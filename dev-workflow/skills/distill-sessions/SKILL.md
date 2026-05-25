@@ -193,6 +193,13 @@ entries with locked Haiku model literal + prompt path + session
 events). Each `trajectory_id` is a deterministic uuid5 over
 `(skill, session, kind)` so re-runs of the same mine produce stable IDs.
 
+High-friction-success sessions (friction_level="high" AND
+facet.outcome ∈ success-strings) emit TWO entries with distinct
+`trajectory_id` values — one routed to `prompt-failure-analysis.md`,
+one to `prompt-success-analysis.md`. **Counting caveat**: `--max-trajectories-per-skill`
+counts dispatches, not sessions, so one such session consumes 2 of
+the budget.
+
 ### Step 2 — Stage 3 subagent fan-out (Claude)
 
 Claude reads `top.json`, then issues **one Agent tool call per
@@ -357,6 +364,13 @@ that key — `main.py` merges over the defaults.
 
 ## Operating notes
 
+- **Cross-skill friction-density routing** — when a session invokes
+  multiple target skills (e.g. brainstorming + writing-plans), the
+  orchestrator computes a severity score for each (session, skill) pair
+  based on accumulated signal weights in that session. Memory Items
+  route to the skill with the highest score; alphabetic is the tie-break.
+  This ensures Memory Items attribute to the friction-owning skill, not
+  lexically-first.
 - **`cleanupPeriodDays` default 30** — Claude Code's `/insights`
   facets under `~/.claude/usage-data/facets/` auto-delete after 30
   days by default. Mining picks up the live state. If you want
@@ -401,23 +415,6 @@ roadmap":
   Risk is low (anchors are picked by the orchestrator, not by
   string-matching code-block contents), but a triple-backtick toggle
   state machine eliminates the edge case.
-- **Dual-dispatch on high-friction-but-succeeded sessions (v0.2)** —
-  `_kind_for_session` ([`scripts/main.py:137-155`](scripts/main.py))
-  short-circuits on `/insights` facet.outcome success-strings before
-  reading `friction_level`, so sessions where the user pulled through
-  heavy NEEDS_REVISION / re-dispatch / interrupt-after-brainstorm
-  signal route to `prompt-success-analysis.md` only — asking "what
-  worked" but never "what was the friction we pulled through." The
-  high-friction-but-succeeded trajectory is arguably the richest
-  learning signal (the friction is the gap the skill should close, the
-  success is the workaround it should encode). v0.2 should emit TWO
-  `subagent_payload[]` entries for that session class — one routed to
-  failure-analysis, one to success-analysis. The uuid5 namespace
-  already includes `kind` so the trajectory IDs stay distinct, but
-  `--max-trajectories-per-skill` arithmetic changes (one high-friction
-  success session now consumes 2 of the budget). 2026-05-24 dogfood
-  evidence: 12/15 subagent_payload entries tagged success because of
-  this short-circuit.
 - **v1.0 broad-scope `skill-log-mining` sibling** — this skill
   (`distill-sessions`) is the narrow v0.1 ship of a wider vision
   documented in `docs/code-toolkit/specs/2026-05-22-skill-log-mining-v0.1-brief.md`.

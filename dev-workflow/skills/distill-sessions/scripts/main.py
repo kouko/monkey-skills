@@ -38,6 +38,7 @@ from aggregate import (
     AggregateRecord,
     aggregate_by_skill,
     rank_top_n,
+    severity_score_for_session,
 )
 from event import Event
 from facets import attach_facets_to_events, load_facets
@@ -134,14 +135,19 @@ def _friction_level_for_session(
 # ---------------------------------------------------------------------------
 
 
-def _kind_for_session(session_id: str, events: list[Event], friction_level: str) -> str:
-    """Decide ``failure`` vs ``success`` for one session.
+def _kinds_for_session(session_id: str, events: list[Event], friction_level: str) -> list[str]:
+    """Decide kind(s) for one session.
+
+    Returns a list of kind strings. Normally a single-element list; dual-
+    dispatch when the session was high-friction but ultimately succeeded
+    (both failure-analysis and success-analysis prompts add value).
 
     Preference order:
       1. /insights facet ``outcome``: ``failed`` / ``partially_achieved`` →
-         failure; ``fully_achieved`` / ``mostly_achieved`` → success.
-      2. Fallback: friction_level ``high`` or ``mid`` → failure; ``low`` →
-         success.
+         [``failure``]; ``fully_achieved`` / ``mostly_achieved`` → [``success``],
+         EXCEPT when friction_level is ``high`` → dual [``failure``, ``success``].
+      2. Fallback (no facet): friction_level ``high`` or ``mid`` → [``failure``];
+         ``low`` → [``success``].
     """
     for ev in events:
         if ev.session != session_id:
@@ -149,10 +155,12 @@ def _kind_for_session(session_id: str, events: list[Event], friction_level: str)
         if ev.facet is None or ev.facet.outcome is None:
             continue
         if ev.facet.outcome in ("failed", "partially_achieved"):
-            return "failure"
+            return ["failure"]
         if ev.facet.outcome in ("fully_achieved", "mostly_achieved"):
-            return "success"
-    return "failure" if friction_level in ("high", "mid") else "success"
+            if friction_level == "high":
+                return ["failure", "success"]
+            return ["success"]
+    return ["failure"] if friction_level in ("high", "mid") else ["success"]
 
 
 # ---------------------------------------------------------------------------
@@ -204,6 +212,51 @@ def _aggregate_record_to_dict(rec: AggregateRecord) -> dict[str, object]:
 
 
 # ---------------------------------------------------------------------------
+# Cross-skill session routing: attribute each multi-skill session to the
+# skill with the highest friction-density score for that session.
+# ---------------------------------------------------------------------------
+
+
+def _compute_session_to_skill(ranked: list[AggregateRecord]) -> dict[str, str]:
+    """Build a ``{session_id: skill_name}`` map for friction-density routing.
+
+    For every session that appears in 2+ skills' ``rec.sessions``, compute
+    ``severity_score_for_session(rec, session_id)`` for each skill that lists
+    it, and assign the session to the skill with the maximum score.
+
+    Tie-break: alphabetically-first skill name (``min()`` over skill names).
+    This preserves determinism across runs and matches the task spec.
+
+    Sessions that appear in exactly ONE skill are attributed to that skill
+    unconditionally — no scoring overhead needed.
+
+    Returns a dict covering ALL sessions across all ranked records.
+    """
+    # Map each session_id → set of skill names that list it.
+    session_skills: dict[str, list[str]] = {}
+    for rec in ranked:
+        for session_id in rec.sessions:
+            session_skills.setdefault(session_id, []).append(rec.skill_name)
+
+    # Build lookup: skill_name → rec (for score computation).
+    rec_by_skill: dict[str, AggregateRecord] = {rec.skill_name: rec for rec in ranked}
+
+    result: dict[str, str] = {}
+    for session_id, skills in session_skills.items():
+        if len(skills) == 1:
+            result[session_id] = skills[0]
+        else:
+            # Multi-skill: pick skill with max score; tie-break = min(skill_name).
+            best_skill = min(
+                skills,
+                key=lambda sk: (-severity_score_for_session(rec_by_skill[sk], session_id), sk),
+            )
+            result[session_id] = best_skill
+
+    return result
+
+
+# ---------------------------------------------------------------------------
 # subagent_payload entry builder.
 # ---------------------------------------------------------------------------
 
@@ -215,6 +268,8 @@ def _build_subagent_entries(
     target_skill_path: Path | None,
     target_skill_md_content: str,
     session_friction: dict[str, str],
+    *,
+    session_to_skill: dict[str, str] | None = None,
 ) -> list[dict[str, object]]:
     """Build one subagent_payload entry per (session, kind) pair.
 
@@ -233,6 +288,9 @@ def _build_subagent_entries(
     namespace = uuid.UUID("00000000-0000-0000-0000-000000000001")
     target_path_str = str(target_skill_path) if target_skill_path else ""
     for session_id in selected_sessions:
+        # Cross-skill routing gate: skip sessions attributed to a different skill.
+        if session_to_skill is not None and session_to_skill.get(session_id, skill_name) != skill_name:
+            continue
         sess_events = events_by_session.get(session_id, [])
         if not sess_events:
             continue
@@ -242,29 +300,31 @@ def _build_subagent_entries(
         # the friction map (defensive; should not happen because main()
         # populates it for every session it dispatches).
         friction_level = session_friction.get(session_id, "low")
-        kind = _kind_for_session(session_id, sess_events, friction_level=friction_level)
-        prompt_path = (
-            "agents/prompt-failure-analysis.md"
-            if kind == "failure"
-            else "agents/prompt-success-analysis.md"
-        )
-        trajectory_id = str(
-            uuid.uuid5(namespace, f"{skill_name}|{session_id}|{kind}")
-        )
-        out.append(
-            {
-                "trajectory_id": trajectory_id,
-                "session_id": session_id,
-                "kind": kind,
-                "prompt_path": prompt_path,
-                "model": HAIKU_MODEL_ID,
-                "input": {
-                    "session_events": [_event_to_dict(ev) for ev in sess_events],
-                    "target_skill_path": target_path_str,
-                    "target_skill_md_content": target_skill_md_content,
-                },
-            }
-        )
+        kinds = _kinds_for_session(session_id, sess_events, friction_level=friction_level)
+        session_events_dicts = [_event_to_dict(ev) for ev in sess_events]
+        for kind in kinds:
+            prompt_path = (
+                "agents/prompt-failure-analysis.md"
+                if kind == "failure"
+                else "agents/prompt-success-analysis.md"
+            )
+            trajectory_id = str(
+                uuid.uuid5(namespace, f"{skill_name}|{session_id}|{kind}")
+            )
+            out.append(
+                {
+                    "trajectory_id": trajectory_id,
+                    "session_id": session_id,
+                    "kind": kind,
+                    "prompt_path": prompt_path,
+                    "model": HAIKU_MODEL_ID,
+                    "input": {
+                        "session_events": session_events_dicts,
+                        "target_skill_path": target_path_str,
+                        "target_skill_md_content": target_skill_md_content,
+                    },
+                }
+            )
     return out
 
 
@@ -418,6 +478,10 @@ def main(argv: list[str] | None = None) -> int:
     top_skills_out: list[dict[str, object]] = []
     subagent_payload: list[dict[str, object]] = []
 
+    # Compute cross-skill session routing before the per-skill loop so each
+    # skill's _build_subagent_entries call can skip sessions attributed away.
+    session_to_skill = _compute_session_to_skill(ranked)
+
     for rec in ranked:
         target_skill_path = _resolve_skill_md_path(rec.skill_name)
         target_skill_md_content = _read_skill_md(target_skill_path)
@@ -472,6 +536,7 @@ def main(argv: list[str] | None = None) -> int:
                 target_skill_path=target_skill_path,
                 target_skill_md_content=target_skill_md_content,
                 session_friction=session_friction,
+                session_to_skill=session_to_skill,
             )
         )
 
