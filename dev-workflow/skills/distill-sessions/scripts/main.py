@@ -38,6 +38,7 @@ from aggregate import (
     AggregateRecord,
     aggregate_by_skill,
     rank_top_n,
+    severity_score_for_session,
 )
 from event import Event
 from facets import attach_facets_to_events, load_facets
@@ -211,6 +212,51 @@ def _aggregate_record_to_dict(rec: AggregateRecord) -> dict[str, object]:
 
 
 # ---------------------------------------------------------------------------
+# Cross-skill session routing: attribute each multi-skill session to the
+# skill with the highest friction-density score for that session.
+# ---------------------------------------------------------------------------
+
+
+def _compute_session_to_skill(ranked: list[AggregateRecord]) -> dict[str, str]:
+    """Build a ``{session_id: skill_name}`` map for friction-density routing.
+
+    For every session that appears in 2+ skills' ``rec.sessions``, compute
+    ``severity_score_for_session(rec, session_id)`` for each skill that lists
+    it, and assign the session to the skill with the maximum score.
+
+    Tie-break: alphabetically-first skill name (``min()`` over skill names).
+    This preserves determinism across runs and matches the task spec.
+
+    Sessions that appear in exactly ONE skill are attributed to that skill
+    unconditionally — no scoring overhead needed.
+
+    Returns a dict covering ALL sessions across all ranked records.
+    """
+    # Map each session_id → set of skill names that list it.
+    session_skills: dict[str, list[str]] = {}
+    for rec in ranked:
+        for session_id in rec.sessions:
+            session_skills.setdefault(session_id, []).append(rec.skill_name)
+
+    # Build lookup: skill_name → rec (for score computation).
+    rec_by_skill: dict[str, AggregateRecord] = {rec.skill_name: rec for rec in ranked}
+
+    result: dict[str, str] = {}
+    for session_id, skills in session_skills.items():
+        if len(skills) == 1:
+            result[session_id] = skills[0]
+        else:
+            # Multi-skill: pick skill with max score; tie-break = min(skill_name).
+            best_skill = min(
+                skills,
+                key=lambda sk: (-severity_score_for_session(rec_by_skill[sk], session_id), sk),
+            )
+            result[session_id] = best_skill
+
+    return result
+
+
+# ---------------------------------------------------------------------------
 # subagent_payload entry builder.
 # ---------------------------------------------------------------------------
 
@@ -222,6 +268,8 @@ def _build_subagent_entries(
     target_skill_path: Path | None,
     target_skill_md_content: str,
     session_friction: dict[str, str],
+    *,
+    session_to_skill: dict[str, str] | None = None,
 ) -> list[dict[str, object]]:
     """Build one subagent_payload entry per (session, kind) pair.
 
@@ -240,6 +288,9 @@ def _build_subagent_entries(
     namespace = uuid.UUID("00000000-0000-0000-0000-000000000001")
     target_path_str = str(target_skill_path) if target_skill_path else ""
     for session_id in selected_sessions:
+        # Cross-skill routing gate: skip sessions attributed to a different skill.
+        if session_to_skill is not None and session_to_skill.get(session_id, skill_name) != skill_name:
+            continue
         sess_events = events_by_session.get(session_id, [])
         if not sess_events:
             continue
@@ -427,6 +478,10 @@ def main(argv: list[str] | None = None) -> int:
     top_skills_out: list[dict[str, object]] = []
     subagent_payload: list[dict[str, object]] = []
 
+    # Compute cross-skill session routing before the per-skill loop so each
+    # skill's _build_subagent_entries call can skip sessions attributed away.
+    session_to_skill = _compute_session_to_skill(ranked)
+
     for rec in ranked:
         target_skill_path = _resolve_skill_md_path(rec.skill_name)
         target_skill_md_content = _read_skill_md(target_skill_path)
@@ -481,6 +536,7 @@ def main(argv: list[str] | None = None) -> int:
                 target_skill_path=target_skill_path,
                 target_skill_md_content=target_skill_md_content,
                 session_friction=session_friction,
+                session_to_skill=session_to_skill,
             )
         )
 
