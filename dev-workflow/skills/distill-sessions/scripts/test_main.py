@@ -490,3 +490,149 @@ def test_low_friction_no_facet_session_is_tagged_kind_success(tmp_path: Path) ->
             f"high-friction session {e['session_id']!r} should be kind=failure, "
             f"got kind={e['kind']!r}"
         )
+
+
+# ---------------------------------------------------------------------------
+# Test 7 — high-friction-success session emits dual-dispatch entries.
+#
+# Q-v0.3-3 (locked in brief): when friction_level="high" AND
+# facet.outcome ∈ {"fully_achieved", "mostly_achieved"}, the pipeline
+# must emit TWO subagent_payload entries for the same session:
+#   - kind="failure" → agents/prompt-failure-analysis.md
+#   - kind="success" → agents/prompt-success-analysis.md
+# with distinct trajectory_ids (uuid5 namespace includes kind).
+# One session counts as 2 dispatches for --max-trajectories-per-skill.
+#
+# Per feedback_kind_classifier_facet_outcome_dominates.md canonical fix-shape.
+# ---------------------------------------------------------------------------
+
+
+def _build_fixture_with_high_friction_success_session(
+    tmp_path: Path,
+) -> tuple[Path, Path, str]:
+    """A minimal project tree with 3 high-friction sessions PLUS one
+    high-friction session that also has facet.outcome="fully_achieved".
+
+    Returns (projects_root_parent, facets_root, hfs_session_id) where
+    hfs_session_id is the high-friction-success session that should trigger
+    dual-dispatch.
+    """
+    projects_root = tmp_path / "projects" / "-Users-kouko-hfs"
+    projects_root.mkdir(parents=True)
+    facets_root = tmp_path / "facets"
+    facets_root.mkdir()
+
+    base_ts = "2026-05-25T08:00:0"
+    # 3 plain high-friction sessions to clear min_session_count=3.
+    plain_sessions = [
+        f"sessHF{i:02d}-aaaa-bbbb-cccc-dddddddddddd" for i in range(3)
+    ]
+    # The 4th session: high-friction (interrupt) + fully_achieved outcome.
+    hfs_session_id = "sessHFSX-aaaa-bbbb-cccc-dddddddddddd"
+
+    all_sessions = plain_sessions + [hfs_session_id]
+    for i, session_id in enumerate(all_sessions):
+        lines = [
+            json.dumps(
+                {
+                    "type": "assistant",
+                    "sessionId": session_id,
+                    "timestamp": f"{base_ts}{i}.000Z",
+                    "message": {
+                        "role": "assistant",
+                        "content": [
+                            {
+                                "type": "tool_use",
+                                "id": f"toolu_hfs_{i}",
+                                "name": "Skill",
+                                "input": {
+                                    "skill": "code-toolkit:brainstorming",
+                                    "args": "test",
+                                },
+                            }
+                        ],
+                    },
+                }
+            ),
+            # Interrupt within 0.5s → high-severity friction signal.
+            json.dumps(
+                {
+                    "type": "user",
+                    "sessionId": session_id,
+                    "timestamp": f"{base_ts}{i}.500Z",
+                    "message": {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": "[Request interrupted by user]"}
+                        ],
+                    },
+                }
+            ),
+        ]
+        (projects_root / f"{session_id}.jsonl").write_text(
+            "\n".join(lines) + "\n", encoding="utf-8"
+        )
+
+    # Write a facet JSON for hfs_session_id with outcome="fully_achieved".
+    facet_payload = {
+        "session_id": hfs_session_id,
+        "outcome": "fully_achieved",
+    }
+    (facets_root / f"{hfs_session_id}.json").write_text(
+        json.dumps(facet_payload), encoding="utf-8"
+    )
+
+    return projects_root.parent, facets_root, hfs_session_id
+
+
+def test_high_friction_success_session_emits_dual_dispatch_entries(
+    tmp_path: Path,
+) -> None:
+    """High-friction session with facet.outcome=fully_achieved must produce
+    2 subagent_payload entries: kind=failure + kind=success, distinct
+    trajectory_ids, correct prompt_path per kind.
+    """
+    projects_root, facets_root, hfs_session_id = (
+        _build_fixture_with_high_friction_success_session(tmp_path)
+    )
+
+    payload, _ = _run_main(
+        [
+            "--target-skill-pattern",
+            "code-toolkit:*",
+            "--project-root",
+            str(projects_root),
+            "--facets-root",
+            str(facets_root),
+        ]
+    )
+
+    hfs_entries = [
+        e for e in payload["subagent_payload"]
+        if e["session_id"] == hfs_session_id
+    ]
+
+    assert len(hfs_entries) == 2, (
+        f"high-friction-success session should emit 2 entries "
+        f"(kind=failure + kind=success), got {len(hfs_entries)}: "
+        f"{[e['kind'] for e in hfs_entries]!r}"
+    )
+
+    kinds = {e["kind"] for e in hfs_entries}
+    assert kinds == {"failure", "success"}, (
+        f"expected kinds={{'failure','success'}}, got {kinds!r}"
+    )
+
+    failure_entry = next(e for e in hfs_entries if e["kind"] == "failure")
+    success_entry = next(e for e in hfs_entries if e["kind"] == "success")
+
+    assert failure_entry["prompt_path"] == "agents/prompt-failure-analysis.md", (
+        f"failure entry has wrong prompt_path: {failure_entry['prompt_path']!r}"
+    )
+    assert success_entry["prompt_path"] == "agents/prompt-success-analysis.md", (
+        f"success entry has wrong prompt_path: {success_entry['prompt_path']!r}"
+    )
+
+    assert failure_entry["trajectory_id"] != success_entry["trajectory_id"], (
+        "failure and success entries must have distinct trajectory_ids"
+    )
