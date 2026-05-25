@@ -408,6 +408,24 @@ def reusability_score(rec: AggregateRecord) -> float:
     return _W_FREQUENCY * f + _W_TIME_COST * t + _W_CROSS_PROJECT * cp + _W_RECENCY * r
 
 
+def score_skill_in_session(rec: AggregateRecord, session_id: str) -> float:
+    """Sum severity-weighted signals for a given session.
+
+    Filters ``rec.signals`` to those matching ``session_id``, then sums
+    severity weights: ``high=3.0``, ``mid=1.0``, ``low=0.3``. Returns 0.0
+    if no matching signals.
+
+    This is a pure function — no I/O, no mutation of ``rec``.
+    """
+    severity_weights = {"high": 3.0, "mid": 1.0, "low": 0.3}
+    total = 0.0
+    for signal in rec.signals:
+        if signal.session == session_id:
+            weight = severity_weights.get(signal.severity, 0.0)
+            total += weight
+    return total
+
+
 # ---------------------------------------------------------------------------
 # fingerprint_count — distinct projects per friction-fingerprint.
 # ---------------------------------------------------------------------------
