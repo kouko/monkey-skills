@@ -28,7 +28,7 @@ from aggregate import (
     fingerprint_count,
     rank_top_n,
     reusability_score,
-    score_skill_in_session,
+    severity_score_for_session,
     signal_fingerprint,
 )
 
@@ -586,11 +586,11 @@ def test_aggregate_computes_recency_from_events():
 
 
 # ---------------------------------------------------------------------------
-# score_skill_in_session — per-session signal severity-weight sum
+# severity_score_for_session — per-session signal severity-weight sum
 # ---------------------------------------------------------------------------
 
 
-def test_score_skill_in_session_sums_severity_weights():
+def test_severity_score_for_session_sums_severity_weights():
     """Score signals in a record filtered by session, using severity weights:
     high=3.0, mid=1.0, low=0.3.
 
@@ -599,7 +599,6 @@ def test_score_skill_in_session_sums_severity_weights():
     - session_b: 1 low → 0.3
     - missing_session: no matching signals → 0.0
     """
-    from aggregate import score_skill_in_session
 
     sig_high_1 = Signal(
         kind="interrupt_after_brainstorm",
@@ -641,10 +640,42 @@ def test_score_skill_in_session_sums_severity_weights():
     )
 
     # Test: score for session_a
-    assert score_skill_in_session(rec, "session_a") == 7.0
+    assert severity_score_for_session(rec, "session_a") == 7.0
 
     # Test: score for session_b
-    assert score_skill_in_session(rec, "session_b") == 0.3
+    assert severity_score_for_session(rec, "session_b") == 0.3
 
     # Test: missing session returns 0.0
-    assert score_skill_in_session(rec, "missing_session") == 0.0
+    assert severity_score_for_session(rec, "missing_session") == 0.0
+
+
+def test_severity_score_for_session_raises_on_unknown_severity():
+    """Unknown severity should raise KeyError to enforce fail-loud discipline.
+
+    Fixture: construct a Signal with severity="critical" (not in the
+    severity_weights dict). Assert pytest.raises(KeyError) when calling
+    severity_score_for_session(rec, "session_a").
+    """
+    import pytest
+
+    sig_unknown_severity = Signal(
+        kind="interrupt_after_brainstorm",
+        session="session_a",
+        ts="2026-05-22T10:00:00.000Z",
+        severity="critical",  # not in the weights dict
+        evidence=[],
+    )
+
+    rec = AggregateRecord(
+        skill_name="code-toolkit:brainstorming",
+        sessions=["session_a"],
+        event_count=1,
+        signals=[sig_unknown_severity],
+        project_paths=set(),
+        facet_summary={},
+        confidence="low",
+    )
+
+    # Must raise KeyError on unknown severity
+    with pytest.raises(KeyError):
+        severity_score_for_session(rec, "session_a")
