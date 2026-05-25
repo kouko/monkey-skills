@@ -45,6 +45,30 @@ def _normalize(text: str) -> str:
     return result
 
 
+def _sort_promoted_and_pending(
+    promoted_entries: list[tuple[int, str, dict]],
+    pending_entries: list[tuple[str, str, dict]],
+) -> tuple[list[dict], list[dict]]:
+    """Sort and extract promoted and pending lists from entry tuples.
+
+    Args:
+        promoted_entries:  List of (group_size, norm_title, representative) tuples.
+        pending_entries:   List of (session_id, norm_title, item) tuples.
+
+    Returns:
+        (promoted, pending) tuple with proper sort order applied:
+        - promoted: sorted by group size descending, then alphabetic by title.
+        - pending: sorted by session_id ascending, then normalized title ascending.
+    """
+    promoted_entries.sort(key=lambda e: (-e[0], e[1]))
+    promoted = [e[2] for e in promoted_entries]
+
+    pending_entries.sort(key=lambda e: (e[0], e[1]))
+    pending = [e[2] for e in pending_entries]
+
+    return promoted, pending
+
+
 def cluster_memory_items(
     items: list[dict],
     min_n: int = 2,
@@ -55,7 +79,7 @@ def cluster_memory_items(
         items:  Flat list of memory item dicts.  Each must contain at least
                 ``title``, ``section_anchor``, and ``session_id`` keys.
         min_n:  Minimum number of *distinct* session_ids required for a group
-                to be promoted.  Default 2.
+                to be promoted.  Default 2. Must be >= 1.
 
     Returns:
         A ``(promoted, pending)`` tuple.
@@ -74,11 +98,19 @@ def cluster_memory_items(
             ``supporting_sessions`` added).  Sorted by session_id then by
             normalized title.
 
+    Raises:
+        ValueError: if min_n < 1.
+
     Notes:
         - Does not mutate input dicts or the input list.
         - Items from the *same* session with the same (title, anchor) do not
           contribute more than one vote toward the distinct-session count.
     """
+    if min_n < 1:
+        raise ValueError(
+            f"min_n must be >= 1 (minimum distinct sessions required for promotion), got {min_n}"
+        )
+
     if not items:
         return [], []
 
@@ -87,30 +119,27 @@ def cluster_memory_items(
     # Each bucket holds a list of (norm_title, item) pairs so we can sort
     # pending later without re-normalizing.
     # -----------------------------------------------------------------------
-    # groups: key -> list of (item_copy, norm_title)
     groups: dict[tuple[str, str], list[tuple[dict, str]]] = defaultdict(list)
 
     for item in items:
         norm_title = _normalize(item.get("title", ""))
         norm_anchor = _normalize(item.get("section_anchor", ""))
         key = (norm_title, norm_anchor)
-        item_copy = copy.copy(item)  # shallow copy — values are strings, safe
+        item_copy = copy.copy(item)
         groups[key].append((item_copy, norm_title))
 
     # -----------------------------------------------------------------------
     # Phase 2: split groups into promoted / pending based on distinct sessions.
     # -----------------------------------------------------------------------
-    promoted_entries: list[tuple[int, str, dict]] = []  # (size, norm_title, rep)
-    pending_entries: list[tuple[str, str, dict]] = []  # (session_id, norm_title, item)
+    promoted_entries: list[tuple[int, str, dict]] = []
+    pending_entries: list[tuple[str, str, dict]] = []
 
     for (norm_title, _norm_anchor), bucket in groups.items():
-        # Count distinct session_ids in this bucket.
         seen_sessions: set[str] = set()
         for item_copy, _ in bucket:
             seen_sessions.add(item_copy.get("session_id", ""))
 
         if len(seen_sessions) >= min_n:
-            # Build representative from the first item in the bucket.
             rep = copy.copy(bucket[0][0])
             rep["supporting_sessions"] = sorted(seen_sessions)
             promoted_entries.append((len(seen_sessions), norm_title, rep))
@@ -120,14 +149,6 @@ def cluster_memory_items(
                 pending_entries.append((session_id, nt, item_copy))
 
     # -----------------------------------------------------------------------
-    # Phase 3: sort and extract final lists.
+    # Phase 3: sort and return via helper.
     # -----------------------------------------------------------------------
-    # promoted: group size descending, then alphabetic by normalized title
-    promoted_entries.sort(key=lambda e: (-e[0], e[1]))
-    promoted = [e[2] for e in promoted_entries]
-
-    # pending: session_id ascending, then normalized title ascending
-    pending_entries.sort(key=lambda e: (e[0], e[1]))
-    pending = [e[2] for e in pending_entries]
-
-    return promoted, pending
+    return _sort_promoted_and_pending(promoted_entries, pending_entries)
