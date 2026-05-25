@@ -228,17 +228,20 @@ def extract_skill_md_headings(skill_md: str) -> set[str]:
     is routed to §"Anchor mismatch — needs review" instead of being silently
     misapplied.
 
-    Known limitation (v0.2): does NOT skip headings nested inside fenced
-    code blocks. A SKILL.md containing a code example like
-    ``` ```bash ## fake heading ``` ``` would yield "fake heading" as a
-    valid anchor — letting a Memory Item whose ``section_anchor`` happens
-    to match the in-code text route to anchor_ok rather than mismatch.
-    Real-world risk is low (anchors are picked by the orchestrator, not
-    by string-matching code-block contents), but a state-machine that
-    toggles on triple-backtick lines is the v0.3+ tightening.
+    Tracks fenced-code-block state via a triple-backtick toggle (v2.6.1
+    hotfix): a line starting with ``` flips the in-code-block flag, and
+    ``##`` lines inside a fenced block do NOT register as headings. This
+    prevents a SKILL.md code example like ``` ```bash\\n## fake heading
+    \\n``` ``` from yielding ``fake heading`` as a valid anchor.
     """
     headings: set[str] = set()
+    in_code_block = False
     for line in skill_md.splitlines():
+        if line.startswith("```"):
+            in_code_block = not in_code_block
+            continue
+        if in_code_block:
+            continue
         if not line.startswith("#"):
             continue
         stripped = line.lstrip("#").strip()

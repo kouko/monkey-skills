@@ -406,15 +406,6 @@ that key — `main.py` merges over the defaults.
 Deferred per brief Decision §"Out of Scope (v0.1)" and §"Future
 roadmap":
 
-- **Heading-extraction state machine (v0.3+)** — `propose.py`'s
-  `extract_skill_md_headings` does NOT currently skip headings nested
-  inside fenced code blocks. A SKILL.md with a code example containing
-  a line like `## heading-in-code` would yield that text as a valid
-  anchor, letting a Memory Item whose `section_anchor` matches the
-  in-code text bypass the §"Anchor mismatch — needs review" routing.
-  Risk is low (anchors are picked by the orchestrator, not by
-  string-matching code-block contents), but a triple-backtick toggle
-  state machine eliminates the edge case.
 - **v1.0 broad-scope `skill-log-mining` sibling** — this skill
   (`distill-sessions`) is the narrow v0.1 ship of a wider vision
   documented in `docs/code-toolkit/specs/2026-05-22-skill-log-mining-v0.1-brief.md`.

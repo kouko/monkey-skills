@@ -562,3 +562,35 @@ def test_cli_module_form_runs(tmp_path: Path) -> None:
     )
     assert result.returncode == 0, f"stderr={result.stderr}"
     assert out.exists()
+
+
+def test_extract_skill_md_headings_skips_fenced_code_block_content() -> None:
+    """Headings inside fenced code blocks must NOT register as valid anchors.
+
+    Regression for v2.6.1 hotfix: prior implementation matched any line
+    starting with ``#``, so a ``## fake heading`` inside a ``` ```bash ``` ``
+    block would falsely appear as a valid SKILL.md anchor — allowing a
+    Memory Item whose ``section_anchor`` happened to match the in-code
+    text to route to anchor_ok instead of §"Anchor mismatch — needs review".
+    """
+    from propose import extract_skill_md_headings
+
+    md = (
+        "# Real Title\n"
+        "\n"
+        "## Real Heading\n"
+        "\n"
+        "some prose.\n"
+        "\n"
+        "```bash\n"
+        "# this is a bash comment, not a heading\n"
+        "## another fake heading\n"
+        "echo hi\n"
+        "```\n"
+        "\n"
+        "## Another Real Heading\n"
+    )
+    headings = extract_skill_md_headings(md)
+    assert headings == {"Real Title", "Real Heading", "Another Real Heading"}, (
+        f"Expected only outside-fence headings, got: {sorted(headings)}"
+    )
