@@ -807,3 +807,80 @@ def test_extract_skill_md_headings_skips_indented_fenced_code_block() -> None:
     assert headings == {"Real Heading", "Tail Real Heading"}, (
         f"Indented fence should suppress inner headings; got: {sorted(headings)}"
     )
+
+
+def test_extract_memory_items_filters_by_target_skill_path() -> None:
+    """v2.7.1 hotfix: extract_memory_items must filter by target_skill_path.
+
+    Regression for v0.3 post-ship dogfood finding: when merged.json contains
+    entries for multiple target skills (e.g. distill-sessions targeted both
+    code-toolkit:writing-plans AND code-toolkit:brainstorming in one run),
+    propose.py used to flatten ALL items into every proposal — items intended
+    for skill A leaked into skill B's proposal. With this fix, callers pass
+    ``target_skill_path=...`` to scope the flatten to one target. Default
+    ``None`` preserves backward-compat (existing tests + fixtures unchanged).
+    """
+    from propose import extract_memory_items
+
+    results = [
+        {
+            "session_id": "session_a",
+            "target_skill_path": "/path/to/skill-A/SKILL.md",
+            "memory_items": [
+                {
+                    "title": "A item 1",
+                    "description": "d",
+                    "content": "c",
+                    "kind": "success",
+                    "section_anchor": "Examples",
+                },
+                {
+                    "title": "A item 2",
+                    "description": "d",
+                    "content": "c",
+                    "kind": "failure",
+                    "section_anchor": "Examples",
+                },
+            ],
+        },
+        {
+            "session_id": "session_b",
+            "target_skill_path": "/path/to/skill-B/SKILL.md",
+            "memory_items": [
+                {
+                    "title": "B item 1",
+                    "description": "d",
+                    "content": "c",
+                    "kind": "success",
+                    "section_anchor": "Examples",
+                },
+                {
+                    "title": "B item 2",
+                    "description": "d",
+                    "content": "c",
+                    "kind": "success",
+                    "section_anchor": "Examples",
+                },
+            ],
+        },
+    ]
+
+    # Filter to skill A only
+    only_a = extract_memory_items(results, target_skill_path="/path/to/skill-A/SKILL.md")
+    assert len(only_a) == 2, f"Expected 2 items from A, got {len(only_a)}"
+    assert all(it["title"].startswith("A ") for it in only_a), (
+        f"Filter leaked items from B: {[it['title'] for it in only_a]}"
+    )
+
+    # Filter to skill B only
+    only_b = extract_memory_items(results, target_skill_path="/path/to/skill-B/SKILL.md")
+    assert len(only_b) == 2, f"Expected 2 items from B, got {len(only_b)}"
+    assert all(it["title"].startswith("B ") for it in only_b), (
+        f"Filter leaked items from A: {[it['title'] for it in only_b]}"
+    )
+
+    # Backward compat: no kwarg = flatten everything (legacy behavior)
+    all_items = extract_memory_items(results)
+    assert len(all_items) == 4, (
+        f"Default (no kwarg) must preserve legacy flatten-all behavior, got {len(all_items)}"
+    )

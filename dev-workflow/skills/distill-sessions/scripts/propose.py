@@ -141,15 +141,30 @@ def normalize_memory_item(raw: dict) -> dict:
     }
 
 
-def extract_memory_items(results: list[dict]) -> list[dict]:
+def extract_memory_items(
+    results: list[dict],
+    target_skill_path: str | None = None,
+) -> list[dict]:
     """Flatten subagent results into a single list of Memory Items.
 
     Each result entry has a ``memory_items`` array; we walk all entries and
     return one flat list with each item normalized + tagged with its source
     session id (for traceability in rendered output).
+
+    When ``target_skill_path`` is provided (v2.7.1 hotfix), entries whose
+    ``target_skill_path`` does NOT match are skipped — necessary when
+    merged.json carries items for multiple target skills in one run (e.g.
+    distill-sessions targeted both writing-plans AND brainstorming).
+    Without this filter, items intended for skill A leak into skill B's
+    proposal. ``None`` default preserves backward-compat (legacy callers
+    that pre-filter merged.json themselves are unaffected).
     """
     flat: list[dict] = []
     for entry in results:
+        if target_skill_path is not None:
+            entry_path = entry.get("target_skill_path")
+            if entry_path != target_skill_path:
+                continue
         session_id = entry.get("session_id", "unknown")
         for raw_item in entry.get("memory_items", []):
             item = normalize_memory_item({**raw_item, "_source_session": session_id})
@@ -719,7 +734,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     results = _load_subagent_results(args.input)
-    items = extract_memory_items(results)
+    items = extract_memory_items(results, target_skill_path=args.target_skill)
 
     # Read SKILL.md text — from --skill-content-file if provided, else from
     # --target-skill. In production --target-skill IS the path to read; the
