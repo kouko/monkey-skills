@@ -348,7 +348,7 @@ def test_trajectory_id_is_deterministic_across_runs(tmp_path: Path) -> None:
 # Test 6 — low-friction session without facet maps to kind=success.
 #
 # Round-2 fix for T9 🟡 #1: ``_build_subagent_entries`` used to hardcode
-# ``friction_level="high"`` as the fallback to ``_kind_for_session``, so
+# ``friction_level="high"`` as the fallback to ``_kinds_for_session``, so
 # any session without a facet got tagged ``kind="failure"`` and routed to
 # ``prompt-failure-analysis.md`` — even when the session's real
 # friction_level was ``low`` (no signals at all). Pin the contract: a

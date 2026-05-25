@@ -135,7 +135,7 @@ def _friction_level_for_session(
 # ---------------------------------------------------------------------------
 
 
-def _kind_for_session(session_id: str, events: list[Event], friction_level: str) -> list[str]:
+def _kinds_for_session(session_id: str, events: list[Event], friction_level: str) -> list[str]:
     """Decide kind(s) for one session.
 
     Returns a list of kind strings. Normally a single-element list; dual-
@@ -300,7 +300,7 @@ def _build_subagent_entries(
         # the friction map (defensive; should not happen because main()
         # populates it for every session it dispatches).
         friction_level = session_friction.get(session_id, "low")
-        kinds = _kind_for_session(session_id, sess_events, friction_level=friction_level)
+        kinds = _kinds_for_session(session_id, sess_events, friction_level=friction_level)
         session_events_dicts = [_event_to_dict(ev) for ev in sess_events]
         for kind in kinds:
             prompt_path = (

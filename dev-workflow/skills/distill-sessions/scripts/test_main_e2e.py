@@ -35,7 +35,7 @@ control:
   ``severity=high``) plus four ``NEEDS_REVISION`` text matches → two
   high-severity signals stacked, ``friction_level=high``. No /insights
   facet — exercises the friction-level fallback in
-  ``_kind_for_session``.
+  ``_kinds_for_session``.
 - **Session 3** — clean control. One brainstorming Skill call, one
   assistant text reply, one polite user thank-you. Zero friction signals
   → ``friction_level=low``, ``kind=success`` via the fallback.
@@ -165,7 +165,7 @@ def _session2_jsonl() -> str:
 
     Two stacked high-severity signals → ``friction_level=high``. No
     /insights facet, so the friction-level fallback in
-    ``_kind_for_session`` decides kind.
+    ``_kinds_for_session`` decides kind.
     """
     sid = _SESSION2_ID
     records = [
@@ -359,7 +359,7 @@ def _build_e2e_tree(tmp_path: Path) -> tuple[Path, Path]:
       for each of the three sessions.
     - facets_root contains ``<session1_id>.json`` (only session 1 carries
       a facet — sessions 2 and 3 stay facet-less, exercising the
-      no-facet branch in ``main._kind_for_session``).
+      no-facet branch in ``main._kinds_for_session``).
     """
     projects_root = tmp_path / "projects"
     project_dir = projects_root / "-Users-kouko-e2e-fixture"
