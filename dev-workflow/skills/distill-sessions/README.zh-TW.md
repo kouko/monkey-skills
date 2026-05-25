@@ -82,6 +82,26 @@ skill 跑 multi-stage pipeline：
 
 完整 step-by-step 見 [`SKILL.md`](SKILL.md) §Pipeline。
 
+### v0.3 主要功能
+
+- **跨技能 friction-density routing** — 當 session 呼叫多個
+  目標 skill 時（例如 brainstorming + writing-plans），Memory Items
+  會 route 到該 session 中 severity score 最高的 skill，而不是
+  字典序最前的 skill。這確保 feedback 歸到 friction 真正來源的 skill。
+
+- **高 friction 成功 session 的雙派遣** — 分類為
+  `friction_level="high"` 且 outcome=success 的 session 會發出
+  **2 個** subagent_payload entry — 一個給 failure-analysis，
+  一個給 success-analysis。`--max-trajectories-per-skill` 預算
+  會計入兩個派遣。
+
+- **Stage 4 cluster + N≥2 晉升** — Memory Items 按 normalized
+  (title, section_anchor) pair 進行 cluster。具有 N≥2 個supporting
+  session 的 item 會升格到 §"Proposed additions" / §"Proposed
+  modifications"；單一 session 的 item (N=1) 會 route 到新的
+  §"Cross-session evidence pending" bucket，待累積到 2 個 session
+  時自動晉升。
+
 ---
 
 ## Installation

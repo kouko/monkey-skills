@@ -87,6 +87,28 @@ skill は multi-stage pipeline で動く：
 
 完全な手順は [`SKILL.md`](SKILL.md) §Pipeline を参照。
 
+### v0.3 の主要機能
+
+- **クロススキル friction-density routing** — session が複数の
+  対象 skill を invoke した場合（e.g. brainstorming + writing-plans）、
+  Memory Items はそのセッション内で最も高い severity score を持つ
+  skill にルートされる — 字句的に最初の skill ではない。これにより
+  feedback は friction の original owner となる skill に帰属される。
+
+- **高-friction-success session の デュアルディスパッチ** —
+  `friction_level="high"` かつ outcome=success に分類される session
+  は、**2 つの** subagent_payload entry を emit する — 1 つは
+  failure-analysis に、もう 1 つは success-analysis に。
+  `--max-trajectories-per-skill` budget はどちらのディスパッチも
+  カウントする。
+
+- **Stage 4 cluster + N≥2 promotion** — Memory Items は normalized
+  (title, section_anchor) pair でクラスタリングされる。N≥2 個の
+  supporting session を持つ item は §"Proposed additions" /
+  §"Proposed modifications" に promote される；single-session item
+  (N=1) は新しい §"Cross-session evidence pending" bucket にルートされ、
+  2 番目の session がマッチすると自動的に re-promote される。
+
 ---
 
 ## Installation

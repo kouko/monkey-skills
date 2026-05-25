@@ -85,6 +85,27 @@ The skill runs a multi-stage pipeline:
 
 See [`SKILL.md`](SKILL.md) §Pipeline for the full step-by-step.
 
+### Key v0.3 features
+
+- **Cross-skill friction-density routing** — when a session invokes
+  multiple target skills (e.g. brainstorming + writing-plans), Memory
+  Items route to the skill with the highest severity score in that
+  session, not the lexically-first skill. This ensures feedback
+  attributes to the friction-owning skill.
+
+- **Dual-dispatch on high-friction-success sessions** — sessions
+  classifying `friction_level="high"` AND outcome=success emit **two**
+  subagent_payload entries — one routed to failure-analysis, one to
+  success-analysis. The `--max-trajectories-per-skill` budget counts
+  both dispatches.
+
+- **Stage 4 cluster + N≥2 promotion** — Memory Items cluster by
+  normalized (title, section_anchor) pair. Items with N≥2 supporting
+  sessions promote to §"Proposed additions" / §"Proposed modifications";
+  single-session items (N=1) route to the new §"Cross-session evidence
+  pending" bucket and re-promote automatically when a second session
+  matches.
+
 ---
 
 ## Installation
