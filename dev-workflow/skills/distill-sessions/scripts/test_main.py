@@ -530,8 +530,7 @@ def _build_fixture_with_high_friction_success_session(
     # The 4th session: high-friction (interrupt) + fully_achieved outcome.
     hfs_session_id = "sessHFSX-aaaa-bbbb-cccc-dddddddddddd"
 
-    all_sessions = plain_sessions + [hfs_session_id]
-    for i, session_id in enumerate(all_sessions):
+    for i, session_id in enumerate(plain_sessions):
         lines = [
             json.dumps(
                 {
@@ -572,6 +571,82 @@ def _build_fixture_with_high_friction_success_session(
         (projects_root / f"{session_id}.jsonl").write_text(
             "\n".join(lines) + "\n", encoding="utf-8"
         )
+
+    # hfs_session_id: 2 brainstorm calls + 2 immediate interrupts → 2
+    # high-severity signals → _friction_level_for_session returns "high".
+    hfs_lines = [
+        json.dumps(
+            {
+                "type": "assistant",
+                "sessionId": hfs_session_id,
+                "timestamp": f"{base_ts}4.000Z",
+                "message": {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_use",
+                            "id": "toolu_hfs_4a",
+                            "name": "Skill",
+                            "input": {
+                                "skill": "code-toolkit:brainstorming",
+                                "args": "test",
+                            },
+                        }
+                    ],
+                },
+            }
+        ),
+        json.dumps(
+            {
+                "type": "user",
+                "sessionId": hfs_session_id,
+                "timestamp": f"{base_ts}4.500Z",
+                "message": {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "[Request interrupted by user]"}
+                    ],
+                },
+            }
+        ),
+        json.dumps(
+            {
+                "type": "assistant",
+                "sessionId": hfs_session_id,
+                "timestamp": f"{base_ts}5.000Z",
+                "message": {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_use",
+                            "id": "toolu_hfs_4b",
+                            "name": "Skill",
+                            "input": {
+                                "skill": "code-toolkit:brainstorming",
+                                "args": "retry",
+                            },
+                        }
+                    ],
+                },
+            }
+        ),
+        json.dumps(
+            {
+                "type": "user",
+                "sessionId": hfs_session_id,
+                "timestamp": f"{base_ts}5.500Z",
+                "message": {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "[Request interrupted by user]"}
+                    ],
+                },
+            }
+        ),
+    ]
+    (projects_root / f"{hfs_session_id}.jsonl").write_text(
+        "\n".join(hfs_lines) + "\n", encoding="utf-8"
+    )
 
     # Write a facet JSON for hfs_session_id with outcome="fully_achieved".
     facet_payload = {

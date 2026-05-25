@@ -134,14 +134,19 @@ def _friction_level_for_session(
 # ---------------------------------------------------------------------------
 
 
-def _kind_for_session(session_id: str, events: list[Event], friction_level: str) -> str:
-    """Decide ``failure`` vs ``success`` for one session.
+def _kind_for_session(session_id: str, events: list[Event], friction_level: str) -> list[str]:
+    """Decide kind(s) for one session.
+
+    Returns a list of kind strings. Normally a single-element list; dual-
+    dispatch when the session was high-friction but ultimately succeeded
+    (both failure-analysis and success-analysis prompts add value).
 
     Preference order:
       1. /insights facet ``outcome``: ``failed`` / ``partially_achieved`` →
-         failure; ``fully_achieved`` / ``mostly_achieved`` → success.
-      2. Fallback: friction_level ``high`` or ``mid`` → failure; ``low`` →
-         success.
+         [``failure``]; ``fully_achieved`` / ``mostly_achieved`` → [``success``],
+         EXCEPT when friction_level is ``high`` → dual [``failure``, ``success``].
+      2. Fallback (no facet): friction_level ``high`` or ``mid`` → [``failure``];
+         ``low`` → [``success``].
     """
     for ev in events:
         if ev.session != session_id:
@@ -149,10 +154,12 @@ def _kind_for_session(session_id: str, events: list[Event], friction_level: str)
         if ev.facet is None or ev.facet.outcome is None:
             continue
         if ev.facet.outcome in ("failed", "partially_achieved"):
-            return "failure"
+            return ["failure"]
         if ev.facet.outcome in ("fully_achieved", "mostly_achieved"):
-            return "success"
-    return "failure" if friction_level in ("high", "mid") else "success"
+            if friction_level == "high":
+                return ["failure", "success"]
+            return ["success"]
+    return ["failure"] if friction_level in ("high", "mid") else ["success"]
 
 
 # ---------------------------------------------------------------------------
@@ -242,29 +249,31 @@ def _build_subagent_entries(
         # the friction map (defensive; should not happen because main()
         # populates it for every session it dispatches).
         friction_level = session_friction.get(session_id, "low")
-        kind = _kind_for_session(session_id, sess_events, friction_level=friction_level)
-        prompt_path = (
-            "agents/prompt-failure-analysis.md"
-            if kind == "failure"
-            else "agents/prompt-success-analysis.md"
-        )
-        trajectory_id = str(
-            uuid.uuid5(namespace, f"{skill_name}|{session_id}|{kind}")
-        )
-        out.append(
-            {
-                "trajectory_id": trajectory_id,
-                "session_id": session_id,
-                "kind": kind,
-                "prompt_path": prompt_path,
-                "model": HAIKU_MODEL_ID,
-                "input": {
-                    "session_events": [_event_to_dict(ev) for ev in sess_events],
-                    "target_skill_path": target_path_str,
-                    "target_skill_md_content": target_skill_md_content,
-                },
-            }
-        )
+        kinds = _kind_for_session(session_id, sess_events, friction_level=friction_level)
+        session_events_dicts = [_event_to_dict(ev) for ev in sess_events]
+        for kind in kinds:
+            prompt_path = (
+                "agents/prompt-failure-analysis.md"
+                if kind == "failure"
+                else "agents/prompt-success-analysis.md"
+            )
+            trajectory_id = str(
+                uuid.uuid5(namespace, f"{skill_name}|{session_id}|{kind}")
+            )
+            out.append(
+                {
+                    "trajectory_id": trajectory_id,
+                    "session_id": session_id,
+                    "kind": kind,
+                    "prompt_path": prompt_path,
+                    "model": HAIKU_MODEL_ID,
+                    "input": {
+                        "session_events": session_events_dicts,
+                        "target_skill_path": target_path_str,
+                        "target_skill_md_content": target_skill_md_content,
+                    },
+                }
+            )
     return out
 
 
