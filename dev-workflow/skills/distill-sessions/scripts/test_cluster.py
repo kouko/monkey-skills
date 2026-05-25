@@ -223,3 +223,33 @@ def test_cluster_same_session_does_not_promote():
     assert len(promoted) == 0
     # Both items go to pending (each preserved individually)
     assert len(pending) == 2
+
+
+# ---------------------------------------------------------------------------
+# min_n validation tests (RED — should fail before validation is added)
+# ---------------------------------------------------------------------------
+
+
+def test_cluster_min_n_zero_raises_value_error():
+    """min_n=0 is invalid and raises ValueError.
+
+    WHY: min_n=0 would silence-promote single-session items (because
+    len(seen) >= 0 evaluates true), violating the docstring's stated
+    semantics of requiring "distinct session_ids required for promotion."
+    Per baseline Rule 12 "Fail loud" — invalid input must raise, not
+    silently corrupt.
+    """
+    item_a = _make_item("Some title", "Examples", "session_a")
+    with pytest.raises(ValueError, match="min_n must be >= 1"):
+        cluster_memory_items([item_a], min_n=0)
+
+
+def test_cluster_min_n_negative_raises_value_error():
+    """min_n < 0 is invalid and raises ValueError.
+
+    WHY: Negative thresholds are semantically nonsensical and would
+    silently pass the comparison check. Fail early with clear error.
+    """
+    item_a = _make_item("Some title", "Examples", "session_a")
+    with pytest.raises(ValueError, match="min_n must be >= 1"):
+        cluster_memory_items([item_a], min_n=-1)
