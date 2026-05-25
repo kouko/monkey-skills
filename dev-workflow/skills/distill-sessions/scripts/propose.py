@@ -1,9 +1,9 @@
 """propose.py — merge subagent Memory Item outputs → markdown diff renderer.
 
-Stage 3 of distill-sessions v0.1. Reads a JSON list of subagent results
+Stage 5a of distill-sessions. Reads a JSON list of subagent results
 (one per session, each containing a list of Trace2Skill Memory Items),
 dedups near-identical Items via Title + content overlap heuristic, then
-renders a structured markdown proposal file with three sections:
+renders a structured markdown proposal file with four sections:
 
 - §"Proposed additions" — kind=success items, tagged
   ``[insert into §<section-anchor>]``.
@@ -15,6 +15,12 @@ renders a structured markdown proposal file with three sections:
   the fenced ``diff`` block. propose.py emits these so apply.py's
   contiguous-run matcher can locate the old lines and substitute the
   new ones in the target SKILL.md.
+- §"Anchor mismatch — needs review" — any item whose
+  ``section_anchor`` doesn't match a real heading in the target
+  SKILL.md (v0.2 Finding #4). apply.py would refuse such items at the
+  DiffMismatch gate anyway; routing them here surfaces the gap up-front
+  with the list of valid headings, so the operator can reassign in the
+  source merged.json instead of re-running the failed pipeline.
 - §"Marked for v0.2" — any item with ``requires_new_reference_file: true``
   (per Q4 of the v0.1 brief: SKILL.md only, new-file proposals deferred).
 
@@ -41,14 +47,12 @@ Subagent results JSON schema (one entry per session)::
                     "description": "...",
                     "content": "...",
                     "kind": "failure" | "success",
-                    "section_anchor": "Examples",          // optional
-                    "requires_new_reference_file": false   // optional
+                    "section_anchor": "Examples",          // REQUIRED as of v0.2 — must be a real heading in the target SKILL.md
+                    "requires_new_reference_file": false   // optional, default false
                 }
             ]
         }
     ]
-
-Per Plan Part 2 §Task 7.
 """
 
 from __future__ import annotations
@@ -77,31 +81,44 @@ _TITLE_SIMILARITY_THRESHOLD = 0.85
 # scenarios.
 _CONTENT_SIMILARITY_THRESHOLD = 0.50
 
-_DEFAULT_SECTION_ANCHOR = "Examples"
-
-
 # ---------------------------------------------------------------------------
 # Memory Item normalization.
 # ---------------------------------------------------------------------------
 
 
 def normalize_memory_item(raw: dict) -> dict:
-    """Fill in optional Memory Item fields with safe defaults.
+    """Normalize a Memory Item dict; enforce required-field invariants.
 
-    Required keys: ``title``, ``description``, ``content``, ``kind``.
-    Optional keys (with defaults): ``section_anchor`` (= "Examples"),
-    ``requires_new_reference_file`` (= False).
+    Required keys: ``title``, ``description``, ``content``, ``kind``,
+    ``section_anchor`` (the latter promoted to required in v0.2 — v0.1's
+    silent default of "Examples" was dead on real code-toolkit SKILL.md
+    files; missing the anchor would silently produce proposals against a
+    non-existent section).
+
+    Optional keys (with defaults): ``requires_new_reference_file`` (= False).
+
+    Raises ``ValueError`` when ``section_anchor`` is absent, ``None``, or
+    blank (whitespace-only).
 
     Returns a new dict; does not mutate ``raw``.
     """
+    section_anchor_raw = raw.get("section_anchor")
+    section_anchor = (
+        str(section_anchor_raw).strip() if section_anchor_raw is not None else ""
+    )
+    if not section_anchor:
+        raise ValueError(
+            "Memory Item missing required 'section_anchor' — v0.2 promoted "
+            "this field to mandatory (Finding #4: dogfood showed v0.1's "
+            "'Examples' default silently misfired on real SKILL.md files). "
+            f"Got raw item: {raw!r}"
+        )
     return {
         "title": str(raw.get("title", "")).strip(),
         "description": str(raw.get("description", "")).strip(),
         "content": str(raw.get("content", "")).strip(),
         "kind": str(raw.get("kind", "failure")).strip().lower(),
-        "section_anchor": str(
-            raw.get("section_anchor") or _DEFAULT_SECTION_ANCHOR
-        ).strip(),
+        "section_anchor": section_anchor,
         "requires_new_reference_file": bool(
             raw.get("requires_new_reference_file", False)
         ),
@@ -195,6 +212,60 @@ def partition_by_v02_marker(items: list[dict]) -> tuple[list[dict], list[dict]]:
         else:
             main.append(item)
     return main, v02
+
+
+# ---------------------------------------------------------------------------
+# v0.2 anchor-mismatch partition.
+# ---------------------------------------------------------------------------
+
+
+def extract_skill_md_headings(skill_md: str) -> set[str]:
+    """Return the set of heading texts (without leading ``#``) from a SKILL.md.
+
+    Captures any line starting with one or more ``#`` followed by space and
+    text; strips the marker + surrounding whitespace. Used for anchor-
+    validation: a Memory Item whose ``section_anchor`` is not in this set
+    is routed to §"Anchor mismatch — needs review" instead of being silently
+    misapplied.
+
+    Known limitation (v0.2): does NOT skip headings nested inside fenced
+    code blocks. A SKILL.md containing a code example like
+    ``` ```bash ## fake heading ``` ``` would yield "fake heading" as a
+    valid anchor — letting a Memory Item whose ``section_anchor`` happens
+    to match the in-code text route to anchor_ok rather than mismatch.
+    Real-world risk is low (anchors are picked by the orchestrator, not
+    by string-matching code-block contents), but a state-machine that
+    toggles on triple-backtick lines is the v0.3+ tightening.
+    """
+    headings: set[str] = set()
+    for line in skill_md.splitlines():
+        if not line.startswith("#"):
+            continue
+        stripped = line.lstrip("#").strip()
+        if stripped:
+            headings.add(stripped)
+    return headings
+
+
+def partition_by_anchor_match(
+    items: list[dict], skill_headings: set[str]
+) -> tuple[list[dict], list[dict]]:
+    """Split items into (anchor_ok, anchor_mismatch).
+
+    Items whose ``section_anchor`` does not exist as a heading in the target
+    SKILL.md go to the mismatch bucket. Headings are matched case-sensitively
+    to align with apply.py's ``_find_section_bounds`` matcher
+    (apply.py:240-247) — emitting a different-cased anchor would make
+    apply.py refuse the proposal anyway.
+    """
+    anchor_ok: list[dict] = []
+    anchor_mismatch: list[dict] = []
+    for item in items:
+        if item["section_anchor"] in skill_headings:
+            anchor_ok.append(item)
+        else:
+            anchor_mismatch.append(item)
+    return anchor_ok, anchor_mismatch
 
 
 # ---------------------------------------------------------------------------
@@ -367,6 +438,36 @@ def _render_v02_item(item: dict) -> list[str]:
     return lines
 
 
+def _render_anchor_mismatch_item(item: dict, valid_headings: list[str]) -> list[str]:
+    """Render one anchor-mismatched item under §Anchor mismatch — needs review.
+
+    The reviewer needs the dead anchor named verbatim AND a list of the
+    valid headings the operator can re-route to.
+    """
+    lines = [
+        f"### {item['title']}",
+    ]
+    if item["description"]:
+        lines.append(f"_{item['description']}_")
+    lines.append("")
+    lines.append(f"**Proposed anchor**: §{item['section_anchor']}  _(no matching heading in target SKILL.md)_")
+    lines.append(f"**Kind**: {item['kind']}")
+    lines.append("")
+    if valid_headings:
+        lines.append("**Valid headings in target**:")
+        for heading in valid_headings:
+            lines.append(f"- §{heading}")
+        lines.append("")
+    lines.append("**Re-route required**: assign a real heading in the source merged.json before re-running propose / apply.")
+    lines.append("")
+    lines.append(item["content"])
+    if item.get("_source_session"):
+        lines.append("")
+        lines.append(f"_source session: `{item['_source_session']}`_")
+    lines.append("")
+    return lines
+
+
 def render_proposals_markdown(
     items: list[dict],
     *,
@@ -394,8 +495,14 @@ def render_proposals_markdown(
     deduped = dedup_items(items)
     main, v02 = partition_by_v02_marker(deduped)
 
-    additions = [it for it in main if it["kind"] == "success"]
-    modifications = [it for it in main if it["kind"] == "failure"]
+    # v0.2 Finding #4: items whose section_anchor doesn't match a real
+    # heading in the target SKILL.md route to a third bucket instead of
+    # silently producing dead-anchor proposals.
+    skill_headings = extract_skill_md_headings(target_skill_md_content)
+    anchor_ok, anchor_mismatch = partition_by_anchor_match(main, skill_headings)
+
+    additions = [it for it in anchor_ok if it["kind"] == "success"]
+    modifications = [it for it in anchor_ok if it["kind"] == "failure"]
 
     parts: list[str] = []
     parts.append(f"# distill-sessions proposals — {run_date}")
@@ -403,7 +510,9 @@ def render_proposals_markdown(
     parts.append(f"**Target SKILL.md**: `{target_skill_path}`")
     parts.append(
         f"**Counts**: {len(additions)} addition(s), "
-        f"{len(modifications)} modification(s), {len(v02)} deferred to v0.2."
+        f"{len(modifications)} modification(s), "
+        f"{len(anchor_mismatch)} anchor mismatch(es), "
+        f"{len(v02)} deferred to v0.2."
     )
     parts.append("")
     parts.append(
@@ -426,6 +535,23 @@ def render_proposals_markdown(
     if modifications:
         for n, item in enumerate(modifications, start=1):
             parts.extend(_render_modification(item, n, target_skill_md_content))
+    else:
+        parts.append("_(none)_")
+        parts.append("")
+
+    parts.append("## Anchor mismatch — needs review")
+    parts.append("")
+    if anchor_mismatch:
+        parts.append(
+            "_These items' `section_anchor` did not match any heading in the "
+            "target SKILL.md. apply.py would refuse them at the DiffMismatch "
+            "gate — re-assign a real heading in the source merged.json before "
+            "re-running propose / apply._"
+        )
+        parts.append("")
+        valid_headings_sorted = sorted(skill_headings)
+        for item in anchor_mismatch:
+            parts.extend(_render_anchor_mismatch_item(item, valid_headings_sorted))
     else:
         parts.append("_(none)_")
         parts.append("")

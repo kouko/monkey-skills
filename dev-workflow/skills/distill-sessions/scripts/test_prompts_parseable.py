@@ -200,3 +200,35 @@ def test_both_prompt_files_have_required_sections() -> None:
     # shape between tests (shouldn't happen in one run).
     _assert_common_shape(FAILURE_PATH)
     _assert_common_shape(SUCCESS_PATH)
+
+
+def test_both_prompts_forbid_orchestrator_memory_reference() -> None:
+    """Regression guard for v0.2 Finding #3 (orchestrator memory leak).
+
+    The orchestrator runs with ``~/.claude/projects/.../memory/MEMORY.md`` auto-
+    loaded into context; that bleeds into dispatched subagents that share the
+    same project. v0.1 dogfood (2026-05-25) showed subagents citing memory
+    entries like ``[feedback_X](project memory)`` inside Memory Item bodies,
+    which then propagated into proposed SKILL.md text — invalid because
+    SKILL.md is consumed by future sessions / other operators who have no
+    such memory directory. The fix is a hard constraint in both prompt files
+    (body §Hard constraints + frontmatter hard_constraints). This test
+    pins both to prevent silent removal.
+    """
+    for path in (FAILURE_PATH, SUCCESS_PATH):
+        fm, body = _split_frontmatter(path.read_text(encoding="utf-8"))
+
+        # Frontmatter list must include the no-memory-citation constraint.
+        constraints = fm.get("hard_constraints", []) or []
+        joined = " ".join(str(c) for c in constraints).lower()
+        assert "project memory" in joined or "orchestrator's project memory" in joined, (
+            f"{path.name}: frontmatter hard_constraints must forbid orchestrator "
+            f"project memory references"
+        )
+
+        # Body §Hard constraints must restate the rule.
+        body_lower = body.lower()
+        assert "never reference the orchestrator's project memory" in body_lower, (
+            f"{path.name}: body §Hard constraints must include the literal "
+            f"'NEVER reference the orchestrator's project memory' bullet"
+        )

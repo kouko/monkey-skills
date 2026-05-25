@@ -210,8 +210,8 @@ example at `scripts/fixture_subagent_results.json`):
         "description": "Failure: agent attempted Edit before Read; tool errored.",
         "content": "When editing an existing file, always invoke Read first so the harness can track file state.",
         "kind": "failure",
-        "section_anchor": "Examples",
-        "requires_new_reference_file": false
+        "section_anchor": "Examples",          // REQUIRED (v0.2) — must match a real heading in the target SKILL.md
+        "requires_new_reference_file": false   // optional, default false
       }
     ]
   }
@@ -223,8 +223,15 @@ Field notes:
 - `kind` ∈ `{"failure", "success"}` — drives §"Proposed modifications"
   vs §"Proposed additions" routing in `propose.py`.
 - `section_anchor` — target heading in the SKILL.md being iterated
-  (e.g. `"Examples"`, `"When to Use"`). Optional; defaults to
-  `"Examples"` if omitted.
+  (e.g. `"Examples"`, `"When to Use"`). **REQUIRED** as of v0.2 — the
+  field must be present and non-blank, or `normalize_memory_item`
+  raises `ValueError`. v0.1's silent default of `"Examples"` proved
+  dead on real code-toolkit SKILL.md files; the orchestrator (or the
+  subagent populating the item) MUST pick a real heading. If
+  `propose.py` finds the anchor doesn't match any heading in the
+  target SKILL.md at render time, the item routes to
+  §"Anchor mismatch — needs review" rather than producing a
+  dead-anchor addition / modification.
 - `requires_new_reference_file` — `true` routes the item into
   §"Marked for v0.2" per Q4 (v0.1 ships SKILL.md write-back only).
   Optional; defaults to `false`.
@@ -245,6 +252,11 @@ single reviewable markdown with:
   blocks with fenced verbatim text,
 - `## Proposed modifications` — `### Modification <n> [§<Section>]`
   blocks with `- old` / `+ new` diff bodies,
+- `## Anchor mismatch — needs review` — items whose `section_anchor`
+  doesn't match any heading in the target SKILL.md (v0.2). Each entry
+  names the dead anchor + lists the valid headings so the operator can
+  re-route. `apply.py` would refuse these at the DiffMismatch gate
+  anyway — surfacing them up-front prevents silent misapplication.
 - `## Marked for v0.2` — proposals requiring new `references/*.md`
   files are bucketed here per brief Q4 (SKILL.md-only at v0.1).
 
@@ -345,6 +357,32 @@ that key — `main.py` merges over the defaults.
 Deferred per brief Decision §"Out of Scope (v0.1)" and §"Future
 roadmap":
 
+- **Heading-extraction state machine (v0.3+)** — `propose.py`'s
+  `extract_skill_md_headings` does NOT currently skip headings nested
+  inside fenced code blocks. A SKILL.md with a code example containing
+  a line like `## heading-in-code` would yield that text as a valid
+  anchor, letting a Memory Item whose `section_anchor` matches the
+  in-code text bypass the §"Anchor mismatch — needs review" routing.
+  Risk is low (anchors are picked by the orchestrator, not by
+  string-matching code-block contents), but a triple-backtick toggle
+  state machine eliminates the edge case.
+- **Dual-dispatch on high-friction-but-succeeded sessions (v0.2)** —
+  `_kind_for_session` ([`scripts/main.py:137-155`](scripts/main.py))
+  short-circuits on `/insights` facet.outcome success-strings before
+  reading `friction_level`, so sessions where the user pulled through
+  heavy NEEDS_REVISION / re-dispatch / interrupt-after-brainstorm
+  signal route to `prompt-success-analysis.md` only — asking "what
+  worked" but never "what was the friction we pulled through." The
+  high-friction-but-succeeded trajectory is arguably the richest
+  learning signal (the friction is the gap the skill should close, the
+  success is the workaround it should encode). v0.2 should emit TWO
+  `subagent_payload[]` entries for that session class — one routed to
+  failure-analysis, one to success-analysis. The uuid5 namespace
+  already includes `kind` so the trajectory IDs stay distinct, but
+  `--max-trajectories-per-skill` arithmetic changes (one high-friction
+  success session now consumes 2 of the budget). 2026-05-24 dogfood
+  evidence: 12/15 subagent_payload entries tagged success because of
+  this short-circuit.
 - **v1.0 broad-scope `skill-log-mining` sibling** — this skill
   (`distill-sessions`) is the narrow v0.1 ship of a wider vision
   documented in `docs/code-toolkit/specs/2026-05-22-skill-log-mining-v0.1-brief.md`.
