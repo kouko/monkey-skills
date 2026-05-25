@@ -1,7 +1,7 @@
 # distill-sessions proposals — 2026-05-22
 
 **Target SKILL.md**: `/fake/skills/example/SKILL.md`
-**Counts**: 1 addition(s), 1 modification(s), 0 anchor mismatch(es), 1 deferred to v0.2.
+**Counts**: 1 addition(s), 0 modification(s), 0 anchor mismatch(es), 1 pending cross-session evidence, 1 deferred to v0.2.
 
 > No silent writes — review the proposals below, then run `python -m apply --approved ...` to commit the diff.
 
@@ -16,30 +16,27 @@ _Success: dispatched 3 implementers in parallel, all returned DONE._
 
 When tasks are file-disjoint and Independent: true, dispatch all implementers in a single assistant message with multiple Agent tool calls.
 
-_source session: `session-bbb-222`_
+_(supported by 2 session(s): session-aaa-111, session-bbb-222)_
 ```
 
 ## Proposed modifications
 
-### Modification 1 [§Examples]
-
-**Use Read before Edit on existing files**
-_Failure: agent attempted Edit before Read; tool errored._
-
-```diff
-- - Example 1: do the thing.
-- - Example 2: do another thing.
-+ - Example 1: do the thing.
-+ - Example 2: do another thing.
-+ 
-+ When editing an existing file, always invoke Read first so the harness can track file state. Edit fails on un-Read files.
-```
-
-_source session: `session-aaa-111`_
+_(none)_
 
 ## Anchor mismatch — needs review
 
 _(none)_
+
+## Cross-session evidence pending
+
+_These items were observed in only 1 session and did not reach the minimum cross-session evidence threshold (min_n=2). They are NOT auto-applied — re-run after more sessions accumulate to promote them._
+
+### Use Read before Edit on existing files
+_Failure: agent attempted Edit before Read; tool errored._
+
+When editing an existing file, always invoke Read first so the harness can track file state. Edit fails on un-Read files.
+
+_Observed in 1 session: `session-aaa-111` — re-run after more session evidence accumulates._
 
 ## Marked for v0.2
 
