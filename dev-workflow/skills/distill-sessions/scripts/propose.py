@@ -2,14 +2,17 @@
 
 Stage 5a of distill-sessions. Reads a JSON list of subagent results
 (one per session, each containing a list of Trace2Skill Memory Items),
-dedups near-identical Items via Title + content overlap heuristic, then
-renders a structured markdown proposal file with four sections:
+clusters items by normalized ``(title, section_anchor)`` via
+``cluster_memory_items`` (v0.3 part-2: N>=2 distinct sessions →
+promoted; N=1 → §"Cross-session evidence pending" bucket), then renders
+a structured markdown proposal file with five sections:
 
-- §"Proposed additions" — kind=success items, tagged
-  ``[insert into §<section-anchor>]``.
-- §"Proposed modifications" — kind=failure items, rendered as fenced
-  ```diff blocks with plain ``- `` / ``+ `` line pairs. Format is
-  defined by apply.py's parser (apply.py:32-69 is the source of
+- §"Proposed additions" — promoted kind=success items, tagged
+  ``[insert into §<section-anchor>]``; carries the cluster's
+  ``supporting_sessions`` list as evidence count.
+- §"Proposed modifications" — promoted kind=failure items, rendered as
+  fenced ```diff blocks with plain ``- `` / ``+ `` line pairs. Format
+  is defined by apply.py's parser (apply.py:32-69 is the source of
   truth): no unified-diff headers (``--- a/`` / ``+++ b/`` / hunk
   ``@@``), only ``- `` (old line) / ``+ `` (new line) lines inside
   the fenced ``diff`` block. propose.py emits these so apply.py's
@@ -21,8 +24,17 @@ renders a structured markdown proposal file with four sections:
   DiffMismatch gate anyway; routing them here surfaces the gap up-front
   with the list of valid headings, so the operator can reassign in the
   source merged.json instead of re-running the failed pipeline.
+- §"Cross-session evidence pending" — items observed in only one
+  session (N=1) — not yet pattern-confirmed (v0.3 part-2 cluster gate).
+  Auto-re-promote when a second session matches the normalized
+  ``(title, section_anchor)`` key.
 - §"Marked for v0.2" — any item with ``requires_new_reference_file: true``
   (per Q4 of the v0.1 brief: SKILL.md only, new-file proposals deferred).
+
+The legacy ratio-based ``dedup_items`` helper is preserved as a public
+function for callers that want the pre-v0.3 behavior; it is no longer
+invoked from ``render_proposals_markdown`` because ``cluster_memory_items``
+subsumes its role.
 
 **No write to target SKILL.md** — this module is read-only against the
 target. Only writes the proposals markdown file. The apply.py module
