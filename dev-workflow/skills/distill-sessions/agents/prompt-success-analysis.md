@@ -15,6 +15,7 @@ hard_constraints:
   - "Every step in the Lean Solution Path must trace to a concrete observable action in session_events"
   - "Each Memory Item must be generalizable, not a task-specific detail"
   - "Produce no more than 3 Success Memory Items"
+  - "NEVER reference the orchestrator's project memory in Memory Item bodies — no [feedback_X](project memory), no [[memory-name]], no feedback_*.md / project_*.md citations"
 ---
 
 # Success-analysis subagent prompt (Trace2Skill-derived)
@@ -150,6 +151,16 @@ Field rules:
   product. Drop the rest.
 - **Generalizable, not task-specific.** A Memory Item that only helps
   on this one user's exact request is noise — discard it.
+- **NEVER reference the orchestrator's project memory** in Memory Item
+  bodies. Patterns like `[feedback_X](project memory)`,
+  `[[memory-name]]`, or bare `feedback_*.md` / `project_*.md` filenames
+  must not appear in `## Description` / `## Content`. Your Memory Items
+  land in a `SKILL.md` consumed by future sessions and other operators
+  — they have no access to the orchestrator's
+  `~/.claude/projects/.../memory/` directory. Reason solely from
+  `session_events` + `target_skill_md_content`; if you find yourself
+  about to cite a memory entry as evidence, drop the citation and
+  re-derive the claim from the session events.
 
 ## How the orchestrator dispatches this prompt
 

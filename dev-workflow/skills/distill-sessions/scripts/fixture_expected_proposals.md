@@ -1,7 +1,7 @@
 # distill-sessions proposals — 2026-05-22
 
 **Target SKILL.md**: `/fake/skills/example/SKILL.md`
-**Counts**: 1 addition(s), 1 modification(s), 1 deferred to v0.2.
+**Counts**: 1 addition(s), 1 modification(s), 0 anchor mismatch(es), 1 deferred to v0.2.
 
 > No silent writes — review the proposals below, then run `python -m apply --approved ...` to commit the diff.
 
@@ -36,6 +36,10 @@ _Failure: agent attempted Edit before Read; tool errored._
 ```
 
 _source session: `session-aaa-111`_
+
+## Anchor mismatch — needs review
+
+_(none)_
 
 ## Marked for v0.2
 

@@ -21,6 +21,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 from propose import (
     dedup_items,
     extract_memory_items,
@@ -134,6 +136,79 @@ def test_requires_new_reference_file_routes_to_v02_bucket(tmp_path: Path) -> Non
     assert "Edit case in Examples" not in v02_section
 
 
+def test_anchor_mismatch_routes_to_review_bucket() -> None:
+    """v0.2 Finding #4 part 2: items whose section_anchor doesn't match a
+    real heading in the target SKILL.md go to §"Anchor mismatch — needs
+    review", NOT into Proposed additions / modifications.
+
+    Without this routing, propose.py silently emits additions tagged
+    ``[insert into §<dead-section>]`` that apply.py would refuse at the
+    DiffMismatch gate. Surfacing the gap as a distinct review bucket
+    forces the operator (or v1.0 broad-scope mining) to assign a real
+    anchor before approval.
+    """
+    skill_md = (
+        "# Test Skill\n\n"
+        "## When to use\n\nFoo.\n\n"
+        "## Self-review\n\nBar.\n"
+    )
+    items = [
+        _mk_item(
+            "Hits real heading",
+            kind="success",
+            section_anchor="When to use",
+        ),
+        _mk_item(
+            "Misses heading",
+            kind="success",
+            section_anchor="Definitely Not A Heading",
+        ),
+        _mk_item(
+            "Mod against real heading",
+            kind="failure",
+            section_anchor="Self-review",
+        ),
+        _mk_item(
+            "Mod against missing heading",
+            kind="failure",
+            section_anchor="Nope",
+        ),
+    ]
+    output = render_proposals_markdown(
+        items,
+        target_skill_path="/fake/path/SKILL.md",
+        target_skill_md_content=skill_md,
+    )
+
+    # New bucket must exist and contain the mismatched items.
+    assert "## Anchor mismatch — needs review" in output, (
+        "render must include §'Anchor mismatch — needs review' for items "
+        "whose section_anchor doesn't match a real heading"
+    )
+    # Bound mismatch_section between its own heading and the next ## heading
+    # (§Marked for v0.2 in this fixture). Slicing to end-of-string would
+    # accidentally include later buckets and produce false-negative on
+    # "Hits real heading" assertion if a later bucket happened to mention it.
+    mismatch_idx = output.index("## Anchor mismatch — needs review")
+    next_heading_idx = output.index("## Marked for v0.2", mismatch_idx)
+    mismatch_section = output[mismatch_idx:next_heading_idx]
+    assert "Misses heading" in mismatch_section
+    assert "Mod against missing heading" in mismatch_section
+    assert "Definitely Not A Heading" in mismatch_section
+    assert "Nope" in mismatch_section
+
+    # Matched items must NOT be in the mismatch bucket.
+    assert "Hits real heading" not in mismatch_section
+    assert "Mod against real heading" not in mismatch_section
+
+    # Matched items must still appear in their normal bucket.
+    additions_idx = output.index("## Proposed additions")
+    modifications_idx = output.index("## Proposed modifications")
+    additions_section = output[additions_idx:modifications_idx]
+    assert "Hits real heading" in additions_section
+    assert "Misses heading" not in additions_section
+
+
 def test_partition_separates_v02_items() -> None:
     """partition_by_v02_marker splits items into (main, v02)."""
     items = [
@@ -194,10 +269,13 @@ def test_addition_uses_insert_tag() -> None:
             section_anchor="Examples",
         ),
     ]
+    # Target SKILL.md must carry the §Examples heading so the new
+    # anchor-match partition (v0.2 Finding #4) routes the addition to
+    # §Proposed additions rather than §Anchor mismatch — needs review.
     output = render_proposals_markdown(
         items,
         target_skill_path="/fake/path/SKILL.md",
-        target_skill_md_content="# Test\n",
+        target_skill_md_content="# Test\n\n## Examples\n\nstuff.\n",
     )
     assert "## Proposed additions" in output
     assert "[insert into §Examples]" in output
@@ -251,9 +329,37 @@ def test_snapshot_matches_expected_output(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_normalize_memory_item_defaults() -> None:
-    """Missing optional fields get safe defaults."""
+def test_normalize_memory_item_rejects_missing_section_anchor() -> None:
+    """v0.2 Finding #4: section_anchor must be explicit, no silent default.
+
+    v0.1 defaulted missing section_anchor to "Examples", which is dead on real
+    code-toolkit SKILL.md files (none ship that heading). v0.2 makes the field
+    REQUIRED at normalization time so the gap surfaces immediately instead of
+    silently producing proposals against a non-existent section.
+    """
     raw = {"title": "T", "description": "D", "content": "C", "kind": "failure"}
+    with pytest.raises(ValueError, match="section_anchor"):
+        normalize_memory_item(raw)
+
+    raw_empty = {**raw, "section_anchor": "   "}
+    with pytest.raises(ValueError, match="section_anchor"):
+        normalize_memory_item(raw_empty)
+
+
+def test_normalize_memory_item_defaults_for_optional_fields() -> None:
+    """Optional fields (requires_new_reference_file) still get safe defaults.
+
+    Only section_anchor was promoted to REQUIRED in v0.2; the v0.2-bucket
+    routing flag stays optional (Q4: most items don't need new reference
+    files).
+    """
+    raw = {
+        "title": "T",
+        "description": "D",
+        "content": "C",
+        "kind": "failure",
+        "section_anchor": "Examples",
+    }
     norm = normalize_memory_item(raw)
     assert norm["section_anchor"] == "Examples"
     assert norm["requires_new_reference_file"] is False
