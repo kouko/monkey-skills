@@ -4,17 +4,17 @@
     "target_skill_path": "/fake/skills/example/SKILL.md",
     "memory_items": [
       {
-        "title": "Use Read before Edit on existing files",
-        "description": "Failure: agent attempted Edit before Read; tool errored.",
-        "content": "When editing an existing file, always invoke Read first so the harness can track file state. Edit fails on un-Read files.",
-        "kind": "failure",
-        "section_anchor": "Examples",
+        "title": "Successful pattern: parallel subagent dispatch",
+        "description": "Success: dispatched 3 implementers in parallel, all returned DONE.",
+        "content": "When tasks are file-disjoint and Independent: true, dispatch all implementers in a single assistant message with multiple Agent tool calls.",
+        "kind": "success",
+        "section_anchor": "When to use",
         "requires_new_reference_file": false
       },
       {
-        "title": "Use Read before Edit on existing files.",
-        "description": "Same failure observed again — confirm Read-before-Edit rule.",
-        "content": "When editing an existing file, always invoke Read first so the harness tracks file state. Edit fails on un-Read files.",
+        "title": "Use Read before Edit on existing files",
+        "description": "Failure: agent attempted Edit before Read; tool errored.",
+        "content": "When editing an existing file, always invoke Read first so the harness can track file state. Edit fails on un-Read files.",
         "kind": "failure",
         "section_anchor": "Examples",
         "requires_new_reference_file": false
@@ -27,7 +27,7 @@
     "memory_items": [
       {
         "title": "Successful pattern: parallel subagent dispatch",
-        "description": "Success: dispatched 3 implementers in parallel, all returned DONE.",
+        "description": "Success: parallel dispatch confirmed in a second session.",
         "content": "When tasks are file-disjoint and Independent: true, dispatch all implementers in a single assistant message with multiple Agent tool calls.",
         "kind": "success",
         "section_anchor": "When to use",

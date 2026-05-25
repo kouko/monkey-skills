@@ -64,6 +64,8 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+from cluster import cluster_memory_items
+
 # ---------------------------------------------------------------------------
 # Constants.
 # ---------------------------------------------------------------------------
@@ -348,7 +350,14 @@ def _render_addition(item: dict, index: int) -> list[str]:
         body_lines.append(f"_{item['description']}_")
         body_lines.append("")
     body_lines.append(item["content"])
-    if item.get("_source_session"):
+    supporting = item.get("supporting_sessions")
+    if supporting:
+        sessions_str = ", ".join(supporting)
+        body_lines.append("")
+        body_lines.append(
+            f"_(supported by {len(supporting)} session(s): {sessions_str})_"
+        )
+    elif item.get("_source_session"):
         body_lines.append("")
         body_lines.append(f"_source session: `{item['_source_session']}`_")
 
@@ -475,6 +484,30 @@ def _render_anchor_mismatch_item(item: dict, valid_headings: list[str]) -> list[
     return lines
 
 
+def _render_pending_item(item: dict) -> list[str]:
+    """Render one pending item under §Cross-session evidence pending.
+
+    Each entry shows the item title + content annotated with its session_id
+    so the operator sees "would have clustered; only 1 session — re-run after
+    more session evidence accumulates."
+    """
+    session_id = item.get("_source_session") or item.get("session_id") or "unknown"
+    lines = [
+        f"### {item['title']}",
+    ]
+    if item.get("description"):
+        lines.append(f"_{item['description']}_")
+    lines.append("")
+    lines.append(item["content"])
+    lines.append("")
+    lines.append(
+        f"_Observed in 1 session: `{session_id}` — re-run after more session "
+        "evidence accumulates._"
+    )
+    lines.append("")
+    return lines
+
+
 def render_proposals_markdown(
     items: list[dict],
     *,
@@ -499,14 +532,26 @@ def render_proposals_markdown(
     if run_date is None:
         run_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
-    deduped = dedup_items(items)
-    main, v02 = partition_by_v02_marker(deduped)
+    main, v02 = partition_by_v02_marker(items)
+
+    # v0.3 cluster step: partition main items into promoted (>= 2 distinct
+    # sessions) and pending (1 session only).  cluster_memory_items uses the
+    # ``session_id`` field; items arriving via extract_memory_items carry
+    # ``_source_session`` — expose it as ``session_id`` for the clusterer
+    # without mutating the original dicts.  Cluster subsumes the old
+    # ``dedup_items`` role: the promoted representative is already one item
+    # per (title, anchor) group; pending items are inherently single-session.
+    clusterable = [
+        {**it, "session_id": it.get("session_id") or it.get("_source_session", "")}
+        for it in main
+    ]
+    promoted, pending = cluster_memory_items(clusterable, min_n=2)
 
     # v0.2 Finding #4: items whose section_anchor doesn't match a real
     # heading in the target SKILL.md route to a third bucket instead of
     # silently producing dead-anchor proposals.
     skill_headings = extract_skill_md_headings(target_skill_md_content)
-    anchor_ok, anchor_mismatch = partition_by_anchor_match(main, skill_headings)
+    anchor_ok, anchor_mismatch = partition_by_anchor_match(promoted, skill_headings)
 
     additions = [it for it in anchor_ok if it["kind"] == "success"]
     modifications = [it for it in anchor_ok if it["kind"] == "failure"]
@@ -519,6 +564,7 @@ def render_proposals_markdown(
         f"**Counts**: {len(additions)} addition(s), "
         f"{len(modifications)} modification(s), "
         f"{len(anchor_mismatch)} anchor mismatch(es), "
+        f"{len(pending)} pending cross-session evidence, "
         f"{len(v02)} deferred to v0.2."
     )
     parts.append("")
@@ -559,6 +605,22 @@ def render_proposals_markdown(
         valid_headings_sorted = sorted(skill_headings)
         for item in anchor_mismatch:
             parts.extend(_render_anchor_mismatch_item(item, valid_headings_sorted))
+    else:
+        parts.append("_(none)_")
+        parts.append("")
+
+    parts.append("## Cross-session evidence pending")
+    parts.append("")
+    if pending:
+        parts.append(
+            "_These items were observed in only 1 session and did not reach "
+            "the minimum cross-session evidence threshold (min_n=2). They are "
+            "NOT auto-applied — re-run after more sessions accumulate to promote "
+            "them._"
+        )
+        parts.append("")
+        for item in pending:
+            parts.extend(_render_pending_item(item))
     else:
         parts.append("_(none)_")
         parts.append("")

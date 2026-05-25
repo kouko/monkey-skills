@@ -50,6 +50,7 @@ def _mk_item(
     kind: str = "failure",
     section_anchor: str = "Examples",
     requires_new_reference_file: bool = False,
+    session_id: str = "test-session-1",
 ) -> dict:
     return {
         "title": title,
@@ -58,7 +59,44 @@ def _mk_item(
         "kind": kind,
         "section_anchor": section_anchor,
         "requires_new_reference_file": requires_new_reference_file,
+        "session_id": session_id,
+        "_source_session": session_id,
     }
+
+
+def _mk_promoted_pair(
+    title: str,
+    *,
+    description: str = "desc",
+    content: str = "content",
+    kind: str = "failure",
+    section_anchor: str = "Examples",
+) -> list[dict]:
+    """Return two items with the same (title, anchor) from different sessions.
+
+    cluster_memory_items(min_n=2) promotes items observed in >= 2 distinct
+    sessions.  Tests that need an item in §Proposed additions / §Proposed
+    modifications (rather than §Cross-session evidence pending) must supply
+    cross-session evidence; this helper produces the minimal 2-item pair.
+    """
+    return [
+        _mk_item(
+            title,
+            description=description,
+            content=content,
+            kind=kind,
+            section_anchor=section_anchor,
+            session_id="test-session-1",
+        ),
+        _mk_item(
+            title,
+            description=description,
+            content=content,
+            kind=kind,
+            section_anchor=section_anchor,
+            session_id="test-session-2",
+        ),
+    ]
 
 
 def _normalize_markdown(text: str) -> str:
@@ -107,18 +145,25 @@ def test_dedup_keeps_distinct_items_different_titles() -> None:
 
 def test_requires_new_reference_file_routes_to_v02_bucket(tmp_path: Path) -> None:
     """Items flagged `requires_new_reference_file: true` go to §Marked for v0.2,
-    NOT into Proposed additions / modifications."""
+    NOT into Proposed additions / modifications.
+
+    v0.2-bucket items are partitioned BEFORE the cluster step, so they bypass
+    clustering entirely — requires_new_reference_file routing is unaffected by
+    the min_n threshold.
+
+    The non-v0.2 item uses _mk_promoted_pair so it appears in §Proposed
+    modifications rather than §Cross-session evidence pending.
+    """
     items = [
         _mk_item(
             "Add new section on git-worktree edge cases",
             kind="success",
             requires_new_reference_file=True,
         ),
-        _mk_item(
+        *_mk_promoted_pair(
             "Edit case in Examples",
             kind="failure",
             section_anchor="Examples",
-            requires_new_reference_file=False,
         ),
     ]
     output = render_proposals_markdown(
@@ -146,6 +191,10 @@ def test_anchor_mismatch_routes_to_review_bucket() -> None:
     DiffMismatch gate. Surfacing the gap as a distinct review bucket
     forces the operator (or v1.0 broad-scope mining) to assign a real
     anchor before approval.
+
+    Each item uses _mk_promoted_pair (2 distinct sessions) so that cluster
+    promotes them — otherwise single-session items route to §Cross-session
+    evidence pending before ever reaching anchor validation.
     """
     skill_md = (
         "# Test Skill\n\n"
@@ -153,22 +202,22 @@ def test_anchor_mismatch_routes_to_review_bucket() -> None:
         "## Self-review\n\nBar.\n"
     )
     items = [
-        _mk_item(
+        *_mk_promoted_pair(
             "Hits real heading",
             kind="success",
             section_anchor="When to use",
         ),
-        _mk_item(
+        *_mk_promoted_pair(
             "Misses heading",
             kind="success",
             section_anchor="Definitely Not A Heading",
         ),
-        _mk_item(
+        *_mk_promoted_pair(
             "Mod against real heading",
             kind="failure",
             section_anchor="Self-review",
         ),
-        _mk_item(
+        *_mk_promoted_pair(
             "Mod against missing heading",
             kind="failure",
             section_anchor="Nope",
@@ -186,11 +235,10 @@ def test_anchor_mismatch_routes_to_review_bucket() -> None:
         "whose section_anchor doesn't match a real heading"
     )
     # Bound mismatch_section between its own heading and the next ## heading
-    # (§Marked for v0.2 in this fixture). Slicing to end-of-string would
-    # accidentally include later buckets and produce false-negative on
-    # "Hits real heading" assertion if a later bucket happened to mention it.
+    # (§Cross-session evidence pending, then §Marked for v0.2). Use the
+    # immediate successor §Cross-session evidence pending so the slice is tight.
     mismatch_idx = output.index("## Anchor mismatch — needs review")
-    next_heading_idx = output.index("## Marked for v0.2", mismatch_idx)
+    next_heading_idx = output.index("## Cross-session evidence pending", mismatch_idx)
     mismatch_section = output[mismatch_idx:next_heading_idx]
     assert "Misses heading" in mismatch_section
     assert "Mod against missing heading" in mismatch_section
@@ -229,16 +277,19 @@ def test_partition_separates_v02_items() -> None:
 
 def test_unified_diff_block_per_modification() -> None:
     """Each modification (kind=failure) produces a fenced ```diff block with
-    + / - lines."""
-    items = [
-        _mk_item(
-            "Refine Examples — avoid bash for git",
-            description="Add anti-pattern note",
-            content="Use the Git tool instead of Bash for git operations.",
-            kind="failure",
-            section_anchor="Examples",
-        ),
-    ]
+    + / - lines.
+
+    Uses _mk_promoted_pair so the item is promoted by cluster (2 distinct
+    sessions) and routes to §Proposed modifications rather than §Cross-session
+    evidence pending.
+    """
+    items = _mk_promoted_pair(
+        "Refine Examples — avoid bash for git",
+        description="Add anti-pattern note",
+        content="Use the Git tool instead of Bash for git operations.",
+        kind="failure",
+        section_anchor="Examples",
+    )
     target_skill_content = (
         "# Test Skill\n\n## Examples\n\nSome example text here.\n\nMore content.\n"
     )
@@ -261,14 +312,17 @@ def test_unified_diff_block_per_modification() -> None:
 
 def test_addition_uses_insert_tag() -> None:
     """kind=success items render under §Proposed additions with the
-    `[insert into §<section>]` tag."""
-    items = [
-        _mk_item(
-            "Show successful pattern X",
-            kind="success",
-            section_anchor="Examples",
-        ),
-    ]
+    `[insert into §<section>]` tag.
+
+    Uses _mk_promoted_pair so the item is promoted by cluster (2 distinct
+    sessions) and routes to §Proposed additions rather than §Cross-session
+    evidence pending.
+    """
+    items = _mk_promoted_pair(
+        "Show successful pattern X",
+        kind="success",
+        section_anchor="Examples",
+    )
     # Target SKILL.md must carry the §Examples heading so the new
     # anchor-match partition (v0.2 Finding #4) routes the addition to
     # §Proposed additions rather than §Anchor mismatch — needs review.
@@ -420,6 +474,10 @@ def test_propose_to_apply_roundtrip(tmp_path: Path) -> None:
 
     # 2. Subagent results JSON: 1 success (→ addition under §When to Use)
     #    and 1 failure (→ modification of §When to Use existing lines).
+    #    Each item appears in 2 distinct sessions so cluster promotes them
+    #    and they route to §Proposed additions / §Proposed modifications
+    #    (single-session items route to §Cross-session evidence pending and
+    #    apply.py would never see them).
     subagent_results = [
         {
             "session_id": "rt-session-1",
@@ -442,7 +500,29 @@ def test_propose_to_apply_roundtrip(tmp_path: Path) -> None:
                     "requires_new_reference_file": False,
                 },
             ],
-        }
+        },
+        {
+            "session_id": "rt-session-2",
+            "target_skill_path": str(target_skill),
+            "memory_items": [
+                {
+                    "title": "Show parallel-dispatch pattern",
+                    "description": "Success: parallel dispatch confirmed again.",
+                    "content": "Dispatch with multiple Agent calls in one message.",
+                    "kind": "success",
+                    "section_anchor": "When to Use",
+                    "requires_new_reference_file": False,
+                },
+                {
+                    "title": "Refine existing guidance",
+                    "description": "Failure: same ambiguity observed.",
+                    "content": "New guidance — must read before edit.",
+                    "kind": "failure",
+                    "section_anchor": "When to Use",
+                    "requires_new_reference_file": False,
+                },
+            ],
+        },
     ]
     input_path = tmp_path / "subagent_results.json"
     input_path.write_text(json.dumps(subagent_results), encoding="utf-8")
