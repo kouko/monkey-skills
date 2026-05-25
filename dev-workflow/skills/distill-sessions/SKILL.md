@@ -278,6 +278,26 @@ Field notes:
   §"Marked for v0.2" per Q4 (v0.1 ships SKILL.md write-back only).
   Optional; defaults to `false`.
 
+### Step 3.5 — Stage 4 cluster: cross-session promotion (Python)
+
+`propose.py` calls `cluster_memory_items(items, min_n=2)` (from
+`scripts/cluster.py`) **before** the partition-and-render step. This
+clusters Memory Items by normalized title + section anchor, splits them
+into:
+
+- **`promoted[]`** — items with N≥2 supporting sessions; these flow
+  through to §"Proposed additions" / §"Proposed modifications" as usual
+  (per decision Q-v0.3-1 Choice A from the brief),
+- **`pending[]`** — items from a single session; these route to the new
+  §"Cross-session evidence pending" bucket where they preserve their
+  per-session anchor and wait for more evidence.
+
+This is the minimal Stage 4 cluster promised in the v0.1 brief (§"Stage 4
+full SDD consolidation"). Single-session items are not silent — operators
+see them grouped, can manually re-route high-confidence ones if desired,
+and they re-promote automatically on the next run once N≥2 sessions
+support the same item (by title + anchor match).
+
 ### Step 4 — Stage 5a proposal render (Python)
 
 ```bash
@@ -299,6 +319,9 @@ single reviewable markdown with:
   names the dead anchor + lists the valid headings so the operator can
   re-route. `apply.py` would refuse these at the DiffMismatch gate
   anyway — surfacing them up-front prevents silent misapplication.
+- `## Cross-session evidence pending` — Memory Items from a single
+  session (N=1 cluster). Not yet pattern-confirmed; preserved here
+  pending more evidence. Re-run after more session data accumulates.
 - `## Marked for v0.2` — proposals requiring new `references/*.md`
   files are bucketed here per brief Q4 (SKILL.md-only at v0.1).
 
@@ -371,6 +394,10 @@ that key — `main.py` merges over the defaults.
   route to the skill with the highest score; alphabetic is the tie-break.
   This ensures Memory Items attribute to the friction-owning skill, not
   lexically-first.
+- **§Cross-session evidence pending bucket** — when reviewing proposals,
+  triage single-session items (N=1) separately. They are preserved
+  intentionally, not bugs; they become promotable to full proposals once
+  a subsequent run shows a second session with the same evidence.
 - **`cleanupPeriodDays` default 30** — Claude Code's `/insights`
   facets under `~/.claude/usage-data/facets/` auto-delete after 30
   days by default. Mining picks up the live state. If you want
@@ -441,10 +468,10 @@ roadmap":
   (claude-coach-style). v0.1 explicitly excluded both to ship the
   narrowest end state first; v1.0 will re-brainstorm the unified
   pipeline that covers all three surfaces.
-- **Stage 4 full SDD consolidation** — if v0.1 dogfood shows
-  orchestrator merge conflicts across the ≤5 per-skill subagent
-  outputs, promote the merge step to a real `spec-reviewer` +
-  `code-quality-reviewer` cycle.
+- **Stage 4 full SDD consolidation** — minimal Stage 4 (title+anchor
+  cluster + N≥2 promotion) shipped at v0.3 part-2; full `spec-reviewer` +
+  `code-quality-reviewer` triad version deferred to v0.5+ if minimal
+  proves insufficient.
 - **YAML config swap** — JSON at v0.1 for stdlib-lean (Q1). If users
   demand inline comments or anchors, swap to YAML with PyYAML in v0.2.
 - **Persistent cross-run fingerprint ledger** — SQLite or JSON
