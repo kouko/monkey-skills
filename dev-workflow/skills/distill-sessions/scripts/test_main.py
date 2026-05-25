@@ -23,6 +23,9 @@ from pathlib import Path
 import pytest
 
 import main
+from aggregate import AggregateRecord
+from event import Event
+from friction_signals import Signal
 
 
 HERE = Path(__file__).parent
@@ -710,4 +713,157 @@ def test_high_friction_success_session_emits_dual_dispatch_entries(
 
     assert failure_entry["trajectory_id"] != success_entry["trajectory_id"], (
         "failure and success entries must have distinct trajectory_ids"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Test 8 — cross-skill routing: session attributed to highest-friction skill.
+#
+# Q-v0.3-2 (locked in brief): when a session appears in 2+ skills' rec.sessions,
+# _build_subagent_entries must emit an entry for that session ONLY for the skill
+# with the highest severity_score_for_session. The lower-friction skill must
+# skip that session.
+#
+# Mechanism: new kw-only arg ``session_to_skill: dict[str, str] | None`` on
+# ``_build_subagent_entries``; gate inside the session loop skips sessions
+# attributed to a different skill.
+# ---------------------------------------------------------------------------
+
+
+def _make_signal(session_id: str, severity: str, kind: str = "interrupt_after_brainstorm") -> Signal:
+    """Minimal Signal for testing — evidence list can be empty for scoring tests."""
+    ev = Event(
+        agent="claude-code",
+        session=session_id,
+        ts="2026-05-25T10:00:00.000Z",
+        role="user",
+        text="[Request interrupted by user]",
+        user_interrupt=True,
+    )
+    return Signal(kind=kind, session=session_id, ts=ev.ts, severity=severity, evidence=[ev])
+
+
+def _make_aggregate_record(skill_name: str, sessions: list[str], signals: list[Signal]) -> AggregateRecord:
+    """Minimal AggregateRecord for routing tests."""
+    return AggregateRecord(
+        skill_name=skill_name,
+        sessions=sessions,
+        event_count=len(sessions),
+        signals=signals,
+        project_paths=set(sessions),
+    )
+
+
+def _make_events_by_session(session_id: str, skill_name: str) -> dict[str, list[Event]]:
+    """One event per session, enough to make _build_subagent_entries emit entries."""
+    ev = Event(
+        agent="claude-code",
+        session=session_id,
+        ts="2026-05-25T10:00:00.000Z",
+        role="assistant",
+        text=f"Skill call: {skill_name}",
+        skill_invocation=skill_name,
+    )
+    return {session_id: [ev]}
+
+
+def test_cross_skill_routing_attributes_session_to_highest_friction_skill() -> None:
+    """Session with 2 high signals on brainstorming, 0 on writing-plans →
+    only brainstorming subagent_payload should contain an entry for that session.
+
+    Tests the ``session_to_skill`` gate in ``_build_subagent_entries`` and the
+    ``_compute_session_to_skill`` helper in main.py.
+    """
+    shared_session = "sess-SHARED-aaaa-bbbb-cccc-dddddddddddd"
+    brainstorm_skill = "code-toolkit:brainstorming"
+    writing_plans_skill = "code-toolkit:writing-plans"
+
+    # brainstorming rec: 2 high signals for the shared session.
+    brainstorm_signals = [
+        _make_signal(shared_session, "high"),
+        _make_signal(shared_session, "high"),
+    ]
+    brainstorm_rec = _make_aggregate_record(brainstorm_skill, [shared_session], brainstorm_signals)
+
+    # writing-plans rec: shared session listed, but 0 signals for it.
+    writing_plans_rec = _make_aggregate_record(writing_plans_skill, [shared_session], [])
+
+    ranked = [brainstorm_rec, writing_plans_rec]
+
+    # Compute session_to_skill via the new helper.
+    session_to_skill = main._compute_session_to_skill(ranked)
+
+    # shared_session must be attributed to brainstorming (score=6.0 vs 0.0).
+    assert session_to_skill.get(shared_session) == brainstorm_skill, (
+        f"expected {shared_session!r} → {brainstorm_skill!r}, "
+        f"got {session_to_skill.get(shared_session)!r}"
+    )
+
+    # Build entries for each skill using session_to_skill.
+    events_by_session = _make_events_by_session(shared_session, brainstorm_skill)
+    session_friction = {shared_session: "high"}
+
+    brainstorm_entries = main._build_subagent_entries(
+        skill_name=brainstorm_skill,
+        selected_sessions=[shared_session],
+        events_by_session=events_by_session,
+        target_skill_path=None,
+        target_skill_md_content="",
+        session_friction=session_friction,
+        session_to_skill=session_to_skill,
+    )
+    writing_plans_entries = main._build_subagent_entries(
+        skill_name=writing_plans_skill,
+        selected_sessions=[shared_session],
+        events_by_session=events_by_session,
+        target_skill_path=None,
+        target_skill_md_content="",
+        session_friction=session_friction,
+        session_to_skill=session_to_skill,
+    )
+
+    brainstorm_sessions = {e["session_id"] for e in brainstorm_entries}
+    writing_plans_sessions = {e["session_id"] for e in writing_plans_entries}
+
+    assert shared_session in brainstorm_sessions, (
+        f"brainstorming should contain entry for {shared_session!r}; "
+        f"got sessions={brainstorm_sessions!r}"
+    )
+    assert shared_session not in writing_plans_sessions, (
+        f"writing-plans must NOT contain entry for {shared_session!r} "
+        f"(routed away by friction-density); got sessions={writing_plans_sessions!r}"
+    )
+
+
+def test_cross_skill_routing_tie_breaks_alphabetically() -> None:
+    """Session with equal friction-density in both skills →
+    routes to the alphabetically-first skill name.
+
+    Equal scores: 1 high signal each (3.0 each). Alphabetic order:
+    'code-toolkit:brainstorming' < 'code-toolkit:writing-plans'
+    → brainstorming wins tie-break.
+    """
+    shared_session = "sess-TIE-aaaa-bbbb-cccc-dddddddddddd"
+    brainstorm_skill = "code-toolkit:brainstorming"
+    writing_plans_skill = "code-toolkit:writing-plans"
+
+    # Each skill gets exactly 1 high signal for shared_session → score 3.0 each.
+    brainstorm_rec = _make_aggregate_record(
+        brainstorm_skill,
+        [shared_session],
+        [_make_signal(shared_session, "high")],
+    )
+    writing_plans_rec = _make_aggregate_record(
+        writing_plans_skill,
+        [shared_session],
+        [_make_signal(shared_session, "high")],
+    )
+
+    ranked = [brainstorm_rec, writing_plans_rec]
+    session_to_skill = main._compute_session_to_skill(ranked)
+
+    # Tie → alphabetically first: brainstorming < writing-plans.
+    assert session_to_skill.get(shared_session) == brainstorm_skill, (
+        f"tie-break should route to alphabetically-first skill; "
+        f"expected {brainstorm_skill!r}, got {session_to_skill.get(shared_session)!r}"
     )
