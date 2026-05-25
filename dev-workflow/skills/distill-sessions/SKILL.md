@@ -64,6 +64,41 @@ Example trigger phrases:
 - ZH-TW:「挖一下最近 code-toolkit 的 session log」「想根據觸發資料
   改 SKILL.md」「從 MEMORY.md 找出可以畢業到 skill 的條目」.
 
+## Bare invocation — preview-then-confirm
+
+When invoked with no scoping context (e.g. user types `/distill-sessions`
+alone, or "fire distill-sessions" with no target named), do NOT default
+to full pipeline. Instead:
+
+1. **Run Stage 1+2 preview only** — `python scripts/main.py
+   --target-skill-pattern 'code-toolkit:*'` (the brief-locked v0.1
+   default). This is cost-free local Python — no API call, seconds to
+   complete. Print the stderr summary block (top-N skills + per-session
+   friction levels) verbatim to chat.
+2. **Pause for user confirmation before Stage 3** — Stage 3 is the
+   expensive step (N parallel Haiku subagents, each consuming a
+   multi-hour session as input). Ask which subset to dispatch:
+   single highest-friction skill / top-3 / all / different target
+   pattern / stop at preview.
+3. **Surface the v0.2 context-overflow known gap** in the preview
+   summary when relevant — if any payload entry is projected to exceed
+   ~180K tokens (rough: `len(json.dumps(payload.input)) // 4`), warn
+   the user and recommend filtering down before dispatch. The current
+   locked Haiku 4.5 model has a 200K context window; 4-out-of-5 real
+   multi-hour code-toolkit sessions exceed that. See §Future for the
+   v0.3+ event-windowing roadmap.
+
+This protocol exists because (a) bare invocation has no signal about
+intent — `code-toolkit:*` is the v0.1 preset but the user may actually
+want a different scope, (b) Stage 3 budget cost is non-trivial and
+asymmetric to the cheap-preview, and (c) user's CLAUDE.md "Issue First"
+discipline expects confirmation before deliverable-producing work.
+
+When the user provides explicit scoping in their prompt (e.g. "挖一下
+writing-plans", "audit code-toolkit:brainstorming activations", "MEMORY.md
+graduation candidates"), skip the preview-pause and execute the
+referenced flow directly.
+
 ## When NOT to use
 
 - **Real-time in-session coaching** — claude-coach territory; this
