@@ -884,3 +884,40 @@ def test_extract_memory_items_filters_by_target_skill_path() -> None:
     assert len(all_items) == 4, (
         f"Default (no kwarg) must preserve legacy flatten-all behavior, got {len(all_items)}"
     )
+
+    # Edge: target_skill_path matches NO entries → empty list (no error).
+    # Operators may pass a target absent from merged.json (typo or
+    # mining-scope mismatch); empty result is informative, not crash.
+    no_match = extract_memory_items(
+        results, target_skill_path="/path/to/skill-C/SKILL.md"
+    )
+    assert no_match == [], (
+        f"No-match filter must return [] (informative empty), got {no_match}"
+    )
+
+    # Edge: entry missing target_skill_path field → skipped when filter
+    # active (None != any string target, so .get('target_skill_path')
+    # returns None and fails the equality check). Malformed-input
+    # defensive behavior.
+    results_with_orphan = results + [
+        {
+            "session_id": "orphan",
+            # NB: deliberately no target_skill_path field
+            "memory_items": [
+                {
+                    "title": "Orphan item",
+                    "description": "d",
+                    "content": "c",
+                    "kind": "success",
+                    "section_anchor": "Examples",
+                },
+            ],
+        },
+    ]
+    only_a_with_orphan = extract_memory_items(
+        results_with_orphan, target_skill_path="/path/to/skill-A/SKILL.md"
+    )
+    assert len(only_a_with_orphan) == 2, (
+        f"Orphan entry (missing target_skill_path) must be skipped under filter, "
+        f"got {len(only_a_with_orphan)}"
+    )
