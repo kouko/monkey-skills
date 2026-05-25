@@ -237,7 +237,11 @@ def extract_skill_md_headings(skill_md: str) -> set[str]:
     headings: set[str] = set()
     in_code_block = False
     for line in skill_md.splitlines():
-        if line.startswith("```"):
+        # ``lstrip()`` covers indented fences (e.g. fenced blocks nested
+        # inside list items); ``##`` headings themselves are NOT
+        # ``lstrip()``-ed below so indented headings stay ignored — same
+        # contract as before.
+        if line.lstrip().startswith("```"):
             in_code_block = not in_code_block
             continue
         if in_code_block:
