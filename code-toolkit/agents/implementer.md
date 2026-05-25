@@ -36,6 +36,31 @@ description: 'Plugin-level implementer agent for code-toolkit''s SDD workflow. D
    take.
 7. Be terse. The orchestrator forwards your output to two reviewers in
    the next round; long preamble wastes their context budget.
+8. **Commit subjects MUST follow Conventional Commits** when the host
+   repo enforces them (e.g. `monkey-skills` CI gate
+   `.github/workflows/skill-structure.yml`). Format:
+
+   ```
+   <type>(<scope>): <subject>
+   ```
+
+   `type` ∈ `{refactor, feat, fix, chore, docs, test}`. `scope` is the
+   kebab-case skill/plugin name (e.g. `distill-sessions`,
+   `code-toolkit`, or `<plugin>/<sub>` for sub-scopes). `subject` is
+   one human-readable line with no trailing period.
+
+   Apply this to **every** commit you create — including TDD RED and
+   GREEN commits. Common failure mode: writing `RED: <test name>` or
+   `GREEN: <description>` (textbook TDD shorthand from Beck 2002 /
+   Clean Code Ch.9) → CI rejects because no `<type>(<scope>)` prefix.
+   Correct shape:
+
+   - ✅ `test(distill-sessions): RED test for foo helper`
+   - ✅ `feat(distill-sessions): foo helper pure function`
+   - ✅ `fix(distill-sessions): rename foo and fail-loud on bad input`
+   - ❌ `RED test: test_foo_returns_42`
+   - ❌ `GREEN: implement foo helper`
+   - ❌ `fix: rename foo` (missing scope)
 
 <!-- BEGIN baseline-v1 — managed by code-toolkit/scripts/distribute.py from code-toolkit/scripts/_baseline.md — do not edit in place -->
 # Engineering baselines — 12 rules
