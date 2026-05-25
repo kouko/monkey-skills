@@ -596,6 +596,111 @@ def test_extract_skill_md_headings_skips_fenced_code_block_content() -> None:
     )
 
 
+def test_render_proposal_includes_cross_session_evidence_pending_section() -> None:
+    """cluster_memory_items is wired into render_proposals_markdown:
+    - items appearing in >= 2 distinct sessions are PROMOTED → existing sections
+    - items appearing in only 1 session are PENDING → §Cross-session evidence pending
+
+    Fixture:
+      item_A  session_a  title="Pattern X"    anchor=Examples  kind=success
+      item_B  session_b  title="Pattern X"    anchor=Examples  kind=success  → same (title,anchor) → 2 sessions → PROMOTED
+      item_C  session_a  title="Unique pattern"  anchor=Examples  kind=success  → 1 session → PENDING
+
+    Section ordering (per spec):
+      ## Proposed additions
+      ## Proposed modifications
+      ## Anchor mismatch — needs review
+      ## Cross-session evidence pending
+      ## Marked for v0.2
+    """
+    skill_md = "# Test Skill\n\n## Examples\n\nSome text.\n"
+
+    # Build normalized items with session_id so cluster_memory_items can count
+    # distinct sessions.  _source_session mirrors session_id (extract_memory_items
+    # sets both when going through the CLI path).
+    def _mk_session_item(
+        title: str,
+        session_id: str,
+        *,
+        anchor: str = "Examples",
+        kind: str = "success",
+    ) -> dict:
+        return {
+            "title": title,
+            "description": f"desc for {title}",
+            "content": f"content for {title}",
+            "kind": kind,
+            "section_anchor": anchor,
+            "requires_new_reference_file": False,
+            "_source_session": session_id,
+            "session_id": session_id,
+        }
+
+    item_a = _mk_session_item("Pattern X", "session_a")
+    item_b = _mk_session_item("Pattern X", "session_b")
+    item_c = _mk_session_item("Unique pattern", "session_a")
+
+    output = render_proposals_markdown(
+        [item_a, item_b, item_c],
+        target_skill_path="/fake/SKILL.md",
+        target_skill_md_content=skill_md,
+        run_date="2026-01-01",
+    )
+
+    # --- §Cross-session evidence pending section must exist ---
+    assert "## Cross-session evidence pending" in output, (
+        "render_proposals_markdown must include §'Cross-session evidence pending' "
+        "for items whose group has only 1 distinct session"
+    )
+
+    # Locate section boundaries for precise scoping.
+    pending_idx = output.index("## Cross-session evidence pending")
+    v02_idx = output.index("## Marked for v0.2", pending_idx)
+    pending_section = output[pending_idx:v02_idx]
+
+    # "Unique pattern" must appear under pending with session_a annotation.
+    assert "Unique pattern" in pending_section, (
+        "single-session item content must appear in §Cross-session evidence pending"
+    )
+    assert "session_a" in pending_section, (
+        "pending section must annotate the source session_id"
+    )
+
+    # "Pattern X" must NOT appear under pending — it is promoted.
+    assert "Pattern X" not in pending_section, (
+        "promoted item (Pattern X, 2 sessions) must NOT appear in §Cross-session evidence pending"
+    )
+
+    # --- Promoted "Pattern X" must appear under §Proposed additions ---
+    additions_idx = output.index("## Proposed additions")
+    modifications_idx = output.index("## Proposed modifications")
+    additions_section = output[additions_idx:modifications_idx]
+
+    assert "Pattern X" in additions_section, (
+        "promoted kind=success item must appear in §Proposed additions"
+    )
+
+    # Promoted items must carry supporting_sessions annotation.
+    assert "session_a" in additions_section, (
+        "promoted item must show session_a in §Proposed additions"
+    )
+    assert "session_b" in additions_section, (
+        "promoted item must show session_b in §Proposed additions"
+    )
+
+    # --- Section ordering ---
+    idx_additions = output.index("## Proposed additions")
+    idx_modifications = output.index("## Proposed modifications")
+    idx_anchor_mismatch = output.index("## Anchor mismatch — needs review")
+    idx_pending = output.index("## Cross-session evidence pending")
+    idx_v02 = output.index("## Marked for v0.2")
+
+    assert idx_additions < idx_modifications < idx_anchor_mismatch < idx_pending < idx_v02, (
+        "Section ordering must be: Proposed additions → Proposed modifications → "
+        "Anchor mismatch — needs review → Cross-session evidence pending → Marked for v0.2"
+    )
+
+
 def test_extract_skill_md_headings_skips_indented_fenced_code_block() -> None:
     """Indented fences (fenced blocks nested inside list items) also count.
 
