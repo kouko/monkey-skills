@@ -10,12 +10,16 @@ Assertions:
 import json
 import pathlib
 
-from packaging.version import Version
-
 # Historical snapshot — the version in the worktree before T4 landed.
 PRE_BUMP = "2.7.1"
 
 PLUGIN_JSON = pathlib.Path(__file__).parent / "plugin.json"
+
+
+def _parse_semver(v: str) -> tuple[int, int, int]:
+    """Parse a 'MAJOR.MINOR.PATCH' string into an integer tuple (stdlib-only)."""
+    major, minor, patch = v.split(".")
+    return (int(major), int(minor), int(patch))
 
 
 def _load_manifest() -> dict:
@@ -28,8 +32,8 @@ def test_version_and_keywords():
     manifest = _load_manifest()
 
     current_str = manifest["version"]
-    current = Version(current_str)
-    pre = Version(PRE_BUMP)
+    current = _parse_semver(current_str)
+    pre = _parse_semver(PRE_BUMP)
 
     # (b) strictly greater than pre-bump snapshot
     assert current > pre, (
@@ -37,14 +41,14 @@ def test_version_and_keywords():
     )
 
     # (c) minor bump: same major, higher minor, patch == 0
-    assert current.major == pre.major, (
-        f"major must not change: got {current.major}, want {pre.major}"
+    assert current[0] == pre[0], (
+        f"major must not change: got {current[0]}, want {pre[0]}"
     )
-    assert current.minor > pre.minor, (
-        f"minor must increase: got {current.minor}, want > {pre.minor}"
+    assert current[1] > pre[1], (
+        f"minor must increase: got {current[1]}, want > {pre[1]}"
     )
-    assert current.micro == 0, (
-        f"patch must reset to 0 on a minor bump: got {current.micro}"
+    assert current[2] == 0, (
+        f"patch must reset to 0 on a minor bump: got {current[2]}"
     )
 
     # (d) "recap" in keywords
