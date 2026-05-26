@@ -15,8 +15,10 @@ prepares the payload.
 
 External surface verification (memory project_external_surface_grounding_discipline.md):
 
-- ``claude-haiku-4-5-20251001`` model literal — locked at this writing per
-  system-prompt environment metadata.
+- ``claude-sonnet-4-6`` model literal — Sonnet 4.6 1M-context standard, chosen
+  in v0.4 brief Q-v0.4-1 to cover all observed trajectory sizes (max 559K in
+  v0.3 dogfood vs 1M cap; v0.3 had 7/12 overflow at 200K). Literal verified
+  via https://platform.claude.com/docs/en/about-claude/models/overview (2026-05-26).
 - ``code-toolkit:dispatching-parallel-agents`` — internal sibling skill in
   this repo at ``code-toolkit/skills/dispatching-parallel-agents/SKILL.md``;
   verified by ``ls`` at implementer-time. Not a 3rd-party API.
@@ -52,8 +54,13 @@ from friction_signals import (
 )
 from ingest import ingest_claude_jsonl
 
-# Locked Haiku model literal for per-trajectory subagent dispatch.
-HAIKU_MODEL_ID = "claude-haiku-4-5-20251001"
+# Subagent model for per-trajectory dispatch.  Switched from Haiku 200K to
+# Sonnet 4.6 1M-context in v0.4 (brief Q-v0.4-1) after v0.3 dogfood showed
+# 7/12 = 58% of real trajectories overflowed Haiku's 200K cap (max 559K).
+# 1M cap covers all observed sizes.  Cost: ~3× Haiku; acceptable at the
+# 2-5×/week locked cadence (~$20-60/month).  Literal verified 2026-05-26 via
+# https://platform.claude.com/docs/en/about-claude/models/overview.
+SUBAGENT_MODEL_ID = "claude-sonnet-4-6"
 
 # Cap on how many trajectories (sessions) we dispatch per target skill.
 # Limits subagent fan-out so we don't burn the org budget on big mines.
@@ -317,7 +324,7 @@ def _build_subagent_entries(
                     "session_id": session_id,
                     "kind": kind,
                     "prompt_path": prompt_path,
-                    "model": HAIKU_MODEL_ID,
+                    "model": SUBAGENT_MODEL_ID,
                     "input": {
                         "session_events": session_events_dicts,
                         "target_skill_path": target_path_str,

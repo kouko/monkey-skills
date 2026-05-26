@@ -159,10 +159,10 @@ def test_main_emits_payload_json_to_stdout(tmp_path: Path) -> None:
         assert sess["friction_level"] in ("low", "mid", "high")
 
     # subagent_payload entries reference the agents/ prompt paths and the
-    # locked Haiku model ID.
+    # locked subagent model ID (Sonnet 4.6 1M-context per v0.4 brief Q-v0.4-1).
     assert payload["subagent_payload"], "subagent_payload must be non-empty"
     for entry in payload["subagent_payload"]:
-        assert entry["model"] == "claude-haiku-4-5-20251001"
+        assert entry["model"] == "claude-sonnet-4-6"
         assert entry["prompt_path"] in (
             "agents/prompt-failure-analysis.md",
             "agents/prompt-success-analysis.md",
