@@ -76,17 +76,20 @@ to full pipeline. Instead:
    complete. Print the stderr summary block (top-N skills + per-session
    friction levels) verbatim to chat.
 2. **Pause for user confirmation before Stage 3** — Stage 3 is the
-   expensive step (N parallel Haiku subagents, each consuming a
+   expensive step (N parallel Sonnet subagents, each consuming a
    multi-hour session as input). Ask which subset to dispatch:
    single highest-friction skill / top-3 / all / different target
    pattern / stop at preview.
-3. **Surface the v0.2 context-overflow known gap** in the preview
-   summary when relevant — if any payload entry is projected to exceed
-   ~180K tokens (rough: `len(json.dumps(payload.input)) // 4`), warn
-   the user and recommend filtering down before dispatch. The current
-   locked Haiku 4.5 model has a 200K context window; 4-out-of-5 real
-   multi-hour code-toolkit sessions exceed that. See §Future for the
-   v0.3+ event-windowing roadmap.
+3. **Surface the context-overflow status** in the preview summary when
+   relevant — the locked Sonnet 4.6 model has a 1M-context window.
+   Overflow is a theoretical floor: the v0.3 post-ship dogfood
+   observed max 559K tokens (56% of the 1M cap); skip+warn fires only
+   for trajectories exceeding 1M tokens, none observed across v0.1 +
+   v0.3 dogfood rounds. If any payload entry is projected to exceed 1M
+   tokens (rough: `len(json.dumps(payload.input)) // 4 > 1_000_000`),
+   warn the user and recommend filtering down before dispatch. See the
+   [v0.3 post-ship dogfood memory](../../../.claude/projects/-Users-kouko-GitHub-monkey-skills/memory/project_distill_sessions_v0_3_post_ship_dogfood.md)
+   for the empirical overflow distribution baseline.
 
 This protocol exists because (a) bare invocation has no signal about
 intent — `code-toolkit:*` is the v0.1 preset but the user may actually
@@ -144,7 +147,7 @@ Python (Stage 5 proposal render + approval-gated write-back).
         |  one Agent call per session-trajectory  |
         |  prompts: agents/prompt-{failure,       |
         |           success}-analysis.md          |
-        |  model:   claude-haiku-4-5-20251001     |
+        |  model:   claude-sonnet-4-6              |
         +-----------------------------------------+
                               |
                               v
@@ -206,7 +209,7 @@ Claude reads `top.json`, then issues **one Agent tool call per
 `subagent_payload[]` entry inside a single assistant message** so the
 harness runs them concurrently. Each subagent:
 
-- runs on `claude-haiku-4-5-20251001` (model literal locked in
+- runs on `claude-sonnet-4-6` (model literal locked in
   `scripts/main.py`),
 - loads `agents/prompt-failure-analysis.md` for failure-kind sessions
   or `agents/prompt-success-analysis.md` for success-kind sessions
@@ -411,11 +414,15 @@ that key — `main.py` merges over the defaults.
   There is no headless flag at the time of writing. Sessions without
   facets still flow through mining; `main.py` falls back to the
   friction-level heuristic for `kind` classification.
-- **Locked Haiku model literal** — `scripts/main.py` pins
-  `claude-haiku-4-5-20251001` for per-trajectory subagents.
-  Architecture-template precedent: Trace2Skill paired a mid-size
-  model for per-trajectory analysis with a larger one for the
-  orchestrator merge.
+- **Locked subagent model (v0.4)** — `scripts/main.py` pins
+  `SUBAGENT_MODEL_ID = "claude-sonnet-4-6"` for per-trajectory
+  subagents (previously Haiku 4.5, swapped in v0.4). The 1M-context
+  window covers all v0.3-observed trajectory sizes (max 559K observed
+  in v0.3 post-ship dogfood = 56% of cap). Cost note: ~3× prior Haiku
+  pricing; acceptable at locked cadence (2-5×/week post-PR cycle) per
+  [v0.4 brief Q-v0.4-1](../../../docs/code-toolkit/specs/2026-05-26-distill-sessions-v0.4-brief.md).
+  Operator can override at orchestration time per v0.1 bare-invocation
+  protocol (pause-for-confirmation gate at Stage 3).
 - **Local-only by default** — mining reads
   `~/.claude/projects/**/*.jsonl` from the user's machine. No
   network calls in `main.py`, `propose.py`, or `apply.py`. The
