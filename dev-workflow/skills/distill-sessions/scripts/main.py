@@ -343,6 +343,7 @@ def _build_subagent_entries(
 def _render_summary_markdown(
     top_skills: list[dict[str, object]],
     config: dict[str, object],
+    subagent_payload: list[dict[str, object]],
 ) -> str:
     """Human-readable summary block for stderr."""
     lines: list[str] = []
@@ -352,6 +353,14 @@ def _render_summary_markdown(
     lines.append(f"- target_pattern: `{config.get('target_pattern')}`")
     lines.append(f"- top_n: {config.get('top_n')}")
     lines.append(f"- max_trajectories_per_skill: {config.get('max_trajectories_per_skill')}")
+    total_input_bytes = sum(
+        len(json.dumps(entry, separators=(",", ":"))) for entry in subagent_payload
+    )
+    estimated_input_tokens = total_input_bytes / 4
+    estimated_input_cost_usd = estimated_input_tokens / 1_000_000 * 3.0
+    lines.append(
+        f"- estimated cost: ~${estimated_input_cost_usd:.2f} input @ Sonnet 4.6 rates ($3/Mtok)"
+    )
     lines.append("")
     lines.append("## Top skills")
     lines.append("")
@@ -567,7 +576,7 @@ def main(argv: list[str] | None = None) -> int:
     sys.stdout.write(json.dumps(payload, indent=2, sort_keys=True))
 
     # Stderr — markdown summary for human read-along.
-    sys.stderr.write(_render_summary_markdown(top_skills_out, config_block))
+    sys.stderr.write(_render_summary_markdown(top_skills_out, config_block, subagent_payload))
 
     return 0
 
