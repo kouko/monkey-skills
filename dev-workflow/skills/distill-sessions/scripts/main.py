@@ -353,6 +353,9 @@ def _render_summary_markdown(
     lines.append(f"- target_pattern: `{config.get('target_pattern')}`")
     lines.append(f"- top_n: {config.get('top_n')}")
     lines.append(f"- max_trajectories_per_skill: {config.get('max_trajectories_per_skill')}")
+    # Cost estimate uses Anthropic's published ~4-bytes-per-token rule-of-thumb;
+    # actual ratio varies (JSON / code / Unicode skew higher per token). Output
+    # cost is excluded — Memory Item bodies are short relative to input.
     total_input_bytes = sum(
         len(json.dumps(entry, separators=(",", ":"))) for entry in subagent_payload
     )
