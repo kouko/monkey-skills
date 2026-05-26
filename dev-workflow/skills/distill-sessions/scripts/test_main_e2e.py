@@ -45,7 +45,8 @@ Two assertion classes back the snapshot:
 1. **Structural** — top_skills carries ``code-toolkit:brainstorming``
    with all 3 sessions present and at least one high-friction session;
    subagent_payload references real ``agents/prompt-{failure,success}-
-   analysis.md`` paths and the locked Haiku model literal.
+   analysis.md`` paths and the locked SUBAGENT_MODEL_ID literal
+   (v0.4 swap from prior Haiku-locked model; see v0.4 brief Q-v0.4-1).
 2. **Snapshot hash** — sha256 over the stable subset (sorted (skill,
    friction_level) tuples + sorted prompt_paths + models). Run-id and
    timestamp are excluded so the test stays deterministic.
@@ -340,7 +341,7 @@ def _session1_facet_json() -> str:
 # update: run the test, copy the ``actual`` value from the failure
 # message into here.
 EXPECTED_SNAPSHOT_HASH = (
-    "2cdfd9c6927bde6e07c246ad1d4bb81dd9e9650902b565c97fdaaf31813daff0"
+    "d80119feaace01022b4695d1b4f6bb18770692387549afb85c54257f56986655"
 )
 
 
@@ -410,7 +411,7 @@ def _snapshot_subset(payload: dict) -> dict:
       sessions — captures the per-session friction classification.
     - Sorted ``prompt_path`` values — captures kind classification
       (failure vs success).
-    - Sorted ``model`` values — pins the Haiku literal.
+    - Sorted ``model`` values — pins the SUBAGENT_MODEL_ID literal.
 
     trajectory_id is deterministic (uuid5) but we don't include it
     because the goal here is "the analysis produced these
@@ -489,12 +490,12 @@ def test_e2e_pipeline_produces_correct_payload(tmp_path: Path) -> None:
         f"got friction_levels={friction_levels!r}"
     )
 
-    # subagent_payload — locked Haiku model literal + real prompt paths.
+    # subagent_payload — locked model literal + real prompt paths.
     assert payload["subagent_payload"], "subagent_payload must be non-empty"
     for entry in payload["subagent_payload"]:
-        assert entry["model"] == "claude-haiku-4-5-20251001", (
+        assert entry["model"] == "claude-sonnet-4-6", (
             f"unexpected model literal {entry['model']!r}; "
-            "expected claude-haiku-4-5-20251001"
+            "expected claude-sonnet-4-6"
         )
         assert entry["prompt_path"] in (
             "agents/prompt-failure-analysis.md",

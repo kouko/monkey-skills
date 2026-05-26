@@ -159,10 +159,10 @@ def test_main_emits_payload_json_to_stdout(tmp_path: Path) -> None:
         assert sess["friction_level"] in ("low", "mid", "high")
 
     # subagent_payload entries reference the agents/ prompt paths and the
-    # locked Haiku model ID.
+    # locked subagent model ID (Sonnet 4.6 1M-context per v0.4 brief Q-v0.4-1).
     assert payload["subagent_payload"], "subagent_payload must be non-empty"
     for entry in payload["subagent_payload"]:
-        assert entry["model"] == "claude-haiku-4-5-20251001"
+        assert entry["model"] == "claude-sonnet-4-6"
         assert entry["prompt_path"] in (
             "agents/prompt-failure-analysis.md",
             "agents/prompt-success-analysis.md",
@@ -866,4 +866,52 @@ def test_cross_skill_routing_tie_breaks_alphabetically() -> None:
     assert session_to_skill.get(shared_session) == brainstorm_skill, (
         f"tie-break should route to alphabetically-first skill; "
         f"expected {brainstorm_skill!r}, got {session_to_skill.get(shared_session)!r}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Test — _render_summary_markdown cost-estimate preview line.
+#
+# T5: the summary block must include a human-readable cost estimate so
+# the user can make an informed decision at the preview pause before
+# dispatching Sonnet subagents.
+# ---------------------------------------------------------------------------
+
+
+def test_render_summary_markdown_includes_cost_estimate() -> None:
+    """_render_summary_markdown emits a '- estimated cost' line.
+
+    WHY: before dispatching Sonnet subagents, the user sees this summary on
+    stderr and decides whether to proceed. Without a cost hint, large sessions
+    silently consume budget. The line must document the model and rate so the
+    number is meaningful.
+    """
+    top_skills: list[dict] = []
+    config: dict = {
+        "run_id": "test-run",
+        "target_pattern": "code-toolkit:*",
+        "top_n": 3,
+        "max_trajectories_per_skill": 5,
+    }
+    # A minimal subagent_payload — one entry with enough JSON bytes to produce
+    # a non-zero cost estimate.
+    subagent_payload = [
+        {
+            "trajectory_id": "aaaa-bbbb",
+            "skill": "code-toolkit:brainstorming",
+            "kind": "failure",
+            "context": {"session_id": "sess-1", "target_skill_path": "/some/path"},
+        }
+    ]
+
+    result = main._render_summary_markdown(top_skills, config, subagent_payload)
+
+    assert "estimated cost" in result, (
+        "_render_summary_markdown must include an 'estimated cost' line"
+    )
+    assert "Sonnet 4.6" in result, (
+        "cost line must document model name so the rate is unambiguous"
+    )
+    assert "$3/Mtok" in result, (
+        "cost line must document the per-token rate"
     )

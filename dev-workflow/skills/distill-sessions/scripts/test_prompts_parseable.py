@@ -21,7 +21,7 @@ This test is a STRUCTURAL guard, not a content review. It asserts:
   verbatim ("NEVER mention ground truth", Trace2Skill source line).
 - Success-side enforces the dead-end-stripping discipline
   ("Lean Solution Path", Trace2Skill source phrase).
-- Both reference Haiku 4.5 as the dispatch model.
+- Both reference Sonnet 4.6 as the dispatch model (v0.4 swap from prior Haiku-locked model; see v0.4 brief Q-v0.4-1).
 
 Why intent-grounded (Rule 9): if the Trace2Skill constraints stop being
 encoded in our prompts, the v0.1 Stage 3 subagents lose their
@@ -47,8 +47,8 @@ AGENTS_DIR = SKILL_ROOT / "agents"
 FAILURE_PATH = AGENTS_DIR / "prompt-failure-analysis.md"
 SUCCESS_PATH = AGENTS_DIR / "prompt-success-analysis.md"
 
-# Canonical Claude Haiku 4.5 model ID expected in frontmatter.
-EXPECTED_MODEL = "claude-haiku-4-5-20251001"
+# Canonical subagent model ID expected in frontmatter (v0.4: Sonnet 4.6 1M-context).
+EXPECTED_MODEL = "claude-sonnet-4-6"
 
 # Required frontmatter keys per Plan T6 §Implementation notes.
 REQUIRED_FRONTMATTER_KEYS = {
