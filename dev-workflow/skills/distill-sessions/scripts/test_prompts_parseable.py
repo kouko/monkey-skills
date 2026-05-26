@@ -47,8 +47,8 @@ AGENTS_DIR = SKILL_ROOT / "agents"
 FAILURE_PATH = AGENTS_DIR / "prompt-failure-analysis.md"
 SUCCESS_PATH = AGENTS_DIR / "prompt-success-analysis.md"
 
-# Canonical Claude Haiku 4.5 model ID expected in frontmatter.
-EXPECTED_MODEL = "claude-haiku-4-5-20251001"
+# Canonical subagent model ID expected in frontmatter (v0.4: Sonnet 4.6 1M-context).
+EXPECTED_MODEL = "claude-sonnet-4-6"
 
 # Required frontmatter keys per Plan T6 §Implementation notes.
 REQUIRED_FRONTMATTER_KEYS = {

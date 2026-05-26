@@ -1,6 +1,6 @@
 ---
 role: trace2skill-success-analyst
-model: claude-haiku-4-5-20251001
+model: claude-sonnet-4-6
 input_contract:
   session_events: list[Event]
   target_skill_path: str
@@ -169,9 +169,8 @@ v0.1 Stage 3 orchestrator. Per the architecture decision in
 `docs/code-toolkit/specs/2026-05-22-distill-sessions-research.md`
 §"Subagent vs headless claude -p":
 
-- **Model**: `claude-haiku-4-5-20251001` (Haiku 4.5 — fast, cheap, used
-  for per-session analysis fan-out as in Trace2Skill's
-  ThreadPoolExecutor pattern).
+- **Model**: `claude-sonnet-4-6` (Sonnet 4.6 1M-context — covers all observed
+  trajectory sizes; v0.4 model lock per distill-sessions v0.4 brief).
 - **Parallel dispatch**: orchestrator emits one assistant message
   containing N parallel `Agent()` tool calls — one per
   (target skill, low-friction session) pair — via the contract
