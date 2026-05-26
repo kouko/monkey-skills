@@ -5,7 +5,7 @@ description: >-
   with `~/.claude/usage-data/facets/*.json` `/insights` outputs, detect
   friction-signal patterns (interrupt-after-brainstorm, NEEDS_REVISION streaks,
   re-dispatch concentration, tool-error clusters), aggregate per target Skill,
-  dispatch per-trajectory Haiku subagents in parallel via
+  dispatch per-trajectory Sonnet 4.6 subagents in parallel via
   `code-toolkit:dispatching-parallel-agents`, and emit a reviewable
   `docs/skill-mining/<date>-<target>-proposals.md` whose §"Proposed additions"
   / §"Proposed modifications" blocks apply.py can write back into a target
@@ -20,7 +20,7 @@ description: >-
   scope at v0.1). 技能ログ採掘・SKILL.md 改善提案・トリガー漏れ検出・活性化ログ分析・
   /insights ファセット結合・並列サブエージェント分析。技能日誌挖掘・SKILL.md 迭代提案・
   觸發遺漏偵測・啟動日誌分析・/insights facet 結合・並行子代理分析。
-version: 0.3.0
+version: 0.4.0
 ---
 
 # distill-sessions
@@ -192,7 +192,7 @@ stdout plus a markdown summary on stderr.
 
 `top.json` carries `top_skills[]` (per-skill aggregates + per-session
 friction levels) and `subagent_payload[]` (per-trajectory dispatch
-entries with locked Haiku model literal + prompt path + session
+entries with locked Sonnet 4.6 model literal + prompt path + session
 events). Each `trajectory_id` is a deterministic uuid5 over
 `(skill, session, kind)` so re-runs of the same mine produce stable IDs.
 

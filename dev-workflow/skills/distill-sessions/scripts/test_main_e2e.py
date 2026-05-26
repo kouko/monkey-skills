@@ -45,7 +45,8 @@ Two assertion classes back the snapshot:
 1. **Structural** — top_skills carries ``code-toolkit:brainstorming``
    with all 3 sessions present and at least one high-friction session;
    subagent_payload references real ``agents/prompt-{failure,success}-
-   analysis.md`` paths and the locked Haiku model literal.
+   analysis.md`` paths and the locked SUBAGENT_MODEL_ID literal
+   (v0.4 swap from prior Haiku-locked model; see v0.4 brief Q-v0.4-1).
 2. **Snapshot hash** — sha256 over the stable subset (sorted (skill,
    friction_level) tuples + sorted prompt_paths + models). Run-id and
    timestamp are excluded so the test stays deterministic.
