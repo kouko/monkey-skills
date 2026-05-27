@@ -13,7 +13,11 @@ import re
 from pathlib import Path
 
 import pytest
-import yaml
+
+try:
+    import yaml  # PyYAML
+except ImportError:  # pragma: no cover — environment guard
+    yaml = None
 
 SKILL_MD = (
     Path(__file__).parent.parent / "SKILL.md"
@@ -30,6 +34,8 @@ FIVE_PRINCIPLES = [
 
 def _parse_skill_md():
     """Split SKILL.md into frontmatter dict and body string."""
+    if yaml is None:  # pragma: no cover — environment guard
+        pytest.skip("PyYAML not available")
     text = SKILL_MD.read_text(encoding="utf-8")
     if not text.startswith("---"):
         raise ValueError("SKILL.md has no YAML frontmatter")
