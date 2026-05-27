@@ -19,8 +19,10 @@ from pathlib import Path
 import pytest
 
 from report import (
+    build_dispatch_payload,
     cluster_by_title_keyword,
     extract_claude_md_candidates,
+    main,
     parse_merged_json,
     render_advisory_markdown,
 )
@@ -309,3 +311,65 @@ def test_render_handles_empty_input_without_crash() -> None:
     assert "新 skill 候選" in output
     assert "數字摘要" in output
     assert "你現在能做的" in output
+
+
+# ---------------------------------------------------------------------------
+# v0.5 T2 tests — analyst-dispatch payload + mandatory --lang flag.
+# ---------------------------------------------------------------------------
+
+
+def test_build_dispatch_payload_emits_correct_schema() -> None:
+    """v0.5 T2 — pure function returns the orchestrator-dispatch payload shape."""
+    merged = parse_merged_json(str(_FIXTURE_PATH))
+    payload = build_dispatch_payload(
+        merged_data=merged,
+        lang="zh-TW",
+        date_str="2026-05-27",
+        output_path="/tmp/x.md",
+    )
+    assert set(payload.keys()) == {"dispatch_payload", "output_path"}
+    dp = payload["dispatch_payload"]
+    assert dp["prompt_path"] == "agents/prompt-advisory-analyst.md"
+    assert dp["model"] == "claude-sonnet-4-6"
+    assert set(dp["input"].keys()) == {"merged_data", "lang", "date_str"}
+    assert dp["input"]["lang"] == "zh-TW"
+    assert dp["input"]["date_str"] == "2026-05-27"
+    assert payload["output_path"] == "/tmp/x.md"
+
+
+def test_main_requires_lang_flag(capsys: pytest.CaptureFixture[str]) -> None:
+    """v0.5 T2 — argparse rejects invocation without --lang."""
+    with pytest.raises(SystemExit) as exc:
+        main(["--input", str(_FIXTURE_PATH)])
+    assert exc.value.code != 0
+    err = capsys.readouterr().err
+    assert "--lang" in err or "lang" in err.lower()
+
+
+def test_main_rejects_invalid_lang(capsys: pytest.CaptureFixture[str]) -> None:
+    """v0.5 T2 — argparse rejects --lang values outside zh-TW/en/ja."""
+    with pytest.raises(SystemExit) as exc:
+        main(["--input", str(_FIXTURE_PATH), "--lang", "fr"])
+    assert exc.value.code != 0
+
+
+def test_main_emits_dispatch_payload_to_stdout(
+    capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    """v0.5 T2 — main() with valid --lang prints dispatch payload JSON to stdout and returns 0."""
+    out_path = tmp_path / "advisory.md"
+    rc = main([
+        "--input", str(_FIXTURE_PATH),
+        "--output", str(out_path),
+        "--date", "2026-05-27",
+        "--lang", "zh-TW",
+    ])
+    assert rc == 0
+    captured = capsys.readouterr()
+    parsed = json.loads(captured.out)
+    assert parsed["output_path"] == str(out_path)
+    assert parsed["dispatch_payload"]["model"] == "claude-sonnet-4-6"
+    assert parsed["dispatch_payload"]["prompt_path"] == "agents/prompt-advisory-analyst.md"
+    assert parsed["dispatch_payload"]["input"]["lang"] == "zh-TW"
+    assert parsed["dispatch_payload"]["input"]["date_str"] == "2026-05-27"
+    assert "merged_data" in parsed["dispatch_payload"]["input"]

@@ -36,6 +36,12 @@ import sys
 from datetime import date
 from pathlib import Path
 
+# Subagent model for v0.5 advisory-analyst dispatch.  Parity with main.py:63
+# (Stage 3 per-trajectory subagent also runs on Sonnet 4.6 1M-context).  The
+# Claude Code orchestrator dispatches this prompt; report.py only emits the
+# dispatch-payload JSON to stdout, no LLM call inside this script.
+SUBAGENT_MODEL_ID = "claude-sonnet-4-6"
+
 # ---------------------------------------------------------------------------
 # Stop-word list — EN + zh (inline per Q-v0.4.1-3 lock).
 # ---------------------------------------------------------------------------
@@ -98,6 +104,35 @@ def parse_merged_json(path: str) -> list[dict]:
             f"Expected top-level JSON list in {path}, got {type(data).__name__}"
         )
     return data
+
+
+def build_dispatch_payload(
+    merged_data: list[dict],
+    lang: str,
+    date_str: str,
+    output_path: Path | str,
+) -> dict[str, object]:
+    """Construct the orchestrator-consumable JSON payload for Sonnet 4.6 advisory dispatch.
+
+    Returns the dict the Claude Code orchestrator reads from this script's
+    stdout.  The orchestrator dispatches ``prompt_path`` (Sonnet 4.6) with
+    ``input`` and writes the returned markdown to ``output_path``.
+
+    Pure function — no I/O, no side effects.  Pattern parity with
+    ``main.py`` Stage 3 dispatch payloads (see ``main.py:312-334``).
+    """
+    return {
+        "dispatch_payload": {
+            "prompt_path": "agents/prompt-advisory-analyst.md",
+            "model": SUBAGENT_MODEL_ID,
+            "input": {
+                "merged_data": merged_data,
+                "lang": lang,
+                "date_str": date_str,
+            },
+        },
+        "output_path": str(output_path),
+    }
 
 
 def _tokenize_title(title: str) -> set[str]:
@@ -511,6 +546,12 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="Override date string (YYYY-MM-DD); default = today.",
     )
+    parser.add_argument(
+        "--lang",
+        required=True,
+        choices=["zh-TW", "en", "ja"],
+        help="Locale for advisory-report explanatory prose (mandatory; no default).",
+    )
     args = parser.parse_args(argv)
 
     date_str = args.date or date.today().isoformat()
@@ -527,11 +568,13 @@ def main(argv: list[str] | None = None) -> int:
         repo_root = script_dir.parents[3]  # scripts/ → distill-sessions/ → skills/ → dev-workflow/ → repo root
         output_path = repo_root / "docs" / "skill-mining" / f"{date_str}-advisory-report.md"
 
-    output = render_advisory_markdown(merged_data, date_str=date_str)
-
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(output, encoding="utf-8")
-    print(f"wrote {output_path}", file=sys.stderr)
+    payload = build_dispatch_payload(
+        merged_data=merged_data,
+        lang=args.lang,
+        date_str=date_str,
+        output_path=output_path,
+    )
+    print(json.dumps(payload, indent=2, ensure_ascii=False))
     return 0
 
 
