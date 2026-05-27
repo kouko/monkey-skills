@@ -10,8 +10,10 @@ description: >-
   `docs/skill-mining/<date>-<target>-proposals.md` whose §"Proposed additions"
   / §"Proposed modifications" blocks apply.py can write back into a target
   SKILL.md only after `--approved`, and a sibling human-readable
-  `docs/skill-mining/<date>-advisory-report.md` (zh-TW, cross-target
-  heuristic clustering via `scripts/report.py`). Use when auditing skill activation
+  `docs/skill-mining/<date>-advisory-report.md` (language picked via
+  mandatory `--lang zh-TW|en|ja`, semantic clustering via a Sonnet 4.6
+  advisory-analyst subagent dispatched from `scripts/report.py`'s JSON
+  payload). Use when auditing skill activation
   telemetry after a heavy `code-toolkit:*` cycle, when MEMORY.md is past its
   soft limit and you need graduation candidates, or before a `skill-refactor`
   session so the refactor lands on evidence not vibes. Do NOT use for creating
@@ -22,7 +24,7 @@ description: >-
   scope at v0.1). 技能ログ採掘・SKILL.md 改善提案・トリガー漏れ検出・活性化ログ分析・
   /insights ファセット結合・並列サブエージェント分析。技能日誌挖掘・SKILL.md 迭代提案・
   觸發遺漏偵測・啟動日誌分析・/insights facet 結合・並行子代理分析。
-version: 0.4.1
+version: 0.5.0
 ---
 
 # distill-sessions
@@ -158,9 +160,13 @@ Python (Stage 5 proposal render + approval-gated write-back).
                               v
         +-----------------------------------------+         +-----------------------------------------+
         | scripts/propose.py  (Stage 5a)          |         | scripts/report.py  (Stage 5c)           |
-        |   merged.json + target SKILL.md         |         |   merged.json (all targets)              |
-        |   -> docs/skill-mining/<date>-<t>.md    |         |   -> docs/skill-mining/<date>-           |
-        +-----------------------------------------+         |      advisory-report.md (zh-TW)          |
+        |   merged.json + target SKILL.md         |         |   merged.json + --lang {zh-TW|en|ja}    |
+        |   -> docs/skill-mining/<date>-<t>.md    |         |   -> JSON dispatch payload (stdout)     |
+        +-----------------------------------------+         |   -> Claude dispatches subagent at      |
+                              |                             |      agents/prompt-advisory-analyst.md  |
+                              |                             |   -> orchestrator writes returned md to |
+                              |                             |      docs/skill-mining/<date>-          |
+                              |                             |      advisory-report.md                 |
                               |                             +-----------------------------------------+
                               v
                   Human reviews the diff
@@ -330,36 +336,53 @@ single reviewable markdown with:
 - `## Marked for v0.2` — proposals requiring new `references/*.md`
   files are bucketed here per brief Q4 (SKILL.md-only at v0.1).
 
-### Step 4b — Stage 5c advisory report (Python)
+### Step 4b — Stage 5c advisory report (Python + Sonnet 4.6 subagent)
 
 ```bash
 python scripts/report.py \
   --input merged.json \
-  [--output docs/skill-mining/<date>-advisory-report.md]
+  --lang zh-TW \
+  [--output docs/skill-mining/<date>-advisory-report.md] \
+  > dispatch_payload.json
 ```
 
-`report.py` reads the same `merged.json` produced by the subagent fan-out
-(Step 3) and emits a single zh-TW human-readable advisory markdown at
-`docs/skill-mining/<date>-advisory-report.md` (default path if `--output`
-is omitted: `docs/skill-mining/<today>-advisory-report.md`).
+v0.5 architecture: `report.py` is a thin payload constructor — it reads
+the same `merged.json` produced by the subagent fan-out (Step 3),
+validates `--lang`, and emits a JSON dispatch payload on stdout. Claude
+then dispatches one subagent at `agents/prompt-advisory-analyst.md`
+(model `claude-sonnet-4-6`), reads the returned markdown, and writes it
+to `--output` (default `docs/skill-mining/<today>-advisory-report.md`).
+The analyst — not Python — does the clustering, dedup, and prose.
 
 Key properties:
 
+- **Mandatory `--lang zh-TW|en|ja`** — no default; explicit per
+  invocation. The flag controls explanatory prose only; code blocks /
+  identifiers / target SKILL.md and CLAUDE.md snippets stay English
+  because they are English source artifacts. Mirrors the user's
+  CLAUDE.md "Working languages: Traditional Chinese / Japanese /
+  English (match my message language)" rule.
 - **Independent surface** — report.py is not required for the
   `propose.py` → `apply.py` flow. Run it after Step 4 (propose.py) for
   a cross-target human summary; skip if you only need per-target
   proposals.
 - **Inputs** — same `merged.json` as `propose.py`; no target SKILL.md
   argument (report is cross-target, not per-target).
-- **Output** — single file (not one-per-target like proposals);
-  sections: top anti-patterns (你最常重複的), per-target breakdown
-  (該改的), CLAUDE.md candidates, new skill candidates (新 skill 候選),
-  numbers summary (數字摘要), action items (你現在能做的).
-- **Heuristic clustering** — `cluster_by_title_keyword` groups Memory
-  Items by shared non-stop-word tokens across the full merged.json.
-  Items whose title keyword appears in ≥2 distinct target skill paths
-  surface as CLAUDE.md candidates (cross-skill behaviour pattern →
-  worth a global rule rather than per-skill addition).
+- **Output** — single file (not one-per-target like proposals); 7
+  sections: top anti-patterns (≤5 semantic clusters), per-target
+  SKILL.md modification list, ≤5 CLAUDE.md candidates (semantic dedup
+  across targets), new-skill candidates, numbers summary, action steps,
+  and a header block naming the run + `--lang`.
+- **Semantic clustering via LLM** — the advisory-analyst subagent does
+  the clustering natively in its prompt. This supersedes v0.4.1's
+  surface-token heuristic which merged unrelated items via shared
+  generic tokens (the v0.4.1 first-dogfood collapsed 31/33 Memory
+  Items into a single cluster via the `axis` token); semantic
+  clustering is the v0.5 fix and there is no `--mode heuristic`
+  fallback (clean break per Q-v0.5-3).
+- **Cost** — ~$0.23 / run (1 Sonnet 4.6 call, ~50K input + ~5K output
+  tokens). Negligible vs Stage 3 (~$3-8 / run across N parallel
+  trajectory subagents).
 - **Suggested invocation** — run post-`propose.py`, same `merged.json`.
   Provides the "why am I repeatedly fixing this?" human perspective that
   complements the per-target machine-actionable proposals.
