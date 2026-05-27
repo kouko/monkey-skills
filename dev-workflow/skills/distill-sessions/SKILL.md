@@ -9,7 +9,9 @@ description: >-
   `code-toolkit:dispatching-parallel-agents`, and emit a reviewable
   `docs/skill-mining/<date>-<target>-proposals.md` whose §"Proposed additions"
   / §"Proposed modifications" blocks apply.py can write back into a target
-  SKILL.md only after `--approved`. Use when auditing skill activation
+  SKILL.md only after `--approved`, and a sibling human-readable
+  `docs/skill-mining/<date>-advisory-report.md` (zh-TW, cross-target
+  heuristic clustering via `scripts/report.py`). Use when auditing skill activation
   telemetry after a heavy `code-toolkit:*` cycle, when MEMORY.md is past its
   soft limit and you need graduation candidates, or before a `skill-refactor`
   session so the refactor lands on evidence not vibes. Do NOT use for creating
@@ -20,7 +22,7 @@ description: >-
   scope at v0.1). 技能ログ採掘・SKILL.md 改善提案・トリガー漏れ検出・活性化ログ分析・
   /insights ファセット結合・並列サブエージェント分析。技能日誌挖掘・SKILL.md 迭代提案・
   觸發遺漏偵測・啟動日誌分析・/insights facet 結合・並行子代理分析。
-version: 0.4.0
+version: 0.4.1
 ---
 
 # distill-sessions
@@ -154,12 +156,12 @@ Python (Stage 5 proposal render + approval-gated write-back).
                        merged.json  (Claude collects)
                               |
                               v
-        +-----------------------------------------+
-        | scripts/propose.py  (Stage 5a)          |
-        |   merged.json + target SKILL.md         |
-        |   -> docs/skill-mining/<date>-<t>.md    |
-        +-----------------------------------------+
-                              |
+        +-----------------------------------------+         +-----------------------------------------+
+        | scripts/propose.py  (Stage 5a)          |         | scripts/report.py  (Stage 5c)           |
+        |   merged.json + target SKILL.md         |         |   merged.json (all targets)              |
+        |   -> docs/skill-mining/<date>-<t>.md    |         |   -> docs/skill-mining/<date>-           |
+        +-----------------------------------------+         |      advisory-report.md (zh-TW)          |
+                              |                             +-----------------------------------------+
                               v
                   Human reviews the diff
                               |
@@ -327,6 +329,40 @@ single reviewable markdown with:
   pending more evidence. Re-run after more session data accumulates.
 - `## Marked for v0.2` — proposals requiring new `references/*.md`
   files are bucketed here per brief Q4 (SKILL.md-only at v0.1).
+
+### Step 4b — Stage 5c advisory report (Python)
+
+```bash
+python scripts/report.py \
+  --input merged.json \
+  [--output docs/skill-mining/<date>-advisory-report.md]
+```
+
+`report.py` reads the same `merged.json` produced by the subagent fan-out
+(Step 3) and emits a single zh-TW human-readable advisory markdown at
+`docs/skill-mining/<date>-advisory-report.md` (default path if `--output`
+is omitted: `docs/skill-mining/<today>-advisory-report.md`).
+
+Key properties:
+
+- **Independent surface** — report.py is not required for the
+  `propose.py` → `apply.py` flow. Run it after Step 4 (propose.py) for
+  a cross-target human summary; skip if you only need per-target
+  proposals.
+- **Inputs** — same `merged.json` as `propose.py`; no target SKILL.md
+  argument (report is cross-target, not per-target).
+- **Output** — single file (not one-per-target like proposals);
+  sections: top anti-patterns (你最常重複的), per-target breakdown
+  (該改的), CLAUDE.md candidates, new skill candidates (新 skill 候選),
+  numbers summary (數字摘要), action items (你現在能做的).
+- **Heuristic clustering** — `cluster_by_title_keyword` groups Memory
+  Items by shared non-stop-word tokens across the full merged.json.
+  Items whose title keyword appears in ≥2 distinct target skill paths
+  surface as CLAUDE.md candidates (cross-skill behaviour pattern →
+  worth a global rule rather than per-skill addition).
+- **Suggested invocation** — run post-`propose.py`, same `merged.json`.
+  Provides the "why am I repeatedly fixing this?" human perspective that
+  complements the per-target machine-actionable proposals.
 
 ### Step 5 — Human review + Stage 5b approval-gated write-back
 

@@ -26,7 +26,7 @@ from report import (
 )
 
 _SCRIPTS_DIR = Path(__file__).parent
-_FIXTURE_PATH = _SCRIPTS_DIR / "fixtures" / "v0.4.1-merged-snapshot.json"
+_FIXTURE_PATH = _SCRIPTS_DIR / "fixture_report_merged.json"
 
 
 # ---------------------------------------------------------------------------
