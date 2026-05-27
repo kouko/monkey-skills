@@ -96,8 +96,16 @@ has lost the thread. The two coexist; do not replace the built-in away-summary.
      term if the user introduced it in this session. Expand acronyms on first
      mention. Short sentences. One fact per bullet.
 
-4. After producing the 7 blocks, wait. Do not continue until the user responds
-   to the Synthesis-check question in block 7.
+4. **Visual aids** (tables / ASCII diagrams): permitted **only when they
+   compress information**, not as decoration. See `references/seven-block-schema.md`
+   §1.5 for per-block guidance. Block 3 (Assessment) defaults to a 2-col
+   key:value table. Block 5 (Why-this-question) and Block 6 (Pending) use
+   tables when there are 2+ options or per-item metadata, prose otherwise.
+   Skip tables for blocks 1 + 7 (single sentence). Reach for ASCII only when
+   real topology exists (pipeline / dependency / state machine).
+
+5. After producing the 6 L3 blocks (Block 4 skipped), wait. Do not continue
+   until the user responds to the Synthesis-check question in block 7.
 
 ## Soft-gate Synthesis-check
 
@@ -118,7 +126,7 @@ correction would only surface 3 turns later.
   Cross-session continuation is HANDOFF (a future sister skill).
 - **Do not replace the built-in `/recap`**: the away-summary is a different
   tool for a different moment. This skill fills the in-session gap.
-- **Do not produce a free-form summary instead of the 7 blocks**: the schema is
+- **Do not produce a free-form summary instead of the 6 L3 blocks**: the schema is
   the user-visible value. A paragraph that "covers the same ground" is not
   equivalent — it breaks the structured-schema principle.
 - **Do not render Block 4 at L3**: that block is L2-only (for the future
@@ -132,6 +140,10 @@ correction would only surface 3 turns later.
 - **If the user actually asks for verbatim user-message listing at L3**:
   produce it as a separate response outside the recap schema, not as a
   ressurected Block 4. The 6-block recap stays focused.
+- **Do not add decorative tables / ASCII**: a 1-row table, a 2-row table whose
+  rows are unrelated, or an ASCII chart for a 3-item list adds framing without
+  compressing. Per `references/seven-block-schema.md` §1.5, tables fire only
+  when they flatten ≥3 sub-items or compare ≥2 options.
 
 ## See also
 

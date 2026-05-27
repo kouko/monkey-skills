@@ -34,6 +34,40 @@ HANDOFF SKILL.md will route the L2 subset.
 **L3 ships 6 blocks** (1, 2, 3, 5, 6, 7).
 **L2 will ship 6 blocks** (1, 2, 3, 4, 6, 7) plus HANDOFF-specific additions per the HANDOFF research v1.1 schema (Interruption Snapshot, Confidence Flags, Do Not Touch, Verification Commands, etc. — those are HANDOFF-only and not in this bundle).
 
+---
+
+## 1.5 — Visual aids (tables / ASCII)
+
+**Rule**: Use tables or ASCII diagrams **only when they compress information** —
+not as decoration. The recap exists to be scanned, not admired. A table that
+flattens 3 sub-bullets into 3 rows wins; a table with 1 row or a chart for 3
+unrelated items adds framing without compressing.
+
+Per-block guidance — added 2026-05-27 after the 3rd dogfood round surfaced
+that some blocks (especially Block 3 Assessment, Block 5 Why-this-question,
+Block 6 Pending) read meaningfully better with a small table:
+
+| Block | Default form | Upgrade to table / ASCII when… |
+|---|---|---|
+| 1 Situation | one sentence prose | Never. One sentence cannot be a table. |
+| 2 Background | bullet list | Comparing 2+ alternatives → 2-col table (option / why-rejected) |
+| 3 Assessment | n/a — **default is table** | Always: 2-col key:value (假設 / 信心 / 卡住) reads cleaner than 3 separate sub-bullets |
+| 5 Why-this-question | prose | 2+ options present → option-comparison table (option / cost / benefit) |
+| 6 Pending | `- [ ]` checklist | Items carry metadata (priority, blocked-by, owner, due-date) → multi-col table |
+| 7 Synthesis-check | one sentence + one question | Never. The whole point is a single direct ask. |
+
+**ASCII diagrams**: useful only when there is real topology — a pipeline /
+dependency graph / state machine the human needs to see spatially. Recap
+content is usually a flat state snapshot; if you reach for an ASCII diagram,
+double-check there is actual structure to visualize, not just a list with
+arrows added.
+
+**Anti-pattern**: a 1-row table, a 2-row table whose rows are unrelated, or
+an ASCII chart for a 3-item list. These add boxes around text without
+reducing parsing cost — net negative for the 60-second-read principle.
+
+---
+
 ### Block 1 — Situation
 
 **Prompt instruction**: One sentence — what are we doing right now? Where are we stuck?
@@ -284,9 +318,14 @@ The test file exists and fails because the bundle file does not exist yet.
 
 ### Assessment
 
-Current assumption: the directory structure is correct and pytest can discover the test.
-Confidence: high — ran `ls` to verify paths.
-Blocked on: nothing; the test runs and fails cleanly (expected RED state).
+| | |
+|---|---|
+| **假設** | directory structure is correct and pytest can discover the test |
+| **信心** | high — ran `ls` to verify paths |
+| **卡住** | nothing; the test runs and fails cleanly (expected RED state) |
+
+*(2-col key:value table per §1.5 — Assessment defaults to this form; reads
+cleaner than 3 separate sub-bullets.)*
 
 ### ~~User messages~~ (skipped at L3 — see Block ↔ Audience map)
 
@@ -299,16 +338,27 @@ HANDOFF sister skill.)*
 
 ### Why-this-question
 
-There is no pending question; this is a recap of a completed step. If there
-were a question — e.g., "should I use H2 or H3 for the block headings?" — the
-answer matters because the test regex matches `^#{2,3}`, so both work, and the
-choice affects how the document renders in a preview.
+There is no pending question; this is a recap of a completed step.
+
+**If a real question with multiple options existed** — e.g., "H2 or H3 for
+block headings?" — per §1.5 the option-comparison reads better as a table:
+
+| Option | Pro | Con |
+|---|---|---|
+| H2 (`##`) | matches top-level convention in bundles | larger visual jump from H1 |
+| H3 (`###`) | tighter under bundle's H2 sections | regex still matches via `^#{2,3}` |
+
+Prose is fine when there is one option or a clear narrative; reach for the
+table when the human is comparing alternatives.
 
 ### Pending
 
 - [ ] Write `seven-block-schema.md` bundle (GREEN step)
 - [ ] Commit GREEN
 - [ ] Return implementer output to orchestrator
+
+*(Simple checklist — no per-item metadata, so the `- [ ]` form wins. If items
+carried priority / blocked-by / owner, per §1.5 a multi-col table would fit.)*
 
 ### Synthesis-check
 
@@ -351,12 +401,17 @@ within the dev-workflow plugin ecosystem.
 
 ### Assessment
 
-Hypothesis: path resolution is nominal. Confidence: sufficient.
-Concern: no outstanding impediments identified at this juncture.
+| Field |
+|---|
+| Hypothesis: path resolution is nominal. Confidence: sufficient. Concern: no outstanding impediments identified at this juncture. |
 
-> **jargon-creep**: "path resolution is nominal", "no outstanding impediments
-> at this juncture" — the plain version is "paths are correct, nothing is
-> blocking us."
+> **decorative-table (§1.5 anti-pattern)**: a 1-row, 1-column table is just a
+> box around prose. It adds parsing cost (the reader has to recognize the
+> table structure) without compressing anything. Correct form is the 2-col
+> key:value table — see Good Example Block 3.
+> **jargon-creep (principle 5)**: "path resolution is nominal", "no
+> outstanding impediments at this juncture" — the plain version is "paths are
+> correct, nothing is blocking us."
 
 ### User messages
 
