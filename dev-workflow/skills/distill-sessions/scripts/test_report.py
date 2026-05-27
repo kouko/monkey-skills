@@ -1,14 +1,17 @@
-"""test_report.py — tests for report.py (merged.json → advisory markdown renderer).
+"""test_report.py — tests for report.py (Stage 5c advisory dispatch-payload generator).
 
-TDD RED phase: these tests are written BEFORE report.py exists.
-Expected initial state: ImportError on 'from report import ...'
+v0.5 architecture: report.py emits a JSON dispatch payload to stdout; the
+Claude Code orchestrator dispatches the Sonnet 4.6 advisory-analyst
+subagent and writes the returned markdown to ``output_path``. All
+heuristic clustering + rendering moved out of report.py into the
+subagent prompt (see ``agents/prompt-advisory-analyst.md``).
 
-Required tests per Task 1 acceptance:
-1. test_render_advisory_markdown_includes_required_sections
-2. test_parse_merged_json_returns_expected_structure
-3. test_cluster_by_title_keyword_groups_similar_titles
-4. test_extract_claude_md_candidates_surfaces_cross_target_keywords
-5. test_render_handles_empty_input_without_crash
+Tests:
+- ``parse_merged_json`` structural correctness (inline + real fixture).
+- ``build_dispatch_payload`` schema parity with main.py Stage 3 pattern.
+- ``main`` CLI argparse contract: mandatory ``--lang``, valid choices,
+  stdout payload shape.
+- ``test_heuristic_functions_removed`` — v0.5 T3 refactor invariant.
 """
 
 from __future__ import annotations
@@ -19,10 +22,9 @@ from pathlib import Path
 import pytest
 
 from report import (
-    cluster_by_title_keyword,
-    extract_claude_md_candidates,
+    build_dispatch_payload,
+    main,
     parse_merged_json,
-    render_advisory_markdown,
 )
 
 _SCRIPTS_DIR = Path(__file__).parent
@@ -65,57 +67,7 @@ def _mk_item(title: str, *, description: str = "desc", content: str = "content")
 
 
 # ---------------------------------------------------------------------------
-# Test 1 — required section headings in rendered output.
-# ---------------------------------------------------------------------------
-
-
-def test_render_advisory_markdown_includes_required_sections() -> None:
-    """render_advisory_markdown must include all 7 required section headings.
-
-    This is the primary acceptance gate: the report is only useful if all
-    sections the user expects are present.
-    """
-    # Minimal 2-entry merged_data so all sections have something to render.
-    merged_data = [
-        _mk_entry(
-            "session-1",
-            "/path/to/brainstorming/SKILL.md",
-            [
-                _mk_item("AskUserQuestion overuse pattern"),
-                _mk_item("Current State Evidence uses memory paths"),
-            ],
-        ),
-        _mk_entry(
-            "session-2",
-            "/path/to/writing-plans/SKILL.md",
-            [
-                _mk_item("AskUserQuestion overuse in planning"),
-            ],
-        ),
-    ]
-
-    output = render_advisory_markdown(merged_data, date_str="2026-05-27")
-
-    # H1 title
-    assert "# Claude 用法檢討" in output
-    # Synthesized-from subtitle
-    assert "Synthesized from" in output
-    # Section 1: top anti-patterns
-    assert "你最常重複的" in output
-    # Section 2: per-target skill breakdown
-    assert "該改的" in output
-    # Section 3: CLAUDE.md candidates
-    assert "CLAUDE.md" in output
-    # Section 4: new skill candidates
-    assert "新 skill 候選" in output
-    # Section 5: numbers summary
-    assert "數字摘要" in output
-    # Section 6: action items
-    assert "你現在能做的" in output
-
-
-# ---------------------------------------------------------------------------
-# Test 2 — parse_merged_json returns expected structure from fixture.
+# parse_merged_json — structural correctness.
 # ---------------------------------------------------------------------------
 
 
@@ -172,140 +124,88 @@ def test_parse_merged_json_real_fixture() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Test 3 — cluster_by_title_keyword groups items with shared keyword.
+# v0.5 T2 tests — analyst-dispatch payload + mandatory --lang flag.
 # ---------------------------------------------------------------------------
 
 
-def test_cluster_by_title_keyword_groups_similar_titles() -> None:
-    """Items sharing a non-stop-word token in their title end up in the same cluster.
+def test_build_dispatch_payload_emits_correct_schema() -> None:
+    """v0.5 T2 — pure function returns the orchestrator-dispatch payload shape."""
+    merged = parse_merged_json(str(_FIXTURE_PATH))
+    payload = build_dispatch_payload(
+        merged_data=merged,
+        lang="zh-TW",
+        date_str="2026-05-27",
+        output_path="/tmp/x.md",
+    )
+    assert set(payload.keys()) == {"dispatch_payload", "output_path"}
+    dp = payload["dispatch_payload"]
+    assert dp["prompt_path"] == "agents/prompt-advisory-analyst.md"
+    assert dp["model"] == "claude-sonnet-4-6"
+    assert set(dp["input"].keys()) == {"merged_data", "lang", "date_str"}
+    assert dp["input"]["lang"] == "zh-TW"
+    assert dp["input"]["date_str"] == "2026-05-27"
+    assert payload["output_path"] == "/tmp/x.md"
 
-    Feed 3 items: 2 share "AskUserQuestion", 1 is unrelated.
-    Expect: ≥1 cluster containing both AskUserQuestion items.
-    """
-    items = [
-        _mk_item("AskUserQuestion overuse causes blocking"),
-        _mk_item("AskUserQuestion used to avoid recommendation"),
-        _mk_item("Current State Evidence cites memory paths"),
+
+def test_main_requires_lang_flag(capsys: pytest.CaptureFixture[str]) -> None:
+    """v0.5 T2 — argparse rejects invocation without --lang."""
+    with pytest.raises(SystemExit) as exc:
+        main(["--input", str(_FIXTURE_PATH)])
+    assert exc.value.code != 0
+    err = capsys.readouterr().err
+    assert "--lang" in err or "lang" in err.lower()
+
+
+def test_main_rejects_invalid_lang(capsys: pytest.CaptureFixture[str]) -> None:
+    """v0.5 T2 — argparse rejects --lang values outside zh-TW/en/ja."""
+    with pytest.raises(SystemExit) as exc:
+        main(["--input", str(_FIXTURE_PATH), "--lang", "fr"])
+    assert exc.value.code != 0
+
+
+def test_main_emits_dispatch_payload_to_stdout(
+    capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    """v0.5 T2 — main() with valid --lang prints dispatch payload JSON to stdout and returns 0."""
+    out_path = tmp_path / "advisory.md"
+    rc = main([
+        "--input", str(_FIXTURE_PATH),
+        "--output", str(out_path),
+        "--date", "2026-05-27",
+        "--lang", "zh-TW",
+    ])
+    assert rc == 0
+    captured = capsys.readouterr()
+    parsed = json.loads(captured.out)
+    assert parsed["output_path"] == str(out_path)
+    assert parsed["dispatch_payload"]["model"] == "claude-sonnet-4-6"
+    assert parsed["dispatch_payload"]["prompt_path"] == "agents/prompt-advisory-analyst.md"
+    assert parsed["dispatch_payload"]["input"]["lang"] == "zh-TW"
+    assert parsed["dispatch_payload"]["input"]["date_str"] == "2026-05-27"
+    assert "merged_data" in parsed["dispatch_payload"]["input"]
+
+
+# ---------------------------------------------------------------------------
+# v0.5 T3 — refactor-invariant: heuristic helpers must not exist after v0.5.
+# ---------------------------------------------------------------------------
+
+
+def test_heuristic_functions_removed():
+    """v0.5 T3 — refactor-invariant: heuristic helpers must not exist after v0.5 architecture migration."""
+    import report
+    deleted_symbols = [
+        "_STOP_WORDS",
+        "_tokenize_title",
+        "cluster_by_title_keyword",
+        "extract_claude_md_candidates",
+        "_render_header",
+        "_render_anti_patterns_section",
+        "_render_skill_breakdown_section",
+        "_render_claude_md_section",
+        "_render_new_skill_section",
+        "_render_summary_section",
+        "_render_action_steps_section",
+        "render_advisory_markdown",
     ]
-
-    clusters = cluster_by_title_keyword(items)
-
-    assert isinstance(clusters, dict), "must return dict"
-    # Find the cluster containing both AskUserQuestion items.
-    ask_cluster = None
-    for keyword, cluster_items in clusters.items():
-        titles = [it["title"] for it in cluster_items]
-        if any("AskUserQuestion" in t for t in titles):
-            if len([t for t in titles if "AskUserQuestion" in t]) >= 2:
-                ask_cluster = cluster_items
-                break
-
-    assert ask_cluster is not None, (
-        "Expected ≥1 cluster grouping both AskUserQuestion items together; "
-        f"got clusters: {list(clusters.keys())}"
-    )
-    assert len(ask_cluster) >= 2, (
-        f"AskUserQuestion cluster must have ≥2 items, got {len(ask_cluster)}"
-    )
-
-
-def test_cluster_by_title_keyword_does_not_group_unrelated_titles() -> None:
-    """Items with no shared non-stop-word keyword stay in separate clusters."""
-    items = [
-        _mk_item("AskUserQuestion overuse causes blocking"),
-        _mk_item("Current State Evidence cites memory paths"),
-        _mk_item("Verify files disjoint before parallel dispatch"),
-    ]
-
-    clusters = cluster_by_title_keyword(items)
-
-    # Each of the 3 items should end up in separate clusters (no shared keywords).
-    # Count total items across all clusters — must be 3 (no duplication).
-    all_clustered = [item for cluster_items in clusters.values() for item in cluster_items]
-    # Deduplicate by title (union-find may represent shared token across multiple singletons)
-    titles_seen = {it["title"] for it in all_clustered}
-    assert len(titles_seen) == 3, (
-        f"All 3 items must appear exactly once across clusters; titles: {titles_seen}"
-    )
-
-
-# ---------------------------------------------------------------------------
-# Test 4 — extract_claude_md_candidates surfaces cross-target keywords.
-# ---------------------------------------------------------------------------
-
-
-def test_extract_claude_md_candidates_surfaces_cross_target_keywords() -> None:
-    """Items whose title keyword appears in ≥2 distinct target skills → candidate.
-
-    Feed items across 2 target skills sharing the keyword "AskUserQuestion".
-    Expect ≥1 candidate from extract_claude_md_candidates.
-    """
-    # items_by_target: target_skill_path → list[items]
-    items_by_target = {
-        "/path/brainstorming/SKILL.md": [
-            _mk_item("AskUserQuestion overuse in brainstorming"),
-            _mk_item("Current State Evidence cites memory paths"),
-        ],
-        "/path/writing-plans/SKILL.md": [
-            _mk_item("AskUserQuestion blocking writing-plans handoff"),
-            _mk_item("Open Questions left for next phase"),
-        ],
-    }
-
-    candidates = extract_claude_md_candidates(items_by_target)
-
-    assert isinstance(candidates, list), "must return list"
-    assert len(candidates) >= 1, (
-        "Expected ≥1 CLAUDE.md candidate from cross-target 'AskUserQuestion' keyword; "
-        f"got {len(candidates)}"
-    )
-    # At least one candidate should reference AskUserQuestion (case-insensitive)
-    ask_candidates = [
-        c for c in candidates
-        if "askuserquestion" in c.get("title", "").lower()
-        or "askuserquestion" in c.get("keyword", "").lower()
-    ]
-    assert len(ask_candidates) >= 1, (
-        f"Expected AskUserQuestion-related candidate; got candidates: {candidates}"
-    )
-
-
-def test_extract_claude_md_candidates_returns_empty_for_single_target() -> None:
-    """No cross-target candidates when all items belong to one skill."""
-    items_by_target = {
-        "/path/brainstorming/SKILL.md": [
-            _mk_item("AskUserQuestion overuse in brainstorming"),
-            _mk_item("AskUserQuestion blocks recommendations"),
-        ],
-    }
-    candidates = extract_claude_md_candidates(items_by_target)
-    # Single target → no cross-target overlap → empty
-    assert candidates == [], (
-        f"Single-target items must yield no CLAUDE.md candidates; got {candidates}"
-    )
-
-
-# ---------------------------------------------------------------------------
-# Test 5 — empty input does not crash.
-# ---------------------------------------------------------------------------
-
-
-def test_render_handles_empty_input_without_crash() -> None:
-    """render_advisory_markdown with empty merged_data must not crash.
-
-    All section headings must still be present even with 0 items — this
-    ensures the report shape is consistent regardless of input size.
-    """
-    output = render_advisory_markdown([], date_str="2026-05-27")
-
-    assert isinstance(output, str)
-    assert len(output) > 0, "output must be non-empty even for empty input"
-
-    # All section headings must still appear.
-    assert "# Claude 用法檢討" in output
-    assert "你最常重複的" in output
-    assert "該改的" in output
-    assert "CLAUDE.md" in output
-    assert "新 skill 候選" in output
-    assert "數字摘要" in output
-    assert "你現在能做的" in output
+    for sym in deleted_symbols:
+        assert getattr(report, sym, None) is None, f"{sym} should be deleted in v0.5 T3"
