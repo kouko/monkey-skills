@@ -268,8 +268,180 @@ def _short_skill_name(target_skill_path: str) -> str:
     return p.parent.name or p.name
 
 
+def _render_header(
+    date_str: str, trajectory_count: int, item_count: int, target_count: int
+) -> list[str]:
+    """Render H1 title + subtitle block."""
+    return [
+        f"# Claude 用法檢討 — {date_str}",
+        "",
+        f"> Synthesized from {trajectory_count} 個 trajectory × "
+        f"{item_count} 個 Memory Item，涵蓋 {target_count} 個 target skill。",
+        "",
+        "---",
+        "",
+    ]
+
+
+def _render_anti_patterns_section(top_patterns: list[tuple]) -> list[str]:
+    """Render §"你最常重複的 N 個小毛病" — top clustered patterns with evidence."""
+    n_patterns = len(top_patterns)
+    lines: list[str] = [f"## 你最常重複的 {n_patterns} 個小毛病", ""]
+    if not top_patterns:
+        lines.extend(["_(無重複 anti-pattern — 所有 Memory Item title 均唯一)_", "", "---", ""])
+        return lines
+    for rank, (keyword, pattern_items) in enumerate(top_patterns, start=1):
+        rep_title = max(pattern_items, key=lambda it: len(it.get("title", "")))
+        lines.append(f"### #{rank} {rep_title['title']}")
+        lines.append(
+            f"- 出現 **{len(pattern_items)}** 個 Memory Item 中（關鍵字：`{keyword}`）"
+        )
+        for it in pattern_items[:3]:
+            desc = it.get("description", "")
+            desc_short = desc[:80] + "…" if len(desc) > 80 else desc
+            lines.append(f"  - {it['title']}")
+            if desc_short:
+                lines.append(f"    _{desc_short}_")
+        if len(pattern_items) > 3:
+            lines.append(f"  - _…（共 {len(pattern_items)} 個 item）_")
+        lines.append("")
+    lines.extend(["---", ""])
+    return lines
+
+
+def _render_skill_breakdown_section(
+    by_target: dict[str, list[dict]], item_count: int
+) -> list[str]:
+    """Render §"該改的 N 個 skill" — per-target failure/success breakdown."""
+    n_skills = len(by_target)
+    lines: list[str] = [f"## 該改的 {n_skills} 個 skill (共 {item_count} 處)", ""]
+    if not by_target:
+        lines.extend(["_(無 Memory Item)_", "", "---", ""])
+        return lines
+    for target_path, target_items in sorted(by_target.items()):
+        skill_name = _short_skill_name(target_path)
+        failure_items = [it for it in target_items if it.get("kind") == "failure"]
+        success_items = [it for it in target_items if it.get("kind") == "success"]
+        lines.append(f"### {skill_name}（{len(target_items)} 個 item）")
+        if failure_items:
+            lines.append(f"**改法（{len(failure_items)} 個 failure）：**")
+            for it in failure_items:
+                lines.append(f"- {it['title']}")
+                desc = it.get("description", "")
+                if desc:
+                    desc_short = desc[:100] + "…" if len(desc) > 100 else desc
+                    lines.append(f"  - _{desc_short}_")
+        if success_items:
+            lines.append(f"**保留（{len(success_items)} 個 success）：**")
+            for it in success_items:
+                lines.append(f"- {it['title']}")
+        lines.append("")
+    lines.extend(["---", ""])
+    return lines
+
+
+def _render_claude_md_section(claude_md_candidates: list[dict]) -> list[str]:
+    """Render §"該加進 CLAUDE.md 的 N 條規則" — cross-target keyword candidates."""
+    n = len(claude_md_candidates)
+    lines: list[str] = [f"## 該加進 ~/.claude/CLAUDE.md 的 {n} 條規則", ""]
+    if not claude_md_candidates:
+        lines.extend([
+            "_(無跨 skill 的共通 pattern — 目前所有 Memory Item 屬單一 skill 範疇)_",
+            "",
+            "---",
+            "",
+        ])
+        return lines
+    lines.extend(["從多個 target skill 重複出現的 pattern 萃取：", ""])
+    for i, cand in enumerate(claude_md_candidates, start=1):
+        keyword = cand["keyword"]
+        targets_short = [_short_skill_name(t) for t in cand["targets"]]
+        lines.append(
+            f"{i}. **`{keyword}`** — 跨 {len(cand['targets'])} 個 skill: {', '.join(targets_short)}"
+        )
+        for it in cand["items"][:2]:
+            lines.append(f"   - {it['title']}")
+        lines.append("")
+    lines.extend(["---", ""])
+    return lines
+
+
+def _render_new_skill_section() -> list[str]:
+    """Render §"新 skill 候選" — v0.4.1 placeholder (real detection in v0.5+)."""
+    return [
+        "## 新 skill 候選",
+        "",
+        "目前無 — 所有 friction 都有現有 skill 收容 "
+        "(v0.5+ semantic clustering ship 後啟用真正的候選偵測)",
+        "",
+        "---",
+        "",
+    ]
+
+
+def _render_summary_section(
+    trajectory_count: int,
+    item_count: int,
+    target_count: int,
+    by_target: dict[str, list[dict]],
+) -> list[str]:
+    """Render §"數字摘要" — quantitative breakdown + cost-estimate pointer."""
+    lines: list[str] = [
+        "## 數字摘要",
+        "",
+        f"- **Trajectory 數**：{trajectory_count}",
+        f"- **Memory Item 數**：{item_count}",
+        f"- **Target skill 數**：{target_count}",
+    ]
+    if by_target:
+        lines.append("- **Target 分布**：")
+        for target_path, target_items in sorted(by_target.items()):
+            skill_name = _short_skill_name(target_path)
+            lines.append(f"  - {skill_name}：{len(target_items)} 個 item")
+    lines.extend([
+        "- **費用估算**：見 `main.py` stderr preview（merged.json 不含 session_events 原始 payload，無法在此 re-derive）",
+        "",
+        "---",
+        "",
+    ])
+    return lines
+
+
+def _render_action_steps_section(
+    top_patterns: list[tuple], claude_md_candidates: list[dict]
+) -> list[str]:
+    """Render §"你現在能做的 N 件事" — actionable next steps with effort estimates."""
+    actions: list[str] = []
+    if top_patterns:
+        actions.append(
+            f"把 Top {min(len(top_patterns), 3)} 個 anti-pattern 對應的 SKILL.md edit 手動 apply | ~20–40 分鐘"
+        )
+    if claude_md_candidates:
+        actions.append(
+            f"把 {len(claude_md_candidates)} 條 CLAUDE.md 規則加進 `~/.claude/CLAUDE.md` | ~5–10 分鐘"
+        )
+    actions.append("等 v0.5 semantic clustering 出來後 batch processing | 未定")
+    actions.append("啥都不做，等下個月再跑一次累積 evidence | 0 分鐘")
+
+    lines: list[str] = [
+        f"## 你現在能做的 {len(actions)} 件事",
+        "",
+        "| Action | Effort |",
+        "|---|---|",
+    ]
+    for i, action in enumerate(actions, start=1):
+        action_text, effort = action.rsplit(" | ", 1)
+        lines.append(f"| {i}. {action_text} | {effort} |")
+    lines.append("")
+    return lines
+
+
 def render_advisory_markdown(merged_data: list[dict], date_str: str) -> str:
     """Render the full zh-TW advisory report markdown as a string.
+
+    Composes 7 section helpers (header + 6 content sections) into the final
+    document. Each helper renders its own section + trailing separator; this
+    orchestrator just sequences them.
 
     Args:
         merged_data: list of merged.json entries (each with ``memory_items``).
@@ -284,176 +456,23 @@ def render_advisory_markdown(merged_data: list[dict], date_str: str) -> str:
     item_count = len(all_items)
     target_count = len(by_target)
 
-    # --- Cluster by title keyword for anti-pattern section ---
+    # Cluster + filter to top patterns (≥2 items in same cluster).
     clusters = cluster_by_title_keyword(all_items)
-    # Sort clusters by size descending (largest = most repeated pattern).
-    sorted_clusters = sorted(
-        clusters.items(), key=lambda kv: len(kv[1]), reverse=True
-    )
-    # Top patterns: clusters with ≥2 items (actual repeated patterns).
+    sorted_clusters = sorted(clusters.items(), key=lambda kv: len(kv[1]), reverse=True)
     top_patterns = [(k, v) for k, v in sorted_clusters if len(v) >= 2]
 
-    # --- CLAUDE.md candidates ---
     claude_md_candidates = extract_claude_md_candidates(by_target)
 
-    # --- Build output ---
-    lines: list[str] = []
-
-    # H1 title
-    lines.append(f"# Claude 用法檢討 — {date_str}")
-    lines.append("")
-
-    # Subtitle
-    lines.append(
-        f"> Synthesized from {trajectory_count} 個 trajectory × "
-        f"{item_count} 個 Memory Item，涵蓋 {target_count} 個 target skill。"
-    )
-    lines.append("")
-    lines.append("---")
-    lines.append("")
-
-    # --- Section 1: Top anti-patterns ---
-    n_patterns = len(top_patterns)
-    lines.append(f"## 你最常重複的 {n_patterns} 個小毛病")
-    lines.append("")
-    if top_patterns:
-        for rank, (keyword, pattern_items) in enumerate(top_patterns, start=1):
-            # Show the most representative title (longest, most informative)
-            rep_title = max(pattern_items, key=lambda it: len(it.get("title", "")))
-            lines.append(f"### #{rank} {rep_title['title']}")
-            lines.append(
-                f"- 出現 **{len(pattern_items)}** 個 Memory Item 中（關鍵字：`{keyword}`）"
-            )
-            # List up to 3 titles as evidence.
-            evidence_items = pattern_items[:3]
-            for it in evidence_items:
-                desc = it.get("description", "")
-                desc_short = desc[:80] + "…" if len(desc) > 80 else desc
-                lines.append(f"  - {it['title']}")
-                if desc_short:
-                    lines.append(f"    _{desc_short}_")
-            if len(pattern_items) > 3:
-                lines.append(f"  - _…（共 {len(pattern_items)} 個 item）_")
-            lines.append("")
-    else:
-        lines.append("_(無重複 anti-pattern — 所有 Memory Item title 均唯一)_")
-        lines.append("")
-
-    lines.append("---")
-    lines.append("")
-
-    # --- Section 2: Per-target SKILL.md breakdown ---
-    n_skills = len(by_target)
-    n_total_items = item_count
-    lines.append(f"## 該改的 {n_skills} 個 skill (共 {n_total_items} 處)")
-    lines.append("")
-    if by_target:
-        for target_path, target_items in sorted(by_target.items()):
-            skill_name = _short_skill_name(target_path)
-            failure_items = [it for it in target_items if it.get("kind") == "failure"]
-            success_items = [it for it in target_items if it.get("kind") == "success"]
-            lines.append(f"### {skill_name}（{len(target_items)} 個 item）")
-            if failure_items:
-                lines.append(f"**改法（{len(failure_items)} 個 failure）：**")
-                for it in failure_items:
-                    lines.append(f"- {it['title']}")
-                    desc = it.get("description", "")
-                    if desc:
-                        desc_short = desc[:100] + "…" if len(desc) > 100 else desc
-                        lines.append(f"  - _{desc_short}_")
-            if success_items:
-                lines.append(f"**保留（{len(success_items)} 個 success）：**")
-                for it in success_items:
-                    lines.append(f"- {it['title']}")
-            lines.append("")
-    else:
-        lines.append("_(無 Memory Item)_")
-        lines.append("")
-
-    lines.append("---")
-    lines.append("")
-
-    # --- Section 3: CLAUDE.md candidates ---
-    n_candidates = len(claude_md_candidates)
-    lines.append(f"## 該加進 ~/.claude/CLAUDE.md 的 {n_candidates} 條規則")
-    lines.append("")
-    if claude_md_candidates:
-        lines.append("從多個 target skill 重複出現的 pattern 萃取：")
-        lines.append("")
-        for i, cand in enumerate(claude_md_candidates, start=1):
-            keyword = cand["keyword"]
-            targets_short = [_short_skill_name(t) for t in cand["targets"]]
-            lines.append(f"{i}. **`{keyword}`** — 跨 {len(cand['targets'])} 個 skill: {', '.join(targets_short)}")
-            # Show up to 2 representative items.
-            rep_items = cand["items"][:2]
-            for it in rep_items:
-                lines.append(f"   - {it['title']}")
-            lines.append("")
-    else:
-        lines.append("_(無跨 skill 的共通 pattern — 目前所有 Memory Item 屬單一 skill 範疇)_")
-        lines.append("")
-
-    lines.append("---")
-    lines.append("")
-
-    # --- Section 4: 新 skill 候選 ---
-    lines.append("## 新 skill 候選")
-    lines.append("")
-    lines.append(
-        "目前無 — 所有 friction 都有現有 skill 收容 "
-        "(v0.5+ semantic clustering ship 後啟用真正的候選偵測)"
-    )
-    lines.append("")
-    lines.append("---")
-    lines.append("")
-
-    # --- Section 5: 數字摘要 ---
-    lines.append("## 數字摘要")
-    lines.append("")
-    lines.append(f"- **Trajectory 數**：{trajectory_count}")
-    lines.append(f"- **Memory Item 數**：{item_count}")
-    lines.append(f"- **Target skill 數**：{target_count}")
-    if by_target:
-        lines.append("- **Target 分布**：")
-        for target_path, target_items in sorted(by_target.items()):
-            skill_name = _short_skill_name(target_path)
-            lines.append(f"  - {skill_name}：{len(target_items)} 個 item")
-    lines.append("- **費用估算**：見 `main.py` stderr preview（merged.json 不含 session_events 原始 payload，無法在此 re-derive）")
-    lines.append("")
-    lines.append("---")
-    lines.append("")
-
-    # --- Section 6: 你現在能做的 N 件事 ---
-    action_count = 0
-    action_lines: list[str] = []
-
-    if top_patterns:
-        action_count += 1
-        action_lines.append(
-            f"| {action_count}. 把 Top {min(len(top_patterns), 3)} 個 anti-pattern 對應的 SKILL.md edit 手動 apply | ~20–40 分鐘 |"
-        )
-    if claude_md_candidates:
-        action_count += 1
-        action_lines.append(
-            f"| {action_count}. 把 {n_candidates} 條 CLAUDE.md 規則加進 `~/.claude/CLAUDE.md` | ~5–10 分鐘 |"
-        )
-    action_count += 1
-    action_lines.append(
-        f"| {action_count}. 等 v0.5 semantic clustering 出來後 batch processing | 未定 |"
-    )
-    action_count += 1
-    action_lines.append(
-        f"| {action_count}. 啥都不做，等下個月再跑一次累積 evidence | 0 分鐘 |"
-    )
-
-    lines.append(f"## 你現在能做的 {action_count} 件事")
-    lines.append("")
-    lines.append("| Action | Effort |")
-    lines.append("|---|---|")
-    lines.extend(action_lines)
-    lines.append("")
-
-    return "\n".join(lines)
+    sections: list[list[str]] = [
+        _render_header(date_str, trajectory_count, item_count, target_count),
+        _render_anti_patterns_section(top_patterns),
+        _render_skill_breakdown_section(by_target, item_count),
+        _render_claude_md_section(claude_md_candidates),
+        _render_new_skill_section(),
+        _render_summary_section(trajectory_count, item_count, target_count, by_target),
+        _render_action_steps_section(top_patterns, claude_md_candidates),
+    ]
+    return "\n".join(line for section in sections for line in section)
 
 
 # ---------------------------------------------------------------------------
