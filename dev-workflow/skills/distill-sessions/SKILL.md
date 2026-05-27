@@ -24,7 +24,7 @@ description: >-
   scope at v0.1). 技能ログ採掘・SKILL.md 改善提案・トリガー漏れ検出・活性化ログ分析・
   /insights ファセット結合・並列サブエージェント分析。技能日誌挖掘・SKILL.md 迭代提案・
   觸發遺漏偵測・啟動日誌分析・/insights facet 結合・並行子代理分析。
-version: 0.5.0
+version: 0.5.1
 ---
 
 # distill-sessions
@@ -348,11 +348,33 @@ python scripts/report.py \
 
 v0.5 architecture: `report.py` is a thin payload constructor — it reads
 the same `merged.json` produced by the subagent fan-out (Step 3),
-validates `--lang`, and emits a JSON dispatch payload on stdout. Claude
-then dispatches one subagent at `agents/prompt-advisory-analyst.md`
-(model `claude-sonnet-4-6`), reads the returned markdown, and writes it
-to `--output` (default `docs/skill-mining/<today>-advisory-report.md`).
+validates `--lang`, and emits a JSON dispatch payload on stdout. The
+orchestrator then dispatches one Sonnet 4.6 subagent at
+`agents/prompt-advisory-analyst.md`, reads the returned markdown, and
+writes it to `--output` (default `docs/skill-mining/<today>-advisory-report.md`).
 The analyst — not Python — does the clustering, dedup, and prose.
+
+**Orchestrator dispatch — 4 steps (cold-start checklist)**:
+
+```
+1. Read  agents/prompt-advisory-analyst.md
+         → load the subagent's role, workflow, output template, hard constraints.
+2. Read  the stdout JSON from `python report.py --input <merged.json> --lang <locale>`
+         → extract `dispatch_payload.input` (merged_data / lang / date_str)
+           and `output_path` (where to write the result).
+3. Agent({subagent_type: "general-purpose", model: "sonnet",
+          prompt: <prompt body + JSON input data>})
+         → wait for the subagent to return the rendered markdown.
+4. Write the subagent's response verbatim to `output_path`.
+         No editing, no preamble — the response IS the file body.
+```
+
+**Model alias note**: the prompt's YAML frontmatter declares
+`model: claude-sonnet-4-6` as documentation reference, but the actual
+`Agent()` call uses the harness-level alias `model: "sonnet"` (which
+the runtime routes to the current Sonnet generation — currently 4.6).
+Passing the literal `"claude-sonnet-4-6"` to `Agent()` will fail enum
+validation.
 
 Key properties:
 
