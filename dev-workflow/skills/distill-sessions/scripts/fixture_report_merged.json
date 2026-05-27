@@ -1,0 +1,354 @@
+[
+  {
+    "session_id": "3d998518-803c-415e-a91c-dc66f4746dea",
+    "trajectory_id": "d412fa1d-87e4-5b47-83c6-a8cf9bea42fa",
+    "kind": "failure",
+    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/code-toolkit/skills/brainstorming/SKILL.md",
+    "memory_items": [
+      {
+        "title": "Clarify all problem-space dimensions before launching Axis 4 research",
+        "description": "When a user's opening message contains one surface type as an example, the agent should enumerate ALL relevant dimensions of the problem space in its initial framing before launching WebSearch, or it will anchor the research to the named example and the user must interrupt to broaden scope.",
+        "content": "In the `## The 5-axis exploration framework` section under Axis 1 (Problem), add a precondition step: before launching WebSearch for Axis 4, explicitly restate the inferred problem scope (including all affected categories) as a brief confirmation question if the user's message contained only an example. The user interrupted mid-WebSearch to expand scope from \"HTTP API\" to \"packages / MCP / CLI tools\" \u2014 a scope clarification that should occur before any research starts, not during it. A single sentence like \"I interpret the scope as X, Y, Z \u2014 shall I proceed with all of these?\" prevents the mid-research interrupt pattern.",
+        "kind": "failure",
+        "section_anchor": "Red Flags \u2014 refuse these rationalizations",
+        "requires_new_reference_file": false
+      },
+      {
+        "title": "Current State Evidence recon must verify SSOT ownership direction, not just file existence",
+        "description": "When a task touches a distribution pipeline (standards/rubrics/checklists flowing between plugins), listing file paths in Current State Evidence without verifying which plugin is canonical vs downstream leads to incorrect SSOT direction in the brief, discovered only in the next pipeline stage.",
+        "content": "In the `## Output Contract \u2014 the brief` section under `## Current State Evidence`, the `Reverse` sub-bullet should require the agent to trace the distribution direction before writing it \u2014 not just listing the target's path. In this session the brief declared code-toolkit as the canonical layer, but reading `distribute.py` (which was only done in writing-plans) revealed domain-teams is canonical and code-toolkit is a downstream copy. Add a note to Current State Evidence: \"For cross-plugin data flows, identify which plugin is the write-origin (SSOT) vs the read-only copy by reading any `distribute.py`/sync script in scope \u2014 do not infer direction from file presence alone.\"",
+        "kind": "failure",
+        "section_anchor": "Red Flags \u2014 refuse these rationalizations",
+        "requires_new_reference_file": false
+      },
+      {
+        "title": "Resolve implementation-design decisions during Axis 3/4, not as Open Questions for writing-plans",
+        "description": "Open Questions in the brief should capture missing facts about problem space or user constraints, not unresolved implementation design choices \u2014 those belong in Axis 3 (Smallest End State) or Axis 4 (Alternatives), and leaving them open forces a blocking AskUserQuestion in the writing-plans stage.",
+        "content": "In the `## Output Contract \u2014 the brief` section under the `Optional but recommended sections`, add a guard: \"Open Questions are for facts the agent cannot determine from reconnaissance (e.g., user's environment constraints, unstated preferences). Implementation decisions \u2014 which option to pick among known alternatives, which gate threshold to use, which distribution timing \u2014 belong in Axis 3 (decision paragraph) or Axis 4 (alternatives triage). If you find yourself writing an Open Question of the form 'should we do X or Y?', resolve it in Axis 3/4 instead; writing-plans should receive a fully-decided brief.\" In this session, four of five Open Questions (distribution timing, staleness threshold, gate strictness, references lifecycle) were design-decision questions that required `AskUserQuestion` during writing-plans, creating a blocking pause that brainstorming's Axis 4 triage was designed to prevent.",
+        "kind": "failure",
+        "section_anchor": "Red Flags \u2014 refuse these rationalizations",
+        "requires_new_reference_file": false
+      }
+    ]
+  },
+  {
+    "session_id": "3d998518-803c-415e-a91c-dc66f4746dea",
+    "trajectory_id": "9db095d9-4ba4-5d40-85ee-299218e783a6",
+    "kind": "success",
+    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/code-toolkit/skills/brainstorming/SKILL.md",
+    "memory_items": [
+      {
+        "title": "Pre-skill option sketch speeds \"go\" decision and scopes brainstorming axis work",
+        "description": "Presenting a compressed 3-option sketch before invoking the brainstorming skill gives the user a concrete anchor and converts a \"what do you think?\" into a directed \"go\", reducing the number of clarification turns inside the skill.",
+        "content": "The brainstorming SKILL.md \u00a7\"Smallest End State\" emphasizes compressing the option space before deep exploration. When the agent wrote a brief 3-tier option table in the first assistant turn \u2014 before loading the skill \u2014 the user replied \"go\" in two words, and the skill's 5-axis framework then proceeded with a pre-filtered decision space. Preserving or strengthening this affordance in SKILL.md (e.g., a \u00a7\"Quick option sketch before skill load\" note in the Output Contract section) would help future agents avoid entering the 5-axis framework with a fully open design space when a few candidate shapes already exist.\n\n---",
+        "kind": "success",
+        "section_anchor": "Smallest End State",
+        "requires_new_reference_file": false
+      },
+      {
+        "title": "Parallel bilingual WebSearch + filesystem recon in one turn eliminates wait-loop friction",
+        "description": "Issuing EN WebSearch, JA WebSearch, and grep/ls filesystem recon as simultaneous parallel calls in a single assistant turn \u2014 before writing the brief \u2014 collapses the research phase into a single blocking step with no sequential wait loops.",
+        "content": "The brainstorming SKILL.md \u00a7\"Research protocol\" and \u00a7\"Multilingual coverage\" mandate parallel EN+JA search but do not explicitly authorize combining them with filesystem recon in the same turn. In this session, the agent bundled both into one turn: the WebSearch calls produced industry evidence while the `grep` + `ls` calls produced current-state evidence and gap confirmation. The two streams were independent and completed in parallel, producing all the material needed for the brief without any additional research turns. The SKILL.md \u00a7\"Axis 4 \u2014 Research protocol\" and \u00a7\"Current State Evidence\" could be strengthened with a note: *\"WebSearch + filesystem recon can and should be issued in the same parallel turn when both are needed for the brief\"*.\n\n---",
+        "kind": "success",
+        "section_anchor": "Research protocol",
+        "requires_new_reference_file": false
+      },
+      {
+        "title": "AskUserQuestion with recommended options converts open questions to resolved decisions in one user turn",
+        "description": "Encoding open questions as structured `AskUserQuestion` calls with a clearly labeled recommended option per question lets the user bulk-resolve all open questions in a single response, avoiding a multi-turn negotiation before handoff to `writing-plans`.",
+        "content": "The brainstorming SKILL.md \u00a7\"Open Questions\" section says to park unresolved decisions in the brief but does not specify how to resolve them. In this session, the agent packed 4 remaining open questions into a single `AskUserQuestion` with multi-choice options and labeled each recommended choice. The user selected all recommended options in one response. The agent then updated the brief with a single `Edit` call replacing \"Open Questions\" with \"Resolved Decisions\". The skill's \u00a7\"Output Contract\" could note this pattern: *\"Open Questions that require user input should be batched into a single AskUserQuestion call with labeled recommended options, so the user can resolve all of them before the handoff to writing-plans proceeds.\"*",
+        "kind": "success",
+        "section_anchor": "Open Questions",
+        "requires_new_reference_file": false
+      }
+    ]
+  },
+  {
+    "session_id": "854149d8-cc37-4bf8-93cd-b7cf1631a121",
+    "trajectory_id": "99b6950a-8ef2-56f0-81cd-2f44dce3d195",
+    "kind": "failure",
+    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/code-toolkit/skills/brainstorming/SKILL.md",
+    "memory_items": [
+      {
+        "title": "Verify codebase file paths with grep/find before citing in Current State Evidence",
+        "description": "When gathering Current State Evidence, agents that assume a file path without verification will hit tool errors on stale or renamed paths, wasting a tool call and breaking the recon flow.",
+        "content": "Under `## Output Contract \u2014 the brief`, the `## Current State Evidence` instruction says \"Agent fills via grep / Read / Explore\" but does not explicitly require that file paths be confirmed to exist before being cited. Add a one-sentence precondition: \"Before reading any previously-known file path, run `ls` or `find` to confirm the path is current \u2014 spec files and brief filenames change across PRs.\" This prevents tool errors when a cited brief or spec was renamed between the last session and the current one, and keeps the recon flow uninterrupted.\n\n---",
+        "kind": "failure",
+        "section_anchor": "Red Flags \u2014 refuse these rationalizations",
+        "requires_new_reference_file": false
+      },
+      {
+        "title": "Confine Current State Evidence recon to codebase files, not project memory",
+        "description": "Agents performing Current State Evidence recon for brainstorming tend to read project-memory files from `~/.claude/projects/.../memory/` instead of the actual codebase, producing Evidence bullets that reference non-portable paths outside the repo.",
+        "content": "In `## Output Contract \u2014 the brief`, the `## Current State Evidence` guidance says \"Agent fills via grep / Read / Explore; user reviews \u2014 same model as Axis 4 research\" but does not constrain the source. Add an explicit constraint: \"Evidence bullets must cite `file:line` paths within the project repo. Memory files (`~/.claude/projects/.../memory/`) are context for the agent but are not valid `file:line` codebase citations \u2014 do not cite them as Evidence.\" This prevents Evidence bullets from referencing memory paths that future operators, other machines, or CI environments cannot access.\n\n---",
+        "kind": "failure",
+        "section_anchor": "Red Flags \u2014 refuse these rationalizations",
+        "requires_new_reference_file": false
+      },
+      {
+        "title": "Open the brief with a one-paragraph plain-language decision summary",
+        "description": "When a structured brief is long (many axes, alternatives tables, locked Q-decisions), users frequently need follow-up questions to extract the core decision, because the `## Decision` section appears near the end of the schema.",
+        "content": "In `## Output Contract \u2014 the brief`, the minimum required section list currently places `## Decision` after `## Problem`, `## Users`, `## Smallest End State`, and `## Current State Evidence`. Add a note: \"Lead the brief with a 3\u20135 sentence plain-language summary of the scope decision and what is explicitly excluded, before the structured sections. This is the first thing the user reads and should stand alone as the answer to 'what are we building and what are we NOT building?'\" This prevents the user from needing follow-up clarification after receiving a multi-hundred-line brief.",
+        "kind": "failure",
+        "section_anchor": "Red Flags \u2014 refuse these rationalizations",
+        "requires_new_reference_file": false
+      }
+    ]
+  },
+  {
+    "session_id": "132fe34c-626c-47d0-a847-d9c4c9d2b7fd",
+    "trajectory_id": "93827ee2-c2ec-5869-a6c1-33f022d6aff7",
+    "kind": "success",
+    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/code-toolkit/skills/brainstorming/SKILL.md",
+    "memory_items": [
+      {
+        "title": "Read live code state before walking 5-axis \u2014 Current State Evidence is a prerequisite, not an output",
+        "description": "Fulfilling the Current State Evidence section with real `file:line` citations before brainstorming axes produces fact-discoveries that reshape the axis walk, rather than letting axes run on stale information.",
+        "content": "In the observed session, the agent read live skill files and ran `wc -l` before processing Axis 1, which revealed a 2.2\u00d7 index.md growth discrepancy that immediately changed the problem framing. The SKILL.md \u00a7Red Flags block states \"Fill Current State Evidence from memory\" is a hallucination anti-pattern. Reinforcing this in SKILL.md as an ordered precondition \u2014 \"run recon first, axis walk second\" \u2014 would prevent silent stale-data errors in future sessions.\n\n---",
+        "kind": "success",
+        "section_anchor": "Red",
+        "requires_new_reference_file": false
+      },
+      {
+        "title": "AskUserQuestion to verify Axis 2 usage prevents building for wrong JTBD",
+        "description": "Asking the user for their actual observed navigation workflow, rather than inferring it from the problem description, was the decisive step that redirected the plan from A-shard (solving navigation-by-category) to E2 snapshot (solving overview at a glance).",
+        "content": "The SKILL.md Axis 2 section asks \"Who specifically? Under what conditions? With what existing tools?\" but does not call out the risk of inferring usage from the feature request. In this session, the user's feature request (A-shard navigation) implied a browsing-by-category workflow that the user did not actually have. A brief note in the Axis 2 guidance \u2014 \"verify actual observed behavior via user question, not inferred from feature request\" \u2014 would help future agents avoid the same trap. The Klement job-story format (\"When [situation], I want to [motivation], so I can [outcome]\") is in the SKILL.md but does not explicitly require verification rather than inference.\n\n---",
+        "kind": "success",
+        "section_anchor": "Red Flags \u2014 refuse these rationalizations",
+        "requires_new_reference_file": false
+      },
+      {
+        "title": "Axis 5 net-negative is a quality signal: count removed artifacts vs added",
+        "description": "Explicitly computing \"what gets removed\" vs \"what gets added\" for competing end-state options produced a quantified maintenance-surface ratio (1:7 for E2 vs E3) that made the recommendation concrete rather than intuitive.",
+        "content": "The SKILL.md Axis 5 states \"Anything that becomes obsolete and is NOT removed in the same change is technical debt by design,\" and pairs it with Current State Evidence. In this session the agent enumerated removed artifacts (636-line stale enumeration, banner-prepend logic, 6\u00d7 shard files never introduced) vs added artifacts (~10 LOC overwrite template), yielding an explicit ratio. Adding a suggestion to the Axis 5 guidance \u2014 \"count removed vs added artifacts; net-negative is a strong signal the option is correct\" \u2014 would help future agents produce the same kind of defense for their recommendation.",
+        "kind": "success",
+        "section_anchor": "Red Flags \u2014 refuse these rationalizations",
+        "requires_new_reference_file": false
+      }
+    ]
+  },
+  {
+    "session_id": "269c265f-050e-456c-bac8-9362accee9df",
+    "trajectory_id": "8cbc77da-353a-54eb-aa46-465c74c548bc",
+    "kind": "failure",
+    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/code-toolkit/skills/brainstorming/SKILL.md",
+    "memory_items": [
+      {
+        "title": "Distinguish \"agent recommends\" from \"agent decides\" to prevent AskUserQuestion blocking",
+        "description": "When the SKILL.md says the agent \"does not make the final decision\" alongside an Anti-pattern of \"no my take,\" the agent resolves the tension by using AskUserQuestion \u2014 which blocks on the user for minutes-to-hours instead of emitting a recommendation the user can accept or override.",
+        "content": "In \u00a7\"What this skill does NOT do\", the line \"Does **not** make the final decision for the user\" directly contradicts the \u00a7Axis 4 Anti-patterns rule `\u274c No \"my take\"`. The agent observed this tension and used `AskUserQuestion` to transfer the decision; the user did not answer for 33 minutes. The fix: clarify that \"does not make the final decision\" means the agent must emit a `## My take` recommendation with a `Conditional reversal` clause \u2014 not defer via `AskUserQuestion`. The user's right is to override the recommendation, not to be asked before the recommendation exists. Change the \u00a7\"What this skill does NOT do\" bullet to: \"Does **not** force the user's choice \u2014 emits a `## My take` recommendation per \u00a7Axis 4 Anti-patterns, then lets the user accept, override, or ask back.\"\n\n---",
+        "kind": "failure",
+        "section_anchor": "What this skill does NOT do",
+        "requires_new_reference_file": false
+      },
+      {
+        "title": "Emit a brief orientation summary immediately after writing the brief file",
+        "description": "When the brief is complex (multiple candidate comparisons, Q-decision locks, out-of-scope items), the user cannot orient to \"what was decided and what is next\" from the brief file alone without re-reading it \u2014 producing a friction gap between \"brief written\" and \"user ready to continue.\"",
+        "content": "The \u00a7Output Contract section specifies the brief schema and landing path but provides no instruction to produce an orientation summary in the conversational turn immediately after `Write`. In this session, the user returned 95 minutes after the brief was written and asked for a recap before they could act. Add to \u00a7Output Contract: after writing the brief file, emit a \u226410-line orientation block in the chat turn covering: (1) the Axis 3 lock in one sentence, (2) the top-3 eliminated alternatives with one-word reason each, (3) what becomes obsolete, and (4) the handoff next step. This replaces the pattern where the user must re-read the full brief to locate the decision.\n\n---",
+        "kind": "failure",
+        "section_anchor": "Output",
+        "requires_new_reference_file": false
+      },
+      {
+        "title": "Document dcg heredoc workaround for commit messages containing destructive-pattern literals",
+        "description": "When a commit message references a destructive shell pattern (e.g., `rm -rf`, `git checkout --`) in descriptive prose inside a heredoc bash command, the dcg hook blocks the commit and requires a two-step workaround \u2014 but this is not documented in any skill that drives the commit step.",
+        "content": "In this session, the agent constructed `git commit -m \"$(cat <<'EOF' ... EOF)\"` where the commit message body contained the literal `rm -rf` as part of a description of a prior fix. The dcg hook matched the substring and blocked the command. Recovery required writing the message to a temp file and using `git commit -F`. Add to the \u00a7Cross-skill delegation or \u00a7Operating notes section: \"If a commit message body must mention a destructive shell pattern as descriptive text (e.g., describing a cleanup the commit removes), use `git commit -F <tmpfile>` rather than an inline heredoc \u2014 the dcg hook scans heredoc bodies for literal destructive patterns regardless of context.\"",
+        "kind": "failure",
+        "section_anchor": "Cross-skill",
+        "requires_new_reference_file": false
+      }
+    ]
+  },
+  {
+    "session_id": "4c4c9377-d25b-4e5f-bf94-42f9b74ecbe1",
+    "trajectory_id": "10e6e036-e642-54e0-8a38-71407c1958a4",
+    "kind": "success",
+    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/code-toolkit/skills/brainstorming/SKILL.md",
+    "memory_items": [
+      {
+        "title": "Jump-start brainstorming when user brings a pre-existing spec covering most axes",
+        "description": "When the user hands in a written artifact that already covers Axes 1/2/3/5, explicitly acknowledge the covered axes and scope the remaining work to uncovered axes only \u2014 do not re-walk the whole framework from scratch.",
+        "content": "The SKILL.md \u00a7\"Explicit user override\" exemption covers the case where the user hands in a spec with all 5 axes covered. When a spec covers 4 of 5, the same spirit applies: produce a \"Brief jump-start\" table showing which axes are pre-covered, then redirect energy to the gaps. This avoids wasting user turns on questions already answered by their upstream artifact, while still honoring the HARD-GATE for the uncovered territory. The brainstorming SKILL.md should reinforce that \"partial spec\" input triggers a coverage audit, not a full 5-axis restart.\n\n---",
+        "kind": "success",
+        "section_anchor": "Explicit user override",
+        "requires_new_reference_file": false
+      },
+      {
+        "title": "Offer labeled multiple-choice options with explicit trade-offs for each architectural ambiguity",
+        "description": "Architectural design decisions resolve faster and cleaner when each ambiguity is surfaced as a separate `AskUserQuestion` turn with 3-4 concrete labeled options and explicit trade-offs per option \u2014 not open-ended or combined questions.",
+        "content": "The session resolved 4 architectural ambiguities (cap-application timing, scope-hint parsing layer, script architecture, test harness) in sequential `AskUserQuestion` calls, each with distinct labeled options and documented pros/cons. User answered all 4 in under 10 minutes total. This maps to the SKILL.md \u00a7\"One question at a time\" and \u00a7\"Multiple choice preferred\" rules. Reinforcing this in \u00a7Axis 4 with an explicit example of the labeled-option pattern (rather than open-ended \"what's your preference?\") would help future agents reproduce the same efficiency.\n\n---",
+        "kind": "success",
+        "section_anchor": "One question at a time",
+        "requires_new_reference_file": false
+      },
+      {
+        "title": "Write the design doc only after synthesizing all decisions into an inline summary the user approves",
+        "description": "Producing a written inline synthesis of all design decisions and obtaining explicit user approval before opening a worktree or writing any file eliminates write-then-revise cycles on the spec.",
+        "content": "The agent produced a complete \u00a71\u2013\u00a78 design summary as a chat message \u2014 STEP table, I/O contracts, commit splits, out-of-scope list \u2014 and asked for approval before any file I/O. User replied \"\u5168\u90e8 ack\" and the worktree creation + spec write followed in one clean pass with zero post-write content revisions (only a targeted self-review fix for a missing case-sensitivity note). The brainstorming SKILL.md \u00a7User Review Gate says to wait for approval before proceeding; the inline synthesis before writing embodies this \u2014 it surfaces all decisions in a reviewable form at lower cost than reading a draft file. Strengthening \u00a7After the Design / Documentation with the explicit recommendation to inline-synthesize first, then write, would codify this pattern.",
+        "kind": "success",
+        "section_anchor": "User",
+        "requires_new_reference_file": false
+      }
+    ]
+  },
+  {
+    "session_id": "02523115-3011-4247-8715-798607ac7cd8",
+    "trajectory_id": "8e6800a2-490e-572b-af63-7f1ae0a57aaf",
+    "kind": "success",
+    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/code-toolkit/skills/subagent-driven-development/SKILL.md",
+    "memory_items": [
+      {
+        "title": "Embed full type specs verbatim in implementer prompts to prevent interpretation drift",
+        "description": "When downstream tasks depend on exact type signatures, copying the spec literally into the implementer prompt \u2014 rather than describing it abstractly \u2014 eliminates a whole class of interpretation-induced first-pass failures.",
+        "content": "In this session, the Task 1 implementer prompt embedded the complete Swift type specifications character-for-character from the plan's \"Types to define\" block, including field names, conformances, and even `CaseIterable` additions. The implementer returned `DONE` on first pass with correct types that downstream Tasks 2 and 5 consumed without modification. The SKILL.md section \"Dispatch `implementer`\u2026with the task description + context paths + resource paths\" supports this \u2014 the winning elaboration is to treat verbatim spec text as a resource that travels in the prompt body, not just in a file reference the implementer must read and interpret. Reinforce in SKILL.md's \u00a7Process that for tasks with load-bearing data contracts (type definitions, schema fields, wire formats), orchestrators should embed the contract text directly rather than only citing the plan file path.\n\n---",
+        "kind": "success",
+        "section_anchor": "Process",
+        "requires_new_reference_file": false
+      },
+      {
+        "title": "Verify files-touched disjointness before parallel worktree dispatch to avoid integration conflicts",
+        "description": "Confirming that parallel tasks touch completely non-overlapping file sets before dispatching them as a single parallel message produces conflict-free cherry-pick integration.",
+        "content": "Before emitting the three-Agent parallel dispatch message for Tasks 2/3/4, the orchestrator explicitly verified (from the plan) that each task's `Files touched` list was disjoint. When the cherry-pick sequence ran, the only conflict was on `scripts/run-tests.sh` \u2014 a file the plan did not list as any task's target (it was modified by two implementers as an opportunistic bug-fix side effect). This confirms that plan-level disjointness checking prevents first-order conflicts, while out-of-scope side-effect edits remain a residual risk. SKILL.md's parallel dispatch guidance (\"All three declare `Independent: true` with disjoint `Files touched` sets\") is already correct; the winning affordance to preserve is that the orchestrator reads and confirms this disjointness from the plan before dispatching, rather than trusting the plan's `Independent: true` flags alone.\n\n---",
+        "kind": "success",
+        "section_anchor": "Red Flags \u2014 refuse these rationalizations",
+        "requires_new_reference_file": false
+      },
+      {
+        "title": "Parallel worktrees start from main HEAD, not parent session HEAD \u2014 acknowledge this before dispatch",
+        "description": "Knowing that `Agent(isolation: \"worktree\")` branches from the repo's `main`, not from the orchestrator's current branch HEAD, lets the orchestrator proactively supply prerequisite commit SHAs in implementer prompts rather than relying on worktrees to self-discover missing dependencies.",
+        "content": "Tasks 2 and 3 each had to re-acquire Task 1's `PlannerTypes.swift` inside their isolated worktrees (via cherry-pick or rebase) before they could compile. Task 4 happened not to need Task 1, so it worked cleanly. The session succeeded because the implementers were resourceful enough to self-recover, but the cherry-pick/rebase steps added latency and produced duplicate \"Task 1 commit\" entries in the worktree branches that the orchestrator had to skip during integration. The SKILL.md currently has no guidance on this worktree-isolation behavior. Adding a callout \u2014 \"When dispatching parallel tasks that depend on a just-completed sequential task, include the prerequisite commit SHA in the implementer prompt and note that worktrees branch from `main`; instruct the implementer to cherry-pick or rebase onto the prerequisite before starting\" \u2014 would eliminate this class of per-task self-recovery overhead in future multi-phase SDD runs.",
+        "kind": "success",
+        "section_anchor": "Red Flags \u2014 refuse these rationalizations",
+        "requires_new_reference_file": false
+      }
+    ]
+  },
+  {
+    "session_id": "06e68673-6b4d-4841-b4b6-c82863afada4",
+    "trajectory_id": "7499d231-12ac-59d7-8416-40f3af2d0765",
+    "kind": "failure",
+    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/code-toolkit/skills/finishing-a-development-branch/SKILL.md",
+    "memory_items": [
+      {
+        "title": "Clarify that finishing-a-development-branch is a post-SDD gate, not a mid-pipeline phase",
+        "description": "When a session invokes writing-plans and SDD without first checking whether all prior pipeline steps are complete, the agent can spend the entire session in planning/implementation phases while the branch-close step (finishing-a-development-branch) is never reached.",
+        "content": "In \u00a7\"When to use\", the skill states \"SDD's task plan just completed all tasks DONE \u2192 Yes\". However the skill does not state explicitly that finishing-a-development-branch MUST NOT be invoked when a writing-plans \u2192 SDD pipeline is still mid-execution. Add a \u00a7\"Precondition check\" (or a row in \u00a7\"When NOT to use\") that reads: \"If writing-plans or SDD is still in progress (tasks not yet DONE), this skill is blocked \u2014 complete the active pipeline phase first; invoking finishing-a-development-branch before SDD finishes skips the code + test gate.\" This prevents sessions where the close-out step is silently deferred indefinitely because the agent conflates \"user asked to wrap up\" with \"pipeline is ready to wrap up.\"",
+        "kind": "failure",
+        "section_anchor": "When to use",
+        "requires_new_reference_file": false
+      },
+      {
+        "title": "Require explicit pipeline-readiness check before dispatching Step 1 code review",
+        "description": "The skill's default flow begins immediately at Step 1 (code review) without verifying that the active SDD plan \u2014 if one exists \u2014 has reached all-tasks-DONE; a session that has an open SDD plan and invokes finishing-a-development-branch will dispatch the code reviewer against an incomplete artifact.",
+        "content": "In \u00a7\"Default flow \u2014 what happens if user just says 'finish this branch'\", add a new Step 0 before Step 1: \"Check for an active SDD plan at `docs/code-toolkit/plans/<date>-<topic>-part-*.md` whose `Plan-document-reviewer verdict: PASS` tasks include any incomplete items. If found, surface: 'SDD plan is in progress \u2014 complete remaining tasks before closing the branch.' STOP.\" This prevents the code-review step from running against a partially-implemented branch, which produces misleading NEEDS_REVISION verdicts or silent oversights that shipping would bake in.",
+        "kind": "failure",
+        "section_anchor": "Default flow \u2014 what happens if user just says 'finish this branch'",
+        "requires_new_reference_file": false
+      },
+      {
+        "title": "Surface the branch-close handoff cue explicitly at SDD task-all-done boundary",
+        "description": "After the final SDD task is marked DONE, the agent has no explicit prompt to invoke finishing-a-development-branch, so the user must re-initiate the close-out sequence manually; sessions that omit this handoff leave the branch in a finished-but-not-merged limbo that creates a long gap before closing.",
+        "content": "In \u00a7\"Cross-skill contract \u2014 heavy delegation\", add a row for the upstream direction: \"SDD (upstream) \u2014 after all tasks DONE, SDD's final summary SHOULD include a line: 'All tasks complete. Ready to invoke finishing-a-development-branch to close out this branch.' This surfaces the handoff cue so the user does not need to remember to invoke the skill manually, reducing the dead time between task completion and branch close.\" This targets the friction pattern where a multi-hour planning + implementation session ends with no explicit prompt to continue to the close-out phase.",
+        "kind": "failure",
+        "section_anchor": "Cross-skill contract \u2014 heavy delegation",
+        "requires_new_reference_file": false
+      }
+    ]
+  },
+  {
+    "session_id": "a83bdc52-7457-4824-ae98-eeccca383e83",
+    "trajectory_id": "081803e3-d55f-5496-ae65-c47721d49732",
+    "kind": "failure",
+    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/code-toolkit/skills/finishing-a-development-branch/SKILL.md",
+    "memory_items": [
+      {
+        "title": "Feature branch created before SDD starts leaves finishing-a-development-branch's \"has commits\" guard exposed",
+        "description": "When the orchestrator creates a feature branch during the planning phase (before any SDD tasks run), the branch remains empty until implementation begins, making any premature invocation of finishing-a-development-branch halt at the step-2 \"Verify branch has commits\" guard.",
+        "content": "In the session, `git checkout -b feat/salesforce-toolkit-v0.1.0` was executed immediately after the design table was locked and writing-plans was invoked \u2014 before a single SDD task had been dispatched. SKILL.md \u00a7\"Default flow\" step 2 reads: \"Verify branch has commits (else: 'nothing to finish; branch matches main').\" If the session had been interrupted between branch creation and the first SDD commit, or if the skill had been invoked too early, this guard would halt silently. SKILL.md should add a note under \u00a7\"When NOT to use \u2014 Mid-task work\" clarifying that the branch itself should be created at the start of SDD (alongside the first implementer commit), not during the writing-plans or brainstorming phase, to ensure the \"has commits\" precondition is structurally satisfied by the time finishing-a-development-branch is naturally invoked.\n\n---",
+        "kind": "failure",
+        "section_anchor": "Default flow",
+        "requires_new_reference_file": false
+      },
+      {
+        "title": "User counter-question in response to structured options triggers a full re-design round before finishing preconditions are met",
+        "description": "When the user answers a structured binary/multi-select design question with a counter-question rather than a selection, the agent must design a new option and obtain re-confirmation \u2014 adding a full extra round before any SKILL.md gate can be checked.",
+        "content": "The session's `AskUserQuestion` batch presented three labeled options for `.mcp.json` launch mode (A = brew binary, B = npx dynamic, C = auto-setup writes file). The user responded with \"\u6709\u66f4\u7a69\u5b9a\u7684\u52d5\u614b\u65b9\u5f0f\u55ce\" (is there a more stable dynamic approach?) \u2014 a counter-question, not a selection. The agent then designed a fourth option (Path D shim launcher in `bin/sf-mcp-launcher.sh`) and re-surfaced it for approval. This re-design round extended the pre-SDD phase by multiple turns. The same pattern can occur during finishing-a-development-branch's own mandatory ask steps (\u00a7\"Default flow\" steps 6, 9, 10): if the user replies with a follow-up question rather than an approval or rejection, the skill has no explicit instruction for re-framing the question with a resolved counter-proposal. SKILL.md \u00a7\"Default flow\" step 6 says \"Show user the proposed commit message + trailers; ASK for approval \u2014 If approved: proceed. If rejected / edited: use user's version.\" Adding a third case \"If counter-question: resolve the question and re-ask the binary\" would eliminate ambiguity about how to handle non-binary responses at each mandatory ASK step.\n\n---",
+        "kind": "failure",
+        "section_anchor": "Default flow",
+        "requires_new_reference_file": false
+      },
+      {
+        "title": "Scope contradiction between upstream answers requires re-confirmation loop before SDD's \"Mid-task work\" gate is cleanly satisfiable",
+        "description": "When upstream design answers contain a logical contradiction (e.g., \"read-only scope\" paired with a \"deploy task\"), the agent must surface the conflict and obtain explicit re-confirmation before SDD can start \u2014 and before finishing-a-development-branch's \u00a7\"When NOT to use \u2014 Mid-task work\" gate is cleanly evaluable.",
+        "content": "The session's first `AskUserQuestion` batch received \"read-only data and report queries only\" for the toolsets question and \"sf-query + sf-deploy two skills\" for the Phase 1 scope question. These are logically contradictory (sf-deploy is a write operation). The agent correctly identified three resolution options (maintain read-only / rename deploy to retrieve / expand to writes) and asked the user to select before proceeding. The user selected option A (maintain read-only), which locked the spec. SKILL.md \u00a7\"When NOT to use \u2014 Mid-task work\" states invocation is blocked when \"The SDD task plan is not yet complete; tasks still pending\" \u2014 but the gate implicitly assumes the SDD plan's scope is itself consistent and fully resolved. If finishing-a-development-branch is invoked at the natural SDD-completion trigger but the underlying scope was resolved by user override mid-session (not in the original brief), the code reviewer in Step 1 may surface the scope inconsistency as a \ud83d\udd34 finding after the fact. SKILL.md could add a note under \u00a7\"Default flow\" step 1 (\"Read branch state\") recommending the orchestrator check whether the original brief's scope matches what was actually built \u2014 surfacing any delta to the user before dispatching Step 1's code review, so scope divergence is declared rather than discovered by the reviewer.",
+        "kind": "failure",
+        "section_anchor": "When NOT to use \u2014 Mid-task work",
+        "requires_new_reference_file": false
+      }
+    ]
+  },
+  {
+    "session_id": "a83bdc52-7457-4824-ae98-eeccca383e83",
+    "trajectory_id": "f25d49e9-bc48-5aa5-8131-e58a93043343",
+    "kind": "success",
+    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/code-toolkit/skills/finishing-a-development-branch/SKILL.md",
+    "memory_items": [
+      {
+        "title": "Run package-level tests before invoking finishing-a-development-branch",
+        "description": "Pre-verifying tests and CI-adjacent checks (bats, shellcheck, marketplace-sync) before invoking the skill eliminates avoidable back-and-forth inside the skill's Step 2 gate.",
+        "content": "In this session the agent ran `bats`, `shellcheck`, and `check-marketplace-description-sync.py` as an explicit \"verification before finishing\" block and confirmed all green before invoking the skill. SKILL.md \u00a7\"Default flow\" step 4 already specifies `verification-before-completion` as a mandatory gate, but the session demonstrated that running those checks proactively \u2014 with results summarised in one assistant turn \u2014 means Step 2 proceeds silently rather than surfacing an unexpected failure that requires remediation time. SKILL.md could strengthen the \u00a7\"Default flow\" step 1 note with a recommendation: \"If the orchestrator already knows test results are current (e.g., SDD just completed all tasks), report them upfront before dispatching Step 1 so Step 2 can be resolved quickly.\"\n\n---",
+        "kind": "success",
+        "section_anchor": "Default flow",
+        "requires_new_reference_file": false
+      },
+      {
+        "title": "Whole-branch review catches cross-task MCP prefix drift that per-task review misses",
+        "description": "The whole-branch code review step catches symbol-consistency bugs (like MCP tool prefix naming) that per-task reviewers cannot see because they have no view across files edited by different tasks.",
+        "content": "The session's per-task SDD triad reviewed each file in isolation and did not catch the mismatch between the MCP server key in `.mcp.json` (`salesforce`) and the `allowed-tools` wildcard prefix used in SKILL.md files and README diagrams (`mcp__salesforce-mcp__*`). The whole-branch reviewer's cross-task-coherence dimension surfaced it as a \ud83d\udfe1 finding. This is the canonical use case for Step 1 of finishing-a-development-branch: catching cross-file symbol consistency that emerges only when all tasks' outputs are read together. SKILL.md \u00a7\"Cross-skill contract\" table already names this as the reason Step 1 delegates to `requesting-code-review`; the session evidence confirms the mechanism works as designed and warrants no SKILL.md change beyond preserving the existing Step 1 mandate.\n\n---",
+        "kind": "success",
+        "section_anchor": "Cross-skill contract",
+        "requires_new_reference_file": false
+      },
+      {
+        "title": "Lock all open design decisions before entering autonomous SDD to avoid mid-flow disambiguation",
+        "description": "Batching all remaining open design decisions into a single structured question-and-answer exchange before invoking `writing-plans` ensures the SDD implementer receives a fully specified brief, eliminating scope-creep interrupts during implementation.",
+        "content": "Before invoking `code-toolkit:writing-plans`, the agent identified four ambiguous design axes (MCP launch mode, alias inference strategy, default toolsets, Phase 1 skill scope) and resolved them in one `AskUserQuestion` multi-select batch. When the user's answers surfaced a contradiction (Q2 \"read-only\" vs Q3 \"sf-deploy\"), the agent flagged it with three labeled resolution options and got explicit user sign-off before proceeding. As a result, the SDD phase ran to 20 tasks with zero scope-change interrupts from the user. SKILL.md \u00a7\"When NOT to use \u2014 Mid-task work\" states: \"The SDD task plan is not yet complete; tasks still pending.\" Ensuring the design is locked before SDD starts is what makes this gate cleanly satisfiable at finishing time. SKILL.md could add to \u00a7\"When to use\" or \u00a7\"Default flow\" a note: \"If upstream brainstorming produced open questions, surface them and get user resolution before invoking writing-plans; unresolved questions produce mid-SDD interrupts that leave finishing-a-development-branch in an indeterminate precondition state.\"",
+        "kind": "success",
+        "section_anchor": "When NOT to use \u2014 Mid-task work",
+        "requires_new_reference_file": false
+      }
+    ]
+  },
+  {
+    "session_id": "afa52784-3f6c-436c-b9cc-9fb9eec72ea6",
+    "trajectory_id": "3e877031-cb8b-5572-a8aa-b46b65d86699",
+    "kind": "success",
+    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/code-toolkit/skills/requesting-code-review/SKILL.md",
+    "memory_items": [
+      {
+        "title": "Intercept informal push commands as push-as-trigger regardless of phrasing",
+        "description": "The push-as-trigger gate fires reliably when the agent treats any informal push request (\"\u5148push\", \"just push\", \"push \u3105\") as equivalent to the literal commands enumerated in \u00a7Push-as-trigger, not only exact CLI invocations.",
+        "content": "The SKILL.md \u00a7Push-as-trigger table lists literal CLI forms (`git push`, `gh pr create`, etc.) and \"wrong-default rationalization\" phrases. The session showed that colloquial phrases like \"\u5148push\u3105\" also match \u2014 the agent correctly identified it as a push-trigger and blocked it. SKILL.md should reinforce this: the rationalization surface is not limited to English or to precise CLI syntax; any informal push request in any language counts as a trigger. Strengthening the description's trigger-phrase list (or adding a note that \"any intent-to-publish message\" triggers the gate) would make this behavior explicit for future agents and reduce the chance of language-based bypasses.\n\n---",
+        "kind": "success",
+        "section_anchor": "Push-as-trigger",
+        "requires_new_reference_file": false
+      },
+      {
+        "title": "Verify NEEDS_REVISION findings against source before escalating",
+        "description": "When the code-reviewer returns a NEEDS_REVISION finding, the orchestrator should independently confirm the bug exists in the actual code before surfacing it to the user and before dispatching a fix.",
+        "content": "In this session the reviewer flagged a plumbing bug; the agent ran targeted `grep` and `Read` calls to confirm the finding was real (not a false positive from stale branch state) before escalating. The SKILL.md \u00a7Process step 3 says only \"Wait for verdict\" and step 4 says \"Surface to user.\" Adding a brief note \u2014 \"If a NEEDS_REVISION finding sounds like it could be a reviewer false-positive (e.g., 'file doesn't exist'), verify with `ls` or `grep` before surfacing\" \u2014 would formalize this defensive step. The session demonstrated this as the decisive action that prevented a false-alarm escalation.\n\n---",
+        "kind": "success",
+        "section_anchor": "Process",
+        "requires_new_reference_file": false
+      },
+      {
+        "title": "Narrow diff scope to the incremental change set, not the full branch history",
+        "description": "When a branch has an established earlier body of commits already reviewed or verified, scoping the reviewer to only the new incremental commits produces a focused, actionable verdict.",
+        "content": "The session had 15 original commits already verified by end-to-end testing, plus 4 new follow-up commits. The agent ran `git diff 83c528a..HEAD` (the base of the new work) rather than `git diff main...HEAD` (the entire 15+4 commit branch), giving the reviewer a tight 10-file diff. The SKILL.md \u00a7Process step 1 says: \"Default: `git diff main...HEAD`. Override with explicit commit range if user specifies.\" The agent used the override without an explicit user instruction \u2014 it inferred the right scope from context. SKILL.md could add a note here: \"If the branch has a verified baseline SHA (e.g., prior PASS in this session or verified by tests), override to `git diff <baseline-sha>..HEAD` to focus the reviewer on the incremental work.\"",
+        "kind": "success",
+        "section_anchor": "Process",
+        "requires_new_reference_file": false
+      }
+    ]
+  }
+]
