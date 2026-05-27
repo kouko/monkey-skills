@@ -1,7 +1,7 @@
 ---
 name: systematic-debugging
 description: 'Use when a bug or production failure needs investigation — any time code is throwing exceptions, returning wrong output, failing intermittently, "doesn''t work" but the cause is non-obvious, or "works on my machine" but breaks elsewhere. Examples: production errors, exceptions you''re tempted to silence with try/except, batch jobs dropping items, regressions you cannot localize, intermittent CI failures, race conditions, heisenbugs, slow queries, memory leaks, encoding bugs (UnicodeDecodeError / mojibake / BOM issues), "this should work but doesn''t" mysteries. Enforces a HARD-GATE 4-phase discipline — REPRODUCE → ISOLATE → HYPOTHESIZE → VERIFY — analogous to tdd-iron-law''s "no implementing without a failing test." No fixing without reproducing. Grounded in Kernighan & Pike (1999) The Practice of Programming Ch.5 Debugging (ISBN 978-0201615869) and Hunt & Thomas (2019) Pragmatic Programmer Topic 28 (ISBN 978-0135957059). Refuses random-patching, fishing-without-hypothesis logging, try/except masking, and "works on my machine" dismissals. デバッグ・系統的・再現先行・本番エラー調査・例外処理・try/except 回避。除錯・系統化・先再現・production bug 調查・例外處理・追根究底。'
-version: 0.9.0
+version: 0.9.1
 ---
 
 <SUBAGENT-STOP>
@@ -82,10 +82,31 @@ The discipline: every fix attempt requires a hypothesis stated in advance. If yo
 | Result | Next step |
 |---|---|
 | ✅ Hypothesis confirmed | Apply the fix. Write a regression test (the repro from Phase 1 becomes a permanent test). Consider [`references/defense-in-depth.md`](references/defense-in-depth.md) for whether additional defensive layers proportional to blast radius are warranted. |
-| ❌ Hypothesis falsified | **Good** — the experiment did its job. Return to Phase 2 with the new information from the falsification. **Do NOT keep the failed-hypothesis fix in.** Revert any speculative changes made during VERIFY before re-isolating. |
+| ❌ Hypothesis falsified (**round 1**) | **Good** — the experiment did its job. Return to Phase 2 with the new information from the falsification. **Do NOT keep the failed-hypothesis fix in.** Revert any speculative changes made during VERIFY before re-isolating. |
+| ❌ Hypothesis falsified (**round 2+**) | **HARD-GATE: WebSearch mandatory** before forming Hypothesis #3. See §"Anchored-thinking guard" below. |
 | 🟡 Inconclusive | The experiment didn't bind the hypothesis. Tighten the prediction in Phase 3; rerun Phase 4. |
 
 **Gate to "done"**: hypothesis confirmed + fix applied + regression test in place + (if appropriate) defensive layer added.
+
+#### Anchored-thinking guard (≥2 falsifications)
+
+When two hypotheses have been falsified in a row, the agent (and human collaborator) is now in **anchored-thinking territory** — the initial framing of the bug is biasing every subsequent hypothesis. Forming Hypothesis #3 on the same internal mental model has high probability of producing another falsification.
+
+**Mandatory before forming Hypothesis #3+**: run **WebSearch** on the problem class using the same protocol as `brainstorming` Axis 4 (EN + JA at minimum, cite sources, document empty results explicitly).
+
+Query patterns (mix-and-match per round):
+- `<framework> <observed-symptom>` — e.g. *"SwiftUI Image aspectRatio not filling parent"*
+- `<framework> <component> <unexpected-behavior>`
+- `<framework 日本語> <症状> 原因`
+- Stack Overflow / GitHub Issues / vendor Developer Forums for the framework
+
+**Output**: 2-3 known patterns from the industry that match observed symptoms. Hypothesis #3 must explicitly reference one of them OR document why none apply.
+
+**Why this gate exists**: hypotheses are formed from the agent's prior mental model of the system. When 2+ have falsified in a row, the prior model itself is the bug — not the code. External information (search results) is the cheapest way to break the loop. Cost: 1-2 minutes of WebSearch. Avoided cost: another speculative-fix cycle (often 10-30 min including diagnostic, revert, re-isolate).
+
+**Empirically validated 2026-05-27** (komado-Refs M1.F.2 polish round 5 — image-rendering letterbox bug): 3 hypotheses were falsified before WebSearch was invoked at user prompting; the first search returned the exact answer (SwiftUI Image's CGImage intrinsic dimensions propagate up to parent layout even with `.resizable() + .aspectRatio(.fit)` — fix per [Alejandro M. P. — Image aspectRatio without frames](https://alejandromp.com/development/blog/image-aspectratio-without-frames/) and [Sarunw — resize image to fit container](https://sarunw.com/posts/how-to-resize-an-image-to-fit-a-container-view-in-swiftui/)).
+
+**Anti-pattern**: *"I'll try one more hypothesis on my intuition before searching."* — that's the anchored-thinking voice. The whole point of this gate is that intuition has already been falsified twice. Refuse; run WebSearch.
 
 ## Cross-skill contract
 
@@ -110,6 +131,7 @@ Delegation contract per CLAUDE.md: pass **paths + structured seed context**, not
 | *"Just wrap it in try/except and move on."* | Masking the bug. The exception is the bug telling you what's wrong; suppressing it converts a known failure into a silent corruption. | Refuse. Find the root cause via Phase 2-3. After root cause, defense-in-depth may add a graceful-degradation layer — but that's a deliberate decision, not a panic move. |
 | *"It's intermittent so let's move on."* | Heisenbug refusal. Intermittent = race condition / timing / leak. These compound silently in production. | Refuse. Phase 1 🟡 → Phase 2 with timing-axis bisection. If genuinely cannot bound after 1 hour of effort, surface to user as known-unknown with observability instrumentation. |
 | *"The error message is clear, I'll just fix it."* | Symptom ≠ root cause. The error message is where the bug surfaced, not where it lives. | Phase 2 ISOLATE first; the line that throws is rarely the line that broke. |
+| *"Let me try a 3rd hypothesis on my intuition"* (after 2 falsifications) | Anchored thinking compounding — the initial mental model is now the bias source, not the code. | §Anchored-thinking guard: WebSearch mandatory before Hypothesis #3+. Internal intuition has been falsified twice; ground the next round in external industry knowledge. |
 | 「先試試看 / とりあえず直してみる」 | Same rationalization, localized. | Same refusal — hypothesis-first. |
 
 ## What this skill does NOT do
