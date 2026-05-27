@@ -60,8 +60,11 @@ has lost the thread. The two coexist; do not replace the built-in away-summary.
      critical file names / error strings. Quote directly — do not rewrite.
    - **Block 3 — Assessment**: current assumption + confidence level + what is
      unknown or blocking.
-   - **Block 4 — User messages**: every user turn in this session, verbatim.
-     No filtering, no selection, no paraphrase.
+   - **Block 4 — User messages (compressed)**: one-line intent per user turn
+     + verbatim quote of any spec-critical phrase (file paths, error messages,
+     named constraints, exact tool/command names). No filtering of which turns
+     to represent. User can request full verbatim with "show me my original
+     messages."
    - **Block 5 — Why-this-question**: explain the agent's most recent question:
      what is being asked, why it matters, what options the user has.
    - **Block 6 — Pending**: checklist of tasks not yet done.
@@ -74,8 +77,10 @@ has lost the thread. The two coexist; do not replace the built-in away-summary.
      free-form paragraphs substituted for blocks.
    - **quote-not-paraphrase**: blocks 2 and 4 reproduce original strings exactly —
      file paths, error messages, command names, user wording.
-   - **all-user-messages**: block 4 lists every user turn with no LLM filtering
-     of "which ones mattered."
+   - **all-user-messages**: block 4 represents every user turn — compressed
+     (one-line intent + verbatim spec-critical phrases) for L3 in-session
+     human reader, fully verbatim for L2 cross-session AI reader (future
+     HANDOFF skill). No turn is dropped as "unimportant" in either form.
    - **synthesis-check**: block 7 always ends with a directed question; agent
      does not continue until user responds.
    - **plain-language**: write in plain everyday language. Only use a technical
@@ -107,9 +112,13 @@ correction would only surface 3 turns later.
 - **Do not produce a free-form summary instead of the 7 blocks**: the schema is
   the user-visible value. A paragraph that "covers the same ground" is not
   equivalent — it breaks the structured-schema principle.
-- **Do not filter user messages**: block 4 is a verbatim list of every user
-  turn. Deciding which messages were "important" is the most common source of
-  silent intent loss.
+- **Do not drop user turns**: block 4 represents every user turn in the
+  session (compressed: one-line intent + verbatim spec-critical phrases).
+  Deciding a turn doesn't matter is the failure mode this rule prevents —
+  even routine "go" / "好" turns count as state transitions worth a line.
+- **Do not paraphrase spec-critical phrases**: file paths, error messages,
+  named constraints, exact tool / command names stay verbatim inside the
+  compressed line. Losing those is invisible intent loss.
 
 ## See also
 

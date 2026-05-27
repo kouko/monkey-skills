@@ -53,15 +53,31 @@ contingency planning.
 
 ---
 
-### Block 4 — User messages
+### Block 4 — User messages (compressed for L3 reader)
 
-**Prompt instruction**: List every message the user sent in this session,
-verbatim. No filtering. No paraphrasing. No selection of "important" ones.
+**Prompt instruction**: For each user turn in this session, produce one line:
+- A short plain-language summary of the turn's intent (≤15 words)
+- Plus a verbatim quote of any **spec-critical phrase** in that turn — file
+  paths, error messages, exact tool/command/file names, named constraints
+  (numbers / dates / hard limits), or any sentence whose paraphrase would
+  change the meaning
 
-**WHY**: The user's exact words are ground truth. Anthropic's compaction prompt
-has a hard rule: "Preserve all user messages that are not tool results." Letting
-the LLM decide which user messages were unimportant is the most common source
-of silent intent loss. If the user said it, it goes here, unchanged.
+If the turn contained no spec-critical phrase, the one-line intent alone is
+enough. If the user explicitly asks "show me my original messages" (or any
+language-equivalent), produce the full verbatim list instead. Default is
+compressed.
+
+**WHY**: This block has different value at L3 (in-session, human warm reader)
+vs L2 (cross-session, AI cold reader). The full verbatim list — inherited from
+Anthropic's compaction prompt rule "Preserve all user messages that are not
+tool results" — is correct for L2 because the next agent has no other source
+of user intent. At L3 the reader is the user themselves; the verbatim list
+they already remember dilutes the recap (violates principle 5, plain-language /
+60-second read). The compressed form preserves the anti-drift goal — spec-
+critical phrases stay verbatim so paraphrase-creep cannot erase file paths /
+constraints — while collapsing routine user turns to one-line intent so the
+recap stays scannable. The opt-in escape hatch ("show me originals") restores
+full verbatim when the user actually needs it.
 
 ---
 
@@ -153,17 +169,41 @@ that the next session needs.
 
 ### all-user-messages
 
-**Definition**: Block 4 lists every user turn in the current session — no
-LLM filtering of "which user messages were important."
+**Definition**: Block 4 preserves the **full set** of user-stated intent across
+the session. The shape of preservation depends on the reader:
+- **L3 (in-session, human reader — this skill's default)**: one-line intent per
+  user turn + verbatim quote of any spec-critical phrase in that turn (file
+  paths, error messages, named constraints, numbers, exact tool / command
+  names). User can request full verbatim with phrases like "show me my original
+  messages."
+- **L2 (cross-session HANDOFF, AI reader — future sister skill)**: every user
+  turn verbatim, no exceptions. The cold AI reader has no other source of user
+  intent.
 
-**WHY**: The user's intent is ground truth. Anthropic's compaction prompt rule:
-"Preserve all user messages that are not tool results." Allowing the LLM to
-decide what the user meant to say is the most common source of invisible intent
-loss. Unimportant-looking messages often carry the actual constraint.
+The non-negotiable: no LLM filtering of which intents to keep. Every user turn
+is represented (compressed or verbatim); none is dropped as "unimportant."
 
-**Failure mode**: User said "also keep the old endpoint alive for 30 days."
-Agent summarizes this session and drops it as "minor." The new agent in the
-next session deletes the old endpoint on day 3.
+**WHY**: The user's intent is ground truth — that part of Anthropic's
+compaction prompt ("Preserve all user messages that are not tool results")
+holds across both readers. What changes between L3 and L2 is the
+*representation*, not the *coverage*: a warm human reader who lived through the
+session has their own memory of routine turns, so verbatim dump is noise; a
+cold AI reader has nothing, so verbatim is the only signal. Spec-critical
+phrases stay verbatim in both forms because paraphrase-creep on file paths /
+constraints is the failure mode this principle exists to prevent. (This L3 vs
+L2 distinction was added 2026-05-27 after pre-merge dogfood showed the original
+"every turn verbatim" rule was inherited from the L2-audience compaction prompt
+and didn't fit L3's human-reader cost / benefit.)
+
+**Failure mode (intent dropped)**: User said "also keep the old endpoint alive
+for 30 days." Agent compresses this turn to "user asked about endpoint" without
+the 30-day constraint quoted verbatim. The new agent in the next session
+deletes the old endpoint on day 3.
+
+**Failure mode (verbatim noise at L3)**: User session has 30 routine turns
+("go", "好", "next", "fix that", "merge"). Agent dumps all 30 verbatim into a
+block that the user has to scroll past to reach block 5 — violates
+plain-language (principle 5) and structured-schema's scan-in-30-seconds value.
 
 ---
 
@@ -231,10 +271,16 @@ Current assumption: the directory structure is correct and pytest can discover t
 Confidence: high — ran `ls` to verify paths.
 Blocked on: nothing; the test runs and fails cleanly (expected RED state).
 
-### User messages (verbatim)
+### User messages (compressed — L3 form)
 
-1. "You are the SDD implementer for Task 1 of the recap v0.1 plan."
-2. [full implementer dispatch prompt — see task spec]
+1. Dispatched implementer for T1 with full SDD task spec. Spec-critical quote:
+   `dev-workflow/skills/recap/references/seven-block-schema.md` (target path);
+   `pytest ...::test_all_seven_blocks_and_five_principles_present -v` (RED
+   acceptance command).
+
+*(Single-turn session — only the dispatch prompt. If user later asks "show me
+the full original message," produce the verbatim text. Default stays
+compressed.)*
 
 ### Why-this-question
 
@@ -303,12 +349,17 @@ The user dispatched the implementer with standard SDD task parameters, including
 resource paths and acceptance criteria. The user's primary directive involved
 TDD compliance and conventional commit discipline.
 
-> **paraphrase-creep + all-user-messages violation**: the actual user messages
-> are gone. The rule (principle 3, all-user-messages) requires verbatim listing
-> of every user turn. This summary drops the specific file paths, branch names,
-> and commit format instructions that the user stated.
-> **jargon-creep**: "dispatched", "SDD task parameters", "TDD compliance",
-> "conventional commit discipline" — these are agent-introduced terms.
+> **all-user-messages violation (intent dropped)**: even in the L3-compressed
+> form, principle 3 requires every user turn to be represented AND any
+> spec-critical phrase to be quoted verbatim. This summary drops the actual
+> file paths (`dev-workflow/skills/recap/references/seven-block-schema.md`),
+> the RED test command, and the commit format constraint. The compressed form
+> would still say "Dispatched T1 implementer. Spec-critical quote: `<path>`,
+> `<command>`" — losing those quotes is the failure mode this principle
+> prevents.
+> **jargon-creep (principle 5)**: "dispatched", "SDD task parameters", "TDD
+> compliance", "conventional commit discipline" — these are agent-introduced
+> terms. Plain version: "asked me to write the failing test for the bundle file."
 
 ### Why-this-question
 
