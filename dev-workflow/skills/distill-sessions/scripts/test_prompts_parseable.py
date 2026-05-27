@@ -46,6 +46,7 @@ SKILL_ROOT = Path(__file__).resolve().parent.parent
 AGENTS_DIR = SKILL_ROOT / "agents"
 FAILURE_PATH = AGENTS_DIR / "prompt-failure-analysis.md"
 SUCCESS_PATH = AGENTS_DIR / "prompt-success-analysis.md"
+ADVISORY_PATH = AGENTS_DIR / "prompt-advisory-analyst.md"
 
 # Canonical subagent model ID expected in frontmatter (v0.4: Sonnet 4.6 1M-context).
 EXPECTED_MODEL = "claude-sonnet-4-6"
@@ -58,6 +59,10 @@ REQUIRED_FRONTMATTER_KEYS = {
     "output_contract",
     "hard_constraints",
 }
+
+# Advisory-analyst (v0.5) frontmatter requires an additional `language` key
+# (locale variable for prose rendering — code blocks stay English).
+ADVISORY_REQUIRED_FRONTMATTER_KEYS = REQUIRED_FRONTMATTER_KEYS | {"language"}
 
 # 4-step workflow per Trace2Skill error_analysis_system_llm.txt §Required Workflow.
 REQUIRED_STEP_MARKERS = [
@@ -200,6 +205,131 @@ def test_both_prompt_files_have_required_sections() -> None:
     # shape between tests (shouldn't happen in one run).
     _assert_common_shape(FAILURE_PATH)
     _assert_common_shape(SUCCESS_PATH)
+
+
+def test_advisory_prompt_structure() -> None:
+    """prompt-advisory-analyst.md (v0.5) must define the 7-section advisory schema.
+
+    Per v0.5 plan T1 + brief §Smallest End State, the Sonnet advisory analyst
+    replaces v0.4.1's heuristic ``cluster_by_title_keyword`` +
+    ``extract_claude_md_candidates`` + ``_render_*`` template renderers. The
+    prompt drives:
+
+    - semantic clustering of Memory Items (≤5 distinct anti-patterns; reject
+      surface-word transitive merges that produced v0.4.1's 31/33 false cluster);
+    - ≤5 real cross-skill CLAUDE.md candidates (semantic dedup vs generic-keyword
+      noise like 'all' / 'open' / 'start');
+    - code-block wrapping for all copy-pasteable suggested edits / command
+      lines / pasted file path references;
+    - explanatory prose in user's working language via ``{{lang}}`` (one of
+      ``zh-TW``, ``en``, ``ja``) — code blocks stay English.
+
+    Why intent-grounded (Rule 9): if these constraints stop being encoded in
+    the prompt, the analyst regresses to v0.4.1's surface-word clustering OR
+    drops the code-block wrapping (forcing user to re-format copy-pasteable
+    edits) OR mixes prose languages (breaking the locale contract). All three
+    are the failure modes v0.5 exists to fix.
+    """
+    assert ADVISORY_PATH.is_file(), f"missing prompt file: {ADVISORY_PATH}"
+    text = ADVISORY_PATH.read_text(encoding="utf-8")
+    fm, body = _split_frontmatter(text)
+
+    missing = ADVISORY_REQUIRED_FRONTMATTER_KEYS - set(fm.keys())
+    assert not missing, (
+        f"{ADVISORY_PATH.name}: frontmatter missing keys: {sorted(missing)}"
+    )
+
+    assert fm["model"] == EXPECTED_MODEL, (
+        f"{ADVISORY_PATH.name}: model is {fm['model']!r}, expected {EXPECTED_MODEL!r}"
+    )
+
+    # Role should signal advisory-analyst side.
+    assert "advisory" in fm["role"].lower() or "analyst" in fm["role"].lower(), (
+        f"advisory-prompt role {fm['role']!r} doesn't mention advisory/analyst"
+    )
+
+    # The 7 section headings must appear in the body's output template (in order).
+    # These are English headings per spec; explanatory prose under them is in {{lang}}.
+    required_section_headings = [
+        "skill-mining advisory report",  # H1 (§1)
+        "Top anti-patterns",  # §2
+        "Per-target SKILL.md modifications",  # §3
+        "CLAUDE.md candidates",  # §4
+        "New-skill candidates",  # §5
+        # §6 header text is locale-variant ("數字摘要" / "Summary numbers" /
+        # "数値サマリ"); at least one variant must appear in the template.
+        # §7
+        "Action steps",
+    ]
+    last_pos = -1
+    for heading in required_section_headings:
+        idx = body.find(heading, last_pos + 1)
+        assert idx != -1, (
+            f"{ADVISORY_PATH.name}: required section heading "
+            f"{heading!r} not found in body output template"
+        )
+        last_pos = idx
+
+    # §6 — at least one of the three locale-variant summary headers must appear.
+    summary_variants = ("數字摘要", "Summary numbers", "数値サマリ")
+    assert any(v in body for v in summary_variants), (
+        f"{ADVISORY_PATH.name}: §6 summary header missing — "
+        f"expected one of {summary_variants}"
+    )
+
+    # Code-block wrapping rule must be documented.
+    body_lower = body.lower()
+    assert "code block" in body_lower or "fenced code block" in body_lower, (
+        f"{ADVISORY_PATH.name}: body must document code-block wrapping rule"
+    )
+
+    # Language enforcement rule — explanatory prose in {{lang}}, code blocks English.
+    assert "{{lang}}" in body, (
+        f"{ADVISORY_PATH.name}: body must reference the {{{{lang}}}} variable"
+    )
+
+    # ≤5 anti-pattern cap and ≤5 CLAUDE.md candidate cap must be stated.
+    assert "5" in body and (
+        "anti-pattern" in body_lower or "anti pattern" in body_lower
+    ), f"{ADVISORY_PATH.name}: body must cap anti-patterns at ≤5"
+
+    # Dispatch / orchestrator section parity with sibling prompts.
+    assert "merged" in body_lower, (
+        f"{ADVISORY_PATH.name}: body must reference merged.json / merged_data input"
+    )
+
+
+def test_advisory_prompt_forbids_orchestrator_memory_reference() -> None:
+    """Same regression guard as sibling prompts (v0.2 Finding #3).
+
+    The advisory analyst runs in the same orchestrator process and inherits the
+    auto-loaded ``~/.claude/projects/.../memory/MEMORY.md``. Without an explicit
+    hard constraint, advisory report copy could cite ``[feedback_X](project
+    memory)`` / ``[[name]]`` / ``feedback_*.md`` — which leak into the rendered
+    advisory and onward into SKILL.md edits the user copies. Pin the no-memory-
+    citation rule here so silent removal fails CI.
+    """
+    fm, body = _split_frontmatter(ADVISORY_PATH.read_text(encoding="utf-8"))
+
+    constraints = fm.get("hard_constraints", []) or []
+    joined = " ".join(str(c) for c in constraints).lower()
+    # Advisory prompt's hard constraints differ in shape from sibling prompts
+    # (analyst over merged.json, not per-trajectory); the no-memory-citation
+    # rule appears in the body §"What you must NOT do" section.
+    body_lower = body.lower()
+    assert (
+        "orchestrator memory" in body_lower
+        or "project memory" in body_lower
+        or "feedback_" in body_lower
+        or "project_" in body_lower
+    ), (
+        f"{ADVISORY_PATH.name}: body must forbid orchestrator memory citations "
+        f"(no [feedback_X](project memory), no [[name]], no feedback_*.md / "
+        f"project_*.md references in rendered advisory output)"
+    )
+    # joined is allowed to be empty for advisory; the body assertion above is
+    # the authoritative check. Touch `joined` to keep linters quiet.
+    _ = joined
 
 
 def test_both_prompts_forbid_orchestrator_memory_reference() -> None:
