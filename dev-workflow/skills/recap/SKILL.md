@@ -53,34 +53,43 @@ has lost the thread. The two coexist; do not replace the built-in away-summary.
 1. Read `references/seven-block-schema.md` for the full V1 template and the
    5 共通核心原則 definitions.
 
-2. Produce a single in-chat message (no file output) with all 7 blocks in order:
+2. Produce a single in-chat message (no file output) with **6 blocks** in
+   order. (Block 4 from the bundle is L2-only and is skipped at L3 — see
+   `references/seven-block-schema.md` §"Block ↔ Audience map".)
 
    - **Block 1 — Situation**: one sentence, present moment, where we are stuck.
    - **Block 2 — Background**: 3–5 bullets; key decisions + rejected options +
      critical file names / error strings. Quote directly — do not rewrite.
+     **This is where spec-critical user phrases land at L3** (since Block 4
+     does not render).
    - **Block 3 — Assessment**: current assumption + confidence level + what is
      unknown or blocking.
-   - **Block 4 — User messages (compressed)**: one-line intent per user turn
-     + verbatim quote of any spec-critical phrase (file paths, error messages,
-     named constraints, exact tool/command names). No filtering of which turns
-     to represent. User can request full verbatim with "show me my original
-     messages."
+   - *(Block 4 — User messages — **skipped at L3.** L2-only; the future
+     HANDOFF sister skill renders it verbatim for a cold AI reader. At L3
+     the human reader already remembers their own turns; dumping them adds
+     no signal.)*
    - **Block 5 — Why-this-question**: explain the agent's most recent question:
      what is being asked, why it matters, what options the user has.
    - **Block 6 — Pending**: checklist of tasks not yet done.
    - **Block 7 — Synthesis-check**: one sentence stating the expected next step,
      then ask the user to confirm or redirect.
 
-3. Apply all 5 共通核心原則 throughout:
+3. Apply all 5 共通核心原則 throughout (4 of the 5 fire at L3; the 5th
+   `all-user-messages` is L2-only and dormant here — kept named in the
+   principle list as the canonical SSOT for the future HANDOFF sister skill):
 
-   - **structured-schema**: use the fixed 7-block structure every time. No
-     free-form paragraphs substituted for blocks.
-   - **quote-not-paraphrase**: blocks 2 and 4 reproduce original strings exactly —
-     file paths, error messages, command names, user wording.
-   - **all-user-messages**: block 4 represents every user turn — compressed
-     (one-line intent + verbatim spec-critical phrases) for L3 in-session
-     human reader, fully verbatim for L2 cross-session AI reader (future
-     HANDOFF skill). No turn is dropped as "unimportant" in either form.
+   - **structured-schema**: use the fixed block structure every time. No
+     free-form paragraphs substituted for blocks. At L3 = 6 blocks (skip
+     Block 4).
+   - **quote-not-paraphrase**: block 2 (and block 4 at L2) reproduces original
+     strings exactly — file paths, error messages, command names, user
+     wording. **At L3 this principle does the work Block 4 used to do** —
+     spec-critical user phrases land in Block 2's quote-not-paraphrase
+     enforcement.
+   - **all-user-messages** *(L2-only — dormant at L3)*: at L2 HANDOFF block 4
+     lists every user turn verbatim. At L3 (this skill) the principle does
+     not fire; Block 4 is skipped entirely. Anchor preserved here as SSOT
+     for HANDOFF.
    - **synthesis-check**: block 7 always ends with a directed question; agent
      does not continue until user responds.
    - **plain-language**: write in plain everyday language. Only use a technical
@@ -112,13 +121,17 @@ correction would only surface 3 turns later.
 - **Do not produce a free-form summary instead of the 7 blocks**: the schema is
   the user-visible value. A paragraph that "covers the same ground" is not
   equivalent — it breaks the structured-schema principle.
-- **Do not drop user turns**: block 4 represents every user turn in the
-  session (compressed: one-line intent + verbatim spec-critical phrases).
-  Deciding a turn doesn't matter is the failure mode this rule prevents —
-  even routine "go" / "好" turns count as state transitions worth a line.
-- **Do not paraphrase spec-critical phrases**: file paths, error messages,
-  named constraints, exact tool / command names stay verbatim inside the
-  compressed line. Losing those is invisible intent loss.
+- **Do not render Block 4 at L3**: that block is L2-only (for the future
+  HANDOFF sister skill's cold AI reader). At L3 the human reader already
+  remembers their own turns. If you find yourself listing user messages,
+  stop and ask whether the content actually belongs in Block 2 Background.
+- **Do not paraphrase spec-critical phrases in Block 2**: file paths, error
+  messages, named constraints, exact tool / command names stay verbatim.
+  At L3 Block 2 is the only place spec-critical user phrases land (since
+  Block 4 is skipped) — losing those quotes here is invisible intent loss.
+- **If the user actually asks for verbatim user-message listing at L3**:
+  produce it as a separate response outside the recap schema, not as a
+  ressurected Block 4. The 6-block recap stays focused.
 
 ## See also
 

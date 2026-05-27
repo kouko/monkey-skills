@@ -14,6 +14,26 @@ Each block has a one-line WHY. The WHY is sourced from the V1 template in the
 Recap research note (§我的 Recap Prompt 模板（V1）) and the Claude Code 9-segment
 compaction schema analysis.
 
+### Block ↔ Audience map
+
+This bundle is the SSOT for both L3 (in-session, human warm reader — this skill)
+and the future L2 HANDOFF sister skill (cross-session, AI cold reader). Not
+every block fires for every reader. SKILL.md routes the L3 subset; future
+HANDOFF SKILL.md will route the L2 subset.
+
+| # | Block | L3 (Recap, this skill) | L2 (HANDOFF, future) |
+|---|---|---|---|
+| 1 | Situation | ✅ render | ✅ render |
+| 2 | Background | ✅ render | ✅ render |
+| 3 | Assessment | ✅ render | ✅ render |
+| 4 | User messages | ❌ **skip** — see Block 4 WHY | ✅ render verbatim |
+| 5 | Why-this-question | ✅ render | ❌ skip (no "agent's recent question" in cross-session) |
+| 6 | Pending | ✅ render | ✅ render |
+| 7 | Synthesis-check | ✅ render | ✅ render (different strength — HANDOFF uses init-prompt synthesis) |
+
+**L3 ships 6 blocks** (1, 2, 3, 5, 6, 7).
+**L2 will ship 6 blocks** (1, 2, 3, 4, 6, 7) plus HANDOFF-specific additions per the HANDOFF research v1.1 schema (Interruption Snapshot, Confidence Flags, Do Not Touch, Verification Commands, etc. — those are HANDOFF-only and not in this bundle).
+
 ### Block 1 — Situation
 
 **Prompt instruction**: One sentence — what are we doing right now? Where are we stuck?
@@ -53,46 +73,47 @@ contingency planning.
 
 ---
 
-### Block 4 — User messages (compressed for L3 reader)
+### Block 4 — User messages (L2-only — skipped at L3)
 
-**Prompt instruction**: For each user turn in this session, produce one line:
-- A short plain-language summary of the turn's intent (≤15 words)
-- Plus a verbatim quote of any **spec-critical phrase** in that turn — file
-  paths, error messages, exact tool/command/file names, named constraints
-  (numbers / dates / hard limits), or any sentence whose paraphrase would
-  change the meaning
+**Prompt instruction (L2 only — for the future HANDOFF sister skill)**: List
+every message the user sent in this session, verbatim. No filtering. No
+paraphrasing. No selection of "important" ones.
 
-If the turn contained no spec-critical phrase, the one-line intent alone is
-enough. If the user explicitly asks "show me my original messages" (or any
-language-equivalent), produce the full verbatim list instead. Default is
-compressed.
+**At L3 (this skill): skip Block 4 entirely.** Renumber the rendered output to
+6 blocks. Spec-critical user phrases (file paths, error messages, named
+constraints) belong in Block 2 (Background) via the quote-not-paraphrase
+principle — that's where the anti-drift discipline lives at L3.
 
 **WHY**: This block has different value at L3 (in-session, human warm reader)
 vs L2 (cross-session, AI cold reader). The full verbatim list — inherited from
 Anthropic's compaction prompt rule "Preserve all user messages that are not
 tool results" — is correct for L2 because the next agent has no other source
-of user intent. At L3 the reader is the user themselves; the verbatim list
-they already remember dilutes the recap (violates principle 5, plain-language /
-60-second read). The compressed form preserves the anti-drift goal — spec-
-critical phrases stay verbatim so paraphrase-creep cannot erase file paths /
-constraints — while collapsing routine user turns to one-line intent so the
-recap stays scannable. The opt-in escape hatch ("show me originals") restores
-full verbatim when the user actually needs it.
+of user intent. At L3 the reader is the user themselves; they already remember
+their own turns, so the block adds no signal and dilutes the recap by pushing
+Block 5 (Why-this-question) below the fold. Two rounds of pre-merge dogfood
+(2026-05-27, this PR's own session) confirmed the block was not worth the
+space — even after compressing to one-line-intent + spec-critical-quotes (the
+intermediate v0.1 design from commit `0d6244d0`), the user reported "沒有太大
+必要" / "still not worth it". Final v0.1 design: drop at L3, keep for L2,
+route spec-critical anti-drift duty to Block 2's quote-not-paraphrase rule.
 
 ---
 
-### Block 5 — Why-this-question
+### Block 5 — Why-this-question (L3-only)
 
 **Prompt instruction**: Explain the agent's most recent question:
 - What is the agent asking?
 - Why does the agent need to know this (what breaks if the user skips it)?
 - What options does the user have, and what are the trade-offs?
 
-**WHY**: This block is Recap-specific — it does not appear in HANDOFF or the
+**WHY**: This block is L3-specific — it does not appear in HANDOFF (L2) or the
 9-segment compaction schema. It exists because the most common mid-session
 confusion point is: "I don't understand why the agent just asked that." Without
 this block, the human may answer the question without understanding the stakes.
-Sourced from the L3 Recap design in the Continuation Stack 4-layer model.
+Sourced from the L3 Recap design in the Continuation Stack 4-layer model. L2
+HANDOFF skips this block because there is no "agent's recent question" in a
+cross-session cold-start context — the cold AI reader is starting fresh, not
+answering a pending question.
 
 ---
 
@@ -167,43 +188,39 @@ that the next session needs.
 
 ---
 
-### all-user-messages
+### all-user-messages (L2-only principle)
 
-**Definition**: Block 4 preserves the **full set** of user-stated intent across
-the session. The shape of preservation depends on the reader:
-- **L3 (in-session, human reader — this skill's default)**: one-line intent per
-  user turn + verbatim quote of any spec-critical phrase in that turn (file
-  paths, error messages, named constraints, numbers, exact tool / command
-  names). User can request full verbatim with phrases like "show me my original
-  messages."
-- **L2 (cross-session HANDOFF, AI reader — future sister skill)**: every user
-  turn verbatim, no exceptions. The cold AI reader has no other source of user
-  intent.
+**Definition**: At L2 (cross-session HANDOFF, AI cold reader): Block 4 lists
+every user turn verbatim — no LLM filtering. The cold AI reader has no other
+source of user intent.
 
-The non-negotiable: no LLM filtering of which intents to keep. Every user turn
-is represented (compressed or verbatim); none is dropped as "unimportant."
+**At L3 (this skill): the principle is dormant.** Block 4 is skipped entirely.
+Spec-critical user phrases (file paths, error messages, named constraints, exact
+tool / command names) are preserved by principle 2 (`quote-not-paraphrase`)
+inside Block 2 (Background) — that's where the anti-drift duty lives at L3. If
+the user explicitly wants a verbatim listing of their messages at L3, they ask
+outside the recap schema; the recap stays focused on the 6 blocks the L3 reader
+actually scans.
 
 **WHY**: The user's intent is ground truth — that part of Anthropic's
 compaction prompt ("Preserve all user messages that are not tool results")
-holds across both readers. What changes between L3 and L2 is the
-*representation*, not the *coverage*: a warm human reader who lived through the
-session has their own memory of routine turns, so verbatim dump is noise; a
-cold AI reader has nothing, so verbatim is the only signal. Spec-critical
-phrases stay verbatim in both forms because paraphrase-creep on file paths /
-constraints is the failure mode this principle exists to prevent. (This L3 vs
-L2 distinction was added 2026-05-27 after pre-merge dogfood showed the original
-"every turn verbatim" rule was inherited from the L2-audience compaction prompt
-and didn't fit L3's human-reader cost / benefit.)
+holds for L2 because the next agent has no other source. At L3 the reader is
+the user themselves who lived through the session — verbatim dump is signal-
+zero noise. Two rounds of pre-merge dogfood (this PR's session, 2026-05-27)
+confirmed the principle fired at L3 only because of L2-prompt inheritance, not
+because of L3 reader cost / benefit. v0.1 ships with the principle reduced to
+L2-only at L3-rendering time, while the anchor `all-user-messages` stays in the
+bundle as the canonical SSOT for the future HANDOFF sister skill.
 
-**Failure mode (intent dropped)**: User said "also keep the old endpoint alive
-for 30 days." Agent compresses this turn to "user asked about endpoint" without
-the 30-day constraint quoted verbatim. The new agent in the next session
-deletes the old endpoint on day 3.
+**Failure mode (L2)**: User said "also keep the old endpoint alive for 30
+days." HANDOFF agent drops this turn as "minor." The new agent in the next
+session deletes the old endpoint on day 3.
 
-**Failure mode (verbatim noise at L3)**: User session has 30 routine turns
-("go", "好", "next", "fix that", "merge"). Agent dumps all 30 verbatim into a
-block that the user has to scroll past to reach block 5 — violates
-plain-language (principle 5) and structured-schema's scan-in-30-seconds value.
+**Failure mode (L3 — what this v0.1 ships to prevent)**: Block 4 at L3 dumps
+17 verbatim user turns (mostly routine "go" / "好" / "next" confirmations) +
+2 substantive direction-setting turns. The human reader has to scroll past
+the 17 to find the 2. Plain-language principle (#5) violated by structural
+verbosity even if every line is technically plain.
 
 ---
 
@@ -271,16 +288,14 @@ Current assumption: the directory structure is correct and pytest can discover t
 Confidence: high — ran `ls` to verify paths.
 Blocked on: nothing; the test runs and fails cleanly (expected RED state).
 
-### User messages (compressed — L3 form)
+### ~~User messages~~ (skipped at L3 — see Block ↔ Audience map)
 
-1. Dispatched implementer for T1 with full SDD task spec. Spec-critical quote:
-   `dev-workflow/skills/recap/references/seven-block-schema.md` (target path);
-   `pytest ...::test_all_seven_blocks_and_five_principles_present -v` (RED
-   acceptance command).
-
-*(Single-turn session — only the dispatch prompt. If user later asks "show me
-the full original message," produce the verbatim text. Default stays
-compressed.)*
+*(L3 render skips Block 4 entirely. Spec-critical phrases from user turns
+appear in Block 2 (Background) above via quote-not-paraphrase. This skip is
+itself part of the good example — demonstrates principle 5 plain-language by
+removing a structurally noisy block that adds no signal for the L3 reader. At
+L2 HANDOFF this block fires verbatim — that example will ship with the
+HANDOFF sister skill.)*
 
 ### Why-this-question
 
@@ -349,14 +364,11 @@ The user dispatched the implementer with standard SDD task parameters, including
 resource paths and acceptance criteria. The user's primary directive involved
 TDD compliance and conventional commit discipline.
 
-> **all-user-messages violation (intent dropped)**: even in the L3-compressed
-> form, principle 3 requires every user turn to be represented AND any
-> spec-critical phrase to be quoted verbatim. This summary drops the actual
-> file paths (`dev-workflow/skills/recap/references/seven-block-schema.md`),
-> the RED test command, and the commit format constraint. The compressed form
-> would still say "Dispatched T1 implementer. Spec-critical quote: `<path>`,
-> `<command>`" — losing those quotes is the failure mode this principle
-> prevents.
+> **structured-schema violation (block 4 should not appear at L3)**: per the
+> Block ↔ Audience map, Block 4 is L2-only. A bad L3 recap that includes
+> Block 4 at all — even a good-looking one — violates the schema for L3.
+> Correct fix at L3: delete Block 4 entirely and rely on Block 2 to carry any
+> spec-critical user phrases via quote-not-paraphrase.
 > **jargon-creep (principle 5)**: "dispatched", "SDD task parameters", "TDD
 > compliance", "conventional commit discipline" — these are agent-introduced
 > terms. Plain version: "asked me to write the failing test for the bundle file."
