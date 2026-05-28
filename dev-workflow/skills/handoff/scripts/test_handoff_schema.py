@@ -43,6 +43,11 @@ REQUIRED_PRINCIPLE_ANCHORS = [
 
 FORBIDDEN_CROSS_LINK = "dev-workflow/skills/recap"
 
+# Regex pattern for H2/H3 headings.
+# Use a plain r-string (not f-string) to avoid {2,3} being interpreted
+# as an f-string expression. The heading text is appended via string concat.
+_H2_H3_PREFIX = r"^#{2,3}\s+.*"
+
 
 def _read_bundle() -> str:
     """Read the bundle file; fail with a descriptive message if missing."""
@@ -66,10 +71,13 @@ def test_all_ten_blocks_and_five_principles_present() -> None:
     content_lower = content.lower()
 
     # --- 10 block headings (case-insensitive) ---
+    # Build pattern by string concat: _H2_H3_PREFIX + escaped heading.
+    # Cannot use f-string here because {2,3} in rf"^#{2,3}..." would be
+    # evaluated as an f-string expression, producing '^#(2, 3)...' instead
+    # of the intended regex quantifier '^#{2,3}...'.
     missing_headings = []
     for heading in REQUIRED_HEADINGS:
-        # heading must appear after a ## or ### marker
-        pattern = rf"^#{2,3}\s+.*{re.escape(heading)}"
+        pattern = _H2_H3_PREFIX + re.escape(heading)
         if not re.search(pattern, content_lower, re.MULTILINE):
             missing_headings.append(heading)
     assert not missing_headings, (
