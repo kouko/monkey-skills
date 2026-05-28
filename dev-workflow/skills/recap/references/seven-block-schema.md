@@ -276,24 +276,45 @@ already started writing 200 lines of option A code.
 
 ### plain-language
 
-**Definition**: Recap output uses plain everyday language so the human can read
-themselves back into state in under 60 seconds without parsing jargon. Only use
-a technical term if the user introduced it first in the session (mirrors
-quote-not-paraphrase on the agent's own vocabulary). Acronyms expanded on first
-mention. Short sentences over long. One fact per bullet.
+**Definition**: Each block of the recap is **an explanation TO the user**, not
+a status report ABOUT the user's work. The agent writes as if speaking
+directly to the user: *"you were debugging the auth flow"* / *"we picked option
+B because option A would have broken the migration"* — not *"Current state:
+debugging auth flow. Decisions made: option B chosen, rationale: migration
+constraint."* The shift from report-style to explanation-style is the lever:
+explanation enters the user's head pre-parsed; status-report tone forces them
+to translate before understanding. Use second-person framing ("you" / "we")
+where natural. Goal: the human reads themselves back into state in under 60
+seconds without parsing jargon. Only use a technical term if the user
+introduced it first in the session (mirrors quote-not-paraphrase on the
+agent's own vocabulary). Acronyms expanded on first mention. Short sentences
+over long. One fact per bullet.
 
-*(Text of this principle is quoted verbatim from the 2026-05-26 brief,
-Smallest End State criterion #5. This is the skill-specific 5th principle,
-added to the 4 共通核心原則 from the synthesis research.)*
+*(Reframed 2026-05-29 per kouko dogfood feedback: original v0.1 wording said
+"Recap output uses plain everyday language" — passive, output-centric. The
+agent treated it as "write in plain prose" and still produced status-report
+tone that was technically plain but still felt distant. v0.1.1 reframes as an
+ACTIVE explanation-TO-user behaviour, which pushes the agent toward
+second-person conversational shape.)*
 
-**WHY**: Recap is written for a human who is already cognitively loaded from
-the work they just did. An agent that explains the situation in its own
-preferred vocabulary (tool names, architectural jargon, acronyms) forces the
-human to do translation work at the moment they can least afford it. The recap
-exists to remove load, not add it. Aligns with kouko's global preference:
-"Plain language over jargon unless I introduce the term first."
+**WHY**: The human reader is already cognitively loaded from the work they
+just did — the most absorbable shape is an explanation addressed to them, not
+a report about them. An agent that writes *"Current state: X. Decisions made:
+Y. Open items: Z."* forces the reader to PARSE before understanding. An agent
+that writes *"You were working on X. We decided Y because Z. Still left: a, b,
+c."* is half-understood by the time the reader finishes the sentence. The
+recap exists to remove load, not add it; explanation-style removes more load
+than report-style even when both use the same plain vocabulary. Aligns with
+kouko's global preference: *"Plain language over jargon unless I introduce
+the term first."*
 
-**Failure mode (paraphrase-creep + jargon-creep)**: See §3 Bad Example below.
+**Failure modes (paraphrase-creep + jargon-creep + status-report-tone)**: See
+§3 Bad Example below. The third mode — status-report-tone — is the v0.1.1
+addition: prose that is grammatically plain but structurally a status dump
+("Hypothesis: X. Confidence: Y. Blocker: Z.") rather than an explanation
+("We think X — fairly confident; only Z is in the way."). Both are "plain
+English" by surface vocabulary; the latter respects the explanation framing
+the principle requires.
 
 ---
 
