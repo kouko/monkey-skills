@@ -42,13 +42,13 @@ HANDOFF ファイルの想定読者は、前回の文脈をゼロから出発す
 
 | 状況 | 使うもの |
 |---|---|
-| **会話の途中**で流れを見失った（まだ同じセッション内） | `dev-workflow:recap`（L3 セッション内、チャット出力のみ） |
+| **会話の途中**で流れを見失った（まだ同じセッション内） | `dev-workflow:recap-state`（L3 セッション内、チャット出力のみ） |
 | **セッションを終わる**；後でコールド AI に再開させたい | `dev-workflow:handoff` prepare モード |
 | **新しいセッションを始める**；前回の状態をロードしたい | `dev-workflow:handoff` resume モード |
 | 離席後に開いたセッションに戻ってきた（組み込み） | Claude Code 組み込み `/recap`（away summary） |
 | 並行エージェントへのタスク委譲 | OpenAI Agents SDK 等（別の問題） |
 
-`dev-workflow:recap` は L3 — ファイルへの書き込みなし、セッション内の
+`dev-workflow:recap-state` は L3 — ファイルへの書き込みなし、セッション内の
 ウォームな人間読者向け、7 ブロックのチャット出力。
 
 `dev-workflow:handoff` は L2 — `.claude/handoffs/` にファイルを書き出し、

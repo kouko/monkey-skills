@@ -1,5 +1,5 @@
 ---
-name: recap
+name: recap-state
 version: 0.1.0
 description: >-
   In-session re-orientation skill. When the user loses track of what we were

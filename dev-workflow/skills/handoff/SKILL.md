@@ -6,7 +6,7 @@ description: >-
   wants to save state so a future AI agent can resume without losing context —
   produce a structured 10-block HANDOFF file in `.claude/handoffs/` (prepare
   mode), or load and verify a prior HANDOFF file before resuming work (resume
-  mode). Not the same as `dev-workflow:recap` (L3 in-session re-orientation
+  mode). Not the same as `dev-workflow:recap-state` (L3 in-session re-orientation
   for a human reader still in the session). Not agent-to-agent delegation
   (not the OpenAI Agents SDK handoff_<id>_tool pattern — that is a different
   problem). This skill is cross-session L2: cold AI reader, new session, zero
@@ -24,7 +24,7 @@ description: >-
   - **en**: "pick up where we left off" / "load handoff" / "resume from last
     session" / "continue where we stopped"
 
-  Disambiguation: `dev-workflow:recap` is L3 in-session (human warm reader,
+  Disambiguation: `dev-workflow:recap-state` is L3 in-session (human warm reader,
   current session, chat output only). `dev-workflow:handoff` is L2
   cross-session (cold AI reader, new session, file output). The two coexist.
   Not agent-to-agent delegation — that is OpenAI Agents SDK or similar
@@ -60,7 +60,7 @@ if the user is starting work and mentions a prior session → resume mode.
 
 | Situation | Skill |
 |---|---|
-| Lost thread mid-session (human still in conversation) | `dev-workflow:recap` (L3 in-session) |
+| Lost thread mid-session (human still in conversation) | `dev-workflow:recap-state` (L3 in-session) |
 | Ending session; want cold AI to resume later | `dev-workflow:handoff` prepare mode (L2 cross-session) |
 | Starting new session; loading prior state | `dev-workflow:handoff` resume mode (L2 cross-session) |
 | User returns to a session after being away (built-in) | Claude Code `/recap` away-summary (built-in, different tool) |
@@ -154,7 +154,7 @@ per principle:
   user returns to a session after being away. This skill fires when the user
   explicitly wants to end a session or resume from a prior one.
 - **Do not use this for in-session re-orientation** — that is
-  `dev-workflow:recap` (L3). If the user is still in the current session and
+  `dev-workflow:recap-state` (L3). If the user is still in the current session and
   just needs a "where were we", use recap.
 - **Do not treat this as agent-to-agent delegation** — not the OpenAI
   `handoff_<id>_tool` pattern. That is a parallel-agent orchestration problem;

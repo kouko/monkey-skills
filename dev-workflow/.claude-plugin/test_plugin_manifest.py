@@ -5,7 +5,7 @@ Assertions:
   (a) plugin.json parses as valid JSON
   (b) version is strictly greater than PRE_BUMP snapshot (2.7.1)
   (c) bump is a minor bump: same major, higher minor, patch == 0
-  (d) keywords array contains "recap"
+  (d) keywords array contains "recap-state" (renamed from "recap" in v0.1.1)
   (e) keywords array contains "handoff"
 """
 import json
@@ -52,10 +52,10 @@ def test_version_and_keywords():
         f"patch must reset to 0 on a minor bump: got {current[2]}"
     )
 
-    # (d) "recap" in keywords
+    # (d) "recap-state" in keywords (renamed v0.1.1 — "recap" collided with built-in slash in some agent UIs)
     keywords = manifest.get("keywords", [])
-    assert "recap" in keywords, (
-        f'"recap" missing from keywords: {keywords!r}'
+    assert "recap-state" in keywords, (
+        f'"recap-state" missing from keywords: {keywords!r}'
     )
 
     # (e) "handoff" in keywords

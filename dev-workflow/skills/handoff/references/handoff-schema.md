@@ -5,7 +5,7 @@
 > the 5 共通核心原則. SKILL.md routes here; do not duplicate content in SKILL.md.
 >
 > **Audience note**: This bundle is L2 (cross-session, AI cold reader).
-> Its sister skill is L3 (in-session, human warm reader): `dev-workflow:recap`.
+> Its sister skill is L3 (in-session, human warm reader): `dev-workflow:recap-state`.
 > Each skill ships its own self-contained bundle — no file sharing, no cross-imports.
 > Per Anthropic skill-independence convention (`CLAUDE.md §Skill Structure`):
 > "每個 skill 是自包含目錄".
@@ -20,7 +20,7 @@
 ## 1 — Block ↔ Audience Map
 
 This bundle is the SSOT for L2 (HANDOFF — cross-session, AI cold reader).
-The L3 sister is `dev-workflow:recap` with its own separate bundle.
+The L3 sister is `dev-workflow:recap-state` with its own separate bundle.
 Do NOT cross-link, import, or reference the recap bundle from this file.
 
 | # | Block name | L2 HANDOFF | Note |
