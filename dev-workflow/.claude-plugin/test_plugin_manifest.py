@@ -6,6 +6,7 @@ Assertions:
   (b) version is strictly greater than PRE_BUMP snapshot (2.7.1)
   (c) bump is a minor bump: same major, higher minor, patch == 0
   (d) keywords array contains "recap"
+  (e) keywords array contains "handoff"
 """
 import json
 import pathlib
@@ -55,4 +56,9 @@ def test_version_and_keywords():
     keywords = manifest.get("keywords", [])
     assert "recap" in keywords, (
         f'"recap" missing from keywords: {keywords!r}'
+    )
+
+    # (e) "handoff" in keywords
+    assert "handoff" in keywords, (
+        f'"handoff" missing from keywords: {keywords!r}'
     )
