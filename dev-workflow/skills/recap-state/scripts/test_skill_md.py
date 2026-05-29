@@ -1,7 +1,7 @@
-"""Tests for dev-workflow/skills/recap/SKILL.md — T2 RED assertions.
+"""Tests for dev-workflow/skills/recap-state/SKILL.md — T2 RED assertions (renamed v0.1.1).
 
 Assertions (a-f) per plan T2 Acceptance.RED:
-  a) YAML frontmatter parses cleanly with name=recap, version=0.1.0, non-empty description
+  a) YAML frontmatter parses cleanly with name=recap-state, version=0.1.0, non-empty description
   b) description contains recap + ≥1 zh-TW trigger + ≥1 ja trigger + ≥1 en trigger
   c) description disambiguates from built-in /recap via away-summary + in-session markers
   d) body references references/seven-block-schema.md (relative path)
@@ -56,8 +56,8 @@ class TestFrontmatterAndRouting:
         self.description = self.fm.get("description", "") or ""
 
     def test_a_frontmatter_fields(self):
-        """(a) YAML frontmatter: name=recap, version=0.1.0, non-empty description."""
-        assert self.fm.get("name") == "recap", "name must be 'recap'"
+        """(a) YAML frontmatter: name=recap-state, version=0.1.0, non-empty description."""
+        assert self.fm.get("name") == "recap-state", "name must be 'recap-state'"
         assert self.fm.get("version") == "0.1.0", "version must be '0.1.0'"
         assert self.description.strip(), "description must be non-empty"
 
@@ -116,7 +116,7 @@ def test_frontmatter_and_routing():
     description = fm.get("description", "") or ""
 
     # (a)
-    assert fm.get("name") == "recap"
+    assert fm.get("name") == "recap-state"
     assert fm.get("version") == "0.1.0"
     assert description.strip()
 

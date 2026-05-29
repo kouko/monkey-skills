@@ -1,5 +1,5 @@
 ---
-name: recap
+name: recap-state
 version: 0.1.0
 description: >-
   In-session re-orientation skill. When the user loses track of what we were
@@ -92,9 +92,14 @@ has lost the thread. The two coexist; do not replace the built-in away-summary.
      for HANDOFF.
    - **synthesis-check**: block 7 always ends with a directed question; agent
      does not continue until user responds.
-   - **plain-language**: write in plain everyday language. Only use a technical
-     term if the user introduced it in this session. Expand acronyms on first
-     mention. Short sentences. One fact per bullet.
+   - **plain-language**: each block **explains TO the user** in plain everyday
+     language — write as if speaking to them ("you were debugging X" / "we
+     picked Y because Z"), NOT reporting at them ("Current state: X.
+     Decisions: Y, rationale: Z."). Use second-person framing where natural.
+     Only use a technical term if the user introduced it in this session.
+     Expand acronyms on first mention. Short sentences. One fact per bullet.
+     See `references/seven-block-schema.md` §plain-language for the
+     report-style vs explanation-style failure-mode contrast.
 
 4. **Visual aids** (tables / ASCII diagrams): permitted **only when they
    compress information**, not as decoration. See `references/seven-block-schema.md`

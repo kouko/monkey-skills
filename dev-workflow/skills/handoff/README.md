@@ -44,13 +44,13 @@ Both skills help you re-orient, but they target different situations:
 
 | Situation | Skill |
 |---|---|
-| Lost the thread **mid-session** (you're still in the conversation) | `dev-workflow:recap` (L3 in-session re-orientation, chat output only) |
+| Lost the thread **mid-session** (you're still in the conversation) | `dev-workflow:recap-state` (L3 in-session re-orientation, chat output only) |
 | **Ending a session**; want a cold AI to resume later | `dev-workflow:handoff` prepare mode |
 | **Starting a new session**; loading prior state | `dev-workflow:handoff` resume mode |
 | You returned to an open session after being away (built-in) | Claude Code built-in `/recap` (away summary) |
 | Delegating a sub-task to a parallel agent | OpenAI Agents SDK or similar (different problem) |
 
-`dev-workflow:recap` is L3 — it writes nothing to disk, targets a warm human
+`dev-workflow:recap-state` is L3 — it writes nothing to disk, targets a warm human
 reader still inside the session, and produces a 7-block chat summary.
 
 `dev-workflow:handoff` is L2 — it writes a file to `.claude/handoffs/`,
