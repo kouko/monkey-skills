@@ -53,9 +53,55 @@ has lost the thread. The two coexist; do not replace the built-in away-summary.
 1. Read `references/seven-block-schema.md` for the full V1 template and the
    5 共通核心原則 definitions.
 
-2. Produce a single in-chat message (no file output) with **6 blocks** in
-   order. (Block 4 from the bundle is L2-only and is skipped at L3 — see
-   `references/seven-block-schema.md` §"Block ↔ Audience map".)
+2. Structure your in-chat response with **two-mode XML tag separation**.
+   Output exactly two sibling top-level tags — one for private planning,
+   one for user-facing explanation:
+
+   ```
+   <thinking>
+   [Internal planning. Telegraphic / structured / agent-to-self mode is
+   fine here. The user sees this block but treats it as your scratch pad,
+   not as the recap content. Plan:
+   - Which user phrases from this session are spec-critical (file paths,
+     error messages, named constraints, exact tool/command names) — these
+     MUST appear verbatim inside <recap> Block 2 Background.
+   - Which blocks would compress better as a table (per `seven-block-schema.md`
+     §1.5 — Block 3 Assessment defaults to 2-col key:value; Block 5 if 2+
+     options compared; Block 6 if items have metadata).
+   - The agent's most recent question (drives Block 5 Why-this-question).
+   - The expected next-step direction (drives Block 7 Synthesis-check).]
+   </thinking>
+
+   <recap>
+   [User-facing explanation. SWITCH to conversational, second-person mode.
+   Write as if speaking TO the user. Apply the plain-language principle in
+   full — explanation-style not report-style. Produce 6 blocks in order
+   below.]
+
+   ### Block 1 — Situation
+   ### Block 2 — Background
+   ### Block 3 — Assessment
+   ### Block 5 — Why-this-question
+   ### Block 6 — Pending
+   ### Block 7 — Synthesis-check
+   </recap>
+   ```
+
+   *(Block 4 is L2-only and skipped at L3 — see `references/seven-block-schema.md`
+   §"Block ↔ Audience map".)*
+
+   **Why two tags, not one stream**: the `<thinking>` block holds planning
+   (telegraphic / structured / agent-to-self — fine to be report-style).
+   The `<recap>` block holds the user-facing explanation (must be
+   plain-language, conversational, explain-TO-user). Mixing them in one
+   stream causes the user-facing text to inherit thinking-mode terseness
+   and status-report tone — exactly the failure that `plain-language`
+   (v0.1.1) was reframed to prevent. Anthropic's official prompting docs
+   recommend XML tag separation (`<thinking>` + `<answer>` pattern) for
+   precisely this kind of internal-vs-external mode boundary; this skill
+   adopts that pattern as the structural enforcer for `plain-language`.
+
+3. Block details (each rendered inside `<recap>`):
 
    - **Block 1 — Situation**: one sentence, present moment, where we are stuck.
    - **Block 2 — Background**: 3–5 bullets; key decisions + rejected options +
