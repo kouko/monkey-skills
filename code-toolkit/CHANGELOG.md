@@ -27,6 +27,48 @@ The toolkit emerged from a single design question — *"is there a way to combin
 
 ---
 
+## [0.12.0] — 2026-05-30 — **Skill-refactor sweep — evidence-based de-bloat**
+
+A systematic `dev-workflow:skill-refactor` (Ablation mode) sweep of all 11
+skills, motivated by the observation that code-toolkit had grown to ~1.66× its
+`obra/superpowers` ancestor in words/skill. The headline result is a **negative
+finding**: the skills are mostly *not* bloated — 7 of 9 swept skills cannot lose
+10% without cutting load-bearing content, and the gate refused to ship cosmetic
+trims. Only two skills carried genuine, behavior-preserving bloat.
+
+### What ships
+
+- **`verification-before-completion` −19%** (1324→1073 words, 7 sections → 5):
+  merged the HARD-GATE + Red-Flags redundancy-trap pair's *duplication*;
+  compressed Process (dropped the detection-signal sublist that duplicates
+  `references/test-invocation-by-stack.md`); consolidated Cross-skill-contract +
+  What-this-does-NOT-do + See-also into one "Boundaries & related skills".
+  "When NOT to use" kept verbatim (ablation positive control: load-bearing).
+  Adds `test-prompts.json` (the skill-refactor gate's eval input).
+- **`dispatching-parallel-agents` −15%** (1748→1488 words, 12 sections → 9):
+  merged When-to-use + When-NOT-to-use into one table; folded
+  What-this-does-NOT-do into the opener; folded See-also into the Cross-skill
+  contract table (every sibling link preserved).
+
+### Verification
+
+Each refactor passed the skill-refactor Q1/Q2/Q3 gate (Q1 = multi-judge
+equivalence ensemble on real behavioral runs; Q2 = ≥10% word reduction; Q3 =
+frontmatter / dependency / link invariants intact). Whole-branch
+`requesting-code-review`: **PASS** (0 🔴 / 0 🟡 / 2 🟢). Validators clean
+(plugin-description-coherence, verify-drift, skill-folder-structure).
+
+### Not shipped (gate working as designed)
+
+- 7 skills returned `NO_SAFE_CUT` (<10% without harming behavior):
+  requesting-code-review, writing-plans, systematic-debugging,
+  subagent-driven-development, finishing-a-development-branch, tdd-iron-law,
+  using-code-toolkit.
+- `using-git-worktrees` reached 10.1% but the equivalence gate caught that the
+  cut flipped a recommendation polarity on the NFS-mount exemption boundary
+  (2/3 judges NOT_EQUIVALENT) → rejected. Same failure class as round 1's
+  exemption-boundary sensitivity.
+
 ## [0.10.0] — 2026-05-30 — **Asking the user — plain-language question block**
 
 Makes the questions and options the orchestrator shows the human user
