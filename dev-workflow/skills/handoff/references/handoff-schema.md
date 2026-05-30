@@ -600,3 +600,90 @@ Everything looks good, I'm fairly confident about most things.
 > confidence table. The cold AI cannot identify which sections are ❓-rated
 > and which are ✅. The prose obscures that Block 5 (Recent decisions) was
 > partially reconstructed from memory (warranting ⚠️).
+
+---
+
+## 6 — Resume Launcher (prepare-mode output)
+
+The Resume Launcher is the **init prompt** prepare mode emits *after* writing the
+10-block file: a copy-paste entry point that starts the next session. It is **not
+an 11th block of the HANDOFF contract** — it is a prepare-mode output, emitted to
+chat AND appended as a closing `## Resume Launcher` section of the file so it
+survives the session (retrievable via `tail`).
+
+**WHY**: The 10-block file is the cold reader's *map*, but a map is only useful
+once opened. Without a launcher the user must remember a resume trigger phrase
+and trust `ls -t | head -1` to pick the right file. The launcher removes both
+frictions: it names the **exact** file and carries the resume procedure inline.
+This is the same split as the prior art our schema already cites — Don't Sleep On
+AI generates a continuation *document* plus a separate *resume prompt* whose job
+is to "reference and activate" the document, not duplicate it.
+
+**Three load-bearing properties** (a launcher that breaks any of these is wrong):
+
+1. **Thin — points, never re-dumps.** The launcher names the file path and the
+   procedure; it MUST NOT reproduce Block 4 (user messages) or any other block
+   content. The file is the single source of truth; a second copy in the launcher
+   is token bloat and a drift surface (two records that disagree after one edit).
+2. **Portable — degrades gracefully.** Phrase it so it works whether or not the
+   new session has the `dev-workflow:handoff` skill installed, and even in a
+   different tool (Codex / Cursor / a bare LLM). Achieve this by telling the
+   reader to *read the file and follow its instructions* (the procedure lives in
+   the file), with an explicit "if you have the skill this is its resume mode; if
+   not, follow the steps from the file" clause. This honors handoff's L2 mandate:
+   cold AI reader, new session **or new tool**.
+3. **No stale embeds.** The launcher references the [T1]/[T2] verification
+   commands; it MUST NOT embed their *expected outputs* (HEAD SHA, version, test
+   counts). Those live in Block 9 and are checked at resume time — embedding them
+   in the launcher creates a second copy that goes stale the moment state moves.
+
+It ends with a blank **`USER DIRECTIVE:`** line: if the user writes a task there,
+the next session treats it as the immediate first action; if blank, the agent
+runs verification, proposes the best next step, and waits for confirmation (the
+`synthesis-check` principle).
+
+### Good Example — Resume Launcher
+
+Continues the imaginary ship from §4 (`HANDOFF-007`, `feat/handoff-v0.1`). Note
+the launcher names the **on-disk filename** (`HANDOFF-YYYY-MM-DD-HHMMSS-<slug>`,
+derived from §4's `created` timestamp), not the logical `handoff_id` — `ls -t`
+discovery and the Read both operate on the filename:
+
+```
+Resume my previous session.
+
+Read `.claude/handoffs/HANDOFF-2026-05-28-221500-handoff-v0.1-t2.md` in full,
+then follow its resume procedure:
+1. Run every [T1] verification command in Block 9; report output vs expected.
+   STOP and ask me if any [T1] command mismatches.
+2. Run the [T2] commands; report any drift and whether it is the known benign
+   case — you may proceed past [T2] drift.
+3. Give me a synthesis-check (3–5 bullets: situation, pending work, intended
+   next step) and wait for my confirmation before acting.
+
+If you have the `dev-workflow:handoff` skill this is its resume mode; if not,
+just follow the three steps above from the file.
+
+USER DIRECTIVE (optional — your immediate first task; leave blank to let the
+agent propose and wait):
+```
+
+### Bad Example — Resume Launcher
+
+```
+Here's everything from last time: we were building the handoff skill, the user
+said work under TDD, the working dir is the worktree, T1 is done at commit
+7b09c92a which should still be HEAD, tests show 1 passed, and next is T2. Pick
+up where we left off and start writing SKILL.md.
+```
+
+> **thin violation**: re-dumps Block 3/4/5 content into the launcher — now there
+> are two copies of the context that drift apart after one edit to the file.
+> **no-stale-embeds violation**: "7b09c92a which should still be HEAD" and "tests
+> show 1 passed" embed expected outputs; if state moved, the launcher now lies,
+> and there is no verification step to catch it.
+> **portable violation**: "Pick up where we left off" assumes warm context the
+> cold/other-tool reader does not have, and never tells it to read the file.
+> **synthesis-check violation**: "start writing SKILL.md" orders immediate action
+> with no verification and no confirmation pause — the exact failure
+> `synthesis-check` exists to prevent.

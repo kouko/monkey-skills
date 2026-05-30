@@ -133,3 +133,48 @@ def test_all_ten_blocks_and_five_principles_present() -> None:
         + "\n".join(f"  {line}" for line in cross_link_hits)
         + "\nHandoff bundle must be self-contained (Anthropic skill-independence rule)."
     )
+
+
+def test_resume_launcher_section_present_and_constrained() -> None:
+    """
+    v0.2.0 gate: the schema documents the Resume Launcher (init prompt) as a
+    prepare-mode output, with its three load-bearing properties and a USER
+    DIRECTIVE field, plus good/bad examples.
+
+    WHY: The launcher is the cross-session entry point. Drift here (dropping the
+    thin / portable / no-stale-embeds constraints, or the USER DIRECTIVE field)
+    would let prepare mode emit a context-re-dump blob that goes stale — the
+    exact failure the bad example warns against.
+    """
+    content = _read_bundle()
+    content_lower = content.lower()
+
+    # --- Resume Launcher section heading present ---
+    assert re.search(_H2_H3_PREFIX + re.escape("resume launcher"),
+                     content_lower, re.MULTILINE), (
+        "Resume Launcher section heading not found.\n"
+        "§6 must document the init prompt prepare mode emits."
+    )
+
+    # --- USER DIRECTIVE field present (the optional first-task slot) ---
+    assert "user directive" in content_lower, (
+        "'USER DIRECTIVE' field not found in the Resume Launcher spec.\n"
+        "The launcher must end with a blank USER DIRECTIVE line."
+    )
+
+    # --- three load-bearing property anchors present ---
+    missing_props = [p for p in ("thin", "portable", "no stale embeds")
+                     if p not in content_lower]
+    assert not missing_props, (
+        f"Missing Resume Launcher property anchors: {missing_props}\n"
+        "The launcher spec must name all three constraints (thin / portable / "
+        "no-stale-embeds)."
+    )
+
+    # --- both good and bad launcher examples present ---
+    assert "good example — resume launcher" in content_lower, (
+        "Good Resume Launcher example not found."
+    )
+    assert "bad example — resume launcher" in content_lower, (
+        "Bad Resume Launcher example (anti-pattern) not found."
+    )
