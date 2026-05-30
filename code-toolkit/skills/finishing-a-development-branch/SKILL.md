@@ -1,7 +1,7 @@
 ---
 name: finishing-a-development-branch
-description: 'Use when ready to close out a development branch — feature done, tests pass, about to merge or open a PR. Examples: "finish this branch", "wrap up the feature", "ready to merge", "open a PR for this branch", "ship it", "close out this branch", "I''m done here, what''s next?". Orchestrates the full close-branch sequence: requesting-code-review (Step 1 human-judgment review) → verification-before-completion (Step 2 package-level test invocation) → mandatory dev-workflow:git-memory delegation for commit message (P3-D) → git push → optional gh pr create → optional git worktree cleanup. Does NOT duplicate git-memory logic (delegates per P3-D); does NOT auto-merge (user agency for the final merge call). ブランチ収了・PR 準備・merge 前収尾。分支收尾・PR 準備・merge 前完工。'
-version: 0.9.0
+description: 'Use when ready to close out a development branch — feature done, tests pass, about to merge or open a PR. Examples: "finish this branch", "wrap up the feature", "ready to merge", "open a PR for this branch", "ship it", "close out this branch", "I''m done here, what''s next?". Orchestrates the full close-branch sequence: requesting-code-review (Phase 1 human-judgment review) → verification-before-completion (Phase 2 package-level test invocation) → mandatory dev-workflow:git-memory delegation for commit message (P3-D) → git push → optional gh pr create → optional git worktree cleanup. Does NOT duplicate git-memory logic (delegates per P3-D); does NOT auto-merge (user agency for the final merge call). ブランチ収了・PR 準備・merge 前収尾。分支收尾・PR 準備・merge 前完工。'
+version: 0.10.0
 ---
 
 <SUBAGENT-STOP>
@@ -15,32 +15,36 @@ Orchestrates the close-branch sequence. The agent acts as conductor — invoking
 ```
 finishing-a-development-branch (this skill)
   │
-  ├─→ Step 1: requesting-code-review
+  ├─→ Phase 1: requesting-code-review
   │     dispatches code-reviewer subagent → verdict: PASS / PASS_WITH_NOTES / NEEDS_REVISION
   │     blocks on 🔴 fatal; surfaces 🟡 / 🟢 findings
   │
-  ├─→ Step 2: verification-before-completion
+  ├─→ Phase 2: verification-before-completion
   │     runs package-level test command → exit 0 + N>0 tests → PASS
   │     blocks on test failure
   │
-  ├─→ Step 3: dev-workflow:git-memory (P3-D MANDATORY)
+  ├─→ Phase 3: dev-workflow:git-memory (P3-D MANDATORY)
   │     decides on Decision: / Learning: / Gotcha: trailers for the close-out commit
   │     orchestrator hands the diff + recent commits; git-memory returns trailer set
   │
-  ├─→ Step 4: git commit (orchestrator runs this)
-  │     uses the message + trailers from Step 3
+  ├─→ Phase 4: git commit (orchestrator runs this)
+  │     uses the message + trailers from Phase 3
   │     does NOT bypass hooks; does NOT amend
   │
-  ├─→ Step 5: git push (orchestrator runs this)
+  ├─→ Phase 5: git push (orchestrator runs this)
   │     pushes the branch; if branch is local-only, sets upstream first
   │
-  ├─→ Step 6 (optional): gh pr create
+  ├─→ Phase 6 (optional): gh pr create
   │     only if user has gh CLI configured AND has not opted out
   │     PR body uses git-memory's PR-body convention
   │
-  └─→ Step 7 (optional): git worktree cleanup
+  └─→ Phase 7 (optional): git worktree cleanup
         if branch was in .worktrees/, offer (do NOT auto-execute) the worktree remove
         per using-git-worktrees §Removing a worktree
+
+(The diagram above is the **phase overview** — which sub-skill fires in what order.
+The numbered **Step** list in §Default flow below is the granular procedure; "Phase N"
+and "Step N" are distinct numbering schemes.)
 ```
 
 ## When NOT to use
@@ -92,25 +96,46 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
    - If 🔴 fatal: surface findings; STOP. Wait for user remediation.
    - If 🟡 / 🟢: surface findings; ASK user to proceed or remediate.
    - If PASS: proceed silently.
-4. Dispatch verification-before-completion
+   - Budget/quota failure fallback: if the code-reviewer subagent fails to launch due to
+     budget or quota exhaustion, perform an inline B2 self-review — Read the diff, surface
+     🟡 / 🟢 findings with an explicit "(self-review — code-reviewer unavailable)" caveat,
+     then apply the same proceed/remediate gate logic. NEVER suggest `/ultrareview` or any
+     external review command in AskUserQuestion options or in the PR body without first
+     verifying it exists via `claude --help`.
+4. Before applying any review findings from Step 3: Read each file you intend to Edit.
+   Whole-branch review commonly flags files created by implementer subagents that the
+   orchestrator's context has never opened — every Edit on an unread file will fail with
+   "File has not been read yet". Read first, then apply.
+5. Dispatch verification-before-completion
+   - MANDATORY even if tests were run immediately before invoking this skill. Step 3
+     fix-ups may have modified files; a pre-invocation test run does NOT satisfy this gate.
    - If test failure: surface output; STOP. Route user to tdd-iron-law or systematic-debugging.
    - If 0 tests ran: surface as failure (configuration bug, not a pass).
    - If PASS: proceed silently.
-5. Invoke dev-workflow:git-memory
+6. Invoke dev-workflow:git-memory
    - Pass: diff, recent commits, branch name
    - Receive: trailer set (Decision: / Learning: / Gotcha: lines) + commit body suggestion
-6. Show user the proposed commit message + trailers; ASK for approval
+7. Show user the proposed commit message + trailers; ASK for approval
    - If approved: proceed
    - If rejected / edited: use user's version
-7. git commit (only after user approval at Step 6)
-8. git push (set upstream if branch is local-only)
-9. ASK user: "Open a PR? (y/N)" — only if gh CLI configured
-   - If yes: gh pr create with title/body from git-memory + branch name
-   - If no: stop after push
-10. ASK user: "Branch was in .worktrees/; remove the worktree? (y/N)"
+8. git hygiene before the close-out commit:
+   - Run `git status --short` to confirm exactly which files are staged and untracked.
+   - Stage with an explicit file list (`git add <file1> <file2> …`) — avoid `git add -A <dir>`
+     which sweeps unrelated untracked files into the commit.
+   - Use the branch-qualified push form `git push -u origin <branch>` (or `git push origin
+     <branch>` if upstream already set) — NEVER a bare `git push`, which trips the sandbox
+     "do not push to main" guard on the first push of a new branch.
+   - If any review-driven fixes were applied in Steps 3–4, re-run verification-before-completion
+     here (Step 5 result is stale) before committing.
+9. git commit (only after user approval at Step 7)
+10. git push (branch-qualified form per Step 8)
+11. ASK user: "Open a PR? (y/N)" — only if gh CLI configured
+    - If yes: gh pr create with title/body from git-memory + branch name
+    - If no: stop after push
+12. ASK user: "Branch was in .worktrees/; remove the worktree? (y/N)"
     - If yes: cd to repo root; git worktree remove .worktrees/<slug>
     - If no: leave it
-11. Report final state: commit SHA, push status, PR URL if created, worktree status
+13. Report final state: commit SHA, push status, PR URL if created, worktree status
 ```
 
 **ASK = stop and wait for user.** This is deliberately NOT autonomous — close-out is a high-blast-radius operation (shipping code → teammates / production). Each user-visible action has a confirmation.
@@ -119,13 +144,14 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
 
 | Agent / user says | Reality | Correct response |
 |---|---|---|
-| *"Skip review, just push."* | Review-skip rationalization — same shape as `requesting-code-review`'s. | Refuse; dispatch Step 1. If reviewer PASSes in 30 seconds, you lose 30 seconds; if NEEDS_REVISION, you gain a fix-before-prod. |
-| *"Tests passed locally yesterday, skip step 2."* | Code may have changed since yesterday. Test results have a half-life of "current uncommitted state". | Re-run verification-before-completion. |
+| *"Skip review, just push."* | Review-skip rationalization — same shape as `requesting-code-review`'s. | Refuse; dispatch requesting-code-review (Phase 1). If reviewer PASSes in 30 seconds, you lose 30 seconds; if NEEDS_REVISION, you gain a fix-before-prod. |
+| *"Tests passed locally yesterday, skip the verification step."* | Code may have changed since yesterday. Test results have a half-life of "current uncommitted state". | Re-run verification-before-completion. |
 | *"Don't bother with git-memory, message is obvious."* | P3-D MANDATORY — git-memory itself decides whether memory trailers are warranted. *"Message is obvious"* may be true (git-memory returns "no trailers needed for this routine commit"); the determination is the skill's job, not the user's pre-decision. | Invoke git-memory anyway. The skill outputs an empty trailer set for routine commits; the invocation itself is the discipline (audit trail of "we considered memory and decided no"). See git-memory §Invocation policy. |
 | *"Auto-merge after push."* | Merge into main is a visible action with consequences for teammates. Always user-decision. | Push only; report PR URL if created. Let user merge via UI / explicit command. |
 | *"Force-push to clean up history."* | Force-push to shared branches is destructive. Force-push to your own feature branch may be appropriate but always requires explicit user authorization. | Refuse unless user explicitly authorizes; warn about implications for any teammates with the branch checked out. |
 | *"Just amend the last commit."* | Amend loses the previous commit's SHA → loses any in-flight reviews referencing that SHA. Per CLAUDE.md commit policy: *"Always create NEW commits rather than amending."* | Refuse; create new commit. |
-| 「review skip / 跳過審查」 | Same rationalization, localized. | Same refusal — dispatch Step 1. |
+| *"I already have a commit message from SDD."* | Per-task SDD commits cover per-task work. The close-out commit captures the full branch; its Decision/Learning/Gotcha trailers require a fresh git-memory call over the whole diff. | Invoke `dev-workflow:git-memory` (Skill call, not an orchestrator-composed message). Even if it returns no trailers ("routine commit"), the invocation is the audit trail. |
+| 「review skip / 跳過審查」 | Same rationalization, localized. | Same refusal — dispatch requesting-code-review (Phase 1). |
 
 ## What this skill does NOT do
 
@@ -140,9 +166,9 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
 
 ## See also
 
-- [`../requesting-code-review/SKILL.md`](../requesting-code-review/SKILL.md) — Step 1 delegate.
-- [`../verification-before-completion/SKILL.md`](../verification-before-completion/SKILL.md) — Step 2 delegate.
-- [`../using-git-worktrees/SKILL.md`](../using-git-worktrees/SKILL.md) — Step 7 delegate (worktree cleanup).
-- `dev-workflow:git-memory` — Step 3 delegate (commit-trailer gate, P3-D MANDATORY).
+- [`../requesting-code-review/SKILL.md`](../requesting-code-review/SKILL.md) — Phase 1 delegate.
+- [`../verification-before-completion/SKILL.md`](../verification-before-completion/SKILL.md) — Phase 2 delegate.
+- [`../using-git-worktrees/SKILL.md`](../using-git-worktrees/SKILL.md) — Phase 7 delegate (worktree cleanup).
+- `dev-workflow:git-memory` — Phase 3 delegate (commit-trailer gate, P3-D MANDATORY).
 - [`../using-code-toolkit/SKILL.md`](../using-code-toolkit/SKILL.md) — router; this skill is Stage 8 (Branch close).
 - CLAUDE.md §"Committing changes with git" — git policy (no amend, no skip hooks, no force-push without authorization) this skill inherits.

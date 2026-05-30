@@ -1,7 +1,7 @@
 ---
 name: brainstorming
 description: 'Use BEFORE implementing — for any task that touches new behavior, new module boundaries, or non-obvious design space. Enforces a HARD-GATE: explore intent and alternatives FIRST through a 5-axis framework (Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete), then emit a structured brief that writing-plans consumes. Refuses "this is simple", "I know what to build", "let''s just start coding" rationalizations. Grounded in Jobs-To-Be-Done (Christensen 1997, ISBN 978-0875845852) and Klement (2018) job-story format. ブレインストーミング・要件発掘・先に探索。腦力激盪・需求探索・先想清楚再寫。'
-version: 0.9.0
+version: 0.10.0
 ---
 
 <SUBAGENT-STOP>
@@ -44,6 +44,8 @@ When uncertain, ask: *"Could a reasonable engineer pick the wrong solution from 
 
 Walk all five. Don't skip any. If an axis returns *"don't know"* or *"need more from user"* — that is itself a discovery output and goes into Open Questions in the brief.
 
+When axis uncertainty requires user input, ask **at most one axis per `AskUserQuestion` call** — the single highest-uncertainty one. Bundling multiple axes (e.g. Axis 1 + Axis 3 + Axis 4 with 3-4 options each) overloads the call and will be rejected by the harness as too many options.
+
 ### Axis 1 — Problem
 
 What is the user trying to accomplish? **Not the solution they proposed — the problem behind the solution.**
@@ -51,6 +53,8 @@ What is the user trying to accomplish? **Not the solution they proposed — the 
 If the user says *"add a CSV export button,"* the problem is not *"have a button."* It might be *"share daily numbers with a non-technical stakeholder who lives in Excel,"* OR *"backup data before deletion,"* OR *"feed data into a downstream pipeline."* Each problem has different success criteria.
 
 Grounded in: **Christensen, C.M. (1997) *The Innovator's Dilemma*, Harvard Business School Press, ISBN 978-0875845852** — the original Jobs-To-Be-Done framing: *"customers don't buy products; they hire them to do a job."* Articulate the job before the product.
+
+When session context gives a confident JTBD read (e.g. the user's prior messages or inline comment already name the job), state it as a committed interpretation — *"I read this as X — correct me if wrong"* — and proceed to Axis 4. `AskUserQuestion` fits genuine cold-start ambiguity; re-presenting an already-confident prose reading as a multiple-choice menu wastes a turn and signals the agent isn't listening.
 
 ### Axis 2 — Users
 
@@ -202,6 +206,10 @@ Optional but recommended sections: Alternatives Considered (Axis 4), What Become
 
 The brief lands in the user's repo at `docs/code-toolkit/specs/<date>-<topic>.md`.
 
+**Plain language in the summary message**: the chat message you send the user after brainstorming must use plain descriptions ("the distribution script now owns SSOT for module X"), not internal identifiers (`Option B`, `Finding #2`, `Q-v0.3-1`, cluster names). Those identifiers are shorthand for *you*; the user needs the human-readable meaning. The brief *file* may keep precise identifiers for `writing-plans` consumption.
+
+**Reverse sub-bullet (SSOT ownership)**: before writing the Reverse sub-bullet, `Read` the distribution/sync script (e.g. `distribute.py`, `sync.sh`) to confirm which module owns canonical SSOT and which direction data flows. Never infer the direction from folder hierarchy alone — the file structure is often misleading.
+
 ## Red Flags — refuse these rationalizations
 
 | Agent / user says | Reality | Correct response |
@@ -221,7 +229,7 @@ The brief lands in the user's repo at `docs/code-toolkit/specs/<date>-<topic>.md
 |---|---|---|
 | Axis 3 surfaces "this change might be bigger than necessary" (smell of accidental complexity / YAGNI) | `dev-workflow:complexity-critique` | Systematic deletion-first triage (three questions: smallest end state / before-after LOC / what becomes obsolete). Optional but strongly recommended. |
 | Axis 4 produces 3+ real options that need triage | `dev-workflow:proposal-critique` | Evidence-grounded KEEP / DEFER / DROP triage. Optional. |
-| Brainstorming output indicates work >1 hour OR >1 module | `writing-plans` (next stage) | Brief becomes the input to plan-splitting. |
+| Brainstorming output indicates work >1 hour OR >1 module | `writing-plans` (next stage) | Brief becomes the input to plan-splitting. Before delegating, surface Axis 1 + Axis 3 (smallest end state) + Out-of-Scope as a visible checkpoint and require explicit user sign-off — do not proceed on an implicit "ok continue." |
 | Brainstorming output indicates a simple one-line known-pattern fix | Skip writing-plans; route straight to `tdd-iron-law` | The brief documented the smallness; trust it. |
 
 Delegation contract (see CLAUDE.md cross-plugin section): pass **paths + structured seed context**, not full file content. The target skill loads its own resources.

@@ -1,7 +1,7 @@
 ---
 name: writing-plans
 description: 'Use AFTER brainstorming has produced a brief, BEFORE subagent-driven-development dispatches implementer subagents. Splits the brief into atomic ≤5-minute tasks with explicit acceptance criteria (RED test + GREEN condition) and a dependency graph. Self-reviews via plan-document-reviewer before declaring DONE. If brief produces >5 atomic tasks, routes back to brainstorming. If implementer returns BLOCKED, fallback re-splits the failing task into smaller children — Beck (2002) Test-Driven Development By Example Part II §Child Test pattern, ISBN 978-0321146533. 計画作成・原子タスク分解・Child Test fallback。計畫拆解・原子任務・遇阻再拆。'
-version: 0.9.0
+version: 0.10.0
 ---
 
 <SUBAGENT-STOP>
@@ -63,9 +63,11 @@ If criteria 1+3 fight (≤5 min vs one-failing-test), criterion 3 wins: even a 1
 If the brief produces **>5 atomic tasks**, the brief is too big. **Do not silently produce a 10-task plan.** Two options:
 
 1. **Route back to brainstorming**: the Smallest End State (Axis 3) was not actually smallest. Surface this and ask the user to re-cut.
-2. **Split into multiple sequential briefs**: if the work genuinely needs >5 atomic tasks and the user agrees, write *N* briefs (each ≤5 tasks) explicitly labeled `<topic>-part-{1..N}.md`. Each brief gets its own plan and its own SDD run. The user ships them sequentially.
+2. **Split into multiple sequential briefs**: if the work genuinely needs >5 atomic tasks and the user agrees, write *N* separate brief files (each ≤5 tasks), explicitly labeled `<topic>-part-{1..N}.md`. Each brief is a standalone input to its own `writing-plans` run and its own SDD run. **Split = N brief files, not N plans from one brief.** A plan is 1-to-1 with one brief; producing two `## Part 1 / ## Part 2` sections inside a single plan file is not valid splitting.
 
 The 5-task ceiling is a deliberate forcing function for the brainstorming HARD-GATE. A 10-task plan is almost always a discovery failure, not a planning failure.
+
+**Structural-split escape hatch (round-2 NEEDS_REVISION only):** If the plan-document-reviewer returns NEEDS_REVISION for a second round and the *sole* failure is a structural-size violation (a task is clearly >5 min but cannot be shrunk further without a brief change), split that oversized task into a fresh sibling part (a new `<topic>-part-N.md` brief → new plan) and treat it as a round-1 input to a fresh `writing-plans` run. The original plan's 2-round cap applies to the original tasks only; the new sibling part starts its own clean round count.
 
 ## BLOCKED fallback — Beck 2002 Child Test pattern
 
@@ -101,7 +103,11 @@ After producing the plan, writing-plans **must** dispatch [`references/plan-docu
 | Dependencies form a DAG (no cycles) | Task A depends on Task B which depends on Task A |
 | Plan size ≤5 tasks | >5 tasks → route back to brainstorming, do not pass to reviewer |
 
+**Pre-patch before dispatch (saves a NEEDS_REVISION round):** Before dispatching the reviewer, Read [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) and scan Check 1 and Check 3. If the plan is missing `Plan-document-reviewer verdict: PENDING` in the top-level header, or if any task is missing a `Brief item covered:` line, patch those fields now. These two omissions are the most common Check-1 / Check-3 failures; pre-patching costs one Read and saves one full round-trip.
+
 If reviewer returns `NEEDS_REVISION`, writing-plans **fixes the plan** and re-runs the reviewer. Up to 2 rounds; if still NEEDS_REVISION after round 2, escalate to user (likely the brief itself needs revisiting).
+
+**Amending a PASS plan:** If the plan is changed after the reviewer returned PASS (e.g., a task description is tightened, a dependency is updated), either (a) re-run the plan-document-reviewer on the amended plan, OR (b) record a one-line skip note in the plan's `Notes` section explaining why the amendment is additive and schema-safe (e.g., "amended Task 2 description for clarity; all required fields and DAG structure unchanged — re-review skipped"). A stale PASS without a skip note is a silent gap.
 
 ## Output contract — the plan
 
@@ -113,6 +119,7 @@ Schema in [`references/plan-format.md`](references/plan-format.md). Plan lives a
 Source brief: docs/code-toolkit/specs/<date>-<topic>.md
 Total tasks: <N> (≤5)
 Execution order: sequential | parallel-where-possible
+Plan-document-reviewer verdict: PENDING   ← required; reviewer will flip to PASS (timestamp)
 
 ## Task 1 — <short name>
 - Description: <≤5 min unit of work, imperative voice>
@@ -123,9 +130,16 @@ Execution order: sequential | parallel-where-possible
 - Acceptance:
   - RED: <failing test name / diagnostic>
   - GREEN: <observable condition when done>
-- External surfaces: <required when task touches non-stdlib external surface; see `references/plan-format.md` §External surfaces. Format `- <category>: <name> — grounding: <method>`. Omit field entirely if pure internal logic.>
-- Dependencies: <"none" | "Task N completes first" | "Tasks N, M parallel">
+- External surfaces: <per-task field — required when the task touches a non-stdlib
+    external surface (the five categories in `references/plan-format.md` §External surfaces;
+    a third-party lib like `packaging` for version/format work counts — prefer stdlib).
+    Omit if pure internal logic. Per-task field, not a Notes catch-all.>
+- Dependencies: <"none" | "Task N completes first" | "Tasks N, M complete first" |
+    "Tasks N, M parallel" — semantics in `references/plan-format.md`; cross-part ordering
+    uses "none" + a plan-level Notes entry (the field is within-plan only).>
 - Independent: <true | false>  # opt-in marker for dispatching-parallel-agents
+- Brief item covered: <quote or close paraphrase from brief's Smallest End State /
+    Decision section — required; plan-document-reviewer Check 3 blocks on this field>
 
 ## Task 2 — ...
 ```

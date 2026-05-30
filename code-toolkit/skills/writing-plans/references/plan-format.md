@@ -51,7 +51,7 @@ If `Plan-document-reviewer verdict` is `PENDING`, the plan has not been self-rev
   - **RED**: <failing test name OR diagnostic the implementer writes first>
   - **GREEN**: <observable condition when the task is done>
 - **External surfaces**: <v0.9.0+ — required when task touches non-stdlib external surface. See §External surfaces below. Omit field entirely if task is pure internal logic.>
-- **Dependencies**: <one of: "none" | "Task N completes first" | "Tasks N, M parallel">
+- **Dependencies**: <one of: "none" | "Task N completes first" | "Tasks N, M complete first" (multi-prerequisite — N and M must both finish before this task starts) | "Tasks N, M parallel" (both are prerequisites, may run in parallel). Cross-part ordering: use "none" at task level + a plan-level `Notes` entry; the field is within-plan only and cannot reference a sibling part's tasks.>
 - **Independent**: <true | false>  # v0.8.0+ — opt-in marker for `dispatching-parallel-agents`. Default false.
 - **Brief item covered**: <quote or reference from the brief's Smallest End State / Decision section>
 ```
@@ -66,7 +66,7 @@ If `Plan-document-reviewer verdict` is `PENDING`, the plan has not been self-rev
 
 When an atomic task touches a **non-stdlib external surface** the agent does not author, the plan MUST declare it. This is the plan-time half of the external-surface-grounding discipline (see `code-toolkit/skills/subagent-driven-development/standards/external-surface-grounding.md`); the review-time half is D7 in `code-quality-reviewer.md` + `code-reviewer.md`. The two halves form one defense-in-depth gate.
 
-Five surface categories trigger the field (per the standard's §Five Surface Categories): **HTTP API**, **SDK package**, **MCP tool**, **CLI flag**, **internal sibling-team contract**.
+Five surface categories trigger the field (per the standard's §Five Surface Categories): **HTTP API**, **SDK package**, **MCP tool**, **CLI flag**, **internal sibling-team contract**. A third-party library reached for to do version / date / format work (e.g. `packaging`) is an **SDK package** surface — declare it or replace it with stdlib. Stdlib parsing (`json`, `datetime`, version-tuple split) is authored-internal and needs no declaration.
 
 Format — one bullet per surface:
 
