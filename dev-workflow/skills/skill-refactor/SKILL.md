@@ -150,6 +150,38 @@ After Q1, Q2, Q3:
   candidate; record the failed move in `results.tsv`; move to next
   round (or skill, if this skill has hit its bound).
 
+## Ablation mode — find bloat without a baseline
+
+The Gate Function proves a *rewrite* preserves behavior. **Ablation mode** answers
+a different question with the same infra — *which sections add words without adding
+capability* — and needs **no external baseline** (the skill is its own control; you
+don't need an ancestor or sibling to compare against).
+
+**Procedure** (reuses `test-prompts.json` + the Q1 judge ensemble):
+
+1. Run the test prompts through the FULL skill → baseline outputs.
+2. For each section, generate a variant with **that one section removed**; re-run the prompts.
+3. Judge ensemble compares full-vs-ablated per section:
+   - behavior **unchanged** on removal → **BLOAT candidate** (compress / cut);
+   - behavior **degraded** (weaker refusal, dropped step, wrong decision) → **LOAD-BEARING** (keep).
+
+**Three caveats — ship them with every ablation report:**
+
+1. **Redundancy trap.** Two overlapping sections each read as removable (the other
+   covers for it), but you cannot remove both → the verdict is **merge the pair**,
+   not delete either. A SPLIT ensemble verdict across two related sections is the tell.
+2. **Coverage boundary.** A section reads as bloat if no test prompt exercises its
+   purpose. Navigational sections (`See also`, cross-skill tables) carry discoverability
+   value that behavioral ablation cannot measure — judge those by hand.
+3. **Candidate-finder, not auto-deleter.** Ablation ranks refactor *targets*; the actual
+   cut still passes the Q1/Q2/Q3 gate.
+
+Grounded in ablation-study methodology (generic prompt additions are non-monotonic —
+validate each component against task evals, not intuition) and the context-rot finding
+that surplus tokens measurably *degrade* output, so a confirmed-bloat cut is often
+net-positive, not neutral. See `references/ablation-mode.md` for the section-splitter +
+worked example.
+
 ## Refactor Moves Catalog
 
 Refactor-hat-safe transformations only. See
