@@ -17,6 +17,32 @@ Pause points the user **does** see:
 
 Everything else — RED-GREEN-REFACTOR cycles, reviewer rounds, re-dispatch on `NEEDS_REVISION` — runs without user intervention.
 
+## Asking the user
+
+When you surface one of those pause points — the「下一步？」hand-off after a task DONE, a `NEEDS_CONTEXT` question, a `BLOCKED`, or the 4th-retry escalation — phrase the question and its options so a task-loaded human can decide **without decoding SDD's internal vocabulary**. The reader is a warm-but-interrupted human, not the reviewer subagent. Seven rules:
+
+1. **Outcome, not mechanism.** Each option describes what the user *gets* ("you'll get the two skills edited and tests green"), not the internal machinery ("uses SDD triad dispatch").
+2. **Translate jargon; expand acronyms on first use.** Replace or gloss internal terms (`implementer`, `spec-reviewer`, 🟡/🟢, `Wave 1 = T1+T3`). **Exception**: terms the user introduced *this session* are fine as-is.
+3. **Numbers carry their meaning.** `PASS 12/12` → "all 5 tasks checked out"; let the mechanism detail (`12/12`) sink to a sub-line, not the headline.
+4. **Open with a one-line state anchor** (一句話現況): *we just did X; now Y needs deciding.* Reuse recap-state's Block-1 "Situation" idea — never ask a bare decision verb with zero context (「下一步？」alone is the failure).
+5. **Research industry practice first** for design / strategy / tech-stack questions — see the [`using-code-toolkit`](../using-code-toolkit/SKILL.md) router rule #5 and `brainstorming`'s Axis-4 (point to them; do not re-implement the protocol here). Don't invent options the user then has to correct.
+6. **≤4 options** (AskUserQuestion hard cap). Never add an explicit "Other" — the tool auto-injects it. End **open** design questions with a free-form invite; for **closed** factual questions, don't.
+7. **Compound asks only when sub-questions share one topic** or are jointly judgeable. Split unrelated decisions into separate rounds.
+
+**Worked example — the built-in `/recap` style is the target:**
+
+```
+✅ Standard (outcome-framed, no jargon, plain status, term-explained-on-use):
+   "We're making code-toolkit's questions easier to understand by adding plain-language
+    rules to two skills. The brief and plan are done and approved; next is editing the
+    actual SKILL.md files."
+
+❌ Avoid (jargon-dense status-report style):
+   "Plan v2 PASS round 2, 0 gaps. T1-T4 sequential, Independent:false, 走 SDD 三角審查. DAG 無環."
+```
+
+"Easier to understand" = outcome not mechanism (R1); zero internal jargon (R2); "done and approved" not `PASS 4/4` (R3). This one sentence is the calibration target for every question and hand-off the orchestrator surfaces below.
+
 ## When to use
 
 Auto-routed by [`using-code-toolkit`](../using-code-toolkit/SKILL.md) when **either** trigger fires:
@@ -48,7 +74,7 @@ If neither trigger fires, the user goes straight to `tdd-iron-law` for implement
 For each atomic task in the plan:
 
 1. **Dispatch `implementer`** via `Agent({subagent_type: "code-toolkit:implementer", prompt: <task body>})` with the task description + context paths + resource paths (input contract is defined in the plugin-level agent at [`code-toolkit/agents/implementer.md`](../../agents/implementer.md); that agent also carries the 12-rule engineering baseline from [`code-toolkit/scripts/_baseline.md`](../../scripts/_baseline.md)). Wait for return.
-2. **Read the implementer's output.** If `status: NEEDS_CONTEXT` → surface the question to the user, do not dispatch reviewers. If `status: BLOCKED` → apply the unblock step or surface to user.
+2. **Read the implementer's output.** If `status: NEEDS_CONTEXT` → surface the question to the user (phrase it per [§Asking the user](#asking-the-user)), do not dispatch reviewers. If `status: BLOCKED` → apply the unblock step or surface to user.
 3. **If `status: DONE` or `DONE_WITH_CONCERNS`**, dispatch **`spec-reviewer`** and **`code-quality-reviewer`** **in parallel** (one message, two tool calls) — both are plugin-level agents (v0.6.0 / P15-12 Phase 2): `Agent({subagent_type: "code-toolkit:spec-reviewer"})` + `Agent({subagent_type: "code-toolkit:code-quality-reviewer"})`. See [`code-toolkit/agents/spec-reviewer.md`](../../agents/spec-reviewer.md) + [`code-toolkit/agents/code-quality-reviewer.md`](../../agents/code-quality-reviewer.md) for input/output contracts. Wait for both.
 4. **Resolve verdicts** per the rule below.
 5. **Move to the next task** unless the resolution requires re-dispatch.
@@ -62,7 +88,7 @@ For each atomic task in the plan:
 | `PASS` | `NEEDS_REVISION` | Re-dispatch implementer with `flags`. Up to **3 rounds** then escalate to user. |
 | `NEEDS_REVISION` | (any) | Re-dispatch implementer with `gaps` + (if any) `flags`. Same 3-round cap. |
 
-A 3-round cap prevents infinite loops on ambiguous specs. On the 4th retry, surface to the user — likely the spec is wrong, not the implementer.
+A 3-round cap prevents infinite loops on ambiguous specs. On the 4th retry, surface to the user — likely the spec is wrong, not the implementer. Phrase that escalation per [§Asking the user](#asking-the-user): lead with a state anchor and say what's actually stuck in plain words, not `NEEDS_REVISION ×3`.
 
 ## Model selection
 
