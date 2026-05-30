@@ -12,43 +12,35 @@ If you are a subagent dispatched with an explicit role prompt, the parent orches
 
 When the work is **2+ independent problem domains** — fixes in unrelated test files, audits across unrelated modules, data fetches for disjoint inputs — default sequential dispatch wastes wall-clock time. Each domain investigation is independent and can happen concurrently.
 
-This is the **across-domain dispatch** layer. It is **not**:
-
-- A replacement for `subagent-driven-development` (SDD's triad is per-task, within one domain).
-- A license to parallelize implementers writing to the same files (file conflicts — forbidden).
-- An exemption from `tdd-iron-law` per branch (every branch still writes the failing test first).
-
 Core principle: **one agent per independent problem domain. Let them work concurrently.**
 
-## When to use
+This is the **across-domain dispatch** layer. It is **not**:
 
-| Scenario | Use this skill? |
+- A replacement for `subagent-driven-development` — SDD's triad is per-task within one domain; this skill is across-task / across-domain.
+- A license to parallelize implementers writing to the same files — file conflicts are forbidden.
+- An exemption from `tdd-iron-law` per branch — every branch still writes the failing test first.
+
+## When to use vs. when NOT to
+
+| Scenario | Dispatch in parallel? |
 |---|---|
 | 3+ test files failing for unrelated reasons | ✅ Yes — one implementer per file |
 | Security audit across multiple modules | ✅ Yes — one reviewer per module |
 | Data fetch for N tickers / N regions / N feeds | ✅ Yes — one data agent per input |
-| Plan declares atomic tasks `independent: true` AND `files touched` sets are disjoint | ✅ Yes — dispatch those tasks' implementers concurrently |
-| Two reviewers on one artifact (spec-rev + code-quality-rev) | ❌ Out of scope — SDD already does this; don't double-wrap |
-| Single domain, complex but cohesive | ❌ No — one focused subagent, not N fragmented ones |
-| Tasks share state or files | ❌ No — sequential, or split the file first |
-| Failures might share a root cause | ❌ No — investigate together first |
-| Exploratory debugging, root cause unknown | ❌ No — diagnose before dispatching |
+| Plan atomic tasks marked `independent: true` AND `files touched` disjoint | ✅ Yes — dispatch those implementers concurrently |
+| Two reviewers on one artifact (spec-rev + code-quality-rev) | ❌ SDD already does this per-task; don't double-wrap |
+| Single domain, complex but cohesive | ❌ One focused subagent, not N fragmented ones |
+| Tasks share a file or symbol | ❌ Merge conflicts + non-deterministic state — sequence, or split the file first |
+| Sequential data dependency (B needs A's output) | ❌ By definition not parallel |
+| Failures might share a root cause / root cause unknown | ❌ One agent investigates first — fragmenting hides the shared cause |
 
-## When NOT to use
-
-| Exempt category | What qualifies |
-|---|---|
-| **Shared file or shared symbol** | Two agents editing the same file = merge conflicts. Sequence them, or split the file first. |
-| **Sequential data dependency** | Agent B needs Agent A's output. By definition not parallel. |
-| **Inside SDD per-task triad** | SDD already parallels spec-reviewer + code-quality-reviewer in one message. |
-| **Multiple implementers within one SDD plan** | Forbidden by `subagent-driven-development` red flags. Exception: tasks the plan **explicitly** marks `independent: true` with disjoint `files touched`. |
-| **Investigation phase** | If you don't yet know what's broken, one agent investigates first — fragmenting the investigation hides shared root causes. |
+Default is **sequential**; parallel dispatch is the exception you justify per the criteria below.
 
 ## The pattern
 
 ### 1. Identify independent domains
 
-A domain is independent when:
+A domain is independent when **all** hold:
 
 - No shared file with any other domain (or the shared file is read-only in all branches).
 - No shared symbol that any branch will rename / remove / re-export.
@@ -88,19 +80,17 @@ The same rule applies to mixed shapes — e.g. one implementer + one Explore + o
 When all parallel agents return:
 
 1. Read each verdict / status. Don't drop or smooth any of them.
-2. Check for accidental file overlap: did any two agents edit the same file? Should not happen if step 1 was honest; if it did, treat as a plan error.
+2. Check for accidental file overlap: did any two agents edit the same file? Should not happen if step 1 was honest; if it did, treat as a plan error — resolve manually now, split better in the next plan.
 3. Aggregate by rule:
    - All `DONE` / `PASS` → integrate, move on.
    - Any `NEEDS_REVISION` → re-dispatch **only that one branch** with the flags. Other branches keep their results.
    - Any `BLOCKED` → apply the unblock step or surface to user.
    - Any `NEEDS_CONTEXT` → surface to user; do not re-dispatch blind.
-4. Run the package-level test suite **once** at the integration point (per `verification-before-completion`) — not per branch.
-
-If two agents accidentally touched the same file: resolve manually now; split better in the next plan.
+4. Run the package-level test suite **once** at the integration point (per `verification-before-completion`) — not per branch. Per-branch suites pass in isolation; the combined diff can still fail.
 
 ## TDD iron-law per branch
 
-Every parallel branch dispatched as a code writer still follows `tdd-iron-law` inside its scope. Parallel dispatch does **not** waive "failing test first" anywhere.
+Every parallel branch dispatched as a code writer still follows `tdd-iron-law` inside its scope. Parallel dispatch does **not** waive "failing test first" anywhere — "small + parallel" is the rationalization combo, refuse it.
 
 If the branch's task is "fix failing test X", the failing test already exists; the branch's job is the GREEN step (and refactor). If the branch's task is "add new feature Y", the branch's first action is still writing the failing test.
 
@@ -125,21 +115,7 @@ The orchestrator may dispatch Task 3 and Task 4 in parallel only when **both** c
 1. Each task declares `independent: true`.
 2. Their `files touched` sets are disjoint.
 
-If either condition fails, fall back to SDD's sequential dispatch.
-
-Default is sequential. `independent: true` is opt-in by the plan author.
-
-## Cross-skill contract
-
-| Direction | Skill | Role |
-|---|---|---|
-| **Upstream** | `writing-plans` | Produces `independent: true` atomic tasks this skill consumes. |
-| **Upstream** | Direct user invocation | "Fix these 3 unrelated test files in parallel" / "audit these 4 modules at once". |
-| **Inside (per branch)** | `code-toolkit:implementer` | Each branch follows `tdd-iron-law`; reports `status` per its dispatched contract. |
-| **Inside (per branch)** | `code-toolkit:code-quality-reviewer` / `code-reviewer` | Each branch produces a three-valued verdict; aggregation happens at this skill's layer. |
-| **Downstream** | `verification-before-completion` | Runs **once** at integration, not per branch. |
-| **Lateral** | `subagent-driven-development` | This skill is the across-task complement. SDD parallels the two reviewers inside one task; this skill parallels independent tasks/domains. |
-| **Lateral** | `using-git-worktrees` | Long-running parallel branches that outlive a session belong in worktrees; short-lived in-session parallel agents (this skill) do not need worktrees. |
+If either condition fails, fall back to SDD's sequential dispatch. `independent: true` is opt-in by the plan author.
 
 ## Red flags — refuse these rationalizations
 
@@ -153,22 +129,17 @@ Default is sequential. `independent: true` is opt-in by the plan author.
 | *"They probably don't touch the same file — just dispatch."* | "Probably" is not "do not". | Verify file disjointness before dispatching. |
 | 「重なってないから並行で / 應該不會衝突吧」 | Same rationalization, localized. | Same refusal — verify, don't assume. |
 
-## What this skill does NOT do
+## Cross-skill contract
 
-- Does **not** plan the work — `writing-plans` does. This skill consumes a plan that already declares independence.
-- Does **not** decide which atomic tasks are independent — the plan author does.
-- Does **not** replace SDD — SDD is per-task triad within one domain; this skill is across-task / across-domain dispatch.
-- Does **not** override `tdd-iron-law` — every branch still writes the failing test first.
-- Does **not** run the test suite per branch — `verification-before-completion` runs once at integration.
-- Does **not** parallelize implementers writing to overlapping files — forbidden, period.
-- Does **not** create worktrees — that is `using-git-worktrees`; this skill's parallel agents share the same checkout.
+| Direction | Skill | Role |
+|---|---|---|
+| **Upstream** | [`../writing-plans/SKILL.md`](../writing-plans/SKILL.md) | Produces the `independent: true` atomic tasks this skill consumes. |
+| **Upstream** | Direct user invocation | "Fix these 3 unrelated test files in parallel" / "audit these 4 modules at once". |
+| **Inside (per branch)** | [`../tdd-iron-law/SKILL.md`](../tdd-iron-law/SKILL.md) via `code-toolkit:implementer` | Each branch follows `tdd-iron-law`, reports `status`; not waived by parallel dispatch. |
+| **Inside (per branch)** | `code-toolkit:code-quality-reviewer` / `code-reviewer` | Each branch produces a three-valued verdict; aggregation happens at this skill's layer. |
+| **Downstream** | [`../verification-before-completion/SKILL.md`](../verification-before-completion/SKILL.md) | Runs **once** at integration, not per branch. |
+| **Lateral** | [`../subagent-driven-development/SKILL.md`](../subagent-driven-development/SKILL.md) | Per-task triad inside one domain; this skill is the across-task complement. |
+| **Lateral** | [`../using-git-worktrees/SKILL.md`](../using-git-worktrees/SKILL.md) | For parallelism that outlives a session; this skill's in-session agents share the same checkout and need no worktree. |
+| **Router** | [`../using-code-toolkit/SKILL.md`](../using-code-toolkit/SKILL.md) | This skill is auxiliary — no Skill Priority stage, on-demand. |
 
-## See also
-
-- [`../subagent-driven-development/SKILL.md`](../subagent-driven-development/SKILL.md) — per-task triad inside one domain; this skill is the across-task complement.
-- [`../writing-plans/SKILL.md`](../writing-plans/SKILL.md) — produces the `independent: true` markup this skill consumes.
-- [`../tdd-iron-law/SKILL.md`](../tdd-iron-law/SKILL.md) — applies per branch; not waived by parallel dispatch.
-- [`../verification-before-completion/SKILL.md`](../verification-before-completion/SKILL.md) — runs once at integration, not per branch.
-- [`../using-git-worktrees/SKILL.md`](../using-git-worktrees/SKILL.md) — for parallelism that outlives a session; this skill is in-session.
-- [`../using-code-toolkit/SKILL.md`](../using-code-toolkit/SKILL.md) — router; this skill is auxiliary (no Skill Priority stage; on-demand).
-- superpowers v5.1.0 `dispatching-parallel-agents` — original pattern this skill borrows from, adapted for code-toolkit's TDD iron-law + verdict aggregation.
+Original pattern: superpowers v5.1.0 `dispatching-parallel-agents`, adapted for code-toolkit's TDD iron-law + verdict aggregation.
