@@ -130,21 +130,13 @@ Plan-document-reviewer verdict: PENDING   ← required; reviewer will flip to PA
 - Acceptance:
   - RED: <failing test name / diagnostic>
   - GREEN: <observable condition when done>
-- External surfaces: <per-task field — required when this task touches a non-stdlib
-    external surface the agent does not author: HTTP API, SDK / third-party package,
-    MCP tool, CLI flag, or internal sibling-team contract (the five categories in
-    `references/plan-format.md` §External surfaces). Reaching for a third-party library
-    to do version / date / format work (e.g. `packaging`) IS an SDK-package surface —
-    declare it, or replace it with stdlib. Format: `- <category>: <name> — grounding: <method>`.
-    Omit field entirely if the task is pure internal logic — stdlib parsing (`json`,
-    `datetime`, version-tuple split) is internal and needs no declaration.
-    DO NOT place in Notes as a catch-all — implementers read per-task fields.>
-- Dependencies: <"none" | "Task N completes first" | "Tasks N, M complete first"
-    (multi-prerequisite — N and M must both finish before this task starts) |
-    "Tasks N, M parallel" (N and M can run in parallel as prerequisites) |
-    CROSS-PART ordering: use "none" at task level + add a plan-level Notes entry
-    ("Task 1 here requires Part-1 Task 3 to be shipped first") — the Dependencies
-    field is within-plan only and cannot reference tasks in a sibling part.>
+- External surfaces: <per-task field — required when the task touches a non-stdlib
+    external surface (the five categories in `references/plan-format.md` §External surfaces;
+    a third-party lib like `packaging` for version/format work counts — prefer stdlib).
+    Omit if pure internal logic. Per-task field, not a Notes catch-all.>
+- Dependencies: <"none" | "Task N completes first" | "Tasks N, M complete first" |
+    "Tasks N, M parallel" — semantics in `references/plan-format.md`; cross-part ordering
+    uses "none" + a plan-level Notes entry (the field is within-plan only).>
 - Independent: <true | false>  # opt-in marker for dispatching-parallel-agents
 - Brief item covered: <quote or close paraphrase from brief's Smallest End State /
     Decision section — required; plan-document-reviewer Check 3 blocks on this field>

@@ -66,7 +66,7 @@ If `Plan-document-reviewer verdict` is `PENDING`, the plan has not been self-rev
 
 When an atomic task touches a **non-stdlib external surface** the agent does not author, the plan MUST declare it. This is the plan-time half of the external-surface-grounding discipline (see `code-toolkit/skills/subagent-driven-development/standards/external-surface-grounding.md`); the review-time half is D7 in `code-quality-reviewer.md` + `code-reviewer.md`. The two halves form one defense-in-depth gate.
 
-Five surface categories trigger the field (per the standard's §Five Surface Categories): **HTTP API**, **SDK package**, **MCP tool**, **CLI flag**, **internal sibling-team contract**.
+Five surface categories trigger the field (per the standard's §Five Surface Categories): **HTTP API**, **SDK package**, **MCP tool**, **CLI flag**, **internal sibling-team contract**. A third-party library reached for to do version / date / format work (e.g. `packaging`) is an **SDK package** surface — declare it or replace it with stdlib. Stdlib parsing (`json`, `datetime`, version-tuple split) is authored-internal and needs no declaration.
 
 Format — one bullet per surface:
 
