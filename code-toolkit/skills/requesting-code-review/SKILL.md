@@ -1,7 +1,7 @@
 ---
 name: requesting-code-review
 description: 'Use BEFORE any push / merge / PR-open action on a non-trivial branch — whole-branch / whole-PR review of the cumulative diff. Examples (positive triggers): "review my branch", "look at my changes", "code review please", "audit the diff", "is this ready to merge", "I''ve finished feature X". Examples (stress / skip-rationalization triggers — this skill MUST also fire here): "just push", "let me push", "skip the review", "SDD already reviewed each task", "small change, no review needed", "it''s fine, just merge", "tests pass so we''re done", any `git push` / `gh pr create` / `gh pr merge` invocation without prior review-PASS in this session. Different from `subagent-driven-development`''s per-task code-quality-reviewer (per atomic task during execution) — this skill is whole-PR review at end-of-work and catches cross-task interactions that per-task review can''t see. Dispatches code-reviewer subagent that loads code-toolkit''s rubrics (quality-gate / arch-gate / security-checklist) directly per P3-A (not via SDD wrapper). Output is severity-tagged structured review (🔴 fatal / 🟡 should-fix / 🟢 nit) with verdict aggregation. コードレビュー・PR 全体審査・push 前必須・skip 拒否。程式碼審查・PR 全面審查・push 前強制・拒絕跳過。'
-version: 0.9.0
+version: 0.10.0
 ---
 
 <SUBAGENT-STOP>
@@ -11,6 +11,34 @@ If you are a subagent dispatched with an explicit role prompt (implementer / spe
 ## What this skill does
 
 Dispatches a **code-reviewer** subagent to review a non-trivial diff as a whole — typically the cumulative changes on a feature branch before merge. The reviewer loads the same rubrics SDD's per-task reviewer uses (`quality-gate.md` / `arch-gate.md` / `security-checklist.md`, functional-copied from `domain-teams:code-team`), but applies them at branch scope rather than per-atomic-task.
+
+## Asking the user
+
+When you relay the reviewer's verdict back to the user — Step 4 below ("Surface to user / Print the verdict + findings"), or the push-as-trigger steps 4-6 in §Push-as-trigger — phrase the relay so a task-loaded human can act on it **without decoding the reviewer's internal vocabulary**. The reader is a warm-but-interrupted human, not the `code-reviewer` subagent. Seven rules:
+
+1. **Outcome, not mechanism.** Each finding says what it *means for the user* and what they should do ("this branch ships a circular dependency — fix before merge"), not just the rule name it tripped ("violates arch-gate D3").
+2. **Translate jargon; expand acronyms on first use.** Replace or gloss internal terms (`implementer`, `spec-reviewer`, 🟡/🟢, `Wave 1 = T1+T3`). **Exception**: terms the user introduced *this session* are fine as-is.
+3. **Numbers and symbols carry their meaning.** Translate `🔴/🟡/🟢`, `PASS_WITH_NOTES`, and the Beck / Martin / OWASP / 徳丸本 citations into one plain sentence ("nothing blocking, two things worth a look before merge") — don't dump the raw verdict block at the user.
+4. **Open with a one-line state anchor** (一句話現況): *I reviewed the whole branch; here's what I found.* Never lead with a bare verdict token (`NEEDS_REVISION` alone is the failure) — give the reader the situation before the symbol.
+5. **Research industry practice first** for design / strategy / tech-stack questions — see the [`using-code-toolkit`](../using-code-toolkit/SKILL.md) router rule #5 and `brainstorming`'s Axis-4 (point to them; do not re-implement the protocol here). Don't invent options the user then has to correct.
+6. **≤4 options** (AskUserQuestion hard cap). Never add an explicit "Other" — the tool auto-injects it. End **open** design questions with a free-form invite; for **closed** factual questions, don't.
+7. **Compound asks only when sub-questions share one topic** or are jointly judgeable. Split unrelated decisions into separate rounds.
+
+**Boundary — these rules govern the relay TO the user ONLY.** They do **not** touch what the `code-reviewer` agent emits. The agent's structured verdict (the `verdict:` / `dimension_scores:` / `findings:` block in §Verdict structure) MUST stay machine-precise and keep every evidence citation — do NOT loosen its R2 evidence-citation contract ([`code-toolkit/agents/code-reviewer.md`](../../agents/code-reviewer.md) §Rule R2: every finding needs a `where:` citing `file:line` / commit SHA, or the verdict flips to `NEEDS_REVISION`). Plain language is for the human-facing relay; the reviewer agent's output stays exact.
+
+**Worked example — the built-in `/recap` style is the target:**
+
+```
+✅ Standard (outcome-framed, no jargon, plain status, term-explained-on-use):
+   "We're making code-toolkit's questions easier to understand by adding plain-language
+    rules to two skills. The brief and plan are done and approved; next is editing the
+    actual SKILL.md files."
+
+❌ Avoid (jargon-dense status-report style):
+   "Plan v2 PASS round 2, 0 gaps. T1-T4 sequential, Independent:false, 走 SDD 三角審查. DAG 無環."
+```
+
+This ✅ example is the calibration target for every verdict-relay and hand-off this skill surfaces.
 
 ## When this is different from SDD's per-task reviewer
 
@@ -86,7 +114,7 @@ This rule applies **even when this skill was not explicitly invoked** — the de
 1. **Determine diff scope**. Default: `git diff main...HEAD` (everything on this branch not on main). Override with explicit commit range if user specifies (`git diff <SHA1>..<SHA2>`).
 2. **Dispatch code-reviewer subagent** via `Agent({subagent_type: "code-toolkit:code-reviewer", prompt: <branch + diff body>})` — plugin-level agent (v0.6.0 / P15-12 Phase 2) at [`code-toolkit/agents/code-reviewer.md`](../../agents/code-reviewer.md). The orchestrator passes: diff range, paths to rubrics + checklists, branch context (recent commits, related issues if known). The agent carries the 12-rule engineering baseline ([`code-toolkit/scripts/_baseline.md`](../../scripts/_baseline.md)) baked into its system prompt.
 3. **Wait for verdict**. Reviewer returns structured review with per-dimension scores, severity-tagged findings, and overall verdict.
-4. **Surface to user**. Print the verdict + findings; let user decide remediation. Do NOT auto-fix — that's user agency.
+4. **Surface to user**. Print the verdict + findings; let user decide remediation. Do NOT auto-fix — that's user agency. **Phrase this relay per §Asking the user** — translate `🔴/🟡/🟢` + the verdict token into plain language and open with a state anchor; the reviewer agent's structured output stays machine-precise.
 5. **Re-dispatch if user fixed and wants re-review** — same skill, fresh subagent (no state carry-over between rounds for clean evaluation).
 
 ## Cross-skill contract
