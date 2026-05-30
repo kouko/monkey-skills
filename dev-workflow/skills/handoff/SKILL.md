@@ -1,6 +1,6 @@
 ---
 name: handoff
-version: 0.1.0
+version: 0.1.1
 description: >-
   Cross-session continuation skill. When a work session ends and the user
   wants to save state so a future AI agent can resume without losing context —
@@ -96,14 +96,23 @@ truth for the future cold AI reader.**
    9. Verification commands (runnable shell assertions + expected output)
    10. Confidence flags (per-block ✅/⚠️/❓ table)
 
-4. Apply `technical-precision` throughout: exact file paths, full error
+4. When authoring Block 9, **tag each verification command [T1] load-bearing or
+   [T2] advisory** per `references/handoff-schema.md` §Block 9, and account for
+   the self-reference: the HANDOFF file you just wrote adds an untracked entry to
+   `git status --short` (the snapshot in step 1 predates the Write), so **never
+   encode a raw git-status line count as a [T1] assertion** — keep it [T2] with a
+   "+1 for `.claude/handoffs/` itself" benign-drift note, or re-snapshot after
+   the Write.
+
+5. Apply `technical-precision` throughout: exact file paths, full error
    messages, precise command names. The reader is a cold AI tool — vague
    descriptions cause wrong-path assumptions.
 
 ## Resume mode — what to do
 
-**HARD-GATE: run ALL Verification Commands and report verbatim. Do not
-continue if any output mismatches expected.**
+**HARD-GATE: run ALL Verification Commands and report verbatim. A [T1
+load-bearing] mismatch means STOP. A [T2 advisory] mismatch is reported and
+judged, not an automatic stop — see step 4.**
 
 1. Run via Bash to find the latest HANDOFF:
    ```
@@ -120,12 +129,20 @@ continue if any output mismatches expected.**
    Actual: abc123 feat(dev-workflow): ...  ← MATCH
    ```
 
-4. **REFUSE TO CONTINUE if any command output does not match expected.**
-   State may have drifted since the HANDOFF was written. Surface the mismatch
-   to the user:
-   > "Verification mismatch on `<command>`: expected `<X>`, got `<Y>`.
-   > State may have changed since the handoff was written. How do you want
-   > to proceed?"
+4. **Apply the tier rule to each mismatch** (Block 9 tags every command [T1] or
+   [T2]; an untagged command is treated as [T1], fail-safe):
+   - **[T1] load-bearing mismatch** (HEAD / branch / version / PR state / test
+     counts) → **REFUSE TO CONTINUE.** State has drifted since the HANDOFF was
+     written. Surface it:
+     > "Load-bearing verification mismatch on `<command>`: expected `<X>`, got
+     > `<Y>`. State has changed since the handoff was written. How do you want
+     > to proceed?"
+   - **[T2] advisory mismatch** (e.g. `git status` line count) → **report it
+     verbatim, state whether it matches the known benign drift, and proceed only
+     if benign.** Do NOT silently wave it through, and do NOT hard-stop on it:
+     > "Advisory mismatch on `git status --short`: expected 3 untracked lines,
+     > got 4 — the extra line is `.claude/handoffs/` itself (the known benign
+     > drift). Proceeding."
 
 5. After all verifications PASS, produce a Synthesis-check (soft gate):
    summarise your understanding of the situation, pending work, and next
