@@ -41,7 +41,7 @@ When you surface one of those pause points — the「下一步？」hand-off aft
    "Plan v2 PASS round 2, 0 gaps. T1-T4 sequential, Independent:false, 走 SDD 三角審查. DAG 無環."
 ```
 
-"Easier to understand" = outcome not mechanism (R1); zero internal jargon (R2); "done and approved" not `PASS 4/4` (R3). This one sentence is the calibration target for every question and hand-off the orchestrator surfaces below.
+This ✅ example is the calibration target for every question and hand-off the orchestrator surfaces below.
 
 ## When to use
 

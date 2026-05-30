@@ -38,7 +38,7 @@ When you relay the reviewer's verdict back to the user — Step 4 below ("Surfac
    "Plan v2 PASS round 2, 0 gaps. T1-T4 sequential, Independent:false, 走 SDD 三角審查. DAG 無環."
 ```
 
-"Easier to understand" = outcome not mechanism (R1); zero internal jargon (R2); "done and approved" not `PASS 4/4` (R3). This sentence is the calibration target for every verdict-relay and hand-off this skill surfaces.
+This ✅ example is the calibration target for every verdict-relay and hand-off this skill surfaces.
 
 ## When this is different from SDD's per-task reviewer
 
