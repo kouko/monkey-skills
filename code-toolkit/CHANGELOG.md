@@ -27,6 +27,54 @@ The toolkit emerged from a single design question — *"is there a way to combin
 
 ---
 
+## [0.10.0] — 2026-05-30 — **Asking the user — plain-language question block**
+
+Makes the questions and options the orchestrator shows the human user
+easier to understand. Adds one `## Asking the user` rule block to the
+two highest-friction skills — `subagent-driven-development` and
+`requesting-code-review` — so that when the orchestrator stops to ask
+"what next?" or "how should I handle these review findings?", the
+question reads cleanly on its own.
+
+### What ships
+
+- **New `## Asking the user` block in two skills**
+  (`subagent-driven-development` + `requesting-code-review`). Each
+  skill ships its **own copy** (self-contained-directory convention) —
+  no shared reference file.
+- The block tells the orchestrator to:
+  - name **what you'll get** from each option, not the internal
+    mechanism behind it (plain, outcome-framed options);
+  - drop or explain internal jargon the user didn't introduce;
+  - open every question with a **one-line state anchor** (we just did
+    X; now Y needs deciding) so a context-switched reader isn't lost;
+  - keep it to **≤4 options**;
+  - **research how the industry does it first** for design / strategy /
+    tech-stack questions, instead of inventing options on the spot.
+
+### Why this ships
+
+Grounded in a closed investigation of **608 real `AskUserQuestion`
+instances across 9 projects** (6 recurring failure modes — jargon
+leak, cold-start with no context, made-up options, ESC-on-confusion,
+too-many-options error, compound overload). 83% of questions already
+read fine; this targets the ~17% tail, not a rewrite.
+
+### Boundary (what does NOT change)
+
+- The **code-reviewer agent's verdict stays machine-precise** —
+  every finding keeps its evidence citation and the structured YAML
+  verdict is untouched. These rules govern only the orchestrator's
+  human-facing relay, never the agent-to-agent verdict.
+
+### Scope
+
+- Per-skill placement: each of the two skills carries its own copy of
+  the block.
+- The other **6 question-emitting skills** are a deliberate future
+  rollout — prove the block on these two via real dogfood first, then
+  roll it out (no mechanical 8-skill rollout up front).
+
 ## [0.9.0] — 2026-05-18 — **Inline rule-sheet — reviewer standards-loading optimization (V1)**
 
 Replaces the upfront `Read` of 7 standards in every reviewer dispatch
