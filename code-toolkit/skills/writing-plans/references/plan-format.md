@@ -51,7 +51,7 @@ If `Plan-document-reviewer verdict` is `PENDING`, the plan has not been self-rev
   - **RED**: <failing test name OR diagnostic the implementer writes first>
   - **GREEN**: <observable condition when the task is done>
 - **External surfaces**: <v0.9.0+ — required when task touches non-stdlib external surface. See §External surfaces below. Omit field entirely if task is pure internal logic.>
-- **Dependencies**: <one of: "none" | "Task N completes first" | "Tasks N, M parallel">
+- **Dependencies**: <one of: "none" | "Task N completes first" | "Tasks N, M complete first" (multi-prerequisite — N and M must both finish before this task starts) | "Tasks N, M parallel" (both are prerequisites, may run in parallel). Cross-part ordering: use "none" at task level + a plan-level `Notes` entry; the field is within-plan only and cannot reference a sibling part's tasks.>
 - **Independent**: <true | false>  # v0.8.0+ — opt-in marker for `dispatching-parallel-agents`. Default false.
 - **Brief item covered**: <quote or reference from the brief's Smallest End State / Decision section>
 ```

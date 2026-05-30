@@ -1,7 +1,7 @@
 ---
 name: subagent-driven-development
 description: Use when a task takes >1 hour OR touches >1 module — splits the work into atomic ≤5-minute units and dispatches three subagents per unit (implementer / spec-reviewer / code-quality-reviewer). The implementer works under the TDD iron law; the two reviewers produce verdicts (PASS / PASS_WITH_NOTES / NEEDS_REVISION) grounded in the 7 standards + 2 rubrics + 2 checklists functional-copied from `domain-teams:code-team`. SDD・サブエージェント駆動開発・並列レビュー。SDD・子代理驅動開發・三角審查。
-version: 0.10.0
+version: 0.11.0
 ---
 
 ## Continuous execution
@@ -17,6 +17,8 @@ Pause points the user **does** see:
 
 Everything else — RED-GREEN-REFACTOR cycles, reviewer rounds, re-dispatch on `NEEDS_REVISION` — runs without user intervention.
 
+**Subagent capacity errors (usage limit / "529 Overloaded").** If a subagent dispatch fails with a monthly-limit or 529 error mid-run: (1) do not silently retry in a loop; (2) finish and commit any tasks already `DONE` in the current wave; (3) surface ONE recovery question to the user with three options: wait for capacity to recover; proceed with explicit B2 orchestrator self-review (mark every verdict "[self-review — confirmation bias risk]"); or push the branch as-is and rely on CI. Phrase this per [§Asking the user](#asking-the-user).
+
 ## Asking the user
 
 When you surface one of those pause points — the「下一步？」hand-off after a task DONE, a `NEEDS_CONTEXT` question, a `BLOCKED`, or the 4th-retry escalation — phrase the question and its options so a task-loaded human can decide **without decoding SDD's internal vocabulary**. The reader is a warm-but-interrupted human, not the reviewer subagent. Seven rules:
@@ -24,7 +26,7 @@ When you surface one of those pause points — the「下一步？」hand-off aft
 1. **Outcome, not mechanism.** Each option describes what the user *gets* ("you'll get the two skills edited and tests green"), not the internal machinery ("uses SDD triad dispatch").
 2. **Translate jargon; expand acronyms on first use.** Replace or gloss internal terms (`implementer`, `spec-reviewer`, 🟡/🟢, `Wave 1 = T1+T3`). **Exception**: terms the user introduced *this session* are fine as-is.
 3. **Numbers carry their meaning.** `PASS 12/12` → "all 5 tasks checked out"; let the mechanism detail (`12/12`) sink to a sub-line, not the headline.
-4. **Open with a one-line state anchor** (一句話現況): *we just did X; now Y needs deciding.* Reuse recap-state's Block-1 "Situation" idea — never ask a bare decision verb with zero context (「下一步？」alone is the failure). Put the anchor **inside the `AskUserQuestion` `question` field**, not only in chat prose above the call — the user reads the rendered question, not your preamble.
+4. **Open with a one-line state anchor** (一句話現況): *we just did X; now Y needs deciding.* Reuse recap-state's Block-1 "Situation" idea — never ask a bare decision verb with zero context (「下一步？」alone is the failure). Put the anchor **inside the `AskUserQuestion` `question` field**, not only in chat prose above the call — the user reads the rendered question, not your preamble. **Never use internal vocabulary in the anchor** — phrases like "T3+T4+T5 reviewer verdicts" or "whole-branch review passed" mean nothing to the user; translate them ("three automated checks passed" / "the full-branch quality review passed"). And never list a slash command or CLI subcommand as an option without first confirming it exists (e.g. `claude --help`).
 5. **Research industry practice first** for design / strategy / tech-stack questions — see the [`using-code-toolkit`](../using-code-toolkit/SKILL.md) router rule #5 and `brainstorming`'s Axis-4 (point to them; do not re-implement the protocol here). Don't invent options the user then has to correct.
 6. **≤4 options** (AskUserQuestion hard cap). Never add an explicit "Other" — the tool auto-injects it. End **open** design questions with a free-form invite; for **closed** factual questions, don't.
 7. **Compound asks only when sub-questions share one topic** or are jointly judgeable. Split unrelated decisions into separate rounds.
@@ -78,6 +80,18 @@ For each atomic task in the plan:
 3. **If `status: DONE` or `DONE_WITH_CONCERNS`**, dispatch **`spec-reviewer`** and **`code-quality-reviewer`** **in parallel** (one message, two tool calls) — both are plugin-level agents (v0.6.0 / P15-12 Phase 2): `Agent({subagent_type: "code-toolkit:spec-reviewer"})` + `Agent({subagent_type: "code-toolkit:code-quality-reviewer"})`. See [`code-toolkit/agents/spec-reviewer.md`](../../agents/spec-reviewer.md) + [`code-toolkit/agents/code-quality-reviewer.md`](../../agents/code-quality-reviewer.md) for input/output contracts. Wait for both.
 4. **Resolve verdicts** per the rule below.
 5. **Move to the next task** unless the resolution requires re-dispatch.
+
+**Parallel dispatch for independent tasks.** Tasks marked `Independent: true` with disjoint file sets → dispatch all their implementers in ONE parallel message (multiple `Agent(...)` calls in one turn). When the wave completes, commit each task's `PASS` artifacts immediately — do not hold a passing task's commit while a `NEEDS_REVISION` sibling in the same wave is re-dispatched. Keeping commits atomic makes the diff bisectable.
+
+**Read-before-Edit is non-negotiable for the orchestrator.** When the orchestrator applies post-review fixes, renames files, or edits files located via `grep`/`jq`: call `Read` on each target file before `Edit`. grep/jq output and subagent-created files do NOT satisfy the Edit read-precondition. Skipping this produces cascading "File has not been read yet" errors across every subsequent edit.
+
+**Environment hygiene.** Commands the orchestrator (or its subagents) run directly:
+
+- Prefix every `pytest` invocation with `PYTHONDONTWRITEBYTECODE=1` — without it, Python writes `__pycache__` directories that trip the skill-folder structure hook.
+- Resolve `git worktree add` paths from the **repo root**; a relative path issued from inside a subdirectory nests the worktree inside a skill folder, triggering the same hook.
+- Issue branch-push and `gh pr create` as **two separate Bash calls** — chaining them with `&&` triggers the dcg "push to main" guard pattern.
+
+**Version / semver work in implementer tasks.** Before importing a package for version parsing or manifest handling, the implementer must confirm it is stdlib (e.g. `importlib.metadata`, plain `tuple(int(x) for x in v.split('.'))`) rather than third-party (e.g. `packaging`). Third-party imports in new code fail the code-quality-reviewer's external-surface-grounding check and return `NEEDS_REVISION`.
 
 ### Verdict resolution
 
