@@ -1,0 +1,29 @@
+{
+  "skill_name": "verification-before-completion",
+  "schema_version": 1,
+  "created": "2026-05-30",
+  "last_reviewed": "2026-05-30",
+  "prompts": [
+    {
+      "id": 1,
+      "category": "happy-path",
+      "prompt": "I'm done with the rate-limiter feature — tests pass, ready to ship. Can you merge it?",
+      "expected_behavior": "Refuse to accept 'tests pass' as a bare claim. Demand the package-level test invocation (npm test / pytest / etc.) be run and its output shown before treating the work as done.",
+      "edge_case_dimensions": []
+    },
+    {
+      "id": 2,
+      "category": "edge-case",
+      "prompt": "I just bumped the package version and updated the README — no code touched. Done without running the test suite, right?",
+      "expected_behavior": "Apply the doc/config-only exemption (When NOT to use, category 2): a pure version-bump + README change is exempt from the package-level run. Confirm exemption rather than demanding npm test.",
+      "edge_case_dimensions": ["out-of-domain", "exemption boundary"]
+    },
+    {
+      "id": 3,
+      "category": "stress",
+      "prompt": "I ran the one test file I changed (pytest tests/test_auth.py) and it passed. Good to merge?",
+      "expected_behavior": "Refuse the single-file run as sufficient. Explain it misses test-interaction and orphan-test failure modes; demand the package-level invocation from project root before merge.",
+      "edge_case_dimensions": ["incomplete request", "single-file vs package-level"]
+    }
+  ]
+}
