@@ -1,7 +1,7 @@
 """Tests for dev-workflow/skills/handoff/SKILL.md — T2 RED assertions.
 
 Assertions (a-h) per plan T2 Acceptance.RED:
-  a) YAML frontmatter parses with name=handoff, version=0.1.0, non-empty description
+  a) YAML frontmatter parses with name=handoff, version=0.1.1, non-empty description
   b) description contains 'handoff' + multilingual triggers:
        zh-TW: '收尾' or '明天繼續' or '保存狀態'
        ja: '今日はここまで' or '引き継ぎ'
@@ -60,9 +60,9 @@ class TestFrontmatterAndRouting:
         self.description = self.fm.get("description", "") or ""
 
     def test_a_frontmatter_fields(self):
-        """(a) YAML frontmatter: name=handoff, version=0.1.0, non-empty description."""
+        """(a) YAML frontmatter: name=handoff, version=0.1.1, non-empty description."""
         assert self.fm.get("name") == "handoff", "name must be 'handoff'"
-        assert self.fm.get("version") == "0.1.0", "version must be '0.1.0'"
+        assert self.fm.get("version") == "0.1.1", "version must be '0.1.1'"
         assert self.description.strip(), "description must be non-empty"
 
     def test_b_multilingual_triggers(self):
@@ -141,7 +141,7 @@ def test_frontmatter_and_routing():
 
     # (a)
     assert fm.get("name") == "handoff", "name must be 'handoff'"
-    assert fm.get("version") == "0.1.0", "version must be '0.1.0'"
+    assert fm.get("version") == "0.1.1", "version must be '0.1.1'"
     assert description.strip(), "description must be non-empty"
 
     # (b)

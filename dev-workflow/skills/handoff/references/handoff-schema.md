@@ -205,14 +205,40 @@ Example from research:
 ### Block 9 — Verification Commands
 
 **Prompt instruction**: List every shell command the new session MUST run and
-the expected output (or expected pattern). Format:
+the expected output (or expected pattern). **Tag each command with a tier** so
+the resume reader knows which mismatches are fatal and which are noise:
+
+- **[T1 load-bearing]** — facts that prove the work has not moved underneath the
+  reader: `git rev-parse HEAD`, branch name, plugin/skill version, PR merge
+  state, test pass/fail counts. A T1 mismatch means **STOP** — state has drifted.
+- **[T2 advisory]** — facts that are inherently noisy and may differ benignly:
+  `git status --short` line counts, presence of generated/untracked files. A T2
+  mismatch is **reported and judged**, never an automatic stop.
+
+Format:
 
 ```
-- `<command>` — expected: <exact output or pattern>
+- [T1] `<command>` — expected: <exact output or pattern>
+- [T2] `<command>` — expected: <pattern>; benign drift: <what variance is OK>
 ```
 
-If any command output does not match expected: **stop and ask the user**.
-Do not proceed on mismatched state.
+**Self-reference caveat for `git status`**: the HANDOFF file you are about to
+Write will itself appear in `git status --short` as a new untracked entry —
+shown as a single `?? .claude/handoffs/` line when that directory is newly
+untracked, or as an individual `?? .claude/handoffs/HANDOFF-….md` line when the
+directory already holds tracked files; either way it is a net +1 line. The
+git-status
+snapshot taken in prepare-mode step 1 was captured BEFORE that Write, so a naive
+"expected: exactly N untracked lines" assertion is **guaranteed off-by-one** on
+resume. Either (a) re-run `git status --short` AFTER writing the HANDOFF and
+snapshot that, or (b) keep it **[T2]** and annotate the benign drift ("+1 line
+for `.claude/handoffs/` itself"). **Never make a raw git-status line count a
+[T1] assertion.**
+
+On resume: a **[T1]** mismatch → stop and ask the user. A **[T2]** mismatch →
+report it verbatim, state whether it is the known benign drift, and proceed only
+if benign (surfacing it either way). An untagged command is treated as **[T1]**
+(fail safe).
 
 **WHY** (research v1.1 §Verification Commands, softaworks RESUME MODE step 4):
 HANDOFF is written at time T; the new session runs at time T+N. Anything
@@ -223,9 +249,10 @@ state that no longer exists.
 
 Example from research:
 ```
-- `git log --oneline -5` — expected: commit abc123 at top
-- `pytest -k test_auth --no-header -q` — expected: 2 failed, 14 passed
-- `cat docs/decisions/ADR-007.md | head -3` — expected: `# ADR-007: Use PostgreSQL`
+- [T1] `git log --oneline -5` — expected: commit abc123 at top
+- [T1] `pytest -k test_auth --no-header -q` — expected: 2 failed, 14 passed
+- [T1] `cat docs/decisions/ADR-007.md | head -3` — expected: `# ADR-007: Use PostgreSQL`
+- [T2] `git status --short` — expected: 3 untracked lines; benign drift: +1 for `.claude/handoffs/` itself
 ```
 
 ---
@@ -441,10 +468,11 @@ reader is confused by vague descriptions, not helped by them
 
 ### Verification Commands
 
-- `git log --oneline -3` — expected: `7b09c92a` at or near top (T1 RED commit)
-- `PYTHONDONTWRITEBYTECODE=1 pytest dev-workflow/skills/handoff/scripts/test_handoff_schema.py -v` — expected: 1 passed
-- `ls dev-workflow/skills/handoff/references/` — expected: `handoff-schema.md` listed
-- `cat dev-workflow/.claude-plugin/plugin.json | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['version'])"` — expected: `2.10.0`
+- [T1] `git log --oneline -3` — expected: `7b09c92a` at or near top (RED commit)
+- [T1] `PYTHONDONTWRITEBYTECODE=1 pytest dev-workflow/skills/handoff/scripts/test_handoff_schema.py -v` — expected: 1 passed
+- [T1] `ls dev-workflow/skills/handoff/references/` — expected: `handoff-schema.md` listed
+- [T1] `cat dev-workflow/.claude-plugin/plugin.json | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['version'])"` — expected: `2.10.0`
+- [T2] `git status --short` — expected: `feat/handoff-v0.1` dirty set; benign drift: +1 untracked line for `.claude/handoffs/` (this HANDOFF file)
 
 ### Confidence Flags
 
