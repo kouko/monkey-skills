@@ -1,6 +1,6 @@
 ---
 name: handoff
-version: 0.1.1
+version: 0.2.0
 description: >-
   Cross-session continuation skill. When a work session ends and the user
   wants to save state so a future AI agent can resume without losing context —
@@ -41,7 +41,8 @@ Produces or consumes a structured 10-block HANDOFF file in
 
 - **Prepare mode** — end of session. Gather live git state via Bash,
   then Write a file named `HANDOFF-YYYY-MM-DD-HHMMSS-<slug>.md` under
-  `.claude/handoffs/`. All 10 blocks per `references/handoff-schema.md`.
+  `.claude/handoffs/`. All 10 blocks per `references/handoff-schema.md`, then
+  emit a copy-paste **Resume Launcher** (init prompt) for the next session.
 - **Resume mode** — start of session. Find the latest HANDOFF file, Read it,
   run every Verification Command via Bash, report verbatim output, and surface
   any mismatch before acting.
@@ -107,6 +108,20 @@ truth for the future cold AI reader.**
 5. Apply `technical-precision` throughout: exact file paths, full error
    messages, precise command names. The reader is a cold AI tool — vague
    descriptions cause wrong-path assumptions.
+
+6. **Emit the Resume Launcher** — after the file is written, produce a
+   copy-paste **init prompt** in a fenced code block per
+   `references/handoff-schema.md` §6 Resume Launcher. Do two things with it:
+   **(a)** append it as a closing `## Resume Launcher` section of the HANDOFF
+   file (so it survives the session and is retrievable with `tail`), and
+   **(b)** print it in chat so the user can copy it immediately. The launcher is
+   a **thin pointer**, not a context re-dump: it names the **exact HANDOFF
+   path**, tells the next session to read that file and resume per its
+   instructions (run [T1] verification → report [T2] drift → synthesis-check
+   before acting), uses **portable phrasing** that works whether or not the new
+   session has `dev-workflow:handoff` installed, and ends with a blank
+   `USER DIRECTIVE:` line. It does NOT reproduce any block content — the file is
+   the single source of truth.
 
 ## Resume mode — what to do
 
