@@ -4,6 +4,54 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.14.0] — 2026-05-31
+
+### Changed — `git-memory`: two readability guardrails for trailer values
+
+`standards/memory-conventions.md` gains **two audience-calibrated
+readability guardrails** for trailer values (`Decision:` / `Learning:`
+/ `Gotcha:`), calibrated for the future-developer/agent reader doing
+`git log` archaeology:
+
+1. **Scannability** — a trailer value leads with its point in the
+   first clause; elaboration is pushed to an RFC-822-folded
+   continuation line. The existing `Decision:`-only "1-3 sentences"
+   cap generalizes into a scannability rule across all trailer types.
+   The hard-250 line-length is reframed as a **ceiling, not a
+   target** — a value approaching 250 chars wants folding or
+   splitting, not a single-line run-on.
+2. **Expand session-ephemeral jargon** — a trailer must be legible to
+   a reader who was NOT in the session: one-off coinages ("P2",
+   cluster names, session-local labels) are expanded or avoided.
+   Shared codebase / domain terms (e.g. `gws`) are fine.
+
+**Dual-consumer invariant** (the reason this is a net win, not just a
+style nudge): git-memory content serves TWO consumers — the human
+archaeologist AND a future **agent** doing `git log --grep='^Decision:'`
+retrieval / Phase-3 digest rebuild. The guardrails **restructure, do
+not truncate** (point-first + folded elaboration; no facts dropped)
+and keep the **machine-parse contract intact** — trailer KEYS stay
+line-anchored and continuation lines use standard RFC-822 folding so
+`git interpret-trailers` / `%(trailers)` / `--grep` still parse.
+Expanding session-ephemeral jargon HELPS the retrieving agent, which
+— like the cold human — was not in the session.
+
+A proposed third "diagram venue" guardrail was **dropped**:
+`memory-conventions.md` already carries a complete `## Diagram venue`
+section (venue table + decision tree), so there was nothing
+substantive to add.
+
+**Grounding**: readable-commit canon — Chris Beams,
+[How to Write a Git Commit Message](https://cbea.ms/git-commit/)
+(body explains what & why, self-contained). The 50/72 subject-line
+rule stays out of scope (git-memory owns trailer values + the PR
+`## Memory` section, not the commit subject).
+
+**See also**:
+- `docs/code-toolkit/specs/2026-05-31-git-memory-readability-guardrails.md`
+  — design brief (problem framing, dual-consumer invariant, audience
+  calibration, dropped diagram-venue guardrail).
+
 ## [2.4.0] — 2026-05-22
 
 ### Added — `distill-sessions` skill (9th in dev-workflow)
