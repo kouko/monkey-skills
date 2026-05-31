@@ -47,6 +47,84 @@ commits (usually 20–30% of commits) add one or more.
 - **Anchors**: use `Related: PR #<N>` — do not use commit SHAs, which
   get rewritten by rebase. PR numbers are stable.
 
+### Readability guardrails
+
+The reader of a trailer is a **future developer doing `git log`
+archaeology** — often you yourself months later (cold), sometimes a
+teammate. Technical, shares the codebase's vocabulary, but **was not
+in the session** that wrote the trailer. Two guardrails calibrate the
+value's wording for that reader. They tighten how you write a value;
+they never change the key vocabulary or the folding mechanism above.
+
+1. **Scannability — lead with the point.** The **first clause** of a
+   trailer value must carry its point; elaboration goes to an RFC-822
+   folded continuation line (the folding documented above), not a
+   breathless multi-clause run-on. This generalizes the
+   `Decision:`-only "1-3 sentences" guidance into a rule across **all**
+   trailer types (`Decision:` / `Learning:` / `Gotcha:`): say the
+   conclusion first, fold the supporting detail beneath it. The hard
+   250-char line length is a **ceiling, not a target** — if a value
+   approaches 250 chars on one line it almost certainly needs folding
+   or splitting into two trailers, not a 250-char run-on.
+
+2. **Expand session-ephemeral jargon.** A trailer must be legible to a
+   reader who was **not in the session**. Expand or avoid one-off
+   coinages — session-local labels like `P2`, ad-hoc cluster names, or
+   a shorthand minted inside a single PR — because the reader cannot
+   resolve them. Shared codebase / domain terms are fine: `gws`, a
+   module name, an established acronym the team already uses need no
+   expansion. The test: would a teammate who never saw this session
+   understand the term? If not, spell it out. This is the
+   audience-calibrated form of "translate the jargon your reader does
+   not share."
+
+### Dual-consumer invariant
+
+A trailer has **two** consumers: the human archaeologist above **and**
+a future **agent** doing `git log --grep='^Decision:'` retrieval or a
+Phase-3 digest rebuild (`git interpret-trailers` + the PR `## Memory`
+section). The guardrails must serve both — they must never degrade the
+machine/agent consumer.
+
+- **Restructure, do NOT truncate.** "Scannable" means point-first with
+  elaboration folded to continuation lines — it does **not** mean
+  "shorter" or "fewer facts." Every retrievable fact is preserved;
+  it is reordered, never removed. Shortening a trailer by dropping
+  detail violates this invariant.
+- **Keep the machine contract intact.** Trailer **keys stay
+  line-anchored** (`Decision:` at the start of a line, so
+  `git log --grep='^Decision:'` still matches) and continuation lines
+  use standard RFC-822 folding (leading space) so
+  `git interpret-trailers --parse --unfold` and `%(trailers)` reconstruct
+  the full value. The guardrails change wording and structure, never
+  the key vocabulary or the folding mechanism.
+- **Net effect on the agent is positive.** Expanding session-ephemeral
+  jargon (guardrail 2) **helps** the retrieving agent, which — like the
+  cold human — was not in the session and cannot resolve one-off
+  coinages. Self-containment serves both consumers identically.
+
+### Before / after — restructuring a dense, jargon-heavy trailer
+
+```
+# Before: multi-clause run-on, leads with mechanism, "(P2)" unexpanded
+Learning: a 3x3 variance re-test distinguished a position-induced
+  regression from generation noise on the ambiguous exemption-boundary
+  prompt (P2), which is why the second-pass review was retained even
+  though the first pass already looked green to the reviewer.
+
+# After: point first, detail folded, session-local "(P2)" expanded
+Learning: keep the second-pass review even when the first pass looks
+  green — a 3x3 variance re-test on the ambiguous exemption-boundary
+  prompt (the highest-severity reviewer finding) showed the failure
+  was a position-induced regression, not generation noise.
+```
+
+The *after* form preserves every fact (the 3x3 re-test, the prompt, the
+regression-vs-noise distinction) — it reorders to put the actionable
+conclusion in the first clause, folds the evidence beneath it, and
+expands the session-local `(P2)` into "the highest-severity reviewer
+finding" so a reader who was not in the session can follow it.
+
 ### Naming notes
 
 - **Do not** use `X-` prefix (RFC 6648 deprecated the X- convention for
