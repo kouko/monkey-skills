@@ -27,6 +27,52 @@ The toolkit emerged from a single design question — *"is there a way to combin
 
 ---
 
+## [0.14.0] — 2026-05-31 — **writing-plans parallelism-aware ceiling**
+
+Made `writing-plans` **parallelism-aware**: the plan-size ceiling is now
+**critical-path DEPTH ≤5** (longest chain of tasks linked by `Dependencies`),
+**not** total task count. A wide-but-shallow plan — many disjoint independent
+leaves at one dependency level — is **no longer force-split**: width fans out
+freely (mark `Independent: true`) and the dispatch/harness layer queues
+concurrency. Additive planning guidance (minor bump); no contract or dependency
+change. Dependencies stays the execution floor throughout.
+
+### What ships
+
+- **Depth-based ceiling** in `writing-plans/SKILL.md`: replaces the count-based
+  "≤5 atomic tasks (total)" ceiling. N independent same-level tasks count as
+  **one level**, not N; **no hard width cap** (the harness owns concurrency,
+  `dispatching-parallel-agents` names no number). The "10-task plan is almost
+  always a discovery failure" line is reframed to depth — a deep chain is a
+  discovery failure, a wide-shallow plan is not. The "split into N sequential
+  briefs" path now fires on **DEPTH** overflow, not width.
+- **Active parallel-marking pass** in the splitting framework: after splitting,
+  mark same-level disjoint tasks `Independent: true`. Guarded by
+  **disjoint-files ≠ independent** — a real semantic dependency
+  (doc-mirrors-code, consumer-imports-producer) keeps tasks sequential
+  regardless of file disjointness; `Dependencies` remains the floor.
+- **Advisory Check 15** in `plan-document-reviewer`: two tasks with disjoint
+  `Files touched` and no dependency edge but NOT marked `Independent: true` →
+  emit a **non-fatal NOTE** ("possible missed parallel opportunity"), never
+  NEEDS_REVISION. Balances the existing one-directional Check 14 (over-claiming).
+  **Check 2** is now depth-based.
+
+This fixes: wide parallel work (i18n sweeps, one-change-across-N-modules,
+multi-source fetches, multi-module audits) was being chopped into sequential
+plans, which also multiplied the per-plan/per-run user confirmations ~N× —
+a direct regression of the v0.13.0 confirmation-fatigue fix.
+
+### Grounding
+
+The industry bounds work by **depth + concurrency, never total count** (EN + JA
+agreement): **Bazel** critical-path scheduling (parallelism limited by the
+critical path + a `--jobs` cap, width is free); **Kanban WIP limits**
+(cap in-flight work, explicitly not the backlog total — conflating the two is
+the named anti-pattern); **Critical Path Method** (find the longest chain,
+parallelize everything off it).
+
+Brief: docs/code-toolkit/specs/2026-05-31-writing-plans-parallelism-aware-ceiling.md
+
 ## [0.13.0] — 2026-05-31 — **`## Asking the user` three-gate redesign**
 
 Restructured the `## Asking the user` guidance in **both**
