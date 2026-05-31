@@ -1,6 +1,6 @@
 ---
 name: writing-plans
-description: 'Use AFTER brainstorming has produced a brief, BEFORE subagent-driven-development dispatches implementer subagents. Splits the brief into atomic ≤5-minute tasks with explicit acceptance criteria (RED test + GREEN condition) and a dependency graph. Self-reviews via plan-document-reviewer before declaring DONE. If brief produces >5 atomic tasks, routes back to brainstorming. If implementer returns BLOCKED, fallback re-splits the failing task into smaller children — Beck (2002) Test-Driven Development By Example Part II §Child Test pattern, ISBN 978-0321146533. 計画作成・原子タスク分解・Child Test fallback。計畫拆解・原子任務・遇阻再拆。'
+description: 'Use AFTER brainstorming has produced a brief, BEFORE subagent-driven-development dispatches implementer subagents. Splits the brief into atomic ≤5-minute tasks with explicit acceptance criteria (RED test + GREEN condition) and a dependency graph. Self-reviews via plan-document-reviewer before declaring DONE. If critical-path depth exceeds 5, routes back to brainstorming. If implementer returns BLOCKED, fallback re-splits the failing task into smaller children — Beck (2002) Test-Driven Development By Example Part II §Child Test pattern, ISBN 978-0321146533. 計画作成・原子タスク分解・Child Test fallback。計畫拆解・原子任務・遇阻再拆。'
 version: 0.10.0
 ---
 
@@ -109,7 +109,7 @@ After producing the plan, writing-plans **must** dispatch [`references/plan-docu
 | Every brief item maps to ≥1 task | Brief Smallest End State item has no covering task |
 | No orphan tasks (untraceable to brief) | Task exists but doesn't appear in brief's scope |
 | Dependencies form a DAG (no cycles) | Task A depends on Task B which depends on Task A |
-| Plan size ≤5 tasks | >5 tasks → route back to brainstorming, do not pass to reviewer |
+| Critical-path depth ≤5 | depth >5 → route back to brainstorming, do not pass to reviewer (total task count is uncapped) |
 
 **Pre-patch before dispatch (saves a NEEDS_REVISION round):** Before dispatching the reviewer, Read [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) and scan Check 1 and Check 3. If the plan is missing `Plan-document-reviewer verdict: PENDING` in the top-level header, or if any task is missing a `Brief item covered:` line, patch those fields now. These two omissions are the most common Check-1 / Check-3 failures; pre-patching costs one Read and saves one full round-trip.
 
@@ -125,7 +125,8 @@ Schema in [`references/plan-format.md`](references/plan-format.md). Plan lives a
 # Plan: <topic>
 
 Source brief: docs/code-toolkit/specs/<date>-<topic>.md
-Total tasks: <N> (≤5)
+Total tasks: <N>   ← uncapped; width is fine (many parallel leaves OK)
+Critical-path depth: <D> (≤5)   ← longest Dependencies chain; this is the ceiling
 Execution order: sequential | parallel-where-possible
 Plan-document-reviewer verdict: PENDING   ← required; reviewer will flip to PASS (timestamp)
 
