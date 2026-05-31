@@ -123,9 +123,9 @@ behavior — judge, then confirm a recommendation; infer the inferable; never pu
 
 - **Save-memory over-confirm** — a GLOBAL behavior (global CLAUDE.md memory
   guidance), not reachable by editing code-toolkit; correct via memory separately.
-- **brainstorming skill + using-code-toolkit router** rollout — defer to v0.2
-  (matches the plain-language investigation's "fix SDD + requesting-code-review
-  first" cadence).
+- **brainstorming skill + using-code-toolkit router** rollout — ~~defer to v0.2~~
+  **DISCHARGED in v0.15.0** (Pattern ③ mirror-principle); see §Cross-skill rollout
+  below for how each skill carries the gates.
 - **>4-options AskUserQuestion InputValidationError** — known bug, unrelated.
 
 ## Open Questions
@@ -140,3 +140,18 @@ behavior — judge, then confirm a recommendation; infer the inferable; never pu
 2. requesting-code-review gets the same gate ① + a LIGHTER gate ② (its asks are
    "fix now / defer / merge anyway" → carry a recommendation); its verdict-structure
    boundary note stays intact.
+
+## Cross-skill rollout
+
+This three-gate model now lives in four code-toolkit skills. This doc is the
+**concept SSOT**; each skill carries its OWN audience-tailored version of the
+gates — no cross-skill file reference, no distribute-script. That is the
+mirror-principle in action (per CLAUDE.md skill-independence): the shared concept
+is recorded here once; the operative wording is duplicated, tailored, per skill.
+
+| Skill | Where the gates live | Tailoring | Ship |
+|---|---|---|---|
+| **subagent-driven-development** | Full `## Asking the user` block — all three gates ①/②/③ explicit | Canonical form: gate ① whether-to-ask, gate ② researched `(Recommended)`, gate ③ the 6 phrasing rules + ✅❌ example | PR #355 (v0.13.0) |
+| **requesting-code-review** | Full `## Asking the user` block | LIGHTER gate ② — its asks are "fix now / defer / merge anyway", each carrying a recommendation; plus the `code-reviewer` verdict-structure boundary note kept intact | PR #355 |
+| **brainstorming** | Pattern ③ native — woven into the axes, NO `## Asking the user` block | gate ① via **Axis 1** (confident-JTBD-read: state a confident reading as committed interpretation rather than re-asking); gate ② via **Axis 4** (research-then-"My take: Recommend / Why / Conditional reversal"); gate ③ via 3 native phrasing rules added to the one-axis-per-call guidance (state-anchor inside the `question` field, outcome-not-mechanism, numbers-carry-meaning). Does NOT re-add brainstorming's existing ≤4-options / one-axis / plain-summary rules | `c5bac7a3` (v0.15.0) |
+| **using-code-toolkit (router)** | gate ② via rule #5 (research before asking) + one-line pointer to gates ①/③ enforced downstream | Thin router: carries gate ② inline; defers ①/③ enforcement to the downstream skill that owns the AskUserQuestion call | v0.15.0 |
