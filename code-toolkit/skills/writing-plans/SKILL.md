@@ -1,6 +1,6 @@
 ---
 name: writing-plans
-description: 'Use AFTER brainstorming has produced a brief, BEFORE subagent-driven-development dispatches implementer subagents. Splits the brief into atomic ≤5-minute tasks with explicit acceptance criteria (RED test + GREEN condition) and a dependency graph. Self-reviews via plan-document-reviewer before declaring DONE. If brief produces >5 atomic tasks, routes back to brainstorming. If implementer returns BLOCKED, fallback re-splits the failing task into smaller children — Beck (2002) Test-Driven Development By Example Part II §Child Test pattern, ISBN 978-0321146533. 計画作成・原子タスク分解・Child Test fallback。計畫拆解・原子任務・遇阻再拆。'
+description: 'Use AFTER brainstorming has produced a brief, BEFORE subagent-driven-development dispatches implementer subagents. Splits the brief into atomic ≤5-minute tasks with explicit acceptance criteria (RED test + GREEN condition) and a dependency graph. Self-reviews via plan-document-reviewer before declaring DONE. If critical-path depth exceeds 5, routes back to brainstorming. If implementer returns BLOCKED, fallback re-splits the failing task into smaller children — Beck (2002) Test-Driven Development By Example Part II §Child Test pattern, ISBN 978-0321146533. 計画作成・原子タスク分解・Child Test fallback。計畫拆解・原子任務・遇阻再拆。'
 version: 0.10.0
 ---
 
@@ -58,14 +58,22 @@ Walk these in order for each prospective task. Stop expanding a task as soon as 
 
 If criteria 1+3 fight (≤5 min vs one-failing-test), criterion 3 wins: even a 1-minute task that needs 3 distinct assertions is 3 tasks. Time-box is a smell threshold, not a strict ceiling.
 
-## Plan size ceiling — 5 atomic tasks
+**Post-split parallel-marking pass.** After splitting, for each pair of tasks at the **same dependency level**: if their `Files touched` are disjoint **AND** there is no semantic dependency (no shared data / symbol, no doc-mirrors-code relationship), mark **both** `Independent: true`. This is the step that turns a flat task list into a parallelism-aware plan.
 
-If the brief produces **>5 atomic tasks**, the brief is too big. **Do not silently produce a 10-task plan.** Two options:
+**Guard — disjoint files ≠ independent.** Disjoint `Files touched` is necessary but not sufficient. A real semantic dependency keeps two tasks sequential **regardless** of file-disjointness — e.g. a doc task that mirrors a code task (doc-mirrors-code), or a consumer task that imports a symbol the producer task defines. In those cases the tasks touch different files yet must run in order. The `Dependencies` field is the **execution floor**: if a semantic dependency exists, declare it in `Dependencies` and leave `Independent: false`, even when the files do not overlap.
 
-1. **Route back to brainstorming**: the Smallest End State (Axis 3) was not actually smallest. Surface this and ask the user to re-cut.
-2. **Split into multiple sequential briefs**: if the work genuinely needs >5 atomic tasks and the user agrees, write *N* separate brief files (each ≤5 tasks), explicitly labeled `<topic>-part-{1..N}.md`. Each brief is a standalone input to its own `writing-plans` run and its own SDD run. **Split = N brief files, not N plans from one brief.** A plan is 1-to-1 with one brief; producing two `## Part 1 / ## Part 2` sections inside a single plan file is not valid splitting.
+## Plan size ceiling — critical-path depth ≤5
 
-The 5-task ceiling is a deliberate forcing function for the brainstorming HARD-GATE. A 10-task plan is almost always a discovery failure, not a planning failure.
+The ceiling is on **critical-path depth**, NOT total task count. Critical-path depth is the **longest chain of tasks linked by `Dependencies`** (the longest sequential path through the dependency DAG). N independent tasks at the **same dependency level** (disjoint `Files touched`, no semantic dependency) count as **ONE level**, not N. A plan with 8 tasks where 6 are parallel leaves at one level has a depth of ~2-3, not 8.
+
+**No hard width cap in the plan.** Mark every parallel-eligible task `Independent: true` and let the dispatch / harness layer queue the concurrency — `dispatching-parallel-agents` names no numeric cap, so the plan declares eligibility and defers throttling downstream. A very wide wave (many `Independent: true` leaves) gets at most a soft "sanity-check that these really are independent" advisory; it is **never** a hard split-trigger. The only hard split-trigger is **depth >5**.
+
+If the critical-path **depth** exceeds 5, the brief is too big. **Do not silently produce a deep chain.** Two options:
+
+1. **Route back to brainstorming**: the Smallest End State (Axis 3) was not actually smallest — it baked in a long sequential dependency chain. Surface this and ask the user to re-cut.
+2. **Split into multiple sequential briefs**: if the work genuinely needs a chain deeper than 5 and the user agrees, write *N* separate brief files (each with depth ≤5), explicitly labeled `<topic>-part-{1..N}.md`. Each brief is a standalone input to its own `writing-plans` run and its own SDD run. **Split = N brief files, not N plans from one brief.** A plan is 1-to-1 with one brief; producing two `## Part 1 / ## Part 2` sections inside a single plan file is not valid splitting.
+
+The depth ceiling is a deliberate forcing function for the brainstorming HARD-GATE. A **deep chain** (critical-path depth >5) is almost always a discovery failure, not a planning failure. A **wide-but-shallow** plan (many independent leaves, shallow depth) is fine — it parallelizes cleanly and is NOT a discovery failure. Industry bounds work by depth + concurrency, not total count: Bazel schedules by critical path, Kanban caps work-in-progress (concurrency) not backlog size, and CPM (Critical Path Method) measures project duration by the longest dependency chain.
 
 **Structural-split escape hatch (round-2 NEEDS_REVISION only):** If the plan-document-reviewer returns NEEDS_REVISION for a second round and the *sole* failure is a structural-size violation (a task is clearly >5 min but cannot be shrunk further without a brief change), split that oversized task into a fresh sibling part (a new `<topic>-part-N.md` brief → new plan) and treat it as a round-1 input to a fresh `writing-plans` run. The original plan's 2-round cap applies to the original tasks only; the new sibling part starts its own clean round count.
 
@@ -101,7 +109,7 @@ After producing the plan, writing-plans **must** dispatch [`references/plan-docu
 | Every brief item maps to ≥1 task | Brief Smallest End State item has no covering task |
 | No orphan tasks (untraceable to brief) | Task exists but doesn't appear in brief's scope |
 | Dependencies form a DAG (no cycles) | Task A depends on Task B which depends on Task A |
-| Plan size ≤5 tasks | >5 tasks → route back to brainstorming, do not pass to reviewer |
+| Critical-path depth ≤5 | depth >5 → route back to brainstorming, do not pass to reviewer (total task count is uncapped) |
 
 **Pre-patch before dispatch (saves a NEEDS_REVISION round):** Before dispatching the reviewer, Read [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) and scan Check 1 and Check 3. If the plan is missing `Plan-document-reviewer verdict: PENDING` in the top-level header, or if any task is missing a `Brief item covered:` line, patch those fields now. These two omissions are the most common Check-1 / Check-3 failures; pre-patching costs one Read and saves one full round-trip.
 
@@ -117,7 +125,8 @@ Schema in [`references/plan-format.md`](references/plan-format.md). Plan lives a
 # Plan: <topic>
 
 Source brief: docs/code-toolkit/specs/<date>-<topic>.md
-Total tasks: <N> (≤5)
+Total tasks: <N>   ← uncapped; width is fine (many parallel leaves OK)
+Critical-path depth: <D> (≤5)   ← longest Dependencies chain; this is the ceiling
 Execution order: sequential | parallel-where-possible
 Plan-document-reviewer verdict: PENDING   ← required; reviewer will flip to PASS (timestamp)
 
@@ -174,7 +183,7 @@ Delegation contract per CLAUDE.md: pass **paths + structured seed context**, not
 |---|---|---|
 | *"Just skip planning, the brief is enough."* | The brief is the *what*; the plan is the *how-cut-into-atomic-pieces*. SDD needs atomicity, not just scope. | Refuse. Produce the plan even if it's only 1-2 tasks. If 1 task, the brief was an exemption candidate (§When NOT to Use). |
 | *"This task is roughly an hour but I don't know how to split it."* | "I don't know how to split" is a discovery failure, not a planning failure. The brief did not articulate Axis 3 (smallest end state) tightly enough. | Surface back to brainstorming for Axis 3 re-cut, do not produce a 1-hour task that violates the ≤5-min rule. |
-| *"10 atomic tasks is fine."* | No — see §Plan size ceiling. 10 tasks = brief too big. | Refuse the 10-task plan. Route back to brainstorming OR split into N briefs each with ≤5 tasks. |
+| *"This chain is 8 tasks deep, that's fine."* | No — see §Plan size ceiling. Critical-path depth >5 = brief too big. (A wide-but-shallow 8-task plan is fine; a deep 8-link chain is not.) | Refuse the deep chain. Route back to brainstorming OR split into N briefs each with depth ≤5. |
 | *"Skip the plan-document-reviewer, it's overkill."* | The reviewer catches the failure modes the splitting framework misses (orphan tasks, cycle dependencies, brief-task coverage gaps). | Refuse. Self-review is non-negotiable. If you genuinely produced a perfect plan, the reviewer takes 30 seconds to confirm. |
 | *"Implementer returned BLOCKED, just retry."* | Beck Child Test pattern says split smaller, not retry. Silent retry burns SDD's 3-round cap. | Re-invoke writing-plans on the failing task per §BLOCKED fallback. |
 | *"This task depends on Task 1, Task 3, AND a thing not in the plan."* | The "thing not in the plan" is a missing task. Declare it. | Add the missing task to the plan. Re-run plan-document-reviewer. |
