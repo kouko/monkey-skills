@@ -4,6 +4,41 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.14.1] — 2026-05-31
+
+### Changed — `git-memory`: squash-merge retrieval caveat (doc accuracy correction)
+
+Pillar 2 **over-claimed** `%(trailers)` machine-readability. In a
+**squash-merge** repo, squash concatenates per-commit messages into the
+squash commit's **mid-body**, so per-commit `Decision:` / `Learning:` /
+`Gotcha:` trailers are no longer in the footer →
+`git log --pretty='%(trailers)'` / `git interpret-trailers --parse` are
+**unreliable on the default branch** (they read only the footer). Pillar 2
+now carries a squash-merge caveat correcting this.
+
+**Squash-robust retrieval path**: `git log --grep` (TEXT match — survives
+squash, still hits the trailers mid-body) **+ the PR `## Memory` section**
+(GitHub-hosted, survives squash). `%(trailers)` structured parse stays
+reliable on **feature branches** and in **merge-commit / rebase-merge**
+repos.
+
+**Two opt-in escape hatches** named for teams needing parseable trailers
+on main: (a) set `squash_merge_commit_message = PR_BODY` and end the PR
+body with the raw trailer footer; (b) use a **merge-commit** (not squash)
+for memory-worthy PRs.
+
+**Doc accuracy correction of a Pillar-2 over-claim — no behavior / config /
+workflow change** (the escape hatches are documented as opt-in, not
+applied; no repo-setting change, no per-PR merge-strategy mandate). Same
+defect class as code-toolkit PR #357 (an accurate-sounding claim that
+doesn't hold in the actual environment).
+
+**See also**:
+- `docs/code-toolkit/specs/2026-05-31-git-memory-squash-retrieval-caveat.md`
+  — design brief (squash buries trailers mid-body, `git log --grep` +
+  PR `## Memory` retrieval path, two opt-in escape hatches, alternatives
+  considered).
+
 ## [2.14.0] — 2026-05-31
 
 ### Changed — `git-memory`: two readability guardrails for trailer values

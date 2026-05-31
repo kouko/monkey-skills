@@ -69,17 +69,42 @@ separate file. Consequences:
 Structured facts ride in **git trailers** — the same mechanism as
 `Co-Authored-By:` and `Signed-off-by:` (see `git-interpret-trailers(1)`).
 
-- Machine-readable: `git log --pretty='%(trailers)'` and
-  `git log --grep='^Decision:'` make retrieval trivial.
+- Machine-readable: `git log --grep='^Decision:'` (reliable everywhere)
+  and `git log --pretty='%(trailers)'` (feature branch / merge-commit
+  repos — see squash caveat below) make retrieval trivial.
 - Coexists with prose: the commit body reads naturally for humans;
   trailers carry the structured signal for machines.
 - Git-native: trailer format is part of core git, not a Claude Code
   convention. Every git hosting platform preserves trailers as raw
-  text even when they don't render them specially.
+  text — true for rendering and non-squash merges; a squash merge
+  relocates them mid-body (see caveat below).
 - Minimum viable schema — three trailers cover ~80% of value:
   - `Decision:` — why this approach was chosen
   - `Learning:` — what was discovered during the work
   - `Gotcha:` — a trap for future self or other readers
+
+> **Squash-merge caveat — `%(trailers)` is unreliable on the default branch.**
+> A squash merge concatenates every per-commit message into one squash
+> commit, so the original trailers land in the **mid-body**, not the
+> footer. `git log --pretty='%(trailers)'` and `git interpret-trailers
+> --parse` read **only the footer**, so on a squash-merge `main` they
+> miss the buried trailers. `git log --grep='^Decision:'` is a **text**
+> match, so it still finds them on `main`.
+
+Retrieval path by repo style:
+
+| Repo merge style | Reliable retrieval |
+|---|---|
+| **Squash merge** (default branch) | `git log --grep` + the PR `## Memory` section (GitHub-hosted, survives squash) |
+| **Feature branch** (pre-squash) | `%(trailers)` structured parse is reliable |
+| **Merge-commit / rebase-merge** | `%(trailers)` structured parse is reliable |
+
+Two opt-in escape hatches for parseable trailers on a squash `main`:
+
+- Set `squash_merge_commit_message = PR_BODY` and end the PR body with
+  the raw trailer footer, so the squash commit's footer carries them.
+- Use a **merge-commit** (not squash) for memory-worthy PRs, preserving
+  each commit's footer.
 
 See `standards/memory-conventions.md` for the full schema, line-length
 rules, and examples.
