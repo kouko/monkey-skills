@@ -27,6 +27,16 @@ The toolkit emerged from a single design question — *"is there a way to combin
 
 ---
 
+## [0.14.1] — 2026-05-31 — **writing-plans depth-ceiling grounding correction**
+
+Documentation-only patch — **no behavior change**; the critical-path depth ≤5 ceiling is unchanged. Corrected the *grounding* of the depth ceiling after a challenge that the prior justification (human working-memory + scheduling analogies) was the wrong domain for an LLM-agent plan:
+
+- The agent-native reason to bound **depth** is **error compounding over sequential LLM steps** — chain reliability ≈ per-step-success^depth, and per-step accuracy itself decays as the chain lengthens (long-horizon-execution research, e.g. "The Illusion of Diminishing Returns", arXiv 2509.09677). A depth-5 chain at ~95% per-step reliability ≈ 77% success.
+- Added an honest marker that the value **`5` is a heuristic / default trigger, not a measured constant** — it was inherited from the prior count-based ceiling, and the literature finds **no universal optimal step count** (the principled limit is a function of per-step reliability; tune it accordingly).
+- Bazel critical-path / Kanban WIP demoted to secondary framing analogies (they support depth-not-count, but are human/scheduling, not agent-native).
+
+Provenance: the human-study research trail (Miller 7±2 / Cowan 4±1 / WBS 3-5 levels / span-of-control) and the LLM-native trail (error compounding / METR long-horizon reliability) are recorded in the session that produced this patch; the takeaway is that the *axis* (depth not count) is well-grounded but the *value* (5) is a tunable heuristic.
+
 ## [0.14.0] — 2026-05-31 — **writing-plans parallelism-aware ceiling**
 
 Made `writing-plans` **parallelism-aware**: the plan-size ceiling is now
