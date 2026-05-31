@@ -27,6 +27,40 @@ The toolkit emerged from a single design question — *"is there a way to combin
 
 ---
 
+## [0.15.0] — 2026-05-31 — **asking-the-user Pattern-③ rollout to brainstorming + router**
+
+Discharges the **v0.2 deferred item from PR #355** (the asking-the-user
+investigation): the three-gate model — gate ① *whether to ask*, gate ② *research
+before asking*, gate ③ *plain phrasing* — is now rolled out to `brainstorming`
+and the `using-code-toolkit` router via **Pattern ③ (mirror-principle)**. Additive
+guidance inside an existing skill (minor bump), consistent with #355's 0.13.0; no
+contract or dependency change.
+
+### What ships
+
+- **brainstorming** — native **gate-③ phrasing rules** added to the one-axis-per-`AskUserQuestion`-call
+  guidance, written tailored to the axis-question context: (a) open with a one-line
+  **state anchor INSIDE the `question` field** (not only chat prose above it); (b)
+  **outcome, not mechanism** (each option says what the user gets, not internal
+  machinery); (c) **numbers carry their meaning** (translate raw counts/symbols). Gate
+  ① already lives in **Axis 1** (confident JTBD read → don't re-ask) and gate ② in
+  **Axis 4** (research-then-"My take: Recommend"), so only gate ③ was the gap. **No
+  `## Asking the user` block** — the rules are folded natively into the existing axis
+  guidance.
+- **router (`using-code-toolkit`)** — rule #5 gains a **one-line pointer** that gates
+  ①/③ are enforced downstream in `brainstorming` / `subagent-driven-development` /
+  `requesting-code-review`. Pointer only; no gate definitions duplicated.
+
+### Method note — Pattern ③ (mirror-principle)
+
+Each skill carries its **own audience-tailored** version of the gate-③ rules; the
+**PR #355 brief is the concept SSOT** (augmented with a §Cross-skill rollout section).
+Explicitly: **NO cross-skill file reference, NO distribute-script, NO copied block** —
+chosen to honor Anthropic skill-independence ("每個 skill 是自包含目錄"). The block is
+audience-tailored, not byte-identical, so a shared-file or distribute mechanism would
+be the wrong tool (those fit byte-identical SSOT like `_baseline.md` / `_rule-sheet.md`,
+not register-shifted prose).
+
 ## [0.14.1] — 2026-05-31 — **writing-plans depth-ceiling grounding correction**
 
 Documentation-only patch — **no behavior change**; the critical-path depth ≤5 ceiling is unchanged. Corrected the *grounding* of the depth ceiling after a challenge that the prior justification (human working-memory + scheduling analogies) was the wrong domain for an LLM-agent plan:
