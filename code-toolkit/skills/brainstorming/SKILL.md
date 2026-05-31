@@ -46,6 +46,14 @@ Walk all five. Don't skip any. If an axis returns *"don't know"* or *"need more 
 
 When axis uncertainty requires user input, ask **at most one axis per `AskUserQuestion` call** — the single highest-uncertainty one. Bundling multiple axes (e.g. Axis 1 + Axis 3 + Axis 4 with 3-4 options each) overloads the call and will be rejected by the harness as too many options.
 
+When that axis question fires, phrase it for the warm-but-interrupted user who reads the rendered question, not your chat preamble:
+
+- **Open with a one-line state anchor inside the `AskUserQuestion` `question` field** — *here's what we've settled, here's the axis still open.* The anchor must live in the `question` field itself, not only in prose above the call; the user sees the rendered menu first. A bare axis prompt («Which approach?» with no context) is the failure.
+- **Outcome, not mechanism.** Each option says what the user *gets* or which design direction it commits to ("ship CSV as a URL query param, no UI work"), not the internal machinery — no axis numbers, no "Option B", no cluster names.
+- **Numbers (and symbols) carry their meaning.** Translate raw counts and jargon into plain words in the option text: "3 industry approaches found" → "the three ways teams actually ship this"; let any bare count sink to a sub-line, never the headline.
+
+These three join the two gates already woven into the axes: gate ① (ask only when genuinely uncertain) lives in **Axis 1** as the confident-JTBD-read rule — state a confident reading as a committed interpretation rather than re-asking — and gate ② (bring a recommendation, not an open question) lives in **Axis 4** as the research-then-"My take: Recommend / Why / Conditional reversal" protocol; together the three read as one coherent set.
+
 ### Axis 1 — Problem
 
 What is the user trying to accomplish? **Not the solution they proposed — the problem behind the solution.**
