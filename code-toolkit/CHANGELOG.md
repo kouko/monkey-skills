@@ -27,6 +27,49 @@ The toolkit emerged from a single design question — *"is there a way to combin
 
 ---
 
+## [0.13.0] — 2026-05-31 — **`## Asking the user` three-gate redesign**
+
+Restructured the `## Asking the user` guidance in **both**
+`subagent-driven-development` and `requesting-code-review` from a flat
+seven-rule list into three sequenced gates. Additive behavioral guidance
+(minor bump); no contract or dependency change.
+
+### What ships
+
+- **Three-gate structure** in both skills:
+  - **① Whether to ask** — tier by reversibility × cost-of-being-wrong:
+    reversible + inferable → act and mention after (no per-step re-confirm
+    under standing authorization); irreversible / outward-facing / costly →
+    always confirm; genuine taste / scope / un-inferable → ask via gate ②.
+  - **② What to bring** — bring a researched `(Recommended)` option and
+    confirm it; never punt an open-ended question to the user. The old
+    standalone phrasing rule #5 ("research industry practice first; don't
+    invent options") is **absorbed into and strengthened as gate ②**.
+    `requesting-code-review` carries a lighter gate ② (its asks are
+    "fix now / defer / merge anyway").
+  - **③ How to phrase** — the kept 6 phrasing rules (verbatim), plus the
+    ✅/❌ worked example and the calibration-target line.
+- `requesting-code-review`'s `code-reviewer` structured-verdict boundary
+  note is preserved unchanged (its R2 evidence-citation contract is not
+  loosened).
+
+### Grounding
+
+Anchored in **Horvitz, *Principles of Mixed-Initiative User Interfaces*
+(CHI 1999)** — the act-vs-ask threshold scales with the cost of being
+wrong (expected-utility threshold; scope precision to confidence).
+
+### Provenance
+
+The plain-language operative rules are a **deliberate translation** of
+察する (sense without being told) / 確連報 (確認・連絡・報告) / 忖度 +
+confirmation-fatigue — the original research terminology is intentionally
+kept OUT of the rule bodies but recorded so future edits can trace it. Full
+lineage: `docs/code-toolkit/specs/2026-05-31-asking-the-user-three-gate-redesign.md`
+§Terminology Provenance.
+
+---
+
 ## [0.12.0] — 2026-05-30 — **Skill-refactor sweep — evidence-based de-bloat**
 
 A systematic `dev-workflow:skill-refactor` (Ablation mode) sweep of all 11
