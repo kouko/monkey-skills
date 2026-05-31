@@ -29,12 +29,15 @@ Free-form plans force SDD to re-parse; this schema makes the parse trivial.
 # Plan: <topic>
 
 **Source brief**: <path to brief, e.g. docs/code-toolkit/specs/2026-05-16-csv-export.md>
-**Total tasks**: <N> (must be ≤5; if >5 route back to brainstorming)
+**Total tasks**: <N>
+**Critical-path depth**: <D> (must be ≤5; if >5 route back to brainstorming)
 **Execution order**: sequential | parallel-where-possible
 **Plan-document-reviewer verdict**: PASS (timestamp) | PENDING
 ```
 
 If `Plan-document-reviewer verdict` is `PENDING`, the plan has not been self-reviewed yet and SDD MUST NOT consume it.
+
+**Critical-path depth** is the **longest chain of tasks linked by `Dependencies`** (the longest sequential path through the dependency DAG). N independent tasks at the **same dependency level** (disjoint `Files touched`, no semantic dependency) count as **one level**, not N. The ceiling is on this depth, NOT on `Total tasks` — `Total tasks` is uncapped.
 
 ### Per-task block (required, repeats N times)
 
@@ -106,7 +109,8 @@ For a brief at `docs/code-toolkit/specs/2026-05-16-csv-export.md` whose Smallest
 # Plan: CSV export query param
 
 **Source brief**: docs/code-toolkit/specs/2026-05-16-csv-export.md
-**Total tasks**: 3 (≤5 ✓)
+**Total tasks**: 3
+**Critical-path depth**: 2 (≤5 ✓)
 **Execution order**: sequential
 **Plan-document-reviewer verdict**: PASS (2026-05-16 10:42)
 
@@ -160,6 +164,30 @@ For a brief at `docs/code-toolkit/specs/2026-05-16-csv-export.md` whose Smallest
 Tasks 1 + 2 are independent (disjoint `Files touched`) and can run parallel in `dispatching-parallel-agents`. Task 3 joins them sequentially because its `Files touched` overlaps Task 1's.
 ```
 
+### Wide-but-shallow example — 8 tasks, critical-path depth 2
+
+A high `Total tasks` count is **not** a discovery failure when the tasks fan out wide instead of chaining deep. Consider a brief whose Smallest End State is *"add a one-line module docstring to each of the 6 renderer files, then run the lint gate, then update the index":*
+
+```markdown
+# Plan: backfill renderer module docstrings
+
+**Source brief**: docs/code-toolkit/specs/2026-05-20-renderer-docstrings.md
+**Total tasks**: 8
+**Critical-path depth**: 2 (≤5 ✓)
+**Execution order**: parallel-where-possible
+
+## Task 1 — Docstring for csv renderer   (Independent: true, Dependencies: none)
+## Task 2 — Docstring for json renderer  (Independent: true, Dependencies: none)
+## Task 3 — Docstring for xml renderer   (Independent: true, Dependencies: none)
+## Task 4 — Docstring for yaml renderer  (Independent: true, Dependencies: none)
+## Task 5 — Docstring for toml renderer  (Independent: true, Dependencies: none)
+## Task 6 — Docstring for html renderer  (Independent: true, Dependencies: none)
+## Task 7 — Run lint gate over all renderers (Dependencies: Tasks 1-6 complete first)
+## Task 8 — Regenerate renderer index doc   (Dependencies: Task 7 completes first)
+```
+
+Tasks 1-6 are **6 disjoint `Independent: true` leaves at one dependency level** — they count as **one level**, not six. The longest chain of tasks linked by `Dependencies` is `(any of 1-6) → 7 → 8`, so the **critical-path depth is 2**. Eight tasks, depth 2: a wide-but-shallow plan that validates cleanly and is **NOT** a discovery failure. It parallelizes the 6 leaves and joins them at Task 7. (Each per-task block above is abbreviated to one line for the depth illustration; a real plan expands every task to the full per-task schema.)
+
 ## Anti-patterns
 
 - ❌ **Vague task descriptions.** *"Add CSV support"* is not actionable. *"Add `format=csv` query param parsing to `GET /reports/:id` handler"* is.
@@ -167,7 +195,7 @@ Tasks 1 + 2 are independent (disjoint `Files touched`) and can run parallel in `
 - ❌ **Missing acceptance.** A task with no RED test name has no done-condition. tdd-iron-law cannot fire on it. Always name the failing test.
 - ❌ **Implicit dependencies.** If a task says *"also remember to update the OpenAPI spec,"* that update is a missing task. Declare it.
 - ❌ **Tasks not traceable to brief.** Every task must quote / reference a brief item. Orphan tasks are scope creep.
-- ❌ **>5 tasks with no fallback decision.** If the plan needs >5 atomic tasks, route back to brainstorming OR split into multiple briefs. Do not silently produce a 10-task plan.
+- ❌ **Critical-path depth >5 with no fallback decision.** If the longest chain of tasks linked by `Dependencies` exceeds depth 5, route back to brainstorming OR split into multiple briefs. A deep chain is a discovery failure. Do not silently produce a deep sequential chain. (A wide-but-shallow plan — many `Independent: true` leaves, shallow depth — is fine; the ceiling counts depth, NOT total task count.)
 - ❌ **Skipping plan-document-reviewer self-review.** `Plan-document-reviewer verdict: PENDING` means SDD blocks. Do not pass an unreviewed plan to SDD.
 - ❌ **Claiming `Independent: true` with overlapping `Files touched`.** Independence requires disjoint write sets. If two tasks both declare `Independent: true` AND share any file in `Files touched`, the claim is wrong — fix the plan, not the dispatch. `dispatching-parallel-agents` will refuse to dispatch overlapping tasks regardless of the marker.
 
