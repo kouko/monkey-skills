@@ -45,18 +45,21 @@ deriving anything from SQL.
 
 ### 2a. Detection
 
-In `manifest.json`, check for:
-
-- A top-level `"semantic_models"` key — present when the project uses
-  dbt Semantic Layer (MetricFlow).
-- A top-level `"metrics"` key with non-empty entries.
+In `manifest.json`, check for a top-level `"semantic_models"` key —
+MetricFlow (dbt Semantic Layer) always populates it. Gate on this key
+alone:
 
 ```python
-has_metricflow = bool(
-    manifest.get("semantic_models") or
-    manifest.get("metrics")
-)
+has_metricflow = bool(manifest.get("semantic_models"))
 ```
+
+**Do NOT gate on the `"metrics"` key.** Legacy dbt (≤1.5) projects can
+declare `metrics:` YAML *without* MetricFlow — those manifests carry a
+non-empty `metrics` key but NO `semantic_models`. Routing them into the
+ingest branch would reference an absent `semantic_models` block. A bare
+`metrics` key without `semantic_models` is the legacy path and belongs
+in the SQL-derivation branch. Only the co-presence of `semantic_models`
++ `metrics` indicates MetricFlow.
 
 If `has_metricflow` is true, take the **MetricFlow ingest branch (§2b)**.
 Otherwise, take the **SQL-derivation branch (§3)**.
@@ -112,7 +115,9 @@ For each confirmed metric candidate, determine:
 
 - **Name**: the business name (not the SQL column name). Derive from
   schema.yml description or column name. Examples: `monthly_recurring_revenue`,
-  not `mrr_usd`; `customer_churn_rate`, not `pct_churned`.
+  not `mrr_usd`; `customer_churn_rate`, not `pct_churned`. The business
+  name maps to the file slug by replacing underscores with hyphens per
+  §8 (`monthly_recurring_revenue` → `monthly-recurring-revenue.md`).
 - **Grain**: what the `GROUP BY` aggregates over — time period, entity key,
   or both. State as "one row per `<grain>`".
 - **Aggregation**: `SUM`, `COUNT`, `AVG`, `COUNT DISTINCT`, ratio, etc.
@@ -326,7 +331,7 @@ relationships:
   - type: depends_on
     target: ../concepts/active-customer.md
     note: "denominator uses the active-customer definition (paid sub on period start)"
-last_changed_by: "init run 2026-06-01"
+last_changed_by: "PR #000"
 tags: ["finance", "retention"]
 stale: false
 stale_at: null
