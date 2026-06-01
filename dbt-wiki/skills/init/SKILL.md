@@ -26,7 +26,7 @@ description: |
   running dbt itself (use dbt CLI).
 ---
 
-# dbt-wiki — Init Workflow (v1.0)
+# dbt-wiki — Init Workflow (v2.0)
 
 Init is **idempotent and re-runnable**. Default mode reads `manifest.json`
 + all `compiled/*.sql` files, generates per-model entity pages with
@@ -201,6 +201,38 @@ ephemeral env (zero pollution of the user's dbt env).
 
 If any check fails, print the error and exit. Do not proceed.
 
+### Step 0c: v1.x layout guard (one-time warning only)
+
+If `.dbt-wiki/` exists AND it contains a top-level `models/` directory
+(v1.x layout — evidence was not yet under `_evidence/`) AND any page
+inside it contains a `## User Notes` section:
+
+```bash
+if [ -d ".dbt-wiki/models" ] && grep -rl "^## User Notes" .dbt-wiki/models/ 2>/dev/null | grep -q .; then
+  cat <<'WARN'
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WARNING: v1.x dbt-wiki detected with User Notes present.
+
+dbt-wiki v2.0 is a clean-break rebuild — it does NOT migrate, copy,
+or preserve any content from the v1.x layout.  The existing
+.dbt-wiki/ directory will be rebuilt from scratch under the new
+layout (_evidence/, entities/, metrics/, concepts/).
+
+Your ## User Notes sections will be LOST if you continue.
+
+ACTION REQUIRED: back up your User Notes before proceeding.
+  Example: cp -r .dbt-wiki/ .dbt-wiki-v1-backup/
+
+Continuing will rebuild from current manifest.json.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WARN
+fi
+```
+
+This warning fires once and then proceeds — it is **not** a migration.
+No content is preserved. The user must back up manually before
+re-running if they want to keep their User Notes.
+
 If `.dbt-wiki/` already exists, set `is_rerun = true` and prompt:
 
 > `.dbt-wiki/` already exists. Re-running init will:
@@ -220,14 +252,22 @@ Abort on "no". Proceed only if "yes" or fresh install.
 `mkdir -p` is always safe (no-op if dirs exist):
 
 ```bash
-mkdir -p .dbt-wiki/models
-mkdir -p .dbt-wiki/sources
-mkdir -p .dbt-wiki/macros
-mkdir -p .dbt-wiki/seeds
-mkdir -p .dbt-wiki/snapshots
-mkdir -p .dbt-wiki/tests
-mkdir -p .dbt-wiki/exposures
+# Knowledge layer
+mkdir -p .dbt-wiki/entities
+mkdir -p .dbt-wiki/metrics
+mkdir -p .dbt-wiki/concepts
+
+# Evidence layer (demoted from top-level in v1.x)
+mkdir -p .dbt-wiki/_evidence/models
+mkdir -p .dbt-wiki/_evidence/sources
+mkdir -p .dbt-wiki/_evidence/macros
+mkdir -p .dbt-wiki/_evidence/seeds
+mkdir -p .dbt-wiki/_evidence/snapshots
+mkdir -p .dbt-wiki/_evidence/tests
+mkdir -p .dbt-wiki/_evidence/exposures
+
 mkdir -p .dbt-wiki/_archive
+mkdir -p .dbt-wiki/syntheses
 ```
 
 Copy plugin templates with **conditional rules**:
@@ -562,55 +602,81 @@ $PY_RUNNER .dbt-wiki/_internal/extract_recursive_column_lineage_test.py
 Expects "6/6 passed". The test uses synthetic manifest + lineage
 (no sqlglot, no real dbt project), so it runs offline.
 
-## Step 5: Write Model / Source / Macro Pages
+## Step 5: Write Evidence Pages (Phase A)
 
-For each model, write `.dbt-wiki/models/<model_name>.md` per the SCHEMA.md
-`model` page type. Filename collision: if `<model_name>.md` exists from
-a different package (different `unique_id`), use `<package>__<model_name>.md`.
+All evidence pages write under `.dbt-wiki/_evidence/<type>/` — the
+evidence layer is the **unchanged v1.x mechanical pipeline**, relocated.
+Do NOT write to top-level `.dbt-wiki/models/` (that was the v1.x layout).
+
+For each model, write `.dbt-wiki/_evidence/models/<model_name>.md` per
+the SCHEMA.md `model` evidence page type. Filename collision: if
+`<model_name>.md` exists from a different package (different `unique_id`),
+use `<package>__<model_name>.md`.
 
 For each source (from `manifest.sources`), write
-`.dbt-wiki/sources/<source_name>__<table_name>.md` per SCHEMA's `source`
-type. Compute `feeds_into` similarly to Step 3b.
+`.dbt-wiki/_evidence/sources/<source_name>__<table_name>.md` per SCHEMA's
+`source` evidence type. Compute `feeds_into` similarly to Step 3b.
 
 For each macro that is referenced by ≥1 model (filter `manifest.macros`
 by checking which appear in any model's `depends_on.macros`), write
-`.dbt-wiki/macros/<macro_name>.md`. Project macros first, then external
-package macros (dbt_utils, dbt_expectations, etc.).
+`.dbt-wiki/_evidence/macros/<macro_name>.md`. Project macros first, then
+external package macros (dbt_utils, dbt_expectations, etc.).
 
-For seeds, snapshots, exposures, singular tests: same pattern, one page per
-resource, frontmatter from manifest.
+For seeds: `.dbt-wiki/_evidence/seeds/<seed_name>.md`.
+For snapshots: `.dbt-wiki/_evidence/snapshots/<snapshot_name>.md`.
+For singular tests: `.dbt-wiki/_evidence/tests/<test_name>.md`.
+For exposures: `.dbt-wiki/_evidence/exposures/<exposure_name>.md`.
 
 ### Re-run merge behavior
 
-When `is_rerun = true` and a model page already exists:
+When `is_rerun = true` and an evidence model page already exists:
 
 1. Read existing frontmatter and body
 2. Build new frontmatter from current manifest + sqlglot
 3. Detect custom body sections (anything outside the standard sections defined in SCHEMA.md):
    - Standard: `## Description`, `## Materialization Notes`, `## SQL Preview`,
-     `## Column Sources (from sqlglot)`, `## Tests`, `## Cross-references`
-   - Custom: any other `##` section the user added
+     `## Inline Comments (from raw_code)`, `## Column Sources (from sqlglot)`,
+     `## Column Lineage Chains`, `## Tests`, `## Cross-references`
+   - Custom (user-owned): `## User Notes` and any other `##` section the user added
 4. Write new file: new frontmatter + standard sections regenerated +
    custom sections preserved verbatim at the end
 5. If new manifest doesn't contain a model previously documented:
-   move `.dbt-wiki/models/<orphaned>.md` to `.dbt-wiki/_archive/<today>/<orphaned>.md`,
-   don't hard-delete
+   move `.dbt-wiki/_evidence/models/<orphaned>.md` to
+   `.dbt-wiki/_archive/<today>/<orphaned>.md`, don't hard-delete
 
 ## Step 6: Generate index.md and lineage.md
 
 ### index.md
 
-Regenerate from current page listing. Group by:
-- Tier path (extract from `path`: `models/staging/` → Staging, `models/marts/` → Marts, etc.)
-- Materialization (from frontmatter)
-- Tags
-- Groups
-- Then: Sources, Macros (project + external), Seeds, Snapshots, Singular Tests, Exposures
+Regenerate as a **knowledge-first** catalog. The knowledge layer leads;
+structural grouping is demoted into an evidence sub-section. Sections
+in order:
+
+**Knowledge layer (lead):**
+- `## Entities` — one line per page in `entities/`: title + `summary`
+  frontmatter field + `status` lifecycle tag. If no entity pages exist
+  yet (Phase B has not run), emit a stub: `(none yet — run Phase B to
+  distill entities from the evidence layer)`.
+- `## Metrics` — same pattern for `metrics/` pages.
+- `## Concepts` — same pattern for `concepts/` pages.
+
+**Evidence layer (demoted — structural grouping):**
+- `## Evidence: Models` — grouped by tier path (`models/staging/` →
+  Staging, `models/marts/` → Marts, etc.). Links to
+  `.dbt-wiki/_evidence/models/<name>.md`.
+- `## Evidence: Models by Materialization` (table / view / incremental / ephemeral)
+- `## Evidence: Models by Tag`
+- `## Evidence: Models by Group`
+- `## Evidence: Sources` — links to `_evidence/sources/`.
+- `## Evidence: Macros (used)` — links to `_evidence/macros/`.
+- `## Evidence: Seeds / Snapshots / Tests / Exposures` — links to
+  corresponding `_evidence/` subdirs.
 
 Statistics block at end:
-- Total models, sources, macros (used)
+- Total evidence pages by type (models, sources, macros, seeds, etc.)
 - Column lineage extraction success rate (count + percent)
 - sqlglot parse failures (count, link to log.md)
+- Knowledge pages: entity count, metric count, concept count
 
 ### lineage.md
 
@@ -622,6 +688,63 @@ For each model, add an adjacency list entry: depends_on (refs / sources / macros
 
 If model count > 500, also produce tier-aggregated view at top.
 
+## Phase B: Knowledge Distillation (runs after Phase A evidence layer is complete)
+
+Phase A (Steps 1–6 above) builds the mechanical evidence layer
+deterministically from manifest.json + sqlglot. Phase B runs
+**after** the evidence layer is fully written. It is the LLM-driven
+knowledge distillation step that produces the knowledge layer
+(`entities/`, `metrics/`, `concepts/`).
+
+### Phase B orchestration
+
+1. Confirm Phase A completed — all `_evidence/` subdirs are populated
+   and `index.md` has been regenerated with evidence sections.
+2. Distill **entities** by following the procedure in
+   `references/distill-entities.md`. Each entity page records:
+   - `derived_from: [<evidence model unique_ids>]` — the evidence
+     pages it was distilled from (used by refresh for stale detection)
+   - `last_changed_by: "<commit SHA or PR#>"` — provenance of the
+     last distillation pass
+3. Distill **metrics** by following the procedure in
+   `references/distill-metrics.md`. If the project has MetricFlow
+   `semantic_models` / `metrics` in `manifest.json`, ingest them as
+   the authoritative input rather than re-deriving from SQL.
+   Same `derived_from` + `last_changed_by` provenance fields.
+4. Distill **concepts** by following the procedure in
+   `references/distill-concepts.md`. Same provenance fields.
+5. Regenerate `index.md` (Step 6) now that knowledge pages exist, so
+   the `## Entities`, `## Metrics`, `## Concepts` sections are
+   populated rather than stub placeholders.
+
+### Phase B spec files
+
+The three distillation procedures are defined in:
+- `references/distill-entities.md` — entity identification,
+  field dictionary, typed-link Relationships
+- `references/distill-metrics.md` — metric definition, algorithm
+  plain-language, MetricFlow-ingest-if-present branch
+- `references/distill-concepts.md` — cross-cutting business rules,
+  concept vs entity boundary criteria
+
+These files are the authoritative specs for Phase B. Read them before
+distilling. Do NOT invent distillation procedure that contradicts them.
+
+### Phase B provenance contract
+
+Every knowledge page produced by Phase B MUST carry:
+
+```yaml
+derived_from:
+  - model.example_dbt_project.stg_customers   # evidence unique_ids
+  - model.example_dbt_project.dim_customers
+last_changed_by: "PR #123"                     # or commit SHA
+```
+
+`derived_from` is the freshness anchor: `/dbt-wiki:refresh` uses it
+to detect which knowledge pages are stale when evidence models change
+(same overlap logic as `syntheses` `affected_models`).
+
 ## Step 7: Append init entry to log.md
 
 ```
@@ -632,9 +755,10 @@ If model count > 500, also produce tier-aggregated view at top.
   - <model_name>: <truncated reason>
   - ... (max 10 listed; full list in /tmp/dbt-wiki-init-failures.log if generated)
 - column_lineage_extracted: <success_count>/<total_models> (<percent>%)
-- Pages created (fresh): <models>/<sources>/<macros>/<seeds>/<snapshots>/<tests>/<exposures>
-- Pages updated (re-run): <count>
-- Pages archived (orphaned): <count>
+- Evidence pages created (fresh): <models>/<sources>/<macros>/<seeds>/<snapshots>/<tests>/<exposures>
+- Evidence pages updated (re-run): <count>
+- Evidence pages archived (orphaned): <count>
+- Knowledge pages created (Phase B): entities/<N>, metrics/<N>, concepts/<N>
 - Run type: <fresh | re-run>
 ```
 
@@ -648,25 +772,32 @@ Print to user:
   Manifest: <DBT_DIR>/target/manifest.json (sha: <sha>)
   Compiled SQL: <count> files parsed via sqlglot (<dialect>)
 
-  Generated:
-    - <N> model pages (column lineage: <success>/<total>)
-    - <N> source pages
-    - <N> macro pages (used by ≥1 model)
+  Phase A — Evidence layer:
+    - <N> model pages        → .dbt-wiki/_evidence/models/ (column lineage: <success>/<total>)
+    - <N> source pages       → .dbt-wiki/_evidence/sources/
+    - <N> macro pages        → .dbt-wiki/_evidence/macros/ (used by ≥1 model)
     - <N> seed / <N> snapshot / <N> singular test / <N> exposure
     - lineage.md (DAG depth: <N>; root sources: <N>; leaves: <N>)
-    - index.md (grouped by tier / materialization / tag / group)
+    - index.md (knowledge-first; evidence layer grouped by tier / tag / group)
+
+  Phase B — Knowledge layer:
+    - <N> entity pages       → .dbt-wiki/entities/
+    - <N> metric pages       → .dbt-wiki/metrics/
+    - <N> concept pages      → .dbt-wiki/concepts/
 
   Files updated:
     - .dbt-wiki/{SCHEMA,index,log,lineage}.md
-    - .dbt-wiki/{models,sources,macros,seeds,snapshots,tests,exposures}/*.md
+    - .dbt-wiki/_evidence/{models,sources,macros,seeds,snapshots,tests,exposures}/*.md
+    - .dbt-wiki/{entities,metrics,concepts}/*.md
     - .dbt-wiki/_internal/extract_column_lineage.py
     - CLAUDE.md drop-in (<created/appended/replaced>)
 
   Next steps:
-    1. Skim .dbt-wiki/index.md to see what was discovered
-    2. Try a query: /dbt-wiki:query "fct_orders 依賴什麼？"
-    3. After next dbt parse + dbt compile, run /dbt-wiki:refresh
-    4. (If installed) repo-wiki and dbt-wiki coexist — use repo-wiki for WHY
+    1. Skim .dbt-wiki/index.md — entities, metrics, and concepts are at the top
+    2. Try a semantic query: /dbt-wiki:query "customer 是什麼？"
+    3. Try a structural query: /dbt-wiki:query "fct_orders 依賴什麼？"
+    4. After next dbt parse + dbt compile, run /dbt-wiki:refresh
+    5. (If installed) repo-wiki and dbt-wiki coexist — use repo-wiki for WHY
 ```
 
 If sqlglot failures > 0, also print:
