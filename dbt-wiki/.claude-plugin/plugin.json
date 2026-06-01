@@ -1,6 +1,6 @@
 {
   "name": "dbt-wiki",
-  "version": "1.3.0",
+  "version": "2.0.0",
   "description": "Local-only LLM-queryable knowledge base for dbt projects — reads manifest.json + compiled SQL via sqlglot for column-level lineage; queries model structure / lineage / refactor impact / tribal knowledge. No dbt Cloud needed.",
   "author": {
     "name": "kouko",
