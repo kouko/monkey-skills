@@ -151,6 +151,70 @@ models in `derived_from:`. Capture the segment split itself as a
 page via a `depends_on` edge. Do NOT fork one metric page per segment —
 that creates near-duplicate pages that diverge over time.
 
+### 3c. Materialization detection
+
+Before writing the metric page, decide whether the metric's
+period/segment variants are already **pre-materialized into physical mart
+columns** — meaning the values are fully computed at build time and a
+consumer query only needs to `SELECT` the column with no query-time
+`GROUP BY` or aggregation.
+
+**Heuristic signal list (check all that apply):**
+
+1. **Mart/reporting layer** — the source model lives under
+   `models/marts/`, `models/reporting/`, `models/finance/`, or a
+   similarly named output layer (not `staging/` or `intermediate/`).
+2. **Column forest** — the model exposes many columns that share a base
+   measure name with period or segment suffixes:
+   e.g. `gmv_mtd`, `gmv_ytd`, `gmv_mom`, `gmv_l30d`, `gmv_online`,
+   `gmv_offline`, `revenue_daily`, `revenue_qtd`, `revenue_yoy`. A
+   column forest is present when five or more such sibling columns exist
+   for the same base measure.
+3. **Schema.yml description signals a stored value** — the column
+   description says the column "holds", "stores", "contains the
+   pre-computed", or "is the [period] value of" the measure rather than
+   describing an aggregation the model performs (e.g. "MTD gross
+   merchandise value as of the reporting date" rather than "sum of daily
+   GMV grouped by month").
+4. **One-row-per-(entity/period) grain, aggregation upstream** — the
+   model is already at a wide, pre-aggregated grain (e.g. one row per
+   store per calendar day) where the aggregation happened at model build
+   time, not at query time. The compiled SQL has no `GROUP BY` in the
+   final SELECT, or the `GROUP BY` covers only the primary key dimensions
+   (store_id, date) rather than computing measure sums.
+
+**Materialized vs still-needs-aggregation — the deciding test:**
+
+| Scenario | Verdict |
+|---|---|
+| Consumer query is `SELECT gmv_mtd FROM mart_store_metrics WHERE store_id = X AND date = Y` — no aggregation, column value is the answer | **Pre-materialized** → materialization fires |
+| Consumer query must `SELECT SUM(revenue) FROM fct_orders WHERE store_id = X GROUP BY date_trunc('month', order_date)` to produce the measure | **Still needs aggregation** → materialization does NOT fire |
+
+A model with a `GROUP BY` in its final SELECT is NOT pre-materialized
+unless that `GROUP BY` covers only the key dimensions and the measure
+column is already the aggregated result (i.e. the aggregation was done
+in a CTE, not at the top level).
+
+**Routing:**
+
+- **Detection fires** (two or more signals present, especially signals 2
+  and 4): the metric's variants are pre-materialized. Add a
+  `## Materialized Columns` section to the metric page (the full output
+  spec for this section is defined by the sibling task in this plan;
+  the section maps period/segment variants to physical `model.column`
+  references so a text-to-SQL consumer can SELECT directly). Adjust
+  `## Calculation` to state that values are pre-computed — see §5 for
+  the adjusted Calculation wording for materialized metrics.
+- **Detection does not fire**: proceed with the existing formula path
+  (numerator/denominator in §5) or the no-formula fallback (§5
+  aggregation/grain/period-variants prose). Do NOT add a
+  `## Materialized Columns` section.
+
+**One-page rule is unchanged.** Materialization detection does not fork
+pages. The "one metric = one page" rule from §1 still holds.
+Materialization only changes HOW `## Calculation` is written and adds
+the `## Materialized Columns` mapping section to the same page.
+
 ---
 
 ## 4. Definition Section
