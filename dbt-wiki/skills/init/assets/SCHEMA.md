@@ -252,17 +252,6 @@ Body sections:
 <the algorithm in plain language — how it's computed, the grain it's
 computed at, edge cases. Cite the aggregation SQL in evidence.>
 
-## Caveats
-<data-quality / coverage caveats, sourced from evidence-layer tests>
-
-## Relationships
-<typed edges:
-- measures → [Customer](../entities/customer.md) — GROUP BY grain
-- depends_on → [Active Customer](../concepts/active-customer.md) — algorithm dependency>
-
-## Evidence
-<cite the _evidence/ model(s) this metric is computed in>
-
 ## Materialized Columns
 _(Optional — include ONLY when the metric's variants are pre-materialized
 into mart columns: values are already computed and a consumer can SELECT
@@ -286,6 +275,17 @@ every column. Enumerate individually only when naming is irregular.
 See `references/distill-metrics.md` for the production procedure:
 materialization detection signals, forest-compression rules, and a
 worked example.
+
+## Caveats
+<data-quality / coverage caveats, sourced from evidence-layer tests>
+
+## Relationships
+<typed edges:
+- measures → [Customer](../entities/customer.md) — GROUP BY grain
+- depends_on → [Active Customer](../concepts/active-customer.md) — algorithm dependency>
+
+## Evidence
+<cite the _evidence/ model(s) this metric is computed in>
 ```
 
 ### knowledge-concept
