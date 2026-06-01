@@ -266,11 +266,11 @@ business population entity exists (e.g. Store), still target it and
 append the time-grain detail to `note`. If no clear entity exists,
 target the most relevant entity available with the grain noted.
 
-**Entity not yet distilled.** If the target entity page has not been
-produced yet (the entity is outside the current evidence slice), still
-emit the `measures` edge. Append `"(entity not yet distilled)"` to the
-`note` value so the edge resolves automatically once that entity page is
-added. Do NOT drop the edge because the target file is absent.
+**Entity not yet distilled.** If the target entity page does not exist yet
+(the entity is outside the current evidence slice), follow SCHEMA's
+*Dangling edge targets* rule (`assets/SCHEMA.md`, Relationships spec): emit
+the `measures` edge AND create a `status: seed` stub page for the target so
+the markdown link resolves. Do NOT leave a broken link or drop the edge.
 
 ### 7b. `depends_on` edge — metric → concept (algorithm dependency)
 
