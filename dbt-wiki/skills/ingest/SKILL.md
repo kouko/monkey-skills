@@ -61,10 +61,10 @@ Exit cleanly if no arg.
 
 Parse the user's argument text for resource names. Match against
 existing pages under:
-- `.dbt-wiki/models/*.md` — model names
-- `.dbt-wiki/sources/*.md` — source names (in form `<source>__<table>`)
-- `.dbt-wiki/macros/*.md` — macro names
-- `.dbt-wiki/seeds/*.md`, `snapshots/*.md`, `exposures/*.md`
+- `.dbt-wiki/_evidence/models/*.md` — model names
+- `.dbt-wiki/_evidence/sources/*.md` — source names (in form `<source>__<table>`)
+- `.dbt-wiki/_evidence/macros/*.md` — macro names
+- `.dbt-wiki/_evidence/seeds/*.md`, `_evidence/snapshots/*.md`, `_evidence/exposures/*.md`
 
 Matching strategy:
 1. **Exact name match**: tokens in the argument that exactly match a
@@ -134,7 +134,7 @@ NEVER:
 
 ```
 ✓ Note attached to <N> page(s):
-  - .dbt-wiki/models/fct_orders.md  (### 2026-05-02 sort-key-rationale)
+  - .dbt-wiki/_evidence/models/fct_orders.md  (### 2026-05-02 sort-key-rationale)
 
   To verify: /dbt-wiki:query "fct_orders sort key 為什麼這樣設？"
   To add more: /dbt-wiki:ingest "<another note>"
