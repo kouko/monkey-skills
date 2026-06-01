@@ -390,7 +390,7 @@ is supported.
 
 | Situation | Action |
 |---|---|
-| `manifest["semantic_models"]` or `manifest["metrics"]` present | MetricFlow ingest branch (§2b) — do not re-derive |
+| `manifest["semantic_models"]` present (gate on this key ALONE — see §2a; a bare `metrics` key without `semantic_models` is legacy dbt ≤1.5, NOT MetricFlow) | MetricFlow ingest branch (§2b) — do not re-derive |
 | No MetricFlow, mart model with `SUM`/`COUNT` + `GROUP BY` | SQL-derivation branch (§3) |
 | Multiple metrics in one model | One page per distinct business measure; share `derived_from` |
 | Metric depends on a concept page | Add `depends_on` edge in both frontmatter and `## Relationships` |
