@@ -114,17 +114,20 @@ phrase explaining how:
 ```markdown
 ## Applies To
 
-- **Customer** (`entities/customer.md`) — `is_active_customer` flag
-  computed in `dim_customers`; used to segment active vs. inactive cohorts.
-- **Churn Rate** (`metrics/churn-rate.md`) — denominator of churn
-  calculation is "active customers at start of period".
-- **Monthly Active Users** (`metrics/monthly-active-users.md`) —
+- **Customer** ([customer.md](../entities/customer.md)) —
+  `is_active_customer` flag computed in `dim_customers`; used to segment
+  active vs. inactive cohorts.
+- **Churn Rate** ([churn-rate.md](../metrics/churn-rate.md)) —
+  denominator of churn calculation is "active customers at start of period".
+- **Monthly Active Users** ([monthly-active-users.md](../metrics/monthly-active-users.md)) —
   definition reuses the same 90-day window.
 ```
 
-Use prose links here (standard markdown, not wikilinks). The machine-
-readable version of these edges goes in the `relationships:` frontmatter
-— see Section 5.
+Use standard markdown hyperlinks here (relative paths, NO `[[wikilinks]]`),
+exactly as in the §7 worked example. The example above is illustrative;
+the §7 worked example is the definitive template. The machine-readable
+version of these edges goes in the `relationships:` frontmatter — see
+Section 5.
 
 ---
 
