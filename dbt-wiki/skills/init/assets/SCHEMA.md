@@ -301,7 +301,9 @@ Edge types:
 
 | `type` | From → To | Inferred from |
 |---|---|---|
-| `depends_on` / `joins` | entity ↔ entity | shared join key / `depends_on` in evidence |
+| `depends_on` | entity → entity (directional) | the FROM entity holds a FK to the TO entity (child → parent). Emit on the FK-holder side. |
+| `joins` | entity ↔ entity (navigational) | a query-time join with no clear ownership direction, OR the parent-side reverse edge of a one-to-many (optional, for graph navigability). **NOT a synonym of `depends_on`** — use `depends_on` whenever an ownership direction is clear. |
+| `converts_to` | entity → entity (lifecycle) | the FROM entity transitions INTO the TO entity via a conversion FK (e.g. a Lead's `converted_opportunity_id` — a converted lead *becomes* an opportunity). One-directional and usually conditional (`WHERE is_converted`). |
 | `measures` | metric → entity | the GROUP BY grain the metric aggregates over |
 | `depends_on` | metric → concept | algorithm dependency (metric uses a rule) |
 | `applies_to` | concept → entity / metric | the rule is encoded in that entity/metric |
@@ -315,6 +317,15 @@ relationships:
     target: ../entities/customer.md     # relative markdown-link target
     note: "GROUP BY customer_id grain"  # optional one-line rationale
 ```
+
+**Dangling edge targets (FK points to an un-distilled entity).** When an
+edge target entity has NO model in the current evidence slice (e.g. a
+`converted_contact_id` FK whose Contact entity isn't distilled yet), still
+emit the edge AND create a `status: seed` stub page for the target
+(`derived_from: []`, a one-line body noting it is an auto-stub) so the
+markdown link resolves. The next init/refresh that distills the target
+promotes the stub `seed → developing`. Never drop an edge just because its
+target page doesn't exist yet.
 
 The `## Evidence` body section is the human-facing rendering of the
 `evidence`-type edges; `derived_from:` frontmatter is its machine-facing

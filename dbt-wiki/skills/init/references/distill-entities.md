@@ -199,8 +199,9 @@ Permitted edge types for entity pages:
 
 | Edge type | From → To | When to emit |
 |---|---|---|
-| `depends_on` | entity → entity | Two entities share a join key (FK relationship). |
-| `joins` | entity ↔ entity | Alternative label when the join is bidirectional in queries (e.g., Order ↔ Customer is a standard JOIN not an ownership hierarchy). Use `depends_on` when directionality is clear. |
+| `depends_on` | entity → entity (directional) | The FROM entity holds a FK to the TO entity (child → parent, e.g. `opportunity.account_id` → Opportunity `depends_on` Account). Emit on the **FK-holder** side. |
+| `joins` | entity ↔ entity (navigational) | A query-time join with no clear ownership direction, OR the **parent-side reverse edge** of a one-to-many you add for graph navigability (e.g. Account `joins` Opportunity so the graph is walkable from the parent). NOT a synonym of `depends_on`. |
+| `converts_to` | entity → entity (lifecycle) | A **conversion / lifecycle-transition FK** — the FROM entity *becomes* the TO entity (e.g. a Lead's `converted_opportunity_id` / `converted_account_id`; once `is_converted`, the lead turns into an Opportunity + Account). Use this, NOT `depends_on`, for `converted_*`/`promoted_*`-style pointers — they are not ongoing structural dependencies. |
 
 ### 4.2 How to derive edges from evidence
 
@@ -216,6 +217,28 @@ Permitted edge types for entity pages:
 
 Emit an edge only when at least one of these signals is present. Do not
 invent edges from name similarity alone.
+
+4. **Conversion / lifecycle FKs** → `converts_to`. A column like
+   `converted_opportunity_id` / `converted_account_id` (often paired with
+   an `is_converted` flag + `converted_date`) means the FROM entity
+   *becomes* the TO entity. Emit `converts_to` from Lead → Opportunity /
+   Account, NOT `depends_on` — a lead does not structurally depend on the
+   account; the account is the artifact the lead turned into.
+
+**Direction & reverse edges.** Encode the canonical edge on the
+**FK-holder** (child) side as `depends_on → parent`. You MAY add the
+reverse edge on the parent page as `joins → child` purely for graph
+navigability ("show me all opportunities for this account") — but
+`depends_on` and `joins` are NOT synonyms: the child→parent ownership is
+`depends_on`; the parent→child convenience edge is `joins`.
+
+**Dangling target (FK points to an un-distilled entity).** When a FK
+target entity has no model in the current evidence slice (e.g. a
+`converted_contact_id` whose Contact entity isn't in scope), still emit
+the edge, and create a `status: seed` stub page for the target with
+`derived_from: []` and a one-line body noting it is an auto-stub — so the
+markdown link resolves. A later init/refresh that distills the target
+promotes it `seed → developing`. Never drop the edge.
 
 ### 4.3 Frontmatter shape
 
