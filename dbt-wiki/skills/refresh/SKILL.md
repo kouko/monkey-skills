@@ -22,7 +22,7 @@ description: |
   the wiki (use /dbt-wiki:query), running dbt itself (use dbt CLI).
 ---
 
-# dbt-wiki — Refresh Workflow (v1.0)
+# dbt-wiki — Refresh Workflow (v2.0)
 
 Refresh is the **daily / per-feature update** path. It assumes init has
 already run (so `.dbt-wiki/` + `SCHEMA.md` + `_internal/` exist) and only
@@ -140,10 +140,10 @@ import json
 new_manifest = json.load(open(f"{DBT_DIR}/target/manifest.json"))
 new_models = {nid: n for nid, n in new_manifest['nodes'].items() if n.get('resource_type') == 'model'}
 
-# Read existing model pages from .dbt-wiki/models/*.md
+# Read existing model pages from .dbt-wiki/_evidence/models/*.md
 import glob, os
 existing_pages = {}
-for path in glob.glob('.dbt-wiki/models/*.md'):
+for path in glob.glob('.dbt-wiki/_evidence/models/*.md'):
     with open(path) as f:
         content = f.read()
         # Parse frontmatter to get unique_id
@@ -196,21 +196,22 @@ For each model in `added`:
        "$DBT_DIR/target/compiled/$PROJECT/${original_file_path}" redshift > /tmp/cl.json
    ```
 2. Reconcile sqlglot output with schema.yml columns
-3. Write `.dbt-wiki/models/<model_name>.md` per SCHEMA's `model` page type
-4. (Same for sources, macros, etc.)
+3. Write `.dbt-wiki/_evidence/models/<model_name>.md` per SCHEMA's `model` page type
+4. (Same for sources → `.dbt-wiki/_evidence/sources/`, macros → `.dbt-wiki/_evidence/macros/`, etc.)
 
 ## Step 4: Process modifications
 
 For each model in `modified`:
 
-1. Read existing page; preserve **custom body sections** (anything outside
-   the standard sections defined in SCHEMA.md):
+1. Read existing page from `.dbt-wiki/_evidence/models/<model_name>.md`; preserve
+   **custom body sections** (anything outside the standard sections defined in SCHEMA.md):
    - Standard: `## Description`, `## Materialization Notes`, `## SQL Preview`,
      `## Column Sources (from sqlglot)`, `## Tests`, `## Cross-references`
    - Custom: any other `##` heading the user added → preserve verbatim at end
 2. Re-run column lineage extraction (Step 3a above)
 3. Build new frontmatter from current manifest + sqlglot output
-4. Write merged file: new frontmatter + regenerated standard sections + preserved custom
+4. Write merged file back to `.dbt-wiki/_evidence/models/<model_name>.md`:
+   new frontmatter + regenerated standard sections + preserved custom
 
 ## Step 5: Process removals (archive, don't delete)
 
@@ -218,7 +219,7 @@ For each model in `removed`:
 
 ```bash
 mkdir -p .dbt-wiki/_archive/<today>/
-mv .dbt-wiki/models/<orphan>.md .dbt-wiki/_archive/<today>/
+mv .dbt-wiki/_evidence/models/<orphan>.md .dbt-wiki/_archive/<today>/
 ```
 
 Add a comment line in the moved file's frontmatter:
@@ -239,19 +240,27 @@ Never hard-delete. User can restore from `_archive/` if needed.
 
 These two files are derived; regenerate from scratch every refresh:
 
-- `index.md`: re-scan `.dbt-wiki/{models,sources,macros,...}/*.md` (skip `_archive/`),
-  group by tier / materialization / tag / group, write
+- `index.md`: **knowledge-first** — re-scan `.dbt-wiki/{entities,metrics,concepts}/*.md`
+  first (knowledge layer leads), then re-scan `.dbt-wiki/_evidence/{models,sources,macros,...}/*.md`
+  (skip `_archive/`). Sections in order: Entities → Metrics → Concepts → Evidence: Models
+  (grouped by tier / materialization / tag / group) → Evidence: Sources → Evidence: Macros (used)
+  → Evidence: Seeds / Snapshots / Tests / Exposures.
 - `lineage.md`: from new manifest, build DAG (depends_on / feeds_into),
   produce ASCII tree + adjacency list
 
-## Step 6.5: Mark stale syntheses (do NOT regenerate, just flag)
+## Step 6.5: Mark stale syntheses and knowledge pages (do NOT regenerate, just flag)
 
-Syntheses (saved query answers from `/dbt-wiki:query` Step 6.5) capture
-point-in-time answers + diagrams. When the manifest changes, those
-answers may become inaccurate — but we don't auto-regenerate (LLM
-cost + answer wording would drift each refresh, breaking git diff
-stability). Instead: mark them stale, let the user decide whether to
-re-query.
+**MVP scope**: this step only **flags** stale pages — it does NOT
+auto-re-distill knowledge pages. Re-distillation is user-triggered
+(run `/dbt-wiki:init` Phase B or a dedicated re-distill command).
+Auto-redistillation is a documented fast-follow, not part of refresh
+MVP. This keeps refresh cheap: no LLM calls, purely deterministic.
+
+Syntheses (saved query answers from `/dbt-wiki:query`) and knowledge
+pages (`entities/`, `metrics/`, `concepts/`) both capture point-in-time
+content. When the manifest changes, that content may become inaccurate —
+but we don't auto-regenerate. Instead: mark them stale, let the user
+decide whether to re-distill / re-query.
 
 ```python
 # Pseudocode for refresh's stale-detection logic:
@@ -263,7 +272,8 @@ changed_uids = set()
 for uid in added | modified | removed:    # from Step 2's diff
     changed_uids.add(uid)
 
-# For each non-archived synthesis, check overlap
+# --- Part A: Syntheses ---
+# For each non-archived synthesis, check overlap via affected_models
 for path in glob.glob('.dbt-wiki/syntheses/*.md'):
     content = Path(path).read_text()
     # Parse frontmatter (YAML between first two `---`)
@@ -277,48 +287,95 @@ for path in glob.glob('.dbt-wiki/syntheses/*.md'):
     if not affected:
         # No precise tracking — fall back to manifest_sha drift
         if fm.get('manifest_sha') != new_sha:
-            mark_stale(path, fm, reason="manifest_sha drift (no affected_models tracking)")
+            mark_stale(path, fm, content, reason="manifest_sha drift (no affected_models tracking)")
         continue
 
     # Precise check: do any of THIS synthesis's affected models appear in this refresh's diff?
     overlap = affected & changed_uids
     if overlap:
-        mark_stale(path, fm, reason=f"affected_models changed: {sorted(overlap)}")
+        mark_stale(path, fm, content, reason=f"affected_models changed: {sorted(overlap)}")
+
+# --- Part B: Knowledge pages (entities/, metrics/, concepts/) ---
+# Uses the SAME mark_stale mechanism. No LLM calls — purely frontmatter + file writes.
+knowledge_stale_count = 0
+for pattern in ['.dbt-wiki/entities/*.md', '.dbt-wiki/metrics/*.md', '.dbt-wiki/concepts/*.md']:
+    for path in glob.glob(pattern):
+        content = Path(path).read_text()
+        fm_text = content.split('---')[1] if content.startswith('---') else ''
+        fm = yaml.safe_load(fm_text) or {}
+
+        if fm.get('stale') or fm.get('status') == 'archived':
+            continue   # already marked or archived; skip
+
+        # derived_from: list of evidence model unique_ids this page was distilled from.
+        # Intersect with changed_uids to determine if any source evidence changed.
+        derived = set(fm.get('derived_from', []))
+        if not derived:
+            continue   # no provenance recorded — cannot detect stale; skip
+
+        overlap = derived & changed_uids
+        if overlap:
+            mark_stale(path, fm, content,
+                       reason=f"derived_from evidence changed: {sorted(overlap)}")
+            knowledge_stale_count += 1
+
+# Store knowledge_stale_count for Step 7 log and Step 8 summary.
 
 
-def mark_stale(path, fm, reason):
+def mark_stale(path, fm, content, reason):
     """Update frontmatter (stale: true, stale_at: today, stale_reason: ...)
     AND prepend a banner to the body so user sees it immediately when opening
-    the .md file in their IDE."""
+    the .md file in their IDE. Reused by both syntheses and knowledge pages."""
     fm['stale'] = True
     fm['stale_at'] = today
     fm['stale_reason'] = reason
     new_fm = yaml.safe_dump(fm, sort_keys=False, allow_unicode=True)
 
     body = content.split('---', 2)[2]   # everything after frontmatter
+
+    # Banner wording adapts to page type
+    is_knowledge = fm.get('type', '').startswith('knowledge-')
+    if is_knowledge:
+        rerun_hint = (
+            f'Re-distill this page after reviewing the changed evidence:\n'
+            f'>\n'
+            f'> ```\n'
+            f'> /dbt-wiki:init  # Phase B re-distill (fast-follow; user-triggered)\n'
+            f'> ```'
+        )
+    else:
+        rerun_hint = (
+            f'Re-run to get fresh answer + diagram:\n'
+            f'>\n'
+            f'> ```\n'
+            f'> /dbt-wiki:query "{fm.get("question", "?")}"\n'
+            f'> ```'
+        )
+
     banner = f"""
-> ⚠️ **STALE WARNING** ({today}): {reason}.
-> The answer below was correct at the time of saving (manifest_sha:
-> `{fm.get('manifest_sha', '?')}`), but underlying models have changed
-> since. Re-run to get fresh answer + diagram:
->
-> ```
-> /dbt-wiki:query "{fm.get('question', '?')}"
-> ```
+> **STALE WARNING** ({today}): {reason}.
+> Original content below was correct at the time it was last generated
+> (manifest_sha: `{fm.get('manifest_sha', '?')}`), but underlying
+> evidence models have changed since. {rerun_hint}
 
 """
     Path(path).write_text(f'---\n{new_fm}---\n{banner}{body}')
 ```
 
-Stale detection is **non-destructive**: original answer + diagrams stay
-intact (user can still read them, just with full awareness they're
-stale). Re-running query overwrites the synthesis with fresh content
-and clears the stale flag.
+Stale detection is **non-destructive**: original content (answer /
+diagrams / distilled knowledge) stays intact — user can still read it
+with full awareness it may be outdated. For syntheses, re-running the
+query overwrites with fresh content and clears the stale flag. For
+knowledge pages, re-distillation (user-triggered) clears the flag.
 
-If `affected_models` is missing from a v1.2-or-earlier synthesis,
-fall back to `manifest_sha` drift (less precise but always works).
+If a knowledge page has no `derived_from` list, it cannot be
+precisely stale-detected and is skipped (no false positives).
 
-Report stale count in summary (Step 8): "Synthesis stale: N marked".
+If `affected_models` is missing from a v1.x synthesis, fall back to
+`manifest_sha` drift (less precise but always works).
+
+Report stale counts in summary (Step 8): "Syntheses stale: N marked.
+Knowledge pages stale: M marked (entities: X, metrics: Y, concepts: Z)."
 
 ## Step 7: Append refresh entry to log.md
 
@@ -333,6 +390,8 @@ Report stale count in summary (Step 8): "Synthesis stale: N marked".
 - sqlglot_failures: <count> (only counted for added/modified)
 - column_lineage_extracted: <count>/<total updated> (<percent>%)
 - Syntheses marked stale: <N> (out of <total> non-archived)
+- Knowledge pages marked stale: <M> (entities: <X>, metrics: <Y>, concepts: <Z>)
+  (stale = flagged only; re-distill is user-triggered)
 ```
 
 ## Step 8: Summary Report
@@ -346,16 +405,27 @@ Report stale count in summary (Step 8): "Synthesis stale: N marked".
     - Macros: +<a> ~<m> -<r>
 
   Updated:
-    - .dbt-wiki/models/*.md, sources/*.md, macros/*.md (changed pages only)
+    - .dbt-wiki/_evidence/models/*.md, _evidence/sources/*.md,
+      _evidence/macros/*.md (changed pages only)
     - .dbt-wiki/lineage.md (regenerated)
-    - .dbt-wiki/index.md (regenerated)
+    - .dbt-wiki/index.md (regenerated, knowledge-first)
     - .dbt-wiki/log.md (refresh entry appended)
 
   Archived (in .dbt-wiki/_archive/<today>/): <removed_count> pages
     (recoverable — never hard-deleted)
 
+  Stale flags set (no content modified — original content preserved):
+    - Syntheses:      <N> marked stale (of <total> non-archived)
+    - Knowledge pages: <M> marked stale
+        entities: <X>  metrics: <Y>  concepts: <Z>
+    NOTE: Knowledge pages are flagged only. Re-distillation is
+    user-triggered (not automatic). This keeps refresh free of LLM calls.
+    To re-distill a stale knowledge page, open it and run:
+      /dbt-wiki:init   # or a targeted re-distill once fast-follow ships
+
   Next steps:
     - Query: /dbt-wiki:query "<question>"
+    - Review stale knowledge pages and re-distill as needed
     - For major refactor (e.g., 50+ model change), consider /dbt-wiki:init for clean rebuild
 ```
 
