@@ -4,7 +4,7 @@
 
 > Local-only LLM 可查詢的 dbt 專案**語意知識庫**，採雙層架構：**知識層**（LLM 蒸餾的業務物件／指標／橫切業務規則）由**證據層**（manifest + sqlglot 機械萃取的結構血緣）支撐。Query 用業務語言問「churn 是什麼意思」「哪些實體跟營收有關」「這個指標怎麼算」，以及既有的結構血緣問題——**不需 dbt Cloud、不離開機器**。
 
-**Version**: 1.0.0 · **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) · **License**: MIT
+**Version**: 2.0.0 · **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) · **License**: MIT
 
 ## 背景
 
@@ -90,11 +90,11 @@ init 分兩階段：Phase A 機械建證據層，Phase B LLM 蒸餾知識層。
   _archive/<date>/       # refresh 時 orphaned 的頁面（永不硬刪）
 ```
 
-## Column-level lineage（最大差異化）
+## 證據層：column-level lineage
 
-dbt 的 `manifest.json` 給你 **model-level** lineage（`fct_orders` depends on `stg_orders`）但**不給 column-level**（`fct_orders.customer_id` 從 `stg_orders.customer_id` 來）。
+知識層的支撐證據。dbt 的 `manifest.json` 給你 **model-level** lineage（`fct_orders` depends on `stg_orders`）但**不給 column-level**（`fct_orders.customer_id` 從 `stg_orders.customer_id` 來）。
 
-dbt-wiki 用 sqlglot parse `target/compiled/<project>/**/*.sql`（jinja 已被 `dbt compile` 展開）抽出 column-level lineage：
+證據層用 sqlglot parse `target/compiled/<project>/**/*.sql`（jinja 已被 `dbt compile` 展開）抽出 column-level lineage——這是知識層蒸餾的原料，也是結構問句的真實源：
 
 ```yaml
 columns:
@@ -121,11 +121,11 @@ columns:
 
 任意交叉連結：
 ```markdown
-<!-- in .dbt-wiki/models/fct_orders.md -->
+<!-- in .dbt-wiki/_evidence/models/fct_orders.md -->
 WHY: see [.repo-wiki/sources/2026-04-29-fsd-management-report-...](../.repo-wiki/sources/...)
 
 <!-- in .repo-wiki/entities/DbtModels.md -->
-For current dependencies of fct_orders, see [fct_orders](.dbt-wiki/models/fct_orders.md)
+For current dependencies of fct_orders, see [fct_orders](.dbt-wiki/_evidence/models/fct_orders.md)
 ```
 
 CLAUDE.md drop-in 用不同 marker（`<!-- dbt-wiki:start --> ... <!-- dbt-wiki:end -->` vs `<!-- repo-wiki:start --> ... <!-- repo-wiki:end -->`）兩者互不覆蓋。
