@@ -1,4 +1,4 @@
-# Wiki Lint — 14 Health Checks
+# Wiki Lint — 15 Health Checks
 
 Categorized into **structural** (format violations), **semantic** (content health), and **provenance** (source/citation integrity).
 
@@ -51,6 +51,8 @@ Mermaid code blocks (` ```mermaid ... ``` `) only allowed in `wiki-synthesis` pa
 ### L06 — Orphan pages
 A page is orphan if NO other wiki page links to it (`## Connections` of others doesn't reference it, no inline `[[link]]` mentions). Output → **warning** with suggestion: "consider deletion or linking".
 
+Before treating a page as an orphan, check it is not an L15 near-duplicate candidate first — otherwise the "link via cross-linker" recommendation would entrench a duplicate by linking the dup page instead of merging it (resolve the L15 merge first, then re-evaluate the survivor for orphanhood).
+
 Reference pages are exempt (always orphan-by-design until consumed).
 
 ### L07 — Broken wikilinks
@@ -89,6 +91,27 @@ When a page's filename slug uses a different language script than its body langu
 - `wiki/concepts/supply-chain-resilience.md` (ASCII slug) with zh-TW body → must have `aliases: [供應鏈韌性]` or similar → missing → **warning**
 
 **Exemptions**: pages where slug and body language are the same script are exempt (no alias required). Pages with `status: archived` are exempt.
+
+### L15 — Near-duplicate pages
+
+Two existing wiki pages that describe the **same real-world entity** under different filenames (e.g. `Thompson-Sampling` and `Thompson-Sampling-MAB`). L07 already catches *exact* filename collisions; L15 catches the *near*-duplicate gap exact matching misses. This is the audit-time / read-only counterpart to wiki-ingest's STEP 4c prevent-new hook.
+
+**Scope**: all-pairs sweep over existing `wiki/{entities,concepts,synthesis,skills,journal}/*.md` pages. `wiki/references/*.md` are **exempt** — reference pages are per-source citation records (one per source ingest), not curated entities, so two references citing similar sources are not duplicates.
+
+**Detection method** (applied INLINE — do not cross-read another skill's file; the method is stated here in full, consistent with [near-duplicate-detection.md](../../wiki-ingest/references/near-duplicate-detection.md), which is an intentional duplicate per repo skill-independence convention — keep the two in sync). Three stages, applied in order to every page pair:
+
+1. **Normalize** each page's `title`, each `aliases` entry, and the filename slug to a comparison key: lowercase → replace `-`/`_` with single spaces → collapse whitespace + trim → drop **trailing** qualifier tokens (short all-caps acronyms like `-MAB`/`-LLM`/`-RAG`/`-API`; generic category words `algorithm(s)`/`method(s)`/`model(s)`/`concept`/`framework`/`approach`/`technique`/`entity`/`company`/`inc`/`corp`/`ltd`; `name-qualifier` repo disambiguators). Strip only trailing qualifiers; never an interior word. Normalization deliberately over-collapses — Stage 3 is the authority on same-vs-different.
+
+2. **Block (candidate generation)** — for each pair, compute string similarity between normalized keys across `title`, each `aliases` entry, and slug (compute these as prose, same as L07's "Levenshtein distance ≤2"). Surface a pair as a candidate when **any** holds on the best-matching field pair (title↔title, title↔alias, alias↔alias, slug↔slug): normalized keys equal; **Levenshtein ≤2**; **Jaro-Winkler ≥0.92**; or one normalized key is a whole-word prefix of the other. Pairs clearing none are never looked at — this is the cost-control step that keeps the judge to a handful of genuinely-similar pairs. Always include `aliases` on **both** sides.
+
+3. **LLM-as-judge confirm** — for each surfaced pair, the executing LLM reads both pages' `title` + `## Summary` + `## Key Facts` (highest-signal bounded sections; not full bodies) and returns a `same`/`different` verdict, a one-line reason (the deciding evidence), and a self-reported confidence:
+   - **HIGH** — clearly the **same** entity; titles/aliases and Key Facts corroborate, no contradicting facts.
+   - **MID** — **plausibly** the same, but evidence is thin or partially conflicting; needs human eyes.
+   - **LOW** — **probably distinct**; lexically close but content diverges (different class, contradictory facts, coincidental name overlap).
+
+   Confidence is the judge's self-report, not a computed score (no-ML constraint — string metrics + LLM judgment only, no embeddings / vector DB / scoring service). When unsure between two tiers, pick the **lower** (bias against over-merging).
+
+Output each `same`-verdict pair → **warning**, annotated with the confidence tier and the one-line reason, plus the recommendation: "run `/wiki-merge <slug-a> <slug-b>` to consolidate". **HIGH and MID are surfaced**; **LOW is treated as distinct and not surfaced** (same disposition as the prevent-new hook — keeps the two intentional duplicates in sync). Read-only — L15 never auto-merges; `/wiki-merge` is human-gated.
 
 ## Provenance (source / citation integrity)
 
@@ -157,6 +180,7 @@ WARNINGS (7):
   L06: skills/setup-x.md — orphan (no inbound links)
   L08: concepts/old-idea.md — stale (updated 2026-01-15, status=developing)
   L09: entities/qux.md — has facts but no Sources section
+  L15: concepts/thompson-sampling.md + concepts/thompson-sampling-mab.md — near-duplicate (HIGH): same Bayesian MAB algorithm; run `/wiki-merge thompson-sampling thompson-sampling-mab` to consolidate
   ...
 
 INFO (2):
@@ -187,3 +211,4 @@ Run `/wiki-auto-research` to address Open Questions surfaced.
 | L12 | Re-ingest stale page from current source, OR add `## Contradictions` block on canonical entity page documenting the disagreement (with as-of-date if time-sensitive) |
 | L13 | Add `aliases:` field to frontmatter with the native-language title (e.g. `aliases: [余白, yohaku]`). Re-run `/wiki-ingest` on the source if you want the wiki page rebuilt (see language-policy.md §4. Aliases Conditional MUST) |
 | L14 | Re-run `/wiki-ingest` on the source (regenerates `## Source` with correct format), OR hand-edit: take `source_path` from frontmatter, strip folder path and `.md` extension, write as `[[basename]]` |
+| L15 | Run `/wiki-merge` on the confirmed pair (human-gated; archives the absorbed page, reversible) |

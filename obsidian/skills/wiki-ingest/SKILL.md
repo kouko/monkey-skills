@@ -174,6 +174,14 @@ Algorithm:
    - If different subject → disambiguate the new page's slug with a qualifier: `<slug>-<qualifier>.md` (e.g., `qlib.md` already exists as Microsoft's library → new conceptual entry becomes `qlib-language.md`).
 4. Surface the disambiguation to the user before writing — do not silently rename.
 
+**Near-duplicate check** (after the exact-name check above, before writing a new page):
+
+The exact-name check only catches identical slugs. Run **near-duplicate detection** per [near-duplicate-detection.md](references/near-duplicate-detection.md) (Normalization → Blocking → LLM-as-judge with HIGH/MID/LOW) to catch the same real-world entity filed under a *different* name (e.g. `Thompson-Sampling` vs `Thompson-Sampling-MAB`). Compare the incoming / just-resolved page against existing pages (1×N, not all-pairs).
+
+- **Only on a HIGH-confidence near-duplicate** → prompt the user, e.g. `近重複 — 這像是既有頁 [existing-slug] 的不同命名,要用 /wiki-merge 合併嗎?(y → 觸發 wiki-merge / n → 照常建新頁)`. The user decides.
+- **Below HIGH confidence** (MID / LOW) → stay silent and proceed as normal. Preserve STEP 4c's restraint — do not nag on weak signals.
+- **Never auto-merge and never block page creation.** wiki-ingest only adds/flags; merging is `/wiki-merge`'s job, triggered by the user.
+
 **If target page does not exist** (after uniqueness check) → create new page following [page-format.md](references/page-format.md). All 8 frontmatter fields. 3 required body sections. Filename in `<wiki-root>/<category>/<slug>.md`.
 
 **If target page exists** → update:

@@ -21,7 +21,7 @@
 
 ## Version
 
-3.9.0 — [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) を参照。
+3.15.0 — [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) を参照。
 
 ## 所属
 
@@ -78,10 +78,11 @@ move か edit のみ。振り分け先が曖昧な場合は確認を取る。
 | Skill | 用途 |
 |---|---|
 | `wiki-setup` | `wiki/` 構造、`.env`、manifest、hot cache の初回 scaffold |
-| `wiki-ingest` | source notes（references/、research/ 等）を SHA-256 delta tracking で wiki/ に蒸留。page format spec の所有者 |
+| `wiki-ingest` | source notes（references/、research/ 等）を SHA-256 delta tracking で wiki/ に蒸留。page format spec の所有者。新規ページ作成前に HIGH 信頼度の near-duplicate を検出 |
 | `wiki-query` | tiered retrieval（hot.md → frontmatter summary → full page）で wiki/ を検索 |
 | `wiki-cross-linker` | 平文の言及を `[[wikilinks]]` に変換し、知識グラフを補強 |
-| `wiki-lint` | 11 項目の health audit — structural / semantic / provenance。Read-only |
+| `wiki-merge` | 確認済みの near-duplicate ページ対を 1 つの canonical ページに統合 — どの対を統合するかは人が gate、skill が可逆な統合を自動実行（archive で削除せず、User Notes は union 保持、slug → aliases、self-verify、audit log） |
+| `wiki-lint` | 15 項目の health audit — structural / semantic / provenance。Read-only |
 | `wiki-auto-research` | 手動 one-shot — Open Questions と ambiguous claim を scan、web search、`research/` にレビュー可能なノート出力 |
 
 ### kepano（Steph Ango）からの import
@@ -162,7 +163,7 @@ note 内に図を描く：
 ```
 obsidian/
 ├── .claude-plugin/
-│   └── plugin.json              # plugin metadata、version 3.9.0
+│   └── plugin.json              # plugin metadata、version 3.15.0
 ├── agents/
 │   └── obsidian-vault-organizer.md  # vault 保守 agent
 ├── commands/
@@ -186,6 +187,7 @@ obsidian/
 │   ├── wiki-ingest/               # source → wiki 蒸留（original）
 │   ├── wiki-query/                # tiered retrieval（original）
 │   ├── wiki-cross-linker/         # 知識グラフ補強（original）
+│   ├── wiki-merge/                # near-duplicate ページ統合（original）
 │   ├── wiki-lint/                 # health audit（original）
 │   └── wiki-auto-research/        # web search で gap 補完（original）
 ├── README.md
