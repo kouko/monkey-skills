@@ -43,11 +43,11 @@ entirely inside a `CASE/WHERE` expression without their own primary key
 belong in `concepts/`.
 
 **Configuration / settings objects**: a 1:1 per-parent settings record
-that has its own primary key (e.g. a per-restaurant reservation-settings
-row) IS an entity by the PK test — but title it to signal it is
-configuration (`Reservation Settings`, not the bare event noun
-`Reservation`; reserve the event noun for a per-booking entity if one
-exists) and say so in the `## Summary`. If the record is purely 1:1
+that has its own primary key (e.g. a per-account settings row, one row
+per parent) IS an entity by the PK test — but title it to signal it is
+configuration (`Account Settings`, not a bare event/object noun; reserve
+the plain noun for the event/transaction entity if one exists) and say
+so in the `## Summary`. If the record is purely 1:1
 settings with no independent lifecycle and few fields, folding it into
 the parent entity's page as a settings section is also acceptable —
 create a separate page only when it has enough fields to stand alone.

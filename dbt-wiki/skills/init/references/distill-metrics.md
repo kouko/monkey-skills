@@ -143,13 +143,13 @@ share the same `derived_from` entry.
 
 **Segment-qualified parallel models = ONE metric page + a segment
 concept.** When two or more structurally parallel models compute the
-same business measure for different segments (e.g. `ichef_tw__gmv`
-for total GMV vs `ichef_twomo__gmv` for OMO-channel GMV), produce ONE
-metric page that covers both segment variants. List both models in
-`derived_from:`. Capture the segment split itself as a `concepts/` page
-(e.g. `omo-channel.md`) and link it from the metric page via a
-`depends_on` edge. Do NOT fork one metric page per segment — that
-creates near-duplicate pages that diverge over time.
+same business measure for different segments (e.g. `sales__total` for
+total revenue vs `sales__online_channel` for a single channel's revenue),
+produce ONE metric page that covers both segment variants. List both
+models in `derived_from:`. Capture the segment split itself as a
+`concepts/` page (e.g. `channel-segment.md`) and link it from the metric
+page via a `depends_on` edge. Do NOT fork one metric page per segment —
+that creates near-duplicate pages that diverge over time.
 
 ---
 
@@ -205,8 +205,8 @@ sum / count / window-accumulation of an upstream base value whose
 business definition lives in an upstream model outside the current
 evidence slice. For such metrics, describe instead:
 
-(a) the aggregation and grain: e.g. "sum of daily GMV over the
-month-to-date window, one row per store per calendar day";
+(a) the aggregation and grain: e.g. "sum of the daily revenue value over
+the month-to-date window, one row per store per calendar day";
 (b) the reporting-period variants the model exposes (daily, MTD, QTD,
 YTD, MoM, YoY, etc.);
 (c) a note that the underlying "what counts as X" definition lives
@@ -259,9 +259,9 @@ per product), emit one `measures` edge per entity.
 
 **Date/time grain — no single business entity.** When the GROUP BY grain
 is a date/time dimension rather than a business entity (e.g. the model
-aggregates across all stores and groups only by `date`), describe the
+aggregates across the whole population and groups only by `date`), describe the
 time grain and population in the `note` field instead:
-`note: "daily grain — aggregated across all stores"`. If a clear
+`note: "daily grain — aggregated across the whole population"`. If a clear
 business population entity exists (e.g. Store), still target it and
 append the time-grain detail to `note`. If no clear entity exists,
 target the most relevant entity available with the grain noted.
@@ -447,9 +447,9 @@ is supported.
 | No MetricFlow, mart model with `SUM`/`COUNT` + `GROUP BY` | SQL-derivation branch (§3) |
 | Multiple metrics in one model | One page per distinct business measure; share `derived_from` |
 | Reporting-period variants (daily/MTD/QTD/YTD/MoM/YoY) of one measure | ONE metric page; describe variants in `## Calculation` — never fork per time window (§1) |
-| Parallel segment models (e.g. total vs OMO-channel GMV) | ONE metric page; list both models in `derived_from:`; segment split → `concepts/` page + `depends_on` edge (§3b) |
+| Parallel segment models (e.g. total vs single-channel revenue) | ONE metric page; list both models in `derived_from:`; segment split → `concepts/` page + `depends_on` edge (§3b) |
 | Metric has no numerator/denominator formula (pure aggregation/window) | Fallback: describe aggregation + grain + period variants; note upstream definition; do NOT invent formula (§5) |
-| `measures` edge — date/time grain, no clear business entity | Use `note: "daily grain — aggregated across all stores"`; target closest entity if one exists (§7a) |
+| `measures` edge — date/time grain, no clear business entity | Use `note: "daily grain — aggregated across the whole population"`; target closest entity if one exists (§7a) |
 | `measures` edge — target entity not yet distilled | Emit the edge anyway; append `"(entity not yet distilled)"` to `note` (§7a) |
 | Metric depends on a concept page | Add `depends_on` edge in both frontmatter and `## Relationships` |
 | Evidence link placement | `derived_from:` + `## Evidence` only — never in `relationships:` |

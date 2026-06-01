@@ -55,8 +55,9 @@ interpretation, so it is NOT a concept.)
 two (or more) models are structurally parallel copies that exist
 *because of* the very rule you are evaluating — for example, a
 per-segment model family where the segment split is the rule itself
-(a `tw` model and a `tw_omo` OMO-segment variant that are near-identical
-by construction) — they count as **one** source of evidence, not two.
+(a total-population model and a single-channel/region variant that are
+near-identical by construction) — they count as **one** source of
+evidence, not two.
 The rule passing Q2 "by construction" this way is not signal.
 
 For such structural-segmentation rules, judge cross-cutting status by
@@ -64,7 +65,7 @@ whether the rule applies across the domain's downstream consumers:
 does every metric or entity in the domain inherit the same split? If
 yes, the rule is cross-cutting and Q2 is satisfied. Say so explicitly
 in the concept's `## Applies To` section (e.g. "This segmentation
-applies to all metrics in the `tw` domain"). If you cannot verify
+applies to every metric in the domain"). If you cannot verify
 cross-domain applicability from the current evidence slice, still
 create the concept when the segmentation visibly governs multiple
 metrics in-slice, but add a one-sentence caveat: "Evidence limited to
