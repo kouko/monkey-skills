@@ -4,6 +4,45 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] — 2026-06-02
+
+### Added — metric column cards (materialized-metric mapping)
+
+Completes the v2.0 minimal-state knowledge layer (knowledge layer + relationship
+graph were already shipped; this is the last piece). Many dbt projects
+pre-materialize a metric into mart columns — a "column forest" such as monthly
+GMV exposed as `gmv_mtd` / `gmv_qtd` / `gmv_ytd` / `gmv_mom` / `gmv_yoy` plus
+channel-segment variants. For text-to-SQL, the value is the **mapping**
+(business variant → physical `model.column`), not a formula — the consumer
+SELECTs the pre-built column rather than synthesizing a `GROUP BY`. This is the
+strongest schema-linking lever for NL→SQL accuracy on projects without a
+MetricFlow / dbt Semantic Layer definition.
+
+- **SCHEMA `knowledge-metric`** — new **optional** `## Materialized Columns`
+  body section (Variant | Model | Column | Grain). Appears only when a metric's
+  variants are pre-materialized into mart columns; body-only (no frontmatter
+  block); does not break "one metric = one page". The v2.x freeze header is
+  clarified to permit additive optional body sections (no change to frontmatter
+  shape / page types / naming / mandatory sections).
+- **`distill-metrics.md` §3c — Materialization detection** — a front-gate in the
+  SQL-derivation branch: anchor signal (column forest **or** pre-aggregated
+  one-row-per-grain) routes the metric to the column-card output; mart-layer +
+  schema.yml description alone are corroborating, not sufficient. Non-materialized
+  metrics keep the existing formula / no-formula-fallback path (paths disjoint).
+- **`distill-metrics.md` §5b — Materialized Columns Output** — producer spec for
+  the card: the Variant|Model|Column|Grain table, plus a **forest-compression
+  rule** — for regular naming (`gmv_{period}_{segment}`) capture the pattern +
+  enumerated dimension values rather than enumerating ~100 rows; enumerate
+  per-variant only when naming is irregular. Includes a `## Calculation`
+  reconciliation note (materialized → SELECT pre-built column, no aggregation).
+- **Worked example (§10b)** — a fully synthetic pre-aggregated Store GMV metric
+  page (dimension-level compressed mapping table), plus a §11 decision-rule row
+  making the materialized-vs-formula split explicit.
+
+Artifact-only refinement of the v2.0 distill spec; zero warehouse / log / external
+calls. `init` / `query` / `refresh` consume the new section generically (no
+hardcoded body-section allowlist) — no changes required there.
+
 ## [2.0.0] — 2026-06-01
 
 ### BREAKING — Knowledge-centric redesign

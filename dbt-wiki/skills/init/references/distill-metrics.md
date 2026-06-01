@@ -682,25 +682,16 @@ or `GROUP BY` is needed.
 
 ## Materialized Columns
 
-**Column pattern**: `gmv_{period}` in model `rpt_store_gmv_daily`
-
-**Dimension values**:
-- `period` ∈ {mtd, qtd, ytd, mom, yoy, online, total}
-
-**Grain**: one row per store per calendar day.
-
-To SELECT: `gmv_{period}` where `{period}` is substituted from the
-list above. Example: `SELECT gmv_mtd FROM rpt_store_gmv_daily WHERE store_id = X AND date = Y`.
-
 | Variant | Model | Column | Grain |
 |---------|-------|--------|-------|
-| MTD | rpt_store_gmv_daily | gmv_mtd | one row per store per calendar day |
-| QTD | rpt_store_gmv_daily | gmv_qtd | one row per store per calendar day |
-| YTD | rpt_store_gmv_daily | gmv_ytd | one row per store per calendar day |
-| MoM growth | rpt_store_gmv_daily | gmv_mom | one row per store per calendar day |
-| YoY growth | rpt_store_gmv_daily | gmv_yoy | one row per store per calendar day |
-| Online channel | rpt_store_gmv_daily | gmv_online | one row per store per calendar day |
-| Total (all channels) | rpt_store_gmv_daily | gmv_total | one row per store per calendar day |
+| Period-to-date / growth views | rpt_store_gmv_daily | `gmv_{period}` — period ∈ {mtd, qtd, ytd, mom, yoy} | one row per store per calendar day |
+| Channel segment | rpt_store_gmv_daily | `gmv_{segment}` — segment ∈ {total, online} | one row per store per calendar day |
+
+To SELECT: substitute the appropriate value from the allowed set in the
+Column cell. For example, to retrieve month-to-date GMV for store 42 on
+2026-06-01: `SELECT gmv_mtd FROM rpt_store_gmv_daily WHERE store_id = 42 AND date = '2026-06-01'`.
+To retrieve online-channel GMV for the same store and date:
+`SELECT gmv_online FROM rpt_store_gmv_daily WHERE store_id = 42 AND date = '2026-06-01'`.
 
 ## Caveats
 
