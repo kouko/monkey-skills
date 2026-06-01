@@ -1,11 +1,11 @@
 ---
 name: wiki-lint
-description: Run 14 health checks on wiki/ (structural, semantic, provenance). Use weekly or after wiki-ingest batches. Read-only — does not auto-fix. Do NOT use to fix issues (use wiki-ingest / wiki-cross-linker). Obsidian wiki 健全性チェック・健康檢查。
+description: Run 15 health checks on wiki/ (structural, semantic, provenance). Use weekly or after wiki-ingest batches. Read-only — does not auto-fix. Do NOT use to fix issues (use wiki-ingest / wiki-cross-linker). Obsidian wiki 健全性チェック・健康檢查。
 ---
 
 # Wiki Lint — Health Check on the Wiki Layer
 
-Runs 14 health checks across the wiki and reports issues without modifying pages. User decides which fixes to apply.
+Runs 15 health checks across the wiki and reports issues without modifying pages. User decides which fixes to apply.
 
 See [lint-checks.md](references/lint-checks.md) for full check definitions.
 
@@ -23,9 +23,9 @@ Build:
 - Frontmatter dump per page (for L01/L02 checks)
 - Parsed `wiki/.manifest.json` (for L10 check)
 
-## STEP 2 — Run the 14 checks
+## STEP 2 — Run the 15 checks
 
-Execute all 14 checks defined in [lint-checks.md](references/lint-checks.md):
+Execute all 15 checks defined in [lint-checks.md](references/lint-checks.md):
 
 **Structural (must-fix):**
 - L01: Frontmatter completeness (per-page-type field set)
@@ -39,6 +39,7 @@ Execute all 14 checks defined in [lint-checks.md](references/lint-checks.md):
 - L07: Broken wikilinks (intra-wiki only; reference-page `## Source` wikilinks are handled by L14)
 - L08: Stale pages
 - L13: Aliases required on cross-language slug (slug language ≠ body language → frontmatter `aliases:` should be present and non-empty; authority: [references/language-policy.md](references/language-policy.md))
+- L15: Near-duplicate pages (read-only all-pairs sweep for two pages describing the same real-world entity under different filenames; HIGH/MID surfaced → `/wiki-merge`)
 
 **Provenance (advisory):**
 - L09: Provenance drift
@@ -47,7 +48,7 @@ Execute all 14 checks defined in [lint-checks.md](references/lint-checks.md):
 - L12: Cross-page numeric / claim disagreement (advisory; user judgment required)
 - L14: Reference page `## Source` wikilink format (basename / no path / no `.md`; basename matches `source_path` stem)
 
-Severity: L01–L04, L07 → **error** (L14 path/extension violations also → **error**). L05, L06, L08, L09, L10, L12, L13, L14 (missing/empty/basename-mismatch) → **warning**. L11 → **info**.
+Severity: L01–L04, L07 → **error** (L14 path/extension violations also → **error**). L05, L06, L08, L09, L10, L12, L13, L14 (missing/empty/basename-mismatch), L15 → **warning**. L11 → **info**.
 
 ## STEP 3 — Report
 

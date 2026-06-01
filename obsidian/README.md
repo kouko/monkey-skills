@@ -21,7 +21,7 @@ both paths get blocked equally on Cowork.
 
 ## Version
 
-3.9.0 — see [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json).
+3.15.0 — see [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json).
 
 ## Part of
 
@@ -80,10 +80,11 @@ Inspired by [Karpathy's LLM Wiki gist](https://gist.github.com/karpathy/442a6bf5
 | Skill | Purpose |
 |---|---|
 | `wiki-setup` | One-time scaffold of `wiki/` structure, `.env`, manifest, hot cache. |
-| `wiki-ingest` | Ingest source notes (references/, research/, etc.) into wiki/ with SHA-256 delta tracking. Owns the page format spec. |
+| `wiki-ingest` | Ingest source notes (references/, research/, etc.) into wiki/ with SHA-256 delta tracking. Owns the page format spec. Flags HIGH-confidence near-duplicates before minting a new page. |
 | `wiki-query` | Query wiki/ via tiered retrieval (hot.md → frontmatter summary → full page). |
 | `wiki-cross-linker` | Strengthen the knowledge graph by converting plain-text mentions into `[[wikilinks]]`. |
-| `wiki-lint` | 11-check health audit — structural, semantic, provenance. Read-only. |
+| `wiki-merge` | Consolidate a confirmed near-duplicate page pair into one canonical page — human gates the pair, the skill auto-executes a reversible merge (archive-not-delete, User Notes union-preserved, slug → aliases, self-verify, audit log). |
+| `wiki-lint` | 15-check health audit — structural, semantic, provenance. Read-only. |
 | `wiki-auto-research` | Manual one-shot — scan Open Questions and ambiguous claims, web-search, write reviewable notes to `research/`. |
 
 ### Imported from kepano (Steph Ango)
@@ -167,7 +168,7 @@ sequence diagram type, applies Obsidian 11.4.1 quirks, and emits a
 ```
 obsidian/
 ├── .claude-plugin/
-│   └── plugin.json              # plugin metadata, version 3.9.0
+│   └── plugin.json              # plugin metadata, version 3.15.0
 ├── agents/
 │   └── obsidian-vault-organizer.md  # vault hygiene agent
 ├── commands/
@@ -191,6 +192,7 @@ obsidian/
 │   ├── wiki-ingest/               # source → wiki distillation (original)
 │   ├── wiki-query/                # tiered retrieval (original)
 │   ├── wiki-cross-linker/         # knowledge graph strengthening (original)
+│   ├── wiki-merge/                # near-duplicate page consolidation (original)
 │   ├── wiki-lint/                 # health audit (original)
 │   └── wiki-auto-research/        # gap-filling via web search (original)
 ├── README.md
