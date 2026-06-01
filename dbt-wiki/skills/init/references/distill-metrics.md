@@ -450,7 +450,7 @@ is supported.
 | Parallel segment models (e.g. total vs single-channel revenue) | ONE metric page; list both models in `derived_from:`; segment split → `concepts/` page + `depends_on` edge (§3b) |
 | Metric has no numerator/denominator formula (pure aggregation/window) | Fallback: describe aggregation + grain + period variants; note upstream definition; do NOT invent formula (§5) |
 | `measures` edge — date/time grain, no clear business entity | Use `note: "daily grain — aggregated across the whole population"`; target closest entity if one exists (§7a) |
-| `measures` edge — target entity not yet distilled | Emit the edge anyway; append `"(entity not yet distilled)"` to `note` (§7a) |
+| `measures` edge — target entity not yet distilled | Emit the edge anyway AND create a `status: seed` stub for the target (SCHEMA dangling-target rule); append `"(entity not yet distilled)"` to `note` (§7a) |
 | Metric depends on a concept page | Add `depends_on` edge in both frontmatter and `## Relationships` |
 | Evidence link placement | `derived_from:` + `## Evidence` only — never in `relationships:` |
 | Slug | kebab-case from business title, not SQL column name |
