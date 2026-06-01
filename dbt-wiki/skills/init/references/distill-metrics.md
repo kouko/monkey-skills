@@ -291,6 +291,104 @@ evidence slice.
 
 Do NOT invent a numerator/denominator that is not present in the SQL.
 
+**Routing note — materialized vs non-materialized.** The formula
+template (numerator/denominator) and the fallback prose
+(aggregation + grain + period-variants) above apply ONLY to
+**non-materialized metrics** — metrics where query-time aggregation is
+still required. When §3c materialization detection fires, `##
+Calculation` instead states that the value is pre-computed and stored
+(SELECT the mapped column directly — no query-time `GROUP BY`), and
+points the reader to the `## Materialized Columns` table. See §5b for
+the full output spec for that section.
+
+---
+
+## 5b. Materialized Columns Output (column cards)
+
+**When to emit.** Add this section to the metric page only when §3c
+materialization detection fired (anchor signal 2 "column forest" OR
+signal 4 "pre-aggregated grain" is present — see §3c routing block).
+Omit the section entirely for non-materialized metrics.
+
+**One-page rule is unchanged.** This section enriches the existing
+single page; it does NOT create a new page type and does not fork the
+metric into multiple pages. The "one metric = one page" rule from §1
+still holds.
+
+**Body-only.** This section belongs in the page body — it does NOT go
+into frontmatter. No new frontmatter fields are needed or allowed.
+
+### Table shape
+
+The section contains a markdown table mapping each period/segment
+variant to the physical column a consumer should SELECT. The table
+MUST use exactly these four columns, in this order, to match SCHEMA.md:
+
+```markdown
+| Variant | Model | Column | Grain |
+|---------|-------|--------|-------|
+| MTD | mart_store_metrics | gmv_mtd | one row per store per calendar day |
+| YTD | mart_store_metrics | gmv_ytd | one row per store per calendar day |
+```
+
+Column definitions:
+
+| Column | Meaning |
+|--------|---------|
+| **Variant** | The business period or segment view the column represents — e.g. "MTD", "YTD", "online channel", "total". One row per distinct variant. |
+| **Model** | The dbt model (mart) that physically holds the column. Use the model's short name (not its `unique_id`). |
+| **Column** | The exact physical column name to `SELECT` from that model. |
+| **Grain** | What one row of that column represents — e.g. "one row per store per calendar day". Matches the model's primary-key dimensions. |
+
+### Forest-compression rule
+
+When the physical columns follow a **regular naming pattern** (e.g.
+`gmv_{period}_{segment}`), do NOT enumerate every combination as a
+separate table row. Instead, capture the **pattern plus the enumerated
+allowed dimension values** in two rows (or a short prose block above
+the table):
+
+```markdown
+**Column pattern**: `gmv_{period}_{segment}` in model `mart_store_metrics`
+
+**Dimension values**:
+- `period` ∈ {daily, mtd, qtd, ytd, mom, yoy, l30d, l7d}
+- `segment` ∈ {total, online, offline, b2b, b2c}
+
+**Grain**: one row per store per calendar day.
+
+To SELECT: `gmv_{period}_{segment}` where `{period}` and `{segment}`
+are substituted from the lists above. Example: `gmv_mtd_online`.
+```
+
+Enumerate columns individually (one row per variant) ONLY when the
+naming is irregular — meaning variants do not share a common template
+and the allowed dimension values cannot be expressed as a compact list.
+
+**Why the compression rule matters.** A mart model can expose 5 period
+windows × 10 segment values = 50 columns for one metric. Listing all
+50 rows (a) makes the page unreadably long, (b) violates §1's
+"don't fork near-duplicate pages" spirit, and (c) actually hurts
+text-to-SQL: a generator that sees the **pattern** `gmv_{period}_{segment}` +
+the allowed dimension lists can infer any column name reliably, whereas
+a 50-row table tempts it to copy a concrete example that may not match
+the requested period/segment. The pattern + dimension lists is
+therefore both more concise AND more generalizable.
+
+### Calculation section consistency
+
+When this section is present, `## Calculation` must be written as
+follows for the materialized variants:
+
+> The value is pre-computed and stored in the mart at build time.
+> To retrieve it, SELECT the appropriate column from the
+> `## Materialized Columns` table below — no query-time aggregation
+> or `GROUP BY` is needed.
+
+Do NOT author a numerator/denominator formula or aggregation-prose
+fallback for the materialized variants. The formula templates in §5
+apply only to non-materialized metrics.
+
 ---
 
 ## 6. Caveats Section
