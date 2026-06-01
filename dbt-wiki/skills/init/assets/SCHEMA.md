@@ -258,6 +258,30 @@ computed at, edge cases. Cite the aggregation SQL in evidence.>
 
 ## Evidence
 <cite the _evidence/ model(s) this metric is computed in>
+
+## Materialized Columns
+_(Optional — include ONLY when the metric's variants are pre-materialized
+into mart columns: values are already computed and a consumer can SELECT
+the right column directly instead of re-aggregating with GROUP BY.
+Omit this section entirely for metrics that still require query-time
+aggregation. Does NOT go into frontmatter — body-only by design.
+This section enriches the existing single page; it does NOT create a
+new page type and does not break the "one metric = one page" principle.)_
+
+A markdown table mapping **period/segment variant → physical `model.column` + grain**:
+
+| Variant | Model | Column | Grain |
+|---------|-------|--------|-------|
+| <e.g. MTD> | <mart_model> | <column_name> | <e.g. day × store> |
+| ... | ... | ... | ... |
+
+When columns follow a regular naming pattern (e.g. `gmv_{period}_{segment}`),
+capture the **pattern + allowed dimension values** rather than enumerating
+every column. Enumerate individually only when naming is irregular.
+
+See `references/distill-metrics.md` for the production procedure:
+materialization detection signals, forest-compression rules, and a
+worked example.
 ```
 
 ### knowledge-concept
