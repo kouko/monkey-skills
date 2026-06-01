@@ -314,6 +314,7 @@ verification_run: <yes | no>
 verified_paths: []
 stale: false                     # refresh sets to true when affected_models change
 stale_at: null
+stale_reason: null               # human-readable why (set by refresh's mark_stale)
 ---
 ```
 
