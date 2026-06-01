@@ -4,6 +4,91 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] — 2026-06-01
+
+### BREAKING — Knowledge-centric redesign
+
+dbt-wiki v2.0 shifts its purpose from **dbt resource structure distillation**
+to **data knowledge distillation**: help users understand and analyze the
+DATA (business entities, metrics, concepts), not just the shape of dbt objects.
+
+#### Architecture: dual-layer model
+
+**Knowledge layer (new, LLM-distilled)** — lives at the top of `.dbt-wiki/`:
+
+- `entities/` — business objects (Customer, Order, Subscription) spanning
+  multiple stg→int→mart models; each page includes a plain-language field
+  glossary (no separate glossary directory)
+- `metrics/` — business metrics (MRR, churn, LTV): definition, calculation
+  rationale, caveats, source models; if the project has MetricFlow metrics,
+  those are ingested as the authoritative input rather than re-derived
+- `concepts/` — cross-cutting business rules encoded in SQL but belonging to
+  no single entity ("active customer = order in last 90 days", fiscal year
+  definitions, status enumerations)
+
+Each knowledge page carries a `## Relationships` section with typed links
+(entity↔entity, metric→entity, metric→concept, concept→entity/metric,
+knowledge→`_evidence/`) derived from lineage and SQL semantics — a
+lightweight knowledge graph without a graph database.
+
+**Evidence layer (demoted, mechanical)** — existing manifest+sqlglot output
+relocated under `_evidence/`:
+
+- `_evidence/models/`, `_evidence/sources/`, `_evidence/macros/`, etc.
+- All manifest+sqlglot extraction, column lineage, `manifest_sha` drift
+  detection, and `syntheses/` stale tracking are fully preserved — these
+  remain the distillation inputs and the authoritative structural truth.
+- `lineage.md` and `syntheses/` stay at `.dbt-wiki/` root.
+
+#### init: two-phase pipeline
+
+- **Phase A** (mechanical, unchanged logic) — builds evidence layer under
+  `_evidence/`, same sqlglot + manifest pipeline as v1.x.
+- **Phase B** (new) — LLM-distills knowledge layer (`entities/`, `metrics/`,
+  `concepts/`) reading Phase A output; each knowledge page records
+  `derived_from: [evidence model uids]` for freshness tracking.
+
+v1.x detection: if init finds an existing `.dbt-wiki/` containing pages with
+`## User Notes`, it prints a one-time warning recommending backup before
+proceeding. No migration is attempted (clean break).
+
+#### query: semantic question classes
+
+`/dbt-wiki:query` gains three new semantic question classes alongside the
+existing structural ones:
+
+- **K1** — entity lookup ("what is a Customer in this project?")
+- **K2** — metric explanation ("how is MRR calculated?", "what are the caveats?")
+- **K3** — cross-cutting concept ("what counts as an active subscription?")
+
+Structural classes (C1–C11) are preserved; they now read from the evidence
+layer directly.
+
+#### refresh: thin evidence refresh + knowledge stale-flagging
+
+`/dbt-wiki:refresh` refreshes the evidence layer (unchanged core logic) and
+flags knowledge pages stale via `derived_from` when their source evidence
+models change — reusing the existing `syntheses` stale mechanism. Auto
+re-distillation of stale knowledge pages is a documented fast-follow, NOT
+included in this release; user re-runs `/dbt-wiki:query` or init Phase B
+to regenerate individual pages.
+
+#### SCHEMA frozen at v2.0
+
+`SCHEMA.md` is re-versioned and frozen at v2.0. All page-type definitions
+(knowledge layer + evidence layer) are documented there. Future breaking
+changes require v3.0+.
+
+### Migration
+
+**Clean break — no migration script.** v1.x `.dbt-wiki/` is rebuilt from
+scratch by re-running `/dbt-wiki:init`. v1.x User Notes are NOT automatically
+preserved (init warns once on detection; back up manually before re-init if
+needed). The evidence layer's structural content (lineage, column data) is
+fully regenerated from manifest+sqlglot.
+
+---
+
 ## [1.3.0] — 2026-05-03
 
 ### Added — Lineage diagrams (ASCII + Mermaid) + auto-saved syntheses with stale detection

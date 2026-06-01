@@ -29,11 +29,14 @@ description: |
   .repo-wiki/ exists in the repo).
 ---
 
-# dbt-wiki — Query Workflow (v1.0)
+# dbt-wiki — Query Workflow (v2.0)
 
-Read-only knowledge base query. `.dbt-wiki/` is a *derived snapshot* of
-`target/manifest.json` + sqlglot column lineage; query checks
-`manifest_sha` drift and warns user when stale.
+Read-only knowledge base query. `.dbt-wiki/` holds two layers: a
+**knowledge layer** (`entities/`, `metrics/`, `concepts/` — LLM-distilled
+business meaning) and an **evidence layer** (`_evidence/` — mechanical
+manifest + sqlglot extraction). Query loads the knowledge layer first;
+structural evidence is the backing source. `manifest_sha` drift is checked
+and surfaced when the evidence layer may be stale.
 
 ## Pre-condition Check (Step 0)
 
@@ -102,40 +105,71 @@ prepends the warning to the final answer.
 
 ## Step 1: Read Index
 
-Load `.dbt-wiki/index.md` to see all available models / sources / macros
-/ seeds / snapshots / tests / exposures.
+Load `.dbt-wiki/index.md`. The index is **knowledge-first**: it leads with
+the `## Entities`, `## Metrics`, and `## Concepts` sections (LLM-distilled
+knowledge pages), followed by structural evidence sections (`## Evidence:
+Models`, `## Evidence: Sources`, etc.). Prefer answering from the knowledge
+layer when the question is about *meaning, definition, or relationships*;
+fall back to the evidence layer (`_evidence/`) for structural / lineage
+queries (C1–C11).
 
 ## Step 2: Identify Question Type
 
-Match the user's question to a query class. Each class has a different
-load pattern:
+Match the user's question to a query class. **Semantic classes (K1–K3)
+are the primary path** — they answer business-language questions from the
+knowledge layer. Structural classes (C1–C11) are the secondary path for
+DAG / lineage / config questions that require evidence-layer detail.
+
+### Semantic query classes (knowledge layer — answer first from here)
 
 | Class | Trigger keywords | What to load |
 |---|---|---|
-| **C1 — Model lookup** | "<model_name> 是什麼", "describe X", "X 的 description" | One model page |
-| **C2 — Upstream lineage** | "依賴什麼", "depends on", "上游", "feeds X", "X comes from" | Model page + walk `depends_on` (1-2 levels deep) |
-| **C3 — Downstream lineage** | "影響哪些", "feeds into", "下游", "depend on X", "downstream of X" | Model page + walk `feeds_into` (1-2 levels deep) |
-| **C4 — Column-level lineage** | "X.col 從哪來", "rename Y 影響什麼", "column lineage", "X 欄位來源", "trace column" | Single model page's `## Column Lineage Chains` body section (precomputed recursive ancestors + descendants — full chain to source / leaf). Single page load answers full DAG question. |
-| **C5 — Materialization filter** | "哪些是 table / view / incremental", "incremental in X tier" | index.md "Models by Materialization" section |
-| **C6 — Tag / Group filter** | "tag X", "group Y", "marts_msd 下" | index.md "Models by Tag/Group/Tier" |
-| **C7 — Test coverage** | "X 有什麼 test", "什麼 test 失敗" | Model page `tests` + (Phase 2) run_results.json |
-| **C8 — Source attribution** | "X 從哪個 source", "source freshness" | source pages + model `depends_on.sources` |
-| **C9 — Macro usage** | "X macro 在哪用", "用了 dbt_utils.X 的有哪些" | macro page `used_by_models` |
-| **C10 — Refactoring impact** | "rename X 影響什麼", "刪掉 X 會壞什麼" | Model page + recursive `feeds_into` (full subtree) |
-| **C11 — Schema gaps** | "schema.yml 漏寫的 column", "沒 description 的 model" | Filter all model pages by `declared_in_schema_yml: false` or empty description |
+| **K1 — Knowledge / definition** | "X 是什麼意思", "解釋這個指標", "what does churn mean", "定義", "什麼是 X", "explain X", "什麼是 Customer" | Load the matching `entities/`, `metrics/`, or `concepts/` knowledge page (covers all three knowledge-page types — entity, metric, or concept lookups). If no match, fall back to evidence-layer description. Cite `_evidence/` pages listed in the knowledge page's `## Evidence` section as backing evidence. |
+| **K2 — Relationship traversal** | "哪些實體/指標跟 Y 有關", "what metrics relate to Customer", "X 跟哪些指標有關聯", "how is X connected to Y" | Load the matching knowledge page(s) + walk their `## Relationships` typed edges (frontmatter `relationships:` + body section). For each related page, load its `summary` frontmatter (avoid full-body load unless needed). Cite `_evidence/` pages as backing. |
+| **K3 — Domain landscape** | "這份資料在講什麼", "give me the landscape of X", "這個專案有哪些業務實體和指標", "overview", "全貌", "domain overview" | Load `index.md` `## Entities` + `## Metrics` + `## Concepts` sections (summary lines only). Then load the 2-3 most relevant knowledge pages for depth. Do NOT load all evidence-layer model pages — knowledge index is self-contained for landscape queries. |
+
+### Structural query classes (evidence layer — for DAG / config / lineage detail)
+
+| Class | Trigger keywords | What to load |
+|---|---|---|
+| **C1 — Model lookup** | "<model_name> 是什麼", "describe X", "X 的 description" | One evidence model page: `.dbt-wiki/_evidence/models/<name>.md` |
+| **C2 — Upstream lineage** | "依賴什麼", "depends on", "上游", "feeds X", "X comes from" | Evidence model page + walk `depends_on` (1-2 levels deep) from `_evidence/models/` |
+| **C3 — Downstream lineage** | "影響哪些", "feeds into", "下游", "depend on X", "downstream of X" | Evidence model page + walk `feeds_into` (1-2 levels deep) from `_evidence/models/` |
+| **C4 — Column-level lineage** | "X.col 從哪來", "rename Y 影響什麼", "column lineage", "X 欄位來源", "trace column" | Single evidence model page's `## Column Lineage Chains` body section from `.dbt-wiki/_evidence/models/<name>.md` (precomputed recursive ancestors + descendants — full chain to source / leaf). |
+| **C5 — Materialization filter** | "哪些是 table / view / incremental", "incremental in X tier" | index.md `## Evidence: Models by Materialization` section |
+| **C6 — Tag / Group filter** | "tag X", "group Y", "marts_msd 下" | index.md `## Evidence: Models by Tag/Group/Tier` |
+| **C7 — Test coverage** | "X 有什麼 test", "什麼 test 失敗" | Evidence model page `tests` from `_evidence/models/` + (Phase 2) run_results.json |
+| **C8 — Source attribution** | "X 從哪個 source", "source freshness" | Evidence source pages from `_evidence/sources/` + model `depends_on.sources` |
+| **C9 — Macro usage** | "X macro 在哪用", "用了 dbt_utils.X 的有哪些" | Evidence macro page `used_by_models` from `_evidence/macros/` |
+| **C10 — Refactoring impact** | "rename X 影響什麼", "刪掉 X 會壞什麼" | Evidence model page + recursive `feeds_into` (full subtree) from `_evidence/models/` |
+| **C11 — Schema gaps** | "schema.yml 漏寫的 column", "沒 description 的 model" | Filter all evidence model pages from `_evidence/models/` by `declared_in_schema_yml: false` or empty description |
 
 ## Step 3: Load Relevant Pages
 
-Load **only the pages needed for the question class**. Never load all of `models/`.
+Load **only the pages needed for the question class**.
 
-For C1: load 1 page.
-For C2/C3: load target + 1 hop upstream/downstream (typically 3-10 pages).
-For C4: load target + ALL ancestors in upstream chain (potentially 5-20 pages).
-For C5/C6: load index.md only (sections are self-contained).
-For C7/C8: load 1-3 pages.
-For C9: load 1 macro page.
-For C10: load target + full downstream subtree (could be 20+ pages — warn if >30).
-For C11: load index.md statistics + scan all model frontmatter (don't load bodies).
+**Knowledge-layer classes (K1–K3):**
+For K1: load 1 knowledge page from `entities/`, `metrics/`, or `concepts/`. If the
+  knowledge page has an `## Evidence` section, note those `_evidence/` pages as
+  backing — load them only if the user asks for structural detail.
+For K2: load the target knowledge page + summary frontmatter of directly linked
+  knowledge pages (via `relationships:`). Typically 2-5 pages total.
+For K3: load `index.md` knowledge sections only (no evidence model pages).
+  Optionally load 2-3 full knowledge pages for depth.
+
+**Evidence-layer classes (C1–C11):** Never load all of `_evidence/models/`.
+For C1: load 1 page from `_evidence/models/`.
+For C2/C3: load target + 1 hop upstream/downstream from `_evidence/models/`
+  (typically 3-10 pages).
+For C4: load target + ALL ancestors in upstream chain from `_evidence/models/`
+  (potentially 5-20 pages).
+For C5/C6: load index.md evidence sections only (self-contained).
+For C7/C8: load 1-3 pages from `_evidence/models/` and/or `_evidence/sources/`.
+For C9: load 1 macro page from `_evidence/macros/`.
+For C10: load target + full downstream subtree from `_evidence/models/`
+  (could be 20+ pages — warn if >30).
+For C11: load index.md statistics + scan frontmatter of `_evidence/models/`
+  pages (don't load bodies).
 
 If load count > 30 pages, ask user to narrow the scope before proceeding:
 > Question would require loading <N> pages. Narrow scope by tier (e.g., "in marts/")
@@ -144,12 +178,21 @@ If load count > 30 pages, ask user to narrow the scope before proceeding:
 ## Step 4: Synthesize Answer with Citations
 
 For each claim in the answer, cite the source `.dbt-wiki/...` page using
-markdown links: `[fct_orders](.dbt-wiki/models/fct_orders.md)`.
+markdown links.
+
+**Knowledge-layer answers (K1–K3):** cite the knowledge page as primary source,
+then cite the `_evidence/` backing pages listed in its `## Evidence` section:
+- Primary: `[Customer](.dbt-wiki/entities/customer.md)`
+- Backing evidence: `[stg_customers](.dbt-wiki/_evidence/models/stg_customers.md)`
+
+**Evidence-layer answers (C1–C11):** cite directly from `_evidence/`:
+- `[fct_orders](.dbt-wiki/_evidence/models/fct_orders.md)`
+- `[raw_data.orders_raw](.dbt-wiki/_evidence/sources/raw_data__orders_raw.md)`
 
 For column lineage answers (C4), present in chain form:
 ```
 fct_orders.customer_id ← stg_orders.customer_id ← raw_data.orders_raw.customer_id
-                       ← stg_customers.id (COALESCE — see fct_orders.md SQL Preview)
+                       ← stg_customers.id (COALESCE — see _evidence/models/fct_orders.md SQL Preview)
 ```
 
 For refactoring impact (C10), present as tree (or use Step 4.5 diagrams).
@@ -226,7 +269,8 @@ Standard format:
 [Detailed breakdown if needed: list, tree, or column-chain notation.]
 
 **Sources consulted**:
-- [<page_name>](.dbt-wiki/<type>/<file>.md)
+- [<page_name>](.dbt-wiki/entities/<file>.md)       ← knowledge layer
+- [<page_name>](.dbt-wiki/_evidence/models/<file>.md)  ← evidence layer backing
 - ...
 ```
 
@@ -234,14 +278,16 @@ For drift-warned answers, prepend the verification notes block from Step 5.
 
 ## Step 6.5: Auto-save synthesis (lineage / decision queries)
 
-For C2/C3/C4/C9/C10 (queries about lineage, macro usage, or refactoring
-impact — answers that have lasting value), auto-save the answer to
-`.dbt-wiki/syntheses/<slug>.md` so it can be re-opened in the IDE for
-the rendered Mermaid diagram + serve as a future reference.
+For K2 (relationship traversal) and C2/C3/C4/C9/C10 (queries about lineage,
+macro usage, or refactoring impact — answers that have lasting value),
+auto-save the answer to `.dbt-wiki/syntheses/<slug>.md` so it can be
+re-opened in the IDE for the rendered Mermaid diagram + serve as a future
+reference.
 
-For C1/C5/C6/C7/C8/C11 (model lookup, materialization filters, schema
-gaps — short-lived informational queries), do NOT auto-save unless user
-explicitly asks: ask `Save this answer to .dbt-wiki/syntheses/? (y/n)`.
+For K1/K3 (definition, landscape) and C1/C5/C6/C7/C8/C11 (model lookup,
+materialization filters, schema gaps — short-lived informational queries),
+do NOT auto-save unless user explicitly asks: ask
+`Save this answer to .dbt-wiki/syntheses/? (y/n)`.
 
 Slug = first 6-8 words of the question, kebab-case, lowercase. Collisions
 appended with `-2`, `-3`, …
@@ -259,19 +305,22 @@ manifest_sha: <current sha — used by refresh for stale detection>
 affected_models:                 # critical for stale detection
   - <model.proj.X>
   - <model.proj.Y>
-query_class: <C1-C11>
+query_class: <K1-K3 or C1-C11>
 diagram_included: <yes | no>
 sources_consulted:
-  - models/<name>.md
+  - entities/<name>.md
+  - _evidence/models/<name>.md
 verification_run: <yes | no>
 verified_paths: []
 stale: false                     # refresh sets to true when affected_models change
 stale_at: null
+stale_reason: null               # human-readable why (set by refresh's mark_stale)
 ---
 ```
 
 `affected_models` is the union of:
-- All model `unique_id` listed in answer's source citations
+- For K1/K2/K3: the `derived_from` evidence `unique_id` values listed in
+  each consulted knowledge page's frontmatter
 - For C4 column-lineage answers: target model + every model touched
   in the recursive ancestor + descendant trees
 - For C2/C3 model-lineage answers: target model + every model in the
@@ -284,7 +333,7 @@ syntheses without false positives from unrelated manifest changes.
 
 ```
 ## [<date>] query | <question-slug>
-- Class: <C1-C11>
+- Class: <K1-K3 or C1-C11>
 - Pages loaded: <list, max 10 shown>
 - Verification triggered: <DT1/DT2/DT3/DT4 list, or "none">
 - Drift warning: <yes/no>
@@ -325,13 +374,21 @@ NEVER:
 - Skip the drift check (Step 0) — silent stale answers are the worst failure mode
 - Load > 30 pages without asking user to narrow scope first
 - Use `[[wikilinks]]` — only standard markdown links
+- Cite structural evidence paths as `.dbt-wiki/models/<name>.md` — always use
+  `.dbt-wiki/_evidence/models/<name>.md` (v2.0 layout)
 
 ALWAYS:
 - Cite every claim with markdown link to `.dbt-wiki/<page>`
-- Identify question class (C1-C11) before loading pages — minimizes load
+- Identify question class (K1–K3 or C1–C11) before loading pages — minimizes load
+- Try knowledge layer (K1–K3) first for definition / relationship / landscape
+  questions; fall back to evidence layer only if no knowledge page matches
+- For knowledge-layer answers, cite `_evidence/` pages as backing evidence
+  (sourced from the knowledge page's `## Evidence` / `derived_from` frontmatter)
 - Include drift warning in output if Step 0 detected mismatch
-- For column-lineage questions, traverse `columns[].sources` chains
-- For refactoring-impact questions, traverse `feeds_into` recursively
+- For column-lineage questions, traverse `columns[].sources` chains in
+  `_evidence/models/`
+- For refactoring-impact questions, traverse `feeds_into` recursively in
+  `_evidence/models/`
 - Suggest `/dbt-wiki:refresh` when wiki is stale, not just in errors
 - Cross-link to `.repo-wiki/` for WHY questions if both plugins installed
 - Append to log.md every query (even no-match ones)
