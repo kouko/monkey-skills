@@ -545,10 +545,11 @@ manifest_sha: <sha at time of save>      # used by refresh for stale detection
 affected_models:                         # critical: enables PRECISE stale detection
   - <model.proj.X>                       # if any of these change in a future
   - <model.proj.Y>                       # refresh, this synthesis gets marked stale
-query_class: <C1-C11>
+query_class: <C1-C11 | K1-K3>            # structural (C*) OR knowledge/semantic (K*) class
 diagram_included: <yes | no>
-sources_consulted:
-  - _evidence/models/<name>.md
+sources_consulted:                        # may mix knowledge + evidence pages
+  - entities/<name>.md                    # knowledge-layer page (when a K-class query)
+  - _evidence/models/<name>.md            # evidence-layer backing page
 verification_run: <yes | no>
 verified_paths: []
 stale: false                             # set true by refresh when affected_models change

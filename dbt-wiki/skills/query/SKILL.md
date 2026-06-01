@@ -124,7 +124,7 @@ DAG / lineage / config questions that require evidence-layer detail.
 
 | Class | Trigger keywords | What to load |
 |---|---|---|
-| **K1 — Concept / definition** | "X 是什麼意思", "解釋這個指標", "what does churn mean", "定義", "什麼是 X", "explain X" | Load the matching `entities/`, `metrics/`, or `concepts/` knowledge page. If no match, fall back to evidence-layer description. Cite `_evidence/` pages listed in the knowledge page's `## Evidence` section as backing evidence. |
+| **K1 — Knowledge / definition** | "X 是什麼意思", "解釋這個指標", "what does churn mean", "定義", "什麼是 X", "explain X", "什麼是 Customer" | Load the matching `entities/`, `metrics/`, or `concepts/` knowledge page (covers all three knowledge-page types — entity, metric, or concept lookups). If no match, fall back to evidence-layer description. Cite `_evidence/` pages listed in the knowledge page's `## Evidence` section as backing evidence. |
 | **K2 — Relationship traversal** | "哪些實體/指標跟 Y 有關", "what metrics relate to Customer", "X 跟哪些指標有關聯", "how is X connected to Y" | Load the matching knowledge page(s) + walk their `## Relationships` typed edges (frontmatter `relationships:` + body section). For each related page, load its `summary` frontmatter (avoid full-body load unless needed). Cite `_evidence/` pages as backing. |
 | **K3 — Domain landscape** | "這份資料在講什麼", "give me the landscape of X", "這個專案有哪些業務實體和指標", "overview", "全貌", "domain overview" | Load `index.md` `## Entities` + `## Metrics` + `## Concepts` sections (summary lines only). Then load the 2-3 most relevant knowledge pages for depth. Do NOT load all evidence-layer model pages — knowledge index is self-contained for landscape queries. |
 

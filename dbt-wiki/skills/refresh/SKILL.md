@@ -265,7 +265,52 @@ decide whether to re-distill / re-query.
 ```python
 # Pseudocode for refresh's stale-detection logic:
 import yaml, glob
+from datetime import date
 from pathlib import Path
+
+today = date.today().isoformat()          # stale_at stamp
+
+
+def mark_stale(path, fm, content, reason):
+    """Update frontmatter (stale: true, stale_at: today, stale_reason: ...)
+    AND prepend a banner to the body so user sees it immediately when opening
+    the .md file in their IDE. Reused by both syntheses and knowledge pages.
+    Defined before its call sites below (Part A + Part B)."""
+    fm['stale'] = True
+    fm['stale_at'] = today
+    fm['stale_reason'] = reason
+    new_fm = yaml.safe_dump(fm, sort_keys=False, allow_unicode=True)
+
+    body = content.split('---', 2)[2]   # everything after frontmatter
+
+    # Banner wording adapts to page type
+    is_knowledge = fm.get('type', '').startswith('knowledge-')
+    if is_knowledge:
+        rerun_hint = (
+            f'Re-distill this page after reviewing the changed evidence:\n'
+            f'>\n'
+            f'> ```\n'
+            f'> /dbt-wiki:init  # Phase B re-distill (fast-follow; user-triggered)\n'
+            f'> ```'
+        )
+    else:
+        rerun_hint = (
+            f'Re-run to get fresh answer + diagram:\n'
+            f'>\n'
+            f'> ```\n'
+            f'> /dbt-wiki:query "{fm.get("question", "?")}"\n'
+            f'> ```'
+        )
+
+    banner = f"""
+> **STALE WARNING** ({today}): {reason}.
+> Original content below was correct at the time it was last generated
+> (manifest_sha: `{fm.get('manifest_sha', '?')}`), but underlying
+> evidence models have changed since. {rerun_hint}
+
+"""
+    Path(path).write_text(f'---\n{new_fm}---\n{banner}{body}')
+
 
 # Build set of model uids that ACTUALLY changed in this refresh
 changed_uids = set()
@@ -320,46 +365,7 @@ for pattern in ['.dbt-wiki/entities/*.md', '.dbt-wiki/metrics/*.md', '.dbt-wiki/
             knowledge_stale_count += 1
 
 # Store knowledge_stale_count for Step 7 log and Step 8 summary.
-
-
-def mark_stale(path, fm, content, reason):
-    """Update frontmatter (stale: true, stale_at: today, stale_reason: ...)
-    AND prepend a banner to the body so user sees it immediately when opening
-    the .md file in their IDE. Reused by both syntheses and knowledge pages."""
-    fm['stale'] = True
-    fm['stale_at'] = today
-    fm['stale_reason'] = reason
-    new_fm = yaml.safe_dump(fm, sort_keys=False, allow_unicode=True)
-
-    body = content.split('---', 2)[2]   # everything after frontmatter
-
-    # Banner wording adapts to page type
-    is_knowledge = fm.get('type', '').startswith('knowledge-')
-    if is_knowledge:
-        rerun_hint = (
-            f'Re-distill this page after reviewing the changed evidence:\n'
-            f'>\n'
-            f'> ```\n'
-            f'> /dbt-wiki:init  # Phase B re-distill (fast-follow; user-triggered)\n'
-            f'> ```'
-        )
-    else:
-        rerun_hint = (
-            f'Re-run to get fresh answer + diagram:\n'
-            f'>\n'
-            f'> ```\n'
-            f'> /dbt-wiki:query "{fm.get("question", "?")}"\n'
-            f'> ```'
-        )
-
-    banner = f"""
-> **STALE WARNING** ({today}): {reason}.
-> Original content below was correct at the time it was last generated
-> (manifest_sha: `{fm.get('manifest_sha', '?')}`), but underlying
-> evidence models have changed since. {rerun_hint}
-
-"""
-    Path(path).write_text(f'---\n{new_fm}---\n{banner}{body}')
+# (mark_stale is defined at the top of this block, before Part A.)
 ```
 
 Stale detection is **non-destructive**: original content (answer /
