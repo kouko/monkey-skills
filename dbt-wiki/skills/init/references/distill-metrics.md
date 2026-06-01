@@ -308,7 +308,9 @@ the full output spec for that section.
 **When to emit.** Add this section to the metric page only when §3c
 materialization detection fired (anchor signal 2 "column forest" OR
 signal 4 "pre-aggregated grain" is present — see §3c routing block).
-Omit the section entirely for non-materialized metrics.
+Omit the section entirely for non-materialized metrics. (This spec
+section produces the bare `## Materialized Columns` heading in the
+output metric page — §10b shows a complete worked example.)
 
 **One-page rule is unchanged.** This section enriches the existing
 single page; it does NOT create a new page type and does not fork the
@@ -612,6 +614,115 @@ is supported.
 
 ---
 
+## 10b. Worked Example — Store GMV (Materialized Metric)
+
+This example shows a complete metric page for a **pre-materialized**
+metric — one where the period variants are already physical columns in
+a mart model and no query-time aggregation is needed.
+
+**Synthetic evidence context:**
+- `rpt_store_gmv_daily.sql` is a wide, pre-aggregated reporting model
+  in `models/reporting/`. Its compiled SQL has no top-level `GROUP BY`
+  on measure columns — the aggregation was performed in an upstream CTE.
+  One row per store per calendar day.
+- The model exposes a **column forest**: `gmv_mtd`, `gmv_qtd`,
+  `gmv_ytd`, `gmv_mom`, `gmv_yoy`, `gmv_online`, `gmv_total` (7
+  sibling columns sharing the `gmv_` base measure name) — anchor
+  signal 2 fires.
+- The schema.yml description on `gmv_mtd` reads: "Month-to-date gross
+  merchandise value as of the reporting date (pre-computed at build
+  time)." This confirms a stored value (signal 3, corroborating).
+- Evidence `unique_ids`:
+  - `model.acme.rpt_store_gmv_daily`
+- No concept dependency: GMV is defined as total order value; no
+  cross-cutting concept page exists in this evidence slice.
+
+**Materialization detection outcome:**
+- Signal 2 (column forest, 7 ≥ 5 siblings) → **fires**.
+- Routing: add `## Materialized Columns` section; write `## Calculation`
+  as SELECT-only (no formula).
+
+**Output file**: `.dbt-wiki/metrics/gross-merchandise-value.md`
+
+```markdown
+---
+type: knowledge-metric
+title: Gross Merchandise Value
+status: developing
+summary: "Total value of orders processed through the platform; pre-computed period variants (MTD/QTD/YTD/MoM/YoY) stored in the store GMV daily mart."
+updated: 2026-06-02
+derived_from:
+  - model.acme.rpt_store_gmv_daily
+relationships:
+  - type: measures
+    target: ../entities/store.md
+    note: "one row per store per calendar day — store_id + date grain"
+last_changed_by: "PR #000"
+tags: ["finance", "gmv"]
+stale: false
+stale_at: null
+stale_reason: null
+---
+
+## Definition
+
+Gross Merchandise Value (GMV) is the total monetary value of all orders
+placed through the platform within a reporting period, before any
+deductions (returns, discounts, fees). It is the primary top-line volume
+indicator for the platform. Reported per store on a daily snapshot basis,
+with pre-built period-accumulation variants (MTD, QTD, YTD) and
+growth-rate variants (MoM, YoY).
+
+## Calculation
+
+The value is pre-computed and stored in the mart at build time.
+To retrieve it, SELECT the appropriate column from the
+`## Materialized Columns` table below — no query-time aggregation
+or `GROUP BY` is needed.
+
+## Materialized Columns
+
+**Column pattern**: `gmv_{period}` in model `rpt_store_gmv_daily`
+
+**Dimension values**:
+- `period` ∈ {mtd, qtd, ytd, mom, yoy, online, total}
+
+**Grain**: one row per store per calendar day.
+
+To SELECT: `gmv_{period}` where `{period}` is substituted from the
+list above. Example: `SELECT gmv_mtd FROM rpt_store_gmv_daily WHERE store_id = X AND date = Y`.
+
+| Variant | Model | Column | Grain |
+|---------|-------|--------|-------|
+| MTD | rpt_store_gmv_daily | gmv_mtd | one row per store per calendar day |
+| QTD | rpt_store_gmv_daily | gmv_qtd | one row per store per calendar day |
+| YTD | rpt_store_gmv_daily | gmv_ytd | one row per store per calendar day |
+| MoM growth | rpt_store_gmv_daily | gmv_mom | one row per store per calendar day |
+| YoY growth | rpt_store_gmv_daily | gmv_yoy | one row per store per calendar day |
+| Online channel | rpt_store_gmv_daily | gmv_online | one row per store per calendar day |
+| Total (all channels) | rpt_store_gmv_daily | gmv_total | one row per store per calendar day |
+
+## Caveats
+
+- GMV reflects the order-placed value; it does not net out returns or
+  cancellations. See the `rpt_store_gmv_daily` model description for
+  any exclusion logic applied upstream.
+- `gmv_mom` and `gmv_yoy` are NULL for the first month/year of a
+  store's history (no prior period to compare against).
+- Model is a daily snapshot; the most recent row reflects the state as
+  of the last successful dbt run (typically one business-day lag).
+
+## Relationships
+
+- measures → [Store](../entities/store.md) — store_id + date grain
+
+## Evidence
+
+- [rpt_store_gmv_daily](../_evidence/models/rpt_store_gmv_daily.md)
+```
+
+---
+
 ## 11. Summary of Decision Rules
 
 | Situation | Action |
@@ -621,7 +732,8 @@ is supported.
 | Multiple metrics in one model | One page per distinct business measure; share `derived_from` |
 | Reporting-period variants (daily/MTD/QTD/YTD/MoM/YoY) of one measure | ONE metric page; describe variants in `## Calculation` — never fork per time window (§1) |
 | Parallel segment models (e.g. total vs single-channel revenue) | ONE metric page; list both models in `derived_from:`; segment split → `concepts/` page + `depends_on` edge (§3b) |
-| Metric has no numerator/denominator formula (pure aggregation/window) | Fallback: describe aggregation + grain + period variants; note upstream definition; do NOT invent formula (§5) |
+| Metric variants already materialized as pre-built mart columns (anchor signal 2 "column forest" OR signal 4 "pre-aggregated grain" fires — §3c) | Materialization branch: emit `## Materialized Columns` card (§5b); `## Calculation` = SELECT pre-built column, no formula, no query-time `GROUP BY` |
+| Metric has no numerator/denominator formula (pure aggregation/window, materialization does NOT fire) | Fallback: describe aggregation + grain + period variants; note upstream definition; do NOT invent formula (§5) |
 | `measures` edge — date/time grain, no clear business entity | Use `note: "daily grain — aggregated across the whole population"`; target closest entity if one exists (§7a) |
 | `measures` edge — target entity not yet distilled | Emit the edge anyway AND create a `status: seed` stub for the target (SCHEMA dangling-target rule); append `"(entity not yet distilled)"` to `note` (§7a) |
 | Metric depends on a concept page | Add `depends_on` edge in both frontmatter and `## Relationships` |
