@@ -62,7 +62,11 @@ An entity page is intentionally a **many-to-one distillation**: it
 synthesises knowledge from the whole model family. List every evidence
 model in `derived_from` (frontmatter) and `## Evidence` (body). Do not
 create separate entity pages for `stg_customers` and `dim_customers` —
-they are two evidence models for one Customer entity.
+they are two evidence models for one Customer entity. Note the boundary:
+"the whole model family" means models for THIS entity only; a model from
+a *different* entity's family that you read only to derive a relationship
+edge does not belong in this page's `derived_from` (see §5.1
+cross-entity exclusion rule).
 
 ---
 
@@ -122,7 +126,7 @@ Use a markdown table with three columns:
 |---|---|---|
 | `customer_id` | Unique identifier for the customer account. Primary key. | `dim_customers.customer_id` |
 | `status` | Current lifecycle state: `active`, `churned`, `paused`. Populated from the CRM status field via the ETL normalisation step. | `dim_customers.status` |
-| `acquired_at` | Date the customer first made a paying purchase (not trial start). Determines cohort membership. | `stg_customers.first_paid_at` |
+| `acquired_at` | Date the customer first made a paying purchase (not trial start). Determines cohort membership. | `dim_customers.acquired_at` |
 | `ltv_usd` | Lifetime revenue (USD) from all completed orders. Recomputed nightly. | `fct_customer_activity.lifetime_revenue` |
 ```
 
@@ -135,15 +139,27 @@ Rules:
   evidence model page that contains the authoritative definition.
   If the field is computed across multiple models, list the primary source.
 
-### 3.3 Where to source the Meaning
+### 3.3 Where to source the Meaning AND which Evidence column to cite
 
-Priority order:
+**Meaning** — source priority order:
 1. schema.yml `columns[].description` in the evidence model page
 2. Inline SQL comments attached to that column (from `## Inline Comments` in evidence page)
 3. LLM inference from column name + context of surrounding model description
 
 Always prefer declared descriptions. LLM inference is a fallback only;
 mark inferred entries with `(inferred)` if confidence is low.
+
+**Evidence column** — canonical-model rule (resolves which model.column
+to cite when the same datum appears in several models): cite the column
+on the **canonical model** for the entity — the mart / fact / dimension
+model that carries the entity's grain (the same model named in §2 Grain),
+NOT the raw staging source it was renamed from. A staging column such as
+`stg_customers.first_paid_at` that surfaces as `dim_customers.acquired_at`
+on the dimension is cited at its canonical mart form `dim_customers.acquired_at`.
+The mart column is the authoritative definition an analyst queries; the
+staging lineage back to it is already recorded in the evidence page's
+`## Column Lineage Chains`. Only when a field exists solely on a staging
+model (never promoted to the mart) do you cite the staging column.
 
 ---
 
@@ -227,15 +243,31 @@ The unique_id format is `model.<package>.<model_name>`.
 
 ```yaml
 derived_from:
-  - model.example_dbt_project.stg_customers
-  - model.example_dbt_project.int_customers
-  - model.example_dbt_project.dim_customers
-  - model.example_dbt_project.fct_customer_activity
+  - model.ecom_project.stg_customers
+  - model.ecom_project.int_customers
+  - model.ecom_project.dim_customers
+  - model.ecom_project.fct_customer_activity
 ```
 
-Include ALL evidence models consulted — not just the canonical mart.
-This is the freshness anchor: refresh uses this list to detect when
-a knowledge page needs re-distilling.
+Include all evidence models **belonging to THIS entity's model family**
+— not just the canonical mart, but also its staging / intermediate
+ancestors (e.g. `stg_customers`, `int_customers`, `dim_customers`).
+This is the freshness anchor: refresh uses this list to detect when a
+knowledge page needs re-distilling.
+
+**Cross-entity exclusion rule.** An evidence model that belongs to
+ANOTHER entity's family — consulted only to derive a `## Relationships`
+edge, never to describe this entity's own fields/grain — must NOT be
+added to this entity's `derived_from`. It lives in that other entity's
+`derived_from`. Example: when distilling Customer, you read `fct_orders`
+to confirm the `fct_orders.customer_id` FK that yields the Customer↔Order
+edge, but `fct_orders` is an Order-family model — it goes in
+`order.md`'s `derived_from`, NOT `customer.md`'s. Adding it here would
+make Customer falsely flag stale every time an Order model changes,
+producing spurious re-distill triggers. Rule of thumb: a model earns a
+slot in `derived_from` only if it sourced a row of this entity's
+`## Fields` table or its `## Grain` — not if it only sourced a
+relationship edge.
 
 ### 5.2 `last_changed_by`
 
