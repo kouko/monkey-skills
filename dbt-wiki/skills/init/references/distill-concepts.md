@@ -32,14 +32,43 @@ following patterns:
 
 For each candidate, answer the three qualifying questions:
 
-1. Is the rule expressed in SQL (CASE/WHERE/literal constant) rather
-   than only in a schema.yml description? (Yes = stronger evidence.)
+1. Is the rule **encoded in the transformation logic** — a SQL
+   `CASE`/`WHERE`/literal constant, OR an enumeration / `accepted_values` /
+   constraint declared in schema.yml? (Required. A rule that exists only
+   as free-prose narration with no SQL and no schema.yml encoding is not
+   yet a concept — note it as a caveat on the relevant entity instead.)
 2. Does the rule appear in ≥2 evidence models or apply to ≥2 entities?
-   (Yes = required for concept classification.)
+   (Required.)
 3. Is the rule about a **business interpretation**, not just a SQL
-   implementation detail like a type cast? (Yes = required.)
+   implementation detail like a type cast? (Required.)
 
-All three must be Yes before creating a concept page.
+All three must be Yes before creating a concept page. Q1 may be satisfied
+via schema.yml `accepted_values`/enums — not only literal SQL — so
+status-code and category concepts still qualify when the compiled `CASE`
+lives in an upstream model outside the current evidence slice. (A pure
+data-format observation — e.g. "opening hours stored as a weekday→slots
+JSON blob" — fails Q3: it is an implementation detail, not a business
+interpretation, so it is NOT a concept.)
+
+**Q2 refinement — independent models, not parallel copies**: the
+"≥2 models" test in Q2 means ≥2 *independent* evidence models. When
+two (or more) models are structurally parallel copies that exist
+*because of* the very rule you are evaluating — for example, a
+per-segment model family where the segment split is the rule itself
+(a `tw` model and a `tw_omo` OMO-segment variant that are near-identical
+by construction) — they count as **one** source of evidence, not two.
+The rule passing Q2 "by construction" this way is not signal.
+
+For such structural-segmentation rules, judge cross-cutting status by
+whether the rule applies across the domain's downstream consumers:
+does every metric or entity in the domain inherit the same split? If
+yes, the rule is cross-cutting and Q2 is satisfied. Say so explicitly
+in the concept's `## Applies To` section (e.g. "This segmentation
+applies to all metrics in the `tw` domain"). If you cannot verify
+cross-domain applicability from the current evidence slice, still
+create the concept when the segmentation visibly governs multiple
+metrics in-slice, but add a one-sentence caveat: "Evidence limited to
+models in the current slice — cross-domain applicability unverified."
 
 ---
 

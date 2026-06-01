@@ -36,6 +36,16 @@ One evidence model can produce multiple metrics (e.g. `fct_mrr.sql`
 computes `new_mrr`, `expansion_mrr`, `churned_mrr`, `net_mrr`). Each
 distinct business measure gets its own `metrics/` page.
 
+**Reporting-period variants are ONE metric, not many.** A mart model
+often outputs a single base measure across many time windows: daily,
+MTD, QTD, YTD, MoM growth, YoY growth, last-month, last-year — easily
+20 columns for one measure. These are all reporting-period views of the
+same underlying business measure. Produce ONE metric page and describe
+the period variants inside `## Calculation`. Do NOT create 20
+near-duplicate pages. Fork a new page only for a genuinely distinct
+business measure (e.g. `new_mrr` vs `churned_mrr`), never for a
+time-window view of the same measure.
+
 ---
 
 ## 2. MetricFlow Branch (authoritative ingest)
@@ -131,6 +141,16 @@ them by source model to avoid redundant `derived_from` lookups. Create
 one page per distinct business measure, but all pages from the same model
 share the same `derived_from` entry.
 
+**Segment-qualified parallel models = ONE metric page + a segment
+concept.** When two or more structurally parallel models compute the
+same business measure for different segments (e.g. `ichef_tw__gmv`
+for total GMV vs `ichef_twomo__gmv` for OMO-channel GMV), produce ONE
+metric page that covers both segment variants. List both models in
+`derived_from:`. Capture the segment split itself as a `concepts/` page
+(e.g. `omo-channel.md`) and link it from the metric page via a
+`depends_on` edge. Do NOT fork one metric page per segment — that
+creates near-duplicate pages that diverge over time.
+
 ---
 
 ## 4. Definition Section
@@ -178,6 +198,24 @@ Example (churn rate):
 Cite the SQL model where this logic lives, but do not dump raw SQL inline.
 The evidence link in `## Evidence` carries the full SQL path.
 
+**Calculation fallback — no numerator/denominator formula.** The
+numerator/denominator template fits formula metrics (e.g. churn rate =
+cancelled / active). It does NOT fit measures that are a direct
+sum / count / window-accumulation of an upstream base value whose
+business definition lives in an upstream model outside the current
+evidence slice. For such metrics, describe instead:
+
+(a) the aggregation and grain: e.g. "sum of daily GMV over the
+month-to-date window, one row per store per calendar day";
+(b) the reporting-period variants the model exposes (daily, MTD, QTD,
+YTD, MoM, YoY, etc.);
+(c) a note that the underlying "what counts as X" definition lives
+upstream — link it as a `depends_on` concept if a concept page exists,
+or add a `## Caveats` note if the upstream model is outside the
+evidence slice.
+
+Do NOT invent a numerator/denominator that is not present in the SQL.
+
 ---
 
 ## 6. Caveats Section
@@ -218,6 +256,21 @@ edge targeting `../entities/customer.md`.
 
 If the metric measures over multiple entities (e.g., revenue per customer
 per product), emit one `measures` edge per entity.
+
+**Date/time grain — no single business entity.** When the GROUP BY grain
+is a date/time dimension rather than a business entity (e.g. the model
+aggregates across all stores and groups only by `date`), describe the
+time grain and population in the `note` field instead:
+`note: "daily grain — aggregated across all stores"`. If a clear
+business population entity exists (e.g. Store), still target it and
+append the time-grain detail to `note`. If no clear entity exists,
+target the most relevant entity available with the grain noted.
+
+**Entity not yet distilled.** If the target entity page has not been
+produced yet (the entity is outside the current evidence slice), still
+emit the `measures` edge. Append `"(entity not yet distilled)"` to the
+`note` value so the edge resolves automatically once that entity page is
+added. Do NOT drop the edge because the target file is absent.
 
 ### 7b. `depends_on` edge — metric → concept (algorithm dependency)
 
@@ -393,6 +446,11 @@ is supported.
 | `manifest["semantic_models"]` present (gate on this key ALONE — see §2a; a bare `metrics` key without `semantic_models` is legacy dbt ≤1.5, NOT MetricFlow) | MetricFlow ingest branch (§2b) — do not re-derive |
 | No MetricFlow, mart model with `SUM`/`COUNT` + `GROUP BY` | SQL-derivation branch (§3) |
 | Multiple metrics in one model | One page per distinct business measure; share `derived_from` |
+| Reporting-period variants (daily/MTD/QTD/YTD/MoM/YoY) of one measure | ONE metric page; describe variants in `## Calculation` — never fork per time window (§1) |
+| Parallel segment models (e.g. total vs OMO-channel GMV) | ONE metric page; list both models in `derived_from:`; segment split → `concepts/` page + `depends_on` edge (§3b) |
+| Metric has no numerator/denominator formula (pure aggregation/window) | Fallback: describe aggregation + grain + period variants; note upstream definition; do NOT invent formula (§5) |
+| `measures` edge — date/time grain, no clear business entity | Use `note: "daily grain — aggregated across all stores"`; target closest entity if one exists (§7a) |
+| `measures` edge — target entity not yet distilled | Emit the edge anyway; append `"(entity not yet distilled)"` to `note` (§7a) |
 | Metric depends on a concept page | Add `depends_on` edge in both frontmatter and `## Relationships` |
 | Evidence link placement | `derived_from:` + `## Evidence` only — never in `relationships:` |
 | Slug | kebab-case from business title, not SQL column name |

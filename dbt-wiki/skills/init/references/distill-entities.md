@@ -42,6 +42,16 @@ When genuinely ambiguous, prefer entity. Cross-cutting rules that exist
 entirely inside a `CASE/WHERE` expression without their own primary key
 belong in `concepts/`.
 
+**Configuration / settings objects**: a 1:1 per-parent settings record
+that has its own primary key (e.g. a per-restaurant reservation-settings
+row) IS an entity by the PK test — but title it to signal it is
+configuration (`Reservation Settings`, not the bare event noun
+`Reservation`; reserve the event noun for a per-booking entity if one
+exists) and say so in the `## Summary`. If the record is purely 1:1
+settings with no independent lifecycle and few fields, folding it into
+the parent entity's page as a settings section is also acceptable —
+create a separate page only when it has enough fields to stand alone.
+
 ### 1.3 Naming
 
 Entity title: the **business name** (capitalised noun), not the dbt
@@ -75,6 +85,15 @@ cross-entity exclusion rule).
 The `## Grain` body section states what one row represents on the
 **canonical mart / fact / dimension model** for the entity (not the
 staging layer).
+
+**Staging-only fallback**: if the entity's evidence contains no
+mart/fact/dimension model (e.g. a staging-only slice), state the grain
+from the most-downstream model available and add one line noting no
+canonical mart exists yet — `Grain stated from staging; no mart/dim
+model in this evidence slice.` A single-model (e.g. staging-only) entity
+is valid: `derived_from` then carries one entry, and `status` stays
+`seed`/`developing` to signal the entity will deepen once mart-layer
+evidence is distilled.
 
 Format: `One row = one <thing> [as of <qualifier>].`
 
