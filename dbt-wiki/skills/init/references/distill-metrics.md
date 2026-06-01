@@ -197,17 +197,28 @@ in a CTE, not at the top level).
 
 **Routing:**
 
-- **Detection fires** (two or more signals present, especially signals 2
-  and 4): the metric's variants are pre-materialized. Add a
-  `## Materialized Columns` section to the metric page (the full output
-  spec for this section is defined by the sibling task in this plan;
-  the section maps period/segment variants to physical `model.column`
-  references so a text-to-SQL consumer can SELECT directly). Adjust
-  `## Calculation` to state that values are pre-computed — see §5 for
-  the adjusted Calculation wording for materialized metrics.
-- **Detection does not fire**: proceed with the existing formula path
-  (numerator/denominator in §5) or the no-formula fallback (§5
-  aggregation/grain/period-variants prose). Do NOT add a
+- **Detection fires** (signal 2 OR signal 4 is present — these are the
+  anchor signals that confirm values are physically stored; signals 1
+  and 3 may also be present as corroboration but are not sufficient on
+  their own): the metric's variants are pre-materialized. Add a
+  `## Materialized Columns` section to the metric page (this section
+  maps period/segment variants to physical `model.column` references so
+  a text-to-SQL consumer can SELECT directly — the output spec for this
+  section is defined later in this spec). Write `## Calculation` to say
+  the value is pre-computed and stored — the consumer SELECTs the mapped
+  column from the `## Materialized Columns` table rather than
+  re-aggregating; do not author a numerator/denominator formula for the
+  materialized variants.
+- **Signals 1 + 3 only (mart layer + schema.yml stored-value
+  description, but no column forest and no pre-aggregated grain)**:
+  materialization does NOT fire. These two signals together indicate a
+  mart model that describes its purpose but still performs query-time
+  aggregation. Proceed with the formula path (numerator/denominator in
+  §5) or the no-formula fallback (§5 aggregation/grain/period-variants
+  prose). Do NOT add a `## Materialized Columns` section.
+- **Detection does not fire** (fewer than one anchor signal): proceed
+  with the formula path (numerator/denominator in §5) or the no-formula
+  fallback (§5 aggregation/grain/period-variants prose). Do NOT add a
   `## Materialized Columns` section.
 
 **One-page rule is unchanged.** Materialization detection does not fork
