@@ -247,6 +247,89 @@ async def test_httpx_fetch_returns_none_on_exception():
 
 
 # ---------------------------------------------------------------------------
+# Debug logging on exception (observability — OWASP ASVS V16)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_anthropic_llm_complete_logs_debug_on_exception(caplog):
+    """complete() emits a DEBUG log record when the Anthropic API call raises."""
+    import logging
+    import anthropic
+
+    with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
+        from deep_research.adapters import AnthropicLLM
+
+        adapter = AnthropicLLM()
+        adapter._client.messages.create = AsyncMock(
+            side_effect=anthropic.APIConnectionError(request=MagicMock())
+        )
+
+        with caplog.at_level(logging.DEBUG, logger="deep_research.adapters"):
+            result = await adapter.complete("prompt", {"type": "object"})
+
+    assert result is None
+    assert any(r.levelno == logging.DEBUG for r in caplog.records), (
+        "Expected a DEBUG log record when AnthropicLLM.complete raises"
+    )
+
+
+@pytest.mark.asyncio
+async def test_brave_search_logs_debug_on_exception(caplog):
+    """search() emits a DEBUG log record when the HTTP call raises."""
+    import logging
+    import httpx
+
+    with patch.dict(os.environ, {"BRAVE_API_KEY": "brave-key"}):
+        from deep_research.adapters import BraveSearch
+
+        adapter = BraveSearch()
+
+        with patch("httpx.AsyncClient") as mock_client_cls:
+            mock_client = AsyncMock()
+            mock_client_cls.return_value.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client_cls.return_value.__aexit__ = AsyncMock(return_value=False)
+            mock_client.get = AsyncMock(
+                side_effect=httpx.ConnectError("connection refused")
+            )
+
+            with caplog.at_level(logging.DEBUG, logger="deep_research.adapters"):
+                results = await adapter.search("test query")
+
+    assert results == []
+    assert any(r.levelno == logging.DEBUG for r in caplog.records), (
+        "Expected a DEBUG log record when BraveSearch.search raises"
+    )
+
+
+@pytest.mark.asyncio
+async def test_httpx_fetch_logs_debug_on_exception(caplog):
+    """fetch() emits a DEBUG log record when the HTTP call raises."""
+    import logging
+    import httpx
+
+    from deep_research.adapters import HttpxFetch
+
+    adapter = HttpxFetch()
+
+    with patch("httpx.AsyncClient") as mock_client_cls:
+        mock_client = AsyncMock()
+        mock_client_cls.return_value.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client_cls.return_value.__aexit__ = AsyncMock(return_value=False)
+        mock_client.get = AsyncMock(
+            side_effect=httpx.TimeoutException("timed out")
+        )
+
+        with caplog.at_level(logging.DEBUG, logger="deep_research.adapters"):
+            result = await adapter.fetch("https://example.com")
+
+    assert result is None
+    assert any(r.levelno == logging.DEBUG for r in caplog.records), (
+        "Expected a DEBUG log record when HttpxFetch.fetch raises"
+    )
+
+
+# ---------------------------------------------------------------------------
 # Missing env key → clear RuntimeError
 # ---------------------------------------------------------------------------
 
