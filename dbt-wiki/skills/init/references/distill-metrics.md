@@ -151,8 +151,6 @@ models in `derived_from:`. Capture the segment split itself as a
 page via a `depends_on` edge. Do NOT fork one metric page per segment —
 that creates near-duplicate pages that diverge over time.
 
----
-
 ## 4. Definition Section
 
 Write `## Definition` in plain language. Explain:
@@ -174,6 +172,57 @@ Example (churn rate):
 ---
 
 ## 5. Calculation Section
+
+### Materialization check (run before writing Calculation)
+
+Before drafting `## Calculation`, decide whether the metric's variants
+are already **pre-materialized into physical mart columns** — values
+fully computed at build time; a consumer query only needs `SELECT col`,
+no query-time `GROUP BY`.
+
+**Anchor signals (check both):**
+
+- **Signal 2 — column forest**: the model exposes five or more sibling
+  columns for the same base measure, differing only by period or segment
+  suffix. This is the reporting-period variant forest described in §1
+  (many sibling columns for one measure — e.g. `gmv_mtd`, `gmv_ytd`,
+  `gmv_mom`, `gmv_l30d`, `gmv_online`). Unlike §1's general note, five
+  or more physical pre-built sibling columns is the threshold that
+  confirms materialization.
+- **Signal 4 — pre-aggregated grain**: the model is already at a wide,
+  one-row-per-(entity/period) grain where aggregation happened at build
+  time. The final SELECT has no `GROUP BY`, or its `GROUP BY` covers
+  only key dimensions (e.g. `store_id, date`) — not measure sums.
+
+Signals 1 (mart/reporting layer) and 3 (schema.yml stored-value
+description) are **corroborating only** — they do NOT trigger
+materialization alone.
+
+**Deciding test:**
+
+| Scenario | Verdict |
+|---|---|
+| Consumer query is `SELECT gmv_mtd FROM mart_store_metrics WHERE store_id = X AND date = Y` — no aggregation needed | **Pre-materialized** → materialization fires |
+| Consumer query must `SELECT SUM(revenue) FROM fct_orders WHERE store_id = X GROUP BY date_trunc('month', order_date)` | **Still needs aggregation** → materialization does NOT fire |
+
+**Routing:**
+
+- **Fires** (signal 2 OR signal 4 present): write `## Calculation` as
+  "value is pre-computed and stored — SELECT the mapped column from
+  `## Materialized Columns`, no query-time `GROUP BY` needed"; emit the
+  `## Materialized Columns` section (§5b). Do NOT author a
+  numerator/denominator formula for the materialized variants.
+- **Signals 1 + 3 only** (mart layer + schema.yml description, but no
+  column forest and no pre-aggregated grain): materialization does NOT
+  fire. Proceed with the formula path or fallback prose below.
+- **Does not fire**: proceed with the formula path or fallback prose
+  below. Do NOT add a `## Materialized Columns` section.
+
+**One-page rule is unchanged.** Materialization does not fork pages —
+it only changes how `## Calculation` is written and adds `## Materialized
+Columns` to the same page (§1: "one metric = one page").
+
+---
 
 Write `## Calculation` in plain language. Cover:
 
@@ -215,6 +264,107 @@ or add a `## Caveats` note if the upstream model is outside the
 evidence slice.
 
 Do NOT invent a numerator/denominator that is not present in the SQL.
+
+**Routing note — materialized vs non-materialized.** The formula
+template (numerator/denominator) and the fallback prose
+(aggregation + grain + period-variants) above apply ONLY to
+**non-materialized metrics** — metrics where query-time aggregation is
+still required. When the §5 materialization check fires, `##
+Calculation` instead states that the value is pre-computed and stored
+(SELECT the mapped column directly — no query-time `GROUP BY`), and
+points the reader to the `## Materialized Columns` table. See §5b for
+the full output spec for that section.
+
+---
+
+## 5b. Materialized Columns Output (column cards)
+
+**When to emit.** Add this section to the metric page only when the
+§5 materialization check fired (anchor signal 2 "column forest" OR
+signal 4 "pre-aggregated grain" is present — see §5 materialization
+check routing block). Omit the section entirely for non-materialized
+metrics. (This spec section produces the bare `## Materialized Columns`
+heading in the output metric page — §10b shows a complete worked
+example.)
+
+**One-page rule is unchanged.** This section enriches the existing
+single page; it does NOT create a new page type and does not fork the
+metric into multiple pages. The "one metric = one page" rule from §1
+still holds.
+
+**Body-only.** This section belongs in the page body — it does NOT go
+into frontmatter. No new frontmatter fields are needed or allowed.
+
+### Table shape
+
+The section contains a markdown table mapping each period/segment
+variant to the physical column a consumer should SELECT. The table
+MUST use exactly these four columns, in this order, to match SCHEMA.md:
+
+```markdown
+| Variant | Model | Column | Grain |
+|---------|-------|--------|-------|
+| MTD | mart_store_metrics | gmv_mtd | one row per store per calendar day |
+| YTD | mart_store_metrics | gmv_ytd | one row per store per calendar day |
+```
+
+Column definitions:
+
+| Column | Meaning |
+|--------|---------|
+| **Variant** | The business period or segment view the column represents — e.g. "MTD", "YTD", "online channel", "total". One row per distinct variant. |
+| **Model** | The dbt model (mart) that physically holds the column. Use the model's short name (not its `unique_id`). |
+| **Column** | The exact physical column name to `SELECT` from that model. |
+| **Grain** | What one row of that column represents — e.g. "one row per store per calendar day". Matches the model's primary-key dimensions. |
+
+### Forest-compression rule
+
+When the physical columns follow a **regular naming pattern** (e.g.
+`gmv_{period}_{segment}`), do NOT enumerate every combination as a
+separate table row. Instead, capture the **pattern plus the enumerated
+allowed dimension values** in two rows (or a short prose block above
+the table):
+
+```markdown
+**Column pattern**: `gmv_{period}_{segment}` in model `mart_store_metrics`
+
+**Dimension values**:
+- `period` ∈ {daily, mtd, qtd, ytd, mom, yoy, l30d, l7d}
+- `segment` ∈ {total, online, offline, b2b, b2c}
+
+**Grain**: one row per store per calendar day.
+
+To SELECT: `gmv_{period}_{segment}` where `{period}` and `{segment}`
+are substituted from the lists above. Example: `gmv_mtd_online`.
+```
+
+Enumerate columns individually (one row per variant) ONLY when the
+naming is irregular — meaning variants do not share a common template
+and the allowed dimension values cannot be expressed as a compact list.
+
+**Why the compression rule matters.** A mart model can expose 5 period
+windows × 10 segment values = 50 columns for one metric. Listing all
+50 rows (a) makes the page unreadably long, (b) violates §1's
+"don't fork near-duplicate pages" spirit, and (c) actually hurts
+text-to-SQL: a generator that sees the **pattern** `gmv_{period}_{segment}` +
+the allowed dimension lists can infer any column name reliably, whereas
+a 50-row table tempts it to copy a concrete example that may not match
+the requested period/segment. The pattern + dimension lists is
+therefore both more concise AND more generalizable.
+
+### Calculation section consistency
+
+When this section is present, `## Calculation` must be written as
+follows for the materialized variants:
+
+> The value is pre-computed and stored in the mart at build time.
+> To retrieve it, SELECT the appropriate column from the
+> `## Materialized Columns` table below — no query-time aggregation
+> or `GROUP BY` is needed.
+
+Do NOT author a numerator/denominator formula or aggregation-prose
+fallback for the materialized variants. The formula templates in §5
+apply only to non-materialized metrics.
 
 ---
 
@@ -439,6 +589,106 @@ is supported.
 
 ---
 
+## 10b. Worked Example — Store GMV (Materialized Metric)
+
+This example shows a complete metric page for a **pre-materialized**
+metric — one where the period variants are already physical columns in
+a mart model and no query-time aggregation is needed.
+
+**Synthetic evidence context:**
+- `rpt_store_gmv_daily.sql` is a wide, pre-aggregated reporting model
+  in `models/reporting/`. Its compiled SQL has no top-level `GROUP BY`
+  on measure columns — the aggregation was performed in an upstream CTE.
+  One row per store per calendar day.
+- The model exposes a **column forest**: `gmv_mtd`, `gmv_qtd`,
+  `gmv_ytd`, `gmv_mom`, `gmv_yoy`, `gmv_online`, `gmv_total` (7
+  sibling columns sharing the `gmv_` base measure name) — anchor
+  signal 2 fires.
+- The schema.yml description on `gmv_mtd` reads: "Month-to-date gross
+  merchandise value as of the reporting date (pre-computed at build
+  time)." This confirms a stored value (signal 3, corroborating).
+- Evidence `unique_ids`:
+  - `model.acme.rpt_store_gmv_daily`
+- No concept dependency: GMV is defined as total order value; no
+  cross-cutting concept page exists in this evidence slice.
+
+**Materialization detection outcome:**
+- Signal 2 (column forest, 7 ≥ 5 siblings) → **fires**.
+- Routing: add `## Materialized Columns` section; write `## Calculation`
+  as SELECT-only (no formula).
+
+**Output file**: `.dbt-wiki/metrics/gross-merchandise-value.md`
+
+```markdown
+---
+type: knowledge-metric
+title: Gross Merchandise Value
+status: developing
+summary: "Total value of orders processed through the platform; pre-computed period variants (MTD/QTD/YTD/MoM/YoY) stored in the store GMV daily mart."
+updated: 2026-06-02
+derived_from:
+  - model.acme.rpt_store_gmv_daily
+relationships:
+  - type: measures
+    target: ../entities/store.md
+    note: "one row per store per calendar day — store_id + date grain"
+last_changed_by: "PR #000"
+tags: ["finance", "gmv"]
+stale: false
+stale_at: null
+stale_reason: null
+---
+
+## Definition
+
+Gross Merchandise Value (GMV) is the total monetary value of all orders
+placed through the platform within a reporting period, before any
+deductions (returns, discounts, fees). It is the primary top-line volume
+indicator for the platform. Reported per store on a daily snapshot basis,
+with pre-built period-accumulation variants (MTD, QTD, YTD) and
+growth-rate variants (MoM, YoY).
+
+## Calculation
+
+The value is pre-computed and stored in the mart at build time.
+To retrieve it, SELECT the appropriate column from the
+`## Materialized Columns` table below — no query-time aggregation
+or `GROUP BY` is needed.
+
+## Materialized Columns
+
+| Variant | Model | Column | Grain |
+|---------|-------|--------|-------|
+| Period-to-date / growth views | rpt_store_gmv_daily | `gmv_{period}` — period ∈ {mtd, qtd, ytd, mom, yoy} | one row per store per calendar day |
+| Channel segment | rpt_store_gmv_daily | `gmv_{segment}` — segment ∈ {total, online} | one row per store per calendar day |
+
+To SELECT: substitute the appropriate value from the allowed set in the
+Column cell. For example, to retrieve month-to-date GMV for store 42 on
+2026-06-01: `SELECT gmv_mtd FROM rpt_store_gmv_daily WHERE store_id = 42 AND date = '2026-06-01'`.
+To retrieve online-channel GMV for the same store and date:
+`SELECT gmv_online FROM rpt_store_gmv_daily WHERE store_id = 42 AND date = '2026-06-01'`.
+
+## Caveats
+
+- GMV reflects the order-placed value; it does not net out returns or
+  cancellations. See the `rpt_store_gmv_daily` model description for
+  any exclusion logic applied upstream.
+- `gmv_mom` and `gmv_yoy` are NULL for the first month/year of a
+  store's history (no prior period to compare against).
+- Model is a daily snapshot; the most recent row reflects the state as
+  of the last successful dbt run (typically one business-day lag).
+
+## Relationships
+
+- measures → [Store](../entities/store.md) — store_id + date grain
+
+## Evidence
+
+- [rpt_store_gmv_daily](../_evidence/models/rpt_store_gmv_daily.md)
+```
+
+---
+
 ## 11. Summary of Decision Rules
 
 | Situation | Action |
@@ -448,7 +698,8 @@ is supported.
 | Multiple metrics in one model | One page per distinct business measure; share `derived_from` |
 | Reporting-period variants (daily/MTD/QTD/YTD/MoM/YoY) of one measure | ONE metric page; describe variants in `## Calculation` — never fork per time window (§1) |
 | Parallel segment models (e.g. total vs single-channel revenue) | ONE metric page; list both models in `derived_from:`; segment split → `concepts/` page + `depends_on` edge (§3b) |
-| Metric has no numerator/denominator formula (pure aggregation/window) | Fallback: describe aggregation + grain + period variants; note upstream definition; do NOT invent formula (§5) |
+| Metric variants already materialized as pre-built mart columns (anchor signal 2 "column forest" OR signal 4 "pre-aggregated grain" fires — §5 materialization check) | Materialization branch: emit `## Materialized Columns` card (§5b); `## Calculation` = SELECT pre-built column, no formula, no query-time `GROUP BY` |
+| Metric has no numerator/denominator formula (pure aggregation/window, materialization does NOT fire) | Fallback: describe aggregation + grain + period variants; note upstream definition; do NOT invent formula (§5) |
 | `measures` edge — date/time grain, no clear business entity | Use `note: "daily grain — aggregated across the whole population"`; target closest entity if one exists (§7a) |
 | `measures` edge — target entity not yet distilled | Emit the edge anyway AND create a `status: seed` stub for the target (SCHEMA dangling-target rule); append `"(entity not yet distilled)"` to `note` (§7a) |
 | Metric depends on a concept page | Add `depends_on` edge in both frontmatter and `## Relationships` |

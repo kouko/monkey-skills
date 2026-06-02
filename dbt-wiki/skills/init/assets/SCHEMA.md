@@ -1,8 +1,12 @@
 # dbt-wiki Schema (v2.0 — frozen for v2.x)
 
 This schema is **frozen for the v2.x line**. Frontmatter shape, page
-types, and naming conventions will not change within v2.x patches; only
-wording clarifications are allowed.
+types, naming conventions, and mandatory body sections will not change
+within v2.x patches; only wording clarifications are allowed. *Additive
+optional body sections* (sections that appear only under a stated
+condition and change no existing required section's semantics) may be
+added within v2.x — they neither break existing pages nor alter the
+frontmatter/page-type/naming contract.
 
 **Clean break from v1.x — no migration.** v2.0 is a breaking redesign:
 dbt object types (model / source / macro / …) are demoted from *the
@@ -247,6 +251,30 @@ Body sections:
 ## Calculation
 <the algorithm in plain language — how it's computed, the grain it's
 computed at, edge cases. Cite the aggregation SQL in evidence.>
+
+## Materialized Columns
+_(Optional — include ONLY when the metric's variants are pre-materialized
+into mart columns: values are already computed and a consumer can SELECT
+the right column directly instead of re-aggregating with GROUP BY.
+Omit this section entirely for metrics that still require query-time
+aggregation. Does NOT go into frontmatter — body-only by design.
+This section enriches the existing single page; it does NOT create a
+new page type and does not break the "one metric = one page" principle.)_
+
+A markdown table mapping **period/segment variant → physical `model.column` + grain**:
+
+| Variant | Model | Column | Grain |
+|---------|-------|--------|-------|
+| <e.g. MTD> | <mart_model> | <column_name> | <e.g. day × store> |
+| ... | ... | ... | ... |
+
+When columns follow a regular naming pattern (e.g. `gmv_{period}_{segment}`),
+capture the **pattern + allowed dimension values** rather than enumerating
+every column. Enumerate individually only when naming is irregular.
+
+See `references/distill-metrics.md` for the production procedure:
+materialization detection signals, forest-compression rules, and a
+worked example.
 
 ## Caveats
 <data-quality / coverage caveats, sourced from evidence-layer tests>
