@@ -347,6 +347,24 @@ class TestDeepResearchFunctionLength:
             "must be ≤50. Extract helpers to shrink it."
         )
 
+    def test_run_search_fetch_under_50_lines(self):
+        """_run_search_fetch() must stay under 50 non-blank body lines.
+
+        WHY: the 50-line soft ceiling (Clean Code Ch.3) is the design constraint
+        that forces extraction of nested closures into named helpers, making each
+        stage unit-testable independently.
+        """
+        import inspect
+        from deep_research.core import _run_search_fetch
+
+        source = inspect.getsource(_run_search_fetch)
+        lines = [ln for ln in source.splitlines() if ln.strip()]
+        body_lines = len(lines) - 1  # subtract the def line
+        assert body_lines <= 50, (
+            f"_run_search_fetch() body is {body_lines} non-blank lines; "
+            "must be ≤50. Extract search_stage/fetch_stage into named helpers."
+        )
+
 
 class TestConfirmedBlockVoteAndEvidence:
     """RED: _confirmed_block must emit Vote: and Verifier evidence lines (spec §SYNTHESIS {block})."""
