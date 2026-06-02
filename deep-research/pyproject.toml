@@ -3,8 +3,8 @@ name = "deep-research"
 version = "0.1.0"
 requires-python = ">=3.12"
 # Core (L1) has zero hard runtime deps — it depends only on stdlib + injected
-# provider Protocols. Capability + transport are opt-in extras:
-#   anthropic / search → L2 reference adapters · mcp → L3 server.
+# provider Protocols. Capability is an opt-in extra:
+#   anthropic / search → L2 reference adapters.
 dependencies = []
 
 [project.scripts]
@@ -13,8 +13,7 @@ deep-research = "deep_research.cli:main"
 [project.optional-dependencies]
 anthropic = ["anthropic"]
 search = ["httpx"]
-mcp = ["mcp"]
-dev = ["pytest", "pytest-asyncio", "anthropic", "httpx", "mcp"]
+dev = ["pytest", "pytest-asyncio", "anthropic", "httpx"]
 
 [build-system]
 requires = ["hatchling"]

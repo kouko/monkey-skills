@@ -127,5 +127,10 @@ cases) becomes obsolete.
 
 - **Q1 (deferred to L2)**: confirm search backend (Brave reco) + LLM provider
   (Anthropic reco) — the user's API keys decide. Does NOT block L1.
-- **Q2**: does the user want L3 (MCP) in this pass, or stop at L2 (CLI) and
-  add MCP later? Default: build all three; L3 is thin once L1+L2 exist.
+- **Q2 — RESOLVED (2026-06-02, post whole-branch-review)**: L3 (MCP) was built
+  and reviewed, then **dropped** per a deletion-first / YAGNI call — no MCP
+  consumer is in sight, L2 (CLI) already clears the "runs on any agent" bar, and
+  re-adding the MCP wrapper later is ~120 lines against an unchanged core (zero
+  risk). Shipped surface is **two layers: L1 core + L2 CLI/adapters.** The
+  removed `mcp_server.py` lives in git history (commit `00bb2ec2`) for a cheap
+  revert if a real MCP-speaking, autonomous-invocation consumer appears.
