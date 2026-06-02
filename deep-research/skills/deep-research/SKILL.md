@@ -48,12 +48,12 @@ subagent per independent input, dispatched in a single assistant message with
 multiple agent calls so the harness runs them concurrently.
 
 Describe and dispatch this work **abstractly as "dispatch N subagents"** — do
-**not** hard-code the Claude Code Workflow tool. The abstract fan-out maps
-across harnesses (Claude Code, Codex, Cursor, …) via the repo's
-`references/{codex,copilot}-tools.md` convention; binding to one harness's
-workflow primitive would break agent-portability. Each per-input subagent is
-independent (disjoint inputs, no shared files), which is exactly the case the
-fan-out convention is for.
+**not** hard-code the Claude Code Workflow tool. Stated abstractly, the fan-out
+maps onto whatever concurrent-subagent primitive the host agent provides
+(Claude Code, Codex, Cursor, …); binding to one harness's workflow primitive
+would break agent-portability. Each per-input subagent is independent (disjoint
+inputs, no shared files), which is exactly the case the fan-out convention is
+for.
 
 ---
 
