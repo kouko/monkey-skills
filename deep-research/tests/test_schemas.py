@@ -1,0 +1,91 @@
+"""RED tests for schemas.py — shape assertions against the verbatim port."""
+from __future__ import annotations
+
+
+def test_scope_schema_shape():
+    from deep_research.schemas import SCOPE_SCHEMA
+
+    angles_prop = SCOPE_SCHEMA["properties"]["angles"]
+    assert angles_prop["minItems"] == 3
+    assert angles_prop["maxItems"] == 6
+    assert set(SCOPE_SCHEMA["required"]) == {"question", "angles", "summary"}
+
+
+def test_verdict_schema_required():
+    from deep_research.schemas import VERDICT_SCHEMA
+
+    assert "refuted" in VERDICT_SCHEMA["required"]
+    assert "evidence" in VERDICT_SCHEMA["required"]
+    assert "confidence" in VERDICT_SCHEMA["required"]
+
+
+def test_constants():
+    from deep_research.schemas import (
+        MAX_FETCH,
+        MAX_VERIFY_CLAIMS,
+        REFUTATIONS_REQUIRED,
+        VOTES_PER_CLAIM,
+    )
+
+    assert VOTES_PER_CLAIM == 3
+    assert REFUTATIONS_REQUIRED == 2
+    assert MAX_FETCH == 15
+    assert MAX_VERIFY_CLAIMS == 25
+
+
+def test_search_schema_shape():
+    from deep_research.schemas import SEARCH_SCHEMA
+
+    results_prop = SEARCH_SCHEMA["properties"]["results"]
+    assert results_prop["maxItems"] == 6
+    assert set(results_prop["items"]["required"]) == {"url", "title", "relevance"}
+    assert SEARCH_SCHEMA["required"] == ["results"]
+
+
+def test_extract_schema_shape():
+    from deep_research.schemas import EXTRACT_SCHEMA
+
+    claims_prop = EXTRACT_SCHEMA["properties"]["claims"]
+    assert claims_prop["maxItems"] == 5
+    assert set(claims_prop["items"]["required"]) == {"claim", "quote", "importance"}
+    sq = EXTRACT_SCHEMA["properties"]["sourceQuality"]
+    assert set(sq["enum"]) == {"primary", "secondary", "blog", "forum", "unreliable"}
+
+
+def test_report_schema_shape():
+    from deep_research.schemas import REPORT_SCHEMA
+
+    assert set(REPORT_SCHEMA["required"]) == {"summary", "findings", "caveats"}
+    finding_req = set(REPORT_SCHEMA["properties"]["findings"]["items"]["required"])
+    assert finding_req == {"claim", "confidence", "sources", "evidence"}
+
+
+def test_dataclasses_importable():
+    from deep_research.schemas import (
+        Angle,
+        ExtractedClaim,
+        Finding,
+        Report,
+        SearchResult,
+        Verdict,
+    )
+
+    # Instantiate with minimal required args to confirm field shapes
+    a = Angle(label="test", query="test query")
+    assert a.rationale is None
+
+    sr = SearchResult(url="http://x.com", title="X", relevance="high")
+    assert sr.snippet is None
+
+    ec = ExtractedClaim(claim="c", quote="q", importance="central",
+                        source_url="http://x.com", source_quality="primary")
+    assert ec.importance == "central"
+
+    v = Verdict(refuted=False, evidence="e", confidence="high")
+    assert v.counter_source is None
+
+    f = Finding(claim="c", confidence="high", sources=["http://x.com"], evidence="e")
+    assert f.vote is None
+
+    r = Report(summary="s", findings=[], caveats="none")
+    assert r.open_questions == []
