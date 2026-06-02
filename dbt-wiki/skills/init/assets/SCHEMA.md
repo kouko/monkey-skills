@@ -215,7 +215,38 @@ Body sections:
 ## Fields
 <plain-language column dictionary — what each meaningful field MEANS in
 business terms. The glossary lives HERE (not a separate folder): each
-row maps a field to its business meaning. Cite evidence columns.>
+row maps a field to its business meaning. Cite evidence columns.
+
+**Value-domain / enum capture (additive, optional — v2.x freeze-compatible).**
+For small-cardinality categorical columns, record the actual stored values
+and their format so SQL generators can map user terms to warehouse values
+without guessing. Only enumerate when the column has **≤ 20 distinct values**
+(threshold — do NOT enumerate high-cardinality columns; they bloat the page
+and drift on every new value). Larger sets belong in a `knowledge-concept`
+page (e.g. a "Status Codes" concept) or a `## Caveats` note pointing to the
+source table.
+
+Format — a **body annotation inline under the relevant `## Fields` entry**
+(NOT a frontmatter key): the `value_domain: [...]` text is rendered in the
+field's bullet, not added to the page's YAML frontmatter.
+
+```
+- **region_code** — 2-letter ISO region code stored in the warehouse.
+  `value_domain: [NL, EU, APAC]`
+  (user terms like "Northland" / "Northland" map to stored value `NL`)
+
+- **order_status** — lifecycle stage of the order.
+  `value_domain: [pending, confirmed, shipped, cancelled]`
+```
+
+Rules:
+1. List only the values that actually appear in production data (distilled
+   from `DISTINCT` evidence or schema.yml `accepted_values` test).
+2. Note any format surprise (e.g. suffix, locale, casing) that would cause
+   an equality filter to miss rows.
+3. If stored values differ from display labels, document both
+   (`stored: NL`, `display: Northland`).
+4. Omit this block entirely for free-text or numeric columns.>
 
 ## Relationships
 <typed edges to other knowledge pages — see "## Relationships spec".
@@ -343,8 +374,21 @@ Frontmatter shape (each edge):
 relationships:
   - type: measures
     target: ../entities/customer.md     # relative markdown-link target
-    note: "GROUP BY customer_id grain"  # optional one-line rationale
+    note: "GROUP BY customer_id grain"  # one-line rationale (see join-key rule below)
 ```
+
+**`note` join-key rule (compound / composite keys).** When the join between
+two entities uses more than one column, the `note` MUST record the **full
+compound key** — all columns in the join condition, not a subset. A partial
+key silently fans out (double-counts rows). Examples:
+
+- Single-column join: `note: "joins on customer_id"`
+- Composite join: `note: "joins on account_id + report_month (composite key — both columns required)"`
+
+Consumers generating SQL (e.g. `/dbt-wiki:to-sql`) MUST read the full key
+from `note` before emitting a JOIN predicate. Omitting any column from a
+composite key is a semantic bug, not a syntax error — it produces extra rows
+with no warning.
 
 **Dangling edge targets (FK points to an un-distilled entity).** When an
 edge target entity has NO model in the current evidence slice (e.g. a

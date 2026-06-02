@@ -4,7 +4,7 @@ Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh
 
 > Local-only LLM-queryable knowledge base for dbt projects. A **two-layer** system: a **knowledge layer** (`entities/`, `metrics/`, `concepts/`) of LLM-distilled business meaning, supported by an **evidence layer** (`_evidence/`) of mechanical extractions from `target/manifest.json` + [sqlglot](https://github.com/tobymao/sqlglot) column-level lineage. Query answers semantic questions ("what does churn mean?", "which entities relate to revenue?") alongside structural lineage questions — without dbt Cloud, without leaving your machine.
 
-**Version**: 2.0.0 · **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) · **License**: MIT
+**Version**: 2.3.0 · **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) · **License**: MIT
 
 ## Background
 
@@ -27,6 +27,7 @@ dbt has excellent first-party docs (`dbt docs generate` → static HTML site) an
 | [`/dbt-wiki:refresh`](skills/refresh/) | After `dbt parse` / `dbt compile` / `dbt run` when models changed | Diff against last `manifest_sha`; updates only changed pages; preserves user-owned `## User Notes` sections |
 | [`/dbt-wiki:ingest`](skills/ingest/) | Whenever you want to capture context that's NOT in manifest.json or schema.yml (gotchas, design rationale, ticket links) | Free-form text arg; auto-attaches to mentioned model / source / macro |
 | [`/dbt-wiki:query`](skills/query/) | Whenever asking semantic questions ("what does churn mean?", "which entities relate to revenue?") or structural lineage questions ("what does fct_orders depend on?", "which columns does stg_customers.email feed?") | `.dbt-wiki/index.md` + relevant knowledge and evidence pages; with optional drift verification |
+| [`/dbt-wiki:to-sql`](skills/to-sql/) | When you want a **runnable SQL query generated** for a business question ("give me the SQL for last month's GMV per store", "write a query that counts active users by plan"). Use this — not `query` — when your goal is SQL output, not understanding. (`query` = understand what data means / explain lineage; `to-sql` = turn a business question into executable SQL) | Business question as free-form text; resolves business terms to physical columns via the knowledge base, assembles join paths, and statically validates the generated SQL |
 
 ## Quick start
 
