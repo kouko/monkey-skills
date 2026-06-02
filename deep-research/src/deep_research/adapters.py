@@ -80,7 +80,9 @@ class AnthropicLLM:
             logger.debug("AnthropicLLM.complete failed", exc_info=True)
             return None
         except Exception:
-            # Catch unexpected non-SDK exceptions (e.g. asyncio cancellation wrappers).
+            # Residual catch for unexpected non-SDK Exceptions. Note: BaseException
+            # (incl. asyncio.CancelledError, KeyboardInterrupt) is intentionally NOT
+            # caught here, so cancellation/interrupts still propagate.
             logger.debug("AnthropicLLM.complete unexpected error", exc_info=True)
             return None
 
