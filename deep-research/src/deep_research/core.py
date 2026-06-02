@@ -111,6 +111,62 @@ def _killed_block(ranked_claims: list[dict], vote_results: list[bool]) -> str:
 # Stage helpers extracted from deep_research() to keep it under 50 lines
 # ---------------------------------------------------------------------------
 
+async def _search_stage(
+    angle: dict,
+    question: str,
+    search: SearchProvider,
+    llm: LLMProvider,
+) -> tuple[dict, list[dict]]:
+    """Call search provider → LLM ranks results → return (angle, ranked_list)."""
+    raw_results = await search.search(angle["query"])
+    ranked = await llm.complete(
+        search_prompt(angle, question)
+        + "\n\n## Raw search results to rank/filter\n"
+        + json.dumps(raw_results, ensure_ascii=False),
+        SEARCH_SCHEMA,
+    )
+    results: list[dict] = (ranked or {}).get("results", [])
+    return angle, results
+
+
+async def _fetch_stage(
+    angle_and_results: tuple[dict, list[dict]],
+    question: str,
+    fetch: FetchProvider,
+    llm: LLMProvider,
+    seen: dict[str, bool],
+    fetch_slots_ref: list[int],
+) -> list[dict]:
+    """Dedup results, fetch novel sources, extract claims.
+
+    filter_novel is synchronous — no await between its read and write of
+    seen + fetch_slots_ref, so concurrent calls cannot race on shared state.
+    """
+    angle, results = angle_and_results
+    novel, _dupes, _dropped, new_slots = filter_novel(results, seen, fetch_slots_ref[0])
+    fetch_slots_ref[0] = new_slots
+
+    extracted: list[dict] = []
+    for source in novel:
+        page_text = await fetch.fetch(source["url"])
+        if page_text is None:
+            continue
+        extract_result = await llm.complete(
+            fetch_prompt(source, angle.get("label", ""), question)
+            + "\n\n## Page content extracted\n"
+            + page_text,
+            EXTRACT_SCHEMA,
+        )
+        if extract_result is None:
+            continue
+        source_quality = extract_result.get("sourceQuality", "unreliable")
+        for raw_claim in extract_result.get("claims", []):
+            extracted.append(
+                {**raw_claim, "sourceUrl": source["url"], "sourceQuality": source_quality}
+            )
+    return extracted
+
+
 async def _run_search_fetch(
     question: str,
     angles: list[dict],
@@ -120,64 +176,18 @@ async def _run_search_fetch(
     concurrency: int,
     fetch_budget: int,
 ) -> list[dict]:
-    """Stages 2a-2c: search → dedup → fetch → extract claims for all angles.
-
-    The filter_novel call is synchronous and mutates seen + fetch_slots_ref
-    atomically (no await between read and write), so concurrent angle
-    executions cannot race on the shared state.
-    """
+    """Stages 2a-2c: search → dedup → fetch → extract claims for all angles."""
     seen: dict[str, bool] = {}
     fetch_slots_ref: list[int] = [fetch_budget]
 
-    async def search_stage(angle: dict) -> tuple[dict, list[dict]]:
-        """Call search provider → LLM ranks results → return (angle, ranked_list)."""
-        raw_results = await search.search(angle["query"])
-        ranked = await llm.complete(
-            search_prompt(angle, question)
-            + "\n\n## Raw search results to rank/filter\n"
-            + json.dumps(raw_results, ensure_ascii=False),
-            SEARCH_SCHEMA,
-        )
-        results: list[dict] = (ranked or {}).get("results", [])
-        return angle, results
+    async def _search(angle: dict) -> tuple[dict, list[dict]]:
+        return await _search_stage(angle, question, search, llm)
 
-    async def fetch_stage(angle_and_results: tuple[dict, list[dict]]) -> list[dict]:
-        """Dedup results, fetch novel sources, extract claims."""
-        angle, results = angle_and_results
-
-        # Atomic dedup — synchronous, no await → no interleaving risk.
-        novel, _dupes, _dropped, new_slots = filter_novel(
-            results, seen, fetch_slots_ref[0]
-        )
-        fetch_slots_ref[0] = new_slots
-
-        extracted: list[dict] = []
-        for source in novel:
-            page_text = await fetch.fetch(source["url"])
-            if page_text is None:
-                # Fetch failed — treat as unreliable with no claims (spec contract).
-                continue
-            extract_result = await llm.complete(
-                fetch_prompt(source, angle.get("label", ""), question)
-                + "\n\n## Page content extracted\n"
-                + page_text,
-                EXTRACT_SCHEMA,
-            )
-            if extract_result is None:
-                continue
-            source_quality = extract_result.get("sourceQuality", "unreliable")
-            for raw_claim in extract_result.get("claims", []):
-                extracted.append(
-                    {
-                        **raw_claim,
-                        "sourceUrl": source["url"],
-                        "sourceQuality": source_quality,
-                    }
-                )
-        return extracted
+    async def _fetch(angle_and_results: tuple[dict, list[dict]]) -> list[dict]:
+        return await _fetch_stage(angle_and_results, question, fetch, llm, seen, fetch_slots_ref)
 
     angle_claim_lists: list[Any] = await pipeline(
-        angles, search_stage, fetch_stage, concurrency=concurrency
+        angles, _search, _fetch, concurrency=concurrency
     )
     all_claims: list[dict] = []
     for slot in angle_claim_lists:
