@@ -10,10 +10,13 @@ Missing required env key
 - HttpxFetch:   no key required; never raises at construction.
 """
 
+import logging
 import os
 
 import anthropic
 import httpx
+
+logger = logging.getLogger(__name__)
 
 
 _BRAVE_SEARCH_URL = "https://api.search.brave.com/res/v1/web/search"
@@ -69,7 +72,18 @@ class AnthropicLLM:
                 tool_choice={"type": "tool", "name": self._TOOL_NAME},
                 messages=[{"role": "user", "content": prompt}],
             )
+        except anthropic.APIError:
+            # anthropic.APIError is the base for all SDK errors (auth 401, rate-limit 429,
+            # connection errors, etc.).
+            # Reference: https://github.com/anthropics/anthropic-sdk-python#error-handling
+            # Verified: 2026-06-02
+            logger.debug("AnthropicLLM.complete failed", exc_info=True)
+            return None
         except Exception:
+            # Residual catch for unexpected non-SDK Exceptions. Note: BaseException
+            # (incl. asyncio.CancelledError, KeyboardInterrupt) is intentionally NOT
+            # caught here, so cancellation/interrupts still propagate.
+            logger.debug("AnthropicLLM.complete unexpected error", exc_info=True)
             return None
 
         if response.stop_reason != "tool_use":
@@ -124,7 +138,16 @@ class BraveSearch:
                 response = await client.get(
                     _BRAVE_SEARCH_URL, headers=headers, params=params
                 )
+        except httpx.HTTPError:
+            # httpx.HTTPError is the base for all httpx errors (RequestError,
+            # TransportError, TimeoutException, ConnectError, etc.).
+            # Reference: https://www.python-httpx.org/exceptions/
+            # Verified: 2026-06-02
+            logger.debug("BraveSearch.search failed", exc_info=True)
+            return []
         except Exception:
+            # Catch unexpected non-httpx exceptions.
+            logger.debug("BraveSearch.search unexpected error", exc_info=True)
             return []
 
         if response.status_code != 200:
@@ -160,7 +183,16 @@ class HttpxFetch:
         try:
             async with httpx.AsyncClient(timeout=_HTTPX_TIMEOUT) as client:
                 response = await client.get(url, headers=headers)
+        except httpx.HTTPError:
+            # httpx.HTTPError is the base for all httpx errors (RequestError,
+            # TransportError, TimeoutException, ConnectError, etc.).
+            # Reference: https://www.python-httpx.org/exceptions/
+            # Verified: 2026-06-02
+            logger.debug("HttpxFetch.fetch failed", exc_info=True)
+            return None
         except Exception:
+            # Catch unexpected non-httpx exceptions.
+            logger.debug("HttpxFetch.fetch unexpected error", exc_info=True)
             return None
 
         if response.status_code != 200:
