@@ -213,3 +213,23 @@ def test_cli_unknown_subcommand_fails_loud():
         text=True,
     )
     assert proc.returncode != 0
+
+
+def test_render_audit_cell_escaping_keeps_one_row():
+    # The named correctness invariant: a pipe / newline / CR inside a claim or
+    # quote must NOT break the single-row markdown table.
+    results = [
+        {
+            "claim": "a | b\nc\r\nd",
+            "citedUrl": "http://x.com",
+            "support": "supported",
+            "evidence": "line1\nline2",
+        }
+    ]
+    md = render_audit(results)
+    # find the data row (the one mentioning the cited url)
+    row = [ln for ln in md.splitlines() if "http://x.com" in ln]
+    assert len(row) == 1, "claim's embedded newlines leaked into extra rows"
+    assert "\\|" in row[0], "pipe not escaped"
+    # no raw CR/LF survived inside the rendered row text
+    assert "\r" not in row[0]

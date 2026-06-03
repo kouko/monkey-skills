@@ -170,8 +170,20 @@ def _cited_source(row: Dict) -> str:
 
 
 def _escape_cell(text: str) -> str:
-    """Keep a markdown table cell on one row: escape pipes, fold newlines."""
-    return str(text).replace("|", "\\|").replace("\n", " ").strip()
+    """Keep a markdown table cell on one row: escape pipes, fold ALL newlines.
+
+    Folds CRLF, lone CR, and LF (a bare ``\\r`` is a line break in some
+    renderers/terminals, so it must be folded too) — the single-row table
+    invariant must hold for any line-ending style.
+    """
+    return (
+        str(text)
+        .replace("|", "\\|")
+        .replace("\r\n", " ")
+        .replace("\r", " ")
+        .replace("\n", " ")
+        .strip()
+    )
 
 
 def render_audit(results: List[Dict]) -> str:
