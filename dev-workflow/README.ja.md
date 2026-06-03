@@ -122,6 +122,7 @@ dev-workflow/
 ├── skills/
 │   ├── brief-before-asking/
 │   ├── complexity-critique/
+│   ├── dbt-model-style/
 │   ├── distill-sessions/
 │   ├── dogfood-skill-testing/
 │   ├── git-memory/

@@ -4,7 +4,7 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
-## [2.15.0] — 2026-06-03
+## [2.16.0] — 2026-06-03
 
 ### Added — `dogfood-skill-testing`: behavioral black-box dogfood for skills-in-development
 
@@ -27,6 +27,14 @@ Apache-2.0) onto the skill-testing substrate, filling the
 black-box-exploratory gap between `skill-judge` (static),
 `skill-creator-advance` (white-box conformance), and `distill-sessions`
 (telemetry).
+
+## [2.15.0] — 2026-06-03
+
+### Added — `dbt-model-style`: dbt model style & structure guide
+
+New skill (PR #374): a style + structure guide for dbt models with a
+header validator script. See the skill's `SKILL.md`. (Changelog entry
+added here for version continuity; the skill landed via #374.)
 
 ## [2.14.1] — 2026-05-31
 
