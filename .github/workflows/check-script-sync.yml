@@ -130,7 +130,7 @@ jobs:
           # NOTE: ROOT above points at investing-toolkit; build the
           # research-toolkit paths explicitly (also relative to checkout root).
           rt_skills = Path("research-toolkit/skills")
-          rt_siblings = ["fact-check", "cite-check"]
+          rt_siblings = ["fact-check", "cite-check", "deep-read"]
           for primitive in ["schemas.py", "rank.py", "prompts.py", "dedup.py"]:
               rt_reference = rt_skills / "deep-research" / "scripts" / primitive
               rt_copies = [
