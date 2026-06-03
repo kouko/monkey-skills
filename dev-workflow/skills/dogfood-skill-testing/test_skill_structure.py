@@ -125,6 +125,9 @@ def test_skill_md_refs():
     text = _read(SKILL_MD)
     assert "references/defect-taxonomy.md" in text, "SKILL.md must reference references/defect-taxonomy.md"
     assert "templates/dogfood-report-template.md" in text, "SKILL.md must reference templates/dogfood-report-template.md"
+    # trigger-eval.json is a shipped bundle asset (the Probe A corpus starter) — it must be
+    # documented so the skill doesn't make the reader rebuild it (re-dogfood finding 2026-06-03).
+    assert "trigger-eval.json" in text, "SKILL.md must reference the shipped trigger-eval.json corpus"
     assert DEFECT_TAXONOMY.exists(), f"referenced file missing: {DEFECT_TAXONOMY}"
     assert REPORT_TEMPLATE.exists(), f"referenced file missing: {REPORT_TEMPLATE}"
 
