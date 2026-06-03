@@ -4,6 +4,158 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] — 2026-06-03
+
+### Added — `pack`: export the knowledge base as a portable analytics skill
+
+dbt-wiki is repositioned as a **knowledge / context layer**, not a query
+engine. Real-data dogfood + an industry scan (Vanna, Wren AI, dbt MCP +
+MetricFlow, dbt-labs' own agent skills) confirmed the differentiator is not
+another NL→SQL engine but **portable curated knowledge** an agent can carry to
+wherever it already has warehouse access. The new `/dbt-wiki:pack` skill freezes
+the distilled `.dbt-wiki/` knowledge into a self-contained, portable Agent Skill
+folder (`<project>-analytics/`) that a downstream agent uses **with its own
+warehouse-connect tool** to ground, generate, execute, and iterate on SQL.
+
+**New skill — `skills/pack/`** (owner-run packager):
+- `SKILL.md` — 8-step packager: locate `.dbt-wiki/` → create the flat
+  `<project>-analytics/` bundle → **freeze** the knowledge layer into a flat
+  `knowledge/` (flatten-on-freeze: source nests, bundle stays flat) → copy the
+  generation guidance → instantiate the bundle `SKILL.md` from the template →
+  reserve `examples/` → write the snapshot annotation (source `manifest_sha` +
+  build date + rebuild pointer) → verify the emitted folder is a flat valid skill.
+- `references/bundle-format.md` — spec for the emitted bundle (flat-skill
+  constraint, portability into `~/.claude/skills/`, on-demand knowledge, the
+  snapshot-annotation block).
+- `references/generation-guidance.md` — the to-sql semantic guardrails
+  (aggregate form · join-grain / fan-out · value-grounding · source
+  disambiguation · temporal) + schema-linking, **reframed for a
+  warehouse-connected agent**: generate → execute via your own tool → inspect →
+  iterate. **Execution is the only gate** — there is deliberately no static
+  existence check (see Removed below for why).
+- `assets/bundle-skill-template.md` — the emitted bundle's `SKILL.md` template
+  (tool-agnostic 4-step consumption procedure; names no specific warehouse tool).
+
+### Removed — the `to-sql` runtime shell (BREAKING)
+
+`skills/to-sql/` is retired. Its never-execute, in-repo NL2SQL design was a half
+solution (a generator that can't run its own output can't catch the semantic
+errors that only execution reveals). Its semantic guardrails are preserved in
+`pack/references/generation-guidance.md`. `/dbt-wiki:to-sql` no longer exists;
+use `/dbt-wiki:pack` to export an analytics bundle and run SQL through your own
+warehouse tool. README Skills tables (en / ja / zh-TW) updated; two stale
+cross-references repointed (`SCHEMA.md`, `distill-entities.md`).
+
+**The static SQL validator was dropped, not carried forward.** A synthetic
+end-to-end pack dogfood surfaced that a static existence check (parse SQL → look
+up tables/columns in a frozen schema) has no coherent home in a portable
+**snapshot** bundle: the live warehouse drifts (columns added / renamed /
+dropped) and the bundle does not auto-update, so a frozen check gives false
+confidence (a dropped column still "exists" in the snapshot) or false errors (a
+new column the snapshot never saw). It also could not see the dangerous
+errors — semantically-valid wrong-number bugs — which only execution reveals.
+The validator (`validate_sql.py` + its 16-case test, a relic of the
+never-execute `to-sql` design) was therefore removed; `knowledge/` **grounds**
+generation, execution **gates** it.
+
+Pure spec/markdown; no warehouse driver in dbt-wiki itself (warehouse-agnostic
+by design); all examples synthetic.
+
+### Deferred (noted, not in this release)
+
+- **Gold-example generation** into the bundle's reserved `examples/` slot.
+- **`init` catalog.json / connect value_domain enrichment** (OQ-A mechanism).
+- **A synthetic `acme-analytics/` demo bundle** (must live OUTSIDE `skills/` to
+  avoid skill-in-skill nesting).
+
+## [2.3.0] — 2026-06-02
+
+### Added — to-sql semantic correctness guardrails (dogfood-driven)
+
+Real-data dogfood (5 axes on a live warehouse) showed the to-sql static
+validator (sqlglot parse + manifest existence) catches syntax + hallucination
+but **not** semantic errors — valid SQL that returns the wrong number, which a
+non-SQL user can't detect. Observed: aggregation form (avg-order-value 3x
+divergence between `SUM/SUM` and `AVG(row-ratio)`), join-grain fan-out (84x row
+inflation from a partial join key), value-grounding (a region/city filter using
+the user's term instead of the stored code → 0 rows), and source ambiguity (the
+same business term answerable by two tables with different figures). This
+release closes those gaps in two layers.
+
+**Prompt guardrails — `to-sql/references/prompt-assembly.md`** (added as §4
+sub-sections; no renumber of §5–§8):
+- **§4e Aggregate Semantics** — derived ratios/averages default to aggregate-level
+  `SUM(num)/SUM(denom)`, never `AVG(row-ratio)`; prefer the metric page's
+  `## Calculation` form; state the form used (§8i).
+- **§4f Join Grain / Fan-out** — JOINs must use the full/compound grain key from
+  the relationship edge's `note`; warn on grain mismatch; never `SUM` over
+  fanned-out rows (§8j).
+- **§4g Value Grounding** — categorical filters use the knowledge page's
+  `value_domain` enum if present, else don't assume user-term = stored-value
+  (`ILIKE`/assumption); record the mapping (§8g).
+- **§4h Source Disambiguation** — when ≥2 sources answer the same term, surface
+  both with their basis instead of silently picking (§8h).
+- Wired into the §6 prompt template; §8 output contract gains assumption
+  surfaces §8g–§8j (joining the existing §8e temporal / §8f NULL-ordering).
+
+**Knowledge-layer capture (so the guardrails have authoritative data)**:
+- `assets/SCHEMA.md` — Relationships spec now requires the edge `note` to record
+  the **compound join key** (all key columns); knowledge-entity gains optional
+  **`value_domain` capture** (body annotation, ≤20-distinct threshold) for small
+  categorical columns.
+- `init/references/distill-metrics.md` §5 — derived-ratio metrics MUST define
+  their aggregation form (aggregate-level vs avg-of-row-ratios).
+- `init/references/distill-entities.md` §3.4 — `## Fields` distillation captures
+  `value_domain` for small categorical columns, aligned with SCHEMA.
+
+Pure spec/markdown; no warehouse/execution; all examples synthetic. The static
+validator itself also gained two same-family false-positive fixes earlier on
+this line (SELECT-alias and CTE-name exclusion) with a regression-lock test set.
+
+## [2.2.0] — 2026-06-02
+
+### Added — `to-sql`: natural-language → SQL skill (NL2SQL part 1, zero-shot)
+
+The first consumer skill that turns the knowledge base into actual queries.
+`/dbt-wiki:to-sql` takes a natural-language **business question** and generates
+a **runnable SQL query** grounded in the distilled knowledge — distinct from
+`/dbt-wiki:query`, which *explains* the data (meaning + lineage). This is
+part 1 (the in-repo runtime consumer) of the NL2SQL effort; a portable
+packager that exports a standalone skill is a planned follow-up.
+
+Architecture reuses what the knowledge base already provides — the schema is
+already decomposed into semantic entities with summaries + a typed relationship
+graph, so retrieval reuses `query`'s tiered loading rather than standing up a
+vector store. Research backing (dbt Semantic Layer benchmark, RASL / SAFE-SQL):
+business-vocabulary→physical-column mapping is the dominant NL→SQL accuracy
+lever; the metric **column cards** (v2.1.0) feed this directly.
+
+- **`skills/to-sql/SKILL.md`** — pipeline: pre-condition + `manifest_sha` drift
+  check (reuses `query` Step 0) → retrieve schema context → assemble prompt →
+  generate SQL (project's adapter dialect) → **static-validate** → present
+  (SQL + cited knowledge pages + validation result + drift caveat).
+- **`skills/to-sql/assets/validate_sql.py`** (+ test) — static validator:
+  sqlglot parse + referenced table/column extraction (with SQL-alias→model
+  resolution), checked for existence against `manifest.json` (optional
+  `catalog.json` enrichment). Missing tables/columns are surfaced so a
+  hallucinated column is caught before the SQL is presented. Manifest-load
+  failure returns a structured error rather than raising. 9/9 tests pass.
+- **`skills/to-sql/references/retrieval.md`** — what to pull (entities + field
+  dictionaries, metrics incl. `## Materialized Columns` cards, concepts,
+  `relationships` join-paths, `_evidence/` backing columns) and how to handle
+  not-found / ambiguous / too-broad.
+- **`skills/to-sql/references/prompt-assembly.md`** — schema-linking, column-card
+  preference (SELECT the pre-built column, don't re-aggregate), join-path
+  assembly, an explicit **empty few-shot slot** (v1 is zero-shot; gold examples
+  are a planned increment), output contract, and the dialect rule.
+
+**Boundary (unchanged hard rule):** `to-sql` **generates** SQL but **never
+executes it and never connects to a warehouse** — validation is static only
+(parse + manifest existence).
+
+Zero changes to `init` / `query` / `refresh` core logic; `to-sql` is additive.
+READMEs (en/ja/zh-TW) gain a `to-sql` row disambiguating it from `query`.
+
 ## [2.1.0] — 2026-06-02
 
 ### Added — metric column cards (materialized-metric mapping)

@@ -1,0 +1,119 @@
+---
+name: <PROJECT_SLUG>-analytics
+description: >-
+  Ground questions in <PROJECT_NAME>'s distilled data knowledge and
+  generate correct SQL against its warehouse — <PROJECT_DESCRIPTION>.
+  This skill carries the semantic knowledge + SQL-generation guidance;
+  it does NOT execute SQL itself. Bring your own warehouse-connect tool
+  (an MCP server or a CLI that runs SQL against the warehouse) to
+  execute and inspect results. Use when asked to answer a data
+  question about <PROJECT_NAME>, write a query against its tables,
+  compute a metric, or explore its entities — e.g. "what was
+  <PROJECT_NAME>'s revenue last month", "average order value per
+  account", "how many active accounts by region". <TRIGGER_PHRASES>
+# --- snapshot annotation (see references/bundle-format.md §Snapshot-annotation block) ---
+source_manifest_sha: <SOURCE_MANIFEST_SHA>
+build_date: <BUILD_DATE>
+snapshot_note: "Snapshot — re-run dbt-wiki:pack to refresh; does not auto-update."
+---
+
+# <PROJECT_NAME> Analytics
+
+> **What this is**: a portable, **tool-agnostic** analytics skill for
+> <PROJECT_NAME>. It freezes the project's distilled semantic knowledge
+> and tells you how to turn a business question into a **correct** SQL
+> query. It does **not** connect to a warehouse — **you** bring the
+> tool that executes SQL.
+>
+> **Snapshot**: this bundle is a point-in-time snapshot
+> (`build_date` above). It does not auto-update. Re-run `dbt-wiki:pack`
+> against a refreshed `.dbt-wiki/` to rebuild.
+
+## What's in this folder
+
+All paths are **relative to this skill's directory**:
+
+- `knowledge/` — frozen semantic knowledge, **read on demand** (it can
+  be large; load only the pages relevant to the question). One file per
+  business object / measure / rule: entities (with `## Fields` column
+  cards + `value_domain` enums), metrics (with `## Calculation` +
+  `## Materialized Columns`), concepts, and relationship edges (with the
+  **full compound join key** in each edge `note`). Files sit **directly**
+  under `knowledge/` (flat — e.g. `knowledge/account.md`,
+  `knowledge/monthly-recurring-revenue.md`; a page-type prefix like
+  `knowledge/metric-monthly-recurring-revenue.md` only when names
+  collide).
+- `references/generation-guidance.md` — the SQL-generation guidance
+  (schema-linking + the five semantic guardrails: aggregate level,
+  compound-grain joins, value-grounding, source disambiguation,
+  temporal). Read this before generating SQL.
+- `examples/` — gold question → correct-SQL few-shot examples. **May be
+  empty** in this snapshot; read any that exist for in-domain grounding.
+
+## How to answer a question (the loop)
+
+This is a **generate → execute → inspect → iterate** loop, not a
+one-shot emit. You supply the execution.
+
+1. **Ground** — read the relevant pages under `knowledge/` and
+   schema-link the business terms in the question to concrete entity
+   fields / physical columns. Follow the schema-linking procedure in
+   `references/generation-guidance.md` (§1). If a term resolves to
+   nothing, ask the user — do not invent a column.
+
+2. **Generate** — write the SQL applying the semantic guardrails in
+   `references/generation-guidance.md` (correct `SUM/SUM` aggregation;
+   full compound join keys / no fan-out; value-grounded categorical
+   filters; surfaced source ambiguity; `CURRENT_DATE`-anchored relative
+   dates — never `MAX(date)` as "now"). Consult any `examples/` for
+   worked patterns. Do **not** static-check the SQL against `knowledge/`:
+   it is a snapshot and the live warehouse drifts, so a frozen existence
+   check gives false confidence or false errors (see
+   `references/generation-guidance.md` §0). Execution is the only gate.
+
+3. **Execute** — run the SQL via **your own warehouse-connect tool**
+   (an MCP server or a CLI that runs SQL against the warehouse). This
+   bundle names no specific tool: you bring it.
+
+4. **Inspect + iterate** — read the returned rows. Check row count,
+   value ranges, NULLs, and obviously-wrong magnitudes (a per-account
+   average equal to the grand total; a "last month" filter returning
+   future-dated rows; a categorical filter returning 0 rows). If the
+   result looks wrong, re-ground, fix the query, and re-run. Repeat
+   until the numbers are defensible.
+
+> **Why execution is the only gate**: this bundle's `knowledge/` is a
+> point-in-time snapshot and the live warehouse drifts, so checking a
+> query against the frozen schema proves nothing about current truth.
+> And even a fresh schema check only proves the SQL *parses* and
+> *references real objects* — not that the answer is *correct*. The
+> dangerous errors are semantically-valid wrong-number bugs (a 3×
+> over-count from averaging pre-aggregated rows; an 84× fan-out from a
+> grain mismatch; a future date from `MAX(date)`). **Only executing the
+> query and inspecting the rows catches those.** Run it. Look at the
+> output. Iterate.
+
+## Worked shape (synthetic)
+
+A question like *"average order value per account for last month"*
+against a project whose entity `account` exposes
+`account_id` / `report_month` and a categorical `region_code`
+(`value_domain: [NL, EU, APAC]`):
+
+1. **Ground**: `knowledge/account.md` → `## Fields` maps "account" →
+   `account_id`, "month" → `report_month`; "average order value" →
+   the metric page's `## Calculation` (a `SUM/SUM` ratio, not
+   `AVG(row_ratio)`).
+2. **Generate**: aggregate-level `SUM(order_revenue) / NULLIF(SUM(invoice_count), 0)`;
+   relative "last month" anchored on `CURRENT_DATE`, not `MAX(report_month)`;
+   any join on the **full** `account_id + report_month` compound key.
+3. **Execute** the query with your warehouse tool.
+4. **Inspect**: confirm the per-account figure is volume-weighted (not a
+   row-level mean), the month is *last* month (not a future amortization
+   row), and the row count is sane. Iterate if not.
+
+---
+
+*Generated by `dbt-wiki:pack`. Knowledge is a snapshot — see the
+`build_date` / `source_manifest_sha` in the frontmatter above (or
+`PROVENANCE.md` if this bundle keeps provenance there).*

@@ -180,6 +180,49 @@ staging lineage back to it is already recorded in the evidence page's
 `## Column Lineage Chains`. Only when a field exists solely on a staging
 model (never promoted to the mart) do you cite the staging column.
 
+### 3.4 Value-domain capture for small-cardinality categorical columns
+
+For any column with **≤ 20 distinct values** (a small-cardinality categorical
+/ enum column), record the actual stored values as a `value_domain: [...]`
+body annotation inline under that column's `## Fields` entry. This lets
+SQL-generating consumers (e.g. a `pack` analytics bundle) map user-facing
+terms to exact warehouse values without guessing.
+
+**When to add it:**
+- The column is categorical (region code, order status, tier, channel,
+  currency code, etc.) AND has ≤ 20 distinct values.
+- You have production evidence: a `DISTINCT` query result, a dbt
+  `accepted_values` test in schema.yml, or documented enum from the source
+  system.
+- Omit entirely for free-text, numeric, or high-cardinality columns (IDs,
+  timestamps, amounts). Those do not belong here; note them in `## Caveats`
+  if the cardinality is surprising.
+
+**Format** — body annotation only, NOT frontmatter:
+
+```markdown
+## Fields
+
+| Field | Meaning | Evidence column |
+|---|---|---|
+| `region_code` | 2-letter region code stored in the warehouse. Lookup joins use this stored value, not the display name. `value_domain: [NL, EU, APAC]` (user terms "Northland"/"Northland" map to stored value `NL`) | `dim_orders.region_code` |
+| `order_status` | Lifecycle stage of the order. `value_domain: [pending, confirmed, shipped, cancelled]` | `fct_orders.order_status` |
+```
+
+**Rules (aligned to SCHEMA §Value-domain / enum capture):**
+1. List only values that **actually appear in production data** — sourced from
+   a `DISTINCT` evidence query or a schema.yml `accepted_values` test. Do not
+   enumerate hypothetical values.
+2. Note any format surprise (suffix, locale, casing) that would cause an
+   equality filter to miss rows — e.g. `value_domain: [NL, EU, APAC]` not
+   `["Northland", "Eurozone", "Asia-Pacific"]`.
+3. If stored values differ from display labels, document both inline:
+   `stored: NL`, `display: Northland`.
+4. **≤ 20 values only.** Larger sets belong in a `knowledge-concept` page
+   (e.g. "Status Codes") or a `## Caveats` note pointing to the source table.
+5. The annotation goes in the **Meaning** cell of the Fields table (body
+   annotation), not in the page's YAML frontmatter block.
+
 ---
 
 ## 4. `## Relationships` — typed edges

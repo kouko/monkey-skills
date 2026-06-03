@@ -275,6 +275,48 @@ Calculation` instead states that the value is pre-computed and stored
 points the reader to the `## Materialized Columns` table. See §5b for
 the full output spec for that section.
 
+**Aggregation form for derived-ratio / average metrics.** When a metric
+is a **derived ratio or average** — its value is computed as one
+aggregate divided by another (e.g. average order value = total sales ÷
+number of invoices, conversion rate = conversions ÷ sessions, churn
+rate = cancellations ÷ active customers) — `## Calculation` MUST
+explicitly state the **aggregation form**:
+
+- **Aggregate-level** (correct for population ratios):
+  `SUM(numerator) / SUM(denominator)` — sum the parts independently,
+  then divide. This is the standard form for business KPIs like AOV,
+  conversion rate, and churn rate: it weights each row by its
+  contribution to the total.
+- **Average of row-level ratios** (per-entity average):
+  `AVG(num / denom)` — compute the ratio for each individual row
+  first, then average the ratios. This gives equal weight to every
+  row regardless of its contribution.
+
+These two forms produce **materially different answers** whenever row
+sizes are unequal, which is the common case.
+
+*Synthetic divergence example — Average Order Value (AOV):*
+
+| Order | Sales | Invoices | Row-level ratio |
+|-------|-------|----------|-----------------|
+| A     | 1 000 | 2        | 500             |
+| B     | 100   | 10       | 10              |
+
+- **Aggregate-level** AOV: `SUM(1000+100) / SUM(2+10)` = 1 100 / 12 ≈ **91.7**
+- **Avg of row-level ratios**: `AVG(500, 10)` = **255.0**
+
+A text-to-SQL consumer that sees only "AOV = sales / invoices" cannot
+determine which form to use. **The metric page's `## Calculation`
+section is the authoritative definition.** State it explicitly:
+> "AOV = `SUM(order_value) / SUM(invoice_count)` — aggregate-level;
+> do NOT use `AVG(order_value / invoice_count)`."
+
+This requirement applies to non-materialized metrics only. For
+materialized metrics (materialization check fired — §5b), the
+aggregation form was resolved at build time; note the form in
+`## Caveats` if it is non-obvious, but do NOT re-specify it as a
+query-time formula.
+
 ---
 
 ## 5b. Materialized Columns Output (column cards)
@@ -378,6 +420,24 @@ Write `## Caveats` for anything that can surprise a consumer of the metric:
   underlying model (not_null, unique, accepted_values).
 - Currency / timezone handling, if relevant.
 - Lag: does this metric reflect near-real-time data or a daily snapshot?
+- **Date/period-column temporal semantics** — for any date or period
+  column in the metric's grain, record:
+  1. **Future-extension**: does the period column extend into the
+     future? Forecast models, forward revenue-recognition (e.g. SRR/MRR
+     amortized over contract length), amortization schedules, and
+     calendar-spine tables all produce forward-dated rows — so
+     `MAX(period_col)` returns a far-future date, NOT the latest actual
+     period. If this applies, note it explicitly, e.g.: *"report_month
+     extends into the future because SRR is amortized forward over
+     contract length; use a `CURRENT_DATE`-anchored filter for
+     'current/last month', not `MAX(report_month)`."* Detect from SQL: a
+     `date_spine`, `generate_series`, or forward-amortization CTE
+     pattern signals future-dating; note it in schema.yml if found.
+  2. **Column kind**: is it a snapshot date (the dbt run date the row
+     was captured), an event date (when something happened), or a
+     recognition/accrual period (the accounting period revenue is
+     assigned to)? State which, because the answer changes how
+     "as of last month" queries should be written.
 
 Source caveats from evidence model pages (`columns[].tests`,
 `generic_tests`, `## Description`, inline SQL comments).
