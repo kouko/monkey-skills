@@ -19,7 +19,7 @@ contracts, and data flow live in `TECH-SPEC.md` (code-team ownership).
 
 | 維度 | 描述 |
 |---|---|
-| 角色 | Acme 工程師；對自己工作的 Salesforce instance（`acme.my.salesforce.com`，Acme 餐廳 POS SaaS）做 read-only 資料查詢分析 |
+| 角色 | Acme 工程師；對一個 Salesforce instance（`acme.my.salesforce.com`）做 read-only 資料查詢分析 |
 | 平台 | macOS (darwin-arm64 / darwin-x64) |
 | 技術能力 | Python / TypeScript proficient、熟 shell、已是 Claude Code 深度使用者 |
 | Salesforce 角色 | org member（非 admin），無 Connected App 自訂權限；用 `sf` CLI 內建公開 OAuth client |
@@ -48,7 +48,7 @@ contracts, and data flow live in `TECH-SPEC.md` (code-team ownership).
 
 **Primary Job Story**
 
-> **When** 我想在 Claude Code 內以自然語言查詢自己工作的 Salesforce
+> **When** 我想在 Claude Code 內以自然語言查詢 Salesforce
 > org（SOQL 查詢），**I want to** 從「裝完一個 plugin → 跑一個 setup
 > 指令 → 完成 browser OAuth → 立刻可用」的單線流程把所有 CLI / OAuth /
 > MCP 設定一次跑完，**so I can** 不需要記 5 套 CLI 指令、不需要編
