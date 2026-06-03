@@ -12,9 +12,15 @@ Verdict logic:
   - classify_support(verdict_obj) -> {"support": ..., "flags": [...]}.
   - summarize(rows) -> audit summary counts.
 
-CLI: `python citecheck.py verdict` reads a JSON array of per-citation
-support objects from stdin and prints an audit summary object to stdout.
-(The markdown report renderer + `report` subcommand are added in C5.)
+Rendering:
+  - render_audit(results) -> a markdown audit report (per-citation
+    verdict table + summary counts).
+
+CLI:
+  - `python citecheck.py verdict` reads a JSON array of per-citation
+    support objects from stdin and prints an audit summary object.
+  - `python citecheck.py report` reads the same JSON array from stdin
+    and prints the markdown audit report.
 """
 from __future__ import annotations
 
@@ -144,6 +150,74 @@ def summarize(rows: List[Dict]) -> Dict:
 
 
 # ---------------------------------------------------------------------------
+# Markdown rendering
+# ---------------------------------------------------------------------------
+
+
+def _cited_source(row: Dict) -> str:
+    """Pick the human-readable cited source for a result row.
+
+    Prefers a resolvable URL; falls back to a non-URL reference; emits a
+    dash when the claim carried no citation at all (unsourced).
+    """
+    url = row.get("citedUrl")
+    if url:
+        return url
+    ref = row.get("citedRef")
+    if ref:
+        return ref
+    return "—"
+
+
+def _escape_cell(text: str) -> str:
+    """Keep a markdown table cell on one row: escape pipes, fold newlines."""
+    return str(text).replace("|", "\\|").replace("\n", " ").strip()
+
+
+def render_audit(results: List[Dict]) -> str:
+    """Render a list of per-citation result rows into a markdown audit report.
+
+    A result row is a per-citation support object (same shape `summarize`
+    consumes) optionally carrying `claim` / `citedUrl` / `citedRef` for
+    display. The report is a per-citation verdict table (claim · cited
+    source · verdict · note/flags) followed by a summary section with the
+    six audit counts.
+
+    Fails loud on a non-list input.
+    """
+    if not isinstance(results, list):
+        raise TypeError(f"render_audit expects a list, got {type(results).__name__}")
+
+    lines: List[str] = ["# Citation audit", ""]
+
+    # --- per-citation verdict table ---
+    lines.append("## Citations")
+    lines.append("")
+    lines.append("| Claim | Cited source | Verdict | Note/flags |")
+    lines.append("| --- | --- | --- | --- |")
+    for row in results:
+        norm = classify_support(row)
+        claim = _escape_cell(row.get("claim", ""))
+        source = _escape_cell(_cited_source(row))
+        verdict = _escape_cell(norm["support"])
+        note = _escape_cell(", ".join(norm["flags"]))
+        lines.append(f"| {claim} | {source} | {verdict} | {note} |")
+    lines.append("")
+
+    # --- summary counts ---
+    counts = summarize(results)["counts"]
+    lines.append("## Summary")
+    lines.append("")
+    lines.append("| Bucket | Count |")
+    lines.append("| --- | --- |")
+    for key in COUNT_KEYS:
+        lines.append(f"| {key} | {counts[key]} |")
+    lines.append("")
+
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -153,16 +227,19 @@ def main(argv: Optional[List[str]] = None) -> int:
     import sys
 
     args = sys.argv[1:] if argv is None else argv
-    if len(args) != 1 or args[0] != "verdict":
+    if len(args) != 1 or args[0] not in ("verdict", "report"):
         name = args[0] if args else "(none)"
         print(
-            f"unknown subcommand {name!r}; expected one of {{verdict}}",
+            f"unknown subcommand {name!r}; expected one of {{verdict, report}}",
             file=sys.stderr,
         )
         return 1
 
     rows = json.load(sys.stdin)
-    print(json.dumps(summarize(rows), indent=2))
+    if args[0] == "report":
+        print(render_audit(rows))
+    else:
+        print(json.dumps(summarize(rows), indent=2))
     return 0
 
 

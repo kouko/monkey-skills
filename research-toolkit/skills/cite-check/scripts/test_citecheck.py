@@ -10,6 +10,7 @@ from citecheck import (
     EXTRACT_CITED_CLAIMS,
     SUPPORT_VERDICT,
     classify_support,
+    render_audit,
     summarize,
 )
 
@@ -114,6 +115,76 @@ def test_summarize_rolls_up_mixed_input():
     assert c["misattributed"] == 1
     assert c["unresolvable"] == 1
     assert c["unsourced"] == 1
+
+
+# --- render_audit markdown report ------------------------------------------
+
+def test_render_audit_emits_table_and_summary_counts():
+    results = [
+        {"claim": "Sky is blue", "citedUrl": "http://a.com", "support": "supported"},
+        {"claim": "Grass is red", "citedUrl": "http://b.com", "support": "unsupported"},
+        {"claim": "Cited wrong", "citedUrl": "http://c.com",
+         "support": "partial", "misattributed": True},
+        {"claim": "Dead link", "citedUrl": "http://d.com", "unresolvable": True},
+        {"claim": "No source"},  # unsourced
+    ]
+    md = render_audit(results)
+    # a per-citation verdict TABLE (markdown pipe table with a header separator)
+    assert "|" in md
+    assert "---" in md
+    # table column headers
+    for header in ("claim", "source", "verdict", "note"):
+        assert header.lower() in md.lower()
+    # every claim appears as a row
+    for r in results:
+        if "claim" in r:
+            assert r["claim"] in md
+    # the misattributed flag surfaces in the note column
+    assert "misattributed" in md
+    # a summary section with the 6 counts
+    for key in ("supported", "partial", "unsupported",
+                "misattributed", "unresolvable", "unsourced"):
+        assert key in md
+
+
+def test_render_audit_empty_results():
+    md = render_audit([])
+    # still emits the 6 summary count labels even with no rows
+    for key in ("supported", "partial", "unsupported",
+                "misattributed", "unresolvable", "unsourced"):
+        assert key in md
+
+
+def test_render_audit_non_list_fails_loud():
+    import pytest as _pytest
+    with _pytest.raises(TypeError):
+        render_audit({"claim": "not a list"})
+
+
+# --- __main__ report subcommand --------------------------------------------
+
+def test_cli_report_prints_markdown():
+    payload = (
+        '[{"claim":"X","citedUrl":"http://x.com","support":"supported"},'
+        '{"claim":"Y","citedUrl":"http://y.com","support":"unsupported"}]'
+    )
+    proc = subprocess.run(
+        [sys.executable, "citecheck.py", "report"],
+        input=payload,
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, proc.stderr
+    out = proc.stdout
+    # markdown table present
+    assert "|" in out
+    assert "---" in out
+    # claims rendered
+    assert "X" in out
+    assert "Y" in out
+    # summary counts present
+    assert "supported" in out
+    assert "unsupported" in out
 
 
 # --- __main__ verdict subcommand -------------------------------------------
