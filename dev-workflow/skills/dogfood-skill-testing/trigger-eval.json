@@ -1,0 +1,15 @@
+[
+  {"query": "dogfood test this skill I'm developing — does it trigger and behave right?", "should_trigger": true},
+  {"query": "exercise my new SKILL.md's triggers and workflow, find what breaks before I ship", "should_trigger": true},
+  {"query": "run a behavioral dogfood on this skill: cold-reader + executor + auditor passes", "should_trigger": true},
+  {"query": "blind-test my skill end to end and report over-trigger / missed-trigger / cold-start defects", "should_trigger": true},
+  {"query": "測試我開發中的 skill 會不會誤觸發、漏觸發，輸出對不對", "should_trigger": true},
+  {"query": "幫我實際跑跑看這個新 skill 的觸發詞跟 workflow，找出壞掉的地方再交付", "should_trigger": true},
+  {"query": "開発中のスキルを実際に動かして挙動とトリガーを検証して、出荷前に欠陥を洗い出して", "should_trigger": true},
+  {"query": "新しい SKILL.md を実行ベースでドッグフードして、誤発火・未発火・コールドスタートを点検したい", "should_trigger": true},
+  {"query": "Score this SKILL.md against the 8-dimension rubric and tell me where it loses points", "should_trigger": false},
+  {"query": "Mine my Claude Code session logs for friction patterns and propose SKILL.md edits", "should_trigger": false},
+  {"query": "Shrink this skill's SKILL.md token count while keeping its behavior unchanged", "should_trigger": false},
+  {"query": "Create a brand-new skill from scratch for me", "should_trigger": false},
+  {"query": "Run an A/B output-quality test on two phrasings of this skill and pick the better one", "should_trigger": false}
+]
