@@ -83,9 +83,15 @@ def parse_doc(text):
         if idx in def_line_numbers:
             continue
 
-        # Blank lines and pure markdown headings carry no claim.
-        if not stripped or stripped.startswith("#"):
+        # Blank lines carry nothing.
+        if not stripped:
             continue
+
+        # Headings are not prose claims, so they are never flagged `unsourced` —
+        # but they CAN carry citations (e.g. `# Section [src](url)`), and a
+        # citation auditor must never silently drop a citation. So scan headings
+        # for citations; just suppress the unsourced fallback for them.
+        is_heading = stripped.startswith("#")
 
         line_has_citation = False
 
@@ -119,8 +125,10 @@ def parse_doc(text):
             )
             line_has_citation = True
 
-        # A claim-bearing line with no citation is reported (not audited).
-        if not line_has_citation:
+        # A prose claim-bearing line with no citation is reported (not audited).
+        # Headings are never flagged unsourced (they carry no prose claim), but
+        # any citations they DID carry were already extracted above.
+        if not line_has_citation and not is_heading:
             anchors.append(
                 {
                     "type": "unsourced",

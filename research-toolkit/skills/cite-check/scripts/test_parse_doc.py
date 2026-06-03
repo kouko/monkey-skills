@@ -139,3 +139,15 @@ def test_cli_prints_json_inline_anchor():
     assert len(inline) == 1
     assert inline[0]["citedUrl"] == "http://x.com"
     assert inline[0]["anchorText"] == "see this"
+
+
+def test_heading_citation_is_extracted_not_dropped():
+    # A citation auditor must never silently drop a citation, even in a heading.
+    anchors = parse_doc("# Section [src](http://h.com)\n\nplain prose.")
+    inline = [a for a in anchors if a["type"] == "inline"]
+    assert len(inline) == 1 and inline[0]["citedUrl"] == "http://h.com"
+    # ...but the heading itself is never flagged as an unsourced prose claim.
+    assert not any(
+        a["type"] == "unsourced" and a["anchorText"].lstrip().startswith("#")
+        for a in anchors
+    )
