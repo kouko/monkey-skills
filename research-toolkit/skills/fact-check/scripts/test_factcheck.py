@@ -69,12 +69,24 @@ def test_confidence_is_best_non_refuting_valid():
     assert result["confidence"] == "high"
 
 
-def test_refuted_confidence_ignores_refuting_votes():
-    # refuted verdict: no non-refuting valid support → confidence "low".
+def test_refuted_confidence_is_best_refuting_vote():
+    # refuted verdict: confidence is DIRECTION-AWARE — the strongest
+    # confidence among the REFUTING votes that drove the verdict, NOT "low".
+    # A unanimous strong refutation must read as a confident refutation.
     verdicts = [_verdict(True, "high"), _verdict(True, "high")]
     result = classify_verdict(verdicts)
     assert result["verdict"] == "refuted"
-    assert result["confidence"] == "low"
+    assert result["confidence"] == "high"
+
+
+def test_refuted_three_votes_best_refuting_confidence():
+    # 3 refuting votes high/high/medium → strong, unanimous refutation.
+    # confidence must surface "high" (the strongest driving vote), not "low".
+    verdicts = [_verdict(True, "high"), _verdict(True, "high"), _verdict(True, "medium")]
+    result = classify_verdict(verdicts)
+    assert result["verdict"] == "refuted"
+    assert result["refuted_count"] == 3
+    assert result["confidence"] == "high"
 
 
 def test_cli_verdict_all_abstain_prints_inconclusive():

@@ -28,15 +28,21 @@ from schemas import REFUTATIONS_REQUIRED, VOTES_PER_CLAIM  # noqa: F401 (VOTES_P
 _CONFIDENCE_ORDER = ["high", "medium", "low"]
 
 
-def _best_confidence(verdicts: list[dict[str, Any]]) -> str:
-    """Best (strongest) confidence among non-refuting valid verdicts.
+def _best_confidence(verdicts: list[dict[str, Any]], *, refuting: bool) -> str:
+    """Best (strongest) confidence among the verdicts that drove the result.
 
-    Returns "low" when there is no non-refuting valid support to report.
+    `refuting=False` → look at non-refuting valid votes (supports the
+    `supported` verdict). `refuting=True` → look at the refuting valid votes
+    (the votes that drove a `refuted` verdict). This makes confidence
+    DIRECTION-AWARE: a unanimous strong refutation reports high confidence,
+    not the "low" fallback.
+
+    Returns "low" when there are no votes in the requested direction.
     """
     candidates = [
         v.get("confidence", "low")
         for v in verdicts
-        if v is not None and not v["refuted"]
+        if v is not None and bool(v["refuted"]) == refuting
     ]
     if not candidates:
         return "low"
@@ -51,21 +57,26 @@ def classify_verdict(verdicts: list[dict[str, Any] | None]) -> dict[str, Any]:
     - `refuted` when >=REFUTATIONS_REQUIRED valid votes have refuted=True.
     - `inconclusive` otherwise (all-abstain / <2 valid / empty input).
 
-    confidence = best non-refuting valid confidence, else "low".
+    confidence is DIRECTION-AWARE: for `supported` it is the best non-refuting
+    valid confidence; for `refuted` it is the best confidence among the
+    refuting votes that drove the verdict; for `inconclusive` it is "low".
     """
     valid = [v for v in (verdicts or []) if v is not None]
     refuted_count = sum(1 for v in valid if v["refuted"])
 
     if quorum_survives(verdicts or []):
         verdict = "supported"
+        confidence = _best_confidence(valid, refuting=False)
     elif refuted_count >= REFUTATIONS_REQUIRED:
         verdict = "refuted"
+        confidence = _best_confidence(valid, refuting=True)
     else:
         verdict = "inconclusive"
+        confidence = "low"
 
     return {
         "verdict": verdict,
-        "confidence": _best_confidence(valid),
+        "confidence": confidence,
         "valid_count": len(valid),
         "refuted_count": refuted_count,
     }
