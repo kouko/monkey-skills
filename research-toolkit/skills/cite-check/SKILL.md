@@ -84,11 +84,9 @@ claim.
 
 2. **Bind anchors to claims (LLM).** The parser gives you *where* the citations
    are; you decide *what claim each one backs*. Reason over the document +
-   anchors and emit a binding object conforming to:
-
-   ```
-   python scripts/citecheck.py  # see EXTRACT_CITED_CLAIMS in citecheck.py
-   ```
+   anchors and emit a binding object conforming to the `EXTRACT_CITED_CLAIMS`
+   schema — a module-level dict in `scripts/citecheck.py` (read it directly;
+   it has no print subcommand).
 
    Shape (`EXTRACT_CITED_CLAIMS`): `{claims: [{claim, citedUrl|citedRef,
    locator}]}` — one entry per cited claim, carrying exactly one of `citedUrl`
