@@ -10,7 +10,7 @@ Salesforce DX MCP Server（[salesforcecli/mcp](https://github.com/salesforcecli/
 
 ## Users
 
-- **唯一 confirmed user**：kouko 對自己工作的 Salesforce instance（`acme.my.salesforce.com`，Acme 餐廳 POS SaaS）做 read-only 資料查詢分析
+- **唯一 confirmed user**：kouko 對一個 Salesforce instance（`acme.my.salesforce.com`）做 read-only 資料查詢分析
 - **次要 user 想像**：其他 Salesforce dev / business analyst macOS 使用者，把 plugin 從 monkey-skills marketplace install 起來就能用
 - **既有條件**：macOS（darwin）、Homebrew 已裝、終端機可開 browser、有 Salesforce org credentials
 
