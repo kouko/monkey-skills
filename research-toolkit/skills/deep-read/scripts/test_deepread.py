@@ -222,3 +222,11 @@ def test_cli_unknown_subcommand_fails_loud():
     proc = _run(["banana"], "")
     assert proc.returncode == 1
     assert proc.stderr.strip()
+
+
+def test_merge_rejects_non_dict_claim_entry():
+    # Fail-loud at the claim-item level too (not just the chunk level): a non-dict
+    # claim entry must raise a typed TypeError, not a bare AttributeError.
+    import pytest
+    with pytest.raises(TypeError):
+        merge_chunks([{"section": "Intro", "claims": ["not a dict"]}])

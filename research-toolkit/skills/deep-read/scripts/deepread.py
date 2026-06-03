@@ -154,6 +154,10 @@ def merge_chunks(chunk_extractions: List[Dict]) -> Dict:
             sections.append(section)
 
         for raw in chunk.get("claims") or []:
+            if not isinstance(raw, dict):
+                raise TypeError(
+                    f"each claim entry must be a dict, got {type(raw).__name__}"
+                )
             key = _claim_key(raw.get("claim", ""))
             if key in seen_claims:
                 continue
