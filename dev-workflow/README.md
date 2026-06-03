@@ -31,8 +31,9 @@ Full design rationale: [`docs/skill-evolution-architecture.md`](docs/skill-evolu
 | [`complexity-critique`](skills/complexity-critique/) | Gate one specific proposed change through three deletion-first questions: smallest possible end state, before/after LOC, what becomes obsolete. PROCEED / PROCEED-WITH-CAVEAT / RESHAPE / REJECT. |
 | [`git-memory`](skills/git-memory/) | Capture decision context (the **why**, not the diff) into commit trailers and PR bodies so any future session — Claude Code, Cursor, Codex, aider, or a human — can reconstruct project knowledge from `git log` alone. |
 | [`brief-before-asking`](skills/brief-before-asking/) | Structured briefing before (or in response to) a complex engineering decision question. 3 modes: Mode A (agent self-detects an upcoming fork), Mode B (user says 「看不懂」 to a question), Mode C (user says 「跟不上」 to an explanation — retreat to Mental Model + drill menu). 6-block format with Mental Model First as the load-bearing rule. |
+| [`dogfood-skill-testing`](skills/dogfood-skill-testing/) | Behavioral black-box dogfood for skills-in-development — exercises triggers + output quality via fresh subagents, emits a fix-actionable findings report. |
 
-All eight skills are **Active**. Lifecycle states and ownership: [`docs/skill-governance.md`](docs/skill-governance.md).
+All nine skills are **Active**. Lifecycle states and ownership: [`docs/skill-governance.md`](docs/skill-governance.md).
 
 ## The critique line
 
@@ -92,7 +93,7 @@ The split is forced by the cost of evaluation: mechanical changes (refactor) tol
 
 ## Upstream chain
 
-Three of the eight skills derive from MIT-licensed upstreams. Full attribution lives in each skill's `NOTICE` file.
+Three of the nine skills derive from MIT-licensed upstreams. Full attribution lives in each skill's `NOTICE` file.
 
 | Skill | Upstream chain |
 |---|---|
@@ -119,9 +120,15 @@ dev-workflow/
 │   ├── quarterly-audit-runbook.md
 │   └── telemetry-setup.md
 ├── skills/
+│   ├── brief-before-asking/
 │   ├── complexity-critique/
+│   ├── dbt-model-style/
+│   ├── distill-sessions/
+│   ├── dogfood-skill-testing/
 │   ├── git-memory/
+│   ├── handoff/
 │   ├── proposal-critique/
+│   ├── recap-state/
 │   ├── skill-creator-advance/
 │   ├── skill-judge/
 │   ├── skill-refactor/

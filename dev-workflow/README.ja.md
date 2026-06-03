@@ -31,8 +31,9 @@ Claude Code 向けの skill 開発は反復的な作業です。skill を draft 
 | [`complexity-critique`](skills/complexity-critique/) | 1 つの具体的な提案変更を 3 つの deletion-first 質問で gate：最小到達状態、before/after の LOC、何が obsolete になるか。PROCEED / PROCEED-WITH-CAVEAT / RESHAPE / REJECT。 |
 | [`git-memory`](skills/git-memory/) | 決定の文脈（diff そのものではなく **why**）を commit trailer と PR 本文に書き込み、Claude Code / Cursor / Codex / aider / 人間など将来のあらゆる session が `git log` だけから project knowledge を再構成できるようにする。 |
 | [`brief-before-asking`](skills/brief-before-asking/) | 複雑な engineering 決定の質問を user に投げる前（あるいは反応として）の構造化 briefing。3 モード：Mode A（agent が複雑な fork に気づいて自発 trigger）、Mode B（user が質問に「看不懂」と返す）、Mode C（user が解釈に「跟不上」と返す — Mental Model + drill menu に退く）。Mental Model First を最高優先とする 6-block 形式。 |
+| [`dogfood-skill-testing`](skills/dogfood-skill-testing/) | 開発中 skill の behavioral black-box dogfood — fresh subagent で trigger と output 品質を実地検証し、修正に直結する findings レポートを出力。 |
 
-8 つの skill はすべて **Active**。lifecycle 状態と所有権：[`docs/skill-governance.md`](docs/skill-governance.md)。
+9 つの skill はすべて **Active**。lifecycle 状態と所有権：[`docs/skill-governance.md`](docs/skill-governance.md)。
 
 ## critique のライン
 
@@ -92,7 +93,7 @@ size →    small                medium                large                new
 
 ## Upstream chain
 
-8 つの skill のうち 3 つは MIT-licensed な upstream に由来します。完全な attribution は各 skill の `NOTICE` ファイル参照。
+9 つの skill のうち 3 つは MIT-licensed な upstream に由来します。完全な attribution は各 skill の `NOTICE` ファイル参照。
 
 | Skill | Upstream chain |
 |---|---|
@@ -119,9 +120,15 @@ dev-workflow/
 │   ├── quarterly-audit-runbook.md
 │   └── telemetry-setup.md
 ├── skills/
+│   ├── brief-before-asking/
 │   ├── complexity-critique/
+│   ├── dbt-model-style/
+│   ├── distill-sessions/
+│   ├── dogfood-skill-testing/
 │   ├── git-memory/
+│   ├── handoff/
 │   ├── proposal-critique/
+│   ├── recap-state/
 │   ├── skill-creator-advance/
 │   ├── skill-judge/
 │   ├── skill-refactor/

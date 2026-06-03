@@ -1,0 +1,54 @@
+dogfood-skill-testing
+=====================
+
+Original design — not a port
+-----------------------------
+
+This skill is an **original design** authored for monkey-skills.
+It is **not** a port, fork, or code-level adaptation of any existing
+skill. No third-party source code, prompt text, or bundled file is
+incorporated.
+
+The skill applies the "dogfood" exploratory-QA *pattern* — give a
+fresh agent a target, let it explore to surface unanticipated
+defects, and emit a structured findings report with reproduction
+evidence — to a different substrate: testing a **skill-in-development**
+(its triggers, workflow, and output quality via fresh subagents)
+rather than a web application. The defect-taxonomy and report-template
+*content* are written for the skill-testing domain; only the generic
+shapes (severity × category; metadata → summary → per-finding blocks)
+are conventional QA structure, not borrowed expression.
+
+Inspiration acknowledged
+------------------------
+
+1. vercel-labs — `agent-browser` `dogfood` skill
+   (Apache-2.0, Copyright 2025 Vercel Inc.,
+   https://github.com/vercel-labs/agent-browser)
+   The exploratory-dogfood framing — systematic exploration →
+   document-on-discovery → reproduction evidence → structured report,
+   and the 6-phase Initialize/Orient/Explore/Document/Wrap-up flow —
+   informed this skill's substrate-swapped workflow. No agent-browser
+   code or text was copied; the pattern is acknowledged here for
+   transparency, not because the license requires it (no Apache-2.0
+   "Work" or "Derivative Work" is distributed).
+
+2. Scott Spence — sandboxed skill-activation eval
+   (https://scottspence.com/posts/measuring-claude-code-skill-activation-with-sandboxed-evals)
+   The real-harness activation-measurement method (temp `.claude/skills/`
+   + `claude -p --allowedTools Skill --output-format stream-json`,
+   parse `Skill()` events, should-fire / should-NOT-fire corpus)
+   informed Probe A. Method acknowledged; no code incorporated.
+
+3. LLM-as-judge practice (Braintrust / Patronus / 電通デジタル et al.)
+   and the oracle-problem caution (Konstantinou et al., ICST 2025)
+   informed the executor/auditor firewall and judge guardrails in
+   Probe B.
+
+License
+-------
+
+MIT — covered by the repository LICENSE (Copyright (c) 2026 kouko).
+
+No copyright dependencies on the inspirations above; design borrowing
+is acknowledged for transparency only.
