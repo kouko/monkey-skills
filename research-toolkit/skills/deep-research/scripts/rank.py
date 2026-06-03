@@ -1,7 +1,12 @@
 """Claim ranking and quorum survival logic.
 
-Pure functions; stdlib only; no schemas import (L1 leaf module).
-Ported verbatim from decompiled-source.md §Quorum rule + §Ranking maps.
+Pure functions; stdlib only; no schemas import (L1 leaf module —
+operates on generic dicts).  Ported verbatim from decompiled-source.md
+§Quorum rule + §Ranking maps.
+
+CLI (consumed by SKILL.md over stdin/stdout JSON):
+    python rank.py           # stdin: claims JSON array  → stdout: ranked (≤25) JSON
+    python rank.py quorum    # stdin: verdicts JSON array → stdout: `true` / `false`
 """
 
 from __future__ import annotations
@@ -70,3 +75,14 @@ def quorum_survives(
     valid = [v for v in verdicts if v is not None]
     refuted = sum(1 for v in valid if v["refuted"])
     return len(valid) >= refutations_required and refuted < refutations_required
+
+
+if __name__ == "__main__":
+    import json
+    import sys
+
+    data = json.load(sys.stdin)
+    if len(sys.argv) > 1 and sys.argv[1] == "quorum":
+        print(json.dumps(quorum_survives(data)))
+    else:
+        print(json.dumps(rank_claims(data)))

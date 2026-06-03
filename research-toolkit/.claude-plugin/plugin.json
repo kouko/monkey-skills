@@ -1,0 +1,21 @@
+{
+  "name": "research-toolkit",
+  "version": "0.1.0",
+  "description": "Research toolkit — agent-portable, key-free research skills that drive the host agent's own LLM + web tools. Ships the deep-research skill (scope / search / dedup / fetch / 3-vote adversarial verify / synthesize); more research skills to follow.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/research-toolkit",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "research-toolkit",
+    "deep-research",
+    "research",
+    "fact-checking",
+    "adversarial-verification",
+    "web-search",
+    "portable"
+  ]
+}

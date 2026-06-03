@@ -3,8 +3,16 @@
 Port of the JS dedup logic from the deep-research pipeline:
   norm_url  — canonical key for seen-set deduplication
   filter_novel — classify results into novel / dupes / budget_dropped
+
+CLI (__main__): reads a JSON object from stdin with keys
+  {results: [...], seen: {...}, fetch_slots: int}
+and prints a JSON object to stdout
+  {novel: [...], seen: {...}, slots: int}
+where `seen` is the mutated seen-map and `slots` is the remaining budget.
 """
 
+import json
+import sys
 from urllib.parse import urlparse
 
 _DEFAULT_REL_RANK: dict[str, int] = {"high": 0, "medium": 1, "low": 2}
@@ -74,3 +82,18 @@ def filter_novel(
             novel.append(result)
 
     return novel, dupes, budget_dropped, fetch_slots
+
+
+def main() -> None:
+    payload = json.load(sys.stdin)
+    seen = payload.get("seen") or {}
+    novel, _dupes, _budget_dropped, slots = filter_novel(
+        payload["results"],
+        seen,
+        payload["fetch_slots"],
+    )
+    json.dump({"novel": novel, "seen": seen, "slots": slots}, sys.stdout)
+
+
+if __name__ == "__main__":
+    main()

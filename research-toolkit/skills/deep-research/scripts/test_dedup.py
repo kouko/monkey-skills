@@ -1,8 +1,15 @@
-"""Tests for dedup.py — norm_url and filter_novel."""
+"""Tests for dedup.py — norm_url, filter_novel, and the __main__ CLI."""
+
+import json
+import subprocess
+import sys
+from pathlib import Path
 
 import pytest
 
-from deep_research.dedup import filter_novel, norm_url
+from dedup import filter_novel, norm_url
+
+_DEDUP = str(Path(__file__).parent / "dedup.py")
 
 
 def test_norm_and_budget() -> None:
@@ -83,3 +90,49 @@ def test_filter_novel_medium_budget_dropped() -> None:
     assert len(budget_dropped) == 1
     assert budget_dropped[0]["url"] == "https://medium.com/article"
     assert slots == 0
+
+
+def _run_cli(payload: dict) -> dict:
+    proc = subprocess.run(
+        [sys.executable, _DEDUP],
+        input=json.dumps(payload),
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, proc.stderr
+    return json.loads(proc.stdout)
+
+
+def test_cli_dedupes_www_and_trailing_slash() -> None:
+    """CLI: www.X.com/a/ and x.com/a normalize to one seen key; the dupe is filtered out."""
+    out = _run_cli(
+        {
+            "results": [
+                {"url": "https://x.com/a", "title": "first", "relevance": "high"},
+                {"url": "https://www.x.com/a/", "title": "dupe", "relevance": "high"},
+            ],
+            "seen": {},
+            "fetch_slots": 5,
+        }
+    )
+    assert len(out["novel"]) == 1
+    assert out["novel"][0]["url"] == "https://x.com/a"
+    assert out["seen"] == {"x.com/a": True}
+    assert out["slots"] == 4  # one novel result decremented the budget
+
+
+def test_cli_fetch_budget_caps_novel_count() -> None:
+    """CLI: fetch_slots caps how many medium/low results survive as novel."""
+    out = _run_cli(
+        {
+            "results": [
+                {"url": "https://a.com/1", "title": "1", "relevance": "medium"},
+                {"url": "https://b.com/2", "title": "2", "relevance": "medium"},
+                {"url": "https://c.com/3", "title": "3", "relevance": "medium"},
+            ],
+            "seen": {},
+            "fetch_slots": 2,
+        }
+    )
+    assert len(out["novel"]) == 2  # budget caps novel count at 2
+    assert out["slots"] == 0

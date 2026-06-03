@@ -1,14 +1,15 @@
 """Tests for rank.py — quorum rule and claim ranking.
 
+Flat-import port of src/deep_research/tests/test_rank.py for the
+scripts/ skill bundle (pytest.ini sets pythonpath = .).
+
 RED targets:
-- test_quorum_rule: four quorum edge cases verbatim from spec
+- test_quorum_rule: quorum edge cases verbatim from spec (incl. all-abstain)
 - test_rank_claims_ordering: central+primary before tangential+blog
 - test_rank_claims_limit: slice to limit
 """
 
-import pytest
-
-from deep_research.rank import quorum_survives, rank_claims
+from rank import quorum_survives, rank_claims
 
 
 # ---------------------------------------------------------------------------

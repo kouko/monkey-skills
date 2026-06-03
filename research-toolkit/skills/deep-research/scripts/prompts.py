@@ -4,9 +4,18 @@ All prompt text is verbatim from:
   docs/code-toolkit/specs/deep-research-decompiled-source.md §Prompts
 
 Do NOT paraphrase. Reviewers diff against the reference.
-"""
 
-from deep_research.schemas import VOTES_PER_CLAIM, REFUTATIONS_REQUIRED
+CLI:
+  python prompts.py scope     --question Q
+  python prompts.py search    --angle JSON --question Q
+  python prompts.py fetch     --source JSON --label L --question Q
+  python prompts.py verify    --claim JSON --voter-idx N --question Q
+  python prompts.py synthesis --question Q --confirmed-block B \\
+                              --killed-block B --confirmed-count N
+"""
+from __future__ import annotations
+
+from schemas import VOTES_PER_CLAIM, REFUTATIONS_REQUIRED
 
 
 def scope_prompt(question: str) -> str:
@@ -157,3 +166,59 @@ def synthesis_prompt(
 6. List 2-4 open questions that emerged but weren't answered.
 
 Structured output only."""
+
+
+def _main(argv: list[str] | None = None) -> int:
+    import argparse
+    import json
+
+    parser = argparse.ArgumentParser(
+        description="Print an assembled deep-research prompt to stdout.",
+    )
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    p_scope = sub.add_parser("scope")
+    p_scope.add_argument("--question", required=True)
+
+    p_search = sub.add_parser("search")
+    p_search.add_argument("--angle", required=True, help="JSON: {label, query, rationale?}")
+    p_search.add_argument("--question", required=True)
+
+    p_fetch = sub.add_parser("fetch")
+    p_fetch.add_argument("--source", required=True, help="JSON: {url, title}")
+    p_fetch.add_argument("--label", required=True, help="search-angle label")
+    p_fetch.add_argument("--question", required=True)
+
+    p_verify = sub.add_parser("verify")
+    p_verify.add_argument("--claim", required=True, help="JSON: {claim, sourceUrl, sourceQuality, quote}")
+    p_verify.add_argument("--voter-idx", type=int, required=True)
+    p_verify.add_argument("--question", required=True)
+
+    p_synth = sub.add_parser("synthesis")
+    p_synth.add_argument("--question", required=True)
+    p_synth.add_argument("--confirmed-block", required=True)
+    p_synth.add_argument("--killed-block", required=True)
+    p_synth.add_argument("--confirmed-count", type=int, required=True)
+
+    args = parser.parse_args(argv)
+
+    if args.command == "scope":
+        print(scope_prompt(question=args.question))
+    elif args.command == "search":
+        print(search_prompt(angle=json.loads(args.angle), question=args.question))
+    elif args.command == "fetch":
+        print(fetch_prompt(source=json.loads(args.source), angle=args.label, question=args.question))
+    elif args.command == "verify":
+        print(verify_prompt(claim=json.loads(args.claim), voter_idx=args.voter_idx, question=args.question))
+    elif args.command == "synthesis":
+        print(synthesis_prompt(
+            question=args.question,
+            confirmed_block=args.confirmed_block,
+            killed_block=args.killed_block,
+            n_confirmed=args.confirmed_count,
+        ))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(_main())

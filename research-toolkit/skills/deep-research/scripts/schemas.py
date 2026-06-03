@@ -2,6 +2,9 @@
 
 Port of the CC built-in deep-research v2.1.159 schema definitions.
 All dict shapes are byte-faithful to the decompiled-source reference.
+
+CLI: `python schemas.py {scope|search|extract|verdict|report}` prints the
+named JSON Schema to stdout. Unknown name → stderr + exit 1.
 """
 from __future__ import annotations
 
@@ -122,6 +125,15 @@ REPORT_SCHEMA = {
     },
 }
 
+# Lookup table for the CLI — name → schema dict.
+SCHEMAS_BY_NAME = {
+    "scope": SCOPE_SCHEMA,
+    "search": SEARCH_SCHEMA,
+    "extract": EXTRACT_SCHEMA,
+    "verdict": VERDICT_SCHEMA,
+    "report": REPORT_SCHEMA,
+}
+
 # ---------------------------------------------------------------------------
 # Typed dataclasses — mirror the schema fields with Python-idiomatic names
 # ---------------------------------------------------------------------------
@@ -175,3 +187,29 @@ class Report:
     findings: List[Finding] = field(default_factory=list)
     caveats: str = ""
     open_questions: List[str] = field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
+
+def main(argv: Optional[List[str]] = None) -> int:
+    import json
+    import sys
+
+    args = sys.argv[1:] if argv is None else argv
+    if len(args) != 1 or args[0] not in SCHEMAS_BY_NAME:
+        valid = "|".join(SCHEMAS_BY_NAME)
+        name = args[0] if args else "(none)"
+        print(f"unknown schema name {name!r}; expected one of {{{valid}}}",
+              file=sys.stderr)
+        return 1
+    print(json.dumps(SCHEMAS_BY_NAME[args[0]], indent=2))
+    return 0
+
+
+if __name__ == "__main__":
+    import sys
+
+    sys.exit(main())

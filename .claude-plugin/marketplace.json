@@ -93,6 +93,11 @@
       "name": "salesforce-toolkit",
       "description": "Salesforce DX MCP server wrapped as Claude Code plugin — brew-first installer, read-only SOQL query (data toolset only). macOS only. ⚠️ Claude Code CLI only — Cowork sandbox not supported.",
       "source": "./salesforce-toolkit/"
+    },
+    {
+      "name": "research-toolkit",
+      "description": "Research toolkit — agent-portable, key-free research skills that drive the host agent's own LLM + web tools. Ships the deep-research skill (scope / search / dedup / fetch / 3-vote adversarial verify / synthesize); more research skills to follow.",
+      "source": "./research-toolkit/"
     }
   ]
 }

@@ -1,9 +1,21 @@
-"""RED tests for schemas.py — shape assertions against the verbatim port."""
+"""Tests for the flat schemas.py — shape assertions + CLI behavior.
+
+Ported from deep-research/tests/test_schemas.py with flat imports
+(`from schemas import ...`), plus CLI tests for the new
+`python schemas.py {scope|search|extract|verdict|report}` entrypoint.
+"""
 from __future__ import annotations
+
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+SCRIPTS_DIR = Path(__file__).resolve().parent
 
 
 def test_scope_schema_shape():
-    from deep_research.schemas import SCOPE_SCHEMA
+    from schemas import SCOPE_SCHEMA
 
     angles_prop = SCOPE_SCHEMA["properties"]["angles"]
     assert angles_prop["minItems"] == 3
@@ -12,7 +24,7 @@ def test_scope_schema_shape():
 
 
 def test_verdict_schema_required():
-    from deep_research.schemas import VERDICT_SCHEMA
+    from schemas import VERDICT_SCHEMA
 
     assert "refuted" in VERDICT_SCHEMA["required"]
     assert "evidence" in VERDICT_SCHEMA["required"]
@@ -20,7 +32,7 @@ def test_verdict_schema_required():
 
 
 def test_constants():
-    from deep_research.schemas import (
+    from schemas import (
         MAX_FETCH,
         MAX_VERIFY_CLAIMS,
         REFUTATIONS_REQUIRED,
@@ -34,7 +46,7 @@ def test_constants():
 
 
 def test_search_schema_shape():
-    from deep_research.schemas import SEARCH_SCHEMA
+    from schemas import SEARCH_SCHEMA
 
     results_prop = SEARCH_SCHEMA["properties"]["results"]
     assert results_prop["maxItems"] == 6
@@ -43,7 +55,7 @@ def test_search_schema_shape():
 
 
 def test_extract_schema_shape():
-    from deep_research.schemas import EXTRACT_SCHEMA
+    from schemas import EXTRACT_SCHEMA
 
     claims_prop = EXTRACT_SCHEMA["properties"]["claims"]
     assert claims_prop["maxItems"] == 5
@@ -53,7 +65,7 @@ def test_extract_schema_shape():
 
 
 def test_report_schema_shape():
-    from deep_research.schemas import REPORT_SCHEMA
+    from schemas import REPORT_SCHEMA
 
     assert set(REPORT_SCHEMA["required"]) == {"summary", "findings", "caveats"}
     finding_req = set(REPORT_SCHEMA["properties"]["findings"]["items"]["required"])
@@ -61,7 +73,7 @@ def test_report_schema_shape():
 
 
 def test_dataclasses_importable():
-    from deep_research.schemas import (
+    from schemas import (
         Angle,
         ExtractedClaim,
         Finding,
@@ -70,7 +82,6 @@ def test_dataclasses_importable():
         Verdict,
     )
 
-    # Instantiate with minimal required args to confirm field shapes
     a = Angle(label="test", query="test query")
     assert a.rationale is None
 
@@ -89,3 +100,38 @@ def test_dataclasses_importable():
 
     r = Report(summary="s", findings=[], caveats="none")
     assert r.open_questions == []
+
+
+# ---------------------------------------------------------------------------
+# CLI: python schemas.py {scope|search|extract|verdict|report}
+# ---------------------------------------------------------------------------
+
+
+def _run_cli(*args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        [sys.executable, str(SCRIPTS_DIR / "schemas.py"), *args],
+        capture_output=True,
+        text=True,
+        env={"PYTHONDONTWRITEBYTECODE": "1"},
+    )
+
+
+def test_cli_verdict_prints_schema():
+    proc = _run_cli("verdict")
+    assert proc.returncode == 0
+    parsed = json.loads(proc.stdout)
+    assert set(parsed["required"]) >= {"refuted", "evidence", "confidence"}
+
+
+def test_cli_scope_prints_schema():
+    proc = _run_cli("scope")
+    assert proc.returncode == 0
+    parsed = json.loads(proc.stdout)
+    assert parsed["properties"]["angles"]["minItems"] == 3
+
+
+def test_cli_unknown_name_fails_loud():
+    proc = _run_cli("bogus")
+    assert proc.returncode == 1
+    assert proc.stdout.strip() == ""
+    assert "bogus" in proc.stderr
