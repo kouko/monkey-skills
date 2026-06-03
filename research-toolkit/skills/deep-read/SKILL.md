@@ -96,8 +96,11 @@ stdin: markdown text → stdout: a JSON array of chunks, each
 
 - `heading` — the `#`-line that starts the chunk (`""` for any preamble
   before the first heading).
-- `text` — the chunk body up to the next heading of the **same or higher**
-  level (a `##` chunk swallows its nested `###` subsections).
+- `text` — the chunk body up to the next **section-level** heading. The
+  chunker picks the section level automatically (the shallowest heading level
+  that repeats, else the shallowest present), so a lone `#` title + several
+  `##` sections splits into one chunk per `##` section (each `##` swallows its
+  nested `###` subsections) — not one giant chunk under the title.
 - `ordinal` — 0-based index in document order.
 
 A heading-less document collapses to **one** chunk. **If the source is

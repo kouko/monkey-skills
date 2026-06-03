@@ -4,15 +4,27 @@ Splits a markdown document into ordered chunks on its ATX headings
 (`#`..`######`), using only the standard library (`re`, `json`, `sys`).
 No third-party dependency.
 
+Chunking happens at the document's SECTION LEVEL ``L`` — not at every
+heading. ``L`` is chosen so the most common document shape (one ``#`` title
+followed by several ``##`` sections) splits into one chunk per ``##``
+section instead of collapsing into a single chunk:
+
+- ``L`` = the SHALLOWEST heading level that appears at least twice (the
+  repeated level — these are the document's sibling sections);
+- if no level repeats, ``L`` = the shallowest heading level present.
+
+A new chunk STARTS at every heading whose level is ``<= L``. Headings
+deeper than ``L`` are absorbed into the current chunk (e.g. ``###``
+subsections fold into their parent ``##`` section).
+
 Chunk model — each chunk is a dict ``{heading, text, ordinal}``:
 
 - ``heading``: the markdown heading line that starts the chunk
   (e.g. ``"## Background"``), or ``""`` for any preamble before the
-  first heading.
+  first level-``<=L`` heading.
 - ``text``: the chunk body — the lines from this heading up to (but not
-  including) the next heading of the SAME OR HIGHER level. A ``##`` chunk
-  therefore swallows nested ``###``/``####`` subsections; a following
-  ``##`` or ``#`` ends it. The heading line itself IS included in ``text``.
+  including) the next heading of level ``<= L``. The heading line itself
+  IS included in ``text``.
 - ``ordinal``: 0-based index of the chunk in document order.
 
 Edge cases:
@@ -45,12 +57,29 @@ def _heading_level(line):
     return len(match.group(1))
 
 
+def _chunk_level(levels):
+    """Pick the section level ``L`` to chunk at, given heading levels.
+
+    ``L`` = the shallowest (smallest) level that appears at least twice; if no
+    level repeats, ``L`` = the shallowest level present. ``levels`` must be
+    non-empty.
+    """
+    counts = {}
+    for level in levels:
+        counts[level] = counts.get(level, 0) + 1
+    repeated = [level for level, count in counts.items() if count >= 2]
+    if repeated:
+        return min(repeated)
+    return min(counts)
+
+
 def chunk_markdown(text):
     """Split ``text`` into ordered ``{heading, text, ordinal}`` chunks.
 
-    A chunk runs from its heading line up to (not including) the next
-    heading of the same-or-higher level. Preamble before the first heading
-    becomes a leading chunk with ``heading == ""``.
+    A new chunk starts at every heading whose level is ``<= L`` (the section
+    level chosen by :func:`_chunk_level`); deeper headings are absorbed into
+    the current chunk. Text before the first level-``<=L`` heading becomes a
+    leading chunk with ``heading == ""``.
     """
     if text == "":
         return []
@@ -64,38 +93,37 @@ def chunk_markdown(text):
         if level is not None:
             headings.append((i, level))
 
+    # No headings at all -> one chunk for the whole document.
+    if not headings:
+        return [{"heading": "", "text": text, "ordinal": 0}]
+
+    # Section level: only headings at this level (or shallower) start chunks.
+    section_level = _chunk_level([level for _, level in headings])
+
+    # Line indices where a new chunk begins: each level-<=L heading.
+    starts = [line_index for line_index, level in headings
+              if level <= section_level]
+
     chunks = []
     ordinal = 0
 
-    # Leading preamble: text before the first heading (or whole doc if none).
-    first_heading_index = headings[0][0] if headings else len(lines)
-    if first_heading_index > 0:
-        preamble = "\n".join(lines[:first_heading_index])
+    # Leading preamble: any text before the first chunk-starting heading. This
+    # includes deeper headings that precede the first level-<=L heading.
+    if starts[0] > 0:
+        preamble = "\n".join(lines[:starts[0]])
         chunks.append({"heading": "", "text": preamble, "ordinal": ordinal})
         ordinal += 1
 
-    # Walk headings in document order. Each heading that is NOT already
-    # swallowed by a previously-emitted chunk starts a new chunk; that chunk
-    # extends until the next heading of the SAME OR HIGHER level (a
-    # smaller-or-equal '#'-count). Deeper headings inside that range are
-    # swallowed, so we skip past them via the ``consumed`` cursor.
-    consumed = 0  # line index up to which output chunks already cover
-    for idx, (line_index, level) in enumerate(headings):
-        if line_index < consumed:
-            continue  # this heading is nested inside an already-emitted chunk
-        end = len(lines)
-        for next_index, next_level in headings[idx + 1:]:
-            if next_level <= level:
-                end = next_index
-                break
-        body = "\n".join(lines[line_index:end])
+    # Each level-<=L heading runs until the next level-<=L heading.
+    for idx, start in enumerate(starts):
+        end = starts[idx + 1] if idx + 1 < len(starts) else len(lines)
+        body = "\n".join(lines[start:end])
         chunks.append({
-            "heading": lines[line_index],
+            "heading": lines[start],
             "text": body,
             "ordinal": ordinal,
         })
         ordinal += 1
-        consumed = end
 
     return chunks
 
