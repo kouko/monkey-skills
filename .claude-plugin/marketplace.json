@@ -26,7 +26,7 @@
     },
     {
       "name": "dev-workflow",
-      "description": "Developer-workflow skills — skill authoring + quality scoring + refactoring + tuning, git-backed project memory, structured pre-decision briefings, complexity / proposal critique.",
+      "description": "Developer-workflow skills — skill authoring + quality scoring + refactoring + tuning, git-backed project memory, structured pre-decision briefings, complexity / proposal critique, dbt model style guide.",
       "source": "./dev-workflow/"
     },
     {

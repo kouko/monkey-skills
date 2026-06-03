@@ -1,7 +1,7 @@
 {
   "name": "dev-workflow",
-  "version": "2.14.1",
-  "description": "Developer-workflow skills — skill authoring + quality scoring + refactoring + tuning, git-backed project memory, structured pre-decision briefings, complexity / proposal critique.",
+  "version": "2.15.0",
+  "description": "Developer-workflow skills — skill authoring + quality scoring + refactoring + tuning, git-backed project memory, structured pre-decision briefings, complexity / proposal critique, dbt model style guide.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
@@ -23,6 +23,8 @@
     "developer-workflow",
     "distill-sessions",
     "recap-state",
-    "handoff"
+    "handoff",
+    "dbt-model-style",
+    "dbt"
   ]
 }
