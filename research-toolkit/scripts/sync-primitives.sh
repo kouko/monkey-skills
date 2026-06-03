@@ -27,12 +27,26 @@ TOOLKIT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 SKILLS_DIR="$TOOLKIT_DIR/skills"
 SSOT_DIR="$SKILLS_DIR/deep-research/scripts"
 
-PRIMITIVES=(
+# All four SSOT primitives. Each sibling carries only the subset it actually
+# uses (see primitives_for) — a skill must not carry code it never invokes.
+ALL_PRIMITIVES=(
   "schemas.py"
   "rank.py"
   "prompts.py"
   "dedup.py"
 )
+
+# Per-skill primitive set. Default = all four (fact-check uses every one;
+# cite-check uses extract/verify/dedup + rank.py for its opt-in quorum).
+# deep-read only invokes schemas.py (EXTRACT_SCHEMA) + prompts.py (fetch_prompt)
+# via CLI and rolls its own claim-text dedup — it needs neither rank.py nor
+# dedup.py, so it carries only the two primitives it actually uses.
+primitives_for() {
+  case "$1" in
+    deep-read) printf '%s\n' "schemas.py" "prompts.py" ;;
+    *)         printf '%s\n' "${ALL_PRIMITIVES[@]}" ;;
+  esac
+}
 
 if [ "$#" -lt 1 ]; then
   echo "Usage: $0 <skill-name> [<skill-name>...]" >&2
@@ -40,7 +54,7 @@ if [ "$#" -lt 1 ]; then
 fi
 
 # Fail loud if any SSOT primitive is missing.
-for f in "${PRIMITIVES[@]}"; do
+for f in "${ALL_PRIMITIVES[@]}"; do
   if [ ! -f "$SSOT_DIR/$f" ]; then
     echo "ERROR: SSOT primitive not found: $SSOT_DIR/$f" >&2
     exit 3
@@ -51,11 +65,11 @@ COPIED=0
 for skill in "$@"; do
   target_dir="$SKILLS_DIR/$skill/scripts"
   mkdir -p "$target_dir"
-  for f in "${PRIMITIVES[@]}"; do
+  while IFS= read -r f; do
     cp "$SSOT_DIR/$f" "$target_dir/$f"
     echo "[copy] $SSOT_DIR/$f -> $target_dir/$f"
     COPIED=$((COPIED + 1))
-  done
+  done < <(primitives_for "$skill")
 done
 
 echo
