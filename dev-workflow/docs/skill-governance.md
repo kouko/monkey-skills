@@ -55,6 +55,7 @@ Each skill has an **owner** responsible for its lifecycle:
 | `complexity-critique` | kouko (with joshuadavidthomas/softaworks lineage) | MIT chain in NOTICE |
 | `skill-refactor` | kouko | original design (darwin-skill inspiration only) |
 | `skill-tuning` | kouko | original design (darwin-skill inspiration only) |
+| `dogfood-skill-testing` | kouko | original design (vercel-labs/agent-browser dogfood-pattern inspiration only, Apache-2.0) |
 
 Ownership transfers require:
 1. Update LICENSE / NOTICE to reflect new owner
@@ -84,6 +85,7 @@ Annotation in plugin README:
 | complexity-critique | Active | 2026-04-29 (v1.5.0) |
 | skill-refactor | Active | 2026-04-29 (v1.6.0) |
 | skill-tuning | Active | 2026-04-29 (v1.7.0) |
+| dogfood-skill-testing | Active | 2026-06-03 (v0.1.0) |
 
 (Updated on state transitions; default Active.)
 
