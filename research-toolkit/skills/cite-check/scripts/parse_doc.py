@@ -64,42 +64,73 @@ def _build_reference_map(lines):
     return refs, def_line_numbers
 
 
+def _group_paragraphs(lines, def_line_numbers):
+    """Group physical lines into paragraph blocks (blank line = separator).
+
+    A claim that wraps across ~80-col lines is one logical unit, but its
+    citation may land on a continuation line. Scanning line-by-line would flag
+    the leading line(s) `unsourced` even though the paragraph is cited, so the
+    paragraph — not the physical line — is the unit of sourcing.
+
+    Reference-definition lines (`[^1]: url`, `[1] ... url`) are excluded from
+    blocks: they are not prose claims and must not be flagged unsourced. An
+    excluded line also acts as a block boundary (like a blank line) so a
+    definition cannot glue two surrounding paragraphs together.
+
+    Yields (line_indices, block_text) where line_indices are 0-based indices of
+    the lines composing the block, in document order.
+    """
+    block = []
+    for idx, line in enumerate(lines):
+        is_boundary = (not line.strip()) or (idx in def_line_numbers)
+        if is_boundary:
+            if block:
+                yield block, "\n".join(lines[i] for i in block)
+                block = []
+            continue
+        block.append(idx)
+    if block:
+        yield block, "\n".join(lines[i] for i in block)
+
+
 def parse_doc(text):
     """Extract citation anchors from a markdown document.
 
     Returns a list of anchor dicts (see module docstring for shapes). Order
-    follows document order; inline + footnote anchors come from the lines that
-    carry them, and any remaining claim-bearing line is flagged `unsourced`.
+    follows document order. Inline + footnote anchors are extracted from each
+    paragraph block (consecutive non-blank, non-reference lines); a block that
+    carries no citation at all is flagged `unsourced`. Operating on blocks (not
+    physical lines) means a wrapped claim whose citation sits on a continuation
+    line is correctly treated as sourced.
+
+    `locator` stays a 1-based line number: for a citation it is the line the
+    citation actually appears on; for an unsourced block it is the block's
+    first line.
     """
     lines = text.splitlines()
     refs, def_line_numbers = _build_reference_map(lines)
 
     anchors = []
-    for idx, line in enumerate(lines):
-        locator = idx + 1  # 1-based line number
-        stripped = line.strip()
+    for line_indices, block in _group_paragraphs(lines, def_line_numbers):
+        first_locator = line_indices[0] + 1  # 1-based line of block start
 
-        # Reference-definition lines are not claims and not new citations.
-        if idx in def_line_numbers:
-            continue
+        # Headings are not prose claims, so a heading-only block is never
+        # flagged `unsourced` — but headings CAN carry citations
+        # (e.g. `# Section [src](url)`), and a citation auditor must never
+        # silently drop one. So we still scan the block for citations; we only
+        # suppress the unsourced fallback when every line is a heading.
+        all_headings = all(
+            lines[i].lstrip().startswith("#") for i in line_indices
+        )
 
-        # Blank lines carry nothing.
-        if not stripped:
-            continue
+        block_has_citation = False
 
-        # Headings are not prose claims, so they are never flagged `unsourced` —
-        # but they CAN carry citations (e.g. `# Section [src](url)`), and a
-        # citation auditor must never silently drop a citation. So scan headings
-        # for citations; just suppress the unsourced fallback for them.
-        is_heading = stripped.startswith("#")
-
-        line_has_citation = False
-
-        # Inline links.
-        for m in _INLINE_LINK.finditer(line):
+        # Inline links — locate each on the physical line it appears on.
+        for m in _INLINE_LINK.finditer(block):
             anchor_text, url = m.group(1), m.group(2)
             if not _is_url(url):
                 continue
+            locator = first_locator + block[: m.start()].count("\n")
             anchors.append(
                 {
                     "type": "inline",
@@ -108,13 +139,14 @@ def parse_doc(text):
                     "locator": locator,
                 }
             )
-            line_has_citation = True
+            block_has_citation = True
 
-        # Footnote / bracket-number markers. Skip spans already consumed by an
-        # inline link's [text] part by removing inline links from the scan text.
-        scan = _INLINE_LINK.sub(" ", line)
+        # Footnote / bracket-number markers. Remove inline links first so a
+        # link's `[text]` part is not misread as a numeric marker.
+        scan = _INLINE_LINK.sub(lambda m: " " * len(m.group(0)), block)
         for m in _MARKER.finditer(scan):
             ref_id = m.group(1)
+            locator = first_locator + scan[: m.start()].count("\n")
             anchors.append(
                 {
                     "type": "footnote",
@@ -123,17 +155,18 @@ def parse_doc(text):
                     "locator": locator,
                 }
             )
-            line_has_citation = True
+            block_has_citation = True
 
-        # A prose claim-bearing line with no citation is reported (not audited).
-        # Headings are never flagged unsourced (they carry no prose claim), but
-        # any citations they DID carry were already extracted above.
-        if not line_has_citation and not is_heading:
+        # A claim-bearing block with no citation anywhere in it is reported
+        # (not audited). Heading-only blocks are never flagged; any citations
+        # they carried were already extracted above. The locator is the block's
+        # first line; anchorText is the block text.
+        if not block_has_citation and not all_headings:
             anchors.append(
                 {
                     "type": "unsourced",
-                    "anchorText": stripped,
-                    "locator": locator,
+                    "anchorText": block.strip(),
+                    "locator": first_locator,
                 }
             )
 

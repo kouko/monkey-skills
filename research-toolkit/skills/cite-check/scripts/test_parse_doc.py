@@ -121,6 +121,48 @@ def test_reference_list_lines_are_not_flagged_unsourced():
     assert all("https://e.com/x" not in t for t in unsourced_text)
 
 
+def test_wrapped_paragraph_with_citation_on_second_line_not_unsourced():
+    """A claim wrapped across lines, cited on a continuation line, is sourced.
+
+    WHY (dogfood): ~80-col wrapped prose puts the citation on a later physical
+    line than the sentence start. Line-by-line scanning falsely flags the first
+    line `unsourced` even though the paragraph IS cited. The paragraph is the
+    unit of sourcing, not the physical line.
+    """
+    doc = (
+        "Python 3.13 ships an experimental free-threaded build in which the GIL can be\n"
+        "disabled [free-threading howto](https://docs.python.org/3.13/howto/free-threading-python.html).\n"
+    )
+    anchors = parse_doc(doc)
+    inline = _by_type(anchors, "inline")
+    assert len(inline) == 1
+    assert (
+        inline[0]["citedUrl"]
+        == "https://docs.python.org/3.13/howto/free-threading-python.html"
+    )
+    # The wrapped paragraph must NOT be flagged unsourced — its citation is on
+    # the second physical line but belongs to the same claim block.
+    assert _by_type(anchors, "unsourced") == []
+
+
+def test_blank_line_separates_paragraphs_for_unsourced_flagging():
+    """Two paragraphs separated by a blank line are sourced independently.
+
+    WHY: paragraph grouping must not over-merge — a genuinely uncited paragraph
+    after a cited one must still be flagged, so the blank line is the boundary.
+    """
+    doc = (
+        "First claim is cited [src](http://a.com).\n"
+        "\n"
+        "Second claim has no citation whatsoever.\n"
+    )
+    anchors = parse_doc(doc)
+    assert len(_by_type(anchors, "inline")) == 1
+    unsourced = _by_type(anchors, "unsourced")
+    assert len(unsourced) == 1
+    assert "Second claim" in unsourced[0]["anchorText"]
+
+
 # --- CLI --------------------------------------------------------------------
 
 
