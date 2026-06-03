@@ -385,7 +385,7 @@ key silently fans out (double-counts rows). Examples:
 - Single-column join: `note: "joins on customer_id"`
 - Composite join: `note: "joins on account_id + report_month (composite key — both columns required)"`
 
-Consumers generating SQL (e.g. `/dbt-wiki:to-sql`) MUST read the full key
+Consumers generating SQL (e.g. a `/dbt-wiki:pack` analytics bundle) MUST read the full key
 from `note` before emitting a JOIN predicate. Omitting any column from a
 composite key is a semantic bug, not a syntax error — it produces extra rows
 with no warning.

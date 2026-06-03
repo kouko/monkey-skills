@@ -4,6 +4,70 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] — 2026-06-03
+
+### Added — `pack`: export the knowledge base as a portable analytics skill
+
+dbt-wiki is repositioned as a **knowledge / context layer**, not a query
+engine. Real-data dogfood + an industry scan (Vanna, Wren AI, dbt MCP +
+MetricFlow, dbt-labs' own agent skills) confirmed the differentiator is not
+another NL→SQL engine but **portable curated knowledge** an agent can carry to
+wherever it already has warehouse access. The new `/dbt-wiki:pack` skill freezes
+the distilled `.dbt-wiki/` knowledge into a self-contained, portable Agent Skill
+folder (`<project>-analytics/`) that a downstream agent uses **with its own
+warehouse-connect tool** to ground, generate, execute, and iterate on SQL.
+
+**New skill — `skills/pack/`** (owner-run packager):
+- `SKILL.md` — 8-step packager: locate `.dbt-wiki/` → create the flat
+  `<project>-analytics/` bundle → **freeze** the knowledge layer into a flat
+  `knowledge/` (flatten-on-freeze: source nests, bundle stays flat) → copy the
+  generation guidance → instantiate the bundle `SKILL.md` from the template →
+  reserve `examples/` → write the snapshot annotation (source `manifest_sha` +
+  build date + rebuild pointer) → verify the emitted folder is a flat valid skill.
+- `references/bundle-format.md` — spec for the emitted bundle (flat-skill
+  constraint, portability into `~/.claude/skills/`, on-demand knowledge, the
+  snapshot-annotation block).
+- `references/generation-guidance.md` — the to-sql semantic guardrails
+  (aggregate form · join-grain / fan-out · value-grounding · source
+  disambiguation · temporal) + schema-linking, **reframed for a
+  warehouse-connected agent**: generate → execute via your own tool → inspect →
+  iterate. **Execution is the only gate** — there is deliberately no static
+  existence check (see Removed below for why).
+- `assets/bundle-skill-template.md` — the emitted bundle's `SKILL.md` template
+  (tool-agnostic 4-step consumption procedure; names no specific warehouse tool).
+
+### Removed — the `to-sql` runtime shell (BREAKING)
+
+`skills/to-sql/` is retired. Its never-execute, in-repo NL2SQL design was a half
+solution (a generator that can't run its own output can't catch the semantic
+errors that only execution reveals). Its semantic guardrails are preserved in
+`pack/references/generation-guidance.md`. `/dbt-wiki:to-sql` no longer exists;
+use `/dbt-wiki:pack` to export an analytics bundle and run SQL through your own
+warehouse tool. README Skills tables (en / ja / zh-TW) updated; two stale
+cross-references repointed (`SCHEMA.md`, `distill-entities.md`).
+
+**The static SQL validator was dropped, not carried forward.** A synthetic
+end-to-end pack dogfood surfaced that a static existence check (parse SQL → look
+up tables/columns in a frozen schema) has no coherent home in a portable
+**snapshot** bundle: the live warehouse drifts (columns added / renamed /
+dropped) and the bundle does not auto-update, so a frozen check gives false
+confidence (a dropped column still "exists" in the snapshot) or false errors (a
+new column the snapshot never saw). It also could not see the dangerous
+errors — semantically-valid wrong-number bugs — which only execution reveals.
+The validator (`validate_sql.py` + its 16-case test, a relic of the
+never-execute `to-sql` design) was therefore removed; `knowledge/` **grounds**
+generation, execution **gates** it.
+
+Pure spec/markdown; no warehouse driver in dbt-wiki itself (warehouse-agnostic
+by design); all examples synthetic.
+
+### Deferred (noted, not in this release)
+
+- **Gold-example generation** into the bundle's reserved `examples/` slot.
+- **`init` catalog.json / connect value_domain enrichment** (OQ-A mechanism).
+- **A synthetic `acme-analytics/` demo bundle** (must live OUTSIDE `skills/` to
+  avoid skill-in-skill nesting).
+
 ## [2.3.0] — 2026-06-02
 
 ### Added — to-sql semantic correctness guardrails (dogfood-driven)

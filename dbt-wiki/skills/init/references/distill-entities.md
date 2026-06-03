@@ -185,7 +185,8 @@ model (never promoted to the mart) do you cite the staging column.
 For any column with **≤ 20 distinct values** (a small-cardinality categorical
 / enum column), record the actual stored values as a `value_domain: [...]`
 body annotation inline under that column's `## Fields` entry. This lets
-to-sql map user-facing terms to exact warehouse values without guessing.
+SQL-generating consumers (e.g. a `pack` analytics bundle) map user-facing
+terms to exact warehouse values without guessing.
 
 **When to add it:**
 - The column is categorical (region code, order status, tier, channel,
