@@ -39,9 +39,15 @@ returns a structured **read report**
 argumentStructure}` (claims keep deep-research's `{claim, quote, importance}`
 shape, plus a location/section locator):
 
-- **Ingest**: EPUB → delegate to `tsundoku:book-extract` (pandoc/NCX chapter
-  split); local markdown/txt → Read; URL → `obsidian:defuddle` (clean markdown)
-  with WebFetch fallback. (PDF/docx → defer or via pandoc.)
+- **Ingest (content-agnostic; RESOLVED 2026-06-03)**: deep-read's CORE
+  processes **text/markdown** — it has ZERO format dependencies (no pandoc, no
+  hard cross-plugin code dep), consistent with the stdlib/no-key ethos. Getting
+  the document *to* text is the **agent's own read-capability**: local
+  `.md`/`.txt` (and PDF, which the host Read tool can read) via `Read`; a URL via
+  `WebFetch` (or `obsidian:defuddle` for clean markdown); an EPUB via
+  `tsundoku:book-extract` (→ chapter-split markdown). Those helper skills are
+  **optional documented ingestion pointers in SKILL.md, NOT code dependencies**.
+  Rule: if the host agent can read it into text, deep-read can process it.
 - **Chunk**: section/chapter-aware (book-extract already chunks EPUB by chapter).
 - **Per-chunk extract**: reuse `fetch_prompt` + `EXTRACT_SCHEMA` with the ≤5
   cap LIFTED and extra fields (methodology / caveats / section role).
@@ -103,18 +109,28 @@ wants a distinct trigger for "understand this book"; (b) drop it / use wiki-inge
 — rejected because wiki-ingest is vault-coupled and book-distill skips
 comprehension, leaving the gap genuinely unowned.
 
-## Open Questions
+## Open Questions — ALL RESOLVED (2026-06-03)
 
-- OQ1: Does deep-read keep any adversarial verify? (single-source self-verify is
-  weak — lean: drop verify, lean on grounding + quotes instead.)
-- OQ2: Chunking ownership — reuse book-extract for EPUB; for other long docs,
-  LLM-native sectioned reading vs a chunker lib (affects portability).
-- OQ3: Local file formats — text/markdown free; PDF/docx need pandoc (via
-  book-extract?) — scope to text+EPUB first?
-- OQ4: Output contract — make the read report a superset of `REPORT_SCHEMA` so a
-  deep-read result could feed INTO a deep-research run as a pre-read source?
-- OQ5: Cross-plugin reuse mechanism — how does research-toolkit invoke
-  `tsundoku:book-extract` / `obsidian:defuddle` cleanly (delegation contract)?
+- OQ1 — RESOLVED: **drop adversarial verify.** Single-source self-verification
+  has no cross-source contradiction signal; deep-read leans on grounding +
+  verbatim quotes per claim instead. (No quorum, no voters — distinct from
+  fact-check/deep-research.)
+- OQ2 — RESOLVED: **chunking = heading/chapter-aware, stdlib.** A small stdlib
+  chunker splits a long markdown doc on its headings; a chapter-split directory
+  (book-extract output) is already one-file-per-chunk. No third-party chunker.
+- OQ3 — RESOLVED: **content-agnostic text core, no format deps.** deep-read
+  processes text/markdown; the agent's own read-capability handles ingestion
+  (Read for .md/.txt/PDF; WebFetch/defuddle for URL; book-extract for EPUB).
+  "If the host can read it to text, deep-read can process it." (See Smallest End
+  State / Decision.)
+- OQ4 — RESOLVED: deep-read emits its **own `READ_SCHEMA`** (sections / claims /
+  methodology / caveats / openQuestions / argumentStructure). Not a forced
+  superset of REPORT_SCHEMA; a future "feed a deep-read result into deep-research
+  as a pre-read source" is a nice-to-have, out of v1 scope.
+- OQ5 — RESOLVED: **no cross-plugin code dependency.** book-extract / defuddle
+  are OPTIONAL ingestion helpers documented as skill-composition pointers in
+  SKILL.md (the agent invokes them as skills if needed), NOT imported code.
+  deep-read ships zero dependency on tsundoku/obsidian.
 
 ## Out of Scope
 
