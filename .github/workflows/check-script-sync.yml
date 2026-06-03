@@ -16,6 +16,12 @@ name: check-script-sync
 # sec_edgar/mops/edinet/finmind/twse_openapi/tdnet/ta) are single-skill —
 # no cross-skill copies, no sync needed.
 #
+# research-toolkit (2026-06-03): deep-research is the SSOT for 4 reusable
+# primitives (schemas/rank/prompts/dedup.py). Sibling skills (fact-check,
+# cite-check) functional-copy them byte-identical into their own scripts/.
+# One group per primitive enforces the copies equal deep-research. Copies
+# may not exist yet — check_group auto-[skip]s missing copies.
+#
 # Status: REQUIRED on `main` branch protection.
 
 on:
@@ -118,10 +124,30 @@ jobs:
               fred_copies,
           )
 
+          # research-toolkit groups: deep-research primitives are the SSOT;
+          # sibling skills functional-copy them byte-identical. One group per
+          # primitive. Copies may be absent (check_group [skip]s them).
+          # NOTE: ROOT above points at investing-toolkit; build the
+          # research-toolkit paths explicitly (also relative to checkout root).
+          rt_skills = Path("research-toolkit/skills")
+          rt_siblings = ["fact-check", "cite-check"]
+          for primitive in ["schemas.py", "rank.py", "prompts.py", "dedup.py"]:
+              rt_reference = rt_skills / "deep-research" / "scripts" / primitive
+              rt_copies = [
+                  rt_skills / skill / "scripts" / primitive
+                  for skill in rt_siblings
+              ]
+              errors += check_group(
+                  f"{primitive} (deep-research reference; fact-check/cite-check copies)",
+                  rt_reference,
+                  rt_copies,
+              )
+
           if errors:
               print()
               print(f"FAIL: {errors} group(s) out of sync.")
               print("Fix locally: bash investing-toolkit/scripts/sync-clients.sh")
+              print("         or: bash research-toolkit/scripts/sync-primitives.sh")
               sys.exit(1)
 
           print()
