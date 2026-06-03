@@ -3,8 +3,11 @@
 Flat import (pytest.ini sets pythonpath = .).
 
 Chunk contract: split markdown into ordered {heading, text, ordinal} chunks
-on headings. A chunk runs from its heading to the next heading of the SAME
-OR HIGHER level (a ## chunk swallows nested ###; a new ## or # ends it).
+on headings at the detected SECTION LEVEL (the shallowest heading level that
+repeats, else the shallowest present). A chunk runs from its section-level
+heading to the next section-level heading; deeper headings nest inside (a ##
+chunk swallows nested ###). A lone # title + several ## sections therefore
+splits one chunk per ## section, not one giant chunk under the title.
 The heading line IS included in the chunk's text.
 """
 import json
@@ -44,7 +47,7 @@ def test_preamble_before_first_heading_is_its_own_chunk():
     assert "body" in chunks[1]["text"]
 
 
-# --- nested ## -> ### stays inside ONE ## chunk (same-or-higher boundary) ---
+# --- nested ## -> ### stays inside ONE ## chunk (deeper-than-section nests) ---
 
 def test_nested_subsection_stays_in_one_parent_chunk():
     md = "## Parent\np-body\n### Child\nc-body\n## Sibling\ns-body\n"
