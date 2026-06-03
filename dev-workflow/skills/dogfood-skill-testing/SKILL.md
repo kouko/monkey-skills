@@ -149,9 +149,14 @@ didn't-fire:
 
 ```bash
 claude -p "$QUERY" --max-turns 1 \
-  --allowedTools Skill --output-format stream-json
-# parse stdout JSONL: a tool_use block with name "Skill" → fired;
-# inspect its input to confirm it routed to <skill-under-test>.
+  --allowedTools Skill --output-format stream-json | tee run.jsonl
+# fired? — any Skill tool_use appears in the stream:
+grep -q '"name":"Skill"' run.jsonl && echo FIRED || echo "did not fire"
+# which skill did it route to? — pull the Skill tool_use input:
+jq -rc 'select(.type=="assistant") | .message.content[]?
+        | select(.type=="tool_use" and .name=="Skill") | .input' run.jsonl
+# (exact JSON path can vary by CLI version; the object you want is a
+#  tool_use block whose name is "Skill" — its input names the routed skill.)
 ```
 
 Corpus shape: **≈20 should-fire + ≥5 should-NOT-fire** queries, **≥2 runs
@@ -179,9 +184,13 @@ and integration crashes.
 - **executor (informed):** given the full SKILL.md body + bundle, runs
   the skill **end-to-end on real / realistic input**. *Derive that input
   from the skill itself* — take a representative task from its own
-  description or one of its should-fire trigger phrases (for a data skill,
-  a small real sample). Told explicitly: *"the user has NOT installed this
-  plugin — execute as if invoked."* If the skill has a config / setup
+  description or one of its should-fire trigger phrases. If realistic input
+  is a **bulky external artifact** (an EPUB, a warehouse schema, a 500-row
+  dataset), use a **minimal real fixture** — a 1–2 page / ~10-row slice of a
+  genuine artifact (redact if sensitive), never a fabricated one: sample
+  *fidelity* matters more than size, and a fabricated input hides the
+  valid-but-wrong bugs you are hunting. Told explicitly: *"the user has NOT
+  installed this plugin — execute as if invoked."* If the skill has a config / setup
   concept, **force its cold-start / fallback branch** (no config present) —
   highest bug density, least exercised; skip this step for skills that have
   no config concept.
