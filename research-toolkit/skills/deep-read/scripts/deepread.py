@@ -1,8 +1,10 @@
 """Deep-read schemas + cross-chunk hierarchical synthesis + report renderer.
 
 Holds the deep-read-specific JSON Schemas and synthesis/render logic,
-kept OUT of the copied byte-identical `schemas.py`/`prompts.py`/`dedup.py`
-so the MD5 drift check against deep-research stays clean.
+kept OUT of the copied byte-identical `schemas.py`/`prompts.py` so the MD5
+drift check against deep-research stays clean. (deep-read carries only those
+two primitives; it has no quorum and rolls its own claim-text dedup, so it
+does not copy rank.py/dedup.py.)
 
 Two binding schemas (JSON-Schema dicts, same dict style as schemas.py):
   - CHUNK_EXTRACT_SCHEMA — per-chunk extraction the agent emits (richer
