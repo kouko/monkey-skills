@@ -12,12 +12,12 @@ deep-read goes **deep on a single source** — it builds a structured
 *understanding* of that one document: its sections, claims (each grounded
 in a verbatim quote), methodology, caveats, and argument structure.
 
-This skill reuses `deep-research`'s extract primitives — `schemas.py`
-(`EXTRACT_SCHEMA`) and `prompts.py` (`fetch_prompt`) do the load-bearing work;
-`dedup.py` / `rank.py` are also carried as **byte-identical copies** for
-sync-set symmetry with the other research-toolkit skills (kept in sync by the
-MD5 CI check), though deep-read's cross-chunk claim merge rolls its own
-claim-text dedup. It adds a stdlib chunker (`chunker.py`) plus
+This skill reuses exactly two of `deep-research`'s extract primitives —
+`schemas.py` (`EXTRACT_SCHEMA`) and `prompts.py` (`fetch_prompt`) — as
+**byte-identical copies** (kept in sync with the deep-research SSOT by the MD5
+CI check). It carries neither `rank.py` nor `dedup.py`: deep-read has no quorum
+step and its cross-chunk claim merge rolls its own claim-text dedup, so copying
+them would be dead code. It adds a stdlib chunker (`chunker.py`) plus
 the deep-read-specific schemas + cross-chunk synthesis + report renderer
 (`deepread.py`).
 
