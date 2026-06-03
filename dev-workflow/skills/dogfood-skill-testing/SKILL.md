@@ -88,8 +88,9 @@ flat-folder convention):
 
 ## Workflow
 
-Six phases — a substrate-swapped port of the original `agent-browser`
-dogfood. The target is a **raw working-tree skill**, never installed.
+Six phases — a substrate-swapped port of the `agent-browser` dogfood
+**pattern** (no code copied — see this skill's `NOTICE`). The target is a
+**raw working-tree skill**, never installed.
 Run the three probes (below) inside Phase 4; append findings as you go.
 
 1. **Initialize.** Locate the skill-under-test directory in the working

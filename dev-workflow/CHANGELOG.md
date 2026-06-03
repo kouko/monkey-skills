@@ -22,7 +22,8 @@ it ships, across three behavioral axes:
 
 Emits a fix-actionable findings report (with raw outputs) to
 `docs/skill-dogfood/`. Ports the `vercel-labs/agent-browser` dogfood
-pattern onto the skill-testing substrate, filling the
+**pattern only** (no code copied — see the skill's `NOTICE`; upstream is
+Apache-2.0) onto the skill-testing substrate, filling the
 black-box-exploratory gap between `skill-judge` (static),
 `skill-creator-advance` (white-box conformance), and `distill-sessions`
 (telemetry).

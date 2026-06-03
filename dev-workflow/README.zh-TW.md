@@ -120,9 +120,14 @@ dev-workflow/
 │   ├── quarterly-audit-runbook.md
 │   └── telemetry-setup.md
 ├── skills/
+│   ├── brief-before-asking/
 │   ├── complexity-critique/
+│   ├── distill-sessions/
+│   ├── dogfood-skill-testing/
 │   ├── git-memory/
+│   ├── handoff/
 │   ├── proposal-critique/
+│   ├── recap-state/
 │   ├── skill-creator-advance/
 │   ├── skill-judge/
 │   ├── skill-refactor/
