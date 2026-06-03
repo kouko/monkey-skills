@@ -1,4 +1,4 @@
-"""Tests for chunk.py — stdlib markdown heading/chapter chunker.
+"""Tests for chunker.py — stdlib markdown heading/chapter chunker.
 
 Flat import (pytest.ini sets pythonpath = .).
 
@@ -11,7 +11,7 @@ import json
 import subprocess
 import sys
 
-from chunk import chunk_markdown
+from chunker import chunk_markdown
 
 
 # --- 3-heading flat doc: 3 chunks, correct headings + ordinals -------------
@@ -94,7 +94,7 @@ def test_empty_input_yields_no_chunks():
 
 def test_cli_prints_chunks_in_order():
     proc = subprocess.run(
-        [sys.executable, "chunk.py"],
+        [sys.executable, "chunker.py"],
         input="# A\nx\n## B\ny\n",
         capture_output=True,
         text=True,
@@ -110,7 +110,7 @@ def test_cli_prints_chunks_in_order():
 
 def test_cli_two_sibling_headings_print_two_chunks_in_order():
     proc = subprocess.run(
-        [sys.executable, "chunk.py"],
+        [sys.executable, "chunker.py"],
         input="# A\nx\n# B\ny\n",
         capture_output=True,
         text=True,

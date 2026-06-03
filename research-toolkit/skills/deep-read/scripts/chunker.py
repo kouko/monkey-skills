@@ -24,7 +24,7 @@ Future option (NOT implemented in v1): for very long heading-less docs (or
 a single oversized section) add a size-based fallback split on blank-line
 paragraph boundaries with a max-char budget per chunk.
 
-CLI: ``chunk.py`` reads markdown from stdin and prints the JSON chunk array
+CLI: ``chunker.py`` reads markdown from stdin and prints the JSON chunk array
 to stdout.
 """
 import json

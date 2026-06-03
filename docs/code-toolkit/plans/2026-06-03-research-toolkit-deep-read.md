@@ -11,7 +11,7 @@ primitives it reuses (`schemas.py`, `prompts.py`, `dedup.py` for per-chunk
 extraction + cross-chunk claim merge; `rank.py` copied too for set-uniformity
 though deep-read does not import it) BYTE-IDENTICAL via the existing
 `research-toolkit/scripts/sync-primitives.sh` (shipped in #370). New
-skill-specific logic lives in NEW files (`chunk.py`, `deepread.py`); new schemas
+skill-specific logic lives in NEW files (`chunker.py`, `deepread.py`); new schemas
 / prompts live inside `deepread.py` so the copied `schemas.py`/`prompts.py` stay
 byte-identical for the MD5 drift check.
 
@@ -27,7 +27,7 @@ Notes:
   from #370. D2 reuses the copier; D3 only ADDS `deep-read` to the CI group's
   sibling list (the group's `check_group` auto-`[skip]`s missing copies).
 - CLI contract (consumed by SKILL.md D6):
-  - `chunk.py` (stdin: markdown text) → prints JSON array of `{heading, text, ordinal}` chunks
+  - `chunker.py` (stdin: markdown text) → prints JSON array of `{heading, text, ordinal}` chunks
   - `deepread.py merge` (stdin: per-chunk extraction objects) → merged+deduped claims/sections JSON
   - `deepread.py report` (stdin: merged understanding) → markdown READ report
   - `deepread.py schema` is NOT provided — `READ_SCHEMA`/extraction-prompt are module dicts read from source (mirrors cite-check's EXTRACT_CITED_CLAIMS).
@@ -69,7 +69,7 @@ Notes:
   - GREEN: pytest passes; for f in schemas rank prompts dedup: `diff research-toolkit/skills/deep-research/scripts/$f.py research-toolkit/skills/deep-read/scripts/$f.py` empty
 - External surfaces: none (stdlib)
 - Dependencies: Task D1 completes first
-- Independent: true   # D2∥D4 wave after D1 (disjoint files: copies vs chunk.py)
+- Independent: true   # D2∥D4 wave after D1 (disjoint files: copies vs chunker.py)
 - Brief item covered: "reuse fetch_prompt + EXTRACT_SCHEMA + dedup (decision A)" (Smallest End State)
 
 ## Task D3 — Add deep-read to the MD5 drift CI group
@@ -90,22 +90,22 @@ Notes:
 - Independent: true   # disjoint file from D1/D4
 - Brief item covered: "decision A … MD5 drift check" (Decision)
 
-## Task D4 — chunk.py: stdlib heading/chapter chunker
-- Description: New flat module `research-toolkit/skills/deep-read/scripts/chunk.py`
+## Task D4 — chunker.py: stdlib heading/chapter chunker
+- Description: New flat module `research-toolkit/skills/deep-read/scripts/chunker.py`
   — split a markdown document into ordered chunks on its headings (stdlib `re`
   only). Each chunk = `{heading, text, ordinal}` (heading = the `#`-line that
   starts the chunk, or `""` for a preamble before the first heading; text = the
   body up to the next heading of the same-or-higher level; ordinal = 0-based
   index). Long heading-less docs → a single chunk (or size-based fallback split).
-  Add `__main__`: `chunk.py` reads markdown from stdin → prints the JSON chunk
+  Add `__main__`: `chunker.py` reads markdown from stdin → prints the JSON chunk
   array. RED test first.
-- Module: research-toolkit/skills/deep-read/scripts/chunk.py
-- Files touched: research-toolkit/skills/deep-read/scripts/chunk.py, research-toolkit/skills/deep-read/scripts/test_chunk.py
+- Module: research-toolkit/skills/deep-read/scripts/chunker.py
+- Files touched: research-toolkit/skills/deep-read/scripts/chunker.py, research-toolkit/skills/deep-read/scripts/test_chunker.py
 - Context paths:
   - docs/code-toolkit/specs/2026-06-03-research-toolkit-deep-read.md
 - Acceptance:
-  - RED: `pytest test_chunk.py` (in scripts/) fails (no module)
-  - GREEN: pytest passes covering: a 3-heading doc → 3 chunks with headings + ordinals; preamble-before-first-heading → its own chunk with heading ""; a heading-less doc → 1 chunk; `printf '# A\\nx\\n## B\\ny\\n' | python3 chunk.py` prints 2+ chunks in order
+  - RED: `pytest test_chunker.py` (in scripts/) fails (no module)
+  - GREEN: pytest passes covering: a 3-heading doc → 3 chunks with headings + ordinals; preamble-before-first-heading → its own chunk with heading ""; a heading-less doc → 1 chunk; `printf '# A\\nx\\n## B\\ny\\n' | python3 chunker.py` prints 2+ chunks in order
 - External surfaces: none (stdlib re)
 - Dependencies: Task D1 completes first
 - Independent: true   # parallel wave after D1 (disjoint file vs D2)
@@ -150,7 +150,7 @@ Notes:
   vs deep-research's breadth. (2) Ingest — get the document as TEXT by whatever
   the host can: `Read` a .md/.txt/PDF; `WebFetch` (or `obsidian:defuddle`) a URL;
   `tsundoku:book-extract` an EPUB → chapter markdown. State these are optional
-  composition pointers, deep-read itself only needs text. (3) Chunk — `chunk.py`
+  composition pointers, deep-read itself only needs text. (3) Chunk — `chunker.py`
   (or one-file-per-chapter from book-extract). (4) Per-chunk extract — FAN OUT
   one subagent per chunk (portable "dispatch N subagents", NOT the CC Workflow
   tool); each emits a chunk extraction conforming to `deepread.py`'s
@@ -167,7 +167,7 @@ Notes:
   - research-toolkit/skills/deep-research/SKILL.md
 - Acceptance:
   - RED: `grep -ci "chunk" research-toolkit/skills/deep-read/SKILL.md` near 0 (placeholder)
-  - GREEN: body names the ingest (text-via-agent-read) + chunk (`chunk.py`) + per-chunk extract (fan-out + `deepread.py` CHUNK_EXTRACT_SCHEMA) + merge (`deepread.py merge`) + render (`deepread.py report`) steps with accurate CLI invocations; states "no API key" AND "no adversarial verify"; describes fan-out abstractly (not CC Workflow); body ≤6000 tokens; frontmatter intact; folder-structure hook clean
+  - GREEN: body names the ingest (text-via-agent-read) + chunk (`chunker.py`) + per-chunk extract (fan-out + `deepread.py` CHUNK_EXTRACT_SCHEMA) + merge (`deepread.py merge`) + render (`deepread.py report`) steps with accurate CLI invocations; states "no API key" AND "no adversarial verify"; describes fan-out abstractly (not CC Workflow); body ≤6000 tokens; frontmatter intact; folder-structure hook clean
 - External surfaces: none (doc)
 - Dependencies: Tasks D4, D5 complete first
 - Independent: false
