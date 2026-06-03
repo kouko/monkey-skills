@@ -85,6 +85,30 @@ def test_classify_support_invalid_support_value_fails_loud():
         classify_support({"support": "definitely-true"})
 
 
+def test_classify_support_explicit_unsourced_support_value():
+    # an agent following SKILL.md naturally encodes an unsourced claim as
+    # {"support": "unsourced"} — MUST NOT crash, lands in the unsourced bucket
+    out = classify_support({"support": "unsourced"})
+    assert out["support"] == "unsourced"
+    assert out["flags"] == []
+
+
+def test_classify_support_type_unsourced_from_parse_doc():
+    # parse_doc.py emits unsourced claims as {"type": "unsourced", ...} with
+    # no support key — MUST NOT crash, lands in the unsourced bucket
+    out = classify_support({"type": "unsourced", "claim": "no citation here"})
+    assert out["support"] == "unsourced"
+    assert out["flags"] == []
+
+
+def test_classify_support_cited_banana_still_fails_loud():
+    # a genuinely-cited row with a garbage support value must STILL fail loud —
+    # the unsourced leniency does not loosen the strict enum for cited rows
+    import pytest as _pytest
+    with _pytest.raises(ValueError):
+        classify_support({"citedUrl": "http://x.com", "support": "banana"})
+
+
 # --- summarize roll-up -----------------------------------------------------
 
 def test_unresolvable_counted_separately_from_unsupported():
@@ -115,6 +139,21 @@ def test_summarize_rolls_up_mixed_input():
     assert c["misattributed"] == 1
     assert c["unresolvable"] == 1
     assert c["unsourced"] == 1
+
+
+def test_summarize_counts_both_natural_unsourced_encodings():
+    # the dogfood crash: a batch carrying BOTH natural unsourced encodings
+    # ({"type":"unsourced"} from parse_doc + {"support":"unsourced"} from an
+    # agent) must NOT raise and must count both as unsourced.
+    rows = [
+        {"support": "supported"},
+        {"type": "unsourced", "claim": "from parse_doc"},
+        {"support": "unsourced", "claim": "from agent"},
+    ]
+    out = summarize(rows)  # must not raise
+    assert out["total"] == 3
+    assert out["counts"]["supported"] == 1
+    assert out["counts"]["unsourced"] == 2
 
 
 # --- render_audit markdown report ------------------------------------------
@@ -153,6 +192,20 @@ def test_render_audit_empty_results():
     for key in ("supported", "partial", "unsupported",
                 "misattributed", "unresolvable", "unsourced"):
         assert key in md
+
+
+def test_render_audit_handles_natural_unsourced_encodings():
+    # render_audit must NOT crash on either natural unsourced encoding and
+    # must count both into the unsourced summary bucket.
+    results = [
+        {"claim": "Sky is blue", "citedUrl": "http://a.com", "support": "supported"},
+        {"claim": "From parse_doc", "type": "unsourced"},
+        {"claim": "From agent", "support": "unsourced"},
+    ]
+    md = render_audit(results)  # must not raise
+    assert "From parse_doc" in md
+    assert "From agent" in md
+    assert "unsourced" in md
 
 
 def test_render_audit_non_list_fails_loud():
@@ -203,6 +256,48 @@ def test_cli_verdict_prints_summary_json():
     assert out["counts"]["supported"] == 1
     assert out["counts"]["unsupported"] == 1
     assert out["counts"]["unresolvable"] == 1
+
+
+def _dogfood_batch_payload():
+    # the exact dogfood batch that crashed the audit: one supported, one
+    # misattributed-unsupported, one unresolvable, one unsourced row.
+    return json.dumps([
+        {"claim": "Sky is blue", "citedUrl": "http://a.com", "support": "supported"},
+        {"claim": "Cited wrong", "citedUrl": "http://c.com",
+         "support": "unsupported", "misattributed": True},
+        {"claim": "Dead link", "citedUrl": "http://d.com", "unresolvable": True},
+        {"claim": "No source", "type": "unsourced"},
+    ])
+
+
+def test_cli_report_succeeds_on_dogfood_batch_with_unsourced():
+    proc = subprocess.run(
+        [sys.executable, "citecheck.py", "report"],
+        input=_dogfood_batch_payload(),
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "No source" in proc.stdout
+    assert "unsourced" in proc.stdout
+
+
+def test_cli_verdict_succeeds_on_dogfood_batch_with_unsourced():
+    proc = subprocess.run(
+        [sys.executable, "citecheck.py", "verdict"],
+        input=_dogfood_batch_payload(),
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, proc.stderr
+    out = json.loads(proc.stdout)
+    assert out["total"] == 4
+    c = out["counts"]
+    assert c["supported"] == 1
+    assert c["unsupported"] == 1
+    assert c["misattributed"] == 1
+    assert c["unresolvable"] == 1
+    assert c["unsourced"] == 1
 
 
 def test_cli_unknown_subcommand_fails_loud():

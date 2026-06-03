@@ -95,13 +95,17 @@ def classify_support(verdict_obj: Dict) -> Dict:
     Rules:
       - unresolvable=True overrides everything → support="unresolvable"
         (a dead/paywalled source cannot support OR refute a claim).
-      - missing/empty support with no flags → support="unsourced"
-        (the claim had no resolvable citation to check against).
+      - an unsourced claim → support="unsourced". This is a first-class,
+        crash-free input recognized via any of its natural encodings:
+        (a) type=="unsourced" (parse_doc.py's output), (b) explicit
+        support=="unsourced" (an agent following SKILL.md), or (c)
+        missing/None support with no resolvable citation (the implicit path).
       - misattributed is a FLAG, not a support state — the support call
         still stands (supported/partial/unsupported), but the audit notes
         the source was cited for the wrong claim.
 
-    Fails loud on a non-dict input or an out-of-enum support value.
+    Fails loud on a non-dict input or, for a genuinely-cited row, an
+    out-of-enum support value (e.g. "banana").
     """
     if not isinstance(verdict_obj, dict):
         raise TypeError(
@@ -119,8 +123,10 @@ def classify_support(verdict_obj: Dict) -> Dict:
         return {"support": "unresolvable", "flags": flags}
 
     raw = verdict_obj.get("support")
-    if raw is None:
-        # no support call and not unresolvable → no citation was resolved.
+    # An unsourced claim is a first-class, crash-free input. Recognize it via
+    # any natural encoding BEFORE the strict enum check so the parse_doc ↔
+    # citecheck integration never aborts the audit on an unsourced row.
+    if raw is None or raw == "unsourced" or verdict_obj.get("type") == "unsourced":
         return {"support": "unsourced", "flags": flags}
     if raw not in SUPPORT_STATES:
         raise ValueError(

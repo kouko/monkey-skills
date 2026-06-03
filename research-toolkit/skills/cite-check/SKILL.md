@@ -90,8 +90,9 @@ claim.
 
    Shape (`EXTRACT_CITED_CLAIMS`): `{claims: [{claim, citedUrl|citedRef,
    locator}]}` — one entry per cited claim, carrying exactly one of `citedUrl`
-   (audit it) or `citedRef` (non-URL → flag-and-skip). Carry the `unsourced`
-   anchors straight through to the report; do not bind them.
+   (audit it) or `citedRef` (non-URL → flag-and-skip). Carry the
+   `type:"unsourced"` anchors straight through to the report unchanged; do not
+   bind them (they land in the `unsourced` bucket and are not audited).
 
 ---
 
@@ -166,7 +167,10 @@ the support state, and a missing support call with no citation collapses to
 
 Collect every per-citation result row (each a `SUPPORT_VERDICT` object,
 optionally carrying `claim` / `citedUrl` / `citedRef` for display, plus the
-`unsourced` rows) into one JSON array and render the audit:
+`unsourced` rows) into one JSON array and render the audit. The Stage-1
+`type:"unsourced"` anchors pass straight into `report` / `verdict` as-is —
+`classify_support` lands them in the `unsourced` bucket (they are not audited),
+so they never crash the report:
 
 ```
 echo '[<result rows>]' | python scripts/citecheck.py report
