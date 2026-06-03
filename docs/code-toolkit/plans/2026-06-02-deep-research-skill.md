@@ -7,8 +7,8 @@ Execution order: parallel-where-possible
 Plan-document-reviewer verdict: PASS (2026-06-03, 14/14; 2 advisory notes — see Notes)
 
 Layout decision (resolves brief OQ2): top-level `deep-research/` is restructured
-from a standalone Python package INTO a plugin — `deep-research/.claude-plugin/
-plugin.json` + `deep-research/skills/deep-research/{SKILL.md, scripts/}`,
+from a standalone Python package INTO a plugin — `research-toolkit/.claude-plugin/
+plugin.json` + `research-toolkit/skills/deep-research/{SKILL.md, scripts/}`,
 following the distill-sessions convention (tests live in `scripts/` alongside
 code; `scripts/pytest.ini` provides the test runner; no root pyproject). It is
 its own plugin (a distinct research capability, not a fit for code-toolkit /
@@ -59,13 +59,13 @@ Notes:
   bans at depth≥2; matches the distill-sessions convention). No logic, no stage
   prose yet.
 - Module: deep-research/ (packaging)
-- Files touched: deep-research/.claude-plugin/plugin.json, deep-research/skills/deep-research/SKILL.md, deep-research/skills/deep-research/scripts/pytest.ini
+- Files touched: research-toolkit/.claude-plugin/plugin.json, research-toolkit/skills/deep-research/SKILL.md, research-toolkit/skills/deep-research/scripts/pytest.ini
 - Context paths:
   - dev-workflow/.claude-plugin/plugin.json
   - dev-workflow/skills/distill-sessions/scripts/pytest.ini
 - Acceptance:
-  - RED: `test -f deep-research/skills/deep-research/SKILL.md` fails (file absent)
-  - GREEN: all three files exist; `python -c "import json,sys,re; d=json.load(open('deep-research/.claude-plugin/plugin.json')); assert d['name']=='deep-research'"` passes; SKILL.md frontmatter parses (has `name:` and `description:`); the `.claude/hooks/validate-skill-folder-structure.sh` constraint holds (scripts/ is single-level)
+  - RED: `test -f research-toolkit/skills/deep-research/SKILL.md` fails (file absent)
+  - GREEN: all three files exist; `python -c "import json,sys,re; d=json.load(open('research-toolkit/.claude-plugin/plugin.json')); assert d['name']=='deep-research'"` passes; SKILL.md frontmatter parses (has `name:` and `description:`); the `.claude/hooks/validate-skill-folder-structure.sh` constraint holds (scripts/ is single-level)
 - External surfaces: plugin manifest schema (Claude Code plugin.json) — metadata only
 - Dependencies: none
 - Independent: false
@@ -78,13 +78,13 @@ Notes:
   `__main__`: `python schemas.py {scope|search|extract|verdict|report}` prints
   the named schema as JSON. Port `test_schemas.py`.
 - Module: deep_research schemas (scripts/schemas.py)
-- Files touched: deep-research/skills/deep-research/scripts/schemas.py, deep-research/skills/deep-research/scripts/test_schemas.py
+- Files touched: research-toolkit/skills/deep-research/scripts/schemas.py, research-toolkit/skills/deep-research/scripts/test_schemas.py
 - Context paths:
   - deep-research/src/deep_research/schemas.py
   - deep-research/tests/test_schemas.py
   - docs/code-toolkit/specs/deep-research-decompiled-source.md
 - Acceptance:
-  - RED: `cd deep-research/skills/deep-research/scripts && pytest test_schemas.py` fails (ModuleNotFoundError)
+  - RED: `cd research-toolkit/skills/deep-research/scripts && pytest test_schemas.py` fails (ModuleNotFoundError)
   - GREEN: same pytest passes; `python schemas.py verdict` prints JSON with required `refuted`/`evidence`/`confidence`; constants equal 3/2/15/25
 - External surfaces: none (stdlib only)
 - Dependencies: Task 1 completes first
@@ -99,7 +99,7 @@ Notes:
   JSON → ranked JSON), `rank.py quorum` (stdin verdicts JSON → `true`/`false`).
   Port `test_rank.py`.
 - Module: deep_research rank (scripts/rank.py)
-- Files touched: deep-research/skills/deep-research/scripts/rank.py, deep-research/skills/deep-research/scripts/test_rank.py
+- Files touched: research-toolkit/skills/deep-research/scripts/rank.py, research-toolkit/skills/deep-research/scripts/test_rank.py
 - Context paths:
   - deep-research/src/deep_research/rank.py
   - deep-research/tests/test_rank.py
@@ -118,7 +118,7 @@ Notes:
   stdin `{results, seen, fetch_slots}` → stdout `{novel, seen, slots}`. Port
   `test_dedup.py`.
 - Module: deep_research dedup (scripts/dedup.py)
-- Files touched: deep-research/skills/deep-research/scripts/dedup.py, deep-research/skills/deep-research/scripts/test_dedup.py
+- Files touched: research-toolkit/skills/deep-research/scripts/dedup.py, research-toolkit/skills/deep-research/scripts/test_dedup.py
 - Context paths:
   - deep-research/src/deep_research/dedup.py
   - deep-research/tests/test_dedup.py
@@ -138,7 +138,7 @@ Notes:
   (e.g. question, angle JSON, claim JSON, voter index) → prints the assembled
   prompt text. Port `test_prompts.py`.
 - Module: deep_research prompts (scripts/prompts.py)
-- Files touched: deep-research/skills/deep-research/scripts/prompts.py, deep-research/skills/deep-research/scripts/test_prompts.py
+- Files touched: research-toolkit/skills/deep-research/scripts/prompts.py, research-toolkit/skills/deep-research/scripts/test_prompts.py
 - Context paths:
   - deep-research/src/deep_research/prompts.py
   - deep-research/tests/test_prompts.py
@@ -162,7 +162,7 @@ Notes:
   `test_synthesis.py` (RED first) covering block format + agentCalls stats
   formula + markdown render.
 - Module: deep_research synthesis (scripts/synthesis.py)
-- Files touched: deep-research/skills/deep-research/scripts/synthesis.py, deep-research/skills/deep-research/scripts/test_synthesis.py
+- Files touched: research-toolkit/skills/deep-research/scripts/synthesis.py, research-toolkit/skills/deep-research/scripts/test_synthesis.py
 - Context paths:
   - deep-research/src/deep_research/core.py
   - deep-research/src/deep_research/cli.py
@@ -189,7 +189,7 @@ Notes:
   - deep-research/src/deep_research/core.py
 - Acceptance:
   - RED: `test ! -e deep-research/src/deep_research/adapters.py` fails (still present)
-  - GREEN: none of the deleted paths exist; `cd deep-research/skills/deep-research/scripts && pytest` is green (5 migrated/new test files pass); no remaining reference to `deep_research.` package imports anywhere under deep-research/
+  - GREEN: none of the deleted paths exist; `cd research-toolkit/skills/deep-research/scripts && pytest` is green (5 migrated/new test files pass); no remaining reference to `deep_research.` package imports anywhere under deep-research/
 - External surfaces: none
 - Dependencies: Tasks 2, 3, 4, 5, 6 complete first (keepers relocated before deletion)
 - Independent: false
@@ -223,13 +223,13 @@ Notes:
   novel source → agent extracts claims via `prompts.py fetch` +
   `schemas.py extract`. Keep body within the ~6000-token cap.
 - Module: deep-research skill doc (SKILL.md)
-- Files touched: deep-research/skills/deep-research/SKILL.md
+- Files touched: research-toolkit/skills/deep-research/SKILL.md
 - Context paths:
   - docs/code-toolkit/specs/2026-06-02-deep-research-skill.md
   - deep-research/src/deep_research/core.py (pipeline shape docstring)
   - code-toolkit/skills/dispatching-parallel-agents/SKILL.md
 - Acceptance:
-  - RED: `grep -c "## " deep-research/skills/deep-research/SKILL.md` returns <1 for stage headers (body still placeholder)
+  - RED: `grep -c "## " research-toolkit/skills/deep-research/SKILL.md` returns <1 for stage headers (body still placeholder)
   - GREEN: body names stages Scope / Search / Fetch with their `prompts.py` + `schemas.py` + `dedup.py` invocations and the subagent fan-out for per-angle work; explicitly states "no API key"; SKILL.md body ≤6000 tokens; frontmatter intact
 - External surfaces: none (doc)
 - Dependencies: Tasks 2, 3, 4, 5 complete first (references their CLI surfaces)
@@ -246,12 +246,12 @@ Notes:
   (no claims / all refuted / synthesis failed) as graceful early-returns the
   agent honors. Add a script-invocation quick-reference appendix.
 - Module: deep-research skill doc (SKILL.md)
-- Files touched: deep-research/skills/deep-research/SKILL.md
+- Files touched: research-toolkit/skills/deep-research/SKILL.md
 - Context paths:
   - deep-research/src/deep_research/core.py (verify/synth/degradation logic)
   - docs/code-toolkit/specs/2026-06-02-deep-research-skill.md
 - Acceptance:
-  - RED: `grep -i "quorum" deep-research/skills/deep-research/SKILL.md` returns nothing (stages 4-5 not yet written)
+  - RED: `grep -i "quorum" research-toolkit/skills/deep-research/SKILL.md` returns nothing (stages 4-5 not yet written)
   - GREEN: body documents the 3-voter fan-out + quorum survival + the 3 degradation paths + `synthesis.py` invocations; SKILL.md body still ≤6000 tokens; `.claude/hooks/validate-skill-folder-structure.sh` constraint holds
 - External surfaces: none (doc)
 - Dependencies: Tasks 6, 9 complete first (T9 = same-file predecessor; T6 = synthesis CLI referenced)

@@ -95,9 +95,9 @@
       "source": "./salesforce-toolkit/"
     },
     {
-      "name": "deep-research",
-      "description": "Agent-portable, key-free deep-research pipeline — scope → search → dedup → fetch → 3-vote adversarial verify → synthesize — that drives the host agent's own LLM + web tools, no API keys.",
-      "source": "./deep-research/"
+      "name": "research-toolkit",
+      "description": "Research toolkit — agent-portable, key-free research skills driving the host agent's own LLM + web tools. Ships deep-research (scope → search → dedup → fetch → 3-vote adversarial verify → synthesize, no API keys); more research skills to follow.",
+      "source": "./research-toolkit/"
     }
   ]
 }
