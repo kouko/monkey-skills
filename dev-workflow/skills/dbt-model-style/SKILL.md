@@ -24,7 +24,7 @@ An adoptable dbt + Redshift **model writing-style template**: once a team adopts
 
 **When a request mixes style and logic** (common — e.g. "fix the source-A→B fallback *and* tidy the `final` CTE"): do the **style/structure** part under this skill; for the **calculation/business-rule** part, name it explicitly and hand it back as out of scope — don't silently change computation, and don't refuse the whole request. Split the edit; don't let "I'm already in here" pull you across the boundary.
 
-**One boundary that genuinely blurs — name-vs-content.** A few style rules can only be *checked* by glancing at the computation: the variant-suffix naming MUST (§3) says a `__paid` column must not smuggle in trial rows, so confirming the **name matches what the column computes** requires reading the logic. That read-to-verify-the-name is in scope; **changing** the computation to fix a mismatch is not — flag the mismatch and hand the logic fix back.
+**One boundary that genuinely blurs — name-vs-content.** A few style rules can only be *checked* by glancing at the computation: the **name-matches-content MUST** (§3) says a `__paid` column must not smuggle in trial rows, so confirming the **name matches what the column computes** requires reading the logic. That read-to-verify-the-name is in scope; **changing** the computation to fix a mismatch is not — flag the mismatch and hand the logic fix back.
 
 Rules come in four levels:
 
@@ -246,8 +246,8 @@ The header splits into **two separate `/* */` blocks** — this split is functio
 > 1. `dbt_project.yml` has `persist_docs: {relation: true, columns: true}` (or the model/folder-level equivalent).
 > 2. After a `dbt run`, the comment actually landed — check with `\d+ <schema>.<table>` in `psql`, or `get_table_comment` via the redshift-comment MCP.
 >
-> **If both hold** → the comment-reaching incentives apply (field-order-for-truncation at the ~1000-char list/search cut, keyword-rich `summary`/`purpose` for `search_tables`, first block as the agent-facing description).
-> **If neither holds** → treat §5 as **readability-only**: keep the two-block split + YAML shape (they still help humans and the validator), but the truncation / keyword / discoverability rules are moot — don't optimize for a comment nothing reads.
+> **If step 2 confirms the comment landed** → the comment-reaching incentives apply (field-order-for-truncation at the ~1000-char list/search cut, `summary`/`purpose` keywords feeding `search_tables`, first block as the agent-facing description).
+> **If the comment did not land** (whether `persist_docs` is off or just misconfigured) → treat §5 as **readability-only**: keep the two-block split + YAML shape (they still help humans and the validator), and keep `summary`/`purpose` keyword-rich (it still aids a human reading the `.sql`) — the keyword **MUST** is *not* cancelled; only its *`search_tables`-discoverability* incentive and the truncation-ordering rule go moot. Don't optimize for a comment nothing reads.
 >
 > `scripts/validate_header.py` checks the header's **shape** (fields present, parseable YAML, balanced `/* */`) — it does **not** verify the comment persisted. The two steps above are the only persistence check.
 
