@@ -8,18 +8,13 @@ description: >-
   produce output that meets its own declared contract on real input. A
   fresh blind subagent that does NOT know the author's intent probes the
   triggers and the workflow and reports what breaks with reproducible
-  transcript evidence, so you ship a skill that activates correctly and
-  does what it claims — not one that passed your own conformance checks but
-  fails on inputs you never imagined. Tests BOTH dimensions co-equally:
-  triggering (trigger-miss / over-trigger) AND output quality (workflow
-  drift / gate bypass / valid-but-wrong). Runs via fresh subagents on
-  working-tree files (no install, no registry) and emits a fix-actionable
-  findings report the user reviews then hands to the main agent to fix.
-  Triggers — zh-TW:「dogfood 這個 skill」「測試我的 skill 會不會觸發」
-  「我的 skill 行為對不對」「黑箱測試 skill」; ja:「スキルをドッグフード
-  したい」「発火するか試す」「スキルの挙動を確認」; en: "dogfood this skill",
-  "does my skill trigger", "behavioral test my skill", "blind-test my skill",
-  "will this skill fire", "test skill behavior before I commit".
+  transcript evidence. Tests BOTH dimensions co-equally: triggering
+  (trigger-miss / over-trigger) AND output quality (workflow drift / gate
+  bypass / valid-but-wrong), on working-tree files — no install, emitting a
+  fix-actionable report.
+  Triggers — zh-TW:「dogfood 這個 skill」「測試我的 skill 會不會觸發」;
+  ja:「スキルをドッグフード」「発火するか試す」; en: "dogfood this skill",
+  "behavioral / blind-test my skill", "will this skill fire before I ship".
   Do NOT use for: static design scoring of a SKILL.md (use
   dev-workflow:skill-judge — 8-dimension rubric, reads the file, does not
   run it); creating a skill or its white-box author-conformance eval loop
