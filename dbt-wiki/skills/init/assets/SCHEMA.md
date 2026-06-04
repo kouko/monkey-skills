@@ -85,7 +85,7 @@ can link to a dbt-wiki knowledge page, and a dbt-wiki page can cite a
 repo-wiki decision. Examples:
 `[Customer](.dbt-wiki/entities/customer.md)` /
 `[fct_orders evidence](.dbt-wiki/_evidence/models/fct_orders.md)` from a
-repo-wiki page; `[FSD report decision](../.repo-wiki/sources/2026-04-29-fsd...md)`
+repo-wiki page; `[revenue forecast decision](../.repo-wiki/sources/2026-04-29-revenue-forecast...md)`
 from a dbt-wiki page.
 
 Neither directory modifies the other. The dbt-wiki CLAUDE.md drop-in
