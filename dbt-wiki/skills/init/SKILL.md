@@ -850,25 +850,38 @@ For each target slug that has **no file on disk**:
 
 #### 6.7.3 Lint `derived_from` cross-domain contamination
 
-For each knowledge page, every `unique_id` listed in `derived_from`
-MUST belong to the page's own domain slice (the list in
-`ownership.json.domains[<owning_domain>]`).
+**How owning domain is determined**: there is no per-page `domain:`
+frontmatter key. A page's owning domain is inferred from its
+`derived_from` uids via the `ownership.json` `domains` reverse-map —
+build `uid_to_domain` by inverting `ownership.json["domains"]`
+(`{ domain: [uid, ...] }` → `{ uid: domain }`), then map each
+`derived_from` uid through it to get the set of domains it touches.
 
-If a `derived_from` entry belongs to a **different** domain's slice,
-flag it:
+A page is **clean** when all its `derived_from` uids resolve to the
+same domain (or none map at all — unmapped uids are ignored).
+A page is **contaminated** when its `derived_from` uids resolve to
+**more than one** distinct domain.
+
+For each contaminated knowledge page, flag it:
 
 ```
-LINT ERROR: <page_path> — derived_from "<unique_id>" belongs to
-domain "<foreign_domain>", not "<page_domain>". Cross-domain
-derived_from entries cause spurious stale-cascades on refresh
-(see distill-entities §5.1 cross-entity exclusion rule).
+LINT ERROR: <page_path> — derived_from spans domains
+{<domain_a>, <domain_b>}: uid "<unique_id>" belongs to
+domain "<foreign_domain>", not "<majority_domain>".
+Cross-domain derived_from entries cause spurious stale-cascades
+on refresh (see distill-entities §5.1 cross-entity exclusion rule).
 ```
+
+Where `<majority_domain>` is the domain whose uids appear most
+frequently in the page's `derived_from` list (i.e. the most likely
+intended owning domain), and each `<unique_id>` / `<foreign_domain>`
+pair names a uid that resolves to a different domain.
 
 Emit all violations before stopping — do not halt on the first one.
 
 A page with cross-domain `derived_from` entries **must not** be
-published until the contamination is resolved: either the entry is
-moved to the correct owning domain's page or removed.
+published until the contamination is resolved: either the foreign
+uid is moved to the correct owning domain's page or removed.
 
 ### Phase B spec files
 
