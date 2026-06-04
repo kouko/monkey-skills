@@ -265,8 +265,13 @@ Provenance sources:
 ```
 
 Rules:
-1. List only the values that actually appear in production data (distilled
-   from `DISTINCT` evidence or schema.yml `accepted_values` test).
+1. Record values you have evidence for, tagged by source:
+   - Production-observed values (from `DISTINCT` or `accepted_values` tests)
+     use `(via: distinct)` or `(via: accepted_values)`.
+   - When no test or DISTINCT evidence exists, you MAY record values inferred
+     from SQL structure or column semantics using `(via: inferred)`. Downstream
+     SQL generators MUST treat inferred enums as a hypothesis, not ground truth.
+   The `(via:)` suffix is mandatory on every `value_domain`.
 2. Always include the `(via:)` suffix so readers know the confidence level.
 3. Note any format surprise (e.g. suffix, locale, casing) that would cause
    an equality filter to miss rows.
