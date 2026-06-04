@@ -45,7 +45,7 @@ No pages are modified; findings are printed as warnings for human review.
 
 ### Added — optional `## Caveats` severity/type tags across distill specs
 
-Caveat blocks in distill agent specs (`distill-models.md`, `distill-entities.md`,
+Caveat blocks in distill agent specs (`distill-concepts.md`, `distill-entities.md`,
 `distill-metrics.md`) now support structured severity/type inline tags:
 
 - `[bug]` — known incorrect behavior
