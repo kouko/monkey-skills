@@ -22,6 +22,10 @@ An adoptable dbt + Redshift **model writing-style template**: once a team adopts
 
 **Style & structure only — not computation.** This skill covers how CTEs are arranged, how columns are named, how comments are written, how JOINs are declared. It does **not** cover calculation logic, business rules, metric formulas, NULL/denominator semantics, or layer-dependency design — those are a separate matter, out of scope here.
 
+**When a request mixes style and logic** (common — e.g. "fix the source-A→B fallback *and* tidy the `final` CTE"): do the **style/structure** part under this skill; for the **calculation/business-rule** part, name it explicitly and hand it back as out of scope — don't silently change computation, and don't refuse the whole request. Split the edit; don't let "I'm already in here" pull you across the boundary.
+
+**One boundary that genuinely blurs — name-vs-content.** A few style rules can only be *checked* by glancing at the computation: the **name-matches-content MUST** (§3) says a `__paid` column must not smuggle in trial rows, so confirming the **name matches what the column computes** requires reading the logic. That read-to-verify-the-name is in scope; **changing** the computation to fix a mismatch is not — flag the mismatch and hand the logic fix back.
+
 Rules come in four levels:
 
 | Level | Meaning |
@@ -236,7 +240,16 @@ final AS (
 
 The header splits into **two separate `/* */` blocks** — this split is functional, not cosmetic:
 
-> **Mechanism (adapt)**: this two-block design assumes your project **(a)** uses dbt `persist_docs` to write the model description into the warehouse table comment (column comments into column comments), and **(b)** has tooling that takes the **first `/* ... */` block** as the description (e.g. some sql→yml scripts use a non-greedy regex that grabs only the first block). Under that assumption, **only the first block reaches the table comment** — seen by humans reading the comment and by SQL-aware LLMs/MCPs; the second block stays in the `.sql` for humans. If your project doesn't enable `persist_docs`, the two-block split is still a good readability convention — it just loses the "reaches the comment" incentive.
+> **Mechanism (adapt)**: this two-block design assumes your project **(a)** uses dbt `persist_docs` to write the model description into the warehouse table comment (column comments into column comments), and **(b)** has tooling that takes the **first `/* ... */` block** as the description (e.g. some sql→yml scripts use a non-greedy regex that grabs only the first block). Under that assumption, **only the first block reaches the table comment** — seen by humans reading the comment and by SQL-aware LLMs/MCPs (MCP = a Model Context Protocol server an agent queries, e.g. a Redshift comment server); the second block stays in the `.sql` for humans. If your project doesn't enable `persist_docs`, the two-block split is still a good readability convention — it just loses the "reaches the comment" incentive.
+
+> **Is it wired up? (check once, per project)** — the "first block reaches the comment" payoff is **invisible from the `.sql` alone**, so confirm the machinery before maintaining the header on faith:
+> 1. `dbt_project.yml` has `persist_docs: {relation: true, columns: true}` (or the model/folder-level equivalent).
+> 2. After a `dbt run`, the comment actually landed — check with `\d+ <schema>.<table>` in `psql`, or `get_table_comment` via the redshift-comment MCP.
+>
+> **If step 2 confirms the comment landed** → the comment-reaching incentives apply (field-order-for-truncation at the ~1000-char list/search cut, `summary`/`purpose` keywords feeding `search_tables`, first block as the agent-facing description).
+> **If the comment did not land** (whether `persist_docs` is off or just misconfigured) → treat §5 as **readability-only**: keep the two-block split + YAML shape (they still help humans and the validator), and keep `summary`/`purpose` keyword-rich (it still aids a human reading the `.sql`) — the keyword **MUST** is *not* cancelled; only its *`search_tables`-discoverability* incentive and the truncation-ordering rule go moot. Don't optimize for a comment nothing reads.
+>
+> `scripts/validate_header.py` checks the header's **shape** (fields present, parseable YAML, balanced `/* */`) — it does **not** verify the comment persisted. The two steps above are the only persistence check.
 
 ### 5.1 First `/* */`: frontmatter + short narrative (→ table comment, for MCP/agent)
 

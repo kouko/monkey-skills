@@ -4,6 +4,25 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.17.0] — 2026-06-03
+
+### Changed — `dbt-model-style`: close 2 dogfood findings (F1 / F3)
+
+Surfaced by an external-triangulation dogfood (via `dogfood-skill-testing`, a blind
+cold-reader on the merged skill — see `docs/skill-dogfood/2026-06-03-dbt-model-style/`):
+
+- **F1 (High)** — the two-block header (§5) is the most-emphasized rule, but its entire
+  value rested on **invisible, unverifiable** project tooling (`persist_docs` + a sql→yml
+  regex), with no way for a cold user to confirm it is wired up. Added an **"Is it wired
+  up? (check once)"** block: a 2-step `persist_docs` + comment-landed check, an explicit
+  **degrade-to-readability-only** path when absent, and a note that `validate_header.py`
+  checks header *shape*, not persistence. Also glossed `MCP` on first use.
+- **F3 (Medium)** — the style-vs-calculation boundary read clean but leaks on real mixed
+  edits. Added a **"when a request mixes style and logic"** rule (do the style part, hand
+  the logic part back as out-of-scope) and named the one genuinely-blurred case — the
+  variant-suffix naming MUST needs a *read* of the computation to verify name-vs-content
+  (reading to verify is in scope; changing the computation is not).
+
 ## [2.16.0] — 2026-06-03
 
 ### Added — `dogfood-skill-testing`: behavioral black-box dogfood for skills-in-development
