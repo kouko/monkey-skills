@@ -38,7 +38,7 @@ cache:
 # fields aren't supplied explicitly.
 # ---------------------------------------------------------------------------
 profile:
-  company_name: ""        # e.g. "資廚管理顧問股份有限公司"
+  company_name: ""        # e.g. "Acme 股份有限公司"
   company_id: ""          # 統一編號
   default_jurisdiction: "TW"
   escalation_threshold_twd: 5000000  # alerts when deal_size > this
