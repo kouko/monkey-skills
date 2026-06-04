@@ -4,6 +4,39 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] — 2026-06-04
+
+### Added — recall pack: SCHEMA v2.1 (additive-optional; v2.0 pages remain valid)
+
+Four optional frontmatter keys added to the page contract; existing pages require
+no changes.
+
+- **`aliases`** — list of project-language synonyms, GL codes, and abbreviations
+  for a model or entity (e.g. `[ARR, MRR, 月次経常収益]`). Distill agents
+  auto-emit this field by extracting un-bridgeable project terms from page
+  bodies; no human gate required. Index lines surface aliases so tiered query
+  matches project-language terms directly.
+- **`title_local`** — project-language title for the model or entity (parallel to
+  the English `title`). Auto-emitted alongside `aliases`; fully automatic.
+- **`reviewed_by`** / **`reviewed_at`** — review lifecycle markers (reviewer
+  identity + ISO date). Workflow is deferred; keys are reserved in the schema now
+  so pages written today are forward-compatible.
+
+### Added — value-domain provenance marker
+
+Value-domain lists now carry a `(via: accepted_values | distinct | inferred)`
+provenance tag so text-to-SQL consumers can distinguish ground-truth enums
+(sourced from dbt `accepted_values` tests or a live `DISTINCT` query) from
+inferred values (extracted heuristically from column descriptions or sample rows).
+
+### Changed — value-domain rule relaxed to permit-but-tag
+
+The previous rule ("list only production values; omit hypotheticals") is relaxed
+in both `SCHEMA.md` and `distill-entities.md §3.4`: inferred values are now
+**allowed** when tagged `(via: inferred)`. Ground-truth values continue to be
+preferred; the tag makes the epistemic status explicit rather than silently
+excluding uncertain-but-useful entries.
+
 ## [2.4.0] — 2026-06-03
 
 ### Added — `pack`: export the knowledge base as a portable analytics skill
