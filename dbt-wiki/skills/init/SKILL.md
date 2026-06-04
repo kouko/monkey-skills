@@ -749,8 +749,8 @@ derived_from:
   - model.example_dbt_project.stg_customers   # evidence unique_ids
   - model.example_dbt_project.dim_customers
 last_changed_by: "PR #123"                     # or commit SHA
-title_local: "顧客"                             # project-language name; omit if none
-aliases:
+title_local: "顧客"                             # project-language title; null if none (always written, never omitted)
+aliases:                                        # project-language synonyms/codes; [] if none (always written, never omitted)
   - customer
   - client
 ```
