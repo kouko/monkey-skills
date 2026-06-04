@@ -153,10 +153,10 @@ If both plugins are installed in the same repo, they coexist cleanly and complem
 Cross-link freely:
 ```markdown
 <!-- in .dbt-wiki/entities/customer.md (knowledge page) -->
-Decision context: see [.repo-wiki/sources/2026-04-29-fsd-management-report-...](../.repo-wiki/sources/...)
+Decision context: see [.repo-wiki/sources/2026-04-29-revenue-forecast-...](../.repo-wiki/sources/...)
 
 <!-- in .dbt-wiki/_evidence/models/fct_orders.md (evidence page) -->
-WHY: see [.repo-wiki/sources/2026-04-29-fsd-management-report-...](../.repo-wiki/sources/...)
+WHY: see [.repo-wiki/sources/2026-04-29-revenue-forecast-...](../.repo-wiki/sources/...)
 
 <!-- in .repo-wiki/entities/DbtModels.md -->
 For Customer entity knowledge, see [customer](.dbt-wiki/entities/customer.md)
