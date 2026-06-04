@@ -757,9 +757,12 @@ aliases:
 
 `title_local` and `aliases` are emitted automatically by the distill
 agent (the alias-capture rule in each `references/distill-*.md` spec
-populates them). Leave `aliases` as an empty list `[]` rather than
-omitting the key entirely, so the index generator can distinguish
-"distilled but no aliases" from "not yet distilled."
+populates them). **During distillation the agent always writes both
+keys**: `aliases: []` when no aliases were found, `title_local: null`
+when no project-language title exists — this lets the index generator
+distinguish "distilled but no aliases" from "not yet distilled."
+Pre-existing v2.0 pages that omit these keys are still valid; SCHEMA.md
+states that missing optional keys parse fine (legacy omission tolerance).
 
 `derived_from` is the freshness anchor: `/dbt-wiki:refresh` uses it
 to detect which knowledge pages are stale when evidence models change
