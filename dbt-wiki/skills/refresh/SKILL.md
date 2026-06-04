@@ -286,7 +286,7 @@ else:
     # ownership.json shape: { "domains": { "<domain>": ["<uid>", ...], ... } }
     # Each uid is a FULL evidence unique_id (e.g. "model.<package>.<name>"),
     # matching the shape stored in derived_from — so uid_to_domain lookup aligns.
-    # Build reverse map: uid -> domain
+    # Build reverse map: uid -> domain (key is full unique_id).
     uid_to_domain = {}
     for domain, uids in ownership["domains"].items():
         for uid in uids:
@@ -300,20 +300,32 @@ else:
             continue
         fm = yaml.safe_load(parts[1]) or {}
         derived = fm.get("derived_from", []) or []
-        page_domain = fm.get("domain")   # set by init fan-out agent
+        if not derived:
+            continue   # no provenance — nothing to check
 
-        if not page_domain:
-            continue   # no domain metadata — cannot check, skip silently
+        # Map each derived_from uid to its domain via the reverse map.
+        # Uids not found in any domain slice are ignored (unmapped).
+        mapped_domains = {uid_to_domain[uid] for uid in derived if uid in uid_to_domain}
 
-        for uid in derived:
-            uid_domain = uid_to_domain.get(uid)
-            if uid_domain and uid_domain != page_domain:
-                warnings.append(
-                    f"⚠ {page_path.name}: derived_from includes {uid} "
-                    f"from domain {uid_domain} (page domain {page_domain}) "
-                    f"— likely a relationship-only model wrongly added; "
-                    f"will cause false stale-cascade."
-                )
+        if len(mapped_domains) <= 1:
+            continue   # all uids resolve to one domain (or none mapped) — clean
+
+        # More than one distinct domain in derived_from → cross-domain contamination.
+        # Identify the majority domain and flag the foreign uid(s).
+        from collections import Counter
+        domain_counts = Counter(uid_to_domain[uid] for uid in derived if uid in uid_to_domain)
+        majority_domain = domain_counts.most_common(1)[0][0]
+        foreign_uids = [uid for uid in derived
+                        if uid in uid_to_domain and uid_to_domain[uid] != majority_domain]
+        foreign_details = ", ".join(
+            f"{uid} (domain: {uid_to_domain[uid]})" for uid in foreign_uids
+        )
+        warnings.append(
+            f"WARNING {page_path.name}: derived_from spans multiple domains "
+            f"(majority: {majority_domain}); foreign uid(s): {foreign_details} "
+            f"— likely relationship-only model(s) wrongly added; "
+            f"will cause false stale-cascade."
+        )
 
     if warnings:
         log_path = wiki / "log.md"
