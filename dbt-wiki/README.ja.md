@@ -139,7 +139,7 @@ columns:
 自由にクロスリンク：
 ```markdown
 <!-- in .dbt-wiki/_evidence/models/fct_orders.md -->
-WHY: see [.repo-wiki/sources/2026-04-29-fsd-management-report-...](../.repo-wiki/sources/...)
+WHY: see [.repo-wiki/sources/2026-04-29-revenue-forecast-...](../.repo-wiki/sources/...)
 
 <!-- in .repo-wiki/entities/DbtModels.md -->
 For current dependencies of fct_orders, see [fct_orders](.dbt-wiki/_evidence/models/fct_orders.md)

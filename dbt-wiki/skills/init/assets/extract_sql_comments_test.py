@@ -73,10 +73,10 @@ SELECT 1
     ),
     # 6. Chinese / multibyte content preserved
     (
-        """-- 這個 model 處理 FSD 內部管報的 base layer
+        """-- 這個 model 處理訂單彙總的 base layer
 SELECT a FROM t
 """,
-        [{"line": 1, "kind": "line", "text": "這個 model 處理 FSD 內部管報的 base layer"}],
+        [{"line": 1, "kind": "line", "text": "這個 model 處理訂單彙總的 base layer"}],
     ),
 ]
 
