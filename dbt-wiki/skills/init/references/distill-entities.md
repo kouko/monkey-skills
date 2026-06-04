@@ -191,9 +191,13 @@ terms to exact warehouse values without guessing.
 **When to add it:**
 - The column is categorical (region code, order status, tier, channel,
   currency code, etc.) AND has ≤ 20 distinct values.
-- You have production evidence: a `DISTINCT` query result, a dbt
-  `accepted_values` test in schema.yml, or documented enum from the source
-  system.
+- **Preferred:** you have production evidence — a `DISTINCT` query result, a dbt
+  `accepted_values` test in schema.yml, or a documented enum from the source
+  system. Tag these `(via: distinct)` or `(via: accepted_values)`.
+- **Also permitted:** no production evidence exists but you can infer plausible
+  values from SQL structure or column semantics. Tag these `(via: inferred)`.
+  Inferred value_domains are a hypothesis, not ground truth; do not omit them
+  solely because production evidence is unavailable.
 - Omit entirely for free-text, numeric, or high-cardinality columns (IDs,
   timestamps, amounts). Those do not belong here; note them in `## Caveats`
   if the cardinality is surprising.
