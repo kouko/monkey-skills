@@ -272,7 +272,7 @@ break the freshness anchor. Surface for human review instead.
 
 ```python
 # Pseudocode — pre-stale derived_from domain-consistency lint
-import json, yaml, glob
+import itertools, json, yaml
 from pathlib import Path
 
 wiki = Path(".dbt-wiki")
@@ -284,6 +284,8 @@ if not ownership_path.exists():
 else:
     ownership = json.loads(ownership_path.read_text())
     # ownership.json shape: { "domains": { "<domain>": ["<uid>", ...], ... } }
+    # Each uid is a FULL evidence unique_id (e.g. "model.<package>.<name>"),
+    # matching the shape stored in derived_from — so uid_to_domain lookup aligns.
     # Build reverse map: uid -> domain
     uid_to_domain = {}
     for domain, uids in ownership["domains"].items():
@@ -291,7 +293,7 @@ else:
             uid_to_domain[uid] = domain
 
     warnings = []
-    for page_path in wiki.glob("entities/*.md") | wiki.glob("metrics/*.md") | wiki.glob("concepts/*.md"):
+    for page_path in itertools.chain(wiki.glob("entities/*.md"), wiki.glob("metrics/*.md"), wiki.glob("concepts/*.md")):
         raw = page_path.read_text()
         parts = raw.split("---", 2)
         if len(parts) < 3:
