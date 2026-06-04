@@ -210,11 +210,20 @@ terms to exact warehouse values without guessing.
 ```
 
 **Rules (aligned to SCHEMA §Value-domain / enum capture):**
-1. List only values that **actually appear in production data** — sourced from
-   a `DISTINCT` evidence query or a schema.yml `accepted_values` test. Do not
-   enumerate hypothetical values.
+1. Always append the `(via:)` provenance suffix so readers know the confidence
+   level. Every `value_domain` entry must carry one of:
+   - `(via: accepted_values)` — backed by a `schema.yml` `accepted_values`
+     test; the list is authoritative and CI-enforced.
+   - `(via: distinct)` — populated from a `DISTINCT` query over production
+     data; accurate at distillation time but not CI-enforced.
+   - `(via: inferred)` — derived from SQL structure or column semantics with
+     NO `accepted_values` test and NO `DISTINCT` backing. This is a
+     **hypothesis, not ground truth**: downstream SQL generators MUST treat
+     this enum as provisional and avoid hard-failing on unlisted values.
+   Inferred values ARE permitted — mark them `(via: inferred)` rather than
+   omitting them.
 2. Note any format surprise (suffix, locale, casing) that would cause an
-   equality filter to miss rows — e.g. `value_domain: [NL, EU, APAC]` not
+   equality filter to miss rows — e.g. `value_domain: [NL, EU, APAC] (via: accepted_values)` not
    `["Northland", "Eurozone", "Asia-Pacific"]`.
 3. If stored values differ from display labels, document both inline:
    `stored: NL`, `display: Northland`.
@@ -401,6 +410,46 @@ Refresh will overwrite these fields if any `derived_from` evidence model changes
 Optional. Use tags from the dbt models' `config.tags` where they carry
 business meaning (e.g., `["finance"]`, `["product"]`). Do not carry
 over technical tags (`["daily", "incremental"]`).
+
+### 5.7 Alias capture for project-language retrieval (fully automatic)
+
+During distillation, automatically populate the `aliases:` frontmatter
+list — no human step required. Collect body terms that a query author
+might search for but that:
+
+- **(a)** do NOT appear in the page's `summary`, AND
+- **(b)** an LLM could NOT bridge from the summary alone.
+
+For entities these are typically: GL / account codes (e.g. `422001`),
+project abbreviations (e.g. `NSDD`, `FSD`, `l3`–`l6`), and non-obvious
+project synonyms for the entity (e.g. `流水分潤` for a revenue-share
+settlement entity).
+
+**EXCLUDE**: terms already in the title or summary, generic words
+(`customer`, `order`, `id`), and anything an LLM would naturally infer
+from the summary alone.
+
+**Tie-breaker**: when uncertain, prefer inclusion — a false-positive
+alias costs a prune; a missed alias is permanent.
+
+Also set `title_local`: the entity's title in the project's working
+language. Use the exact term as it appears in the project's schema.yml
+descriptions or internal documentation — NOT a translation of the
+English title.
+
+Both fields are emitted automatically on every `init` and `refresh`
+run; a human may prune `aliases` later (pruning is never required, but
+never re-add a term that was intentionally pruned).
+
+**Frontmatter shape (extend the §5 provenance template)**:
+
+```yaml
+aliases:
+  - "422001"          # GL account code used in internal docs, not in summary
+  - NSDD              # project abbreviation not inferable from English title
+  - 流水分潤          # non-obvious project synonym for the entity
+title_local: 流水分潤結算  # entity title in project's working language (from schema.yml)
+```
 
 ---
 
