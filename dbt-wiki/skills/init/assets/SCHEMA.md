@@ -271,13 +271,12 @@ Rules:
    - When no test or DISTINCT evidence exists, you MAY record values inferred
      from SQL structure or column semantics using `(via: inferred)`. Downstream
      SQL generators MUST treat inferred enums as a hypothesis, not ground truth.
-   The `(via:)` suffix is mandatory on every `value_domain`.
-2. Always include the `(via:)` suffix so readers know the confidence level.
-3. Note any format surprise (e.g. suffix, locale, casing) that would cause
+   The `(via:)` suffix is mandatory on every `value_domain` so readers know the confidence level.
+2. Note any format surprise (e.g. suffix, locale, casing) that would cause
    an equality filter to miss rows.
-4. If stored values differ from display labels, document both
+3. If stored values differ from display labels, document both
    (`stored: NL`, `display: Northland`).
-5. Omit this block entirely for free-text or numeric columns.>
+4. Omit this block entirely for free-text or numeric columns.>
 
 ## Relationships
 <typed edges to other knowledge pages — see "## Relationships spec".
