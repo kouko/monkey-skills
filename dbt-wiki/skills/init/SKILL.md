@@ -736,9 +736,9 @@ context window), Phase B fans out one subagent per **domain** — a
 cohesive cluster of models sharing a business purpose (e.g. `billing`,
 `sales`, `inventory`).
 
-#### Before fan-out: write `_internal/ownership.json`
+#### Before fan-out: write `.dbt-wiki/_internal/ownership.json`
 
-Before dispatching domain agents, write `_internal/ownership.json`
+Before dispatching domain agents, write `.dbt-wiki/_internal/ownership.json`
 with two maps:
 
 ```json
@@ -748,9 +748,9 @@ with two maps:
     "order":    "sales"
   },
   "domains": {
-    "billing":   ["billing_invoices_v1", "billing_payments_v1"],
-    "sales":     ["sales_orders_v1", "sales_order_lines_v1"],
-    "inventory": ["inventory_stock_v1"]
+    "billing":   ["model.example_dbt_project.billing_invoices_v1", "model.example_dbt_project.billing_payments_v1"],
+    "sales":     ["model.example_dbt_project.sales_orders_v1", "model.example_dbt_project.sales_order_lines_v1"],
+    "inventory": ["model.example_dbt_project.inventory_stock_v1"]
   }
 }
 ```
@@ -761,7 +761,9 @@ with two maps:
   entity page is owned by the `billing` agent; all other agents may
   link to it but must not create it.
 - **`domains`** — maps each domain slug to the list of evidence
-  `unique_id`s it is responsible for distilling.
+  `unique_id`s it is responsible for distilling. Values are full dbt
+  `unique_id`s (`model.<package>.<name>`) — the same shape as
+  `derived_from` entries in wiki pages.
 
 #### has_metricflow gate (P2-1)
 
