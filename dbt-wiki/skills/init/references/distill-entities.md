@@ -457,6 +457,42 @@ title_local: 經常性收入  # entity title in project's working language (from
 
 ---
 
+## Caveats — severity/type tag convention
+
+Each caveat bullet in `## Caveats` **may** be prefixed with one of the
+following tags. Tagging is optional but recommended: it lets query
+consumers and future distillers triage caveats at a glance without
+reading every bullet.
+
+| Tag | Meaning | When to use |
+|---|---|---|
+| `[bug]` | Produces wrong results if not handled | A source defect, unfiltered row, or aggregation trap that causes silent over/under-counting unless the query explicitly guards against it |
+| `[limitation]` | Known coverage or scope gap, by design or upstream | A column that is NULL for a known segment, a model that covers only one region, or a metric that excludes a class of records by design |
+| `[temporal]` | Date/period semantics gotcha | Future-dating artefacts, snapshot-vs-event-vs-accrual ambiguity, or a date column that does not mean what its name implies |
+| `[no-test]` | No dbt test guards this datum | A column or invariant with no `not_null`, `unique`, `accepted_values`, or relationship test — data-quality risk is undetected by CI |
+
+**Rules:**
+- Use at most **one tag per bullet**.
+- Omit the tag entirely if none of the four categories fits; plain bullets are valid.
+- Do **not** invent new tags — use plain text to describe anything outside the four categories.
+
+**Generic example:**
+
+```markdown
+## Caveats
+
+- **[bug]** Unfiltered total row: source CSV appends a grand-total row;
+  `SUM(qty)` over-counts unless `WHERE key IS NOT NULL`.
+- **[limitation]** Coverage is domestic orders only; cross-border records
+  are excluded upstream and will never appear in this model.
+- **[temporal]** `close_date` reflects the accounting-close date, not
+  the event date; for event-time analysis use `event_at` instead.
+- **[no-test]** `tier` has no `accepted_values` test; new tiers added
+  upstream will silently appear as unmapped values.
+```
+
+---
+
 ## 6. Worked example
 
 ### Input: synthetic 3-tier evidence set
