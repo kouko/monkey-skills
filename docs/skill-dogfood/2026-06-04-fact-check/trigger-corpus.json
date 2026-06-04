@@ -1,0 +1,29 @@
+{
+  "target": "fact-check",
+  "distractors": ["deep-research", "cite-check", "deep-read"],
+  "queries": [
+    {"id": "sf01", "lang": "en", "should_fire": true,  "route_to": "fact-check", "query": "Is it true that the Great Wall of China is visible from space with the naked eye?"},
+    {"id": "sf02", "lang": "en", "should_fire": true,  "route_to": "fact-check", "query": "Can you verify this claim: honey never spoils?"},
+    {"id": "sf03", "lang": "en", "should_fire": true,  "route_to": "fact-check", "query": "Fact-check this for me: humans only use 10 percent of their brain."},
+    {"id": "sf04", "lang": "en", "should_fire": true,  "route_to": "fact-check", "query": "Did Einstein really fail math in school? Just want a quick verdict."},
+    {"id": "sf05", "lang": "zh", "should_fire": true,  "route_to": "fact-check", "query": "這個說法對嗎：每天一定要喝八杯水才健康"},
+    {"id": "sf06", "lang": "ja", "should_fire": true,  "route_to": "fact-check", "query": "この主張は本当？ナポレオンはとても背が低かった"},
+    {"id": "sf07", "lang": "en", "should_fire": true,  "route_to": "fact-check", "query": "Is it accurate that a goldfish has only a 3-second memory?"},
+    {"id": "sf08", "lang": "en", "should_fire": true,  "route_to": "fact-check", "query": "Someone told me lightning never strikes the same place twice. True or false?"},
+    {"id": "sf09", "lang": "zh", "should_fire": true,  "route_to": "fact-check", "query": "真的假的？吃宵夜一定會變胖"},
+    {"id": "sf10", "lang": "en", "should_fire": true,  "route_to": "fact-check", "query": "Quick check on one claim: NASA spent millions developing a space pen while the Soviets just used pencils."},
+    {"id": "sf11", "lang": "en", "should_fire": true,  "route_to": "fact-check", "query": "Is the claim that we swallow eight spiders a year in our sleep correct?"},
+    {"id": "sf12", "lang": "ja", "should_fire": true,  "route_to": "fact-check", "query": "事実確認してほしい：金魚の記憶は3秒しかもたない"},
+    {"id": "sf13", "lang": "en", "should_fire": true,  "route_to": "fact-check", "query": "Is it true bananas are berries but strawberries are not?"},
+    {"id": "sf14", "lang": "zh", "should_fire": true,  "route_to": "fact-check", "query": "幫我查證一個說法：長城是唯一從太空可見的人造建築"},
+    {"id": "sf15", "lang": "en", "should_fire": true,  "route_to": "fact-check", "query": "Someone claims COVID vaccines contain tracking microchips. Is that true?"},
+    {"id": "sf16", "lang": "en", "should_fire": true,  "route_to": "fact-check", "query": "Verify whether the Coriolis effect determines which way water drains in a sink."},
+
+    {"id": "sn01", "lang": "en", "should_fire": false, "route_to": "deep-research", "query": "Write me a deep, multi-source research report on the state of solid-state battery commercialization."},
+    {"id": "sn02", "lang": "en", "should_fire": false, "route_to": "deep-research", "query": "I need a thorough multi-source analysis of remote-work productivity trends with citations."},
+    {"id": "sn03", "lang": "zh", "should_fire": false, "route_to": "deep-research", "query": "深入研究一下台灣半導體產業的競爭格局，給我一份完整的報告"},
+    {"id": "sn04", "lang": "en", "should_fire": false, "route_to": "cite-check", "query": "Here is my finished essay. Can you check that every citation actually supports the claim it is attached to and flag dead links?"},
+    {"id": "sn05", "lang": "en", "should_fire": false, "route_to": "cite-check", "query": "Audit the references in this draft document and tell me which sources are misattributed."},
+    {"id": "sn06", "lang": "en", "should_fire": false, "route_to": "deep-read", "query": "Help me deeply understand this 60-page research paper, section by section."}
+  ]
+}

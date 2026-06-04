@@ -89,6 +89,138 @@ def test_refuted_three_votes_best_refuting_confidence():
     assert result["confidence"] == "high"
 
 
+def test_reason_supported_is_quorum_survived():
+    # The output carries a `reason` discriminator so a caller can phrase the
+    # user-facing answer; a surviving quorum reports reason "quorum-survived".
+    result = classify_verdict([_verdict(False), _verdict(False), _verdict(False)])
+    assert result["verdict"] == "supported"
+    assert result["reason"] == "quorum-survived"
+
+
+def test_reason_refuted_is_quorum_refuted():
+    result = classify_verdict([_verdict(True), _verdict(True)])
+    assert result["verdict"] == "refuted"
+    assert result["reason"] == "quorum-refuted"
+
+
+def test_reason_empty_without_flag_is_insufficient_evidence():
+    # Empty / thin evidence on a REAL topic — true epistemic suspension.
+    result = classify_verdict([])
+    assert result["verdict"] == "inconclusive"
+    assert result["reason"] == "insufficient-evidence"
+
+
+def test_reason_all_abstain_is_insufficient_evidence():
+    result = classify_verdict([None, None, None])
+    assert result["verdict"] == "inconclusive"
+    assert result["reason"] == "insufficient-evidence"
+
+
+def test_no_referent_empty_is_inconclusive_with_no_referent_reason():
+    # F-003: a claim whose named entity/event has ZERO footprint is NOT the
+    # same as "real topic, thin evidence". Verdict stays inconclusive (0 valid
+    # votes is math-true), but reason flips to "no-referent" so the caller can
+    # surface "no trace found — likely fabricated", not a neutral "undecided".
+    result = classify_verdict([], no_referent=True)
+    assert result["verdict"] == "inconclusive"
+    assert result["reason"] == "no-referent"
+    assert result["valid_count"] == 0
+
+
+def test_no_referent_flag_does_not_override_a_real_quorum():
+    # Defensive: if votes somehow exist and the quorum decides, the verdict
+    # math wins — the no_referent flag only discriminates the inconclusive
+    # bucket, it never fabricates a refutation or suppresses a real verdict.
+    result = classify_verdict(
+        [_verdict(False), _verdict(False), _verdict(False)], no_referent=True
+    )
+    assert result["verdict"] == "supported"
+    assert result["reason"] == "quorum-survived"
+
+
+def test_cli_no_referent_flag_sets_no_referent_reason():
+    proc = subprocess.run(
+        [sys.executable, str(_SCRIPT), "verdict", "--no-referent"],
+        input="[]",
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, proc.stderr
+    obj = json.loads(proc.stdout)
+    assert obj["verdict"] == "inconclusive"
+    assert obj["reason"] == "no-referent"
+
+
+def test_solo_votes_cannot_establish_quorum():
+    # F-004: a quorum is only valid if its votes come from INDEPENDENT contexts.
+    # When the executor could not fan out and voted in a single shared context
+    # (independent_fanout=False), three look-alike "supporting" votes must NOT
+    # drive a `supported` verdict — a non-independent quorum is not a quorum.
+    result = classify_verdict(
+        [_verdict(False), _verdict(False), _verdict(False)],
+        independent_fanout=False,
+    )
+    assert result["verdict"] == "inconclusive"
+    assert result["reason"] == "no-quorum"
+
+
+def test_solo_refutation_is_not_trusted():
+    # Symmetric: a single-context "refutation quorum" cannot drive `refuted`.
+    result = classify_verdict(
+        [_verdict(True), _verdict(True)], independent_fanout=False
+    )
+    assert result["verdict"] == "inconclusive"
+    assert result["reason"] == "no-quorum"
+
+
+def test_independent_fanout_is_the_default():
+    # Default (independent_fanout=True) preserves existing behavior — a real
+    # fan-out of three non-refuting votes still reads as supported.
+    result = classify_verdict([_verdict(False), _verdict(False), _verdict(False)])
+    assert result["verdict"] == "supported"
+    assert result["reason"] == "quorum-survived"
+
+
+def test_solo_sub_quorum_is_insufficient_not_no_quorum():
+    # A single valid vote was never a quorum, so non-independence has nothing to
+    # invalidate — the honest reason is insufficient-evidence, not no-quorum.
+    # The solo gate only fires when >=2 valid votes WOULD have formed a quorum.
+    result = classify_verdict([_verdict(False), None, None], independent_fanout=False)
+    assert result["verdict"] == "inconclusive"
+    assert result["reason"] == "insufficient-evidence"
+
+
+def test_solo_two_valid_votes_is_no_quorum():
+    # Boundary: 2 valid votes WOULD form a quorum, so solo invalidates it.
+    result = classify_verdict([_verdict(False), _verdict(False)], independent_fanout=False)
+    assert result["verdict"] == "inconclusive"
+    assert result["reason"] == "no-quorum"
+
+
+def test_solo_with_no_votes_falls_through_to_referent():
+    # The solo gate only invalidates an actual (fake) quorum. With NO votes the
+    # gate is moot — the empty-evidence reasons (no-referent / insufficient)
+    # still apply.
+    result = classify_verdict([], independent_fanout=False, no_referent=True)
+    assert result["verdict"] == "inconclusive"
+    assert result["reason"] == "no-referent"
+
+
+def test_cli_solo_flag_sets_no_quorum_reason():
+    proc = subprocess.run(
+        [sys.executable, str(_SCRIPT), "verdict", "--solo"],
+        input='[{"refuted":false,"evidence":"e","confidence":"high"},'
+              '{"refuted":false,"evidence":"e","confidence":"high"},'
+              '{"refuted":false,"evidence":"e","confidence":"high"}]',
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, proc.stderr
+    obj = json.loads(proc.stdout)
+    assert obj["verdict"] == "inconclusive"
+    assert obj["reason"] == "no-quorum"
+
+
 def test_cli_verdict_all_abstain_prints_inconclusive():
     proc = subprocess.run(
         [sys.executable, str(_SCRIPT), "verdict"],
