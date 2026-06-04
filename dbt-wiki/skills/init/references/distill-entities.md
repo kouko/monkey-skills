@@ -205,8 +205,8 @@ terms to exact warehouse values without guessing.
 
 | Field | Meaning | Evidence column |
 |---|---|---|
-| `region_code` | 2-letter region code stored in the warehouse. Lookup joins use this stored value, not the display name. `value_domain: [NL, EU, APAC]` (user terms "Northland"/"Northland" map to stored value `NL`) | `dim_orders.region_code` |
-| `order_status` | Lifecycle stage of the order. `value_domain: [pending, confirmed, shipped, cancelled]` | `fct_orders.order_status` |
+| `region_code` | 2-letter region code stored in the warehouse. Lookup joins use this stored value, not the display name. `value_domain: [NL, EU, APAC] (via: accepted_values)` (user terms "Northland"/"Northland" map to stored value `NL`) | `dim_orders.region_code` |
+| `order_status` | Lifecycle stage of the order. `value_domain: [pending, confirmed, shipped, cancelled] (via: distinct)` | `fct_orders.order_status` |
 ```
 
 **Rules (aligned to SCHEMA §Value-domain / enum capture):**
@@ -557,6 +557,10 @@ relationships:
     note: "one customer has many orders; fct_orders.customer_id FK to dim_customers.customer_id"
 last_changed_by: "init-2026-06-01"
 tags: []
+aliases:
+  - cust        # project abbreviation used in internal SQL (e.g. cust_id)
+  - buyer       # synonym used in Shopify event schema
+title_local: null  # project uses English throughout; no alternate-language title
 stale: false
 stale_at: null
 stale_reason: null
