@@ -795,6 +795,79 @@ another domain, it:
 Dangling links to cross-domain reserved entities are resolved by the
 reconcile pass (Step 6.7 — handled separately; do not add it here).
 
+### Step 6.7: Reconcile pass (after Phase B fan-out)
+
+Run **once** after all domain agents have returned their pages. This
+step resolves dangling links and enforces cross-domain provenance
+integrity.
+
+#### 6.7.1 Collect all relationship targets
+
+Scan every knowledge page under `entities/`, `metrics/`, and
+`concepts/`. Build a set of every `relationships[].target` slug
+referenced across all pages.
+
+#### 6.7.2 Resolve missing targets
+
+For each target slug that has **no file on disk**:
+
+1. **Look up `reserved_entities` in `ownership.json`.**
+
+   - **If the slug IS a reserved entity** — check whether the owning
+     domain produced a page for it.
+
+     - Owner produced no page → emit a **WARNING** (do NOT silently
+       create a stub for a reserved slug):
+
+       ```
+       WARNING: reserved entity "<slug>" (owner: "<domain>") has no
+       page — owner agent may have failed or skipped it. Resolve
+       manually before publishing.
+       ```
+
+     - Owner produced a page but the path is wrong → log a path-mismatch
+       warning and correct the `relationships[].target` reference.
+
+   - **If the slug is NOT in `reserved_entities`** (genuine dangling
+     reference, e.g. a concept referenced in passing) → create a
+     seed stub (`status: seed`) so the markdown link resolves:
+
+     ```yaml
+     ---
+     title: "<slug>"
+     status: seed
+     derived_from: []
+     last_changed_by: "auto-stub (reconcile pass)"
+     ---
+     <!-- Auto-generated stub. Replace with a real distillation pass. -->
+     ```
+
+     Place the stub in the appropriate subdirectory (`entities/`,
+     `metrics/`, or `concepts/`) based on the page type that referenced
+     it. If ambiguous, place under `concepts/`.
+
+#### 6.7.3 Lint `derived_from` cross-domain contamination
+
+For each knowledge page, every `unique_id` listed in `derived_from`
+MUST belong to the page's own domain slice (the list in
+`ownership.json.domains[<owning_domain>]`).
+
+If a `derived_from` entry belongs to a **different** domain's slice,
+flag it:
+
+```
+LINT ERROR: <page_path> — derived_from "<unique_id>" belongs to
+domain "<foreign_domain>", not "<page_domain>". Cross-domain
+derived_from entries cause spurious stale-cascades on refresh
+(see distill-entities §5.1 cross-entity exclusion rule).
+```
+
+Emit all violations before stopping — do not halt on the first one.
+
+A page with cross-domain `derived_from` entries **must not** be
+published until the contamination is resolved: either the entry is
+moved to the correct owning domain's page or removed.
+
 ### Phase B spec files
 
 The three distillation procedures are defined in:
