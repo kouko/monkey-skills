@@ -191,9 +191,13 @@ terms to exact warehouse values without guessing.
 **When to add it:**
 - The column is categorical (region code, order status, tier, channel,
   currency code, etc.) AND has ≤ 20 distinct values.
-- You have production evidence: a `DISTINCT` query result, a dbt
-  `accepted_values` test in schema.yml, or documented enum from the source
-  system.
+- **Preferred:** you have production evidence — a `DISTINCT` query result, a dbt
+  `accepted_values` test in schema.yml, or a documented enum from the source
+  system. Tag these `(via: distinct)` or `(via: accepted_values)`.
+- **Also permitted:** no production evidence exists but you can infer plausible
+  values from SQL structure or column semantics. Tag these `(via: inferred)`.
+  Inferred value_domains are a hypothesis, not ground truth; do not omit them
+  solely because production evidence is unavailable.
 - Omit entirely for free-text, numeric, or high-cardinality columns (IDs,
   timestamps, amounts). Those do not belong here; note them in `## Caveats`
   if the cardinality is surprising.
@@ -205,16 +209,25 @@ terms to exact warehouse values without guessing.
 
 | Field | Meaning | Evidence column |
 |---|---|---|
-| `region_code` | 2-letter region code stored in the warehouse. Lookup joins use this stored value, not the display name. `value_domain: [NL, EU, APAC]` (user terms "Northland"/"Northland" map to stored value `NL`) | `dim_orders.region_code` |
-| `order_status` | Lifecycle stage of the order. `value_domain: [pending, confirmed, shipped, cancelled]` | `fct_orders.order_status` |
+| `region_code` | 2-letter region code stored in the warehouse. Lookup joins use this stored value, not the display name. `value_domain: [NL, EU, APAC] (via: accepted_values)` (user terms "Northland"/"Northland" map to stored value `NL`) | `dim_orders.region_code` |
+| `order_status` | Lifecycle stage of the order. `value_domain: [pending, confirmed, shipped, cancelled] (via: distinct)` | `fct_orders.order_status` |
 ```
 
 **Rules (aligned to SCHEMA §Value-domain / enum capture):**
-1. List only values that **actually appear in production data** — sourced from
-   a `DISTINCT` evidence query or a schema.yml `accepted_values` test. Do not
-   enumerate hypothetical values.
+1. Always append the `(via:)` provenance suffix so readers know the confidence
+   level. Every `value_domain` entry must carry one of:
+   - `(via: accepted_values)` — backed by a `schema.yml` `accepted_values`
+     test; the list is authoritative and CI-enforced.
+   - `(via: distinct)` — populated from a `DISTINCT` query over production
+     data; accurate at distillation time but not CI-enforced.
+   - `(via: inferred)` — derived from SQL structure or column semantics with
+     NO `accepted_values` test and NO `DISTINCT` backing. This is a
+     **hypothesis, not ground truth**: downstream SQL generators MUST treat
+     this enum as provisional and avoid hard-failing on unlisted values.
+   Inferred values ARE permitted — mark them `(via: inferred)` rather than
+   omitting them.
 2. Note any format surprise (suffix, locale, casing) that would cause an
-   equality filter to miss rows — e.g. `value_domain: [NL, EU, APAC]` not
+   equality filter to miss rows — e.g. `value_domain: [NL, EU, APAC] (via: accepted_values)` not
    `["Northland", "Eurozone", "Asia-Pacific"]`.
 3. If stored values differ from display labels, document both inline:
    `stored: NL`, `display: Northland`.
@@ -402,6 +415,46 @@ Optional. Use tags from the dbt models' `config.tags` where they carry
 business meaning (e.g., `["finance"]`, `["product"]`). Do not carry
 over technical tags (`["daily", "incremental"]`).
 
+### 5.7 Alias capture for project-language retrieval (fully automatic)
+
+During distillation, automatically populate the `aliases:` frontmatter
+list — no human step required. Collect body terms that a query author
+might search for but that:
+
+- **(a)** do NOT appear in the page's `summary`, AND
+- **(b)** an LLM could NOT bridge from the summary alone.
+
+For entities these are typically: GL / account codes (e.g. `5010`),
+project abbreviations (e.g. `MRR`, `NRR`, `lvl1`–`lvl3`), and non-obvious
+project synonyms for the entity (e.g. `recurring-rev` for a recurring-revenue
+entity).
+
+**EXCLUDE**: terms already in the title or summary, generic words
+(`customer`, `order`, `id`), and anything an LLM would naturally infer
+from the summary alone.
+
+**Tie-breaker**: when uncertain, prefer inclusion — a false-positive
+alias costs a prune; a missed alias is permanent.
+
+Also set `title_local`: the entity's title in the project's working
+language. Use the exact term as it appears in the project's schema.yml
+descriptions or internal documentation — NOT a translation of the
+English title.
+
+Both fields are emitted automatically on every `init` and `refresh`
+run; a human may prune `aliases` later (pruning is never required, but
+never re-add a term that was intentionally pruned).
+
+**Frontmatter shape (extend the §5 provenance template)**:
+
+```yaml
+aliases:
+  - "5010"            # GL account code used in internal docs, not in summary
+  - MRR               # project abbreviation not inferable from English title
+  - recurring-rev     # non-obvious project synonym for the entity
+title_local: 經常性收入  # entity title in project's working language (from schema.yml)
+```
+
 ---
 
 ## 6. Worked example
@@ -508,6 +561,10 @@ relationships:
     note: "one customer has many orders; fct_orders.customer_id FK to dim_customers.customer_id"
 last_changed_by: "init-2026-06-01"
 tags: []
+aliases:
+  - cust        # project abbreviation used in internal SQL (e.g. cust_id)
+  - buyer       # synonym used in Shopify event schema
+title_local: null  # project uses English throughout; no alternate-language title
 stale: false
 stale_at: null
 stale_reason: null

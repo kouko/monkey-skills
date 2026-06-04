@@ -653,12 +653,22 @@ structural grouping is demoted into an evidence sub-section. Sections
 in order:
 
 **Knowledge layer (lead):**
-- `## Entities` — one line per page in `entities/`: title + `summary`
-  frontmatter field + `status` lifecycle tag. If no entity pages exist
-  yet (Phase B has not run), emit a stub: `(none yet — run Phase B to
-  distill entities from the evidence layer)`.
-- `## Metrics` — same pattern for `metrics/` pages.
-- `## Concepts` — same pattern for `concepts/` pages.
+
+Canonical line shape for every entry in `## Entities`, `## Metrics`,
+and `## Concepts`:
+```
+- [<title>｜<title_local>](<folder>/<slug>.md) `<status>` — <summary> 〔aka: <alias1>, <alias2>, …〕
+```
+Omission rules:
+- The `｜<title_local>` segment is **omitted** when `title_local` is absent (or null).
+- The `〔aka: …〕` clause is **omitted** when `aliases` is empty.
+
+- `## Entities` — one line per page in `entities/` using the canonical
+  line shape above. If no entity pages exist yet (Phase B has not run),
+  emit a stub: `(none yet — run Phase B to distill entities from the
+  evidence layer)`.
+- `## Metrics` — same canonical line shape for `metrics/` pages.
+- `## Concepts` — same canonical line shape for `concepts/` pages.
 
 **Evidence layer (demoted — structural grouping):**
 - `## Evidence: Models` — grouped by tier path (`models/staging/` →
@@ -739,7 +749,20 @@ derived_from:
   - model.example_dbt_project.stg_customers   # evidence unique_ids
   - model.example_dbt_project.dim_customers
 last_changed_by: "PR #123"                     # or commit SHA
+title_local: "顧客"                             # project-language title; null if none (always written, never omitted)
+aliases:                                        # project-language synonyms/codes; [] if none (always written, never omitted)
+  - customer
+  - client
 ```
+
+`title_local` and `aliases` are emitted automatically by the distill
+agent (the alias-capture rule in each `references/distill-*.md` spec
+populates them). **During distillation the agent always writes both
+keys**: `aliases: []` when no aliases were found, `title_local: null`
+when no project-language title exists — this lets the index generator
+distinguish "distilled but no aliases" from "not yet distilled."
+Pre-existing v2.0 pages that omit these keys are still valid; SCHEMA.md
+states that missing optional keys parse fine (legacy omission tolerance).
 
 `derived_from` is the freshness anchor: `/dbt-wiki:refresh` uses it
 to detect which knowledge pages are stale when evidence models change

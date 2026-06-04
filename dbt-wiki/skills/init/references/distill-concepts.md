@@ -225,6 +225,10 @@ tags: ["customer", "activity"]
 stale: false
 stale_at: null
 stale_reason: null
+aliases:
+  - active_flag          # project SQL name, not in summary
+  - "is_active_90d"      # field name variant used in fct_churn
+title_local: アクティブ顧客定義   # concept title in project's working language; null if project is English-only
 ---
 ```
 
@@ -247,6 +251,45 @@ stale_reason: null
 - `stale` / `stale_at` / `stale_reason` are written by `/dbt-wiki:refresh`
   when a `derived_from` evidence model changes; do not set them manually
   during distillation.
+
+---
+
+## 6a. Alias capture for project-language retrieval (fully automatic)
+
+During distillation, automatically populate the `aliases:` frontmatter
+list — no human step required. Collect terms you wrote into this page's
+body that a query author might search for but that:
+
+- **(a)** do NOT appear in the page's `summary`, AND
+- **(b)** an LLM could NOT bridge from the summary alone.
+
+For concepts these are typically: project-specific rule names or codes
+(e.g. `"active_flag"`, `"is_active_90d"`), status enumerations (e.g.
+`"status 'C'"`, `"order_status = 'cancelled'"`), and non-obvious
+project synonyms for the business rule (e.g. `"retention window"` for
+a churn threshold concept).
+
+**EXCLUDE**: terms already in the title or summary, generic words
+(`customer`, `order`, `flag`), and anything an LLM would naturally
+infer from the summary alone.
+
+Also set `title_local`: this concept's title in the project's working
+language (e.g. Japanese, Traditional Chinese). Use the exact term as
+it appears in the project's schema.yml descriptions or internal
+documentation — not a translation of the English title.
+
+Both fields are emitted automatically on every `init` and `refresh`
+run; a human may prune `aliases` later (pruning is never required, but
+never add back a term that was intentionally removed).
+
+**Frontmatter addition (extend Section 6 template)**:
+
+```yaml
+aliases:
+  - active_flag          # project SQL name, not in summary
+  - "is_active_90d"      # field name variant used in fct_churn
+title_local: アクティブ顧客定義   # concept title in project's working language
+```
 
 ---
 
@@ -314,6 +357,10 @@ tags: ["customer", "activity", "churn"]
 stale: false
 stale_at: null
 stale_reason: null
+aliases:
+  - is_active_customer   # SQL field name in dim_customers
+  - "active_flag"        # shorthand used in fct_churn comments
+title_local: アクティブ顧客定義   # project uses Japanese in schema.yml descriptions
 ---
 
 ## Rule
@@ -369,3 +416,4 @@ Use this checklist once per identified concept before writing the page:
 - [ ] `slug` is kebab-case and matches the filename
 - [ ] `summary` is ≤200 chars
 - [ ] No `[[wikilinks]]` — only standard markdown links with relative paths
+- [ ] `aliases:` populated with project-specific SQL names / synonyms not inferable from summary; `title_local:` set to project-language title (or `null` if English-only project)

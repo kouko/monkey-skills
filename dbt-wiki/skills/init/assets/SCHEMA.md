@@ -1,12 +1,13 @@
-# dbt-wiki Schema (v2.0 — frozen for v2.x)
+# dbt-wiki Schema (v2.1 — frozen for v2.x; additive optional keys in 2.1)
 
 This schema is **frozen for the v2.x line**. Frontmatter shape, page
 types, naming conventions, and mandatory body sections will not change
-within v2.x patches; only wording clarifications are allowed. *Additive
-optional body sections* (sections that appear only under a stated
-condition and change no existing required section's semantics) may be
-added within v2.x — they neither break existing pages nor alter the
-frontmatter/page-type/naming contract.
+within v2.x. **v2.1 is an additive bump** that introduces four optional
+frontmatter keys (`aliases`, `title_local`, `reviewed_by`, `reviewed_at`),
+the value-domain `(via:)` provenance marker, and alias-surfaced index
+lines. **v2.0 pages remain valid** — missing optional keys parse fine;
+the frontmatter shape is otherwise unchanged. Page types, naming
+conventions, and mandatory body sections still will not change.
 
 **Clean break from v1.x — no migration.** v2.0 is a breaking redesign:
 dbt object types (model / source / macro / …) are demoted from *the
@@ -84,7 +85,7 @@ can link to a dbt-wiki knowledge page, and a dbt-wiki page can cite a
 repo-wiki decision. Examples:
 `[Customer](.dbt-wiki/entities/customer.md)` /
 `[fct_orders evidence](.dbt-wiki/_evidence/models/fct_orders.md)` from a
-repo-wiki page; `[FSD report decision](../.repo-wiki/sources/2026-04-29-fsd...md)`
+repo-wiki page; `[revenue forecast decision](../.repo-wiki/sources/2026-04-29-revenue-forecast...md)`
 from a dbt-wiki page.
 
 Neither directory modifies the other. The dbt-wiki CLAUDE.md drop-in
@@ -169,8 +170,16 @@ tags: ["finance"]
 stale: false                      # set true by refresh when a derived_from evidence model changes
 stale_at: null                    # YYYY-MM-DD refresh flagged it (else null)
 stale_reason: null                # human-readable why (else null)
+title_local: null                 # optional — title in the project's language (recall aid)
+aliases: []                       # optional — project-language synonyms / GL codes / abbreviations for retrieval
+reviewed_by: null                 # optional — set when a human promotes status to `mature`
+reviewed_at: null                 # optional — ISO date of that review
 ---
 ```
+
+v2.0 pages that omit the four optional keys above (`title_local`,
+`aliases`, `reviewed_by`, `reviewed_at`) remain fully valid — missing
+optional keys parse fine.
 
 - **`status`** lifecycle: `seed` (auto-stub, not yet distilled) →
   `developing` (distilled, needs review) → `mature` (reviewed,
@@ -230,18 +239,39 @@ Format — a **body annotation inline under the relevant `## Fields` entry**
 (NOT a frontmatter key): the `value_domain: [...]` text is rendered in the
 field's bullet, not added to the page's YAML frontmatter.
 
+Append the optional provenance suffix to record where the enum came from:
+
+```
+value_domain: [a, b, c] (via: accepted_values | distinct | inferred)
+```
+
+Provenance sources:
+- `(via: accepted_values)` — backed by a `schema.yml` `accepted_values`
+  test; the list is authoritative and CI-enforced.
+- `(via: distinct)` — populated from a `DISTINCT` query over production
+  data; accurate at time of distillation but not CI-enforced.
+- `(via: inferred)` — derived from SQL structure or column semantics with
+  NO `accepted_values` test and NO `DISTINCT` backing. This is a
+  **hypothesis, not ground truth**: downstream SQL generators MUST treat
+  this enum as provisional and avoid hard-failing on unlisted values.
+
 ```
 - **region_code** — 2-letter ISO region code stored in the warehouse.
-  `value_domain: [NL, EU, APAC]`
-  (user terms like "Northland" / "Northland" map to stored value `NL`)
+  `value_domain: [NL, EU, APAC] (via: accepted_values)`
+  (user terms like "Northland" map to stored value `NL`)
 
 - **order_status** — lifecycle stage of the order.
-  `value_domain: [pending, confirmed, shipped, cancelled]`
+  `value_domain: [pending, confirmed, shipped, cancelled] (via: distinct)`
 ```
 
 Rules:
-1. List only the values that actually appear in production data (distilled
-   from `DISTINCT` evidence or schema.yml `accepted_values` test).
+1. Record values you have evidence for, tagged by source:
+   - Production-observed values (from `DISTINCT` or `accepted_values` tests)
+     use `(via: distinct)` or `(via: accepted_values)`.
+   - When no test or DISTINCT evidence exists, you MAY record values inferred
+     from SQL structure or column semantics using `(via: inferred)`. Downstream
+     SQL generators MUST treat inferred enums as a hypothesis, not ground truth.
+   The `(via:)` suffix is mandatory on every `value_domain` so readers know the confidence level.
 2. Note any format surprise (e.g. suffix, locale, casing) that would cause
    an equality filter to miss rows.
 3. If stored values differ from display labels, document both
@@ -680,9 +710,20 @@ with fresh content (overwrites synthesis, clears stale flag).
 grouping is demoted into an evidence section. Sections, in order:
 
 Knowledge layer (lead):
-- `## Entities` (one line per entity: title + `summary` + status)
-- `## Metrics` (one line per metric: title + `summary` + status)
-- `## Concepts` (one line per concept: title + `summary` + status)
+- `## Entities` (one line per entity — see canonical line shape below)
+- `## Metrics` (one line per metric — see canonical line shape below)
+- `## Concepts` (one line per concept — see canonical line shape below)
+
+Canonical knowledge line shape:
+```
+- [<title>｜<title_local>](<folder>/<slug>.md) `<status>` — <summary> 〔aka: <alias1>, <alias2>, …〕
+```
+
+Rules:
+- The `｜<title_local>` segment is **omitted** when `title_local` is absent (or null).
+- The `〔aka: …〕` clause is **omitted** when `aliases` is empty.
+- Surfacing `title_local` and `aliases` here is what lets the tiered query (Step 1) match
+  project-language terms without loading every knowledge page body.
 
 Evidence layer (demoted — structural grouping):
 - `## Evidence: Models` (grouped by tier path: `models/staging/`, `models/marts/`, etc.)

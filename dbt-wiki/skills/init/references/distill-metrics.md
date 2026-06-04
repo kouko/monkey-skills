@@ -529,6 +529,33 @@ stale_reason: null
 ---
 ```
 
+### Alias capture for project-language retrieval (fully automatic)
+
+During distillation, automatically populate the `aliases:` frontmatter list
+— no human step required. Collect terms you wrote into this page's body that
+a query author might search for but that:
+
+- **(a)** do NOT appear in the page's `summary`, AND
+- **(b)** an LLM could NOT bridge from the summary alone.
+
+For metrics these are typically: project-specific metric / GL codes (e.g.
+`5010`), project abbreviations (e.g. `MRR`, `NRR`), hierarchy levels
+(`lvl1`–`lvl3`), and non-obvious project synonyms (e.g. `recurring-rev`). EXCLUDE:
+terms already in the title or summary, generic words, and anything an LLM
+would naturally infer from the summary.
+
+**When uncertain, prefer inclusion — a false-positive alias costs a prune; a
+missed alias is permanent.**
+
+Also set `title_local`: this metric's title in the project's working language.
+Use the exact term as it appears in the project's schema.yml descriptions or
+internal documentation — not a translation of the English title. Set to `null`
+if the project is English-only.
+
+Both fields are emitted automatically on every `init` and `refresh` run; a
+human may prune `aliases` later (pruning is never required, but never add back
+a term that was intentionally removed).
+
 `derived_from` must list the `unique_id` of every evidence model that
 contains the metric computation. This is the freshness anchor: refresh
 flags the page stale if any listed unique_id changes.
@@ -599,6 +626,10 @@ tags: ["finance", "retention"]
 stale: false
 stale_at: null
 stale_reason: null
+aliases:
+  - churn_rate         # SQL column name in fct_churn_monthly
+  - pct_churned        # shorthand used in schema.yml description
+title_local: null      # synthetic example — project is English-only
 ---
 
 ## Definition
