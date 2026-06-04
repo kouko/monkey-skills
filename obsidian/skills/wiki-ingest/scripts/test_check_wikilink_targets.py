@@ -50,6 +50,61 @@ def test_core_resolution(tmp_path: Path) -> None:
     assert cwt.find_unresolved_targets(page2, vault, exclude_dirs=[]) == []
 
 
+def test_block_form_aliases_resolve(tmp_path: Path) -> None:
+    """A note with BLOCK-form `aliases:\\n  - Alt2` resolves a [[Alt2]] link.
+
+    Guards the block-form branch of _parse_aliases (inline form is covered
+    by test_core_resolution). RED if the block branch breaks: [[Alt2]] would
+    be flagged as unresolved.
+    """
+    vault = tmp_path
+
+    (vault / "Existing.md").write_text(
+        "---\naliases:\n  - Alt2\n  - Alt3\n---\n\nbody\n",
+        encoding="utf-8",
+    )
+
+    page = vault / "page.md"
+    page.write_text("Block alias: [[Alt2]] and [[Alt3]].\n", encoding="utf-8")
+
+    unresolved = cwt.find_unresolved_targets(page, vault, exclude_dirs=[])
+
+    assert unresolved == []
+
+
+def test_case_variant_target_deduped(tmp_path: Path) -> None:
+    """A page linking both [[Missing]] and [[missing]] reports it ONCE.
+
+    Honors the docstring promise of case-consistent de-dup; RED if the
+    seen-set keyed off raw case rather than the case-folded base.
+    """
+    vault = tmp_path
+
+    page = vault / "page.md"
+    page.write_text("Both [[Missing]] and [[missing]] here.\n", encoding="utf-8")
+
+    unresolved = cwt.find_unresolved_targets(page, vault, exclude_dirs=[])
+
+    assert len(unresolved) == 1
+
+
+def test_missing_page_exits_2(tmp_path: Path, capsys) -> None:
+    """A non-existent <page> path is a usage-style error: exit 2, no traceback.
+
+    Distinguishable from gate-trip (exit 1) and clean (exit 0). RED before
+    the guard: main() would propagate FileNotFoundError (uncaught) instead
+    of returning 2.
+    """
+    missing = tmp_path / "does-not-exist.md"
+
+    rc = cwt.main(["check-wikilink-targets.py", str(missing), str(tmp_path)])
+
+    assert rc == 2
+    err = capsys.readouterr().err
+    assert "Traceback" not in err
+    assert err.strip()  # a clear message was printed to stderr
+
+
 def test_exemptions(tmp_path: Path) -> None:
     """Same-note headings, `## Source` links, code spans, and path-prefix
     forms are NOT flagged."""

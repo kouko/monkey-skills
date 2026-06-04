@@ -73,6 +73,12 @@ Place the TOC immediately after the top-level `# Heading`, before the body conte
 [[#Heading in same note]]              Same-note heading link
 ```
 
+> **Only emit `[[Target]]` when `Target` already resolves to an existing note in the vault** (bare-basename match, including frontmatter aliases). Otherwise write the term as plain bold text (`**Target**`) with its relationship reason. Never emit a wikilink solely to create a placeholder note.
+>
+> Before emitting a `[[link]]`, verify the note exists — Glob/search the vault for the bare basename (and any frontmatter `aliases`) first. This is a behavioral check, not a scripted gate. If the vault is not accessible in your current context, default to the plain-text `**Target**` form rather than guessing.
+>
+> **Exempt:** same-note `[[#Heading]]`, `[[#^block]]`, and same-note Table-of-Contents links always resolve and are exempt from this rule.
+
 Define a block ID by appending `^block-id` to any paragraph:
 
 ```markdown

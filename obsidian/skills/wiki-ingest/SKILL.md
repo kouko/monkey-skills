@@ -187,7 +187,7 @@ The exact-name check only catches identical slugs. Run **near-duplicate detectio
 **If target page exists** → update:
 - `## Summary` — re-synthesize incorporating new source
 - `## Key Facts` — append new facts; mark provenance correctly (`^[inferred]`, `^[ambiguous]`)
-- `## Connections` — add new wikilinks if discovered
+- `## Connections` — Only emit `[[Target]]` when `Target` already resolves to an existing note in the vault (bare-basename match, including frontmatter aliases). Otherwise write the term as plain bold text (`**Target**`) with its relationship reason. Never emit a wikilink solely to create a placeholder.
 - `## Sources` — add link to the per-source reference page (see 4d)
 - `frontmatter.sources_count` — increment
 - `frontmatter.updated` — today's date
@@ -201,6 +201,16 @@ grep -nE '`[^`]*\[\[[^]]+\]\][^`]*`' <wiki-root>/<category>/<slug>.md
 ```
 
 If this finds any match, you wrote a backtick-wrapped wikilink (e.g. `` `[[Page]]` `` or `` **`[[Page]]`** ``) — Obsidian renders it as inline code, NOT a clickable link. **Do not advance**: edit the file to remove the wrapping backticks, then re-run the check until empty. The Quality bar self-check (below) is advisory; this grep is the enforced gate. Spec rationale in [page-format.md](references/page-format.md#never-wrap-wikilinks-in-backticks-critical).
+
+**Unresolved-wikilink gate** (run after every page write, BEFORE moving on — run from the skill root):
+
+```bash
+python scripts/check-wikilink-targets.py <wiki-root>/<category>/<slug>.md <wiki-root>
+# <wiki-root> is the inventory scope — pass the wiki root so all wiki pages count as resolvable;
+# do NOT exclude wiki/ subdirs like references (that would drop real reference-page basenames)
+```
+
+The script prints one unresolved `[[Target]]` per line (exit 1 if any, 0 if none) — these are wikilinks whose `Target` does not resolve to an existing note in the vault inventory (bare-basename match incl. frontmatter aliases; same-note `[[#Heading]]`, `## Source` cross-layer links, and code-span wikilinks are already exempt). **Do not advance** while any target is reported: for each unresolved `[[X]]`, downgrade it to plain bold text `**X**` and keep its one-line relationship reason (`/wiki-cross-linker` will promote it to `[[X]]` once page `X` exists), then re-run the script until it reports none. Like the backtick grep above, this is the enforced gate; the Quality bar self-check (below) is advisory.
 
 ### 4d. Create/update reference page
 
@@ -342,7 +352,7 @@ Recommended next steps:
 - [ ] All 8 frontmatter fields present and validly typed
 - [ ] `summary` ≤200 chars, self-contained, no markdown
 - [ ] 3 required body sections present
-- [ ] At least 1 [[wikilink]] in `## Connections` with one-line reason
+- [ ] At least 1 connection (link if the page exists; else a plain-text candidate + reason)
 - [ ] `^[inferred]` / `^[ambiguous]` markers used correctly
 - [ ] No Mermaid in entity/concept pages
 - [ ] Wikilinks use **bare filename only** — no `<subfolder>/` path prefix, no `.md` extension

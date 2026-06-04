@@ -6,7 +6,11 @@
 #   Authoring-time gate. Given a just-written markdown page, return the
 #   [[Target]] links whose Target is NOT an existing note (by bare
 #   basename, case-insensitive) and NOT a frontmatter alias of any note.
-#   Mirrors wiki-lint L07 inventory logic (lint-checks.md:58-66).
+#   Shares L07's inventory concept (lint-checks.md:58-66) but diverges
+#   intentionally (not a bug): it rglob's the whole passed <vault-root>
+#   rather than L07's fixed wiki/{...}/ subdir list, and it RESOLVES
+#   path-prefixed [[dir/Name]] on the trailing basename, whereas L07
+#   routes those to L04 as violations.
 #
 # Usage (CLI):
 #   python check-wikilink-targets.py <page.md> <vault-root> [exclude-dir ...]
@@ -277,6 +281,16 @@ def main(argv: list[str]) -> int:
     page_path = Path(argv[1])
     vault_root = Path(argv[2])
     exclude_dirs = list(argv[3:])
+
+    # Bad-input guard: a non-existent page is a usage error (exit 2), kept
+    # distinct from the gate-trip exit 1 so a typo'd path can't masquerade
+    # as "unresolved links found".
+    if not page_path.is_file():
+        print(
+            f"error: page not found: {page_path}",
+            file=sys.stderr,
+        )
+        return 2
 
     unresolved = find_unresolved_targets(page_path, vault_root, exclude_dirs)
     for target in unresolved:

@@ -27,6 +27,8 @@ source_questions:                          # MUST: questions this note answers
   - "Question text exactly as it appeared in Open Questions"
   - "Another question"
 source_pages:                              # MUST: wiki pages that surfaced these questions (bare filename only)
+  # These STAY as `[[wikilinks]]` — the pages already exist by construction
+  # (they surfaced the Open Questions being researched), so they are NOT dangling.
   - "[[Thompson-Sampling]]"
   - "[[exploration-exploitation]]"
 search_queries_used:                       # for audit / reproducibility
@@ -66,7 +68,7 @@ What to update in the wiki when this research is accepted:
   - Add: "...new fact..." (cite [Source 2])
 - Update `[[Thompson-Sampling]]` `## Open Questions`:
   - REMOVE: "Question that was answered above"
-- (Optional) Create new page: `[[new-concept]]`
+- (Optional) Create new page: `new-concept` — written as plain text / inline code, NOT a `[[wikilink]]`, because the page does not exist yet (emitting `[[new-concept]]` here is what leaks a dangling link into `research/`). `wiki-ingest` creates the page; once it exists, `wiki-cross-linker` promotes mentions to links.
 
 ## Reviewer notes
 
@@ -123,3 +125,5 @@ Exception: user can pass `--force <question>` to re-research a specific question
 3. Edit if needed, set `status: reviewed-accept`
 4. Run `/wiki-ingest` (typically with "Research notes only" scope) to merge findings into the wiki
 5. The corresponding Open Questions are removed by `/wiki-ingest` based on the `Recommended wiki updates` block
+
+> `/wiki-ingest` consumes the `Recommended wiki updates` block by *reading* it (STEP 4 `Read` + interpret the body — no regex parser keyed off `[[...]]` syntax). The non-link `` `new-concept` `` form above is read identically: the agent follows the human-language "Create new page:" instruction and the inline-code page name, so dropping the brackets does not break ingestion. Page-existence and category routing are decided downstream by `/wiki-ingest`'s own uniqueness check (STEP 4 §Filename uniqueness check), not by whether this bullet was a wikilink.
