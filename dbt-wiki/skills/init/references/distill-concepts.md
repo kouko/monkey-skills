@@ -154,6 +154,7 @@ cohort membership.
 ```
 
 Tags are optional; omit them when the caveat is self-evidently low-risk.
+Do NOT invent tags beyond the four above.
 
 ---
 
