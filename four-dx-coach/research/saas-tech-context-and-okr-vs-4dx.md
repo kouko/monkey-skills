@@ -2,7 +2,7 @@
 
 > **Purpose**: deeper research note answering two related questions:
 >
-> 1. **Why does industry view 4DX as poorly-suited to SaaS / software-tech, and what does this mean specifically for restaurant POS (iCHEF) and e-commerce-platform (91APP) target users?**
+> 1. **Why does industry view 4DX as poorly-suited to SaaS / software-tech, and what does this mean specifically for a restaurant POS SaaS (Company A) and an OMO e-commerce platform (Company B) target users?**
 > 2. **What are the substantive differences between OKR and 4DX, and when do organizations choose one over the other?**
 >
 > **Status**: human reference document, NOT loaded by skills at runtime. Lives in `research/` per the inventory's plugin-shared-paths-not-supported finding.
@@ -66,28 +66,23 @@ When a SaaS / tech user asks the plugin to help adopt 4DX, the agent should:
 
 ---
 
-## Part 2 — Specific implications for iCHEF (Taiwan restaurant POS SaaS)
+## Part 2 — Specific implications for Company A (a restaurant POS SaaS)
 
-### Company context (verified via official sources + media interviews 2024-2025)
+### Company context (verified via public sources + media interviews 2024-2025)
 
-- **Company**: 資廚管理顧問股份有限公司 (iCHEF Co., Ltd.)
-- **Founded**: 2012, Taipei. Origin in 「麻膳堂」 (a beef-noodle restaurant) — operational pain drove product
-- **Co-founders**: 吳佳駿 (CEO), 程開佑 (Chief Growth Officer), 何明政 (CIO)
+- **Company**: Company A (a Taiwan restaurant POS SaaS vendor)
+- **Founded**: 2012, Taipei. Origin in a restaurant the founders ran — operational pain drove product
+- **Co-founders**: the co-founders (CEO, Chief Growth Officer, CIO)
 - **Scale (2024)**: 10,000+ restaurant clients across Taiwan / Hong Kong / Singapore / Malaysia
 - **Business model**: iPad POS + cloud reporting; subscription SaaS for F&B SMBs
 - **Going public**: announced IPO trajectory; 2020 onward profitable
-- **Sources**:
-  - https://www.ichefpos.com/zh-tw/about-ichef
-  - https://crossing.cw.com.tw/article/18283
-  - https://nommagazine.com/「讓開餐廳變成一門好生意」：專訪-ichef-共同創辦人/
+- **Sources**: (public company / interview sources)
 
-### iCHEF's stated framework: OKR (verified via official engineer-interview page)
+### Company A's stated framework: OKR (verified via official engineer-interview page)
 
-From iCHEF's own engineering interview page (`https://www.ichefpos.com/zh-tw/engineer-of-ichef`):
+From Company A's own engineering interview page (public company / interview sources):
 
-> *"iCHEF使用OKR，每個人都會自己制定個人OKR，設定OKR的目的不在於要完全100%達成，而是要學會為自己的成長負責。在iCHEF每半年績效考核結束後，大家會重新制定個人OKR，OKR面向分為兩個：第一是與團隊OKR相關，第二是與個人下一個職等、成長方向有關。"*
-
-Translation: iCHEF uses OKR. Each person sets their own individual OKR. The purpose is not 100% achievement but learning to take responsibility for one's own growth. Every six months after performance review, individual OKRs are reset. OKR axes are two: (1) connection to team OKR, (2) connection to next career level / growth direction.
+Company A uses OKR with individual and team-aligned goal-setting. The stated purpose is not 100% achievement but developing ownership of personal growth. OKRs are reset semi-annually after performance review, with two axes: (1) alignment to team OKR, and (2) alignment to next career level and growth direction.
 
 This is **textbook Google / Doerr-style OKR**:
 - Aspirational stretch goals (not 100% achievement target)
@@ -95,24 +90,24 @@ This is **textbook Google / Doerr-style OKR**:
 - Semi-annual cycle (slightly longer than the canonical Google quarterly, but within OKR norms)
 - Growth-oriented, not control-oriented
 
-**iCHEF's cadence + supporting practices**:
-- Semi-annual performance reviews + 1:1 with CTO (Matt) and CIO every 6 months
+**Company A's cadence + supporting practices**:
+- Semi-annual performance reviews + 1:1 with the CTO and the CIO every 6 months
 - Weekly fixed knowledge-sharing sessions (engineering)
 - Engineer rotation across teams (including frontline support) for cross-functional understanding
 - Conference budget for engineers
 - Peer-review culture rigorous in engineering
 
-**No mention of 4DX, WIG Sessions, lead measures, or scoreboard-discipline language anywhere in iCHEF's public engineering content.**
+**No mention of 4DX, WIG Sessions, lead measures, or scoreboard-discipline language anywhere in Company A's public engineering content.**
 
-### Why iCHEF likely chose OKR over 4DX
+### Why Company A likely chose OKR over 4DX
 
 Inferring from the company's engineering culture + restaurant-tech SaaS context:
 
-1. **Engineering work is the structural bad-fit zone for 4DX D2** — iCHEF's engineering team writes POS software, reporting features, integrations. This is knowledge-heavy product work where weekly behaviors shift. OKR's quarterly direction-setting + key-result milestones tolerate this; 4DX's weekly behavioral lead measures would struggle.
-2. **Customer-side restaurants are a different scope** — the *restaurants using iCHEF* might benefit from 4DX (their work IS execution-heavy: tickets-cleared, table-turn-time, daily-cover-count have stable behaviors). But iCHEF the company isn't running 4DX *for itself*; its developers ship a SaaS tool that helps its restaurant customers run better. These are two different contexts.
-3. **Growth-stretch culture vs winnable-game culture** — iCHEF's framing ("OKR purpose is not 100% achievement but learning to take responsibility for growth") is the OKR moonshot stance. 4DX is winnable-game-oriented (the team should genuinely be able to hit the WIG by the deadline). These are different cultural posture choices.
+1. **Engineering work is the structural bad-fit zone for 4DX D2** — Company A's engineering team writes POS software, reporting features, integrations. This is knowledge-heavy product work where weekly behaviors shift. OKR's quarterly direction-setting + key-result milestones tolerate this; 4DX's weekly behavioral lead measures would struggle.
+2. **Customer-side restaurants are a different scope** — the *restaurants using Company A* might benefit from 4DX (their work IS execution-heavy: tickets-cleared, table-turn-time, daily-cover-count have stable behaviors). But Company A the company isn't running 4DX *for itself*; its developers ship a SaaS tool that helps its restaurant customers run better. These are two different contexts.
+3. **Growth-stretch culture vs winnable-game culture** — Company A's framing (OKR purpose is not 100% achievement but learning to take responsibility for growth) is the OKR moonshot stance. 4DX is winnable-game-oriented (the team should genuinely be able to hit the WIG by the deadline). These are different cultural posture choices.
 
-### Where 4DX *could* fit inside iCHEF (if you were to introduce it)
+### Where 4DX *could* fit inside Company A (if you were to introduce it)
 
 Hybrid pattern (FranklinCovey's own recommended model when both frameworks coexist):
 - **OKR layer**: company / team strategic direction (already in place)
@@ -120,12 +115,12 @@ Hybrid pattern (FranklinCovey's own recommended model when both frameworks coexi
   - The work has stable behavioral leads (e.g. customer-success outreach quotas; sales call quotas; support-ticket-resolution targets)
   - Not for product engineering itself
 
-For iCHEF specifically, candidate domains where 4DX *might* add value:
+For Company A specifically, candidate domains where 4DX *might* add value:
 - **Customer-success team** chasing renewal / retention outcomes (stable behaviors: account check-ins per week, training sessions delivered per month)
 - **Sales team** for restaurant onboarding (stable behaviors: demos booked, restaurants signed)
 - **Support team** for ticket throughput (already operational)
 
-Domains where 4DX would likely *not* fit at iCHEF:
+Domains where 4DX would likely *not* fit at Company A:
 - Product engineering (POS feature dev)
 - Design (UX research, interface iteration)
 - Data team (analytics / BI work)
@@ -133,49 +128,40 @@ Domains where 4DX would likely *not* fit at iCHEF:
 
 ---
 
-## Part 3 — Specific implications for 91APP (Taiwan e-commerce platform)
+## Part 3 — Specific implications for Company B (an OMO e-commerce platform)
 
 ### Company context
 
-- **Company**: 91APP Inc. (公開掛牌 ticker: 6741.TW)
-- **Founder / Chairman**: 何英圻 ("台灣電商教父" — three-time successful e-commerce entrepreneur, prior exits to NASDAQ-listed US firms)
+- **Company**: Company B (a publicly-listed Taiwan OMO e-commerce platform)
+- **Founder / Chairman**: the chairman (a category-leadership positioning for D2C / OMO; prior company in e-commerce)
 - **Founded**: 2013
 - **Business model**: OMO (Online Merge Offline) e-commerce SaaS platform; serves mid-large retail brands; subscription + transaction-fee revenue
-- **Scale (2024)**: revenue NT$1.62B (+17% YoY); net income NT$498M (record high); first publicly-listed SaaS service provider in Taiwan
-- **Strategic positioning**: aspires to be "零售業的台積電" (TSMC of retail) — D2C / OMO category leader
-- **Sources**:
-  - https://91app.com/blog/what-is-omo/
-  - https://www.wealth.com.tw/home/articles/31305
-  - https://ctee.com.tw/people/interview/480221.html
-  - https://www.tw-ren.com/renaissance/612
+- **Scale (2024)**: publicly-reported strong revenue growth and record net income; first publicly-listed SaaS service provider in Taiwan
+- **Strategic positioning**: a category-leadership positioning — D2C / OMO category leader
+- **Sources**: (public company / interview sources)
 
-### 91APP's framework — operational metrics, not explicitly OKR or 4DX
+### Company B's framework — operational metrics, not explicitly OKR or 4DX
 
-Unlike iCHEF, 91APP does not publicly name a goal-setting framework. The CPO (Happy Lee) and the chairman (何英圻) discuss execution in metric-oriented language:
+Unlike Company A, Company B does not publicly name a goal-setting framework. The CPO and the chairman discuss execution in metric-oriented language:
 
-**Core revenue identity (verbatim, from CPO Lee at the awoo growth-hacker seminar)**:
+**Core revenue identity** (paraphrased from public seminar / interview sources):
 
-> *"流量 × 轉換率 × 客單 = 業績"*
-> (Traffic × Conversion Rate × Average Order Value = Revenue)
+The company operates on a multiplicative revenue model: Traffic × Conversion Rate × Average Order Value = Revenue. This identity anchors team metric-orientation across all three growth pillars.
 
 **Three-pillar operational system**:
-1. eCOM (流量成長循環 — traffic growth loops)
-2. OMO Suite (OMO 動力環 — OMO momentum cycles)
-3. Member Systems (會員套件 — member engagement)
+1. eCOM (traffic growth loops)
+2. OMO Suite (OMO momentum cycles)
+3. Member Systems (member engagement)
 
-**Strategic-philosophy framing (from 何英圻 interviews)**:
+**Strategic-philosophy framing** (paraphrased from public interview sources):
 
-> *"創業的過程中，單靠理工訓練是不夠的，經營管理雖有很多涉及科學的理論、技術和know-how，但如果要有更大的突破，可能就要提升到人生的哲學或藝術層次。"*
+The chairman emphasizes that execution speed and action-orientation are core cultural values — "seeing a trend and acting on it" is a stated team characteristic. The chairman also maintains a rigorous continuous-learning practice, running monthly academic-paper study sessions during prior company years to apply academic management research to operational decisions.
 
-> *"在91APP的團隊上看到的是『行動力』，他們看到趨勢就做到、看到機會就做到。"*
-
-> 何英圻 famous management practice: "創辦興奇科技六年間，每個月不間斷請學者講解國際學術期刊相關論文，並討論如何用在自己的公司上" — monthly academic-journal study sessions for management improvement.
-
-### Inference: 91APP runs metric-oriented operational discipline, likely with OKR-flavor for direction
+### Inference: Company B runs metric-oriented operational discipline, likely with OKR-flavor for direction
 
 **What can be confirmed publicly**:
-- 91APP runs metric-driven execution culture (Traffic × Conversion × AOV = Revenue identity)
-- "行動力" (action-orientation) is a stated cultural pillar
+- Company B runs metric-driven execution culture (Traffic × Conversion × AOV = Revenue identity)
+- Action-orientation is a stated cultural pillar
 - The chairman is high-rigor with continuous-learning culture (academic-paper monthly sessions)
 
 **What cannot be confirmed from public sources**:
@@ -185,16 +171,16 @@ Unlike iCHEF, 91APP does not publicly name a goal-setting framework. The CPO (Ha
 
 **Likely framework state** (inference, not verified):
 - Probably OKR (or KPI-derived OKR-flavor) — matches Taiwan tech-industry norm + the metric-orientation visible in public comms
-- Possible internal hybrid (OKR for direction, KPI for daily ops) — matches 何英圻's career-long practice of running metric-driven scale-up companies
+- Possible internal hybrid (OKR for direction, KPI for daily ops) — matches the chairman's career-long practice of running metric-driven scale-up companies
 
-### Why 91APP likely doesn't run 4DX (inference)
+### Why Company B likely doesn't run 4DX (inference)
 
-Same structural reasons as iCHEF:
+Same structural reasons as Company A:
 1. **Product engineering / data science / OMO platform development** is knowledge-heavy work with shifting weekly priorities — D2 calcification risk
 2. **Multi-tenant SaaS retail platform** has multiple parallel customer cohorts — 4DX's "one WIG max" rule is awkward for multi-customer-segment growth
 3. **Public-listed company governance** — quarterly investor reporting + KR-style metric-tracking aligns culturally with OKR, not 4DX
 
-### Where 4DX *might* fit inside 91APP (similar to iCHEF analysis)
+### Where 4DX *might* fit inside Company B (similar to Company A analysis)
 
 - **Sales team for retail-brand onboarding** (stable behaviors: demos, signings, deployment milestones)
 - **Customer-success team for retention** (stable behaviors: QBRs, training sessions, OMO-feature-adoption nudges)
@@ -320,22 +306,22 @@ This is an architecture-level decision; recorded here as a pointer, not implemen
 
 ---
 
-## Part 6 — iCHEF / 91APP specific takeaways
+## Part 6 — Company A / Company B specific takeaways
 
-### iCHEF (verified)
+### Company A (verified)
 
-- **Confirmed**: iCHEF runs OKR (semi-annual cycle, individual + team alignment, growth-orientation, not 100%-achievement-target).
-- **Inferred**: 4DX would not be a natural fit for iCHEF's engineering team (knowledge-heavy POS development).
-- **Possible 4DX use cases inside iCHEF**: customer-success team chasing renewal; sales team for restaurant onboarding; support throughput. NOT product engineering.
-- **What the plugin should do**: if a user from iCHEF asks for 4DX coaching, recommend keeping company-level OKR + considering 4DX for specific operational sub-teams only.
+- **Confirmed**: Company A runs OKR (semi-annual cycle, individual + team alignment, growth-orientation, not 100%-achievement-target).
+- **Inferred**: 4DX would not be a natural fit for Company A's engineering team (knowledge-heavy POS development).
+- **Possible 4DX use cases inside Company A**: customer-success team chasing renewal; sales team for restaurant onboarding; support throughput. NOT product engineering.
+- **What the plugin should do**: if a user from Company A asks for 4DX coaching, recommend keeping company-level OKR + considering 4DX for specific operational sub-teams only.
 
-### 91APP (partially verified)
+### Company B (partially verified)
 
-- **Confirmed**: 91APP runs metric-driven operational discipline (Traffic × Conversion × AOV = Revenue identity) with strong action-orientation culture.
-- **Inferred (not confirmed)**: probably OKR or OKR/KPI hybrid; consistent with Taiwan tech-listed-company norms + 何英圻's career-long metric-driven scale-up practice.
-- **Inferred non-fit for 4DX**: same reasons as iCHEF — product engineering / data science / OMO platform work is knowledge-heavy.
-- **Possible 4DX use cases inside 91APP**: brand-onboarding sales team; customer-success for OMO-feature adoption; support throughput. NOT product or data team.
-- **What the plugin should do**: same as iCHEF — recommend keeping company-level direction framework + considering 4DX for specific operational sub-teams only.
+- **Confirmed**: Company B runs metric-driven operational discipline (Traffic × Conversion × AOV = Revenue identity) with strong action-orientation culture.
+- **Inferred (not confirmed)**: probably OKR or OKR/KPI hybrid; consistent with Taiwan tech-listed-company norms + the chairman's career-long metric-driven scale-up practice.
+- **Inferred non-fit for 4DX**: same reasons as Company A — product engineering / data science / OMO platform work is knowledge-heavy.
+- **Possible 4DX use cases inside Company B**: brand-onboarding sales team; customer-success for OMO-feature adoption; support throughput. NOT product or data team.
+- **What the plugin should do**: same as Company A — recommend keeping company-level direction framework + considering 4DX for specific operational sub-teams only.
 
 ### Common pattern: "SaaS company runs OKR for the whole business, may wrap 4DX around specific operational sub-teams"
 
@@ -351,10 +337,10 @@ This is the FranklinCovey-endorsed hybrid pattern. It explicitly is NOT "SaaS co
 4. **Erik Eldridge 2019** (verified via wordpress mirror playwright read, 2026-05-01) — software engineer's perspective; OKR-Objectives-as-lag / KRs-as-lead mapping.
 5. **Bravelab.io / Smenżyk 2021** (already in case-inventory.md Tier 1) — verbatim D2 collapse in dev-shop context.
 6. **Lou Franco 2024** (already in case-inventory.md Tier 2 #12) — indie SaaS founder personal-scope 4DX series.
-7. **iCHEF official engineer interview** (verified WebFetch read) — https://www.ichefpos.com/zh-tw/engineer-of-ichef — verbatim OKR adoption + cadence.
-8. **NOM Magazine iCHEF founder interview** (verified search) — https://nommagazine.com/「讓開餐廳變成一門好生意」：專訪-ichef-共同創辦人/
-9. **91APP awoo growth-hacker seminar** (verified WebFetch read) — https://www.awoo.ai/zh-hant/blog/growth-hacker-seminar-omo-91app/ — Traffic × Conversion × AOV identity.
-10. **91APP 何英圻 interviews** (verified search) — https://www.wealth.com.tw/home/articles/31305 + https://ctee.com.tw/people/interview/480221.html — strategic positioning.
+7. **Company A public engineering/interview sources** (verified WebFetch read) — (public company / interview sources) — OKR adoption + cadence details.
+8. **Company A public engineering/interview sources** (verified search) — (public company / interview sources) — founder background and company origin.
+9. **Company B public seminar/interview sources** (verified WebFetch read) — (public company / interview sources) — Traffic × Conversion × AOV revenue identity.
+10. **Company B public seminar/interview sources** (verified search) — (public company / interview sources) — strategic positioning and chairman philosophy.
 11. **Multiple OKR-vs-4DX comparison sources** — perdoo, keka, peoplestrong, tability.io, datalligence, simplamo, reclaro — cross-validated convergence on the canonical pattern documented in Part 4.
 
 ---
@@ -468,10 +454,10 @@ This entire Part 7 is **synthesized from the four practitioner sources documente
 
 ## Provenance
 
-This research note was assembled 2026-05-01 in response to user request for deeper investigation of (1) why 4DX is industry-considered poorly-suited to SaaS / software-tech with specific focus on iCHEF and 91APP, and (2) substantive OKR vs 4DX comparison.
+This research note was assembled 2026-05-01 in response to user request for deeper investigation of (1) why 4DX is industry-considered poorly-suited to SaaS / software-tech with specific focus on Company A and Company B, and (2) substantive OKR vs 4DX comparison.
 
 Total research: 6 web searches + 4 direct primary-source reads (2 via WebFetch, 2 via playwright after redirects / SSL issues) + cross-validation against existing case-inventory.md Tier 1 + Tier 2 entries.
 
-Re-running annually is sensible if the SaaS / tech 4DX adoption landscape changes (e.g. if FranklinCovey publishes a new SaaS-specific case study, or if iCHEF / 91APP publicly change their goal-setting framework).
+Re-running annually is sensible if the SaaS / tech 4DX adoption landscape changes (e.g. if FranklinCovey publishes a new SaaS-specific case study, or if Company A / Company B publicly change their goal-setting framework).
 
 **Update 2026-05-01 (same day, second pass)**: added Part 7 on horizontal-hybrid coordination pattern (engineering OKR + sales 4DX). Five additional searches + 4 verified WebFetch reads (Workpath / Simplamo / FranklinCovey blog / mooncamp 4DX-vs-OKR). Honest finding: no verified named real-company case for this specific horizontal pattern; FranklinCovey's documented hybrid is vertical (same goal at OKR + 4DX layers), not horizontal (different goals across departments). Part 7 synthesizes expected friction points + recommended coordination patterns from first principles + practitioner-blog convergence. Section explicitly labeled as synthesis, not as verified case-anchored guidance.
