@@ -1,12 +1,13 @@
-# dbt-wiki Schema (v2.0 — frozen for v2.x)
+# dbt-wiki Schema (v2.1 — frozen for v2.x; additive optional keys in 2.1)
 
 This schema is **frozen for the v2.x line**. Frontmatter shape, page
 types, naming conventions, and mandatory body sections will not change
-within v2.x patches; only wording clarifications are allowed. *Additive
-optional body sections* (sections that appear only under a stated
-condition and change no existing required section's semantics) may be
-added within v2.x — they neither break existing pages nor alter the
-frontmatter/page-type/naming contract.
+within v2.x. **v2.1 is an additive bump** that introduces four optional
+frontmatter keys (`aliases`, `title_local`, `reviewed_by`, `reviewed_at`),
+the value-domain `(via:)` provenance marker, and alias-surfaced index
+lines. **v2.0 pages remain valid** — missing optional keys parse fine;
+the frontmatter shape is otherwise unchanged. Page types, naming
+conventions, and mandatory body sections still will not change.
 
 **Clean break from v1.x — no migration.** v2.0 is a breaking redesign:
 dbt object types (model / source / macro / …) are demoted from *the
@@ -169,8 +170,16 @@ tags: ["finance"]
 stale: false                      # set true by refresh when a derived_from evidence model changes
 stale_at: null                    # YYYY-MM-DD refresh flagged it (else null)
 stale_reason: null                # human-readable why (else null)
+title_local: null                 # optional — title in the project's language (recall aid)
+aliases: []                       # optional — project-language synonyms / GL codes / abbreviations for retrieval
+reviewed_by: null                 # optional — set when a human promotes status to `mature`
+reviewed_at: null                 # optional — ISO date of that review
 ---
 ```
+
+v2.0 pages that omit the four optional keys above (`title_local`,
+`aliases`, `reviewed_by`, `reviewed_at`) remain fully valid — missing
+optional keys parse fine.
 
 - **`status`** lifecycle: `seed` (auto-stub, not yet distilled) →
   `developing` (distilled, needs review) → `mature` (reviewed,
@@ -680,9 +689,20 @@ with fresh content (overwrites synthesis, clears stale flag).
 grouping is demoted into an evidence section. Sections, in order:
 
 Knowledge layer (lead):
-- `## Entities` (one line per entity: title + `summary` + status)
-- `## Metrics` (one line per metric: title + `summary` + status)
-- `## Concepts` (one line per concept: title + `summary` + status)
+- `## Entities` (one line per entity — see canonical line shape below)
+- `## Metrics` (one line per metric — see canonical line shape below)
+- `## Concepts` (one line per concept — see canonical line shape below)
+
+Canonical knowledge line shape:
+```
+- [<title>｜<title_local>](<folder>/<slug>.md) `<status>` — <summary> 〔aka: <alias1>, <alias2>, …〕
+```
+
+Rules:
+- The `｜<title_local>` segment is **omitted** when `title_local` is absent (or null).
+- The `〔aka: …〕` clause is **omitted** when `aliases` is empty.
+- Surfacing `title_local` and `aliases` here is what lets the tiered query (Step 1) match
+  project-language terms without loading every knowledge page body.
 
 Evidence layer (demoted — structural grouping):
 - `## Evidence: Models` (grouped by tier path: `models/staging/`, `models/marts/`, etc.)
