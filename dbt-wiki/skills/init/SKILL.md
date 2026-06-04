@@ -727,6 +727,74 @@ knowledge distillation step that produces the knowledge layer
    the `## Entities`, `## Metrics`, `## Concepts` sections are
    populated rather than stub placeholders.
 
+### Phase B parallel orchestration (large projects, >~80 models)
+
+This layer is **optional**. Small projects use the sequential Phase B
+flow above. When the evidence set is large (typically >~80 models,
+or when manual distillation of entities/metrics would exceed a single
+context window), Phase B fans out one subagent per **domain** — a
+cohesive cluster of models sharing a business purpose (e.g. `billing`,
+`sales`, `inventory`).
+
+#### Before fan-out: write `_internal/ownership.json`
+
+Before dispatching domain agents, write `_internal/ownership.json`
+with two maps:
+
+```json
+{
+  "reserved_entities": {
+    "customer": "billing",
+    "order":    "sales"
+  },
+  "domains": {
+    "billing":   ["billing_invoices_v1", "billing_payments_v1"],
+    "sales":     ["sales_orders_v1", "sales_order_lines_v1"],
+    "inventory": ["inventory_stock_v1"]
+  }
+}
+```
+
+- **`reserved_entities`** — business objects that two or more domains
+  reference but exactly one domain owns. Each entry maps a slug to its
+  owning domain. Example: `"customer": "billing"` means the `customer`
+  entity page is owned by the `billing` agent; all other agents may
+  link to it but must not create it.
+- **`domains`** — maps each domain slug to the list of evidence
+  `unique_id`s it is responsible for distilling.
+
+#### has_metricflow gate (P2-1)
+
+Before dispatching any metric agent, evaluate:
+
+```python
+has_metricflow = bool(manifest.get("semantic_models"))
+```
+
+Pass `has_metricflow` into each metric agent's brief. When
+`has_metricflow` is `false`, agents skip the MetricFlow branch in
+distill-metrics §2 entirely (the detection logic already lives in
+that spec; this is the orchestration-level gate that avoids
+unnecessary checks across all domain agents).
+
+#### Per-domain fan-out rules
+
+Each domain agent receives:
+- Its own slice of evidence `unique_id`s (from `domains` map above).
+- The full `reserved_entities` map and the `domains` map for
+  cross-domain awareness.
+- The `has_metricflow` flag.
+
+Each domain agent **builds only the pages it owns**. When a domain
+agent needs to express a relationship to a reserved entity owned by
+another domain, it:
+1. Emits the relationship edge in the owning page's typed-link
+   `Relationships` section with the correct relative path.
+2. Does **not** create the target page — leaves a dangling link.
+
+Dangling links to cross-domain reserved entities are resolved by the
+reconcile pass (Step 6.7 — handled separately; do not add it here).
+
 ### Phase B spec files
 
 The three distillation procedures are defined in:
