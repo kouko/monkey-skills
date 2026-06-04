@@ -439,6 +439,38 @@ Write `## Caveats` for anything that can surprise a consumer of the metric:
      assigned to)? State which, because the answer changes how
      "as of last month" queries should be written.
 
+### Caveat severity/type tags (optional but recommended)
+
+Prefix each caveat bullet with a tag to help consumers triage at a
+glance. Four tags are defined:
+
+| Tag | Meaning |
+|-----|---------|
+| `[bug]` | Wrong results if this caveat is not handled — the data has a known defect or the query must compensate. |
+| `[limitation]` | Known coverage or scope gap — the metric does not measure what its name implies in some situation, but no incorrect result is produced if the consumer is aware. |
+| `[temporal]` | Date or period semantics gotcha — formalises the **Date/period-column temporal-semantics** guidance above. Use this tag whenever the future-extension or column-kind guidance applies (e.g. a forecast model whose date column extends past `CURRENT_DATE`, or a recognition period column misread as an event date). |
+| `[no-test]` | No dbt test guards the upstream datum — the value is untested and could change silently. |
+
+Generic examples of the four tags in practice:
+
+- `[bug]` The `orders` fact table includes a "total" summary row per
+  store alongside the transactional rows; failing to filter it out
+  inflates any aggregate by one extra row per store per period.
+- `[limitation]` Refund records before the platform migration date are
+  not captured; the metric understates gross refund volume for any
+  period that spans the cutover.
+- `[temporal]` The `projection_month` column extends past `CURRENT_DATE`
+  because revenue is amortised forward over contract length; use a
+  `CURRENT_DATE`-anchored filter for "current / last month" queries,
+  **not** `MAX(projection_month)` (see Date/period-column temporal-
+  semantics guidance above).
+- `[no-test]` The `plan_type` column used to exclude trial accounts has
+  no `accepted_values` test; a new plan code added to the source system
+  would silently pass through as billable.
+
+Omit tags when caveats are self-evident from context. Do NOT invent
+tags beyond the four above.
+
 Source caveats from evidence model pages (`columns[].tests`,
 `generic_tests`, `## Description`, inline SQL comments).
 
