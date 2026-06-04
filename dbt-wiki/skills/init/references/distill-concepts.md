@@ -134,6 +134,28 @@ Guidelines for the Rule prose:
   the entity page type existed — for concept pages, keep it in the
   Rule section itself.
 
+**Severity/type tags for caveats (optional but recommended)**: when
+writing caveats — whether inline in the Rule section or in a
+`## Caveats` block — prefix each caveat with a tag to signal impact:
+
+| Tag | Meaning |
+|---|---|
+| `[bug]` | Wrong results if this caveat is not handled (e.g. a NULL propagation that silently zeroes a metric) |
+| `[limitation]` | Known coverage or scope gap that does not produce wrong results, but constrains valid use (e.g. "only covers completed orders") |
+| `[temporal]` | Date or period semantics gotcha (e.g. "window is calendar days, not business days") |
+| `[no-test]` | No dbt test guards this datum; value is asserted by convention, not enforced |
+
+Example:
+
+```markdown
+`[temporal]` The 90-day window uses `CURRENT_DATE` at query time, not
+at event time — reruns on historical dates will produce different
+cohort membership.
+```
+
+Tags are optional; omit them when the caveat is self-evidently low-risk.
+Do NOT invent tags beyond the four above.
+
 ---
 
 ## 4. `## Applies To` section

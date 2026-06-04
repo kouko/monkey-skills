@@ -727,6 +727,162 @@ knowledge distillation step that produces the knowledge layer
    the `## Entities`, `## Metrics`, `## Concepts` sections are
    populated rather than stub placeholders.
 
+### Phase B parallel orchestration (large projects, >~80 models)
+
+This layer is **optional**. Small projects use the sequential Phase B
+flow above. When the evidence set is large (typically >~80 models,
+or when manual distillation of entities/metrics would exceed a single
+context window), Phase B fans out one subagent per **domain** — a
+cohesive cluster of models sharing a business purpose (e.g. `billing`,
+`sales`, `inventory`).
+
+#### Before fan-out: write `.dbt-wiki/_internal/ownership.json`
+
+Before dispatching domain agents, write `.dbt-wiki/_internal/ownership.json`
+with two maps:
+
+```json
+{
+  "reserved_entities": {
+    "customer": "billing",
+    "order":    "sales"
+  },
+  "domains": {
+    "billing":   ["model.example_dbt_project.billing_invoices_v1", "model.example_dbt_project.billing_payments_v1"],
+    "sales":     ["model.example_dbt_project.sales_orders_v1", "model.example_dbt_project.sales_order_lines_v1"],
+    "inventory": ["model.example_dbt_project.inventory_stock_v1"]
+  }
+}
+```
+
+- **`reserved_entities`** — business objects that two or more domains
+  reference but exactly one domain owns. Each entry maps a slug to its
+  owning domain. Example: `"customer": "billing"` means the `customer`
+  entity page is owned by the `billing` agent; all other agents may
+  link to it but must not create it.
+- **`domains`** — maps each domain slug to the list of evidence
+  `unique_id`s it is responsible for distilling. Values are full dbt
+  `unique_id`s (`model.<package>.<name>`) — the same shape as
+  `derived_from` entries in wiki pages.
+
+#### has_metricflow gate (P2-1)
+
+Before dispatching any metric agent, evaluate:
+
+```python
+has_metricflow = bool(manifest.get("semantic_models"))
+```
+
+Pass `has_metricflow` into each metric agent's brief. When
+`has_metricflow` is `false`, agents skip the MetricFlow branch in
+distill-metrics §2 entirely (the detection logic already lives in
+that spec; this is the orchestration-level gate that avoids
+unnecessary checks across all domain agents).
+
+#### Per-domain fan-out rules
+
+Each domain agent receives:
+- Its own slice of evidence `unique_id`s (from `domains` map above).
+- The full `reserved_entities` map and the `domains` map for
+  cross-domain awareness.
+- The `has_metricflow` flag.
+
+Each domain agent **builds only the pages it owns**. When a domain
+agent needs to express a relationship to a reserved entity owned by
+another domain, it:
+1. Emits the relationship edge in the owning page's typed-link
+   `Relationships` section with the correct relative path.
+2. Does **not** create the target page — leaves a dangling link.
+
+Dangling links to cross-domain reserved entities are resolved by the
+reconcile pass (Step 6.7 — handled separately; do not add it here).
+
+### Step 6.7: Reconcile pass (after Phase B fan-out)
+
+Run **once** after all domain agents have returned their pages. This
+step resolves dangling links and enforces cross-domain provenance
+integrity.
+
+#### 6.7.1 Collect all relationship targets
+
+Scan every knowledge page under `entities/`, `metrics/`, and
+`concepts/`. Build a set of every `relationships[].target` slug
+referenced across all pages.
+
+#### 6.7.2 Resolve missing targets
+
+For each target slug that has **no file on disk**:
+
+1. **Look up `reserved_entities` in `ownership.json`.**
+
+   - **If the slug IS a reserved entity** — check whether the owning
+     domain produced a page for it.
+
+     - Owner produced no page → emit a **WARNING** (do NOT silently
+       create a stub for a reserved slug):
+
+       ```
+       WARNING: reserved entity "<slug>" (owner: "<domain>") has no
+       page — owner agent may have failed or skipped it. Resolve
+       manually before publishing.
+       ```
+
+     - Owner produced a page but the path is wrong → log a path-mismatch
+       warning and correct the `relationships[].target` reference.
+
+   - **If the slug is NOT in `reserved_entities`** (genuine dangling
+     reference, e.g. a concept referenced in passing) → create a
+     seed stub (`status: seed`) so the markdown link resolves:
+
+     ```yaml
+     ---
+     title: "<slug>"
+     status: seed
+     derived_from: []
+     last_changed_by: "auto-stub (reconcile pass)"
+     ---
+     <!-- Auto-generated stub. Replace with a real distillation pass. -->
+     ```
+
+     Place the stub in the appropriate subdirectory (`entities/`,
+     `metrics/`, or `concepts/`) based on the page type that referenced
+     it. If ambiguous, place under `concepts/`.
+
+#### 6.7.3 Lint `derived_from` cross-domain contamination
+
+**How owning domain is determined**: there is no per-page `domain:`
+frontmatter key. A page's owning domain is inferred from its
+`derived_from` uids via the `ownership.json` `domains` reverse-map —
+build `uid_to_domain` by inverting `ownership.json["domains"]`
+(`{ domain: [uid, ...] }` → `{ uid: domain }`), then map each
+`derived_from` uid through it to get the set of domains it touches.
+
+A page is **clean** when all its `derived_from` uids resolve to the
+same domain (or none map at all — unmapped uids are ignored).
+A page is **contaminated** when its `derived_from` uids resolve to
+**more than one** distinct domain.
+
+For each contaminated knowledge page, flag it:
+
+```
+LINT ERROR: <page_path> — derived_from spans domains
+{<domain_a>, <domain_b>}: uid "<unique_id>" belongs to
+domain "<foreign_domain>", not "<majority_domain>".
+Cross-domain derived_from entries cause spurious stale-cascades
+on refresh (see distill-entities §5.1 cross-entity exclusion rule).
+```
+
+Where `<majority_domain>` is the domain whose uids appear most
+frequently in the page's `derived_from` list (i.e. the most likely
+intended owning domain), and each `<unique_id>` / `<foreign_domain>`
+pair names a uid that resolves to a different domain.
+
+Emit all violations before stopping — do not halt on the first one.
+
+A page with cross-domain `derived_from` entries **must not** be
+published until the contamination is resolved: either the foreign
+uid is moved to the correct owning domain's page or removed.
+
 ### Phase B spec files
 
 The three distillation procedures are defined in:

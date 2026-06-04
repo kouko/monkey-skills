@@ -248,6 +248,98 @@ These two files are derived; regenerate from scratch every refresh:
 - `lineage.md`: from new manifest, build DAG (depends_on / feeds_into),
   produce ASCII tree + adjacency list
 
+## Step 6.4: Pre-stale lint — derived_from domain consistency
+
+**Gate**: if `_internal/ownership.json` does not exist (small or
+sequential projects that skipped the fan-out init path), **skip this
+step entirely** — `ownership.json` is only written by the domain
+fan-out during `init`, so its absence is normal, not an error.
+
+**Purpose**: verify that every `derived_from` unique_id listed in a
+knowledge page belongs to the same domain slice that owns the page,
+according to `ownership.json`. A unique_id from a *different* domain
+is almost always a relationship-only model that was added to
+`derived_from` in violation of the cross-entity exclusion rule
+(`init/references/distill-entities.md` §5.1 "Cross-entity exclusion
+rule"). If left undetected, it will produce a false stale-cascade:
+the knowledge page will be flagged stale every time an unrelated
+domain changes.
+
+This step is **WARNING-only** — do NOT auto-remove the offending
+unique_ids. The uid could be a legitimate cross-domain entity in a
+denormalised or shared-dimension pattern; auto-removal would silently
+break the freshness anchor. Surface for human review instead.
+
+```python
+# Pseudocode — pre-stale derived_from domain-consistency lint
+import itertools, json, yaml
+from pathlib import Path
+
+wiki = Path(".dbt-wiki")
+ownership_path = wiki / "_internal" / "ownership.json"
+
+if not ownership_path.exists():
+    # Small/sequential project — no domain fan-out, skip.
+    pass
+else:
+    ownership = json.loads(ownership_path.read_text())
+    # ownership.json shape: { "domains": { "<domain>": ["<uid>", ...], ... } }
+    # Each uid is a FULL evidence unique_id (e.g. "model.<package>.<name>"),
+    # matching the shape stored in derived_from — so uid_to_domain lookup aligns.
+    # Build reverse map: uid -> domain (key is full unique_id).
+    uid_to_domain = {}
+    for domain, uids in ownership["domains"].items():
+        for uid in uids:
+            uid_to_domain[uid] = domain
+
+    warnings = []
+    for page_path in itertools.chain(wiki.glob("entities/*.md"), wiki.glob("metrics/*.md"), wiki.glob("concepts/*.md")):
+        raw = page_path.read_text()
+        parts = raw.split("---", 2)
+        if len(parts) < 3:
+            continue
+        fm = yaml.safe_load(parts[1]) or {}
+        derived = fm.get("derived_from", []) or []
+        if not derived:
+            continue   # no provenance — nothing to check
+
+        # Map each derived_from uid to its domain via the reverse map.
+        # Uids not found in any domain slice are ignored (unmapped).
+        mapped_domains = {uid_to_domain[uid] for uid in derived if uid in uid_to_domain}
+
+        if len(mapped_domains) <= 1:
+            continue   # all uids resolve to one domain (or none mapped) — clean
+
+        # More than one distinct domain in derived_from → cross-domain contamination.
+        # Identify the majority domain and flag the foreign uid(s).
+        from collections import Counter
+        domain_counts = Counter(uid_to_domain[uid] for uid in derived if uid in uid_to_domain)
+        majority_domain = domain_counts.most_common(1)[0][0]
+        foreign_uids = [uid for uid in derived
+                        if uid in uid_to_domain and uid_to_domain[uid] != majority_domain]
+        foreign_details = ", ".join(
+            f"{uid} (domain: {uid_to_domain[uid]})" for uid in foreign_uids
+        )
+        warnings.append(
+            f"WARNING {page_path.name}: derived_from spans multiple domains "
+            f"(majority: {majority_domain}); foreign uid(s): {foreign_details} "
+            f"— likely relationship-only model(s) wrongly added; "
+            f"will cause false stale-cascade."
+        )
+
+    if warnings:
+        log_path = wiki / "log.md"
+        existing = log_path.read_text() if log_path.exists() else ""
+        log_path.write_text(existing + "\n### Step 6.4 derived_from domain-consistency lint\n\n" +
+                            "\n".join(warnings) + "\n")
+        # Also surface in the chat so the user sees it immediately.
+        print("\n".join(warnings))
+```
+
+**No auto-fix.** After emitting warnings, continue to Step 6.5 — the
+domain-consistency issue does not block stale detection; it only means
+some stale flags may be over-eager.
+
 ## Step 6.5: Mark stale syntheses and knowledge pages (do NOT regenerate, just flag)
 
 **MVP scope**: this step only **flags** stale pages — it does NOT

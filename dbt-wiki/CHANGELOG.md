@@ -4,6 +4,58 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] — 2026-06-05
+
+### Added — parallel orchestration spec for large projects (Phase B)
+
+Distill runs on large projects can now fan out per-domain subagent workers
+rather than executing serially. An internal ownership registry
+(`.dbt-wiki/_internal/ownership.json`) tracks reserved-slug ownership and
+domain→unique_id maps so concurrent workers do not collide on shared slugs.
+
+- **Per-domain subagent fan-out** — each domain runs its own distill agent in
+  parallel; the orchestrator coordinates wave boundaries and dependency order.
+- **`.dbt-wiki/_internal/ownership.json`** — new reserved file (not a wiki
+  page). Stores two maps: `reserved_slug → owner_domain` and
+  `domain → [unique_id, ...]`. Created before fan-out; updated atomically by
+  each worker at commit time.
+- **Step 6.7 reconcile pass** — post-fan-out reconciliation distinguishes
+  reserved-owner-failed pages (emit `WARNING`, keep existing owner) from
+  genuine dangler stubs (status remains `seed`). Cross-domain `derived_from`
+  contamination is flagged as a lint warning; workers must not emit
+  `derived_from` references that cross domain boundaries without explicit
+  approval.
+
+### Added — `has_metricflow` pre-fan-out gate
+
+An orchestration guard checks whether the project uses MetricFlow (semantic
+layer) before launching metric-domain agents. On SQL-derivation projects
+(where metrics are defined directly in SQL models rather than via the
+MetricFlow DSL), metric agents skip the MetricFlow branch entirely, avoiding
+spurious "no semantic manifest found" warnings.
+
+### Added — `/dbt-wiki:refresh` pre-stale `derived_from` domain-consistency lint
+
+`refresh` now runs a WARNING-only lint pass before executing any distill
+steps. The pass checks whether existing `derived_from` references in the
+current wiki cross domain boundaries in a way that is inconsistent with the
+ownership registry. The lint is gated: it fires only when
+`ownership.json` is present; projects without the registry are unaffected.
+No pages are modified; findings are printed as warnings for human review.
+
+### Added — optional `## Caveats` severity/type tags across distill specs
+
+Caveat blocks in distill agent specs (`distill-concepts.md`, `distill-entities.md`,
+`distill-metrics.md`) now support structured severity/type inline tags:
+
+- `[bug]` — known incorrect behavior
+- `[limitation]` — known capability boundary
+- `[temporal]` — time-sensitive or likely to change
+- `[no-test]` — assertion not covered by an automated test
+
+Tags are optional; untagged caveats remain valid. Consumers may use tags to
+filter or prioritize caveat display.
+
 ## [2.5.0] — 2026-06-04
 
 ### Added — recall pack: SCHEMA v2.1 (additive-optional; v2.0 pages remain valid)
