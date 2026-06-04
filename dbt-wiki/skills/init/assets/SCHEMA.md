@@ -239,23 +239,40 @@ Format — a **body annotation inline under the relevant `## Fields` entry**
 (NOT a frontmatter key): the `value_domain: [...]` text is rendered in the
 field's bullet, not added to the page's YAML frontmatter.
 
+Append the optional provenance suffix to record where the enum came from:
+
+```
+value_domain: [a, b, c] (via: accepted_values | distinct | inferred)
+```
+
+Provenance sources:
+- `(via: accepted_values)` — backed by a `schema.yml` `accepted_values`
+  test; the list is authoritative and CI-enforced.
+- `(via: distinct)` — populated from a `DISTINCT` query over production
+  data; accurate at time of distillation but not CI-enforced.
+- `(via: inferred)` — derived from SQL structure or column semantics with
+  NO `accepted_values` test and NO `DISTINCT` backing. This is a
+  **hypothesis, not ground truth**: downstream SQL generators MUST treat
+  this enum as provisional and avoid hard-failing on unlisted values.
+
 ```
 - **region_code** — 2-letter ISO region code stored in the warehouse.
-  `value_domain: [NL, EU, APAC]`
-  (user terms like "Northland" / "Northland" map to stored value `NL`)
+  `value_domain: [NL, EU, APAC] (via: accepted_values)`
+  (user terms like "Northland" map to stored value `NL`)
 
 - **order_status** — lifecycle stage of the order.
-  `value_domain: [pending, confirmed, shipped, cancelled]`
+  `value_domain: [pending, confirmed, shipped, cancelled] (via: distinct)`
 ```
 
 Rules:
 1. List only the values that actually appear in production data (distilled
    from `DISTINCT` evidence or schema.yml `accepted_values` test).
-2. Note any format surprise (e.g. suffix, locale, casing) that would cause
+2. Always include the `(via:)` suffix so readers know the confidence level.
+3. Note any format surprise (e.g. suffix, locale, casing) that would cause
    an equality filter to miss rows.
-3. If stored values differ from display labels, document both
+4. If stored values differ from display labels, document both
    (`stored: NL`, `display: Northland`).
-4. Omit this block entirely for free-text or numeric columns.>
+5. Omit this block entirely for free-text or numeric columns.>
 
 ## Relationships
 <typed edges to other knowledge pages — see "## Relationships spec".
