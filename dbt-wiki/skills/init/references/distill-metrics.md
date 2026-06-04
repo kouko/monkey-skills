@@ -539,8 +539,8 @@ a query author might search for but that:
 - **(b)** an LLM could NOT bridge from the summary alone.
 
 For metrics these are typically: project-specific metric / GL codes (e.g.
-`422001`), project abbreviations (e.g. `NSDD`, `FSD`), hierarchy levels
-(`l3`–`l6`), and non-obvious project synonyms (e.g. `流水分潤`). EXCLUDE:
+`5010`), project abbreviations (e.g. `MRR`, `NRR`), hierarchy levels
+(`lvl1`–`lvl3`), and non-obvious project synonyms (e.g. `recurring-rev`). EXCLUDE:
 terms already in the title or summary, generic words, and anything an LLM
 would naturally infer from the summary.
 

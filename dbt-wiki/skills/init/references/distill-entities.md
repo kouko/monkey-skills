@@ -424,10 +424,10 @@ might search for but that:
 - **(a)** do NOT appear in the page's `summary`, AND
 - **(b)** an LLM could NOT bridge from the summary alone.
 
-For entities these are typically: GL / account codes (e.g. `422001`),
-project abbreviations (e.g. `NSDD`, `FSD`, `l3`–`l6`), and non-obvious
-project synonyms for the entity (e.g. `流水分潤` for a revenue-share
-settlement entity).
+For entities these are typically: GL / account codes (e.g. `5010`),
+project abbreviations (e.g. `MRR`, `NRR`, `lvl1`–`lvl3`), and non-obvious
+project synonyms for the entity (e.g. `recurring-rev` for a recurring-revenue
+entity).
 
 **EXCLUDE**: terms already in the title or summary, generic words
 (`customer`, `order`, `id`), and anything an LLM would naturally infer
@@ -449,10 +449,10 @@ never re-add a term that was intentionally pruned).
 
 ```yaml
 aliases:
-  - "422001"          # GL account code used in internal docs, not in summary
-  - NSDD              # project abbreviation not inferable from English title
-  - 流水分潤          # non-obvious project synonym for the entity
-title_local: 流水分潤結算  # entity title in project's working language (from schema.yml)
+  - "5010"            # GL account code used in internal docs, not in summary
+  - MRR               # project abbreviation not inferable from English title
+  - recurring-rev     # non-obvious project synonym for the entity
+title_local: 經常性收入  # entity title in project's working language (from schema.yml)
 ```
 
 ---
