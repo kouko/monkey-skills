@@ -225,6 +225,10 @@ tags: ["customer", "activity"]
 stale: false
 stale_at: null
 stale_reason: null
+aliases:
+  - active_flag          # project SQL name, not in summary
+  - "is_active_90d"      # field name variant used in fct_churn
+title_local: アクティブ顧客定義   # concept title in project's working language; null if project is English-only
 ---
 ```
 
@@ -353,6 +357,10 @@ tags: ["customer", "activity", "churn"]
 stale: false
 stale_at: null
 stale_reason: null
+aliases:
+  - is_active_customer   # SQL field name in dim_customers
+  - "active_flag"        # shorthand used in fct_churn comments
+title_local: アクティブ顧客定義   # project uses Japanese in schema.yml descriptions
 ---
 
 ## Rule
@@ -408,3 +416,4 @@ Use this checklist once per identified concept before writing the page:
 - [ ] `slug` is kebab-case and matches the filename
 - [ ] `summary` is ≤200 chars
 - [ ] No `[[wikilinks]]` — only standard markdown links with relative paths
+- [ ] `aliases:` populated with project-specific SQL names / synonyms not inferable from summary; `title_local:` set to project-language title (or `null` if English-only project)
