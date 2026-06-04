@@ -1,0 +1,16 @@
+{
+  "note": "F-002 re-test: prior failures sf08/sf13 @3 runs + 3 fresh common-knowledge claims @3 runs + 6 should-NOT @2 runs (over-trigger regression).",
+  "queries": [
+    {"id": "sf08", "should_fire": true,  "route_to": "fact-check", "runs": 3, "query": "Someone told me lightning never strikes the same place twice. True or false?"},
+    {"id": "sf13", "should_fire": true,  "route_to": "fact-check", "runs": 3, "query": "Is it true bananas are berries but strawberries are not?"},
+    {"id": "ck01", "should_fire": true,  "route_to": "fact-check", "runs": 3, "query": "Is it true that we only have five senses?"},
+    {"id": "ck02", "should_fire": true,  "route_to": "fact-check", "runs": 3, "query": "Bulls hate the color red, right?"},
+    {"id": "ck03", "should_fire": true,  "route_to": "fact-check", "runs": 3, "query": "Is it accurate that the tongue has separate zones for sweet, sour, salty and bitter?"},
+    {"id": "sn01", "should_fire": false, "route_to": "deep-research", "runs": 2, "query": "Write me a deep, multi-source research report on the state of solid-state battery commercialization."},
+    {"id": "sn02", "should_fire": false, "route_to": "deep-research", "runs": 2, "query": "I need a thorough multi-source analysis of remote-work productivity trends with citations."},
+    {"id": "sn03", "should_fire": false, "route_to": "deep-research", "runs": 2, "query": "深入研究一下台灣半導體產業的競爭格局，給我一份完整的報告"},
+    {"id": "sn04", "should_fire": false, "route_to": "cite-check", "runs": 2, "query": "Here is my finished essay. Can you check that every citation actually supports the claim it is attached to and flag dead links?"},
+    {"id": "sn05", "should_fire": false, "route_to": "cite-check", "runs": 2, "query": "Audit the references in this draft document and tell me which sources are misattributed."},
+    {"id": "sn06", "should_fire": false, "route_to": "deep-read", "runs": 2, "query": "Help me deeply understand this 60-page research paper, section by section."}
+  ]
+}

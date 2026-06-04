@@ -1,0 +1,13 @@
+{"id":"sf13","run":1,"should_fire":true,"routed":"fact-check"}
+{"id":"sf13","run":2,"should_fire":true,"routed":"fact-check"}
+{"id":"sf-new","run":1,"should_fire":true,"routed":"fact-check"}
+{"id":"sf-new","run":2,"should_fire":true,"routed":"fact-check"}
+{"id":"zh","run":1,"should_fire":true,"routed":"fact-check"}
+{"id":"zh","run":2,"should_fire":true,"routed":"fact-check"}
+{"id":"snR","run":1,"should_fire":false,"routed":""}
+{"id":"snR","run":2,"should_fire":false,"routed":"deep-research"}
+{"id":"snC","run":1,"should_fire":false,"routed":"cite-check"}
+{"id":"snC","run":2,"should_fire":false,"routed":"cite-check"}
+{"id":"snD","run":1,"should_fire":false,"routed":"deep-read"}
+{"id":"snD","run":2,"should_fire":false,"routed":"deep-read"}
+DONE

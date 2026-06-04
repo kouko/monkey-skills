@@ -1,0 +1,4 @@
+# Raw per-run JSONL stream dumps from the activation harness — bulky, reproducible
+# from the corpora + run scripts; not committed.
+probe-a-raw/
+retest-raw/
