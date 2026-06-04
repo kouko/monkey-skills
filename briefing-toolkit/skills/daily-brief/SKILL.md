@@ -7,7 +7,7 @@ description: >-
   Do NOT use for 績效回顧/自評/專案盤點(那是 performance-evidence-audit,同機制反方向時間軸);Do NOT use 來寫回官方系統、代送或自動回覆(本 skill 唯讀 + 只寫本機草稿)。
 metadata:
   tags: [daily-brief, morning-brief, aggregator, read-only, draft-only, cross-platform, triage, continuity, pdb]
-  note: data/aggregator skill — 自包含 raw MCP fan-out;無 source_book(非 framework 型)。
+  note: data/aggregator skill — 自包含 raw MCP fan-out。
 ---
 
 # Daily Brief(每日跨平台晨報)
@@ -60,7 +60,7 @@ metadata:
 → **MANDATORY:讀 `references/prioritization-framework.md` §延續性**(定位規則 + 首份 / 跳天降級)。
 
 ### 平行 fan-out(每平台一個 sub-agent,一次發出)
-**在同一訊息發出全部就緒平台的 sub-agent(多個 Agent 呼叫並行,每平台一個、各自獨立 context)**,廣度優先。每個 sub-agent:**先用 ToolSearch 載入該平台 MCP 工具的 schema**(這些工具是 deferred,**不先載直接呼叫會 InputValidationError**),再確認身份,再在期間窗內多角度搜索,回傳結構化 markdown(項目 + 出處深連結 + caveats)。**某平台過了 Gate 卻在 fan-out 中途失敗(rate-limit / timeout / token 過期)→ 標為 runtime 盲區寫進涵蓋聲明,不靜默吞掉、也不整份中止。**
+**在同一訊息發出全部就緒平台的 sub-agent(多個 Agent 呼叫並行,每平台一個、各自獨立 context)**,廣度優先。每個 sub-agent:**先用 ToolSearch 載入該平台 MCP 工具的 schema**(這些工具是 deferred,**不先載直接呼叫會 InputValidationError**),再在期間窗內多角度搜索,回傳結構化 markdown(項目 + 出處深連結 + caveats)。**把 0-A Gate 已取得的本人身份(Slack user ID、Asana GID、Notion self id、各 email、GitHub login)直接寫進每個 agent 的 prompt**——身份只該問一次,agent 拿到就不必重抓,省一輪 round-trip(見 playbook §2「身份 token 往下傳」)。**某平台過了 Gate 卻在 fan-out 中途失敗(rate-limit / timeout / token 過期)→ 標為 runtime 盲區寫進涵蓋聲明,不靜默吞掉、也不整份中止。**
 → **MANDATORY:讀 `references/platform-search-playbook.md`**(7 平台各自的 ToolSearch 查詢字串、搜索角度、雷區、canonical 連結形式)。
 → **Do NOT load** `references/brief-templates.md` 於此步——版型在產出階段才需要。
 
@@ -72,7 +72,7 @@ metadata:
 今日項目用**唯一識別碼 JOIN 昨日 CSV**,算四狀態:🆕 新發生 / ⏳ 仍在等你(已 N 天)/ ✅ 已結 / 🔄 狀態變化。**硬原則**:每個狀態都**以 ID 去 live 平台重驗**(原則 6),昨日 CSV 只給「要追哪些 ID」不給事實。首份 / 跳天依 continuity-load 的標記降級處理。
 
 ### 產出雙產物(draft-only,日期前綴)
-寫進指定資料夾:`<YYYY-MM-DD>_晨報.md`(curated,PDB 風格 6 段 + 動態焦點)+ `<YYYY-MM-DD>_完整事項.md`(零省略行動表,每列可點)+ `<YYYY-MM-DD>_完整事項.csv`(機讀,**唯一識別碼欄 = 隔天 delta 的 join key,不可省略**)。兩份開頭都放資料源涵蓋聲明。
+寫進指定資料夾:`<YYYY-MM-DD>_晨報.md`(curated,PDB〔President's Daily Brief,美國總統每日簡報〕風格 6 段 + 動態焦點)+ `<YYYY-MM-DD>_完整事項.md`(零省略行動表,每列可點)+ `<YYYY-MM-DD>_完整事項.csv`(機讀,**唯一識別碼欄 = 隔天 delta 的 join key,不可省略**)。兩份開頭都放資料源涵蓋聲明。
 → **MANDATORY:讀 `references/brief-templates.md`**(晨報 6 段版型 + 完整表 / CSV schema + 涵蓋聲明 + 日期前綴命名規則)。
 
 ## 排程註記
