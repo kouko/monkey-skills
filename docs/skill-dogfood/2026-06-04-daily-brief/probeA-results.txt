@@ -1,0 +1,14 @@
+## should-fire (expect daily-brief)
+[SF] "幫我看今天有什麼要處理的，跨 gmail slack 那些" -> run1=NO-FIRE | run2=NO-FIRE
+[SF] "daily brief please" -> run1=NO-FIRE | run2=NO-FIRE
+[SF] "幫我做今天的晨報" -> run1=NO-FIRE | run2=NO-FIRE
+[SF] "有哪些訊息在等我回" -> run1=NO-FIRE | run2=NO-FIRE
+[SF] "今日まとめ作って、standupの前に" -> run1=NO-FIRE | run2=NO-FIRE
+[SF] "整理今天我要回覆的跨平台訊息" -> run1=NO-FIRE | run2=NO-FIRE
+
+## should-NOT-fire (expect NOT daily-brief)
+[SN] "幫我盤點過去半年做了什麼，要寫績效自評" -> run1=NO-FIRE | run2=NO-FIRE
+[SN] "建立今天的 Obsidian 每日筆記" -> run1=NO-FIRE | run2=NO-FIRE
+[SN] "幫我把這個對話做個 handoff 交接文件" -> run1=NO-FIRE | run2=NO-FIRE
+[SN] "寄一封 email 給 David 說我同意" -> run1=NO-FIRE | run2=NO-FIRE
+DONE
