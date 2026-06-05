@@ -233,15 +233,21 @@ When the human replies affirmatively (yes / looks good / certify / approve / 認
    - Set `stale_at: null`
    - Set `stale_reason: null`
 
-5. **Append a section-header entry to `.dbt-wiki/log.md`**:
+5. **Append one log entry per certified page to `.dbt-wiki/log.md`**:
 
    ```
-   ## [YYYY-MM-DD] review | certified <type>/<slug>.md (and any others) by <reviewer>
+   ## [YYYY-MM-DD] review | certified <type>/<slug>.md by <reviewer>
+   - Previous status: <developing | stale-mature>
+   - New status: mature
+   - Reviewer notes: <free text or "none">
    ```
 
    Example:
    ```
    ## [2026-05-15] review | certified entities/order.md by alice
+   - Previous status: developing
+   - New status: mature
+   - Reviewer notes: none
    ```
 
    Create `.dbt-wiki/log.md` with a `# dbt-wiki log` header if it does not yet
