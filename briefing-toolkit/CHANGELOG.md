@@ -9,10 +9,17 @@ Continuity & zero-omission hardening; regression-verified via `dev-workflow:dogf
 ### Added
 - **G1 — 5th continuity state**: distinguishes `🆕 真新發生` (item date ≥ prior-brief generation time) from `⚠️ 昨日未涵蓋` (item date < prior-brief time — missed-yesterday / suspected under-collection), rendered distinctly in the 📈 brief section. Prevents a collection-method change (e.g. Asana 1→42 between days) from mislabeling old backlog as new events.
 - **G4 — collection-volume visibility**: per-platform returned counts in the coverage statement; a `計數對照` step flags material count swings, feeding the G1 discrimination.
+- **Per-platform Worked Examples + a shared generative Sanity-check** — one tight example per platform sub-agent; the Sanity-check ("an active source returning 0 → suspect the query, retry; don't report empty") replaces the prior reactive "enumerate every landmine" approach.
+- **"Live discovery wins" principle** — live `ToolSearch` results override the playbook's dated negative-capability notes (treated as "as of YYYY-MM" snapshots, not capability ceilings), so the skill auto-adapts to MCP changes instead of silently suppressing newly-added tools.
+- **Supplementary "waiting-on-me" signals** — Gmail `is:unread` (weak proxy), Slack `is:saved` / `has:pin` as personal-marker signals; Drive `viewedByMeTime` browse-history.
+- **Window-edge (窗緣) inclusion** — items 1–3 days past the future-N window still surface, flagged "(窗緣)", instead of being dropped at the boundary.
 
 ### Changed
 - **G3 — strict zero-fold complete table**: the complete action table is now one-row-per-item in BOTH MD and CSV (never grouped / footnote-summarized; every JOIN key preserved), with a named anti-pattern against consolidating stale backlog. Clarifies the dual-product split (curated brief vs zero-omission table).
 - **G2 — stale/cached re-verify degradation**: if a continuity re-verify returns an `as-of`/cached snapshot earlier than today, the item's confidence drops to `推論` with a "重驗資料非即時 (as-of X)" caveat (mirrors the §3 thread-read-failure rule); Notion `notion-fetch` playbook bullet added to check the returned timestamp.
+- **Per-platform fan-out hardening**: Notion ranks by owner/teamspace/last-edited (`created_by=0` means rarely-authors, not an API bug); Slack drops the unreliable `after:`/`before:` operators (filter timestamps client-side) and mandates DM / private-channel coverage; GitHub uses global `--author=@me` / `--review-requested=@me` / `--assignee=@me` search (avoids the non-repo-cwd failure).
+- **5-cell per-platform template** (identity / tools / strategy + Worked Example + Pitfalls & Sanity-check), replacing the heavier 7-cell form — context-engineering evidence shows extra cells bloat agent context and degrade output.
+- **✅-rarity expectation + thread-read degradation**: documents that a cross-platform `✅` (2+ independent sources) is inherently rare in this ecosystem; an unreadable/truncated thread degrades confidence rather than asserting "they're waiting on you".
 
 ### Fixed
 - **H1**: dispatch phrasing now "全部 ✅就緒平台（最多 7）" — no longer contradicts the readiness Gate.
