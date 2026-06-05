@@ -105,6 +105,46 @@ def test_missing_page_exits_2(tmp_path: Path, capsys) -> None:
     assert err.strip()  # a clear message was printed to stderr
 
 
+def test_embeds_exempt(tmp_path: Path) -> None:
+    """`![[...]]` embeds are NEVER flagged — attachments, missing notes, size
+    params all exempt — but a plain dangling `[[...]]` on the SAME page IS.
+
+    The gate exists to catch dangling NOTE links (the click-to-create
+    phantom-note problem). Embed integrity (broken image/PDF) is a separate
+    concern, not this gate's job. RED before the fix: the link regex ignores
+    the leading '!' so embed targets leak through and get reported (then the
+    SKILL downgrade rule mangles `![[architecture.png]]` -> `!**...**`).
+
+    Asserting the plain link IS still flagged proves we exempt only embeds,
+    not over-strip the whole line.
+    """
+    vault = tmp_path
+
+    (vault / "existing.md").write_text("body\n", encoding="utf-8")
+
+    page = vault / "page.md"
+    page.write_text(
+        "\n".join(
+            [
+                # Embed of an attachment NOT in the *.md inventory.
+                "![[architecture.png]]",
+                # Embed of a non-existent note.
+                "![[some-missing-note]]",
+                # Embed with a size param.
+                "![[existing|300]]",
+                # A REAL dangling plain link on the same page — must flag.
+                "See [[Genuinely Missing]] for details.",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    unresolved = cwt.find_unresolved_targets(page, vault, exclude_dirs=[])
+
+    assert unresolved == ["Genuinely Missing"]
+
+
 def test_exemptions(tmp_path: Path) -> None:
     """Same-note headings, `## Source` links, code spans, and path-prefix
     forms are NOT flagged."""

@@ -29,12 +29,16 @@
 #   - [[Missing]] → flagged (returned).
 #
 # Exemptions (Task 2): same-note `[[#…]]`-only links (empty base),
-#   wikilinks inside the `## Source` section, wikilinks inside fenced
-#   ``` ``` ``` / inline `` ` `` code spans (not live links — same
-#   backtick-gate reasoning as wiki-ingest), and `dir/Name` path-prefix
-#   forms (resolve on the trailing basename). _strip_exempt_regions
-#   blanks the non-live regions before _extract_wikilinks scans;
-#   _link_base normalizes display / heading / path-prefix to the base.
+#   `![[…]]` embeds (an embed transcludes its target inline — image /
+#   PDF / note — so a missing embed target is an embed-integrity concern,
+#   NOT this gate's dangling-note job; the leading `!` is excluded by a
+#   negative lookbehind in _WIKILINK_RE), wikilinks inside the `## Source`
+#   section, wikilinks inside fenced ``` ``` ``` / inline `` ` `` code spans
+#   (not live links — same backtick-gate reasoning as wiki-ingest), and
+#   `dir/Name` path-prefix forms (resolve on the trailing basename).
+#   _strip_exempt_regions blanks the non-live regions before
+#   _extract_wikilinks scans; _link_base normalizes display / heading /
+#   path-prefix to the base.
 #
 # Python >= 3.10, stdlib only.
 
@@ -50,7 +54,12 @@ import re
 # ---------------------------------------------------------------------------
 
 # A wikilink: [[...]] capturing the inner text (no nested brackets).
-_WIKILINK_RE = re.compile(r"\[\[([^\[\]]+?)\]\]")
+# Negative lookbehind on '!' EXEMPTS embeds (![[...]]): an embed renders the
+# target inline (image/PDF/note transclusion), it is not a click-to-create
+# NOTE link, so a missing embed target is a separate concern (embed integrity),
+# NOT this gate's dangling-note job. So ![[architecture.png]] / ![[missing]] /
+# ![[note|300]] are never captured, regardless of attachment vs note vs absent.
+_WIKILINK_RE = re.compile(r"(?<!!)\[\[([^\[\]]+?)\]\]")
 
 # Frontmatter block at the very top of a file: --- ... ---
 _FRONTMATTER_RE = re.compile(r"\A---\s*\n(.*?)\n---", re.DOTALL)
