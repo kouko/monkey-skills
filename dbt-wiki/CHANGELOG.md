@@ -4,6 +4,43 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0] — 2026-06-05
+
+### Added — `/dbt-wiki:review` certification command
+
+A new `review` skill provides a prioritized review queue for wiki pages
+that need human verification. It surfaces `developing` pages alongside
+stale `mature` pages (those not reviewed within the configured staleness
+window) in a ranked order that highlights risk signals:
+
+- `(via: inferred)` value-domain entries — automatically inferred values
+  that have not been human-confirmed.
+- `[bug]` / `[no-test]` caveat tags — known defects or untested
+  assertions in the page's Caveats block.
+- Inbound reference count — pages cited by many other pages carry higher
+  risk if their content is wrong.
+
+Reviewing a page promotes it from `developing` to `mature` (or resets a
+stale `mature` page's certification clock) and stamps `reviewed_by` /
+`reviewed_at` fields on the frontmatter. A `## [date] review | …` log
+entry is appended to the page's History section. Stale `mature` pages
+are flagged for re-review; they are never automatically demoted.
+
+### Changed — metric fork standard in `distill-metrics.md` §3b
+
+The rule governing when a metric variant forks to a separate page has
+been made more precise. A metric forks only when:
+
+- **Grain differs** — the entity-key dimensionality changes (e.g.,
+  order-level vs. customer-level aggregation), or
+- **Measure definition differs** — including `ratio`, `derived`, or
+  `conversion` metric types whose formula or base events diverge.
+
+Variants that differ only by a dimension value (source, scenario, time
+period, region, or business unit) stay on one page as documented
+variants. This replaces the prior segment-only guidance and eliminates
+ambiguity for multi-axis variant decisions.
+
 ## [2.6.0] — 2026-06-05
 
 ### Added — parallel orchestration spec for large projects (Phase B)
