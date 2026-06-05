@@ -145,16 +145,20 @@ share the same `derived_from` entry.
 
 **Separate metric page (fork) IFF the underlying metric itself differs:**
 
-- **① Different Grain** — the level of detail one row represents changes.
-  For example, `daily revenue` (one row per day) and `monthly revenue`
-  rolled up to a different entity key are different grains and warrant
-  separate pages only if they represent genuinely distinct business
-  measures, not just period variants of the same measure (see §1:
-  reporting-period variants stay ONE page).
+- **① Different Grain** — the **entity-key dimensionality** of one row
+  genuinely changes (e.g. revenue *per store per day* vs revenue *per
+  region*), **NOT** merely a different time-window. Period / time-window
+  variants of the same measure (daily / MTD / QTD / YTD / MoM / YoY)
+  have the **same grain** and stay ONE page per §1. A grain fork applies
+  only when the set of entity dimensions aggregated over differs — not
+  when the same measure is re-bucketed over time.
 - **② Different Measure definition** — what is counted and how it is
   aggregated changes. This includes MetricFlow `ratio`, `derived`, and
   `conversion` metric types that combine or transform other metrics into a
-  new number. A `ratio` or `derived` metric (e.g. `arpa = revenue /
+  new number. `conversion` is a sub-type of `derived` (e.g.
+  `checkout_conversion_rate = completed_checkouts / checkout_sessions`);
+  it is treated identically — its own page, separate from the input
+  measures. A `ratio` or `derived` metric (e.g. `arpa = revenue /
   active_accounts`) has a fundamentally different Measure definition from
   its inputs and therefore gets its OWN page, separate from `revenue` or
   `active_accounts`.
