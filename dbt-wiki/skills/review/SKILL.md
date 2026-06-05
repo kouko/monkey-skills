@@ -229,18 +229,19 @@ When the human replies affirmatively (yes / looks good / certify / approve / 認
 3. **Stamp `reviewed_at`**: today's date in ISO-8601 format (`YYYY-MM-DD`).
 
 4. **If the page was stale**, clear the staleness fields:
-   - Set `stale: false` (or remove the key)
-   - Remove `stale_at` and `stale_reason`
+   - Set `stale: false`
+   - Set `stale_at: null`
+   - Set `stale_reason: null`
 
-5. **Append a one-line entry to `.dbt-wiki/log.md`**:
+5. **Append a section-header entry to `.dbt-wiki/log.md`**:
 
    ```
-   YYYY-MM-DD  review  <type>/<slug>.md  certified by <reviewer>
+   ## [YYYY-MM-DD] review | certified <type>/<slug>.md (and any others) by <reviewer>
    ```
 
    Example:
    ```
-   2026-05-15  review  entities/order.md  certified by alice
+   ## [2026-05-15] review | certified entities/order.md by alice
    ```
 
    Create `.dbt-wiki/log.md` with a `# dbt-wiki log` header if it does not yet
