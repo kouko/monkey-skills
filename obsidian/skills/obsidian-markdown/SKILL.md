@@ -12,12 +12,12 @@ Create and edit valid Obsidian Flavored Markdown. Obsidian extends CommonMark an
 1. **Add frontmatter** with properties (title, tags, aliases) at the top of the file. See [PROPERTIES.md](references/PROPERTIES.md) for all property types.
 2. **Write content** using standard Markdown for structure, plus Obsidian-specific syntax below.
 3. **Consider a Table of Contents** for longer notes with multiple sections. Use `[[#Heading]]` wikilinks listed after the first heading.
-4. **Link related notes** using wikilinks (`[[Note]]`) for internal vault connections, or standard Markdown links for external URLs.
+4. **Link related notes** using wikilinks (`[[Note]]`) for internal vault connections that **already exist** (see §Internal Links for the existence rule), or standard Markdown links for external URLs.
 5. **Embed content** from other notes, images, or PDFs using the `![[embed]]` syntax. See [EMBEDS.md](references/EMBEDS.md) for all embed types.
 6. **Add callouts** for highlighted information using `> [!type]` syntax. See [CALLOUTS.md](references/CALLOUTS.md) for all callout types.
 7. **Verify** the note renders correctly in Obsidian's reading view.
 
-> When choosing between wikilinks and Markdown links: use `[[wikilinks]]` for notes within the vault (Obsidian tracks renames automatically) and `[text](url)` for external URLs only.
+> When choosing between wikilinks and Markdown links: use `[[wikilinks]]` for notes within the vault (Obsidian tracks renames automatically) and `[text](url)` for external URLs only. Emit a `[[wikilink]]` only for a note that already exists (§Internal Links); otherwise write the term as plain bold text.
 
 ## Properties (Frontmatter)
 
@@ -176,6 +176,8 @@ Inline footnote.^[This is inline.]
 
 ## Complete Example
 
+*The `[[wikilinks]]` below assume their target notes already exist in the vault (per §Internal Links). When authoring for real, link only notes that exist; otherwise write the term as plain bold text.*
+
 ````markdown
 ---
 title: Project Alpha
@@ -193,7 +195,7 @@ status: in-progress
 - [[#Tasks]]
 - [[#Notes]]
 
-This project aims to [[improve workflow]] using modern techniques.
+This project builds on [[Project Planning]] using modern techniques.
 
 > [!important] Key Deadline
 > The first milestone is due on ==January 30th==.

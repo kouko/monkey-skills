@@ -205,12 +205,12 @@ If this finds any match, you wrote a backtick-wrapped wikilink (e.g. `` `[[Page]
 **Unresolved-wikilink gate** (run after every page write, BEFORE moving on — run from the skill root):
 
 ```bash
-python scripts/check-wikilink-targets.py <wiki-root>/<category>/<slug>.md <wiki-root>
+python3 scripts/check-wikilink-targets.py <wiki-root>/<category>/<slug>.md <wiki-root>
 # <wiki-root> is the inventory scope — pass the wiki root so all wiki pages count as resolvable;
 # do NOT exclude wiki/ subdirs like references (that would drop real reference-page basenames)
 ```
 
-The script prints one unresolved `[[Target]]` per line (exit 1 if any, 0 if none) — these are wikilinks whose `Target` does not resolve to an existing note in the vault inventory (bare-basename match incl. frontmatter aliases; same-note `[[#Heading]]`, `## Source` cross-layer links, and code-span wikilinks are already exempt). **Do not advance** while any target is reported: for each unresolved `[[X]]`, downgrade it to plain bold text `**X**` and keep its one-line relationship reason (`/wiki-cross-linker` will promote it to `[[X]]` once page `X` exists), then re-run the script until it reports none. Like the backtick grep above, this is the enforced gate; the Quality bar self-check (below) is advisory.
+The script prints one unresolved `[[Target]]` per line (exit 1 if any, 0 if none) — these are wikilinks whose `Target` does not resolve to an existing note in the vault inventory (bare-basename match incl. frontmatter aliases; same-note `[[#Heading]]`, `## Source` cross-layer links, and code-span wikilinks are already exempt). **Do not advance** while any target is reported: for each unresolved `[[X]]`, downgrade it to plain bold text `**X**` and keep its one-line relationship reason (`/wiki-cross-linker` will promote it to `[[X]]` once page `X` exists), then re-run the script until it reports none. Like the backtick grep above, this is the enforced gate; the Quality bar self-check (below) is advisory. Line format either way is `- <target> — one-line reason`: resolved `- [[exploration-exploitation]] — related concept`, downgraded `- **Thompson Sampling** — related algorithm (no page yet)` (canonical spec: [page-format.md](references/page-format.md) §Connections).
 
 ### 4d. Create/update reference page
 
