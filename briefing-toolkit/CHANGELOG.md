@@ -2,6 +2,25 @@
 
 All notable changes to this plugin are documented here.
 
+## [0.2.0] — 2026-06-05
+
+Continuity & zero-omission hardening; regression-verified via `dev-workflow:dogfood-skill-testing` (see `docs/skill-dogfood/2026-06-05-daily-brief/report.md`) — gate: no new Critical/High vs the 2026-06-04 baseline.
+
+### Added
+- **G1 — 5th continuity state**: distinguishes `🆕 真新發生` (item date ≥ prior-brief generation time) from `⚠️ 昨日未涵蓋` (item date < prior-brief time — missed-yesterday / suspected under-collection), rendered distinctly in the 📈 brief section. Prevents a collection-method change (e.g. Asana 1→42 between days) from mislabeling old backlog as new events.
+- **G4 — collection-volume visibility**: per-platform returned counts in the coverage statement; a `計數對照` step flags material count swings, feeding the G1 discrimination.
+
+### Changed
+- **G3 — strict zero-fold complete table**: the complete action table is now one-row-per-item in BOTH MD and CSV (never grouped / footnote-summarized; every JOIN key preserved), with a named anti-pattern against consolidating stale backlog. Clarifies the dual-product split (curated brief vs zero-omission table).
+- **G2 — stale/cached re-verify degradation**: if a continuity re-verify returns an `as-of`/cached snapshot earlier than today, the item's confidence drops to `推論` with a "重驗資料非即時 (as-of X)" caveat (mirrors the §3 thread-read-failure rule); Notion `notion-fetch` playbook bullet added to check the returned timestamp.
+
+### Fixed
+- **H1**: dispatch phrasing now "全部 ✅就緒平台（最多 7）" — no longer contradicts the readiness Gate.
+- **M1**: a returned link that is not an `http(s)` URL (placeholder / unresolved token) is marked `⚠️無直連`, not rendered clickable.
+- **M2**: "PDB" expanded to "PDB（President's Daily Brief）" on first use in `SKILL.md` and `brief-templates.md`.
+- **L2**: defined 高槓桿決策 with an example; purged dev-internal jargon (`source skill` / `source_book`) from user-facing prose across all four reference files.
+- Continuity state-count + label consistency: every reference now reflects the 4-base-states + 第五狀態 structure; canonicalized `🆕 真新發生` across `SKILL.md` and all reference files.
+
 ## [0.1.0] — 2026-06-03
 
 Initial release.
