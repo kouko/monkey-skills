@@ -171,14 +171,133 @@ the table:
 
 ---
 
-*(Steps 3–6 — certify action, write reviewed_by / reviewed_at, flag
-not-certifiable pages, and log — are added in the next task.)*
+## Step 3 — Per-Page Review Surface
+
+For each queued page (working through the ranked queue top-to-bottom, one page
+at a time), surface the following so the human can verify efficiently without
+re-reading every body line:
+
+**Inferred value-domains** (`via: inferred`)
+: List every `value_domain:` line in the `## Fields` / `## Definition` body
+  section that carries `(via: inferred)`. These are AI guesses — no
+  `accepted_values` test and no `DISTINCT` evidence backs them. Example surface:
+
+  ```
+  Field `status` — value_domain: [pending, active, cancelled]  (via: inferred)
+  Field `region` — value_domain: [north, south]  (via: inferred)
+  ```
+
+  Ask the human: "Do these match the values you see in your warehouse?"
+
+**Caveat landmines** (`[bug]` / `[no-test]`)
+: Quote each Caveat entry tagged `[bug]` or `[no-test]` verbatim. Example:
+
+  ```
+  [bug]  amount includes tax when channel = 'web' (ticket #1234)
+  [no-test]  soft-deleted rows excluded by convention — no dbt test guards this
+  ```
+
+**Evidence lineage** (`derived_from`)
+: List the `derived_from` model unique_ids so the human can spot whether the
+  page is rooted in the right models. Do not load the evidence pages —
+  the unique_ids are sufficient.
+
+**Page summary**
+: Display the `summary` frontmatter field (one sentence the LLM wrote to
+  describe the entity/metric/concept). This is the fastest way for the human to
+  confirm the page describes what they think it describes.
+
+After surfacing the above, ask:
+
+> "Does everything above look correct? Reply **yes** to certify, **skip** to
+> defer this page, or describe any corrections needed."
+
+Do NOT certify automatically — certification is always a human action.
+
+---
+
+## Step 4 — On Human Approval: Certify (Promote to `mature`)
+
+When the human replies affirmatively (yes / looks good / certify / approve / 認証 / 認定):
+
+1. **Set `status: mature`** in the page frontmatter.
+
+2. **Stamp `reviewed_by`**: infer the reviewer's name from `git config user.name`
+   in the wiki's git repo. If the command fails or the human overrides (e.g.
+   "put my name as Alice"), use the human-supplied value instead.
+
+3. **Stamp `reviewed_at`**: today's date in ISO-8601 format (`YYYY-MM-DD`).
+
+4. **If the page was stale**, clear the staleness fields:
+   - Set `stale: false` (or remove the key)
+   - Remove `stale_at` and `stale_reason`
+
+5. **Append a one-line entry to `.dbt-wiki/log.md`**:
+
+   ```
+   YYYY-MM-DD  review  <type>/<slug>.md  certified by <reviewer>
+   ```
+
+   Example:
+   ```
+   2026-05-15  review  entities/order.md  certified by alice
+   ```
+
+   Create `.dbt-wiki/log.md` with a `# dbt-wiki log` header if it does not yet
+   exist.
+
+6. Confirm back: "Certified `<title>` as mature (reviewed_by: `<name>`,
+   reviewed_at: `<date>`)."
+
+Move on to the next queued page.
+
+---
+
+## Step 5 — Stale `mature` Pages: Flag, Never Auto-Demote
+
+A `mature` page that `/dbt-wiki:refresh` has flagged with `stale: true` enters
+the queue as **"re-review needed"** (Step 1 already handles this). The rule:
+
+**NEVER auto-demote `mature → developing` on staleness.**
+
+Rationale: a page that has been human-certified retains its certification value
+even when the underlying evidence models change. Demoting it automatically on
+every refresh would thrash the human certification record and create false
+impressions that every previously-reviewed page is unreviewed again.
+
+Instead:
+
+| Human action | What the agent does |
+|---|---|
+| Re-certifies (Step 4 approval) | Clear `stale` / `stale_at` / `stale_reason`, refresh `reviewed_at`, keep `status: mature`. |
+| Explicitly downgrades ("this needs rework") | Set `status: developing`, clear `reviewed_by` / `reviewed_at`, add a Caveat noting why. |
+| Skips ("defer") | Leave all frontmatter unchanged — page stays `mature + stale`, re-appears in the next review queue. |
+
+Only the human decides whether a stale-mature page drops back to `developing`.
+The agent never makes that decision unilaterally.
+
+---
+
+## Step 6 — Implementation Note (Prose-Driven, No Python)
+
+This entire review loop is **LLM-prose-driven**:
+
+- The agent reads frontmatter and body text using the Read tool.
+- The agent presents the surface (Step 3), waits for human reply, then writes
+  frontmatter edits using the Edit tool if approved.
+- **No Python scripts, no automation harness.** The human is in the loop on
+  every page; the agent is the interface.
+- **Write only the approved pages.** If the human skips a page or requests
+  corrections, do not touch that page's frontmatter until the human confirms
+  the corrections are addressed.
+
+---
 
 ## Rules
 
 NEVER:
-- Demote a page (do not change `status: mature` → `status: developing`; flag
-  it not-certifiable instead — see Step 3+ when added).
+- Demote a page unilaterally (do not change `status: mature` → `status: developing`
+  except on explicit human instruction — see Step 5).
 - Auto-certify pages without human confirmation — certification is a human
   action, not an LLM action.
 - Modify `.dbt-wiki/_evidence/` pages — review touches only knowledge pages.
