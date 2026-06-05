@@ -19,6 +19,7 @@ base for your dbt project. Do NOT edit its files directly.
 - Query in business language: `/dbt-wiki:query "<question>"`
 - Rebuild evidence + flag stale knowledge after `dbt parse`: `/dbt-wiki:refresh`
 - Full rebuild from scratch: `/dbt-wiki:init`
+- Review & certify pages: `/dbt-wiki:review` — promote `developing` (and stale `mature`) pages to `mature` after human check
 
 Pre-condition: run `dbt parse && dbt compile` before init/refresh
 (generates `target/manifest.json` and compiled SQL that dbt-wiki reads).

@@ -141,6 +141,53 @@ them by source model to avoid redundant `derived_from` lookups. Create
 one page per distinct business measure, but all pages from the same model
 share the same `derived_from` entry.
 
+#### Fork standard — when to create a separate metric page
+
+**Separate metric page (fork) IFF the underlying metric itself differs:**
+
+- **① Different Grain** — the **entity-key dimensionality** of one row
+  genuinely changes (e.g. revenue *per store per day* vs revenue *per
+  region*), **NOT** merely a different time-window. Period / time-window
+  variants of the same measure (daily / MTD / QTD / YTD / MoM / YoY)
+  have the **same grain** and stay ONE page per §1. A grain fork applies
+  only when the set of entity dimensions aggregated over differs — not
+  when the same measure is re-bucketed over time.
+- **② Different Measure definition** — what is counted and how it is
+  aggregated changes. This includes MetricFlow `ratio`, `derived`, and
+  `conversion` metric types that combine or transform other metrics into a
+  new number. `conversion` is a sub-type of `derived` (e.g.
+  `checkout_conversion_rate = completed_checkouts / checkout_sessions`);
+  it is treated identically — its own page, separate from the input
+  measures. A `ratio` or `derived` metric (e.g. `arpa = revenue /
+  active_accounts`) has a fundamentally different Measure definition from
+  its inputs and therefore gets its OWN page, separate from `revenue` or
+  `active_accounts`.
+
+**Otherwise — ONE page.** Variants that differ ONLY by a dimension
+(data source, scenario Actual/Forecast, period YoY/MoM/YTD/MTD, region,
+business unit) do NOT fork. List the variants in `## Calculation` and/or
+`## Materialized Columns` on a single page.
+
+**Business unit is a conformed dimension.** A metric shared across
+business units (BUs) stays ONE page sliced by BU — never duplicate the
+page per BU. BU is a filter or GROUP BY dimension on the same measure,
+not a different measure.
+
+**Worked example — positive (one page):** `daily_revenue` computed from
+two data sources — e.g. from a ledger-close model (`fct_revenue_ledger`)
+and from a forecast schedule (`fct_revenue_forecast`). Both compute the
+same measure (sum of revenue) at the same grain (one row per day). They
+are variants by data source, not different measures → ONE metric page
+(`daily-revenue.md`). List both models in `derived_from:` and describe
+the source variants in `## Calculation`.
+
+**Worked example — negative (fork):** `arpa` (average revenue per
+active account) defined as `SUM(revenue) / COUNT(active_accounts)`.
+This is a `ratio`/`derived` metric: its Measure definition is a new
+computation that combines two separate measures. It is NOT a variant of
+`revenue` → create its OWN page (`arpa.md`) separate from
+`revenue.md`.
+
 **Segment-qualified parallel models = ONE metric page + a segment
 concept.** When two or more structurally parallel models compute the
 same business measure for different segments (e.g. `sales__total` for
@@ -149,7 +196,8 @@ produce ONE metric page that covers both segment variants. List both
 models in `derived_from:`. Capture the segment split itself as a
 `concepts/` page (e.g. `channel-segment.md`) and link it from the metric
 page via a `depends_on` edge. Do NOT fork one metric page per segment —
-that creates near-duplicate pages that diverge over time.
+segments are one kind of dimension; the fork rule above does not apply.
+That creates near-duplicate pages that diverge over time.
 
 ## 4. Definition Section
 
@@ -820,6 +868,8 @@ To retrieve online-channel GMV for the same store and date:
 | No MetricFlow, mart model with `SUM`/`COUNT` + `GROUP BY` | SQL-derivation branch (§3) |
 | Multiple metrics in one model | One page per distinct business measure; share `derived_from` |
 | Reporting-period variants (daily/MTD/QTD/YTD/MoM/YoY) of one measure | ONE metric page; describe variants in `## Calculation` — never fork per time window (§1) |
+| Variants differ ONLY by dimension (data source, scenario, period, region, BU) — same Grain + same Measure definition | ONE metric page; list variants in `## Calculation`/`## Materialized Columns` — never fork (§3b fork standard) |
+| Metric has a different Grain OR different Measure definition (incl. `ratio`/`derived`/`conversion` types, e.g. `arpa = revenue / active_accounts`) | Fork: its OWN page — separate from input measures (§3b fork standard) |
 | Parallel segment models (e.g. total vs single-channel revenue) | ONE metric page; list both models in `derived_from:`; segment split → `concepts/` page + `depends_on` edge (§3b) |
 | Metric variants already materialized as pre-built mart columns (anchor signal 2 "column forest" OR signal 4 "pre-aggregated grain" fires — §5 materialization check) | Materialization branch: emit `## Materialized Columns` card (§5b); `## Calculation` = SELECT pre-built column, no formula, no query-time `GROUP BY` |
 | Metric has no numerator/denominator formula (pure aggregation/window, materialization does NOT fire) | Fallback: describe aggregation + grain + period variants; note upstream definition; do NOT invent formula (§5) |

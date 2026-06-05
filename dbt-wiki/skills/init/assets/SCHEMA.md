@@ -766,6 +766,11 @@ Append-only operation log. Entries:
 - Pages consulted: <list>
 - Verification triggered: <yes/no>
 - Synthesis saved: <path or "not saved">
+
+## [YYYY-MM-DD] review | certified <type>/<slug>.md by <reviewer>
+- Previous status: <developing|stale-mature>
+- New status: mature
+- Reviewer notes: <free text or "none">
 ```
 
 ## Naming Rules
