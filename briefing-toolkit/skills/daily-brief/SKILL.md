@@ -7,14 +7,14 @@ description: >-
   Do NOT use for 績效回顧/自評/專案盤點(那是 performance-evidence-audit,同機制反方向時間軸);Do NOT use 來寫回官方系統、代送或自動回覆(本 skill 唯讀 + 只寫本機草稿)。
 metadata:
   tags: [daily-brief, morning-brief, aggregator, read-only, draft-only, cross-platform, triage, continuity, pdb]
-  note: data/aggregator skill — 自包含 raw MCP fan-out;無 source_book(非 framework 型)。
+  note: data/aggregator skill — 自包含 raw MCP fan-out。
 ---
 
 # Daily Brief(每日跨平台晨報)
 
 ## 一句話定位
 
-把散在 7 個平台(Gmail / Slack / Notion / Asana / Google Drive / Google Calendar / GitHub)的事,整理成一份**可信、每一列都能一鍵點回原始紀錄處理**的晨報,外加一張**零省略**的完整行動表。產物**每天累積**(日期前綴台帳),並**跨日延續**——今天的簡報會對照昨天,算出哪些已結、哪些還在等你、哪些是新發生。核心價值不是「撈到很多」,而是**交叉印證後標信心、標出處、誠實標盲區、不漏掉任何要你回覆或處理的事**。
+把散在 7 個平台(Gmail / Slack / Notion / Asana / Google Drive / Google Calendar / GitHub)的事,整理成一份**可信、每一列都能一鍵點回原始紀錄處理**的晨報,外加一張**零省略**的完整行動表。產物**每天累積**(日期前綴台帳),並**跨日延續**——今天的簡報會對照昨天,算出哪些已結、哪些還在等你、哪些是真新發生。核心價值不是「撈到很多」,而是**交叉印證後標信心、標出處、誠實標盲區、不漏掉任何要你回覆或處理的事**。
 
 ## 何時用 / 何時不用
 
@@ -60,7 +60,7 @@ metadata:
 → **MANDATORY:讀 `references/prioritization-framework.md` §延續性**(定位規則 + 首份 / 跳天降級)。
 
 ### 平行 fan-out(每平台一個 sub-agent,一次發出)
-**在同一訊息發出全部就緒平台的 sub-agent(多個 Agent 呼叫並行,每平台一個、各自獨立 context)**,廣度優先。每個 sub-agent:**先用 ToolSearch 載入該平台 MCP 工具的 schema**(這些工具是 deferred,**不先載直接呼叫會 InputValidationError**),再確認身份,再在期間窗內多角度搜索,回傳結構化 markdown(項目 + 出處深連結 + caveats)。**某平台過了 Gate 卻在 fan-out 中途失敗(rate-limit / timeout / token 過期)→ 標為 runtime 盲區寫進涵蓋聲明,不靜默吞掉、也不整份中止。**
+**在同一訊息發出全部就緒平台的 sub-agent(多個 Agent 呼叫並行,每平台一個、各自獨立 context)**,廣度優先。每個 sub-agent:**先用 ToolSearch 載入該平台 MCP 工具的 schema**(這些工具是 deferred,**不先載直接呼叫會 InputValidationError**),再在期間窗內多角度搜索,回傳結構化 markdown(項目 + 出處深連結 + caveats)。**把 0-A Gate 已取得的本人身份(Slack user ID、Asana GID、Notion self id、各 email、GitHub login)直接寫進每個 agent 的 prompt**——身份只該問一次,agent 拿到就不必重抓,省一輪 round-trip(見 playbook §2「身份 token 往下傳」)。**某平台過了 Gate 卻在 fan-out 中途失敗(rate-limit / timeout / token 過期)→ 標為 runtime 盲區寫進涵蓋聲明,不靜默吞掉、也不整份中止。**
 → **MANDATORY:讀 `references/platform-search-playbook.md`**(7 平台各自的 ToolSearch 查詢字串、搜索角度、雷區、canonical 連結形式)。
 → **Do NOT load** `references/brief-templates.md` 於此步——版型在產出階段才需要。
 
@@ -69,10 +69,10 @@ metadata:
 → **MANDATORY:讀 `references/prioritization-framework.md`**(評分維度、動態焦點門檻、需回覆啟發式、信心模型)。
 
 ### continuity-diff(triage 後)
-今日項目用**唯一識別碼 JOIN 昨日 CSV**,算四狀態:🆕 新發生 / ⏳ 仍在等你(已 N 天)/ ✅ 已結 / 🔄 狀態變化。**硬原則**:每個狀態都**以 ID 去 live 平台重驗**(原則 6),昨日 CSV 只給「要追哪些 ID」不給事實。首份 / 跳天依 continuity-load 的標記降級處理。
+今日項目用**唯一識別碼 JOIN 昨日 CSV**,算狀態:🆕 真新發生 / ⏳ 仍在等你(已 N 天)/ ✅ 已結 / 🔄 狀態變化;「今有、昨 CSV 無」再依項目日期分 🆕 真新發生 vs ⚠️ 昨日未涵蓋(見 §5b 第五狀態)。**硬原則**:每個狀態都**以 ID 去 live 平台重驗**(原則 6),昨日 CSV 只給「要追哪些 ID」不給事實。首份 / 跳天依 continuity-load 的標記降級處理。
 
 ### 產出雙產物(draft-only,日期前綴)
-寫進指定資料夾:`<YYYY-MM-DD>_晨報.md`(curated,PDB 風格 6 段 + 動態焦點)+ `<YYYY-MM-DD>_完整事項.md`(零省略行動表,每列可點)+ `<YYYY-MM-DD>_完整事項.csv`(機讀,**唯一識別碼欄 = 隔天 delta 的 join key,不可省略**)。兩份開頭都放資料源涵蓋聲明。
+寫進指定資料夾:`<YYYY-MM-DD>_晨報.md`(curated,PDB（President's Daily Brief）風格 6 段 + 動態焦點)+ `<YYYY-MM-DD>_完整事項.md`(零省略行動表,每列可點)+ `<YYYY-MM-DD>_完整事項.csv`(機讀,**唯一識別碼欄 = 隔天 delta 的 join key,不可省略**)。兩份開頭都放資料源涵蓋聲明。
 → **MANDATORY:讀 `references/brief-templates.md`**(晨報 6 段版型 + 完整表 / CSV schema + 涵蓋聲明 + 日期前綴命名規則)。
 
 ## 排程註記
@@ -94,5 +94,5 @@ metadata:
 ## 參考檔
 
 - `references/platform-search-playbook.md` — **0-A Gate 與 fan-out 時讀**。7 平台(含 GitHub)各自的就緒檢查 pre-flight、ToolSearch 查詢字串、搜索角度、雷區、canonical 深連結形式表。**不要**在 triage / 產出階段載入。
-- `references/prioritization-framework.md` — **continuity-load 與 triage 時讀**。緊急度 × 相關性評分、動態焦點門檻、「需回覆」啟發式、信心模型、延續性 diff(ID-join + live 重驗 + 4 狀態 + 首份 / 跳天降級)。
+- `references/prioritization-framework.md` — **continuity-load 與 triage 時讀**。緊急度 × 相關性評分、動態焦點門檻、「需回覆」啟發式、信心模型、延續性 diff(ID-join + live 重驗 + 四狀態 + 第五狀態 + 首份 / 跳天降級)。
 - `references/brief-templates.md` — **產出階段才讀**。晨報 6 段版型(含「自上次以來」延續段)+ 完整事項表版型 + CSV schema(含唯一識別碼 join key)+ 資料源涵蓋聲明 + 日期前綴命名 / 累積規則。
