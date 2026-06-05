@@ -69,7 +69,7 @@ metadata:
 → **MANDATORY:讀 `references/prioritization-framework.md`**(評分維度、動態焦點門檻、需回覆啟發式、信心模型)。
 
 ### continuity-diff(triage 後)
-今日項目用**唯一識別碼 JOIN 昨日 CSV**,算四狀態:🆕 新發生 / ⏳ 仍在等你(已 N 天)/ ✅ 已結 / 🔄 狀態變化。**硬原則**:每個狀態都**以 ID 去 live 平台重驗**(原則 6),昨日 CSV 只給「要追哪些 ID」不給事實。首份 / 跳天依 continuity-load 的標記降級處理。
+今日項目用**唯一識別碼 JOIN 昨日 CSV**,算狀態:🆕 真新發生 / ⏳ 仍在等你(已 N 天)/ ✅ 已結 / 🔄 狀態變化;「今有、昨 CSV 無」再依項目日期分 🆕 真新發生 vs ⚠️ 昨日未涵蓋(見 §5b 第五狀態)。**硬原則**:每個狀態都**以 ID 去 live 平台重驗**(原則 6),昨日 CSV 只給「要追哪些 ID」不給事實。首份 / 跳天依 continuity-load 的標記降級處理。
 
 ### 產出雙產物(draft-only,日期前綴)
 寫進指定資料夾:`<YYYY-MM-DD>_晨報.md`(curated,PDB（President's Daily Brief）風格 6 段 + 動態焦點)+ `<YYYY-MM-DD>_完整事項.md`(零省略行動表,每列可點)+ `<YYYY-MM-DD>_完整事項.csv`(機讀,**唯一識別碼欄 = 隔天 delta 的 join key,不可省略**)。兩份開頭都放資料源涵蓋聲明。
@@ -94,5 +94,5 @@ metadata:
 ## 參考檔
 
 - `references/platform-search-playbook.md` — **0-A Gate 與 fan-out 時讀**。7 平台(含 GitHub)各自的就緒檢查 pre-flight、ToolSearch 查詢字串、搜索角度、雷區、canonical 深連結形式表。**不要**在 triage / 產出階段載入。
-- `references/prioritization-framework.md` — **continuity-load 與 triage 時讀**。緊急度 × 相關性評分、動態焦點門檻、「需回覆」啟發式、信心模型、延續性 diff(ID-join + live 重驗 + 4 狀態 + 首份 / 跳天降級)。
+- `references/prioritization-framework.md` — **continuity-load 與 triage 時讀**。緊急度 × 相關性評分、動態焦點門檻、「需回覆」啟發式、信心模型、延續性 diff(ID-join + live 重驗 + 四狀態 + 第五狀態 + 首份 / 跳天降級)。
 - `references/brief-templates.md` — **產出階段才讀**。晨報 6 段版型(含「自上次以來」延續段)+ 完整事項表版型 + CSV schema(含唯一識別碼 join key)+ 資料源涵蓋聲明 + 日期前綴命名 / 累積規則。
