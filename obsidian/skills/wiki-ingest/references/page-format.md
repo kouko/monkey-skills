@@ -197,8 +197,10 @@ End with confidence: high | medium | unverified.
 
 ## Connections
 - [[OtherWikiPage]] — one-line reason for the link
-- At least 1 [[wikilink]] required
+- At least 1 connection — `[[link]]` if the related page already exists, else a plain-text candidate (`**Term**`) with its one-line reason; wiki-cross-linker promotes it once the page exists
 - Link reason is mandatory (forces semantic linking, not symbolic)
+- Inventory rule: Only emit `[[Target]]` when `Target` already resolves to an existing note in the vault (bare-basename match, including frontmatter aliases). Otherwise write the term as plain bold text (`**Target**`) with its relationship reason. Never emit a wikilink solely to create a placeholder.
+- Exempt (always emit even if no separate note resolves): same-note `[[#Heading]]` / `[[#^block]]` links (the anchor target is this same page) and the reference-page `## Source` cross-layer wikilink (its bare-basename rule lives in §Reference page body structure)
 ```
 
 ### Conditional sections
