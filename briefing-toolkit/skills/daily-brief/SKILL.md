@@ -72,7 +72,7 @@ metadata:
 今日項目用**唯一識別碼 JOIN 昨日 CSV**,算四狀態:🆕 新發生 / ⏳ 仍在等你(已 N 天)/ ✅ 已結 / 🔄 狀態變化。**硬原則**:每個狀態都**以 ID 去 live 平台重驗**(原則 6),昨日 CSV 只給「要追哪些 ID」不給事實。首份 / 跳天依 continuity-load 的標記降級處理。
 
 ### 產出雙產物(draft-only,日期前綴)
-寫進指定資料夾:`<YYYY-MM-DD>_晨報.md`(curated,PDB〔President's Daily Brief,美國總統每日簡報〕風格 6 段 + 動態焦點)+ `<YYYY-MM-DD>_完整事項.md`(零省略行動表,每列可點)+ `<YYYY-MM-DD>_完整事項.csv`(機讀,**唯一識別碼欄 = 隔天 delta 的 join key,不可省略**)。兩份開頭都放資料源涵蓋聲明。
+寫進指定資料夾:`<YYYY-MM-DD>_晨報.md`(curated,PDB（President's Daily Brief）風格 6 段 + 動態焦點)+ `<YYYY-MM-DD>_完整事項.md`(零省略行動表,每列可點)+ `<YYYY-MM-DD>_完整事項.csv`(機讀,**唯一識別碼欄 = 隔天 delta 的 join key,不可省略**)。兩份開頭都放資料源涵蓋聲明。
 → **MANDATORY:讀 `references/brief-templates.md`**(晨報 6 段版型 + 完整表 / CSV schema + 涵蓋聲明 + 日期前綴命名規則)。
 
 ## 排程註記
