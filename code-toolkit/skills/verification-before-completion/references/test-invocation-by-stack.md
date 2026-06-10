@@ -2,9 +2,23 @@
 
 > Companion to [`../SKILL.md`](../SKILL.md). The canonical package-level test command per language / build tool, plus detection signals so the agent picks the right command without asking.
 
+## Priority 0 — consult the project-declared surface first
+
+Before falling back to signal detection, consult the project-declared surface first: check the `AGENTS.md` commands section, `make`/`just` `test` recipes, and README commands. Prefer a declared **granular `test` verb** over a bundled `check` that mixes lint and tests.
+
+**Trust earned by execution, not granted by source.** A declared verb outranks detection only if it runs and emits a test count (`N passed`, N>0) **on a clean, test-only signal**. A verb whose output **interleaves other tooling with the test run** — a bundled `check`/`test` recipe that runs lint+typecheck+tests together — is **signal-opaque**: a count appearing *somewhere* in the mixed output does NOT qualify it, because the interleaving defeats vbc's "0 tests ran / N passed" defense. When the declared verb is signal-opaque, prefer the **granular `test` verb**; if a granular runner is independently detectable (e.g. `pytest` via `pyproject.toml`), run it directly rather than the bundled recipe. Fall back to the signal-detection table only when no granular verb resolves at all, or the declared verb fails to run. Never hard-fail on a broken declaration; never use a signal-opaque bundled `check` as the gate — granular `test` only.
+
+Resolution order:
+
+1. **Consult declared surface** — `AGENTS.md` commands section, `make`/`just` `test` recipe, README. Pick the most granular `test` verb available.
+2. **Earn trust by execution** — the declared verb wins only if it runs and emits a test count (N > 0) from clean, test-only output. If it errors, produces no parseable count, **or interleaves lint/typecheck with the test run (signal-opaque)**, prefer a granular `test` verb (run an independently-detectable runner like `pytest` directly), else proceed to step 3.
+3. **Fall back to detection** — apply the signal → command table below as the fallback, not the default.
+
+> **Note on `Makefile`/`justfile` `test` recipes**: the "Generic" rows at the bottom of the table (`make test`, `just test`) are also valid *declared-surface* entries at priority 0 — not only lowest-priority fallbacks. If a `Makefile` or `justfile` `test` recipe is present and runs successfully, treat it as a priority-0 declared verb, subject to the same execution-earns-trust rule above.
+
 ## Detection signals → command table
 
-Detect by signal files at project root. If multiple signals match (monorepo / polyglot repo), the user must specify which package to verify; the skill cannot guess.
+If no declared surface resolves (priority 0 above), detect by signal files at project root. If multiple signals match (monorepo / polyglot repo), the user must specify which package to verify; the skill cannot guess.
 
 | Signal file | Language / runtime | Canonical command | Notes |
 |---|---|---|---|

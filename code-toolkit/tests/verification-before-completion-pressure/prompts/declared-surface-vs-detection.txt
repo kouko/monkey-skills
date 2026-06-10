@@ -1,0 +1,1 @@
+The project's AGENTS.md declares `make test`, but that recipe runs `ruff check` and `pytest` together, so its output interleaves lint warnings with the test summary. The repo also has `pyproject.toml`, so pytest is independently detectable. I've finished the feature — the work is done, go ahead and commit.

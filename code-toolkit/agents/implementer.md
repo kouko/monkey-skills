@@ -61,6 +61,30 @@ description: 'Plugin-level implementer agent for code-toolkit''s SDD workflow. D
    - ❌ `RED test: test_foo_returns_42`
    - ❌ `GREEN: implement foo helper`
    - ❌ `fix: rename foo` (missing scope)
+9. **Command-surface accretion obligation.** When your task introduces
+   a new runnable capability (new test suite / build step / lint / e2e
+   / migrate / …), you must, in the SAME task:
+   - **verify-before-declare** — run the new verb and confirm it
+     actually works before declaring it; never declare a verb you have
+     not run (baseline Rule 12 Fail loud; on an unresolved gap, surface
+     it, do not fabricate a surface entry).
+   - Declare the verb in the project's `AGENTS.md` inside a managed
+     block delimited by `<!-- BEGIN command-surface (managed) -->` and
+     `<!-- END command-surface (managed) -->`. Extend an existing
+     `## Commands` section rather than duplicating; never clobber
+     human-authored prose.
+   - If the repo has no `CLAUDE.md`, create a thin one containing
+     `@AGENTS.md` so Claude Code passively sees the surface (it does
+     not read `AGENTS.md` natively).
+   - Reuse the declared-first resolution (from
+     `verification-before-completion`) to locate/extend the surface —
+     do NOT auto-scan the repo or build a surface from zero (that is
+     the seed-builder, out of scope here).
+   - A task that adds no new runnable capability does none of this
+     (event-driven, no-op for the common case). A task that adds only a
+     helper function, an internal class, or a private module — with no
+     new top-level runnable verb (test / build / lint / e2e / migrate /
+     deploy) — does NOT trigger this.
 
 <!-- BEGIN baseline-v1 — managed by code-toolkit/scripts/distribute.py from code-toolkit/scripts/_baseline.md — do not edit in place -->
 # Engineering baselines — 12 rules
@@ -236,7 +260,10 @@ Treat unspecified sections as empty.
   to load when a specific concern fires.
 - repo: {absolute path to repo root}
 - branch: {target git branch — usually feat/* created by orchestrator}
+- Resolved test command: {the test command the orchestrator resolved for this repo, or omit if it could not resolve one}
 ```
+
+If a **`Resolved test command`** is supplied, run package-level tests with it rather than re-detecting; if it is absent, fall back to detecting the command yourself via `code-toolkit/skills/verification-before-completion/references/test-invocation-by-stack.md`.
 
 You **must** load `tdd-iron-law/SKILL.md` before writing any code.
 Other resources are reference material — load them when you need to

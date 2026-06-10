@@ -90,7 +90,7 @@ If neither trigger fires, the user goes straight to `tdd-iron-law` for implement
 
 For each atomic task in the plan:
 
-1. **Dispatch `implementer`** via `Agent({subagent_type: "code-toolkit:implementer", prompt: <task body>})` with the task description + context paths + resource paths (input contract is defined in the plugin-level agent at [`code-toolkit/agents/implementer.md`](../../agents/implementer.md); that agent also carries the 12-rule engineering baseline from [`code-toolkit/scripts/_baseline.md`](../../scripts/_baseline.md)). Wait for return.
+1. **Dispatch `implementer`** via `Agent({subagent_type: "code-toolkit:implementer", prompt: <task body>})` with the task description + context paths + resource paths (input contract is defined in the plugin-level agent at [`code-toolkit/agents/implementer.md`](../../agents/implementer.md); that agent also carries the 12-rule engineering baseline from [`code-toolkit/scripts/_baseline.md`](../../scripts/_baseline.md)). Before dispatching, the orchestrator resolves the project's test command once via `verification-before-completion`'s declared-first rule (consult the declared surface; trust only if it runs and emits a test count; else fall back to detection), caches it **session-scoped** (re-resolve across sessions because declarations rot), and passes it into the implementer dispatch as a **`Resolved test command`** line so the implementer runs the project's real test command instead of re-detecting. (Optional optimization: invalidate the session cache mid-session if the declaring file's content-hash changes.) Wait for return.
 2. **Read the implementer's output.** If `status: NEEDS_CONTEXT` → surface the question to the user (phrase it per [§Asking the user](#asking-the-user)), do not dispatch reviewers. If `status: BLOCKED` → apply the unblock step or surface to user.
 3. **If `status: DONE` or `DONE_WITH_CONCERNS`**, dispatch **`spec-reviewer`** and **`code-quality-reviewer`** **in parallel** (one message, two tool calls) — both are plugin-level agents (v0.6.0 / P15-12 Phase 2): `Agent({subagent_type: "code-toolkit:spec-reviewer"})` + `Agent({subagent_type: "code-toolkit:code-quality-reviewer"})`. See [`code-toolkit/agents/spec-reviewer.md`](../../agents/spec-reviewer.md) + [`code-toolkit/agents/code-quality-reviewer.md`](../../agents/code-quality-reviewer.md) for input/output contracts. Wait for both.
 4. **Resolve verdicts** per the rule below.
@@ -118,6 +118,16 @@ For each atomic task in the plan:
 | `NEEDS_REVISION` | (any) | Re-dispatch implementer with `gaps` + (if any) `flags`. Same 3-round cap. |
 
 A 3-round cap prevents infinite loops on ambiguous specs. On the 4th retry, surface to the user — likely the spec is wrong, not the implementer. Phrase that escalation per [§Asking the user](#asking-the-user): lead with a state anchor and say what's actually stuck in plain words, not `NEEDS_REVISION ×3`.
+
+## Definition of Done — command-surface accretion
+
+A task that introduces a **new runnable capability** (a new test suite, build step, lint target, e2e suite, `migrate` command, etc.) must have that verb **declared in the command surface** (the project's declared commands — `AGENTS.md` commands section, `make`/`just` recipes, `package.json` scripts) **AND verified to run** before the implementer reports `DONE`. This is **accretion**: it binds "add a capability" to "declare it in the surface" exactly as TDD binds "add behaviour" to "add a test". Enforcement lives in the **implementer's task-completion contract** (verify-before-declare + declare in the managed block, as specified in [`code-toolkit/agents/implementer.md`](../../agents/implementer.md)) — it is the implementer that self-enforces this obligation, not the orchestrator's verdict-resolution table.
+
+**Event-driven — not per-task polling.** A task that adds *no* new runnable capability triggers *no* surface change. The clause is a no-op for the common case. It is **not** a per-task audit of the whole surface, and it is **not** a build-once bootstrap. *Negative example:* a task that adds only a helper function, an internal class, or a private module — with no new top-level runnable verb — does NOT trigger this.
+
+**Moving target.** "Complete" is relative to the project's *current* capabilities. Never pre-declare a verb that does not yet exist (no `deploy` entry before deployment exists; no `migrate` entry before a migration runner exists).
+
+**Mechanics.** The implementer reuses the declared-first resolution from `verification-before-completion` to locate the surface. Full mechanics (managed block, shim pattern, verify-before-declare discipline) are in the implementer contract at [`code-toolkit/agents/implementer.md`](../../agents/implementer.md).
 
 ## Model selection
 

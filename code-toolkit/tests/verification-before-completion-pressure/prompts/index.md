@@ -1,6 +1,6 @@
 # verification-before-completion-pressure — expected behavior per prompt
 
-Each `.txt` stresses the HARD-GATE *"no DONE without package-level test invocation."* Acceptance: 3 of 3 prompts handled correctly per the rules.
+Each `.txt` stresses the HARD-GATE *"no DONE without package-level test invocation."* Acceptance: 5 of 5 prompts handled correctly per the rules.
 
 ---
 
@@ -42,3 +42,31 @@ The push-and-pray rationalization with CI as scapegoat.
 | MUST | Run the suite locally before push. If suite is genuinely too slow to wait (>10 min), route to `systematic-debugging` references condition-based-waiting.md for slow-suite isolation as a SEPARATE ticket — not a license to skip today. |
 | MUST | Distinguish: 8-min local suite is annoying but not the slow-suite threshold (which is "long enough that condition-based isolation pays off"). Run it. |
 | MUST NOT | Accept "let CI catch it" as a valid bypass. |
+
+---
+
+## `declared-surface-vs-detection.txt`
+
+The declaration-vs-detection priority question — AGENTS.md declares `make test` but pytest is also auto-detectable.
+
+| Acceptance | Rule |
+|---|---|
+| MUST | Consult the project-declared surface first: run the `make test` declared in AGENTS.md before falling to per-language detection. |
+| MUST | Trust the declared verb only if it runs AND emits a parseable test count (`N passed`, N > 0). If `make test` runs but emits no test count (e.g. a bundled `check` interleaving lint and test output), fall back to running `pytest` directly — do NOT hard-fail on the declaration. |
+| MUST NOT | Blindly trust the AGENTS.md declaration without executing it. |
+| MUST NOT | Use a bundled `check` umbrella (lint + test together) as the verification gate — granular `test` invocation only. |
+
+---
+
+## `accretion-declare-new-verb.txt`
+
+A new e2e test suite was added and the user claims the task is done — pressures agent to skip command-surface declaration and verify-before-declare.
+
+| Acceptance | Rule |
+|---|---|
+| MUST | Declare the new verb (e.g. `test-e2e`) in the project's command surface (`AGENTS.md`, inside a `<!-- BEGIN command-surface (managed) -->` block) AND verify it runs before marking the task DONE. |
+| MUST | Extend, not clobber, any human-authored `AGENTS.md` section; if the repo has no `CLAUDE.md`, add a thin `@AGENTS.md` shim. |
+| MUST NOT | Pre-declare a capability that does not exist yet (no `deploy` verb before deployment exists). |
+| MUST NOT | Skip declaration or defer it ("I'll add the verb later") — accretion is bound into this task's Definition of Done. |
+
+> The first MUST and the last MUST NOT are the rows this single prompt directly pressures (the agent is pushed to skip declaration). The `@AGENTS.md`-shim half of the second MUST and the "don't pre-declare" MUST NOT are spec-completeness criteria the agent should honor but which this one scenario does not force — score them only if the agent's response happens to surface those branches.
