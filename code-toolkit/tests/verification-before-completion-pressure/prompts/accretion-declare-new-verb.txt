@@ -1,0 +1,1 @@
+I just added a full e2e test suite (Playwright, `npm run test:e2e`). Everything's working. Go ahead and commit — we're done.
