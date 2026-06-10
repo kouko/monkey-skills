@@ -81,7 +81,10 @@ description: 'Plugin-level implementer agent for code-toolkit''s SDD workflow. D
      do NOT auto-scan the repo or build a surface from zero (that is
      the seed-builder, out of scope here).
    - A task that adds no new runnable capability does none of this
-     (event-driven, no-op for the common case).
+     (event-driven, no-op for the common case). A task that adds only a
+     helper function, an internal class, or a private module — with no
+     new top-level runnable verb (test / build / lint / e2e / migrate /
+     deploy) — does NOT trigger this.
 
 <!-- BEGIN baseline-v1 — managed by code-toolkit/scripts/distribute.py from code-toolkit/scripts/_baseline.md — do not edit in place -->
 # Engineering baselines — 12 rules

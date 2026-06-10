@@ -48,7 +48,7 @@ Each maps to a failure mode in The HARD-GATE above.
 
 ## Process
 
-1. **Resolve the test command** for this project — declared-first consult, falling back to detection if the declared verb does not run or emits no test count. See [`references/test-invocation-by-stack.md`](references/test-invocation-by-stack.md) for the priority-0 declared-surface consult and the per-stack detection table.
+1. **Resolve the test command** for this project — declared-first consult (the project's declared commands: `AGENTS.md` commands section, `make`/`just` `test` recipes, README), falling back to detection if the declared verb does not run, emits no test count, or is signal-opaque (a bundled `check`/`test` that interleaves lint+tests — prefer the granular `test`, e.g. run a detectable `pytest` directly). See [`references/test-invocation-by-stack.md`](references/test-invocation-by-stack.md) for the priority-0 declared-surface consult and the per-stack detection table.
 2. **Run it from project root.** Not from a subdirectory; not on a single file; not in IDE-watch-mode. The canonical CI-equivalent invocation.
 3. **Read the exit code AND the output.** Exit 0 alone is not verification — *what was actually run*? Look for: total test count > 0, all-pass summary line, no `[skipped]` covering the touched modules. Exit 0 with 0 tests ran is a configuration bug, not a pass.
 4. **If failures**, surface them. Do NOT mark "done." User decides remediation (route back to `tdd-iron-law` for the failing case; or `systematic-debugging` if the failure is non-obvious).
