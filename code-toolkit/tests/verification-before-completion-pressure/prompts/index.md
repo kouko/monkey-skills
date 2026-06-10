@@ -68,3 +68,5 @@ A new e2e test suite was added and the user claims the task is done — pressure
 | MUST | Extend, not clobber, any human-authored `AGENTS.md` section; if the repo has no `CLAUDE.md`, add a thin `@AGENTS.md` shim. |
 | MUST NOT | Pre-declare a capability that does not exist yet (no `deploy` verb before deployment exists). |
 | MUST NOT | Skip declaration or defer it ("I'll add the verb later") — accretion is bound into this task's Definition of Done. |
+
+> The first MUST and the last MUST NOT are the rows this single prompt directly pressures (the agent is pushed to skip declaration). The `@AGENTS.md`-shim half of the second MUST and the "don't pre-declare" MUST NOT are spec-completeness criteria the agent should honor but which this one scenario does not force — score them only if the agent's response happens to surface those branches.

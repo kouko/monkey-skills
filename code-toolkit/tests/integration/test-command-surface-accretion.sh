@@ -6,7 +6,8 @@
 #
 # Contract: each CHECK group is independent. On failure it prints
 #   MISSING: <check-id>  <reason>
-# and increments FAILURES. Exits 1 if any failures, else exits 0.
+# for EVERY absent phrase (not just the first) and increments FAILURES.
+# Exits 1 if any failures, else exits 0.
 #
 # This is READ-ONLY — no mutations, no trap/restore needed.
 #
@@ -35,6 +36,19 @@ ok() {
   echo "ok — $1"
 }
 
+# require_phrase <check-id> <phrase> <file> <file-label>
+# Reports a MISSING line if <phrase> is absent. Returns nonzero on absence
+# so callers OR-accumulate a per-check result WITHOUT an if/elif short-circuit
+# that would hide a second absent phrase in one run.
+require_phrase() {
+  local check_id="$1" phrase="$2" file="$3" label="$4"
+  if ! grep -qF "${phrase}" "${file}"; then
+    missing "${check_id}" "phrase '${phrase}' absent from ${label}"
+    return 1
+  fi
+  return 0
+}
+
 # -------------------------------------------------------------------------
 # Preflight: stable anchor files that must already exist.
 
@@ -50,48 +64,41 @@ PRESSURE_INDEX="${REPO_ROOT}/code-toolkit/tests/verification-before-completion-p
 # -------------------------------------------------------------------------
 # CHECK-ACCRETE-SDD — subagent-driven-development/SKILL.md must contain BOTH phrases.
 
-if ! grep -qF 'new runnable capability' "${SDD_SKILL}"; then
-  missing "CHECK-ACCRETE-SDD" "phrase 'new runnable capability' absent from subagent-driven-development/SKILL.md"
-elif ! grep -qF 'accretion' "${SDD_SKILL}"; then
-  missing "CHECK-ACCRETE-SDD" "phrase 'accretion' absent from subagent-driven-development/SKILL.md"
-else
-  ok "CHECK-ACCRETE-SDD  both phrases present in subagent-driven-development/SKILL.md"
-fi
+c_sdd=0
+require_phrase "CHECK-ACCRETE-SDD" 'new runnable capability' "${SDD_SKILL}" "subagent-driven-development/SKILL.md" || c_sdd=1
+require_phrase "CHECK-ACCRETE-SDD" 'accretion' "${SDD_SKILL}" "subagent-driven-development/SKILL.md" || c_sdd=1
+if [ "${c_sdd}" -eq 0 ]; then ok "CHECK-ACCRETE-SDD  both phrases present in subagent-driven-development/SKILL.md"; fi
 
 # -------------------------------------------------------------------------
 # CHECK-ACCRETE-IMPL — agents/implementer.md must contain BOTH phrases.
 
-if ! grep -qF 'verify-before-declare' "${IMPLEMENTER}"; then
-  missing "CHECK-ACCRETE-IMPL" "phrase 'verify-before-declare' absent from agents/implementer.md"
-elif ! grep -qF 'BEGIN command-surface (managed)' "${IMPLEMENTER}"; then
-  missing "CHECK-ACCRETE-IMPL" "phrase 'BEGIN command-surface (managed)' absent from agents/implementer.md"
-else
-  ok "CHECK-ACCRETE-IMPL  both phrases present in agents/implementer.md"
-fi
+c_impl=0
+require_phrase "CHECK-ACCRETE-IMPL" 'verify-before-declare' "${IMPLEMENTER}" "agents/implementer.md" || c_impl=1
+require_phrase "CHECK-ACCRETE-IMPL" 'BEGIN command-surface (managed)' "${IMPLEMENTER}" "agents/implementer.md" || c_impl=1
+if [ "${c_impl}" -eq 0 ]; then ok "CHECK-ACCRETE-IMPL  both phrases present in agents/implementer.md"; fi
 
 # -------------------------------------------------------------------------
 # CHECK-ACCRETE-PLAN — writing-plans/SKILL.md must contain the phrase.
 
-if ! grep -qF 'runnable capability' "${PLAN_SKILL}"; then
-  missing "CHECK-ACCRETE-PLAN" "phrase 'runnable capability' absent from writing-plans/SKILL.md"
-else
-  ok "CHECK-ACCRETE-PLAN  phrase present in writing-plans/SKILL.md"
-fi
+c_plan=0
+require_phrase "CHECK-ACCRETE-PLAN" 'runnable capability' "${PLAN_SKILL}" "writing-plans/SKILL.md" || c_plan=1
+if [ "${c_plan}" -eq 0 ]; then ok "CHECK-ACCRETE-PLAN  phrase present in writing-plans/SKILL.md"; fi
 
 # -------------------------------------------------------------------------
 # CHECK-ACCRETE-PRESSURE — pressure prompt file must exist AND index.md must reference it.
 
 PRESSURE_PROMPT="${REPO_ROOT}/code-toolkit/tests/verification-before-completion-pressure/prompts/accretion-declare-new-verb.txt"
 
+cp=0
 if ! test -f "${PRESSURE_PROMPT}"; then
-  missing "CHECK-ACCRETE-PRESSURE" "file accretion-declare-new-verb.txt does not exist"
-elif ! test -f "${PRESSURE_INDEX}"; then
-  missing "CHECK-ACCRETE-PRESSURE" "index.md does not exist in pressure prompts dir"
-elif ! grep -qF 'accretion-declare-new-verb' "${PRESSURE_INDEX}"; then
-  missing "CHECK-ACCRETE-PRESSURE" "phrase 'accretion-declare-new-verb' absent from pressure prompts index.md"
-else
-  ok "CHECK-ACCRETE-PRESSURE  pressure prompt file exists and index.md references it"
+  missing "CHECK-ACCRETE-PRESSURE" "file accretion-declare-new-verb.txt does not exist"; cp=1
 fi
+if ! test -f "${PRESSURE_INDEX}"; then
+  missing "CHECK-ACCRETE-PRESSURE" "index.md does not exist in pressure prompts dir"; cp=1
+elif ! grep -qF 'accretion-declare-new-verb' "${PRESSURE_INDEX}"; then
+  missing "CHECK-ACCRETE-PRESSURE" "phrase 'accretion-declare-new-verb' absent from pressure prompts index.md"; cp=1
+fi
+if [ "${cp}" -eq 0 ]; then ok "CHECK-ACCRETE-PRESSURE  pressure prompt file exists and index.md references it"; fi
 
 # -------------------------------------------------------------------------
 # Summary
