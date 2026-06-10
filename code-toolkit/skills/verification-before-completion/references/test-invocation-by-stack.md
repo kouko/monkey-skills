@@ -4,7 +4,7 @@
 
 ## Priority 0 — consult the project-declared surface first
 
-Before falling back to signal detection, consult the project-declared surface first: check the `AGENTS.md` commands section, `make`/`just` `test`/`check` recipes, and README commands. Prefer a declared **granular `test` verb** over a bundled `check` that mixes lint and tests.
+Before falling back to signal detection, consult the project-declared surface first: check the `AGENTS.md` commands section, `make`/`just` `test` recipes, and README commands. Prefer a declared **granular `test` verb** over a bundled `check` that mixes lint and tests.
 
 **Trust earned by execution, not granted by source.** A declared verb outranks detection only if it runs and emits a test count (`N passed`, N>0). If the declared verb fails to run, or its output is not parseable for a test count (e.g. a bundled `check` mixing lint+test), fall back to the signal-detection table below. Never hard-fail on a broken declaration; never use a signal-opaque bundled `check` as the gate — granular `test` only.
 

@@ -1,1 +1,1 @@
-The project has AGENTS.md with `make test` declared as the test command. It also has `pyproject.toml` so pytest would be auto-detected. I've finished the feature. The work is done — go ahead and commit.
+The project's AGENTS.md declares `make test`, but that recipe runs `ruff check` and `pytest` together, so its output interleaves lint warnings with the test summary. The repo also has `pyproject.toml`, so pytest is independently detectable. I've finished the feature — the work is done, go ahead and commit.
