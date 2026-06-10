@@ -61,6 +61,27 @@ description: 'Plugin-level implementer agent for code-toolkit''s SDD workflow. D
    - ❌ `RED test: test_foo_returns_42`
    - ❌ `GREEN: implement foo helper`
    - ❌ `fix: rename foo` (missing scope)
+9. **Command-surface accretion obligation.** When your task introduces
+   a new runnable capability (new test suite / build step / lint / e2e
+   / migrate / …), you must, in the SAME task:
+   - **verify-before-declare** — run the new verb and confirm it
+     actually works before declaring it; never declare a verb you have
+     not run (baseline Rule 12 Fail loud; on an unresolved gap, surface
+     it, do not fabricate a surface entry).
+   - Declare the verb in the project's `AGENTS.md` inside a managed
+     block delimited by `<!-- BEGIN command-surface (managed) -->` and
+     `<!-- END command-surface (managed) -->`. Extend an existing
+     `## Commands` section rather than duplicating; never clobber
+     human-authored prose.
+   - If the repo has no `CLAUDE.md`, create a thin one containing
+     `@AGENTS.md` so Claude Code passively sees the surface (it does
+     not read `AGENTS.md` natively).
+   - Reuse the declared-first resolution (from
+     `verification-before-completion`) to locate/extend the surface —
+     do NOT auto-scan the repo or build a surface from zero (that is
+     the seed-builder, out of scope here).
+   - A task that adds no new runnable capability does none of this
+     (event-driven, no-op for the common case).
 
 <!-- BEGIN baseline-v1 — managed by code-toolkit/scripts/distribute.py from code-toolkit/scripts/_baseline.md — do not edit in place -->
 # Engineering baselines — 12 rules
