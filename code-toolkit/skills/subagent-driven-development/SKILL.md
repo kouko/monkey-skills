@@ -119,6 +119,16 @@ For each atomic task in the plan:
 
 A 3-round cap prevents infinite loops on ambiguous specs. On the 4th retry, surface to the user — likely the spec is wrong, not the implementer. Phrase that escalation per [§Asking the user](#asking-the-user): lead with a state anchor and say what's actually stuck in plain words, not `NEEDS_REVISION ×3`.
 
+## Definition of Done — command-surface accretion
+
+A task that introduces a **new runnable capability** (a new test suite, build step, lint target, e2e suite, `migrate` command, etc.) is **not DONE** until that verb is **declared in the command surface AND verified to run**. This is **accretion**: it binds "add a capability" to "declare it in the surface" exactly as TDD binds "add behaviour" to "add a test". The implementer's DONE status is invalid without it.
+
+**Event-driven — not per-task polling.** A task that adds *no* new runnable capability triggers *no* surface change. The clause is a no-op for the common case. It is **not** a per-task audit of the whole surface, and it is **not** a build-once bootstrap.
+
+**Moving target.** "Complete" is relative to the project's *current* capabilities. Never pre-declare a verb that does not yet exist (no `deploy` entry before deployment exists; no `migrate` entry before a migration runner exists).
+
+**Mechanics.** The implementer reuses the declared-first resolution from `verification-before-completion` to locate the surface. The mechanics of declaring (managed block, shim pattern, verify-before-declare discipline) live in the implementer contract at [`code-toolkit/agents/implementer.md`](../../agents/implementer.md). The orchestrator passes the resolved surface path into each implementer dispatch alongside the resolved test command.
+
 ## Model selection
 
 Pick the cheapest model that meets the task's actual reasoning load.
