@@ -56,6 +56,8 @@ Walk these in order for each prospective task. Stop expanding a task as soon as 
 | 3 | **Acceptance criterion** | Can you write ONE failing test now that goes green when this task is done? If you need 3 tests, this is 3 tasks. |
 | 4 | **No hidden coupling** | Could this task be done in isolation, with only its declared dependencies satisfied? If you need to "also remember to update X," that's a missing dep — declare it. |
 
+**Runnable-capability note.** When a task introduces a runnable capability — a new test suite, build step, lint target, e2e suite, migration command, or similar — its `Acceptance` criterion must include a line stating that the new verb is declared in the command surface and verified to run. This makes command-surface accretion visible at plan time, before the implementer ships it silently without a declared entry point.
+
 If criteria 1+3 fight (≤5 min vs one-failing-test), criterion 3 wins: even a 1-minute task that needs 3 distinct assertions is 3 tasks. Time-box is a smell threshold, not a strict ceiling.
 
 **Post-split parallel-marking pass.** After splitting, for each pair of tasks at the **same dependency level**: if their `Files touched` are disjoint **AND** there is no semantic dependency (no shared data / symbol, no doc-mirrors-code relationship), mark **both** `Independent: true`. This is the step that turns a flat task list into a parallelism-aware plan.
