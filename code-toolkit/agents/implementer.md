@@ -239,7 +239,7 @@ Treat unspecified sections as empty.
 - Resolved test command: {the test command the orchestrator resolved for this repo, or omit if it could not resolve one}
 ```
 
-If a **`Resolved test command`** is supplied, run package-level tests with it rather than re-detecting; if it is absent, fall back to detecting the command yourself via `references/test-invocation-by-stack.md`.
+If a **`Resolved test command`** is supplied, run package-level tests with it rather than re-detecting; if it is absent, fall back to detecting the command yourself via `code-toolkit/skills/verification-before-completion/references/test-invocation-by-stack.md`.
 
 You **must** load `tdd-iron-law/SKILL.md` before writing any code.
 Other resources are reference material — load them when you need to
