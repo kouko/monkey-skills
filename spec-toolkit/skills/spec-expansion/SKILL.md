@@ -49,27 +49,44 @@ to seed + 6 lenses; blind spots listed below". This is baseline Rule 12
 (fail loud) applied to spec recall: an honest coverage statement, never a
 false completeness claim.
 
-## The 5-stage pipeline
+## The three phases
 
-Run these stages in order. Stages ② and ③ are the mechanical sweet spot;
-stage ④ is the prune; stages emit provenance at every step.
+Run **three explicit phases in order**. Each phase (a) **announces itself**
+as it runs — print the exact marker line so the execution trace is visible —
+and (b) **emits a visible intermediate artifact** (a named `##` section in
+`proposal.md`) before the next phase starts. Provenance is tagged at every
+step. Do not collapse the phases into one silent pass: the visibility *is*
+the contract — a reader watching the run sees backbone → object model →
+matrix appear in order, and can audit each before the spec is emitted.
 
-### ① Extract objects + CTAs (extraction)
+### Phase ① USM — lay the user-journey backbone
 
-From the seed, extract the **objects** (the nouns the system manipulates) and
-the **CTAs** (call-to-action verbs — what actors *do* to objects). Tag each
-extracted item `seeded` (came straight from the seed text) or `inferred`
-(you supplied it from domain priors). This is the seed-ceiling boundary in
-action: be explicit about what you added.
+**Announce:** print `— Phase ① USM backbone —` before you start.
 
-### ② OOUX fan-out — per object (LLM prior, the sweet spot)
+Lay the **USM backbone**: the happy-path **spine** of ordered user steps (the
+left-to-right user-journey of who does what, in sequence). Extraction folds
+in here — from the seed, identify the **actors**, their **journey**, the
+**objects** (the nouns the system manipulates) and the **CTAs**
+(call-to-action verbs — what actors *do* to objects) that the journey
+touches. Tag each extracted item `seeded` (straight from the seed text) or
+`inferred` (you supplied it from domain priors) — the seed-ceiling boundary
+in action: be explicit about what you added.
 
-For **each object**, fan out its:
-- **attributes** — the data it carries,
-- **states** — model these as a small **state machine** (the legal states
-  and the transitions between them),
-- **relationships** — to other objects,
-- **CTAs** — the actions performed on it.
+**Visible artifact:** emit a `## USM backbone` section in `proposal.md` — an
+ordered list (or table) of the journey steps that form the spine.
+
+### Phase ② OOUX — fan out the object model
+
+**Announce:** print `— Phase ② OOUX object model —` before you start.
+
+For **each object** the journey touches, fan out **ORCA** — its:
+- **Objects** — confirm the object as a first-class noun,
+- **Relationships** — links to other objects,
+- **CTAs** — the actions performed on it,
+- **Attributes** — the data it carries,
+
+and model the object's **states as a state machine** (the legal states and
+the transitions between them).
 
 Dispatch this per-object work as **multi-agent fan-out**: dispatch N
 subagents (one per object), per `code-toolkit:dispatching-parallel-agents`,
@@ -79,17 +96,20 @@ primitive, so the skill stays agent-portable. Each per-object expansion is
 independent (disjoint objects, no shared state), which is exactly the case
 the fan-out convention is for.
 
-### ③ Build the backbone × object × CTA × state grid (cartesian, mechanical)
+**Visible artifact:** emit a `## OOUX object model` section in `proposal.md` —
+the object inventory plus, for each object, its state machine (states +
+legal transitions).
 
-Lay out the USM **backbone** (the left-to-right user-journey spine) and take
-the cartesian product `backbone × object × CTA × state`. Each cell is a
-candidate path/edge. This is mechanical and deliberately over-generates —
-pruning happens next.
+### Phase ③ 自動拓展矩陣 (auto-expansion matrix) — grid, prune, emit
 
-### ④ Lens layer — prune + add aspects
+**Announce:** print `— Phase ③ auto-expansion matrix —` before you start.
 
-Walk the grid through fixed **lenses**, dropping illegal cells and surfacing
-aspects the cartesian grid cannot see:
+**Build the grid (cartesian, mechanical).** Take the cartesian product
+`backbone × object × CTA × state`. Each cell is a candidate path/edge. This
+is mechanical and deliberately over-generates — pruning happens next.
+
+**Prune through the lens layer.** Walk the grid through fixed **lenses**,
+dropping illegal cells and surfacing aspects the cartesian grid cannot see:
 
 - **state-transition legality** — keep every legal transition (= "all
   paths"); flag invalid transitions as edge cases; drop impossible cells.
@@ -102,11 +122,13 @@ aspects the cartesian grid cannot see:
 - **NFR checklist** — performance / security / concurrency / network-failure
   / timing aspects (system-layer failures OOUX alone cannot reach).
 
-### ⑤ Emit (hybrid output format)
+**Visible artifact:** emit a `## Path × edge matrix` section in `proposal.md`
+— the grid plus the surviving paths/edges that remain post-prune.
 
-Emit the surviving paths/edges as the hybrid output format below. Every
-emitted item carries a provenance tag. Close with a coverage statement
-("coverage relative to seed + N lenses") — never a completeness claim.
+**Emit (hybrid output format).** Emit the surviving paths/edges as the hybrid
+output format below. Every emitted item carries a provenance tag. Close with
+a coverage statement ("coverage relative to seed + N lenses") — never a
+completeness claim.
 
 ## Provenance tagging
 
@@ -158,13 +180,18 @@ delta free of spec-toolkit-specific sections.
 
 spec-toolkit's differentiating richness goes in `proposal.md` additive
 sections (OpenSpec's structure-only validate tolerates extra sections, so the
-delta stays pure while the richness lives here):
+delta stays pure while the richness lives here). `proposal.md` carries
+**five visible sections** — the three per-phase artifacts plus provenance and
+blind spots:
 
+- `## USM backbone` — Phase ① artifact: the ordered journey-step spine.
+- `## OOUX object model` — Phase ② artifact: the object inventory + each
+  object's state machine.
+- `## Path × edge matrix` — Phase ③ artifact: the grid plus which
+  `backbone × object × CTA × state` paths and edges survive post-prune.
 - `## Provenance` — every item tagged seeded / inferred / critic-found.
-- `## Path × edge matrix` — the grid appendix: which `object × CTA × state`
-  paths and edges are covered, post-prune.
-- `## Blind spots — needs human/field input` — left present (the
-  completeness-critic fills it; it is the critic's load-bearing output —
+- `## Blind spots — needs human/field input` — left present and **non-empty**
+  (the completeness-critic fills it; it is the critic's load-bearing output —
   aspects no generator can manufacture, e.g. business-domain reality that
   needs human/field input). Never delete this section; never claim it is
   empty because the spec is "complete".
