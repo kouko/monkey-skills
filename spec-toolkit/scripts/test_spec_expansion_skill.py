@@ -136,7 +136,10 @@ def test_lenses_teach_discrimination_not_just_list():
         "bva": ("bva", "boundary"),
         "crud": ("crud",),
         "permission": ("permission",),
-        "empty": ("empty", "loading"),
+        # anchor on "loading" — unique to the empty/error/loading lens;
+        # "empty" alone also appears in the BVA bullet, which would match the
+        # wrong line and weaken the guard for this lens.
+        "empty": ("loading",),
         "nfr": ("nfr",),
     }
     teach_words = ("dominates", "keep", "flag", "drop", "in-scope",
