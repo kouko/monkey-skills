@@ -40,7 +40,6 @@ _RFC2119 = re.compile(r"\b(MUST|SHALL|SHOULD|MAY)\b")
 
 _ADDED_REQ_HDR = re.compile(r"^##\s+ADDED\s+Requirements\s*$", re.MULTILINE)
 _REQUIREMENT_HDR = re.compile(r"^###\s+Requirement:", re.MULTILINE)
-_SCENARIO_HDR = re.compile(r"^####\s+Scenario:")
 
 
 def _delta_files(root: Path) -> list[Path]:
