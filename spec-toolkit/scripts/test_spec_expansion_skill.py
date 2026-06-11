@@ -3,9 +3,11 @@ instructions.
 
 SKILL.md is a prompt artifact, not executable code. Its correctness is the
 PRESENCE of buried, single-sentence, load-bearing rules that the
-`extract-to-reference` memory warns get silently lost in prose: the 5-stage
-pipeline, provenance tagging (all three tags), the ban-the-word-"complete"
-guardrail, and the hybrid output-format markers the validator enforces.
+`extract-to-reference` memory warns get silently lost in prose: the THREE
+explicit phases (USM / OOUX / auto-expansion matrix), each ANNOUNCED during
+execution and each emitting a VISIBLE proposal.md artifact section; provenance
+tagging (all three tags), the ban-the-word-"complete" guardrail, and the
+hybrid output-format markers the validator enforces.
 
 These checks assert on the load-bearing PHRASES (intent), tolerant of wording
 variation, so the test guards meaning without being brittle.
@@ -46,28 +48,71 @@ def test_description_triggers_on_spec_expansion_intent():
     assert "edge" in front  # edge-case coverage trigger
 
 
-# --- the 5-stage pipeline ---------------------------------------------------
+# --- the three explicit phases (USM / OOUX / auto-expansion matrix) ----------
 
-def test_five_stage_pipeline_present():
+def test_three_explicit_phases_present():
+    """The skill documents THREE explicitly-named top-level phases, not a
+    flat 5-stage pipeline."""
     text = _text().lower()
-    # ① extract objects + CTAs
+    # the three phase NAMES must be present as named phases
+    assert "usm" in text, "phase 1: USM"
+    assert "ooux" in text, "phase 2: OOUX"
+    assert "auto-expansion matrix" in text or "expansion matrix" in text \
+        or "自動拓展矩陣" in _text(), "phase 3: auto-expansion matrix"
+    # the THREE explicit phases must be marked as distinct phases (not "5 stages")
+    assert "phase" in text, "phases must be named as explicit phases"
+    assert "phase ①" in text and "phase ②" in text and "phase ③" in text, \
+        "three phases must be explicitly numbered ① ② ③"
+    # the old 5-stage framing must be gone (restructured, not flat pipeline)
+    assert "5-stage pipeline" not in text and "5 stage pipeline" not in text, \
+        "the flat '5-stage pipeline' framing must be replaced by three phases"
+
+
+def test_phases_announced_during_execution():
+    """Each phase MUST be announced as it runs (visible execution trace)."""
+    text = _text()
+    # the literal announce markers the skill instructs the agent to emit
+    assert "— Phase ① USM backbone —" in text, \
+        "must instruct announcing Phase ① USM backbone"
+    assert "— Phase ② OOUX object model —" in text, \
+        "must instruct announcing Phase ② OOUX object model"
+    assert "— Phase ③ auto-expansion matrix —" in text, \
+        "must instruct announcing Phase ③ auto-expansion matrix"
+    low = text.lower()
+    assert "announce" in low, "must instruct the agent to ANNOUNCE each phase"
+
+
+def test_three_visible_artifact_sections_per_phase():
+    """Each phase emits a VISIBLE intermediate artifact section in proposal.md."""
+    text = _text()
+    assert "## USM backbone" in text, \
+        "Phase ① must emit a visible '## USM backbone' section"
+    assert "## OOUX object model" in text, \
+        "Phase ② must emit a visible '## OOUX object model' section"
+    assert "## Path × edge matrix" in text, \
+        "Phase ③ must emit a visible '## Path × edge matrix' section"
+
+
+def test_phase_detail_preserved():
+    """The old 5 stages' detail must survive as sub-steps under the 3 phases."""
+    text = _text().lower()
+    # USM phase folds in actor/journey extraction; objects + CTAs
     assert "object" in text and ("cta" in text or "call to action" in text), \
-        "stage 1: extract objects + CTAs"
-    # ② OOUX fan-out (per-object attributes/states/relationships)
-    assert "ooux" in text, "stage 2: OOUX fan-out"
-    assert "state" in text and "relationship" in text, \
-        "stage 2: per-object attributes/states/relationships"
-    # ③ the backbone x object x CTA x state grid
-    assert "backbone" in text and "grid" in text, \
-        "stage 3: backbone x object x CTA x state grid"
-    # ④ lens layer prune (name several lenses)
-    assert "lens" in text, "stage 4: lens layer"
+        "extraction of objects + CTAs preserved"
+    assert "backbone" in text, "USM backbone (journey spine) preserved"
+    # OOUX phase: per-object attributes/states-as-state-machine/relationships
+    assert "state machine" in text, \
+        "OOUX phase: states modeled as a state machine"
+    assert "relationship" in text and "attribute" in text, \
+        "OOUX phase: per-object relationships/attributes preserved"
+    # matrix phase: cartesian grid + lens prune + emit
+    assert "grid" in text, "matrix phase: the cartesian grid preserved"
+    assert "lens" in text, "matrix phase: lens-layer prune preserved"
     for lens in ("bva", "crud", "permission", "nfr"):
-        assert lens in text, f"stage 4 lens missing: {lens}"
+        assert lens in text, f"matrix-phase lens missing: {lens}"
     assert "state-transition" in text or "state transition" in text, \
-        "stage 4 lens: state-transition legality"
-    # ⑤ emit
-    assert "emit" in text, "stage 5: emit"
+        "matrix-phase lens: state-transition legality preserved"
+    assert "emit" in text, "matrix phase: emit preserved"
 
 
 def test_multi_agent_fan_out_referenced():
