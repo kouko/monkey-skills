@@ -103,6 +103,11 @@
       "name": "research-toolkit",
       "description": "Research toolkit — agent-portable, key-free research skills that drive the host agent's own LLM + web tools. Ships the deep-research skill (scope / search / dedup / fetch / 3-vote adversarial verify / synthesize); more research skills to follow.",
       "source": "./research-toolkit/"
+    },
+    {
+      "name": "spec-toolkit",
+      "description": "Spec toolkit — agent-portable, key-free GENERATE-layer skills that expand a sparse seed into a complete spec and adversarially critique it for omissions. Ships spec-expansion (seed → objects/CTAs → state machines → path×edge matrix → candidate scenarios, all provenance-tagged) and completeness-critic (loop-until-dry omission hunt that emits its own blind spots). Writes the OpenSpec change-folder shape plus additive richness sections, consumed downstream by code-toolkit's VERIFY layer.",
+      "source": "./spec-toolkit/"
     }
   ]
 }
