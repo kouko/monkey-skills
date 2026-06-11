@@ -27,6 +27,42 @@ The toolkit emerged from a single design question — *"is there a way to combin
 
 ---
 
+## [0.16.0] — 2026-06-11 — **brainstorming greenfield UI-coverage nudge (Tier 1)**
+
+Adds a greenfield-gated, UI/state-surface-gated lightweight nudge to `brainstorming`:
+when Current-State-Evidence is `N/A — greenfield` / thin **AND** the feature has a
+UI / interaction / stateful surface, enumerate UI states across six categories
+(empty / error / loading / state-transition / permission / boundary) **before
+finalizing the brief** — plus a forward-pointer to `spec-toolkit:spec-expansion`
+for the heavy case (**Tier 2, deferred** until `writing-plans` reads OpenSpec
+change-folders). Additive prose inside an existing skill (minor bump); **zero
+cross-plugin dependency**.
+
+Grounded in a 3-archetype greenfield A/B (eyedropper / collections / side-by-side)
+showing plain brainstorming is thin on UI-edge coverage in greenfield (8/17, 6/12,
+3/13) while the regime is brownfield-neutral (Current-State-Evidence recon
+compensates there) — hence the **greenfield gate** (firing it in brownfield would be
+near-dead-text). **DRY:** category reminder only; the full lens method (BVA /
+state-machine / permission matrix) stays SSOT in `spec-toolkit:spec-expansion`.
+
+### What ships
+
+- **brainstorming** — new greenfield UI-state nudge subsection (after Current State
+  Evidence, where the `N/A — greenfield` determination is made) + a Tier-2/deferred
+  forward-pointer in `## Cross-skill delegation`. Skill version 0.10.1 → 0.11.0.
+- **test** — `scripts/test_brainstorming_greenfield_nudge.py` grep-guards the six
+  categories / the two-pronged gate + both exclusions (not-brownfield, not-pure-logic)
+  / the forward-pointer / the DRY guardrail (stdlib-only, intent-tolerant).
+- **deferred (Tier 2):** brainstorming judging + delegating the full spec to
+  `spec-toolkit:spec-expansion` via the OpenSpec change-folder contract — blocked on
+  the unbuilt OpenSpec DECLARE wiring (writing-plans reading change-folders;
+  2026-05-30 OpenSpec brief Q6=A).
+- **post-ship verification (not shipped code):** greenfield A/B (with-nudge vs
+  without, same 3 seeds) to confirm the nudge lifts coverage above the no-nudge
+  baseline — if it doesn't, it's dead text (per the A/B-baseline lesson).
+
+---
+
 ## [0.15.0] — 2026-05-31 — **asking-the-user Pattern-③ rollout to brainstorming + router**
 
 Discharges the **v0.2 deferred item from PR #355** (the asking-the-user

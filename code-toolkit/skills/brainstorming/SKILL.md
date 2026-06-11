@@ -1,7 +1,7 @@
 ---
 name: brainstorming
 description: 'Use BEFORE implementing — for any task that touches new behavior, new module boundaries, or non-obvious design space. Enforces a HARD-GATE: explore intent and alternatives FIRST through a 5-axis framework (Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete), then emit a structured brief that writing-plans consumes. Refuses "this is simple", "I know what to build", "let''s just start coding" rationalizations. Grounded in Jobs-To-Be-Done (Christensen 1997, ISBN 978-0875845852) and Klement (2018) job-story format. ブレインストーミング・要件発掘・先に探索。腦力激盪・需求探索・先想清楚再寫。'
-version: 0.10.1
+version: 0.11.0
 ---
 
 <SUBAGENT-STOP>
