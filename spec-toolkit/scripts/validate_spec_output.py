@@ -12,10 +12,14 @@ This module checks the SKELETON only (structure, not content quality),
 mirroring `openspec validate`'s structure-only behavior: extra/unknown
 sections are tolerated, never rejected.
 
+It also checks spec-toolkit's ADDITIVE sections in proposal.md (## Provenance,
+## Blind spots — needs human/field input, ## Path × edge matrix) — the
+differentiating richness that OpenSpec's structure-only validate tolerates.
+
 Design: each check is a function (root: Path) -> list[str] of problem
-messages (empty == ok). `_SKELETON_CHECKS` is the ordered registry. Task 3
-adds an `_ADDITIVE_CHECKS` group of the same shape and appends it to the
-checks `validate()` runs — no edits to existing check functions required.
+messages (empty == ok). `_SKELETON_CHECKS` is the skeleton registry;
+`_ADDITIVE_CHECKS` is the additive registry of the same shape. `validate()`
+runs both groups.
 
 CLI: `python validate_spec_output.py <output-dir>` -> exit 0 if valid,
 exit 1 with agent-actionable messages on stderr if invalid.
@@ -108,9 +112,68 @@ def _check_scenario_given_when_then(root: Path) -> list[str]:
             return [f"'#### Scenario:' in {d} is missing "
                     f"{', '.join(missing)} line(s) "
                     f"(each scenario needs GIVEN / WHEN / THEN)"]
-    if not saw_scenario:
-        return [f"no '#### Scenario:' header found under {root / 'specs'} "
-                f"(each requirement needs >=1 scenario with GIVEN/WHEN/THEN)"]
+    return [f"no '#### Scenario:' header found under {root / 'specs'} "
+            f"(each requirement needs >=1 scenario with GIVEN/WHEN/THEN)"]
+
+
+# --- additive checks: spec-toolkit's differentiating richness ---------------
+# Per the brief, the OpenSpec delta under specs/ stays pure (openspec-validate
+# clean); the additive sections live in proposal.md. These checks therefore
+# read proposal.md. Tolerant of extra content, like the skeleton checks.
+
+_SEC_PROVENANCE = "## Provenance"
+_SEC_BLIND_SPOTS = "## Blind spots — needs human/field input"
+_SEC_PATH_EDGE_MATRIX = "## Path × edge matrix"
+
+_H2 = re.compile(r"^##\s", re.MULTILINE)
+
+
+def _section_body(text: str, header: str) -> str | None:
+    """Body of the `## <header>` section (lines after the header line up to the
+    next `## ` header or end), or None if the header is absent. Match is on a
+    whole header line so a substring in prose never counts."""
+    pat = re.compile(r"^" + re.escape(header) + r"\s*$", re.MULTILINE)
+    m = pat.search(text)
+    if m is None:
+        return None
+    nxt = _H2.search(text, m.end())
+    return text[m.end():nxt.start()] if nxt else text[m.end():]
+
+
+def _check_provenance_section(root: Path) -> list[str]:
+    proposal = root / "proposal.md"
+    if not proposal.is_file():
+        return []  # already reported by _check_proposal
+    if _section_body(proposal.read_text(encoding="utf-8"), _SEC_PROVENANCE) is None:
+        return [f"missing '{_SEC_PROVENANCE}' section in {proposal} "
+                f"(tag each item seeded / inferred / critic-found)"]
+    return []
+
+
+def _check_blind_spots_section(root: Path) -> list[str]:
+    proposal = root / "proposal.md"
+    if not proposal.is_file():
+        return []  # already reported by _check_proposal
+    body = _section_body(proposal.read_text(encoding="utf-8"), _SEC_BLIND_SPOTS)
+    if body is None:
+        return [f"missing '{_SEC_BLIND_SPOTS}' section in {proposal} "
+                f"(the critic's load-bearing output — list what needs "
+                f"human/field input)"]
+    if not any(line.strip() for line in body.splitlines()):
+        return [f"'{_SEC_BLIND_SPOTS}' section in {proposal} is empty "
+                f"(it MUST list >=1 blind spot; an empty section means the "
+                f"critic produced nothing)"]
+    return []
+
+
+def _check_path_edge_matrix_section(root: Path) -> list[str]:
+    proposal = root / "proposal.md"
+    if not proposal.is_file():
+        return []  # already reported by _check_proposal
+    if _section_body(proposal.read_text(encoding="utf-8"),
+                     _SEC_PATH_EDGE_MATRIX) is None:
+        return [f"missing '{_SEC_PATH_EDGE_MATRIX}' section in {proposal} "
+                f"(the path/edge coverage appendix)"]
     return []
 
 
@@ -143,6 +206,13 @@ _SKELETON_CHECKS = [
     _check_scenario_given_when_then,
 ]
 
+# spec-toolkit's additive richness, beyond the openspec-clean skeleton.
+_ADDITIVE_CHECKS = [
+    _check_provenance_section,
+    _check_blind_spots_section,
+    _check_path_edge_matrix_section,
+]
+
 
 def validate(root: Path) -> tuple[bool, list[str]]:
     """Run all checks against the output directory `root`.
@@ -153,7 +223,7 @@ def validate(root: Path) -> tuple[bool, list[str]]:
     problems: list[str] = []
     if not root.is_dir():
         return False, [f"output directory does not exist: {root}"]
-    for check in _SKELETON_CHECKS:
+    for check in _SKELETON_CHECKS + _ADDITIVE_CHECKS:
         problems.extend(check(root))
     return (not problems), problems
 
