@@ -106,7 +106,7 @@
     },
     {
       "name": "spec-toolkit",
-      "description": "Spec toolkit — agent-portable, key-free GENERATE-layer skills that expand a sparse seed into a high-recall, verification-ready spec draft and adversarially critique it for omissions. Ships spec-expansion (seed → objects/CTAs → state machines → path×edge matrix → candidate scenarios, all provenance-tagged) and completeness-critic (loop-until-dry omission hunt that emits its own blind spots). Writes the OpenSpec change-folder shape plus additive richness sections, consumed downstream by code-toolkit's VERIFY layer.",
+      "description": "Spec toolkit — agent-portable, key-free GENERATE-layer skills that expand a sparse seed into a high-recall, verification-ready spec draft and adversarially critique it for omissions. Ships spec-expansion (seed → objects/CTAs → state machines → path×edge matrix → candidate scenarios, all provenance-tagged) and completeness-critic (loop-until-dry multi-lens omission hunt that emits its own blind spots). Writes the OpenSpec change-folder shape (proposal.md + specs/ delta) plus additive richness sections, consumed downstream by code-toolkit's VERIFY layer.",
       "source": "./spec-toolkit/"
     }
   ]
