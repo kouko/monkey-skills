@@ -115,6 +115,69 @@ def test_phase_detail_preserved():
     assert "emit" in text, "matrix phase: emit preserved"
 
 
+def test_lenses_teach_discrimination_not_just_list():
+    """Each of the 6 lenses must carry a 'when it dominates' cue AND a
+    keep/flag/drop (or in-scope/noise) discriminator — the engine of the
+    high-recall claim. Listing the lens name alone is the gap this closes."""
+    text = _text()
+    low = text.lower()
+
+    # the discrimination vocabulary must be present across the lens layer:
+    assert "dominates when" in low or "dominates" in low, \
+        "lenses must teach WHEN each dominates, not just name them"
+    assert ("keep" in low and "flag" in low and "drop" in low) \
+        or ("in-scope" in low and "noise" in low), \
+        "lenses must teach a legal-vs-illegal / in-scope-vs-noise discriminator"
+
+    # every one of the six lenses must carry teaching vocab ON its own line —
+    # not just appear as a bare bullet label.
+    lens_cues = {
+        "state-transition": ("state transition", "state-transition"),
+        "bva": ("bva", "boundary"),
+        "crud": ("crud",),
+        "permission": ("permission",),
+        "empty": ("empty", "loading"),
+        "nfr": ("nfr",),
+    }
+    teach_words = ("dominates", "keep", "flag", "drop", "in-scope",
+                   "noise", "discrimin")
+    for lens, needles in lens_cues.items():
+        found_teaching = False
+        for line in low.splitlines():
+            if any(n in line for n in needles) and any(t in line for t in teach_words):
+                found_teaching = True
+                break
+        assert found_teaching, \
+            f"lens '{lens}' must carry when-it-dominates / keep-flag-drop teaching on its line"
+
+
+def test_seed_adequacy_preflight_gate():
+    """Phase ① must OPEN with a seed-adequacy pre-flight: if the seed is too
+    sparse to fan out responsibly, surface what's missing and ask the user /
+    flag it BEFORE expanding — rather than manufacturing fiction."""
+    low = _text().lower()
+    assert "too sparse" in low or "sparse" in low, \
+        "pre-flight must name the too-sparse condition"
+    assert "before" in low, "pre-flight must fire BEFORE fan-out / expanding"
+    assert "ask" in low, "pre-flight must ask the user / surface the gap"
+    assert "fiction" in low or "manufactur" in low or "fabricat" in low, \
+        "pre-flight must forbid manufacturing fiction from a sparse seed"
+    assert "pre-flight" in low or "preflight" in low or "seed-adequacy" in low \
+        or "seed adequacy" in low, \
+        "the gate must be a named seed-adequacy pre-flight"
+
+
+def test_sparse_output_fallback():
+    """If pruning leaves no high-priority surviving paths, report honestly
+    rather than padding — the sparse-output fallback."""
+    low = _text().lower()
+    assert "no high-priority" in low or "no surviving" in low \
+        or "nothing survives" in low or "no high priority" in low, \
+        "must handle the empty-after-prune case"
+    assert "pad" in low or "padding" in low, \
+        "sparse-output fallback must forbid padding"
+
+
 def test_multi_agent_fan_out_referenced():
     text = _text().lower()
     assert "dispatching-parallel-agents" in text or "fan-out" in text \
