@@ -98,11 +98,7 @@ def _check_scenario_given_when_then(root: Path) -> list[str]:
     deltas = _delta_files(root)
     if not deltas:
         return []
-    saw_scenario = False
     for d in deltas:
-        for line_no, line in enumerate(d.read_text(encoding="utf-8").splitlines()):
-            if _SCENARIO_HDR.match(line):
-                saw_scenario = True
         block = _first_scenario_block(d.read_text(encoding="utf-8"))
         if block is not None:
             upper = block.upper()
