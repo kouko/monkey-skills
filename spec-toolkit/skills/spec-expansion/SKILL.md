@@ -63,6 +63,24 @@ matrix appear in order, and can audit each before the spec is emitted.
 
 **Announce:** print `— Phase ① USM backbone —` before you start.
 
+**Seed-adequacy pre-flight (gate) — run this BEFORE you fan out.** A sparse
+seed sets the ceiling (honesty rail #1); fanning out a too-sparse seed
+**manufactures fiction** that *looks* like recall but is invented intent. So
+before extracting actors/objects, check the seed against two tripwires:
+
+- **fewer than a couple of distinct actors *or* objects** can be named from
+  the seed, **or**
+- **the core object's lifecycle (its states / what can happen to it) is
+  unstated.**
+
+If either tripwire fires, **stop and surface what's missing — ask the user
+(or flag it explicitly as a blind spot) BEFORE expanding.** Name the specific
+gap ("seed names 1 object and no lifecycle — need the X states / the second
+actor"). Do **not** silently invent the missing actors, objects, or
+lifecycle to make the grid look full — that is the manufacture-fiction
+failure this gate exists to stop. Only once the seed clears the pre-flight
+(or the user fills the gap) do you proceed to extraction.
+
 Lay the **USM backbone**: the happy-path **spine** of ordered user steps (the
 left-to-right user-journey of who does what, in sequence). Extraction folds
 in here — from the seed, identify the **actors**, their **journey**, the
@@ -109,18 +127,45 @@ legal transitions).
 is mechanical and deliberately over-generates — pruning happens next.
 
 **Prune through the lens layer.** Walk the grid through fixed **lenses**,
-dropping illegal cells and surfacing aspects the cartesian grid cannot see:
+dropping illegal cells and surfacing aspects the cartesian grid cannot see.
+Each lens below teaches **when it dominates** and a **keep / flag / drop**
+discriminator — apply the discriminator cell-by-cell; the lens layer is the
+engine of the high-recall claim, so judge each cell, don't just enumerate:
 
-- **state-transition legality** — keep every legal transition (= "all
-  paths"); flag invalid transitions as edge cases; drop impossible cells.
-- **BVA** (boundary-value analysis) — data edges (min / max / off-by-one /
-  empty).
-- **CRUD** — create / read / update / delete completeness per object.
-- **permissions** — who may perform each CTA; unauthorized-actor paths.
-- **empty / error / loading** states — the UI/runtime states happy-path
-  specs skip.
-- **NFR checklist** — performance / security / concurrency / network-failure
-  / timing aspects (system-layer failures OOUX alone cannot reach).
+- **state-transition legality** — *dominates when* the object has a rich
+  lifecycle. **KEEP** every legal transition as a path; **FLAG** each illegal
+  transition (e.g. `refund → ship`) as an edge case; **DROP** impossible
+  cells (e.g. ship before pay).
+- **BVA** (boundary-value analysis) — *dominates when* a CTA takes numeric /
+  sized / dated input. **KEEP** min / max / off-by-one / empty as distinct
+  paths; **FLAG** the just-past-boundary case as the bug-prone edge; **DROP**
+  redundant interior values (one nominal mid-range value suffices — extra
+  ones are noise).
+- **CRUD** — *dominates when* an object is persisted. **KEEP** each
+  create / read / update / delete the actors actually perform; **FLAG** a
+  missing leg (e.g. no delete path) as a coverage gap; **DROP** CRUD legs the
+  object's lifecycle forbids (e.g. update on an immutable record).
+- **permissions** — *dominates when* more than one actor role exists. **KEEP**
+  the authorized actor × CTA cell **and** the unauthorized-actor-denied path;
+  **FLAG** any CTA whose authorization is unstated; **DROP** role × CTA cells
+  the role can never reach.
+- **empty / error / loading** states — *dominates when* the CTA crosses a
+  network / async / collection boundary. **KEEP** empty, error, and loading
+  as explicit states happy-path specs skip; **FLAG** any path with no defined
+  error state; **DROP** the loading state for a purely synchronous local CTA
+  (noise).
+- **NFR checklist** — *dominates when* the system has scale / security /
+  concurrency / timing obligations OOUX alone cannot reach. **KEEP** the
+  performance / security / concurrency / network-failure / timing aspect that
+  binds a real obligation; **FLAG** an NFR the seed implies but never
+  quantifies (needs human input); **DROP** speculative NFRs no requirement
+  asks for (gold-plating noise).
+
+**Sparse-output fallback.** If, after pruning, **no high-priority surviving
+paths** remain, **report that honestly** — say so plainly and point back to
+the seed-adequacy pre-flight — **do not pad** the matrix with low-value or
+invented cells to make it look fuller. An honest near-empty matrix beats
+padding (Rule 12, fail loud).
 
 **Visible artifact:** emit a `## Path × edge matrix` section in `proposal.md`
 — the grid plus the surviving paths/edges that remain post-prune.
