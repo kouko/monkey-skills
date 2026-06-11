@@ -160,6 +160,14 @@ The brief lands in the user's repo at `docs/code-toolkit/specs/<date>-<topic>.md
 
 **Reverse sub-bullet (SSOT ownership)**: before writing the Reverse sub-bullet, `Read` the distribution/sync script (e.g. `distribute.py`, `sync.sh`) to confirm which module owns canonical SSOT and which direction data flows. Never infer the direction from folder hierarchy alone — the file structure is often misleading.
 
+### Greenfield UI-state nudge
+
+This nudge fires **only** when **both** hold: (a) Current State Evidence is `N/A — greenfield` or thin (no pre-existing recon to lean on), **AND** (b) the feature has a UI / interaction / stateful surface (something a user clicks, types into, navigates, or watches change over time). When both are true, before finalizing the brief **enumerate the UI states across these six categories**: **empty / error / loading / state-transition / permission / boundary**. Greenfield is exactly where these get silently dropped — there is no Current-State-Evidence recon to surface them, so the happy path is all that gets written down.
+
+It does **not** fire in brownfield (the Current-State-Evidence recon — Forward / Reverse / Error / Data / Boundary — already walks these touch points) and **not** for pure-logic / data-only features with no interactive surface.
+
+**DRY guardrail** — this is a category *reminder only*: enumerate which of the six states the feature has, don't model them. The full method (BVA / state-machine modeling / permission matrix, with keep-flag-drop discrimination per lens) lives in `spec-toolkit:spec-expansion`; **do not reproduce it here**.
+
 ## Red Flags — refuse these rationalizations
 
 | Agent / user says | Reality | Correct response |
@@ -181,6 +189,7 @@ The brief lands in the user's repo at `docs/code-toolkit/specs/<date>-<topic>.md
 | Axis 4 produces 3+ real options that need triage | `dev-workflow:proposal-critique` | Evidence-grounded KEEP / DEFER / DROP triage. Optional. |
 | Brainstorming output indicates work >1 hour OR >1 module | `writing-plans` (next stage) | Brief becomes the input to plan-splitting. Before delegating, surface Axis 1 + Axis 3 (smallest end state) + Out-of-Scope as a visible checkpoint and require explicit user sign-off — do not proceed on an implicit "ok continue." |
 | Brainstorming output indicates a simple one-line known-pattern fix | Skip writing-plans; route straight to `tdd-iron-law` | The brief documented the smallness; trust it. |
+| Greenfield UI feature needs **high-coverage / high-risk** state fan-out (beyond the inline six-category reminder) | `spec-toolkit:spec-expansion` | Runs the full lens (USM / OOUX / auto-expansion matrix) on a sparse seed. **Tier 2 — deferred**: active once `writing-plans` reads OpenSpec change-folders. Until that wiring lands, use the inline §Greenfield UI-state nudge above. |
 
 Delegation contract (see CLAUDE.md cross-plugin section): pass **paths + structured seed context**, not full file content. The target skill loads its own resources.
 

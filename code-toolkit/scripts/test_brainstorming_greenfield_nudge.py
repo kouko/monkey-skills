@@ -58,9 +58,10 @@ def test_greenfield_and_ui_gate():
     # find the nudge region: a window of lines around the first 'greenfield'
     # mention that also names the UI surface (the nudge), not the brief schema
     # 'N/A — greenfield' line alone.
-    ui_phrases = ("ui", "interaction", "stateful", "state surface",
+    ui_phrases = ("interaction", "stateful", "state surface",
                   "state-surface", "interactive")
-    surface_hit = any(p in low for p in ui_phrases)
+    surface_hit = bool(re.search(r"\bui\b", low)) or any(
+        p in low for p in ui_phrases)
     assert surface_hit, \
         "gate must name a UI / interaction / stateful surface as a fire condition"
 
@@ -89,11 +90,16 @@ def test_gate_and_categories_colocated():
     # locate the nudge: the line range spanning from the first 'greenfield'
     # gate mention that is co-located with a UI surface word, to within a
     # ~25-line window. Then assert the six categories appear inside it.
+    # match "ui" only as a whole word (avoid 'required' / 'build' substrings);
+    # the longer surface words can match as substrings safely.
+    def _surface(line: str) -> bool:
+        if re.search(r"\bui\b", line):
+            return True
+        return any(p in line for p in ("interaction", "stateful", "interactive"))
+
     nudge_start = None
     for i, line in enumerate(lines):
-        if "greenfield" in line and any(
-            p in line for p in ("ui", "interaction", "stateful", "interactive")
-        ):
+        if "greenfield" in line and _surface(line):
             nudge_start = i
             break
     # fall back: the heading/sentence that introduces the enumeration
