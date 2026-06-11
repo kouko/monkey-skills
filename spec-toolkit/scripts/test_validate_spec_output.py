@@ -42,9 +42,10 @@ def _well_formed_delta() -> str:
 
 
 def _well_formed_additive() -> str:
-    """The five additive sections spec-toolkit requires in proposal.md (the
+    """The additive sections spec-toolkit requires in proposal.md (the
     three-flow artifacts USM backbone / OOUX object model / Path × edge matrix
-    plus Provenance and a non-empty Blind-spots body)."""
+    plus Provenance and a non-empty Blind-spots body, plus the L2/L3
+    Cross-object combinations / Journey navigation sections)."""
     return (
         "## USM backbone\n"
         "- Sign up → Log in → Use feature → Log out\n"
@@ -63,6 +64,12 @@ def _well_formed_additive() -> str:
         "| path | edge |\n"
         "| --- | --- |\n"
         "| login | wrong password |\n"
+        "\n"
+        "## Cross-object combinations\n"
+        "- User × Session: one user holds many sessions\n"
+        "\n"
+        "## Journey navigation\n"
+        "- From login screen → dashboard → feature\n"
     )
 
 
@@ -186,7 +193,8 @@ def test_skeleton_tolerates_extra_content(tmp_path):
 # operate on proposal.md.
 
 def _proposal_with(*, usm=True, ooux=True, provenance=True, blind_spots=True,
-                   blind_spots_empty=False, matrix=True) -> str:
+                   blind_spots_empty=False, matrix=True,
+                   cross_object=True, journey=True) -> str:
     parts = ["# Proposal\n\nWhy this change.\n"]
     if usm:
         parts.append("## USM backbone\n- Sign up → Log in → Use feature\n")
@@ -203,6 +211,12 @@ def _proposal_with(*, usm=True, ooux=True, provenance=True, blind_spots=True,
     if matrix:
         parts.append("## Path × edge matrix\n| path | edge |\n| --- | --- |\n"
                      "| login | wrong password |\n")
+    if cross_object:
+        parts.append("## Cross-object combinations\n"
+                     "- User × Session: one user holds many sessions\n")
+    if journey:
+        parts.append("## Journey navigation\n"
+                     "- From login screen → dashboard → feature\n")
     return "\n".join(parts)
 
 
@@ -257,6 +271,29 @@ def test_additive_rejects_missing_path_edge_matrix(tmp_path):
     ok, problems = validate(root)
     assert not ok
     assert any("Path × edge matrix" in p for p in problems), problems
+
+
+def _proposal_five_original_only() -> str:
+    """The five ORIGINAL additive sections, but MISSING the two L2/L3 sections
+    (Cross-object combinations / Journey navigation)."""
+    return (
+        "# Proposal\n\nWhy this change.\n"
+        "\n## USM backbone\n- Sign up → Log in → Use feature\n"
+        "\n## OOUX object model\n- User (objects), Session (objects)\n"
+        "\n## Provenance\n- User login: seeded\n"
+        "\n## Blind spots — needs human/field input\n"
+        "- Lockout threshold is a policy call I cannot judge.\n"
+        "\n## Path × edge matrix\n| path | edge |\n| --- | --- |\n"
+        "| login | wrong password |\n"
+    )
+
+
+def test_rejects_missing_cross_object_and_journey(tmp_path):
+    root = _write_skeleton(tmp_path, proposal_body=_proposal_five_original_only())
+    ok, problems = validate(root)
+    assert not ok
+    assert any("Cross-object combinations" in p for p in problems), problems
+    assert any("Journey navigation" in p for p in problems), problems
 
 
 def test_additive_accepts_complete_hybrid(tmp_path):

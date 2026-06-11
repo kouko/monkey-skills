@@ -158,6 +158,19 @@ def test_spec_not_code_boundary():
         "boundary: code review / TDD is code-toolkit's / VSDD's job"
 
 
+# --- dual-role note: L2/L3 systematization refocuses the critic ------------
+
+def test_dual_role_note_present():
+    low = _text().lower()
+    # spec-expansion v0.2 systematizes L2 (cross-object) + L3 (journey)
+    assert ("l2" in low and "l3" in low) \
+        or ("cross-object" in low and "journey" in low), \
+        "must note v0.2 systematizes L2 (cross-object) and L3 (journey)"
+    # the critic REFOCUSES (not merely 'lighter') onto residual regimes
+    assert "single-object" in low or "resume" in low or "landing" in low, \
+        "must give a refocus cue (single-object / resume / landing)"
+
+
 # --- how it writes back -----------------------------------------------------
 
 def test_writes_back_provenance_critic_found():

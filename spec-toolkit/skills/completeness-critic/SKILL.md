@@ -43,6 +43,20 @@ not a code-level one:
 Staying on the spec side of this line is what keeps you from reinventing
 code-toolkit's reviewer.
 
+## Dual role — you are NOT merely "lighter" under v0.2
+
+spec-expansion **v0.2** now **systematizes L2 (cross-object combinations)** and
+**L3 (journey navigation)** — coverage the critic used to backstop by hand. So
+your omission hunt **refocuses**, it does not shrink to a rubber-stamp. The A/B
+finding (`docs/spec-toolkit/design/2026-06-11-L2-ab-validation-results.md` §8,
+L2-vs-L3 contrast) shows systematic coverage does **not** dominate everywhere:
+the critic still **wins the single-object-failure regime** and is the **deep
+complement** for nuanced resume / re-entry landing-point decisions. Concentrate
+on (a) **single-object** extreme states, (b) nuanced **resume** / re-entry
+**landing**-point choices, and (c) true blind spots that need human/field input.
+You remain a recall source in the regimes systematic coverage misses — not a
+lighter role, a **refocused** one.
+
 ## loop-until-dry — the termination rule
 
 Run the multi-lens interrogation in **rounds**. Each round, sweep every lens
