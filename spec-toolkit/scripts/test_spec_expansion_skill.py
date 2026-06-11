@@ -188,6 +188,53 @@ def test_multi_agent_fan_out_referenced():
         "must reference multi-agent fan-out for per-object expansion"
 
 
+# --- L3 journey-navigation layer --------------------------------------------
+
+def test_l3_journey_navigation_present():
+    """The L3 journey-navigation layer: Phase ① ALSO builds the backbone as a
+    navigation graph; a Phase ③c sub-step applies 0-switch state-transition
+    coverage to it (broadly, any flow with ≥2 stages); proposal.md carries a
+    `## Journey navigation` section as the Phase ③c artifact."""
+    text = _text()
+    low = text.lower()
+    # the Phase ③c announce marker (exact bytes — validator hard-codes same)
+    assert "— Phase ③c journey navigation —" in text, \
+        "must announce '— Phase ③c journey navigation —'"
+    # the visible proposal.md artifact section (exact bytes)
+    assert "## Journey navigation" in text, \
+        "Phase ③c must emit a visible '## Journey navigation' section"
+    # the backbone-as-navigation-graph instruction
+    assert "navigation graph" in low, \
+        "Phase ① must ALSO build the backbone as a navigation graph"
+    # a coverage cue: 0-switch or state-transition
+    assert "0-switch" in low or "state-transition" in low or "state transition" in low, \
+        "Phase ③c must apply 0-switch / state-transition coverage to the graph"
+
+
+# --- L2 cross-object-combination layer --------------------------------------
+
+def test_l2_cross_object_combinations_present():
+    """The L2 cross-object-combination layer: a Phase ③b sub-step enumerates
+    per-stage joint state combinations of co-active objects, GATED on
+    interaction-density; wide stages (≥4 co-active objects) call
+    scripts/pairwise.py; proposal.md carries a `## Cross-object combinations`
+    section as the Phase ③b artifact."""
+    text = _text()
+    low = text.lower()
+    # the Phase ③b announce marker (exact bytes — validator hard-codes same)
+    assert "— Phase ③b cross-object combinations —" in text, \
+        "must announce '— Phase ③b cross-object combinations —'"
+    # the visible proposal.md artifact section (exact bytes)
+    assert "## Cross-object combinations" in text, \
+        "Phase ③b must emit a visible '## Cross-object combinations' section"
+    # the interaction-density gate
+    assert "interaction-density" in low, \
+        "Phase ③b must be gated on interaction-density"
+    # the wide-stage pairwise generator path
+    assert "scripts/pairwise.py" in text, \
+        "wide stages (≥4 objects) must call scripts/pairwise.py"
+
+
 # --- provenance tagging (all three tags) ------------------------------------
 
 def test_provenance_tags_all_three():

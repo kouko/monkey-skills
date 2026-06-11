@@ -126,6 +126,8 @@ _SEC_OOUX_OBJECT_MODEL = "## OOUX object model"
 _SEC_PROVENANCE = "## Provenance"
 _SEC_BLIND_SPOTS = "## Blind spots — needs human/field input"
 _SEC_PATH_EDGE_MATRIX = "## Path × edge matrix"
+_SEC_CROSS_OBJECT_COMBINATIONS = "## Cross-object combinations"
+_SEC_JOURNEY_NAVIGATION = "## Journey navigation"
 
 _H2 = re.compile(r"^##\s", re.MULTILINE)
 
@@ -201,6 +203,28 @@ def _check_path_edge_matrix_section(root: Path) -> list[str]:
     return []
 
 
+def _check_cross_object_combinations_section(root: Path) -> list[str]:
+    proposal = root / "proposal.md"
+    if not proposal.is_file():
+        return []  # already reported by _check_proposal
+    if _section_body(proposal.read_text(encoding="utf-8"),
+                     _SEC_CROSS_OBJECT_COMBINATIONS) is None:
+        return [f"missing '{_SEC_CROSS_OBJECT_COMBINATIONS}' section in {proposal} "
+                f"(L2 artifact — make cross-object combinations visible)"]
+    return []
+
+
+def _check_journey_navigation_section(root: Path) -> list[str]:
+    proposal = root / "proposal.md"
+    if not proposal.is_file():
+        return []  # already reported by _check_proposal
+    if _section_body(proposal.read_text(encoding="utf-8"),
+                     _SEC_JOURNEY_NAVIGATION) is None:
+        return [f"missing '{_SEC_JOURNEY_NAVIGATION}' section in {proposal} "
+                f"(L3 artifact — make journey navigation visible)"]
+    return []
+
+
 # --- text helpers -----------------------------------------------------------
 
 _ANY_HEADER = re.compile(r"^#{2,4}\s", re.MULTILINE)
@@ -240,6 +264,8 @@ _ADDITIVE_CHECKS = [
     _check_provenance_section,
     _check_blind_spots_section,
     _check_path_edge_matrix_section,
+    _check_cross_object_combinations_section,
+    _check_journey_navigation_section,
 ]
 
 

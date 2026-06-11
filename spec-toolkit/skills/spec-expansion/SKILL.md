@@ -1,7 +1,7 @@
 ---
 name: spec-expansion
 description: Turn a sparse seed (a few lines of feature intent) into a high-recall spec draft — systematically fan out objects, states, paths and edge cases, then emit candidate acceptance criteria in OpenSpec change-folder shape. Use for spec-expansion / requirement fan-out / edge-case coverage when starting a non-trivial coding task from a sparse idea and you want the paths, states and edge cases named BEFORE implementation instead of discovered late by review. 規格擴展・需求展開・邊界案例覆蓋。仕様展開・要件ファンアウト・エッジケース網羅。
-version: 0.1.0
+version: 0.2.0
 ---
 
 # spec-expansion
@@ -90,6 +90,13 @@ touches. Tag each extracted item `seeded` (straight from the seed text) or
 `inferred` (you supplied it from domain priors) — the seed-ceiling boundary
 in action: be explicit about what you added.
 
+**Also build the backbone as a navigation graph.** Beyond the left-to-right
+happy-path spine, model the journey as a **navigation graph**: nodes = stages,
+edges typed `{forward, back, skip, abandon, resume_reenter, error_escape,
+retry_self}`. The spine captures only `forward`; the typed edges capture how a
+real user moves *between* stages (goes back, skips ahead, abandons and resumes,
+escapes on error, retries in place). This graph is the input Phase ③c walks.
+
 **Visible artifact:** emit a `## USM backbone` section in `proposal.md` — an
 ordered list (or table) of the journey steps that form the spine.
 
@@ -170,6 +177,49 @@ padding (Rule 12, fail loud).
 **Visible artifact:** emit a `## Path × edge matrix` section in `proposal.md`
 — the grid plus the surviving paths/edges that remain post-prune.
 
+**Phase ③b — cross-object combinations.**
+Announce `— Phase ③b cross-object combinations —`.
+For each flow-stage, identify the **co-active objects** on that stage (the
+objects simultaneously live), enumerate their **joint state combinations**,
+and specify the **reaction each combination requires** (what the system must
+do when those objects sit in that joint state — and especially where the
+joint reaction is *not* just the union of the per-object reactions).
+
+**Gate it on interaction-density.** Run ③b on a stage **only when** that
+stage's required reaction depends on the **joint state** of ≥2 objects —
+i.e. some object-pair's joint reaction ≠ the union of their individual
+reactions (`interaction-density`). Otherwise **skip ③b for that stage** and
+let the per-object grid (Phase ③) + the completeness-critic handle it; the
+critic out-recalls joint enumeration on separable single-object-failure
+stages and prunes its junk, so do not enumerate combinations where the
+reaction is just the union of individual reactions.
+
+**Wide stages (≥4 co-active objects).** Full in-prompt enumeration leaks on
+wide stages (the exhaustive grid catches gold pure-prompt enumeration
+misses) — instead call the generator `scripts/pairwise.py`: pipe
+`{"params": {"<Object>": ["<state>", ...], ...}}` to its stdin and it
+returns a **pairwise-covering** set of combinations. For ≤3-object stages,
+full in-prompt enumeration of the joint grid suffices. Residue a pairwise
+set cannot guarantee (gold reachable only via a higher-order combination)
+is **blind-spotted, never padded** — carry the honesty rail: an honest
+"pairwise-covered + listed residue" beats a fabricated full grid.
+
+**Phase ③c — journey-navigation coverage.**
+Announce `— Phase ③c journey navigation —`.
+Apply **0-switch state-transition coverage** to the navigation
+graph from Phase ①: **walk every navigation edge exactly once** and, for each
+legal transition, specify the **reaction it requires** (what the system must do
+when the user takes that edge — restore which state, land on which step, warn,
+re-validate, etc.). 0-switch means single-edge coverage: each typed edge
+(`forward / back / skip / abandon / resume_reenter / error_escape /
+retry_self`) is exercised once, not every edge-pair sequence. Apply this
+**broadly to any flow with ≥2 stages** — it is **not** gated behind a lens
+trigger; a multi-stage journey always has navigation edges worth specifying.
+The completeness-critic remains the **deep complement** for nuanced
+resume / re-entry landing-point decisions (exactly *where* to land, *what* to
+restore) — L3 systematic coverage gets breadth across every edge, the critic
+gets those deep per-case judgments.
+
 **Emit (hybrid output format).** Emit the surviving paths/edges as the hybrid
 output format below. Every emitted item carries a provenance tag. Close with
 a coverage statement ("coverage relative to seed + N lenses") — never a
@@ -226,7 +276,7 @@ delta free of spec-toolkit-specific sections.
 spec-toolkit's differentiating richness goes in `proposal.md` additive
 sections (OpenSpec's structure-only validate tolerates extra sections, so the
 delta stays pure while the richness lives here). `proposal.md` carries
-**five visible sections** — the three per-phase artifacts plus provenance and
+**seven visible sections** — the five per-phase artifacts plus provenance and
 blind spots:
 
 - `## USM backbone` — Phase ① artifact: the ordered journey-step spine.
@@ -234,6 +284,17 @@ blind spots:
   object's state machine.
 - `## Path × edge matrix` — Phase ③ artifact: the grid plus which
   `backbone × object × CTA × state` paths and edges survive post-prune.
+- `## Cross-object combinations` — Phase ③b artifact: per interaction-dense
+  stage, the joint state combinations of its co-active objects and the
+  reaction each requires (wide stages reduced via `scripts/pairwise.py`).
+  **Structurally required — always emitted**; when no stage is
+  interaction-dense, its body states that honestly (e.g. "no
+  interaction-dense stage — combinations N/A") and does **not** pad.
+- `## Journey navigation` — Phase ③c artifact: the 0-switch walk of the
+  navigation graph — every legal typed transition (`forward / back / skip /
+  abandon / resume_reenter / error_escape / retry_self`) and the reaction it
+  requires. **Structurally required — always emitted**; for a single-stage
+  flow the body says so (no inter-stage edges to specify).
 - `## Provenance` — every item tagged seeded / inferred / critic-found.
 - `## Blind spots — needs human/field input` — left present and **non-empty**
   (the completeness-critic fills it; it is the critic's load-bearing output —
