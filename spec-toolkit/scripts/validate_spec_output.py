@@ -12,9 +12,10 @@ This module checks the SKELETON only (structure, not content quality),
 mirroring `openspec validate`'s structure-only behavior: extra/unknown
 sections are tolerated, never rejected.
 
-It also checks spec-toolkit's ADDITIVE sections in proposal.md (## Provenance,
-## Blind spots — needs human/field input, ## Path × edge matrix) — the
-differentiating richness that OpenSpec's structure-only validate tolerates.
+It also checks spec-toolkit's ADDITIVE sections in proposal.md (## USM
+backbone, ## OOUX object model, ## Provenance, ## Blind spots — needs
+human/field input, ## Path × edge matrix) — the differentiating richness
+that OpenSpec's structure-only validate tolerates.
 
 Design: each check is a function (root: Path) -> list[str] of problem
 messages (empty == ok). `_SKELETON_CHECKS` is the skeleton registry;
@@ -120,6 +121,8 @@ def _check_scenario_given_when_then(root: Path) -> list[str]:
 # clean); the additive sections live in proposal.md. These checks therefore
 # read proposal.md. Tolerant of extra content, like the skeleton checks.
 
+_SEC_USM_BACKBONE = "## USM backbone"
+_SEC_OOUX_OBJECT_MODEL = "## OOUX object model"
 _SEC_PROVENANCE = "## Provenance"
 _SEC_BLIND_SPOTS = "## Blind spots — needs human/field input"
 _SEC_PATH_EDGE_MATRIX = "## Path × edge matrix"
@@ -137,6 +140,28 @@ def _section_body(text: str, header: str) -> str | None:
         return None
     nxt = _H2.search(text, m.end())
     return text[m.end():nxt.start()] if nxt else text[m.end():]
+
+
+def _check_usm_backbone_section(root: Path) -> list[str]:
+    proposal = root / "proposal.md"
+    if not proposal.is_file():
+        return []  # already reported by _check_proposal
+    if _section_body(proposal.read_text(encoding="utf-8"),
+                     _SEC_USM_BACKBONE) is None:
+        return [f"missing '{_SEC_USM_BACKBONE}' section in {proposal} "
+                f"(Phase ① artifact — make the USM backbone visible)"]
+    return []
+
+
+def _check_ooux_object_model_section(root: Path) -> list[str]:
+    proposal = root / "proposal.md"
+    if not proposal.is_file():
+        return []  # already reported by _check_proposal
+    if _section_body(proposal.read_text(encoding="utf-8"),
+                     _SEC_OOUX_OBJECT_MODEL) is None:
+        return [f"missing '{_SEC_OOUX_OBJECT_MODEL}' section in {proposal} "
+                f"(Phase ② artifact — make the OOUX object model visible)"]
+    return []
 
 
 def _check_provenance_section(root: Path) -> list[str]:
@@ -206,7 +231,12 @@ _SKELETON_CHECKS = [
 ]
 
 # spec-toolkit's additive richness, beyond the openspec-clean skeleton.
+# The three-flow artifacts (USM backbone / OOUX object model / Path × edge
+# matrix) make each expansion phase visible; Provenance + Blind spots carry
+# the critic's load-bearing output.
 _ADDITIVE_CHECKS = [
+    _check_usm_backbone_section,
+    _check_ooux_object_model_section,
     _check_provenance_section,
     _check_blind_spots_section,
     _check_path_edge_matrix_section,
