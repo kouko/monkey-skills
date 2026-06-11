@@ -41,12 +41,35 @@ def _well_formed_delta() -> str:
     )
 
 
+def _well_formed_additive() -> str:
+    """The three additive sections spec-toolkit requires in proposal.md,
+    with a non-empty Blind-spots body."""
+    return (
+        "## Provenance\n"
+        "- User login: seeded\n"
+        "- Lockout after N tries: critic-found\n"
+        "\n"
+        "## Blind spots — needs human/field input\n"
+        "- Lockout threshold N is a policy call I cannot judge.\n"
+        "\n"
+        "## Path × edge matrix\n"
+        "| path | edge |\n"
+        "| --- | --- |\n"
+        "| login | wrong password |\n"
+    )
+
+
 def _write_skeleton(root: Path, *, delta_body: str | None = None,
-                    with_proposal: bool = True) -> Path:
-    """Build a skeleton output dir under root; return root."""
+                    with_proposal: bool = True,
+                    proposal_body: str | None = None) -> Path:
+    """Build a skeleton output dir under root; return root.
+
+    `proposal_body`, when given, is the full proposal.md content (lets
+    additive tests control which sections are present)."""
     if with_proposal:
-        (root / "proposal.md").write_text("# Proposal\n\nWhy this change.\n",
-                                          encoding="utf-8")
+        content = ("# Proposal\n\nWhy this change.\n\n" + _well_formed_additive()
+                   if proposal_body is None else proposal_body)
+        (root / "proposal.md").write_text(content, encoding="utf-8")
     specs = root / "specs" / "auth"
     specs.mkdir(parents=True, exist_ok=True)
     body = _well_formed_delta() if delta_body is None else delta_body
@@ -148,6 +171,70 @@ def test_skeleton_tolerates_extra_content(tmp_path):
     root = _write_skeleton(tmp_path, delta_body=body)
     ok, problems = validate(root)
     assert ok, f"extra content must be tolerated, got: {problems}"
+
+
+# --- additive-section tests (Task 3) ---------------------------------------
+# spec-toolkit's differentiating richness lives in proposal.md's additive
+# sections; the OpenSpec delta under specs/ stays pure. So additive checks
+# operate on proposal.md.
+
+def _proposal_with(*, provenance=True, blind_spots=True,
+                   blind_spots_empty=False, matrix=True) -> str:
+    parts = ["# Proposal\n\nWhy this change.\n"]
+    if provenance:
+        parts.append("## Provenance\n- User login: seeded\n")
+    if blind_spots:
+        if blind_spots_empty:
+            parts.append("## Blind spots — needs human/field input\n")
+        else:
+            parts.append("## Blind spots — needs human/field input\n"
+                         "- Lockout threshold is a policy call I cannot judge.\n")
+    if matrix:
+        parts.append("## Path × edge matrix\n| path | edge |\n| --- | --- |\n"
+                     "| login | wrong password |\n")
+    return "\n".join(parts)
+
+
+def test_additive_rejects_missing_provenance(tmp_path):
+    root = _write_skeleton(tmp_path, proposal_body=_proposal_with(provenance=False))
+    ok, problems = validate(root)
+    assert not ok
+    assert any("Provenance" in p for p in problems), problems
+
+
+def test_additive_rejects_missing_blind_spots(tmp_path):
+    root = _write_skeleton(tmp_path, proposal_body=_proposal_with(blind_spots=False))
+    ok, problems = validate(root)
+    assert not ok
+    assert any("Blind spots" in p for p in problems), problems
+
+
+def test_additive_rejects_empty_blind_spots(tmp_path):
+    root = _write_skeleton(
+        tmp_path, proposal_body=_proposal_with(blind_spots_empty=True))
+    ok, problems = validate(root)
+    assert not ok
+    assert any("Blind spots" in p for p in problems), problems
+
+
+def test_additive_rejects_missing_path_edge_matrix(tmp_path):
+    root = _write_skeleton(tmp_path, proposal_body=_proposal_with(matrix=False))
+    ok, problems = validate(root)
+    assert not ok
+    assert any("Path × edge matrix" in p for p in problems), problems
+
+
+def test_additive_accepts_complete_hybrid(tmp_path):
+    root = _write_skeleton(tmp_path, proposal_body=_proposal_with())
+    ok, problems = validate(root)
+    assert ok, f"complete hybrid (skeleton + 3 additive) should pass, got: {problems}"
+    assert problems == []
+
+
+def test_additive_accepts_complete_hybrid_cli(tmp_path):
+    root = _write_skeleton(tmp_path, proposal_body=_proposal_with())
+    proc = _run_cli(root)
+    assert proc.returncode == 0, proc.stderr + proc.stdout
 
 
 # --- CLI contract (thin __main__) ------------------------------------------
