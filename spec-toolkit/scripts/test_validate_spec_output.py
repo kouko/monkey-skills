@@ -42,9 +42,16 @@ def _well_formed_delta() -> str:
 
 
 def _well_formed_additive() -> str:
-    """The three additive sections spec-toolkit requires in proposal.md,
-    with a non-empty Blind-spots body."""
+    """The five additive sections spec-toolkit requires in proposal.md (the
+    three-flow artifacts USM backbone / OOUX object model / Path × edge matrix
+    plus Provenance and a non-empty Blind-spots body)."""
     return (
+        "## USM backbone\n"
+        "- Sign up → Log in → Use feature → Log out\n"
+        "\n"
+        "## OOUX object model\n"
+        "- User (objects), Session (objects)\n"
+        "\n"
         "## Provenance\n"
         "- User login: seeded\n"
         "- Lockout after N tries: critic-found\n"
@@ -178,9 +185,13 @@ def test_skeleton_tolerates_extra_content(tmp_path):
 # sections; the OpenSpec delta under specs/ stays pure. So additive checks
 # operate on proposal.md.
 
-def _proposal_with(*, provenance=True, blind_spots=True,
+def _proposal_with(*, usm=True, ooux=True, provenance=True, blind_spots=True,
                    blind_spots_empty=False, matrix=True) -> str:
     parts = ["# Proposal\n\nWhy this change.\n"]
+    if usm:
+        parts.append("## USM backbone\n- Sign up → Log in → Use feature\n")
+    if ooux:
+        parts.append("## OOUX object model\n- User (objects), Session (objects)\n")
     if provenance:
         parts.append("## Provenance\n- User login: seeded\n")
     if blind_spots:
@@ -193,6 +204,30 @@ def _proposal_with(*, provenance=True, blind_spots=True,
         parts.append("## Path × edge matrix\n| path | edge |\n| --- | --- |\n"
                      "| login | wrong password |\n")
     return "\n".join(parts)
+
+
+def test_additive_rejects_missing_usm_backbone(tmp_path):
+    root = _write_skeleton(tmp_path, proposal_body=_proposal_with(usm=False))
+    ok, problems = validate(root)
+    assert not ok
+    assert any("USM backbone" in p for p in problems), problems
+
+
+def test_additive_rejects_missing_ooux_object_model(tmp_path):
+    root = _write_skeleton(tmp_path, proposal_body=_proposal_with(ooux=False))
+    ok, problems = validate(root)
+    assert not ok
+    assert any("OOUX object model" in p for p in problems), problems
+
+
+def test_additive_usm_prose_mention_does_not_satisfy(tmp_path):
+    # A prose mention of "USM backbone" must NOT count — whole-line header only.
+    body = _proposal_with(usm=False)
+    body += "\nWe considered a USM backbone here but did not add the section.\n"
+    root = _write_skeleton(tmp_path, proposal_body=body)
+    ok, problems = validate(root)
+    assert not ok
+    assert any("USM backbone" in p for p in problems), problems
 
 
 def test_additive_rejects_missing_provenance(tmp_path):
@@ -227,7 +262,7 @@ def test_additive_rejects_missing_path_edge_matrix(tmp_path):
 def test_additive_accepts_complete_hybrid(tmp_path):
     root = _write_skeleton(tmp_path, proposal_body=_proposal_with())
     ok, problems = validate(root)
-    assert ok, f"complete hybrid (skeleton + 3 additive) should pass, got: {problems}"
+    assert ok, f"complete hybrid (skeleton + 5 additive) should pass, got: {problems}"
     assert problems == []
 
 
