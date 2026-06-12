@@ -1,7 +1,7 @@
 ---
 name: completeness-critic
 description: Adversarial completeness critique of a spec-expansion output via a decorrelated critic panel — fresh-context critic subagents with distinct personas and input-views each hunt OMISSIONS the writer missed (missing objects/actors, unhandled states, system-layer failures, NFR/policy gaps), then UNION their findings with an overlap-rate diagnostic and emit residual blind spots. Use when reviewing a spec draft for gaps / missing requirements / blind spots / completeness, after spec-expansion produces a draft and before it feeds code-toolkit's VERIFY layer. Critiques the SPEC for omissions only — never code, never TDD.
-version: 0.2.0
+version: 0.2.1
 ---
 
 # completeness-critic
@@ -56,18 +56,47 @@ not a lighter one. *How* you run that refocused hunt is the panel below.
 
 ## loop-until-dry — the termination rule
 
-Run the multi-lens interrogation in **rounds**. Each round, sweep every lens
-against the current draft and surface any new gap.
+Run the multi-lens interrogation in **rounds**. **Mind the cost**: a panel round
+is **N fresh-context subagent dispatches** (one per lens) — a *blanket* re-sweep
+of all five lenses every round is ~15 subagent calls across a 3-round loop (the
+*blanket worst case* — targeted re-seeding below makes the real cost far lower),
+and that cost is exactly the pressure that tempts the executor to **silently skip the
+loop** (the F-1 failure). The fix is not to abandon the loop — it is to make the
+re-runs **targeted**.
 
 1. **Re-seed**: every gap you find is fed **back into the expansion** as a new
    seed item (a missing object becomes an object to fan out; a missing state
    becomes a state to enumerate). Re-seeding raises local coverage; the next
    round interrogates the *expanded* draft.
-2. **Terminate when dry**: keep looping until **K consecutive rounds surface
-   nothing new** (default `K = 2`). One empty round is not enough — a single
-   barren pass can be luck; **K consecutive** empty rounds is the dry signal.
-3. **Honesty rail**: "dry" means *no new gap found under the current lenses* —
+2. **Targeted re-seed, not a blanket re-sweep**: after round 1, **re-dispatch
+   only the lens(es) whose re-seeded gaps open a genuinely new object / actor /
+   state-class** — a real new seed that *changes that lens's input*. **Re-run a
+   lens only when its input actually changed**; a lens whose view is unchanged
+   would just re-find what round 1 already found, so don't pay for it.
+3. **Escalate to a full second panel round only when a re-seed surfaces a new
+   defect CLASS** — a gap whose kind none of the five lenses was hunting. A new
+   *instance* of an already-covered class only re-runs the affected lens (rule 2);
+   a new *class* is what justifies re-dispatching the whole panel.
+4. **Terminate when dry — `K = 2` is the LOGICAL stop**: keep looping until
+   **K consecutive rounds surface nothing new** (default `K = 2`). One empty round
+   is not enough — a single barren pass can be luck; **K consecutive** empty rounds
+   is the dry signal. The dry signal still terminates the loop; what the targeted
+   mechanism changes is *which* critics re-run **between** the dry checks — not
+   whether the loop runs. **A round is dry when no re-seed opened a new instance
+   or class for any re-run lens; if no lens's input changed after a productive
+   round, that round is dry _by definition_** — you do **not** force a blanket
+   re-sweep of all five critics just to "prove" dryness (doing so would re-incur
+   the very F-1 cost the targeted mechanism exists to avoid).
+5. **Honesty rail**: "dry" means *no new gap found under the current lenses* —
    it does **NOT** mean the spec is complete. See the blind-spots rule below.
+
+> **Anti-pattern (F-1) — do NOT silently skip the loop to save cost.** Running
+> one round and calling it done "because re-running all five critics is
+> expensive" is the F-1 failure: the cost objection is real, but the fix is
+> **targeted re-seeding** (rule 2 — re-run only the changed-input lens), **not**
+> abandoning the loop. Skipping the loop trades the named cost for an unnamed
+> recall loss; the targeted mechanism pays the cost only where a lens's input
+> actually moved.
 
 Re-seeding cannot break the theoretical ceiling: external completeness is
 relative to all external knowledge, and a sparse seed + LLM priors are not a
@@ -97,7 +126,11 @@ Each lens-critic carries:
 
 Collect the **UNION** of all lens-critics' findings, then **dedup + re-seed** (the
 loop-until-dry rounds above continue to drive the panel; re-seeding feeds each
-found gap back into the expanded draft for the next round).
+found gap back into the expanded draft for the next round). The dedup + rank
+mechanics are specified in full under [`## Consolidate the panel union before
+writing back`](#consolidate-the-panel-union-before-writing-back) below — that is
+the canonical step that turns this raw union into the ranked set write-back
+consumes.
 
 For each lens, ask the omission question — "**what is missing here?**" — not the
 consistency question. Inconsistency-hunting is Spec Kit's job; you hunt absence.
@@ -253,21 +286,61 @@ panel **redundancy** (diversify the panel), it is **not** the input to a
 completeness number. That diagnostic deliberately stops at "diversify"; this
 rule is the explicit ban on turning the overlap into an estimate.
 
+## Consolidate the panel union before writing back
+
+The panel emits a **5-way UNION with cross-lens duplicates** — the same gap is
+routinely found by 2–4 critics at once (the dogfood saw durability ×2,
+multi-device-merge ×3–4, autocomplete-privacy ×4). The ~3–4× precision win the
+experiment measured is **per-critic** (each lens stays in lane); the
+**panel-level union still needs a merge/rank pass** before it touches the spec,
+or 40+ raw items dump noise into the draft. Do this **qualitatively** — a
+judgment call like the overlap diagnostic, **no script, no computed metric**:
+
+1. **Dedup semantically across lenses** — a gap found by several critics in
+   different words collapses to **ONE** consolidated finding (carry the set of
+   lenses that hit it).
+2. **Rank by (severity × number-of-lenses-that-found-it)** — **cross-lens
+   convergence is the precision signal**: a gap that **multiple independent
+   lenses** hit is load-bearing, the panel-level analogue of the per-critic
+   precision win. A high-severity gap surfaced by 3–4 decorrelated lenses ranks
+   above a single-lens nit. (Convergence raises *rank confidence*, not
+   completeness — it never licenses a completeness number; the capture-recapture
+   ban still stands.) This is **not** in tension with the overlap-rate diagnostic
+   (which reads high *panel-wide* overlap as a redundancy red flag): that measures
+   whether the lenses *as a whole* are collapsing onto the same cells; this
+   measures whether *one specific finding* was independently corroborated by
+   several lenses. Panel-wide redundancy ≠ independent corroboration of a single
+   gap.
+3. **Re-seed only the ranked load-bearing set** as `critic-found` provenance +
+   candidate GIVEN/WHEN/THEN scenarios. The high-rank consolidated findings are
+   what flow into the draft.
+4. **The long tail → blind-spots / residue, never padded into the spec.** A
+   low-rank single-lens gap you cannot make concrete is **not** silently
+   promoted into a requirement to look thorough — that is the banned "complete"
+   reflex. It goes to `## Blind spots` (if it needs human/field input) or stays
+   as named residue. No-padding honesty holds: report what converged, name what
+   did not.
+
+`## How you write back` below operates on **this consolidated, ranked set** —
+not the raw union.
+
 ## How you write back
 
-You **extend** the spec-expansion output in place — you never overwrite the
+You **extend** the spec-expansion output in place with the **consolidated,
+ranked findings** (above) — never the raw union — and you never overwrite the
 writer's work, you augment it:
 
 1. **`## Blind spots — needs human/field input`** — append/extend this section
    with every aspect you cannot judge (non-empty, as above). This is the
    section the validator checks is non-empty.
-2. **`## Provenance`** — every gap you found and re-seeded into the draft is
-   added as an item tagged **`critic-found`** (distinct from the writer's
+2. **`## Provenance`** — every **consolidated** gap you re-seeded into the draft
+   is added as an item tagged **`critic-found`** (distinct from the writer's
    `seeded` / `inferred` tags), so the lineage of each requirement is
-   traceable.
-3. **Candidate `#### Scenario:` items** — a critic-found gap that is concrete
-   enough becomes a candidate acceptance criterion in GIVEN/WHEN/THEN shape,
-   added under the relevant `### Requirement:` in the OpenSpec skeleton, so it
+   traceable; note the lenses that converged on it as the rank signal.
+3. **Candidate `#### Scenario:` items** — a ranked load-bearing critic-found gap
+   that is concrete enough becomes a candidate acceptance criterion in
+   GIVEN/WHEN/THEN shape, added under the relevant `### Requirement:` in the
+   OpenSpec skeleton, so it
    flows straight into code-toolkit's `writing-plans` (one scenario → one
    RED test). Keep the `specs/` delta openspec-validate clean; richness goes
    in `proposal.md`.
@@ -277,9 +350,13 @@ writer's work, you augment it:
 After the loop terminates (K consecutive dry rounds), report:
 
 - rounds run, gaps found per round, what was re-seeded;
-- the **overlap judgment** per round and whether the panel was **diverse enough**
-  (low overlap) or needed an added orthogonal lens / persona / input view (high
-  overlap) — reported as redundancy, never as near-completeness;
+- **REQUIRED — the overlap-rate judgment for each round + whether the panel was
+  diverse enough**: report the per-round overlap-rate judgment from the
+  `### Overlap-rate diagnostic` as a first-class summary item (this turns that
+  diagnostic from advisory-only into a *reported* step) — state whether the panel
+  was **diverse enough** (low overlap) or needed an added orthogonal lens /
+  persona / input view (high overlap). Framed as panel **redundancy**, never as a
+  completeness signal and never as near-completeness;
 - the `critic-found` items now tagged in `## Provenance`;
 - the non-empty `## Blind spots — needs human/field input` list;
 - an explicit statement of **coverage relative to seed + 5 lenses** — never the
