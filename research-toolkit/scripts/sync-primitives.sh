@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# sync-primitives.sh — Place byte-identical copies of deep-research's
+# sync-primitives.sh — Place byte-identical copies of deep-deep-research's
 # reusable primitives into one or more sibling research-toolkit skills.
 #
-# deep-research is the SSOT (single source of truth) for four primitives:
+# deep-deep-research is the SSOT (single source of truth) for four primitives:
 #
 #   - schemas.py  — shared dataclasses / typed structures
 #   - rank.py     — source-ranking helper
@@ -11,7 +11,7 @@
 #
 # Sibling skills that reuse these (e.g. fact-check, cite-check) carry
 # byte-identical copies under their own scripts/ dir. This script
-# (re)creates those copies from the deep-research SSOT.
+# (re)creates those copies from the deep-deep-research SSOT.
 #
 # Usage:
 #   bash research-toolkit/scripts/sync-primitives.sh <skill-name> [<skill-name>...]
@@ -25,7 +25,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 TOOLKIT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 SKILLS_DIR="$TOOLKIT_DIR/skills"
-SSOT_DIR="$SKILLS_DIR/deep-research/scripts"
+SSOT_DIR="$SKILLS_DIR/deep-deep-research/scripts"
 
 # All four SSOT primitives. Each sibling carries only the subset it actually
 # uses (see primitives_for) — a skill must not carry code it never invokes.

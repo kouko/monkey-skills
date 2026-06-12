@@ -1,10 +1,10 @@
 ---
-name: deep-research
+name: deep-deep-research
 description: Deep research harness — fan-out web searches, fetch sources, adversarially verify claims, synthesize a cited report. Use when the user wants a deep, multi-source, fact-checked research report on any topic, run inside any coding agent host using the host's own LLM + web tools (zero API-key setup).
 version: 0.1.0
 ---
 
-# deep-research
+# deep-deep-research
 
 A multi-source, adversarially-verified research pipeline that produces a
 cited report. It reproduces the content of Claude Code's built-in
@@ -79,6 +79,74 @@ Turn the user's question into 3–6 distinct research **angles**.
    the `label` tags everything downstream.
 
 Keep the angles genuinely distinct — they become the parallel search fan-out.
+
+### Opt-in: Verbalized Sampling (VS) scope mode
+
+This is an **opt-in alternative** to the default 3–6-angle scope above. The
+default Stage 1 (the `scope`/`scope_prompt` path) is **unchanged** and remains
+the standard route — use VS mode only when you want a wider candidate pool
+that deliberately surfaces *non-obvious* angles alongside the obvious ones
+(Verbalized Sampling: over-generate, tier by typicality, then keep a
+high-typicality "head" plus a low-typicality "tail"). VS mode produces angles
+in the **same shape** the default scope emits, so Stage 2 onward is untouched.
+
+1. **Over-generate candidates.** Get the VS scope prompt:
+
+   ```
+   python scripts/scope_vs.py prompt --question "<the user's question>"
+   ```
+
+   Reason over it and emit ~`CANDIDATE_COUNT` (**12**) candidate angles
+   conforming to the schema printed by:
+
+   ```
+   python scripts/scope_vs.py schema
+   ```
+
+   Shape: `{question, summary, candidates}` where each candidate is
+   `{label, query, rationale, relevance, typicality_tier}` —
+   `relevance` ∈ `high`/`medium`/`low`, and `typicality_tier` ∈
+   `most-obvious`/`mid`/`least-obvious` (ranked **relatively within this one
+   call**, scored blind to authorship).
+
+2. **Self-consistency (calibration).** Re-run the scope reasoning
+   `SELF_CONSISTENCY_RUNS` (**2**) times — text-only, no fetch, so it is cheap
+   — and keep only candidates whose `typicality_tier` is **stable across the
+   runs**. This is the over-confidence guard: a candidate whose tier flips
+   between runs has an unreliable self-rated typicality and should not be
+   trusted to fill a head or tail slot.
+
+3. **Face-validity check** (the #1 risk — typicality self-eval reliability).
+   Before trusting the tiers, **print the candidates with their tiers** and
+   eyeball whether the `least-obvious` picks are genuinely non-obvious yet
+   still relevant. If a "surprise" angle is actually off-topic or trivially
+   obvious, drop or re-tier it — the selector trusts the tiers you feed it.
+
+4. **Select head + tail.** Feed the calibrated candidates to the deterministic
+   selector:
+
+   ```
+   echo '{"candidates": [...], "head_k": 3, "tail_k": 2}' \
+     | python scripts/vs_select.py
+   ```
+
+   stdin `{candidates, head_k, tail_k}` → stdout `{angles}`. It applies a
+   high-typicality **head** floor plus a low-typicality **tail** of surprises,
+   relevance-floored (drops `low`), deduped by label/normalized-query, with the
+   tail lexically de-redundified, capped at **≤ 6** angles. Each returned angle
+   is stripped to `{label, query, rationale}` — the **same shape** the default
+   scope emits.
+
+5. **Feed Stage 2 unchanged.** Hand the returned `angles` into the **unchanged
+   Stage 2 (Search + dedup)** exactly as you would the default scope angles.
+   Nothing downstream of Stage 1 changes.
+
+**Eval pointer.** After running both arms (VS vs the default baseline) over a
+question set, `python scripts/metric_novelty.py` computes the two-arm metric —
+how much of the VS arm's confirmed evidence the baseline never fetched
+(novel-AND-confirmed contribution rate) plus a per-question win direction. It
+reads the two arms' per-question data on stdin as JSON and writes the aggregate
+on stdout. This is **eval tooling**, not part of the live research pipeline.
 
 ---
 
