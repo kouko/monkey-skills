@@ -47,15 +47,12 @@ code-toolkit's reviewer.
 
 spec-expansion **v0.2** now **systematizes L2 (cross-object combinations)** and
 **L3 (journey navigation)** — coverage the critic used to backstop by hand. So
-your omission hunt **refocuses**, it does not shrink to a rubber-stamp. The A/B
-finding (`docs/spec-toolkit/design/2026-06-11-L2-ab-validation-results.md` §8,
-L2-vs-L3 contrast) shows systematic coverage does **not** dominate everywhere:
-the critic still **wins the single-object-failure regime** and is the **deep
-complement** for nuanced resume / re-entry landing-point decisions. Concentrate
-on (a) **single-object** extreme states, (b) nuanced **resume** / re-entry
-**landing**-point choices, and (c) true blind spots that need human/field input.
-You remain a recall source in the regimes systematic coverage misses — not a
-lighter role, a **refocused** one.
+your omission hunt **refocuses**, it does not shrink to a rubber-stamp: it still
+**wins the single-object-failure regime** and is the **deep complement** for
+nuanced resume / re-entry landing-point decisions
+(`docs/spec-toolkit/design/2026-06-11-L2-ab-validation-results.md` §8). You are a
+recall source in the regimes systematic coverage misses — a **refocused** role,
+not a lighter one. *How* you run that refocused hunt is the panel below.
 
 ## loop-until-dry — the termination rule
 
@@ -76,41 +73,89 @@ Re-seeding cannot break the theoretical ceiling: external completeness is
 relative to all external knowledge, and a sparse seed + LLM priors are not a
 complete source. The loop raises the ceiling *locally*; it never reaches it.
 
-## The multi-lens fixed interrogation checklist
+## The multi-lens critic panel
 
-Sweep **five fixed lenses**. Each lens is **blind to the others** — run them as
-**separate passes** so one lens's findings do not anchor the next. (Blending
-lenses into one prose pass is the failure mode; an independent pass per lens
-catches gaps a single blended sweep rationalizes away.)
+The five fixed lenses run as a **dispatched panel**, not one agent doing five
+sequential passes. **Dispatch one subagent per lens, each with fresh context** —
+phrase this fan-out portably (like `research-toolkit:deep-research`'s fan-out),
+**not** bound to any one harness/tool, because this skill is agent-portable.
+**Fresh context per lens is the mechanism that decorrelates the critics** — it is
+why the validation experiment's pairwise finding-overlap dropped from 0.67–0.96
+(one agent's shared-context passes) to 0.22–0.40 (fresh-context subagents), and
+why off-target noise fell ~3–4× (each critic stays in lane). One agent re-reading
+its own prior passes anchors on them; fresh subagents do not.
 
-1. **Missing object / actor** — Is every **object** the seed implies present?
+Each lens-critic carries:
+
+- **a distinct adversarial persona** — a frame that shifts what is *salient* so
+  the panel does not all stare at the same cells (e.g. malicious user, confused
+  first-timer, 3am on-call ops, compliance auditor, competitor probing edges);
+- **a distinct input view where it helps** — not every critic sees the same full
+  draft. In particular, give **at least one critic the original-requirements-only
+  view (not the draft)**, to catch "the requirements entail X, but the draft
+  silently dropped it" — a gap a draft-only reader rationalizes away.
+
+Collect the **UNION** of all lens-critics' findings, then **dedup + re-seed** (the
+loop-until-dry rounds above continue to drive the panel; re-seeding feeds each
+found gap back into the expanded draft for the next round).
+
+For each lens, ask the omission question — "**what is missing here?**" — not the
+consistency question. Inconsistency-hunting is Spec Kit's job; you hunt absence.
+
+### Overlap-rate diagnostic — is the panel actually diverse?
+
+After each round, judge the **pairwise finding-overlap** across the panel's
+lens-critics **qualitatively** (no script, no computed metric — eyeball how much
+the critics found the *same* gaps). The decision rule:
+
+- **High overlap (~>70%)** → the panel is **NOT diverse enough**. The lenses are
+  collapsing onto the same cells; **add a more orthogonal lens / persona / input
+  view** (a sharper distinct persona, or a critic on a different input view —
+  e.g. the original-requirements-only view) and re-run.
+- **Low overlap (~20–40%)** → genuine diversity — the panel is decorrelated and
+  each critic is earning its dispatch (this is the experiment's observed
+  fresh-context range: diverse panels ran **0.22–0.40** vs homogeneous one-agent
+  passes at **0.67–0.96**).
+
+**Honesty rail — high overlap = panel redundancy, NOT near-completeness.** Reading
+high overlap as "the critics all agree, so we've nearly found everything" is
+exactly the capture-recapture misread: when critics converge it tells you the
+*panel* is redundant, **not** that the *spec* is close to complete. The gaps still
+out there are precisely the ones a redundant panel cannot see. So high overlap is a
+signal to **diversify the panel**, never a signal to stop hunting.
+
+### The five lenses (load-bearing order)
+
+1. **NFR / security — load-bearing #1.** Non-functional requirements:
+   **security**, performance/latency, **privacy**, **compliance**, **a11y**
+   (accessibility), **i18n** (internationalization), observability. A **generic
+   omissions-hunt is structurally blind to this lens** — the experiment found
+   it the **#1 unique-recovery lens** (H4: generic critics never surface NFR /
+   security gaps; this lens uniquely recovered them on multiple seeds, both
+   runs). Persona: malicious user / 3am on-call ops. Treat this lens as the one
+   that most justifies the panel.
+
+2. **Policy / legal / permissions — load-bearing secondary.** **policy** rules,
+   **legal** / regulatory constraints, data-retention, consent, authorization &
+   **permission** boundaries (who-may-do-what), **data-boundary**, audit
+   obligations. Persona: compliance auditor. The experiment's secondary
+   unique-recovery lens.
+
+3. **Missing object / actor** — Is every **object** the seed implies present?
    Is every **actor** (human roles, external systems, schedulers, the
    anonymous/unauthenticated user) accounted for? Who else touches this that
-   the draft forgot?
+   the draft forgot? Persona: competitor probing edges.
 
-2. **State completeness** — For each object, is every **state** enumerated:
+4. **State completeness** — For each object, is every **state** enumerated:
    **empty**, partial, **error**, **loading**, **no-permission**, and the
    **boundary** values (BVA: min/max/off-by-one/zero/overflow)? A draft that
-   only specifies the happy state is incomplete.
+   only specifies the happy state is incomplete. Persona: confused first-timer.
 
-3. **Cross-object & system-layer failures** — The aspects OOUX is blind to:
+5. **Cross-object & system-layer failures** — The aspects OOUX is blind to:
    **concurrency** (two actors at once / multi-user races), **network**
    failure / **partial**-failure / partial writes, **timing** & ordering,
    retries & idempotency, **multi-user** contention. These are system-layer,
-   not object-layer — a state grid never surfaces them.
-
-4. **NFR** — Non-functional requirements: performance/latency, **security**,
-   **privacy**, **compliance**, **a11y** (accessibility), **i18n**
-   (internationalization), observability. Each is an axis the functional draft
-   silently assumes.
-
-5. **Policy / legal / permissions** — **policy** rules, **legal** /
-   regulatory constraints, data-retention, consent, authorization &
-   permission boundaries (who-may-do-what), audit obligations.
-
-For each lens, ask the omission question — "**what is missing here?**" — not
-the consistency question. Inconsistency-hunting is Spec Kit's job; you hunt
-absence.
+   not object-layer — a state grid never surfaces them. Persona: 3am on-call ops.
 
 ## You MUST emit your own blind spots
 
@@ -175,6 +220,9 @@ writer's work, you augment it:
 After the loop terminates (K consecutive dry rounds), report:
 
 - rounds run, gaps found per round, what was re-seeded;
+- the **overlap judgment** per round and whether the panel was **diverse enough**
+  (low overlap) or needed an added orthogonal lens / persona / input view (high
+  overlap) — reported as redundancy, never as near-completeness;
 - the `critic-found` items now tagged in `## Provenance`;
 - the non-empty `## Blind spots — needs human/field input` list;
 - an explicit statement of **coverage relative to seed + 5 lenses** — never the
