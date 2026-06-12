@@ -58,8 +58,9 @@ not a lighter one. *How* you run that refocused hunt is the panel below.
 
 Run the multi-lens interrogation in **rounds**. **Mind the cost**: a panel round
 is **N fresh-context subagent dispatches** (one per lens) — a *blanket* re-sweep
-of all five lenses every round is ~15 subagent calls across a 3-round loop, and
-that cost is exactly the pressure that tempts the executor to **silently skip the
+of all five lenses every round is ~15 subagent calls across a 3-round loop (the
+*blanket worst case* — targeted re-seeding below makes the real cost far lower),
+and that cost is exactly the pressure that tempts the executor to **silently skip the
 loop** (the F-1 failure). The fix is not to abandon the loop — it is to make the
 re-runs **targeted**.
 
@@ -338,8 +339,8 @@ writer's work, you augment it:
    traceable; note the lenses that converged on it as the rank signal.
 3. **Candidate `#### Scenario:` items** — a ranked load-bearing critic-found gap
    that is concrete enough becomes a candidate acceptance criterion in
-   GIVEN/WHEN/THEN shape,
-   added under the relevant `### Requirement:` in the OpenSpec skeleton, so it
+   GIVEN/WHEN/THEN shape, added under the relevant `### Requirement:` in the
+   OpenSpec skeleton, so it
    flows straight into code-toolkit's `writing-plans` (one scenario → one
    RED test). Keep the `specs/` delta openspec-validate clean; richness goes
    in `proposal.md`.
