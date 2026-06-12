@@ -114,6 +114,12 @@ lens's defect-class can have that lens **removed without redesign**. The paying
 lens set is model-bound and regime-bound — **re-baseline periodically**: re-run
 a bare-model-vs-panel check and prune any lens the current model has subsumed
 (`docs/spec-toolkit/research/2026-06-12-sdd-harness-bitter-lesson.md` §Part 3).
+The experiment already named the **standing prune candidate**: the
+**state-completeness lens** (lens #4 — empty/error/loading) is the most
+redundant, because a generic omissions-hunt already covers it (H4:
+`docs/spec-toolkit/design/2026-06-12-diverse-critic-decorrelation-and-experiment.md`);
+the load-bearing lenses (NFR/security, permissions/data-boundary) are the last
+to go.
 
 ### Overlap-rate diagnostic — is the panel actually diverse?
 
@@ -143,7 +149,7 @@ signal to **diversify the panel**, never a signal to stop hunting.
    **security**, performance/latency, **privacy**, **compliance**, **a11y**
    (accessibility), **i18n** (internationalization), observability. A **generic
    omissions-hunt is structurally blind to this lens** — the experiment found
-   it the **#1 unique-recovery lens** (H4: generic critics never surface NFR /
+   it the **#1 unique-recovery lens** (H4: generic critics structurally miss NFR /
    security gaps; this lens uniquely recovered them on multiple seeds, both
    runs). Persona: malicious user / 3am on-call ops. Treat this lens as the one
    that most justifies the panel.
