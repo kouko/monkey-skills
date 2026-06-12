@@ -1,7 +1,7 @@
 ---
 name: completeness-critic
-description: Adversarial completeness critique of a spec-expansion output — hunt OMISSIONS the writer missed (missing objects/actors, unhandled states, system-layer failures, NFR/policy gaps), loop-until-dry, and emit your own blind spots. Use when reviewing a spec draft for gaps / missing requirements / blind spots / completeness, after spec-expansion produces a draft and before it feeds code-toolkit's VERIFY layer. Critiques the SPEC for omissions only — never code, never TDD.
-version: 0.1.0
+description: Adversarial completeness critique of a spec-expansion output via a decorrelated critic panel — fresh-context critic subagents with distinct personas and input-views each hunt OMISSIONS the writer missed (missing objects/actors, unhandled states, system-layer failures, NFR/policy gaps), then UNION their findings with an overlap-rate diagnostic and emit residual blind spots. Use when reviewing a spec draft for gaps / missing requirements / blind spots / completeness, after spec-expansion produces a draft and before it feeds code-toolkit's VERIFY layer. Critiques the SPEC for omissions only — never code, never TDD.
+version: 0.2.0
 ---
 
 # completeness-critic
@@ -102,6 +102,19 @@ found gap back into the expanded draft for the next round).
 For each lens, ask the omission question — "**what is missing here?**" — not the
 consistency question. Inconsistency-hunting is Spec Kit's job; you hunt absence.
 
+### Each lens is designed deletable (Bitter Lesson)
+
+The **panel as a verification mechanism** (writer≠judge — an external check on
+the writer) is **Bitter-Lesson-proof: keep it regardless of model strength**;
+but each **individual lens is closer to a crutch** — it enumerates coverage a
+stronger model may later derive unaided. So **each lens is designed deletable**:
+the panel mechanics (fan-out, union, loop-until-dry, overlap diagnostic) do
+**not** depend on the specific lens set, so a future model that subsumes a
+lens's defect-class can have that lens **removed without redesign**. The paying
+lens set is model-bound and regime-bound — **re-baseline periodically**: re-run
+a bare-model-vs-panel check and prune any lens the current model has subsumed
+(`docs/spec-toolkit/research/2026-06-12-sdd-harness-bitter-lesson.md` §Part 3).
+
 ### Overlap-rate diagnostic — is the panel actually diverse?
 
 After each round, judge the **pairwise finding-overlap** across the panel's
@@ -195,6 +208,44 @@ thorough produces false confidence — the most dangerous failure. Frame your
 output as **"coverage relative to seed + N lenses"**, never "complete". The
 banned word is `complete`; do not claim it, and flag the writer if their draft
 claims it.
+
+## Ban the completeness estimate — no capture-recapture, no completeness %
+
+The rule above bans the **word**; this rule bans the **number**. They are the
+same honesty rail at two levels: one forbids you to *say* "complete", this one
+forbids you to *quantify* it.
+
+You may **NEVER** emit a **capture-recapture** point estimate, a **completeness
+percentage** / **completeness %**, an estimated-residual *number*, or any
+statistical claim that quantifies "how much of the unseen is left". Report only
+what you **found** (the union of gaps); make **no claim about the unseen**.
+*(The single narrow exception: a heavily-caveated residual **lower bound**
+— "≥N, likely many more" — as a pure stop/continue signal, never a percentage.
+Reach for it rarely; the ban is the default.)*
+
+**Why — correlated critics make the estimator lie.** Capture-recapture's
+validity needs **independent** captures. Your K lens-critics share one base
+model, so they are **positively correlated** — they find the same gaps and miss
+the same gaps. The estimator reads that high overlap as "the captures barely
+add anything new, so we've nearly exhausted the population", and therefore
+**systematically under-counts the residual → false completeness** — the most
+dangerous honesty failure (a confident number is trusted more than a vague
+claim). Numeric illustration: 100 true gaps, correlated critics each find the
+same easy 12 (overlap 11) → Lincoln-Petersen N̂ = 12·12/11 ≈ 13 → claims ~92%
+complete while **88 gaps remain unfound**.
+
+This is **empirically confirmed**, not just theory: `design §Part C H2`
+(`docs/spec-toolkit/design/2026-06-12-diverse-critic-decorrelation-and-experiment.md`)
+showed **homogeneous** panels under-estimate the KNOWN residual (false
+completeness reproduced — e.g. overlap 0.93 → Chao 15 < true 18); **diverse**
+panels did NOT under-estimate. Decorrelation reduces the bias but never makes
+the estimate safe (residual correlation remains), so the ban stands regardless
+of how diverse the panel looks.
+
+This connects to the **overlap-rate diagnostic** above: high overlap signals
+panel **redundancy** (diversify the panel), it is **not** the input to a
+completeness number. That diagnostic deliberately stops at "diversify"; this
+rule is the explicit ban on turning the overlap into an estimate.
 
 ## How you write back
 
