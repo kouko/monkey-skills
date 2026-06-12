@@ -211,6 +211,30 @@ def test_l3_journey_navigation_present():
         "Phase ③c must apply 0-switch / state-transition coverage to the graph"
 
 
+def test_single_surface_backbone_collapse_present():
+    """A single-surface / utility / floating app with no sequential journey
+    has no multi-stage spine to lay; forcing one manufactures fiction (the
+    seed-adequacy honesty rail). Phase ① must permit the USM backbone to
+    COLLAPSE to ~1 stage node, with the navigation graph (Phase ③c) carrying
+    the structure instead — a legitimate, honest output shape."""
+    low = _text().lower()
+    # single-surface cue
+    assert "single-surface" in low or "single surface" in low, \
+        "Phase ① must name the single-surface / utility / floating-app case"
+    # collapse cue in proximity to the nav-graph / backbone structure carrier
+    found_collapse = False
+    for line in low.splitlines():
+        if "collapse" in line and (
+            "navigation graph" in line or "nav graph" in line
+            or "backbone" in line
+        ):
+            found_collapse = True
+            break
+    assert found_collapse, \
+        "Phase ① must say the backbone may COLLAPSE to ~1 node with the " \
+        "navigation graph carrying the structure (collapse near nav-graph/backbone)"
+
+
 # --- L2 cross-object-combination layer --------------------------------------
 
 def test_l2_cross_object_combinations_present():
@@ -233,6 +257,42 @@ def test_l2_cross_object_combinations_present():
     # the wide-stage pairwise generator path
     assert "scripts/pairwise.py" in text, \
         "wide stages (≥4 objects) must call scripts/pairwise.py"
+
+
+def test_l2_wide_stage_mandates_pairwise_tool():
+    """Wide stages (≥4 co-active objects) must be IMPERATIVE about tool use:
+    the executor MUST run scripts/pairwise.py (a real-seed dogfood found the
+    LLM bypasses it and reasons combinations inline, which the shipped A/B
+    proved LEAKS). Two cues must co-occur on the wide-stage instruction:
+    (1) an imperative MUST-run/MUST-invoke directive near pairwise.py, and
+    (2) a ban on enumerating wide-stage combinations inline by reasoning."""
+    low = _text().lower()
+
+    # (1) imperative tool-use directive in proximity to pairwise.py — a soft
+    # "instead call the generator" is NOT enough; require a MUST run/invoke
+    # cue on a line that also names the tool.
+    imperative_near_tool = False
+    for line in low.splitlines():
+        if "pairwise.py" in line and (
+            "must run" in line or "must invoke" in line or "must call" in line
+        ):
+            imperative_near_tool = True
+            break
+    assert imperative_near_tool, \
+        "wide-stage instruction must IMPERATIVELY mandate running " \
+        "scripts/pairwise.py (MUST run/invoke/call), not softly suggest it"
+
+    # (2) ban on inline enumeration of wide-stage combinations by reasoning.
+    ban_inline = (
+        "must not enumerate" in low
+        or "do not enumerate" in low
+        or "never enumerate" in low
+        or "not inline" in low
+        or ("inline" in low and "leak" in low)
+    )
+    assert ban_inline, \
+        "wide-stage instruction must BAN inline reasoning-based enumeration " \
+        "(the A/B-validated leak) — e.g. 'must not enumerate ... inline'"
 
 
 # --- provenance tagging (all three tags) ------------------------------------

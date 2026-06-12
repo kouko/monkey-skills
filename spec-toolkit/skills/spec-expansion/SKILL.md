@@ -1,7 +1,7 @@
 ---
 name: spec-expansion
 description: Turn a sparse seed (a few lines of feature intent) into a high-recall spec draft — systematically fan out objects, states, paths and edge cases, then emit candidate acceptance criteria in OpenSpec change-folder shape. Use for spec-expansion / requirement fan-out / edge-case coverage when starting a non-trivial coding task from a sparse idea and you want the paths, states and edge cases named BEFORE implementation instead of discovered late by review. 規格擴展・需求展開・邊界案例覆蓋。仕様展開・要件ファンアウト・エッジケース網羅。
-version: 0.2.0
+version: 0.2.1
 ---
 
 # spec-expansion
@@ -96,6 +96,16 @@ edges typed `{forward, back, skip, abandon, resume_reenter, error_escape,
 retry_self}`. The spine captures only `forward`; the typed edges capture how a
 real user moves *between* stages (goes back, skips ahead, abandons and resumes,
 escapes on error, retries in place). This graph is the input Phase ③c walks.
+
+**Single-surface collapse.** For a **single-surface / utility / floating app
+with no sequential journey** (e.g. a persistent edit-and-preview note pane —
+where the mode is a place you stay, not a stage you pass through), the USM
+backbone may legitimately **collapse to ~1 stage node**. In that case the
+**navigation graph (Phase ③c) carries the structure** — the modal escapes,
+back / abandon / resume edges — and the linear spine does not. Do **not**
+force a multi-stage spine where none exists; forcing one manufactures fiction
+(the seed-adequacy honesty rail above). A single-node backbone with a rich
+navigation graph is a legitimate, honest output shape, not a degenerate one.
 
 **Visible artifact:** emit a `## USM backbone` section in `proposal.md` — an
 ordered list (or table) of the journey steps that form the spine.
@@ -194,15 +204,22 @@ critic out-recalls joint enumeration on separable single-object-failure
 stages and prunes its junk, so do not enumerate combinations where the
 reaction is just the union of individual reactions.
 
-**Wide stages (≥4 co-active objects).** Full in-prompt enumeration leaks on
-wide stages (the exhaustive grid catches gold pure-prompt enumeration
-misses) — instead call the generator `scripts/pairwise.py`: pipe
-`{"params": {"<Object>": ["<state>", ...], ...}}` to its stdin and it
-returns a **pairwise-covering** set of combinations. For ≤3-object stages,
-full in-prompt enumeration of the joint grid suffices. Residue a pairwise
-set cannot guarantee (gold reachable only via a higher-order combination)
-is **blind-spotted, never padded** — carry the honesty rail: an honest
-"pairwise-covered + listed residue" beats a fabricated full grid.
+**Wide stages (≥4 co-active objects).** On a ≥4-object stage you
+**MUST run `scripts/pairwise.py`** — and **MUST NOT enumerate** a wide
+stage's combinations **inline** by reasoning. Inline reasoning-based
+enumeration on wide stages is the A/B-validated **leak** (the exhaustive grid
+catches gold that pure-prompt enumeration misses, `missed_by_both` up to 11);
+the tool exists precisely to prevent it, so reasoning the grid in your head is
+never an acceptable substitute. Pipe `{"params": {"<Object>": ["<state>",
+...], ...}}` to its stdin and it returns a **pairwise-covering** set of
+combinations — and you **MUST show the invocation** (the actual command /
+stdin payload) in the output trace so the tool-use is auditable. For
+≤3-object stages, full in-prompt enumeration of the joint grid suffices (the
+ban is wide-stage-only).
+Residue a pairwise set cannot guarantee (gold reachable only via a
+higher-order combination) is **blind-spotted, never padded** — carry the
+honesty rail: an honest "pairwise-covered + listed residue" beats a fabricated
+full grid.
 
 **Phase ③c — journey-navigation coverage.**
 Announce `— Phase ③c journey navigation —`.
