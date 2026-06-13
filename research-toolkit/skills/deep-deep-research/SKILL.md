@@ -172,7 +172,7 @@ proposes gap-fill angles for the cells nothing covers.
 
 2. **Walk cells + propose gaps.** Get the cell-walk audit prompt, passing the
    angles you already have **and the 2–3 frameworks you picked in step 1**
-   (omit `--frameworks` only to fall back to the general 萬用起手 route):
+   (omit `--frameworks` only to fall back to the general any-question route):
 
    ```
    python scripts/framework_audit.py audit-prompt \

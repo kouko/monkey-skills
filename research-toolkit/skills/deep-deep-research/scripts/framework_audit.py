@@ -1,6 +1,6 @@
 """Framework completeness-audit: gap-angle schema + prompts + selector.
 
-Lever ① of the deep-deep-research opt-in passes. Where schemas.py's
+Lever 1 of the deep-deep-research opt-in passes. Where schemas.py's
 SCOPE_SCHEMA emits the base research angles, FRAMEWORK_AUDIT_SCHEMA emits
 *gap-fill* angles — each tagged with the analytical framework + uncovered
 cell that motivated it — so an audit pass can top up the angle set before

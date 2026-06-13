@@ -13,7 +13,10 @@ from pathlib import Path
 
 SCRIPTS_DIR = Path(__file__).resolve().parent
 
-_CJK = re.compile(r"[一-鿿]")
+# CJK-block ranges: punctuation/symbols (incl 〔〕「」、。), kana, CJK Ext-A,
+# CJK unified ideographs, fullwidth forms, and enclosed alphanumerics (①②…).
+# Excludes ASCII-safe typography the doc legitimately uses (→ × ≈ ⊂ — …).
+_CJK = re.compile(r"[　-〿぀-ヿ㐀-䶿一-鿿＀-￯①-⓿]")
 
 
 def test_module_source_is_english_only():

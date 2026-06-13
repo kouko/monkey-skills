@@ -84,7 +84,7 @@ stable public knowledge.
 - Blind-spot: easy to hit *formal* exhaustiveness while missing a substantive branch; doesn't tell you if you picked the right split dimension.
 
 **5W1H / 5W2H** — Five Ws journalism tradition.
-- Cells: Who / What / When / Where / Why / How 〔+ How much / How many〕.
+- Cells: Who / What / When / Where / Why / How [+ How much / How many].
 - As auditor: walk all six; a missing cell = incomplete description. Most-missed: **Why** (motive/causality) and **How much** (magnitude).
 - Blind-spot: surface-of-event only; no mechanism, no time evolution, no stakeholder conflict; Why only one layer deep.
 
@@ -101,7 +101,7 @@ stable public knowledge.
 ### Structured analytic / anti-blind-spot (SATs)
 
 **ACH — Analysis of Competing Hypotheses** — Heuer (CIA, 1999); Heuer & Pherson 2011.
-- Cells (8 steps): ① enumerate **all** hypotheses (not just the likeliest) → ② list evidence/arguments → ③ build hypothesis×evidence matrix → ④ mark each item consistent/inconsistent per hypothesis → ⑤ refine → ⑥ pick the hypothesis with the **fewest** contradictions (not most support) → ⑦ sensitivity analysis → ⑧ report relative likelihoods + future indicators.
+- Cells (8 steps): (1) enumerate **all** hypotheses (not just the likeliest) → (2) list evidence/arguments → (3) build hypothesis×evidence matrix → (4) mark each item consistent/inconsistent per hypothesis → (5) refine → (6) pick the hypothesis with the **fewest** contradictions (not most support) → (7) sensitivity analysis → (8) report relative likelihoods + future indicators.
 - As auditor: *"Did I list **all** plausible hypotheses, or only confirm my favorite?"* Missing a hypothesis = confirmation bias.
 - Blind-spot: evidence weighting is human-judged; can still miss the unknown-unknown hypothesis entirely.
 
@@ -125,19 +125,19 @@ stable public knowledge.
 ### Business strategy
 
 **PESTEL / PESTLE** — popularized from Aguilar's *Scanning the Business Environment* (1967; the PEST acronym is a later textbook codification).
-- Cells: Political / Economic / Social / Technological / Environmental / Legal 〔variants: STEEP, +Geographic〕.
+- Cells: Political / Economic / Social / Technological / Environmental / Legal [variants: STEEP, +Geographic].
 - As auditor: walk all six macro drivers — which class of macro force did I omit? Most-missed: **Legal** and **Environmental**.
 - Blind-spot: lists factors but gives no interaction or weighting; no industry-competition layer (pair with Five Forces); no time ordering.
 
 **Porter Five Forces** — Porter, *HBR* 1979 / *Competitive Strategy* (1980).
-- Cells: ① threat of new entrants / ② supplier bargaining power / ③ buyer bargaining power / ④ threat of substitutes / ⑤ rivalry among existing competitors 〔often +6th: complements / government〕.
+- Cells: (1) threat of new entrants / (2) supplier bargaining power / (3) buyer bargaining power / (4) threat of substitutes / (5) rivalry among existing competitors [often +6th: complements / government].
 - As auditor: walk all five — which pressure did I omit when assessing the industry/company? Most-missed: substitutes and supplier power.
 - Blind-spot: static snapshot, ignores dynamics and cooperation (ecosystems/complements); no macro layer (pair with PESTEL).
 
 ### Investment / finance
 
 **DuPont Analysis** — DuPont Co., 1920s (F. Donaldson Brown).
-- Cells: ROE = net margin (profitability) × asset turnover (efficiency) × equity multiplier (leverage) 〔5-factor version further splits tax burden and interest burden〕.
+- Cells: ROE = net margin (profitability) × asset turnover (efficiency) × equity multiplier (leverage) [5-factor version further splits tax burden and interest burden].
 - As auditor: *"Is this high ROE from profit, efficiency, or leverage?"* Missing the leverage cell = mis-reading risk.
 - Blind-spot: accounting numbers are manipulable; excludes cash flow and capex quality.
 
@@ -165,7 +165,7 @@ stable public knowledge.
 ### Economics / policy
 
 **Bardach Eightfold Path** — Bardach, *A Practical Guide for Policy Analysis* (2000).
-- Cells (8 steps): ① define the problem → ② assemble evidence → ③ construct alternatives → ④ select criteria → ⑤ project outcomes → ⑥ confront trade-offs → ⑦ decide → ⑧ tell your story (communicate).
+- Cells (8 steps): (1) define the problem → (2) assemble evidence → (3) construct alternatives → (4) select criteria → (5) project outcomes → (6) confront trade-offs → (7) decide → (8) tell your story (communicate).
 - As auditor: *"Did I skip 'construct enough alternatives' or 'state explicit criteria'?"* Most-missed: steps 3 and 4.
 - Blind-spot: linear flow, weak on political dynamics and power; criteria selection itself carries value judgments.
 - *(Route note: if Bardach isn't your fit, the policy route's present alternatives are CBA / stakeholder / first-second-order effects — below.)*
