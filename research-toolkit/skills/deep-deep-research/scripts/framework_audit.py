@@ -112,7 +112,7 @@ Reasoning over the routing table only — no web search, no retrieval."""
 # Number of framework-collective blind-spots in the library's meta-check list
 # (the "Collective blind-spots" section of references/framework-audit-library.md).
 # Interpolated into the prompt so the count stays in sync with the library.
-BLIND_SPOT_COUNT: int = 12
+BLIND_SPOT_COUNT: int = 7
 
 # Fallback frameworks when the caller doesn't pass --frameworks: the routing
 # table's general (any-question) route first-line frameworks. Lets

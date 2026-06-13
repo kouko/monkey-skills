@@ -150,9 +150,11 @@ def test_audit_prompt_walks_cells_and_proposes_gaps():
     # (f) instructs dedup against the existing angles (don't re-propose).
     assert "dedup" in lower or "already cover" in lower or "re-propose" in lower
 
-    # (g) references the 12 collective blind-spots meta-check.
+    # (g) references the 7 collective blind-spots meta-check.
+    # Pin the full interpolated title (not a bare "7" substring, which would
+    # also pass for 17/27/70) so the assertion guards BLIND_SPOT_COUNT == 7.
     assert "blind-spot" in lower or "blind spot" in lower
-    assert "12" in prompt
+    assert "Collective blind-spots (7, meta-level)" in prompt
 
     # (h) text-only — positively pins the no-fetch constraint.
     assert "no web search" in lower or "no retrieval" in lower

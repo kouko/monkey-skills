@@ -18,7 +18,7 @@
    `framework` + `cell`.
 3. **Dedup, then meta-check.** Multiple frameworks overlap (see
    **Cross-framework dedup notes**); walk a shared cell only once. Finally
-   run the **12 collective blind-spots** — the dimensions *all* frameworks
+   run the **7 collective blind-spots** — the dimensions *all* frameworks
    structurally miss — and add any that your angles don't already cover.
 
 Each framework block has the shape:
@@ -132,7 +132,7 @@ stable public knowledge.
 **Porter Five Forces** — Porter, *HBR* 1979 / *Competitive Strategy* (1980).
 - Cells: (1) threat of new entrants / (2) supplier bargaining power / (3) buyer bargaining power / (4) threat of substitutes / (5) rivalry among existing competitors [often +6th: complements / government].
 - As auditor: walk all five — which pressure did I omit when assessing the industry/company? Most-missed: substitutes and supplier power.
-- Blind-spot: static snapshot, ignores dynamics and cooperation (ecosystems/complements); no macro layer (pair with PESTEL).
+- Blind-spot: static snapshot, ignores dynamics and cooperation (ecosystems/complements); no macro layer (pair with PESTEL). Also misses *platform / external-dependency obsolescence* — a strategy built on a platform you don't control (Wardley-style evolution/commoditization moves a capability you depend on down the value chain) carries the risk that the entitlement / API / capability you rely on is deprecated or cut mid-stream.
 
 ### Investment / finance
 
@@ -143,11 +143,11 @@ stable public knowledge.
 
 **Economic Moat** — Buffett concept; Dorsey (Morningstar) systematized.
 - Cells (moat sources): intangibles (brand/patent/license) / switching costs / network effects / cost advantage (scale/process/location) / efficient scale (niche monopoly).
-- As auditor: *"Which moat type does this company have? Can it be eroded? Width and trend?"* Most-missed: the *time* dimension — "moat narrowing".
+- As auditor: *"Which moat type does this company have? Can it be eroded? Width and trend?"* Most-missed: the *time* dimension — "moat narrowing"; and the *key-person* dimension — durability also rests on retaining the key talent/architects who sustain the advantage, so a competitor poaching them erodes the moat.
 - Blind-spot: easy to rationalize after the fact; moats vanish (tech disruption); width is hard to quantify.
 
 **Equity Risk Taxonomy** — general investment risk-management taxonomy (CFA-curriculum style).
-- Cells: market/systematic / industry / company-specific (operating/financial/governance) / liquidity / valuation / event (policy/litigation/M&A) / ESG.
+- Cells: market/systematic / industry / company-specific (operating/financial/governance/key-person concentration) / liquidity / valuation / event (policy/litigation/M&A) / ESG.
 - As auditor: *"Which classes hold this name's main risks? Did I miss governance or liquidity?"*
 - Blind-spot: classes overlap; tail/unknown risks hard to enumerate; weighting is judgment.
 
@@ -209,22 +209,48 @@ coverage" illusion.
 
 ---
 
-## Collective blind-spots (12, meta-level)
+## Collective blind-spots (7, meta-level)
 
-> Run *all* the frameworks above and these dimensions are still
-> systematically missed — most mainstream frameworks just don't have a cell
-> for them. After your framework walk, manually check each of these against
-> your angle set.
+> Any single framework structurally sees only what its cells encode — the
+> chosen lens *is* the blind spot (Maslow's law of the instrument; Munger's
+> latticework; multi-framing — Bolman & Deal: "each frame… is a product of …
+> blind spots", Morgan's *Images of Organization*, Allison's *Essence of
+> Decision*). After the framework walk, two omission classes remain
+> *regardless of domain*: **structural / frame omissions** (the lens has no
+> cell for it) and **cognitive omissions** (the mind treats present
+> information as complete). The recognized **self-applied** completeness
+> canons are the Decision Quality six-element chain (Spetzler, Winter & Meyer,
+> SDG 2016) and the IC analytic standards (ICD 203); the cognitive layer's
+> root is Kahneman's WYSIATI ("what you see is all there is").
+>
+> Honest notes: this list is **not itself a named canon** — it synthesizes
+> the above, so each item carries its own citation and the *category* is not
+> claimed as canonical. Items can cross both axes (Cooper, *Curing Analytic
+> Pathologies*). The Kahneman-Lovallo-Sibony 2011 checklist is scoped for
+> evaluators judging *others'* proposals, so it is referenced only in the
+> guardrail's motivation/social note below, not used as the section anchor.
+>
+> One thing is **not** on this list: questioning the frame itself and
+> enumerating alternative frames is the framework walk's own job (MECE /
+> issue tree / ACH / SCQA are the general-start frameworks), so it is not
+> repeated here.
 
-1. **Time-decay / shelf-life**: nearly all frameworks are static snapshots (SWOT, BMC, Five Forces, stakeholder…) with no cell for "how long until this conclusion expires" / "the half-life of the data and assumptions". → Manually add: how long is the conclusion valid? When must it be re-assessed?
-2. **Subsegment granularity**: frameworks tell you to "analyze the market/customer/risk" but not **how finely to slice**. Correct analysis at the wrong granularity still misses (whole looks fine while one subsegment collapses). → Ask: is my granularity right? Any subsegment hidden by the average?
-3. **Base rates / outside view**: most frameworks are inside-view (this case only) and skip "the historical success rate of similar things". → Always add base rates.
-4. **Second-order / reflexivity**: frameworks mostly stop at first-order (direct effects), missing that others adapt, markets re-equilibrate, and your action changes the thing being analyzed (reflexivity). → Add second-order / general-equilibrium.
-5. **Unknown unknowns**: frameworks can only audit "the cells the framework imagined"; what kills you is usually the blind spot no cell maps to. → Add red team / outsider / pre-mortem.
-6. **Power & political feasibility**: technical/analytic frameworks (CBA, DCF, Bardach's formal steps) often assume "the best option gets adopted", missing who will object and who holds a veto. → Add stakeholder / power-interest / Kingdon.
-7. **Distribution vs aggregate**: CBA, EV, aggregate metrics show "total benefit" but miss the distribution of who wins and who loses. → Add tax incidence / stakeholder ethics.
-8. **Instrument bias / law of the instrument**: the framework you pick determines what you see — an investor using only financial frameworks won't see cultural risk. → Deliberately pick cross-domain frameworks (Munger latticework).
-9. **Evidence quality & source**: most frameworks help you list "dimensions" but not "is the data for this cell reliable? are the sources independent?" → Add scuttlebutt (multi-source cross-check) / key assumptions check.
-10. **Normative / ethics**: business/technical frameworks generally have no ethics cell. → For high-stakes questions add the three ethical lenses + stakeholder ethics.
-11. **Execution gap / knowing-doing gap**: analytic frameworks stop at "what should be done", missing "can it actually be done" (resources/organization/capability). → Add ends-ways-means / 7S / the O in VRIO.
-12. **Uncertainty expression**: frameworks mostly give "categories/lists" and rarely require marking each cell's confidence level and sources of uncertainty. → Manually tag each conclusion with its confidence and the key unknowns.
+**Axis A — Structural / frame omissions** (the chosen lens has no cell for it, any domain):
+
+- **A1 — Time & dynamics**: most frameworks are static snapshots, with no cell for evolution, lag, or when the conclusion/premise expires. → Add the time axis: how does this evolve, what is the lag, and when does the conclusion expire? (Systems/CLD delay; Mintzberg's prediction fallacy; Iriyama's theory-vs-framework — a framework's implicit premise is context-dependent and goes obsolete.)
+- **A2 — Second-order / reflexivity**: frameworks stop at first-order; others adapt, markets re-equilibrate, and the act of analyzing changes the analyzed thing. → Add second-order / general-equilibrium effects. (Marks' second-order thinking; Soros reflexivity.)
+- **A3 — Feasibility, power & reversibility**: analytic frameworks assume the best option is adopted; they miss who vetoes, whether it can actually be executed, and how hard the decision is to undo (one-way vs two-way door). → Add stakeholder/power + an execution check + a reversibility check. (DQ "commitment to action"; Pfeffer & Sutton, *The Knowing-Doing Gap*; Kingdon; Bezos's one-way/two-way doors.)
+
+**Axis B — Cognitive omissions** (the mind treats present information as all there is — WYSIATI — regardless of framework):
+
+- **B1 — Outside view / base rates**: anchored on the case, omitting the reference-class distribution; salient features crowd out absent or unattended ones. → Add base rates / the outside view. (Base-rate neglect, Kahneman & Tversky 1973; reference-class forecasting, Flyvbjerg 2004/2006; outside-view concept, Kahneman & Tversky 1979 / Kahneman & Lovallo 1993; focusing illusion, Kahneman & Schkade 1998.)
+- **B2 — Disconfirming evidence & rival hypotheses**: confirmation-seeking; failure to generate or test the alternatives. → List rival hypotheses and seek disconfirming evidence. (Confirmation bias, Wason; Klayman & Ha 1987; ACH.)
+- **B3 — Uncertainty & evidence quality**: confidence left unmarked; source independence and reliability unchecked. → Tag each conclusion's confidence and check source independence. (ICD 203 Standard 2 uncertainty + Standard 3 assumptions-vs-judgments; SAT Quality-of-Information Check.)
+- **B4 — Unknown-unknowns**: the omission no cell maps to; what kills you isn't on any list. → Run a structured surfacing technique. (WYSIATI's limit case; pre-mortem, Klein 2007; what-if analysis.)
+
+**Demoted to notes** (lower-yield or conditional — *not* numbered slots, but don't lose them):
+
+- *Values / normative (conditional)*: for **high-stakes** / normative questions, add the ethical lenses (consequentialist / deontological / virtue) + stakeholder ethics — the values-and-tradeoffs dimension a positive-analysis framework has no cell for. Conditional, not universal: skip it on a purely descriptive question. (DQ "clear values & tradeoffs".)
+- *Distribution / tails (sub-note of B1)*: aggregates hide who-wins-who-loses and the tail — a single expected value or total can be right while the distribution is the whole story. Check the distribution, especially for risk / policy questions. (CBA's distribution blind-spot.)
+
+**Guardrail — audit-as-justification / thought-stopping** (not numbered): an empty gap is a legitimate, honest result — finding nothing missing is a valid outcome, not a failure of the audit. Don't let "I ran the audit" become the goal itself, or a post-hoc rationalization that launders a conclusion you already held. Running the checklist is not the same as covering the space: box-checking is not coverage, the broader-coverage finding for structured techniques is only *preliminary*, and adversarial moves can backfire — devil's advocacy can *heighten* confidence in the preferred hypothesis rather than puncture it (RAND RR-1408). The JP practitioner critique names the same failure: `shikō teishi` (thought-stopping — the checklist substitutes for thinking) and `keigaika` (the practice ossifies into empty form). Motivation / social note: self-interest, affect (loving your own proposal), and groupthink (Kunda's motivated reasoning; the Kahneman-Lovallo-Sibony 2011 evaluator questions) are mostly **out of scope** for a framework-completeness auditor — flag them only when the analyst has a personal stake in the outcome.

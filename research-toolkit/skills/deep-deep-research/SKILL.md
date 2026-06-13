@@ -190,7 +190,7 @@ proposes gap-fill angles for the cells nothing covers.
 
    Shape: `{question, gaps}` where each gap is
    `{label, query, framework, cell, rationale?}`. Finish with a pass over the
-   **12 collective blind-spots** at the bottom of the library (the dimensions
+   **7 collective blind-spots** at the bottom of the library (the dimensions
    *all* frameworks structurally miss). An empty gap list is a valid, honest
    result — don't pad it.
 
