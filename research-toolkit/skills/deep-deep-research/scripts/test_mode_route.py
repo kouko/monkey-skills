@@ -112,6 +112,67 @@ def test_classify_prompt_has_taxonomy_and_hardrules():
     assert "context-dependent" in proc.stdout
 
 
+def test_stance_block_maps_modes():
+    from mode_route import stance_block
+
+    # settled → give the consensus clearly, do not over-hedge.
+    settled = stance_block("settled")
+    assert "consensus" in settled
+    assert "clearly" in settled or "do not over-hedge" in settled
+
+    # unsettled → map competing positions, calibrate DOWN, do not force a
+    # verdict. This is the fix for the synthesis prompt's false-consensus bias
+    # (§三-C 測試1: mode-blind synthesis manufactures false consensus on
+    # genuinely contested questions).
+    unsettled = stance_block("unsettled")
+    assert "competing positions" in unsettled or "map" in unsettled
+    assert "calibrate" in unsettled
+    assert "do not force" in unsettled or "not force a verdict" in unsettled
+
+    # chaotic surfaces via the OPTIONAL mode_label → ALSO add a
+    # volatility / recency flag note (on top of the unsettled directive).
+    chaotic = stance_block("unsettled", mode_label="chaotic")
+    assert "volatil" in chaotic.lower() or "recency" in chaotic.lower()
+    # the chaotic note is additive — the unsettled stance is still present.
+    assert "calibrate" in chaotic
+
+    # Unknown / missing / garbage mode_binary → fail-safe to the unsettled
+    # directive (hard rule 2: surfacing a debate is safer than false
+    # consensus). The fallback returns the SAME text as unsettled.
+    assert stance_block("garbage") == unsettled
+    assert stance_block("") == unsettled
+    assert stance_block(None) == unsettled
+
+
+def test_stance_cli_round_trip():
+    # stance subcommand: read {mode_binary, mode_label?} from stdin, write
+    # {stance_block: "<directive>"} to stdout (mirrors vs_select.py main()).
+    proc = subprocess.run(
+        [sys.executable, str(SCRIPTS_DIR / "mode_route.py"), "stance"],
+        input='{"mode_binary": "unsettled"}',
+        capture_output=True,
+        text=True,
+        env={"PYTHONDONTWRITEBYTECODE": "1"},
+    )
+    assert proc.returncode == 0
+    out = json.loads(proc.stdout)
+    assert "stance_block" in out
+    assert "calibrate" in out["stance_block"]
+
+    # mode_label flows through stdin → chaotic note appears.
+    proc2 = subprocess.run(
+        [sys.executable, str(SCRIPTS_DIR / "mode_route.py"), "stance"],
+        input='{"mode_binary": "unsettled", "mode_label": "chaotic"}',
+        capture_output=True,
+        text=True,
+        env={"PYTHONDONTWRITEBYTECODE": "1"},
+    )
+    assert proc2.returncode == 0
+    out2 = json.loads(proc2.stdout)
+    block = out2["stance_block"].lower()
+    assert "volatil" in block or "recency" in block
+
+
 def test_cli_unknown_subcommand():
     proc = subprocess.run(
         [sys.executable, str(SCRIPTS_DIR / "mode_route.py"), "bogus"],

@@ -27,9 +27,9 @@ CLI:
   python mode_route.py schema     prints MODE_VERDICT_SCHEMA as JSON
   python mode_route.py classify-prompt --confirmed-block CB --killed-block KB \
       --question Q                prints the epistemic-mode classify prompt
+  python mode_route.py stance     reads {mode_binary, mode_label?} from stdin,
+                                  prints {stance_block: "<directive>"} to stdout
 Exits 0. Unknown/missing subcommand → stderr + exit 1.
-
-(A later task adds a stdin `stance` subcommand alongside the sections below.)
 """
 from __future__ import annotations
 
@@ -129,6 +129,73 @@ Structured output only."""
 
 
 # ---------------------------------------------------------------------------
+# Synthesis-stance directive
+# ---------------------------------------------------------------------------
+
+# The SETTLED directive: a question whose answer is a known consensus. The fix
+# here is the MIRROR of the unsettled fix — on an already-settled question the
+# risk is the opposite (over-hedging a fact into false uncertainty), so the
+# stance is to state the consensus plainly. (§三-C 測試1: settled/CVD case = a
+# tie, i.e. meta did NOT over-fuzzify — this directive must not introduce hedge.)
+_STANCE_SETTLED = (
+    "SYNTHESIS STANCE — settled question. The evidence points to a consensus "
+    "answer. Give the consensus answer clearly and directly; do not over-hedge "
+    "a settled fact into false uncertainty. State the consensus, then note any "
+    "genuine caveats briefly without diluting the headline."
+)
+
+# The UNSETTLED directive: the load-bearing fix. The synced base synthesis
+# prompt instructs "write 3-5 sentences ANSWERING the question + give high
+# confidence to consistent findings" — on a genuinely contested question that
+# pushes toward FALSE CONSENSUS (§三-C 測試1: mode-blind synthesis silently
+# promoted a no-effect finding to "best identification", demoted the opposing
+# view to a dissent, and over-confidenced it). This directive flips the goal
+# from "give a verdict" to "faithfully draw the shape of the debate".
+_STANCE_UNSETTLED = (
+    "SYNTHESIS STANCE — unsettled question. do not force a verdict. Map the "
+    "competing positions honestly: present each evidence-backed position on its "
+    "own terms, do not silently promote one to the headline answer or demote "
+    "another to a footnote. calibrate confidence DOWN — surface the genuine "
+    "disagreement rather than manufacturing a consensus the evidence does not "
+    "support."
+)
+
+# Additive note when the OPTIONAL mode_label is chaotic — fast-changing /
+# recency-dominated. Appended to the unsettled directive (chaotic → unsettled).
+_STANCE_CHAOTIC_NOTE = (
+    " Additionally, this is a fast-changing / volatile situation: flag that the "
+    "answer is recency-sensitive and may not hold next quarter, and prefer the "
+    "most recent evidence."
+)
+
+
+def stance_block(mode_binary, mode_label=None) -> str:
+    """Return the synthesis-STANCE directive string for the given mode.
+
+    The SKILL.md opt-in branch PREPENDS this directive to the base synthesis
+    prompt (the synced prompts.py synthesis prompt stays byte-identical).
+
+    - ``mode_binary == "settled"`` → state the consensus clearly, do not
+      over-hedge.
+    - ``mode_binary == "unsettled"`` → do not force a verdict; map the competing
+      positions, calibrate confidence down, surface the debate honestly.
+    - ``mode_label == "chaotic"`` → ALSO append a volatility / recency note.
+    - Unknown / missing / unrecognized ``mode_binary`` → fail-safe to the
+      ``unsettled`` directive (hard rule 2: surfacing a debate is safer than
+      manufacturing false consensus).
+    """
+    if mode_binary == "settled":
+        block = _STANCE_SETTLED
+    else:
+        # Everything else — "unsettled", unknown strings, "", None — fail-safe
+        # to the unsettled directive.
+        block = _STANCE_UNSETTLED
+    if mode_label == "chaotic":
+        block = block + _STANCE_CHAOTIC_NOTE
+    return block
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -143,6 +210,7 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="mode_route.py", add_help=False)
     sub = parser.add_subparsers(dest="command")
     sub.add_parser("schema", add_help=False)
+    sub.add_parser("stance", add_help=False)  # reads JSON from stdin
     p_classify = sub.add_parser("classify-prompt", add_help=False)
     p_classify.add_argument("--question", required=True)
     p_classify.add_argument("--confirmed-block", required=True)
@@ -170,6 +238,13 @@ def main(argv=None) -> int:
 
     if ns.command == "schema":
         print(json.dumps(MODE_VERDICT_SCHEMA, indent=2))
+        return 0
+    if ns.command == "stance":
+        # Mirror vs_select.py main(): read a JSON object from stdin, write the
+        # result object to stdout. mode_binary is required; mode_label optional.
+        payload = json.load(sys.stdin)
+        block = stance_block(payload.get("mode_binary"), payload.get("mode_label"))
+        json.dump({"stance_block": block}, sys.stdout)
         return 0
     # ns.command == "classify-prompt"
     print(classify_prompt(ns.question, ns.confirmed_block, ns.killed_block))
