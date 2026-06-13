@@ -71,9 +71,9 @@ def classify_prompt(question: str) -> str:
     """Return the question-type classification prompt with {QUESTION} interpolated.
 
     Asks the agent to classify the research question's *type* against the
-    routing-table 題型 keys in references/framework-audit-library.md, then
-    pick the 2–3 audit frameworks that type routes to. Text-only — the agent
-    reasons over the bundled routing table, it does not fetch anything.
+    routing-table question-type keys in references/framework-audit-library.md,
+    then pick the 2–3 audit frameworks that type routes to. Text-only — the
+    agent reasons over the bundled routing table, it does not fetch anything.
 
     Mirrors scope_vs_prompt's structure/tone (Question / Task / Output).
     """
@@ -86,17 +86,18 @@ search, no retrieval; reason over the bundled routing table only.
 {question}
 
 ## Task
-1. Read the **routing table (路由表)** in `{LIBRARY_REF}` — its left column
-   lists question types (題型 keys, e.g. investment/個股, macro/產業,
-   policy/法規, product/UX, risk/安全, or the general 萬用起手 row).
-2. Decide which 題型 row this question best matches. If it spans two types,
-   name the primary one and note the secondary.
-3. From that row's first-line frameworks (走查格子), pick the **2–3** audit
-   frameworks that best fit this question. Add one reinforcement framework
-   only if the route's cells feel thin.
+1. Read the **routing table** in `{LIBRARY_REF}` — its left column lists
+   question types (e.g. Investment / single stock, Macro / industry,
+   Policy / regulation, Product / UX, Risk / safety, or the
+   Any question (general start) row).
+2. Decide which question-type row this question best matches. If it spans two
+   types, name the primary one and note the secondary.
+3. From that row's first-line frameworks (walk the cells), pick the **2–3**
+   audit frameworks that best fit this question. Add one reinforcement
+   framework only if the route's cells feel thin.
 
 ## Output
-- `type` — the routing-table 題型 key you matched (plus any secondary).
+- `type` — the routing-table question-type key you matched (plus any secondary).
 - `frameworks` — the 2–3 framework names you picked from that route.
 - `why` — one line per framework: why it fits THIS question's gaps.
 
@@ -107,12 +108,12 @@ Reasoning over the routing table only — no web search, no retrieval."""
 
 
 # Number of framework-collective blind-spots in the library's meta-check list
-# (the「框架自身的集體盲點」section of references/framework-audit-library.md).
+# (the "Collective blind-spots" section of references/framework-audit-library.md).
 # Interpolated into the prompt so the count stays in sync with the library.
 BLIND_SPOT_COUNT: int = 12
 
 # Fallback frameworks when the caller doesn't pass --frameworks: the routing
-# table's 萬用起手 (general / any-question) first-line frameworks. Lets
+# table's general (any-question) route first-line frameworks. Lets
 # audit-prompt run standalone without first running classify-prompt.
 DEFAULT_FRAMEWORKS = ["MECE/issue tree", "5W1H", "PMEST", "SCQA"]
 
@@ -153,7 +154,7 @@ bundled framework cell-blocks only.
 
 ## Task
 1. **Walk the cells.** For EACH framework above, open its cell-block in
-   `{LIBRARY_REF}` and go **cell by cell (一格一格走查格子)**. For every
+   `{LIBRARY_REF}` and walk the cells one by one. For every
    cell, decide: does the existing angle list already cover this cell?
    Mark it **covered** or **uncovered**.
 2. **Propose gaps for uncovered cells ONLY.** For each uncovered cell, emit
@@ -168,7 +169,7 @@ bundled framework cell-blocks only.
    once.
 4. **Final meta-check — the {BLIND_SPOT_COUNT} collective blind-spots.**
    After the framework walk, run the
-   「框架自身的集體盲點 ({BLIND_SPOT_COUNT} collective blind-spots)」 list at
+   "Collective blind-spots ({BLIND_SPOT_COUNT}, meta-level)" list at
    the bottom of `{LIBRARY_REF}` — the dimensions ALL frameworks
    structurally miss (time-decay, base rates, second-order, unknown-unknowns,
    …). For each blind-spot your angles don't already cover, add a gap-fill
@@ -287,8 +288,9 @@ def main(argv=None) -> int:
     p_audit = sub.add_parser("audit-prompt", add_help=False)
     p_audit.add_argument("--question", required=True)
     p_audit.add_argument("--angles", required=True)
-    # --frameworks is optional JSON; default to the 萬用起手 (general) route's
-    # first-line frameworks so the prompt is usable without classify output.
+    # --frameworks is optional JSON; default to the general (any-question)
+    # route's first-line frameworks so the prompt is usable without classify
+    # output.
     p_audit.add_argument("--frameworks", default=None)
     # `select` takes no flags — it reads {gap_angles, existing_angles,
     # fetch_slots} from stdin and writes {angles} to stdout (vs_select.py mold).

@@ -6,11 +6,41 @@ Mirrors test_scope_vs.py style: flat imports (`from framework_audit import
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
 
 SCRIPTS_DIR = Path(__file__).resolve().parent
+
+_CJK = re.compile(r"[一-鿿]")
+
+
+def test_module_source_is_english_only():
+    # The classify→audit→library walk must stay consistent in one language;
+    # this module's prompts route into the now-English library, so any
+    # residual CJK is a cross-language drift bug (the task's load-bearing
+    # acceptance criterion: grep CJK == 0).
+    src = (SCRIPTS_DIR / "framework_audit.py").read_text(encoding="utf-8")
+    leftover = _CJK.findall(src)
+    assert leftover == [], f"residual CJK in framework_audit.py: {leftover}"
+
+
+def test_classify_prompt_uses_canonical_routing_labels():
+    # classify_prompt's example route keys MUST be drawn from the library's
+    # routing-table row labels verbatim, or the agent classifies into a key
+    # the library can't route. Spot-check the canonical English labels.
+    from framework_audit import classify_prompt
+
+    prompt = classify_prompt("any question")
+    for label in (
+        "Investment / single stock",
+        "Macro / industry",
+        "Policy / regulation",
+        "Product / UX",
+        "Risk / safety",
+    ):
+        assert label in prompt, f"missing canonical routing label: {label!r}"
 
 
 def test_schema_subcommand_emits_gap_schema():
@@ -53,7 +83,7 @@ def test_classify_prompt_contains_question_and_routes():
 
     # (b) instructs consulting the routing table to pick frameworks.
     lower = prompt.lower()
-    assert "routing table" in lower or "路由表" in prompt
+    assert "routing table" in lower
     assert "framework-audit-library.md" in prompt
 
     # (c) asks for 2–3 frameworks (covers the en-dash and hyphen forms).
@@ -79,7 +109,7 @@ def test_classify_prompt_contains_question_and_routes():
     )
     assert proc.returncode == 0
     assert q in proc.stdout
-    assert "routing table" in proc.stdout.lower() or "路由表" in proc.stdout
+    assert "routing table" in proc.stdout.lower()
 
 
 def test_audit_prompt_walks_cells_and_proposes_gaps():
@@ -104,7 +134,7 @@ def test_audit_prompt_walks_cells_and_proposes_gaps():
     assert "DCF + Comparables" in prompt
 
     # (d) instructs per-cell walking of each framework.
-    assert "cell" in lower or "格子" in prompt
+    assert "cell" in lower
     assert "uncovered" in lower
 
     # (e) asks for gap angles tagged with framework + cell.
