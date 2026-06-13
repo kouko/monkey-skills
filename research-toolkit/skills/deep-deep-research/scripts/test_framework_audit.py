@@ -152,3 +152,106 @@ def test_cli_unknown_subcommand():
     assert proc.returncode == 1
     assert proc.stdout.strip() == ""
     assert "bogus" in proc.stderr
+
+
+def test_cli_missing_subcommand():
+    # Empty argv → name "(none)" path (carry-forward gap from Task 1: only the
+    # bogus-subcommand path was covered, never the no-subcommand path).
+    proc = subprocess.run(
+        [sys.executable, str(SCRIPTS_DIR / "framework_audit.py")],
+        capture_output=True,
+        text=True,
+        env={"PYTHONDONTWRITEBYTECODE": "1"},
+    )
+    assert proc.returncode == 1
+    assert proc.stdout.strip() == ""
+    assert "(none)" in proc.stderr or "expected one of" in proc.stderr
+
+
+def test_select_gaps_dedups_and_caps():
+    from framework_audit import select_gaps
+
+    existing = [
+        {"label": "Moat durability", "query": "NVDA moat CUDA lock-in"},
+        {"label": "Valuation multiples", "query": "NVDA forward P/E vs peers"},
+    ]
+    gaps = [
+        # (1) duplicates an existing angle by case-folded label → dropped.
+        {"label": "moat durability", "query": "something else entirely",
+         "framework": "Porter", "cell": "Rivalry"},
+        # (2) duplicates an existing angle by normalized query → dropped.
+        {"label": "Different label", "query": "NVDA forward P/E vs peers",
+         "framework": "DCF", "cell": "Multiple"},
+        # (3..5) three genuinely novel gaps that survive dedup.
+        {"label": "Supplier power", "query": "NVDA TSMC supplier concentration",
+         "framework": "Porter", "cell": "Supplier", "rationale": "single-fab risk"},
+        {"label": "Time decay", "query": "NVDA AI capex cycle peak timing",
+         "framework": "collective-blind-spot", "cell": "time-decay"},
+        {"label": "Base rates", "query": "semiconductor cycle base rate drawdown",
+         "framework": "collective-blind-spot", "cell": "base-rates"},
+        # (6) intra-gap duplicate of (3) by label → dropped (earlier-gap dedup).
+        {"label": "supplier power", "query": "a totally different query string",
+         "framework": "Porter", "cell": "Supplier"},
+    ]
+
+    # fetch_slots caps survivors. 3 novel gaps survive; cap to 2.
+    out = select_gaps(gaps, existing, fetch_slots=2)
+    assert len(out) == 2
+    # Survivors are the first two novel gaps in input order (Supplier, Time decay).
+    assert out[0]["label"] == "Supplier power"
+    assert out[1]["label"] == "Time decay"
+    # Each output is stripped to the SCOPE_SCHEMA angle shape: framework/cell gone.
+    for angle in out:
+        assert set(angle.keys()) <= {"label", "query", "rationale"}
+        assert "framework" not in angle
+        assert "cell" not in angle
+    # rationale preserved when present (Supplier power had one).
+    assert out[0]["rationale"] == "single-fab risk"
+    # rationale omitted when absent (Time decay had none).
+    assert "rationale" not in out[1]
+
+    # A higher cap admits all 3 distinct novel gaps (the two dupes + intra-dup
+    # stay dropped regardless of slots).
+    out_all = select_gaps(gaps, existing, fetch_slots=10)
+    assert [a["label"] for a in out_all] == ["Supplier power", "Time decay", "Base rates"]
+
+    # Empty gaps → [] (valid; caller proceeds with original angles).
+    assert select_gaps([], existing, fetch_slots=5) == []
+
+    # fetch_slots <= 0 → [] (no budget).
+    assert select_gaps(gaps, existing, fetch_slots=0) == []
+    assert select_gaps(gaps, existing, fetch_slots=-1) == []
+
+
+def test_select_subcommand_cli_roundtrip():
+    from framework_audit import select_gaps
+
+    payload = {
+        "gap_angles": [
+            {"label": "Supplier power", "query": "NVDA TSMC supplier concentration",
+             "framework": "Porter", "cell": "Supplier"},
+            {"label": "Moat durability", "query": "dup by label",
+             "framework": "Porter", "cell": "Rivalry"},
+        ],
+        "existing_angles": [
+            {"label": "Moat durability", "query": "NVDA moat CUDA lock-in"},
+        ],
+        "fetch_slots": 5,
+    }
+    proc = subprocess.run(
+        [sys.executable, str(SCRIPTS_DIR / "framework_audit.py"), "select"],
+        input=json.dumps(payload),
+        capture_output=True,
+        text=True,
+        env={"PYTHONDONTWRITEBYTECODE": "1"},
+    )
+    assert proc.returncode == 0
+    out = json.loads(proc.stdout)
+    # stdout shape is {angles: [...]}, mirroring vs_select.py.
+    assert set(out.keys()) == {"angles"}
+    # The label-dup gap was dropped; only the novel Supplier gap survives.
+    assert [a["label"] for a in out["angles"]] == ["Supplier power"]
+    # CLI result matches the in-process function exactly.
+    assert out["angles"] == select_gaps(
+        payload["gap_angles"], payload["existing_angles"], payload["fetch_slots"]
+    )

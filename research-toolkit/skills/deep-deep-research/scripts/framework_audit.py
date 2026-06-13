@@ -193,6 +193,81 @@ Reasoning over the bundled cell-blocks only — no web search, no retrieval."""
 
 
 # ---------------------------------------------------------------------------
+# Deterministic gap selector
+# ---------------------------------------------------------------------------
+
+from dedup import norm_url  # read-only import of the synced SSOT primitive
+
+
+def _angle_keys(angle: dict) -> tuple[str, str]:
+    """Identity keys for dedup: (case-folded label, normalized query).
+
+    Mirrors vs_select.py's `_dedup_key`: a URL-shaped query is normalized via
+    `dedup.norm_url`; a plain query is casefold+strip. A gap collides with an
+    existing angle (or an earlier gap) if EITHER key matches.
+    """
+    label = angle.get("label", "").casefold().strip()
+    query = angle.get("query", "")
+    if "://" in query or query.startswith("//"):
+        qkey = norm_url(query)
+    else:
+        qkey = query.casefold().strip()
+    return (label, qkey)
+
+
+def _strip_angle(gap: dict) -> dict:
+    """Reduce a gap to the SCOPE_SCHEMA angle shape {label, query, rationale?}.
+
+    Mirrors vs_select.py's `_strip`: rationale kept only if present; framework
+    and cell (the FRAMEWORK_AUDIT_SCHEMA-only tags) are dropped so Stage 2 sees
+    the same angle shape it always sees.
+    """
+    angle = {"label": gap["label"], "query": gap["query"]}
+    rationale = gap.get("rationale")
+    if rationale:
+        angle["rationale"] = rationale
+    return angle
+
+
+def select_gaps(gap_angles, existing_angles, fetch_slots: int) -> list:
+    """Dedup gap-fill angles against existing angles, cap to budget, strip.
+
+    Deterministic, stdlib-only. Steps:
+      1. Drop any gap whose case-folded label OR normalized query matches an
+         existing angle, OR an EARLIER surviving gap (intra-gap dedup).
+      2. Cap survivors to `fetch_slots` (remaining MAX_FETCH budget). If
+         `fetch_slots <= 0`, return [].
+      3. Strip each survivor to {label, query, rationale?} (SCOPE_SCHEMA shape).
+
+    Empty input or all-dropped → [] (a valid, honest result; the caller then
+    proceeds with the original angle set unchanged).
+    """
+    if fetch_slots <= 0:
+        return []
+
+    # Seed the seen-set with both keys of every existing angle. A gap collides
+    # if EITHER its label OR its query key is already seen, so the two key
+    # families are namespaced (("l", ...) / ("q", ...)) to avoid cross-matching.
+    seen: set = set()
+    for a in existing_angles:
+        label_key, query_key = _angle_keys(a)
+        seen.add(("l", label_key))
+        seen.add(("q", query_key))
+
+    survivors = []
+    for gap in gap_angles:
+        label_key, query_key = _angle_keys(gap)
+        if ("l", label_key) in seen or ("q", query_key) in seen:
+            continue
+        seen.add(("l", label_key))
+        seen.add(("q", query_key))
+        survivors.append(gap)
+
+    capped = survivors[:fetch_slots]
+    return [_strip_angle(g) for g in capped]
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -215,6 +290,9 @@ def main(argv=None) -> int:
     # --frameworks is optional JSON; default to the 萬用起手 (general) route's
     # first-line frameworks so the prompt is usable without classify output.
     p_audit.add_argument("--frameworks", default=None)
+    # `select` takes no flags — it reads {gap_angles, existing_angles,
+    # fetch_slots} from stdin and writes {angles} to stdout (vs_select.py mold).
+    sub.add_parser("select", add_help=False)
 
     # Derive the valid-subcommand list from the registered subparsers so it
     # cannot drift from what's actually wired up (single source of truth).
@@ -257,6 +335,15 @@ def main(argv=None) -> int:
                 print(f"--frameworks must be valid JSON: {exc}", file=sys.stderr)
                 return 1
         print(audit_prompt(ns.question, angles, frameworks))
+        return 0
+    if ns.command == "select":
+        payload = json.load(sys.stdin)
+        angles = select_gaps(
+            payload["gap_angles"],
+            payload["existing_angles"],
+            payload["fetch_slots"],
+        )
+        json.dump({"angles": angles}, sys.stdout)
         return 0
     return 0
 
