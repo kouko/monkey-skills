@@ -213,6 +213,28 @@ proposes gap-fill angles for the cells nothing covers.
    original angle set and hand the augmented set into the **unchanged Stage 2
    (Search + dedup)**. Nothing downstream of Stage 1 changes.
 
+5. **Verify-backfill check (POST-pipeline).** After the pipeline runs through
+   Stage 5 (verify), confirm each gap-fill angle actually *landed* evidence —
+   the fix for a flagged structural cell that research silently dropped.
+   Collect `confirmed_labels` = the set of angle **labels** whose claims
+   survived Stage-5 quorum (each confirmed claim traces to its angle's label,
+   since the label tags everything downstream). Then run:
+
+   ```
+   echo '{"gap_angles": [...], "confirmed_labels": [...]}' \
+     | python scripts/framework_audit.py backfill
+   ```
+
+   Pass the **TAGGED gap angles** (the `audit-prompt` output, which still
+   carries `framework` + `cell` — **not** the `select` output, which stripped
+   them) so the report can name which framework cell came up empty. stdin
+   `{gap_angles, confirmed_labels}` → stdout
+   `{unlanded, landed_count, unlanded_count}`. For each `unlanded` gap, either
+   **re-search that angle within the remaining `MAX_FETCH` budget**, **or**
+   surface it in the report as an explicitly-flagged known gap (*"dimension X
+   was flagged important but no reliable evidence was found"*). Degradation:
+   empty `unlanded` → nothing to do.
+
 **Cost.** Steps 1–2 are **one text-only LLM pass each — no fetch**; the agent
 reasons over the bundled library only. Gap angles cost fetches **only if
 added**, and that is gated to the remaining budget in step 3. **Empty gaps →
@@ -507,6 +529,7 @@ not error out:
 | 1 | `framework_audit.py classify-prompt --question Q` | — → type-classify prompt |
 | 1 | `framework_audit.py audit-prompt --angles A --question Q` | — → cell-walk audit prompt |
 | 1 | `framework_audit.py select` | `{gap_angles, existing_angles, fetch_slots}` → `{angles}` |
+| 5 | `framework_audit.py backfill` | `{gap_angles, confirmed_labels}` → `{unlanded, landed_count, unlanded_count}` |
 | 2 | `prompts.py search --angle A --question Q` | — → search prompt |
 | 2 | `schemas.py search` | — → search schema |
 | 2 | `dedup.py` | `{results, seen, fetch_slots}` → `{novel, seen, slots}` |
