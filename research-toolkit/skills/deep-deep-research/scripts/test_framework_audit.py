@@ -259,6 +259,97 @@ def test_select_gaps_dedups_and_caps():
     assert select_gaps(gaps, existing, fetch_slots=-1) == []
 
 
+def test_backfill_check_flags_unlanded():
+    from framework_audit import backfill_check
+
+    gaps = [
+        # (1) label absent from confirmed_labels → UNLANDED, tags preserved.
+        {"label": "Supplier power", "query": "NVDA TSMC supplier concentration",
+         "framework": "Porter", "cell": "Supplier"},
+        # (2) label present (case-INSENSITIVE: confirmed has lowercase) → LANDED.
+        {"label": "DCF Intrinsic Value", "query": "NVDA DCF WACC terminal growth",
+         "framework": "DCF", "cell": "Intrinsic"},
+        # (3) label present with surrounding whitespace on confirmed side → LANDED.
+        {"label": "Base rates", "query": "semiconductor cycle base rate drawdown",
+         "framework": "collective-blind-spot", "cell": "base-rates"},
+    ]
+    confirmed = ["dcf intrinsic value", "  base rates  ", "Some other landed angle"]
+
+    result = backfill_check(gaps, confirmed)
+
+    # landed_count + unlanded_count sums to total gaps (the conservation rule).
+    assert result["landed_count"] + result["unlanded_count"] == len(gaps)
+    # Exactly one gap (Supplier power) is unlanded; two landed (case-insensitive).
+    assert result["unlanded_count"] == 1
+    assert result["landed_count"] == 2
+
+    # The single unlanded entry is Supplier power, with framework + cell preserved.
+    unlanded = result["unlanded"]
+    assert len(unlanded) == 1
+    assert unlanded[0]["label"] == "Supplier power"
+    assert unlanded[0]["framework"] == "Porter"
+    assert unlanded[0]["cell"] == "Supplier"
+    assert unlanded[0]["query"] == "NVDA TSMC supplier concentration"
+
+    # Empty gap_angles → empty unlanded, both counts zero.
+    empty = backfill_check([], confirmed)
+    assert empty == {"unlanded": [], "landed_count": 0, "unlanded_count": 0}
+
+    # Empty confirmed_labels → ALL gaps unlanded.
+    none_landed = backfill_check(gaps, [])
+    assert none_landed["unlanded_count"] == len(gaps)
+    assert none_landed["landed_count"] == 0
+    assert [g["label"] for g in none_landed["unlanded"]] == [
+        "Supplier power", "DCF Intrinsic Value", "Base rates"
+    ]
+
+
+def test_backfill_check_preserves_only_present_keys():
+    from framework_audit import backfill_check
+
+    # A gap missing `query` carries through only the keys it has — no invented keys.
+    gaps = [{"label": "No query gap", "framework": "MECE", "cell": "Branch"}]
+    result = backfill_check(gaps, [])
+    assert result["unlanded_count"] == 1
+    entry = result["unlanded"][0]
+    assert entry["label"] == "No query gap"
+    assert entry["framework"] == "MECE"
+    assert entry["cell"] == "Branch"
+    assert "query" not in entry
+
+
+def test_backfill_subcommand_cli_roundtrip():
+    from framework_audit import backfill_check
+
+    payload = {
+        "gap_angles": [
+            {"label": "Supplier power", "query": "NVDA TSMC supplier concentration",
+             "framework": "Porter", "cell": "Supplier"},
+            {"label": "DCF Intrinsic Value", "query": "NVDA DCF WACC",
+             "framework": "DCF", "cell": "Intrinsic"},
+        ],
+        "confirmed_labels": ["dcf intrinsic value"],
+    }
+    proc = subprocess.run(
+        [sys.executable, str(SCRIPTS_DIR / "framework_audit.py"), "backfill"],
+        input=json.dumps(payload),
+        capture_output=True,
+        text=True,
+        env={"PYTHONDONTWRITEBYTECODE": "1"},
+    )
+    assert proc.returncode == 0
+    out = json.loads(proc.stdout)
+    assert set(out.keys()) == {"unlanded", "landed_count", "unlanded_count"}
+    # The DCF gap landed (case-insensitive); only Supplier power is unlanded.
+    assert out["landed_count"] == 1
+    assert out["unlanded_count"] == 1
+    assert [a["label"] for a in out["unlanded"]] == ["Supplier power"]
+    # CLI result matches the in-process function exactly.
+    assert out == backfill_check(
+        payload["gap_angles"], payload["confirmed_labels"]
+    )
+
+
 def test_select_subcommand_cli_roundtrip():
     from framework_audit import select_gaps
 

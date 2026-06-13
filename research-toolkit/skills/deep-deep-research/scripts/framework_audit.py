@@ -19,6 +19,8 @@ CLI:
   python framework_audit.py schema                    prints FRAMEWORK_AUDIT_SCHEMA as JSON
   python framework_audit.py classify-prompt --question Q  prints the type-classify prompt
   python framework_audit.py audit-prompt --angles A --question Q  prints the cell-walk audit prompt
+  python framework_audit.py select                    stdin {gap_angles, existing_angles, fetch_slots} -> stdout {angles}
+  python framework_audit.py backfill                  stdin {gap_angles, confirmed_labels} -> stdout {unlanded, landed_count, unlanded_count}
 Exit 0. Unknown/missing subcommand → stderr + exit 1.
 """
 from __future__ import annotations
@@ -269,6 +271,48 @@ def select_gaps(gap_angles, existing_angles, fetch_slots: int) -> list:
 
 
 # ---------------------------------------------------------------------------
+# Deterministic backfill check
+# ---------------------------------------------------------------------------
+
+
+def backfill_check(gap_angles, confirmed_labels) -> dict:
+    """Partition audit gap-angles into landed vs unlanded by confirmed labels.
+
+    Deterministic, stdlib-only. A gap is UNLANDED if its case-folded+stripped
+    `label` is NOT among the case-folded+stripped `confirmed_labels` (the labels
+    of angles that produced >=1 confirmed claim). Label normalization mirrors
+    `_angle_keys` (casefold + strip).
+
+    Each unlanded entry carries through only the keys the gap actually has
+    (label / framework / cell / query when present) — no keys are invented.
+
+    Returns `{"unlanded": [...], "landed_count": int, "unlanded_count": int}`.
+    `landed_count + unlanded_count == len(gap_angles)` always holds. Empty
+    `gap_angles` -> all-zero result; empty `confirmed_labels` -> all unlanded.
+    """
+    confirmed = {str(c).casefold().strip() for c in confirmed_labels}
+
+    unlanded = []
+    landed_count = 0
+    for gap in gap_angles:
+        label_key = gap.get("label", "").casefold().strip()
+        if label_key in confirmed:
+            landed_count += 1
+            continue
+        # Carry through only the keys this gap actually has; do not invent.
+        entry = {
+            k: gap[k] for k in ("label", "framework", "cell", "query") if k in gap
+        }
+        unlanded.append(entry)
+
+    return {
+        "unlanded": unlanded,
+        "landed_count": landed_count,
+        "unlanded_count": len(unlanded),
+    }
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -295,6 +339,9 @@ def main(argv=None) -> int:
     # `select` takes no flags — it reads {gap_angles, existing_angles,
     # fetch_slots} from stdin and writes {angles} to stdout (vs_select.py mold).
     sub.add_parser("select", add_help=False)
+    # `backfill` takes no flags — it reads {gap_angles, confirmed_labels} from
+    # stdin and writes the partition dict to stdout (mirrors `select`'s I/O).
+    sub.add_parser("backfill", add_help=False)
 
     # Derive the valid-subcommand list from the registered subparsers so it
     # cannot drift from what's actually wired up (single source of truth).
@@ -346,6 +393,14 @@ def main(argv=None) -> int:
             payload["fetch_slots"],
         )
         json.dump({"angles": angles}, sys.stdout)
+        return 0
+    if ns.command == "backfill":
+        payload = json.load(sys.stdin)
+        result = backfill_check(
+            payload["gap_angles"],
+            payload["confirmed_labels"],
+        )
+        json.dump(result, sys.stdout)
         return 0
     return 0
 
