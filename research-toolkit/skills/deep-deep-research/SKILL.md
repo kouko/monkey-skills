@@ -397,6 +397,68 @@ Partition the ranked claims into **confirmed** (survived) and **killed**
    Shape: `{summary, findings: [{claim, confidence, sources, evidence, vote?}],
    caveats, openQuestions?}`.
 
+### Opt-in: Meta-mode synthesis-stance routing
+
+This is an **opt-in, ADDITIVE** wrap on Stage 6 steps 2–3. The **default
+synthesis path is unchanged**: skip this and the base synthesis prompt from
+`prompts.py synthesis` (step 2) drives synthesis as written. When enabled, you
+classify the question's epistemic mode **from the verified evidence** (not the
+question text) and **PREPEND** a one-paragraph stance directive ahead of that
+base prompt. **CRITICAL — wrap, never modify:** `prompts.py` is a synced SSOT
+primitive behind a CI MD5 gate; you **PREPEND** the stance block to the base
+synthesis prompt string and do **NOT** edit `prompts.py`. The base prompt stays
+**byte-identical**.
+
+It fixes the base prompt's *false-consensus bias* (it instructs "answer the
+question + give high confidence to consistent findings", which on a genuinely
+contested question silently promotes one position to the headline).
+
+After Stage 5 you have the `confirmed_block` / `killed_block` from
+`synthesis.py blocks` (step 1). Then:
+
+1. **Classify the mode from the evidence.** Get the classify prompt:
+
+   ```
+   python scripts/mode_route.py classify-prompt \
+     --confirmed-block '<CB>' --killed-block '<KB>' --question "<q>"
+   ```
+
+   Reason over it — judge by the evidence's **stance spread**, not the
+   question framing (an "X vs Y" phrasing biases toward over-calling
+   contested) — and emit a verdict conforming to the schema printed by:
+
+   ```
+   python scripts/mode_route.py schema
+   ```
+
+   Shape: required `mode_binary` (`settled` / `unsettled`) plus optional soft
+   `mode_label` (`clear` / `complicated` / `complex` / `chaotic`). The robust
+   signal is **settled-vs-unsettled**; the `mode_label` sub-distinction is a
+   **low-confidence soft signal** (model-dependent noise — never hinge hard
+   behavior on it). When unsure, **fail-safe to `unsettled`**.
+
+2. **Get the stance directive:**
+
+   ```
+   echo '{"mode_binary":"<settled|unsettled>","mode_label":"<optional>"}' \
+     | python scripts/mode_route.py stance
+   ```
+
+   stdin `{mode_binary, mode_label?}` → stdout `{stance_block}`. Behavior:
+   **settled** → state the consensus clearly, don't over-hedge a fact into
+   false uncertainty; **unsettled** → don't force a verdict, map competing
+   positions, calibrate confidence DOWN; **chaotic** (via `mode_label`) →
+   additionally flag volatility / recency. Unknown / missing `mode_binary`
+   fail-safes to the unsettled directive.
+
+3. **PREPEND, then synthesize.** Prepend the returned `stance_block` string
+   ahead of the **byte-identical** base synthesis prompt from step 2, and
+   reason over the combined prompt to emit the same report schema (step 3).
+   You do **not** edit `prompts.py` — the stance directive is a prefix only.
+
+**Degradation.** If classify fails or returns nothing, fall back to the
+**unmodified** base synthesis prompt — never block synthesis.
+
 4. Produce stats + the rendered markdown:
 
    ```
@@ -456,5 +518,8 @@ not error out:
 | 5 | `rank.py quorum` | verdicts array → `true`/`false` |
 | 6 | `synthesis.py blocks` | `{ranked_claims, vote_results, verdicts_per_claim}` → `{confirmed_block, killed_block}` |
 | 6 | `prompts.py synthesis --question Q --confirmed-block CB --killed-block KB --confirmed-count N` | — → synthesis prompt |
+| 6 | `mode_route.py schema` | — → mode-verdict schema |
+| 6 | `mode_route.py classify-prompt --confirmed-block CB --killed-block KB --question Q` | — → epistemic-mode classify prompt |
+| 6 | `mode_route.py stance` | `{mode_binary, mode_label?}` → `{stance_block}` |
 | 6 | `schemas.py report` | — → report schema |
 | 6 | `synthesis.py report` | `{report, ranked_claims, angles, all_claims, confirmed, killed}` → `{stats, markdown}` |
