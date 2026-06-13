@@ -1,7 +1,7 @@
 ---
 name: completeness-critic
 description: Adversarial completeness critique of a spec-expansion output via a decorrelated critic panel — fresh-context critic subagents with distinct personas and input-views each hunt OMISSIONS the writer missed (missing objects/actors, unhandled states, system-layer failures, NFR/policy gaps), then UNION their findings with an overlap-rate diagnostic and emit residual blind spots. Use when reviewing a spec draft for gaps / missing requirements / blind spots / completeness, after spec-expansion produces a draft and before it feeds code-toolkit's VERIFY layer. Critiques the SPEC for omissions only — never code, never TDD.
-version: 0.2.1
+version: 0.2.2
 ---
 
 # completeness-critic
@@ -108,6 +108,14 @@ The five fixed lenses run as a **dispatched panel**, not one agent doing five
 sequential passes. **Dispatch one subagent per lens, each with fresh context** —
 phrase this fan-out portably (like `research-toolkit:deep-research`'s fan-out),
 **not** bound to any one harness/tool, because this skill is agent-portable.
+**Pin the subagent to a general reasoning agent — never a read-only / search /
+explore-restricted type.** Lens-critique is pure design reasoning (it reads the
+draft and reasons about omissions); a search-restricted subagent whose system
+prompt says "I only locate code, I don't reason" can **refuse the lens role**, and
+the panel silently loses that lens. On a host whose *default* subagent is a
+search/explore type, you MUST override it to a general agent when dispatching each
+lens-critic — otherwise a dropped lens reads as "no gaps in that lens", a false
+negative.
 **Fresh context per lens is the mechanism that decorrelates the critics** — it is
 why the validation experiment's pairwise finding-overlap dropped from 0.67–0.96
 (one agent's shared-context passes) to 0.22–0.40 (fresh-context subagents), and
