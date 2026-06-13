@@ -13,9 +13,12 @@ from pathlib import Path
 
 SCRIPTS_DIR = Path(__file__).resolve().parent
 
-# CJK-block ranges: punctuation/symbols (incl 〔〕「」、。), kana, CJK Ext-A,
-# CJK unified ideographs, fullwidth forms, and enclosed alphanumerics (①②…).
-# Excludes ASCII-safe typography the doc legitimately uses (→ × ≈ ⊂ — …).
+# CJK-block ranges (U+ boundaries, in regex order):
+#   U+3000–303F CJK punctuation/symbols (incl 〔〕「」、。)
+#   U+3040–30FF kana · U+3400–4DBF CJK Ext-A · U+4E00–9FFF CJK unified
+#   U+FF00–FFEF fullwidth forms · U+2460–24FF enclosed alphanumerics (①②…)
+# Starts at U+3000 / U+2460 so ASCII-safe typography the doc uses
+# (→ U+2192, × U+00D7, ≈ U+2248, ⊂ U+2282, — U+2014, … U+2026) is NOT matched.
 _CJK = re.compile(r"[　-〿぀-ヿ㐀-䶿一-鿿＀-￯①-⓿]")
 
 

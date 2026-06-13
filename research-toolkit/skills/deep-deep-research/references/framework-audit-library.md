@@ -59,7 +59,7 @@ it past its edge).
 | **International relations / geopolitics** | Waltz levels, IR three lenses, PMESII-PT, DIME | actor mapping, power-interest, stakeholder |
 | **Military / adversarial competition** | OODA, CoG, ends-ways-means, DIME, game theory | PMESII, red teaming, second-order |
 | **Root cause / failure** | 5 Whys, Ishikawa, fault tree, ACH | iceberg, CLD, FMEA |
-| **Systems / policy backlash** | iceberg, CLD, leverage points, stock-flow | second-order thinking, second-order, Bardach |
+| **Systems / policy backlash** | iceberg, CLD, leverage points, stock-flow | second-order, Bardach |
 | **Decision / betting** | expected value, base rates, WRAP, bull/bear/base, Kelly | inversion, pre-mortem, second-order, Cynefin |
 | **Argument / writing** | Toulmin, IRAC, MECE, SCQA | devil's advocacy, key assumptions check |
 | **Ethics / value trade-off** | consequentialist/deontological/virtue three lenses, stakeholder ethics | CBA, second-order, Overton |
