@@ -481,7 +481,75 @@ After Stage 5 you have the `confirmed_block` / `killed_block` from
 **Degradation.** If classify fails or returns nothing, fall back to the
 **unmodified** base synthesis prompt — never block synthesis.
 
-4. Produce stats + the rendered markdown:
+### Opt-in: Purpose-fit relevance-floor
+
+This is an **opt-in, ADDITIVE** end-check on Stage 6. The **default 360° path
+is unchanged**: skip this and the base synthesis runs exactly as written
+above. When enabled, it operates on the **Stage-5 confirmed claims** and
+classifies them against an *inferred decision purpose* — a relevance **floor**,
+not a filter: a claim that scores `not_relevant` is **down-weighted in
+emphasis, never deleted**. It fixes the base prompt's tendency to weight every
+confirmed claim equally regardless of whether it bears on the decision the
+asker is actually trying to make.
+
+It reads the decision-frame catalog `references/purpose-frames.md` (the
+question type's analytical frames) when running in **multi-frame** mode.
+
+After Stage 5 you have the `confirmed_block` from `synthesis.py blocks`
+(step 1). Then:
+
+1. **Infer the purpose + confidence, classify the claims.** Get the prompt:
+
+   ```
+   python scripts/purpose_fit.py purpose-classify-prompt \
+     --question "<q>" --confirmed-block '<CB>'
+   ```
+
+   Reason over it: infer the decision purpose behind the question and attach a
+   `confidence`; then bucket **every** Stage-5 confirmed claim into
+   `decisive` / `contextual` / `not_relevant` per frame — **without deleting
+   any** (a demoted claim is RETAINED and LABELED, never removed). Emit a
+   verdict conforming to the schema printed by:
+
+   ```
+   python scripts/purpose_fit.py schema
+   ```
+
+   Shape: required `inferred_purpose`, `confidence`, `mode`
+   (`consolidated` / `multi-frame`), `mooting_factors`, and `frames` (each
+   with `decisive` / `contextual` / `not_relevant` claim-ref arrays). High
+   confidence → `consolidated` (foreground the one decision-frame); low /
+   ambiguous → `multi-frame` (read `references/purpose-frames.md`, present the
+   frames evenly).
+
+2. **Render the directive:**
+
+   ```
+   echo '{"inferred_purpose":"...","confidence":"...","mode":"...", \
+          "mooting_factors":[...],"frames":[...]}' \
+     | python scripts/purpose_fit.py block
+   ```
+
+   stdin verdict (`purpose_fit.py schema`) → stdout `{purpose_fit_block}`.
+   **moot-hoist:** any `mooting_factors` — confirmed claims that could SETTLE
+   the decision OUTRIGHT — are surfaced as a top-level callout **ABOVE** the
+   frames, never buried inside a frame bucket.
+
+3. **PREPEND, then synthesize.** Prepend `purpose_fit_block` ahead of the
+   synthesis prompt. When both this lever and meta-mode are enabled the prepend
+   order is **purpose-fit → meta-mode → base synthesis prompt** (base
+   `prompts.py synthesis` stays **byte-identical**). **CRITICAL — wrap, never
+   modify:** never edit `prompts.py` — same discipline as meta-mode; the
+   purpose-fit directive is a prefix only.
+
+**Degradation.** If classify fails or returns nothing, fall back to the
+**unmodified** base synthesis prompt — never block synthesis.
+
+---
+
+**Final render (base Stage 6 — runs in all modes).** After synthesis (with or
+without the opt-in meta-mode / purpose-fit prepends above), produce stats + the
+rendered markdown:
 
    ```
    echo '{"report": {...}, "ranked_claims": [...], "angles": [...], \
@@ -544,5 +612,8 @@ not error out:
 | 6 | `mode_route.py schema` | — → mode-verdict schema |
 | 6 | `mode_route.py classify-prompt --confirmed-block CB --killed-block KB --question Q` | — → epistemic-mode classify prompt |
 | 6 | `mode_route.py stance` | `{mode_binary, mode_label?}` → `{stance_block}` |
+| 6 | `purpose_fit.py schema` | — → purpose-fit verdict schema |
+| 6 | `purpose_fit.py purpose-classify-prompt --question Q --confirmed-block CB` | — → purpose-fit classify prompt |
+| 6 | `purpose_fit.py block` | `{inferred_purpose, confidence, mode, mooting_factors, frames}` → `{purpose_fit_block}` |
 | 6 | `schemas.py report` | — → report schema |
 | 6 | `synthesis.py report` | `{report, ranked_claims, angles, all_claims, confirmed, killed}` → `{stats, markdown}` |
