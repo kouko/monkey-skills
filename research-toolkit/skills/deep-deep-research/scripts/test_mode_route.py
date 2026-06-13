@@ -48,6 +48,70 @@ def test_mode_schema_binary_required_label_optional():
     assert json.loads(proc.stdout) == MODE_VERDICT_SCHEMA
 
 
+def test_classify_prompt_has_taxonomy_and_hardrules():
+    from mode_route import classify_prompt
+
+    question = "Are microservices more scalable for most companies?"
+    confirmed_block = "CONFIRMED: monolith-first preferred by many teams"
+    killed_block = "KILLED: microservices always reduce coupling"
+
+    prompt = classify_prompt(question, confirmed_block, killed_block)
+
+    # The question + both evidence blocks must be interpolated verbatim.
+    assert question in prompt
+    assert confirmed_block in prompt
+    assert killed_block in prompt
+
+    # Load-bearing taxonomy markers (cross-model-validated; must appear).
+    # "context-dependent" maps to complex — a context-dependent answer is
+    # complex, not settled.
+    assert "context-dependent" in prompt
+    assert "complex" in prompt
+    # A loud / popular opinion is NOT the same as genuine contestation;
+    # judge by evidence stance-spread, not by how loudly a view is held.
+    assert "loud" in prompt
+    assert "contested" in prompt
+
+    # All four Cynefin modes present.
+    for mode in ("clear", "complicated", "complex", "chaotic"):
+        assert mode in prompt
+
+    # Hard rule 1: classify FROM THE EVIDENCE / stance spread, not the
+    # question-text framing ("X vs Y" biases toward over-calling complex).
+    assert "stance spread" in prompt
+    assert "from the evidence" in prompt
+
+    # Hard rule 2: when unsure, fail-safe to unsettled / complex.
+    assert "fail-safe" in prompt
+    assert "unsettled" in prompt
+
+    # Hard rule 3: clear/complicated/complex is a low-confidence soft signal;
+    # only settled-vs-unsettled is the binding output.
+    assert "low-confidence" in prompt
+    assert "settled" in prompt
+
+    # Output must reference the verdict schema.
+    assert "MODE_VERDICT_SCHEMA" in prompt
+
+    # CLI round-trip: classify-prompt prints the prompt, exit 0.
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPTS_DIR / "mode_route.py"),
+            "classify-prompt",
+            "--confirmed-block", confirmed_block,
+            "--killed-block", killed_block,
+            "--question", question,
+        ],
+        capture_output=True,
+        text=True,
+        env={"PYTHONDONTWRITEBYTECODE": "1"},
+    )
+    assert proc.returncode == 0
+    assert question in proc.stdout
+    assert "context-dependent" in proc.stdout
+
+
 def test_cli_unknown_subcommand():
     proc = subprocess.run(
         [sys.executable, str(SCRIPTS_DIR / "mode_route.py"), "bogus"],

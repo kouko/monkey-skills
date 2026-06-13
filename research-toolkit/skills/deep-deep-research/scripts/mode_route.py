@@ -25,10 +25,11 @@ Provenance (recorded here, NOT leaked into runtime behavior):
 
 CLI:
   python mode_route.py schema     prints MODE_VERDICT_SCHEMA as JSON
+  python mode_route.py classify-prompt --confirmed-block CB --killed-block KB \
+      --question Q                prints the epistemic-mode classify prompt
 Exits 0. Unknown/missing subcommand → stderr + exit 1.
 
-(First of three tasks building this module; later tasks add a classify-prompt
-builder and a stdin `stance` subcommand alongside the sections below.)
+(A later task adds a stdin `stance` subcommand alongside the sections below.)
 """
 from __future__ import annotations
 
@@ -59,8 +60,72 @@ MODE_VERDICT_SCHEMA = {
 # ---------------------------------------------------------------------------
 # Prompt builder
 # ---------------------------------------------------------------------------
-#
-# (classify_prompt is added by a later task in this module.)
+
+
+def classify_prompt(question: str, confirmed_block: str, killed_block: str) -> str:
+    """Return the epistemic-mode classification prompt.
+
+    Asks the agent to classify the question's epistemic mode FROM THE
+    EVIDENCE (the confirmed vs killed claim blocks), not from the
+    question-text framing. The 4-mode taxonomy + 3 hard rules below are
+    cross-model-validated (eval §三-C); they are carried verbatim and must
+    not be paraphrased away — the taxonomy markers ("context-dependent" =
+    complex; loud-opinion ≠ contested) are what makes question-grounded
+    classification survive the "X vs Y" framing trap.
+    """
+    return f"""\
+Classify the EPISTEMIC MODE of this research question — is the answer a
+settled fact, an expert-resolvable consensus, a genuinely contested
+debate, or a fast-changing/volatile situation? The classification sets
+how synthesis should take a stance toward the answer.
+
+## Question
+{question}
+
+## Evidence — confirmed claims (survived adversarial verification)
+{confirmed_block}
+
+## Evidence — killed claims (failed verification / refuted)
+{killed_block}
+
+## The 4-mode taxonomy (carry these meanings exactly)
+- **clear** — a known, settled fact; one right answer that is not in
+  dispute (e.g. an established scientific consensus). → settled.
+- **complicated** — no live dispute, but the answer needs expertise /
+  analysis to assemble; experts converge once the work is done. → settled.
+- **complex** — the answer is genuinely contested OR **context-dependent**:
+  a **context-dependent answer is complex, not settled** ("it depends on
+  X" means there is no single settled answer). Competing positions are
+  each evidence-backed. → unsettled.
+- **chaotic** — fast-changing / volatile / recency-dominated; today's
+  answer may not hold next quarter. → unsettled (flag volatility).
+
+CRITICAL marker — **a loud / popular opinion is NOT the same as genuine
+contestation** (loud-opinion ≠ contested). Judge by the evidence's
+**stance spread**, not by how loudly or popularly a view is held. A view
+that is loudly asserted but evidence-thin is NOT a real debate; a quiet
+but evenly-split body of evidence IS.
+
+## Three hard rules (do not skip)
+1. **Classify from the evidence / stance spread**, NOT from the
+   question-text framing. An "X vs Y" phrasing in the question biases you
+   toward over-calling **complex** — ignore the framing and read how the
+   confirmed vs killed claims actually spread across positions.
+2. When unsure, **fail-safe to `unsettled` / complex**. Surfacing a debate
+   that turns out settled is far less harmful than manufacturing false
+   consensus on something genuinely open.
+3. Treat clear / complicated / complex as a **low-confidence soft signal**
+   only. The **only binding output is settled vs unsettled** — do NOT
+   hinge behavior on the complicated↔complex line (it is model-dependent
+   noise). Set `mode_binary` carefully; `mode_label` is advisory.
+
+## Output
+Emit a verdict conforming to MODE_VERDICT_SCHEMA:
+- `mode_binary` (REQUIRED) — `settled` or `unsettled`.
+- `mode_label` (optional) — clear / complicated / complex / chaotic.
+- `rationale` (optional) — one line citing the evidence stance spread.
+
+Structured output only."""
 
 
 # ---------------------------------------------------------------------------
@@ -78,6 +143,10 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="mode_route.py", add_help=False)
     sub = parser.add_subparsers(dest="command")
     sub.add_parser("schema", add_help=False)
+    p_classify = sub.add_parser("classify-prompt", add_help=False)
+    p_classify.add_argument("--question", required=True)
+    p_classify.add_argument("--confirmed-block", required=True)
+    p_classify.add_argument("--killed-block", required=True)
 
     # Derive the valid-subcommand list from the registered subparsers so it
     # cannot drift from what's actually wired up (single source of truth).
@@ -99,8 +168,11 @@ def main(argv=None) -> int:
         # specific error to stderr; just normalize the exit code.
         return 1
 
-    # ns.command == "schema" (the only registered subcommand)
-    print(json.dumps(MODE_VERDICT_SCHEMA, indent=2))
+    if ns.command == "schema":
+        print(json.dumps(MODE_VERDICT_SCHEMA, indent=2))
+        return 0
+    # ns.command == "classify-prompt"
+    print(classify_prompt(ns.question, ns.confirmed_block, ns.killed_block))
     return 0
 
 
