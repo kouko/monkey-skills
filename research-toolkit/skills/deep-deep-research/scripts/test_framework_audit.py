@@ -82,6 +82,66 @@ def test_classify_prompt_contains_question_and_routes():
     assert "routing table" in proc.stdout.lower() or "路由表" in proc.stdout
 
 
+def test_audit_prompt_walks_cells_and_proposes_gaps():
+    from framework_audit import audit_prompt
+
+    q = "Is NVDA a buy at current valuation given AI capex cycle risk?"
+    angles = [
+        {"label": "Moat durability", "query": "NVDA moat CUDA lock-in"},
+        {"label": "Valuation multiples", "query": "NVDA forward P/E vs peers"},
+    ]
+    frameworks = ["Porter Five Forces", "DCF + Comparables"]
+    prompt = audit_prompt(q, angles, frameworks)
+
+    lower = prompt.lower()
+
+    # (a) the question text is interpolated verbatim.
+    assert q in prompt
+
+    # (b) the existing angle set is interpolated (a label substring appears).
+    assert "Moat durability" in prompt
+    # (c) the chosen frameworks are named in the prompt.
+    assert "DCF + Comparables" in prompt
+
+    # (d) instructs per-cell walking of each framework.
+    assert "cell" in lower or "格子" in prompt
+    assert "uncovered" in lower
+
+    # (e) asks for gap angles tagged with framework + cell.
+    assert "framework" in lower and "cell" in lower
+    assert "label" in lower and "query" in lower
+
+    # (f) instructs dedup against the existing angles (don't re-propose).
+    assert "dedup" in lower or "already cover" in lower or "re-propose" in lower
+
+    # (g) references the 12 collective blind-spots meta-check.
+    assert "blind-spot" in lower or "blind spot" in lower
+    assert "12" in prompt
+
+    # (h) text-only — positively pins the no-fetch constraint.
+    assert "no web search" in lower or "no retrieval" in lower
+
+    # CLI round-trip: audit-prompt prints the prompt, exit 0.
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPTS_DIR / "framework_audit.py"),
+            "audit-prompt",
+            "--angles",
+            json.dumps(angles),
+            "--question",
+            q,
+        ],
+        capture_output=True,
+        text=True,
+        env={"PYTHONDONTWRITEBYTECODE": "1"},
+    )
+    assert proc.returncode == 0
+    assert q in proc.stdout
+    assert "Moat durability" in proc.stdout
+    assert "uncovered" in proc.stdout.lower()
+
+
 def test_cli_unknown_subcommand():
     proc = subprocess.run(
         [sys.executable, str(SCRIPTS_DIR / "framework_audit.py"), "bogus"],
