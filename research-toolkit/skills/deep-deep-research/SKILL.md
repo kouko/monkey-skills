@@ -148,6 +148,77 @@ how much of the VS arm's confirmed evidence the baseline never fetched
 reads the two arms' per-question data on stdin as JSON and writes the aggregate
 on stdout. This is **eval tooling**, not part of the live research pipeline.
 
+### Opt-in: Framework completeness-audit
+
+This is an **opt-in, ADDITIVE pass** that runs **after Stage 1 and before
+Stage 2** — it tops up the angle set rather than replacing it. It works after
+**either** the default scope path **or** VS mode (both emit the same angle
+shape), and the **default path is unchanged**: skip this pass and Stage 2 sees
+the original angles untouched. The framework is an **AUDITOR, not a
+generator** — the free-form/VS scope stays the angle generator; this pass only
+walks analytical-framework cells against the angles you already have and
+proposes gap-fill angles for the cells nothing covers.
+
+1. **Classify the question type.** Get the type-classify prompt:
+
+   ```
+   python scripts/framework_audit.py classify-prompt --question "<q>"
+   ```
+
+   Reason over it against the **routing table** in
+   `references/framework-audit-library.md` and pick **2–3** audit frameworks
+   for this question's type (add one reinforcement framework only if the
+   route's cells feel thin).
+
+2. **Walk cells + propose gaps.** Get the cell-walk audit prompt, passing the
+   angles you already have **and the 2–3 frameworks you picked in step 1**
+   (omit `--frameworks` only to fall back to the general 萬用起手 route):
+
+   ```
+   python scripts/framework_audit.py audit-prompt \
+     --angles '<angles JSON>' --frameworks '["<framework>", ...]' --question "<q>"
+   ```
+
+   Reason over the chosen frameworks' cell-blocks in
+   `references/framework-audit-library.md`: walk each framework **cell by
+   cell** against the angle set, and for every **uncovered** cell propose one
+   gap-fill angle conforming to the schema printed by:
+
+   ```
+   python scripts/framework_audit.py schema
+   ```
+
+   Shape: `{question, gaps}` where each gap is
+   `{label, query, framework, cell, rationale?}`. Finish with a pass over the
+   **12 collective blind-spots** at the bottom of the library (the dimensions
+   *all* frameworks structurally miss). An empty gap list is a valid, honest
+   result — don't pad it.
+
+3. **Select within budget.** Feed the gaps + the existing angles to the
+   deterministic selector:
+
+   ```
+   echo '{"gap_angles": [...], "existing_angles": [...], \
+          "fetch_slots": <remaining MAX_FETCH>}' \
+     | python scripts/framework_audit.py select
+   ```
+
+   stdin `{gap_angles, existing_angles, fetch_slots}` → stdout `{angles}`. It
+   dedups each gap against the existing angles (and earlier gaps) by
+   case-folded label / normalized query, caps survivors to the remaining
+   `fetch_slots`, and strips each to the `{label, query, rationale?}` angle
+   shape — the **same shape** Stage 2 always sees. `fetch_slots <= 0` → `[]`.
+
+4. **Feed Stage 2 unchanged.** Append the returned gap `angles` to the
+   original angle set and hand the augmented set into the **unchanged Stage 2
+   (Search + dedup)**. Nothing downstream of Stage 1 changes.
+
+**Cost.** Steps 1–2 are **one text-only LLM pass each — no fetch**; the agent
+reasons over the bundled library only. Gap angles cost fetches **only if
+added**, and that is gated to the remaining budget in step 3. **Empty gaps →
+proceed with the original angles** (degradation contract: the audit never
+blocks the pipeline).
+
 ---
 
 ## Stage 2 — Search + dedup
@@ -370,6 +441,10 @@ not error out:
 |---|---|---|
 | 1 | `prompts.py scope --question Q` | — → scope prompt |
 | 1 | `schemas.py scope` | — → scope schema |
+| 1 | `framework_audit.py schema` | — → gap-angle schema |
+| 1 | `framework_audit.py classify-prompt --question Q` | — → type-classify prompt |
+| 1 | `framework_audit.py audit-prompt --angles A --question Q` | — → cell-walk audit prompt |
+| 1 | `framework_audit.py select` | `{gap_angles, existing_angles, fetch_slots}` → `{angles}` |
 | 2 | `prompts.py search --angle A --question Q` | — → search prompt |
 | 2 | `schemas.py search` | — → search schema |
 | 2 | `dedup.py` | `{results, seen, fetch_slots}` → `{novel, seen, slots}` |
