@@ -42,6 +42,46 @@ def test_schema_subcommand_emits_gap_schema():
     assert json.loads(proc.stdout) == FRAMEWORK_AUDIT_SCHEMA
 
 
+def test_classify_prompt_contains_question_and_routes():
+    from framework_audit import classify_prompt
+
+    q = "Is NVDA a buy at current valuation given AI capex cycle risk?"
+    prompt = classify_prompt(q)
+
+    # (a) the question text is interpolated verbatim.
+    assert q in prompt
+
+    # (b) instructs consulting the routing table to pick frameworks.
+    lower = prompt.lower()
+    assert "routing table" in lower or "路由表" in prompt
+    assert "framework-audit-library.md" in prompt
+
+    # (c) asks for 2–3 frameworks (covers the en-dash and hyphen forms).
+    assert ("2–3" in prompt or "2-3" in prompt)
+    assert "framework" in lower
+
+    # (d) text-only — positively pins the no-web-search constraint the prompt
+    # claims (a "fetch" not-in check would be vacuous: the prompt never emits it).
+    assert "no web search" in lower or "no retrieval" in lower
+
+    # CLI round-trip: classify-prompt prints the prompt, exit 0.
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPTS_DIR / "framework_audit.py"),
+            "classify-prompt",
+            "--question",
+            q,
+        ],
+        capture_output=True,
+        text=True,
+        env={"PYTHONDONTWRITEBYTECODE": "1"},
+    )
+    assert proc.returncode == 0
+    assert q in proc.stdout
+    assert "routing table" in proc.stdout.lower() or "路由表" in proc.stdout
+
+
 def test_cli_unknown_subcommand():
     proc = subprocess.run(
         [sys.executable, str(SCRIPTS_DIR / "framework_audit.py"), "bogus"],
