@@ -111,6 +111,23 @@ def test_purpose_classify_prompt():
     assert proc.stdout.strip() == prompt.strip()
 
 
+def test_purpose_classify_prompt_pins_claim_ref_indices():
+    """Dogfood F1: the prompt MUST pin that claim-refs are the bracketed [N]
+    indices printed in the confirmed_block, so the verdict's refs line up with
+    what synthesis.py blocks emits (`### [0]`...). Without this, a schema-valid
+    verdict could use free-text/made-up refs that silently dangle downstream."""
+    from purpose_fit import purpose_classify_prompt
+
+    prompt = purpose_classify_prompt(
+        question="Should we migrate to Postgres?",
+        confirmed_block="### [0] Postgres handles our scale.",
+        frames_ref="references/purpose-frames.md",
+    )
+    low = prompt.lower()
+    assert "[n]" in low, "prompt must reference the [N] index scheme"
+    assert "index" in low, "prompt must name the claim-ref scheme as an index"
+
+
 def test_purpose_fit_block_consolidated_moot_hoist():
     from purpose_fit import purpose_fit_block
 

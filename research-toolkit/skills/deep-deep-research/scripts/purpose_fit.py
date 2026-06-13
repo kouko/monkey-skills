@@ -134,6 +134,13 @@ OUTRIGHT — a single fact that moots the rest of the analysis (e.g. a hard
 constraint that makes other considerations irrelevant). Flag them; never let a
 mooting factor sit silently inside a frame bucket.
 
+## Claim references — use the [N] index
+Every claim-ref you emit (in `decisive` / `contextual` / `not_relevant` /
+`mooting_factors`) MUST be the bracketed **[N] index** exactly as printed in
+the confirmed claims above (e.g. `[0]`, `[3]`) — NOT claim text, paraphrases,
+or invented labels. The synthesis step reads the same `### [N]`-indexed block,
+so only the `[N]` index lets it resolve your refs; any other scheme dangles.
+
 ## Output
 Emit a verdict conforming to PURPOSE_FIT_SCHEMA:
 - `inferred_purpose` (REQUIRED) — the decision purpose you inferred.

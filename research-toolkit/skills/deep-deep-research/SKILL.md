@@ -520,7 +520,10 @@ After Stage 5 you have the `confirmed_block` from `synthesis.py blocks`
    with `decisive` / `contextual` / `not_relevant` claim-ref arrays). High
    confidence → `consolidated` (foreground the one decision-frame); low /
    ambiguous → `multi-frame` (read `references/purpose-frames.md`, present the
-   frames evenly).
+   frames evenly). **Claim-refs are the `[N]` indices** from the
+   `confirmed_block` (the `### [N]` headers `synthesis.py blocks` emits) — not
+   claim text or invented labels — so the prepended directive's refs resolve
+   against the same block synthesis reads.
 
 2. **Render the directive:**
 
