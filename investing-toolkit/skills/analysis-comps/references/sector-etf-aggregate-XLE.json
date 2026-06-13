@@ -1,10 +1,10 @@
 {
   "etf": "XLE",
   "schema_id": "energy",
-  "as_of": "2026-05-05",
+  "as_of": "2026-06-13",
   "_meta": {
     "holdings_count": 10,
-    "weight_coverage_pct": 75.68,
+    "weight_coverage_pct": 74.92,
     "outliers_dropped": {},
     "skipped_holdings": [],
     "schema_dispatch": {
@@ -13,12 +13,12 @@
     "source": "yfinance funds_data + data-us memo-fetch"
   },
   "multiples": {
-    "evEbitda": 12.80878209889907,
-    "priceToBook": 2.7728560737156336,
-    "priceToCFO": 11.50886908648765
+    "evEbitda": 12.621108057129637,
+    "priceToBook": 2.803934519901227,
+    "priceToCFO": 11.493563230714244
   },
   "indicators": {
-    "FCF_yield": 4.367803668019246,
-    "debt_to_equity": 23.63625809538052
+    "FCF_yield": 4.485990140371527,
+    "debt_to_equity": 19.41817220653225
   }
 }

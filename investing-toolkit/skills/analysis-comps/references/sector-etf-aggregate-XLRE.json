@@ -1,23 +1,24 @@
 {
   "etf": "XLRE",
   "schema_id": "reit",
-  "as_of": "2026-05-05",
+  "as_of": "2026-06-13",
   "_meta": {
     "holdings_count": 10,
-    "weight_coverage_pct": 58.87,
-    "outliers_dropped": {},
+    "weight_coverage_pct": 58.43,
+    "outliers_dropped": {
+      "priceToBook": 1
+    },
     "skipped_holdings": [],
     "schema_dispatch": {
-      "reit": 9,
-      "default": 1
+      "reit": 10
     },
     "source": "yfinance funds_data + data-us memo-fetch"
   },
   "multiples": {
-    "priceToFFO": 27.203094339893383,
-    "evEbitdare": 24.961029003844732,
-    "priceToBook": 6.743613590317338,
-    "priceToTangibleBook": 6.543234090313843
+    "priceToFFO": 28.36106304228302,
+    "evEbitdare": 25.5267763705912,
+    "priceToBook": 7.215849940913342,
+    "priceToTangibleBook": 6.714370435015915
   },
   "indicators": {}
 }
