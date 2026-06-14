@@ -140,7 +140,14 @@ print(f'estimated tokens: {est} (budget: 2000)')
 sys.exit(0 if est <= 2000 else 1)
 "
 
-# Confirm hook bash script emits valid JSON with the three expected keys
+# Confirm hook bash script emits valid JSON with all 3 keys.
+# CANONICAL: hookSpecificOutput.additionalContext — the nested camelCase
+#   key BOTH hosts consume (Codex hooks doc, developers.openai.com/codex/
+#   hooks: "That additionalContext text is added as extra developer
+#   context"; Claude Code reads the same nested key).
+# DEFENSIVE: additional_context + bare additionalContext — top-level
+#   belt-and-suspenders emitted for cross-version/host portability, NOT
+#   because Codex requires a snake_case shape.
 code-toolkit/hooks/session-start | python3 -c "
 import json, sys
 d = json.load(sys.stdin)

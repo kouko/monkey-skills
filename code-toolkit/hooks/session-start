@@ -3,10 +3,20 @@
 # Reads skills/using-code-toolkit/SKILL.md and injects it as additionalContext
 # so every Claude Code / Codex CLI session starts with the router loaded.
 #
-# Emits BOTH:
-#   hookSpecificOutput.additionalContext  ← Claude Code shape
-#   additional_context                    ← Codex CLI shape
-#   additionalContext                     ← legacy / mixed shape
+# CANONICAL key (both hosts consume): hookSpecificOutput.additionalContext
+# Per the official Codex hooks contract (developers.openai.com/codex/hooks):
+# "That additionalContext text is added as extra developer context." Claude
+# Code reads the SAME nested camelCase key, so this one shape is what both
+# hosts actually consume.
+#
+# DEFENSIVE keys (belt-and-suspenders, emitted for cross-version/host
+# portability — NOT because Codex requires snake_case):
+#   additional_context   (top-level snake_case)
+#   additionalContext    (bare top-level camelCase)
+# These are harmless extras a host ignores if it doesn't read them; we emit
+# all three so the router survives host/version shape drift. This is a
+# deliberate design — tests/integration/test-superpowers-mode-off.sh asserts
+# all 3 keys are present (Check 4).
 #
 # Escape hatch (Phase 1.5):
 #   export CODE_TOOLKIT_MODE=off   # skip injection (no-op JSON returned)
@@ -18,13 +28,15 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 SKILL_PATH="${PLUGIN_ROOT}/skills/using-code-toolkit/SKILL.md"
 
-# Escape hatch — Superpowers coexistence
+# Escape hatch — Superpowers coexistence.
+# Emit canonical nested key + both defensive top-level keys (all empty).
 if [ "${CODE_TOOLKIT_MODE:-on}" = "off" ]; then
   printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":""},"additional_context":"","additionalContext":""}\n'
   exit 0
 fi
 
-# Skill file missing → fail open with empty context (do not crash the session)
+# Skill file missing → fail open with empty context (do not crash the session).
+# Same 3-key shape as the escape hatch.
 if [ ! -f "${SKILL_PATH}" ]; then
   printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":""},"additional_context":"","additionalContext":""}\n'
   exit 0
@@ -49,5 +61,6 @@ banner_open='<EXTREMELY_IMPORTANT>\nYou have code-toolkit. Routing through this 
 banner_close='\n</EXTREMELY_IMPORTANT>'
 context="${banner_open}${escaped}${banner_close}"
 
+# Emit canonical nested key + both defensive top-level keys (same content).
 printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"},"additional_context":"%s","additionalContext":"%s"}\n' \
   "${context}" "${context}" "${context}"

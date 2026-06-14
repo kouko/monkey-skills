@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
-# test-skill-loading.sh — verify Codex CLI plugin install + skill discovery
+# test-skill-loading.sh — verify Codex CLI plugin install + discovery
 #
-# Phase 2.5 v0.4.0 build deliverable. Runs the install + details probe;
-# verifies all 11 expected skills are discoverable (v0.9.0+).
+# Phase 2.5 v0.4.0 build deliverable. Confirms code-toolkit is
+# installed + enabled via `codex plugin list` (the real Codex 0.139.0
+# enumeration command). Codex 0.139.0 has no per-plugin skill-listing
+# command (no `plugin details` analogue), so per-skill assertion is
+# documented as a limitation, not faked against plugin-level output.
+#
+# Real Codex 0.139.0 `codex plugin` surface (probed from
+# `codex plugin --help`): add / list / marketplace {add,list,upgrade,
+# remove} / remove. There is NO `install`, NO `details`, NO `--scope`.
 #
 # Prerequisite: Codex CLI installed (https://github.com/openai/codex
 # or equivalent). Script gracefully skips with install instructions if
@@ -44,8 +51,8 @@ To install + run this test:
 
   # Then add this plugin as a local marketplace (mirrors the Claude
   # Code workflow per CHANGELOG [0.1.0]):
-  codex plugin marketplace add /path/to/monkey-skills/.worktrees/code-toolkit-design --scope local
-  codex plugin install code-toolkit@monkey-skills --scope local
+  codex plugin marketplace add /path/to/monkey-skills/.worktrees/code-toolkit-design
+  codex plugin add code-toolkit@monkey-skills
 
   # Re-run this script:
   bash code-toolkit/tests/codex-cli/test-skill-loading.sh
@@ -69,8 +76,8 @@ FAIL: code-toolkit not installed in Codex CLI.
 Install it first:
 
   cd /path/to/monkey-skills/.worktrees/code-toolkit-design
-  codex plugin marketplace add . --scope local
-  codex plugin install code-toolkit@monkey-skills --scope local
+  codex plugin marketplace add .
+  codex plugin add code-toolkit@monkey-skills
 EOF
   exit 1
 fi
@@ -78,37 +85,37 @@ fi
 echo "OK: code-toolkit installed"
 
 # -------------------------------------------------------------------------
-# Step 2 — fetch skill list
+# Step 2 — confirm code-toolkit is installed AND enabled
 
-# ⚠️ TBD verify exact Codex CLI command for skill enumeration. The
-# Claude Code analogue is `claude plugin details <name>` which lists
-# skills. Codex CLI's command name might differ.
+# Codex 0.139.0 `codex plugin list` enumerates PLUGINS (not the skills
+# inside a plugin) as a table: "PLUGIN  STATUS  VERSION  PATH" where
+# STATUS reads "installed, enabled" for an active plugin. There is no
+# `plugin details` / per-plugin skill-listing command in this surface,
+# so we assert on the plugin row, not on individual skill names.
 
-DETAILS_OUTPUT=$(codex plugin details code-toolkit 2>&1)
-if [ -z "${DETAILS_OUTPUT}" ]; then
-  echo "FAIL: 'codex plugin details code-toolkit' returned empty output"
-  echo "      (⚠️ verify Codex CLI's plugin-details command name)"
+LIST_OUTPUT=$(codex plugin list 2>&1)
+if ! echo "${LIST_OUTPUT}" | grep -E 'code-toolkit' | grep -qi 'enabled'; then
+  echo "FAIL: code-toolkit not shown as enabled in 'codex plugin list':"
+  echo "${LIST_OUTPUT}" | grep -E 'code-toolkit' || echo "  (no code-toolkit row found)"
   exit 1
 fi
+
+echo "OK: code-toolkit installed + enabled"
 
 # -------------------------------------------------------------------------
-# Step 3 — verify each expected skill appears in the details output
+# Step 3 — per-skill enumeration: NOT available in Codex 0.139.0
+#
+# Codex 0.139.0 exposes no command that lists the skills bundled inside
+# an installed plugin (no `plugin details` analogue). The EXPECTED_SKILLS
+# array above is retained as the authoritative manifest of what
+# code-toolkit ships; verifying each is loadable requires opening a
+# Codex session and invoking the skill, which is the live ritual in
+# tests/codex-cli/README.md (not a non-interactive `plugin` subcommand).
+#
+# If a future Codex release adds a skill-enumeration command, re-add an
+# assertion loop over EXPECTED_SKILLS here.
 
-missing=()
-for skill in "${EXPECTED_SKILLS[@]}"; do
-  if ! echo "${DETAILS_OUTPUT}" | grep -q "${skill}"; then
-    missing+=("${skill}")
-  fi
-done
-
-if [ ${#missing[@]} -gt 0 ]; then
-  echo "FAIL: ${#missing[@]} of ${#EXPECTED_SKILLS[@]} expected skills missing from Codex CLI plugin details:"
-  for s in "${missing[@]}"; do
-    echo "  - ${s}"
-  done
-  exit 1
-fi
-
-echo "OK: all ${#EXPECTED_SKILLS[@]} expected skills discoverable in Codex CLI"
-echo "PASS — Codex CLI plugin install + skill enumeration verified"
+echo "NOTE: skipped per-skill enumeration — Codex 0.139.0 has no"
+echo "      skill-listing command; ${#EXPECTED_SKILLS[@]} expected skills tracked in this script."
+echo "PASS — Codex CLI plugin install + enabled-state verified"
 exit 0
