@@ -33,6 +33,17 @@ This directory does **not** contain canonical sources. It is a **pointer** that 
    -->
    ```
 
+## Codex manifest sync
+
+The Codex plugin manifest (`code-toolkit/.codex-plugin/plugin.json`) derives its **shared** fields from the Claude SSOT (`code-toolkit/.claude-plugin/plugin.json`) while keeping a Codex-only `interface` block.
+
+| Script | Verb | Effect |
+|---|---|---|
+| `code-toolkit/scripts/sync_codex_manifest.py` | (no flag) | Rewrite the Codex manifest's shared fields from the Claude SSOT; `interface` preserved verbatim. |
+| `code-toolkit/scripts/sync_codex_manifest.py` | `--check` | Pure read; exit non-zero on divergence (CI drift gate), zero when synced. |
+
+Stdlib only (`json`). Mirrors the `distribute.py` (write) / `verify-drift.py` (`--check`) split used for the knowledge layer above.
+
 ## Why this pattern
 
 Mirrors `legal-toolkit/scripts/canonical/` (Phase 1.10) and `dev-workflow:complexity-critique` mindset functional-copy arrangement (see `domain-teams:code-team/SKILL.md` §Resource Manifest cross-plugin paragraph). Keeps each plugin runtime self-contained while preserving a single editable source of truth.

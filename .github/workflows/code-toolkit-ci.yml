@@ -1,0 +1,66 @@
+name: code-toolkit CI
+
+# Runs code-toolkit's drift gates on every PR that touches the plugin (or
+# the workflow itself), and on every push to main that changes the plugin.
+#
+# Two SSOT drift gates are enforced:
+#
+#   - verify-drift.py:        the code-team <-> code-toolkit knowledge SSOT —
+#                             every routed functional copy must stay
+#                             byte-identical to its canonical payload.
+#   - sync_codex_manifest.py: the Codex plugin manifest SSOT —
+#                             .codex-plugin/plugin.json must stay in sync with
+#                             .claude-plugin/plugin.json. Any manual edit that
+#                             diverges the two fails the build. Repair locally
+#                             with: python code-toolkit/scripts/sync_codex_manifest.py
+#
+# The sync_codex_manifest.py pytest suite is also run so the generator logic
+# itself is covered, mirroring legal-toolkit-ci.yml (pytest + drift).
+#
+# Status: intended for `main` branch protection.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'code-toolkit/**'
+      - '.github/workflows/code-toolkit-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'code-toolkit/**'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: pytest + knowledge-drift + codex-manifest-drift
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install test deps
+        # pytest = test runner. The drift + sync scripts are pure stdlib (P1-E).
+        run: python3 -m pip install --quiet pytest
+
+      - name: Run code-toolkit scripts/ pytest suite
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m pytest code-toolkit/scripts/ -v
+
+      - name: Verify code-team <-> code-toolkit knowledge SSOT
+        # canonical/ is the single source of truth; each skill carries routed
+        # functional copies. Any byte-level divergence fails the build.
+        run: python3 code-toolkit/scripts/verify-drift.py
+
+      - name: Verify Codex manifest in sync
+        # .codex-plugin/plugin.json is generated from .claude-plugin/plugin.json.
+        # --check fails (exit 1) on any drift so a manual edit can't diverge the two.
+        run: python3 code-toolkit/scripts/sync_codex_manifest.py --check

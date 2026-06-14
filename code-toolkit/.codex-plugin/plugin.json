@@ -1,6 +1,6 @@
 {
   "name": "code-toolkit",
-  "version": "0.9.0",
+  "version": "0.16.0",
   "description": "Process-discipline + canon-grounded coding workflow for Claude Code (+ Codex CLI manifest in lock-step). 11 skills + 4 plugin-level subagents enforce TDD / brainstorming / SDD / parallel-dispatch / code review. Grounded in Beck / Martin / Fowler / Feathers / OWASP / 徳丸本.",
   "author": {
     "name": "kouko",
@@ -13,9 +13,15 @@
     "code-toolkit",
     "tdd",
     "subagent-driven-development",
+    "brainstorming",
     "code-review",
     "process-discipline",
-    "primary-source-grounding"
+    "primary-source-grounding",
+    "clean-code",
+    "solid",
+    "owasp-asvs",
+    "session-start-hook",
+    "superpowers-parity"
   ],
   "skills": "./skills/",
   "interface": {

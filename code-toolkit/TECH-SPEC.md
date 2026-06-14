@@ -216,8 +216,13 @@ escape_for_json() {
 escaped=$(escape_for_json "$content")
 context="<EXTREMELY_IMPORTANT>\nYou have code-toolkit.\n\n${escaped}\n</EXTREMELY_IMPORTANT>"
 
-# Emit JSON with both Claude Code (hookSpecificOutput.additionalContext)
-# and Codex CLI (additional_context) keys for portability.
+# Emit JSON. The CANONICAL key both hosts consume is the nested
+# hookSpecificOutput.additionalContext — per the official Codex hooks
+# doc (developers.openai.com/codex/hooks), "That additionalContext text
+# is added as extra developer context," and Claude Code reads the same
+# nested key. The two top-level keys (additional_context snake_case,
+# additionalContext bare) are DEFENSIVE belt-and-suspenders for
+# cross-version/host portability — NOT a Codex-required snake_case shape.
 cat <<EOF
 {
   "hookSpecificOutput": {"additionalContext": "${context}"},
@@ -434,11 +439,12 @@ flags: [🔴 fatal / 🟡 should-fix / 🟢 nit]
 For users who already have Superpowers installed and want to disable code-toolkit's hook:
 
 ```bash
-# In hooks/session-start, check before injecting:
+# In hooks/session-start, check before injecting.
+# OFF mode emits the same 3-key shape (canonical nested + 2 defensive
+# top-level), all with empty context, so the JSON shape is stable across
+# modes.
 if [ "${CODE_TOOLKIT_MODE:-on}" = "off" ]; then
-    cat <<EOF
-{"hookSpecificOutput": {"additionalContext": ""}}
-EOF
+    printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":""},"additional_context":"","additionalContext":""}\n'
     exit 0
 fi
 ```
