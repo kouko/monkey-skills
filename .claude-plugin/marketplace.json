@@ -105,6 +105,11 @@
       "source": "./research-toolkit/"
     },
     {
+      "name": "xquik-toolkit",
+      "description": "Xquik toolkit for X/Twitter data workflows. Use when searching posts, looking up users, configuring MCP access, or planning monitor, webhook, and extraction tasks through Xquik.",
+      "source": "./xquik-toolkit/"
+    },
+    {
       "name": "loom-spec",
       "description": "Key-free GENERATE-layer spec skills — expand a seed into a high-recall spec + critique omissions.",
       "source": "./loom-spec/"
