@@ -1,0 +1,43 @@
+{
+  "name": "xquik-toolkit",
+  "version": "0.1.0",
+  "description": "Source-aware Xquik toolkit for Twitter/X advanced search, profiles, trends, SDKs, MCP, exports, monitoring, webhooks, and approval-gated account workflows.",
+  "author": {
+    "name": "Xquik",
+    "url": "https://github.com/Xquik-dev"
+  },
+  "homepage": "https://docs.xquik.com",
+  "repository": "https://github.com/Xquik-dev/x-twitter-scraper",
+  "license": "MIT",
+  "keywords": [
+    "xquik",
+    "twitter-api",
+    "twitter-advanced-search",
+    "tweet-search",
+    "mcp",
+    "sdk",
+    "data-extraction",
+    "monitoring",
+    "webhooks"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Xquik Toolkit",
+    "shortDescription": "Current X data workflows through REST, SDKs, and remote MCP",
+    "longDescription": "Use current Xquik source contracts for Twitter/X advanced search, profile and trend reads, SDK integration, exports, monitoring, webhooks, private reads, and approval-gated account actions. The plugin auto-registers the first-party remote MCP server and keeps persistent, metered, media, and account operations behind an explicit confirmation gate.",
+    "developerName": "Xquik",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Run a bounded Twitter advanced search with Xquik.",
+      "Choose the current Xquik SDK for this application.",
+      "Prepare a gated X monitoring and webhook workflow."
+    ],
+    "websiteURL": "https://docs.xquik.com"
+  }
+}
