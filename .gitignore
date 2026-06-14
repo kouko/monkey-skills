@@ -11,6 +11,12 @@ Thumbs.db
 .claude/scheduled_tasks.lock
 .claude/scheduled_tasks.json
 
+# Local-only scratch with private/cross-project context — NEVER commit.
+# Handoffs (cold-reader continuation) and embedded worktrees legitimately
+# reference private repos / customer context; they are personal, not shippable.
+.claude/handoffs/
+.claude/worktrees/
+
 # Keep .gitkeep files
 !**/.gitkeep
 
