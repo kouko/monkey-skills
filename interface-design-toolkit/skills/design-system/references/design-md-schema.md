@@ -154,3 +154,34 @@ When emitting `DESIGN.md`, the `design-system` skill MUST:
 4. Verify every color pairing meets WCAG-AA contrast.
 5. Run `npx @google/design.md` lint and resolve violations before declaring done.
 6. Keep flows / screens / navigation **out** — those go in `ui-flows.md`.
+
+## Anti-patterns — NEVER ship these (the "AI-generated" tells)
+
+Generic AI-generated UI has a recognizable signature. A designer cringes at it on
+sight; the model has not stepped on these landmines, so name them explicitly. The
+emitted `DESIGN.md` MUST avoid:
+
+- **NEVER default to the AI-signature fonts** (Inter, Roboto, Open Sans, system-ui)
+  *without a brand reason*. They are the overused default of generated UI and read
+  as "no one chose this." Pick type that carries the brand voice; if you do use a
+  ubiquitous face, say *why* in the Typography rationale.
+- **NEVER use the purple/indigo → blue gradient on white.** It is *the* tell of an
+  AI-generated landing page. Cliché color stories (purple-on-white, neon-on-dark
+  "cyberpunk", pastel-everything) signal zero taste. Derive the palette from the
+  brand voice + PRINCIPLES, not from the model's prior.
+- **NEVER apply one uniform `border-radius` to everything.** Blanket rounding
+  flattens visual hierarchy and is a generated-UI smell. Vary radius by component
+  role (cards vs inputs vs pills); a deliberate radius scale > a single default.
+- **NEVER use pure black `#000` on pure white `#fff` for body text.** The maximal
+  contrast vibrates and reads cheap; use a near-black (e.g. an off-black token)
+  and a near-white surface. (Still meet WCAG-AA — `#000`/`#fff` is a taste fault,
+  not a contrast fault.)
+- **NEVER exceed ~2–3 accent colors** or scatter unscoped accents. More colors =
+  less hierarchy. One primary, one (maybe two) supporting, semantic colors for
+  state — that is usually the whole budget.
+- **NEVER let a token contradict a PRINCIPLES.md principle.** A "minimal,
+  low-stimulus" constitution with 6 accents and heavy motion is incoherent — the
+  design system answers to the constitution, not to defaults.
+
+The test for each: would a designer say "yes, I learned that the hard way," or
+"that's obvious"? Keep only the former.

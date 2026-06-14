@@ -133,3 +133,36 @@ character, entry/exit, density. The render-variant **flags** name which states
 exist. `spec-toolkit:spec-expansion` then does the **behavioral fan-out** —
 object state machines, transition rules, edge cases, `#### Scenario:` blocks —
 seeded by this file. Keep the boundary: flag here, fan-out there.
+
+## Anti-patterns — NEVER ship these flows
+
+Bad flows share recognizable smells. Name them so the generated `ui-flows.md`
+avoids them:
+
+- **NEVER design only the happy path.** The empty / loading / error / success
+  variants are where real products live and where users actually get stuck — a
+  flow that only shows the success state is half a flow. Flag every variant
+  (dimension 1) even when you do not spec its transition.
+- **NEVER leave a dead-end surface.** Every surface must offer a way forward,
+  back, or out. A screen/panel/command a user can reach but not leave (no nav, no
+  back, no exit) is the most common — and most invisible — flow bug.
+- **NEVER gate the *primary* task behind a modal or interstitial.** Modals
+  interrupt and trap focus; reserve them for destructive confirmation or genuinely
+  blocking input. Routing the main job through a modal is friction theater.
+- **NEVER add a confirm step to a *reversible* action** (friction with no payoff),
+  and **NEVER skip confirmation on an *irreversible* one** (delete, send, pay).
+  Match the transition's weight (instant / guided / deliberate) to its
+  reversibility, not to habit.
+- **NEVER assume a single front door.** Real users arrive via deep links,
+  notifications, sub-commands, aliases, pipes, and back-navigation. A flow drawn
+  from "user opens the home screen" only is brittle — enumerate the real entry
+  points (dimension 5).
+- **NEVER bury a primary task more than ~3 steps deep.** Each extra hop sheds
+  users; if the core job needs a 5-screen wizard, the information architecture is
+  wrong, not the flow.
+- **NEVER let a flow drift from PRINCIPLES.md.** A "≤3-step primary task"
+  principle and a 6-screen onboarding are in direct conflict — the constitution
+  wins; redesign the flow.
+
+The test for each: would a product designer say "yes, learned that the hard way,"
+or "that's obvious"? Keep only the former.
