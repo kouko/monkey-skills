@@ -1,0 +1,20 @@
+{
+  "name": "product-principles-toolkit",
+  "version": "0.1.0",
+  "description": "Product-principles toolkit — an agent-portable, key-free cross-cutting product-constitution generator. Turns a product idea into a PRINCIPLES.md that states a single north-star and a small set of non-negotiable, falsifiable principles (each with a testable claim and a clear violation signal), so the same constitution can govern design, spec, and code instead of each layer drifting on its own. Runs inside any coding-agent host using the host's own model — no API keys, no external services — and emits a portable Markdown artifact that downstream design / spec / code-generation skills can read and enforce.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/product-principles-toolkit",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "product-principles",
+    "constitution",
+    "principles",
+    "north-star",
+    "product-spec",
+    "portable"
+  ]
+}
