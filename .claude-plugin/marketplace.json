@@ -105,6 +105,11 @@
       "source": "./research-toolkit/"
     },
     {
+      "name": "xquik-toolkit",
+      "description": "Xquik toolkit for X/Twitter data workflows. Use when searching posts, looking up users, configuring MCP access, or planning monitor, webhook, and extraction tasks through Xquik.",
+      "source": "./xquik-toolkit/"
+    },
+    {
       "name": "spec-toolkit",
       "description": "Spec toolkit — agent-portable, key-free GENERATE-layer skills that expand a sparse seed into a high-recall, verification-ready spec draft and adversarially critique it for omissions. Ships spec-expansion (seed → objects/CTAs → state machines → path×edge matrix → candidate scenarios, all provenance-tagged) and completeness-critic (loop-until-dry multi-lens omission hunt that emits its own blind spots). Writes the OpenSpec change-folder shape (proposal.md + specs/ delta) plus additive richness sections, consumed downstream by code-toolkit's VERIFY layer.",
       "source": "./spec-toolkit/"
