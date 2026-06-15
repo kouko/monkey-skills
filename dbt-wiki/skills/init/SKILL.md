@@ -379,6 +379,10 @@ cp <SKILL_DIR>/assets/extract_recursive_column_lineage.py .dbt-wiki/_internal/
 cp <SKILL_DIR>/assets/extract_recursive_column_lineage_test.py .dbt-wiki/_internal/
 cp <SKILL_DIR>/assets/format_lineage_diagram.py .dbt-wiki/_internal/
 cp <SKILL_DIR>/assets/format_lineage_diagram_test.py .dbt-wiki/_internal/
+cp <SKILL_DIR>/assets/detect_source_language.py .dbt-wiki/_internal/
+cp <SKILL_DIR>/assets/detect_source_language_test.py .dbt-wiki/_internal/
+cp <SKILL_DIR>/assets/lint_schema_divergence.py .dbt-wiki/_internal/
+cp <SKILL_DIR>/assets/lint_schema_divergence_test.py .dbt-wiki/_internal/
 cp <SKILL_DIR>/assets/synthesis_template.md .dbt-wiki/_internal/
 ```
 
@@ -708,6 +712,18 @@ knowledge distillation step that produces the knowledge layer
 
 ### Phase B orchestration
 
+0. **Resolve the source language.** Knowledge pages are written in the language
+   of the project's model comments (dbt-wiki treats comments as the source of
+   truth; translating them loses domain terms) — see each distill spec's §0.
+   Run `.dbt-wiki/_internal/detect_source_language.py` (copied from
+   `assets/` in Step 4; honours an explicit
+   `DBT_WIKI_LANGUAGE` / project setting first, else auto-detects the dominant
+   script of the evidence `## Description` + `## Inline Comments`). Record the
+   result as `source_language:` in `index.md` frontmatter and pass it into every
+   domain agent's brief, so the whole fan-out writes ONE consistent language.
+   Slugs, frontmatter keys, identifiers and stored `value_domain` values stay
+   ASCII regardless.
+
 1. Confirm Phase A completed — all `_evidence/` subdirs are populated
    and `index.md` has been regenerated with evidence sections.
 2. Distill **entities** by following the procedure in
@@ -739,10 +755,12 @@ cohesive cluster of models sharing a business purpose (e.g. `billing`,
 #### Before fan-out: write `.dbt-wiki/_internal/ownership.json`
 
 Before dispatching domain agents, write `.dbt-wiki/_internal/ownership.json`
-with two maps:
+with two maps (plus the resolved `source_language` from step 0, so every domain
+agent writes the same language):
 
 ```json
 {
+  "source_language": "zh",
   "reserved_entities": {
     "customer": "billing",
     "order":    "sales"

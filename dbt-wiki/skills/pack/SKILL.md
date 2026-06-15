@@ -151,6 +151,20 @@ Then copy [the bundle SKILL.md template](assets/bundle-skill-template.md) to
 | `<SOURCE_MANIFEST_SHA>` | `$SOURCE_MANIFEST_SHA` captured above (source `manifest_sha` from `.dbt-wiki/log.md`) |
 | `<BUILD_DATE>` | `$BUILD_DATE` captured above (today, `YYYY-MM-DD`) |
 
+**Language — match the knowledge layer.** The packaged knowledge follows the
+same source-language rule as distillation (init wrote pages in the project's
+source language). Read `source_language` from `.dbt-wiki/index.md` frontmatter
+(`grep -m1 'source_language:' .dbt-wiki/index.md`). Write the bundle's
+**project-specific prose** in that language: `<PROJECT_DESCRIPTION>`,
+`<PROJECT_NAME>` where natural, the body's "What this is" / orientation /
+worked-example sections, and `<TRIGGER_PHRASES>` (use the project-language terms
+a local analyst would actually type). The `knowledge/` pages are copied
+**verbatim** in Step 2, so they are already in the source language — do NOT
+translate them. Keep ASCII / English for the `name:` slug, the snapshot
+frontmatter keys, and `references/generation-guidance.md` (the five SQL
+guardrails are universal, language-neutral agent guidance, not project
+knowledge — leave it as shipped).
+
 **Substitution contract for `<TRIGGER_PHRASES>` (YAML-fragile).** The template's
 frontmatter `description` is a **folded block scalar** (`>-`). `<TRIGGER_PHRASES>`
 sits inside that folded block, so substitute it as a **single-line plain string**
