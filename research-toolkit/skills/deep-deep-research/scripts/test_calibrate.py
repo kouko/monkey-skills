@@ -89,7 +89,7 @@ def test_cli_block_roundtrip():
 
 
 def test_cli_unknown_subcommand_exits_1():
-    """`calibrate.py bogus` exits 1 and writes a non-empty message to stderr."""
+    """`calibrate.py bogus` exits 1, clean stdout, and names the bad subcommand on stderr."""
     proc = subprocess.run(
         [sys.executable, str(SCRIPTS_DIR / "calibrate.py"), "bogus"],
         capture_output=True,
@@ -97,4 +97,18 @@ def test_cli_unknown_subcommand_exits_1():
         env={"PYTHONDONTWRITEBYTECODE": "1"},
     )
     assert proc.returncode == 1
-    assert proc.stderr.strip() != "", "Expected non-empty stderr for unknown subcommand"
+    assert proc.stdout.strip() == "", "Error path must not write to stdout"
+    assert "bogus" in proc.stderr, "stderr should name the bad subcommand"
+
+
+def test_cli_no_subcommand_exits_1():
+    """`calibrate.py` with no subcommand (the 'missing' branch) exits 1 with stderr."""
+    proc = subprocess.run(
+        [sys.executable, str(SCRIPTS_DIR / "calibrate.py")],
+        capture_output=True,
+        text=True,
+        env={"PYTHONDONTWRITEBYTECODE": "1"},
+    )
+    assert proc.returncode == 1
+    assert proc.stdout.strip() == "", "Error path must not write to stdout"
+    assert proc.stderr.strip() != "", "Expected non-empty stderr for missing subcommand"
