@@ -539,8 +539,8 @@ After Stage 5 you have the `confirmed_block` from `synthesis.py blocks`
    frames, never buried inside a frame bucket.
 
 3. **PREPEND, then synthesize.** Prepend `purpose_fit_block` ahead of the
-   synthesis prompt. When both this lever and meta-mode are enabled the prepend
-   order is **purpose-fit → meta-mode → base synthesis prompt** (base
+   synthesis prompt. When all levers are enabled the prepend order is
+   **purpose-fit → meta-mode → calibration → base synthesis prompt** (base
    `prompts.py synthesis` stays **byte-identical**). **CRITICAL — wrap, never
    modify:** never edit `prompts.py` — same discipline as meta-mode; the
    purpose-fit directive is a prefix only.
@@ -548,10 +548,56 @@ After Stage 5 you have the `confirmed_block` from `synthesis.py blocks`
 **Degradation.** If classify fails or returns nothing, fall back to the
 **unmodified** base synthesis prompt — never block synthesis.
 
+### Opt-in: Calibration prepend
+
+This is an **opt-in, ADDITIVE** prepend on Stage 6 steps 2–3. The **default
+synthesis path is unchanged**: skip this and the base synthesis runs exactly as
+written above. It fixes the base synthesis prompt's *confidence-laundering at
+the aggregation step* — when a merged finding rests on a weak, split-vote, or
+single-source claim it can inherit the strongest component's confidence tag, and
+the summary headline can overstate certainty relative to its own hedged body;
+these are aggregation-layer defects that claim-level verification (Stage 5)
+structurally cannot catch (each claim is individually fine; the defect is in
+how they're combined). (Observed rate: 6/8 seeds in the calibration eval,
+cross-model, `docs/skill-dogfood/2026-06-15-synthesis-skeptic-eval/REPORT.md`.)
+
+Unlike meta-mode (which classifies the question's epistemic mode) and
+purpose-fit (which classifies decision relevance), calibration is **static** —
+the same 3 anti-laundering rules apply every run, so it needs no classify step
+and no schema.
+
+1. **Retrieve the calibration directive:**
+
+   ```
+   python scripts/calibrate.py block
+   ```
+
+   stdin: none → stdout `{"calibration_block": "<directive>"}`. The directive
+   encodes 3 rules: (1) a merged finding's confidence = its **weakest**
+   load-bearing claim (never average up from a weak/split-vote/single-source
+   component to reach `high`); (2) summary confidence ≤ body confidence (the
+   headline must not state conclusions more certainly than the findings and
+   caveats it summarizes); (3) split/tied votes or mutually-conflicting
+   confirmed claims must **not** be presented as consensus — surface the tension
+   explicitly.
+
+2. **PREPEND, then synthesize.** Prepend the returned `calibration_block`
+   string ahead of the **byte-identical** base synthesis prompt from step 2,
+   and reason over the combined prompt to emit the same report schema (step 3).
+   **PREPEND order when all levers are enabled:
+   purpose-fit → meta-mode → calibration → base synthesis prompt.**
+   Calibration sits CLOSEST to the base prompt because it governs the
+   base synthesis's confidence-tagging mechanics — the rule must be freshest
+   at the point the model actually assigns confidence values. You do **not**
+   edit `prompts.py` — the calibration directive is a prefix only.
+
+**Degradation.** If `calibrate.py` errors or returns nothing, fall back to the
+**unmodified** base synthesis prompt — never block synthesis.
+
 ---
 
 **Final render (base Stage 6 — runs in all modes).** After synthesis (with or
-without the opt-in meta-mode / purpose-fit prepends above), produce stats + the
+without the opt-in meta-mode / purpose-fit / calibration prepends above), produce stats + the
 rendered markdown:
 
    ```
@@ -618,5 +664,6 @@ not error out:
 | 6 | `purpose_fit.py schema` | — → purpose-fit verdict schema |
 | 6 | `purpose_fit.py purpose-classify-prompt --question Q --confirmed-block CB` | — → purpose-fit classify prompt |
 | 6 | `purpose_fit.py block` | `{inferred_purpose, confidence, mode, mooting_factors, frames}` → `{purpose_fit_block}` |
+| 6 | `calibrate.py block` | — → `{calibration_block}` |
 | 6 | `schemas.py report` | — → report schema |
 | 6 | `synthesis.py report` | `{report, ranked_claims, angles, all_claims, confirmed, killed}` → `{stats, markdown}` |
