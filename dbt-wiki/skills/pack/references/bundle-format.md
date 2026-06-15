@@ -146,6 +146,19 @@ warehouse-connected agent: **generate SQL grounded in `knowledge/` →
 execute via your own warehouse tool → iterate**. It is reference
 material the bundle's `SKILL.md` points at on demand.
 
+## Language
+
+The bundle inherits the knowledge layer's language. The source `.dbt-wiki/`
+distills pages in the **project's source-comment language** (dbt-wiki treats
+comments as the source of truth), so the frozen `knowledge/` pages are already
+in that language and are copied **verbatim** — `pack` never translates them. The
+bundle's own `SKILL.md` writes its **project-specific** prose (description,
+orientation, worked example, trigger phrases) in the same `source_language`
+(read from `.dbt-wiki/index.md`). What stays ASCII / English regardless: the
+`name:` slug, frontmatter keys, knowledge slugs / links, stored `value_domain`
+values, and `references/generation-guidance.md` — the SQL guardrails are
+universal, language-neutral agent guidance, not project knowledge.
+
 ## `examples/` — gold few-shot context (slot reserved)
 
 `examples/` is the slot for in-domain **question → correct-SQL** gold

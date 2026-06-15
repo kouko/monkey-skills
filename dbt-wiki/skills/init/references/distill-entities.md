@@ -6,6 +6,32 @@ that contradicts this spec or the SCHEMA contract in `assets/SCHEMA.md`.
 
 ---
 
+## 0. Language — write in the project's source language
+
+dbt-wiki treats **comments as the source of truth**. The model comments,
+schema.yml descriptions, and inline SQL comments this page is distilled from are
+often NOT English; translating them silently rounds off domain terms the
+warehouse and the team depend on (a literal translation often has no exact
+English equivalent). Write this
+page in the project's **source language** and preserve domain terms **verbatim —
+do not translate them**.
+
+Resolve the source language in this order:
+1. the explicit `source_language` init recorded (project setting / `DBT_WIKI_LANGUAGE`);
+2. if unset, auto-detect the dominant script of the evidence `## Description` +
+   `## Inline Comments` of this entity's models (init runs
+   `assets/detect_source_language.py` for this deterministically).
+
+Localize the **prose** — `## Summary`, `## Grain`, the *meaning* cells of
+`## Fields`, `## Caveats` — plus the `summary:` frontmatter and `title`. Keep
+**ASCII / English** for everything machine- or structure-bearing: the kebab-case
+slug + filename, frontmatter **keys**, `relationships[].target` paths,
+`derived_from` unique_ids, column identifiers, and stored `value_domain`
+**values** (warehouse values, not prose). Put an English gloss of the title in
+`aliases` so English queries still match.
+
+---
+
 ## 1. Entity identification
 
 An **entity** is a business object — a thing the organisation tracks,
@@ -106,6 +132,13 @@ If multiple models in the family have different grains, state the
 primary grain (the one with the business PK) and note variants:
 `Primary grain: one order (order_id). fct_orders_daily is
 grain = order × calendar day.`
+
+The same caution applies to **columns**, not only grain. When the family
+spans structurally parallel per-segment / market / brand twins whose physical
+schemas differ (renamed or dropped columns, divergent value domains), pick ONE
+canonical model for the `## Fields` glossary but **also record the per-twin
+delta** — see §3.4 rule 5. Diff the `columns` of every family model in the
+Phase-A evidence pages first; never assume the twins share the canonical schema.
 
 How to determine grain:
 1. Find the model whose PK is declared with `tests: [unique, not_null]`
@@ -233,7 +266,20 @@ terms to exact warehouse values without guessing.
    `stored: NL`, `display: Northland`.
 4. **≤ 20 values only.** Larger sets belong in a `knowledge-concept` page
    (e.g. "Status Codes") or a `## Caveats` note pointing to the source table.
-5. The annotation goes in the **Meaning** cell of the Fields table (body
+5. **Per-twin schema divergence.** When the entity's `derived_from` spans
+   structurally parallel twins (per-segment / market / brand copies) whose
+   physical schemas differ, the `## Fields` glossary still uses ONE canonical
+   model — but you MUST also record how each twin diverges, so a consumer
+   querying a non-canonical twin uses the right identifiers. Diff the `columns`
+   of every twin (the Phase-A evidence pages list them) and capture, inline in
+   the affected `## Fields` rows or in a short trailing note, any of: a column
+   **rename** (`stored as region_code (total) / region (online twin)`), a column
+   **absent on a twin** (`no revenue__gross on the online twin`), or a
+   **divergent value_domain** (`value_domain: [NL, EU, APAC] (total) / [APAC]
+   (online) (via: distinct)`). Do not present the canonical schema as universal — a twin
+   that renames or drops a column silently breaks a consumer's filter or UNION,
+   and the snapshot looks fine until the query is executed.
+6. The annotation goes in the **Meaning** cell of the Fields table (body
    annotation), not in the page's YAML frontmatter block.
 
 ---

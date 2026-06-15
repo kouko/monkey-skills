@@ -70,11 +70,28 @@ For each business term in the question:
    case-insensitively and allow synonyms (e.g. "customer" → "Account").
    The **Column name** column is the physical SQL identifier to emit.
 
-3. Confirm the column actually exists before you rely on it. After
-   resolving via the knowledge page, cross-check the physical model's
-   evidence/columns page (listed in the entity's `## Evidence`
-   section) — use the column name as it appears there; do **not**
-   synthesize or guess a column not present.
+3. Confirm the column actually exists before you rely on it. This bundle
+   carries the curated knowledge layer but **not** the underlying
+   `_evidence/` pages, so there is no offline column dump to cross-check
+   against — the `## Evidence` links point back to the source project, not
+   into this bundle. Use the column name exactly as the knowledge page
+   records it, and **before committing to it, probe the live warehouse**
+   (your own tool's column listing, or a `SELECT ... LIMIT 0`). Do **not**
+   synthesize or guess a column the knowledge page does not name.
+
+4. **Parallel twins may not share column names — read the per-variant
+   schema map.** When a metric/entity is distilled from per-segment /
+   market / brand twins, the twins can rename columns (e.g.
+   `region_code` → `region`), drop columns the canonical model
+   has (e.g. no `revenue__gross`), or use a narrower value
+   domain (e.g. `[APAC]` vs the canonical `[NL, EU, APAC]`). A well-distilled page
+   records this as a per-variant schema map (a small table in
+   `## Calculation` / `## Fields`). **Read it before writing a UNION or
+   cross-twin query**, and align columns explicitly per twin (alias renamed
+   columns, `NULL`-fill columns a twin lacks). If the page has no such map
+   but `derived_from` clearly spans twins, treat the canonical column names
+   as unverified for the other twins and probe each before UNIONing — the
+   names that work for the canonical model silently error on a renamed twin.
 
 If a term resolves to multiple fields across multiple entities, carry
 all candidates into source disambiguation (§5). If a term resolves to
