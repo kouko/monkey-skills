@@ -1,10 +1,13 @@
 """Tests for calibrate.py — CALIBRATION_BLOCK constant + calibration_block() function.
 
 Mirrors test_mode_route.py style: flat imports (`from calibrate import ...`)
-plus SCRIPTS_DIR anchor for subprocess CLI tests (Task 2 will add CLI tests).
+plus SCRIPTS_DIR anchor for subprocess CLI tests.
 """
 from __future__ import annotations
 
+import json
+import subprocess
+import sys
 from pathlib import Path
 
 SCRIPTS_DIR = Path(__file__).resolve().parent
@@ -62,3 +65,36 @@ def test_calibration_block_is_nonempty_string():
 
     assert isinstance(CALIBRATION_BLOCK, str)
     assert len(CALIBRATION_BLOCK) > 50, "CALIBRATION_BLOCK is suspiciously short"
+
+
+# ---------------------------------------------------------------------------
+# CLI tests (Task 2) — subprocess round-trip, mirroring test_mode_route.py
+# ---------------------------------------------------------------------------
+
+
+def test_cli_block_roundtrip():
+    """`calibrate.py block` exits 0 and stdout is JSON with calibration_block() value."""
+    from calibrate import calibration_block
+
+    proc = subprocess.run(
+        [sys.executable, str(SCRIPTS_DIR / "calibrate.py"), "block"],
+        capture_output=True,
+        text=True,
+        env={"PYTHONDONTWRITEBYTECODE": "1"},
+    )
+    assert proc.returncode == 0, f"Expected exit 0, got {proc.returncode}; stderr={proc.stderr!r}"
+    out = json.loads(proc.stdout)
+    assert "calibration_block" in out
+    assert out["calibration_block"] == calibration_block()
+
+
+def test_cli_unknown_subcommand_exits_1():
+    """`calibrate.py bogus` exits 1 and writes a non-empty message to stderr."""
+    proc = subprocess.run(
+        [sys.executable, str(SCRIPTS_DIR / "calibrate.py"), "bogus"],
+        capture_output=True,
+        text=True,
+        env={"PYTHONDONTWRITEBYTECODE": "1"},
+    )
+    assert proc.returncode == 1
+    assert proc.stderr.strip() != "", "Expected non-empty stderr for unknown subcommand"

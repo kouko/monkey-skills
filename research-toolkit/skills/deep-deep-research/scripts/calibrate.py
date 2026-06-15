@@ -81,3 +81,43 @@ def calibration_block() -> str:
     lever is opt-in enabled.
     """
     return CALIBRATION_BLOCK
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
+
+def main(argv=None) -> int:
+    import argparse
+    import json
+    import sys
+
+    args = sys.argv[1:] if argv is None else argv
+
+    parser = argparse.ArgumentParser(prog="calibrate.py", add_help=False)
+    sub = parser.add_subparsers(dest="command")
+    sub.add_parser("block", add_help=False)
+
+    # Derive the valid-subcommand list from the registered subparsers so it
+    # cannot drift from what's actually wired up (single source of truth).
+    valid = ", ".join(sub.choices)
+
+    # Reject an unknown / missing subcommand up front, BEFORE argparse — so a
+    # missing-required-arg error on a *known* subcommand isn't mislabeled
+    # "unknown subcommand".
+    if not args or args[0] not in sub.choices:
+        name = args[0] if args else "(none)"
+        print(f"unknown subcommand {name!r}; expected one of {{{valid}}}",
+              file=sys.stderr)
+        return 1
+
+    # ns.command == "block"
+    json.dump({"calibration_block": calibration_block()}, sys.stdout)
+    return 0
+
+
+if __name__ == "__main__":
+    import sys
+
+    sys.exit(main())
