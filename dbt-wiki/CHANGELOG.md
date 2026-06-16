@@ -4,6 +4,38 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.0] — 2026-06-16
+
+### Changed — canonical-model selection rule in distillation specs
+
+Sharpened how Phase B picks the **canonical model** for an entity or
+metric when several models carry the same data at a similar grain (a
+dimension plus a dashboard/export reshape, or per-segment / per-region /
+per-brand / per-scenario twins). Previously the specs said only "the
+mart / fact / dimension model that carries the grain" — ambiguous when
+more than one candidate exists.
+
+The rule now states that **DAG position and authority are different
+axes**: moving downstream means *more specialized*, not *more
+authoritative*. The canonical model is the **most-downstream model that
+is still general-purpose** — bounded below by a floor (never a `stg_` /
+single-attribute fragment) and above by a ceiling (never a
+presentation / export / per-segment leaf, which is a narrower copy). The
+`feeds_into` fan-out count is a canonicality signal **only within** the
+assembly layer, never across layers.
+
+- `references/distill-entities.md` — new §2.1 "Picking the canonical
+  model when several models share that grain"; cross-reference added to
+  §3.3 (Evidence column rule) and a new §7 anti-pattern row.
+- `references/distill-metrics.md` — parallel guidance on the §3a
+  "Source model" bullet, including a `[bug]`-tagged caveat to flag
+  structurally parallel twins with a **different measure basis**
+  (tax-inclusive vs tax-exclusive, differing currency) that must not be
+  naively UNION-ed or summed.
+
+Affects future `init` / `refresh` distillation only; existing knowledge
+pages are unchanged until re-distilled.
+
 ## [2.7.0] — 2026-06-05
 
 ### Added — `/dbt-wiki:review` certification command
