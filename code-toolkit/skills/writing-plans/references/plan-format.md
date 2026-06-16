@@ -57,6 +57,10 @@ If `Plan-document-reviewer verdict` is `PENDING`, the plan has not been self-rev
 - **Dependencies**: <one of: "none" | "Task N completes first" | "Tasks N, M complete first" (multi-prerequisite — N and M must both finish before this task starts) | "Tasks N, M parallel" (both are prerequisites, may run in parallel). Cross-part ordering: use "none" at task level + a plan-level `Notes` entry; the field is within-plan only and cannot reference a sibling part's tasks.>
 - **Independent**: <true | false>  # v0.8.0+ — opt-in marker for `dispatching-parallel-agents`. Default false.
 - **Brief item covered**: <quote or reference from the brief's Smallest End State / Decision section>
+- **Status**: <OPTIONAL runtime ledger field — see §Progress ledger. One of:
+    "pending" | "claimed(@<agent>)" | "done(<sha>)" | "blocked". Default OMITTED (a plan with no
+    Status fields behaves exactly as before — fully backward compatible). NOT authoring content;
+    SDD writes it, the plan-document-reviewer ignores it.>
 ```
 
 #### `Files touched` and `Independent` (v0.8.0+)
@@ -64,6 +68,33 @@ If `Plan-document-reviewer verdict` is `PENDING`, the plan has not been self-rev
 - **`Files touched`** is the **disjointness oracle** for cross-task parallel dispatch. List every file the implementer will Write or Edit (not files it merely Reads — those go in `Context paths`).
 - **`Independent: true`** is the plan author's claim that this task has no shared symbol / no sequential data dependency with other `Independent: true` tasks. Default `false`.
 - [`../../dispatching-parallel-agents/SKILL.md`](../../dispatching-parallel-agents/SKILL.md) MAY dispatch tasks concurrently only when **both** declare `Independent: true` AND their `Files touched` sets are disjoint. Otherwise SDD's sequential dispatch is the floor.
+
+#### `Status` — the progress ledger (v0.10.0+, optional)
+
+The optional per-task `Status` field turns the plan into a **run-scoped, durable, shared progress
+ledger**. It is **runtime state**, not plan-authoring content: `writing-plans` never sets it (a fresh
+plan has no `Status` fields), `subagent-driven-development` **maintains** it as it executes, and
+`plan-document-reviewer` **ignores** it.
+
+Vocabulary (exactly these four):
+
+| Value | Meaning | Set by SDD when |
+|---|---|---|
+| `pending` | not started (or simply omitted) | — (default / omitted) |
+| `claimed(@<agent>)` | an agent is working it; `<agent>` is the worktree branch name (unique per agent) | the implementer is dispatched |
+| `done(<sha>)` | resolved + committed; `<sha>` is the task's commit | reviewers PASS and the task is committed |
+| `blocked` | stuck (NEEDS_CONTEXT / BLOCKED / 3-round cap) | the task cannot proceed |
+
+Why it earns its place:
+- **Interruption (crash / session death):** the committed ledger + per-task commits let a resumed run
+  skip `done(<sha>)` tasks and redo only the in-flight `claimed` one — no full-plan re-derivation.
+- **Scale:** explicit status beats reconstructing progress from `git log` on a large plan.
+- **Multi-agent (b):** the ledger is the **shared task-claim doc** that coordinates several concurrent
+  agents (see `dispatching-parallel-agents` §Multiple concurrent sessions) — worktrees isolate files,
+  the ledger coordinates *who does what*.
+
+**Backward compatibility is total:** omit `Status` and nothing changes. The field is opt-in by presence,
+exactly like `External surfaces`.
 
 #### `External surfaces` (v0.9.0+)
 
