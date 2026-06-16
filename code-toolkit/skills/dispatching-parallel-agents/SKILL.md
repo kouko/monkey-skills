@@ -117,6 +117,19 @@ The orchestrator may dispatch Task 3 and Task 4 in parallel only when **both** c
 
 If either condition fails, fall back to SDD's sequential dispatch. `independent: true` is opt-in by the plan author.
 
+## Multiple concurrent sessions on one repo (mode b)
+
+Everything above is **mode (a)**: one orchestrator fans out subagents in a single assistant message — they **share one checkout**, the harness runs them concurrently, results aggregate in that orchestrator. Mode **(b)** is different: **several independent sessions/agents working the same repo at once** (e.g. you run two Claude sessions in parallel). The harness does **not** coordinate across sessions, so (b) needs an explicit convention. The industry-canonical stack (worktree + branch + partition + PR) applies:
+
+1. **Worktree-per-agent** — each concurrent agent gets its own `git worktree` (see [`../using-git-worktrees/SKILL.md`](../using-git-worktrees/SKILL.md); Claude Code's `isolation: worktree` automates create + cleanup). This isolates the working files.
+2. **Static up-front partition** — assign each agent a **disjoint slice** of the plan's `Independent: true` tasks (e.g. agent A: tasks 1–4, agent B: tasks 5–8). Because the slices' `Files touched` sets are disjoint *by the plan*, no runtime locking/claiming is needed — partition is the simplest robust claim when the tasks are known up front. (Dynamic runtime claiming is out of scope; revisit only if many agents must load-balance an unknown task set.)
+3. **Shared ledger = the plan's `Status` field** — each agent writes `claimed(@<its-worktree-branch>)` / `done(<sha>)` / `blocked` into the plan (see `../writing-plans/references/plan-format.md` §Progress ledger). The committed plan is the shared task-claim doc that lets the agents see who has what — worktrees isolate *files*, the ledger coordinates *work*.
+4. **PR-per-agent** — each agent opens its own PR; merge is human-gated at the integration point (run the package suite once on the merged state, per `verification-before-completion`).
+
+**Load-bearing pitfall (the #1 mistake):** a worktree isolates files but does **NOT** prevent overlapping-edit collisions — if two agents edit the same file in different worktrees, you get conflicting parallel solutions and the merge review becomes the bottleneck. **The `Files touched` disjointness partition (step 2) is the real collision defense, not the worktree.** Verify partition disjointness before launching concurrent agents.
+
+**Practical ceiling:** ~3–5 concurrent agents. Beyond that, wait-time + integration/merge cost dominate and throughput stops scaling linearly.
+
 ## Red flags — refuse these rationalizations
 
 | Agent / user says | Reality | Correct response |
@@ -139,7 +152,7 @@ If either condition fails, fall back to SDD's sequential dispatch. `independent:
 | **Inside (per branch)** | `code-toolkit:code-quality-reviewer` / `code-reviewer` | Each branch produces a three-valued verdict; aggregation happens at this skill's layer. |
 | **Downstream** | [`../verification-before-completion/SKILL.md`](../verification-before-completion/SKILL.md) | Runs **once** at integration, not per branch. |
 | **Lateral** | [`../subagent-driven-development/SKILL.md`](../subagent-driven-development/SKILL.md) | Per-task triad inside one domain; this skill is the across-task complement. |
-| **Lateral** | [`../using-git-worktrees/SKILL.md`](../using-git-worktrees/SKILL.md) | For parallelism that outlives a session; this skill's in-session agents share the same checkout and need no worktree. |
+| **Lateral** | [`../using-git-worktrees/SKILL.md`](../using-git-worktrees/SKILL.md) | Mode (a) in-session agents share one checkout and need no worktree; **mode (b) concurrent sessions require worktree-per-agent** (see §Multiple concurrent sessions). |
 | **Router** | [`../using-code-toolkit/SKILL.md`](../using-code-toolkit/SKILL.md) | This skill is auxiliary — no Skill Priority stage, on-demand. |
 
 Original pattern: superpowers v5.1.0 `dispatching-parallel-agents`, adapted for code-toolkit's TDD iron-law + verdict aggregation.

@@ -98,6 +98,16 @@ For each atomic task in the plan:
 
 **Parallel dispatch for independent tasks.** Tasks marked `Independent: true` with disjoint file sets → dispatch all their implementers in ONE parallel message (multiple `Agent(...)` calls in one turn). When the wave completes, commit each task's `PASS` artifacts immediately — do not hold a passing task's commit while a `NEEDS_REVISION` sibling in the same wave is re-dispatched. Keeping commits atomic makes the diff bisectable.
 
+**Progress ledger — maintain `Status` per task + resume from it (v0.10.0+, optional).** When the plan carries the optional per-task `Status` field (see `writing-plans/references/plan-format.md` §Progress ledger), the orchestrator **writes it back into the plan as it executes** so the plan becomes a durable, shared progress record:
+
+- On dispatch → set `Status: claimed(@<agent>)` (`<agent>` = the worktree branch name, unique per agent; for a single-orchestrator run use the current branch).
+- On resolved DONE (both reviewers PASS / PASS_WITH_NOTES) **after committing** → set `Status: done(<sha>)` with that task's commit sha.
+- On `BLOCKED` / NEEDS_CONTEXT / the 3-round cap → set `Status: blocked`.
+
+Commit the ledger update **per task** (lean: keep it maximally current so a crash loses at most the one in-flight task). The plan file is the SSOT for progress; the per-task code commits are the durable artifacts the ledger points at.
+
+**Resume after interruption:** on re-entry, **read the plan ledger first** — skip every `done(<sha>)` task (its work is committed), redo only **your own** in-flight `claimed(@<this-agent>)` task, and continue. (In mode (b), leave a sibling agent's live `claimed(@other)` alone — it owns that slice; see `dispatching-parallel-agents` §Multiple concurrent sessions.) This is the continuous, finer-grained complement to `dev-workflow:handoff` (which stays for the cross-session narrative + verification commands). A plan with no `Status` fields → behaves exactly as before (the ledger is opt-in by presence).
+
 **Read-before-Edit is non-negotiable for the orchestrator.** When the orchestrator applies post-review fixes, renames files, or edits files located via `grep`/`jq`: call `Read` on each target file before `Edit`. grep/jq output and subagent-created files do NOT satisfy the Edit read-precondition. Skipping this produces cascading "File has not been read yet" errors across every subsequent edit.
 
 **Environment hygiene.** Commands the orchestrator (or its subagents) run directly:
