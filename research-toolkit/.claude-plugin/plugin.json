@@ -1,7 +1,7 @@
 {
   "name": "research-toolkit",
   "version": "0.2.0",
-  "description": "Research toolkit — agent-portable, key-free research skills that drive the host agent's own LLM + web tools. Ships the deep-research skill (scope / search / dedup / fetch / 3-vote adversarial verify / synthesize); more research skills to follow.",
+  "description": "Research toolkit — agent-portable, key-free research skills that drive the host agent's own LLM + web tools. Ships the deep-deep-research skill (scope / search / dedup / fetch / 3-vote adversarial verify / synthesize); more research skills to follow.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
