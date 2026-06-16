@@ -123,6 +123,13 @@ informs its guard-rule lenses. This skill *writes* the seed; spec-expansion
 *reads* it and does the behavioral fan-out. Keep the boundary — flag here,
 fan-out there.
 
+**Point-don't-copy — structure for addressability.** spec-expansion does not copy
+this surface into its proposal; it **links back** to these sections and fans out only
+net-new behavior. So give each `##` dimension a **stable, addressable heading** the
+downstream can cite. The canonical section→phase mapping lives in
+`spec-toolkit:spec-expansion` (§"Consuming a `ui-flows.md` seed") — do not duplicate it
+here; a copied table would drift.
+
 ### 7. Validate and fix
 
 Run the change-folder validator (repo-root-relative path

@@ -49,6 +49,33 @@ to seed + 6 lenses; blind spots listed below". This is baseline Rule 12
 (fail loud) applied to spec recall: an honest coverage statement, never a
 false completeness claim.
 
+## Consuming a `ui-flows.md` seed (DESIGN→spec seam)
+
+When the seed is a `ui-flows.md` produced by `interface-design-toolkit:interaction-flows`
+(rather than a few raw lines of intent), the interface **surface** is already specified —
+the inventory, user flows, entry/exit points and density flags. Do **not** re-derive or
+re-express that surface here; that is the design station's output, and copying it in
+creates a second source of truth that drifts.
+
+Instead, **point-don't-copy**: in the proposal, **link back** to the named `ui-flows.md`
+sections and fan out only the **NET-NEW behavior** the surface implies — object state
+machines, transition guard rules, edge cases, and `#### Scenario:` acceptance blocks. The
+surface is the input; the behavioral depth is what this skill adds.
+
+Map the seed's sections to the phases below (this table is the canonical seam mapping —
+`interaction-flows` points here rather than copying it):
+
+| `ui-flows.md` section | feeds |
+|---|---|
+| §inventory + render-variant flags | Phase ② OOUX object / state model |
+| §User flows + §Entry + §Exit | Phase ③c `## Journey navigation` |
+| §Transitions (character) | guard-rule lenses (Phase ③ matrix pruning) |
+| interaction-dense surface (density flag) | `## Cross-object combinations` |
+
+The seed-adequacy pre-flight (Phase ①) still applies — a `ui-flows.md` is a *rich* seed,
+but if it leaves a core object's lifecycle unstated, surface that gap rather than inventing
+it. If no `ui-flows.md` exists, ignore this section and treat the input as a generic seed.
+
 ## The three phases
 
 Run **three explicit phases in order**. Each phase (a) **announces itself**
@@ -205,7 +232,7 @@ stages and prunes its junk, so do not enumerate combinations where the
 reaction is just the union of individual reactions.
 
 **Wide stages (≥4 co-active objects).** On a ≥4-object stage you
-**MUST run `scripts/pairwise.py`** — and **MUST NOT enumerate** a wide
+**MUST run `spec-toolkit/scripts/pairwise.py`** — and **MUST NOT enumerate** a wide
 stage's combinations **inline** by reasoning. Inline reasoning-based
 enumeration on wide stages is the A/B-validated **leak** (the exhaustive grid
 catches gold that pure-prompt enumeration misses, `missed_by_both` up to 11);
@@ -303,7 +330,7 @@ blind spots:
   `backbone × object × CTA × state` paths and edges survive post-prune.
 - `## Cross-object combinations` — Phase ③b artifact: per interaction-dense
   stage, the joint state combinations of its co-active objects and the
-  reaction each requires (wide stages reduced via `scripts/pairwise.py`).
+  reaction each requires (wide stages reduced via `spec-toolkit/scripts/pairwise.py`).
   **Structurally required — always emitted**; when no stage is
   interaction-dense, its body states that honestly (e.g. "no
   interaction-dense stage — combinations N/A") and does **not** pad.
