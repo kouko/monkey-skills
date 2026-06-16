@@ -69,7 +69,7 @@ If `Plan-document-reviewer verdict` is `PENDING`, the plan has not been self-rev
 - **`Independent: true`** is the plan author's claim that this task has no shared symbol / no sequential data dependency with other `Independent: true` tasks. Default `false`.
 - [`../../dispatching-parallel-agents/SKILL.md`](../../dispatching-parallel-agents/SKILL.md) MAY dispatch tasks concurrently only when **both** declare `Independent: true` AND their `Files touched` sets are disjoint. Otherwise SDD's sequential dispatch is the floor.
 
-#### `Status` — the progress ledger (v0.10.0+, optional)
+#### Progress ledger — the `Status` field (v0.10.0+, optional)
 
 The optional per-task `Status` field turns the plan into a **run-scoped, durable, shared progress
 ledger**. It is **runtime state**, not plan-authoring content: `writing-plans` never sets it (a fresh
