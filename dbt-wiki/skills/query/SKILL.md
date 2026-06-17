@@ -137,7 +137,7 @@ DAG / lineage / config questions that require evidence-layer detail.
 | **C3 — Downstream lineage** | "影響哪些", "feeds into", "下游", "depend on X", "downstream of X" | Evidence model page + walk `feeds_into` (1-2 levels deep) from `_evidence/models/` |
 | **C4 — Column-level lineage** | "X.col 從哪來", "rename Y 影響什麼", "column lineage", "X 欄位來源", "trace column" | Single evidence model page's `## Column Lineage Chains` body section from `.dbt-wiki/_evidence/models/<name>.md` (precomputed recursive ancestors + descendants — full chain to source / leaf). |
 | **C5 — Materialization filter** | "哪些是 table / view / incremental", "incremental in X tier" | index.md `## Evidence: Models by Materialization` section |
-| **C6 — Tag / Group filter** | "tag X", "group Y", "marts_finance 下" | index.md `## Evidence: Models by Tag/Group/Tier` |
+| **C6 — Tag / Group filter** | "tag X", "group Y", "marts_msd 下" | index.md `## Evidence: Models by Tag/Group/Tier` |
 | **C7 — Test coverage** | "X 有什麼 test", "什麼 test 失敗" | Evidence model page `tests` from `_evidence/models/` + (Phase 2) run_results.json |
 | **C8 — Source attribution** | "X 從哪個 source", "source freshness" | Evidence source pages from `_evidence/sources/` + model `depends_on.sources` |
 | **C9 — Macro usage** | "X macro 在哪用", "用了 dbt_utils.X 的有哪些" | Evidence macro page `used_by_models` from `_evidence/macros/` |

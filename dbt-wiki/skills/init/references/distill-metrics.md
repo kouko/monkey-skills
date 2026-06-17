@@ -159,18 +159,7 @@ For each confirmed metric candidate, determine:
   or both. State as "one row per `<grain>`".
 - **Aggregation**: `SUM`, `COUNT`, `AVG`, `COUNT DISTINCT`, ratio, etc.
 - **Source model**: which evidence model computes this metric
-  (`unique_id` from manifest). When the **same measure** is computed in
-  several models (a base aggregate plus a dashboard/export reshape, or
-  per-region / per-scenario / per-BU twins), cite the **canonical**
-  computing model — the most-downstream model that is still
-  general-purpose, not a presentation/export leaf — using the same
-  "most-downstream-still-general + `feeds_into` fan-out tiebreaker" rule as
-  `distill-entities.md` §2.1. List the period/region/scenario variants in
-  `## Calculation` / `## Materialized Columns` on the one page (they do not
-  fork — see the Fork standard below). When structurally parallel twins use
-  a **different measure basis** (e.g. tax-inclusive vs tax-exclusive,
-  different currency), add a `[bug]`-tagged `## Caveats` line that they
-  **must not be naively UNION-ed or summed**.
+  (`unique_id` from manifest).
 
 ### 3b. Group metrics by source model
 

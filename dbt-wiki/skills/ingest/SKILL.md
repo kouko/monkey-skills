@@ -13,7 +13,7 @@ description: |
   cycles (refresh treats ## User Notes as user-owned).
   Triggers when user wants to record context: "remember that fct_orders
   ...", "fct_orders 的 sort_key 是因為...", "stg_X 有個 gotcha",
-  "marts_finance 整層需要...", "備註 fct_X", "記下 stg_Y", "annotate
+  "marts_msd 整層需要...", "備註 fct_X", "記下 stg_Y", "annotate
   <model>", "add note to <model>", "ingest dbt context", "describe
   why <model>", "/dbt-wiki:ingest", "把這個 dbt context 記下來",
   "新增 dbt 註記", "dbt model 註解", "dbt メモ".
@@ -69,7 +69,7 @@ existing pages under:
 Matching strategy:
 1. **Exact name match**: tokens in the argument that exactly match a
    resource name (case-sensitive, since dbt is case-sensitive)
-2. **Tier-prefix match**: if user mentions a tier ("marts_finance 整層"),
+2. **Tier-prefix match**: if user mentions a tier ("marts_msd 整層"),
    collect all models under that path prefix
 3. **No match → ask**:
 
@@ -102,7 +102,7 @@ Skip dbt resource names already in heading. Examples:
 | User text | Slug |
 |---|---|
 | "fct_orders sort_key is (order_date, customer_id) because..." | `sort-key-rationale` |
-| "marts_finance permissions need analytics_readonly_group..." | `permissions-readonly-group` |
+| "marts_msd permissions need prod_marts_readonly_group..." | `permissions-readonly-group` |
 | "stg_customers has GDPR redaction merge — see incident #4521" | `gdpr-redaction-merge` |
 
 If slug collides with an existing entry on the same date, append `-2`, `-3`, ...

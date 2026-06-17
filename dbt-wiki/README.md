@@ -55,7 +55,7 @@ dbt has excellent first-party docs (`dbt docs generate` → static HTML site) an
 6. (Optional) Capture tribal knowledge that's not in manifest.json or schema.yml:
    ```
    /dbt-wiki:ingest "fct_orders sort_key is (order_date, customer_id) because Tableau extract joins on these — see incident #4521"
-   /dbt-wiki:ingest "marts_finance needs analytics_readonly_group permission grant before incremental run"
+   /dbt-wiki:ingest "marts_msd needs prod_marts_readonly_group permission grant before incremental run"
    ```
 7. Ask anything:
    ```
@@ -68,7 +68,7 @@ dbt has excellent first-party docs (`dbt docs generate` → static HTML site) an
    # Structural lineage questions (answered from evidence layer)
    /dbt-wiki:query "fct_orders 依賴什麼？"
    /dbt-wiki:query "rename stg_customers.email 會影響哪些 model？"
-   /dbt-wiki:query "marts_finance 下哪些是 incremental？"
+   /dbt-wiki:query "marts_msd 下哪些是 incremental？"
    /dbt-wiki:query "fct_orders sort key 為什麼這樣設？"      # answers from ingested context
    ```
 
