@@ -148,6 +148,39 @@ How to determine grain:
 3. Last resort: infer from the PK column name (e.g., `order_id` with
    `not_null` test implies grain = one order).
 
+### 2.1 Picking the canonical model when several models share that grain
+
+The grain test above can match **more than one** model — a dimension, a
+dashboard reshape, and a per-segment copy may all carry one-row-per-customer.
+DAG position and authority are **different axes**: moving downstream means
+*more specialized*, not *more authoritative*. The two coincide only up to
+the point where the entity is assembled; past it, downstream models are
+narrower copies, not better ones.
+
+The canonical model is therefore **the most-downstream model that is still
+general-purpose** — it assembles the entity but has not yet been specialized
+for a single consumer:
+
+- **Floor** — never pick a `stg_` / single-attribute fragment; those are
+  pre-assembly upstream pieces, not the assembled entity.
+- **Ceiling** — do NOT overshoot into a presentation / export /
+  per-segment / per-region / per-brand leaf. Those are *specializations* of
+  the canonical model, not more-authoritative versions of it. Reading "most
+  downstream" as "best" lands you on a narrowed, consumer-specific copy.
+- **Same-layer tiebreaker** — among candidates at the right grain, prefer the
+  one with the highest `feeds_into` fan-out: a hub that many siblings build on
+  is the agreed assembly point. Fan-out is a signal **only within** the
+  assembly layer — a `stg_` model can also have many dependents, so never use
+  fan-out to select *across* layers (it would pull you upstream of the
+  assembled entity).
+- **Record the specializations, don't hide them.** When specialized leaves
+  exist, name the canonical hub in `## Grain` and note the leaves (and when to
+  use each) in `## Caveats` — analysis reads the hub; a finished dashboard
+  number reads its purpose-built leaf. For structurally parallel twins
+  (per-segment / market / brand / scenario), also carry a `[bug]`-tagged
+  caveat that the twins **must not be naively UNION-ed or summed** when their
+  measure basis differs (see §3.4 rule 5 for the column-level delta).
+
 ---
 
 ## 3. Fields section — plain-language column dictionary
@@ -212,6 +245,11 @@ The mart column is the authoritative definition an analyst queries; the
 staging lineage back to it is already recorded in the evidence page's
 `## Column Lineage Chains`. Only when a field exists solely on a staging
 model (never promoted to the mart) do you cite the staging column.
+
+When the field is carried at the entity's grain by **several** models (a
+dimension plus a dashboard/export reshape, or per-segment twins), cite it
+on the **canonical** model chosen per §2.1 — the most-downstream still
+general-purpose model — never on a specialized presentation/export leaf.
 
 ### 3.4 Value-domain capture for small-cardinality categorical columns
 
@@ -720,3 +758,4 @@ layer that normalises raw Shopify IDs before dimension table population.
 | Writing a 400-char `summary` | Summary is capped at 200 chars — tiered query reads it without loading the body. |
 | Setting `status: mature` at distillation time | Phase B distillation produces `developing`; a human reviewer upgrades to `mature`. |
 | Omitting plumbing-column exclusions | Do not include `_fivetran_synced`, `dbt_updated_at`, surrogate hash columns in `## Fields`. |
+| Picking the **most-downstream** model as canonical (a `dash_`/`export_`/per-segment leaf) | Canonical = most-downstream model still **general-purpose** (§2.1); a specialized leaf is a narrower copy, not a more-authoritative one. Use `feeds_into` fan-out as a tiebreaker only *within* the assembly layer. |

@@ -568,7 +568,7 @@ entry, free-form prose body. Refresh PRESERVES this section verbatim
 — it is user content, not derived. Examples:)
 
 ### 2026-05-02 redshift-permission-gotcha
-prod_marts_readonly_group must be granted before each incremental run;
+analytics_readonly_group must be granted before each incremental run;
 hook in dbt_project.yml handles this. See incident #4521.
 
 ## Cross-references
