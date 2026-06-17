@@ -184,7 +184,11 @@ exactly the capture-recapture misread: when critics converge it tells you the
 out there are precisely the ones a redundant panel cannot see. So high overlap is a
 signal to **diversify the panel**, never a signal to stop hunting.
 
-### The five lenses (load-bearing order)
+### The lenses (load-bearing order)
+
+The first five are the **always-on fixed panel** (the cost model above counts these
+five). The sixth is **conditional** — it runs only when the consumer project has a
+`docs/product-principles-toolkit/PRINCIPLES.md`, adding one dispatch when present.
 
 1. **NFR / security — load-bearing #1.** Non-functional requirements:
    **security**, performance/latency, **privacy**, **compliance**, **a11y**
@@ -216,6 +220,30 @@ signal to **diversify the panel**, never a signal to stop hunting.
    failure / **partial**-failure / partial writes, **timing** & ordering,
    retries & idempotency, **multi-user** contention. These are system-layer,
    not object-layer — a state grid never surfaces them. Persona: 3am on-call ops.
+
+6. **Principles-entailed omission — conditional (only when `PRINCIPLES.md` present).**
+   Read the consumer's `docs/product-principles-toolkit/PRINCIPLES.md` (North Star +
+   the falsifiable `— check:` clauses) as this lens's input view. Ask the **omission**
+   question, not the violation question: *"what behavior that a principle ENTAILS did
+   the spec silently OMIT?"* — e.g. a principle "must work offline" → hunt where the
+   draft drops offline / sync-conflict handling; "介面極簡 for pro users" → hunt the
+   power-user shortcut paths the happy-path spec never enumerated. This stays inside
+   the absence-not-inconsistency boundary (you hunt the **missing** principle-entailed
+   requirement; whether the spec *contradicts* a principle is a conformance check the
+   code-review layer owns, not this panel). Persona: the product owner who wrote the
+   principles and is asking "where did my non-negotiable quietly fall out?" **N/A
+   no-op when no `PRINCIPLES.md` exists** — announce "principles lens: N/A (no
+   PRINCIPLES.md)" and skip the dispatch; never invent principles.
+   - **Read PRINCIPLES.md as the entailment SOURCE and the draft as the target** —
+     this lens is *not* draft-blind (unlike lens 3's requirements-only view): you
+     need both to locate the absence.
+   - **When a `— check:` clause is phrased as a violation-grep** (e.g. "grep for
+     modals, expect zero" / "scan copy for jargon"), do not run the grep — that is
+     the code-review layer's conformance job. The lens-6 move is to hunt the
+     behavior the clause's **exception/carve-out entails** (e.g. "modals reserved
+     for irreversible confirms" → is the entailed confirm flow specified?). If a
+     principle is purely a copy/code-level constraint with no spec-layer entailment,
+     record it out-of-frame rather than manufacture an omission.
 
 ## You MUST emit your own blind spots
 
@@ -367,8 +395,8 @@ After the loop terminates (K consecutive dry rounds), report:
   completeness signal and never as near-completeness;
 - the `critic-found` items now tagged in `## Provenance`;
 - the non-empty `## Blind spots — needs human/field input` list;
-- an explicit statement of **coverage relative to seed + 5 lenses** — never the
-  word "complete".
+- an explicit statement of **coverage relative to seed + N lenses** (N = 5, or 6
+  when the conditional principles lens ran) — never the word "complete".
 
 Then hand the extended output to the verification gate (human review →
 code-toolkit VERIFY). You do not declare done; you declare *coverage and its
