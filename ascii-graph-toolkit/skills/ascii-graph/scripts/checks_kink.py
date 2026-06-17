@@ -31,6 +31,10 @@ ARROW_TARGET_OFFSET = {"▼": +1, "▲": -1}
 JUNCTIONS = frozenset("┬┴├┤┼└┘┌┐")
 # Glyphs that form a box's horizontal border / corners.
 BOX_BORDER = frozenset("─┼┬┴├┤└┘┌┐")
+# Any structural glyph a seam may continue into or terminate at on the line
+# below: connectors (continuation), junctions/corners (termination), or a
+# horizontal rule (a border the seam meets).
+STRUCTURAL = CONNECTORS | JUNCTIONS | frozenset("─")
 
 
 def _connector_columns(line: str) -> dict:
@@ -39,6 +43,22 @@ def _connector_columns(line: str) -> dict:
     col = 0
     for ch in line:
         if ch in CONNECTORS:
+            cols[col] = ch
+        col += display_width(ch)
+    return cols
+
+
+def _structural_columns(line: str) -> dict:
+    """Map display-column -> structural glyph for each structural glyph.
+
+    Used to decide whether a connector's seam continues or terminates on the
+    line below: a corner/junction or horizontal rule at the same column is a
+    legitimate seam end, not a kink.
+    """
+    cols = {}
+    col = 0
+    for ch in line:
+        if ch in STRUCTURAL:
             cols[col] = ch
         col += display_width(ch)
     return cols
@@ -69,9 +89,13 @@ def find_issues(lines: list[str]) -> list[tuple[int, int, str]]:
     """Return [(line_no_1based, display_col_0based, message), ...]."""
     issues = []
     per_line = [_connector_columns(ln) for ln in lines]
+    per_line_structural = [_structural_columns(ln) for ln in lines]
 
     for idx, cols in enumerate(per_line):
         below = per_line[idx + 1] if idx + 1 < len(per_line) else {}
+        below_structural = (
+            per_line_structural[idx + 1] if idx + 1 < len(per_line) else {}
+        )
 
         for col, glyph in cols.items():
             # --- Arrowhead-into-box ---------------------------------------
@@ -90,23 +114,28 @@ def find_issues(lines: list[str]) -> list[tuple[int, int, str]]:
                         )
 
             # --- Seam-straightness ----------------------------------------
-            # A plain connector continued below at a shifted column, with no
-            # junction glyph on either endpoint to justify the bend, is a kink.
-            if not below or glyph in JUNCTIONS:
+            # A plain connector at `col` is fine if the seam either continues
+            # or terminates at SOME structural glyph (connector, corner/
+            # junction, or horizontal rule) directly below at the same column.
+            # Only an off-by-one bend — a structural glyph at col±1 below with
+            # no junction to justify it — is a genuine kink.
+            if not below_structural or glyph in JUNCTIONS:
                 continue
-            if col in below:
-                continue  # straight continuation
-            for bcol, bglyph in below.items():
-                if bglyph in JUNCTIONS:
-                    continue  # the shift is justified downstream
-                if abs(bcol - col) >= 1:
-                    issues.append(
-                        (
-                            idx + 2,
-                            bcol,
-                            f"seam kink: connector drifts from col {col} to "
-                            f"col {bcol} with no junction glyph",
-                        )
+            if col in below_structural:
+                continue  # seam continues or terminates straight below
+            for delta in (-1, 1):
+                bcol = col + delta
+                if bcol not in below_structural:
+                    continue
+                if below_structural[bcol] in JUNCTIONS:
+                    continue  # the shift is justified by a junction
+                issues.append(
+                    (
+                        idx + 2,
+                        bcol,
+                        f"seam kink: connector drifts from col {col} to "
+                        f"col {bcol} with no junction glyph",
                     )
+                )
 
     return issues

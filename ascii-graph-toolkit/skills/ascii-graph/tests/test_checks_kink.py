@@ -55,6 +55,26 @@ ARROW_MISSES_BOX = [
     "└───────────────┘",
 ]
 
+# Display-width-aligned nested box: the outer │ at each side terminates at a
+# corner on the line below, and inner boxes sit fully inside. No connector
+# bends, so there must be no kink flagged.
+NESTED_BOX = [
+    "┌────────────────────┐",
+    "│  データ層          │",
+    "│  ┌────┐  ┌────┐    │",
+    "│  │ PG │  │RDS │    │",
+    "│  └────┘  └────┘    │",
+    "└────────────────────┘",
+]
+
+# Two boxes side by side on one row: each │ terminates at a corner directly
+# below it. No seam bends, so there must be no kink flagged.
+TWO_SIDE_BY_SIDE_BOXES = [
+    "┌──┐ ┌──┐",
+    "│a │ │b │",
+    "└──┘ └──┘",
+]
+
 
 # --- Seam-straightness tests ---------------------------------------------
 
@@ -70,6 +90,14 @@ def test_straight_seam_clean():
 
 def test_justified_bend_not_flagged():
     assert find_issues(JUSTIFIED_BEND) == []
+
+
+def test_nested_box_no_false_kink():
+    assert find_issues(NESTED_BOX) == []
+
+
+def test_two_side_by_side_boxes_no_false_kink():
+    assert find_issues(TWO_SIDE_BY_SIDE_BOXES) == []
 
 
 # --- Arrowhead-into-box tests --------------------------------------------
