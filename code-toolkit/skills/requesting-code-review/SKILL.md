@@ -128,6 +128,7 @@ This rule applies **even when this skill was not explicitly invoked** — the de
 
 1. **Determine diff scope**. Default: `git diff main...HEAD` (everything on this branch not on main). Override with explicit commit range if user specifies (`git diff <SHA1>..<SHA2>`).
 2. **Dispatch code-reviewer subagent** via `Agent({subagent_type: "code-toolkit:code-reviewer", prompt: <branch + diff body>})` — plugin-level agent (v0.6.0 / P15-12 Phase 2) at [`code-toolkit/agents/code-reviewer.md`](../../agents/code-reviewer.md). The orchestrator passes: diff range, paths to rubrics + checklists, branch context (recent commits, related issues if known). The agent carries the 12-rule engineering baseline ([`code-toolkit/scripts/_baseline.md`](../../scripts/_baseline.md)) baked into its system prompt.
+   - **Principles-conformance discovery (conditional):** before dispatching, check whether the consumer project has a `docs/product-principles-toolkit/PRINCIPLES.md`. **If present**, pass its path to the reviewer and instruct it to score the `principles-conformance` dimension (D8 in the agent contract — does the diff violate any falsifiable `— check:` clause?). **If absent**, pass nothing — the reviewer emits `principles-conformance: N/A`. Never synthesize principles; the file is the only source.
 3. **Wait for verdict**. Reviewer returns structured review with per-dimension scores, severity-tagged findings, and overall verdict.
 4. **Surface to user**. Print the verdict + findings; let user decide remediation. Do NOT auto-fix — that's user agency, even for a trivial single-line nit. Silently auto-fixing then re-reviewing removes the user's decision point and burns an extra review round. **Phrase this relay per §Asking the user** — translate `🔴/🟡/🟢` + the verdict token into plain language and open with a state anchor; the reviewer agent's structured output stays machine-precise.
 5. **Re-dispatch if user fixed and wants re-review** — same skill, fresh subagent (no state carry-over between rounds for clean evaluation).
@@ -159,6 +160,8 @@ dimension_scores:
   tests: PASS | PASS_WITH_NOTES | NEEDS_REVISION
   refactoring: PASS | PASS_WITH_NOTES | NEEDS_REVISION
   cross-task-coherence: PASS | PASS_WITH_NOTES | NEEDS_REVISION  # NEW at branch scope
+  external-surface-grounding: PASS | PASS_WITH_NOTES | NEEDS_REVISION  # mirrors per-task D7 + cross-task surface-consistency
+  principles-conformance: PASS | PASS_WITH_NOTES | NEEDS_REVISION | N/A  # vs consumer PRINCIPLES.md; N/A when absent
 
 findings:
   - severity: 🔴 fatal | 🟡 should-fix | 🟢 nit
