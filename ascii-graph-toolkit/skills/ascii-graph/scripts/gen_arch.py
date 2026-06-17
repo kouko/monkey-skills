@@ -76,14 +76,24 @@ def render_arch(layers: list[dict]) -> str:
         components = layer["components"]
         cells = [_cell(c) for c in components]
 
-        # Absorb the difference between this layer's natural row width and
-        # the shared interior into the LAST cell (Task 2 will distribute
-        # slack deterministically).
+        # Distribute the difference between this layer's natural row width and
+        # the shared interior EVENLY across the cells: each cell gets a `base`
+        # number of extra spaces, and the integer `remainder` is spread one
+        # cell at a time so the per-cell widths differ by at most one. The
+        # leftover (the remainder) lands on the trailing cells — keeping the
+        # last cell as the tie-break sink, deterministic for a given input.
+        # This replaces dumping all slack on the last cell, which left skinny
+        # cells beside one bloated tail.
         slack = interior - _row_natural_width(components)
         if cells:
-            cells[-1] = cells[-1] + " " * slack
+            base, remainder = divmod(slack, len(cells))
+            n = len(cells)
+            cells = [
+                cell + " " * (base + (1 if i >= n - remainder else 0))
+                for i, cell in enumerate(cells)
+            ]
         else:
-            # Degenerate empty-row case is Task 2; for now pad to interior.
+            # Degenerate empty-row case: pad the single empty cell to interior.
             cells = [" " * interior]
 
         # Top border + bottom border: ─ across the whole interior, with ┬
