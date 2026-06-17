@@ -48,3 +48,34 @@ def test_display_width_aligned_table_has_no_issues():
         "└──────┘",     # 8
     ]
     assert find_issues(lines) == []
+
+
+def test_branching_flowchart_is_not_a_table():
+    # A decision box whose bottom border forks into two branch stubs.
+    # The box content │ sit at display-cols 3 and 16; the branch stub
+    # "│    │"'s │ sit at cols 7 and 12 -- a DIFFERENT left/right frame.
+    # A flowchart is not a table, so the stub must not be flagged as a
+    # too-narrow table row.
+    lines = [
+        "   ┌────────────┐",
+        "   │ 權限足夠?  │",
+        "   └───┬────┬───┘",
+        "       │    │",
+        "      是    否",
+        "       ▼    ▼",
+    ]
+    assert find_issues(lines) == []
+
+
+def test_lone_single_box_is_not_a_table():
+    # One box: top border + one content row + bottom border. A single box
+    # is not a table (no second data row sharing the frame), so nothing is
+    # flagged even though this row's display width (10) exceeds the border
+    # width (8) -- a single mislabelled box is a diagram element, not a
+    # too-wide table row.
+    lines = [
+        "┌──────┐",     # width 8
+        "│中文中文│",   # width 10 -- wider than the border
+        "└──────┘",     # width 8
+    ]
+    assert find_issues(lines) == []
