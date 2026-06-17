@@ -1,7 +1,7 @@
 ---
 name: using-code-toolkit
 description: Router for code-toolkit — invoke whenever the user wants to **build, change, debug, or review code** (features / bug fixes / refactors / migrations / reviews / dependency bumps). Drives a Superpowers-style flow — brainstorm → plan → subagent-driven development → TDD iron-law → systematic debugging → code review → finish branch — with each rule grounded in primary sources (Beck 2002 / Martin 2008 / Fowler 2018 / OWASP ASVS / 徳丸本 Ch.6). 程式碼開發・流程紀律・一級書目 grounding。コーディング・プロセス規律・原典 grounding.
-version: 0.9.0
+version: 0.10.0
 ---
 
 <SUBAGENT-STOP>
@@ -61,6 +61,41 @@ Walk through these stages in order. Skip a stage only when its precondition is a
 
 **Auto-suggest hook** (Stage 3 → Auxiliary): When SDD is about to consume a plan that contains **≥2 tasks** marked `Independent: true` with **disjoint `Files touched`**, the router suggests `dispatching-parallel-agents` for those tasks (the implementer fan-out happens in one assistant message; the rest of the plan stays on SDD's per-task triad). The user can decline; SDD's sequential dispatch is always the fallback. This is the **only** time the toolkit dispatches multiple implementers within one plan — every other path keeps SDD's "one implementer at a time" floor.
 
+## Continuous mode (opt-in): spec-frozen → PR auto-advance
+
+By default the pipeline is **human-pumped**: between every stage the user says "go". **Continuous mode** is an **opt-in** convention that lets the orchestrator run stage→stage unattended — from a frozen spec all the way to a PR — **without losing the verification gates**. It adds a STOP rule, not a brain.
+
+**Entry — at the SPEC, not the plan.** Continuous mode starts only when **both** hold:
+
+1. The user **opts in** explicitly (e.g. "run continuous to PR" / "連續跑到 PR"). The default stays human-pumped.
+2. A **human-approved, frozen spec** exists — concretely the `brainstorming` hand-off **brief** (`docs/code-toolkit/specs/<topic>.md`), the per-feature artifact that locks the *approach*; this is **not** the repo-level PRODUCT-SPEC / TECH-SPEC. **Design + spec stay human-gated** (sign-off locks the *approach* via `brainstorming`'s Smallest-End-State / Alternatives axes). The plan is **not** a human checkpoint: it is the mechanical sequencing of an already-decided approach, so it is **auto-generated** by `writing-plans` and **gated** by the `plan-document-reviewer` evaluator subagent (a real writer≠judge **plan gate**, PASS / NEEDS_REVISION). The plan becomes one more auto-advance-with-gate stage.
+
+**Auto-advance behavior.** Within continuous mode the orchestrator proceeds `writing-plans → plan gate → SDD per-task triad → whole-branch review → verification → finish→PR` without waiting for a human "go", **unless a stop condition fires**.
+
+**Stop contract (halt-and-escalate).** The run halts and escalates when any row fires:
+
+| # | Stop trigger | Notes |
+|---|---|---|
+| 0a | **plan critical-path depth >5** (`writing-plans` route-back) | scope too deep → escalate: **re-cut** the spec. Existing forcing function |
+| 0b | **`plan-document-reviewer` = NEEDS_REVISION for 2 rounds** | plan can't be made schema-valid / atomic → escalate. Existing 2-round cap |
+| 1 | implementer returns **BLOCKED** | agent self-declares it needs a human; safe direction |
+| 2a | **review-revision loop**: 2 reviewer↔implementer round-trips still NEEDS_REVISION | spec/quality gap; no WebSearch — fix is human clarification, not research |
+| 2b | **debug loop**: `systematic-debugging` exhausts (2 hypotheses → mandatory WebSearch → hypothesis #3 still falsified) | reuses the existing **anchored-thinking** guard; zero new logic |
+| 3 | a **scope / decision the plan did not specify** arises (not in the spec) | don't let the agent invent scope unattended |
+| 4 | the agent **self-declares an assumption** outside plan/spec coverage | honest self-declaration trigger, not a fuzzy confidence detector |
+| 5 | **whole-branch review = NEEDS_REVISION** (cross-task) | direct stop; cross-task issues most need human eyes — do NOT auto-remediate |
+| 6 | any **PASS_WITH_NOTES** (per-task or whole-branch) | **auto-advance**; accumulate the notes, surface them all at the PR |
+| 7 | **PR-open reached** | terminal stop; human merges; **never auto-merge** (inherited from `finishing-a-development-branch`) |
+
+**Crutch-vs-verification line (load-bearing).** Within a task the agent may re-attempt **inside the existing gate loops** up to the bounds above (retry-within-bounds = verification). It may **NOT re-plan, re-scope, or re-route** — those HALT and escalate, they are not autonomous decisions. WebSearch is allowed only as `systematic-debugging`'s hypothesis-#3 input, never as a general "research a workaround" escape hatch.
+
+**Escalation surfacing (two-layer).**
+
+- **(i) Stop-and-wait (baseline, always):** the run **halts** and emits a clear **"why I stopped + what I need from you"** message plus the accumulated PASS_WITH_NOTES. Zero infrastructure.
+- **(ii) Proactive notification (layered, optional):** if the host supports it (push notification / proactive message), send the stop reason so the user gets it while away. **Degrades gracefully** to (i) when the host lacks the capability — never a hard dependency.
+
+This mode is **composed over existing gates** — it references, and does not duplicate, `systematic-debugging` (the anchored-thinking / WebSearch guard for row 2b), `subagent-driven-development` (the per-task verdicts), and `finishing-a-development-branch` (the PR-stop / never-auto-merge terminal).
+
 ## Red flags — agent rationalizations to refuse
 
 | Agent says | Reality | Correct response |
@@ -86,7 +121,7 @@ Walk through these stages in order. Skip a stage only when its precondition is a
 ## What this router does NOT do
 
 - Does **not** write or review code itself — it routes.
-- Does **not** auto-invoke downstream skills — the harness invokes them when the user's next message + Skill Priority match.
+- Does **not** auto-invoke downstream skills — the harness invokes them when the user's next message + Skill Priority match. **Exception:** when the user explicitly opts into **continuous mode** (see §"Continuous mode"), the orchestrator auto-advances stage→stage until a stop condition fires.
 - Does **not** enforce one workflow for every task — Flexible skills (§Skill types) cover tailoring.
 - Does **not** replace `domain-teams:code-team` — both ship; pick by use-case (build vs audit).
 
