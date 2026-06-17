@@ -42,21 +42,40 @@ def san(s):
              .replace("(", "「").replace(")", "」"))
 
 
+def die(msg):
+    """Clean failure (stderr + exit 2) — matches the collectors' style."""
+    print(f"cot_mermaid: error: {msg}", file=sys.stderr)
+    sys.exit(2)
+
+
+def title_bullets(n, ctx):
+    """Pull (title, bullets) from a node dict, with actionable errors."""
+    if not isinstance(n, dict):
+        die(f"{ctx}: node must be an object, got {type(n).__name__}")
+    if "title" not in n or "bullets" not in n:
+        die(f"{ctx}: node missing 'title'/'bullets' (keys: {sorted(n)})")
+    if not isinstance(n["bullets"], list) or not n["bullets"]:
+        die(f"{ctx}: 'bullets' must be a non-empty list")
+    return n["title"], n["bullets"]
+
+
 def node(nid, title, bullets):
     body = san(title) + "<br/>━━━━<br/>" + "<br/>".join("• " + san(b) for b in bullets)
     return f'{nid}["{DL}{body}{DR}"]'
 
 
 def chain(nodes):
+    if not isinstance(nodes, list):
+        die("chain 'nodes' must be a list")
     L = len(nodes)
     if L < 2:
-        sys.exit("chain needs ≥2 nodes")
+        die("chain needs ≥2 nodes")
     roles = ["mech"] * L
     roles[0] = "trigger"
     roles[L - 1] = "concl"
     if L >= 4:
         roles[L - 2] = "result"
-    ns = [node(f"N{i}", n["title"], n["bullets"]) for i, n in enumerate(nodes)]
+    ns = [node(f"N{i}", *title_bullets(n, f"chain node {i}")) for i, n in enumerate(nodes)]
     lines = ["```mermaid", "flowchart LR", "    " + " --> ".join(ns)]
     lines += [f"    style N{i} {ROLE[roles[i]]}" for i in range(L)]
     lines.append("```")
@@ -64,40 +83,62 @@ def chain(nodes):
 
 
 def web(nodes, edges):
-    by_id = {n["id"]: n for n in nodes}
+    if not isinstance(nodes, list) or not isinstance(edges, list):
+        die("web needs 'nodes' and 'edges' lists")
+    by_id = {}
+    for n in nodes:
+        if not isinstance(n, dict) or "id" not in n:
+            die(f"web node missing 'id': {n}")
+        by_id[n["id"]] = n
     defined = set()
 
     def ref(nid):
+        if nid not in by_id:
+            die(f"edge references undefined node {nid!r}")
         if nid in defined:
             return nid
         defined.add(nid)
-        n = by_id[nid]
-        return node(nid, n["title"], n["bullets"])
+        return node(nid, *title_bullets(by_id[nid], f"web node {nid!r}"))
 
     lines = ["```mermaid", "flowchart TD"]
     for e in edges:
+        if "from" not in e or "to" not in e:
+            die(f"edge missing 'from'/'to': {e}")
         arrow = e.get("arrow", "-->")
         lbl = f"|{san(e['label'])}|" if e.get("label") else ""
         lines.append(f"    {ref(e['from'])} {arrow}{lbl} {ref(e['to'])}")
     for n in nodes:
-        if n["role"] not in ROLE:
-            sys.exit(f"unknown role {n['role']!r}")
+        if n.get("role") not in ROLE:
+            die(f"unknown/missing role {n.get('role')!r} on node {n['id']!r}")
         lines.append(f"    style {n['id']} {ROLE[n['role']]}")
     lines.append("```")
     return "\n".join(lines)
 
 
 def render(d):
-    if d.get("type") == "chain":
+    if not isinstance(d, dict) or "type" not in d:
+        die("input must be a JSON object with a 'type' field")
+    if d["type"] == "chain":
+        if "nodes" not in d:
+            die("chain input needs 'nodes'")
         return chain(d["nodes"])
-    if d.get("type") == "web":
+    if d["type"] == "web":
+        if "nodes" not in d or "edges" not in d:
+            die("web input needs 'nodes' and 'edges'")
         return web(d["nodes"], d["edges"])
-    sys.exit("type must be 'chain' or 'web'")
+    die(f"type must be 'chain' or 'web', got {d['type']!r}")
 
 
 def main():
-    raw = open(sys.argv[1], encoding="utf-8").read() if len(sys.argv) > 1 else sys.stdin.read()
-    print(render(json.loads(raw)))
+    try:
+        raw = open(sys.argv[1], encoding="utf-8").read() if len(sys.argv) > 1 else sys.stdin.read()
+    except OSError as e:
+        die(f"cannot read input: {e}")
+    try:
+        d = json.loads(raw)
+    except json.JSONDecodeError as e:
+        die(f"invalid JSON input: {e}")
+    print(render(d))
 
 
 if __name__ == "__main__":
