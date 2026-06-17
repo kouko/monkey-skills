@@ -12,6 +12,10 @@ file/stdin CLI wrapper that prints both and exits 0 (clean) / 1 (drift).
 
 import sys
 
+# Suppress __pycache__ creation: these scripts live inside a skill folder whose
+# flat-structure hook treats any nested dir (incl. __pycache__) as a violation.
+sys.dont_write_bytecode = True
+
 from width import display_width
 from checks_seam import find_issues as seam_issues
 from checks_table import find_issues as table_issues

@@ -14,6 +14,10 @@ Unknown shape -> error message on stderr, return 2.
 import json
 import sys
 
+# Suppress __pycache__ creation: these scripts live inside a skill folder whose
+# flat-structure hook treats any nested dir (incl. __pycache__) as a violation.
+sys.dont_write_bytecode = True
+
 from gen_bar import render_bar
 from gen_flow import render_flow
 from gen_table import render_table
