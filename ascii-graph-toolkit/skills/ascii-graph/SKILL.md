@@ -158,6 +158,29 @@ For arrows in flows, prefer the box-drawing/triangle set used by the generators
 (`▼ ▲ ► ◄` are rendered 1-cell in practice alongside `│ ─`); if you need a literal
 `→` in a label, keep it out of the column that sets the box width.
 
+### Box-drawing palette — expressiveness for complex diagrams
+
+For hand-drawn diagrams you may use the full box-drawing repertoire below — **all
+of it is de-facto 1-cell in practice AND recognised by `align.py`** (the taxonomy
+lives in `scripts/glyphs.py`, the SSOT the checks import). Use line style to carry
+meaning; the verifier still validates seams/junctions across every style.
+
+| Style | Glyphs | Suggested use |
+| --- | --- | --- |
+| Light (default) | `┌┐└┘ ├┤┬┴┼ │ ─` | normal boxes, trunks, branches/merges (`┬` split, `┴` join, `┼` cross) |
+| Rounded | `╭╮╰╯` | soft / start–end nodes |
+| Heavy | `┏┓┗┛ ┣┫┳┻╋ ┃ ━` | highlight a critical box or path |
+| Double | `╔╗╚╝ ╠╣╦╩╬ ║ ═` | system / trust boundary, emphasis frame |
+| Dashed | `┄┅┆┇` / `┈┉┊┋` | async / optional / planned (vs solid = sync/required) |
+| Arrows | `▼ ▲ ► ◄` | flow direction (1-cell, align-safe) |
+
+Junctions (`┬┴├┤┼` and their rounded/heavy/double variants) tell both the reader
+and the oracle "a seam legitimately branches/ends here" — so prefer a real junction
+glyph over faking a corner with a plain `│`/`─`. Mixing styles in one diagram is
+fine (e.g. a double-line outer boundary with light inner boxes); the checks handle
+it. Still subject to the alignment-column policy above — line glyphs are safe, but
+don't put `§→★`-class symbols in width-setting columns.
+
 ## Languages
 
 中文 / English / 日本語 all handled. Japanese kana and kanji are the same
@@ -182,6 +205,7 @@ ASCII as an explicitly-labelled lossy view.
 | `scripts/generate.py` | Generator dispatch CLI (table / flow / tree / bar) |
 | `scripts/align.py` | Alignment oracle CLI (verify-loop, exit 0/1) |
 | `scripts/width.py` | Shared display-width primitive (wcwidth) |
+| `scripts/glyphs.py` | Canonical box-drawing glyph taxonomy (SSOT for the checks) |
 | `scripts/gen_table.py` `scripts/gen_flow.py` `scripts/gen_tree.py` `scripts/gen_bar.py` | Per-shape generators |
 | `scripts/checks_seam.py` `scripts/checks_table.py` `scripts/checks_kink.py` | Drift checks wired by `align.py` |
 
