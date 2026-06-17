@@ -121,7 +121,7 @@
     },
     {
       "name": "ascii-graph-toolkit",
-      "description": "CJK (中/英/日) display-width-aware ASCII/Unicode diagram & table toolkit for plain-text channels that cannot render Mermaid (Claude Code terminal, Slack, PR text) — deterministic generators (table/flow/tree/bar) + a wcwidth verify-loop alignment oracle; zero external binary, pure-Python.",
+      "description": "CJK (中/英/日) display-width-aware ASCII/Unicode diagram & table toolkit for plain-text channels that cannot render Mermaid (Claude Code terminal, Slack, PR text) — deterministic generators (table/flow/tree/bar/arch) + a wcwidth verify-loop alignment oracle; zero external binary, pure-Python.",
       "source": "./ascii-graph-toolkit/"
     }
   ]

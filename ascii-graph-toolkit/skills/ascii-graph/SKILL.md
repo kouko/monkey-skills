@@ -1,6 +1,6 @@
 ---
 name: ascii-graph
-description: CJK (中/英/日) display-width-aware ASCII/Unicode diagram and table generator for plain-text channels that cannot render Mermaid (Claude Code terminal, Slack, PR text). Provides deterministic generators (table / flow / tree / bar) plus a wcwidth-based verify-loop that acts as an alignment oracle so full-width characters stay aligned. Zero external binary, pure-Python.
+description: CJK (中/英/日) display-width-aware ASCII/Unicode diagram and table generator for plain-text channels that cannot render Mermaid (Claude Code terminal, Slack, PR text). Provides deterministic generators (table / flow / tree / bar / arch) plus a wcwidth-based verify-loop that acts as an alignment oracle so full-width characters stay aligned. Zero external binary, pure-Python.
 ---
 
 ## Purpose
@@ -22,9 +22,10 @@ aligned) or run the **verify-loop** (hand-drawn, script-checked).
 | Shape you need | Path |
 | --- | --- |
 | Table | `python scripts/generate.py table` |
-| Linear / layered flow (boxes on one trunk) | `python scripts/generate.py flow` |
+| Linear flow (boxes on one trunk) | `python scripts/generate.py flow` |
 | Tree / hierarchy | `python scripts/generate.py tree` |
 | Horizontal bar chart | `python scripts/generate.py bar` |
+| Layered / n-tier architecture (boxes in stacked layer bands) | `python scripts/generate.py arch` |
 | **Any other box-and-arrow flowchart** you compose by hand | **VERIFY-LOOP** with `scripts/align.py` (below) |
 | class / ER / state / gantt / mindmap / C4 | **Emit Mermaid source** (see Honest ceiling) |
 
@@ -85,6 +86,30 @@ echo '{"pairs":[["東京",120],["台北",80],["NYC",40]],"width":20}' \
 東京 ████████████████████ 120
 台北 █████████████ 80
 NYC  ███████ 40
+```
+
+**arch** — payload `{"layers":[{"name":...,"components":[...]}]}` (vertically-stacked
+independent layer bands, each band = a centered layer name over a row of
+component cells; no connector arrows — each band is self-contained):
+
+```
+echo '{"layers":[{"name":"Presentation 表示層","components":["Web App","モバイル","管理後台"]},{"name":"Application 應用層","components":["API Gateway","認証サービス"]},{"name":"Data 資料層","components":["PostgreSQL","Redis 快取"]}]}' \
+  | python scripts/generate.py arch
+┌───────────────────────────────┐
+│      Presentation 表示層      │
+├─────────┬──────────┬──────────┤
+│ Web App │ モバイル │ 管理後台 │
+└─────────┴──────────┴──────────┘
+┌───────────────────────────────┐
+│      Application 應用層       │
+├──────────────┬────────────────┤
+│ API Gateway  │ 認証サービス   │
+└──────────────┴────────────────┘
+┌───────────────────────────────┐
+│          Data 資料層          │
+├───────────────┬───────────────┤
+│ PostgreSQL    │ Redis 快取    │
+└───────────────┴───────────────┘
 ```
 
 ### VERIFY-LOOP — `python scripts/align.py -`
@@ -188,8 +213,9 @@ Wide class as Chinese (2 cells), so JP tables and flows align identically.
 
 ## Honest ceiling
 
-This v1 **reliably aligns**: tables, linear / layered flows, trees, bar
-charts, and hand-drawn flowcharts (verified by `align.py`).
+This v1 **reliably aligns**: tables, linear flows, trees, bar charts,
+layered / n-tier architecture diagrams, and hand-drawn flowcharts
+(verified by `align.py`).
 
 For **class / ER / state / gantt / mindmap / C4** diagrams there is **no
 display-width-correct ASCII renderer available**. For those, **emit the
@@ -202,11 +228,11 @@ ASCII as an explicitly-labelled lossy view.
 
 | Path | Role |
 | --- | --- |
-| `scripts/generate.py` | Generator dispatch CLI (table / flow / tree / bar) |
+| `scripts/generate.py` | Generator dispatch CLI (table / flow / tree / bar / arch) |
 | `scripts/align.py` | Alignment oracle CLI (verify-loop, exit 0/1) |
 | `scripts/width.py` | Shared display-width primitive (wcwidth) |
 | `scripts/glyphs.py` | Canonical box-drawing glyph taxonomy (SSOT for the checks) |
-| `scripts/gen_table.py` `scripts/gen_flow.py` `scripts/gen_tree.py` `scripts/gen_bar.py` | Per-shape generators |
+| `scripts/gen_table.py` `scripts/gen_flow.py` `scripts/gen_tree.py` `scripts/gen_bar.py` `scripts/gen_arch.py` | Per-shape generators |
 | `scripts/checks_seam.py` `scripts/checks_table.py` `scripts/checks_kink.py` | Drift checks wired by `align.py` |
 
 ## Self-check
