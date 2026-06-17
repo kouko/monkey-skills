@@ -11,7 +11,8 @@ the Claude Code terminal, Slack messages, PR descriptions, code comments —
 for a semi-technical reader. Full-width characters (Chinese, Japanese
 kana/kanji) occupy 2 terminal cells while ASCII occupies 1; eyeballed
 padding silently breaks. This skill makes the **script the width oracle** so
-columns and trunks actually line up. Pure Python, zero external binary.
+columns and trunks actually line up. Pure Python — requires the `wcwidth`
+package (`pip install wcwidth`); no compiled binary.
 
 ## Routing rule (core)
 
@@ -55,7 +56,14 @@ echo '{"steps":["収到訂單","驗證","出貨"]}' | python scripts/generate.py
 └──────────┘
       │
       ▼
-   ... (驗證 / 出貨 follow on the same trunk)
+┌──────────┐
+│   驗證   │
+└──────────┘
+      │
+      ▼
+┌──────────┐
+│   出貨   │
+└──────────┘
 ```
 
 **tree** — payload `{"node":{"label":...,"children":[{...}]}}`:
@@ -95,11 +103,16 @@ drift**. Loop:
 
 ```
 printf '┌────┐\n│ 訂單 │\n└────┘\n' | python scripts/align.py -
-   0     6 | ┌────┐
-   1     8 | │ 訂單 │
-   2     6 | └────┘
+  ln  width | content
+   1     6 | ┌────┐
+   2     8 | │ 訂單 │
+   3     6 | └────┘
 line 2: col 7: '│' at display-col 7 connects to nothing vertically
 ```
+
+Line numbers are **1-based** and match the drift message (here `line 2` is the
+`│ 訂單 │` row — width 8 vs the box's 6, so its right `│` lands at display-col 7,
+past the border). A column **greater than the box width is the drift**.
 
 **NEVER hand-pad by eyeballing CJK width** — the script is the oracle. The
 three checks it wires (vertical-seam connect, table equal-width, kink +
@@ -119,6 +132,12 @@ arrowhead-landing) live in `scripts/checks_seam.py`,
 Measured by `scripts/width.py` (wraps `wcwidth`). **Emoji must NOT be used
 as an alignment anchor or as column content** — terminal emoji width is
 nondeterministic across fonts/terminals and will break alignment.
+
+**Ambiguous-width caveat:** East-Asian *Ambiguous* glyphs (e.g. `¥`, `·`, `§`,
+some punctuation) are counted as **1 cell** here — correct in default / Western
+terminals. A terminal configured `ambiguous=wide` (common in some CJK locales)
+renders them as 2 cells and can overflow a column sized at 1. Avoid
+ambiguous-width glyphs inside aligned columns, or state the assumption.
 
 ## Languages
 

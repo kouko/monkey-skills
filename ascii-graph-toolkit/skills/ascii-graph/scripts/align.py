@@ -33,7 +33,7 @@ def analyze(text: str) -> tuple[str, list[tuple[int, int, str]]]:
     """
     lines = text.splitlines()
     report = "\n".join(
-        f"{i:4d} {display_width(line):5d} | {line}"
+        f"{i + 1:4d} {display_width(line):5d} | {line}"
         for i, line in enumerate(lines)
     )
     issues: list[tuple[int, int, str]] = []
@@ -59,6 +59,9 @@ def main(argv=None) -> int:
             text = fh.read()
 
     report, issues = analyze(text)
+    # Legend: line numbers are 1-based and match the drift messages below.
+    # A '│' whose display-col exceeds the box width IS the drift (CJK overflow).
+    print("  ln  width | content")
     print(report)
     if issues:
         for ln, col, msg in issues:

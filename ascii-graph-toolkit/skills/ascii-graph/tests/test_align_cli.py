@@ -63,6 +63,20 @@ def test_analyze_report_is_one_line_per_input_line():
     assert len(report.splitlines()) == len(DRIFTED.splitlines())
 
 
+def test_report_line_numbers_are_1_based_and_match_issue_numbering():
+    # Regression for the dogfood F1 bug: the report numbered lines 0-based
+    # while drift messages are 1-based, so "fix the flagged line" pointed one
+    # line off. The report's first line must be index 1, and an issue's line
+    # number must name the same row the report shows.
+    report, issues = align.analyze(DRIFTED)
+    first = report.splitlines()[0]
+    assert first.split()[0] == "1", f"report not 1-based: {first!r}"
+    ln = issues[0][0]
+    # The issue's 1-based line number must appear as a report row label.
+    labels = {line.split()[0] for line in report.splitlines()}
+    assert str(ln) in labels
+
+
 def test_main_drifted_returns_1(tmp_path):
     f = tmp_path / "drifted.txt"
     f.write_text(DRIFTED, encoding="utf-8")
