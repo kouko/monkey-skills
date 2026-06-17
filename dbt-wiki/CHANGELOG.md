@@ -551,8 +551,8 @@ After re-running `/dbt-wiki:init` (or just `/dbt-wiki:refresh`):
   ASCII tree (15 nodes, terminal-readable) + Mermaid block (renders in
   Dataspell preview)
 - Answer auto-saved to `.dbt-wiki/syntheses/mart-customer-dimension-upstream.md`
-- Future refresh after `int_ms_cd__store_name` changes → that synthesis
-  marked stale with banner: "affected_models changed: int_ms_cd__store_name"
+- Future refresh after `dim_customers` changes → that synthesis
+  marked stale with banner: "affected_models changed: dim_customers"
 
 ### Decision rationale
 
@@ -978,10 +978,10 @@ Four skills for local-only LLM-queryable dbt knowledge (symmetric with repo-wiki
 
 ### Pre-trial validation
 
-Plan validation against `<local dbt project>` (real dbt-on-Redshift project, ~200+ models across 8 tiers — staging/interm/marts/marts_msd/marts_qlr/dash/expt/export_to_googlesheets):
+Plan validation against `<local dbt project>` (real dbt-on-Redshift project, ~200+ models across multiple tiers — staging / intermediate / marts / reporting / exports):
 - ✅ dbt project layout matches dbt-wiki's expectations (`dbt/dbt_project.yml`, `dbt/models/<tier>/`, `dbt/target/`)
-- ✅ User already has dbt CLI (`dbt-redshift` conda env)
-- ⏳ sqlglot install required (`pip install sqlglot` in dbt-redshift env) — pre-condition
+- ✅ User already has dbt CLI
+- ⏳ sqlglot install required (`pip install sqlglot` in their dbt env) — pre-condition
 - ⏳ Real-world dogfood scheduled post-merge: `/dbt-wiki:init` against example-dbt-pipeline → measure model count, sqlglot failure rate, lineage depth, query response quality
 
 ### Known limitations (v1.0)
