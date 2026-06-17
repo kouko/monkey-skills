@@ -4,6 +4,36 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.0] — 2026-06-17
+
+### Added — deterministic Phase A evidence-page generator
+
+Phase A previously described page emission as "for each model, write
+`<model>.md`" — infeasible beyond a few dozen models (real projects have
+hundreds–thousands). Init now ships `assets/build_evidence_pages.py`
+(stdlib-only, with `build_evidence_pages_test.py`): a deterministic
+generator that consumes `manifest.json` + the sqlglot/comment JSONL and
+emits **every** evidence page (models / sources / used-macros / seeds /
+snapshots / singular tests) plus `index.md` and `lineage.md`, exactly per
+the SCHEMA.md page contracts. Step 4 copies it; Step 5 invokes it instead
+of describing a per-model hand-write.
+
+### Added — Phase B persistence verification gate + deliverable contract
+
+Hardened Phase B fan-out against the "agent analysed but never wrote
+files" failure mode. New **Step 6.6 persistence gate** runs after fan-out
+and before reconcile: it counts pages on disk, cross-checks each domain's
+return manifest against actual files, retries failed domains with an
+explicit "files are the deliverable" directive, and — for harnesses where
+spawned/async agents don't reliably persist — switches to a
+**return-and-materialize** shape (agent returns `{folder, slug, content}`
+via structured output; the orchestrator writes the files). A new
+"deliverable contract" subsection states that a domain agent's deliverable
+is files on disk, never its reply message.
+
+No SCHEMA changes (schema stays frozen for v2.x); both items are additive
+to the init workflow + assets.
+
 ## [2.9.0] — 2026-06-16
 
 ### Changed — canonical-model selection rule in distillation specs

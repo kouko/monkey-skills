@@ -383,6 +383,8 @@ cp <SKILL_DIR>/assets/detect_source_language.py .dbt-wiki/_internal/
 cp <SKILL_DIR>/assets/detect_source_language_test.py .dbt-wiki/_internal/
 cp <SKILL_DIR>/assets/lint_schema_divergence.py .dbt-wiki/_internal/
 cp <SKILL_DIR>/assets/lint_schema_divergence_test.py .dbt-wiki/_internal/
+cp <SKILL_DIR>/assets/build_evidence_pages.py .dbt-wiki/_internal/
+cp <SKILL_DIR>/assets/build_evidence_pages_test.py .dbt-wiki/_internal/
 cp <SKILL_DIR>/assets/synthesis_template.md .dbt-wiki/_internal/
 ```
 
@@ -612,24 +614,49 @@ All evidence pages write under `.dbt-wiki/_evidence/<type>/` — the
 evidence layer is the **unchanged v1.x mechanical pipeline**, relocated.
 Do NOT write to top-level `.dbt-wiki/models/` (that was the v1.x layout).
 
-For each model, write `.dbt-wiki/_evidence/models/<model_name>.md` per
-the SCHEMA.md `model` evidence page type. Filename collision: if
-`<model_name>.md` exists from a different package (different `unique_id`),
-use `<package>__<model_name>.md`.
+**Do NOT hand-write evidence pages.** Beyond a few dozen models this is
+infeasible (real projects have hundreds–thousands of models), and the page
+shape is fully derivable from `manifest.json` + the Step 4 JSONL outputs —
+so it must be mechanical and reproducible, not authored by hand. dbt-wiki
+ships a deterministic, stdlib-only generator — `build_evidence_pages.py`
+(copied to `.dbt-wiki/_internal/` in Step 4) — that emits EVERY evidence
+page (models / sources / used-macros / seeds / snapshots / singular tests)
+plus `index.md` and `lineage.md`, exactly per the SCHEMA.md page contracts.
 
-For each source (from `manifest.sources`), write
-`.dbt-wiki/_evidence/sources/<source_name>__<table_name>.md` per SCHEMA's
-`source` evidence type. Compute `feeds_into` similarly to Step 3b.
+Invoke it once (use `$PY_RUNNER` from Step 0):
 
-For each macro that is referenced by ≥1 model (filter `manifest.macros`
-by checking which appear in any model's `depends_on.macros`), write
-`.dbt-wiki/_evidence/macros/<macro_name>.md`. Project macros first, then
-external package macros (dbt_utils, dbt_expectations, etc.).
+```bash
+$PY_RUNNER .dbt-wiki/_internal/build_evidence_pages.py \
+    --manifest "$DBT_DIR/target/manifest.json" \
+    --wiki-dir .dbt-wiki \
+    --dbt-dir "$DBT_DIR" \
+    --col-lineage /tmp/dbt-wiki-col-lineage.jsonl \
+    --comments /tmp/dbt-wiki-comments.jsonl \
+    --recursive-lineage /tmp/dbt-wiki-recursive-lineage.jsonl
+    # optional: --project-name NAME (default = manifest metadata.project_name)
+    #           --today YYYY-MM-DD  (default = today)
+```
 
-For seeds: `.dbt-wiki/_evidence/seeds/<seed_name>.md`.
-For snapshots: `.dbt-wiki/_evidence/snapshots/<snapshot_name>.md`.
-For singular tests: `.dbt-wiki/_evidence/tests/<test_name>.md`.
-For exposures: `.dbt-wiki/_evidence/exposures/<exposure_name>.md`.
+It prints a stats JSON (model/source/macro/seed/test counts, column-lineage
+success rate, sqlglot failures, DAG depth, leaf count) — capture it for the
+Step 7 log entry. What it writes, per the SCHEMA.md evidence page types:
+
+- `.dbt-wiki/_evidence/models/<model_name>.md` (collision → `<package>__<model_name>.md`)
+- `.dbt-wiki/_evidence/sources/<source_name>__<table_name>.md` (with `feeds_into`)
+- `.dbt-wiki/_evidence/macros/<macro_name>.md` (only macros used by ≥1 model;
+  external-package macros use `<package>__<macro_name>.md`)
+- `.dbt-wiki/_evidence/{seeds,snapshots,tests}/<name>.md` (tests = singular only;
+  generic schema.yml tests are folded inline into their model page)
+- `.dbt-wiki/index.md` and `.dbt-wiki/lineage.md` (Step 6 documents their shape;
+  the generator follows it. Phase B later regenerates only the `index.md`
+  knowledge sections — Entities / Metrics / Concepts.)
+
+Verify the generator first (optional, recommended on first run):
+`$PY_RUNNER .dbt-wiki/_internal/build_evidence_pages_test.py` → expects "6/6 passed".
+
+**Exposures** (if any are declared) are the one node type the generator does
+not emit; write `.dbt-wiki/_evidence/exposures/<exposure_name>.md` per SCHEMA's
+`exposure` type for each (exposures are rare and low-volume).
 
 ### Re-run merge behavior
 
@@ -649,6 +676,12 @@ When `is_rerun = true` and an evidence model page already exists:
    `.dbt-wiki/_archive/<today>/<orphaned>.md`, don't hard-delete
 
 ## Step 6: Generate index.md and lineage.md
+
+> `build_evidence_pages.py` (Step 5) **already wrote** `index.md` and
+> `lineage.md` following the shapes specified below — this section is the
+> contract the generator implements (and the shape Phase B regenerates the
+> `index.md` knowledge sections against after distillation). You normally do
+> not hand-write these; the spec below is for understanding / verification.
 
 ### index.md
 
@@ -812,8 +845,54 @@ another domain, it:
    `Relationships` section with the correct relative path.
 2. Does **not** create the target page — leaves a dangling link.
 
+#### Deliverable contract — files on disk, not a return message
+
+A domain agent's deliverable is the set of page **files it writes to
+`.dbt-wiki/{entities,metrics,concepts}/`**. Its final/return message is
+only a manifest (the slugs it wrote) used for verification — it is
+**never** accepted in lieu of files. State this explicitly in every
+agent brief: the single most common fan-out failure mode is an agent
+that produces polished page *content in its reply* but never calls the
+write tool. Two robust dispatch shapes — pick one and make the brief
+unambiguous:
+
+- **Write-direct** (default): the agent writes each page with the file
+  tool, then returns a manifest of slugs. Cheaper context, but depends
+  on the agent actually writing — so the Step 6.6 gate below is
+  mandatory.
+- **Return-and-materialize** (robust fallback for harnesses where
+  spawned/async agents don't reliably persist files): the agent returns
+  each page as structured output `{folder, slug, content}` (force it via
+  a schema), and the **orchestrator** writes the files. Persistence then
+  cannot silently fail. Switch to this when Step 6.6 shows write-direct
+  produced zero pages.
+
 Dangling links to cross-domain reserved entities are resolved by the
 reconcile pass (Step 6.7 — handled separately; do not add it here).
+
+### Step 6.6: Persistence verification gate (after fan-out, before reconcile)
+
+Fan-out can silently produce **zero files** (an agent that analysed but
+never wrote). NEVER proceed to reconcile on faith — verify on disk:
+
+1. Count pages actually written:
+   `find .dbt-wiki/entities .dbt-wiki/metrics .dbt-wiki/concepts -name '*.md' | wc -l`.
+2. Cross-check per domain: each dispatched domain in `ownership.json`
+   should have produced ≥1 page for the objects it owns. If a domain's
+   return manifest claims files that are **not on disk**, that domain
+   failed to persist.
+3. **Retry** each failed domain once with an explicit directive: *"You
+   wrote 0 files; your deliverable is files on disk, not your reply —
+   write them now with the file tool."* If write-direct keeps failing
+   after one retry, switch that domain (or all) to the
+   **Return-and-materialize** shape above and have the orchestrator write
+   the files.
+4. After at most K=2 rounds, if pages are still missing, emit a WARNING
+   naming the empty domains and continue — do not let a silent zero pass
+   as success.
+
+Proceed to Step 6.7 only once the on-disk page count is non-zero and
+covers the dispatched domains.
 
 ### Step 6.7: Reconcile pass (after Phase B fan-out)
 
@@ -986,7 +1065,7 @@ Print to user:
     - .dbt-wiki/{SCHEMA,index,log,lineage}.md
     - .dbt-wiki/_evidence/{models,sources,macros,seeds,snapshots,tests,exposures}/*.md
     - .dbt-wiki/{entities,metrics,concepts}/*.md
-    - .dbt-wiki/_internal/extract_column_lineage.py
+    - .dbt-wiki/_internal/{extract_column_lineage,build_evidence_pages,...}.py
     - CLAUDE.md drop-in (<created/appended/replaced>)
 
   Next steps:
