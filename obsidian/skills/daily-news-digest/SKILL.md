@@ -5,13 +5,14 @@ description: >-
   news/YYYY-MM-DD 每日新聞.md. Use when the user wants to organize, round up,
   or summarize a day's news / content / references — phrases like 「整理今天的新聞」
   「彙整某天新聞」「每日新聞」「幫我把這天的內容整理成一篇」「daily news digest」.
-  Scans references/*/ notes by YYYY-MM-DD filename prefix and sorts each into
+  Scans the vault's dated notes by YYYY-MM-DD filename prefix (every folder except
+  wiki / news / templates — the model triages what's relevant) and sorts each into
   TWO tiers: (1) 時效新聞 — time-sensitive events (market moves / geopolitics /
   launches / earnings), which are CLUSTERED by underlying event and synthesized
   into rewritten, integrated stories with a TL;DR, tables, and Mermaid diagrams;
   and (2) 知識與觀點 — evergreen-but-substantive content (社論 / 評測 / 教學 /
   投資策略 / 長青分析), surfaced as categorized short-labeled links with a one-line
-  takeaway each. Same-day research/ notes and handwritten daily notes go in an
+  takeaway each. The user's own research notes and handwritten daily notes go in an
   appendix. Do NOT use for: summarizing a single YouTube video (that is the
   vault's YouTube-summary workflow), building the wiki (use wiki-ingest), or
   investing analysis (use investing-toolkit). 每日新聞彙整・知識整理。
@@ -43,7 +44,7 @@ signal. The YouTube `categories` field lies — an AI-market analysis gets tagge
 |---|---|---|
 | **📰 新聞(整合故事)** | Dated events: 個股/財報/油價/利率/Fed・央行, 衝突/選舉/政策/制裁, 發表會/新模型/併購 | Clustered + synthesized into rewritten stories, then grouped under thematic category headings (the heart of the skill) |
 | **🧠 知識與觀點** | Substantive but not date-driven: 社論/評論, 工具評測/跑分, 教學/walkthrough, 投資策略/方法論, 長青深度分析 | Categorized short-labeled links + one-line takeaway each (NOT rewritten) |
-| **附錄 / drop** | `research/` notes → research appendix. Pure filler with no takeaway → drop. | Links only |
+| **研究附錄 / drop** | The user's own research / analysis notes → research appendix (links only). Pure filler with no takeaway → drop. | Links only |
 
 > [!tip] The litmus test for tier 1 vs tier 2
 > Ask: "If I read this six months from now, would the **date** matter?" A market
@@ -67,15 +68,22 @@ so tokens go to judgment, not file-opening:
 python3 scripts/collect_sources.py <YYYY-MM-DD> .
 ```
 
-It prints a JSON manifest: `news_candidates` (every `references/` note with that
-date prefix — title / **wikilink** / url / channel / tags / ~400-char snippet)
-and `research` (same-day `research/` notes). If `counts.news_candidates` is 0,
-tell the user no dated references exist for that day and stop — don't fabricate.
+It casts a **wide net**: every dated note **anywhere in the vault** — no folder
+layout assumed — is returned in one `candidates` list (each with `path` /
+**`wikilink`** / `folder` / title / url / channel / tags / ~400-char snippet).
+It skips only `wiki/`, `news/` (this skill's own output), `_templates/`, and
+dot-folders by default (`--exclude` to change). **You decide what's in or out at
+triage** — the collector doesn't pre-filter by folder. If `counts.candidates` is
+0, tell the user no dated notes exist for that day and stop — don't fabricate.
 
-### STEP 2 — Triage each candidate into the three buckets
+### STEP 2 — Triage each candidate into the buckets
 
-For **each** `news_candidates` entry, assign 時效新聞 / 知識與觀點 / drop using the
-table above. Keep a running tally (you'll report kept-vs-dropped to the user).
+For **each** `candidates` entry, assign one of: **時效新聞** / **知識與觀點** /
+**研究附錄** (the user's own research/analysis — goes to the appendix, not the
+body) / **drop**. Use `tags` + `snippet` as the primary signal; `folder` is a
+hint, not a rule (e.g. a `research/`- or `notes/`-style folder leans 研究附錄, a
+clippings/references-style folder leans consumed-content) — but judge on content.
+Keep a running tally (you'll report kept-vs-dropped to the user).
 
 ### STEP 3 — Cluster the news into stories, then group stories by theme
 
@@ -154,7 +162,7 @@ an earnings arc. For these, reconstruct the progression so the reader sees the
 > [!important] Execution model — delegate the note-reading on heavy days
 > Reading every clustered note (full bodies, often with long transcripts) into the
 > main context is the real context cost. So **route by load**:
-> - **Heavy day** (`counts.news_candidates` ≳ 40, OR any single cluster ≳ 6 notes):
+> - **Heavy day** (`counts.candidates` ≳ 40, OR any single cluster ≳ 6 notes):
 >   **dispatch one subagent per story-cluster, in parallel** (one assistant message,
 >   multiple `Agent`/`Task` calls — they're independent). Give each subagent the
 >   cluster's note **paths** + the story angle; it reads the full notes and returns
@@ -258,7 +266,8 @@ on why raw long links are banned in narrative).
 
 ### STEP 7 — Appendices & report
 
-- **Research appendix**: each `research/` item as a short-labeled link + one line.
+- **Research appendix**: each item you triaged as **研究附錄** as a short-labeled
+  link + one line.
 - **Handwritten appendix**: if `daily/<YYYY-MM-DD>.md` exists, surface real
   handwritten content from its `## Note` section; skip silently if empty.
 - **Report**: digest path, story count (and sources merged), tier-2 item count,
@@ -331,7 +340,8 @@ on why raw long links are banned in narrative).
   Mermaid house style. **Load at STEP 6**, not before.
 - `scripts/collect_sources.py` — the single-day collector (STEP 1).
 - `scripts/collect_history.py` — the cross-date history collector for evolving
-  stories (STEP 3.5): keyword + date-window search over references/ + investing/.
+  stories (STEP 3.5): keyword + date-window search over the whole vault (minus
+  `--exclude`, same default as collect_sources); `--folders` to restrict.
 - `scripts/cot_mermaid.py` — renders CoT node **content** (JSON) → coloured Mermaid
   with the FIXED role→colour scheme (STEP 4/6). Chain (`flowchart LR`, positional
   roles) or web (`flowchart TD`, explicit roles). Use it so every CoT diagram is

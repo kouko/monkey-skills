@@ -61,8 +61,22 @@ def test_per_day_cap_reports_dropped():
     print("PASS test_per_day_cap_reports_dropped")
 
 
+def test_whole_vault_default_but_excludes_wiki():
+    """Default scans the whole vault (any folder), but skips wiki/."""
+    with tempfile.TemporaryDirectory() as tmp:
+        v = Path(tmp)
+        _note(v / "anything" / "2026-06-10 a.md", "美伊 升溫。")   # arbitrary folder kept
+        _note(v / "wiki" / "2026-06-10 entity.md", "美伊 wiki。")  # wiki excluded
+        m = _run("美伊", v)
+        folders = {n["folder"] for n in m["timeline"]}
+        assert m["counts"]["notes_kept"] == 1, m["counts"]
+        assert "wiki" not in " ".join(folders), folders
+    print("PASS test_whole_vault_default_but_excludes_wiki")
+
+
 if __name__ == "__main__":
     test_matches_keyword_in_range_sorted_by_date()
     test_until_excludes_later_dates()
     test_per_day_cap_reports_dropped()
+    test_whole_vault_default_but_excludes_wiki()
     print("All tests passed.")

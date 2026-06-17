@@ -32,7 +32,18 @@ from pathlib import Path
 
 DATE_RE = re.compile(r"(\d{4}-\d{2}-\d{2})")
 SNIPPET_CHARS = 360
-DEFAULT_FOLDERS = ("references", "investing")
+# By default search the WHOLE vault (no folder-layout assumptions), skipping the
+# same system/output folders as collect_sources. Use --folders to restrict.
+DEFAULT_EXCLUDE = ("wiki", "news", "_templates")
+
+
+def excluded(rel, exclude):
+    """True if this relative path is in an excluded top-level folder or any
+    dot-directory component."""
+    parts = rel.parts
+    if len(parts) > 1 and parts[0] in exclude:
+        return True
+    return any(part.startswith(".") for part in parts[:-1])
 
 
 def split_body(text):
@@ -76,7 +87,12 @@ def main():
     ap.add_argument("--since")
     ap.add_argument("--until")
     ap.add_argument("--per-day", type=int, default=3)
-    ap.add_argument("--folders", default=",".join(DEFAULT_FOLDERS))
+    ap.add_argument("--folders", default="",
+                    help="comma-separated folders to RESTRICT the search to; "
+                         "default empty = whole vault (minus --exclude)")
+    ap.add_argument("--exclude", default=",".join(DEFAULT_EXCLUDE),
+                    help=f"top-level folders to skip when scanning the whole vault "
+                         f"(default: {','.join(DEFAULT_EXCLUDE)})")
     args = ap.parse_args()
 
     for d in (args.since, args.until):
@@ -87,13 +103,20 @@ def main():
     kws = [k.strip() for k in re.split(r"[,\s]+", args.keywords) if k.strip()]
     kws_lower = [k.lower() for k in kws]
     vault_root = Path(args.vault_root).resolve()
+    restrict = [f.strip() for f in args.folders.split(",") if f.strip()]
+    exclude = {x.strip() for x in args.exclude.split(",") if x.strip()}
+
+    # Build the file list: restricted folders if given, else the whole vault.
+    if restrict:
+        paths = (p for folder in restrict
+                 for p in (vault_root / folder).rglob("*.md")
+                 if (vault_root / folder).exists())
+    else:
+        paths = (p for p in vault_root.rglob("*.md")
+                 if not excluded(p.relative_to(vault_root), exclude))
 
     by_date = {}
-    for folder in args.folders.split(","):
-        base = vault_root / folder.strip()
-        if not base.exists():
-            continue
-        for p in base.rglob("*.md"):
+    for p in paths:
             m = DATE_RE.search(p.name)
             if not m:
                 continue

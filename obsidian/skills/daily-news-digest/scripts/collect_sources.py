@@ -1,55 +1,45 @@
 #!/usr/bin/env python3
 """Collect a single day's notes for the daily-news-digest skill.
 
-Given a date (YYYY-MM-DD), this scans the vault for notes whose filename
-starts with that date prefix and emits a compact JSON manifest to stdout.
-The manifest is what the skill's AI step reads to judge newsworthiness —
-so the goal here is cheap, deterministic extraction of the *signals*
-(frontmatter category/tags + a short body snippet), NOT full note bodies.
+Given a date (YYYY-MM-DD), this scans the WHOLE vault for notes whose filename
+starts with that date prefix and emits a compact JSON manifest to stdout. It
+casts a wide net on purpose — **every dated note except a small set of excluded
+folders is returned as a candidate, and the skill's AI step (triage) decides
+what to include and how to classify it** (時效新聞 / 知識與觀點 / research
+appendix / drop). The collector does not assume any particular folder layout.
 
-Two buckets are produced:
-  - news_candidates: everything under references/*/  (consumed external
-    content — the raw material the AI triages into news vs non-news)
-  - research:        everything under research/      (the user's own
-    notes — these go in the digest's appendix, not the news body)
+Excluded by default (`--exclude`):
+  - wiki/        the LLM-owned wiki layer — never consumed as news
+  - news/        this skill's own output — avoid digesting prior digests
+  - _templates/  note templates, not content
+  - any dot-folder (.obsidian/, .git/, .claude/, …) — config / system
 
-No third-party dependencies (no PyYAML) so it runs anywhere Python 3 does.
-The frontmatter parser is intentionally minimal: it only understands the
-flat `key: value` and indented `- item` list shapes these notes actually
-use. Anything it can't parse is simply skipped — the body snippet is the
-backstop signal.
+The goal is cheap, deterministic extraction of the *signals* (frontmatter
+category/tags + a short body snippet), NOT full note bodies. No third-party
+dependencies (no PyYAML) so it runs anywhere Python 3 does.
 """
 
+import argparse
 import json
 import re
 import sys
 from pathlib import Path
 
-# Frontmatter scalar fields worth surfacing to the triage step. Each is a
-# cheap, high-signal hint about whether a note is time-sensitive news.
+# Frontmatter scalar fields worth surfacing to the triage step.
 SCALAR_FIELDS = (
-    "title",
-    "url",
-    "channel_name",
-    "channel",
-    "duration",
-    "upload_date",
-    "date",
-    "language",
-    "type",
+    "title", "url", "channel_name", "channel", "duration",
+    "upload_date", "date", "language", "type",
 )
-# List fields (category / tags) are the strongest newsworthiness signal:
-# "News & Politics" vs "Education", geopolitics/oil-prices vs tutorial/skill-system.
+# List fields (category / tags) are the strongest newsworthiness signal.
 LIST_FIELDS = ("categories", "tags")
-
 SNIPPET_CHARS = 400
+DEFAULT_EXCLUDE = ("wiki", "news", "_templates")
 
 
 def split_frontmatter(text):
     """Return (frontmatter_text, body_text). Empty frontmatter if absent."""
     if not text.startswith("---"):
         return "", text
-    # Match the first fenced YAML block: --- ... ---
     m = re.match(r"^---\s*\n(.*?)\n---\s*\n?(.*)$", text, re.DOTALL)
     if not m:
         return "", text
@@ -63,9 +53,6 @@ def parse_frontmatter(fm_text):
     i = 0
     while i < len(lines):
         line = lines[i]
-        # Indented list items belong to the key opened on a prior line; the
-        # list-collection branch below consumes them, so a stray one here is
-        # just skipped.
         m = re.match(r"^([A-Za-z_][\w-]*):\s*(.*)$", line)
         if not m:
             i += 1
@@ -73,15 +60,12 @@ def parse_frontmatter(fm_text):
         key, inline = m.group(1), m.group(2).strip()
         if key in LIST_FIELDS:
             items = []
-            # Inline form: `tags: [a, b]`
             if inline.startswith("[") and inline.endswith("]"):
                 items = [
                     x.strip().strip('"').strip("'")
-                    for x in inline[1:-1].split(",")
-                    if x.strip()
+                    for x in inline[1:-1].split(",") if x.strip()
                 ]
             else:
-                # Block form: subsequent `  - item` lines.
                 j = i + 1
                 while j < len(lines) and re.match(r"^\s*-\s+", lines[j]):
                     items.append(re.sub(r"^\s*-\s+", "", lines[j]).strip().strip('"').strip("'"))
@@ -99,12 +83,11 @@ def extract_snippet(body):
     """First substantive prose paragraph, trimmed to SNIPPET_CHARS."""
     for block in re.split(r"\n\s*\n", body):
         cleaned = block.strip()
-        # Skip markdown headers, list-only blocks, code fences, callouts.
         cleaned = re.sub(r"^#{1,6}\s+.*$", "", cleaned, flags=re.MULTILINE).strip()
         if not cleaned or cleaned.startswith(("```", ">", "|", "![", "- ", "* ")):
             continue
         cleaned = re.sub(r"\s+", " ", cleaned)
-        if len(cleaned) < 20:  # too short to be a real lead paragraph
+        if len(cleaned) < 20:
             continue
         return cleaned[:SNIPPET_CHARS]
     return ""
@@ -117,9 +100,8 @@ def collect_one(path, vault_root):
         return None
     fm_text, body = split_frontmatter(text)
     fm = parse_frontmatter(fm_text)
-    rel = str(path.relative_to(vault_root))
     return {
-        "path": rel,
+        "path": str(path.relative_to(vault_root)),
         # wikilink target = filename without .md extension (Obsidian convention)
         "wikilink": path.stem,
         "folder": str(path.parent.relative_to(vault_root)),
@@ -134,18 +116,23 @@ def collect_one(path, vault_root):
     }
 
 
-def scan(glob_root, date, vault_root):
-    base = vault_root / glob_root
-    if not base.exists():
-        return []
-    # Recurse at any depth: references/ holds notes at the root, one level
-    # deep (references/ai/…), and nested (references/playlist/<series>/…).
-    # The date-prefix filename is the relevance filter, not folder depth.
-    pattern = f"{date}*.md"
-    paths = base.rglob(pattern)
+def excluded(rel, exclude):
+    """True if this relative path should be skipped: an excluded top-level
+    folder, or any dot-directory component."""
+    parts = rel.parts
+    if len(parts) > 1 and parts[0] in exclude:
+        return True
+    # any directory component (not the filename itself) starting with '.'
+    return any(part.startswith(".") for part in parts[:-1])
+
+
+def scan_vault(date, vault_root, exclude):
     out = []
-    for p in sorted(paths):
+    for p in sorted(vault_root.rglob(f"{date}*.md")):
         if not p.name.startswith(date):
+            continue
+        rel = p.relative_to(vault_root)
+        if excluded(rel, exclude):
             continue
         rec = collect_one(p, vault_root)
         if rec:
@@ -154,25 +141,27 @@ def scan(glob_root, date, vault_root):
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("usage: collect_sources.py YYYY-MM-DD [vault_root]", file=sys.stderr)
-        sys.exit(2)
-    date = sys.argv[1]
-    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date):
-        print(f"error: date must be YYYY-MM-DD, got {date!r}", file=sys.stderr)
-        sys.exit(2)
-    vault_root = Path(sys.argv[2]) if len(sys.argv) > 2 else Path.cwd()
-    vault_root = vault_root.resolve()
+    ap = argparse.ArgumentParser(description="Collect a day's dated notes for daily-news-digest.")
+    ap.add_argument("date")
+    ap.add_argument("vault_root", nargs="?", default=".")
+    ap.add_argument("--exclude", default=",".join(DEFAULT_EXCLUDE),
+                    help="comma-separated top-level folders to skip "
+                         f"(default: {','.join(DEFAULT_EXCLUDE)}); dot-folders are always skipped")
+    args = ap.parse_args()
 
-    news = scan("references", date, vault_root)
-    research = scan("research", date, vault_root)
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", args.date):
+        print(f"error: date must be YYYY-MM-DD, got {args.date!r}", file=sys.stderr)
+        sys.exit(2)
+    vault_root = Path(args.vault_root).resolve()
+    exclude = {x.strip() for x in args.exclude.split(",") if x.strip()}
 
+    candidates = scan_vault(args.date, vault_root, exclude)
     manifest = {
-        "date": date,
+        "date": args.date,
         "vault_root": str(vault_root),
-        "counts": {"news_candidates": len(news), "research": len(research)},
-        "news_candidates": news,
-        "research": research,
+        "excluded_folders": sorted(exclude),
+        "counts": {"candidates": len(candidates)},
+        "candidates": candidates,
     }
     print(json.dumps(manifest, ensure_ascii=False, indent=2))
 
