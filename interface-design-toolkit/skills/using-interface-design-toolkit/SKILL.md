@@ -48,8 +48,16 @@ Walk through these stages in order. Skip a stage only when its precondition is a
 | 0 | Modality | (this router — Step 0) | recorded modality (GUI / TUI / CLI) |
 | 1 | Static design system | `design-system` | the design-system artifact (GUI → `DESIGN.md`) |
 | 2 | Interaction / flows | `interaction-flows` | `ui-flows.md` |
+| 3 | Review (writer≠judge gate) | `design-critic` | gap-hunted design + `## Blind spots` |
 
-Both stages read the product's `PRINCIPLES.md` as governing context.
+Stages 1–2 read the product's `PRINCIPLES.md` as governing context.
+
+**Stage 3 — the design station's completeness gate.** Once `design-system` +
+`interaction-flows` have emitted their artifacts, route to `design-critic` for an
+adversarial heuristic-evaluation pass (writer≠judge) that hunts SURFACE omissions —
+undrawn empty/error/loading states, navigational dead-ends, unreachable screens,
+missing entry/exit — **before** `ui-flows.md` is handed to `spec-toolkit:spec-expansion`.
+It critiques the surface only; behavioral fan-out stays downstream.
 
 ## How to access skills
 
