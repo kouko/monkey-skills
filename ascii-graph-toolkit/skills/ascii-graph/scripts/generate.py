@@ -7,6 +7,7 @@ the matching generator, prints the rendered diagram, returns 0. Shapes:
     flow   {"steps": [...]}
     tree   {"node": {...}}
     bar    {"pairs": [["label", value], ...], "width": 20}
+    arch   {"layers": [{"name": str, "components": [str, ...]}, ...]}
 
 Unknown shape -> error message on stderr, return 2.
 """
@@ -18,12 +19,13 @@ import sys
 # flat-structure hook treats any nested dir (incl. __pycache__) as a violation.
 sys.dont_write_bytecode = True
 
+from gen_arch import render_arch
 from gen_bar import render_bar
 from gen_flow import render_flow
 from gen_table import render_table
 from gen_tree import render_tree
 
-_SHAPES = ("table", "flow", "tree", "bar")
+_SHAPES = ("table", "flow", "tree", "bar", "arch")
 
 
 def render(shape: str, payload: dict) -> str:
@@ -45,6 +47,8 @@ def render(shape: str, payload: dict) -> str:
     if shape == "bar":
         pairs = [(label, value) for label, value in payload["pairs"]]
         return render_bar(pairs, width=payload.get("width", 20))
+    if shape == "arch":
+        return render_arch(payload["layers"])
     raise ValueError(f"unknown shape: {shape!r} (expected one of {_SHAPES})")
 
 
