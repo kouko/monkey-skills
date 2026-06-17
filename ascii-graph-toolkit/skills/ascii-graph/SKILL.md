@@ -133,11 +133,30 @@ Measured by `scripts/width.py` (wraps `wcwidth`). **Emoji must NOT be used
 as an alignment anchor or as column content** — terminal emoji width is
 nondeterministic across fonts/terminals and will break alignment.
 
-**Ambiguous-width caveat:** East-Asian *Ambiguous* glyphs (e.g. `¥`, `·`, `§`,
-some punctuation) are counted as **1 cell** here — correct in default / Western
-terminals. A terminal configured `ambiguous=wide` (common in some CJK locales)
-renders them as 2 cells and can overflow a column sized at 1. Avoid
-ambiguous-width glyphs inside aligned columns, or state the assumption.
+**Ambiguous-width caveat:** East-Asian *Ambiguous* glyphs (e.g. `·`, `§`, `°`,
+`±`, `→`, `★`, Greek/Cyrillic) are counted as **1 cell** here — correct in modern
+/ Western terminals (Ghostty, kitty, WezTerm, Alacritty, Windows Terminal all
+default narrow). A terminal explicitly set `ambiguous=wide` (an opt-in some CJK
+users enable in iTerm2 / PuTTY / mintty, or via `VTE_CJK_WIDTH`) renders them as
+2 cells and can overflow a column sized at 1. No mainstream terminal defaults to
+wide; it is a shrinking legacy corner.
+
+### Alignment-column character policy (cross-terminal safe)
+
+Width is only guaranteed identical across narrow **and** wide terminals for the
+deterministic classes. When a label/cell/anchor must align, restrict it to the
+**whitelist**; keep the **blacklist** out of aligned positions (use them only in
+free text that is not load-bearing for a column edge or a trunk).
+
+| | Characters | Why |
+| --- | --- | --- |
+| ✅ **Safe (deterministic)** | 漢字・かな・カナ・諺文 (always 2); ASCII letters/digits/`+-*/=%`; fullwidth punctuation `，。：？！（）「」` (always 2); box-drawing `─│┌┐└┘├┤┬┴┼` (special-cased 1 in ~all terminals) | width is the same under `ambiguous=1` and `=2` |
+| ⚠️ **Avoid in aligned columns** | `§ ° ± · × ÷ → ← ↔ ↑ ↓ ★ ☆ ♥ ◇ ○ □` + most U+2190–U+25FF symbols, Greek `αβ…`, Cyrillic | East-Asian *Ambiguous* → 1 or 2 by terminal policy |
+| ❌ **Never as anchor / column content** | emoji, ZWJ sequences, VS16 (`️`), regional indicators | width nondeterministic across fonts/terminals |
+
+For arrows in flows, prefer the box-drawing/triangle set used by the generators
+(`▼ ▲ ► ◄` are rendered 1-cell in practice alongside `│ ─`); if you need a literal
+`→` in a label, keep it out of the column that sets the box width.
 
 ## Languages
 
