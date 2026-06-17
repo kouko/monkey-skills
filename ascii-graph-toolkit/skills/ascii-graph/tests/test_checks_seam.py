@@ -66,3 +66,36 @@ def test_issue_tuple_shape():
     assert isinstance(ln, int) and ln >= 1
     assert isinstance(col, int) and col >= 0
     assert isinstance(msg, str) and msg
+
+
+# Double-line box, width-correct (interior ' 中文 ' = 6 display cells -> 6 ═).
+DOUBLE_CLEAN = """\
+╔══════╗
+║ 中文 ║
+╚══════╝"""
+
+# Same double box but the content row is sized by char-count (6 CJK+space chars
+# vs 6-cell border) -> the right ║ lands at a column no border reaches.
+DOUBLE_CORRUPTED = """\
+╔══════╗
+║ 中文字測試 ║
+╚══════╝"""
+
+# Rounded box, width-correct (interior ' 中文 ' = 6 display cells -> 6 ─).
+ROUNDED_CLEAN = """\
+╭──────╮
+│ 中文 │
+╰──────╯"""
+
+
+def test_double_line_box_clean():
+    assert find_issues(DOUBLE_CLEAN.splitlines()) == []
+
+
+def test_double_line_box_corrupted_caught():
+    issues = find_issues(DOUBLE_CORRUPTED.splitlines())
+    assert len(issues) >= 1
+
+
+def test_rounded_box_clean():
+    assert find_issues(ROUNDED_CLEAN.splitlines()) == []

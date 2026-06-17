@@ -75,6 +75,35 @@ TWO_SIDE_BY_SIDE_BOXES = [
     "└──┘ └──┘",
 ]
 
+# Correctly-aligned ROUNDED box. ╭╮╰╯ are corners (junctions): each │ side
+# terminates at a rounded corner directly below. No bend, no kink flagged.
+ROUNDED_BOX = [
+    "╭──────╮",
+    "│ 中文 │",
+    "╰──────╯",
+]
+
+# Correctly-aligned HEAVY box. ┏┓┗┛ are corners; ┃ is a vertical connector.
+# Width-correct, so each ┃ side terminates at a heavy corner directly below.
+HEAVY_BOX = [
+    "┏━━━━┓",
+    "┃ 中 ┃",
+    "┗━━━━┛",
+]
+
+# Corrupted DOUBLE-line box: a double-line trunk ║ exits via a ╦ tee, runs
+# straight one line, then drifts one column with no junction to justify it —
+# the off-by-one kink mirror of KINK_SEAM but built from double-line glyphs.
+# Proves ║ is now actually checked as a vertical connector (it was skipped —
+# silently clean — before the glyphs.py taxonomy refactor).
+DOUBLE_BOX_CORRUPTED = [
+    "╔═══╗",
+    "║ X ║",
+    "╚═╦═╝",            # ╦ tee at col 2 (exit point)
+    "  ║",              # ║ at col 2 — straight so far
+    "   ║",             # ║ drifts to col 3 — KINK, no junction
+]
+
 
 # --- Seam-straightness tests ---------------------------------------------
 
@@ -98,6 +127,18 @@ def test_nested_box_no_false_kink():
 
 def test_two_side_by_side_boxes_no_false_kink():
     assert find_issues(TWO_SIDE_BY_SIDE_BOXES) == []
+
+
+def test_rounded_box_no_false_kink():
+    assert find_issues(ROUNDED_BOX) == []
+
+
+def test_heavy_box_no_false_kink():
+    assert find_issues(HEAVY_BOX) == []
+
+
+def test_double_box_corrupted_is_caught():
+    assert find_issues(DOUBLE_BOX_CORRUPTED) != []
 
 
 # --- Arrowhead-into-box tests --------------------------------------------

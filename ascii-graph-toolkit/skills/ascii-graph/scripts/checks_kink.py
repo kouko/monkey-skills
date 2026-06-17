@@ -21,20 +21,14 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "scripts"))
 
+from glyphs import BOX_BORDER, JUNCTIONS, STRUCTURAL, VERTICAL_CONNECTORS  # noqa: E402
 from width import display_width  # noqa: E402
 
-# Connectors that participate in a vertical seam run.
-CONNECTORS = frozenset("│┬┴▼▲")
+# Connectors that participate in a vertical seam run (light/heavy/double/dashed
+# verticals plus arrowheads) — canonical taxonomy from glyphs.py.
+CONNECTORS = VERTICAL_CONNECTORS
 # Arrowheads and the direction (line offset) of the box they point into.
 ARROW_TARGET_OFFSET = {"▼": +1, "▲": -1}
-# Junction glyphs that legitimately justify a column shift in a seam.
-JUNCTIONS = frozenset("┬┴├┤┼└┘┌┐")
-# Glyphs that form a box's horizontal border / corners.
-BOX_BORDER = frozenset("─┼┬┴├┤└┘┌┐")
-# Any structural glyph a seam may continue into or terminate at on the line
-# below: connectors (continuation), junctions/corners (termination), or a
-# horizontal rule (a border the seam meets).
-STRUCTURAL = CONNECTORS | JUNCTIONS | frozenset("─")
 
 
 def _connector_columns(line: str) -> dict:
