@@ -79,6 +79,29 @@ def test_arch_shape_routes():
     assert "モバイル" in out and "資料層" in out
 
 
+def test_seq_shape_routes():
+    payload = {"participants": ["User", "API サービス", "DB"], "messages": []}
+    out = render("seq", payload)
+    lines = out.splitlines()
+    assert out
+    assert "\n" in out
+    # WHY: a shared display-width across the lifeline rows is the only
+    # observable proof that dispatch reached the real CJK-aware seq
+    # renderer (lifelines align under display-centered participant boxes,
+    # not character-centered ones).
+    assert "API サービス" in out and "User" in out and "DB" in out
+    widths = {display_width(line) for line in lines}
+    assert len(widths) == 1, f"lines misaligned: {sorted(widths)}"
+
+
+def test_main_seq_returns_0(monkeypatch, capsys):
+    payload = '{"participants":["A","B"],"messages":[]}'
+    monkeypatch.setattr("sys.stdin", io.StringIO(payload))
+    assert main(["seq"]) == 0
+    out = capsys.readouterr().out
+    assert out.strip()
+
+
 def test_main_arch_returns_0(monkeypatch, capsys):
     payload = '{"layers":[{"name":"L1","components":["a","b"]}]}'
     monkeypatch.setattr("sys.stdin", io.StringIO(payload))

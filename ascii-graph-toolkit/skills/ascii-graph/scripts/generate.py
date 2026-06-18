@@ -8,6 +8,7 @@ the matching generator, prints the rendered diagram, returns 0. Shapes:
     tree   {"node": {...}}
     bar    {"pairs": [["label", value], ...], "width": 20}
     arch   {"layers": [{"name": str, "components": [str, ...]}, ...]}
+    seq    {"participants": [str, ...], "messages": [{"from","to","label"}, ...]}
 
 Unknown shape -> error message on stderr, return 2.
 """
@@ -22,10 +23,11 @@ sys.dont_write_bytecode = True
 from gen_arch import render_arch
 from gen_bar import render_bar
 from gen_flow import render_flow
+from gen_seq import render_seq
 from gen_table import render_table
 from gen_tree import render_tree
 
-_SHAPES = ("table", "flow", "tree", "bar", "arch")
+_SHAPES = ("table", "flow", "tree", "bar", "arch", "seq")
 
 
 def render(shape: str, payload: dict) -> str:
@@ -49,6 +51,8 @@ def render(shape: str, payload: dict) -> str:
         return render_bar(pairs, width=payload.get("width", 20))
     if shape == "arch":
         return render_arch(payload["layers"])
+    if shape == "seq":
+        return render_seq(payload["participants"], payload["messages"])
     raise ValueError(f"unknown shape: {shape!r} (expected one of {_SHAPES})")
 
 
