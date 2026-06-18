@@ -113,7 +113,7 @@ echo '{"layers":[{"name":"Presentation 表示層","components":["Web App","モ�
 └───────────────┴───────────────┘
 ```
 
-**seq** — payload `{"participants":[...],"messages":[{"from","to","label"},...]}`
+**seq** — payload `{"participants":[...],"messages":[{"from":"A","to":"B","label":"..."},...]}`
 (participant boxes across the top with vertical lifelines below; each message is a
 centered label row + a directional arrow row whose arrowhead lands on the target
 lifeline column). Lines after the lifeline header carry trailing spaces to the
@@ -121,6 +121,8 @@ diagram's full display-width — pasted verbatim below (re-running reproduces it
 byte-for-byte):
 
 ```
+echo '{"participants":["顧客","API サービス","DB"],"messages":[{"from":"顧客","to":"API サービス","label":"注文を送信"},{"from":"API サービス","to":"DB","label":"在庫確認"}]}' \
+  | python scripts/generate.py seq
 ┌──────┐   ┌──────────────┐   ┌────┐
 │ 顧客 │   │ API サービス │   │ DB │
 └───┬──┘   └───────┬──────┘   └──┬─┘
@@ -131,6 +133,11 @@ byte-for-byte):
     │              │  在庫確認   │  
                    │─────────────►  
 ```
+
+> On a message's arrow row, the lifelines *outside* that message's span are left
+> blank and the row is right-padded with trailing spaces to the diagram's full
+> display-width — this is **intentional** (the diagram stays rectangular), not
+> misalignment.
 
 ### VERIFY-LOOP — `python scripts/align.py -`
 
@@ -160,7 +167,8 @@ Line numbers are **1-based** and match the drift message (here `line 2` is the
 past the border). A column **greater than the box width is the drift**.
 
 **NEVER hand-pad by eyeballing CJK width** — the script is the oracle. The
-three checks it wires (vertical-seam connect, table equal-width, kink +
+three checks it wires (vertical-seam connect, table equal-width, kink — a
+connector that bends mid-seam with no junction glyph to justify it — plus
 arrowhead-landing) live in `scripts/checks_seam.py`,
 `scripts/checks_table.py`, `scripts/checks_kink.py`.
 
@@ -258,7 +266,7 @@ ASCII as an explicitly-labelled lossy view.
 | `scripts/generate.py` | Generator dispatch CLI (table / flow / tree / bar / arch / seq) |
 | `scripts/align.py` | Alignment oracle CLI (verify-loop, exit 0/1) |
 | `scripts/width.py` | Shared display-width primitive (wcwidth) |
-| `scripts/glyphs.py` | Canonical box-drawing glyph taxonomy (SSOT for the checks) |
+| `scripts/glyphs.py` | Canonical box-drawing glyph taxonomy (single source of truth, SSOT, for the checks) |
 | `scripts/gen_table.py` `scripts/gen_flow.py` `scripts/gen_tree.py` `scripts/gen_bar.py` `scripts/gen_arch.py` | Per-shape generators |
 | `scripts/gen_seq.py` | Sequence-diagram generator (lifelines + message rows; correctness by construction, not via `align.py`) |
 | `scripts/checks_seam.py` `scripts/checks_table.py` `scripts/checks_kink.py` | Drift checks wired by `align.py` |
