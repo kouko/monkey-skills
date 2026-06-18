@@ -146,14 +146,24 @@ These are ColorBrewer-inspired, tested for colorblind-friendliness.
 
 ## Quality Checklist
 
-Before outputting any diagram, verify:
+### Programmatic validation (authoritative — run for non-trivial or CJK diagrams)
+
+The eyeball checklist below verifies *you followed the rules*; it **cannot verify the rules are right for the target Mermaid build**. Render through the real parser instead:
+
+```bash
+scripts/validate.sh path/to/note.md      # checks every ```mermaid block
+scripts/validate.sh diagram.mmd          # a single diagram
+cat diagram.mmd | scripts/validate.sh -  # stdin
+```
+
+It reports `FAIL` on syntax errors (which mermaid-cli does NOT signal via exit code) and `WARN` on likely literal-quote mistakes. A `FAIL` is a real bug; a `PASS` means it parses in mermaid-cli — which is **more lenient than Obsidian**, so verify CJK-heavy diagrams in Obsidian too. Requires `npx` (Node) on PATH.
 
 ### Universal checks (all 17 types)
 - [ ] No `number. space` pattern in node / label text ([quirk 1](obsidian-common-quirks.md))
 - [ ] Subgraphs with spaces use `subgraph id["Display"]` format ([quirk 2](obsidian-common-quirks.md))
 - [ ] All node / entity references use IDs, not display text ([quirk 3](obsidian-common-quirks.md))
 - [ ] Special characters replaced: `"` → `『』`, `()` → `「」` ([quirk 4](obsidian-common-quirks.md))
-- [ ] **User-visible display strings quoted where the parser supports it** ([quirk 4.5](obsidian-common-quirks.md)) — flowchart nodes `A["Label"]`, arrow labels `-->|"Label"|`, pie labels, quadrant data points, xychart axes, C4 labels, gitGraph tags
+- [ ] **Quote per each type's position rule, NOT everywhere** ([quirk 4.5](obsidian-common-quirks.md)) — quote where the parser strips them (flowchart nodes `A["Label"]`, arrow labels `-->|"Label"|`, pie slice labels, quadrant data points + axis/quadrant labels, xychart axes/series, C4 labels, gitGraph tags/ids, architecture CJK brackets) but NEVER quote free-form titles (pie/quadrant/gantt/timeline titles render the `"` literally). CJK identifiers (gitGraph branch, state/class IDs) can't be quoted at all — romanize
 - [ ] No v11.5+ features used (Neo look, showDataLabelOutsideBar, wardley-beta) ([quirk 6](obsidian-common-quirks.md))
 - [ ] Diagram wrapped in ` ```mermaid ... ``` ` fence
 - [ ] No Emoji in node / label text (use color coding instead)
