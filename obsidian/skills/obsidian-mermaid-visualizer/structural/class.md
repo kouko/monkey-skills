@@ -117,7 +117,7 @@ classDiagram
 - **Known quirks**:
   - Relationship arrow direction can be confusing — `A <|-- B` means B inherits from A (arrow points to parent)
   - Long method signatures may get cut off — keep concise
-  - Unicode in class names sometimes causes issues — prefer ASCII
+  - CJK class names render fine (verified mermaid-cli 2026-06); if you hit a parse error with other Unicode (rare), romanize that name. Note relationship labels are NOT quotable (quotes render literally) — see Quote rule below
 - **Workaround**: none needed
 
 ## Quote rule for class diagrams
