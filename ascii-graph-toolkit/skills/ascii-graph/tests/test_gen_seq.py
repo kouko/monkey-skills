@@ -89,3 +89,116 @@ def test_participants_render_boxes_and_lifelines():
             f"lifeline │ columns {_col_of_char(row, '│')} "
             f"not at box centers {expected_centers}"
         )
+
+
+def _box_centers(top_line: str, participants: list[str]) -> list[int]:
+    """Independently recompute each box's lifeline display-center column.
+
+    Mirrors the test-1 derivation: interior = name width + 2 pads, the left
+    border occupies the box's first column, so the center sits at
+    box_start + 1 + interior // 2. box_start is read from actual "┌" columns.
+    """
+    box_starts = _col_of_char(top_line, "┌")
+    return [
+        start + 1 + (display_width(name) + 2) // 2
+        for start, name in zip(box_starts, participants)
+    ]
+
+
+def test_message_arrow_direction_and_landing():
+    """Each message renders a centered label row + a directional arrow row.
+
+    Three messages exercise the geometry that a naive char-index layout gets
+    wrong:
+
+      1. a LEFT→RIGHT message: the arrowhead ► must land EXACTLY on the
+         target lifeline's display-center column, shaft is ─;
+      2. a RIGHT→LEFT message: the arrowhead ◄ must land EXACTLY on the
+         target (leftward) column;
+      3. a NON-ADJACENT span (skips a middle participant): on the arrow row
+         the shaft CROSSES the intermediate lifeline column (that cell is a
+         shaft glyph, not the preserved │);
+
+    plus the two invariants the whole diagram must keep: every line shares one
+    display width, and each label is centered over its arrow's span.
+    """
+    participants = ["A", "B", "C"]
+    messages = [
+        {"from": "A", "to": "B", "label": "go"},   # left -> right, adjacent
+        {"from": "B", "to": "A", "label": "ok"},   # right -> left, adjacent
+        {"from": "A", "to": "C", "label": "skip"},  # left -> right, non-adjacent
+    ]
+
+    out = render_seq(participants, messages)
+    lines = out.splitlines()
+
+    # Shared display width across every line (rectangularity).
+    widths = {display_width(line) for line in lines}
+    assert len(widths) == 1, f"lines misaligned: {sorted(widths)}"
+
+    centers = _box_centers(lines[0], participants)
+    col_a, col_b, col_c = centers
+
+    # Arrow rows are the lines carrying a horizontal arrowhead glyph.
+    arrow_rows = [ln for ln in lines if "►" in ln or "◄" in ln]
+    assert len(arrow_rows) == len(messages), (
+        f"expected {len(messages)} arrow rows, got {len(arrow_rows)}"
+    )
+    row_go, row_ok, row_skip = arrow_rows
+
+    # 1. A -> B : single ► head landing on B's column; rightward shaft.
+    assert _col_of_char(row_go, "►") == [col_b], (
+        f"L->R head at {_col_of_char(row_go, '►')}, expected B col {col_b}"
+    )
+    assert "◄" not in row_go
+    # Shaft cell immediately right of the source is a horizontal glyph.
+    assert row_go[col_a + 1] == "─", "L->R shaft should start with ─"
+
+    # 2. B -> A : single ◄ head landing on A's (leftward) column.
+    assert _col_of_char(row_ok, "◄") == [col_a], (
+        f"R->L head at {_col_of_char(row_ok, '◄')}, expected A col {col_a}"
+    )
+    assert "►" not in row_ok
+
+    # 3. A -> C : head on C; the intermediate lifeline column B is CROSSED by
+    #    the shaft on this row (a horizontal glyph, NOT the preserved │).
+    assert _col_of_char(row_skip, "►") == [col_c], (
+        f"non-adjacent head at {_col_of_char(row_skip, '►')}, expected C col {col_c}"
+    )
+    crossing_cell = row_skip[col_b]
+    assert crossing_cell != "│", (
+        f"intermediate lifeline at col {col_b} should be crossed, got {crossing_cell!r}"
+    )
+    assert crossing_cell == "─", (
+        f"crossing cell should be shaft ─, got {crossing_cell!r}"
+    )
+
+    # Label rows: the line directly ABOVE each arrow row carries its label,
+    # centered over the arrow's [min, max] column span.
+    for arrow_row, msg in zip(arrow_rows, messages):
+        idx = lines.index(arrow_row)
+        label_row = lines[idx - 1]
+        label = msg["label"]
+        assert label in label_row, f"label {label!r} missing above its arrow"
+        # Centered: the label's midpoint sits within 1 cell of the span midpoint.
+        start_col = display_width(label_row[: label_row.index(label)])
+        label_mid = start_col + display_width(label) / 2
+        lo = min(centers[participants.index(msg["from"])],
+                 centers[participants.index(msg["to"])])
+        hi = max(centers[participants.index(msg["from"])],
+                 centers[participants.index(msg["to"])])
+        span_mid = (lo + hi) / 2
+        assert abs(label_mid - span_mid) <= 1, (
+            f"label {label!r} mid {label_mid} not centered over span "
+            f"mid {span_mid}"
+        )
+
+
+def test_self_message_rejected():
+    """A message with from == to (self-message) is rejected with ValueError."""
+    import pytest
+
+    participants = ["A", "B"]
+    messages = [{"from": "A", "to": "A", "label": "loop"}]
+    with pytest.raises(ValueError):
+        render_seq(participants, messages)
