@@ -80,14 +80,20 @@ Width / height customization. Not all init options work reliably in Obsidian 11.
 
 ## Quote rule for quadrant
 
-Mixed quoting convention — only **data points** take quoted labels; axis / title / quadrant labels are unquoted free-form text (quoting them causes the quotes to render literally):
+The quoting convention is **position-dependent, and differs for ASCII vs CJK / non-ASCII**. Verified against Obsidian's bundled Mermaid (2026-06: `Lexical error on line N. Unrecognized text` reproduced on an unquoted CJK axis label, and literal quotes reproduced on a quoted title):
 
-- **Data points** (always quote): `"Name": [x, y]` ✅
-- **Title** (unquoted, free-form): `title Priority Matrix` ✅ — do NOT quote
-- **Axis labels** (unquoted, free-form): `x-axis Low Effort --> High Effort` ✅ — do NOT quote
-- **Quadrant labels** (unquoted, free-form): `quadrant-1 Quick Wins` ✅ — do NOT quote
+| Element | ASCII label | CJK / non-ASCII label | Effect of quoting |
+|---|---|---|---|
+| **Title** | unquoted: `title Priority Matrix` | unquoted: `title 優先度矩陣` | ⚠️ quotes render **literally** — never quote the title |
+| **Axis** (`x-axis` / `y-axis`) | unquoted OK: `x-axis Low --> High` | **MUST quote**: `x-axis "單一規則" --> "完整框架"` | renders clean (no literal quotes) |
+| **Quadrant** (`quadrant-1..4`) | unquoted OK: `quadrant-1 Quick Wins` | **MUST quote**: `quadrant-1 "工程判斷"` | renders clean (no literal quotes) |
+| **Data points** | always quote: `"Name": [x, y]` | always quote: `"名稱": [x, y]` | required |
 
-This is the opposite of `xychart-beta` where title and axis names ARE quoted. The divergence is intentional per each diagram type's parser. Quadrant data-point labels follow the unified quote rule because they are the user-visible items whose quoting is required for spaces and CJK.
+**Why CJK axis / quadrant labels must be quoted**: Obsidian's bundled Mermaid lexer rejects unquoted non-ASCII text in `x-axis` / `y-axis` / `quadrant-*` positions (`Lexical error … Unrecognized text`). Quoting turns the label into a string token the lexer accepts, and — unlike the title — the quotes do **not** render literally there.
+
+**The title is the one exception**: quoting it prints the `"` characters, while an unquoted CJK title parses fine — so leave the title unquoted even when it contains CJK.
+
+This is the opposite of `xychart-beta` (where title and axis names ARE quoted). The divergence is intentional per each diagram type's parser.
 
 ## Worked examples
 
@@ -161,11 +167,33 @@ quadrantChart
     "Product D": [0.15, 0.2]
 ```
 
+### Example 5: CJK labels (Obsidian) — axis & quadrant quoted, title unquoted
+
+```mermaid
+quadrantChart
+    title AI Agent 編碼輔助工具定位
+    x-axis "單一規則" --> "完整工作流框架"
+    y-axis "壓縮表達省Token" --> "提升工程決策"
+    quadrant-1 "工程判斷x框架"
+    quadrant-2 "工程判斷x規則"
+    quadrant-3 "表達壓縮x規則"
+    quadrant-4 "表達壓縮x框架"
+    "Ponytail": [0.3, 0.82]
+    "Caveman": [0.25, 0.15]
+    "Superpowers": [0.88, 0.85]
+    "Karpathy CLAUDE.md": [0.2, 0.66]
+    "Cursor Rules": [0.12, 0.42]
+```
+
+Note: title stays unquoted (quoting prints literal `"`); CJK axis & quadrant labels are quoted (unquoted CJK there throws `Lexical error … Unrecognized text` in Obsidian). See § Quote rule for quadrant.
+
 ## Error prevention
 
 | ❌ Wrong | ✅ Right | Reason |
 |---|---|---|
 | `x-axis "Low" to "High"` | `x-axis Low --> High` | Must use `-->` arrow, not `to` |
+| `x-axis 單一規則 --> 完整框架` (unquoted CJK) | `x-axis "單一規則" --> "完整框架"` | Obsidian lexer rejects unquoted non-ASCII in axis/quadrant — quote them |
+| `title "優先度矩陣"` (quoted CJK title) | `title 優先度矩陣` | Quoting the title renders the `"` literally — leave title unquoted |
 | Point `"Name" (0.5, 0.5)` | `"Name": [0.5, 0.5]` | Colon + square brackets required |
 | Coordinate outside `[0, 1]` range | Normalize to 0–1 scale | Values outside this range won't render |
 | Mixing quadrant-N with skipping numbers | Define all 4 or none (for labeled quadrants) | Partial definitions may render inconsistently |
@@ -179,5 +207,6 @@ quadrantChart
 - [ ] Quadrant labels either all 4 defined or all 4 omitted (avoid partial)
 - [ ] Quadrant labels ≤ 3 words to prevent truncation
 - [ ] Point names quoted if contain spaces
+- [ ] CJK / non-ASCII axis & quadrant labels are quoted (`x-axis "標籤" --> "標籤"`); title left unquoted (see § Quote rule for quadrant)
 
 See also [obsidian-common-quirks.md](../obsidian-common-quirks.md) for universal rules.

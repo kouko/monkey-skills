@@ -33,7 +33,7 @@ This skill is designed for **option 1** (zero-setup Obsidian native rendering).
 | Data viz | XY Chart (bar) | [data-viz/xychart.md](data-viz/xychart.md) | v11.1+ (`xychart-beta`) | ✅ full | — | Use directly |
 | Data viz | XY Chart (line) | [data-viz/xychart.md](data-viz/xychart.md) | v11.1+ | ✅ full (with named syntax) | Use `line "name" [values]` not bare `line [values]` | Use directly with named-line form |
 | Data viz | Pie | [data-viz/pie.md](data-viz/pie.md) | any | ✅ full | — | Use directly |
-| Data viz | Quadrant | [data-viz/quadrant.md](data-viz/quadrant.md) | v10.6+ | ✅ full | Quadrant numbering counter-intuitive | Use directly |
+| Data viz | Quadrant | [data-viz/quadrant.md](data-viz/quadrant.md) | v10.6+ | ✅ full | Quadrant numbering counter-intuitive; CJK axis/quadrant labels MUST be quoted, title must NOT | Use directly |
 | Structural | Architecture | [structural/architecture.md](structural/architecture.md) | v11.1+ (`architecture-beta`) | 🟡 partial | Iconify CDN offline fails | Built-in icons OK; fallback to graph TB if iconify blocked |
 | Structural | Block | [structural/block.md](structural/block.md) | v10.10+ (`block-beta`) | 🟡 needs testing | 2024 forum reports rendering issues | Test in target Obsidian; fallback to graph TB if broken |
 | Structural | Class | [structural/class.md](structural/class.md) | any | ✅ full | Relationship arrow direction confusing | Use directly |
