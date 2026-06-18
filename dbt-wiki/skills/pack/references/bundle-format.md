@@ -22,6 +22,7 @@ distilled against a real warehouse is governed: it lands in the user's
 acme-analytics/                  # the emitted Agent Skill (synthetic name)
   SKILL.md                       # entry point — the consumption contract
   knowledge/                     # frozen distilled knowledge (read on-demand)
+    _relations.md                #   physical anchor: relation -> schema + columns (Step 2.5)
   references/                    # generation guidance (copied in from pack)
   examples/                      # gold few-shot context (MAY be empty in v1)
   PROVENANCE.md                  # snapshot annotation (OR fold into SKILL.md frontmatter)
@@ -133,6 +134,27 @@ What is **dropped** when freezing: the bulky `_evidence/` mechanical
 layer (raw manifest/sqlglot pages), `index.md`/`lineage.md`/`log.md`
 machinery, and any `_internal/` artifacts. The bundle carries the
 **curated semantic knowledge**, not the full evidence base.
+
+## `knowledge/_relations.md` — physical anchor (the one thing re-carried from `_evidence/`)
+
+Dropping `_evidence/` is right for grounding (the mechanical layer is noise
+for a generation agent and stales fast) — with **one** exception that the
+knowledge layer cannot supply: the **schema-qualified table**. Knowledge pages
+name relations as `model.column`, never `schema.model`, so a bundle deployed at
+a **repo-less target** can't write a runnable `FROM` without it. Step 2.5
+restores exactly this thin anchor — `knowledge/_relations.md`, a flat
+on-demand child of `knowledge/` listing, for every relation the knowledge pages
+derive from:
+
+- its **schema** (load-bearing; complete; reflects dbt custom-schema
+  concatenation like `<db>__marts`, which a single-schema guess gets wrong), and
+- its **column list** — offline from the source `_evidence/` pages (names +
+  descriptions), or, with `--with-catalog`, real **types** pulled from the live
+  warehouse for the canonical relations.
+
+This is deliberately NOT a re-import of the evidence layer: no lineage, no raw
+SQL, no materialization internals — only the relation→schema→columns map a
+warehouse-connected agent needs to qualify a `FROM`. See `SKILL.md` Step 2.5.
 
 ## `references/` — generation guidance (copied in)
 

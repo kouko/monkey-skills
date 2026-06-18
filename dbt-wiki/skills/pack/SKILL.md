@@ -119,6 +119,67 @@ manifest / sqlglot dumps), `index.md` / `lineage.md` / `log.md` machinery, and
 any `_internal/` artifacts. The bundle carries the curated semantic knowledge,
 not the full evidence base.
 
+## Step 2.5 — Emit the physical-anchor `knowledge/_relations.md`
+
+The frozen `knowledge/` names dbt relations (`int_x.col`) but — because the
+`_evidence/` layer is dropped (Step 2) — it does **not** carry the
+schema-qualified table an analyst needs in a `FROM`. For a bundle deployed at a
+**repo-less target that still reaches the same warehouse**, restore the thin,
+high-value anchor: for every relation the knowledge pages derive from, its
+**schema + column list**. dbt-wiki ships a deterministic generator —
+[`assets/build_relations_anchor.py`](assets/build_relations_anchor.py)
+(PEP 723; declares `pyyaml`, so run it with `uv run`).
+
+**Offline (default)** — schema + column names + descriptions, read from the
+source `.dbt-wiki/_evidence/` pages (pack already stands on them; no manifest
+or warehouse access needed). **Schema is the load-bearing piece** and is
+complete; it correctly reflects dbt custom-schema concatenation (e.g. marts in
+`<db>__marts`), which a single-schema assumption gets wrong:
+
+```bash
+uv run <SKILL_DIR>/assets/build_relations_anchor.py \
+    --evidence-dir "$WIKI_DIR/.dbt-wiki/_evidence" \
+    --knowledge-dir "<project>-analytics/knowledge" \
+    --out "<project>-analytics/knowledge/_relations.md"
+```
+
+(`<SKILL_DIR>` = the directory containing this SKILL.md. If `.dbt-wiki/_evidence/`
+is absent — e.g. an evidence-pruned wiki — skip this step and note in the
+bundle that `FROM` schemas must be resolved live.)
+
+**`--with-catalog` (optional, real column TYPES)** — when the target runs
+against the live warehouse and you want true types / full columns for the
+**canonical** relations (those the knowledge pages cite as `model.column`):
+the **orchestrator** runs ONE `information_schema.columns` query *with its own
+warehouse tool*, saves the JSON, and passes it. `pack` itself connects to no
+warehouse (see Rules) — the query is the orchestrator's, exactly as the
+consuming bundle brings its own execution.
+
+```bash
+# 1. (your warehouse tool) pull RAW column rows for the cited relations:
+#      SELECT table_schema, table_name, ordinal_position, column_name, data_type
+#      FROM information_schema.columns
+#      WHERE table_schema IN (<schemas>) AND table_name IN (<cited relations>)
+#      ORDER BY 1,2,3
+#    ⚠ Do NOT LISTAGG over information_schema (unsupported on Redshift system
+#      tables); pull RAW rows — the script aggregates per relation. Save the
+#      tool's JSON result to /tmp/catalog.json.
+# 2. merge it:
+uv run <SKILL_DIR>/assets/build_relations_anchor.py \
+    --evidence-dir "$WIKI_DIR/.dbt-wiki/_evidence" \
+    --knowledge-dir "<project>-analytics/knowledge" \
+    --out "<project>-analytics/knowledge/_relations.md" \
+    --catalog /tmp/catalog.json
+```
+
+Skip `--with-catalog` when packing offline — the offline anchor (schema +
+column names) already makes the bundle self-sufficient for schema-qualifying a
+`FROM`; the live tool fills any missing column detail per-table on demand.
+
+The emitted `_relations.md` is a flat child of `knowledge/` (it loads on
+demand like any knowledge page). Verify the generator on first run (optional):
+`uv run <SKILL_DIR>/assets/build_relations_anchor_test.py` → "6/6 passed".
+
 ## Step 3 — Copy in the generation guidance
 
 Copy this skill's [generation-guidance](references/generation-guidance.md)
