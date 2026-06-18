@@ -63,26 +63,80 @@ def render_seq(participants: list[str], messages: list[dict]) -> str:
     # Per-box interior width = name + one padding space on each side.
     interiors = [display_width(name) + 2 for name in participants]
 
+    # Index-of lookup for message endpoints, used both to size gaps below and
+    # to resolve lifeline columns when drawing arrows.
+    index_of = {nm: i for i, nm in enumerate(participants)}
+
+    # Per-gap width between adjacent boxes. Default to _GAP, then WIDEN any gap
+    # so each message's label fits WITHIN its arrow span. A message spanning
+    # participants i..j lands on the two lifeline columns; the inclusive span is
+    # (center[j] - center[i] + 1) cells, and must be >= display_width(label).
+    # The span is a deterministic function of the interiors (fixed) and the gaps
+    # in between, so widening reduces to: ensure the gaps spanned by a message
+    # supply enough extra cells. We add any deficit to the LAST gap in the span
+    # (deterministic, keeps every prior gap minimal) so a wide label never
+    # overflows past its target lifeline.
+    gaps = [_GAP] * (len(participants) - 1)
+
+    def _span_cells(i: int, j: int) -> int:
+        """Inclusive display-cell span between lifeline columns of boxes i..j.
+
+        Equals (center[hi_j] - center[lo_i] + 1), where center[k] is the column
+        the layout walk below assigns: a box occupies (interior + 2) cells (two
+        borders) plus gaps[k] before the next box, and its lifeline sits at
+        local offset (1 + interior // 2). Computed here by mirroring that walk
+        EXACTLY so the sized span equals the final rendered span (no off-by-one).
+        """
+        lo_i, hi_j = min(i, j), max(i, j)
+        # Display-column distance from box lo_i's start to box hi_j's start:
+        # each box in between contributes its full width (interior + 2) and the
+        # gap that follows it.
+        start_delta = sum(
+            interiors[k] + 2 + gaps[k] for k in range(lo_i, hi_j)
+        )
+        # center[k] - box_start[k] = 1 (left border) + interior[k] // 2.
+        center_delta = (
+            start_delta
+            + (1 + interiors[hi_j] // 2)
+            - (1 + interiors[lo_i] // 2)
+        )
+        return center_delta + 1  # inclusive
+
+    for msg in messages:
+        i, j = index_of[msg["from"]], index_of[msg["to"]]
+        if i == j:
+            continue  # self-message is rejected later; skip sizing
+        lo_i, hi_j = min(i, j), max(i, j)
+        need = display_width(msg["label"])
+        deficit = need - _span_cells(i, j)
+        if deficit > 0:
+            gaps[hi_j - 1] += deficit  # widen the last gap in the span
+
     # Walk left to right, recording each box's start display-column and its
     # lifeline center display-column. A box occupies (interior + 2) cells (two
-    # borders); adjacent boxes are separated by _GAP spaces. The lifeline sits
+    # borders); box k and k+1 are separated by gaps[k] spaces. The lifeline sits
     # at the interior center: box_start + 1 (left border) + interior // 2.
     centers: list[int] = []
     col = 0
-    for interior in interiors:
+    for idx, interior in enumerate(interiors):
         centers.append(col + 1 + interior // 2)
-        col += interior + 2 + _GAP
-    total_width = col - _GAP  # trailing gap is not part of the diagram
-
-    gap = " " * _GAP
+        col += interior + 2
+        if idx < len(gaps):
+            col += gaps[idx]
+    total_width = col
 
     # Header rows are assembled as concatenated per-box segments joined by the
-    # gap. Segments are built as STRINGS (not a char grid) so a 2-cell CJK glyph
-    # stays a single contiguous character — a char-indexed grid would smear it.
-    top = gap.join("┌" + "─" * iw + "┐" for iw in interiors)
-    name = gap.join(
-        "│ " + nm + " │" for nm in participants
-    )
+    # PER-GAP spacing (gaps may differ after widening). Segments are built as
+    # STRINGS (not a char grid) so a 2-cell CJK glyph stays a single contiguous
+    # character — a char-indexed grid would smear it.
+    def _join_segments(segs: list[str]) -> str:
+        out = segs[0]
+        for k, seg in enumerate(segs[1:]):
+            out += " " * gaps[k] + seg
+        return out
+
+    top = _join_segments(["┌" + "─" * iw + "┐" for iw in interiors])
+    name = _join_segments(["│ " + nm + " │" for nm in participants])
 
     # The bottom border carries the lifeline stub ┬ at each box's center. Built
     # per box: ─ across the interior with ┬ at the interior-local center.
@@ -91,7 +145,7 @@ def render_seq(participants: list[str], messages: list[dict]) -> str:
         interior_chars = ["─"] * iw
         interior_chars[iw // 2] = "┬"  # local center mirrors centers[] math
         bottom_segs.append("└" + "".join(interior_chars) + "┘")
-    bottom = gap.join(bottom_segs)
+    bottom = _join_segments(bottom_segs)
 
     lines = [top, name, bottom]
 

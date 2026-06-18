@@ -194,6 +194,110 @@ def test_message_arrow_direction_and_landing():
         )
 
 
+def test_long_cjk_label_widens_gap():
+    """A CJK label wider than the default lifeline gap widens its span.
+
+    Two adjacent participants (`A`, `B`) carry a message whose CJK label is
+    far wider than the default box-to-box gap. Before column-widening, the
+    label would clamp/overflow past the target lifeline and shear the
+    rectangle. We assert three things a correct widening keeps true:
+
+      1. the FULL label appears on its label row, fitting WITHIN its arrow's
+         [src, dst] span — it does not overflow past the target lifeline
+         column and is not truncated;
+      2. EVERY rendered line shares one display width (rectangularity);
+      3. each lifeline `│` sits at consistent display-columns across every
+         lifeline row (lifelines stay vertical after the widening shift).
+    """
+    participants = ["A", "B"]
+    # 6 CJK glyphs = 12 display cells, far wider than the default _GAP (3) plus
+    # the two 1-cell box interiors: the gap MUST widen to fit this label.
+    label = "送信処理開始要"
+    messages = [{"from": "A", "to": "B", "label": label}]
+
+    out = render_seq(participants, messages)
+    lines = out.splitlines()
+
+    # 2. Rectangular: one shared display width across every line.
+    widths = {display_width(line) for line in lines}
+    assert len(widths) == 1, f"lines misaligned: {sorted(widths)}"
+
+    centers = _box_centers(lines[0], participants)
+    col_a, col_b = centers
+    lo, hi = min(col_a, col_b), max(col_a, col_b)
+
+    # Locate the arrow row and its label row (line directly above).
+    arrow_rows = [ln for ln in lines if "►" in ln or "◄" in ln]
+    assert len(arrow_rows) == 1, f"expected 1 arrow row, got {len(arrow_rows)}"
+    arrow_row = arrow_rows[0]
+    # Arrowhead lands exactly on B's lifeline column.
+    assert _col_of_char(arrow_row, "►") == [col_b], (
+        f"arrowhead at {_col_of_char(arrow_row, '►')}, expected B col {col_b}"
+    )
+    label_row = lines[lines.index(arrow_row) - 1]
+
+    # 1. Full label present and fitting WITHIN the [lo, hi] arrow span.
+    assert label in label_row, f"label {label!r} missing / truncated"
+    start_col = display_width(label_row[: label_row.index(label)])
+    end_col = start_col + display_width(label)
+    assert start_col >= lo, (
+        f"label starts at col {start_col}, overflows left past span start {lo}"
+    )
+    assert end_col <= hi + 1, (
+        f"label ends at col {end_col}, overflows past target lifeline {hi}"
+    )
+
+    # 3. Lifelines vertical: every lifeline row carries │ at the same columns.
+    lifeline_rows = [
+        ln for ln in lines if set(ln) <= {"│", " "} and "│" in ln
+    ]
+    assert lifeline_rows, "expected at least one vertical-lifeline row"
+    for row in lifeline_rows:
+        assert _col_of_char(row, "│") == centers, (
+            f"lifeline │ columns {_col_of_char(row, '│')} "
+            f"drifted from box centers {centers}"
+        )
+
+
+def test_label_fitting_default_span_does_not_widen():
+    """A label that EXACTLY fits the default span must NOT widen the gap.
+
+    Column-widening must add only the deficit between the label width and the
+    TRUE inclusive lifeline span (center[dst] - center[src] + 1). If the span
+    primitive miscounts (off-by-one), a label that already fits gets a
+    spuriously wider gap — the diagram is wider than necessary. We pin this by
+    comparing against the messages-less skeleton: a label whose display width
+    equals the true default span produces a diagram of the SAME total width as
+    the participants-only skeleton (no widening).
+    """
+    participants = ["A", "B"]
+
+    # Baseline width with no messages = the un-widened skeleton.
+    skeleton = render_seq(participants, [])
+    base_width = display_width(skeleton.splitlines()[0])
+
+    # True default inclusive span between A's and B's lifelines, computed from
+    # the skeleton's own header (independent of render_seq internals).
+    centers = _box_centers(skeleton.splitlines()[0], participants)
+    default_span = centers[1] - centers[0] + 1
+
+    # A label exactly as wide as that span fits without any widening.
+    label = "x" * default_span
+    out = render_seq(participants, [{"from": "A", "to": "B", "label": label}])
+    out_width = display_width(out.splitlines()[0])
+
+    assert out_width == base_width, (
+        f"label of width {default_span} (== true span) over-widened: diagram "
+        f"width {out_width} vs minimal {base_width}"
+    )
+    # And the full label still fits within the (unchanged) span.
+    label_row = next(ln for ln in out.splitlines() if label in ln)
+    start_col = display_width(label_row[: label_row.index(label)])
+    assert start_col >= centers[0] and start_col + default_span <= centers[1] + 1, (
+        f"label not within span [{centers[0]}, {centers[1]}]"
+    )
+
+
 def test_self_message_rejected():
     """A message with from == to (self-message) is rejected with ValueError."""
     import pytest
