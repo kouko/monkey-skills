@@ -141,7 +141,7 @@ Gantt's grammar treats `section`, `title`, and task-name positions as free-form 
 - Task name: `Research        :done, research, 2026-01-01, 5d` ✅ (the "Research" part is free-form, NOT quotable)
 - Task ID, status, dates, durations: all structured tokens, unquoted
 
-**For CJK content in Gantt**: Mermaid Gantt tolerates CJK in title / section / task name positions without quoting. If a specific label fails to parse, rephrase or remove special characters.
+**For CJK content in Gantt**: CJK usually parses unquoted in title / section / task-name positions, but this is **not guaranteed** in Obsidian's bundled lexer (mermaid-cli is more lenient than Obsidian — a cli pass does not prove an Obsidian pass; and a task line puts the CJK name right before the `:` delimiter, structurally similar to the quadrant data-point case that does fail in Obsidian). There is **no quoting escape** (quotes render literally). If a label fails to parse in Obsidian, rephrase / romanize it — do not add quotes.
 
 ## Worked examples
 

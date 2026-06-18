@@ -124,7 +124,7 @@ State diagrams, like sequence diagrams, treat text after `:` as free-form descri
 
 **State IDs must remain unquoted identifiers** (`Idle`, `Loading`, etc.) — these are not display strings, they are references. If you need a multi-word state, use underscore (`Virus_scan`) or camelCase (`VirusScan`).
 
-**For CJK / special characters in state**: Mermaid state-v2 tolerates CJK in descriptions and labels without quoting. If a label fails to parse, rephrase or remove the problematic character rather than wrapping in quotes.
+**For CJK / special characters in state**: CJK usually parses unquoted in descriptions and transition labels, but this is **not guaranteed** in Obsidian's bundled lexer (mermaid-cli is more lenient than Obsidian — a cli pass does not prove an Obsidian pass). There is no quoting escape (quotes render literally). If a label fails to parse in Obsidian, rephrase / romanize the text rather than wrapping in quotes. Note: state **IDs** must stay ASCII identifiers regardless — put any CJK in the description (`Scanning : 病毒掃描`), not the ID.
 
 ## Worked examples
 

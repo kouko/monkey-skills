@@ -105,6 +105,9 @@ Mermaid gitGraph requires quoting on **commit IDs** and **tags** — this is the
 - **Branch names** (`branch develop`, `checkout develop`): identifiers — unquoted. Branch names are references, not display strings
 - **Commit type keywords** (`type: REVERSE`, `type: HIGHLIGHT`): enum values — unquoted
 
+> [!warning] Branch names must be ASCII — no CJK
+> A CJK branch name (`branch 開發` / `checkout 開發`) throws `Syntax error in text`, and because branch names are identifiers they **cannot be quoted** to fix it (verified with mermaid-cli, 2026-06). Use an ASCII branch id and put any CJK in a quotable display field instead — commit `id:` and `tag:` accept CJK when quoted (`commit id: "初始化"`, `commit tag: "版本1.0"` both render clean). Same applies to `checkout` / `merge` / `cherry-pick` which reference the branch name.
+
 ## Worked examples
 
 ### Example 1: Simple feature branch workflow
