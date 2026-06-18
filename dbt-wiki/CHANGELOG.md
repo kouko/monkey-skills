@@ -4,6 +4,30 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.11.0] — 2026-06-18
+
+### Added — `pack` physical-anchor layer (`knowledge/_relations.md`)
+
+`dbt-wiki:pack` drops the `_evidence/` layer when freezing a bundle — correct
+for semantic grounding, but it loses the one physical fact the knowledge layer
+cannot supply: the **schema-qualified table**. A bundle deployed at a repo-less
+target (no dbt project, no `.dbt-wiki/`) that still reaches the same warehouse
+then can't write a runnable `FROM <schema>.<table>`.
+
+New **Step 2.5** + `assets/build_relations_anchor.py` (stdlib + pyyaml via
+PEP 723; `assets/build_relations_anchor_test.py`, 6/6) emit
+`knowledge/_relations.md`: for every relation the knowledge pages derive from,
+its **schema** (offline from the source `_evidence/` pages — complete, and
+correctly reflecting dbt custom-schema concatenation like `<db>__marts`, which
+a single-schema assumption gets wrong) + its **column list** (offline names +
+descriptions, or real **types** via the optional `--with-catalog` live-warehouse
+merge — the orchestrator runs the `information_schema.columns` query with its
+own tool; `pack` still connects to no warehouse). Deliberately NOT a re-import
+of the evidence layer — no lineage / raw SQL / materialization, only the
+relation→schema→columns map a warehouse-connected agent needs to qualify a
+`FROM`. The bundle SKILL.md template + `references/bundle-format.md` now
+document `_relations.md` and the schema-qualification step.
+
 ## [2.10.0] — 2026-06-17
 
 ### Added — deterministic Phase A evidence-page generator
