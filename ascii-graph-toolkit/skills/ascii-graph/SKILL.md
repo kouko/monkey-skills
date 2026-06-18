@@ -1,6 +1,6 @@
 ---
 name: ascii-graph
-description: CJK (中/英/日) display-width-aware ASCII/Unicode diagram and table generator for plain-text channels that cannot render Mermaid (Claude Code terminal, Slack, PR text). Provides deterministic generators (table / flow / tree / bar / arch) plus a wcwidth-based verify-loop that acts as an alignment oracle so full-width characters stay aligned. Zero external binary, pure-Python.
+description: CJK (中/英/日) display-width-aware ASCII/Unicode diagram and table generator for plain-text channels that cannot render Mermaid (Claude Code terminal, Slack, PR text). Provides deterministic generators (table / flow / tree / bar / arch / seq) plus a wcwidth-based verify-loop that acts as an alignment oracle so full-width characters stay aligned. Zero external binary, pure-Python.
 ---
 
 ## Purpose
@@ -26,6 +26,7 @@ aligned) or run the **verify-loop** (hand-drawn, script-checked).
 | Tree / hierarchy | `python scripts/generate.py tree` |
 | Horizontal bar chart | `python scripts/generate.py bar` |
 | Layered / n-tier architecture (boxes in stacked layer bands) | `python scripts/generate.py arch` |
+| Sequence diagram (participants + ordered messages over time) | `python scripts/generate.py seq` |
 | **Any other box-and-arrow flowchart** you compose by hand | **VERIFY-LOOP** with `scripts/align.py` (below) |
 | class / ER / state / gantt / mindmap / C4 | **Emit Mermaid source** (see Honest ceiling) |
 
@@ -110,6 +111,25 @@ echo '{"layers":[{"name":"Presentation 表示層","components":["Web App","モ�
 ├───────────────┬───────────────┤
 │ PostgreSQL    │ Redis 快取    │
 └───────────────┴───────────────┘
+```
+
+**seq** — payload `{"participants":[...],"messages":[{"from","to","label"},...]}`
+(participant boxes across the top with vertical lifelines below; each message is a
+centered label row + a directional arrow row whose arrowhead lands on the target
+lifeline column). Lines after the lifeline header carry trailing spaces to the
+diagram's full display-width — pasted verbatim below (re-running reproduces it
+byte-for-byte):
+
+```
+┌──────┐   ┌──────────────┐   ┌────┐
+│ 顧客 │   │ API サービス │   │ DB │
+└───┬──┘   └───────┬──────┘   └──┬─┘
+    │              │             │  
+    │              │             │  
+    │ 注文を送信   │             │  
+    │──────────────►                
+    │              │  在庫確認   │  
+                   │─────────────►  
 ```
 
 ### VERIFY-LOOP — `python scripts/align.py -`
@@ -214,8 +234,15 @@ Wide class as Chinese (2 cells), so JP tables and flows align identically.
 ## Honest ceiling
 
 This v1 **reliably aligns**: tables, linear flows, trees, bar charts,
-layered / n-tier architecture diagrams, and hand-drawn flowcharts
-(verified by `align.py`).
+layered / n-tier architecture diagrams, and sequence diagrams (all aligned
+**by construction** by their generators), plus hand-drawn flowcharts (verified
+by `align.py`).
+
+The **seq** generator's correctness is guaranteed **by construction**
+(deterministic column math + its own structural tests), **not** by `align.py`
+— a sequence diagram's horizontal arrows crossing vertical lifelines is a
+different topology than align.py's vertical-seam model, so it does not run
+through the verify-loop.
 
 For **class / ER / state / gantt / mindmap / C4** diagrams there is **no
 display-width-correct ASCII renderer available**. For those, **emit the
@@ -228,11 +255,12 @@ ASCII as an explicitly-labelled lossy view.
 
 | Path | Role |
 | --- | --- |
-| `scripts/generate.py` | Generator dispatch CLI (table / flow / tree / bar / arch) |
+| `scripts/generate.py` | Generator dispatch CLI (table / flow / tree / bar / arch / seq) |
 | `scripts/align.py` | Alignment oracle CLI (verify-loop, exit 0/1) |
 | `scripts/width.py` | Shared display-width primitive (wcwidth) |
 | `scripts/glyphs.py` | Canonical box-drawing glyph taxonomy (SSOT for the checks) |
 | `scripts/gen_table.py` `scripts/gen_flow.py` `scripts/gen_tree.py` `scripts/gen_bar.py` `scripts/gen_arch.py` | Per-shape generators |
+| `scripts/gen_seq.py` | Sequence-diagram generator (lifelines + message rows; correctness by construction, not via `align.py`) |
 | `scripts/checks_seam.py` `scripts/checks_table.py` `scripts/checks_kink.py` | Drift checks wired by `align.py` |
 
 ## Self-check
