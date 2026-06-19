@@ -1,12 +1,7 @@
 ---
 name: descartes-methodical-doubt
-description: >-
-  Methodical Doubt — systematically doubt everything until only the
-  indubitable remains. Use when auditing trust or stress-testing
-  whether something is truly known. Not for decomposition
-  (use first-principles), dialogue (use socratic-method), or single
-  hypothesis testing (use popper-falsifiability).
-  方法的懐疑。方法論的懷疑。
+description: |
+  Methodical doubt — systematically doubt everything until only the indubitable remains. Use when auditing trust or stress-testing whether something is truly known. Decompose → first-principles; hypothesis test → popper-falsifiability.
 ---
 
 # Descartes' Methodical Doubt
