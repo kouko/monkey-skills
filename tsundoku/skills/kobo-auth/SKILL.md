@@ -1,13 +1,7 @@
 ---
 name: kobo-auth
-description: >-
-  First-time setup and credential management for the Kobo library toolkit.
-  Installs the kobodl binary, runs the device-flow activation (kobo.com/activate
-  + 6-digit code), stores credentials in XDG-style locations with mode 600, and
-  supports importing existing kobodl.json from other tools. Use when the user
-  needs to log into Kobo, re-authenticate after expiry, change Kobo accounts,
-  or migrate credentials from a prior kobodl install. macOS only. Kobo 帳號登入
-  と認証管理。Kobo帳號驗證・登入流程。
+description: |
+  Setup + credential management for the Kobo toolkit — installs kobodl, runs device-flow activation, stores creds mode 600, imports existing kobodl.json. Use to log into Kobo, re-auth, switch accounts, or migrate creds. macOS only.
 ---
 
 # Kobo Auth

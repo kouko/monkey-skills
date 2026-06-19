@@ -1,17 +1,7 @@
 ---
 name: book-distill
-description: >-
-  Distill a book (already converted to chunked Markdown by book-extract) into
-  a coherent set of executable agent skills. Use when the user wants to "拆書"
-  / "蒸留する" / "turn this book into skills" — i.e. extract the book's
-  frameworks, principles, decision rules, and methodologies into atomic,
-  reusable Claude skills that an agent can invoke in real-world situations.
-  NOT for simple summarization, book reviews, or author-as-persona role-play
-  (the latter belongs in a separate persona-distillation pipeline). Pipeline:
-  Adler analytical read → 5 parallel extractors → triple verification → RIA++
-  rendering → Zettelkasten linking → adversarial pressure test. Adapted from
-  kangarooking/cangjie-skill (MIT). Language-adaptive output.
-  書籍 → エージェント skill 蒸留パイプライン。書籍を skill に蒸餾。
+description: |
+  Distill a book (chunked to Markdown by book-extract) into executable agent skills — its frameworks, principles, decision rules as reusable skills. Use for '拆書' / 'turn this book into skills'. Not summarization or persona role-play.
 ---
 
 # book-distill — Distill a book into a coherent set of executable skills
