@@ -1,14 +1,7 @@
 ---
 name: docs-team
-description: >-
-  Write documentation and assess codebases with primary-source-grounded
-  rigor. Use when writing README, API docs, tutorials, how-to guides,
-  references, explanations, ADRs, or auditing codebase health and doc quality.
-  Do NOT use for code implementation (use code-team), product-level specs
-  (use planning-team), or deep research (use research-team).
-  Delivers tutorials, how-to guides, references, explanations, READMEs,
-  ADRs, API docs, codebase assessment reports.
-  文件撰寫・Diátaxis・技術債評估。ドキュメント・Diátaxis・コードベース分析。
+description: |
+  Write documentation and assess codebases with primary-source rigor (Diátaxis). Use for README, API docs, tutorials, how-tos, references, explanations, ADRs, or codebase-health audits. Code → code-team; product specs → planning-team.
 ---
 
 # Docs Team

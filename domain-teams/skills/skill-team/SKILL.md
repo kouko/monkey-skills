@@ -1,15 +1,7 @@
 ---
 name: skill-team
-description: >-
-  Build or modify domain-team skills with convention discipline.
-  Use when creating a new team skill or refactoring an existing one
-  with primary-source grounding, 3-commit split, and 4-tier gate
-  design. Do NOT use for generic Claude skill authoring (use
-  superpowers:writing-skills), plugin packaging, obsidian skills,
-  philosophers-toolkit skills, or utility scripts. Delivers new
-  or refactored skill directories (SKILL.md + standards + protocols
-  + gates), 3-commit branches ready for PR, and router integration.
-  スキル再設計・メタスキル・ドメインチーム。技能建構・團隊慣例。
+description: |
+  Build or modify domain-team skills with convention discipline — primary-source grounding, 3-commit split, 4-tier gates. Use when creating or refactoring a team skill. Generic Claude skills → superpowers:writing-skills.
 ---
 
 # Skill Team
