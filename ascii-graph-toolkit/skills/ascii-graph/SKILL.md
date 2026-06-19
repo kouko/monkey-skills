@@ -1,6 +1,7 @@
 ---
 name: ascii-graph
-description: CJK (中/英/日) display-width-aware ASCII/Unicode diagram and table generator for plain-text channels that cannot render Mermaid (Claude Code terminal, Slack, PR text). Provides deterministic generators (table / flow / tree / bar / arch / seq) plus a wcwidth-based verify-loop that acts as an alignment oracle so full-width characters stay aligned. Zero external binary, pure-Python.
+description: |
+  CJK-width-aware ASCII/Unicode diagram & table generator for plain-text channels that can't render Mermaid (terminal, Slack, PR text). Generators: table / flow / tree / bar / arch / seq, + a wcwidth alignment oracle. Pure-Python, zero binary.
 ---
 
 ## Purpose
