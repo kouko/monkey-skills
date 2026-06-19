@@ -51,7 +51,7 @@ if [ ! -f .dbt-wiki/_internal/extract_column_lineage.py ]; then
   # copy every production script + template the cache needs (NOT the *_test.py)
   for f in extract_column_lineage extract_sql_comments extract_recursive_column_lineage \
            format_lineage_diagram detect_source_language lint_schema_divergence \
-           build_evidence_pages; do
+           build_evidence_pages build_index_knowledge reconcile; do
     cp "<INIT_ASSETS>/$f.py" .dbt-wiki/_internal/
   done
   cp "<INIT_ASSETS>/synthesis_template.md" .dbt-wiki/_internal/
@@ -256,9 +256,17 @@ Never hard-delete. User can restore from `_archive/` if needed.
 
 These two files are derived; regenerate from scratch every refresh:
 
-- `index.md`: **knowledge-first** — re-scan `.dbt-wiki/{entities,metrics,concepts}/*.md`
-  first (knowledge layer leads), then re-scan `.dbt-wiki/_evidence/{models,sources,macros,...}/*.md`
-  (skip `_archive/`). Sections in order: Entities → Metrics → Concepts → Evidence: Models
+- `index.md`: **knowledge-first** — the evidence sections come from the
+  evidence re-scan; the knowledge sections (`## Entities` / `## Metrics` /
+  `## Concepts`) are **deterministically regenerated** from the current
+  knowledge pages' frontmatter by the shipped generator:
+
+  ```bash
+  $PY_RUNNER .dbt-wiki/_internal/build_index_knowledge.py .dbt-wiki
+  ```
+
+  Run it after the evidence-section rebuild so both halves reflect the
+  current state. Section order: Entities → Metrics → Concepts → Evidence: Models
   (grouped by tier / materialization / tag / group) → Evidence: Sources → Evidence: Macros (used)
   → Evidence: Seeds / Snapshots / Tests / Exposures.
 - `lineage.md`: from new manifest, build DAG (depends_on / feeds_into),

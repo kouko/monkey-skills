@@ -4,6 +4,32 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.0] — 2026-06-20
+
+### Added — deterministic Phase-B finalization scripts (index regen + reconcile)
+
+Two Phase-B finalization steps were specified as prose only, so the orchestrator
+hand-implemented them each init — error-prone and token-expensive at 50–120
+knowledge pages. Both are now shipped, tested scripts.
+
+- **`build_index_knowledge.py`** (+ test, 8/8): regenerates `index.md`'s
+  `## Entities` / `## Metrics` / `## Concepts` sections deterministically from
+  each knowledge page's frontmatter (`title` / `title_local` / `status` /
+  `summary` / `aliases`) in the SCHEMA canonical line shape, updates the
+  `- Knowledge pages:` stats line, and leaves the evidence sections untouched.
+  Previously `build_evidence_pages.py` only wrote stub placeholders and Phase B
+  Step 6 / refresh Step 6 said "regenerate by hand".
+- **`reconcile.py`** (+ test, 11/11): the Step 6.7 reconcile pass — scans every
+  `relationships[].target`, warns on a missing reserved-entity slug or writes a
+  `status: seed` stub for a genuine dangling reference, and lints `derived_from`
+  cross-domain contamination via `_internal/ownership.json`. Degrades gracefully
+  when `ownership.json` is absent (small projects with no domain fan-out): every
+  dangling ref is stubbed and the contamination lint is a no-op.
+
+Both are wired into `init` (Step 4 copy loop, Phase B Step 6, Step 6.7) and the
+index regen into `refresh` (Step 6 + the rebuildable-cache bootstrap). Pure
+stdlib + pyyaml, idempotent, no project specifics.
+
 ## [2.12.1] — 2026-06-19
 
 ### Changed — `init` lands only production scripts, not the one-shot `*_test.py`
