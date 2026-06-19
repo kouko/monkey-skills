@@ -15,6 +15,7 @@
     "design-system",
     "ui-flows",
     "mermaid",
-    "portable"
+    "portable",
+    "loom-pipeline"
   ]
 }

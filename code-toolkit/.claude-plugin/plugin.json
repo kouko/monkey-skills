@@ -21,7 +21,8 @@
     "solid",
     "owasp-asvs",
     "session-start-hook",
-    "superpowers-parity"
+    "superpowers-parity",
+    "loom-pipeline"
   ],
   "skills": "./skills/"
 }
