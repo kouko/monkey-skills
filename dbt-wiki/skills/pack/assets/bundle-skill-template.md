@@ -25,6 +25,11 @@ snapshot_note: "Snapshot — re-run dbt-wiki:pack to refresh; does not auto-upda
 > query. It does **not** connect to a warehouse — **you** bring the
 > tool that executes SQL.
 >
+> **Warehouse engine**: <WAREHOUSE_DIALECT> — generate
+> <WAREHOUSE_DIALECT>-dialect SQL (date functions, casts, string
+> concatenation differ by engine). "Tool-agnostic" means no specific
+> MCP/CLI is assumed; the dialect is still fixed.
+>
 > **Snapshot**: this bundle is a point-in-time snapshot
 > (`build_date` above). It does not auto-update. Re-run `dbt-wiki:pack`
 > against a refreshed `.dbt-wiki/` to rebuild.

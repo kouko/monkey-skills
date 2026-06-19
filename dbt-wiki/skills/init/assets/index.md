@@ -3,6 +3,8 @@ title: dbt-wiki Index
 type: index
 last_updated: <YYYY-MM-DD>
 manifest_sha: <md5>
+source_language: <lang>      # resolved at Phase B step 0 (detect_source_language)
+dialect: <sqlglot dialect>   # resolved at Step 4a (adapter -> dialect); read by dbt-wiki:pack
 ---
 
 # dbt-wiki Index

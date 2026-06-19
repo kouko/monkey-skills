@@ -270,6 +270,32 @@ mkdir -p .dbt-wiki/_archive
 mkdir -p .dbt-wiki/syntheses
 ```
 
+**Mark `_internal/` as a rebuildable cache (do not commit it).** The
+`_internal/` scripts are mechanical, copied verbatim from the plugin's
+`assets/`, and re-derivable on demand — `init` writes them and `refresh`
+self-heals them from the same plugin source (see refresh Step 0). Committing
+them just duplicates the installed plugin and drifts on plugin upgrade. Emit a
+`.dbt-wiki/.gitignore` (idempotent — skip if it already exists) so they stay out
+of git:
+
+```bash
+test -f .dbt-wiki/.gitignore || cat > .dbt-wiki/.gitignore <<'GITIGNORE'
+# Rebuildable mechanical cache — re-created by /dbt-wiki:init and self-healed
+# by /dbt-wiki:refresh from the installed plugin. Not part of the knowledge state.
+_internal/
+**/__pycache__/
+GITIGNORE
+```
+
+The committed knowledge state is everything else under `.dbt-wiki/`
+(`entities/`, `metrics/`, `concepts/`, `_evidence/`, `index.md`, `log.md`, …);
+`_internal/` is tooling, not knowledge.
+
+> **Already committed `_internal/` from an earlier init?** `.gitignore` does not
+> untrack files git already tracks. On a re-run, if `_internal/` is tracked,
+> stop tracking it (keeps it on disk): `git rm -r --cached .dbt-wiki/_internal`.
+> Detect with `git ls-files .dbt-wiki/_internal | head -1` — non-empty ⇒ run it.
+
 Copy plugin templates with **conditional rules**:
 
 | Target | First-run | Re-run |
@@ -426,6 +452,14 @@ Map dbt adapter to sqlglot dialect:
 | (unknown / not found) | postgres (closest neutral default) |
 
 Export as `DIALECT=...` for use in batch invocation below.
+
+**Persist the dialect.** Record the resolved `$DIALECT` in `.dbt-wiki/index.md`
+frontmatter as `dialect: <DIALECT>` (alongside `source_language`; see Phase B
+step 0 where `source_language` is written — set `dialect` in the same place).
+This is the **only** record of the warehouse SQL dialect in `.dbt-wiki/`, and
+`dbt-wiki:pack` reads it to tell a repo-less consuming agent which SQL dialect
+to generate (pack itself never touches the dbt project, so without this the
+dialect is lost). Also add a `dialect:` line to the Step 7 `log.md` init entry.
 
 ### Step 4b: Run batch extraction
 

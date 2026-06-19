@@ -128,7 +128,9 @@ in v1.x).
   lineage.md           # Full DAG (model-to-model) visualization (evidence-derived)
   syntheses/           # Saved query answers (auto-saved by /dbt-wiki:query for lineage classes;
                        #   marked stale by /dbt-wiki:refresh when affected_models change)
-  _internal/           # Internal extraction artifacts (e.g. recursive column-lineage JSONL)
+  _internal/           # Rebuildable mechanical cache: extraction scripts (copied from
+                       #   the plugin) + artifacts (e.g. lineage JSONL). NOT knowledge —
+                       #   gitignored via .dbt-wiki/.gitignore; init writes it, refresh self-heals it.
   _archive/            # Archived (orphaned) pages — never hard-deleted
 ```
 
