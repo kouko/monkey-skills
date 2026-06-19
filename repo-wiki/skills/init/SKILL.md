@@ -1,15 +1,7 @@
 ---
 name: init
 description: |
-  Use when: setting up repo-wiki for the first time in a repository,
-  or re-seeding the knowledge base from scratch. Default mode scans
-  the entire src/ tree to build complete entity coverage and pulls
-  per-module recent commits (N=5). Use "init full-history" for an
-  era-grouped backfill of the complete git history. Triggers on
-  "init repo-wiki", "set up knowledge base", "seed from git history",
-  "/repo-wiki:init", "初始化 repo-wiki", "建立知識庫".
-  Do NOT trigger for: incremental updates after changes (use
-  /repo-wiki:ingest), answering questions (use /repo-wiki:query).
+  First-time setup of repo-wiki — scans src/ for entity coverage + recent commits; 'init full-history' for an era-grouped git backfill. Use to set up or re-seed the base. Updates → repo-wiki:ingest; ask → repo-wiki:query.
 ---
 
 # Repo Wiki — Init Workflow (v1.1)
