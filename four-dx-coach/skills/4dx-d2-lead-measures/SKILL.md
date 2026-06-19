@@ -1,11 +1,7 @@
 ---
 name: 4dx-d2-lead-measures
 description: |
-  Coaches the user to identify weekly-actionable lead measures (predictive AND influenceable) for a WIG across solo / team-leader / team-member scopes, plus audit-mode diagnosis of an existing lead list or KPI dashboard. Use when the user has a WIG but is about to track lag metrics or adopt a generic KPI dashboard, BEFORE picking the behaviors that actually move the WIG.
-  EN: "Help me find lead measures", "Audit our lead measures", "Are our 12 KPIs real leads?"
-  JP: 「lead measure を決めたい」「うちの lead measure を診断して」「これ本当に lead？」
-  zh-TW: 「幫我找 lead measure」「主管覺得我們的 lead 要調整」「12 個指標哪些是真 lead？」
-  Do NOT use for stale-lead momentum rescue (→ 4dx-sustain-momentum-rescue) or cross-discipline 4DX audit (→ 4dx-audit).
+  Coaches identifying weekly lead measures (predictive + influenceable) for a WIG + audit of a lead list. Use when about to track lag metrics or a generic dashboard: 'find lead measures', 'are our KPIs real leads?'. Stale leads → momentum-rescue.
 source_book: "The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker"
 source_chapter: "Chapter 3 — Discipline 2: Act on the Lead Measures; Chapter 7 — Translating Organizational Focus Into Executable Targets; Chapter 12 — Applying Discipline 1 (member operating frame); Chapter 13 — Applying Discipline 2"
 source_language: en

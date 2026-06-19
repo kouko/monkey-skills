@@ -1,11 +1,7 @@
 ---
 name: 4dx-meta-whirlwind-triage
 description: |
-  Pre-D1 capacity triage — whirlwind vs WIG split — via Socratic 7-day live audit or consultant verdict on a provided time log / calendar. Use when the user is about to write a WIG without acknowledging that ~80% of capacity is the whirlwind, or says "I have no time for a WIG".
-  EN: "I'm always firefighting", "day job eats my whole week", "audit my calendar against 4DX"
-  JP: 「日常業務に追われて目標に手がつかない」「カレンダーを 4DX 視点で診断して」「上司に時間の使い方ダメ出しされた」
-  zh-TW: 「每天都在救火」「主管覺得我時間分配要調整」「老闆看我時間紀錄說亂忙」
-  Do NOT use for already-running cadence collapse (→ `4dx-sustain-momentum-rescue`) or 4DX-fit questions (→ `4dx-meta-strategy-triage`).
+  Pre-D1 capacity triage — whirlwind vs WIG split — via a 7-day audit or time-log. Use when about to write a WIG ignoring that the whirlwind eats ~80% of capacity, or 'always firefighting' / 'no time for a WIG'. Cadence collapse → momentum-rescue.
 source_book: The 4 Disciplines of Execution — McChesney, Covey, Huling, Thele, Walker
 source_chapter: "Chapter 1: The Real Problem with Execution"
 source_language: en

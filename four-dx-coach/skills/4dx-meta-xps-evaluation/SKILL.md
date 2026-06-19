@@ -1,11 +1,7 @@
 ---
 name: 4dx-meta-xps-evaluation
 description: |
-  Audits a team's 4DX execution quality via the book-canonical XPS (4 components × 0-1 = 0-4) with a weakest-discipline fix priority. Use when a team-leader is about to renew, end, or escalate a 4DX cycle and needs an honest pulse-check on whether the team is actually executing 4DX vs going through motions.
-  EN: "Audit our team's 4DX execution", "Score our 4DX", "Is our 4DX actually working?"
-  JP: 「チームの 4DX 実行品質を評価」「うちの 4DX 機能してる？」「XPS 出して」
-  zh-TW: 「稽核我們團隊的 4DX 執行品質」「幫我們團隊打 XPS」「4DX 跑得怎麼樣？」
-  Do NOT use for solo personal rescue (→ `4dx-sustain-momentum-rescue`) or running a live WIG session (→ `4dx-d4-cadence`).
+  Audits a team's 4DX execution quality via the canonical XPS (4 components, 0-4) with a weakest-discipline fix priority. Use when a leader will renew/end/escalate a cycle: 'score our 4DX', 'is it actually working?'. Solo rescue → momentum-rescue.
 source_book: The 4 Disciplines of Execution — McChesney, Covey, Huling, Thele, Walker
 source_chapter: "Chapter 10: Sustaining 4DX Results and Engagement"
 source_language: en

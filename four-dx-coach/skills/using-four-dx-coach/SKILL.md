@@ -1,11 +1,7 @@
 ---
 name: using-four-dx-coach
 description: |
-  Routes vague or scope-ambiguous 4DX queries to the right topical skill across personal / team-leader / team-member scopes. Use when user mentions 4DX vocabulary or asks "how do I start" without specifying scope, before they pick a sub-skill manually.
-  EN: "where do I begin with 4DX", "stuck on my goal", "4DX 不知道從何開始"
-  JP: 「4DX を使い始めたい」「4DX の始め方」「4DX どこから始めれば」
-  zh-TW: 「想要開始用 4DX」「4DX 不知道從哪裡開始」「4 個執行紀律怎麼開始」
-  Do NOT use when user names a specific discipline (→ that topic skill directly) or provides multi-layer artifacts (→ 4dx-audit).
+  Router for 4DX coaching — routes vague or scope-ambiguous 4-Disciplines-of-Execution queries to the right sub-skill (personal / team-leader / member). Use on '4DX where do I begin?', 'stuck on my goal', or '4DX 不知道從哪開始'.
 source_book: The 4 Disciplines of Execution — McChesney, Covey, Huling, Thele, Walker (2nd ed., 2021)
 source_language: en
 tags: [router, entry-point, dispatcher, 4dx, scope-triage, personal, team-leader, team-member, multi-file]
