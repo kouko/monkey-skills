@@ -188,3 +188,60 @@ def test_single_layer_single_component():
 
     # No inner component seam: the separator has no ┬ junctions.
     assert "┬" not in lines[2], "single-component separator should have no ┬"
+
+
+def test_multiline_component():
+    """A layer with a `\n` component and a `\n` layer name grows taller.
+
+    The band's row height = max line-count among its component cells, and a
+    multi-line layer NAME renders as multiple centered name lines. Cells
+    TOP-align: the taller cell's text fills the upper rows, with blank padding
+    below for shorter cells. The shared outer width still spans all bands, and
+    every output line keeps one equal display width.
+    """
+    layers = [
+        {
+            "name": "資料層\nData Layer",  # two name lines
+            "components": ["快取\nCache", "DB"],  # 2-line CJK cell + 1-line cell
+        },
+        {
+            "name": "Single",
+            "components": ["Plain"],
+        },
+    ]
+
+    out = render_arch(layers)
+    lines = out.splitlines()
+
+    # 1. Rectangular: one shared display width across every line.
+    widths = {display_width(line) for line in lines}
+    assert len(widths) == 1, f"multiline lines misaligned: {sorted(widths)}"
+
+    # 2. The first band gains extra rows. Single-line band = 5 lines
+    #    [top, name, separator, row, bottom]. The first band has a 2-line name
+    #    (+1 name line) and a 2-line tallest cell (+1 row line), so it is
+    #    5 + 1 + 1 = 7 lines. Total = 7 + 5 = 12 lines.
+    assert len(lines) == 12, f"expected 12 lines (7 + 5), got {len(lines)}"
+
+    # 3. The multi-line NAME renders across two centered lines. Both name
+    #    fragments must appear as their own lines.
+    name_lines = [ln for ln in lines[:7] if "資料層" in ln or "Data Layer" in ln]
+    assert any("資料層" in ln for ln in name_lines), "first name line missing"
+    assert any("Data Layer" in ln for ln in name_lines), "second name line missing"
+    # They are on distinct lines (not concatenated onto one).
+    assert not any(
+        "資料層" in ln and "Data Layer" in ln for ln in name_lines
+    ), "name lines should not be concatenated"
+
+    # 4. The multi-line CELL top-aligns: "快取" appears on the first row line,
+    #    "Cache" on the second; the single-line "DB" sits beside "快取" on the
+    #    first row line and the blank below it on the second.
+    #    Band layout: [top, name0, name1, separator, row0, row1, bottom].
+    row0, row1 = lines[4], lines[5]
+    assert "快取" in row0 and "DB" in row0, f"row0 missing top cell text: {row0!r}"
+    assert "Cache" in row1, f"row1 missing continuation text: {row1!r}"
+    assert "DB" not in row1, f"single-line DB should not repeat on row1: {row1!r}"
+
+    # 5. The oracle stays clean under the taller band.
+    _report, issues = analyze(out)
+    assert issues == [], f"oracle found drift in multiline band: {issues}"

@@ -63,3 +63,30 @@ def test_empty_input_returns_empty_string():
     # WHY: empty input must not crash (max() on an empty sequence raises).
     # Parity with gen_flow's empty-steps guard.
     assert render_bar([]) == ""
+
+
+def test_newline_in_label_rejected():
+    # WHY: a bar row is inherently one line. A label containing '\n'
+    # would silently split one row into two and corrupt the chart
+    # alignment, so it must fail loud (ValueError) rather than render.
+    import pytest
+
+    with pytest.raises(ValueError):
+        render_bar([("a\nb", 10)])
+
+    # A normal bar still renders — the guard must not block valid input.
+    assert render_bar([("ok", 10)]) != ""
+
+
+def test_carriage_return_in_label_rejected():
+    # WHY: a carriage-return (\r) is a 0-width cursor-moving control char that
+    # passes display-width checks yet silently corrupts the chart's terminal
+    # alignment. The guard previously tested only for "\n", letting a \r-only
+    # label through; it must reject ANY line break (\r, \n, \r\n).
+    import pytest
+
+    with pytest.raises(ValueError):
+        render_bar([("a\rb", 10)])
+
+    with pytest.raises(ValueError):
+        render_bar([("a\r\nb", 10)])

@@ -139,6 +139,41 @@ echo '{"participants":["顧客","API サービス","DB"],"messages":[{"from":"�
 > display-width — this is **intentional** (the diagram stays rectangular), not
 > misalignment.
 
+### Multi-line labels (換行)
+
+A `\n` inside a label splits it into multiple lines (each line independently
+padded and CJK-width-aligned per that shape's existing alignment — centered in
+flow / arch, left-aligned in table, bare continuation lines in tree) in
+**flow / tree / table / arch**.
+**seq / bar reject `\n` with a `ValueError`** — multi-line is not meaningful
+there (deferred), so a stray newline fails loud instead of silently corrupting
+output. CRLF and a bare `\r` are handled too — treated as line breaks like `\n`
+(so a label pasted from a Windows file is fine); other control characters
+(e.g. `\t`) are not special-cased, so keep labels to printable text plus `\n`.
+Pass the JSON as the `printf '%s'` **argument** (not `echo`, and not inside
+`printf`'s format string) so the shell hands the literal two-character `\n` to
+`json.loads`: `echo` expands `\n` to a real newline, which `json.loads` then
+rejects with `Invalid control character`.
+
+```
+printf '%s' '{"steps":["收到訂單","驗證使用者\n身份確認（OAuth）","出貨"]}' \
+  | python scripts/generate.py flow
+┌───────────────────┐
+│     收到訂單      │
+└───────────────────┘
+          │
+          ▼
+┌───────────────────┐
+│    驗證使用者     │
+│ 身份確認（OAuth） │
+└───────────────────┘
+          │
+          ▼
+┌───────────────────┐
+│       出貨        │
+└───────────────────┘
+```
+
 ### VERIFY-LOOP — `python scripts/align.py -`
 
 For a flowchart no generator fits, you draw it by hand, but you do **not**

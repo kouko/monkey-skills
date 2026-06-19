@@ -306,3 +306,51 @@ def test_self_message_rejected():
     messages = [{"from": "A", "to": "A", "label": "loop"}]
     with pytest.raises(ValueError):
         render_seq(participants, messages)
+
+
+def test_newline_in_label_rejected():
+    """A `\\n` in a participant name OR a message label is rejected loudly.
+
+    Multi-line sequence diagrams are DEFERRED. A newline embedded in a
+    participant name or a message label would silently corrupt the diagram
+    (a row would split across lines, shearing the rectangle and lifelines).
+    The check must fire EARLY — before any layout — so the failure is a clear
+    ValueError, not a downstream mis-render. A normal seq still renders fine.
+    """
+    import pytest
+
+    # 1. Newline in a participant name -> ValueError.
+    with pytest.raises(ValueError):
+        render_seq(["A\nB", "C"], [])
+
+    # 2. Newline in a message label -> ValueError.
+    with pytest.raises(ValueError):
+        render_seq(["A", "B"], [{"from": "A", "to": "B", "label": "go\nstop"}])
+
+    # 3. A normal seq (no newlines anywhere) still renders without error.
+    out = render_seq(["A", "B"], [{"from": "A", "to": "B", "label": "go"}])
+    assert "go" in out
+    assert "►" in out
+
+
+def test_carriage_return_in_label_rejected():
+    """A bare \\r (no \\n) in a name OR message label is rejected loudly.
+
+    A carriage-return is a 0-width cursor-moving control char: it passes the
+    display-width checks yet silently corrupts the rendered diagram's terminal
+    alignment. The reject guard that only tested for "\\n" let a \\r-only label
+    through; the guard must reject ANY line break (\\r, \\n, \\r\\n).
+    """
+    import pytest
+
+    # 1. Bare \r in a participant name -> ValueError.
+    with pytest.raises(ValueError):
+        render_seq(["A\rB", "C"], [])
+
+    # 2. Bare \r in a message label -> ValueError.
+    with pytest.raises(ValueError):
+        render_seq(["A", "B"], [{"from": "A", "to": "B", "label": "go\rstop"}])
+
+    # 3. CRLF in a message label -> ValueError.
+    with pytest.raises(ValueError):
+        render_seq(["A", "B"], [{"from": "A", "to": "B", "label": "go\r\nstop"}])

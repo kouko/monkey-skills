@@ -24,3 +24,16 @@ def char_width(c: str) -> int:
 def display_width(s: str) -> int:
     """Return the total terminal-cell width of a string."""
     return sum(char_width(c) for c in s)
+
+
+def split_lines(label: str) -> list[str]:
+    """Split a label into a list of >= 1 physical line, no embedded controls.
+
+    Uses str.splitlines(), which breaks on \\n, \\r, \\r\\n (and \\v/\\f), so a
+    CRLF or bare-CR label becomes real line breaks with NO embedded
+    carriage-return left in any element. A bare \\r is a 0-width
+    cursor-moving control char: left embedded it passes width checks yet
+    silently corrupts terminal alignment, so it must become a real break.
+    Empty input yields [""] (splitlines("") is [], normalized to one line).
+    """
+    return label.splitlines() or [""]

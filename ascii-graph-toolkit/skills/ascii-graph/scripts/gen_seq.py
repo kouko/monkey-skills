@@ -31,7 +31,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "scripts"))
 
-from width import display_width
+from width import display_width, split_lines
 
 # Source the directional arrowheads from the canonical taxonomy rather than
 # hardcoding, so the glyph set stays single-sourced with the check modules.
@@ -59,6 +59,23 @@ def render_seq(participants: list[str], messages: list[dict]) -> str:
     """
     if not participants:
         return ""
+
+    # Multi-line sequence diagrams are DEFERRED: ANY line break (\n, \r, \r\n)
+    # in a name or label would split a row across lines and silently corrupt
+    # the diagram. A bare \r is especially insidious — a 0-width cursor-moving
+    # control char that passes width checks yet shears alignment at exit 0.
+    # split_lines(x) != [x] is true for every line break, so reject loudly
+    # here, BEFORE any layout, so the failure is a clear ValueError.
+    for nm in participants:
+        if split_lines(nm) != [nm]:
+            raise ValueError(
+                f"line break not supported in participant name: {nm!r}"
+            )
+    for msg in messages:
+        if split_lines(msg["label"]) != [msg["label"]]:
+            raise ValueError(
+                f"line break not supported in message label: {msg['label']!r}"
+            )
 
     # Per-box interior width = name + one padding space on each side.
     interiors = [display_width(name) + 2 for name in participants]

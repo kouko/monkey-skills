@@ -19,7 +19,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "scripts"))
 
-from width import display_width
+from width import display_width, split_lines
 
 from gen_flow import render_flow
 
@@ -57,3 +57,46 @@ def test_connector_and_arrow_share_one_trunk_column():
     # Linear flow of 3 steps -> 2 connectors, each "│" then "▼".
     assert len(cols) >= 2, f"expected connector/arrow lines, got {cols}"
     assert len(set(cols)) == 1, f"trunk column not constant: {cols}"
+
+
+def test_multiline_step():
+    """A \\n label renders one centered body line per physical line.
+
+    The box grows taller (one body line per label line); a single-line
+    sibling still renders exactly one body line; and every box line --
+    borders, multi-line body, single-line body -- shares one display_width
+    so the diagram stays rectangular (the bare trunk │/▼ line is padding +
+    glyph, narrower by design, and is covered by the trunk-column test).
+    """
+    multi = "驗證使用者\n身份確認"
+    single = "完了"
+    out = render_flow([multi, single])
+    lines = out.splitlines()
+
+    # Box lines are the borders (┌/└) and the bordered body lines; the
+    # bare trunk │/▼ is excluded (it is padding + a single glyph).
+    box_lines = [
+        ln for ln in lines
+        if ln.startswith(("┌", "└")) or (ln.startswith("│") and ln.endswith("│"))
+    ]
+
+    # (2) every box line shares one display_width.
+    widths = {display_width(ln) for ln in box_lines}
+    assert len(widths) == 1, f"box lines differ in display width: {widths}"
+
+    # (1) the multi-line box has one body line per label line. Body lines
+    # are bordered with "│" on both ends but are not the bare trunk.
+    body_lines = [
+        ln for ln in lines
+        if ln.startswith("│") and ln.endswith("│") and ln.strip() != "│"
+    ]
+    multi_bodies = [
+        ln for ln in body_lines if any(part in ln for part in split_lines(multi))
+    ]
+    assert len(multi_bodies) == len(split_lines(multi)) == 2, (
+        f"multi-line box body lines: {multi_bodies}"
+    )
+
+    # (3) the single-line sibling still renders exactly one body line.
+    single_bodies = [ln for ln in body_lines if single in ln]
+    assert len(single_bodies) == 1, f"single-line box body lines: {single_bodies}"
