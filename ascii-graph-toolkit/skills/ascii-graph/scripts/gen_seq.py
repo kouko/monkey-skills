@@ -60,6 +60,20 @@ def render_seq(participants: list[str], messages: list[dict]) -> str:
     if not participants:
         return ""
 
+    # Multi-line sequence diagrams are DEFERRED: a `\n` in any name or label
+    # would split a row across lines and silently corrupt the diagram. Reject
+    # loudly here, BEFORE any layout, so the failure is a clear ValueError.
+    for nm in participants:
+        if "\n" in nm:
+            raise ValueError(
+                f"newline not supported in participant name: {nm!r}"
+            )
+    for msg in messages:
+        if "\n" in msg["label"]:
+            raise ValueError(
+                f"newline not supported in message label: {msg['label']!r}"
+            )
+
     # Per-box interior width = name + one padding space on each side.
     interiors = [display_width(name) + 2 for name in participants]
 
