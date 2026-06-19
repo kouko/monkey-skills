@@ -220,7 +220,7 @@ decision，若 options list 太長則 user 用 proposal-critique。
 - **`dev-workflow:proposal-critique`** — 對既有 list / plan 的
   triage。當 brief-before-asking 產出的 Options list 本身太長時
   下游組合使用。
-- **`dev-workflow:skill-creator-advance`** — 用來迭代此 skill
+- **`skill-dev-toolkit:skill-creator-advance`** — 用來迭代此 skill
   （test-prompts.json + eval loop）。
 - **`superpowers:brainstorming`** — task-start ideation；
   brief-before-asking 是 task-progress decision。
@@ -237,7 +237,7 @@ decision，若 options list 太長則 user 用 proposal-critique。
 | **Phase 2 — SKILL.md 撰寫** | 完成。6 block + 3 mode 結構、各 block depth rules、Mode Detection Heuristics 表。 |
 | **Phase 3 — Description 優化** | **待辦。** 預計透過 `skill-creator-advance` 的 description-A/B loop 調 router triggering accuracy。 |
 | **Phase 6 — Worked examples + tests** | 完成。[`references/EXAMPLES.md`](references/EXAMPLES.md)、[`test-prompts.json`](test-prompts.json)、[`trigger-eval.json`](trigger-eval.json)。 |
-| **Phase 7 — 輸出品質 A/B** | **待辦。** Phase 3 完成後再透過 `dev-workflow:skill-tuning` 跑。Mode A briefing 風格是 taste-sensitive（簡潔度、lean 的肯定強度、jargon-flag 策略）— 純規則遵循無法 surface 出最佳版本。 |
+| **Phase 7 — 輸出品質 A/B** | **待辦。** Phase 3 完成後再透過 `skill-dev-toolkit:skill-tuning` 跑。Mode A briefing 風格是 taste-sensitive（簡潔度、lean 的肯定強度、jargon-flag 策略）— 純規則遵循無法 surface 出最佳版本。 |
 
 Skill 已可作為 v1.0 出貨，會在 feedback 下持續改進。Mode C 是設計
 面最年輕的部分；預期在實際 session 使用後會 refine。

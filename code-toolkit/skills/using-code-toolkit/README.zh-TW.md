@@ -35,7 +35,7 @@
 
 - 純讀取性問題（「這個 function 在做什麼？」）— Router 不寫不審，直接回答即可。
 - 對已交付產出做合規評分審查 — 用 `domain-teams:code-team`（被動 gate 入口）。
-- 寫 / 重構 *skill* 本身（不是 application code）— 用 `dev-workflow:skill-creator-advance` / `skill-refactor`。
+- 寫 / 重構 *skill* 本身（不是 application code）— 用 `skill-dev-toolkit:skill-creator-advance` / `skill-refactor`。
 
 ## 並存契約
 

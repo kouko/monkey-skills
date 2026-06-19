@@ -227,7 +227,7 @@ Failures ルール「DEFER without re-trigger → DROP」が matrix 消費
   [`SKILL.md`](SKILL.md) の最初の worked example はこの skill を
   生んだセッション**そのもの**である。
 - **限界**：**n=1 の origin sample**。1 セッションは非常に小さな
-  証拠基盤。Skill は `dev-workflow:skill-creator-advance` の
+  証拠基盤。Skill は `skill-dev-toolkit:skill-creator-advance` の
   [`description-design.md`](../skill-creator-advance/references/description-design.md)
   で確立された sample-size 規律に従う：empirical anchor は
   示唆的であり、権威ではない。

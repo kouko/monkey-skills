@@ -228,7 +228,7 @@ That's both the strength and the limit:
   IS the session that produced the skill.
 - **Limit**: **n=1 origin sample**. One session is a tiny
   evidence base. The skill follows the sample-size discipline
-  established in `dev-workflow:skill-creator-advance`'s
+  established in `skill-dev-toolkit:skill-creator-advance`'s
   [`description-design.md`](../skill-creator-advance/references/description-design.md):
   empirical anchors are indicative, not authoritative.
 

@@ -210,7 +210,7 @@ When deciding between Mode B and Mode C:
 ### Sibling skills
 
 - **`dev-workflow:complexity-critique`** — one-shot deletion-first gate (orthogonal — critique not briefing)
-- **`dev-workflow:skill-creator-advance`** — iterate this skill via test prompts
+- **`skill-dev-toolkit:skill-creator-advance`** — iterate this skill via test prompts
 - **`superpowers:brainstorming`** — task-start ideation (brief-before-asking is for task-progress decisions)
 
 ## Core Mindset

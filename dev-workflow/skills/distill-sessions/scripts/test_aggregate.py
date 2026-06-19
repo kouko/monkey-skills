@@ -92,7 +92,7 @@ def test_aggregate_by_skill_groups_correctly():
             "2026-05-22T12:00:00.000Z",
             session="S3",
             role="assistant",
-            skill_invocation="dev-workflow:skill-judge",  # doesn't match pattern
+            skill_invocation="skill-dev-toolkit:skill-judge",  # doesn't match pattern
         ),
     ]
     records = aggregate_by_skill(events, signals=[], target_pattern="code-toolkit:*")

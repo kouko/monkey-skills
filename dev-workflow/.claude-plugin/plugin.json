@@ -1,7 +1,7 @@
 {
   "name": "dev-workflow",
-  "version": "2.17.0",
-  "description": "Developer-workflow skills — skill authoring + quality scoring + refactoring + tuning, git-backed project memory, structured pre-decision briefings, complexity / proposal critique, dbt model style guide, behavioral skill dogfood-testing.",
+  "version": "2.18.0",
+  "description": "Developer-workflow skills — git-backed project memory, structured pre-decision briefings, complexity / proposal critique, dbt model style guide, in-session recap, cross-session handoff, and session-log distillation.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
@@ -10,22 +10,15 @@
   "repository": "https://github.com/kouko/monkey-skills",
   "license": "MIT",
   "keywords": [
-    "skill-creation",
-    "skill-creator",
-    "skill-judge",
-    "skill-evaluation",
     "git-memory",
     "brief-before-asking",
     "proposal-critique",
     "complexity-critique",
-    "skill-refactor",
-    "skill-tuning",
     "developer-workflow",
     "distill-sessions",
     "recap-state",
     "handoff",
     "dbt-model-style",
-    "dbt",
-    "dogfood-skill-testing"
+    "dbt"
   ]
 }
