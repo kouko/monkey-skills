@@ -15,6 +15,7 @@
     "principles",
     "north-star",
     "product-spec",
-    "portable"
+    "portable",
+    "loom-pipeline"
   ]
 }
