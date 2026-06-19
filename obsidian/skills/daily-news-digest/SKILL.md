@@ -1,21 +1,7 @@
 ---
 name: daily-news-digest
-description: >-
-  Compiles one day's consumed content into a standalone two-tier digest at
-  news/YYYY-MM-DD 每日新聞.md. Use when the user wants to organize, round up,
-  or summarize a day's news / content / references — phrases like 「整理今天的新聞」
-  「彙整某天新聞」「每日新聞」「幫我把這天的內容整理成一篇」「daily news digest」.
-  Scans the vault's dated notes by YYYY-MM-DD filename prefix (every folder except
-  wiki / news / templates — the model triages what's relevant) and sorts each into
-  TWO tiers: (1) 時效新聞 — time-sensitive events (market moves / geopolitics /
-  launches / earnings), which are CLUSTERED by underlying event and synthesized
-  into rewritten, integrated stories with a TL;DR, tables, and Mermaid diagrams;
-  and (2) 知識與觀點 — evergreen-but-substantive content (社論 / 評測 / 教學 /
-  投資策略 / 長青分析), surfaced as categorized short-labeled links with a one-line
-  takeaway each. The user's own research notes and handwritten daily notes go in an
-  appendix. Do NOT use for: summarizing a single YouTube video (that is the
-  vault's YouTube-summary workflow), building the wiki (use wiki-ingest), or
-  investing analysis (use investing-toolkit). 每日新聞彙整・知識整理。
+description: |
+  Compile one day's vault notes into a two-tier daily digest — clustered time-sensitive stories + evergreen knowledge links — at news/YYYY-MM-DD. Use for '整理今天的新聞', '每日新聞', 'daily news digest', or rounding up a day's content.
 ---
 
 # Daily News Digest（每日新聞彙整）
