@@ -1,6 +1,7 @@
 ---
 name: legal-document-draft
-description: Draft new Taiwan-law legal documents (privacy policy / ToS / DPA / NDA) from company profile + negotiation playbook + per-session inputs. Skeleton-and-LLM-fill templates pinned to current in-force 個資法 + 民法 + 消保法 + 公平交易法; hand-curated per-mode compliance checklists with statute citations; deterministic structural grading; safe defaults for items deferred to PDPC 子法 (Phase 2.5 patch path documented in compliance.md TBD migration section). Outputs 2 files per session — <doc-type>.md (publish-ready) + compliance.md (法務 internal review) — into legal-outputs/<timestamp>-<mode>/. Cross-references legal-playbook/ for variable defaults; uses legal-playbook/profile.yml as the single source of company identity shared across legal-toolkit skills.
+description: |
+  Draft new Taiwan-law legal documents (privacy policy / ToS / DPA / NDA) from a company profile + playbook, pinned to 個資法 / 民法 / 消保法 / 公平交易法 with compliance checklists. Use to create a new legal doc. Review a contract → legal-contract-review.
 ---
 
 # legal-document-draft
