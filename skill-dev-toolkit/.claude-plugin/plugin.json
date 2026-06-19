@@ -1,0 +1,23 @@
+{
+  "name": "skill-dev-toolkit",
+  "version": "0.1.0",
+  "description": "Self-contained toolkit for authoring Claude Agent Skills end-to-end — create & redesign, score design quality, token/structure refactor, output-quality A/B tuning, and blind behavioral dogfood — with zero cross-plugin dependencies.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/skill-dev-toolkit",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "skill-authoring",
+    "skill-creation",
+    "skill-creator",
+    "skill-judge",
+    "skill-evaluation",
+    "skill-refactor",
+    "skill-tuning",
+    "dogfood-skill-testing",
+    "self-contained"
+  ]
+}

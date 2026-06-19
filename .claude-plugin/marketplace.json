@@ -26,7 +26,7 @@
     },
     {
       "name": "dev-workflow",
-      "description": "Developer-workflow skills — skill authoring + quality scoring + refactoring + tuning, git-backed project memory, structured pre-decision briefings, complexity / proposal critique, dbt model style guide, behavioral skill dogfood-testing.",
+      "description": "Developer-workflow skills — git-backed project memory, structured pre-decision briefings, complexity / proposal critique, dbt model style guide, in-session recap, cross-session handoff, and session-log distillation.",
       "source": "./dev-workflow/"
     },
     {
@@ -123,6 +123,11 @@
       "name": "ascii-graph-toolkit",
       "description": "CJK (中/英/日) display-width-aware ASCII/Unicode diagram & table toolkit for plain-text channels that cannot render Mermaid (Claude Code terminal, Slack, PR text) — deterministic generators (table/flow/tree/bar/arch/seq) + a wcwidth verify-loop alignment oracle; zero external binary, pure-Python.",
       "source": "./ascii-graph-toolkit/"
+    },
+    {
+      "name": "skill-dev-toolkit",
+      "description": "Self-contained toolkit for authoring Claude Agent Skills — create & redesign, score design quality, blind behavioral dogfood, token/structure refactor, and output-quality A/B tuning — with zero cross-plugin dependencies.",
+      "source": "./skill-dev-toolkit/"
     }
   ]
 }
