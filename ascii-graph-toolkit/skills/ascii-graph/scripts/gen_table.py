@@ -11,7 +11,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "scripts"))
 
-from width import display_width
+from width import display_width, split_lines
 
 _UNICODE = {
     "tl": "┌", "tm": "┬", "tr": "┐",
@@ -42,7 +42,11 @@ def render_table(
 
     all_rows = [headers, *rows]
     col_widths = [
-        max(display_width(row[i]) for row in all_rows)
+        max(
+            display_width(line)
+            for row in all_rows
+            for line in split_lines(row[i])
+        )
         for i in range(len(headers))
     ]
 
@@ -50,16 +54,27 @@ def render_table(
         segments = [g["h"] * (w + 2) for w in col_widths]
         return left + mid.join(segments) + right
 
-    def data_line(cells: list[str]) -> str:
-        padded = [" " + _pad(cells[i], col_widths[i]) + " "
+    def physical_line(cell_lines: list[str]) -> str:
+        padded = [" " + _pad(cell_lines[i], col_widths[i]) + " "
                   for i in range(len(col_widths))]
         return g["v"] + g["v"].join(padded) + g["v"]
 
+    def data_lines(cells: list[str]) -> list[str]:
+        # Split each cell into physical lines; row height = tallest cell.
+        # Cells with fewer lines are top-aligned: blank-padded below so
+        # the i-th physical line shows each cell's i-th label line.
+        split = [split_lines(cell) for cell in cells]
+        height = max(len(s) for s in split)
+        return [
+            physical_line([s[i] if i < len(s) else "" for s in split])
+            for i in range(height)
+        ]
+
     lines = [
         border(g["tl"], g["tm"], g["tr"]),
-        data_line(headers),
+        *data_lines(headers),
         border(g["ml"], g["mm"], g["mr"]),
-        *[data_line(row) for row in rows],
+        *[line for row in rows for line in data_lines(row)],
         border(g["bl"], g["bm"], g["br"]),
     ]
     return "\n".join(lines)
