@@ -241,6 +241,14 @@ convention: `knowledge/<page>.md`, `references/generation-guidance.md`,
 paths and never uses `[[wikilinks]]` (standard markdown links only,
 matching the source `.dbt-wiki/` convention).
 
+**Intra-`knowledge/` links are flattened to match the flat layout.** The source
+pages link cross-folder (`[X](../entities/x.md)`) and cite evidence
+(`[m](../_evidence/models/m.md)`); after the flatten-on-freeze those paths are
+wrong (the target is a flat sibling, and `_evidence/` was dropped). pack Step 2.6
+rewrites them: cross-folder → flat sibling `[X](x.md)`; dropped-`_evidence/`
+links → delinked to plain label text. Acceptance (Step 7) requires **zero broken
+intra-`knowledge/` links**.
+
 ## Acceptance summary
 
 A conformant `pack` output is a folder `<project>-analytics/` that:

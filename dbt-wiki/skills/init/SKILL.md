@@ -427,6 +427,14 @@ Map dbt adapter to sqlglot dialect:
 
 Export as `DIALECT=...` for use in batch invocation below.
 
+**Persist the dialect.** Record the resolved `$DIALECT` in `.dbt-wiki/index.md`
+frontmatter as `dialect: <DIALECT>` (alongside `source_language`; see Phase B
+step 0 where `source_language` is written — set `dialect` in the same place).
+This is the **only** record of the warehouse SQL dialect in `.dbt-wiki/`, and
+`dbt-wiki:pack` reads it to tell a repo-less consuming agent which SQL dialect
+to generate (pack itself never touches the dbt project, so without this the
+dialect is lost). Also add a `dialect:` line to the Step 7 `log.md` init entry.
+
 ### Step 4b: Run batch extraction
 
 ```bash

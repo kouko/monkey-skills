@@ -180,6 +180,32 @@ The emitted `_relations.md` is a flat child of `knowledge/` (it loads on
 demand like any knowledge page). Verify the generator on first run (optional):
 `uv run <SKILL_DIR>/assets/build_relations_anchor_test.py` → "6/6 passed".
 
+## Step 2.6 — Flatten in-page links (run after freezing knowledge)
+
+Step 2 moved the page **files** to a flat `knowledge/`, but the frozen pages
+were copied **verbatim** — their in-page links still use the **nested** source
+layout (`[X](../entities/x.md)`, `[m](../_evidence/models/m.md)`) and therefore
+**break** in the flat bundle. Rewrite them with the shipped flattener:
+
+```bash
+uv run <SKILL_DIR>/assets/flatten_links.py "<project>-analytics/knowledge"
+```
+
+It rewrites, in both markdown body links AND frontmatter `target:` edges:
+- `](../{entities,concepts,metrics}/<slug>.md)` → flat sibling `](<slug>.md)`;
+- `[label](../_evidence/…)` → `label` (the `_evidence/` layer was dropped in
+  Step 2, so these are dead — delink to plain text, keeping the model name).
+
+It is **idempotent** (re-run after any re-freeze) and pure path-shape logic — no
+project specifics. It exits non-zero and lists offenders if any broken
+intra-knowledge link remains; require `0 broken intra-knowledge links remain`
+before continuing. Verify the script on first run (optional):
+`uv run <SKILL_DIR>/assets/flatten_links_test.py` → "6/6 passed".
+
+> Without this step the bundle's progressive-disclosure-by-link is broken: a
+> reader following `[Customer](../entities/customer.md)` hits a non-existent
+> path (it is a flat sibling `customer.md`), and every `## Evidence` link dangles.
+
 ## Step 3 — Copy in the generation guidance
 
 Copy this skill's [generation-guidance](references/generation-guidance.md)
@@ -198,7 +224,14 @@ they mean):
 ```bash
 SOURCE_MANIFEST_SHA=$(grep -m 1 'manifest_sha:' .dbt-wiki/log.md | sed 's/.*manifest_sha: //' | tr -d ' ')
 BUILD_DATE=$(date +%Y-%m-%d)
+# Warehouse SQL dialect — recorded by init in .dbt-wiki/index.md frontmatter (Step 4a).
+WAREHOUSE_DIALECT=$(grep -m 1 'dialect:' .dbt-wiki/index.md | sed 's/.*dialect: *//' | sed 's/ *#.*//' | tr -d ' ')
 ```
+
+If `index.md` has no `dialect:` line (a wiki built by an older `init`), fall back
+to a `dbt debug` / `profiles.yml` `type:` lookup, or substitute the plain note
+*"confirm your warehouse's SQL dialect before running"* — never leave the
+placeholder unfilled.
 
 Then copy [the bundle SKILL.md template](assets/bundle-skill-template.md) to
 `<project>-analytics/SKILL.md` and fill its placeholders:
@@ -211,6 +244,7 @@ Then copy [the bundle SKILL.md template](assets/bundle-skill-template.md) to
 | `<TRIGGER_PHRASES>` | extra activation phrases (see substitution contract below) |
 | `<SOURCE_MANIFEST_SHA>` | `$SOURCE_MANIFEST_SHA` captured above (source `manifest_sha` from `.dbt-wiki/log.md`) |
 | `<BUILD_DATE>` | `$BUILD_DATE` captured above (today, `YYYY-MM-DD`) |
+| `<WAREHOUSE_DIALECT>` | `$WAREHOUSE_DIALECT` captured above (the warehouse SQL dialect, e.g. `redshift` / `snowflake` / `bigquery`); appears twice in the template's "Warehouse engine" line. Keep ASCII — it is engine-bearing, not prose |
 
 **Language — match the knowledge layer.** The packaged knowledge follows the
 same source-language rule as distillation (init wrote pages in the project's
@@ -284,12 +318,25 @@ NESTED=$(find "$BUNDLE" -mindepth 2 -type d)
 for d in knowledge references examples; do
   test -d "$BUNDLE/$d" || { echo "FAIL: missing $d/"; exit 1; }
 done
+
+# (d) no broken intra-knowledge links (Step 2.6 flattening must have run).
+python3 - "$BUNDLE/knowledge" <<'PY' || { echo "FAIL: broken links — re-run Step 2.6 flatten_links.py"; exit 1; }
+import sys, re
+from pathlib import Path
+k = Path(sys.argv[1]); bad = 0
+for p in k.glob("*.md"):
+    for m in re.finditer(r"\]\(([^)]+\.md)\)", p.read_text(encoding="utf-8")):
+        l = m.group(1).strip()
+        if not l.startswith("http") and not (p.parent / l).resolve().exists():
+            print(f"  broken: {p.name} -> {l}"); bad += 1
+sys.exit(1 if bad else 0)
+PY
 echo "✓ flat valid skill"
 ```
 
 Confirm no placeholder leaked: grep the emitted `SKILL.md` for
-`<PROJECT_` / `<SOURCE_MANIFEST_SHA>` / `<BUILD_DATE>` / `<TRIGGER_PHRASES>` — any
-match means an unfilled placeholder (re-do Step 4).
+`<PROJECT_` / `<SOURCE_MANIFEST_SHA>` / `<BUILD_DATE>` / `<TRIGGER_PHRASES>` /
+`<WAREHOUSE_DIALECT>` — any match means an unfilled placeholder (re-do Step 4).
 
 ## What you produced
 
