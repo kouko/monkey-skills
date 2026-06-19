@@ -4,6 +4,20 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.12.1] — 2026-06-19
+
+### Changed — `init` lands only production scripts, not the one-shot `*_test.py`
+
+Follow-up to 2.12.0's "`_internal/` is a rebuildable cache". `init` copied both
+the 7 production extraction scripts **and** their 7 `*_test.py` into
+`.dbt-wiki/_internal/`, but the smoke tests run once at first-init verification
+and are dead weight on disk thereafter (gitignored since 2.12.0, but still
+cluttering the working tree). `init` now copies **only the 7 production scripts**
+(+ `synthesis_template.md`, copy block compacted to a loop); the optional Step 4c
+/ 4g / evidence-generator smoke tests run in-place from `<SKILL_DIR>/assets/`.
+Halves the `.py` landed in the user's repo (14 → 7) with no change to the
+production data path; `refresh` is untouched (it invokes no `*_test.py`).
+
 ## [2.12.0] — 2026-06-19
 
 Three generic defects surfaced by a behavioral dogfood of a packed analytics
