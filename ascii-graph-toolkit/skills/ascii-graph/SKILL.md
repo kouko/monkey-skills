@@ -139,6 +139,36 @@ echo '{"participants":["顧客","API サービス","DB"],"messages":[{"from":"�
 > display-width — this is **intentional** (the diagram stays rectangular), not
 > misalignment.
 
+### Multi-line labels (換行)
+
+A `\n` inside a label splits it into multiple lines (each line independently
+padded and CJK-width-aligned per that shape's existing alignment — centered in
+flow / arch, left-aligned in table, bare continuation lines in tree) in
+**flow / tree / table / arch**.
+**seq / bar reject `\n` with a `ValueError`** — multi-line is not meaningful
+there (deferred), so a stray newline fails loud instead of silently corrupting
+output. Use `printf '%s'` (not `echo`) so the shell passes the literal `\n` two
+characters into the JSON rather than expanding it to a real newline:
+
+```
+printf '%s' '{"steps":["收到訂單","驗證使用者\n身份確認（OAuth）","出貨"]}' \
+  | python scripts/generate.py flow
+┌───────────────────┐
+│     收到訂單      │
+└───────────────────┘
+          │
+          ▼
+┌───────────────────┐
+│    驗證使用者     │
+│ 身份確認（OAuth） │
+└───────────────────┘
+          │
+          ▼
+┌───────────────────┐
+│       出貨        │
+└───────────────────┘
+```
+
 ### VERIFY-LOOP — `python scripts/align.py -`
 
 For a flowchart no generator fits, you draw it by hand, but you do **not**
