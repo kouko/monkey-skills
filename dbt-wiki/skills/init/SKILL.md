@@ -402,7 +402,8 @@ one-shot smoke tests stay in the plugin and run in-place from there (Steps 4c /
 mkdir -p .dbt-wiki/_internal
 for f in extract_column_lineage extract_sql_comments \
          extract_recursive_column_lineage format_lineage_diagram \
-         detect_source_language lint_schema_divergence build_evidence_pages; do
+         detect_source_language lint_schema_divergence build_evidence_pages \
+         build_index_knowledge reconcile; do
   cp "<SKILL_DIR>/assets/$f.py" .dbt-wiki/_internal/
 done
 cp <SKILL_DIR>/assets/synthesis_template.md .dbt-wiki/_internal/
@@ -798,9 +799,20 @@ knowledge distillation step that produces the knowledge layer
    Same `derived_from` + `last_changed_by` provenance fields.
 4. Distill **concepts** by following the procedure in
    `references/distill-concepts.md`. Same provenance fields.
-5. Regenerate `index.md` (Step 6) now that knowledge pages exist, so
-   the `## Entities`, `## Metrics`, `## Concepts` sections are
-   populated rather than stub placeholders.
+5. Regenerate `index.md`'s knowledge sections now that knowledge pages
+   exist, so `## Entities` / `## Metrics` / `## Concepts` are populated
+   rather than stub placeholders. This is **deterministic** (derived from
+   each page's frontmatter — `title` / `title_local` / `status` / `summary`
+   / `aliases`), so run the generator rather than hand-transcribing:
+
+   ```bash
+   $PY_RUNNER .dbt-wiki/_internal/build_index_knowledge.py .dbt-wiki
+   ```
+
+   It replaces the three knowledge sections in the SCHEMA canonical line
+   shape and updates the `- Knowledge pages:` stats line, leaving the
+   evidence sections untouched. (Optional first-run check:
+   `$PY_RUNNER <SKILL_DIR>/assets/build_index_knowledge_test.py` → "8/8 passed".)
 
 ### Phase B parallel orchestration (large projects, >~80 models)
 
@@ -924,7 +936,25 @@ covers the dispatched domains.
 
 Run **once** after all domain agents have returned their pages. This
 step resolves dangling links and enforces cross-domain provenance
-integrity.
+integrity. It is **deterministic** — run the shipped generator rather
+than hand-implementing the three sub-passes below:
+
+```bash
+$PY_RUNNER .dbt-wiki/_internal/reconcile.py .dbt-wiki
+```
+
+It (1) scans every `relationships[].target`, (2) for each missing target
+warns on a reserved-entity slug (owner agent should have produced it) or
+writes a `status: seed` stub for a genuine dangling reference, and (3)
+lints `derived_from` cross-domain contamination using
+`_internal/ownership.json`. If `ownership.json` is absent (a small project
+that skipped domain fan-out) it degrades gracefully — every dangling ref
+becomes a stub and the contamination lint is a no-op. Review its printed
+WARNINGs and contamination flags and resolve per the rules below. (Optional
+first-run check: `$PY_RUNNER <SKILL_DIR>/assets/reconcile_test.py` → "11/11 passed".)
+
+The three sub-passes below document **what the script does** (and how to
+resolve what it surfaces) — read them to act on the output.
 
 #### 6.7.1 Collect all relationship targets
 
