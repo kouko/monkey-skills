@@ -392,25 +392,19 @@ for node_id, node in manifest['nodes'].items():
 ## Step 4: Column-Level Lineage via sqlglot
 
 dbt-wiki ships a tested Python script that uses sqlglot's `lineage` API
-to extract per-column source references from compiled dbt SQL. Copy it
-from the plugin's assets to the project's `.dbt-wiki/_internal/`:
+to extract per-column source references from compiled dbt SQL. Copy the
+**production** scripts (not the `*_test.py`) from the plugin's assets to the
+project's `.dbt-wiki/_internal/` — `_internal/` is a rebuildable cache, so the
+one-shot smoke tests stay in the plugin and run in-place from there (Steps 4c /
+4g), never landing in the user's repo:
 
 ```bash
 mkdir -p .dbt-wiki/_internal
-cp <SKILL_DIR>/assets/extract_column_lineage.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/extract_column_lineage_test.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/extract_sql_comments.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/extract_sql_comments_test.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/extract_recursive_column_lineage.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/extract_recursive_column_lineage_test.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/format_lineage_diagram.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/format_lineage_diagram_test.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/detect_source_language.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/detect_source_language_test.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/lint_schema_divergence.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/lint_schema_divergence_test.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/build_evidence_pages.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/build_evidence_pages_test.py .dbt-wiki/_internal/
+for f in extract_column_lineage extract_sql_comments \
+         extract_recursive_column_lineage format_lineage_diagram \
+         detect_source_language lint_schema_divergence build_evidence_pages; do
+  cp "<SKILL_DIR>/assets/$f.py" .dbt-wiki/_internal/
+done
 cp <SKILL_DIR>/assets/synthesis_template.md .dbt-wiki/_internal/
 ```
 
@@ -483,10 +477,11 @@ with empty `sources:` per column.
 
 ### Step 4c: (Optional but recommended on first run) Verify the script
 
-The script ships with a 7-case smoke test. Run once before processing:
+The script ships with a 7-case smoke test. Run once before processing
+(from the plugin assets — the `*_test.py` are not copied into `_internal/`):
 
 ```bash
-$PY_RUNNER .dbt-wiki/_internal/extract_column_lineage_test.py
+$PY_RUNNER <SKILL_DIR>/assets/extract_column_lineage_test.py
 ```
 
 Expects "7/7 passed". If failures appear, sqlglot version mismatch is
@@ -502,7 +497,6 @@ to `.dbt-wiki/_internal/` in Step 4 alongside the lineage script:
 
 ```bash
 cp <SKILL_DIR>/assets/extract_sql_comments.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/extract_sql_comments_test.py .dbt-wiki/_internal/
 ```
 
 Batch-extract all model file comments (uses `dbt/models/` raw paths,
@@ -588,9 +582,7 @@ the manifest). Init copies it alongside the other scripts in Step 4:
 
 ```bash
 cp <SKILL_DIR>/assets/extract_recursive_column_lineage.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/extract_recursive_column_lineage_test.py .dbt-wiki/_internal/
 cp <SKILL_DIR>/assets/format_lineage_diagram.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/format_lineage_diagram_test.py .dbt-wiki/_internal/
 cp <SKILL_DIR>/assets/synthesis_template.md .dbt-wiki/_internal/
 ```
 
@@ -636,7 +628,7 @@ ancestor + descendant tree as nested bullet lists for human readability).
 ### Step 4g: Verify recursive script (optional, recommended on first run)
 
 ```bash
-$PY_RUNNER .dbt-wiki/_internal/extract_recursive_column_lineage_test.py
+$PY_RUNNER <SKILL_DIR>/assets/extract_recursive_column_lineage_test.py
 ```
 
 Expects "6/6 passed". The test uses synthetic manifest + lineage
@@ -686,7 +678,7 @@ Step 7 log entry. What it writes, per the SCHEMA.md evidence page types:
   knowledge sections — Entities / Metrics / Concepts.)
 
 Verify the generator first (optional, recommended on first run):
-`$PY_RUNNER .dbt-wiki/_internal/build_evidence_pages_test.py` → expects "6/6 passed".
+`$PY_RUNNER <SKILL_DIR>/assets/build_evidence_pages_test.py` → expects "6/6 passed".
 
 **Exposures** (if any are declared) are the one node type the generator does
 not emit; write `.dbt-wiki/_evidence/exposures/<exposure_name>.md` per SCHEMA's
