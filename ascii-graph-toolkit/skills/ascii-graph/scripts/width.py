@@ -24,3 +24,8 @@ def char_width(c: str) -> int:
 def display_width(s: str) -> int:
     """Return the total terminal-cell width of a string."""
     return sum(char_width(c) for c in s)
+
+
+def split_lines(label: str) -> list[str]:
+    """Split a label on newlines into a list of >= 1 physical line."""
+    return label.split("\n")

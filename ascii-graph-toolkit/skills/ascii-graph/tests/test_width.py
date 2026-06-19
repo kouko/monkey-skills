@@ -10,7 +10,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "scripts"))
 
-from width import char_width, display_width
+from width import char_width, display_width, split_lines
 
 
 def test_display_width_cjk_is_two_per_char():
@@ -61,3 +61,11 @@ def test_char_width_control_and_zero_width_is_zero():
     assert char_width("\x00") == 0          # NUL control char
     assert char_width("​") == 0        # zero-width space
     assert char_width("́") == 0        # combining acute accent
+
+
+def test_split_lines():
+    # Always >= 1 element; a bare label is a single-element list.
+    assert split_lines("abc") == ["abc"]
+    assert split_lines("a\nb") == ["a", "b"]
+    assert split_lines("a\n\nb") == ["a", "", "b"]
+    assert split_lines("") == [""]
