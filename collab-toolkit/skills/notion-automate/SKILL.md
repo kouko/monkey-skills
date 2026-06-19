@@ -1,6 +1,7 @@
 ---
 name: notion-automate
-description: Notion automation via official MCP (mcp.notion.com/mcp). Read-only v0.2.0 — search-workspace / page-fetch / database-query via MCP tool calls. Locale-independent (structured JSON, no UI scraping). page-backlinks dropped — Notion API exposes no native backlinks endpoint. Notion MCP・ページ読取・公式サーバ。Notion MCP・頁面讀取・官方伺服器。
+description: |
+  Notion automation via the official MCP server. Read-only — search-workspace / page-fetch / database-query via MCP tool calls. Locale-independent (structured JSON, no UI scraping).
 allowed-tools: mcp__notion__search, mcp__notion__get_page, mcp__notion__query_database
 ---
 
