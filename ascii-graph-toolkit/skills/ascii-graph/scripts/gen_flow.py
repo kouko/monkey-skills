@@ -24,7 +24,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "scripts"))
 
-from width import display_width
+from width import display_width, split_lines
 
 
 def _center(label: str, interior: int) -> str:
@@ -49,8 +49,12 @@ def render_flow(steps: list[str]) -> str:
     if not steps:
         return ""
 
-    # Interior width = widest label + one padding space on each side.
-    interior = max(display_width(s) for s in steps) + 2
+    # Interior width = widest label line (a step may carry embedded
+    # newlines, rendered one body line per physical line) + one padding
+    # space on each side.
+    interior = max(
+        display_width(line) for step in steps for line in split_lines(step)
+    ) + 2
 
     # Trunk column = the box's center display-column. Boxes start at
     # column 0; the left border "│" occupies column 0, interior starts
@@ -63,8 +67,11 @@ def render_flow(steps: list[str]) -> str:
 
     blocks = []
     for step in steps:
-        body = "│" + _center(step, interior) + "│"
-        blocks.append([top, body, bottom])
+        block = [top]
+        for line in split_lines(step):
+            block.append("│" + _center(line, interior) + "│")
+        block.append(bottom)
+        blocks.append(block)
 
     lines: list[str] = []
     for i, block in enumerate(blocks):
