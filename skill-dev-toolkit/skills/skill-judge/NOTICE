@@ -27,14 +27,14 @@ patterns) has been altered.
    convention (explicit `Use when` / `Do NOT use for` / `Delivers`
    clauses, multi-language keyword tail line for trigger discovery).
    The new description references sibling skills:
-     - `dev-workflow:skill-creator-advance` (behavioral / runtime eval)
-     - `domain-teams:skill-team` (domain-team convention enforcement)
+     - `skill-dev-toolkit:skill-creator-advance` (behavioral / runtime eval)
+     - structural convention gates (domain-team convention enforcement)
    to clarify scope boundaries.
 
 2. New section "Adaptation for monkey-skills domain-team skills"
    inserted before "The Meta-Question". Establishes the core
    principle that skill-judge is advisory (0-120 design-quality
-   scoring) and `domain-teams:skill-team`'s gates are authoritative
+   scoring) and the structural convention gates are authoritative
    (PASS/FAIL convention enforcement) — gate failures surface as
    "Critical Issues" in the report without capping D1-D8 scores.
    Provides:
@@ -47,10 +47,10 @@ patterns) has been altered.
        → Critical Issue, no score cap; Dump pattern penalized
        separately per upstream criteria)
      - Focus-dimension guidance (D1/D3/D6 carry the most net-new
-       value above what skill-team gates partially cover for
+       value above what structural convention gates partially cover for
        D4/D5/D8)
      - Explicit "complementary, not replacement" statement vs
-       skill-team gates with both-pass/both-fail examples.
+       structural convention gates with both-pass/both-fail examples.
 
 3. Inline note added at the end of D7 cross-referencing the new
    adaptation section. Notes that domain-team skills fit Process

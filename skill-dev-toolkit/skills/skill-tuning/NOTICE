@@ -1,4 +1,4 @@
-skill-tasting
+skill-tuning
 =============
 
 Original design — not a port
@@ -22,7 +22,7 @@ work through human preference capture instead.
 
 Specific design distinctions from `darwin-skill`:
 
-1. **Phase B isolation** — `skill-tasting` only handles
+1. **Phase B isolation** — `skill-tuning` only handles
    taste-sensitive A/B; structural refactor goes to
    `skill-refactor`. `darwin-skill` does both in one rubric. The
    split is foundational to avoiding LLM-as-judge / Goodhart drift
@@ -81,7 +81,7 @@ Inspirations acknowledged
 
 5. Fowler, M. — *Refactoring* (2nd ed, 2018) Two Hats principle.
    Grounds the refactor-vs-feature split that separates
-   skill-refactor from skill-tasting at the architectural level.
+   skill-refactor from skill-tuning at the architectural level.
 
 6. monkey-skills `dev-workflow/docs/skill-evolution-architecture.md`
    captures the full rationale for the Two-Hats split applied to
@@ -114,7 +114,7 @@ Same-PR drift rule (per
 and-functional-copy precedent set in PR #159):
 
 - The canonical SoT for these conventions lives in
-  `dev-workflow:skill-refactor/references/`
+  `skill-dev-toolkit:skill-refactor/references/`
 - Edits to a convention land in skill-refactor first, then mirror
   here in the **same PR**
 - Bundled copies in this skill carry header blockquotes pointing

@@ -1,8 +1,8 @@
 # Golden Anchor Protocol
 
 > **Shared convention — bundled functional copy.** This file is
-> bundled in both `dev-workflow:skill-refactor/references/` and
-> `dev-workflow:skill-tuning/references/`. Same-PR drift rule:
+> bundled in both `skill-dev-toolkit:skill-refactor/references/` and
+> `skill-dev-toolkit:skill-tuning/references/`. Same-PR drift rule:
 > any edit to this protocol must update both copies in the same
 > PR. The two copies are intentionally synchronized functional
 > copies, not delegated paths — runtime self-containment is

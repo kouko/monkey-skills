@@ -23,8 +23,8 @@ than they need to, with output behavior that's the same as before
 internal structure without changing external behavior. Output
 equivalence is enforced by a multi-judge ensemble + structured
 comparison; behavior changes are out of scope (route to
-`dev-workflow:skill-tuning` for output quality work or
-`dev-workflow:skill-creator-advance` for structural redesign).
+`skill-dev-toolkit:skill-tuning` for output quality work or
+`skill-dev-toolkit:skill-creator-advance` for structural redesign).
 
 This skill is **runtime self-contained** — `dev-workflow` is the
 only plugin needed. No cross-plugin dependency.
@@ -64,7 +64,7 @@ Before proposing any refactor, the target skill needs:
 If any of (1)-(4) cannot be obtained (e.g., skill has no
 deterministic test prompts because output is purely creative), the
 gate cannot run safely. Report the blocker to the user and suggest
-`dev-workflow:skill-tuning` if the underlying intent was quality
+`skill-dev-toolkit:skill-tuning` if the underlying intent was quality
 improvement, or manual edit if only cosmetic.
 
 ## The Gate Function (per round)
@@ -181,7 +181,7 @@ Quick reference:
 | Inline single-use definition | Remove indirection | Low |
 | Tighten verbose phrasing | "in order to" → "to" | Low |
 | Remove "ALWAYS / NEVER" caps where the prose can carry meaning | Reduce noise | Low–medium (test for behavior change) |
-| Move worked examples to companion file | If 3+ examples, extract per skill-team companion-file pattern | Medium (load discipline matters) |
+| Move worked examples to companion file | If 3+ examples, extract per domain-team structural gates companion-file pattern | Medium (load discipline matters) |
 
 **Out-of-scope moves** (these are not refactor; route elsewhere):
 - Adding new behavior or capability → `skill-creator-advance`
@@ -198,7 +198,7 @@ cascade governs how to handle disagreement:
 |---|---|---|
 | **Tier 1** | All 3 judges agree (equivalent or not) | Auto verdict |
 | **Tier 2** | 2-of-3 agree | Auto verdict but flag as "uncertain", show user |
-| **Tier 3** | Judges all disagree, or >50% probability of taste-call | Hand off to `dev-workflow:skill-tuning` (the equivalence question is masking a taste question; skill-refactor is the wrong tool) |
+| **Tier 3** | Judges all disagree, or >50% probability of taste-call | Hand off to `skill-dev-toolkit:skill-tuning` (the equivalence question is masking a taste question; skill-refactor is the wrong tool) |
 
 Tier 3 is the safety valve: when "is the output the same?" turns
 into "which output is better?", we've left refactor territory.
@@ -226,21 +226,19 @@ into "which output is better?", we've left refactor territory.
 
 ## Composes With
 
-- **`dev-workflow:skill-creator-advance`** — when refactor reveals a
+- **`skill-dev-toolkit:skill-creator-advance`** — when refactor reveals a
   structural problem that needs redesign (not equivalence-preserving
   cleanup), hand off here.
-- **`dev-workflow:skill-tuning`** — when the
+- **`skill-dev-toolkit:skill-tuning`** — when the
   question turns from "are the outputs equivalent" to "which output
   is better", hand off here.
-- **`dev-workflow:skill-judge`** — optional advisory check before /
+- **`skill-dev-toolkit:skill-judge`** — optional advisory check before /
   after refactor; if score drops by ≥1σ across rounds while
   equivalence keeps passing, this is a signal of subtle taste-drift
   that the equivalence check missed.
-- **`domain-teams:code-team/standards/refactoring-standard.md`** —
-  philosophical anchor (Fowler Two Hats, behavior-preserving
-  discipline). Bundled-copy pattern not used; this skill references
-  the canonical code-team version for human reading. Skill is still
-  runtime self-contained — no runtime dependency on `domain-teams`.
+- **Refactoring discipline** — philosophical anchor: Fowler's Two Hats
+  (separate behavior-preserving refactor from feature change). This skill
+  is fully self-contained — no cross-plugin dependency.
 
 ## Worked Example — token bloat in skill-creator-advance
 

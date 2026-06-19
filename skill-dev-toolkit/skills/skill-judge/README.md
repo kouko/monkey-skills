@@ -88,7 +88,7 @@ remediation guidance.
 - **Behavioral / runtime testing** — use [`skill-creator-advance`](../skill-creator-advance/)
   (it has the eval-loop with test prompts and quantitative assertions)
 - **Domain-team skill convention enforcement** — use
-  [`domain-teams:skill-team`](../../../domain-teams/skills/skill-team/)
+  domain-team structural convention gates
   (PASS/FAIL gates on monkey-skills convention: 4-tier gate hierarchy,
   3-commit split, primary-source grounding, ~6,000-token cap)
 - **Generic code review** — wrong tool for the job
@@ -98,12 +98,12 @@ These three skills are complementary:
 | Skill                                             | Mode      | Output                         |
 |---------------------------------------------------|-----------|--------------------------------|
 | `skill-judge` (this skill)                        | Static    | 0–120 advisory score           |
-| `dev-workflow:skill-creator-advance`              | Behavioral| Pass/fail on test prompts      |
-| `domain-teams:skill-team`                         | Structural| PASS/FAIL on convention gates  |
+| `skill-dev-toolkit:skill-creator-advance`              | Behavioral| Pass/fail on test prompts      |
+| structural convention gates                         | Structural| PASS/FAIL on convention gates  |
 
-A skill can pass `skill-team`'s gates and still score D in `skill-judge`
+A skill can pass structural convention gates's gates and still score D in `skill-judge`
 (no convention violations, but the content is mostly redundant). It can
-also score A in `skill-judge` and fail `skill-team`'s gates (great
+also score A in `skill-judge` and fail structural convention gates's gates (great
 content, wrong directory layout). They measure different things.
 
 ---
@@ -118,11 +118,11 @@ applies a small adaptation:
   checkpoints + medium freedom). Line count is a correlate, not the
   criterion — domain-team skills exceed upstream typical line counts
   by design and are not penalized for it.
-- **D4 / D5 supplementary checks**: skill-team's `CHK-SKL-001`
+- **D4 / D5 supplementary checks**: the structural convention gates' `CHK-SKL-001`
   (40–200-word description) and `CHK-SKL-010` (~6,000-token cap) are
   surfaced as **Critical Issues** in the report when they fail, but
   scoring uses the upstream rubric without arbitrary caps.
-- **Focus dimensions**: D4/D5/D8 are partially covered by skill-team's
+- **Focus dimensions**: D4/D5/D8 are partially covered by the structural convention layer's
   gates, so D1/D3/D6 carry the most net-new value when the gates
   already pass.
 

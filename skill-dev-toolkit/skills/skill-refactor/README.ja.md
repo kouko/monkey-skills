@@ -129,12 +129,12 @@ prompt フレーミングで spawn する：
 
 ### 以下の場合は呼び出**さない**…
 
-- **skill 出力が悪い / 間違っている** → `dev-workflow:skill-tuning`
+- **skill 出力が悪い / 間違っている** → `skill-dev-toolkit:skill-tuning`
   を使う — 品質改善は人間 A/B 必要、等価保持
   リファクタではない
 - **phase 追加 / agent 変更 / workflow 再構築** →
-  `dev-workflow:skill-creator-advance` — 構造的書き直しは feature hat
-- **新規 skill 作成** → `dev-workflow:skill-creator-advance`
+  `skill-dev-toolkit:skill-creator-advance` — 構造的書き直しは feature hat
+- **新規 skill 作成** → `skill-dev-toolkit:skill-creator-advance`
 - **1 行の cosmetic 編集** — 直接編集で十分、gate コストが編集
   コストを超える
 - **skill が `test-prompts.json` を持たず user が書きたがらない** —
@@ -207,16 +207,16 @@ ensemble が存在する理由。
 
 この skill は **既存 skill 1 つを動作保持で扱う**。引き渡しは：
 
-- **`dev-workflow:proposal-critique`** — 複数の refactor 提案を
+- **a proposal-triage gate** — 複数の refactor 提案を
   triage して優先順位付け
-- **`dev-workflow:complexity-critique`** — 問いが「そもそも
+- **a complexity / deletion-first gate** — 問いが「そもそも
   refactor すべきか」のとき（smallest-end-state を考えてから
   refactor 呼び出し）
-- **`dev-workflow:skill-creator-advance`** — 変更が構造的
+- **`skill-dev-toolkit:skill-creator-advance`** — 変更が構造的
   （phase 追加 / agent 変更 / 再設計）
-- **`dev-workflow:skill-tuning`** — 問いが
+- **`skill-dev-toolkit:skill-tuning`** — 問いが
   「出力は等価か」から「どちらの出力が良いか」に変わったとき
-- **`dev-workflow:skill-judge`** — オプショナル advisory；
+- **`skill-dev-toolkit:skill-judge`** — オプショナル advisory；
   refactor 前 / 後にスコアを取り、等価チェックが通り続けても
   スコアが落ちれば微妙な taste drift の信号
 

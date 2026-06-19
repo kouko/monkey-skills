@@ -209,18 +209,18 @@ non-negotiable accuracy contract.
 
 ## How does it relate to other skills?
 
-- **`dev-workflow:skill-refactor`** — sibling Phase A skill;
+- **`skill-dev-toolkit:skill-refactor`** — sibling Phase A skill;
   preserves behavior, LLM-judge equivalence; tuning changes
   behavior, human judges. They compose: refactor first to shrink
   tokens, then taste to optimize quality.
-- **`dev-workflow:skill-creator-advance`** — when tuning reveals
+- **`skill-dev-toolkit:skill-creator-advance`** — when tuning reveals
   no variant in the same shape produces preferred output, hand off
   to redesign.
-- **`dev-workflow:skill-judge`** — optional advisory check on
+- **`skill-dev-toolkit:skill-judge`** — optional advisory check on
   variants; advisory only (does not understand taste).
 - **`copywriting-toolkit:voice-anchors`** — analogous concept at
   the copywriting level; this skill borrows curation discipline.
-- **`dev-workflow:proposal-critique`** — when faced with multiple
+- **a proposal-triage gate** — when faced with multiple
   tuning proposals, triage which to do first.
 
 ---

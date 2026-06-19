@@ -192,6 +192,6 @@ version.
   curation policy
 - `references/preference-log-schema.md` — how constitutional results
   are logged per round
-- `dev-workflow:skill-refactor` references the same constitution
+- `skill-dev-toolkit:skill-refactor` references the same constitution
   but uses it differently — refactor checks Q3 invariants don't
   break MUSTs; tuning filters variants before they reach the user

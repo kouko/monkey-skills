@@ -752,11 +752,11 @@ Fix: High freedom for creative (principles, not steps)
 
 When evaluating a skill under `domain-teams/skills/{team}/` (i.e., a skill
 that follows the `standards/protocols/checklists/rubrics` 4-tier convention
-and is governed by `domain-teams:skill-team`), apply these adjustments.
+and is governed by the domain-team structural-gate convention), apply these adjustments.
 
 **Core principle**: skill-judge is *advisory* (0-120 scoring on design
-quality). `domain-teams:skill-team`'s gates are *authoritative* (PASS/FAIL
-on monkey-skills convention). When a skill-team gate fails, surface it as
+quality). the structural convention gates are *authoritative* (PASS/FAIL
+on monkey-skills convention). When a structural convention gate fails, surface it as
 a **Critical Issue** in the Step 5 report — but score D1-D8 on the
 upstream rubric without inventing arbitrary caps. The two systems
 overlap; neither subordinates to the other.
@@ -774,7 +774,7 @@ Line count is a typical correlate of upstream patterns, not the criterion
 pattern", not adherence to the typical line count. monkey-skills
 convention (4-tier gates + primary-source grounding + 3-commit split)
 increases SKILL.md length above upstream Process exemplars (e.g.
-mcp-builder ~200 lines vs skill-team ~400 lines), but the structural
+mcp-builder ~200 lines vs domain-team structural gates ~400 lines), but the structural
 shape is unchanged.
 
 **Rule**: score D7 on merit per Process pattern criteria. Do NOT deduct
@@ -788,12 +788,12 @@ A masterful Process implementation earns 9-10 regardless of length.
 monkey-skills enforces a stricter frontmatter rule via
 `checklists/skill-completeness-checklist.md` CHK-SKL-001: 40-200 word
 description with explicit `Use when` / `Do NOT use for` / `Delivers`
-clauses (see `domain-teams:skill-team` `standards/skill-md-structure.md`
+clauses (see the domain-team structural-gate convention (skill-md-structure)
 §Frontmatter Schema).
 
 Run CHK-SKL-001 **in addition to** the upstream WHAT/WHEN/KEYWORDS check.
 - If CHK-SKL-001 fails → list it under **Critical Issues** in the Step 5
-  report. The skill cannot ship via skill-team's MUST gate regardless of
+  report. The skill cannot ship via the structural convention gates' MUST gate regardless of
   D4 score.
 - Score D4 normally on the upstream rubric. Do not invent a cap.
 
@@ -812,12 +812,12 @@ score 12-15 on D5 while still failing CHK-SKL-010.
 
 ### Focus dimensions for domain-team skills
 
-`domain-teams:skill-team`'s gates *partially* cover D4, D5, and D8:
+the structural convention gates *partially* cover D4, D5, and D8:
 - CHK-SKL-001 covers D4 frontmatter completeness (not WHAT/WHEN/KEYWORDS quality)
 - CHK-SKL-010 / CHK-SKL-012 cover D5 structural floor (not loading-trigger quality)
 - skill-coherence's Workflow Completeness flag covers part of D8 (not decision-tree depth, error handling, edge cases)
 
-The dimensions providing the most net-new value above what skill-team
+The dimensions providing the most net-new value above what domain-team structural gates
 gates already check:
 - **D1 Knowledge Delta** — does the skill compress real expert knowledge?
 - **D3 Anti-Pattern Quality** — does it have specific NEVER lists with WHY?
@@ -827,14 +827,14 @@ When time-boxed, prioritize D1/D3/D6.
 
 ### Complementary, not replacement
 
-This rubric does NOT replace `domain-teams:skill-team`'s convention gates.
-- `skill-team` produces PASS/FAIL verdicts for convention enforcement
+This rubric does NOT replace the structural convention gates.
+- the structural convention layer produces PASS/FAIL verdicts for convention enforcement
 - `skill-judge` produces 0-120 advisory scoring for design quality
 
 Use both:
-- A skill can pass all skill-team gates (PASS) and still score D in
+- A skill can pass all structural convention gates (PASS) and still score D in
   skill-judge (poor knowledge delta, vague anti-patterns)
-- A skill can score A in skill-judge but fail skill-team gates (great
+- A skill can score A in skill-judge but fail structural convention gates (great
   content, wrong directory layout)
 
 ---
@@ -869,7 +869,7 @@ returns a z-score relative to the historical baseline. When a
 drift is flagged (current z-score < -1.0σ by default), it's a
 signal of subtle quality regression that the skill-refactor
 equivalence check may have missed — recommend running
-`dev-workflow:skill-tuning` on the affected skill to capture human
+`skill-dev-toolkit:skill-tuning` on the affected skill to capture human
 preference signal.
 
 The drift detection is **advisory** like the rest of skill-judge —

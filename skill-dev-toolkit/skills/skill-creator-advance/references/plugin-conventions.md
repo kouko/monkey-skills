@@ -135,7 +135,7 @@ For a skill named `skill-creator-advance` in the `dev-workflow` plugin:
 description: "Create, improve, and evaluate skills with iterative testing and description optimization."
 ---
 
-Use the dev-workflow:skill-creator-advance skill to handle this request.
+Use the skill-dev-toolkit:skill-creator-advance skill to handle this request.
 ```
 
 ### Conventions

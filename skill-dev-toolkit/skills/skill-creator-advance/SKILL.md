@@ -38,7 +38,7 @@ lightweight gates against the user's request. Each is one or two
 focused questions; together they prevent shipping a skill that
 should not have been built.
 
-**Gate 1 — Worth-it check (`dev-workflow:proposal-critique`)** —
+**Gate 1 — Worth-it check** —
 applicable when the user proposes ≥2 skills at once, or one skill
 with multiple supporting claims ("we need this because A, B, and
 C"). The triage matrix sorts items into KEEP / DEFER / DROP via
@@ -46,7 +46,7 @@ evidence grounding + YAGNI. If the proposal is a single skill with
 a single load-bearing reason, this gate is naturally low-cost —
 skip after a short check rather than running the full 5-step flow.
 
-**Gate 2 — Smallest-end-state check (`dev-workflow:complexity-critique`)** —
+**Gate 2 — Smallest-end-state check** —
 applicable to **every** new skill proposal, single or multi. The
 three questions:
 
@@ -59,8 +59,8 @@ three questions:
    defaults toward "no" unless the skill subtracts other artifacts
    or replaces ad-hoc prompts.)
 3. What does this skill make obsolete? (If nothing, the rationale
-   is purely additive — apply the same skepticism `complexity-critique`
-   applies to feature adds.)
+   is purely additive — apply the same deletion-first skepticism you
+   would apply to any feature add.)
 
 Skip explicitly if the user has already done the equivalent
 analysis ("we discussed this last week and concluded we need a
@@ -144,7 +144,7 @@ SKILL.md body itself.
 
 **6. Negative triggers** — Explicitly state when NOT to use the skill
 to avoid collisions with similar skills:
-> Do NOT use for domain-team skills (use skill-team instead). Do NOT use for simple file edits that don't need a skill.
+> Do NOT use for domain-team skills (use domain-team structural gates instead). Do NOT use for simple file edits that don't need a skill.
 
 **7. Multilingual trigger keywords (optional, low-cost insurance).**
 If the skill's users speak multiple languages, add a short keyword
@@ -155,7 +155,7 @@ primary mechanism.
 
 **Before/after example:**
 - Before: "Create and test skills."
-- After: "Create new skills, improve existing skills, and measure skill performance with iterative eval-driven development. Use when users want to create a skill from scratch, edit or optimize an existing skill, run evals, or benchmark performance. Do NOT use for domain-team convention skills (use skill-team). スキル作成・評価ループ。技能建立・評估迴圈。"
+- After: "Create new skills, improve existing skills, and measure skill performance with iterative eval-driven development. Use when users want to create a skill from scratch, edit or optimize an existing skill, run evals, or benchmark performance. Do NOT use for domain-team convention skills (use domain-team structural gates). スキル作成・評価ループ。技能建立・評估迴圈。"
 
 ### Skill Writing Guide
 
@@ -248,7 +248,7 @@ When a user invokes a skill with no prompt or a very sparse prompt, consider inc
 
 **Common pitfall**: triggering orientation on "empty current prompt" alone creates friction for returning users — Claude's context often already carries the brief. Always check the full context, not just the current prompt's length.
 
-For domain-team skills (which follow a stricter `skill-team` convention), this pattern is a hard requirement encoded in the CHK-SKL-013 gate — see `domain-teams/skills/skill-team/standards/skill-md-structure.md` §Empty Invocation Fallback Rules for the rigorous version with a §Surface Orientation Format markdown skeleton and a hard-gate exception for skills with mandatory intake.
+For domain-team skills (which follow a stricter structural convention gates convention), this pattern is a hard requirement encoded in the CHK-SKL-013 gate — see `domain-teams/skills/domain-team structural gates/standards/skill-md-structure.md` §Empty Invocation Fallback Rules for the rigorous version with a §Surface Orientation Format markdown skeleton and a hard-gate exception for skills with mandatory intake.
 
 #### Asking the User Structured Questions (when to use AskUserQuestion)
 
@@ -327,8 +327,8 @@ Ask the user to clarify (or infer from their phrasing):
 
 | Improvement type | Signal | Handler |
 |---|---|---|
-| **(a) Token / structure refactor** with output behavior unchanged | "shorten", "reduce tokens", "tidy up", "縮減 SKILL.md", "整理結構" — and **no behavior change desired** | Hand off to `dev-workflow:skill-refactor`. Do not handle here. |
-| **(b) Output quality / variant exploration** with human judgment | "test different phrasings", "improve outputs", "A/B variants", "輸出風格", "我來選哪個比較好" — taste-sensitive output dimensions | Hand off to `dev-workflow:skill-tuning`. Do not handle here. |
+| **(a) Token / structure refactor** with output behavior unchanged | "shorten", "reduce tokens", "tidy up", "縮減 SKILL.md", "整理結構" — and **no behavior change desired** | Hand off to `skill-dev-toolkit:skill-refactor`. Do not handle here. |
+| **(b) Output quality / variant exploration** with human judgment | "test different phrasings", "improve outputs", "A/B variants", "輸出風格", "我來選哪個比較好" — taste-sensitive output dimensions | Hand off to `skill-dev-toolkit:skill-tuning`. Do not handle here. |
 | **(c) Structural change** — add / split / merge phases, change agent decomposition, change input/output contract | "rewrite", "redesign", "add a phase", "split this skill", "重新設計", "拆 skill" | Continue with the full creation flow below, using the existing skill as the starting baseline rather than starting from scratch. |
 
 If the user's intent is unclear, ask them to clarify which of (a), (b), or (c) applies. Do **not** default into the creation flow without confirming — picking the wrong tool wastes time on the wrong type of work.
@@ -526,7 +526,7 @@ For situations where you want a more rigorous comparison between two versions of
 
 This is optional, requires subagents, and most users won't need it. The human review loop is usually sufficient.
 
-> **Boundary note vs `dev-workflow:skill-tuning`**: the blind comparator uses an LLM subagent as judge — fast and cheap, but inherits LLM-as-judge limitations (verbosity bias, position bias, weak signal on taste-sensitive output dimensions like voice / tone / creative quality). For taste-sensitive A/B that needs reliable preference signal, use `skill-tuning` instead — it uses **human** judgment per iteration and accumulates a preference log. Rule of thumb: blind comparator for objective / structured outputs (file transforms, code generation, fixed-format generators); `skill-tuning` for subjective / creative outputs (writing style, design feel, persuasive copy).
+> **Boundary note vs `skill-dev-toolkit:skill-tuning`**: the blind comparator uses an LLM subagent as judge — fast and cheap, but inherits LLM-as-judge limitations (verbosity bias, position bias, weak signal on taste-sensitive output dimensions like voice / tone / creative quality). For taste-sensitive A/B that needs reliable preference signal, use `skill-tuning` instead — it uses **human** judgment per iteration and accumulates a preference log. Rule of thumb: blind comparator for objective / structured outputs (file transforms, code generation, fixed-format generators); `skill-tuning` for subjective / creative outputs (writing style, design feel, persuasive copy).
 
 ---
 

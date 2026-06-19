@@ -93,11 +93,11 @@ optimize description triggering".
 
 ### Move Worked Examples to Companion File
 
-When a protocol has 3+ worked examples, extract per skill-team's
+When a protocol has 3+ worked examples, extract per the structural convention gates'
 companion-file convention to `{protocol-name}-examples.md`.
 
 **Constraint**: keep 1-2 examples inline as quick-mode pattern
-anchor (per skill-team convention).
+anchor (per domain-team structural convention).
 
 **Equivalence risk**: medium. Quick-mode runs may behave
 differently if companion file doesn't load. Test both modes.

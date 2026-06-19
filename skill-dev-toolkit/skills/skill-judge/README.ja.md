@@ -89,7 +89,7 @@ rubric は 17 以上の Anthropic 公式 skill から観察された pattern と
   を使う（test prompt と quantitative assertion を持つ eval-loop が
   ある）
 - **domain-team skill の convention 強制** —
-  [`domain-teams:skill-team`](../../../domain-teams/skills/skill-team/)
+  domain-team structural convention gates
   を使う（monkey-skills convention：4-tier gate hierarchy、3-commit
   split、primary-source grounding、~6,000-token cap に対する
   PASS/FAIL gate）
@@ -100,12 +100,12 @@ rubric は 17 以上の Anthropic 公式 skill から観察された pattern と
 | Skill                                             | Mode      | Output                         |
 |---------------------------------------------------|-----------|--------------------------------|
 | `skill-judge`（この skill）                       | Static    | 0–120 advisory score           |
-| `dev-workflow:skill-creator-advance`              | Behavioral| test prompt の pass/fail       |
-| `domain-teams:skill-team`                         | Structural| convention gate の PASS/FAIL   |
+| `skill-dev-toolkit:skill-creator-advance`              | Behavioral| test prompt の pass/fail       |
+| structural convention gates                         | Structural| convention gate の PASS/FAIL   |
 
-ある skill が `skill-team` の gate を通過しても、`skill-judge` で
+ある skill が structural convention gates の gate を通過しても、`skill-judge` で
 D 評価になる場合がある（convention 違反はないが、内容のほとんどが
-redundant）。逆に `skill-judge` で A 評価でも `skill-team` の gate に
+redundant）。逆に `skill-judge` で A 評価でも structural convention gates の gate に
 失敗する場合もある（内容は良いが directory layout が違う）。それぞれ
 測っているものが異なる。
 
@@ -121,11 +121,11 @@ redundant）。逆に `skill-judge` で A 評価でも `skill-team` の gate に
   checkpoint + medium freedom）。行数は correlate であり criterion
   ではない — domain-team skill は設計上 upstream の typical 行数を
   超過するが、それを理由に減点しない。
-- **D4 / D5 supplementary check**：skill-team の `CHK-SKL-001`
+- **D4 / D5 supplementary check**：domain-team structural gates の `CHK-SKL-001`
   （40–200 word の description）と `CHK-SKL-010`（~6,000-token cap）
   が失敗した場合は report の **Critical Issues** に surface するが、
   scoring 自体は upstream rubric を任意の cap なしで使う。
-- **重点観点**：D4/D5/D8 は skill-team の gate で部分的に cover
+- **重点観点**：D4/D5/D8 は domain-team structural gates の gate で部分的に cover
   されているため、gate が既に pass している場合は D1/D3/D6 が最も
   新規価値を持つ。
 

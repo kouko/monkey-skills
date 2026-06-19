@@ -183,16 +183,16 @@ A 與 B 進到 A/B。User 選 A。
 
 ## 它與其他 skill 的關係？
 
-- **`dev-workflow:skill-refactor`** — 姊妹 Phase A skill；保留行為、
+- **`skill-dev-toolkit:skill-refactor`** — 姊妹 Phase A skill；保留行為、
   LLM-judge 等價；tuning 改變行為、人類 judge。可組合：先 refactor
   縮短 token，再 taste 優化品質。
-- **`dev-workflow:skill-creator-advance`** — 當 tuning 顯示同形狀
+- **`skill-dev-toolkit:skill-creator-advance`** — 當 tuning 顯示同形狀
   下沒有變體產出偏好輸出時，handoff 到重設計。
-- **`dev-workflow:skill-judge`** — 對變體的 advisory check（advisory
+- **`skill-dev-toolkit:skill-judge`** — 對變體的 advisory check（advisory
   only；不懂 taste）。
 - **`copywriting-toolkit:voice-anchors`** — 寫作層的對應概念；此
   skill 借鑑其策展紀律。
-- **`dev-workflow:proposal-critique`** — 多個 tuning 提案要 triage 時。
+- **a proposal-triage gate** — 多個 tuning 提案要 triage 時。
 
 ---
 

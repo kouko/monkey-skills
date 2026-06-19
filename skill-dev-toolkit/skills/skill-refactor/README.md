@@ -132,13 +132,13 @@ Full protocol: [`references/multi-judge-ensemble.md`](references/multi-judge-ens
 ### Don't invoke when…
 
 - **Skill output is bad / wrong** — use
-  `dev-workflow:skill-tuning` — taste
+  `skill-dev-toolkit:skill-tuning` — taste
   improvement requires human-judged A/B, not equivalence-preserving
   refactor
 - **You want to add a phase / change agent / restructure
-  workflow** — use `dev-workflow:skill-creator-advance` — structural
+  workflow** — use `skill-dev-toolkit:skill-creator-advance` — structural
   rewrite is feature-hat work
-- **Creating a new skill** — use `dev-workflow:skill-creator-advance`
+- **Creating a new skill** — use `skill-dev-toolkit:skill-creator-advance`
 - **Single-line cosmetic edits** — just edit directly; the gate cost
   exceeds the change cost
 - **Skill has no `test-prompts.json` and user won't write one** —
@@ -213,17 +213,17 @@ multi-judge ensemble exists to catch.
 This skill operates on **a single existing skill, with output
 preserved**. Hand off when:
 
-- **`dev-workflow:proposal-critique`** — when faced with multiple
+- **a proposal-triage gate** — when faced with multiple
   refactor proposals, triage which to do first
-- **`dev-workflow:complexity-critique`** — when the question is
+- **a complexity / deletion-first gate** — when the question is
   "should we even refactor this skill at all" (smallest-end-state
   thinking before invoking refactor)
-- **`dev-workflow:skill-creator-advance`** — when the change is
+- **`skill-dev-toolkit:skill-creator-advance`** — when the change is
   structural (add phase, change agents, redesign workflow)
-- **`dev-workflow:skill-tuning`** — when the
+- **`skill-dev-toolkit:skill-tuning`** — when the
   question turns from "are outputs equivalent" to "which output is
   better"
-- **`dev-workflow:skill-judge`** — optional advisory check before /
+- **`skill-dev-toolkit:skill-judge`** — optional advisory check before /
   after refactor; if score drops while equivalence keeps passing,
   signal of subtle taste-drift the equivalence check missed
 

@@ -259,12 +259,12 @@ main agent directly to drive the fix.
 
 ## When NOT to use
 
-- **Static design scoring** of a SKILL.md → `dev-workflow:skill-judge`
+- **Static design scoring** of a SKILL.md → `skill-dev-toolkit:skill-judge`
   (reads the file, does not run it).
 - **Author-conformance eval** against the author's own known prompts, or
-  creating/redesigning a skill → `dev-workflow:skill-creator-advance`.
-- **Retrospective activation telemetry** from past session logs →
-  `dev-workflow:distill-sessions`.
+  creating/redesigning a skill → `skill-dev-toolkit:skill-creator-advance`.
+- **Retrospective activation telemetry** from past session logs → a
+  session-log mining tool (out of scope for this behavioral dogfood).
 
 ## Red flags
 

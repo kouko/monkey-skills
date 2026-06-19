@@ -163,7 +163,7 @@ the choice is locked.
 For multi-evaluator setups (rare; only when multiple humans review
 together), each evaluator picks independently; aggregate via
 inter-rater agreement; if agreement <70%, escalate as
-`dev-workflow:skill-refactor`-style "uncertain" → don't ratchet
+`skill-dev-toolkit:skill-refactor`-style "uncertain" → don't ratchet
 without resolution.
 
 See `references/ab-harness-protocol.md` for the full harness flow.
@@ -271,14 +271,14 @@ training methodology.
 
 ## Composes With
 
-- **`dev-workflow:skill-creator-advance`** — when tuning reveals a
+- **`skill-dev-toolkit:skill-creator-advance`** — when tuning reveals a
   structural problem (no variant in the same shape gets preferred,
   user wants fundamentally different shape), hand off to redesign
-- **`dev-workflow:skill-refactor`** — when the variant the user
+- **`skill-dev-toolkit:skill-refactor`** — when the variant the user
   picks happens to be longer (token cost up), can chain to
   refactor afterwards to compress without losing the chosen
   qualities
-- **`dev-workflow:skill-judge`** — optional advisory check on each
+- **`skill-dev-toolkit:skill-judge`** — optional advisory check on each
   variant; advisory only (skill-judge does not understand taste);
   useful as a sanity check on structural dimensions of variants
 - **`copywriting-toolkit:voice-anchors`** — analogous concept at

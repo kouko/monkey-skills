@@ -1,8 +1,8 @@
 # Golden Anchor Protocol
 
 > **Shared convention — canonical SoT.** This file is bundled in
-> both `dev-workflow:skill-refactor/references/` and
-> `dev-workflow:skill-tuning/references/` as functional copies.
+> both `skill-dev-toolkit:skill-refactor/references/` and
+> `skill-dev-toolkit:skill-tuning/references/` as functional copies.
 > This location is the canonical SoT for the convention's
 > evolution; the `skill-tuning` copy is updated to match in the
 > same PR (drift rule). Runtime self-containment preserved on

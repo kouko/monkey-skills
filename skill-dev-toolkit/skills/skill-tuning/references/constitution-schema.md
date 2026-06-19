@@ -1,8 +1,8 @@
 # Constitution Schema
 
 > **Shared convention — bundled functional copy.** This file is
-> bundled in both `dev-workflow:skill-refactor/references/` and
-> `dev-workflow:skill-tuning/references/`. Same-PR drift rule:
+> bundled in both `skill-dev-toolkit:skill-refactor/references/` and
+> `skill-dev-toolkit:skill-tuning/references/`. Same-PR drift rule:
 > edits land in `skill-refactor/references/constitution-schema.md`
 > first (canonical SoT location, shipped v1.6.0), then mirror here
 > in the same PR. Runtime self-containment preserved on each side.

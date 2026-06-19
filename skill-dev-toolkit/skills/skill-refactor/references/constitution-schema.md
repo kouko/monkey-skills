@@ -1,8 +1,8 @@
 # Constitution Schema
 
 > **Shared convention — canonical SoT.** This file is bundled in
-> both `dev-workflow:skill-refactor/references/` and
-> `dev-workflow:skill-tuning/references/` as functional copies.
+> both `skill-dev-toolkit:skill-refactor/references/` and
+> `skill-dev-toolkit:skill-tuning/references/` as functional copies.
 > This location is the canonical SoT for evolution; same-PR drift
 > rule mirrors edits to the `skill-tuning` copy.
 
