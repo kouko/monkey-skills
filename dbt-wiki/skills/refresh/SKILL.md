@@ -41,8 +41,24 @@ cd "$WIKI_DIR" || { echo "Cannot cd to $WIKI_DIR"; exit 1; }
 
 test -d .dbt-wiki || { echo "Knowledge base not initialized at $WIKI_DIR/.dbt-wiki/. Run /dbt-wiki:init first."; exit 1; }
 test -f .dbt-wiki/log.md || { echo ".dbt-wiki/log.md missing. Re-run /dbt-wiki:init."; exit 1; }
+# `_internal/` is a rebuildable cache (init may gitignore it), so a fresh clone
+# can legitimately lack it. Self-heal from the plugin's init assets instead of
+# erroring. `<INIT_ASSETS>` = the init skill's assets dir, a sibling of this
+# skill: resolve it as `<SKILL_DIR>/../init/assets` (this SKILL.md lives in
+# `.../skills/refresh/`; init's assets are in `.../skills/init/assets/`).
+if [ ! -f .dbt-wiki/_internal/extract_column_lineage.py ]; then
+  mkdir -p .dbt-wiki/_internal
+  # copy every production script + template the cache needs (NOT the *_test.py)
+  for f in extract_column_lineage extract_sql_comments extract_recursive_column_lineage \
+           format_lineage_diagram detect_source_language lint_schema_divergence \
+           build_evidence_pages; do
+    cp "<INIT_ASSETS>/$f.py" .dbt-wiki/_internal/
+  done
+  cp "<INIT_ASSETS>/synthesis_template.md" .dbt-wiki/_internal/
+  echo "Restored .dbt-wiki/_internal/ from the plugin (rebuildable cache)."
+fi
 test -f .dbt-wiki/_internal/extract_column_lineage.py || {
-  echo "Column lineage script missing. Re-run /dbt-wiki:init to restore."
+  echo "Could not restore _internal/ from <INIT_ASSETS>. Re-run /dbt-wiki:init."
   exit 1
 }
 
