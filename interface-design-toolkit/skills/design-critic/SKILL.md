@@ -1,6 +1,7 @@
 ---
 name: design-critic
-description: Adversarial completeness critique of a design-station output (DESIGN.md + ui-flows.md) via a decorrelated writer≠judge critic panel — fresh-context lens subagents each hunt SURFACE omissions the designer missed (undrawn empty/loading/error states, navigational dead-ends, unreachable screens, missing entry/exit points, modality/a11y gaps), grounded in Nielsen's usability heuristics, then UNION findings and emit residual blind spots. Use to review a design draft for gaps / missing states / dead-ends / blind spots BEFORE it feeds spec-expansion. Heuristic evaluation of the interface SURFACE only — never spec behavior, never code. 介面設計盲點審查・畫面狀態網羅・死路偵測。インターフェース設計レビュー・抜け漏れ・ヒューリスティック評価。
+description: |
+  Adversarial critique of a design output (DESIGN.md + ui-flows.md) via a writer≠judge panel for SURFACE omissions (undrawn states, dead-ends, a11y) per Nielsen. Use to review a design draft for gaps before spec-expansion. Surface only, never code.
 ---
 
 # design-critic
