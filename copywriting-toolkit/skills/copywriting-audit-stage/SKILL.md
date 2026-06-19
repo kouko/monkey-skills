@@ -1,6 +1,7 @@
 ---
 name: copywriting-audit-stage
-description: Audit existing external copy you did not draft — competitor / legacy / A/B variant — through voice positioning, tone, ethics, and form checks. Use when you have pre-existing copy text (not a new brief) and want review / critique / rewrite suggestions. Not for new copy creation — use using-copywriting-toolkit to start a fresh pipeline. 文案審查・既存コピー監査。
+description: |
+  Audit existing external copy you didn't draft (competitor / legacy / variant) via voice, tone, ethics, form checks. Use with pre-existing copy (not a new brief) wanting review / critique / rewrite ideas. New copy → using-copywriting-toolkit.
 ---
 
 # copywriting-audit-stage

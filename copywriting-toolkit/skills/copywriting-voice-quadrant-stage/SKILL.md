@@ -1,6 +1,7 @@
 ---
 name: copywriting-voice-quadrant-stage
-description: Pick voice direction on the Authority vs Affinity × Reason vs Emotion quadrant, matched to EN/ZH/JP practitioner anchors (Ogilvy / 許舜英 / 糸井 / 龔大中) + Schwartz awareness level routing. Use when you have a draft AND need macro voice direction diagnosis — before tone tuning. Also use when deciding the voice register of a new brand (standalone voice guide). Not for sentence-level tone polish or maestro lineage craft (use copywriting-voice-tone-stage). ボイス・ポジショニング・四象限。文案聲音象限・語氣方向。
+description: |
+  Pick voice direction on the Authority×Affinity / Reason×Emotion quadrant, matched to anchors (Ogilvy / 許舜英 / 糸井). Use with a draft needing macro voice diagnosis before tone tuning, or a new brand voice guide. Polish → voice-tone-stage.
 ---
 
 # copywriting-voice-quadrant-stage

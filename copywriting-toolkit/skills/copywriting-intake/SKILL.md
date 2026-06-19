@@ -1,6 +1,7 @@
 ---
 name: copywriting-intake
-description: Clarify and confirm copywriting requirements — product, audience, goal, form, Schwartz awareness level — with a hard gate on missing info. Use when starting a new copywriting task with an incomplete or ambiguous brief, before any drafting, ideation, or audit. LOOSE recommend planning-team when thesis-level ambiguity surfaces. Not for external-copy review (use copywriting-audit-stage — audit bypasses intake by design). 文案需求確認・brief 整理・ヒアリング。コピー案件インテーク・需求確認。
+description: |
+  Clarify and confirm copywriting requirements (product, audience, goal, form, awareness level), hard gate on missing info. Use at the start of a new copy task with an incomplete brief, before drafting. External-copy → copywriting-audit-stage.
 ---
 
 # copywriting-intake
