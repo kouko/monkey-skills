@@ -89,7 +89,14 @@ one-shot emit. You supply the execution.
 
 3. **Execute** — run the SQL via **your own warehouse-connect tool**
    (an MCP server or a CLI that runs SQL against the warehouse). This
-   bundle names no specific tool: you bring it.
+   bundle names no specific tool: you bring it. **If no tool in your
+   environment can reach the warehouse**, do not guess at results: deliver
+   the grounded SQL, tell the user you need a SQL-executing tool (MCP /
+   CLI), and state the connection prerequisites — the warehouse engine
+   named above, any VPN / credentials it requires, and (in a dev
+   environment) the schema prefix to substitute for the one in
+   `knowledge/_relations.md`. Stop at this gate rather than fabricating an
+   answer; the grounded SQL is still a useful deliverable.
 
 4. **Inspect + iterate** — read the returned rows. Check row count,
    value ranges, NULLs, and obviously-wrong magnitudes (a per-account
