@@ -20,6 +20,11 @@ def render_bar(pairs: list[tuple[str, float]], width: int = 20) -> str:
     """Render labelled values as a CJK-aligned horizontal bar chart."""
     if not pairs:
         return ""
+    for label, _ in pairs:
+        if "\n" in label:
+            raise ValueError(
+                f"bar label must be single-line, got newline in {label!r}"
+            )
     label_width = max(display_width(label) for label, _ in pairs)
     max_value = max(value for _, value in pairs)
 
