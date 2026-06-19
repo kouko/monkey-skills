@@ -1,20 +1,7 @@
 ---
 name: skill-judge
-description: >-
-  Evaluate Agent Skill design quality with an 8-dimension rubric (Knowledge
-  Delta, Mindset+Procedures, Anti-Pattern, Spec Compliance, Progressive
-  Disclosure, Freedom Calibration, Pattern Recognition, Practical Usability)
-  scoring 0-120 plus letter grade A-F. Use when reviewing, auditing, or
-  scoring a SKILL.md file or skill package, when asking "is this skill
-  well-designed", or when comparing skill quality across skills. Also use
-  to learn skill design patterns through worked rubric application. Do NOT
-  use for behavioral / runtime testing of a skill (use
-  dev-workflow:skill-creator-advance eval loop), for domain-team skill
-  convention enforcement (use domain-teams:skill-team gates), or for
-  generic code review. Delivers a multi-dimensional evaluation report with
-  E:A:R knowledge ratio, dimension scores, critical issues, and prioritized
-  improvements.
-  スキル品質評価・八次元採点。技能品質評估・八維評分。
+description: |
+  Score Agent Skill design quality on an 8-dimension rubric (0-120 + grade A-F). Use when reviewing or scoring a SKILL.md / skill package, or 'is this skill well-designed?'. Behavioral testing → dogfood-skill-testing; redesign → skill-creator-advance.
 ---
 
 # Skill Judge

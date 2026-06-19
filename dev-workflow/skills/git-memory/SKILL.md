@@ -1,16 +1,7 @@
 ---
 name: git-memory
-description: >-
-  MANDATORY invocation gate before every `git commit` and `gh pr create` —
-  the skill itself decides whether memory trailers (`Decision:` / `Learning:`
-  / `Gotcha:`) are warranted. Do NOT pre-decide "this commit is routine" and
-  skip the skill; that decision belongs to the skill, not the caller. Without
-  this gate, the git history loses the "why" archive that
-  `git log --grep='Decision:'` retrieves across sessions, machine changes,
-  and tool switches. Also use to recall past decisions (user asks "why did
-  we...", 為什麼, references an old branch, revisits earlier work). Triggers:
-  about-to-`git commit`, about-to-`gh pr create`, about-to-merge, "why did
-  we", 為什麼, "decision", "rationale", "commit メモ", "決定記録".
+description: |
+  Mandatory gate before every git commit / gh pr create — the skill decides whether memory trailers (Decision/Learning/Gotcha) apply; don't pre-judge a commit 'routine'. Also recalls past decisions: 'why did we…', '為什麼', an old branch.
 ---
 
 # Git Memory
