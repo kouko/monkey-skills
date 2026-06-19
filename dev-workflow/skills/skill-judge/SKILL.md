@@ -310,6 +310,17 @@ This is useless — Agent has no idea when to activate it.
 - [ ] Specific enough that Agent knows EXACTLY when to use it
 - [ ] Includes scenarios where this skill MUST be used (not just "can be used")
 
+**House description standard (additional D4 criteria — deduct when violated)**
+Rationale + evidence: `docs/skill-mining/2026-06-19-skill-description-standard.md`.
+- [ ] **Length ≤250 chars (target ≤150; 1024 = absolute spec ceiling)** — over-long descriptions
+  evict other skills from the shared listing budget. Penalize >250; flag >150.
+- [ ] **what + when only** — step-by-step **procedure / workflow / grounding** belongs in the
+  body, NOT the description. Penalize procedure dumped into the description.
+- [ ] **Positive specific triggers**, not reliance on "ALWAYS invoke" directives (over-trigger at
+  scale) or "Do NOT use for X" behavioral negation (LLMs handle negation unreliably).
+- [ ] **No CJK / multilingual keyword redundancy** — cross-lingual triggering is A/B-verified
+  redundant; translated trigger tails are dead weight (and truncated first).
+
 ---
 
 ### D5: Progressive Disclosure (15 points)
