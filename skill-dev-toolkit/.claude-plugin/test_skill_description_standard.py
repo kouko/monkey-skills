@@ -1,5 +1,5 @@
 """Structural grep-test: the house skill-description standard must be encoded in
-the two dev-workflow skills that author / judge descriptions.
+the two skill-dev-toolkit skills that author / judge descriptions.
 
 The standard (SSOT rationale: docs/skill-mining/2026-06-19-skill-description-standard.md)
 is inlined into each consuming skill per this repo's self-contained-skill convention
@@ -13,8 +13,8 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-CREATOR = ROOT / "dev-workflow" / "skills" / "skill-creator-advance" / "SKILL.md"
-JUDGE = ROOT / "dev-workflow" / "skills" / "skill-judge" / "SKILL.md"
+CREATOR = ROOT / "skill-dev-toolkit" / "skills" / "skill-creator-advance" / "SKILL.md"
+JUDGE = ROOT / "skill-dev-toolkit" / "skills" / "skill-judge" / "SKILL.md"
 
 
 def _low(p: Path) -> str:
