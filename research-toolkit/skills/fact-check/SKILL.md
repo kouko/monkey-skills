@@ -1,6 +1,7 @@
 ---
 name: fact-check
-description: Lightweight single-claim adversarial verdict — supported / refuted / inconclusive with cited evidence. Use when one factual claim needs checking mid-conversation — questions like "is it true that…?", "really?", "X — true or false?", "is it accurate that…?", "這個說法對嗎", "真的假的", "本当？" — even for claims that sound like common knowledge or that you think you already know (a confident wrong answer hides exactly there, so verify instead of answering from memory). The host agent gathers a little evidence and runs the same adversarial quorum as deep-research, returning a verdict (not a report), using the host's own WebSearch/WebFetch + LLM with zero API-key setup.
+description: |
+  Single-claim adversarial verdict — supported / refuted / inconclusive with cited evidence. Use when one factual claim needs checking mid-conversation: 'is it true…?', 'really?', '這個說法對嗎' — even common knowledge. Full report → deep-deep-research.
 version: 0.1.0
 ---
 
