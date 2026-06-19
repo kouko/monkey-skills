@@ -1,14 +1,7 @@
 ---
 name: report-portfolio-review
-description: >-
-  Layer 3 orchestrator that produces a portfolio P&L review document
-  (Markdown) with optional macro-regime overlay. Parses holdings, groups
-  tickers by country (US/JP/TW/KR/CN), batch-fetches prices via
-  data-{country}/pack.py --pack screener-batch in parallel, runs
-  analysis-portfolio for pure compute, optionally overlays
-  analysis-macro-regime, then renders Markdown via review_format.py.
-  ポートフォリオ評価レポート — マクロレジーム重ね合わせ可。
-  投資組合損益回顧 — 可疊加總經 regime overlay。
+description: |
+  Layer-3 orchestrator for a portfolio P&L review (Markdown), optional macro-regime overlay. Parses holdings, groups by country, batch-fetches prices via data-{country} screener-batch, runs analysis-portfolio, renders Markdown.
 ---
 
 # report-portfolio-review

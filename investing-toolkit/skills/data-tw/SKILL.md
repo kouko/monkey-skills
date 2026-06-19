@@ -1,15 +1,7 @@
 ---
 name: data-tw
-description: >-
-  Layer 1 (Data) skill for Taiwan equities + macro. Bundles 8 clients
-  (yfinance, MOPS, TWSE/TPEx OpenAPI, FinMind, CBC, DGBAS, NDC, stat.gov.tw)
-  behind a `pack.py` facade with 5 pack types — snapshot, memo-fetch,
-  comps-multiples, screener-batch, regime-pack. MOPS + TWSE OpenAPI are Tier A
-  primary; FinMind is Tier 2 fallback / by-design gap supplier
-  (per-stock T86 三大法人 daily flow, .TWO price history). Pure I/O — no
-  analysis. Single-ticker (`--ticker`) and batch (`--tickers`) modes.
-  台股資料層（公開觀測站＋證交所 OpenAPI＋總經，Tier A 為主，FinMind 補位）。
-  台湾データ層（MOPS／TWSE／マクロ統合、Tier A 中心）。
+description: |
+  Layer-1 data fetch for Taiwan equities + macro — yfinance, MOPS, TWSE/TPEx OpenAPI, FinMind, CBC, DGBAS behind pack.py, 5 pack types. MOPS/TWSE Tier-A, FinMind Tier-2 fallback (三大法人). Pure I/O; --ticker / --tickers.
 ---
 
 # data-tw

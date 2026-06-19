@@ -1,15 +1,7 @@
 ---
 name: data-us
-description: >-
-  Layer 1 (Data) — multi-source US data bundler. Fetch-only role; pure I/O, no
-  analysis. Composes yfinance (price + multiples), SEC EDGAR (10-K/10-Q/8-K +
-  XBRL facts + Item-section narrative), and FRED (macro indicators) into
-  structured JSON via `pack.py`. Supports `--ticker` (single) and `--tickers`
-  (batch). Pack types: snapshot / memo-fetch / comps-multiples /
-  screener-batch / regime-pack. Designed for handoff to Layer 2 analysis-*
-  skills (analysis-dcf, analysis-comps, analysis-macro-regime,
-  analysis-screener) and Layer 3 report-* skills.
-  米国データバンドル取得（fetch only）。美國資料擷取與打包（純 I/O）。
+description: |
+  Layer-1 multi-source US data bundler — fetch-only, pure I/O. yfinance (price + multiples), SEC EDGAR (10-K/10-Q/8-K + XBRL), FRED macro → JSON via pack.py. --ticker / --tickers; 5 pack types (snapshot / memo-fetch / comps / screener / regime).
 ---
 
 # data-us
