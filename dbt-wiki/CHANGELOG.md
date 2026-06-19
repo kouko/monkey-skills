@@ -4,6 +4,17 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.2] — 2026-06-20
+
+### Changed — trim the `review` skill description to the house standard
+
+`review` (926 chars) was the last dbt-wiki description over the 250 cap
+(the other five shipped in 2.13.1). Trimmed to 229: what + when + one CJK
+trigger (審核) + a positive redirect to `query`; dropped the trilingual
+trigger list and the "Do NOT trigger for X" block. Metadata only — no
+behavior change; body untouched. Routing verified by a blind A/B
+(routes to ground truth).
+
 ## [2.13.1] — 2026-06-20
 
 ### Changed — trim 5 skill descriptions to the house description standard
