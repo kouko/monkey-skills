@@ -331,3 +331,26 @@ def test_newline_in_label_rejected():
     out = render_seq(["A", "B"], [{"from": "A", "to": "B", "label": "go"}])
     assert "go" in out
     assert "►" in out
+
+
+def test_carriage_return_in_label_rejected():
+    """A bare \\r (no \\n) in a name OR message label is rejected loudly.
+
+    A carriage-return is a 0-width cursor-moving control char: it passes the
+    display-width checks yet silently corrupts the rendered diagram's terminal
+    alignment. The reject guard that only tested for "\\n" let a \\r-only label
+    through; the guard must reject ANY line break (\\r, \\n, \\r\\n).
+    """
+    import pytest
+
+    # 1. Bare \r in a participant name -> ValueError.
+    with pytest.raises(ValueError):
+        render_seq(["A\rB", "C"], [])
+
+    # 2. Bare \r in a message label -> ValueError.
+    with pytest.raises(ValueError):
+        render_seq(["A", "B"], [{"from": "A", "to": "B", "label": "go\rstop"}])
+
+    # 3. CRLF in a message label -> ValueError.
+    with pytest.raises(ValueError):
+        render_seq(["A", "B"], [{"from": "A", "to": "B", "label": "go\r\nstop"}])

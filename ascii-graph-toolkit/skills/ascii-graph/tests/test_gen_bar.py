@@ -76,3 +76,17 @@ def test_newline_in_label_rejected():
 
     # A normal bar still renders — the guard must not block valid input.
     assert render_bar([("ok", 10)]) != ""
+
+
+def test_carriage_return_in_label_rejected():
+    # WHY: a carriage-return (\r) is a 0-width cursor-moving control char that
+    # passes display-width checks yet silently corrupts the chart's terminal
+    # alignment. The guard previously tested only for "\n", letting a \r-only
+    # label through; it must reject ANY line break (\r, \n, \r\n).
+    import pytest
+
+    with pytest.raises(ValueError):
+        render_bar([("a\rb", 10)])
+
+    with pytest.raises(ValueError):
+        render_bar([("a\r\nb", 10)])
