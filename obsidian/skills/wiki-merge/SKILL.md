@@ -1,6 +1,7 @@
 ---
 name: wiki-merge
-description: Consolidate a confirmed near-duplicate PAIR of wiki/ pages into one canonical page; human gates WHICH pair, the skill auto-executes the merge. Use when wiki-ingest STEP 4c or wiki-lint L15 flags a near-duplicate (e.g. `Thompson-Sampling` vs `Thompson-Sampling-MAB`) and you decide to merge it. Triggers: 「合併重複頁」「合併這兩頁」, 「重複ページ統合」「ページをマージ」, "merge duplicate pages" / "merge these two wiki pages". Do NOT use for wiki-ingest (which ADDS pages from source notes) or wiki-cross-linker (which LINKS existing pages without consolidating). wiki-merge WRITES — it collapses two pages into one and archives the absorbed page. Do NOT use for repo-wiki or dbt-wiki. Obsidian wiki 重複頁合併・近重複統合・知識圖譜去碎裂。
+description: |
+  Consolidate a confirmed near-duplicate PAIR of wiki/ pages into one canonical page (human picks the pair; skill merges + archives the other). Use when wiki-ingest/wiki-lint flags a near-duplicate. Add pages → wiki-ingest; link → wiki-cross-linker.
 ---
 
 # Wiki Merge — Consolidate a Near-Duplicate Pair

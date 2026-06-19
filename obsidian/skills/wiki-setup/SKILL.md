@@ -1,6 +1,7 @@
 ---
 name: wiki-setup
-description: Scaffold an LLM wiki layer in an Obsidian vault — 6 type folders, index/log/hot/manifest, .obsidian-wiki.config. Use to init wiki/ first time or rebuild. Do NOT use for repo-wiki:init, dbt-wiki:init, or vault setup (use obsidian-vault-setup). Obsidian wiki 初期化・初始化。
+description: |
+  Scaffold an LLM wiki layer in an Obsidian vault — 6 type folders + index/log/hot/manifest + .obsidian-wiki.config. Use to init wiki/ first-time or rebuild. Not repo-wiki:init / dbt-wiki:init; full vault setup → obsidian-vault-setup.
 ---
 
 # Wiki Setup — One-Time Wiki Layer Initialization
