@@ -1,30 +1,8 @@
 ---
 name: recap-state
 version: 0.1.0
-description: >-
-  In-session re-orientation skill. When the user loses track of what we were
-  doing mid-conversation — after a break, a long tool output, or an agent
-  question whose premise they can no longer reconstruct — produce a structured
-  7-block recap in chat and end with a Synthesis-check before continuing.
-
-  Triggers (fire when you recognise any of these phrases):
-  - **zh-TW**: 「我們剛剛在幹嘛」「我們在做什麼」「剛剛講到哪」「帶我回到」「我跟丟了」
-  - **ja**: 「ちょっと振り返って」「今どこだっけ」「振り返りをして」「状況を整理して」
-  - **en**: "where were we" / "I'm lost" / "recap" / "bring me back" / "what are we doing"
-  - **slash**: User types `/recap` inside a skill conversation (NOT the built-in away-summary).
-
-  **Disambiguation**: Claude Code v2.1.108+ ships a built-in `/recap`
-  (away-summary) that fires when the user returns to a session after being away.
-  That is a cross-context return tool. This skill is different: it is an
-  in-session re-orientation tool that the user invokes explicitly while already
-  in conversation. The built-in away-summary continues to work as designed;
-  this skill fills the gap the built-in does not cover.
-
-  Do NOT use for: new-session continuation (that is HANDOFF, a future skill),
-  compacting context to save tokens (use built-in /compact), or replacing the
-  built-in away-summary.
-  構造化振り返り・会話内リオリエンテーション・セッション途中で迷子になったとき。
-  結構化對話重新定位・對話中途迷失・七格式摘要。
+description: |
+  In-session re-orientation: when you lose track mid-conversation, produce a structured recap in chat ending with a Synthesis-check. Use for 'where were we', 'I'm lost', 'recap', or 'what are we doing'. For new-session continuation use handoff.
 ---
 
 # Recap

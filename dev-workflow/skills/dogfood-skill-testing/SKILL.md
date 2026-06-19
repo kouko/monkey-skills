@@ -1,31 +1,7 @@
 ---
 name: dogfood-skill-testing
-description: >-
-  Behavioral black-box dogfood of a skill-IN-DEVELOPMENT — a raw SKILL.md
-  in the working tree that is NOT yet installed. Use when the user wants
-  to gut-check how a drafted/edited skill actually behaves before trusting
-  it: does it FIRE when it should and NOT over-fire, and does its workflow
-  produce output that meets its own declared contract on real input. A
-  fresh blind subagent that does NOT know the author's intent probes the
-  triggers and the workflow and reports what breaks with reproducible
-  transcript evidence. Tests BOTH dimensions co-equally: triggering
-  (trigger-miss / over-trigger) AND output quality (workflow drift / gate
-  bypass / valid-but-wrong), on working-tree files — no install, emitting a
-  fix-actionable report.
-  Triggers — zh-TW:「dogfood 這個 skill」「測試我的 skill 會不會觸發」;
-  ja:「スキルをドッグフード」「発火するか試す」; en: "dogfood this skill",
-  "behavioral / blind-test my skill", "will this skill fire before I ship".
-  Do NOT use for: static design scoring of a SKILL.md (use
-  dev-workflow:skill-judge — 8-dimension rubric, reads the file, does not
-  run it); creating a skill or its white-box author-conformance eval loop
-  (use dev-workflow:skill-creator-advance — measures against the AUTHOR's
-  known prompts, not blind exploratory inputs; a bare "test my skill" is
-  shared by both — this skill owns the BEHAVIORAL / blind reading,
-  skill-creator-advance the white-box eval reading); mining past session logs
-  for activation telemetry (use dev-workflow:distill-sessions —
-  retrospective, this skill is prospective); token / structure refactor
-  that preserves behavior (use dev-workflow:skill-refactor).
-  スキル挙動ドッグフード・発火テスト・黒箱行動検証。技能行為 dogfood・觸發測試・黑箱行為驗證。
+description: |
+  Blind behavioral test of a drafted SKILL.md: does it fire when expected (not over-fire), and does its workflow meet its contract on real input? Use for 'dogfood this skill' or 'will it fire before I ship'. For static scoring use skill-judge.
 version: 0.1.0
 ---
 
