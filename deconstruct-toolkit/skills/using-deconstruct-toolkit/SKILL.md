@@ -1,14 +1,7 @@
 ---
 name: using-deconstruct-toolkit
-description: >-
-  Route to the right deconstruction skill. Use when user wants to
-  reverse-engineer a polished artifact (copy, document pack, UI,
-  argument, product, organization) but isn't sure which skill to
-  invoke. Do NOT use when user already specified the skill, when the
-  target is code (use sourceatlas instead), or when the user wants
-  forward-direction production (copywriting / docs / design — use
-  those plugins).
-  脱構築 skill の振り分け。逆向解構 skill 路由。
+description: |
+  Route to the right deconstruction skill when the user wants to reverse-engineer/拆解 an artifact, argument, or hidden assumptions but hasn't named which. Code → sourceatlas; forward production → copy/docs/design plugins.
 ---
 
 # Using Deconstruct Toolkit

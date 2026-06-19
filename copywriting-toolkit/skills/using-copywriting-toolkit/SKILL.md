@@ -1,6 +1,7 @@
 ---
 name: using-copywriting-toolkit
-description: You MUST use this before any copywriting draft, ideation, audit, or candidate-generation work on a raw user brief — write a landing page / email / キャッチコピー / sales letter / SNS post / voice guide / copy audit / tagline options / headline brainstorm / angle ideation. Routes new briefs (Shape A), external-copy audits (Shape B), or resumed mid-pipeline envelopes (Shape C) through a 9-phase decision tree with precondition + bounce-back enforcement. Not for direct skill invocation when the target skill is already known (call it directly). 文案工具組導引・パイプラインルーター。コピーツールキット案内・文案流程入口・創意發想入口。
+description: |
+  Router for copywriting — use BEFORE any draft, ideation, audit, or tagline/headline work on a raw brief (landing page / email / sales letter / SNS / voice guide / audit). Routes new briefs, audits, or resumed pipelines via a 9-phase decision tree.
 ---
 
 # using-copywriting-toolkit

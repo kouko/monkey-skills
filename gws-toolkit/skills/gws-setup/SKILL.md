@@ -1,6 +1,7 @@
 ---
 name: gws-setup
-description: First-time Google Workspace backend onboarding for gws-toolkit — GCP Console OAuth setup (Slides + Drive + Docs + Sheets + Gmail + Calendar API), gws CLI bootstrap, BYO-OAuth-client mechanism for External-audience accounts, credential hygiene, and upstream gws-* skill installation. 使用時機：第一次用 gws / 看到 401 403 auth / invalid_scope / invalid_client / 重新跑 setup / state detection 判斷要補哪一步 / OAuth scope 升級。v0.6.0: Workspace accounts auto-detected by gcloud active-account email domain (Internal app, no 7-day refresh limit); personal @gmail.com still supported via External + Testing path with 7-day refresh. macOS only.
+description: |
+  First-time Google Workspace onboarding — GCP OAuth setup (Slides/Drive/Docs/Sheets/Gmail/Calendar) + gws CLI bootstrap + BYO-OAuth for External accounts. Use on first gws use, 401/403 auth errors, invalid_scope, or re-running setup. macOS only.
 ---
 
 # gws-setup

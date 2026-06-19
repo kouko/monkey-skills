@@ -1,6 +1,7 @@
 ---
 name: copywriting-form-check-stage
-description: Verify draft copy against its chosen framework — PASONA / 新PASONA / PASBECONA / QUEST / PASTOR / BEAF / PREP / CREMA stage completeness + length band + CTA appropriateness. Use when you have a draft that has passed ethics review and need final structure validation before delivery (judgement-only, does not edit the draft). Not for legal / ethics review (use copywriting-ethics-check-stage) or voice drift (use copywriting-voice-tone-stage). 形式ゲート・フレームワーク適合チェック。形式審查・結構檢查。
+description: |
+  Verify draft copy against its framework (PASONA / QUEST / PASTOR / BEAF / PREP / CREMA): stage completeness, length band, CTA fit. Use with a draft past ethics review for final structure validation (judgement-only). Voice drift → voice-tone-stage.
 ---
 
 # copywriting-form-check-stage

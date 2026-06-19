@@ -1,6 +1,7 @@
 ---
 name: product-principles
-description: Turn a sparse product idea into a PRINCIPLES.md — the product constitution. Use BEFORE design, spec, or build, when defining product goals, the north-star, the non-negotiable design principles, or a product charter that must govern every downstream decision. Produces a single product-level PRINCIPLES.md with a `## North Star` (goal + a concrete checkable success condition) and `## Principles` (3-7 non-negotiable, falsifiable principles, each carrying a `— check:` marker). Key-free, in-repo, git-diffable; governs interface-design, spec, and code — for ANY product including headless / CLI / library work with no UI. Triggers — en: define product principles, design principles, product constitution / charter, north star, product goals. zh-TW: 產品原則 / 設計原則 / 產品憲章 / 北極星目標 / 定義產品目標. ja: 製品の原則 / プロダクト指針 / プロダクト憲章 / ノーススター / 製品ゴールを定義.
+description: |
+  Turn a sparse product idea into a PRINCIPLES.md product constitution — a north-star + 3-7 non-negotiable falsifiable principles. Use BEFORE design/spec/build; governs design/spec/code. Triggers: product/design principles, north star, 產品憲章.
 ---
 
 # product-principles

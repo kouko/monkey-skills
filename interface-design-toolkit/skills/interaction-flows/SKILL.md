@@ -1,6 +1,7 @@
 ---
 name: interaction-flows
-description: Generate a ui-flows.md interaction-flow artifact for a product feature or change — modality-aware (GUI screens / TUI panels+keys / CLI commands+output). Maps the screen/panel/command inventory, navigation, user flows, transitions, entry/exit points, and information density across 7 UX dimensions, governed by the product's PRINCIPLES.md. Emits Mermaid flow diagrams + ASCII wireframes; the resulting ui-flows.md is the rich seed handed to spec-toolkit:spec-expansion. Key-free — runs on the host agent's own model, no API keys, no external services. Use when mapping a product's interface surface and UX flows before specing or building. 介面流程・畫面導覽・互動流程・UX 設計（GUI/TUI/CLI）。インターフェースフロー・画面遷移・UX設計・モダリティ別（GUI/TUI/CLI）。
+description: |
+  Generate a ui-flows.md interaction-flow artifact for a feature — modality-aware (GUI / TUI / CLI). Maps inventory, navigation, flows per PRINCIPLES.md; emits Mermaid + ASCII wireframes (→ spec-expansion). Use to map UX flows before specing.
 version: 0.1.0
 ---
 

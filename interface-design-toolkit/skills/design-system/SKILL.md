@@ -1,6 +1,7 @@
 ---
 name: design-system
-description: Generate a product's visual design system — colors, typography, layout, elevation, shapes, component tokens — governed by the product's PRINCIPLES.md. Modality-aware: for a GUI it emits a DESIGN.md in Google's open 8-section format (YAML tokens + prose); for a TUI / CLI it emits a lightweight conventions stub (full TUI/CLI design-system is phase-2). Use BEFORE spec / build when defining a product's look — brand voice, palette, type scale, spacing, component styling — that the frontend implements and the spec inherits. Visual system only — flows live in interaction-flows. Triggers — en: design system, visual system, design tokens, color palette, typography scale, component styling. zh-TW: 設計系統 / 視覺系統 / 設計規範 / 設計 token / 配色 / 字體排版. ja: デザインシステム / ビジュアルシステム / デザイントークン / カラーパレット / タイポグラフィ.
+description: |
+  Generate a product's visual design system — colors, typography, layout, component tokens — per PRINCIPLES.md. GUI → DESIGN.md (YAML tokens + prose); TUI/CLI → conventions stub. Use BEFORE spec/build to define the look. Flows → interaction-flows.
 ---
 
 # design-system

@@ -1,12 +1,7 @@
 ---
 name: design-team
-description: >-
-  Design with accessibility and quality review. Use when designing UI,
-  creating wireframes, planning UX strategy, or auditing accessibility.
-  Do NOT use for code implementation (use code-team), product-level
-  specs (use planning-team), or deep research (use research-team).
-  Delivers UI specs, wireframes, design documentation.
-  UI設計・UXレビュー・アクセシビリティ。介面設計・無障礙審查。
+description: |
+  Design with accessibility and quality review. Use when designing UI, creating wireframes, planning UX strategy, or auditing accessibility. Delivers UI specs, wireframes, design docs. Code → code-team; product specs → planning-team.
 ---
 
 # Design Team

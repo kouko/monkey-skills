@@ -1,14 +1,7 @@
 ---
 name: report-equity-memo
-description: >-
-  Layer 3 (Report) orchestrator producing a full equity investment memo
-  (Markdown). Country-routes by ticker suffix to data-{us,jp,tw,kr,cn}
-  pack.py memo-fetch + regime-pack, runs analysis-dcf + analysis-macro-regime
-  on the pre-fetched JSON, then delegates the Deep Equity Research Memo
-  protocol (+ 2 MUST / 4 SHOULD / 1 MAY gates) to domain-teams:investing-team.
-  Optional final formatting via domain-teams:docs-team. No data fetching, no
-  scoring inside this skill — pure pipeline orchestration over data-* +
-  analysis-* + cross-plugin delegation. 株式投資メモの編成層。權益投資備忘錄編排層。
+description: |
+  Layer-3 orchestrator for a full equity investment memo (Markdown). Routes by ticker suffix to data-{country} memo-fetch, runs analysis-dcf + macro-regime, then delegates the memo protocol + gates to domain-teams:investing-team. Pure orchestration.
 ---
 
 # report-equity-memo

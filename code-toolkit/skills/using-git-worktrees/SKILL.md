@@ -1,6 +1,7 @@
 ---
 name: using-git-worktrees
-description: 'Use when working on parallel branches simultaneously (multiple feature branches in flight; long-running experiments alongside production work; design-then-build cycles where the design branch outlives a single session). Examples: "I want to work on feature X while keeping main checked out for the bug fix", "set up a worktree for the v2 redesign", "experimental refactor I don''t want polluting my main checkout", "this branch will run for weeks, give it its own dir". Native git worktree workflow per P3-C — no wrapper tool, just `git worktree add` with a documented `.worktrees/` subdirectory convention + `.gitignore` discipline. Refuses the "just stash and switch" rationalization when work-in-progress on the current branch makes branch-switching painful. Git worktree・並行ブランチ・experimental branch。Git worktree・平行 branch・實驗 branch。'
+description: |
+  Use for parallel branches at once — features in flight, long experiments, design-then-build cycles outliving a session. Fires on 'work on X while keeping main', 'worktree for the redesign'. Uses git worktree; refuses 'just stash and switch'.
 version: 0.9.0
 ---
 

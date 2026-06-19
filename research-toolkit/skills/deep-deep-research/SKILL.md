@@ -1,6 +1,7 @@
 ---
 name: deep-deep-research
-description: Deep research harness — fan-out web searches, fetch sources, adversarially verify claims, synthesize a cited report. Use when the user wants a deep, multi-source, fact-checked research report on any topic, run inside any coding agent host using the host's own LLM + web tools (zero API-key setup).
+description: |
+  Deep research harness — fan-out web searches, fetch sources, adversarially verify claims, synthesize a cited report. Use for a deep, multi-source, fact-checked research report on any topic. Key-free (host's own LLM + web tools).
 version: 0.1.0
 ---
 

@@ -1,15 +1,7 @@
 ---
 name: data-jp
-description: >-
-  Fetch-only Japan data bundler. Layer 1 of the v2.0.0 three-layer architecture
-  — bundles yfinance .T, EDINET (金融庁 Tier A), TDnet (Yanoshin), BOJ
-  Time-Series, e-Stat / 統計ダッシュボード, and ECB Data Portal behind a single
-  pack.py facade with five pack types (snapshot / memo-fetch / comps-multiples /
-  screener-batch / regime-pack). EDINET_API_KEY env var auto-routes memo-fetch
-  to Tier A primary-source filings; without the key, fallback to yfinance
-  financials with explicit "Tier 2 fallback" provenance label. No analysis, no
-  scoring — Layer 2 (analysis-*) and Layer 3 (report-*) skills consume the
-  output JSON verbatim. 日本データ取得層。
+description: |
+  Layer-1 fetch-only Japan data bundler — yfinance .T, EDINET (金融庁 Tier A), TDnet, BOJ, e-Stat, ECB behind one pack.py facade with 5 pack types. EDINET_API_KEY routes to Tier-A filings, else yfinance fallback. No analysis.
 ---
 
 # data-jp

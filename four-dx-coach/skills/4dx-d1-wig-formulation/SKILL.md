@@ -1,11 +1,7 @@
 ---
 name: 4dx-d1-wig-formulation
 description: |
-  Coaches the user to formulate a Wildly Important Goal in From-X-to-Y-by-When form across solo / team-leader / team-member scopes, plus audit-mode diagnosis of an existing WIG draft. Use when the user is about to declare a goal lacking lag-measurable finish line, deadline, or clear scope (personal vs team), BEFORE the goal gets committed.
-  EN: "Define my personal WIG", "Pick our team's Primary WIG", "Audit our WIG — too abstract"
-  JP: 「自分の WIG を決めたい」「Primary WIG をどう選ぶ」「WIG を診断して」
-  zh-TW: 「幫我訂個人 WIG」「team 選 Primary WIG」「WIG 哪裡有問題」
-  Do NOT use for cascading Primary WIG to sub-teams (→ 4dx-d1-wig-cascade) or pre-D1 strategy fit (→ 4dx-meta-strategy-triage).
+  Coaches formulating a Wildly Important Goal (From-X-to-Y-by-When; solo/team/member) + audit of a draft. Use when declaring a goal lacking a lag-measurable finish, deadline, or scope: 'define my WIG', 'audit our WIG'. Cascading down → wig-cascade.
 source_book: "The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker"
 source_chapter: "Chapter 2 — Discipline 1: Focus on the Wildly Important; Chapter 6 — Choosing Where to Focus; Chapter 7 — Defining the WIG; Chapter 12 — Applying Discipline 1"
 source_language: en

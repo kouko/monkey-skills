@@ -1,19 +1,7 @@
 ---
 name: copywriting-team
-description: >-
-  Write persuasive marketing copy grounded in Japanese advertising tradition
-  and validated Anglo persuasion psychology. Use when drafting landing page
-  headlines, email campaigns, キャッチコピー, sales letters, product
-  descriptions, voice-and-tone guides, or auditing existing copy.
-  Do NOT use for technical documentation (use docs-team), product strategy
-  (use planning-team), UX microcopy inside interface screens (use design-team),
-  or market research (use research-team).
-  Delivers long-form copy (PASONA/PASBECONA/QUEST/PASTOR), mid-form EC
-  product copy (BEAF), light-action copy (PREP/CREMA for opt-in/
-  subscribe/download), short-form キャッチコピー (7-15 chars), neta-
-  injected copy (pop culture / subculture / meme / literary / classical
-  references via 4 techniques + source-type-aware retrieval pipeline),
-  voice guides, and audit reports.
+description: |
+  Write persuasive marketing copy from Japanese advertising + Anglo persuasion psychology (PASONA / BEAF / QUEST / PASTOR). Use for landing-page headlines, email campaigns, キャッチコピー, sales letters, product copy, or audits. UI microcopy → design-team.
 ---
 
 # Copywriting Team

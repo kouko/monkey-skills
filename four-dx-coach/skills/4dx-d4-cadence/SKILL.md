@@ -1,16 +1,7 @@
 ---
 name: 4dx-d4-cadence
 description: |
-  Coaches the D4 weekly WIG Session across solo / team-leader / member-
-  prep / member-debrief / audit modes. Use when user is about to skip a
-  weekly WIG cadence, run the WIG Session as a status-update meeting,
-  or rebuild a session that's drifting (boss / team feedback that
-  meetings feel pointless).
-  EN: "Run my weekly WIG Session", "Prep my commitment", "Audit our WIG meetings".
-  JP:「WIG Session 回したい」「commitment 準備」「会議録を見て何がダメか」.
-  zh-TW:「每週 review」「commitment 怎麼準備」「老闆說週會浪費時間幫我診斷」.
-  Do NOT use for daily standup / sprint retro (→ `using-four-dx-coach`)
-  or multi-week collapse「幾週沒做了」(→ `4dx-sustain-momentum-rescue`).
+  Coaches the D4 weekly WIG Session (solo / leader / member / audit). Use when about to skip the cadence, run it as a status meeting, or rebuild a drifting session: 'run my WIG Session', 'audit our WIG meetings'. Multi-week collapse → momentum-rescue.
 source_book: "The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker"
 source_chapter: "Chapter 5 — Discipline 4: Create a Cadence of Accountability; Chapter 10 — Sustaining 4DX; Chapter 15 — Applying Discipline 4"
 source_language: en

@@ -1,23 +1,7 @@
 ---
 name: complexity-critique
-description: >-
-  Gate for evaluating a specific proposed change — refactor, feature
-  add, technical-debt cleanup, or even a should-we-build-this-at-all
-  question with no existing code yet — through a deletion-first
-  lens. Forces three checks: smallest possible result, before/after
-  LOC count (N/A for pure greenfield; Q1 alternatives include
-  "0 functions = decline to build"), what the change makes obsolete.
-  Biases toward removing code over adding. Use when the user asks
-  whether a change is worth the lines it adds, what can be deleted,
-  whether a feature should exist at all, or how to keep a refactor
-  small. Triggers: complexity audit / can this be simpler / what can
-  we delete / worth the lines / should we build this / 降低複雜度 /
-  可以再小一點 / 該不該做這個功能 / リファクタすべきか / 最佳實踐.
-  Not-triggers: open-ended exploratory brainstorming with no specific
-  feature or change proposed (use superpowers:brainstorming),
-  multi-item proposal triage (use proposal-critique),
-  post-implementation diff review (use Anthropic simplify), trivial
-  single-line edits.
+description: |
+  Evaluate one proposed change (refactor / feature / tech-debt) via a deletion-first lens: before/after LOC, what it obsoletes. Use for 'worth the lines?', 'what can we delete?', 'should we build this?'. Multi-item → proposal-critique.
 ---
 
 # Complexity Critique

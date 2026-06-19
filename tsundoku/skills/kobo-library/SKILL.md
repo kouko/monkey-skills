@@ -1,15 +1,7 @@
 ---
 name: kobo-library
-description: >-
-  Search a user's Kobo e-book library by title / author / series / publication
-  date / category / description text / reading status / language, present
-  matches to the user, and download the chosen books as DRM-free EPUBs via
-  kobodl. Wraps subdavis/kobo-book-downloader and exposes the rich library
-  JSON (Title / Authors / Publisher / Series / ISBN / Description / Genre /
-  Categories / ReadingState / CoverImageUrl). macOS only. Requires
-  `kobo-auth` to have run first. Use when the user wants to find a specific
-  book or a set of books from their Kobo library and download them. 電子書庫
-  搜尋・下載・條件絞り込み。
+description: |
+  Search a Kobo e-book library by title/author/series/date/category/status/language and download chosen books as DRM-free EPUBs via kobodl. Use to find and download books from a Kobo library. macOS only; run kobo-auth first.
 ---
 
 # Kobo Library

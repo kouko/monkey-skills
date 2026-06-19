@@ -1,17 +1,7 @@
 ---
 name: legal-playbook-author
 description: |
-  Author and maintain your company's contract-negotiation playbook for the legal-toolkit ecosystem. Produces / updates per-clause Markdown entries under `legal-playbook/` in the working folder, with deterministic frontmatter (gates / walk_away_triggers / escalate_to / risk_default) and LLM-comparison body (preferred / fallback N / 為什麼這條重要). Supports three modes: bootstrap (first-time setup with cold-start fallback seeding option), extend (add new clause), revise (modify existing clause selectively). Auto-detects when a flat clause should upgrade to a variant-folder schema (gate-keyed by deal_size / counterparty_type / jurisdiction).
-
-  契約議價 playbook の作成・維持。台湾 in-house 法務向け playbook authoring skill。
-
-  TRIGGER (中英雙語):
-  - playbook author / playbook bootstrap / extend / revise
-  - 建 playbook / 改紅線 / 加條款 / 升級 fallback / 更新 walk-away
-  - 第一次安裝 / first install / cold start / seed baseline
-
-  USE WHEN: user wants to create or modify clause-level negotiation rules
-  in their legal-playbook/ folder, or is setting up for the first time.
+  Author and maintain your contract-negotiation playbook (legal-playbook/) — per-clause entries with frontmatter (gates / walk_away / escalate) + preferred/fallback body; modes bootstrap / extend / revise. Use for '建 playbook', '改紅線', '加條款'.
 version: 0.1.0
 ---
 

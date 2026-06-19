@@ -1,6 +1,7 @@
 ---
 name: using-interface-design-toolkit
-description: Router for interface-design-toolkit — invoke whenever the user wants to **design the interface / interaction / UX** of a product across any modality (GUI / TUI / CLI). Records the product **modality** first, then routes to two generate skills — `design-system` (the design-system artifact: GUI → DESIGN.md) and `interaction-flows` (→ ui-flows.md). Reads the product's `PRINCIPLES.md` (from product-principles-toolkit) as governing context that constrains every design decision. Triggers — en: design the interface / UI / UX, interaction design, screen flow, design system, CLI command surface, TUI layout, wireframe the product. zh-TW: 設計介面 / UI / UX / 互動設計 / 畫面流程 / 設計系統 / CLI 介面 / TUI 版面. ja: インターフェース設計 / UI / UX / インタラクション設計 / 画面フロー / デザインシステム / CLI 設計 / TUI レイアウト.
+description: |
+  Router for interface-design-toolkit — design a product's interface/interaction/UX in any modality (GUI/TUI/CLI). Routes to design-system (→ DESIGN.md) + interaction-flows (→ ui-flows.md). Use for 'design the UI/UX', screen flow, TUI/CLI layout.
 version: 0.1.0
 ---
 

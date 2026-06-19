@@ -1,14 +1,7 @@
 ---
 name: investing-team
-description: >-
-  Make defensible investment decisions backed by primary-source frameworks.
-  Use for Buy/Hold/Sell verdicts on individual securities, equity research
-  memos, portfolio rebalancing, macro regime calls (Investment Clock), and
-  Taiwan equity analysis (三大法人、月營收、董監持股、融資融券). Do NOT use for
-  business strategy / competitive analysis (use research-team), code
-  implementation (use code-team), or product specs (use planning-team).
-  Delivers investment memos, verdict + sizing, regime calls, portfolio reviews.
-  投資分析・個股決策・台股診断。投資家視点の分析。
+description: |
+  Make defensible investment decisions from primary-source frameworks. Use for Buy/Hold/Sell verdicts, equity memos, portfolio rebalancing, macro regime calls (Investment Clock), or TW equity analysis (三大法人). Business strategy → research-team.
 ---
 
 # Investing Team

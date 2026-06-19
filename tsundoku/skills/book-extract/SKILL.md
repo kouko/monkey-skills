@@ -1,15 +1,7 @@
 ---
 name: book-extract
-description: >-
-  Convert a downloaded EPUB into chunked-by-chapter Markdown for LLM
-  ingestion. Designed for 400+ page expository books where chapter-level
-  chunking matters for two-pass distillation (full book → outline → skill).
-  Uses pandoc as the conversion engine, drives chapter splitting from the
-  EPUB's NCX (table of contents) so it works on books that don't use semantic
-  H1 markup. CJK-safe (繁中 / 簡中 / 日文). Use when the user wants to read
-  a book they own into Claude's context, build a skill from a book's
-  knowledge, or generate Obsidian / RAG-friendly chapter notes from EPUB.
-  電子書EPUB分章Markdown化。書籍知識のskill化に向けた変換。
+description: |
+  Convert a downloaded EPUB into chunked-by-chapter Markdown — NCX-driven chapter splitting, pandoc engine, CJK-safe (繁中/簡中/日文). Use to read an owned book into context or build a skill from it. Then → book-distill.
 ---
 
 # Kobo Extract

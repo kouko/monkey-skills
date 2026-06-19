@@ -1,13 +1,7 @@
 ---
 name: ingest
 description: |
-  Use when: updating the knowledge base after code changes, capturing
-  tribal knowledge, or importing external design documents. Triggers
-  on "update knowledge", "ingest changes", "capture context",
-  "remember that <X>", "import this doc", "/repo-wiki:ingest",
-  "更新知識庫", "把這個記下來", "匯入這份設計".
-  Do NOT trigger for: first-time setup (use /repo-wiki:init),
-  answering questions (use /repo-wiki:query).
+  Record context into the repo knowledge base after code changes, or import a design doc. Use for 'update knowledge', 'remember that X', 'import this doc', '更新知識庫'. Setup → repo-wiki:init; ask → repo-wiki:query.
 ---
 
 # Repo Wiki — Ingest Workflow

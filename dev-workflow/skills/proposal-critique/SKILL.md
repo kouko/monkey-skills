@@ -1,11 +1,7 @@
 ---
 name: proposal-critique
-description: >-
-  Triage a proposal — list, plan, or prose recommendation — into KEEP /
-  DEFER / DROP using evidence grounding and YAGNI. Use when the user
-  asks for critique, complexity audit, simplification, or industry
-  validation. Triggers: complexity audit / over-engineered / YAGNI /
-  業界證實 / 可以簡化 / 過剰設計.
+description: |
+  Triage a proposal (list, plan, or prose recommendation) into KEEP / DEFER / DROP using evidence grounding and YAGNI. Use for 'critique this', 'over-engineered?', 'can this be simpler?', '業界證實'. Single specific change → complexity-critique.
 ---
 
 # Proposal Critique

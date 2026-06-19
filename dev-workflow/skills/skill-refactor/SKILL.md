@@ -1,22 +1,7 @@
 ---
 name: skill-refactor
-description: >-
-  Token / structure refactor for an existing skill, **preserving
-  output behavior**. Three checks per round: output equivalence
-  (multi-judge ensemble + structured comparison), token reduction
-  (≥10% threshold), invariant preservation (frontmatter / dependencies
-  / contract). Emits PROCEED / RESHAPE / REJECT verdict with git
-  ratchet (auto-revert if score drops or equivalence fails). Use when
-  the user wants to shrink a skill's SKILL.md, tidy structure, dedupe
-  prose, or optimize token cost without changing what the skill does.
-  Triggers: shorten skill / reduce tokens / 縮減 SKILL.md / 整理結構
-  / refactor skill / behavior unchanged / 保留行為的前提下 / リファクタ
-  with output preservation. Do NOT use for output quality A/B (use
-  dev-workflow:skill-tuning), structural redesign / phase changes
-  (use dev-workflow:skill-creator-advance), creating a new skill (use
-  dev-workflow:skill-creator-advance), or single-line cosmetic edits
-  (just edit directly). スキル refactor・トークン削減・等価保証。
-  技能精簡・Token 縮減・行為保留。
+description: |
+  Token/structure refactor of a skill, preserving output behavior — checks equivalence, ≥10% token cut, invariants. Use for 'shorten this skill', 'reduce tokens', '縮減 SKILL.md'. Output A/B → skill-tuning; redesign/create → skill-creator-advance.
 ---
 
 # Skill Refactor

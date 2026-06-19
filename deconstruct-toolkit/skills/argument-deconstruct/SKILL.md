@@ -1,16 +1,7 @@
 ---
 name: argument-deconstruct
-description: >-
-  Reverse-engineer the structure of any long-form argument — op-ed,
-  proposal, manifesto, political text, paper introduction. Surfaces
-  the claim-grounds-warrant chain, makes hidden warrants explicit,
-  detects missing rebuttals, identifies Burke pentad ratios, and
-  produces an argument map with ethical position. Use when user asks
-  "拆解這個論證 / 反駁這份提案 / find the warrant / where does this
-  argument fail". Do NOT use for non-argumentative texts (use
-  artifact-deconstruct), for hidden-assumption hunts (use
-  assumption-surface), or for codebase reasoning (use sourceatlas).
-  論証の脱構築。論證逆向解構。
+description: |
+  Reverse-engineer a long-form argument (op-ed, proposal, manifesto, paper) — claim-grounds-warrant chain, hidden warrants, missing rebuttals, argument map. Use for '拆解這個論證' or 'find the warrant'. Hidden assumptions → assumption-surface.
 ---
 
 # Argument Deconstruct

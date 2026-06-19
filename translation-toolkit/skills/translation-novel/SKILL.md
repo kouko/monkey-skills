@@ -1,6 +1,7 @@
 ---
 name: translation-novel
-description: Translate novel chapters / long-form fiction with scene-aware chunking + scene-window context, optional whole-book pre-pass (characters / world-glossary), 5D-literary REFLECT, and the M3 deterministic linter. Replaces v0.1.0 whole-doc TRANSLATE_THIS windowing for ~17x cost reduction. M1+M2+M3 strict, S1+S2 SHOULD, I1 INFO.
+description: |
+  Translate novel chapters / long-form fiction — scene-aware chunking + scene-window context, optional whole-book pre-pass (characters / world-glossary), 5D-literary REFLECT, and a deterministic linter. ~17x cheaper than whole-doc windowing.
 version: 0.3.0
 ---
 
