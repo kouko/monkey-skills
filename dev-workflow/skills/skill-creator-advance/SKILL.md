@@ -552,6 +552,24 @@ This is optional, requires subagents, and most users won't need it. The human re
 
 The description field in SKILL.md frontmatter is the primary mechanism that determines whether Claude invokes a skill. After creating or improving a skill, offer to optimize the description for better triggering accuracy.
 
+### House description standard (the optimization target)
+
+Any description you write or optimize MUST follow the house standard (rationale + evidence:
+`docs/skill-mining/2026-06-19-skill-description-standard.md`):
+
+- **Length: target ≤150 chars, hard cap 250** (never over the 1024 spec limit). Descriptions
+  share a context-listing budget; over-long ones silently evict OTHER skills from what Claude sees.
+- **Content: what it does + when to use it** — positive, specific triggers front-loaded (real
+  user phrasings). Keep the step-by-step **procedure / workflow / grounding citations OUT of the
+  description**; those live in the body (the body loads in full on activation, so a what+when
+  summary does NOT cause the body to be skipped — that fear is unverified).
+- **Disambiguate by positive specificity**, NOT by "ALWAYS invoke" directives (they over-trigger
+  at scale and are not Anthropic-endorsed) nor "Do NOT use for X" behavioral negation (LLMs handle
+  negation unreliably). A light positive redirect ("for X, use skill-Y") is fine.
+- **No CJK / multilingual keyword redundancy** — cross-lingual reasoning triggers non-English
+  prompts without translated tails (A/B-verified); appended CJK is also truncated first.
+- Third person, no XML tags. The optimization loop below must keep `best_description` within these rules.
+
 ### Step 1: Generate trigger eval queries
 
 Create 20 eval queries — a mix of should-trigger and should-not-trigger. Save as JSON:
