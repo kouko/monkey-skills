@@ -190,7 +190,7 @@ A 與 B 進到 A/B。User 選 A。
   下沒有變體產出偏好輸出時，handoff 到重設計。
 - **`skill-dev-toolkit:skill-judge`** — 對變體的 advisory check（advisory
   only；不懂 taste）。
-- **`copywriting-toolkit:voice-anchors`** — 寫作層的對應概念；此
+- **a voice-anchor curation discipline** — 寫作層的對應概念；此
   skill 借鑑其策展紀律。
 - **a proposal-triage gate** — 多個 tuning 提案要 triage 時。
 

@@ -69,7 +69,7 @@ Inspirations acknowledged
    https://github.com/alchaincyf/darwin-skill).
    First application to Claude Agent Skills.
 
-3. monkey-skills `copywriting-toolkit:voice-anchors` (MIT). The
+3. monkey-skills' copywriting voice-anchor curation (MIT). The
    golden anchor / constitutional discipline borrows curation
    patterns from voice-anchor work (90 anchors validated via
    N=10 dry runs).

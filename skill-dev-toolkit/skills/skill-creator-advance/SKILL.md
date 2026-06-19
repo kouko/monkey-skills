@@ -248,7 +248,7 @@ When a user invokes a skill with no prompt or a very sparse prompt, consider inc
 
 **Common pitfall**: triggering orientation on "empty current prompt" alone creates friction for returning users — Claude's context often already carries the brief. Always check the full context, not just the current prompt's length.
 
-For domain-team skills (which follow a stricter structural convention gates convention), this pattern is a hard requirement encoded in the CHK-SKL-013 gate — see `domain-teams/skills/domain-team structural gates/standards/skill-md-structure.md` §Empty Invocation Fallback Rules for the rigorous version with a §Surface Orientation Format markdown skeleton and a hard-gate exception for skills with mandatory intake.
+For domain-team skills (which follow a stricter structural-gate convention), this pattern is a hard requirement encoded in the CHK-SKL-013 gate — consult your domain-team plugin's structure standard for the rigorous version (Empty Invocation Fallback Rules + a Surface Orientation Format skeleton, with a hard-gate exception for skills with mandatory intake).
 
 #### Asking the User Structured Questions (when to use AskUserQuestion)
 

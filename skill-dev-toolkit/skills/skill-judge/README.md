@@ -101,9 +101,9 @@ These three skills are complementary:
 | `skill-dev-toolkit:skill-creator-advance`              | Behavioral| Pass/fail on test prompts      |
 | structural convention gates                         | Structural| PASS/FAIL on convention gates  |
 
-A skill can pass structural convention gates's gates and still score D in `skill-judge`
+A skill can pass structural convention gates and still score D in `skill-judge`
 (no convention violations, but the content is mostly redundant). It can
-also score A in `skill-judge` and fail structural convention gates's gates (great
+also score A in `skill-judge` and fail structural convention gates (great
 content, wrong directory layout). They measure different things.
 
 ---

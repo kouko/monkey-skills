@@ -218,7 +218,7 @@ non-negotiable accuracy contract.
   to redesign.
 - **`skill-dev-toolkit:skill-judge`** — optional advisory check on
   variants; advisory only (does not understand taste).
-- **`copywriting-toolkit:voice-anchors`** — analogous concept at
+- **a voice-anchor curation discipline** — analogous concept at
   the copywriting level; this skill borrows curation discipline.
 - **a proposal-triage gate** — when faced with multiple
   tuning proposals, triage which to do first.

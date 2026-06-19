@@ -14,7 +14,7 @@ its own. Skills: `skill-creator-advance`, `skill-judge`, `dogfood-skill-testing`
 `skill-refactor`, `skill-tuning`.
 
 Self-sufficiency was achieved by **inlining** the worth-it / smallest-skill check
-(previously delegated to `dev-workflow:complexity-critique` / `proposal-critique`,
+(previously delegated to dev-workflow's complexity-critique / proposal-critique gates,
 which are general coding gates that stay in dev-workflow) and **genericizing**
 documentation references (e.g. skill-judge's boundary notes vs domain-team
 convention gates) — no `plugin:skill` reference to any other plugin remains.

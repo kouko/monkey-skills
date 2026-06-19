@@ -281,7 +281,7 @@ training methodology.
 - **`skill-dev-toolkit:skill-judge`** — optional advisory check on each
   variant; advisory only (skill-judge does not understand taste);
   useful as a sanity check on structural dimensions of variants
-- **`copywriting-toolkit:voice-anchors`** — analogous concept at
+- **a voice-anchor curation discipline** — analogous concept at
   the copywriting level; the goldens / constitution patterns in
   this skill borrow from voice-anchor curation discipline
 

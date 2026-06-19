@@ -755,7 +755,7 @@ that follows the `standards/protocols/checklists/rubrics` 4-tier convention
 and is governed by the domain-team structural-gate convention), apply these adjustments.
 
 **Core principle**: skill-judge is *advisory* (0-120 scoring on design
-quality). the structural convention gates are *authoritative* (PASS/FAIL
+quality). The structural convention gates are *authoritative* (PASS/FAIL
 on monkey-skills convention). When a structural convention gate fails, surface it as
 a **Critical Issue** in the Step 5 report — but score D1-D8 on the
 upstream rubric without inventing arbitrary caps. The two systems
@@ -788,7 +788,7 @@ A masterful Process implementation earns 9-10 regardless of length.
 monkey-skills enforces a stricter frontmatter rule via
 `checklists/skill-completeness-checklist.md` CHK-SKL-001: 40-200 word
 description with explicit `Use when` / `Do NOT use for` / `Delivers`
-clauses (see the domain-team structural-gate convention (skill-md-structure)
+clauses (see the domain-team structural-gate convention, skill-md-structure
 §Frontmatter Schema).
 
 Run CHK-SKL-001 **in addition to** the upstream WHAT/WHEN/KEYWORDS check.
