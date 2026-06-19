@@ -4,6 +4,45 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.12.0] — 2026-06-19
+
+Three generic defects surfaced by a behavioral dogfood of a packed analytics
+bundle, fixed at the plugin source so every project benefits.
+
+### Fixed — `pack` flatten no longer breaks in-page links
+
+Flatten-on-freeze relocates pages to a flat `knowledge/` but copied their
+content verbatim, so cross-folder links (`[X](../entities/x.md)`) and dropped
+`_evidence/` citations stayed nested and broke in the bundle — **766 broken
+links** on one real bundle. New **Step 2.6** + `pack/assets/flatten_links.py`
+(stdlib, idempotent, pure path-shape; `flatten_links_test.py`, 6/6) rewrites
+cross-folder links to flat siblings (`[X](x.md)`) and delinks dropped-evidence
+references to plain label text. Step 7 acceptance now gates on **zero broken
+intra-`knowledge/` links**; `references/bundle-format.md` documents the rule.
+
+### Added — bundle carries the warehouse SQL dialect
+
+`init` resolved the sqlglot dialect (Step 4a) but never persisted it, and
+`pack` reads only `.dbt-wiki/`, so a repo-less consuming agent had no way to
+know which SQL dialect to generate (date functions, casts, concatenation differ
+by engine). `init` now writes `dialect:` into `index.md` frontmatter (next to
+`source_language:`); `pack` reads it into a new `<WAREHOUSE_DIALECT>` template
+placeholder, emitting a **"Warehouse engine"** line in the bundle SKILL.md.
+Engine ≠ a specific MCP/CLI, so tool-agnosticism is preserved.
+
+### Changed — `_internal/` is a rebuildable cache, self-healed by `refresh`
+
+The `_internal/` extraction scripts are mechanical copies of the plugin's own
+`assets/`, yet `init` landed them permanently in the user's repo (14 `.py`
+including 7 one-shot `*_test.py`) and `refresh` hard-failed if they were absent
+("re-run init"). Result: scripts duplicated into every repo, committed to git,
+and drifting on plugin upgrade. Now `init` emits a `.dbt-wiki/.gitignore`
+ignoring `_internal/` + `__pycache__` (with a `git rm --cached` note for repos
+that already tracked it), and `refresh` **self-heals** `_internal/` from the
+plugin's init assets (`<SKILL_DIR>/../init/assets`) instead of erroring — so a
+fresh clone with a gitignored `_internal/` just works. `SCHEMA.md` documents
+`_internal/` as rebuildable tooling, not knowledge state.
+
 ## [2.11.0] — 2026-06-18
 
 ### Added — `pack` physical-anchor layer (`knowledge/_relations.md`)
