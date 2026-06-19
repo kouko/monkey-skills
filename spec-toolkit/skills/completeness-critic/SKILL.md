@@ -1,6 +1,7 @@
 ---
 name: completeness-critic
-description: Adversarial completeness critique of a spec-expansion output via a decorrelated critic panel — fresh-context critic subagents with distinct personas and input-views each hunt OMISSIONS the writer missed (missing objects/actors, unhandled states, system-layer failures, NFR/policy gaps), then UNION their findings with an overlap-rate diagnostic and emit residual blind spots. Use when reviewing a spec draft for gaps / missing requirements / blind spots / completeness, after spec-expansion produces a draft and before it feeds code-toolkit's VERIFY layer. Critiques the SPEC for omissions only — never code, never TDD.
+description: |
+  Adversarial completeness critique of a spec-expansion draft via a critic panel hunting OMISSIONS (missing objects/actors, unhandled states, NFR gaps). Use to review a spec draft for gaps before VERIFY. Spec omissions only, never code.
 version: 0.2.2
 ---
 

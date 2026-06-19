@@ -1,6 +1,7 @@
 ---
 name: spec-expansion
-description: Turn a sparse seed (a few lines of feature intent) into a high-recall spec draft — systematically fan out objects, states, paths and edge cases, then emit candidate acceptance criteria in OpenSpec change-folder shape. Use for spec-expansion / requirement fan-out / edge-case coverage when starting a non-trivial coding task from a sparse idea and you want the paths, states and edge cases named BEFORE implementation instead of discovered late by review. 規格擴展・需求展開・邊界案例覆蓋。仕様展開・要件ファンアウト・エッジケース網羅。
+description: |
+  Turn a sparse seed (a few lines of feature intent) into a high-recall spec draft — fan out objects, states, paths, edge cases → acceptance criteria in OpenSpec shape. Use for requirement fan-out / edge-case coverage before implementation.
 version: 0.2.1
 ---
 
