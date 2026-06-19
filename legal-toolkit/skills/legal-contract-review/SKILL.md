@@ -1,17 +1,7 @@
 ---
 name: legal-contract-review
 description: |
-  Taiwan in-house legal contract review skill. Runs a 7-layer schema-driven pipeline (Stark 7 contract concepts / Adams 10 language categories / Burnham 6 functional tiers) with Taiwan-jurisdiction overlay (L0a 強行/任意 規定二分 / L0b 定型化契約 §247-1 / L6.5 六準則契約解釋) and a playbook-driven L7 evaluate step (ABAC pre-filter + Harvey dual-score self-grade). Outputs 6 structured Markdown files (issues / redline / memo-legal / memo-business / escalation / self-grade) under legal-outputs/<timestamp>-<contract-name>/. Three modes: review (default, full 6-output) / redline (focus on substitute clause text) / nda (skip L2-L3 for simpler structure). Cold-start fallback: if user has no legal-playbook/, reads 7 bundled fallback baselines (confidentiality / governing-law / auto-renewal / termination-and-survival + v0.3.5+ NDA-native: deemed-breach-cascade / disclosing-party-indemnity / assignment-prohibition) so the toolkit produces useful output on first install.
-
-  台灣 in-house 法務合約審查 skill。台湾 in-house 法務向け契約レビュー skill。
-
-  TRIGGER (中英雙語):
-  - contract review / redline / NDA review / contract analysis
-  - 合約審查 / 合約 review / 合約紅線 / 條款比對 / NDA review
-  - 服務合約 / SaaS / MSA / 採購合約 / 勞動契約 / 保密協議 / DPA
-
-  USE WHEN: User provides a contract file (or pastes a contract) and
-  asks for review, redlining, risk analysis, or playbook comparison.
+  Taiwan in-house legal contract review: a 7-layer schema pipeline with Taiwan-jurisdiction overlay + playbook eval → structured issues, redline, memos. Use when the user gives a contract for review, redlining, risk analysis, or NDA review ('合約審查').
 version: 0.1.0
 ---
 

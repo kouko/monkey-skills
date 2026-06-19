@@ -1,32 +1,7 @@
 ---
 name: query
 description: |
-  Default channel for ANY question about dbt model structure, column-level
-  data lineage, materialization / incremental / sort_key / dist_key config,
-  schema.yml columns and tests, source / macro / seed / snapshot / exposure
-  declarations, refactoring impact (rename / delete propagation across the
-  DAG), inline SQL or jinja comments, OR dbt-internal WHY captured via
-  /dbt-wiki:ingest user notes (sort_key rationale, materialization gotchas,
-  ticket / incident links). Use BEFORE reading dbt/models/*.sql,
-  dbt/target/manifest.json, or dbt/target/compiled/*.sql directly — wiki
-  provides structured manifest + sqlglot column lineage + extracted SQL/jinja
-  comments + accumulated user notes, with manifest_sha drift verification.
-  Triggers on dbt vocabulary in any language: "fct_orders 依賴什麼",
-  "rename column 影響哪些", "哪些是 incremental / view / table",
-  "什麼 model 用了 X", "stg_X 影響下游", "model 從哪裡來", "上游 / 下游",
-  "schema.yml 漏寫", "ROW_NUMBER 哪些用", "marts / staging / interm / dash 下",
-  "sort_key / dist_key 設定", "為什麼用 view 不用 table",
-  "fct_orders.customer_id 從哪", "trace column", "show lineage",
-  "what feeds X", "depends on what", "where is X used", "rename impact",
-  "DAG of X", "macro 在哪用", "snapshot 政策", "/dbt-wiki:query",
-  "查 dbt", "問 dbt", "dbt について", "model 構造", "lineage 確認".
-  Do NOT trigger for: writing or modifying SQL in dbt/models/ (use Edit
-  tool directly), running dbt commands like dbt run / dbt test / dbt seed
-  (use dbt CLI or the dbt-mcp server), first-time setup (use /dbt-wiki:init),
-  updating wiki after dbt parse / compile (use /dbt-wiki:refresh), adding
-  tribal knowledge or design rationale (use /dbt-wiki:ingest), cross-cutting
-  business / project-level WHY beyond dbt itself (use /repo-wiki:query if
-  .repo-wiki/ exists in the repo).
+  Answer any dbt question from .dbt-wiki/: model structure, column lineage, config, schema.yml, refactor impact, ingested notes — before reading dbt/ files. Use for 'trace column', 'what feeds X', 'rename impact', '依賴什麼'. Setup→init, updates→refresh.
 ---
 
 # dbt-wiki — Query Workflow (v2.0)

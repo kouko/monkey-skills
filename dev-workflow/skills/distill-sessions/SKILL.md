@@ -1,29 +1,7 @@
 ---
 name: distill-sessions
-description: >-
-  Mine `~/.claude/projects/**/*.jsonl` Claude Code session transcripts joined
-  with `~/.claude/usage-data/facets/*.json` `/insights` outputs, detect
-  friction-signal patterns (interrupt-after-brainstorm, NEEDS_REVISION streaks,
-  re-dispatch concentration, tool-error clusters), aggregate per target Skill,
-  dispatch per-trajectory Sonnet 4.6 subagents in parallel via
-  `code-toolkit:dispatching-parallel-agents`, and emit a reviewable
-  `docs/skill-mining/<date>-<target>-proposals.md` whose §"Proposed additions"
-  / §"Proposed modifications" blocks apply.py can write back into a target
-  SKILL.md only after `--approved`, and a sibling human-readable
-  `docs/skill-mining/<date>-advisory-report.md` (language picked via
-  mandatory `--lang zh-TW|en|ja`, semantic clustering via a Sonnet 4.6
-  advisory-analyst subagent dispatched from `scripts/report.py`'s JSON
-  payload). Use when auditing skill activation
-  telemetry after a heavy `code-toolkit:*` cycle, when MEMORY.md is past its
-  soft limit and you need graduation candidates, or before a `skill-refactor`
-  session so the refactor lands on evidence not vibes. Do NOT use for creating
-  new skills from scratch (use `dev-workflow:skill-creator-advance`), for
-  taste-driven A/B output tuning (use `dev-workflow:skill-tuning`), for
-  token / structure refactors of an existing skill (use
-  `dev-workflow:skill-refactor`), or for real-time session coaching (out of
-  scope at v0.1). 技能ログ採掘・SKILL.md 改善提案・トリガー漏れ検出・活性化ログ分析・
-  /insights ファセット結合・並列サブエージェント分析。技能日誌挖掘・SKILL.md 迭代提案・
-  觸發遺漏偵測・啟動日誌分析・/insights facet 結合・並行子代理分析。
+description: |
+  Mine past Claude Code session transcripts + /insights for friction patterns → a per-skill improvement-proposals doc. Use to audit skill-activation telemetry, or gather evidence before a refactor. For creating a skill use skill-creator-advance.
 version: 0.5.1
 ---
 

@@ -4,6 +4,21 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.1] — 2026-06-20
+
+### Changed — trim 5 skill descriptions to the house description standard
+
+The `query` / `ingest` / `init` / `refresh` / `pack` skill `description` fields
+(1156–1731 chars) were over the 1024 spec ceiling and well over the house
+standard's 250 cap. Trimmed to 239–248 chars each: kept what + when + positive
+triggers (one representative CJK trigger each) and the lifecycle redirects
+(setup→init, updates→refresh, ask→query); moved the exhaustive bilingual
+trigger lists and the "Do NOT trigger for X" blocks out of the description.
+Metadata only — no skill behavior change; bodies untouched. Triggering parity
+verified by a 12-probe blind A/B (old vs new routed identically, 12/12 to ground
+truth, including 7 CJK/bilingual prompts and the init↔refresh boundary). See
+`docs/skill-mining/2026-06-19-skill-description-standard.md`.
+
 ## [2.13.0] — 2026-06-20
 
 ### Added — deterministic Phase-B finalization scripts (index regen + reconcile)

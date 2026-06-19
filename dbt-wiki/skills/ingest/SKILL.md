@@ -1,28 +1,7 @@
 ---
 name: ingest
 description: |
-  Capture user-supplied dbt-internal context that is NOT in manifest.json
-  or schema.yml: sort_key / dist_key / materialization rationale, Redshift
-  / Snowflake / BigQuery dialect gotchas, schema permission quirks,
-  incremental policy reasons, deprecated-but-not-removed model status,
-  ticket / incident links, tribal knowledge from team conversations.
-  Auto-detects target model / source / macro / seed / snapshot from the
-  message text; appends note as a dated entry under the target page's
-  ## User Notes body section. Multi-target match resolution (asks to
-  clarify if no match or multiple matches). Survives /dbt-wiki:refresh
-  cycles (refresh treats ## User Notes as user-owned).
-  Triggers when user wants to record context: "remember that fct_orders
-  ...", "fct_orders 的 sort_key 是因為...", "stg_X 有個 gotcha",
-  "marts_finance 整層需要...", "備註 fct_X", "記下 stg_Y", "annotate
-  <model>", "add note to <model>", "ingest dbt context", "describe
-  why <model>", "/dbt-wiki:ingest", "把這個 dbt context 記下來",
-  "新增 dbt 註記", "dbt model 註解", "dbt メモ".
-  Do NOT trigger for: first-time setup (use /dbt-wiki:init), updating
-  wiki after dbt parse / compile (use /dbt-wiki:refresh), querying
-  existing knowledge (use /dbt-wiki:query), capturing cross-cutting
-  business / project-level WHY beyond dbt itself (use /repo-wiki:ingest
-  if .repo-wiki/ exists), modifying actual model SQL (use Edit tool
-  on dbt/models/<file>.sql).
+  Record dbt tribal knowledge not in manifest/schema.yml (sort_key rationale, dialect gotchas, incident links) into a model's User Notes (survives refresh). Use for 'remember that fct_orders…', 'add note to <model>', '備註 fct_X'. To query, use query.
 ---
 
 # dbt-wiki — Ingest Workflow (v1.0)

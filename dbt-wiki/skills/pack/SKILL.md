@@ -1,22 +1,7 @@
 ---
 name: pack
 description: |
-  Package the dbt-wiki knowledge base into a portable, warehouse-tool-agnostic
-  analytics skill. Run by the PROJECT OWNER (someone who has a distilled
-  `.dbt-wiki/`) to freeze the curated semantic knowledge into a self-contained
-  Agent Skill folder `<project>-analytics/` (SKILL.md + knowledge/ + references/
-  + examples/) that a teammate or agent can drop into `~/.claude/skills/` and use
-  with their OWN warehouse-connect tool — no dbt project, no DB driver required.
-  The emitted bundle carries knowledge + SQL-generation guidance, NOT an executor.
-  Triggers: "package the dbt-wiki knowledge", "build a portable analytics skill",
-  "freeze the knowledge base into a bundle", "export dbt-wiki for a teammate",
-  "make a shareable analytics skill", "/dbt-wiki:pack",
-  "把 dbt-wiki 知識打包", "封裝成可攜知識 skill", "做一個分析 skill 給同事",
-  "dbt-wiki をパッケージ化", "知識 skill を書き出す".
-  Do NOT trigger for: querying the knowledge base (use /dbt-wiki:query), building
-  or refreshing `.dbt-wiki/` itself (use /dbt-wiki:init or /dbt-wiki:refresh),
-  adding tribal knowledge (use /dbt-wiki:ingest), or running SQL against a
-  warehouse (the emitted bundle does that, with the consuming agent's own tool).
+  Package .dbt-wiki/ into a portable, warehouse-agnostic analytics Agent Skill a teammate can use with their own warehouse tool — knowledge + SQL guidance, not an executor. Use for 'package the dbt-wiki knowledge' or 'export for a teammate'.
 ---
 
 # dbt-wiki — Pack Workflow (emit a portable analytics skill)

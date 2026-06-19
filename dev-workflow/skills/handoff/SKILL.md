@@ -1,35 +1,8 @@
 ---
 name: handoff
 version: 0.2.0
-description: >-
-  Cross-session continuation skill. When a work session ends and the user
-  wants to save state so a future AI agent can resume without losing context —
-  produce a structured 10-block HANDOFF file in `.claude/handoffs/` (prepare
-  mode), or load and verify a prior HANDOFF file before resuming work (resume
-  mode). Not the same as `dev-workflow:recap-state` (L3 in-session re-orientation
-  for a human reader still in the session). Not agent-to-agent delegation
-  (not the OpenAI Agents SDK handoff_<id>_tool pattern — that is a different
-  problem). This skill is cross-session L2: cold AI reader, new session, zero
-  prior context.
-
-  Prepare-mode triggers (fire when you recognise any of these):
-  - **zh-TW**: 「收尾」「明天繼續」「保存狀態」「先這樣」「記錄一下進度」「今天先到這」
-  - **ja**: 「今日はここまで」「引き継ぎ」「状態を保存して」「セッションを終わる」
-  - **en**: "wrap up" / "save state" / "I'm done for today" / "let's stop here"
-    / "save progress" / "end session"
-
-  Resume-mode triggers (fire when you recognise any of these):
-  - **zh-TW**: 「繼續上次」「從上次說到哪裡」「載入狀態」「接著做」
-  - **ja**: 「前回の続きから」「引き継ぎを読んで」「再開して」
-  - **en**: "pick up where we left off" / "load handoff" / "resume from last
-    session" / "continue where we stopped"
-
-  Disambiguation: `dev-workflow:recap-state` is L3 in-session (human warm reader,
-  current session, chat output only). `dev-workflow:handoff` is L2
-  cross-session (cold AI reader, new session, file output). The two coexist.
-  Not agent-to-agent delegation — that is OpenAI Agents SDK or similar
-  (different problem). クロスセッション引き継ぎ・セッション終了時保存・再開時ロード。
-  跨對話接續・保存狀態・冷啟動恢復。
+description: |
+  Save session state to a structured HANDOFF file so a future agent resumes cleanly, or load/verify a prior HANDOFF. Use for 'wrap up', 'save state', 'done for today', or 'pick up where we left off'. For in-session re-orientation use recap-state.
 ---
 
 # Handoff

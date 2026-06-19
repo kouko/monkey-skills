@@ -1,29 +1,7 @@
 ---
 name: skill-tuning
-description: >-
-  Output quality A/B for an existing skill — generate variants with
-  different output traits, run them blind against the same test
-  prompts, present side-by-side to the user, capture preference
-  (A / B / both / neither). Each iteration is human-judged; no LLM
-  ratchet on taste-sensitive outputs. Constitution honored as floor
-  (variants violating MUST clauses auto-rejected before user sees
-  them); preference log accumulates as RLHF-lite dataset; H4
-  self-trained judge replaces LLM-judge once log is dense enough.
-  Use when the user wants to tune a skill's output style /
-  quality / voice / tone, explore variant phrasings, or accumulate
-  preference signal for taste-sensitive skill work. Triggers:
-  tune skill / skill tuning / fine-tune skill output / improve
-  skill output / A/B variants / output quality / preference
-  tuning / RLHF skill / 調整 skill 輸出 / 風格優化 / 跑 A/B 測試
-  / 改善 skill 輸出 / 出力品質 / スキル チューニング / 試不同
-  phrasing / taste-sensitive skill. Do NOT use for token /
-  structure refactor with output preserved (use
-  dev-workflow:skill-refactor), structural redesign (use
-  dev-workflow:skill-creator-advance), creating new skill (use
-  dev-workflow:skill-creator-advance), or deterministic /
-  mechanical skills where output is binary correct / incorrect
-  (no taste dimension to A/B). スキル チューニング・出力 A/B
-  ・人間判定・選好ログ。技能調整・輸出 A/B・人類判斷・偏好累積。
+description: |
+  Output-quality A/B for an existing skill: generate variants, run blind on the same prompts, human picks the winner. Use to tune a skill's output style/voice/tone. For redesign use skill-creator-advance; for token refactor use skill-refactor.
 ---
 
 # Skill Tuning

@@ -1,25 +1,7 @@
 ---
 name: refresh
 description: |
-  Incremental update for dbt-wiki AFTER user runs dbt parse / dbt compile
-  / dbt run. Compares current target/manifest.json md5 against the
-  last-recorded manifest_sha; processes only added / modified / removed
-  models / sources / macros / seeds / snapshots / exposures. Re-runs
-  sqlglot column-lineage extraction AND inline-comment extraction on
-  changed files only. Removed resources are archived to
-  .dbt-wiki/_archive/<date>/, never hard-deleted. Preserves user-owned
-  ## User Notes body sections verbatim (managed by /dbt-wiki:ingest).
-  Always regenerates derived files: index.md and lineage.md. Asks user
-  to confirm diff summary before writing.
-  Triggers when user says "I just ran dbt parse / dbt compile / dbt run",
-  "model 改了", "新增了 model", "刪了 model", "renamed a model",
-  "refresh dbt-wiki", "update dbt knowledge", "after dbt parse",
-  "dbt model changed", "manifest changed", "/dbt-wiki:refresh",
-  "更新 dbt-wiki", "重新生 dbt 知識庫", "dbt parse 跑完了",
-  "dbt 改完之後", "dbt model 更新後", "dbt-wiki 更新".
-  Do NOT trigger for: first-time setup (use /dbt-wiki:init), adding
-  user context that isn't a code change (use /dbt-wiki:ingest), querying
-  the wiki (use /dbt-wiki:query), running dbt itself (use dbt CLI).
+  Incrementally update .dbt-wiki/ after dbt parse/compile: diff manifest md5, reprocess only changed resources, re-run sqlglot lineage, preserve User Notes. Use for 'I just ran dbt parse', 'model 改了', 'refresh dbt-wiki'. Setup→init; add notes→ingest.
 ---
 
 # dbt-wiki — Refresh Workflow (v2.0)
