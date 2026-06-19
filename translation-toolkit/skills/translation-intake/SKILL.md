@@ -1,6 +1,7 @@
 ---
 name: translation-intake
-description: Layer 1 of translation-toolkit. Clarifies translation parameters (5 axes — mode / register / strategy / locale / domain — plus skopos) via auto-detect or explicit user input. Output is an intake-spec consumed by downstream skills (translation-i18n / -doc / -creative / -audit).
+description: |
+  Layer 1 of translation-toolkit — clarify translation parameters (mode / register / strategy / locale / domain + skopos) via auto-detect or user input. Outputs an intake-spec for translation-i18n / -doc / -creative / -audit.
 version: 0.1.0
 ---
 
