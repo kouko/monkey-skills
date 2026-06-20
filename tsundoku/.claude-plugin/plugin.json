@@ -1,7 +1,7 @@
 {
   "name": "tsundoku",
   "version": "0.11.1",
-  "description": "Turn owned-but-unread Kobo e-books into actionable skills — search library, download DRM-free EPUBs, chunk-to-Markdown, distill via RIA-TV++ pipeline into executable skills. ⚠️ Claude Code CLI only — Cowork blocks Kobo auth + EPUB downloads.",
+  "description": "Turn owned-but-unread Kobo e-books into actionable skills. ⚠️ Claude Code CLI only.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"

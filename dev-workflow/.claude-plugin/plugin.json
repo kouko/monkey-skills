@@ -1,7 +1,7 @@
 {
   "name": "dev-workflow",
   "version": "2.18.0",
-  "description": "Developer-workflow skills — git-backed project memory, structured pre-decision briefings, complexity / proposal critique, dbt model style guide, in-session recap, cross-session handoff, and session-log distillation.",
+  "description": "Developer-workflow skills — git memory, decision briefs, critique, recap, handoff, session distill.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"

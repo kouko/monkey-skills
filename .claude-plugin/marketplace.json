@@ -6,17 +6,17 @@
   "plugins": [
     {
       "name": "briefing-toolkit",
-      "description": "Daily morning brief across your connected tools — read-only fan-out over Slack / Asana / Notion / GitHub / Gmail / Google Calendar / Drive into a PDB-style briefing plus a zero-omission, link-rich action table that accumulates day-over-day for continuity analysis. ⚠️ Claude Code CLI — uses whichever of these MCP servers you have connected; degrades gracefully when some are absent.",
+      "description": "Daily read-only morning brief over connected MCP tools (Slack/Asana/Notion). ⚠️ Claude Code CLI.",
       "source": "./briefing-toolkit/"
     },
     {
       "name": "domain-teams",
-      "description": "Domain-expert team skills (planning / code / design / research / copywriting) with checkpoint-based quality gates.",
+      "description": "Domain-expert team skills (planning/code/design/research/copywriting) with quality-gate checkpoints.",
       "source": "./domain-teams/"
     },
     {
       "name": "obsidian",
-      "description": "Obsidian vault workflows — daily notes / markdown / bases / diagrams / canvas / vault management — plus an LLM wiki knowledge layer on top. ⚠️ `defuddle` skill needs Claude Code CLI.",
+      "description": "Obsidian vault workflows (notes/markdown/bases/diagrams/canvas) + an LLM wiki knowledge layer.",
       "source": "./obsidian/"
     },
     {
@@ -26,107 +26,107 @@
     },
     {
       "name": "dev-workflow",
-      "description": "Developer-workflow skills — git-backed project memory, structured pre-decision briefings, complexity / proposal critique, dbt model style guide, in-session recap, cross-session handoff, and session-log distillation.",
+      "description": "Developer-workflow skills — git memory, decision briefs, critique, recap, handoff, session distill.",
       "source": "./dev-workflow/"
     },
     {
       "name": "investing-toolkit",
-      "description": "Three-layer investing research toolkit — 5 country data fetchers (US/JP/TW/KR/CN), 6 analysis skills (DCF / comps / screener / technical / portfolio / macro), 4 report orchestrators. ⚠️ Claude Code CLI only — Cowork sandbox blocks external data fetches.",
+      "description": "Three-layer investing research toolkit — data, analysis, report skills. ⚠️ Claude Code CLI only.",
       "source": "./investing-toolkit/"
     },
     {
       "name": "copywriting-toolkit",
-      "description": "Pipeline-structured copywriting toolkit — 14 specialized skills (intake / ideation / 5 form-specific drafters / voice / ethics / form gate / audit). Grounded in PASONA / Cialdini / FTC + 景品表示法 ethics.",
+      "description": "Pipeline copywriting toolkit — 14 skills from intake to audit, grounded in PASONA/Cialdini/FTC.",
       "source": "./copywriting-toolkit/"
     },
     {
       "name": "gws-toolkit",
-      "description": "Generic Google Workspace toolkit on the official googleworkspace/cli (gws) — drive / docs / slides / sheets / gmail / calendar + setup automation + write-safety wrappers + design knowledge (Minto / SCQA / chart selection). ⚠️ Claude Code CLI only — Cowork sandbox blocks Google API calls.",
+      "description": "Google Workspace toolkit on the official gws CLI (drive/docs/sheets/gmail). ⚠️ Claude Code CLI only.",
       "source": "./gws-toolkit/"
     },
     {
       "name": "translation-toolkit",
-      "description": "High-quality translation across i18n / docs / ad copy / novel chapters for EN / JA / ZH-TW / ZH-CN. Bundled CC-BY glossary (~10K entries) + 6-gate verification (placeholder / glossary / linter / back-translation / register / untranslatability).",
+      "description": "High-quality EN/JA/ZH translation with a bundled glossary + 6-gate verification.",
       "source": "./translation-toolkit/"
     },
     {
       "name": "tsundoku",
-      "description": "Turn owned-but-unread Kobo e-books into actionable skills — search library, download DRM-free EPUBs, chunk-to-Markdown, distill via RIA-TV++ pipeline into executable skills. ⚠️ Claude Code CLI only — Cowork blocks Kobo auth + EPUB downloads.",
+      "description": "Turn owned-but-unread Kobo e-books into actionable skills. ⚠️ Claude Code CLI only.",
       "source": "./tsundoku/"
     },
     {
       "name": "four-dx-coach",
-      "description": "Multi-scope coach for The 4 Disciplines of Execution — personal / team-leader / team-member scopes; 12 dual-mode skills (coach mode = Socratic dialogue, audit mode = single-artifact synthesis). NOT for enterprise multi-team rollout.",
+      "description": "Multi-scope coach for the 4 Disciplines of Execution — Socratic coach + single-artifact audit modes.",
       "source": "./four-dx-coach/"
     },
     {
       "name": "repo-wiki",
-      "description": "LLM Wiki pattern for code repos — init scans src/ + recent commits, grow incrementally from changes / conversational context, query in natural language. Knowledge lives in .repo-wiki/ committed alongside code. Zero external deps.",
+      "description": "LLM wiki for code repos — init from src + commits, grow from changes, query in natural language.",
       "source": "./repo-wiki/"
     },
     {
       "name": "dbt-wiki",
-      "description": "Local-only two-layer knowledge base for dbt projects — an LLM-distilled knowledge layer (entities / metrics / concepts connected by typed relationships) answers semantic questions like 'what does churn mean?' or 'which entities relate to revenue?', supported by an evidence layer (manifest.json + sqlglot column-level lineage). No dbt Cloud needed.",
+      "description": "Local-only two-layer knowledge base for dbt projects — semantic Q&A over manifest + column lineage.",
       "source": "./dbt-wiki/"
     },
     {
       "name": "deconstruct-toolkit",
-      "description": "Reverse-engineer polished artifacts (copy / docs / UI / arguments / products / orgs) — surface design blueprints, frameworks, rhetorical mechanisms, intentional omissions. Cultural-variant lenses for EN / JA / ZH.",
+      "description": "Reverse-engineer polished artifacts (copy/docs/UI/arguments/orgs) into their blueprints. EN/JA/ZH.",
       "source": "./deconstruct-toolkit/"
     },
     {
       "name": "systems-thinking-toolkit",
-      "description": "Systems-thinking toolkit grounded in Sherwood, *Seeing the Forest for the Trees* (2002) — 7 skills + 1 router: CLD craft / archetypes / overlay / mental-model / lever cascade / executable Python simulator / manager-personality quadrant.",
+      "description": "Systems-thinking toolkit (Sherwood 2002) — CLDs, archetypes, simulation, and more across 7 skills.",
       "source": "./systems-thinking-toolkit/"
     },
     {
       "name": "legal-toolkit",
-      "description": "In-house legal toolkit for 台灣 SME → 上市櫃 法務 — 7-layer contract review + playbook negotiation + 6 skills (review / draft / incident-response / IRAC issue-spot / research). Path A grounded (current Taiwan in-force law).",
+      "description": "In-house legal toolkit for Taiwan SMEs — contract review, playbook negotiation, drafting, research.",
       "source": "./legal-toolkit/"
     },
     {
       "name": "collab-toolkit",
-      "description": "Read-only office-collab toolkit for non-Google services (Asana / Slack / Notion) over official MCP servers. Locale-independent. Gmail / Google Calendar moved to gws-toolkit. ⚠️ Claude Code CLI only — Cowork sandbox not supported.",
+      "description": "Read-only office-collab toolkit for Asana/Slack/Notion via MCP. ⚠️ Claude Code CLI only.",
       "source": "./collab-toolkit/"
     },
     {
       "name": "code-toolkit",
-      "description": "Process-discipline + canon-grounded coding workflow for Claude Code (+ Codex CLI manifest in lock-step). 11 skills + 4 plugin-level subagents enforce TDD / brainstorming / SDD / parallel-dispatch / code review. Grounded in Beck / Martin / Fowler / Feathers / OWASP / 徳丸本.",
+      "description": "Canon-grounded coding-discipline workflow (TDD/brainstorm/SDD/review) for Claude Code + Codex.",
       "source": "./code-toolkit/"
     },
     {
       "name": "salesforce-toolkit",
-      "description": "Salesforce DX MCP server wrapped as Claude Code plugin — brew-first installer, read-only SOQL query (data toolset only). macOS only. ⚠️ Claude Code CLI only — Cowork sandbox not supported.",
+      "description": "Salesforce DX MCP wrapped as a plugin — read-only SOQL, macOS only. ⚠️ Claude Code CLI only.",
       "source": "./salesforce-toolkit/"
     },
     {
       "name": "research-toolkit",
-      "description": "Research toolkit — agent-portable, key-free research skills that drive the host agent's own LLM + web tools. Ships the deep-deep-research skill (scope / search / dedup / fetch / 3-vote adversarial verify / synthesize); more research skills to follow.",
+      "description": "Key-free research skills driving the host agent's own LLM + web tools (ships deep-deep-research).",
       "source": "./research-toolkit/"
     },
     {
       "name": "spec-toolkit",
-      "description": "Spec toolkit — agent-portable, key-free GENERATE-layer skills that expand a sparse seed into a high-recall, verification-ready spec draft and adversarially critique it for omissions. Ships spec-expansion (seed → objects/CTAs → state machines → path×edge matrix → candidate scenarios, all provenance-tagged) and completeness-critic (loop-until-dry multi-lens omission hunt that emits its own blind spots). Writes the OpenSpec change-folder shape (proposal.md + specs/ delta) plus additive richness sections, consumed downstream by code-toolkit's VERIFY layer.",
+      "description": "Key-free GENERATE-layer spec skills — expand a seed into a high-recall spec + critique omissions.",
       "source": "./spec-toolkit/"
     },
     {
       "name": "product-principles-toolkit",
-      "description": "Product-principles toolkit — an agent-portable, key-free cross-cutting product-constitution generator. Turns a product idea into a PRINCIPLES.md that states a single north-star and a small set of non-negotiable, falsifiable principles (each with a testable claim and a clear violation signal), so the same constitution can govern design, spec, and code instead of each layer drifting on its own. Runs inside any coding-agent host using the host's own model — no API keys, no external services — and emits a portable Markdown artifact that downstream design / spec / code-generation skills can read and enforce.",
+      "description": "Key-free generator for a product PRINCIPLES.md — one north-star + falsifiable, testable principles.",
       "source": "./product-principles-toolkit/"
     },
     {
       "name": "interface-design-toolkit",
-      "description": "Interface-design toolkit — an agent-portable, key-free, cross-modal (GUI / TUI / CLI) interface and UX design generator. Turns a product idea into two portable Markdown artifacts: a DESIGN.md that captures the visual system (layout, components, states, and design tokens) and a ui-flows.md that captures the interaction flows (screens, transitions, and edge cases as Mermaid diagrams), both seeding downstream spec-expansion. The whole design is governed by a product PRINCIPLES.md so the visual and interaction layers stay consistent with the product constitution instead of drifting. Runs inside any coding-agent host using the host's own model — no API keys, no external services — and emits Markdown that downstream spec / code-generation skills can read and enforce.",
+      "description": "Key-free cross-modal (GUI/TUI/CLI) UX design generator — emits portable DESIGN.md + ui-flows.md.",
       "source": "./interface-design-toolkit/"
     },
     {
       "name": "ascii-graph-toolkit",
-      "description": "CJK (中/英/日) display-width-aware ASCII/Unicode diagram & table toolkit for plain-text channels that cannot render Mermaid (Claude Code terminal, Slack, PR text) — deterministic generators (table/flow/tree/bar/arch/seq) + a wcwidth verify-loop alignment oracle; zero external binary, pure-Python.",
+      "description": "CJK-width-aware ASCII/Unicode diagram & table toolkit for channels that can't render Mermaid.",
       "source": "./ascii-graph-toolkit/"
     },
     {
       "name": "skill-dev-toolkit",
-      "description": "Self-contained toolkit for authoring Claude Agent Skills end-to-end — create & redesign, score design quality, token/structure refactor, output-quality A/B tuning, and blind behavioral dogfood — with zero cross-plugin dependencies.",
+      "description": "Self-contained toolkit to author Claude Agent Skills — create, score, refactor, tune, dogfood.",
       "source": "./skill-dev-toolkit/"
     }
   ]

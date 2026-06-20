@@ -1,7 +1,7 @@
 {
   "name": "skill-dev-toolkit",
   "version": "0.1.0",
-  "description": "Self-contained toolkit for authoring Claude Agent Skills end-to-end — create & redesign, score design quality, token/structure refactor, output-quality A/B tuning, and blind behavioral dogfood — with zero cross-plugin dependencies.",
+  "description": "Self-contained toolkit to author Claude Agent Skills — create, score, refactor, tune, dogfood.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"

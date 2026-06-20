@@ -1,7 +1,7 @@
 {
   "name": "interface-design-toolkit",
   "version": "0.2.0",
-  "description": "Interface-design toolkit — an agent-portable, key-free, cross-modal (GUI / TUI / CLI) interface and UX design generator. Turns a product idea into two portable Markdown artifacts: a DESIGN.md that captures the visual system (layout, components, states, and design tokens) and a ui-flows.md that captures the interaction flows (screens, transitions, and edge cases as Mermaid diagrams), both seeding downstream spec-expansion. The whole design is governed by a product PRINCIPLES.md so the visual and interaction layers stay consistent with the product constitution instead of drifting. Runs inside any coding-agent host using the host's own model — no API keys, no external services — and emits Markdown that downstream spec / code-generation skills can read and enforce.",
+  "description": "Key-free cross-modal (GUI/TUI/CLI) UX design generator — emits portable DESIGN.md + ui-flows.md.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"

@@ -1,7 +1,7 @@
 {
   "name": "obsidian",
   "version": "3.15.0",
-  "description": "Obsidian vault workflows — daily notes / markdown / bases / diagrams / canvas / vault management — plus an LLM wiki knowledge layer on top. ⚠️ `defuddle` skill needs Claude Code CLI.",
+  "description": "Obsidian vault workflows (notes/markdown/bases/diagrams/canvas) + an LLM wiki knowledge layer.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"

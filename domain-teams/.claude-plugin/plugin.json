@@ -1,7 +1,7 @@
 {
   "name": "domain-teams",
   "version": "5.6.0",
-  "description": "Domain-expert team skills (planning / code / design / research / copywriting) with checkpoint-based quality gates.",
+  "description": "Domain-expert team skills (planning/code/design/research/copywriting) with quality-gate checkpoints.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
