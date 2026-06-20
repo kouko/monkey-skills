@@ -65,36 +65,32 @@ class TestFrontmatterAndRouting:
         assert self.fm.get("version") == "0.3.0", "version must be '0.3.0'"
         assert self.description.strip(), "description must be non-empty"
 
-    def test_b_multilingual_triggers(self):
-        """(b) description contains 'handoff' + zh-TW + ja + en triggers."""
+    def test_b_description_triggers(self):
+        """(b) description contains 'handoff' + ≥1 EN what/when trigger.
+
+        The house description standard (2026-06, PR #426/#428/#429) removed CJK
+        trigger tails from skill descriptions — multilingual discoverability now
+        lives in the tri-language READMEs (see test_handoff_readmes.py), not the
+        description. So this asserts the English triggers only.
+        """
         desc = self.description
         assert "handoff" in desc.lower(), "description must contain 'handoff'"
-        # zh-TW triggers
-        assert any(t in desc for t in ("收尾", "明天繼續", "保存狀態")), (
-            "description must contain at least one zh-TW trigger: 收尾 or 明天繼續 or 保存狀態"
-        )
-        # ja triggers
-        assert any(t in desc for t in ("今日はここまで", "引き継ぎ")), (
-            "description must contain at least one ja trigger: 今日はここまで or 引き継ぎ"
-        )
-        # en triggers
         assert any(t in desc for t in ("wrap up", "save state", "pick up where we left off")), (
             "description must contain at least one en trigger: 'wrap up' or 'save state' or 'pick up where we left off'"
         )
 
-    def test_c_double_disambiguation(self):
-        """(c) description disambiguates from sister recap AND from agent-to-agent handoff."""
+    def test_c_recap_disambiguation(self):
+        """(c) description disambiguates from the in-session sister skill.
+
+        The house standard trimmed the verbose 'cross-session / not-agent-to-agent'
+        jargon; disambiguation is now the explicit recap-state redirect.
+        """
         desc = self.description
-        # Disambiguate from recap: cross-session vs in-session contrast
-        assert "cross-session" in desc, (
-            "description must contain 'cross-session' to contrast with in-session recap"
+        assert "recap-state" in desc, (
+            "description must redirect in-session re-orientation to recap-state"
         )
         assert "in-session" in desc, (
-            "description must contain 'in-session' to contrast with this skill's cross-session scope"
-        )
-        # Disambiguate from OpenAI agent-to-agent handoff
-        assert any(t in desc for t in ("not agent-to-agent", "not delegation", "agent-to-agent")), (
-            "description must mention agent-to-agent disambiguation"
+            "description must mention 'in-session' (the recap-state case it redirects)"
         )
 
     def test_d_relative_path_reference(self):
@@ -144,17 +140,14 @@ def test_frontmatter_and_routing():
     assert fm.get("version") == "0.3.0", "version must be '0.3.0'"
     assert description.strip(), "description must be non-empty"
 
-    # (b)
+    # (b) — EN triggers only (house standard removed CJK tails; see test_b_description_triggers)
     desc = description
     assert "handoff" in desc.lower()
-    assert any(t in desc for t in ("收尾", "明天繼續", "保存狀態"))
-    assert any(t in desc for t in ("今日はここまで", "引き継ぎ"))
     assert any(t in desc for t in ("wrap up", "save state", "pick up where we left off"))
 
-    # (c)
-    assert "cross-session" in desc
+    # (c) — recap-state redirect disambiguation (house standard trimmed the verbose jargon)
+    assert "recap-state" in desc
     assert "in-session" in desc
-    assert any(t in desc for t in ("not agent-to-agent", "not delegation", "agent-to-agent"))
 
     # (d)
     assert "references/handoff-schema.md" in body
