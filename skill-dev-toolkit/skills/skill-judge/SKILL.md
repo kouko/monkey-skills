@@ -857,7 +857,7 @@ What gets compressed must be things Claude doesn't have. Otherwise, it's garbage
 
 Skill-judge runs are stateless by default — each evaluation produces
 a score independent of past evaluations. For longer-lived skills
-that get refactored, retasted, or otherwise modified over time, an
+that get refactored, retested, or otherwise modified over time, an
 optional companion script tracks score history per skill and flags
 **drift** (significant drops in score across evaluations).
 

@@ -4,7 +4,7 @@
 Optional companion to `skill-judge`. Records per-skill score history
 to a JSONL log so subsequent evaluations can detect drift (a
 significant drop in score over time) — useful as a regression
-signal for skills that have been refactored, retasted, or otherwise
+signal for skills that have been refactored, retested, or otherwise
 modified.
 
 Per the skill-evolution architecture §H3 horizon
