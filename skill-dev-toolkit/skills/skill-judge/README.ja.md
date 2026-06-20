@@ -142,7 +142,7 @@ redundant）。逆に `skill-judge` で A 評価でも structural convention gat
 upstream は 8 つの観点からなる rubric、E:A:R 知識分類、
 evaluation protocol、9 つの典型的失敗パターンを提供する。
 
-kouko による modifications：dev-workflow plugin の convention に
+kouko による modifications：skill-dev-toolkit plugin の convention に
 合わせた frontmatter 書き換え；新たな "Adaptation for monkey-skills
 domain-team skills" section の追加；scope の曖昧さ排除のための
 sibling skill への cross-reference 挿入。完全な upstream chain と

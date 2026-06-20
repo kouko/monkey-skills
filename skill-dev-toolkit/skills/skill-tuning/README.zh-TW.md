@@ -67,7 +67,7 @@ flowchart TD
 
 ### Verdict 詞彙
 
-跟其他 dev-workflow critique skill 平行：
+跟 dev-workflow 的 critique skill 平行：
 
 | Verdict | 條件 | 動作 |
 |---|---|---|
@@ -194,20 +194,18 @@ A 與 B 進到 A/B。User 選 A。
 
 ---
 
-## 在 dev-workflow 中的位置
+## 在 skill-dev-toolkit 中的位置
 
-dev-workflow skill 完整家族：
+skill 撰寫的生命週期（全部在 `skill-dev-toolkit`）：
 
-```
-proposal-critique  → complexity-critique → skill-creator-advance
-（list / plan         （單變更 gate）         （建立 + 重設計）
- triage）
+- `skill-creator-advance` — 建立 + 重設計
+- `skill-judge` — advisory 設計評分
+- `skill-refactor` — Phase A: token / 結構重構，行為保留
+- `skill-tuning` — Phase B: 輸出 A/B、人類 judge、preference log
+- `dogfood-skill-testing` — 盲測行為
 
-skill-judge          skill-refactor        skill-tuning
-（advisory 評分）    （Phase A: token /     （Phase B: 輸出 A/B,
-                       結構, 行為保留）       人類 judge,
-                                              preference log）
-```
+通用 critique gate（`proposal-critique` / `complexity-critique`）
+留在 `dev-workflow`。
 
 `skill-refactor`（Phase A）跟 `skill-tuning`（Phase B）的拆分是
 基礎性的 — 反映 Fowler Two Hats 套到 skill：refactor 保留行為、

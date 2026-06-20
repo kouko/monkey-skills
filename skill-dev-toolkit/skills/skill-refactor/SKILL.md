@@ -26,7 +26,7 @@ comparison; behavior changes are out of scope (route to
 `skill-dev-toolkit:skill-tuning` for output quality work or
 `skill-dev-toolkit:skill-creator-advance` for structural redesign).
 
-This skill is **runtime self-contained** — `dev-workflow` is the
+This skill is **runtime self-contained** — `skill-dev-toolkit` is the
 only plugin needed. No cross-plugin dependency.
 
 ## The Iron Law

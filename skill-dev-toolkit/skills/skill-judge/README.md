@@ -139,7 +139,7 @@ This skill is adapted from
 rubric, E:A:R knowledge classification, evaluation protocol, and 9 common
 failure patterns.
 
-Modifications by kouko: frontmatter rewritten to dev-workflow plugin
+Modifications by kouko: frontmatter rewritten to skill-dev-toolkit plugin
 convention; new "Adaptation for monkey-skills domain-team skills" section
 added; cross-references inserted to sibling skills for scope
 disambiguation. See [`NOTICE`](NOTICE) for the full upstream chain and

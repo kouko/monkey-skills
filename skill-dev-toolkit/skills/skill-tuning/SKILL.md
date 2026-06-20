@@ -35,7 +35,7 @@ a dataset; eventually (H4 horizon) a small judge can be trained on
 it that approximates the user's taste better than any general LLM
 judge.
 
-This skill is **runtime self-contained** — `dev-workflow` is the
+This skill is **runtime self-contained** — `skill-dev-toolkit` is the
 only plugin needed. No cross-plugin dependency.
 
 ## The Iron Law
@@ -188,7 +188,7 @@ See `references/preference-log-schema.md`.
 
 ## Verdict Vocabulary
 
-Parallel to other dev-workflow critique skills:
+Parallel to dev-workflow's critique skills:
 
 | Verdict | When | Action |
 |---|---|---|

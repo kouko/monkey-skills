@@ -119,5 +119,5 @@ in PR #159):
   back to the canonical location for clarity
 
 This arrangement preserves runtime self-containment (each skill
-runs with `dev-workflow` alone, no cross-plugin or cross-skill
+runs with `skill-dev-toolkit` alone, no cross-plugin or cross-skill
 runtime dependency) while keeping evolution coherent.

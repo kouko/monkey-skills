@@ -15,15 +15,15 @@ The upstream provides the full 8-dimension rubric, E:A:R knowledge
 classification, evaluation protocol, common failure patterns, and
 quick-reference checklist that form the core of this skill.
 
-Modifications for monkey-skills dev-workflow plugin
----------------------------------------------------
+Modifications for monkey-skills skill-dev-toolkit plugin
+-------------------------------------------------------
 
 The following changes were made to adapt the upstream skill to the
 monkey-skills repository conventions. None of the upstream's evaluation
 content (D1-D8 rubric, philosophy, protocol, output format, failure
 patterns) has been altered.
 
-1. Frontmatter rewritten to match dev-workflow plugin's frontmatter
+1. Frontmatter rewritten to match skill-dev-toolkit plugin's frontmatter
    convention (explicit `Use when` / `Do NOT use for` / `Delivers`
    clauses, multi-language keyword tail line for trigger discovery).
    The new description references sibling skills:

@@ -74,7 +74,7 @@ flowchart TD
 
 ### Verdict vocabulary
 
-Parallel to other dev-workflow critique skills:
+Parallel to dev-workflow's critique skills:
 
 | Verdict | When | Action |
 |---|---|---|
@@ -223,20 +223,18 @@ non-negotiable accuracy contract.
 
 ---
 
-## Where in dev-workflow does this fit?
+## Where in skill-dev-toolkit does this fit?
 
-The complete dev-workflow skill family:
+The skill-authoring lifecycle (all in `skill-dev-toolkit`):
 
-```
-proposal-critique  → complexity-critique → skill-creator-advance
-(list / plan         (single change gate)   (creation + redesign)
- triage)
+- `skill-creator-advance` — creation + redesign
+- `skill-judge` — advisory design score
+- `skill-refactor` — Phase A: token / structure refactor, output preserved
+- `skill-tuning` — Phase B: output A/B, human judge, preference log
+- `dogfood-skill-testing` — blind behavioral test
 
-skill-judge          skill-refactor        skill-tuning
-(advisory score)     (Phase A: tokens /    (Phase B: output A/B,
-                      structure, output      human judge,
-                      preserved)             preference log)
-```
+The general critique gates (`proposal-critique` / `complexity-critique`)
+stay in `dev-workflow`.
 
 The split between `skill-refactor` (Phase A) and `skill-tuning`
 (Phase B) is foundational — it reflects Fowler's Two Hats applied

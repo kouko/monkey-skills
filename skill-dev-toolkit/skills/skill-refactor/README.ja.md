@@ -80,7 +80,7 @@ flowchart TD
 
 ### Verdict 語彙
 
-dev-workflow の他の critique skill と並行：
+dev-workflow の critique skill と並行：
 
 | Verdict | 条件 | アクション |
 |---|---|---|
@@ -222,19 +222,18 @@ ensemble が存在する理由。
 
 ---
 
-## dev-workflow の中での位置
+## skill-dev-toolkit の中での位置
 
-dev-workflow skill ファミリーは現在こう：
+skill オーサリングのライフサイクル（すべて `skill-dev-toolkit`）：
 
-```
-proposal-critique  → complexity-critique → skill-creator-advance
-（list/plan triage）  （単一変更 gate）        （作成 + 再設計）
+- `skill-creator-advance` — 作成 + 再設計
+- `skill-judge` — advisory 設計スコア
+- `skill-refactor` — Phase A: トークン / 構造のリファクタ、動作保持
+- `skill-tuning` — Phase B: 出力 A/B、人間 judge、preference log
+- `dogfood-skill-testing` — ブラインド挙動テスト
 
-skill-judge          skill-refactor       skill-tuning
-（advisory スコア）   （Phase A: トークン /  （Phase B: 出力 A/B、
-                        構造, 動作保持）       人間 judge）
-                                              [PR-3 で追加予定]
-```
+汎用 critique gate（`proposal-critique` / `complexity-critique`）は
+`dev-workflow` に残ります。
 
 `skill-refactor`（Phase A）と `skill-tuning`（Phase B）の分割
 は、Fowler の Two Hats を skill に適用したもの：refactor は動作
