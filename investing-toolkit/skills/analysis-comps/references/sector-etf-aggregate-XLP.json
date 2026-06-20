@@ -1,10 +1,10 @@
 {
   "etf": "XLP",
   "schema_id": "default",
-  "as_of": "2026-05-05",
+  "as_of": "2026-06-20",
   "_meta": {
     "holdings_count": 10,
-    "weight_coverage_pct": 62.83,
+    "weight_coverage_pct": 62.1,
     "outliers_dropped": {
       "priceToBook": 3
     },
@@ -15,15 +15,15 @@
     "source": "yfinance funds_data + data-us memo-fetch"
   },
   "multiples": {
-    "trailingPE": 33.32987177166229,
+    "trailingPE": 33.61497172172706,
     "forwardPE": null,
-    "evEbitda": 21.630992967085877,
-    "priceToSales": 3.2488704070414935,
-    "priceToBook": 9.548669211448807
+    "evEbitda": 22.390254918462954,
+    "priceToSales": 3.9861917883773024,
+    "priceToBook": 9.582992555589735
   },
   "indicators": {
-    "gross_margin": 52.20735792039922,
-    "operating_margin": 16.491806409492778,
-    "FCF_yield": 3.325106579182556
+    "gross_margin": 56.14885839975969,
+    "operating_margin": 18.520390479216715,
+    "FCF_yield": 3.261696528434523
   }
 }
