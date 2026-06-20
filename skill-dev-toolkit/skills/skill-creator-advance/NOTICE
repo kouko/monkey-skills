@@ -25,14 +25,13 @@ This skill is adapted from a chain of MIT-licensed upstream projects:
 
 3. kouko monkey-skills — this distribution.
    https://github.com/kouko/monkey-skills
-   Path: dev-workflow/skills/skill-creator-advance/
+   Path: skill-dev-toolkit/skills/skill-creator-advance/
    License: MIT. Copyright (c) 2026 kouko.
 
 Modifications in this distribution (kouko)
 ------------------------------------------
 
-See dev-workflow/CHANGELOG.md for the full per-version modification list.
-High-level summary (v1.0.0):
+High-level summary of modifications in this distribution (v1.0.0):
 
 - monkey-skills ecosystem integration guidance
 - Description best practices (negative triggers, multilingual keywords)
