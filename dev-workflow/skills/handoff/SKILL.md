@@ -1,6 +1,6 @@
 ---
 name: handoff
-version: 0.2.0
+version: 0.3.0
 description: |
   Save session state to a structured HANDOFF file so a future agent resumes cleanly, or load/verify a prior HANDOFF. Use for 'wrap up', 'save state', 'done for today', or 'pick up where we left off'. For in-session re-orientation use recap-state.
 ---
@@ -59,7 +59,8 @@ truth for the future cold AI reader.**
    `handoff-skill-t2`, `auth-refactor-session-3`).
 
 3. Author all 10 blocks per `references/handoff-schema.md`:
-   1. Frontmatter (YAML — git.head, git.dirty, tools.claude_code)
+   1. Frontmatter (YAML — `conversation_language` = the language you have been
+      replying to the user in this session; git.head, git.dirty, tools.claude_code)
    2. Situation (one sentence — exact present state)
    3. Background (decisions + rejected paths + critical paths, verbatim)
    4. All user messages (every turn verbatim — no filtering)
@@ -92,9 +93,12 @@ truth for the future cold AI reader.**
    path**, tells the next session to read that file and resume per its
    instructions (run [T1] verification → report [T2] drift → synthesis-check
    before acting), uses **portable phrasing** that works whether or not the new
-   session has `dev-workflow:handoff` installed, and ends with a blank
-   `USER DIRECTIVE:` line. It does NOT reproduce any block content — the file is
-   the single source of truth.
+   session has `dev-workflow:handoff` installed, carries a line telling the next
+   session to **reply in the `conversation_language`** from the frontmatter (so
+   the resumed session continues in the user's language instead of defaulting to
+   English — subagent / tool output stays in its source language, localized
+   before surfacing), and ends with a blank `USER DIRECTIVE:` line. It does NOT
+   reproduce any block content — the file is the single source of truth.
 
 ## Resume mode — what to do
 
@@ -107,7 +111,10 @@ judged, not an automatic stop — see step 4.**
    ls -t .claude/handoffs/ | head -1
    ```
 
-2. Read the file. Read it fully — do not skim.
+2. Read the file. Read it fully — do not skim. Adopt its `conversation_language`
+   for all user-facing replies in this resumed session — do NOT default to
+   English; subagent / tool output stays in its source language and is localized
+   before surfacing (same as a normal session).
 
 3. Run EACH Verification Command from Block 9 via Bash. Report the verbatim
    output next to the expected output. Example format:

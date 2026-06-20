@@ -60,9 +60,9 @@ class TestFrontmatterAndRouting:
         self.description = self.fm.get("description", "") or ""
 
     def test_a_frontmatter_fields(self):
-        """(a) YAML frontmatter: name=handoff, version=0.2.0, non-empty description."""
+        """(a) YAML frontmatter: name=handoff, version=0.3.0, non-empty description."""
         assert self.fm.get("name") == "handoff", "name must be 'handoff'"
-        assert self.fm.get("version") == "0.2.0", "version must be '0.2.0'"
+        assert self.fm.get("version") == "0.3.0", "version must be '0.3.0'"
         assert self.description.strip(), "description must be non-empty"
 
     def test_b_multilingual_triggers(self):
@@ -141,7 +141,7 @@ def test_frontmatter_and_routing():
 
     # (a)
     assert fm.get("name") == "handoff", "name must be 'handoff'"
-    assert fm.get("version") == "0.2.0", "version must be '0.2.0'"
+    assert fm.get("version") == "0.3.0", "version must be '0.3.0'"
     assert description.strip(), "description must be non-empty"
 
     # (b)
