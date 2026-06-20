@@ -4,6 +4,24 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.3] — 2026-06-20
+
+### Changed — emitted bundle handles the no-warehouse-tool case gracefully
+
+A behavioral dogfood of a packed bundle (cold-reader probe) surfaced a
+cold-start gap: the bundle SKILL.md's generate→execute→inspect loop assumes the
+consuming agent has a warehouse-connect tool, but said nothing about what to do
+when it has **none** — leaving a first-timer blocked at step 3 with no guidance.
+
+`assets/bundle-skill-template.md` step 3 (Execute) now adds a no-tool
+degradation clause: if nothing in the environment can reach the warehouse, the
+agent delivers the grounded SQL, tells the user it needs a SQL-executing tool,
+and states the connection prerequisites (the warehouse engine, any VPN /
+credentials, and the dev-schema prefix to substitute) — rather than fabricating
+an answer. Project-specific connection details stay in each emitted bundle, not
+the template (generic, no warehouse schema leaks). Template-only change; no
+script or data path affected.
+
 ## [2.13.2] — 2026-06-20
 
 ### Changed — trim the `review` skill description to the house standard
@@ -29,7 +47,6 @@ Metadata only — no skill behavior change; bodies untouched. Triggering parity
 verified by a 12-probe blind A/B (old vs new routed identically, 12/12 to ground
 truth, including 7 CJK/bilingual prompts and the init↔refresh boundary). See
 `docs/skill-mining/2026-06-19-skill-description-standard.md`.
-
 ## [2.13.0] — 2026-06-20
 
 ### Added — deterministic Phase-B finalization scripts (index regen + reconcile)
