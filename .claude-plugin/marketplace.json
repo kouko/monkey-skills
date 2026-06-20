@@ -16,7 +16,7 @@
     },
     {
       "name": "obsidian",
-      "description": "Obsidian vault workflows (notes/markdown/bases/diagrams/canvas) + an LLM wiki knowledge layer.",
+      "description": "Obsidian vault workflows (notes/markdown/diagrams/canvas) + LLM wiki layer. ⚠️ defuddle needs CLI.",
       "source": "./obsidian/"
     },
     {
