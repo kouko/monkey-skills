@@ -273,6 +273,20 @@ terms to exact warehouse values without guessing.
   timestamps, amounts). Those do not belong here; note them in `## Caveats`
   if the cardinality is surprising.
 
+**Prose-enumeration is a hard trigger (the single most common §3.4 miss).**
+If you list a column's discrete values anywhere in its `## Fields` Meaning prose
+— e.g. `status: active / churned / paused`, `規模：高 / 中 / 低`, or
+`stage: new / won / lost` — you have ALREADY established it is a bounded
+categorical, so you **MUST** also emit its `value_domain: [...]` annotation in
+the same Meaning cell. Describing the values in prose **without** the
+machine-readable annotation is the dominant omission and silently defeats
+SQL-generating consumers: they cannot turn prose into a filter literal, so they
+guess or probe. Treat a prose value-list as an obligation to annotate, never a
+substitute for it. (For a filter-critical lifecycle/stage/status column whose
+terminal or "won/closed/active" semantics are ambiguous, also add a one-line
+`## Caveats` note — the stored values can be captured even when their business
+meaning needs human confirmation.)
+
 **Format** — body annotation only, NOT frontmatter:
 
 ```markdown
