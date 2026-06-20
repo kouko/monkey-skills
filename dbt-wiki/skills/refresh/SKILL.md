@@ -33,7 +33,7 @@ if [ ! -f .dbt-wiki/_internal/extract_column_lineage.py ]; then
   # copy every production script + template the cache needs (NOT the *_test.py)
   for f in extract_column_lineage extract_sql_comments extract_recursive_column_lineage \
            format_lineage_diagram detect_source_language lint_schema_divergence \
-           build_evidence_pages build_index_knowledge reconcile; do
+           lint_identifier_fidelity build_evidence_pages build_index_knowledge reconcile; do
     cp "<INIT_ASSETS>/$f.py" .dbt-wiki/_internal/
   done
   cp "<INIT_ASSETS>/synthesis_template.md" .dbt-wiki/_internal/
@@ -251,6 +251,11 @@ These two files are derived; regenerate from scratch every refresh:
   current state. Section order: Entities → Metrics → Concepts → Evidence: Models
   (grouped by tier / materialization / tag / group) → Evidence: Sources → Evidence: Macros (used)
   → Evidence: Seeds / Snapshots / Tests / Exposures.
+- **Identifier-fidelity gate** — if any knowledge page was re-distilled or
+  edited this refresh (or a column was renamed/dropped upstream), re-run the
+  phantom-column gate so no page is left citing a column the manifest no longer
+  has: `$PY_RUNNER .dbt-wiki/_internal/lint_identifier_fidelity.py .dbt-wiki`
+  (see init Step 6.8). Exit non-zero ⇒ fix the cited identifier before publishing.
 - `lineage.md`: from new manifest, build DAG (depends_on / feeds_into),
   produce ASCII tree + adjacency list
 
