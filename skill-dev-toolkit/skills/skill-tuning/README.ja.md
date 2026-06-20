@@ -32,9 +32,7 @@ hat に対する **feature hat** 対偶：refactor は動作を保持する
 tuning は意図的に動作を変えて良い出力を探す（人間判断を使う —
 taste はまさに LLM-as-judge が失敗する領域）。
 
-この分割は基礎的。完全な根拠は
-[`../../docs/skill-evolution-architecture.md`](../../docs/skill-evolution-architecture.md)
-§1。
+この分割は基礎的。
 
 ---
 

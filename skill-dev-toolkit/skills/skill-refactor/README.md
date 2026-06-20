@@ -266,8 +266,7 @@ structural refactoring with output quality evaluation in a single
 Phase A (structure with output preservation); Phase B (output
 quality A/B) is the separate `skill-tuning` skill. The split avoids
 the LLM-as-judge / Goodhart drift that monolithic taste-rubrics
-produce — see [`../../docs/skill-evolution-architecture.md`](../../docs/skill-evolution-architecture.md)
-§1 for the architectural reasoning.
+produce.
 
 Other distinctions: 3-judge ensemble + varied framing (vs single
 judge), specific-behavior-diff override (vs majority rules), three

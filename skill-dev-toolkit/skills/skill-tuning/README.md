@@ -34,9 +34,7 @@ equivalence — a binary check LLMs handle well), tuning
 deliberately changes behavior to find better outputs (and uses
 human judgment because taste is exactly where LLM-as-judge fails).
 
-The split is foundational. See
-[`../../docs/skill-evolution-architecture.md`](../../docs/skill-evolution-architecture.md)
-§1 for the full rationale.
+The split is foundational.
 
 ---
 

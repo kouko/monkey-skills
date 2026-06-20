@@ -27,9 +27,7 @@
 這是 LLM 處理得好的二元檢查），tuning 刻意改變行為以找更好的輸出
 （用人類判斷，因為 taste 正是 LLM-as-judge 失靈的地方）。
 
-此分割是基礎性的。完整理由見
-[`../../docs/skill-evolution-architecture.md`](../../docs/skill-evolution-architecture.md)
-§1。
+此分割是基礎性的。
 
 ---
 

@@ -241,9 +241,7 @@ skill-judge          skill-refactor       skill-tuning
 評估混在單一 8 維 rubric。此 skill（skill-refactor）刻意只處理
 Phase A（結構 + 行為保留）；Phase B（輸出品質 A/B）是另一個獨立
 skill `skill-tuning`。這個拆分避開了單一 rubric 帶 LLM-as-judge /
-Goodhart drift 的問題 — 詳見
-[`../../docs/skill-evolution-architecture.md`](../../docs/skill-evolution-architecture.md)
-§1 的架構推理。
+Goodhart drift 的問題。
 
 其他差異：3-judge ensemble + varied framing（vs 單 judge）、
 specific-behavior-diff override（vs 多數決）、三項具體問題（vs

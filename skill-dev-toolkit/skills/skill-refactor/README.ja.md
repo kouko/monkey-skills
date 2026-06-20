@@ -258,9 +258,7 @@ skill-judge          skill-refactor       skill-tuning
 （skill-refactor）は意図的に Phase A（構造 + 動作保持）のみを
 扱い、Phase B（出力品質 A/B）は別 skill `skill-tuning`。この
 分割は単一 rubric が抱える LLM-as-judge / Goodhart drift 問題
-を回避する — 詳細は
-[`../../docs/skill-evolution-architecture.md`](../../docs/skill-evolution-architecture.md)
-§1。
+を回避する。
 
 その他の差異：3-judge ensemble + varied framing（vs 単 judge）、
 specific-behavior-diff override（vs 多数決）、3 つの具体的問い

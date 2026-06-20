@@ -185,5 +185,3 @@ out-of-scope until single-skill training proves valuable.
   generated
 - `scripts/judge_train_stub.py` — the placeholder script;
   documents the interface
-- `dev-workflow/docs/skill-evolution-architecture.md` §6 H4
-  horizon — the broader plan this fits into
