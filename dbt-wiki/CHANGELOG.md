@@ -4,6 +4,28 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.4] — 2026-06-20
+
+### Changed — distill-entities §3.4 hardens value_domain adherence
+
+A behavioral dogfood of a packed bundle hit a recurring distillation miss: a
+small-cardinality categorical column (a sales-funnel stage column) had its values
+listed in the `## Fields` Meaning **prose** but carried no machine-readable
+`value_domain` annotation — so a SQL-generating consumer could not turn the
+categorical filter into a literal and had to guess. A sweep found several more
+state/classification columns with the same prose-only pattern. The §3.4 rule
+already required value_domain for ≤20-value categoricals; the gap was adherence,
+not the rule.
+
+`references/distill-entities.md` §3.4 now states an explicit **prose-enumeration
+hard trigger**: if a column's discrete values appear anywhere in its Meaning
+prose, the distiller MUST also emit the `value_domain: [...]` annotation in the
+same cell (prose is an obligation to annotate, never a substitute). Adds the
+companion guidance for filter-critical lifecycle/stage columns whose
+terminal-state semantics are ambiguous: capture the stored values, and add a
+`## Caveats` note where the business meaning needs human confirmation. Spec-prose
+only — no script or data-path change.
+
 ## [2.13.3] — 2026-06-20
 
 ### Changed — emitted bundle handles the no-warehouse-tool case gracefully
