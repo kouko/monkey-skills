@@ -811,13 +811,12 @@ score 12-15 on D5 while still failing CHK-SKL-010.
 
 ### Focus dimensions for domain-team skills
 
-the structural convention gates *partially* cover D4, D5, and D8:
+The structural convention gates *partially* cover D4, D5, and D8:
 - CHK-SKL-001 covers D4 frontmatter completeness (not WHAT/WHEN/KEYWORDS quality)
 - CHK-SKL-010 / CHK-SKL-012 cover D5 structural floor (not loading-trigger quality)
 - skill-coherence's Workflow Completeness flag covers part of D8 (not decision-tree depth, error handling, edge cases)
 
-The dimensions providing the most net-new value above what domain-team structural gates
-gates already check:
+The dimensions providing the most net-new value above what the structural convention gates already check:
 - **D1 Knowledge Delta** — does the skill compress real expert knowledge?
 - **D3 Anti-Pattern Quality** — does it have specific NEVER lists with WHY?
 - **D6 Freedom Calibration** — is specificity matched to task fragility?
@@ -873,8 +872,7 @@ preference signal.
 
 The drift detection is **advisory** like the rest of skill-judge —
 it does not auto-revert anything. Use it as a periodic regression
-check or as part of the quarterly audit (see
-`dev-workflow/docs/quarterly-audit-runbook.md`).
+check or as part of a periodic quality audit.
 
 Quick invocation:
 
