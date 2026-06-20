@@ -1,7 +1,7 @@
 {
   "name": "four-dx-coach",
   "version": "0.9.1",
-  "description": "Multi-scope coach for The 4 Disciplines of Execution — personal / team-leader / team-member scopes; 12 dual-mode skills (coach mode = Socratic dialogue, audit mode = single-artifact synthesis). NOT for enterprise multi-team rollout.",
+  "description": "Multi-scope coach for the 4 Disciplines of Execution — Socratic coach + single-artifact audit modes.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"

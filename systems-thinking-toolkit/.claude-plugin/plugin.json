@@ -1,7 +1,7 @@
 {
   "name": "systems-thinking-toolkit",
   "version": "0.10.0",
-  "description": "Systems-thinking toolkit grounded in Sherwood, *Seeing the Forest for the Trees* (2002) — 7 skills + 1 router: CLD craft / archetypes / overlay / mental-model / lever cascade / executable Python simulator / manager-personality quadrant.",
+  "description": "Systems-thinking toolkit (Sherwood 2002) — CLDs, archetypes, simulation, and more across 7 skills.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"

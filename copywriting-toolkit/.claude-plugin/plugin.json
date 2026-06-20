@@ -1,7 +1,7 @@
 {
   "name": "copywriting-toolkit",
   "version": "1.14.0",
-  "description": "Pipeline-structured copywriting toolkit — 14 specialized skills (intake / ideation / 5 form-specific drafters / voice / ethics / form gate / audit). Grounded in PASONA / Cialdini / FTC + 景品表示法 ethics.",
+  "description": "Pipeline copywriting toolkit — 14 skills from intake to audit, grounded in PASONA/Cialdini/FTC.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"

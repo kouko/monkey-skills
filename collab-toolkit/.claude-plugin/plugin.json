@@ -1,7 +1,7 @@
 {
   "name": "collab-toolkit",
   "version": "0.2.0",
-  "description": "Read-only office-collab toolkit for non-Google services (Asana / Slack / Notion) over official MCP servers. Locale-independent. Gmail / Google Calendar moved to gws-toolkit. ⚠️ Claude Code CLI only — Cowork sandbox not supported.",
+  "description": "Read-only office-collab toolkit for Asana/Slack/Notion via MCP. ⚠️ Claude Code CLI only.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"

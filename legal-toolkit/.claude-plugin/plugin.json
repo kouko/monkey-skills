@@ -1,7 +1,7 @@
 {
   "name": "legal-toolkit",
   "version": "0.5.2",
-  "description": "In-house legal toolkit for 台灣 SME → 上市櫃 法務 — 7-layer contract review + playbook negotiation + 6 skills (review / draft / incident-response / IRAC issue-spot / research). Path A grounded (current Taiwan in-force law).",
+  "description": "In-house legal toolkit for Taiwan SMEs — contract review, playbook negotiation, drafting, research.",
   "author": {
     "name": "kouko",
     "email": "kouko.d@gmail.com"

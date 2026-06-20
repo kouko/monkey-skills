@@ -1,7 +1,7 @@
 {
   "name": "translation-toolkit",
   "version": "0.3.0",
-  "description": "High-quality translation across i18n / docs / ad copy / novel chapters for EN / JA / ZH-TW / ZH-CN. Bundled CC-BY glossary (~10K entries) + 6-gate verification (placeholder / glossary / linter / back-translation / register / untranslatability).",
+  "description": "High-quality EN/JA/ZH translation with a bundled glossary + 6-gate verification.",
   "author": {
     "name": "kouko",
     "email": "kouko.d@gmail.com"
