@@ -126,7 +126,7 @@
     },
     {
       "name": "skill-dev-toolkit",
-      "description": "Self-contained toolkit for authoring Claude Agent Skills — create & redesign, score design quality, blind behavioral dogfood, token/structure refactor, and output-quality A/B tuning — with zero cross-plugin dependencies.",
+      "description": "Self-contained toolkit for authoring Claude Agent Skills end-to-end — create & redesign, score design quality, token/structure refactor, output-quality A/B tuning, and blind behavioral dogfood — with zero cross-plugin dependencies.",
       "source": "./skill-dev-toolkit/"
     }
   ]
