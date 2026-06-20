@@ -292,7 +292,7 @@ Full design-influence detail in [`NOTICE`](NOTICE).
 ## License
 
 MIT — see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE) for design-
-influence acknowledgments. Repository root: [`../../../../LICENSE`](../../../../LICENSE).
+influence acknowledgments. Repository root: [`../../../LICENSE`](../../../LICENSE).
 
 ## Files
 

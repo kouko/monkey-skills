@@ -462,7 +462,7 @@ Once all runs are done:
 
 2. **Check for regressions** (iteration 2+) — After grading, compare results against the previous iteration. Read `references/iteration-automation.md` for the full protocol. Lead with any regressions when reporting to the user.
 
-3. **Aggregate into benchmark** — run the aggregation script from the skill-creator directory:
+3. **Aggregate into benchmark** — run the aggregation script from the skill-creator-advance directory:
    ```bash
    python -m scripts.aggregate_benchmark <workspace>/iteration-N --skill-name <name>
    ```

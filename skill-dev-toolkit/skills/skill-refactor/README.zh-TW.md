@@ -266,7 +266,7 @@ specific-behavior-diff override（vs 多數決）、三項具體問題（vs
 ## License
 
 MIT — 見 [`LICENSE`](LICENSE) 與 [`NOTICE`](NOTICE)（design-influence
-acknowledgments）。Repository root：[`../../../../LICENSE`](../../../../LICENSE)。
+acknowledgments）。Repository root：[`../../../LICENSE`](../../../LICENSE)。
 
 ## Files
 

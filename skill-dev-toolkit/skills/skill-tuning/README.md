@@ -284,7 +284,7 @@ This skill's design is independent. Notable distinctions
 ## License
 
 MIT — see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE) for design-
-influence acknowledgments. Repository root: [`../../../../LICENSE`](../../../../LICENSE).
+influence acknowledgments. Repository root: [`../../../LICENSE`](../../../LICENSE).
 
 ## Files
 

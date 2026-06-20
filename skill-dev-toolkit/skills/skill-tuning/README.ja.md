@@ -273,7 +273,7 @@ tuning は動作変更。これらを 1 つの skill に混ぜる（`darwin-skil
 ## License
 
 MIT — [`LICENSE`](LICENSE) と [`NOTICE`](NOTICE)（design-influence
-acknowledgments）参照。Repository root：[`../../../../LICENSE`](../../../../LICENSE)。
+acknowledgments）参照。Repository root：[`../../../LICENSE`](../../../LICENSE)。
 
 ## Files
 
