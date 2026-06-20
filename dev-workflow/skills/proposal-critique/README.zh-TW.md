@@ -216,7 +216,7 @@ Matrix 多產出了一個 DEFER，因為 §Common Failures 規則
   [`SKILL.md`](SKILL.md) 中第一個 worked example 就**是**
   產出此 skill 的那次 session。
 - **侷限**：**n=1 origin sample**。一次 session 是極小的證據基礎。
-  此 skill 遵循 `dev-workflow:skill-creator-advance` 中
+  此 skill 遵循 `skill-dev-toolkit:skill-creator-advance` 中
   [`description-design.md`](../skill-creator-advance/references/description-design.md)
   建立的 sample-size 紀律：empirical anchor 只是參考，不是權威。
 

@@ -3,10 +3,10 @@
 > Status: ADOPTED 2026-06-19 (length target 150 / cap 250). Evidence basis + refuted alternatives:
 > `docs/skill-mining/2026-06-19-skill-description-research.md` (deep-research, 9 claims verified).
 > This doc is the human-readable SSOT (rationale + evidence). The operative rules are **inlined
-> (copied)** into `dev-workflow:skill-creator-advance` (authoring) and `dev-workflow:skill-judge`
+> (copied)** into `skill-dev-toolkit:skill-creator-advance` (authoring) and `skill-dev-toolkit:skill-judge`
 > (a D4 rubric check), per this repo's self-contained-skill convention — skills cannot resolve a
 > cross-plugin reference at runtime. Drift is guarded by
-> `dev-workflow/.claude-plugin/test_skill_description_standard.py`, not by a sync script (only two
+> `skill-dev-toolkit/.claude-plugin/test_skill_description_standard.py`, not by a sync script (only two
 > consumers, short rule-set). If a third consumer appears, revisit the canonical+distribute pattern.
 
 ## Why this exists

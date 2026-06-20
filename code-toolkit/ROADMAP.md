@@ -49,7 +49,7 @@ Phase    v0.x.0   天數     Skill 累計   重點                              
 **觀察名單（不一定做）**：
 - `dispatching-parallel-agents`（Superpowers 有；待 Phase 3 後評估）
 - `receiving-code-review`（功能與 `dev-workflow:git-memory` 重疊；待評估）
-- `writing-skills`（範圍重疊 `dev-workflow:skill-creator-advance`；不做）
+- `writing-skills`（範圍重疊 `skill-dev-toolkit:skill-creator-advance`；不做）
 - `visual brainstorming server`（Superpowers 5.1.0 新 feature；MVP 不做）
 
 ---

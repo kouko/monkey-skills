@@ -4,6 +4,18 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.18.0] — 2026-06-20
+
+### Changed — extracted the 5 skill-authoring skills to `skill-dev-toolkit`
+
+`skill-creator-advance`, `skill-judge`, `skill-refactor`, `skill-tuning`, and
+`dogfood-skill-testing` moved to the new self-contained `skill-dev-toolkit`
+plugin so the skill-authoring lifecycle can be distributed independently.
+dev-workflow retains the general developer-workflow tools: git-memory,
+brief-before-asking, complexity-critique, proposal-critique, dbt-model-style,
+recap-state, handoff, distill-sessions. The description-standard grep guard and
+the skill-refactor↔skill-tuning shared-conventions drift gate moved with the skills.
+
 ## [2.17.0] — 2026-06-03
 
 ### Changed — `dbt-model-style`: close 2 dogfood findings (F1 / F3)

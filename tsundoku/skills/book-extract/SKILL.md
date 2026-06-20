@@ -10,7 +10,7 @@ Converts an EPUB → one Markdown file per chapter, ready for LLM ingestion.
 
 The downstream goal is **knowledge → skill**: feed the chunked Markdown to
 Claude, distill into an outline, then refine into a reusable skill (typically
-via `dev-workflow:skill-creator-advance`).
+via `skill-dev-toolkit:skill-creator-advance`).
 
 ## Why a custom converter?
 
@@ -192,7 +192,7 @@ notes — **the actionable knowledge density is in the outline, not the prose**.
 
 ### Step 3 — Pass 2: build the skill
 
-Hand the outline + a few re-read chapters to **`dev-workflow:skill-creator-advance`**
+Hand the outline + a few re-read chapters to **`skill-dev-toolkit:skill-creator-advance`**
 or write directly:
 
 ```
@@ -272,7 +272,7 @@ Auth (`$TSUNDOKU_ROOT`), binary (`$TSUNDOKU_ROOT/bin/`), and EPUB downloads
 
 | Input from | This skill | Output to |
 |---|---|---|
-| `kobo-library:kobo_get.sh` (EPUB) | converts | `dev-workflow:skill-creator-advance` (skill creation) |
+| `kobo-library:kobo_get.sh` (EPUB) | converts | `skill-dev-toolkit:skill-creator-advance` (skill creation) |
 | Manual EPUB drop | converts | `obsidian:obsidian-markdown` (vault notes) |
 | Manual EPUB drop | converts | direct LLM context |
 

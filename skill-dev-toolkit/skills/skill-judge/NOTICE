@@ -1,0 +1,70 @@
+skill-judge
+===========
+
+Upstream
+--------
+
+This skill is adapted from an MIT-licensed upstream project:
+
+  Leonardo Flores `skill-judge` — direct upstream.
+  https://github.com/softaworks/agent-toolkit
+  Path: skills/skill-judge/
+  License: MIT. Copyright (c) 2026 Leonardo Flores.
+
+The upstream provides the full 8-dimension rubric, E:A:R knowledge
+classification, evaluation protocol, common failure patterns, and
+quick-reference checklist that form the core of this skill.
+
+Modifications for monkey-skills dev-workflow plugin
+---------------------------------------------------
+
+The following changes were made to adapt the upstream skill to the
+monkey-skills repository conventions. None of the upstream's evaluation
+content (D1-D8 rubric, philosophy, protocol, output format, failure
+patterns) has been altered.
+
+1. Frontmatter rewritten to match dev-workflow plugin's frontmatter
+   convention (explicit `Use when` / `Do NOT use for` / `Delivers`
+   clauses, multi-language keyword tail line for trigger discovery).
+   The new description references sibling skills:
+     - `skill-dev-toolkit:skill-creator-advance` (behavioral / runtime eval)
+     - structural convention gates (domain-team convention enforcement)
+   to clarify scope boundaries.
+
+2. New section "Adaptation for monkey-skills domain-team skills"
+   inserted before "The Meta-Question". Establishes the core
+   principle that skill-judge is advisory (0-120 design-quality
+   scoring) and the structural convention gates are authoritative
+   (PASS/FAIL convention enforcement) — gate failures surface as
+   "Critical Issues" in the report without capping D1-D8 scores.
+   Provides:
+     - D7 clarification (domain-team skills fit upstream Process
+       pattern by structural characteristics; line count is a
+       correlate, not the criterion; report Pattern field = `Process`)
+     - D4 supplementary check (run CHK-SKL-001 in addition to
+       WHAT/WHEN/KEYWORDS; failure → Critical Issue, no score cap)
+     - D5 supplementary check (run CHK-SKL-010 token cap; failure
+       → Critical Issue, no score cap; Dump pattern penalized
+       separately per upstream criteria)
+     - Focus-dimension guidance (D1/D3/D6 carry the most net-new
+       value above what structural convention gates partially cover for
+       D4/D5/D8)
+     - Explicit "complementary, not replacement" statement vs
+       structural convention gates with both-pass/both-fail examples.
+
+3. Inline note added at the end of D7 cross-referencing the new
+   adaptation section. Notes that domain-team skills fit Process
+   pattern structurally despite exceeding upstream's typical line
+   count for that pattern.
+
+4. License block: dual-copyright header preserving Leonardo Flores's
+   2026 copyright (upstream) plus 2026 kouko (modifications).
+
+License
+-------
+
+Both the upstream skill and the modifications are MIT-licensed.
+See LICENSE in this directory for the dual-copyright text.
+
+The overall monkey-skills repository is also MIT-licensed; see the
+top-level LICENSE file.

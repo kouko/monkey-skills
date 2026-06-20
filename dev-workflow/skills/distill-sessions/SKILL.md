@@ -97,10 +97,10 @@ referenced flow directly.
   *consumes* the facet output as Stage 1 input for per-skill
   cross-session aggregation.
 - **Creating a new skill from scratch** — use
-  `dev-workflow:skill-creator-advance`.
-- **Taste-driven output A/B tuning** — use `dev-workflow:skill-tuning`.
+  `skill-dev-toolkit:skill-creator-advance`.
+- **Taste-driven output A/B tuning** — use `skill-dev-toolkit:skill-tuning`.
 - **Token / structure refactor with output equivalence** — use
-  `dev-workflow:skill-refactor`.
+  `skill-dev-toolkit:skill-refactor`.
 
 ## Pipeline
 

@@ -10,17 +10,17 @@ of each shared convention across all skills that bundle it.
 
 Currently checks:
 
-  dev-workflow/skills/skill-refactor/references/golden-anchor-protocol.md
+  skill-dev-toolkit/skills/skill-refactor/references/golden-anchor-protocol.md
   vs
-  dev-workflow/skills/skill-tuning/references/golden-anchor-protocol.md
+  skill-dev-toolkit/skills/skill-tuning/references/golden-anchor-protocol.md
 
-  dev-workflow/skills/skill-refactor/references/test-prompts-schema.md
+  skill-dev-toolkit/skills/skill-refactor/references/test-prompts-schema.md
   vs
-  dev-workflow/skills/skill-tuning/references/test-prompts-schema.md
+  skill-dev-toolkit/skills/skill-tuning/references/test-prompts-schema.md
 
-  dev-workflow/skills/skill-refactor/references/constitution-schema.md
+  skill-dev-toolkit/skills/skill-refactor/references/constitution-schema.md
   vs
-  dev-workflow/skills/skill-tuning/references/constitution-schema.md
+  skill-dev-toolkit/skills/skill-tuning/references/constitution-schema.md
 
 The header blockquote (lines starting with `>` immediately after
 the H1 heading) is intentionally **different** between SSOT location
@@ -64,28 +64,28 @@ SHARED_CONVENTIONS: list[ConventionPair] = [
     ConventionPair(
         name="golden-anchor-protocol",
         canonical_path=REPO_ROOT
-        / "dev-workflow/skills/skill-refactor/references/golden-anchor-protocol.md",
+        / "skill-dev-toolkit/skills/skill-refactor/references/golden-anchor-protocol.md",
         functional_copies=[
             REPO_ROOT
-            / "dev-workflow/skills/skill-tuning/references/golden-anchor-protocol.md",
+            / "skill-dev-toolkit/skills/skill-tuning/references/golden-anchor-protocol.md",
         ],
     ),
     ConventionPair(
         name="test-prompts-schema",
         canonical_path=REPO_ROOT
-        / "dev-workflow/skills/skill-refactor/references/test-prompts-schema.md",
+        / "skill-dev-toolkit/skills/skill-refactor/references/test-prompts-schema.md",
         functional_copies=[
             REPO_ROOT
-            / "dev-workflow/skills/skill-tuning/references/test-prompts-schema.md",
+            / "skill-dev-toolkit/skills/skill-tuning/references/test-prompts-schema.md",
         ],
     ),
     ConventionPair(
         name="constitution-schema",
         canonical_path=REPO_ROOT
-        / "dev-workflow/skills/skill-refactor/references/constitution-schema.md",
+        / "skill-dev-toolkit/skills/skill-refactor/references/constitution-schema.md",
         functional_copies=[
             REPO_ROOT
-            / "dev-workflow/skills/skill-tuning/references/constitution-schema.md",
+            / "skill-dev-toolkit/skills/skill-tuning/references/constitution-schema.md",
         ],
     ),
 ]

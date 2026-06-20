@@ -262,7 +262,7 @@ Per `methodology/06-stage4-pressure-test.md`:
   — frameworks, decision rules
 - **persona-distill** (separate, future): would distill *how a person
   thinks* — voice, mental models, biographical context
-- **skill-creator-advance** (`dev-workflow:skill-creator-advance`):
+- **skill-creator-advance** (`skill-dev-toolkit:skill-creator-advance`):
   packages a hand-written skill draft into Claude Code spec; you can
   pipe a book-distill output through it for final QA
 

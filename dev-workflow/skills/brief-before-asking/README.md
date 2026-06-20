@@ -240,7 +240,7 @@ live in [`SKILL.md`](SKILL.md) under each block):
 - **`dev-workflow:proposal-critique`** — triage of an existing
   list / plan. Composes downstream of brief-before-asking when the
   resulting Options list is itself too long.
-- **`dev-workflow:skill-creator-advance`** — used to iterate this
+- **`skill-dev-toolkit:skill-creator-advance`** — used to iterate this
   skill (test-prompts.json + eval loop).
 - **`superpowers:brainstorming`** — task-start ideation;
   brief-before-asking is task-progress decision.
@@ -257,7 +257,7 @@ live in [`SKILL.md`](SKILL.md) under each block):
 | **Phase 2 — SKILL.md authoring** | Complete. 6-block + 3-mode structure, depth rules per block, Mode Detection Heuristics table. |
 | **Phase 3 — Description optimization** | **Pending.** Will run through `skill-creator-advance` description-A/B loop to tune router triggering accuracy. |
 | **Phase 6 — Worked examples + tests** | Complete. [`references/EXAMPLES.md`](references/EXAMPLES.md), [`test-prompts.json`](test-prompts.json), [`trigger-eval.json`](trigger-eval.json). |
-| **Phase 7 — Output-quality A/B** | **Pending.** Will run through `dev-workflow:skill-tuning` once Phase 3 is done. Mode A briefing style is taste-sensitive (terseness, lean assertiveness, jargon-flagging strategy) — pure rule-following won't surface the best version. |
+| **Phase 7 — Output-quality A/B** | **Pending.** Will run through `skill-dev-toolkit:skill-tuning` once Phase 3 is done. Mode A briefing style is taste-sensitive (terseness, lean assertiveness, jargon-flagging strategy) — pure rule-following won't surface the best version. |
 
 The skill is shippable as v1.0 and improves under feedback. Mode C
 in particular is the youngest design surface; expect refinement

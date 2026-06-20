@@ -35,7 +35,7 @@ The router is injected at SessionStart so the agent does **not** rely on the use
 
 - Pure read-only questions about code ("what does this function do?") — the router does not write or audit; answer directly.
 - Auditing an already-shipped artifact for compliance scoring — use `domain-teams:code-team` (passive gate entry).
-- Writing or refactoring a *skill* (not application code) — use `dev-workflow:skill-creator-advance` / `skill-refactor`.
+- Writing or refactoring a *skill* (not application code) — use `skill-dev-toolkit:skill-creator-advance` / `skill-refactor`.
 
 ## Coexistence
 

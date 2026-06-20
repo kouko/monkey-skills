@@ -312,7 +312,7 @@ Sync via: code-toolkit/scripts/distribute.py
 | Commit 前 | `finishing-a-development-branch` | `dev-workflow:git-memory`（mandatory gate） |
 | 複雜度疑慮 | `brainstorming` 或 `writing-plans` | `dev-workflow:complexity-critique`（建議；可選） |
 | 多方案 triage | `brainstorming` | `dev-workflow:proposal-critique`（建議；可選） |
-| 寫新 skill | （不適用 — 不在 code-toolkit 範圍） | `dev-workflow:skill-creator-advance` |
+| 寫新 skill | （不適用 — 不在 code-toolkit 範圍） | `skill-dev-toolkit:skill-creator-advance` |
 | 已產出要 audit | `requesting-code-review` 子代理 | 可選 `domain-teams:code-team`（被動 gate 入口） |
 
 委派契約（CLAUDE.md 已有 cross-plugin delegation 規範）：
