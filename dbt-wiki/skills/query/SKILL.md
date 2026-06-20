@@ -102,6 +102,7 @@ DAG / lineage / config questions that require evidence-layer detail.
 | **K1 — Knowledge / definition** | "X 是什麼意思", "解釋這個指標", "what does churn mean", "定義", "什麼是 X", "explain X", "什麼是 Customer" | Load the matching `entities/`, `metrics/`, or `concepts/` knowledge page (covers all three knowledge-page types — entity, metric, or concept lookups). If no match, fall back to evidence-layer description. Cite `_evidence/` pages listed in the knowledge page's `## Evidence` section as backing evidence. |
 | **K2 — Relationship traversal** | "哪些實體/指標跟 Y 有關", "what metrics relate to Customer", "X 跟哪些指標有關聯", "how is X connected to Y" | Load the matching knowledge page(s) + walk their `## Relationships` typed edges (frontmatter `relationships:` + body section). For each related page, load its `summary` frontmatter (avoid full-body load unless needed). Cite `_evidence/` pages as backing. |
 | **K3 — Domain landscape** | "這份資料在講什麼", "give me the landscape of X", "這個專案有哪些業務實體和指標", "overview", "全貌", "domain overview" | Load `index.md` `## Entities` + `## Metrics` + `## Concepts` sections (summary lines only). Then load the 2-3 most relevant knowledge pages for depth. Do NOT load all evidence-layer model pages — knowledge index is self-contained for landscape queries. |
+| **K4 — Value domain / categorical values** | "X 欄位有哪些值", "what statuses / categories / types exist", "region 可以是哪些值", "X 的值域", "可以填哪些", "the stored value for <a display label>" | Load the `entities/` / `metrics/` page whose `## Fields` table contains column X, and read that column's inline `value_domain: [...] (via: …)` annotation. **Surface the stored values verbatim** plus the `(via:)` confidence — `accepted_values` = CI-enforced (authoritative); `distinct` = sampled from production (accurate at distill time); `inferred` = a hypothesis (treat as provisional). If the user used a colloquial / display label that differs from a stored value, **map it to the exact stored literal and flag the difference** (e.g. user says "Northland" → stored value is `NL`; an equality filter must use the stored form). If the column has no `value_domain` (free-text / high-cardinality, or not yet captured), say so and point the user to introspect the warehouse (`SELECT DISTINCT <col>`). |
 
 ### Structural query classes (evidence layer — for DAG / config / lineage detail)
 
@@ -163,6 +164,15 @@ then cite the `_evidence/` backing pages listed in its `## Evidence` section:
 **Evidence-layer answers (C1–C11):** cite directly from `_evidence/`:
 - `[fct_orders](.dbt-wiki/_evidence/models/fct_orders.md)`
 - `[raw_data.orders_raw](.dbt-wiki/_evidence/sources/raw_data__orders_raw.md)`
+
+**Value-domain answers (K4):** quote the `value_domain` stored values **verbatim**
+(never paraphrase them — a paraphrase is not a usable filter literal) and always
+state the `(via:)` confidence so the reader knows whether the list is
+authoritative (`accepted_values`), sampled (`distinct`), or provisional
+(`inferred`). When the question (or any other answer) implies an equality filter
+on a categorical column, ground the literal on the stored value, not the user's
+colloquial term, and surface the mapping when they differ. Cite the knowledge
+page whose `## Fields` carried the annotation.
 
 For column lineage answers (C4), present in chain form:
 ```

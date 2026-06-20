@@ -4,6 +4,26 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.14.1] — 2026-06-20
+
+### Changed — `query` leverages `value_domain` (value-grounded answers)
+
+`init` §3.4 captures `value_domain` enums on categorical columns so a consumer
+can map a user's colloquial term to the exact stored warehouse value — the
+packed `pack` bundle's generation-guidance uses this, but the native
+`/dbt-wiki:query` skill never did (it had no value-domain query class and zero
+`value_domain` references). So a "what statuses exist?" question, or a filter
+implied by an answer, wasn't grounded on the stored values the knowledge base
+already records.
+
+`query/SKILL.md` adds **query class K4 — Value domain / categorical values**
+(load the column's `## Fields` `value_domain`, surface the stored values verbatim
++ the `(via:)` confidence, and map a colloquial label to the exact stored
+literal, flagging the difference) plus a Step-4 synthesis note to quote stored
+values verbatim and ground equality filters on them. Doc-only; no script,
+schema, or other-skill change — `ingest` needs no change (it only appends User
+Notes and never touches distillation / value_domain).
+
 ## [2.14.0] — 2026-06-20
 
 ### Added — `lint_identifier_fidelity.py` build-time gate (phantom-column citations)
