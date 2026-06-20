@@ -7,7 +7,7 @@ significant drop in score over time) — useful as a regression
 signal for skills that have been refactored, retasted, or otherwise
 modified.
 
-Per dev-workflow/docs/skill-evolution-architecture.md §H3 horizon
+Per the skill-evolution architecture §H3 horizon
 (skill-judge drift detection extension).
 
 Score history file location:

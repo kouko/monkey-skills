@@ -785,11 +785,10 @@ A masterful Process implementation earns 9-10 regardless of length.
 
 ### D4 Specification Compliance — supplementary check
 
-monkey-skills enforces a stricter frontmatter rule via
-`checklists/skill-completeness-checklist.md` CHK-SKL-001: 40-200 word
-description with explicit `Use when` / `Do NOT use for` / `Delivers`
-clauses (see the domain-team structural-gate convention, skill-md-structure
-§Frontmatter Schema).
+monkey-skills enforces a stricter frontmatter convention via its
+structural-gate checklist (CHK-SKL-001): a substantive description with
+an explicit `Use when` clause and positive delegation redirects (see your
+domain-team plugin's structure standard for the rigorous version).
 
 Run CHK-SKL-001 **in addition to** the upstream WHAT/WHEN/KEYWORDS check.
 - If CHK-SKL-001 fails → list it under **Critical Issues** in the Step 5
