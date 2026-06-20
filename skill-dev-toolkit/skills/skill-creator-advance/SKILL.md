@@ -41,10 +41,12 @@ should not have been built.
 **Gate 1 — Worth-it check** —
 applicable when the user proposes ≥2 skills at once, or one skill
 with multiple supporting claims ("we need this because A, B, and
-C"). The triage matrix sorts items into KEEP / DEFER / DROP via
-evidence grounding + YAGNI. If the proposal is a single skill with
-a single load-bearing reason, this gate is naturally low-cost —
-skip after a short check rather than running the full 5-step flow.
+C"). Triage each proposed item into KEEP / DEFER / DROP, judging it
+on evidence grounding (is the need real and recurring, not
+speculative?) and YAGNI (would you build it now?). If the proposal
+is a single skill with a single load-bearing reason, this gate is
+naturally low-cost — confirm the one reason holds, then move to
+Gate 2 rather than running a full multi-item triage.
 
 **Gate 2 — Smallest-end-state check** —
 applicable to **every** new skill proposal, single or multi. The

@@ -80,7 +80,7 @@ flowchart TD
 
 ### Verdict 語彙
 
-dev-workflow の他の critique skill と並行：
+dev-workflow の critique skill と並行：
 
 | Verdict | 条件 | アクション |
 |---|---|---|
@@ -222,19 +222,18 @@ ensemble が存在する理由。
 
 ---
 
-## dev-workflow の中での位置
+## skill-dev-toolkit の中での位置
 
-dev-workflow skill ファミリーは現在こう：
+skill オーサリングのライフサイクル（すべて `skill-dev-toolkit`）：
 
-```
-proposal-critique  → complexity-critique → skill-creator-advance
-（list/plan triage）  （単一変更 gate）        （作成 + 再設計）
+- `skill-creator-advance` — 作成 + 再設計
+- `skill-judge` — advisory 設計スコア
+- `skill-refactor` — Phase A: トークン / 構造のリファクタ、動作保持
+- `skill-tuning` — Phase B: 出力 A/B、人間 judge、preference log
+- `dogfood-skill-testing` — ブラインド挙動テスト
 
-skill-judge          skill-refactor       skill-tuning
-（advisory スコア）   （Phase A: トークン /  （Phase B: 出力 A/B、
-                        構造, 動作保持）       人間 judge）
-                                              [PR-3 で追加予定]
-```
+汎用 critique gate（`proposal-critique` / `complexity-critique`）は
+`dev-workflow` に残ります。
 
 `skill-refactor`（Phase A）と `skill-tuning`（Phase B）の分割
 は、Fowler の Two Hats を skill に適用したもの：refactor は動作
@@ -258,9 +257,7 @@ skill-judge          skill-refactor       skill-tuning
 （skill-refactor）は意図的に Phase A（構造 + 動作保持）のみを
 扱い、Phase B（出力品質 A/B）は別 skill `skill-tuning`。この
 分割は単一 rubric が抱える LLM-as-judge / Goodhart drift 問題
-を回避する — 詳細は
-[`../../docs/skill-evolution-architecture.md`](../../docs/skill-evolution-architecture.md)
-§1。
+を回避する。
 
 その他の差異：3-judge ensemble + varied framing（vs 単 judge）、
 specific-behavior-diff override（vs 多数決）、3 つの具体的問い

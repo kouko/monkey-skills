@@ -89,7 +89,7 @@ vary too much in density to be a reliable measure.
 Always use **relative paths** (relative to the skill directory) when referencing
 bundled files from SKILL.md:
 - Good: `references/schemas.md`, `agents/grader.md`
-- Bad: `dev-workflow/skills/skill-creator-advance/references/schemas.md`
+- Bad: `skill-dev-toolkit/skills/skill-creator-advance/references/schemas.md`
 
 Claude Code provides the base path at runtime; bundled files resolve from
 the skill directory.
@@ -126,9 +126,9 @@ Use the {plugin-name}:{skill-name} skill to handle this request.
 
 ### Example
 
-For a skill named `skill-creator-advance` in the `dev-workflow` plugin:
+For a skill named `skill-creator-advance` in the `skill-dev-toolkit` plugin:
 
-**File**: `dev-workflow/commands/skill-creator-advance.md`
+**File**: `skill-dev-toolkit/commands/skill-creator-advance.md`
 
 ```markdown
 ---

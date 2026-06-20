@@ -82,7 +82,7 @@ flowchart TD
 
 ### The verdict vocabulary
 
-Parallel to other dev-workflow critique skills:
+Parallel to dev-workflow's critique skills:
 
 | Verdict | When | Action |
 |---|---|---|
@@ -229,19 +229,18 @@ preserved**. Hand off when:
 
 ---
 
-## Where in dev-workflow does this fit?
+## Where in skill-dev-toolkit does this fit?
 
-The dev-workflow skill family now reads:
+The skill-authoring lifecycle (all in `skill-dev-toolkit`):
 
-```
-proposal-critique  → complexity-critique → skill-creator-advance
-(list/plan triage)   (single change gate)   (creation + redesign)
+- `skill-creator-advance` — creation + redesign
+- `skill-judge` — advisory design score
+- `skill-refactor` — Phase A: token / structure refactor, output preserved
+- `skill-tuning` — Phase B: output A/B, human judge, preference log
+- `dogfood-skill-testing` — blind behavioral test
 
-skill-judge          skill-refactor       skill-tuning
-(advisory score)     (Phase A: tokens     (Phase B: output A/B,
-                      / structure with     human judge)
-                      output preserved)    [coming PR-3]
-```
+The general critique gates (`proposal-critique` / `complexity-critique`)
+stay in `dev-workflow`.
 
 The split between `skill-refactor` (Phase A) and `skill-tuning`
 (Phase B) reflects Fowler's Two Hats applied to skills: refactor
@@ -266,8 +265,7 @@ structural refactoring with output quality evaluation in a single
 Phase A (structure with output preservation); Phase B (output
 quality A/B) is the separate `skill-tuning` skill. The split avoids
 the LLM-as-judge / Goodhart drift that monolithic taste-rubrics
-produce — see [`../../docs/skill-evolution-architecture.md`](../../docs/skill-evolution-architecture.md)
-§1 for the architectural reasoning.
+produce.
 
 Other distinctions: 3-judge ensemble + varied framing (vs single
 judge), specific-behavior-diff override (vs majority rules), three

@@ -22,8 +22,7 @@ Specific design distinctions from `darwin-skill`:
    (structure with output preservation); Phase B (output quality
    A/B) is the separate `skill-dev-toolkit:skill-tuning` skill. This
    split avoids the LLM-as-judge / Goodhart drift problems that
-   monolithic taste-rubrics produce — see
-   `dev-workflow/docs/skill-evolution-architecture.md` §1.
+   monolithic taste-rubrics produce.
 2. **Multi-judge ensemble** — `skill-refactor` uses a 3-judge
    ensemble with varied prompt framing (utility / content /
    boundary) for Q1's semantic equivalence check, rather than a
@@ -35,8 +34,8 @@ Specific design distinctions from `darwin-skill`:
    equivalent" votes when one judge's specific reason was correct.
 4. **Three-question gate (Q1 equivalence + Q2 token reduction ≥10%
    + Q3 invariant preservation)** — vs `darwin-skill`'s 8-dim
-   weighted score. The three-question shape parallels other
-   dev-workflow critique skills (`proposal-critique`,
+   weighted score. The three-question shape parallels dev-workflow's
+   critique skills (`proposal-critique`,
    `complexity-critique`).
 5. **Verdict vocabulary** — PROCEED / RESHAPE / REJECT — parallel
    to `complexity-critique`. `darwin-skill` uses keep / revert.
@@ -71,9 +70,9 @@ The autonomous-loop concept that informs this skill traces:
    principle. Grounds this skill's discipline of refusing
    behavior-changing edits in refactor scope.
 
-4. monkey-skills `dev-workflow/docs/skill-evolution-architecture.md`
-   captures the full rationale for splitting Phase A / Phase B and
-   the cost-blind H1-H4 horizons that informed PR-2's scope.
+4. monkey-skills' skill-evolution architecture rationale — covers
+   splitting Phase A / Phase B and the cost-blind H1-H4 horizons that
+   informed PR-2's scope.
 
 License
 -------
@@ -98,8 +97,7 @@ in both skills' `references/`:
 - `test-prompts-schema.md`
 - `constitution-schema.md`
 
-**Same-PR drift rule** (per
-`dev-workflow/docs/skill-evolution-architecture.md`): any edit to
+**Same-PR drift rule**: any edit to
 the protocol must update both copies in the same PR. This skill
 ships the canonical content for these conventions in PR-2;
 `skill-tuning` will copy them verbatim plus a header blockquote

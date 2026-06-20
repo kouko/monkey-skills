@@ -134,7 +134,7 @@ layout 不對）。它們量的是不同的東西。
 維度組成的 rubric、E:A:R 知識分類、evaluation protocol、9 種典型
 失敗模式。
 
-kouko 的 modifications：依 dev-workflow plugin convention 改寫
+kouko 的 modifications：依 skill-dev-toolkit plugin convention 改寫
 frontmatter；新增 "Adaptation for monkey-skills domain-team skills"
 section；插入 sibling skill 的 cross-reference 釐清 scope。完整
 upstream chain 與 modification 摘要見 [`NOTICE`](NOTICE)，dual-

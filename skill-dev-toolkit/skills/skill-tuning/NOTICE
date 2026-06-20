@@ -83,10 +83,9 @@ Inspirations acknowledged
    Grounds the refactor-vs-feature split that separates
    skill-refactor from skill-tuning at the architectural level.
 
-6. monkey-skills `dev-workflow/docs/skill-evolution-architecture.md`
-   captures the full rationale for the Two-Hats split applied to
-   skills, the cost-blind H1-H4 horizons, and the trained-judge
-   trajectory.
+6. monkey-skills' skill-evolution architecture rationale — the
+   Two-Hats split applied to skills, the cost-blind H1-H4 horizons,
+   and the trained-judge trajectory.
 
 License
 -------
@@ -109,9 +108,8 @@ files in `references/`:
 - `test-prompts-schema.md`
 - `constitution-schema.md`
 
-Same-PR drift rule (per
-`dev-workflow/docs/skill-evolution-architecture.md` and the SSOT-
-and-functional-copy precedent set in PR #159):
+Same-PR drift rule (per the SSOT-and-functional-copy precedent set
+in PR #159):
 
 - The canonical SoT for these conventions lives in
   `skill-dev-toolkit:skill-refactor/references/`
@@ -121,5 +119,5 @@ and-functional-copy precedent set in PR #159):
   back to the canonical location for clarity
 
 This arrangement preserves runtime self-containment (each skill
-runs with `dev-workflow` alone, no cross-plugin or cross-skill
+runs with `skill-dev-toolkit` alone, no cross-plugin or cross-skill
 runtime dependency) while keeping evolution coherent.
