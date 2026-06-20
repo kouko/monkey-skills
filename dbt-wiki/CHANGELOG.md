@@ -4,6 +4,31 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.14.0] — 2026-06-20
+
+### Added — `lint_identifier_fidelity.py` build-time gate (phantom-column citations)
+
+A behavioral dogfood of a packed bundle (financial-reporting domain, ~60+ leaf
+columns per table) surfaced a class of knowledge defect the existing gates miss:
+a `## Fields` table citing a `model.column` that **does not exist** in the
+manifest (a dropped `__daily` suffix, an invented prefix, a bare name for a
+column that was split in two). A SQL-generating consumer then emits a query
+referencing a non-existent column that fails at execution — and nothing in the
+page looks wrong on inspection. A deterministic sweep of one real bundle found
+4 such phantom citations among 906 (the other 902 were correct).
+
+New `assets/lint_identifier_fidelity.py` (+ test, 8/8) cross-checks every
+`` `model.column` `` cited in `entities/` / `metrics/` / `concepts/` against the
+model's evidence `columns:` frontmatter, verifying **only** `sqlglot`-extracted
+models (complete output-column set); citations to `schema_yml_only` / `failed`
+models or non-evidence relations are skipped as unverifiable, never flagged
+(zero false positives). Exit non-zero ⇒ phantom citations exist. Deterministic,
+pure stdlib, reads `.dbt-wiki/` only. Wired into `init` (copy-loop + new Step
+6.8 gate after reconcile) and `refresh` (copy-loop + knowledge-regen note).
+Complements `lint_schema_divergence.py` (twin schema-delta documentation) — that
+checks whether divergence is *documented*; this checks whether cited columns
+*exist*.
+
 ## [2.13.4] — 2026-06-20
 
 ### Changed — distill-entities §3.4 hardens value_domain adherence

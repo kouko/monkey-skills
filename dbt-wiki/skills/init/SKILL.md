@@ -380,8 +380,8 @@ one-shot smoke tests stay in the plugin and run in-place from there (Steps 4c /
 mkdir -p .dbt-wiki/_internal
 for f in extract_column_lineage extract_sql_comments \
          extract_recursive_column_lineage format_lineage_diagram \
-         detect_source_language lint_schema_divergence build_evidence_pages \
-         build_index_knowledge reconcile; do
+         detect_source_language lint_schema_divergence lint_identifier_fidelity \
+         build_evidence_pages build_index_knowledge reconcile; do
   cp "<SKILL_DIR>/assets/$f.py" .dbt-wiki/_internal/
 done
 cp <SKILL_DIR>/assets/synthesis_template.md .dbt-wiki/_internal/
@@ -1013,6 +1013,32 @@ Emit all violations before stopping — do not halt on the first one.
 A page with cross-domain `derived_from` entries **must not** be
 published until the contamination is resolved: either the foreign
 uid is moved to the correct owning domain's page or removed.
+
+### Step 6.8: Identifier-fidelity gate (after reconcile)
+
+Distillation occasionally **paraphrases a column identifier instead of
+copying it verbatim** from the evidence layer — a dropped `__daily` suffix,
+an invented prefix, a bare name for a column that was split in two. The
+result is a `## Fields` citation to a column that **does not exist**, so a
+SQL-generating consumer of the bundle emits a query that fails at execution.
+Nothing in the page looks wrong on inspection — only a cross-check against
+the manifest catches it. Run the shipped deterministic gate:
+
+```bash
+$PY_RUNNER .dbt-wiki/_internal/lint_identifier_fidelity.py .dbt-wiki
+```
+
+It scans every `` `model.column` `` cited in `entities/` / `metrics/` /
+`concepts/` and verifies the column exists in that model's evidence
+`columns:` frontmatter, checking **only** models extracted via `sqlglot`
+(a complete output-column set); citations to `schema_yml_only` / `failed`
+models or to non-evidence relations (sources) are skipped as unverifiable,
+never flagged. Exit non-zero ⇒ phantom-column citations exist. For each one,
+correct the knowledge page to the manifest-true identifier (read the model's
+`_evidence/models/<model>.md` `columns:` list) and re-run until clean. A page
+with a phantom-column citation **must not** be published. (Optional first-run
+check: `$PY_RUNNER <SKILL_DIR>/assets/lint_identifier_fidelity_test.py` →
+"8/8 passed".)
 
 ### Phase B spec files
 
