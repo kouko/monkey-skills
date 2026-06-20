@@ -70,9 +70,9 @@ The autonomous-loop concept that informs this skill traces:
    principle. Grounds this skill's discipline of refusing
    behavior-changing edits in refactor scope.
 
-4. monkey-skills' skill-evolution architecture rationale — the
-   full rationale for splitting Phase A / Phase B and the cost-blind
-   H1-H4 horizons that informed PR-2's scope.
+4. monkey-skills' skill-evolution architecture rationale — covers
+   splitting Phase A / Phase B and the cost-blind H1-H4 horizons that
+   informed PR-2's scope.
 
 License
 -------
