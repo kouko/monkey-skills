@@ -69,7 +69,17 @@ By default the pipeline is **human-pumped**: between every stage the user says "
 **Entry — at the SPEC, not the plan.** Continuous mode starts only when **both** hold:
 
 1. The user **opts in** explicitly (e.g. "run continuous to PR" / "連續跑到 PR"). The default stays human-pumped.
-2. A **human-approved, frozen spec** exists — concretely the `brainstorming` hand-off **brief** (`docs/loom/specs/<topic>.md`), the per-feature artifact that locks the *approach*; this is **not** the repo-level PRODUCT-SPEC / TECH-SPEC. **Design + spec stay human-gated** (sign-off locks the *approach* via `brainstorming`'s Smallest-End-State / Alternatives axes). The plan is **not** a human checkpoint: it is the mechanical sequencing of an already-decided approach, so it is **auto-generated** by `writing-plans` and **gated** by the `plan-document-reviewer` evaluator subagent (a real writer≠judge **plan gate**, PASS / NEEDS_REVISION). The plan becomes one more auto-advance-with-gate stage.
+2. A **human-approved, frozen spec** exists. Two entry artifacts are accepted (the user picks one — see freeze discrimination below):
+   - **(a) the `brainstorming` hand-off brief** (`docs/loom/specs/<topic>.md`), the per-feature artifact that locks the *approach*; or
+   - **(b) a human-approved loom-spec change-folder** (`docs/loom/<change-id>/`) as an **alternative** entry artifact alongside the brief — the upstream loom-spec output the user has signed off on.
+
+   Either way this is **not** the repo-level PRODUCT-SPEC / TECH-SPEC. **Design + spec stay human-gated** (sign-off locks the *approach* via `brainstorming`'s Smallest-End-State / Alternatives axes, or via the user's approval of the change-folder). The plan is **not** a human checkpoint: it is the mechanical sequencing of an already-decided approach, so it is **auto-generated** by `writing-plans` and **gated** by the `plan-document-reviewer` evaluator subagent (a real writer≠judge **plan gate**, PASS / NEEDS_REVISION). The plan becomes one more auto-advance-with-gate stage.
+
+**Freeze discrimination — declared, NOT content-shape sniffed (R6).** The freeze does **not** classify the entry artifact by sniffing its content shape. Instead, the **user declares** which artifact to run on (the brief, or a change-folder at a named path), and the freeze **confirms** the change-folder by two checkable signals — never a fuzzy content-shape classifier:
+- **(a) named-artifact presence** — `specs/<capability>/spec.md` exists at the declared change-folder path; and
+- **(b) validator exit 0** — `loom-spec/scripts/validate_spec_output.py <change-folder>` returns **exit 0** (the cross-plugin gate; loom-spec owns the format, loom-code reuses it — no new validator). A non-zero exit HALTS the freeze and escalates (the artifact is not validate-clean).
+
+This follows the declaration-gate learning: don't fake a fuzzy objective detector — make the agent declare it, and gate the consequence on a checkable signal. Upstream stays human-gated; the STOP contract + never-auto-merge terminal below are **unchanged**.
 
 **Auto-advance behavior.** Within continuous mode the orchestrator proceeds `writing-plans → plan gate → SDD per-task triad → whole-branch review → verification → finish→PR` without waiting for a human "go", **unless a stop condition fires**.
 
