@@ -97,7 +97,7 @@ constitution; more than 7 dilutes the non-negotiable weight. See the synthetic
 ### Step 5 — Emit `PRINCIPLES.md` into the consumer project
 
 Emit the result as **`PRINCIPLES.md`** into the **consumer project** at
-**`docs/product-principles-toolkit/PRINCIPLES.md`** (the established
+**`docs/loom/PRINCIPLES.md`** (the established
 `docs/<toolkit>/` convention). It is **product-level — one file per product**,
 not per-feature. Do not scatter it; the constitution is a single supreme file.
 
@@ -106,7 +106,7 @@ not per-feature. Do not scatter it; the constitution is a single supreme file.
 Run the validator and **fix any flagged issue before declaring done**:
 
 ```
-python loom-product-principles/scripts/validate_principles_output.py docs/product-principles-toolkit/PRINCIPLES.md
+python loom-product-principles/scripts/validate_principles_output.py docs/loom/PRINCIPLES.md
 ```
 
 It mechanically checks the two required sections exist and that **every**

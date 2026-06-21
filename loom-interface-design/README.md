@@ -43,7 +43,7 @@ Both skills read `loom-product-principles`'s **`PRINCIPLES.md`** (cross-plugin, 
 The design change-folder is written into the **consumer project** under the established `docs/<toolkit>/` convention:
 
 ```
-docs/interface-design-toolkit/
+docs/loom/
   DESIGN.md          # GUI design-system, product-level (one per product)
   ui-flows.md        # interaction flows, per-feature/change
 ```
@@ -65,7 +65,7 @@ Out (deferred — **not shipped in MVP**):
 - **Behavioral state/edge/path fan-out** — `spec-expansion`'s turf; `ui-flows.md` seeds it, doesn't do it.
 - **Automated interface-design → loom-spec hand-off seam** — manual via the shared `docs/<toolkit>/` convention first.
 
-See `docs/interface-design-toolkit/specs/2026-06-14-loom-interface-design-mvp.md` (brief).
+See `docs/loom/specs/2026-06-14-loom-interface-design-mvp.md` (brief).
 
 ## License
 

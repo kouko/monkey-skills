@@ -345,7 +345,7 @@ findings using the same 🔴 / 🟡 / 🟢 taxonomy.
 | refactoring | `standards/refactoring-standard.md` + `standards/pragmatic-principles.md` — Rule of Three at branch scope (3 tasks doing similar thing → extract) |
 | **cross-task-coherence** | **Branch-only dimension.** Look for: inconsistent abstractions across tasks; duplicated logic that survived per-task review because each task saw only its slice; tasks that introduce dependencies on each other in non-obvious ways; scope creep (task did more than its name suggested) |
 | **external-surface-grounding** | `standards/external-surface-grounding.md` — mirrors per-task D7 (HTTP API / SDK / MCP / CLI / sibling-team contract calls need grounding cites) AND adds the whole-branch-only cross-task-conflict check |
-| **principles-conformance** | **Conditional dimension — scored only when the consumer project has `docs/product-principles-toolkit/PRINCIPLES.md`** (the orchestrator passes its path; see `requesting-code-review` §Process). Asks the **conformance** question: does the branch diff VIOLATE any of PRINCIPLES.md's falsifiable `— check:` clauses? The source is the **consumer's PRINCIPLES.md artifact**, NOT a code-team standard (code-team is generic; product principles are project-specific). When PRINCIPLES.md is absent, emit `principles-conformance: N/A` and no findings. See §D8 below for severity. |
+| **principles-conformance** | **Conditional dimension — scored only when the consumer project has `docs/loom/PRINCIPLES.md`** (the orchestrator passes its path; see `requesting-code-review` §Process). Asks the **conformance** question: does the branch diff VIOLATE any of PRINCIPLES.md's falsifiable `— check:` clauses? The source is the **consumer's PRINCIPLES.md artifact**, NOT a code-team standard (code-team is generic; product principles are project-specific). When PRINCIPLES.md is absent, emit `principles-conformance: N/A` and no findings. See §D8 below for severity. |
 
 #### D7 — External Surface Grounding (whole-branch + cross-task)
 
@@ -362,7 +362,7 @@ The agent has no author authority over external surfaces — third-party HTTP AP
 
 #### D8 — Principles Conformance (conditional; whole-branch)
 
-Fires **only** when the orchestrator passes a `docs/product-principles-toolkit/PRINCIPLES.md`
+Fires **only** when the orchestrator passes a `docs/loom/PRINCIPLES.md`
 path. The agent has no authority to invent principles — it judges the branch diff **against
 the falsifiable `— check:` clauses already written in that file** (industry analogue: Spec
 Kit's `/speckit.review` constitution gate). It is a **conformance** check (does the diff

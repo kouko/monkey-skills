@@ -1,6 +1,6 @@
 # Plan: interface-design-toolkit MVP
 
-**Source brief**: docs/interface-design-toolkit/specs/2026-06-14-interface-design-toolkit-mvp.md
+**Source brief**: docs/loom/specs/2026-06-14-interface-design-toolkit-mvp.md
 **Total tasks**: 12
 **Critical-path depth**: 3 (≤5 ✓) — e.g. T8 → T9 → T11
 **Execution order**: parallel-where-possible
@@ -20,7 +20,7 @@
 - **Module**: `interface-design-toolkit/skills/design-system/references/design-md-schema.md`
 - **Files touched**: `interface-design-toolkit/skills/design-system/references/design-md-schema.md`
 - **Context paths**:
-  - `/Users/kouko/GitHub/monkey-skills/docs/interface-design-toolkit/specs/2026-06-14-interface-design-toolkit-mvp.md`
+  - `/Users/kouko/GitHub/monkey-skills/docs/loom/specs/2026-06-14-interface-design-toolkit-mvp.md`
 - **Acceptance**:
   - **RED**: `grep -c '^## ' design-md-schema.md` returns <8.
   - **GREEN**: all 8 sections + per-section token keys + source cite + lint/contrast note.
@@ -36,7 +36,7 @@
 - **Module**: `interface-design-toolkit/skills/interaction-flows/references/ux-flow-checklist.md`
 - **Files touched**: `interface-design-toolkit/skills/interaction-flows/references/ux-flow-checklist.md`
 - **Context paths**:
-  - `/Users/kouko/GitHub/monkey-skills/docs/interface-design-toolkit/specs/2026-06-14-interface-design-toolkit-mvp.md`
+  - `/Users/kouko/GitHub/monkey-skills/docs/loom/specs/2026-06-14-interface-design-toolkit-mvp.md`
 - **Acceptance**:
   - **RED**: `grep -ci 'screen.*inventory\|mobile flow\|entry point\|modality' ux-flow-checklist.md` returns <4.
   - **GREEN**: 7 dimensions present as generation prompts; per-modality rendering noted; render-variant flag rule stated.
@@ -96,7 +96,7 @@
 - **Files touched**: `interface-design-toolkit/README.md`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/spec-toolkit/README.md`
-  - `/Users/kouko/GitHub/monkey-skills/docs/interface-design-toolkit/specs/2026-06-14-interface-design-toolkit-mvp.md`
+  - `/Users/kouko/GitHub/monkey-skills/docs/loom/specs/2026-06-14-interface-design-toolkit-mvp.md`
 - **Acceptance**:
   - **RED**: `test -f interface-design-toolkit/README.md` fails.
   - **GREEN**: README documents the change-folder output + seam-1 + PRINCIPLES governance + modality posture.

@@ -1,6 +1,6 @@
 # Plan: product-principles-toolkit MVP
 
-**Source brief**: docs/product-principles-toolkit/specs/2026-06-14-product-principles-toolkit-mvp.md
+**Source brief**: docs/loom/specs/2026-06-14-product-principles-toolkit-mvp.md
 **Total tasks**: 6
 **Critical-path depth**: 3 (≤5 ✓) — T1 → T5 → T6
 **Execution order**: parallel-where-possible
@@ -19,7 +19,7 @@
 - **Module**: `product-principles-toolkit/skills/product-principles/references/principles-rules.md`
 - **Files touched**: `product-principles-toolkit/skills/product-principles/references/principles-rules.md`
 - **Context paths**:
-  - `/Users/kouko/GitHub/monkey-skills/docs/product-principles-toolkit/specs/2026-06-14-product-principles-toolkit-mvp.md`
+  - `/Users/kouko/GitHub/monkey-skills/docs/loom/specs/2026-06-14-product-principles-toolkit-mvp.md`
 - **Acceptance**:
   - **RED**: `grep -ci 'falsifiable\|north star\|check' principles-rules.md` returns <3.
   - **GREEN**: North Star + Principles format defined; per-principle falsifiable-check requirement stated; synthetic ✅/❌ examples present; constitution/steering prior art cited.
@@ -65,7 +65,7 @@
 - **Files touched**: `product-principles-toolkit/README.md`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/spec-toolkit/README.md`
-  - `/Users/kouko/GitHub/monkey-skills/docs/product-principles-toolkit/specs/2026-06-14-product-principles-toolkit-mvp.md`
+  - `/Users/kouko/GitHub/monkey-skills/docs/loom/specs/2026-06-14-product-principles-toolkit-mvp.md`
 - **Acceptance**:
   - **RED**: `test -f product-principles-toolkit/README.md` fails.
   - **GREEN**: README documents `PRINCIPLES.md` output + cross-cutting governance + key-free.
@@ -90,7 +90,7 @@
 
 ## Task 6 — Author product-principles SKILL.md (via skill-creator-advance)
 
-- **Description**: Author `product-principles-toolkit/skills/product-principles/SKILL.md` — the one skill: sparse idea → elicit + write `PRINCIPLES.md` (North Star + 3–7 falsifiable principles per `references/principles-rules.md`) → run `scripts/validate_principles_output.py`. Output to consumer `docs/product-principles-toolkit/PRINCIPLES.md`. Flat-skill; references by relative path. Iterated via `dev-workflow:skill-creator-advance`.
+- **Description**: Author `product-principles-toolkit/skills/product-principles/SKILL.md` — the one skill: sparse idea → elicit + write `PRINCIPLES.md` (North Star + 3–7 falsifiable principles per `references/principles-rules.md`) → run `scripts/validate_principles_output.py`. Output to consumer `docs/loom/PRINCIPLES.md`. Flat-skill; references by relative path. Iterated via `dev-workflow:skill-creator-advance`.
 - **Module**: `product-principles-toolkit/skills/product-principles/SKILL.md`
 - **Files touched**: `product-principles-toolkit/skills/product-principles/SKILL.md`
 - **Context paths**:
@@ -98,7 +98,7 @@
   - `/Users/kouko/GitHub/monkey-skills/spec-toolkit/skills/spec-expansion/SKILL.md`
 - **Acceptance**:
   - **RED**: grep diagnostic — SKILL.md absent, OR description >1024 chars, OR body doesn't reference `references/principles-rules.md` + `scripts/validate_principles_output.py`, OR not flat-skill.
-  - **GREEN**: SKILL.md present; description ≤1024; declares `PRINCIPLES.md` output + the `docs/product-principles-toolkit/` location; references the rules doc + validator; flat-skill; passes the skill-creator-advance activation harness.
+  - **GREEN**: SKILL.md present; description ≤1024; declares `PRINCIPLES.md` output + the `docs/loom/` location; references the rules doc + validator; flat-skill; passes the skill-creator-advance activation harness.
 - **Dependencies**: Tasks 1, 5 complete first
 - **Independent**: false  # consumes the reference doc + validator contract
 - **Brief item covered**: "One skill (`product-principles`) that turns a sparse idea into `PRINCIPLES.md`"

@@ -135,8 +135,8 @@ def test_body_emits_to_consumer_project_path():
     """The skill writes PRINCIPLES.md into the consumer project at the
     docs/<toolkit>/ convention — product-level, one per product."""
     text = _text()
-    assert "docs/product-principles-toolkit/PRINCIPLES.md" in text, \
-        "body must emit PRINCIPLES.md to docs/product-principles-toolkit/"
+    assert "docs/loom/PRINCIPLES.md" in text, \
+        "body must emit PRINCIPLES.md to docs/loom/"
 
 
 def test_body_mandates_validation_step():

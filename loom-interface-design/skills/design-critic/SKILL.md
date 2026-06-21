@@ -24,8 +24,8 @@ reasoning and the parallel fan-out. There is no external runtime, no API key, no
 program to install — the panel rides on the host agent you are already in.
 
 **Inputs.** The artifacts under critique are the design change-folder in the consumer
-project — by convention `docs/interface-design-toolkit/DESIGN.md` +
-`docs/interface-design-toolkit/ui-flows.md` (one or both may be present; critique
+project — by convention `docs/loom/DESIGN.md` +
+`docs/loom/ui-flows.md` (one or both may be present; critique
 whatever exists, note the missing one). **Wrong-artifact guard:** if you are handed a
 **spec** (behavioral requirements / `#### Scenario:` blocks) or **code**, STOP — that
 is the wrong skill (`loom-spec:completeness-critic` for a spec; code review for
@@ -127,7 +127,7 @@ never invent a design the writer plausibly omitted on purpose; flag the absence.
 
 ### Conditional lens — PRINCIPLES.md (omission-framed)
 
-When the consumer project has a `docs/product-principles-toolkit/PRINCIPLES.md`,
+When the consumer project has a `docs/loom/PRINCIPLES.md`,
 add a 6th conditional lens: *"what principle-entailed UI surface did the design
 OMIT?"* (e.g. a principle "must work offline" → is the offline/cached render-state
 designed?). **N/A no-op when no `PRINCIPLES.md` exists** — announce "principles

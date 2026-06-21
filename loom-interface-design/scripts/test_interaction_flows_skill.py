@@ -122,8 +122,8 @@ def test_body_detects_modality():
 def test_body_emits_ui_flows_to_consumer_project():
     text = _text()
     assert "ui-flows.md" in text, "body must emit ui-flows.md"
-    assert "docs/interface-design-toolkit/" in text, \
-        "body must emit into docs/interface-design-toolkit/"
+    assert "docs/loom/" in text, \
+        "body must emit into docs/loom/"
 
 
 def test_body_names_spec_expansion_seam():

@@ -189,7 +189,7 @@ signal to **diversify the panel**, never a signal to stop hunting.
 
 The first five are the **always-on fixed panel** (the cost model above counts these
 five). The sixth is **conditional** — it runs only when the consumer project has a
-`docs/product-principles-toolkit/PRINCIPLES.md`, adding one dispatch when present.
+`docs/loom/PRINCIPLES.md`, adding one dispatch when present.
 
 1. **NFR / security — load-bearing #1.** Non-functional requirements:
    **security**, performance/latency, **privacy**, **compliance**, **a11y**
@@ -223,7 +223,7 @@ five). The sixth is **conditional** — it runs only when the consumer project h
    not object-layer — a state grid never surfaces them. Persona: 3am on-call ops.
 
 6. **Principles-entailed omission — conditional (only when `PRINCIPLES.md` present).**
-   Read the consumer's `docs/product-principles-toolkit/PRINCIPLES.md` (North Star +
+   Read the consumer's `docs/loom/PRINCIPLES.md` (North Star +
    the falsifiable `— check:` clauses) as this lens's input view. Ask the **omission**
    question, not the violation question: *"what behavior that a principle ENTAILS did
    the spec silently OMIT?"* — e.g. a principle "must work offline" → hunt where the

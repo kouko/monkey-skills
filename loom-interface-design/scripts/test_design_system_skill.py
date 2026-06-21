@@ -116,7 +116,7 @@ def test_body_reads_principles_as_governing_constraint():
     text = _text()
     assert "PRINCIPLES.md" in text, \
         "body must read the product's PRINCIPLES.md"
-    assert "docs/product-principles-toolkit/PRINCIPLES.md" in text, \
+    assert "docs/loom/PRINCIPLES.md" in text, \
         "body must read PRINCIPLES.md from the consumer project path"
     low = text.lower()
     assert "govern" in low or "constrain" in low, \
@@ -154,8 +154,8 @@ def test_body_emits_to_consumer_project_path():
     """The skill writes into the consumer project at the docs/<toolkit>/
     convention — DESIGN.md is product-level (one per product)."""
     text = _text()
-    assert "docs/interface-design-toolkit/" in text, \
-        "body must emit into docs/interface-design-toolkit/"
+    assert "docs/loom/" in text, \
+        "body must emit into docs/loom/"
     low = text.lower()
     assert "product-level" in low or "one per product" in low, \
         "body must state DESIGN.md is product-level (one per product)"

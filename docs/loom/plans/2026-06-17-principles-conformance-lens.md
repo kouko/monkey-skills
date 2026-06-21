@@ -26,7 +26,7 @@ Notes:
   lenses" (rename heading to "### The lenses" or "### The six lenses") framed as an
   OMISSION question — *"what PRINCIPLES.md-entailed behavior did the spec OMIT?"*
   (e.g. a principle "must work offline" → hunt where the spec drops offline
-  handling). The lens reads `docs/product-principles-toolkit/PRINCIPLES.md` as an
+  handling). The lens reads `docs/loom/PRINCIPLES.md` as an
   extra input view; if absent, the lens is an announced N/A no-op. Must respect the
   skill's absence-not-inconsistency boundary (SKILL.md:143) — frame as missing
   principle-entailed behavior, NOT "the spec violates a principle".
@@ -52,7 +52,7 @@ Notes:
   `principles-conformance` to the `dimension_scores` block (:296-304) and a row to
   the dimension→source mapping table (:339-346). It asks the CONFORMANCE question —
   *does the branch diff VIOLATE any PRINCIPLES.md `— check:` clause?* — mapped to the
-  **consumer's `docs/product-principles-toolkit/PRINCIPLES.md`** (NOT a code-team
+  **consumer's `docs/loom/PRINCIPLES.md`** (NOT a code-team
   standard). Severity: violation of a falsifiable check = 🟡 (🔴 if the principle is
   safety/security-bearing); ambiguous = 🟢. Graceful N/A when PRINCIPLES.md absent.
   The edit MUST land OUTSIDE the injected baseline / rule-sheet block so drift stays
@@ -79,7 +79,7 @@ Notes:
 ## Task 3 — requesting-code-review SKILL: discover + pass PRINCIPLES.md path
 - Description: In requesting-code-review/SKILL.md §Process (the dispatch step that
   passes "diff range, paths to rubrics + checklists, branch context"), add: discover
-  `docs/product-principles-toolkit/PRINCIPLES.md` in the consumer repo and pass its
+  `docs/loom/PRINCIPLES.md` in the consumer repo and pass its
   path to the code-reviewer with the conformance instruction; if absent, pass
   nothing and the dimension is N/A. Reference the `principles-conformance` dimension
   by the exact name T2 defines.
@@ -93,12 +93,12 @@ Notes:
   - docs/loom/specs/2026-06-17-principles-conformance-lens.md (brief)
 - Acceptance:
   - RED: `grep -ci 'PRINCIPLES' code-toolkit/skills/requesting-code-review/SKILL.md` = 0.
-  - GREEN: the Process dispatch step names `docs/product-principles-toolkit/PRINCIPLES.md`
+  - GREEN: the Process dispatch step names `docs/loom/PRINCIPLES.md`
     discovery + path pass-through + N/A-when-absent, and references the
     `principles-conformance` dimension by the name T2 uses; flat-skill + token budget
     intact.
 - Dependencies: Task 2 completes first
 - Independent: false
 - Brief item covered: "requesting-code-review SKILL.md: in the dispatch step,
-  discover docs/product-principles-toolkit/PRINCIPLES.md … and pass its path to the
+  discover docs/loom/PRINCIPLES.md … and pass its path to the
   reviewer with the conformance instruction."

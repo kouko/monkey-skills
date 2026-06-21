@@ -26,7 +26,7 @@ and doesn't re-litigate the design surface.*
 ## Users
 
 (Axis 2) An agent (or kouko) running `spec-toolkit:spec-expansion` on a feature that
-**already has a `docs/interface-design-toolkit/ui-flows.md`**, on the host agent, no API
+**already has a `docs/loom/ui-flows.md`**, on the host agent, no API
 key. The complementary user is the agent running `interaction-flows` who needs to know to
 **structure ui-flows sections so they're addressable** (stable headings) because the
 downstream links back rather than copies.

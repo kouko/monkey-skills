@@ -38,8 +38,8 @@ script (mirror `spec-toolkit/scripts/validate_spec_output.py`) checks the two se
 carries a check. That's the whole MVP: idea → `PRINCIPLES.md`. Ship the portable core first.
 
 **Runtime output location:** the skill writes `PRINCIPLES.md` into the **consumer project** under the established
-`docs/<toolkit>/` convention → `docs/product-principles-toolkit/PRINCIPLES.md` (product-level, single file; not
-per-feature). The repo's own dev brief/plan live in `docs/product-principles-toolkit/specs|plans/` in
+`docs/<toolkit>/` convention → `docs/loom/PRINCIPLES.md` (product-level, single file; not
+per-feature). The repo's own dev brief/plan live in `docs/loom/specs|plans/` in
 monkey-skills.
 
 ## Current State Evidence

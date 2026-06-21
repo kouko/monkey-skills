@@ -34,7 +34,7 @@ This is **product design principles + target user**, not a full market/business-
 A single product-level file written into the **consumer project** under the established `docs/<toolkit>/` convention:
 
 ```
-docs/product-principles-toolkit/PRINCIPLES.md
+docs/loom/PRINCIPLES.md
   ## North Star      # original goal + concrete definition of success
   ## Principles       # 3–7 non-negotiable principles, each with a falsifiable check
 ```
@@ -49,7 +49,7 @@ A principle is only useful if it is **falsifiable / checkable** — otherwise it
 
 In: the `product-principles` skill + the format validator. The constitution MAY ride the downstream seam as always-on steering context (it is just one more file path).
 
-Out (deferred): a writer≠judge **conformance gate** ("does this artifact violate a principle?") — when built, it is added as a **lens** to the existing critics (`loom-spec:completeness-critic`, `loom-code:requesting-code-review`), not a new gate engine; a second `principles-conformance` skill; business/market/strategy framing (that stays `planning-team`'s `PRODUCT-SPEC.md` turf); an automated hand-off seam to interface-design / spec. See `docs/product-principles-toolkit/specs/2026-06-14-loom-product-principles-mvp.md` (brief).
+Out (deferred): a writer≠judge **conformance gate** ("does this artifact violate a principle?") — when built, it is added as a **lens** to the existing critics (`loom-spec:completeness-critic`, `loom-code:requesting-code-review`), not a new gate engine; a second `principles-conformance` skill; business/market/strategy framing (that stays `planning-team`'s `PRODUCT-SPEC.md` turf); an automated hand-off seam to interface-design / spec. See `docs/loom/specs/2026-06-14-loom-product-principles-mvp.md` (brief).
 
 ## License
 

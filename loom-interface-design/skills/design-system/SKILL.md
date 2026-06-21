@@ -57,7 +57,7 @@ generation time**.
 ### Step 2 — Read the governing PRINCIPLES.md
 
 Read the product's **`PRINCIPLES.md`** (from `loom-product-principles`, at
-**`docs/product-principles-toolkit/PRINCIPLES.md`** in the consumer project) as
+**`docs/loom/PRINCIPLES.md`** in the consumer project) as
 the **governing constraint** on the visual system. The constitution's North
 Star and principles **constrain** the design — e.g. a "minimal interface"
 principle constrains the palette to few colors and a restrained component set;
@@ -105,7 +105,7 @@ Do not fake an 8-section `DESIGN.md` for a non-GUI modality.
 ### Step 5 — Emit into the consumer project
 
 Emit the artifact into the consumer project under
-**`docs/interface-design-toolkit/`** (the established `docs/<toolkit>/`
+**`docs/loom/`** (the established `docs/<toolkit>/`
 convention). `DESIGN.md` is **product-level — one per product** (the design
 *system*), so place it at the toolkit root, not per-feature.
 
@@ -128,7 +128,7 @@ principles) is your responsibility.
 **Note — the validator checks the *whole* change-folder.** It requires BOTH
 `DESIGN.md` (this skill) and `ui-flows.md` (the `interaction-flows` skill)
 present. Run the full validation once the change-folder is assembled — after
-`interaction-flows` has also emitted into the same `docs/interface-design-toolkit/`
+`interaction-flows` has also emitted into the same `docs/loom/`
 directory (the `using-loom-interface-design` router coordinates this). A
 `DESIGN.md`-only run will correctly report the missing `ui-flows.md`.
 

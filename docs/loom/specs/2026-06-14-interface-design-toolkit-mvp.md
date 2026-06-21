@@ -48,7 +48,7 @@ design-system doc + `ui-flows.md` present and well-formed). All artifacts **key-
   edges, `#### Scenario:`) — NOT duplicated here.
 - `DESIGN.md` tokens are a **side-channel** straight to code-toolkit's frontend implementation (styling/lint).
 
-**Runtime output location:** consumer project `docs/interface-design-toolkit/` (per the established `docs/<toolkit>/`
+**Runtime output location:** consumer project `docs/loom/` (per the established `docs/<toolkit>/`
 convention) — design-system doc at the toolkit root (product-level), `ui-flows.md` per-feature/change. The OpenSpec
 change-folder that spec-toolkit later produces lives under `docs/spec-toolkit/` (artifact-location decision **A**:
 in-`docs/`, consistent with the in-use convention, not a root `openspec/`).
@@ -83,7 +83,7 @@ in-`docs/`, consistent with the in-use convention, not a root `openspec/`).
 ### Evidence paths appendix
 - `spec-toolkit/skills/spec-expansion/SKILL.md`, `domain-teams/skills/design-team/SKILL.md`,
   `obsidian/skills/obsidian-mermaid-visualizer/SKILL.md`, `spec-toolkit/scripts/validate_spec_output.py`
-- `docs/product-principles-toolkit/specs/2026-06-14-product-principles-toolkit-mvp.md` (the governing constitution plugin)
+- `docs/loom/specs/2026-06-14-product-principles-toolkit-mvp.md` (the governing constitution plugin)
 - Research: Google open `DESIGN.md` 8-section visual-system scope (designmd.app/what-is-design-md, howaiworks.ai, anthropics/skills#1008)
 
 ## Decision

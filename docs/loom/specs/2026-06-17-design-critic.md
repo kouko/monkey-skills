@@ -28,7 +28,7 @@ evaluation). Distinct from a casual critique: structured, heuristic-grounded (NN
 ## Users
 
 (Axis 2) An agent (or kouko) running the interface-design pipeline on a feature, right after
-`design-system` + `interaction-flows` have emitted into `docs/interface-design-toolkit/`, before
+`design-system` + `interaction-flows` have emitted into `docs/loom/`, before
 handing `ui-flows.md` to spec-expansion. Modality-aware (GUI/TUI/CLI). Key-free, host-agent model.
 
 ## Smallest End State

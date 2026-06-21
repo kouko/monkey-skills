@@ -285,10 +285,13 @@ much of the spec is real intent vs model inference vs critic recovery.
 ## The hybrid output format
 
 Emit a **directory in OpenSpec change-folder shape** (plain markdown — no
-OpenSpec CLI dependency):
+OpenSpec CLI dependency). Default `<output-dir>` = `docs/loom/<change-id>/` in
+the consumer project (the loom suite's shared artifact home, alongside
+`PRINCIPLES.md` / `DESIGN.md` / `specs/` / `plans/`), unless the user names
+another location:
 
 ```
-<output-dir>/
+<output-dir>/                      # default: docs/loom/<change-id>/
   proposal.md                      # additive richness lives here
   specs/<capability>/spec.md       # OpenSpec-pure delta (validate-clean)
 ```

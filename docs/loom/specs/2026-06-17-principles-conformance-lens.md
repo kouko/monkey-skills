@@ -27,7 +27,7 @@ passing. Academic prior art: arXiv 2602.02584 *Constitutional Spec-Driven Develo
 
 (Axis 2) An agent (or kouko) running `requesting-code-review` on a branch, OR
 `completeness-critic` on a spec draft, in a consumer project that **has a
-`docs/product-principles-toolkit/PRINCIPLES.md`**. Most projects won't have one → the check
+`docs/loom/PRINCIPLES.md`**. Most projects won't have one → the check
 must degrade to a no-op N/A when PRINCIPLES.md is absent (no false findings, no noise).
 
 ## Smallest End State
@@ -44,7 +44,7 @@ must degrade to a no-op N/A when PRINCIPLES.md is absent (no false findings, no 
      violation of a falsifiable check = 🟡 should-fix (or 🔴 if the principle is safety/
      security-bearing); ambiguous = 🟢 note. Graceful N/A when PRINCIPLES.md absent.
    - **requesting-code-review SKILL.md**: in the dispatch step, **discover**
-     `docs/product-principles-toolkit/PRINCIPLES.md` in the consumer repo and **pass its path**
+     `docs/loom/PRINCIPLES.md` in the consumer repo and **pass its path**
      to the reviewer with the conformance instruction. If absent, pass nothing (dimension N/A).
 
 2. **Spec side (omission frame, respects the skill's absence-not-inconsistency boundary) —
@@ -55,7 +55,7 @@ must degrade to a no-op N/A when PRINCIPLES.md is absent (no false findings, no 
      rule (SKILL.md:143 — "you hunt absence; inconsistency is Spec Kit's job"). The lens reads
      PRINCIPLES.md as an additional input view; N/A no-op when absent.
 
-3. **Path-discovery convention (shared):** `docs/product-principles-toolkit/PRINCIPLES.md` in
+3. **Path-discovery convention (shared):** `docs/loom/PRINCIPLES.md` in
    the consumer project. Absent → the check is N/A (announced once, no findings).
 
 ## Current State Evidence
@@ -93,7 +93,7 @@ Build Option A: a **conformance dimension** in the whole-branch code-reviewer (a
 diff violate a `— check:` clause?", mapped to the consumer PRINCIPLES.md, drift-safe house
 edit) + an **omission-framed principles lens** in completeness-critic (asks "what
 principle-entailed behavior is the spec missing?", respecting its absence-not-inconsistency
-boundary) + a shared path-discovery convention (`docs/product-principles-toolkit/PRINCIPLES.md`,
+boundary) + a shared path-discovery convention (`docs/loom/PRINCIPLES.md`,
 N/A no-op when absent). We will **NOT** build a new gate engine/skill, **NOT** add a synced
 standard to code-team, **NOT** touch the per-task code-quality-reviewer (whole-branch only,
 matching Spec Kit's review-time gate), and **NOT** build the plan-time constitutional gate

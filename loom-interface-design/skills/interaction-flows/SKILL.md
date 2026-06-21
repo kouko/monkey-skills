@@ -28,7 +28,7 @@ to install — the method rides on the host agent you are already in.
 
 Before generating anything, **read the product's `PRINCIPLES.md`** (from
 `loom-product-principles`, at
-`docs/product-principles-toolkit/PRINCIPLES.md` in the consumer project). It is
+`docs/loom/PRINCIPLES.md` in the consumer project). It is
 the **product constitution** and **governs every design decision** here —
 inventory choices, transition character, density posture, and exit-design must
 stay consistent with it instead of drifting.
@@ -54,7 +54,7 @@ their rules:
 
 ### 2. Read PRINCIPLES.md as the governing constraint
 
-Per the section above — load `docs/product-principles-toolkit/PRINCIPLES.md`, or
+Per the section above — load `docs/loom/PRINCIPLES.md`, or
 surface its absence loudly.
 
 ### 3. Detect (or ask) the modality
@@ -111,7 +111,7 @@ here would duplicate loom-spec — do not.
 
 ### 6. Emit `ui-flows.md` into the consumer project
 
-Write the artifact to `docs/interface-design-toolkit/ui-flows.md` in the consumer
+Write the artifact to `docs/loom/ui-flows.md` in the consumer
 project (per feature / change). Structure it as one `##` section per dimension,
 provenance-honest about which surfaces / flows are derived from the feature
 description vs inferred from domain priors.
@@ -142,7 +142,7 @@ artifact done with validator failures outstanding (Rule 12).
 **Note — the validator checks the *whole* change-folder.** It requires BOTH
 `DESIGN.md` (from the `design-system` skill) and `ui-flows.md` (this skill)
 present. Run the full validation once the change-folder is assembled — i.e.
-after `design-system` has also emitted into the same `docs/interface-design-toolkit/`
+after `design-system` has also emitted into the same `docs/loom/`
 directory (the `using-loom-interface-design` router coordinates this). A
 `ui-flows.md`-only run will correctly report the missing `DESIGN.md`.
 

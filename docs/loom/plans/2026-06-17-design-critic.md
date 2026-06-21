@@ -1,6 +1,6 @@
 # Plan: design-critic — writer≠judge omission critic for the design surface
 
-Source brief: docs/interface-design-toolkit/specs/2026-06-17-design-critic.md
+Source brief: docs/loom/specs/2026-06-17-design-critic.md
 Total tasks: 5
 Critical-path depth: 4 (T1→T3→T4→T5; T2 parallel with T1)
 Execution order: parallel-where-possible (T1 ∥ T2; then T3; then T4; then T5)
@@ -34,7 +34,7 @@ Notes:
 - Files touched: interface-design-toolkit/scripts/test_design_critic_skill.py
 - Context paths:
   - spec-toolkit/scripts/test_completeness_critic_skill.py (the template to mirror)
-  - docs/interface-design-toolkit/specs/2026-06-17-design-critic.md (brief — the lens set)
+  - docs/loom/specs/2026-06-17-design-critic.md (brief — the lens set)
 - Acceptance:
   - RED: `PYTHONDONTWRITEBYTECODE=1 python -m pytest interface-design-toolkit/scripts/test_design_critic_skill.py -q`
     fails (collection error / assertion fail — SKILL.md absent).
@@ -55,7 +55,7 @@ Notes:
 - Files touched: interface-design-toolkit/skills/design-critic/references/design-heuristics.md
 - Context paths:
   - interface-design-toolkit/skills/interaction-flows/references/ux-flow-checklist.md (the 7 dims)
-  - docs/interface-design-toolkit/specs/2026-06-17-design-critic.md (brief — the 5 lenses)
+  - docs/loom/specs/2026-06-17-design-critic.md (brief — the 5 lenses)
 - Acceptance:
   - RED: `test -f interface-design-toolkit/skills/design-critic/references/design-heuristics.md` → absent.
   - GREEN: the file exists, names all 10 Nielsen heuristics, maps them to the 5 lenses + 7 dims,
@@ -80,7 +80,7 @@ Notes:
   - spec-toolkit/skills/completeness-critic/SKILL.md (pattern to mirror — panel/loop/blind-spots)
   - interface-design-toolkit/skills/design-critic/references/design-heuristics.md (T2 — cite it)
   - interface-design-toolkit/scripts/test_design_critic_skill.py (T1 — the contract to satisfy)
-  - docs/interface-design-toolkit/specs/2026-06-17-design-critic.md (brief)
+  - docs/loom/specs/2026-06-17-design-critic.md (brief)
 - Acceptance:
   - RED: T1's test is failing on SKILL.md-absent assertions.
   - GREEN: `PYTHONDONTWRITEBYTECODE=1 python -m pytest interface-design-toolkit/scripts/test_design_critic_skill.py -q`
