@@ -71,6 +71,40 @@ def test_plan_format_keeps_one_field():
             f"must keep ONE field — found a competing field name: {stray!r}"
 
 
+def test_plan_format_documents_empty_recon_sentinel():
+    """plan-format.md must bless an empty-recon sentinel: when target-repo
+    reconnaissance finds NO existing code (greenfield / wrong repo), the
+    required `Files touched` / `Module` fields may be written as a PROPOSED-new
+    form CLEARLY MARKED NEW (not a fabricated existing path), AND any task whose
+    `Files touched` is a proposed-new path defaults to `Independent: false`
+    (the disjointness oracle cannot be trusted on a path that does not exist).
+    """
+    text = _text(PLAN_FORMAT)
+    low = text.lower()
+    # the sentinel is blessed — a proposed-new / greenfield marker for the
+    # recon-found-nothing case
+    assert "recon" in low and ("greenfield" in low or "no existing" in low), \
+        ("plan-format.md must document the empty-recon case (recon finds no "
+         "existing target — greenfield / wrong repo)")
+    assert "new:" in low or "proposed" in low, \
+        ("plan-format.md must bless a PROPOSED-new sentinel form (e.g. "
+         "`NEW: <proposed-path>`) for Files touched / Module when recon "
+         "finds nothing")
+    # the disjointness-oracle safety default: proposed-new path => Independent: false
+    lines = low.splitlines()
+    found_default = False
+    for i, line in enumerate(lines):
+        if "proposed" in line or "new:" in line:
+            window = "\n".join(lines[max(0, i - 4):i + 6])
+            if "independent" in window and "false" in window:
+                found_default = True
+                break
+    assert found_default, \
+        ("plan-format.md must state that a task with a PROPOSED-new "
+         "`Files touched` path defaults to `Independent: false` — the "
+         "disjointness oracle cannot be trusted on a path that does not exist")
+
+
 def test_reviewer_check3_accepts_join_key_referent():
     """plan-document-reviewer Check 3 must accept EITHER a brief item OR the
     spec join-key referent as valid provenance (field-presence unchanged)."""
