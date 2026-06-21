@@ -1,7 +1,7 @@
 ---
 name: writing-plans
 description: |
-  Use AFTER brainstorming produces a brief, BEFORE subagent-driven-development dispatches implementers. Splits it into atomic ≤5-min tasks with acceptance criteria (RED + GREEN) + a dependency graph. Re-splits a BLOCKED task into children.
+  Use AFTER brainstorming produces a brief, BEFORE subagent-driven-development dispatches implementers. Splits it into atomic ≤5-min tasks with RED + GREEN acceptance criteria and a dependency graph.
 version: 0.11.0
 ---
 
@@ -104,17 +104,14 @@ writing-plans applies the same pattern to plan tasks. The implementer's BLOCKED 
 
 ## Self-review — plan-document-reviewer
 
-After producing the plan, writing-plans **must** dispatch [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) as an evaluator subagent. The reviewer checks:
+After producing the plan, writing-plans **must** dispatch [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) as an evaluator subagent. That prompt holds the **authoritative, full check list** — do not maintain a duplicate copy here (it drifts). The highest-value checks, so you can self-pre-screen before dispatch:
 
-| Check | Failure → NEEDS_REVISION |
-|---|---|
-| Each task ≤5 min (criterion 1) | Task estimated >5 min |
-| Each task touches ≤1 module (criterion 2) | Task lists 2+ modules in `module` field |
-| Each task has a failing-test acceptance (criterion 3) | `acceptance` field empty or doesn't name a RED test |
-| Every brief item maps to ≥1 task | Brief Smallest End State item has no covering task |
-| No orphan tasks (untraceable to brief) | Task exists but doesn't appear in brief's scope |
-| Dependencies form a DAG (no cycles) | Task A depends on Task B which depends on Task A |
-| Critical-path depth ≤5 | depth >5 → route back to brainstorming, do not pass to reviewer (total task count is uncapped) |
+- **≤5-min** per task (criterion 1);
+- **one-failing-test acceptance** — each task names a specific RED test (criterion 3);
+- **every brief item covered** — every Smallest End State / Decision item maps to ≥1 task, no orphan tasks;
+- **DAG, no cycles** — `Dependencies` form an acyclic graph with critical-path depth ≤5.
+
+The prompt also enforces parallel-dispatch checks (`Independent: true` tasks need disjoint `Files touched`; missed-parallel advisory) — see it for the complete list.
 
 **Pre-patch before dispatch (saves a NEEDS_REVISION round):** Before dispatching the reviewer, Read [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) and scan Check 1 and Check 3. If the plan is missing `Plan-document-reviewer verdict: PENDING` in the top-level header, or if any task is missing a `Brief item covered:` line, patch those fields now. These two omissions are the most common Check-1 / Check-3 failures; pre-patching costs one Read and saves one full round-trip.
 
@@ -158,6 +155,32 @@ Plan-document-reviewer verdict: PENDING   ← required; reviewer will flip to PA
 ## Task 2 — ...
 ```
 
+**Worked micro-example** — two tasks, one `Independent: true` pair (disjoint files, no semantic dependency):
+
+```markdown
+## Task 1 — add slugify() helper
+- Module: src/text/slug.py
+- Files touched: src/text/slug.py, tests/test_slug.py
+- Acceptance:
+  - RED: tests/test_slug.py::test_slugify_lowercases_and_dashes fails (slugify undefined)
+  - GREEN: slugify("Hello World") == "hello-world"
+- Dependencies: none
+- Independent: true
+- Brief item covered: "URL slugs derived from titles"
+
+## Task 2 — add truncate() helper
+- Module: src/text/truncate.py
+- Files touched: src/text/truncate.py, tests/test_truncate.py
+- Acceptance:
+  - RED: tests/test_truncate.py::test_truncate_adds_ellipsis fails (truncate undefined)
+  - GREEN: truncate("abcdef", 3) == "abc…"
+- Dependencies: none
+- Independent: true
+- Brief item covered: "preview text capped at N chars"
+```
+
+Both tasks touch disjoint files and share no symbol → both `Independent: true`, so `dispatching-parallel-agents` may dispatch them in one wave.
+
 ### Parallel-dispatch markup (v0.8.0+)
 
 Two per-task fields signal eligibility for [`../dispatching-parallel-agents/SKILL.md`](../dispatching-parallel-agents/SKILL.md):
@@ -177,7 +200,7 @@ A **second input contract**, alongside the brainstorming brief. writing-plans ca
 
 **Scenario → task mapping.** Map each `#### Scenario:` (its GIVEN / WHEN / THEN) → **one task's `Acceptance: RED/GREEN`**. The THEN is the GREEN observable; the GIVEN/WHEN set up the RED. One `### Requirement:` may **fan to N tasks** — split per the same ≤5-min / one-failing-test rule in §The splitting framework (a multi-Scenario Requirement is N candidate tasks, grouped or split by the time-box).
 
-**Point-don't-copy / link back.** Do **NOT** copy the spec body into the plan — loom-spec stays SSOT. Reference the source `### Requirement:` / `#### Scenario:` names via the stable join key `<change-id> / Requirement: <name> / Scenario: <name>` (the `Brief item covered:` field accepts this referent — see [`references/plan-format.md`](references/plan-format.md)). The plan **links back** to the spec; it does not duplicate it.
+**Point-don't-copy / link back.** **NEVER** copy the spec body into the plan — loom-spec is SSOT, and a copied delta silently goes stale the moment loom-spec re-edits the change-folder, so the plan then drives implementers off a spec that no longer exists. Reference the source `### Requirement:` / `#### Scenario:` names via the stable join key `<change-id> / Requirement: <name> / Scenario: <name>` (the `Brief item covered:` field accepts this referent — see [`references/plan-format.md`](references/plan-format.md)). The plan **links back** to the spec; it does not duplicate it.
 
 **Verbatim-copy carve-out (fact vs interpretation).** One exception to point-don't-copy: the THEN **observable**, **magic values**, and **signatures** are *facts* — copy them **verbatim** into the RED/GREEN assertion (a paraphrased magic value or signature is a defect). The surrounding **narrative** and **design rationale** are *interpretation* — link to them, do not copy. Facts in, prose linked.
 
@@ -185,7 +208,7 @@ A **second input contract**, alongside the brainstorming brief. writing-plans ca
 
 - **MODIFIED / REMOVED deltas.** When the spec carries a `## MODIFIED Requirements` or `## REMOVED Requirements` block (not just `## ADDED Requirements`), map them to change / removal tasks **plus the corresponding test update** — same `#### Scenario:` → RED/GREEN discipline (the RED is the failing test that encodes the changed / removed behavior; the GREEN is the updated test passing).
 
-**Consumer read-only.** writing-plans **MUST NOT modify** the producer's change-folder. It reads `docs/loom/<change-id>/` and writes only its own plan at `docs/loom/plans/<date>-<topic>.md` (the canonical plan path from the §Output contract; for a change-folder input the `<change-id>` fills the `<topic>` slot). The change-folder is loom-spec's owned artifact; editing it is a SSOT violation.
+**Consumer read-only.** **NEVER edit the producer's change-folder** — loom-spec is SSOT, so a consumer edit makes sibling consumers read a different spec than the one the freeze validated, and races the freeze's `validate_spec_output.py` re-run. writing-plans reads `docs/loom/<change-id>/` and writes only its own plan at `docs/loom/plans/<date>-<topic>.md` (the canonical plan path from the §Output contract; for a change-folder input the `<change-id>` fills the `<topic>` slot).
 
 ## Cross-skill contract
 
