@@ -56,7 +56,13 @@ If `Plan-document-reviewer verdict` is `PENDING`, the plan has not been self-rev
 - **External surfaces**: <v0.9.0+ — required when task touches non-stdlib external surface. See §External surfaces below. Omit field entirely if task is pure internal logic.>
 - **Dependencies**: <one of: "none" | "Task N completes first" | "Tasks N, M complete first" (multi-prerequisite — N and M must both finish before this task starts) | "Tasks N, M parallel" (both are prerequisites, may run in parallel). Cross-part ordering: use "none" at task level + a plan-level `Notes` entry; the field is within-plan only and cannot reference a sibling part's tasks.>
 - **Independent**: <true | false>  # v0.8.0+ — opt-in marker for `dispatching-parallel-agents`. Default false.
-- **Brief item covered**: <quote or reference from the brief's Smallest End State / Decision section>
+- **Brief item covered**: <traceability referent — ONE field, two accepted referent kinds:
+    (a) a quote or reference from the brief's Smallest End State / Decision section, OR
+    (b) when the plan consumes a loom-spec change-folder, a **stable join key** of the form
+    `<change-id> / Requirement: <name> / Scenario: <name>` (R5 — a checkable provenance referent,
+    à la Kiro `_Requirements:` / Spec-Kit `FR-###`). This is the SAME field with a broadened
+    referent — do NOT add a second field; point at the source `### Requirement:` / `#### Scenario:`
+    names rather than copying their prose.>
 - **Status**: <OPTIONAL runtime ledger field — see §Progress ledger. One of:
     "pending" | "claimed(@<agent>)" | "done(<sha>)" | "blocked". Default OMITTED (a plan with no
     Status fields behaves exactly as before — fully backward compatible). NOT authoring content;
