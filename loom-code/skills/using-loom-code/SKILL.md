@@ -2,7 +2,7 @@
 name: using-loom-code
 description: |
   Router for loom-code — invoke when the user wants to build, change, debug, or review code (features / fixes / refactors / migrations / reviews). Drives brainstorm → plan → SDD → TDD → debugging → code review → finish branch.
-version: 0.10.0
+version: 0.11.0
 ---
 
 <SUBAGENT-STOP>
@@ -64,38 +64,11 @@ Walk through these stages in order. Skip a stage only when its precondition is a
 
 ## Continuous mode (opt-in): spec-frozen → PR auto-advance
 
-By default the pipeline is **human-pumped**: between every stage the user says "go". **Continuous mode** is an **opt-in** convention that lets the orchestrator run stage→stage unattended — from a frozen spec all the way to a PR — **without losing the verification gates**. It adds a STOP rule, not a brain.
+**Continuous mode** is an **opt-in** convention that lets the orchestrator auto-advance stage→stage from a frozen spec to a PR without a human "go" between stages (the default stays human-pumped). **Entry precondition:** the user opts in explicitly **and** a **human-approved** frozen entry artifact exists — either the `brainstorming` brief or a validated loom-spec change-folder. It adds a STOP rule, not a brain; the full doctrine lives in the reference.
 
-**Entry — at the SPEC, not the plan.** Continuous mode starts only when **both** hold:
+**MANDATORY:** when the user opts into continuous mode ("run continuous to PR" / "連續跑到 PR"), **READ `references/continuous-mode.md` IN FULL before auto-advancing.** The stub here is not enough to run safely.
 
-1. The user **opts in** explicitly (e.g. "run continuous to PR" / "連續跑到 PR"). The default stays human-pumped.
-2. A **human-approved, frozen spec** exists — concretely the `brainstorming` hand-off **brief** (`docs/loom/specs/<topic>.md`), the per-feature artifact that locks the *approach*; this is **not** the repo-level PRODUCT-SPEC / TECH-SPEC. **Design + spec stay human-gated** (sign-off locks the *approach* via `brainstorming`'s Smallest-End-State / Alternatives axes). The plan is **not** a human checkpoint: it is the mechanical sequencing of an already-decided approach, so it is **auto-generated** by `writing-plans` and **gated** by the `plan-document-reviewer` evaluator subagent (a real writer≠judge **plan gate**, PASS / NEEDS_REVISION). The plan becomes one more auto-advance-with-gate stage.
-
-**Auto-advance behavior.** Within continuous mode the orchestrator proceeds `writing-plans → plan gate → SDD per-task triad → whole-branch review → verification → finish→PR` without waiting for a human "go", **unless a stop condition fires**.
-
-**Stop contract (halt-and-escalate).** The run halts and escalates when any row fires:
-
-| # | Stop trigger | Notes |
-|---|---|---|
-| 0a | **plan critical-path depth >5** (`writing-plans` route-back) | scope too deep → escalate: **re-cut** the spec. Existing forcing function |
-| 0b | **`plan-document-reviewer` = NEEDS_REVISION for 2 rounds** | plan can't be made schema-valid / atomic → escalate. Existing 2-round cap |
-| 1 | implementer returns **BLOCKED** | agent self-declares it needs a human; safe direction |
-| 2a | **review-revision loop**: 2 reviewer↔implementer round-trips still NEEDS_REVISION | spec/quality gap; no WebSearch — fix is human clarification, not research |
-| 2b | **debug loop**: `systematic-debugging` exhausts (2 hypotheses → mandatory WebSearch → hypothesis #3 still falsified) | reuses the existing **anchored-thinking** guard; zero new logic |
-| 3 | a **scope / decision the plan did not specify** arises (not in the spec) | don't let the agent invent scope unattended |
-| 4 | the agent **self-declares an assumption** outside plan/spec coverage | honest self-declaration trigger, not a fuzzy confidence detector |
-| 5 | **whole-branch review = NEEDS_REVISION** (cross-task) | direct stop; cross-task issues most need human eyes — do NOT auto-remediate |
-| 6 | any **PASS_WITH_NOTES** (per-task or whole-branch) | **auto-advance**; accumulate the notes, surface them all at the PR |
-| 7 | **PR-open reached** | terminal stop; human merges; **never auto-merge** (inherited from `finishing-a-development-branch`) |
-
-**Crutch-vs-verification line (load-bearing).** Within a task the agent may re-attempt **inside the existing gate loops** up to the bounds above (retry-within-bounds = verification). It may **NOT re-plan, re-scope, or re-route** — those HALT and escalate, they are not autonomous decisions. WebSearch is allowed only as `systematic-debugging`'s hypothesis-#3 input, never as a general "research a workaround" escape hatch.
-
-**Escalation surfacing (two-layer).**
-
-- **(i) Stop-and-wait (baseline, always):** the run **halts** and emits a clear **"why I stopped + what I need from you"** message plus the accumulated PASS_WITH_NOTES. Zero infrastructure.
-- **(ii) Proactive notification (layered, optional):** if the host supports it (push notification / proactive message), send the stop reason so the user gets it while away. **Degrades gracefully** to (i) when the host lacks the capability — never a hard dependency.
-
-This mode is **composed over existing gates** — it references, and does not duplicate, `systematic-debugging` (the anchored-thinking / WebSearch guard for row 2b), `subagent-driven-development` (the per-task verdicts), and `finishing-a-development-branch` (the PR-stop / never-auto-merge terminal).
+**Invariant (one line):** **never auto-merge**; **HALT** and escalate on re-plan / re-scope / re-route (and every STOP-contract row); **PR-open is the terminal stop** — the human merges.
 
 ## Red flags — agent rationalizations to refuse
 
@@ -128,7 +101,12 @@ This mode is **composed over existing gates** — it references, and does not du
 
 ## Reference
 
-- `references/claude-code-tools.md` — Claude Code canonical tool names.
-- `references/codex-tools.md` — Codex CLI tool mapping (Phase 2.5 ship target).
+Load each file **only when its trigger fires** — do NOT speculatively load all of them.
+
+- `references/continuous-mode.md` — full Continuous-mode doctrine (entry/freeze, STOP contract, never-auto-merge). **MANDATORY:** when the user opts into continuous mode, READ this **IN FULL** before auto-advancing (the §"Continuous mode" stub above is not enough to run safely).
+- `references/claude-code-tools.md` — Claude Code canonical tool names. Read only when the host is **Claude Code**.
+- `references/codex-tools.md` — Codex CLI tool mapping (Phase 2.5 ship target). Read only when the host is **Codex CLI**.
 - `references/engineering-baselines.md` — 12-rule engineering baseline carried by every loom-code plugin-level agent (SSOT in `../../scripts/_baseline.md`; v0.5.2 / P15-12).
 - `../../PRODUCT-SPEC.md` / `../../TECH-SPEC.md` / `../../ROADMAP.md` — design lock + phase plan.
+
+**Do NOT load** all three reference files up front — `continuous-mode.md` only on opt-in, the host-tool files only under their matching host. The router body alone routes the common (human-pumped) path.
