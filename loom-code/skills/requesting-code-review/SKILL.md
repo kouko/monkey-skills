@@ -137,7 +137,7 @@ This rule applies **even when this skill was not explicitly invoked** — the de
    grep -rn "LOOM-SIMPLIFY:" $(git diff --name-only main...HEAD)
    ```
 
-   (Scope the grep to the files the branch changed — same diff range as Step 1; this is the introducing-branch review gate, where each marker's `ceiling:` / `upgrade:` is freshest.) Present the hits as a **ledger view** in the verdict's `simplification_ledger` block (see §Verdict structure) so every corner-cut the branch ships is visible at the merge gate, not buried in a code comment. For each marker, confirm a checkable `ceiling:` and an `upgrade:` path are present; a marker missing either is itself a finding. When the grep returns nothing, the ledger is empty — say so explicitly ("no deliberate simplifications recorded on this branch"), don't omit the line. The marker convention + harvest rule are defined in [`../subagent-driven-development/standards/deliberate-simplification.md`](../subagent-driven-development/standards/deliberate-simplification.md) (§Harvest + Scope Boundary) — that standard is the SSOT; this step surfaces its grep-on-demand view at the review gate.
+   (Scope the grep to the files the branch changed — same diff range as Step 1; this is the introducing-branch review gate, where each marker's `ceiling:` / `upgrade:` is freshest.) Present the hits as a **ledger view** in the verdict's `simplification_ledger` block (see §Verdict structure) so every corner-cut the branch ships is visible at the merge gate, not buried in a code comment. For each marker, confirm a checkable `ceiling:`, an `upgrade:` path, and a `ref:` are present (the standard requires all four fields); a marker missing any is itself a finding. When the grep returns nothing, the ledger is empty — say so explicitly ("no deliberate simplifications recorded on this branch"), don't omit the line. The marker convention + harvest rule are defined in [`../subagent-driven-development/standards/deliberate-simplification.md`](../subagent-driven-development/standards/deliberate-simplification.md) (§Harvest + Scope Boundary) — that standard is the SSOT; this step surfaces its grep-on-demand view at the review gate.
 5. **Surface to user**. Print the verdict + findings + the simplification ledger; let user decide remediation. Do NOT auto-fix — that's user agency, even for a trivial single-line nit. Silently auto-fixing then re-reviewing removes the user's decision point and burns an extra review round. **Phrase this relay per §Asking the user** — translate `🔴/🟡/🟢` + the verdict token into plain language and open with a state anchor; the reviewer agent's structured output stays machine-precise. The ledger surfaces in plain language too: each shortcut as "what corner was cut, when it breaks, how to upgrade."
 6. **Re-dispatch if user fixed and wants re-review** — same skill, fresh subagent (no state carry-over between rounds for clean evaluation).
 
@@ -184,7 +184,7 @@ simplification_ledger:                         # grep -rn "LOOM-SIMPLIFY:" over 
     ceiling: <checkable condition under which it breaks>
     upgrade: <path to the proper version>
     ref: <originating brief/task>
-    marker_valid: true | false                  # false when ceiling: or upgrade: is missing/uncheckable → also emit a finding
+    marker_valid: true | false                  # false when ceiling:, upgrade:, or ref: is missing (or ceiling: uncheckable) → also emit a finding
 
 summary:
   - <≤5 bullet observations about the branch as a whole>
@@ -194,7 +194,8 @@ summary:
 markers (§Process Step 4): the deliberate, scope-bounded shortcuts this
 branch ships, surfaced so the merge gate sees each corner-cut and its
 ceiling/upgrade. An empty list means none were recorded. A marker with
-`marker_valid: false` (no checkable `ceiling:` or no `upgrade:`) is a
+`marker_valid: false` (missing `ceiling:`, `upgrade:`, or `ref:`, or an
+uncheckable `ceiling:`) is a
 finding per [`../subagent-driven-development/standards/deliberate-simplification.md`](../subagent-driven-development/standards/deliberate-simplification.md) §Field Rules.
 
 `standards_version` lets downstream readers tell whether a verdict was

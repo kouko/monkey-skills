@@ -13,7 +13,7 @@ A new **deliberate-simplification ledger** makes scope-bounded shortcuts an
 auditable, surfaced decision rather than silent debt. The canonical standard
 `domain-teams/skills/code-team/standards/deliberate-simplification.md` (with a
 byte-identical functional copy in the SDD bundled standards) defines a
-`LOOM-SIMPLIFY:` in-code marker with four kinds —
+`LOOM-SIMPLIFY:` in-code marker with four fields —
 `shortcut` / `ceiling` / `upgrade` / `ref`.
 
 - **Implementer** (`implementer.md` rule 10) leaves the `LOOM-SIMPLIFY:` marker
