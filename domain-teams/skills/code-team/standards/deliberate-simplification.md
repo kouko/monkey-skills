@@ -22,12 +22,14 @@ the review gate exactly what each shortcut costs.
   records. https://martinfowler.com/bliki/TechnicalDebtQuadrant.html
 - **Maldonado, E. da S. et al. (ICSME 2017) *An Empirical Study on the
   Removal of Self-Admitted Technical Debt*.** ~74.4% of SATD comments
-  are eventually removed, but **58% of those "removals" did not fix the
-  problem** — the comment was deleted along with surrounding code. This
-  is why lifetime grep-tracking is unreliable and why we harvest only at
-  the introducing branch's review gate (see Harvest + Scope Boundary).
+  are eventually removed. This is part of why lifetime grep-tracking is
+  unreliable and why we harvest only at the introducing branch's review
+  gate (see Harvest + Scope Boundary).
   https://rabeabdalkareem.github.io/files/2-maldonado_icsme2017.pdf
-- **Maipradit, R. et al. "Wait For It" (arXiv:1901.09511).** ~8% of SATD
+- **Maipradit, R. et al. "Wait For It" (arXiv:1901.09511),** crediting
+  Zampetti et al. (2018), reports that **58% of "removed" SATD comments
+  did not actually fix the problem** — the comment was deleted along
+  with surrounding code. ~5.3% overall (up to ~8% per-project) of SATD
   comments are **"on-hold"** — they record a *waiting condition* (a bug
   fix, a library version, a threshold) and are the most
   machine-manageable debt class. The `ceiling:` field is exactly this
@@ -76,8 +78,9 @@ for member in members:
    vague ceiling is uncheckable and so cannot be managed.
 2. **`ref:` ties the marker to its originating brief/task** — the loom
    equivalent of a ticket link. This follows the EN+JP industry
-   ownership convention (e.g. Datadog's JA rule that TODO/FIXME must
-   carry ownership): every debt marker should be traceable to the
+   ownership convention (e.g. Datadog's static-analysis rule that
+   TODO/FIXME must carry ownership): every debt marker should be
+   traceable to the
    decision that authorized it, so the shortcut is never orphaned.
 3. **The marker is left ONLY for a deliberate, scope-bounded shortcut**
    taken because the proper solution is Out-of-Scope per the brief. It
@@ -108,9 +111,10 @@ reviewer/human decides whether each corner-cut is acceptable to ship.
 
 **Why scope the harvest to the introducing branch's review gate, and
 not track markers across the codebase's lifetime?** The SATD literature
-(Maldonado et al., ICSME 2017) finds that ~74.4% of debt comments are
-eventually removed, but **58% of those removals deleted the comment
-along with surrounding code without fixing the underlying problem**.
+finds that ~74.4% of debt comments are eventually removed (Maldonado et
+al., ICSME 2017), but **58% of those removals deleted the comment along
+with surrounding code without fixing the underlying problem** (Maipradit
+et al. "Wait For It", arXiv:1901.09511, crediting Zampetti et al. 2018).
 That makes any lifetime grep-count harvest gameable and unreliable — a
 falling marker count does not mean debt was paid down. Scoping the
 harvest to the merge gate of the branch that *introduces* the shortcut
