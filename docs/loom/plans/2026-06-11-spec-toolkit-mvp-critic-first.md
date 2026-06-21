@@ -1,6 +1,6 @@
 # Plan: spec-toolkit MVP — critic-first thin slice (v0.1)
 
-Source brief: docs/spec-toolkit/specs/2026-06-11-spec-toolkit-mvp-critic-first.md
+Source brief: docs/loom/specs/2026-06-11-spec-toolkit-mvp-critic-first.md
 Total tasks: 7 (uncapped; width is fine)
 Critical-path depth: 4 (≤5) — longest chain T2 → T3 → T4/T5 → T7
 Execution order: parallel-where-possible
@@ -38,8 +38,8 @@ Plan-document-reviewer verdict: PASS (2026-06-11; 13/14, Check 12 N/A — not a 
 - Module: spec-toolkit output validator (skeleton half)
 - Files touched: spec-toolkit/scripts/validate_spec_output.py, spec-toolkit/scripts/test_validate_spec_output.py
 - Context paths:
-  - docs/spec-toolkit/specs/2026-06-11-spec-toolkit-mvp-critic-first.md (Smallest End State → Output hybrid format)
-  - docs/spec-toolkit/research/2026-06-11-spec-toolkit-openspec-research-synthesis.md (§2 OpenSpec delta format)
+  - docs/loom/specs/2026-06-11-spec-toolkit-mvp-critic-first.md (Smallest End State → Output hybrid format)
+  - docs/loom/research/2026-06-11-spec-toolkit-openspec-research-synthesis.md (§2 OpenSpec delta format)
 - Acceptance:
   - RED: `test_validate_spec_output.py::test_skeleton_*` — validator (absent) → import/exec fails; a fixture dir missing `#### Scenario:` must be rejected (non-zero).
   - GREEN: rejects fixtures missing proposal.md / missing `## ADDED Requirements` / missing `#### Scenario:` GIVEN-WHEN-THEN; accepts a well-formed skeleton fixture (exit 0).
@@ -52,7 +52,7 @@ Plan-document-reviewer verdict: PASS (2026-06-11; 13/14, Check 12 N/A — not a 
 - Module: spec-toolkit output validator (additive half)
 - Files touched: spec-toolkit/scripts/validate_spec_output.py, spec-toolkit/scripts/test_validate_spec_output.py
 - Context paths:
-  - docs/spec-toolkit/specs/2026-06-11-spec-toolkit-mvp-critic-first.md (Output → additive sections)
+  - docs/loom/specs/2026-06-11-spec-toolkit-mvp-critic-first.md (Output → additive sections)
 - Acceptance:
   - RED: `test_validate_spec_output.py::test_additive_*` — a fixture with valid skeleton but missing/empty `## Blind spots` must be rejected.
   - GREEN: rejects fixtures missing any additive section or with an empty Blind-spots section; accepts a complete hybrid fixture (skeleton + 3 additive sections).
@@ -65,7 +65,7 @@ Plan-document-reviewer verdict: PASS (2026-06-11; 13/14, Check 12 N/A — not a 
 - Module: spec-expansion skill
 - Files touched: spec-toolkit/skills/spec-expansion/SKILL.md, spec-toolkit/scripts/test_spec_expansion_skill.py
 - Context paths:
-  - docs/spec-toolkit/research/2026-06-11-spec-toolkit-openspec-research-synthesis.md (§3.1 5-stage pipeline, §3.2 hard boundaries)
+  - docs/loom/research/2026-06-11-spec-toolkit-openspec-research-synthesis.md (§3.1 5-stage pipeline, §3.2 hard boundaries)
   - research-toolkit/skills/deep-research/SKILL.md (skill authoring style/structure)
 - Acceptance:
   - RED: `test_spec_expansion_skill.py` — grep asserts SKILL.md has YAML frontmatter (name+description), the THREE explicit phases (USM/OOUX/matrix) + per-phase announcements + three visible artifact sections (and that the old "5-stage pipeline" framing is gone), provenance-tagging instruction, the ban-"complete" guardrail, and the hybrid output format. Fails before authoring/restructure.
@@ -79,7 +79,7 @@ Plan-document-reviewer verdict: PASS (2026-06-11; 13/14, Check 12 N/A — not a 
 - Module: completeness-critic skill
 - Files touched: spec-toolkit/skills/completeness-critic/SKILL.md, spec-toolkit/scripts/test_completeness_critic_skill.py
 - Context paths:
-  - docs/spec-toolkit/research/2026-06-11-spec-toolkit-openspec-research-synthesis.md (§3.1 completeness-critic, §4b Planner-Generator-Evaluator + 要件定義 caution)
+  - docs/loom/research/2026-06-11-spec-toolkit-openspec-research-synthesis.md (§3.1 completeness-critic, §4b Planner-Generator-Evaluator + 要件定義 caution)
 - Acceptance:
   - RED: `test_completeness_critic_skill.py` — grep asserts frontmatter, loop-until-dry, the multi-lens checklist, the must-emit-blind-spots instruction, and the "critiques spec not code" boundary. Fails before authoring.
   - GREEN: all required load-bearing phrases present; passes folder-structure hook.

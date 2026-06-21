@@ -1,6 +1,6 @@
 # Plan: DESIGN→spec seam (P1) — doc-only point-don't-copy convention
 
-Source brief: docs/spec-toolkit/specs/2026-06-16-design-spec-seam.md
+Source brief: docs/loom/specs/2026-06-16-design-spec-seam.md
 Total tasks: 2
 Critical-path depth: 1 (both tasks at the same level; uncapped width)
 Execution order: parallel-where-possible
@@ -33,7 +33,7 @@ Notes:
 - Files touched: spec-toolkit/skills/spec-expansion/SKILL.md
 - Context paths:
   - spec-toolkit/skills/spec-expansion/SKILL.md (insertion point + existing phases)
-  - docs/spec-toolkit/specs/2026-06-16-design-spec-seam.md (brief — the mapping)
+  - docs/loom/specs/2026-06-16-design-spec-seam.md (brief — the mapping)
   - interface-design-toolkit/skills/interaction-flows/SKILL.md (lines 118–124 —
     the reciprocal seam wording to stay consistent with)
 - Acceptance:
@@ -61,7 +61,7 @@ Notes:
 - Context paths:
   - interface-design-toolkit/skills/interaction-flows/SKILL.md (§6, lines 111–139;
     "See also" pointer pattern at line 158)
-  - docs/spec-toolkit/specs/2026-06-16-design-spec-seam.md (brief)
+  - docs/loom/specs/2026-06-16-design-spec-seam.md (brief)
 - Acceptance:
   - RED: `grep -ci "point-don't-copy\|addressable\|stable heading"`
     interaction-flows/SKILL.md = 0 (current state).

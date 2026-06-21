@@ -1,7 +1,7 @@
 # SDD tooling, coding harnesses, and the "stronger models need less scaffolding" debate (2025–2026)
 
 > **Type**: research synthesis (web-sourced, multi-angle, both-sides). Date: 2026-06-12.
-> **Method**: ~11 EN + JP WebSearches across the SDD-tool landscape, OpenSpec-vs-composition, and the scaffolding/Bitter-Lesson debate, plus the OpenSpec CLI hands-on test (`docs/spec-toolkit/design/…L2-ab-validation-results` sibling). Confidence tags + thin-evidence flags inline. Primary sources preferred over listicles.
+> **Method**: ~11 EN + JP WebSearches across the SDD-tool landscape, OpenSpec-vs-composition, and the scaffolding/Bitter-Lesson debate, plus the OpenSpec CLI hands-on test (`docs/loom/design/…L2-ab-validation-results` sibling). Confidence tags + thin-evidence flags inline. Primary sources preferred over listicles.
 > **Why this exists**: to ground the decision *not* to integrate the OpenSpec CLI into the skill (see `project_spec_toolkit_mvp` memory + the complexity-critique verdict), and to stress-test whether spec-toolkit/code-toolkit's scaffolding survives the "bet on the model" critique.
 
 ## 中文 TL;DR

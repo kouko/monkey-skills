@@ -3,7 +3,7 @@
 > **Stage**: brainstorming output (consumed by `code-toolkit:writing-plans`)
 > **Date**: 2026-06-12
 > **Base**: branch off `origin/main` (`e38aa3a1`) — local main is stale. Modifies the SHIPPED `spec-toolkit:spec-expansion` (PR #387).
-> **Validation**: both layers A/B-validated before this brief — `docs/spec-toolkit/design/2026-06-11-L2-ab-validation-results.md` (§7–§8). Design model: `…/design/2026-06-11-spec-expansion-v0.2-three-transition-layers.md`.
+> **Validation**: both layers A/B-validated before this brief — `docs/loom/design/2026-06-11-L2-ab-validation-results.md` (§7–§8). Design model: `…/design/2026-06-11-spec-expansion-v0.2-three-transition-layers.md`.
 
 ## Problem
 

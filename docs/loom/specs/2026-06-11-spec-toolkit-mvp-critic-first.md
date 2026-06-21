@@ -4,7 +4,7 @@
 > **Date**: 2026-06-11
 > **Status**: Brief drafted, awaiting sign-off → plan
 > **Driver**: kouko — close the GENERATE gap (Station 1 of the 4-station "stably produce code" pipeline)
-> **Grounding**: `docs/spec-toolkit/research/2026-06-11-spec-toolkit-openspec-research-synthesis.md` (research) + 5 vault notes + OpenSpec 2026-06 web check
+> **Grounding**: `docs/loom/research/2026-06-11-spec-toolkit-openspec-research-synthesis.md` (research) + 5 vault notes + OpenSpec 2026-06 web check
 
 > **Positioning (revised post-dogfood, 2026-06-11)**: The original bet — "the critic finds omissions a capable model misses" — was tested by a **7-seed A/B dogfood** (`spec-toolkit/examples/AB-SUMMARY.md`) and came back **weak + situational**: the recall edge appears only in object-deep, under-documented operational domains (inventory, workforce), never dramatically, and is ≈zero in textbook domains. The **reliable, domain-independent value is structural**: verification-ready `GIVEN/WHEN/THEN` acceptance criteria + enforced blind-spots/provenance that a free brainstorm does not produce. **spec-toolkit is therefore positioned as a "structured, verification-ready spec output" tool — NOT a "finds more than you would" tool.** The Problem/Smallest-End-State below are preserved as the original planning record; read them through this corrected lens. See `spec-toolkit/README.md` for the shipped positioning.
 

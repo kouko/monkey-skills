@@ -51,7 +51,7 @@ spec-expansion **v0.2** now **systematizes L2 (cross-object combinations)** and
 your omission hunt **refocuses**, it does not shrink to a rubber-stamp: it still
 **wins the single-object-failure regime** and is the **deep complement** for
 nuanced resume / re-entry landing-point decisions
-(`docs/spec-toolkit/design/2026-06-11-L2-ab-validation-results.md` §8). You are a
+(`docs/loom/design/2026-06-11-L2-ab-validation-results.md` §8). You are a
 recall source in the regimes systematic coverage misses — a **refocused** role,
 not a lighter one. *How* you run that refocused hunt is the panel below.
 
@@ -155,11 +155,11 @@ the panel mechanics (fan-out, union, loop-until-dry, overlap diagnostic) do
 lens's defect-class can have that lens **removed without redesign**. The paying
 lens set is model-bound and regime-bound — **re-baseline periodically**: re-run
 a bare-model-vs-panel check and prune any lens the current model has subsumed
-(`docs/spec-toolkit/research/2026-06-12-sdd-harness-bitter-lesson.md` §Part 3).
+(`docs/loom/research/2026-06-12-sdd-harness-bitter-lesson.md` §Part 3).
 The experiment already named the **standing prune candidate**: the
 **state-completeness lens** (lens #4 — empty/error/loading) is the most
 redundant, because a generic omissions-hunt already covers it (H4:
-`docs/spec-toolkit/design/2026-06-12-diverse-critic-decorrelation-and-experiment.md`);
+`docs/loom/design/2026-06-12-diverse-critic-decorrelation-and-experiment.md`);
 the load-bearing lenses (NFR/security, permissions/data-boundary) are the last
 to go.
 
@@ -311,7 +311,7 @@ same easy 12 (overlap 11) → Lincoln-Petersen N̂ = 12·12/11 ≈ 13 → claims
 complete while **88 gaps remain unfound**.
 
 This is **empirically confirmed**, not just theory: `design §Part C H2`
-(`docs/spec-toolkit/design/2026-06-12-diverse-critic-decorrelation-and-experiment.md`)
+(`docs/loom/design/2026-06-12-diverse-critic-decorrelation-and-experiment.md`)
 showed **homogeneous** panels under-estimate the KNOWN residual (false
 completeness reproduced — e.g. overlap 0.93 → Chao 15 < true 18); **diverse**
 panels did NOT under-estimate. Decorrelation reduces the bias but never makes

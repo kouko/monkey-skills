@@ -1,7 +1,7 @@
 # Brief — spec-expansion v0.2.1: dogfood hardening (F-1 pairwise discipline + F-3 single-surface backbone)
 
 > **Stage**: brief (discovery already done — the 2026-06-12 real-seed dogfood IS the discovery). Base: branch off `origin/main` (`8e3607e0`).
-> **Source**: `docs/spec-toolkit/dogfood/2026-06-12-pip-note-app/` findings F-1 + F-3; grounded in the shipped A/B (`…/design/2026-06-11-L2-ab-validation-results.md`).
+> **Source**: `docs/loom/dogfood/2026-06-12-pip-note-app/` findings F-1 + F-3; grounded in the shipped A/B (`…/design/2026-06-11-L2-ab-validation-results.md`).
 
 ## Problem
 
@@ -28,7 +28,7 @@ Two additive prose edits to `spec-expansion/SKILL.md` (+ a version bump) — no 
 - **Error/guardrail:** must preserve the existing honesty rails (ban-"complete", seed-adequacy gate, sparse-output fallback) and stay < 500 lines (currently 316).
 - **Data/Boundary:** no output-contract change; `scripts/pairwise.py` already exists and is unchanged; consumer (`writing-plans`) unaffected.
 
-Evidence paths: `spec-toolkit/skills/spec-expansion/SKILL.md`, `spec-toolkit/scripts/test_spec_expansion_skill.py`, `docs/spec-toolkit/dogfood/2026-06-12-pip-note-app/proposal.md` (F-1/F-3 evidence).
+Evidence paths: `spec-toolkit/skills/spec-expansion/SKILL.md`, `spec-toolkit/scripts/test_spec_expansion_skill.py`, `docs/loom/dogfood/2026-06-12-pip-note-app/proposal.md` (F-1/F-3 evidence).
 
 ## Decision
 

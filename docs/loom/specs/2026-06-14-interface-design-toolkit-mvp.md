@@ -50,7 +50,7 @@ design-system doc + `ui-flows.md` present and well-formed). All artifacts **key-
 
 **Runtime output location:** consumer project `docs/loom/` (per the established `docs/<toolkit>/`
 convention) — design-system doc at the toolkit root (product-level), `ui-flows.md` per-feature/change. The OpenSpec
-change-folder that spec-toolkit later produces lives under `docs/spec-toolkit/` (artifact-location decision **A**:
+change-folder that spec-toolkit later produces lives under `docs/loom/` (artifact-location decision **A**:
 in-`docs/`, consistent with the in-use convention, not a root `openspec/`).
 
 ## Current State Evidence

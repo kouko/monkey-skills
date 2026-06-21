@@ -1,6 +1,6 @@
 # Plan: spec-expansion v0.2.1 — dogfood hardening (F-1 + F-3)
 
-Source brief: docs/spec-toolkit/specs/2026-06-12-spec-expansion-v0.2.1-dogfood-hardening.md
+Source brief: docs/loom/specs/2026-06-12-spec-expansion-v0.2.1-dogfood-hardening.md
 Total tasks: 3
 Critical-path depth: 3 (≤5) — T1 → T2 → T3, all touch spec-expansion/SKILL.md (sequential floor)
 Execution order: sequential
@@ -12,7 +12,7 @@ Plan-document-reviewer verdict: PASS (2026-06-12, inline self-review) — 3-task
 - Files touched: spec-toolkit/skills/spec-expansion/SKILL.md, spec-toolkit/scripts/test_spec_expansion_skill.py
 - Context paths:
   - spec-toolkit/skills/spec-expansion/SKILL.md  (Phase ③b wide-stage para, ~L197-205)
-  - docs/spec-toolkit/dogfood/2026-06-12-pip-note-app/proposal.md  (F-1 evidence)
+  - docs/loom/dogfood/2026-06-12-pip-note-app/proposal.md  (F-1 evidence)
 - Acceptance:
   - RED: `test_spec_expansion_skill.py::test_l2_wide_stage_mandates_pairwise_tool` — assert the SKILL.md wide-stage text contains an imperative tool-use cue (`MUST run` near `pairwise.py`) AND a ban on inline enumeration for wide stages (e.g. `do not enumerate` / `not inline`).
   - GREEN: assertions pass; all pre-existing assertions stay green.

@@ -45,7 +45,7 @@ The engine auto-expands (strong) but cannot auto-complete (a theoretical floor):
 
 ## Scope (v0.1)
 
-In: `spec-expansion` + `completeness-critic` + the format validator. Out (deferred to v0.2): OpenSpec CLI wiring, `spec-discovery` / `spec-persist` / a router skill, knowledge-layer SSOT sharing, proportional-rigor tiering, cross-host testing. See `docs/spec-toolkit/specs/2026-06-11-loom-spec-mvp-critic-first.md` (brief) and `docs/spec-toolkit/research/2026-06-11-loom-spec-openspec-research-synthesis.md` (research).
+In: `spec-expansion` + `completeness-critic` + the format validator. Out (deferred to v0.2): OpenSpec CLI wiring, `spec-discovery` / `spec-persist` / a router skill, knowledge-layer SSOT sharing, proportional-rigor tiering, cross-host testing. See `docs/loom/specs/2026-06-11-loom-spec-mvp-critic-first.md` (brief) and `docs/loom/research/2026-06-11-loom-spec-openspec-research-synthesis.md` (research).
 
 ## License
 

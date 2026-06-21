@@ -1,6 +1,6 @@
 # Plan: spec-expansion v0.2 — L2 cross-object combination + L3 journey navigation
 
-Source brief: docs/spec-toolkit/specs/2026-06-12-spec-expansion-v0.2-l2-l3.md
+Source brief: docs/loom/specs/2026-06-12-spec-expansion-v0.2-l2-l3.md
 Total tasks: 7   (width is fine — 4 parallel leaves at wave 1)
 Critical-path depth: 4 (≤5)   — longest chain T1 → T2 → T5 → T7
 Execution order: parallel-where-possible
@@ -71,7 +71,7 @@ These resolve the doc-mirrors-code coupling at plan time, so the validator task 
 - Files touched: spec-toolkit/skills/spec-expansion/SKILL.md, spec-toolkit/scripts/test_spec_expansion_skill.py
 - Context paths:
   - spec-toolkit/skills/spec-expansion/SKILL.md  (Phase ① + Phase ③ + visible-sections list)
-  - docs/spec-toolkit/design/2026-06-11-L2-ab-validation-results.md  (§7-§8 grounding)
+  - docs/loom/design/2026-06-11-L2-ab-validation-results.md  (§7-§8 grounding)
 - Acceptance:
   - RED: `test_spec_expansion_skill.py::test_l3_journey_navigation_present` — assert SKILL.md contains the `— Phase ③c journey navigation —` announce, `## Journey navigation`, "navigation graph", and a transition-coverage cue ("0-switch" or "state-transition").
   - GREEN: assertions pass; existing tests stay green.

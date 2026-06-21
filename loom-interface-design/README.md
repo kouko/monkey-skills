@@ -50,7 +50,7 @@ docs/loom/
 
 The design-system doc lives at the toolkit root (product-level); `ui-flows.md` is per-feature/change. All artifacts are **key-free, in-repo, git-diffable**. A `validate_*` script (mirroring `loom-spec/scripts/validate_spec_output.py`) is the executable format contract: it checks the change-folder's documents are present and well-formed (exit 0 = conformant).
 
-The OpenSpec change-folder that `loom-spec` later produces lives under `docs/spec-toolkit/` — consistent with the in-use `docs/<toolkit>/` convention, not a root `openspec/`.
+The OpenSpec change-folder that `loom-spec` later produces lives under `docs/loom/` — consistent with the in-use `docs/<toolkit>/` convention, not a root `openspec/`.
 
 ## Scope (v0.1)
 

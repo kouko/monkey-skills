@@ -4,7 +4,7 @@
 > **Date**: 2026-06-11
 > **Status**: Brief signed off → plan
 > **Driver**: kouko — close the cheap part of the greenfield UI-coverage gap
-> **Grounding**: 3-archetype greenfield A/B + memory `feedback_spec_coverage_value_greenfield_regime`; `docs/spec-toolkit/research/2026-06-11-spec-toolkit-openspec-research-synthesis.md`
+> **Grounding**: 3-archetype greenfield A/B + memory `feedback_spec_coverage_value_greenfield_regime`; `docs/loom/research/2026-06-11-spec-toolkit-openspec-research-synthesis.md`
 
 ## Problem
 (Axis 1 — JTBD)
