@@ -89,7 +89,7 @@ class AggregateRecord:
     Fields:
 
     - ``skill_name``: the value from ``event.skill_invocation`` that this
-      bucket groups on (e.g. ``"code-toolkit:brainstorming"``).
+      bucket groups on (e.g. ``"loom-code:brainstorming"``).
     - ``sessions``: distinct session ids in which this skill was invoked.
     - ``event_count``: total invocations across all sessions (one event
       per recognized Skill call).
@@ -263,7 +263,7 @@ def _max_project_count(records: dict[str, AggregateRecord]) -> int:
 def aggregate_by_skill(
     events: list[Event],
     signals: list[Signal],
-    target_pattern: str = "code-toolkit:*",
+    target_pattern: str = "loom-code:*",
     *,
     session_to_project: dict[str, str] | None = None,
 ) -> dict[str, AggregateRecord]:
@@ -277,7 +277,7 @@ def aggregate_by_skill(
             ``friction_signals.detect_*`` calls. Signals are dedup'd via
             :func:`dedup_signals` before attachment.
         target_pattern: fnmatch glob applied to ``event.skill_invocation``
-            (default ``"code-toolkit:*"``).
+            (default ``"loom-code:*"``).
         session_to_project: optional dict mapping session id → project
             tree path. When omitted, sessions themselves stand in for
             project paths (v0.1 approximation; v0.2 plans Event.project_path).

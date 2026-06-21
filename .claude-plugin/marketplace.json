@@ -90,9 +90,9 @@
       "source": "./collab-toolkit/"
     },
     {
-      "name": "code-toolkit",
+      "name": "loom-code",
       "description": "Canon-grounded coding-discipline workflow (TDD/brainstorm/SDD/review) for Claude Code + Codex.",
-      "source": "./code-toolkit/"
+      "source": "./loom-code/"
     },
     {
       "name": "salesforce-toolkit",
@@ -105,19 +105,19 @@
       "source": "./research-toolkit/"
     },
     {
-      "name": "spec-toolkit",
+      "name": "loom-spec",
       "description": "Key-free GENERATE-layer spec skills — expand a seed into a high-recall spec + critique omissions.",
-      "source": "./spec-toolkit/"
+      "source": "./loom-spec/"
     },
     {
-      "name": "product-principles-toolkit",
+      "name": "loom-product-principles",
       "description": "Key-free generator for a product PRINCIPLES.md — one north-star + falsifiable, testable principles.",
-      "source": "./product-principles-toolkit/"
+      "source": "./loom-product-principles/"
     },
     {
-      "name": "interface-design-toolkit",
+      "name": "loom-interface-design",
       "description": "Key-free cross-modal (GUI/TUI/CLI) UX design generator — emits portable DESIGN.md + ui-flows.md.",
-      "source": "./interface-design-toolkit/"
+      "source": "./loom-interface-design/"
     },
     {
       "name": "ascii-graph-toolkit",

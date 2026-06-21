@@ -12,7 +12,7 @@ transcripts, attach `/insights` per-session facets, detect friction
 signals, aggregate per target Skill, dispatch per-trajectory subagents
 in parallel, and emit a reviewable SKILL.md edit proposal.
 
-The skill is engine-generic; v0.1 ships `code-toolkit:*` as the default
+The skill is engine-generic; v0.1 ships `loom-code:*` as the default
 target preset (14 sessions of dogfood evidence) with `--target-skill-pattern`
 parameterizing wider scopes. Stage 4 (full SDD spec-reviewer +
 code-quality-reviewer consolidation) is deferred to v0.2 if dogfood
@@ -23,7 +23,7 @@ shows orchestrator merge conflicts.
 Triggered by any of:
 
 - **After a multi-PR cycle on a skill family** — e.g. several PRs in
-  one week against `code-toolkit:*`. Friction patterns
+  one week against `loom-code:*`. Friction patterns
   (NEEDS_REVISION re-dispatch streaks, interrupt-after-brainstorm,
   tool-error clusters) have accumulated and are now mineable.
 - **MEMORY.md soft-limit breach** — when MEMORY.md exceeds its
@@ -38,12 +38,12 @@ Triggered by any of:
 
 Example trigger phrases:
 
-- EN: "mine my skill logs for code-toolkit", "audit skill activation
+- EN: "mine my skill logs for loom-code", "audit skill activation
   telemetry", "what skills are graduation candidates from MEMORY.md".
-- JA:「最近の code-toolkit ログを掘って改善提案を出して」「SKILL.md
+- JA:「最近の loom-code ログを掘って改善提案を出して」「SKILL.md
   をテレメトリ根拠で iterate したい」「MEMORY.md から graduation
   候補を抽出して」.
-- ZH-TW:「挖一下最近 code-toolkit 的 session log」「想根據觸發資料
+- ZH-TW:「挖一下最近 loom-code 的 session log」「想根據觸發資料
   改 SKILL.md」「從 MEMORY.md 找出可以畢業到 skill 的條目」.
 
 ## Bare invocation — preview-then-confirm
@@ -53,7 +53,7 @@ alone, or "fire distill-sessions" with no target named), do NOT default
 to full pipeline. Instead:
 
 1. **Run Stage 1+2 preview only** — `python scripts/main.py
-   --target-skill-pattern 'code-toolkit:*'` (the brief-locked v0.1
+   --target-skill-pattern 'loom-code:*'` (the brief-locked v0.1
    default). This is cost-free local Python — no API call, seconds to
    complete. Print the stderr summary block (top-N skills + per-session
    friction levels) verbatim to chat.
@@ -74,13 +74,13 @@ to full pipeline. Instead:
    for the empirical overflow distribution baseline.
 
 This protocol exists because (a) bare invocation has no signal about
-intent — `code-toolkit:*` is the v0.1 preset but the user may actually
+intent — `loom-code:*` is the v0.1 preset but the user may actually
 want a different scope, (b) Stage 3 budget cost is non-trivial and
 asymmetric to the cheap-preview, and (c) user's CLAUDE.md "Issue First"
 discipline expects confirmation before deliverable-producing work.
 
 When the user provides explicit scoping in their prompt (e.g. "挖一下
-writing-plans", "audit code-toolkit:brainstorming activations", "MEMORY.md
+writing-plans", "audit loom-code:brainstorming activations", "MEMORY.md
 graduation candidates"), skip the preview-pause and execute the
 referenced flow directly.
 
@@ -125,7 +125,7 @@ Python (Stage 5 proposal render + approval-gated write-back).
         +-----------------------------------------+
         | Claude reads top.json                   |
         | dispatches N subagents in parallel via  |
-        | code-toolkit:dispatching-parallel-agents|
+        | loom-code:dispatching-parallel-agents|
         |  one Agent call per session-trajectory  |
         |  prompts: agents/prompt-{failure,       |
         |           success}-analysis.md          |
@@ -161,7 +161,7 @@ Python (Stage 5 proposal render + approval-gated write-back).
 
 ```bash
 python scripts/main.py \
-  --target-skill-pattern 'code-toolkit:*' \
+  --target-skill-pattern 'loom-code:*' \
   [--config path/to/override.json] \
   [--top-n 5] \
   [--max-trajectories-per-skill 5] \
@@ -208,7 +208,7 @@ harness runs them concurrently. Each subagent:
   `## Title` / `## Description` / `## Content` sub-headings, **not**
   raw JSON.
 
-Use `code-toolkit:dispatching-parallel-agents` for the fan-out — it
+Use `loom-code:dispatching-parallel-agents` for the fan-out — it
 encapsulates the "one assistant message with N Agent calls" pattern,
 the per-branch TDD iron-law discipline, and verdict aggregation. See
 its SKILL.md for parallel-eligibility rules (no shared files / no
@@ -257,7 +257,7 @@ Field notes:
   (e.g. `"Examples"`, `"When to Use"`). **REQUIRED** as of v0.2 — the
   field must be present and non-blank, or `normalize_memory_item`
   raises `ValueError`. v0.1's silent default of `"Examples"` proved
-  dead on real code-toolkit SKILL.md files; the orchestrator (or the
+  dead on real loom-code SKILL.md files; the orchestrator (or the
   subagent populating the item) MUST pick a real heading. If
   `propose.py` finds the anchor doesn't match any heading in the
   target SKILL.md at render time, the item routes to
@@ -479,7 +479,7 @@ that key — `main.py` merges over the defaults.
   window covers all v0.3-observed trajectory sizes (max 559K observed
   in v0.3 post-ship dogfood = 56% of cap). Cost note: ~3× prior Haiku
   pricing; acceptable at locked cadence (2-5×/week post-PR cycle) per
-  [v0.4 brief Q-v0.4-1](../../../docs/code-toolkit/specs/2026-05-26-distill-sessions-v0.4-brief.md).
+  [v0.4 brief Q-v0.4-1](../../../docs/loom/specs/2026-05-26-distill-sessions-v0.4-brief.md).
   Operator can override at orchestration time per v0.1 bare-invocation
   protocol (pause-for-confirmation gate at Stage 3).
 - **Local-only by default** — mining reads
@@ -527,7 +527,7 @@ roadmap":
 
 - **v1.0 broad-scope `skill-log-mining` sibling** — this skill
   (`distill-sessions`) is the narrow v0.1 ship of a wider vision
-  documented in `docs/code-toolkit/specs/2026-05-22-skill-log-mining-v0.1-brief.md`.
+  documented in `docs/loom/specs/2026-05-22-skill-log-mining-v0.1-brief.md`.
   The broad-scope `skill-log-mining` is planned to also surface
   (a) new-skill proposals from clustering recurring prompts (crune-style),
   (b) `CLAUDE.md` rule extractions from recurring user corrections
@@ -569,7 +569,7 @@ roadmap":
   *iterates* existing ones. github chigichan24/crune.
 - **claude-coach** — signal taxonomy + agent-guardrail framing.
   github netresearch/claude-coach-plugin.
-- **Brief** — `docs/code-toolkit/specs/2026-05-22-distill-sessions-v0.1-brief.md`
+- **Brief** — `docs/loom/specs/2026-05-22-distill-sessions-v0.1-brief.md`
   carries the six locked decisions (Q1-Q6) and the empirical
   derivation of the Q5 thresholds from the mining-demo Pattern 1-4
   findings.

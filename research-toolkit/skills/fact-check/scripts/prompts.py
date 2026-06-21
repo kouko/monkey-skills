@@ -1,7 +1,7 @@
 """Prompt builder functions for deep-research.
 
 All prompt text is verbatim from:
-  docs/code-toolkit/specs/deep-research-decompiled-source.md §Prompts
+  docs/loom/specs/deep-research-decompiled-source.md §Prompts
 
 Do NOT paraphrase. Reviewers diff against the reference.
 

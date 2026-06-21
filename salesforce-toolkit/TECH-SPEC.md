@@ -11,7 +11,7 @@ name throughout this file.
 - Target plugin: `salesforce-toolkit` (v0.1.0, greenfield)
 - Upstream PRODUCT-SPEC: [`./PRODUCT-SPEC.md`](./PRODUCT-SPEC.md)
 - Upstream brief:
-  [`../docs/code-toolkit/specs/2026-05-20-salesforce-toolkit-v0.1.0.md`](../docs/code-toolkit/specs/2026-05-20-salesforce-toolkit-v0.1.0.md)
+  [`../docs/loom/specs/2026-05-20-salesforce-toolkit-v0.1.0.md`](../docs/loom/specs/2026-05-20-salesforce-toolkit-v0.1.0.md)
 - Hard constraints: macOS only (PRODUCT-SPEC §Users) / bash 3.2
   compatible (macOS default) / no Python runtime / no `ci:` commit type
   (use `chore(<plugin>)`) / UTF-8 only
@@ -38,7 +38,7 @@ Section-by-section pointer map back to
 | §Setup Flow | §JTBD primary (single-line setup) + §Success criteria KR1 (< 5 min end-to-end) + KR2 (idempotent re-run) |
 | Non-goals (no Hosted MCP, no schema validation, no multi-org wrapper) | §Non-goals (verbatim mirror) |
 
-Brief Decision Q1–Q7 (in [`../docs/code-toolkit/specs/2026-05-20-salesforce-toolkit-v0.1.0.md`](../docs/code-toolkit/specs/2026-05-20-salesforce-toolkit-v0.1.0.md))
+Brief Decision Q1–Q7 (in [`../docs/loom/specs/2026-05-20-salesforce-toolkit-v0.1.0.md`](../docs/loom/specs/2026-05-20-salesforce-toolkit-v0.1.0.md))
 are realized as:
 
 - Q1 (Path D shim launcher) → §Modules `bin/sf-mcp-launcher.sh`

@@ -44,7 +44,7 @@ directory (paths below are relative to it).
 
 Several stages do the same work across N independent inputs (one search per
 angle, three verifier votes per claim). Do these **in parallel by dispatching
-N subagents**, per `code-toolkit:dispatching-parallel-agents`: one fresh
+N subagents**, per `loom-code:dispatching-parallel-agents`: one fresh
 subagent per independent input, dispatched in a single assistant message with
 multiple agent calls so the harness runs them concurrently.
 

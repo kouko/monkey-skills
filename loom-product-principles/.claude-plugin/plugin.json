@@ -1,0 +1,21 @@
+{
+  "name": "loom-product-principles",
+  "version": "0.2.0",
+  "description": "Key-free generator for a product PRINCIPLES.md — one north-star + falsifiable, testable principles.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/loom-product-principles",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "product-principles",
+    "constitution",
+    "principles",
+    "north-star",
+    "product-spec",
+    "portable",
+    "loom-pipeline"
+  ]
+}

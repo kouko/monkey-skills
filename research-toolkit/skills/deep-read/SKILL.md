@@ -56,7 +56,7 @@ directory (paths below are relative to it).
 
 The per-chunk extraction (Step 3) does the same work across N independent
 chunks. Do this **in parallel by dispatching N subagents**, per
-`code-toolkit:dispatching-parallel-agents`: one fresh subagent per chunk,
+`loom-code:dispatching-parallel-agents`: one fresh subagent per chunk,
 dispatched in a single assistant message with multiple agent calls so the
 harness runs them concurrently.
 

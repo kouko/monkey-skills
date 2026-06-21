@@ -1,6 +1,6 @@
 """friction_signals.py — four Q5-default friction detectors over Event[].
 
-Pattern provenance (ported, not vendored, from /tmp/code-toolkit-mine.py
+Pattern provenance (ported, not vendored, from /tmp/loom-code-mine.py
 demo run on ~/.claude/projects/ 2026-05-22):
 
 - **Pattern 1** (interrupt-after-brainstorm): 25% of mined `[Request
@@ -64,7 +64,7 @@ BAKED_THRESHOLDS: dict[str, int] = {
 _BRAINSTORMING_SKILLS = frozenset(
     {
         "brainstorming",
-        "code-toolkit:brainstorming",
+        "loom-code:brainstorming",
         "superpowers:brainstorming",
     }
 )

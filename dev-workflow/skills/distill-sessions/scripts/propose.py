@@ -105,7 +105,7 @@ def normalize_memory_item(raw: dict) -> dict:
 
     Required keys: ``title``, ``description``, ``content``, ``kind``,
     ``section_anchor`` (the latter promoted to required in v0.2 — v0.1's
-    silent default of "Examples" was dead on real code-toolkit SKILL.md
+    silent default of "Examples" was dead on real loom-code SKILL.md
     files; missing the anchor would silently produce proposals against a
     non-existent section).
 

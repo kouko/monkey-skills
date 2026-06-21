@@ -82,7 +82,7 @@ first use, add a one-line gloss for `kink`/`oracle`.
 ### F5 (Low, accepted) — input-robustness asymmetry
 `seq` rejects self-message with a friendly `ValueError` but an unknown participant
 raises a bare `KeyError`; emoji is documented unsafe but not rejected. Both are recorded
-as accepted/deferred in `docs/code-toolkit/specs/2026-06-18-ascii-graph-v2-backlog-decisions.md`.
+as accepted/deferred in `docs/loom/specs/2026-06-18-ascii-graph-v2-backlog-decisions.md`.
 
 ### F0 — REFUTED: "documented commands leak `__pycache__`"
 Probe B reported the documented invocation creates `scripts/__pycache__`. **Clean

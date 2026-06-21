@@ -1,10 +1,10 @@
 [
-  {"query": "I've burned through a lot of code-toolkit PRs lately — what can I learn from the JSONL logs about which skills missed-trigger?", "should_trigger": true},
+  {"query": "I've burned through a lot of loom-code PRs lately — what can I learn from the JSONL logs about which skills missed-trigger?", "should_trigger": true},
   {"query": "Mine my Claude Code session logs to find friction patterns in skill brief-before-asking and propose SKILL.md edits", "should_trigger": true},
   {"query": "Distill MEMORY.md friction memos into concrete SKILL.md edit proposals for dev-workflow skills", "should_trigger": true},
   {"query": "Analyze ~/.claude/projects/ JSONL transcripts to figure out which dev-workflow skills need iteration this week", "should_trigger": true},
   {"query": "技能ログから知見を蒸留して既存 SKILL.md の description / body 改善提案を出してほしい", "should_trigger": true},
-  {"query": "ここ最近の PR から code-toolkit の活性化漏れパターンを見つけて skill を改善したい", "should_trigger": true},
+  {"query": "ここ最近の PR から loom-code の活性化漏れパターンを見つけて skill を改善したい", "should_trigger": true},
   {"query": "從 JSONL transcript 挖掘 skill iteration 機會，產生 dev-workflow:* 的 SKILL.md edit proposal", "should_trigger": true},
   {"query": "把累積在 MEMORY.md 的 friction memo 整理成具體的 SKILL.md 修改提案", "should_trigger": true},
   {"query": "Coach me in real time while I'm coding — interrupt me when I'm about to make a mistake", "should_trigger": false},

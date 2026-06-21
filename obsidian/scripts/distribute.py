@@ -52,7 +52,7 @@ CANONICAL = (
 # Relative path of the canonical file (used in header text)
 CANONICAL_REL = "obsidian/skills/wiki-ingest/references/language-policy.md"
 
-# Marker identifiers — mirror code-toolkit BEGIN/END style
+# Marker identifiers — mirror loom-code BEGIN/END style
 MARKER_ID = "language-policy-v1"
 DISTRIBUTE_SCRIPT = "obsidian/scripts/distribute.py"
 

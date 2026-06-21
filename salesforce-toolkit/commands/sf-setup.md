@@ -392,7 +392,7 @@ This invokes the 6-step idempotent installer with TTY prompts (no Claude orchest
 
 ## See also
 
-- `docs/code-toolkit/specs/2026-05-20-salesforce-toolkit-v0.1.0.md` — PRODUCT-SPEC (setup steps, JSON contract)
+- `docs/loom/specs/2026-05-20-salesforce-toolkit-v0.1.0.md` — PRODUCT-SPEC (setup steps, JSON contract)
 - `scripts/sf/credential-check.sh` — state probe (Step 1 source)
 - `scripts/sf/alias-infer.sh` — 3-layer alias inference (Steps 2 + 5 source)
 - `scripts/sf/auto-setup.sh` — TTY-bound terminal-mode installer (alternative path)
