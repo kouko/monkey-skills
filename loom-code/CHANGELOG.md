@@ -5,6 +5,26 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [Unreleased] — 2026-06-21 — **spec→code seam wired (resolves the Tier-2 deferral)**
+
+### Added
+
+The spec→code delegation deferred in 0.16.0 is now **built**. `writing-plans`
+gains a second input contract — a validated `loom-spec` change-folder (see its
+**§Consuming a loom-spec change-folder**) — so a full spec flows
+spec → plan → code. `brainstorming`'s `loom-spec:spec-expansion` forward-pointer
+is flipped from **Tier-2-deferred** to **active / wired**, and Continuous-mode
+freeze accepts an approved, `validate_spec_output.py`-clean change-folder as an
+entry artifact.
+
+This **resolves the two "deferred (Tier 2)" notes in 0.16.0 below** (the
+forward-pointer activation condition — "active once `writing-plans` reads
+OpenSpec change-folders" — and the blocked-on-unbuilt-wiring delegation item):
+that wiring has now landed.
+
+> Version stamping (plugin.json bump + marketplace sync) is tracked separately;
+> this Unreleased entry records the behavioral delivery.
+
 ## [0.17.0] — 2026-06-21
 
 ### Changed — **BREAKING: renamed `code-toolkit` → `loom-code`**
@@ -92,8 +112,9 @@ when Current-State-Evidence is `N/A — greenfield` / thin **AND** the feature h
 UI / interaction / stateful surface, enumerate UI states across six categories
 (empty / error / loading / state-transition / permission / boundary) **before
 finalizing the brief** — plus a forward-pointer to `spec-toolkit:spec-expansion`
-for the heavy case (**Tier 2, deferred** until `writing-plans` reads OpenSpec
-change-folders). Additive prose inside an existing skill (minor bump); **zero
+for the heavy case (was **Tier 2, deferred** until `writing-plans` reads OpenSpec
+change-folders; **delivered in [Unreleased] 2026-06-21** — now active / wired).
+Additive prose inside an existing skill (minor bump); **zero
 cross-plugin dependency**.
 
 Grounded in a 3-archetype greenfield A/B (eyedropper / collections / side-by-side)
@@ -111,10 +132,11 @@ state-machine / permission matrix) stays SSOT in `spec-toolkit:spec-expansion`.
 - **test** — `scripts/test_brainstorming_greenfield_nudge.py` grep-guards the six
   categories / the two-pronged gate + both exclusions (not-brownfield, not-pure-logic)
   / the forward-pointer / the DRY guardrail (stdlib-only, intent-tolerant).
-- **deferred (Tier 2):** brainstorming judging + delegating the full spec to
-  `spec-toolkit:spec-expansion` via the OpenSpec change-folder contract — blocked on
-  the unbuilt OpenSpec DECLARE wiring (writing-plans reading change-folders;
-  2026-05-30 OpenSpec brief Q6=A).
+- **~~deferred (Tier 2)~~ → delivered in [Unreleased] 2026-06-21:** brainstorming
+  judging + delegating the full spec to `spec-toolkit:spec-expansion` via the
+  OpenSpec change-folder contract — was blocked on the unbuilt OpenSpec DECLARE
+  wiring (writing-plans reading change-folders; 2026-05-30 OpenSpec brief Q6=A);
+  that wiring has now landed (`writing-plans` §Consuming a loom-spec change-folder).
 - **post-ship verification (not shipped code):** greenfield A/B (with-nudge vs
   without, same 3 seeds) to confirm the nudge lifts coverage above the no-nudge
   baseline — if it doesn't, it's dead text (per the A/B-baseline lesson).
