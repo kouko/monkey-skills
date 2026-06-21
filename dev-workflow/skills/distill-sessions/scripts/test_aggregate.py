@@ -72,21 +72,21 @@ def test_aggregate_thresholds_are_q5_defaults():
 
 
 def test_aggregate_by_skill_groups_correctly():
-    """target_pattern='code-toolkit:*' filters to matching invocations;
-    2 sessions of code-toolkit:brainstorming → 1 record with 2 sessions.
+    """target_pattern='loom-code:*' filters to matching invocations;
+    2 sessions of loom-code:brainstorming → 1 record with 2 sessions.
     """
     events = [
         _ev(
             "2026-05-22T10:00:00.000Z",
             session="S1",
             role="assistant",
-            skill_invocation="code-toolkit:brainstorming",
+            skill_invocation="loom-code:brainstorming",
         ),
         _ev(
             "2026-05-22T11:00:00.000Z",
             session="S2",
             role="assistant",
-            skill_invocation="code-toolkit:brainstorming",
+            skill_invocation="loom-code:brainstorming",
         ),
         _ev(
             "2026-05-22T12:00:00.000Z",
@@ -95,9 +95,9 @@ def test_aggregate_by_skill_groups_correctly():
             skill_invocation="skill-dev-toolkit:skill-judge",  # doesn't match pattern
         ),
     ]
-    records = aggregate_by_skill(events, signals=[], target_pattern="code-toolkit:*")
-    assert set(records.keys()) == {"code-toolkit:brainstorming"}
-    rec = records["code-toolkit:brainstorming"]
+    records = aggregate_by_skill(events, signals=[], target_pattern="loom-code:*")
+    assert set(records.keys()) == {"loom-code:brainstorming"}
+    rec = records["loom-code:brainstorming"]
     assert sorted(rec.sessions) == ["S1", "S2"]
     assert rec.event_count == 2
 
@@ -110,16 +110,16 @@ def test_aggregate_by_skill_tolerates_none_skill_invocation():
             "2026-05-22T10:01:00.000Z",
             session="S1",
             role="assistant",
-            skill_invocation="code-toolkit:brainstorming",
+            skill_invocation="loom-code:brainstorming",
         ),
     ]
-    records = aggregate_by_skill(events, signals=[], target_pattern="code-toolkit:*")
-    assert set(records.keys()) == {"code-toolkit:brainstorming"}
+    records = aggregate_by_skill(events, signals=[], target_pattern="loom-code:*")
+    assert set(records.keys()) == {"loom-code:brainstorming"}
 
 
 def test_aggregate_by_skill_empty_input_returns_empty_dict():
     """Empty events + empty signals → empty dict, no exceptions."""
-    records = aggregate_by_skill([], signals=[], target_pattern="code-toolkit:*")
+    records = aggregate_by_skill([], signals=[], target_pattern="loom-code:*")
     assert records == {}
 
 
@@ -132,13 +132,13 @@ def test_aggregate_by_skill_attaches_signals_by_session():
             "2026-05-22T10:00:00.000Z",
             session="S1",
             role="assistant",
-            skill_invocation="code-toolkit:brainstorming",
+            skill_invocation="loom-code:brainstorming",
         ),
         _ev(
             "2026-05-22T11:00:00.000Z",
             session="S2",
             role="assistant",
-            skill_invocation="code-toolkit:writing-plans",
+            skill_invocation="loom-code:writing-plans",
         ),
     ]
     sig_S1 = Signal(
@@ -158,10 +158,10 @@ def test_aggregate_by_skill_attaches_signals_by_session():
     records = aggregate_by_skill(
         events,
         signals=[sig_S1, sig_S2],
-        target_pattern="code-toolkit:*",
+        target_pattern="loom-code:*",
     )
-    assert {s.session for s in records["code-toolkit:brainstorming"].signals} == {"S1"}
-    assert {s.session for s in records["code-toolkit:writing-plans"].signals} == {"S2"}
+    assert {s.session for s in records["loom-code:brainstorming"].signals} == {"S1"}
+    assert {s.session for s in records["loom-code:writing-plans"].signals} == {"S2"}
 
 
 # ---------------------------------------------------------------------------
@@ -175,7 +175,7 @@ def test_reusability_score_matches_crune_formula():
     Pin all 4 normalized inputs and verify the weighted sum to 3 decimals.
     """
     rec = AggregateRecord(
-        skill_name="code-toolkit:brainstorming",
+        skill_name="loom-code:brainstorming",
         sessions=["S1", "S2", "S3"],
         event_count=10,
         signals=[],
@@ -341,22 +341,22 @@ def test_confidence_tagging_uses_cross_project_count():
             "2026-05-22T10:00:00.000Z",
             session="S1",
             role="assistant",
-            skill_invocation="code-toolkit:brainstorming",
+            skill_invocation="loom-code:brainstorming",
         ),
         _ev(
             "2026-05-22T10:00:00.000Z",
             session="S2",
             role="assistant",
-            skill_invocation="code-toolkit:brainstorming",
+            skill_invocation="loom-code:brainstorming",
         ),
     ]
     records = aggregate_by_skill(
         multi_project_events,
         signals=[],
-        target_pattern="code-toolkit:*",
+        target_pattern="loom-code:*",
         session_to_project={"S1": "/p1", "S2": "/p2"},
     )
-    rec = records["code-toolkit:brainstorming"]
+    rec = records["loom-code:brainstorming"]
     assert rec.confidence == "high"  # 2 distinct projects meets cross_project_count=2
 
     one_project_events = [
@@ -364,22 +364,22 @@ def test_confidence_tagging_uses_cross_project_count():
             "2026-05-22T10:00:00.000Z",
             session="S1",
             role="assistant",
-            skill_invocation="code-toolkit:brainstorming",
+            skill_invocation="loom-code:brainstorming",
         ),
         _ev(
             "2026-05-22T11:00:00.000Z",
             session="S2",
             role="assistant",
-            skill_invocation="code-toolkit:brainstorming",
+            skill_invocation="loom-code:brainstorming",
         ),
     ]
     records2 = aggregate_by_skill(
         one_project_events,
         signals=[],
-        target_pattern="code-toolkit:*",
+        target_pattern="loom-code:*",
         session_to_project={"S1": "/p1", "S2": "/p1"},
     )
-    assert records2["code-toolkit:brainstorming"].confidence == "low"
+    assert records2["loom-code:brainstorming"].confidence == "low"
 
 
 # ---------------------------------------------------------------------------
@@ -447,21 +447,21 @@ def test_aggregate_dedups_T4_overlapping_cluster_signals():
             "2026-05-22T10:00:00.000Z",
             session="S1",
             role="assistant",
-            skill_invocation="code-toolkit:brainstorming",
+            skill_invocation="loom-code:brainstorming",
             tool_error="boom1",
         ),
         _ev(
             "2026-05-22T10:00:01.000Z",
             session="S1",
             role="assistant",
-            skill_invocation="code-toolkit:brainstorming",
+            skill_invocation="loom-code:brainstorming",
             tool_error="boom2",
         ),
         _ev(
             "2026-05-22T10:00:02.000Z",
             session="S1",
             role="assistant",
-            skill_invocation="code-toolkit:brainstorming",
+            skill_invocation="loom-code:brainstorming",
             tool_error="boom3",
         ),
     ]
@@ -473,9 +473,9 @@ def test_aggregate_dedups_T4_overlapping_cluster_signals():
     records = aggregate_by_skill(
         events,
         signals=raw_signals,
-        target_pattern="code-toolkit:*",
+        target_pattern="loom-code:*",
     )
-    rec = records["code-toolkit:brainstorming"]
+    rec = records["loom-code:brainstorming"]
     cluster_signals = [s for s in rec.signals if s.kind == "tool_error_cluster"]
     assert len(cluster_signals) == 1  # dedup'd at aggregate layer
 
@@ -561,7 +561,7 @@ def test_aggregate_computes_recency_from_events():
             yesterday,
             session=f"S{i}",
             role="assistant",
-            skill_invocation="code-toolkit:fresh",
+            skill_invocation="loom-code:fresh",
         )
         for i in range(3)
     ]
@@ -570,18 +570,18 @@ def test_aggregate_computes_recency_from_events():
             long_ago,
             session=f"T{i}",
             role="assistant",
-            skill_invocation="code-toolkit:stale",
+            skill_invocation="loom-code:stale",
         )
         for i in range(3)
     ]
     records = aggregate_by_skill(
         events_fresh + events_stale,
         signals=[],
-        target_pattern="code-toolkit:*",
+        target_pattern="loom-code:*",
     )
     assert (
-        records["code-toolkit:fresh"].recency_norm
-        > records["code-toolkit:stale"].recency_norm
+        records["loom-code:fresh"].recency_norm
+        > records["loom-code:stale"].recency_norm
     )
 
 
@@ -630,7 +630,7 @@ def test_severity_score_for_session_sums_severity_weights():
     )
 
     rec = AggregateRecord(
-        skill_name="code-toolkit:brainstorming",
+        skill_name="loom-code:brainstorming",
         sessions=["session_a", "session_b"],
         event_count=4,
         signals=[sig_high_1, sig_high_2, sig_mid, sig_low],
@@ -667,7 +667,7 @@ def test_severity_score_for_session_raises_on_unknown_severity():
     )
 
     rec = AggregateRecord(
-        skill_name="code-toolkit:brainstorming",
+        skill_name="loom-code:brainstorming",
         sessions=["session_a"],
         event_count=1,
         signals=[sig_unknown_severity],

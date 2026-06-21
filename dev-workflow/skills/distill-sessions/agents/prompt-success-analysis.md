@@ -174,7 +174,7 @@ v0.1 Stage 3 orchestrator. Per the architecture decision in
 - **Parallel dispatch**: orchestrator emits one assistant message
   containing N parallel `Agent()` tool calls — one per
   (target skill, low-friction session) pair — via the contract
-  documented in `code-toolkit:dispatching-parallel-agents`.
+  documented in `loom-code:dispatching-parallel-agents`.
 - **Input passing**: `session_events / target_skill_path /
   target_skill_md_content` are serialized into the dispatched Agent
   prompt as JSON. The subagent parses it and runs the workflow above.

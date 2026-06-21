@@ -101,7 +101,7 @@ claim.
 
 For every **distinct cited URL** in the bound claims, retrieve what the source
 actually says. This is per-source independent work — **fan out one subagent per
-source** (per `code-toolkit:dispatching-parallel-agents`) when there are
+source** (per `loom-code:dispatching-parallel-agents`) when there are
 several.
 
 1. **Dedup the cited URLs first** so the same source is fetched once even if it

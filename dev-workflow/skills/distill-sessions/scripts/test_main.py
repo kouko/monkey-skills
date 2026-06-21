@@ -43,7 +43,7 @@ def _build_fixture_tree(tmp_path: Path) -> tuple[Path, Path]:
     """Build a tiny ~/.claude/projects-shaped tree under tmp_path.
 
     Returns (projects_root, facets_root). 3 sessions invoking
-    ``code-toolkit:brainstorming`` so the skill clears the
+    ``loom-code:brainstorming`` so the skill clears the
     ``min_session_count=3`` threshold; each session has an immediate
     user_interrupt after the brainstorming call → high-severity
     interrupt_after_brainstorm signals.
@@ -75,7 +75,7 @@ def _build_fixture_tree(tmp_path: Path) -> tuple[Path, Path]:
                                 "id": f"toolu_{i}_01",
                                 "name": "Skill",
                                 "input": {
-                                    "skill": "code-toolkit:brainstorming",
+                                    "skill": "loom-code:brainstorming",
                                     "args": "test",
                                 },
                             }
@@ -127,7 +127,7 @@ def test_main_emits_payload_json_to_stdout(tmp_path: Path) -> None:
     payload, _stderr = _run_main(
         [
             "--target-skill-pattern",
-            "code-toolkit:*",
+            "loom-code:*",
             "--project-root",
             str(projects_root),
             "--facets-root",
@@ -144,12 +144,12 @@ def test_main_emits_payload_json_to_stdout(tmp_path: Path) -> None:
     assert isinstance(payload["top_skills"], list)
     assert isinstance(payload["subagent_payload"], list)
 
-    # The fixture has 3 sessions of code-toolkit:brainstorming with a
+    # The fixture has 3 sessions of loom-code:brainstorming with a
     # high-severity interrupt each — that skill MUST be in top_skills.
     skill_names = [s["skill"] for s in payload["top_skills"]]
-    assert "code-toolkit:brainstorming" in skill_names
+    assert "loom-code:brainstorming" in skill_names
 
-    top = next(s for s in payload["top_skills"] if s["skill"] == "code-toolkit:brainstorming")
+    top = next(s for s in payload["top_skills"] if s["skill"] == "loom-code:brainstorming")
     assert "sessions" in top
     assert "aggregate_record" in top
     assert isinstance(top["sessions"], list)
@@ -188,7 +188,7 @@ def test_top_n_caps_returned_skills(tmp_path: Path) -> None:
 
     base_ts = "2026-05-22T10:14:0"
     # Two skills, each with ≥3 sessions to clear min_session_count.
-    for skill in ("code-toolkit:brainstorming", "code-toolkit:writing-plans"):
+    for skill in ("loom-code:brainstorming", "loom-code:writing-plans"):
         for i in range(3):
             session_id = f"{skill[-12:]}-sess-{i:04d}-cccc-dddddddddddd".replace(
                 ":", "-"
@@ -234,7 +234,7 @@ def test_top_n_caps_returned_skills(tmp_path: Path) -> None:
     payload, _ = _run_main(
         [
             "--target-skill-pattern",
-            "code-toolkit:*",
+            "loom-code:*",
             "--project-root",
             str(projects_root.parent),
             "--facets-root",
@@ -266,7 +266,7 @@ def test_config_override_swaps_thresholds(tmp_path: Path) -> None:
     payload, _ = _run_main(
         [
             "--target-skill-pattern",
-            "code-toolkit:*",
+            "loom-code:*",
             "--project-root",
             str(projects_root),
             "--facets-root",
@@ -294,7 +294,7 @@ def test_stderr_contains_markdown_summary(tmp_path: Path) -> None:
     _payload, stderr_text = _run_main(
         [
             "--target-skill-pattern",
-            "code-toolkit:*",
+            "loom-code:*",
             "--project-root",
             str(projects_root),
             "--facets-root",
@@ -305,7 +305,7 @@ def test_stderr_contains_markdown_summary(tmp_path: Path) -> None:
     # Some markdown section header for top skills.
     assert "## Top skills" in stderr_text
     # And at least the qualifying skill name printed in the summary.
-    assert "code-toolkit:brainstorming" in stderr_text
+    assert "loom-code:brainstorming" in stderr_text
 
 
 # ---------------------------------------------------------------------------
@@ -326,7 +326,7 @@ def test_trajectory_id_is_deterministic_across_runs(tmp_path: Path) -> None:
 
     argv = [
         "--target-skill-pattern",
-        "code-toolkit:*",
+        "loom-code:*",
         "--project-root",
         str(projects_root),
         "--facets-root",
@@ -391,7 +391,7 @@ def _build_fixture_with_low_friction_session(tmp_path: Path) -> tuple[Path, Path
                                 "id": f"toolu_{i}_01",
                                 "name": "Skill",
                                 "input": {
-                                    "skill": "code-toolkit:brainstorming",
+                                    "skill": "loom-code:brainstorming",
                                     "args": "test",
                                 },
                             }
@@ -433,7 +433,7 @@ def _build_fixture_with_low_friction_session(tmp_path: Path) -> tuple[Path, Path
                             "id": "toolu_low_01",
                             "name": "Skill",
                             "input": {
-                                "skill": "code-toolkit:brainstorming",
+                                "skill": "loom-code:brainstorming",
                                 "args": "calm-session",
                             },
                         }
@@ -457,7 +457,7 @@ def test_low_friction_no_facet_session_is_tagged_kind_success(tmp_path: Path) ->
     payload, _ = _run_main(
         [
             "--target-skill-pattern",
-            "code-toolkit:*",
+            "loom-code:*",
             "--project-root",
             str(projects_root),
             "--facets-root",
@@ -548,7 +548,7 @@ def _build_fixture_with_high_friction_success_session(
                                 "id": f"toolu_hfs_{i}",
                                 "name": "Skill",
                                 "input": {
-                                    "skill": "code-toolkit:brainstorming",
+                                    "skill": "loom-code:brainstorming",
                                     "args": "test",
                                 },
                             }
@@ -591,7 +591,7 @@ def _build_fixture_with_high_friction_success_session(
                             "id": "toolu_hfs_4a",
                             "name": "Skill",
                             "input": {
-                                "skill": "code-toolkit:brainstorming",
+                                "skill": "loom-code:brainstorming",
                                 "args": "test",
                             },
                         }
@@ -625,7 +625,7 @@ def _build_fixture_with_high_friction_success_session(
                             "id": "toolu_hfs_4b",
                             "name": "Skill",
                             "input": {
-                                "skill": "code-toolkit:brainstorming",
+                                "skill": "loom-code:brainstorming",
                                 "args": "retry",
                             },
                         }
@@ -677,7 +677,7 @@ def test_high_friction_success_session_emits_dual_dispatch_entries(
     payload, _ = _run_main(
         [
             "--target-skill-pattern",
-            "code-toolkit:*",
+            "loom-code:*",
             "--project-root",
             str(projects_root),
             "--facets-root",
@@ -775,8 +775,8 @@ def test_cross_skill_routing_attributes_session_to_highest_friction_skill() -> N
     ``_compute_session_to_skill`` helper in main.py.
     """
     shared_session = "sess-SHARED-aaaa-bbbb-cccc-dddddddddddd"
-    brainstorm_skill = "code-toolkit:brainstorming"
-    writing_plans_skill = "code-toolkit:writing-plans"
+    brainstorm_skill = "loom-code:brainstorming"
+    writing_plans_skill = "loom-code:writing-plans"
 
     # brainstorming rec: 2 high signals for the shared session.
     brainstorm_signals = [
@@ -840,12 +840,12 @@ def test_cross_skill_routing_tie_breaks_alphabetically() -> None:
     routes to the alphabetically-first skill name.
 
     Equal scores: 1 high signal each (3.0 each). Alphabetic order:
-    'code-toolkit:brainstorming' < 'code-toolkit:writing-plans'
+    'loom-code:brainstorming' < 'loom-code:writing-plans'
     → brainstorming wins tie-break.
     """
     shared_session = "sess-TIE-aaaa-bbbb-cccc-dddddddddddd"
-    brainstorm_skill = "code-toolkit:brainstorming"
-    writing_plans_skill = "code-toolkit:writing-plans"
+    brainstorm_skill = "loom-code:brainstorming"
+    writing_plans_skill = "loom-code:writing-plans"
 
     # Each skill gets exactly 1 high signal for shared_session → score 3.0 each.
     brainstorm_rec = _make_aggregate_record(
@@ -889,7 +889,7 @@ def test_render_summary_markdown_includes_cost_estimate() -> None:
     top_skills: list[dict] = []
     config: dict = {
         "run_id": "test-run",
-        "target_pattern": "code-toolkit:*",
+        "target_pattern": "loom-code:*",
         "top_n": 3,
         "max_trajectories_per_skill": 5,
     }
@@ -898,7 +898,7 @@ def test_render_summary_markdown_includes_cost_estimate() -> None:
     subagent_payload = [
         {
             "trajectory_id": "aaaa-bbbb",
-            "skill": "code-toolkit:brainstorming",
+            "skill": "loom-code:brainstorming",
             "kind": "failure",
             "context": {"session_id": "sess-1", "target_skill_path": "/some/path"},
         }

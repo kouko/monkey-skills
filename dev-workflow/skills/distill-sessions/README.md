@@ -4,7 +4,7 @@
 
 > Mine `~/.claude/projects` JSONL transcripts plus `/insights` facets
 > to surface missed-trigger patterns in shipped `dev-workflow:*` and
-> `code-toolkit:*` skills, then propose data-grounded edits to their
+> `loom-code:*` skills, then propose data-grounded edits to their
 > SKILL.md files.
 
 A user-invoked **skill-iteration skill**: when you've run a stretch of
@@ -66,7 +66,7 @@ The skill runs a multi-stage pipeline:
        JSON payload (stdout) + Markdown summary (stderr)
               │
               ▼  Stage 3: Claude dispatches subagents via
-              │   code-toolkit:dispatching-parallel-agents
+              │   loom-code:dispatching-parallel-agents
               │   - one Haiku-4.5 subagent per (skill, session)
               │   - failure vs success prompt selected per friction
               ▼
@@ -141,16 +141,16 @@ Expected output sketch:
 # distill-sessions v0.1 — run summary    (stderr)
 
 - run_id: `b3a1...`
-- target_pattern: `code-toolkit:*`
+- target_pattern: `loom-code:*`
 - top_n: 5
 - max_trajectories_per_skill: 5
 
 ## Top skills
 
-- **code-toolkit:writing-plans**
+- **loom-code:writing-plans**
   - session `2026-05-20-...`: friction=high, events=12
   - session `2026-05-18-...`: friction=mid,  events=7
-- **code-toolkit:brainstorming**
+- **loom-code:brainstorming**
   - session `2026-05-19-...`: friction=mid,  events=5
 ...
 ```
@@ -173,7 +173,7 @@ The override schema is documented in
 [`SKILL.md`](SKILL.md) §Configuration. CLI flags also exist for the
 most common levers:
 
-- `--target-skill-pattern` (default `code-toolkit:*`)
+- `--target-skill-pattern` (default `loom-code:*`)
 - `--top-n` (default `5`)
 - `--max-trajectories-per-skill` (default `5`)
 - `--project-root` (override `~/.claude/projects`, mainly for tests)

@@ -94,7 +94,7 @@ def test_ingest_extracts_skill_invocation_from_tool_use():
     Skill name must surface in `skill_invocation`."""
     events = list(ingest_claude_jsonl(FIXTURE_DIR))
     skill_calls = [ev.skill_invocation for ev in events if ev.skill_invocation]
-    assert "code-toolkit:brainstorming" in skill_calls, (
+    assert "loom-code:brainstorming" in skill_calls, (
         f"Skill tool_use not extracted: skill_invocation values = "
         f"{skill_calls}"
     )

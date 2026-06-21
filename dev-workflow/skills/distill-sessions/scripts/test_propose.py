@@ -387,7 +387,7 @@ def test_normalize_memory_item_rejects_missing_section_anchor() -> None:
     """v0.2 Finding #4: section_anchor must be explicit, no silent default.
 
     v0.1 defaulted missing section_anchor to "Examples", which is dead on real
-    code-toolkit SKILL.md files (none ship that heading). v0.2 makes the field
+    loom-code SKILL.md files (none ship that heading). v0.2 makes the field
     REQUIRED at normalization time so the gap surfaces immediately instead of
     silently producing proposals against a non-existent section.
     """
@@ -814,7 +814,7 @@ def test_extract_memory_items_filters_by_target_skill_path() -> None:
 
     Regression for v0.3 post-ship dogfood finding: when merged.json contains
     entries for multiple target skills (e.g. distill-sessions targeted both
-    code-toolkit:writing-plans AND code-toolkit:brainstorming in one run),
+    loom-code:writing-plans AND loom-code:brainstorming in one run),
     propose.py used to flatten ALL items into every proposal — items intended
     for skill A leaked into skill B's proposal. With this fix, callers pass
     ``target_skill_path=...`` to scope the flatten to one target. Default

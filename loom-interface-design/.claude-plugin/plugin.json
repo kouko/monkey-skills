@@ -1,0 +1,21 @@
+{
+  "name": "loom-interface-design",
+  "version": "0.3.0",
+  "description": "Key-free cross-modal (GUI/TUI/CLI) UX design generator — emits portable DESIGN.md + ui-flows.md.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/loom-interface-design",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "interface-design",
+    "ui-ux",
+    "design-system",
+    "ui-flows",
+    "mermaid",
+    "portable",
+    "loom-pipeline"
+  ]
+}

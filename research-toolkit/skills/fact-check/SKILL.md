@@ -54,7 +54,7 @@ scripts' flat imports work because Python puts the script's own directory on
 
 Stage B casts `VOTES_PER_CLAIM = 3` independent verifier votes. Do these **in
 parallel by dispatching 3 subagents**, per
-`code-toolkit:dispatching-parallel-agents`: one fresh subagent per
+`loom-code:dispatching-parallel-agents`: one fresh subagent per
 `voter_idx`, dispatched in a single assistant message with multiple agent
 calls so the harness runs them concurrently.
 

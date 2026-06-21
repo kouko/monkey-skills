@@ -42,7 +42,7 @@ control:
 
 Two assertion classes back the snapshot:
 
-1. **Structural** — top_skills carries ``code-toolkit:brainstorming``
+1. **Structural** — top_skills carries ``loom-code:brainstorming``
    with all 3 sessions present and at least one high-friction session;
    subagent_payload references real ``agents/prompt-{failure,success}-
    analysis.md`` paths and the locked SUBAGENT_MODEL_ID literal
@@ -108,7 +108,7 @@ def _session1_jsonl() -> str:
                 "content": [{
                     "type": "tool_use", "id": "toolu_e2e_1_01",
                     "name": "Skill",
-                    "input": {"skill": "code-toolkit:brainstorming",
+                    "input": {"skill": "loom-code:brainstorming",
                               "args": "first attempt"},
                 }],
             },
@@ -135,7 +135,7 @@ def _session1_jsonl() -> str:
                 "content": [{
                     "type": "tool_use", "id": "toolu_e2e_1_02",
                     "name": "Skill",
-                    "input": {"skill": "code-toolkit:brainstorming",
+                    "input": {"skill": "loom-code:brainstorming",
                               "args": "second attempt"},
                 }],
             },
@@ -186,7 +186,7 @@ def _session2_jsonl() -> str:
                 "content": [{
                     "type": "tool_use", "id": "toolu_e2e_2_01",
                     "name": "Skill",
-                    "input": {"skill": "code-toolkit:brainstorming",
+                    "input": {"skill": "loom-code:brainstorming",
                               "args": "plan refactor"},
                 }],
             },
@@ -273,7 +273,7 @@ def _session3_jsonl() -> str:
                 "content": [{
                     "type": "tool_use", "id": "toolu_e2e_3_01",
                     "name": "Skill",
-                    "input": {"skill": "code-toolkit:brainstorming",
+                    "input": {"skill": "loom-code:brainstorming",
                               "args": "calm exploration"},
                 }],
             },
@@ -341,7 +341,7 @@ def _session1_facet_json() -> str:
 # update: run the test, copy the ``actual`` value from the failure
 # message into here.
 EXPECTED_SNAPSHOT_HASH = (
-    "d80119feaace01022b4695d1b4f6bb18770692387549afb85c54257f56986655"
+    "bcde6a2e45d0e866f2670f95cdc1a6f7b2bcab9f7b88c299c4f9309fd6fe6395"
 )
 
 
@@ -452,7 +452,7 @@ def test_e2e_pipeline_produces_correct_payload(tmp_path: Path) -> None:
     payload, _stderr = _run_main(
         [
             "--target-skill-pattern",
-            "code-toolkit:*",
+            "loom-code:*",
             "--project-root",
             str(projects_root),
             "--facets-root",
@@ -464,18 +464,18 @@ def test_e2e_pipeline_produces_correct_payload(tmp_path: Path) -> None:
 
     # ---- Structural assertions ----
 
-    # 3 sessions of code-toolkit:brainstorming → clears min_session_count=3.
+    # 3 sessions of loom-code:brainstorming → clears min_session_count=3.
     skill_names = [s["skill"] for s in payload["top_skills"]]
     assert len(payload["top_skills"]) >= 1, (
         f"expected >=1 top_skill, got 0; skill_names={skill_names!r}"
     )
-    assert "code-toolkit:brainstorming" in skill_names, (
-        f"code-toolkit:brainstorming missing from top_skills; got {skill_names!r}"
+    assert "loom-code:brainstorming" in skill_names, (
+        f"loom-code:brainstorming missing from top_skills; got {skill_names!r}"
     )
 
     top = next(
         s for s in payload["top_skills"]
-        if s["skill"] == "code-toolkit:brainstorming"
+        if s["skill"] == "loom-code:brainstorming"
     )
     assert len(top["sessions"]) == 3, (
         f"expected 3 sessions for brainstorming, got {len(top['sessions'])}; "

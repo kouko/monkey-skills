@@ -380,7 +380,7 @@ REQUIRED_SUBDIRS = {"standards", "protocols", "checklists", "rubrics"}
 # Optional subdirs allowed across all plugins per CLAUDE.md §Skill Structure:
 #   research/ + references/ — documentation / grounding evidence
 #   agents/ + scripts/ + assets/ — runtime assets that ship with the skill
-# Router skills and process-toolkit-style skills (e.g. code-toolkit) often
+# Router skills and process-toolkit-style skills (e.g. loom-code) often
 # have agents/ + scripts/ instead of the 4 REQUIRED_SUBDIRS; the router-skill
 # exemption in CHK-SKL-012 already handles the "no protocols/" case, but the
 # optional subdirs list must include agents/ + scripts/ + assets/ so they
