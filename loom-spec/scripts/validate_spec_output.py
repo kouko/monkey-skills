@@ -6,7 +6,7 @@ markdown, no OpenSpec CLI dependency):
 
     <output-dir>/
       proposal.md
-      specs/<capability>/spec.md   # delta with ## ADDED Requirements ...
+      specs/<capability>/spec.md   # delta: ## ADDED / MODIFIED / REMOVED Requirements ...
 
 This module checks the SKELETON only (structure, not content quality),
 mirroring `openspec validate`'s structure-only behavior: extra/unknown
@@ -39,7 +39,11 @@ from pathlib import Path
 # per OpenSpec convention that the normative keyword is uppercase).
 _RFC2119 = re.compile(r"\b(MUST|SHALL|SHOULD|MAY)\b")
 
-_ADDED_REQ_HDR = re.compile(r"^##\s+ADDED\s+Requirements\s*$", re.MULTILINE)
+# A requirements block opens with ADDED / MODIFIED / REMOVED — an OpenSpec
+# change may add, modify, or remove. Accept any of the three as a valid block
+# opener; gating the delta on ADDED alone walled off MODIFIED/REMOVED changes.
+_REQ_BLOCK_HDR = re.compile(
+    r"^##\s+(?:ADDED|MODIFIED|REMOVED)\s+Requirements\s*$", re.MULTILINE)
 _REQUIREMENT_HDR = re.compile(r"^###\s+Requirement:", re.MULTILINE)
 
 
@@ -70,15 +74,21 @@ def _check_specs_dir(root: Path) -> list[str]:
     return []
 
 
-def _check_added_requirements(root: Path) -> list[str]:
+def _check_requirements_block(root: Path) -> list[str]:
+    # Note (KNOWN EDGE, out of scope): a pure '## REMOVED Requirements' delta
+    # with NO scenarios still fails _check_scenario_given_when_then below — a
+    # removal may legitimately have no scenario. That is a separate, deeper
+    # decision; this check only makes ADDED/MODIFIED/REMOVED reachable as a
+    # valid block opener.
     deltas = _delta_files(root)
     if not deltas:
         return []  # already reported by _check_specs_dir
-    if any(_ADDED_REQ_HDR.search(d.read_text(encoding="utf-8")) for d in deltas):
+    if any(_REQ_BLOCK_HDR.search(d.read_text(encoding="utf-8")) for d in deltas):
         return []
     return [f"no delta under {root / 'specs'} contains a "
-            f"'## ADDED Requirements' header "
-            f"(this header opens the block OpenSpec parses)"]
+            f"'## ADDED Requirements' / '## MODIFIED Requirements' / "
+            f"'## REMOVED Requirements' header "
+            f"(one of these opens the block OpenSpec parses)"]
 
 
 def _check_requirement_with_rfc2119(root: Path) -> list[str]:
@@ -249,7 +259,7 @@ def _first_scenario_block(text: str) -> str | None:
 _SKELETON_CHECKS = [
     _check_proposal,
     _check_specs_dir,
-    _check_added_requirements,
+    _check_requirements_block,
     _check_requirement_with_rfc2119,
     _check_scenario_given_when_then,
 ]

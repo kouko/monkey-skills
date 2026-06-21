@@ -174,6 +174,26 @@ def test_skeleton_rejects_scenario_missing_given_when_then(tmp_path):
     assert any("THEN" in p for p in problems), problems
 
 
+def test_skeleton_accepts_modified_only_delta(tmp_path):
+    # An OpenSpec change whose delta is ONLY a `## MODIFIED Requirements`
+    # block (no ## ADDED) is valid: a change may ADD / MODIFY / REMOVE.
+    body = (
+        "## MODIFIED Requirements\n"
+        "\n"
+        "### Requirement: User login\n"
+        "The system MUST authenticate a user with valid credentials.\n"
+        "\n"
+        "#### Scenario: Valid credentials\n"
+        "- GIVEN a registered user\n"
+        "- WHEN they submit a correct password\n"
+        "- THEN they are granted a session\n"
+    )
+    root = _write_skeleton(tmp_path, delta_body=body)
+    ok, problems = validate(root)
+    assert ok, f"MODIFIED-only delta should pass, got: {problems}"
+    assert problems == []
+
+
 def test_skeleton_tolerates_extra_content(tmp_path):
     body = _well_formed_delta() + (
         "\n## Some Unknown Section\n"
