@@ -81,6 +81,9 @@ ROUTE: dict[str, list[str]] = {
     "standards/external-surface-grounding.md": [
         f"{_SDD_STANDARDS_DIR}/external-surface-grounding.md",
     ],
+    "standards/deliberate-simplification.md": [
+        f"{_SDD_STANDARDS_DIR}/deliberate-simplification.md",
+    ],
     "rubrics/quality-gate.md": [
         f"{_SDD_RUBRICS_DIR}/quality-gate.md",
     ],
