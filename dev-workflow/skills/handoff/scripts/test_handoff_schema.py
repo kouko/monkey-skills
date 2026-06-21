@@ -178,3 +178,34 @@ def test_resume_launcher_section_present_and_constrained() -> None:
     assert "bad example — resume launcher" in content_lower, (
         "Bad Resume Launcher example (anti-pattern) not found."
     )
+
+
+def test_conversation_language_captured_and_propagated() -> None:
+    """
+    v0.3.0 language-preservation gate: the HANDOFF must capture the session's
+    conversation language (Block 1 frontmatter) AND the Resume Launcher must tell
+    the next session to reply in it.
+
+    WHY: a cold resume has no warm context for which language the user was
+    conversing in, so it defaults to English — dropping the user's
+    conversation-language preference across the session boundary. Recording it in
+    frontmatter (the record) and embedding a reply-in-that-language instruction in
+    the launcher (the propagation channel, pasted as the new session's first
+    message and working even without the skill installed) closes that gap.
+    """
+    content = _read_bundle()
+    cl = content.lower()
+
+    # --- Block 1 frontmatter captures the conversation language ---
+    assert "conversation_language" in cl, (
+        "'conversation_language' frontmatter field not found.\n"
+        "Block 1 must record the language the agent has been replying in so a "
+        "cold resume can continue in it instead of defaulting to English."
+    )
+
+    # --- Resume Launcher propagates it (the load-bearing channel) ---
+    assert "reply to me in the conversation language" in cl, (
+        "Resume Launcher must instruct the next session to reply in the captured "
+        "conversation language.\n"
+        "Without this the pasted launcher primes the cold session in English."
+    )

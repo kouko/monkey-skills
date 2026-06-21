@@ -4,6 +4,19 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.19.0] — 2026-06-21
+
+### Added — handoff preserves the conversation language (`handoff` 0.2.0 → 0.3.0)
+
+`dev-workflow:handoff` now captures the session's conversation language in the
+HANDOFF and carries it across the session boundary. Block 1 frontmatter gains a
+`conversation_language` field, and the Resume Launcher embeds a "reply to me in
+the conversation language" instruction — the channel actually pasted into the
+next session, so the resumed agent continues in the user's language instead of
+defaulting to English. Scope is user-facing replies only; subagent / tool output
+stays in its source language and is localized before surfacing, as in a normal
+session. Fixes the observed bug where a resumed session reverted to English.
+
 ## [2.18.0] — 2026-06-20
 
 ### Changed — extracted the 5 skill-authoring skills to `skill-dev-toolkit`
