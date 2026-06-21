@@ -29,7 +29,7 @@ the review gate exactly what each shortcut costs.
 - **Maipradit, R. et al. "Wait For It" (arXiv:1901.09511),** crediting
   Zampetti et al. (2018), reports that **58% of "removed" SATD comments
   did not actually fix the problem** — the comment was deleted along
-  with surrounding code. ~5.3% overall (up to ~8% per-project) of SATD
+  with surrounding code. ~5.3% overall of SATD
   comments are **"on-hold"** — they record a *waiting condition* (a bug
   fix, a library version, a threshold) and are the most
   machine-manageable debt class. The `ceiling:` field is exactly this
