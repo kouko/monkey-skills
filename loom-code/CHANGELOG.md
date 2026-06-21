@@ -119,7 +119,7 @@ UI / interaction / stateful surface, enumerate UI states across six categories
 (empty / error / loading / state-transition / permission / boundary) **before
 finalizing the brief** — plus a forward-pointer to `spec-toolkit:spec-expansion`
 for the heavy case (was **Tier 2, deferred** until `writing-plans` reads OpenSpec
-change-folders; **delivered in [Unreleased] 2026-06-21** — now active / wired).
+change-folders; **delivered in 0.18.0** — now active / wired).
 Additive prose inside an existing skill (minor bump); **zero
 cross-plugin dependency**.
 
@@ -138,7 +138,7 @@ state-machine / permission matrix) stays SSOT in `spec-toolkit:spec-expansion`.
 - **test** — `scripts/test_brainstorming_greenfield_nudge.py` grep-guards the six
   categories / the two-pronged gate + both exclusions (not-brownfield, not-pure-logic)
   / the forward-pointer / the DRY guardrail (stdlib-only, intent-tolerant).
-- **~~deferred (Tier 2)~~ → delivered in [Unreleased] 2026-06-21:** brainstorming
+- **~~deferred (Tier 2)~~ → delivered in 0.18.0:** brainstorming
   judging + delegating the full spec to `spec-toolkit:spec-expansion` via the
   OpenSpec change-folder contract — was blocked on the unbuilt OpenSpec DECLARE
   wiring (writing-plans reading change-folders; 2026-05-30 OpenSpec brief Q6=A);
