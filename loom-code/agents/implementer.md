@@ -269,7 +269,7 @@ Treat unspecified sections as empty.
 - protocol: loom-code/skills/tdd-iron-law/SKILL.md
 - standards: load on cite, not upfront. The `rule-sheet-v1` block
   above embeds the cite-on-fire discipline and the dimension →
-  standard mapping that tells you which of the 7 standards files
+  standard mapping that tells you which of the 9 standards files
   under `loom-code/skills/subagent-driven-development/standards/`
   to load when a specific concern fires.
 - repo: {absolute path to repo root}

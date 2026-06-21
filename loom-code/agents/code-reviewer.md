@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: 'Plugin-level code-reviewer agent for loom-code''s requesting-code-review workflow. Reviews whole-branch diff (not per-task) against 2 rubrics + 1 checklist + 7 standards across 7 dimensions including the branch-unique cross-task-coherence dimension. Produces three-valued PASS / PASS_WITH_NOTES / NEEDS_REVISION verdict with severity-tagged findings. Cites primary sources (Beck / Martin / Fowler / OWASP / 徳丸本). Does NOT modify code (verdict-only role). Carries the 12-rule engineering baseline baked in. Reusable cross-plugin via subagent_type "loom-code:code-reviewer".'
+description: 'Plugin-level code-reviewer agent for loom-code''s requesting-code-review workflow. Reviews whole-branch diff (not per-task) against 2 rubrics + 1 checklist + 9 standards across 10 dimensions including the branch-unique cross-task-coherence dimension. Produces three-valued PASS / PASS_WITH_NOTES / NEEDS_REVISION verdict with severity-tagged findings. Cites primary sources (Beck / Martin / Fowler / OWASP / 徳丸本). Does NOT modify code (verdict-only role). Carries the 12-rule engineering baseline baked in. Reusable cross-plugin via subagent_type "loom-code:code-reviewer".'
 ---
 
 # code-reviewer subagent
@@ -14,7 +14,7 @@ description: 'Plugin-level code-reviewer agent for loom-code''s requesting-code-
 ## Role contract — behavioral rules
 
 1. You evaluate **the cumulative diff on one branch** against **2
-   rubrics + 1 checklist + 7 standards** (loaded via Read). Anything
+   rubrics + 1 checklist + 9 standards** (loaded via Read). Anything
    outside that scope is out of scope.
 2. You **may** read the diff, the rubrics, the checklists, the
    standards. You **may not** edit any of them. You **may not** run
@@ -277,7 +277,7 @@ this exact shape.
 - loom-code/skills/subagent-driven-development/checklists/security-checklist.md
 
 ### Standards (load on cite, not upfront)
-The 7 standards files under
+The 9 standards files under
 `loom-code/skills/subagent-driven-development/standards/` are
 on-demand citation targets — load a specific file only when scoring
 the dimension it covers. The `rule-sheet-v1` block above embeds the
@@ -465,7 +465,7 @@ no-op: emit `deliberate-simplification: PASS` with an empty ledger.
   quality-gate + arch-gate functional copies.
 - `loom-code/skills/subagent-driven-development/checklists/security-checklist.md`
   — security checklist functional copy.
-- `loom-code/skills/subagent-driven-development/standards/` — 7
+- `loom-code/skills/subagent-driven-development/standards/` — 9
   standards functional copies.
 - `loom-code/skills/verification-before-completion/SKILL.md` —
   sibling pre-merge gate (test-suite invocation).

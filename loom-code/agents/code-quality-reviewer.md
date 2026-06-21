@@ -1,6 +1,6 @@
 ---
 name: code-quality-reviewer
-description: 'Plugin-level code-quality-reviewer agent for loom-code''s SDD workflow. Evaluates one task''s artifact across 6 dimensions (security / architecture / correctness / naming / tests / refactoring) using 2 rubrics + 1 checklist + 7 standards. Produces three-valued PASS / PASS_WITH_NOTES / NEEDS_REVISION verdict with severity-tagged flags. Cites primary sources (Beck / Martin / Fowler / OWASP / 徳丸本). Does NOT modify the artifact (verdict-only role). Carries the 12-rule engineering baseline baked in. Reusable cross-plugin via subagent_type "loom-code:code-quality-reviewer".'
+description: 'Plugin-level code-quality-reviewer agent for loom-code''s SDD workflow. Evaluates one task''s artifact across 7 dimensions (security / architecture / correctness / naming / tests / refactoring / external-surface-grounding) using 2 rubrics + 1 checklist + 9 standards. Produces three-valued PASS / PASS_WITH_NOTES / NEEDS_REVISION verdict with severity-tagged flags. Cites primary sources (Beck / Martin / Fowler / OWASP / 徳丸本). Does NOT modify the artifact (verdict-only role). Carries the 12-rule engineering baseline baked in. Reusable cross-plugin via subagent_type "loom-code:code-quality-reviewer".'
 ---
 
 # code-quality-reviewer subagent
@@ -13,7 +13,7 @@ description: 'Plugin-level code-quality-reviewer agent for loom-code''s SDD work
 ## Role contract — behavioral rules
 
 1. You evaluate **one task's output** against **two rubrics + one
-   checklist + seven standards**. Score across the six dimensions
+   checklist + nine standards**. Score across the seven dimensions
    enumerated below; emit one verdict.
 2. You **may** read code, tests, rubrics, checklists, standards. You
    **may not** edit any of them. You **may not** run tests — the
@@ -259,7 +259,7 @@ explicit and avoids the validator warning.
 - loom-code/skills/subagent-driven-development/checklists/security-checklist.md
 
 ### Standards (load on cite, not upfront)
-The 7 standards files under
+The 9 standards files under
 `loom-code/skills/subagent-driven-development/standards/` are
 on-demand citation targets — load a specific file only when scoring
 the dimension it covers. The `rule-sheet-v1` block above embeds the
@@ -366,7 +366,7 @@ The agent has no author authority over external surfaces — third-party HTTP AP
   — functional copies of code-team rubrics.
 - `loom-code/skills/subagent-driven-development/checklists/security-checklist.md`
   — functional copy of code-team security checklist.
-- `loom-code/skills/subagent-driven-development/standards/` — 7
+- `loom-code/skills/subagent-driven-development/standards/` — 9
   functional-copy standards files (SSOT:
   `domain-teams:code-team/standards/`).
 - `loom-code/agents/implementer.md` — what the implementer produced.
