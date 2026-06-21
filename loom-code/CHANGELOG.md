@@ -24,10 +24,44 @@ pipeline plugins now carry the `loom-` prefix:
 - Env var `CODE_TOOLKIT_MODE` → `LOOM_CODE_MODE` (hard cut, no fallback).
 - Router skill `using-code-toolkit` → `using-loom-code`; CI workflow
   `code-toolkit-ci.yml` → `loom-code-ci.yml`.
-- The `docs/loom/` doc archive is NOT renamed (separate from the plugin).
+- The shared SDD doc archive moved `docs/code-toolkit/` → `docs/loom/`
+  (suite-named, matching the OpenSpec / Spec Kit / Kiro tool-named-dir norm);
+  brainstorming / writing-plans now write new briefs/plans to `docs/loom/`.
 
 Installed users must re-add the plugin under its new name; old `code-toolkit:`
 ids and the old env var no longer resolve.
+
+### Migrating old references (other repos / shells / configs)
+
+There is **no alias** — old references break and must be repointed. When you
+hit a pre-rename reference anywhere, apply this mapping:
+
+```
+code-toolkit               → loom-code
+spec-toolkit               → loom-spec
+interface-design-toolkit   → loom-interface-design
+product-principles-toolkit → loom-product-principles
+CODE_TOOLKIT_MODE          → LOOM_CODE_MODE
+docs/code-toolkit/         → docs/loom/
+```
+
+- **Installed plugin**: re-add under `loom-code` (remove old, add new).
+- **Shell rc**: rename any `CODE_TOOLKIT_MODE` export to `LOOM_CODE_MODE`.
+- **Other repos' CLAUDE.md / .claude/settings.json / scripts**: grep + sed the
+  tokens above (order: env var → longest token → shortest token last).
+- **Old HANDOFF / session files**: historical — leave them; repoint only when you
+  actually resume that session.
+
+**Changing the skill's output path does NOT move existing files** — the skill
+only sets where *new* briefs are written. To migrate an existing
+`docs/code-toolkit/` archive in another repo (one-time, history-preserving):
+
+```bash
+git mv docs/code-toolkit docs/loom
+grep -rIl 'docs/code-toolkit' . | grep -v node_modules | while read f; do
+  sed -i '' 's#docs/code-toolkit#docs/loom#g' "$f"; done
+grep -rIl 'docs/code-toolkit' . | grep -v node_modules | wc -l   # expect 0
+```
 
 ## Journey overview (v0.1.0 → v1.0.0)
 
