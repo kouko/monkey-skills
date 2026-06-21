@@ -303,10 +303,11 @@ dimension_scores:
   cross-task-coherence: PASS | PASS_WITH_NOTES | NEEDS_REVISION  # whole-branch scope only
   external-surface-grounding: PASS | PASS_WITH_NOTES | NEEDS_REVISION  # mirrors per-task D7 + adds cross-task surface-consistency 🟡
   principles-conformance: PASS | PASS_WITH_NOTES | NEEDS_REVISION | N/A  # vs consumer PRINCIPLES.md; N/A when absent
+  deliberate-simplification: PASS | PASS_WITH_NOTES | NEEDS_REVISION  # LOOM-SIMPLIFY marker harvest + completeness check; PASS with empty ledger when no markers
 
 findings:
   - severity: 🔴 fatal | 🟡 should-fix | 🟢 nit
-    dimension: security | architecture | correctness | naming | tests | refactoring | cross-task-coherence | external-surface-grounding | principles-conformance
+    dimension: security | architecture | correctness | naming | tests | refactoring | cross-task-coherence | external-surface-grounding | principles-conformance | deliberate-simplification
     where: <file:line OR commit SHA range>
     source: <rubric / checklist / standard file:section that triggered this>
     note: <1-2 sentence finding>
@@ -345,6 +346,7 @@ findings using the same 🔴 / 🟡 / 🟢 taxonomy.
 | refactoring | `standards/refactoring-standard.md` + `standards/pragmatic-principles.md` — Rule of Three at branch scope (3 tasks doing similar thing → extract) |
 | **cross-task-coherence** | **Branch-only dimension.** Look for: inconsistent abstractions across tasks; duplicated logic that survived per-task review because each task saw only its slice; tasks that introduce dependencies on each other in non-obvious ways; scope creep (task did more than its name suggested) |
 | **external-surface-grounding** | `standards/external-surface-grounding.md` — mirrors per-task D7 (HTTP API / SDK / MCP / CLI / sibling-team contract calls need grounding cites) AND adds the whole-branch-only cross-task-conflict check |
+| **deliberate-simplification** | **Branch-only dimension.** `standards/deliberate-simplification.md` — grep the branch diff for `LOOM-SIMPLIFY:` markers, surface them as a ledger view in `summary`, and flag any marker missing `ceiling:` / `upgrade:` / `ref:` or whose `ceiling:` is vague (`later` / `someday`). See §D9 below. |
 | **principles-conformance** | **Conditional dimension — scored only when the consumer project has `docs/loom/PRINCIPLES.md`** (the orchestrator passes its path; see `requesting-code-review` §Process). Asks the **conformance** question: does the branch diff VIOLATE any of PRINCIPLES.md's falsifiable `— check:` clauses? The source is the **consumer's PRINCIPLES.md artifact**, NOT a code-team standard (code-team is generic; product principles are project-specific). When PRINCIPLES.md is absent, emit `principles-conformance: N/A` and no findings. See §D8 below for severity. |
 
 #### D7 — External Surface Grounding (whole-branch + cross-task)
@@ -381,6 +383,63 @@ principles lens performs on the spec.
 - **Principles the diff does not exercise produce NO finding** — silence is not a violation (same discipline as the 🟢 "do not manufacture" rule).
 - **Score only the statically-verifiable portion** of each `— check:` clause against the diff (e.g. count fields, grep tokens, presence of a modal). **Defer runtime-only checks** (tap counts, offline render, in-session undo behavior) to the verification / agent-device layer — do not false-pass ("can't see it → assume fine") or false-fail.
 - **If a `— check:` clause is not objectively testable** (no falsifiable condition), emit 🟢 and note that the principle is unfalsifiable rather than forcing a pass/fail.
+
+#### D9 — Deliberate-Simplification Marker Harvest (whole-branch)
+
+**Whole-branch-only step — the marker harvest is per-branch, not
+per-task.** Per-task reviewers see one slice; you see the cumulative
+diff, which is the one moment where every `LOOM-SIMPLIFY:` shortcut the
+branch introduces is visible together. Grounding standard:
+`standards/deliberate-simplification.md` (PEP 350 codetags; Fowler
+Technical-Debt-Quadrant *deliberate+prudent*; Maipradit et al. "Wait For
+It" arXiv:1901.09511 on-hold SATD). That standard makes the in-code
+marker the SSOT and scopes the harvest to **this** branch's review gate
+— do not attempt a lifetime / cross-codebase marker count (gameable per
+the SATD-removal literature).
+
+**Harvest step.** Grep the branch diff (or the touched tree) for the
+marker:
+
+```
+grep -rn "LOOM-SIMPLIFY:" <branch-diff-or-tree>
+```
+
+Each marker carries exactly four fields per the standard:
+
+```
+LOOM-SIMPLIFY: <shortcut> | ceiling: <checkable condition> | upgrade: <proper path> | ref: <brief/task>
+```
+
+**Surface a ledger view.** In `summary`, render the collected markers
+as a compact ledger — one row per marker with its `file:line`,
+`shortcut`, `ceiling`, and `ref` — so the human at the gate can see at a
+glance exactly what each corner-cut costs. If the grep returns nothing,
+state that no markers were found (silence is reported, not skipped —
+Rule 12 fail-loud).
+
+**Completeness flag.** Emit a finding for each marker that is
+**malformed or vague**:
+
+- 🟡 **Missing field**: the marker lacks `ceiling:`, `upgrade:`, or
+  `ref:` (the standard requires all four fields). Cite the marker's
+  `file:line` in `where`; `source:`
+  `standards/deliberate-simplification.md §Field Rules`.
+- 🟡 **Vague ceiling**: `ceiling:` is not a checkable condition — it
+  reads `later` / `someday` / `eventually` rather than a threshold,
+  named event, or version (§Field Rules 1; §Anti-Patterns). A vague
+  ceiling is uncheckable and so cannot be managed. Cite the marker's
+  `file:line`.
+- 🟢 **Nit**: marker is well-formed but its shortcut looks like it may
+  exceed its own stated ceiling already, or the `ref:` does not resolve
+  to a brief/task in this branch — flag for human judgment, do not
+  manufacture a violation.
+
+A well-formed marker is **not** a finding — it is a sanctioned,
+tracked corner-cut; report it in the ledger only. Do **not** re-litigate
+whether the shortcut should exist (that was the brief's scope decision);
+your job is to confirm the marker is complete and its ceiling is
+checkable. When the branch introduces no shortcuts, this dimension is a
+no-op: emit `deliberate-simplification: PASS` with an empty ledger.
 
 ## Anti-patterns the orchestrator will reject
 
