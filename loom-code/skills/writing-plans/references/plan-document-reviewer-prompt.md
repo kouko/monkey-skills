@@ -15,10 +15,10 @@
 
 ```
 ### Plan
-<absolute path to docs/code-toolkit/plans/<date>-<topic>.md>
+<absolute path to docs/loom/plans/<date>-<topic>.md>
 
 ### Source brief
-<absolute path to docs/code-toolkit/specs/<date>-<topic>.md>
+<absolute path to docs/loom/specs/<date>-<topic>.md>
 
 ### Schema
 loom-code/skills/writing-plans/references/plan-format.md

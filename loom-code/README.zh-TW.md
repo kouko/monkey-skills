@@ -2,7 +2,7 @@
 
 > **Process-discipline + canon-grounded 程式開發工作流 for Claude Code (+ Codex CLI)。** 11-skill plugin，SessionStart 自動注入 router charter，讓 agent 停止合理化、開始 deferring — 每條規則皆 grounded 於一級書目（Beck on TDD / Martin on naming / Fowler on refactoring / Feathers on legacy code / OWASP ASVS on security / 徳丸本 on encoding security）。
 
-**狀態**：v0.9.0（11 skill 已 ship — v0.3.0 起達成 Superpowers parity；v0.6.0 / P15-12 起 4 個 plugin-level subagent 攜帶 SSOT 注入的 12 條 engineering baseline；v0.7.0 出貨 reviewer-output discipline R1+R2 + brainstorming Current State Evidence + 路徑遷移 `docs/superpowers/` → `docs/code-toolkit/`；v0.8.0 新增 `dispatching-parallel-agents`（auxiliary 跨 domain 派遣）+ `writing-plans` schema 擴充（`Independent` + `Files touched` 任務欄位）；**v0.9.0 推出 inline rule-sheet** — reviewer 上行 standards 載入量由 ~80K → ~8K chars 壓縮（4 個 plugin-level agent 注入 `_rule-sheet.md`）；7 份 standards 檔由「上行預載入」轉為「即時引用查表」；cite-on-fire 紀律明文化（徳丸本 Ch.6 / OWASP ASVS 章節號引用前必 `Read` 驗證；Beck / Clean Code / Fowler 章節可憑記憶引用）；Codex CLI build 完成、Codex 實機驗證仍延後；merge to main 受使用者政策「完全做好之前不合 main」+ v1.0.0 目標 ≥5 dogfood notes 阻擋）
+**狀態**：v0.9.0（11 skill 已 ship — v0.3.0 起達成 Superpowers parity；v0.6.0 / P15-12 起 4 個 plugin-level subagent 攜帶 SSOT 注入的 12 條 engineering baseline；v0.7.0 出貨 reviewer-output discipline R1+R2 + brainstorming Current State Evidence + 路徑遷移 `docs/superpowers/` → `docs/loom/`；v0.8.0 新增 `dispatching-parallel-agents`（auxiliary 跨 domain 派遣）+ `writing-plans` schema 擴充（`Independent` + `Files touched` 任務欄位）；**v0.9.0 推出 inline rule-sheet** — reviewer 上行 standards 載入量由 ~80K → ~8K chars 壓縮（4 個 plugin-level agent 注入 `_rule-sheet.md`）；7 份 standards 檔由「上行預載入」轉為「即時引用查表」；cite-on-fire 紀律明文化（徳丸本 Ch.6 / OWASP ASVS 章節號引用前必 `Read` 驗證；Beck / Clean Code / Fowler 章節可憑記憶引用）；Codex CLI build 完成、Codex 實機驗證仍延後；merge to main 受使用者政策「完全做好之前不合 main」+ v1.0.0 目標 ≥5 dogfood notes 阻擋）
 **語言**：[English](README.md) | [日本語](README.ja.md) | **繁體中文**
 **Repository**：[`monkey-skills`](https://github.com/kouko/monkey-skills) 的一部分
 
@@ -87,9 +87,9 @@ claude plugin install loom-code@monkey-skills --scope local
 ```
 你: "我想加 feature X"
   ↓ (SessionStart hook router 自動觸發)
-brainstorming → 5-axis brief + Current State Evidence → docs/code-toolkit/specs/<topic>.md
+brainstorming → 5-axis brief + Current State Evidence → docs/loom/specs/<topic>.md
   ↓
-writing-plans → ≤5-task plan → docs/code-toolkit/plans/<topic>.md
+writing-plans → ≤5-task plan → docs/loom/plans/<topic>.md
   ↓
 subagent-driven-development → 每個 task 派 triad
   ↓ (每個 implementer subagent 內)

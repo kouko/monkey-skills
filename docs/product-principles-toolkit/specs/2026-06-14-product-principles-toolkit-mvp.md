@@ -62,7 +62,7 @@ monkey-skills.
 
 ### Evidence paths appendix
 - `spec-toolkit/scripts/validate_spec_output.py` (validator pattern), `spec-toolkit/.claude-plugin/plugin.json` (template)
-- Real consumer-project evidence for the `docs/<toolkit>/` runtime convention: a downstream consumer repo carries `docs/code-toolkit/{specs,plans}/` committed (verified locally)
+- Real consumer-project evidence for the `docs/<toolkit>/` runtime convention: a downstream consumer repo carries `docs/loom/{specs,plans}/` committed (verified locally)
 - Research: Spec Kit `constitution.md` (github/spec-kit/blob/main/memory/constitution.md); Kiro steering (kiro.dev); Martin Fowler "SDD: Kiro, spec-kit, Tessl"
 
 ## Decision

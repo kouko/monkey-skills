@@ -8,7 +8,7 @@ contracts, and data flow live in `TECH-SPEC.md` (code-team ownership).
 - Spec type: PRODUCT-SPEC (planning-team ownership)
 - Target plugin: `salesforce-toolkit` (v0.1.0, greenfield)
 - Upstream brief:
-  [`docs/code-toolkit/specs/2026-05-20-salesforce-toolkit-v0.1.0.md`](../docs/code-toolkit/specs/2026-05-20-salesforce-toolkit-v0.1.0.md)
+  [`docs/loom/specs/2026-05-20-salesforce-toolkit-v0.1.0.md`](../docs/loom/specs/2026-05-20-salesforce-toolkit-v0.1.0.md)
 - Status: shipped v0.1.0 (2026-05-21) — all 5 plan parts landed; scope-cut + dogfood hardening complete; whole-branch review PASS
 
 ---
@@ -222,7 +222,7 @@ toolset enum）確認：`data` toolset 只暴露唯一 tool `run_soql_query`;
 
 - **TECH-SPEC.md** 對應本檔，覆蓋 module design / data flow / interface
   contracts / setup flow 細節
-- **Implementation plans**：[`docs/code-toolkit/plans/2026-05-20-salesforce-toolkit-v0.1.0-part-{1,2,3,4a,4b}.md`](../docs/code-toolkit/plans/)
+- **Implementation plans**：[`docs/loom/plans/2026-05-20-salesforce-toolkit-v0.1.0-part-{1,2,3,4a,4b}.md`](../docs/loom/plans/)
   — 5-part plan series，原子任務 ≤ 5 min / unit
-- **Brief**：[`docs/code-toolkit/specs/2026-05-20-salesforce-toolkit-v0.1.0.md`](../docs/code-toolkit/specs/2026-05-20-salesforce-toolkit-v0.1.0.md)
+- **Brief**：[`docs/loom/specs/2026-05-20-salesforce-toolkit-v0.1.0.md`](../docs/loom/specs/2026-05-20-salesforce-toolkit-v0.1.0.md)
   — brainstorming brief、Decision Q1–Q7、Out of Scope、Alternatives

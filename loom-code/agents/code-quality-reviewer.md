@@ -337,7 +337,7 @@ informational only.
 
 The agent has no author authority over external surfaces — third-party HTTP APIs, third-party packages (npm / pip / cargo), MCP server tools, CLI binaries, internal sibling-team contracts. Calling them without verifying their current shape is the failure mode this dimension catches. See `standards/external-surface-grounding.md` for the rule, the 5 surface categories, the 4 grounding sources (Live verification / MCP schema / Pinned reference / In-repo evidence), and the anti-patterns.
 
-**Severity calibration** (per §Resolved Decisions Q4 of the brief `docs/code-toolkit/specs/2026-05-22-external-surface-grounding-discipline.md`):
+**Severity calibration** (per §Resolved Decisions Q4 of the brief `docs/loom/specs/2026-05-22-external-surface-grounding-discipline.md`):
 
 - 🔴 **Fatal MUST**: a call into surface category **HTTP API / SDK package / MCP tool / CLI flag** in this task's diff lacks a grounding cite in the test docstring / commit message / PR body. Implementer fixes on re-dispatch.
 - 🟡 **Should-fix SHOULD**: a call into surface category **internal sibling-team contract** lacks a grounding cite. Lower severity than the four external categories because sibling-team contracts are harder to objectively audit; the whole-branch reviewer carries the harder cross-task version.

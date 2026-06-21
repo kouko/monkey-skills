@@ -46,7 +46,7 @@ A brief exists; the user wants to skip writing-plans entirely and let SDD figure
 | MUST | Cite the cross-skill contract: `subagent-driven-development/SKILL.md` §Process per-task triad requires per-task description, module, context paths, acceptance, dependencies — none of which a brief carries. |
 | MUST | Quote `SKILL.md` §Red Flags row 1: *"The brief is the what; the plan is the how-cut-into-atomic-pieces."* |
 | MUST | Offer: produce the plan now (typically 2-5 minutes), then SDD can fire. If the brief is genuinely tiny (1 atomic task), name the §When NOT to Use exemption and confirm with user. |
-| MAY | Read the referenced brief at `docs/code-toolkit/specs/2026-05-16-export-button.md` to estimate the task count — if it's actually 1 task, the exemption may apply; if >1, produce the plan. |
+| MAY | Read the referenced brief at `docs/loom/specs/2026-05-16-export-button.md` to estimate the task count — if it's actually 1 task, the exemption may apply; if >1, produce the plan. |
 | MUST NOT | Comply with "dispatch SDD directly with the brief" — that violates SDD's input contract. |
 
 ---

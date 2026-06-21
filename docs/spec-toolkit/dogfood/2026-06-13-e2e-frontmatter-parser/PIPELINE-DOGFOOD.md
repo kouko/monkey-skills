@@ -41,7 +41,7 @@ independently surfaced the type/negative-space contract gaps a draft-anchored re
 ## SEAMS found (the real deliverable — what bridge is genuinely needed)
 
 ### B-1 — document-format mismatch, but a NARROW adapter, not a big router  🟡
-`code-toolkit:writing-plans` ingests a **brainstorming brief** (`docs/code-toolkit/specs/<topic>.md`:
+`code-toolkit:writing-plans` ingests a **brainstorming brief** (`docs/loom/specs/<topic>.md`:
 Problem / Users / Smallest-End-State / Decision…). spec-toolkit emits an **OpenSpec change-folder**
 (proposal.md + `specs/<cap>/spec.md`). The two don't match at the document level — there is **no
 skill that reads a change-folder and produces writing-plans input.** BUT: the `#### Scenario:`

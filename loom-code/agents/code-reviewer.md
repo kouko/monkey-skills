@@ -351,7 +351,7 @@ findings using the same 🔴 / 🟡 / 🟢 taxonomy.
 
 The agent has no author authority over external surfaces — third-party HTTP APIs, third-party packages, MCP server tools, CLI binaries, internal sibling-team contracts. Whole-branch scope adds the **cross-task surface-consistency check** that per-task reviewers cannot perform. See `standards/external-surface-grounding.md` for the rule, the 5 surface categories, the 4 grounding sources, and the anti-patterns.
 
-**Severity calibration** (mirrors per-task D7 from `code-quality-reviewer.md` per §Resolved Decisions Q4 of the brief `docs/code-toolkit/specs/2026-05-22-external-surface-grounding-discipline.md`, PLUS the cross-task 🟡 unique to whole-branch):
+**Severity calibration** (mirrors per-task D7 from `code-quality-reviewer.md` per §Resolved Decisions Q4 of the brief `docs/loom/specs/2026-05-22-external-surface-grounding-discipline.md`, PLUS the cross-task 🟡 unique to whole-branch):
 
 - 🔴 **Fatal MUST**: a call into surface category **HTTP API / SDK package / MCP tool / CLI flag** anywhere in the branch lacks a grounding cite.
 - 🟡 **Should-fix SHOULD**: a call into surface category **internal sibling-team contract** lacks a grounding cite (per Q4 — lower severity because sibling-team contracts are harder to objectively audit at review time).

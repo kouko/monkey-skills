@@ -83,7 +83,7 @@ Three pieces:
 ```markdown
 # Plan: APIClient async/await refactor
 
-**Source brief**: docs/code-toolkit/specs/2026-05-16-apiclient-refactor.md
+**Source brief**: docs/loom/specs/2026-05-16-apiclient-refactor.md
 **Total tasks**: 4 (≤5 ✓)
 **Execution order**: sequential (each task depends on prior)
 **Plan-document-reviewer verdict**: PASS

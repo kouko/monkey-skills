@@ -22,7 +22,7 @@ The plan is the **paths-not-content handoff** between brainstorming and SDD. bra
 ## The pipeline
 
 ```
-brainstorming → brief (docs/code-toolkit/specs/<topic>.md)
+brainstorming → brief (docs/loom/specs/<topic>.md)
                   ↓
               writing-plans
                   ↓
@@ -124,12 +124,12 @@ If reviewer returns `NEEDS_REVISION`, writing-plans **fixes the plan** and re-ru
 
 ## Output contract — the plan
 
-Schema in [`references/plan-format.md`](references/plan-format.md). Plan lives at `docs/code-toolkit/plans/<date>-<topic>.md` (sibling to the brief). Minimum structure:
+Schema in [`references/plan-format.md`](references/plan-format.md). Plan lives at `docs/loom/plans/<date>-<topic>.md` (sibling to the brief). Minimum structure:
 
 ```markdown
 # Plan: <topic>
 
-Source brief: docs/code-toolkit/specs/<date>-<topic>.md
+Source brief: docs/loom/specs/<date>-<topic>.md
 Total tasks: <N>   ← uncapped; width is fine (many parallel leaves OK)
 Critical-path depth: <D> (≤5)   ← longest Dependencies chain; this is the ceiling
 Execution order: sequential | parallel-where-possible
@@ -173,8 +173,8 @@ The markup is **opt-in**. A plan that omits it (or sets `Independent: false`) ro
 
 | Direction | Skill | Contract |
 |---|---|---|
-| **Upstream** | `brainstorming` | Produces brief at `docs/code-toolkit/specs/<topic>.md`. writing-plans reads it via Read tool. |
-| **Downstream** | `subagent-driven-development` | Consumes plan at `docs/code-toolkit/plans/<topic>.md`. SDD reads plan + dispatches per-task triad. |
+| **Upstream** | `brainstorming` | Produces brief at `docs/loom/specs/<topic>.md`. writing-plans reads it via Read tool. |
+| **Downstream** | `subagent-driven-development` | Consumes plan at `docs/loom/plans/<topic>.md`. SDD reads plan + dispatches per-task triad. |
 | **Downstream (opt-in)** | `dispatching-parallel-agents` | Consumes tasks marked `Independent: true` with disjoint `Files touched`. Dispatches their implementers in one assistant message for concurrent execution. Fall back to SDD's sequential dispatch if either condition fails. |
 | **Self-review** | `plan-document-reviewer` (evaluator subagent) | writing-plans dispatches it after producing the plan. Returns PASS / NEEDS_REVISION. |
 | **Recursive (BLOCKED fallback)** | `writing-plans` (self) | When SDD's implementer returns BLOCKED with decomposition signal, orchestrator re-invokes this skill on the failing task. |

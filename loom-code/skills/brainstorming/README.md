@@ -30,7 +30,7 @@ When the change touches existing code or process, the brief carries a `## Curren
 
 ## Output
 
-A structured brief written to `docs/code-toolkit/specs/YYYY-MM-DD-<topic>.md`. Schema: see [`references/handoff-brief-format.md`](references/handoff-brief-format.md). `writing-plans` (Phase 2) consumes this brief to split work into atomic tasks.
+A structured brief written to `docs/loom/specs/YYYY-MM-DD-<topic>.md`. Schema: see [`references/handoff-brief-format.md`](references/handoff-brief-format.md). `writing-plans` (Phase 2) consumes this brief to split work into atomic tasks.
 
 ## When NOT to use
 

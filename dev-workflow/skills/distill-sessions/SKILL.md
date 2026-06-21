@@ -479,7 +479,7 @@ that key — `main.py` merges over the defaults.
   window covers all v0.3-observed trajectory sizes (max 559K observed
   in v0.3 post-ship dogfood = 56% of cap). Cost note: ~3× prior Haiku
   pricing; acceptable at locked cadence (2-5×/week post-PR cycle) per
-  [v0.4 brief Q-v0.4-1](../../../docs/code-toolkit/specs/2026-05-26-distill-sessions-v0.4-brief.md).
+  [v0.4 brief Q-v0.4-1](../../../docs/loom/specs/2026-05-26-distill-sessions-v0.4-brief.md).
   Operator can override at orchestration time per v0.1 bare-invocation
   protocol (pause-for-confirmation gate at Stage 3).
 - **Local-only by default** — mining reads
@@ -527,7 +527,7 @@ roadmap":
 
 - **v1.0 broad-scope `skill-log-mining` sibling** — this skill
   (`distill-sessions`) is the narrow v0.1 ship of a wider vision
-  documented in `docs/code-toolkit/specs/2026-05-22-skill-log-mining-v0.1-brief.md`.
+  documented in `docs/loom/specs/2026-05-22-skill-log-mining-v0.1-brief.md`.
   The broad-scope `skill-log-mining` is planned to also surface
   (a) new-skill proposals from clustering recurring prompts (crune-style),
   (b) `CLAUDE.md` rule extractions from recurring user corrections
@@ -569,7 +569,7 @@ roadmap":
   *iterates* existing ones. github chigichan24/crune.
 - **claude-coach** — signal taxonomy + agent-guardrail framing.
   github netresearch/claude-coach-plugin.
-- **Brief** — `docs/code-toolkit/specs/2026-05-22-distill-sessions-v0.1-brief.md`
+- **Brief** — `docs/loom/specs/2026-05-22-distill-sessions-v0.1-brief.md`
   carries the six locked decisions (Q1-Q6) and the empirical
   derivation of the Q5 thresholds from the mining-demo Pattern 1-4
   findings.

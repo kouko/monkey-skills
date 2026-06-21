@@ -139,7 +139,7 @@ Field rules:
 
 This prompt is dispatched as a Claude `Agent()` subagent call from the
 v0.1 Stage 3 orchestrator. Per the architecture decision in
-`docs/code-toolkit/specs/2026-05-22-distill-sessions-research.md`
+`docs/loom/specs/2026-05-22-distill-sessions-research.md`
 §"Subagent vs headless claude -p":
 
 - **Model**: `claude-sonnet-4-6` (Sonnet 4.6 1M-context — covers all observed

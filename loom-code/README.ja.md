@@ -2,7 +2,7 @@
 
 > **Process-discipline + canon-grounded コーディングワークフロー for Claude Code (+ Codex CLI)。** 11-skill プラグイン。SessionStart で router charter を自動注入し、エージェントが合理化をやめて defer し始めるよう仕向ける — 各ルールは一次情報源に grounded（Beck on TDD / Martin on naming / Fowler on refactoring / Feathers on legacy code / OWASP ASVS on security / 徳丸本 on encoding security）。
 
-**状態**：v0.9.0（11 skill 出荷済 — v0.3.0 以来 Superpowers parity；v0.6.0 / P15-12 以来 4 つの plugin-level subagent が SSOT 注入の 12 ルール engineering baseline を運搬；v0.7.0 は reviewer-output discipline R1+R2 + brainstorming Current State Evidence + パス移行 `docs/superpowers/` → `docs/code-toolkit/` を出荷；v0.8.0 で `dispatching-parallel-agents` を追加（auxiliary の across-domain ディスパッチ）+ `writing-plans` schema 拡張（`Independent` + `Files touched` タスクフィールド）；**v0.9.0 で inline rule-sheet を出荷** — reviewer 上行 standards load を ~80K → ~8K chars に圧縮（4 つの plugin-level agent に `_rule-sheet.md` を注入）；7 つの standards ファイルは「事前ロード入力」から「オンデマンド引用ターゲット」へ役割移行；cite-on-fire 規律を成文化（徳丸本 Ch.6 / OWASP ASVS のセクション番号は引用前に `Read` 必須、Beck / Clean Code / Fowler の章番号は記憶からの引用可）；Codex CLI build 完了、実機検証は延期中；merge to main はユーザポリシー「完全做好之前不合 main」+ v1.0.0 目標 ≥5 dogfood notes でブロック中）
+**状態**：v0.9.0（11 skill 出荷済 — v0.3.0 以来 Superpowers parity；v0.6.0 / P15-12 以来 4 つの plugin-level subagent が SSOT 注入の 12 ルール engineering baseline を運搬；v0.7.0 は reviewer-output discipline R1+R2 + brainstorming Current State Evidence + パス移行 `docs/superpowers/` → `docs/loom/` を出荷；v0.8.0 で `dispatching-parallel-agents` を追加（auxiliary の across-domain ディスパッチ）+ `writing-plans` schema 拡張（`Independent` + `Files touched` タスクフィールド）；**v0.9.0 で inline rule-sheet を出荷** — reviewer 上行 standards load を ~80K → ~8K chars に圧縮（4 つの plugin-level agent に `_rule-sheet.md` を注入）；7 つの standards ファイルは「事前ロード入力」から「オンデマンド引用ターゲット」へ役割移行；cite-on-fire 規律を成文化（徳丸本 Ch.6 / OWASP ASVS のセクション番号は引用前に `Read` 必須、Beck / Clean Code / Fowler の章番号は記憶からの引用可）；Codex CLI build 完了、実機検証は延期中；merge to main はユーザポリシー「完全做好之前不合 main」+ v1.0.0 目標 ≥5 dogfood notes でブロック中）
 **言語**：[English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 **Repository**：[`monkey-skills`](https://github.com/kouko/monkey-skills) の一部
 
@@ -87,9 +87,9 @@ claude plugin install loom-code@monkey-skills --scope local
 ```
 あなた: "feature X を追加したい"
   ↓ (SessionStart hook router 自動発火)
-brainstorming → 5-axis brief + Current State Evidence → docs/code-toolkit/specs/<topic>.md
+brainstorming → 5-axis brief + Current State Evidence → docs/loom/specs/<topic>.md
   ↓
-writing-plans → ≤5-task plan → docs/code-toolkit/plans/<topic>.md
+writing-plans → ≤5-task plan → docs/loom/plans/<topic>.md
   ↓
 subagent-driven-development → タスクごとに triad ディスパッチ
   ↓ (各 implementer subagent 内)

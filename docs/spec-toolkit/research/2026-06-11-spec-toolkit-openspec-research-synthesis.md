@@ -188,8 +188,8 @@ The "NEW Spec Toolkit Ends Vibe Coding" video titles (WorldofAI, Bart Mode) are 
 - `2026-06-09 Task vs Object 設計之爭` (USM/OOUX theory, upstream) · `2026-05-26 OpenSpec × code-toolkit 整合 Playbook` (original 2-layer DECLARE/VERIFY model)
 
 **Repo:**
-- `docs/code-toolkit/specs/2026-05-30-openspec-integration-brief.md` — locked DECLARE brief (Q1–Q9; out-of-scope explicitly excludes generation/completeness)
-- `code-toolkit/docs/code-toolkit/specs/2026-06-10-auto-build-harness-evaluation.md` — 4-station eval (note: its "C chosen" was later superseded — Station 4 = already-shipped discipline, don't build; Station 1 GENERATE is the gap)
+- `docs/loom/specs/2026-05-30-openspec-integration-brief.md` — locked DECLARE brief (Q1–Q9; out-of-scope explicitly excludes generation/completeness)
+- `code-toolkit/docs/loom/specs/2026-06-10-auto-build-harness-evaluation.md` — 4-station eval (note: its "C chosen" was later superseded — Station 4 = already-shipped discipline, don't build; Station 1 GENERATE is the gap)
 
 **Vault — prior art & foundations (broader sweep, 2026-06-11):**
 - `research/harness-engineering-course/` (12 lessons + roadmap + resources) — the harness curriculum the 4-station model derives from; L06/L07/L08/L09/L10 load-bearing for GENERATE/VERIFY; `feature_list.json` triple + evaluator-rubric templates

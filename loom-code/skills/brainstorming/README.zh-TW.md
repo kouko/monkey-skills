@@ -30,7 +30,7 @@
 
 ## 產出
 
-寫到 `docs/code-toolkit/specs/YYYY-MM-DD-<topic>.md` 的結構化 brief。Schema 在 [`references/handoff-brief-format.md`](references/handoff-brief-format.md)。`writing-plans`（Phase 2）會消費這個 brief 拆成原子任務。
+寫到 `docs/loom/specs/YYYY-MM-DD-<topic>.md` 的結構化 brief。Schema 在 [`references/handoff-brief-format.md`](references/handoff-brief-format.md)。`writing-plans`（Phase 2）會消費這個 brief 拆成原子任務。
 
 ## 不使用時機
 

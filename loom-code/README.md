@@ -2,7 +2,7 @@
 
 > **Process-discipline + canon-grounded coding workflow for Claude Code (+ Codex CLI).** An 11-skill plugin that auto-injects a SessionStart router charter so the agent stops rationalizing and starts deferring — every rule grounded in a primary source (Beck on TDD, Martin on naming, Fowler on refactoring, Feathers on legacy code, OWASP ASVS on security, 徳丸本 on encoding security).
 
-**Status**: v0.9.0 (11 skills shipped — full Superpowers parity since v0.3.0; 4 plugin-level subagents with SSOT-injected 12-rule baseline since v0.6.0 / P15-12; v0.7.0 shipped reviewer-output discipline R1+R2 + Current State Evidence section + path migration `docs/superpowers/` → `docs/code-toolkit/`; v0.8.0 added `dispatching-parallel-agents` (auxiliary across-domain dispatch) + `writing-plans` schema extension (`Independent` + `Files touched` task fields); **v0.9.0 ships inline rule-sheet** — reviewer upfront standards load shrinks ~80K → ~8K chars via `_rule-sheet.md` injected into all 4 plugin-level agents; 7 standards files shift role from preload input to on-demand citation target; cite-on-fire discipline codified (徳丸本 Ch.6 / OWASP ASVS sections MUST `Read` before citing; Beck / Clean Code / Fowler chapters may cite from memory); Codex CLI build complete, Codex live verification still deferred; merge to main blocked on user policy "完全做好之前不合 main" + ≥5 dogfood notes for v1.0.0 target)
+**Status**: v0.9.0 (11 skills shipped — full Superpowers parity since v0.3.0; 4 plugin-level subagents with SSOT-injected 12-rule baseline since v0.6.0 / P15-12; v0.7.0 shipped reviewer-output discipline R1+R2 + Current State Evidence section + path migration `docs/superpowers/` → `docs/loom/`; v0.8.0 added `dispatching-parallel-agents` (auxiliary across-domain dispatch) + `writing-plans` schema extension (`Independent` + `Files touched` task fields); **v0.9.0 ships inline rule-sheet** — reviewer upfront standards load shrinks ~80K → ~8K chars via `_rule-sheet.md` injected into all 4 plugin-level agents; 7 standards files shift role from preload input to on-demand citation target; cite-on-fire discipline codified (徳丸本 Ch.6 / OWASP ASVS sections MUST `Read` before citing; Beck / Clean Code / Fowler chapters may cite from memory); Codex CLI build complete, Codex live verification still deferred; merge to main blocked on user policy "完全做好之前不合 main" + ≥5 dogfood notes for v1.0.0 target)
 **Languages**: [English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 **Repository**: part of [`monkey-skills`](https://github.com/kouko/monkey-skills)
 
@@ -92,9 +92,9 @@ The intended user flow on a non-trivial task:
 ```
 You: "I want to add feature X"
   ↓ (SessionStart hook router auto-fires)
-brainstorming → 5-axis brief → docs/code-toolkit/specs/<topic>.md
+brainstorming → 5-axis brief → docs/loom/specs/<topic>.md
   ↓
-writing-plans → ≤5-task plan → docs/code-toolkit/plans/<topic>.md
+writing-plans → ≤5-task plan → docs/loom/plans/<topic>.md
   ↓
 subagent-driven-development → per-task triad dispatch
   ↓ (per implementer subagent)

@@ -155,7 +155,7 @@ Brainstorming's deliverable is a **structured brief** that `writing-plans` consu
 
 Optional but recommended sections: Alternatives Considered (Axis 4), What Becomes Obsolete (Axis 5), Open Questions.
 
-The brief lands in the user's repo at `docs/code-toolkit/specs/<date>-<topic>.md`.
+The brief lands in the user's repo at `docs/loom/specs/<date>-<topic>.md`.
 
 **Plain language in the summary message**: the chat message you send the user after brainstorming must use plain descriptions ("the distribution script now owns SSOT for module X"), not internal identifiers (`Option B`, `Finding #2`, `Q-v0.3-1`, cluster names). Those identifiers are shorthand for *you*; the user needs the human-readable meaning. The brief *file* may keep precise identifiers for `writing-plans` consumption.
 

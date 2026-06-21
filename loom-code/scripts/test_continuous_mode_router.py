@@ -3,7 +3,7 @@ will be added to the using-loom-code router SKILL.md.
 
 SKILL.md is a prompt artifact, not executable code. Its correctness is the
 PRESENCE of the load-bearing convention + stop contract described in
-`docs/code-toolkit/specs/2026-06-17-continuous-mode-auto-advance.md`:
+`docs/loom/specs/2026-06-17-continuous-mode-auto-advance.md`:
 spec-frozen (NOT plan-frozen) entry, design/spec stay human-gated while the
 plan is auto-generated + gated, an explicit stop contract (every trigger row
 of the spec's table), a crutch-vs-verification line forbidding

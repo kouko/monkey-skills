@@ -18,7 +18,7 @@ Free-form plans force SDD to re-parse; this schema makes the parse trivial.
 
 | Mode | Path | When |
 |---|---|---|
-| File | `docs/code-toolkit/plans/YYYY-MM-DD-<topic>.md` | **Default.** Sibling to the brief at `docs/code-toolkit/specs/`. |
+| File | `docs/loom/plans/YYYY-MM-DD-<topic>.md` | **Default.** Sibling to the brief at `docs/loom/specs/`. |
 | Inline (no file) | Plan in chat context | Only for §When NOT to Use exempt cases — brief was its own plan; document inline; do not commit. |
 
 ## Schema
@@ -28,7 +28,7 @@ Free-form plans force SDD to re-parse; this schema makes the parse trivial.
 ```markdown
 # Plan: <topic>
 
-**Source brief**: <path to brief, e.g. docs/code-toolkit/specs/2026-05-16-csv-export.md>
+**Source brief**: <path to brief, e.g. docs/loom/specs/2026-05-16-csv-export.md>
 **Total tasks**: <N>
 **Critical-path depth**: <D> (must be ≤5; if >5 route back to brainstorming)
 **Execution order**: sequential | parallel-where-possible
@@ -134,12 +134,12 @@ Parent declared DONE when all children DONE.
 
 ## Worked example
 
-For a brief at `docs/code-toolkit/specs/2026-05-16-csv-export.md` whose Smallest End State is *"add `?format=csv` query param to the existing `/reports/<id>` endpoint":*
+For a brief at `docs/loom/specs/2026-05-16-csv-export.md` whose Smallest End State is *"add `?format=csv` query param to the existing `/reports/<id>` endpoint":*
 
 ```markdown
 # Plan: CSV export query param
 
-**Source brief**: docs/code-toolkit/specs/2026-05-16-csv-export.md
+**Source brief**: docs/loom/specs/2026-05-16-csv-export.md
 **Total tasks**: 3
 **Critical-path depth**: 2 (≤5 ✓)
 **Execution order**: sequential
@@ -202,7 +202,7 @@ A high `Total tasks` count is **not** a discovery failure when the tasks fan out
 ```markdown
 # Plan: backfill renderer module docstrings
 
-**Source brief**: docs/code-toolkit/specs/2026-05-20-renderer-docstrings.md
+**Source brief**: docs/loom/specs/2026-05-20-renderer-docstrings.md
 **Total tasks**: 8
 **Critical-path depth**: 2 (≤5 ✓)
 **Execution order**: parallel-where-possible

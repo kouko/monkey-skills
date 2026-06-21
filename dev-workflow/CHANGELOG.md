@@ -110,7 +110,7 @@ defect class as code-toolkit PR #357 (an accurate-sounding claim that
 doesn't hold in the actual environment).
 
 **See also**:
-- `docs/code-toolkit/specs/2026-05-31-git-memory-squash-retrieval-caveat.md`
+- `docs/loom/specs/2026-05-31-git-memory-squash-retrieval-caveat.md`
   — design brief (squash buries trailers mid-body, `git log --grep` +
   PR `## Memory` retrieval path, two opt-in escape hatches, alternatives
   considered).
@@ -159,7 +159,7 @@ rule stays out of scope (git-memory owns trailer values + the PR
 `## Memory` section, not the commit subject).
 
 **See also**:
-- `docs/code-toolkit/specs/2026-05-31-git-memory-readability-guardrails.md`
+- `docs/loom/specs/2026-05-31-git-memory-readability-guardrails.md`
   — design brief (problem framing, dual-consumer invariant, audience
   calibration, dropped diagram-venue guardrail).
 
@@ -205,9 +205,9 @@ under-cited references → propose surgical SKILL.md edits → re-ship.
   `code-toolkit:*` corpus for drift signals)
 
 **See also**:
-- `docs/code-toolkit/specs/2026-05-22-distill-sessions-v0.1-brief.md` —
+- `docs/loom/specs/2026-05-22-distill-sessions-v0.1-brief.md` —
   v0.1 design brief (problem framing, scope decisions, deferred items)
-- `docs/code-toolkit/specs/2026-05-22-distill-sessions-research.md` —
+- `docs/loom/specs/2026-05-22-distill-sessions-research.md` —
   background research (JSONL schema, /insights facet anatomy, prior
   telemetry-mining attempts)
 

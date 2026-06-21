@@ -24,7 +24,7 @@ pipeline plugins now carry the `loom-` prefix:
 - Env var `CODE_TOOLKIT_MODE` → `LOOM_CODE_MODE` (hard cut, no fallback).
 - Router skill `using-code-toolkit` → `using-loom-code`; CI workflow
   `code-toolkit-ci.yml` → `loom-code-ci.yml`.
-- The `docs/code-toolkit/` doc archive is NOT renamed (separate from the plugin).
+- The `docs/loom/` doc archive is NOT renamed (separate from the plugin).
 
 Installed users must re-add the plugin under its new name; old `code-toolkit:`
 ids and the old env var no longer resolve.
@@ -40,7 +40,7 @@ The toolkit emerged from a single design question — *"is there a way to combin
 | **v0.2.1** | 2026-05-16 | Phase 1.5 rolling patches | tdd-iron-law gains Feathers (2004) Ch.13 §Legitimate legacy-code backfill distinction (closes "I just wrote 200 lines" rationalization gap surfaced in ritual); systematic-debugging description tuned for production-bug auto-fire (closes the auto-discovery miss surfaced in v0.2.0 ritual). |
 | **v0.3.0** | 2026-05-16 | Phase 3 — close-branch cluster + full Superpowers parity | + requesting-code-review + verification-before-completion + finishing-a-development-branch + using-git-worktrees = 9 of 9 planned skills shipped. Push-without-review gap caught + fixed (Fix 1+2+3 + Path A patches). End-to-end orchestrator ritual validated 3-of-4 Phase 3 skills in one cascading session. |
 | **v0.4.0** | (current draft) | Phase 2.5 + Phase 3.5 + Phase 4 prep | Codex CLI variant manifest + integration tests + 3 worked examples (Python / TypeScript / Swift) + 5 cross-plugin integration test scripts + announcement draft + multi-version retrospective. Build complete; verification rituals deferred to user-side Codex / superpowers sessions. |
-| **v0.7.0** | 2026-05-16 | Policy-reset merge-to-main | Catches `main` up to the post-policy quality bar. Synthesizes v0.3.0 → v0.6.1 (Codex variant, reviewer-discipline R1+R2, Current State Evidence, `docs/superpowers/` → `docs/code-toolkit/` migration). No new feature; the merge artifact. |
+| **v0.7.0** | 2026-05-16 | Policy-reset merge-to-main | Catches `main` up to the post-policy quality bar. Synthesizes v0.3.0 → v0.6.1 (Codex variant, reviewer-discipline R1+R2, Current State Evidence, `docs/superpowers/` → `docs/loom/` migration). No new feature; the merge artifact. |
 | **v0.8.0** | 2026-05-18 | Across-domain parallel dispatch | + `dispatching-parallel-agents` (auxiliary skill borrowed from superpowers v5.1.0, adapted with TDD iron-law per branch + 3-valued verdict aggregation). `writing-plans` schema extended with `Independent` + `Files touched` per-task markup as the parallel-dispatch eligibility oracle. 11 skills total. |
 | **v0.9.0** | 2026-05-18 | Inline rule-sheet — reviewer load reduction | Reviewer upfront standards load shrinks from ~80K → ~8K chars via inline `_rule-sheet.md` (1,531 bytes) injected into all 4 plugin-level agents through `distribute.py`'s `_baseline.md`-style BEGIN/END marker mechanism. 7 standards files unchanged in role — shifted from preload input to on-demand citation target. Cite-on-fire discipline codified (徳丸本 Ch.6 / OWASP ASVS section numbers MUST `Read` before citing; Beck / Clean Code / Fowler chapters may cite from memory). +1 integration test (rule-sheet drift). |
 | **v1.0.0** | (target) | GA | After v0.8.0 dogfood adds 4 more notes (`research/dogfood-*.md`) + announcement publish + public release. Phase 4 GA criteria from ROADMAP met. |
@@ -175,7 +175,7 @@ critical path + a `--jobs` cap, width is free); **Kanban WIP limits**
 the named anti-pattern); **Critical Path Method** (find the longest chain,
 parallelize everything off it).
 
-Brief: docs/code-toolkit/specs/2026-05-31-writing-plans-parallelism-aware-ceiling.md
+Brief: docs/loom/specs/2026-05-31-writing-plans-parallelism-aware-ceiling.md
 
 ## [0.13.0] — 2026-05-31 — **`## Asking the user` three-gate redesign**
 
@@ -215,7 +215,7 @@ The plain-language operative rules are a **deliberate translation** of
 察する (sense without being told) / 確連報 (確認・連絡・報告) / 忖度 +
 confirmation-fatigue — the original research terminology is intentionally
 kept OUT of the rule bodies but recorded so future edits can trace it. Full
-lineage: `docs/code-toolkit/specs/2026-05-31-asking-the-user-three-gate-redesign.md`
+lineage: `docs/loom/specs/2026-05-31-asking-the-user-three-gate-redesign.md`
 §Terminology Provenance.
 
 ---
@@ -418,8 +418,8 @@ when a flag's `source:` field cites a specific section.
 
 ### References
 
-- Brief: `docs/code-toolkit/specs/2026-05-18-inline-rule-sheet.md`
-- Plan: `docs/code-toolkit/plans/2026-05-18-inline-rule-sheet.md`
+- Brief: `docs/loom/specs/2026-05-18-inline-rule-sheet.md`
+- Plan: `docs/loom/plans/2026-05-18-inline-rule-sheet.md`
 
 ### Migration
 

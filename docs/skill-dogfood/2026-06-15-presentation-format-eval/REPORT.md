@@ -71,7 +71,7 @@ output shape.
   may not justify touching the schema/render path. Lower value than verification-class work.
 
 ## Decision: PARKED (2026-06-16)
-Built the brief (`docs/code-toolkit/specs/2026-06-16-presentation-structure-hint.md`, Option A,
+Built the brief (`docs/loom/specs/2026-06-16-presentation-structure-hint.md`, Option A,
 cost re-estimated cheap after the code check showed NO JSON validator + house-editable renderer +
 REPORT_SCHEMA allows extra fields → zero synced edits needed), then **decided NOT to build now**.
 
