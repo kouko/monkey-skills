@@ -4,6 +4,31 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.19.0] — 2026-06-21
+
+### Added — handoff preserves the conversation language (`handoff` 0.2.0 → 0.3.0)
+
+`dev-workflow:handoff` now captures the session's conversation language in the
+HANDOFF and carries it across the session boundary. Block 1 frontmatter gains a
+`conversation_language` field, and the Resume Launcher embeds a "reply to me in
+the conversation language" instruction — the channel actually pasted into the
+next session, so the resumed agent continues in the user's language instead of
+defaulting to English. Scope is user-facing replies only; subagent / tool output
+stays in its source language and is localized before surfacing, as in a normal
+session. Fixes the observed bug where a resumed session reverted to English.
+
+## [2.18.0] — 2026-06-20
+
+### Changed — extracted the 5 skill-authoring skills to `skill-dev-toolkit`
+
+`skill-creator-advance`, `skill-judge`, `skill-refactor`, `skill-tuning`, and
+`dogfood-skill-testing` moved to the new self-contained `skill-dev-toolkit`
+plugin so the skill-authoring lifecycle can be distributed independently.
+dev-workflow retains the general developer-workflow tools: git-memory,
+brief-before-asking, complexity-critique, proposal-critique, dbt-model-style,
+recap-state, handoff, distill-sessions. The description-standard grep guard and
+the skill-refactor↔skill-tuning shared-conventions drift gate moved with the skills.
+
 ## [2.17.0] — 2026-06-03
 
 ### Changed — `dbt-model-style`: close 2 dogfood findings (F1 / F3)
@@ -85,7 +110,7 @@ defect class as code-toolkit PR #357 (an accurate-sounding claim that
 doesn't hold in the actual environment).
 
 **See also**:
-- `docs/code-toolkit/specs/2026-05-31-git-memory-squash-retrieval-caveat.md`
+- `docs/loom/specs/2026-05-31-git-memory-squash-retrieval-caveat.md`
   — design brief (squash buries trailers mid-body, `git log --grep` +
   PR `## Memory` retrieval path, two opt-in escape hatches, alternatives
   considered).
@@ -134,7 +159,7 @@ rule stays out of scope (git-memory owns trailer values + the PR
 `## Memory` section, not the commit subject).
 
 **See also**:
-- `docs/code-toolkit/specs/2026-05-31-git-memory-readability-guardrails.md`
+- `docs/loom/specs/2026-05-31-git-memory-readability-guardrails.md`
   — design brief (problem framing, dual-consumer invariant, audience
   calibration, dropped diagram-venue guardrail).
 
@@ -180,9 +205,9 @@ under-cited references → propose surgical SKILL.md edits → re-ship.
   `code-toolkit:*` corpus for drift signals)
 
 **See also**:
-- `docs/code-toolkit/specs/2026-05-22-distill-sessions-v0.1-brief.md` —
+- `docs/loom/specs/2026-05-22-distill-sessions-v0.1-brief.md` —
   v0.1 design brief (problem framing, scope decisions, deferred items)
-- `docs/code-toolkit/specs/2026-05-22-distill-sessions-research.md` —
+- `docs/loom/specs/2026-05-22-distill-sessions-research.md` —
   background research (JSONL schema, /insights facet anatomy, prior
   telemetry-mining attempts)
 

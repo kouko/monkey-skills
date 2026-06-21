@@ -76,7 +76,7 @@ Or: split the grouping into parallel top-level dirs at skill root
 (e.g. scripts-redshift/ + scripts-snowflake/ instead of scripts/redshift/
 + scripts/snowflake/).
 
-See dev-workflow:skill-creator-advance § "Folder structure must be flat"
+See skill-dev-toolkit:skill-creator-advance § "Folder structure must be flat"
 for full guidance and examples.
 EOF
   exit 2

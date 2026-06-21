@@ -1,17 +1,7 @@
 ---
 name: artifact-deconstruct
-description: >-
-  Reverse-engineer the design blueprint of any polished artifact (copy,
-  document pack, SOP, playbook, presentation, UI screenshot, advertising,
-  literature). Surfaces audience targeting, creation sequence, borrowed
-  frameworks, rhetorical mechanisms, design patterns, and intentional
-  omissions. Outputs a 6-section deconstruction report with ethical
-  position verdict. Use when user asks "deconstruct / 拆解 / 反推 /
-  reverse engineer" a polished artifact, or "why is this written so
-  well" / "what's the design behind this" / "teardown this". Do NOT use
-  for code (use sourceatlas), self-thinking (use philosophers-toolkit),
-  or summarization (use plain reading).
-  制作物の脱構築。作品逆向解構。
+description: |
+  Reverse-engineer the design blueprint of a polished artifact (copy, doc, deck, UI, ad) — audience, creation sequence, frameworks, rhetoric, omissions. Use for 'deconstruct/拆解/反推 this' or 'why so well-written'. Argument → argument-deconstruct.
 ---
 
 # Artifact Deconstruct

@@ -1,11 +1,7 @@
 ---
 name: qa-team
-description: >-
-  Plan and verify tests beyond unit level. Use when designing E2E test strategies,
-  creating test plans, analyzing coverage gaps, or planning performance tests.
-  Do NOT use for writing test code (use code-team), product specs (use planning-team),
-  or deployment (use devops-team).
-  Delivers TEST-PLAN.md, coverage reports, test strategies.
+description: |
+  Plan and verify tests beyond unit level. Use to design E2E strategies, create test plans, analyze coverage gaps, or plan performance tests. Delivers TEST-PLAN.md + coverage reports. Writing test code → code-team; deployment → devops-team.
 ---
 
 # QA Team

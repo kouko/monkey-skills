@@ -1,15 +1,7 @@
 ---
 name: book-extract
-description: >-
-  Convert a downloaded EPUB into chunked-by-chapter Markdown for LLM
-  ingestion. Designed for 400+ page expository books where chapter-level
-  chunking matters for two-pass distillation (full book → outline → skill).
-  Uses pandoc as the conversion engine, drives chapter splitting from the
-  EPUB's NCX (table of contents) so it works on books that don't use semantic
-  H1 markup. CJK-safe (繁中 / 簡中 / 日文). Use when the user wants to read
-  a book they own into Claude's context, build a skill from a book's
-  knowledge, or generate Obsidian / RAG-friendly chapter notes from EPUB.
-  電子書EPUB分章Markdown化。書籍知識のskill化に向けた変換。
+description: |
+  Convert a downloaded EPUB into chunked-by-chapter Markdown — NCX-driven chapter splitting, pandoc engine, CJK-safe (繁中/簡中/日文). Use to read an owned book into context or build a skill from it. Then → book-distill.
 ---
 
 # Kobo Extract
@@ -18,7 +10,7 @@ Converts an EPUB → one Markdown file per chapter, ready for LLM ingestion.
 
 The downstream goal is **knowledge → skill**: feed the chunked Markdown to
 Claude, distill into an outline, then refine into a reusable skill (typically
-via `dev-workflow:skill-creator-advance`).
+via `skill-dev-toolkit:skill-creator-advance`).
 
 ## Why a custom converter?
 
@@ -200,7 +192,7 @@ notes — **the actionable knowledge density is in the outline, not the prose**.
 
 ### Step 3 — Pass 2: build the skill
 
-Hand the outline + a few re-read chapters to **`dev-workflow:skill-creator-advance`**
+Hand the outline + a few re-read chapters to **`skill-dev-toolkit:skill-creator-advance`**
 or write directly:
 
 ```
@@ -280,7 +272,7 @@ Auth (`$TSUNDOKU_ROOT`), binary (`$TSUNDOKU_ROOT/bin/`), and EPUB downloads
 
 | Input from | This skill | Output to |
 |---|---|---|
-| `kobo-library:kobo_get.sh` (EPUB) | converts | `dev-workflow:skill-creator-advance` (skill creation) |
+| `kobo-library:kobo_get.sh` (EPUB) | converts | `skill-dev-toolkit:skill-creator-advance` (skill creation) |
 | Manual EPUB drop | converts | `obsidian:obsidian-markdown` (vault notes) |
 | Manual EPUB drop | converts | direct LLM context |
 

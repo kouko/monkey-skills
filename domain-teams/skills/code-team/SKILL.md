@@ -1,20 +1,7 @@
 ---
 name: code-team
-description: >-
-  Develop code with primary-source-grounded quality gates. Anchored on
-  Clean Code (Martin 2008), The Pragmatic Programmer (Hunt & Thomas 2019),
-  SOLID principles (Martin 2000/2017), Kent Beck's Test-Driven Development
-  (2002), Martin Fowler's Refactoring 2nd edition (2018), Working
-  Effectively with Legacy Code (Feathers 2004), OWASP ASVS v5.0.0, and
-  徳丸本 第 2 版 Ch.6 for JP multi-byte character encoding security.
-  Use when implementing features, fixing bugs, refactoring code, writing
-  TECH-SPEC.md, or writing unit tests. Do NOT use for documentation or
-  codebase assessment (use docs-team), E2E / integration / performance
-  test strategy (use qa-team), CI/CD or infrastructure (use devops-team),
-  product-level specs (use planning-team), UX/UI design (use design-team),
-  or deep research (use research-team). Delivers code, TECH-SPEC.md,
-  unit tests, and in-code documentation. Longevity over delivery speed.
-  實作・修 bug・重構・技術規格。コード実装・バグ修正。
+description: |
+  Develop code with primary-source gates (Clean Code / SOLID / TDD / Refactoring / OWASP ASVS / 徳丸本). Use to implement features, fix bugs, refactor, write TECH-SPEC.md / unit tests. Docs → docs-team; test strategy → qa-team; CI/CD → devops-team.
 ---
 
 # Code Team

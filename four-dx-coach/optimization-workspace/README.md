@@ -2,7 +2,7 @@
 
 > **Status**: NEGATIVE RESULT (2026-05-01)
 >
-> Attempted `dev-workflow:skill-creator-advance` description-optimization loop on all 12 four-dx-coach skills. The loop was unable to produce any improvement over the trim baseline because the trigger-detection mechanism returned `trigger_rate=0.0` for nearly every query across all skills. **Conclusion**: the framework as currently implemented is not suited to conversational coaching skills.
+> Attempted `skill-dev-toolkit:skill-creator-advance` description-optimization loop on all 12 four-dx-coach skills. The loop was unable to produce any improvement over the trim baseline because the trigger-detection mechanism returned `trigger_rate=0.0` for nearly every query across all skills. **Conclusion**: the framework as currently implemented is not suited to conversational coaching skills.
 
 ---
 
@@ -54,7 +54,7 @@ If the trigger-test mechanism is later fixed (e.g. by forcing `Skill` invocation
 1. **Switch eval mechanism** — replace `claude -p` subprocess with direct Anthropic API call + structured trigger-decision prompt; bypasses the "model can answer directly" issue
 2. **Force skill consideration** — modify `run_eval.py` to use a system prompt that explicitly requires the model to declare WHICH skill it would consult (even if it could answer directly), reducing the conversational-skill exemption
 3. **Try a different test model** — Opus or Haiku may have different invocation thresholds, but root cause is structural (conversational skill nature), not model-specific
-4. **Shift to A/B human-judgment evaluation** — `dev-workflow:skill-tuning` (human-in-the-loop) rather than automated trigger-rate optimization
+4. **Shift to A/B human-judgment evaluation** — `skill-dev-toolkit:skill-tuning` (human-in-the-loop) rather than automated trigger-rate optimization
 
 ---
 

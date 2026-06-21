@@ -1,16 +1,7 @@
 ---
 name: research-team
-description: >-
-  Conduct primary-source-grounded research with citation verification,
-  confidence calibration, and systematic-review rigor. Use when researching
-  and analyzing topics, doing market or competitive analysis (operator
-  perspective), evaluating tech stacks, running OSS license audits, or
-  academic literature review. Do NOT use for investment decisions or
-  Buy/Hold/Sell verdicts (use investing-team), code implementation (use
-  code-team), UI design (use design-team), or product-level specs (use
-  planning-team). Delivers research reports, analysis, evaluations,
-  tech stack assessments.
-  研究・分析・技術評估・開源調查・市場分析。調査・技術評価。
+description: |
+  Primary-source research with citation verification + confidence calibration. Use for topic research, market/competitive analysis, tech-stack evaluation, OSS license audits, or literature review. Investment verdicts → investing-team; code → code-team.
 ---
 
 # Research Team

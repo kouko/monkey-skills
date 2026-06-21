@@ -1,29 +1,7 @@
 ---
 name: init
 description: |
-  First-time setup for dbt-wiki: scaffold .dbt-wiki/ knowledge base from
-  target/manifest.json (model / source / macro / seed / snapshot / test /
-  exposure metadata, ref/source dependencies, schema.yml columns and
-  tests), plus target/compiled/<project>/**/*.sql parsed via sqlglot for
-  column-level lineage, plus dbt/models/**/*.sql raw files parsed via
-  regex for inline SQL/jinja comments. Generates one markdown page per
-  resource, plus index.md (grouped by tier / materialization / tag /
-  group), lineage.md (ASCII DAG + adjacency list), log.md, SCHEMA.md,
-  and an idempotent CLAUDE.md drop-in. Re-runnable: refreshes
-  manifest-derived fields, archives orphans, preserves user-owned body
-  sections.
-  Pre-condition: dbt parse && dbt compile must be run first (init
-  checks for target/manifest.json and target/compiled/), and sqlglot
-  must be installed (pip install sqlglot).
-  Triggers on "init dbt-wiki", "set up dbt-wiki", "scaffold dbt
-  knowledge base", "seed dbt model wiki", "build dbt-wiki from
-  manifest", "first-time dbt knowledge", "/dbt-wiki:init",
-  "初始化 dbt-wiki", "建立 dbt 知識庫", "從 manifest 建立 dbt wiki",
-  "dbt-wiki 第一次", "scaffold dbt knowledge", "dbt-wiki セットアップ".
-  Do NOT trigger for: incremental updates after dbt parse (use
-  /dbt-wiki:refresh), adding user context / tribal knowledge (use
-  /dbt-wiki:ingest), answering questions (use /dbt-wiki:query),
-  running dbt itself (use dbt CLI).
+  First-time setup: scaffold .dbt-wiki/ from manifest.json + compiled SQL (sqlglot column lineage) + inline comments — pages, index, lineage DAG, CLAUDE.md. Needs dbt parse && compile first. Use for 'init dbt-wiki' or '初始化'. Later updates→refresh.
 ---
 
 # dbt-wiki — Init Workflow (v2.0)
@@ -270,6 +248,32 @@ mkdir -p .dbt-wiki/_archive
 mkdir -p .dbt-wiki/syntheses
 ```
 
+**Mark `_internal/` as a rebuildable cache (do not commit it).** The
+`_internal/` scripts are mechanical, copied verbatim from the plugin's
+`assets/`, and re-derivable on demand — `init` writes them and `refresh`
+self-heals them from the same plugin source (see refresh Step 0). Committing
+them just duplicates the installed plugin and drifts on plugin upgrade. Emit a
+`.dbt-wiki/.gitignore` (idempotent — skip if it already exists) so they stay out
+of git:
+
+```bash
+test -f .dbt-wiki/.gitignore || cat > .dbt-wiki/.gitignore <<'GITIGNORE'
+# Rebuildable mechanical cache — re-created by /dbt-wiki:init and self-healed
+# by /dbt-wiki:refresh from the installed plugin. Not part of the knowledge state.
+_internal/
+**/__pycache__/
+GITIGNORE
+```
+
+The committed knowledge state is everything else under `.dbt-wiki/`
+(`entities/`, `metrics/`, `concepts/`, `_evidence/`, `index.md`, `log.md`, …);
+`_internal/` is tooling, not knowledge.
+
+> **Already committed `_internal/` from an earlier init?** `.gitignore` does not
+> untrack files git already tracks. On a re-run, if `_internal/` is tracked,
+> stop tracking it (keeps it on disk): `git rm -r --cached .dbt-wiki/_internal`.
+> Detect with `git ls-files .dbt-wiki/_internal | head -1` — non-empty ⇒ run it.
+
 Copy plugin templates with **conditional rules**:
 
 | Target | First-run | Re-run |
@@ -366,19 +370,20 @@ for node_id, node in manifest['nodes'].items():
 ## Step 4: Column-Level Lineage via sqlglot
 
 dbt-wiki ships a tested Python script that uses sqlglot's `lineage` API
-to extract per-column source references from compiled dbt SQL. Copy it
-from the plugin's assets to the project's `.dbt-wiki/_internal/`:
+to extract per-column source references from compiled dbt SQL. Copy the
+**production** scripts (not the `*_test.py`) from the plugin's assets to the
+project's `.dbt-wiki/_internal/` — `_internal/` is a rebuildable cache, so the
+one-shot smoke tests stay in the plugin and run in-place from there (Steps 4c /
+4g), never landing in the user's repo:
 
 ```bash
 mkdir -p .dbt-wiki/_internal
-cp <SKILL_DIR>/assets/extract_column_lineage.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/extract_column_lineage_test.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/extract_sql_comments.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/extract_sql_comments_test.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/extract_recursive_column_lineage.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/extract_recursive_column_lineage_test.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/format_lineage_diagram.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/format_lineage_diagram_test.py .dbt-wiki/_internal/
+for f in extract_column_lineage extract_sql_comments \
+         extract_recursive_column_lineage format_lineage_diagram \
+         detect_source_language lint_schema_divergence lint_identifier_fidelity \
+         build_evidence_pages build_index_knowledge reconcile; do
+  cp "<SKILL_DIR>/assets/$f.py" .dbt-wiki/_internal/
+done
 cp <SKILL_DIR>/assets/synthesis_template.md .dbt-wiki/_internal/
 ```
 
@@ -421,6 +426,14 @@ Map dbt adapter to sqlglot dialect:
 
 Export as `DIALECT=...` for use in batch invocation below.
 
+**Persist the dialect.** Record the resolved `$DIALECT` in `.dbt-wiki/index.md`
+frontmatter as `dialect: <DIALECT>` (alongside `source_language`; see Phase B
+step 0 where `source_language` is written — set `dialect` in the same place).
+This is the **only** record of the warehouse SQL dialect in `.dbt-wiki/`, and
+`dbt-wiki:pack` reads it to tell a repo-less consuming agent which SQL dialect
+to generate (pack itself never touches the dbt project, so without this the
+dialect is lost). Also add a `dialect:` line to the Step 7 `log.md` init entry.
+
 ### Step 4b: Run batch extraction
 
 ```bash
@@ -443,10 +456,11 @@ with empty `sources:` per column.
 
 ### Step 4c: (Optional but recommended on first run) Verify the script
 
-The script ships with a 7-case smoke test. Run once before processing:
+The script ships with a 7-case smoke test. Run once before processing
+(from the plugin assets — the `*_test.py` are not copied into `_internal/`):
 
 ```bash
-$PY_RUNNER .dbt-wiki/_internal/extract_column_lineage_test.py
+$PY_RUNNER <SKILL_DIR>/assets/extract_column_lineage_test.py
 ```
 
 Expects "7/7 passed". If failures appear, sqlglot version mismatch is
@@ -462,7 +476,6 @@ to `.dbt-wiki/_internal/` in Step 4 alongside the lineage script:
 
 ```bash
 cp <SKILL_DIR>/assets/extract_sql_comments.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/extract_sql_comments_test.py .dbt-wiki/_internal/
 ```
 
 Batch-extract all model file comments (uses `dbt/models/` raw paths,
@@ -548,9 +561,7 @@ the manifest). Init copies it alongside the other scripts in Step 4:
 
 ```bash
 cp <SKILL_DIR>/assets/extract_recursive_column_lineage.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/extract_recursive_column_lineage_test.py .dbt-wiki/_internal/
 cp <SKILL_DIR>/assets/format_lineage_diagram.py .dbt-wiki/_internal/
-cp <SKILL_DIR>/assets/format_lineage_diagram_test.py .dbt-wiki/_internal/
 cp <SKILL_DIR>/assets/synthesis_template.md .dbt-wiki/_internal/
 ```
 
@@ -596,7 +607,7 @@ ancestor + descendant tree as nested bullet lists for human readability).
 ### Step 4g: Verify recursive script (optional, recommended on first run)
 
 ```bash
-$PY_RUNNER .dbt-wiki/_internal/extract_recursive_column_lineage_test.py
+$PY_RUNNER <SKILL_DIR>/assets/extract_recursive_column_lineage_test.py
 ```
 
 Expects "6/6 passed". The test uses synthetic manifest + lineage
@@ -608,24 +619,49 @@ All evidence pages write under `.dbt-wiki/_evidence/<type>/` — the
 evidence layer is the **unchanged v1.x mechanical pipeline**, relocated.
 Do NOT write to top-level `.dbt-wiki/models/` (that was the v1.x layout).
 
-For each model, write `.dbt-wiki/_evidence/models/<model_name>.md` per
-the SCHEMA.md `model` evidence page type. Filename collision: if
-`<model_name>.md` exists from a different package (different `unique_id`),
-use `<package>__<model_name>.md`.
+**Do NOT hand-write evidence pages.** Beyond a few dozen models this is
+infeasible (real projects have hundreds–thousands of models), and the page
+shape is fully derivable from `manifest.json` + the Step 4 JSONL outputs —
+so it must be mechanical and reproducible, not authored by hand. dbt-wiki
+ships a deterministic, stdlib-only generator — `build_evidence_pages.py`
+(copied to `.dbt-wiki/_internal/` in Step 4) — that emits EVERY evidence
+page (models / sources / used-macros / seeds / snapshots / singular tests)
+plus `index.md` and `lineage.md`, exactly per the SCHEMA.md page contracts.
 
-For each source (from `manifest.sources`), write
-`.dbt-wiki/_evidence/sources/<source_name>__<table_name>.md` per SCHEMA's
-`source` evidence type. Compute `feeds_into` similarly to Step 3b.
+Invoke it once (use `$PY_RUNNER` from Step 0):
 
-For each macro that is referenced by ≥1 model (filter `manifest.macros`
-by checking which appear in any model's `depends_on.macros`), write
-`.dbt-wiki/_evidence/macros/<macro_name>.md`. Project macros first, then
-external package macros (dbt_utils, dbt_expectations, etc.).
+```bash
+$PY_RUNNER .dbt-wiki/_internal/build_evidence_pages.py \
+    --manifest "$DBT_DIR/target/manifest.json" \
+    --wiki-dir .dbt-wiki \
+    --dbt-dir "$DBT_DIR" \
+    --col-lineage /tmp/dbt-wiki-col-lineage.jsonl \
+    --comments /tmp/dbt-wiki-comments.jsonl \
+    --recursive-lineage /tmp/dbt-wiki-recursive-lineage.jsonl
+    # optional: --project-name NAME (default = manifest metadata.project_name)
+    #           --today YYYY-MM-DD  (default = today)
+```
 
-For seeds: `.dbt-wiki/_evidence/seeds/<seed_name>.md`.
-For snapshots: `.dbt-wiki/_evidence/snapshots/<snapshot_name>.md`.
-For singular tests: `.dbt-wiki/_evidence/tests/<test_name>.md`.
-For exposures: `.dbt-wiki/_evidence/exposures/<exposure_name>.md`.
+It prints a stats JSON (model/source/macro/seed/test counts, column-lineage
+success rate, sqlglot failures, DAG depth, leaf count) — capture it for the
+Step 7 log entry. What it writes, per the SCHEMA.md evidence page types:
+
+- `.dbt-wiki/_evidence/models/<model_name>.md` (collision → `<package>__<model_name>.md`)
+- `.dbt-wiki/_evidence/sources/<source_name>__<table_name>.md` (with `feeds_into`)
+- `.dbt-wiki/_evidence/macros/<macro_name>.md` (only macros used by ≥1 model;
+  external-package macros use `<package>__<macro_name>.md`)
+- `.dbt-wiki/_evidence/{seeds,snapshots,tests}/<name>.md` (tests = singular only;
+  generic schema.yml tests are folded inline into their model page)
+- `.dbt-wiki/index.md` and `.dbt-wiki/lineage.md` (Step 6 documents their shape;
+  the generator follows it. Phase B later regenerates only the `index.md`
+  knowledge sections — Entities / Metrics / Concepts.)
+
+Verify the generator first (optional, recommended on first run):
+`$PY_RUNNER <SKILL_DIR>/assets/build_evidence_pages_test.py` → expects "6/6 passed".
+
+**Exposures** (if any are declared) are the one node type the generator does
+not emit; write `.dbt-wiki/_evidence/exposures/<exposure_name>.md` per SCHEMA's
+`exposure` type for each (exposures are rare and low-volume).
 
 ### Re-run merge behavior
 
@@ -645,6 +681,12 @@ When `is_rerun = true` and an evidence model page already exists:
    `.dbt-wiki/_archive/<today>/<orphaned>.md`, don't hard-delete
 
 ## Step 6: Generate index.md and lineage.md
+
+> `build_evidence_pages.py` (Step 5) **already wrote** `index.md` and
+> `lineage.md` following the shapes specified below — this section is the
+> contract the generator implements (and the shape Phase B regenerates the
+> `index.md` knowledge sections against after distillation). You normally do
+> not hand-write these; the spec below is for understanding / verification.
 
 ### index.md
 
@@ -708,6 +750,18 @@ knowledge distillation step that produces the knowledge layer
 
 ### Phase B orchestration
 
+0. **Resolve the source language.** Knowledge pages are written in the language
+   of the project's model comments (dbt-wiki treats comments as the source of
+   truth; translating them loses domain terms) — see each distill spec's §0.
+   Run `.dbt-wiki/_internal/detect_source_language.py` (copied from
+   `assets/` in Step 4; honours an explicit
+   `DBT_WIKI_LANGUAGE` / project setting first, else auto-detects the dominant
+   script of the evidence `## Description` + `## Inline Comments`). Record the
+   result as `source_language:` in `index.md` frontmatter and pass it into every
+   domain agent's brief, so the whole fan-out writes ONE consistent language.
+   Slugs, frontmatter keys, identifiers and stored `value_domain` values stay
+   ASCII regardless.
+
 1. Confirm Phase A completed — all `_evidence/` subdirs are populated
    and `index.md` has been regenerated with evidence sections.
 2. Distill **entities** by following the procedure in
@@ -723,9 +777,20 @@ knowledge distillation step that produces the knowledge layer
    Same `derived_from` + `last_changed_by` provenance fields.
 4. Distill **concepts** by following the procedure in
    `references/distill-concepts.md`. Same provenance fields.
-5. Regenerate `index.md` (Step 6) now that knowledge pages exist, so
-   the `## Entities`, `## Metrics`, `## Concepts` sections are
-   populated rather than stub placeholders.
+5. Regenerate `index.md`'s knowledge sections now that knowledge pages
+   exist, so `## Entities` / `## Metrics` / `## Concepts` are populated
+   rather than stub placeholders. This is **deterministic** (derived from
+   each page's frontmatter — `title` / `title_local` / `status` / `summary`
+   / `aliases`), so run the generator rather than hand-transcribing:
+
+   ```bash
+   $PY_RUNNER .dbt-wiki/_internal/build_index_knowledge.py .dbt-wiki
+   ```
+
+   It replaces the three knowledge sections in the SCHEMA canonical line
+   shape and updates the `- Knowledge pages:` stats line, leaving the
+   evidence sections untouched. (Optional first-run check:
+   `$PY_RUNNER <SKILL_DIR>/assets/build_index_knowledge_test.py` → "8/8 passed".)
 
 ### Phase B parallel orchestration (large projects, >~80 models)
 
@@ -739,10 +804,12 @@ cohesive cluster of models sharing a business purpose (e.g. `billing`,
 #### Before fan-out: write `.dbt-wiki/_internal/ownership.json`
 
 Before dispatching domain agents, write `.dbt-wiki/_internal/ownership.json`
-with two maps:
+with two maps (plus the resolved `source_language` from step 0, so every domain
+agent writes the same language):
 
 ```json
 {
+  "source_language": "zh",
   "reserved_entities": {
     "customer": "billing",
     "order":    "sales"
@@ -794,14 +861,78 @@ another domain, it:
    `Relationships` section with the correct relative path.
 2. Does **not** create the target page — leaves a dangling link.
 
+#### Deliverable contract — files on disk, not a return message
+
+A domain agent's deliverable is the set of page **files it writes to
+`.dbt-wiki/{entities,metrics,concepts}/`**. Its final/return message is
+only a manifest (the slugs it wrote) used for verification — it is
+**never** accepted in lieu of files. State this explicitly in every
+agent brief: the single most common fan-out failure mode is an agent
+that produces polished page *content in its reply* but never calls the
+write tool. Two robust dispatch shapes — pick one and make the brief
+unambiguous:
+
+- **Write-direct** (default): the agent writes each page with the file
+  tool, then returns a manifest of slugs. Cheaper context, but depends
+  on the agent actually writing — so the Step 6.6 gate below is
+  mandatory.
+- **Return-and-materialize** (robust fallback for harnesses where
+  spawned/async agents don't reliably persist files): the agent returns
+  each page as structured output `{folder, slug, content}` (force it via
+  a schema), and the **orchestrator** writes the files. Persistence then
+  cannot silently fail. Switch to this when Step 6.6 shows write-direct
+  produced zero pages.
+
 Dangling links to cross-domain reserved entities are resolved by the
 reconcile pass (Step 6.7 — handled separately; do not add it here).
+
+### Step 6.6: Persistence verification gate (after fan-out, before reconcile)
+
+Fan-out can silently produce **zero files** (an agent that analysed but
+never wrote). NEVER proceed to reconcile on faith — verify on disk:
+
+1. Count pages actually written:
+   `find .dbt-wiki/entities .dbt-wiki/metrics .dbt-wiki/concepts -name '*.md' | wc -l`.
+2. Cross-check per domain: each dispatched domain in `ownership.json`
+   should have produced ≥1 page for the objects it owns. If a domain's
+   return manifest claims files that are **not on disk**, that domain
+   failed to persist.
+3. **Retry** each failed domain once with an explicit directive: *"You
+   wrote 0 files; your deliverable is files on disk, not your reply —
+   write them now with the file tool."* If write-direct keeps failing
+   after one retry, switch that domain (or all) to the
+   **Return-and-materialize** shape above and have the orchestrator write
+   the files.
+4. After at most K=2 rounds, if pages are still missing, emit a WARNING
+   naming the empty domains and continue — do not let a silent zero pass
+   as success.
+
+Proceed to Step 6.7 only once the on-disk page count is non-zero and
+covers the dispatched domains.
 
 ### Step 6.7: Reconcile pass (after Phase B fan-out)
 
 Run **once** after all domain agents have returned their pages. This
 step resolves dangling links and enforces cross-domain provenance
-integrity.
+integrity. It is **deterministic** — run the shipped generator rather
+than hand-implementing the three sub-passes below:
+
+```bash
+$PY_RUNNER .dbt-wiki/_internal/reconcile.py .dbt-wiki
+```
+
+It (1) scans every `relationships[].target`, (2) for each missing target
+warns on a reserved-entity slug (owner agent should have produced it) or
+writes a `status: seed` stub for a genuine dangling reference, and (3)
+lints `derived_from` cross-domain contamination using
+`_internal/ownership.json`. If `ownership.json` is absent (a small project
+that skipped domain fan-out) it degrades gracefully — every dangling ref
+becomes a stub and the contamination lint is a no-op. Review its printed
+WARNINGs and contamination flags and resolve per the rules below. (Optional
+first-run check: `$PY_RUNNER <SKILL_DIR>/assets/reconcile_test.py` → "11/11 passed".)
+
+The three sub-passes below document **what the script does** (and how to
+resolve what it surfaces) — read them to act on the output.
 
 #### 6.7.1 Collect all relationship targets
 
@@ -882,6 +1013,32 @@ Emit all violations before stopping — do not halt on the first one.
 A page with cross-domain `derived_from` entries **must not** be
 published until the contamination is resolved: either the foreign
 uid is moved to the correct owning domain's page or removed.
+
+### Step 6.8: Identifier-fidelity gate (after reconcile)
+
+Distillation occasionally **paraphrases a column identifier instead of
+copying it verbatim** from the evidence layer — a dropped `__daily` suffix,
+an invented prefix, a bare name for a column that was split in two. The
+result is a `## Fields` citation to a column that **does not exist**, so a
+SQL-generating consumer of the bundle emits a query that fails at execution.
+Nothing in the page looks wrong on inspection — only a cross-check against
+the manifest catches it. Run the shipped deterministic gate:
+
+```bash
+$PY_RUNNER .dbt-wiki/_internal/lint_identifier_fidelity.py .dbt-wiki
+```
+
+It scans every `` `model.column` `` cited in `entities/` / `metrics/` /
+`concepts/` and verifies the column exists in that model's evidence
+`columns:` frontmatter, checking **only** models extracted via `sqlglot`
+(a complete output-column set); citations to `schema_yml_only` / `failed`
+models or to non-evidence relations (sources) are skipped as unverifiable,
+never flagged. Exit non-zero ⇒ phantom-column citations exist. For each one,
+correct the knowledge page to the manifest-true identifier (read the model's
+`_evidence/models/<model>.md` `columns:` list) and re-run until clean. A page
+with a phantom-column citation **must not** be published. (Optional first-run
+check: `$PY_RUNNER <SKILL_DIR>/assets/lint_identifier_fidelity_test.py` →
+"8/8 passed".)
 
 ### Phase B spec files
 
@@ -968,7 +1125,7 @@ Print to user:
     - .dbt-wiki/{SCHEMA,index,log,lineage}.md
     - .dbt-wiki/_evidence/{models,sources,macros,seeds,snapshots,tests,exposures}/*.md
     - .dbt-wiki/{entities,metrics,concepts}/*.md
-    - .dbt-wiki/_internal/extract_column_lineage.py
+    - .dbt-wiki/_internal/{extract_column_lineage,build_evidence_pages,...}.py
     - CLAUDE.md drop-in (<created/appended/replaced>)
 
   Next steps:

@@ -1,14 +1,7 @@
 ---
 name: data-cn
-description: >-
-  Layer 1 (Data) skill for China — fetch CN macro indicators and individual
-  stock data via NBS new-SPA API (Tier A primary, 21 presets), akshare
-  aggregator (PBOC LPR/RRR/SHIBOR + 社融/new loans + Caixin PMI, 8 presets),
-  FRED (USDCNY + FX reserves, 2 series), and yfinance (.SS/.SZ/.HK). Pure
-  I/O — no analysis, no scoring. Outputs structured JSON via 5 pack types
-  (snapshot, memo-fetch, comps-multiples, screener-batch, regime-pack).
-  中国データ層 — マクロ + 個別株（.SS/.SZ/.HK）取得。
-  中國資料層 — 宏觀 + 個股（.SS/.SZ/.HK）擷取。
+description: |
+  Layer-1 data fetch for China — CN macro + stocks (.SS/.SZ/.HK) via NBS API, akshare (PBOC, 社融, Caixin PMI), FRED, yfinance. Pure I/O, no analysis. Outputs JSON in 5 pack types (snapshot / memo-fetch / comps / screener-batch / regime).
 ---
 
 # data-cn

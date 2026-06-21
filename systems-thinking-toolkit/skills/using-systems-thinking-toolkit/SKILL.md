@@ -1,15 +1,7 @@
 ---
 name: using-systems-thinking-toolkit
-description: >-
-  Route to the best systems-thinking skill when intent is unclear. Use
-  when something is spiraling, oscillating, hitting a ceiling, stuck in
-  a vicious cycle, or you want to map a tangled situation but aren't
-  sure which method fits — e.g. 'my team keeps missing deadlines and
-  overcompensating', 'this keeps getting worse and I don't know why',
-  'we need to plan strategy across multiple timescales'. Do NOT use
-  when the user already named a specific method (cld-craft, archetypes,
-  overlay, simulation, strategy, team, quadrant).
-  システム思考の案内。系統思考導引。
+description: |
+  Route to the best systems-thinking skill when intent is unclear — something spiraling, oscillating, hitting a ceiling, or a tangle to map. Use on 'this keeps getting worse, I don't know why' or 'map a tangled situation'. Named method → that skill.
 ---
 
 # Using Systems Thinking Toolkit

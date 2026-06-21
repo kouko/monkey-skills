@@ -1,16 +1,7 @@
 ---
 name: devops-team
-description: >-
-  Ship code safely with CI/CD, containers, and infrastructure as code,
-  grounded in Google SRE, DORA, and 12-Factor primary sources.
-  Use when designing pipelines, writing Dockerfiles, configuring deployments,
-  setting up monitoring (SLIs/SLOs), measuring DORA baselines, auditing
-  12-Factor compliance, or managing infrastructure.
-  Do NOT use for application code (use code-team), test strategy (use qa-team),
-  or product specs (use planning-team).
-  Delivers DEPLOY-SPEC.md, DORA-BASELINE.md, CI/CD configs, Dockerfiles,
-  IaC definitions, monitoring specs.
-  デプロイ・CI/CD・インフラ・SRE。部署・基礎設施・可觀測性。
+description: |
+  Ship code safely with CI/CD, containers, and IaC, grounded in Google SRE / DORA / 12-Factor. Use to design pipelines, write Dockerfiles, configure deployments, set SLIs/SLOs, or manage infra. App code → code-team; test strategy → qa-team.
 ---
 
 # DevOps Team

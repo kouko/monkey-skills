@@ -1,6 +1,7 @@
 ---
 name: slides-builder
-description: Execute slide-plan.json v1.2 against Google Slides backend — create blank deck, build slides with Google predefined layouts, insert text to placeholders, insert local images, emit deck URL. Use when user has a structured slide-plan (or equivalent) and asks to generate / 生成 / 匯出 / 做簡報 / create deck / google slides / プレゼン作成. MVP 僅支援 target=google-slides；html / pptx / marp 未實作。
+description: |
+  Execute a slide-plan.json against Google Slides — create deck, build slides, fill placeholders, insert images, emit deck URL. Use when you have a structured slide-plan and ask to generate / 做簡報 / create deck / google slides. google-slides only.
 ---
 
 # slides-builder

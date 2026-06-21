@@ -32,16 +32,16 @@ This skill is designed for **option 1** (zero-setup Obsidian native rendering).
 | Flow | State | [flow/state.md](flow/state.md) | any | ✅ full | Use v2 (`stateDiagram-v2`) not v1 | Use directly |
 | Data viz | XY Chart (bar) | [data-viz/xychart.md](data-viz/xychart.md) | v11.1+ (`xychart-beta`) | ✅ full | — | Use directly |
 | Data viz | XY Chart (line) | [data-viz/xychart.md](data-viz/xychart.md) | v11.1+ | ✅ full (with named syntax) | Use `line "name" [values]` not bare `line [values]` | Use directly with named-line form |
-| Data viz | Pie | [data-viz/pie.md](data-viz/pie.md) | any | ✅ full | — | Use directly |
-| Data viz | Quadrant | [data-viz/quadrant.md](data-viz/quadrant.md) | v10.6+ | ✅ full | Quadrant numbering counter-intuitive | Use directly |
-| Structural | Architecture | [structural/architecture.md](structural/architecture.md) | v11.1+ (`architecture-beta`) | 🟡 partial | Iconify CDN offline fails | Built-in icons OK; fallback to graph TB if iconify blocked |
+| Data viz | Pie | [data-viz/pie.md](data-viz/pie.md) | any | ✅ full | Title must NOT be quoted (quoting prints literal `"`); slice labels ARE quoted | Use directly |
+| Data viz | Quadrant | [data-viz/quadrant.md](data-viz/quadrant.md) | v10.6+ | ✅ full | Quadrant numbering counter-intuitive; CJK axis/quadrant labels MUST be quoted, title must NOT | Use directly |
+| Structural | Architecture | [structural/architecture.md](structural/architecture.md) | v11.1+ (`architecture-beta`) | 🟡 partial | Iconify CDN offline fails; CJK bracket labels MUST be quoted `["..."]` (unquoted CJK = syntax error) | Built-in icons OK; quote CJK labels; fallback to graph TB if iconify blocked |
 | Structural | Block | [structural/block.md](structural/block.md) | v10.10+ (`block-beta`) | 🟡 needs testing | 2024 forum reports rendering issues | Test in target Obsidian; fallback to graph TB if broken |
 | Structural | Class | [structural/class.md](structural/class.md) | any | ✅ full | Relationship arrow direction confusing | Use directly |
 | Structural | ER | [structural/er.md](structural/er.md) | any | ✅ full | Cardinality syntax strict | Use directly |
 | Structural | C4 | [structural/c4.md](structural/c4.md) | v9+ | ✅ full | Don't mix Context / Container / Component in one diagram | Use directly (separate per level) |
-| Structural | gitgraph | [structural/gitgraph.md](structural/gitgraph.md) | any | ✅ full | Orientation setting (`TB`) unreliable | Use directly (LR is default) |
-| Time | Gantt | [time/gantt.md](time/gantt.md) | any | ✅ full | — | Use directly |
-| Time | Timeline | [time/timeline.md](time/timeline.md) | v10.9+ | ✅ full | Colons in event text collide with separator | Escape or rephrase |
+| Structural | gitgraph | [structural/gitgraph.md](structural/gitgraph.md) | any | ✅ full | Orientation setting (`TB`) unreliable; branch names must be ASCII (CJK branch = syntax error, not quotable) — put CJK in quoted `id:` / `tag:` | Use directly (LR is default) |
+| Time | Gantt | [time/gantt.md](time/gantt.md) | any | ✅ full | CJK section/task names usually parse but no quoting escape (quotes render literally); if Obsidian throws `Unrecognized text`, rephrase | Use directly; verify CJK in Obsidian |
+| Time | Timeline | [time/timeline.md](time/timeline.md) | v10.9+ | ✅ full | Only a space-padded ` : ` splits events (bare `9:00` is safe); no quoting escape exists | Rephrase to avoid a literal ` : ` in event text (quoting renders literally) |
 
 **Status legend**:
 - ✅ **full**: renders correctly in Obsidian 11.4.1 native viewer

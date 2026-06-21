@@ -1,6 +1,7 @@
 ---
 name: using-gws-toolkit
-description: Router skill for gws-toolkit. Route the user to the right skill based on intent (design consultation / onboarding / deck generation / Drive operations / Docs / Sheets). Slides backend is the primary use case; raw Drive / Docs / Sheets API access via vendored upstream gws-* skills. 簡報・投影片・deck・プレゼン・slides・presentation・幻灯片・Drive・Docs・Sheets・試算表・文件。
+description: |
+  Router for gws-toolkit — route by intent (design consult / onboarding / deck generation / Drive / Docs / Sheets). Slides is the primary use case; raw Drive/Docs/Sheets via vendored gws-* skills. Use for 簡報 / slides / deck / プレゼン / Drive / Docs.
 ---
 
 # using-gws-toolkit

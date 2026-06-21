@@ -1,6 +1,7 @@
 ---
 name: copywriting-light-action
-description: Write light-action copy for opt-in / subscribe / download / LINE 登録 / micro-conversions using PREP / CREMA frameworks. Use when you have a confirmed brief with light-CTA goal — email opt-in page, newsletter subscribe, free download LP, light SNS action copy — after intake, before voice positioning. Not for full sales letters (use copywriting-long-form-pasona / -extended) or キャッチコピー (use copywriting-short-form). Not for raw briefs — route via using-copywriting-toolkit first. 文案・軽アクション・PREP/CREMA。
+description: |
+  Write light-action copy for opt-in / subscribe / download / micro-conversions using PREP/CREMA. Use with a confirmed light-CTA brief (email opt-in, newsletter, download LP), after intake, before voice positioning. Sales letters → long-form-pasona.
 ---
 
 # copywriting-light-action

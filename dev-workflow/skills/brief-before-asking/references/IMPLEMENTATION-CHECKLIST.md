@@ -20,7 +20,7 @@ Goal: read SKILL.md fresh and check it survives basic sanity.
 - [ ] Try invoking via natural language: "use brief-before-asking before you ask X" — does Claude pick it up?
 - [ ] Try the description triggers: 「看不懂」「跟不上」「太多術語」 — does Claude correctly identify Mode B vs Mode C?
 
-## Phase 2 — Test prompts (use `dev-workflow:skill-creator-advance`)
+## Phase 2 — Test prompts (use `skill-dev-toolkit:skill-creator-advance`)
 
 Goal: build a `test-prompts.json` for repeatable evaluation. Pattern follows existing dev-workflow skills (see `skill-creator-advance/test-prompts.json`).
 
@@ -37,7 +37,7 @@ Suggested test cases:
 - [ ] **TC9 — Bundled forks**: 3 independent questions in one briefing → expected: rejected, one fork per briefing
 - [ ] **TC10 — Escape hatch**: user says "just decide, don't ask" → expected: skill defers, agent acts autonomously and notes choice
 
-## Phase 3 — Description optimization (use `dev-workflow:skill-creator-advance`)
+## Phase 3 — Description optimization (use `skill-dev-toolkit:skill-creator-advance`)
 
 Goal: maximize trigger accuracy for both proactive and reactive modes.
 
@@ -63,7 +63,7 @@ Mode C is the iteration-4 addition that hasn't been tested. This is the highest-
 - [ ] Consider whether `dev-workflow:complexity-critique` should reference brief-before-asking (when complexity critique surfaces a fork, that fork may need briefing)
 - [ ] Add to `dev-workflow/CHANGELOG.md`
 
-## Phase 6 — Quality gates (use `dev-workflow:skill-judge`)
+## Phase 6 — Quality gates (use `skill-dev-toolkit:skill-judge`)
 
 Run advisory 8-dimension evaluation:
 
@@ -78,7 +78,7 @@ Run advisory 8-dimension evaluation:
 
 Target: ≥85/120 (A-/B+ grade).
 
-## Phase 7 — Skill tuning (later, use `dev-workflow:skill-tuning`)
+## Phase 7 — Skill tuning (later, use `skill-dev-toolkit:skill-tuning`)
 
 Once draft is validated:
 

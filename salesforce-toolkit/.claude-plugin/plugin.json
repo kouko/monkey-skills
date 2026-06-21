@@ -1,7 +1,7 @@
 {
   "name": "salesforce-toolkit",
   "version": "0.1.1",
-  "description": "Salesforce DX MCP server wrapped as Claude Code plugin — brew-first installer, read-only SOQL query (data toolset only). macOS only. ⚠️ Claude Code CLI only — Cowork sandbox not supported.",
+  "description": "Salesforce DX MCP wrapped as a plugin — read-only SOQL, macOS only. ⚠️ Claude Code CLI only.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"

@@ -1,32 +1,7 @@
 ---
 name: query
 description: |
-  Default channel for ANY question about dbt model structure, column-level
-  data lineage, materialization / incremental / sort_key / dist_key config,
-  schema.yml columns and tests, source / macro / seed / snapshot / exposure
-  declarations, refactoring impact (rename / delete propagation across the
-  DAG), inline SQL or jinja comments, OR dbt-internal WHY captured via
-  /dbt-wiki:ingest user notes (sort_key rationale, materialization gotchas,
-  ticket / incident links). Use BEFORE reading dbt/models/*.sql,
-  dbt/target/manifest.json, or dbt/target/compiled/*.sql directly — wiki
-  provides structured manifest + sqlglot column lineage + extracted SQL/jinja
-  comments + accumulated user notes, with manifest_sha drift verification.
-  Triggers on dbt vocabulary in any language: "fct_orders 依賴什麼",
-  "rename column 影響哪些", "哪些是 incremental / view / table",
-  "什麼 model 用了 X", "stg_X 影響下游", "model 從哪裡來", "上游 / 下游",
-  "schema.yml 漏寫", "ROW_NUMBER 哪些用", "marts / staging / interm / dash 下",
-  "sort_key / dist_key 設定", "為什麼用 view 不用 table",
-  "fct_orders.customer_id 從哪", "trace column", "show lineage",
-  "what feeds X", "depends on what", "where is X used", "rename impact",
-  "DAG of X", "macro 在哪用", "snapshot 政策", "/dbt-wiki:query",
-  "查 dbt", "問 dbt", "dbt について", "model 構造", "lineage 確認".
-  Do NOT trigger for: writing or modifying SQL in dbt/models/ (use Edit
-  tool directly), running dbt commands like dbt run / dbt test / dbt seed
-  (use dbt CLI or the dbt-mcp server), first-time setup (use /dbt-wiki:init),
-  updating wiki after dbt parse / compile (use /dbt-wiki:refresh), adding
-  tribal knowledge or design rationale (use /dbt-wiki:ingest), cross-cutting
-  business / project-level WHY beyond dbt itself (use /repo-wiki:query if
-  .repo-wiki/ exists in the repo).
+  Answer any dbt question from .dbt-wiki/: model structure, column lineage, config, schema.yml, refactor impact, ingested notes — before reading dbt/ files. Use for 'trace column', 'what feeds X', 'rename impact', '依賴什麼'. Setup→init, updates→refresh.
 ---
 
 # dbt-wiki — Query Workflow (v2.0)
@@ -127,6 +102,7 @@ DAG / lineage / config questions that require evidence-layer detail.
 | **K1 — Knowledge / definition** | "X 是什麼意思", "解釋這個指標", "what does churn mean", "定義", "什麼是 X", "explain X", "什麼是 Customer" | Load the matching `entities/`, `metrics/`, or `concepts/` knowledge page (covers all three knowledge-page types — entity, metric, or concept lookups). If no match, fall back to evidence-layer description. Cite `_evidence/` pages listed in the knowledge page's `## Evidence` section as backing evidence. |
 | **K2 — Relationship traversal** | "哪些實體/指標跟 Y 有關", "what metrics relate to Customer", "X 跟哪些指標有關聯", "how is X connected to Y" | Load the matching knowledge page(s) + walk their `## Relationships` typed edges (frontmatter `relationships:` + body section). For each related page, load its `summary` frontmatter (avoid full-body load unless needed). Cite `_evidence/` pages as backing. |
 | **K3 — Domain landscape** | "這份資料在講什麼", "give me the landscape of X", "這個專案有哪些業務實體和指標", "overview", "全貌", "domain overview" | Load `index.md` `## Entities` + `## Metrics` + `## Concepts` sections (summary lines only). Then load the 2-3 most relevant knowledge pages for depth. Do NOT load all evidence-layer model pages — knowledge index is self-contained for landscape queries. |
+| **K4 — Value domain / categorical values** | "X 欄位有哪些值", "what statuses / categories / types exist", "region 可以是哪些值", "X 的值域", "可以填哪些", "the stored value for <a display label>" | Load the `entities/` / `metrics/` page whose `## Fields` table contains column X, and read that column's inline `value_domain: [...] (via: …)` annotation. **Surface the stored values verbatim** plus the `(via:)` confidence — `accepted_values` = CI-enforced (authoritative); `distinct` = sampled from production (accurate at distill time); `inferred` = a hypothesis (treat as provisional). If the user used a colloquial / display label that differs from a stored value, **map it to the exact stored literal and flag the difference** (e.g. user says "Northland" → stored value is `NL`; an equality filter must use the stored form). If the column has no `value_domain` (free-text / high-cardinality, or not yet captured), say so and point the user to introspect the warehouse (`SELECT DISTINCT <col>`). |
 
 ### Structural query classes (evidence layer — for DAG / config / lineage detail)
 
@@ -137,7 +113,7 @@ DAG / lineage / config questions that require evidence-layer detail.
 | **C3 — Downstream lineage** | "影響哪些", "feeds into", "下游", "depend on X", "downstream of X" | Evidence model page + walk `feeds_into` (1-2 levels deep) from `_evidence/models/` |
 | **C4 — Column-level lineage** | "X.col 從哪來", "rename Y 影響什麼", "column lineage", "X 欄位來源", "trace column" | Single evidence model page's `## Column Lineage Chains` body section from `.dbt-wiki/_evidence/models/<name>.md` (precomputed recursive ancestors + descendants — full chain to source / leaf). |
 | **C5 — Materialization filter** | "哪些是 table / view / incremental", "incremental in X tier" | index.md `## Evidence: Models by Materialization` section |
-| **C6 — Tag / Group filter** | "tag X", "group Y", "marts_msd 下" | index.md `## Evidence: Models by Tag/Group/Tier` |
+| **C6 — Tag / Group filter** | "tag X", "group Y", "marts_finance 下" | index.md `## Evidence: Models by Tag/Group/Tier` |
 | **C7 — Test coverage** | "X 有什麼 test", "什麼 test 失敗" | Evidence model page `tests` from `_evidence/models/` + (Phase 2) run_results.json |
 | **C8 — Source attribution** | "X 從哪個 source", "source freshness" | Evidence source pages from `_evidence/sources/` + model `depends_on.sources` |
 | **C9 — Macro usage** | "X macro 在哪用", "用了 dbt_utils.X 的有哪些" | Evidence macro page `used_by_models` from `_evidence/macros/` |
@@ -188,6 +164,15 @@ then cite the `_evidence/` backing pages listed in its `## Evidence` section:
 **Evidence-layer answers (C1–C11):** cite directly from `_evidence/`:
 - `[fct_orders](.dbt-wiki/_evidence/models/fct_orders.md)`
 - `[raw_data.orders_raw](.dbt-wiki/_evidence/sources/raw_data__orders_raw.md)`
+
+**Value-domain answers (K4):** quote the `value_domain` stored values **verbatim**
+(never paraphrase them — a paraphrase is not a usable filter literal) and always
+state the `(via:)` confidence so the reader knows whether the list is
+authoritative (`accepted_values`), sampled (`distinct`), or provisional
+(`inferred`). When the question (or any other answer) implies an equality filter
+on a categorical column, ground the literal on the stored value, not the user's
+colloquial term, and surface the mapping when they differ. Cite the knowledge
+page whose `## Fields` carried the annotation.
 
 For column lineage answers (C4), present in chain form:
 ```

@@ -6,6 +6,32 @@ that contradicts this spec or the SCHEMA contract in `assets/SCHEMA.md`.
 
 ---
 
+## 0. Language — write in the project's source language
+
+dbt-wiki treats **comments as the source of truth**. The model comments,
+schema.yml descriptions, and inline SQL comments this page is distilled from are
+often NOT English; translating them silently rounds off domain terms the
+warehouse and the team depend on (a literal translation often has no exact
+English equivalent). Write this
+page in the project's **source language** and preserve domain terms **verbatim —
+do not translate them**.
+
+Resolve the source language in this order:
+1. the explicit `source_language` init recorded (project setting / `DBT_WIKI_LANGUAGE`);
+2. if unset, auto-detect the dominant script of the evidence `## Description` +
+   `## Inline Comments` of this entity's models (init runs
+   `assets/detect_source_language.py` for this deterministically).
+
+Localize the **prose** — `## Summary`, `## Grain`, the *meaning* cells of
+`## Fields`, `## Caveats` — plus the `summary:` frontmatter and `title`. Keep
+**ASCII / English** for everything machine- or structure-bearing: the kebab-case
+slug + filename, frontmatter **keys**, `relationships[].target` paths,
+`derived_from` unique_ids, column identifiers, and stored `value_domain`
+**values** (warehouse values, not prose). Put an English gloss of the title in
+`aliases` so English queries still match.
+
+---
+
 ## 1. Entity identification
 
 An **entity** is a business object — a thing the organisation tracks,
@@ -107,6 +133,13 @@ primary grain (the one with the business PK) and note variants:
 `Primary grain: one order (order_id). fct_orders_daily is
 grain = order × calendar day.`
 
+The same caution applies to **columns**, not only grain. When the family
+spans structurally parallel per-segment / market / brand twins whose physical
+schemas differ (renamed or dropped columns, divergent value domains), pick ONE
+canonical model for the `## Fields` glossary but **also record the per-twin
+delta** — see §3.4 rule 5. Diff the `columns` of every family model in the
+Phase-A evidence pages first; never assume the twins share the canonical schema.
+
 How to determine grain:
 1. Find the model whose PK is declared with `tests: [unique, not_null]`
    in schema.yml — that is the authoritative grain model.
@@ -114,6 +147,39 @@ How to determine grain:
    model in the evidence layer.
 3. Last resort: infer from the PK column name (e.g., `order_id` with
    `not_null` test implies grain = one order).
+
+### 2.1 Picking the canonical model when several models share that grain
+
+The grain test above can match **more than one** model — a dimension, a
+dashboard reshape, and a per-segment copy may all carry one-row-per-customer.
+DAG position and authority are **different axes**: moving downstream means
+*more specialized*, not *more authoritative*. The two coincide only up to
+the point where the entity is assembled; past it, downstream models are
+narrower copies, not better ones.
+
+The canonical model is therefore **the most-downstream model that is still
+general-purpose** — it assembles the entity but has not yet been specialized
+for a single consumer:
+
+- **Floor** — never pick a `stg_` / single-attribute fragment; those are
+  pre-assembly upstream pieces, not the assembled entity.
+- **Ceiling** — do NOT overshoot into a presentation / export /
+  per-segment / per-region / per-brand leaf. Those are *specializations* of
+  the canonical model, not more-authoritative versions of it. Reading "most
+  downstream" as "best" lands you on a narrowed, consumer-specific copy.
+- **Same-layer tiebreaker** — among candidates at the right grain, prefer the
+  one with the highest `feeds_into` fan-out: a hub that many siblings build on
+  is the agreed assembly point. Fan-out is a signal **only within** the
+  assembly layer — a `stg_` model can also have many dependents, so never use
+  fan-out to select *across* layers (it would pull you upstream of the
+  assembled entity).
+- **Record the specializations, don't hide them.** When specialized leaves
+  exist, name the canonical hub in `## Grain` and note the leaves (and when to
+  use each) in `## Caveats` — analysis reads the hub; a finished dashboard
+  number reads its purpose-built leaf. For structurally parallel twins
+  (per-segment / market / brand / scenario), also carry a `[bug]`-tagged
+  caveat that the twins **must not be naively UNION-ed or summed** when their
+  measure basis differs (see §3.4 rule 5 for the column-level delta).
 
 ---
 
@@ -180,6 +246,11 @@ staging lineage back to it is already recorded in the evidence page's
 `## Column Lineage Chains`. Only when a field exists solely on a staging
 model (never promoted to the mart) do you cite the staging column.
 
+When the field is carried at the entity's grain by **several** models (a
+dimension plus a dashboard/export reshape, or per-segment twins), cite it
+on the **canonical** model chosen per §2.1 — the most-downstream still
+general-purpose model — never on a specialized presentation/export leaf.
+
 ### 3.4 Value-domain capture for small-cardinality categorical columns
 
 For any column with **≤ 20 distinct values** (a small-cardinality categorical
@@ -201,6 +272,20 @@ terms to exact warehouse values without guessing.
 - Omit entirely for free-text, numeric, or high-cardinality columns (IDs,
   timestamps, amounts). Those do not belong here; note them in `## Caveats`
   if the cardinality is surprising.
+
+**Prose-enumeration is a hard trigger (the single most common §3.4 miss).**
+If you list a column's discrete values anywhere in its `## Fields` Meaning prose
+— e.g. `status: active / churned / paused`, `規模：高 / 中 / 低`, or
+`stage: new / won / lost` — you have ALREADY established it is a bounded
+categorical, so you **MUST** also emit its `value_domain: [...]` annotation in
+the same Meaning cell. Describing the values in prose **without** the
+machine-readable annotation is the dominant omission and silently defeats
+SQL-generating consumers: they cannot turn prose into a filter literal, so they
+guess or probe. Treat a prose value-list as an obligation to annotate, never a
+substitute for it. (For a filter-critical lifecycle/stage/status column whose
+terminal or "won/closed/active" semantics are ambiguous, also add a one-line
+`## Caveats` note — the stored values can be captured even when their business
+meaning needs human confirmation.)
 
 **Format** — body annotation only, NOT frontmatter:
 
@@ -233,7 +318,20 @@ terms to exact warehouse values without guessing.
    `stored: NL`, `display: Northland`.
 4. **≤ 20 values only.** Larger sets belong in a `knowledge-concept` page
    (e.g. "Status Codes") or a `## Caveats` note pointing to the source table.
-5. The annotation goes in the **Meaning** cell of the Fields table (body
+5. **Per-twin schema divergence.** When the entity's `derived_from` spans
+   structurally parallel twins (per-segment / market / brand copies) whose
+   physical schemas differ, the `## Fields` glossary still uses ONE canonical
+   model — but you MUST also record how each twin diverges, so a consumer
+   querying a non-canonical twin uses the right identifiers. Diff the `columns`
+   of every twin (the Phase-A evidence pages list them) and capture, inline in
+   the affected `## Fields` rows or in a short trailing note, any of: a column
+   **rename** (`stored as region_code (total) / region (online twin)`), a column
+   **absent on a twin** (`no revenue__gross on the online twin`), or a
+   **divergent value_domain** (`value_domain: [NL, EU, APAC] (total) / [APAC]
+   (online) (via: distinct)`). Do not present the canonical schema as universal — a twin
+   that renames or drops a column silently breaks a consumer's filter or UNION,
+   and the snapshot looks fine until the query is executed.
+6. The annotation goes in the **Meaning** cell of the Fields table (body
    annotation), not in the page's YAML frontmatter block.
 
 ---
@@ -674,3 +772,4 @@ layer that normalises raw Shopify IDs before dimension table population.
 | Writing a 400-char `summary` | Summary is capped at 200 chars — tiered query reads it without loading the body. |
 | Setting `status: mature` at distillation time | Phase B distillation produces `developing`; a human reviewer upgrades to `mature`. |
 | Omitting plumbing-column exclusions | Do not include `_fivetran_synced`, `dbt_updated_at`, surrogate hash columns in `## Fields`. |
+| Picking the **most-downstream** model as canonical (a `dash_`/`export_`/per-segment leaf) | Canonical = most-downstream model still **general-purpose** (§2.1); a specialized leaf is a narrower copy, not a more-authoritative one. Use `feeds_into` fan-out as a tiebreaker only *within* the assembly layer. |

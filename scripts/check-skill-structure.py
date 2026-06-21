@@ -15,7 +15,7 @@ they are deterministic and useful at PR time; the LLM-judgment-heavy
 items like CHK-SKL-002 persona block live in the dogfood evaluator
 gate, not here):
 
-    CHK-SKL-001 (FATAL)  — frontmatter description >= 40 word tokens
+    CHK-SKL-001 (FATAL)  — frontmatter description >= 30 word tokens
                             after CJK/punctuation exclusion and
                             hyphen/slash splitting; router skills
                             (no protocols/ subdirectory, no worker
@@ -69,10 +69,15 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 
 # Per skill-md-structure.md §Frontmatter Schema:
-#   - 40-word floor for non-router skills
+#   - 30-word floor for non-router skills (lowered from 40 in the
+#     2026-06-20 house-description-standard reconciliation: the lean
+#     ≤250-char standard caps descriptions shorter than the old 40-word
+#     floor allowed for verb-heavy team skills; 30 keeps a "substantive"
+#     floor while admitting the lean style. See
+#     docs/skill-mining/2026-06-19-skill-description-standard.md)
 #   - exclude YAML tokens, CJK/bilingual suffix lines, punctuation
 #   - hyphenated and slash-separated compounds split into tokens
-WORD_FLOOR = 40
+WORD_FLOOR = 30
 
 # Punctuation that should be stripped before tokenization. Includes both
 # ASCII and CJK punctuation per the standard.
@@ -375,7 +380,7 @@ REQUIRED_SUBDIRS = {"standards", "protocols", "checklists", "rubrics"}
 # Optional subdirs allowed across all plugins per CLAUDE.md §Skill Structure:
 #   research/ + references/ — documentation / grounding evidence
 #   agents/ + scripts/ + assets/ — runtime assets that ship with the skill
-# Router skills and process-toolkit-style skills (e.g. code-toolkit) often
+# Router skills and process-toolkit-style skills (e.g. loom-code) often
 # have agents/ + scripts/ instead of the 4 REQUIRED_SUBDIRS; the router-skill
 # exemption in CHK-SKL-012 already handles the "no protocols/" case, but the
 # optional subdirs list must include agents/ + scripts/ + assets/ so they

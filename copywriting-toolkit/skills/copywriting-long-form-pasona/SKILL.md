@@ -1,6 +1,7 @@
 ---
 name: copywriting-long-form-pasona
-description: Write long-form landing pages, sales letters, email campaigns, 記事広告, long CM copy using PASONA / 新PASONA / PASBECONA (神田昌典 canonical). Use when you have a confirmed brief with JP long-form persuasion goal — after intake, before voice positioning. Not for EN QUEST / PASTOR (use copywriting-long-form-extended) or キャッチコピー (use copywriting-short-form). Not for raw briefs — route via using-copywriting-toolkit first. 長文案・PASONA。
+description: |
+  Write long-form LPs, sales letters, email campaigns, 記事広告 using PASONA / 新PASONA / PASBECONA (神田昌典). Use with a confirmed JP long-form brief, after intake, before voice positioning. EN QUEST/PASTOR → long-form-extended; tagline → short-form.
 ---
 
 # copywriting-long-form-pasona

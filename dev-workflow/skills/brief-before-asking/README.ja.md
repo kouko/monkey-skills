@@ -237,7 +237,7 @@ brief-before-asking で decision を surface に出し、ユーザーが
 - **`dev-workflow:proposal-critique`** — 既存 list / plan の triage。
   Brief-before-asking の Options list 自体が長すぎる場合に downstream
   で組み合わせる。
-- **`dev-workflow:skill-creator-advance`** — この skill のイテレー
+- **`skill-dev-toolkit:skill-creator-advance`** — この skill のイテレー
   ション用（test-prompts.json + eval loop）。
 - **`superpowers:brainstorming`** — task-start ideation；
   brief-before-asking は task-progress decision。
@@ -254,7 +254,7 @@ brief-before-asking で decision を surface に出し、ユーザーが
 | **Phase 2 — SKILL.md 執筆** | 完了。6 ブロック + 3 mode 構造、block ごとの depth rules、Mode Detection Heuristics テーブル。 |
 | **Phase 3 — Description 最適化** | **保留中。** Router triggering accuracy 調整のため `skill-creator-advance` の description-A/B loop を回す予定。 |
 | **Phase 6 — Worked examples + tests** | 完了。[`references/EXAMPLES.md`](references/EXAMPLES.md)、[`test-prompts.json`](test-prompts.json)、[`trigger-eval.json`](trigger-eval.json)。 |
-| **Phase 7 — 出力品質 A/B** | **保留中。** Phase 3 完了後に `dev-workflow:skill-tuning` を回す予定。Mode A briefing スタイルは taste-sensitive（簡潔さ、lean の assertiveness、jargon-flag 戦略）— 純粋な rule-following では最良版が surface しない。 |
+| **Phase 7 — 出力品質 A/B** | **保留中。** Phase 3 完了後に `skill-dev-toolkit:skill-tuning` を回す予定。Mode A briefing スタイルは taste-sensitive（簡潔さ、lean の assertiveness、jargon-flag 戦略）— 純粋な rule-following では最良版が surface しない。 |
 
 Skill は v1.0 として shippable、feedback で改善する。特に Mode C
 が一番若い設計面；実 session 使用で refinement を予期する。

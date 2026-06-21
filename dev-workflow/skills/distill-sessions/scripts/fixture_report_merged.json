@@ -3,7 +3,7 @@
     "session_id": "3d998518-803c-415e-a91c-dc66f4746dea",
     "trajectory_id": "d412fa1d-87e4-5b47-83c6-a8cf9bea42fa",
     "kind": "failure",
-    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/code-toolkit/skills/brainstorming/SKILL.md",
+    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/loom-code/skills/brainstorming/SKILL.md",
     "memory_items": [
       {
         "title": "Clarify all problem-space dimensions before launching Axis 4 research",
@@ -16,7 +16,7 @@
       {
         "title": "Current State Evidence recon must verify SSOT ownership direction, not just file existence",
         "description": "When a task touches a distribution pipeline (standards/rubrics/checklists flowing between plugins), listing file paths in Current State Evidence without verifying which plugin is canonical vs downstream leads to incorrect SSOT direction in the brief, discovered only in the next pipeline stage.",
-        "content": "In the `## Output Contract \u2014 the brief` section under `## Current State Evidence`, the `Reverse` sub-bullet should require the agent to trace the distribution direction before writing it \u2014 not just listing the target's path. In this session the brief declared code-toolkit as the canonical layer, but reading `distribute.py` (which was only done in writing-plans) revealed domain-teams is canonical and code-toolkit is a downstream copy. Add a note to Current State Evidence: \"For cross-plugin data flows, identify which plugin is the write-origin (SSOT) vs the read-only copy by reading any `distribute.py`/sync script in scope \u2014 do not infer direction from file presence alone.\"",
+        "content": "In the `## Output Contract \u2014 the brief` section under `## Current State Evidence`, the `Reverse` sub-bullet should require the agent to trace the distribution direction before writing it \u2014 not just listing the target's path. In this session the brief declared loom-code as the canonical layer, but reading `distribute.py` (which was only done in writing-plans) revealed domain-teams is canonical and loom-code is a downstream copy. Add a note to Current State Evidence: \"For cross-plugin data flows, identify which plugin is the write-origin (SSOT) vs the read-only copy by reading any `distribute.py`/sync script in scope \u2014 do not infer direction from file presence alone.\"",
         "kind": "failure",
         "section_anchor": "Red Flags \u2014 refuse these rationalizations",
         "requires_new_reference_file": false
@@ -35,7 +35,7 @@
     "session_id": "3d998518-803c-415e-a91c-dc66f4746dea",
     "trajectory_id": "9db095d9-4ba4-5d40-85ee-299218e783a6",
     "kind": "success",
-    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/code-toolkit/skills/brainstorming/SKILL.md",
+    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/loom-code/skills/brainstorming/SKILL.md",
     "memory_items": [
       {
         "title": "Pre-skill option sketch speeds \"go\" decision and scopes brainstorming axis work",
@@ -67,7 +67,7 @@
     "session_id": "854149d8-cc37-4bf8-93cd-b7cf1631a121",
     "trajectory_id": "99b6950a-8ef2-56f0-81cd-2f44dce3d195",
     "kind": "failure",
-    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/code-toolkit/skills/brainstorming/SKILL.md",
+    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/loom-code/skills/brainstorming/SKILL.md",
     "memory_items": [
       {
         "title": "Verify codebase file paths with grep/find before citing in Current State Evidence",
@@ -99,7 +99,7 @@
     "session_id": "132fe34c-626c-47d0-a847-d9c4c9d2b7fd",
     "trajectory_id": "93827ee2-c2ec-5869-a6c1-33f022d6aff7",
     "kind": "success",
-    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/code-toolkit/skills/brainstorming/SKILL.md",
+    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/loom-code/skills/brainstorming/SKILL.md",
     "memory_items": [
       {
         "title": "Read live code state before walking 5-axis \u2014 Current State Evidence is a prerequisite, not an output",
@@ -131,7 +131,7 @@
     "session_id": "269c265f-050e-456c-bac8-9362accee9df",
     "trajectory_id": "8cbc77da-353a-54eb-aa46-465c74c548bc",
     "kind": "failure",
-    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/code-toolkit/skills/brainstorming/SKILL.md",
+    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/loom-code/skills/brainstorming/SKILL.md",
     "memory_items": [
       {
         "title": "Distinguish \"agent recommends\" from \"agent decides\" to prevent AskUserQuestion blocking",
@@ -163,7 +163,7 @@
     "session_id": "4c4c9377-d25b-4e5f-bf94-42f9b74ecbe1",
     "trajectory_id": "10e6e036-e642-54e0-8a38-71407c1958a4",
     "kind": "success",
-    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/code-toolkit/skills/brainstorming/SKILL.md",
+    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/loom-code/skills/brainstorming/SKILL.md",
     "memory_items": [
       {
         "title": "Jump-start brainstorming when user brings a pre-existing spec covering most axes",
@@ -195,7 +195,7 @@
     "session_id": "02523115-3011-4247-8715-798607ac7cd8",
     "trajectory_id": "8e6800a2-490e-572b-af63-7f1ae0a57aaf",
     "kind": "success",
-    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/code-toolkit/skills/subagent-driven-development/SKILL.md",
+    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/loom-code/skills/subagent-driven-development/SKILL.md",
     "memory_items": [
       {
         "title": "Embed full type specs verbatim in implementer prompts to prevent interpretation drift",
@@ -227,7 +227,7 @@
     "session_id": "06e68673-6b4d-4841-b4b6-c82863afada4",
     "trajectory_id": "7499d231-12ac-59d7-8416-40f3af2d0765",
     "kind": "failure",
-    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/code-toolkit/skills/finishing-a-development-branch/SKILL.md",
+    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/loom-code/skills/finishing-a-development-branch/SKILL.md",
     "memory_items": [
       {
         "title": "Clarify that finishing-a-development-branch is a post-SDD gate, not a mid-pipeline phase",
@@ -240,7 +240,7 @@
       {
         "title": "Require explicit pipeline-readiness check before dispatching Step 1 code review",
         "description": "The skill's default flow begins immediately at Step 1 (code review) without verifying that the active SDD plan \u2014 if one exists \u2014 has reached all-tasks-DONE; a session that has an open SDD plan and invokes finishing-a-development-branch will dispatch the code reviewer against an incomplete artifact.",
-        "content": "In \u00a7\"Default flow \u2014 what happens if user just says 'finish this branch'\", add a new Step 0 before Step 1: \"Check for an active SDD plan at `docs/code-toolkit/plans/<date>-<topic>-part-*.md` whose `Plan-document-reviewer verdict: PASS` tasks include any incomplete items. If found, surface: 'SDD plan is in progress \u2014 complete remaining tasks before closing the branch.' STOP.\" This prevents the code-review step from running against a partially-implemented branch, which produces misleading NEEDS_REVISION verdicts or silent oversights that shipping would bake in.",
+        "content": "In \u00a7\"Default flow \u2014 what happens if user just says 'finish this branch'\", add a new Step 0 before Step 1: \"Check for an active SDD plan at `docs/loom/plans/<date>-<topic>-part-*.md` whose `Plan-document-reviewer verdict: PASS` tasks include any incomplete items. If found, surface: 'SDD plan is in progress \u2014 complete remaining tasks before closing the branch.' STOP.\" This prevents the code-review step from running against a partially-implemented branch, which produces misleading NEEDS_REVISION verdicts or silent oversights that shipping would bake in.",
         "kind": "failure",
         "section_anchor": "Default flow \u2014 what happens if user just says 'finish this branch'",
         "requires_new_reference_file": false
@@ -259,7 +259,7 @@
     "session_id": "a83bdc52-7457-4824-ae98-eeccca383e83",
     "trajectory_id": "081803e3-d55f-5496-ae65-c47721d49732",
     "kind": "failure",
-    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/code-toolkit/skills/finishing-a-development-branch/SKILL.md",
+    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/loom-code/skills/finishing-a-development-branch/SKILL.md",
     "memory_items": [
       {
         "title": "Feature branch created before SDD starts leaves finishing-a-development-branch's \"has commits\" guard exposed",
@@ -291,7 +291,7 @@
     "session_id": "a83bdc52-7457-4824-ae98-eeccca383e83",
     "trajectory_id": "f25d49e9-bc48-5aa5-8131-e58a93043343",
     "kind": "success",
-    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/code-toolkit/skills/finishing-a-development-branch/SKILL.md",
+    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/loom-code/skills/finishing-a-development-branch/SKILL.md",
     "memory_items": [
       {
         "title": "Run package-level tests before invoking finishing-a-development-branch",
@@ -312,7 +312,7 @@
       {
         "title": "Lock all open design decisions before entering autonomous SDD to avoid mid-flow disambiguation",
         "description": "Batching all remaining open design decisions into a single structured question-and-answer exchange before invoking `writing-plans` ensures the SDD implementer receives a fully specified brief, eliminating scope-creep interrupts during implementation.",
-        "content": "Before invoking `code-toolkit:writing-plans`, the agent identified four ambiguous design axes (MCP launch mode, alias inference strategy, default toolsets, Phase 1 skill scope) and resolved them in one `AskUserQuestion` multi-select batch. When the user's answers surfaced a contradiction (Q2 \"read-only\" vs Q3 \"sf-deploy\"), the agent flagged it with three labeled resolution options and got explicit user sign-off before proceeding. As a result, the SDD phase ran to 20 tasks with zero scope-change interrupts from the user. SKILL.md \u00a7\"When NOT to use \u2014 Mid-task work\" states: \"The SDD task plan is not yet complete; tasks still pending.\" Ensuring the design is locked before SDD starts is what makes this gate cleanly satisfiable at finishing time. SKILL.md could add to \u00a7\"When to use\" or \u00a7\"Default flow\" a note: \"If upstream brainstorming produced open questions, surface them and get user resolution before invoking writing-plans; unresolved questions produce mid-SDD interrupts that leave finishing-a-development-branch in an indeterminate precondition state.\"",
+        "content": "Before invoking `loom-code:writing-plans`, the agent identified four ambiguous design axes (MCP launch mode, alias inference strategy, default toolsets, Phase 1 skill scope) and resolved them in one `AskUserQuestion` multi-select batch. When the user's answers surfaced a contradiction (Q2 \"read-only\" vs Q3 \"sf-deploy\"), the agent flagged it with three labeled resolution options and got explicit user sign-off before proceeding. As a result, the SDD phase ran to 20 tasks with zero scope-change interrupts from the user. SKILL.md \u00a7\"When NOT to use \u2014 Mid-task work\" states: \"The SDD task plan is not yet complete; tasks still pending.\" Ensuring the design is locked before SDD starts is what makes this gate cleanly satisfiable at finishing time. SKILL.md could add to \u00a7\"When to use\" or \u00a7\"Default flow\" a note: \"If upstream brainstorming produced open questions, surface them and get user resolution before invoking writing-plans; unresolved questions produce mid-SDD interrupts that leave finishing-a-development-branch in an indeterminate precondition state.\"",
         "kind": "success",
         "section_anchor": "When NOT to use \u2014 Mid-task work",
         "requires_new_reference_file": false
@@ -323,7 +323,7 @@
     "session_id": "afa52784-3f6c-436c-b9cc-9fb9eec72ea6",
     "trajectory_id": "3e877031-cb8b-5572-a8aa-b46b65d86699",
     "kind": "success",
-    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/code-toolkit/skills/requesting-code-review/SKILL.md",
+    "target_skill_path": "/Users/kouko/GitHub/monkey-skills/loom-code/skills/requesting-code-review/SKILL.md",
     "memory_items": [
       {
         "title": "Intercept informal push commands as push-as-trigger regardless of phrasing",

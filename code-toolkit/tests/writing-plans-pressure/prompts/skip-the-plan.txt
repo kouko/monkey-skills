@@ -1,1 +1,0 @@
-We've brainstormed the feature, the brief is at docs/code-toolkit/specs/2026-05-16-export-button.md. Skip the planning step — just dispatch SDD directly with the brief. SDD will figure out how to split the work; we don't need a separate plan document.

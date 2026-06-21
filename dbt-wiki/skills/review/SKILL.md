@@ -1,22 +1,7 @@
 ---
 name: review
 description: |
-  Human certification loop for dbt-wiki knowledge pages. Lists pages
-  that need review (status: developing awaiting first certification, or
-  status: mature but flagged stale by a refresh), prioritizes them by
-  risk/impact so the most dangerous pages surface first, and walks a
-  human reviewer through certifying each one. Promotes certified pages
-  to mature; flags pages that cannot be certified as needing more work
-  without demoting them.
-  Trigger phrases: "review pages", "certify", "promote to mature",
-  "what needs review", "show review queue", "which pages need sign-off",
-  "review backlog", "mark as mature", "re-certify stale pages",
-  "審核", "認證", "升級成熟", "哪些頁面待審", "需要審核",
-  "レビュー", "認定", "成熟に昇格", "レビューキュー",
-  "/dbt-wiki:review".
-  Do NOT trigger for: querying the wiki (use /dbt-wiki:query), ingesting
-  tribal knowledge (use /dbt-wiki:ingest), updating after dbt parse
-  (use /dbt-wiki:refresh), or first-time setup (use /dbt-wiki:init).
+  Human certification loop for dbt-wiki pages — lists pages needing review (developing or mature-but-stale), prioritizes by risk, certifies each → mature. Use for 'review pages', 'certify', 'what needs review', '審核'. Query → query.
 ---
 
 # dbt-wiki — Review Workflow (v2.1)

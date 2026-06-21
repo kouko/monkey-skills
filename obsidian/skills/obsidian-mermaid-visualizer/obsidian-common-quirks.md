@@ -127,22 +127,23 @@ This is the most common silent-failure pattern: diagram parses but layout is wro
 - Flowchart / graph / circular-flow / comparison node labels: `A["Label"]`, `B("Label")`, `C(("Label"))`, `D{"Decision?"}`, `E[/"Para"/]`, `F[("DB")]`, etc.
 - Flowchart arrow labels: `A -->|"Label"| B`
 - Subgraph display names with spaces: `subgraph id["Display Name"]`
-- Pie slice labels: `"Label" : value`
-- Pie title (if multi-word): `pie title "Multi Word Title"`
+- Pie slice labels: `"Label" : value` (the pie **title** must NOT be quoted — see unquoted list)
 - Quadrant data points: `"Name": [x, y]`
+- Quadrant x-axis / y-axis / quadrant-N labels: CJK MUST be quoted (`x-axis "單一規則" --> "完整框架"`); the quadrant **title** must NOT — see [data-viz/quadrant.md](data-viz/quadrant.md)
 - xychart title, axis names, categorical x-axis labels, series names: all `"..."` per [data-viz/xychart.md](data-viz/xychart.md) Style rule
 - Block-beta labels: `id["Display"]`
+- Architecture-beta bracket labels containing CJK / special chars: `service x(server)["應用伺服器"]` — unquoted CJK in a bracket throws a syntax error
 - C4 element / boundary / relationship labels: all quoted per C4 canonical syntax
 - gitGraph commit IDs and tags: `id: "..."`, `tag: "..."`
 
 **Positions where quoting is NOT supported — leave unquoted**:
-- Identifiers / node IDs / branch names / class names / entity names (these are references, not display strings)
+- Identifiers / node IDs / branch names / class names / entity names (references, not display strings) — keep these **ASCII**: CJK in an identifier position (e.g. a gitGraph `branch 開發`) throws a syntax error and **cannot** be fixed by quoting; romanize it, or move the CJK into a quotable display field (tag / commit-id / label)
 - Keywords: `subgraph`, `end`, `class`, `state`, `loop`, `alt`, `participant`, `actor`, `section`, `title`, `direction`
 - Sequence message text / state transition labels / state descriptions (positions after `:` in sequence-v2 and state-v2)
-- Gantt title / section / task name (all free-form after keyword)
-- Timeline title / section / period / event text
-- Quadrant title / axis / quadrant-N labels (but data-point names ARE quoted)
-- Architecture-beta bracket content `[Label]` (bracket form is canonical; adding quotes inside is non-standard)
+- Gantt title / section / task name (all free-form after keyword; quoting renders literally — if CJK fails to parse, rephrase, there is no quoting escape)
+- Timeline title / section / period / event text (same: quoting renders literally)
+- Pie title and Quadrant title (free-form to end of line; quoting prints literal `"`). ⚠️ Quadrant **axis / quadrant-N labels are the exception** — those MUST be quoted for CJK (see quoted list above)
+- Architecture-beta bracket content for **ASCII** labels (`[Label]`); CJK / special-char bracket labels MUST be quoted (`["..."]`) — see quoted list above
 - Numeric values, arrow operators, cardinality symbols, shape syntax without text content
 
 **When uncertain**: test in Mermaid Live Editor first; if quotes render literally in output, the position does not support quoting — leave unquoted and rely on rephrasing to avoid special characters.

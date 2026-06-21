@@ -1,11 +1,7 @@
 ---
 name: 4dx-meta-strategy-triage
 description: |
-  Multi-scope gate that decides whether 4 Disciplines of Execution fits a goal or team and returns a single verdict. Use when user is about to install 4DX or commit to a goal-system framework, before going into D1 — to verify the situation actually fits 4DX vs whirlwind / habit / portfolio / stroke-of-pen.
-  EN: "should I use 4DX for X", "should our team adopt 4DX", "is 4DX a good fit"
-  JP: 「この目標に 4DX 使える？」「うちのチームに 4DX 合うか」「4DX 適合性を診断」
-  zh-TW: 「4DX 適合我這個目標嗎」「我們團隊適合導入 4DX 嗎」「4DX 會不會太重」
-  Do NOT use for already-committed users asking "how to start" or members inheriting a WIG (→ 4dx-d1-wig-formulation).
+  Gate deciding whether 4DX fits a goal or team before D1 — 4DX vs whirlwind / habit / portfolio. Use when about to install 4DX or commit to a goal system: 'should I use 4DX here?', 'is 4DX a fit for our team?'. Committed already → wig-formulation.
 source_book: The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker
 source_chapter: "Chapter 1 (The Real Problem With Execution) + Chapter 6 (Choosing Where to Focus)"
 source_language: en

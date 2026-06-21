@@ -1,6 +1,7 @@
 ---
 name: copywriting-mid-form
-description: Write EC product descriptions / POP / presentation copy using BEAF (Benefit → Evidence → Advantage → Feature). Use when you have a confirmed brief with mid-form product-copy goal — Rakuten / Amazon JP / POP / presentation materials — after intake, before voice positioning. Not for キャッチコピー (use copywriting-short-form) or long-form LP / sales letter (use copywriting-long-form-pasona / -extended). Not for raw briefs — route via using-copywriting-toolkit first. 中文案・EC 商品コピー。
+description: |
+  Write EC product descriptions / POP / presentation copy using BEAF (Benefit→Evidence→Advantage→Feature). Use with a confirmed mid-form brief (Rakuten / Amazon JP), after intake, before voice positioning. Tagline → short-form; long → long-form-pasona.
 ---
 
 # copywriting-mid-form

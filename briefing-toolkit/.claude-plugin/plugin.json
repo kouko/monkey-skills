@@ -1,7 +1,7 @@
 {
   "name": "briefing-toolkit",
   "version": "0.2.0",
-  "description": "Daily morning brief across your connected tools — read-only fan-out over Slack / Asana / Notion / GitHub / Gmail / Google Calendar / Drive into a PDB-style briefing plus a zero-omission, link-rich action table that accumulates day-over-day for continuity analysis. ⚠️ Claude Code CLI — uses whichever of these MCP servers you have connected; degrades gracefully when some are absent.",
+  "description": "Daily read-only morning brief over connected MCP tools (Slack/Asana/Notion). ⚠️ Claude Code CLI.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"

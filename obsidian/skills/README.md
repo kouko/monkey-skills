@@ -13,6 +13,7 @@
 | obsidian-canvas-creator | [axtonliu/axton-obsidian-visual-skills](https://github.com/axtonliu/axton-obsidian-visual-skills) + json-canvas from [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) | MIT (Axton Liu + Steph Ango) |
 | obsidian-excalidraw-diagram | [axtonliu/axton-obsidian-visual-skills](https://github.com/axtonliu/axton-obsidian-visual-skills) | MIT (Axton Liu) |
 | obsidian-mermaid-visualizer | [axtonliu/axton-obsidian-visual-skills](https://github.com/axtonliu/axton-obsidian-visual-skills) | MIT (Axton Liu) |
+| daily-news-digest | This project | — |
 | dashboard-design | This project | — |
 | obsidian-daily | This project | — |
 | obsidian-file-intel | This project | — |

@@ -1,15 +1,7 @@
 ---
 name: 4dx-d1-wig-cascade
 description: |
-  Coaches a leader-of-leaders (3+ sub-teams) to translate an org Primary
-  WIG into Team WIGs via Ch 7 four rules — coach + audit modes. Use when
-  team-leader is about to assign sub-team WIGs OR has chosen a Primary
-  WIG and is about to translate it down without an alignment check.
-  EN: "Translate Primary WIG to my 3-7 sub-teams", "Audit our cascade — sub-leaders complaining".
-  JP:「Primary WIG を各チームに翻訳」「cascade 診断、下のリーダー文句」.
-  zh-TW:「Primary WIG 怎麼拆給下面各個團隊」「cascade 哪裡有問題，下面 leader 抱怨」.
-  Do NOT use for single-team WIG (→ `4dx-d1-wig-formulation`) or
-  OKR / KR cascade (→ `using-four-dx-coach`).
+  Coaches a leader-of-leaders (3+ sub-teams) to translate an org Primary WIG into Team WIGs (Ch.7 four rules). Use when assigning sub-team WIGs unchecked: 'translate Primary WIG down', 'audit our cascade'. Single-team WIG → wig-formulation.
 source_book: "The 4 Disciplines of Execution (2nd ed., 2021) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker"
 source_chapter: "Chapter 7 — Translating Organizational Focus Into Executable Targets"
 source_language: en

@@ -22,6 +22,7 @@ distilled against a real warehouse is governed: it lands in the user's
 acme-analytics/                  # the emitted Agent Skill (synthetic name)
   SKILL.md                       # entry point — the consumption contract
   knowledge/                     # frozen distilled knowledge (read on-demand)
+    _relations.md                #   physical anchor: relation -> schema + columns (Step 2.5)
   references/                    # generation guidance (copied in from pack)
   examples/                      # gold few-shot context (MAY be empty in v1)
   PROVENANCE.md                  # snapshot annotation (OR fold into SKILL.md frontmatter)
@@ -134,6 +135,27 @@ layer (raw manifest/sqlglot pages), `index.md`/`lineage.md`/`log.md`
 machinery, and any `_internal/` artifacts. The bundle carries the
 **curated semantic knowledge**, not the full evidence base.
 
+## `knowledge/_relations.md` — physical anchor (the one thing re-carried from `_evidence/`)
+
+Dropping `_evidence/` is right for grounding (the mechanical layer is noise
+for a generation agent and stales fast) — with **one** exception that the
+knowledge layer cannot supply: the **schema-qualified table**. Knowledge pages
+name relations as `model.column`, never `schema.model`, so a bundle deployed at
+a **repo-less target** can't write a runnable `FROM` without it. Step 2.5
+restores exactly this thin anchor — `knowledge/_relations.md`, a flat
+on-demand child of `knowledge/` listing, for every relation the knowledge pages
+derive from:
+
+- its **schema** (load-bearing; complete; reflects dbt custom-schema
+  concatenation like `<db>__marts`, which a single-schema guess gets wrong), and
+- its **column list** — offline from the source `_evidence/` pages (names +
+  descriptions), or, with `--with-catalog`, real **types** pulled from the live
+  warehouse for the canonical relations.
+
+This is deliberately NOT a re-import of the evidence layer: no lineage, no raw
+SQL, no materialization internals — only the relation→schema→columns map a
+warehouse-connected agent needs to qualify a `FROM`. See `SKILL.md` Step 2.5.
+
 ## `references/` — generation guidance (copied in)
 
 `references/` holds the SQL-**generation guidance** for the consuming
@@ -145,6 +167,19 @@ temporal grounding) + schema-linking as guidance for a
 warehouse-connected agent: **generate SQL grounded in `knowledge/` →
 execute via your own warehouse tool → iterate**. It is reference
 material the bundle's `SKILL.md` points at on demand.
+
+## Language
+
+The bundle inherits the knowledge layer's language. The source `.dbt-wiki/`
+distills pages in the **project's source-comment language** (dbt-wiki treats
+comments as the source of truth), so the frozen `knowledge/` pages are already
+in that language and are copied **verbatim** — `pack` never translates them. The
+bundle's own `SKILL.md` writes its **project-specific** prose (description,
+orientation, worked example, trigger phrases) in the same `source_language`
+(read from `.dbt-wiki/index.md`). What stays ASCII / English regardless: the
+`name:` slug, frontmatter keys, knowledge slugs / links, stored `value_domain`
+values, and `references/generation-guidance.md` — the SQL guardrails are
+universal, language-neutral agent guidance, not project knowledge.
 
 ## `examples/` — gold few-shot context (slot reserved)
 
@@ -205,6 +240,14 @@ convention: `knowledge/<page>.md`, `references/generation-guidance.md`,
 `examples/<example>.md`. The bundle never uses absolute filesystem
 paths and never uses `[[wikilinks]]` (standard markdown links only,
 matching the source `.dbt-wiki/` convention).
+
+**Intra-`knowledge/` links are flattened to match the flat layout.** The source
+pages link cross-folder (`[X](../entities/x.md)`) and cite evidence
+(`[m](../_evidence/models/m.md)`); after the flatten-on-freeze those paths are
+wrong (the target is a flat sibling, and `_evidence/` was dropped). pack Step 2.6
+rewrites them: cross-folder → flat sibling `[X](x.md)`; dropped-`_evidence/`
+links → delinked to plain label text. Acceptance (Step 7) requires **zero broken
+intra-`knowledge/` links**.
 
 ## Acceptance summary
 

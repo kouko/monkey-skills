@@ -7,6 +7,31 @@ normative contract for frontmatter shape, edge types, and naming.
 
 ---
 
+## 0. Language — write in the project's source language
+
+dbt-wiki treats **comments as the source of truth**. The model comments,
+schema.yml descriptions, and inline SQL comments this concept is distilled from
+are often NOT English; translating them silently rounds off domain terms the
+warehouse and the team depend on (a literal translation often has no exact
+English equivalent). Write this
+page in the project's **source language** and preserve domain terms **verbatim —
+do not translate them**.
+
+Resolve the source language in this order:
+1. the explicit `source_language` init recorded (project setting / `DBT_WIKI_LANGUAGE`);
+2. if unset, auto-detect the dominant script of the evidence `## Description` +
+   `## Inline Comments` of the models that encode this rule
+   (init runs `assets/detect_source_language.py` for this deterministically).
+
+Localize the **prose** — `## Rule`, `## Applies To`, `## Caveats` — plus the
+`summary:` frontmatter and `title`. Keep **ASCII / English** for everything
+machine- or structure-bearing: the kebab-case slug + filename, frontmatter
+**keys**, `relationships[].target` paths, `derived_from` unique_ids, column
+identifiers, and stored `value_domain` **values** (warehouse values, not prose).
+Put an English gloss of the title in `aliases` so English queries still match.
+
+---
+
 ## 1. Concept identification
 
 A concept is a **cross-cutting business rule** that is encoded in SQL

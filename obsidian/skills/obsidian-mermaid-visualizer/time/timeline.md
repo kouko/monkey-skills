@@ -110,7 +110,9 @@ Mermaid timeline treats title / section / period / event text as free-form token
 - Period / events: `1957 : FORTRAN` ✅ (NOT `1957 : "FORTRAN"`)
 - Multi-event line: `1995 : Java : JavaScript : PHP : Ruby` ✅ — each event is colon-delimited free-form, unquoted
 
-**For CJK content in Timeline**: Mermaid timeline tolerates CJK throughout. Known caveat — colon in event text collides with the event separator; rephrase or remove colons rather than quoting.
+**For CJK content in Timeline**: CJK usually parses throughout, but this is **not guaranteed** in Obsidian's bundled lexer (mermaid-cli is more lenient than Obsidian — a cli pass does not prove an Obsidian pass). No quoting escape exists (quotes render literally); if a label fails in Obsidian, rephrase / romanize it.
+
+**Colon caveat (scoped)**: only a **space-padded ` : `** starts a new event — that is the separator. A bare colon inside event text is safe and does NOT split: `2023 : 開會 9:00 開始` renders as one event, and `2023 : 發布 http://x` keeps the `://` (verified mermaid-cli 2026-06). So only avoid the literal ` : ` (space-colon-space) sequence inside an event; there is no quoting/escape mechanism, so rephrase if you need that exact sequence.
 
 ## Worked examples
 

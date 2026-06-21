@@ -1,22 +1,7 @@
 ---
 name: pack
 description: |
-  Package the dbt-wiki knowledge base into a portable, warehouse-tool-agnostic
-  analytics skill. Run by the PROJECT OWNER (someone who has a distilled
-  `.dbt-wiki/`) to freeze the curated semantic knowledge into a self-contained
-  Agent Skill folder `<project>-analytics/` (SKILL.md + knowledge/ + references/
-  + examples/) that a teammate or agent can drop into `~/.claude/skills/` and use
-  with their OWN warehouse-connect tool — no dbt project, no DB driver required.
-  The emitted bundle carries knowledge + SQL-generation guidance, NOT an executor.
-  Triggers: "package the dbt-wiki knowledge", "build a portable analytics skill",
-  "freeze the knowledge base into a bundle", "export dbt-wiki for a teammate",
-  "make a shareable analytics skill", "/dbt-wiki:pack",
-  "把 dbt-wiki 知識打包", "封裝成可攜知識 skill", "做一個分析 skill 給同事",
-  "dbt-wiki をパッケージ化", "知識 skill を書き出す".
-  Do NOT trigger for: querying the knowledge base (use /dbt-wiki:query), building
-  or refreshing `.dbt-wiki/` itself (use /dbt-wiki:init or /dbt-wiki:refresh),
-  adding tribal knowledge (use /dbt-wiki:ingest), or running SQL against a
-  warehouse (the emitted bundle does that, with the consuming agent's own tool).
+  Package .dbt-wiki/ into a portable, warehouse-agnostic analytics Agent Skill a teammate can use with their own warehouse tool — knowledge + SQL guidance, not an executor. Use for 'package the dbt-wiki knowledge' or 'export for a teammate'.
 ---
 
 # dbt-wiki — Pack Workflow (emit a portable analytics skill)
@@ -119,6 +104,93 @@ manifest / sqlglot dumps), `index.md` / `lineage.md` / `log.md` machinery, and
 any `_internal/` artifacts. The bundle carries the curated semantic knowledge,
 not the full evidence base.
 
+## Step 2.5 — Emit the physical-anchor `knowledge/_relations.md`
+
+The frozen `knowledge/` names dbt relations (`int_x.col`) but — because the
+`_evidence/` layer is dropped (Step 2) — it does **not** carry the
+schema-qualified table an analyst needs in a `FROM`. For a bundle deployed at a
+**repo-less target that still reaches the same warehouse**, restore the thin,
+high-value anchor: for every relation the knowledge pages derive from, its
+**schema + column list**. dbt-wiki ships a deterministic generator —
+[`assets/build_relations_anchor.py`](assets/build_relations_anchor.py)
+(PEP 723; declares `pyyaml`, so run it with `uv run`).
+
+**Offline (default)** — schema + column names + descriptions, read from the
+source `.dbt-wiki/_evidence/` pages (pack already stands on them; no manifest
+or warehouse access needed). **Schema is the load-bearing piece** and is
+complete; it correctly reflects dbt custom-schema concatenation (e.g. marts in
+`<db>__marts`), which a single-schema assumption gets wrong:
+
+```bash
+uv run <SKILL_DIR>/assets/build_relations_anchor.py \
+    --evidence-dir "$WIKI_DIR/.dbt-wiki/_evidence" \
+    --knowledge-dir "<project>-analytics/knowledge" \
+    --out "<project>-analytics/knowledge/_relations.md"
+```
+
+(`<SKILL_DIR>` = the directory containing this SKILL.md. If `.dbt-wiki/_evidence/`
+is absent — e.g. an evidence-pruned wiki — skip this step and note in the
+bundle that `FROM` schemas must be resolved live.)
+
+**`--with-catalog` (optional, real column TYPES)** — when the target runs
+against the live warehouse and you want true types / full columns for the
+**canonical** relations (those the knowledge pages cite as `model.column`):
+the **orchestrator** runs ONE `information_schema.columns` query *with its own
+warehouse tool*, saves the JSON, and passes it. `pack` itself connects to no
+warehouse (see Rules) — the query is the orchestrator's, exactly as the
+consuming bundle brings its own execution.
+
+```bash
+# 1. (your warehouse tool) pull RAW column rows for the cited relations:
+#      SELECT table_schema, table_name, ordinal_position, column_name, data_type
+#      FROM information_schema.columns
+#      WHERE table_schema IN (<schemas>) AND table_name IN (<cited relations>)
+#      ORDER BY 1,2,3
+#    ⚠ Do NOT LISTAGG over information_schema (unsupported on Redshift system
+#      tables); pull RAW rows — the script aggregates per relation. Save the
+#      tool's JSON result to /tmp/catalog.json.
+# 2. merge it:
+uv run <SKILL_DIR>/assets/build_relations_anchor.py \
+    --evidence-dir "$WIKI_DIR/.dbt-wiki/_evidence" \
+    --knowledge-dir "<project>-analytics/knowledge" \
+    --out "<project>-analytics/knowledge/_relations.md" \
+    --catalog /tmp/catalog.json
+```
+
+Skip `--with-catalog` when packing offline — the offline anchor (schema +
+column names) already makes the bundle self-sufficient for schema-qualifying a
+`FROM`; the live tool fills any missing column detail per-table on demand.
+
+The emitted `_relations.md` is a flat child of `knowledge/` (it loads on
+demand like any knowledge page). Verify the generator on first run (optional):
+`uv run <SKILL_DIR>/assets/build_relations_anchor_test.py` → "6/6 passed".
+
+## Step 2.6 — Flatten in-page links (run after freezing knowledge)
+
+Step 2 moved the page **files** to a flat `knowledge/`, but the frozen pages
+were copied **verbatim** — their in-page links still use the **nested** source
+layout (`[X](../entities/x.md)`, `[m](../_evidence/models/m.md)`) and therefore
+**break** in the flat bundle. Rewrite them with the shipped flattener:
+
+```bash
+uv run <SKILL_DIR>/assets/flatten_links.py "<project>-analytics/knowledge"
+```
+
+It rewrites, in both markdown body links AND frontmatter `target:` edges:
+- `](../{entities,concepts,metrics}/<slug>.md)` → flat sibling `](<slug>.md)`;
+- `[label](../_evidence/…)` → `label` (the `_evidence/` layer was dropped in
+  Step 2, so these are dead — delink to plain text, keeping the model name).
+
+It is **idempotent** (re-run after any re-freeze) and pure path-shape logic — no
+project specifics. It exits non-zero and lists offenders if any broken
+intra-knowledge link remains; require `0 broken intra-knowledge links remain`
+before continuing. Verify the script on first run (optional):
+`uv run <SKILL_DIR>/assets/flatten_links_test.py` → "6/6 passed".
+
+> Without this step the bundle's progressive-disclosure-by-link is broken: a
+> reader following `[Customer](../entities/customer.md)` hits a non-existent
+> path (it is a flat sibling `customer.md`), and every `## Evidence` link dangles.
+
 ## Step 3 — Copy in the generation guidance
 
 Copy this skill's [generation-guidance](references/generation-guidance.md)
@@ -137,7 +209,14 @@ they mean):
 ```bash
 SOURCE_MANIFEST_SHA=$(grep -m 1 'manifest_sha:' .dbt-wiki/log.md | sed 's/.*manifest_sha: //' | tr -d ' ')
 BUILD_DATE=$(date +%Y-%m-%d)
+# Warehouse SQL dialect — recorded by init in .dbt-wiki/index.md frontmatter (Step 4a).
+WAREHOUSE_DIALECT=$(grep -m 1 'dialect:' .dbt-wiki/index.md | sed 's/.*dialect: *//' | sed 's/ *#.*//' | tr -d ' ')
 ```
+
+If `index.md` has no `dialect:` line (a wiki built by an older `init`), fall back
+to a `dbt debug` / `profiles.yml` `type:` lookup, or substitute the plain note
+*"confirm your warehouse's SQL dialect before running"* — never leave the
+placeholder unfilled.
 
 Then copy [the bundle SKILL.md template](assets/bundle-skill-template.md) to
 `<project>-analytics/SKILL.md` and fill its placeholders:
@@ -150,6 +229,21 @@ Then copy [the bundle SKILL.md template](assets/bundle-skill-template.md) to
 | `<TRIGGER_PHRASES>` | extra activation phrases (see substitution contract below) |
 | `<SOURCE_MANIFEST_SHA>` | `$SOURCE_MANIFEST_SHA` captured above (source `manifest_sha` from `.dbt-wiki/log.md`) |
 | `<BUILD_DATE>` | `$BUILD_DATE` captured above (today, `YYYY-MM-DD`) |
+| `<WAREHOUSE_DIALECT>` | `$WAREHOUSE_DIALECT` captured above (the warehouse SQL dialect, e.g. `redshift` / `snowflake` / `bigquery`); appears twice in the template's "Warehouse engine" line. Keep ASCII — it is engine-bearing, not prose |
+
+**Language — match the knowledge layer.** The packaged knowledge follows the
+same source-language rule as distillation (init wrote pages in the project's
+source language). Read `source_language` from `.dbt-wiki/index.md` frontmatter
+(`grep -m1 'source_language:' .dbt-wiki/index.md`). Write the bundle's
+**project-specific prose** in that language: `<PROJECT_DESCRIPTION>`,
+`<PROJECT_NAME>` where natural, the body's "What this is" / orientation /
+worked-example sections, and `<TRIGGER_PHRASES>` (use the project-language terms
+a local analyst would actually type). The `knowledge/` pages are copied
+**verbatim** in Step 2, so they are already in the source language — do NOT
+translate them. Keep ASCII / English for the `name:` slug, the snapshot
+frontmatter keys, and `references/generation-guidance.md` (the five SQL
+guardrails are universal, language-neutral agent guidance, not project
+knowledge — leave it as shipped).
 
 **Substitution contract for `<TRIGGER_PHRASES>` (YAML-fragile).** The template's
 frontmatter `description` is a **folded block scalar** (`>-`). `<TRIGGER_PHRASES>`
@@ -209,12 +303,25 @@ NESTED=$(find "$BUNDLE" -mindepth 2 -type d)
 for d in knowledge references examples; do
   test -d "$BUNDLE/$d" || { echo "FAIL: missing $d/"; exit 1; }
 done
+
+# (d) no broken intra-knowledge links (Step 2.6 flattening must have run).
+python3 - "$BUNDLE/knowledge" <<'PY' || { echo "FAIL: broken links — re-run Step 2.6 flatten_links.py"; exit 1; }
+import sys, re
+from pathlib import Path
+k = Path(sys.argv[1]); bad = 0
+for p in k.glob("*.md"):
+    for m in re.finditer(r"\]\(([^)]+\.md)\)", p.read_text(encoding="utf-8")):
+        l = m.group(1).strip()
+        if not l.startswith("http") and not (p.parent / l).resolve().exists():
+            print(f"  broken: {p.name} -> {l}"); bad += 1
+sys.exit(1 if bad else 0)
+PY
 echo "✓ flat valid skill"
 ```
 
 Confirm no placeholder leaked: grep the emitted `SKILL.md` for
-`<PROJECT_` / `<SOURCE_MANIFEST_SHA>` / `<BUILD_DATE>` / `<TRIGGER_PHRASES>` — any
-match means an unfilled placeholder (re-do Step 4).
+`<PROJECT_` / `<SOURCE_MANIFEST_SHA>` / `<BUILD_DATE>` / `<TRIGGER_PHRASES>` /
+`<WAREHOUSE_DIALECT>` — any match means an unfilled placeholder (re-do Step 4).
 
 ## What you produced
 

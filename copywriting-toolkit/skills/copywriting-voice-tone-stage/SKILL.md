@@ -1,6 +1,7 @@
 ---
 name: copywriting-voice-tone-stage
-description: Fix voice drift / tone inconsistency and apply voice anchor register — Ogilvy 4-axis + individual-creator anchors (JP / ZH / EN). Use when you have a draft with a quadrant assigned AND need sentence-level tone polish — 語尾 / 呼吸 / rhythm refinement — before ethics gate. Not for macro quadrant selection (use copywriting-voice-quadrant-stage) or legal / ethics review (use copywriting-ethics-check-stage). ボイス・トーン調整・系譜クラフト。文案聲調修飾・語氣校正。
+description: |
+  Fix voice drift / tone inconsistency, apply a voice-anchor register (Ogilvy 4-axis + JP/ZH/EN anchors). Use with a draft that has a quadrant assigned, for tone polish (語尾/rhythm) before the ethics gate. Macro quadrant → voice-quadrant-stage.
 ---
 
 # copywriting-voice-tone-stage

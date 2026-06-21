@@ -115,7 +115,7 @@ Sequence diagram has **limited quote support** compared to flowchart. Mermaid se
 - `loop Every 10 seconds` — NOT `loop "Every 10 seconds"`
 - `alt Success` — NOT `alt "Success"`
 
-**For CJK / special characters in sequence**: Mermaid sequence tolerates CJK in these positions without quoting. If a specific message fails to parse, use the backtick-escape `A->>B: \`message with special chars\`` or HTML-encode problematic characters. Do not wrap the whole string in `"..."` as the quotes will render literally.
+**For CJK / special characters in sequence**: CJK usually parses unquoted in these positions, but this is **not guaranteed** in Obsidian's bundled lexer (mermaid-cli is more lenient than Obsidian, so a cli pass does not prove an Obsidian pass). There is **no quoting escape** here — quotes render literally, and the backtick form `` `...` `` also renders the backticks literally (do not use it). If a message fails to parse in Obsidian, the only fix is to **rephrase / romanize** the problematic text or HTML-encode the offending character. Never wrap the string in `"..."`.
 
 ## Worked examples
 

@@ -3,7 +3,7 @@
 [English](README.md) | [日本語](README.ja.md) | **繁體中文**
 
 > 挖掘 `~/.claude/projects` JSONL transcript 與 `/insights` facet，
-> surface 已 ship 的 `dev-workflow:*` 與 `code-toolkit:*` skill 中
+> surface 已 ship 的 `dev-workflow:*` 與 `loom-code:*` skill 中
 > 的 trigger 遺漏 pattern，並對各對象 SKILL.md 產出 data-grounded
 > 的 edit proposal。
 
@@ -62,7 +62,7 @@ skill 跑 multi-stage pipeline：
               ▼
        JSON payload (stdout) + Markdown summary (stderr)
               │
-              ▼  Stage 3: Claude 透過 code-toolkit:dispatching-parallel-agents
+              ▼  Stage 3: Claude 透過 loom-code:dispatching-parallel-agents
               │   dispatch subagent
               │   - 每個 (skill, session) 一個 Haiku-4.5 subagent
               │   - 依 friction 選 failure / success prompt
@@ -136,16 +136,16 @@ python3 main.py
 # distill-sessions v0.1 — run summary    (stderr)
 
 - run_id: `b3a1...`
-- target_pattern: `code-toolkit:*`
+- target_pattern: `loom-code:*`
 - top_n: 5
 - max_trajectories_per_skill: 5
 
 ## Top skills
 
-- **code-toolkit:writing-plans**
+- **loom-code:writing-plans**
   - session `2026-05-20-...`: friction=high, events=12
   - session `2026-05-18-...`: friction=mid,  events=7
-- **code-toolkit:brainstorming**
+- **loom-code:brainstorming**
   - session `2026-05-19-...`: friction=mid,  events=5
 ...
 ```
@@ -167,7 +167,7 @@ python3 main.py --config /path/to/my-thresholds.json
 完整 override schema 見 [`SKILL.md`](SKILL.md) §Configuration。
 常用 lever 也提供了 CLI flag：
 
-- `--target-skill-pattern`（default `code-toolkit:*`）
+- `--target-skill-pattern`（default `loom-code:*`）
 - `--top-n`（default `5`）
 - `--max-trajectories-per-skill`（default `5`）
 - `--project-root`（`~/.claude/projects` override，主要給測試用）

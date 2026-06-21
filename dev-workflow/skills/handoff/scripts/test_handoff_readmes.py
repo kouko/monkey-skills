@@ -165,53 +165,44 @@ def test_tri_lang_readmes_consistent():
         f"SKILL.md has: {skill_prepare_triggers_in_desc}. EN README has: {en_prepare_in_readme}."
     )
 
-    # 4a. JA README: ≥2 prepare-mode AND ≥2 resume-mode native triggers also in SKILL.md description
+    # 4a. JA README lists ≥2 prepare-mode AND ≥2 resume-mode native triggers.
+    # (The 2026-06 house description standard removed CJK trigger tails from the
+    # EN skill description, so native-language triggers are checked in the README
+    # only — no longer cross-checked against skill_desc.)
     ja_prepare_triggers = [
-        "今日はここまで", "引き継ぎ", "状態を保存", "セッションを終わる",
-        "今日はここまで", "先這樣",  # SKILL.md JA prepare triggers
+        "今日はここまで", "引き継ぎ", "状態を保存", "セッションを終わる", "先這樣",
     ]
-    ja_prepare_in_skill = [t for t in ja_prepare_triggers if t in skill_desc]
     ja_prepare_in_readme = [t for t in ja_prepare_triggers if t in ja_text]
-    ja_prepare_shared = [t for t in ja_prepare_in_readme if t in skill_desc]
-    assert len(ja_prepare_shared) >= 2, (
-        f"README.ja.md must list ≥2 prepare-mode trigger phrases that also appear in SKILL.md description. "
-        f"SKILL.md has: {ja_prepare_in_skill}. README.ja.md has: {ja_prepare_in_readme}. "
-        f"Shared: {ja_prepare_shared}."
+    assert len(ja_prepare_in_readme) >= 2, (
+        f"README.ja.md must list ≥2 prepare-mode native trigger phrases. "
+        f"Found: {ja_prepare_in_readme}."
     )
 
     ja_resume_triggers = [
         "前回の続きから", "引き継ぎを読んで", "再開して",
     ]
-    ja_resume_in_skill = [t for t in ja_resume_triggers if t in skill_desc]
     ja_resume_in_readme = [t for t in ja_resume_triggers if t in ja_text]
-    ja_resume_shared = [t for t in ja_resume_in_readme if t in skill_desc]
-    assert len(ja_resume_shared) >= 2, (
-        f"README.ja.md must list ≥2 resume-mode trigger phrases that also appear in SKILL.md description. "
-        f"SKILL.md has: {ja_resume_in_skill}. README.ja.md has: {ja_resume_in_readme}. "
-        f"Shared: {ja_resume_shared}."
+    assert len(ja_resume_in_readme) >= 2, (
+        f"README.ja.md must list ≥2 resume-mode native trigger phrases. "
+        f"Found: {ja_resume_in_readme}."
     )
 
-    # 4b. zh-TW README: ≥2 prepare-mode AND ≥2 resume-mode native triggers also in SKILL.md description
+    # 4b. zh-TW README lists ≥2 prepare-mode AND ≥2 resume-mode native triggers
+    # (README-only, per the house-standard note in 4a).
     zhtw_prepare_triggers = [
         "收尾", "明天繼續", "保存狀態", "先這樣", "記錄一下進度", "今天先到這",
     ]
-    zhtw_prepare_in_skill = [t for t in zhtw_prepare_triggers if t in skill_desc]
     zhtw_prepare_in_readme = [t for t in zhtw_prepare_triggers if t in zhtw_text]
-    zhtw_prepare_shared = [t for t in zhtw_prepare_in_readme if t in skill_desc]
-    assert len(zhtw_prepare_shared) >= 2, (
-        f"README.zh-TW.md must list ≥2 prepare-mode trigger phrases that also appear in SKILL.md description. "
-        f"SKILL.md has: {zhtw_prepare_in_skill}. README.zh-TW.md has: {zhtw_prepare_in_readme}. "
-        f"Shared: {zhtw_prepare_shared}."
+    assert len(zhtw_prepare_in_readme) >= 2, (
+        f"README.zh-TW.md must list ≥2 prepare-mode native trigger phrases. "
+        f"Found: {zhtw_prepare_in_readme}."
     )
 
     zhtw_resume_triggers = [
         "繼續上次", "從上次說到哪裡", "載入狀態", "接著做",
     ]
-    zhtw_resume_in_skill = [t for t in zhtw_resume_triggers if t in skill_desc]
     zhtw_resume_in_readme = [t for t in zhtw_resume_triggers if t in zhtw_text]
-    zhtw_resume_shared = [t for t in zhtw_resume_in_readme if t in skill_desc]
-    assert len(zhtw_resume_shared) >= 2, (
-        f"README.zh-TW.md must list ≥2 resume-mode trigger phrases that also appear in SKILL.md description. "
-        f"SKILL.md has: {zhtw_resume_in_skill}. README.zh-TW.md has: {zhtw_resume_in_readme}. "
-        f"Shared: {zhtw_resume_shared}."
+    assert len(zhtw_resume_in_readme) >= 2, (
+        f"README.zh-TW.md must list ≥2 resume-mode native trigger phrases. "
+        f"Found: {zhtw_resume_in_readme}."
     )

@@ -1,6 +1,7 @@
 ---
 name: copywriting-short-form
-description: Write キャッチコピー / headlines / taglines (7-15 chars, AIDMA A+I, 3秒ルール, 5 切入點 framework). Use when you have a confirmed brief with short-form deliverable — tagline, SNS post, banner, CM title — after intake, before voice positioning. Not for EC product description (use copywriting-mid-form) or long-form LP / sales letter (use copywriting-long-form-pasona / -extended). Not for raw briefs — route via using-copywriting-toolkit first. 短文案・キャッチコピー作成。
+description: |
+  Write キャッチコピー / headlines / taglines (7-15 chars, AIDMA, 3秒ルール). Use with a confirmed short-form brief — tagline, SNS post, banner, CM title — after intake, before voice positioning. EC copy → mid-form; long-form → long-form-pasona.
 ---
 
 # copywriting-short-form

@@ -1,6 +1,7 @@
 ---
 name: slack-automate
-description: Slack automation via the official Slack MCP server. Read-only v0.2.0 — search-messages / channel-read / thread-read / find-user via MCP tool calls. Locale-independent (structured JSON, no UI scraping). Slack MCP・メッセージ読取・公式 MCP サーバ。Slack MCP・訊息讀取・官方 MCP 伺服器。
+description: |
+  Slack automation via the official Slack MCP server. Read-only — search-messages / channel-read / thread-read / find-user via MCP tool calls. Locale-independent (structured JSON, no UI scraping).
 allowed-tools: mcp__slack__search_messages, mcp__slack__read_channel, mcp__slack__read_thread, mcp__slack__find_user
 ---
 

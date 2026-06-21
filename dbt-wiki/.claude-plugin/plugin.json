@@ -1,7 +1,7 @@
 {
   "name": "dbt-wiki",
-  "version": "2.7.0",
-  "description": "Local-only two-layer knowledge base for dbt projects — an LLM-distilled knowledge layer (entities / metrics / concepts connected by typed relationships) answers semantic questions like 'what does churn mean?' or 'which entities relate to revenue?', supported by an evidence layer (manifest.json + sqlglot column-level lineage). No dbt Cloud needed.",
+  "version": "2.14.1",
+  "description": "Local-only two-layer knowledge base for dbt projects — semantic Q&A over manifest + column lineage.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"

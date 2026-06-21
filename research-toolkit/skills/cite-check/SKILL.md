@@ -1,6 +1,7 @@
 ---
 name: cite-check
-description: Audit an existing document's cited claims — fetch each cited source and check it actually supports the claim; flag unsupported / misattributed / dead-link citations. Use when the user wants to verify that a document's citations hold up, run inside any coding agent host using the host's own LLM + web tools (zero API-key setup).
+description: |
+  Audit a document's cited claims — fetch each cited source and check it actually supports the claim; flag unsupported / misattributed / dead-link citations. Use to verify a document's citations hold up. Key-free (host's own LLM + web tools).
 version: 0.1.0
 ---
 
@@ -100,7 +101,7 @@ claim.
 
 For every **distinct cited URL** in the bound claims, retrieve what the source
 actually says. This is per-source independent work — **fan out one subagent per
-source** (per `code-toolkit:dispatching-parallel-agents`) when there are
+source** (per `loom-code:dispatching-parallel-agents`) when there are
 several.
 
 1. **Dedup the cited URLs first** so the same source is fetched once even if it

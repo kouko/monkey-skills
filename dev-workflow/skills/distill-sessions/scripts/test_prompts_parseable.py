@@ -4,7 +4,7 @@ Per dev-workflow/skills/distill-sessions Plan Part 2 §Task 6.
 
 The two prompt files at agents/prompt-{failure,success}-analysis.md are
 bundled subagent prompts the v0.1 Stage 3 orchestrator dispatches via
-``code-toolkit:dispatching-parallel-agents``. The files are markdown with
+``loom-code:dispatching-parallel-agents``. The files are markdown with
 YAML frontmatter (``role / model / input_contract / output_contract /
 hard_constraints``) plus a 4-step body that mirrors Trace2Skill's
 ``analysis/error_analysis_system_llm.txt`` and

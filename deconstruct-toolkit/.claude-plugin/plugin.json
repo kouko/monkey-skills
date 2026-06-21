@@ -1,7 +1,7 @@
 {
   "name": "deconstruct-toolkit",
   "version": "0.2.3",
-  "description": "Reverse-engineer polished artifacts (copy / docs / UI / arguments / products / orgs) — surface design blueprints, frameworks, rhetorical mechanisms, intentional omissions. Cultural-variant lenses for EN / JA / ZH.",
+  "description": "Reverse-engineer polished artifacts (copy/docs/UI/arguments/orgs) into their blueprints. EN/JA/ZH.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"

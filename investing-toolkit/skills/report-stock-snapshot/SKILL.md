@@ -1,15 +1,7 @@
 ---
 name: report-stock-snapshot
-description: >-
-  Layer 3 (Report) orchestrator that produces a single-page Markdown snapshot
-  card for any equity ticker (US / JP / TW / KR / CN / HK). Auto-detects market
-  from the ticker suffix, dispatches to the matching `data-{country}/pack.py
-  --pack snapshot` to fetch primary-source disclosures + price + valuation, then
-  renders a Markdown card with header, valuation block, returns / dividends,
-  recent disclosures (SEC 8-K / TDnet / MOPS 重大訊息), and a tier-routing
-  provenance footer. Pure orchestration — no analysis, no verdict. Hands off
-  cleanly to `domain-teams:investing-team` or `report-equity-memo` for full
-  diagnosis. 個股快照卡片產出。個別株スナップショットカード生成。
+description: |
+  Layer-3 single-page Markdown snapshot card for any equity (US/JP/TW/KR/CN/HK). Auto-detects market by suffix, dispatches data-{country} snapshot (disclosures + price + valuation), renders a card. No analysis; hands off to report-equity-memo.
 ---
 
 # report-stock-snapshot

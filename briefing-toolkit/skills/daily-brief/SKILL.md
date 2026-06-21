@@ -1,10 +1,7 @@
 ---
 name: daily-brief
-description: >-
-  把散在 Gmail / Slack / Notion / Asana / Drive / Calendar / GitHub 的事整理成一份可信、每列可點處理的晨報,外加一張零省略行動表;每天累積、跨日延續(已結/仍在等你/新發生)。
-  每天開工、想知道今天有什麼要處理、怕漏掉待回覆時用——before starting your workday。
-  觸發詞:每日簡報、daily brief、morning brief、晨報、今天要做什麼、待回覆、要回的訊息、standup、今日まとめ、朝のブリーフィング。
-  Do NOT use for 績效回顧/自評/專案盤點(那是 performance-evidence-audit,同機制反方向時間軸);Do NOT use 來寫回官方系統、代送或自動回覆(本 skill 唯讀 + 只寫本機草稿)。
+description: |
+  Compile scattered Gmail / Slack / Notion / Calendar / GitHub items into a trustworthy clickable morning brief + action table; accrues across days. Use at workday start — 每日簡報 / daily brief / 晨報 / 今天要做什麼 / 待回覆. Read-only, local draft.
 metadata:
   tags: [daily-brief, morning-brief, aggregator, read-only, draft-only, cross-platform, triage, continuity, pdb]
   note: data/aggregator skill — 自包含 raw MCP fan-out。

@@ -1,11 +1,7 @@
 ---
 name: socratic-method
-description: >-
-  Socratic dialogue — guide users through questioning, not answering.
-  Use when user wants their thinking challenged through open dialogue.
-  Not for systematic doubt (use descartes-methodical-doubt) or
-  hypothesis testing (use popper-falsifiability).
-  蘇格拉底式對話・詰問法。ソクラテス式対話。
+description: |
+  Socratic dialogue — guide the user through questioning, not answering. Use when the user wants their thinking challenged via open dialogue. Doubt → descartes-methodical-doubt; hypothesis test → popper-falsifiability.
 ---
 
 # Socratic Method: The Dialectic Engine

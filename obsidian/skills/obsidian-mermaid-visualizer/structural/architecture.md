@@ -103,9 +103,13 @@ Use junctions to branch one output to multiple inputs.
 
 ## Quote rule for architecture-beta
 
-architecture-beta uses the bracket form `[Display Label]` for service / group display names. Per Mermaid docs, adding quotes inside the bracket (e.g., `["Display Label"]`) is **not part of the documented canonical form** and support is inconsistent across Mermaid versions.
+architecture-beta uses the bracket form `[Display Label]` for service / group display names. The quoting rule is **script-dependent** — verified with mermaid-cli (2026-06):
 
-**Recommendation**: leave bracket content unquoted in architecture-beta: `service svc(server)[App Server]`. If a label contains characters that fail to parse (e.g., embedded `[`, `]`, or CDN-unsafe chars), rephrase rather than quoting. If you need CJK content, test it — CJK characters inside brackets generally work in architecture-beta without quoting.
+- **ASCII labels**: leave unquoted, `service svc(server)[App Server]` — this is the canonical form.
+- **CJK / non-ASCII labels**: MUST be quoted **inside** the bracket, `service svc(server)["應用伺服器"]`. Unquoted CJK in a bracket throws `Syntax error in text` (applies to BOTH `service` and `group` labels). Quoted CJK renders clean (no literal quotes).
+
+> [!warning]
+> Earlier guidance here said CJK "generally works without quoting" — that is **wrong**. Unquoted CJK bracket content fails to parse. Always quote CJK (and other non-ASCII / special-char) bracket labels. If a label contains the bracket chars `[` or `]` themselves, rephrase — those can't be escaped.
 
 If the fallback to `graph TB` is triggered, apply the standard flowchart quote rule (`A["Label"]`) to the fallback diagram.
 

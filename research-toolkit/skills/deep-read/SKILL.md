@@ -1,6 +1,7 @@
 ---
 name: deep-read
-description: Deeply understand ONE large document or book — build a structured understanding (sections, claims, methodology, caveats, argument-structure) of a single source, depth-on-one-source vs deep-research's breadth-across-many. Use when the user wants to thoroughly comprehend one long document, paper, or book, run inside any coding agent host using the host's own tools (zero API-key setup).
+description: |
+  Deeply understand ONE large document or book — structured understanding (sections, claims, methodology, caveats, argument). Use to thoroughly comprehend one long doc/paper/book — depth-on-one vs deep-research's breadth-across-many.
 version: 0.1.0
 ---
 
@@ -55,7 +56,7 @@ directory (paths below are relative to it).
 
 The per-chunk extraction (Step 3) does the same work across N independent
 chunks. Do this **in parallel by dispatching N subagents**, per
-`code-toolkit:dispatching-parallel-agents`: one fresh subagent per chunk,
+`loom-code:dispatching-parallel-agents`: one fresh subagent per chunk,
 dispatched in a single assistant message with multiple agent calls so the
 harness runs them concurrently.
 

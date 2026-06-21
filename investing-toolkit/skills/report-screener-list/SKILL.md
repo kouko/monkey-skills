@@ -1,14 +1,7 @@
 ---
 name: report-screener-list
-description: >-
-  Layer 3 orchestrator for cross-country stock screening. Parses a comma-separated
-  ticker list (US / TW / JP / KR / CN mixed allowed), groups by country suffix,
-  fans out parallel `data-{country}/pack.py --pack screener-batch` fetches,
-  concatenates batches, runs `analysis-screener` (pure compute — preset filters +
-  composite score + ranking), then renders a Markdown top-N table via
-  `screener_format.py`. 8 presets: value / deep-value / quality / high-dividend /
-  growth / growth-value / momentum / balanced. クロスカントリー個別銘柄スクリーナー。
-  跨市場個股篩選器。
+description: |
+  Layer-3 orchestrator for cross-country stock screening. Parses a mixed ticker list (US/TW/JP/KR/CN), groups by suffix, fans out parallel data-{country} screener-batch, runs analysis-screener (filter+score+rank), renders a top-N table. 8 presets.
 ---
 
 # report-screener-list

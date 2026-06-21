@@ -1,11 +1,7 @@
 ---
 name: analysis-screener
-description: >-
-  Pure-compute screener: filter + composite score + ranking on pre-batched
-  ticker data. Input: --input <data-pack-json-path> from
-  data-{country}/pack.py --tickers ... --pack screener-batch (or concatenated
-  multi-country). Output: ranked top-N JSON. 銘柄スクリーナー（純計算）。
-  股票篩選器純計算層。
+description: |
+  Pure-compute screener: filter + composite score + ranking on pre-batched ticker data. Input: a data-pack JSON from data-{country}/pack.py --pack screener-batch (single or multi-country). Output: ranked top-N JSON.
 ---
 
 # analysis-screener

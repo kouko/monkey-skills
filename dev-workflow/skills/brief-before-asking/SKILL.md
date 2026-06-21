@@ -1,24 +1,7 @@
 ---
 name: brief-before-asking
-description: >-
-  Deliver a 6-block structured briefing before (or in response to) any
-  complex engineering decision question, so the user can quickly understand
-  the problem and decide. The 6 blocks are: Mental Model → Situation →
-  Why-this-fork → Options → My take → Open ends. Mental Model First is the
-  highest priority — agent must establish a plain-English abstraction bridge
-  before diving into technical detail. Use **proactively** when about to ask
-  user about non-trivial engineering decisions (race conditions, performance
-  bottlenecks, service boundary changes, refactor direction, tech selection,
-  bug root cause). Use **reactively** when user signals they don't follow
-  either the question OR the explanation — phrases like 「看不懂」「跟不上」
-  「太多術語」「more context」「ELI5」「in plain English」 (full trigger
-  lists in body §Mode B and §Mode C). Do NOT
-  use for trivial fork questions (naming, log levels, formatting — decide
-  autonomously), pure factual queries (X is什麼), or when user has said
-  "just decide, don't ask". Differentiated from `scqa-decision` (heavy
-  ceremony for cross-team architecture review): brief-before-asking is the
-  daily-use middleweight for individual complex decisions. 構造化ブリーフィング・
-  抽象橋・複雑エンジニアリング問題。結構化簡報・抽象橋・複雜工程問題說明。
+description: |
+  Deliver a 6-block briefing (Mental Model → Situation → Why-fork → Options → My take → Open ends) before asking a complex engineering decision. Use proactively before non-trivial fork questions, or reactively on '看不懂' / 'in plain English' / 'ELI5'.
 ---
 
 # Brief Before Asking
@@ -227,7 +210,7 @@ When deciding between Mode B and Mode C:
 ### Sibling skills
 
 - **`dev-workflow:complexity-critique`** — one-shot deletion-first gate (orthogonal — critique not briefing)
-- **`dev-workflow:skill-creator-advance`** — iterate this skill via test prompts
+- **`skill-dev-toolkit:skill-creator-advance`** — iterate this skill via test prompts
 - **`superpowers:brainstorming`** — task-start ideation (brief-before-asking is for task-progress decisions)
 
 ## Core Mindset

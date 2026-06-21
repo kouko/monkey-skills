@@ -1,7 +1,7 @@
 {
   "name": "repo-wiki",
   "version": "1.1.0",
-  "description": "LLM Wiki pattern for code repos — init scans src/ + recent commits, grow incrementally from changes / conversational context, query in natural language. Knowledge lives in .repo-wiki/ committed alongside code. Zero external deps.",
+  "description": "LLM wiki for code repos — init from src + commits, grow from changes, query in natural language.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"

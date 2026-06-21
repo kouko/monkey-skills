@@ -9,6 +9,33 @@ Referenced from: `SKILL.md § Phase B step 3`
 
 ---
 
+## 0. Language — write in the project's source language
+
+dbt-wiki treats **comments as the source of truth**. The model comments,
+schema.yml descriptions, and inline SQL comments this metric is distilled from
+are often NOT English; translating them silently rounds off domain terms the
+warehouse and the team depend on (a literal translation often has no exact
+English equivalent). Write this
+page in the project's **source language** and preserve domain terms **verbatim —
+do not translate them**.
+
+Resolve the source language in this order:
+1. the explicit `source_language` init recorded (project setting / `DBT_WIKI_LANGUAGE`);
+2. if unset, auto-detect the dominant script of the evidence `## Description` +
+   `## Inline Comments` of this metric's models (init runs
+   `assets/detect_source_language.py` for this deterministically).
+
+Localize the **prose** — `## Definition`, `## Calculation`, `## Materialized
+Columns` notes, `## Caveats` — plus the `summary:` frontmatter and `title`. Keep
+**ASCII / English** for everything machine- or structure-bearing: the kebab-case
+slug + filename, frontmatter **keys**, `relationships[].target` paths,
+`derived_from` unique_ids, column / model identifiers, and stored `value_domain`
+**values** (warehouse values, not prose). Put an English gloss of the title in
+`aliases` so English queries still match. (The MetricFlow ingest branch §2b is
+exempt — represent declared `description` / `label` text as written.)
+
+---
+
 ## 1. What Is a Business Metric?
 
 A **business metric** is a scalar or time-series business measure that
@@ -132,7 +159,18 @@ For each confirmed metric candidate, determine:
   or both. State as "one row per `<grain>`".
 - **Aggregation**: `SUM`, `COUNT`, `AVG`, `COUNT DISTINCT`, ratio, etc.
 - **Source model**: which evidence model computes this metric
-  (`unique_id` from manifest).
+  (`unique_id` from manifest). When the **same measure** is computed in
+  several models (a base aggregate plus a dashboard/export reshape, or
+  per-region / per-scenario / per-BU twins), cite the **canonical**
+  computing model — the most-downstream model that is still
+  general-purpose, not a presentation/export leaf — using the same
+  "most-downstream-still-general + `feeds_into` fan-out tiebreaker" rule as
+  `distill-entities.md` §2.1. List the period/region/scenario variants in
+  `## Calculation` / `## Materialized Columns` on the one page (they do not
+  fork — see the Fork standard below). When structurally parallel twins use
+  a **different measure basis** (e.g. tax-inclusive vs tax-exclusive,
+  different currency), add a `[bug]`-tagged `## Caveats` line that they
+  **must not be naively UNION-ed or summed**.
 
 ### 3b. Group metrics by source model
 
@@ -198,6 +236,33 @@ models in `derived_from:`. Capture the segment split itself as a
 page via a `depends_on` edge. Do NOT fork one metric page per segment —
 segments are one kind of dimension; the fork rule above does not apply.
 That creates near-duplicate pages that diverge over time.
+
+**Parallel models are NOT guaranteed schema-identical — capture the delta.**
+"Structurally parallel" means the same *measure* at the same *grain*; it does
+NOT promise the same physical columns. Per-segment / per-market / per-brand
+twins are frequently re-implemented over different source populations and drift
+in their column schema: a twin may **rename** columns (e.g. `region_code` →
+`region`), **drop** columns the canonical model has (e.g. no `revenue__gross` /
+`revenue__net` split), or expose a **narrower value domain** (e.g. `[APAC]`
+instead of the canonical `[NL, EU, APAC]`). Collapsing the twins to ONE page is
+still correct — but recording only the canonical model's column names is NOT.
+Before finalising the page, **diff the `columns` of every model in
+`derived_from`** — the Phase-A evidence pages already list them, so this is a
+cheap mechanical check; do **not** infer homogeneity from the fact that they are
+"the same metric". If the column sets differ, add a compact **per-variant schema
+map** to `## Calculation` so a consumer can query each twin correctly (synthetic
+example):
+
+| Variant (model) | measure column(s) | dimension columns | value domain |
+|---|---|---|---|
+| total `fct_sales__total` | `revenue` (+ `revenue__gross` / `revenue__net`) | `region_code`, `channel_code` | `NL`, `EU`, `APAC` |
+| online `fct_sales__online` | `revenue` only | `region`, `channel` | `APAC` |
+
+Omit the table only when the twins are verified column-identical. The cost of
+skipping it is concrete: a UNION or cross-twin query written against the
+canonical column names **silently errors or fans out** — the snapshot reads
+fine, only execution catches it. Recording the delta is what lets a consumer
+get it right before running.
 
 ## 4. Definition Section
 

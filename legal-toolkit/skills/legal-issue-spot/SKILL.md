@@ -1,14 +1,7 @@
 ---
 name: legal-issue-spot
 description: |
-  IRAC issue-spotting skill for Taiwan in-house 法務. Takes a business-language fact pattern ("我們想做 X，能不能做？") and produces an issue 矩陣 + per-element 構成要件涵攝 + 風險分級 (🔴/🟡/🟢) + escalation recommendation. Pure-LLM workflow; no external fetches; no profile.yml dependency. Output: 2-file audience-shaped (issues.md for 法務 / business.md for 業務 + escalation建議). When ⚠️ low-confidence subsumption detected, business.md soft-handoffs to /legal-research with concrete query string. §6.3 disclaimer footer + §6.4 escalation override inherited from v0.4.x.
-
-  TRIGGER (中英雙語):
-  - 「能不能做」/「是否合法」/「我們想做」/「分析一下」
-  - "is it legal" / "can we" / "fact pattern" / "issue spot"
-  - 民法 / 勞基法 / 個資法 issue across multiple statutes
-
-  USE WHEN: user describes a business scenario in fact-pattern form and wants legal analysis (issue-spotting + 構成要件 涵攝 + risk grade), NOT a literal law-text lookup (that's legal-research).
+  IRAC issue-spotting for Taiwan in-house 法務 — a business fact pattern ('能不能做?') → issue matrix + 構成要件涵攝 + 風險分級 + escalation. Use for 'is it legal?', 'can we…?', a multi-statute scenario. Literal law-text lookup → legal-research.
 version: 0.1.0
 ---
 

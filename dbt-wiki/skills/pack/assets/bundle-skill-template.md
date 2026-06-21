@@ -25,6 +25,11 @@ snapshot_note: "Snapshot — re-run dbt-wiki:pack to refresh; does not auto-upda
 > query. It does **not** connect to a warehouse — **you** bring the
 > tool that executes SQL.
 >
+> **Warehouse engine**: <WAREHOUSE_DIALECT> — generate
+> <WAREHOUSE_DIALECT>-dialect SQL (date functions, casts, string
+> concatenation differ by engine). "Tool-agnostic" means no specific
+> MCP/CLI is assumed; the dialect is still fixed.
+>
 > **Snapshot**: this bundle is a point-in-time snapshot
 > (`build_date` above). It does not auto-update. Re-run `dbt-wiki:pack`
 > against a refreshed `.dbt-wiki/` to rebuild.
@@ -43,6 +48,15 @@ All paths are **relative to this skill's directory**:
   `knowledge/monthly-recurring-revenue.md`; a page-type prefix like
   `knowledge/metric-monthly-recurring-revenue.md` only when names
   collide).
+- `knowledge/_relations.md` — **physical anchor**: every relation the
+  knowledge pages cite → its **schema** + column list. The knowledge pages
+  name relations as `model.column` (no schema); read `_relations.md` to
+  qualify a runnable `FROM <schema>.<table>`. Schemas reflect dbt
+  custom-schema concatenation (e.g. marts in `<db>__marts`) — do **not**
+  assume one schema for all. Relations marked "needs introspect" (or columns
+  you don't see): query the live warehouse (`information_schema.columns` /
+  `SELECT … LIMIT 0`). In a dev environment, swap the prod schema prefix for
+  your dev schema.
 - `references/generation-guidance.md` — the SQL-generation guidance
   (schema-linking + the five semantic guardrails: aggregate level,
   compound-grain joins, value-grounding, source disambiguation,
@@ -57,7 +71,9 @@ one-shot emit. You supply the execution.
 
 1. **Ground** — read the relevant pages under `knowledge/` and
    schema-link the business terms in the question to concrete entity
-   fields / physical columns. Follow the schema-linking procedure in
+   fields / physical columns; resolve the **schema-qualified `FROM`** via
+   `knowledge/_relations.md` (introspect the live warehouse for any relation
+   it marks "needs introspect"). Follow the schema-linking procedure in
    `references/generation-guidance.md` (§1). If a term resolves to
    nothing, ask the user — do not invent a column.
 
@@ -73,7 +89,14 @@ one-shot emit. You supply the execution.
 
 3. **Execute** — run the SQL via **your own warehouse-connect tool**
    (an MCP server or a CLI that runs SQL against the warehouse). This
-   bundle names no specific tool: you bring it.
+   bundle names no specific tool: you bring it. **If no tool in your
+   environment can reach the warehouse**, do not guess at results: deliver
+   the grounded SQL, tell the user you need a SQL-executing tool (MCP /
+   CLI), and state the connection prerequisites — the warehouse engine
+   named above, any VPN / credentials it requires, and (in a dev
+   environment) the schema prefix to substitute for the one in
+   `knowledge/_relations.md`. Stop at this gate rather than fabricating an
+   answer; the grounded SQL is still a useful deliverable.
 
 4. **Inspect + iterate** — read the returned rows. Check row count,
    value ranges, NULLs, and obviously-wrong magnitudes (a per-account

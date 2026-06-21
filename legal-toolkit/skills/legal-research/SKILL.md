@@ -1,14 +1,7 @@
 ---
 name: legal-research
 description: |
-  IRAC legal-research skill for Taiwan in-house 法務. Takes a 法律問題 / 條文 / 判例 query, runs plan-first 半互動 Agent loop (LLM plans search → user Y/n confirms → autonomous WebFetch + triangulation + Harvey doc-level citation), and produces 4-file output (plan.md + state.json + research-memo.md + executive-summary.md). Loop cap: ≤ 5 rounds OR ≤ 30 fetches; early-stop on ≥ 8 sources + ≥ 2 法源類型; forced_stop emits ⚠️ marker. No profile.yml dependency. §6.3 disclaimer footer + §6.4 escalation override inherited from v0.4.x.
-
-  TRIGGER (中英雙語):
-  - 「查 §」/「§227 是」/「判例」/「法條」/「找判決」/「research」/「lookup」/「條文」/「函釋」
-  - "law-text lookup" / "find precedent" / "research the case" / "what does §X say"
-  - 條文號 + 法典名 patterns (e.g.「民法 §184」/「個資法 §27」)
-
-  USE WHEN: user wants literal law-text / 判例 / 函釋 lookup with structured iterative search + triangulation + citation. NOT for fact-pattern analysis (use legal-issue-spot).
+  IRAC legal-research for Taiwan in-house 法務 — a 法條 / 判例 / 函釋 query runs a plan-first loop (plan→confirm→WebFetch+triangulation) → research memo. Use for '查 §227', '找判決', 'what does §X say'. Fact-pattern → legal-issue-spot.
 version: 0.1.0
 ---
 

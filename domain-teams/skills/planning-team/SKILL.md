@@ -1,14 +1,7 @@
 ---
 name: planning-team
-description: >-
-  Cross-domain project planning (企画) grounded in primary-source
-  product-management canon. Use when starting a new project, defining
-  product scope, writing PRODUCT-SPEC.md, or making major direction
-  changes. Do NOT use for technical specs (use code-team), pure
-  research (use research-team), or pure design (use design-team).
-  Delivers PRODUCT-SPEC.md anchored in JTBD, Lean Startup, OKR, 4 Big
-  Risks, and Business Model Canvas / Lean Canvas.
-  企画・プロダクト仕様策定。產品規格・專案企劃。
+description: |
+  Cross-domain project planning (企画) from product canon (JTBD / Lean Startup / OKR / 4 Big Risks / BMC). Use when starting a project, defining scope, writing PRODUCT-SPEC.md, or direction changes. Technical specs → code-team; design → design-team.
 ---
 
 # Planning Team

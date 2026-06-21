@@ -1,12 +1,7 @@
 ---
 name: popper-falsifiability
-description: >-
-  Popper's Falsifiability — turn vague claims into testable hypotheses
-  and design tests that could prove them wrong. Use when user has
-  assumptions to verify or claims to test. Not for systematic doubt
-  of all premises (use descartes-methodical-doubt) or open-ended
-  dialogue (use socratic-method).
-  反証可能性・仮説検証。可否證性・假說驗證。
+description: |
+  Popper's falsifiability — turn vague claims into testable hypotheses and design tests that could prove them wrong. Use when you have assumptions to verify or claims to test. Doubt all premises → descartes-methodical-doubt.
 ---
 
 # Popper's Falsifiability

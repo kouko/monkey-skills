@@ -60,6 +60,7 @@ handoff_id: HANDOFF-<NNN>
 created: <ISO-8601 timestamp with timezone>
 trigger_type: voluntary  # voluntary | forced
 project: <repo or project name>
+conversation_language: <the language you have been replying to the user in this session — e.g. "Traditional Chinese (繁體中文)" | "日本語" | "English">
 chain:
   continues_from: <previous HANDOFF filename or null>
 git:
@@ -78,6 +79,15 @@ tomorrow") from forced ("context pressure") — schema emphasis differs.
 `chain.continues_from` enables multi-handoff history traversal up to 3 levels.
 `git.head` is the ground-truth state anchor: if the new session finds a
 different HEAD, it surfaces the divergence before proceeding.
+`conversation_language` records the language the agent was replying to the user
+in this session. A cold resume has no warm context for which language the user
+prefers, so it defaults to English and silently drops the user's
+conversation-language preference at the session boundary. Capturing it here (and
+embedding a reply-in-that-language instruction in the §6 Resume Launcher, the
+channel actually pasted into the next session) keeps the resumed session in the
+user's language. **Scope: user-facing replies only** — subagent / tool output is
+data, kept in its source language and localized before surfacing, exactly as in
+a normal session.
 
 ---
 
@@ -395,6 +405,7 @@ handoff_id: HANDOFF-007
 created: 2026-05-28T22:15:00+08:00
 trigger_type: voluntary
 project: monkey-skills
+conversation_language: English
 chain:
   continues_from: HANDOFF-006.md
 git:
@@ -636,6 +647,16 @@ is to "reference and activate" the document, not duplicate it.
    commands; it MUST NOT embed their *expected outputs* (HEAD SHA, version, test
    counts). Those live in Block 9 and are checked at resume time — embedding them
    in the launcher creates a second copy that goes stale the moment state moves.
+4. **Language-preserving — carries the user's conversation language.** The
+   launcher tells the next session to **reply to the user in the
+   `conversation_language` from the frontmatter** (the example below resolves it
+   to the concrete language). This is load-bearing precisely because the launcher
+   is pasted as the new session's *first message*: without an explicit
+   instruction the cold session defaults to English and drops the language the
+   user was conversing in. Unlike #3 this is a *stable preference*, not a drifting
+   state value, so naming the language in the launcher is correct, not a stale
+   embed. Scope is user-facing replies only — subagent / tool output stays in its
+   source language and is localized before surfacing.
 
 It ends with a blank **`USER DIRECTIVE:`** line: if the user writes a task there,
 the next session treats it as the immediate first action; if blank, the agent
@@ -663,6 +684,10 @@ then follow its resume procedure:
 
 If you have the `dev-workflow:handoff` skill this is its resume mode; if not,
 just follow the three steps above from the file.
+
+Reply to me in the conversation language from the HANDOFF frontmatter
+(`conversation_language`: English here) — subagent / tool output is data;
+localize it before surfacing, don't default to English.
 
 USER DIRECTIVE (optional — your immediate first task; leave blank to let the
 agent propose and wait):

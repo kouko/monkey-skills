@@ -1,11 +1,7 @@
 ---
 name: 4dx-d3-scoreboard
 description: |
-  Coaches the user to design or read a compelling players' scoreboard (≤4 elements, lead + lag with pacing line, 5-second winning test) across solo / team-leader / team-member scopes, plus audit-mode diagnosis of an existing board. Use when the user is about to use a complex BI/KPI dashboard or track wrong metrics, BEFORE designing a glance-readable players' scoreboard.
-  EN: "Design my scoreboard", "Audit our scoreboard", "Team doesn't look at the scoreboard"
-  JP: 「自分用の scoreboard を設計」「うちの scoreboard 誰も見てない」「dashboard を 4DX 視点で見て」
-  zh-TW: 「設計自己的計分板」「scoreboard 沒人看，幫我看哪裡有問題」「team scoreboard 怎麼看」
-  Do NOT use for stalled-cadence signals like "hasn't updated in a month" (→ 4dx-sustain-momentum-rescue) or cross-discipline 4DX audit (→ 4dx-audit).
+  Coaches designing or reading a players' scoreboard (≤4 elements, lead+lag, 5-sec winning test). Use when about to use a complex BI dashboard or track wrong metrics: 'design my scoreboard', 'audit our scoreboard'. Stalled cadence → momentum-rescue.
 source_book: "The 4 Disciplines of Execution (2nd ed., 2021) — McChesney/Covey/Huling/Thele/Walker"
 source_chapter: "Chapter 4 — Discipline 3: Keep a Compelling Scoreboard; Chapter 14 — Applying Discipline 3"
 source_language: en

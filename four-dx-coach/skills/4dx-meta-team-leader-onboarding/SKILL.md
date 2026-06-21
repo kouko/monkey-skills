@@ -1,16 +1,7 @@
 ---
 name: 4dx-meta-team-leader-onboarding
 description: |
-  Coaches a leader-of-leaders to earn commitment (not compliance) from
-  direct-report team-leaders before launching 4DX — coach + audit modes.
-  Use when leader is about to roll out 4DX to direct reports without
-  preparing for commitment-vs-compliance (the failure mode where reports
-  nod and don't actually buy in).
-  EN: "Get my team-leaders on board with 4DX", "Pilot or mandate?", "Audit onboarding — team not bought in".
-  JP:「部下リーダーに 4DX を腹落ちさせたい」「全社展開かパイロットか」「表面的に従ってるだけ」.
-  zh-TW:「下屬 leader 真心接受 4DX？」「pilot 還是全面導入？」「表面配合心裡抗拒」.
-  Do NOT use for pre-fit decision (→ `4dx-meta-strategy-triage`) or
-  bought-in cascade (→ `4dx-d1-wig-cascade`).
+  Coaches a leader-of-leaders to earn commitment (not compliance) from report team-leaders before launching 4DX. Use when rolling 4DX out without prepping buy-in: 'get my leaders on board', 'pilot or mandate?'. Bought-in cascade → wig-cascade.
 source_book: "The 4 Disciplines of Execution (2nd ed.) — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker"
 source_chapter: "Chapter 8 — Getting Your Leaders on Board"
 source_language: en

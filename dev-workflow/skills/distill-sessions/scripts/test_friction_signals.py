@@ -95,12 +95,12 @@ def test_interrupt_after_brainstorm_outside_window_no_signal():
 
 
 def test_interrupt_after_brainstorm_qualified_skill_form():
-    """Skill invocation 'code-toolkit:brainstorming' is recognized too."""
+    """Skill invocation 'loom-code:brainstorming' is recognized too."""
     events = [
         _ev(
             "2026-05-22T10:00:00.000Z",
             role="assistant",
-            skill_invocation="code-toolkit:brainstorming",
+            skill_invocation="loom-code:brainstorming",
         ),
         _ev(
             "2026-05-22T10:00:30.000Z",

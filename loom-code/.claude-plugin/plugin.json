@@ -1,0 +1,28 @@
+{
+  "name": "loom-code",
+  "version": "0.17.0",
+  "description": "Canon-grounded coding-discipline workflow (TDD/brainstorm/SDD/review) for Claude Code + Codex.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/loom-code",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "loom-code",
+    "tdd",
+    "subagent-driven-development",
+    "brainstorming",
+    "code-review",
+    "process-discipline",
+    "primary-source-grounding",
+    "clean-code",
+    "solid",
+    "owasp-asvs",
+    "session-start-hook",
+    "superpowers-parity",
+    "loom-pipeline"
+  ],
+  "skills": "./skills/"
+}

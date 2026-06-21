@@ -1,6 +1,7 @@
 ---
 name: sf-query
-description: Natural-language Salesforce SOQL query via the Salesforce DX MCP server — list objects, fetch records, filter, aggregate, traverse parent-child relationships. Read-only data toolset (single MCP tool — `run_soql_query`). Salesforce SOQL・データクエリ・自然言語。Salesforce SOQL・資料查詢・自然語言。
+description: |
+  Natural-language Salesforce SOQL queries via the Salesforce DX MCP server — list objects, fetch records, filter, aggregate, traverse parent-child relationships. Read-only (single tool: run_soql_query).
 allowed-tools: mcp__salesforce__*
 ---
 

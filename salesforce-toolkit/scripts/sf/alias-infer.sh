@@ -6,7 +6,7 @@
 # a clean `sf` CLI alias from (1) an explicit user override, (2) the org's
 # instance URL subdomain, or (3) the well-known login/test endpoint name.
 # Source of truth: spec Decision Q3 in
-#   docs/code-toolkit/specs/2026-05-20-salesforce-toolkit-v0.1.0.md.
+#   docs/loom/specs/2026-05-20-salesforce-toolkit-v0.1.0.md.
 #
 # Why this guard exists:
 #   The auto-setup.sh flow needs to suggest a sensible default alias at the

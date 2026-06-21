@@ -1,6 +1,7 @@
 ---
 name: asana-automate
-description: Asana automation via official MCP V2 (mcp.asana.com/v2/mcp). Read-only v0.2.0 — task-list / task-detail / project-overview / search-global via MCP tool calls. Locale-independent (structured JSON, no UI scraping). Asana MCP・タスク読取・公式 V2 サーバ。Asana MCP・任務讀取・官方 V2 伺服器。
+description: |
+  Asana automation via the official MCP V2 server. Read-only — task-list / task-detail / project-overview / search-global via MCP tool calls. Locale-independent (structured JSON, no UI scraping).
 allowed-tools: mcp__asana__list_tasks, mcp__asana__get_task, mcp__asana__list_projects, mcp__asana__search
 ---
 

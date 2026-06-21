@@ -1,25 +1,7 @@
 ---
 name: refresh
 description: |
-  Incremental update for dbt-wiki AFTER user runs dbt parse / dbt compile
-  / dbt run. Compares current target/manifest.json md5 against the
-  last-recorded manifest_sha; processes only added / modified / removed
-  models / sources / macros / seeds / snapshots / exposures. Re-runs
-  sqlglot column-lineage extraction AND inline-comment extraction on
-  changed files only. Removed resources are archived to
-  .dbt-wiki/_archive/<date>/, never hard-deleted. Preserves user-owned
-  ## User Notes body sections verbatim (managed by /dbt-wiki:ingest).
-  Always regenerates derived files: index.md and lineage.md. Asks user
-  to confirm diff summary before writing.
-  Triggers when user says "I just ran dbt parse / dbt compile / dbt run",
-  "model 改了", "新增了 model", "刪了 model", "renamed a model",
-  "refresh dbt-wiki", "update dbt knowledge", "after dbt parse",
-  "dbt model changed", "manifest changed", "/dbt-wiki:refresh",
-  "更新 dbt-wiki", "重新生 dbt 知識庫", "dbt parse 跑完了",
-  "dbt 改完之後", "dbt model 更新後", "dbt-wiki 更新".
-  Do NOT trigger for: first-time setup (use /dbt-wiki:init), adding
-  user context that isn't a code change (use /dbt-wiki:ingest), querying
-  the wiki (use /dbt-wiki:query), running dbt itself (use dbt CLI).
+  Incrementally update .dbt-wiki/ after dbt parse/compile: diff manifest md5, reprocess only changed resources, re-run sqlglot lineage, preserve User Notes. Use for 'I just ran dbt parse', 'model 改了', 'refresh dbt-wiki'. Setup→init; add notes→ingest.
 ---
 
 # dbt-wiki — Refresh Workflow (v2.0)
@@ -41,8 +23,24 @@ cd "$WIKI_DIR" || { echo "Cannot cd to $WIKI_DIR"; exit 1; }
 
 test -d .dbt-wiki || { echo "Knowledge base not initialized at $WIKI_DIR/.dbt-wiki/. Run /dbt-wiki:init first."; exit 1; }
 test -f .dbt-wiki/log.md || { echo ".dbt-wiki/log.md missing. Re-run /dbt-wiki:init."; exit 1; }
+# `_internal/` is a rebuildable cache (init may gitignore it), so a fresh clone
+# can legitimately lack it. Self-heal from the plugin's init assets instead of
+# erroring. `<INIT_ASSETS>` = the init skill's assets dir, a sibling of this
+# skill: resolve it as `<SKILL_DIR>/../init/assets` (this SKILL.md lives in
+# `.../skills/refresh/`; init's assets are in `.../skills/init/assets/`).
+if [ ! -f .dbt-wiki/_internal/extract_column_lineage.py ]; then
+  mkdir -p .dbt-wiki/_internal
+  # copy every production script + template the cache needs (NOT the *_test.py)
+  for f in extract_column_lineage extract_sql_comments extract_recursive_column_lineage \
+           format_lineage_diagram detect_source_language lint_schema_divergence \
+           lint_identifier_fidelity build_evidence_pages build_index_knowledge reconcile; do
+    cp "<INIT_ASSETS>/$f.py" .dbt-wiki/_internal/
+  done
+  cp "<INIT_ASSETS>/synthesis_template.md" .dbt-wiki/_internal/
+  echo "Restored .dbt-wiki/_internal/ from the plugin (rebuildable cache)."
+fi
 test -f .dbt-wiki/_internal/extract_column_lineage.py || {
-  echo "Column lineage script missing. Re-run /dbt-wiki:init to restore."
+  echo "Could not restore _internal/ from <INIT_ASSETS>. Re-run /dbt-wiki:init."
   exit 1
 }
 
@@ -240,11 +238,24 @@ Never hard-delete. User can restore from `_archive/` if needed.
 
 These two files are derived; regenerate from scratch every refresh:
 
-- `index.md`: **knowledge-first** — re-scan `.dbt-wiki/{entities,metrics,concepts}/*.md`
-  first (knowledge layer leads), then re-scan `.dbt-wiki/_evidence/{models,sources,macros,...}/*.md`
-  (skip `_archive/`). Sections in order: Entities → Metrics → Concepts → Evidence: Models
+- `index.md`: **knowledge-first** — the evidence sections come from the
+  evidence re-scan; the knowledge sections (`## Entities` / `## Metrics` /
+  `## Concepts`) are **deterministically regenerated** from the current
+  knowledge pages' frontmatter by the shipped generator:
+
+  ```bash
+  $PY_RUNNER .dbt-wiki/_internal/build_index_knowledge.py .dbt-wiki
+  ```
+
+  Run it after the evidence-section rebuild so both halves reflect the
+  current state. Section order: Entities → Metrics → Concepts → Evidence: Models
   (grouped by tier / materialization / tag / group) → Evidence: Sources → Evidence: Macros (used)
   → Evidence: Seeds / Snapshots / Tests / Exposures.
+- **Identifier-fidelity gate** — if any knowledge page was re-distilled or
+  edited this refresh (or a column was renamed/dropped upstream), re-run the
+  phantom-column gate so no page is left citing a column the manifest no longer
+  has: `$PY_RUNNER .dbt-wiki/_internal/lint_identifier_fidelity.py .dbt-wiki`
+  (see init Step 6.8). Exit non-zero ⇒ fix the cited identifier before publishing.
 - `lineage.md`: from new manifest, build DAG (depends_on / feeds_into),
   produce ASCII tree + adjacency list
 

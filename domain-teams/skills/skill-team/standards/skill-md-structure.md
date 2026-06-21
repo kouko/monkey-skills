@@ -31,11 +31,15 @@ description: >-
 
 **`name`**: kebab-case, matches directory name exactly (e.g. `qa-team`).
 
-**`description`**: 40–200 words. MUST contain:
+**`description`**: **≤250 characters** (house standard — target ~150;
+see `docs/skill-mining/2026-06-19-skill-description-standard.md`), with a
+**≥30 word-token floor** so a team description stays substantive. MUST contain:
 - A one-sentence mission statement
 - A "Use when" clause listing trigger verbs (write, audit, design, refactor …)
-- A "Do NOT use for" clause with delegation targets (`code-team`, `planning-team`, …)
-- A "Delivers" clause listing output artifact names
+- A **positive delegation redirect** for adjacent work (e.g. "Docs → docs-team")
+  — the house standard refutes "Do NOT use for X" behavioral negation, so use a
+  short positive "→ sibling-team" pointer instead
+- A "Delivers" clause (optional — keep if it fits the char budget)
 
 **Word count rule**. Count only the English prose body of the
 description. **Exclude**:
@@ -65,7 +69,12 @@ precedent across qa-team (v4.2.0), docs-team (v4.3.0), devops-team
 Do NOT use for / Delivers) are kept concise and non-repetitive.
 An earlier 80-word floor was aspirational and never matched observed
 precedent — it was lowered to 40 in v4.6.1 so the standard matches
-reality. See `CHK-SKL-001` in `checklists/skill-completeness-checklist.md`.
+reality, then to **30 in the 2026-06-20 house-description-standard
+reconciliation**: the repo-wide lean ≤250-char standard caps descriptions
+shorter than a 40-word floor allows for verb-heavy team skills (e.g.
+investing-team / research-team), so the floor drops to 30 to keep a
+substantive minimum while admitting the lean style. See `CHK-SKL-001` in
+`checklists/skill-completeness-checklist.md`.
 
 **Router-skill exemption**. A **router skill** — a skill whose sole
 purpose is to route callers to other skills, containing no worker or

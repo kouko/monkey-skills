@@ -1,16 +1,7 @@
 ---
 name: assumption-surface
-description: >-
-  Surface the hidden assumptions in any text — strategy memo, social-
-  media thread, policy brief, opinion piece. Outputs a 5–15 row
-  assumption table with strength ratings (foundational / load-bearing
-  / decorative) and falsifiability checks per foundational assumption.
-  Use when user asks "find the hidden assumptions / what is this
-  *assuming* / stress-test these claims / 揭露隱性假設". Do NOT use
-  for full design analysis (use artifact-deconstruct), pure argument
-  structure (use argument-deconstruct), or self-thinking (use
-  philosophers-toolkit:descartes-methodical-doubt).
-  隠れた前提の浮上化。隱性假設揭露。
+description: |
+  Surface hidden assumptions in any text (memo, thread, policy brief, op-ed) — a 5–15 row table with strength ratings + falsifiability checks. Use for 'find the hidden assumptions', 'what is this assuming?', '揭露隱性假設'. Argument → argument-deconstruct.
 ---
 
 # Assumption Surface

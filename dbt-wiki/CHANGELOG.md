@@ -4,6 +4,281 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.14.1] — 2026-06-20
+
+### Changed — `query` leverages `value_domain` (value-grounded answers)
+
+`init` §3.4 captures `value_domain` enums on categorical columns so a consumer
+can map a user's colloquial term to the exact stored warehouse value — the
+packed `pack` bundle's generation-guidance uses this, but the native
+`/dbt-wiki:query` skill never did (it had no value-domain query class and zero
+`value_domain` references). So a "what statuses exist?" question, or a filter
+implied by an answer, wasn't grounded on the stored values the knowledge base
+already records.
+
+`query/SKILL.md` adds **query class K4 — Value domain / categorical values**
+(load the column's `## Fields` `value_domain`, surface the stored values verbatim
++ the `(via:)` confidence, and map a colloquial label to the exact stored
+literal, flagging the difference) plus a Step-4 synthesis note to quote stored
+values verbatim and ground equality filters on them. Doc-only; no script,
+schema, or other-skill change — `ingest` needs no change (it only appends User
+Notes and never touches distillation / value_domain).
+
+## [2.14.0] — 2026-06-20
+
+### Added — `lint_identifier_fidelity.py` build-time gate (phantom-column citations)
+
+A behavioral dogfood of a packed bundle (financial-reporting domain, ~60+ leaf
+columns per table) surfaced a class of knowledge defect the existing gates miss:
+a `## Fields` table citing a `model.column` that **does not exist** in the
+manifest (a dropped `__daily` suffix, an invented prefix, a bare name for a
+column that was split in two). A SQL-generating consumer then emits a query
+referencing a non-existent column that fails at execution — and nothing in the
+page looks wrong on inspection. A deterministic sweep of one real bundle found
+4 such phantom citations among 906 (the other 902 were correct).
+
+New `assets/lint_identifier_fidelity.py` (+ test, 8/8) cross-checks every
+`` `model.column` `` cited in `entities/` / `metrics/` / `concepts/` against the
+model's evidence `columns:` frontmatter, verifying **only** `sqlglot`-extracted
+models (complete output-column set); citations to `schema_yml_only` / `failed`
+models or non-evidence relations are skipped as unverifiable, never flagged
+(zero false positives). Exit non-zero ⇒ phantom citations exist. Deterministic,
+pure stdlib, reads `.dbt-wiki/` only. Wired into `init` (copy-loop + new Step
+6.8 gate after reconcile) and `refresh` (copy-loop + knowledge-regen note).
+Complements `lint_schema_divergence.py` (twin schema-delta documentation) — that
+checks whether divergence is *documented*; this checks whether cited columns
+*exist*.
+
+## [2.13.4] — 2026-06-20
+
+### Changed — distill-entities §3.4 hardens value_domain adherence
+
+A behavioral dogfood of a packed bundle hit a recurring distillation miss: a
+small-cardinality categorical column (a sales-funnel stage column) had its values
+listed in the `## Fields` Meaning **prose** but carried no machine-readable
+`value_domain` annotation — so a SQL-generating consumer could not turn the
+categorical filter into a literal and had to guess. A sweep found several more
+state/classification columns with the same prose-only pattern. The §3.4 rule
+already required value_domain for ≤20-value categoricals; the gap was adherence,
+not the rule.
+
+`references/distill-entities.md` §3.4 now states an explicit **prose-enumeration
+hard trigger**: if a column's discrete values appear anywhere in its Meaning
+prose, the distiller MUST also emit the `value_domain: [...]` annotation in the
+same cell (prose is an obligation to annotate, never a substitute). Adds the
+companion guidance for filter-critical lifecycle/stage columns whose
+terminal-state semantics are ambiguous: capture the stored values, and add a
+`## Caveats` note where the business meaning needs human confirmation. Spec-prose
+only — no script or data-path change.
+
+## [2.13.3] — 2026-06-20
+
+### Changed — emitted bundle handles the no-warehouse-tool case gracefully
+
+A behavioral dogfood of a packed bundle (cold-reader probe) surfaced a
+cold-start gap: the bundle SKILL.md's generate→execute→inspect loop assumes the
+consuming agent has a warehouse-connect tool, but said nothing about what to do
+when it has **none** — leaving a first-timer blocked at step 3 with no guidance.
+
+`assets/bundle-skill-template.md` step 3 (Execute) now adds a no-tool
+degradation clause: if nothing in the environment can reach the warehouse, the
+agent delivers the grounded SQL, tells the user it needs a SQL-executing tool,
+and states the connection prerequisites (the warehouse engine, any VPN /
+credentials, and the dev-schema prefix to substitute) — rather than fabricating
+an answer. Project-specific connection details stay in each emitted bundle, not
+the template (generic, no warehouse schema leaks). Template-only change; no
+script or data path affected.
+
+## [2.13.2] — 2026-06-20
+
+### Changed — trim the `review` skill description to the house standard
+
+`review` (926 chars) was the last dbt-wiki description over the 250 cap
+(the other five shipped in 2.13.1). Trimmed to 229: what + when + one CJK
+trigger (審核) + a positive redirect to `query`; dropped the trilingual
+trigger list and the "Do NOT trigger for X" block. Metadata only — no
+behavior change; body untouched. Routing verified by a blind A/B
+(routes to ground truth).
+
+## [2.13.1] — 2026-06-20
+
+### Changed — trim 5 skill descriptions to the house description standard
+
+The `query` / `ingest` / `init` / `refresh` / `pack` skill `description` fields
+(1156–1731 chars) were over the 1024 spec ceiling and well over the house
+standard's 250 cap. Trimmed to 239–248 chars each: kept what + when + positive
+triggers (one representative CJK trigger each) and the lifecycle redirects
+(setup→init, updates→refresh, ask→query); moved the exhaustive bilingual
+trigger lists and the "Do NOT trigger for X" blocks out of the description.
+Metadata only — no skill behavior change; bodies untouched. Triggering parity
+verified by a 12-probe blind A/B (old vs new routed identically, 12/12 to ground
+truth, including 7 CJK/bilingual prompts and the init↔refresh boundary). See
+`docs/skill-mining/2026-06-19-skill-description-standard.md`.
+## [2.13.0] — 2026-06-20
+
+### Added — deterministic Phase-B finalization scripts (index regen + reconcile)
+
+Two Phase-B finalization steps were specified as prose only, so the orchestrator
+hand-implemented them each init — error-prone and token-expensive at 50–120
+knowledge pages. Both are now shipped, tested scripts.
+
+- **`build_index_knowledge.py`** (+ test, 8/8): regenerates `index.md`'s
+  `## Entities` / `## Metrics` / `## Concepts` sections deterministically from
+  each knowledge page's frontmatter (`title` / `title_local` / `status` /
+  `summary` / `aliases`) in the SCHEMA canonical line shape, updates the
+  `- Knowledge pages:` stats line, and leaves the evidence sections untouched.
+  Previously `build_evidence_pages.py` only wrote stub placeholders and Phase B
+  Step 6 / refresh Step 6 said "regenerate by hand".
+- **`reconcile.py`** (+ test, 11/11): the Step 6.7 reconcile pass — scans every
+  `relationships[].target`, warns on a missing reserved-entity slug or writes a
+  `status: seed` stub for a genuine dangling reference, and lints `derived_from`
+  cross-domain contamination via `_internal/ownership.json`. Degrades gracefully
+  when `ownership.json` is absent (small projects with no domain fan-out): every
+  dangling ref is stubbed and the contamination lint is a no-op.
+
+Both are wired into `init` (Step 4 copy loop, Phase B Step 6, Step 6.7) and the
+index regen into `refresh` (Step 6 + the rebuildable-cache bootstrap). Pure
+stdlib + pyyaml, idempotent, no project specifics.
+
+## [2.12.1] — 2026-06-19
+
+### Changed — `init` lands only production scripts, not the one-shot `*_test.py`
+
+Follow-up to 2.12.0's "`_internal/` is a rebuildable cache". `init` copied both
+the 7 production extraction scripts **and** their 7 `*_test.py` into
+`.dbt-wiki/_internal/`, but the smoke tests run once at first-init verification
+and are dead weight on disk thereafter (gitignored since 2.12.0, but still
+cluttering the working tree). `init` now copies **only the 7 production scripts**
+(+ `synthesis_template.md`, copy block compacted to a loop); the optional Step 4c
+/ 4g / evidence-generator smoke tests run in-place from `<SKILL_DIR>/assets/`.
+Halves the `.py` landed in the user's repo (14 → 7) with no change to the
+production data path; `refresh` is untouched (it invokes no `*_test.py`).
+
+## [2.12.0] — 2026-06-19
+
+Three generic defects surfaced by a behavioral dogfood of a packed analytics
+bundle, fixed at the plugin source so every project benefits.
+
+### Fixed — `pack` flatten no longer breaks in-page links
+
+Flatten-on-freeze relocates pages to a flat `knowledge/` but copied their
+content verbatim, so cross-folder links (`[X](../entities/x.md)`) and dropped
+`_evidence/` citations stayed nested and broke in the bundle — **766 broken
+links** on one real bundle. New **Step 2.6** + `pack/assets/flatten_links.py`
+(stdlib, idempotent, pure path-shape; `flatten_links_test.py`, 6/6) rewrites
+cross-folder links to flat siblings (`[X](x.md)`) and delinks dropped-evidence
+references to plain label text. Step 7 acceptance now gates on **zero broken
+intra-`knowledge/` links**; `references/bundle-format.md` documents the rule.
+
+### Added — bundle carries the warehouse SQL dialect
+
+`init` resolved the sqlglot dialect (Step 4a) but never persisted it, and
+`pack` reads only `.dbt-wiki/`, so a repo-less consuming agent had no way to
+know which SQL dialect to generate (date functions, casts, concatenation differ
+by engine). `init` now writes `dialect:` into `index.md` frontmatter (next to
+`source_language:`); `pack` reads it into a new `<WAREHOUSE_DIALECT>` template
+placeholder, emitting a **"Warehouse engine"** line in the bundle SKILL.md.
+Engine ≠ a specific MCP/CLI, so tool-agnosticism is preserved.
+
+### Changed — `_internal/` is a rebuildable cache, self-healed by `refresh`
+
+The `_internal/` extraction scripts are mechanical copies of the plugin's own
+`assets/`, yet `init` landed them permanently in the user's repo (14 `.py`
+including 7 one-shot `*_test.py`) and `refresh` hard-failed if they were absent
+("re-run init"). Result: scripts duplicated into every repo, committed to git,
+and drifting on plugin upgrade. Now `init` emits a `.dbt-wiki/.gitignore`
+ignoring `_internal/` + `__pycache__` (with a `git rm --cached` note for repos
+that already tracked it), and `refresh` **self-heals** `_internal/` from the
+plugin's init assets (`<SKILL_DIR>/../init/assets`) instead of erroring — so a
+fresh clone with a gitignored `_internal/` just works. `SCHEMA.md` documents
+`_internal/` as rebuildable tooling, not knowledge state.
+
+## [2.11.0] — 2026-06-18
+
+### Added — `pack` physical-anchor layer (`knowledge/_relations.md`)
+
+`dbt-wiki:pack` drops the `_evidence/` layer when freezing a bundle — correct
+for semantic grounding, but it loses the one physical fact the knowledge layer
+cannot supply: the **schema-qualified table**. A bundle deployed at a repo-less
+target (no dbt project, no `.dbt-wiki/`) that still reaches the same warehouse
+then can't write a runnable `FROM <schema>.<table>`.
+
+New **Step 2.5** + `assets/build_relations_anchor.py` (stdlib + pyyaml via
+PEP 723; `assets/build_relations_anchor_test.py`, 6/6) emit
+`knowledge/_relations.md`: for every relation the knowledge pages derive from,
+its **schema** (offline from the source `_evidence/` pages — complete, and
+correctly reflecting dbt custom-schema concatenation like `<db>__marts`, which
+a single-schema assumption gets wrong) + its **column list** (offline names +
+descriptions, or real **types** via the optional `--with-catalog` live-warehouse
+merge — the orchestrator runs the `information_schema.columns` query with its
+own tool; `pack` still connects to no warehouse). Deliberately NOT a re-import
+of the evidence layer — no lineage / raw SQL / materialization, only the
+relation→schema→columns map a warehouse-connected agent needs to qualify a
+`FROM`. The bundle SKILL.md template + `references/bundle-format.md` now
+document `_relations.md` and the schema-qualification step.
+
+## [2.10.0] — 2026-06-17
+
+### Added — deterministic Phase A evidence-page generator
+
+Phase A previously described page emission as "for each model, write
+`<model>.md`" — infeasible beyond a few dozen models (real projects have
+hundreds–thousands). Init now ships `assets/build_evidence_pages.py`
+(stdlib-only, with `build_evidence_pages_test.py`): a deterministic
+generator that consumes `manifest.json` + the sqlglot/comment JSONL and
+emits **every** evidence page (models / sources / used-macros / seeds /
+snapshots / singular tests) plus `index.md` and `lineage.md`, exactly per
+the SCHEMA.md page contracts. Step 4 copies it; Step 5 invokes it instead
+of describing a per-model hand-write.
+
+### Added — Phase B persistence verification gate + deliverable contract
+
+Hardened Phase B fan-out against the "agent analysed but never wrote
+files" failure mode. New **Step 6.6 persistence gate** runs after fan-out
+and before reconcile: it counts pages on disk, cross-checks each domain's
+return manifest against actual files, retries failed domains with an
+explicit "files are the deliverable" directive, and — for harnesses where
+spawned/async agents don't reliably persist — switches to a
+**return-and-materialize** shape (agent returns `{folder, slug, content}`
+via structured output; the orchestrator writes the files). A new
+"deliverable contract" subsection states that a domain agent's deliverable
+is files on disk, never its reply message.
+
+No SCHEMA changes (schema stays frozen for v2.x); both items are additive
+to the init workflow + assets.
+
+## [2.9.0] — 2026-06-16
+
+### Changed — canonical-model selection rule in distillation specs
+
+Sharpened how Phase B picks the **canonical model** for an entity or
+metric when several models carry the same data at a similar grain (a
+dimension plus a dashboard/export reshape, or per-segment / per-region /
+per-brand / per-scenario twins). Previously the specs said only "the
+mart / fact / dimension model that carries the grain" — ambiguous when
+more than one candidate exists.
+
+The rule now states that **DAG position and authority are different
+axes**: moving downstream means *more specialized*, not *more
+authoritative*. The canonical model is the **most-downstream model that
+is still general-purpose** — bounded below by a floor (never a `stg_` /
+single-attribute fragment) and above by a ceiling (never a
+presentation / export / per-segment leaf, which is a narrower copy). The
+`feeds_into` fan-out count is a canonicality signal **only within** the
+assembly layer, never across layers.
+
+- `references/distill-entities.md` — new §2.1 "Picking the canonical
+  model when several models share that grain"; cross-reference added to
+  §3.3 (Evidence column rule) and a new §7 anti-pattern row.
+- `references/distill-metrics.md` — parallel guidance on the §3a
+  "Source model" bullet, including a `[bug]`-tagged caveat to flag
+  structurally parallel twins with a **different measure basis**
+  (tax-inclusive vs tax-exclusive, differing currency) that must not be
+  naively UNION-ed or summed.
+
+Affects future `init` / `refresh` distillation only; existing knowledge
+pages are unchanged until re-distilled.
+
 ## [2.7.0] — 2026-06-05
 
 ### Added — `/dbt-wiki:review` certification command
@@ -519,8 +794,8 @@ After re-running `/dbt-wiki:init` (or just `/dbt-wiki:refresh`):
   ASCII tree (15 nodes, terminal-readable) + Mermaid block (renders in
   Dataspell preview)
 - Answer auto-saved to `.dbt-wiki/syntheses/mart-customer-dimension-upstream.md`
-- Future refresh after `int_ms_cd__store_name` changes → that synthesis
-  marked stale with banner: "affected_models changed: int_ms_cd__store_name"
+- Future refresh after `dim_customers` changes → that synthesis
+  marked stale with banner: "affected_models changed: dim_customers"
 
 ### Decision rationale
 
@@ -946,10 +1221,10 @@ Four skills for local-only LLM-queryable dbt knowledge (symmetric with repo-wiki
 
 ### Pre-trial validation
 
-Plan validation against `<local dbt project>` (real dbt-on-Redshift project, ~200+ models across 8 tiers — staging/interm/marts/marts_msd/marts_qlr/dash/expt/export_to_googlesheets):
+Plan validation against `<local dbt project>` (real dbt-on-Redshift project, ~200+ models across multiple tiers — staging / intermediate / marts / reporting / exports):
 - ✅ dbt project layout matches dbt-wiki's expectations (`dbt/dbt_project.yml`, `dbt/models/<tier>/`, `dbt/target/`)
-- ✅ User already has dbt CLI (`dbt-redshift` conda env)
-- ⏳ sqlglot install required (`pip install sqlglot` in dbt-redshift env) — pre-condition
+- ✅ User already has dbt CLI
+- ⏳ sqlglot install required (`pip install sqlglot` in their dbt env) — pre-condition
 - ⏳ Real-world dogfood scheduled post-merge: `/dbt-wiki:init` against example-dbt-pipeline → measure model count, sqlglot failure rate, lineage depth, query response quality
 
 ### Known limitations (v1.0)

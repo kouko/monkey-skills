@@ -1,11 +1,7 @@
 ---
 name: 4dx-sustain-momentum-rescue
 description: |
-  Diagnoses where an already-running 4DX stack broke (D1/D2/D3/D4/whirlwind/substrate) and routes to the matching restart instead of generic "try harder". Use when the user reports the WIG cadence has broken, engagement has dropped, or "it stopped working" (especially Stage-3 plateau), before they conclude 4DX itself is wrong for them.
-  EN: "haven't done my 4DX in weeks", "lost momentum on my goal", "scoreboard feels pointless"
-  JP: 「WIG セッションが続かない」「4DX が止まった」「リード指標は達成しているのに結果が動かない」
-  zh-TW: 「4DX 已經幾週沒做了」「lead measure 都做到了但還是沒進展」「想重啟但不知道從哪開始」
-  Do NOT use for first-time WIG setup (→ `4dx-d1-wig-formulation`) or never-started users (→ `4dx-meta-whirlwind-triage`).
+  Diagnoses where a running 4DX stack broke (D1/D2/D3/D4/whirlwind/substrate) and routes to the matching restart, not 'try harder'. Use when the cadence broke, engagement dropped, or 'haven't done 4DX in weeks'. First-time setup → wig-formulation.
 source_book: The 4 Disciplines of Execution — Chris McChesney, Sean Covey, Jim Huling, Scott Thele, Beverly Walker
 source_chapter: "Chapter 10: Sustaining 4DX Results and Engagement + The Missing Ingredient"
 source_language: en

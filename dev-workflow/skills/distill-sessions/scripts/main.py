@@ -5,12 +5,12 @@ detects friction signals, aggregates per target Skill, ranks top-N, and emits
 two artifacts:
 
 - **JSON payload on stdout** consumed by the Part 3 SKILL.md prose that drives
-  ``code-toolkit:dispatching-parallel-agents`` fan-out. Shape per plan T9 §(f).
+  ``loom-code:dispatching-parallel-agents`` fan-out. Shape per plan T9 §(f).
 - **Markdown summary on stderr** for human read-along during runs.
 
 Python does NOT call ``Agent()`` itself — see Plan Part 2 §"Plan-time decisions
 inherited from Part 1" / "Subagent dispatch": the dispatch is handled by Claude
-at runtime via ``code-toolkit:dispatching-parallel-agents``; this script just
+at runtime via ``loom-code:dispatching-parallel-agents``; this script just
 prepares the payload.
 
 External surface verification (memory project_external_surface_grounding_discipline.md):
@@ -19,8 +19,8 @@ External surface verification (memory project_external_surface_grounding_discipl
   in v0.4 brief Q-v0.4-1 to cover all observed trajectory sizes (max 559K in
   v0.3 dogfood vs 1M cap; v0.3 had 7/12 overflow at 200K). Literal verified
   via https://platform.claude.com/docs/en/about-claude/models/overview (2026-05-26).
-- ``code-toolkit:dispatching-parallel-agents`` — internal sibling skill in
-  this repo at ``code-toolkit/skills/dispatching-parallel-agents/SKILL.md``;
+- ``loom-code:dispatching-parallel-agents`` — internal sibling skill in
+  this repo at ``loom-code/skills/dispatching-parallel-agents/SKILL.md``;
   verified by ``ls`` at implementer-time. Not a 3rd-party API.
 
 Per Plan Part 2 §Task 9.
@@ -70,7 +70,7 @@ DEFAULT_MAX_TRAJECTORIES_PER_SKILL = 5
 DEFAULT_TOP_N = 5
 
 # Default target skill glob.
-DEFAULT_TARGET_PATTERN = "code-toolkit:*"
+DEFAULT_TARGET_PATTERN = "loom-code:*"
 
 # Repo-root resolution: this file lives at
 # ``dev-workflow/skills/distill-sessions/scripts/main.py``. monkey-skills root

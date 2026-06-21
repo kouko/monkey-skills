@@ -1,11 +1,7 @@
 ---
 name: aristotle-first-principles
-description: >-
-  First Principles Thinking — decompose problems to fundamental truths
-  and rebuild from scratch, rejecting analogy and convention. Use when
-  user wants to rethink a problem from zero, not when they want to
-  analyze what exists or compare options.
-  第一原理思考。第一原理・根本から考え直す。
+description: |
+  First-principles thinking — decompose a problem to fundamental truths and rebuild from scratch, rejecting analogy and convention. Use to rethink a problem from zero, not to analyze what exists or compare options.
 ---
 
 # Aristotle's First Principles

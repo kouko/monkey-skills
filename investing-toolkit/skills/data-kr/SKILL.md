@@ -1,15 +1,7 @@
 ---
 name: data-kr
-description: >-
-  Korea (KOSPI / KOSDAQ) Layer 1 data skill — single facade exposing pack
-  modes (snapshot / memo-fetch / comps-multiples / screener-batch /
-  regime-pack) over yfinance .KS/.KQ tickers and BOK ECOS-KEYSTAT macro
-  indicators (54 series via FinanceDataReader). Data-only — no analysis,
-  no formatting. Returns structured JSON with provenance for handoff to
-  Layer 2 analysis skills (analysis-comps / analysis-screener /
-  analysis-macro-regime) or domain-teams:investing-team.
-  한국 데이터 레이어 — yfinance + BOK ECOS 매크로.
-  韓國資料層 — yfinance + 韓國銀行 ECOS 總經指標。
+description: |
+  Layer-1 data fetch for Korea (KOSPI/KOSDAQ) — yfinance .KS/.KQ + BOK ECOS macro (FinanceDataReader), one facade, 5 pack modes (snapshot / memo-fetch / comps / screener-batch / regime). Data-only, no analysis; JSON with provenance.
 ---
 
 # data-kr
