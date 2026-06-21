@@ -101,6 +101,26 @@ def test_confirmation_by_validator_exit_zero():
         "the validator gate must require exit 0"
 
 
+# --- 3b. the brief↔change-folder gate asymmetry is documented as INTENTIONAL -
+
+def test_brief_entry_gated_by_human_approval_asymmetry():
+    """F2: the freeze gives the change-folder entry a machine gate (presence +
+    validator) but the brief entry has NO structural gate. This asymmetry must
+    be documented as INTENTIONAL: the brief is a human-authored, human-approved
+    artifact (the approval IS its gate), whereas the change-folder is
+    machine-generated and therefore machine-validated."""
+    window = _freeze_window()
+    # the brief's gate is human approval
+    assert ("human-approved" in window or "human approval" in window
+            or "approval is its gate" in window or "approval is the gate" in window), \
+        "the freeze must state the brief's gate IS the human approval"
+    # the contrast: the change-folder is machine-generated / machine-validated
+    assert "machine-generated" in window or "machine generated" in window, \
+        "the freeze must state the change-folder is machine-generated (why it needs validation)"
+    assert "machine-validated" in window or "machine validated" in window, \
+        "the freeze must state the change-folder is machine-validated (the contrast to the brief)"
+
+
 # --- 4. invariants UNCHANGED: STOP contract + never-auto-merge --------------
 
 def test_never_auto_merge_invariant_intact():
