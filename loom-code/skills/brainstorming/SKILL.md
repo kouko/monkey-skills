@@ -2,7 +2,7 @@
 name: brainstorming
 description: |
   Use BEFORE implementing new behavior or non-obvious design — explore intent + alternatives via a 5-axis framework (Problem / Users / Smallest End State / Alternatives / Obsoletes) → a brief. Refuses 'this is simple' / 'just start coding'.
-version: 0.11.0
+version: 0.12.0
 ---
 
 <SUBAGENT-STOP>

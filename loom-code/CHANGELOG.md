@@ -5,25 +5,31 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
-## [Unreleased] — 2026-06-21 — **spec→code seam wired (resolves the Tier-2 deferral)**
+## [0.18.0] — 2026-06-21 — **spec→code seam wired (resolves the Tier-2 deferral)**
 
 ### Added
 
 The spec→code delegation deferred in 0.16.0 is now **built**. `writing-plans`
 gains a second input contract — a validated `loom-spec` change-folder (see its
 **§Consuming a loom-spec change-folder**) — so a full spec flows
-spec → plan → code. `brainstorming`'s `loom-spec:spec-expansion` forward-pointer
-is flipped from **Tier-2-deferred** to **active / wired**, and Continuous-mode
-freeze accepts an approved, `validate_spec_output.py`-clean change-folder as an
-entry artifact.
+spec → plan → code. Each `#### Scenario:` GIVEN/WHEN/THEN maps to one task's
+`Acceptance: RED/GREEN`, and `brainstorming`'s `loom-spec:spec-expansion`
+forward-pointer is flipped from **Tier-2-deferred** to **active / wired**.
+Continuous-mode freeze accepts an approved, `validate_spec_output.py`-clean
+change-folder as an entry artifact (discriminated by user-declaration +
+named-artifact presence + validator exit 0, not content-shape sniffing; STOP
+contract + never-auto-merge unchanged).
+
+Plan traceability now joins back to the spec: the `Brief item covered:` field
+accepts a **stable join key** referent — `<change-id> / Requirement: <name> /
+Scenario: <name>` — so every task traces to its originating scenario, and
+`plan-document-reviewer` Check 3 accepts either a brief item or this spec
+join-key provenance (point-don't-copy; loom-spec stays SSOT, consumer read-only).
 
 This **resolves the two "deferred (Tier 2)" notes in 0.16.0 below** (the
 forward-pointer activation condition — "active once `writing-plans` reads
 OpenSpec change-folders" — and the blocked-on-unbuilt-wiring delegation item):
 that wiring has now landed.
-
-> Version stamping (plugin.json bump + marketplace sync) is tracked separately;
-> this Unreleased entry records the behavioral delivery.
 
 ## [0.17.0] — 2026-06-21
 

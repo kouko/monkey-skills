@@ -2,7 +2,7 @@
 name: writing-plans
 description: |
   Use AFTER brainstorming produces a brief, BEFORE subagent-driven-development dispatches implementers. Splits it into atomic ≤5-min tasks with acceptance criteria (RED + GREEN) + a dependency graph. Re-splits a BLOCKED task into children.
-version: 0.10.0
+version: 0.11.0
 ---
 
 <SUBAGENT-STOP>
