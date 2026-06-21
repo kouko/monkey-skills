@@ -169,6 +169,18 @@ If both conditions hold across N tasks, `dispatching-parallel-agents` MAY dispat
 
 The markup is **opt-in**. A plan that omits it (or sets `Independent: false`) routes through SDD's standard sequential per-task triad. Claiming `Independent: true` with overlapping `Files touched` is a plan error — `plan-document-reviewer` should catch it; if not, `dispatching-parallel-agents` will refuse to dispatch.
 
+## Consuming a loom-spec change-folder
+
+A **second input contract**, alongside the brainstorming brief. writing-plans can take a **validated loom-spec change-folder** — `docs/loom/<change-id>/` emitted by `loom-spec:spec-expansion`, **`validate_spec_output.py`-clean** (exit 0) — as its input *instead of* a brief. The change-folder's `specs/<capability>/spec.md` delta is OpenSpec-pure: `### Requirement:` blocks each containing one or more `#### Scenario:` (GIVEN / WHEN / THEN) acceptance criteria.
+
+**Scenario → task mapping.** Map each `#### Scenario:` (its GIVEN / WHEN / THEN) → **one task's `Acceptance: RED/GREEN`**. The THEN is the GREEN observable; the GIVEN/WHEN set up the RED. One `### Requirement:` may **fan to N tasks** — split per the same ≤5-min / one-failing-test rule in §The splitting framework (a multi-Scenario Requirement is N candidate tasks, grouped or split by the time-box).
+
+**Point-don't-copy / link back.** Do **NOT** copy the spec body into the plan — loom-spec stays SSOT. Reference the source `### Requirement:` / `#### Scenario:` names via the stable join key `<change-id> / Requirement: <name> / Scenario: <name>` (the `Brief item covered:` field accepts this referent — see [`references/plan-format.md`](references/plan-format.md)). The plan **links back** to the spec; it does not duplicate it.
+
+**Verbatim-copy carve-out (fact vs interpretation).** One exception to point-don't-copy: the THEN **observable**, **magic values**, and **signatures** are *facts* — copy them **verbatim** into the RED/GREEN assertion (a paraphrased magic value or signature is a defect). The surrounding **narrative** and **design rationale** are *interpretation* — link to them, do not copy. Facts in, prose linked.
+
+**Consumer read-only.** writing-plans **MUST NOT modify** the producer's change-folder. It reads `docs/loom/<change-id>/` and writes only its own plan at `docs/loom/plans/<date>-<change-id>.md`. The change-folder is loom-spec's owned artifact; editing it is a SSOT violation.
+
 ## Cross-skill contract
 
 | Direction | Skill | Contract |
