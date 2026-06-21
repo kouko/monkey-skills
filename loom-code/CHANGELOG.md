@@ -31,6 +31,20 @@ forward-pointer activation condition — "active once `writing-plans` reads
 OpenSpec change-folders" — and the blocked-on-unbuilt-wiring delegation item):
 that wiring has now landed.
 
+### Dogfood hardening
+
+Fixes from dogfooding the wired seam before release:
+- The upstream `loom-spec` validator now accepts `## MODIFIED` /
+  `## REMOVED Requirements` blocks (was `ADDED`-only), so MODIFIED/REMOVED
+  change-folders flow through to plan + code (loom-spec 0.3.1).
+- Documented the brief-entry asymmetry: a spec join-key referent and a
+  brainstorming brief item are interchangeable provenance for
+  `Brief item covered:`, but only the join key round-trips back to the spec.
+- De-jargoned the consumer-facing prose in `using-loom-code` / `writing-plans`
+  / `plan-format`.
+- Added an empty-recon sentinel so an empty Current-State reconnaissance is an
+  explicit declared state, not a silently-skipped step.
+
 ## [0.17.0] — 2026-06-21
 
 ### Changed — **BREAKING: renamed `code-toolkit` → `loom-code`**
