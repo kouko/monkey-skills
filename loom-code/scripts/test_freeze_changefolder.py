@@ -2,8 +2,12 @@
 that accepts a human-approved loom-spec change-folder as an alternative entry
 artifact alongside the brainstorming brief (Task 3 of the spec→code wiring).
 
-SKILL.md is a prompt artifact, not executable code. Its correctness is the
-PRESENCE of the load-bearing convention described in
+After the router structural refactor the Continuous-mode doctrine — including
+the freeze/entry discrimination — lives in `references/continuous-mode.md`
+(the router body carries only a short stub, since it is SessionStart-injected
+and token-budgeted). These checks therefore assert against the REFERENCE.
+
+Correctness is the PRESENCE of the load-bearing convention described in
 `docs/loom/specs/2026-06-21-spec-to-code-wiring.md` Decision §2 (R6):
 
   Continuous-mode freeze accepts EITHER the brainstorming brief OR a
@@ -17,28 +21,28 @@ These checks assert on the load-bearing PHRASES (intent), tolerant of wording
 variation (lowercase substring / regex), so the test guards MEANING without
 being brittle — but each assertion targets a real phrase from the contract.
 
-Stdlib only (pathlib + re). Resolve SKILL.md relative to this test file.
-
-This test is RED until the freeze section is extended (Task 3 GREEN).
+Stdlib only (pathlib + re). Resolve files relative to this test file.
 """
 
 import re
 from pathlib import Path
 
-SKILL = Path(__file__).parents[1] / "skills" / "using-loom-code" / "SKILL.md"
+_SKILLS = Path(__file__).parents[1] / "skills" / "using-loom-code"
+SKILL = _SKILLS / "SKILL.md"
+REF = _SKILLS / "references" / "continuous-mode.md"
 
 
-def _text() -> str:
-    assert SKILL.is_file(), f"SKILL.md is absent at {SKILL}"
-    return SKILL.read_text(encoding="utf-8")
+def _ref() -> str:
+    assert REF.is_file(), f"continuous-mode.md reference is absent at {REF}"
+    return REF.read_text(encoding="utf-8")
 
 
 def _freeze_window() -> str:
     """The Continuous-mode ENTRY/freeze block — from the 'Continuous mode'
     heading down to (but excluding) the 'Auto-advance behavior' heading.
     The change-folder alternative must live inside the entry/freeze block,
-    not anywhere else in the file."""
-    low = _text().lower()
+    not anywhere else in the reference."""
+    low = _ref().lower()
     start = low.find("continuous mode")
     assert start != -1, "Continuous mode section must exist"
     end = low.find("auto-advance behavior", start)
@@ -46,9 +50,9 @@ def _freeze_window() -> str:
     return low[start:end]
 
 
-def test_skill_md_exists():
-    """Guard: the router SKILL.md must exist where we expect it."""
-    assert SKILL.is_file(), f"SKILL.md is absent at {SKILL}"
+def test_reference_exists():
+    """Guard: the relocated Continuous-mode doctrine reference must exist."""
+    assert REF.is_file(), f"continuous-mode.md reference is absent at {REF}"
 
 
 # --- 1. the freeze names the change-folder as an alternative entry artifact --
@@ -59,7 +63,6 @@ def test_freeze_names_changefolder_alternative():
     window = _freeze_window()
     assert "change-folder" in window or "change folder" in window, \
         "freeze entry must name a loom-spec change-folder as an alternative artifact"
-    # it is an ALTERNATIVE — the brief must still be a valid entry too
     assert "brief" in window, \
         "the brainstorming brief must remain a valid entry artifact alongside the change-folder"
 
@@ -70,10 +73,8 @@ def test_discrimination_is_user_declaration_not_shape_sniffing():
     """R6: the user DECLARES which artifact; the freeze must NOT sniff content
     shape to classify the artifact."""
     window = _freeze_window()
-    # user declares which artifact
     assert ("declare" in window or "declares" in window or "declared" in window), \
         "discrimination must be by user declaration (the user declares which artifact)"
-    # explicit refusal of content-shape sniffing
     assert re.search(r"(not|no|never|without|rather than).{0,60}"
                      r"(content[-\s]*shape|shape[-\s]*sniff|sniff)", window), \
         "the freeze must explicitly state it does NOT rely on content-shape sniffing"
@@ -110,11 +111,9 @@ def test_brief_entry_gated_by_human_approval_asymmetry():
     artifact (the approval IS its gate), whereas the change-folder is
     machine-generated and therefore machine-validated."""
     window = _freeze_window()
-    # the brief's gate is human approval
     assert ("human-approved" in window or "human approval" in window
             or "approval is its gate" in window or "approval is the gate" in window), \
         "the freeze must state the brief's gate IS the human approval"
-    # the contrast: the change-folder is machine-generated / machine-validated
     assert "machine-generated" in window or "machine generated" in window, \
         "the freeze must state the change-folder is machine-generated (why it needs validation)"
     assert "machine-validated" in window or "machine validated" in window, \
@@ -126,7 +125,7 @@ def test_brief_entry_gated_by_human_approval_asymmetry():
 def test_never_auto_merge_invariant_intact():
     """The never-auto-merge invariant (Stop-contract row 7) must remain — the
     freeze extension must NOT weaken the terminal merge gate."""
-    low = _text().lower()
+    low = _ref().lower()
     assert "never auto-merge" in low or "never auto merge" in low, \
         "the never-auto-merge invariant must remain intact"
 
@@ -134,10 +133,9 @@ def test_never_auto_merge_invariant_intact():
 def test_stop_contract_invariant_intact():
     """The STOP contract must remain present and unweakened — the freeze
     extension touches ENTRY, not the stop rules."""
-    text = _text()
+    text = _ref()
     low = text.lower()
     assert "stop contract" in low or "stop trigger" in low, \
         "the STOP contract must remain present"
-    # terminal PR-open stop row still references the never-auto-merge terminal
     assert "PR-open reached" in text or "pr-open reached" in low, \
         "the terminal PR-open stop row must remain in the STOP contract"
