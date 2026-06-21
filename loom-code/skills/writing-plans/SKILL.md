@@ -179,6 +179,10 @@ A **second input contract**, alongside the brainstorming brief. writing-plans ca
 
 **Verbatim-copy carve-out (fact vs interpretation).** One exception to point-don't-copy: the THEN **observable**, **magic values**, and **signatures** are *facts* — copy them **verbatim** into the RED/GREEN assertion (a paraphrased magic value or signature is a defect). The surrounding **narrative** and **design rationale** are *interpretation* — link to them, do not copy. Facts in, prose linked.
 
+**WHAT not WHERE — populate code-target fields by target-repo recon.** The change-folder supplies the **WHAT** (behavior / acceptance) but carries **no file / module / path info** — yet `references/plan-format.md` makes `Module` and `Files touched` (the parallelism disjointness oracle) required per task. Do **not** guess placeholder paths. Populate each task's `Module` / `Files touched` / `Context paths` by **reconnaissance of the TARGET repo** — grep / Read / Explore over the codebase the change lands in, the same Current-State-Evidence recon brainstorming does — seeded by the proposal's `## OOUX object model` where present (object → likely module / file). The spec names the behavior; the target repo tells you where it lives.
+
+- **MODIFIED / REMOVED deltas.** When the spec carries `### MODIFIED` or `### REMOVED` requirement deltas (not just `## ADDED`), map them to change / removal tasks **plus the corresponding test update** — same `#### Scenario:` → RED/GREEN discipline (the RED is the failing test that encodes the changed / removed behavior; the GREEN is the updated test passing).
+
 **Consumer read-only.** writing-plans **MUST NOT modify** the producer's change-folder. It reads `docs/loom/<change-id>/` and writes only its own plan at `docs/loom/plans/<date>-<change-id>.md`. The change-folder is loom-spec's owned artifact; editing it is a SSOT violation.
 
 ## Cross-skill contract

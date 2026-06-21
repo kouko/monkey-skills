@@ -69,3 +69,38 @@ def test_writing_plans_documents_changefolder_input():
     assert "read-only" in low or "read only" in low \
         or "must not modify" in low or "must not edit" in low, \
         "must declare the consumer read-only on the change-folder"
+
+
+def test_changefolder_codetarget_fields_via_recon():
+    """The change-folder carries the WHAT (behavior / acceptance) but not the
+    WHERE. The section must tell the consumer to populate each task's `Module` /
+    `Files touched` / `Context paths` by reconnaissance of the TARGET repo
+    (grep / Read / Explore — the same Current-State-Evidence recon that
+    brainstorming does), seeded by the proposal's OOUX object model where
+    present; and to map `### MODIFIED` / `### REMOVED` requirement deltas to
+    change / removal tasks plus the corresponding test update under the same
+    scenario → RED/GREEN discipline."""
+    text = _text()
+    low = text.lower()
+
+    # 1. recon of the target repo populates the code-target fields.
+    assert "recon" in low, \
+        "must tell the consumer to do target-repo reconnaissance"
+    assert "target repo" in low or "target-repo" in low, \
+        "must name the TARGET repo as the place recon happens"
+
+    # 2. the three code-target fields the change-folder cannot supply.
+    assert "Module" in text, "must name the Module field to populate"
+    assert "Files touched" in text, \
+        "must name the Files touched field to populate"
+    assert "Context paths" in text, \
+        "must name the Context paths field to populate"
+
+    # 3. seeded by the proposal's OOUX object model.
+    assert "OOUX" in text, \
+        "must seed recon from the proposal's OOUX object model"
+
+    # 4. MODIFIED / REMOVED requirement deltas map to change/removal tasks +
+    #    the corresponding test update, same scenario → RED/GREEN discipline.
+    assert "MODIFIED" in text, "must handle '### MODIFIED' requirement deltas"
+    assert "REMOVED" in text, "must handle '### REMOVED' requirement deltas"
