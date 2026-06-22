@@ -38,9 +38,11 @@ def generate_index(
 
     For each record's each `@req`, resolve req->capability via
     `namespace` and place `- <test>` under `### <req>` under
-    `## <capability>`. Reqs absent from `namespace` are skipped here
-    (orphan handling is a separate concern). Ordering is deterministic:
-    capabilities, then requirements, then tests are each sorted.
+    `## <capability>`. Reqs absent from `namespace` are excluded from
+    the tree; coverage gaps and dangling tags are then collected into a
+    trailing `## Orphans` section (see `_orphan_lines`). Ordering is
+    deterministic: capabilities, then requirements, then tests are each
+    sorted.
     """
     # tree: capability -> req -> set of test names
     tree: dict[str, dict[str, set[str]]] = {}
@@ -62,4 +64,39 @@ def generate_index(
             lines.append("")
             for test in sorted(tree[capability][req]):
                 lines.append(f"- {test}")
+
+    lines.extend(_orphan_lines(tag_records, namespace))
     return "\n".join(lines) + "\n"
+
+
+def _orphan_lines(
+    tag_records: list[dict], namespace: dict[str, str]
+) -> list[str]:
+    """Render the `## Orphans` section, or nothing if there are none.
+
+    Two distinct orphan kinds, kept in separate line groups:
+    - reqs in `namespace` linked by zero tests (a coverage gap), and
+    - a record's `@req` absent from `namespace` (a dangling tag).
+    Both groups are sorted for deterministic output.
+    """
+    linked_reqs = {req for record in tag_records for req in record["reqs"]}
+    untested = sorted(req for req in namespace if req not in linked_reqs)
+    dangling = sorted(req for req in linked_reqs if req not in namespace)
+
+    if not untested and not dangling:
+        return []
+
+    lines = ["", "## Orphans"]
+    if untested:
+        lines.append("")
+        lines.append("### reqs with no tests")
+        lines.append("")
+        for req in untested:
+            lines.append(f"- {req}")
+    if dangling:
+        lines.append("")
+        lines.append("### dangling @req (not in namespace)")
+        lines.append("")
+        for req in dangling:
+            lines.append(f"- {req}")
+    return lines

@@ -45,3 +45,30 @@ def test_generate_index_tree():
     assert "### REQ-1" in md
     assert "- test_x" in md
     assert md.index("## order") < md.index("### REQ-1") < md.index("- test_x")
+
+
+def test_orphans_section():
+    # WHY: the index must surface BOTH coverage holes so a reader sees
+    # what is untested and what is mistagged. Two distinct orphan kinds:
+    # (a) a namespace req with zero linked tests (REQ-2) is a coverage
+    # gap; (b) a test whose @req is absent from the namespace
+    # (REQ-UNKNOWN) is a dangling tag — likely a typo or a deleted req.
+    # Conflating them would hide the difference between "needs a test"
+    # and "fix the tag", so the markdown lists them under distinct groups.
+    tag_records = [
+        {"test": "test_x", "reqs": ["REQ-1"], "invariant_refs": []},
+        {"test": "test_y", "reqs": ["REQ-UNKNOWN"], "invariant_refs": []},
+    ]
+    namespace = {"REQ-1": "order", "REQ-2": "order"}
+
+    md = generate_index(tag_records, namespace)
+
+    assert "## Orphans" in md
+    # (a) namespace req with no test
+    assert "REQ-2" in md
+    # (b) test's @req not in namespace (dangling)
+    assert "REQ-UNKNOWN" in md
+    # both appear after the Orphans heading, not in the tree above it
+    orphans_at = md.index("## Orphans")
+    assert md.index("REQ-2") > orphans_at
+    assert md.index("REQ-UNKNOWN") > orphans_at
