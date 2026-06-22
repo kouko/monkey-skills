@@ -1,7 +1,7 @@
 ---
 name: git-memory
 description: |
-  Mandatory gate before every git commit / gh pr create — the skill decides whether memory trailers (Decision/Learning/Gotcha) apply; don't pre-judge a commit 'routine'. Also recalls past decisions: 'why did we…', '為什麼', an old branch.
+  Mandatory gate before every git commit / gh pr create / gh pr merge — the skill decides whether memory trailers (Decision/Learning/Gotcha) apply; don't pre-judge a commit 'routine'. Also recalls past decisions: 'why did we…', '為什麼', an old branch.
 ---
 
 # Git Memory
@@ -17,8 +17,17 @@ Two distinct decisions must not be conflated:
 
 | Decision | Who decides | When |
 |----------|-------------|------|
-| **Should this skill be invoked?** | The caller | Before `git commit` / `gh pr create` — answer is **always yes** in a Claude session |
+| **Should this skill be invoked?** | The caller | Before `git commit` / `gh pr create` / `gh pr merge` — answer is **always yes** in a Claude session |
 | **Should this commit carry memory trailers?** | The skill | Inside the skill — routine commits exit cleanly with no trailers |
+
+`gh pr merge` (esp. `--squash`) is the **last checkpoint before the
+branch closes** and the substrate can end up empty. A squash *relocates*
+each commit's trailers into the squash commit's mid-body — still
+retrievable via `git log --grep`, though no longer footer-parseable
+(`%(trailers)`) — so on a squash `main` there are **two** durable
+carriers: the grep-able mid-body trailers and the PR `## Memory` section
+(which additionally survives and renders on GitHub). Fire the gate here
+too — the *always yes* rule holds, only the trailer outcome varies.
 
 Pre-deciding "this commit is routine, I'll skip the skill" is the bug.
 The skill's classification logic (routine vs non-routine, see *When not to
