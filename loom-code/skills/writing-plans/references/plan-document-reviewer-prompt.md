@@ -40,7 +40,7 @@ You **must** load all three via the Read tool before producing a verdict.
 | 8 | Every item in the brief's `Smallest End State` + `Decision` sections maps to ≥1 task's `Brief item covered` field | Brief item not covered by any task |
 | 9 | No orphan tasks — every task's `Brief item covered` quotes / references the brief | Task exists with no brief traceability |
 | 10 | Dependency graph is a DAG — no cycles | Task A depends on B, B depends on A (directly or transitively) |
-| 11 | `Dependencies` field uses valid syntax: `"none"` OR `"Task N completes first"` OR `"Tasks N, M parallel"` | Free-form dependency description |
+| 11 | `Dependencies` field uses valid syntax: `"none"` OR `"Task N completes first"` OR `"Tasks N, M complete first"` (multi-prerequisite — N and M must both finish before this task starts) OR `"Tasks N, M parallel"` | Free-form dependency description |
 | 12 | If this plan is a BLOCKED fallback (parent-child decomposition section present): parent task ID is named; child tasks ladder up; parent-DONE condition is explicit | Missing parent reference or unclear ladder |
 | 13 | (v0.8.0+) Each task has the optional `Files touched` field. If absent on any task that declares `Independent: true`, fail — the disjointness oracle is missing. Tasks without `Independent: true` may omit `Files touched`. | `Independent: true` task missing `Files touched` |
 | 14 | (v0.8.0+) For any two tasks both declaring `Independent: true`, their `Files touched` sets MUST be disjoint (no shared path). If they share any file, the claim is wrong — flip one to `Independent: false` OR split the shared file. | Two `Independent: true` tasks share at least one file in `Files touched` |
