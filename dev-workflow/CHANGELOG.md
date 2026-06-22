@@ -4,6 +4,30 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.20.0] — 2026-06-23
+
+### Added — `git-memory`: merge in the trigger surface + verified substrate survival
+
+`dev-workflow:git-memory` now treats branch-close as a memory checkpoint and
+verifies — rather than assumes — that decided memory actually lands in a durable
+git carrier. Addresses authoring-time under-recording, where memory-worthy PRs
+were shipping with an empty git substrate even though the session and Claude-native
+`MEMORY.md` had the decisions.
+
+- **P1 — merge joins the gate's trigger surface.** The gate now fires before
+  `gh pr merge` (especially `--squash`), not just `git commit` / `gh pr create`.
+  Merge is the last checkpoint before a branch closes and the git-side memory
+  substrate can end up empty.
+- **P2 — substrate survival is verified, not assumed.** A new
+  `scripts/memory-grep.sh --verify <ref>` mode confirms a `Decision:` / `Learning:`
+  / `Gotcha:` trailer is retrievable by text match (survives squash mid-body):
+  exit 0 if found, 4 if the substrate is empty, 1 if no ref is given, 2 if the ref
+  is unresolvable. `protocols/compose-pr.md` now REQUIRES the `## Memory` section
+  for memory-worthy PRs (the optional framing stays only for non-memory-worthy
+  ones) and adds a pre-close dual-carrier verify step. SKILL.md Pillar 2 frames the
+  verification as required while keeping the `squash_merge_commit_message=PR_BODY`
+  and per-PR merge-commit repo settings genuinely opt-in.
+
 ## [2.19.0] — 2026-06-21
 
 ### Added — handoff preserves the conversation language (`handoff` 0.2.0 → 0.3.0)
