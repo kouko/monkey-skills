@@ -2,7 +2,7 @@
 name: requesting-code-review
 description: |
   Use BEFORE any push/merge/PR on a non-trivial branch — whole-branch review of the cumulative diff. Fires on 'review my branch', 'ready to merge?', and excuses it refuses: 'just push', 'skip review', git push / gh pr create with no prior review-PASS.
-version: 0.11.0
+version: 0.12.0
 ---
 
 <SUBAGENT-STOP>
@@ -131,8 +131,15 @@ This rule applies **even when this skill was not explicitly invoked** — the de
 2. **Dispatch code-reviewer subagent** via `Agent({subagent_type: "loom-code:code-reviewer", prompt: <branch + diff body>})` — plugin-level agent (v0.6.0 / P15-12 Phase 2) at [`loom-code/agents/code-reviewer.md`](../../agents/code-reviewer.md). The orchestrator passes: diff range, paths to rubrics + checklists, branch context (recent commits, related issues if known). The agent carries the 12-rule engineering baseline ([`loom-code/scripts/_baseline.md`](../../scripts/_baseline.md)) baked into its system prompt.
    - **Principles-conformance discovery (conditional):** before dispatching, check whether the consumer project has a `docs/loom/PRINCIPLES.md`. **If present**, pass its path to the reviewer and instruct it to score the `principles-conformance` dimension (D8 in the agent contract — does the diff violate any falsifiable `— check:` clause?). **If absent**, pass nothing — the reviewer emits `principles-conformance: N/A`. Never synthesize principles; the file is the only source.
 3. **Wait for verdict**. Reviewer returns structured review with per-dimension scores, severity-tagged findings, and overall verdict.
-4. **Surface to user**. Print the verdict + findings; let user decide remediation. Do NOT auto-fix — that's user agency, even for a trivial single-line nit. Silently auto-fixing then re-reviewing removes the user's decision point and burns an extra review round. **Phrase this relay per §Asking the user** — translate `🔴/🟡/🟢` + the verdict token into plain language and open with a state anchor; the reviewer agent's structured output stays machine-precise.
-5. **Re-dispatch if user fixed and wants re-review** — same skill, fresh subagent (no state carry-over between rounds for clean evaluation).
+4. **Harvest the deliberate-simplification ledger**. Before producing the review summary, grep the whole-branch diff for the `LOOM-SIMPLIFY:` markers that record deliberate, scope-bounded shortcuts the branch shipped:
+
+   ```
+   grep -rn "LOOM-SIMPLIFY:" $(git diff --name-only main...HEAD)
+   ```
+
+   (Scope the grep to the files the branch changed — same diff range as Step 1; this is the introducing-branch review gate, where each marker's `ceiling:` / `upgrade:` is freshest.) Present the hits as a **ledger view** in the verdict's `simplification_ledger` block (see §Verdict structure) so every corner-cut the branch ships is visible at the merge gate, not buried in a code comment. For each marker, confirm a checkable `ceiling:`, an `upgrade:` path, and a `ref:` are present (the standard requires all four fields); a marker missing any is itself a finding. When the grep returns nothing, the ledger is empty — say so explicitly ("no deliberate simplifications recorded on this branch"), don't omit the line. The marker convention + harvest rule are defined in [`../subagent-driven-development/standards/deliberate-simplification.md`](../subagent-driven-development/standards/deliberate-simplification.md) (§Harvest + Scope Boundary) — that standard is the SSOT; this step surfaces its grep-on-demand view at the review gate.
+5. **Surface to user**. Print the verdict + findings + the simplification ledger; let user decide remediation. Do NOT auto-fix — that's user agency, even for a trivial single-line nit. Silently auto-fixing then re-reviewing removes the user's decision point and burns an extra review round. **Phrase this relay per §Asking the user** — translate `🔴/🟡/🟢` + the verdict token into plain language and open with a state anchor; the reviewer agent's structured output stays machine-precise. The ledger surfaces in plain language too: each shortcut as "what corner was cut, when it breaks, how to upgrade."
+6. **Re-dispatch if user fixed and wants re-review** — same skill, fresh subagent (no state carry-over between rounds for clean evaluation).
 
 ## Cross-skill contract
 
@@ -171,9 +178,25 @@ findings:
     source: <rubric / checklist / standard file:section that triggered this>
     note: <1-2 sentence finding>
 
+simplification_ledger:                         # grep -rn "LOOM-SIMPLIFY:" over the branch diff (Step 4); [] when none
+  - where: <file:line>
+    shortcut: <what corner was cut>
+    ceiling: <checkable condition under which it breaks>
+    upgrade: <path to the proper version>
+    ref: <originating brief/task>
+    marker_valid: true | false                  # false when ceiling:, upgrade:, or ref: is missing (or ceiling: uncheckable) → also emit a finding
+
 summary:
   - <≤5 bullet observations about the branch as a whole>
 ```
+
+`simplification_ledger` is the gate-scoped harvest of `LOOM-SIMPLIFY:`
+markers (§Process Step 4): the deliberate, scope-bounded shortcuts this
+branch ships, surfaced so the merge gate sees each corner-cut and its
+ceiling/upgrade. An empty list means none were recorded. A marker with
+`marker_valid: false` (missing `ceiling:`, `upgrade:`, or `ref:`, or an
+uncheckable `ceiling:`) is a
+finding per [`../subagent-driven-development/standards/deliberate-simplification.md`](../subagent-driven-development/standards/deliberate-simplification.md) §Field Rules.
 
 `standards_version` lets downstream readers tell whether a verdict was
 scored under the rules in effect now or a prior revision — standards,
@@ -216,6 +239,7 @@ rubrics, and checklists ship together under one plugin version.
 - [`../subagent-driven-development/rubrics/quality-gate.md`](../subagent-driven-development/rubrics/quality-gate.md) — functional copy of code-team's quality rubric.
 - [`../subagent-driven-development/rubrics/arch-gate.md`](../subagent-driven-development/rubrics/arch-gate.md) — functional copy of code-team's architecture rubric.
 - [`../subagent-driven-development/checklists/security-checklist.md`](../subagent-driven-development/checklists/security-checklist.md) — functional copy of code-team's security checklist.
+- [`../subagent-driven-development/standards/deliberate-simplification.md`](../subagent-driven-development/standards/deliberate-simplification.md) — the `LOOM-SIMPLIFY:` marker convention + grep-on-demand harvest rule this skill surfaces at the merge gate (§Process Step 4).
 - [`../verification-before-completion/SKILL.md`](../verification-before-completion/SKILL.md) — sibling skill that fires alongside this one in finishing-a-branch flow.
 - [`../finishing-a-development-branch/SKILL.md`](../finishing-a-development-branch/SKILL.md) — orchestrator that invokes this skill.
 - [`../using-loom-code/SKILL.md`](../using-loom-code/SKILL.md) — router; this skill is Stage 6 (Review).

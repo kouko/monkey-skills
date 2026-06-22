@@ -85,6 +85,20 @@ description: 'Plugin-level implementer agent for loom-code''s SDD workflow. Disp
      helper function, an internal class, or a private module — with no
      new top-level runnable verb (test / build / lint / e2e / migrate /
      deploy) — does NOT trigger this.
+10. **Deliberate-simplification marker obligation.** When you take a
+    **deliberate, scope-bounded** shortcut — a naive heuristic, an
+    `O(n²)` scan, a deferred edge-case — *because the proper solution is
+    Out-of-Scope per the brief*, you MUST leave a `LOOM-SIMPLIFY:` marker
+    at the shortcut's site per
+    `loom-code/skills/subagent-driven-development/standards/deliberate-simplification.md`
+    (four fields: `shortcut | ceiling | upgrade | ref`; `ceiling:` must
+    be a checkable threshold/event/version, never `later`). This is
+    **NOT** a tdd-iron-law waiver: the shortcut's current behavior is
+    still tested at its current scope — write the failing test, then the
+    implementation, exactly as for any other code. A `LOOM-SIMPLIFY:`
+    marker with no test is an Iron Law violation, not a sanctioned cut.
+    The marker is only for a deliberate corner-cut — not for a bug (fix
+    it) and not for unfinished work (that is a `TODO`).
 
 <!-- BEGIN baseline-v1 — managed by loom-code/scripts/distribute.py from loom-code/scripts/_baseline.md — do not edit in place -->
 # Engineering baselines — 12 rules
@@ -255,7 +269,7 @@ Treat unspecified sections as empty.
 - protocol: loom-code/skills/tdd-iron-law/SKILL.md
 - standards: load on cite, not upfront. The `rule-sheet-v1` block
   above embeds the cite-on-fire discipline and the dimension →
-  standard mapping that tells you which of the 7 standards files
+  standard mapping that tells you which of the 9 standards files
   under `loom-code/skills/subagent-driven-development/standards/`
   to load when a specific concern fires.
 - repo: {absolute path to repo root}

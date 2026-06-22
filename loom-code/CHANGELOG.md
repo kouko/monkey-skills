@@ -5,6 +5,31 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.19.0] — 2026-06-22 — **deliberate-simplification ledger (LOOM-SIMPLIFY marker + review-gate harvest)**
+
+### Added
+
+A new **deliberate-simplification ledger** makes scope-bounded shortcuts an
+auditable, surfaced decision rather than silent debt. The canonical standard
+`domain-teams/skills/code-team/standards/deliberate-simplification.md` (with a
+byte-identical functional copy in the SDD bundled standards) defines a
+`LOOM-SIMPLIFY:` in-code marker with four fields —
+`shortcut` / `ceiling` / `upgrade` / `ref`.
+
+- **Implementer** (`implementer.md` rule 10) leaves the `LOOM-SIMPLIFY:` marker
+  inline whenever it takes a scope-bounded shortcut, so the simplification is
+  recorded at the exact site it applies.
+- **Whole-branch code-reviewer** (`code-reviewer.md` §D9) harvests the markers
+  across the cumulative diff and completeness-checks them (kind well-formed,
+  scope claim plausible, no marker hiding a real defect).
+- **`requesting-code-review`** surfaces the harvested ledger at the merge gate,
+  so a reviewer sees every deliberate shortcut before approving the branch.
+
+**In-code markers are the single source of truth** — there is no persisted
+ledger file to drift. The marker is **not a TDD waiver**: shortcut code is still
+written test-first under the Iron Law; the marker only records that the scope was
+deliberately bounded.
+
 ## [0.18.0] — 2026-06-21 — **spec→code seam wired (resolves the Tier-2 deferral)**
 
 ### Added
