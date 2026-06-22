@@ -114,6 +114,10 @@ durable carrier**:
   `protocols/compose-pr.md`).
 
 An empty result is a flag to fix **before** merge, not to ignore.
+This verification is **enforced as an executable gate by
+`loom-code:finishing-a-development-branch`** at branch close-out — it
+runs `memory-grep.sh --verify HEAD` and STOPs when a memory-worthy
+branch's commit carrier is empty (exit `4`).
 
 Two **opt-in** escape hatches — needed **only** if you want structured
 `%(trailers)` footer-parse on `main`; they are **not** required,

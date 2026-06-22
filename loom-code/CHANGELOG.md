@@ -5,6 +5,33 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.20.0] — 2026-06-23 — **executable both-carrier memory verify gate at branch close-out**
+
+### Added
+
+`finishing-a-development-branch` now runs an **executable both-carrier verify
+gate** at branch close-out, turning the P2 "verification required" prose into a
+step that actually executes.
+
+- **Commit-carrier gate (post-commit, pre-push).** After the close-out commit,
+  the flow runs `dev-workflow/skills/git-memory/scripts/memory-grep.sh --verify
+  HEAD`. When the branch is memory-worthy (git-memory's Phase-3 trailer set was
+  non-empty) and `--verify` reports the commit carrier empty (**exit 4**), the
+  flow **hard-STOPs** — the memory must be retrievable via `git log --grep` on
+  `main` before push. A routine branch (empty trailer set) treats exit 4 as
+  expected and proceeds.
+- **PR-carrier check (at PR creation).** When opening the PR for a memory-worthy
+  branch, the flow confirms the PR body carries a `## Memory` section before
+  declaring the PR ready, per the both-carrier policy.
+- The existing P2 verify prose now points at this enforced gate, so the
+  description and the enforcement agree.
+
+This closes the authoring-time-under-recording leak that #445's own dogfood
+exposed (its squash commit `--verify`'d to **exit 4** — recorded only in the PR
+`## Memory`, not in the commit carrier). **Verification-class** scaffolding: it
+runs a check and surfaces a hard exit-4 signal — **no new generative mechanism**
+(Phase 3/4 already authors the trailers).
+
 ## [0.19.0] — 2026-06-22 — **deliberate-simplification ledger (LOOM-SIMPLIFY marker + review-gate harvest)**
 
 ### Added
