@@ -103,10 +103,9 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
      then apply the same proceed/remediate gate logic. NEVER suggest `/ultrareview` or any
      external review command in AskUserQuestion options or in the PR body without first
      verifying it exists via `claude --help`.
-4. Before applying any review findings from Step 3: Read each file you intend to Edit.
-   Whole-branch review commonly flags files created by implementer subagents that the
-   orchestrator's context has never opened — every Edit on an unread file will fail with
-   "File has not been read yet". Read first, then apply.
+4. Before applying any review findings from Step 3: Read each file you intend to Edit
+   (Bash inspection does NOT satisfy the Edit/Write precondition) — details in
+   [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §S1.
 5. Dispatch verification-before-completion
    - MANDATORY even if tests were run immediately before invoking this skill. Step 3
      fix-ups may have modified files; a pre-invocation test run does NOT satisfy this gate.
@@ -126,6 +125,9 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
    - Use the branch-qualified push form `git push -u origin <branch>` (or `git push origin
      <branch>` if upstream already set) — NEVER a bare `git push`, which trips the sandbox
      "do not push to main" guard on the first push of a new branch.
+   - Compound `git push && gh pr create` must be two separate Bash calls, and any rebase-conflict
+     resolution uses Read+Edit (not Bash `cat`+`Write`) — details in
+     [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §S2/§D1.
    - If any review-driven fixes were applied in Steps 3–4, re-run verification-before-completion
      here (Step 5 result is stale) before committing.
 9. git commit (only after user approval at Step 7)

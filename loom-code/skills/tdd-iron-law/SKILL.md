@@ -139,3 +139,4 @@ Skipping this diagnostic is how tests-pass-but-bug-still-ships happens. Beck (20
 - `references/testing-anti-patterns.md` — enumerated anti-patterns with primary-source citations.
 - `../../scripts/canonical/README.md` — SSOT pointer for the functional-copy mechanism.
 - `../using-loom-code/SKILL.md` — router; explains how this skill is invoked in the larger flow.
+- [environment-gotchas](../using-loom-code/references/environment-gotchas.md) — when doing direct TDD (no SDD) batch refactors, the orchestrator harness gotchas (esp. the Read-tool precondition before Edit) apply.
