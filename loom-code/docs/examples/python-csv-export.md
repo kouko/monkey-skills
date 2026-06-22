@@ -144,7 +144,7 @@ SDD dispatches 3 subagents per task (implementer + spec-reviewer + code-quality-
 Implementer subagent receives the prompt (see `skills/subagent-driven-development/agents/implementer-prompt.md` template) with:
 - Task description (from plan)
 - Context paths (existing files to read)
-- Resource paths (7 standards + tdd-iron-law)
+- Resource paths (9 standards + tdd-iron-law)
 
 **Implementer's `tdd-iron-law` flow** (Stage 4 — Discipline, fires INSIDE implementer):
 

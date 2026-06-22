@@ -55,7 +55,7 @@ ROUTE: dict[str, list[str]] = {
     # tdd-iron-law owns its own functional copy of the TDD standard so the
     # skill can ship without subagent-driven-development. subagent-driven-
     # development keeps its own copy too so the implementer / reviewer
-    # subagents can load all seven standards via a single resource path.
+    # subagents can load all nine standards via a single resource path.
     "standards/tdd-standard.md": [
         "skills/tdd-iron-law/standards/tdd-standard.md",
         f"{_SDD_STANDARDS_DIR}/tdd-standard.md",
