@@ -110,4 +110,4 @@ Load each file **only when its trigger fires** — do NOT speculatively load all
 - `references/environment-gotchas.md` — consolidated orchestrator harness / dcg / Read-tool-precondition gotchas (cross-cutting; pointed at by SDD / tdd-iron-law / finishing-a-development-branch / using-git-worktrees). Read only when an orchestrator hits a harness friction (blocked git command, "File has not been read yet", rebase conflict).
 - `../../PRODUCT-SPEC.md` / `../../TECH-SPEC.md` / `../../ROADMAP.md` — design lock + phase plan.
 
-**Do NOT load** all three reference files up front — `continuous-mode.md` only on opt-in, the host-tool files only under their matching host. The router body alone routes the common (human-pumped) path.
+**Do NOT load** every reference file up front — `continuous-mode.md` only on opt-in, the host-tool files only under their matching host, `environment-gotchas.md` only on a harness-friction trigger. The router body alone routes the common (human-pumped) path.

@@ -14,6 +14,12 @@ A trailing ``#anchor`` on an otherwise-relative link is stripped before
 the existence check (e.g. ``references/guide.md#step-2`` checks
 ``references/guide.md``).
 
+Caveat: only INLINE links ``](target)`` are checked. Reference-style
+link definitions (``[id]: path``) and inline links carrying a title
+attribute (``](path "title")``) are NOT covered — the loom-code SKILL.md
+convention is title-less inline links, so this matches today's corpus; a
+future author adding a reference-style link should not assume coverage.
+
 - Exit 0: every relative cross-ref resolves.
 - Exit 1: one or more targets are missing; each is printed to stderr as
   ``<skill-md-path>: <link>``.
