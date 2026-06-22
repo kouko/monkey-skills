@@ -10,7 +10,7 @@ fixtures (no on-disk fixture dir — mirrors `test_check_skill_crossrefs.py`).
 Stdlib only (pathlib + tmp_path fixture).
 """
 
-from living_spec_index import load_namespace
+from living_spec_index import generate_index, load_namespace
 
 
 def _make_spec(specs_dir, capability, body):
@@ -28,3 +28,20 @@ def test_load_namespace(tmp_path):
     _make_spec(specs, "order", "### Requirement: REQ-1\nsome prose\n")
 
     assert load_namespace(specs) == {"REQ-1": "order"}
+
+
+def test_generate_index_tree():
+    # WHY: the index is a 3-level tree (capability > req > test). Each
+    # test's @req must resolve through the namespace to its capability
+    # and nest under both headings in tree order, so a reader scanning
+    # the index sees which tests pin which requirement under which
+    # capability.
+    tag_records = [{"test": "test_x", "reqs": ["REQ-1"], "invariant_refs": []}]
+    namespace = {"REQ-1": "order"}
+
+    md = generate_index(tag_records, namespace)
+
+    assert "## order" in md
+    assert "### REQ-1" in md
+    assert "- test_x" in md
+    assert md.index("## order") < md.index("### REQ-1") < md.index("- test_x")

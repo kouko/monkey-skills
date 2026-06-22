@@ -29,3 +29,37 @@ def load_namespace(specs_dir: Path) -> dict[str, str]:
             if match:
                 namespace[match.group(1)] = capability
     return namespace
+
+
+def generate_index(
+    tag_records: list[dict], namespace: dict[str, str]
+) -> str:
+    """Render a 3-level markdown tree: capability > requirement > test.
+
+    For each record's each `@req`, resolve req->capability via
+    `namespace` and place `- <test>` under `### <req>` under
+    `## <capability>`. Reqs absent from `namespace` are skipped here
+    (orphan handling is a separate concern). Ordering is deterministic:
+    capabilities, then requirements, then tests are each sorted.
+    """
+    # tree: capability -> req -> set of test names
+    tree: dict[str, dict[str, set[str]]] = {}
+    for record in tag_records:
+        test = record["test"]
+        for req in record["reqs"]:
+            capability = namespace.get(req)
+            if capability is None:
+                continue
+            tree.setdefault(capability, {}).setdefault(req, set()).add(test)
+
+    lines = ["# Living-spec index"]
+    for capability in sorted(tree):
+        lines.append("")
+        lines.append(f"## {capability}")
+        for req in sorted(tree[capability]):
+            lines.append("")
+            lines.append(f"### {req}")
+            lines.append("")
+            for test in sorted(tree[capability][req]):
+                lines.append(f"- {test}")
+    return "\n".join(lines) + "\n"
