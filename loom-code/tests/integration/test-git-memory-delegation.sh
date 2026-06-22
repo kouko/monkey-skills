@@ -2,7 +2,7 @@
 # test-git-memory-delegation.sh
 #
 # Verify loom-code's finishing-a-development-branch skill invokes
-# dev-workflow:git-memory at Step 3 per ROADMAP P3-D MANDATORY.
+# dev-workflow:git-memory (Default-flow Step 6 / Phase 3) per ROADMAP P3-D MANDATORY.
 #
 # Usage:
 #   bash loom-code/tests/integration/test-git-memory-delegation.sh
@@ -96,7 +96,7 @@ if command -v claude >/dev/null 2>&1; then
   if claude plugin list 2>&1 | grep -A 3 "[❯>] dev-workflow" | grep -q "Status: ✔ enabled"; then
     pass "dev-workflow plugin enabled (git-memory dispatchable)"
   else
-    fail "dev-workflow plugin not enabled — Step 3 delegation will fail"
+    fail "dev-workflow plugin not enabled — git-memory delegation will fail"
   fi
 else
   skip "claude CLI not found"
@@ -126,15 +126,15 @@ Offline checks PASSED. Live verification (manual, in fresh Claude session):
   3. Prompt: "finish this branch"
   4. Expected agent behavior:
      - Skill(loom-code:finishing-a-development-branch) auto-loads
-     - Steps 1 + 2 run (requesting-code-review + verification-before-
+     - Phases 1 + 2 run (requesting-code-review + verification-before-
        completion)
-     - Step 3 EXPLICITLY invokes dev-workflow:git-memory (transcript
+     - Phase 3 EXPLICITLY invokes dev-workflow:git-memory (transcript
        should show "Skill(dev-workflow:git-memory) → Successfully
        loaded skill" before commit message draft)
      - Step 4 commit message includes git-memory's trailer decisions
        (Decision: / Learning: / Gotcha: as warranted)
 
-  5. PASS if transcript shows Step 3 git-memory invocation BEFORE the
+  5. PASS if transcript shows Phase 3 git-memory invocation BEFORE the
      commit subject is finalized. FAIL if commit message is drafted
      without git-memory dispatch.
 EOF
