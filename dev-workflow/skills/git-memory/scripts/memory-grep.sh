@@ -16,6 +16,7 @@
 # Usage:
 #   memory-grep.sh [--since=<period>] [--limit=<n>] [--repo=<path>]
 #                  [--format=plain|json] [--no-pr] [--no-commit]
+#   memory-grep.sh --verify <ref> [--repo=<path>]
 #
 # Defaults:
 #   --since='3 months ago'
@@ -35,8 +36,10 @@
 # Exit codes:
 #   0  success
 #   1  usage error
-#   2  not a git repo
+#   2  not a git repo (or, in --verify mode, an unresolvable ref)
 #   3  external dependency missing (jq always required; gh required if PR path enabled)
+#   4  --verify only: a memory check was requested but NO memory trailer
+#      (^Decision:/^Learning:/^Gotcha:) was found in the ref's message body
 
 set -euo pipefail
 
@@ -46,8 +49,14 @@ REPO='.'
 FORMAT='plain'
 INCLUDE_PR=1
 INCLUDE_COMMIT=1
+VERIFY_MODE=0
+VERIFY_REF=''
 
+# Extraction includes Related: (relationship context). Verify does NOT —
+# the memory-worthy predicate is the three keys Decision/Learning/Gotcha
+# only (a Related:-only commit captured no actual memory).
 TRAILER_KEYS_REGEX='^(Decision|Learning|Gotcha|Related):'
+VERIFY_KEYS_REGEX='^(Decision|Learning|Gotcha):'
 
 usage() {
   cat <<'EOF'
@@ -56,6 +65,7 @@ memory-grep.sh — retrieve git-memory entries from a repo
 Usage:
   memory-grep.sh [--since=<period>] [--limit=<n>] [--repo=<path>]
                  [--format=plain|json] [--no-pr] [--no-commit]
+  memory-grep.sh --verify <ref> [--repo=<path>]
 
 Options:
   --since=<period>   date filter for COMMITS (default: "3 months ago")
@@ -64,6 +74,11 @@ Options:
   --format=<f>       output format: plain | json (default: plain)
   --no-pr            skip PR body extraction
   --no-commit        skip commit trailer extraction
+  --verify <ref>     check whether <ref>'s message body carries a memory
+                     trailer (^Decision:/^Learning:/^Gotcha:). Exits 0 if
+                     present, 4 if absent, 2 if <ref> does not resolve.
+                     Text match on the full body — survives squash mid-body
+                     under the COMMIT_MESSAGES setting; does not footer-parse.
 
 Note: --since filters commits by date; --limit caps PR count.
       PRs are not date-filtered (newest N are always taken).
@@ -72,6 +87,7 @@ Examples:
   memory-grep.sh --since='6 months ago' --limit=100
   memory-grep.sh --no-pr              # commit trailers only
   memory-grep.sh --format=json | jq '.commits[]'
+  memory-grep.sh --verify HEAD        # did this commit capture memory?
 EOF
 }
 
@@ -97,7 +113,15 @@ render_group() {
 
 # ─── argument parsing ──────────────────────────────────────────────
 
+# --verify takes the FOLLOWING token as its ref. The for-loop has no
+# lookahead, so a one-shot flag (expect_ref) captures the next token.
+expect_ref=0
 for arg in "$@"; do
+  if [ "$expect_ref" = 1 ]; then
+    VERIFY_REF="$arg"
+    expect_ref=0
+    continue
+  fi
   case "$arg" in
     --since=*)   SINCE="${arg#*=}" ;;
     --limit=*)   LIMIT="${arg#*=}" ;;
@@ -105,10 +129,40 @@ for arg in "$@"; do
     --format=*)  FORMAT="${arg#*=}" ;;
     --no-pr)     INCLUDE_PR=0 ;;
     --no-commit) INCLUDE_COMMIT=0 ;;
+    --verify)    VERIFY_MODE=1; expect_ref=1 ;;
     -h|--help)   usage; exit 0 ;;
     *) echo "Unknown argument: $arg" >&2; usage; exit 1 ;;
   esac
 done
+
+# ─── verify mode (memory-substrate check) ──────────────────────────
+#
+# Runs before the normal extraction path and exits. Needs neither jq,
+# gh, nor the --since/--limit machinery — it grep's a single commit's
+# full message body for a memory trailer (text match, so it survives a
+# squash that pushes the trailer mid-body under COMMIT_MESSAGES).
+if [ "$VERIFY_MODE" = 1 ]; then
+  if [ -z "$VERIFY_REF" ]; then
+    echo "--verify requires a <ref>" >&2
+    usage
+    exit 1
+  fi
+  if ! git -C "$REPO" rev-parse --git-dir >/dev/null 2>&1; then
+    echo "Not a git repository: $REPO" >&2
+    exit 2
+  fi
+  if ! git -C "$REPO" rev-parse --verify --quiet "${VERIFY_REF}^{commit}" >/dev/null 2>&1; then
+    echo "Unresolvable ref: $VERIFY_REF" >&2
+    exit 2
+  fi
+  if git -C "$REPO" log -1 --format='%B' "$VERIFY_REF" \
+       | grep -qE "$VERIFY_KEYS_REGEX"; then
+    exit 0
+  else
+    echo "No memory trailer found in $VERIFY_REF" >&2
+    exit 4
+  fi
+fi
 
 case "$FORMAT" in
   plain|json) ;;
