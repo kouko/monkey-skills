@@ -82,3 +82,23 @@ def test_clean_input_returns_empty():
     )
 
     assert violations == [], f"clean input must yield no violations, got: {violations!r}"
+
+
+def test_index_is_current():
+    # WHY: the CI gate must be able to assert that a committed INDEX.md is
+    # byte-identical to a fresh `generate_index(...)` (the verify-drift
+    # pattern). Anything less than byte-identity — even a stray trailing
+    # newline — means the committed file is stale and must fail loud, so
+    # the index can never silently drift from its source of truth.
+    checker = _load_checker()
+
+    x = "# Living Spec Index\n\n- REQ-1: order\n"
+
+    # identical strings are current.
+    assert checker.index_is_current(x, x) is True, (
+        "byte-identical strings must be current"
+    )
+    # a trailing-newline difference is NOT current (byte-identity).
+    assert checker.index_is_current(x, x + "\n") is False, (
+        "a trailing-newline difference must fail byte-identity"
+    )

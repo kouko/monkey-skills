@@ -59,6 +59,18 @@ def find_structural_violations(
     return violations
 
 
+def index_is_current(committed_md: str, regenerated_md: str) -> bool:
+    """Return True iff a committed INDEX.md matches a fresh regeneration.
+
+    Byte-identity check (the verify-drift pattern): CI regenerates the
+    index with ``generate_index(...)`` and compares the result against
+    the committed file. Any difference — including a stray trailing
+    newline — means the committed file is stale and the gate must fail
+    loud, so the index can never silently drift from its source.
+    """
+    return committed_md == regenerated_md
+
+
 def main() -> int:
     # Slice boundary: real-repo wiring (building tag_records / malformed
     # / namespace from the source tree) is deferred. Run over empty
