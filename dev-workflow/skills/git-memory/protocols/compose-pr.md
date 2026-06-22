@@ -199,6 +199,11 @@ it's empty**. Composing the section is not enough — verify it is
 actually retrievable from **both** carriers before the branch closes
 / the PR merges.
 
+This verify is **enforced as an executable gate by
+`loom-code:finishing-a-development-branch`**: its Default-flow close-out
+runs `--verify HEAD` and STOPs on a memory-worthy branch whose commit
+carrier is empty. The checks below describe what that gate executes.
+
 For a memory-worthy PR (Step 2), the orchestrator runs both checks:
 
 1. **Commit carrier** — run
