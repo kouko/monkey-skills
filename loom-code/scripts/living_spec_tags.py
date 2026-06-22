@@ -30,6 +30,13 @@ _TAG_RE = re.compile(
     r"(?:#|//|--)\s*@(req|invariant-ref):\s*(\S+)"
 )
 
+# Marker presence: a line comment carrying the `@req`/`@invariant-ref`
+# marker, regardless of whether a `: <id>` follows. A line that hits
+# this but NOT `_TAG_RE` is malformed (missing colon, or empty id).
+_TAG_MARKER_RE = re.compile(
+    r"(?:#|//|--)\s*@(?:req|invariant-ref)\b"
+)
+
 
 def extract_tags(text: str) -> list[dict]:
     """Return one dict per test-function carrying >=1 tag, source order.
@@ -65,3 +72,19 @@ def extract_tags(text: str) -> list[dict]:
     return [
         r for r in results if r["reqs"] or r["invariant_refs"]
     ]
+
+
+def find_malformed_tags(text: str) -> list[str]:
+    """Return raw (stripped) comment lines carrying a malformed tag.
+
+    A malformed tag is a ``@req`` / ``@invariant-ref`` marker that
+    appears after a comment prefix but lacks a ``: <non-empty-id>``
+    value — e.g. ``# @req:`` (colon, empty id) or ``# @req REQ-1``
+    (no colon). Well-formed ``# @req: REQ-1`` lines are NOT reported.
+    Lines are returned in source order.
+    """
+    malformed: list[str] = []
+    for line in text.splitlines():
+        if _TAG_MARKER_RE.search(line) and not _TAG_RE.search(line):
+            malformed.append(line.strip())
+    return malformed
