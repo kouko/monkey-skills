@@ -64,3 +64,9 @@ jobs:
         # .codex-plugin/plugin.json is generated from .claude-plugin/plugin.json.
         # --check fails (exit 1) on any drift so a manual edit can't diverge the two.
         run: python3 loom-code/scripts/sync_codex_manifest.py --check
+
+      - name: Verify skill cross-references resolve
+        # Every relative markdown link in a SKILL.md must point at an existing
+        # file. Guards the cross-skill reference convention (e.g. the shared
+        # references/environment-gotchas.md pointers) against silent breakage.
+        run: python3 loom-code/scripts/check-skill-crossrefs.py
