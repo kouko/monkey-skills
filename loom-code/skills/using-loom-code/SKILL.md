@@ -107,6 +107,7 @@ Load each file **only when its trigger fires** — do NOT speculatively load all
 - `references/claude-code-tools.md` — Claude Code canonical tool names. Read only when the host is **Claude Code**.
 - `references/codex-tools.md` — Codex CLI tool mapping (Phase 2.5 ship target). Read only when the host is **Codex CLI**.
 - `references/engineering-baselines.md` — 12-rule engineering baseline carried by every loom-code plugin-level agent (SSOT in `../../scripts/_baseline.md`; v0.5.2 / P15-12).
+- `references/environment-gotchas.md` — consolidated orchestrator harness / dcg / Read-tool-precondition gotchas (cross-cutting; pointed at by SDD / tdd-iron-law / finishing-a-development-branch / using-git-worktrees). Read only when an orchestrator hits a harness friction (blocked git command, "File has not been read yet", rebase conflict).
 - `../../PRODUCT-SPEC.md` / `../../TECH-SPEC.md` / `../../ROADMAP.md` — design lock + phase plan.
 
 **Do NOT load** all three reference files up front — `continuous-mode.md` only on opt-in, the host-tool files only under their matching host. The router body alone routes the common (human-pumped) path.
