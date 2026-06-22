@@ -99,7 +99,26 @@ Retrieval path by repo style:
 | **Feature branch** (pre-squash) | `%(trailers)` structured parse is reliable |
 | **Merge-commit / rebase-merge** | `%(trailers)` structured parse is reliable |
 
-Two opt-in escape hatches for parseable trailers on a squash `main`:
+**Verification is required before a memory-worthy PR closes.** The
+confirmed failure mode is authoring-time under-recording — a
+memory-worthy PR closing with an empty substrate, *not* a squash-loss
+problem. So before merge, **verify the memory actually landed in a
+durable carrier**:
+
+- Run `scripts/memory-grep.sh --verify <ref>` against the commit
+  carrier. It exits `0` when a `Decision:`/`Learning:`/`Gotcha:`
+  trailer is retrievable from the ref's message body (text match, so it
+  works mid-body on a squash `main`), and `4` when the substrate is
+  empty.
+- Confirm the PR `## Memory` section is present (per
+  `protocols/compose-pr.md`).
+
+An empty result is a flag to fix **before** merge, not to ignore.
+
+Two **opt-in** escape hatches — needed **only** if you want structured
+`%(trailers)` footer-parse on `main`; they are **not** required,
+because `git log --grep` text-retrieval of the mid-body trailers is the
+supported path (see table above):
 
 - Set `squash_merge_commit_message = PR_BODY` and end the PR body with
   the raw trailer footer, so the squash commit's footer carries them.
