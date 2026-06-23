@@ -1,7 +1,7 @@
 ---
 name: brief-before-asking
 description: |
-  Deliver a 6-block briefing (Mental Model → Situation → Why-fork → Options → My take → Open ends) before a non-trivial engineering decision — the default, not optional. Also fires reactively on confusion about the question, the explanation, or the stakes, or a 2nd consecutive signal.
+  Deliver a Mental-Model-first briefing before asking the user to decide a non-trivial engineering fork — the default, not optional. Also fires reactively when they're lost on the question, the explanation, or the stakes.
 ---
 
 # Brief Before Asking
