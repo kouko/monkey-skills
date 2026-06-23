@@ -1,7 +1,7 @@
 ---
 name: query
 description: |
-  Answer any dbt question from .dbt-wiki/: model structure, column lineage, config, schema.yml, refactor impact, ingested notes — before reading dbt/ files. Use for 'trace column', 'what feeds X', 'rename impact', '依賴什麼'. Setup→init, updates→refresh.
+  Answer any dbt question from .dbt-wiki/: model structure, column lineage, config, schema.yml, refactor impact, ingested notes — before reading dbt/ files. Use for 'trace column', 'what feeds X', 'rename impact', '依賴什麼'. Setup→init, updates→rescan.
 ---
 
 # dbt-wiki — Query Workflow (v2.0)
@@ -31,7 +31,7 @@ test -f .dbt-wiki/index.md || { echo "Missing .dbt-wiki/index.md — re-run /dbt
 ```bash
 LAST_SHA=$(grep -m 1 'manifest_sha:' .dbt-wiki/log.md | sed 's/.*manifest_sha: //' | tr -d ' ')
 
-# Find current manifest using the same 5-tier detection as init/refresh
+# Find current manifest using the same 5-tier detection as init/rescan
 # (silent if not — drift check is non-fatal):
 #   1. $DBT_PROJECT_DIR env var
 #   2. ancestor walk from cwd (up to 5 levels)
@@ -68,9 +68,9 @@ fi
 if [ -n "$DBT_DIR" ] && [ -f "$DBT_DIR/target/manifest.json" ]; then
   CURRENT_SHA=$(md5 -q "$DBT_DIR/target/manifest.json" 2>/dev/null || md5sum "$DBT_DIR/target/manifest.json" | cut -d' ' -f1)
   if [ "$CURRENT_SHA" != "$LAST_SHA" ]; then
-    DRIFT_WARNING="⚠ manifest.json has changed since last refresh (current: $CURRENT_SHA, wiki: $LAST_SHA)"
+    DRIFT_WARNING="⚠ manifest.json has changed since last rescan (current: $CURRENT_SHA, wiki: $LAST_SHA)"
     echo "$DRIFT_WARNING"
-    echo "  Answer based on possibly-stale wiki. Run /dbt-wiki:refresh for up-to-date answers."
+    echo "  Answer based on possibly-stale wiki. Run /dbt-wiki:rescan for up-to-date answers."
   fi
 fi
 ```
@@ -221,7 +221,7 @@ Output is JSON with `ascii`, `mermaid`, `node_count`, `truncated` keys.
   for complete DAG"
 
 `/tmp/dbt-wiki-recursive-lineage.jsonl` is generated at init time and
-refreshed by `/dbt-wiki:refresh`. If missing, fall back to model-level
+refreshed by `/dbt-wiki:rescan`. If missing, fall back to model-level
 diagram only (C2/C3 still work; C4/C10 emit the chain form from Step 4).
 
 ## Step 5: Verification (Optional, T-trigger style)
@@ -230,7 +230,7 @@ Same Eager verification model as repo-wiki, adapted for dbt:
 
 | Trigger | Action |
 |---|---|
-| **DT1** | Page `last_updated > 30 days` (dbt projects move fast) → warn "wiki may be stale; re-refresh" |
+| **DT1** | Page `last_updated > 30 days` (dbt projects move fast) → warn "wiki may be stale; re-run `/dbt-wiki:rescan`" |
 | **DT2** | Question contains current-state keyword ("currently", "now", "目前") → also read `target/manifest.json` directly to verify model still exists |
 | **DT3** | Question is about column existence ("does X have column Y") → cross-check both wiki page AND grep compiled SQL for Y |
 | **DT4** | drift_warning fired in Step 0 → automatically inject "Verified Against Cache" caveat in output |
@@ -241,7 +241,7 @@ If any trigger fires, prepend to answer:
 ## ⚠ Verification Notes
 - Wiki manifest_sha: <wiki_sha> (current: <current_sha if differs>)
 - Pages older than 30 days: <list>
-- Recommend: /dbt-wiki:refresh before relying on this answer
+- Recommend: /dbt-wiki:rescan before relying on this answer
 ```
 
 ## Step 6: Present Answer
@@ -286,7 +286,7 @@ type: synthesis
 question: "<exact question>"
 slug: <slug>
 date: <YYYY-MM-DD>
-manifest_sha: <current sha — used by refresh for stale detection>
+manifest_sha: <current sha — used by rescan for stale detection>
 affected_models:                 # critical for stale detection
   - <model.proj.X>
   - <model.proj.Y>
@@ -297,9 +297,9 @@ sources_consulted:
   - _evidence/models/<name>.md
 verification_run: <yes | no>
 verified_paths: []
-stale: false                     # refresh sets to true when affected_models change
+stale: false                     # rescan sets to true when affected_models change
 stale_at: null
-stale_reason: null               # human-readable why (set by refresh's mark_stale)
+stale_reason: null               # human-readable why (set by rescan's mark_stale)
 ---
 ```
 
@@ -311,7 +311,7 @@ stale_reason: null               # human-readable why (set by refresh's mark_sta
 - For C2/C3 model-lineage answers: target model + every model in the
   rendered ASCII / Mermaid
 
-This list lets `/dbt-wiki:refresh` (Step 7) precisely detect stale
+This list lets `/dbt-wiki:rescan` (Step 7) precisely detect stale
 syntheses without false positives from unrelated manifest changes.
 
 ## Step 7: Append Query Log
@@ -340,7 +340,7 @@ If no relevant pages exist for the question (e.g., model name not found):
 > No model named "X" found in dbt-wiki.
 >
 > - Did you mean: <fuzzy-matched suggestions from index.md>?
-> - If "X" was just added to dbt: run `/dbt-wiki:refresh`
+> - If "X" was just added to dbt: run `/dbt-wiki:rescan`
 > - If "X" was renamed: search `.dbt-wiki/_archive/` for the old name
 
 For partial answers (e.g., column lineage extraction failed for the
@@ -374,6 +374,6 @@ ALWAYS:
   `_evidence/models/`
 - For refactoring-impact questions, traverse `feeds_into` recursively in
   `_evidence/models/`
-- Suggest `/dbt-wiki:refresh` when wiki is stale, not just in errors
+- Suggest `/dbt-wiki:rescan` when wiki is stale, not just in errors
 - Cross-link to `.repo-wiki/` for WHY questions if both plugins installed
 - Append to log.md every query (even no-match ones)

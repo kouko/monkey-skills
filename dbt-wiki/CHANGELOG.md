@@ -4,6 +4,52 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] — 2026-06-24
+
+### Changed (BREAKING) — `/dbt-wiki:refresh` → `/dbt-wiki:rescan`
+
+The `refresh` command is renamed to `rescan`. `refresh` over-promised: it reads
+as "fully re-sync everything", but the command only rebuilt the cheap mechanical
+**evidence** layer (manifest diff + sqlglot lineage) and *flagged* knowledge
+pages stale — it never re-distilled the semantic layer. `rescan` names exactly
+what it does: re-scan the evidence, 0 LLM, safe to run daily.
+
+Migration: replace `/dbt-wiki:refresh` with `/dbt-wiki:rescan` — behaviour is
+otherwise identical. Existing `.dbt-wiki/` vaults need no change; historical
+`refresh` log entries are left as-is.
+
+### Added — `/dbt-wiki:redistill` (the LLM half — fast-follow now shipped)
+
+Re-distills the knowledge pages `rescan` flagged stale so their semantic prose
+catches up with the changed evidence.
+
+- Deterministic work-list (`redistill/assets/collect_redistill_worklist.py`,
+  13-case test): stale + non-mature + non-archived pages **with provenance**,
+  grouped by the domain owning the majority of their `derived_from` evidence
+  (via `_internal/ownership.json`). Falls back to a single `(all)` group when
+  ownership.json is absent (small / sequential init had no domain fan-out).
+- Skips human-certified `mature` pages by default (`--force-mature` to include).
+  **Delegates** the actual distillation to init's `references/distill-*.md`
+  (single source of truth — no copied logic), then runs reconcile +
+  lint_identifier_fidelity + build_index_knowledge. `--dry-run` / `--yes`.
+- User-triggered only: LLM cost + non-determinism stay off the daily path.
+
+### Added — `/dbt-wiki:sync` (one-shot orchestrator)
+
+"Just bring my wiki up to date": runs `rescan`, then if it left knowledge pages
+stale, **gates** an LLM `redistill` behind an explicit yes (non-interactive
+default = no). Delegates to both sibling skills — owns the sequencing + the gate,
+never reimplements their logic. `--no-redistill` / `--redistill` / `--yes` /
+`--force-mature` / `--dry-run`.
+
+### Notes
+
+- Command-reference cross-links updated repo-wide (init / query / review /
+  ingest prose, init asset templates, README ×3). `pack`'s "re-run to refresh"
+  is the English verb, not the command — left unchanged.
+- Phase 2 (materiality triage in `sync`, so cosmetic-only changes skip the gate)
+  is the next fast-follow.
+
 ## [2.14.1] — 2026-06-20
 
 ### Changed — `query` leverages `value_domain` (value-grounded answers)

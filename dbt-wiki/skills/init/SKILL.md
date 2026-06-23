@@ -1,7 +1,7 @@
 ---
 name: init
 description: |
-  First-time setup: scaffold .dbt-wiki/ from manifest.json + compiled SQL (sqlglot column lineage) + inline comments — pages, index, lineage DAG, CLAUDE.md. Needs dbt parse && compile first. Use for 'init dbt-wiki' or '初始化'. Later updates→refresh.
+  First-time setup: scaffold .dbt-wiki/ from manifest.json + compiled SQL (sqlglot column lineage) + inline comments — pages, index, lineage DAG, CLAUDE.md. Needs dbt parse && compile first. Use for 'init dbt-wiki' or '初始化'. Later updates→rescan.
 ---
 
 # dbt-wiki — Init Workflow (v2.0)
@@ -250,8 +250,8 @@ mkdir -p .dbt-wiki/syntheses
 
 **Mark `_internal/` as a rebuildable cache (do not commit it).** The
 `_internal/` scripts are mechanical, copied verbatim from the plugin's
-`assets/`, and re-derivable on demand — `init` writes them and `refresh`
-self-heals them from the same plugin source (see refresh Step 0). Committing
+`assets/`, and re-derivable on demand — `init` writes them and `rescan`
+self-heals them from the same plugin source (see rescan Step 0). Committing
 them just duplicates the installed plugin and drifts on plugin upgrade. Emit a
 `.dbt-wiki/.gitignore` (idempotent — skip if it already exists) so they stay out
 of git:
@@ -259,7 +259,7 @@ of git:
 ```bash
 test -f .dbt-wiki/.gitignore || cat > .dbt-wiki/.gitignore <<'GITIGNORE'
 # Rebuildable mechanical cache — re-created by /dbt-wiki:init and self-healed
-# by /dbt-wiki:refresh from the installed plugin. Not part of the knowledge state.
+# by /dbt-wiki:rescan from the installed plugin. Not part of the knowledge state.
 _internal/
 **/__pycache__/
 GITIGNORE
@@ -392,7 +392,7 @@ cp <SKILL_DIR>/assets/synthesis_template.md .dbt-wiki/_internal/
 The script CLI (use `$PY_RUNNER` from Step 0 — `uv run` or `python3`):
 
 ```bash
-# Single file (used during refresh):
+# Single file (used during rescan):
 $PY_RUNNER .dbt-wiki/_internal/extract_column_lineage.py <compiled_sql_path> [dialect]
 
 # Batch (used during init — much faster than per-file invocation):
@@ -767,7 +767,7 @@ knowledge distillation step that produces the knowledge layer
 2. Distill **entities** by following the procedure in
    `references/distill-entities.md`. Each entity page records:
    - `derived_from: [<evidence model unique_ids>]` — the evidence
-     pages it was distilled from (used by refresh for stale detection)
+     pages it was distilled from (used by rescan for stale detection)
    - `last_changed_by: "<commit SHA or PR#>"` — provenance of the
      last distillation pass
 3. Distill **metrics** by following the procedure in
@@ -1000,7 +1000,7 @@ LINT ERROR: <page_path> — derived_from spans domains
 {<domain_a>, <domain_b>}: uid "<unique_id>" belongs to
 domain "<foreign_domain>", not "<majority_domain>".
 Cross-domain derived_from entries cause spurious stale-cascades
-on refresh (see distill-entities §5.1 cross-entity exclusion rule).
+on rescan (see distill-entities §5.1 cross-entity exclusion rule).
 ```
 
 Where `<majority_domain>` is the domain whose uids appear most
@@ -1077,7 +1077,7 @@ distinguish "distilled but no aliases" from "not yet distilled."
 Pre-existing v2.0 pages that omit these keys are still valid; SCHEMA.md
 states that missing optional keys parse fine (legacy omission tolerance).
 
-`derived_from` is the freshness anchor: `/dbt-wiki:refresh` uses it
+`derived_from` is the freshness anchor: `/dbt-wiki:rescan` uses it
 to detect which knowledge pages are stale when evidence models change
 (same overlap logic as `syntheses` `affected_models`).
 
@@ -1132,7 +1132,7 @@ Print to user:
     1. Skim .dbt-wiki/index.md — entities, metrics, and concepts are at the top
     2. Try a semantic query: /dbt-wiki:query "customer 是什麼？"
     3. Try a structural query: /dbt-wiki:query "fct_orders 依賴什麼？"
-    4. After next dbt parse + dbt compile, run /dbt-wiki:refresh
+    4. After next dbt parse + dbt compile, run /dbt-wiki:rescan
     5. (If installed) repo-wiki and dbt-wiki coexist — use repo-wiki for WHY
 ```
 
@@ -1163,7 +1163,7 @@ NEVER:
 
 ALWAYS:
 - Verify Step 0 pre-conditions before any other action
-- Record `manifest_sha` in log.md so refresh can detect drift
+- Record `manifest_sha` in log.md so rescan can detect drift
 - Preserve custom body sections in model pages on re-run (anything outside SCHEMA.md's standard sections)
 - Mark column lineage extraction status per model (`columns_extracted_via: sqlglot | schema_yml_only | failed`)
 - Filter macros by usage (don't create pages for unused project macros or unused external package macros)

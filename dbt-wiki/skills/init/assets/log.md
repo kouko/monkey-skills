@@ -1,15 +1,15 @@
 # .dbt-wiki/ Operation Log
 
-> Append-only log of every init / refresh / query operation.
+> Append-only log of every init / rescan / query operation.
 >
 > Entry format: `## [YYYY-MM-DD] <operation> | <summary>`
 >
-> Operations: `init`, `refresh`, `query`
+> Operations: `init`, `rescan`, `query`
 >
 > Grep:
 > ```
 > grep "^## \[" .dbt-wiki/log.md | tail -10        # recent activity
-> grep "refresh" .dbt-wiki/log.md                  # only refresh runs
+> grep "rescan" .dbt-wiki/log.md                  # only rescan runs
 > grep "sqlglot_failures" .dbt-wiki/log.md         # see parse failures
 > ```
 

@@ -1,19 +1,19 @@
 ---
 name: ingest
 description: |
-  Record dbt tribal knowledge not in manifest/schema.yml (sort_key rationale, dialect gotchas, incident links) into a model's User Notes (survives refresh). Use for 'remember that fct_orders…', 'add note to <model>', '備註 fct_X'. To query, use query.
+  Record dbt tribal knowledge not in manifest/schema.yml (sort_key rationale, dialect gotchas, incident links) into a model's User Notes (survives rescan). Use for 'remember that fct_orders…', 'add note to <model>', '備註 fct_X'. To query, use query.
 ---
 
 # dbt-wiki — Ingest Workflow (v1.0)
 
 User-supplied context capture. Mirrors `/repo-wiki:ingest` context
 mode for the dbt-internal scope. Notes attach to specific
-model / source / macro pages and survive `/dbt-wiki:refresh` runs
+model / source / macro pages and survive `/dbt-wiki:rescan` runs
 (preserved as user-owned `## User Notes` body section per SCHEMA.md).
 
 dbt-wiki ingest is **context-only** in v1.0. It does NOT have:
 - `git` mode (manifest.json snapshot supersedes git for dbt structure;
-  use /dbt-wiki:refresh after `dbt parse` instead)
+  use /dbt-wiki:rescan after `dbt parse` instead)
 - `doc-import` mode (v2 backlog — for now, paste the doc summary as
   context manually, or write to a `docs/` file and reference it)
 
@@ -140,7 +140,7 @@ NEVER:
 - Rewrite or paraphrase the user's note content (light whitespace
   normalization OK; semantic editing NOT OK)
 - Auto-attach without confirming target on multi-match or no-match
-- Skip the `## User Notes` section heading (refresh recognizes it as
+- Skip the `## User Notes` section heading (rescan recognizes it as
   user-owned by name)
 - Use `[[wikilinks]]` — only standard markdown links
 - Connect to dbt Cloud / warehouse / external API

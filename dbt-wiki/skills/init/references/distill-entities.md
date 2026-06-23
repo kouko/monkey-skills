@@ -391,7 +391,7 @@ target entity has no model in the current evidence slice (e.g. a
 `converted_contact_id` whose Contact entity isn't in scope), still emit
 the edge, and create a `status: seed` stub page for the target with
 `derived_from: []` and a one-line body noting it is an auto-stub — so the
-markdown link resolves. A later init/refresh that distills the target
+markdown link resolves. A later init/rescan that distills the target
 promotes it `seed → developing`. Never drop the edge.
 
 ### 4.3 Frontmatter shape
@@ -448,7 +448,7 @@ derived_from:
 Include all evidence models **belonging to THIS entity's model family**
 — not just the canonical mart, but also its staging / intermediate
 ancestors (e.g. `stg_customers`, `int_customers`, `dim_customers`).
-This is the freshness anchor: refresh uses this list to detect when a
+This is the freshness anchor: rescan uses this list to detect when a
 knowledge page needs re-distilling.
 
 **Cross-entity exclusion rule.** An evidence model that belongs to
@@ -467,7 +467,7 @@ relationship edge.
 
 ### 5.2 `last_changed_by`
 
-Set to the commit SHA or PR identifier of the init/refresh run that
+Set to the commit SHA or PR identifier of the init/rescan run that
 produced this page. During init, use the session identifier or a
 placeholder `"init-YYYY-MM-DD"` if no commit SHA is available yet.
 
@@ -479,7 +479,7 @@ last_changed_by: "init-2026-06-01"
 
 | Status | When to use |
 |---|---|
-| `seed` | Auto-stub created by refresh; body not yet filled |
+| `seed` | Auto-stub created by rescan; body not yet filled |
 | `developing` | Phase B has distilled content; human review not yet done |
 | `mature` | Reviewed and trusted by a domain expert |
 | `archived` | Entity no longer appears in evidence layer |
@@ -505,7 +505,7 @@ stale_at: null
 stale_reason: null
 ```
 
-Refresh will overwrite these fields if any `derived_from` evidence model changes.
+Rescan will overwrite these fields if any `derived_from` evidence model changes.
 
 ### 5.6 `tags`
 
@@ -539,7 +539,7 @@ language. Use the exact term as it appears in the project's schema.yml
 descriptions or internal documentation — NOT a translation of the
 English title.
 
-Both fields are emitted automatically on every `init` and `refresh`
+Both fields are emitted automatically on every `init` and `rescan`
 run; a human may prune `aliases` later (pruning is never required, but
 never re-add a term that was intentionally pruned).
 
