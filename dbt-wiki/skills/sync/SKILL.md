@@ -88,9 +88,13 @@ folder.
 
 ```python
 # Pseudocode — page-level materiality triage. Run via $PY_RUNNER (resolved in
-# Step 2) so triage_worklist.py imports cleanly.
-import json
+# Step 2). Put the helper's dir on sys.path EXPLICITLY (don't rely on cwd —
+# rescan's delegation cd'd to the git root), so `from triage_worklist import …`
+# resolves no matter where this block runs. `<SKILL_DIR>` = the dir holding
+# THIS SKILL.md; the helper is its sibling at `<SKILL_DIR>/assets/`.
+import json, sys
 from pathlib import Path
+sys.path.insert(0, "<SKILL_DIR>/assets")   # so triage_worklist imports cleanly
 
 worklist = json.loads(Path("/tmp/sync_worklist.json").read_text())
 groups = worklist["groups"]   # {domain: [page, ...]} from Step 2
