@@ -111,7 +111,7 @@ def check_mid_readmes(spec_dir: Path) -> list[str]:
     if not spec_dir.is_dir():
         return []
     problems: list[str] = []
-    for cap in sorted(p for p in spec_dir.iterdir() if p.is_dir()):
+    for cap in _capability_dirs(spec_dir):
         if not (cap / "README.md").is_file():
             problems.append(
                 f"missing README.md in capability '{cap.name}' ({cap}) "
