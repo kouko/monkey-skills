@@ -19,6 +19,21 @@ from pathlib import Path
 
 from living_spec_tags import locate_bindings
 
+# Directory names that hold vendored / generated code we must not walk
+# into — a `git log -L` per test file there is wasted work.
+_VENDOR_DIRS = frozenset(
+    {"node_modules", "site-packages", "__pycache__", "venv", ".eggs"}
+)
+
+
+def _is_vendored(relative_parts: tuple[str, ...]) -> bool:
+    """True if any directory component is a dot-dir or a vendor dir."""
+    # The last part is the file name; only directory components count.
+    for part in relative_parts[:-1]:
+        if part.startswith(".") or part in _VENDOR_DIRS:
+            return True
+    return False
+
 
 def collect_bindings(
     root: Path,
@@ -38,6 +53,7 @@ def collect_bindings(
         for pattern in patterns
         for path in root.rglob(pattern)
         if path.is_file()
+        and not _is_vendored(path.relative_to(root).parts)
     }
 
     bindings: list[dict] = []

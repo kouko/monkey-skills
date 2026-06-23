@@ -38,10 +38,6 @@ _TAG_RE = re.compile(
 # `"    # @req: REQ-1\n"`) is NOT a binding.
 _REQ_TAG_RE = re.compile(r"^\s*(?:#|//|--)\s*@req:\s*(\S+)")
 
-# Any function definition (`def name(`) — used to bound a test body's
-# line range: the body ends just before the NEXT def at/below it.
-_DEF_RE = re.compile(r"^\s*def\s+\w+\s*\(")
-
 # Marker presence: a line comment carrying the `@req`/`@invariant-ref`
 # marker, regardless of whether a `: <id>` follows. A line that hits
 # this but NOT `_TAG_RE` is malformed (missing colon, or empty id).
@@ -110,12 +106,18 @@ def locate_bindings(text: str) -> list[dict]:
         {"test", "req", "body_start", "body_end", "binding_line"}
 
     All line numbers are 1-based. ``body_start`` is the line of the
-    enclosing ``def test_...(``; ``body_end`` is the line just before the
-    NEXT ``def ...`` (any def) at/below it, or the last line of ``text``
-    if no def follows — i.e. the enclosing test's body range, suitable
-    for a later ``git log -L``. ``binding_line`` is the line of that
-    ``@req:`` comment. A test carrying two ``@req`` lines yields two
-    records sharing test + body range but differing in binding_line/req.
+    enclosing ``def test_...(``; ``body_end`` is the last line of the
+    test's body, determined by INDENTATION: the body runs from the
+    ``def test_...`` line down to (but not including) the first
+    subsequent non-blank line whose indentation is <= the ``def`` line's
+    indentation (a dedent to a sibling / module-level statement, e.g.
+    the next ``def`` or a top-level line), or the last line of ``text``
+    if no such dedent follows. Blank lines never end the body, and
+    nested ``def`` helpers (more-indented) stay INSIDE the range — so an
+    assertion below a nested helper is correctly covered for a later
+    ``git log -L``. ``binding_line`` is the line of that ``@req:``
+    comment. A test carrying two ``@req`` lines yields two records
+    sharing test + body range but differing in binding_line/req.
 
     Only ``@req`` bindings are located; ``@invariant-ref`` is ignored
     (out of scope for the drift lane).
@@ -123,16 +125,20 @@ def locate_bindings(text: str) -> list[dict]:
     lines = text.splitlines()
     total = len(lines)
 
-    # Index every def line (1-based) so a test's body_end is the line
-    # before the next def at/below its own def.
-    def_lines = [
-        idx + 1 for idx, line in enumerate(lines) if _DEF_RE.match(line)
-    ]
+    def _indent(line: str) -> int:
+        # Leading-whitespace width, counting raw leading chars (matching
+        # the existing `\s*`-anchored parsing — no tab expansion).
+        return len(line) - len(line.lstrip())
 
     def body_end_for(start: int) -> int:
-        for d in def_lines:
-            if d > start:
-                return d - 1
+        # `start` is 1-based; lines[start-1] is the `def test_...` line.
+        def_indent = _indent(lines[start - 1])
+        for idx in range(start, total):  # 0-based lines AFTER the def
+            line = lines[idx]
+            if not line.strip():
+                continue  # blank lines never end the body
+            if _indent(line) <= def_indent:
+                return idx  # 1-based line before this dedent (idx == lineno-1)
         return total
 
     records: list[dict] = []

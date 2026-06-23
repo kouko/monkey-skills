@@ -68,6 +68,24 @@ def test_locate_bindings_returns_line_positions():
     ]
 
 
+def test_locate_bindings_body_includes_nested_helper_and_trailing_assert():
+    # A nested helper `def` inside the test must NOT truncate the body
+    # range. body_end must reach the assertion that follows the helper
+    # (a dedent to the next sibling/top-level def or EOF ends the body),
+    # else an edit to that assert line is invisible to `git log -L`.
+    text = (
+        "def test_x():\n"            # line 1  body_start
+        "    # @req: REQ-1\n"        # line 2  binding
+        "    def helper():\n"        # line 3  nested def -> must stay inside body
+        "        return 1\n"         # line 4
+        "    assert helper() == 1\n" # line 5  trailing assert -> must be in body
+    )
+    records = locate_bindings(text)
+    assert len(records) == 1
+    # The trailing assertion (line 5) must be within the body range.
+    assert records[0]["body_end"] >= 5
+
+
 def test_locate_bindings_ignores_at_req_inside_string_literal():
     # A fixture-style source where a `@req:` sits INSIDE a Python string
     # literal (a `"` precedes the `#`) must NOT be collected — that line
