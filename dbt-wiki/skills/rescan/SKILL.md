@@ -39,6 +39,24 @@ if [ ! -f .dbt-wiki/_internal/extract_column_lineage.py ]; then
   cp "<INIT_ASSETS>/synthesis_template.md" .dbt-wiki/_internal/
   echo "Restored .dbt-wiki/_internal/ from the plugin (rebuildable cache)."
 fi
+
+# Rescan-OWNED materiality helpers (Step 2.6). These live in THIS skill's
+# assets (not init's), so they get a SEPARATE copy step. Both land in the
+# same `_internal/` dir so the sibling import `from logic_sha import ...`
+# inside classify_materiality.py resolves. `<SKILL_DIR>` = the directory
+# containing THIS SKILL.md (`.../skills/rescan/`). We MUST use that
+# placeholder, not a bare `../`: Step 0 already `cd`-ed to the git root, so
+# a relative path here would resolve against the repo root, not this skill.
+if [ ! -f .dbt-wiki/_internal/classify_materiality.py ]; then
+  mkdir -p .dbt-wiki/_internal
+  cp "<SKILL_DIR>/assets/logic_sha.py"            .dbt-wiki/_internal/
+  cp "<SKILL_DIR>/assets/classify_materiality.py" .dbt-wiki/_internal/
+  echo "Restored materiality helpers (logic_sha.py + classify_materiality.py)."
+fi
+test -f .dbt-wiki/_internal/classify_materiality.py || {
+  echo "Could not restore materiality helpers from <SKILL_DIR>/assets/. Re-run /dbt-wiki:init."
+  exit 1
+}
 test -f .dbt-wiki/_internal/extract_column_lineage.py || {
   echo "Could not restore _internal/ from <INIT_ASSETS>. Re-run /dbt-wiki:init."
   exit 1
@@ -171,6 +189,27 @@ for uid in common:
 (Same logic for sources, macros, seeds, snapshots — compare frontmatter
 to detect material change.)
 
+**Capture the `old` struct now, before any overwrite.** Step 2.6's
+materiality classification needs each modified/removed model's PRIOR
+`{columns, depends_on, materialization}` — and that lives in the
+existing evidence page frontmatter, which **Step 4 overwrites**. So
+while you still hold `existing_fm` here in the Step 2 diff (before the
+Step 3/4 rewrite), stash the old struct per uid:
+
+```python
+# Stash the prior evidence-page frontmatter snapshot per uid, keyed for
+# Step 2.6. MUST happen here (Step 2), before Step 4 overwrites the page.
+old_struct = {}   # uid -> {"columns", "depends_on", "materialization"}
+for uid in modified | set(removed):
+    fm = parse_frontmatter(open(existing_pages[uid]).read())
+    old_struct[uid] = {
+        "columns": {c['name'] for c in fm.get('columns', [])},
+        "depends_on": set(fm.get('depends_on', {}).get('refs', []) +
+                          [f"source.{s}" for s in fm.get('depends_on', {}).get('sources', [])]),
+        "materialization": fm.get('materialization'),
+    }
+```
+
 Print summary before writing:
 
 ```
@@ -183,6 +222,82 @@ Continue? (yes/no)
 ```
 
 If `yes`, proceed. Otherwise abort.
+
+## Step 2.6: Per-model materiality classification (0 LLM)
+
+Sync needs to know which changed models changed their **logic/structure**
+(material — the knowledge page must be re-distilled) versus which only had
+a comment/whitespace edit (cosmetic — leave the page alone). Compute that
+here, deterministically in Python, and emit a map sync consumes. This is
+**0-LLM** — pure sqlglot fingerprinting + set comparison, same cheap-path
+discipline as the rest of rescan.
+
+The helper `classify_changed_models(changed, cache, dialect="redshift")
+-> (materiality_map, updated_cache)` is already implemented + tested
+(`.dbt-wiki/_internal/classify_materiality.py`, restored in Step 0).
+`materiality_map = {uid: "material"|"cosmetic"}`; the logic-fingerprint
+cache has shape `{uid: {"sha", "method"}}`.
+
+```python
+# Pseudocode — per-model materiality classification (0 LLM). Run via $PY_RUNNER
+# so classify_materiality.py's sibling `from logic_sha import ...` resolves
+# (both helpers live in .dbt-wiki/_internal/ — see Step 0 self-heal).
+import json
+from pathlib import Path
+
+wiki = Path(".dbt-wiki")
+internal = wiki / "_internal"
+
+# Build the `changed` list classify_changed_models expects: one dict per uid
+# across added | modified | removed.
+#   old: the PRIOR {columns(name set), depends_on(set), materialization} from
+#        old_struct stashed in Step 2 BEFORE Step 4 overwrote the page; None
+#        for `added` (no prior page).
+#   new: {columns(name set), depends_on(set), materialization, compiled_sql}
+#        from the NEW manifest + the compiled SQL file under
+#        $DBT_DIR/target/compiled/...; None for `removed` (gone from manifest).
+def _compiled_sql(node):
+    p = Path(DBT_DIR) / "target" / "compiled" / node["compiled_path"]
+    return p.read_text() if p.exists() else ""
+
+changed = []
+for uid in added:
+    n = new_models[uid]
+    changed.append({"uid": uid, "status": "added", "old": None,
+                    "new": {"columns": set(n["columns"]),
+                            "depends_on": set(n["depends_on"]["nodes"]),
+                            "materialization": n["config"]["materialized"],
+                            "compiled_sql": _compiled_sql(n)}})
+for uid in modified:
+    n = new_models[uid]
+    changed.append({"uid": uid, "status": "modified",
+                    "old": old_struct[uid],   # captured in Step 2, pre-overwrite
+                    "new": {"columns": set(n["columns"]),
+                            "depends_on": set(n["depends_on"]["nodes"]),
+                            "materialization": n["config"]["materialized"],
+                            "compiled_sql": _compiled_sql(n)}})
+for uid in removed:
+    changed.append({"uid": uid, "status": "removed",
+                    "old": old_struct[uid], "new": None})
+
+# Load the prior logic-fingerprint cache ({} on first run — file absent).
+cache_path = internal / "logic_sha_cache.json"
+cache = json.loads(cache_path.read_text()) if cache_path.exists() else {}
+
+# Classify. dialect comes from the same source as init (log.md / dbt_project.yml).
+from classify_materiality import classify_changed_models
+materiality_map, updated_cache = classify_changed_models(changed, cache, dialect=DIALECT)
+
+# Persist the refreshed cache back, and emit the map for sync to consume.
+cache_path.write_text(json.dumps(updated_cache, indent=2, sort_keys=True))
+(internal / "last_rescan_materiality.json").write_text(
+    json.dumps(materiality_map, indent=2, sort_keys=True))
+```
+
+`last_rescan_materiality.json` is the hand-off artifact: `/dbt-wiki:sync`
+reads it to decide which stale knowledge pages actually warrant a
+(LLM-costed) re-distill vs which can keep their existing content. rescan
+itself still makes **0 LLM calls** — it only writes these two JSON files.
 
 ## Step 3: Process additions
 
