@@ -11,7 +11,7 @@
    - genuine dangling reference     -> create a `status: seed` stub so the
      markdown link resolves.
 3. Lint `derived_from` cross-domain contamination (uids spanning >1 domain),
-   which would cause spurious stale-cascades on refresh.
+   which would cause spurious stale-cascades on rescan.
 
 Reads `_internal/ownership.json` when present (the domain fan-out map written by
 the orchestrator for large projects). **Small projects skip domain fan-out and

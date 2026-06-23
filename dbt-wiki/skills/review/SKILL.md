@@ -9,7 +9,7 @@ description: |
 Human certification loop. Knowledge pages start as `developing` (LLM-distilled,
 not yet human-verified). A page becomes `mature` only when a human confirms its
 business meaning, field definitions, and value-domain claims are correct. Stale
-`mature` pages (flagged by `/dbt-wiki:refresh`) re-enter the queue for
+`mature` pages (flagged by `/dbt-wiki:rescan`) re-enter the queue for
 re-certification. This skill orchestrates that loop.
 
 ## Pre-condition Check (Step 0)
@@ -38,7 +38,7 @@ condition:
 | Condition | Meaning |
 |---|---|
 | `status: developing` | First certification needed — page was distilled by the LLM but no human has signed off yet. |
-| `status: mature` AND `stale: true` | Re-certification needed — the page was previously certified, but `/dbt-wiki:refresh` flagged it stale because one or more of its `derived_from` evidence models changed. |
+| `status: mature` AND `stale: true` | Re-certification needed — the page was previously certified, but `/dbt-wiki:rescan` flagged it stale because one or more of its `derived_from` evidence models changed. |
 
 Pages with `status: seed` are not yet distilled — skip them.
 Pages with `status: archived` are retired — skip them.
@@ -61,7 +61,7 @@ For each candidate page, read its frontmatter to extract:
 - `type` — knowledge-entity | knowledge-metric | knowledge-concept
 - `status` — developing | mature
 - `stale` — true | false
-- `stale_reason` — why it was flagged (set by refresh; null on first-cert pages)
+- `stale_reason` — why it was flagged (set by rescan; null on first-cert pages)
 - `updated` — last distilled/edited date
 - `derived_from` — list of evidence model unique_ids (used to compute reference count in Step 2)
 - `aliases` — project-language synonyms (display aid)
@@ -70,7 +70,7 @@ If the queue is empty, report:
 
 > All knowledge pages are either certified (mature + not stale) or not yet
 > distilled (seed). Nothing to review.
-> Run `/dbt-wiki:refresh` if you suspect recently changed evidence models
+> Run `/dbt-wiki:rescan` if you suspect recently changed evidence models
 > have not been propagated yet.
 
 ## Step 2 — Prioritize by Risk / Impact
@@ -247,21 +247,21 @@ Move on to the next queued page.
 
 ## Step 5 — Stale `mature` Pages: Flag, Never Auto-Demote
 
-A `mature` page that `/dbt-wiki:refresh` has flagged with `stale: true` enters
+A `mature` page that `/dbt-wiki:rescan` has flagged with `stale: true` enters
 the queue as **"re-review needed"** (Step 1 already handles this). The rule:
 
 **NEVER auto-demote `mature → developing` on staleness.**
 
 Rationale: a page that has been human-certified retains its certification value
 even when the underlying evidence models change. Demoting it automatically on
-every refresh would thrash the human certification record and create false
+every rescan would thrash the human certification record and create false
 impressions that every previously-reviewed page is unreviewed again.
 
 Instead:
 
 | Human action | What the agent does |
 |---|---|
-| Re-certifies (Step 4 approval) | Clear `stale` / `stale_at` / `stale_reason`, refresh `reviewed_at`, keep `status: mature`. |
+| Re-certifies (Step 4 approval) | Clear `stale` / `stale_at` / `stale_reason`, update `reviewed_at`, keep `status: mature`. |
 | Explicitly downgrades ("this needs rework") | Set `status: developing`, clear `reviewed_by` / `reviewed_at`, add a Caveat noting why. |
 | Skips ("defer") | Leave all frontmatter unchanged — page stays `mature + stale`, re-appears in the next review queue. |
 

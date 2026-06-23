@@ -4,6 +4,84 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] — 2026-06-24
+
+### Added — materiality triage in `sync` (Phase 2): cosmetic-only changes skip the LLM gate
+
+`sync` no longer prompts a (paid, non-deterministic) `redistill` when the dbt
+change that flagged knowledge pages stale was **cosmetic only** — a comment /
+whitespace / `schema.yml` description edit that did not change a model's meaning.
+Only **material** evidence changes (column add/remove/rename, `depends_on` /
+lineage, materialization, or a logic change) reach the gate.
+
+How it works (all deterministic, `rescan` stays 0-LLM):
+
+- **`logic_sha`** (`rescan/assets/logic_sha.py`, 10-case TDD) — a comment-stripped,
+  sqlglot-normalized SQL fingerprint (regex fallback + `method` flag when sqlglot
+  can't parse). Comment/whitespace edits leave it unchanged; logic edits change it.
+- **per-model classifier** (`rescan/assets/classify_materiality.py`, 14-case TDD) —
+  labels each changed model material/cosmetic by comparing column-name-set,
+  `depends_on`, materialization, and `logic_sha` against a baseline cached in
+  `_internal/logic_sha_cache.json`; `rescan` Step 2.6 emits
+  `_internal/last_rescan_materiality.json`.
+- **page-level triage** (`sync/assets/triage_worklist.py`, 10-case TDD) — a stale
+  page is material iff ANY of its `derived_from` changed-models is material
+  (OR-aggregation). `sync` Step 2.5 drops cosmetic-only pages from the gate
+  (kept flagged stale, surfaced, not re-distilled). All-cosmetic → cheap exit 0,
+  no prompt.
+
+Industry-aligned (dbt's own `state:modified` has the file-checksum flaw; dbt
+state-aware orchestration moved to comment-ignoring semantic diffs). Fallback:
+when `last_rescan_materiality.json` is absent (a `rescan` from before this
+feature, or first upgrade) `sync` treats all stale pages as material — never
+blocks. No evidence-page schema change; `init` untouched.
+
+## [3.0.0] — 2026-06-24
+
+### Changed (BREAKING) — `/dbt-wiki:refresh` → `/dbt-wiki:rescan`
+
+The `refresh` command is renamed to `rescan`. `refresh` over-promised: it reads
+as "fully re-sync everything", but the command only rebuilt the cheap mechanical
+**evidence** layer (manifest diff + sqlglot lineage) and *flagged* knowledge
+pages stale — it never re-distilled the semantic layer. `rescan` names exactly
+what it does: re-scan the evidence, 0 LLM, safe to run daily.
+
+Migration: replace `/dbt-wiki:refresh` with `/dbt-wiki:rescan` — behaviour is
+otherwise identical. Existing `.dbt-wiki/` vaults need no change; historical
+`refresh` log entries are left as-is.
+
+### Added — `/dbt-wiki:redistill` (the LLM half — fast-follow now shipped)
+
+Re-distills the knowledge pages `rescan` flagged stale so their semantic prose
+catches up with the changed evidence.
+
+- Deterministic work-list (`redistill/assets/collect_redistill_worklist.py`,
+  13-case test): stale + non-mature + non-archived pages **with provenance**,
+  grouped by the domain owning the majority of their `derived_from` evidence
+  (via `_internal/ownership.json`). Falls back to a single `(all)` group when
+  ownership.json is absent (small / sequential init had no domain fan-out).
+- Skips human-certified `mature` pages by default (`--force-mature` to include).
+  **Delegates** the actual distillation to init's `references/distill-*.md`
+  (single source of truth — no copied logic), then runs reconcile +
+  lint_identifier_fidelity + build_index_knowledge. `--dry-run` / `--yes`.
+- User-triggered only: LLM cost + non-determinism stay off the daily path.
+
+### Added — `/dbt-wiki:sync` (one-shot orchestrator)
+
+"Just bring my wiki up to date": runs `rescan`, then if it left knowledge pages
+stale, **gates** an LLM `redistill` behind an explicit yes (non-interactive
+default = no). Delegates to both sibling skills — owns the sequencing + the gate,
+never reimplements their logic. `--no-redistill` / `--redistill` / `--yes` /
+`--force-mature` / `--dry-run`.
+
+### Notes
+
+- Command-reference cross-links updated repo-wide (init / query / review /
+  ingest prose, init asset templates, README ×3). `pack`'s "re-run to refresh"
+  is the English verb, not the command — left unchanged.
+- Phase 2 (materiality triage in `sync`, so cosmetic-only changes skip the gate)
+  is the next fast-follow.
+
 ## [2.14.1] — 2026-06-20
 
 ### Changed — `query` leverages `value_domain` (value-grounded answers)

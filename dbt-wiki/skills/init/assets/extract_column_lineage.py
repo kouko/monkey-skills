@@ -7,7 +7,7 @@
 
 dbt-wiki ships this script as a plugin asset. /dbt-wiki:init copies it to
 .dbt-wiki/_internal/extract_column_lineage.py for the user's project.
-The init/refresh skills invoke it once per model (or in batch mode) to
+The init/rescan skills invoke it once per model (or in batch mode) to
 populate the `columns[].sources` field of model entity pages.
 
 Dependency installation
@@ -25,7 +25,7 @@ so `uv run` auto-installs it without polluting the user's Python env.
 
 Usage
 -----
-Single file (preferred for incremental refresh):
+Single file (preferred for incremental rescan):
 
     uv run extract_column_lineage.py <compiled_sql_file> [dialect]
 
