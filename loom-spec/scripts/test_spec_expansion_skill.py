@@ -339,6 +339,64 @@ def test_specs_delta_stays_openspec_pure():
     assert "specs/" in low or "specs/" in _text()
 
 
+# --- persistent intent layer authoring convention ---------------------------
+
+def test_skill_documents_intent_layer():
+    """The skill MUST document how to author the PERSISTENT intent layer:
+    the TOP/MID locations, the three canonical TOP MODEL.md sections (which
+    MUST mirror validate_intent_layer.py's _TOP_SECTIONS), the per-capability
+    MID README.md, cut rule #4, and the MID-no-restate anti-pattern."""
+    text = _text()
+    low = text.lower()
+
+    # an explicitly-named intent-layer authoring section
+    assert "persistent intent layer" in low, \
+        "must document authoring the persistent intent layer in a named section"
+
+    # TOP + MID locations (exact paths)
+    assert "docs/loom/spec/MODEL.md" in text, \
+        "must name the TOP MODEL.md location docs/loom/spec/MODEL.md"
+    assert "docs/loom/spec/<capability>/README.md" in text, \
+        "must name the MID per-capability README.md location " \
+        "docs/loom/spec/<capability>/README.md"
+    assert "top" in low and "mid" in low, \
+        "must distinguish the TOP vs MID altitudes"
+
+    # the canonical TOP sections — imported from the validator (the SSOT) so a
+    # VALIDATOR-side rename of _TOP_SECTIONS trips this test too, not only a
+    # doc-side drift; this closes the doc-mirrors-code loop (Task-4 ↔ Task-1).
+    from validate_intent_layer import _TOP_SECTIONS
+    for header in _TOP_SECTIONS:
+        assert header in text, \
+            f"TOP MODEL.md canonical section missing: {header}"
+
+    # cut rule #4: delete-the-capability test → YES→MID, NO→TOP
+    assert "cut rule" in low, "must state cut rule #4 by name"
+    found_cut = False
+    for line in low.splitlines():
+        if "delet" in line and "capability" in line:
+            found_cut = True
+            break
+    assert found_cut, \
+        "cut rule #4 must frame the 'remove this capability — does this " \
+        "content get deleted?' test"
+    assert "yes" in low and "no" in low, \
+        "cut rule #4 must route YES→MID, NO→TOP"
+
+    # the MID-no-restate anti-pattern (human-reviewed, NOT a CI gate)
+    found_antipattern = False
+    for line in low.splitlines():
+        if "mid" in line and "restate" in line and (
+            "test" in line or "behavior" in line
+        ):
+            found_antipattern = True
+            break
+    assert found_antipattern, \
+        "must carry the anti-pattern: MID must not restate behavior a test owns"
+    assert "rot" in low, \
+        "anti-pattern must name the residual-rot surface it guards against"
+
+
 # --- boundary: stops at GENERATE --------------------------------------------
 
 def test_generate_boundary_no_tdd_no_review():

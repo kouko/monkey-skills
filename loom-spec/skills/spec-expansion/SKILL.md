@@ -353,6 +353,51 @@ blind spots:
 Validate the emitted directory with
 `loom-spec/scripts/validate_spec_output.py <output-dir>` before handoff.
 
+## Authoring the persistent intent layer
+
+The hybrid output above is the **per-change** artifact (a `docs/loom/<change-id>/`
+folder, consumed once by VERIFY then frozen). The **persistent intent layer** is
+the durable spec root that outlives any single change — the cross-cutting model
+and per-capability intent that tests cannot encode. It lives in **two altitudes**:
+
+- **TOP** — `docs/loom/spec/MODEL.md`: the cross-cutting model that spans
+  capabilities (system-wide invariants, object lifecycles, the global scope
+  boundary).
+- **MID** — `docs/loom/spec/<capability>/README.md`: one per capability,
+  carrying that capability's intent / why / scope.
+
+**TOP `MODEL.md` carries exactly these three canonical sections** (the header
+text is load-bearing — `loom-spec/scripts/validate_intent_layer.py` enforces it
+via `_TOP_SECTIONS`, so match it verbatim):
+
+```
+## Invariants
+## Object state machines
+## Out of scope
+```
+
+`## Invariants` are the rules that must always hold across capabilities;
+`## Object state machines` are the cross-cutting object lifecycles; `## Out of
+scope` is the global boundary of what the system deliberately does not do.
+
+**MID `README.md`** carries the capability's **intent / why / scope** — the
+reason this capability exists and what it is responsible for, not how any one
+flow behaves.
+
+**Cut rule #4 — TOP vs MID placement.**
+Ask: *"remove this capability — does this content get deleted?"*
+- **YES** → it belongs in the capability's **MID** `README.md`.
+- **NO** (it survives the capability's removal because it spans others) → it
+  belongs in **TOP** `MODEL.md`.
+
+**Anti-pattern — MID must NOT restate behavior a test owns.** A MID `README.md`
+that re-describes step-by-step what a flow does duplicates what the `####
+Scenario:` acceptance tests already own — the residual-rot surface: the prose
+and the tests drift apart, and the prose silently goes stale. Keep MID at the
+intent/why/scope altitude; let the tests be the single source of truth for
+behavior. This discipline is **human-reviewed, NOT a CI gate** — no script
+detects restated behavior, so a reviewer must hold the line at authoring time.
+
 ## Boundary — stops at GENERATE
 
 This skill **stops at GENERATE**. It does **not** run TDD, write production
