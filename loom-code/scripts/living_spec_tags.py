@@ -30,6 +30,14 @@ _TAG_RE = re.compile(
     r"(?:#|//|--)\s*@(req|invariant-ref):\s*(\S+)"
 )
 
+# A `@req:` binding line specifically (the drift lane ignores
+# `@invariant-ref`). Captures the requirement id.
+_REQ_TAG_RE = re.compile(r"(?:#|//|--)\s*@req:\s*(\S+)")
+
+# Any function definition (`def name(`) — used to bound a test body's
+# line range: the body ends just before the NEXT def at/below it.
+_DEF_RE = re.compile(r"^\s*def\s+\w+\s*\(")
+
 # Marker presence: a line comment carrying the `@req`/`@invariant-ref`
 # marker, regardless of whether a `: <id>` follows. A line that hits
 # this but NOT `_TAG_RE` is malformed (missing colon, or empty id).
@@ -88,3 +96,65 @@ def find_malformed_tags(text: str) -> list[str]:
         if _TAG_MARKER_RE.search(line) and not _TAG_RE.search(line):
             malformed.append(line.strip())
     return malformed
+
+
+def locate_bindings(text: str) -> list[dict]:
+    """Return one record per ``@req`` binding with its line positions.
+
+    Each record::
+
+        {"test", "req", "body_start", "body_end", "binding_line"}
+
+    All line numbers are 1-based. ``body_start`` is the line of the
+    enclosing ``def test_...(``; ``body_end`` is the line just before the
+    NEXT ``def ...`` (any def) at/below it, or the last line of ``text``
+    if no def follows — i.e. the enclosing test's body range, suitable
+    for a later ``git log -L``. ``binding_line`` is the line of that
+    ``@req:`` comment. A test carrying two ``@req`` lines yields two
+    records sharing test + body range but differing in binding_line/req.
+
+    Only ``@req`` bindings are located; ``@invariant-ref`` is ignored
+    (out of scope for the drift lane).
+    """
+    lines = text.splitlines()
+    total = len(lines)
+
+    # Index every def line (1-based) so a test's body_end is the line
+    # before the next def at/below its own def.
+    def_lines = [
+        idx + 1 for idx, line in enumerate(lines) if _DEF_RE.match(line)
+    ]
+
+    def body_end_for(start: int) -> int:
+        for d in def_lines:
+            if d > start:
+                return d - 1
+        return total
+
+    records: list[dict] = []
+    current_test: str | None = None
+    current_start = 0
+    current_end = 0
+    for idx, line in enumerate(lines):
+        lineno = idx + 1
+        def_match = _TEST_DEF_RE.match(line)
+        if def_match:
+            current_test = def_match.group(1)
+            current_start = lineno
+            current_end = body_end_for(lineno)
+            continue
+        if current_test is None:
+            # A @req before any enclosing test has no body range; skip.
+            continue
+        req_match = _REQ_TAG_RE.search(line)
+        if req_match:
+            records.append(
+                {
+                    "test": current_test,
+                    "req": req_match.group(1),
+                    "body_start": current_start,
+                    "body_end": current_end,
+                    "binding_line": lineno,
+                }
+            )
+    return records
