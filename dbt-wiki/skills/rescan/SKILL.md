@@ -254,10 +254,14 @@ internal = wiki / "_internal"
 #        old_struct stashed in Step 2 BEFORE Step 4 overwrote the page; None
 #        for `added` (no prior page).
 #   new: {columns(name set), depends_on(set), materialization, compiled_sql}
-#        from the NEW manifest + the compiled SQL file under
-#        $DBT_DIR/target/compiled/...; None for `removed` (gone from manifest).
+#        from the NEW manifest + the compiled SQL file; None for `removed`
+#        (gone from manifest).
 def _compiled_sql(node):
-    p = Path(DBT_DIR) / "target" / "compiled" / node["compiled_path"]
+    # dbt's manifest `compiled_path` is already project-root-relative and
+    # ALREADY includes the `target/compiled/<project>/...` prefix — do NOT
+    # re-prepend `target/compiled` (that double-prefixes → file never found →
+    # empty SQL → every model force-classed material, neutering the triage).
+    p = Path(DBT_DIR) / node["compiled_path"]
     return p.read_text() if p.exists() else ""
 
 changed = []
