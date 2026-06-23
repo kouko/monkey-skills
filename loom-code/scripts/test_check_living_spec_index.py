@@ -17,6 +17,8 @@ Stdlib only.
 """
 
 import importlib.util
+import os
+import subprocess
 from pathlib import Path
 
 _MODULE_PATH = Path(__file__).parent / "check-living-spec-index.py"
@@ -29,6 +31,37 @@ def _load_checker():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def _git(repo: Path, *args: str, env: dict | None = None) -> str:
+    """Run a git command in `repo`, return stdout (stripped)."""
+    result = subprocess.run(
+        ["git", "-C", str(repo), *args],
+        check=True,
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    return result.stdout.strip()
+
+
+def _init_repo(tmp_path: Path) -> Path:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _git(repo, "init", "-q")
+    _git(repo, "config", "user.email", "test@example.com")
+    _git(repo, "config", "user.name", "Test User")
+    return repo
+
+
+def _commit(repo: Path, message: str, *, date: str) -> str:
+    """Stage all + commit with a pinned author/committer date; return SHA."""
+    env = os.environ.copy()
+    env["GIT_AUTHOR_DATE"] = date
+    env["GIT_COMMITTER_DATE"] = date
+    _git(repo, "add", "-A", env=env)
+    _git(repo, "commit", "-q", "-m", message, env=env)
+    return _git(repo, "rev-parse", "HEAD")
 
 
 def test_structural_violations():
@@ -102,3 +135,124 @@ def test_index_is_current():
     assert checker.index_is_current(x, x + "\n") is False, (
         "a trailing-newline difference must fail byte-identity"
     )
+
+
+def test_run_drift_lane_emits_warn_and_exits_zero(tmp_path, capsys):
+    # WHY: the WARN lane composes the three upstream modules
+    # (collect -> resolve -> drift) over a real source tree, and a drifted
+    # binding must SURFACE as advice WITHOUT failing the build — a WARN is
+    # informational, never a gate failure, and must never touch the
+    # structural FAIL list. This is the end-to-end seam: collect a tagged
+    # test, resolve its body/binding commits, detect body-after-binding
+    # drift, print to stderr, and STILL exit 0.
+    checker = _load_checker()
+    repo = _init_repo(tmp_path)
+    src = repo / "test_thing.py"
+    # binding_line = 2 (@req), body assertion = line 3 (edited later).
+    src.write_text(
+        "def test_thing():\n"
+        "    # @req: REQ-1\n"
+        "    assert compute() == 1\n",
+        encoding="utf-8",
+    )
+    _commit(repo, "initial", date="2026-01-01T00:00:00 +0000")
+    # Later commit touches ONLY the body line => body_ts > binding_ts.
+    src.write_text(
+        "def test_thing():\n"
+        "    # @req: REQ-1\n"
+        "    assert compute() == 2\n",
+        encoding="utf-8",
+    )
+    _commit(repo, "tweak body", date="2026-02-01T00:00:00 +0000")
+
+    # (1) run_drift_lane returns a non-empty WARN list for the drift.
+    warns = checker.run_drift_lane(repo)
+    assert warns, f"drifted tagged test must yield a WARN, got: {warns!r}"
+    assert any("test_thing" in w for w in warns)
+
+    # (2) main over that root prints the WARN to stderr and returns 0
+    # EVEN THOUGH a WARN exists — a WARN never fails the build.
+    rc = checker.main([str(repo)])
+    assert rc == 0, f"a WARN must not fail the build, got rc={rc!r}"
+    captured = capsys.readouterr()
+    assert "test_thing" in captured.err, (
+        f"WARN must be printed to stderr, got: {captured.err!r}"
+    )
+
+
+def test_run_drift_lane_no_drift_is_silent(tmp_path, capsys):
+    # WHY: a clean tree (no body-after-binding drift) must yield [] and a
+    # silent, exit-0 main — no false-positive WARNs on stderr.
+    checker = _load_checker()
+    repo = _init_repo(tmp_path)
+    src = repo / "test_thing.py"
+    src.write_text(
+        "def test_thing():\n"
+        "    # @req: REQ-1\n"
+        "    assert compute() == 1\n",
+        encoding="utf-8",
+    )
+    _commit(repo, "initial", date="2026-01-01T00:00:00 +0000")
+
+    assert checker.run_drift_lane(repo) == [], "no drift must yield []"
+
+    rc = checker.main([str(repo)])
+    assert rc == 0
+    captured = capsys.readouterr()
+    assert "WARN" not in captured.err, (
+        f"a clean tree must emit no WARN, got: {captured.err!r}"
+    )
+
+
+def test_uncommitted_tagged_test_is_skipped_not_fatal(tmp_path, capsys):
+    # WHY: the WARN lane must ALWAYS exit 0 and NEVER pre-empt the
+    # structural FAIL lane. A net-new @req-tagged test in the WORKING
+    # TREE (the everyday local pre-commit workflow) has no committed
+    # history, so `git log -L` exits 128. That binding has no committed
+    # baseline => it cannot be drift; it must be SKIPPED, not crash the
+    # lane. Here a committed+drifted test coexists with an uncommitted
+    # tagged test: run_drift_lane must surface the drifted one WITHOUT
+    # raising, and main must still return 0 with no traceback.
+    checker = _load_checker()
+    repo = _init_repo(tmp_path)
+
+    # A committed tagged test that later drifts (body edited after @req).
+    drifted = repo / "test_drift.py"
+    drifted.write_text(
+        "def test_drift():\n"
+        "    # @req: REQ-1\n"
+        "    assert compute() == 1\n",
+        encoding="utf-8",
+    )
+    _commit(repo, "initial", date="2026-01-01T00:00:00 +0000")
+    drifted.write_text(
+        "def test_drift():\n"
+        "    # @req: REQ-1\n"
+        "    assert compute() == 2\n",
+        encoding="utf-8",
+    )
+    _commit(repo, "tweak body", date="2026-02-01T00:00:00 +0000")
+
+    # A NEW tagged test in the working tree, NEVER committed.
+    uncommitted = repo / "test_new.py"
+    uncommitted.write_text(
+        "def test_new():\n"
+        "    # @req: REQ-2\n"
+        "    assert compute() == 2\n",
+        encoding="utf-8",
+    )
+
+    # (1) run_drift_lane must NOT raise on the uncommitted binding; it
+    # surfaces the committed-drift WARN and skips the uncommitted one.
+    warns = checker.run_drift_lane(repo)
+    assert any("test_drift" in w for w in warns), (
+        f"the committed drift must still surface, got: {warns!r}"
+    )
+    assert not any("test_new" in w for w in warns), (
+        f"the uncommitted test has no baseline => no WARN, got: {warns!r}"
+    )
+
+    # (2) main must return 0 (WARN lane never fails the build) and the
+    # uncommitted test must not crash it with a traceback.
+    rc = checker.main([str(repo)])
+    assert rc == 0, f"a WARN/skip must not fail the build, got rc={rc!r}"

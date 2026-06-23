@@ -9,6 +9,8 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
+import pytest
+
 from living_spec_gitref import resolve_binding_refs
 
 
@@ -135,3 +137,104 @@ def test_resolve_refs_binding_touched_after_body(tmp_path: Path) -> None:
     assert enriched["body_ref"] == c1
     assert enriched["body_ref"] != enriched["binding_ref"]
     assert enriched["binding_ts"] >= enriched["body_ts"]
+
+
+def test_unresolvable_range_returns_none(tmp_path: Path) -> None:
+    """A binding with NO committed history is unresolvable, not an error.
+
+    WHY: the everyday local pre-commit workflow has a net-new @req-tagged
+    test in the WORKING TREE that has never been committed — its path is
+    not in HEAD, so ``git log -L`` exits 128 ("There is no path ... in
+    the commit"). That is NOT a git failure: there is simply no committed
+    baseline to drift from. The resolver must signal "unresolvable"
+    (return None) for THAT case rather than letting CalledProcessError
+    propagate and crash the advisory WARN lane. A None binding cannot be
+    a drift, so the downstream lane skips it.
+    """
+    repo = _init_repo(tmp_path)
+    committed = repo / "test_committed.py"
+    committed.write_text(
+        "def test_committed():\n"
+        "    # @req: REQ-1\n"
+        "    assert compute() == 1\n",
+        encoding="utf-8",
+    )
+    _commit(repo, "initial", date="2026-01-01T00:00:00 +0000")
+
+    # A NEW tagged test file staged-or-not but NEVER committed: its range
+    # has no committed history => git log -L exits 128.
+    uncommitted = repo / "test_new.py"
+    uncommitted.write_text(
+        "def test_new():\n"
+        "    # @req: REQ-2\n"
+        "    assert compute() == 2\n",
+        encoding="utf-8",
+    )
+    binding = {
+        "test": "test_new",
+        "req": "REQ-2",
+        "body_start": 1,
+        "body_end": 3,
+        "binding_line": 2,
+        "file": "test_new.py",
+    }
+
+    # Unresolvable (no committed baseline) => None, NOT a raise.
+    assert resolve_binding_refs(binding, repo) is None
+
+
+def test_unresolvable_range_via_body_beyond_committed_length(
+    tmp_path: Path,
+) -> None:
+    """A body range beyond HEAD's committed file length is unresolvable.
+
+    WHY: an uncommitted edit can push a test's body range past the
+    number of lines the file had at HEAD; ``git log -L`` then exits 128
+    ("file ... has only N lines"). Same class as a never-committed path —
+    no committed baseline for that range — so it must signal None, not
+    crash the WARN lane.
+    """
+    repo = _init_repo(tmp_path)
+    src = repo / "test_thing.py"
+    # Committed file is only 3 lines long.
+    src.write_text(
+        "def test_thing():\n"
+        "    # @req: REQ-1\n"
+        "    assert compute() == 1\n",
+        encoding="utf-8",
+    )
+    _commit(repo, "initial", date="2026-01-01T00:00:00 +0000")
+
+    # Binding points the body range past the committed file length.
+    binding = {
+        "test": "test_thing",
+        "req": "REQ-1",
+        "body_start": 5,
+        "body_end": 8,
+        "binding_line": 2,
+        "file": "test_thing.py",
+    }
+    assert resolve_binding_refs(binding, repo) is None
+
+
+def test_genuine_git_error_still_raises(tmp_path: Path) -> None:
+    """A GENUINE git failure must still propagate — never be masked.
+
+    WHY: the unresolvable-history skip is surgical, NOT a blanket
+    try/except. Pointing the resolver at a directory that is not a git
+    repository is a real error (no ``.git``); it must raise
+    CalledProcessError so a broken setup fails loud instead of being
+    silently swallowed as "unresolvable".
+    """
+    not_a_repo = tmp_path / "plain"
+    not_a_repo.mkdir()
+    binding = {
+        "test": "test_x",
+        "req": "REQ-1",
+        "body_start": 1,
+        "body_end": 3,
+        "binding_line": 2,
+        "file": "test_x.py",
+    }
+    with pytest.raises(subprocess.CalledProcessError):
+        resolve_binding_refs(binding, not_a_repo)
