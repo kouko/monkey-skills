@@ -13,6 +13,12 @@ returning one problem message per MISSING required section. When MODEL.md
 is ABSENT it returns [] — absence is the aggregator's concern in a later
 task, not this check's.
 
+`check_mid_readmes(spec_dir) -> list[str]` checks the MID altitude: each
+IMMEDIATE sub-directory of `spec_dir` is a capability dir whose per-
+capability intent doc is `README.md`. It returns one problem message per
+capability dir that lacks a README.md. A spec_dir with no capability
+subdirs (or a non-existent spec_dir) returns [].
+
 Required canonical TOP sections (exact header text, whole-line match):
 - ## Invariants
 - ## Object state machines
@@ -72,4 +78,25 @@ def check_top_model(spec_dir: Path) -> list[str]:
                 f"missing '{header}' section in {model} "
                 f"(a TOP-altitude MODEL.md needs the cross-cutting "
                 f"{header.lstrip('# ').lower()})")
+    return problems
+
+
+def check_mid_readmes(spec_dir: Path) -> list[str]:
+    """Check that every MID-altitude capability dir has a README.md.
+
+    Each IMMEDIATE sub-directory of `spec_dir` is a capability dir whose
+    per-capability intent doc is `README.md`. Returns one problem message
+    per capability dir that lacks one. A spec_dir with no capability subdirs,
+    or a non-existent spec_dir, returns [] (absence is the aggregator's
+    concern, not this check's).
+    """
+    spec_dir = Path(spec_dir)
+    if not spec_dir.is_dir():
+        return []
+    problems: list[str] = []
+    for cap in sorted(p for p in spec_dir.iterdir() if p.is_dir()):
+        if not (cap / "README.md").is_file():
+            problems.append(
+                f"missing README.md in capability '{cap.name}' ({cap}) "
+                f"(a MID-altitude capability dir needs a README.md intent doc)")
     return problems

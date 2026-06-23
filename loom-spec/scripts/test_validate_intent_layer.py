@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from validate_intent_layer import check_top_model
+from validate_intent_layer import check_mid_readmes, check_top_model
 
 _ALL_SECTIONS = (
     "## Invariants\n\nThe ledger total never goes negative.\n\n"
@@ -55,3 +55,35 @@ def test_top_model_section_only_in_prose_does_not_count(tmp_path: Path) -> None:
 def test_top_model_absent_returns_empty(tmp_path: Path) -> None:
     # No MODEL.md -> absence handled by aggregator; this check returns [].
     assert check_top_model(tmp_path) == []
+
+
+def test_mid_capability_without_readme_reported(tmp_path: Path) -> None:
+    # A capability dir lacking the MID README.md yields exactly one problem
+    # naming that capability; a sibling capability WITH a README.md yields none.
+    (tmp_path / "order").mkdir()
+    documented = tmp_path / "payment"
+    documented.mkdir()
+    (documented / "README.md").write_text("# Payment\n", encoding="utf-8")
+    problems = check_mid_readmes(tmp_path)
+    assert len(problems) == 1
+    assert "order" in problems[0]
+    assert str(tmp_path / "order") in problems[0]
+
+
+def test_mid_all_capabilities_documented_ok(tmp_path: Path) -> None:
+    for cap in ("order", "payment"):
+        d = tmp_path / cap
+        d.mkdir()
+        (d / "README.md").write_text(f"# {cap}\n", encoding="utf-8")
+    assert check_mid_readmes(tmp_path) == []
+
+
+def test_mid_no_capability_subdirs_returns_empty(tmp_path: Path) -> None:
+    # A spec_dir with no immediate sub-directories -> [].
+    (tmp_path / "MODEL.md").write_text("## Invariants\n", encoding="utf-8")
+    assert check_mid_readmes(tmp_path) == []
+
+
+def test_mid_nonexistent_spec_dir_returns_empty(tmp_path: Path) -> None:
+    # A non-existent spec_dir -> [] (aggregator's concern).
+    assert check_mid_readmes(tmp_path / "does-not-exist") == []
