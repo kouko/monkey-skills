@@ -21,10 +21,13 @@ skills and never reimplements their logic:
 This keeps a single source of truth: rescan owns the cheap half, redistill owns
 the LLM half, sync just sequences them and owns the gate between.
 
-> Phase 1 (MVP) has **no materiality triage** — the gate fires whenever rescan
-> leaves stale developing pages, even if the change was purely cosmetic
-> (comment/description only). Just answer **no** at the gate for cosmetic runs.
-> Phase 2 adds triage so cosmetic changes skip the gate automatically.
+> **Materiality triage ships** (Step 2.5): cosmetic-only stale pages
+> (comment/description/whitespace changes) auto-skip the LLM gate — only
+> pages whose evidence changed in *meaning* enter Step 3. Triage consumes the
+> `last_rescan_materiality.json` map that rescan Step 2.6 emits; if that map is
+> **absent** (a rescan from before this feature, or a first upgrade) sync falls
+> back to treating **all** stale pages as material (the original Phase-1
+> behaviour) — it never blocks on a missing map.
 
 ## Args
 
@@ -67,9 +70,71 @@ If `total_selected == 0` and no `--force-mature` target exists: print "Evidence
 updated; no stale developing knowledge pages to re-distill." and **exit 0** —
 the cheap path was enough.
 
+## Step 2.5: Materiality triage (split material vs cosmetic-only — 0 LLM)
+
+The work-list from Step 2 contains every **stale** developing page. But some
+went stale because their evidence changed only cosmetically (a comment /
+whitespace / description edit), not in meaning — re-distilling those wastes LLM
+budget. Rescan already classified each changed model in its Step 2.6 and emitted
+`last_rescan_materiality.json` (`{uid: "material"|"cosmetic"}`). Roll that
+per-model verdict up to a per-page verdict here, so only **material** pages enter
+the gate. This is **0-LLM** — pure set comparison via the rescan helper.
+
+`<SKILL_DIR>` = the directory containing this SKILL.md; the triage helper is its
+own sibling at `<SKILL_DIR>/assets/triage_worklist.py`. Use the absolute
+placeholder path, NOT a bare `../` — rescan's delegation already `cd`'d to the
+git repo root, so a relative path would resolve against that, not the skill
+folder.
+
+```python
+# Pseudocode — page-level materiality triage. Run via $PY_RUNNER (resolved in
+# Step 2) so triage_worklist.py imports cleanly.
+import json
+from pathlib import Path
+
+worklist = json.loads(Path("/tmp/sync_worklist.json").read_text())
+groups = worklist["groups"]   # {domain: [page, ...]} from Step 2
+
+mat_path = Path(".dbt-wiki/_internal/last_rescan_materiality.json")
+
+if not mat_path.exists():
+    # FALLBACK: rescan ran before this feature (or first upgrade) — no map.
+    # Treat ALL stale pages as material (original Phase-1 behaviour). Never
+    # block on a missing map. Note the fallback explicitly in the run output.
+    material_groups = groups
+    cosmetic_pages = []
+    print("No materiality map (last_rescan_materiality.json absent) — "
+          "treating all stale pages as material (fallback).")
+else:
+    materiality_map = json.loads(mat_path.read_text())
+    from triage_worklist import triage   # <SKILL_DIR>/assets/triage_worklist.py
+    partition = triage(groups, materiality_map)
+    material_groups = partition["material"]   # {domain: [page, ...]}
+    cosmetic_pages = partition["cosmetic"]    # flat [page, ...]
+
+# Surface the cosmetic-only pages — they stay flagged stale, NOT re-distilled.
+if cosmetic_pages:
+    print(f"Skipped (cosmetic-only): {len(cosmetic_pages)} page(s) — evidence "
+          f"changed only cosmetically; left flagged stale, not re-distilled.")
+
+# Only `material_groups` flows into the Step 3 gate. Count material pages:
+material_page_count = sum(len(pages) for pages in material_groups.values())
+material_domain_count = len(material_groups)
+```
+
+If `material_page_count == 0` (every stale page was cosmetic-only) and no
+`--force-mature` target exists: print **"Evidence updated; <N> page(s) stale but
+all cosmetic — skipped (left flagged stale, not re-distilled)."** and **exit 0**.
+The cheap path was enough — do NOT enter the gate, do NOT prompt, do NOT spend on
+the LLM.
+
 ## Step 3: The gate (interactive, unless pre-answered)
 
-Print the redistill scope table (from the work-list: domains, pages,
+The gate operates on the **material** partition from Step 2.5 only
+(`material_groups` / `material_page_count` / `material_domain_count`) — the
+cosmetic-only pages were already surfaced and skipped, and never reach here.
+
+Print the redistill scope table for the material pages (domains, pages,
 `skipped_mature`, fallback flag — same shape as redistill Step 2).
 
 Then decide:
@@ -77,9 +142,9 @@ Then decide:
 - `--no-redistill` → skip; print how to redistill later (`/dbt-wiki:redistill`)
   and **exit 0**.
 - `--yes` or `--redistill` → proceed without asking.
-- otherwise **ask**: *"Rescan flagged <N> knowledge page(s) across <D>
-  domain(s) stale. Re-distill them now? This calls the LLM. Some may be cosmetic
-  — say no to leave them flagged. (yes/no)"*
+- otherwise **ask**: *"Rescan flagged <material_page_count> knowledge page(s)
+  across <material_domain_count> domain(s) with material evidence changes.
+  Re-distill them now? This calls the LLM. (yes/no)"*
   - **no** → leave stale flags in place; print `/dbt-wiki:redistill` as the
     follow-up and **exit 0**.
   - **yes** → continue.
