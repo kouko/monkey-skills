@@ -129,6 +129,64 @@ This is the structurally different shape of Mode C.
 
 ---
 
+## Real-World Cases (mined from actual sessions)
+
+These three are real before/after pairs pulled from session logs — unedited except for trimming. They cover Modes B, C, and D across three domains (UX, research pipeline, data/SQL). Real cases beat synthetic ones: the recovery turns show what *landing the briefing* actually looks like in messy, domain-specific reality.
+
+### Real Case 1 — Eval design (Mode C: lost in jargon)
+
+**The bad ask** — agent dumped a full eval-design table, then asked to proceed:
+> | **Arm A** | sonnet 單趟 synthesis（含可選 meta-mode prepend）|
+> | **Arm B** | A 的 synthesis → opus 異質 skeptic pass 對著 confirmed-claims 去 falsify |
+> | **反同模型膨脹** | generator=sonnet vs judge=opus … recall 可能略樂觀 |
+> … base-rate / recall / precision / materiality / Build 門檻 …
+> 要我**就照這個設計跑**嗎？
+
+**User:** 用白話文解釋
+
+**The recovery** — a plain-language restate that is, in fact, a full briefing in disguise:
+> 白話版——我要測什麼、為什麼。
+> **現在的情況**：研究報告產生器最後一步是「把驗證過的資料整理成一篇報告」… **這一步只做一次，沒人回頭檢查它整理得對不對。**
+> 我選的「缺口 1」就是想補一個**回頭挑毛病的人**。
+> **但我不急著做，先測一件事**：強的 AI 模型搞不好自己整理就夠好了…那個「挑毛病的人」就是多餘的。
+> **實驗怎麼做**：**甲組**（照現在的方式整理）／**乙組**（整理完再請另一個 AI 挑毛病）／**裁判**（第三個 AI，換一個牌子，避免自己幫自己打分）。
+> **為什麼要這樣繞**：紀律是「先用證據證明值得做，再動手」… 我不想花力氣做一個 AI 本來就會的東西。
+
+**Why it works:** The recovery is a textbook briefing — Mental Model (一步只做一次、沒人檢查) → why it matters (整理可能藏矛盾／標錯信心) → options in plain words (甲/乙/裁判, not Arm A/B/judge) → My take + stakes (為什麼要這樣繞). Same decision, opposite legibility.
+
+### Real Case 2 — text-to-SQL knowledge layer (Mode D: stakes didn't land)
+
+**The bad ask** — a leverage table of pp-deltas, with no plain definition of the core term:
+> | 關係/join-path 圖 | +39〜+51pp（複雜多表）| ✅ 已有、最強資產 |
+> | in-domain gold 問題→SQL 範例 | +44.9pp（真實 KaggleDBQA）| ❌ Gap B = 第一優先 |
+> **結論**：最高 ROI 不是 profiling，而是把 syntheses/ 演化成「問題→SQL gold 範例庫」…
+
+**User** — understood the words, not the point; supplied the missing definition themselves:
+> 我想確定一下 我們現在說的 text to SQL 的 text 是商業邏輯問題 而不是單純的 SQL 統計的白話文 對嗎？
+
+**The recovery** — lead with the distinction that makes the whole thing matter:
+> 對，而且這個區分正是**整個設計的存在理由**。
+> | | 白話統計（直接對 schema）| 商業邏輯問題（要懂業務）|
+> | 例 | 「昨天幾筆訂單」| 「這季 churn 多少」「哪些活躍餐廳貢獻最多 GMV 成長」|
+> | 沒知識層時 | 普通模型也能做 | **模型直接失敗**（BIRD「需外部知識」子集，最佳模型僅 40%）|
+
+**Why it works:** The user was lost on *what the choice was even about* (stakes), not on a term's meaning — so a second pp-delta table would not have helped. The two-example contrast (昨天幾筆訂單 vs 這季 churn) made the stakes land in one line. This is Mode D, not C.
+
+### Real Case 3 — keyboard-shortcut design (Mode B: didn't get the question)
+
+**The bad ask** — three quick questions; Q3 was pure jargon with no grounding:
+> 3. **Persistence 語意**：per-window-per-archive (跟 flip / rotate 同 L3 lock) vs cross-archive…
+
+**User** — answered Q1/Q2 fine, hit the wall on Q3:
+> Ａ。2. 是同一件事 3. 不太懂你的問題
+
+**The recovery** — the agent's own question was malformed; retract, don't re-word:
+> Q3 不懂的原因是：A 沒有獨立 state… 所以「persistence」這個問題其實**不適用**於 A — `currentIndex` 已經是唯一狀態。**問錯了、忘掉這條。**
+
+**Why it works:** The fix wasn't to re-phrase the jargon — it was to notice the question was *invalid* (asking persistence of a stateless option). Sometimes "I don't get the question" means the question shouldn't have been asked. Mode B done right can end in retraction, not a glossary.
+
+---
+
 ## Anti-Patterns Demonstrated
 
 These are concrete examples of common mistakes the skill must reject.
