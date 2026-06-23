@@ -31,8 +31,12 @@ _TAG_RE = re.compile(
 )
 
 # A `@req:` binding line specifically (the drift lane ignores
-# `@invariant-ref`). Captures the requirement id.
-_REQ_TAG_RE = re.compile(r"(?:#|//|--)\s*@req:\s*(\S+)")
+# `@invariant-ref`). Captures the requirement id. The comment marker
+# must start the line (after optional leading whitespace only) so the
+# line genuinely IS a dedicated comment — an `@req:` buried inside a
+# code line or a string literal (e.g. a test fixture's
+# `"    # @req: REQ-1\n"`) is NOT a binding.
+_REQ_TAG_RE = re.compile(r"^\s*(?:#|//|--)\s*@req:\s*(\S+)")
 
 # Any function definition (`def name(`) — used to bound a test body's
 # line range: the body ends just before the NEXT def at/below it.
@@ -146,7 +150,7 @@ def locate_bindings(text: str) -> list[dict]:
         if current_test is None:
             # A @req before any enclosing test has no body range; skip.
             continue
-        req_match = _REQ_TAG_RE.search(line)
+        req_match = _REQ_TAG_RE.match(line)
         if req_match:
             records.append(
                 {

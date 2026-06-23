@@ -66,3 +66,31 @@ def test_locate_bindings_returns_line_positions():
             "binding_line": 7,
         },
     ]
+
+
+def test_locate_bindings_ignores_at_req_inside_string_literal():
+    # A fixture-style source where a `@req:` sits INSIDE a Python string
+    # literal (a `"` precedes the `#`) must NOT be collected — that line
+    # is code, not a dedicated comment. A sibling REAL comment line
+    # (`# @req:` at line-start after indent) in the same source IS
+    # collected, with a clean id (no garbled `\n",` suffix).
+    text = (
+        "def test_outer():\n"               # line 1
+        '        "    # @req: REQ-1\\n",\n'  # line 2  @req inside a string literal -> IGNORE
+        "    # @req: REQ-OK\n"              # line 3  real comment line -> COLLECT
+        "    pass\n"                        # line 4
+    )
+    records = locate_bindings(text)
+    # The string-literal occurrence is not a binding.
+    assert all(r["binding_line"] != 2 for r in records)
+    assert not any("REQ-1" in r["req"] for r in records)
+    # The real comment line is collected with a clean id.
+    assert records == [
+        {
+            "test": "test_outer",
+            "req": "REQ-OK",
+            "body_start": 1,
+            "body_end": 4,
+            "binding_line": 3,
+        }
+    ]
