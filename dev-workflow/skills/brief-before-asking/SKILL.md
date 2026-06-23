@@ -1,7 +1,7 @@
 ---
 name: brief-before-asking
 description: |
-  Deliver a 6-block briefing (Mental Model → Situation → Why-fork → Options → My take → Open ends) before asking a complex engineering decision. Use proactively before non-trivial fork questions, or reactively on '看不懂' / 'in plain English' / 'ELI5'.
+  Deliver a 6-block briefing (Mental Model → Situation → Why-fork → Options → My take → Open ends) before a non-trivial engineering decision — the default, not optional. Also fires reactively on confusion about the question, the explanation, or the stakes, or a 2nd consecutive signal.
 ---
 
 # Brief Before Asking
@@ -14,12 +14,12 @@ The agent defaults to implementation-level detail with embedded jargon. The user
 
 **brief-before-asking** enforces a 6-block briefing structure where **Mental Model leads** — the plain-English scaffolding that lets all subsequent technical content land.
 
-## Three Trigger Modes
+## Four Trigger Modes
 
-### Mode A — Proactive
-**Triggered by**: Agent self-detects "I'm about to ask user about a non-trivial decision."
+### Mode A — Proactive (DEFAULT for any non-trivial fork)
+**Triggered by**: You are about to ask the user to decide anything non-trivial (see *When NOT to Use*). This is the **default path** — briefing first is not optional. Firing `AskUserQuestion` with bare / jargon options *before* the user has the Mental Model + My take is a **violation**, not a shortcut.
 
-**Output**: Full 6-block briefing → ends with specific request.
+**Output**: Full 6-block briefing → ends with the specific request (the `AskUserQuestion` fires only after the briefing has landed).
 
 **Mini-example** — index decision briefing (compressed):
 
@@ -59,6 +59,24 @@ The agent defaults to implementation-level detail with embedded jargon. The user
 > **Why Mode C pauses**: The user already drowned in jargon once. Dumping 6 more blocks just drowns them again, even reordered. The fix is to land Mental Model first, then let the user pick the drill direction.
 
 > **First Mode C of session — optional load**: `references/EXAMPLES.md` §Saga/Outbox demo shows a worked Mode C output (Mental Model + glossary + drill menu). Skip if you've already produced one this session.
+
+### Mode D — Reactive on Stakes
+**Triggered by user phrases** showing they got the *words* but not *why it matters / what changes by their choice*:
+- 「不知道你要我決定什麼」「這要幹嘛」「為什麼要選這個」「差別/意義/影響在哪」「選了會怎樣」
+- "why does this matter" / "what changes if I pick X" / "what's the actual difference" / "so what"
+
+**Output (different from B and C)**:
+1. Bridge: 「退一步，用白話講我要你決定的到底是什麼、以及為何重要。」
+2. Lead with a **consequence-first Mental Model** + an **"if you pick A … / if you pick B …" outcome contrast** — an everyday analogy beats a precise mechanism here.
+3. *Then* My take (lean + why).
+4. **Drop or define the internal labels** (e.g. `Arm A`, `D`/`E`, `WARN`, `thin/thick-slice`) — replace them with the analogy and plain outcome words. Do not carry the raw jargon *alongside* the plain framing, or the stakes stay half-buried (a real dogfood blemish).
+5. **Do NOT** answer with more options, more detail, or a structural / dataflow diagram — those deepen the fog (see Anti-Patterns).
+
+> **Why Mode D differs from C**: Mode C is *lost in jargon* (fix: define terms, land the Mental Model). Mode D is *the words parsed fine but the significance didn't* — the user could read three well-framed options and still not see why they're being asked. The fix is consequence + outcome-contrast, not glossary.
+
+> **Repeated-confusion guard (meta-trigger, overrides mode choice)**: the **2nd consecutive** confusion signal — even differently phrased (「X 是啥」then「不能一起做嗎」), even if each alone seems minor — is a hard STOP. Do not add more detail, options, or another diagram. Drop to the Mental Model and reframe from scratch. Escalating detail after the user is already lost is the exact failure this guard breaks.
+
+> **Mode D example — optional load**: `references/EXAMPLES.md` §Real-World Cases → Real Case 2 (text-to-SQL) is a worked Mode D (consequence-first + a two-example outcome contrast); Real Case 1 shows the plain-language restate of a jargon-buried fork.
 
 ## The 6-Block Briefing Structure
 
@@ -164,6 +182,8 @@ Per-block forbidden items live in each block's section above. The patterns below
 - ❌ Conclusion-first with no reasoning: "I recommend Redis, OK?" — collapses 6 blocks into 1 ask
 - ❌ Multiple forks bundled into one briefing — one fork per briefing
 - ❌ **Mode C trigger but agent dumps full 6 blocks instead of pausing** — re-drowns the user
+- ❌ **Answering stakes-confusion (Mode D) with a structural diagram** — when the user is lost on *why it matters / what changes by their choice*, a dataflow / architecture / sequence diagram makes it worse (it shows *structure*; they asked for *consequence*). Lead with an analogy + outcome contrast; a diagram only after the stakes have landed.
+- ❌ **Escalating detail after a confusion signal** — adding more tables / research / options when the user just said they're lost. The 2nd confusion signal is a STOP, not a cue for more.
 
 ## When NOT to Use
 
@@ -180,10 +200,12 @@ Per-block forbidden items live in each block's section above. The patterns below
 
 ## Mode Detection Heuristics
 
-When deciding between Mode B and Mode C:
+When deciding between Modes B / C / D:
 
 | Signal | Mode |
 |--------|------|
+| User got the words but asks **why it matters / what changes** by their choice | D |
+| Any **2nd consecutive** confusion signal (B/C/D mixed) | STOP → reframe at Mental Model |
 | User asks what the **question** means | B |
 | User asks what the **explanation** means | C |
 | User says "什麼意思" right after agent's short question | B |
@@ -193,6 +215,8 @@ When deciding between Mode B and Mode C:
 | Agent just delivered ≥3 sentences of dense technical content + user signals confusion | C |
 | Agent's previous turn was a short ambiguous question + user signals confusion | B |
 | Still ambiguous after checking prior turn → default to **C** (safer; Mode C pauses) | C |
+
+> **Tiebreak — phrase content beats turn position.** When a signal could be C-by-position but D-by-phrasing (e.g. 「為什麼要選」/ "why does this matter" right after a long jargon explanation), classify by **what the user named**: a signal naming the *stakes* (why / impact / 差別 / what-changes) is **D** even after a dense explanation; one naming *can't-follow* (lost / 跟不上 / too much jargon) is **C**. Use turn-position as the tiebreak only when the phrase itself is neutral ("more context" / 「補充」).
 
 ## See Also
 
