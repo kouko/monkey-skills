@@ -4,6 +4,38 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] — 2026-06-24
+
+### Added — materiality triage in `sync` (Phase 2): cosmetic-only changes skip the LLM gate
+
+`sync` no longer prompts a (paid, non-deterministic) `redistill` when the dbt
+change that flagged knowledge pages stale was **cosmetic only** — a comment /
+whitespace / `schema.yml` description edit that did not change a model's meaning.
+Only **material** evidence changes (column add/remove/rename, `depends_on` /
+lineage, materialization, or a logic change) reach the gate.
+
+How it works (all deterministic, `rescan` stays 0-LLM):
+
+- **`logic_sha`** (`rescan/assets/logic_sha.py`, 10-case TDD) — a comment-stripped,
+  sqlglot-normalized SQL fingerprint (regex fallback + `method` flag when sqlglot
+  can't parse). Comment/whitespace edits leave it unchanged; logic edits change it.
+- **per-model classifier** (`rescan/assets/classify_materiality.py`, 14-case TDD) —
+  labels each changed model material/cosmetic by comparing column-name-set,
+  `depends_on`, materialization, and `logic_sha` against a baseline cached in
+  `_internal/logic_sha_cache.json`; `rescan` Step 2.6 emits
+  `_internal/last_rescan_materiality.json`.
+- **page-level triage** (`sync/assets/triage_worklist.py`, 10-case TDD) — a stale
+  page is material iff ANY of its `derived_from` changed-models is material
+  (OR-aggregation). `sync` Step 2.5 drops cosmetic-only pages from the gate
+  (kept flagged stale, surfaced, not re-distilled). All-cosmetic → cheap exit 0,
+  no prompt.
+
+Industry-aligned (dbt's own `state:modified` has the file-checksum flaw; dbt
+state-aware orchestration moved to comment-ignoring semantic diffs). Fallback:
+when `last_rescan_materiality.json` is absent (a `rescan` from before this
+feature, or first upgrade) `sync` treats all stale pages as material — never
+blocks. No evidence-page schema change; `init` untouched.
+
 ## [3.0.0] — 2026-06-24
 
 ### Changed (BREAKING) — `/dbt-wiki:refresh` → `/dbt-wiki:rescan`

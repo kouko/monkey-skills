@@ -193,7 +193,6 @@ CLAUDE.md drop-in 用不同 marker（`<!-- dbt-wiki:start --> ... <!-- dbt-wiki:
 
 ## Fast-follow backlog（v2.x+）
 
-- `sync` 的 materiality triage（Phase 2）——純註解 / description 的 cosmetic 變更自動跳過 redistill 把關，只有實質證據變更才提示重蒸
 - `ingest` 寫入知識層頁面
 - `domains/` 維度（主題領域 landscape）
 - `catalog.json` 整合（真實 warehouse column type、row count）——opt-in

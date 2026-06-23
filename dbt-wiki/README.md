@@ -208,7 +208,6 @@ CLAUDE.md drop-ins use distinct markers (`<!-- dbt-wiki:start --> ... <!-- dbt-w
 
 ## Backlog (fast-follow after v2.0 MVP)
 
-- **materiality triage in `sync` (Phase 2)** — auto-skip the redistill gate on purely cosmetic changes (comment/description only), so only material evidence changes prompt a re-distill
 - **`ingest` → knowledge pages** — write ingested context directly into knowledge page `## User Notes` in addition to evidence pages
 - **`domains/`** — topic-area landscape pages (finance / marketing / product) aggregating entities + metrics + concepts
 - `catalog.json` integration (real warehouse column types, row counts) — opt-in Phase 2 read

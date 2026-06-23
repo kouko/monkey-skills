@@ -190,7 +190,6 @@ dbt-wiki **v2.0** は v1.x からの破壊的再設計であり、migration scri
 
 ## fast-follow（v2.x）
 
-- **`sync` の materiality triage（Phase 2）** — コメント / description のみの cosmetic な変更では redistill ゲートを自動スキップし、実質的な証拠変更のときだけ再蒸餾を促す
 - **`domains/` 次元** — entities / metrics / concepts を束ねる主題領域ランドスケープ（finance / marketing / product）
 - **ingest → 知識ページ** — `/dbt-wiki:ingest` でコンテキストを知識ページにも記録
 - `catalog.json` 統合（実 warehouse column type、row count） — opt-in
