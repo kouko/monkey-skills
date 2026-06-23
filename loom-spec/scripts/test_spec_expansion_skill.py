@@ -397,6 +397,108 @@ def test_skill_documents_intent_layer():
         "anti-pattern must name the residual-rot surface it guards against"
 
 
+# --- prior-state intake (closed loop: read own persisted layer) -------------
+
+def test_skill_documents_prior_state_intake():
+    """The skill MUST document consuming its OWN persisted intent layer as
+    prior-state for the next cycle (closing the spec→spec loop). The section
+    must carry: (a) point-don't-copy + link-back (never copy persisted
+    content), (b) a seam-mapping table routing each persisted prior-state to
+    the phase it feeds (5 rows), (c) the empty base case (additive / may be
+    empty / absent → treat as a generic seed, no cold-start deadlock), and
+    (d) the INDEX referenced WHEN-PRESENT."""
+    text = _text()
+    low = text.lower()
+
+    # an explicitly-named prior-state intake section
+    assert "prior-state" in low, \
+        "must document consuming the persisted intent layer as prior-state " \
+        "in a named section"
+
+    # (a) point-don't-copy + link-back + never-copy wording
+    assert "point-don't-copy" in low or "point don't copy" in low, \
+        "(a) must carry the point-don't-copy convention"
+    assert "link back" in low or "link-back" in low or "links back" in low \
+        or "references" in low, \
+        "(a) must link back / reference the persisted files by path"
+    found_never_copy = False
+    for line in low.splitlines():
+        if ("never" in line or "not" in line) and "cop" in line:
+            found_never_copy = True
+            break
+    assert found_never_copy, \
+        "(a) must say it NEVER copies persisted content into the change-folder"
+
+    # (b) the seam-mapping table: 5 prior-state → phase rows. Each cue must
+    # co-occur with its target phase ON ONE source line (markdown table rows
+    # are single lines), so wrapping cannot split the mapping.
+    rows = [
+        # (needle in the prior-state cell, needle in the phase cell)
+        (("readme.md", "mid"), ("phase ①", "phase 1", "usm")),
+        (("object state machines",), ("phase ②", "phase 2", "ooux")),
+        (("invariants",), ("phase ③", "phase 3", "matrix")),
+        (("out of scope",), ("phase ③", "phase 3", "prun")),
+        (("index",), ("net-new", "net new", "fan")),
+    ]
+    for state_needles, phase_needles in rows:
+        found = False
+        for line in low.splitlines():
+            if any(s in line for s in state_needles) and \
+                    any(p in line for p in phase_needles):
+                found = True
+                break
+        assert found, (
+            f"seam-mapping row missing: a prior-state {state_needles} must map "
+            f"to its phase {phase_needles} on one line"
+        )
+
+    # the canonical TOP section headers must be named as prior-state sources
+    # (exact bytes, mirrors validate_intent_layer._TOP_SECTIONS).
+    assert "## Object state machines" in text, \
+        "(b) must reference TOP MODEL.md's '## Object state machines' section"
+    assert "## Invariants" in text, \
+        "(b) must reference TOP MODEL.md's '## Invariants' section"
+    assert "## Out of scope" in text, \
+        "(b) must reference TOP MODEL.md's '## Out of scope' section"
+
+    # (c) the empty base case — additive, may be empty, absent → generic seed
+    assert "additive" in low, \
+        "(c) prior-state intake must be ADDITIVE"
+    found_may_be_empty = False
+    for line in low.splitlines():
+        if "empty" in line and ("may" in line or "additive" in line):
+            found_may_be_empty = True
+            break
+    assert found_may_be_empty, \
+        "(c) must say the prior-state MAY BE EMPTY"
+    found_generic = False
+    for line in low.splitlines():
+        if ("absent" in line or "no" in line or "nothing" in line) and \
+                "generic seed" in line:
+            found_generic = True
+            break
+    assert found_generic, \
+        "(c) absent/empty layer → treat the input as a generic seed " \
+        "(mirror the ui-flows stance)"
+    assert "authoritative" in low, \
+        "(c) an empty/absent layer is NEVER authoritative (no cold-start deadlock)"
+
+    # (d) the INDEX referenced when-present
+    found_index_when_present = False
+    for line in low.splitlines():
+        if "index" in line and ("when present" in line or "when-present" in line
+                                 or "if present" in line):
+            found_index_when_present = True
+            break
+    assert found_index_when_present, \
+        "(d) the generated INDEX must be referenced read-WHEN-PRESENT"
+
+    # READ-ONLY: this read path must not author/edit the persisted layer
+    assert "read-only" in low or "read only" in low, \
+        "the prior-state intake path must be READ-ONLY (authoring is a " \
+        "separate section's job)"
+
+
 # --- boundary: stops at GENERATE --------------------------------------------
 
 def test_generate_boundary_no_tdd_no_review():
