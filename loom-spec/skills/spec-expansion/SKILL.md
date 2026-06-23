@@ -77,6 +77,38 @@ The seed-adequacy pre-flight (Phase ①) still applies — a `ui-flows.md` is a 
 but if it leaves a core object's lifecycle unstated, surface that gap rather than inventing
 it. If no `ui-flows.md` exists, ignore this section and treat the input as a generic seed.
 
+## Consuming the persisted intent layer as prior-state
+
+When the capability you are spec-ing **already has a persisted intent layer** (the
+durable `docs/loom/spec/` root this skill authors — see *Authoring the persistent
+intent layer* below), read it as **prior-state** so this cycle extends the last one
+rather than re-deriving it from scratch. This closes the spec→spec loop: loom-spec
+reads its own persisted output as the seed-context for the next change.
+
+**Point-don't-copy.** REFERENCE the persisted files by path and **link back** to the
+named sections — **NEVER copy their content** into the change-folder. A copy is a
+second source of truth that drifts from the layer it duplicates; the persisted layer
+stays the single source, and the change-folder points at it. This read path is
+**READ-ONLY** — it never authors or edits the persisted layer (that is the *Authoring
+the persistent intent layer* section's job).
+
+Map each persisted prior-state to the phase it feeds (read each WHEN PRESENT):
+
+| persisted prior-state | feeds |
+|---|---|
+| MID `docs/loom/spec/<capability>/README.md` (intent / why / scope) | Phase ① seed-adequacy + USM backbone |
+| TOP `docs/loom/spec/MODEL.md` `## Object state machines` | Phase ② OOUX object/state model (extend, don't redefine) |
+| TOP `MODEL.md` `## Invariants` | Phase ③ matrix guard-rule lenses |
+| TOP `MODEL.md` `## Out of scope` | Phase ③ pruning (don't fan deliberately-excluded paths) |
+| the generated INDEX (capability→req→test), when present | the fan boundary — fan NET-NEW only (#406 semantics) |
+
+**The empty base case — prior-state intake is ADDITIVE and may be empty.** A net-new
+capability (or a repo mid-adoption with no layer or index yet) reads whatever exists,
+possibly nothing. An empty or absent layer is **never authoritative** — there is no
+cold-start deadlock: if no persisted layer exists, ignore this section and treat the
+input as a generic seed. The INDEX in particular lives at a later (capstone) repo
+location, so reference it **when present**; its absence is covered by this base case.
+
 ## The three phases
 
 Run **three explicit phases in order**. Each phase (a) **announces itself**
