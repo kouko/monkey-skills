@@ -19,6 +19,21 @@ capability intent doc is `README.md`. It returns one problem message per
 capability dir that lacks a README.md. A spec_dir with no capability
 subdirs (or a non-existent spec_dir) returns [].
 
+`validate(spec_dir) -> tuple[bool, list[str]]` is the aggregator. It
+applies the absent-layer tolerance that mirrors the ui-flows-seam
+"if absent, ignore" stance:
+- a spec_dir that does NOT exist -> (True, []) (layer not adopted);
+- a spec_dir that exists but is EMPTY (no MODEL.md AND no capability
+  subdirs) -> (True, []) (mid-adoption repo with no intent layer yet);
+- a NON-EMPTY spec_dir (MODEL.md OR >=1 capability subdir) -> the layer
+  is in use, so it runs check_top_model + check_mid_readmes AND, because
+  check_top_model returns [] on a MISSING MODEL.md, the aggregator adds
+  a presence problem when MODEL.md is absent while the layer is non-empty
+  (the TOP model is required once the layer exists). All problems aggregate.
+
+CLI: `python validate_intent_layer.py <spec-dir>` -> exit 0 if valid,
+exit 1 with agent-actionable messages on stderr if invalid.
+
 Required canonical TOP sections (exact header text, whole-line match):
 - ## Invariants
 - ## Object state machines
@@ -34,7 +49,9 @@ Stdlib only.
 
 from __future__ import annotations
 
+import argparse
 import re
+import sys
 from pathlib import Path
 
 # Required canonical TOP-altitude sections of MODEL.md, in declaration order.
@@ -100,3 +117,57 @@ def check_mid_readmes(spec_dir: Path) -> list[str]:
                 f"missing README.md in capability '{cap.name}' ({cap}) "
                 f"(a MID-altitude capability dir needs a README.md intent doc)")
     return problems
+
+
+def _capability_dirs(spec_dir: Path) -> list[Path]:
+    """Immediate sub-directories of spec_dir (the capability dirs)."""
+    return sorted(p for p in spec_dir.iterdir() if p.is_dir())
+
+
+def validate(spec_dir: Path) -> tuple[bool, list[str]]:
+    """Aggregate the TOP + MID intent-layer checks for `spec_dir`.
+
+    Returns (ok, problems). ok is True iff problems is empty. Absent or
+    empty intent layers are tolerated (returns (True, [])); a non-empty
+    layer is graded, and a non-empty layer missing its MODEL.md earns a
+    presence problem (the TOP model is required once the layer exists).
+    """
+    spec_dir = Path(spec_dir)
+    if not spec_dir.is_dir():
+        return True, []  # layer not adopted yet
+    model = spec_dir / "MODEL.md"
+    has_model = model.is_file()
+    caps = _capability_dirs(spec_dir)
+    if not has_model and not caps:
+        return True, []  # empty layer: mid-adoption repo, no intent layer yet
+    problems: list[str] = []
+    if not has_model:
+        problems.append(
+            f"missing MODEL.md at {model} "
+            f"(once the intent layer is in use, the TOP-altitude MODEL.md "
+            f"carrying the cross-cutting model is required)")
+    problems.extend(check_top_model(spec_dir))
+    problems.extend(check_mid_readmes(spec_dir))
+    return (not problems), problems
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Validate a loom-spec intent-layer root (TOP MODEL.md + "
+                    "MID capability READMEs).")
+    parser.add_argument("spec_dir", help="path to the loom-spec intent-layer root")
+    args = parser.parse_args(argv)
+
+    ok, problems = validate(Path(args.spec_dir))
+    if ok:
+        print(f"OK: {args.spec_dir} conforms to the intent-layer skeleton.")
+        return 0
+    print(f"INVALID: {args.spec_dir} does not conform to the intent-layer "
+          f"skeleton.", file=sys.stderr)
+    for p in problems:
+        print(f"  - {p}", file=sys.stderr)
+    return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
