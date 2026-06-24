@@ -137,6 +137,51 @@ def test_index_is_current():
     )
 
 
+def test_build_index_renders_tree(tmp_path):
+    # WHY: build_index is the single regeneration path the CLI, the
+    # finishing step, and the CI verify step all call. It must compose
+    # collect_structural_records (anchored @req parsing over the tree),
+    # load_namespace (req->capability from docs/loom/spec), and
+    # generate_index into one markdown string — so a tagged test under a
+    # declared requirement surfaces in the index tree. The output must be
+    # byte-equal to driving those three functions by hand over the same
+    # tree (no hidden transform).
+    import living_spec_collect as LC
+    import living_spec_index as LI
+
+    checker = _load_checker()
+    repo = _init_repo(tmp_path)
+
+    # A test file carrying a real @req binding.
+    (repo / "test_order.py").write_text(
+        "def test_places_order():\n"
+        "    # @req: REQ-1\n"
+        "    assert place() == 1\n",
+        encoding="utf-8",
+    )
+    # A matching spec declaring that requirement under capability `order`.
+    spec_dir = repo / "docs" / "loom" / "spec" / "order"
+    spec_dir.mkdir(parents=True)
+    (spec_dir / "spec.md").write_text(
+        "### Requirement: REQ-1\n", encoding="utf-8"
+    )
+    _commit(repo, "tagged test + spec", date="2026-01-01T00:00:00 +0000")
+
+    index = checker.build_index(repo)
+
+    # The tree renders capability > requirement > test.
+    assert "## order" in index
+    assert "### REQ-1" in index
+    assert "- test_places_order" in index
+
+    # Byte-equal to driving the three composed functions by hand.
+    expected = LI.generate_index(
+        LC.collect_structural_records(repo),
+        LI.load_namespace(repo / "docs" / "loom" / "spec"),
+    )
+    assert index == expected
+
+
 def test_run_drift_lane_emits_warn_and_exits_zero(tmp_path, capsys):
     # WHY: the WARN lane composes the three upstream modules
     # (collect -> resolve -> drift) over a real source tree, and a drifted
