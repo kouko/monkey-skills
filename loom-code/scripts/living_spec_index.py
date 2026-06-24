@@ -22,6 +22,18 @@ _REQUIREMENT_STATUS_RE = re.compile(
     r"^###\s+Requirement:\s*(.+?)\s*(?:\[(active|deferred)\])?\s*$"
 )
 
+# A requirement heading that DOES carry a trailing `[...]` bracket,
+# capturing the id-portion (group 1) and the raw bracket content
+# (group 2) regardless of whether it is a valid status. This is the
+# fail-loud counterpart to `_REQUIREMENT_STATUS_RE`: that regex only
+# matches valid/absent suffixes (an unrecognized suffix falls through
+# into the id group and defaults active), so it cannot SEE a typo'd
+# status. This one always matches a bracket, letting the caller flag
+# any content that is not `active`/`deferred`.
+_REQUIREMENT_BRACKET_RE = re.compile(
+    r"^###\s+Requirement:\s*(.+?)\s*\[([^\]]*)\]\s*$"
+)
+
 
 def load_namespace(specs_dir: Path) -> dict[str, str]:
     """Map each `### Requirement: <id>` to its capability (the dir name).
@@ -55,6 +67,30 @@ def load_req_status(specs_dir: Path) -> dict[str, str]:
             if match:
                 status[match.group(1)] = match.group(2) or "active"
     return status
+
+
+def find_malformed_status(specs_dir: Path) -> list[str]:
+    """Flag `### Requirement:` headings with an invalid `[...]` status.
+
+    Walks the SAME `<specs_dir>/<capability>/spec.md` files as
+    `load_namespace`/`load_req_status`. A heading whose trailing bracket
+    content is neither "active" nor "deferred" (e.g. `[activ]`,
+    `[todo]`, `[ ]`) is a MALFORMED declaration that `load_req_status`
+    would silently default to "active"; this surfaces it instead.
+    Returns one descriptive string per offender naming the bracket
+    content and the id-portion. A heading with no bracket, or a valid
+    `[active]`/`[deferred]`, yields nothing. Source order, deterministic.
+    """
+    offenders: list[str] = []
+    for spec_path in sorted(Path(specs_dir).glob("*/spec.md")):
+        for line in spec_path.read_text(encoding="utf-8").splitlines():
+            match = _REQUIREMENT_BRACKET_RE.match(line)
+            if match and match.group(2) not in ("active", "deferred"):
+                offenders.append(
+                    f"MALFORMED status '[{match.group(2)}]' on "
+                    f"requirement {match.group(1)}"
+                )
+    return offenders
 
 
 def generate_index(
