@@ -92,3 +92,14 @@ jobs:
         env:
           PYTHONDONTWRITEBYTECODE: "1"
         run: python3 loom-code/scripts/check-living-spec-index.py --verify-index docs/loom/INDEX.md .
+
+      - name: Verify living-spec active reqs are covered
+        # Merge-boundary gate: every `active` requirement must have a passing
+        # test. This runs AFTER the green pytest gate above, so a green suite
+        # means every linked test passed — "0 passing" therefore reduces to
+        # "0 linked", and an uncovered active req exits 1. Unlike --verify-index,
+        # this gate regenerates nothing (no --write-index counterpart); it only
+        # reads the persisted intent + @req links and reports coverage.
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 loom-code/scripts/check-living-spec-index.py --check-coverage .
