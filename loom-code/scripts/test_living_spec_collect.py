@@ -148,3 +148,48 @@ def test_collect_malformed_is_fixture_safe(tmp_path: Path) -> None:
     assert any("@req" in line for line in malformed)
     assert all('"# @req"' not in line for line in malformed)
     assert malformed == ["# @req"]
+
+
+# A `.py` file whose ONLY `@req` / malformed markers live inside a
+# TRIPLE-QUOTED string literal — they sit at line-start on their own
+# lines (so anchoring alone can't reject them), but they are part of a
+# STRING token, not a real comment. A test file that exercises the
+# `@req` parser carries exactly this shape (its fixtures embed fake
+# tags). A `# @req: REQ-REAL` outside any string IS a real comment and
+# must still be collected (guard against over-filtering).
+_STRING_LITERAL_REQS = (
+    "_SRC = '''\n"
+    "def test_x():\n"
+    "    # @req: REQ-FAKE\n"
+    "    # @req\n"
+    "    pass\n"
+    "'''\n"
+    "\n\n"
+    "def test_real():\n"
+    "    # @req: REQ-REAL\n"
+    "    pass\n"
+)
+
+
+def test_structural_collectors_ignore_string_literal_reqs(
+    tmp_path: Path,
+) -> None:
+    # The `# @req: REQ-FAKE` and bare `# @req` live at column-0 of their
+    # own lines, but INSIDE a `'''...'''` literal — so the anchored
+    # line-regex (which can't see token boundaries) would mistake them
+    # for real comments. Tokenizing the source proves they are STRING
+    # tokens, not COMMENT tokens, so neither collector reports them; the
+    # genuine `# @req: REQ-REAL` comment outside the literal still is.
+    (tmp_path / "test_litreq.py").write_text(
+        _STRING_LITERAL_REQS, encoding="utf-8"
+    )
+
+    records = collect_structural_records(tmp_path)
+    malformed = collect_malformed(tmp_path)
+
+    # Only the real comment binds; the string-literal `@req`s vanish.
+    assert records == [
+        {"test": "test_real", "reqs": ["REQ-REAL"], "invariant_refs": []}
+    ]
+    # No malformed line: the bare `# @req` was inside the literal.
+    assert malformed == []
