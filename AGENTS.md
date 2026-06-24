@@ -43,6 +43,12 @@ Role boundaries enforced by behavior, not reading restrictions:
 - **Verify the committed index is current** (merge-boundary gate):
   `python3 loom-code/scripts/check-living-spec-index.py --verify-index docs/loom/INDEX.md`
   — byte-identity check vs a fresh regeneration; rc=1 if stale.
+- **Check active-req coverage** (merge-boundary gate):
+  `python3 loom-code/scripts/check-living-spec-index.py --check-coverage [<repo-root>]`
+  — fails rc=1 on any ACTIVE `### Requirement:` with 0 linked tests
+  (named on stderr); a `[deferred]` req with 0 tests is surfaced on
+  stdout (informational, rc=0). Sound because CI runs it after the green
+  pytest gate, so a linked test ≡ a passing test.
 <!-- END command-surface (managed) -->
 
 ## Plugin: domain-teams

@@ -10,6 +10,11 @@ structural defects that must FAIL the gate:
 - each MALFORMED tag line (a ``@req`` / ``@invariant-ref`` marker
   lacking a usable ``: <id>`` value), passed through verbatim.
 
+``find_structural_violations`` covers the first two; ``main()``
+additionally folds ``find_malformed_status`` into the SAME FAIL list,
+so a ``### Requirement: <id> [activ]`` with a bad status token (a
+syntax defect, RED-safe on every push) also fails ``rc=1``.
+
 Clean input (every ``@req`` resolves, no malformed lines) returns the
 empty list.
 
@@ -26,9 +31,15 @@ modes selected from argv:
   WRITES ``<path>`` (the finishing-step / once-per-branch regen path);
 - ``--verify-index <path>`` regenerates and asserts byte-identity vs
   the committed ``<path>`` (reusing ``index_is_current``), returning 1
-  on mismatch — the merge-boundary stale-index gate.
+  on mismatch — the merge-boundary stale-index gate;
+- ``--check-coverage [root]`` composes the real-repo inputs and runs the
+  hermetic ``active_coverage`` — an UNCOVERED active req fails ``rc=1``
+  (stderr), a deferred req with 0 tests is surfaced informationally
+  (stdout). The merge-boundary coverage gate (sound because CI runs it
+  after the green pytest gate, so a linked test == a passing test).
 
-Both default ``<path>`` to ``docs/loom/INDEX.md`` when omitted.
+The index modes default ``<path>`` to ``docs/loom/INDEX.md`` when
+omitted; ``--check-coverage`` takes only an optional trailing ``[root]``.
 
 ``build_index(root)`` is the single regeneration path the CLI, the
 finishing step, and the CI verify lane all call — composing
@@ -55,7 +66,12 @@ from living_spec_collect import (
 )
 from living_spec_drift import find_gitref_drift
 from living_spec_gitref import resolve_binding_refs
-from living_spec_index import generate_index, load_namespace
+from living_spec_index import (
+    find_malformed_status,
+    generate_index,
+    load_namespace,
+    load_req_status,
+)
 
 
 def find_structural_violations(
@@ -89,6 +105,58 @@ def find_structural_violations(
     for line in malformed:
         violations.append(f"MALFORMED tag: {line}")
     return violations
+
+
+def active_coverage(
+    tag_records: list[dict],
+    namespace: dict[str, str],
+    statuses: dict[str, str],
+) -> tuple[list[str], list[str]]:
+    """Partition namespace reqs by coverage and intent status.
+
+    A hermetic check over in-memory inputs (no filesystem), mirroring
+    ``find_structural_violations``' shape:
+
+    - ``tag_records`` is ``collect_structural_records`` output (one dict
+      per tagged test with ``test`` / ``reqs`` / ``invariant_refs``);
+    - ``namespace`` is ``load_namespace`` output (``{req_id: capability}``);
+    - ``statuses`` is ``load_req_status`` output (``{req_id: "active" |
+      "deferred"}``); a req absent from ``statuses`` defaults ``"active"``.
+
+    The records are inverted to req -> set-of-tests, then each req in
+    ``namespace`` is classified:
+
+    - ``active`` with 0 linked tests -> a coverage ``violation``
+      (``"UNCOVERED active req '<id>' (0 passing tests)"``): an active
+      promise must never sit unverified;
+    - ``deferred`` with 0 linked tests -> ``surfaced`` advisory
+      (``"deferred req '<id>' (inspirational, 0 tests)"``): an
+      intentionally-aspirational req, never a defect;
+    - any req WITH >=1 linked test -> neither list, regardless of status.
+
+    Returns ``(violations, surfaced)``, each sorted by req id. Empty
+    ``violations`` == every active req is covered.
+    """
+    linked: dict[str, set[str]] = {}
+    for record in tag_records:
+        for req in record["reqs"]:
+            linked.setdefault(req, set()).add(record["test"])
+
+    violations: list[str] = []
+    surfaced: list[str] = []
+    for req in sorted(namespace):
+        if linked.get(req):
+            continue
+        status = statuses.get(req, "active")
+        if status == "deferred":
+            surfaced.append(
+                f"deferred req '{req}' (inspirational, 0 tests)"
+            )
+        else:
+            violations.append(
+                f"UNCOVERED active req '{req}' (0 passing tests)"
+            )
+    return violations, surfaced
 
 
 def index_is_current(committed_md: str, regenerated_md: str) -> bool:
@@ -179,11 +247,12 @@ def main(argv: list[str] | None = None) -> int:
     #   [root]                          -> default lanes over root
     #   [--write-index, [path,] [root]] -> regenerate + WRITE path
     #   [--verify-index, [path,] [root]]-> regenerate + byte-identity gate
+    #   [--check-coverage, [root]]      -> active-coverage merge gate
     # A leading --write-index/--verify-index flag consumes an optional
-    # <path> arg (defaulting to docs/loom/INDEX.md); the trailing
-    # positional, if present, still selects the source tree (the WARN-lane
-    # tests pass `[str(repo)]` with no flag, so the default path must
-    # preserve that behavior).
+    # <path> arg (defaulting to docs/loom/INDEX.md); --check-coverage takes
+    # no <path>. The trailing positional, if present, still selects the
+    # source tree (the WARN-lane tests pass `[str(repo)]` with no flag, so
+    # the default path must preserve that behavior).
     args = sys.argv[1:] if argv is None else argv
 
     mode = None
@@ -193,6 +262,9 @@ def main(argv: list[str] | None = None) -> int:
         index_path = Path(args[0]) if args else _DEFAULT_INDEX
         if args:
             args = args[1:]
+    elif args and args[0] == "--check-coverage":
+        mode = args[0]
+        args = args[1:]
 
     root = Path(args[0]) if args else Path.cwd()
 
@@ -210,6 +282,29 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 1
+    if mode == "--check-coverage":
+        # Merge-boundary coverage gate: compose the real-repo inputs and run
+        # the hermetic active_coverage. SOUND because CI runs this AFTER the
+        # green pytest gate, so a linked test ≡ a passing test (0 linked ≡
+        # 0 passing). Deferred reqs with 0 tests are informational (stdout,
+        # never fail); uncovered active reqs are violations (stderr, rc=1).
+        tag_records = collect_structural_records(root)
+        namespace = load_namespace(root / "docs" / "loom" / "spec")
+        statuses = load_req_status(root / "docs" / "loom" / "spec")
+        violations, surfaced = active_coverage(tag_records, namespace, statuses)
+        for line in surfaced:
+            print(line)
+        if violations:
+            for entry in violations:
+                print(entry, file=sys.stderr)
+            print(
+                f"\nFAIL: {len(violations)} living-spec coverage "
+                f"violation(s).",
+                file=sys.stderr,
+            )
+            return 1
+        print("OK: every active living-spec req is covered.")
+        return 0
 
     # WARN lane: advisory only. Print each drift WARN to stderr but NEVER
     # let it fail the build or touch the structural FAIL list below.
@@ -223,6 +318,10 @@ def main(argv: list[str] | None = None) -> int:
     malformed = collect_malformed(root)
     namespace = load_namespace(root / "docs" / "loom" / "spec")
     violations = find_structural_violations(tag_records, malformed, namespace)
+    # Fold the malformed-status check into the SAME FAIL list: a bad status
+    # token (`[activ]`) is a syntax defect, RED-safe to gate on every push
+    # (not a coverage check) — surface it on stderr and count it toward rc=1.
+    violations += find_malformed_status(root / "docs" / "loom" / "spec")
     if violations:
         for entry in violations:
             print(entry, file=sys.stderr)
