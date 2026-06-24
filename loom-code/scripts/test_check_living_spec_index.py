@@ -54,6 +54,19 @@ def _init_repo(tmp_path: Path) -> Path:
     return repo
 
 
+def _declare_reqs(repo: Path, capability: str, *req_ids: str) -> None:
+    """Declare ``req_ids`` under ``docs/loom/spec/<capability>/spec.md``.
+
+    Keeps the namespace non-empty so the structural FAIL lane sees these
+    ``@req``s as resolvable — the WARN-lane fixtures exercise drift, not
+    dangling tags, so their tagged tests must resolve to stay rc=0.
+    """
+    spec_dir = repo / "docs" / "loom" / "spec" / capability
+    spec_dir.mkdir(parents=True, exist_ok=True)
+    body = "".join(f"### Requirement: {r}\n" for r in req_ids)
+    (spec_dir / "spec.md").write_text(body, encoding="utf-8")
+
+
 def _commit(repo: Path, message: str, *, date: str) -> str:
     """Stage all + commit with a pinned author/committer date; return SHA."""
     env = os.environ.copy()
@@ -137,6 +150,51 @@ def test_index_is_current():
     )
 
 
+def test_build_index_renders_tree(tmp_path):
+    # WHY: build_index is the single regeneration path the CLI, the
+    # finishing step, and the CI verify step all call. It must compose
+    # collect_structural_records (anchored @req parsing over the tree),
+    # load_namespace (req->capability from docs/loom/spec), and
+    # generate_index into one markdown string — so a tagged test under a
+    # declared requirement surfaces in the index tree. The output must be
+    # byte-equal to driving those three functions by hand over the same
+    # tree (no hidden transform).
+    import living_spec_collect as LC
+    import living_spec_index as LI
+
+    checker = _load_checker()
+    repo = _init_repo(tmp_path)
+
+    # A test file carrying a real @req binding.
+    (repo / "test_order.py").write_text(
+        "def test_places_order():\n"
+        "    # @req: REQ-1\n"
+        "    assert place() == 1\n",
+        encoding="utf-8",
+    )
+    # A matching spec declaring that requirement under capability `order`.
+    spec_dir = repo / "docs" / "loom" / "spec" / "order"
+    spec_dir.mkdir(parents=True)
+    (spec_dir / "spec.md").write_text(
+        "### Requirement: REQ-1\n", encoding="utf-8"
+    )
+    _commit(repo, "tagged test + spec", date="2026-01-01T00:00:00 +0000")
+
+    index = checker.build_index(repo)
+
+    # The tree renders capability > requirement > test.
+    assert "## order" in index
+    assert "### REQ-1" in index
+    assert "- test_places_order" in index
+
+    # Byte-equal to driving the three composed functions by hand.
+    expected = LI.generate_index(
+        LC.collect_structural_records(repo),
+        LI.load_namespace(repo / "docs" / "loom" / "spec"),
+    )
+    assert index == expected
+
+
 def test_run_drift_lane_emits_warn_and_exits_zero(tmp_path, capsys):
     # WHY: the WARN lane composes the three upstream modules
     # (collect -> resolve -> drift) over a real source tree, and a drifted
@@ -155,6 +213,9 @@ def test_run_drift_lane_emits_warn_and_exits_zero(tmp_path, capsys):
         "    assert compute() == 1\n",
         encoding="utf-8",
     )
+    # Declare REQ-1 so the structural lane stays clean — this fixture
+    # exercises the WARN (drift) lane, not a dangling tag.
+    _declare_reqs(repo, "order", "REQ-1")
     _commit(repo, "initial", date="2026-01-01T00:00:00 +0000")
     # Later commit touches ONLY the body line => body_ts > binding_ts.
     src.write_text(
@@ -192,6 +253,7 @@ def test_run_drift_lane_no_drift_is_silent(tmp_path, capsys):
         "    assert compute() == 1\n",
         encoding="utf-8",
     )
+    _declare_reqs(repo, "order", "REQ-1")
     _commit(repo, "initial", date="2026-01-01T00:00:00 +0000")
 
     assert checker.run_drift_lane(repo) == [], "no drift must yield []"
@@ -201,6 +263,147 @@ def test_run_drift_lane_no_drift_is_silent(tmp_path, capsys):
     captured = capsys.readouterr()
     assert "WARN" not in captured.err, (
         f"a clean tree must emit no WARN, got: {captured.err!r}"
+    )
+
+
+def test_main_structural_lane_fails_on_real_dangling_req(tmp_path, capsys):
+    # WHY: main()'s structural lane must read the REAL repo, not an empty
+    # stub. A committed test whose `@req: REQ-NOPE` is absent from the
+    # namespace declared under docs/loom/spec is a DANGLING binding — the
+    # gate must FAIL LOUD (rc=1) and name the offending id on stderr, so a
+    # mistagged test cannot slip into the index. Against the empty-inputs
+    # stub this test FAILS (the stub ignores real input and returns 0);
+    # wiring collect_structural_records / collect_malformed / load_namespace
+    # into main() makes it pass.
+    checker = _load_checker()
+    repo = _init_repo(tmp_path)
+
+    (repo / "test_order.py").write_text(
+        "def test_x():\n"
+        "    # @req: REQ-NOPE\n"
+        "    assert True\n",
+        encoding="utf-8",
+    )
+    spec_dir = repo / "docs" / "loom" / "spec" / "order"
+    spec_dir.mkdir(parents=True)
+    (spec_dir / "spec.md").write_text(
+        "### Requirement: REQ-1\n", encoding="utf-8"
+    )
+    _commit(repo, "dangling tagged test + spec", date="2026-01-01T00:00:00 +0000")
+
+    rc = checker.main([str(repo)])
+    assert rc == 1, (
+        f"a real dangling @req must fail the structural lane, got rc={rc!r}"
+    )
+    captured = capsys.readouterr()
+    assert "REQ-NOPE" in captured.err, (
+        f"the dangling @req id must be named on stderr, got: {captured.err!r}"
+    )
+
+
+def test_main_structural_lane_passes_on_resolvable_req(tmp_path, capsys):
+    # WHY: the structural lane must NOT false-positive. A committed test
+    # whose `@req: REQ-1` IS declared in the namespace is structurally
+    # clean — main() must print the OK line and return 0.
+    checker = _load_checker()
+    repo = _init_repo(tmp_path)
+
+    (repo / "test_order.py").write_text(
+        "def test_x():\n"
+        "    # @req: REQ-1\n"
+        "    assert True\n",
+        encoding="utf-8",
+    )
+    spec_dir = repo / "docs" / "loom" / "spec" / "order"
+    spec_dir.mkdir(parents=True)
+    (spec_dir / "spec.md").write_text(
+        "### Requirement: REQ-1\n", encoding="utf-8"
+    )
+    _commit(repo, "resolvable tagged test + spec", date="2026-01-01T00:00:00 +0000")
+
+    rc = checker.main([str(repo)])
+    assert rc == 0, (
+        f"a resolvable @req must not fail the structural lane, got rc={rc!r}"
+    )
+
+
+def test_verify_index_mode_fails_on_stale(tmp_path):
+    # WHY: the merge-boundary stale-index gate. `--verify-index <path>`
+    # regenerates the index from the source tree and asserts byte-identity
+    # against the committed file. A committed INDEX.md whose bytes differ
+    # from a fresh `build_index` is STALE and must FAIL LOUD (rc=1) so a
+    # drifted generated file can never sneak through merge. Against the
+    # pre-implementation main() the `--verify-index` flag is unrecognized:
+    # argv[0] == "--verify-index" is treated as the source-tree path, which
+    # does not exist as a repo => the run does NOT return 1-for-stale-index
+    # (it returns 0 or crashes on a bogus root), so this test fails until
+    # the mode is wired.
+    checker = _load_checker()
+    repo = _init_repo(tmp_path)
+
+    # A committed tagged test + matching spec so build_index renders a
+    # non-trivial tree (the committed file below is deliberately WRONG).
+    (repo / "test_order.py").write_text(
+        "def test_x():\n"
+        "    # @req: REQ-1\n"
+        "    assert True\n",
+        encoding="utf-8",
+    )
+    spec_dir = repo / "docs" / "loom" / "spec" / "order"
+    spec_dir.mkdir(parents=True)
+    (spec_dir / "spec.md").write_text(
+        "### Requirement: REQ-1\n", encoding="utf-8"
+    )
+    index_path = repo / "docs" / "loom" / "INDEX.md"
+    # A STALE committed index: bytes that differ from a fresh build_index.
+    index_path.write_text("# stale — does not match source\n", encoding="utf-8")
+    _commit(repo, "tagged test + spec + stale index", date="2026-01-01T00:00:00 +0000")
+
+    # Sanity: the committed file really is stale vs a fresh regeneration.
+    assert index_path.read_text(encoding="utf-8") != checker.build_index(repo)
+
+    rc = checker.main(["--verify-index", str(index_path), str(repo)])
+    assert rc == 1, (
+        f"a stale committed INDEX.md must fail --verify-index, got rc={rc!r}"
+    )
+
+
+def test_write_then_verify_index_round_trips(tmp_path):
+    # WHY: `--write-index <path>` regenerates and WRITES the file;
+    # `--verify-index <path>` over the same tree must then PASS (rc=0) —
+    # the write/verify round-trip is the contract that lets the finishing
+    # step regenerate and the CI gate verify against one shared
+    # build_index path. A write that verify then rejects would mean the two
+    # modes disagree on the canonical bytes.
+    checker = _load_checker()
+    repo = _init_repo(tmp_path)
+
+    (repo / "test_order.py").write_text(
+        "def test_x():\n"
+        "    # @req: REQ-1\n"
+        "    assert True\n",
+        encoding="utf-8",
+    )
+    spec_dir = repo / "docs" / "loom" / "spec" / "order"
+    spec_dir.mkdir(parents=True)
+    (spec_dir / "spec.md").write_text(
+        "### Requirement: REQ-1\n", encoding="utf-8"
+    )
+    _commit(repo, "tagged test + spec", date="2026-01-01T00:00:00 +0000")
+
+    index_path = repo / "docs" / "loom" / "INDEX.md"
+
+    # write-index regenerates and writes the file...
+    wrc = checker.main(["--write-index", str(index_path), str(repo)])
+    assert wrc == 0, f"--write-index must return 0, got rc={wrc!r}"
+    assert index_path.read_text(encoding="utf-8") == checker.build_index(repo), (
+        "--write-index must write exactly build_index(root)"
+    )
+
+    # ...and verify-index over the same tree then passes byte-identity.
+    vrc = checker.main(["--verify-index", str(index_path), str(repo)])
+    assert vrc == 0, (
+        f"--verify-index must pass on a freshly written index, got rc={vrc!r}"
     )
 
 
@@ -224,6 +427,10 @@ def test_uncommitted_tagged_test_is_skipped_not_fatal(tmp_path, capsys):
         "    assert compute() == 1\n",
         encoding="utf-8",
     )
+    # Declare both reqs (REQ-1 for the committed drift, REQ-2 for the
+    # uncommitted working-tree test) so the structural lane stays clean
+    # and rc=0 reflects only the WARN/skip behavior under test.
+    _declare_reqs(repo, "order", "REQ-1", "REQ-2")
     _commit(repo, "initial", date="2026-01-01T00:00:00 +0000")
     drifted.write_text(
         "def test_drift():\n"
@@ -256,3 +463,32 @@ def test_uncommitted_tagged_test_is_skipped_not_fatal(tmp_path, capsys):
     # uncommitted test must not crash it with a traceback.
     rc = checker.main([str(repo)])
     assert rc == 0, f"a WARN/skip must not fail the build, got rc={rc!r}"
+
+
+# Repo root = three parents up from this test file:
+#   .../loom-dogfood/loom-code/scripts/test_check_living_spec_index.py
+#   parents[0] scripts  parents[1] loom-code  parents[2] loom-dogfood (root)
+# The root is the source tree that contains the committed docs/loom/INDEX.md.
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_committed_index_is_current():
+    # WHY: docs/loom/INDEX.md is the AUTHORED-vs-DERIVED anchor the CI
+    # verify step checks against. If anyone changes what build_index
+    # produces (a collector, namespace loader, or renderer tweak) without
+    # regenerating the committed file, the committed index silently drifts
+    # from its source of truth. This guard recomputes build_index over the
+    # REAL repo root and asserts byte-identity with the committed file via
+    # index_is_current — failing loud the moment the two diverge.
+    checker = _load_checker()
+
+    committed = (_REPO_ROOT / "docs" / "loom" / "INDEX.md").read_text(
+        encoding="utf-8"
+    )
+    regenerated = checker.build_index(_REPO_ROOT)
+
+    assert checker.index_is_current(committed, regenerated), (
+        "committed docs/loom/INDEX.md is stale vs a fresh build_index over "
+        "the repo root; regenerate it with "
+        "`check-living-spec-index.py --write-index docs/loom/INDEX.md <root>`"
+    )

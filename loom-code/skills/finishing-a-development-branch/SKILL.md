@@ -121,6 +121,14 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
    - If approved: proceed
    - If rejected / edited: use user's version
 8. git hygiene before the close-out commit:
+   - Living-spec index regen (orchestrator-only, ONCE per branch): if the repo has a
+     `docs/loom/` tree, run
+     `python3 loom-code/scripts/check-living-spec-index.py --write-index docs/loom/INDEX.md <repo-root>`
+     once, then stage the regenerated `docs/loom/INDEX.md` (`git add docs/loom/INDEX.md`)
+     so it lands in THIS close-out commit. This is EXPLICITLY orchestrator-only, NOT
+     per-implementer / per-wave: the index is a repo-wide generated file, so a per-implementer
+     regen under parallel SDD would merge-conflict the file and reflect only a partial tree.
+     This mirrors loom's existing "orchestrator commits, implementers don't" rule.
    - Run `git status --short` to confirm exactly which files are staged and untracked.
    - Stage with an explicit file list (`git add <file1> <file2> …`) — avoid `git add -A <dir>`
      which sweeps unrelated untracked files into the commit.
