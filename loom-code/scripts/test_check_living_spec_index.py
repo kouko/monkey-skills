@@ -327,6 +327,86 @@ def test_main_structural_lane_passes_on_resolvable_req(tmp_path, capsys):
     )
 
 
+def test_verify_index_mode_fails_on_stale(tmp_path):
+    # WHY: the merge-boundary stale-index gate. `--verify-index <path>`
+    # regenerates the index from the source tree and asserts byte-identity
+    # against the committed file. A committed INDEX.md whose bytes differ
+    # from a fresh `build_index` is STALE and must FAIL LOUD (rc=1) so a
+    # drifted generated file can never sneak through merge. Against the
+    # pre-implementation main() the `--verify-index` flag is unrecognized:
+    # argv[0] == "--verify-index" is treated as the source-tree path, which
+    # does not exist as a repo => the run does NOT return 1-for-stale-index
+    # (it returns 0 or crashes on a bogus root), so this test fails until
+    # the mode is wired.
+    checker = _load_checker()
+    repo = _init_repo(tmp_path)
+
+    # A committed tagged test + matching spec so build_index renders a
+    # non-trivial tree (the committed file below is deliberately WRONG).
+    (repo / "test_order.py").write_text(
+        "def test_x():\n"
+        "    # @req: REQ-1\n"
+        "    assert True\n",
+        encoding="utf-8",
+    )
+    spec_dir = repo / "docs" / "loom" / "spec" / "order"
+    spec_dir.mkdir(parents=True)
+    (spec_dir / "spec.md").write_text(
+        "### Requirement: REQ-1\n", encoding="utf-8"
+    )
+    index_path = repo / "docs" / "loom" / "INDEX.md"
+    # A STALE committed index: bytes that differ from a fresh build_index.
+    index_path.write_text("# stale — does not match source\n", encoding="utf-8")
+    _commit(repo, "tagged test + spec + stale index", date="2026-01-01T00:00:00 +0000")
+
+    # Sanity: the committed file really is stale vs a fresh regeneration.
+    assert index_path.read_text(encoding="utf-8") != checker.build_index(repo)
+
+    rc = checker.main(["--verify-index", str(index_path), str(repo)])
+    assert rc == 1, (
+        f"a stale committed INDEX.md must fail --verify-index, got rc={rc!r}"
+    )
+
+
+def test_write_then_verify_index_round_trips(tmp_path):
+    # WHY: `--write-index <path>` regenerates and WRITES the file;
+    # `--verify-index <path>` over the same tree must then PASS (rc=0) —
+    # the write/verify round-trip is the contract that lets the finishing
+    # step regenerate and the CI gate verify against one shared
+    # build_index path. A write that verify then rejects would mean the two
+    # modes disagree on the canonical bytes.
+    checker = _load_checker()
+    repo = _init_repo(tmp_path)
+
+    (repo / "test_order.py").write_text(
+        "def test_x():\n"
+        "    # @req: REQ-1\n"
+        "    assert True\n",
+        encoding="utf-8",
+    )
+    spec_dir = repo / "docs" / "loom" / "spec" / "order"
+    spec_dir.mkdir(parents=True)
+    (spec_dir / "spec.md").write_text(
+        "### Requirement: REQ-1\n", encoding="utf-8"
+    )
+    _commit(repo, "tagged test + spec", date="2026-01-01T00:00:00 +0000")
+
+    index_path = repo / "docs" / "loom" / "INDEX.md"
+
+    # write-index regenerates and writes the file...
+    wrc = checker.main(["--write-index", str(index_path), str(repo)])
+    assert wrc == 0, f"--write-index must return 0, got rc={wrc!r}"
+    assert index_path.read_text(encoding="utf-8") == checker.build_index(repo), (
+        "--write-index must write exactly build_index(root)"
+    )
+
+    # ...and verify-index over the same tree then passes byte-identity.
+    vrc = checker.main(["--verify-index", str(index_path), str(repo)])
+    assert vrc == 0, (
+        f"--verify-index must pass on a freshly written index, got rc={vrc!r}"
+    )
+
+
 def test_uncommitted_tagged_test_is_skipped_not_fatal(tmp_path, capsys):
     # WHY: the WARN lane must ALWAYS exit 0 and NEVER pre-empt the
     # structural FAIL lane. A net-new @req-tagged test in the WORKING
