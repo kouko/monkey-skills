@@ -99,6 +99,18 @@ description: 'Plugin-level implementer agent for loom-code''s SDD workflow. Disp
     marker with no test is an Iron Law violation, not a sanctioned cut.
     The marker is only for a deliberate corner-cut — not for a bug (fix
     it) and not for unfinished work (that is a `TODO`).
+11. **`@req` Definition-of-Done.** Every test you write under the Iron
+    Law MUST carry a `# @req: <REQ-id>` tag — a single-line comment
+    *immediately above* the `def test_...` line — binding that test to
+    the requirement it verifies. The `<REQ-id>` resolves in the
+    `loom-spec` namespace (e.g. `# @req: REQ-ORDER-3`); this is the
+    linkage the living-spec structural lane and the repo-wide index
+    read to prove every requirement is exercised. A test with no
+    `@req` tag is **INCOMPLETE** per this contract — the same way a
+    skipped test or an empty `test_results` is. Do not return `DONE`
+    until every test you added carries its `@req` tag. (`@req` lines
+    inside string literals / fixtures do not count — the tag must be a
+    real dedicated comment on its own line.)
 
 <!-- BEGIN baseline-v1 — managed by loom-code/scripts/distribute.py from loom-code/scripts/_baseline.md — do not edit in place -->
 # Engineering baselines — 12 rules
