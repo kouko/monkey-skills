@@ -145,6 +145,21 @@ def run_drift_lane(root: Path) -> list[str]:
     lane must never crash. This keeps the advisory lane's promise — it
     NEVER fails the build and is wholly independent of the structural
     FAIL path.
+
+    INTENTIONAL lane asymmetry: this lane collects via ``collect_bindings``
+    (anchored regex only), whereas the structural FAIL lane collects via
+    ``collect_structural_records`` (additionally ``tokenize``-filtered to
+    drop ``@req`` markers sitting inside string literals — e.g. parser
+    self-test fixtures). So over a self-hosting tree the two lanes can
+    disagree on what counts as a binding: the drift lane may see phantom
+    bindings from fixture strings that the structural lane (correctly)
+    sees as zero. This is BY DESIGN, not an oversight — string-literal
+    awareness was scoped to the FAIL lane (where a false positive blocks
+    a merge) and deferred for this ADVISORY lane (a false positive here
+    is at worst a spurious WARN that never blocks the build; see the
+    design brief's "Residual rot surface" deferred-hardening note). If the
+    drift lane is ever promoted to a blocking gate, give it the same
+    ``_real_comment_lines`` filter first.
     """
     root = Path(root)
     enriched = [
