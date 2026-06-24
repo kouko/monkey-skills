@@ -91,6 +91,58 @@ def find_structural_violations(
     return violations
 
 
+def active_coverage(
+    tag_records: list[dict],
+    namespace: dict[str, str],
+    statuses: dict[str, str],
+) -> tuple[list[str], list[str]]:
+    """Partition namespace reqs by coverage and intent status.
+
+    A hermetic check over in-memory inputs (no filesystem), mirroring
+    ``find_structural_violations``' shape:
+
+    - ``tag_records`` is ``collect_structural_records`` output (one dict
+      per tagged test with ``test`` / ``reqs`` / ``invariant_refs``);
+    - ``namespace`` is ``load_namespace`` output (``{req_id: capability}``);
+    - ``statuses`` is ``load_req_status`` output (``{req_id: "active" |
+      "deferred"}``); a req absent from ``statuses`` defaults ``"active"``.
+
+    The records are inverted to req -> set-of-tests, then each req in
+    ``namespace`` is classified:
+
+    - ``active`` with 0 linked tests -> a coverage ``violation``
+      (``"UNCOVERED active req '<id>' (0 passing tests)"``): an active
+      promise must never sit unverified;
+    - ``deferred`` with 0 linked tests -> ``surfaced`` advisory
+      (``"deferred req '<id>' (inspirational, 0 tests)"``): an
+      intentionally-aspirational req, never a defect;
+    - any req WITH >=1 linked test -> neither list, regardless of status.
+
+    Returns ``(violations, surfaced)``, each sorted by req id. Empty
+    ``violations`` == every active req is covered.
+    """
+    linked: dict[str, set[str]] = {}
+    for record in tag_records:
+        for req in record["reqs"]:
+            linked.setdefault(req, set()).add(record["test"])
+
+    violations: list[str] = []
+    surfaced: list[str] = []
+    for req in sorted(namespace):
+        if linked.get(req):
+            continue
+        status = statuses.get(req, "active")
+        if status == "deferred":
+            surfaced.append(
+                f"deferred req '{req}' (inspirational, 0 tests)"
+            )
+        else:
+            violations.append(
+                f"UNCOVERED active req '{req}' (0 passing tests)"
+            )
+    return violations, surfaced
+
+
 def index_is_current(committed_md: str, regenerated_md: str) -> bool:
     """Return True iff a committed INDEX.md matches a fresh regeneration.
 
