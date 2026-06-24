@@ -21,6 +21,11 @@ inputs. The ``__main__`` block is a thin runner: real-repo wiring
 source tree) is deferred to a later slice, so it currently runs over
 empty inputs and exits 0.
 
+``build_index(root)`` is the single regeneration path the CLI, the
+finishing step, and the CI verify lane all call — composing
+``collect_structural_records`` -> ``load_namespace`` -> ``generate_index``
+across the source tree into the index markdown string.
+
 Alongside the structural FAIL lane, the runner drives an advisory WARN
 lane via ``run_drift_lane(root)`` — composing collect -> resolve ->
 drift across the source tree to surface git-ref drift on stderr. A
@@ -34,9 +39,10 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from living_spec_collect import collect_bindings
+from living_spec_collect import collect_bindings, collect_structural_records
 from living_spec_drift import find_gitref_drift
 from living_spec_gitref import resolve_binding_refs
+from living_spec_index import generate_index, load_namespace
 
 
 def find_structural_violations(
@@ -82,6 +88,31 @@ def index_is_current(committed_md: str, regenerated_md: str) -> bool:
     loud, so the index can never silently drift from its source.
     """
     return committed_md == regenerated_md
+
+
+def build_index(root: Path) -> str:
+    """Return the freshly regenerated living-spec index markdown.
+
+    The single regeneration path shared by the CLI, the finishing step,
+    and the CI verify lane. Composes the three upstream functions over
+    the source tree at ``root``:
+
+    - ``collect_structural_records(root)`` parses every ANCHORED ``@req``
+      binding under ``root`` into ``{test, reqs, invariant_refs}``
+      records;
+    - ``load_namespace(root / "docs/loom/spec")`` maps each
+      ``### Requirement: <id>`` to its capability (the subdir name);
+    - ``generate_index(records, namespace)`` renders the
+      capability > requirement > test markdown tree.
+
+    Over a repo with no ``docs/loom/spec`` tree yet, ``load_namespace``
+    returns ``{}`` and the index is near-empty — the valid base case,
+    not an error.
+    """
+    root = Path(root)
+    tag_records = collect_structural_records(root)
+    namespace = load_namespace(root / "docs" / "loom" / "spec")
+    return generate_index(tag_records, namespace)
 
 
 def run_drift_lane(root: Path) -> list[str]:
