@@ -10,7 +10,7 @@ fixtures (no on-disk fixture dir — mirrors `test_check_skill_crossrefs.py`).
 Stdlib only (pathlib + tmp_path fixture).
 """
 
-from living_spec_index import generate_index, load_namespace
+from living_spec_index import generate_index, load_namespace, load_req_status
 
 
 def _make_spec(specs_dir, capability, body):
@@ -28,6 +28,27 @@ def test_load_namespace(tmp_path):
     _make_spec(specs, "order", "### Requirement: REQ-1\nsome prose\n")
 
     assert load_namespace(specs) == {"REQ-1": "order"}
+
+
+def test_load_req_status_parses_suffix_default_active(tmp_path):
+    # WHY: the `[deferred]` suffix on a `### Requirement:` heading marks
+    # intent that is declared-but-not-yet-implemented; a bare heading is
+    # `active` by default. load_req_status must surface that status so a
+    # downstream consumer can distinguish "missing coverage on an active
+    # req" (a real gap) from "missing coverage on a deferred req"
+    # (expected). The status suffix MUST NOT leak into the req id —
+    # load_namespace's REQ-1 capture has to stay "REQ-1", not
+    # "REQ-1 [deferred]", or the two maps key on different ids and the
+    # index can't join them.
+    specs = tmp_path / "specs"
+    _make_spec(
+        specs,
+        "orders",
+        "### Requirement: REQ-1 [deferred]\n### Requirement: REQ-2\n",
+    )
+
+    assert load_req_status(specs) == {"REQ-1": "deferred", "REQ-2": "active"}
+    assert load_namespace(specs) == {"REQ-1": "orders", "REQ-2": "orders"}
 
 
 def test_generate_index_tree():
