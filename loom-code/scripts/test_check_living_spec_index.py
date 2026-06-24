@@ -130,6 +130,59 @@ def test_clean_input_returns_empty():
     assert violations == [], f"clean input must yield no violations, got: {violations!r}"
 
 
+def test_active_coverage():
+    # WHY: the hermetic coverage check must enforce the living-spec
+    # contract two ways at once. (a) An ACTIVE req with ZERO linked
+    # passing tests is an UNCOVERED promise — the gate must surface it as
+    # a violation so an active requirement can never sit unverified. (b) A
+    # DEFERRED req with zero tests is INTENTIONALLY inspirational, not a
+    # defect — it must surface only as advisory (separate list), never as
+    # a violation. And a req that HAS ≥1 linked test is covered regardless
+    # of status, so it appears in neither list. The function inverts
+    # tag_records to req->tests, then partitions namespace reqs by status
+    # and link-count.
+    checker = _load_checker()
+
+    tag_records = [
+        {"test": "t1", "reqs": ["REQ-1"], "invariant_refs": []},
+    ]
+    namespace = {"REQ-1": "o", "REQ-2": "o", "REQ-3": "o"}
+    statuses = {"REQ-2": "deferred", "REQ-3": "active"}
+    # REQ-1 defaults active and IS linked (t1) -> neither list.
+    # REQ-2 deferred, 0 tests -> surfaced only.
+    # REQ-3 active, 0 tests -> violation only.
+
+    violations, surfaced = checker.active_coverage(
+        tag_records, namespace, statuses
+    )
+
+    # (a) the active+uncovered req IS a violation, naming the id.
+    assert any("REQ-3" in v for v in violations), (
+        f"active req with 0 tests must be a violation, got: {violations!r}"
+    )
+    # the linked active req (REQ-1) is NOT a violation.
+    assert not any("REQ-1" in v for v in violations), (
+        f"a linked active req must not be flagged, got: {violations!r}"
+    )
+    # the deferred req is NOT a violation (it is inspirational).
+    assert not any("REQ-2" in v for v in violations), (
+        f"a deferred req must not be a violation, got: {violations!r}"
+    )
+
+    # (b) the deferred+uncovered req IS surfaced (advisory).
+    assert any("REQ-2" in s for s in surfaced), (
+        f"deferred req with 0 tests must be surfaced, got: {surfaced!r}"
+    )
+    # the active req (REQ-3) is NOT in the advisory list.
+    assert not any("REQ-3" in s for s in surfaced), (
+        f"an active req must not be in the advisory list, got: {surfaced!r}"
+    )
+    # the linked req (REQ-1) is NOT surfaced.
+    assert not any("REQ-1" in s for s in surfaced), (
+        f"a linked req must not be surfaced, got: {surfaced!r}"
+    )
+
+
 def test_index_is_current():
     # WHY: the CI gate must be able to assert that a committed INDEX.md is
     # byte-identical to a fresh `generate_index(...)` (the verify-drift
