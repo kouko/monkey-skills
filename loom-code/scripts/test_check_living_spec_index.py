@@ -54,6 +54,19 @@ def _init_repo(tmp_path: Path) -> Path:
     return repo
 
 
+def _declare_reqs(repo: Path, capability: str, *req_ids: str) -> None:
+    """Declare ``req_ids`` under ``docs/loom/spec/<capability>/spec.md``.
+
+    Keeps the namespace non-empty so the structural FAIL lane sees these
+    ``@req``s as resolvable — the WARN-lane fixtures exercise drift, not
+    dangling tags, so their tagged tests must resolve to stay rc=0.
+    """
+    spec_dir = repo / "docs" / "loom" / "spec" / capability
+    spec_dir.mkdir(parents=True, exist_ok=True)
+    body = "".join(f"### Requirement: {r}\n" for r in req_ids)
+    (spec_dir / "spec.md").write_text(body, encoding="utf-8")
+
+
 def _commit(repo: Path, message: str, *, date: str) -> str:
     """Stage all + commit with a pinned author/committer date; return SHA."""
     env = os.environ.copy()
@@ -200,6 +213,9 @@ def test_run_drift_lane_emits_warn_and_exits_zero(tmp_path, capsys):
         "    assert compute() == 1\n",
         encoding="utf-8",
     )
+    # Declare REQ-1 so the structural lane stays clean — this fixture
+    # exercises the WARN (drift) lane, not a dangling tag.
+    _declare_reqs(repo, "order", "REQ-1")
     _commit(repo, "initial", date="2026-01-01T00:00:00 +0000")
     # Later commit touches ONLY the body line => body_ts > binding_ts.
     src.write_text(
@@ -237,6 +253,7 @@ def test_run_drift_lane_no_drift_is_silent(tmp_path, capsys):
         "    assert compute() == 1\n",
         encoding="utf-8",
     )
+    _declare_reqs(repo, "order", "REQ-1")
     _commit(repo, "initial", date="2026-01-01T00:00:00 +0000")
 
     assert checker.run_drift_lane(repo) == [], "no drift must yield []"
@@ -330,6 +347,10 @@ def test_uncommitted_tagged_test_is_skipped_not_fatal(tmp_path, capsys):
         "    assert compute() == 1\n",
         encoding="utf-8",
     )
+    # Declare both reqs (REQ-1 for the committed drift, REQ-2 for the
+    # uncommitted working-tree test) so the structural lane stays clean
+    # and rc=0 reflects only the WARN/skip behavior under test.
+    _declare_reqs(repo, "order", "REQ-1", "REQ-2")
     _commit(repo, "initial", date="2026-01-01T00:00:00 +0000")
     drifted.write_text(
         "def test_drift():\n"

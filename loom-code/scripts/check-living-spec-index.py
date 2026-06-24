@@ -39,7 +39,11 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from living_spec_collect import collect_bindings, collect_structural_records
+from living_spec_collect import (
+    collect_bindings,
+    collect_malformed,
+    collect_structural_records,
+)
 from living_spec_drift import find_gitref_drift
 from living_spec_gitref import resolve_binding_refs
 from living_spec_index import generate_index, load_namespace
@@ -54,7 +58,7 @@ def find_structural_violations(
 
     ``tag_records`` is ``extract_tags`` output (one dict per tagged
     test with ``test`` / ``reqs`` / ``invariant_refs``); ``malformed``
-    is ``find_malformed_tags`` output (raw malformed comment lines);
+    is ``collect_malformed`` output (raw malformed comment lines);
     ``namespace`` is ``load_namespace`` output (``{req_id: capability}``).
 
     Two violation kinds are reported:
@@ -153,10 +157,13 @@ def main(argv: list[str] | None = None) -> int:
     for warn in run_drift_lane(root):
         print(warn, file=sys.stderr)
 
-    # Slice boundary: real-repo wiring (building tag_records / malformed
-    # / namespace from the source tree) is deferred. Run over empty
-    # inputs for now — the function is exercised by its unit tests.
-    violations = find_structural_violations([], [], {})
+    # Structural FAIL lane: build tag_records / malformed / namespace from
+    # the real source tree at `root` and surface every dangling @req +
+    # malformed tag. This is the gate that fails the build (rc=1).
+    tag_records = collect_structural_records(root)
+    malformed = collect_malformed(root)
+    namespace = load_namespace(root / "docs" / "loom" / "spec")
+    violations = find_structural_violations(tag_records, malformed, namespace)
     if violations:
         for entry in violations:
             print(entry, file=sys.stderr)
