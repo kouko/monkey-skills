@@ -430,6 +430,45 @@ intent/why/scope altitude; let the tests be the single source of truth for
 behavior. This discipline is **human-reviewed, NOT a CI gate** — no script
 detects restated behavior, so a reviewer must hold the line at authoring time.
 
+### Requirement status — `[active|deferred]`
+
+Each `### Requirement:` carries an **intent-status** that says whether the
+requirement is meant to be verified now or is aspirational. Declare it as a
+suffix on the heading:
+
+```
+### Requirement: REQ-X [deferred]
+### Requirement: REQ-X [active]
+### Requirement: REQ-X            ← no suffix ≡ active (the default)
+```
+
+- **`active`** is the **DEFAULT** and may be omitted — `### Requirement: REQ-X`
+  is exactly equivalent to `### Requirement: REQ-X [active]`.
+- Only `active` and `deferred` are valid. Any other suffix (e.g. `[activ]`,
+  `[future]`) is a **malformed declaration** that **FAILs the every-push
+  structural lane** of the drift gate — it needs no index and is RED-phase-safe,
+  so it is enforced on every push, PR and main alike.
+
+**Canonical vs inspirational (Tessl framing).** A requirement's status maps onto
+Tessl's spec-authority distinction — tests are what turn an *inspirational* spec
+into a *canonical* one:
+
+- a **verified `active`** requirement (has passing tests bound via `@req`) =
+  **canonical** — authority from test-binding;
+- a **`deferred` or unverified** requirement = **inspirational** — intent stated,
+  not yet test-bound.
+
+**Merge-boundary gate behavior.** The `active`-coverage check is a
+**post-finishing, pre-merge required PR check** (it needs `@req` resolution +
+test results, so it is merge-pinned, not run on req emission and not mid-RED):
+
+- **`active` + 0 passing tests = FAIL** — blocks the merge. By the merge boundary
+  the TDD RED must have gone GREEN; this is **not** failed mid-RED, where a
+  freshly-specced `active` req legitimately has 0 tests (failing it then would
+  invert the iron law).
+- **`deferred` + 0 tests = surfaced** — shown in the index as *inspirational*,
+  **never** a FAIL.
+
 ## Boundary — stops at GENERATE
 
 This skill **stops at GENERATE**. It does **not** run TDD, write production
