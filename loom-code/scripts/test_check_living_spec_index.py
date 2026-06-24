@@ -545,3 +545,71 @@ def test_committed_index_is_current():
         "the repo root; regenerate it with "
         "`check-living-spec-index.py --write-index docs/loom/INDEX.md <root>`"
     )
+
+
+def test_main_fails_on_malformed_status(tmp_path, capsys):
+    # WHY: a bad status token (e.g. `[activ]` instead of `[active]`) is a
+    # SYNTAX defect, not a coverage gap — `load_req_status` would silently
+    # default it to "active", masking the typo. main()'s every-push
+    # structural lane must fold `find_malformed_status` into its FAIL list
+    # so a malformed `[...]` suffix fails the build (rc=1) on EVERY push and
+    # names the offender on stderr. The fixture is otherwise clean — the
+    # tagged test's `@req: REQ-1` resolves and the malformed REQ-2 is
+    # untagged — so against the pre-wiring main() (status never checked) the
+    # lane returns 0; this test then FAILS by asserting rc == 1.
+    checker = _load_checker()
+    repo = _init_repo(tmp_path)
+
+    (repo / "test_order.py").write_text(
+        "def test_x():\n"
+        "    # @req: REQ-1\n"
+        "    assert True\n",
+        encoding="utf-8",
+    )
+    spec_dir = repo / "docs" / "loom" / "spec" / "orders"
+    spec_dir.mkdir(parents=True)
+    (spec_dir / "spec.md").write_text(
+        "### Requirement: REQ-1\n"
+        "### Requirement: REQ-2 [activ]\n",
+        encoding="utf-8",
+    )
+    _commit(repo, "malformed status suffix", date="2026-01-01T00:00:00 +0000")
+
+    rc = checker.main([str(repo)])
+    assert rc == 1, (
+        f"a malformed status token must fail the structural lane, got rc={rc!r}"
+    )
+    captured = capsys.readouterr()
+    assert "REQ-2" in captured.err and "activ" in captured.err, (
+        f"the malformed status + req id must be named on stderr, got: "
+        f"{captured.err!r}"
+    )
+
+
+def test_main_passes_on_valid_status_suffix(tmp_path, capsys):
+    # WHY: the malformed-status check must NOT false-positive. A valid
+    # `[deferred]` suffix is a well-formed intent declaration, not a syntax
+    # defect — main() must stay rc=0 on it (the structural lane is clean;
+    # coverage of a deferred req is Task 5's `--check-coverage` mode, not
+    # this every-push lane).
+    checker = _load_checker()
+    repo = _init_repo(tmp_path)
+
+    (repo / "test_order.py").write_text(
+        "def test_x():\n"
+        "    # @req: REQ-1\n"
+        "    assert True\n",
+        encoding="utf-8",
+    )
+    spec_dir = repo / "docs" / "loom" / "spec" / "orders"
+    spec_dir.mkdir(parents=True)
+    (spec_dir / "spec.md").write_text(
+        "### Requirement: REQ-1 [deferred]\n", encoding="utf-8"
+    )
+    _commit(repo, "valid deferred status", date="2026-01-01T00:00:00 +0000")
+
+    rc = checker.main([str(repo)])
+    assert rc == 0, (
+        f"a valid status suffix must not fail the structural lane, got "
+        f"rc={rc!r}"
+    )
