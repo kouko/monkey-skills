@@ -463,3 +463,32 @@ def test_uncommitted_tagged_test_is_skipped_not_fatal(tmp_path, capsys):
     # uncommitted test must not crash it with a traceback.
     rc = checker.main([str(repo)])
     assert rc == 0, f"a WARN/skip must not fail the build, got rc={rc!r}"
+
+
+# Repo root = three parents up from this test file:
+#   .../loom-dogfood/loom-code/scripts/test_check_living_spec_index.py
+#   parents[0] scripts  parents[1] loom-code  parents[2] loom-dogfood (root)
+# The root is the source tree that contains the committed docs/loom/INDEX.md.
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_committed_index_is_current():
+    # WHY: docs/loom/INDEX.md is the AUTHORED-vs-DERIVED anchor the CI
+    # verify step checks against. If anyone changes what build_index
+    # produces (a collector, namespace loader, or renderer tweak) without
+    # regenerating the committed file, the committed index silently drifts
+    # from its source of truth. This guard recomputes build_index over the
+    # REAL repo root and asserts byte-identity with the committed file via
+    # index_is_current — failing loud the moment the two diverge.
+    checker = _load_checker()
+
+    committed = (_REPO_ROOT / "docs" / "loom" / "INDEX.md").read_text(
+        encoding="utf-8"
+    )
+    regenerated = checker.build_index(_REPO_ROOT)
+
+    assert checker.index_is_current(committed, regenerated), (
+        "committed docs/loom/INDEX.md is stale vs a fresh build_index over "
+        "the repo root; regenerate it with "
+        "`check-living-spec-index.py --write-index docs/loom/INDEX.md <root>`"
+    )
