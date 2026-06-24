@@ -24,11 +24,16 @@ on:
     branches: [main]
     paths:
       - 'loom-code/**'
+      # The living-spec gates scan the repo root and check the committed
+      # docs/loom/INDEX.md, so a docs/loom/** change must also trigger CI —
+      # else an index drift or a spec-tree edit could merge ungated.
+      - 'docs/loom/**'
       - '.github/workflows/loom-code-ci.yml'
   push:
     branches: [main]
     paths:
       - 'loom-code/**'
+      - 'docs/loom/**'
 
 permissions:
   contents: read
