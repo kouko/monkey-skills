@@ -33,7 +33,7 @@ def test_malformed_tag_reported():
 
 def test_locate_bindings_returns_line_positions():
     # test_a (lines 1-3) carries one @req; test_b (lines 4-7) carries two.
-    # @invariant-ref must be ignored by this locator (drift lane is @req only).
+    # Any `@invariant-ref` must be ignored here (drift lane is @req only).
     text = (
         "def test_a():\n"          # line 1  body_start for test_a
         "    # @req: REQ-1\n"      # line 2  binding for test_a

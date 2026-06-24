@@ -11,11 +11,13 @@ deterministic. Only files matching ``patterns`` are read; everything
 else (including non-test files carrying ``@req``-looking comments) is
 ignored. Pure file I/O plus the locator — no git here.
 
-Stdlib only (pathlib, re).
+Stdlib only (pathlib, re, io, tokenize).
 """
 from __future__ import annotations
 
+import io
 import re
+import tokenize
 from pathlib import Path
 
 from living_spec_tags import locate_bindings
@@ -39,6 +41,33 @@ _ANCHORED_VALID_RE = re.compile(
 _VENDOR_DIRS = frozenset(
     {"node_modules", "site-packages", "__pycache__", "venv", ".eggs"}
 )
+
+
+def _real_comment_lines(text: str) -> set[int]:
+    """1-based line numbers carrying a genuine ``#`` comment token.
+
+    Tokenizes ``text`` and returns every line number that hosts a
+    ``tokenize.COMMENT`` token. A ``# @req:`` buried inside a string
+    literal (a test fixture's triple-quoted source) is part of a STRING
+    token, NOT a COMMENT token, so its line is absent from the set —
+    that is what lets the structural collectors below reject it even
+    though it sits at column 0 on its own line, where the anchored
+    line-regex alone cannot.
+
+    A malformed ``.py`` fixture (one that does not tokenize) yields an
+    empty set rather than crashing the walk: ``tokenize.TokenizeError``
+    and ``IndentationError`` are caught and treated as "no real
+    comments". Partial tokens emitted before a mid-stream failure are
+    discarded so the result reflects only a cleanly tokenizable file.
+    """
+    lines: set[int] = set()
+    try:
+        for tok in tokenize.generate_tokens(io.StringIO(text).readline):
+            if tok.type == tokenize.COMMENT:
+                lines.add(tok.start[0])
+    except (tokenize.TokenizeError, IndentationError):
+        return set()
+    return lines
 
 
 def _is_vendored(relative_parts: tuple[str, ...]) -> bool:
@@ -102,23 +131,52 @@ def collect_structural_records(
     ``invariant_refs`` is always ``[]``: the drift lane's locator
     tracks only ``@req``, and the structural-violation + index
     consumers read only ``reqs`` + ``test``. Records preserve
-    `collect_bindings`' sorted-by-file order, so the result is
-    deterministic.
+    sorted-by-file order, so the result is deterministic.
+
+    Anchoring alone (``locate_bindings``) rejects an ``@req:`` sharing a
+    line with code, but NOT one sitting at column 0 of its own line
+    *inside* a triple-quoted string literal — the shape a fixture in a
+    test that exercises the ``@req`` parser carries. So for ``.py``
+    files this re-reads each file's text and drops any binding whose
+    ``binding_line`` is not a real ``#``-comment line per
+    `_real_comment_lines` (token-aware). Non-``.py`` files pass through
+    unchanged (no Python tokenization applies).
     """
+    root = Path(root)
     records: list[dict] = []
     by_key: dict[tuple[str, str], dict] = {}
-    for binding in collect_bindings(root, patterns):
-        key = (binding["file"], binding["test"])
-        record = by_key.get(key)
-        if record is None:
-            record = {
-                "test": binding["test"],
-                "reqs": [],
-                "invariant_refs": [],
-            }
-            by_key[key] = record
-            records.append(record)
-        record["reqs"].append(binding["req"])
+    matched = {
+        path
+        for pattern in patterns
+        for path in root.rglob(pattern)
+        if path.is_file()
+        and not _is_vendored(path.relative_to(root).parts)
+    }
+    for path in sorted(matched):
+        relative = path.relative_to(root).as_posix()
+        text = path.read_text(encoding="utf-8")
+        comment_lines = (
+            _real_comment_lines(text)
+            if path.suffix == ".py"
+            else None
+        )
+        for binding in locate_bindings(text):
+            if (
+                comment_lines is not None
+                and binding["binding_line"] not in comment_lines
+            ):
+                continue  # @req lives inside a string literal, not a comment
+            key = (relative, binding["test"])
+            record = by_key.get(key)
+            if record is None:
+                record = {
+                    "test": binding["test"],
+                    "reqs": [],
+                    "invariant_refs": [],
+                }
+                by_key[key] = record
+                records.append(record)
+            record["reqs"].append(binding["req"])
     return records
 
 
@@ -133,10 +191,16 @@ def collect_malformed(
     an ANCHORED ``@req`` / ``@invariant-ref`` marker but lacks a usable
     ``: <id>`` value — e.g. ``# @req`` (no colon) or ``# @req:`` (empty
     id). Detection is ANCHORED (the comment marker must start the line
-    after optional indent), so a malformed marker inside a string
-    literal (a test fixture) is NOT reported — unlike the non-anchored
-    `living_spec_tags.find_malformed_tags`, which is unsafe over the
-    real repo. Files are processed in sorted order, so the flat list is
+    after optional indent), so a malformed marker that shares a line
+    with code is NOT reported. But an anchored malformed marker sitting
+    at column 0 of its own line *inside* a triple-quoted string literal
+    (a fixture in a test that exercises the parser) still matches the
+    anchored regex — so for ``.py`` files this additionally requires the
+    line to be a real ``#``-comment line per `_real_comment_lines`
+    (token-aware). Non-``.py`` files keep the anchored-only check (no
+    Python tokenization applies). Unlike the non-anchored
+    `living_spec_tags.find_malformed_tags`, this is safe over the real
+    repo. Files are processed in sorted order, so the flat list is
     deterministic. `find_structural_violations` consumes this as its
     ``malformed`` argument.
     """
@@ -152,9 +216,18 @@ def collect_malformed(
     malformed: list[str] = []
     for path in sorted(matched):
         text = path.read_text(encoding="utf-8")
-        for line in text.splitlines():
-            if _ANCHORED_MARKER_RE.match(line) and not (
-                _ANCHORED_VALID_RE.match(line)
+        comment_lines = (
+            _real_comment_lines(text)
+            if path.suffix == ".py"
+            else None
+        )
+        for lineno, line in enumerate(text.splitlines(), start=1):
+            if not (
+                _ANCHORED_MARKER_RE.match(line)
+                and not _ANCHORED_VALID_RE.match(line)
             ):
-                malformed.append(line.strip())
+                continue
+            if comment_lines is not None and lineno not in comment_lines:
+                continue  # marker is inside a string literal, not a comment
+            malformed.append(line.strip())
     return malformed
