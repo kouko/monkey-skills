@@ -64,3 +64,44 @@ def collect_bindings(
             binding["file"] = relative
             bindings.append(binding)
     return bindings
+
+
+def collect_structural_records(
+    root: Path,
+    patterns: tuple[str, ...] = ("test_*.py", "*_test.py"),
+) -> list[dict]:
+    """Return one ``extract_tags``-shaped record per tagged test.
+
+    Regroups `collect_bindings` output — one record per ``@req``
+    binding — by ``(file, test)`` into the structural shape that
+    `find_structural_violations` and `generate_index` consume::
+
+        [{"test": <name>, "reqs": [...], "invariant_refs": []}]
+
+    Reusing `collect_bindings` means the ANCHORED `locate_bindings`
+    path does the parsing, so a ``@req:`` buried in a string literal
+    (a test fixture) is NOT a binding and never reaches the index —
+    unlike a naive `extract_tags` over the tree, whose non-anchored
+    ``.search`` would mistake the fixture string for a real binding.
+
+    ``invariant_refs`` is always ``[]``: the drift lane's locator
+    tracks only ``@req``, and the structural-violation + index
+    consumers read only ``reqs`` + ``test``. Records preserve
+    `collect_bindings`' sorted-by-file order, so the result is
+    deterministic.
+    """
+    records: list[dict] = []
+    by_key: dict[tuple[str, str], dict] = {}
+    for binding in collect_bindings(root, patterns):
+        key = (binding["file"], binding["test"])
+        record = by_key.get(key)
+        if record is None:
+            record = {
+                "test": binding["test"],
+                "reqs": [],
+                "invariant_refs": [],
+            }
+            by_key[key] = record
+            records.append(record)
+        record["reqs"].append(binding["req"])
+    return records
