@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from living_spec_collect import collect_bindings
+from living_spec_collect import collect_bindings, collect_structural_records
 
 _TEST_A = """\
 def test_alpha():
@@ -75,3 +75,35 @@ def test_collect_is_deterministic_sorted_by_file(tmp_path: Path) -> None:
 
     # Files sorted before processing: b_test.py < test_a.py.
     assert [b["file"] for b in bindings] == ["b_test.py", "test_a.py"]
+
+
+# A real test carrying a genuine `@req:` comment line (anchored binding).
+_REAL = """\
+def test_x():
+    # @req: REQ-1
+    pass
+"""
+
+# A test whose only `@req` lives INSIDE a string literal — a fixture
+# string, NOT a binding. The anchored locator must skip it, so it must
+# never reach the structural index.
+_FIXTURE = """\
+def test_y():
+    src = "    # @req: REQ-FIXTURE"
+    assert src
+"""
+
+
+def test_collect_structural_records_is_fixture_safe(tmp_path: Path) -> None:
+    # A naive non-anchored `extract_tags` over the tree would treat the
+    # fixture-string `@req` as a real binding and flood the index. The
+    # structural collector reuses the ANCHORED locate_bindings path, so
+    # only the genuine `# @req:` comment becomes a record.
+    (tmp_path / "test_real.py").write_text(_REAL, encoding="utf-8")
+    (tmp_path / "test_fixture.py").write_text(_FIXTURE, encoding="utf-8")
+
+    records = collect_structural_records(tmp_path)
+
+    assert records == [
+        {"test": "test_x", "reqs": ["REQ-1"], "invariant_refs": []}
+    ]
