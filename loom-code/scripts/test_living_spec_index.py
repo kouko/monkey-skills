@@ -10,7 +10,12 @@ fixtures (no on-disk fixture dir — mirrors `test_check_skill_crossrefs.py`).
 Stdlib only (pathlib + tmp_path fixture).
 """
 
-from living_spec_index import generate_index, load_namespace, load_req_status
+from living_spec_index import (
+    find_malformed_status,
+    generate_index,
+    load_namespace,
+    load_req_status,
+)
 
 
 def _make_spec(specs_dir, capability, body):
@@ -49,6 +54,36 @@ def test_load_req_status_parses_suffix_default_active(tmp_path):
 
     assert load_req_status(specs) == {"REQ-1": "deferred", "REQ-2": "active"}
     assert load_namespace(specs) == {"REQ-1": "orders", "REQ-2": "orders"}
+
+
+def test_find_malformed_status(tmp_path):
+    # WHY: load_req_status defaults any unrecognized suffix to "active"
+    # by design, which silently swallows a typo'd status token like
+    # `[activ]` — the author MEANT to declare intent but mistyped it, and
+    # a silent default hides the mistake. find_malformed_status closes
+    # that hole: a `[...]` whose content is neither "active" nor
+    # "deferred" is a MALFORMED declaration that must be surfaced (a real
+    # author error), while a valid `[deferred]` (REQ-2) or a bare heading
+    # with no suffix (REQ-3) is intentional and must NOT be flagged. This
+    # is the fail-loud counterpart to load_req_status's lenient default.
+    specs = tmp_path / "specs"
+    _make_spec(
+        specs,
+        "orders",
+        "### Requirement: REQ-1 [activ]\n"
+        "### Requirement: REQ-2 [deferred]\n"
+        "### Requirement: REQ-3\n",
+    )
+
+    result = find_malformed_status(specs)
+
+    joined = "\n".join(result)
+    # the malformed one IS reported, naming both the req-id-portion and
+    # the offending bracket content
+    assert any("REQ-1" in line and "activ" in line for line in result)
+    # the valid [deferred] and the bare heading are NOT flagged
+    assert "REQ-2" not in joined
+    assert "REQ-3" not in joined
 
 
 def test_generate_index_tree():
