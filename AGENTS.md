@@ -29,6 +29,22 @@ Role boundaries enforced by behavior, not reading restrictions:
 | SHOULD | Auto-trigger, skippable with reason | evaluator |
 | MAY | User-requested only | evaluator |
 
+## Commands
+
+<!-- BEGIN command-surface (managed) -->
+- **Living-spec structural gate** (every push):
+  `python3 loom-code/scripts/check-living-spec-index.py [<repo-root>]` —
+  fails rc=1 on any dangling `@req` / malformed tag; runs the advisory
+  drift WARN lane alongside.
+- **Regenerate the living-spec index**:
+  `python3 loom-code/scripts/check-living-spec-index.py --write-index docs/loom/INDEX.md`
+  — regenerates `docs/loom/INDEX.md` from the source tree (the
+  finishing-step / once-per-branch regen path).
+- **Verify the committed index is current** (merge-boundary gate):
+  `python3 loom-code/scripts/check-living-spec-index.py --verify-index docs/loom/INDEX.md`
+  — byte-identity check vs a fresh regeneration; rc=1 if stale.
+<!-- END command-surface (managed) -->
+
 ## Plugin: domain-teams
 
 ### Entry Point

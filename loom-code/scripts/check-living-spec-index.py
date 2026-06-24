@@ -16,10 +16,19 @@ empty list.
 The importable entry point is
 ``find_structural_violations(tag_records, malformed, namespace)
 -> list[str]`` so it can be tested hermetically against in-memory
-inputs. The ``__main__`` block is a thin runner: real-repo wiring
-(building ``tag_records`` / ``malformed`` / ``namespace`` from the
-source tree) is deferred to a later slice, so it currently runs over
-empty inputs and exits 0.
+inputs. ``main()`` builds ``tag_records`` / ``malformed`` /
+``namespace`` from the REAL source tree, fails ``rc=1`` on any
+structural violation (dangling ``@req`` / malformed tag), and runs the
+advisory WARN lane alongside. ``main()`` also supports two alternate
+modes selected from argv:
+
+- ``--write-index <path>`` regenerates via ``build_index(root)`` and
+  WRITES ``<path>`` (the finishing-step / once-per-branch regen path);
+- ``--verify-index <path>`` regenerates and asserts byte-identity vs
+  the committed ``<path>`` (reusing ``index_is_current``), returning 1
+  on mismatch — the merge-boundary stale-index gate.
+
+Both default ``<path>`` to ``docs/loom/INDEX.md`` when omitted.
 
 ``build_index(root)`` is the single regeneration path the CLI, the
 finishing step, and the CI verify lane all call — composing
@@ -146,11 +155,46 @@ def run_drift_lane(root: Path) -> list[str]:
     return find_gitref_drift(enriched)
 
 
+_DEFAULT_INDEX = Path("docs") / "loom" / "INDEX.md"
+
+
 def main(argv: list[str] | None = None) -> int:
-    # Optional argv path selects the source tree for the WARN lane; the
-    # CI invokes this from the repo root, so default to cwd.
+    # argv shapes:
+    #   []                              -> default lanes over cwd
+    #   [root]                          -> default lanes over root
+    #   [--write-index, [path,] [root]] -> regenerate + WRITE path
+    #   [--verify-index, [path,] [root]]-> regenerate + byte-identity gate
+    # A leading --write-index/--verify-index flag consumes an optional
+    # <path> arg (defaulting to docs/loom/INDEX.md); the trailing
+    # positional, if present, still selects the source tree (the WARN-lane
+    # tests pass `[str(repo)]` with no flag, so the default path must
+    # preserve that behavior).
     args = sys.argv[1:] if argv is None else argv
+
+    mode = None
+    if args and args[0] in ("--write-index", "--verify-index"):
+        mode = args[0]
+        args = args[1:]
+        index_path = Path(args[0]) if args else _DEFAULT_INDEX
+        if args:
+            args = args[1:]
+
     root = Path(args[0]) if args else Path.cwd()
+
+    if mode == "--write-index":
+        index_path.write_text(build_index(root), encoding="utf-8")
+        return 0
+    if mode == "--verify-index":
+        committed = index_path.read_text(encoding="utf-8")
+        if index_is_current(committed, build_index(root)):
+            print(f"OK: {index_path} is current.")
+            return 0
+        print(
+            f"FAIL: {index_path} is stale (not byte-identical to a fresh "
+            f"build_index). Regenerate with --write-index.",
+            file=sys.stderr,
+        )
+        return 1
 
     # WARN lane: advisory only. Print each drift WARN to stderr but NEVER
     # let it fail the build or touch the structural FAIL list below.
