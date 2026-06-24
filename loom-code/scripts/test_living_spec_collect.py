@@ -3,7 +3,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from living_spec_collect import collect_bindings, collect_structural_records
+from living_spec_collect import (
+    collect_bindings,
+    collect_malformed,
+    collect_structural_records,
+)
 
 _TEST_A = """\
 def test_alpha():
@@ -107,3 +111,40 @@ def test_collect_structural_records_is_fixture_safe(tmp_path: Path) -> None:
     assert records == [
         {"test": "test_x", "reqs": ["REQ-1"], "invariant_refs": []}
     ]
+
+
+# A real malformed tag: an anchored `@req` marker with NO `: <id>`
+# value, sitting on its own comment line inside a test.
+_REAL_MALFORMED = """\
+def test_x():
+    # @req
+    pass
+"""
+
+# A test whose only malformed-looking marker lives INSIDE a string
+# literal — a fixture string, NOT a malformed comment line. The
+# anchored collector must skip it.
+_FIXTURE_MALFORMED = """\
+def test_y():
+    s = "# @req"
+    assert s
+"""
+
+
+def test_collect_malformed_is_fixture_safe(tmp_path: Path) -> None:
+    # A naive non-anchored `find_malformed_tags` over the tree would
+    # flag the fixture-string `# @req` as malformed. The anchored
+    # collector reports ONLY the real column-0 comment line.
+    (tmp_path / "test_real.py").write_text(
+        _REAL_MALFORMED, encoding="utf-8"
+    )
+    (tmp_path / "test_fixture.py").write_text(
+        _FIXTURE_MALFORMED, encoding="utf-8"
+    )
+
+    malformed = collect_malformed(tmp_path)
+
+    # The genuine malformed line is reported; the fixture string is not.
+    assert any("@req" in line for line in malformed)
+    assert all('"# @req"' not in line for line in malformed)
+    assert malformed == ["# @req"]

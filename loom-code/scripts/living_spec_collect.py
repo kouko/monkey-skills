@@ -11,13 +11,28 @@ deterministic. Only files matching ``patterns`` are read; everything
 else (including non-test files carrying ``@req``-looking comments) is
 ignored. Pure file I/O plus the locator — no git here.
 
-Stdlib only (pathlib).
+Stdlib only (pathlib, re).
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from living_spec_tags import locate_bindings
+
+# ANCHORED malformed-tag detection — mirrors `living_spec_tags`'
+# `_REQ_TAG_RE` anchoring (`^\s*(?:#|//|--)\s*...`) rather than the
+# NON-anchored `find_malformed_tags`. The comment marker must START
+# the line (after optional indent only), so a malformed `@req` buried
+# inside a string literal (a test fixture's `"# @req"`) is NOT flagged
+# over the real repo. A line is malformed iff it hits the MARKER form
+# but NOT the VALID form (`@(req|invariant-ref): <non-empty-id>`).
+_ANCHORED_MARKER_RE = re.compile(
+    r"^\s*(?:#|//|--)\s*@(?:req|invariant-ref)\b"
+)
+_ANCHORED_VALID_RE = re.compile(
+    r"^\s*(?:#|//|--)\s*@(?:req|invariant-ref):\s*(\S+)"
+)
 
 # Directory names that hold vendored / generated code we must not walk
 # into — a `git log -L` per test file there is wasted work.
@@ -105,3 +120,41 @@ def collect_structural_records(
             records.append(record)
         record["reqs"].append(binding["req"])
     return records
+
+
+def collect_malformed(
+    root: Path,
+    patterns: tuple[str, ...] = ("test_*.py", "*_test.py"),
+) -> list[str]:
+    """Return raw malformed ``@req`` / ``@invariant-ref`` comment lines.
+
+    Walks the same test files as `collect_bindings` (same patterns +
+    vendored-dir exclusion) and returns each stripped line that carries
+    an ANCHORED ``@req`` / ``@invariant-ref`` marker but lacks a usable
+    ``: <id>`` value — e.g. ``# @req`` (no colon) or ``# @req:`` (empty
+    id). Detection is ANCHORED (the comment marker must start the line
+    after optional indent), so a malformed marker inside a string
+    literal (a test fixture) is NOT reported — unlike the non-anchored
+    `living_spec_tags.find_malformed_tags`, which is unsafe over the
+    real repo. Files are processed in sorted order, so the flat list is
+    deterministic. `find_structural_violations` consumes this as its
+    ``malformed`` argument.
+    """
+    root = Path(root)
+    matched = {
+        path
+        for pattern in patterns
+        for path in root.rglob(pattern)
+        if path.is_file()
+        and not _is_vendored(path.relative_to(root).parts)
+    }
+
+    malformed: list[str] = []
+    for path in sorted(matched):
+        text = path.read_text(encoding="utf-8")
+        for line in text.splitlines():
+            if _ANCHORED_MARKER_RE.match(line) and not (
+                _ANCHORED_VALID_RE.match(line)
+            ):
+                malformed.append(line.strip())
+    return malformed
