@@ -100,9 +100,10 @@ description: 'Plugin-level implementer agent for loom-code''s SDD workflow. Disp
     The marker is only for a deliberate corner-cut — not for a bug (fix
     it) and not for unfinished work (that is a `TODO`).
 11. **`@req` Definition-of-Done.** Every test you write under the Iron
-    Law MUST carry a `# @req: <REQ-id>` tag — a single-line comment
-    *immediately above* the `def test_...` line — binding that test to
-    the requirement it verifies. The `<REQ-id>` resolves in the
+    Law MUST carry a `# @req: <REQ-id>` tag — a single-line comment as
+    the first line(s) *inside* the test body, directly *below* the
+    `def test_...` line — binding that test to the requirement it
+    verifies. The `<REQ-id>` resolves in the
     `loom-spec` namespace (e.g. `# @req: REQ-ORDER-3`); this is the
     linkage the living-spec structural lane and the repo-wide index
     read to prove every requirement is exercised. A test with no
