@@ -193,3 +193,34 @@ def test_structural_collectors_ignore_string_literal_reqs(
     ]
     # No malformed line: the bare `# @req` was inside the literal.
     assert malformed == []
+
+
+# A `.py` file that does NOT tokenize — an unterminated triple-quoted
+# string. `tokenize.generate_tokens` raises `tokenize.TokenError` on it.
+# This is the exact shape the string-literal fix targets (a fixture
+# embedding fake tags), so the collectors MUST survive it: the
+# unparseable file contributes nothing, the walk continues.
+_UNPARSEABLE_PY = "x = '''oops never closed\n"
+
+
+def test_structural_collectors_survive_unparseable_py(
+    tmp_path: Path,
+) -> None:
+    # An unterminated triple-quote makes `tokenize.generate_tokens`
+    # raise `tokenize.TokenError`. `_real_comment_lines` must catch it
+    # and treat the file as having no real comments — neither collector
+    # may raise. A normal tagged test alongside it is still collected,
+    # proving the walk continued past the bad file.
+    (tmp_path / "test_bad.py").write_text(
+        _UNPARSEABLE_PY, encoding="utf-8"
+    )
+    (tmp_path / "test_good.py").write_text(_REAL, encoding="utf-8")
+
+    # Neither call may raise; the bad file contributes nothing.
+    records = collect_structural_records(tmp_path)
+    malformed = collect_malformed(tmp_path)
+
+    assert records == [
+        {"test": "test_x", "reqs": ["REQ-1"], "invariant_refs": []}
+    ]
+    assert malformed == []
