@@ -55,7 +55,7 @@ def _real_comment_lines(text: str) -> set[int]:
     line-regex alone cannot.
 
     A malformed ``.py`` fixture (one that does not tokenize) yields an
-    empty set rather than crashing the walk: ``tokenize.TokenizeError``
+    empty set rather than crashing the walk: ``tokenize.TokenError``
     and ``IndentationError`` are caught and treated as "no real
     comments". Partial tokens emitted before a mid-stream failure are
     discarded so the result reflects only a cleanly tokenizable file.
@@ -65,7 +65,7 @@ def _real_comment_lines(text: str) -> set[int]:
         for tok in tokenize.generate_tokens(io.StringIO(text).readline):
             if tok.type == tokenize.COMMENT:
                 lines.add(tok.start[0])
-    except (tokenize.TokenizeError, IndentationError):
+    except (tokenize.TokenError, IndentationError):
         return set()
     return lines
 
