@@ -249,6 +249,67 @@ def test_run_drift_lane_no_drift_is_silent(tmp_path, capsys):
     )
 
 
+def test_main_structural_lane_fails_on_real_dangling_req(tmp_path, capsys):
+    # WHY: main()'s structural lane must read the REAL repo, not an empty
+    # stub. A committed test whose `@req: REQ-NOPE` is absent from the
+    # namespace declared under docs/loom/spec is a DANGLING binding — the
+    # gate must FAIL LOUD (rc=1) and name the offending id on stderr, so a
+    # mistagged test cannot slip into the index. Against the empty-inputs
+    # stub this test FAILS (the stub ignores real input and returns 0);
+    # wiring collect_structural_records / collect_malformed / load_namespace
+    # into main() makes it pass.
+    checker = _load_checker()
+    repo = _init_repo(tmp_path)
+
+    (repo / "test_order.py").write_text(
+        "def test_x():\n"
+        "    # @req: REQ-NOPE\n"
+        "    assert True\n",
+        encoding="utf-8",
+    )
+    spec_dir = repo / "docs" / "loom" / "spec" / "order"
+    spec_dir.mkdir(parents=True)
+    (spec_dir / "spec.md").write_text(
+        "### Requirement: REQ-1\n", encoding="utf-8"
+    )
+    _commit(repo, "dangling tagged test + spec", date="2026-01-01T00:00:00 +0000")
+
+    rc = checker.main([str(repo)])
+    assert rc == 1, (
+        f"a real dangling @req must fail the structural lane, got rc={rc!r}"
+    )
+    captured = capsys.readouterr()
+    assert "REQ-NOPE" in captured.err, (
+        f"the dangling @req id must be named on stderr, got: {captured.err!r}"
+    )
+
+
+def test_main_structural_lane_passes_on_resolvable_req(tmp_path, capsys):
+    # WHY: the structural lane must NOT false-positive. A committed test
+    # whose `@req: REQ-1` IS declared in the namespace is structurally
+    # clean — main() must print the OK line and return 0.
+    checker = _load_checker()
+    repo = _init_repo(tmp_path)
+
+    (repo / "test_order.py").write_text(
+        "def test_x():\n"
+        "    # @req: REQ-1\n"
+        "    assert True\n",
+        encoding="utf-8",
+    )
+    spec_dir = repo / "docs" / "loom" / "spec" / "order"
+    spec_dir.mkdir(parents=True)
+    (spec_dir / "spec.md").write_text(
+        "### Requirement: REQ-1\n", encoding="utf-8"
+    )
+    _commit(repo, "resolvable tagged test + spec", date="2026-01-01T00:00:00 +0000")
+
+    rc = checker.main([str(repo)])
+    assert rc == 0, (
+        f"a resolvable @req must not fail the structural lane, got rc={rc!r}"
+    )
+
+
 def test_uncommitted_tagged_test_is_skipped_not_fatal(tmp_path, capsys):
     # WHY: the WARN lane must ALWAYS exit 0 and NEVER pre-empt the
     # structural FAIL lane. A net-new @req-tagged test in the WORKING
