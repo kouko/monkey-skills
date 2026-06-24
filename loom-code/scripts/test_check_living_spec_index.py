@@ -586,6 +586,92 @@ def test_main_fails_on_malformed_status(tmp_path, capsys):
     )
 
 
+def test_check_coverage_mode_fails_on_uncovered_active(tmp_path, capsys):
+    # WHY: `--check-coverage` is the merge-boundary coverage gate. It
+    # composes the real-repo inputs (collect_structural_records +
+    # load_namespace + load_req_status) and runs the hermetic
+    # active_coverage. An ACTIVE req (active by default) with NO test
+    # carrying its `# @req:` is an UNCOVERED promise — the gate must FAIL
+    # LOUD (rc=1) and name the offender on stderr. Sound because CI runs
+    # this AFTER the green pytest gate, so a linked test ≡ a passing test.
+    # Against the pre-implementation main() the `--check-coverage` flag is
+    # unrecognized: argv[0] == "--check-coverage" is treated as the
+    # source-tree path (a nonexistent repo) => the run falls through to the
+    # default lane and does NOT return 1-for-uncovered, so this test fails
+    # until the mode is wired.
+    checker = _load_checker()
+    repo = _init_repo(tmp_path)
+
+    spec_dir = repo / "docs" / "loom" / "spec" / "orders"
+    spec_dir.mkdir(parents=True)
+    # REQ-1 active by default, and NO test carries `# @req: REQ-1`.
+    (spec_dir / "spec.md").write_text(
+        "### Requirement: REQ-1\n", encoding="utf-8"
+    )
+    _commit(repo, "active req, no covering test", date="2026-01-01T00:00:00 +0000")
+
+    rc = checker.main(["--check-coverage", str(repo)])
+    assert rc == 1, (
+        f"an uncovered active req must fail --check-coverage, got rc={rc!r}"
+    )
+    captured = capsys.readouterr()
+    assert "REQ-1" in captured.err, (
+        f"the uncovered active req id must be named on stderr, got: "
+        f"{captured.err!r}"
+    )
+
+
+def test_check_coverage_mode_passes_when_covered(tmp_path, capsys):
+    # WHY: the coverage gate must NOT false-positive. An active req with a
+    # committed test carrying its `# @req:` is covered — main() must return
+    # 0. (Complements the failing case above.)
+    checker = _load_checker()
+    repo = _init_repo(tmp_path)
+
+    (repo / "test_order.py").write_text(
+        "def test_x():\n"
+        "    # @req: REQ-1\n"
+        "    assert True\n",
+        encoding="utf-8",
+    )
+    spec_dir = repo / "docs" / "loom" / "spec" / "orders"
+    spec_dir.mkdir(parents=True)
+    (spec_dir / "spec.md").write_text(
+        "### Requirement: REQ-1\n", encoding="utf-8"
+    )
+    _commit(repo, "active req + covering test", date="2026-01-01T00:00:00 +0000")
+
+    rc = checker.main(["--check-coverage", str(repo)])
+    assert rc == 0, (
+        f"a covered active req must pass --check-coverage, got rc={rc!r}"
+    )
+
+
+def test_check_coverage_mode_surfaces_deferred_returns_zero(tmp_path, capsys):
+    # WHY: a `[deferred]` req with 0 tests is INTENTIONALLY inspirational,
+    # not a defect — `--check-coverage` must surface it on STDOUT (advisory)
+    # and STILL return 0. The deferred status is the escape hatch that lets
+    # an aspirational req sit unverified without blocking merge.
+    checker = _load_checker()
+    repo = _init_repo(tmp_path)
+
+    spec_dir = repo / "docs" / "loom" / "spec" / "orders"
+    spec_dir.mkdir(parents=True)
+    (spec_dir / "spec.md").write_text(
+        "### Requirement: REQ-1 [deferred]\n", encoding="utf-8"
+    )
+    _commit(repo, "deferred req, no test", date="2026-01-01T00:00:00 +0000")
+
+    rc = checker.main(["--check-coverage", str(repo)])
+    assert rc == 0, (
+        f"a deferred req with 0 tests must not fail, got rc={rc!r}"
+    )
+    captured = capsys.readouterr()
+    assert "REQ-1" in captured.out, (
+        f"the deferred req must be surfaced on stdout, got: {captured.out!r}"
+    )
+
+
 def test_main_passes_on_valid_status_suffix(tmp_path, capsys):
     # WHY: the malformed-status check must NOT false-positive. A valid
     # `[deferred]` suffix is a well-formed intent declaration, not a syntax
