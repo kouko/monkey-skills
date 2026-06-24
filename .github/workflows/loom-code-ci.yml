@@ -70,3 +70,20 @@ jobs:
         # file. Guards the cross-skill reference convention (e.g. the shared
         # references/environment-gotchas.md pointers) against silent breakage.
         run: python3 loom-code/scripts/check-skill-crossrefs.py
+
+      - name: Verify living-spec structural integrity
+        # Hard FAIL on every push: every @req tag in the repo source tree must
+        # resolve to a real requirement id and be well-formed. A dangling or
+        # malformed @req exits 1 and fails the build.
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 loom-code/scripts/check-living-spec-index.py .
+
+      - name: Verify living-spec index is current
+        # Byte-identity gate: regenerate build_index over the repo root and
+        # byte-compare to the committed docs/loom/INDEX.md. Any drift exits 1
+        # so a stale committed index can't slip in. Repair locally with:
+        # python3 loom-code/scripts/check-living-spec-index.py --write-index docs/loom/INDEX.md .
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 loom-code/scripts/check-living-spec-index.py --verify-index docs/loom/INDEX.md .
