@@ -10,6 +10,11 @@ structural defects that must FAIL the gate:
 - each MALFORMED tag line (a ``@req`` / ``@invariant-ref`` marker
   lacking a usable ``: <id>`` value), passed through verbatim.
 
+``find_structural_violations`` covers the first two; ``main()``
+additionally folds ``find_malformed_status`` into the SAME FAIL list,
+so a ``### Requirement: <id> [activ]`` with a bad status token (a
+syntax defect, RED-safe on every push) also fails ``rc=1``.
+
 Clean input (every ``@req`` resolves, no malformed lines) returns the
 empty list.
 
@@ -55,7 +60,11 @@ from living_spec_collect import (
 )
 from living_spec_drift import find_gitref_drift
 from living_spec_gitref import resolve_binding_refs
-from living_spec_index import generate_index, load_namespace
+from living_spec_index import (
+    find_malformed_status,
+    generate_index,
+    load_namespace,
+)
 
 
 def find_structural_violations(
@@ -275,6 +284,10 @@ def main(argv: list[str] | None = None) -> int:
     malformed = collect_malformed(root)
     namespace = load_namespace(root / "docs" / "loom" / "spec")
     violations = find_structural_violations(tag_records, malformed, namespace)
+    # Fold the malformed-status check into the SAME FAIL list: a bad status
+    # token (`[activ]`) is a syntax defect, RED-safe to gate on every push
+    # (not a coverage check) — surface it on stderr and count it toward rc=1.
+    violations += find_malformed_status(root / "docs" / "loom" / "spec")
     if violations:
         for entry in violations:
             print(entry, file=sys.stderr)
