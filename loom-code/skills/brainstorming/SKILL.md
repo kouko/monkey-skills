@@ -63,7 +63,7 @@ What is the user trying to accomplish? **Not the solution they proposed — the 
 
 If the user says *"add a CSV export button,"* the problem is not *"have a button."* It might be *"share daily numbers with a non-technical stakeholder who lives in Excel,"* OR *"backup data before deletion,"* OR *"feed data into a downstream pipeline."* Each problem has different success criteria.
 
-Grounded in: **Christensen, C.M. (1997) *The Innovator's Dilemma*, Harvard Business School Press, ISBN 978-0875845852** — the original Jobs-To-Be-Done framing: *"customers don't buy products; they hire them to do a job."* Articulate the job before the product.
+Grounded in: **Christensen, C.M., Hall, T., Dillon, K., & Duncan, D.S. (2016) *Competing Against Luck*, Harper Business** (and the HBR companion "Know Your Customers' Jobs to Be Done", Sept 2016) — the Jobs-To-Be-Done framing: *"customers don't buy products; they hire them to do a job."* Articulate the job before the product. (Note: this framing is **not** in *The Innovator's Dilemma* (1997), which is about disruption — a common misattribution; JTBD's origin is also contested with Ulwick's Outcome-Driven Innovation, HBR 2002.)
 
 When session context gives a confident JTBD read (e.g. the user's prior messages or inline comment already name the job), state it as a committed interpretation — *"I read this as X — correct me if wrong"* — and proceed to Axis 4. `AskUserQuestion` fits genuine cold-start ambiguity; re-presenting an already-confident prose reading as a multiple-choice menu wastes a turn and signals the agent isn't listening.
 

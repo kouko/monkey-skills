@@ -229,6 +229,7 @@ When deciding between Modes B / C / D:
 ### Author-only — do NOT load at runtime
 
 - **`references/DESIGN.md`** — design rationale + 4-iteration history. Load only when redesigning this skill.
+- **`references/GROUNDING.md`** — the communication / HCI theory each design choice maps to (Curse of Knowledge, Cognitive Load, Minto, Horvitz CHI 1999, JTBD, Clark & Brennan grounding, Audience Design, Progressive Disclosure), web-verified with misattribution flags. Load only to justify / defend / extend a design choice.
 - **`references/IMPLEMENTATION-CHECKLIST.md`** — author phase checklist. Load only when working on this skill itself.
 
 ### Sibling skills
