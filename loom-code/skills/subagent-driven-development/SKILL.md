@@ -51,12 +51,12 @@ When you ask a technical decision (a bug-fix approach, a design choice, error ha
 
 ```
 ✅ Standard (outcome-framed, no jargon, plain status, term-explained-on-use):
-   "We're making loom-code's questions easier to understand by adding plain-language
-    rules to two skills. The brief and plan are done and approved; next is editing the
-    actual SKILL.md files."
+   "The first three pieces are done and checked out clean — the parser, the new flag, and the
+    error path. The next one needs a call from you: when a tag is malformed, should the build
+    just warn, or stop and fail?"
 
 ❌ Avoid (jargon-dense status-report style):
-   "Plan v2 PASS round 2, 0 gaps. T1-T4 sequential, Independent:false, 走 SDD 三角審查. DAG 無環."
+   "Wave 1 DONE: T1/T3/T4 PASS 3/3, reviewers green. T5 BLOCKED — NEEDS_CONTEXT on malformed-tag policy. Independent:false. 下一步？"
 ```
 
 This ✅ example is the calibration target for every question and hand-off the orchestrator surfaces below.
