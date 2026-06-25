@@ -110,7 +110,7 @@ Corner radii and border treatment — the shape language of components.
 
 Expected token keys (confirm against the spec):
 
-- `radius` — the radius scale (e.g. none / sm / md / lg / full)
+- `rounded` — the corner-radius scale (e.g. none / sm / md / lg / full). Token key is `rounded` per the Google DESIGN.md spec (not `radius`).
 - `border_width` — border weight tokens
 - `border_style` — default border style where it matters
 
@@ -125,7 +125,7 @@ Expected token keys (confirm against the spec):
 
 - `button` — variants (primary / secondary / destructive) and their token bindings
 - `input` — field styling tokens
-- `card` — surface / radius / elevation bindings
+- `card` — surface / rounded / elevation bindings
 - `states` — visual states (hover / focus / active / disabled) as token deltas
 
 > Note: `states` here is **presentational** (hover/focus/disabled styling).
