@@ -80,6 +80,8 @@ def test_description_carries_positive_triggers():
     front = _frontmatter().lower()
     assert "design system" in front or "design-system" in front, \
         "description must carry an English trigger (design system)"
+    assert not re.search(r"[一-鿿぀-ヿ]", _frontmatter()), \
+        "description must carry NO CJK / kana keyword redundancy (house standard)"
 
 
 def test_description_states_design_concerns():

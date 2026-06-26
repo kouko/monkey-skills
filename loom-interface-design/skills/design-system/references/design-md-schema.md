@@ -178,7 +178,9 @@ When emitting `DESIGN.md`, the `design-system` skill MUST:
 
 1. Confirm the exact YAML token keys against the authoritative Google
    `DESIGN.md` spec at generation time.
-2. Emit all 8 `##` sections in the order above.
+2. **Commit the visual concept first** (Overview / Brand: an art-direction idea
+   + the 3-5 generative visual principles, per the *Derivation contract*), then
+   emit all 8 `##` sections in the order above.
 3. Populate each section's YAML token block.
 4. Verify every color pairing meets WCAG-AA contrast.
 5. Run `npx @google/design.md` lint and resolve violations before declaring done.

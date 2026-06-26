@@ -79,6 +79,8 @@ def test_description_carries_positive_triggers():
     for kw in ("flow", "screen"):
         assert kw in front, \
             f"description must carry the English trigger '{kw}'"
+    assert not re.search(r"[一-鿿぀-ヿ]", _frontmatter()), \
+        "description must carry NO CJK / kana keyword redundancy (house standard)"
 
 
 # --- modality-aware body procedure ------------------------------------------
