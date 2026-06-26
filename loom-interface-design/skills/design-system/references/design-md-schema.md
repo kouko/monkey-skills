@@ -43,14 +43,43 @@ section carries a short prose rationale plus a YAML token block.
 
 ## Overview / Brand
 
-Product identity and the design system's intent — voice, personality, and
-the high-level brand direction the visual tokens express.
+Product identity **and the committed visual concept the whole system answers
+to.** This section is the design system's *generative* layer — the conceptual
+ground every downstream token is derived from and defensible against. A thin,
+generic identity here ("clean and modern") is the root cause of generic,
+"AI-generated"-looking output; a committed concept is what prevents it.
+
+Carry, in the **prose body** of this section (the YAML keys below stay thin):
+
+- **Visual concept (art direction)** — ONE specific, committed creative
+  direction the design expresses, in a sentence or two (e.g. "editorial print
+  weekly — generous measure, restrained palette, confident serif headlines" /
+  "utilitarian terminal — monospace, high-density, near-zero ornament").
+  Commit to a specific aesthetic; a non-committal concept yields non-committal
+  tokens.
+- **Mood** — the emotional target as a few adjectives (the `brand_voice` token).
+- **Generative visual principles** — the small set of *canonical* visual-design
+  principles this concept leans on, each with one line on how it shows up here.
+  Draw from the established canon — **hierarchy, contrast, balance, rhythm /
+  repetition, alignment, proximity, white space, gestalt grouping** — and pick
+  the **3-5 that express this concept**, not all of them generically. They are
+  *generative*: they justify the downstream token choices (e.g. "hierarchy via
+  type-scale jumps, not color" → drives the Typography scale + a restrained
+  palette).
+
+**Derivation contract:** every token in Colors / Typography / Layout /
+Elevation / Shapes / Components MUST be derivable from, and defensible against,
+this concept + its principles (and the governing `PRINCIPLES.md`). A token you
+cannot trace back to the concept is an arbitrary default — the exact failure the
+Anti-patterns section bans. A committed concept makes most of those bans
+redundant: a design that commits to "restrained editorial" does not reach for a
+purple gradient on its own.
 
 Expected YAML frontmatter / token keys (confirm against the spec):
 
 - `name` — product / system name
 - `description` — one-line design-system intent
-- `brand_voice` — adjectives describing personality (e.g. calm, precise)
+- `brand_voice` — adjectives describing personality / mood (e.g. calm, precise)
 - `theme` — `light` / `dark` / `system`
 
 ## Colors
