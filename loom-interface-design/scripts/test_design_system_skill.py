@@ -72,20 +72,14 @@ def test_description_present_and_within_codex_limit():
     )
 
 
-def test_description_carries_trilingual_triggers():
-    """The skill must fire on visual/design-system intent in en + zh-TW + ja."""
+def test_description_carries_positive_triggers():
+    """The description must carry a positive, specific English trigger for
+    visual/design-system intent. Per the house description standard, triggers
+    are positive English keywords — no CJK / multilingual keyword redundancy
+    (cross-lingual triggering is A/B-verified redundant)."""
     front = _frontmatter().lower()
-    # en
     assert "design system" in front or "design-system" in front, \
         "description must carry an English trigger (design system)"
-    # zh-TW (Traditional)
-    assert ("設計系統" in front or "視覺系統" in front
-            or "設計規範" in front), \
-        "description must carry a zh-TW trigger (設計系統 / 視覺系統 / 設計規範)"
-    # ja
-    assert ("デザインシステム" in front or "ビジュアル" in front
-            or "デザイン" in front), \
-        "description must carry a ja trigger (デザインシステム / ビジュアル)"
 
 
 def test_description_states_design_concerns():
