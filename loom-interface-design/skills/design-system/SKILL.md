@@ -83,11 +83,16 @@ Emit a **`DESIGN.md`** following the schema contract from Step 1:
 
 1. Confirm the exact YAML token keys against the authoritative Google
    `DESIGN.md` spec at generation time.
-2. Emit **all 8 `##` sections in order**, each with a short prose rationale
+2. **First commit the visual concept** in **Overview / Brand** — one specific
+   art-direction idea plus the **3-5 generative visual principles** it leans on
+   (per the schema's *Derivation contract*). This is the conceptual ground for
+   everything below; a generic identity here is what makes output look
+   "AI-generated."
+3. Emit **all 8 `##` sections in order**, each with a short prose rationale
    plus its YAML token block (Overview / Brand → Colors → Typography → Layout →
-   Elevation & Depth → Shapes → Components → Do's & Don'ts).
-3. Derive the tokens from the **brand voice** and the **PRINCIPLES.md**
-   constraints — not arbitrary defaults.
+   Elevation & Depth → Shapes → Components → Do's & Don'ts), then **derive every
+   token from that committed concept + the `PRINCIPLES.md` constraints** — each
+   token defensible against the concept, never an arbitrary default.
 4. **Verify WCAG-AA contrast** for every foreground/background pairing (body
    text ≥ 4.5:1, large text ≥ 3:1). Treat an AA failure as a **blocker**.
 5. Run the spec lint `npx @google/design.md` where available and resolve

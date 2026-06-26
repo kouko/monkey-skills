@@ -1,7 +1,7 @@
 ---
 name: product-principles
 description: |
-  Turn a sparse product idea into a PRINCIPLES.md product constitution — a north-star + 3-7 non-negotiable falsifiable principles. Use BEFORE design/spec/build; governs design/spec/code. Triggers: product/design principles, north star, 產品憲章.
+  Turn a sparse product idea into a PRINCIPLES.md constitution — a north-star + 3-7 falsifiable principles governing design/spec/code. Use when the user asks what principles should guide a product/design decision or how to frame a product trade-off.
 ---
 
 # product-principles

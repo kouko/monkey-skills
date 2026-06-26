@@ -46,12 +46,12 @@ Six rules:
 
 ```
 ✅ Standard (outcome-framed, no jargon, plain status, term-explained-on-use):
-   "We're making loom-code's questions easier to understand by adding plain-language
-    rules to two skills. The brief and plan are done and approved; next is editing the
-    actual SKILL.md files."
+   "I reviewed the whole branch — nothing blocks the merge, but two things are worth a look
+    first: a query that could be slow on large tables, and a missing test for the empty-input
+    case. Want me to fix them now, or merge and follow up?"
 
 ❌ Avoid (jargon-dense status-report style):
-   "Plan v2 PASS round 2, 0 gaps. T1-T4 sequential, Independent:false, 走 SDD 三角審查. DAG 無環."
+   "Verdict: PASS_WITH_NOTES. 🔴 0 / 🟡 2 / 🟢 8. perf D2 (Fowler), tests D5 (Beck). See findings[]. Ready to merge?"
 ```
 
 This ✅ example is the calibration target for every verdict-relay and hand-off this skill surfaces.
