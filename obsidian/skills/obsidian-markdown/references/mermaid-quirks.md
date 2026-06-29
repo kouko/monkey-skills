@@ -7,16 +7,21 @@ Read this **before writing any Mermaid block inline** in an Obsidian note.
 
 ---
 
-## Rule 1: Line breaks in node labels — `<br/>` not `\n`
+## Rule 1: Line breaks — `<br/>` not `\n`
 
-`\n` is **not** a valid escape inside Mermaid node text. Use `<br/>`.
+`\n` is **not** a valid escape inside Mermaid node text or edge labels. Use `<br/>`.
 
 ```
 ❌ A["first line\nsecond line"]
 ✅ A["first line<br/>second line"]
+
+❌ A -->|"step one\nstep two"| B
+✅ A -->|"step one<br/>step two"| B
 ```
 
-Applies to all quoted node labels in flowchart / graph diagrams.
+Applies to all quoted node labels and arrow labels in flowchart / graph diagrams.
+
+> ⚠️ **Needs verification in Obsidian 11.4.1**: `obsidian-common-quirks.md` Quirk 4 states `<br/>` only works in circle nodes `((text<br/>line))` and recommends a separate annotation node for other shapes. This conflicts with vault CLAUDE.md conventions and standard Mermaid behavior. Test in your Obsidian before relying on `<br/>` in `["..."]` rectangular nodes — if it does not render, use a separate annotation node or a circle node instead.
 
 ---
 
@@ -97,10 +102,11 @@ CJK text without quotes fails unpredictably.
 
 Before finalising any inline Mermaid block:
 
-- [ ] No `\n` in node labels — replaced with `<br/>`
-- [ ] No `number. space` pattern in node text
+- [ ] No `\n` in node labels or edge labels — replaced with `<br/>`
+- [ ] No `number. space` pattern in node text or edge labels
 - [ ] Subgraphs with spaces use `subgraph id["Name"]` format
 - [ ] All connections use node IDs, not display text
-- [ ] CJK / special-char display strings are quoted
+- [ ] CJK / special-char display strings are quoted (Rule 5)
+- [ ] Special characters substituted: `()` → `「」`, `"` → `『』`, `#` → `&#35;` (Rule 6)
 - [ ] Multi-node styling uses `classDef` + `class`
 - [ ] No v11.5+ features (`look: neo`, `showDataLabelOutsideBar`, `wardley-beta`)

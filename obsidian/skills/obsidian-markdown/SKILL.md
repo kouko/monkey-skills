@@ -180,7 +180,7 @@ Write inline (without invoking the visualizer) only when **all** of the followin
 
 - Clearly a `flowchart` / `graph` type — simple directional flow or decision tree
 - ≤ 6 nodes, no subgraphs
-- Node labels contain no special characters that need escaping (Rule 6 of mermaid-quirks: `"`, `()`, `#`) — pure CJK is fine when quoted per Rule 5; mixed CJK+special-chars is not
+- Special characters (`"`, `()`, `#`) in labels have already been substituted per Rule 6 of mermaid-quirks — `()` → `「」`, `"` → `『』`, `#` → `&#35;`
 - Already read [mermaid-quirks.md](references/mermaid-quirks.md) and the pre-flight checklist is complete
 
 ### Obsidian-note links in Mermaid
