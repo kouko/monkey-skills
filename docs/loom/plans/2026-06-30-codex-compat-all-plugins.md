@@ -31,7 +31,7 @@ collab-toolkit + salesforce-toolkit = Batch C / out of scope.)
 - Brief item covered: "ONE shared repo-level script ... copied from .claude-plugin (SSOT) → .codex-plugin, preserving the interface block"
 
 ## Task 2 — add --scaffold mode + the eligible-plugin list to the engine
-- Description: Extend the engine with `--scaffold` (when a plugin lacks `.codex-plugin/plugin.json`, create one = 8 shared fields + mechanically-derivable interface fields [displayName=name, developerName=author, websiteURL=repository+/<name>] + judgment fields [longDescription, category, capabilities, defaultPrompt, brandColor] set to literal `"TODO"`), and a `CODEX_ELIGIBLE` constant (21 Batch-A names + loom-code; excludes dev-workflow / collab-toolkit / salesforce-toolkit) so `--all` iterates exactly that set.
+- Description: Extend the engine with `--scaffold` (when a plugin lacks `.codex-plugin/plugin.json`, create one = 8 shared fields + mechanically-derivable interface fields [displayName=name, developerName=author, websiteURL=repository+"/tree/main/"+name (canonical GitHub subdir form — NOT bare repository+/name, which 404s)] + judgment fields [longDescription, category, capabilities, defaultPrompt, brandColor] set to literal `"TODO"`), and a `CODEX_ELIGIBLE` constant (21 Batch-A names + loom-code; excludes dev-workflow / collab-toolkit / salesforce-toolkit) so `--all` iterates exactly that set.
 - Module: scripts/sync_codex_manifests.py
 - Files touched: scripts/sync_codex_manifests.py, scripts/test_sync_codex_manifests.py
 - Context paths:
