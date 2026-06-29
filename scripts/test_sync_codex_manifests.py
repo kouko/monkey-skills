@@ -196,8 +196,8 @@ def test_scaffold_seeds_mechanical_fields_and_todo_placeholders(tmp_path):
     # mechanically-derivable fields come from the Claude manifest
     assert iface["displayName"] == "demo-plugin"  # == name
     assert iface["developerName"] == "kouko"  # == author.name
-    # websiteURL == repository + "/" + name
-    assert iface["websiteURL"] == "https://example.com/repo/demo-plugin"
+    # websiteURL == repository + "/tree/main/" + name (canonical GitHub subdir form)
+    assert iface["websiteURL"] == "https://example.com/repo/tree/main/demo-plugin"
     # judgment fields are literal "TODO" placeholders for Phase 2 to fill
     for todo in ("longDescription", "category", "capabilities", "defaultPrompt", "brandColor"):
         assert iface[todo] == "TODO", f"{todo} must be a TODO placeholder"
@@ -242,3 +242,70 @@ def test_eligible_list_excludes_hook_and_mcp_plugins():
 
     for excluded in ("dev-workflow", "collab-toolkit", "salesforce-toolkit"):
         assert excluded not in eligible, f"{excluded} must be excluded"
+
+
+# --- CLI: --scaffold creates a manifest; --all iterates; --all --check read-only
+
+def test_cli_scaffold_creates_manifest(tmp_path):
+    """`--scaffold <plugin>` over a claude-only dir creates the Codex manifest."""
+    plugin = _build_claude_only(tmp_path / "demo-plugin", _claude_ssot())
+    assert not _codex_path(plugin).exists()
+
+    proc = _run(["--scaffold"], plugin)
+    assert proc.returncode == 0, proc.stderr
+    assert _codex_path(plugin).exists()
+    written = json.loads(_codex_path(plugin).read_text(encoding="utf-8"))
+    assert written["interface"]["displayName"] == "demo-plugin"
+
+
+def _build_all_eligible(repo_root: Path) -> dict:
+    """Build every CODEX_ELIGIBLE plugin under ``repo_root`` (stale Codex copy)."""
+    import sync_codex_manifests as m
+
+    dirs = {}
+    for name in m.CODEX_ELIGIBLE:
+        claude = _claude_ssot()
+        claude["name"] = name
+        dirs[name] = _build_plugin(repo_root / name, claude, _stale_codex())
+    return dirs
+
+
+def _run_all(argv, repo_root: Path):
+    return subprocess.run(
+        [sys.executable, str(SCRIPT), "--all", *argv, "--repo-root", str(repo_root)],
+        capture_output=True,
+        text=True,
+    )
+
+
+def test_cli_all_iterates_and_syncs(tmp_path):
+    """`--all` walks every eligible plugin under --repo-root and syncs each."""
+    dirs = _build_all_eligible(tmp_path)
+
+    proc = _run_all([], tmp_path)
+    assert proc.returncode == 0, proc.stderr
+    for name, plugin in dirs.items():
+        written = json.loads(_codex_path(plugin).read_text(encoding="utf-8"))
+        assert written["version"] == _claude_ssot()["version"], f"{name} not synced"
+
+
+def test_cli_all_check_is_read_only_and_fails_on_drift(tmp_path):
+    """`--all --check` is a pure read: exits non-zero on drift, mutates nothing."""
+    dirs = _build_all_eligible(tmp_path)
+    assert _run_all([], tmp_path).returncode == 0  # bring all into sync first
+
+    # drift exactly one plugin's Codex shared field
+    victim = dirs["dbt-wiki"]
+    codex = json.loads(_codex_path(victim).read_text(encoding="utf-8"))
+    codex["version"] = "9.9.9"
+    _codex_path(victim).write_text(
+        json.dumps(codex, indent=2) + "\n", encoding="utf-8"
+    )
+
+    before = {n: _codex_path(p).read_text(encoding="utf-8") for n, p in dirs.items()}
+    proc = _run_all(["--check"], tmp_path)
+    after = {n: _codex_path(p).read_text(encoding="utf-8") for n, p in dirs.items()}
+
+    assert proc.returncode != 0, "drift in one plugin must fail --all --check"
+    assert "DRIFT" in proc.stderr, proc.stderr
+    assert after == before, "--all --check must be pure read (no mutation)"
