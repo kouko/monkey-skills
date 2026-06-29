@@ -150,7 +150,7 @@ def _derive_interface(source: dict) -> dict:
     author = source.get("author")
     developer = author.get("name", "") if isinstance(author, dict) else (author or "")
     repository = source.get("repository", "")
-    website = f"{repository}/{name}" if repository and name else (repository or name)
+    website = f"{repository}/tree/main/{name}" if repository and name else (repository or name)
     return {
         "displayName": name,
         "shortDescription": "TODO",
@@ -216,17 +216,37 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="iterate every CODEX_ELIGIBLE plugin under the repo root",
     )
+    parser.add_argument(
+        "--repo-root",
+        type=Path,
+        default=None,
+        help="repo root for --all (defaults to this script's parent repo)",
+    )
     args = parser.parse_args(argv)
 
     if args.all:
-        repo_root = Path(__file__).resolve().parent.parent
+        repo_root = (
+            args.repo_root
+            if args.repo_root is not None
+            else Path(__file__).resolve().parent.parent
+        )
+        # In --check mode this stays read-only and accumulates a non-zero exit
+        # if ANY plugin is out of sync; otherwise sync_plugin always returns
+        # True (after writing) so the loop never trips the drift branch.
+        exit_code = 0
         for name in CODEX_ELIGIBLE:
             plugin_dir = repo_root / name
             if args.scaffold:
                 scaffold_plugin(plugin_dir)
-            else:
-                sync_plugin(plugin_dir)
-        return 0
+            elif not sync_plugin(plugin_dir, check=args.check):
+                print(
+                    f"DRIFT: {codex_manifest_path(plugin_dir)} shared fields "
+                    f"diverge from {claude_manifest_path(plugin_dir)}. "
+                    f"Run: python3 {Path(__file__).name} {plugin_dir}",
+                    file=sys.stderr,
+                )
+                exit_code = 1
+        return exit_code
 
     if args.plugin is None:
         parser.error("a plugin directory is required unless --all is given")
