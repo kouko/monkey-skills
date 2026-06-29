@@ -49,6 +49,35 @@ SHARED_FIELDS = (
 CLAUDE_MANIFEST = (".claude-plugin", "plugin.json")
 CODEX_MANIFEST = (".codex-plugin", "plugin.json")
 
+# Plugins whose Codex manifest is in scope for sync/scaffold: the 21 Batch-A
+# plugins plus loom-code (which shipped its Codex manifest first). Deliberately
+# EXCLUDES dev-workflow, collab-toolkit, salesforce-toolkit (hook/MCP-only
+# plugins with no Codex interface surface to maintain).
+CODEX_ELIGIBLE = (
+    "ascii-graph-toolkit",
+    "briefing-toolkit",
+    "copywriting-toolkit",
+    "dbt-wiki",
+    "deconstruct-toolkit",
+    "domain-teams",
+    "four-dx-coach",
+    "gws-toolkit",
+    "investing-toolkit",
+    "legal-toolkit",
+    "loom-interface-design",
+    "loom-product-principles",
+    "loom-spec",
+    "obsidian",
+    "philosophers-toolkit",
+    "repo-wiki",
+    "research-toolkit",
+    "skill-dev-toolkit",
+    "systems-thinking-toolkit",
+    "translation-toolkit",
+    "tsundoku",
+    "loom-code",
+)
+
 
 def sync_shared_fields(source: dict, target: dict) -> dict:
     """Return a new target dict with SHARED_FIELDS copied from ``source``.
@@ -109,15 +138,102 @@ def sync_plugin(plugin_dir, check: bool = False) -> bool:
     return True
 
 
+def _derive_interface(source: dict) -> dict:
+    """Build a fresh Codex ``interface`` block from the Claude SSOT.
+
+    Mechanically-derivable fields are filled from ``source``; judgment fields
+    Phase 2 must author by hand are seeded with the literal string ``"TODO"``.
+    Key set + order mirror loom-code/.codex-plugin/plugin.json (the schema
+    template). ``author`` may be a ``{"name", "url"}`` dict or a bare string.
+    """
+    name = source.get("name", "")
+    author = source.get("author")
+    developer = author.get("name", "") if isinstance(author, dict) else (author or "")
+    repository = source.get("repository", "")
+    website = f"{repository}/{name}" if repository and name else (repository or name)
+    return {
+        "displayName": name,
+        "shortDescription": "TODO",
+        "longDescription": "TODO",
+        "developerName": developer,
+        "category": "TODO",
+        "capabilities": "TODO",
+        "defaultPrompt": "TODO",
+        "websiteURL": website,
+        "brandColor": "TODO",
+    }
+
+
+def scaffold_plugin(plugin_dir, sync: bool = True) -> bool:
+    """Create a missing Codex manifest for ``plugin_dir`` from its Claude SSOT.
+
+    Seeds the 8 SHARED_FIELDS plus a TODO-placeholder ``interface`` block (see
+    ``_derive_interface``). Returns ``True`` iff a manifest was created.
+
+    Never clobbers an existing Codex manifest: if one is already present this is
+    a no-op (or a shared-field sync when ``sync=True``) and returns ``False`` —
+    human-authored ``interface`` values are preserved.
+    """
+    plugin_dir = Path(plugin_dir)
+    target_path = codex_manifest_path(plugin_dir)
+    if target_path.exists():
+        if sync:
+            sync_plugin(plugin_dir)
+        return False
+
+    source = _load(claude_manifest_path(plugin_dir))
+    manifest: dict = {}
+    for field in SHARED_FIELDS:
+        if field in source:
+            manifest[field] = source[field]
+    manifest["interface"] = _derive_interface(source)
+
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    _dump(target_path, manifest)
+    return True
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("plugin", type=Path, help="plugin directory (name or path)")
+    parser.add_argument(
+        "plugin",
+        type=Path,
+        nargs="?",
+        help="plugin directory (name or path); omit when using --all",
+    )
     parser.add_argument(
         "--check",
         action="store_true",
         help="pure read; exit non-zero on divergence (CI drift gate)",
     )
+    parser.add_argument(
+        "--scaffold",
+        action="store_true",
+        help="create a missing Codex manifest (TODO placeholders) then sync; never clobbers",
+    )
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="iterate every CODEX_ELIGIBLE plugin under the repo root",
+    )
     args = parser.parse_args(argv)
+
+    if args.all:
+        repo_root = Path(__file__).resolve().parent.parent
+        for name in CODEX_ELIGIBLE:
+            plugin_dir = repo_root / name
+            if args.scaffold:
+                scaffold_plugin(plugin_dir)
+            else:
+                sync_plugin(plugin_dir)
+        return 0
+
+    if args.plugin is None:
+        parser.error("a plugin directory is required unless --all is given")
+
+    if args.scaffold:
+        scaffold_plugin(args.plugin)
+        return 0
 
     if args.check:
         if sync_plugin(args.plugin, check=True):
