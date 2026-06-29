@@ -169,8 +169,8 @@ Delegate to the visualizer when **any** of the following is true:
 2. **Ambiguous type** — content could plausibly map to two or more diagram types
    (e.g. "process with states" → flowchart vs stateDiagram; "actors over time" → flowchart vs sequence).
 
-3. **Complex flowchart** — would have more than ~6 nodes, involves subgraphs,
-   multi-level nesting, or custom classDef styling.
+3. **Complex flowchart** — would have more than ~6 nodes, or involves subgraphs
+   or multi-level nesting.
 
 4. **Data visualization** — encodes numeric data, proportions, or 2×2 positioning.
 
@@ -180,7 +180,7 @@ Write inline (without invoking the visualizer) only when **all** of the followin
 
 - Clearly a `flowchart` / `graph` type — simple directional flow or decision tree
 - ≤ 6 nodes, no subgraphs
-- Node labels are simple (no CJK mixing, no special characters, no multi-line)
+- Node labels contain no special characters that need escaping (Rule 6 of mermaid-quirks: `"`, `()`, `#`) — pure CJK is fine when quoted per Rule 5; mixed CJK+special-chars is not
 - Already read [mermaid-quirks.md](references/mermaid-quirks.md) and the pre-flight checklist is complete
 
 ### Obsidian-note links in Mermaid
