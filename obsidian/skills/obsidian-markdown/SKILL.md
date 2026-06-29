@@ -12,7 +12,7 @@ Create and edit valid Obsidian Flavored Markdown. Obsidian extends CommonMark an
 
 1. **Add frontmatter** with properties (title, tags, aliases) at the top of the file. See [PROPERTIES.md](references/PROPERTIES.md) for all property types.
 2. **Write content** using standard Markdown for structure, plus Obsidian-specific syntax below.
-   - If the note needs a **diagram**, read [mermaid-quirks.md](references/mermaid-quirks.md) and then check §Diagrams for whether to invoke `obsidian:obsidian-mermaid-visualizer` or write inline.
+   - Each time the note needs a **diagram**, read [mermaid-quirks.md](references/mermaid-quirks.md) and check §Diagrams for whether to invoke `obsidian:obsidian-mermaid-visualizer` or write inline. Repeat for every diagram in the note — inline and delegate decisions are made per diagram, not per note.
 3. **Consider a Table of Contents** for longer notes with multiple sections. Use `[[#Heading]]` wikilinks listed after the first heading.
 4. **Link related notes** using wikilinks (`[[Note]]`) for internal vault connections that **already exist** (see §Internal Links for the existence rule), or standard Markdown links for external URLs.
 5. **Embed content** from other notes, images, or PDFs using the `![[embed]]` syntax. See [EMBEDS.md](references/EMBEDS.md) for all embed types.

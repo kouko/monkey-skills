@@ -110,3 +110,4 @@ Before finalising any inline Mermaid block:
 - [ ] Special characters substituted: `()` → `「」`, `"` → `『』`, `#` → `&#35;` (Rule 6)
 - [ ] Multi-node styling uses `classDef` + `class`
 - [ ] No v11.5+ features (`look: neo`, `showDataLabelOutsideBar`, `wardley-beta`)
+- [ ] *(if applicable)* Nodes that should open a vault note have `class NodeName internal-link;`
