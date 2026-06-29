@@ -166,3 +166,79 @@ def test_cli_sync_then_check_is_clean(tmp_path):
 
     assert _run([], plugin).returncode == 0
     assert _run(["--check"], plugin).returncode == 0
+
+
+# --- --scaffold seeds a missing Codex manifest with mechanical + TODO fields ---
+
+def _build_claude_only(plugin_dir: Path, claude: dict) -> Path:
+    """Create only <plugin_dir>/.claude-plugin/plugin.json (no Codex manifest)."""
+    (plugin_dir / ".claude-plugin").mkdir(parents=True)
+    (plugin_dir / ".claude-plugin" / "plugin.json").write_text(
+        json.dumps(claude, indent=2) + "\n", encoding="utf-8"
+    )
+    return plugin_dir
+
+
+def test_scaffold_seeds_mechanical_fields_and_todo_placeholders(tmp_path):
+    import sync_codex_manifests as m
+
+    plugin = _build_claude_only(tmp_path / "demo-plugin", _claude_ssot())
+    assert not _codex_path(plugin).exists()
+
+    m.scaffold_plugin(plugin)
+
+    written = json.loads(_codex_path(plugin).read_text(encoding="utf-8"))
+    # shared fields seeded from the Claude SSOT
+    for field in SHARED_FIELDS:
+        assert written[field] == _claude_ssot()[field], f"{field} not seeded from SSOT"
+
+    iface = written["interface"]
+    # mechanically-derivable fields come from the Claude manifest
+    assert iface["displayName"] == "demo-plugin"  # == name
+    assert iface["developerName"] == "kouko"  # == author.name
+    # websiteURL == repository + "/" + name
+    assert iface["websiteURL"] == "https://example.com/repo/demo-plugin"
+    # judgment fields are literal "TODO" placeholders for Phase 2 to fill
+    for todo in ("longDescription", "category", "capabilities", "defaultPrompt", "brandColor"):
+        assert iface[todo] == "TODO", f"{todo} must be a TODO placeholder"
+
+
+def test_scaffold_does_not_clobber_existing_codex(tmp_path):
+    import sync_codex_manifests as m
+
+    plugin = _build_plugin(tmp_path / "demo-plugin", _claude_ssot(), _stale_codex())
+    iface_before = json.loads(_codex_path(plugin).read_text())["interface"]
+
+    created = m.scaffold_plugin(plugin)
+    assert created is False  # already exists -> not created
+
+    after = json.loads(_codex_path(plugin).read_text(encoding="utf-8"))
+    # human-authored interface preserved verbatim (not overwritten with TODOs)
+    assert after["interface"] == iface_before
+    # but shared fields are still brought into sync from the SSOT
+    assert after["version"] == _claude_ssot()["version"]
+
+
+# --- CODEX_ELIGIBLE: 21 Batch-A + loom-code; excludes hook/mcp-only plugins ----
+
+def test_eligible_list_excludes_hook_and_mcp_plugins():
+    import sync_codex_manifests as m
+
+    batch_a = {
+        "ascii-graph-toolkit", "briefing-toolkit", "copywriting-toolkit",
+        "dbt-wiki", "deconstruct-toolkit", "domain-teams", "four-dx-coach",
+        "gws-toolkit", "investing-toolkit", "legal-toolkit",
+        "loom-interface-design", "loom-product-principles", "loom-spec",
+        "obsidian", "philosophers-toolkit", "repo-wiki", "research-toolkit",
+        "skill-dev-toolkit", "systems-thinking-toolkit", "translation-toolkit",
+        "tsundoku",
+    }
+    assert len(batch_a) == 21
+
+    eligible = set(m.CODEX_ELIGIBLE)
+    assert batch_a <= eligible, batch_a - eligible
+    assert "loom-code" in eligible
+    assert len(eligible) == 22  # 21 Batch-A + loom-code, no duplicates
+
+    for excluded in ("dev-workflow", "collab-toolkit", "salesforce-toolkit"):
+        assert excluded not in eligible, f"{excluded} must be excluded"
