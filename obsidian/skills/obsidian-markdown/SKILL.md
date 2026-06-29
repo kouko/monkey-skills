@@ -12,6 +12,7 @@ Create and edit valid Obsidian Flavored Markdown. Obsidian extends CommonMark an
 
 1. **Add frontmatter** with properties (title, tags, aliases) at the top of the file. See [PROPERTIES.md](references/PROPERTIES.md) for all property types.
 2. **Write content** using standard Markdown for structure, plus Obsidian-specific syntax below.
+   - If the note needs a **diagram**, stop and invoke `obsidian:obsidian-mermaid-visualizer` at that point — do not write Mermaid syntax directly (see §Diagrams).
 3. **Consider a Table of Contents** for longer notes with multiple sections. Use `[[#Heading]]` wikilinks listed after the first heading.
 4. **Link related notes** using wikilinks (`[[Note]]`) for internal vault connections that **already exist** (see §Internal Links for the existence rule), or standard Markdown links for external URLs.
 5. **Embed content** from other notes, images, or PDFs using the `![[embed]]` syntax. See [EMBEDS.md](references/EMBEDS.md) for all embed types.
@@ -154,16 +155,17 @@ $$
 
 ## Diagrams (Mermaid)
 
-````markdown
-```mermaid
-graph TD
-    A[Start] --> B{Decision}
-    B -->|Yes| C[Do this]
-    B -->|No| D[Do that]
-```
-````
+**Do not write Mermaid code directly in this skill.**
 
-To link Mermaid nodes to Obsidian notes, add `class NodeName internal-link;`.
+When a note needs a diagram:
+
+1. **Stop** and invoke `obsidian:obsidian-mermaid-visualizer` skill.
+2. That skill selects the right diagram type, applies Obsidian-specific syntax rules (e.g. `<br/>` not `\n` in node labels, list-syntax conflicts, v11.4.1 version constraints), and generates verified code.
+3. Paste the generated ` ```mermaid ``` ` block into the note at the target position.
+
+Writing Mermaid inline — bypassing the visualizer — reliably introduces syntax errors that are invisible until render time (`\n` line breaks, unsupported features, parser conflicts). The visualizer exists precisely to prevent these.
+
+To link a Mermaid node to an Obsidian note, add `class NodeName internal-link;` — mention this requirement when invoking the visualizer.
 
 ## Footnotes
 
