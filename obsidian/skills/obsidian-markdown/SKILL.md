@@ -12,7 +12,7 @@ Create and edit valid Obsidian Flavored Markdown. Obsidian extends CommonMark an
 
 1. **Add frontmatter** with properties (title, tags, aliases) at the top of the file. See [PROPERTIES.md](references/PROPERTIES.md) for all property types.
 2. **Write content** using standard Markdown for structure, plus Obsidian-specific syntax below.
-   - If the note needs a **diagram**, stop and invoke `obsidian:obsidian-mermaid-visualizer` at that point — do not write Mermaid syntax directly (see §Diagrams).
+   - If the note needs a **diagram**, read [mermaid-quirks.md](references/mermaid-quirks.md) and then check §Diagrams for whether to invoke `obsidian:obsidian-mermaid-visualizer` or write inline.
 3. **Consider a Table of Contents** for longer notes with multiple sections. Use `[[#Heading]]` wikilinks listed after the first heading.
 4. **Link related notes** using wikilinks (`[[Note]]`) for internal vault connections that **already exist** (see §Internal Links for the existence rule), or standard Markdown links for external URLs.
 5. **Embed content** from other notes, images, or PDFs using the `![[embed]]` syntax. See [EMBEDS.md](references/EMBEDS.md) for all embed types.
@@ -155,17 +155,37 @@ $$
 
 ## Diagrams (Mermaid)
 
-**Do not write Mermaid code directly in this skill.**
+**Before writing any Mermaid block:** read [mermaid-quirks.md](references/mermaid-quirks.md) and run its pre-flight checklist.
 
-When a note needs a diagram:
+### When to invoke `obsidian:obsidian-mermaid-visualizer`
 
-1. **Stop** and invoke `obsidian:obsidian-mermaid-visualizer` skill.
-2. That skill selects the right diagram type, applies Obsidian-specific syntax rules (e.g. `<br/>` not `\n` in node labels, list-syntax conflicts, v11.4.1 version constraints), and generates verified code.
-3. Paste the generated ` ```mermaid ``` ` block into the note at the target position.
+Delegate to the visualizer when **any** of the following is true:
 
-Writing Mermaid inline — bypassing the visualizer — reliably introduces syntax errors that are invisible until render time (`\n` line breaks, unsupported features, parser conflicts). The visualizer exists precisely to prevent these.
+1. **Non-flowchart type** — the diagram is not a plain directional flow. This covers:
+   `sequenceDiagram`, `stateDiagram-v2`, `erDiagram`, `classDiagram`, `C4Context` (and C4 variants),
+   `gitGraph`, `gantt`, `timeline`, `mindmap`, `xychart-beta`, `pie`, `quadrant-chart`,
+   `architecture-beta`, `block-beta` — anything other than `flowchart` / `graph`.
 
-To link a Mermaid node to an Obsidian note, add `class NodeName internal-link;` — mention this requirement when invoking the visualizer.
+2. **Ambiguous type** — content could plausibly map to two or more diagram types
+   (e.g. "process with states" → flowchart vs stateDiagram; "actors over time" → flowchart vs sequence).
+
+3. **Complex flowchart** — would have more than ~6 nodes, involves subgraphs,
+   multi-level nesting, or custom classDef styling.
+
+4. **Data visualization** — encodes numeric data, proportions, or 2×2 positioning.
+
+### When to write Mermaid inline
+
+Write inline (without invoking the visualizer) only when **all** of the following hold:
+
+- Clearly a `flowchart` / `graph` type — simple directional flow or decision tree
+- ≤ 6 nodes, no subgraphs
+- Node labels are simple (no CJK mixing, no special characters, no multi-line)
+- Already read [mermaid-quirks.md](references/mermaid-quirks.md) and the pre-flight checklist is complete
+
+### Obsidian-note links in Mermaid
+
+To link a Mermaid node to an Obsidian note, add `class NodeName internal-link;`. Mention this requirement when invoking the visualizer, or apply it manually when writing inline.
 
 ## Footnotes
 
