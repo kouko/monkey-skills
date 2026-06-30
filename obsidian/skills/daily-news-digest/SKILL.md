@@ -106,12 +106,12 @@ short title, not a number.
 
 | Category | Typical stories |
 |---|---|
-| 國際・地緣政治 | 衝突、外交、制裁、選舉、國際組織 |
-| 金融市場・總經 | 股市、匯率、利率、通膨、央行、債市 |
-| AI・科技 | 模型發布、AI 產品、科技平台、晶片 |
-| 商業・產業 | 財報、併購、企業策略、產業動態 |
-| 能源・商品 | 油價、天然氣、礦產、供應鏈 |
-| 政策・監管 | 立法、監管行動、關稅、政府政策 |
+| 國際・地緣政治 | conflict, diplomacy, sanctions, elections, international orgs |
+| 金融市場・總經 | equities, FX, rates, inflation, central banks, bonds |
+| AI・科技 | model releases, AI products, tech platforms, semiconductors |
+| 商業・產業 | earnings, M&A, corporate strategy, industry dynamics |
+| 能源・商品 | oil/gas prices, mining, commodities, supply chains |
+| 政策・監管 | legislation, regulatory action, tariffs, government policy |
 
 If none of the six fits, create a new heading — but add a one-line comment in
 the digest's frontmatter `notes` field explaining why (e.g. `notes: "新增「社會・
@@ -256,11 +256,11 @@ below — pick 2–4 that fit the day's knowledge content:
 
 | Sub-category | Typical content |
 |---|---|
-| 投資策略・市場觀點 | 投資框架、個股分析、市場評論、策略觀點 |
-| AI・開發・工具 | LLM 應用、開發工具、工程實踐、AI 研究 |
-| 科技產品・趨勢 | 產品評測、科技發布、硬體、平台趨勢 |
-| 商業・策略・思維 | 商業模型、策略框架、思維方法、管理 |
-| 設計・創作 | UI/UX、工業設計、視覺、創作工具 |
+| 投資策略・市場觀點 | investing frameworks, stock analysis, market commentary, strategy |
+| AI・開發・工具 | LLM applications, dev tools, engineering practices, AI research |
+| 科技產品・趨勢 | product reviews, tech launches, hardware, platform trends |
+| 商業・策略・思維 | business models, strategy frameworks, mental models, management |
+| 設計・創作 | UI/UX, industrial design, visual design, creative tools |
 
 If none of the five fits, create a new sub-heading and add a one-line comment
 in `notes` (same rule as the news tier). In **each** sub-category:
