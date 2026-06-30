@@ -1,7 +1,7 @@
 ---
 name: daily-news-digest
 description: |
-  Compile one day's vault notes into a two-tier daily digest — clustered time-sensitive stories + evergreen knowledge links — at news/YYYY-MM-DD. Use for '整理今天的新聞', '每日新聞', 'daily news digest', or rounding up a day's content.
+  Compile one day's vault notes into a two-tier daily digest — clustered time-sensitive stories + evergreen knowledge links — at news/YYYY-MM-DD. Use for '整理今天的新聞', '每日新聞', 'daily news digest', rounding up a day's content, or summarizing what you consumed/read today.
 ---
 
 # Daily News Digest（每日新聞彙整）
@@ -65,6 +65,12 @@ Before spending tokens on collection, do two things:
    SKILL_DIR="<the path shown in the skill metadata header>"
    ```
    Using the runtime-provided path avoids hard-coding the plugin cache version.
+   If the metadata header is absent (cold-start or direct invocation without the
+   plugin runtime), locate the scripts automatically:
+   ```bash
+   SKILL_DIR=$(find "$HOME/.claude/plugins/cache" -type d -name "daily-news-digest" 2>/dev/null | sort -r | head -1)
+   ```
+   (`sort -r` picks the highest version number if multiple cache versions exist.)
 
 ### STEP 1 — Collect candidates
 
@@ -106,8 +112,10 @@ sources**. Aim for **4–7 stories** on a busy day. A lone source is a valid
 one-source story; just don't pad it.
 
 Then **group the stories under 2–4 thematic category headings** using the
-**anchored-open** taxonomy below. There is **no single "Time-Sensitive News"
-umbrella heading**; the news is categorized the same way Knowledge & Perspectives
+**anchored-open** taxonomy below (**anchored-open**: pick from the fixed list;
+only create a new heading when nothing fits, and record the reason in the
+digest's frontmatter `notes` field so the taxonomy can be reviewed). There is
+**no single "Time-Sensitive News" umbrella heading**; the news is categorized the same way Knowledge & Perspectives
 is. **Story headings carry no number** — `### <story title>`. The Source Index
 references each story by its short title, not a number.
 
@@ -240,7 +248,7 @@ wire feed, not summarizing notes one by one:
    tension is signal.
 3. **Write a one-line TL;DR — the bottom-line takeaway / so-what**, NOT a
    restating of the causal steps (the COT diagram below carries those). Then a
-   **COT mini-diagram** directly (a compact `flowchart LR` of the story's causal
+   **COT (Chain-of-Thought) mini-diagram** directly (a compact `flowchart LR` of the story's causal
    chain (**3–5 hops as the story warrants** — trigger → mechanism → result →
    conclusion is a natural arc, collapse or extend as needed) — **no caption
    label before it**. Each node = title + ━━━━ + a **left-aligned bullet list of
@@ -305,7 +313,10 @@ earns its place.
 ### STEP 6 — Write the digest
 
 **READ `references/digest-format.md` first** — it holds the output template, the
-link-presentation rules, and the Mermaid house style. Then create the digest file
+link-presentation rules, and the Mermaid house style. (If the file is missing or
+unreadable, fall back to: standard YAML frontmatter with title/date/type/tags/status,
+COT colour scheme from §STEP 4 — trigger green / mechanism purple / result orange /
+conclusion cyan — and the link rules in §Hard rules below.) Then create the digest file
 at `news/<YYYY-MM-DD> <title>.md` (title in the user's language; e.g.
 `news/2026-07-01 每日新聞.md` in Traditional Chinese). **Order at the top:
 `## Table of Contents`** (in user's language, right under the title), then a
