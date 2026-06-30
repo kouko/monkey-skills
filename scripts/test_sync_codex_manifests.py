@@ -345,3 +345,29 @@ def test_cli_all_check_is_read_only_and_fails_on_drift(tmp_path):
     assert proc.returncode != 0, "drift in one plugin must fail --all --check"
     assert "DRIFT" in proc.stderr, proc.stderr
     assert after == before, "--all --check must be pure read (no mutation)"
+
+
+# --- repo-level regression guard: the REAL committed manifests must be in sync --
+# Third drift-defense layer, independent of the git hook (shift-left) and the CI
+# gate. Runs against the actual committed manifests (not a tmp fixture) so the
+# pytest suite alone catches any plugin whose .codex-plugin/plugin.json has
+# drifted from its .claude-plugin/plugin.json SSOT.
+
+REPO_ROOT = SCRIPT.resolve().parent.parent
+
+
+def test_all_eligible_codex_manifests_in_sync():
+    import sync_codex_manifests as m
+
+    # Sanity sub-check: the eligible set is the expected 21 Batch-A + loom-code.
+    assert len(m.CODEX_ELIGIBLE) == 22, f"expected 22 eligible, got {len(m.CODEX_ELIGIBLE)}"
+
+    drifted = [
+        name
+        for name in m.CODEX_ELIGIBLE
+        if not m.sync_plugin(REPO_ROOT / name, check=True)
+    ]
+    assert not drifted, (
+        "committed Codex manifests drifted from their Claude SSOT: "
+        f"{drifted}. Run: python3 scripts/sync_codex_manifests.py <plugin>"
+    )
