@@ -95,3 +95,22 @@ def test_real_batch_a_plugin_in_sync():
     assert real.exists()
     result = run_hook(str(real))
     assert result.returncode == 0, result.stderr
+
+
+def test_codex_less_plugin_is_noop(tmp_path):
+    """A plugin with a .claude-plugin manifest but NO .codex-plugin (a
+    deliberately Codex-less plugin like dev-workflow/collab/salesforce) ->
+    the hook no-ops (exit 0), NOT a false drift block. Pins the load-bearing
+    `[ -f .../.codex-plugin/plugin.json ] || exit 0` guard against regression:
+    without it, every edit to those plugins would falsely block (exit 2)."""
+    (tmp_path / "scripts").mkdir()
+    shutil.copy(SYNC_ENGINE, tmp_path / "scripts" / "sync_codex_manifests.py")
+    plugin = tmp_path / "codexless"
+    (plugin / ".claude-plugin").mkdir(parents=True)
+    claude_path = plugin / ".claude-plugin" / "plugin.json"
+    claude_path.write_text(
+        json.dumps({"name": "codexless", "version": "1.0.0", "description": "d"}),
+        encoding="utf-8",
+    )
+    result = run_hook(str(claude_path))
+    assert result.returncode == 0, result.stderr

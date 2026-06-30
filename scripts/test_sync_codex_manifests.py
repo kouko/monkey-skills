@@ -362,12 +362,17 @@ def test_all_eligible_codex_manifests_in_sync():
     # Sanity sub-check: the eligible set is the expected 21 Batch-A + loom-code.
     assert len(m.CODEX_ELIGIBLE) == 22, f"expected 22 eligible, got {len(m.CODEX_ELIGIBLE)}"
 
-    drifted = [
-        name
-        for name in m.CODEX_ELIGIBLE
-        if not m.sync_plugin(REPO_ROOT / name, check=True)
-    ]
-    assert not drifted, (
-        "committed Codex manifests drifted from their Claude SSOT: "
-        f"{drifted}. Run: python3 scripts/sync_codex_manifests.py <plugin>"
+    # Fold MISSING (no .codex-plugin manifest yet) into the offender list so a
+    # future eligible plugin added before it is scaffolded fails CLEANLY (named),
+    # not with a raw FileNotFoundError from sync_plugin's _load.
+    offenders = []
+    for name in m.CODEX_ELIGIBLE:
+        plugin_dir = REPO_ROOT / name
+        if not m.codex_manifest_path(plugin_dir).exists():
+            offenders.append(f"{name} (MISSING .codex-plugin/plugin.json)")
+        elif not m.sync_plugin(plugin_dir, check=True):
+            offenders.append(name)
+    assert not offenders, (
+        "committed Codex manifests drifted or missing vs their Claude SSOT: "
+        f"{offenders}. Run: python3 scripts/sync_codex_manifests.py --scaffold --all"
     )
