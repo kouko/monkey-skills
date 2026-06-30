@@ -102,21 +102,22 @@ heading**; the news is categorized the same way 知識與觀點 is. **Story head
 carry no number** — `### <故事標題>`. The 來源索引 references each story by its
 short title, not a number.
 
-**時效新聞 category anchor list** — pick 2–4 that fit the day's stories:
+**時效新聞 category anchor list** — pick 2–4 that fit the day's stories.
+Write the actual heading in the **user's language** (e.g. 「國際・地緣政治」in
+Traditional Chinese, "International & Geopolitics" in English):
 
-| Category | Typical stories |
+| Concept | Typical stories |
 |---|---|
-| 國際・地緣政治 | conflict, diplomacy, sanctions, elections, international orgs |
-| 金融市場・總經 | equities, FX, rates, inflation, central banks, bonds |
-| AI・科技 | model releases, AI products, tech platforms, semiconductors |
-| 商業・產業 | earnings, M&A, corporate strategy, industry dynamics |
-| 能源・商品 | oil/gas prices, mining, commodities, supply chains |
-| 政策・監管 | legislation, regulatory action, tariffs, government policy |
+| International & Geopolitics | conflict, diplomacy, sanctions, elections, international orgs |
+| Financial Markets & Macro | equities, FX, rates, inflation, central banks, bonds |
+| AI & Technology | model releases, AI products, tech platforms, semiconductors |
+| Business & Industry | earnings, M&A, corporate strategy, industry dynamics |
+| Energy & Commodities | oil/gas prices, mining, commodities, supply chains |
+| Policy & Regulation | legislation, regulatory action, tariffs, government policy |
 
 If none of the six fits, create a new heading — but add a one-line comment in
-the digest's frontmatter `notes` field explaining why (e.g. `notes: "新增「社會・
-文化」— 當日有重大社會事件"`), so the taxonomy can be reviewed and extended
-deliberately.
+the digest's frontmatter `notes` field explaining why, so the taxonomy can be
+reviewed and extended deliberately.
 
 ### STEP 3.5 — For evolving stories, pull history and build 事件進程
 
@@ -252,15 +253,17 @@ execution model — returning each sub-category's 精選/整合 summaries + CoT 
 content; the main agent renders + assembles.)
 
 Group tier-2 items under sub-headings using the **anchored-open** taxonomy
-below — pick 2–4 that fit the day's knowledge content:
+below — pick 2–4 that fit the day's knowledge content. Write the actual
+sub-heading in the **user's language** (e.g. 「投資策略・市場觀點」in Traditional
+Chinese, "Investing Strategy & Market Views" in English):
 
-| Sub-category | Typical content |
+| Concept | Typical content |
 |---|---|
-| 投資策略・市場觀點 | investing frameworks, stock analysis, market commentary, strategy |
-| AI・開發・工具 | LLM applications, dev tools, engineering practices, AI research |
-| 科技產品・趨勢 | product reviews, tech launches, hardware, platform trends |
-| 商業・策略・思維 | business models, strategy frameworks, mental models, management |
-| 設計・創作 | UI/UX, industrial design, visual design, creative tools |
+| Investing Strategy & Market Views | investing frameworks, stock analysis, market commentary, strategy |
+| AI, Development & Tools | LLM applications, dev tools, engineering practices, AI research |
+| Tech Products & Trends | product reviews, tech launches, hardware, platform trends |
+| Business, Strategy & Thinking | business models, strategy frameworks, mental models, management |
+| Design & Creativity | UI/UX, industrial design, visual design, creative tools |
 
 If none of the five fits, create a new sub-heading and add a one-line comment
 in `notes` (same rule as the news tier). In **each** sub-category:
