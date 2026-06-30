@@ -65,10 +65,10 @@ jobs:
         # pytest = test runner. The drift + sync scripts are pure stdlib (P1-E).
         run: python3 -m pip install --quiet pytest
 
-      - name: Run loom-code scripts/ pytest suite
+      - name: Run pytest suites (loom-code + codex-compat engine + hook)
         env:
           PYTHONDONTWRITEBYTECODE: "1"
-        run: python3 -m pytest loom-code/scripts/ -v
+        run: python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -v
 
       - name: Verify code-team <-> loom-code knowledge SSOT
         # canonical/ is the single source of truth; each skill carries routed

@@ -10,8 +10,8 @@ Codex-only ``interface`` block. This engine copies the shared fields into the
 Codex manifest in lock-step while preserving ``interface`` (and any other
 Codex-only key) verbatim.
 
-Unlike ``loom-code/scripts/sync_codex_manifest.py`` (self-locating to its own
-parent plugin), this engine is REPO-LEVEL: the plugin to sync is passed in as a
+This engine is REPO-LEVEL (not self-locating to a single plugin): the plugin to
+sync is passed in as a
 directory name or path. The public surface (``sync_plugin`` + a CLI taking a
 plugin arg) is shaped so a later task can add ``--scaffold``, an eligible-plugin
 list, and ``--all`` without reworking it.
