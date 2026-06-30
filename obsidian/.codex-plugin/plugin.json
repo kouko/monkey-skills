@@ -25,13 +25,21 @@
   ],
   "interface": {
     "displayName": "obsidian",
-    "shortDescription": "TODO",
-    "longDescription": "TODO",
+    "shortDescription": "Obsidian vault workflows — notes, diagrams, canvas, plus an LLM wiki layer",
+    "longDescription": "Manage Obsidian vaults end-to-end: author Flavored Markdown / Bases / Canvas, generate Mermaid and Excalidraw diagrams, run daily notes and file-intel summaries via the Obsidian CLI, and maintain an incremental LLM wiki layer (wiki-setup/ingest/cross-linker/query/lint/merge) with SHA-256 delta tracking. using-obsidian routes the skills.",
     "developerName": "kouko",
-    "category": "TODO",
-    "capabilities": "TODO",
-    "defaultPrompt": "TODO",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Create a note in my Obsidian vault.",
+      "Make a Mermaid diagram for this workflow.",
+      "Ingest my new notes into the wiki layer."
+    ],
     "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/obsidian",
-    "brandColor": "TODO"
+    "brandColor": "#7C3AED"
   }
 }

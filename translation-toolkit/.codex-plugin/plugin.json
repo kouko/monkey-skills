@@ -25,13 +25,21 @@
   ],
   "interface": {
     "displayName": "translation-toolkit",
-    "shortDescription": "TODO",
-    "longDescription": "TODO",
+    "shortDescription": "High-quality EN/JA/ZH translation with a 6-gate check",
+    "longDescription": "Translate between English, Japanese, and Chinese with a bundled glossary and a 6-gate verification pass that catches mistranslation, omission, register drift, and terminology inconsistency. Mode-specific skills handle documents, novels, creative copy, and software i18n, with an intake step to scope the job and an audit step to grade an existing translation. Use it when fidelity, tone, and consistent terminology matter.",
     "developerName": "kouko",
-    "category": "TODO",
-    "capabilities": "TODO",
-    "defaultPrompt": "TODO",
+    "category": "Writing",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Translate this document from English to Japanese.",
+      "Translate this novel chapter into Chinese, preserving tone and voice.",
+      "Audit this existing translation for accuracy and consistency."
+    ],
     "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/translation-toolkit",
-    "brandColor": "TODO"
+    "brandColor": "#DB2777"
   }
 }

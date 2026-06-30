@@ -22,13 +22,21 @@
   ],
   "interface": {
     "displayName": "systems-thinking-toolkit",
-    "shortDescription": "TODO",
-    "longDescription": "TODO",
+    "shortDescription": "Map feedback loops, archetypes, and leverage points",
+    "longDescription": "Reason about complex systems using Sherwood's (2002) toolkit: craft causal-loop diagrams, recognize the classic system archetypes, overlay loops to find structure, model behavior with simulation, and trace strategy levers through their cascading effects — plus team mental-model and manager-personality framing. Use it to understand why a stubborn problem persists, spot unintended consequences, and find where a small change moves the whole system.",
     "developerName": "kouko",
-    "category": "TODO",
-    "capabilities": "TODO",
-    "defaultPrompt": "TODO",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Build a causal-loop diagram for why our onboarding keeps stalling.",
+      "Which system archetype explains this recurring problem?",
+      "Find the highest-leverage intervention point in this system."
+    ],
     "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/systems-thinking-toolkit",
-    "brandColor": "TODO"
+    "brandColor": "#0891B2"
   }
 }

@@ -26,13 +26,21 @@
   ],
   "interface": {
     "displayName": "domain-teams",
-    "shortDescription": "TODO",
-    "longDescription": "TODO",
+    "shortDescription": "Domain-expert team skills (code/design/research/docs/QA…) with quality-gate checkpoints",
+    "longDescription": "Use domain-teams to run work through a specialist team — planning, code, design, devops, docs, research, copywriting, investing, qa, or skill. Each team pairs a worker (produces artifacts) with an evaluator (produces verdicts), enforcing four-tier SELF / MUST / SHOULD / MAY quality gates so a deliverable is reviewed before it hands off. Composes with sibling toolkits via cross-plugin delegation.",
     "developerName": "kouko",
-    "category": "TODO",
-    "capabilities": "TODO",
-    "defaultPrompt": "TODO",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Have the planning team draft a product spec.",
+      "Run the code team on this feature.",
+      "Get the research team to investigate this question."
+    ],
     "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/domain-teams",
-    "brandColor": "TODO"
+    "brandColor": "#0D9488"
   }
 }

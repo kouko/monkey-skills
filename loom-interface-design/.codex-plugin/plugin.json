@@ -20,13 +20,21 @@
   ],
   "interface": {
     "displayName": "loom-interface-design",
-    "shortDescription": "TODO",
-    "longDescription": "TODO",
+    "shortDescription": "Key-free cross-modal (GUI/TUI/CLI) UX and visual design generator",
+    "longDescription": "Design a product's interface in any modality: design-system emits a DESIGN.md of color/typography/layout/component tokens, interaction-flows maps navigation and UX into a ui-flows.md with Mermaid + ASCII wireframes, and design-critic runs an adversarial writer-not-judge panel for surface gaps (undrawn states, dead-ends, a11y) per Nielsen. Governed by PRINCIPLES.md; using-loom-interface-design routes the skills.",
     "developerName": "kouko",
-    "category": "TODO",
-    "capabilities": "TODO",
-    "defaultPrompt": "TODO",
+    "category": "Design",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Design the UI/UX for this feature.",
+      "Generate a visual design system for this product.",
+      "Map the interaction flows for this TUI."
+    ],
     "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/loom-interface-design",
-    "brandColor": "TODO"
+    "brandColor": "#DB2777"
   }
 }

@@ -36,13 +36,21 @@
   ],
   "interface": {
     "displayName": "deconstruct-toolkit",
-    "shortDescription": "TODO",
-    "longDescription": "TODO",
+    "shortDescription": "Reverse-engineer polished artifacts into reusable blueprints (EN / JA / ZH)",
+    "longDescription": "Use deconstruct-toolkit to take apart a polished artifact — marketing copy, docs, UI, an argument, or an org design — into the structure, moves, and hidden assumptions that make it work. artifact-deconstruct extracts a reusable blueprint, argument-deconstruct maps a piece's claims and rhetorical structure, and assumption-surface exposes the unstated premises. Works in English, Japanese, and Chinese.",
     "developerName": "kouko",
-    "category": "TODO",
-    "capabilities": "TODO",
-    "defaultPrompt": "TODO",
+    "category": "Research",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Deconstruct this landing page into its blueprint.",
+      "Break down the argument in this essay.",
+      "Surface the hidden assumptions in this proposal."
+    ],
     "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/deconstruct-toolkit",
-    "brandColor": "TODO"
+    "brandColor": "#7C3AED"
   }
 }
