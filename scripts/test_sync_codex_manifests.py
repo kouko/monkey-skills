@@ -203,6 +203,42 @@ def test_scaffold_seeds_mechanical_fields_and_todo_placeholders(tmp_path):
         assert iface[todo] == "TODO", f"{todo} must be a TODO placeholder"
 
 
+def test_website_url_falls_back_to_homepage_when_no_repository(tmp_path):
+    """A plugin with `homepage` but NO `repository` must get a real URL.
+
+    The Claude SSOT's `homepage` is the canonical GitHub tree URL; when
+    `repository` is absent the websiteURL fallback must use it, not degrade to
+    the bare plugin name (which is not a URL).
+    """
+    import sync_codex_manifests as m
+
+    claude = _claude_ssot()
+    del claude["repository"]
+    claude["homepage"] = "https://github.com/kouko/monkey-skills/tree/main/demo-plugin"
+
+    plugin = _build_claude_only(tmp_path / "demo-plugin", claude)
+    m.scaffold_plugin(plugin)
+
+    iface = json.loads(_codex_path(plugin).read_text(encoding="utf-8"))["interface"]
+    assert iface["websiteURL"] == claude["homepage"]
+    assert iface["websiteURL"] != "demo-plugin"  # must not degrade to bare name
+
+
+def test_check_all_reports_missing_manifest_cleanly(tmp_path):
+    """`--all --check` on an eligible plugin with no Codex manifest must fail
+    with a clean MISSING message, not a raw FileNotFoundError traceback."""
+    dirs = _build_all_eligible(tmp_path)
+    assert _run_all([], tmp_path).returncode == 0  # bring all into sync first
+
+    # remove one eligible plugin's Codex manifest entirely
+    _codex_path(dirs["dbt-wiki"]).unlink()
+
+    proc = _run_all(["--check"], tmp_path)
+    assert proc.returncode != 0, "missing manifest must fail --all --check"
+    assert "MISSING" in proc.stderr, proc.stderr
+    assert "Traceback" not in proc.stderr, "must be a clean message, not a traceback"
+
+
 def test_scaffold_does_not_clobber_existing_codex(tmp_path):
     import sync_codex_manifests as m
 
