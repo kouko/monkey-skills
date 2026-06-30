@@ -60,7 +60,10 @@ def title_bullets(n, ctx):
 
 
 def node(nid, title, bullets):
-    body = san(title) + "<br/>━━━━<br/>" + "<br/>".join("• " + san(b) for b in bullets)
+    # Strip leading "• " if the caller already added it — idempotent so both
+    # {"bullets": ["事實1"]} and {"bullets": ["• 事實1"]} produce a single bullet.
+    cleaned = [b.removeprefix("• ") for b in bullets]
+    body = san(title) + "<br/>━━━━<br/>" + "<br/>".join("• " + san(b) for b in cleaned)
     return f'{nid}["{DL}{body}{DR}"]'
 
 
