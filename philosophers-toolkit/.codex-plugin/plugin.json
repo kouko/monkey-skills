@@ -33,8 +33,7 @@
     "category": "Education",
     "capabilities": [
       "Interactive",
-      "Read",
-      "Write"
+      "Read"
     ],
     "defaultPrompt": [
       "Help me reason through this decision from first principles.",
