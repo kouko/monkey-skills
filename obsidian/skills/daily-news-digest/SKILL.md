@@ -96,12 +96,27 @@ lens, a market-reaction lens, and a diplomat lens is **one story with four
 sources**. Aim for **4–7 stories** on a busy day. A lone source is a valid
 one-source story; just don't pad it.
 
-Then **group the stories under 2–4 thematic category headings** (e.g. 國際・
-地緣政治 / 金融市場・總經 / AI・科技 / 商業・產業 — pick what the day's stories
-warrant). There is **no single "時效新聞" umbrella heading**; the news is
-categorized the same way 知識與觀點 is. **Story headings carry no number** —
-`### <故事標題>`. The 來源索引 references each story by its short title, not a
-number.
+Then **group the stories under 2–4 thematic category headings** using the
+**anchored-open** taxonomy below. There is **no single "時效新聞" umbrella
+heading**; the news is categorized the same way 知識與觀點 is. **Story headings
+carry no number** — `### <故事標題>`. The 來源索引 references each story by its
+short title, not a number.
+
+**時效新聞 category anchor list** — pick 2–4 that fit the day's stories:
+
+| Category | Typical stories |
+|---|---|
+| 國際・地緣政治 | 衝突、外交、制裁、選舉、國際組織 |
+| 金融市場・總經 | 股市、匯率、利率、通膨、央行、債市 |
+| AI・科技 | 模型發布、AI 產品、科技平台、晶片 |
+| 商業・產業 | 財報、併購、企業策略、產業動態 |
+| 能源・商品 | 油價、天然氣、礦產、供應鏈 |
+| 政策・監管 | 立法、監管行動、關稅、政府政策 |
+
+If none of the six fits, create a new heading — but add a one-line comment in
+the digest's frontmatter `notes` field explaining why (e.g. `notes: "新增「社會・
+文化」— 當日有重大社會事件"`), so the taxonomy can be reviewed and extended
+deliberately.
 
 ### STEP 3.5 — For evolving stories, pull history and build 事件進程
 
@@ -236,8 +251,19 @@ wire feed, not summarizing notes one by one:
 execution model — returning each sub-category's 精選/整合 summaries + CoT node
 content; the main agent renders + assembles.)
 
-Group tier-2 items under sub-headings (e.g. 投資策略・市場觀點 / AI・開發 /
-商業・設計・思維・長青 — adapt to the day). In **each** sub-category:
+Group tier-2 items under sub-headings using the **anchored-open** taxonomy
+below — pick 2–4 that fit the day's knowledge content:
+
+| Sub-category | Typical content |
+|---|---|
+| 投資策略・市場觀點 | 投資框架、個股分析、市場評論、策略觀點 |
+| AI・開發・工具 | LLM 應用、開發工具、工程實踐、AI 研究 |
+| 科技產品・趨勢 | 產品評測、科技發布、硬體、平台趨勢 |
+| 商業・策略・思維 | 商業模型、策略框架、思維方法、管理 |
+| 設計・創作 | UI/UX、工業設計、視覺、創作工具 |
+
+If none of the five fits, create a new sub-heading and add a one-line comment
+in `notes` (same rule as the news tier). In **each** sub-category:
 
 1. **Promote ≥1 important piece to a 2–3 sentence summary** in a `> [!example]`
    callout. The callout title is **the piece's short title only** (no "精選摘要 —"
