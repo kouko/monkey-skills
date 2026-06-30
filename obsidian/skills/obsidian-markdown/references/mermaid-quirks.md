@@ -21,7 +21,7 @@ Read this **before writing any Mermaid block inline** in an Obsidian note.
 
 Applies to all quoted node labels and arrow labels in flowchart / graph diagrams.
 
-> ⚠️ **Needs verification in Obsidian 11.4.1**: `obsidian-common-quirks.md` Quirk 4 states `<br/>` only works in circle nodes `((text<br/>line))` and recommends a separate annotation node for other shapes. This conflicts with vault CLAUDE.md conventions and standard Mermaid behavior. Test in your Obsidian before relying on `<br/>` in `["..."]` rectangular nodes — if it does not render, use a separate annotation node or a circle node instead.
+> ✅ **Verified in Obsidian 11.4.1** (2026-06-30): `<br/>` works in both rectangular `["..."]` and circle `(("..."))` nodes. `\n` does not work in either. An earlier note in `obsidian-common-quirks.md` Quirk 4 claiming circle-only has been corrected.
 
 ---
 

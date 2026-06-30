@@ -107,7 +107,7 @@ This is the most common silent-failure pattern: diagram parses but layout is wro
 | `"` (double quote) | Breaks node text parsing | `『』` (CJK quote) |
 | `()` (parens in text) | Ambiguous with shape syntax | `「」` (CJK bracket) |
 | `:` (colon) | Usually safe; avoid if parsing fails | Use dash or remove |
-| `<br/>` (line break) | **Only** works in circle nodes `((Text<br/>Line))` | Use separate annotation node for other shapes |
+| `<br/>` (line break) | Works in quoted node labels: `["Text<br/>Line"]`, `(("Text<br/>Line"))`, etc. | Does **not** work unquoted; use `["..."]` quoting |
 | `#` (hash) | Reserved; escape with `&#35;` | Replace with text "number" |
 
 **Length guideline**: keep node text under 50 characters. Long labels should be broken into annotation nodes or use circle-node line breaks.
