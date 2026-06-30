@@ -29,12 +29,21 @@ on:
       # docs/loom/INDEX.md, so a docs/loom/** change must also trigger CI —
       # else an index drift or a spec-tree edit could merge ungated.
       - 'docs/loom/**'
+      # The Codex drift gate runs --all (every plugin's manifest pair), so the
+      # trigger scope must match: ANY plugin's manifest edit must fire CI, else
+      # a drift in a non-loom-code plugin merges ungated (fail-open).
+      - '**/.claude-plugin/plugin.json'
+      - '**/.codex-plugin/plugin.json'
+      - 'scripts/sync_codex_manifests.py'
       - '.github/workflows/loom-code-ci.yml'
   push:
     branches: [main]
     paths:
       - 'loom-code/**'
       - 'docs/loom/**'
+      - '**/.claude-plugin/plugin.json'
+      - '**/.codex-plugin/plugin.json'
+      - 'scripts/sync_codex_manifests.py'
 
 permissions:
   contents: read
