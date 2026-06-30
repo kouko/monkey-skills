@@ -150,7 +150,16 @@ def _derive_interface(source: dict) -> dict:
     author = source.get("author")
     developer = author.get("name", "") if isinstance(author, dict) else (author or "")
     repository = source.get("repository", "")
-    website = f"{repository}/tree/main/{name}" if repository and name else (repository or name)
+    homepage = source.get("homepage", "")
+    # websiteURL fallback chain: a repository derives the canonical GitHub subdir
+    # URL; absent that, the homepage IS already that tree URL; the bare name is a
+    # last resort only when neither URL is present.
+    if repository and name:
+        website = f"{repository}/tree/main/{name}"
+    elif homepage:
+        website = homepage
+    else:
+        website = repository or name
     return {
         "displayName": name,
         "shortDescription": "TODO",
@@ -238,6 +247,12 @@ def main(argv: list[str] | None = None) -> int:
             plugin_dir = repo_root / name
             if args.scaffold:
                 scaffold_plugin(plugin_dir)
+            elif args.check and not codex_manifest_path(plugin_dir).exists():
+                print(
+                    f"MISSING: {codex_manifest_path(plugin_dir)} — run --scaffold",
+                    file=sys.stderr,
+                )
+                exit_code = 1
             elif not sync_plugin(plugin_dir, check=args.check):
                 print(
                     f"DRIFT: {codex_manifest_path(plugin_dir)} shared fields "
@@ -256,6 +271,12 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.check:
+        if not codex_manifest_path(args.plugin).exists():
+            print(
+                f"MISSING: {codex_manifest_path(args.plugin)} — run --scaffold",
+                file=sys.stderr,
+            )
+            return 1
         if sync_plugin(args.plugin, check=True):
             return 0
         print(
