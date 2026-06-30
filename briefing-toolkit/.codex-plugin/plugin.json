@@ -25,13 +25,20 @@
   ],
   "interface": {
     "displayName": "briefing-toolkit",
-    "shortDescription": "TODO",
-    "longDescription": "TODO",
+    "shortDescription": "Read-only cross-tool morning brief over Slack / Asana / Notion",
+    "longDescription": "Use briefing-toolkit's daily-brief skill to generate today's cross-tool morning brief — schedule, action-required items, project status, and what's upcoming — pulled from connected MCP tools with source links back to each item. Includes a zero-omission action table that accumulates day over day. Read-only; never mutates the source tools.",
     "developerName": "kouko",
-    "category": "TODO",
-    "capabilities": "TODO",
-    "defaultPrompt": "TODO",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read"
+    ],
+    "defaultPrompt": [
+      "Give me today's morning brief.",
+      "What needs my attention across Slack and Asana today?",
+      "Summarize my schedule and open action items."
+    ],
     "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/briefing-toolkit",
-    "brandColor": "TODO"
+    "brandColor": "#F59E0B"
   }
 }

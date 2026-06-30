@@ -25,13 +25,21 @@
   ],
   "interface": {
     "displayName": "legal-toolkit",
-    "shortDescription": "TODO",
-    "longDescription": "TODO",
+    "shortDescription": "In-house legal toolkit for Taiwan SMEs — review, draft, negotiate, research",
+    "longDescription": "Cover the in-house legal workflow for Taiwan SMEs: contract review, issue-spotting, playbook-driven negotiation authoring, document drafting, legal research, and incident response. using-legal-toolkit routes the seven skills; the toolkit defers substantive legal decisions to the user rather than rendering judgments.",
     "developerName": "kouko",
-    "category": "TODO",
-    "capabilities": "TODO",
-    "defaultPrompt": "TODO",
+    "category": "Other",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Review this contract and flag risky clauses.",
+      "Draft an NDA for a vendor engagement.",
+      "Spot the legal issues in this situation."
+    ],
     "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/legal-toolkit",
-    "brandColor": "TODO"
+    "brandColor": "#7C2D12"
   }
 }

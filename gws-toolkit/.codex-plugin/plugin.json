@@ -24,13 +24,21 @@
   ],
   "interface": {
     "displayName": "gws-toolkit",
-    "shortDescription": "TODO",
-    "longDescription": "TODO",
+    "shortDescription": "Drive Google Workspace (Drive/Docs/Sheets/Slides/Gmail/Calendar) from the CLI",
+    "longDescription": "Operate Google Workspace through the official gws CLI without leaving the agent: list and upload Drive files, read and write Docs, append to Sheets, build SCQA/Minto-structured Slides decks (slides-builder + slides-design), triage and send Gmail, and manage Calendar agendas. Includes gws-setup for first-run auth and a using-gws-toolkit router across 18 skills.",
     "developerName": "kouko",
-    "category": "TODO",
-    "capabilities": "TODO",
-    "defaultPrompt": "TODO",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Summarize my unread Gmail and draft replies.",
+      "Build a Slides deck from this outline.",
+      "Append these rows to my Google Sheet."
+    ],
     "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/gws-toolkit",
-    "brandColor": "TODO"
+    "brandColor": "#EA4335"
   }
 }

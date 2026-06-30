@@ -24,13 +24,21 @@
   ],
   "interface": {
     "displayName": "tsundoku",
-    "shortDescription": "TODO",
-    "longDescription": "TODO",
+    "shortDescription": "Turn owned-but-unread e-books into actionable skills",
+    "longDescription": "Clear the tsundoku pile by mining the books you already own for usable knowledge: authenticate to Kobo and search your library, download chosen titles as DRM-free EPUBs, convert them to chapter-chunked Markdown, then distill each book's frameworks, principles, and decision rules into atomic, reusable agent skills. Use it to convert a stack of unread books into capabilities an agent can actually invoke.",
     "developerName": "kouko",
-    "category": "TODO",
-    "capabilities": "TODO",
-    "defaultPrompt": "TODO",
+    "category": "Education",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Search my Kobo library and download this book.",
+      "Convert this EPUB into chapter-chunked Markdown.",
+      "Distill this book into a set of agent skills."
+    ],
     "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/tsundoku",
-    "brandColor": "TODO"
+    "brandColor": "#B45309"
   }
 }

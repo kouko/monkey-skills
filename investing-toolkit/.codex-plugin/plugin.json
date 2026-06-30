@@ -33,13 +33,21 @@
   ],
   "interface": {
     "displayName": "investing-toolkit",
-    "shortDescription": "TODO",
-    "longDescription": "TODO",
+    "shortDescription": "Three-layer equity research: market data, valuation analysis, and reports",
+    "longDescription": "Run end-to-end investing research across a data layer (US/JP/KR/TW/CN market fetchers), an analysis layer (DCF, comps, screener, technical, macro-regime, portfolio), and a report layer (equity memo, portfolio review, screener list, stock snapshot). Primary-source-anchored with gate enforcement; using-investing-toolkit routes the 16 skills.",
     "developerName": "kouko",
-    "category": "TODO",
-    "capabilities": "TODO",
-    "defaultPrompt": "TODO",
+    "category": "Finance",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Write an equity research memo for this stock.",
+      "Run a DCF valuation on this company.",
+      "Screen for undervalued stocks in this market."
+    ],
     "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/investing-toolkit",
-    "brandColor": "TODO"
+    "brandColor": "#059669"
   }
 }

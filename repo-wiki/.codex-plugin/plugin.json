@@ -22,13 +22,21 @@
   ],
   "interface": {
     "displayName": "repo-wiki",
-    "shortDescription": "TODO",
-    "longDescription": "TODO",
+    "shortDescription": "A natural-language wiki for any code repository",
+    "longDescription": "Build and maintain an LLM-friendly wiki over a code repo: init bootstraps it from source files and commit history, ingest grows it incrementally as the code changes, and query answers natural-language questions about how the codebase works. Use it to onboard onto an unfamiliar repo, capture tribal knowledge, or ask 'where does X happen?' without grepping by hand.",
     "developerName": "kouko",
-    "category": "TODO",
-    "capabilities": "TODO",
-    "defaultPrompt": "TODO",
+    "category": "Coding",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Initialize a wiki for this repository.",
+      "Update the repo wiki with my latest changes.",
+      "How does authentication work in this codebase?"
+    ],
     "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/repo-wiki",
-    "brandColor": "TODO"
+    "brandColor": "#0D9488"
   }
 }

@@ -23,13 +23,21 @@
   ],
   "interface": {
     "displayName": "ascii-graph-toolkit",
-    "shortDescription": "TODO",
-    "longDescription": "TODO",
+    "shortDescription": "CJK-width-aware ASCII/Unicode diagram & table generator for plain-text channels",
+    "longDescription": "Use ascii-graph-toolkit to render tables, flows, trees, bar charts, architecture, and sequence diagrams as plain text where Mermaid can't render — Claude Code terminals, Slack, PR descriptions. Deterministic pure-Python generators plus a wcwidth-based verify-loop that acts as an alignment oracle, so full-width CJK (中/日) characters stay aligned. Zero external binary.",
     "developerName": "kouko",
-    "category": "TODO",
-    "capabilities": "TODO",
-    "defaultPrompt": "TODO",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Draw an ASCII flowchart of this pipeline.",
+      "Make a CJK-aligned comparison table for the terminal.",
+      "Render this architecture as a plain-text diagram for the PR."
+    ],
     "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/ascii-graph-toolkit",
-    "brandColor": "TODO"
+    "brandColor": "#16A34A"
   }
 }
