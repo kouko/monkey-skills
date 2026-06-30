@@ -28,19 +28,27 @@ signal. The YouTube `categories` field lies — an AI-market analysis gets tagge
 
 | Bucket | What goes here | How it's handled |
 |---|---|---|
-| **📰 新聞(整合故事)** | Dated events: 個股/財報/油價/利率/Fed・央行, 衝突/選舉/政策/制裁, 發表會/新模型/併購 | Clustered + synthesized into rewritten stories, then grouped under thematic category headings (the heart of the skill) |
-| **🧠 知識與觀點** | Substantive but not date-driven: 社論/評論, 工具評測/跑分, 教學/walkthrough, 投資策略/方法論, 長青深度分析 | Categorized short-labeled links + one-line takeaway each (NOT rewritten) |
-| **研究附錄 / drop** | The user's own research / analysis notes → research appendix (links only). Pure filler with no takeaway → drop. | Links only |
+| **📰 Time-Sensitive News** | Dated events: individual stocks/earnings/oil/rates/central banks, conflict/elections/policy/sanctions, launches/new models/M&A | Clustered + synthesized into rewritten stories, then grouped under thematic category headings (the heart of the skill) |
+| **🧠 Knowledge & Perspectives** | Substantive but not date-driven: op-eds/commentary, tool reviews/benchmarks, tutorials/walkthroughs, investing strategy/methodology, long-form deep analysis | Categorized short-labeled links + one-line takeaway each (NOT rewritten) |
+| **Research Appendix / drop** | The user's own research / analysis notes → research appendix (links only). Pure filler with no takeaway → drop. | Links only |
+
+> [!note] Output section names follow the user's language
+> The bucket labels above are English shorthand used throughout this document.
+> Translate to the user's language when writing the actual digest sections (e.g.
+> "Time-Sensitive News" → 「時效新聞」, "Knowledge & Perspectives" → 「知識與觀點」,
+> "Source Index" → 「來源索引」in Traditional Chinese). The same applies to all
+> section headings called out in this skill.
 
 > [!tip] The litmus test for tier 1 vs tier 2
 > Ask: "If I read this six months from now, would the **date** matter?" A market
-> move or launch is stale in a week → 時效新聞. A tutorial or a thinking-model
-> essay is just as useful next year → 知識與觀點. Both stay in the digest; only
-> the **treatment** differs (synthesized story vs indexed link).
+> move or launch is stale in a week → Time-Sensitive News. A tutorial or a
+> thinking-model essay is just as useful next year → Knowledge & Perspectives.
+> Both stay in the digest; only the **treatment** differs (synthesized story vs
+> indexed link).
 
 Borderline event-driven explainers lean on whether a **specific dated event**
-drives the piece. When genuinely unsure between the two tiers, prefer 知識與觀點
-(a link is cheaper than a forced story).
+drives the piece. When genuinely unsure between the two tiers, prefer
+Knowledge & Perspectives (a link is cheaper than a forced story).
 
 ## Workflow
 
@@ -78,10 +86,11 @@ triage** — the collector doesn't pre-filter by folder. If `counts.candidates` 
 
 ### STEP 2 — Triage each candidate into the buckets
 
-For **each** `candidates` entry, assign one of: **時效新聞** / **知識與觀點** /
-**研究附錄** (the user's own research/analysis — goes to the appendix, not the
-body) / **drop**. Use `tags` + `snippet` as the primary signal; `folder` is a
-hint, not a rule (e.g. a `research/`- or `notes/`-style folder leans 研究附錄, a
+For **each** `candidates` entry, assign one of: **Time-Sensitive News** /
+**Knowledge & Perspectives** / **Research Appendix** (the user's own
+research/analysis — goes to the appendix, not the body) / **drop**. Use `tags` +
+`snippet` as the primary signal; `folder` is a hint, not a rule (e.g. a
+`research/`- or `notes/`-style folder leans Research Appendix, a
 clippings/references-style folder leans consumed-content) — but judge on content.
 Keep a running tally (you'll report kept-vs-dropped to the user).
 
@@ -97,14 +106,14 @@ sources**. Aim for **4–7 stories** on a busy day. A lone source is a valid
 one-source story; just don't pad it.
 
 Then **group the stories under 2–4 thematic category headings** using the
-**anchored-open** taxonomy below. There is **no single "時效新聞" umbrella
-heading**; the news is categorized the same way 知識與觀點 is. **Story headings
-carry no number** — `### <故事標題>`. The 來源索引 references each story by its
-short title, not a number.
+**anchored-open** taxonomy below. There is **no single "Time-Sensitive News"
+umbrella heading**; the news is categorized the same way Knowledge & Perspectives
+is. **Story headings carry no number** — `### <story title>`. The Source Index
+references each story by its short title, not a number.
 
-**時效新聞 category anchor list** — pick 2–4 that fit the day's stories.
-Write the actual heading in the **user's language** (e.g. 「國際・地緣政治」in
-Traditional Chinese, "International & Geopolitics" in English):
+**Time-Sensitive News category anchor list** — pick 2–4 that fit the day's
+stories. Write the actual heading in the **user's language** (e.g. 「國際・地緣
+政治」in Traditional Chinese, "International & Geopolitics" in English):
 
 | Concept | Typical stories |
 |---|---|
@@ -119,7 +128,7 @@ If none of the six fits, create a new heading — but add a one-line comment in
 the digest's frontmatter `notes` field explaining why, so the taxonomy can be
 reviewed and extended deliberately.
 
-### STEP 3.5 — For evolving stories, pull history and build 事件進程
+### STEP 3.5 — For evolving stories, pull history and build an Event Arc
 
 Some stories are **not one-off events but ongoing arcs** — a geopolitical
 conflict, an oil-price move, a rate/inflation cycle, a stock-index trajectory,
@@ -131,22 +140,22 @@ an earnings arc. For these, reconstruct the progression so the reader sees the
 > list and flag every multi-week arc. Market/macro stories are the most common
 > miss — a stock index hitting a record is an arc (the rebound only means
 > something against the prior correction); long-end yields, inflation prints,
-> and an FX cycle are all arcs. A 📈 金融市場・總經 category with zero 事件進程 on
-> a volatile day is usually a miss, not a clean day.
+> and an FX cycle are all arcs. A 📈 Financial Markets & Macro category with zero
+> Event Arc on a volatile day is usually a miss, not a clean day.
 
-**What SKIPS 事件進程:**
+**What SKIPS Event Arc:**
 - **One-off events** — a product launch, a regulatory action, an M&A headline,
   a single earnings beat. There is no multi-week trajectory to draw.
 - **Forward-looking single events** — "this week's central-bank decision" is an
   upcoming datapoint, not a progression. (Its *backdrop* — the rate/yield arc —
-  may already be covered by a sibling story's 事件進程; don't duplicate it.)
+  may already be covered by a sibling story's Event Arc; don't duplicate it.)
 
 1. **Pull prior notes** with the history collector — it greps `references/` +
    `investing/` for earlier dated notes on the same entity/keywords:
 
    ```bash
    python3 "$SKILL_DIR/scripts/collect_history.py" \
-     "<關鍵字,OR,逗號分隔>" . --since <YYYY-MM-DD> --until <digest date − 1>
+     "<keyword1,OR,keyword2>" . --since <YYYY-MM-DD> --until <digest date − 1>
    ```
 
    `--until` = the day **before** the digest date (today's notes are already in
@@ -154,26 +163,26 @@ an earnings arc. For these, reconstruct the progression so the reader sees the
 
 2. **Extract the trajectory** — read a few milestone notes for the real numbers
    (e.g. oil 104 → 90 → 80 across the weeks), then write a short progression
-   sub-section: a 趨勢分析 paragraph + (optionally) a visual. **Give the `####`
-   heading a dynamic, content-specific title** — not a fixed "事件進程" label.
-   Name the actual arc: 「油價三個月:104 高峰跌破 80」、「日經過山車:創高→修正→再創高」、
-   「升息路徑:從擺脫通縮到 31 年高位」、「Fable 5 一週風暴:發布→被禁→傳返場」. Use a
-   **`timeline`** Mermaid for milestone chronology, or an **`xychart`** line for a
-   clean numeric series. **Proportionality**: if the story already carries a
-   mechanism diagram (a flowchart/graph), a **prose-only** 趨勢分析 is enough —
-   don't stack 3 charts in one category. (E.g. on 2026-06-15, the market-rebound
-   story got a timeline; the sibling 大摩-fragility story, which already had a
-   graph, got a prose yield-trajectory paragraph.)
+   sub-section: a trend paragraph + (optionally) a visual. **Give the `####`
+   heading a dynamic, content-specific title** — not a fixed "Event Arc" label.
+   Name the actual arc (e.g. "Oil: 3-month slide from peak 104 to 80",
+   "Nikkei rollercoaster: new high → correction → new high",
+   "Rate path: from deflation escape to 31-year high"). Use a **`timeline`**
+   Mermaid for milestone chronology, or an **`xychart`** line for a clean
+   numeric series. **Proportionality**: if the story already carries a mechanism
+   diagram (a flowchart/graph), a **prose-only** trend paragraph is enough —
+   don't stack 3 charts in one category.
 3. **Cross-reference the user's own `investing/` analyses** when they exist —
    surfacing "you predicted this in March" is high-value (per vault CLAUDE.md).
 4. **Cite the history minimally.** If you cross-referenced an `investing/`
-   analysis, keep a short inline link to it at the paragraph end (e.g. 「可對照
-   investing/ [[…|3月油價通膨分析]]」). **Do NOT** add generic boilerplate like
-   「綜合 references/ 近月逐日筆記」 — it repeats across every story and adds no
-   information; the 事件進程 already implies prior-note synthesis. Never imply
-   numbers you didn't read, but a bare references/-only attribution can be dropped.
+   analysis, keep a short inline link to it at the paragraph end (e.g.
+   `→ see [[…|Mar oil-price analysis]]`). **Do NOT** add generic boilerplate
+   like "synthesized from recent references/ notes" — it repeats across every
+   story and adds no information; the Event Arc already implies prior-note
+   synthesis. Never imply numbers you didn't read, but a bare
+   references/-only attribution can be dropped.
 
-**事件進程 sweep table — fill this for EVERY story before moving to STEP 4.**
+**Event Arc sweep table — fill this for EVERY story before moving to STEP 4.**
 Do not skip; leaving a row blank is itself a decision that must be made explicitly:
 
 | # | Story title | Multi-week arc? | Action |
@@ -183,10 +192,12 @@ Do not skip; leaving a row blank is itself a decision that must be made explicit
 | … | | | |
 
 > [!warning] Red flags — stop and re-examine if you see any of these:
-> - A 📈金融市場・總經 category with **"No"** across every row on a volatile day
+> - A 📈 Financial Markets & Macro category with **"No"** across every row on a
+>   volatile day
 > - Story subject is an FX rate, stock index, inflation print, or bond yield
 >   → almost certainly an arc even if today's is the first note you've collected
-> - Story title contains 「再創高」「連續」「第N天」「持續」「突破」→ arc by definition
+> - Story title contains momentum/continuation markers (e.g. "new high",
+>   "consecutive", "day N", "ongoing", "breakthrough") → arc by definition
 
 ### STEP 4 — Synthesize each story (the heart of this skill)
 
@@ -210,13 +221,13 @@ Do not skip; leaving a row blank is itself a decision that must be made explicit
 > ```
 > { heading, category(🌍/📈/🤖/🚀…), tldr,
 >   cot: {type:"chain", nodes:[{title, bullets:[…]}, …]},   // → $SKILL_DIR/scripts/cot_mermaid.py
->   narrative: ["<段1>", "<段2>"],            // inline links as [[stem|短標籤]]
+>   narrative: ["<para 1>", "<para 2>"],       // inline links as [[stem|short label]]
 >   table?: "<markdown table or null>",
->   progression?: { title, milestones:[{date, text}], note },  // 事件進程, evolving only
->   sources: [{stem, label}] }                // for inline links + 來源索引
+>   progression?: { title, milestones:[{date, text}], note },  // Event Arc, evolving only
+>   sources: [{stem, label}] }                // for inline links + Source Index
 > ```
 > The CoT `nodes` carry only content; `$SKILL_DIR/scripts/cot_mermaid.py` applies the fixed
-> colours/style. The main agent owns dedup, the day-level 總圖, and STEP 8 verify.
+> colours/style. The main agent owns dedup, the day-level overview diagram, and STEP 8 verify.
 
 For each cluster, **rewrite an integrated story** — you are the editor merging a
 wire feed, not summarizing notes one by one:
@@ -228,28 +239,28 @@ wire feed, not summarizing notes one by one:
    Where sources disagree on interpretation, **surface the disagreement** — that
    tension is signal.
 3. **Write a one-line TL;DR — the bottom-line takeaway / so-what**, NOT a
-   restating of the causal steps (the COT 圖 below carries those). Then a **COT
-   mini-diagram** directly (a compact `flowchart LR` of the story's 3–4-hop causal
-   chain (**3–5 hops as the story warrants, not a fixed 4** — 觸發→機制→結果→含義 is
-   a natural arc, collapse or extend as needed) — **no `推演`/caption label before
-   it**. Each node = 標題 + ━━━━ + a **left-aligned bullet list of 3–5 `• ` facts**
-   (`<div style='text-align:left'>`; not prose — it renders unevenly). **Colour
-   every node by role with the fixed scheme** (觸發 綠 / 機制 紫 / 結果 橙 / 含義 青 —
-   see digest-format §COT), consistent across all CoT diagrams. So TL;DR =
-   conclusion, COT 圖 = steps, narrative =
-   detail — three complementary layers. Then **1–3 narrative paragraphs** in
-   繁體中文. (The day-level 總圖 lives in the merged `## 🧭 當日總覽` — see STEP 6.)
-   **Segment for readability** — break a long block into short paragraphs (≈ 2–4
-   sentences each, one idea per paragraph: framework / terms / market reaction /
-   disagreement…). Never ship a 5+ sentence wall of text; a blank line between
-   ideas is the cheapest readability win.
+   restating of the causal steps (the COT diagram below carries those). Then a
+   **COT mini-diagram** directly (a compact `flowchart LR` of the story's causal
+   chain (**3–5 hops as the story warrants** — trigger → mechanism → result →
+   conclusion is a natural arc, collapse or extend as needed) — **no caption
+   label before it**. Each node = title + ━━━━ + a **left-aligned bullet list of
+   3–5 `• ` facts** (`<div style='text-align:left'>`; not prose — it renders
+   unevenly). **Colour every node by role with the fixed scheme** (trigger green /
+   mechanism purple / result orange / conclusion cyan — see digest-format §COT),
+   consistent across all CoT diagrams. So TL;DR = conclusion, COT diagram =
+   steps, narrative = detail — three complementary layers. Then **1–3 narrative
+   paragraphs** in the user's language. **Segment for readability** — break a
+   long block into short paragraphs (≈ 2–4 sentences each, one idea per
+   paragraph: framework / terms / market reaction / disagreement…). Never ship a
+   5+ sentence wall of text; a blank line between ideas is the cheapest
+   readability win.
 4. **Add a visual only when it earns its place** (table for comparable data,
    Mermaid for a causal chain / one-cause-many-effects / timeline).
 
-### STEP 5 — Index the 知識與觀點 tier
+### STEP 5 — Index the Knowledge & Perspectives tier
 
 (On a **heavy day**, this whole tier can be **one more subagent** — see STEP 4's
-execution model — returning each sub-category's 精選/整合 summaries + CoT node
+execution model — returning each sub-category's promoted summaries + CoT node
 content; the main agent renders + assembles.)
 
 Group tier-2 items under sub-headings using the **anchored-open** taxonomy
@@ -269,21 +280,23 @@ If none of the five fits, create a new sub-heading and add a one-line comment
 in `notes` (same rule as the news tier). In **each** sub-category:
 
 1. **Promote ≥1 important piece to a 2–3 sentence summary** in a `> [!example]`
-   callout. The callout title is **the piece's short title only** (no "精選摘要 —"
-   prefix); end with a `> 來源:[[<stem>|<短標籤>]]` line, then a **CoT 小圖**
+   callout. The callout title is **the piece's short title only** (no prefix);
+   end with a `> Source: [[<stem>|<short label>]]` line, then a **CoT mini-diagram**
    (same style as the news COT: `flowchart LR`, bullet-list nodes, 3–5 hops) that
    visualises that piece's argument logic.
 2. **When ≥2 items in the category cover the same sub-topic or debate, integrate
    them into a short analysis** instead of listing them separately — a
-   `**整合分析 — <主題>**` sub-block (2–3 sentences) that reconciles the pieces,
-   names the agreement/tension, and links each contributing source inline with a
-   short label, then its own **CoT 小圖** (兩方辯論 → 共識 → 分歧, etc.). (e.g. a
-   bull-case and a bear-case on the same stock → one 多空辯論 analysis.) This is
-   the knowledge-tier analogue of STEP 3–4 clustering.
-3. Then a **`**其他相關文章**` sub-label**, followed by the *remaining* unrelated
-   items as one-liners: `- [[<stem>|<短標籤>]] — <核心論點或方法,一句>` (these are
-   link-only — **no CoT 圖**). The sub-label keeps the section reading smoothly
-   (摘要+圖 → 整合+圖 → 相關清單).
+   `**Synthesis — <topic>**` sub-block (in user's language; 2–3 sentences) that
+   reconciles the pieces, names the agreement/tension, and links each contributing
+   source inline with a short label, then its own **CoT mini-diagram** (two sides
+   → consensus → divergence, etc.). (e.g. a bull-case and a bear-case on the same
+   stock → one bull-vs-bear synthesis.) This is the knowledge-tier analogue of
+   STEP 3–4 clustering.
+3. Then a **`**Related Articles**`** sub-label (in user's language), followed by
+   the *remaining* unrelated items as one-liners:
+   `- [[<stem>|<short label>]] — <core argument or method, one sentence>`
+   (these are link-only — **no CoT diagram**). The sub-label keeps the section
+   reading smoothly (summary+chart → synthesis+chart → link list).
 
 Only force integration where relatedness is real; disparate items stay as a
 curated one-liner list. The value is a categorized index with synthesis where it
@@ -292,42 +305,46 @@ earns its place.
 ### STEP 6 — Write the digest
 
 **READ `references/digest-format.md` first** — it holds the output template, the
-link-presentation rules, and the Mermaid house style. Then create
-`news/<YYYY-MM-DD> 每日新聞.md`. **Order at the top: `## 目錄` first (right under the
-title)**, then a merged **`## 🧭 當日總覽`** section. The 目錄 is in-page
-`[[#完整標題|短名]]` anchor links to each story (grouped by news category) plus
-知識與觀點 / 其他觀察 / 來源索引 / 附錄. The 當日總覽 section merges the `> [!abstract]`
-overview text **and** the day-level COT `flowchart TD` 總圖 (causal web of the day's
-stories). **Render every CoT diagram — the 總圖 and each story / knowledge 小圖 —
-through `$SKILL_DIR/scripts/cot_mermaid.py`** (feed it node content JSON), so
-the fixed role-colours and style are identical everywhere; don't hand-write the
-`style` lines. Concrete calling pattern:
+link-presentation rules, and the Mermaid house style. Then create the digest file
+at `news/<YYYY-MM-DD> <title>.md` (title in the user's language; e.g.
+`news/2026-07-01 每日新聞.md` in Traditional Chinese). **Order at the top:
+`## Table of Contents`** (in user's language, right under the title), then a
+merged **`## 🧭 Day Overview`** section (in user's language). The Table of
+Contents is in-page `[[#full heading|short name]]` anchor links to each story
+(grouped by news category) plus Knowledge & Perspectives / Other Notes / Source
+Index / Appendix. The Day Overview section merges the `> [!abstract]` overview
+text **and** the day-level COT `flowchart TD` overview diagram (causal web of the
+day's stories). **Render every CoT diagram — the overview diagram and each story
+/ knowledge mini-diagram — through `$SKILL_DIR/scripts/cot_mermaid.py`** (feed it
+node content JSON), so the fixed role-colours and style are identical everywhere;
+don't hand-write the `style` lines. Concrete calling pattern:
 
 ```bash
 # Per-story chain (flowchart LR) — roles assigned by position (first=trigger, last=concl):
+# Node titles and bullets should be in the user's language.
 cat > /tmp/cot_chain.json << 'COTJSON'
 {"type":"chain","nodes":[
-  {"title":"觸發節點","bullets":["事實1","事實2","事實3"]},
-  {"title":"機制節點","bullets":["原因1","原因2"]},
-  {"title":"結果節點","bullets":["影響1","影響2"]},
-  {"title":"含義節點","bullets":["結論1","結論2"]}
+  {"title":"Trigger node","bullets":["fact 1","fact 2","fact 3"]},
+  {"title":"Mechanism node","bullets":["reason 1","reason 2"]},
+  {"title":"Result node","bullets":["impact 1","impact 2"]},
+  {"title":"Conclusion node","bullets":["takeaway 1","takeaway 2"]}
 ]}
 COTJSON
 python3 "$SKILL_DIR/scripts/cot_mermaid.py" /tmp/cot_chain.json
 
-# Day-level 總圖 web (flowchart TD) — each node needs explicit "role":
+# Day-level overview web (flowchart TD) — each node needs explicit "role":
 cat > /tmp/cot_web.json << 'COTJSON'
 {"type":"web",
  "nodes":[
-   {"id":"A","title":"故事1","bullets":["要點"],"role":"trigger"},
-   {"id":"B","title":"故事2","bullets":["要點"],"role":"mech"},
-   {"id":"C","title":"共同結果","bullets":["要點"],"role":"result"},
-   {"id":"D","title":"含義","bullets":["結論"],"role":"concl"}
+   {"id":"A","title":"Story 1","bullets":["key point"],"role":"trigger"},
+   {"id":"B","title":"Story 2","bullets":["key point"],"role":"mech"},
+   {"id":"C","title":"Shared result","bullets":["key point"],"role":"result"},
+   {"id":"D","title":"Implication","bullets":["conclusion"],"role":"concl"}
  ],
  "edges":[
-   {"from":"A","to":"C","label":"推動"},
-   {"from":"B","to":"C","label":"加速"},
-   {"from":"C","to":"D","label":"導致"}
+   {"from":"A","to":"C","label":"drives"},
+   {"from":"B","to":"C","label":"accelerates"},
+   {"from":"C","to":"D","label":"leads to"}
  ]}
 COTJSON
 python3 "$SKILL_DIR/scripts/cot_mermaid.py" /tmp/cot_web.json
@@ -336,17 +353,17 @@ python3 "$SKILL_DIR/scripts/cot_mermaid.py" /tmp/cot_web.json
 The script writes a ready-to-paste ` ```mermaid ``` ` block to stdout.
 `(` `)` in node titles are automatically converted to `「」` (Obsidian-Mermaid safe).
 
-Follow the vault's Obsidian conventions
-(complete frontmatter, callouts) and the digest-format link rules: **embed
-short-labelled jump-links inline in the body (anchored on words already in the
-prose), AND also collect every source into a `## 來源索引` at the end as a
-standard full-filename list under per-story `###` sub-headings** (see §Hard rules
-on why raw long links are banned in narrative).
+Follow the vault's Obsidian conventions (complete frontmatter, callouts) and the
+digest-format link rules: **embed short-labelled jump-links inline in the body
+(anchored on words already in the prose), AND also collect every source into a
+`## Source Index` (in user's language) at the end as a standard full-filename
+list under per-story `###` sub-headings** (see §Hard rules on why raw long links
+are banned in narrative).
 
 ### STEP 7 — Appendices & report
 
-- **Research appendix**: each item you triaged as **研究附錄** as a short-labeled
-  link + one line.
+- **Research appendix**: each item you triaged as **Research Appendix** as a
+  short-labeled link + one line.
 - **Handwritten appendix**: if `daily/<YYYY-MM-DD>.md` exists, surface real
   handwritten content from its `## Note` section; skip silently if empty.
 - **Report**: digest path, story count (and sources merged), tier-2 item count,
@@ -354,23 +371,23 @@ on why raw long links are banned in narrative).
 
 ## Hard rules
 
-> [!warning] references/ 是唯讀的 Sources 層
+> [!warning] references/ is the immutable Sources layer
 > NEVER edit, rename, or add wikilinks **into** any `references/` note. This skill
 > only **reads** them and links **from** the new `news/` note **to** them — the
 > vault's three-layer wiki contract (`wiki/SCHEMA.md`); the Sources layer is
 > immutable.
 
-> [!important] 連結用 wikilink stem,不是 title;且必須短
+> [!important] Use the wikilink stem, not the title — and keep labels short
 > A source note's frontmatter `title` is NOT its filename — the vault's
 > YouTube-summary workflow strips `&`, `()`, ` (summary)` etc. from the filename.
 > Linking `[[<title>]]` produces a **broken link**. ALWAYS build the target from
 > the collector's `wikilink` field (= the real stem), and give it a short display
-> label: `[[<stem>|<短標籤>]]`. Never inline a **bare long** wikilink. Do embed
-> **jump-links inline by wrapping an existing prose phrase** (display text = the
-> words already in the sentence), NOT a `(短標籤)` parenthetical — so the reader
-> hops to a source while reading. AND **also** list every source in the end
-> `## 來源索引` as a full-filename list (see `references/digest-format.md` for
-> the inline-vs-index split).
+> label: `[[<stem>|<short label>]]`. Never inline a **bare long** wikilink. Do
+> embed **jump-links inline by wrapping an existing prose phrase** (display text =
+> the words already in the sentence), NOT a `(short label)` parenthetical — so
+> the reader hops to a source while reading. AND **also** list every source in the
+> end `## Source Index` (in user's language) as a full-filename list (see
+> `references/digest-format.md` for the inline-vs-index split).
 >
 > **Beware truncated triage views.** When you print the manifest to eyeball
 > candidates, the `title` is often clipped (`… (summary)` cut off, long titles
@@ -379,13 +396,13 @@ on why raw long links are banned in narrative).
 > 2026-06-16: three misc links built from clipped titles broke until rebuilt from
 > the stem.)
 
-> [!important] 寫完跑自檢（COT 完整性 + 連結解析 + Mermaid 語法）
+> [!important] Run self-checks after writing (COT completeness + link resolution + Mermaid syntax)
 > After writing the digest, run **three checks** before declaring done.
 >
-> **① COT 完整性** — every time-sensitive story must have a `flowchart LR`.
+> **① COT completeness** — every time-sensitive story must have a `flowchart LR`.
 > Count story headings in the news section and compare to COT diagram count:
 > ```bash
-> python3 - "news/<YYYY-MM-DD> 每日新聞.md" <<'PY'
+> python3 - "news/<YYYY-MM-DD> <digest title>.md" <<'PY'
 > import re, sys
 > text = open(sys.argv[1], encoding="utf-8").read()
 > news = text.split("## 🧠")[0] if "## 🧠" in text else text
@@ -399,9 +416,9 @@ on why raw long links are banned in narrative).
 > PY
 > ```
 >
-> **② 連結解析** — every wikilink must resolve to a real file:
+> **② Link resolution** — every wikilink must resolve to a real file:
 > ```bash
-> python3 - "news/<YYYY-MM-DD> 每日新聞.md" <<'PY'
+> python3 - "news/<YYYY-MM-DD> <digest title>.md" <<'PY'
 > import re, os, sys
 > doc = open(sys.argv[1], encoding="utf-8").read()
 > links = {m.split("|")[0].split("#")[0].strip()
@@ -414,18 +431,18 @@ on why raw long links are banned in narrative).
 > Note: `""` is filtered out — it comes from page-anchor-only links like
 > `[[#heading|label]]` where `split("#")[0]` is empty; these are not broken.
 >
-> **③ Mermaid 語法** — parse every mermaid block through mermaid-cli (requires `npx`):
+> **③ Mermaid syntax** — parse every mermaid block through mermaid-cli (requires `npx`):
 > ```bash
-> bash "$SKILL_DIR/scripts/validate.sh" "news/<YYYY-MM-DD> 每日新聞.md"
+> bash "$SKILL_DIR/scripts/validate.sh" "news/<YYYY-MM-DD> <digest title>.md"
 > ```
 > FAIL = real syntax error (fix before finishing). WARN = literal `"` in rendered
 > text (likely a wrongly-quoted title/label). PASS = parses in mermaid-cli —
 > note: cli is more lenient than Obsidian, so CJK-heavy diagrams should also be
 > verified in Obsidian directly.
 > This check is most valuable for hand-written diagrams (`timeline`, `xychart`
-> in 事件進程); `cot_mermaid.py`-generated diagrams rarely fail here.
+> in Event Arc); `cot_mermaid.py`-generated diagrams rarely fail here.
 
-> [!danger] 合成失敗模式 — NEVER do these
+> [!danger] Synthesis failure modes — NEVER do these
 > - **NEVER merge two events into one story just because they share an asset or
 >   region.** A Fed decision and an oil shock both moving markets are TWO stories.
 > - **NEVER let the most detailed source set the narrative frame** — reconcile
@@ -438,12 +455,12 @@ on why raw long links are banned in narrative).
 >   what happened, open the source note and read it rather than guessing.
 
 - **Create `news/` if it doesn't exist** — it's a new top-level folder.
-- **One file per day.** If `news/<date> 每日新聞.md` already exists, ask whether to
-  overwrite or merge before clobbering it. **When merging new content**, also
+- **One file per day.** If `news/<date> <title>.md` already exists, ask whether
+  to overwrite or merge before clobbering it. **When merging new content**, also
   complete these before declaring done:
   - [ ] Update frontmatter `source_count` and `story_count`
   - [ ] Update `> [!abstract]` to mention the new stories added
-  - [ ] Add new story nodes to the 總圖 `flowchart TD` in `## 🧭 當日總覽`
+  - [ ] Add new story nodes to the overview `flowchart TD` in the Day Overview section
 - **Non-`.md` links keep the extension** (`[[file.txt]]`), per vault convention.
 
 ## Reference files
