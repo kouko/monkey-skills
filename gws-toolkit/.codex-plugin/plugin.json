@@ -1,0 +1,36 @@
+{
+  "name": "gws-toolkit",
+  "version": "0.7.3",
+  "description": "Google Workspace toolkit on the official gws CLI (drive/docs/sheets/gmail). ⚠️ Claude Code CLI only.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/gws-toolkit",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "gws",
+    "googleworkspace",
+    "google-drive",
+    "google-docs",
+    "google-slides",
+    "google-sheets",
+    "gmail",
+    "google-calendar",
+    "scqa",
+    "minto",
+    "platform-pivot"
+  ],
+  "interface": {
+    "displayName": "gws-toolkit",
+    "shortDescription": "TODO",
+    "longDescription": "TODO",
+    "developerName": "kouko",
+    "category": "TODO",
+    "capabilities": "TODO",
+    "defaultPrompt": "TODO",
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/gws-toolkit",
+    "brandColor": "TODO"
+  }
+}

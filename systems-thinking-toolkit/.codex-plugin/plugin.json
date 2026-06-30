@@ -1,0 +1,34 @@
+{
+  "name": "systems-thinking-toolkit",
+  "version": "0.10.0",
+  "description": "Systems-thinking toolkit (Sherwood 2002) — CLDs, archetypes, simulation, and more across 7 skills.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/systems-thinking-toolkit",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "systems-thinking",
+    "causal-loop-diagram",
+    "feedback-loop",
+    "sherwood",
+    "scenario-planning",
+    "stock-flow",
+    "mental-models",
+    "strategy",
+    "intervention-archetypes"
+  ],
+  "interface": {
+    "displayName": "systems-thinking-toolkit",
+    "shortDescription": "TODO",
+    "longDescription": "TODO",
+    "developerName": "kouko",
+    "category": "TODO",
+    "capabilities": "TODO",
+    "defaultPrompt": "TODO",
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/systems-thinking-toolkit",
+    "brandColor": "TODO"
+  }
+}

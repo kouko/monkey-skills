@@ -1,0 +1,37 @@
+{
+  "name": "obsidian",
+  "version": "3.15.0",
+  "description": "Obsidian vault workflows (notes/markdown/diagrams/canvas) + LLM wiki layer. ⚠️ defuddle needs CLI.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/obsidian",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "obsidian",
+    "vault",
+    "daily-notes",
+    "markdown",
+    "bases",
+    "canvas",
+    "mermaid",
+    "excalidraw",
+    "dashboard",
+    "file-intel",
+    "wiki",
+    "knowledge-distillation"
+  ],
+  "interface": {
+    "displayName": "obsidian",
+    "shortDescription": "TODO",
+    "longDescription": "TODO",
+    "developerName": "kouko",
+    "category": "TODO",
+    "capabilities": "TODO",
+    "defaultPrompt": "TODO",
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/obsidian",
+    "brandColor": "TODO"
+  }
+}

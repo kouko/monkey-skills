@@ -1,0 +1,36 @@
+{
+  "name": "tsundoku",
+  "version": "0.11.1",
+  "description": "Turn owned-but-unread Kobo e-books into actionable skills. ⚠️ Claude Code CLI only.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/tsundoku",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "kobo",
+    "ebook",
+    "epub",
+    "markdown",
+    "distill",
+    "ria-tv",
+    "zettelkasten",
+    "book-to-skill",
+    "kobodl",
+    "pandoc",
+    "tsundoku"
+  ],
+  "interface": {
+    "displayName": "tsundoku",
+    "shortDescription": "TODO",
+    "longDescription": "TODO",
+    "developerName": "kouko",
+    "category": "TODO",
+    "capabilities": "TODO",
+    "defaultPrompt": "TODO",
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/tsundoku",
+    "brandColor": "TODO"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "legal-toolkit",
+  "version": "0.5.2",
+  "description": "In-house legal toolkit for Taiwan SMEs — contract review, playbook negotiation, drafting, research.",
+  "author": {
+    "name": "kouko",
+    "email": "kouko.d@gmail.com"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/legal-toolkit",
+  "license": "MIT",
+  "keywords": [
+    "legal",
+    "contract-review",
+    "playbook",
+    "compliance",
+    "taiwan",
+    "stark-drafting-contracts",
+    "adams-mscd",
+    "民法",
+    "個資法",
+    "公司法",
+    "in-house-legal",
+    "disclaimer-driven",
+    "harvey-dual-score"
+  ],
+  "interface": {
+    "displayName": "legal-toolkit",
+    "shortDescription": "TODO",
+    "longDescription": "TODO",
+    "developerName": "kouko",
+    "category": "TODO",
+    "capabilities": "TODO",
+    "defaultPrompt": "TODO",
+    "websiteURL": "legal-toolkit",
+    "brandColor": "TODO"
+  }
+}

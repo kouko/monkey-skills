@@ -1,0 +1,37 @@
+{
+  "name": "translation-toolkit",
+  "version": "0.3.0",
+  "description": "High-quality EN/JA/ZH translation with a bundled glossary + 6-gate verification.",
+  "author": {
+    "name": "kouko",
+    "email": "kouko.d@gmail.com"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/translation-toolkit",
+  "license": "MIT",
+  "keywords": [
+    "translation",
+    "i18n",
+    "glossary",
+    "novel",
+    "ad-copy",
+    "back-translation",
+    "literary-translation",
+    "en",
+    "ja",
+    "zh-tw",
+    "zh-cn",
+    "翻訳",
+    "翻譯"
+  ],
+  "interface": {
+    "displayName": "translation-toolkit",
+    "shortDescription": "TODO",
+    "longDescription": "TODO",
+    "developerName": "kouko",
+    "category": "TODO",
+    "capabilities": "TODO",
+    "defaultPrompt": "TODO",
+    "websiteURL": "translation-toolkit",
+    "brandColor": "TODO"
+  }
+}

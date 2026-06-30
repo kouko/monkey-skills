@@ -1,0 +1,37 @@
+{
+  "name": "briefing-toolkit",
+  "version": "0.2.0",
+  "description": "Daily read-only morning brief over connected MCP tools (Slack/Asana/Notion). ⚠️ Claude Code CLI.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/briefing-toolkit",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "daily-brief",
+    "morning-brief",
+    "digest",
+    "aggregator",
+    "read-only",
+    "slack",
+    "asana",
+    "notion",
+    "github",
+    "gmail",
+    "calendar",
+    "pdb"
+  ],
+  "interface": {
+    "displayName": "briefing-toolkit",
+    "shortDescription": "TODO",
+    "longDescription": "TODO",
+    "developerName": "kouko",
+    "category": "TODO",
+    "capabilities": "TODO",
+    "defaultPrompt": "TODO",
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/briefing-toolkit",
+    "brandColor": "TODO"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "dbt-wiki",
+  "version": "3.1.0",
+  "description": "Local-only two-layer knowledge base for dbt projects — semantic Q&A over manifest + column lineage.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/dbt-wiki",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "dbt",
+    "data-modeling",
+    "lineage",
+    "column-lineage",
+    "manifest-json",
+    "sqlglot",
+    "redshift",
+    "snowflake",
+    "bigquery",
+    "knowledge-base",
+    "llm-queryable",
+    "local-only"
+  ],
+  "interface": {
+    "displayName": "dbt-wiki",
+    "shortDescription": "TODO",
+    "longDescription": "TODO",
+    "developerName": "kouko",
+    "category": "TODO",
+    "capabilities": "TODO",
+    "defaultPrompt": "TODO",
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/dbt-wiki",
+    "brandColor": "TODO"
+  }
+}

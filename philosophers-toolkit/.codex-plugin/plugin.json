@@ -1,0 +1,39 @@
+{
+  "name": "philosophers-toolkit",
+  "version": "1.0.4",
+  "description": "Philosophical thinking frameworks for problem clarification and deeper reasoning.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/philosophers-toolkit",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "philosophy",
+    "thinking",
+    "brainstorming",
+    "first-principles",
+    "socratic",
+    "hegelian-dialectics",
+    "kaizen",
+    "hansei",
+    "ikigai",
+    "wabi-sabi",
+    "shu-ha-ri",
+    "popper",
+    "descartes",
+    "aristotle"
+  ],
+  "interface": {
+    "displayName": "philosophers-toolkit",
+    "shortDescription": "TODO",
+    "longDescription": "TODO",
+    "developerName": "kouko",
+    "category": "TODO",
+    "capabilities": "TODO",
+    "defaultPrompt": "TODO",
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/philosophers-toolkit",
+    "brandColor": "TODO"
+  }
+}
