@@ -1,0 +1,32 @@
+{
+  "name": "research-toolkit",
+  "version": "0.2.0",
+  "description": "Key-free research skills driving the host agent's own LLM + web tools (ships deep-deep-research).",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/research-toolkit",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "research-toolkit",
+    "deep-research",
+    "research",
+    "fact-checking",
+    "adversarial-verification",
+    "web-search",
+    "portable"
+  ],
+  "interface": {
+    "displayName": "research-toolkit",
+    "shortDescription": "TODO",
+    "longDescription": "TODO",
+    "developerName": "kouko",
+    "category": "TODO",
+    "capabilities": "TODO",
+    "defaultPrompt": "TODO",
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/research-toolkit",
+    "brandColor": "TODO"
+  }
+}

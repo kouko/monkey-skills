@@ -39,8 +39,8 @@ The Codex plugin manifest (`loom-code/.codex-plugin/plugin.json`) derives its **
 
 | Script | Verb | Effect |
 |---|---|---|
-| `loom-code/scripts/sync_codex_manifest.py` | (no flag) | Rewrite the Codex manifest's shared fields from the Claude SSOT; `interface` preserved verbatim. |
-| `loom-code/scripts/sync_codex_manifest.py` | `--check` | Pure read; exit non-zero on divergence (CI drift gate), zero when synced. |
+| `scripts/sync_codex_manifests.py loom-code` | (no flag) | Rewrite the Codex manifest's shared fields from the Claude SSOT; `interface` preserved verbatim. |
+| `scripts/sync_codex_manifests.py loom-code --check` | `--check` | Pure read; exit non-zero on divergence (CI drift gate), zero when synced. |
 
 Stdlib only (`json`). Mirrors the `distribute.py` (write) / `verify-drift.py` (`--check`) split used for the knowledge layer above.
 

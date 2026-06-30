@@ -1,0 +1,48 @@
+{
+  "name": "deconstruct-toolkit",
+  "version": "0.2.3",
+  "description": "Reverse-engineer polished artifacts (copy/docs/UI/arguments/orgs) into their blueprints. EN/JA/ZH.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/deconstruct-toolkit",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "deconstruct",
+    "reverse-engineering",
+    "artifact-analysis",
+    "design-archaeology",
+    "rhetorical-analysis",
+    "frame-analysis",
+    "semiotic-analysis",
+    "genre-analysis",
+    "ux-critique",
+    "persuasion-analysis",
+    "toulmin",
+    "cialdini",
+    "lakoff",
+    "barthes",
+    "derrida",
+    "bcg-deconstruction",
+    "cultural-variants",
+    "kishotenketsu",
+    "wenxin-diaolong",
+    "tatemae-honne",
+    "guanxi-mianzi",
+    "japanese-rhetoric",
+    "chinese-rhetoric"
+  ],
+  "interface": {
+    "displayName": "deconstruct-toolkit",
+    "shortDescription": "TODO",
+    "longDescription": "TODO",
+    "developerName": "kouko",
+    "category": "TODO",
+    "capabilities": "TODO",
+    "defaultPrompt": "TODO",
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/deconstruct-toolkit",
+    "brandColor": "TODO"
+  }
+}

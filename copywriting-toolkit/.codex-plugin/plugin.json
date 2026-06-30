@@ -1,0 +1,38 @@
+{
+  "name": "copywriting-toolkit",
+  "version": "1.14.0",
+  "description": "Pipeline copywriting toolkit — 14 skills from intake to audit, grounded in PASONA/Cialdini/FTC.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/copywriting-toolkit",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "copywriting",
+    "marketing",
+    "pasona",
+    "voice-anchor",
+    "voice-quadrant",
+    "ethics",
+    "landing-page",
+    "headline",
+    "tagline",
+    "schwartz",
+    "cialdini",
+    "kanda-pasona",
+    "taniyama"
+  ],
+  "interface": {
+    "displayName": "copywriting-toolkit",
+    "shortDescription": "TODO",
+    "longDescription": "TODO",
+    "developerName": "kouko",
+    "category": "TODO",
+    "capabilities": "TODO",
+    "defaultPrompt": "TODO",
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/copywriting-toolkit",
+    "brandColor": "TODO"
+  }
+}

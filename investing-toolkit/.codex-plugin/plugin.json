@@ -1,0 +1,45 @@
+{
+  "name": "investing-toolkit",
+  "version": "2.1.0",
+  "description": "Three-layer investing research toolkit — data, analysis, report skills. ⚠️ Claude Code CLI only.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/investing-toolkit",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "investing",
+    "macro",
+    "regime",
+    "dcf",
+    "screener",
+    "equity",
+    "snapshot",
+    "fred",
+    "edinet",
+    "twse",
+    "mops",
+    "finmind",
+    "yfinance",
+    "akshare",
+    "boj",
+    "us-stocks",
+    "tw-stocks",
+    "jp-stocks",
+    "kr-stocks",
+    "cn-stocks"
+  ],
+  "interface": {
+    "displayName": "investing-toolkit",
+    "shortDescription": "TODO",
+    "longDescription": "TODO",
+    "developerName": "kouko",
+    "category": "TODO",
+    "capabilities": "TODO",
+    "defaultPrompt": "TODO",
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/investing-toolkit",
+    "brandColor": "TODO"
+  }
+}

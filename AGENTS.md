@@ -49,6 +49,16 @@ Role boundaries enforced by behavior, not reading restrictions:
   (named on stderr); a `[deferred]` req with 0 tests is surfaced on
   stdout (informational, rc=0). Sound because CI runs it after the green
   pytest gate, so a linked test ≡ a passing test.
+- **Sync a plugin's Codex manifest from its Claude SSOT**:
+  `python3 scripts/sync_codex_manifests.py <plugin>` — copies the 8
+  shared fields (name/version/description/author/homepage/repository/
+  license/keywords) from `<plugin>/.claude-plugin/plugin.json` into
+  `<plugin>/.codex-plugin/plugin.json`, preserving the Codex-only
+  `interface` block verbatim.
+- **Check Codex-manifest drift** (CI gate):
+  `python3 scripts/sync_codex_manifests.py --check <plugin>` — pure
+  read; rc=0 when the Codex manifest's shared fields match the Claude
+  SSOT, rc=1 on divergence.
 <!-- END command-surface (managed) -->
 
 ## Plugin: domain-teams
