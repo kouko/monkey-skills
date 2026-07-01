@@ -17,11 +17,11 @@ Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh
 | [`tsundoku`](tsundoku/) | 0.11.0 | 4 | 5 | Tsundoku 積読 — turn an owned-but-unread Kobo e-book pile into actionable agent skills via the RIA-TV++ distillation pipeline. |
 | [`repo-wiki`](repo-wiki/) | 1.0.0 | 3 | 3 | LLM Wiki Pattern for code repos — seed `.repo-wiki/` from git history (init), grow from changes / context / external docs (ingest, polymorphic), query with verification against `src/` (Eager triggers + segmented output). |
 | [`deconstruct-toolkit`](deconstruct-toolkit/) | 0.2.1 | 4 | 1 | Reverse-engineer polished artifacts (copy / docs / UI / arguments / products / organizations) — surface design blueprints, hidden frameworks, rhetorical mechanisms, intentional omissions. Grounded in Derrida / Barthes / Toulmin / Lakoff / Goffman / Cialdini / Bhatia / Nielsen-Norman, with EN/JA/ZH cultural-variant lenses (Hinds kishōtenketsu / 劉勰《文心雕龍》六觀 / Hu/Hwang face-and-favor). BCG「バリュー・チェーンの脱構築」系譜. |
-| [`salesforce-toolkit`](salesforce-toolkit/) | 0.1.0 | 1 | 1 | Salesforce DX MCP server wrapped as Claude Code plugin — brew-first installer, read-only SOQL query (data toolset only). macOS only. ⚠️ Claude Code CLI only — Cowork sandbox not supported. |
+| [`salesforce-toolkit`](salesforce-toolkit/) | 0.1.0 | 1 | 1 | Salesforce DX MCP server wrapped as Claude Code plugin — brew-first installer, read-only SOQL query (data toolset only). macOS only. ⚠️ Not supported in the Cowork sandbox (TTY-bound OAuth); installs on Codex CLI too (MCP auto-registers). |
 
 **Totals:** 84 skills and 42 slash commands across 10 plugins listed (the marketplace ships 18 — table not yet fully synced; see [`marketplace.json`](.claude-plugin/marketplace.json) for the authoritative list).
 
-> Plugins marked ⚠️ in their own description (`investing-toolkit`, `tsundoku`, `salesforce-toolkit`, plus the `defuddle` skill in `obsidian`) require Claude Code CLI — Cowork sandbox blocks their external network access or subprocess use.
+> Plugins marked ⚠️ in their own description (`investing-toolkit`, `tsundoku`, `salesforce-toolkit`, plus the `defuddle` skill in `obsidian`) are not supported in the Cowork sandbox — it blocks their external network access or subprocess use. (`salesforce-toolkit` does install on Codex CLI; its ⚠️ is Cowork-specific, not "Claude Code only".)
 
 ## Install
 

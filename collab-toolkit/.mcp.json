@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "asana": {
+      "type": "http",
+      "url": "https://mcp.asana.com/v2/mcp"
+    },
+    "slack": {
+      "type": "http",
+      "url": "https://mcp.slack.com/mcp",
+      "oauth": {
+        "scopes": "search:read.public search:read.private search:read.mpim search:read.im search:read.files files:read emoji:read search:read.users channels:history groups:history mpim:history im:history channels:read groups:read mpim:read users:read users:read.email"
+      }
+    },
+    "notion": {
+      "type": "http",
+      "url": "https://mcp.notion.com/mcp"
+    }
+  }
+}
