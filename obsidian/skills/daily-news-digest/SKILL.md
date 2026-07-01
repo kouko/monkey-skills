@@ -312,7 +312,7 @@ earns its place.
 
 ### STEP 6 — Write the digest
 
-**READ `references/digest-format.md` first** — it holds the output template, the
+**READ `_templates/digest-format.md` first** — it holds the output template, the
 link-presentation rules, and the Mermaid house style. (If the file is missing or
 unreadable, fall back to: standard YAML frontmatter with title/date/type/tags/status,
 COT colour scheme from §STEP 4 — trigger green / mechanism purple / result orange /
@@ -398,7 +398,7 @@ are banned in narrative).
 > the words already in the sentence), NOT a `(short label)` parenthetical — so
 > the reader hops to a source while reading. AND **also** list every source in the
 > end `## Source Index` (in user's language) as a full-filename list (see
-> `references/digest-format.md` for the inline-vs-index split).
+> `_templates/digest-format.md` for the inline-vs-index split).
 >
 > **Beware truncated triage views.** When you print the manifest to eyeball
 > candidates, the `title` is often clipped (`… (summary)` cut off, long titles
@@ -476,7 +476,7 @@ are banned in narrative).
 
 ## Reference files
 
-- `references/digest-format.md` — output template, link-presentation rules,
+- `_templates/digest-format.md` — output template, link-presentation rules,
   Mermaid house style. **Load at STEP 6**, not before.
 - `$SKILL_DIR/scripts/collect_sources.py` — the single-day collector (STEP 1).
 - `$SKILL_DIR/scripts/collect_history.py` — the cross-date history collector for
