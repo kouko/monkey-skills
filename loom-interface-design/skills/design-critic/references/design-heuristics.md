@@ -71,7 +71,7 @@ not drawn*, it is yours.
 
 ## Deletability (Bitter Lesson)
 
-The **panel** (writer ≠ judge — an external check on the design) is
+The **panel** (writer≠judge — an external check on the design) is
 verification-class: keep it regardless of model strength. Each **individual
 lens** is closer to a crutch — a stronger model may derive its coverage unaided.
 So each lens is **designed deletable**: the panel mechanics do not depend on the

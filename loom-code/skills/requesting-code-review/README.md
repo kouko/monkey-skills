@@ -66,7 +66,7 @@ R1+R2 discipline lives in `loom-code/scripts/_reviewer-discipline.md` (SSOT) and
 ## See also
 
 - [`SKILL.md`](SKILL.md) — operational spec.
-- [`agents/code-reviewer-prompt.md`](agents/code-reviewer-prompt.md) — subagent role prompt.
+- [`../../agents/code-reviewer.md`](../../agents/code-reviewer.md) — subagent role prompt.
 - [`../subagent-driven-development/SKILL.md`](../subagent-driven-development/SKILL.md) — per-task reviewer (different scope, same rubrics).
 - [`../verification-before-completion/SKILL.md`](../verification-before-completion/SKILL.md) — sibling pre-merge gate (test-suite).
 - [`../finishing-a-development-branch/SKILL.md`](../finishing-a-development-branch/SKILL.md) — orchestrator.

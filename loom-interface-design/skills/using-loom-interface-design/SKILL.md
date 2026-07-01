@@ -2,7 +2,7 @@
 name: using-loom-interface-design
 description: |
   Router for loom-interface-design — design a product's interface/interaction/UX in any modality (GUI/TUI/CLI). Routes to design-system (→ DESIGN.md) + interaction-flows (→ ui-flows.md). Use for 'design the UI/UX', screen flow, TUI/CLI layout.
-version: 0.1.0
+version: 0.3.0
 ---
 
 <SUBAGENT-STOP>
@@ -80,7 +80,7 @@ If the user types `/skill-name`, that is an explicit invocation — load it via 
 ## Coexistence
 
 - **`loom-product-principles:product-principles`** — produces the `PRINCIPLES.md` this toolkit reads as governing context. The principles layer comes **before** interface design; this toolkit consumes its output, never duplicates it.
-- Downstream **spec** and **code** layers consume the design artifacts (the design-system artifact + `ui-flows.md`) produced here.
+- Downstream **spec** (`loom-spec:spec-expansion`) consumes `ui-flows.md`; the **code / frontend** layer consumes the `DESIGN.md` tokens directly at implementation time (a human / code-level seam, not a loom-code skill).
 
 ## What this router does NOT do
 

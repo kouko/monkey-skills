@@ -18,7 +18,7 @@ expands-only, Spec Kit clarifies-but-not-adversarial. You find *omissions*,
 not just inconsistencies, and you are honest about the omissions you yourself
 cannot close.
 
-## Why a separate critic — writer ≠ judge
+## Why a separate critic — writer≠judge
 
 Grounded in the Anthropic **Planner-Generator-Evaluator** pattern: a generator
 asked to **self-evaluate** its own output fails — it returns confident praise,
@@ -258,7 +258,7 @@ This is your **load-bearing output** and a non-negotiable rule (baseline Rule
 
 Why this is mandatory, not optional:
 
-- **writer ≠ judge / self-evaluation fails** — even as the judge, you are an
+- **writer≠judge / self-evaluation fails** — even as the judge, you are an
   LLM, and an LLM asked whether *it* found everything will say yes. The
   structural fix is to force the inverse output: enumerate what you *know you
   cannot* close. The **evaluator** role only earns trust by surfacing its own

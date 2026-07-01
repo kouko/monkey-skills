@@ -18,7 +18,7 @@ finishing-a-development-branch (this skill)
   │
   ├─→ Phase 1: requesting-code-review
   │     dispatches code-reviewer subagent → verdict: PASS / PASS_WITH_NOTES / NEEDS_REVISION
-  │     blocks on 🔴 fatal; surfaces 🟡 / 🟢 findings
+  │     blocks on NEEDS_REVISION (any 🔴, or 2+ 🟡); PASS_WITH_NOTES (1 🟡) surfaces + asks
   │
   ├─→ Phase 2: verification-before-completion
   │     runs package-level test command → exit 0 + N>0 tests → PASS
@@ -95,16 +95,18 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
 ```
 1. Read branch state — git status + git log main..HEAD + git diff main...HEAD
 2. Verify branch has commits (else: "nothing to finish; branch matches main")
-3. Dispatch requesting-code-review
-   - If 🔴 fatal: surface findings; STOP. Wait for user remediation.
-   - If 🟡 / 🟢: surface findings; ASK user to proceed or remediate.
-   - If PASS: proceed silently.
+3. Dispatch requesting-code-review — route on the returned verdict, not raw severity:
+   - If NEEDS_REVISION (any 🔴 fatal, or 2+ 🟡 should-fix): surface findings; STOP. Wait
+     for user remediation. (Consistent with requesting-code-review: NEEDS_REVISION → do NOT push.)
+   - If PASS_WITH_NOTES (exactly 1 🟡, no 🔴): surface findings; ASK user to proceed or remediate.
+   - If PASS (all 🟢): proceed silently.
    - Budget/quota failure fallback: if the code-reviewer subagent fails to launch due to
      budget or quota exhaustion, perform an inline B2 self-review — Read the diff, surface
-     🟡 / 🟢 findings with an explicit "(self-review — code-reviewer unavailable)" caveat,
-     then apply the same proceed/remediate gate logic. NEVER suggest `/ultrareview` or any
-     external review command in AskUserQuestion options or in the PR body without first
-     verifying it exists via `claude --help`.
+     🔴 / 🟡 / 🟢 findings with an explicit "(self-review — code-reviewer unavailable)" caveat,
+     then derive the verdict by the same aggregation (any 🔴 or 2+ 🟡 → NEEDS_REVISION;
+     exactly 1 🟡 → PASS_WITH_NOTES; all 🟢 → PASS) and apply the gate above. NEVER suggest
+     `/ultrareview` or any external review command in AskUserQuestion options or in the PR body
+     without first verifying it exists via `claude --help`.
 4. Before applying any review findings from Step 3: Read each file you intend to Edit
    (Bash inspection does NOT satisfy the Edit/Write precondition) — details in
    [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §S1.
@@ -151,7 +153,7 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
       Root cause this gate closes: a memory-worthy branch must not ship with an empty
       commit carrier — the decision would be unretrievable via `git log --grep` on
       main (the #445 leak). This is a hard STOP, consistent with finishing's other
-      gates (🔴 review / test-failure both STOP).
+      gates (NEEDS_REVISION review / test-failure both STOP).
     - If Phase 3 returned an EMPTY trailer set (routine branch), exit 4 is expected →
       proceed to push.
     - If `--verify HEAD` exits 0: the carrier landed → proceed to push.

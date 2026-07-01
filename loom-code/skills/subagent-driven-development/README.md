@@ -57,7 +57,7 @@ Auto-injected by `distribute.py` alongside the 12-rule engineering baseline. The
 ## See also
 
 - [`SKILL.md`](SKILL.md) — orchestration spec.
-- [`agents/implementer-prompt.md`](agents/implementer-prompt.md) / [`agents/spec-reviewer-prompt.md`](agents/spec-reviewer-prompt.md) / [`agents/code-quality-reviewer-prompt.md`](agents/code-quality-reviewer-prompt.md) — role prompts.
+- [`../../agents/implementer.md`](../../agents/implementer.md) / [`../../agents/spec-reviewer.md`](../../agents/spec-reviewer.md) / [`../../agents/code-quality-reviewer.md`](../../agents/code-quality-reviewer.md) — role prompts.
 - [`../tdd-iron-law/SKILL.md`](../tdd-iron-law/SKILL.md) — iron law the implementer works under.
 - [`../using-loom-code/SKILL.md`](../using-loom-code/SKILL.md) — router; routing rule for "when to use SDD."
 - [`../../scripts/canonical/README.md`](../../scripts/canonical/README.md) — SSOT pointer + drift policy.

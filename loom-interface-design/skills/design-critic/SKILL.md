@@ -2,6 +2,7 @@
 name: design-critic
 description: |
   Adversarial critique of a design output (DESIGN.md + ui-flows.md) via a writer≠judge panel for SURFACE omissions (undrawn states, dead-ends, a11y) per Nielsen. Use to review a design draft for gaps before spec-expansion. Surface only, never code.
+version: 0.3.0
 ---
 
 # design-critic
@@ -32,7 +33,7 @@ is the wrong skill (`loom-spec:completeness-critic` for a spec; code review for
 code). Do not run the panel over a non-design artifact and dutifully drop every
 finding; decline and name the right skill.
 
-## Why a separate critic — writer ≠ judge
+## Why a separate critic — writer≠judge
 
 The skill that wrote `ui-flows.md` cannot reliably find its own blind spots: a
 generator anchors on the surface it already drew. Self-review by the same context
@@ -167,7 +168,7 @@ honest coverage statement, never a false completeness claim.
 
 ## Each lens is designed deletable (Bitter Lesson)
 
-The **panel as a verification mechanism** (writer ≠ judge) is **Bitter-Lesson-proof
+The **panel as a verification mechanism** (writer≠judge) is **Bitter-Lesson-proof
 — keep it regardless of model strength**. But each **individual lens** is closer to
 a crutch — a stronger model may derive its coverage unaided. So **each lens is
 deletable**: the panel mechanics (fan-out, union, loop-until-dry) do not depend on

@@ -2,6 +2,7 @@
 name: product-principles
 description: |
   Turn a sparse product idea into a PRINCIPLES.md constitution — a north-star + 3-7 falsifiable principles governing design/spec/code. Use when the user asks what principles should guide a product/design decision or how to frame a product trade-off.
+version: 0.2.0
 ---
 
 # product-principles
@@ -121,6 +122,6 @@ platitude) is your responsibility, guided by the ✅/❌ examples in the contrac
 downstream station — **interface-design, spec-expansion, and code** (incl.
 **headless / CLI** products with no UI). It is **key-free** and **git-diffable**,
 so it lives in the repo and reviews like code. Downstream stations *read* it as
-steering context; a future conformance gate (writer ≠ judge) may check artifacts
+steering context; a future conformance gate (writer≠judge) may check artifacts
 against these principles — but that is out of this skill's scope. This skill
 *writes* the constitution; it does not enforce it downstream.

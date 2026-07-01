@@ -66,7 +66,7 @@ R1+R2 紀律的 canonical 在 `loom-code/scripts/_reviewer-discipline.md`，由 
 ## 參考
 
 - [`SKILL.md`](SKILL.md) — 運作規格
-- [`agents/code-reviewer-prompt.md`](agents/code-reviewer-prompt.md) — subagent 角色 prompt
+- [`../../agents/code-reviewer.md`](../../agents/code-reviewer.md) — subagent 角色 prompt
 - [`../subagent-driven-development/SKILL.md`](../subagent-driven-development/SKILL.md) — per-task reviewer（不同 scope，同 rubrics）
 - [`../verification-before-completion/SKILL.md`](../verification-before-completion/SKILL.md) — 同層的 pre-merge gate（test-suite）
 - [`../finishing-a-development-branch/SKILL.md`](../finishing-a-development-branch/SKILL.md) — orchestrator
