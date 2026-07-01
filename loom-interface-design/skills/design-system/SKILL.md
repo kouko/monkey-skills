@@ -2,6 +2,7 @@
 name: design-system
 description: |
   Generate a product's visual design system — colors, typography, layout, component tokens — per PRINCIPLES.md. GUI → DESIGN.md (YAML tokens + prose); TUI/CLI → conventions stub. Use BEFORE spec/build to define the look. Flows → interaction-flows.
+version: 0.3.0
 ---
 
 # design-system
@@ -139,9 +140,10 @@ directory (the `using-loom-interface-design` router coordinates this). A
 
 ## Downstream — where the design system goes
 
-- **Frontend (loom-code):** the `DESIGN.md` tokens side-channel directly to
-  the UI implementation — colors, spacing, type scale, and component defaults
-  the styling/lint reads.
+- **Frontend implementation:** the `DESIGN.md` tokens side-channel directly to
+  the UI code — colors, spacing, type scale, and component defaults the
+  styling/lint reads. This seam is the frontend build itself (human / code
+  level), **not** a loom-code skill — no loom-code skill reads `DESIGN.md`.
 - **Spec (loom-spec):** the design system is the *visual* surface; the
   *behavioral* fan-out (object state machines, edges, acceptance scenarios) is
   `spec-expansion`'s turf, seeded by `ui-flows.md` — not duplicated here.

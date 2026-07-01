@@ -14,6 +14,10 @@ preloads.
 - Verdict (`quality-gate.md` §Verdict Rules): any 🔴 → NEEDS_REVISION;
   2+ 🟡 → NEEDS_REVISION; 1 🟡 → PASS_WITH_NOTES; all 🟢 → PASS.
   Opaque flag (no `where:` / `source:`) → NEEDS_REVISION.
+  Scope: quality / architecture dimensions. The spec-reviewer is
+  binary per its role contract (PASS / NEEDS_REVISION only, no
+  PASS_WITH_NOTES) — there a lone 🟡 → NEEDS_REVISION, not
+  PASS_WITH_NOTES.
 - Severity: 🔴 fatal / 🟡 should-fix / 🟢 nit (informational).
 
 ## Dimension → standard path

@@ -205,6 +205,13 @@ fork silently.
 "Tests pass" is wrong if any were skipped.
 Default to surfacing uncertainty, not hiding it.
 
+A status that rests on belief, not an executed check, is downgraded —
+not asserted. If you did not actually run the verification, say so:
+drop the optimistic token (DONE → DONE_WITH_CONCERNS, PASS →
+PASS_WITH_NOTES) and state "will verify by: <command>". "I'm confident
+it passes" is not a run. The reviewer's time is not for checking
+whether your reply is truthful.
+
 ---
 
 **SSOT note**: this content is the canonical text. Every `loom-code`
@@ -240,6 +247,10 @@ preloads.
 - Verdict (`quality-gate.md` §Verdict Rules): any 🔴 → NEEDS_REVISION;
   2+ 🟡 → NEEDS_REVISION; 1 🟡 → PASS_WITH_NOTES; all 🟢 → PASS.
   Opaque flag (no `where:` / `source:`) → NEEDS_REVISION.
+  Scope: quality / architecture dimensions. The spec-reviewer is
+  binary per its role contract (PASS / NEEDS_REVISION only, no
+  PASS_WITH_NOTES) — there a lone 🟡 → NEEDS_REVISION, not
+  PASS_WITH_NOTES.
 - Severity: 🔴 fatal / 🟡 should-fix / 🟢 nit (informational).
 
 ## Dimension → standard path
@@ -317,11 +328,17 @@ unblock_step:                    # if BLOCKED; otherwise omit. The specific acti
 
 - **`DONE`** — task complete; all new tests RED-then-GREEN under the
   Iron Law; old tests still GREEN.
-- **`DONE_WITH_CONCERNS`** — task complete and tests pass, but you
-  noticed something the reviewer should flag (smell, possible
-  regression elsewhere, suboptimal naming you could not fix without
-  exceeding scope). Use this freely — it is the channel by which
-  design feedback reaches the orchestrator.
+- **`DONE_WITH_CONCERNS`** — task complete, but one of two things holds.
+  *Either* tests pass and you noticed something the reviewer should flag
+  (smell, possible regression elsewhere, suboptimal naming you could not
+  fix without exceeding scope) — use this freely, it is the channel by
+  which design feedback reaches the orchestrator. *Or* you believe the
+  work is complete but did not actually execute the package-level suite
+  this round (ran a single file, reasoned the tests pass, runner
+  unavailable): report `DONE_WITH_CONCERNS` and put
+  `will verify by: <package-level command>` in `self_review`. `DONE`
+  asserts an executed RED-then-GREEN run; if you did not run it, you may
+  not assert it.
 - **`NEEDS_CONTEXT`** — you cannot proceed until a specific question
   is answered (ambiguous spec, missing test fixture, undefined edge
   case). Include `open_questions`.
@@ -333,6 +350,12 @@ unblock_step:                    # if BLOCKED; otherwise omit. The specific acti
 
 - Returning `DONE` with `test_results` empty — Iron Law violation. The
   orchestrator re-dispatches with the original task.
+- Returning `DONE` with `test_results` lines not obtained from an
+  actual runner invocation (asserted from belief) — asserting `DONE` on
+  tests you did not run is an Iron Law violation. Unlike empty
+  `test_results` (which the orchestrator re-dispatches), self-correct
+  before returning: downgrade to `DONE_WITH_CONCERNS` with
+  `will verify by …`.
 - Returning `DONE` after deleting tests to "make them pass" — you
   removed the failing-then-passing evidence. Re-dispatch.
 - Editing the spec / rubric / checklist / standards / sibling prompts
@@ -349,12 +372,10 @@ unblock_step:                    # if BLOCKED; otherwise omit. The specific acti
   execution).
 - `loom-code/skills/tdd-iron-law/SKILL.md` — the Iron Law you work
   under.
-- `loom-code/skills/subagent-driven-development/agents/spec-reviewer-prompt.md`
-  — what spec-reviewer will check after you return (Phase 2 will
-  promote this to plugin-level too).
-- `loom-code/skills/subagent-driven-development/agents/code-quality-reviewer-prompt.md`
-  — what code-quality-reviewer will check after you return (Phase 2
-  promote target).
+- `loom-code/agents/spec-reviewer.md`
+  — what spec-reviewer will check after you return.
+- `loom-code/agents/code-quality-reviewer.md`
+  — what code-quality-reviewer will check after you return.
 - `loom-code/scripts/_baseline.md` — SSOT for the engineering
   baselines (do not edit the BEGIN/END block above directly;
   regenerate via `scripts/distribute.py`).

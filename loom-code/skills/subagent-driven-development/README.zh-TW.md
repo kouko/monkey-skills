@@ -57,7 +57,7 @@
 ## 參考
 
 - [`SKILL.md`](SKILL.md) — Orchestration 規格。
-- [`agents/implementer-prompt.md`](agents/implementer-prompt.md) / [`agents/spec-reviewer-prompt.md`](agents/spec-reviewer-prompt.md) / [`agents/code-quality-reviewer-prompt.md`](agents/code-quality-reviewer-prompt.md) — 角色 prompt。
+- [`../../agents/implementer.md`](../../agents/implementer.md) / [`../../agents/spec-reviewer.md`](../../agents/spec-reviewer.md) / [`../../agents/code-quality-reviewer.md`](../../agents/code-quality-reviewer.md) — 角色 prompt。
 - [`../tdd-iron-law/SKILL.md`](../tdd-iron-law/SKILL.md) — Implementer 必須遵守的鐵律。
 - [`../using-loom-code/SKILL.md`](../using-loom-code/SKILL.md) — Router；SDD 觸發規則。
 - [`../../scripts/canonical/README.md`](../../scripts/canonical/README.md) — SSOT 指標 + drift 政策。

@@ -31,6 +31,23 @@ cannot remediate *"naming is off somewhere."* Missing evidence flips
 the whole verdict to `NEEDS_REVISION` regardless of severity. The
 orchestrator treats a verdict with any opaque element as malformed.
 
+## Rule R3 — A verdict resting on unconfirmed evidence downgrades
+
+You may not run tests; your correctness / tests verdict rests on the
+implementer's reported `test_results`, which you did not produce. When
+a dimension's PASS rests on evidence you could not independently
+confirm, do not emit a clean PASS for it — downgrade to
+`PASS_WITH_NOTES` naming exactly what you could not verify (e.g.
+"correctness rests on implementer `test_results`; not independently
+run"). For the binary spec-reviewer, which has no `PASS_WITH_NOTES`
+token, record the same caveat in `notes` rather than passing it
+silently. Never false-pass ("can't see it → assume fine").
+
+This downgrade sets that dimension's `dimension_scores` entry only — it
+is not itself a counted 🟡 finding and does not feed the 2+ 🟡 →
+NEEDS_REVISION aggregation (that aggregation counts `findings[]`
+entries, each with its own `where:` citation).
+
 ## Common anti-patterns the orchestrator will reject
 
 - Output missing the `standards_version` field — the orchestrator

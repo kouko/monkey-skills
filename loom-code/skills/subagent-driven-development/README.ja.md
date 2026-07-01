@@ -57,7 +57,7 @@
 ## 関連
 
 - [`SKILL.md`](SKILL.md) — オーケストレーション仕様。
-- [`agents/implementer-prompt.md`](agents/implementer-prompt.md) / [`agents/spec-reviewer-prompt.md`](agents/spec-reviewer-prompt.md) / [`agents/code-quality-reviewer-prompt.md`](agents/code-quality-reviewer-prompt.md) — 役割プロンプト。
+- [`../../agents/implementer.md`](../../agents/implementer.md) / [`../../agents/spec-reviewer.md`](../../agents/spec-reviewer.md) / [`../../agents/code-quality-reviewer.md`](../../agents/code-quality-reviewer.md) — 役割プロンプト。
 - [`../tdd-iron-law/SKILL.md`](../tdd-iron-law/SKILL.md) — implementer が従う鉄則。
 - [`../using-loom-code/SKILL.md`](../using-loom-code/SKILL.md) — ルーター；SDD 発火条件。
 - [`../../scripts/canonical/README.md`](../../scripts/canonical/README.md) — SSOT ポインタ + ドリフトポリシー。

@@ -66,7 +66,7 @@ R1+R2 規律の canonical は `loom-code/scripts/_reviewer-discipline.md` にあ
 ## 関連
 
 - [`SKILL.md`](SKILL.md) — 運用仕様。
-- [`agents/code-reviewer-prompt.md`](agents/code-reviewer-prompt.md) — サブエージェント役割プロンプト。
+- [`../../agents/code-reviewer.md`](../../agents/code-reviewer.md) — サブエージェント役割プロンプト。
 - [`../subagent-driven-development/SKILL.md`](../subagent-driven-development/SKILL.md) — タスク単位レビュア（異なるスコープ、同じ rubrics）。
 - [`../verification-before-completion/SKILL.md`](../verification-before-completion/SKILL.md) — 兄弟 pre-merge gate（test-suite）。
 - [`../finishing-a-development-branch/SKILL.md`](../finishing-a-development-branch/SKILL.md) — オーケストレータ。

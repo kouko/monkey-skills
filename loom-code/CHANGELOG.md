@@ -2446,7 +2446,7 @@ consumes.
 - `skills/brainstorming/SKILL.md` — HARD-GATE measure ("DO NOT START
   IMPLEMENTING UNTIL YOU HAVE EXPLORED INTENT"); §When NOT to Use with
   4 enumerated exemptions; 5-axis framework with primary-source citations
-  (Christensen 1997 JTBD ISBN 978-0875845852; Klement 2018 job-story
+  (Christensen 2016 JTBD ISBN 978-0062435613; Klement 2018 job-story
   format ISBN 978-1718626751); Red Flags table with en + ja + zh-TW
   triggers; Output Contract pointing at handoff-brief-format.md; Cross-
   skill delegation to `dev-workflow:complexity-critique` (optional,

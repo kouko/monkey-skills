@@ -89,6 +89,13 @@ fork silently.
 "Tests pass" is wrong if any were skipped.
 Default to surfacing uncertainty, not hiding it.
 
+A status that rests on belief, not an executed check, is downgraded —
+not asserted. If you did not actually run the verification, say so:
+drop the optimistic token (DONE → DONE_WITH_CONCERNS, PASS →
+PASS_WITH_NOTES) and state "will verify by: <command>". "I'm confident
+it passes" is not a run. The reviewer's time is not for checking
+whether your reply is truthful.
+
 ---
 
 **SSOT note**: this content is the canonical text. Every `loom-code`

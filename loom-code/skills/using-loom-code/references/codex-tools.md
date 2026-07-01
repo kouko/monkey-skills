@@ -133,9 +133,9 @@ So the hook is the safety net even if specialist skill invocation tool names dif
 
 ## See also
 
-- [`../../tests/codex-cli/README.md`](../../tests/codex-cli/README.md) — verification procedure.
-- [`../../.codex-plugin/plugin.json`](../../.codex-plugin/plugin.json) — Codex manifest.
-- [`../../hooks/session-start`](../../hooks/session-start) — bash; emits the nested `hookSpecificOutput.additionalContext` shape both Claude Code + Codex 0.139.0 consume.
+- [`../../../tests/codex-cli/README.md`](../../../tests/codex-cli/README.md) — verification procedure.
+- [`../../../.codex-plugin/plugin.json`](../../../.codex-plugin/plugin.json) — Codex manifest.
+- [`../../../hooks/session-start`](../../../hooks/session-start) — bash; emits the nested `hookSpecificOutput.additionalContext` shape both Claude Code + Codex 0.139.0 consume.
 - [`claude-code-tools.md`](claude-code-tools.md) — Claude Code canonical tool names (verified; v0.1.0+).
-- [`../../TECH-SPEC.md`](../../TECH-SPEC.md) §2.3 — hook mechanism design that drives the portable JSON output.
+- [`../../../TECH-SPEC.md`](../../../TECH-SPEC.md) §2.3 — hook mechanism design that drives the portable JSON output.
 - `obra/superpowers` v5.1.0 — Codex plugin reference implementation (this plugin's `interface` block schema mirrors it).

@@ -2,7 +2,7 @@
 name: interaction-flows
 description: |
   Generate a ui-flows.md interaction-flow artifact — screens, navigation, user flows, state transitions, wireframes (GUI/TUI/CLI). Use when the user wants to map, design, or lay out a UI/UX flow, screen, or its states before specing or coding.
-version: 0.1.0
+version: 0.3.0
 ---
 
 # interaction-flows

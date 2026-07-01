@@ -84,6 +84,7 @@ When all parallel agents return:
 2. Check for accidental file overlap: did any two agents edit the same file? Should not happen if step 1 was honest; if it did, treat as a plan error — resolve manually now, split better in the next plan.
 3. Aggregate by rule:
    - All `DONE` / `PASS` → integrate, move on.
+   - Any `DONE_WITH_CONCERNS` / `PASS_WITH_NOTES` → integrate, but surface the concerns / notes to the user; do not silently drop them (they are the non-blocking design-feedback channel).
    - Any `NEEDS_REVISION` → re-dispatch **only that one branch** with the flags. Other branches keep their results.
    - Any `BLOCKED` → apply the unblock step or surface to user.
    - Any `NEEDS_CONTEXT` → surface to user; do not re-dispatch blind.

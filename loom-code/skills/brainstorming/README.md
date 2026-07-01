@@ -18,7 +18,7 @@ Walk all five. None are optional unless the §When NOT to Use exemption applies.
 
 | Axis | Question | Grounded in |
 |---|---|---|
-| 1 — Problem | What job is the user hiring this change to do? **Not the solution they proposed.** | Christensen (1997) JTBD, ISBN 978-0875845852 |
+| 1 — Problem | What job is the user hiring this change to do? **Not the solution they proposed.** | Christensen et al. (2016) JTBD, ISBN 978-0062435613 |
 | 2 — Users | Who, in what conditions, with what existing tools and constraints? | Klement (2018) job-story format, ISBN 978-1718626751 |
 | 3 — Smallest End State | What is the minimum shippable resolution? | Often delegates to `dev-workflow:complexity-critique` |
 | 4 — Alternatives Considered | What are 2-3 other ways this could be solved, and why rejected? | Forces trade-off articulation |

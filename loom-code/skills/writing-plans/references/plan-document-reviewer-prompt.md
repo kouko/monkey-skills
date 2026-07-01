@@ -78,5 +78,5 @@ notes:                           # optional; ≤3 bullets
 
 - [`../SKILL.md`](../SKILL.md) — writing-plans orchestration spec.
 - [`plan-format.md`](plan-format.md) — the schema this reviewer enforces.
-- [`../../subagent-driven-development/agents/spec-reviewer-prompt.md`](../../subagent-driven-development/agents/spec-reviewer-prompt.md) — sibling evaluator pattern (binary verdict, structured gaps).
-- [`../../subagent-driven-development/agents/code-quality-reviewer-prompt.md`](../../subagent-driven-development/agents/code-quality-reviewer-prompt.md) — sibling evaluator pattern (three-valued verdict, multi-dimension).
+- [`../../../agents/spec-reviewer.md`](../../../agents/spec-reviewer.md) — sibling evaluator pattern (binary verdict, structured gaps).
+- [`../../../agents/code-quality-reviewer.md`](../../../agents/code-quality-reviewer.md) — sibling evaluator pattern (three-valued verdict, multi-dimension).

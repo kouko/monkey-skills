@@ -64,6 +64,23 @@ cannot remediate *"naming is off somewhere."* Missing evidence flips
 the whole verdict to `NEEDS_REVISION` regardless of severity. The
 orchestrator treats a verdict with any opaque element as malformed.
 
+## Rule R3 — A verdict resting on unconfirmed evidence downgrades
+
+You may not run tests; your correctness / tests verdict rests on the
+implementer's reported `test_results`, which you did not produce. When
+a dimension's PASS rests on evidence you could not independently
+confirm, do not emit a clean PASS for it — downgrade to
+`PASS_WITH_NOTES` naming exactly what you could not verify (e.g.
+"correctness rests on implementer `test_results`; not independently
+run"). For the binary spec-reviewer, which has no `PASS_WITH_NOTES`
+token, record the same caveat in `notes` rather than passing it
+silently. Never false-pass ("can't see it → assume fine").
+
+This downgrade sets that dimension's `dimension_scores` entry only — it
+is not itself a counted 🟡 finding and does not feed the 2+ 🟡 →
+NEEDS_REVISION aggregation (that aggregation counts `findings[]`
+entries, each with its own `where:` citation).
+
 ## Common anti-patterns the orchestrator will reject
 
 - Output missing the `standards_version` field — the orchestrator
@@ -109,6 +126,10 @@ preloads.
 - Verdict (`quality-gate.md` §Verdict Rules): any 🔴 → NEEDS_REVISION;
   2+ 🟡 → NEEDS_REVISION; 1 🟡 → PASS_WITH_NOTES; all 🟢 → PASS.
   Opaque flag (no `where:` / `source:`) → NEEDS_REVISION.
+  Scope: quality / architecture dimensions. The spec-reviewer is
+  binary per its role contract (PASS / NEEDS_REVISION only, no
+  PASS_WITH_NOTES) — there a lone 🟡 → NEEDS_REVISION, not
+  PASS_WITH_NOTES.
 - Severity: 🔴 fatal / 🟡 should-fix / 🟢 nit (informational).
 
 ## Dimension → standard path
@@ -226,6 +247,13 @@ fork silently.
 "Completed" is wrong if anything was skipped silently.
 "Tests pass" is wrong if any were skipped.
 Default to surfacing uncertainty, not hiding it.
+
+A status that rests on belief, not an executed check, is downgraded —
+not asserted. If you did not actually run the verification, say so:
+drop the optimistic token (DONE → DONE_WITH_CONCERNS, PASS →
+PASS_WITH_NOTES) and state "will verify by: <command>". "I'm confident
+it passes" is not a run. The reviewer's time is not for checking
+whether your reply is truthful.
 
 ---
 
