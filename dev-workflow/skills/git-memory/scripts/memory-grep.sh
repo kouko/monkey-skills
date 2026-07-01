@@ -49,6 +49,10 @@ REPO='.'
 FORMAT='plain'
 INCLUDE_PR=1
 INCLUDE_COMMIT=1
+INCLUDE_HISTORY=0
+MATCH=''
+PATHSPEC=''
+TOP=''
 VERIFY_MODE=0
 VERIFY_REF=''
 
@@ -74,6 +78,18 @@ Options:
   --format=<f>       output format: plain | json (default: plain)
   --no-pr            skip PR body extraction
   --no-commit        skip commit trailer extraction
+  --match=<regex>    topic filter: keep only records whose text matches
+                     (case-insensitive regex). Searches commit subject +
+                     trailer values, and PR title + Memory section.
+  --path=<pathspec>  keep only COMMITS touching <pathspec>. Commit-only —
+                     PR sections cannot be path-scoped. Does NOT affect
+                     liveness (the supersession scan stays full-history).
+  --top=<n>          cap displayed commits to the newest <n>; the number
+                     suppressed is reported (never silently truncated).
+  --history          include superseded records (default: live only). A
+                     record is superseded when a LATER commit carries a
+                     `Supersedes:` trailer naming it (by PR #N or SHA).
+                     Liveness is computed by forward-scan, never stored.
   --verify <ref>     check whether <ref>'s message body carries a memory
                      trailer (^Decision:/^Learning:/^Gotcha:). Exits 0 if
                      present, 4 if absent, 2 if <ref> does not resolve.
@@ -86,6 +102,9 @@ Note: --since filters commits by date; --limit caps PR count.
 Examples:
   memory-grep.sh --since='6 months ago' --limit=100
   memory-grep.sh --no-pr              # commit trailers only
+  memory-grep.sh --match='parser|latency'      # topic recall
+  memory-grep.sh --path=src/parser --top=5     # decisions touching a path
+  memory-grep.sh --history           # include superseded decisions
   memory-grep.sh --format=json | jq '.commits[]'
   memory-grep.sh --verify HEAD        # did this commit capture memory?
 EOF
@@ -129,6 +148,10 @@ for arg in "$@"; do
     --format=*)  FORMAT="${arg#*=}" ;;
     --no-pr)     INCLUDE_PR=0 ;;
     --no-commit) INCLUDE_COMMIT=0 ;;
+    --history)   INCLUDE_HISTORY=1 ;;
+    --match=*)   MATCH="${arg#*=}" ;;
+    --path=*)    PATHSPEC="${arg#*=}" ;;
+    --top=*)     TOP="${arg#*=}" ;;
     --verify)    VERIFY_MODE=1; expect_ref=1 ;;
     -h|--help)   usage; exit 0 ;;
     *) echo "Unknown argument: $arg" >&2; usage; exit 1 ;;
@@ -178,6 +201,11 @@ if ! [[ "$LIMIT" =~ ^[1-9][0-9]*$ ]]; then
   exit 1
 fi
 
+if [ -n "$TOP" ] && ! [[ "$TOP" =~ ^[1-9][0-9]*$ ]]; then
+  echo "Invalid --top: $TOP (expected positive integer)" >&2
+  exit 1
+fi
+
 if ! git -C "$REPO" rev-parse --git-dir >/dev/null 2>&1; then
   echo "Not a git repository: $REPO" >&2
   exit 2
@@ -190,16 +218,33 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 3
 fi
 
+# Validate --match ONCE up front. Otherwise jq's test() throws mid-filter
+# under `set -euo pipefail`, aborting with an undocumented exit and one
+# raw "Regex failure" line per commit. An agent composing --match from a
+# free-text topic can easily pass an unbalanced ( or [ — fail loud and
+# clean instead.
+if [ -n "$MATCH" ] && ! jq -n --arg m "$MATCH" '"" | test($m; "i")' >/dev/null 2>&1; then
+  echo "Invalid --match regex: $MATCH" >&2
+  exit 1
+fi
+
 # ─── commit trailer extraction (Layer 2 — git's own parser) ────────
 #
 # Emits NDJSON (one object per line) for each memory-worthy commit:
 #   {sha, date, subject, decision:[...], learning:[...], gotcha:[...], related:[...]}
 
 extract_commits_ndjson() {
-  git -C "$REPO" log \
-    --since="$SINCE" \
-    --no-merges \
-    --format='%H' \
+  # --path narrows which commits are DISPLAYED. It is intentionally NOT
+  # applied to build_supersession_index (which scans full history), so a
+  # superseding commit outside the pathspec still retires a shown record.
+  # Collect SHAs first (bash-3.2 + set -u safe: no empty-array expansion).
+  local shas
+  if [ -n "$PATHSPEC" ]; then
+    shas=$(git -C "$REPO" log --since="$SINCE" --no-merges --format='%H' -- "$PATHSPEC")
+  else
+    shas=$(git -C "$REPO" log --since="$SINCE" --no-merges --format='%H')
+  fi
+  printf '%s\n' "$shas" \
     | while read -r full_sha; do
         [ -z "$full_sha" ] && continue
 
@@ -251,9 +296,121 @@ extract_commits_ndjson() {
       done
 }
 
+# ─── supersession index (Supersedes: trailer → liveness) ───────────
+#
+# Append-only substrate: an earlier decision can't be edited, so the
+# replacement commit carries a backward-pointing `Supersedes:` trailer
+# (by `PR #N` or by SHA). Liveness is COMPUTED, never stored — a record
+# is superseded iff some later commit names it. bash-3.2-safe: no
+# associative arrays; the map is a `token<TAB>by_label` text table.
+
+# normalize_ref <value> → "pr:<N>" | "sha:<hex>" | "" (unrecognized)
+normalize_ref() {
+  local v="$1"
+  if printf '%s' "$v" | grep -qE '#[0-9]+'; then
+    printf 'pr:%s' "$(printf '%s' "$v" | sed -n 's/.*#\([0-9][0-9]*\).*/\1/p')"
+  elif printf '%s' "$v" | grep -qiE '^[0-9a-f]{7,40}$'; then
+    printf 'sha:%s' "$(printf '%s' "$v" | tr 'A-Z' 'a-z')"
+  fi
+}
+
+# Emit one `token<TAB>by_label` line per Supersedes: target. Scans ALL
+# commits in range (not just memory-worthy ones) so a Supersedes-only
+# commit still registers. Note: a superseding commit OUTSIDE the --since
+# window won't be seen — widen --since to resurface old supersessions.
+# The map is order-free; "later-supersedes-earlier" is guaranteed by the
+# backward-pointer authoring convention, not enforced here (a forward or
+# self-referential Supersedes: would mis-hide a live record).
+build_supersession_index() {
+  git -C "$REPO" log --since="$SINCE" --no-merges --format='%H' \
+    | while read -r sha; do
+        [ -z "$sha" ] && continue
+        local sup_lines
+        sup_lines=$(
+          git -C "$REPO" log -1 --format='%B' "$sha" \
+            | git interpret-trailers --parse --unfold 2>/dev/null \
+            | grep -E '^Supersedes:' || true
+        )
+        [ -z "$sup_lines" ] && continue
+        local by_label by_pr
+        by_label=$(git -C "$REPO" log -1 --format='%h' "$sha")
+        by_pr=$(git -C "$REPO" log -1 --format='%s' "$sha" \
+          | sed -n 's/.*(#\([0-9][0-9]*\)).*/\1/p')
+        [ -n "$by_pr" ] && by_label="$by_label (PR #$by_pr)"
+        printf '%s\n' "$sup_lines" | while IFS= read -r line; do
+          local val token
+          val=$(printf '%s' "${line#Supersedes:}" | sed 's/^ *//; s/ *$//')
+          token=$(normalize_ref "$val")
+          [ -n "$token" ] && printf '%s\t%s\n' "$token" "$by_label"
+        done
+      done
+}
+
+# lookup_superseded <short_sha> <subject> → by_label if superseded, else ""
+# Matches by PR number (from the subject's "(#N)") or by SHA prefix.
+lookup_superseded() {
+  local short="$1" subject="$2" pr
+  pr=$(printf '%s' "$subject" | sed -n 's/.*(#\([0-9][0-9]*\)).*/\1/p')
+  if [ -n "$pr" ]; then
+    local hit
+    hit=$(printf '%s\n' "$SUPERSEDE_MAP" \
+      | awk -F'\t' -v p="pr:$pr" '$1==p {print $2; exit}')
+    [ -n "$hit" ] && { printf '%s' "$hit"; return; }
+  fi
+  printf '%s\n' "$SUPERSEDE_MAP" \
+    | awk -F'\t' -v s="$short" '
+        $1 ~ /^sha:/ {
+          tok = substr($1, 5)
+          if (index(tok, s) == 1 || index(s, tok) == 1) { print $2; exit }
+        }'
+}
+
+# Annotate NDJSON commit records with {superseded, superseded_by} and,
+# unless --history, drop the superseded ones. Single filtering point for
+# both plain and json output.
+annotate_commits() {
+  while IFS= read -r rec; do
+    [ -z "$rec" ] && continue
+    local sha subject by
+    sha=$(printf '%s' "$rec" | jq -r '.sha')
+    subject=$(printf '%s' "$rec" | jq -r '.subject')
+    by=$(lookup_superseded "$sha" "$subject")
+    if [ -n "$by" ]; then
+      [ "$INCLUDE_HISTORY" = 0 ] && continue
+      printf '%s' "$rec" | jq -c --arg by "$by" \
+        '. + {superseded: true, superseded_by: $by}'
+    else
+      printf '%s' "$rec" | jq -c '. + {superseded: false, superseded_by: null}'
+    fi
+  done
+}
+
 commit_records=''
+COMMIT_DROPPED=0
 if [ "$INCLUDE_COMMIT" = 1 ]; then
+  SUPERSEDE_MAP=$(build_supersession_index)
   commit_records=$(extract_commits_ndjson)
+  [ -n "$commit_records" ] && \
+    commit_records=$(printf '%s\n' "$commit_records" | annotate_commits)
+
+  # --match topic filter, applied AFTER liveness annotation so it narrows
+  # the view only. Searchable text = subject + all trailer values.
+  if [ -n "$MATCH" ] && [ -n "$commit_records" ]; then
+    commit_records=$(printf '%s\n' "$commit_records" | jq -c --arg m "$MATCH" \
+      'select((([.subject] + .decision + .learning + .gotcha + .related)
+                | join(" ")) | test($m; "i"))')
+  fi
+
+  # --top cap. Records are already reverse-chronological (newest first),
+  # so head keeps the newest N. Suppressed count is reported, never
+  # silently dropped.
+  if [ -n "$TOP" ] && [ -n "$commit_records" ]; then
+    _n=$(printf '%s\n' "$commit_records" | grep -c .)
+    if [ "$_n" -gt "$TOP" ]; then
+      COMMIT_DROPPED=$((_n - TOP))
+      commit_records=$(printf '%s\n' "$commit_records" | head -n "$TOP")
+    fi
+  fi
 fi
 
 # ─── PR body Memory-section extraction ─────────────────────────────
@@ -288,11 +445,22 @@ if [ "$INCLUDE_PR" = 1 ]; then
   fi
 fi
 
+# --match filters PRs by title + Memory-section text. (--path is
+# commit-only: gh pr list cannot filter by pathspec, so PR sections are
+# never path-scoped — see usage.)
+if [ -n "$MATCH" ] && [ -n "$pr_records" ]; then
+  pr_records=$(printf '%s\n' "$pr_records" | jq -c --arg m "$MATCH" \
+    'select(((.title // "") + " " + (.memory // "")) | test($m; "i"))')
+fi
+
 # ─── emit output ───────────────────────────────────────────────────
 
 case "$FORMAT" in
   plain)
-    echo "# git-memory digest — repo=$REPO since=\"$SINCE\""
+    hdr="# git-memory digest — repo=$REPO since=\"$SINCE\""
+    [ -n "$MATCH" ]    && hdr="$hdr match=\"$MATCH\""
+    [ -n "$PATHSPEC" ] && hdr="$hdr path=\"$PATHSPEC\""
+    echo "$hdr"
     echo
     if [ "$INCLUDE_COMMIT" = 1 ]; then
       echo "## Commit trailers"
@@ -303,7 +471,12 @@ case "$FORMAT" in
           sha=$(printf '%s' "$rec" | jq -r '.sha')
           date=$(printf '%s' "$rec" | jq -r '.date')
           subject=$(printf '%s' "$rec" | jq -r '.subject')
-          echo "### $sha  $date  $subject"
+          superseded_by=$(printf '%s' "$rec" | jq -r '.superseded_by // ""')
+          if [ -n "$superseded_by" ]; then
+            echo "### $sha  $date  $subject  [SUPERSEDED by $superseded_by]"
+          else
+            echo "### $sha  $date  $subject"
+          fi
           for key_pair in 'decision Decision' 'learning Learning' 'gotcha Gotcha' 'related Related'; do
             k=${key_pair% *}
             label=${key_pair#* }
@@ -312,8 +485,16 @@ case "$FORMAT" in
           done
           echo
         done
+        [ "$COMMIT_DROPPED" -gt 0 ] && \
+          echo "(… $COMMIT_DROPPED more matches suppressed; raise --top or narrow --match/--path)" && echo
       else
-        echo "(none in range)"
+        if [ -n "$MATCH" ]; then
+          echo "(no memory matches \"$MATCH\")"
+        elif [ -n "$PATHSPEC" ]; then
+          echo "(no memory touched \"$PATHSPEC\")"
+        else
+          echo "(none in range)"
+        fi
         echo
       fi
     fi
@@ -342,6 +523,9 @@ case "$FORMAT" in
     jq -n \
       --arg since "$SINCE" \
       --arg repo "$REPO" \
+      --arg match "$MATCH" \
+      --arg path "$PATHSPEC" \
+      --argjson suppressed "$COMMIT_DROPPED" \
       --argjson commits "$(
         if [ -z "$commit_records" ]; then
           echo '[]'
@@ -356,6 +540,10 @@ case "$FORMAT" in
           printf '%s\n' "$pr_records" | jq -s '.'
         fi
       )" \
-      '{repo: $repo, since: $since, commits: $commits, prs: $prs}'
+      '{repo: $repo, since: $since,
+        match: (if $match == "" then null else $match end),
+        path:  (if $path  == "" then null else $path  end),
+        commits_suppressed: $suppressed,
+        commits: $commits, prs: $prs}'
     ;;
 esac

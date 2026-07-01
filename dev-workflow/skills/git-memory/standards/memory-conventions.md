@@ -6,7 +6,7 @@ reference.
 
 ## Commit trailers
 
-### Schema (three core + one cross-reference)
+### Schema (three core + two link trailers)
 
 | Trailer | Value shape | When to use |
 |---|---|---|
@@ -14,9 +14,39 @@ reference.
 | `Learning:` | Something discovered during the work that a future reader would want to know. | A surprising constraint, undocumented behavior, or insight worth keeping |
 | `Gotcha:` | A specific trap future self or others should avoid. | A failure mode, easy-to-miss edge case, or policy limit hit during the work |
 | `Related:` | `PR #<N>` — the PR anchor used for cross-reference | When this change builds on or relates to a prior PR |
+| `Supersedes:` | `PR #<N>` (preferred) or a commit SHA — the earlier decision this one retires | When this change reverses or replaces a decision recorded in an earlier commit/PR |
 
-All four are **optional**. A typical commit message has none. Memory-worthy
+All five are **optional**. A typical commit message has none. Memory-worthy
 commits (usually 20–30% of commits) add one or more.
+
+### Supersession & liveness
+
+Commit messages are **immutable** — you cannot go back and edit an
+earlier `Decision:` when it turns out wrong. So supersession points
+**backward from the replacement**, not forward from the original: the
+*new* commit carries `Supersedes: PR #<N>` (or `Supersedes: <sha>`)
+naming the decision it retires.
+
+Liveness is then **computed, never stored**. A recorded decision is
+*live* unless some **later** commit's `Supersedes:` names it — matched by
+the target's PR number (from a `(#N)` in the subject) or by SHA prefix.
+`scripts/memory-grep.sh` builds the superseded-set by forward-scanning
+the log and, by default, **shows live records only**; pass `--history`
+to include superseded ones (tagged `[SUPERSEDED by …]`).
+
+- **Prefer `PR #<N>` over a SHA.** SHAs get rewritten by rebase/squash;
+  PR numbers are stable (same rule as `Related:`).
+- **Validate the target at authoring time.** Before committing a
+  `Supersedes:`, confirm the referenced PR/SHA exists and actually
+  carries a `Decision:`/`Learning:`/`Gotcha:` — a pointer to nothing is
+  a silently broken chain, the top operational failure mode of
+  immutable decision logs.
+- **One field, no lifecycle states.** There is deliberately no
+  `proposed`/`deprecated` status vocabulary — `Supersedes:` plus
+  computed liveness covers the retire-and-replace case without a
+  half-defined state machine.
+- **Caveat:** a superseding commit outside `memory-grep.sh --since`'s
+  window won't be seen — widen `--since` to resurface old supersessions.
 
 ### Format rules
 
@@ -291,3 +321,30 @@ the record incorrectly. Always round-trip through
 `git interpret-trailers --parse`.
 
 See `scripts/memory-grep.sh` for the packaged version.
+
+### Pull retrieval (topic recall)
+
+Retrieval is **pull, not push**: recall the few decisions relevant to
+the task at hand, rather than pre-baking every decision into an
+always-loaded file. Evidence for the pull default: a 2026 ETH Zurich
+study found that **auto-generated, always-loaded context files reduced
+agent task success by ~3% and raised inference cost by ~20%** — worse
+than shipping no file at all — because over-detailed auto-generated
+context distracts the agent (InfoQ, "The Value of Context Files for
+Coding Agents", 2026-03; a small human-curated file gave only a ~4%
+gain). On-demand retrieval avoids that. The packaged surface is
+`memory-grep.sh`'s three filters:
+
+| Flag | Scope | Notes |
+|---|---|---|
+| `--match=<regex>` | commits **and** PRs | case-insensitive; searches commit subject + trailer values, PR title + `## Memory` text |
+| `--path=<pathspec>` | commits **only** | "which decisions touched this file?"; PR sections cannot be path-scoped |
+| `--top=<n>` | commit display cap | newest first; the suppressed count is printed, never silently dropped |
+
+**Liveness invariant.** `--match` / `--path` narrow the *view* only —
+the supersession index is always built over full history. So a
+decision retired by a commit that neither matches the topic nor touches
+the path is still correctly hidden by default (add `--history` to see
+it). Ranking is deliberately reverse-chronological with **no fuzzy
+relevance score**, preserving deterministic retrieval (same query →
+same bytes).

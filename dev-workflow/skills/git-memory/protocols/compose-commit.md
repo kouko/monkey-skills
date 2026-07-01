@@ -76,6 +76,28 @@ Link to an earlier PR when the current commit builds on its context.
 Related: PR #135
 ```
 
+### `Supersedes:`
+
+Use when this commit **reverses or replaces** a decision recorded
+earlier. Because commit messages are immutable, the pointer lives on the
+*new* commit and points backward; retrieval computes liveness from it
+(`memory-grep.sh` hides superseded decisions unless `--history`).
+
+```
+Decision: switch to a single-pass parser after the two-pass approach
+  blew the latency budget under load.
+Supersedes: PR #135
+```
+
+- Prefer `PR #<N>`; a SHA works but gets rewritten by rebase/squash.
+- **Validate before committing**: confirm the referenced PR/SHA exists
+  and actually carries a `Decision:`/`Learning:`/`Gotcha:`. A pointer to
+  nothing is a silently broken chain — the top failure mode of immutable
+  decision logs. `memory-grep.sh --verify <ref>` is a quick
+  existence-and-memory check, but it needs a **git-resolvable ref** — it
+  cannot resolve `PR #135`, so resolve the PR to its merge/squash commit
+  SHA first (e.g. `gh pr view 135 --json mergeCommit`) and verify that.
+
 ## Step 4 — Diagram, if change is architectural
 
 If the change alters architecture, data flow, or state transitions,

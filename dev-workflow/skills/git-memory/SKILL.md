@@ -186,9 +186,14 @@ terse replies") stays in Claude native memory. A project decision
 ("we adopted two-layer i18n because API surface is English but
 user-facing design needs trilingual") belongs in git-memory.
 
-In later phases, a rebuild script can distill git-memory into
-`MEMORY.md`-shaped entries so Claude Code's auto-loaded memory
-reflects project decisions without manual transcription.
+The two are recalled differently: Claude Code native memory is
+**pushed** (auto-loaded every session), while git-memory is **pulled**
+on demand — you retrieve the few project decisions relevant to the task
+at hand rather than preloading them (see `protocols/recall.md`).
+Distilling git-memory into an always-loaded `MEMORY.md` is deliberately
+**not** the design: auto-generated, always-loaded context files tend to
+degrade agent performance (see `standards/memory-conventions.md`
+§Pull retrieval for the evidence), so retrieval stays on-demand.
 
 ## Phased rollout
 
@@ -200,8 +205,16 @@ reflects project decisions without manual transcription.
   `.github/` is deferred until humans-opening-PRs-via-GitHub-UI
   becomes a real use case in this repo — Claude-authored PRs
   bypass the template entirely via `gh pr create --body`.)
-- **Phase 3** — rebuild pipeline: `git log --trailer` + PR body
-  extraction → distilled `MEMORY.md` entries.
+- **Phase 3** — pull retrieval surface: on-demand topic/area recall over
+  the substrate (`memory-grep.sh --match` / `--path` / `--top`, driven by
+  `protocols/recall.md`), so past decisions surface when the task needs
+  them. This deliberately replaces the earlier "distill into an
+  always-loaded `MEMORY.md`" idea — preloaded auto-generated context
+  tends to hurt agents (evidence in `standards/memory-conventions.md`
+  §Pull retrieval); on-demand pull does not. A future step could expose the
+  same retrieval as an MCP tool for cross-agent ambient querying, but
+  that trades away the zero-infra property and is deferred until a
+  multi-agent / larger-team need is real.
 
 ## Resources
 
@@ -211,18 +224,35 @@ reflects project decisions without manual transcription.
   with memory trailers
 - `protocols/compose-pr.md` — guidance for writing PR bodies with a
   `## Memory` section
-- `scripts/memory-grep.sh` — retrieval primitive; run from any repo to
-  dump all memory trailers + PR `## Memory` sections as a digest
+- `protocols/recall.md` — when and how to **pull** past decisions
+  (topic/area triggers, liveness defaults, surfacing to the user)
+- `scripts/memory-grep.sh` — retrieval primitive; dumps memory trailers
+  + PR `## Memory` sections, with `--match`/`--path`/`--top` for scoped
+  recall, `--history` to include superseded decisions, and `--verify`
 
 ## Prior art
 
 The approach is closest to **Lore** (Stetsenko, arXiv:2603.15566,
-2026) — a git-trailer-based decision protocol with an associated
-CLI. `git-memory` deliberately starts with a leaner three-trailer
-subset (`Decision:` / `Learning:` / `Gotcha:`) rather than Lore's
-full 12-trailer schema, to keep the per-commit cognitive load low.
-If Lore's schema becomes a de-facto standard, the upgrade path is
-additive (introduce more trailers on top of the existing three).
+2026) — a git-trailer-based decision protocol with an associated CLI.
+`git-memory` deliberately uses a leaner **three-key schema**
+(`Decision:` / `Learning:` / `Gotcha:`, plus the `Related:` /
+`Supersedes:` link trailers) rather than Lore's 12-trailer schema, to
+keep the per-commit cognitive load low. Note this is a *different*
+schema, not a subset — only `Related:` overlaps by name.
+
+Two deliberate divergences worth recording:
+
+- **On supersession**, Lore's paper leaves conflict-resolution
+  undefined; `git-memory` computes liveness from a backward-pointing
+  `Supersedes:` (see `standards/memory-conventions.md`).
+- **On substrate**, Lore's *shipped* product (`rac`, github.com/
+  itsthelore/rac-core, 2026) moved off commit trailers to typed Markdown
+  files served read-only over MCP with CI-enforced status — a divergence
+  from the paper's trailer-based protocol. That is the right lane at
+  team/org scale;
+  `git-memory` keeps the zero-infra commit-trailer substrate for the
+  solo / small-team case, and treats "graduate to a Markdown + MCP
+  store" as an explicit signal for when the repo outgrows it.
 
 Related prior art:
 
