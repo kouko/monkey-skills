@@ -2,7 +2,7 @@
 name: brainstorming
 description: |
   Use BEFORE implementing new behavior or non-obvious design — explore intent + alternatives via a 5-axis framework (Problem / Users / Smallest End State / Alternatives / Obsoletes) → a brief. Refuses 'this is simple' / 'just start coding'.
-version: 0.11.0
+version: 0.12.0
 ---
 
 <SUBAGENT-STOP>
@@ -55,13 +55,15 @@ When that axis question fires, phrase it for the warm-but-interrupted user who r
 
 These three join the two gates already woven into the axes: gate ① (ask only when genuinely uncertain) lives in **Axis 1** as the confident-JTBD-read rule — state a confident reading as a committed interpretation rather than re-asking — and gate ② (bring a recommendation, not an open question) lives in **Axis 4** as the research-then-"My take: Recommend / Why / Conditional reversal" protocol; together the three read as one coherent set.
 
+**Above all — lead with the stakes, and brief first when the fork is complex.** The framing rules above make the *options* legible; they do not guarantee the user grasps *why they are being asked*. Before the options, the `question` field's first line must say, in plain words, *what this choice changes for the user and why it matters* — not just what the options are (a user can read three well-framed options and still not see the point). And when the fork is genuinely complex (≥3 trade-offs, ≥2 implementation paths, or architectural blast radius), **brief before you ask**: run `dev-workflow:brief-before-asking` (Mental Model → My take) first, then fire the `AskUserQuestion`. That skill is the canonical source for this framing; the rules here are its in-workflow shorthand.
+
 ### Axis 1 — Problem
 
 What is the user trying to accomplish? **Not the solution they proposed — the problem behind the solution.**
 
 If the user says *"add a CSV export button,"* the problem is not *"have a button."* It might be *"share daily numbers with a non-technical stakeholder who lives in Excel,"* OR *"backup data before deletion,"* OR *"feed data into a downstream pipeline."* Each problem has different success criteria.
 
-Grounded in: **Christensen, C.M. (1997) *The Innovator's Dilemma*, Harvard Business School Press, ISBN 978-0875845852** — the original Jobs-To-Be-Done framing: *"customers don't buy products; they hire them to do a job."* Articulate the job before the product.
+Grounded in: **Christensen, C.M., Hall, T., Dillon, K., & Duncan, D.S. (2016) *Competing Against Luck*, Harper Business** (and the HBR companion "Know Your Customers' Jobs to Be Done", Sept 2016) — the Jobs-To-Be-Done framing: *"customers don't buy products; they hire them to do a job."* Articulate the job before the product. (Note: this framing is **not** in *The Innovator's Dilemma* (1997), which is about disruption — a common misattribution; JTBD's origin is also contested with Ulwick's Outcome-Driven Innovation, HBR 2002.)
 
 When session context gives a confident JTBD read (e.g. the user's prior messages or inline comment already name the job), state it as a committed interpretation — *"I read this as X — correct me if wrong"* — and proceed to Axis 4. `AskUserQuestion` fits genuine cold-start ambiguity; re-presenting an already-confident prose reading as a multiple-choice menu wastes a turn and signals the agent isn't listening.
 
@@ -190,7 +192,7 @@ It does **not** fire in brownfield (the Current-State-Evidence recon — Forward
 | Axis 4 produces 3+ real options that need triage | `dev-workflow:proposal-critique` | Evidence-grounded KEEP / DEFER / DROP triage. Optional. |
 | Brainstorming output indicates work >1 hour OR >1 module | `writing-plans` (next stage) | Brief becomes the input to plan-splitting. Before delegating, surface Axis 1 + Axis 3 (smallest end state) + Out-of-Scope as a visible checkpoint and require explicit user sign-off — do not proceed on an implicit "ok continue." |
 | Brainstorming output indicates a simple one-line known-pattern fix | Skip writing-plans; route straight to `tdd-iron-law` | The brief documented the smallness; trust it. |
-| Greenfield UI feature needs **high-coverage / high-risk** state fan-out (beyond the inline six-category reminder) | `loom-spec:spec-expansion` | Runs the full lens (USM / OOUX / auto-expansion matrix) on a sparse seed. **Tier 2 — deferred**: active once `writing-plans` reads OpenSpec change-folders. Until that wiring lands, use the inline §Greenfield UI-state nudge above. |
+| Greenfield UI feature needs **high-coverage / high-risk** state fan-out (beyond the inline six-category reminder) | `loom-spec:spec-expansion` | Runs the full lens (USM / OOUX / auto-expansion matrix) on a sparse seed. **Active / wired**: `writing-plans` now reads loom-spec change-folders (see its **§Consuming a loom-spec change-folder**), so the full spec can flow spec→plan→code. Use the inline §Greenfield UI-state nudge for lightweight cases; escalate to `loom-spec:spec-expansion` (→ a validated change-folder) for the high-coverage path. |
 
 Delegation contract (see CLAUDE.md cross-plugin section): pass **paths + structured seed context**, not full file content. The target skill loads its own resources.
 

@@ -1,0 +1,53 @@
+{
+  "name": "investing-toolkit",
+  "version": "2.1.0",
+  "description": "Three-layer investing research toolkit — data, analysis, report skills. ⚠️ Claude Code CLI only.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/investing-toolkit",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "investing",
+    "macro",
+    "regime",
+    "dcf",
+    "screener",
+    "equity",
+    "snapshot",
+    "fred",
+    "edinet",
+    "twse",
+    "mops",
+    "finmind",
+    "yfinance",
+    "akshare",
+    "boj",
+    "us-stocks",
+    "tw-stocks",
+    "jp-stocks",
+    "kr-stocks",
+    "cn-stocks"
+  ],
+  "interface": {
+    "displayName": "investing-toolkit",
+    "shortDescription": "Three-layer equity research: market data, valuation analysis, and reports",
+    "longDescription": "Run end-to-end investing research across a data layer (US/JP/KR/TW/CN market fetchers), an analysis layer (DCF, comps, screener, technical, macro-regime, portfolio), and a report layer (equity memo, portfolio review, screener list, stock snapshot). Primary-source-anchored with gate enforcement; using-investing-toolkit routes the 16 skills.",
+    "developerName": "kouko",
+    "category": "Finance",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Write an equity research memo for this stock.",
+      "Run a DCF valuation on this company.",
+      "Screen for undervalued stocks in this market."
+    ],
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/investing-toolkit",
+    "brandColor": "#059669"
+  }
+}

@@ -1,0 +1,53 @@
+name: loom-spec CI
+
+# Runs loom-spec's scripts/ pytest suite on every PR that touches the plugin
+# (or this workflow), and on every push to main that changes the plugin.
+#
+# loom-spec's scripts/ suite (validate_spec_output / validate_intent_layer /
+# pairwise / the skill + manifest behavioral tests) previously had NO CI
+# coverage — only loom-code/** was gated (loom-code-ci.yml). This workflow
+# closes that gap so the GENERATE-station validators + skill conventions are
+# guarded the same way the VERIFY station is.
+#
+# loom-spec carries no synced-knowledge SSOT, no .codex-plugin manifest, and no
+# skill-crossref script (those are loom-code's), so this is pytest-only —
+# mirroring legal-toolkit-ci.yml's pytest-only shape rather than loom-code-ci's
+# four-gate shape.
+#
+# Status: intended for `main` branch protection.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'loom-spec/**'
+      - '.github/workflows/loom-spec-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'loom-spec/**'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: loom-spec pytest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install test deps
+        # pytest = test runner. The validators are pure stdlib.
+        run: python3 -m pip install --quiet pytest
+
+      - name: Run loom-spec scripts/ pytest suite
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m pytest loom-spec/scripts/ -v

@@ -10,7 +10,7 @@ dialect: <sqlglot dialect>   # resolved at Step 4a (adapter -> dialect); read by
 # dbt-wiki Index
 
 > Master catalog of all model / source / macro pages in `.dbt-wiki/`.
-> Regenerated on every `/dbt-wiki:init` and `/dbt-wiki:refresh` run.
+> Regenerated on every `/dbt-wiki:init` and `/dbt-wiki:rescan` run.
 > Do not edit by hand — changes will be overwritten.
 
 ## Models

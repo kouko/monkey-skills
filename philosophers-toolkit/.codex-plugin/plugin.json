@@ -1,0 +1,46 @@
+{
+  "name": "philosophers-toolkit",
+  "version": "1.0.4",
+  "description": "Philosophical thinking frameworks for problem clarification and deeper reasoning.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/philosophers-toolkit",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "philosophy",
+    "thinking",
+    "brainstorming",
+    "first-principles",
+    "socratic",
+    "hegelian-dialectics",
+    "kaizen",
+    "hansei",
+    "ikigai",
+    "wabi-sabi",
+    "shu-ha-ri",
+    "popper",
+    "descartes",
+    "aristotle"
+  ],
+  "interface": {
+    "displayName": "philosophers-toolkit",
+    "shortDescription": "Philosophical thinking frameworks for sharper reasoning",
+    "longDescription": "Apply classic and Eastern thinking frameworks to clarify problems and reason more deeply — Aristotle's first principles and four causes, Socratic questioning, Hegelian dialectics, Cartesian doubt, Popper falsifiability, plus kaizen, hansei, ikigai, wabi-sabi, and shu-ha-ri. Use them to interrogate assumptions, decompose a tangled problem, or stress-test a conclusion before committing.",
+    "developerName": "kouko",
+    "category": "Education",
+    "capabilities": [
+      "Interactive",
+      "Read"
+    ],
+    "defaultPrompt": [
+      "Help me reason through this decision from first principles.",
+      "Use the Socratic method to challenge my assumptions here.",
+      "Apply Popper falsifiability to test whether this claim holds up."
+    ],
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/philosophers-toolkit",
+    "brandColor": "#7C3AED"
+  }
+}

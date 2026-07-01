@@ -1,0 +1,42 @@
+{
+  "name": "systems-thinking-toolkit",
+  "version": "0.10.0",
+  "description": "Systems-thinking toolkit (Sherwood 2002) — CLDs, archetypes, simulation, and more across 7 skills.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/systems-thinking-toolkit",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "systems-thinking",
+    "causal-loop-diagram",
+    "feedback-loop",
+    "sherwood",
+    "scenario-planning",
+    "stock-flow",
+    "mental-models",
+    "strategy",
+    "intervention-archetypes"
+  ],
+  "interface": {
+    "displayName": "systems-thinking-toolkit",
+    "shortDescription": "Map feedback loops, archetypes, and leverage points",
+    "longDescription": "Reason about complex systems using Sherwood's (2002) toolkit: craft causal-loop diagrams, recognize the classic system archetypes, overlay loops to find structure, model behavior with simulation, and trace strategy levers through their cascading effects — plus team mental-model and manager-personality framing. Use it to understand why a stubborn problem persists, spot unintended consequences, and find where a small change moves the whole system.",
+    "developerName": "kouko",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Build a causal-loop diagram for why our onboarding keeps stalling.",
+      "Which system archetype explains this recurring problem?",
+      "Find the highest-leverage intervention point in this system."
+    ],
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/systems-thinking-toolkit",
+    "brandColor": "#0891B2"
+  }
+}

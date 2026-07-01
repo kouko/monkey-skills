@@ -2,7 +2,7 @@
 # test-git-memory-delegation.sh
 #
 # Verify loom-code's finishing-a-development-branch skill invokes
-# dev-workflow:git-memory at Step 3 per ROADMAP P3-D MANDATORY.
+# dev-workflow:git-memory (Default-flow Step 6 / Phase 3) per ROADMAP P3-D MANDATORY.
 #
 # Usage:
 #   bash loom-code/tests/integration/test-git-memory-delegation.sh
@@ -45,12 +45,41 @@ else
 fi
 
 # -------------------------------------------------------------------------
-# Check 3 — offline: Step 3 in 7-step flow is git-memory
+# Check 3 — offline: the Default flow's git-memory step names git-memory
+# (git-memory is Step 6 of the numbered Default flow — "Invoke dev-workflow:git-memory")
 
-if grep -E "Step 3.*git-memory|git-memory.*Step 3" "${FINISH_SKILL}" >/dev/null; then
-  pass "Step 3 of the 7-step flow names git-memory"
+if grep -E "^6\. Invoke dev-workflow:git-memory" "${FINISH_SKILL}" >/dev/null; then
+  pass "Default-flow Step 6 names dev-workflow:git-memory"
 else
-  fail "Step 3 of the 7-step flow does NOT explicitly name git-memory"
+  fail "Default-flow Step 6 does NOT explicitly name dev-workflow:git-memory"
+fi
+
+# -------------------------------------------------------------------------
+# Check 3b — offline: F4 commit-carrier verify gate present
+# After the close-out commit, finishing must run memory-grep.sh --verify HEAD
+# and STOP a memory-worthy branch whose commit carrier is empty (exit 4).
+
+if grep -- '--verify' "${FINISH_SKILL}" >/dev/null; then
+  pass "finishing-a-development-branch names the --verify commit-carrier gate (F4)"
+else
+  fail "finishing-a-development-branch does NOT name the --verify commit-carrier gate — memory-worthy branch can ship with an empty commit carrier (#445 leak)"
+fi
+
+if grep -- 'memory-grep.sh' "${FINISH_SKILL}" >/dev/null; then
+  pass "finishing-a-development-branch references the memory-grep.sh script by path"
+else
+  fail "finishing-a-development-branch does NOT reference dev-workflow's memory-grep.sh script"
+fi
+
+# -------------------------------------------------------------------------
+# Check 3c — offline: F4 PR-carrier check present
+# At PR creation, finishing must confirm the PR body carries a ## Memory section
+# for a memory-worthy branch.
+
+if grep -- '## Memory' "${FINISH_SKILL}" >/dev/null; then
+  pass "finishing-a-development-branch names the PR ## Memory carrier check (F4)"
+else
+  fail "finishing-a-development-branch does NOT name the PR ## Memory carrier check — PR-carrier half of both-carrier policy missing"
 fi
 
 # -------------------------------------------------------------------------
@@ -67,7 +96,7 @@ if command -v claude >/dev/null 2>&1; then
   if claude plugin list 2>&1 | grep -A 3 "[❯>] dev-workflow" | grep -q "Status: ✔ enabled"; then
     pass "dev-workflow plugin enabled (git-memory dispatchable)"
   else
-    fail "dev-workflow plugin not enabled — Step 3 delegation will fail"
+    fail "dev-workflow plugin not enabled — git-memory delegation will fail"
   fi
 else
   skip "claude CLI not found"
@@ -97,15 +126,15 @@ Offline checks PASSED. Live verification (manual, in fresh Claude session):
   3. Prompt: "finish this branch"
   4. Expected agent behavior:
      - Skill(loom-code:finishing-a-development-branch) auto-loads
-     - Steps 1 + 2 run (requesting-code-review + verification-before-
+     - Phases 1 + 2 run (requesting-code-review + verification-before-
        completion)
-     - Step 3 EXPLICITLY invokes dev-workflow:git-memory (transcript
+     - Phase 3 EXPLICITLY invokes dev-workflow:git-memory (transcript
        should show "Skill(dev-workflow:git-memory) → Successfully
        loaded skill" before commit message draft)
      - Step 4 commit message includes git-memory's trailer decisions
        (Decision: / Learning: / Gotcha: as warranted)
 
-  5. PASS if transcript shows Step 3 git-memory invocation BEFORE the
+  5. PASS if transcript shows Phase 3 git-memory invocation BEFORE the
      commit subject is finalized. FAIL if commit message is drafted
      without git-memory dispatch.
 EOF

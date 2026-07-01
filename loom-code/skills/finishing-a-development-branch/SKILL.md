@@ -31,6 +31,8 @@ finishing-a-development-branch (this skill)
   ├─→ Phase 4: git commit (orchestrator runs this)
   │     uses the message + trailers from Phase 3
   │     does NOT bypass hooks; does NOT amend
+  │     then verifies the carrier landed: memory-grep.sh --verify HEAD
+  │     (memory-worthy + exit 4 → STOP before push; both-carrier policy)
   │
   ├─→ Phase 5: git push (orchestrator runs this)
   │     pushes the branch; if branch is local-only, sets upstream first
@@ -103,10 +105,9 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
      then apply the same proceed/remediate gate logic. NEVER suggest `/ultrareview` or any
      external review command in AskUserQuestion options or in the PR body without first
      verifying it exists via `claude --help`.
-4. Before applying any review findings from Step 3: Read each file you intend to Edit.
-   Whole-branch review commonly flags files created by implementer subagents that the
-   orchestrator's context has never opened — every Edit on an unread file will fail with
-   "File has not been read yet". Read first, then apply.
+4. Before applying any review findings from Step 3: Read each file you intend to Edit
+   (Bash inspection does NOT satisfy the Edit/Write precondition) — details in
+   [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §S1.
 5. Dispatch verification-before-completion
    - MANDATORY even if tests were run immediately before invoking this skill. Step 3
      fix-ups may have modified files; a pre-invocation test run does NOT satisfy this gate.
@@ -120,18 +121,48 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
    - If approved: proceed
    - If rejected / edited: use user's version
 8. git hygiene before the close-out commit:
+   - Living-spec index regen (orchestrator-only, ONCE per branch): if the repo has a
+     `docs/loom/` tree, run
+     `python3 loom-code/scripts/check-living-spec-index.py --write-index docs/loom/INDEX.md <repo-root>`
+     once, then stage the regenerated `docs/loom/INDEX.md` (`git add docs/loom/INDEX.md`)
+     so it lands in THIS close-out commit. This is EXPLICITLY orchestrator-only, NOT
+     per-implementer / per-wave: the index is a repo-wide generated file, so a per-implementer
+     regen under parallel SDD would merge-conflict the file and reflect only a partial tree.
+     This mirrors loom's existing "orchestrator commits, implementers don't" rule.
    - Run `git status --short` to confirm exactly which files are staged and untracked.
    - Stage with an explicit file list (`git add <file1> <file2> …`) — avoid `git add -A <dir>`
      which sweeps unrelated untracked files into the commit.
    - Use the branch-qualified push form `git push -u origin <branch>` (or `git push origin
      <branch>` if upstream already set) — NEVER a bare `git push`, which trips the sandbox
      "do not push to main" guard on the first push of a new branch.
+   - Compound `git push && gh pr create` must be two separate Bash calls, and any rebase-conflict
+     resolution uses Read+Edit (not Bash `cat`+`Write`) — details in
+     [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §S2/§D1.
    - If any review-driven fixes were applied in Steps 3–4, re-run verification-before-completion
      here (Step 5 result is stale) before committing.
 9. git commit (only after user approval at Step 7)
+9b. Commit-carrier verify gate — MANDATORY, runs AFTER the commit, BEFORE push:
+    - Run `dev-workflow/skills/git-memory/scripts/memory-grep.sh --verify HEAD`
+      (exit 0 = a Decision/Learning/Gotcha trailer is retrievable from HEAD's body;
+      exit 4 = none).
+    - If Phase 3 (Step 6) returned a NON-empty trailer set (the branch is
+      memory-worthy) AND `--verify HEAD` exits 4: STOP. Surface "the close-out
+      commit did not capture the memory trailers — fix before push." Do NOT push.
+      Root cause this gate closes: a memory-worthy branch must not ship with an empty
+      commit carrier — the decision would be unretrievable via `git log --grep` on
+      main (the #445 leak). This is a hard STOP, consistent with finishing's other
+      gates (🔴 review / test-failure both STOP).
+    - If Phase 3 returned an EMPTY trailer set (routine branch), exit 4 is expected →
+      proceed to push.
+    - If `--verify HEAD` exits 0: the carrier landed → proceed to push.
 10. git push (branch-qualified form per Step 8)
 11. ASK user: "Open a PR? (y/N)" — only if gh CLI configured
     - If yes: gh pr create with title/body from git-memory + branch name
+    - PR-carrier check (memory-worthy branch only): before declaring the PR ready,
+      grep the PR body you just composed for a `## Memory` section. If Phase 3
+      returned a non-empty trailer set and the body has no `## Memory` section,
+      flag it and add the section (both-carrier policy — commit AND PR carry the
+      memory). No new tooling: it is a grep on the body you are about to submit.
     - If no: stop after push
 12. ASK user: "Branch was in .worktrees/; remove the worktree? (y/N)"
     - If yes: cd to repo root; git worktree remove .worktrees/<slug>

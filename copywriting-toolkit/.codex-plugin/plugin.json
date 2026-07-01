@@ -1,0 +1,46 @@
+{
+  "name": "copywriting-toolkit",
+  "version": "1.14.0",
+  "description": "Pipeline copywriting toolkit — 14 skills from intake to audit, grounded in PASONA/Cialdini/FTC.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/copywriting-toolkit",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "copywriting",
+    "marketing",
+    "pasona",
+    "voice-anchor",
+    "voice-quadrant",
+    "ethics",
+    "landing-page",
+    "headline",
+    "tagline",
+    "schwartz",
+    "cialdini",
+    "kanda-pasona",
+    "taniyama"
+  ],
+  "interface": {
+    "displayName": "copywriting-toolkit",
+    "shortDescription": "Pipeline copywriting from intake to ethics audit, grounded in PASONA / Cialdini / FTC",
+    "longDescription": "Use copywriting-toolkit to drive copy through a 14-skill pipeline — intake, voice/tone and voice-quadrant calibration, ideation, neta-injection, and short / mid / long-form drafting (PASONA structure) — then through form-check, ethics-check, and final audit gates. Grounded in PASONA, Cialdini's persuasion principles, and FTC disclosure rules so persuasion stays honest.",
+    "developerName": "kouko",
+    "category": "Writing",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Write landing-page copy for this product.",
+      "Draft a PASONA long-form sales page.",
+      "Audit this copy for ethics and FTC compliance."
+    ],
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/copywriting-toolkit",
+    "brandColor": "#DB2777"
+  }
+}

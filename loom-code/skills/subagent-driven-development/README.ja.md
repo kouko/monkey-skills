@@ -2,7 +2,7 @@
 
 [English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 
-> 1 時間超 または 複数モジュールに跨るタスクを **5 分以下の原子タスク** に分解し、各タスクに 3 つのサブエージェントを並行ディスパッチする：**implementer**（worker、TDD 鉄則下で実装） + **spec-reviewer** + **code-quality-reviewer**（いずれも evaluator）。判定は `domain-teams:code-team` の 7 standards + 2 rubrics + 2 checklists を functional copy として根拠化。
+> 1 時間超 または 複数モジュールに跨るタスクを **5 分以下の原子タスク** に分解し、各タスクに 3 つのサブエージェントを並行ディスパッチする：**implementer**（worker、TDD 鉄則下で実装） + **spec-reviewer** + **code-quality-reviewer**（いずれも evaluator）。判定は `domain-teams:code-team` の 9 standards + 2 rubrics + 2 checklists を functional copy として根拠化。
 
 [loom-code](../..) プラグインの一部。エージェントが読み込むのは [`SKILL.md`](SKILL.md)、本 README は人間向け。
 
@@ -21,7 +21,7 @@
 |---|---|---|---|---|
 | `implementer` | worker | (status: DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED) | task / spec / standards | コード・テスト・commit |
 | `spec-reviewer` | evaluator | PASS / NEEDS_REVISION + gap 一覧 | artifact / spec / `checklists/spec-consistency.md` | 判定のみ |
-| `code-quality-reviewer` | evaluator | PASS / PASS_WITH_NOTES / NEEDS_REVISION + 6 次元スコア + flags (🔴 / 🟡 / 🟢) | artifact / rubrics / checklist / 7 standards | 判定のみ |
+| `code-quality-reviewer` | evaluator | PASS / PASS_WITH_NOTES / NEEDS_REVISION + 7 次元スコア + flags (🔴 / 🟡 / 🟢) | artifact / rubrics / checklist / 9 standards | 判定のみ |
 
 各タスクは implementer 1 ラウンド + reviewer 並列 1 ラウンドで進む。レビュアの守備範囲は故意に非重複：spec-reviewer は品質を採点しない、code-quality-reviewer は spec 網羅性を採点しない。混ぜるとオーケストレータの解決アルゴリズムが壊れる。
 

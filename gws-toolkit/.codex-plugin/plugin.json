@@ -1,0 +1,44 @@
+{
+  "name": "gws-toolkit",
+  "version": "0.7.3",
+  "description": "Google Workspace toolkit on the official gws CLI (drive/docs/sheets/gmail). ⚠️ Claude Code CLI only.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/gws-toolkit",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "gws",
+    "googleworkspace",
+    "google-drive",
+    "google-docs",
+    "google-slides",
+    "google-sheets",
+    "gmail",
+    "google-calendar",
+    "scqa",
+    "minto",
+    "platform-pivot"
+  ],
+  "interface": {
+    "displayName": "gws-toolkit",
+    "shortDescription": "Drive Google Workspace (Drive/Docs/Sheets/Slides/Gmail/Calendar) from the CLI",
+    "longDescription": "Operate Google Workspace through the official gws CLI without leaving the agent: list and upload Drive files, read and write Docs, append to Sheets, build SCQA/Minto-structured Slides decks (slides-builder + slides-design), triage and send Gmail, and manage Calendar agendas. Includes gws-setup for first-run auth and a using-gws-toolkit router across 18 skills.",
+    "developerName": "kouko",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Summarize my unread Gmail and draft replies.",
+      "Build a Slides deck from this outline.",
+      "Append these rows to my Google Sheet."
+    ],
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/gws-toolkit",
+    "brandColor": "#EA4335"
+  }
+}

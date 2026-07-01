@@ -13,15 +13,15 @@ base for your dbt project. Do NOT edit its files directly.
 - **Evidence layer** (`_evidence/models/`, `_evidence/sources/`,
   `_evidence/macros/`, …) — mechanical extraction from
   `target/manifest.json` + sqlglot column lineage. Deterministic;
-  rebuilt by init/refresh.
+  rebuilt by init/rescan.
 
 **Usage:**
 - Query in business language: `/dbt-wiki:query "<question>"`
-- Rebuild evidence + flag stale knowledge after `dbt parse`: `/dbt-wiki:refresh`
+- Rebuild evidence + flag stale knowledge after `dbt parse`: `/dbt-wiki:rescan`
 - Full rebuild from scratch: `/dbt-wiki:init`
 - Review & certify pages: `/dbt-wiki:review` — promote `developing` (and stale `mature`) pages to `mature` after human check
 
-Pre-condition: run `dbt parse && dbt compile` before init/refresh
+Pre-condition: run `dbt parse && dbt compile` before init/rescan
 (generates `target/manifest.json` and compiled SQL that dbt-wiki reads).
 
 Schema rules: `.dbt-wiki/SCHEMA.md`

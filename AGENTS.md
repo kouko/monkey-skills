@@ -29,6 +29,38 @@ Role boundaries enforced by behavior, not reading restrictions:
 | SHOULD | Auto-trigger, skippable with reason | evaluator |
 | MAY | User-requested only | evaluator |
 
+## Commands
+
+<!-- BEGIN command-surface (managed) -->
+- **Living-spec structural gate** (every push):
+  `python3 loom-code/scripts/check-living-spec-index.py [<repo-root>]` —
+  fails rc=1 on any dangling `@req` / malformed tag; runs the advisory
+  drift WARN lane alongside.
+- **Regenerate the living-spec index**:
+  `python3 loom-code/scripts/check-living-spec-index.py --write-index docs/loom/INDEX.md`
+  — regenerates `docs/loom/INDEX.md` from the source tree (the
+  finishing-step / once-per-branch regen path).
+- **Verify the committed index is current** (merge-boundary gate):
+  `python3 loom-code/scripts/check-living-spec-index.py --verify-index docs/loom/INDEX.md`
+  — byte-identity check vs a fresh regeneration; rc=1 if stale.
+- **Check active-req coverage** (merge-boundary gate):
+  `python3 loom-code/scripts/check-living-spec-index.py --check-coverage [<repo-root>]`
+  — fails rc=1 on any ACTIVE `### Requirement:` with 0 linked tests
+  (named on stderr); a `[deferred]` req with 0 tests is surfaced on
+  stdout (informational, rc=0). Sound because CI runs it after the green
+  pytest gate, so a linked test ≡ a passing test.
+- **Sync a plugin's Codex manifest from its Claude SSOT**:
+  `python3 scripts/sync_codex_manifests.py <plugin>` — copies the 8
+  shared fields (name/version/description/author/homepage/repository/
+  license/keywords) from `<plugin>/.claude-plugin/plugin.json` into
+  `<plugin>/.codex-plugin/plugin.json`, preserving the Codex-only
+  `interface` block verbatim.
+- **Check Codex-manifest drift** (CI gate):
+  `python3 scripts/sync_codex_manifests.py --check <plugin>` — pure
+  read; rc=0 when the Codex manifest's shared fields match the Claude
+  SSOT, rc=1 on divergence.
+<!-- END command-surface (managed) -->
+
 ## Plugin: domain-teams
 
 ### Entry Point

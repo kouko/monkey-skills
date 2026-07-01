@@ -3,9 +3,9 @@ type: synthesis
 question: "<exact question user asked>"
 slug: <slug-from-question>
 date: <YYYY-MM-DD>
-manifest_sha: <sha at time of save>     # for stale detection by /dbt-wiki:refresh
+manifest_sha: <sha at time of save>     # for stale detection by /dbt-wiki:rescan
 affected_models:                        # list of model unique_ids the answer depends on;
-  - <model.proj.foo>                    # refresh re-checks these specifically
+  - <model.proj.foo>                    # rescan re-checks these specifically
   - <model.proj.bar>
 query_class: <C1-C11>                   # which query class this answer came from
 diagram_included: <yes | no>            # does body have ASCII / Mermaid diagrams?
@@ -14,11 +14,11 @@ sources_consulted:                      # entity / source / macro pages loaded t
   - sources/<src>__<table>.md
 verification_run: <yes | no>            # did Step 3.5 verification fire?
 verified_paths: []                      # if yes, which dbt/models/*.sql files were spot-checked
-stale: false                            # set true by refresh when manifest_sha drifts
-stale_at: null                          # date refresh marked it stale
+stale: false                            # set true by rescan when manifest_sha drifts
+stale_at: null                          # date rescan marked it stale
 ---
 
-<!-- IF stale: refresh prepends a banner here so it's the first thing user sees -->
+<!-- IF stale: rescan prepends a banner here so it's the first thing user sees -->
 
 ## Question
 <the question, verbatim>
@@ -46,5 +46,5 @@ stale_at: null                          # date refresh marked it stale
 
 > Saved by `/dbt-wiki:query`. To re-run with current data:
 > `/dbt-wiki:query "<the question>"`
-> Refresh marks this stale automatically when manifest changes affect any
+> Rescan marks this stale automatically when manifest changes affect any
 > of the `affected_models` listed above.

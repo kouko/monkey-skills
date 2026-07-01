@@ -97,6 +97,8 @@ git worktree prune
 
 `git worktree remove` refuses if the worktree has uncommitted changes — that's a feature, not a bug. Force with `--force` only if you've verified the changes are intentional throwaways.
 
+File operations inside a worktree have sharp edges (e.g. renaming an untracked just-written file needs plain `mv`, not `git mv`) — see [`environment-gotchas`](../using-loom-code/references/environment-gotchas.md).
+
 ## Cross-skill contract
 
 | Direction | Skill | Role |

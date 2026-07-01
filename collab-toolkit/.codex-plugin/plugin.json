@@ -1,0 +1,39 @@
+{
+  "name": "collab-toolkit",
+  "version": "0.2.0",
+  "description": "Read-only office-collab toolkit for Asana/Slack/Notion via MCP (servers declared in .mcp.json).",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/collab-toolkit",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "office-collaboration",
+    "asana",
+    "slack",
+    "notion",
+    "oauth",
+    "read-only"
+  ],
+  "interface": {
+    "displayName": "collab-toolkit",
+    "shortDescription": "Read-only Asana / Slack / Notion search via MCP",
+    "longDescription": "Read-only access to Asana, Slack, and Notion through their official MCP servers — search tasks and projects in Asana, search messages and read channels and threads in Slack, and search the workspace, fetch pages, and query databases in Notion. Every call returns structured JSON (no UI scraping, locale-independent). The three MCP servers are declared in .mcp.json, so Codex auto-registers them on `codex plugin add` (verified on 0.139.0), exactly as Claude Code does. You still complete each server's OAuth connection before the skills can fetch data; end-to-end skill execution on Codex is not yet live-verified.",
+    "developerName": "kouko",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read"
+    ],
+    "defaultPrompt": [
+      "Search our Slack for the deploy discussion from last week.",
+      "Summarize the open tasks in this Asana project.",
+      "Find the Notion page documenting our onboarding process."
+    ],
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/collab-toolkit",
+    "brandColor": "#14B8A6"
+  }
+}

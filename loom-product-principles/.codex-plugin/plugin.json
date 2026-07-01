@@ -1,0 +1,40 @@
+{
+  "name": "loom-product-principles",
+  "version": "0.2.0",
+  "description": "Key-free generator for a product PRINCIPLES.md — one north-star + falsifiable, testable principles.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/loom-product-principles",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "product-principles",
+    "constitution",
+    "principles",
+    "north-star",
+    "product-spec",
+    "portable",
+    "loom-pipeline"
+  ],
+  "interface": {
+    "displayName": "loom-product-principles",
+    "shortDescription": "Turn a sparse product idea into a falsifiable PRINCIPLES.md constitution",
+    "longDescription": "The product-principles skill turns a sparse product idea into a PRINCIPLES.md product constitution — one north-star plus 3-7 non-negotiable, falsifiable, testable principles. Use it before design/spec/build so the resulting constitution governs downstream design, spec, and code decisions.",
+    "developerName": "kouko",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Write the product principles for this idea.",
+      "Define a north-star and constitution for this product.",
+      "Turn this rough concept into a PRINCIPLES.md."
+    ],
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/loom-product-principles",
+    "brandColor": "#D97706"
+  }
+}

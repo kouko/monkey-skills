@@ -5,7 +5,7 @@
 > ChatGPT, plugin manifest version 0.16.0). See the **Verified outcome**
 > section below for the exact commands and results. The Codex manifest
 > (`.codex-plugin/plugin.json`) is now kept in lock-step with
-> `.claude-plugin/plugin.json` by `scripts/sync_codex_manifest.py` + the
+> `.claude-plugin/plugin.json` by the shared repo-level `scripts/sync_codex_manifests.py` + the
 > CI drift gate (the prior manual "since v0.4.0" discipline had silently
 > drifted to 0.9.0 before this fix).
 

@@ -1,0 +1,40 @@
+{
+  "name": "research-toolkit",
+  "version": "0.2.0",
+  "description": "Key-free research skills driving the host agent's own LLM + web tools (ships deep-deep-research).",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/research-toolkit",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "research-toolkit",
+    "deep-research",
+    "research",
+    "fact-checking",
+    "adversarial-verification",
+    "web-search",
+    "portable"
+  ],
+  "interface": {
+    "displayName": "research-toolkit",
+    "shortDescription": "Key-free deep research, fact-check, and citation auditing",
+    "longDescription": "Run multi-source, adversarially-verified research using the host agent's own LLM and web tools — no API keys to configure. deep-research fans out searches, fetches sources, and synthesizes a cited report; fact-check verifies a claim against primary sources; cite-check audits an existing document so every citation actually supports its claim; deep-read digests a long source closely. Use it for any question that demands evidence rather than recall.",
+    "developerName": "kouko",
+    "category": "Research",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Research the current state of solid-state battery commercialization and cite sources.",
+      "Fact-check this claim against primary sources.",
+      "Audit the citations in this document and flag any that don't hold up."
+    ],
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/research-toolkit",
+    "brandColor": "#D97706"
+  }
+}

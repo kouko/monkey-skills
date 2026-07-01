@@ -1,7 +1,7 @@
 ---
 name: git-memory
 description: |
-  Mandatory gate before every git commit / gh pr create — the skill decides whether memory trailers (Decision/Learning/Gotcha) apply; don't pre-judge a commit 'routine'. Also recalls past decisions: 'why did we…', '為什麼', an old branch.
+  Mandatory gate before every git commit / gh pr create / gh pr merge — the skill decides whether memory trailers (Decision/Learning/Gotcha) apply; don't pre-judge a commit 'routine'. Also recalls past decisions: 'why did we…', '為什麼', an old branch.
 ---
 
 # Git Memory
@@ -17,8 +17,17 @@ Two distinct decisions must not be conflated:
 
 | Decision | Who decides | When |
 |----------|-------------|------|
-| **Should this skill be invoked?** | The caller | Before `git commit` / `gh pr create` — answer is **always yes** in a Claude session |
+| **Should this skill be invoked?** | The caller | Before `git commit` / `gh pr create` / `gh pr merge` — answer is **always yes** in a Claude session |
 | **Should this commit carry memory trailers?** | The skill | Inside the skill — routine commits exit cleanly with no trailers |
+
+`gh pr merge` (esp. `--squash`) is the **last checkpoint before the
+branch closes** and the substrate can end up empty. A squash *relocates*
+each commit's trailers into the squash commit's mid-body — still
+retrievable via `git log --grep`, though no longer footer-parseable
+(`%(trailers)`) — so on a squash `main` there are **two** durable
+carriers: the grep-able mid-body trailers and the PR `## Memory` section
+(which additionally survives and renders on GitHub). Fire the gate here
+too — the *always yes* rule holds, only the trailer outcome varies.
 
 Pre-deciding "this commit is routine, I'll skip the skill" is the bug.
 The skill's classification logic (routine vs non-routine, see *When not to
@@ -90,7 +99,30 @@ Retrieval path by repo style:
 | **Feature branch** (pre-squash) | `%(trailers)` structured parse is reliable |
 | **Merge-commit / rebase-merge** | `%(trailers)` structured parse is reliable |
 
-Two opt-in escape hatches for parseable trailers on a squash `main`:
+**Verification is required before a memory-worthy PR closes.** The
+confirmed failure mode is authoring-time under-recording — a
+memory-worthy PR closing with an empty substrate, *not* a squash-loss
+problem. So before merge, **verify the memory actually landed in a
+durable carrier**:
+
+- Run `scripts/memory-grep.sh --verify <ref>` against the commit
+  carrier. It exits `0` when a `Decision:`/`Learning:`/`Gotcha:`
+  trailer is retrievable from the ref's message body (text match, so it
+  works mid-body on a squash `main`), and `4` when the substrate is
+  empty.
+- Confirm the PR `## Memory` section is present (per
+  `protocols/compose-pr.md`).
+
+An empty result is a flag to fix **before** merge, not to ignore.
+This verification is **enforced as an executable gate by
+`loom-code:finishing-a-development-branch`** at branch close-out — it
+runs `memory-grep.sh --verify HEAD` and STOPs when a memory-worthy
+branch's commit carrier is empty (exit `4`).
+
+Two **opt-in** escape hatches — needed **only** if you want structured
+`%(trailers)` footer-parse on `main`; they are **not** required,
+because `git log --grep` text-retrieval of the mid-body trailers is the
+supported path (see table above):
 
 - Set `squash_merge_commit_message = PR_BODY` and end the PR body with
   the raw trailer footer, so the squash commit's footer carries them.

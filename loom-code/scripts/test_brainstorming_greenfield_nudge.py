@@ -153,21 +153,24 @@ def test_dry_guardrail_reminder_only():
 
 # --- the forward-pointer ----------------------------------------------------
 
-def test_forward_pointer_tier2_deferred():
+def test_forward_pointer_active_wired():
     """A forward-pointer to loom-spec:spec-expansion for high-coverage /
-    high-risk greenfield, marked Tier 2 and deferred (active once writing-plans
-    reads OpenSpec change-folders)."""
+    high-risk greenfield, now marked ACTIVE / wired: writing-plans reads
+    loom-spec change-folders, so the spec→code delegation is live (no longer
+    Tier-2-deferred)."""
     text = _text()
     low = text.lower()
     assert "loom-spec:spec-expansion" in text, \
         "forward-pointer must name loom-spec:spec-expansion"
-    assert "tier 2" in low or "tier-2" in low, \
-        "forward-pointer must be marked Tier 2"
-    assert "defer" in low, \
-        "forward-pointer must be marked deferred"
-    # the deferral condition: once writing-plans reads OpenSpec change-folders
-    assert "openspec" in low, \
-        "forward-pointer must name the OpenSpec change-folder activation condition"
+    assert "active" in low or "wired" in low, \
+        "forward-pointer must be marked active / wired (no longer deferred)"
+    # the wiring is now live: this exact pointer must NOT still say it is deferred
+    assert "tier 2 — deferred" not in low and "tier-2 — deferred" not in low \
+        and "tier 2, deferred" not in low and "tier-2, deferred" not in low, \
+        "forward-pointer must not still describe the wiring as Tier-2-deferred"
+    # it must point at the new writing-plans input contract section
+    assert "change-folder" in low or "change folder" in low, \
+        "forward-pointer must name the change-folder input contract now wired"
 
 
 def test_forward_pointer_high_coverage_risk():

@@ -98,7 +98,7 @@ The **evidence layer** is a derived snapshot of `target/manifest.json` +
 parsed compiled SQL. It can drift if `dbt parse` / `dbt compile` is
 re-run after changes — the query workflow checks `manifest_sha` mtime
 against the snapshot and warns if drift is detected. Run
-`/dbt-wiki:refresh` after every `dbt parse` to refresh evidence and
+`/dbt-wiki:rescan` after every `dbt parse` to rescan evidence and
 flag affected knowledge pages stale (via each knowledge page's
 `derived_from:` overlap with the changed evidence models — same
 mechanism as `syntheses` `affected_models`).
@@ -127,10 +127,10 @@ in v1.x).
     exposures/         #   One page per declared exposure (optional)
   lineage.md           # Full DAG (model-to-model) visualization (evidence-derived)
   syntheses/           # Saved query answers (auto-saved by /dbt-wiki:query for lineage classes;
-                       #   marked stale by /dbt-wiki:refresh when affected_models change)
+                       #   marked stale by /dbt-wiki:rescan when affected_models change)
   _internal/           # Rebuildable mechanical cache: extraction scripts (copied from
                        #   the plugin) + artifacts (e.g. lineage JSONL). NOT knowledge —
-                       #   gitignored via .dbt-wiki/.gitignore; init writes it, refresh self-heals it.
+                       #   gitignored via .dbt-wiki/.gitignore; init writes it, rescan self-heals it.
   _archive/            # Archived (orphaned) pages — never hard-deleted
 ```
 
@@ -151,7 +151,7 @@ v2.0.)
 ### Shared provenance frontmatter
 
 All three knowledge page types carry the same provenance fields. These
-drive freshness / stale-detection on refresh:
+drive freshness / stale-detection on rescan:
 
 ```yaml
 ---
@@ -161,7 +161,7 @@ status: developing                # lifecycle: seed → developing → mature �
 summary: "..."                    # ≤200 chars — one-line business meaning (used by tiered query)
 updated: 2026-06-01               # YYYY-MM-DD this page was last distilled/edited
 derived_from:                     # evidence model unique_ids this page was distilled from.
-  - model.example_dbt_project.stg_customers     # refresh diffs these against the changed
+  - model.example_dbt_project.stg_customers     # rescan diffs these against the changed
   - model.example_dbt_project.dim_customers     # evidence set to detect stale knowledge pages
 relationships:                    # typed edges — see "## Relationships spec" below
   - type: depends_on              # edge type
@@ -169,8 +169,8 @@ relationships:                    # typed edges — see "## Relationships spec" 
     note: "shares customer_id join key"
 last_changed_by: "PR #123"        # commit SHA or PR that last re-distilled this page (provenance)
 tags: ["finance"]
-stale: false                      # set true by refresh when a derived_from evidence model changes
-stale_at: null                    # YYYY-MM-DD refresh flagged it (else null)
+stale: false                      # set true by rescan when a derived_from evidence model changes
+stale_at: null                    # YYYY-MM-DD rescan flagged it (else null)
 stale_reason: null                # human-readable why (else null)
 title_local: null                 # optional — title in the project's language (recall aid)
 aliases: []                       # optional — project-language synonyms / GL codes / abbreviations for retrieval
@@ -188,7 +188,7 @@ optional keys parse fine.
   trusted) → `archived` (entity no longer exists in evidence).
 - **`summary`** is capped at **200 chars** so tiered query can read it
   without loading the full body.
-- **`derived_from`** is the freshness anchor: on refresh, if any listed
+- **`derived_from`** is the freshness anchor: on rescan, if any listed
   evidence `unique_id` is in the changed set, this page is flagged
   stale (reusing the `syntheses` `affected_models` overlap logic).
 - **`last_changed_by`** records the commit/PR that last re-distilled
@@ -202,7 +202,7 @@ optional keys parse fine.
   the convention identical across the entity / metric / concept
   examples so generated links never double a path segment.
 - **`stale` / `stale_at` / `stale_reason`** mirror the `synthesis`
-  staleness contract — refresh writes these when a `derived_from`
+  staleness contract — rescan writes these when a `derived_from`
   evidence model changes (T7 writes against this shape).
 
 ### knowledge-entity
@@ -427,7 +427,7 @@ edge target entity has NO model in the current evidence slice (e.g. a
 `converted_contact_id` FK whose Contact entity isn't distilled yet), still
 emit the edge AND create a `status: seed` stub page for the target
 (`derived_from: []`, a one-line body noting it is an auto-stub) so the
-markdown link resolves. The next init/refresh that distills the target
+markdown link resolves. The next init/rescan that distills the target
 promotes the stub `seed → developing`. Never drop an edge just because its
 target page doesn't exist yet.
 
@@ -532,7 +532,7 @@ Body sections (all optional, init populates what's available):
 [line 35] -- status mapping per ticket FOO-1234
 ```
 (Auto-extracted from `dbt/models/<path>.sql`. Empty section means no
-comments in source. Refresh re-extracts.)
+comments in source. Rescan re-extracts.)
 
 ## Column Sources (from sqlglot — direct, single-hop)
 - order_id ← stg_orders.order_id
@@ -566,7 +566,7 @@ recursion at that point.)
 
 ## User Notes
 (Populated by `/dbt-wiki:ingest`. Format: `### YYYY-MM-DD <slug>` per
-entry, free-form prose body. Refresh PRESERVES this section verbatim
+entry, free-form prose body. Rescan PRESERVES this section verbatim
 — it is user content, not derived. Examples:)
 
 ### 2026-05-02 redshift-permission-gotcha
@@ -579,11 +579,11 @@ hook in dbt_project.yml handles this. See incident #4521.
 - Downstream models: [dim_orders_summary](dim_orders_summary.md), ...
 ```
 
-**Standard sections** (init/refresh regenerate): Description, Materialization
+**Standard sections** (init/rescan regenerate): Description, Materialization
 Notes, SQL Preview, Inline Comments, Column Sources, Column Lineage Chains,
 Tests, Cross-references.
 
-**User-owned sections** (init/refresh PRESERVE verbatim): User Notes,
+**User-owned sections** (init/rescan PRESERVE verbatim): User Notes,
 plus any `##`-level heading the user added that isn't in the standard list.
 
 ### source
@@ -646,7 +646,7 @@ File: `.dbt-wiki/syntheses/<question-slug>.md`
 Auto-saved by `/dbt-wiki:query` for lineage-class queries (C2/C3/C4/C9/C10).
 Captures the question, the answer (with inline citations), ASCII tree +
 Mermaid diagram, and the manifest_sha + affected_models needed for stale
-detection by `/dbt-wiki:refresh`.
+detection by `/dbt-wiki:rescan`.
 
 Frontmatter (full template in `assets/synthesis_template.md`):
 
@@ -656,10 +656,10 @@ type: synthesis
 question: "<exact question>"             # so re-query is verbatim
 slug: <kebab-case slug>
 date: <YYYY-MM-DD>
-manifest_sha: <sha at time of save>      # used by refresh for stale detection
+manifest_sha: <sha at time of save>      # used by rescan for stale detection
 affected_models:                         # critical: enables PRECISE stale detection
   - <model.proj.X>                       # if any of these change in a future
-  - <model.proj.Y>                       # refresh, this synthesis gets marked stale
+  - <model.proj.Y>                       # rescan, this synthesis gets marked stale
 query_class: <C1-C11 | K1-K3>            # structural (C*) OR knowledge/semantic (K*) class
 diagram_included: <yes | no>
 sources_consulted:                        # may mix knowledge + evidence pages
@@ -667,7 +667,7 @@ sources_consulted:                        # may mix knowledge + evidence pages
   - _evidence/models/<name>.md            # evidence-layer backing page
 verification_run: <yes | no>
 verified_paths: []
-stale: false                             # set true by refresh when affected_models change
+stale: false                             # set true by rescan when affected_models change
 stale_at: null
 stale_reason: null                       # human-readable why
 ---
@@ -676,7 +676,7 @@ stale_reason: null                       # human-readable why
 Body sections:
 
 ```markdown
-<!-- IF stale: refresh prepends a banner here so it's the FIRST thing user sees -->
+<!-- IF stale: rescan prepends a banner here so it's the FIRST thing user sees -->
 
 ## Question
 <verbatim>
@@ -699,8 +699,8 @@ Body sections:
 - [<page>](.dbt-wiki/_evidence/<type>/<page>.md)
 ```
 
-**Stale lifecycle**: refresh's Step 6.5 checks each non-archived synthesis.
-If any `affected_models` overlap the refresh's added/modified/removed
+**Stale lifecycle**: rescan's Step 6.5 checks each non-archived synthesis.
+If any `affected_models` overlap the rescan's added/modified/removed
 sets, mark `stale: true` + prepend banner. Original answer + diagrams
 preserved (non-destructive). User re-runs `/dbt-wiki:query` to regenerate
 with fresh content (overwrites synthesis, clears stale flag).
@@ -758,7 +758,7 @@ Append-only operation log. Entries:
 - Pages updated: <count>
 - Pages removed (orphaned): <count>
 
-## [YYYY-MM-DD] refresh | <N> changed (added: <a>, modified: <m>, removed: <r>)
+## [YYYY-MM-DD] rescan | <N> changed (added: <a>, modified: <m>, removed: <r>)
 - manifest_sha: <md5>
 - Models added: <list>
 - Models modified: <list>
@@ -793,9 +793,9 @@ not a dbt object name. Examples: `customer.md`, `active-customer.md`
 (the concept page referenced in the metrics→concept example),
 `monthly-recurring-revenue.md`.
 
-## Refresh Idempotency Contract
+## Rescan Idempotency Contract
 
-When `/dbt-wiki:refresh` runs:
+When `/dbt-wiki:rescan` runs:
 
 1. Compare new `manifest_sha` to log.md's most recent `manifest_sha`. Skip if identical.
 2. For each model in new manifest:
@@ -809,7 +809,7 @@ When `/dbt-wiki:refresh` runs:
    evidence `unique_id` is in the added/modified/removed set, mark it
    stale (same overlap logic as `syntheses` `affected_models`). v2.0
    MVP only flags; auto re-distill is a fast-follow.
-6. Append refresh entry to `log.md`.
+6. Append rescan entry to `log.md`.
 
 ## What dbt-wiki NEVER does
 

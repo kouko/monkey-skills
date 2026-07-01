@@ -1,0 +1,45 @@
+{
+  "name": "obsidian",
+  "version": "3.16.1",
+  "description": "Obsidian vault workflows (notes/markdown/diagrams/canvas) + LLM wiki layer. ⚠️ defuddle needs CLI.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/obsidian",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "obsidian",
+    "vault",
+    "daily-notes",
+    "markdown",
+    "bases",
+    "canvas",
+    "mermaid",
+    "excalidraw",
+    "dashboard",
+    "file-intel",
+    "wiki",
+    "knowledge-distillation"
+  ],
+  "interface": {
+    "displayName": "obsidian",
+    "shortDescription": "Obsidian vault workflows — notes, diagrams, canvas, plus an LLM wiki layer",
+    "longDescription": "Manage Obsidian vaults end-to-end: author Flavored Markdown / Bases / Canvas, generate Mermaid and Excalidraw diagrams, run daily notes and file-intel summaries via the Obsidian CLI, and maintain an incremental LLM wiki layer (wiki-setup/ingest/cross-linker/query/lint/merge) with SHA-256 delta tracking. using-obsidian routes the skills.",
+    "developerName": "kouko",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Create a note in my Obsidian vault.",
+      "Make a Mermaid diagram for this workflow.",
+      "Ingest my new notes into the wiki layer."
+    ],
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/obsidian",
+    "brandColor": "#7C3AED"
+  }
+}

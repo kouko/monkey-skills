@@ -1,7 +1,7 @@
 {
   "name": "collab-toolkit",
   "version": "0.2.0",
-  "description": "Read-only office-collab toolkit for Asana/Slack/Notion via MCP. ⚠️ Claude Code CLI only.",
+  "description": "Read-only office-collab toolkit for Asana/Slack/Notion via MCP (servers declared in .mcp.json).",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
@@ -17,22 +17,5 @@
     "notion",
     "oauth",
     "read-only"
-  ],
-  "mcpServers": {
-    "asana": {
-      "type": "http",
-      "url": "https://mcp.asana.com/v2/mcp"
-    },
-    "slack": {
-      "type": "http",
-      "url": "https://mcp.slack.com/mcp",
-      "oauth": {
-        "scopes": "search:read.public search:read.private search:read.mpim search:read.im search:read.files files:read emoji:read search:read.users channels:history groups:history mpim:history im:history channels:read groups:read mpim:read users:read users:read.email"
-      }
-    },
-    "notion": {
-      "type": "http",
-      "url": "https://mcp.notion.com/mcp"
-    }
-  }
+  ]
 }

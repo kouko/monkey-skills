@@ -24,7 +24,9 @@ dbt has excellent first-party docs (`dbt docs generate` → static HTML site) an
 | Skill | When | Primary input |
 |---|---|---|
 | [`/dbt-wiki:init`](skills/init/) | Once per project (idempotent re-run safe) | `target/manifest.json` + `target/compiled/**/*.sql` (sqlglot column lineage) + `dbt/models/**/*.sql` (raw — for inline SQL/jinja comments) |
-| [`/dbt-wiki:refresh`](skills/refresh/) | After `dbt parse` / `dbt compile` / `dbt run` when models changed | Diff against last `manifest_sha`; updates only changed pages; preserves user-owned `## User Notes` sections |
+| [`/dbt-wiki:rescan`](skills/rescan/) | After `dbt parse` / `dbt compile` / `dbt run` when models changed (cheap, 0 LLM) | Diff against last `manifest_sha`; updates only changed evidence pages; flags affected knowledge pages stale; preserves user-owned `## User Notes` sections |
+| [`/dbt-wiki:redistill`](skills/redistill/) | After rescan flags knowledge pages stale — realign their semantics (LLM, user-triggered) | The stale entities/metrics/concepts pages + their `derived_from` evidence; grouped by domain, skips human-certified `mature` pages |
+| [`/dbt-wiki:sync`](skills/sync/) | "Just bring my wiki up to date" in one command | Runs `rescan`, then if knowledge pages went stale, gates an LLM `redistill` behind an explicit yes |
 | [`/dbt-wiki:ingest`](skills/ingest/) | Whenever you want to capture context that's NOT in manifest.json or schema.yml (gotchas, design rationale, ticket links) | Free-form text arg; auto-attaches to mentioned model / source / macro |
 | [`/dbt-wiki:query`](skills/query/) | Whenever asking semantic questions ("what does churn mean?", "which entities relate to revenue?") or structural lineage questions ("what does fct_orders depend on?", "which columns does stg_customers.email feed?") | `.dbt-wiki/index.md` + relevant knowledge and evidence pages; with optional drift verification |
 | [`/dbt-wiki:pack`](skills/pack/) | When you want to **package the distilled knowledge base into a portable Agent Skill bundle** (`<project>-analytics/`) that another agent uses with its own warehouse-connect tool to ground + generate + execute SQL. Run by the project owner; the emitted bundle drops into any Skills-compatible agent. | The frozen `.dbt-wiki/` knowledge layer (entities / metrics / concepts + column cards + relationships + value domains); emits a flat skill folder (SKILL.md + knowledge/ + references/ + examples/) with a snapshot annotation |
@@ -50,7 +52,7 @@ dbt has excellent first-party docs (`dbt docs generate` → static HTML site) an
    ```
    then
    ```
-   /dbt-wiki:refresh
+   /dbt-wiki:rescan
    ```
 6. (Optional) Capture tribal knowledge that's not in manifest.json or schema.yml:
    ```
@@ -102,10 +104,10 @@ dbt has excellent first-party docs (`dbt docs generate` → static HTML site) an
 
   syntheses/             # saved query answers (auto-saved for lineage + semantic queries)
   _internal/             # extraction helpers (sqlglot, recursive column lineage)
-  _archive/<date>/       # orphaned pages from refresh (never hard-deleted)
+  _archive/<date>/       # orphaned pages from rescan (never hard-deleted)
 ```
 
-Knowledge pages cite their evidence via `## Evidence` sections (standard markdown links) and `derived_from:` frontmatter. Refresh keeps evidence fresh and flags affected knowledge pages stale for re-distillation.
+Knowledge pages cite their evidence via `## Evidence` sections (standard markdown links) and `derived_from:` frontmatter. Rescan keeps evidence fresh and flags affected knowledge pages stale for re-distillation.
 
 ## Two layers working together
 
@@ -141,7 +143,7 @@ This unlocks structural lineage queries the manifest alone can't answer:
 - `"哪些 model 用了 ROW_NUMBER() OVER (...)？"` → sqlglot AST scan
 - `"schema.yml 漏寫的 column"` → diff sqlglot SELECT list vs schema.yml `columns:`
 
-Knowledge pages cite which `_evidence/` pages they were distilled from. Refresh detects when cited evidence changes and flags the knowledge page stale.
+Knowledge pages cite which `_evidence/` pages they were distilled from. Rescan detects when cited evidence changes and flags the knowledge page stale.
 
 ## Coexistence with [`repo-wiki`](../repo-wiki/)
 
@@ -186,7 +188,7 @@ CLAUDE.md drop-ins use distinct markers (`<!-- dbt-wiki:start --> ... <!-- dbt-w
 2. **manifest.json + compiled SQL are the evidence source of truth** — never re-derive what dbt already parsed; knowledge is distilled from evidence, not independently invented
 3. **Always parse `compiled/*.sql`, never `raw_code`** — jinja must be expanded by dbt first
 4. **Local-only** — no Cloud, no warehouse calls (catalog.json optional Phase 2)
-5. **Refresh is idempotent** — diff `manifest_sha`, update only changed evidence pages; flag affected knowledge pages stale
+5. **Rescan is idempotent** — diff `manifest_sha`, update only changed evidence pages; flag affected knowledge pages stale
 6. **Archive, never delete** — orphaned pages go to `.dbt-wiki/_archive/<date>/`
 7. **Drift-aware queries** — query checks `manifest_sha` against current evidence; warns if stale
 8. **Coexist with repo-wiki** — WHAT-the-data-means here (semantic knowledge), WHY there (decisions); cross-link freely
@@ -194,7 +196,7 @@ CLAUDE.md drop-ins use distinct markers (`<!-- dbt-wiki:start --> ... <!-- dbt-w
 ## Pre-conditions
 
 - **dbt project**: any version supported by your dbt installation (`manifest.json` schema v9+ recommended)
-- **`dbt parse && dbt compile`** must run before `init` / `refresh`
+- **`dbt parse && dbt compile`** must run before `init` / `rescan`
 - **Python 3.10+** AND either:
   - [uv](https://github.com/astral-sh/uv) (recommended — script self-declares sqlglot via PEP 723 inline metadata; uv auto-installs in ephemeral env), OR
   - pip-installed sqlglot in your active Python env (`pip install 'sqlglot>=25.0'`)
@@ -206,7 +208,6 @@ CLAUDE.md drop-ins use distinct markers (`<!-- dbt-wiki:start --> ... <!-- dbt-w
 
 ## Backlog (fast-follow after v2.0 MVP)
 
-- **`refresh` auto re-distillation** — when evidence changes, automatically re-distill affected knowledge pages (MVP flags stale; auto re-distill is fast-follow)
 - **`ingest` → knowledge pages** — write ingested context directly into knowledge page `## User Notes` in addition to evidence pages
 - **`domains/`** — topic-area landscape pages (finance / marketing / product) aggregating entities + metrics + concepts
 - `catalog.json` integration (real warehouse column types, row counts) — opt-in Phase 2 read

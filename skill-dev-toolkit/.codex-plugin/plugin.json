@@ -1,0 +1,42 @@
+{
+  "name": "skill-dev-toolkit",
+  "version": "0.1.0",
+  "description": "Self-contained toolkit to author Claude Agent Skills — create, score, refactor, tune, dogfood.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/skill-dev-toolkit",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "skill-authoring",
+    "skill-creation",
+    "skill-creator",
+    "skill-judge",
+    "skill-evaluation",
+    "skill-refactor",
+    "skill-tuning",
+    "dogfood-skill-testing",
+    "self-contained"
+  ],
+  "interface": {
+    "displayName": "skill-dev-toolkit",
+    "shortDescription": "Author, score, and refine Claude Agent Skills end-to-end",
+    "longDescription": "A self-contained toolkit for building high-quality Agent Skills: skill-creator-advance scaffolds or redesigns a skill, skill-judge scores it on an 8-dimension rubric, dogfood-skill-testing runs a blind behavioral test of whether it fires and meets its contract, skill-refactor cuts tokens while preserving behavior, and skill-tuning runs blind output A/B to tune voice and quality. Use it to take a skill from idea to ship.",
+    "developerName": "kouko",
+    "category": "Coding",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Help me build a new Claude Agent Skill.",
+      "Score this SKILL.md and tell me where it's weak.",
+      "Dogfood this skill — will it fire when expected without over-firing?"
+    ],
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/skill-dev-toolkit",
+    "brandColor": "#16A34A"
+  }
+}

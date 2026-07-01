@@ -9,7 +9,7 @@ manifest_sha: <md5>
 
 > Auto-generated from `target/manifest.json` (model-level) plus sqlglot
 > column-level extraction. Regenerated on every `/dbt-wiki:init` and
-> `/dbt-wiki:refresh`. Do not edit by hand.
+> `/dbt-wiki:rescan`. Do not edit by hand.
 
 ## Statistics
 

@@ -32,7 +32,7 @@ You **must** load all three via the Read tool before producing a verdict.
 |---|---|---|
 | 1 | Plan has top-level header with `Source brief`, `Total tasks`, `Execution order`, `Plan-document-reviewer verdict` fields | Any field missing |
 | 2 | **Critical-path DEPTH ≤ 5** — the longest chain of tasks linked by `Dependencies` (N independent same-level tasks count as ONE level, not N). A wide-but-shallow plan with >5 total tasks but depth ≤5 PASSES. | Critical-path depth >5 (writing-plans should have split into sequential briefs / routed back to brainstorming) |
-| 3 | Each task has all required fields (Description, Module, Context paths, Acceptance.RED, Acceptance.GREEN, Dependencies, Brief item covered) | Any required field missing or empty |
+| 3 | Each task has all required fields (Description, Module, Context paths, Acceptance.RED, Acceptance.GREEN, Dependencies, Brief item covered). The `Brief item covered` field is satisfied by EITHER referent kind: (a) a brief item, OR (b) when the plan consumes a loom-spec change-folder, a stable join key `<change-id> / Requirement: <name> / Scenario: <name>` (R5). Field-PRESENCE is the requirement — accept the spec join-key referent as valid provenance, do not require a brief item specifically. | Any required field missing or empty |
 | 4 | Each task's `Module` field names exactly ONE module / file path | Task lists 2+ modules |
 | 5 | Each task's Description is estimated ≤5 min for a focused implementer subagent | Task is clearly larger (e.g. "Implement entire CSV pipeline" — too vague + too big) |
 | 6 | Each task's `Acceptance.RED` names a specific failing test (file + test name) OR a specific failing diagnostic | RED field is vague ("write a test that fails") or absent |
@@ -40,7 +40,7 @@ You **must** load all three via the Read tool before producing a verdict.
 | 8 | Every item in the brief's `Smallest End State` + `Decision` sections maps to ≥1 task's `Brief item covered` field | Brief item not covered by any task |
 | 9 | No orphan tasks — every task's `Brief item covered` quotes / references the brief | Task exists with no brief traceability |
 | 10 | Dependency graph is a DAG — no cycles | Task A depends on B, B depends on A (directly or transitively) |
-| 11 | `Dependencies` field uses valid syntax: `"none"` OR `"Task N completes first"` OR `"Tasks N, M parallel"` | Free-form dependency description |
+| 11 | `Dependencies` field uses valid syntax: `"none"` OR `"Task N completes first"` OR `"Tasks N, M complete first"` (multi-prerequisite — N and M must both finish before this task starts) OR `"Tasks N, M parallel"` | Free-form dependency description |
 | 12 | If this plan is a BLOCKED fallback (parent-child decomposition section present): parent task ID is named; child tasks ladder up; parent-DONE condition is explicit | Missing parent reference or unclear ladder |
 | 13 | (v0.8.0+) Each task has the optional `Files touched` field. If absent on any task that declares `Independent: true`, fail — the disjointness oracle is missing. Tasks without `Independent: true` may omit `Files touched`. | `Independent: true` task missing `Files touched` |
 | 14 | (v0.8.0+) For any two tasks both declaring `Independent: true`, their `Files touched` sets MUST be disjoint (no shared path). If they share any file, the claim is wrong — flip one to `Independent: false` OR split the shared file. | Two `Independent: true` tasks share at least one file in `Files touched` |

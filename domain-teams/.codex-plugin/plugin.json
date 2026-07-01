@@ -1,0 +1,46 @@
+{
+  "name": "domain-teams",
+  "version": "5.6.0",
+  "description": "Domain-expert team skills (planning/code/design/research/copywriting) with quality-gate checkpoints.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/domain-teams",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "domain-teams",
+    "quality-gates",
+    "checkpoint",
+    "planning",
+    "code",
+    "docs",
+    "qa",
+    "devops",
+    "design",
+    "research",
+    "investing",
+    "copywriting",
+    "skill-team"
+  ],
+  "interface": {
+    "displayName": "domain-teams",
+    "shortDescription": "Domain-expert team skills (code/design/research/docs/QA…) with quality-gate checkpoints",
+    "longDescription": "Use domain-teams to run work through a specialist team — planning, code, design, devops, docs, research, copywriting, investing, qa, or skill. Each team pairs a worker (produces artifacts) with an evaluator (produces verdicts), enforcing four-tier SELF / MUST / SHOULD / MAY quality gates so a deliverable is reviewed before it hands off. Composes with sibling toolkits via cross-plugin delegation.",
+    "developerName": "kouko",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Have the planning team draft a product spec.",
+      "Run the code team on this feature.",
+      "Get the research team to investigate this question."
+    ],
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/domain-teams",
+    "brandColor": "#0D9488"
+  }
+}

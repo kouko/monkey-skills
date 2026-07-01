@@ -2,7 +2,7 @@
 
 [English](README.md) | [日本語](README.ja.md) | **繁體中文**
 
-> 把 >1 小時 或 跨多個 module 的工作切成 **≤5 分鐘的原子任務**，每個任務並行派出三個 subagent：**implementer**（worker，在 TDD 鐵律下實作）+ **spec-reviewer** + **code-quality-reviewer**（兩者皆 evaluator）。評分依據是 `domain-teams:code-team` 的 7 standards + 2 rubrics + 2 checklists 之 functional copy。
+> 把 >1 小時 或 跨多個 module 的工作切成 **≤5 分鐘的原子任務**，每個任務並行派出三個 subagent：**implementer**（worker，在 TDD 鐵律下實作）+ **spec-reviewer** + **code-quality-reviewer**（兩者皆 evaluator）。評分依據是 `domain-teams:code-team` 的 9 standards + 2 rubrics + 2 checklists 之 functional copy。
 
 [loom-code](../..) plugin 的一部分。Agent 載入的是 [`SKILL.md`](SKILL.md)；本 README 是給人類看的。
 
@@ -21,7 +21,7 @@
 |---|---|---|---|---|
 | `implementer` | worker | (status: DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED) | task / spec / standards | code / 測試 / commit |
 | `spec-reviewer` | evaluator | PASS / NEEDS_REVISION + gap list | artifact / spec / `checklists/spec-consistency.md` | 只產 verdict |
-| `code-quality-reviewer` | evaluator | PASS / PASS_WITH_NOTES / NEEDS_REVISION + 六維度評分 + flags (🔴 / 🟡 / 🟢) | artifact / rubrics / checklist / 7 standards | 只產 verdict |
+| `code-quality-reviewer` | evaluator | PASS / PASS_WITH_NOTES / NEEDS_REVISION + 七維度評分 + flags (🔴 / 🟡 / 🟢) | artifact / rubrics / checklist / 9 standards | 只產 verdict |
 
 每個任務跑：implementer 一輪 + reviewer 並行一輪。Reviewer 守備範圍故意不重疊：spec-reviewer 不評品質，code-quality-reviewer 不評 spec 涵蓋度。混在一起會把 orchestrator 的解決演算法搞壞。
 

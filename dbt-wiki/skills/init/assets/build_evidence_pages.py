@@ -442,7 +442,7 @@ def main(argv=None):
     # ---- index.md ----
     idx = ["---", "title: dbt-wiki Index", "type: index", f"last_updated: {today}",
            f"manifest_sha: {manifest_sha}", "---", "", "# dbt-wiki Index", "",
-           "> Knowledge-first catalog. Regenerated on every `/dbt-wiki:init` / `/dbt-wiki:refresh`. Do not edit by hand.", "",
+           "> Knowledge-first catalog. Regenerated on every `/dbt-wiki:init` / `/dbt-wiki:rescan`. Do not edit by hand.", "",
            "## Entities", "", "_(Phase B knowledge distillation populates this.)_", "",
            "## Metrics", "", "_(Phase B knowledge distillation populates this.)_", "",
            "## Concepts", "", "_(Phase B knowledge distillation populates this.)_", "",

@@ -1,0 +1,45 @@
+{
+  "name": "dbt-wiki",
+  "version": "3.1.0",
+  "description": "Local-only two-layer knowledge base for dbt projects — semantic Q&A over manifest + column lineage.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/dbt-wiki",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "dbt",
+    "data-modeling",
+    "lineage",
+    "column-lineage",
+    "manifest-json",
+    "sqlglot",
+    "redshift",
+    "snowflake",
+    "bigquery",
+    "knowledge-base",
+    "llm-queryable",
+    "local-only"
+  ],
+  "interface": {
+    "displayName": "dbt-wiki",
+    "shortDescription": "Local two-layer knowledge base for dbt — semantic Q&A over manifest + column lineage",
+    "longDescription": "Use dbt-wiki to build a local-only knowledge base for a dbt project: init scaffolds pages, a lineage DAG, and CLAUDE.md from manifest.json + compiled SQL (sqlglot column lineage) + inline comments; ingest records tribal knowledge (sort_key rationale, dialect gotchas, incident links) into per-model User Notes that survive a rescan; and query answers semantic questions over the result. rescan / redistill / sync / review / pack keep it current.",
+    "developerName": "kouko",
+    "category": "Data",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Init dbt-wiki for this project.",
+      "What feeds fct_orders?",
+      "Add a note that fct_orders' sort_key is tuned for incremental merges."
+    ],
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/dbt-wiki",
+    "brandColor": "#EA580C"
+  }
+}

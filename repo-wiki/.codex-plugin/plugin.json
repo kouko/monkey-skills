@@ -1,0 +1,42 @@
+{
+  "name": "repo-wiki",
+  "version": "1.1.0",
+  "description": "LLM wiki for code repos — init from src + commits, grow from changes, query in natural language.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/repo-wiki",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "repo-knowledge",
+    "knowledge-base",
+    "llm-wiki",
+    "code-wiki",
+    "git-aware",
+    "documentation",
+    "tribal-knowledge",
+    "decision-archive",
+    "verification-fenced"
+  ],
+  "interface": {
+    "displayName": "repo-wiki",
+    "shortDescription": "A natural-language wiki for any code repository",
+    "longDescription": "Build and maintain an LLM-friendly wiki over a code repo: init bootstraps it from source files and commit history, ingest grows it incrementally as the code changes, and query answers natural-language questions about how the codebase works. Use it to onboard onto an unfamiliar repo, capture tribal knowledge, or ask 'where does X happen?' without grepping by hand.",
+    "developerName": "kouko",
+    "category": "Coding",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Initialize a wiki for this repository.",
+      "Update the repo wiki with my latest changes.",
+      "How does authentication work in this codebase?"
+    ],
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/repo-wiki",
+    "brandColor": "#0D9488"
+  }
+}

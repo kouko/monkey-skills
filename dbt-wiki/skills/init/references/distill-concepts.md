@@ -291,11 +291,11 @@ title_local: アクティブ顧客定義   # concept title in project's working 
 - `derived_from` lists evidence model `unique_id` values (format:
   `model.<package>.<model_name>`). Include every evidence model whose
   compiled SQL contains the CASE/WHERE logic that defines this concept.
-  This list drives stale detection on refresh.
+  This list drives stale detection on rescan.
 - `last_changed_by` is set to the commit SHA or PR number that last
   re-distilled this page. On first distillation by `init`, use
   `"init run <YYYY-MM-DD>"`.
-- `stale` / `stale_at` / `stale_reason` are written by `/dbt-wiki:refresh`
+- `stale` / `stale_at` / `stale_reason` are written by `/dbt-wiki:rescan`
   when a `derived_from` evidence model changes; do not set them manually
   during distillation.
 
@@ -325,7 +325,7 @@ language (e.g. Japanese, Traditional Chinese). Use the exact term as
 it appears in the project's schema.yml descriptions or internal
 documentation — not a translation of the English title.
 
-Both fields are emitted automatically on every `init` and `refresh`
+Both fields are emitted automatically on every `init` and `rescan`
 run; a human may prune `aliases` later (pruning is never required, but
 never add back a term that was intentionally removed).
 

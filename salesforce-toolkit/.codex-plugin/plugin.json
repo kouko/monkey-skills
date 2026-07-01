@@ -1,0 +1,36 @@
+{
+  "name": "salesforce-toolkit",
+  "version": "0.1.1",
+  "description": "Salesforce DX MCP wrapped as a plugin — read-only SOQL, macOS only (MCP declared in .mcp.json).",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/salesforce-toolkit",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "salesforce",
+    "read-only",
+    "soql"
+  ],
+  "interface": {
+    "displayName": "salesforce-toolkit",
+    "shortDescription": "Read-only Salesforce SOQL via the DX MCP",
+    "longDescription": "Ask a business question in plain language and get Salesforce data back. The sf-query skill composes a SOQL string, runs it through the Salesforce DX MCP server (read-only run_soql_query), and renders the rows as a table or a narrative answer — list objects, filter and aggregate records, and traverse parent-child relationships. The MCP server is declared in .mcp.json, so Codex auto-registers it on `codex plugin add` (verified on 0.139.0). It still needs an authenticated Salesforce org; whether Codex resolves the ${CLAUDE_PLUGIN_ROOT} launcher path at run time and exposes the tool under the name the skill expects is not yet live-verified. macOS only.",
+    "developerName": "kouko",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read"
+    ],
+    "defaultPrompt": [
+      "Show me the open opportunities closing this quarter.",
+      "List the accounts created in the last 30 days.",
+      "Which contacts work at this account?"
+    ],
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/salesforce-toolkit",
+    "brandColor": "#00A1E0"
+  }
+}

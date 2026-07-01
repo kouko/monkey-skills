@@ -339,6 +339,166 @@ def test_specs_delta_stays_openspec_pure():
     assert "specs/" in low or "specs/" in _text()
 
 
+# --- persistent intent layer authoring convention ---------------------------
+
+def test_skill_documents_intent_layer():
+    """The skill MUST document how to author the PERSISTENT intent layer:
+    the TOP/MID locations, the three canonical TOP MODEL.md sections (which
+    MUST mirror validate_intent_layer.py's _TOP_SECTIONS), the per-capability
+    MID README.md, cut rule #4, and the MID-no-restate anti-pattern."""
+    text = _text()
+    low = text.lower()
+
+    # an explicitly-named intent-layer authoring section
+    assert "persistent intent layer" in low, \
+        "must document authoring the persistent intent layer in a named section"
+
+    # TOP + MID locations (exact paths)
+    assert "docs/loom/spec/MODEL.md" in text, \
+        "must name the TOP MODEL.md location docs/loom/spec/MODEL.md"
+    assert "docs/loom/spec/<capability>/README.md" in text, \
+        "must name the MID per-capability README.md location " \
+        "docs/loom/spec/<capability>/README.md"
+    assert "top" in low and "mid" in low, \
+        "must distinguish the TOP vs MID altitudes"
+
+    # the canonical TOP sections — imported from the validator (the SSOT) so a
+    # VALIDATOR-side rename of _TOP_SECTIONS trips this test too, not only a
+    # doc-side drift; this closes the doc-mirrors-code loop (Task-4 ↔ Task-1).
+    from validate_intent_layer import _TOP_SECTIONS
+    for header in _TOP_SECTIONS:
+        assert header in text, \
+            f"TOP MODEL.md canonical section missing: {header}"
+
+    # cut rule #4: delete-the-capability test → YES→MID, NO→TOP
+    assert "cut rule" in low, "must state cut rule #4 by name"
+    found_cut = False
+    for line in low.splitlines():
+        if "delet" in line and "capability" in line:
+            found_cut = True
+            break
+    assert found_cut, \
+        "cut rule #4 must frame the 'remove this capability — does this " \
+        "content get deleted?' test"
+    assert "yes" in low and "no" in low, \
+        "cut rule #4 must route YES→MID, NO→TOP"
+
+    # the MID-no-restate anti-pattern (human-reviewed, NOT a CI gate)
+    found_antipattern = False
+    for line in low.splitlines():
+        if "mid" in line and "restate" in line and (
+            "test" in line or "behavior" in line
+        ):
+            found_antipattern = True
+            break
+    assert found_antipattern, \
+        "must carry the anti-pattern: MID must not restate behavior a test owns"
+    assert "rot" in low, \
+        "anti-pattern must name the residual-rot surface it guards against"
+
+
+# --- prior-state intake (closed loop: read own persisted layer) -------------
+
+def test_skill_documents_prior_state_intake():
+    """The skill MUST document consuming its OWN persisted intent layer as
+    prior-state for the next cycle (closing the spec→spec loop). The section
+    must carry: (a) point-don't-copy + link-back (never copy persisted
+    content), (b) a seam-mapping table routing each persisted prior-state to
+    the phase it feeds (5 rows), (c) the empty base case (additive / may be
+    empty / absent → treat as a generic seed, no cold-start deadlock), and
+    (d) the INDEX referenced WHEN-PRESENT."""
+    text = _text()
+    low = text.lower()
+
+    # an explicitly-named prior-state intake section
+    assert "prior-state" in low, \
+        "must document consuming the persisted intent layer as prior-state " \
+        "in a named section"
+
+    # (a) point-don't-copy + link-back + never-copy wording
+    assert "point-don't-copy" in low or "point don't copy" in low, \
+        "(a) must carry the point-don't-copy convention"
+    assert "link back" in low or "link-back" in low or "links back" in low \
+        or "references" in low, \
+        "(a) must link back / reference the persisted files by path"
+    found_never_copy = False
+    for line in low.splitlines():
+        if ("never" in line or "not" in line) and "cop" in line:
+            found_never_copy = True
+            break
+    assert found_never_copy, \
+        "(a) must say it NEVER copies persisted content into the change-folder"
+
+    # (b) the seam-mapping table: 5 prior-state → phase rows. Each cue must
+    # co-occur with its target phase ON ONE source line (markdown table rows
+    # are single lines), so wrapping cannot split the mapping.
+    rows = [
+        # (needle in the prior-state cell, needle in the phase cell)
+        (("readme.md", "mid"), ("phase ①", "phase 1", "usm")),
+        (("object state machines",), ("phase ②", "phase 2", "ooux")),
+        (("invariants",), ("phase ③", "phase 3", "matrix")),
+        (("out of scope",), ("phase ③", "phase 3", "prun")),
+        (("index",), ("net-new", "net new", "fan")),
+    ]
+    for state_needles, phase_needles in rows:
+        found = False
+        for line in low.splitlines():
+            if any(s in line for s in state_needles) and \
+                    any(p in line for p in phase_needles):
+                found = True
+                break
+        assert found, (
+            f"seam-mapping row missing: a prior-state {state_needles} must map "
+            f"to its phase {phase_needles} on one line"
+        )
+
+    # the canonical TOP section headers must be named as prior-state sources
+    # (exact bytes, mirrors validate_intent_layer._TOP_SECTIONS).
+    assert "## Object state machines" in text, \
+        "(b) must reference TOP MODEL.md's '## Object state machines' section"
+    assert "## Invariants" in text, \
+        "(b) must reference TOP MODEL.md's '## Invariants' section"
+    assert "## Out of scope" in text, \
+        "(b) must reference TOP MODEL.md's '## Out of scope' section"
+
+    # (c) the empty base case — additive, may be empty, absent → generic seed
+    assert "additive" in low, \
+        "(c) prior-state intake must be ADDITIVE"
+    found_may_be_empty = False
+    for line in low.splitlines():
+        if "empty" in line and ("may" in line or "additive" in line):
+            found_may_be_empty = True
+            break
+    assert found_may_be_empty, \
+        "(c) must say the prior-state MAY BE EMPTY"
+    found_generic = False
+    for line in low.splitlines():
+        if ("absent" in line or "no" in line or "nothing" in line) and \
+                "generic seed" in line:
+            found_generic = True
+            break
+    assert found_generic, \
+        "(c) absent/empty layer → treat the input as a generic seed " \
+        "(mirror the ui-flows stance)"
+    assert "authoritative" in low, \
+        "(c) an empty/absent layer is NEVER authoritative (no cold-start deadlock)"
+
+    # (d) the INDEX referenced when-present
+    found_index_when_present = False
+    for line in low.splitlines():
+        if "index" in line and ("when present" in line or "when-present" in line
+                                 or "if present" in line):
+            found_index_when_present = True
+            break
+    assert found_index_when_present, \
+        "(d) the generated INDEX must be referenced read-WHEN-PRESENT"
+
+    # READ-ONLY: this read path must not author/edit the persisted layer
+    assert "read-only" in low or "read only" in low, \
+        "the prior-state intake path must be READ-ONLY (authoring is a " \
+        "separate section's job)"
+
+
 # --- boundary: stops at GENERATE --------------------------------------------
 
 def test_generate_boundary_no_tdd_no_review():

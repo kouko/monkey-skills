@@ -1,7 +1,7 @@
 ---
 name: interaction-flows
 description: |
-  Generate a ui-flows.md interaction-flow artifact for a feature — modality-aware (GUI / TUI / CLI). Maps inventory, navigation, flows per PRINCIPLES.md; emits Mermaid + ASCII wireframes (→ spec-expansion). Use to map UX flows before specing.
+  Generate a ui-flows.md interaction-flow artifact — screens, navigation, user flows, state transitions, wireframes (GUI/TUI/CLI). Use when the user wants to map, design, or lay out a UI/UX flow, screen, or its states before specing or coding.
 version: 0.1.0
 ---
 

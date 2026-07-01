@@ -1,0 +1,45 @@
+{
+  "name": "legal-toolkit",
+  "version": "0.5.2",
+  "description": "In-house legal toolkit for Taiwan SMEs — contract review, playbook negotiation, drafting, research.",
+  "author": {
+    "name": "kouko",
+    "email": "kouko.d@gmail.com"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/legal-toolkit",
+  "license": "MIT",
+  "keywords": [
+    "legal",
+    "contract-review",
+    "playbook",
+    "compliance",
+    "taiwan",
+    "stark-drafting-contracts",
+    "adams-mscd",
+    "民法",
+    "個資法",
+    "公司法",
+    "in-house-legal",
+    "disclaimer-driven",
+    "harvey-dual-score"
+  ],
+  "interface": {
+    "displayName": "legal-toolkit",
+    "shortDescription": "In-house legal toolkit for Taiwan SMEs — review, draft, negotiate, research",
+    "longDescription": "Cover the in-house legal workflow for Taiwan SMEs: contract review, issue-spotting, playbook-driven negotiation authoring, document drafting, legal research, and incident response. using-legal-toolkit routes the seven skills; the toolkit defers substantive legal decisions to the user rather than rendering judgments.",
+    "developerName": "kouko",
+    "category": "Other",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Review this contract and flag risky clauses.",
+      "Draft an NDA for a vendor engagement.",
+      "Spot the legal issues in this situation."
+    ],
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/legal-toolkit",
+    "brandColor": "#7C2D12"
+  }
+}

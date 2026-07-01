@@ -35,8 +35,16 @@ A PR is memory-worthy if **any** of these is true:
 - The PR touches architecture / flow / state in a way a diagram would
   clarify
 
-If none apply, skip `## Memory` entirely. A PR without `## Memory` is
-the correct signal that the diff speaks for itself.
+**If any apply, the PR is memory-worthy and `## Memory` is REQUIRED**
+— not optional. A memory-worthy PR that closes with no `## Memory`
+section (and no memory trailers on its commits) is the exact failure
+this protocol exists to prevent: the substrate ships empty and the
+"why" is lost.
+
+If **none** apply, the PR is not memory-worthy — skip `## Memory`
+entirely. A non-memory-worthy PR without `## Memory` is the correct
+signal that the diff speaks for itself. See "When to skip" below for
+the legitimate skip cases.
 
 ## Step 3 — Draft the `## Memory` section
 
@@ -159,13 +167,17 @@ flowchart LR
 
 ## When to skip `## Memory` entirely
 
+Skip **only** for non-memory-worthy PRs (the Step-2 filter found none
+of its criteria). For these, `## Memory` is correctly absent:
+
 - Dependency bumps (`chore(deps): bump X from 1.2 to 1.3`)
 - Formatting-only PRs
 - Typo fixes
 - Tests-only PRs that don't change behavior
 - Routine docs updates
 
-For these, the diff and `## Summary` are sufficient signal.
+For these, the diff and `## Summary` are sufficient signal. For any
+memory-worthy PR, skipping is **not** an option — see Step 2.
 
 ## Step 6 — Confirm with user before opening
 
@@ -177,3 +189,34 @@ user:
 
 Adjust based on user feedback. Err on the side of less — deleting a
 sub-heading is cheaper than over-drafting.
+
+## Step 7 — Verify substrate survival before the branch closes
+
+The confirmed root cause of lost memory is **authoring-time
+under-recording**: a memory-worthy PR closing with an empty
+substrate (no commit trailer, no `## Memory`) and **no signal that
+it's empty**. Composing the section is not enough — verify it is
+actually retrievable from **both** carriers before the branch closes
+/ the PR merges.
+
+This verify is **enforced as an executable gate by
+`loom-code:finishing-a-development-branch`**: its Default-flow close-out
+runs `--verify HEAD` and STOPs on a memory-worthy branch whose commit
+carrier is empty. The checks below describe what that gate executes.
+
+For a memory-worthy PR (Step 2), the orchestrator runs both checks:
+
+1. **Commit carrier** — run
+   `scripts/memory-grep.sh --verify <merge-commit-or-ref>` against the
+   commit that carries the memory to main (the squash/merge commit, or
+   the close-out commit). It exits **0** if a
+   `Decision:`/`Learning:`/`Gotcha:` trailer is retrievable from that
+   ref's message body, **4** if the substrate is empty.
+2. **PR carrier** — confirm the PR `## Memory` section is present
+   (`gh pr view` / `memory-grep.sh` already extracts it).
+
+An empty result — `--verify` exits **4** **and** no `## Memory`
+section — is a flag to **fix before merge**, not to ignore. Re-author
+the missing carrier (add the trailers and/or the `## Memory` section),
+then re-run the verify. Do not close a memory-worthy branch on an
+empty substrate.

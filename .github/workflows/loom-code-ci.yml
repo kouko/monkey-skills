@@ -8,13 +8,14 @@ name: loom-code CI
 #   - verify-drift.py:        the code-team <-> loom-code knowledge SSOT —
 #                             every routed functional copy must stay
 #                             byte-identical to its canonical payload.
-#   - sync_codex_manifest.py: the Codex plugin manifest SSOT —
-#                             .codex-plugin/plugin.json must stay in sync with
-#                             .claude-plugin/plugin.json. Any manual edit that
-#                             diverges the two fails the build. Repair locally
-#                             with: python loom-code/scripts/sync_codex_manifest.py
+#   - sync_codex_manifests.py: the Codex plugin manifest SSOT —
+#                             each CODEX_ELIGIBLE plugin's .codex-plugin/plugin.json
+#                             must stay in sync with its .claude-plugin/plugin.json.
+#                             Any manual edit that diverges the two, or a missing
+#                             eligible Codex manifest, fails the build. Repair
+#                             locally with: python scripts/sync_codex_manifests.py --all
 #
-# The sync_codex_manifest.py pytest suite is also run so the generator logic
+# The sync_codex_manifests.py pytest suite is also run so the generator logic
 # itself is covered, mirroring legal-toolkit-ci.yml (pytest + drift).
 #
 # Status: intended for `main` branch protection.
@@ -24,11 +25,25 @@ on:
     branches: [main]
     paths:
       - 'loom-code/**'
+      # The living-spec gates scan the repo root and check the committed
+      # docs/loom/INDEX.md, so a docs/loom/** change must also trigger CI —
+      # else an index drift or a spec-tree edit could merge ungated.
+      - 'docs/loom/**'
+      # The Codex drift gate runs --all (every plugin's manifest pair), so the
+      # trigger scope must match: ANY plugin's manifest edit must fire CI, else
+      # a drift in a non-loom-code plugin merges ungated (fail-open).
+      - '**/.claude-plugin/plugin.json'
+      - '**/.codex-plugin/plugin.json'
+      - 'scripts/sync_codex_manifests.py'
       - '.github/workflows/loom-code-ci.yml'
   push:
     branches: [main]
     paths:
       - 'loom-code/**'
+      - 'docs/loom/**'
+      - '**/.claude-plugin/plugin.json'
+      - '**/.codex-plugin/plugin.json'
+      - 'scripts/sync_codex_manifests.py'
 
 permissions:
   contents: read
@@ -50,17 +65,53 @@ jobs:
         # pytest = test runner. The drift + sync scripts are pure stdlib (P1-E).
         run: python3 -m pip install --quiet pytest
 
-      - name: Run loom-code scripts/ pytest suite
+      - name: Run pytest suites (loom-code + codex-compat engine + hook)
         env:
           PYTHONDONTWRITEBYTECODE: "1"
-        run: python3 -m pytest loom-code/scripts/ -v
+        run: python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -v
 
       - name: Verify code-team <-> loom-code knowledge SSOT
         # canonical/ is the single source of truth; each skill carries routed
         # functional copies. Any byte-level divergence fails the build.
         run: python3 loom-code/scripts/verify-drift.py
 
-      - name: Verify Codex manifest in sync
-        # .codex-plugin/plugin.json is generated from .claude-plugin/plugin.json.
-        # --check fails (exit 1) on any drift so a manual edit can't diverge the two.
-        run: python3 loom-code/scripts/sync_codex_manifest.py --check
+      - name: Codex manifest drift gate (all plugins)
+        # Each CODEX_ELIGIBLE plugin's .codex-plugin/plugin.json is generated
+        # from its .claude-plugin/plugin.json. --check --all fails (exit 1) on
+        # any drift OR any missing eligible manifest across all plugins, so a
+        # manual edit can't diverge the two.
+        run: python3 scripts/sync_codex_manifests.py --check --all
+
+      - name: Verify skill cross-references resolve
+        # Every relative markdown link in a SKILL.md must point at an existing
+        # file. Guards the cross-skill reference convention (e.g. the shared
+        # references/environment-gotchas.md pointers) against silent breakage.
+        run: python3 loom-code/scripts/check-skill-crossrefs.py
+
+      - name: Verify living-spec structural integrity
+        # Hard FAIL on every push: every @req tag in the repo source tree must
+        # resolve to a real requirement id and be well-formed. A dangling or
+        # malformed @req exits 1 and fails the build.
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 loom-code/scripts/check-living-spec-index.py .
+
+      - name: Verify living-spec index is current
+        # Byte-identity gate: regenerate build_index over the repo root and
+        # byte-compare to the committed docs/loom/INDEX.md. Any drift exits 1
+        # so a stale committed index can't slip in. Repair locally with:
+        # python3 loom-code/scripts/check-living-spec-index.py --write-index docs/loom/INDEX.md .
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 loom-code/scripts/check-living-spec-index.py --verify-index docs/loom/INDEX.md .
+
+      - name: Verify living-spec active reqs are covered
+        # Merge-boundary gate: every `active` requirement must have a passing
+        # test. This runs AFTER the green pytest gate above, so a green suite
+        # means every linked test passed — "0 passing" therefore reduces to
+        # "0 linked", and an uncovered active req exits 1. Unlike --verify-index,
+        # this gate regenerates nothing (no --write-index counterpart); it only
+        # reads the persisted intent + @req links and reports coverage.
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 loom-code/scripts/check-living-spec-index.py --check-coverage .

@@ -1,7 +1,7 @@
 {
   "name": "salesforce-toolkit",
   "version": "0.1.1",
-  "description": "Salesforce DX MCP wrapped as a plugin — read-only SOQL, macOS only. ⚠️ Claude Code CLI only.",
+  "description": "Salesforce DX MCP wrapped as a plugin — read-only SOQL, macOS only (MCP declared in .mcp.json).",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"

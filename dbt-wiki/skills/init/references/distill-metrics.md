@@ -697,12 +697,12 @@ Use the exact term as it appears in the project's schema.yml descriptions or
 internal documentation — not a translation of the English title. Set to `null`
 if the project is English-only.
 
-Both fields are emitted automatically on every `init` and `refresh` run; a
+Both fields are emitted automatically on every `init` and `rescan` run; a
 human may prune `aliases` later (pruning is never required, but never add back
 a term that was intentionally removed).
 
 `derived_from` must list the `unique_id` of every evidence model that
-contains the metric computation. This is the freshness anchor: refresh
+contains the metric computation. This is the freshness anchor: rescan
 flags the page stale if any listed unique_id changes.
 
 Slug: kebab-case from the business `title`, not the SQL column name.

@@ -1,0 +1,45 @@
+{
+  "name": "translation-toolkit",
+  "version": "0.3.0",
+  "description": "High-quality EN/JA/ZH translation with a bundled glossary + 6-gate verification.",
+  "author": {
+    "name": "kouko",
+    "email": "kouko.d@gmail.com"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/translation-toolkit",
+  "license": "MIT",
+  "keywords": [
+    "translation",
+    "i18n",
+    "glossary",
+    "novel",
+    "ad-copy",
+    "back-translation",
+    "literary-translation",
+    "en",
+    "ja",
+    "zh-tw",
+    "zh-cn",
+    "翻訳",
+    "翻譯"
+  ],
+  "interface": {
+    "displayName": "translation-toolkit",
+    "shortDescription": "High-quality EN/JA/ZH translation with a 6-gate check",
+    "longDescription": "Translate between English, Japanese, and Chinese with a bundled glossary and a 6-gate verification pass that catches mistranslation, omission, register drift, and terminology inconsistency. Mode-specific skills handle documents, novels, creative copy, and software i18n, with an intake step to scope the job and an audit step to grade an existing translation. Use it when fidelity, tone, and consistent terminology matter.",
+    "developerName": "kouko",
+    "category": "Writing",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Translate this document from English to Japanese.",
+      "Translate this novel chapter into Chinese, preserving tone and voice.",
+      "Audit this existing translation for accuracy and consistency."
+    ],
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/translation-toolkit",
+    "brandColor": "#DB2777"
+  }
+}

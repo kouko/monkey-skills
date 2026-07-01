@@ -1,0 +1,65 @@
+{
+  "name": "four-dx-coach",
+  "version": "0.9.1",
+  "description": "Multi-scope coach for the 4 Disciplines of Execution — Socratic coach + single-artifact audit modes.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/four-dx-coach",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "4dx",
+    "execution",
+    "wildly-important-goal",
+    "wig",
+    "lead-measures",
+    "scoreboard",
+    "cadence-of-accountability",
+    "wig-session",
+    "personal-coaching",
+    "team-leader",
+    "team-member",
+    "multi-file",
+    "scope-flex",
+    "consultant-mode",
+    "dual-mode",
+    "single-layer-audit",
+    "cross-layer-aggregator",
+    "artifact-audit",
+    "roadmap",
+    "lead-measure-facilitation",
+    "scoreboard-design",
+    "scope-symmetry",
+    "primary-wig",
+    "wig-cascade",
+    "targets-not-plans",
+    "xps-evaluation",
+    "commitment-vs-compliance",
+    "goal-setting",
+    "accountability-partner",
+    "book-distill",
+    "franklincovey",
+    "mcchesney"
+  ],
+  "interface": {
+    "displayName": "four-dx-coach",
+    "shortDescription": "Coach for the 4 Disciplines of Execution — Socratic coaching + single-artifact audits",
+    "longDescription": "Use four-dx-coach to apply the 4 Disciplines of Execution: WIG formulation and cascade (D1), lead measures (D2), scoreboard (D3), and cadence of accountability (D4) — plus meta skills for strategy / whirlwind triage, XPS evaluation, team-leader onboarding, and momentum rescue. Runs as a Socratic coach that draws answers out of you, or as a single-artifact audit of an existing WIG, scoreboard, or cadence.",
+    "developerName": "kouko",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Help me formulate a WIG for my team.",
+      "Audit our 4DX scoreboard.",
+      "Coach me through setting lead measures."
+    ],
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/four-dx-coach",
+    "brandColor": "#CA8A04"
+  }
+}

@@ -70,18 +70,17 @@ def test_description_present_and_within_codex_limit():
     )
 
 
-def test_description_carries_trilingual_triggers():
-    """The skill must fire on screen/nav/UX-flow intent in en + zh-TW + ja."""
+def test_description_carries_positive_triggers():
+    """The description must carry positive, specific English triggers for
+    screen / navigation / UX-flow intent. Per the house description standard,
+    triggers are positive English keywords — no CJK / multilingual keyword
+    redundancy (cross-lingual triggering is A/B-verified redundant)."""
     front = _frontmatter().lower()
-    # en
-    assert "flow" in front, \
-        "description must carry an English trigger (flow / user flow / UX flow)"
-    # zh-TW (Traditional) — contains Han characters
-    assert re.search(r"[一-鿿]", _frontmatter()), \
-        "description must carry a zh-TW trigger (Traditional Chinese)"
-    # ja — contains kana
-    assert re.search(r"[぀-ヿ]", _frontmatter()), \
-        "description must carry a ja trigger (kana)"
+    for kw in ("flow", "screen"):
+        assert kw in front, \
+            f"description must carry the English trigger '{kw}'"
+    assert not re.search(r"[一-鿿぀-ヿ]", _frontmatter()), \
+        "description must carry NO CJK / kana keyword redundancy (house standard)"
 
 
 # --- modality-aware body procedure ------------------------------------------
