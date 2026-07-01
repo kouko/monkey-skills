@@ -50,9 +50,11 @@ CLAUDE_MANIFEST = (".claude-plugin", "plugin.json")
 CODEX_MANIFEST = (".codex-plugin", "plugin.json")
 
 # Plugins whose Codex manifest is in scope for sync/scaffold: the 21 Batch-A
-# plugins plus loom-code (which shipped its Codex manifest first). Deliberately
-# EXCLUDES dev-workflow, collab-toolkit, salesforce-toolkit (hook/MCP-only
-# plugins with no Codex interface surface to maintain).
+# plugins plus loom-code (which shipped its Codex manifest first).
+# Phase 2b made the whole repo eligible: dev-workflow (a PostToolUse validation
+# hook, no SessionStart context-injection), collab-toolkit + salesforce-toolkit
+# (MCP servers) now ship Codex manifests too — every repo plugin has a
+# .codex-plugin/plugin.json under the SSOT.
 CODEX_ELIGIBLE = (
     "ascii-graph-toolkit",
     "briefing-toolkit",
@@ -76,6 +78,9 @@ CODEX_ELIGIBLE = (
     "translation-toolkit",
     "tsundoku",
     "loom-code",
+    "dev-workflow",
+    "collab-toolkit",
+    "salesforce-toolkit",
 )
 
 

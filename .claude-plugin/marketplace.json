@@ -86,7 +86,7 @@
     },
     {
       "name": "collab-toolkit",
-      "description": "Read-only office-collab toolkit for Asana/Slack/Notion via MCP. ⚠️ Claude Code CLI only.",
+      "description": "Read-only office-collab toolkit for Asana/Slack/Notion via MCP (servers declared in .mcp.json).",
       "source": "./collab-toolkit/"
     },
     {
@@ -96,7 +96,7 @@
     },
     {
       "name": "salesforce-toolkit",
-      "description": "Salesforce DX MCP wrapped as a plugin — read-only SOQL, macOS only. ⚠️ Claude Code CLI only.",
+      "description": "Salesforce DX MCP wrapped as a plugin — read-only SOQL, macOS only (MCP declared in .mcp.json).",
       "source": "./salesforce-toolkit/"
     },
     {

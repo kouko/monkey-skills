@@ -27,7 +27,8 @@ codex plugin marketplace remove monkey-skills
 ## Enumeration
 
 `codex plugin list` rendered **all 25 marketplace plugins** with no parse error — i.e. the
-22 authored `.codex-plugin/plugin.json` manifests (21 Batch-A + loom-code) parse cleanly on
+22 authored `.codex-plugin/plugin.json` manifests (21 Batch-A + loom-code; Phase-2a state,
+now 25 after Phase 2b below) parse cleanly on
 Codex 0.139.0, including the authored `interface` blocks (`capabilities` as a JSON array,
 etc.). The 3 plugins without a `.codex-plugin` manifest yet (dev-workflow = Batch B;
 collab-toolkit, salesforce-toolkit = Batch C) appear in the marketplace listing (from
@@ -50,10 +51,47 @@ All 6 → `codex plugin add … @monkey-skills` succeeded; `codex plugin list` s
 skills (counts match the source repo). Coverage spans 5 categories + the min/max skill-count
 extremes + the read-only-capabilities case.
 
+## Phase 2b — Batch B + C live verification (Codex 0.139.0, 2026-07-01)
+
+The last 3 repo plugins (dev-workflow, collab-toolkit, salesforce-toolkit) were
+authored + installed on the same real Codex instance. All 25 repo plugins now ship a
+`.codex-plugin/plugin.json`.
+
+| Plugin | Batch | Result |
+|---|---|---|
+| dev-workflow | B (PostToolUse validation hook) | ✅ installed, enabled — 8 skills present |
+| collab-toolkit | C (Asana/Slack/Notion MCP) | ✅ installed, enabled |
+| salesforce-toolkit | C (Salesforce DX MCP) | ✅ installed, enabled |
+
+**Batch B finding.** dev-workflow's hook is a **PostToolUse validator**
+(`validate-skill-folder-structure.sh`), NOT a SessionStart context-injector — so it needs
+**no `hookSpecificOutput.additionalContext` treatment** (the earlier plan assumption was
+wrong). It installs like any Batch-A plugin.
+
+**Batch C finding — the MCP registration mechanism (the decisive test).**
+On `codex plugin add`, **Codex auto-registers a plugin's `.mcp.json` MCP servers, but does
+NOT read `mcpServers` declared inline in `.claude-plugin/plugin.json`.**
+
+- salesforce-toolkit ships a `.mcp.json` (stdio) → its `salesforce` MCP **auto-registered**
+  (`codex mcp get salesforce` → `transport: stdio`).
+- collab-toolkit originally declared its 3 servers **inline** in plugin.json (no `.mcp.json`)
+  → **nothing auto-registered**. After moving them to a bundled `.mcp.json`, all 3
+  **auto-registered** as `streamable_http` (`codex mcp get asana` → the mcp.asana.com URL).
+- `codex plugin remove <plugin>` **auto-unregisters** the plugin's `.mcp.json` MCP servers
+  (lifecycle-tied — `codex mcp remove` reported them already gone).
+- Fix applied: collab-toolkit converted inline `mcpServers` → bundled `.mcp.json` (the
+  portable form salesforce already used; Claude Code reads both, so no Claude-Code change),
+  and the false "⚠️ Claude Code CLI only" caveat dropped from both descriptions.
+
+**Not verified (needs live OAuth / an authenticated org — out of scope):** end-to-end skill
+execution on Codex — the OAuth completion for Asana/Slack/Notion, the Salesforce org auth +
+whether Codex resolves the `${CLAUDE_PLUGIN_ROOT}` launcher path at run time, and whether
+Codex exposes the MCP tools under the `mcp__<server>__*` names the skills' `allowed-tools`
+expect. Install + MCP-server auto-registration is verified; the tool-call round-trip is not.
+
 ## Conclusion
 
-The repo-wide Codex-compat Phase-1 engine output + Phase-2 authored interfaces are
-**verified loadable + skill-discoverable on Codex 0.139.0**. No manifest failed to parse or
-install. Remaining Phase-2 work (Batch B `dev-workflow` hook contract; Batch C
-`collab`/`salesforce` MCP) is out of scope here and tracked in
-`docs/loom/specs/2026-06-30-codex-compat-all-plugins.md`.
+All 25 repo plugins are **verified loadable + skill-discoverable on Codex 0.139.0**, and the
+MCP-bearing plugins' servers **auto-register from `.mcp.json`** on install. No manifest failed
+to parse or install. The one open item is the live OAuth/org-gated end-to-end skill round-trip
+(above), which needs real credentials to close.

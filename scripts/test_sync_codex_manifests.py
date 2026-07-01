@@ -255,9 +255,9 @@ def test_scaffold_does_not_clobber_existing_codex(tmp_path):
     assert after["version"] == _claude_ssot()["version"]
 
 
-# --- CODEX_ELIGIBLE: 21 Batch-A + loom-code; excludes hook/mcp-only plugins ----
+# --- CODEX_ELIGIBLE: all 25 repo plugins (21 Batch-A + loom-code + 3 Phase-2b) ----
 
-def test_eligible_list_excludes_hook_and_mcp_plugins():
+def test_eligible_list_covers_all_25_repo_plugins():
     import sync_codex_manifests as m
 
     batch_a = {
@@ -274,10 +274,11 @@ def test_eligible_list_excludes_hook_and_mcp_plugins():
     eligible = set(m.CODEX_ELIGIBLE)
     assert batch_a <= eligible, batch_a - eligible
     assert "loom-code" in eligible
-    assert len(eligible) == 22  # 21 Batch-A + loom-code, no duplicates
-
-    for excluded in ("dev-workflow", "collab-toolkit", "salesforce-toolkit"):
-        assert excluded not in eligible, f"{excluded} must be excluded"
+    # Phase 2b: dev-workflow (PostToolUse hook) + collab-toolkit / salesforce-toolkit
+    # (MCP servers) are now eligible too — the whole repo ships Codex manifests.
+    for added in ("dev-workflow", "collab-toolkit", "salesforce-toolkit"):
+        assert added in eligible, f"{added} must now be eligible (Phase 2b)"
+    assert len(eligible) == 25  # 21 Batch-A + loom-code + 3 Phase-2b, no duplicates
 
 
 # --- CLI: --scaffold creates a manifest; --all iterates; --all --check read-only
@@ -359,8 +360,8 @@ REPO_ROOT = SCRIPT.resolve().parent.parent
 def test_all_eligible_codex_manifests_in_sync():
     import sync_codex_manifests as m
 
-    # Sanity sub-check: the eligible set is the expected 21 Batch-A + loom-code.
-    assert len(m.CODEX_ELIGIBLE) == 22, f"expected 22 eligible, got {len(m.CODEX_ELIGIBLE)}"
+    # Sanity sub-check: the eligible set is 21 Batch-A + loom-code + 3 Phase-2b.
+    assert len(m.CODEX_ELIGIBLE) == 25, f"expected 25 eligible, got {len(m.CODEX_ELIGIBLE)}"
 
     # Fold MISSING (no .codex-plugin manifest yet) into the offender list so a
     # future eligible plugin added before it is scaffolded fails CLEANLY (named),

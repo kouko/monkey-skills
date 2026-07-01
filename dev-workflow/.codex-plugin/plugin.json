@@ -1,0 +1,43 @@
+{
+  "name": "dev-workflow",
+  "version": "2.20.0",
+  "description": "Developer-workflow skills — git memory, decision briefs, critique, recap, handoff, session distill.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/dev-workflow",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "git-memory",
+    "brief-before-asking",
+    "proposal-critique",
+    "complexity-critique",
+    "developer-workflow",
+    "distill-sessions",
+    "recap-state",
+    "handoff",
+    "dbt-model-style",
+    "dbt"
+  ],
+  "interface": {
+    "displayName": "dev-workflow",
+    "shortDescription": "Process skills for the work around the code",
+    "longDescription": "Skills for the engineering work that surrounds writing code — git-memory (record why a decision was made into commit/PR memory trailers, then recall it later), brief-before-asking (a 6-block briefing before a hard fork question), proposal-critique and complexity-critique (triage a plan or a single change by a deletion-first, YAGNI lens), recap-state and handoff (re-orient mid-session or save state for the next session), distill-sessions (mine past transcripts for friction patterns), and dbt-model-style (a dbt + Redshift model style contract). Use them to decide well, remember why, and hand off cleanly. Bundles a PostToolUse hook that validates skill folder structure on edit.",
+    "developerName": "kouko",
+    "category": "Coding",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Before I commit to this approach, give me a briefing on the trade-offs.",
+      "Critique this plan — what can we drop or defer?",
+      "Record why we chose this design into git memory so we can recall it later."
+    ],
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/dev-workflow",
+    "brandColor": "#475569"
+  }
+}
