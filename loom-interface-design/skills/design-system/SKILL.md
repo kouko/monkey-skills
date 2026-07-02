@@ -124,7 +124,8 @@ flagged issue before declaring done**:
 python loom-interface-design/scripts/validate_design_output.py <design-output-dir>
 ```
 
-The relative path from this skill dir is `scripts/validate_design_output.py`.
+The path relative to this skill dir is `../../scripts/validate_design_output.py`
+(the script ships at the plugin root's `scripts/`).
 It mechanically checks the change-folder structure (the design-system doc
 present, the GUI `DESIGN.md` carrying all 8 canonical `##` sections). The
 validator checks *structure*; the *quality* of the tokens (palette derived from

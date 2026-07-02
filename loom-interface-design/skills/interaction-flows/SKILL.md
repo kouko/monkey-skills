@@ -135,7 +135,7 @@ here; a copied table would drift.
 
 Run the change-folder validator (repo-root-relative path
 `loom-interface-design/scripts/validate_design_output.py <design-output-dir>`;
-the skill-relative form is `scripts/validate_design_output.py`) on the emitted
+the skill-relative form is `../../scripts/validate_design_output.py`) on the emitted
 directory and **fix every flagged issue** before handing off. Do not declare the
 artifact done with validator failures outstanding (Rule 12).
 

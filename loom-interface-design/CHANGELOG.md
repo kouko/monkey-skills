@@ -1,0 +1,50 @@
+# Changelog
+
+All notable changes to the `loom-interface-design` plugin (formerly `interface-design-toolkit`) are documented in this file.
+
+Format: [Keep a Changelog](https://keepachangelog.com/).
+Versioning: [Semantic Versioning](https://semver.org/).
+
+> This file was reconstructed on 2026-07-02 from the git history — the plugin
+> shipped its first three versions without a CHANGELOG.
+
+## [Unreleased]
+
+### Fixed
+
+- `design-system` / `interaction-flows` SKILL.md now state the correct
+  skill-dir-relative validator path (`../../scripts/validate_design_output.py`);
+  the previously claimed `scripts/…` form did not resolve from the skill
+  directory in an installed plugin.
+- README: `design-critic` listed as shipped (it landed in v0.2.0 but the README
+  still called it deferred), scope section retitled to the current version line,
+  and the `DESIGN.md` side-channel description aligned with the honest seam
+  wording from #465 (no loom-code skill machine-reads `DESIGN.md`).
+- Earlier unversioned post-0.3.0 fixes: trigger-description rewrites +
+  DESIGN.md visual-concept layer (#456), reply-honesty prose + skill version
+  fields (#465).
+
+## [0.3.0] — 2026-06-21
+
+### Changed
+
+- **BREAKING**: plugin renamed `interface-design-toolkit` → `loom-interface-design`;
+  router skill renamed `using-interface-design-toolkit` → `using-loom-interface-design`;
+  artifact paths unified under `docs/loom/` (#440).
+
+## [0.2.0] — 2026-06-17
+
+### Added
+
+- `design-critic` — adversarial writer≠judge panel hunting surface omissions
+  (undrawn states, dead-end flows, a11y gaps) + principle conformance over the
+  design change-folder, mirroring `loom-spec:completeness-critic` (#409).
+
+## [0.1.0] — 2026-06-15
+
+### Added
+
+- MVP: `design-system` (GUI → 8-section `DESIGN.md`) + `interaction-flows`
+  (`ui-flows.md`) + `using-interface-design-toolkit` router +
+  `validate_design_output.py` change-folder validator. Cross-modal
+  architecture (GUI/TUI/CLI), GUI-first (#399).
