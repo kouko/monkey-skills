@@ -231,7 +231,7 @@ explicit and avoids the validator warning.
 <!-- END baseline-v1 -->
 
 <!-- BEGIN rule-sheet-v1 — managed by loom-code/scripts/distribute.py from loom-code/scripts/_rule-sheet.md — do not edit in place -->
-# Code-toolkit rule sheet — deltas only
+# Loom-code rule sheet — deltas only
 
 ## Preamble
 
@@ -246,7 +246,7 @@ preloads.
   (house) / 100-line gate-warning (`naming-and-functions.md`).
 - Verdict (`quality-gate.md` §Verdict Rules): any 🔴 → NEEDS_REVISION;
   2+ 🟡 → NEEDS_REVISION; 1 🟡 → PASS_WITH_NOTES; all 🟢 → PASS.
-  Opaque flag (no `where:` / `source:`) → NEEDS_REVISION.
+  Opaque finding (no `where:` / `source:`) → NEEDS_REVISION.
   Scope: quality / architecture dimensions. The spec-reviewer is
   binary per its role contract (PASS / NEEDS_REVISION only, no
   PASS_WITH_NOTES) — there a lone 🟡 → NEEDS_REVISION, not

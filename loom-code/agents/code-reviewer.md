@@ -58,7 +58,7 @@ in effect now or a prior revision.
 
 ## Rule R2 — Every output element needs an evidence citation
 
-Every flag / finding / gap in your output must include the evidence
+Every finding / gap in your output must include the evidence
 citation field defined by your agent-specific output schema (typically
 `where:`, `artifact:`, or `spec_ref:`). The value cites `file:line`,
 commit SHA, or commit SHA range.
@@ -114,7 +114,7 @@ a dispatchable agent.
 <!-- END reviewer-discipline-v1 -->
 
 <!-- BEGIN rule-sheet-v1 — managed by loom-code/scripts/distribute.py from loom-code/scripts/_rule-sheet.md — do not edit in place -->
-# Code-toolkit rule sheet — deltas only
+# Loom-code rule sheet — deltas only
 
 ## Preamble
 
@@ -129,7 +129,7 @@ preloads.
   (house) / 100-line gate-warning (`naming-and-functions.md`).
 - Verdict (`quality-gate.md` §Verdict Rules): any 🔴 → NEEDS_REVISION;
   2+ 🟡 → NEEDS_REVISION; 1 🟡 → PASS_WITH_NOTES; all 🟢 → PASS.
-  Opaque flag (no `where:` / `source:`) → NEEDS_REVISION.
+  Opaque finding (no `where:` / `source:`) → NEEDS_REVISION.
   Scope: quality / architecture dimensions. The spec-reviewer is
   binary per its role contract (PASS / NEEDS_REVISION only, no
   PASS_WITH_NOTES) — there a lone 🟡 → NEEDS_REVISION, not
@@ -425,12 +425,20 @@ marker the SSOT and scopes the harvest to **this** branch's review gate
 — do not attempt a lifetime / cross-codebase marker count (gameable per
 the SATD-removal literature).
 
-**Harvest step.** Grep the branch diff (or the touched tree) for the
-marker:
+**Harvest step.** Grep the files changed by this branch for the
+marker. Use whichever form the input contract supplies:
 
+```bash
+# Case A — Diff scope is a git range (e.g. main...HEAD):
+git diff --name-only <diff-scope> | xargs grep -n "LOOM-SIMPLIFY:"
+
+# Case B — Diff was supplied as file content (not a range):
+grep "LOOM-SIMPLIFY:" <<< "<diff-content>"
+# or: cat <diff-path> | grep "LOOM-SIMPLIFY:"
 ```
-grep -rn "LOOM-SIMPLIFY:" <branch-diff-or-tree>
-```
+
+Substitute `<diff-scope>` / `<diff-content>` / `<diff-path>` with the
+actual value from `### Diff scope` / `### Diff` in the input contract.
 
 Each marker carries exactly four fields per the standard:
 
@@ -445,7 +453,7 @@ glance exactly what each corner-cut costs. If the grep returns nothing,
 state that no markers were found (silence is reported, not skipped —
 Rule 12 fail-loud).
 
-**Completeness flag.** Emit a finding for each marker that is
+**Completeness check.** Emit a finding for each marker that is
 **malformed or vague**:
 
 - 🟡 **Missing field**: the marker lacks `ceiling:`, `upgrade:`, or
@@ -471,7 +479,7 @@ no-op: emit `deliberate-simplification: PASS` with an empty ledger.
 
 ## Anti-patterns the orchestrator will reject
 
-- `verdict: PASS` with any 🔴 flag — internally inconsistent.
+- `verdict: PASS` with any 🔴 finding — internally inconsistent.
 - Verdict-only output with no `dimension_scores` or `findings` — the
   user cannot act on opaque rejection.
 - Editing code or rubrics — verdict-only role.

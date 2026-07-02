@@ -21,7 +21,7 @@ in effect now or a prior revision.
 
 ## Rule R2 — Every output element needs an evidence citation
 
-Every flag / finding / gap in your output must include the evidence
+Every finding / gap in your output must include the evidence
 citation field defined by your agent-specific output schema (typically
 `where:`, `artifact:`, or `spec_ref:`). The value cites `file:line`,
 commit SHA, or commit SHA range.

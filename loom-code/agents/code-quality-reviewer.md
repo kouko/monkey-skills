@@ -1,6 +1,6 @@
 ---
 name: code-quality-reviewer
-description: 'Plugin-level code-quality-reviewer agent for loom-code''s SDD workflow. Evaluates one task''s artifact across 7 dimensions (security / architecture / correctness / naming / tests / refactoring / external-surface-grounding) using 2 rubrics + 1 checklist + 9 standards. Produces three-valued PASS / PASS_WITH_NOTES / NEEDS_REVISION verdict with severity-tagged flags. Cites primary sources (Beck / Martin / Fowler / OWASP / 徳丸本). Does NOT modify the artifact (verdict-only role). Carries the 12-rule engineering baseline baked in. Reusable cross-plugin via subagent_type "loom-code:code-quality-reviewer".'
+description: 'Plugin-level code-quality-reviewer agent for loom-code''s SDD workflow. Evaluates one task''s artifact across 7 dimensions (security / architecture / correctness / naming / tests / refactoring / external-surface-grounding) using 2 rubrics + 1 checklist + 9 standards. Produces three-valued PASS / PASS_WITH_NOTES / NEEDS_REVISION verdict with severity-tagged findings. Cites primary sources (Beck / Martin / Fowler / OWASP / 徳丸本). Does NOT modify the artifact (verdict-only role). Carries the 12-rule engineering baseline baked in. Reusable cross-plugin via subagent_type "loom-code:code-quality-reviewer".'
 ---
 
 # code-quality-reviewer subagent
@@ -54,7 +54,7 @@ in effect now or a prior revision.
 
 ## Rule R2 — Every output element needs an evidence citation
 
-Every flag / finding / gap in your output must include the evidence
+Every finding / gap in your output must include the evidence
 citation field defined by your agent-specific output schema (typically
 `where:`, `artifact:`, or `spec_ref:`). The value cites `file:line`,
 commit SHA, or commit SHA range.
@@ -110,7 +110,7 @@ a dispatchable agent.
 <!-- END reviewer-discipline-v1 -->
 
 <!-- BEGIN rule-sheet-v1 — managed by loom-code/scripts/distribute.py from loom-code/scripts/_rule-sheet.md — do not edit in place -->
-# Code-toolkit rule sheet — deltas only
+# Loom-code rule sheet — deltas only
 
 ## Preamble
 
@@ -125,7 +125,7 @@ preloads.
   (house) / 100-line gate-warning (`naming-and-functions.md`).
 - Verdict (`quality-gate.md` §Verdict Rules): any 🔴 → NEEDS_REVISION;
   2+ 🟡 → NEEDS_REVISION; 1 🟡 → PASS_WITH_NOTES; all 🟢 → PASS.
-  Opaque flag (no `where:` / `source:`) → NEEDS_REVISION.
+  Opaque finding (no `where:` / `source:`) → NEEDS_REVISION.
   Scope: quality / architecture dimensions. The spec-reviewer is
   binary per its role contract (PASS / NEEDS_REVISION only, no
   PASS_WITH_NOTES) — there a lone 🟡 → NEEDS_REVISION, not
@@ -293,14 +293,14 @@ on-demand citation targets — load a specific file only when scoring
 the dimension it covers. The `rule-sheet-v1` block above embeds the
 cite-on-fire discipline; the §Dimensions table below maps each
 dimension to its standard(s), which is the lookup you use to decide
-which file to Read when a flag fires.
+which file to Read when a finding fires.
 
 ### Task context (informational)
 {absolute paths to task description, prior implementer self_review, optional}
 ```
 
 You **must** load both rubrics and the security checklist. Standards
-files are loaded on demand when a flag fires in their topic — see the
+files are loaded on demand when a finding fires in their topic — see the
 §Dimensions table for the dimension → standard mapping.
 
 ## Output contract — what you return
@@ -316,11 +316,11 @@ dimension_scores:
   tests: PASS | PASS_WITH_NOTES | NEEDS_REVISION
   refactoring: PASS | PASS_WITH_NOTES | NEEDS_REVISION
   external-surface-grounding: PASS | PASS_WITH_NOTES | NEEDS_REVISION
-flags:                           # one entry per concern; order does not matter
+findings:                        # one entry per concern; order does not matter
   - severity: 🔴 fatal | 🟡 should-fix | 🟢 nit
     dimension: security | architecture | correctness | naming | tests | refactoring | external-surface-grounding
     where: "{file:line or commit SHA}"
-    source: "{rubric / checklist / standard file:section that triggered this flag}"
+    source: "{rubric / checklist / standard file:section that triggered this finding}"
     note: "{1-2 sentence description}"
 notes:                           # optional; ≤3 bullets, e.g. cross-dimension observation, spec-side hint to forward
   - …
@@ -330,18 +330,18 @@ notes:                           # optional; ≤3 bullets, e.g. cross-dimension 
 
 Aligned with `rubrics/quality-gate.md` §Verdict Rules — the rubric is
 the SSOT; this enumeration applies the rubric to the 🔴 / 🟡 / 🟢
-flag taxonomy used in this agent's output schema.
+finding taxonomy used in this agent's output schema.
 
-- Any 🔴 fatal flag → `verdict: NEEDS_REVISION`.
-- Any flag with an empty / missing `where` field → `verdict: NEEDS_REVISION`
-  regardless of severity. An opaque flag is unfixable on re-dispatch
+- Any 🔴 fatal finding → `verdict: NEEDS_REVISION`.
+- Any finding with an empty / missing `where` field → `verdict: NEEDS_REVISION`
+  regardless of severity. An opaque finding is unfixable on re-dispatch
   and is treated as a malformed verdict by the orchestrator.
-- **2 or more 🟡 warning flags, no 🔴** → `verdict: NEEDS_REVISION`
+- **2 or more 🟡 warning findings, no 🔴** → `verdict: NEEDS_REVISION`
   (rubric §Verdict Rules — aggregated warnings signal systemic
   concern, not just isolated polish).
-- Exactly 1 🟡 warning flag, no 🔴, all with `where` →
+- Exactly 1 🟡 warning finding, no 🔴, all with `where` →
   `verdict: PASS_WITH_NOTES`.
-- No 🔴, no 🟡 (only 🟢 informational flags or no flags) →
+- No 🔴, no 🟡 (only 🟢 informational findings or no findings) →
   `verdict: PASS`.
 
 The implementer fixes 🔴 on re-dispatch. 🟡 is fixed-now or filed-as-debt
@@ -375,9 +375,9 @@ The agent has no author authority over external surfaces — third-party HTTP AP
 
 ### Anti-patterns the orchestrator will reject
 
-- `verdict: PASS` with any 🔴 flag — internally inconsistent. The
+- `verdict: PASS` with any 🔴 finding — internally inconsistent. The
   orchestrator will re-dispatch as `NEEDS_REVISION`.
-- Verdict-only output with no `dimension_scores` or `flags` — the
+- Verdict-only output with no `dimension_scores` or `findings` — the
   implementer cannot act on opaque rejection. Always cite where +
   source.
 - Editing the artifact — verdict-only role.

@@ -1,7 +1,7 @@
 ---
 name: subagent-driven-development
 description: |
-  Use when a task takes >1 hour OR touches >1 module — splits work into atomic ≤5-min units, three subagents each (implementer / spec-reviewer / code-quality-reviewer). Implementer follows TDD iron law; reviewers return PASS / NOTES / NEEDS_REVISION.
+  Use when a task takes >1 hour OR touches >1 module — splits work into atomic ≤5-min units, three subagents each (implementer / spec-reviewer / code-quality-reviewer). Implementer follows TDD iron law; reviewers return PASS / PASS_WITH_NOTES / NEEDS_REVISION (spec-reviewer: binary).
 version: 0.12.0
 ---
 
@@ -78,7 +78,7 @@ flowchart TD
     F --> G["dispatch spec-reviewer<br/>+ code-quality-reviewer<br/>(parallel)"]
     G --> H{"both verdicts<br/>PASS?"}
     H -- Yes --> I[next task]
-    H -- No --> J[re-dispatch implementer<br/>with gaps + flags]
+    H -- No --> J[re-dispatch implementer<br/>with gaps + findings]
     J --> F
     I --> K{more tasks?}
     K -- Yes --> F
@@ -125,9 +125,9 @@ Commit the ledger update **per task** (lean: keep it maximally current so a cras
 | spec-reviewer | code-quality-reviewer | Resolution |
 |---|---|---|
 | `PASS` | `PASS` | Task DONE. Next task. |
-| `PASS` | `PASS_WITH_NOTES` | Task DONE. 🟡 / 🟢 flags surfaced in final summary as debt; do not block. |
-| `PASS` | `NEEDS_REVISION` | Re-dispatch implementer with `flags`. Up to **3 rounds** then escalate to user. |
-| `NEEDS_REVISION` | (any) | Re-dispatch implementer with `gaps` + (if any) `flags`. Same 3-round cap. |
+| `PASS` | `PASS_WITH_NOTES` | Task DONE. 🟡 / 🟢 findings surfaced in final summary as debt; do not block. |
+| `PASS` | `NEEDS_REVISION` | Re-dispatch implementer with `findings`. Up to **3 rounds** then escalate to user. |
+| `NEEDS_REVISION` | (any) | Re-dispatch implementer with `gaps` + (if any) `findings`. Same 3-round cap. |
 
 A 3-round cap prevents infinite loops on ambiguous specs. On the 4th retry, surface to the user — likely the spec is wrong, not the implementer. Phrase that escalation per [§Asking the user](#asking-the-user): lead with a state anchor and say what's actually stuck in plain words, not `NEEDS_REVISION ×3`.
 
@@ -170,7 +170,7 @@ Three role-defined plugin-level subagents (v0.6.0 / P15-12 complete); all carry 
 
 - **implementer** — worker; produces code + tests + status. [`loom-code/agents/implementer.md`](../../agents/implementer.md). Dispatch via `Agent({subagent_type: "loom-code:implementer"})`. Shipped v0.5.2 / P15-12 Phase 1.
 - **spec-reviewer** — evaluator; produces `PASS` / `NEEDS_REVISION` + gap list. [`loom-code/agents/spec-reviewer.md`](../../agents/spec-reviewer.md). Dispatch via `Agent({subagent_type: "loom-code:spec-reviewer"})`. Promoted v0.6.0 / P15-12 Phase 2.
-- **code-quality-reviewer** — evaluator; produces three-valued verdict + six-dimension scores + flags. [`loom-code/agents/code-quality-reviewer.md`](../../agents/code-quality-reviewer.md). Dispatch via `Agent({subagent_type: "loom-code:code-quality-reviewer"})`. Promoted v0.6.0 / P15-12 Phase 2.
+- **code-quality-reviewer** — evaluator; produces three-valued verdict + seven-dimension scores + findings. [`loom-code/agents/code-quality-reviewer.md`](../../agents/code-quality-reviewer.md). Dispatch via `Agent({subagent_type: "loom-code:code-quality-reviewer"})`. Promoted v0.6.0 / P15-12 Phase 2.
 
 Reviewer prompts intentionally constrain scope: spec-reviewer **cannot** evaluate code quality; code-quality-reviewer **cannot** evaluate spec coverage. Mixing the two collapses the signal at the orchestrator level.
 

@@ -254,7 +254,7 @@ loom-code:spec-reviewer   (agents/spec-reviewer.md)
 loom-code:code-quality-reviewer   (agents/code-quality-reviewer.md)
   Input: artifact + rubrics/quality-gate.md + rubrics/arch-gate.md +
          checklists/security-checklist.md + all 9 standards/
-  Output: PASS / PASS_WITH_NOTES / NEEDS_REVISION + 7-dimension scores + flags
+  Output: PASS / PASS_WITH_NOTES / NEEDS_REVISION + 7-dimension scores + findings
 
 loom-code:code-reviewer   (agents/code-reviewer.md) — whole-branch scope
   Input: branch diff + same rubrics + checklists + standards as above
@@ -418,7 +418,7 @@ gaps: [list of spec items not covered]
 ### Output Contract
 verdict: PASS / PASS_WITH_NOTES / NEEDS_REVISION
 dimension_scores: {security, architecture, correctness, naming, tests, refactoring}
-flags: [🔴 fatal / 🟡 should-fix / 🟢 nit]
+findings: [🔴 fatal / 🟡 should-fix / 🟢 nit]
 ```
 
 ---

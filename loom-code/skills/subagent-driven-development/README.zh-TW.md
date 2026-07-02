@@ -21,7 +21,7 @@
 |---|---|---|---|---|
 | `implementer` | worker | (status: DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED) | task / spec / standards | code / 測試 / commit |
 | `spec-reviewer` | evaluator | PASS / NEEDS_REVISION + gap list | artifact / spec / `checklists/spec-consistency.md` | 只產 verdict |
-| `code-quality-reviewer` | evaluator | PASS / PASS_WITH_NOTES / NEEDS_REVISION + 七維度評分 + flags (🔴 / 🟡 / 🟢) | artifact / rubrics / checklist / 9 standards | 只產 verdict |
+| `code-quality-reviewer` | evaluator | PASS / PASS_WITH_NOTES / NEEDS_REVISION + 七維度評分 + findings (🔴 / 🟡 / 🟢) | artifact / rubrics / checklist / 9 standards | 只產 verdict |
 
 每個任務跑：implementer 一輪 + reviewer 並行一輪。Reviewer 守備範圍故意不重疊：spec-reviewer 不評品質，code-quality-reviewer 不評 spec 涵蓋度。混在一起會把 orchestrator 的解決演算法搞壞。
 
@@ -42,7 +42,7 @@
 3 個 reviewer agent（`spec-reviewer`、`code-quality-reviewer`、`code-reviewer`）各自 **額外** 攜帶一個檔內 SSOT 注入區塊 — **reviewer-discipline-v1** — 用 BEGIN/END 標記包覆。Canonical 文字在 `loom-code/scripts/_reviewer-discipline.md`：
 
 - **R1** — 每個 verdict 帶 `standards_version` 欄位（從 `plugin.json` 的 `version` 讀），讓未來讀者知道這次 review 是哪一版 rubric 跑的。
-- **R2** — 每個 flag / finding / gap 都必須帶證據引用欄位（`where:` / `artifact:` / `spec_ref:`）。缺證據 → 整個 verdict 翻成 `NEEDS_REVISION`（opaque 輸出無法修）。
+- **R2** — 每個 finding / gap 都必須帶證據引用欄位（`where:` / `artifact:` / `spec_ref:`）。缺證據 → 整個 verdict 翻成 `NEEDS_REVISION`（opaque 輸出無法修）。
 
 由 `distribute.py` 跟 12 條 engineering baseline 一起自動注入。Implementer **不** 攜帶此區塊 — 它不產 verdict。`verify-drift.py` 透過共用的 `expected_agent_text` 同時覆蓋兩個注入區塊。
 
