@@ -7,6 +7,21 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Decided
+
+- **`using-loom-spec` router: parked, with explicit re-triggers** (audit
+  close-out, reaffirming the MVP brief's v0.2 deferral). The router's
+  load-bearing job per the 2026-06-11 research synthesis is the
+  proportional-rigor **tiering judgment**, which depends on
+  `spec-discovery` / `spec-persist` and the OpenSpec DECLARE layer — none
+  built. The writer→judge sequencing concern that re-raised the question is
+  already covered in-skill (spec-expansion handoff + completeness-critic
+  verdict resolution, shipped in the audit's earlier PRs). Re-triggers in
+  README §Scope: DECLARE lands, or discovery/persist are scheduled — the
+  router ships with its tiering cargo, not before it. Also fixed the README's
+  dead pointers to the pre-rename brief/research filenames (frozen docs keep
+  old names; the pointers now match).
+
 ### Changed
 
 - `spec-expansion` §Consuming a `ui-flows.md` seed now names the seed's

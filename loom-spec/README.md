@@ -45,7 +45,11 @@ The engine auto-expands (strong) but cannot auto-complete (a theoretical floor):
 
 ## Scope (v0.3.x)
 
-In: `spec-expansion` + `completeness-critic` + the format validator. Out (still deferred): OpenSpec CLI wiring, `spec-discovery` / `spec-persist` / a router skill, knowledge-layer SSOT sharing, proportional-rigor tiering, cross-host testing. See `docs/loom/specs/2026-06-11-loom-spec-mvp-critic-first.md` (brief) and `docs/loom/research/2026-06-11-loom-spec-openspec-research-synthesis.md` (research).
+In: `spec-expansion` + `completeness-critic` + the format validator. Out (still deferred): OpenSpec CLI wiring, `spec-discovery` / `spec-persist`, knowledge-layer SSOT sharing, cross-host testing.
+
+**`using-loom-spec` router + proportional-rigor tiering — deliberately parked** (2026-07-02 audit close-out, reaffirming the MVP brief's v0.2 deferral): the router's load-bearing job is the **tiering judgment** ("decide whether to expand at all" — No-Spec / Lite / Full), which depends on `spec-discovery` / `spec-persist` and the OpenSpec DECLARE layer, none of which exist yet. A router built now would only duplicate the writer→judge sequencing that the two skills already carry themselves (spec-expansion's handoff + completeness-critic's verdict resolution rules) — a sync-drift surface with no engine. Re-trigger: the OpenSpec DECLARE layer lands, or `spec-discovery` / `spec-persist` are actually scheduled — the router ships **with** its tiering cargo, not before it.
+
+See `docs/loom/specs/2026-06-11-spec-toolkit-mvp-critic-first.md` (brief; pre-rename filename kept per frozen-docs policy) and `docs/loom/research/2026-06-11-spec-toolkit-openspec-research-synthesis.md` (research).
 
 ## License
 
