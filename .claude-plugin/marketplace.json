@@ -105,6 +105,11 @@
       "source": "./research-toolkit/"
     },
     {
+      "name": "hermes-tweet",
+      "description": "Hermes Agent X/Twitter workflow skill for sourced social-signal briefs from profiles, timelines, searches, and post URLs, with write actions explicitly gated.",
+      "source": "./hermes-tweet/"
+    },
+    {
       "name": "loom-spec",
       "description": "Key-free GENERATE-layer spec skills — expand a seed into a high-recall spec + critique omissions.",
       "source": "./loom-spec/"
