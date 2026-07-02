@@ -12,6 +12,14 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Skill description restored to the proactive, trilingual-trigger form: fires
+  BEFORE design/spec/build (not only when asked), carries 產品原則 / 產品憲章 /
+  プロダクト指針 triggers and the "north star" phrasing the test suite encodes,
+  and states a when-NOT boundary. #456's rewrite had dropped the CJK triggers
+  and made the description reactive-only, silently breaking 2 tests (no CI ran
+  them) and likely re-opening the pre-#456 under-firing this plugin was known
+  for.
+
 - `product-principles` SKILL.md now states the correct skill-dir-relative
   validator path (`../../scripts/validate_principles_output.py`); the
   previously claimed `scripts/…` form did not resolve from the skill directory
