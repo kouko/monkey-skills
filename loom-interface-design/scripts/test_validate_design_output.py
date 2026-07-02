@@ -267,3 +267,16 @@ def test_side_by_side_design_md_takes_precedence(tmp_path):
     (change / "ui-flows.md").write_text(_ui_flows_body(), encoding="utf-8")
     ok, problems = validate(change)
     assert ok, problems
+
+
+def test_relative_dot_invocation_from_inside_change_folder(tmp_path, monkeypatch):
+    """Invoking the validator with root="." from INSIDE the change folder must
+    still find the parent-level DESIGN.md — Path(".").parent is Path("."), so
+    the resolver must normalize the root to an absolute path first."""
+    (tmp_path / "DESIGN.md").write_text(_design_body(), encoding="utf-8")
+    change = tmp_path / "my-feature"
+    change.mkdir()
+    (change / "ui-flows.md").write_text(_ui_flows_body(), encoding="utf-8")
+    monkeypatch.chdir(change)
+    ok, problems = validate(Path("."))
+    assert ok, problems

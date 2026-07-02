@@ -232,5 +232,8 @@ def test_inputs_are_per_change_folder():
     """The critique inputs must reflect the per-change layout: product-level
     DESIGN.md + per-change docs/loom/<change-id>/ui-flows.md."""
     text = _text()
-    assert "<change-id>" in text, \
-        "critique inputs must name the per-change <change-id> folder"
+    assert "docs/loom/<change-id>/ui-flows.md" in text, \
+        "critique inputs must name the per-change " \
+        "docs/loom/<change-id>/ui-flows.md path"
+    assert "docs/loom/DESIGN.md" in text, \
+        "critique inputs must name the product-level DESIGN.md"

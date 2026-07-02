@@ -341,7 +341,10 @@ Emit a **directory in OpenSpec change-folder shape** (plain markdown — no
 OpenSpec CLI dependency). Default `<output-dir>` = `docs/loom/<change-id>/` in
 the consumer project (the loom suite's shared artifact home, alongside
 `PRINCIPLES.md` / `DESIGN.md` / `specs/` / `plans/`), unless the user names
-another location:
+another location. **When the seed is a `docs/loom/<X>/ui-flows.md`, emit into
+that same folder** — `<X>` IS this change's `<change-id>`; do not mint a
+second, differently-cased id (the sit-beside contract with
+`loom-interface-design` depends on the ids matching):
 
 ```
 <output-dir>/                      # default: docs/loom/<change-id>/

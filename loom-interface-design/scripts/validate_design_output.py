@@ -182,7 +182,10 @@ def validate(root: Path) -> tuple[bool, list[str]]:
 
     Returns (ok, problems). ok is True iff problems is empty.
     """
-    root = Path(root)
+    # Resolve to an absolute path: with a relative root like "." invoked from
+    # inside the change folder, Path(".").parent is Path(".") — the parent
+    # (product-level) DESIGN.md lookup would silently check the same dir.
+    root = Path(root).resolve()
     if not root.is_dir():
         return False, [f"design change-folder does not exist: {root}"]
     problems: list[str] = []
