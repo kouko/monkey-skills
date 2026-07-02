@@ -125,7 +125,8 @@ so it lives in the repo and reviews like code. Downstream stations *read* it as
 a governing constraint, each via its own intake section:
 `loom-interface-design:design-system` / `interaction-flows` (generators),
 `loom-spec:spec-expansion` (§Governing constraint), and the critics'
-principles lenses (`design-critic` lens 6, `completeness-critic` lens 6).
+principles lenses (`design-critic`'s conditional PRINCIPLES lens,
+`completeness-critic` lens 6).
 At the code station the conformance gate is **live**: loom-code's
 whole-branch `code-reviewer` scores a `principles-conformance` dimension
 (D8, writer≠judge) against these principles when the file is present.
