@@ -12,7 +12,7 @@ Codex 0.139.0 **refuses to load** any skill whose `description` frontmatter exce
 invalid description: exceeds maximum length of 1024 characters
 ```
 
-Claude Code has **no such limit**. This is why 2 of `loom-code`'s skills had their `description` trimmed to load under Codex — keep every skill's `description` ≤ 1024 chars to stay dual-harness portable. After the trim, all 11 skills load under Codex 0.139.0 (verified).
+Claude Code has **no such limit**. This is why 2 of `loom-code`'s skills had their `description` trimmed to load under Codex — keep every skill's `description` ≤ 1024 chars to stay dual-harness portable. After the trim, all skills of the set verified at the time (11; `ui-verification` added later, unverified live on Codex) load under Codex 0.139.0.
 
 ## Installing the plugin in Codex 0.139.0
 
@@ -42,7 +42,7 @@ Codex uses **slash-command syntax** for skill invocation:
 /plugin:skill-name    # plugin-scoped (when same skill name exists in multiple plugins)
 ```
 
-For `loom-code`'s 11 skills:
+For `loom-code`'s skills (11 at verification time):
 
 | Skill | Codex invocation |
 |---|---|
@@ -57,10 +57,11 @@ For `loom-code`'s 11 skills:
 | finishing-a-development-branch | `/finishing-a-development-branch` |
 | using-git-worktrees | `/using-git-worktrees` |
 | dispatching-parallel-agents | `/dispatching-parallel-agents` |
+| ui-verification | `/ui-verification` (added v0.21.0 — **unverified live on Codex**) |
 
 If a skill name conflicts with another installed plugin (e.g. `obra/superpowers` ships `/brainstorming` too), use the plugin-scoped form: `/loom-code:brainstorming`.
 
-**Verified**: all 11 skills load from the installed plugin under Codex 0.139.0 (after the `description` trim above). The SessionStart hook injects the router — confirmed, a live session quoted the router banner verbatim.
+**Verified**: all 11 then-existing skills load from the installed plugin under Codex 0.139.0 (after the `description` trim above). The SessionStart hook injects the router — confirmed, a live session quoted the router banner verbatim.
 
 **Assumed (not exercised in this test)**: auto-discovery via description-text classification (the prompt-match mechanism Claude Code uses). The hook injection covers the router (always-on context) regardless of whether prompt-match works identically; specialist skills load via slash command for certain.
 

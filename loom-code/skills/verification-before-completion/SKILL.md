@@ -57,7 +57,7 @@ Each maps to a failure mode in The HARD-GATE above.
 
 ## Boundaries & related skills
 
-This skill runs the *existing* suite. It does **not** write tests (`tdd-iron-law`), judge code quality (`requesting-code-review` / SDD's per-task reviewer), decide which tests should exist, or replace CI — CI runs on push to remote; this skill runs *before* push so push carries only clean diffs.
+This skill runs the *existing* suite. It does **not** write tests (`tdd-iron-law`), judge code quality (`requesting-code-review` / SDD's per-task reviewer), decide which tests should exist, or replace CI — CI runs on push to remote; this skill runs *before* push so push carries only clean diffs. The rendered-UI half of verification (driving the real app through `ui-flows.md`'s states) is [`ui-verification`](../ui-verification/SKILL.md)'s job — a conditional sibling gate, not part of this one.
 
 Invoked by `subagent-driven-development` (optional, end of each task triad — per-task for fast suites, deferred to end-of-plan for slow ones) and `finishing-a-development-branch` (Step 2, after `requesting-code-review`). On **PASS** the branch flow proceeds to git-memory + commit; on **FAIL** surface to the user, who routes to `tdd-iron-law` (failing case → RED → fix → GREEN) or `systematic-debugging` (failure non-obvious).
 

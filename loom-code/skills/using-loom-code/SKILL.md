@@ -53,6 +53,7 @@ Walk through these stages in order. Skip a stage only when its precondition is a
 | 5 | Repair (when stuck) | `systematic-debugging` | ✅ shipped |
 | 6 | Review | `requesting-code-review` | ✅ shipped |
 | 7 | Verification | `verification-before-completion` | ✅ shipped |
+| 7b | UI verification (conditional) | `ui-verification` — fires only when the branch touched UI and a `ui-flows.md` exists; N/A otherwise | ✅ shipped |
 | 8 | Branch close | `finishing-a-development-branch` → delegates `dev-workflow:git-memory` | ✅ shipped |
 
 **Auxiliary** (on-demand, not part of the linear stage flow):
