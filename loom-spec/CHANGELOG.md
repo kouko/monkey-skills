@@ -5,6 +5,19 @@ All notable changes to the `loom-spec` plugin (formerly `spec-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- `spec-expansion` now reads `docs/loom/PRINCIPLES.md` as a **governing
+  constraint** before expanding (new §Governing constraint — constitution→spec
+  seam): the constitution bounds the fan-out scope, steers Phase ③ pruning
+  priorities, and sets the NFR posture; absence is surfaced loudly (expansion
+  proceeds only with an explicit "ungoverned" caveat). Closes the seam gap
+  where product-principles claimed to govern spec-expansion but only the
+  completeness-critic's post-hoc lens ever read the constitution. Guarded by
+  `test_body_reads_principles_as_governing_constraint`.
+
 ## [0.3.1] — 2026-06-21
 
 ### Changed

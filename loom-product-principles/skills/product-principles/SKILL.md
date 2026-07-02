@@ -122,6 +122,13 @@ platitude) is your responsibility, guided by the ✅/❌ examples in the contrac
 downstream station — **interface-design, spec-expansion, and code** (incl.
 **headless / CLI** products with no UI). It is **key-free** and **git-diffable**,
 so it lives in the repo and reviews like code. Downstream stations *read* it as
-steering context; a future conformance gate (writer≠judge) may check artifacts
-against these principles — but that is out of this skill's scope. This skill
-*writes* the constitution; it does not enforce it downstream.
+a governing constraint, each via its own intake section:
+`loom-interface-design:design-system` / `interaction-flows` (generators),
+`loom-spec:spec-expansion` (§Governing constraint), and the critics'
+principles lenses (`design-critic`'s conditional PRINCIPLES lens,
+`completeness-critic` lens 6).
+At the code station the conformance gate is **live**: loom-code's
+whole-branch `code-reviewer` scores a `principles-conformance` dimension
+(D8, writer≠judge) against these principles when the file is present.
+This skill *writes* the constitution; enforcement lives in those
+downstream gates.

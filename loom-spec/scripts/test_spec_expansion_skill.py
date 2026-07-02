@@ -499,6 +499,38 @@ def test_skill_documents_prior_state_intake():
         "separate section's job)"
 
 
+# --- governing constitution (PRINCIPLES.md seam) -----------------------------
+
+def test_body_reads_principles_as_governing_constraint():
+    """The spec GENERATE station must read the product constitution the same
+    way the design station's generators do (interaction-flows / design-system
+    both carry a governing-constraint section): PRINCIPLES.md governs the
+    fan-out WHEN PRESENT, and its absence is surfaced loudly — never silently
+    treated as an unconstrained spec. Before this seam existed,
+    product-principles claimed to govern spec-expansion but only the
+    completeness-critic (lens 6, post-hoc) ever read the constitution."""
+    text = _text()
+    lines = text.splitlines()
+    hits = [ln for ln in lines if "PRINCIPLES.md" in ln]
+    assert len(hits) >= 2, \
+        "body must READ the product's PRINCIPLES.md as a governing input — " \
+        "not merely list it once as a sibling artifact path"
+    assert any("govern" in ln.lower() or "constrain" in ln.lower()
+               for ln in hits), \
+        "some PRINCIPLES.md mention must frame it as governing/constraining " \
+        "the expansion"
+    # absence surfaced near a PRINCIPLES.md mention (8-line window)
+    idxs = [i for i, ln in enumerate(lines) if "PRINCIPLES.md" in ln]
+    window_ok = any(
+        any(w in lines[j].lower() for w in ("absent", "absence", "missing"))
+        for i in idxs
+        for j in range(max(0, i - 4), min(len(lines), i + 5))
+    )
+    assert window_ok, \
+        "PRINCIPLES.md absence must be surfaced (fail loud), near the " \
+        "governing-constraint text"
+
+
 # --- boundary: stops at GENERATE --------------------------------------------
 
 def test_generate_boundary_no_tdd_no_review():
