@@ -37,7 +37,15 @@ A 5th thin plugin shipping exactly:
    invokes `Workflow({scriptPath})` — one workflow invocation **per
    pipeline segment**, with human gates between segments.
 2. **One driver script asset** — the dogfood driver's descendant with
-   F1–F5 + the v1 gap subset baked in (see Decision).
+   F1–F5 + the v1 gap subset baked in (see Decision). **Assembled, not
+   hand-monolithic** (decision 2026-07-03, plan-review round-2
+   escalation, user-approved): flat per-concern source modules under
+   `loom-pipeline/scripts/` (header/guard/runStation/segments/ledger)
+   concatenated by `scripts/build_driver.py` into the self-contained
+   asset (Workflow scripts cannot import), with a rebuild-and-diff
+   drift test — the same SSOT-and-functional-copy mechanism as
+   loom-code's `distribute.py`. Atomic tasks per module; the built
+   asset is generated-and-committed.
 3. **Structural tests** for the script + skill prose (repo CI).
 
 No agents of its own, no standards of its own, no gates of its own —
@@ -133,6 +141,22 @@ watchdog implementation).
 
 We will NOT build: our own review/verdict logic (stations own it), a
 Codex driver variant, cross-vendor judging, an agents/ directory.
+
+## Committed next (v1.1 — deliberately NOT in this plan)
+
+**Batch implementation mode** (user requirement 2026-07-03, stated as
+the metaphor 「白天討論規格、晚上自動實作」 — the capability wanted is
+the general one, NOT time-of-day scheduling): after the user has
+interactively discussed and FROZEN multiple changes (validator exit-0
++ plan written), a batch entry mode iterates segment 3 per queued
+change (own worktree/branch, per-change pre-authorized budget, failure
+isolates to its item) unattended — whenever invoked, foreground or
+background. Interface afterwards = N ledgers + N PR branches; merge
+stays human. Distinct from the parked full autopilot (agent-selected
+work, continuous ticks) — human gates move to spec-freeze time, they
+do not disappear. v1's segment-3-standalone design (`args.segment`,
+no-merge prohibition, per-run budgets) is the enabling interface; v1.1
+adds only the queue convention + the batch loop.
 
 ## Out of Scope
 
