@@ -22,12 +22,17 @@ on:
     paths:
       - 'loom-interface-design/**'
       - 'loom-product-principles/**'
+      # Both plugins' test_marketplace_entry.py read the repo-root
+      # marketplace.json, so an edit there must fire this gate too —
+      # else a removed/renamed entry merges ungated (fail-open).
+      - '.claude-plugin/marketplace.json'
       - '.github/workflows/loom-siblings-ci.yml'
   push:
     branches: [main]
     paths:
       - 'loom-interface-design/**'
       - 'loom-product-principles/**'
+      - '.claude-plugin/marketplace.json'
 
 permissions:
   contents: read
