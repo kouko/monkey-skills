@@ -181,3 +181,37 @@ def test_writes_back_provenance_critic_found():
         "critic-found items must be tagged critic-found in Provenance"
     assert "## Provenance" in text, \
         "critic-found items go into the '## Provenance' section"
+
+
+# --- verdict contract (two-valued, machine-readable) -------------------------
+
+def test_verdict_two_valued_enum():
+    """The router/orchestrator layer calls this critic a gate, so it must emit
+    a machine-readable verdict. The enum is deliberately TWO-valued —
+    PASS_WITH_NOTES / NEEDS_REVISION, aligned with loom-code's reviewer
+    vocabulary but WITHOUT the unqualified PASS token: a critic verdict
+    claiming nothing remains would itself be a completeness claim (the banned
+    "complete" reflex), and the mandatory non-empty Blind spots section means
+    every clean outcome carries notes."""
+    text = _text()
+    assert "PASS_WITH_NOTES" in text, \
+        "verdict enum must carry PASS_WITH_NOTES"
+    assert "NEEDS_REVISION" in text, \
+        "verdict enum must carry NEEDS_REVISION"
+    low = text.lower()
+    assert "verdict" in low, "must frame the output as a verdict"
+    # the no-bare-PASS rationale must be stated
+    assert re.search(r"(no|never|not)\b[^.\n]*\bunqualified pass|"
+                     r"(no|never|not)\b[^.\n]*\bbare pass|"
+                     r"deliberately\s+(has\s+)?no\s+pass\b", low), \
+        "must state that an unqualified/bare PASS is deliberately absent"
+
+
+def test_severity_scale_defined():
+    """Rank = severity x cross-lens convergence, but severity itself was never
+    defined here (design-critic defines a 3-point scale). The two critics'
+    verdicts share semantics only if the scale is defined on both sides."""
+    text = _text()
+    assert re.search(r"\*\*3\s*=", text) and re.search(r"\*\*2\s*=", text) \
+        and re.search(r"\*\*1\s*=", text), \
+        "severity must be a defined 3-point scale (3 = / 2 = / 1 =)"

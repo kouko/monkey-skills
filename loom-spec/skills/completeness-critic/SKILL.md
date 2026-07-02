@@ -336,8 +336,13 @@ judgment call like the overlap diagnostic, **no script, no computed metric**:
 1. **Dedup semantically across lenses** — a gap found by several critics in
    different words collapses to **ONE** consolidated finding (carry the set of
    lenses that hit it).
-2. **Rank by (severity × number-of-lenses-that-found-it)** — **cross-lens
-   convergence is the precision signal**: a gap that **multiple independent
+2. **Rank by (severity × number-of-lenses-that-found-it)**. **Severity** is a
+   3-point scale (the same scale as `design-critic`, so the two critics'
+   verdicts share semantics): **3 = load-bearing** — the capability cannot ship
+   correctly with this omission (a missing requirement / state the
+   implementation would get wrong); **2 = should-add** — a secondary state /
+   NFR / edge the writer should cover; **1 = polish** — a docs-level nicety.
+   **Cross-lens convergence is the precision signal**: a gap that **multiple independent
    lenses** hit is load-bearing, the panel-level analogue of the per-critic
    precision win. A high-severity gap surfaced by 3–4 decorrelated lenses ranks
    above a single-lens nit. (Convergence raises *rank confidence*, not
@@ -359,7 +364,11 @@ judgment call like the overlap diagnostic, **no script, no computed metric**:
    did not.
 
 `## How you write back` below operates on **this consolidated, ranked set** —
-not the raw union.
+not the raw union. That write-back is the **sanctioned GENERATE-station
+exception** to the repo's evaluator-does-not-modify rule (repo CLAUDE.md
+§Agent Behavioral Rules): augmentation only, always provenance-tagged, never
+overwriting writer content — and the §Verdict below is still required, so the
+gate signal never rides on prose.
 
 ## How you write back
 
@@ -399,9 +408,28 @@ After the loop terminates (K consecutive dry rounds), report:
 - an explicit statement of **coverage relative to seed + N lenses** (N = 5, or 6
   when the conditional principles lens ran) — never the word "complete".
 
-Then hand the extended output to the verification gate (human review →
-loom-code VERIFY). You do not declare done; you declare *coverage and its
-limits*.
+Then emit the verdict (§Verdict below) and hand the extended output onward.
+You do not declare done; you declare *coverage and its limits*.
+
+## Verdict — two-valued, machine-readable
+
+End the round summary with exactly **one verdict token** (aligned with
+loom-code's reviewer vocabulary) so the orchestrator gets a machine-readable
+revise/proceed signal instead of inferring one from prose:
+
+- **`NEEDS_REVISION`** — a **severity-3** consolidated finding could **not** be
+  concretely re-seeded (it needs writer rework — e.g. it contradicts the
+  draft's existing structure), **or** `../../scripts/validate_spec_output.py`
+  fails on the extended output after write-back. Resolution: back to the
+  `spec-expansion` writer before any handoff.
+- **`PASS_WITH_NOTES`** — the loop terminated dry, the ranked findings are
+  re-seeded (`critic-found`), and `## Blind spots` is non-empty as required.
+  Resolution: hand to human review → loom-code VERIFY.
+
+There is deliberately **no unqualified PASS** in this enum: a critic verdict
+claiming nothing remains would itself be a completeness claim (§Ban claiming
+"complete"), and the mandatory non-empty Blind spots means every clean outcome
+carries notes by construction.
 
 ## Reference
 

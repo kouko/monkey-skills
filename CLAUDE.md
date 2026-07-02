@@ -49,6 +49,7 @@ skills/init/references/v1/spec.md     ← references/ 下開 v1/
 ### Agent Behavioral Rules
 - worker：produces artifacts, does NOT produce gate verdicts
 - evaluator：produces verdicts, does NOT modify artifacts
+- **明文豁免**：GENERATE 站的 critic（`loom-interface-design:design-critic`、`loom-spec:completeness-critic`）是 sanctioned co-writer——可對草稿做 provenance-tagged **增補**（`critic-found` 標記），永不覆寫 writer 內容，且仍必須產出兩值 verdict（`PASS_WITH_NOTES` / `NEEDS_REVISION`，無 bare `PASS`——無條件通過即變相 complete 宣稱）。writer≠judge 由 fresh-context panel 保證，不靠「不改檔案」保證
 - Knowledge access is open（行為限制，非閱讀限制）
 
 ### Agent Launch Convention

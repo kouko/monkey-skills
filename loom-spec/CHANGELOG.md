@@ -9,6 +9,18 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- `completeness-critic` now ends every run with a **machine-readable two-valued
+  verdict** — `PASS_WITH_NOTES` / `NEEDS_REVISION` (aligned with loom-code's
+  reviewer vocabulary; an unqualified PASS is deliberately absent — it would be
+  a completeness claim, and Blind spots is non-empty by construction). Verdict
+  semantics: `NEEDS_REVISION` when a severity-3 finding cannot be concretely
+  re-seeded or the validator fails post-write-back. The **severity scale is now
+  defined** (3 = load-bearing / 2 = should-add / 1 = polish, same scale as
+  design-critic), and the write-back is documented as the sanctioned
+  GENERATE-station exception to the evaluator-does-not-modify rule (repo
+  CLAUDE.md). Guarded by `test_verdict_two_valued_enum` +
+  `test_severity_scale_defined`.
+
 - `spec-expansion` now reads `docs/loom/PRINCIPLES.md` as a **governing
   constraint** before expanding (new §Governing constraint — constitution→spec
   seam): the constitution bounds the fan-out scope, steers Phase ③ pruning
