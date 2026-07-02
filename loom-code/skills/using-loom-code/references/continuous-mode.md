@@ -46,8 +46,10 @@ checkable signals — never a fuzzy content-shape classifier:
 
 - **(a) named-artifact presence** — `specs/<capability>/spec.md` exists at the
   declared change-folder path; and
-- **(b) validator exit 0** — `loom-spec/scripts/validate_spec_output.py
-  <change-folder>` returns **exit 0** (the cross-plugin gate; loom-spec owns
+- **(b) validator exit 0** — loom-spec's `scripts/validate_spec_output.py
+  <change-folder>` (resolve under the loom-spec plugin root; in a
+  monkey-skills checkout: `loom-spec/scripts/validate_spec_output.py`)
+  returns **exit 0** (the cross-plugin gate; loom-spec owns
   the format, loom-code reuses it — no new validator). A non-zero exit HALTS
   the freeze and escalates (the artifact is not validate-clean).
 
