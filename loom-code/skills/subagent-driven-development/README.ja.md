@@ -21,7 +21,7 @@
 |---|---|---|---|---|
 | `implementer` | worker | (status: DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED) | task / spec / standards | コード・テスト・commit |
 | `spec-reviewer` | evaluator | PASS / NEEDS_REVISION + gap 一覧 | artifact / spec / `checklists/spec-consistency.md` | 判定のみ |
-| `code-quality-reviewer` | evaluator | PASS / PASS_WITH_NOTES / NEEDS_REVISION + 7 次元スコア + flags (🔴 / 🟡 / 🟢) | artifact / rubrics / checklist / 9 standards | 判定のみ |
+| `code-quality-reviewer` | evaluator | PASS / PASS_WITH_NOTES / NEEDS_REVISION + 7 次元スコア + findings (🔴 / 🟡 / 🟢) | artifact / rubrics / checklist / 9 standards | 判定のみ |
 
 各タスクは implementer 1 ラウンド + reviewer 並列 1 ラウンドで進む。レビュアの守備範囲は故意に非重複：spec-reviewer は品質を採点しない、code-quality-reviewer は spec 網羅性を採点しない。混ぜるとオーケストレータの解決アルゴリズムが壊れる。
 
@@ -42,7 +42,7 @@
 3 つの reviewer agent（`spec-reviewer`、`code-quality-reviewer`、`code-reviewer`）はそれぞれ **追加で** ファイル内 SSOT 注入ブロック — **reviewer-discipline-v1** — を BEGIN/END マーカーで包んで持つ。canonical テキストは `loom-code/scripts/_reviewer-discipline.md`：
 
 - **R1** — すべての verdict に `standards_version` フィールドを付与（`plugin.json` の `version` から読む）— 後の読者が「どのバージョンの rubric で採点されたか」を判別できる。
-- **R2** — すべての flag / finding / gap にエビデンス引用フィールド（`where:` / `artifact:` / `spec_ref:`）を必須記載。欠落すると verdict 全体が `NEEDS_REVISION` に反転（不透明な出力は修正不能）。
+- **R2** — すべての finding / gap にエビデンス引用フィールド（`where:` / `artifact:` / `spec_ref:`）を必須記載。欠落すると verdict 全体が `NEEDS_REVISION` に反転（不透明な出力は修正不能）。
 
 `distribute.py` が 12 ルール engineering baseline と並んで自動注入する。implementer はこのブロックを **持たない** — verdict を出さないため。`verify-drift.py` は共有の `expected_agent_text` 経由で両方のブロックをカバー。
 

@@ -43,9 +43,9 @@ The `specs/` delta stays OpenSpec-pure (structure-only `openspec validate`-clean
 
 The engine auto-expands (strong) but cannot auto-complete (a theoretical floor): the seed sets the ceiling; combinatorial coverage ≠ aspectual completeness; a filled grid that *looks* thorough is the most dangerous failure. So the output **never claims "complete"** — it states "coverage relative to seed + N lenses" and lists its blind spots. Trust is earned by execution (loom-code's gate), not by a spec that looks finished.
 
-## Scope (v0.1)
+## Scope (v0.3.x)
 
-In: `spec-expansion` + `completeness-critic` + the format validator. Out (deferred to v0.2): OpenSpec CLI wiring, `spec-discovery` / `spec-persist` / a router skill, knowledge-layer SSOT sharing, proportional-rigor tiering, cross-host testing. See `docs/loom/specs/2026-06-11-loom-spec-mvp-critic-first.md` (brief) and `docs/loom/research/2026-06-11-loom-spec-openspec-research-synthesis.md` (research).
+In: `spec-expansion` + `completeness-critic` + the format validator. Out (still deferred): OpenSpec CLI wiring, `spec-discovery` / `spec-persist` / a router skill, knowledge-layer SSOT sharing, proportional-rigor tiering, cross-host testing. See `docs/loom/specs/2026-06-11-loom-spec-mvp-critic-first.md` (brief) and `docs/loom/research/2026-06-11-loom-spec-openspec-research-synthesis.md` (research).
 
 ## License
 

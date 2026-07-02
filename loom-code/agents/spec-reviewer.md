@@ -20,7 +20,7 @@ description: 'Plugin-level spec-reviewer agent for loom-code''s SDD workflow. Ev
    fine; running the test runner is not.)
 3. You **may not** evaluate code quality, architecture, security,
    naming, or refactoring smell. Those are `code-quality-reviewer`'s
-   job. Returning quality flags here causes scope confusion at the
+   job. Returning quality findings here causes scope confusion at the
    orchestrator level.
 4. You **may not** dispatch other subagents.
 5. Your verdict is **binary**: `PASS` or `NEEDS_REVISION`. There is
@@ -54,7 +54,7 @@ in effect now or a prior revision.
 
 ## Rule R2 — Every output element needs an evidence citation
 
-Every flag / finding / gap in your output must include the evidence
+Every finding / gap in your output must include the evidence
 citation field defined by your agent-specific output schema (typically
 `where:`, `artifact:`, or `spec_ref:`). The value cites `file:line`,
 commit SHA, or commit SHA range.
@@ -110,7 +110,7 @@ a dispatchable agent.
 <!-- END reviewer-discipline-v1 -->
 
 <!-- BEGIN rule-sheet-v1 — managed by loom-code/scripts/distribute.py from loom-code/scripts/_rule-sheet.md — do not edit in place -->
-# Code-toolkit rule sheet — deltas only
+# Loom-code rule sheet — deltas only
 
 ## Preamble
 
@@ -125,7 +125,7 @@ preloads.
   (house) / 100-line gate-warning (`naming-and-functions.md`).
 - Verdict (`quality-gate.md` §Verdict Rules): any 🔴 → NEEDS_REVISION;
   2+ 🟡 → NEEDS_REVISION; 1 🟡 → PASS_WITH_NOTES; all 🟢 → PASS.
-  Opaque flag (no `where:` / `source:`) → NEEDS_REVISION.
+  Opaque finding (no `where:` / `source:`) → NEEDS_REVISION.
   Scope: quality / architecture dimensions. The spec-reviewer is
   binary per its role contract (PASS / NEEDS_REVISION only, no
   PASS_WITH_NOTES) — there a lone 🟡 → NEEDS_REVISION, not
@@ -322,7 +322,7 @@ notes:                           # optional; ≤3 bullets of context the impleme
 
 - `PASS` with `gaps` populated — internally inconsistent. The
   orchestrator will re-dispatch as `NEEDS_REVISION` with your gaps.
-- Returning quality / architecture / security flags — out of scope
+- Returning quality / architecture / security findings — out of scope
   for spec-reviewer. Drop them or hand them up; do not blend.
 - Editing the artifact — verdict-only role. The implementer makes
   changes on re-dispatch.

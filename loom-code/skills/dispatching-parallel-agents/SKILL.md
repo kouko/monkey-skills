@@ -85,7 +85,7 @@ When all parallel agents return:
 3. Aggregate by rule:
    - All `DONE` / `PASS` → integrate, move on.
    - Any `DONE_WITH_CONCERNS` / `PASS_WITH_NOTES` → integrate, but surface the concerns / notes to the user; do not silently drop them (they are the non-blocking design-feedback channel).
-   - Any `NEEDS_REVISION` → re-dispatch **only that one branch** with the flags. Other branches keep their results.
+   - Any `NEEDS_REVISION` → re-dispatch **only that one branch** with the findings. Other branches keep their results.
    - Any `BLOCKED` → apply the unblock step or surface to user.
    - Any `NEEDS_CONTEXT` → surface to user; do not re-dispatch blind.
 4. Run the package-level test suite **once** at the integration point (per `verification-before-completion`) — not per branch. Per-branch suites pass in isolation; the combined diff can still fail.

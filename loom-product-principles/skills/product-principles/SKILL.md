@@ -111,8 +111,8 @@ python loom-product-principles/scripts/validate_principles_output.py docs/loom/P
 ```
 
 It mechanically checks the two required sections exist and that **every**
-principle carries the literal `— check:` marker (the relative path from this
-skill dir is `scripts/validate_principles_output.py`). The validator checks
+principle carries the literal `— check:` marker (the path relative to this
+skill dir is `../../scripts/validate_principles_output.py`). The validator checks
 *structure*; the *quality* of each check (truly falsifiable vs disguised
 platitude) is your responsibility, guided by the ✅/❌ examples in the contract.
 
