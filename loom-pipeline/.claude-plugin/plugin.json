@@ -1,0 +1,20 @@
+{
+  "name": "loom-pipeline",
+  "version": "0.1.0",
+  "description": "Deterministic workflow driver conducting the loom principles→design→spec→code pipeline across station plugins.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/loom-pipeline",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "loom-pipeline",
+    "conductor",
+    "workflow",
+    "orchestration",
+    "pipeline-driver",
+    "portable"
+  ]
+}

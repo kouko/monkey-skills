@@ -1,0 +1,39 @@
+{
+  "name": "loom-pipeline",
+  "version": "0.1.0",
+  "description": "Deterministic workflow driver conducting the loom principles→design→spec→code pipeline across station plugins.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/loom-pipeline",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "loom-pipeline",
+    "conductor",
+    "workflow",
+    "orchestration",
+    "pipeline-driver",
+    "portable"
+  ],
+  "interface": {
+    "displayName": "loom-pipeline",
+    "shortDescription": "Deterministic conductor for the loom principles→design→spec→code pipeline",
+    "longDescription": "loom-pipeline is the conductor plugin for the loom suite: a deterministic Workflow driver that runs the principles→design→spec→code pipeline in segments, with fresh-context station agents, machine-readable gate verdicts, fail-loud input contracts, budgets, and a run ledger. NOTE: the driver requires the Claude Code Workflow primitive — it is N/A on Codex hosts (the four loom station plugins run interactively on Codex instead).",
+    "developerName": "kouko",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Run the loom pipeline on this change.",
+      "Drive this feature through principles, design, spec, and code.",
+      "Resume the loom pipeline run."
+    ],
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/loom-pipeline",
+    "brandColor": "#0E7490"
+  }
+}
