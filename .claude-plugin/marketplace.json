@@ -120,6 +120,11 @@
       "source": "./loom-interface-design/"
     },
     {
+      "name": "loom-pipeline",
+      "description": "Deterministic workflow driver conducting the loom principles→design→spec→code pipeline across station plugins.",
+      "source": "./loom-pipeline/"
+    },
+    {
       "name": "ascii-graph-toolkit",
       "description": "CJK-width-aware ASCII/Unicode diagram & table toolkit for channels that can't render Mermaid.",
       "source": "./ascii-graph-toolkit/"

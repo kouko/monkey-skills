@@ -1,0 +1,158 @@
+---
+name: using-loom-pipeline
+description: |
+  Drives the loom principles→design→spec→code pipeline end-to-end via
+  deterministic Claude Code Workflow segments — one Workflow invocation per
+  pipeline segment, never an inline hand-rolled orchestration. It is a thin
+  conductor: judgment (verdicts, standards, gates) stays in the four station
+  plugins (loom-product-principles, loom-interface-design, loom-spec,
+  loom-code); this skill only sequences them and enforces the run-input
+  contract. CONDITIONAL: fires only when both the Workflow tool is available
+  in the host AND the four station plugins are installed — otherwise
+  `loom-pipeline: N/A` with the reason, loudly. Codex hosts are N/A (Codex
+  has no Workflow primitive; do not fake orchestration inline there).
+  Triggers: "run the loom pipeline", "全管線", "全流程跑一遍",
+  自動實作 this change, "drive principles through code", "run the conductor".
+version: 0.1.0
+---
+
+<SUBAGENT-STOP>
+If you are a subagent dispatched with an explicit role prompt, your dispatcher
+already decided whether the pipeline conductor applies. Follow your dispatched
+prompt directly — do not re-derive fire conditions or re-invoke Workflow
+yourself.
+</SUBAGENT-STOP>
+
+# using-loom-pipeline — the thin conductor over the 4 station plugins
+
+This skill is orchestration only. It never authors PRINCIPLES.md, DESIGN.md,
+ui-flows.md, a spec draft, or code, and it never produces a verdict — those
+stay with `loom-product-principles`, `loom-interface-design`, `loom-spec`,
+and `loom-code`. Its entire job is: collect the run-input contract, resolve
+the driver asset's absolute path, and invoke `Workflow({scriptPath})` once
+per pipeline segment.
+
+## §When it fires — BOTH conditions, checked first
+
+1. **The Workflow tool is available** in this host (Claude Code exposes a
+   `Workflow` primitive that accepts an arbitrary `scriptPath`).
+2. **The four station plugins are installed**: `loom-product-principles`,
+   `loom-interface-design`, `loom-spec`, `loom-code`.
+
+Either condition false → emit **`loom-pipeline: N/A`** with the specific
+reason (which condition failed) and stop. N/A is a first-class honest
+outcome — **never silently skip, and never fake the orchestration inline**
+(e.g. by hand-driving the four stations one Task/Skill call at a time and
+presenting it as if the conductor ran). A faked run here reproduces exactly
+the babysitting problem this plugin exists to remove.
+
+**Codex hosts: N/A by definition.** Codex has no Workflow primitive (verified
+against the plugin-components reference); this skill has no fallback path
+for it. Report `loom-pipeline: N/A (no Workflow primitive on this host)` and
+stop — do not attempt a shell-script substitute here (that is a parked,
+separate re-trigger, not this skill's job).
+
+## §Run inputs — the 5-field contract
+
+Before invoking Workflow, collect exactly these fields. A missing required
+field is a fail-loud stop, never an improvised default (except where a
+default is explicitly stated below):
+
+| Field | Required | Default | Notes |
+|---|---|---|---|
+| **change-id** | yes | none | Identifies the per-change folder (`docs/loom/<change-id>/`); loom-spec owns that layout — this skill only threads the id through. |
+| **target project path** | yes | none | Absolute path to the consumer project the pipeline runs against. |
+| **token budgets** | yes | run-level: host default budget cap; per-station: an even split of the run-level budget across the segment's stations | Two numbers: a run-level cap and a per-station cap. Over-budget at either level is fail-loud inside the driver, never a silent continue. |
+| **model policy** | yes | Claude default model tier for all stations | Which model tier each station runs on (Workflow's `model` param is Claude-family only — no cross-vendor judging in v1). |
+| **resumeRunId** | no | none (fresh run) | Optional. Maps directly to Workflow's native `resumeFromRunId` — passing it resumes a previously checkpointed run instead of starting over. (Grounding: `scriptPath`/`resumeFromRunId` parameter names verified live — 2026-07-03 F5 dispatch spike run `wf_667ec006-ec2` and the same-day pipeline dogfood both exercised them against the real Workflow tool.) |
+
+## §Invocation — resolve the driver asset, one call per segment
+
+The driver ships as a single self-contained asset at
+`assets/loom-pipeline.js`, relative to this skill's own directory. Resolve
+its **absolute** path from the base directory the host gives this skill (the
+host provides "Base directory for this skill" — join it with
+`skills/using-loom-pipeline/assets/loom-pipeline.js` if that base is the
+plugin root, or `assets/loom-pipeline.js` if the base is already this
+skill's own directory). Never hardcode a path guessed from the current
+working directory — the asset must resolve correctly regardless of which
+project the pipeline is driving.
+
+Once resolved, invoke Workflow once per pipeline segment — never once for
+the whole run:
+
+```
+Workflow({
+  scriptPath: "<resolved absolute path to assets/loom-pipeline.js>",
+  args: {
+    segment: <1 | 2 | 3>,
+    changeId: "<change-id>",
+    projectPath: "<target project absolute path>",
+    budgets: { run: <run-level cap>, perStation: <per-station cap> },
+    models: { /* per-station or blanket model policy */ },
+    resumeRunId: "<optional — omit for a fresh run>"
+  }
+})
+```
+
+## §Segments — the 3-segment execution map
+
+One `Workflow` invocation per segment, never one call for the whole run.
+Segment names match the driver meta's phases (Principles + Design / Spec /
+Code) — same vocabulary end to end so a paused run's segment number always
+maps back to a station-plugin phase.
+
+1. **Segment 1 — Principles + Design.** `loom-product-principles` drafts
+   PRINCIPLES.md, then `loom-interface-design` drafts DESIGN.md +
+   ui-flows.md, then the **design-critic panel**
+   (`loom-interface-design:design-critic`) adversarially reviews the draft
+   for surface omissions before the segment closes.
+2. **Segment 2 — Spec.** `loom-spec:spec-expansion` fans the seed out into
+   an OpenSpec-shape draft, the **completeness-critic** panel
+   (`loom-spec:completeness-critic`) hunts omissions, then the **validator
+   gate** (loom-spec's exit-0 binary validator) must pass before the
+   segment closes.
+3. **Segment 3 — Code.** `loom-code:subagent-driven-development` implements
+   the spec task-by-task under the TDD iron law, then a **whole-branch
+   review** (`loom-code:requesting-code-review`) covers the cumulative
+   diff, then **ui-verify** (`loom-code:ui-verification`) exercises the
+   running surface before the segment closes.
+
+## §Human gates (between segments)
+
+Exactly 4 gates. Each is a stop, not a notification — the conductor waits
+for the human's answer before the next Workflow call.
+
+(a) **Change-id minting** — before Segment 1. The human names the
+    per-change folder (`docs/loom/<change-id>/`); the conductor never
+    invents a change-id.
+
+(b) **Product forks** — during any segment, whenever a station surfaces a
+    genuine product decision (not an implementation detail). The
+    conductor briefs it per the **#475 complex-fork escalation**
+    (`dev-workflow:brief-before-asking`) instead of letting the station
+    improvise a default — the same discipline #475 established for
+    complex forks inside SDD applies here at the pipeline level.
+
+(c) **Cost policy** — before each segment. The human confirms (or
+    revises) the token budgets and model-tier policy for the segment
+    about to run; a stale budget/model confirmation from a prior segment
+    is never silently reused across a segment boundary.
+
+(d) **Final merge** — after Segment 3. The pipeline **never merges**. The
+    conductor's output is PR branches + the run ledger; a human takes it
+    from there. This mirrors gate (b)'s stance: judgment-bearing actions
+    are never automated inside the conductor.
+
+## §Driver prohibitions
+
+- The driver never edits station artifacts.
+- The driver never produces verdicts.
+- The driver never merges.
+
+Judgment stays in the four station plugins (cross-plugin delegation contract)
+— the conductor only orchestrates and records.
+
+**Stable-prefix dispatch convention**: station preambles are
+stable/cacheable; the per-change payload is appended, never prepended —
+prepending would invalidate the cache on every dispatch.

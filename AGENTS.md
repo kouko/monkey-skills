@@ -59,6 +59,11 @@ Role boundaries enforced by behavior, not reading restrictions:
   `python3 scripts/sync_codex_manifests.py --check <plugin>` — pure
   read; rc=0 when the Codex manifest's shared fields match the Claude
   SSOT, rc=1 on divergence.
+- **Rebuild the loom-pipeline driver asset**:
+  `python3 loom-pipeline/scripts/build_driver.py` — concatenates
+  `loom-pipeline/scripts/driver_NN_*.js` sources in filename order into
+  `loom-pipeline/skills/using-loom-pipeline/assets/loom-pipeline.js`;
+  `--out <path>` builds to an alternate path instead.
 <!-- END command-surface (managed) -->
 
 ## Plugin: domain-teams

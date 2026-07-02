@@ -6,7 +6,9 @@
 > code(SDD) → whole-branch review — with a **Workflow script as conductor**
 > reading each station's verdict / validator exit code. Deliverable: the
 > **manual-intervention ledger** (what still needs a human), plus driver-layer
-> requirements learned by running it.
+> requirements learned by running it. The F1–F5 requirements identified here
+> are now implemented by `loom-pipeline` v0.1.0 — this doc remains the
+> evidence record; the plugin is the living implementation.
 
 ## Setup
 
