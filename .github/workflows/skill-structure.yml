@@ -39,12 +39,24 @@ jobs:
       - name: Run check-skill-structure.py against domain-teams
         run: python3 scripts/check-skill-structure.py domain-teams
 
-      - name: Run check-skill-structure.py against the loom-* suite
-        run: |
-          python3 scripts/check-skill-structure.py loom-code
-          python3 scripts/check-skill-structure.py loom-spec
-          python3 scripts/check-skill-structure.py loom-interface-design
-          python3 scripts/check-skill-structure.py loom-product-principles
+      # One step per loom plugin, each running even when a sibling fails
+      # (`!cancelled()`): a shared run block — or default step skipping —
+      # stops at the first failure and masks the remaining plugins' results.
+      - name: Run check-skill-structure.py against loom-code
+        if: ${{ !cancelled() }}
+        run: python3 scripts/check-skill-structure.py loom-code
+
+      - name: Run check-skill-structure.py against loom-spec
+        if: ${{ !cancelled() }}
+        run: python3 scripts/check-skill-structure.py loom-spec
+
+      - name: Run check-skill-structure.py against loom-interface-design
+        if: ${{ !cancelled() }}
+        run: python3 scripts/check-skill-structure.py loom-interface-design
+
+      - name: Run check-skill-structure.py against loom-product-principles
+        if: ${{ !cancelled() }}
+        run: python3 scripts/check-skill-structure.py loom-product-principles
 
   shared-conventions-drift:
     name: dev-workflow shared conventions drift

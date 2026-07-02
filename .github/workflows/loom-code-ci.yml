@@ -115,3 +115,21 @@ jobs:
         env:
           PYTHONDONTWRITEBYTECODE: "1"
         run: python3 loom-code/scripts/check-living-spec-index.py --check-coverage .
+
+      # Only the 3 repo-state-only .sh tests run here. The other 5 under
+      # tests/integration/ probe the LOCAL Claude CLI install state
+      # (`claude plugin list`, enabled-plugin checks) and are meaningless
+      # or flaky on a runner with no `claude` binary — they stay local-only.
+      # One step per test with `!cancelled()` so each reports even when a
+      # sibling fails (same visibility pattern as skill-structure.yml).
+      - name: Integration test — command-surface accretion
+        if: ${{ !cancelled() }}
+        run: bash loom-code/tests/integration/test-command-surface-accretion.sh
+
+      - name: Integration test — command-surface resolution
+        if: ${{ !cancelled() }}
+        run: bash loom-code/tests/integration/test-command-surface-resolution.sh
+
+      - name: Integration test — rule-sheet drift
+        if: ${{ !cancelled() }}
+        run: bash loom-code/tests/integration/test-rule-sheet-drift.sh
