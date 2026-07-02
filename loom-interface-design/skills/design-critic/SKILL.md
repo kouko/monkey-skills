@@ -200,14 +200,19 @@ them `needs human/field input`.
 **"surface-coverage relative to N lenses; blind spots listed below"** instead. An
 honest coverage statement, never a false completeness claim.
 
-## Round summary + verdict
+## Round summary
 
 After the loop terminates (K consecutive dry rounds), report: rounds run and
 gaps found per round; the per-round overlap-rate judgment (§Overlap-rate
 diagnostic) — was the panel diverse enough or did it need an orthogonal lens;
 the `critic-found` additions; the non-empty `## Blind spots` list; and the
 coverage statement ("surface-coverage relative to N lenses"). Then end with
-exactly **one verdict token** (aligned with loom-code's reviewer vocabulary):
+the verdict (§Verdict below).
+
+## Verdict — two-valued, machine-readable
+
+End the round summary with exactly **one verdict token** (aligned with
+loom-code's reviewer vocabulary):
 
 - **`NEEDS_REVISION`** — a **severity-3** gap (blocks the user's core job)
   could not be concretely re-seeded and needs the writer to redo a surface,
