@@ -164,11 +164,13 @@ async function seg3RunTaskTriad(planPath, task, codeOpts, reviewOpts) {
       await seg3RunReviewRound(planPath, task, implementerResult, round, reviewOpts)
 
     if (!needsRevision) {
-      return makeStationResult({
+      const triadResult = makeStationResult({
         verdict: 'PASS',
         artifacts: [implementerResult, specReview, qualityReview],
         summary: `task ${task.id}: implementer + triad passed after ${round} remediation round(s)`,
       })
+      triadResult.station = `seg3-task-${task.id}`
+      return triadResult
     }
 
     // Intentional asymmetry vs seg1's design-critic loop: unreviewable CODE
@@ -202,11 +204,13 @@ async function seg3RunWholeBranchReview(opts) {
     { budget: opts.budget, tokenCap: opts.tokenCap }
   )
 
-  return makeStationResult({
+  const result = makeStationResult({
     verdict: review && review.verdict,
     artifacts: [review],
     summary: 'whole-branch code-reviewer verdict for the cumulative branch diff',
   })
+  result.station = 'seg3-whole-branch-review'
+  return result
 }
 
 // seg3CheckUiVerificationGate(projectPath, changeId, probeOpts) — a
@@ -247,10 +251,12 @@ async function seg3RunUiVerification(projectPath, changeId, probeOpts, reviewOpt
   const justification = (gate && gate.justification) || ''
 
   if (!uiFlowsExists || !branchTouchedUi) {
-    return makeStationResult({
+    const naResult = makeStationResult({
       verdict: 'N/A',
       summary: `ui-verification: N/A — ${justification}`,
     })
+    naResult.station = 'seg3-ui-verification'
+    return naResult
   }
 
   const verification = await runStation(
@@ -269,11 +275,13 @@ async function seg3RunUiVerification(projectPath, changeId, probeOpts, reviewOpt
     { budget: reviewOpts.budget, tokenCap: reviewOpts.tokenCap }
   )
 
-  return makeStationResult({
+  const result = makeStationResult({
     verdict: verification && verification.verdict,
     artifacts: [verification],
     summary: 'ui-verification: drove the ui-flows.md-enumerated states against the real rendered app',
   })
+  result.station = 'seg3-ui-verification'
+  return result
 }
 
 // runSegment3(args) — segment-3 entry point: SDD build + whole-branch

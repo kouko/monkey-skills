@@ -177,3 +177,25 @@ def test_seg1_is_principles_structurally_valid_wired_or_absent():
         "isPrinciplesStructurallyValid is defined but never invoked beyond its "
         "own definition — dead helper (must be wired or deleted)"
     )
+
+
+def test_seg1_station_results_carry_station_field():
+    # @req: REQ-LOOM-PIPELINE-SEG1-6
+    source = MODULE_PATH.read_text(encoding="utf-8")
+
+    assert re.search(r"principlesResult\.station\s*=\s*'principles'", source), (
+        "principlesResult must be tagged station: 'principles' before it is "
+        "pushed onto the stations array driver_90_main.js reads"
+    )
+    assert re.search(r"designResult\.station\s*=\s*`design r\$\{round\}`", source), (
+        "designResult must be tagged with the per-round design station label "
+        "before it is pushed onto the stations array"
+    )
+    assert re.search(r"\.station\s*=\s*'design-critic'", source), (
+        "the rally-cap-exhausted marker must be tagged station: 'design-critic'"
+    )
+    station_tag_count = len(re.findall(r"\.station\s*=\s*", source))
+    assert station_tag_count >= 3, (
+        f"expected >=3 station-tag assignment sites (principles/design/"
+        f"design-critic-unresolved), found {station_tag_count}"
+    )

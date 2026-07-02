@@ -329,3 +329,34 @@ def test_seg3_ui_gate_justification_surfaced_in_na_summary():
         "the N/A summary must quote gate.justification instead of a "
         "hardcoded string"
     )
+
+
+def test_seg3_station_results_carry_station_field():
+    # @req: REQ-LOOM-PIPELINE-SEG3-8
+    source = MODULE_PATH.read_text(encoding="utf-8")
+
+    assert re.search(r"\.station\s*=\s*`seg3-task-\$\{task\.id\}`", source), (
+        "the task triad's STATION result must be tagged station: "
+        "`seg3-task-${task.id}` before it is returned"
+    )
+    assert re.search(r"\.station\s*=\s*'seg3-whole-branch-review'", source), (
+        "the whole-branch review result must be tagged station: "
+        "'seg3-whole-branch-review'"
+    )
+    ui_verification_fn = re.search(
+        r"async function seg3RunUiVerification[\s\S]*?\n}\n", source
+    )
+    assert ui_verification_fn, "could not locate seg3RunUiVerification function body"
+    ui_verify_body = ui_verification_fn.group(0)
+    ui_station_tags = re.findall(r"\.station\s*=\s*'seg3-ui-verification'", ui_verify_body)
+    assert len(ui_station_tags) >= 2, (
+        "both the N/A branch and the fired-verification branch of "
+        "seg3RunUiVerification must tag their result station: "
+        "'seg3-ui-verification'"
+    )
+
+    station_tag_count = len(re.findall(r"\.station\s*=\s*", source))
+    assert station_tag_count >= 4, (
+        f"expected >=4 station-tag assignment sites (triad, whole-branch, "
+        f"and both ui-verification branches), found {station_tag_count}"
+    )

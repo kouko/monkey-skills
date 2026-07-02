@@ -148,8 +148,9 @@ async function runSegment2(args) {
         ),
       { tokenCap: perStation.spec }
     )
-    results.push(specResult)
     recordLedger({ station: `spec r${round}`, role: 'writer', ...specResult })
+    specResult.station = 'spec'
+    results.push(specResult)
 
     // ---- completeness-critic panel: script-layer fan-out, >=2 fresh lenses
     const lensResults = []
@@ -168,9 +169,10 @@ async function runSegment2(args) {
           ),
         { tokenCap: perStation.critic }
       )
-      results.push(lensResult)
       // G5: per-judge verdict recorded to the ledger, one entry per lens.
       recordLedger({ station: 'spec-critic', judge: lens.name, round, ...lensResult })
+      lensResult.station = `spec-critic:${lens.name}`
+      results.push(lensResult)
       lensResults.push(lensResult)
     }
 
@@ -193,8 +195,9 @@ async function runSegment2(args) {
         ],
         summary: `spec-critic loop cap hit (RALLY_CAP=${RALLY_CAP}) — unresolved, failing loud in the segment result`,
       })
-      results.push(unresolved)
       recordLedger({ station: 'spec-critic-gate', role: 'panel', ...unresolved })
+      unresolved.station = 'spec-critic'
+      results.push(unresolved)
     }
   }
 
@@ -210,8 +213,9 @@ async function runSegment2(args) {
       }),
     { tokenCap: perStation.validator }
   )
-  results.push(validatorResult)
   recordLedger({ station: 'spec-validator', role: 'validator', ...validatorResult })
+  validatorResult.station = 'validator'
+  results.push(validatorResult)
 
   if (validatorResult.validator_exit !== 0) {
     throw new Error(

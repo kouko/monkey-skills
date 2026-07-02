@@ -1,0 +1,66 @@
+name: loom-pipeline CI
+
+# Runs the loom-pipeline plugin's pytest suite (loom-pipeline/scripts/),
+# including the driver-build tests and the build-drift regression test
+# that checks the generated driver stays in sync with its js segment
+# sources. This plugin previously had NO CI coverage.
+#
+# This suite runs as its OWN pytest invocation (own job, own workflow
+# file) rather than being folded into loom-siblings-ci.yml or another
+# plugin's workflow: monkey-skills has repeated same-basename test files
+# across plugins with no __init__.py (see loom-siblings-ci.yml), so a
+# combined collection risks "import file mismatch" errors. Keeping each
+# plugin's suite in its own job/workflow avoids that collision class
+# entirely.
+#
+# The suite's build-drift test shells out to `node --check` on the
+# generated driver segments, so this job needs Node available. It does
+# not set up Node explicitly: ubuntu-latest ships a Node.js runtime by
+# default (see actions/runner-images), and no other workflow in this
+# repo runs its own actions/setup-node step for a similar `node --check`
+# use, so we rely on the runner image's preinstalled Node here too.
+#
+# Status: intended for `main` branch protection.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'loom-pipeline/**'
+      # test_pipeline_marketplace_entry.py reads the repo-root
+      # marketplace.json, so an edit there must fire this gate too —
+      # else a removed/renamed entry merges ungated (fail-open).
+      - '.claude-plugin/marketplace.json'
+      - '.github/workflows/loom-pipeline-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'loom-pipeline/**'
+      - '.claude-plugin/marketplace.json'
+      - '.github/workflows/loom-pipeline-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  pipeline:
+    name: loom-pipeline pytest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install test deps
+        # pytest = test runner; pyyaml = this suite's own CI-workflow
+        # self-test parses YAML.
+        run: python3 -m pip install --quiet pytest pyyaml
+
+      - name: Run loom-pipeline scripts/ pytest suite
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m pytest loom-pipeline/scripts/ -q

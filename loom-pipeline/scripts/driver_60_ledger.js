@@ -99,7 +99,7 @@ function renderInterventionBuckets(stationResults) {
 function renderStationTable(stationResults) {
   const rows = (stationResults || []).map((s) => {
     const validatorExit = s.validator_exit !== undefined ? s.validator_exit : 'n/a'
-    return '| ' + (s.name || 'unknown') + ' | ' + (s.verdict || 'n/a') + ' | ' + validatorExit + ' | ' + (s.summary || '') + ' |'
+    return '| ' + (s.station || s.name || 'unknown') + ' | ' + (s.verdict || 'n/a') + ' | ' + validatorExit + ' | ' + (s.summary || '') + ' |'
   })
   if (rows.length === 0) {
     rows.push('| (none) | n/a | n/a | n/a |')

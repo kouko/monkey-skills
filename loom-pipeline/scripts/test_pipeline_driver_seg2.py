@@ -207,3 +207,16 @@ def test_seg2_execution_wiring_behavioral():
         "missing-skillsRoot error must name the fail-loud contract"
     )
     assert "OK" in result.stdout
+
+
+def test_seg2_station_results_carry_station_field():
+    # @req: REQ-LOOM-PIPELINE-SEG2-2
+    source = MODULE_PATH.read_text(encoding="utf-8")
+
+    for expected in [
+        "specResult.station = 'spec'",
+        "lensResult.station = `spec-critic:${lens.name}`",
+        "unresolved.station = 'spec-critic'",
+        "validatorResult.station = 'validator'",
+    ]:
+        assert expected in source, f"missing station-tag site: {expected!r}"

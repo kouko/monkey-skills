@@ -261,6 +261,7 @@ async function runSegment1(args) {
     })
   )
   recordLedger({ station: 'principles', role: 'station', ...principlesResult })
+  principlesResult.station = 'principles'
   stations.push(principlesResult)
 
   // -- design + design-critic panel, rally-capped --
@@ -279,6 +280,7 @@ async function runSegment1(args) {
       tokenCap: perStation.design,
     })
     recordLedger({ station: `design r${round}`, role: 'station', ...designResult })
+    designResult.station = `design r${round}`
     stations.push(designResult)
 
     panelVerdicts = await runDesignCriticPanel(projectPath, changeId, round, budgets, models)
@@ -293,21 +295,21 @@ async function runSegment1(args) {
   if (unresolved) {
     // rally cap exhausted, still NEEDS_REVISION — fail-loud, not a silent
     // accept: surface the unresolved gap as its own STATION-shaped record.
-    stations.push(
-      makeStationResult({
-        verdict: 'NEEDS_REVISION',
-        artifacts: [],
-        validator_exit: -1,
-        interventions: [
-          {
-            kind: 'decision',
-            description: `design-critic panel still NEEDS_REVISION after ${RALLY_CAP} rounds — a human would arbitrate`,
-            agent_fallback: 'proceeded with the flagged draft; surfaced unresolved rather than silently accepting it',
-          },
-        ],
-        summary: `design-critic rally cap (${RALLY_CAP}) exhausted, unresolved`,
-      })
-    )
+    const unresolvedResult = makeStationResult({
+      verdict: 'NEEDS_REVISION',
+      artifacts: [],
+      validator_exit: -1,
+      interventions: [
+        {
+          kind: 'decision',
+          description: `design-critic panel still NEEDS_REVISION after ${RALLY_CAP} rounds — a human would arbitrate`,
+          agent_fallback: 'proceeded with the flagged draft; surfaced unresolved rather than silently accepting it',
+        },
+      ],
+      summary: `design-critic rally cap (${RALLY_CAP}) exhausted, unresolved`,
+    })
+    unresolvedResult.station = 'design-critic'
+    stations.push(unresolvedResult)
   }
 
   // -- G3: Decisions-section presence check on the (final) design artifacts --
