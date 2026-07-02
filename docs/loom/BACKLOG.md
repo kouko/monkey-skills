@@ -1,0 +1,101 @@
+# loom family backlog
+
+> SSOT for cross-plugin open items. Convention: one entry per item with
+> **start/re-trigger condition**, **origin** (PR / ledger / discussion),
+> and **status** (`COMMITTED-NEXT` | `OPEN` | `PARKED` | `UPSTREAM`).
+> Plugin-local parks stay in each plugin's README (§parked items with
+> re-triggers); this file holds items that cross plugin boundaries or
+> have no plugin home yet. Claude-side session memory keeps only a
+> pointer here — this file is the durable truth (versioned, host-agnostic,
+> greppable). Completed items are deleted, not archived — git history is
+> the archive.
+
+## ENGINEERING.md — per-project engineering constitution
+- Status: COMMITTED-NEXT (start: immediately after this file lands)
+- Origin: 2026-07-04 discussion during loom-pipeline live-verify; memory
+  `engineering-principles-backlog`
+- What: the tech-side twin of PRINCIPLES.md — falsifiable `— check:`
+  clauses for per-project engineering decisions (dependency posture,
+  conservative↔aggressive dial, test-rigor CEILING above the iron-law
+  floor, explicit negative decisions). D8 conformance machinery is
+  generic and reusable. Industry precedent: Spec Kit's constitution
+  covers both product and engineering.
+- Build-time design questions: separate file vs PRINCIPLES.md section;
+  generator owner (loom-product-principles emits both vs a loom-code
+  skill); D8 severity calibration for engineering violations.
+- Guardrails: mint clauses from RECURRING bucket-B engineering questions
+  in real pipeline ledgers, never imagined upfront; every clause must be
+  D8-checkable (unchecked clauses rot); never touch the iron-law floor.
+
+## G4 — Sonnet-vs-Fable gate quality A/B
+- Status: OPEN
+- Start: after the first REAL change runs through the pipeline
+- Origin: PR #476 open question; protocol documented in
+  loom-pipeline/README.md §G4
+- What: same branch reviewed by both model tiers; compare verdict tokens
+  + finding severity distributions against a human review. Also settles
+  whether the two-valued verdict scheme inflates (untested house
+  hypothesis, flagged in the industry research doc).
+
+## validate_design_output.py dual-root mode
+- Status: UPSTREAM (loom-interface-design)
+- Start: next loom-interface-design touch
+- Origin: live-verify finding 4 (report
+  docs/loom/dogfood/2026-07-04-loom-pipeline-v1-live-verify.md); the
+  validator assumes DESIGN.md + ui-flows.md are colocated, but the
+  sanctioned layout (audit #472) splits product-level vs per-change —
+  exit 1 is structurally guaranteed. Needs --design-root/--flows-root
+  (or equivalent) arguments.
+
+## Segment-3 first live run
+- Status: OPEN
+- Start: first real change (deliberately NOT burned on a toy — agreed
+  2026-07-04; dispatch machinery already proven by the F5 spike and the
+  2026-07-03 dogfood)
+- What: SDD triads via agentType + whole-branch review + conditional
+  ui-verification, driven by the merged driver against a real repo.
+
+## v1.1 — batch implementation mode
+- Status: COMMITTED-NEXT (after ENGINEERING.md)
+- Origin: user requirement 2026-07-03 (「白天討論規格、晚上自動實作」 is a
+  METAPHOR — time-agnostic); design in the brief §Committed next +
+  loom-pipeline/README.md
+- What: queue of FROZEN change-folders → unattended segment-3 runs (own
+  worktree/branch, per-change budget, failures isolate) → N ledgers + N
+  PR branches; merge stays human. /goal is the recommended supervision
+  shell (research 2026-07-04: condition + turn-cap clause; Workflow-tool
+  interaction undocumented — spike first). KNOWN SEAM: plan generation
+  (writing-plans) lives in neither segment — the freeze definition must
+  include "plan written", or a segment 2.5 gets added.
+- Parallel variant (v1.1.x): worktree isolation specified; the
+  AEP-borrowed git-commit dispatch lock is parked in the README with
+  exactly this re-trigger.
+
+## loom-spec station briefing gate (#475 parity)
+- Status: OPEN (original 值得做 list item 3, half-covered)
+- Origin: 2026-07-03 dogfood — spec station resolved a product decision
+  (ending-controls) inline. The pipeline's human gate (b) now covers
+  DRIVER runs; loom-spec itself still lacks the brief-before-asking
+  escalation for INTERACTIVE use.
+
+## duration-override test affordance → interaction-flows enumeration
+- Status: OPEN (original 值得做 list item 4)
+- Origin: ui-verification first live run (PR #477 dogfood note) — 4
+  states untestable behind a 25-minute wait; pipeline-produced apps
+  should be required at design time to expose a test affordance.
+  Candidate enumeration item for loom-interface-design:interaction-flows.
+
+## req-tag guard line in dispatch templates
+- Status: OPEN (small)
+- Origin: PR #479 CI — implementers pattern-matched the `# @req:` tag
+  convention without registering ids → 33 dangling-tag failures. Add to
+  loom-code dispatch templates (implementer contract or SDD prompts):
+  "no @req tags unless the id exists in the living-spec namespace".
+  Related lockstep gotcha: stripping tags requires regenerating
+  docs/loom/INDEX.md.
+
+## Interventions bucket calibration (cosmetic)
+- Status: OPEN (small)
+- Origin: live-verify seg1 ledger — a routine adopt-if-valid note was
+  filed as a bucket-A intervention; an adopt is a cost-cut record, not
+  an intervention. Station preamble wording tweak in driver_30_seg1.js.
