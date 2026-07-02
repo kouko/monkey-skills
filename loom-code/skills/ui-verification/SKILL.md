@@ -79,7 +79,13 @@ surfaces that honestly to the user.
    `mismatch` (reached, contradicts the row — e.g. variant missing, dead-end
    present) / `unreachable` (could not drive the app into it through the UI)
    / `untestable` (needs conditions this environment cannot produce — e.g.
-   real network failure, OS permission dialogs; name the condition).
+   real network failure, OS permission dialogs, **or long real-time waits**:
+   a 25-minute timer's end states are `untestable` unless the project exposes
+   a test affordance such as a duration override — name the condition, and
+   flag the missing affordance as worth adding). If you substitute a weaker
+   static check for an undriveable state (e.g. DOM presence instead of the
+   real failure path), label it a **half-measure** in the observation — it
+   never upgrades the state to `verified`.
 5. **Report** with the verdict below. Findings carry `where` (the state/flow
    + the artifact row) and the observation evidence, mirroring the R2
    evidence-citation discipline every loom-code gate uses.
