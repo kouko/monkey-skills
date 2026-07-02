@@ -193,3 +193,18 @@ def test_seg1_station_results_carry_station_field():
         f"expected >=3 station-tag assignment sites (principles/design/"
         f"design-critic-unresolved), found {station_tag_count}"
     )
+
+
+def test_seg1_every_dispatch_passes_a_schema():
+    """Live finding (run wf_ff22820b-61d): agent() without opts.schema
+    returns plain TEXT — the harness only injects StructuredOutput when a
+    schema is passed. Spreading that string into recordLedger produced
+    indexed-char garbage. Every seg1 dispatch site must pass a schema."""
+    source = MODULE_PATH.read_text(encoding="utf-8")
+    assert "SEG1_STATION_SCHEMA" in source and "SEG1_CRITIC_SCHEMA" in source
+    assert source.count("schema: SEG1_STATION_SCHEMA") >= 2, (
+        "principles + design dispatches must pass SEG1_STATION_SCHEMA"
+    )
+    assert source.count("schema: SEG1_CRITIC_SCHEMA") >= 1, (
+        "critic-lens dispatch must pass SEG1_CRITIC_SCHEMA"
+    )

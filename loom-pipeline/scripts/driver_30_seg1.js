@@ -42,6 +42,54 @@ function isPrinciplesStructurallyValid(text) {
   return hasNorthStar && hasFalsifiableCheck
 }
 
+// Local station-result schemas (SEG1_ prefix — one concat scope; see
+// driver_40_seg2.js's same note). Live finding wf_ff22820b-61d: agent()
+// WITHOUT opts.schema returns plain TEXT (the harness only injects the
+// StructuredOutput tool when a schema is passed) — spreading that string
+// into recordLedger produced indexed-char garbage. Schemas are therefore
+// load-bearing, not decoration.
+const SEG1_STATION_SCHEMA = {
+  type: 'object',
+  required: ['verdict', 'artifacts', 'interventions', 'summary'],
+  properties: {
+    verdict: { type: 'string', description: 'adopted | authored | PASS_WITH_NOTES | NEEDS_REVISION | DONE | FAIL' },
+    artifacts: { type: 'array', items: { type: 'string' }, description: 'absolute paths written' },
+    validator_exit: { type: 'integer', description: 'validator exit code; -1 if none ran' },
+    interventions: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['bucket', 'text'],
+        properties: {
+          bucket: { type: 'string', description: "A | B | C — driver_60_ledger.js INTERVENTION_BUCKETS" },
+          text: { type: 'string' },
+          critic_found: { type: 'boolean' },
+        },
+      },
+    },
+    summary: { type: 'string', description: 'must carry the DECISIONS_SECTION: present|absent token for design' },
+    principles_text_head: { type: 'string', description: 'first ~80 lines of PRINCIPLES.md verbatim (adopt/author both)' },
+  },
+}
+
+const SEG1_CRITIC_SCHEMA = {
+  type: 'object',
+  required: ['verdict', 'summary'],
+  properties: {
+    verdict: { type: 'string', description: 'PASS_WITH_NOTES | NEEDS_REVISION — two-valued, no bare PASS' },
+    summary: { type: 'string' },
+    critic_found_rows: { type: 'integer', description: 'count of critic-found additions made to ui-flows.md' },
+    interventions: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['bucket', 'text'],
+        properties: { bucket: { type: 'string' }, text: { type: 'string' }, critic_found: { type: 'boolean' } },
+      },
+    },
+  },
+}
+
 const PRINCIPLES_STABLE_PREAMBLE = [
   'STATION: principles (idempotent adopt-if-valid gate).',
   'Check whether <projectPath>/docs/loom/PRINCIPLES.md already exists.',
@@ -186,6 +234,7 @@ async function runDesignCriticPanel(projectPath, changeId, round, budgets, model
       label: `design-critic:${lens.name} r${round}`,
       phase: SEGMENT_1_PHASE_TITLE,
       model: models['design-critic'],
+      schema: SEG1_CRITIC_SCHEMA,
     })
     const result = await runStation('design-critic', thunk, {
       tokenCap: perStation['design-critic'],
@@ -254,6 +303,7 @@ async function runSegment1(args) {
     label: 'principles',
     phase: SEGMENT_1_PHASE_TITLE,
     model: models.principles,
+    schema: SEG1_STATION_SCHEMA,
   })
   const principlesResult = reconcilePrinciplesAdoption(
     await runStation('principles', principlesThunk, {
@@ -275,6 +325,7 @@ async function runSegment1(args) {
       label: `design r${round}`,
       phase: SEGMENT_1_PHASE_TITLE,
       model: models.design,
+      schema: SEG1_STATION_SCHEMA,
     })
     designResult = await runStation('design', designThunk, {
       tokenCap: perStation.design,
