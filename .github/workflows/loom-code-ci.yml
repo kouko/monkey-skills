@@ -115,3 +115,13 @@ jobs:
         env:
           PYTHONDONTWRITEBYTECODE: "1"
         run: python3 loom-code/scripts/check-living-spec-index.py --check-coverage .
+
+      - name: Run self-contained integration tests
+        # Only the 3 repo-state-only .sh tests run here. The other 5 under
+        # tests/integration/ probe the LOCAL Claude CLI install state
+        # (`claude plugin list`, enabled-plugin checks) and are meaningless
+        # or flaky on a runner with no `claude` binary — they stay local-only.
+        run: |
+          bash loom-code/tests/integration/test-command-surface-accretion.sh
+          bash loom-code/tests/integration/test-command-surface-resolution.sh
+          bash loom-code/tests/integration/test-rule-sheet-drift.sh

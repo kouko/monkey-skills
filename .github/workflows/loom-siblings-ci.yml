@@ -1,0 +1,75 @@
+name: loom-siblings CI
+
+# Runs the pytest suites of the two loom sibling plugins that previously had
+# NO CI coverage: loom-interface-design (validators + skill/manifest
+# behavioral tests) and loom-product-principles (validator + skill/manifest
+# behavioral tests). loom-code and loom-spec already have their own workflows
+# (loom-code-ci.yml / loom-spec-ci.yml); this closes the remaining gap —
+# loom-product-principles' suite sat silently RED from #456 (2026-06-26)
+# until #468's audit precisely because nothing ran it.
+#
+# The two suites MUST run as separate pytest invocations: both plugins (and
+# loom-spec) ship same-basename test files (test_marketplace_entry.py /
+# test_plugin_manifest.py) with no __init__.py, so a single combined
+# invocation dies with "import file mismatch" at collection. Separate jobs
+# also give per-plugin CI visibility.
+#
+# Status: intended for `main` branch protection.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'loom-interface-design/**'
+      - 'loom-product-principles/**'
+      - '.github/workflows/loom-siblings-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'loom-interface-design/**'
+      - 'loom-product-principles/**'
+
+permissions:
+  contents: read
+
+jobs:
+  interface-design:
+    name: loom-interface-design pytest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install test deps
+        # pytest = test runner. The validators are pure stdlib.
+        run: python3 -m pip install --quiet pytest
+
+      - name: Run loom-interface-design scripts/ pytest suite
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m pytest loom-interface-design/scripts/ -v
+
+  product-principles:
+    name: loom-product-principles pytest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install test deps
+        run: python3 -m pip install --quiet pytest
+
+      - name: Run loom-product-principles scripts/ pytest suite
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m pytest loom-product-principles/scripts/ -v
