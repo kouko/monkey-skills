@@ -10,6 +10,21 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- **`ui-flows.md` moves into a per-change folder** —
+  `docs/loom/<change-id>/ui-flows.md`, sharing the `<change-id>`
+  `loom-spec:spec-expansion` uses, so the design seed sits beside the spec
+  delta it feeds. The old fixed product-level `docs/loom/ui-flows.md` meant
+  the second feature overwrote the first ("per-feature/change" was declared
+  but not honored by the path). `DESIGN.md` stays product-level.
+  `validate_design_output.py` now resolves `DESIGN.md` most-specific-first
+  (change folder, then its parent) — the legacy side-by-side layout still
+  validates. `design-critic` inputs and README updated. Guarded by
+  `test_change_folder_with_design_at_parent_passes` (+3 sibling tests),
+  `test_ui_flows_emitted_per_change_folder`,
+  `test_inputs_are_per_change_folder`.
+
 ### Added
 
 - `design-critic` now ends every run with a **machine-readable two-valued

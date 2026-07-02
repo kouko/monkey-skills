@@ -72,7 +72,9 @@ loud). This intake is **read-only**: never edit the constitution from here.
 ## Consuming a `ui-flows.md` seed (DESIGN→spec seam)
 
 When the seed is a `ui-flows.md` produced by `loom-interface-design:interaction-flows`
-(rather than a few raw lines of intent), the interface **surface** is already specified —
+(by convention it sits in **this change's own folder** —
+`docs/loom/<change-id>/ui-flows.md`, the same `<change-id>` this skill emits
+into — rather than a few raw lines of intent), the interface **surface** is already specified —
 the inventory, user flows, entry/exit points and density flags. Do **not** re-derive or
 re-express that surface here; that is the design station's output, and copying it in
 creates a second source of truth that drifts.
@@ -339,7 +341,10 @@ Emit a **directory in OpenSpec change-folder shape** (plain markdown — no
 OpenSpec CLI dependency). Default `<output-dir>` = `docs/loom/<change-id>/` in
 the consumer project (the loom suite's shared artifact home, alongside
 `PRINCIPLES.md` / `DESIGN.md` / `specs/` / `plans/`), unless the user names
-another location:
+another location. **When the seed is a `docs/loom/<X>/ui-flows.md`, emit into
+that same folder** — `<X>` IS this change's `<change-id>`; do not mint a
+second, differently-cased id (the sit-beside contract with
+`loom-interface-design` depends on the ids matching):
 
 ```
 <output-dir>/                      # default: docs/loom/<change-id>/

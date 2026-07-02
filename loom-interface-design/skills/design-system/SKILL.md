@@ -132,12 +132,15 @@ validator checks *structure*; the *quality* of the tokens (palette derived from
 the brand voice, contrast actually meeting AA, choices defensible against the
 principles) is your responsibility.
 
-**Note — the validator checks the *whole* change-folder.** It requires BOTH
-`DESIGN.md` (this skill) and `ui-flows.md` (the `interaction-flows` skill)
-present. Run the full validation once the change-folder is assembled — after
-`interaction-flows` has also emitted into the same `docs/loom/`
-directory (the `using-loom-interface-design` router coordinates this). A
-`DESIGN.md`-only run will correctly report the missing `ui-flows.md`.
+**Note — the validator checks the *whole* change-folder.** It requires
+`ui-flows.md` (the `interaction-flows` skill) in the change folder
+(`docs/loom/<change-id>/`) and resolves `DESIGN.md` (this skill)
+most-specific-first — change folder, then its parent: this skill's canonical
+home is the product level, `docs/loom/DESIGN.md`, one per product. Run the
+full validation once the change-folder is assembled — after
+`interaction-flows` has emitted (the `using-loom-interface-design` router
+coordinates this). A `DESIGN.md`-only run will correctly report the missing
+`ui-flows.md`.
 
 ## Downstream — where the design system goes
 

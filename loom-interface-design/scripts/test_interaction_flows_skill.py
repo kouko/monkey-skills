@@ -163,3 +163,15 @@ def test_skill_folder_is_flat():
                     f"flat-skill violation: nested subdir {child} under {sub} "
                     f"(subfolders must be single-level)"
                 )
+
+
+def test_ui_flows_emitted_per_change_folder():
+    """ui-flows.md is declared per-feature/change, so it must be emitted into
+    a per-change folder (docs/loom/<change-id>/ui-flows.md, sharing the
+    change-id loom-spec uses) — a fixed product-level docs/loom/ui-flows.md
+    means the second feature overwrites the first."""
+    text = _text()
+    assert "<change-id>" in text, \
+        "emit path must carry the <change-id> per-change discriminator"
+    assert "docs/loom/<change-id>/ui-flows.md" in text, \
+        "must emit to docs/loom/<change-id>/ui-flows.md"

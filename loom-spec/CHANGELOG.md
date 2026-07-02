@@ -7,6 +7,13 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- `spec-expansion` §Consuming a `ui-flows.md` seed now names the seed's
+  canonical per-change location (`docs/loom/<change-id>/ui-flows.md`, the same
+  change folder this skill emits into) — following loom-interface-design's
+  move of `ui-flows.md` off the fixed product-level path.
+
 ### Added
 
 - `completeness-critic` now ends every run with a **machine-readable two-valued

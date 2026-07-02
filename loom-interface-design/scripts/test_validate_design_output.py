@@ -217,3 +217,66 @@ def test_cli_nonzero_with_actionable_message_on_invalid(tmp_path):
     assert proc.returncode != 0
     combined = proc.stdout + proc.stderr
     assert "ui-flows.md" in combined, combined
+
+
+# --- per-change layout: ui-flows.md in docs/loom/<change-id>/ ----------------
+# DESIGN.md is product-level (one per product, at docs/loom/); ui-flows.md is
+# per-change (docs/loom/<change-id>/). The validator, given the CHANGE folder,
+# must accept DESIGN.md at the folder itself (legacy side-by-side layout) OR
+# at its parent (per-change layout).
+
+def test_change_folder_with_design_at_parent_passes(tmp_path):
+    (tmp_path / "DESIGN.md").write_text(_design_body(), encoding="utf-8")
+    change = tmp_path / "my-feature"
+    change.mkdir()
+    (change / "ui-flows.md").write_text(_ui_flows_body(), encoding="utf-8")
+    ok, problems = validate(change)
+    assert ok, problems
+
+
+def test_design_sections_checked_at_parent(tmp_path):
+    """A parent-level DESIGN.md is not just presence-checked — its 8-section
+    contract is enforced the same as a side-by-side one."""
+    (tmp_path / "DESIGN.md").write_text(
+        _design_body(sections=_DESIGN_SECTIONS[:4]), encoding="utf-8")
+    change = tmp_path / "my-feature"
+    change.mkdir()
+    (change / "ui-flows.md").write_text(_ui_flows_body(), encoding="utf-8")
+    ok, problems = validate(change)
+    assert not ok
+    assert any("DESIGN.md" in p for p in problems)
+
+
+def test_missing_design_at_both_levels_flagged(tmp_path):
+    change = tmp_path / "my-feature"
+    change.mkdir()
+    (change / "ui-flows.md").write_text(_ui_flows_body(), encoding="utf-8")
+    ok, problems = validate(change)
+    assert not ok
+    assert any("DESIGN.md" in p for p in problems)
+
+
+def test_side_by_side_design_md_takes_precedence(tmp_path):
+    """Legacy layout stays valid; a change-folder-local DESIGN.md wins over
+    the parent one (most-specific-first resolution)."""
+    (tmp_path / "DESIGN.md").write_text(
+        _design_body(sections=_DESIGN_SECTIONS[:4]), encoding="utf-8")
+    change = tmp_path / "chg"
+    change.mkdir()
+    (change / "DESIGN.md").write_text(_design_body(), encoding="utf-8")
+    (change / "ui-flows.md").write_text(_ui_flows_body(), encoding="utf-8")
+    ok, problems = validate(change)
+    assert ok, problems
+
+
+def test_relative_dot_invocation_from_inside_change_folder(tmp_path, monkeypatch):
+    """Invoking the validator with root="." from INSIDE the change folder must
+    still find the parent-level DESIGN.md — Path(".").parent is Path("."), so
+    the resolver must normalize the root to an absolute path first."""
+    (tmp_path / "DESIGN.md").write_text(_design_body(), encoding="utf-8")
+    change = tmp_path / "my-feature"
+    change.mkdir()
+    (change / "ui-flows.md").write_text(_ui_flows_body(), encoding="utf-8")
+    monkeypatch.chdir(change)
+    ok, problems = validate(Path("."))
+    assert ok, problems

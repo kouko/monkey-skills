@@ -1,11 +1,20 @@
 """Validate an loom-interface-design DESIGN CHANGE-FOLDER.
 
 The `design-system` + `interaction-flows` skills emit a change-folder (a
-directory) holding the design-system doc plus the interaction-flows doc:
+directory) holding the interaction-flows doc, governed by the product-level
+design-system doc. Two layouts are accepted:
 
-    <change-folder>/
-      DESIGN.md       # design-system doc for the GUI modality (Google 8-section)
-      ui-flows.md     # interaction-flows doc (inventory + nav + render variants)
+    per-change (canonical):            legacy (side-by-side):
+    docs/loom/
+      DESIGN.md    # product-level         <change-folder>/
+      <change-id>/                           DESIGN.md
+        ui-flows.md                          ui-flows.md
+
+`ui-flows.md` MUST sit in the change-folder handed to this validator;
+`DESIGN.md` (Google 8-section, GUI modality) is resolved most-specific-first —
+the change-folder itself, then its parent (the product level). A fixed
+product-level ui-flows.md is NOT a layout: per-feature flows at a fixed path
+would overwrite each other, which is why the change-id folder exists.
 
 This module checks the change-folder STRUCTURE (presence + well-formedness),
 mirroring `loom-spec/scripts/validate_spec_output.py`'s structure-only
@@ -67,11 +76,29 @@ _UI_FLOWS_SECTIONS = (
 
 # --- checks: each returns list[str] of problems (empty == ok) ---------------
 
+def _resolve_design_doc(root: Path) -> Path | None:
+    """Resolve the governing DESIGN.md, most-specific-first.
+
+    The change-folder's own DESIGN.md (legacy side-by-side layout) wins over
+    the parent's product-level one (per-change layout). None when neither
+    exists.
+    """
+    local = root / _DESIGN_DOC
+    if local.is_file():
+        return local
+    parent = root.parent / _DESIGN_DOC
+    if parent.is_file():
+        return parent
+    return None
+
+
 def _check_design_doc_present(root: Path) -> list[str]:
-    if not (root / _DESIGN_DOC).is_file():
-        return [f"missing design-system doc '{_DESIGN_DOC}' at "
-                f"{root / _DESIGN_DOC} (the GUI change-folder needs the "
-                f"Google 8-section DESIGN.md emitted by `design-system`)"]
+    if _resolve_design_doc(root) is None:
+        return [f"missing design-system doc '{_DESIGN_DOC}': not at "
+                f"{root / _DESIGN_DOC} (side-by-side layout) nor at "
+                f"{root.parent / _DESIGN_DOC} (product level) — the "
+                f"change-folder needs the Google 8-section DESIGN.md emitted "
+                f"by `design-system`"]
     return []
 
 
@@ -101,8 +128,8 @@ def _heading_titles(text: str) -> list[str]:
 
 
 def _check_design_sections(root: Path) -> list[str]:
-    design = root / _DESIGN_DOC
-    if not design.is_file():
+    design = _resolve_design_doc(root)
+    if design is None:
         # presence is _check_design_doc_present's job; don't double-report.
         return []
     present = set(_heading_titles(design.read_text(encoding="utf-8")))
@@ -155,7 +182,10 @@ def validate(root: Path) -> tuple[bool, list[str]]:
 
     Returns (ok, problems). ok is True iff problems is empty.
     """
-    root = Path(root)
+    # Resolve to an absolute path: with a relative root like "." invoked from
+    # inside the change folder, Path(".").parent is Path(".") — the parent
+    # (product-level) DESIGN.md lookup would silently check the same dir.
+    root = Path(root).resolve()
     if not root.is_dir():
         return False, [f"design change-folder does not exist: {root}"]
     problems: list[str] = []
