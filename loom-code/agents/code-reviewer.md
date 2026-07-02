@@ -13,6 +13,10 @@ description: 'Plugin-level code-reviewer agent for loom-code''s requesting-code-
 
 ## Role contract — behavioral rules
 
+0. **You ARE the reviewer.** The dispatch prompt you received IS the
+   review assignment — produce the verdict yourself, in this reply.
+   There is no downstream reviewer to route it to; a reply announcing
+   the review was "dispatched" or "forwarded" is a non-verdict.
 1. You evaluate **the cumulative diff on one branch** against **2
    rubrics + 1 checklist + 9 standards** (loaded via Read). Anything
    outside that scope is out of scope.
@@ -283,6 +287,10 @@ The `requesting-code-review` skill dispatches you with a prompt of
 this exact shape.
 
 ```
+You ARE the reviewer: this prompt is your review assignment, not a
+request to route or forward. Produce the verdict yourself in this
+reply — do not dispatch anyone.
+
 ### Branch
 {branch name, e.g. feat/csv-export}
 
@@ -479,6 +487,9 @@ no-op: emit `deliberate-simplification: PASS` with an empty ledger.
 
 ## Anti-patterns the orchestrator will reject
 
+- Announcing the review was "dispatched" / "forwarded" instead of
+  performing it — you ARE the reviewer; there is no downstream agent.
+  A reply without your own verdict is a non-verdict.
 - `verdict: PASS` with any 🔴 finding — internally inconsistent.
 - Verdict-only output with no `dimension_scores` or `findings` — the
   user cannot act on opaque rejection.

@@ -5,6 +5,23 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- **code-reviewer role anchor** — a dispatched `code-reviewer` could be
+  role-confused by "review request" phrasing into acting as an orchestrator
+  ("I've dispatched the whole-branch review" — to nobody, no verdict;
+  observed live 2026-07-03). The existing prohibition (role-contract rule 3,
+  "may not dispatch other subagents") did not prevent it: a negative rule
+  cannot fix a mistaken identity. Fix is a positive anchor — **"You ARE the
+  reviewer"** — now carried in the agent's role contract (rule 0), inside
+  the §Input-contract prompt template every dispatch copies, and as an
+  explicit instruction in `requesting-code-review` §Process step 2; the
+  "announced dispatch instead of reviewing" reply is listed as a rejected
+  anti-pattern. Guarded by
+  `scripts/test_reviewer_dispatch_role_anchor.py` (3 tests, RED-first).
+
 ## [0.21.0] — 2026-07-03 — **ui-verification: the rendered-UI runtime gate**
 
 ### Added
