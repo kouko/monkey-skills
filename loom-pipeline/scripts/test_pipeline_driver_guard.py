@@ -146,6 +146,32 @@ def test_fail_loud_guard():
         "skillsRoot leak error must carry the fail-loud contract phrase"
     )
 
+    # Behavioral: harness integration — the Workflow tool can deliver args
+    # as a JSON STRING (observed live 2026-07-04, run wf_e96f6d0d-140).
+    # A string that parses to a valid args object must be accepted
+    # (deterministic recovery, not improvisation); a non-JSON string still throws.
+    string_ok_harness = source + "\n" + (
+        "const parsed = guardArgs(JSON.stringify({segment: 2, changeId: 'c1', "
+        "projectPath: '/tmp/x', budgets: {run: 1, perStation: {}}, "
+        "models: {}}));\n"
+        "if (typeof parsed !== 'object' || parsed.segment !== 2) {\n"
+        "  console.error('FAIL: JSON-string args not parsed to object');\n"
+        "  process.exit(1);\n"
+        "}\n"
+        "process.exit(0);\n"
+    )
+    r1 = subprocess.run(["node", "-e", string_ok_harness], capture_output=True, text=True)
+    assert r1.returncode == 0, (
+        f"guardArgs must accept a JSON-string encoding of valid args: {r1.stderr}"
+    )
+    garbage_harness = source + "\n" + (
+        "try { guardArgs('not json at all'); process.exit(0); }\n"
+        "catch (e) { console.error(e.message); process.exit(1); }\n"
+    )
+    r2 = subprocess.run(["node", "-e", garbage_harness], capture_output=True, text=True)
+    assert r2.returncode != 0, "guardArgs must still throw on a non-JSON string"
+    assert FAIL_LOUD_PHRASE in r2.stderr
+
     # Behavioral: a fully valid args object must not throw.
     ok_harness = source + "\n" + (
         "guardArgs({segment: 2, changeId: 'c1', projectPath: '/tmp/x', "

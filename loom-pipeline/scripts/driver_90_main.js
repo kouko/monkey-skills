@@ -61,7 +61,19 @@ function mainBuildVerdicts(stationResults) {
 // render + write the ledger for EVERY segment (not just segment 3), then
 // return the machine-readable run summary the entry skill relays.
 async function mainDispatch(args) {
-  guardArgs(args)
+  // guardArgs returns the validated args — and may have PARSED them from a
+  // JSON string (harness stringification, observed live wf_e96f6d0d-140);
+  // everything below must use the returned object, not the raw input.
+  args = guardArgs(args)
+
+  // Live finding wf_ff22820b-61d: budget.spent() is TURN-scoped (shared
+  // pool across the main loop and all workflows this turn), so comparing
+  // it raw against args.budgets.run is apples/oranges. Capture a baseline
+  // here and report THIS RUN's delta everywhere (summary + ledger).
+  const runSpentBaseline =
+    typeof budget !== 'undefined' && typeof budget.spent === 'function'
+      ? budget.spent()
+      : null
 
   let stationResults
   if (args.segment === 1) {
@@ -79,6 +91,17 @@ async function mainDispatch(args) {
     )
   }
 
+  // ONE spent checkpoint, reused by the ledger AND the run summary —
+  // two separate reads around the ledger write diverge by the write's
+  // own cost (whole-branch review 🟡, 2026-07-04). Both numbers exclude
+  // the ledger-write itself; that exclusion is documented, not hidden.
+  const runSpent =
+    runSpentBaseline !== null && typeof budget !== 'undefined'
+      ? budget.spent() - runSpentBaseline
+      : null
+  if (runSpent !== null) {
+    args.budgetSpent = runSpent
+  }
   const ledgerMarkdown = renderLedger(args, stationResults)
   log(`segment ${args.segment}: ledger rendered (${ledgerMarkdown.length} chars)`)
   await writeLedger(args, stationResults)
@@ -89,13 +112,11 @@ async function mainDispatch(args) {
     verdicts: mainBuildVerdicts(stationResults),
     budget: {
       run: args.budgets.run,
-      // `spent` is THIS INVOCATION's turn-scoped output-token count — per
-      // the Workflow tool's budget primitive docs, budget.spent() counts
-      // output tokens spent THIS TURN across the main loop and all
-      // workflows (a shared per-turn pool), not a cumulative cross-run
-      // total. A resumed run (resumeFromRunId) starts a fresh turn count;
-      // cross-invocation cost lives in the per-segment ledgers instead.
-      spent: typeof budget !== 'undefined' ? budget.spent() : null,
+      // `spent` is THIS RUN's delta of the turn-scoped budget.spent()
+      // pool (baseline captured at dispatch start) — comparable against
+      // args.budgets.run, unlike the raw turn total. A resumed run
+      // (resumeFromRunId) starts a fresh count.
+      spent: runSpent,
     },
   }
 }

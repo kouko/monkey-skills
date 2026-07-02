@@ -53,6 +53,11 @@ def test_segment_routing():
 
     # public dispatcher name exactly mainDispatch
     assert "async function mainDispatch(" in source
+    # guard's return must be consumed — it may have PARSED string args
+    # (harness stringification, observed live wf_e96f6d0d-140)
+    assert "args = guardArgs(args)" in source, (
+        "mainDispatch must reassign args from guardArgs's return"
+    )
 
     # routes to all three segments
     assert "runSegment1(" in source
@@ -164,8 +169,13 @@ def test_segment2_routing_behavioral():
     ) + "\n" + main_defs_only
 
     harness = combined_source + "\n" + (
-        "var budget = { spent: () => 42, remaining: () => 999999 };\n"
+        "// advancing spent() so mainDispatch's baseline-delta accounting is\n"
+        "// genuinely exercised: calls land at baseline, ledger-thread, return.\n"
+        "var __spentCalls = 0;\n"
+        "var budget = { spent: () => { __spentCalls++; return __spentCalls * 21; }, remaining: () => 999999 };\n"
+        "var __allPrompts = [];\n"
         "async function agent(prompt, opts) {\n"
+        "  __allPrompts.push(String(prompt));\n"
         "  return {\n"
         "    verdict: 'PASS_WITH_NOTES',\n"
         "    artifacts: ['/tmp/x/proposal.md'],\n"
@@ -215,8 +225,23 @@ def test_segment2_routing_behavioral():
         "      process.exit(1);\n"
         "    }\n"
         "  }\n"
-        "  if (!summary.budget || summary.budget.run !== 500000 || summary.budget.spent !== 42) {\n"
-        "    console.error('FAIL: expected budget {run:500000, spent:42}, got ' + JSON.stringify(summary.budget));\n"
+        "  // runStation's own budget checks also call spent(), so the exact\n"
+        "  // count is not predictable — assert the SEMANTICS instead: spent is\n"
+        "  // a non-negative DELTA, strictly smaller than the raw pool total\n"
+        "  // (a raw turn total would equal/exceed it — the live bug shape).\n"
+        "  // ledger and summary must carry the SAME spent checkpoint —\n"
+        "  // the rendered ledger travels inside the writeLedger station prompt\n"
+        "  var __writtenLedger = __allPrompts.join('\\n');\n"
+        "  var ledgerSpentMatch = __writtenLedger.match(/- Spent: (\\d+)/);\n"
+        "  if (!ledgerSpentMatch || Number(ledgerSpentMatch[1]) !== summary.budget.spent) {\n"
+        "    console.error('FAIL: ledger Spent (' + (ledgerSpentMatch && ledgerSpentMatch[1]) + ') != summary spent (' + summary.budget.spent + ')');\n"
+        "    process.exit(1);\n"
+        "  }\n"
+        "  var rawEnd = budget.spent();\n"
+        "  if (!summary.budget || summary.budget.run !== 500000 ||\n"
+        "      typeof summary.budget.spent !== 'number' ||\n"
+        "      summary.budget.spent < 0 || summary.budget.spent >= rawEnd) {\n"
+        "    console.error('FAIL: expected run-delta budget, got ' + JSON.stringify(summary.budget) + ' rawEnd=' + rawEnd);\n"
         "    process.exit(1);\n"
         "  }\n"
         "\n"

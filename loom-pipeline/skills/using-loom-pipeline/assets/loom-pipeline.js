@@ -55,6 +55,28 @@ function guardArgs(args) {
     "hunting, no substitute seeds; the run FAILS rather than guessing.";
   var REQUIRED_FIELDS = ["segment", "changeId", "projectPath", "budgets", "models"];
 
+  // Harness integration (observed live 2026-07-04, run wf_e96f6d0d-140):
+  // the Workflow tool can deliver args as a JSON STRING. Parsing a valid
+  // JSON object out of it is deterministic recovery, not improvisation —
+  // anything else still fails loud below.
+  if (typeof args === "string") {
+    try {
+      args = JSON.parse(args);
+    } catch (e) {
+      throw new Error(
+        "guardArgs: args arrived as a non-JSON string (" + args.slice(0, 80) +
+        "...). " + FAIL_LOUD_NOTICE
+      );
+    }
+  }
+
+  if (Array.isArray(args)) {
+    throw new Error(
+      "guardArgs: expected an args object, received an array. " +
+      FAIL_LOUD_NOTICE
+    );
+  }
+
   if (args === null || args === undefined || typeof args !== "object") {
     throw new Error(
       "guardArgs: expected an args object, received " + String(args) + ". " +
@@ -443,6 +465,54 @@ function isPrinciplesStructurallyValid(text) {
   return hasNorthStar && hasFalsifiableCheck
 }
 
+// Local station-result schemas (SEG1_ prefix — one concat scope; see
+// driver_40_seg2.js's same note). Live finding wf_ff22820b-61d: agent()
+// WITHOUT opts.schema returns plain TEXT (the harness only injects the
+// StructuredOutput tool when a schema is passed) — spreading that string
+// into recordLedger produced indexed-char garbage. Schemas are therefore
+// load-bearing, not decoration.
+const SEG1_STATION_SCHEMA = {
+  type: 'object',
+  required: ['verdict', 'artifacts', 'interventions', 'summary'],
+  properties: {
+    verdict: { type: 'string', description: 'adopted | authored | PASS_WITH_NOTES | NEEDS_REVISION | DONE | FAIL' },
+    artifacts: { type: 'array', items: { type: 'string' }, description: 'absolute paths written' },
+    validator_exit: { type: 'integer', description: 'validator exit code; -1 if none ran' },
+    interventions: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['bucket', 'text'],
+        properties: {
+          bucket: { type: 'string', description: "A | B | C — driver_60_ledger.js INTERVENTION_BUCKETS" },
+          text: { type: 'string' },
+          critic_found: { type: 'boolean' },
+        },
+      },
+    },
+    summary: { type: 'string', description: 'must carry the DECISIONS_SECTION: present|absent token for design' },
+    principles_text_head: { type: 'string', description: 'first ~80 lines of PRINCIPLES.md verbatim (adopt/author both)' },
+  },
+}
+
+const SEG1_CRITIC_SCHEMA = {
+  type: 'object',
+  required: ['verdict', 'summary'],
+  properties: {
+    verdict: { type: 'string', description: 'PASS_WITH_NOTES | NEEDS_REVISION — two-valued, no bare PASS' },
+    summary: { type: 'string' },
+    critic_found_rows: { type: 'integer', description: 'count of critic-found additions made to ui-flows.md' },
+    interventions: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['bucket', 'text'],
+        properties: { bucket: { type: 'string' }, text: { type: 'string' }, critic_found: { type: 'boolean' } },
+      },
+    },
+  },
+}
+
 const PRINCIPLES_STABLE_PREAMBLE = [
   'STATION: principles (idempotent adopt-if-valid gate).',
   'Check whether <projectPath>/docs/loom/PRINCIPLES.md already exists.',
@@ -587,6 +657,7 @@ async function runDesignCriticPanel(projectPath, changeId, round, budgets, model
       label: `design-critic:${lens.name} r${round}`,
       phase: SEGMENT_1_PHASE_TITLE,
       model: models['design-critic'],
+      schema: SEG1_CRITIC_SCHEMA,
     })
     const result = await runStation('design-critic', thunk, {
       tokenCap: perStation['design-critic'],
@@ -655,6 +726,7 @@ async function runSegment1(args) {
     label: 'principles',
     phase: SEGMENT_1_PHASE_TITLE,
     model: models.principles,
+    schema: SEG1_STATION_SCHEMA,
   })
   const principlesResult = reconcilePrinciplesAdoption(
     await runStation('principles', principlesThunk, {
@@ -676,6 +748,7 @@ async function runSegment1(args) {
       label: `design r${round}`,
       phase: SEGMENT_1_PHASE_TITLE,
       model: models.design,
+      schema: SEG1_STATION_SCHEMA,
     })
     designResult = await runStation('design', designThunk, {
       tokenCap: perStation.design,
@@ -1606,7 +1679,19 @@ function mainBuildVerdicts(stationResults) {
 // render + write the ledger for EVERY segment (not just segment 3), then
 // return the machine-readable run summary the entry skill relays.
 async function mainDispatch(args) {
-  guardArgs(args)
+  // guardArgs returns the validated args — and may have PARSED them from a
+  // JSON string (harness stringification, observed live wf_e96f6d0d-140);
+  // everything below must use the returned object, not the raw input.
+  args = guardArgs(args)
+
+  // Live finding wf_ff22820b-61d: budget.spent() is TURN-scoped (shared
+  // pool across the main loop and all workflows this turn), so comparing
+  // it raw against args.budgets.run is apples/oranges. Capture a baseline
+  // here and report THIS RUN's delta everywhere (summary + ledger).
+  const runSpentBaseline =
+    typeof budget !== 'undefined' && typeof budget.spent === 'function'
+      ? budget.spent()
+      : null
 
   let stationResults
   if (args.segment === 1) {
@@ -1624,6 +1709,17 @@ async function mainDispatch(args) {
     )
   }
 
+  // ONE spent checkpoint, reused by the ledger AND the run summary —
+  // two separate reads around the ledger write diverge by the write's
+  // own cost (whole-branch review 🟡, 2026-07-04). Both numbers exclude
+  // the ledger-write itself; that exclusion is documented, not hidden.
+  const runSpent =
+    runSpentBaseline !== null && typeof budget !== 'undefined'
+      ? budget.spent() - runSpentBaseline
+      : null
+  if (runSpent !== null) {
+    args.budgetSpent = runSpent
+  }
   const ledgerMarkdown = renderLedger(args, stationResults)
   log(`segment ${args.segment}: ledger rendered (${ledgerMarkdown.length} chars)`)
   await writeLedger(args, stationResults)
@@ -1634,13 +1730,11 @@ async function mainDispatch(args) {
     verdicts: mainBuildVerdicts(stationResults),
     budget: {
       run: args.budgets.run,
-      // `spent` is THIS INVOCATION's turn-scoped output-token count — per
-      // the Workflow tool's budget primitive docs, budget.spent() counts
-      // output tokens spent THIS TURN across the main loop and all
-      // workflows (a shared per-turn pool), not a cumulative cross-run
-      // total. A resumed run (resumeFromRunId) starts a fresh turn count;
-      // cross-invocation cost lives in the per-segment ledgers instead.
-      spent: typeof budget !== 'undefined' ? budget.spent() : null,
+      // `spent` is THIS RUN's delta of the turn-scoped budget.spent()
+      // pool (baseline captured at dispatch start) — comparable against
+      // args.budgets.run, unlike the raw turn total. A resumed run
+      // (resumeFromRunId) starts a fresh count.
+      spent: runSpent,
     },
   }
 }

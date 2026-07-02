@@ -18,6 +18,28 @@ function guardArgs(args) {
     "hunting, no substitute seeds; the run FAILS rather than guessing.";
   var REQUIRED_FIELDS = ["segment", "changeId", "projectPath", "budgets", "models"];
 
+  // Harness integration (observed live 2026-07-04, run wf_e96f6d0d-140):
+  // the Workflow tool can deliver args as a JSON STRING. Parsing a valid
+  // JSON object out of it is deterministic recovery, not improvisation —
+  // anything else still fails loud below.
+  if (typeof args === "string") {
+    try {
+      args = JSON.parse(args);
+    } catch (e) {
+      throw new Error(
+        "guardArgs: args arrived as a non-JSON string (" + args.slice(0, 80) +
+        "...). " + FAIL_LOUD_NOTICE
+      );
+    }
+  }
+
+  if (Array.isArray(args)) {
+    throw new Error(
+      "guardArgs: expected an args object, received an array. " +
+      FAIL_LOUD_NOTICE
+    );
+  }
+
   if (args === null || args === undefined || typeof args !== "object") {
     throw new Error(
       "guardArgs: expected an args object, received " + String(args) + ". " +
