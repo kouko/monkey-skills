@@ -136,6 +136,20 @@ lens: N/A (no PRINCIPLES.md)" and skip the dispatch; never invent principles. (T
 mirrors `completeness-critic`'s principles lens — omission frame; whether the design
 *contradicts* a principle is the code-review conformance layer's job.)
 
+### Overlap-rate diagnostic — is the panel actually diverse?
+
+After each round, make a **qualitative overlap judgment** (no script, no
+computed metric — mirroring `completeness-critic`'s diagnostic): how much of
+the round's union did multiple lenses find? **High panel-wide overlap is a
+redundancy red flag** — the personas/lenses are collapsing onto the same
+cells, so add or swap in an **orthogonal lens / persona / input view** before
+the next round; low overlap means the panel is earning its dispatch cost.
+Report the judgment in §Round summary. Two rails: panel redundancy is
+**never** read as "the design must be nearly covered" (that would be a
+completeness signal), and panel-wide overlap is **distinct** from per-finding
+cross-lens convergence (§Consolidate) — the first measures the panel, the
+second corroborates one specific gap.
+
 ## Consolidate the panel union
 
 Collect the **UNION** of all lens-critics' findings, then **dedup semantically**
@@ -147,6 +161,26 @@ nicety). Re-seed the ranked load-bearing set into the **design view** (the worki
 copy of the artifacts under critique — `DESIGN.md` + `ui-flows.md` plus the gaps
 found so far) for the next round; the long tail goes to blind spots, never
 padded into the design.
+
+## How you write back
+
+You **extend the design view in place** with the consolidated, ranked set —
+never the raw union — and you **never overwrite** the writer's content, you
+augment it (mirroring `completeness-critic`'s write-back contract):
+
+1. Every critic-originated addition (a missing state row, a new exit, an
+   error-screen stub) is tagged **`critic-found`** where it lands in
+   `DESIGN.md` / `ui-flows.md`, so each surface's lineage stays traceable
+   against the writer's original.
+2. **`## Blind spots — needs human/field input`** is appended/extended per the
+   rule below.
+3. After write-back, run the change-folder validator
+   (`../../scripts/validate_design_output.py`) — a failure feeds the §Verdict.
+
+This write-back is the **sanctioned GENERATE-station exception** to the repo's
+evaluator-does-not-modify rule (repo CLAUDE.md §Agent Behavioral Rules):
+augmentation only, provenance-tagged, never overwriting — and the §Verdict
+below is still required, so the gate signal never rides on prose.
 
 ## You MUST emit your own blind spots
 
@@ -165,6 +199,33 @@ them `needs human/field input`.
 "comprehensive", or "all states covered" — **do not claim "complete"**. State
 **"surface-coverage relative to N lenses; blind spots listed below"** instead. An
 honest coverage statement, never a false completeness claim.
+
+## Round summary
+
+After the loop terminates (K consecutive dry rounds), report: rounds run and
+gaps found per round; the per-round overlap-rate judgment (§Overlap-rate
+diagnostic) — was the panel diverse enough or did it need an orthogonal lens;
+the `critic-found` additions; the non-empty `## Blind spots` list; and the
+coverage statement ("surface-coverage relative to N lenses"). Then end with
+the verdict (§Verdict below).
+
+## Verdict — two-valued, machine-readable
+
+End the round summary with exactly **one verdict token** (aligned with
+loom-code's reviewer vocabulary):
+
+- **`NEEDS_REVISION`** — a **severity-3** gap (blocks the user's core job)
+  could not be concretely re-seeded and needs the writer to redo a surface,
+  **or** `../../scripts/validate_design_output.py` fails after write-back.
+  Resolution: route back to `design-system` / `interaction-flows` for the
+  flagged surfaces, then re-run this critic.
+- **`PASS_WITH_NOTES`** — dry, findings re-seeded (`critic-found`), Blind
+  spots non-empty. Resolution: the change-folder proceeds — `ui-flows.md`
+  hands to `loom-spec:spec-expansion`.
+
+There is **deliberately no unqualified `PASS`** in this enum: a bare PASS
+would claim no omissions remain — the banned "complete" reflex — and Blind
+spots is non-empty by construction, so every clean outcome carries notes.
 
 ## Each lens is designed deletable (Bitter Lesson)
 

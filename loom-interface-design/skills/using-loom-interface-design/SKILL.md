@@ -60,6 +60,12 @@ undrawn empty/error/loading states, navigational dead-ends, unreachable screens,
 missing entry/exit — **before** `ui-flows.md` is handed to `loom-spec:spec-expansion`.
 It critiques the surface only; behavioral fan-out stays downstream.
 
+**Stage-3 resolution rule.** `design-critic` ends with a two-valued verdict:
+`NEEDS_REVISION` → route back to `design-system` / `interaction-flows` for the
+flagged surfaces, then re-run the critic; `PASS_WITH_NOTES` → the change-folder
+proceeds (`ui-flows.md` hands to `loom-spec:spec-expansion`). There is no bare
+`PASS` — the critic never claims the surface is complete.
+
 ## How to access skills
 
 | Harness | Mechanism |

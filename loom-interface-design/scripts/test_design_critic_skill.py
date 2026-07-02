@@ -181,3 +181,48 @@ def test_bitter_lesson_deletable_lens_note():
     assert "deletable" in low or "delete" in low or "prune" in low \
         or "re-baseline" in low or "rebaseline" in low, \
         "must state each lens is deletable / re-baseline periodically"
+
+
+# --- verdict contract (two-valued, machine-readable) -------------------------
+
+def test_verdict_two_valued_enum():
+    """The router calls this critic the design station's writer!=judge gate,
+    so it must emit a machine-readable verdict: PASS_WITH_NOTES /
+    NEEDS_REVISION, with the unqualified PASS deliberately absent (a bare PASS
+    would be a completeness claim; Blind spots is mandatory non-empty)."""
+    text = _text()
+    assert "PASS_WITH_NOTES" in text, \
+        "verdict enum must carry PASS_WITH_NOTES"
+    assert "NEEDS_REVISION" in text, \
+        "verdict enum must carry NEEDS_REVISION"
+    low = text.lower()
+    assert "verdict" in low, "must frame the output as a verdict"
+    import re as _re
+    assert _re.search(r"(no|never|not)\b[^.\n]*\bunqualified pass|"
+                      r"(no|never|not)\b[^.\n]*\bbare pass|"
+                      r"deliberately\s+(has\s+)?no\s+pass\b", low), \
+        "must state that an unqualified/bare PASS is deliberately absent"
+
+
+def test_write_back_carries_provenance():
+    """Re-seeding into the design view must be a real write-back contract
+    (mirroring completeness-critic): augment in place, never overwrite the
+    writer's content, and tag every critic-originated addition critic-found so
+    lineage is traceable."""
+    text = _text()
+    assert "critic-found" in text, \
+        "critic-originated additions must carry the critic-found provenance tag"
+    low = text.lower()
+    assert "overwrite" in low, \
+        "write-back must state it never overwrites the writer's content"
+
+
+def test_overlap_rate_diagnostic_present():
+    """The panel needs the overlap-rate diversity diagnostic (mirroring
+    completeness-critic): high panel-wide overlap = redundancy red flag (add an
+    orthogonal lens/persona), reported in the round summary, never read as a
+    completeness signal."""
+    low = _text().lower()
+    assert "overlap" in low, "must carry the overlap-rate diagnostic"
+    assert "redundan" in low, \
+        "high overlap must be framed as panel redundancy"

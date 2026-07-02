@@ -10,6 +10,19 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `design-critic` now ends every run with a **machine-readable two-valued
+  verdict** — `PASS_WITH_NOTES` / `NEEDS_REVISION` (no unqualified PASS — that
+  would be a completeness claim). The router carries the stage-3 resolution
+  rule (`NEEDS_REVISION` → back to the generators; `PASS_WITH_NOTES` →
+  `ui-flows.md` hands to spec-expansion). Drift-alignment with
+  `completeness-critic`: explicit **write-back contract** (augment in place,
+  never overwrite, `critic-found` provenance tags, validator run post
+  write-back) and the **overlap-rate panel-diversity diagnostic** reported in
+  the new round summary. Guarded by `test_verdict_two_valued_enum`,
+  `test_write_back_carries_provenance`, `test_overlap_rate_diagnostic_present`.
+
 ### Fixed
 
 - `design-system` / `interaction-flows` SKILL.md now state the correct
