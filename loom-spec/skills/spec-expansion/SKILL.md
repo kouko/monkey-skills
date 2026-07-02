@@ -265,7 +265,7 @@ stages and prunes its junk, so do not enumerate combinations where the
 reaction is just the union of individual reactions.
 
 **Wide stages (≥4 co-active objects).** On a ≥4-object stage you
-**MUST run `loom-spec/scripts/pairwise.py`** — and **MUST NOT enumerate** a wide
+**MUST run `../../scripts/pairwise.py`** (path relative to this skill's directory — the script ships at the plugin root's `scripts/`) — and **MUST NOT enumerate** a wide
 stage's combinations **inline** by reasoning. Inline reasoning-based
 enumeration on wide stages is the A/B-validated **leak** (the exhaustive grid
 catches gold that pure-prompt enumeration misses, `missed_by_both` up to 11);
@@ -366,7 +366,7 @@ blind spots:
   `backbone × object × CTA × state` paths and edges survive post-prune.
 - `## Cross-object combinations` — Phase ③b artifact: per interaction-dense
   stage, the joint state combinations of its co-active objects and the
-  reaction each requires (wide stages reduced via `loom-spec/scripts/pairwise.py`).
+  reaction each requires (wide stages reduced via `../../scripts/pairwise.py`).
   **Structurally required — always emitted**; when no stage is
   interaction-dense, its body states that honestly (e.g. "no
   interaction-dense stage — combinations N/A") and does **not** pad.
@@ -383,7 +383,8 @@ blind spots:
   empty because the spec is "complete".
 
 Validate the emitted directory with
-`loom-spec/scripts/validate_spec_output.py <output-dir>` before handoff.
+`../../scripts/validate_spec_output.py <output-dir>` (relative to this skill's
+directory) before handoff.
 
 ## Authoring the persistent intent layer
 
@@ -399,7 +400,7 @@ and per-capability intent that tests cannot encode. It lives in **two altitudes*
   carrying that capability's intent / why / scope.
 
 **TOP `MODEL.md` carries exactly these three canonical sections** (the header
-text is load-bearing — `loom-spec/scripts/validate_intent_layer.py` enforces it
+text is load-bearing — `../../scripts/validate_intent_layer.py` enforces it
 via `_TOP_SECTIONS`, so match it verbatim):
 
 ```
