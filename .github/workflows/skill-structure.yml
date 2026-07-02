@@ -39,6 +39,13 @@ jobs:
       - name: Run check-skill-structure.py against domain-teams
         run: python3 scripts/check-skill-structure.py domain-teams
 
+      - name: Run check-skill-structure.py against the loom-* suite
+        run: |
+          python3 scripts/check-skill-structure.py loom-code
+          python3 scripts/check-skill-structure.py loom-spec
+          python3 scripts/check-skill-structure.py loom-interface-design
+          python3 scripts/check-skill-structure.py loom-product-principles
+
   shared-conventions-drift:
     name: dev-workflow shared conventions drift
     runs-on: ubuntu-latest
