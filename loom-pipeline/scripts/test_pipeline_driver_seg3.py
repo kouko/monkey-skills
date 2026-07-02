@@ -29,7 +29,6 @@ WHOLE_BRANCH_REVIEW_ANCHOR = (
 
 
 def test_seg3_triad_review_uiverify():
-    # @req: REQ-LOOM-PIPELINE-SEG3-1
     assert MODULE_PATH.exists(), f"module missing: {MODULE_PATH}"
 
     check = subprocess.run(
@@ -117,7 +116,6 @@ def test_seg3_triad_review_uiverify():
 
 
 def test_seg3_plan_intake_schema_requires_id_and_name():
-    # @req: REQ-LOOM-PIPELINE-SEG3-2
     source = MODULE_PATH.read_text(encoding="utf-8")
 
     plan_intake_idx = source.index("SEG3_PLAN_INTAKE_SCHEMA")
@@ -142,7 +140,6 @@ def test_seg3_plan_intake_schema_requires_id_and_name():
 
 
 def test_seg3_budgets_per_station_family():
-    # @req: REQ-LOOM-PIPELINE-SEG3-3
     source = MODULE_PATH.read_text(encoding="utf-8")
 
     assert "perStation.code" in source, (
@@ -247,7 +244,6 @@ def test_extract_runstation_calls_strips_string_literal_parens():
     literal early on the escaped quote, which would desync the scan on the
     stray ')' that follows.
 
-    # @req: REQ-LOOM-PIPELINE-SEG3-7
     """
     source = (
         "runStation('closing ) paren only', () => agent('ok')); "
@@ -262,7 +258,6 @@ def test_extract_runstation_calls_strips_string_literal_parens():
 
 
 def test_seg3_dispatch_sites_wrapped_by_runstation():
-    # @req: REQ-LOOM-PIPELINE-SEG3-4
     source = MODULE_PATH.read_text(encoding="utf-8")
 
     assert "await agent(" not in source, (
@@ -287,7 +282,6 @@ def test_seg3_dispatch_sites_wrapped_by_runstation():
 
 
 def test_seg3_triad_ledger_calls_carry_judge_field():
-    # @req: REQ-LOOM-PIPELINE-SEG3-5
     source = MODULE_PATH.read_text(encoding="utf-8")
 
     ledger_lines = [
@@ -306,7 +300,6 @@ def test_seg3_triad_ledger_calls_carry_judge_field():
 
 
 def test_seg3_ui_gate_justification_surfaced_in_na_summary():
-    # @req: REQ-LOOM-PIPELINE-SEG3-6
     source = MODULE_PATH.read_text(encoding="utf-8")
 
     ui_gate_idx = source.index("SEG3_UI_GATE_SCHEMA")
@@ -332,7 +325,6 @@ def test_seg3_ui_gate_justification_surfaced_in_na_summary():
 
 
 def test_seg3_station_results_carry_station_field():
-    # @req: REQ-LOOM-PIPELINE-SEG3-8
     source = MODULE_PATH.read_text(encoding="utf-8")
 
     assert re.search(r"\.station\s*=\s*`seg3-task-\$\{task\.id\}`", source), (

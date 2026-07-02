@@ -35,7 +35,6 @@ MODULE_MARKERS = [
 
 
 def test_asset_matches_rebuild(tmp_path):
-    # @req: REQ-LOOM-PIPELINE-DRIVER-BUILD-1
     assert ASSET_PATH.exists(), f"committed driver asset missing: {ASSET_PATH}"
 
     rebuilt_path = tmp_path / "loom-pipeline.js"

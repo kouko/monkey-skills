@@ -28,7 +28,6 @@ def _executable_compressed(source: str) -> str:
 
 
 def test_meta_literal():
-    # @req: REQ-LOOM-PIPELINE-DRIVER-HEADER
     assert MODULE_PATH.exists(), f"module missing: {MODULE_PATH}"
 
     source = MODULE_PATH.read_text(encoding="utf-8")

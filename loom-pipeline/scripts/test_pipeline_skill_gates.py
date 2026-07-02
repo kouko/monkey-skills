@@ -2,7 +2,6 @@
 execution map, the 4 human gates between segments, and the driver
 prohibitions (verbatim) + stable-prefix dispatch convention note.
 
-# @req: REQ-LOOM-PIPELINE-SKILL-GATES-1
 """
 from pathlib import Path
 
@@ -24,7 +23,6 @@ def _body(text: str) -> str:
 
 
 def test_segments_gates_prohibitions():
-    # @req: REQ-LOOM-PIPELINE-SKILL-GATES-1
     assert SKILL_MD.exists(), f"missing {SKILL_MD}"
     text = SKILL_MD.read_text()
     body = _body(text)

@@ -5,7 +5,6 @@ slots leaked as the literal string "undefined" and stations improvised
 substitute seeds instead of failing. guardArgs() must throw, naming exactly
 which input is bad, rather than let a bad run proceed.
 
-# @req: REQ-LOOM-PIPELINE-GUARD-1
 """
 import subprocess
 from pathlib import Path
@@ -18,7 +17,6 @@ FAIL_LOUD_PHRASE = "fail-loud: refusing to improvise missing inputs"
 
 
 def test_fail_loud_guard():
-    # @req: REQ-LOOM-PIPELINE-GUARD-1
     assert MODULE.exists(), f"missing {MODULE}"
 
     check = subprocess.run(

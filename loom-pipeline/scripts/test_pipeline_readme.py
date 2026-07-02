@@ -2,7 +2,6 @@
 the required sections — Codex N/A note, G4 comparison-protocol section, the
 v1.1 batch-mode note, and all 5 parked items each with a re-trigger.
 
-# @req: REQ-LOOM-PIPELINE-README-1
 """
 from pathlib import Path
 
@@ -12,7 +11,6 @@ CHANGELOG = PLUGIN_ROOT / "CHANGELOG.md"
 
 
 def test_readme_parks_and_codex_note():
-    # @req: REQ-LOOM-PIPELINE-README-1
     assert README.exists(), f"missing {README}"
     text = README.read_text()
 

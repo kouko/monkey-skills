@@ -1,5 +1,4 @@
 """Tests for loom-pipeline/scripts/build_driver.py."""
-# @req: REQ-LOOM-PIPELINE-DRIVER-BUILD-1
 from __future__ import annotations
 
 import subprocess
@@ -13,7 +12,6 @@ AGENTS_MD = REPO_ROOT / "AGENTS.md"
 
 
 def test_build_to_temp_and_lint(tmp_path):
-    # @req: REQ-LOOM-PIPELINE-DRIVER-BUILD-1
     out_path = tmp_path / "loom-pipeline.js"
 
     result = subprocess.run(
@@ -53,7 +51,6 @@ def test_build_to_temp_and_lint(tmp_path):
 
 
 def test_agents_md_mentions_build_driver():
-    # @req: REQ-LOOM-PIPELINE-DRIVER-BUILD-1
     content = AGENTS_MD.read_text(encoding="utf-8")
     assert "build_driver.py" in content, (
         "AGENTS.md must declare the loom-pipeline build_driver.py verb"

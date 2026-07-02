@@ -26,7 +26,6 @@ STATION_FIELDS = ["verdict", "artifacts", "validator_exit", "interventions", "su
 
 
 def test_ladder_budgets_watchdog_prefix():
-    # @req: REQ-LOOM-PIPELINE-RUNSTATION-1
     assert MODULE_PATH.exists(), f"module missing: {MODULE_PATH}"
 
     source = MODULE_PATH.read_text(encoding="utf-8")
@@ -69,7 +68,6 @@ def test_ladder_budgets_watchdog_prefix():
 
 
 def test_runstation_fails_loud_without_budget():
-    # @req: REQ-LOOM-PIPELINE-RUNSTATION-1
     source = MODULE_PATH.read_text(encoding="utf-8")
 
     harness = source + "\n" + (
@@ -97,7 +95,6 @@ def test_runstation_fails_loud_without_budget():
 
 
 def test_runstation_cumulative_budget_stops_ladder():
-    # @req: REQ-LOOM-PIPELINE-RUNSTATION-1
     source = MODULE_PATH.read_text(encoding="utf-8")
 
     # Mock budget: spent() advances 60 per real thunk invocation. tokenCap is
@@ -148,7 +145,6 @@ def test_runstation_cumulative_budget_stops_ladder():
 
 
 def test_runstation_watchdog_rejects_instead_of_hanging():
-    # @req: REQ-LOOM-PIPELINE-RUNSTATION-1
     source = MODULE_PATH.read_text(encoding="utf-8")
 
     harness = source + "\n" + (

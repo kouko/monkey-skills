@@ -22,7 +22,6 @@ MODULE_PATH = Path(__file__).parent / "driver_60_ledger.js"
 
 
 def test_ledger_fields():
-    # @req: REQ-LOOM-PIPELINE-LEDGER-1
     assert MODULE_PATH.exists(), f"module missing: {MODULE_PATH}"
 
     source = MODULE_PATH.read_text(encoding="utf-8")
@@ -79,7 +78,6 @@ def test_ledger_fields():
 
 
 def test_ledger_record_and_render_behavioral():
-    # @req: REQ-LOOM-PIPELINE-LEDGER-1
     assert MODULE_PATH.exists(), f"module missing: {MODULE_PATH}"
     source = MODULE_PATH.read_text(encoding="utf-8")
 
@@ -161,7 +159,6 @@ def test_interventions_attributed_by_station_field():
     rendered as [unknown]. Pin the fix: a real producer-shaped station
     result must attribute its intervention by its .station value.
 
-    # @req: REQ-LOOM-PIPELINE-LEDGER-3
     """
     assert MODULE_PATH.exists(), f"module missing: {MODULE_PATH}"
     source = MODULE_PATH.read_text(encoding="utf-8")
@@ -199,7 +196,6 @@ def test_g2_metric_counts_nested_critic_found_interventions():
     items. renderG2Metric must count THAT, not the always-empty top-level
     field, so 'Critic-found rows' stops being structurally dead.
 
-    # @req: REQ-LOOM-PIPELINE-LEDGER-2
     """
     assert MODULE_PATH.exists(), f"module missing: {MODULE_PATH}"
     source = MODULE_PATH.read_text(encoding="utf-8")

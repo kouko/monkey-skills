@@ -29,7 +29,6 @@ def _seg2_phase_title() -> str:
 
 
 def test_seg2_validator_gate():
-    # @req: REQ-LOOM-PIPELINE-SEG2-1
     assert MODULE_PATH.exists(), f"module missing: {MODULE_PATH}"
 
     source = MODULE_PATH.read_text(encoding="utf-8")
@@ -124,7 +123,6 @@ def test_seg2_execution_wiring_behavioral():
         message BEFORE any station dispatch — no hardcoded validator path
         fallback.
 
-    # @req: REQ-LOOM-PIPELINE-SEG2-1
     """
     combined_source = "\n".join(
         p.read_text(encoding="utf-8")
@@ -210,7 +208,6 @@ def test_seg2_execution_wiring_behavioral():
 
 
 def test_seg2_station_results_carry_station_field():
-    # @req: REQ-LOOM-PIPELINE-SEG2-2
     source = MODULE_PATH.read_text(encoding="utf-8")
 
     for expected in [

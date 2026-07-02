@@ -23,7 +23,6 @@ def _load_workflow():
 
 
 def test_workflow_paths():
-    # @req: REQ-LOOM-PIPELINE-CI-WORKFLOW
     text, data = _load_workflow()
 
     # PyYAML's SafeLoader interprets the bare `on:` key as boolean True.

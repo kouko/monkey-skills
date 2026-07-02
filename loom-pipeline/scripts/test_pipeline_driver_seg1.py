@@ -26,7 +26,6 @@ def _segment_1_phase_title():
 
 
 def test_seg1_panel_caps_ledger():
-    # @req: REQ-LOOM-PIPELINE-SEG1-1
     assert MODULE_PATH.exists(), f"module missing: {MODULE_PATH}"
 
     source = MODULE_PATH.read_text(encoding="utf-8")
@@ -89,7 +88,6 @@ def test_seg1_panel_caps_ledger():
 
 
 def test_seg1_ledger_entries_carry_judge_or_role():
-    # @req: REQ-LOOM-PIPELINE-SEG1-2
     source = MODULE_PATH.read_text(encoding="utf-8")
 
     ledger_lines = [
@@ -105,7 +103,6 @@ def test_seg1_ledger_entries_carry_judge_or_role():
 
 
 def test_seg1_no_naked_agent_dispatch():
-    # @req: REQ-LOOM-PIPELINE-SEG1-3
     source = MODULE_PATH.read_text(encoding="utf-8")
 
     # Every agent() dispatch must be wrapped by runStation's watchdog / token
@@ -138,7 +135,6 @@ def test_seg1_no_naked_agent_dispatch():
 
 
 def test_seg1_decisions_section_checked_against_artifact_not_self_report():
-    # @req: REQ-LOOM-PIPELINE-SEG1-4
     source = MODULE_PATH.read_text(encoding="utf-8")
 
     assert "DECISIONS_SECTION" in source, (
@@ -163,7 +159,6 @@ def test_seg1_decisions_section_checked_against_artifact_not_self_report():
 
 
 def test_seg1_is_principles_structurally_valid_wired_or_absent():
-    # @req: REQ-LOOM-PIPELINE-SEG1-5
     source = MODULE_PATH.read_text(encoding="utf-8")
 
     definition_count = len(re.findall(r"function isPrinciplesStructurallyValid", source))
@@ -180,7 +175,6 @@ def test_seg1_is_principles_structurally_valid_wired_or_absent():
 
 
 def test_seg1_station_results_carry_station_field():
-    # @req: REQ-LOOM-PIPELINE-SEG1-6
     source = MODULE_PATH.read_text(encoding="utf-8")
 
     assert re.search(r"principlesResult\.station\s*=\s*'principles'", source), (

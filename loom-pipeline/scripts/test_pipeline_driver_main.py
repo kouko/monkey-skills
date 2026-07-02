@@ -36,7 +36,6 @@ TOP_LEVEL_MARKER = "// ---- top-level execution"
 
 
 def test_segment_routing():
-    # @req: REQ-LOOM-PIPELINE-MAIN-1
     assert MODULE_PATH.exists(), f"module missing: {MODULE_PATH}"
     source = MODULE_PATH.read_text(encoding="utf-8")
 
@@ -151,7 +150,6 @@ def test_segment2_routing_behavioral():
     'unknown' key in an object map, silently dropping every verdict but the
     last.
 
-    # @req: REQ-LOOM-PIPELINE-MAIN-1
     """
     main_source = MODULE_PATH.read_text(encoding="utf-8")
     assert TOP_LEVEL_MARKER in main_source, (

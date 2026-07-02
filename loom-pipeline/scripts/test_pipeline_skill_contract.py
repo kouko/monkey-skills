@@ -2,7 +2,6 @@
 gate, the N/A-loud clause, the 6-field run-input contract, and the
 Workflow({scriptPath...}) invocation resolved from the skill's base path.
 
-# @req: REQ-LOOM-PIPELINE-SKILL-CONTRACT-1
 """
 from pathlib import Path
 
@@ -24,7 +23,6 @@ def _body(text: str) -> str:
 
 
 def test_fire_inputs_and_invocation():
-    # @req: REQ-LOOM-PIPELINE-SKILL-CONTRACT-1
     assert SKILL_MD.exists(), f"missing {SKILL_MD}"
     text = SKILL_MD.read_text()
     lower = text.lower()

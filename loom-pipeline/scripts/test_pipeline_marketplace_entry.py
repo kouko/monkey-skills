@@ -5,7 +5,6 @@ from pathlib import Path
 
 
 def test_entry_present_and_synced():
-    # @req: REQ-LOOM-PIPELINE-MARKETPLACE-ENTRY
     repo_root = Path(__file__).parents[2]
     marketplace = json.loads(
         (repo_root / ".claude-plugin" / "marketplace.json").read_text()

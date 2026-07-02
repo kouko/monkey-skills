@@ -1,6 +1,5 @@
 """Structural test: both plugin manifests exist, parse, and stay in sync.
 
-# @req: REQ-LOOM-PIPELINE-MANIFEST-1
 """
 import json
 from pathlib import Path
@@ -11,7 +10,6 @@ CODEX_MANIFEST = PLUGIN_ROOT / ".codex-plugin" / "plugin.json"
 
 
 def test_manifests_exist_and_sync():
-    # @req: REQ-LOOM-PIPELINE-MANIFEST-1
     assert CLAUDE_MANIFEST.exists(), f"missing {CLAUDE_MANIFEST}"
     assert CODEX_MANIFEST.exists(), f"missing {CODEX_MANIFEST}"
 
