@@ -299,13 +299,6 @@ async function runSegment3(args) {
   // Canonical budgets shape: { run, perStation: { <stationName>: <cap> } }.
   const perStation = budgets.perStation || {}
 
-  // LOOM-SIMPLIFY: local `perStation.probe || 20000` fallback instead of a
-  // driver_20 STATION_TOKEN_BUDGETS['probe'] entry | ceiling: next time
-  // driver_20_runstation.js is edited by any task in this plan | upgrade:
-  // add a 'probe' entry to STATION_TOKEN_BUDGETS there and drop this local
-  // fallback | ref: Task 11 remediation round, finding 🟡2 (driver_20 is
-  // out of scope for this task).
-  //
   // Explicit family-constant fallbacks (STATION_TOKEN_BUDGETS.code / .review)
   // instead of runStation's own name-keyed STATION_TOKEN_BUDGETS[name]
   // lookup: seg3's station labels are dynamic per-task strings (e.g.
@@ -314,7 +307,7 @@ async function runSegment3(args) {
   // generic 20000 default instead of the code/review family's real cap.
   const codeOpts = { budget, models, tokenCap: perStation.code || STATION_TOKEN_BUDGETS.code }
   const reviewOpts = { budget, models, tokenCap: perStation.review || STATION_TOKEN_BUDGETS.review }
-  const probeOpts = { budget, models, tokenCap: perStation.probe || 20000 }
+  const probeOpts = { budget, models, tokenCap: perStation.probe || STATION_TOKEN_BUDGETS.probe }
 
   const planIntake = await runStation(
     'seg3-plan-intake',

@@ -186,7 +186,7 @@ async function runSegment2(args) {
 
     if (round === RALLY_CAP) {
       const unresolved = makeStationResult({
-        verdict: 'UNRESOLVED',
+        verdict: 'NEEDS_REVISION',  // same token seg1 uses for rally-cap exhaustion — one vocabulary
         interventions: [
           {
             bucket: 'B',

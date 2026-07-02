@@ -198,6 +198,8 @@ const STATION_TOKEN_BUDGETS = {
   code: 150000,
   review: 60000,
   ledger: 10000,
+  'spec-validator': 30000,
+  probe: 20000,
 }
 
 // ---- stable-prefix dispatch --------------------------------------------------
@@ -908,7 +910,7 @@ async function runSegment2(args) {
 
     if (round === RALLY_CAP) {
       const unresolved = makeStationResult({
-        verdict: 'UNRESOLVED',
+        verdict: 'NEEDS_REVISION',  // same token seg1 uses for rally-cap exhaustion — one vocabulary
         interventions: [
           {
             bucket: 'B',
@@ -1249,13 +1251,6 @@ async function runSegment3(args) {
   // Canonical budgets shape: { run, perStation: { <stationName>: <cap> } }.
   const perStation = budgets.perStation || {}
 
-  // LOOM-SIMPLIFY: local `perStation.probe || 20000` fallback instead of a
-  // driver_20 STATION_TOKEN_BUDGETS['probe'] entry | ceiling: next time
-  // driver_20_runstation.js is edited by any task in this plan | upgrade:
-  // add a 'probe' entry to STATION_TOKEN_BUDGETS there and drop this local
-  // fallback | ref: Task 11 remediation round, finding 🟡2 (driver_20 is
-  // out of scope for this task).
-  //
   // Explicit family-constant fallbacks (STATION_TOKEN_BUDGETS.code / .review)
   // instead of runStation's own name-keyed STATION_TOKEN_BUDGETS[name]
   // lookup: seg3's station labels are dynamic per-task strings (e.g.
@@ -1264,7 +1259,7 @@ async function runSegment3(args) {
   // generic 20000 default instead of the code/review family's real cap.
   const codeOpts = { budget, models, tokenCap: perStation.code || STATION_TOKEN_BUDGETS.code }
   const reviewOpts = { budget, models, tokenCap: perStation.review || STATION_TOKEN_BUDGETS.review }
-  const probeOpts = { budget, models, tokenCap: perStation.probe || 20000 }
+  const probeOpts = { budget, models, tokenCap: perStation.probe || STATION_TOKEN_BUDGETS.probe }
 
   const planIntake = await runStation(
     'seg3-plan-intake',
@@ -1373,6 +1368,9 @@ function recordLedger(entry) {
 
 // ---- interventions: 3-bucket flatten --------------------------------------
 
+// Render-layer tolerance is intentional (contrast recordLedger's fail-loud):
+// the ledger is the run's evidence trail — one mis-tagged bucket must land
+// visibly in "Unbucketed", never crash the render and destroy the trail.
 const INTERVENTION_BUCKETS = [
   { key: 'A', title: 'A. Driver/harness gaps (automatable — fix the machinery, not the human)' },
   { key: 'B', title: 'B. Genuine human gates (keep a person here)' },
@@ -1385,7 +1383,7 @@ function renderInterventionBuckets(stationResults) {
 
   ;(stationResults || []).forEach((station) => {
     ;(station.interventions || []).forEach((iv) => {
-      const label = '[' + (station.name || 'unknown') + '] ' + (iv && iv.text ? iv.text : JSON.stringify(iv))
+      const label = '[' + (station.station || station.name || 'unknown') + '] ' + (iv && iv.text ? iv.text : JSON.stringify(iv))
       if (iv && Object.prototype.hasOwnProperty.call(buckets, iv.bucket)) {
         buckets[iv.bucket].push('- ' + label)
       } else {

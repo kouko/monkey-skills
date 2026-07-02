@@ -56,6 +56,8 @@ const STATION_TOKEN_BUDGETS = {
   code: 150000,
   review: 60000,
   ledger: 10000,
+  'spec-validator': 30000,
+  probe: 20000,
 }
 
 // ---- stable-prefix dispatch --------------------------------------------------

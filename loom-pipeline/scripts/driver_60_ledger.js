@@ -61,6 +61,9 @@ function recordLedger(entry) {
 
 // ---- interventions: 3-bucket flatten --------------------------------------
 
+// Render-layer tolerance is intentional (contrast recordLedger's fail-loud):
+// the ledger is the run's evidence trail — one mis-tagged bucket must land
+// visibly in "Unbucketed", never crash the render and destroy the trail.
 const INTERVENTION_BUCKETS = [
   { key: 'A', title: 'A. Driver/harness gaps (automatable — fix the machinery, not the human)' },
   { key: 'B', title: 'B. Genuine human gates (keep a person here)' },
@@ -73,7 +76,7 @@ function renderInterventionBuckets(stationResults) {
 
   ;(stationResults || []).forEach((station) => {
     ;(station.interventions || []).forEach((iv) => {
-      const label = '[' + (station.name || 'unknown') + '] ' + (iv && iv.text ? iv.text : JSON.stringify(iv))
+      const label = '[' + (station.station || station.name || 'unknown') + '] ' + (iv && iv.text ? iv.text : JSON.stringify(iv))
       if (iv && Object.prototype.hasOwnProperty.call(buckets, iv.bucket)) {
         buckets[iv.bucket].push('- ' + label)
       } else {

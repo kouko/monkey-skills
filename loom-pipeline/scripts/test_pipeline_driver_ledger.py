@@ -155,6 +155,44 @@ def test_ledger_record_and_render_behavioral():
     assert "OK" in result.stdout
 
 
+def test_interventions_attributed_by_station_field():
+    """Whole-branch review 🔴: renderInterventionBuckets read station.name,
+    which no producer sets (they all set .station) — every intervention
+    rendered as [unknown]. Pin the fix: a real producer-shaped station
+    result must attribute its intervention by its .station value.
+
+    # @req: REQ-LOOM-PIPELINE-LEDGER-3
+    """
+    assert MODULE_PATH.exists(), f"module missing: {MODULE_PATH}"
+    source = MODULE_PATH.read_text(encoding="utf-8")
+
+    harness = source + "\n" + (
+        "(() => {\n"
+        "  const stationResults = [\n"
+        "    { station: 'spec-validator', verdict: 'NEEDS_REVISION', interventions: [\n"
+        "      { bucket: 'B', text: 'Decisions section absent', critic_found: false },\n"
+        "    ] },\n"
+        "  ];\n"
+        "  const args = { changeId: 'c1', projectPath: '/tmp/x', budgets: { run: 1, perStation: {} } };\n"
+        "  const out = renderLedger(args, stationResults);\n"
+        "  if (out.includes('[unknown]')) {\n"
+        "    console.error('FAIL: intervention attributed to [unknown]');\n"
+        "    process.exit(1);\n"
+        "  }\n"
+        "  if (!out.includes('[spec-validator]')) {\n"
+        "    console.error('FAIL: intervention not attributed to its station');\n"
+        "    process.exit(1);\n"
+        "  }\n"
+        "  console.log('OK');\n"
+        "})();\n"
+    )
+    import subprocess as sp
+    result = sp.run(["node", "-e", harness], capture_output=True, text=True, timeout=10)
+    assert result.returncode == 0, (
+        f"attribution probe failed: stdout={result.stdout!r} stderr={result.stderr!r}"
+    )
+
+
 def test_g2_metric_counts_nested_critic_found_interventions():
     """G2 fix: nothing populates top-level LEDGER entry.critic_found — the
     seg2/seg3 schemas nest critic_found inside stationResults[].interventions[]
