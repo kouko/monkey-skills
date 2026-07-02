@@ -45,11 +45,12 @@ The design change-folder is written into the **consumer project** under the esta
 
 ```
 docs/loom/
-  DESIGN.md          # GUI design-system, product-level (one per product)
-  ui-flows.md        # interaction flows, per-feature/change
+  DESIGN.md               # GUI design-system, product-level (one per product)
+  <change-id>/
+    ui-flows.md           # interaction flows, per-feature/change
 ```
 
-The design-system doc lives at the toolkit root (product-level); `ui-flows.md` is per-feature/change. All artifacts are **key-free, in-repo, git-diffable**. A `validate_*` script (mirroring `loom-spec/scripts/validate_spec_output.py`) is the executable format contract: it checks the change-folder's documents are present and well-formed (exit 0 = conformant).
+The design-system doc lives at the toolkit root (product-level); `ui-flows.md` is per-feature/change and lives in a **per-change folder** — the same `<change-id>` that `loom-spec:spec-expansion` uses, so the design seed sits beside the spec delta it feeds (a fixed product-level `ui-flows.md` would be overwritten by the next feature). All artifacts are **key-free, in-repo, git-diffable**. A `validate_*` script (mirroring `loom-spec/scripts/validate_spec_output.py`) is the executable format contract: it checks the change-folder's documents are present and well-formed (exit 0 = conformant).
 
 The OpenSpec change-folder that `loom-spec` later produces lives under `docs/loom/` — consistent with the in-use `docs/<toolkit>/` convention, not a root `openspec/`.
 

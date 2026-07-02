@@ -72,7 +72,9 @@ loud). This intake is **read-only**: never edit the constitution from here.
 ## Consuming a `ui-flows.md` seed (DESIGN→spec seam)
 
 When the seed is a `ui-flows.md` produced by `loom-interface-design:interaction-flows`
-(rather than a few raw lines of intent), the interface **surface** is already specified —
+(by convention it sits in **this change's own folder** —
+`docs/loom/<change-id>/ui-flows.md`, the same `<change-id>` this skill emits
+into — rather than a few raw lines of intent), the interface **surface** is already specified —
 the inventory, user flows, entry/exit points and density flags. Do **not** re-derive or
 re-express that surface here; that is the design station's output, and copying it in
 creates a second source of truth that drifts.

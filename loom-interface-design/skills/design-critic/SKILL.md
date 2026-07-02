@@ -25,9 +25,10 @@ reasoning and the parallel fan-out. There is no external runtime, no API key, no
 program to install — the panel rides on the host agent you are already in.
 
 **Inputs.** The artifacts under critique are the design change-folder in the consumer
-project — by convention `docs/loom/DESIGN.md` +
-`docs/loom/ui-flows.md` (one or both may be present; critique
-whatever exists, note the missing one). **Wrong-artifact guard:** if you are handed a
+project — by convention the product-level `docs/loom/DESIGN.md` + the
+per-change `docs/loom/<change-id>/ui-flows.md` (legacy runs may have both
+side-by-side; one or both may be present — critique whatever exists, note the
+missing one). **Wrong-artifact guard:** if you are handed a
 **spec** (behavioral requirements / `#### Scenario:` blocks) or **code**, STOP — that
 is the wrong skill (`loom-spec:completeness-critic` for a spec; code review for
 code). Do not run the panel over a non-design artifact and dutifully drop every

@@ -111,8 +111,16 @@ here would duplicate loom-spec — do not.
 
 ### 6. Emit `ui-flows.md` into the consumer project
 
-Write the artifact to `docs/loom/ui-flows.md` in the consumer
-project (per feature / change). Structure it as one `##` section per dimension,
+Write the artifact to `docs/loom/<change-id>/ui-flows.md` in the consumer
+project — **per feature / change, one folder per change**. `<change-id>` is
+the kebab-case name of this feature/change, the **same id**
+`loom-spec:spec-expansion` uses for its change folder, so the design seed sits
+beside the spec delta it will feed (ask the user for the change name if the
+feature description does not yield an obvious one). Do **not** write to a
+fixed product-level `docs/loom/ui-flows.md` — a per-feature artifact at a
+fixed path means the second feature overwrites the first. (`DESIGN.md` stays
+product-level at `docs/loom/` — one per product, not per change.)
+Structure it as one `##` section per dimension,
 provenance-honest about which surfaces / flows are derived from the feature
 description vs inferred from domain priors.
 
@@ -135,16 +143,19 @@ here; a copied table would drift.
 
 Run the change-folder validator (repo-root-relative path
 `loom-interface-design/scripts/validate_design_output.py <design-output-dir>`;
-the skill-relative form is `../../scripts/validate_design_output.py`) on the emitted
-directory and **fix every flagged issue** before handing off. Do not declare the
-artifact done with validator failures outstanding (Rule 12).
+the skill-relative form is `../../scripts/validate_design_output.py`) on the
+emitted **change folder** (`docs/loom/<change-id>/`) and **fix every flagged
+issue** before handing off. Do not declare the artifact done with validator
+failures outstanding (Rule 12).
 
-**Note — the validator checks the *whole* change-folder.** It requires BOTH
-`DESIGN.md` (from the `design-system` skill) and `ui-flows.md` (this skill)
-present. Run the full validation once the change-folder is assembled — i.e.
-after `design-system` has also emitted into the same `docs/loom/`
-directory (the `using-loom-interface-design` router coordinates this). A
-`ui-flows.md`-only run will correctly report the missing `DESIGN.md`.
+**Note — the validator checks the *whole* change-folder.** It requires
+`ui-flows.md` (this skill) in the change folder and resolves `DESIGN.md`
+(from the `design-system` skill) most-specific-first — the change folder
+itself, then its parent (the product level, `DESIGN.md`'s canonical home).
+Run the full validation once the change-folder is assembled — i.e. after
+`design-system` has also emitted (the `using-loom-interface-design` router
+coordinates this). A `ui-flows.md`-only run with no `DESIGN.md` at either
+level will correctly report the missing `DESIGN.md`.
 
 ## Boundary — stops at GENERATE (the surface)
 

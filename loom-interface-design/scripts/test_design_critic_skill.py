@@ -226,3 +226,11 @@ def test_overlap_rate_diagnostic_present():
     assert "overlap" in low, "must carry the overlap-rate diagnostic"
     assert "redundan" in low, \
         "high overlap must be framed as panel redundancy"
+
+
+def test_inputs_are_per_change_folder():
+    """The critique inputs must reflect the per-change layout: product-level
+    DESIGN.md + per-change docs/loom/<change-id>/ui-flows.md."""
+    text = _text()
+    assert "<change-id>" in text, \
+        "critique inputs must name the per-change <change-id> folder"
