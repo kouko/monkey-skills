@@ -88,7 +88,7 @@ contract violations are among the most costly quality failures.*
 - Suggest fixes, don't just point out problems
 - If the code works and is clear, say "LGTM" — don't invent issues
 - Max 5 flags per review (prioritize by impact)
-- Reference `standards/code-conventions.md` for objective style rules
+- Reference `standards/naming-and-functions.md` for objective style rules
 
 ## Output Format
 

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed — code-team quality-gate dead standards reference
+
+`code-team/rubrics/quality-gate.md` §Rules referenced a nonexistent
+`standards/code-conventions.md`; repointed to
+`standards/naming-and-functions.md` (the standard that actually carries the
+objective style rules). Propagates to the loom-code functional copy via
+`loom-code/scripts/distribute.py`.
+
 ### Changed — research-team universal onboarding + selective tagging
 
 `research-team` undergoes a structural refactor (planned v5.6.0)
