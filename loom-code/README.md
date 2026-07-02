@@ -1,8 +1,8 @@
 # loom-code
 
-> **Process-discipline + canon-grounded coding workflow for Claude Code (+ Codex CLI).** An 11-skill plugin that auto-injects a SessionStart router charter so the agent stops rationalizing and starts deferring — every rule grounded in a primary source (Beck on TDD, Martin on naming, Fowler on refactoring, Feathers on legacy code, OWASP ASVS on security, 徳丸本 on encoding security).
+> **Process-discipline + canon-grounded coding workflow for Claude Code (+ Codex CLI).** A 12-skill plugin that auto-injects a SessionStart router charter so the agent stops rationalizing and starts deferring — every rule grounded in a primary source (Beck on TDD, Martin on naming, Fowler on refactoring, Feathers on legacy code, OWASP ASVS on security, 徳丸本 on encoding security).
 
-**Status**: v0.20.0 — 11 skills; full Superpowers parity since v0.3.0. Per-version detail (rule-sheet injection, reviewer-discipline, parallel dispatch, spec→code seam, memory verify gate, …) lives in [CHANGELOG.md](CHANGELOG.md).
+**Status**: v0.21.0 — 12 skills; full Superpowers parity since v0.3.0. Per-version detail (rule-sheet injection, reviewer-discipline, parallel dispatch, spec→code seam, memory verify gate, …) lives in [CHANGELOG.md](CHANGELOG.md).
 **Languages**: [English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 **Repository**: part of [`monkey-skills`](https://github.com/kouko/monkey-skills)
 
@@ -42,7 +42,7 @@ claude plugin install loom-code@monkey-skills
 
 # Verify
 claude plugin list | grep loom-code       # expect: enabled
-claude plugin details loom-code           # expect: 11 skills + 1 SessionStart hook
+claude plugin details loom-code           # expect: 12 skills + 1 SessionStart hook
 ```
 
 ### Codex CLI (build complete; live verification deferred)
@@ -67,7 +67,7 @@ claude plugin install loom-code@monkey-skills --scope local
 
 ---
 
-## The 11 skills
+## The 12 skills
 
 | # | Skill | Stage | What it does |
 |---|---|---|---|
@@ -79,6 +79,7 @@ claude plugin install loom-code@monkey-skills --scope local
 | 5 | [`systematic-debugging`](skills/systematic-debugging/) | Repair | 4-phase REPRODUCE → ISOLATE → HYPOTHESIZE → VERIFY; HARD-GATE "NO FIXING WITHOUT REPRODUCING" |
 | 6 | [`requesting-code-review`](skills/requesting-code-review/) | Review | Whole-branch review with 7-dimension scoring (cross-task-coherence as branch-only dimension); push-as-trigger |
 | 7 | [`verification-before-completion`](skills/verification-before-completion/) | Verification | "NO DONE WITHOUT PACKAGE-LEVEL TEST INVOCATION"; 20+ stack canonical commands |
+| 7b | [`ui-verification`](skills/ui-verification/) | Verification (conditional) | Drives the rendered app through `ui-flows.md`'s enumerated states via host browser/device automation; N/A-loud when conditions/tooling absent; token conformance excluded (parked) |
 | 8 | [`finishing-a-development-branch`](skills/finishing-a-development-branch/) | Branch close | 7-step orchestrator (review → verify → git-memory mandatory → commit → push → optional PR + worktree cleanup) |
 | Aux | [`using-git-worktrees`](skills/using-git-worktrees/) | Lateral | Native `git worktree` workflow; `.worktrees/<slug>/` convention |
 | Aux | [`dispatching-parallel-agents`](skills/dispatching-parallel-agents/) | Lateral (v0.8.0+) | Across-domain `Agent` dispatch in one assistant message when 2+ problem domains are independent (disjoint files, no shared symbol, no sequential data dep); TDD iron-law applies per branch; verdict aggregation at this skill's layer |

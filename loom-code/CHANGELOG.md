@@ -5,9 +5,24 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.21.0] — 2026-07-03 — **ui-verification: the rendered-UI runtime gate**
 
 ### Added
+
+- **New skill `ui-verification`** (skill 12): drives the real rendered app
+  through every state `docs/loom/<change-id>/ui-flows.md` enumerates (render
+  variants, flows, entry/exit) using the host's browser/device automation
+  (chrome-devtools / agent-device MCP class), producing a two-valued verdict
+  (`PASS_WITH_NOTES` / `NEEDS_REVISION`; no bare PASS — coverage is relative
+  to the enumeration). CONDITIONAL gate (D8 pattern): fires only when a
+  ui-flows.md exists and the branch touched a UI surface; **N/A-loud** when
+  tooling is absent — never fake a walkthrough from source. DESIGN.md token
+  conformance explicitly out of scope (respects the #473 park). Born from the
+  2026-07-03 pipeline dogfood, where 28/28 green tests shipped a GUI with
+  zero behavioral verification. Wired into `finishing-a-development-branch`
+  (Phase 2 conditional sibling), the router stage table (7b), and
+  `verification-before-completion`'s boundary. Guarded by
+  `test_ui_verification_skill.py`.
 
 - **Complex-fork briefing escalation rolled to the remaining asking gates.**
   `brainstorming` already mandated `dev-workflow:brief-before-asking` for

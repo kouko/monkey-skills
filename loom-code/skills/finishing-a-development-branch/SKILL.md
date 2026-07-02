@@ -23,6 +23,9 @@ finishing-a-development-branch (this skill)
   ├─→ Phase 2: verification-before-completion
   │     runs package-level test command → exit 0 + N>0 tests → PASS
   │     blocks on test failure
+  │     + ui-verification (CONDITIONAL): branch touched UI AND a
+  │       ui-flows.md exists → drive the rendered app through its
+  │       enumerated states; otherwise N/A (honest skip, stated)
   │
   ├─→ Phase 3: dev-workflow:git-memory (P3-D MANDATORY)
   │     decides on Decision: / Learning: / Gotcha: trailers for the close-out commit
@@ -78,6 +81,7 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
 |---|---|---|
 | 1 | `requesting-code-review` | Human-judgment quality review is its own skill with its own subagent; this orchestrator just dispatches |
 | 2 | `verification-before-completion` | Package-level test invocation has its own per-stack command table; this orchestrator just invokes the gate |
+| 2b | `ui-verification` (conditional) | Rendered-UI runtime gate has its own tooling/degradation contract (browser/device automation, N/A-loud); fires only when the branch touched UI and a `ui-flows.md` exists |
 | 3 | `dev-workflow:git-memory` | P3-D MANDATORY — git-memory decides whether memory trailers are warranted on this commit. Orchestrator passes the diff + recent commits; git-memory returns the trailer set (or empty, if routine) |
 | 4 | git CLI | Standard `git commit -m "<msg>" -m "<body with trailers>"` |
 | 5 | git CLI | `git push -u origin <branch>` if new; `git push` if upstream set |
@@ -116,6 +120,11 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
    - If test failure: surface output; STOP. Route user to tdd-iron-law or systematic-debugging.
    - If 0 tests ran: surface as failure (configuration bug, not a pass).
    - If PASS: proceed silently.
+5b. Dispatch ui-verification (CONDITIONAL — skip as N/A when the branch touched no UI
+    surface or no ui-flows.md exists; state the N/A, don't silently omit)
+   - NEEDS_REVISION (state mismatch / unreachable): surface findings; STOP — route to the
+     implementer, or flag the design station if the enumeration itself is wrong.
+   - PASS_WITH_NOTES: proceed; carry untestable-state notes into the PR body.
 6. Invoke dev-workflow:git-memory
    - Pass: diff, recent commits, branch name
    - Receive: trailer set (Decision: / Learning: / Gotcha: lines) + commit body suggestion
@@ -202,6 +211,7 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
 
 - [`../requesting-code-review/SKILL.md`](../requesting-code-review/SKILL.md) — Phase 1 delegate.
 - [`../verification-before-completion/SKILL.md`](../verification-before-completion/SKILL.md) — Phase 2 delegate.
+- [`../ui-verification/SKILL.md`](../ui-verification/SKILL.md) — Phase 2 conditional sibling (rendered-UI gate).
 - [`../using-git-worktrees/SKILL.md`](../using-git-worktrees/SKILL.md) — Phase 7 delegate (worktree cleanup).
 - `dev-workflow:git-memory` — Phase 3 delegate (commit-trailer gate, P3-D MANDATORY).
 - [`../using-loom-code/SKILL.md`](../using-loom-code/SKILL.md) — router; this skill is Stage 8 (Branch close).

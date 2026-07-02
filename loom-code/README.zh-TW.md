@@ -1,8 +1,8 @@
 # loom-code
 
-> **Process-discipline + canon-grounded 程式開發工作流 for Claude Code (+ Codex CLI)。** 11-skill plugin，SessionStart 自動注入 router charter，讓 agent 停止合理化、開始 deferring — 每條規則皆 grounded 於一級書目（Beck on TDD / Martin on naming / Fowler on refactoring / Feathers on legacy code / OWASP ASVS on security / 徳丸本 on encoding security）。
+> **Process-discipline + canon-grounded 程式開發工作流 for Claude Code (+ Codex CLI)。** 12-skill plugin，SessionStart 自動注入 router charter，讓 agent 停止合理化、開始 deferring — 每條規則皆 grounded 於一級書目（Beck on TDD / Martin on naming / Fowler on refactoring / Feathers on legacy code / OWASP ASVS on security / 徳丸本 on encoding security）。
 
-**狀態**：v0.20.0 — 11 skills；v0.3.0 起達成完整 Superpowers parity。各版本細節（rule-sheet 注入、reviewer-discipline、parallel dispatch、spec→code seam、memory verify gate 等）見 [CHANGELOG.md](CHANGELOG.md)。
+**狀態**：v0.21.0 — 12 skills；v0.3.0 起達成完整 Superpowers parity。各版本細節（rule-sheet 注入、reviewer-discipline、parallel dispatch、spec→code seam、memory verify gate 等）見 [CHANGELOG.md](CHANGELOG.md)。
 **語言**：[English](README.md) | [日本語](README.ja.md) | **繁體中文**
 **Repository**：[`monkey-skills`](https://github.com/kouko/monkey-skills) 的一部分
 
@@ -41,7 +41,7 @@ claude plugin install loom-code@monkey-skills
 
 # 驗證
 claude plugin list | grep loom-code       # 預期：enabled
-claude plugin details loom-code           # 預期：11 skills + 1 SessionStart hook
+claude plugin details loom-code           # 預期：12 skills + 1 SessionStart hook
 ```
 
 ### Codex CLI（build 完成、實機驗證延後）
@@ -62,7 +62,7 @@ claude plugin install loom-code@monkey-skills --scope local
 
 ---
 
-## 11 個 skill
+## 12 個 skill
 
 | # | Skill | Stage | 做什麼 |
 |---|---|---|---|
@@ -74,6 +74,7 @@ claude plugin install loom-code@monkey-skills --scope local
 | 5 | [`systematic-debugging`](skills/systematic-debugging/) | Repair | 4 階段 REPRODUCE → ISOLATE → HYPOTHESIZE → VERIFY；HARD-GATE "沒重現不准 fix" |
 | 6 | [`requesting-code-review`](skills/requesting-code-review/) | Review | 全 branch 審查、7 維度評分（cross-task-coherence 為 branch 限定維度）；v0.7.0+ verdict 帶 `standards_version` stamp、findings 必填 `where:` file:line；push-as-trigger |
 | 7 | [`verification-before-completion`](skills/verification-before-completion/) | Verification | "沒跑 package-level test 不准 done"；涵蓋 20+ 種 stack 的 canonical command |
+| 7b | [`ui-verification`](skills/ui-verification/) | Verification（條件式） | 用 host 的 browser/device 自動化把 `ui-flows.md` 列舉的狀態實機走一遍；條件或工具不在時明講 N/A；token 合規檢查排除在外（已停車） |
 | 8 | [`finishing-a-development-branch`](skills/finishing-a-development-branch/) | 分支收尾 | 7 步 orchestrator（review → verify → git-memory 強制 → commit → push → 可選 PR + worktree 清理） |
 | Aux | [`using-git-worktrees`](skills/using-git-worktrees/) | Lateral | 原生 `git worktree` 流程；`.worktrees/<slug>/` 慣例 |
 | Aux | [`dispatching-parallel-agents`](skills/dispatching-parallel-agents/) | Lateral（v0.8.0+） | 跨 domain `Agent` 派遣，**單一 assistant message 多 `Agent` call** 同時跑；2+ 獨立問題 domain（無共用檔、無共用 symbol、無 sequential data 依賴）才適用；TDD iron-law per branch；verdict 在本 skill 層聚合 |

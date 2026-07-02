@@ -1,8 +1,8 @@
 # loom-code
 
-> **Process-discipline + canon-grounded コーディングワークフロー for Claude Code (+ Codex CLI)。** 11-skill プラグイン。SessionStart で router charter を自動注入し、エージェントが合理化をやめて defer し始めるよう仕向ける — 各ルールは一次情報源に grounded（Beck on TDD / Martin on naming / Fowler on refactoring / Feathers on legacy code / OWASP ASVS on security / 徳丸本 on encoding security）。
+> **Process-discipline + canon-grounded コーディングワークフロー for Claude Code (+ Codex CLI)。** 12-skill プラグイン。SessionStart で router charter を自動注入し、エージェントが合理化をやめて defer し始めるよう仕向ける — 各ルールは一次情報源に grounded（Beck on TDD / Martin on naming / Fowler on refactoring / Feathers on legacy code / OWASP ASVS on security / 徳丸本 on encoding security）。
 
-**状態**：v0.20.0 — 11 skills；v0.3.0 以来フル Superpowers parity。バージョンごとの詳細（rule-sheet 注入、reviewer-discipline、parallel dispatch、spec→code seam、memory verify gate など）は [CHANGELOG.md](CHANGELOG.md) を参照。
+**状態**：v0.21.0 — 12 skills；v0.3.0 以来フル Superpowers parity。バージョンごとの詳細（rule-sheet 注入、reviewer-discipline、parallel dispatch、spec→code seam、memory verify gate など）は [CHANGELOG.md](CHANGELOG.md) を参照。
 **言語**：[English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 **Repository**：[`monkey-skills`](https://github.com/kouko/monkey-skills) の一部
 
@@ -41,7 +41,7 @@ claude plugin install loom-code@monkey-skills
 
 # 確認
 claude plugin list | grep loom-code       # 期待：enabled
-claude plugin details loom-code           # 期待：11 skills + 1 SessionStart hook
+claude plugin details loom-code           # 期待：12 skills + 1 SessionStart hook
 ```
 
 ### Codex CLI（build 完了、実機検証は延期中）
@@ -62,7 +62,7 @@ claude plugin install loom-code@monkey-skills --scope local
 
 ---
 
-## 11 のスキル
+## 12 のスキル
 
 | # | Skill | Stage | 何をするか |
 |---|---|---|---|
@@ -74,6 +74,7 @@ claude plugin install loom-code@monkey-skills --scope local
 | 5 | [`systematic-debugging`](skills/systematic-debugging/) | Repair | 4 フェーズ REPRODUCE → ISOLATE → HYPOTHESIZE → VERIFY；HARD-GATE "再現せず fix するな" |
 | 6 | [`requesting-code-review`](skills/requesting-code-review/) | Review | 全ブランチレビュー 7 次元スコア（cross-task-coherence はブランチ限定次元）；v0.7.0+ verdict に `standards_version` スタンプ、findings は `where:` file:line 必須；push-as-trigger |
 | 7 | [`verification-before-completion`](skills/verification-before-completion/) | Verification | "PACKAGE-LEVEL TEST 実行なしに DONE するな"；20+ stack の canonical コマンドを網羅 |
+| 7b | [`ui-verification`](skills/ui-verification/) | Verification（条件付き） | `ui-flows.md` が列挙する状態をホストの browser/device 自動化で実機走査；条件・ツール不在時は N/A を明示；token 適合チェックは対象外（park 済み） |
 | 8 | [`finishing-a-development-branch`](skills/finishing-a-development-branch/) | Branch close | 7 ステップ orchestrator（review → verify → git-memory 必須 → commit → push → 任意 PR + worktree cleanup） |
 | Aux | [`using-git-worktrees`](skills/using-git-worktrees/) | Lateral | ネイティブ `git worktree` ワークフロー；`.worktrees/<slug>/` 慣習 |
 | Aux | [`dispatching-parallel-agents`](skills/dispatching-parallel-agents/) | Lateral（v0.8.0+） | across-domain `Agent` ディスパッチ、**1 つの assistant メッセージ内に複数の `Agent` 呼び出し**で並行実行；2+ の独立した問題ドメイン（共有ファイル無し・共有シンボル無し・順次データ依存無し）に適用；TDD iron-law は各ブランチで適用；verdict はこの skill 層で集約 |
