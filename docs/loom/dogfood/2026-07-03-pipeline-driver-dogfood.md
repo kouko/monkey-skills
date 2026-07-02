@@ -33,7 +33,7 @@
 | 3 | design-critic | PASS_WITH_NOTES | exit 0 | 2 rounds, 15 gaps (2 sev-3) all re-seeded `critic-found`; 11 blind spots |
 | 4 | spec-expansion | PASS_WITH_NOTES | exit 0 | 13 Requirements / ~24 scenarios; single-surface collapse; `pairwise.py` ran on the 6-object stage |
 | 5 | completeness-critic | PASS_WITH_NOTES | exit 0 | 6 lenses, 5 gaps re-seeded, write-back committed |
-| 6 | code (writing-plans + SDD) | PASS_WITH_NOTES | exit 0 | 5-task plan (deliberate cut from 13 reqs), RED→GREEN per task, **28/28 tests green**, 5 conventional commits on a feature branch |
+| 6 | code (writing-plans + SDD) | PASS_WITH_NOTES | exit 0 | 5-task plan (deliberate cut from 13 reqs), RED→GREEN per task, **28/28 tests green**, 5 conventional commits (SDD's own) on the feature branch |
 | 7 | whole-branch review | **NEEDS_REVISION** | — | 1 🔴 cross-task-coherence + 2 🟡 |
 
 **The final 🔴 is the run's best advertisement for the pipeline's own design.**
@@ -81,7 +81,12 @@ guard** in every station prompt: required inputs missing at their exact paths
 working in any other directory. Launch 5's stations all logged "input
 contract verified" before working.
 
-## The intervention ledger — 25 entries, three buckets
+## The intervention ledger — 25 raw entries, triaged into three buckets
+
+(The stations logged 25 raw interventions; near-duplicates across stations —
+e.g. the same no-dispatch-tool gap reported by four stations — are
+consolidated below, so the bucket items enumerate consolidated THEMES, not
+the raw 25.)
 
 ### A. Driver/harness gaps (automatable — fix the machinery, not the human)
 
@@ -121,9 +126,11 @@ contract verified" before working.
    the pipeline entry — launch 2's design station self-named
    `core-timer-session` while the driver said `focus-timer-mvp`, costing a
    canonicalization step.
-3. **Cost caps as policy**: 5-of-13-requirements task cut, 1-round critic caps,
-   round-3 skipped while round 2 was NOT dry — each is a scope/rigor decision
-   a human should set (per-run budget policy), not a station's judgment call.
+3. **Cost caps as policy**: 5-of-13-requirements task cut; completeness-critic
+   capped at 1 round (dryness never verified); design-critic stopped at 2
+   rounds although round 2 was NOT dry (its own K=2 rule would justify a round
+   3) — each is a scope/rigor decision a human should set (per-run budget
+   policy), not a station's judgment call.
 4. **Final merge** stays human (review NEEDS_REVISION → fix or accept is a
    user decision; loom-code already encodes no-auto-merge).
 
@@ -160,7 +167,10 @@ contract verified" before working.
 ## Artifacts
 
 - Toy repo (session scratchpad, `focus-timer/`): branch `feat/focus-timer-mvp`,
-  9 commits, 28/28 tests green; `docs/loom/` carries PRINCIPLES / DESIGN /
+  11 commits total (1 seed + 5 upstream-station commits + 5 SDD commits;
+  design-critic's round-2 write-back stayed uncommitted per its evaluator
+  convention — the per-station commit-contract gap of Bucket A item 3),
+  28/28 tests green; `docs/loom/` carries PRINCIPLES / DESIGN /
   ui-flows / spec change-folder with both critics' provenance-tagged
   write-backs. Re-verified locally: `node --test` exit 0.
 - Driver script: session workflow dir, `loom-pipeline-dogfood-*.js`
