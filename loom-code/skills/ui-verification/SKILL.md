@@ -46,7 +46,7 @@ capabilities, not one vendor:
 | Modality | Typical host tools |
 |---|---|
 | Web GUI | `chrome-devtools` MCP (navigate / click / fill / snapshot / screenshot / wait_for), or Playwright-family tooling |
-| iOS / Android / macOS app | `agent-device` MCP (boot / open / tap / type / screenshot / snapshot) |
+| iOS / Android / macOS app | `agent-device` MCP (boot / open / click / type / press / screenshot / snapshot) |
 | TUI / CLI | **out of scope for v1** — matches the design station's phase-2 posture; note it and stop |
 
 **No usable tooling → `ui-verification: N/A (no browser/device automation
@@ -126,10 +126,12 @@ untestable: …" — never "the UI is verified".
 ## Where it runs in the branch flow
 
 Invoked by `finishing-a-development-branch` alongside
-`verification-before-completion` (the two verification halves: suite + UI),
-and available on demand after any UI-touching SDD task lands. Run it **before
-the whole-branch review** when possible, so the reviewer sees the observation
-evidence instead of re-deriving UI claims from source.
+`verification-before-completion` (the two verification halves: suite + UI —
+Phase 2, after the review phase in that orchestrator's fixed order), and
+available on demand after any UI-touching SDD task lands. The **earlier**
+run is the on-demand one: walking the states right after the last UI task
+lands gives the whole-branch reviewer observation evidence instead of
+re-derived UI claims — take it when you control the timing.
 
 - [`../verification-before-completion/SKILL.md`](../verification-before-completion/SKILL.md) — the package-test sibling gate.
 - [`../finishing-a-development-branch/SKILL.md`](../finishing-a-development-branch/SKILL.md) — the orchestrator that invokes both gates.

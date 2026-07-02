@@ -122,7 +122,8 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
    - If PASS: proceed silently.
 5b. Dispatch ui-verification (CONDITIONAL — skip as N/A when the branch touched no UI
     surface or no ui-flows.md exists; state the N/A, don't silently omit)
-   - NEEDS_REVISION (state mismatch / unreachable): surface findings; STOP — route to the
+   - NEEDS_REVISION (state mismatch, or unreachable state whose ui-flows.md row is NOT
+     marked future/deferred): surface findings; STOP — route to the
      implementer, or flag the design station if the enumeration itself is wrong.
    - PASS_WITH_NOTES: proceed; carry untestable-state notes into the PR body.
 6. Invoke dev-workflow:git-memory

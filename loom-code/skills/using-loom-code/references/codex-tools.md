@@ -57,6 +57,7 @@ For `loom-code`'s skills (11 at verification time):
 | finishing-a-development-branch | `/finishing-a-development-branch` |
 | using-git-worktrees | `/using-git-worktrees` |
 | dispatching-parallel-agents | `/dispatching-parallel-agents` |
+| ui-verification | `/ui-verification` (added v0.21.0 — **unverified live on Codex**) |
 
 If a skill name conflicts with another installed plugin (e.g. `obra/superpowers` ships `/brainstorming` too), use the plugin-scoped form: `/loom-code:brainstorming`.
 

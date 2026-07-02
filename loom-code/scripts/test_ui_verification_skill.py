@@ -34,14 +34,25 @@ def _text() -> str:
     return SKILL.read_text(encoding="utf-8")
 
 
-def test_frontmatter_name_and_conditional_description():
+def _frontmatter() -> str:
+    """Text between the opening --- fences (the YAML frontmatter only)."""
     text = _text()
-    assert "name: ui-verification" in text
-    low = text.lower()
-    assert "ui-flows.md" in text, \
-        "description/body must condition on the ui-flows.md artifact"
-    assert "do not" in low or "not for" in low or "n/a" in low, \
-        "description must carry a when-NOT boundary"
+    parts = text.split("---")
+    assert len(parts) >= 3, "SKILL.md must open with a --- frontmatter block"
+    return parts[1]
+
+
+def test_frontmatter_name_and_conditional_description():
+    front = _frontmatter()
+    assert "name: ui-verification" in front
+    low = front.lower()
+    assert "ui-flows.md" in front, \
+        "description must condition on the ui-flows.md artifact"
+    assert "not for" in low or "do not" in low, \
+        "description itself must carry a when-NOT boundary (body mentions " \
+        "do not count)"
+    assert "n/a" in low, \
+        "description must name the N/A outcome"
 
 
 def test_conditional_gate_on_ui_flows_and_ui_surface():
