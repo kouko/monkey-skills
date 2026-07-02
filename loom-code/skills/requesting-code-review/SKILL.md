@@ -29,6 +29,8 @@ Every question spends the user's attention; asking on autopilot is confirmation 
 
 This skill mostly relays a verdict and asks the user to choose: fix the findings now, defer them, or merge anyway. Whichever you ask, **lead with a scoped `(Recommended)` option and one line of why** — never hand the user an open-ended punt they have to fill in themselves. Research industry practice first for design/strategy calls ([`using-loom-code`](../using-loom-code/SKILL.md) router rule #5 / `brainstorming`'s Axis-4 — point to them, do not re-implement the protocol here). *(Grounded: Horvitz, Principles of Mixed-Initiative User Interfaces, CHI 1999.)*
 
+**Complex remediation fork → brief before you ask.** A finding can open a genuine design fork (e.g. an architectural 🔴 with two viable remediations). When that fork is complex (≥3 trade-offs, ≥2 implementation paths, or architectural blast radius), do not compress it into a fix/defer/merge ask — run `dev-workflow:brief-before-asking` (6-block briefing, Mental Model first) before the `AskUserQuestion`. Same trigger as `brainstorming`'s rule — `brainstorming` carries the canonical trigger rule; `dev-workflow:brief-before-asking` owns the 6-block format.
+
 ### ③ How to phrase
 
 Six rules:
