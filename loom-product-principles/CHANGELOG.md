@@ -10,6 +10,14 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- §Downstream updated to reflect the wired reality: named per-station intake
+  sections (design generators, `loom-spec:spec-expansion` §Governing
+  constraint, both critics' principles lenses) and the **live** loom-code
+  `code-reviewer` D8 principles-conformance gate — replacing the stale "a
+  future conformance gate may check artifacts" forward-reference.
+
 ### Fixed
 
 - Skill description restored to the proactive, trilingual-trigger form: fires

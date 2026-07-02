@@ -50,6 +50,25 @@ to seed + 6 lenses; blind spots listed below". This is baseline Rule 12
 (fail loud) applied to spec recall: an honest coverage statement, never a
 false completeness claim.
 
+## Governing constraint — PRINCIPLES.md first (constitution→spec seam)
+
+Before expanding anything, **read the product's `PRINCIPLES.md`** (from
+`loom-product-principles`, at `docs/loom/PRINCIPLES.md` in the consumer
+project) **when present**. It is the **product constitution** and it
+**governs the fan-out**: the scope boundary (what the grid may enumerate at
+all), pruning priorities in Phase ③ (a principle like "primary task in ≤3
+steps" demotes paths that violate it), and the NFR posture the critic will
+later hold the draft against. Reading it here is what makes the expansion
+governed at GENERATE time — the `completeness-critic`'s principles lens
+(lens 6) is the post-hoc check, not a substitute for this intake.
+
+**If `PRINCIPLES.md` is absent, surface that loudly** — do not silently
+expand an unconstrained spec. Tell the user the expansion is **ungoverned**
+and either ask them to run `loom-product-principles:product-principles`
+first or proceed only with an explicit, flagged "no PRINCIPLES — spec is
+unconstrained" caveat recorded in the proposal (baseline Rule 12 — fail
+loud). This intake is **read-only**: never edit the constitution from here.
+
 ## Consuming a `ui-flows.md` seed (DESIGN→spec seam)
 
 When the seed is a `ui-flows.md` produced by `loom-interface-design:interaction-flows`
