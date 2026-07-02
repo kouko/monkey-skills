@@ -148,6 +148,9 @@ coordinates this). A `DESIGN.md`-only run will correctly report the missing
   the UI code — colors, spacing, type scale, and component defaults the
   styling/lint reads. This seam is the frontend build itself (human / code
   level), **not** a loom-code skill — no loom-code skill reads `DESIGN.md`.
+  That is a **deliberate park, not a gap** (audit 2026-07-02, reaffirming
+  #456): consumer-side machinery is undecidable until a real frontend
+  consumer exists. Re-trigger conditions live in the plugin README §Scope.
 - **Spec (loom-spec):** the design system is the *visual* surface; the
   *behavioral* fan-out (object state machines, edges, acceptance scenarios) is
   `spec-expansion`'s turf, seeded by `ui-flows.md` — not duplicated here.

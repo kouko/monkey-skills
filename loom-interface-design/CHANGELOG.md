@@ -10,6 +10,18 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Decided
+
+- **`DESIGN.md` machine consumer: parked, with explicit re-triggers** (audit
+  batch ③ close-out). Wiring a loom-code review gate / implementer intake was
+  evaluated and rejected for now — it would front-run #456's documented
+  decision that consumer-side machinery (including the shadcn-vs-Material
+  token-naming question a conformance check must interpret) is undecidable
+  until a real frontend consumer lands, and the upstream DESIGN.md spec is
+  alpha with consumer behavior unspecified. Re-triggers recorded in README
+  §Scope: first real GUI product wiring its frontend to the pipeline, or
+  upstream spec 1.0 / second-vendor adoption.
+
 ### Changed
 
 - **`ui-flows.md` moves into a per-change folder** —
