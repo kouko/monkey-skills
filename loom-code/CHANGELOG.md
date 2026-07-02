@@ -5,6 +5,21 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- **Complex-fork briefing escalation rolled to the remaining asking gates.**
+  `brainstorming` already mandated `dev-workflow:brief-before-asking` for
+  genuinely complex forks (≥3 trade-offs / ≥2 implementation paths /
+  architectural blast radius); `subagent-driven-development` and
+  `requesting-code-review` gate ② now carry the same escalation (mirror
+  principle per #355/#358 — in-place sentence, no copied block), so
+  implementation-time technical decisions and complex remediation forks brief
+  the user (Mental Model first) instead of handing over options they cannot
+  evaluate. The threshold triple is a shared trigger contract guarded lockstep
+  by `test_asking_user_briefing_escalation.py`.
+
 ## [0.20.0] — 2026-06-23 — **executable both-carrier memory verify gate at branch close-out**
 
 ### Added
