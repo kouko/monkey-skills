@@ -52,7 +52,7 @@ for it. Report `loom-pipeline: N/A (no Workflow primitive on this host)` and
 stop — do not attempt a shell-script substitute here (that is a parked,
 separate re-trigger, not this skill's job).
 
-## §Run inputs — the 5-field contract
+## §Run inputs — the 6-field contract
 
 Before invoking Workflow, collect exactly these fields. A missing required
 field is a fail-loud stop, never an improvised default (except where a
@@ -62,9 +62,10 @@ default is explicitly stated below):
 |---|---|---|---|
 | **change-id** | yes | none | Identifies the per-change folder (`docs/loom/<change-id>/`); loom-spec owns that layout — this skill only threads the id through. |
 | **target project path** | yes | none | Absolute path to the consumer project the pipeline runs against. |
-| **token budgets** | yes | run-level: host default budget cap; per-station: an even split of the run-level budget across the segment's stations | Two numbers: a run-level cap and a per-station cap. Over-budget at either level is fail-loud inside the driver, never a silent continue. |
+| **token budgets** | yes | run-level: host default budget cap; per-station: the driver's documented per-station defaults (`STATION_TOKEN_BUDGETS` in `driver_20_runstation.js`) | Canonical shape: `{ run: <number>, perStation: { <stationName>: <number>, ... } }`. `perStation` keys are station names (`principles`, `design`, `design-critic`, `spec`, `critic`, `validator`, `code`, `review`, `probe`) — omit a station's key to fall back to the driver's documented default for that station. Over-budget at either level is fail-loud inside the driver, never a silent continue. |
 | **model policy** | yes | Claude default model tier for all stations | Which model tier each station runs on (Workflow's `model` param is Claude-family only — no cross-vendor judging in v1). |
 | **resumeRunId** | no | none (fresh run) | Optional. Maps directly to Workflow's native `resumeFromRunId` — passing it resumes a previously checkpointed run instead of starting over. (Grounding: `scriptPath`/`resumeFromRunId` parameter names verified live — 2026-07-03 F5 dispatch spike run `wf_667ec006-ec2` and the same-day pipeline dogfood both exercised them against the real Workflow tool.) |
+| **skillsRoot** | yes for runs that include segment 2 | none | Absolute path to the monkey-skills checkout / plugin source root — the orchestrator resolves it (e.g. the repo root of the loom plugins install/checkout). Segment 2 uses it to locate the loom-spec validator script; missing it is a fail-loud stop inside the driver, never a guessed path. |
 
 ## §Invocation — resolve the driver asset, one call per segment
 
@@ -88,8 +89,9 @@ Workflow({
     segment: <1 | 2 | 3>,
     changeId: "<change-id>",
     projectPath: "<target project absolute path>",
-    budgets: { run: <run-level cap>, perStation: <per-station cap> },
+    budgets: { run: <run-level cap>, perStation: { principles: <cap>, design: <cap>, "design-critic": <cap>, spec: <cap>, critic: <cap>, validator: <cap>, code: <cap>, review: <cap>, probe: <cap> } },
     models: { /* per-station or blanket model policy */ },
+    skillsRoot: "<absolute path to the monkey-skills checkout — required for segment 2>",
     resumeRunId: "<optional — omit for a fresh run>"
   }
 })

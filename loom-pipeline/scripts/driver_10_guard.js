@@ -53,6 +53,26 @@ function guardArgs(args) {
     );
   }
 
+  // skillsRoot is optional at this guard layer (only segment 2 needs it —
+  // driver_40_seg2.js throws its own fail-loud error when it is missing
+  // there); when present it gets the same F4 "undefined"-string leak guard
+  // as resumeRunId, plus an absolute-path shape check like projectPath.
+  if (Object.prototype.hasOwnProperty.call(args, "skillsRoot")) {
+    if (args.skillsRoot === "undefined") {
+      throw new Error(
+        'guardArgs: optional input "skillsRoot" leaked the literal string ' +
+        '"undefined" (received "undefined"). ' + FAIL_LOUD_NOTICE
+      );
+    }
+    if (typeof args.skillsRoot !== "string" || args.skillsRoot.charAt(0) !== "/") {
+      throw new Error(
+        'guardArgs: "skillsRoot", when present, must be an absolute path ' +
+        'starting with "/" (received ' + JSON.stringify(args.skillsRoot) + "). " +
+        FAIL_LOUD_NOTICE
+      );
+    }
+  }
+
   if (args.segment !== 1 && args.segment !== 2 && args.segment !== 3) {
     throw new Error(
       'guardArgs: "segment" must be one of 1, 2, 3 (received ' +
@@ -64,6 +84,19 @@ function guardArgs(args) {
     throw new Error(
       'guardArgs: "projectPath" must be an absolute path starting with "/" ' +
       "(received " + JSON.stringify(args.projectPath) + "). " + FAIL_LOUD_NOTICE
+    );
+  }
+
+  // changeId becomes a path segment (docs/loom/<changeId>/...) — allow-list
+  // rather than deny-list: only [A-Za-z0-9._-] is safe there. A deny-list
+  // (reject "/" and "..") lets shell-metacharacter ids like "foo$(x)"
+  // through; an allow-list closes that hole by construction.
+  var CHANGE_ID_ALLOWED_PATTERN = /^[A-Za-z0-9._-]+$/;
+  if (!CHANGE_ID_ALLOWED_PATTERN.test(args.changeId) || args.changeId.indexOf("..") !== -1) {
+    throw new Error(
+      'guardArgs: "changeId" must match ' + CHANGE_ID_ALLOWED_PATTERN +
+      " (letters, digits, dot, underscore, hyphen only; no \"..\") " +
+      "(received " + JSON.stringify(args.changeId) + "). " + FAIL_LOUD_NOTICE
     );
   }
 

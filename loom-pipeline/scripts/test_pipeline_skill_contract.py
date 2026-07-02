@@ -1,5 +1,5 @@
 """Structural test: using-loom-pipeline SKILL.md carries the fire-condition
-gate, the N/A-loud clause, the 5-field run-input contract, and the
+gate, the N/A-loud clause, the 6-field run-input contract, and the
 Workflow({scriptPath...}) invocation resolved from the skill's base path.
 
 # @req: REQ-LOOM-PIPELINE-SKILL-CONTRACT-1
@@ -52,6 +52,7 @@ def test_fire_inputs_and_invocation():
     assert "budget" in lower, "missing token-budget run input"
     assert "model" in lower, "missing model-policy run input"
     assert "resumerunid" in lower, "missing resumeRunId run input"
+    assert "skillsroot" in lower, "missing skillsRoot run input"
 
     # Invocation mechanism.
     assert "Workflow({scriptPath" in text, \
