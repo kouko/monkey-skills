@@ -33,6 +33,13 @@ function guardArgs(args) {
     }
   }
 
+  if (Array.isArray(args)) {
+    throw new Error(
+      "guardArgs: expected an args object, received an array. " +
+      FAIL_LOUD_NOTICE
+    );
+  }
+
   if (args === null || args === undefined || typeof args !== "object") {
     throw new Error(
       "guardArgs: expected an args object, received " + String(args) + ". " +

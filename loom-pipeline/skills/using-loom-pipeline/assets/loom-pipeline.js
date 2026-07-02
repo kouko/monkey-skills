@@ -70,6 +70,13 @@ function guardArgs(args) {
     }
   }
 
+  if (Array.isArray(args)) {
+    throw new Error(
+      "guardArgs: expected an args object, received an array. " +
+      FAIL_LOUD_NOTICE
+    );
+  }
+
   if (args === null || args === undefined || typeof args !== "object") {
     throw new Error(
       "guardArgs: expected an args object, received " + String(args) + ". " +
@@ -1702,19 +1709,20 @@ async function mainDispatch(args) {
     )
   }
 
-  // Thread this run's spend into the ledger (renderBudgetSection reads
-  // args.budgetSpent; 'n/a' when the budget primitive is unavailable).
-  if (runSpentBaseline !== null && typeof budget !== 'undefined') {
-    args.budgetSpent = budget.spent() - runSpentBaseline
-  }
-  const ledgerMarkdown = renderLedger(args, stationResults)
-  log(`segment ${args.segment}: ledger rendered (${ledgerMarkdown.length} chars)`)
-  await writeLedger(args, stationResults)
-
+  // ONE spent checkpoint, reused by the ledger AND the run summary —
+  // two separate reads around the ledger write diverge by the write's
+  // own cost (whole-branch review 🟡, 2026-07-04). Both numbers exclude
+  // the ledger-write itself; that exclusion is documented, not hidden.
   const runSpent =
     runSpentBaseline !== null && typeof budget !== 'undefined'
       ? budget.spent() - runSpentBaseline
       : null
+  if (runSpent !== null) {
+    args.budgetSpent = runSpent
+  }
+  const ledgerMarkdown = renderLedger(args, stationResults)
+  log(`segment ${args.segment}: ledger rendered (${ledgerMarkdown.length} chars)`)
+  await writeLedger(args, stationResults)
 
   return {
     segment: args.segment,
