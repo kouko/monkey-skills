@@ -45,3 +45,16 @@ def test_readme_parks_and_codex_note():
     assert CHANGELOG.exists(), f"missing {CHANGELOG}"
     changelog_text = CHANGELOG.read_text()
     assert "[0.1.0]" in changelog_text, "missing [0.1.0] entry in CHANGELOG"
+
+
+def test_readme_batch_mode_documented_not_committed_next():
+    """v1.1 shipped — README flips from the 'Committed next' promise to
+    documenting the batch_queue.py CLI that actually exists now (plan
+    Task 12, docs/loom/plans/2026-07-03-loom-pipeline-v1-1-batch-mode.md).
+    """
+    text = README.read_text()
+
+    assert "Batch mode" in text, "missing §Batch mode heading"
+    assert "Committed next (v1.1)" not in text, (
+        "stale 'Committed next (v1.1)' heading — batch mode has shipped"
+    )
