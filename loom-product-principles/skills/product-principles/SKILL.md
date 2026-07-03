@@ -2,7 +2,7 @@
 name: product-principles
 description: |
   Turn a sparse product idea into a PRINCIPLES.md project constitution — a north star + 3-7 falsifiable Product Principles, plus optional Design Principles and Engineering Principles, governing design/spec/code. Use BEFORE design/spec/build on a new product, and when the user asks what principles should guide a product/design/engineering decision or how to frame a trade-off. Triggers: product principles, project constitution, north star, 產品原則, 設計原則, 工程原則, 產品憲章, プロダクト指針, エンジニアリング原則. Not for critiquing an existing design or spec (design-critic / completeness-critic).
-version: 0.2.0
+version: 0.3.0
 ---
 
 # product-principles
@@ -153,9 +153,12 @@ Run the validator and **fix any flagged issue before declaring done**:
 python loom-product-principles/scripts/validate_principles_output.py docs/loom/PRINCIPLES.md
 ```
 
-It mechanically checks the two required sections exist and that **every**
-principle carries the literal `— check:` marker (the path relative to this
-skill dir is `../../scripts/validate_principles_output.py`). The validator checks
+It mechanically enforces the full contract summary in
+`references/principles-rules.md` §Validator contract — the required
+sections, per-section entry counts, the literal `— check:` marker on
+**every** entry (all three jurisdictions), the optional-section rules, and
+the legacy-heading migration check (the path relative to this skill dir is
+`../../scripts/validate_principles_output.py`). The validator checks
 *structure*; the *quality* of each check (truly falsifiable vs disguised
 platitude) is your responsibility, guided by the ✅/❌ examples in the contract.
 

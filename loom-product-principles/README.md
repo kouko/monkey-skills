@@ -9,7 +9,7 @@ The **cross-cutting constitution** layer that sits *above* the whole spec→code
    (optional UI)        (GENERATE)   (VERIFY)
 ```
 
-The constitution is **project-level** (one per product) and applies to **any** product — including pure-headless / library / CLI work that has no UI at all.
+The constitution is **project-level** (one per project) and applies to **any** product — including pure-headless / library / CLI work that has no UI at all.
 
 Agent-portable and key-free: the skill drives the host agent's own LLM — no external runtime, no API key, no install beyond the plugin.
 
@@ -42,7 +42,7 @@ docs/loom/PRINCIPLES.md
   ## Engineering Principles    # optional — 1–7, never empty if present
 ```
 
-`PRINCIPLES.md` is **key-free, in-repo, git-diffable**, and **project-level** (one per product, not per-feature). A `validate_*` script (mirroring `loom-spec/scripts/validate_spec_output.py`) is the executable format contract: it checks the required section exists, every present optional section is non-empty, and every principle carries a check (exit 0 = conformant).
+`PRINCIPLES.md` is **key-free, in-repo, git-diffable**, and **project-level** (one per project, not per-feature). A `validate_*` script (mirroring `loom-spec/scripts/validate_spec_output.py`) is the executable format contract: it checks the required section exists, every present optional section is non-empty, and every principle carries a check (exit 0 = conformant).
 
 ## Honesty rails
 
