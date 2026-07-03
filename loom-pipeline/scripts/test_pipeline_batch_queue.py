@@ -318,6 +318,8 @@ def test_check_frozen_rejects_when_validator_nonzero(tmp_path):
     plan_path = project_path / plan_rel
     plan_path.parent.mkdir(parents=True)
     plan_path.write_text("plan\n", encoding="utf-8")
+    # Form A: the change folder exists, so the validator is the gate.
+    (project_path / "docs" / "loom" / "add-export-csv").mkdir(parents=True)
 
     skills_root = tmp_path / "skills"
     _write_stub_validator(skills_root, exit_code=1)
@@ -334,6 +336,8 @@ def test_check_frozen_accepts_when_validator_zero_and_plan_present(tmp_path):
     plan_path = project_path / plan_rel
     plan_path.parent.mkdir(parents=True)
     plan_path.write_text("plan\n", encoding="utf-8")
+    # Form A: the change folder exists, so the validator is the gate.
+    (project_path / "docs" / "loom" / "add-export-csv").mkdir(parents=True)
 
     skills_root = tmp_path / "skills"
     _write_stub_validator(skills_root, exit_code=0)
@@ -342,6 +346,66 @@ def test_check_frozen_accepts_when_validator_zero_and_plan_present(tmp_path):
 
     assert eligible is True
     assert reason
+
+
+_PLAN_WITH_PASS = (
+    "# Plan: add export csv\n\n"
+    "**Plan-document-reviewer verdict**: PASS (2026-07-03, 14/14 checks)\n"
+)
+
+
+def test_check_frozen_accepts_brief_plan_form_when_no_change_folder(tmp_path):
+    # Form B (brief+plan): no docs/loom/<id>/ change folder exists; the plan
+    # carries a reviewer PASS line. The validator must NOT be consulted —
+    # the stub exits 1, so eligibility proves the branch order.
+    project_path = tmp_path / "project"
+    plan_rel = "docs/loom/plans/2026-07-03-add-export-csv.md"
+    plan_path = project_path / plan_rel
+    plan_path.parent.mkdir(parents=True)
+    plan_path.write_text(_PLAN_WITH_PASS, encoding="utf-8")
+
+    skills_root = tmp_path / "skills"
+    _write_stub_validator(skills_root, exit_code=1)
+
+    eligible, reason = check_frozen(_make_entry(plan_rel), project_path, skills_root)
+
+    assert eligible is True
+    assert "brief+plan" in reason
+
+
+def test_check_frozen_rejects_brief_plan_form_without_reviewer_pass(tmp_path):
+    project_path = tmp_path / "project"
+    plan_rel = "docs/loom/plans/2026-07-03-add-export-csv.md"
+    plan_path = project_path / plan_rel
+    plan_path.parent.mkdir(parents=True)
+    plan_path.write_text("# Plan: add export csv\n\nno verdict line here\n", encoding="utf-8")
+
+    skills_root = tmp_path / "skills"
+    _write_stub_validator(skills_root, exit_code=0)
+
+    eligible, reason = check_frozen(_make_entry(plan_rel), project_path, skills_root)
+
+    assert eligible is False
+    assert "Plan-document-reviewer" in reason
+
+
+def test_check_frozen_rejects_brief_plan_form_with_pending_verdict(tmp_path):
+    project_path = tmp_path / "project"
+    plan_rel = "docs/loom/plans/2026-07-03-add-export-csv.md"
+    plan_path = project_path / plan_rel
+    plan_path.parent.mkdir(parents=True)
+    plan_path.write_text(
+        "# Plan: add export csv\n\n**Plan-document-reviewer verdict**: PENDING\n",
+        encoding="utf-8",
+    )
+
+    skills_root = tmp_path / "skills"
+    _write_stub_validator(skills_root, exit_code=0)
+
+    eligible, reason = check_frozen(_make_entry(plan_rel), project_path, skills_root)
+
+    assert eligible is False
+    assert "Plan-document-reviewer" in reason
 
 
 def test_check_frozen_rejects_when_plan_missing(tmp_path):
@@ -619,7 +683,7 @@ def test_next_emits_workflow_args_and_marks_running(tmp_path, capsys):
     plan_rel = "docs/loom/plans/2026-07-03-add-export-csv.md"
     plan_path = project_path / plan_rel
     plan_path.parent.mkdir(parents=True)
-    plan_path.write_text("plan\n", encoding="utf-8")
+    plan_path.write_text(_PLAN_WITH_PASS, encoding="utf-8")
     _run_git(["add", plan_rel], project_path)
     _run_git(["commit", "-m", "add plan"], project_path)
 
@@ -695,7 +759,7 @@ def test_next_skips_unfrozen_entry_and_advances(tmp_path, capsys):
     plan_rel_b = "docs/loom/plans/2026-07-03-add-export-csv.md"
     plan_path_b = project_path / plan_rel_b
     plan_path_b.parent.mkdir(parents=True)
-    plan_path_b.write_text("plan b\n", encoding="utf-8")
+    plan_path_b.write_text(_PLAN_WITH_PASS, encoding="utf-8")
     _run_git(["add", plan_rel_b], project_path)
     _run_git(["commit", "-m", "add plan b"], project_path)
 
@@ -746,9 +810,10 @@ def test_next_skips_when_plan_not_in_worktree(tmp_path, capsys):
     plan_rel = "docs/loom/plans/2026-07-03-uncommitted-plan.md"
     plan_path = project_path / plan_rel
     plan_path.parent.mkdir(parents=True)
-    plan_path.write_text("plan\n", encoding="utf-8")
+    plan_path.write_text(_PLAN_WITH_PASS, encoding="utf-8")
     # Deliberately NOT committed: check_frozen (main checkout) sees the
-    # file, but ensure_worktree's worktree (created from HEAD) will not.
+    # file (and its reviewer PASS line satisfies Form B), but
+    # ensure_worktree's worktree (created from HEAD) will not.
 
     loom_dir = project_path / "docs" / "loom"
     (loom_dir / "QUEUE.toml").write_text(
@@ -855,7 +920,7 @@ def test_next_override_halt_bypasses_breaker(tmp_path, capsys):
     plan_rel = "docs/loom/plans/2026-07-03-add-dark-mode.md"
     plan_path = project_path / plan_rel
     plan_path.parent.mkdir(parents=True)
-    plan_path.write_text("plan\n", encoding="utf-8")
+    plan_path.write_text(_PLAN_WITH_PASS, encoding="utf-8")
     _run_git(["add", plan_rel], project_path)
     _run_git(["commit", "-m", "add plan"], project_path)
 
@@ -898,7 +963,7 @@ def test_next_exits_cleanly_on_queue_error_mid_scan(tmp_path, capsys):
     plan_rel = "docs/loom/plans/2026-07-03-add-export-csv.md"
     plan_path = project_path / plan_rel
     plan_path.parent.mkdir(parents=True)
-    plan_path.write_text("plan\n", encoding="utf-8")
+    plan_path.write_text(_PLAN_WITH_PASS, encoding="utf-8")
     _run_git(["add", plan_rel], project_path)
     _run_git(["commit", "-m", "add plan"], project_path)
 

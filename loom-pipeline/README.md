@@ -129,8 +129,10 @@ each entry's status (`QUEUED` / `RUNNING` / `DONE` / `FAILED` /
 sequential-only:
 
 1. `batch_queue.py next --project <path> --skills-root <path>` picks
-   the first `QUEUED` entry, checks the freeze predicate (validator
-   exit-0 + plan present), creates its worktree/branch, records
+   the first `QUEUED` entry, checks the freeze predicate (change-folder
+   form: validator exit-0; or brief+plan form: the plan carries a
+   reviewer PASS line — plan committed either way), creates its
+   worktree/branch, records
    `RUNNING`, and prints one JSON object with ready-to-use `Workflow`
    args (`{segment: 3, changeId, projectPath, planPath, budgets,
    models, skillsRoot, branch}`). Empty/exhausted queue prints
