@@ -796,3 +796,130 @@ def test_next_skips_when_plan_not_in_worktree(tmp_path, capsys):
         text=True,
     )
     assert branch_check.returncode != 0, "branch loom/uncommitted-plan still exists"
+
+
+def test_next_halts_after_two_consecutive_failures(tmp_path, capsys):
+    # Task 10 circuit breaker (plan §Settled open questions 3): the two
+    # most recent terminal (DONE/FAILED) entries are both FAILED and
+    # consecutive → refuse before ever touching git/worktrees.
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+    save_state(
+        loom_dir / "queue-state.json",
+        {
+            "add-export-csv": {"status": "FAILED", "reason": "boom"},
+            "fix-login-redirect": {"status": "FAILED", "reason": "boom2"},
+        },
+    )
+    skills_root = tmp_path / "skills"
+
+    exit_code = main(
+        ["next", "--project", str(project_path), "--skills-root", str(skills_root)]
+    )
+
+    assert exit_code == 3
+    err = capsys.readouterr().err
+    assert "add-export-csv" in err
+    assert "fix-login-redirect" in err
+    assert "HALT" in err
+
+
+def test_next_does_not_halt_when_failures_not_consecutive(tmp_path, capsys):
+    # Elaboration (in-scope, cheap): FAILED, DONE, FAILED — the two most
+    # recent terminal entries are DONE then FAILED, not both FAILED, so the
+    # breaker does not fire. All three entries are terminal (no QUEUED
+    # left), so `next` reaches its normal empty-queue {"done": true} path.
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+    save_state(
+        loom_dir / "queue-state.json",
+        {
+            "add-export-csv": {"status": "FAILED"},
+            "fix-login-redirect": {"status": "DONE"},
+            "add-dark-mode": {"status": "FAILED"},
+        },
+    )
+    skills_root = tmp_path / "skills"
+
+    exit_code = main(
+        ["next", "--project", str(project_path), "--skills-root", str(skills_root)]
+    )
+
+    assert exit_code == 0
+    assert json.loads(capsys.readouterr().out.strip()) == {"done": True}
+
+
+def test_next_override_halt_bypasses_breaker(tmp_path, capsys):
+    project_path = _make_tmp_git_repo(tmp_path)
+
+    plan_rel = "docs/loom/plans/2026-07-03-add-dark-mode.md"
+    plan_path = project_path / plan_rel
+    plan_path.parent.mkdir(parents=True)
+    plan_path.write_text("plan\n", encoding="utf-8")
+    _run_git(["add", plan_rel], project_path)
+    _run_git(["commit", "-m", "add plan"], project_path)
+
+    loom_dir = project_path / "docs" / "loom"
+    (loom_dir / "QUEUE.toml").write_text(QUEUE_TOML, encoding="utf-8")
+    save_state(
+        loom_dir / "queue-state.json",
+        {
+            "add-export-csv": {"status": "FAILED", "reason": "boom"},
+            "fix-login-redirect": {"status": "FAILED", "reason": "boom2"},
+        },
+    )
+    skills_root = tmp_path / "skills"
+    _write_stub_validator(skills_root, exit_code=0)
+
+    exit_code = main(
+        [
+            "next",
+            "--project",
+            str(project_path),
+            "--skills-root",
+            str(skills_root),
+            "--override-halt",
+        ]
+    )
+
+    assert exit_code == 0
+    payload = json.loads(capsys.readouterr().out.strip())
+    assert payload["changeId"] == "add-dark-mode"
+
+
+def test_next_exits_cleanly_on_queue_error_mid_scan(tmp_path, capsys):
+    # Sanctioned addition from Task 9's round-2 quality review: a
+    # QueueError raised mid-scan by ensure_worktree must not propagate as a
+    # raw traceback — main() catches it and exits 1, like load_queue
+    # failures already do.
+    project_path = _make_tmp_git_repo(tmp_path)
+    _run_git(["branch", "loom/add-export-csv"], project_path)
+
+    plan_rel = "docs/loom/plans/2026-07-03-add-export-csv.md"
+    plan_path = project_path / plan_rel
+    plan_path.parent.mkdir(parents=True)
+    plan_path.write_text("plan\n", encoding="utf-8")
+    _run_git(["add", plan_rel], project_path)
+    _run_git(["commit", "-m", "add plan"], project_path)
+
+    loom_dir = project_path / "docs" / "loom"
+    (loom_dir / "QUEUE.toml").write_text(
+        '[[change]]\n'
+        'id = "add-export-csv"\n'
+        f'plan = "{plan_rel}"\n'
+        "[change.budgets]\n"
+        "run = 200000\n",
+        encoding="utf-8",
+    )
+
+    skills_root = tmp_path / "skills"
+    _write_stub_validator(skills_root, exit_code=0)
+
+    exit_code = main(
+        ["next", "--project", str(project_path), "--skills-root", str(skills_root)]
+    )
+
+    assert exit_code == 1
+    err = capsys.readouterr().err
+    assert "ensure_worktree" in err
+    assert "add-export-csv" in err

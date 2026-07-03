@@ -501,6 +501,49 @@ def _dispatch_entry(
     print(json.dumps(payload))
 
 
+def _check_circuit_breaker(entries: list[dict]) -> tuple[str, str] | None:
+    """Task 10 circuit breaker: two most recent terminal entries both FAILED.
+
+    ``entries`` is queue-order ``effective_entries`` output. Only ``DONE``
+    and ``FAILED`` count as terminal — ``SKIPPED`` and ``QUEUED``/``RUNNING``
+    do not (plan §Settled open questions 3). Returns the halting pair's ids
+    ``(older, newer)`` when the two most recent terminal entries are both
+    ``FAILED`` and adjacent in that terminal-only sequence; else ``None``.
+    """
+    terminal = [e for e in entries if e["status"] in ("DONE", "FAILED")]
+    if len(terminal) < 2:
+        return None
+    older, newer = terminal[-2], terminal[-1]
+    if older["status"] == "FAILED" and newer["status"] == "FAILED":
+        return older["id"], newer["id"]
+    return None
+
+
+def _halt_notice_if_tripped(entries: list[dict], override_halt: bool) -> bool:
+    """Print the HALT notice and return True iff the breaker should fire.
+
+    Wraps ``_check_circuit_breaker`` with the print-and-decide shell so
+    ``_cmd_next`` stays a plain ``if _halt_notice_if_tripped(...): return 3``
+    — keeps the caller's body short (house 50-line function ceiling).
+    ``override_halt`` short-circuits to False without evaluating the
+    predicate.
+    """
+    if override_halt:
+        return False
+    halt_pair = _check_circuit_breaker(entries)
+    if halt_pair is None:
+        return False
+    older_id, newer_id = halt_pair
+    print(
+        "next: HALT — circuit breaker tripped: two consecutive FAILED "
+        f"entries ({older_id!r} then {newer_id!r}); refusing to select a "
+        "next entry (systemic-failure signal). Pass --override-halt to "
+        "proceed anyway.",
+        file=sys.stderr,
+    )
+    return True
+
+
 def _cmd_next(args: argparse.Namespace) -> int:
     """Implements the ``next`` subcommand — see ``main``'s subparser setup.
 
@@ -533,9 +576,20 @@ def _cmd_next(args: argparse.Namespace) -> int:
     queue, or every remaining ``QUEUED`` entry got skipped) prints
     ``{"done": true}`` and exits 0.
 
+    **Circuit breaker** (Task 10, plan §Settled open questions 3): before
+    selecting, ``_halt_notice_if_tripped`` scans for two consecutive FAILED
+    entries among the most recent terminal (DONE/FAILED) outcomes. If
+    tripped, this exits 3 with a HALT message naming both ids instead of
+    scanning at all — unless ``args.override_halt`` is set, which bypasses
+    the check entirely.
+
     Only machine-readable JSON goes to stdout (the dispatch payload, or
-    ``{"done": true}``); all human-facing notices (skip reasons) go to
-    stderr, mirroring ``_cmd_mark``/``_cmd_status``.
+    ``{"done": true}``); all human-facing notices (skip reasons, the HALT
+    message) go to stderr, mirroring ``_cmd_mark``/``_cmd_status``. A
+    ``QueueError`` raised mid-scan by ``ensure_worktree``/
+    ``_teardown_worktree`` is not caught here — ``main`` catches it at the
+    dispatch level so it exits 1 like a ``load_queue`` failure, instead of
+    propagating as a raw traceback.
     """
     project_path = Path(args.project).resolve()
     skills_root = Path(args.skills_root).resolve()
@@ -551,8 +605,12 @@ def _cmd_next(args: argparse.Namespace) -> int:
         return 1
 
     state = load_state(state_path)
+    merged = effective_entries(entries, state)
 
-    for entry in effective_entries(entries, state):
+    if _halt_notice_if_tripped(merged, args.override_halt):
+        return 3
+
+    for entry in merged:
         if entry["status"] != QUEUED:
             continue
 
@@ -628,6 +686,15 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     status_parser.set_defaults(func=_cmd_status)
 
+    _add_next_subparser(subparsers)
+
+    return parser
+
+
+def _add_next_subparser(subparsers: argparse._SubParsersAction) -> None:
+    """Register the ``next`` subcommand's arguments (split out of
+    ``_build_parser`` to keep that function under the house length ceiling).
+    """
     next_parser = subparsers.add_parser(
         "next",
         help="pick the next QUEUED entry, ready its worktree, print its Workflow args as JSON",
@@ -645,15 +712,32 @@ def _build_parser() -> argparse.ArgumentParser:
         "--queue",
         help="override path to QUEUE.toml (default: <project>/docs/loom/QUEUE.toml)",
     )
+    next_parser.add_argument(
+        "--override-halt",
+        dest="override_halt",
+        action="store_true",
+        default=False,
+        help="bypass the consecutive-FAILED circuit breaker (Task 10)",
+    )
     next_parser.set_defaults(func=_cmd_next)
-
-    return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """Parse argv and dispatch to the selected subcommand's ``func``.
+
+    Catches ``QueueError`` at this single dispatch site: ``mark``/``status``
+    already catch their own ``load_queue`` failures internally (so this is a
+    no-op for them), but ``next`` can raise ``QueueError`` mid-scan via
+    ``ensure_worktree``/``_teardown_worktree`` — this ensures that exits 1
+    with a stderr message instead of propagating as a raw traceback.
+    """
     parser = _build_parser()
     args = parser.parse_args(argv)
-    return args.func(args)
+    try:
+        return args.func(args)
+    except QueueError as e:
+        print(str(e), file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":
