@@ -655,6 +655,7 @@ def test_next_emits_workflow_args_and_marks_running(tmp_path, capsys):
         "budgets": {"run": 200000},
         "models": {},
         "skillsRoot": str(skills_root.resolve()),
+        "branch": "loom/add-export-csv",
     }
     assert expected_plan_path.is_file()
 
@@ -685,3 +686,95 @@ def test_next_reports_done_when_queue_empty(tmp_path, capsys):
     out = capsys.readouterr().out.strip()
     assert json.loads(out) == {"done": True}
     assert not (project_path / ".worktrees").exists()
+
+
+def test_next_skips_unfrozen_entry_and_advances(tmp_path, capsys):
+    project_path = _make_tmp_git_repo(tmp_path)
+
+    # Entry B is eligible: plan committed, validator exit 0.
+    plan_rel_b = "docs/loom/plans/2026-07-03-add-export-csv.md"
+    plan_path_b = project_path / plan_rel_b
+    plan_path_b.parent.mkdir(parents=True)
+    plan_path_b.write_text("plan b\n", encoding="utf-8")
+    _run_git(["add", plan_rel_b], project_path)
+    _run_git(["commit", "-m", "add plan b"], project_path)
+
+    loom_dir = project_path / "docs" / "loom"
+    (loom_dir / "QUEUE.toml").write_text(
+        '[[change]]\n'
+        'id = "unfrozen-change"\n'
+        'plan = "docs/loom/plans/2026-07-03-unfrozen-change.md"\n'
+        "[change.budgets]\n"
+        "run = 100000\n"
+        "\n"
+        "[[change]]\n"
+        'id = "add-export-csv"\n'
+        f'plan = "{plan_rel_b}"\n'
+        "[change.budgets]\n"
+        "run = 200000\n",
+        encoding="utf-8",
+    )
+
+    skills_root = tmp_path / "skills"
+    _write_stub_validator(skills_root, exit_code=0)
+
+    exit_code = main(
+        ["next", "--project", str(project_path), "--skills-root", str(skills_root)]
+    )
+
+    assert exit_code == 0
+    out = capsys.readouterr()
+    payload = json.loads(out.out.strip())
+
+    worktree_path_b = project_path / ".worktrees" / "loom-add-export-csv"
+    assert payload["changeId"] == "add-export-csv"
+    assert payload["projectPath"] == str(worktree_path_b.resolve())
+    assert payload["branch"] == "loom/add-export-csv"
+
+    assert "unfrozen-change" in out.err
+    assert not (project_path / ".worktrees" / "loom-unfrozen-change").exists()
+
+    state = load_state(loom_dir / "queue-state.json")
+    assert state["unfrozen-change"]["status"] == "SKIPPED"
+    assert "not found" in state["unfrozen-change"]["reason"]
+    assert state["add-export-csv"]["status"] == "RUNNING"
+
+
+def test_next_skips_when_plan_not_in_worktree(tmp_path, capsys):
+    project_path = _make_tmp_git_repo(tmp_path)
+
+    plan_rel = "docs/loom/plans/2026-07-03-uncommitted-plan.md"
+    plan_path = project_path / plan_rel
+    plan_path.parent.mkdir(parents=True)
+    plan_path.write_text("plan\n", encoding="utf-8")
+    # Deliberately NOT committed: check_frozen (main checkout) sees the
+    # file, but ensure_worktree's worktree (created from HEAD) will not.
+
+    loom_dir = project_path / "docs" / "loom"
+    (loom_dir / "QUEUE.toml").write_text(
+        '[[change]]\n'
+        'id = "uncommitted-plan"\n'
+        f'plan = "{plan_rel}"\n'
+        "[change.budgets]\n"
+        "run = 100000\n",
+        encoding="utf-8",
+    )
+
+    skills_root = tmp_path / "skills"
+    _write_stub_validator(skills_root, exit_code=0)
+
+    exit_code = main(
+        ["next", "--project", str(project_path), "--skills-root", str(skills_root)]
+    )
+
+    assert exit_code == 0
+    out = capsys.readouterr()
+    assert json.loads(out.out.strip()) == {"done": True}
+    assert "uncommitted-plan" in out.err
+
+    state = load_state(loom_dir / "queue-state.json")
+    assert state["uncommitted-plan"]["status"] == "SKIPPED"
+    reason = state["uncommitted-plan"]["reason"].lower()
+    assert "not" in reason and "worktree" in reason
+    # The idempotent worktree left behind is harmless — not torn down.
+    assert (project_path / ".worktrees" / "loom-uncommitted-plan").is_dir()

@@ -403,29 +403,60 @@ def _cmd_status(args: argparse.Namespace) -> int:
     return 0
 
 
+def _mark_skipped(state: dict, change_id: str, reason: str) -> None:
+    """Record ``SKIPPED`` + ``reason`` for change_id in state, in place.
+
+    Shared by ``_cmd_next``'s two skip sites (freeze-predicate failure and
+    the post-worktree uncommitted-plan check) — same record shape
+    ``_cmd_mark`` uses for ``failed``/``done``.
+    """
+    record = dict(state.get(change_id, {}))
+    record["status"] = "SKIPPED"
+    record["reason"] = reason
+    state[change_id] = record
+
+
 def _cmd_next(args: argparse.Namespace) -> int:
     """Implements the ``next`` subcommand — see ``main``'s subparser setup.
 
-    Happy path only (Task 8 of
-    docs/loom/plans/2026-07-03-loom-pipeline-v1-1-batch-mode.md): picks the
-    first entry with effective status ``QUEUED`` (queue order), runs
-    ``check_frozen``, and on eligible creates its worktree/branch
-    (``ensure_worktree``), records ``RUNNING`` (+ ``branch``, ``worktree``)
-    in state, and prints ONE JSON object to stdout carrying the driver's
-    ready-to-use Workflow args — ``segment``/``changeId``/``projectPath``/
-    ``planPath``/``budgets``/``models``/``skillsRoot``, field names exactly
-    matching ``driver_10_guard.js``'s ``guardArgs`` REQUIRED_FIELDS plus
-    ``driver_50_seg3.js``'s ``planPath`` guard. ``projectPath`` is the
-    worktree path (not the main checkout) and ``planPath`` is resolved
-    *inside* that worktree. Empty queue (no QUEUED entries left) prints
-    ``{"done": true}`` and exits 0.
+    Scans effective entries in queue order for the first one that is both
+    ``QUEUED`` and eligible. An entry that fails ``check_frozen``
+    (validator non-zero, or plan missing in the main checkout) is recorded
+    ``SKIPPED`` with the predicate's reason, a one-line notice goes to
+    stderr, and the scan advances to the next ``QUEUED`` entry — Task 9 of
+    docs/loom/plans/2026-07-03-loom-pipeline-v1-1-batch-mode.md
+    ("ineligible entries are marked SKIPPED loudly, never silently").
+    Nothing is ever silent and one bad entry never blocks the queue.
 
-    A head entry that fails ``check_frozen`` fails loud here (prints the
-    reason to stderr, exit 1) rather than skipping to the next entry —
-    skip-and-advance is Task 9's job, not this one's.
+    **Invariant** (plan §Branch base note): ``ensure_worktree`` branches
+    from the project's current HEAD, so freezing implies the change-folder
+    + plan are committed — the worktree sees them too. That invariant can
+    be violated by a plan edited/created after the freeze check ran but
+    never committed, so a defensive re-check runs *between*
+    ``ensure_worktree`` and recording ``RUNNING``: if
+    ``<worktree_path>/<entry["plan"]>`` is not a file, this entry is ALSO
+    recorded ``SKIPPED`` (reason names the uncommitted-plan cause) instead
+    of ``RUNNING``, with the same notice-and-advance semantics as the
+    freeze-predicate skip above. The worktree already created is left in
+    place rather than torn down — it is idempotent (``ensure_worktree``
+    reuses it) and therefore harmless.
 
-    Only this machine-readable JSON goes to stdout; all human-facing
-    notices go to stderr, mirroring ``_cmd_mark``/``_cmd_status``.
+    On the first entry that clears both checks: records ``RUNNING`` (+
+    ``branch``, ``worktree``) in state and prints ONE JSON object to
+    stdout carrying the driver's ready-to-use Workflow args —
+    ``segment``/``changeId``/``projectPath``/``planPath``/``budgets``/
+    ``models``/``skillsRoot``/``branch``, field names matching
+    ``driver_10_guard.js``'s ``guardArgs`` REQUIRED_FIELDS,
+    ``driver_50_seg3.js``'s ``planPath`` guard, and ``runSegment3``'s
+    optional ``args.branch`` (whole-branch review station).
+    ``projectPath`` is the worktree path (not the main checkout) and
+    ``planPath`` is resolved *inside* that worktree. No eligible entry
+    left (empty queue, or every remaining ``QUEUED`` entry got skipped)
+    prints ``{"done": true}`` and exits 0.
+
+    Only machine-readable JSON goes to stdout (the dispatch payload, or
+    ``{"done": true}``); all human-facing notices (skip reasons) go to
+    stderr, mirroring ``_cmd_mark``/``_cmd_status``.
     """
     project_path = Path(args.project).resolve()
     skills_root = Path(args.skills_root).resolve()
@@ -443,42 +474,56 @@ def _cmd_next(args: argparse.Namespace) -> int:
     state = load_state(state_path)
     merged = effective_entries(entries, state)
 
-    head = None
     for entry in merged:
-        if entry["status"] == QUEUED:
-            head = entry
-            break
+        if entry["status"] != QUEUED:
+            continue
 
-    if head is None:
-        print(json.dumps({"done": True}))
+        eligible, reason = check_frozen(entry, project_path, skills_root)
+        if not eligible:
+            _mark_skipped(state, entry["id"], reason)
+            save_state(state_path, state)
+            print(f"next: skipping {entry['id']!r} — {reason}", file=sys.stderr)
+            continue
+
+        worktree_path, branch = ensure_worktree(project_path, entry["id"])
+        plan_path = (worktree_path / entry["plan"]).resolve()
+
+        if not plan_path.is_file():
+            uncommitted_reason = (
+                f'entry "{entry["id"]}" plan not found in its worktree at '
+                f'"{plan_path}" — present in the main checkout but never '
+                "committed, so the worktree (branched from HEAD) does not "
+                "see it (plan §Branch base note)."
+            )
+            _mark_skipped(state, entry["id"], uncommitted_reason)
+            save_state(state_path, state)
+            print(
+                f"next: skipping {entry['id']!r} — {uncommitted_reason}",
+                file=sys.stderr,
+            )
+            continue
+
+        record = dict(state.get(entry["id"], {}))
+        record["status"] = "RUNNING"
+        record["branch"] = branch
+        record["worktree"] = str(worktree_path)
+        state[entry["id"]] = record
+        save_state(state_path, state)
+
+        payload = {
+            "segment": 3,
+            "changeId": entry["id"],
+            "projectPath": str(worktree_path.resolve()),
+            "planPath": str(plan_path),
+            "budgets": entry["budgets"],
+            "models": entry.get("models", {}),
+            "skillsRoot": str(skills_root),
+            "branch": branch,
+        }
+        print(json.dumps(payload))
         return 0
 
-    eligible, reason = check_frozen(head, project_path, skills_root)
-    if not eligible:
-        print(f"next: {reason}", file=sys.stderr)
-        return 1
-
-    worktree_path, branch = ensure_worktree(project_path, head["id"])
-
-    record = dict(state.get(head["id"], {}))
-    record["status"] = "RUNNING"
-    record["branch"] = branch
-    record["worktree"] = str(worktree_path)
-    state[head["id"]] = record
-    save_state(state_path, state)
-
-    plan_path = (worktree_path / head["plan"]).resolve()
-
-    payload = {
-        "segment": 3,
-        "changeId": head["id"],
-        "projectPath": str(worktree_path.resolve()),
-        "planPath": str(plan_path),
-        "budgets": head["budgets"],
-        "models": head.get("models", {}),
-        "skillsRoot": str(skills_root),
-    }
-    print(json.dumps(payload))
+    print(json.dumps({"done": True}))
     return 0
 
 
