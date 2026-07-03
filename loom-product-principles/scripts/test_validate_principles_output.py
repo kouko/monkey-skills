@@ -25,6 +25,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 from validate_principles_output import validate
 
 
@@ -275,6 +277,85 @@ def test_valid_doc_emits_no_legacy_warning(tmp_path):
     ok, problems = validate(p)
     assert ok, f"renamed heading should not trigger legacy warning: {problems}"
     assert not any("legacy" in m.lower() for m in problems), problems
+
+
+# --- optional jurisdiction sections (Design/Engineering Principles) --------
+
+_OPTIONAL_HEADINGS = ["## Design Principles", "## Engineering Principles"]
+
+
+def _optional_section(heading: str, n: int, *, marker: str = f" {EM} check:") -> str:
+    """`<heading>` with n ordered-list entries, each carrying `marker`."""
+    lines = [f"{heading}\n", "\n"]
+    for i in range(1, n + 1):
+        lines.append(
+            f"{i}. Clause statement number {i}{marker} testable condition {i} "
+            f"observed in the happy-path flow.\n"
+        )
+    return "".join(lines)
+
+
+@pytest.mark.parametrize("heading", _OPTIONAL_HEADINGS)
+@pytest.mark.parametrize(
+    "case",
+    ["absent", "one_marked_entry", "eight_entries", "zero_entries", "missing_marker"],
+)
+def test_optional_jurisdiction_section_rules(tmp_path, heading, case):
+    base = _valid_doc(3)
+    if case == "absent":
+        # No mention of the optional heading at all -> valid.
+        doc = base
+        expect_ok = True
+    elif case == "one_marked_entry":
+        # Floor of 1 marked entry -> valid.
+        doc = base + "\n" + _optional_section(heading, 1)
+        expect_ok = True
+    elif case == "eight_entries":
+        # Exceeds the 7-entry ceiling -> invalid.
+        doc = base + "\n" + _optional_section(heading, 8)
+        expect_ok = False
+    elif case == "zero_entries":
+        # Heading present, no entries -> invalid: a present-but-empty section
+        # must be omitted, not left empty.
+        doc = base + "\n" + f"{heading}\n\n"
+        expect_ok = False
+    else:  # missing_marker
+        # An entry missing the literal `— check:` marker -> invalid.
+        doc = (
+            base + "\n" + f"{heading}\n\n"
+            + "1. Clause without the marker at all.\n"
+        )
+        expect_ok = False
+
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+
+    if expect_ok:
+        assert ok, f"case={case!r} heading={heading!r} should pass, got: {problems}"
+        return
+
+    assert not ok, f"case={case!r} heading={heading!r} should fail, got no problems"
+    name = heading.removeprefix("## ")
+    if case == "zero_entries":
+        assert any(name in m and "omit" in m.lower() for m in problems), problems
+    elif case == "missing_marker":
+        assert any("check" in m for m in problems), problems
+    else:  # eight_entries
+        assert any(name in m for m in problems), problems
+
+
+def test_all_three_sections_combined_validates_ok(tmp_path):
+    # North Star + Product Principles + both optional sections together.
+    doc = (
+        _valid_doc(3)
+        + "\n" + _optional_section("## Design Principles", 2)
+        + "\n" + _optional_section("## Engineering Principles", 1)
+    )
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert ok, f"all three sections combined should validate OK, got: {problems}"
 
 
 # --- CLI contract (thin __main__) ------------------------------------------
