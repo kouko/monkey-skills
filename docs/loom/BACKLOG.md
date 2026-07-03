@@ -52,15 +52,6 @@
   should be required at design time to expose a test affordance.
   Candidate enumeration item for loom-interface-design:interaction-flows.
 
-## req-tag guard line in dispatch templates
-- Status: OPEN (small)
-- Origin: PR #479 CI — implementers pattern-matched the `# @req:` tag
-  convention without registering ids → 33 dangling-tag failures. Add to
-  loom-code dispatch templates (implementer contract or SDD prompts):
-  "no @req tags unless the id exists in the living-spec namespace".
-  Related lockstep gotcha: stripping tags requires regenerating
-  docs/loom/INDEX.md.
-
 ## Interventions bucket calibration (cosmetic)
 - Status: OPEN (small)
 - Origin: live-verify seg1 ledger — a routine adopt-if-valid note was

@@ -119,7 +119,11 @@ description: 'Plugin-level implementer agent for loom-code''s SDD workflow. Disp
     (PR #479: 33 dangling-tag failures from exactly this). When the
     dispatch carries **no** registered REQ-ids, **omit** `@req` tags
     entirely; untagged tests are **not INCOMPLETE** in that case —
-    state the omission in your report instead of inventing an id.
+    state the omission in your report instead of inventing an id. The
+    same per-test escape applies when the dispatch has registered ids
+    but a specific test you write (e.g. a defensive edge case beyond
+    the named requirements) corresponds to none of them: omit the tag
+    on that test and note it — never stretch an unrelated id to fit.
     (`@req` lines inside string literals / fixtures do not count — the
     tag must be a real dedicated comment on its own line.)
 

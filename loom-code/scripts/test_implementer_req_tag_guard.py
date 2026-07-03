@@ -33,8 +33,10 @@ def _text(p: Path) -> str:
 
 def _rule_11_block(text: str) -> str:
     """Slice rule 11 from the role contract (up to the managed baseline)."""
-    start = text.find("11.")
-    assert start != -1, "role-contract rule 11 is absent from implementer.md"
+    # Anchor on the rule's bold lead-in, not a bare "11." (which a future
+    # version number or list elsewhere in the file could shadow).
+    start = text.find("**`@req` Definition-of-Done")
+    assert start != -1, "role-contract rule 11 lead-in is absent from implementer.md"
     end = text.find("<!-- BEGIN baseline-v1", start)
     return text[start:end] if end != -1 else text[start:]
 
@@ -56,6 +58,17 @@ def test_rule_11_forbids_minting_ids():
         "rule 11 must explicitly forbid minting new REQ-ids — "
         "pattern-matched ids are exactly what produced the 33 dangling-tag "
         "CI failures on PR #479"
+    )
+
+
+def test_rule_11_names_the_per_test_escape():
+    """A test matching none of the dispatch's registered ids is also untagged."""
+    block = _rule_11_block(_text(AGENT))
+    assert "corresponds to none" in block and "never stretch" in block.lower(), (
+        "rule 11 must cover the mixed cell — dispatch HAS registered ids "
+        "but one test maps to none of them — with the same omit-and-note "
+        "escape, or an implementer is left with no legal move for a "
+        "defensive edge-case test"
     )
 
 
