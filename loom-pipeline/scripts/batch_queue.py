@@ -509,6 +509,11 @@ def _check_circuit_breaker(entries: list[dict]) -> tuple[str, str] | None:
     do not (plan §Settled open questions 3). Returns the halting pair's ids
     ``(older, newer)`` when the two most recent terminal entries are both
     ``FAILED`` and adjacent in that terminal-only sequence; else ``None``.
+
+    "Most recent" is measured by QUEUE.toml file position — a positional
+    proxy for recency that is sound only under v1.1's sequential-only,
+    no-retry dispatch model (hand-editing queue-state.json to retry an
+    earlier entry out of turn breaks the equivalence).
     """
     terminal = [e for e in entries if e["status"] in ("DONE", "FAILED")]
     if len(terminal) < 2:
