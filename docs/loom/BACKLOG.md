@@ -10,23 +10,6 @@
 > greppable). Completed items are deleted, not archived — git history is
 > the archive.
 
-## ENGINEERING.md — per-project engineering constitution
-- Status: COMMITTED-NEXT (start: immediately after this file lands)
-- Origin: 2026-07-04 discussion during loom-pipeline live-verify; memory
-  `engineering-principles-backlog`
-- What: the tech-side twin of PRINCIPLES.md — falsifiable `— check:`
-  clauses for per-project engineering decisions (dependency posture,
-  conservative↔aggressive dial, test-rigor CEILING above the iron-law
-  floor, explicit negative decisions). D8 conformance machinery is
-  generic and reusable. Industry precedent: Spec Kit's constitution
-  covers both product and engineering.
-- Build-time design questions: separate file vs PRINCIPLES.md section;
-  generator owner (loom-product-principles emits both vs a loom-code
-  skill); D8 severity calibration for engineering violations.
-- Guardrails: mint clauses from RECURRING bucket-B engineering questions
-  in real pipeline ledgers, never imagined upfront; every clause must be
-  D8-checkable (unchecked clauses rot); never touch the iron-law floor.
-
 ## G4 — Sonnet-vs-Fable gate quality A/B
 - Status: OPEN
 - Start: after the first REAL change runs through the pipeline
@@ -56,7 +39,8 @@
   ui-verification, driven by the merged driver against a real repo.
 
 ## v1.1 — batch implementation mode
-- Status: COMMITTED-NEXT (after ENGINEERING.md)
+- Status: COMMITTED-NEXT (constitution work shipped 2026-07-03 — this
+  is now the front of the queue)
 - Origin: user requirement 2026-07-03 (「白天討論規格、晚上自動實作」 is a
   METAPHOR — time-agnostic); design in the brief §Committed next +
   loom-pipeline/README.md
