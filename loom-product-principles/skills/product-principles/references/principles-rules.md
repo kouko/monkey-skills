@@ -211,19 +211,39 @@ falsifiable condition.
 1. A `## North Star` section exists and is **non-empty** — at least one
    non-whitespace, non-heading line of body text appears under the heading
    before the next `##`.
-2. A `## Principles` section exists with **3–7** principle **entries**, where an
-   entry is a **top-level ordered-list item** (a line matching `^\d+\.\s` — i.e.
-   `1.`, `2.`, …). Unordered bullets, nested items, and the ✅/❌ example lines
-   are NOT counted as entries.
-3. **Every** principle entry carries a falsifiable check. The check marker is the
-   **literal token `— check:`** — an em dash (U+2014 `—`), a single space, the
-   lowercase word `check`, then a colon — appearing **on the same line as the
-   principle entry**. An entry without that exact marker fails validation.
+2. A `## Product Principles` section exists with **3–7** principle **entries**,
+   where an entry is a **top-level ordered-list item** (a line matching
+   `^\d+\.\s` — i.e. `1.`, `2.`, …). Unordered bullets, nested items, and the
+   ✅/❌ example lines are NOT counted as entries.
+3. **Every** principle entry — in `## Product Principles` and, when present, in
+   `## Design Principles` / `## Engineering Principles` — carries a falsifiable
+   check. The check marker is the **literal token `— check:`** — an em dash
+   (U+2014 `—`), a single space, the lowercase word `check`, then a colon —
+   appearing **on the same line as the entry**. An entry without that exact
+   marker fails validation.
+4. A legacy `## Principles` heading (the pre-rename name) is detected as a
+   whole header line and fails validation with a **targeted migration
+   message** naming `## Product Principles` as the rename target. A
+   `## Product Principles` heading never triggers this check — the match is on
+   the whole heading line, not a substring.
+5. `## Design Principles` and `## Engineering Principles` are **optional**:
+   absent is valid; present requires **1–7** entries following the same
+   ordered-list + `— check:` rules as `## Product Principles` (rule 2/3 above,
+   with the floor lowered to 1). A present-but-empty section (0 entries) is
+   invalid — it must be omitted, not left empty.
 
 **Generators MUST emit the exact `— check:` marker** (em dash, not a hyphen
 `-`/`--`; lowercase `check:`; same line). This is the load-bearing lexeme the
 validator keys on; emitting a hyphen or a different-cased word is a generation
 bug, not a validator gap.
+
+**Engineering guardrails (apply beyond the validator's mechanical checks):**
+a clause is only minted from a decision the project **actually commits to** —
+never imagined upfront to make a section "look complete." A test-rigor clause
+in `## Engineering Principles` sets a per-project **CEILING** above the TDD
+iron-law floor (e.g. "property-based tests required for the parser module"),
+**never below it** — a clause cannot lower coverage or skip the red-green
+cycle the iron law already requires everywhere else.
 
 The validator is mechanical (section structure + the literal marker above); the
 *quality* of a check (is it truly falsifiable, not a disguised platitude) is the
