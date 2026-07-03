@@ -1,6 +1,7 @@
 """Tests for loom-pipeline/scripts/batch_queue.py."""
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -9,6 +10,7 @@ from batch_queue import (
     QueueError,
     check_frozen,
     effective_entries,
+    ensure_worktree,
     load_queue,
     load_state,
     save_state,
@@ -386,3 +388,78 @@ def test_check_frozen_rejects_absolute_path_escaping_project(tmp_path):
 
     assert eligible is False
     assert "traversal" in reason.lower()
+
+
+def _run_git(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        ["git", "-C", str(cwd), *args],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+
+def _make_tmp_git_repo(tmp_path: Path) -> Path:
+    """Build a tmp git repo with one commit — stand-in for a real project."""
+    project_path = tmp_path / "project"
+    project_path.mkdir()
+    _run_git(["init"], project_path)
+    _run_git(["config", "user.email", "test@example.com"], project_path)
+    _run_git(["config", "user.name", "Test"], project_path)
+    (project_path / "README.md").write_text("hello\n", encoding="utf-8")
+    _run_git(["add", "README.md"], project_path)
+    _run_git(["commit", "-m", "initial commit"], project_path)
+    return project_path
+
+
+def test_ensure_worktree_creates_branch_and_path(tmp_path):
+    project_path = _make_tmp_git_repo(tmp_path)
+
+    worktree_path, branch = ensure_worktree(project_path, "add-export-csv")
+
+    assert branch == "loom/add-export-csv"
+    assert worktree_path == project_path / ".worktrees" / "loom-add-export-csv"
+    assert worktree_path.is_dir()
+    head = _run_git(["rev-parse", "--abbrev-ref", "HEAD"], worktree_path)
+    assert head.stdout.strip() == "loom/add-export-csv"
+
+    # idempotent: second call returns the same path without error
+    worktree_path_2, branch_2 = ensure_worktree(project_path, "add-export-csv")
+    assert worktree_path_2 == worktree_path
+    assert branch_2 == branch
+
+
+def test_ensure_worktree_fails_loud_when_branch_exists_without_worktree(tmp_path):
+    project_path = _make_tmp_git_repo(tmp_path)
+    _run_git(["branch", "loom/add-export-csv"], project_path)
+
+    with pytest.raises(QueueError) as exc_info:
+        ensure_worktree(project_path, "add-export-csv")
+
+    assert "loom/add-export-csv" in str(exc_info.value)
+    assert "ensure_worktree" in str(exc_info.value)
+
+
+def test_ensure_worktree_fails_loud_when_path_exists_on_wrong_branch(tmp_path):
+    project_path = _make_tmp_git_repo(tmp_path)
+    conflict_path = project_path / ".worktrees" / "loom-add-export-csv"
+    conflict_path.mkdir(parents=True)
+    (conflict_path / "placeholder.txt").write_text("not a worktree\n", encoding="utf-8")
+
+    with pytest.raises(QueueError) as exc_info:
+        ensure_worktree(project_path, "add-export-csv")
+
+    assert str(conflict_path) in str(exc_info.value)
+    assert "ensure_worktree" in str(exc_info.value)
+
+
+def test_ensure_worktree_fails_loud_on_git_command_failure(tmp_path):
+    # project_path is not a git repo at all — `git -C <path> worktree add`
+    # fails, and the failure must surface git's own stderr.
+    project_path = tmp_path / "not-a-repo"
+    project_path.mkdir()
+
+    with pytest.raises(QueueError) as exc_info:
+        ensure_worktree(project_path, "add-export-csv")
+
+    assert "ensure_worktree" in str(exc_info.value)

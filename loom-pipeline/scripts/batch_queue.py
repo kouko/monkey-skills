@@ -237,3 +237,71 @@ def check_frozen(entry: dict, project_path: Path, skills_root: Path) -> tuple[bo
         )
 
     return (True, f'entry "{entry_id}" is frozen — validator exit 0, plan present.')
+
+
+def ensure_worktree(project_path: Path, change_id: str) -> tuple[Path, str]:
+    """Create (or reuse) the worktree + branch for ``change_id``.
+
+    Branch ``loom/<change_id>``, worktree
+    ``<project_path>/.worktrees/loom-<change_id>`` — the house convention
+    (using-git-worktrees/SKILL.md §The ``.worktrees/`` convention). Creates
+    via ``git -C <project_path> worktree add -b <branch> <worktree_path>``
+    from current HEAD (list-form subprocess args, no shell=True).
+
+    Idempotent: if the worktree directory already exists and is checked
+    out on ``branch``, returns it without error — no second ``git
+    worktree add``.
+
+    Fails loud with ``QueueError`` on any conflict this call did not
+    create: the branch exists without the worktree directory, the
+    directory exists but isn't checked out on ``branch`` (or isn't a git
+    checkout at all), or the ``git worktree add`` command itself fails
+    (git's stderr is included in the message).
+    """
+    project_path = Path(project_path)
+    branch = f"loom/{change_id}"
+    worktree_path = project_path / ".worktrees" / f"loom-{change_id}"
+
+    if worktree_path.is_dir():
+        head = subprocess.run(
+            ["git", "-C", str(worktree_path), "rev-parse", "--abbrev-ref", "HEAD"],
+            capture_output=True,
+            text=True,
+        )
+        if head.returncode == 0 and head.stdout.strip() == branch:
+            return worktree_path, branch
+        found = head.stdout.strip() if head.returncode == 0 else head.stderr.strip()
+        _fail(
+            f'worktree path "{worktree_path}" already exists but is not '
+            f'checked out on branch "{branch}" (found {found!r}) — refusing '
+            "to touch a conflict this call did not create.",
+            fn="ensure_worktree",
+        )
+
+    branch_check = subprocess.run(
+        ["git", "-C", str(project_path), "show-ref", "--verify", "--quiet", f"refs/heads/{branch}"],
+        capture_output=True,
+        text=True,
+    )
+    if branch_check.returncode == 0:
+        _fail(
+            f'branch "{branch}" already exists in "{project_path}" but its '
+            f'worktree "{worktree_path}" does not — refusing to touch a '
+            "conflict this call did not create.",
+            fn="ensure_worktree",
+        )
+
+    add_result = subprocess.run(
+        ["git", "-C", str(project_path), "worktree", "add", "-b", branch, str(worktree_path)],
+        capture_output=True,
+        text=True,
+    )
+    if add_result.returncode != 0:
+        _fail(
+            f'"git worktree add -b {branch} {worktree_path}" failed in '
+            f'"{project_path}" (exit {add_result.returncode}): '
+            f"{add_result.stderr.strip()}",
+            fn="ensure_worktree",
+        )
+
+    return worktree_path, branch
