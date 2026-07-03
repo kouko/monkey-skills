@@ -33,11 +33,15 @@ QUEUED = "QUEUED"
 # scripts/driver_10_guard.js:112-123.
 _CHANGE_ID_ALLOWED_PATTERN = re.compile(r"^[A-Za-z0-9._-]+$")
 
-# Form-B freeze gate: the plan header's reviewer-verdict line, tolerant of
-# the markdown bold markers the plan format uses
-# (`**Plan-document-reviewer verdict**: PASS (…)`). PENDING never matches.
+# Form-B freeze gate: the plan header's reviewer-verdict line. Anchored to
+# the START of a line (a header FIELD, not a whole-body substring — prose
+# that merely quotes the phrase mid-sentence must not count as frozen).
+# Tolerant of the markdown bold markers the plan format uses
+# (`**Plan-document-reviewer verdict**: PASS (…)`) and of the plain form
+# real consumer plans use. PENDING never matches.
 _PLAN_REVIEWER_PASS_PATTERN = re.compile(
-    r"Plan-document-reviewer verdict\*{0,2}\s*:\s*\*{0,2}\s*PASS\b"
+    r"^\*{0,2}Plan-document-reviewer verdict\*{0,2}\s*:\s*\*{0,2}\s*PASS\b",
+    re.MULTILINE,
 )
 
 FAIL_LOUD_NOTICE = (

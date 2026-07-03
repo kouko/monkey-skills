@@ -373,6 +373,52 @@ def test_check_frozen_accepts_brief_plan_form_when_no_change_folder(tmp_path):
     assert "brief+plan" in reason
 
 
+def test_check_frozen_accepts_brief_plan_form_plain_verdict_line(tmp_path):
+    # Regression anchor for the non-bold header form real consumer plans
+    # use (observed on komado-Viewfinder): no markdown asterisks.
+    project_path = tmp_path / "project"
+    plan_rel = "docs/loom/plans/2026-07-03-add-export-csv.md"
+    plan_path = project_path / plan_rel
+    plan_path.parent.mkdir(parents=True)
+    plan_path.write_text(
+        "# Plan: add export csv\n\n"
+        "Plan-document-reviewer verdict: PASS (2026-07-03, 14/14 checks)\n",
+        encoding="utf-8",
+    )
+
+    skills_root = tmp_path / "skills"
+    _write_stub_validator(skills_root, exit_code=1)
+
+    eligible, reason = check_frozen(_make_entry(plan_rel), project_path, skills_root)
+
+    assert eligible is True
+    assert "brief+plan" in reason
+
+
+def test_check_frozen_rejects_brief_plan_form_quoting_the_phrase_in_prose(tmp_path):
+    # A plan that merely QUOTES the verdict phrase mid-sentence (docs about
+    # the pipeline itself do this) must NOT count as frozen — the gate is a
+    # line-anchored header field, not a whole-body substring.
+    project_path = tmp_path / "project"
+    plan_rel = "docs/loom/plans/2026-07-03-add-export-csv.md"
+    plan_path = project_path / plan_rel
+    plan_path.parent.mkdir(parents=True)
+    plan_path.write_text(
+        "# Plan: add export csv\n\n"
+        "The freeze predicate looks for a `Plan-document-reviewer "
+        "verdict: PASS` line in the plan header.\n",
+        encoding="utf-8",
+    )
+
+    skills_root = tmp_path / "skills"
+    _write_stub_validator(skills_root, exit_code=0)
+
+    eligible, reason = check_frozen(_make_entry(plan_rel), project_path, skills_root)
+
+    assert eligible is False
+    assert "Plan-document-reviewer" in reason
+
+
 def test_check_frozen_rejects_brief_plan_form_without_reviewer_pass(tmp_path):
     project_path = tmp_path / "project"
     plan_rel = "docs/loom/plans/2026-07-03-add-export-csv.md"
