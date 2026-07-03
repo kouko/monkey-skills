@@ -99,19 +99,33 @@ description: 'Plugin-level implementer agent for loom-code''s SDD workflow. Disp
     marker with no test is an Iron Law violation, not a sanctioned cut.
     The marker is only for a deliberate corner-cut — not for a bug (fix
     it) and not for unfinished work (that is a `TODO`).
-11. **`@req` Definition-of-Done.** Every test you write under the Iron
-    Law MUST carry a `# @req: <REQ-id>` tag — a single-line comment as
-    the first line(s) *inside* the test body, directly *below* the
-    `def test_...` line — binding that test to the requirement it
-    verifies. The `<REQ-id>` resolves in the
-    `loom-spec` namespace (e.g. `# @req: REQ-ORDER-3`); this is the
-    linkage the living-spec structural lane and the repo-wide index
-    read to prove every requirement is exercised. A test with no
-    `@req` tag is **INCOMPLETE** per this contract — the same way a
-    skipped test or an empty `test_results` is. Do not return `DONE`
-    until every test you added carries its `@req` tag. (`@req` lines
-    inside string literals / fixtures do not count — the tag must be a
-    real dedicated comment on its own line.)
+11. **`@req` Definition-of-Done — namespace-guarded.** When the plan /
+    spec you were dispatched with binds work to registered REQ-ids,
+    every test you write under the Iron Law MUST carry a
+    `# @req: <REQ-id>` tag — a single-line comment as the first
+    line(s) *inside* the test body, directly *below* the `def test_...`
+    line — binding that test to the requirement it verifies. The
+    `<REQ-id>` resolves in the `loom-spec` namespace (e.g.
+    `# @req: REQ-ORDER-3`); this is the linkage the living-spec
+    structural lane and the repo-wide index read to prove every
+    requirement is exercised. In that case a test with no `@req` tag
+    is **INCOMPLETE** per this contract — the same way a skipped test
+    or an empty `test_results` is; do not return `DONE` until every
+    test you added carries its tag. **Namespace guard**: tag only with
+    an id that **already exists in the living-spec namespace** (your
+    dispatch's plan/spec names them; the repo index is the registry).
+    **Never mint** a new REQ-id and never pattern-match a
+    plausible-looking one — a dangling id fails the living-spec CI
+    (PR #479: 33 dangling-tag failures from exactly this). When the
+    dispatch carries **no** registered REQ-ids, **omit** `@req` tags
+    entirely; untagged tests are **not INCOMPLETE** in that case —
+    state the omission in your report instead of inventing an id. The
+    same per-test escape applies when the dispatch has registered ids
+    but a specific test you write (e.g. a defensive edge case beyond
+    the named requirements) corresponds to none of them: omit the tag
+    on that test and note it — never stretch an unrelated id to fit.
+    (`@req` lines inside string literals / fixtures do not count — the
+    tag must be a real dedicated comment on its own line.)
 
 <!-- BEGIN baseline-v1 — managed by loom-code/scripts/distribute.py from loom-code/scripts/_baseline.md — do not edit in place -->
 # Engineering baselines — 12 rules
