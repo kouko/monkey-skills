@@ -40,6 +40,13 @@ from pathlib import Path
 
 _NORTH_STAR = "## North Star"
 _PRINCIPLES = "## Product Principles"
+_LEGACY_PRINCIPLES = "## Principles"
+
+# The legacy heading, matched as a WHOLE header line (same style as
+# `_section_body`) so `## Product Principles` never false-positives.
+_LEGACY_HEADING_RE = re.compile(
+    r"^" + re.escape(_LEGACY_PRINCIPLES) + r"\s*$", re.MULTILINE
+)
 
 # A top-level ordered-list item: `1. `, `2. `, ... at column 0 (no leading
 # whitespace, so nested/indented items do not count).
@@ -120,10 +127,21 @@ def _check_every_principle_has_check(text: str) -> list[str]:
     return problems
 
 
+def _check_legacy_heading(text: str) -> list[str]:
+    if _LEGACY_HEADING_RE.search(text) is None:
+        return []
+    return [
+        f"legacy '{_LEGACY_PRINCIPLES}' heading found; rename it to "
+        f"'{_PRINCIPLES}' (same rules apply: 3-7 top-level ordered entries, "
+        f"each carrying the '{_CHECK_MARKER}' marker)"
+    ]
+
+
 _CHECKS = [
     _check_north_star,
     _check_principles_count,
     _check_every_principle_has_check,
+    _check_legacy_heading,
 ]
 
 

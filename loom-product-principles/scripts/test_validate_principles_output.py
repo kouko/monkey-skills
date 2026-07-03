@@ -241,6 +241,42 @@ def test_accepts_product_principles_heading(tmp_path):
     )
 
 
+# --- legacy heading migration message ---------------------------------------
+
+def test_legacy_heading_gets_migration_message(tmp_path):
+    # A file still using the legacy `## Principles` heading is invalid, and
+    # the migration message names `## Product Principles` as the rename target.
+    doc = (
+        "# PRINCIPLES\n\n"
+        + _north_star()
+        + "\n## Principles\n\n"
+        f"1. First principle{EM} check: testable condition one.\n"
+        f"2. Second principle{EM} check: testable condition two.\n"
+        f"3. Third principle{EM} check: testable condition three.\n"
+    )
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert not ok
+    # Must be an actionable RENAME message (legacy heading detected), not the
+    # generic "missing section" message that _check_principles_count would
+    # emit on its own.
+    assert any(
+        "legacy" in m.lower() and "## Product Principles" in m
+        for m in problems
+    ), problems
+
+
+def test_valid_doc_emits_no_legacy_warning(tmp_path):
+    # A file already using the renamed `## Product Principles` heading must
+    # NOT trip the legacy-heading check.
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(_valid_doc(3), encoding="utf-8")
+    ok, problems = validate(p)
+    assert ok, f"renamed heading should not trigger legacy warning: {problems}"
+    assert not any("legacy" in m.lower() for m in problems), problems
+
+
 # --- CLI contract (thin __main__) ------------------------------------------
 
 def _run_cli(target: Path):
