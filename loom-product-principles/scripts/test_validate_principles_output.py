@@ -349,6 +349,38 @@ def test_optional_jurisdiction_section_rules(tmp_path, heading, case):
         assert any(name in m for m in problems), problems
 
 
+def test_optional_section_count_and_marker_problems_both_reported(tmp_path):
+    # 8 entries (over the 7-ceiling), NONE carrying the `— check:` marker.
+    # The required-section pair (_check_principles_count +
+    # _check_every_principle_has_check) reports both a count problem and a
+    # marker problem via separate registered functions; the optional-section
+    # check must report the same completeness, not short-circuit on count.
+    heading = "## Design Principles"
+    lines = [f"{heading}\n", "\n"]
+    for i in range(1, 9):
+        lines.append(f"{i}. Clause without the marker at all, number {i}.\n")
+    doc = _valid_doc(3) + "\n" + "".join(lines)
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert not ok
+    assert any("8" in m and "7" in m for m in problems), (
+        f"expected a count problem, got: {problems}"
+    )
+    assert any("check" in m for m in problems), (
+        f"expected marker problems too (not short-circuited), got: {problems}"
+    )
+
+
+def test_optional_section_seven_entries_marked_is_ok(tmp_path):
+    # Ceiling case: exactly 7 marked entries in an optional section -> valid.
+    p = tmp_path / "PRINCIPLES.md"
+    doc = _valid_doc(3) + "\n" + _optional_section("## Engineering Principles", 7)
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert ok, f"7 marked entries in an optional section should pass, got: {problems}"
+
+
 def test_all_three_sections_combined_validates_ok(tmp_path):
     # North Star + Product Principles + both optional sections together.
     doc = (

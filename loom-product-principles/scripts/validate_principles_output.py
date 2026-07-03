@@ -151,14 +151,15 @@ def _check_optional_jurisdiction_sections(text: str) -> list[str]:
         body = _section_body(text, heading)
         if body is None:
             continue  # optional section absent -> valid
-        n = len(_principle_entries(body))
+        entries = _principle_entries(body)
+        n = len(entries)
         if n == 0:
             problems.append(
                 f"'{heading}' is present but has no ordered-list entries; a "
                 f"section with no committed clauses must be omitted, not left "
                 f"empty (an empty heading invites platitude-filling)"
             )
-            continue
+            continue  # no entries to check markers on
         if n > _MAX_PRINCIPLES:
             problems.append(
                 f"'{heading}' has {n} ordered-list entries; the contract "
@@ -166,8 +167,7 @@ def _check_optional_jurisdiction_sections(text: str) -> list[str]:
                 f"is a top-level `N.` line; bullets, nested items, and ✅/❌ "
                 f"examples do not count)"
             )
-            continue
-        for entry in _principle_entries(body):
+        for entry in entries:
             if _CHECK_MARKER not in entry:
                 problems.append(
                     f"'{heading}' entry lacks the literal '{_CHECK_MARKER}' "
