@@ -16,6 +16,7 @@ from __future__ import annotations
 import re
 import tomllib
 from pathlib import Path
+from typing import NoReturn
 
 # changeId becomes a path segment (docs/loom/<id>/...) — allow-list rather
 # than deny-list, same reasoning as driver_10_guard.js's guardArgs():
@@ -35,6 +36,11 @@ class QueueError(Exception):
     """
 
 
+def _fail(msg: str) -> NoReturn:
+    """Raise QueueError in the house fail-loud shape (single message site)."""
+    raise QueueError(f"load_queue: {msg} {FAIL_LOUD_NOTICE}")
+
+
 def load_queue(queue_path: Path) -> list[dict]:
     """Parse ``[[change]]`` entries from queue_path, in file order.
 
@@ -45,58 +51,53 @@ def load_queue(queue_path: Path) -> list[dict]:
     reading queue_path itself).
 
     Raises ``QueueError`` naming the offending entry (its ``id``, or its
-    index when ``id`` itself is absent) and the specific problem when:
-    the file is missing or not valid TOML; an entry is missing ``id``,
-    ``plan``, or ``budgets.run``; ``id`` violates the changeId allow-list
-    ``^[A-Za-z0-9._-]+$`` or contains ``..``; or two entries share an
-    ``id``. No improvised defaults — see FAIL_LOUD_NOTICE.
+    index when ``id`` is absent or not a string) and the specific problem
+    when: the file is missing or not valid TOML; an entry is missing
+    ``id``, ``plan``, or ``budgets.run``; ``id`` is not a string, violates
+    the changeId allow-list ``^[A-Za-z0-9._-]+$``, or contains ``..``; or
+    two entries share an ``id``. No improvised defaults — see
+    FAIL_LOUD_NOTICE.
     """
     if not queue_path.is_file():
-        raise QueueError(
-            f'load_queue: queue file not found at "{queue_path}". {FAIL_LOUD_NOTICE}'
-        )
+        _fail(f'queue file not found at "{queue_path}".')
 
     try:
         with queue_path.open("rb") as f:
             data = tomllib.load(f)
     except tomllib.TOMLDecodeError as e:
-        raise QueueError(
-            f'load_queue: "{queue_path}" is not valid TOML ({e}). {FAIL_LOUD_NOTICE}'
-        ) from e
+        _fail(f'"{queue_path}" is not valid TOML ({e}).')
 
     entries = list(data.get("change", []))
     seen_ids: set[str] = set()
     for index, entry in enumerate(entries):
-        label = entry.get("id") or f"<entry at index {index}>"
+        entry_id = entry.get("id")
+        index_label = f"<entry at index {index}>"
+        label = entry_id if isinstance(entry_id, str) and entry_id else index_label
 
         for field in ("id", "plan"):
             if not entry.get(field):
-                raise QueueError(
-                    f'load_queue: entry "{label}" is missing required field '
-                    f'"{field}". {FAIL_LOUD_NOTICE}'
-                )
+                _fail(f'entry "{label}" is missing required field "{field}".')
 
         budgets = entry.get("budgets")
         if not isinstance(budgets, dict) or not budgets.get("run"):
-            raise QueueError(
-                f'load_queue: entry "{label}" is missing required field '
-                f'"budgets.run". {FAIL_LOUD_NOTICE}'
+            _fail(f'entry "{label}" is missing required field "budgets.run".')
+
+        if not isinstance(entry_id, str):
+            _fail(
+                f'entry "{index_label}" has "id" of wrong type — must be a '
+                f"TOML string; received {entry_id!r} "
+                f"({type(entry_id).__name__})."
             )
 
-        entry_id = entry["id"]
         if not _CHANGE_ID_ALLOWED_PATTERN.match(entry_id) or ".." in entry_id:
-            raise QueueError(
-                f'load_queue: entry "{label}" has "id" that must match '
+            _fail(
+                f'entry "{label}" has "id" that must match '
                 f"{_CHANGE_ID_ALLOWED_PATTERN.pattern} (letters, digits, dot, "
-                f'underscore, hyphen only; no ".."); received {entry_id!r}. '
-                f"{FAIL_LOUD_NOTICE}"
+                f'underscore, hyphen only; no ".."); received {entry_id!r}.'
             )
 
         if entry_id in seen_ids:
-            raise QueueError(
-                f'load_queue: duplicate "id" {entry_id!r} in "{queue_path}". '
-                f"{FAIL_LOUD_NOTICE}"
-            )
+            _fail(f'duplicate "id" {entry_id!r} in "{queue_path}".')
         seen_ids.add(entry_id)
 
     return entries

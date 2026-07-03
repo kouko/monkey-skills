@@ -116,6 +116,26 @@ run = 200000
     assert "add export csv" in str(exc_info.value)
 
 
+def test_load_queue_fails_loud_on_non_string_id(tmp_path):
+    queue_path = tmp_path / "QUEUE.toml"
+    queue_path.write_text(
+        """\
+[[change]]
+id = 42
+plan = "docs/loom/plans/2026-07-03-add-export-csv.md"
+[change.budgets]
+run = 200000
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(QueueError) as exc_info:
+        load_queue(queue_path)
+
+    assert "42" in str(exc_info.value)
+    assert "index 0" in str(exc_info.value)
+
+
 def test_load_queue_fails_loud_on_id_containing_dotdot(tmp_path):
     queue_path = tmp_path / "QUEUE.toml"
     queue_path.write_text(
