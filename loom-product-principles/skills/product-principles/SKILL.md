@@ -147,10 +147,14 @@ not per-feature. Do not scatter it; the constitution is a single supreme file.
 
 ### Step 7 — Validate, then fix
 
-Run the validator and **fix any flagged issue before declaring done**:
+Run the validator and **fix any flagged issue before declaring done**.
+The script lives in the PLUGIN repo; the artifact lives in the CONSUMER
+project — the two paths have different bases, so resolve the script path
+to an absolute path and run from the consumer project root:
 
 ```
-python loom-product-principles/scripts/validate_principles_output.py docs/loom/PRINCIPLES.md
+cd <consumer-project-root>
+python <resolved-absolute-path-to>/loom-product-principles/scripts/validate_principles_output.py docs/loom/PRINCIPLES.md
 ```
 
 It mechanically enforces the full contract summary in

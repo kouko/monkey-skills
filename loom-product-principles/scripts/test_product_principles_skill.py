@@ -146,7 +146,7 @@ def test_body_mandates_falsifiable_check_marker():
 
 def test_body_emits_to_consumer_project_path():
     """The skill writes PRINCIPLES.md into the consumer project at the
-    docs/<toolkit>/ convention — product-level, one per product."""
+    docs/<toolkit>/ convention — project-level, one per project."""
     text = _text()
     assert "docs/loom/PRINCIPLES.md" in text, \
         "body must emit PRINCIPLES.md to docs/loom/"

@@ -119,6 +119,11 @@ A good check is **observable** (you can point at where you'd measure it),
 **binary or thresholded** (pass/fail or a number), and **artifact-bound** (it
 refers to the flow, the output, the file — something that exists).
 
+**Write each entry as a single physical line — do not soft-wrap.** The
+validator matches `— check:` on the same physical line as the entry's
+`N.` prefix; a soft-wrapped entry silently pushes the marker onto the
+next line and fails validation even though it renders correctly.
+
 ---
 
 ## Optional sections — `## Design Principles` and `## Engineering Principles`
