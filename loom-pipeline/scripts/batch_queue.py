@@ -403,6 +403,85 @@ def _cmd_status(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_next(args: argparse.Namespace) -> int:
+    """Implements the ``next`` subcommand — see ``main``'s subparser setup.
+
+    Happy path only (Task 8 of
+    docs/loom/plans/2026-07-03-loom-pipeline-v1-1-batch-mode.md): picks the
+    first entry with effective status ``QUEUED`` (queue order), runs
+    ``check_frozen``, and on eligible creates its worktree/branch
+    (``ensure_worktree``), records ``RUNNING`` (+ ``branch``, ``worktree``)
+    in state, and prints ONE JSON object to stdout carrying the driver's
+    ready-to-use Workflow args — ``segment``/``changeId``/``projectPath``/
+    ``planPath``/``budgets``/``models``/``skillsRoot``, field names exactly
+    matching ``driver_10_guard.js``'s ``guardArgs`` REQUIRED_FIELDS plus
+    ``driver_50_seg3.js``'s ``planPath`` guard. ``projectPath`` is the
+    worktree path (not the main checkout) and ``planPath`` is resolved
+    *inside* that worktree. Empty queue (no QUEUED entries left) prints
+    ``{"done": true}`` and exits 0.
+
+    A head entry that fails ``check_frozen`` fails loud here (prints the
+    reason to stderr, exit 1) rather than skipping to the next entry —
+    skip-and-advance is Task 9's job, not this one's.
+
+    Only this machine-readable JSON goes to stdout; all human-facing
+    notices go to stderr, mirroring ``_cmd_mark``/``_cmd_status``.
+    """
+    project_path = Path(args.project).resolve()
+    skills_root = Path(args.skills_root).resolve()
+    queue_path = (
+        Path(args.queue) if args.queue else project_path / "docs" / "loom" / "QUEUE.toml"
+    )
+    state_path = project_path / "docs" / "loom" / "queue-state.json"
+
+    try:
+        entries = load_queue(queue_path)
+    except QueueError as e:
+        print(str(e), file=sys.stderr)
+        return 1
+
+    state = load_state(state_path)
+    merged = effective_entries(entries, state)
+
+    head = None
+    for entry in merged:
+        if entry["status"] == QUEUED:
+            head = entry
+            break
+
+    if head is None:
+        print(json.dumps({"done": True}))
+        return 0
+
+    eligible, reason = check_frozen(head, project_path, skills_root)
+    if not eligible:
+        print(f"next: {reason}", file=sys.stderr)
+        return 1
+
+    worktree_path, branch = ensure_worktree(project_path, head["id"])
+
+    record = dict(state.get(head["id"], {}))
+    record["status"] = "RUNNING"
+    record["branch"] = branch
+    record["worktree"] = str(worktree_path)
+    state[head["id"]] = record
+    save_state(state_path, state)
+
+    plan_path = (worktree_path / head["plan"]).resolve()
+
+    payload = {
+        "segment": 3,
+        "changeId": head["id"],
+        "projectPath": str(worktree_path.resolve()),
+        "planPath": str(plan_path),
+        "budgets": head["budgets"],
+        "models": head.get("models", {}),
+        "skillsRoot": str(skills_root),
+    }
+    print(json.dumps(payload))
+    return 0
+
+
 def _assert_valid_change_id(id_value: str, *, fn: str) -> None:
     """Trust-boundary re-assertion of the changeId allow-list.
 
@@ -422,9 +501,7 @@ def _assert_valid_change_id(id_value: str, *, fn: str) -> None:
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    """Top-level argparse setup. Subparser structure left open for the
-    ``next`` subcommand added by a later task.
-    """
+    """Top-level argparse setup: ``mark``, ``status``, ``next`` subcommands."""
     parser = argparse.ArgumentParser(
         prog="batch_queue.py", description="loom-pipeline batch mode bookkeeping"
     )
@@ -449,6 +526,25 @@ def _build_parser() -> argparse.ArgumentParser:
         "--project", required=True, help="target project root"
     )
     status_parser.set_defaults(func=_cmd_status)
+
+    next_parser = subparsers.add_parser(
+        "next",
+        help="pick the next QUEUED entry, ready its worktree, print its Workflow args as JSON",
+    )
+    next_parser.add_argument(
+        "--project", required=True, help="target project root"
+    )
+    next_parser.add_argument(
+        "--skills-root",
+        dest="skills_root",
+        required=True,
+        help="absolute path to the monkey-skills checkout / plugin source root",
+    )
+    next_parser.add_argument(
+        "--queue",
+        help="override path to QUEUE.toml (default: <project>/docs/loom/QUEUE.toml)",
+    )
+    next_parser.set_defaults(func=_cmd_next)
 
     return parser
 
