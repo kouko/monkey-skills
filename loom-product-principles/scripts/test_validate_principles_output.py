@@ -6,7 +6,7 @@ The validator checks a single PRINCIPLES.md file against the pinned contract in
 ("Validator contract (summary)" section). Valid iff:
   1. A `## North Star` section exists and is non-empty (>=1 non-whitespace,
      non-heading body line before the next `##`).
-  2. A `## Principles` section exists with 3-7 entries, where an entry is a
+  2. A `## Product Principles` section exists with 3-7 entries, where an entry is a
      top-level ordered-list item (line matching `^\\d+\\.\\s`). Unordered
      bullets / nested items / the ✅❌ example lines do NOT count.
   3. Every principle entry carries the literal `— check:` marker (em dash
@@ -48,8 +48,9 @@ def _north_star() -> str:
 
 
 def _principles(n: int, *, marker: str = f" {EM} check:") -> str:
-    """`## Principles` with n ordered-list entries, each carrying `marker`."""
-    lines = ["## Principles\n", "\n"]
+    """`## Product Principles` with n ordered-list entries, each carrying
+    `marker`."""
+    lines = ["## Product Principles\n", "\n"]
     for i in range(1, n + 1):
         lines.append(
             f"{i}. Principle statement number {i}{marker} testable condition {i} "
@@ -140,7 +141,7 @@ def test_unordered_bullets_do_not_count_as_entries(tmp_path):
     doc = (
         "# PRINCIPLES\n\n"
         + _north_star()
-        + "\n## Principles\n\n"
+        + "\n## Product Principles\n\n"
         f"- A bullet statement {EM} check: not an ordered entry\n"
         f"   1. A nested ordered item {EM} check: indented, not top-level\n"
     )
@@ -156,7 +157,7 @@ def test_example_lines_do_not_count_as_entries(tmp_path):
     doc = (
         "# PRINCIPLES\n\n"
         + _north_star()
-        + "\n## Principles\n\n"
+        + "\n## Product Principles\n\n"
         f"- ✅ `Primary task completes in <=3 steps {EM} check: count steps`\n"
         "- ❌ `Be delightful` — no check.\n"
     )
@@ -174,7 +175,7 @@ def test_principle_without_check_flagged(tmp_path):
     doc = (
         "# PRINCIPLES\n\n"
         + _north_star()
-        + "\n## Principles\n\n"
+        + "\n## Product Principles\n\n"
         f"1. First principle{EM} check: testable condition in the flow.\n"
         f"2. Second principle{EM} check: another testable condition.\n"
         "3. Third principle - check: a hyphen, not an em dash, so no marker.\n"
@@ -191,7 +192,7 @@ def test_hyphen_marker_does_not_satisfy(tmp_path):
     doc = (
         "# PRINCIPLES\n\n"
         + _north_star()
-        + "\n## Principles\n\n"
+        + "\n## Product Principles\n\n"
         "1. First principle -- check: condition one.\n"
         "2. Second principle -- check: condition two.\n"
         "3. Third principle -- check: condition three.\n"
@@ -208,7 +209,7 @@ def test_wrong_case_check_does_not_satisfy(tmp_path):
     doc = (
         "# PRINCIPLES\n\n"
         + _north_star()
-        + "\n## Principles\n\n"
+        + "\n## Product Principles\n\n"
         f"1. First principle{EM} Check: capital C does not satisfy.\n"
         f"2. Second principle{EM} check: lowercase ok here.\n"
         f"3. Third principle{EM} check: lowercase ok here too.\n"
@@ -218,6 +219,26 @@ def test_wrong_case_check_does_not_satisfy(tmp_path):
     ok, problems = validate(p)
     assert not ok
     assert any("check" in m for m in problems), problems
+
+
+def test_accepts_product_principles_heading(tmp_path):
+    # The renamed required heading (`## Product Principles`) must be accepted
+    # with the same 3-7-entries + marker rules as the legacy `## Principles`.
+    doc = (
+        "# PRINCIPLES\n\n"
+        + _north_star()
+        + "\n## Product Principles\n\n"
+        f"1. First principle{EM} check: testable condition one.\n"
+        f"2. Second principle{EM} check: testable condition two.\n"
+        f"3. Third principle{EM} check: testable condition three.\n"
+    )
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert ok, (
+        f"'## Product Principles' heading with 3 marked entries should pass, "
+        f"got: {problems}"
+    )
 
 
 # --- CLI contract (thin __main__) ------------------------------------------

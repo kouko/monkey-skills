@@ -11,8 +11,9 @@ Valid iff:
   1. A `## North Star` section exists and is non-empty — at least one
      non-whitespace, non-heading body line appears under the heading before
      the next `##`.
-  2. A `## Principles` section exists with 3-7 principle ENTRIES, where an
-     entry is a TOP-LEVEL ordered-list item (a line matching `^\\d+\\.\\s`).
+  2. A `## Product Principles` section exists with 3-7 principle ENTRIES,
+     where an entry is a TOP-LEVEL ordered-list item (a line matching
+     `^\\d+\\.\\s`).
      Unordered bullets, nested (indented) items, and the ✅/❌ example lines
      are NOT counted.
   3. EVERY principle entry carries the literal `— check:` marker — an em dash
@@ -38,7 +39,7 @@ import sys
 from pathlib import Path
 
 _NORTH_STAR = "## North Star"
-_PRINCIPLES = "## Principles"
+_PRINCIPLES = "## Product Principles"
 
 # A top-level ordered-list item: `1. `, `2. `, ... at column 0 (no leading
 # whitespace, so nested/indented items do not count).
@@ -67,7 +68,8 @@ def _section_body(text: str, header: str) -> str | None:
 
 
 def _principle_entries(body: str) -> list[str]:
-    """The top-level ordered-list entry lines within a `## Principles` body."""
+    """The top-level ordered-list entry lines within a `## Product Principles`
+    body."""
     return [line for line in body.splitlines() if _ENTRY.match(line)]
 
 
