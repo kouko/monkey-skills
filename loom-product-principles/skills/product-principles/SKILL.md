@@ -13,7 +13,7 @@ interface-design, spec, or code, fix the product's *original goal* and its
 *non-negotiable, falsifiable principles* as the supreme input every downstream
 decision is checked against.
 
-`PRINCIPLES.md` is **project-level** (one per product), **key-free**,
+`PRINCIPLES.md` is **project-level** (one per project), **key-free**,
 **in-repo**, and **git-diffable**. It is the cross-cutting **constitution** that
 governs **interface-design, spec-expansion (functional design), and code** — and
 it applies to **any** product, including pure-**headless / CLI / library** work
