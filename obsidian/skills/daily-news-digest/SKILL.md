@@ -1,7 +1,7 @@
 ---
 name: daily-news-digest
 description: |
-  Compile one day's vault notes into a two-tier daily digest — clustered time-sensitive stories + evergreen knowledge links — at news/YYYY-MM-DD. Use for '整理今天的新聞', '每日新聞', 'daily news digest', rounding up a day's content, or summarizing what you consumed/read today.
+  Compile one day's vault notes into a two-tier daily digest — clustered time-sensitive stories + evergreen knowledge links — at news/YYYY-MM-DD. Use for '整理今天的新聞', '每日新聞', 'daily news digest', rounding up a day's content, or summarizing what you consumed/read today. Also use for managing long-story arc books in news/arcs/ — open/pause/close a tracking book（開一本追蹤 X／暫停追蹤／不用追了）.
 ---
 
 # Daily News Digest（每日新聞彙整）
@@ -54,23 +54,33 @@ Knowledge & Perspectives (a link is cheaper than a forced story).
 
 ### STEP 0 — Pre-flight
 
-Before spending tokens on collection, do two things:
+Before spending tokens on collection, do four things:
 
+0. **Pin the vault root** — you are invoked with the vault as cwd; capture it
+   before any `cd` can move you:
+   ```bash
+   VAULT_ROOT="$(pwd)"   # sanity: [ -d "$VAULT_ROOT/references" ] || ask the user
+   ```
+   Every vault path below (`news/…`, collector runs, the STEP 6 Write) resolves
+   against `$VAULT_ROOT`. The collector manifest's `path` fields are
+   **vault-root-relative** — always read them from `$VAULT_ROOT`.
 1. **Check for an existing digest** — `ls "news/<YYYY-MM-DD>*"`. If found, ask
    **overwrite / merge / abort** and wait for the user's answer before continuing.
-2. **Resolve the skill base directory** — it appears as `Base directory for this
-   skill:` in the skill metadata header injected by the runtime. Store it as a
-   shell variable; every script call below uses it:
-   ```bash
-   SKILL_DIR="<the path shown in the skill metadata header>"
-   ```
-   Using the runtime-provided path avoids hard-coding the plugin cache version.
-   If the metadata header is absent (cold-start or direct invocation without the
-   plugin runtime), locate the scripts automatically:
+2. **Resolve the skill base directory** — `SKILL_DIR="<the path shown as
+   'Base directory for this skill:' in the runtime metadata header>"`;
+   every script call below uses it. If the header is absent:
    ```bash
    SKILL_DIR=$(find "$HOME/.claude/plugins/cache" -type d -name "daily-news-digest" 2>/dev/null | sort -r | head -1)
    ```
-   (`sort -r` picks the highest version number if multiple cache versions exist.)
+   If both fail (e.g. git checkout), **ask the user — do not guess**.
+
+3. **Multi-date requests: one heavy day per run.** For a multi-date
+   request（「最近幾天都整理」）, confirm the date list, then run **heavy
+   days (≥ 40 candidates) in separate invocations** — or at minimum
+   checkpoint per day: a scratchpad file (never the vault) with
+   `done:` / `pending:` / `resolved:` lists, updated between dates.
+   Real failure 2026-06-22: five heavy days in one run exhausted
+   context three times, each compaction losing already-resolved details.
 
 ### STEP 1 — Collect candidates
 
@@ -143,6 +153,14 @@ conflict, an oil-price move, a rate/inflation cycle, a stock-index trajectory,
 an earnings arc. For these, reconstruct the progression so the reader sees the
 *trend*, not just today's snapshot.
 
+**Read [arc-tracking.md](references/arc-tracking.md) first.** The vault keeps
+per-story 追蹤本 (arc books) under `news/arcs/` — they are both the memory this
+step writes to and the **material the digest's trend paragraphs read from**.
+Match today's stories against the books' frontmatter `keywords`, update matched
+active books (milestone line + number rows), open new event books per its
+dedup rules, and report lifecycle changes in STEP 7. Standing topic books
+(美股/台股/日股/利率/油價/地緣…) are created-if-missing per its starter list.
+
 > [!important] Sweep EVERY story, across ALL categories
 > This is **not just for the headline geopolitical story**. Walk your full story
 > list and flag every multi-week arc. Market/macro stories are the most common
@@ -158,8 +176,11 @@ an earnings arc. For these, reconstruct the progression so the reader sees the
   upcoming datapoint, not a progression. (Its *backdrop* — the rate/yield arc —
   may already be covered by a sibling story's Event Arc; don't duplicate it.)
 
-1. **Pull prior notes** with the history collector — it greps `references/` +
-   `investing/` for earlier dated notes on the same entity/keywords:
+1. **Pull the history from the matched arc book first** (its 里程碑 + 數字表
+   already hold the dates and numbers). Fall back to the history collector —
+   it greps `references/` + `investing/` for earlier dated notes on the same
+   entity/keywords — only when no book covers the story or to backfill a
+   newly-opened book:
 
    ```bash
    python3 "$SKILL_DIR/scripts/collect_history.py" \
@@ -190,58 +211,34 @@ an earnings arc. For these, reconstruct the progression so the reader sees the
    synthesis. Never imply numbers you didn't read, but a bare
    references/-only attribution can be dropped.
 
-**Event Arc sweep table — fill this for EVERY story before moving to STEP 4.**
-Do not skip; leaving a row blank is itself a decision that must be made explicitly:
-
-| # | Story title | Multi-week arc? | Action |
-|---|---|---|---|
-| 1 | `<story 1>` | Yes / No | `collect_history(...)` / skip |
-| 2 | `<story 2>` | Yes / No | `collect_history(...)` / skip |
-| … | | | |
-
-> [!warning] Red flags — stop and re-examine if you see any of these:
-> - A 📈 Financial Markets & Macro category with **"No"** across every row on a
->   volatile day
-> - Story subject is an FX rate, stock index, inflation print, or bond yield
->   → almost certainly an arc even if today's is the first note you've collected
-> - Story title contains momentum/continuation markers (e.g. "new high",
->   "consecutive", "day N", "ongoing", "breakthrough") → arc by definition
+**Arc sweep — fill the sweep table in
+[arc-tracking.md](references/arc-tracking.md) for EVERY story before moving to
+STEP 4** (multi-week arc? → matched book / new event book / skip). Do not
+skip: leaving a row blank is itself a decision that must be made explicitly,
+and its red-flag list (FX/index/inflation/yield subjects; momentum markers
+like 「創新高」「連續」 in titles) is mandatory re-examination criteria.
 
 ### STEP 4 — Synthesize each story (the heart of this skill)
 
-> [!important] Execution model — delegate the note-reading on heavy days
-> Reading every clustered note (full bodies, often with long transcripts) into the
-> main context is the real context cost. So **route by load**:
-> - **Heavy day** (`counts.candidates` ≳ 40, OR any single cluster ≳ 6 notes):
->   **dispatch one subagent per story-cluster, in parallel** (one assistant message,
->   multiple `Agent`/`Task` calls — they're independent). Give each subagent the
->   cluster's note **paths** + the story angle; it reads the full notes and returns
->   the **structured story object** (contract below) — the main agent never loads
->   raw transcripts, only finished stories. The knowledge tier (STEP 5) can be one
->   more subagent. Then the **main agent assembles, renders every CoT via
->   `$SKILL_DIR/scripts/cot_mermaid.py`, writes the file, and runs the link self-check** —
->   rendering and verification stay central for consistency.
-> - **Light day**: skip subagents — the dispatch overhead isn't worth it; the main
->   agent reads and synthesizes directly.
->
-> **Subagent return contract** (one per story, so the main agent can assemble
-> uniformly) — return JSON-ish:
-> ```
-> { heading, category(🌍/📈/🤖/🚀…), tldr,
->   cot: {type:"chain", nodes:[{title, bullets:[…]}, …]},   // → $SKILL_DIR/scripts/cot_mermaid.py
->   narrative: ["<para 1>", "<para 2>"],       // inline links as [[stem|short label]]
->   table?: "<markdown table or null>",
->   progression?: { title, milestones:[{date, text}], note },  // Event Arc, evolving only
->   sources: [{stem, label}] }                // for inline links + Source Index
-> ```
-> The CoT `nodes` carry only content; `$SKILL_DIR/scripts/cot_mermaid.py` applies the fixed
-> colours/style. The main agent owns dedup, the day-level overview diagram, and STEP 8 verify.
+> [!important] Execution model — route by load
+> - **Heavy day** (`counts.candidates` ≳ 40, OR any single cluster ≳ 6
+>   notes): **READ [heavy-day-dispatch.md](references/heavy-day-dispatch.md)
+>   and dispatch per its contract** — one blocking subagent per
+>   story-cluster (never `run_in_background`), structured story objects
+>   back, main agent assembles/renders/verifies centrally.
+> - **Light day**: skip subagents — the dispatch overhead isn't worth
+>   it; the main agent reads and synthesizes directly.
 
 For each cluster, **rewrite an integrated story** — you are the editor merging a
 wire feed, not summarizing notes one by one:
 
 1. **Read the actual source notes**, not just the manifest snippets — open every
    note in the cluster (`references/`) for the real facts, numbers, and quotes.
+   **Open each note via the manifest's exact `path` field with a native file
+   API** (Read tool / Python `open(path)`), never by retyping or shell-embedding
+   the filename — YouTube-derived names routinely contain `&`, full-width `｜`
+   and similar characters that make shell-string file reads return empty output
+   **silently** (real failure 2026-06-16).
 2. **Integrate and cross-reference.** Reconcile numbers (if two sources cite WTI
    at 80.3 vs 81, say so), combine the timeline, assemble the fullest picture.
    Where sources disagree on interpretation, **surface the disagreement** — that
@@ -313,12 +310,20 @@ earns its place.
 ### STEP 6 — Write the digest
 
 **READ `_templates/digest-format.md` first** — it holds the output template, the
-link-presentation rules, and the Mermaid house style. (If the file is missing or
+link-presentation rules, and the Mermaid house style. **Precedence when the two
+disagree: the template wins on formatting/presentation; this SKILL.md wins on
+inclusion rules** (what sections exist, what gets skipped when empty — e.g. an
+empty handwritten appendix is skipped silently even if the template shows a
+「今日無」 placeholder). (If the file is missing or
 unreadable, fall back to: standard YAML frontmatter with title/date/type/tags/status,
 COT colour scheme from §STEP 4 — trigger green / mechanism purple / result orange /
 conclusion cyan — and the link rules in §Hard rules below.) Then create the digest file
 at `news/<YYYY-MM-DD> <title>.md` (title in the user's language; e.g.
-`news/2026-07-01 每日新聞.md` in Traditional Chinese). **Order at the top:
+`news/2026-07-01 每日新聞.md` in Traditional Chinese). **Write with the
+vault-absolute path** — `$VAULT_ROOT/news/…` (pinned at STEP 0) right before
+the Write call; a relative `news/…` silently lands wherever an earlier
+scratch-dir `cd` left the shell (real failure 2026-07-02: digest written to
+`/private/tmp/...`, self-checks failed `FileNotFoundError`). **Order at the top:
 `## Table of Contents`** (in user's language, right under the title), then a
 merged **`## 🧭 Day Overview`** section (in user's language). The Table of
 Contents is in-page `[[#full heading|short name]]` anchor links to each story
@@ -331,9 +336,14 @@ node content JSON), so the fixed role-colours and style are identical everywhere
 don't hand-write the `style` lines. Concrete calling pattern:
 
 ```bash
+# Scratch JSON goes in a mktemp session dir — never fixed /tmp literals
+# (fixed paths leave debris; deleting them is often blocked by the host's
+# destructive-command guard — treat cleanup as best-effort, don't retry a block).
+COT_TMP=$(mktemp -d)
+
 # Per-story chain (flowchart LR) — roles assigned by position (first=trigger, last=concl):
 # Node titles and bullets should be in the user's language.
-cat > /tmp/cot_chain.json << 'COTJSON'
+cat > "$COT_TMP/cot_chain.json" << 'COTJSON'
 {"type":"chain","nodes":[
   {"title":"Trigger node","bullets":["fact 1","fact 2","fact 3"]},
   {"title":"Mechanism node","bullets":["reason 1","reason 2"]},
@@ -341,10 +351,12 @@ cat > /tmp/cot_chain.json << 'COTJSON'
   {"title":"Conclusion node","bullets":["takeaway 1","takeaway 2"]}
 ]}
 COTJSON
-python3 "$SKILL_DIR/scripts/cot_mermaid.py" /tmp/cot_chain.json
+python3 "$SKILL_DIR/scripts/cot_mermaid.py" "$COT_TMP/cot_chain.json"
 
-# Day-level overview web (flowchart TD) — each node needs explicit "role":
-cat > /tmp/cot_web.json << 'COTJSON'
+# Day-level overview web (flowchart TD) — each node needs explicit "role".
+# Valid role values are EXACTLY: trigger / mech / result / concl —
+# full words like "mechanism" are rejected (real failure 2026-06-18).
+cat > "$COT_TMP/cot_web.json" << 'COTJSON'
 {"type":"web",
  "nodes":[
    {"id":"A","title":"Story 1","bullets":["key point"],"role":"trigger"},
@@ -358,7 +370,7 @@ cat > /tmp/cot_web.json << 'COTJSON'
    {"from":"C","to":"D","label":"leads to"}
  ]}
 COTJSON
-python3 "$SKILL_DIR/scripts/cot_mermaid.py" /tmp/cot_web.json
+python3 "$SKILL_DIR/scripts/cot_mermaid.py" "$COT_TMP/cot_web.json"
 ```
 
 The script writes a ready-to-paste ` ```mermaid ``` ` block to stdout.
@@ -369,7 +381,8 @@ digest-format link rules: **embed short-labelled jump-links inline in the body
 (anchored on words already in the prose), AND also collect every source into a
 `## Source Index` (in user's language) at the end as a standard full-filename
 list under per-story `###` sub-headings** (see §Hard rules on why raw long links
-are banned in narrative).
+are banned in narrative). A source feeding N stories appears under each story's
+sub-heading — duplication across sub-headings is correct, not an error.
 
 ### STEP 7 — Appendices & report
 
@@ -378,7 +391,9 @@ are banned in narrative).
 - **Handwritten appendix**: if `daily/<YYYY-MM-DD>.md` exists, surface real
   handwritten content from its `## Note` section; skip silently if empty.
 - **Report**: digest path, story count (and sources merged), tier-2 item count,
-  kept-vs-dropped one-liner, and anything borderline to double-check.
+  kept-vs-dropped one-liner, **arc books** (updated count / newly-opened list
+  for the user to veto / stale `kind: event` books to suggest closing), and
+  anything borderline to double-check.
 
 ## Hard rules
 
@@ -400,58 +415,27 @@ are banned in narrative).
 > end `## Source Index` (in user's language) as a full-filename list (see
 > `_templates/digest-format.md` for the inline-vs-index split).
 >
-> **Beware truncated triage views.** When you print the manifest to eyeball
-> candidates, the `title` is often clipped (`… (summary)` cut off, long titles
-> shortened). NEVER copy a link target from that printed/truncated view — go back
-> to the manifest JSON and copy the full `wikilink` field. (Real failure on
-> 2026-06-16: three misc links built from clipped titles broke until rebuilt from
-> the stem.)
+> **Beware truncated triage views — including your own.** Any printed listing —
+> the manifest print, but equally your own ad-hoc triage output (`stem[:60]`
+> slices) or a title retyped from memory — is a truncated view. NEVER build a
+> link target from any of them. Instead, **build one full stem→label dict from
+> the untruncated manifest JSON and keep it live through to the Write call**
+> (dump it to a scratch file and consult that file when writing links). Real
+> failures: 2026-06-16, three misc links built from clipped titles; 2026-06-22,
+> **all five digests** in a batch shipped broken links from the agent's own
+> `stem[:60]` prints and memory-typed punctuation（「！」vs「？」）.
 
-> [!important] Run self-checks after writing (COT completeness + link resolution + Mermaid syntax)
-> After writing the digest, run **three checks** before declaring done.
->
-> **① COT completeness** — every time-sensitive story must have a `flowchart LR`.
-> Count story headings in the news section and compare to COT diagram count:
+> [!important] THE DIGEST GATE — run `digest_check.py` after writing (exit code decides; do not skip, do not paraphrase)
 > ```bash
-> python3 - "news/<YYYY-MM-DD> <digest title>.md" <<'PY'
-> import re, sys
-> text = open(sys.argv[1], encoding="utf-8").read()
-> news = text.split("## 🧠")[0] if "## 🧠" in text else text
-> stories = len(re.findall(r"^### ", news, re.M))
-> cots = len(re.findall(r"^flowchart LR", text, re.M))
-> print(f"Stories (news section): {stories}  |  COT diagrams (LR): {cots}")
-> if cots < stories:
->     print(f"⚠️  {stories - cots} story/stories missing COT — add before finishing")
-> else:
->     print("COT completeness ✓")
-> PY
+> python3 "$SKILL_DIR/scripts/digest_check.py" "$VAULT_ROOT" "$VAULT_ROOT/news/<YYYY-MM-DD> <title>.md"
 > ```
->
-> **② Link resolution** — every wikilink must resolve to a real file:
-> ```bash
-> python3 - "news/<YYYY-MM-DD> <digest title>.md" <<'PY'
-> import re, os, sys
-> doc = open(sys.argv[1], encoding="utf-8").read()
-> links = {m.split("|")[0].split("#")[0].strip()
->          for m in re.findall(r"\[\[([^\]]+)\]\]", doc)}
-> stems = {f[:-3] for _,_,fs in os.walk(".") for f in fs if f.endswith(".md")}
-> miss = sorted(links - stems - {""})
-> print("broken:", miss or "none ✓")
-> PY
-> ```
-> Note: `""` is filtered out — it comes from page-anchor-only links like
-> `[[#heading|label]]` where `split("#")[0]` is empty; these are not broken.
->
-> **③ Mermaid syntax** — parse every mermaid block through mermaid-cli (requires `npx`):
-> ```bash
-> bash "$SKILL_DIR/scripts/validate.sh" "news/<YYYY-MM-DD> <digest title>.md"
-> ```
-> FAIL = real syntax error (fix before finishing). WARN = literal `"` in rendered
-> text (likely a wrongly-quoted title/label). PASS = parses in mermaid-cli —
-> note: cli is more lenient than Obsidian, so CJK-heavy diagrams should also be
-> verified in Obsidian directly.
-> This check is most valuable for hand-written diagrams (`timeline`, `xychart`
-> in Event Arc); `cot_mermaid.py`-generated diagrams rarely fail here.
+> One command covers COT completeness + link resolution + Mermaid
+> syntax (via mermaid-cli; cli is more lenient than Obsidian — verify
+> CJK-heavy hand-written diagrams in Obsidian too). **It is a repair
+> LOOP, not a report**: non-zero exit = fix the digest yourself NOW and
+> re-run until `ALL PASS ✓`, in THIS run. Never end the run — or hand
+> the repair back to the user — with a failing gate. Paste the final
+> output verbatim into your report.
 
 > [!danger] Synthesis failure modes — NEVER do these
 > - **NEVER merge two events into one story just because they share an asset or
@@ -478,7 +462,19 @@ are banned in narrative).
 
 - `_templates/digest-format.md` — output template, link-presentation rules,
   Mermaid house style. **Load at STEP 6**, not before.
+- `$SKILL_DIR/scripts/digest_check.py` — the digest gate (STEP 7): COT
+  completeness / link resolution / Mermaid syntax in one exit-coded
+  command. Loop until ALL PASS.
+- `references/heavy-day-dispatch.md` — heavy-day subagent execution model
+  + return contract. **Load only when STEP 4 routes heavy.**
+- `references/arc-tracking.md` — 追蹤本 (arc book) spec: book format
+  (frontmatter keywords / status / indicators + 里程碑 + 數字表), daily
+  match/update/open lifecycle, sweep table + red flags, starter topic books.
+  **Load at STEP 3.5.**
 - `$SKILL_DIR/scripts/collect_sources.py` — the single-day collector (STEP 1).
+- `$SKILL_DIR/scripts/arc_check.py` — the single arc-book gate (STEP 3.5
+  step 5): starters/keywords/anchors/milestone-count/event-dedup in one
+  exit-coded command. Run after the digest is written; loop until ALL PASS.
 - `$SKILL_DIR/scripts/collect_history.py` — the cross-date history collector for
   evolving stories (STEP 3.5): keyword + date-window search over the whole vault
   (minus `--exclude`, same default as collect_sources); `--folders` to restrict.
