@@ -1,18 +1,22 @@
 # PRINCIPLES.md authoring contract — principles-rules
 
-This document is the authoring contract for a product's `PRINCIPLES.md` — the
-product constitution. It defines the required sections, the load-bearing
-falsifiable-check rule, and synthetic ✅/❌ examples.
+This document is the authoring contract for a project's `PRINCIPLES.md` — the
+project constitution. It defines the required and optional sections, the
+load-bearing falsifiable-check rule, and synthetic ✅/❌ examples per
+jurisdiction.
 
 **Consumed by:**
 - `scripts/validate_principles_output.py` (the validator) — mechanically checks
-  the two required sections exist and that every principle carries a check.
+  the required sections exist and that every principle carries a check.
 - the `product-principles` SKILL.md — the generator that writes `PRINCIPLES.md`
   reads this contract to know the shape and rules it must emit.
 
-`PRINCIPLES.md` is **product-level** (one per product), **key-free**, **in-repo**,
-and **git-diffable**. It is the supreme input that governs downstream
-interface-design, spec-expansion (functional design), and code.
+`PRINCIPLES.md` is a **project-level** constitution (one per project),
+**key-free**, **in-repo**, and **git-diffable**. It is the supreme input that
+governs downstream interface-design, spec-expansion (functional design), and
+code. The `## Product Principles` section itself keeps the narrower **product**
+jurisdiction — what the product is, for whom, and its success trade-offs; see
+the jurisdiction table below.
 
 ---
 
@@ -117,10 +121,55 @@ refers to the flow, the output, the file — something that exists).
 
 ---
 
+## Optional sections — `## Design Principles` and `## Engineering Principles`
+
+`## Design Principles` and `## Engineering Principles` are **optional** — each
+is emitted only when the project has committed **real**, already-decided
+clauses for that jurisdiction, never speculative filler minted just to fill the
+heading.
+
+When present, each section follows the same rule as `## Product Principles`,
+with a lower floor:
+
+- **1–7** top-level ordered-list entries (a line matching `^\d+\.\s`). The floor
+  is 1, not 3: a young project legitimately has committed to only one or two
+  decisions in a given jurisdiction so far. The ceiling stays 7, for the same
+  "non-negotiable" reason as `## Product Principles`.
+- **Every** entry carries the identical literal `— check:` marker used by
+  `## Product Principles` — an em dash (U+2014 `—`), a single space, the
+  lowercase word `check`, then a colon, on the same line as the entry. There is
+  no separate marker per jurisdiction; all three sections reuse one lexeme.
+
+**Format (same shape for both headings):**
+
+```markdown
+## Design Principles
+
+1. <principle statement> — check: <concrete, testable condition>
+```
+
+```markdown
+## Engineering Principles
+
+1. <principle statement> — check: <concrete, testable condition>
+```
+
+**A jurisdiction with no committed clauses emits NO section — never a
+present-but-empty heading.** A `## Design Principles` or `## Engineering
+Principles` heading with zero entries is invalid; if the project hasn't
+committed real decisions in that jurisdiction yet, omit the heading entirely.
+An empty heading invites platitude-filling to make the section "look done."
+
+---
+
 ## Falsifiable vs platitude — synthetic ✅/❌ examples
 
-These contrast a falsifiable principle against a platitude. Use only synthetic
-phrasing; never name a real brand, company, customer, or product.
+These contrast a falsifiable principle against a platitude, sorted under the
+jurisdiction each pair would actually land under (see the jurisdiction table
+above). Use only synthetic phrasing; never name a real brand, company,
+customer, or product.
+
+### Design
 
 **Example 1**
 
@@ -136,6 +185,18 @@ phrasing; never name a real brand, company, customer, or product.
 
 - ✅ `Output is offline-readable — check: render the output with the network disabled; it must display its full content`
 - ❌ `Be reliable` — no threshold, no artifact, no way to fail it.
+
+**Example 4**
+
+- ✅ `Error states always show a next-step action — check: inspect every error screen in ui-flows.md; each has ≥1 actionable button or link, never a dead end`
+- ❌ `Handle errors gracefully` — "gracefully" is not observable; nothing to grep for.
+
+### Engineering
+
+**Example 1**
+
+- ✅ `No new runtime dependency without a lockfile diff traceable to the PR description — check: diff the lockfile; every added package name has a matching justification line in the PR`
+- ❌ `Keep dependencies lean` — no ceiling, no artifact-bound condition; nothing to count.
 
 The pattern in every ✅: a statement plus an `— check:` that names *where* and
 *how* you would catch a violation. The pattern in every ❌: an adjective with no
