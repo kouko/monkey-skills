@@ -13,10 +13,16 @@ caller; this module does not depend on cwd.
 """
 from __future__ import annotations
 
+import json
+import os
 import re
+import tempfile
 import tomllib
 from pathlib import Path
 from typing import NoReturn
+
+# Status a queue entry has when no state record exists for its id yet.
+QUEUED = "QUEUED"
 
 # changeId becomes a path segment (docs/loom/<id>/...) — allow-list rather
 # than deny-list, same reasoning as driver_10_guard.js's guardArgs():
@@ -36,9 +42,13 @@ class QueueError(Exception):
     """
 
 
-def _fail(msg: str) -> NoReturn:
-    """Raise QueueError in the house fail-loud shape (single message site)."""
-    raise QueueError(f"load_queue: {msg} {FAIL_LOUD_NOTICE}")
+def _fail(msg: str, *, fn: str = "load_queue") -> NoReturn:
+    """Raise QueueError in the house fail-loud shape (single message site).
+
+    ``fn`` names the failing function in the message prefix — callers other
+    than ``load_queue`` (e.g. ``load_state``) pass their own name.
+    """
+    raise QueueError(f"{fn}: {msg} {FAIL_LOUD_NOTICE}")
 
 
 def load_queue(queue_path: Path) -> list[dict]:
@@ -101,3 +111,60 @@ def load_queue(queue_path: Path) -> list[dict]:
         seen_ids.add(entry_id)
 
     return entries
+
+
+def load_state(state_path: Path) -> dict:
+    """Load the machine-owned state file (``queue-state.json`` by convention).
+
+    A missing file is a fresh batch and returns ``{}`` — this is not an
+    error (unlike a missing QUEUE.toml, which is human-authored and
+    required). Malformed JSON fails loud with ``QueueError``, mirroring
+    ``load_queue``'s no-improvised-defaults stance (FAIL_LOUD_NOTICE).
+    """
+    if not state_path.is_file():
+        return {}
+
+    try:
+        with state_path.open("r", encoding="utf-8") as f:
+            return json.load(f)
+    except json.JSONDecodeError as e:
+        _fail(f'"{state_path}" is not valid JSON ({e}).', fn="load_state")
+
+
+def save_state(state_path: Path, state: dict) -> None:
+    """Write state to state_path atomically (tmp file + ``os.replace``).
+
+    The tmp file is created in state_path's own directory so the rename
+    is same-filesystem and therefore atomic; it is cleaned up on failure.
+    """
+    fd, tmp_name = tempfile.mkstemp(
+        prefix=f".{state_path.name}.", suffix=".tmp", dir=state_path.parent
+    )
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(state, f, indent=2, sort_keys=True)
+            f.write("\n")
+        os.replace(tmp_name, state_path)
+    except BaseException:
+        Path(tmp_name).unlink(missing_ok=True)
+        raise
+
+
+def effective_entries(entries: list[dict], state: dict) -> list[dict]:
+    """Merge ``load_queue`` entries with recorded ``load_state`` statuses.
+
+    Returns a new list of shallow-copied entry dicts (inputs are not
+    mutated), each augmented with ``status`` (``QUEUED`` when the entry's
+    id has no state record) and, when present in the record, ``runId``,
+    ``branch``, ``worktree``, ``reason``.
+    """
+    merged = []
+    for entry in entries:
+        record = state.get(entry["id"], {})
+        effective = dict(entry)
+        effective["status"] = record.get("status", QUEUED)
+        for field in ("runId", "branch", "worktree", "reason"):
+            if field in record:
+                effective[field] = record[field]
+        merged.append(effective)
+    return merged

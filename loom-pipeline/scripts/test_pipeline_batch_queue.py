@@ -5,7 +5,13 @@ from pathlib import Path
 
 import pytest
 
-from batch_queue import QueueError, load_queue
+from batch_queue import (
+    QueueError,
+    effective_entries,
+    load_queue,
+    load_state,
+    save_state,
+)
 
 QUEUE_TOML = """\
 [[change]]
@@ -197,3 +203,74 @@ def test_load_queue_fails_loud_on_invalid_toml(tmp_path):
         load_queue(queue_path)
 
     assert str(queue_path) in str(exc_info.value)
+
+
+def test_effective_entries_defaults_absent_ids_to_queued():
+    entries = [
+        {"id": "add-export-csv", "plan": "p1", "budgets": {"run": 1}},
+        {"id": "fix-login-redirect", "plan": "p2", "budgets": {"run": 1}},
+    ]
+    state = {"add-export-csv": {"status": "DONE", "runId": "wf_1"}}
+
+    merged = effective_entries(entries, state)
+
+    assert merged[0]["status"] == "DONE"
+    assert merged[0]["runId"] == "wf_1"
+    assert merged[1]["status"] == "QUEUED"
+    assert "runId" not in merged[1]
+
+
+def test_effective_entries_merges_full_record_fields():
+    entries = [{"id": "add-export-csv", "plan": "p1", "budgets": {"run": 1}}]
+    state = {
+        "add-export-csv": {
+            "status": "SKIPPED",
+            "reason": "validator exit 1",
+            "branch": "loom/add-export-csv",
+            "worktree": "/tmp/wt/add-export-csv",
+        }
+    }
+
+    merged = effective_entries(entries, state)
+
+    assert merged[0]["status"] == "SKIPPED"
+    assert merged[0]["reason"] == "validator exit 1"
+    assert merged[0]["branch"] == "loom/add-export-csv"
+    assert merged[0]["worktree"] == "/tmp/wt/add-export-csv"
+
+
+def test_load_state_returns_empty_state_when_file_missing(tmp_path):
+    state_path = tmp_path / "queue-state.json"
+
+    assert load_state(state_path) == {}
+
+
+def test_save_state_then_load_state_round_trips_records(tmp_path):
+    state_path = tmp_path / "queue-state.json"
+    state = {
+        "add-export-csv": {
+            "status": "RUNNING",
+            "runId": "wf_1",
+            "branch": "loom/add-export-csv",
+            "worktree": "/tmp/wt/add-export-csv",
+        },
+        "fix-login-redirect": {"status": "FAILED", "reason": "validator exit 1"},
+    }
+
+    save_state(state_path, state)
+    loaded = load_state(state_path)
+
+    assert loaded == state
+    # atomic write: no leftover tmp file beside the final state file
+    assert [p.name for p in tmp_path.iterdir()] == [state_path.name]
+
+
+def test_load_state_fails_loud_on_malformed_json(tmp_path):
+    state_path = tmp_path / "queue-state.json"
+    state_path.write_text("not json", encoding="utf-8")
+
+    with pytest.raises(QueueError) as exc_info:
+        load_state(state_path)
+
+    assert "load_state" in str(exc_info.value)
+    assert str(state_path) in str(exc_info.value)
