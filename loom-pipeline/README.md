@@ -106,17 +106,52 @@ compare:
 Run this comparison before switching a station's default judge model
 to a cheaper tier; a single anecdotal run is not sufficient evidence.
 
-## Committed next (v1.1): batch implementation mode
+## Batch mode (v1.1)
 
-Not in v1. A queue of **FROZEN** change-folders (validator exit-0 +
-plan written) feeds a batch entry mode that iterates Segment 3 per
-queued item — each its own worktree/branch, its own pre-authorized
-budget, and a failure isolates to its own item rather than stalling
-the queue. Output is N ledgers + N PR branches; merge stays human.
-Explicitly **time-agnostic** — no scheduler required; it runs whenever
-invoked, foreground or background. This is distinct from the parked
-full-autopilot mode below: batch mode's human gates move to
-spec-freeze time, they do not disappear.
+A queue of **FROZEN** change-folders (loom-spec validator exit-0 +
+plan written) feeds an unattended segment-3 loop, one queued item at a
+time, each in its own worktree/branch with its own pre-authorized
+budget. Explicitly **time-agnostic** — no scheduler required; it runs
+whenever invoked, foreground or background. Human gates move to
+spec-freeze time (queue-entry authoring), they do not disappear —
+merge stays human, and this is distinct from the parked full-autopilot
+mode below.
+
+**Intent/state separation**: the human-edited queue file
+(`docs/loom/QUEUE.toml` in the target project, array-of-tables
+`[[change]]` — `id` / `plan` / `budgets.run` / optional
+`budgets.perStation` / optional `models`) is never written by the
+tooling. Machine-owned state (`docs/loom/queue-state.json`) records
+each entry's status (`QUEUED` / `RUNNING` / `DONE` / `FAILED` /
+`SKIPPED`) and is written only by `batch_queue.py`.
+
+**The loop** — `loom-pipeline/scripts/batch_queue.py`, pure stdlib,
+sequential-only:
+
+1. `batch_queue.py next --project <path> --skills-root <path>` picks
+   the first `QUEUED` entry, checks the freeze predicate (validator
+   exit-0 + plan present), creates its worktree/branch, records
+   `RUNNING`, and prints one JSON object with ready-to-use `Workflow`
+   args (`{segment: 3, changeId, projectPath, planPath, budgets,
+   models, skillsRoot, branch}`). Empty/exhausted queue prints
+   `{"done": true}` and exits 0.
+2. The main agent calls `Workflow(segment: 3, ...)` with exactly that
+   JSON — it never parses the queue file, never composes git commands,
+   never diagnoses failures mid-batch.
+3. `batch_queue.py mark <change-id> done|failed --project <path>
+   [--run-id <id>] [--reason <text>]` writes the outcome back to state.
+4. Repeat from step 1.
+
+**Failure isolation**: an ineligible entry (freeze predicate fails, or
+its plan never got committed to the worktree) is marked `SKIPPED` with
+a reason and the loop advances — one bad entry never stalls the queue.
+2 consecutive `FAILED` entries trip a circuit breaker: `next` exits 3
+with a HALT message naming both ids (`--override-halt` bypasses).
+`batch_queue.py status --project <path>` prints a one-screen overview
+(id, effective status, runId, reason) — the first thing a fresh
+session reads to take over a batch.
+
+Output is N ledgers + N `loom/<id>` PR branches; merge stays human.
 
 ## Parked items (with re-triggers)
 

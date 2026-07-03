@@ -1,0 +1,749 @@
+#!/usr/bin/env python3
+"""Deterministic bookkeeping CLI for loom-pipeline batch mode.
+
+Parses the human-editable ``QUEUE.toml`` (array-of-tables ``[[change]]``)
+that lives in the target project's ``docs/loom/`` directory. Intent
+(QUEUE.toml) is separate from state (machine-owned ``queue-state.json``,
+loaded/written via ``load_state``/``save_state`` below and merged onto
+queue entries by ``effective_entries``) — see
+docs/loom/plans/2026-07-03-loom-pipeline-v1-1-batch-mode.md
+§Settled open questions 1.
+
+Pure stdlib (``tomllib``, Python 3.11+). Paths are resolved by the
+caller; this module does not depend on cwd.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+import tempfile
+import tomllib
+from pathlib import Path
+from typing import NoReturn, Sequence
+
+# Status a queue entry has when no state record exists for its id yet.
+QUEUED = "QUEUED"
+
+# changeId becomes a path segment (docs/loom/<id>/...) — allow-list rather
+# than deny-list, same reasoning as driver_10_guard.js's guardArgs():
+# scripts/driver_10_guard.js:112-123.
+_CHANGE_ID_ALLOWED_PATTERN = re.compile(r"^[A-Za-z0-9._-]+$")
+
+FAIL_LOUD_NOTICE = (
+    "fail-loud: refusing to improvise a missing or invalid queue entry — "
+    "no defaults, no silent skip; load_queue FAILS rather than guessing."
+)
+
+
+class QueueError(Exception):
+    """Raised when QUEUE.toml is missing, unparseable, or malformed.
+
+    Mirrors driver_10_guard.js's guardArgs() no-improvised-defaults stance.
+    """
+
+
+def _fail(msg: str, *, fn: str = "load_queue") -> NoReturn:
+    """Raise QueueError in the house fail-loud shape (single message site).
+
+    ``fn`` names the failing function in the message prefix — callers other
+    than ``load_queue`` (e.g. ``load_state``) pass their own name.
+    """
+    raise QueueError(f"{fn}: {msg} {FAIL_LOUD_NOTICE}")
+
+
+def load_queue(queue_path: Path) -> list[dict]:
+    """Parse ``[[change]]`` entries from queue_path, in file order.
+
+    Each returned dict carries at least ``id``, ``plan``
+    (project-relative path string), and ``budgets`` (dict with ``run``
+    and optionally ``perStation``); ``models`` is included when present
+    in the source entry. Resolves nothing (no filesystem checks beyond
+    reading queue_path itself).
+
+    Raises ``QueueError`` naming the offending entry (its ``id``, or its
+    index when ``id`` is absent or not a string) and the specific problem
+    when: the file is missing or not valid TOML; an entry is missing
+    ``id``, ``plan``, or ``budgets.run``; ``id`` is not a string, violates
+    the changeId allow-list ``^[A-Za-z0-9._-]+$``, or contains ``..``; or
+    two entries share an ``id``. No improvised defaults — see
+    FAIL_LOUD_NOTICE.
+    """
+    if not queue_path.is_file():
+        _fail(f'queue file not found at "{queue_path}".')
+
+    try:
+        with queue_path.open("rb") as f:
+            data = tomllib.load(f)
+    except tomllib.TOMLDecodeError as e:
+        _fail(f'"{queue_path}" is not valid TOML ({e}).')
+
+    entries = list(data.get("change", []))
+    seen_ids: set[str] = set()
+    for index, entry in enumerate(entries):
+        entry_id = entry.get("id")
+        index_label = f"<entry at index {index}>"
+        label = entry_id if isinstance(entry_id, str) and entry_id else index_label
+
+        for field in ("id", "plan"):
+            if not entry.get(field):
+                _fail(f'entry "{label}" is missing required field "{field}".')
+
+        budgets = entry.get("budgets")
+        if not isinstance(budgets, dict) or not budgets.get("run"):
+            _fail(f'entry "{label}" is missing required field "budgets.run".')
+
+        if not isinstance(entry_id, str):
+            _fail(
+                f'entry "{index_label}" has "id" of wrong type — must be a '
+                f"TOML string; received {entry_id!r} "
+                f"({type(entry_id).__name__})."
+            )
+
+        _assert_valid_change_id(entry_id, fn="load_queue")
+
+        if entry_id in seen_ids:
+            _fail(f'duplicate "id" {entry_id!r} in "{queue_path}".')
+        seen_ids.add(entry_id)
+
+    return entries
+
+
+def load_state(state_path: Path) -> dict:
+    """Load the machine-owned state file (``queue-state.json`` by convention).
+
+    A missing file is a fresh batch and returns ``{}`` — this is not an
+    error (unlike a missing QUEUE.toml, which is human-authored and
+    required). Malformed JSON, or valid JSON whose top level is not an
+    object (the state file is an object keyed by change id), fails loud
+    with ``QueueError``, mirroring ``load_queue``'s
+    no-improvised-defaults stance (FAIL_LOUD_NOTICE).
+    """
+    if not state_path.is_file():
+        return {}
+
+    try:
+        with state_path.open("r", encoding="utf-8") as f:
+            state = json.load(f)
+    except json.JSONDecodeError as e:
+        _fail(f'"{state_path}" is not valid JSON ({e}).', fn="load_state")
+
+    if not isinstance(state, dict):
+        _fail(
+            f'"{state_path}" has wrong top-level JSON type — must be an '
+            f"object keyed by change id; received {type(state).__name__}.",
+            fn="load_state",
+        )
+    return state
+
+
+def save_state(state_path: Path, state: dict) -> None:
+    """Write state to state_path atomically (tmp file + ``os.replace``).
+
+    The tmp file is created in state_path's own directory so the rename
+    is same-filesystem and therefore atomic; it is cleaned up on failure.
+    Precondition: ``state_path.parent`` must already exist (``docs/loom/``
+    by convention) — this function does not create directories.
+    """
+    fd, tmp_name = tempfile.mkstemp(
+        prefix=f".{state_path.name}.", suffix=".tmp", dir=state_path.parent
+    )
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(state, f, indent=2, sort_keys=True)
+            f.write("\n")
+        os.replace(tmp_name, state_path)
+    except BaseException:
+        Path(tmp_name).unlink(missing_ok=True)
+        raise
+
+
+def effective_entries(entries: list[dict], state: dict) -> list[dict]:
+    """Merge ``load_queue`` entries with recorded ``load_state`` statuses.
+
+    Returns a new list of shallow-copied entry dicts (inputs are not
+    mutated), each augmented with ``status`` (``QUEUED`` when the entry's
+    id has no state record) and, when present in the record, ``runId``,
+    ``branch``, ``worktree``, ``reason``.
+    """
+    merged = []
+    for entry in entries:
+        record = state.get(entry["id"], {})
+        effective = dict(entry)
+        effective["status"] = record.get("status", QUEUED)
+        for field in ("runId", "branch", "worktree", "reason"):
+            if field in record:
+                effective[field] = record[field]
+        merged.append(effective)
+    return merged
+
+
+def check_frozen(entry: dict, project_path: Path, skills_root: Path) -> tuple[bool, str]:
+    """Freeze predicate: loom-spec validator exit-0 AND plan file present.
+
+    Decision §"Freeze predicate = loom-spec validator exit-0 + plan
+    written" (docs/loom/plans/2026-07-03-loom-pipeline-v1-1-batch-mode.md
+    Task 4). Runs ``python3 <skills_root>/loom-spec/scripts/
+    validate_spec_output.py <project_path>/docs/loom/<id>`` via subprocess
+    (invocation convention: driver_40_seg2.js:106-127) and requires
+    ``<project_path>/<entry["plan"]>`` to exist.
+
+    Returns ``(eligible, reason)`` — **never raises for ineligibility**,
+    including a path-traversal attempt in ``entry["plan"]``: the resolved
+    plan path is guarded to stay inside ``project_path`` (``Path.resolve()``
+    + ``relative_to`` check), and a traversal is reported as an eligibility
+    failure via the return tuple, not a raised ``QueueError``. This keeps
+    one failure channel for this function (contrast ``load_queue``, which
+    raises ``QueueError`` for structural defects at parse time — this
+    function runs later, per-entry, and its whole contract is "tell me why
+    not" rather than "refuse to load").
+    """
+    project_path = Path(project_path).resolve()
+    entry_id = entry["id"]
+
+    # Trust-boundary re-assertion: entry["id"] is trusted-by-contract
+    # (load_queue already validated it) — re-check here so the boundary is
+    # explicit rather than emergent.
+    _assert_valid_change_id(entry_id, fn="check_frozen")
+
+    plan_path = (project_path / entry["plan"]).resolve()
+    try:
+        plan_path.relative_to(project_path)
+    except ValueError:
+        return (
+            False,
+            f'entry "{entry_id}" plan "{entry["plan"]}" resolves to '
+            f'"{plan_path}", outside project_path "{project_path}" '
+            "(path traversal).",
+        )
+
+    if not plan_path.is_file():
+        return (False, f'entry "{entry_id}" plan not found at "{plan_path}".')
+
+    change_dir = project_path / "docs" / "loom" / entry_id
+    validator_script = Path(skills_root) / "loom-spec" / "scripts" / "validate_spec_output.py"
+    result = subprocess.run(
+        ["python3", str(validator_script), str(change_dir)],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        return (
+            False,
+            f'entry "{entry_id}" failed the freeze predicate — validator '
+            f"exited {result.returncode} for \"{change_dir}\" (ran: python3 "
+            f'{validator_script} {change_dir}).',
+        )
+
+    return (True, f'entry "{entry_id}" is frozen — validator exit 0, plan present.')
+
+
+def ensure_worktree(project_path: Path, change_id: str) -> tuple[Path, str]:
+    """Create (or reuse) the worktree + branch for ``change_id``.
+
+    Branch ``loom/<change_id>``, worktree
+    ``<project_path>/.worktrees/loom-<change_id>`` — the house convention
+    (using-git-worktrees/SKILL.md §The ``.worktrees/`` convention). Creates
+    via ``git -C <project_path> worktree add -b <branch> <worktree_path>``
+    from current HEAD (list-form subprocess args, no shell=True).
+
+    Idempotent: if the worktree directory already exists and is checked
+    out on ``branch``, returns it without error — no second ``git
+    worktree add``.
+
+    Fails loud with ``QueueError`` on any conflict this call did not
+    create: the branch exists without the worktree directory, the
+    directory exists but isn't checked out on ``branch`` (or isn't a git
+    checkout at all), or the ``git worktree add`` command itself fails
+    (git's stderr is included in the message).
+    """
+    # Trust-boundary re-assertion: change_id is trusted-by-contract
+    # (callers derive it from load_queue's already-validated entries) —
+    # re-check here so the boundary is explicit rather than emergent.
+    _assert_valid_change_id(change_id, fn="ensure_worktree")
+
+    project_path = Path(project_path)
+    branch = f"loom/{change_id}"
+    worktree_path = project_path / ".worktrees" / f"loom-{change_id}"
+
+    if worktree_path.is_dir():
+        head = subprocess.run(
+            ["git", "-C", str(worktree_path), "rev-parse", "--abbrev-ref", "HEAD"],
+            capture_output=True,
+            text=True,
+        )
+        if head.returncode == 0 and head.stdout.strip() == branch:
+            return worktree_path, branch
+        found = head.stdout.strip() if head.returncode == 0 else head.stderr.strip()
+        _fail(
+            f'worktree path "{worktree_path}" already exists but is not '
+            f'checked out on branch "{branch}" (found {found!r}) — refusing '
+            "to touch a conflict this call did not create.",
+            fn="ensure_worktree",
+        )
+
+    branch_check = subprocess.run(
+        ["git", "-C", str(project_path), "show-ref", "--verify", "--quiet", f"refs/heads/{branch}"],
+        capture_output=True,
+        text=True,
+    )
+    if branch_check.returncode == 0:
+        _fail(
+            f'branch "{branch}" already exists in "{project_path}" but its '
+            f'worktree "{worktree_path}" does not — refusing to touch a '
+            "conflict this call did not create.",
+            fn="ensure_worktree",
+        )
+
+    add_result = subprocess.run(
+        ["git", "-C", str(project_path), "worktree", "add", "-b", branch, str(worktree_path)],
+        capture_output=True,
+        text=True,
+    )
+    if add_result.returncode != 0:
+        _fail(
+            f'"git worktree add -b {branch} {worktree_path}" failed in '
+            f'"{project_path}" (exit {add_result.returncode}): '
+            f"{add_result.stderr.strip()}",
+            fn="ensure_worktree",
+        )
+
+    return worktree_path, branch
+
+
+def _cmd_mark(args: argparse.Namespace) -> int:
+    """Implements the ``mark`` subcommand — see ``main``'s subparser setup.
+
+    Writes/updates the state record for ``args.change_id`` and returns a
+    process exit code (0 on success, 1 on a caller-facing error such as an
+    unknown change id — printed to stderr, never raised as an exception,
+    since this is the CLI boundary). Status is stored uppercase (DONE /
+    FAILED) to match ``effective_entries``'s vocabulary.
+    """
+    project_path = Path(args.project)
+    queue_path = project_path / "docs" / "loom" / "QUEUE.toml"
+    state_path = project_path / "docs" / "loom" / "queue-state.json"
+
+    try:
+        entries = load_queue(queue_path)
+    except QueueError as e:
+        print(str(e), file=sys.stderr)
+        return 1
+
+    known_ids = {entry["id"] for entry in entries}
+    if args.change_id not in known_ids:
+        print(
+            f'mark: unknown change id "{args.change_id}" — not present in '
+            f'"{queue_path}".',
+            file=sys.stderr,
+        )
+        return 1
+
+    state = load_state(state_path)
+    record = dict(state.get(args.change_id, {}))
+    record["status"] = args.status.upper()
+    if args.run_id:
+        record["runId"] = args.run_id
+    if args.reason:
+        record["reason"] = args.reason
+    state[args.change_id] = record
+
+    save_state(state_path, state)
+    return 0
+
+
+def _cmd_status(args: argparse.Namespace) -> int:
+    """Implements the ``status`` subcommand — see ``main``'s subparser setup.
+
+    Prints a one-screen plain-text overview to stdout: one line per queue
+    entry, in queue order (``effective_entries`` preserves ``load_queue``'s
+    file order), carrying id + effective status + ``runId`` (when recorded)
+    + ``reason`` (only for SKIPPED/FAILED — a record re-marked done can
+    retain a stale ``reason`` field, so this guard is deliberate, not
+    incidental), followed by a final totals line (count per status). This
+    is the first thing a fresh session reads to take over a batch, so the
+    format is kept grep-friendly and stable: one ``key=value`` per field
+    after the id and status columns.
+
+    Returns a process exit code (0 on success, 1 when the queue file is
+    missing/malformed — printed to stderr, mirroring ``_cmd_mark``).
+    """
+    project_path = Path(args.project)
+    queue_path = project_path / "docs" / "loom" / "QUEUE.toml"
+    state_path = project_path / "docs" / "loom" / "queue-state.json"
+
+    try:
+        entries = load_queue(queue_path)
+    except QueueError as e:
+        print(str(e), file=sys.stderr)
+        return 1
+
+    state = load_state(state_path)
+    merged = effective_entries(entries, state)
+
+    totals: dict[str, int] = {}
+    for entry in merged:
+        status = entry["status"]
+        totals[status] = totals.get(status, 0) + 1
+
+        fields = [entry["id"], status]
+        if "runId" in entry:
+            fields.append(f'runId={entry["runId"]}')
+        if status in ("SKIPPED", "FAILED") and "reason" in entry:
+            fields.append(f'reason={entry["reason"]}')
+        print("  ".join(fields))
+
+    totals_fields = " ".join(
+        f"{status}={count}" for status, count in sorted(totals.items())
+    )
+    print(f"total={len(merged)} {totals_fields}".rstrip())
+    return 0
+
+
+def _skip_entry(state: dict, state_path: Path, change_id: str, reason: str) -> None:
+    """Record ``SKIPPED`` + ``reason`` for change_id, persist, notice to stderr.
+
+    Shared by ``_cmd_next``'s two skip sites (freeze-predicate failure and
+    the post-worktree uncommitted-plan check) — never silent: every skip
+    writes state AND prints one line to stderr. Record shape matches
+    ``_cmd_mark``'s ``failed``/``done`` records.
+    """
+    record = dict(state.get(change_id, {}))
+    record["status"] = "SKIPPED"
+    record["reason"] = reason
+    state[change_id] = record
+    save_state(state_path, state)
+    print(f"next: skipping {change_id!r} — {reason}", file=sys.stderr)
+
+
+def _teardown_worktree(project_path: Path, worktree_path: Path, branch: str) -> None:
+    """Remove a worktree + branch that ``_cmd_next`` just created.
+
+    Used only on the uncommitted-plan skip path: ``SKIPPED`` has no
+    automatic path back to ``QUEUED`` and ``status`` does not surface the
+    worktree field, so a leftover worktree/branch would be undiscoverable
+    by an operator — tear both down so a later re-queue starts clean.
+    Fails loud with ``QueueError`` (git stderr included) if either git
+    command fails; a half-done teardown must not be swallowed.
+    """
+    removal = subprocess.run(
+        ["git", "-C", str(project_path), "worktree", "remove", str(worktree_path)],
+        capture_output=True,
+        text=True,
+    )
+    if removal.returncode != 0:
+        _fail(
+            f'"git worktree remove {worktree_path}" failed in '
+            f'"{project_path}" (exit {removal.returncode}): '
+            f"{removal.stderr.strip()}",
+            fn="_teardown_worktree",
+        )
+    deletion = subprocess.run(
+        ["git", "-C", str(project_path), "branch", "-D", branch],
+        capture_output=True,
+        text=True,
+    )
+    if deletion.returncode != 0:
+        _fail(
+            f'"git branch -D {branch}" failed in "{project_path}" '
+            f"(exit {deletion.returncode}): {deletion.stderr.strip()}",
+            fn="_teardown_worktree",
+        )
+
+
+def _uncommitted_plan_reason(change_id: str, plan_path: Path) -> str:
+    """Skip reason for a plan the worktree cannot see (never committed)."""
+    return (
+        f'entry "{change_id}" plan not found in its worktree at '
+        f'"{plan_path}" — present in the main checkout but never '
+        "committed, so the worktree (branched from HEAD) does not "
+        "see it (plan §Branch base note)."
+    )
+
+
+def _dispatch_entry(
+    state: dict,
+    state_path: Path,
+    entry: dict,
+    worktree_path: Path,
+    plan_path: Path,
+    skills_root: Path,
+    branch: str,
+) -> None:
+    """Record ``RUNNING`` for entry and print its Workflow args to stdout.
+
+    Payload field names match ``driver_10_guard.js``'s ``guardArgs``
+    REQUIRED_FIELDS, ``driver_50_seg3.js``'s ``planPath`` guard, and
+    ``runSegment3``'s optional ``args.branch`` (whole-branch review
+    station). ``projectPath`` is the worktree path (not the main checkout)
+    and ``planPath`` is resolved *inside* that worktree.
+    """
+    record = dict(state.get(entry["id"], {}))
+    record["status"] = "RUNNING"
+    record["branch"] = branch
+    record["worktree"] = str(worktree_path)
+    state[entry["id"]] = record
+    save_state(state_path, state)
+
+    payload = {
+        "segment": 3,
+        "changeId": entry["id"],
+        "projectPath": str(worktree_path.resolve()),
+        "planPath": str(plan_path),
+        "budgets": entry["budgets"],
+        "models": entry.get("models", {}),
+        "skillsRoot": str(skills_root),
+        "branch": branch,
+    }
+    print(json.dumps(payload))
+
+
+def _check_circuit_breaker(entries: list[dict]) -> tuple[str, str] | None:
+    """Task 10 circuit breaker: two most recent terminal entries both FAILED.
+
+    ``entries`` is queue-order ``effective_entries`` output. Only ``DONE``
+    and ``FAILED`` count as terminal — ``SKIPPED`` and ``QUEUED``/``RUNNING``
+    do not (plan §Settled open questions 3). Returns the halting pair's ids
+    ``(older, newer)`` when the two most recent terminal entries are both
+    ``FAILED`` and adjacent in that terminal-only sequence; else ``None``.
+
+    "Most recent" is measured by QUEUE.toml file position — a positional
+    proxy for recency that is sound only under v1.1's sequential-only,
+    no-retry dispatch model (hand-editing queue-state.json to retry an
+    earlier entry out of turn breaks the equivalence).
+    """
+    terminal = [e for e in entries if e["status"] in ("DONE", "FAILED")]
+    if len(terminal) < 2:
+        return None
+    older, newer = terminal[-2], terminal[-1]
+    if older["status"] == "FAILED" and newer["status"] == "FAILED":
+        return older["id"], newer["id"]
+    return None
+
+
+def _halt_notice_if_tripped(entries: list[dict], override_halt: bool) -> bool:
+    """Print the HALT notice and return True iff the breaker should fire.
+
+    Wraps ``_check_circuit_breaker`` with the print-and-decide shell so
+    ``_cmd_next`` stays a plain ``if _halt_notice_if_tripped(...): return 3``
+    — keeps the caller's body short (house 50-line function ceiling).
+    ``override_halt`` short-circuits to False without evaluating the
+    predicate.
+    """
+    if override_halt:
+        return False
+    halt_pair = _check_circuit_breaker(entries)
+    if halt_pair is None:
+        return False
+    older_id, newer_id = halt_pair
+    print(
+        "next: HALT — circuit breaker tripped: two consecutive FAILED "
+        f"entries ({older_id!r} then {newer_id!r}); refusing to select a "
+        "next entry (systemic-failure signal). Pass --override-halt to "
+        "proceed anyway.",
+        file=sys.stderr,
+    )
+    return True
+
+
+def _cmd_next(args: argparse.Namespace) -> int:
+    """Implements the ``next`` subcommand — see ``main``'s subparser setup.
+
+    Scans effective entries in queue order for the first one that is both
+    ``QUEUED`` and eligible. An entry that fails ``check_frozen``
+    (validator non-zero, or plan missing in the main checkout) is recorded
+    ``SKIPPED`` with the predicate's reason, a one-line notice goes to
+    stderr, and the scan advances to the next ``QUEUED`` entry — Task 9 of
+    docs/loom/plans/2026-07-03-loom-pipeline-v1-1-batch-mode.md
+    ("ineligible entries are marked SKIPPED loudly, never silently").
+    Nothing is ever silent and one bad entry never blocks the queue.
+
+    **Invariant** (plan §Branch base note): ``ensure_worktree`` branches
+    from the project's current HEAD, so freezing implies the change-folder
+    + plan are committed — the worktree sees them too. That invariant can
+    be violated by a plan edited/created after the freeze check ran but
+    never committed, so a defensive re-check runs *between*
+    ``ensure_worktree`` and recording ``RUNNING``: if
+    ``<worktree_path>/<entry["plan"]>`` is not a file, this entry is ALSO
+    recorded ``SKIPPED`` (reason names the uncommitted-plan cause) instead
+    of ``RUNNING``, with the same notice-and-advance semantics as the
+    freeze-predicate skip above — and the worktree + branch this call just
+    created are torn down (``_teardown_worktree``), so a later re-queue
+    starts clean instead of leaving an undiscoverable leftover.
+
+    On the first entry that clears both checks: ``_dispatch_entry`` records
+    ``RUNNING`` (+ ``branch``, ``worktree``) in state and prints ONE JSON
+    object to stdout carrying the driver's ready-to-use Workflow args (see
+    its docstring for the field contract). No eligible entry left (empty
+    queue, or every remaining ``QUEUED`` entry got skipped) prints
+    ``{"done": true}`` and exits 0.
+
+    **Circuit breaker** (Task 10, plan §Settled open questions 3): before
+    selecting, ``_halt_notice_if_tripped`` scans for two consecutive FAILED
+    entries among the most recent terminal (DONE/FAILED) outcomes. If
+    tripped, this exits 3 with a HALT message naming both ids instead of
+    scanning at all — unless ``args.override_halt`` is set, which bypasses
+    the check entirely.
+
+    Only machine-readable JSON goes to stdout (the dispatch payload, or
+    ``{"done": true}``); all human-facing notices (skip reasons, the HALT
+    message) go to stderr, mirroring ``_cmd_mark``/``_cmd_status``. A
+    ``QueueError`` raised mid-scan by ``ensure_worktree``/
+    ``_teardown_worktree`` is not caught here — ``main`` catches it at the
+    dispatch level so it exits 1 like a ``load_queue`` failure, instead of
+    propagating as a raw traceback.
+    """
+    project_path = Path(args.project).resolve()
+    skills_root = Path(args.skills_root).resolve()
+    queue_path = (
+        Path(args.queue) if args.queue else project_path / "docs" / "loom" / "QUEUE.toml"
+    )
+    state_path = project_path / "docs" / "loom" / "queue-state.json"
+
+    try:
+        entries = load_queue(queue_path)
+    except QueueError as e:
+        print(str(e), file=sys.stderr)
+        return 1
+
+    state = load_state(state_path)
+    merged = effective_entries(entries, state)
+
+    if _halt_notice_if_tripped(merged, args.override_halt):
+        return 3
+
+    for entry in merged:
+        if entry["status"] != QUEUED:
+            continue
+
+        eligible, reason = check_frozen(entry, project_path, skills_root)
+        if not eligible:
+            _skip_entry(state, state_path, entry["id"], reason)
+            continue
+
+        worktree_path, branch = ensure_worktree(project_path, entry["id"])
+        plan_path = (worktree_path / entry["plan"]).resolve()
+
+        if not plan_path.is_file():
+            _teardown_worktree(project_path, worktree_path, branch)
+            _skip_entry(
+                state,
+                state_path,
+                entry["id"],
+                _uncommitted_plan_reason(entry["id"], plan_path),
+            )
+            continue
+
+        _dispatch_entry(
+            state, state_path, entry, worktree_path, plan_path, skills_root, branch
+        )
+        return 0
+
+    print(json.dumps({"done": True}))
+    return 0
+
+
+def _assert_valid_change_id(id_value: str, *, fn: str) -> None:
+    """Trust-boundary re-assertion of the changeId allow-list.
+
+    Shared by ``load_queue``, ``check_frozen``, ``ensure_worktree`` — the
+    same check was copy-pasted at all three sites (Rule of Three), so it is
+    extracted here and routed through ``_fail(fn=...)``. Raises
+    ``QueueError`` when ``id_value`` fails ``_CHANGE_ID_ALLOWED_PATTERN`` or
+    contains ``".."``.
+    """
+    if not _CHANGE_ID_ALLOWED_PATTERN.match(id_value) or ".." in id_value:
+        _fail(
+            f'"{id_value}" must match {_CHANGE_ID_ALLOWED_PATTERN.pattern} '
+            f'(letters, digits, dot, underscore, hyphen only; no ".."); '
+            f"received {id_value!r}.",
+            fn=fn,
+        )
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    """Top-level argparse setup: ``mark``, ``status``, ``next`` subcommands."""
+    parser = argparse.ArgumentParser(
+        prog="batch_queue.py", description="loom-pipeline batch mode bookkeeping"
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    mark_parser = subparsers.add_parser(
+        "mark", help="record done/failed status for a queue entry"
+    )
+    mark_parser.add_argument("change_id")
+    mark_parser.add_argument("status", choices=["done", "failed"])
+    mark_parser.add_argument(
+        "--project", required=True, help="target project root"
+    )
+    mark_parser.add_argument("--run-id", dest="run_id")
+    mark_parser.add_argument("--reason")
+    mark_parser.set_defaults(func=_cmd_mark)
+
+    status_parser = subparsers.add_parser(
+        "status", help="print a one-screen overview of the queue"
+    )
+    status_parser.add_argument(
+        "--project", required=True, help="target project root"
+    )
+    status_parser.set_defaults(func=_cmd_status)
+
+    _add_next_subparser(subparsers)
+
+    return parser
+
+
+def _add_next_subparser(subparsers: argparse._SubParsersAction) -> None:
+    """Register the ``next`` subcommand's arguments (split out of
+    ``_build_parser`` to keep that function under the house length ceiling).
+    """
+    next_parser = subparsers.add_parser(
+        "next",
+        help="pick the next QUEUED entry, ready its worktree, print its Workflow args as JSON",
+    )
+    next_parser.add_argument(
+        "--project", required=True, help="target project root"
+    )
+    next_parser.add_argument(
+        "--skills-root",
+        dest="skills_root",
+        required=True,
+        help="absolute path to the monkey-skills checkout / plugin source root",
+    )
+    next_parser.add_argument(
+        "--queue",
+        help="override path to QUEUE.toml (default: <project>/docs/loom/QUEUE.toml)",
+    )
+    next_parser.add_argument(
+        "--override-halt",
+        dest="override_halt",
+        action="store_true",
+        default=False,
+        help="bypass the consecutive-FAILED circuit breaker (Task 10)",
+    )
+    next_parser.set_defaults(func=_cmd_next)
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    """Parse argv and dispatch to the selected subcommand's ``func``.
+
+    Catches ``QueueError`` at this single dispatch site: ``mark``/``status``
+    already catch their own ``load_queue`` failures internally (so this is a
+    no-op for them), but ``next`` can raise ``QueueError`` mid-scan via
+    ``ensure_worktree``/``_teardown_worktree`` — this ensures that exits 1
+    with a stderr message instead of propagating as a raw traceback.
+    """
+    parser = _build_parser()
+    args = parser.parse_args(argv)
+    try:
+        return args.func(args)
+    except QueueError as e:
+        print(str(e), file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -38,23 +38,6 @@
 - What: SDD triads via agentType + whole-branch review + conditional
   ui-verification, driven by the merged driver against a real repo.
 
-## v1.1 — batch implementation mode
-- Status: COMMITTED-NEXT (constitution work shipped 2026-07-03 — this
-  is now the front of the queue)
-- Origin: user requirement 2026-07-03 (「白天討論規格、晚上自動實作」 is a
-  METAPHOR — time-agnostic); design in the brief §Committed next +
-  loom-pipeline/README.md
-- What: queue of FROZEN change-folders → unattended segment-3 runs (own
-  worktree/branch, per-change budget, failures isolate) → N ledgers + N
-  PR branches; merge stays human. /goal is the recommended supervision
-  shell (research 2026-07-04: condition + turn-cap clause; Workflow-tool
-  interaction undocumented — spike first). KNOWN SEAM: plan generation
-  (writing-plans) lives in neither segment — the freeze definition must
-  include "plan written", or a segment 2.5 gets added.
-- Parallel variant (v1.1.x): worktree isolation specified; the
-  AEP-borrowed git-commit dispatch lock is parked in the README with
-  exactly this re-trigger.
-
 ## loom-spec station briefing gate (#475 parity)
 - Status: OPEN (original 值得做 list item 3, half-covered)
 - Origin: 2026-07-03 dogfood — spec station resolved a product decision
