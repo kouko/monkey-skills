@@ -85,6 +85,19 @@ def test_description_carries_trilingual_triggers():
         "description must carry a ja trigger (製品の原則 / プロダクト指針)"
 
 
+def test_description_covers_design_and_engineering_triggers():
+    """The three-jurisdiction scope must be routable in CJK too — a zh-TW/ja
+    user asking specifically about design or engineering principles must hit
+    this skill, not just product-principle phrasings."""
+    front = _frontmatter()
+    assert "設計原則" in front, \
+        "description must carry a design-principles CJK trigger (設計原則)"
+    assert ("工程原則" in front or "技術原則" in front
+            or "エンジニアリング" in front), \
+        "description must carry an engineering-principles CJK trigger " \
+        "(工程原則 / 技術原則 / エンジニアリング原則)"
+
+
 def test_description_states_principles_md_output():
     """description must signal it produces a PRINCIPLES.md governing
     design / spec / code, key-free."""
