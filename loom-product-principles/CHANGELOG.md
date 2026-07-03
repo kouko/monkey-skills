@@ -8,9 +8,24 @@ Versioning: [Semantic Versioning](https://semver.org/).
 > This file was reconstructed on 2026-07-02 from the git history — the plugin
 > shipped its first two versions without a CHANGELOG.
 
-## [Unreleased]
+## [0.3.0] — 2026-07-03
 
 ### Changed
+
+- **Three-jurisdiction sections**: the required section renamed
+  `## Principles` → `## Product Principles` (legacy `## Principles` files
+  are detected and migrated with a one-line message, not silently
+  rejected). Two new optional sections, `## Design Principles` and
+  `## Engineering Principles`, each 1–7 falsifiable principles and never
+  emitted empty — jurisdiction-appropriate content is elicited only when
+  the product warrants it. `references/principles-rules.md` gained the
+  Jurisdictions table and the posture-elicitation steps (does this product
+  need a Design jurisdiction? an Engineering jurisdiction?) that decide
+  whether each optional section is generated.
+- Unqualified "product-level" claims in `SKILL.md` / `principles-rules.md`
+  / `README.md` widened to project-constitution framing; the `## Product
+  Principles` jurisdiction itself is unchanged in scope (product design
+  principles + target user, not business/market/strategy).
 
 - §Downstream updated to reflect the wired reality: named per-station intake
   sections (design generators, `loom-spec:spec-expansion` §Governing

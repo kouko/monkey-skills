@@ -1,7 +1,7 @@
 {
   "name": "loom-product-principles",
-  "version": "0.2.0",
-  "description": "Key-free generator for a product PRINCIPLES.md — one north-star + falsifiable, testable principles.",
+  "version": "0.3.0",
+  "description": "Key-free generator for a PRINCIPLES.md project constitution — one north-star + falsifiable Product Principles, plus optional Design/Engineering Principles by jurisdiction.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
@@ -20,8 +20,8 @@
   ],
   "interface": {
     "displayName": "loom-product-principles",
-    "shortDescription": "Turn a sparse product idea into a falsifiable PRINCIPLES.md constitution",
-    "longDescription": "The product-principles skill turns a sparse product idea into a PRINCIPLES.md product constitution — one north-star plus 3-7 non-negotiable, falsifiable, testable principles. Use it before design/spec/build so the resulting constitution governs downstream design, spec, and code decisions.",
+    "shortDescription": "Turn a sparse product idea into a falsifiable PRINCIPLES.md project constitution",
+    "longDescription": "The product-principles skill turns a sparse product idea into a PRINCIPLES.md project constitution — one north-star plus 3-7 non-negotiable, falsifiable, testable Product Principles, plus optional Design Principles and Engineering Principles by jurisdiction. Use it before design/spec/build so the resulting constitution governs downstream design, spec, and code decisions.",
     "developerName": "kouko",
     "category": "Productivity",
     "capabilities": [
