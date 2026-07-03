@@ -14,14 +14,16 @@ caller; this module does not depend on cwd.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import re
 import subprocess
+import sys
 import tempfile
 import tomllib
 from pathlib import Path
-from typing import NoReturn
+from typing import NoReturn, Sequence
 
 # Status a queue entry has when no state record exists for its id yet.
 QUEUED = "QUEUED"
@@ -207,6 +209,17 @@ def check_frozen(entry: dict, project_path: Path, skills_root: Path) -> tuple[bo
     project_path = Path(project_path).resolve()
     entry_id = entry["id"]
 
+    # Trust-boundary re-assertion: entry["id"] is trusted-by-contract
+    # (load_queue already validated it) — re-check here so the boundary is
+    # explicit rather than emergent.
+    if not _CHANGE_ID_ALLOWED_PATTERN.match(entry_id) or ".." in entry_id:
+        _fail(
+            f'entry "{entry_id}" has "id" that must match '
+            f"{_CHANGE_ID_ALLOWED_PATTERN.pattern} (letters, digits, dot, "
+            f'underscore, hyphen only; no ".."); received {entry_id!r}.',
+            fn="check_frozen",
+        )
+
     plan_path = (project_path / entry["plan"]).resolve()
     try:
         plan_path.relative_to(project_path)
@@ -258,6 +271,17 @@ def ensure_worktree(project_path: Path, change_id: str) -> tuple[Path, str]:
     checkout at all), or the ``git worktree add`` command itself fails
     (git's stderr is included in the message).
     """
+    # Trust-boundary re-assertion: change_id is trusted-by-contract
+    # (callers derive it from load_queue's already-validated entries) —
+    # re-check here so the boundary is explicit rather than emergent.
+    if not _CHANGE_ID_ALLOWED_PATTERN.match(change_id) or ".." in change_id:
+        _fail(
+            f'change_id must match {_CHANGE_ID_ALLOWED_PATTERN.pattern} '
+            f'(letters, digits, dot, underscore, hyphen only; no ".."); '
+            f"received {change_id!r}.",
+            fn="ensure_worktree",
+        )
+
     project_path = Path(project_path)
     branch = f"loom/{change_id}"
     worktree_path = project_path / ".worktrees" / f"loom-{change_id}"
@@ -305,3 +329,78 @@ def ensure_worktree(project_path: Path, change_id: str) -> tuple[Path, str]:
         )
 
     return worktree_path, branch
+
+
+def _cmd_mark(args: argparse.Namespace) -> int:
+    """Implements the ``mark`` subcommand — see ``main``'s subparser setup.
+
+    Writes/updates the state record for ``args.change_id`` and returns a
+    process exit code (0 on success, 1 on a caller-facing error such as an
+    unknown change id — printed to stderr, never raised as an exception,
+    since this is the CLI boundary). Status is stored uppercase (DONE /
+    FAILED) to match ``effective_entries``'s vocabulary.
+    """
+    project_path = Path(args.project)
+    queue_path = project_path / "docs" / "loom" / "QUEUE.toml"
+    state_path = project_path / "docs" / "loom" / "queue-state.json"
+
+    try:
+        entries = load_queue(queue_path)
+    except QueueError as e:
+        print(str(e), file=sys.stderr)
+        return 1
+
+    known_ids = {entry["id"] for entry in entries}
+    if args.change_id not in known_ids:
+        print(
+            f'mark: unknown change id "{args.change_id}" — not present in '
+            f'"{queue_path}".',
+            file=sys.stderr,
+        )
+        return 1
+
+    state = load_state(state_path)
+    record = dict(state.get(args.change_id, {}))
+    record["status"] = args.status.upper()
+    if args.run_id:
+        record["runId"] = args.run_id
+    if args.reason:
+        record["reason"] = args.reason
+    state[args.change_id] = record
+
+    save_state(state_path, state)
+    return 0
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    """Top-level argparse setup. Subparser structure left open for the
+    ``next``/``status`` subcommands added by later tasks.
+    """
+    parser = argparse.ArgumentParser(
+        prog="batch_queue.py", description="loom-pipeline batch mode bookkeeping"
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    mark_parser = subparsers.add_parser(
+        "mark", help="record done/failed status for a queue entry"
+    )
+    mark_parser.add_argument("change_id")
+    mark_parser.add_argument("status", choices=["done", "failed"])
+    mark_parser.add_argument(
+        "--project", required=True, help="target project root"
+    )
+    mark_parser.add_argument("--run-id", dest="run_id")
+    mark_parser.add_argument("--reason")
+    mark_parser.set_defaults(func=_cmd_mark)
+
+    return parser
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = _build_parser()
+    args = parser.parse_args(argv)
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

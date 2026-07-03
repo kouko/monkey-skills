@@ -13,6 +13,7 @@ from batch_queue import (
     ensure_worktree,
     load_queue,
     load_state,
+    main,
     save_state,
 )
 
@@ -463,3 +464,114 @@ def test_ensure_worktree_fails_loud_on_git_command_failure(tmp_path):
         ensure_worktree(project_path, "add-export-csv")
 
     assert "ensure_worktree" in str(exc_info.value)
+
+
+def test_check_frozen_rejects_invalid_change_id(tmp_path):
+    # Sanctioned debt closure (Task 6): check_frozen trusts entry["id"] by
+    # contract (load_queue already validated it) — re-assert the allow-list
+    # at the trust boundary instead of leaving it emergent.
+    project_path = tmp_path / "project"
+    project_path.mkdir()
+    skills_root = tmp_path / "skills"
+    _write_stub_validator(skills_root, exit_code=0)
+    entry = {"id": "bad id!", "plan": "plan.md", "budgets": {"run": 1}}
+
+    with pytest.raises(QueueError) as exc_info:
+        check_frozen(entry, project_path, skills_root)
+
+    assert "check_frozen" in str(exc_info.value)
+    assert "bad id!" in str(exc_info.value)
+
+
+def test_ensure_worktree_rejects_invalid_change_id(tmp_path):
+    # Sanctioned debt closure (Task 6): ensure_worktree trusts change_id by
+    # contract — re-assert the allow-list at the trust boundary.
+    project_path = _make_tmp_git_repo(tmp_path)
+
+    with pytest.raises(QueueError) as exc_info:
+        ensure_worktree(project_path, "bad id!")
+
+    assert "ensure_worktree" in str(exc_info.value)
+    assert "bad id!" in str(exc_info.value)
+
+
+def _write_queue(project_path: Path) -> Path:
+    loom_dir = project_path / "docs" / "loom"
+    loom_dir.mkdir(parents=True)
+    (loom_dir / "QUEUE.toml").write_text(QUEUE_TOML, encoding="utf-8")
+    return loom_dir
+
+
+def test_mark_writes_status_and_run_id(tmp_path):
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+
+    exit_code = main(
+        [
+            "mark",
+            "add-export-csv",
+            "done",
+            "--project",
+            str(project_path),
+            "--run-id",
+            "wf_1",
+        ]
+    )
+
+    assert exit_code == 0
+    state = load_state(loom_dir / "queue-state.json")
+    assert state["add-export-csv"]["status"] == "DONE"
+    assert state["add-export-csv"]["runId"] == "wf_1"
+
+
+def test_mark_records_reason_for_failed(tmp_path):
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+
+    exit_code = main(
+        [
+            "mark",
+            "fix-login-redirect",
+            "failed",
+            "--project",
+            str(project_path),
+            "--reason",
+            "validator exit 1",
+        ]
+    )
+
+    assert exit_code == 0
+    state = load_state(loom_dir / "queue-state.json")
+    assert state["fix-login-redirect"]["status"] == "FAILED"
+    assert state["fix-login-redirect"]["reason"] == "validator exit 1"
+
+
+def test_mark_fails_loud_on_unknown_change_id(tmp_path, capsys):
+    project_path = tmp_path / "project"
+    _write_queue(project_path)
+
+    exit_code = main(
+        ["mark", "does-not-exist", "done", "--project", str(project_path)]
+    )
+
+    assert exit_code != 0
+    assert "does-not-exist" in capsys.readouterr().err
+
+
+def test_mark_rejects_invalid_status_choice(tmp_path, capsys):
+    project_path = tmp_path / "project"
+    _write_queue(project_path)
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(
+            [
+                "mark",
+                "add-export-csv",
+                "bogus-status",
+                "--project",
+                str(project_path),
+            ]
+        )
+
+    assert exc_info.value.code != 0
+    assert "bogus-status" in capsys.readouterr().err
