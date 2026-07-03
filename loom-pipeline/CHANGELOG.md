@@ -6,6 +6,33 @@ this file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.2.0] — 2026-07-03
+
+Batch implementation mode (v1.1): a queue of FROZEN change-folders runs
+Segment 3 unattended, one change at a time — N ledgers + N `loom/<id>`
+PR branches out, merge stays human. Human gates (a) change-id and (c)
+cost policy move to freeze time (queue-entry authoring); no scheduler,
+time-agnostic.
+
+- New host-side bookkeeping CLI `scripts/batch_queue.py`
+  (`next` / `mark` / `status`): parses the human-edited
+  `docs/loom/QUEUE.toml` (stdlib `tomllib`), keeps machine-owned state
+  in `docs/loom/queue-state.json`, verifies the freeze predicate
+  (loom-spec validator exit-0 + plan committed), creates the per-change
+  worktree/branch (`.worktrees/loom-<id>`, branch `loom/<id>`), and
+  emits ready-to-use Workflow args JSON for Segment 3.
+- Failure isolation: ineligible entries are SKIPPED loudly with the
+  predicate's reason (uncommitted-plan skips tear the just-created
+  worktree back down); a failed change never stalls the queue.
+- Circuit breaker: 2 consecutive FAILED terminal outcomes halt the
+  queue (exit 3); `--override-halt` bypasses after human review.
+- SKILL.md §Batch mode: the dispatcher-only loop contract
+  (`next` → `Workflow({segment: 3, …})` → `mark`) — the main agent
+  never parses the queue file, never composes git commands, never
+  diagnoses failures mid-batch.
+- Zero driver changes: the v1 `assets/loom-pipeline.js` asset and all
+  `driver_*.js` sources are byte-identical to 0.1.0.
+
 ## [0.1.0] — 2026-07-03
 
 Conductor plugin born: the entry skill (`using-loom-pipeline`) plus the
