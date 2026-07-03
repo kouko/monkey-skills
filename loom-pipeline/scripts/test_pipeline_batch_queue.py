@@ -274,3 +274,18 @@ def test_load_state_fails_loud_on_malformed_json(tmp_path):
 
     assert "load_state" in str(exc_info.value)
     assert str(state_path) in str(exc_info.value)
+
+
+def test_load_state_fails_loud_on_non_dict_json(tmp_path):
+    # valid JSON but wrong shape (top level must be an object keyed by id) —
+    # without the guard this leaks through and explodes later in
+    # effective_entries with a raw AttributeError.
+    state_path = tmp_path / "queue-state.json"
+    state_path.write_text("[]", encoding="utf-8")
+
+    with pytest.raises(QueueError) as exc_info:
+        load_state(state_path)
+
+    assert "load_state" in str(exc_info.value)
+    assert str(state_path) in str(exc_info.value)
+    assert "list" in str(exc_info.value)

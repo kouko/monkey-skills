@@ -4,7 +4,8 @@
 Parses the human-editable ``QUEUE.toml`` (array-of-tables ``[[change]]``)
 that lives in the target project's ``docs/loom/`` directory. Intent
 (QUEUE.toml) is separate from state (machine-owned ``queue-state.json``,
-not touched by this module yet) — see
+loaded/written via ``load_state``/``save_state`` below and merged onto
+queue entries by ``effective_entries``) — see
 docs/loom/plans/2026-07-03-loom-pipeline-v1-1-batch-mode.md
 §Settled open questions 1.
 
@@ -118,17 +119,27 @@ def load_state(state_path: Path) -> dict:
 
     A missing file is a fresh batch and returns ``{}`` — this is not an
     error (unlike a missing QUEUE.toml, which is human-authored and
-    required). Malformed JSON fails loud with ``QueueError``, mirroring
-    ``load_queue``'s no-improvised-defaults stance (FAIL_LOUD_NOTICE).
+    required). Malformed JSON, or valid JSON whose top level is not an
+    object (the state file is an object keyed by change id), fails loud
+    with ``QueueError``, mirroring ``load_queue``'s
+    no-improvised-defaults stance (FAIL_LOUD_NOTICE).
     """
     if not state_path.is_file():
         return {}
 
     try:
         with state_path.open("r", encoding="utf-8") as f:
-            return json.load(f)
+            state = json.load(f)
     except json.JSONDecodeError as e:
         _fail(f'"{state_path}" is not valid JSON ({e}).', fn="load_state")
+
+    if not isinstance(state, dict):
+        _fail(
+            f'"{state_path}" has wrong top-level JSON type — must be an '
+            f"object keyed by change id; received {type(state).__name__}.",
+            fn="load_state",
+        )
+    return state
 
 
 def save_state(state_path: Path, state: dict) -> None:
@@ -136,6 +147,8 @@ def save_state(state_path: Path, state: dict) -> None:
 
     The tmp file is created in state_path's own directory so the rename
     is same-filesystem and therefore atomic; it is cleaned up on failure.
+    Precondition: ``state_path.parent`` must already exist (``docs/loom/``
+    by convention) — this function does not create directories.
     """
     fd, tmp_name = tempfile.mkstemp(
         prefix=f".{state_path.name}.", suffix=".tmp", dir=state_path.parent
