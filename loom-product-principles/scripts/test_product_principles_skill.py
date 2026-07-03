@@ -113,8 +113,8 @@ def test_body_has_north_star_and_principles_sections():
     text = _text()
     assert "## North Star" in text, \
         "body must instruct writing a '## North Star' section"
-    assert "## Principles" in text, \
-        "body must instruct writing a '## Principles' section"
+    assert "## Product Principles" in text, \
+        "body must instruct writing a '## Product Principles' section"
 
 
 def test_body_mandates_falsifiable_check_marker():

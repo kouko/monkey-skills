@@ -1,23 +1,26 @@
 ---
 name: product-principles
 description: |
-  Turn a sparse product idea into a PRINCIPLES.md constitution — a north star + 3-7 falsifiable principles governing design/spec/code. Use BEFORE design/spec/build on a new product, and when the user asks what principles should guide a product/design decision or how to frame a product trade-off. Triggers: product principles, north star, 產品原則, 產品憲章, プロダクト指針. Not for critiquing an existing design or spec (design-critic / completeness-critic).
+  Turn a sparse product idea into a PRINCIPLES.md project constitution — a north star + 3-7 falsifiable Product Principles, plus optional Design Principles and Engineering Principles, governing design/spec/code. Use BEFORE design/spec/build on a new product, and when the user asks what principles should guide a product/design/engineering decision or how to frame a trade-off. Triggers: product principles, project constitution, north star, 產品原則, 產品憲章, プロダクト指針. Not for critiquing an existing design or spec (design-critic / completeness-critic).
 version: 0.2.0
 ---
 
 # product-principles
 
 Turn a **sparse product idea** into a single **`PRINCIPLES.md`** — the
-**product constitution**. This is the **principles-first** layer: before any
+**project constitution**. This is the **principles-first** layer: before any
 interface-design, spec, or code, fix the product's *original goal* and its
 *non-negotiable, falsifiable principles* as the supreme input every downstream
 decision is checked against.
 
-`PRINCIPLES.md` is **product-level** (one per product), **key-free**,
+`PRINCIPLES.md` is **project-level** (one per product), **key-free**,
 **in-repo**, and **git-diffable**. It is the cross-cutting **constitution** that
 governs **interface-design, spec-expansion (functional design), and code** — and
 it applies to **any** product, including pure-**headless / CLI / library** work
-that has no UI at all.
+that has no UI at all. It is organized by **jurisdiction** — the required
+**`## Product Principles`** section covers what the product is, for whom, and
+the success trade-offs it makes; see `references/principles-rules.md` for the
+full jurisdiction table.
 
 ## Executor model — who does what
 
@@ -41,7 +44,7 @@ that *read* this file.
 ### Step 1 — Read the authoring contract
 
 Read **`references/principles-rules.md`** before writing anything. It is the
-authoring contract: it pins the exact `## North Star` and `## Principles`
+authoring contract: it pins the exact `## North Star` and `## Product Principles`
 formats, the **load-bearing per-principle `— check:` falsifiable-marker rule**
 (an em dash `—`, a single space, lowercase `check`, a colon — on the same line
 as the principle), and the synthetic ✅/❌ examples. The emitted `PRINCIPLES.md`
@@ -71,16 +74,16 @@ aspiration. Use the format in the contract:
 **Success:** <a concrete, checkable condition that means the goal is met>
 ```
 
-### Step 4 — Write `## Principles` (each with a falsifiable `— check:`)
+### Step 4 — Write `## Product Principles` (each with a falsifiable `— check:`)
 
-Write the `## Principles` section: **3–7 non-negotiable principles**, as a
+Write the `## Product Principles` section: **3–7 non-negotiable principles**, as a
 top-level ordered list, **each carrying the literal `— check:` falsifiable
 marker** (em dash, lowercase `check:`, same line). A good check is **observable**
 (you can point at where you'd measure it), **binary or thresholded**, and
 **artifact-bound** (it refers to the flow, the output, or a file that exists).
 
 ```markdown
-## Principles
+## Product Principles
 
 1. <principle statement> — check: <concrete, testable condition>
 2. <principle statement> — check: <concrete, testable condition>
@@ -99,7 +102,7 @@ constitution; more than 7 dilutes the non-negotiable weight. See the synthetic
 
 Emit the result as **`PRINCIPLES.md`** into the **consumer project** at
 **`docs/loom/PRINCIPLES.md`** (the established
-`docs/<toolkit>/` convention). It is **product-level — one file per product**,
+`docs/<toolkit>/` convention). It is **project-level — one file per project**,
 not per-feature. Do not scatter it; the constitution is a single supreme file.
 
 ### Step 6 — Validate, then fix
