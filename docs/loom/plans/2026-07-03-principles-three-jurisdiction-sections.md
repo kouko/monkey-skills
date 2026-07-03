@@ -19,7 +19,7 @@
   - **RED**: `test_validate_principles_output.py::test_accepts_product_principles_heading` (a file with `## North Star` + `## Product Principles` carrying 3 marked entries validates OK) fails — the validator still requires the legacy heading.
   - **GREEN**: new heading accepted; no fixture in the file still uses a bare `## Principles` section as a VALID case; full test file green.
 - **Dependencies**: none
-- **Independent**: false  # Tasks 2 and 3 edit the same two files
+- **Independent**: true  # disjoint from every other Independent-true task; Tasks 2–3 join AFTER it via Dependencies
 - **Brief item covered**: Smallest End State item 1 — "`## Principles` → `## Product Principles` — hard rename, same rules (3–7 top-level ordered entries…)"
 
 ## Task 2 — Legacy-heading detection with targeted migration message
@@ -64,7 +64,7 @@
   - **RED**: diagnostic `grep -q '## Product Principles' loom-product-principles/skills/product-principles/references/principles-rules.md` exits 1 (the contract still uses the legacy section name and has no jurisdiction table).
   - **GREEN**: grep exits 0; a jurisdiction table naming all three jurisdictions with their content scopes is present; no format block still shows a bare `## Principles` section as the required shape.
 - **Dependencies**: none  # mirrors the brief directly; validator-behavior sync is Task 6's job
-- **Independent**: false  # Tasks 5 and 6 edit the same file
+- **Independent**: true  # disjoint from every other Independent-true task; Tasks 5–6 join AFTER it via Dependencies
 - **Brief item covered**: Smallest End State item 3 — "The authoring contract (`principles-rules.md`) gains a jurisdiction table — Product = what/for whom/success trade-offs; Design = …; Engineering = …"
 
 ## Task 5 — Contract: optional-section rules + re-sorted and new ✅/❌ examples
@@ -198,6 +198,9 @@
 
 ## Notes
 
+- Runtime resolution (2026-07-03): **Task 12 resolved as already-satisfied, no commit.** The implementer verified the living-spec index does NOT register brief/plan markdown under docs/loom/specs|plans — its scope is `@req`-tagged tests + the `docs/loom/spec/` (singular) requirement namespace, which this change never touches. All three GREEN checks pass unchanged (`--verify-index` OK, structural gate OK, 18 index tests green). Brief Smallest End State item 7's premise was over-cautious; the acceptance's GREEN condition holds vacuously.
+- Runtime dispatch note (2026-07-03): wave 2 = Tasks 2, 5, 7 dispatched concurrently after their prerequisites (Tasks 1 and 4) completed — pairwise-disjoint write sets verified by the orchestrator (validator+its test / principles-rules.md / SKILL.md+skill test). Task 3 held back until Task 2 lands (shared write set), Task 6 until Task 5, Task 8 until Task 7, Task 10 until Task 8.
+- Amendment after PASS (2026-07-03): flipped Tasks 1 and 4 to `Independent: true` per the round-2 reviewer's own Check-15 advisory (chain heads with `Files touched` disjoint from every other `Independent: true` task; Check-14 disjointness re-verified by hand). Additive and schema-safe — DAG, fields, and depth unchanged; re-review skipped.
 - Critical path: Task 4 → 7 → 8 → 10 (depth 4). Side chains: 1 → 2 (depth 2), 1 → 3 → 6 (depth 3), 4 → 5 (depth 2). Tasks 9, 11, 12 are depth-1 leaves.
 - Tasks 1–3 share two files (validator + its test file): Task 3 depends only on Task 1 semantically but SDD runs it after Task 2 because of the shared write set. Same pattern for Tasks 4–6 (contract file, listed order) and Tasks 7–8 (SKILL + skill test).
 - Tasks 9, 11, 12 are `Independent: true` with mutually disjoint `Files touched` — `dispatching-parallel-agents` may run them as one wave alongside the sequential chains.
