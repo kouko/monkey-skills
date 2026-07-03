@@ -33,6 +33,17 @@ QUEUED = "QUEUED"
 # scripts/driver_10_guard.js:112-123.
 _CHANGE_ID_ALLOWED_PATTERN = re.compile(r"^[A-Za-z0-9._-]+$")
 
+# Form-B freeze gate: the plan header's reviewer-verdict line. Anchored to
+# the START of a line (a header FIELD, not a whole-body substring — prose
+# that merely quotes the phrase mid-sentence must not count as frozen).
+# Tolerant of the markdown bold markers the plan format uses
+# (`**Plan-document-reviewer verdict**: PASS (…)`) and of the plain form
+# real consumer plans use. PENDING never matches.
+_PLAN_REVIEWER_PASS_PATTERN = re.compile(
+    r"^\*{0,2}Plan-document-reviewer verdict\*{0,2}\s*:\s*\*{0,2}\s*PASS\b",
+    re.MULTILINE,
+)
+
 FAIL_LOUD_NOTICE = (
     "fail-loud: refusing to improvise a missing or invalid queue entry — "
     "no defaults, no silent skip; load_queue FAILS rather than guessing."
@@ -182,14 +193,24 @@ def effective_entries(entries: list[dict], state: dict) -> list[dict]:
 
 
 def check_frozen(entry: dict, project_path: Path, skills_root: Path) -> tuple[bool, str]:
-    """Freeze predicate: loom-spec validator exit-0 AND plan file present.
+    """Freeze predicate — two accepted forms, both requiring the plan file.
 
+    Form A (change-folder): ``docs/loom/<id>/`` exists → it must pass the
+    loom-spec validator (``python3 <skills_root>/loom-spec/scripts/
+    validate_spec_output.py <project_path>/docs/loom/<id>``, invocation
+    convention driver_40_seg2.js:106-127). This is the original v1.1
     Decision §"Freeze predicate = loom-spec validator exit-0 + plan
     written" (docs/loom/plans/2026-07-03-loom-pipeline-v1-1-batch-mode.md
-    Task 4). Runs ``python3 <skills_root>/loom-spec/scripts/
-    validate_spec_output.py <project_path>/docs/loom/<id>`` via subprocess
-    (invocation convention: driver_40_seg2.js:106-127) and requires
-    ``<project_path>/<entry["plan"]>`` to exist.
+    Task 4).
+
+    Form B (brief+plan): ``docs/loom/<id>/`` does NOT exist → the plan
+    file itself must carry a ``Plan-document-reviewer verdict: PASS``
+    line. Real interactive work (observed live 2026-07-03 on
+    komado-Viewfinder) produces brainstorm-brief + reviewer-PASSed plan
+    with no OpenSpec change folder; rejecting that form forced ceremony
+    the pipeline does not need. A change folder that EXISTS but fails the
+    validator is still a hard reject — a broken change folder is a red
+    flag, never a fallback to Form B.
 
     Returns ``(eligible, reason)`` — **never raises for ineligibility**,
     including a path-traversal attempt in ``entry["plan"]``: the resolved
@@ -224,6 +245,23 @@ def check_frozen(entry: dict, project_path: Path, skills_root: Path) -> tuple[bo
         return (False, f'entry "{entry_id}" plan not found at "{plan_path}".')
 
     change_dir = project_path / "docs" / "loom" / entry_id
+    if not change_dir.is_dir():
+        # Form B: no change folder — the plan's reviewer verdict is the gate.
+        if _PLAN_REVIEWER_PASS_PATTERN.search(
+            plan_path.read_text(encoding="utf-8")
+        ):
+            return (
+                True,
+                f'entry "{entry_id}" is frozen — brief+plan form (no change '
+                "folder; plan carries Plan-document-reviewer verdict: PASS).",
+            )
+        return (
+            False,
+            f'entry "{entry_id}" has no change folder at "{change_dir}" and '
+            'its plan carries no "Plan-document-reviewer verdict: PASS" '
+            "line — not frozen under either form.",
+        )
+
     validator_script = Path(skills_root) / "loom-spec" / "scripts" / "validate_spec_output.py"
     result = subprocess.run(
         ["python3", str(validator_script), str(change_dir)],
@@ -238,7 +276,7 @@ def check_frozen(entry: dict, project_path: Path, skills_root: Path) -> tuple[bo
             f'{validator_script} {change_dir}).',
         )
 
-    return (True, f'entry "{entry_id}" is frozen — validator exit 0, plan present.')
+    return (True, f'entry "{entry_id}" is frozen — change-folder form (validator exit 0), plan present.')
 
 
 def ensure_worktree(project_path: Path, change_id: str) -> tuple[Path, str]:

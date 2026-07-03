@@ -6,6 +6,20 @@ this file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] — 2026-07-03
+
+### Added
+
+- **Brief+plan freeze form** — `batch_queue.py`'s freeze predicate now
+  accepts a second form: when no `docs/loom/<change-id>/` change folder
+  exists, an entry is frozen if its (committed) plan file carries a
+  `Plan-document-reviewer verdict: PASS` line. Real interactive work
+  (observed live on a consumer project, 2026-07-03) produces
+  brainstorm-brief + reviewer-PASSed plan with no OpenSpec change
+  folder; v1.1's change-folder-only predicate would have SKIPPED every
+  such entry. A change folder that exists but fails the validator is
+  still a hard reject — never a fallback to the plan-verdict form.
+
 ## [0.2.0] — 2026-07-03
 
 Batch implementation mode (v1.1): a queue of FROZEN change-folders runs

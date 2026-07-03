@@ -193,12 +193,20 @@ per change id), never hand-edited. Neither file writes the other.
 
 ### Freeze predicate
 
-An entry is eligible for `next` only when the loom-spec validator exits 0
-for `docs/loom/<id>/` **and** the plan is committed. A validator failure
-skips the entry before any worktree exists; an uncommitted plan (invisible
-to the worktree, which branches from HEAD) is caught after worktree
-creation — that entry is SKIPPED and its just-created worktree and branch
-are torn down. No segment 2.5: freezing
+An entry is eligible for `next` under either of two forms, both requiring
+the plan file to be committed:
+
+- **Change-folder form** — `docs/loom/<id>/` exists: it must pass the
+  loom-spec validator (exit 0). A folder that exists but fails is a hard
+  reject, never a fallback.
+- **Brief+plan form** — no `docs/loom/<id>/` folder: the plan itself must
+  carry a `Plan-document-reviewer verdict: PASS` line (the
+  brainstorm→brief→plan path produces exactly this and no change folder).
+
+An ineligible entry skips before any worktree exists; an uncommitted plan
+(invisible to the worktree, which branches from HEAD) is caught after
+worktree creation — that entry is SKIPPED and its just-created worktree
+and branch are torn down. No segment 2.5: freezing
 happens interactively before queueing, never inside the unattended run.
 
 ### The dispatcher-only loop
