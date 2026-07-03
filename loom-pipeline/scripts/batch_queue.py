@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import subprocess
 import tempfile
 import tomllib
 from pathlib import Path
@@ -181,3 +182,58 @@ def effective_entries(entries: list[dict], state: dict) -> list[dict]:
                 effective[field] = record[field]
         merged.append(effective)
     return merged
+
+
+def check_frozen(entry: dict, project_path: Path, skills_root: Path) -> tuple[bool, str]:
+    """Freeze predicate: loom-spec validator exit-0 AND plan file present.
+
+    Decision §"Freeze predicate = loom-spec validator exit-0 + plan
+    written" (docs/loom/plans/2026-07-03-loom-pipeline-v1-1-batch-mode.md
+    Task 4). Runs ``python3 <skills_root>/loom-spec/scripts/
+    validate_spec_output.py <project_path>/docs/loom/<id>`` via subprocess
+    (invocation convention: driver_40_seg2.js:106-127) and requires
+    ``<project_path>/<entry["plan"]>`` to exist.
+
+    Returns ``(eligible, reason)`` — **never raises for ineligibility**,
+    including a path-traversal attempt in ``entry["plan"]``: the resolved
+    plan path is guarded to stay inside ``project_path`` (``Path.resolve()``
+    + ``relative_to`` check), and a traversal is reported as an eligibility
+    failure via the return tuple, not a raised ``QueueError``. This keeps
+    one failure channel for this function (contrast ``load_queue``, which
+    raises ``QueueError`` for structural defects at parse time — this
+    function runs later, per-entry, and its whole contract is "tell me why
+    not" rather than "refuse to load").
+    """
+    project_path = Path(project_path).resolve()
+    entry_id = entry["id"]
+
+    plan_path = (project_path / entry["plan"]).resolve()
+    try:
+        plan_path.relative_to(project_path)
+    except ValueError:
+        return (
+            False,
+            f'entry "{entry_id}" plan "{entry["plan"]}" resolves to '
+            f'"{plan_path}", outside project_path "{project_path}" '
+            "(path traversal).",
+        )
+
+    if not plan_path.is_file():
+        return (False, f'entry "{entry_id}" plan not found at "{plan_path}".')
+
+    change_dir = project_path / "docs" / "loom" / entry_id
+    validator_script = Path(skills_root) / "loom-spec" / "scripts" / "validate_spec_output.py"
+    result = subprocess.run(
+        ["python3", str(validator_script), str(change_dir)],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        return (
+            False,
+            f'entry "{entry_id}" failed the freeze predicate — validator '
+            f"exited {result.returncode} for \"{change_dir}\" (ran: python3 "
+            f'{validator_script} {change_dir}).',
+        )
+
+    return (True, f'entry "{entry_id}" is frozen — validator exit 0, plan present.')

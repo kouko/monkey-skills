@@ -7,6 +7,7 @@ import pytest
 
 from batch_queue import (
     QueueError,
+    check_frozen,
     effective_entries,
     load_queue,
     load_state,
@@ -289,3 +290,99 @@ def test_load_state_fails_loud_on_non_dict_json(tmp_path):
     assert "load_state" in str(exc_info.value)
     assert str(state_path) in str(exc_info.value)
     assert "list" in str(exc_info.value)
+
+
+def _write_stub_validator(skills_root: Path, exit_code: int) -> None:
+    """Write a stub loom-spec validator under skills_root that exits exit_code.
+
+    Stands in for the real ``loom-spec/scripts/validate_spec_output.py`` so
+    tests never invoke the real validator (host convention: stub, don't
+    shell out to sibling-team scripts from unit tests).
+    """
+    validator_path = skills_root / "loom-spec" / "scripts" / "validate_spec_output.py"
+    validator_path.parent.mkdir(parents=True, exist_ok=True)
+    validator_path.write_text(f"import sys\nsys.exit({exit_code})\n", encoding="utf-8")
+
+
+def _make_entry(plan_rel: str) -> dict:
+    return {"id": "add-export-csv", "plan": plan_rel, "budgets": {"run": 1}}
+
+
+def test_check_frozen_rejects_when_validator_nonzero(tmp_path):
+    project_path = tmp_path / "project"
+    plan_rel = "docs/loom/plans/2026-07-03-add-export-csv.md"
+    plan_path = project_path / plan_rel
+    plan_path.parent.mkdir(parents=True)
+    plan_path.write_text("plan\n", encoding="utf-8")
+
+    skills_root = tmp_path / "skills"
+    _write_stub_validator(skills_root, exit_code=1)
+
+    eligible, reason = check_frozen(_make_entry(plan_rel), project_path, skills_root)
+
+    assert eligible is False
+    assert "1" in reason
+
+
+def test_check_frozen_accepts_when_validator_zero_and_plan_present(tmp_path):
+    project_path = tmp_path / "project"
+    plan_rel = "docs/loom/plans/2026-07-03-add-export-csv.md"
+    plan_path = project_path / plan_rel
+    plan_path.parent.mkdir(parents=True)
+    plan_path.write_text("plan\n", encoding="utf-8")
+
+    skills_root = tmp_path / "skills"
+    _write_stub_validator(skills_root, exit_code=0)
+
+    eligible, reason = check_frozen(_make_entry(plan_rel), project_path, skills_root)
+
+    assert eligible is True
+    assert reason
+
+
+def test_check_frozen_rejects_when_plan_missing(tmp_path):
+    project_path = tmp_path / "project"
+    project_path.mkdir()
+    plan_rel = "docs/loom/plans/2026-07-03-missing.md"
+
+    skills_root = tmp_path / "skills"
+    _write_stub_validator(skills_root, exit_code=0)
+
+    eligible, reason = check_frozen(_make_entry(plan_rel), project_path, skills_root)
+
+    assert eligible is False
+    assert "not found" in reason
+
+
+def test_check_frozen_rejects_path_traversal_in_plan(tmp_path):
+    project_path = tmp_path / "project"
+    project_path.mkdir()
+    outside = tmp_path / "outside.md"
+    outside.write_text("secret\n", encoding="utf-8")
+
+    skills_root = tmp_path / "skills"
+    _write_stub_validator(skills_root, exit_code=0)
+
+    eligible, reason = check_frozen(
+        _make_entry("../outside.md"), project_path, skills_root
+    )
+
+    assert eligible is False
+    assert "traversal" in reason.lower()
+
+
+def test_check_frozen_rejects_absolute_path_escaping_project(tmp_path):
+    project_path = tmp_path / "project"
+    project_path.mkdir()
+    outside = tmp_path / "etc-passwd-stand-in.md"
+    outside.write_text("secret\n", encoding="utf-8")
+
+    skills_root = tmp_path / "skills"
+    _write_stub_validator(skills_root, exit_code=0)
+
+    eligible, reason = check_frozen(
+        _make_entry(str(outside)), project_path, skills_root
+    )
+
+    assert eligible is False
+    assert "traversal" in reason.lower()
