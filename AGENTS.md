@@ -64,6 +64,12 @@ Role boundaries enforced by behavior, not reading restrictions:
   `loom-pipeline/scripts/driver_NN_*.js` sources in filename order into
   `loom-pipeline/skills/using-loom-pipeline/assets/loom-pipeline.js`;
   `--out <path>` builds to an alternate path instead.
+- **Drive loom-pipeline batch mode's queue bookkeeping**:
+  `python3 loom-pipeline/scripts/batch_queue.py {next|mark|status}` —
+  deterministic dispatcher-loop CLI over `docs/loom/QUEUE.toml` (human
+  intent) and `docs/loom/queue-state.json` (machine state); `next` emits
+  ready-to-use `Workflow` args, `mark` records done/failed, `status`
+  prints a one-screen queue overview.
 <!-- END command-surface (managed) -->
 
 ## Plugin: domain-teams

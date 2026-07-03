@@ -57,3 +57,40 @@ def test_fire_inputs_and_invocation():
         "missing the literal Workflow({scriptPath invocation snippet"
     assert "base path" in lower or "base directory" in lower, \
         "missing base-path-resolution mention"
+
+
+def test_skill_batch_mode_section_contract():
+    assert SKILL_MD.exists(), f"missing {SKILL_MD}"
+    text = SKILL_MD.read_text()
+    body = _body(text)
+    body_lower = body.lower()
+
+    batch_idx = body_lower.find("## §batch mode")
+    assert batch_idx != -1, "missing §Batch mode heading"
+    batch_section = body[batch_idx:]
+    batch_section_lower = batch_section.lower()
+
+    # Three dispatcher-only prohibitions, verbatim (plan Task 11 / brief
+    # Smallest End State §3), scoped to the §Batch mode section itself so
+    # this can't pass on an unrelated mention elsewhere in the file.
+    assert "never parses the queue file" in batch_section_lower, \
+        "missing 'never parses the queue file' prohibition"
+    assert "never composes git commands" in batch_section_lower, \
+        "missing 'never composes git commands' prohibition"
+    assert "never diagnoses failures mid-batch" in batch_section_lower, \
+        "missing 'never diagnoses failures mid-batch' prohibition"
+
+    # next -> Workflow -> mark loop, in that order, within §Batch mode
+    # (the §Invocation section earlier in the file has its own unrelated
+    # Workflow({ call, so this must not scan the whole document).
+    next_idx = batch_section.find("batch_queue.py next")
+    workflow_idx = batch_section.find("Workflow(")
+    mark_idx = batch_section.find("batch_queue.py mark")
+    assert -1 not in (next_idx, workflow_idx, mark_idx), \
+        "missing one of next / Workflow / mark in the §Batch mode loop description"
+    assert next_idx < workflow_idx < mark_idx, \
+        "next -> Workflow -> mark loop is not documented in that order"
+
+    # Both queue files named.
+    assert "QUEUE.toml" in batch_section, "missing QUEUE.toml"
+    assert "queue-state.json" in batch_section, "missing queue-state.json"

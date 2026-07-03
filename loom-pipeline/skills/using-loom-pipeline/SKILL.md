@@ -158,3 +158,75 @@ Judgment stays in the four station plugins (cross-plugin delegation contract)
 **Stable-prefix dispatch convention**: station preambles are
 stable/cacheable; the per-change payload is appended, never prepended —
 prepending would invalidate the cache on every dispatch.
+
+## §Batch mode — freeze many changes, run the queue unattended
+
+Batch mode moves every per-change human decision (gates (a) and (c)) to
+**freeze time**, so a whole queue of changes runs Segment 3 unattended —
+walk away, come back to N reviewable PR branches. Sequential only; a
+parallel variant is parked (`loom-pipeline/README.md` §Parked items).
+
+### Queue file — `docs/loom/QUEUE.toml`
+
+Human-edited, in the target project, one `[[change]]` array-of-tables entry
+per change, authored at freeze time:
+
+```toml
+[[change]]
+id = "add-export-csv"
+plan = "docs/loom/plans/2026-07-03-add-export-csv.md"
+models = { code = "sonnet", review = "sonnet" }
+[change.budgets]
+run = 200000
+perStation = { code = 40000, review = 20000 }
+```
+
+Required: `id`, `plan` (project-relative path to the change's plan),
+`budgets.run`. Optional: `budgets.perStation`, `models`.
+
+### Intent vs. state — two files, two owners
+
+`QUEUE.toml` is the human's **intent** — hand-edited at freeze time, never
+machine-written. `docs/loom/queue-state.json` is the machine's **state** —
+owned by `batch_queue.py` alone (records `RUNNING`/`DONE`/`FAILED`/`SKIPPED`
+per change id), never hand-edited. Neither file writes the other.
+
+### Freeze predicate
+
+An entry is eligible for `next` only when the loom-spec validator exits 0
+for `docs/loom/<id>/` **and** the plan is committed — the worktree branches
+from HEAD, so an uncommitted plan is invisible to it and the entry is
+SKIPPED with its just-created worktree torn down. No segment 2.5: freezing
+happens interactively before queueing, never inside the unattended run.
+
+### The dispatcher-only loop
+
+The main agent repeats exactly this loop, one iteration per change, until
+`next` prints `{"done": true}` or exits 3 (circuit-breaker HALT):
+
+1. `python3 <skillsRoot>/loom-pipeline/scripts/batch_queue.py next --project <projectPath> --skills-root <skillsRoot>`
+2. `Workflow({scriptPath: "<resolved assets/loom-pipeline.js>", args: <the JSON stdout from step 1, verbatim>})`
+3. `python3 <skillsRoot>/loom-pipeline/scripts/batch_queue.py mark <id> done|failed --run-id <the Workflow run id>`
+
+The main agent is **dispatcher-only**: it never parses the queue file, it
+never composes git commands, and it never diagnoses failures mid-batch —
+all of that is script-owned (`batch_queue.py`) or deferred to the
+end-of-batch human report below.
+
+### `next` exit codes
+
+| Code | Meaning |
+|---|---|
+| 0 | dispatched an entry (Workflow args JSON on stdout), or the queue is done (`{"done": true}`) |
+| 1 | fail-loud error (malformed `QUEUE.toml`, etc.) |
+| 2 | argparse usage error |
+| 3 | circuit-breaker HALT — 2 consecutive `FAILED` entries; `--override-halt` bypasses after human review |
+
+### End of batch
+
+`python3 <skillsRoot>/loom-pipeline/scripts/batch_queue.py status --project <projectPath>`
+prints the one-screen report a fresh session reads first. A finished batch
+of N changes leaves N ledgers at
+`<projectPath>/docs/loom/<changeId>/pipeline-ledger.md` and N PR-ready
+`loom/<id>` branches — merge stays human (gate (d) is unchanged by batch
+mode).
