@@ -101,17 +101,21 @@ constitution; more than 7 dilutes the non-negotiable weight. See the synthetic
 ### Step 5 — Elicit design posture and engineering posture (optional)
 
 Ask, briefly, whether the project has already **committed** to any
-**design-posture** decisions (interaction posture, feedback/error stance,
-information density, accessibility floor, tone where checkable) or
-**engineering-posture** decisions (stack, dependency posture, the
-conservative↔aggressive style dial, a test-rigor **ceiling** set above the
-TDD iron-law floor — never below it — and explicit negative decisions). See
-the jurisdiction table in `references/principles-rules.md`.
+**design-posture** or **engineering-posture** decisions — see the jurisdiction
+table in `references/principles-rules.md` for what belongs in each.
+
+For `## Engineering Principles` specifically: any test-rigor decision is a
+**ceiling** set *above* the TDD iron-law floor — never below it.
 
 **Elicit, don't imagine.** Write a clause only for a decision the user
 actually commits to right now — never invent placeholder clauses to fill out
 a jurisdiction. If the user has no committed decisions in a jurisdiction yet,
 skip it entirely for this pass.
+
+**Reject platitudes — push back**, the same as Step 4: a clause with no
+falsifiable `— check:`, or a check nothing could ever falsify, is not a
+principle here either. See the Design and Engineering ✅/❌ examples in
+`references/principles-rules.md`.
 
 For each committed clause, write it under `## Design Principles` and/or
 `## Engineering Principles` in the same format as Product Principles — **1–7**
