@@ -103,12 +103,7 @@ def load_queue(queue_path: Path) -> list[dict]:
                 f"({type(entry_id).__name__})."
             )
 
-        if not _CHANGE_ID_ALLOWED_PATTERN.match(entry_id) or ".." in entry_id:
-            _fail(
-                f'entry "{label}" has "id" that must match '
-                f"{_CHANGE_ID_ALLOWED_PATTERN.pattern} (letters, digits, dot, "
-                f'underscore, hyphen only; no ".."); received {entry_id!r}.'
-            )
+        _assert_valid_change_id(entry_id, fn="load_queue")
 
         if entry_id in seen_ids:
             _fail(f'duplicate "id" {entry_id!r} in "{queue_path}".')
@@ -212,13 +207,7 @@ def check_frozen(entry: dict, project_path: Path, skills_root: Path) -> tuple[bo
     # Trust-boundary re-assertion: entry["id"] is trusted-by-contract
     # (load_queue already validated it) — re-check here so the boundary is
     # explicit rather than emergent.
-    if not _CHANGE_ID_ALLOWED_PATTERN.match(entry_id) or ".." in entry_id:
-        _fail(
-            f'entry "{entry_id}" has "id" that must match '
-            f"{_CHANGE_ID_ALLOWED_PATTERN.pattern} (letters, digits, dot, "
-            f'underscore, hyphen only; no ".."); received {entry_id!r}.',
-            fn="check_frozen",
-        )
+    _assert_valid_change_id(entry_id, fn="check_frozen")
 
     plan_path = (project_path / entry["plan"]).resolve()
     try:
@@ -274,13 +263,7 @@ def ensure_worktree(project_path: Path, change_id: str) -> tuple[Path, str]:
     # Trust-boundary re-assertion: change_id is trusted-by-contract
     # (callers derive it from load_queue's already-validated entries) —
     # re-check here so the boundary is explicit rather than emergent.
-    if not _CHANGE_ID_ALLOWED_PATTERN.match(change_id) or ".." in change_id:
-        _fail(
-            f'change_id must match {_CHANGE_ID_ALLOWED_PATTERN.pattern} '
-            f'(letters, digits, dot, underscore, hyphen only; no ".."); '
-            f"received {change_id!r}.",
-            fn="ensure_worktree",
-        )
+    _assert_valid_change_id(change_id, fn="ensure_worktree")
 
     project_path = Path(project_path)
     branch = f"loom/{change_id}"
@@ -372,9 +355,75 @@ def _cmd_mark(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_status(args: argparse.Namespace) -> int:
+    """Implements the ``status`` subcommand — see ``main``'s subparser setup.
+
+    Prints a one-screen plain-text overview to stdout: one line per queue
+    entry, in queue order (``effective_entries`` preserves ``load_queue``'s
+    file order), carrying id + effective status + ``runId`` (when recorded)
+    + ``reason`` (only for SKIPPED/FAILED — a record re-marked done can
+    retain a stale ``reason`` field, so this guard is deliberate, not
+    incidental), followed by a final totals line (count per status). This
+    is the first thing a fresh session reads to take over a batch, so the
+    format is kept grep-friendly and stable: one ``key=value`` per field
+    after the id and status columns.
+
+    Returns a process exit code (0 on success, 1 when the queue file is
+    missing/malformed — printed to stderr, mirroring ``_cmd_mark``).
+    """
+    project_path = Path(args.project)
+    queue_path = project_path / "docs" / "loom" / "QUEUE.toml"
+    state_path = project_path / "docs" / "loom" / "queue-state.json"
+
+    try:
+        entries = load_queue(queue_path)
+    except QueueError as e:
+        print(str(e), file=sys.stderr)
+        return 1
+
+    state = load_state(state_path)
+    merged = effective_entries(entries, state)
+
+    totals: dict[str, int] = {}
+    for entry in merged:
+        status = entry["status"]
+        totals[status] = totals.get(status, 0) + 1
+
+        fields = [entry["id"], status]
+        if "runId" in entry:
+            fields.append(f'runId={entry["runId"]}')
+        if status in ("SKIPPED", "FAILED") and "reason" in entry:
+            fields.append(f'reason={entry["reason"]}')
+        print("  ".join(fields))
+
+    totals_fields = " ".join(
+        f"{status}={count}" for status, count in sorted(totals.items())
+    )
+    print(f"total={len(merged)} {totals_fields}".rstrip())
+    return 0
+
+
+def _assert_valid_change_id(id_value: str, *, fn: str) -> None:
+    """Trust-boundary re-assertion of the changeId allow-list.
+
+    Shared by ``load_queue``, ``check_frozen``, ``ensure_worktree`` — the
+    same check was copy-pasted at all three sites (Rule of Three), so it is
+    extracted here and routed through ``_fail(fn=...)``. Raises
+    ``QueueError`` when ``id_value`` fails ``_CHANGE_ID_ALLOWED_PATTERN`` or
+    contains ``".."``.
+    """
+    if not _CHANGE_ID_ALLOWED_PATTERN.match(id_value) or ".." in id_value:
+        _fail(
+            f'"{id_value}" must match {_CHANGE_ID_ALLOWED_PATTERN.pattern} '
+            f'(letters, digits, dot, underscore, hyphen only; no ".."); '
+            f"received {id_value!r}.",
+            fn=fn,
+        )
+
+
 def _build_parser() -> argparse.ArgumentParser:
     """Top-level argparse setup. Subparser structure left open for the
-    ``next``/``status`` subcommands added by later tasks.
+    ``next`` subcommand added by a later task.
     """
     parser = argparse.ArgumentParser(
         prog="batch_queue.py", description="loom-pipeline batch mode bookkeeping"
@@ -392,6 +441,14 @@ def _build_parser() -> argparse.ArgumentParser:
     mark_parser.add_argument("--run-id", dest="run_id")
     mark_parser.add_argument("--reason")
     mark_parser.set_defaults(func=_cmd_mark)
+
+    status_parser = subparsers.add_parser(
+        "status", help="print a one-screen overview of the queue"
+    )
+    status_parser.add_argument(
+        "--project", required=True, help="target project root"
+    )
+    status_parser.set_defaults(func=_cmd_status)
 
     return parser
 

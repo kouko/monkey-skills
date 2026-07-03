@@ -575,3 +575,38 @@ def test_mark_rejects_invalid_status_choice(tmp_path, capsys):
 
     assert exc_info.value.code != 0
     assert "bogus-status" in capsys.readouterr().err
+
+
+def test_status_lists_every_entry_with_effective_status(tmp_path, capsys):
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+    save_state(
+        loom_dir / "queue-state.json",
+        {
+            "add-export-csv": {"status": "DONE", "runId": "wf_1"},
+            "fix-login-redirect": {"status": "FAILED", "reason": "validator exit 1"},
+        },
+    )
+
+    exit_code = main(["status", "--project", str(project_path)])
+
+    assert exit_code == 0
+    lines = capsys.readouterr().out.strip().splitlines()
+
+    # one line per queue entry, in queue order (QUEUE_TOML order above)
+    assert "add-export-csv" in lines[0]
+    assert "DONE" in lines[0]
+    assert "wf_1" in lines[0]
+
+    assert "fix-login-redirect" in lines[1]
+    assert "FAILED" in lines[1]
+    assert "validator exit 1" in lines[1]
+
+    assert "add-dark-mode" in lines[2]
+    assert "QUEUED" in lines[2]
+
+    # final totals line, counts per status
+    totals_line = lines[-1]
+    assert "DONE=1" in totals_line
+    assert "FAILED=1" in totals_line
+    assert "QUEUED=1" in totals_line
