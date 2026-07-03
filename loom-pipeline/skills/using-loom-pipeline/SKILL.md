@@ -194,9 +194,11 @@ per change id), never hand-edited. Neither file writes the other.
 ### Freeze predicate
 
 An entry is eligible for `next` only when the loom-spec validator exits 0
-for `docs/loom/<id>/` **and** the plan is committed — the worktree branches
-from HEAD, so an uncommitted plan is invisible to it and the entry is
-SKIPPED with its just-created worktree torn down. No segment 2.5: freezing
+for `docs/loom/<id>/` **and** the plan is committed. A validator failure
+skips the entry before any worktree exists; an uncommitted plan (invisible
+to the worktree, which branches from HEAD) is caught after worktree
+creation — that entry is SKIPPED and its just-created worktree and branch
+are torn down. No segment 2.5: freezing
 happens interactively before queueing, never inside the unattended run.
 
 ### The dispatcher-only loop
@@ -206,7 +208,7 @@ The main agent repeats exactly this loop, one iteration per change, until
 
 1. `python3 <skillsRoot>/loom-pipeline/scripts/batch_queue.py next --project <projectPath> --skills-root <skillsRoot>`
 2. `Workflow({scriptPath: "<resolved assets/loom-pipeline.js>", args: <the JSON stdout from step 1, verbatim>})`
-3. `python3 <skillsRoot>/loom-pipeline/scripts/batch_queue.py mark <id> done|failed --run-id <the Workflow run id>`
+3. `python3 <skillsRoot>/loom-pipeline/scripts/batch_queue.py mark <id> done|failed --project <projectPath> --run-id <the Workflow run id>`
 
 The main agent is **dispatcher-only**: it never parses the queue file, it
 never composes git commands, and it never diagnoses failures mid-batch —

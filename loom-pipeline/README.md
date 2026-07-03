@@ -133,13 +133,13 @@ sequential-only:
    exit-0 + plan present), creates its worktree/branch, records
    `RUNNING`, and prints one JSON object with ready-to-use `Workflow`
    args (`{segment: 3, changeId, projectPath, planPath, budgets,
-   models, skillsRoot}`). Empty/exhausted queue prints `{"done":
-   true}` and exits 0.
+   models, skillsRoot, branch}`). Empty/exhausted queue prints
+   `{"done": true}` and exits 0.
 2. The main agent calls `Workflow(segment: 3, ...)` with exactly that
    JSON — it never parses the queue file, never composes git commands,
    never diagnoses failures mid-batch.
-3. `batch_queue.py mark <change-id> done|failed [--run-id <id>]
-   [--reason <text>]` writes the outcome back to state.
+3. `batch_queue.py mark <change-id> done|failed --project <path>
+   [--run-id <id>] [--reason <text>]` writes the outcome back to state.
 4. Repeat from step 1.
 
 **Failure isolation**: an ineligible entry (freeze predicate fails, or
