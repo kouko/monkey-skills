@@ -98,14 +98,50 @@ in ≤3 steps — check: count steps in the happy-path flow"). Fewer than 3 is n
 constitution; more than 7 dilutes the non-negotiable weight. See the synthetic
 ✅/❌ examples in `references/principles-rules.md`.
 
-### Step 5 — Emit `PRINCIPLES.md` into the consumer project
+### Step 5 — Elicit design posture and engineering posture (optional)
+
+Ask, briefly, whether the project has already **committed** to any
+**design-posture** decisions (interaction posture, feedback/error stance,
+information density, accessibility floor, tone where checkable) or
+**engineering-posture** decisions (stack, dependency posture, the
+conservative↔aggressive style dial, a test-rigor **ceiling** set above the
+TDD iron-law floor — never below it — and explicit negative decisions). See
+the jurisdiction table in `references/principles-rules.md`.
+
+**Elicit, don't imagine.** Write a clause only for a decision the user
+actually commits to right now — never invent placeholder clauses to fill out
+a jurisdiction. If the user has no committed decisions in a jurisdiction yet,
+skip it entirely for this pass.
+
+For each committed clause, write it under `## Design Principles` and/or
+`## Engineering Principles` in the same format as Product Principles — **1–7**
+top-level ordered entries, each carrying the identical literal `— check:`
+marker:
+
+```markdown
+## Design Principles
+
+1. <principle statement> — check: <concrete, testable condition>
+```
+
+```markdown
+## Engineering Principles
+
+1. <principle statement> — check: <concrete, testable condition>
+```
+
+**Never emit an empty section.** A jurisdiction with zero committed clauses
+emits **no** heading at all — do not write `## Design Principles` or
+`## Engineering Principles` with nothing under it just to "look complete."
+
+### Step 6 — Emit `PRINCIPLES.md` into the consumer project
 
 Emit the result as **`PRINCIPLES.md`** into the **consumer project** at
 **`docs/loom/PRINCIPLES.md`** (the established
 `docs/<toolkit>/` convention). It is **project-level — one file per project**,
 not per-feature. Do not scatter it; the constitution is a single supreme file.
 
-### Step 6 — Validate, then fix
+### Step 7 — Validate, then fix
 
 Run the validator and **fix any flagged issue before declaring done**:
 

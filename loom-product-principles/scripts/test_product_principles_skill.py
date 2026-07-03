@@ -164,6 +164,34 @@ def test_body_elicits_idea_and_target_user():
         "body must elicit the product idea + target user"
 
 
+def test_skill_defines_three_jurisdiction_sections():
+    """The generator elicits ALL three jurisdictions, not just Product: it
+    must instruct writing '## Product Principles', '## Design Principles',
+    and '## Engineering Principles' sections, with a dedicated elicitation
+    step for design posture and one for engineering posture. Optional
+    sections are emitted only for clauses the user actually commits to, and
+    a jurisdiction with no committed clauses emits no section (never an
+    empty heading)."""
+    text = _text()
+    low = text.lower()
+    assert "## Product Principles" in text, \
+        "body must instruct writing a '## Product Principles' section"
+    assert "## Design Principles" in text, \
+        "body must instruct writing a '## Design Principles' section"
+    assert "## Engineering Principles" in text, \
+        "body must instruct writing a '## Engineering Principles' section"
+    assert "design posture" in low, \
+        "body must have a design-posture elicitation step"
+    assert "engineering posture" in low, \
+        "body must have an engineering-posture elicitation step"
+    assert "commit" in low, \
+        "body must state clauses are emitted only from decisions the user " \
+        "actually commits to"
+    assert "empty" in low, \
+        "body must state a jurisdiction with no committed clauses emits no " \
+        "section (never an empty heading)"
+
+
 # --- flat-skill structure (repo hook enforces) ------------------------------
 
 def test_skill_folder_is_flat():
