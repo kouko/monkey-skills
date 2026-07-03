@@ -85,6 +85,19 @@ def test_description_carries_trilingual_triggers():
         "description must carry a ja trigger (製品の原則 / プロダクト指針)"
 
 
+def test_description_covers_design_and_engineering_triggers():
+    """The three-jurisdiction scope must be routable in CJK too — a zh-TW/ja
+    user asking specifically about design or engineering principles must hit
+    this skill, not just product-principle phrasings."""
+    front = _frontmatter()
+    assert "設計原則" in front, \
+        "description must carry a design-principles CJK trigger (設計原則)"
+    assert ("工程原則" in front or "技術原則" in front
+            or "エンジニアリング" in front), \
+        "description must carry an engineering-principles CJK trigger " \
+        "(工程原則 / 技術原則 / エンジニアリング原則)"
+
+
 def test_description_states_principles_md_output():
     """description must signal it produces a PRINCIPLES.md governing
     design / spec / code, key-free."""
@@ -113,8 +126,8 @@ def test_body_has_north_star_and_principles_sections():
     text = _text()
     assert "## North Star" in text, \
         "body must instruct writing a '## North Star' section"
-    assert "## Principles" in text, \
-        "body must instruct writing a '## Principles' section"
+    assert "## Product Principles" in text, \
+        "body must instruct writing a '## Product Principles' section"
 
 
 def test_body_mandates_falsifiable_check_marker():
@@ -133,7 +146,7 @@ def test_body_mandates_falsifiable_check_marker():
 
 def test_body_emits_to_consumer_project_path():
     """The skill writes PRINCIPLES.md into the consumer project at the
-    docs/<toolkit>/ convention — product-level, one per product."""
+    docs/<toolkit>/ convention — project-level, one per project."""
     text = _text()
     assert "docs/loom/PRINCIPLES.md" in text, \
         "body must emit PRINCIPLES.md to docs/loom/"
@@ -162,6 +175,34 @@ def test_body_elicits_idea_and_target_user():
     low = _text().lower()
     assert "target user" in low, \
         "body must elicit the product idea + target user"
+
+
+def test_skill_defines_three_jurisdiction_sections():
+    """The generator elicits ALL three jurisdictions, not just Product: it
+    must instruct writing '## Product Principles', '## Design Principles',
+    and '## Engineering Principles' sections, with a dedicated elicitation
+    step for design posture and one for engineering posture. Optional
+    sections are emitted only for clauses the user actually commits to, and
+    a jurisdiction with no committed clauses emits no section (never an
+    empty heading)."""
+    text = _text()
+    low = text.lower()
+    assert "## Product Principles" in text, \
+        "body must instruct writing a '## Product Principles' section"
+    assert "## Design Principles" in text, \
+        "body must instruct writing a '## Design Principles' section"
+    assert "## Engineering Principles" in text, \
+        "body must instruct writing a '## Engineering Principles' section"
+    assert "design posture" in low, \
+        "body must have a design-posture elicitation step"
+    assert "engineering posture" in low, \
+        "body must have an engineering-posture elicitation step"
+    assert "commit" in low, \
+        "body must state clauses are emitted only from decisions the user " \
+        "actually commits to"
+    assert "empty" in low, \
+        "body must state a jurisdiction with no committed clauses emits no " \
+        "section (never an empty heading)"
 
 
 # --- flat-skill structure (repo hook enforces) ------------------------------

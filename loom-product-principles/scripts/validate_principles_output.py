@@ -11,14 +11,22 @@ Valid iff:
   1. A `## North Star` section exists and is non-empty — at least one
      non-whitespace, non-heading body line appears under the heading before
      the next `##`.
-  2. A `## Principles` section exists with 3-7 principle ENTRIES, where an
-     entry is a TOP-LEVEL ordered-list item (a line matching `^\\d+\\.\\s`).
+  2. A `## Product Principles` section exists with 3-7 principle ENTRIES,
+     where an entry is a TOP-LEVEL ordered-list item (a line matching
+     `^\\d+\\.\\s`).
      Unordered bullets, nested (indented) items, and the ✅/❌ example lines
      are NOT counted.
   3. EVERY principle entry carries the literal `— check:` marker — an em dash
      (U+2014 `—`), a single space, the lowercase word `check`, then a colon —
      on the same line as the entry. A hyphen `-`/`--` or different casing does
      NOT satisfy it.
+  4. `## Design Principles` and `## Engineering Principles` are OPTIONAL:
+     absent is valid; present requires 1-7 entries with the same ordered-list
+     + `— check:` rules as `## Product Principles`. A present-but-empty
+     section (0 entries) is invalid — it must be omitted, not left empty.
+  5. No legacy `## Principles` heading remains — a whole-line legacy heading
+     is invalid and yields a targeted migration message naming
+     `## Product Principles` as the rename target.
 
 Design: each check is a function (text: str) -> list[str] of problem messages
 (empty == ok), mirroring `loom-spec/scripts/validate_spec_output.py`.
@@ -38,7 +46,21 @@ import sys
 from pathlib import Path
 
 _NORTH_STAR = "## North Star"
-_PRINCIPLES = "## Principles"
+_PRINCIPLES = "## Product Principles"
+_LEGACY_PRINCIPLES = "## Principles"
+
+# Optional jurisdiction sections: same ordered-list + `— check:` lexeme as
+# `## Product Principles`, but with a lower floor (1, not 3) and OPTIONAL —
+# absent is valid. A present-but-empty section is invalid (an empty heading
+# invites platitude-filling; a section with no clauses is simply omitted).
+_OPTIONAL_SECTIONS = ["## Design Principles", "## Engineering Principles"]
+_MIN_OPTIONAL_ENTRIES = 1
+
+# The legacy heading, matched as a WHOLE header line (same style as
+# `_section_body`) so `## Product Principles` never false-positives.
+_LEGACY_HEADING_RE = re.compile(
+    r"^" + re.escape(_LEGACY_PRINCIPLES) + r"\s*$", re.MULTILINE
+)
 
 # A top-level ordered-list item: `1. `, `2. `, ... at column 0 (no leading
 # whitespace, so nested/indented items do not count).
@@ -67,7 +89,8 @@ def _section_body(text: str, header: str) -> str | None:
 
 
 def _principle_entries(body: str) -> list[str]:
-    """The top-level ordered-list entry lines within a `## Principles` body."""
+    """The top-level ordered-list entry lines within a `## Product Principles`
+    body."""
     return [line for line in body.splitlines() if _ENTRY.match(line)]
 
 
@@ -118,10 +141,59 @@ def _check_every_principle_has_check(text: str) -> list[str]:
     return problems
 
 
+def _check_optional_jurisdiction_sections(text: str) -> list[str]:
+    """One rule, applied to both `## Design Principles` and
+    `## Engineering Principles`: absent = valid; present = 1-7 top-level
+    ordered entries, every entry carrying the `— check:` marker; present
+    with 0 entries = invalid."""
+    problems: list[str] = []
+    for heading in _OPTIONAL_SECTIONS:
+        body = _section_body(text, heading)
+        if body is None:
+            continue  # optional section absent -> valid
+        entries = _principle_entries(body)
+        n = len(entries)
+        if n == 0:
+            problems.append(
+                f"'{heading}' is present but has no ordered-list entries; a "
+                f"section with no committed clauses must be omitted, not left "
+                f"empty (an empty heading invites platitude-filling)"
+            )
+            continue  # no entries to check markers on
+        if n > _MAX_PRINCIPLES:
+            problems.append(
+                f"'{heading}' has {n} ordered-list entries; the contract "
+                f"requires {_MIN_OPTIONAL_ENTRIES}-{_MAX_PRINCIPLES} (an entry "
+                f"is a top-level `N.` line; bullets, nested items, and ✅/❌ "
+                f"examples do not count)"
+            )
+        for entry in entries:
+            if _CHECK_MARKER not in entry:
+                problems.append(
+                    f"'{heading}' entry lacks the literal '{_CHECK_MARKER}' "
+                    f"marker (em dash U+2014, single space, lowercase "
+                    f"'check', colon; a hyphen or different casing does not "
+                    f"count): {entry.strip()!r}"
+                )
+    return problems
+
+
+def _check_legacy_heading(text: str) -> list[str]:
+    if _LEGACY_HEADING_RE.search(text) is None:
+        return []
+    return [
+        f"legacy '{_LEGACY_PRINCIPLES}' heading found; rename it to "
+        f"'{_PRINCIPLES}' (same rules apply: 3-7 top-level ordered entries, "
+        f"each carrying the '{_CHECK_MARKER}' marker)"
+    ]
+
+
 _CHECKS = [
     _check_north_star,
     _check_principles_count,
     _check_every_principle_has_check,
+    _check_optional_jurisdiction_sections,
+    _check_legacy_heading,
 ]
 
 

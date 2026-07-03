@@ -5,7 +5,15 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.21.1] — 2026-07-03
+
+### Added
+
+- **D8 jurisdiction note** — `agents/code-reviewer.md` §D8 now states
+  explicitly that `— check:` clauses in ANY of PRINCIPLES.md's
+  jurisdiction sections (`## Product Principles` / `## Design Principles`
+  / `## Engineering Principles`) are judged under the same existing
+  subject-matter severity rule — no per-jurisdiction severity tier.
 
 ### Fixed
 

@@ -6,11 +6,15 @@ The validator checks a single PRINCIPLES.md file against the pinned contract in
 ("Validator contract (summary)" section). Valid iff:
   1. A `## North Star` section exists and is non-empty (>=1 non-whitespace,
      non-heading body line before the next `##`).
-  2. A `## Principles` section exists with 3-7 entries, where an entry is a
+  2. A `## Product Principles` section exists with 3-7 entries, where an entry is a
      top-level ordered-list item (line matching `^\\d+\\.\\s`). Unordered
      bullets / nested items / the ✅❌ example lines do NOT count.
   3. Every principle entry carries the literal `— check:` marker (em dash
      U+2014, single space, lowercase `check`, colon) on the same line.
+  4. `## Design Principles` / `## Engineering Principles` are optional:
+     absent valid; present = 1-7 entries, same marker rules; empty invalid.
+  5. No legacy `## Principles` heading (whole-line) — invalid with a
+     migration message naming `## Product Principles`.
 
 Each check = a function (text/path) -> list[str] of problems (empty == ok),
 mirroring loom-spec/scripts/validate_spec_output.py. CLI:
@@ -24,6 +28,8 @@ Fixtures built INLINE via tmp_path (flat-folder rule: no fixtures/ subdir).
 import subprocess
 import sys
 from pathlib import Path
+
+import pytest
 
 from validate_principles_output import validate
 
@@ -48,8 +54,9 @@ def _north_star() -> str:
 
 
 def _principles(n: int, *, marker: str = f" {EM} check:") -> str:
-    """`## Principles` with n ordered-list entries, each carrying `marker`."""
-    lines = ["## Principles\n", "\n"]
+    """`## Product Principles` with n ordered-list entries, each carrying
+    `marker`."""
+    lines = ["## Product Principles\n", "\n"]
     for i in range(1, n + 1):
         lines.append(
             f"{i}. Principle statement number {i}{marker} testable condition {i} "
@@ -140,7 +147,7 @@ def test_unordered_bullets_do_not_count_as_entries(tmp_path):
     doc = (
         "# PRINCIPLES\n\n"
         + _north_star()
-        + "\n## Principles\n\n"
+        + "\n## Product Principles\n\n"
         f"- A bullet statement {EM} check: not an ordered entry\n"
         f"   1. A nested ordered item {EM} check: indented, not top-level\n"
     )
@@ -156,7 +163,7 @@ def test_example_lines_do_not_count_as_entries(tmp_path):
     doc = (
         "# PRINCIPLES\n\n"
         + _north_star()
-        + "\n## Principles\n\n"
+        + "\n## Product Principles\n\n"
         f"- ✅ `Primary task completes in <=3 steps {EM} check: count steps`\n"
         "- ❌ `Be delightful` — no check.\n"
     )
@@ -174,7 +181,7 @@ def test_principle_without_check_flagged(tmp_path):
     doc = (
         "# PRINCIPLES\n\n"
         + _north_star()
-        + "\n## Principles\n\n"
+        + "\n## Product Principles\n\n"
         f"1. First principle{EM} check: testable condition in the flow.\n"
         f"2. Second principle{EM} check: another testable condition.\n"
         "3. Third principle - check: a hyphen, not an em dash, so no marker.\n"
@@ -191,7 +198,7 @@ def test_hyphen_marker_does_not_satisfy(tmp_path):
     doc = (
         "# PRINCIPLES\n\n"
         + _north_star()
-        + "\n## Principles\n\n"
+        + "\n## Product Principles\n\n"
         "1. First principle -- check: condition one.\n"
         "2. Second principle -- check: condition two.\n"
         "3. Third principle -- check: condition three.\n"
@@ -208,7 +215,7 @@ def test_wrong_case_check_does_not_satisfy(tmp_path):
     doc = (
         "# PRINCIPLES\n\n"
         + _north_star()
-        + "\n## Principles\n\n"
+        + "\n## Product Principles\n\n"
         f"1. First principle{EM} Check: capital C does not satisfy.\n"
         f"2. Second principle{EM} check: lowercase ok here.\n"
         f"3. Third principle{EM} check: lowercase ok here too.\n"
@@ -218,6 +225,173 @@ def test_wrong_case_check_does_not_satisfy(tmp_path):
     ok, problems = validate(p)
     assert not ok
     assert any("check" in m for m in problems), problems
+
+
+def test_accepts_product_principles_heading(tmp_path):
+    # The renamed required heading (`## Product Principles`) must be accepted
+    # with the same 3-7-entries + marker rules as the legacy `## Principles`.
+    doc = (
+        "# PRINCIPLES\n\n"
+        + _north_star()
+        + "\n## Product Principles\n\n"
+        f"1. First principle{EM} check: testable condition one.\n"
+        f"2. Second principle{EM} check: testable condition two.\n"
+        f"3. Third principle{EM} check: testable condition three.\n"
+    )
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert ok, (
+        f"'## Product Principles' heading with 3 marked entries should pass, "
+        f"got: {problems}"
+    )
+
+
+# --- legacy heading migration message ---------------------------------------
+
+def test_legacy_heading_gets_migration_message(tmp_path):
+    # A file still using the legacy `## Principles` heading is invalid, and
+    # the migration message names `## Product Principles` as the rename target.
+    doc = (
+        "# PRINCIPLES\n\n"
+        + _north_star()
+        + "\n## Principles\n\n"
+        f"1. First principle{EM} check: testable condition one.\n"
+        f"2. Second principle{EM} check: testable condition two.\n"
+        f"3. Third principle{EM} check: testable condition three.\n"
+    )
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert not ok
+    # Must be an actionable RENAME message (legacy heading detected), not the
+    # generic "missing section" message that _check_principles_count would
+    # emit on its own.
+    assert any(
+        "legacy" in m.lower() and "## Product Principles" in m
+        for m in problems
+    ), problems
+
+
+def test_valid_doc_emits_no_legacy_warning(tmp_path):
+    # A file already using the renamed `## Product Principles` heading must
+    # NOT trip the legacy-heading check.
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(_valid_doc(3), encoding="utf-8")
+    ok, problems = validate(p)
+    assert ok, f"renamed heading should not trigger legacy warning: {problems}"
+    assert not any("legacy" in m.lower() for m in problems), problems
+
+
+# --- optional jurisdiction sections (Design/Engineering Principles) --------
+
+_OPTIONAL_HEADINGS = ["## Design Principles", "## Engineering Principles"]
+
+
+def _optional_section(heading: str, n: int, *, marker: str = f" {EM} check:") -> str:
+    """`<heading>` with n ordered-list entries, each carrying `marker`."""
+    lines = [f"{heading}\n", "\n"]
+    for i in range(1, n + 1):
+        lines.append(
+            f"{i}. Clause statement number {i}{marker} testable condition {i} "
+            f"observed in the happy-path flow.\n"
+        )
+    return "".join(lines)
+
+
+@pytest.mark.parametrize("heading", _OPTIONAL_HEADINGS)
+@pytest.mark.parametrize(
+    "case",
+    ["absent", "one_marked_entry", "eight_entries", "zero_entries", "missing_marker"],
+)
+def test_optional_jurisdiction_section_rules(tmp_path, heading, case):
+    base = _valid_doc(3)
+    if case == "absent":
+        # No mention of the optional heading at all -> valid.
+        doc = base
+        expect_ok = True
+    elif case == "one_marked_entry":
+        # Floor of 1 marked entry -> valid.
+        doc = base + "\n" + _optional_section(heading, 1)
+        expect_ok = True
+    elif case == "eight_entries":
+        # Exceeds the 7-entry ceiling -> invalid.
+        doc = base + "\n" + _optional_section(heading, 8)
+        expect_ok = False
+    elif case == "zero_entries":
+        # Heading present, no entries -> invalid: a present-but-empty section
+        # must be omitted, not left empty.
+        doc = base + "\n" + f"{heading}\n\n"
+        expect_ok = False
+    else:  # missing_marker
+        # An entry missing the literal `— check:` marker -> invalid.
+        doc = (
+            base + "\n" + f"{heading}\n\n"
+            + "1. Clause without the marker at all.\n"
+        )
+        expect_ok = False
+
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+
+    if expect_ok:
+        assert ok, f"case={case!r} heading={heading!r} should pass, got: {problems}"
+        return
+
+    assert not ok, f"case={case!r} heading={heading!r} should fail, got no problems"
+    name = heading.removeprefix("## ")
+    if case == "zero_entries":
+        assert any(name in m and "omit" in m.lower() for m in problems), problems
+    elif case == "missing_marker":
+        assert any("check" in m for m in problems), problems
+    else:  # eight_entries
+        assert any(name in m for m in problems), problems
+
+
+def test_optional_section_count_and_marker_problems_both_reported(tmp_path):
+    # 8 entries (over the 7-ceiling), NONE carrying the `— check:` marker.
+    # The required-section pair (_check_principles_count +
+    # _check_every_principle_has_check) reports both a count problem and a
+    # marker problem via separate registered functions; the optional-section
+    # check must report the same completeness, not short-circuit on count.
+    heading = "## Design Principles"
+    lines = [f"{heading}\n", "\n"]
+    for i in range(1, 9):
+        lines.append(f"{i}. Clause without the marker at all, number {i}.\n")
+    doc = _valid_doc(3) + "\n" + "".join(lines)
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert not ok
+    assert any("8" in m and "7" in m for m in problems), (
+        f"expected a count problem, got: {problems}"
+    )
+    assert any("check" in m for m in problems), (
+        f"expected marker problems too (not short-circuited), got: {problems}"
+    )
+
+
+def test_optional_section_seven_entries_marked_is_ok(tmp_path):
+    # Ceiling case: exactly 7 marked entries in an optional section -> valid.
+    p = tmp_path / "PRINCIPLES.md"
+    doc = _valid_doc(3) + "\n" + _optional_section("## Engineering Principles", 7)
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert ok, f"7 marked entries in an optional section should pass, got: {problems}"
+
+
+def test_all_three_sections_combined_validates_ok(tmp_path):
+    # North Star + Product Principles + both optional sections together.
+    doc = (
+        _valid_doc(3)
+        + "\n" + _optional_section("## Design Principles", 2)
+        + "\n" + _optional_section("## Engineering Principles", 1)
+    )
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert ok, f"all three sections combined should validate OK, got: {problems}"
 
 
 # --- CLI contract (thin __main__) ------------------------------------------

@@ -414,6 +414,8 @@ principles lens performs on the spec.
 - 🟢 **Nit**: the diff is in tension with a principle's *spirit* but does not clearly fail its falsifiable check (ambiguous — flag for human judgment, do not manufacture a violation).
 - **`N/A`**: no `PRINCIPLES.md` was passed. Emit `principles-conformance: N/A` and no findings — never fabricate principles to score against.
 
+**Jurisdiction note**: a `— check:` clause in ANY of PRINCIPLES.md's jurisdiction sections (`## Product Principles` / `## Design Principles` / `## Engineering Principles`) is judged under the same subject-matter severity rule above — e.g. a supply-chain-bearing Engineering Principles clause violation is 🔴 Fatal, a dependency-count clause violation is 🟡 Should-fix; there is no separate severity tier per jurisdiction.
+
 **Scoring notes:**
 - **🔴-vs-🟡 split** is judged by the **principle's subject matter**, not the violation's blast radius (a safety/security/privacy *principle* → 🔴; everything else → 🟡). When ambiguous, **default to 🟡**.
 - **Principles the diff does not exercise produce NO finding** — silence is not a violation (same discipline as the 🟢 "do not manufacture" rule).

@@ -111,7 +111,7 @@
     },
     {
       "name": "loom-product-principles",
-      "description": "Key-free generator for a product PRINCIPLES.md — one north-star + falsifiable, testable principles.",
+      "description": "Key-free generator for a PRINCIPLES.md project constitution — one north-star + falsifiable Product Principles, plus optional Design/Engineering Principles by jurisdiction.",
       "source": "./loom-product-principles/"
     },
     {

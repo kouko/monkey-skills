@@ -1,23 +1,26 @@
 ---
 name: product-principles
 description: |
-  Turn a sparse product idea into a PRINCIPLES.md constitution — a north star + 3-7 falsifiable principles governing design/spec/code. Use BEFORE design/spec/build on a new product, and when the user asks what principles should guide a product/design decision or how to frame a product trade-off. Triggers: product principles, north star, 產品原則, 產品憲章, プロダクト指針. Not for critiquing an existing design or spec (design-critic / completeness-critic).
-version: 0.2.0
+  Turn a sparse product idea into a PRINCIPLES.md project constitution — a north star + 3-7 falsifiable Product Principles, plus optional Design Principles and Engineering Principles, governing design/spec/code. Use BEFORE design/spec/build on a new product, and when the user asks what principles should guide a product/design/engineering decision or how to frame a trade-off. Triggers: product principles, project constitution, north star, 產品原則, 設計原則, 工程原則, 產品憲章, プロダクト指針, エンジニアリング原則. Not for critiquing an existing design or spec (design-critic / completeness-critic).
+version: 0.3.0
 ---
 
 # product-principles
 
 Turn a **sparse product idea** into a single **`PRINCIPLES.md`** — the
-**product constitution**. This is the **principles-first** layer: before any
+**project constitution**. This is the **principles-first** layer: before any
 interface-design, spec, or code, fix the product's *original goal* and its
 *non-negotiable, falsifiable principles* as the supreme input every downstream
 decision is checked against.
 
-`PRINCIPLES.md` is **product-level** (one per product), **key-free**,
+`PRINCIPLES.md` is **project-level** (one per project), **key-free**,
 **in-repo**, and **git-diffable**. It is the cross-cutting **constitution** that
 governs **interface-design, spec-expansion (functional design), and code** — and
 it applies to **any** product, including pure-**headless / CLI / library** work
-that has no UI at all.
+that has no UI at all. It is organized by **jurisdiction** — the required
+**`## Product Principles`** section covers what the product is, for whom, and
+the success trade-offs it makes; see `references/principles-rules.md` for the
+full jurisdiction table.
 
 ## Executor model — who does what
 
@@ -41,7 +44,7 @@ that *read* this file.
 ### Step 1 — Read the authoring contract
 
 Read **`references/principles-rules.md`** before writing anything. It is the
-authoring contract: it pins the exact `## North Star` and `## Principles`
+authoring contract: it pins the exact `## North Star` and `## Product Principles`
 formats, the **load-bearing per-principle `— check:` falsifiable-marker rule**
 (an em dash `—`, a single space, lowercase `check`, a colon — on the same line
 as the principle), and the synthetic ✅/❌ examples. The emitted `PRINCIPLES.md`
@@ -71,16 +74,16 @@ aspiration. Use the format in the contract:
 **Success:** <a concrete, checkable condition that means the goal is met>
 ```
 
-### Step 4 — Write `## Principles` (each with a falsifiable `— check:`)
+### Step 4 — Write `## Product Principles` (each with a falsifiable `— check:`)
 
-Write the `## Principles` section: **3–7 non-negotiable principles**, as a
+Write the `## Product Principles` section: **3–7 non-negotiable principles**, as a
 top-level ordered list, **each carrying the literal `— check:` falsifiable
 marker** (em dash, lowercase `check:`, same line). A good check is **observable**
 (you can point at where you'd measure it), **binary or thresholded**, and
 **artifact-bound** (it refers to the flow, the output, or a file that exists).
 
 ```markdown
-## Principles
+## Product Principles
 
 1. <principle statement> — check: <concrete, testable condition>
 2. <principle statement> — check: <concrete, testable condition>
@@ -95,24 +98,71 @@ in ≤3 steps — check: count steps in the happy-path flow"). Fewer than 3 is n
 constitution; more than 7 dilutes the non-negotiable weight. See the synthetic
 ✅/❌ examples in `references/principles-rules.md`.
 
-### Step 5 — Emit `PRINCIPLES.md` into the consumer project
+### Step 5 — Elicit design posture and engineering posture (optional)
+
+Ask, briefly, whether the project has already **committed** to any
+**design-posture** or **engineering-posture** decisions — see the jurisdiction
+table in `references/principles-rules.md` for what belongs in each.
+
+For `## Engineering Principles` specifically: any test-rigor decision is a
+**ceiling** set *above* the TDD iron-law floor — never below it.
+
+**Elicit, don't imagine.** Write a clause only for a decision the user
+actually commits to right now — never invent placeholder clauses to fill out
+a jurisdiction. If the user has no committed decisions in a jurisdiction yet,
+skip it entirely for this pass.
+
+**Reject platitudes — push back**, the same as Step 4: a clause with no
+falsifiable `— check:`, or a check nothing could ever falsify, is not a
+principle here either. See the Design and Engineering ✅/❌ examples in
+`references/principles-rules.md`.
+
+For each committed clause, write it under `## Design Principles` and/or
+`## Engineering Principles` in the same format as Product Principles — **1–7**
+top-level ordered entries, each carrying the identical literal `— check:`
+marker:
+
+```markdown
+## Design Principles
+
+1. <principle statement> — check: <concrete, testable condition>
+```
+
+```markdown
+## Engineering Principles
+
+1. <principle statement> — check: <concrete, testable condition>
+```
+
+**Never emit an empty section.** A jurisdiction with zero committed clauses
+emits **no** heading at all — do not write `## Design Principles` or
+`## Engineering Principles` with nothing under it just to "look complete."
+
+### Step 6 — Emit `PRINCIPLES.md` into the consumer project
 
 Emit the result as **`PRINCIPLES.md`** into the **consumer project** at
 **`docs/loom/PRINCIPLES.md`** (the established
-`docs/<toolkit>/` convention). It is **product-level — one file per product**,
+`docs/<toolkit>/` convention). It is **project-level — one file per project**,
 not per-feature. Do not scatter it; the constitution is a single supreme file.
 
-### Step 6 — Validate, then fix
+### Step 7 — Validate, then fix
 
-Run the validator and **fix any flagged issue before declaring done**:
+Run the validator and **fix any flagged issue before declaring done**.
+The script lives in the PLUGIN repo; the artifact lives in the CONSUMER
+project — the two paths have different bases, so resolve the script path
+to an absolute path and run from the consumer project root:
 
 ```
-python loom-product-principles/scripts/validate_principles_output.py docs/loom/PRINCIPLES.md
+cd <consumer-project-root>
+python <resolved-absolute-path-to>/loom-product-principles/scripts/validate_principles_output.py docs/loom/PRINCIPLES.md
 ```
 
-It mechanically checks the two required sections exist and that **every**
-principle carries the literal `— check:` marker (the path relative to this
-skill dir is `../../scripts/validate_principles_output.py`). The validator checks
+It mechanically enforces the full contract summary in
+`references/principles-rules.md` §Validator contract — the required
+sections, per-section entry counts, the literal `— check:` marker on
+**every** entry (all three jurisdictions), the optional-section rules, and
+the legacy-heading migration check (the path relative to this skill dir is
+`../../scripts/validate_principles_output.py`). The validator checks
 *structure*; the *quality* of each check (truly falsifiable vs disguised
 platitude) is your responsibility, guided by the ✅/❌ examples in the contract.
 
