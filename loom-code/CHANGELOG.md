@@ -15,7 +15,10 @@ Versioning: [Semantic Versioning](https://semver.org/).
   living-spec namespace, never mint or pattern-match one (a dangling id
   fails the living-spec CI — PR #479 produced 33 such failures), and
   when the dispatch carries no registered ids, omit tags entirely
-  (untagged tests are not INCOMPLETE in that case). Resolves the
+  (untagged tests are not INCOMPLETE in that case). The same
+  omit-and-note escape applies per test when registered ids are in
+  scope but a specific test corresponds to none of them — never
+  stretch an unrelated id to fit. Resolves the
   contract-vs-CI conflict re-confirmed live on the v1.1 batch-mode
   branch, where every dispatch needed a hand-carried standing
   exemption. Guarded by `scripts/test_implementer_req_tag_guard.py`.
