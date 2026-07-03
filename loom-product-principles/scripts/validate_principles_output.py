@@ -24,6 +24,9 @@ Valid iff:
      absent is valid; present requires 1-7 entries with the same ordered-list
      + `— check:` rules as `## Product Principles`. A present-but-empty
      section (0 entries) is invalid — it must be omitted, not left empty.
+  5. No legacy `## Principles` heading remains — a whole-line legacy heading
+     is invalid and yields a targeted migration message naming
+     `## Product Principles` as the rename target.
 
 Design: each check is a function (text: str) -> list[str] of problem messages
 (empty == ok), mirroring `loom-spec/scripts/validate_spec_output.py`.

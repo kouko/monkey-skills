@@ -11,6 +11,10 @@ The validator checks a single PRINCIPLES.md file against the pinned contract in
      bullets / nested items / the ✅❌ example lines do NOT count.
   3. Every principle entry carries the literal `— check:` marker (em dash
      U+2014, single space, lowercase `check`, colon) on the same line.
+  4. `## Design Principles` / `## Engineering Principles` are optional:
+     absent valid; present = 1-7 entries, same marker rules; empty invalid.
+  5. No legacy `## Principles` heading (whole-line) — invalid with a
+     migration message naming `## Product Principles`.
 
 Each check = a function (text/path) -> list[str] of problems (empty == ok),
 mirroring loom-spec/scripts/validate_spec_output.py. CLI:
