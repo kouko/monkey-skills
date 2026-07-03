@@ -776,5 +776,23 @@ def test_next_skips_when_plan_not_in_worktree(tmp_path, capsys):
     assert state["uncommitted-plan"]["status"] == "SKIPPED"
     reason = state["uncommitted-plan"]["reason"].lower()
     assert "not" in reason and "worktree" in reason
-    # The idempotent worktree left behind is harmless — not torn down.
-    assert (project_path / ".worktrees" / "loom-uncommitted-plan").is_dir()
+    # Teardown: the worktree + branch created for this entry are removed on
+    # this skip path — SKIPPED has no automatic path back to QUEUED and
+    # `status` doesn't surface the worktree field, so a leftover would be
+    # undiscoverable; a later re-queue must start clean instead of hitting
+    # ensure_worktree's branch-exists-without-worktree conflict.
+    assert not (project_path / ".worktrees" / "loom-uncommitted-plan").exists()
+    branch_check = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(project_path),
+            "show-ref",
+            "--verify",
+            "--quiet",
+            "refs/heads/loom/uncommitted-plan",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert branch_check.returncode != 0, "branch loom/uncommitted-plan still exists"

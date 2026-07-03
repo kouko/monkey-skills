@@ -403,17 +403,102 @@ def _cmd_status(args: argparse.Namespace) -> int:
     return 0
 
 
-def _mark_skipped(state: dict, change_id: str, reason: str) -> None:
-    """Record ``SKIPPED`` + ``reason`` for change_id in state, in place.
+def _skip_entry(state: dict, state_path: Path, change_id: str, reason: str) -> None:
+    """Record ``SKIPPED`` + ``reason`` for change_id, persist, notice to stderr.
 
     Shared by ``_cmd_next``'s two skip sites (freeze-predicate failure and
-    the post-worktree uncommitted-plan check) — same record shape
-    ``_cmd_mark`` uses for ``failed``/``done``.
+    the post-worktree uncommitted-plan check) — never silent: every skip
+    writes state AND prints one line to stderr. Record shape matches
+    ``_cmd_mark``'s ``failed``/``done`` records.
     """
     record = dict(state.get(change_id, {}))
     record["status"] = "SKIPPED"
     record["reason"] = reason
     state[change_id] = record
+    save_state(state_path, state)
+    print(f"next: skipping {change_id!r} — {reason}", file=sys.stderr)
+
+
+def _teardown_worktree(project_path: Path, worktree_path: Path, branch: str) -> None:
+    """Remove a worktree + branch that ``_cmd_next`` just created.
+
+    Used only on the uncommitted-plan skip path: ``SKIPPED`` has no
+    automatic path back to ``QUEUED`` and ``status`` does not surface the
+    worktree field, so a leftover worktree/branch would be undiscoverable
+    by an operator — tear both down so a later re-queue starts clean.
+    Fails loud with ``QueueError`` (git stderr included) if either git
+    command fails; a half-done teardown must not be swallowed.
+    """
+    removal = subprocess.run(
+        ["git", "-C", str(project_path), "worktree", "remove", str(worktree_path)],
+        capture_output=True,
+        text=True,
+    )
+    if removal.returncode != 0:
+        _fail(
+            f'"git worktree remove {worktree_path}" failed in '
+            f'"{project_path}" (exit {removal.returncode}): '
+            f"{removal.stderr.strip()}",
+            fn="_teardown_worktree",
+        )
+    deletion = subprocess.run(
+        ["git", "-C", str(project_path), "branch", "-D", branch],
+        capture_output=True,
+        text=True,
+    )
+    if deletion.returncode != 0:
+        _fail(
+            f'"git branch -D {branch}" failed in "{project_path}" '
+            f"(exit {deletion.returncode}): {deletion.stderr.strip()}",
+            fn="_teardown_worktree",
+        )
+
+
+def _uncommitted_plan_reason(change_id: str, plan_path: Path) -> str:
+    """Skip reason for a plan the worktree cannot see (never committed)."""
+    return (
+        f'entry "{change_id}" plan not found in its worktree at '
+        f'"{plan_path}" — present in the main checkout but never '
+        "committed, so the worktree (branched from HEAD) does not "
+        "see it (plan §Branch base note)."
+    )
+
+
+def _dispatch_entry(
+    state: dict,
+    state_path: Path,
+    entry: dict,
+    worktree_path: Path,
+    plan_path: Path,
+    skills_root: Path,
+    branch: str,
+) -> None:
+    """Record ``RUNNING`` for entry and print its Workflow args to stdout.
+
+    Payload field names match ``driver_10_guard.js``'s ``guardArgs``
+    REQUIRED_FIELDS, ``driver_50_seg3.js``'s ``planPath`` guard, and
+    ``runSegment3``'s optional ``args.branch`` (whole-branch review
+    station). ``projectPath`` is the worktree path (not the main checkout)
+    and ``planPath`` is resolved *inside* that worktree.
+    """
+    record = dict(state.get(entry["id"], {}))
+    record["status"] = "RUNNING"
+    record["branch"] = branch
+    record["worktree"] = str(worktree_path)
+    state[entry["id"]] = record
+    save_state(state_path, state)
+
+    payload = {
+        "segment": 3,
+        "changeId": entry["id"],
+        "projectPath": str(worktree_path.resolve()),
+        "planPath": str(plan_path),
+        "budgets": entry["budgets"],
+        "models": entry.get("models", {}),
+        "skillsRoot": str(skills_root),
+        "branch": branch,
+    }
+    print(json.dumps(payload))
 
 
 def _cmd_next(args: argparse.Namespace) -> int:
@@ -437,22 +522,16 @@ def _cmd_next(args: argparse.Namespace) -> int:
     ``<worktree_path>/<entry["plan"]>`` is not a file, this entry is ALSO
     recorded ``SKIPPED`` (reason names the uncommitted-plan cause) instead
     of ``RUNNING``, with the same notice-and-advance semantics as the
-    freeze-predicate skip above. The worktree already created is left in
-    place rather than torn down — it is idempotent (``ensure_worktree``
-    reuses it) and therefore harmless.
+    freeze-predicate skip above — and the worktree + branch this call just
+    created are torn down (``_teardown_worktree``), so a later re-queue
+    starts clean instead of leaving an undiscoverable leftover.
 
-    On the first entry that clears both checks: records ``RUNNING`` (+
-    ``branch``, ``worktree``) in state and prints ONE JSON object to
-    stdout carrying the driver's ready-to-use Workflow args —
-    ``segment``/``changeId``/``projectPath``/``planPath``/``budgets``/
-    ``models``/``skillsRoot``/``branch``, field names matching
-    ``driver_10_guard.js``'s ``guardArgs`` REQUIRED_FIELDS,
-    ``driver_50_seg3.js``'s ``planPath`` guard, and ``runSegment3``'s
-    optional ``args.branch`` (whole-branch review station).
-    ``projectPath`` is the worktree path (not the main checkout) and
-    ``planPath`` is resolved *inside* that worktree. No eligible entry
-    left (empty queue, or every remaining ``QUEUED`` entry got skipped)
-    prints ``{"done": true}`` and exits 0.
+    On the first entry that clears both checks: ``_dispatch_entry`` records
+    ``RUNNING`` (+ ``branch``, ``worktree``) in state and prints ONE JSON
+    object to stdout carrying the driver's ready-to-use Workflow args (see
+    its docstring for the field contract). No eligible entry left (empty
+    queue, or every remaining ``QUEUED`` entry got skipped) prints
+    ``{"done": true}`` and exits 0.
 
     Only machine-readable JSON goes to stdout (the dispatch payload, or
     ``{"done": true}``); all human-facing notices (skip reasons) go to
@@ -472,55 +551,32 @@ def _cmd_next(args: argparse.Namespace) -> int:
         return 1
 
     state = load_state(state_path)
-    merged = effective_entries(entries, state)
 
-    for entry in merged:
+    for entry in effective_entries(entries, state):
         if entry["status"] != QUEUED:
             continue
 
         eligible, reason = check_frozen(entry, project_path, skills_root)
         if not eligible:
-            _mark_skipped(state, entry["id"], reason)
-            save_state(state_path, state)
-            print(f"next: skipping {entry['id']!r} — {reason}", file=sys.stderr)
+            _skip_entry(state, state_path, entry["id"], reason)
             continue
 
         worktree_path, branch = ensure_worktree(project_path, entry["id"])
         plan_path = (worktree_path / entry["plan"]).resolve()
 
         if not plan_path.is_file():
-            uncommitted_reason = (
-                f'entry "{entry["id"]}" plan not found in its worktree at '
-                f'"{plan_path}" — present in the main checkout but never '
-                "committed, so the worktree (branched from HEAD) does not "
-                "see it (plan §Branch base note)."
-            )
-            _mark_skipped(state, entry["id"], uncommitted_reason)
-            save_state(state_path, state)
-            print(
-                f"next: skipping {entry['id']!r} — {uncommitted_reason}",
-                file=sys.stderr,
+            _teardown_worktree(project_path, worktree_path, branch)
+            _skip_entry(
+                state,
+                state_path,
+                entry["id"],
+                _uncommitted_plan_reason(entry["id"], plan_path),
             )
             continue
 
-        record = dict(state.get(entry["id"], {}))
-        record["status"] = "RUNNING"
-        record["branch"] = branch
-        record["worktree"] = str(worktree_path)
-        state[entry["id"]] = record
-        save_state(state_path, state)
-
-        payload = {
-            "segment": 3,
-            "changeId": entry["id"],
-            "projectPath": str(worktree_path.resolve()),
-            "planPath": str(plan_path),
-            "budgets": entry["budgets"],
-            "models": entry.get("models", {}),
-            "skillsRoot": str(skills_root),
-            "branch": branch,
-        }
-        print(json.dumps(payload))
+        _dispatch_entry(
+            state, state_path, entry, worktree_path, plan_path, skills_root, branch
+        )
         return 0
 
     print(json.dumps({"done": True}))
