@@ -35,6 +35,19 @@ per-principle falsifiable-check rule below.
 
 ---
 
+## Jurisdictions — Product / Design / Engineering
+
+`PRINCIPLES.md` sections are organized by **jurisdiction** — which lens judges a
+clause and what turf that clause covers:
+
+| Jurisdiction | Content scope |
+| --- | --- |
+| **Product** | What the product is, for whom, and the success trade-offs it makes. |
+| **Design** | How the interface behaves and feels — interaction posture, feedback/error stance, information density, accessibility floor, and tone where checkable. |
+| **Engineering** | How it is built — stack choices, dependency posture, the conservative↔aggressive style dial, a test-rigor **CEILING** set above the TDD iron-law floor (never below it), and explicit negative decisions. |
+
+---
+
 ## Required section — `## North Star`
 
 The `## North Star` section states **two** things:
@@ -71,9 +84,9 @@ happy-path flow, keyboard-only, with zero mouse events.
 
 ---
 
-## Required section — `## Principles`
+## Required section — `## Product Principles`
 
-The `## Principles` section lists **3–7 non-negotiable principles**. Fewer than
+The `## Product Principles` section lists **3–7 non-negotiable principles**. Fewer than
 3 is not a constitution; more than 7 dilutes the "non-negotiable" weight and
 nothing stays supreme.
 
@@ -86,7 +99,7 @@ artifact. The check is what makes a principle usable later as a downstream gate.
 Use an inline `— check: <testable condition>` marker on every principle:
 
 ```markdown
-## Principles
+## Product Principles
 
 1. <principle statement> — check: <concrete, testable condition>
 2. <principle statement> — check: <concrete, testable condition>
@@ -95,8 +108,8 @@ Use an inline `— check: <testable condition>` marker on every principle:
 
 **Platitudes are rejected.** A statement with no `— check:` marker, or with a
 "check" that no artifact could ever falsify (e.g. "feels good", "is high
-quality"), is not a principle. The validator rejects a `## Principles` section
-where any entry lacks a falsifiable check.
+quality"), is not a principle. The validator rejects a `## Product Principles`
+section where any entry lacks a falsifiable check.
 
 A good check is **observable** (you can point at where you'd measure it),
 **binary or thresholded** (pass/fail or a number), and **artifact-bound** (it
