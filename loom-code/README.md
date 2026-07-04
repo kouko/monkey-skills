@@ -2,7 +2,7 @@
 
 > **Process-discipline + canon-grounded coding workflow for Claude Code (+ Codex CLI).** A 12-skill plugin that auto-injects a SessionStart router charter so the agent stops rationalizing and starts deferring — every rule grounded in a primary source (Beck on TDD, Martin on naming, Fowler on refactoring, Feathers on legacy code, OWASP ASVS on security, 徳丸本 on encoding security).
 
-**Status**: v0.22.0 — 12 skills; full Superpowers parity since v0.3.0. Per-version detail (rule-sheet injection, reviewer-discipline, parallel dispatch, spec→code seam, memory verify gate, …) lives in [CHANGELOG.md](CHANGELOG.md).
+**Status**: v0.23.0 — 12 skills; full Superpowers parity since v0.3.0. Per-version detail (rule-sheet injection, reviewer-discipline, parallel dispatch, spec→code seam, memory verify gate, …) lives in [CHANGELOG.md](CHANGELOG.md).
 **Languages**: [English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 **Repository**: part of [`monkey-skills`](https://github.com/kouko/monkey-skills)
 
@@ -42,12 +42,12 @@ claude plugin install loom-code@monkey-skills
 
 # Verify
 claude plugin list | grep loom-code       # expect: enabled
-claude plugin details loom-code           # expect: 12 skills + 1 SessionStart hook
+claude plugin details loom-code           # expect: 12 skills + SessionStart & PreToolUse hooks
 ```
 
 ### Codex CLI (build complete; live verification deferred)
 
-⚠️ Codex CLI manifest is built and bumped through v0.22.0 alongside the
+⚠️ Codex CLI manifest is built and bumped through v0.23.0 alongside the
 Claude Code variant, but a live install + verification ritual on a real
 Codex CLI instance is still deferred per user direction. See
 [`tests/codex-cli/README.md`](tests/codex-cli/README.md) for the install
@@ -147,7 +147,7 @@ Plus on-demand:
 | Harness | Status |
 |---|---|
 | **Claude Code** | ✅ Verified end-to-end through multiple ritual cycles — Phase 3 orchestrator (v0.3.0), Phase 4 prep (v0.4.0), multilingual research (v0.5.1), plugin-level agent dispatch (v0.5.2 + v0.6.0), whole-branch code-review with cross-task-coherence dimension (v0.6.0), reviewer-discipline SSOT extraction + Current State Evidence section (v0.7.0) |
-| **Codex CLI** | ⚠️ Manifest built + tracked at v0.22.0; live install + verification ritual deferred per user (see `tests/codex-cli/README.md`) |
+| **Codex CLI** | ⚠️ Manifest built + tracked at v0.23.0; live install + verification ritual deferred per user (see `tests/codex-cli/README.md`) |
 
 The SessionStart hook emits a portable JSON shape covering Claude Code's `hookSpecificOutput.additionalContext`, Codex CLI's `additional_context`, and legacy `additionalContext` keys — same hook serves both harnesses.
 
