@@ -57,6 +57,25 @@ These three join the two gates already woven into the axes: gate ① (ask only w
 
 **Above all — lead with the stakes, and brief first when the fork is complex.** The framing rules above make the *options* legible; they do not guarantee the user grasps *why they are being asked*. Before the options, the `question` field's first line must say, in plain words, *what this choice changes for the user and why it matters* — not just what the options are (a user can read three well-framed options and still not see the point). And when the fork is genuinely complex (≥3 trade-offs, ≥2 implementation paths, or architectural blast radius), **brief before you ask**: run `dev-workflow:brief-before-asking` (Mental Model → My take) first, then fire the `AskUserQuestion`. That skill is the canonical source for this framing; the rules here are its in-workflow shorthand.
 
+### Axis 0 — Upstream artifacts (family §Intake)
+
+Before Axis 1, check the target repo against **the loom family reception's**
+on-ramp criteria table (`loom-pipeline/hooks/family-reception.md`) — point to
+it, never copy its rows here (SSOT: that file owns the table body).
+
+**Negative guard (silent skip)**: if the work is a bug fix, a refactor, or a
+test-covered increment, Axis 0 is skipped silently — no noise on incremental
+work. Only proceed past this guard for product-shaped / user-facing /
+multi-state new work.
+
+If a criteria row triggers, surface the recommendation **ONCE** — name the
+concrete design-side sequence (e.g. `using-loom-product-principles` →
+`using-loom-interface-design` → `using-loom-spec`, whichever rows fired), then
+record the user's choice in the brief under a `## Design-side on-ramp` line
+("offered — user chose <direct/detour>") and proceed either way.
+Never re-raise it after a decline — the recommend-once rule holds for the
+rest of this task.
+
 ### Axis 1 — Problem
 
 What is the user trying to accomplish? **Not the solution they proposed — the problem behind the solution.**
