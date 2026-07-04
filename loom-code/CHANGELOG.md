@@ -38,8 +38,12 @@ Versioning: [Semantic Versioning](https://semver.org/).
   aggregate (expected-NONE + non-loom fire is EXACT, never OVER); a `run`
   mode shelling out to `claude -p ... --output-format stream-json` (list-form
   args, `--max-turns` floor of 4, first `Skill` tool_use extracted as
-  fired) with an argparse `run`/`grade` CLI. Five documented method traps
-  from the 2026-06-24/25 firing-test memory are baked in. Guarded by
+  fired) with an argparse `run`/`grade` CLI. Run records tolerate non-JSON
+  stdout noise (skipped lines surfaced as `unparsed_lines`, never silent),
+  and a per-record failure is captured as a `harness_error` record that the
+  contamination filter discards downstream — one bad record never aborts
+  the batch. Six documented method traps (five from the 2026-06-24/25
+  firing-test memory + the corpus-grading trap #6) are baked in. Guarded by
   `scripts/test_loom_firing_harness.py`.
 - **Firing corpora** — `docs/loom/firing-corpus/{goal-oriented,near-miss,
   direct-ask}.jsonl` (8/10/10 self-contained lines): goal-oriented
