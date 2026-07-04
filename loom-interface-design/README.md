@@ -24,7 +24,30 @@ Two generate skills, a critic, and a router:
   - **TUI / CLI** → a lightweight conventions doc (terminal palette/layout for TUI; output-format + command/flag naming + help/error style for CLI). *Phase-2 — the GUI path ships first.*
 - **`interaction-flows`** (modality-aware) → **`ui-flows.md`** (per-feature/change): screen/panel/command inventory (with a *flag* of which render variants exist — empty/loading/error/success), **user flows** as mermaid, **UI structure** as ascii layout blocks, plus transitions, entry/exit points, information density, and mobile flow — a 7-dimension UX-flow checklist. For CLI/TUI the same dimensions render as command/output or panel/keybinding flows.
 - **`design-critic`** → adversarial critique of the emitted change-folder (`DESIGN.md` + `ui-flows.md`) via a writer≠judge panel hunting **surface omissions** — undrawn states, dead-end flows, a11y gaps — plus principle-conformance against `PRINCIPLES.md` when present. Surface only, never code.
-- **`using-loom-interface-design`** (router) — routes to the three skills and records the modality.
+- **`using-loom-interface-design`** (entry/router) — runs the family **§Intake** reception check (upstream `PRINCIPLES.md` on-ramp per `loom-pipeline/hooks/family-reception.md`, adjacent-station redirects to `using-loom-spec` / `using-loom-code`), then records the modality and routes to the three skills.
+
+## Execution flow
+
+```mermaid
+flowchart TD
+    entry["using-loom-interface-design<br/>entry - Intake per family reception"]
+    ds["design-system"]
+    flows["interaction-flows"]
+    dmd["DESIGN.md"]
+    ufl["ui-flows.md"]
+    critic["design-critic<br/>writer-vs-judge critique"]
+    spec["loom-spec:spec-expansion"]
+
+    entry --> ds
+    entry --> flows
+    ds --> dmd
+    flows --> ufl
+    dmd --> critic
+    ufl --> critic
+    critic -- NEEDS_REVISION --> ds
+    critic -- NEEDS_REVISION --> flows
+    critic -- PASS_WITH_NOTES --> spec
+```
 
 ## What it's for
 
@@ -54,7 +77,7 @@ The design-system doc lives at the toolkit root (product-level); `ui-flows.md` i
 
 The OpenSpec change-folder that `loom-spec` later produces lives under `docs/loom/` — consistent with the in-use `docs/<toolkit>/` convention, not a root `openspec/`.
 
-## Scope (v0.3.x)
+## Scope (v0.4.x)
 
 In: the `design-system` and `interaction-flows` generate skills, the `design-critic` writer≠judge gate (shipped v0.2.0, mirroring `loom-spec:completeness-critic`), the router, and the change-folder validator. GUI ships fully (DESIGN.md + ui-flows + validator). The skills are written modality-aware so the architecture is cross-modal from day one.
 
