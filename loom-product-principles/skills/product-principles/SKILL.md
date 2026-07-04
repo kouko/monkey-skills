@@ -182,3 +182,7 @@ whole-branch `code-reviewer` scores a `principles-conformance` dimension
 (D8, writer≠judge) against these principles when the file is present.
 This skill *writes* the constitution; enforcement lives in those
 downstream gates.
+
+**Next station.** Once `PRINCIPLES.md` is shipped, hand off to
+`using-loom-interface-design` for UI-bearing products, or to `using-loom-spec`
+to expand a feature directly when the product is headless / CLI-only.
