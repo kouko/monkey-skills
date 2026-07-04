@@ -32,16 +32,18 @@ each is named here with the layer that guards against it:
    "go/OK" continuations). Enforced by hand-authored corpus files
    (Task F2), validated through `validate_corpus`.
 
-This module currently implements the corpus layer (parsing +
-contamination filtering, Task F1a) and the grader (Task F1b). `run`
-(F1c) lands in a follow-up task; records are kept as plain dicts
-throughout so that mode can produce output this layer consumes
-directly.
+This module implements the corpus layer (parsing + contamination
+filtering, Task F1a), the grader (Task F1b), and the `run` mode (Task
+F1c) that shells out to the live `claude` CLI and merges its output
+onto corpus records so `grade_corpus` can consume them directly.
 
 Stdlib only.
 """
 
+import argparse
 import json
+import subprocess
+import sys
 
 _SELF_CONTAINED_MIN_LEN = 15
 _REQUIRED_FIELDS = ("query", "expected", "notes")
@@ -180,3 +182,130 @@ def grade_corpus(records: list[dict], discarded_count: int = 0) -> dict:
         counts[grade_record(record)] += 1
     counts["discarded"] = discarded_count
     return counts
+
+
+_MAX_TURNS_FLOOR = 4
+
+
+class MaxTurnsBelowFloorError(Exception):
+    """Raised when --max-turns is set below the floor (trap #1).
+
+    A too-tight turn ceiling makes orient-first queries hit the turn
+    ceiling, which misreads as a trigger-miss (see module docstring,
+    trap #1). Refused before any subprocess call is made.
+    """
+
+
+def _extract_fired_skill(stream_events: list[dict]):
+    """First `Skill` tool_use `.input.skill` across the transcript.
+
+    Chronologically FIRST, not "first loom-relevant": grading cares
+    about the model's initial routing decision, so a later exploratory
+    dispatch (loom or not) must not overwrite that signal.
+    """
+    for event in stream_events:
+        if event.get("type") != "assistant":
+            continue
+        for block in event.get("message", {}).get("content", []):
+            if block.get("type") == "tool_use" and block.get("name") == "Skill":
+                return block.get("input", {}).get("skill")
+    return None
+
+
+def _extract_result(stream_events: list[dict]) -> tuple[str, str]:
+    """(subtype, text) from the terminal `result` event, or ("", "") if absent."""
+    for event in stream_events:
+        if event.get("type") == "result":
+            return event.get("subtype", ""), event.get("result", "")
+    return "", ""
+
+
+def run_one(record: dict, claude_bin: str = "claude", max_turns: int = 4) -> dict:
+    """Shell out to `claude -p` for one corpus record; merge run results.
+
+    Runs `claude -p "<query>" --max-turns <N> --allowedTools Skill
+    --output-format stream-json --verbose` as a list-form subprocess
+    (no shell=True), parses the stream-json lines, and merges `fired`
+    (the captured skill id or None), `result_subtype`, and `text` onto
+    a copy of `record` — the exact field contract `grade_record` and
+    `_is_contaminated` read.
+
+    Raises `MaxTurnsBelowFloorError` if `max_turns` < 4 (trap #1).
+    """
+    if max_turns < _MAX_TURNS_FLOOR:
+        raise MaxTurnsBelowFloorError(
+            f"--max-turns {max_turns} is below the floor of "
+            f"{_MAX_TURNS_FLOOR} (trap #1: too-tight turns misread "
+            "orient-first queries as trigger-misses)"
+        )
+    argv = [
+        claude_bin,
+        "-p",
+        record["query"],
+        "--max-turns",
+        str(max_turns),
+        "--allowedTools",
+        "Skill",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+    ]
+    proc = subprocess.run(argv, capture_output=True, text=True, check=False)
+    events = [json.loads(line) for line in proc.stdout.splitlines() if line.strip()]
+    fired = _extract_fired_skill(events)
+    subtype, text = _extract_result(events)
+    return {**record, "fired": fired, "result_subtype": subtype, "text": text}
+
+
+def run_corpus(
+    records: list[dict], claude_bin: str = "claude", max_turns: int = 4
+) -> list[dict]:
+    """Run every corpus record through `run_one`; return the raw merged records."""
+    return [
+        run_one(record, claude_bin=claude_bin, max_turns=max_turns) for record in records
+    ]
+
+
+def _cmd_run(args: argparse.Namespace) -> None:
+    with open(args.corpus, encoding="utf-8") as f:
+        records = parse_corpus(f.read())
+    results = run_corpus(records, max_turns=args.max_turns)
+    output = "\n".join(json.dumps(r, ensure_ascii=False) for r in results) + "\n"
+    if args.out:
+        with open(args.out, "w", encoding="utf-8") as f:
+            f.write(output)
+    else:
+        sys.stdout.write(output)
+
+
+def _cmd_grade(args: argparse.Namespace) -> None:
+    with open(args.in_path, encoding="utf-8") as f:
+        raw_records = [json.loads(line) for line in f if line.strip()]
+    kept, discarded_count = filter_contaminated(raw_records)
+    counts = grade_corpus(kept, discarded_count=discarded_count)
+    for key in ("EXACT", "FAMILY", "MISS", "OVER", "discarded"):
+        print(f"{key}: {counts[key]}")
+
+
+def main(argv: list[str] | None = None) -> None:
+    """CLI entry: `run --corpus <path> [--max-turns N] [--out <path>]` or
+    `grade --in <path>`."""
+    parser = argparse.ArgumentParser(description="loom-* firing/refusal harness")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    run_parser = subparsers.add_parser("run")
+    run_parser.add_argument("--corpus", required=True)
+    run_parser.add_argument("--max-turns", type=int, default=_MAX_TURNS_FLOOR)
+    run_parser.add_argument("--out")
+    run_parser.set_defaults(func=_cmd_run)
+
+    grade_parser = subparsers.add_parser("grade")
+    grade_parser.add_argument("--in", dest="in_path", required=True)
+    grade_parser.set_defaults(func=_cmd_grade)
+
+    args = parser.parse_args(argv)
+    args.func(args)
+
+
+if __name__ == "__main__":
+    main()

@@ -14,14 +14,19 @@ layer enforces each):
 Canned fixtures only — no live `claude` calls, no network.
 """
 
+import os
+import stat
+
 import pytest
 
 from loom_firing_harness import (
     CorpusError,
+    MaxTurnsBelowFloorError,
     filter_contaminated,
     grade_corpus,
     grade_record,
     parse_corpus,
+    run_one,
     validate_corpus,
 )
 
@@ -117,3 +122,51 @@ def test_grade_exact_family_miss_over():
     assert counts["MISS"] == 2
     assert counts["OVER"] == 1
     assert counts["discarded"] == 3
+
+
+def _write_stub_claude(tmp_path):
+    """A fake `claude` CLI on PATH: prints canned stream-json, no network."""
+    stub = tmp_path / "claude"
+    stub.write_text(
+        "#!/usr/bin/env python3\n"
+        "import json\n"
+        "events = [\n"
+        '    {"type": "system", "subtype": "init"},\n'
+        '    {"type": "assistant", "message": {"content": [\n'
+        '        {"type": "tool_use", "name": "Skill",\n'
+        '         "input": {"skill": "loom-code:brainstorming"}}\n'
+        "    ]}},\n"
+        '    {"type": "result", "subtype": "success",\n'
+        '     "result": "Routed to brainstorming."},\n'
+        "]\n"
+        "for e in events:\n"
+        "    print(json.dumps(e))\n"
+    )
+    stub.chmod(stub.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+    return stub
+
+
+def test_run_mode_captures_fired_skill(tmp_path, monkeypatch):
+    """`run_one` shells to a stub `claude -p` and captures fired skill +
+    subtype (Task F1c); trap #1's max-turns floor is enforced and named.
+    """
+    _write_stub_claude(tmp_path)
+    monkeypatch.setenv("PATH", str(tmp_path) + os.pathsep + os.environ["PATH"])
+
+    record = {
+        "query": "幫我做一個記帳 app，從零開始規劃功能與畫面",
+        "expected": "loom-code:brainstorming",
+        "notes": "smoke test for run mode",
+    }
+
+    result = run_one(record, claude_bin="claude", max_turns=4)
+    assert result["fired"] == "loom-code:brainstorming"
+    assert result["result_subtype"] == "success"
+    assert "brainstorming" in result["text"]
+    # corpus fields pass through untouched
+    assert result["expected"] == "loom-code:brainstorming"
+    assert result["query"] == record["query"]
+
+    # trap #1: max-turns below the floor of 4 is refused with a named error
+    with pytest.raises(MaxTurnsBelowFloorError):
+        run_one(record, claude_bin="claude", max_turns=3)
