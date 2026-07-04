@@ -1,7 +1,7 @@
 {
   "name": "deconstruct-toolkit",
   "version": "0.2.3",
-  "description": "Reverse-engineer polished artifacts (copy/docs/UI/arguments/orgs) into their blueprints. EN/JA/ZH.",
+  "description": "Reverse-engineer polished artifacts (copy/docs/UI/arguments/orgs) into their blueprints, in EN/JA/ZH.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"

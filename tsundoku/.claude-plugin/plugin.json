@@ -1,7 +1,7 @@
 {
   "name": "tsundoku",
   "version": "0.11.1",
-  "description": "Turn owned-but-unread Kobo e-books into actionable skills. ⚠️ Claude Code CLI only.",
+  "description": "Turn owned-but-unread Kobo e-books into actionable skills (Claude Code CLI only).",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
