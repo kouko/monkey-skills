@@ -6,7 +6,7 @@
   "plugins": [
     {
       "name": "briefing-toolkit",
-      "description": "Daily read-only morning brief over connected MCP tools (Slack/Asana/Notion). ⚠️ Claude Code CLI.",
+      "description": "Daily read-only morning brief over connected MCP tools (Slack/Asana/Notion; Claude Code CLI only).",
       "source": "./briefing-toolkit/"
     },
     {
@@ -16,7 +16,7 @@
     },
     {
       "name": "obsidian",
-      "description": "Obsidian vault workflows (notes/markdown/diagrams/canvas) + LLM wiki layer. ⚠️ defuddle needs CLI.",
+      "description": "Obsidian vault workflows (notes/markdown/diagrams/canvas) + LLM wiki layer (defuddle needs CLI).",
       "source": "./obsidian/"
     },
     {
@@ -31,7 +31,7 @@
     },
     {
       "name": "investing-toolkit",
-      "description": "Three-layer investing research toolkit — data, analysis, report skills. ⚠️ Claude Code CLI only.",
+      "description": "Three-layer investing research toolkit — data, analysis, report skills (Claude Code CLI only).",
       "source": "./investing-toolkit/"
     },
     {
@@ -41,7 +41,7 @@
     },
     {
       "name": "gws-toolkit",
-      "description": "Google Workspace toolkit on the official gws CLI (drive/docs/sheets/gmail). ⚠️ Claude Code CLI only.",
+      "description": "Google Workspace toolkit on the official gws CLI (drive/docs/sheets/gmail; Claude Code CLI only).",
       "source": "./gws-toolkit/"
     },
     {
@@ -51,7 +51,7 @@
     },
     {
       "name": "tsundoku",
-      "description": "Turn owned-but-unread Kobo e-books into actionable skills. ⚠️ Claude Code CLI only.",
+      "description": "Turn owned-but-unread Kobo e-books into actionable skills (Claude Code CLI only).",
       "source": "./tsundoku/"
     },
     {
@@ -71,7 +71,7 @@
     },
     {
       "name": "deconstruct-toolkit",
-      "description": "Reverse-engineer polished artifacts (copy/docs/UI/arguments/orgs) into their blueprints. EN/JA/ZH.",
+      "description": "Reverse-engineer polished artifacts (copy/docs/UI/arguments/orgs) into their blueprints, in EN/JA/ZH.",
       "source": "./deconstruct-toolkit/"
     },
     {
@@ -111,7 +111,7 @@
     },
     {
       "name": "loom-product-principles",
-      "description": "Key-free generator for a PRINCIPLES.md project constitution — one north-star + falsifiable Product Principles, plus optional Design/Engineering Principles by jurisdiction.",
+      "description": "Key-free generator for a PRINCIPLES.md project constitution — north star + falsifiable Product Principles, plus optional Design/Engineering Principles.",
       "source": "./loom-product-principles/"
     },
     {

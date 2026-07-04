@@ -1,7 +1,7 @@
 {
   "name": "obsidian",
   "version": "3.18.0",
-  "description": "Obsidian vault workflows (notes/markdown/diagrams/canvas) + LLM wiki layer. ⚠️ defuddle needs CLI.",
+  "description": "Obsidian vault workflows (notes/markdown/diagrams/canvas) + LLM wiki layer (defuddle needs CLI).",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"

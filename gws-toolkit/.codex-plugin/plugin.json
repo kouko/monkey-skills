@@ -1,7 +1,7 @@
 {
   "name": "gws-toolkit",
   "version": "0.7.3",
-  "description": "Google Workspace toolkit on the official gws CLI (drive/docs/sheets/gmail). ⚠️ Claude Code CLI only.",
+  "description": "Google Workspace toolkit on the official gws CLI (drive/docs/sheets/gmail; Claude Code CLI only).",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
