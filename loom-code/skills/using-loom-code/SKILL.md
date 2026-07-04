@@ -14,7 +14,7 @@ If you are a subagent already dispatched with an explicit role prompt (implement
 
 Five load-bearing rules:
 
-1. **Brainstorm before implementing.** Explore intent + alternatives first. Call `brainstorming` — 5-axis framework (Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete) → structured brief.
+1. **Brainstorm before implementing.** Explore intent + alternatives first. Call `brainstorming` — 5-axis framework ("5-axis" is the historical name; the walk starts at Axis 0) (Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete) → structured brief.
 2. **TDD is the iron law.** No production code without a failing test first. Call `tdd-iron-law`. Beck (2002, ISBN 978-0321146533) Preface: *"Write the test you wish you had. Make it fail. Make it pass. Make it clean."* Floor, not aspiration.
 3. **Split + dispatch (SDD).** Task >1 hour or >1 module → `subagent-driven-development`; atomic ≤5-min units; three subagents per task (implementer / spec-reviewer / code-quality-reviewer).
 4. **Never push without review.** `git push` / `gh pr create` / `gh pr merge` without prior `requesting-code-review` PASS (or `finishing-a-development-branch` flow) = violation. Push commands trigger review, not bypass.
@@ -81,6 +81,7 @@ Walk through these stages in order. Skip a stage only when its precondition is a
 | "Subagents add overhead." | Context-window logic, not quality logic. | If task >1 hour or >1 module, SDD is mandatory. |
 | "User said skip TDD." | Valid only if user is explicit *and* the work matches `tdd-iron-law/SKILL.md` §When NOT to Use (throwaway / generated / pure config). | Quote §When NOT to Use back; ask for explicit confirmation. |
 | 「我先快速試一下 / ちょっと試すだけ」 | Same rationalization, localized. | Same refusal — load `tdd-iron-law`. |
+| "I'll skip straight to the brief." | Skipping `brainstorming`'s Axis 0 upstream check before writing a brief = violation — new product-shaped work may need `using-loom-product-principles` / `using-loom-interface-design` / `using-loom-spec` first. | Load `brainstorming`; Axis 0 checks the reception criteria before Axis 1. |
 
 ## Skill types
 
@@ -92,6 +93,7 @@ Walk through these stages in order. Skip a stage only when its precondition is a
 - **`domain-teams:code-team`** — passive gate entry. Use it to audit existing artifacts; this toolkit is for building from scratch. The knowledge layer (`standards/`, `rubrics/`, `checklists/`) here is a byte-identical functional copy of `code-team/`; sync via `scripts/distribute.py`, drift-checked by `scripts/verify-drift.py`.
 - **`dev-workflow:{git-memory, complexity-critique, proposal-critique}`** — loom-code **delegates** to these at the right moments. Never duplicate their logic.
 - **`obra/superpowers`** — overlapping skill names + dual SessionStart hook. To disable loom-code's hook injection: `export LOOM_CODE_MODE=off` in shell rc.
+- **loom family reception** — `loom-pipeline`'s SessionStart hook carries the family map (the five `using-loom-*` entries) + the on-ramp criteria table; `brainstorming`'s Axis 0 points to it rather than duplicating it here.
 
 ## What this router does NOT do
 

@@ -2,7 +2,7 @@
 
 **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-> **HARD-GATE — DO NOT START IMPLEMENTING UNTIL YOU HAVE EXPLORED INTENT.** Walks the user / agent through a 5-axis discovery framework (Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete) and produces a structured brief that `writing-plans` consumes. Refuses "this is simple", "I know what to build", "let's just start coding" rationalizations.
+> **HARD-GATE — DO NOT START IMPLEMENTING UNTIL YOU HAVE EXPLORED INTENT.** Walks the user / agent through an upstream-artifact gate (Axis 0, family §Intake) plus a 5-axis discovery framework (Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete) and produces a structured brief that `writing-plans` consumes. Refuses "this is simple", "I know what to build", "let's just start coding" rationalizations.
 
 Part of the [loom-code](../..) plugin. Operational spec the agent loads is [`SKILL.md`](SKILL.md); this README is for humans.
 
@@ -10,11 +10,11 @@ Part of the [loom-code](../..) plugin. Operational spec the agent loads is [`SKI
 
 The pressure to skip — *"this is simple,"* *"I know what to build,"* *"let's just start coding"* — is exactly the failure mode this skill exists to prevent. The 5 minutes of brainstorming saves the 50 minutes of building the wrong thing and the 500 minutes of refactoring out of it.
 
-If the user or agent invokes implementation moves (drafting code, opening files, reaching for `tdd-iron-law`) *before* the 5 axes are walked, the skill refuses and routes back to discovery.
+If the user or agent invokes implementation moves (drafting code, opening files, reaching for `tdd-iron-law`) *before* Axis 0 and the 5 axes are walked, the skill refuses and routes back to discovery.
 
 ## The 5-axis framework
 
-Walk all five. None are optional unless the §When NOT to Use exemption applies.
+"5-axis" is the historical name; the walk now starts at Axis 0. Walk all axes below; none are optional unless the §When NOT to Use exemption applies.
 
 | Axis | Question | Grounded in |
 |---|---|---|

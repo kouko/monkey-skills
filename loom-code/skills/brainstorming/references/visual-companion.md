@@ -1,6 +1,6 @@
 # Visual companion — when text isn't enough
 
-> Companion to [`../SKILL.md`](../SKILL.md). Use when one of the 5 axes is **easier to think through visually than verbally**. Diagrams are not decoration — they are a different reasoning surface that catches errors prose hides.
+> Companion to [`../SKILL.md`](../SKILL.md). Use when one of the axes — including Axis 0 — is **easier to think through visually than verbally**. Diagrams are not decoration — they are a different reasoning surface that catches errors prose hides.
 
 ## When a diagram pays for itself
 

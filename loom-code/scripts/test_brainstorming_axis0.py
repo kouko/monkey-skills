@@ -121,3 +121,76 @@ def test_axis0_negative_guard_silent_skip():
         "negative guard must name test-covered increment"
     assert "silently" in low, \
         "negative guard must state the skip happens SILENTLY (no noise)"
+
+
+# --- router (using-loom-code) red-flag + family pointer (Task E2) ---------
+
+ROUTER = Path(__file__).parents[1] / "skills" / "using-loom-code" / "SKILL.md"
+
+# using-loom-code/SKILL.md line count immediately before Task E2 (measured
+# `wc -l` on the untouched file). This file is hook-injected every session,
+# so its net growth is capped at 15 lines — test-asserted against this fixed
+# baseline rather than a moving git ref.
+_ROUTER_BASELINE_LINES = 114
+_ROUTER_GROWTH_CAP = 15
+
+
+def _router_text() -> str:
+    assert ROUTER.is_file(), f"using-loom-code/SKILL.md is absent at {ROUTER}"
+    return ROUTER.read_text(encoding="utf-8")
+
+
+def test_router_axis0_red_flag():
+    """using-loom-code/SKILL.md must:
+    (a) carry a red-flag row naming skipping brainstorming's Axis 0 upstream
+        check before writing a brief as a violation;
+    (b) point to the loom family reception (loom-pipeline's SessionStart
+        hook) as the family map + on-ramp criteria SSOT;
+    (c) update rule #1's '5-axis framework' mention with one clause noting
+        the walk now starts at Axis 0, without rewriting the rule;
+    and stay within the ≤15 net-line-growth cap (this file is hook-injected
+    every session)."""
+    text = _router_text()
+    low = text.lower()
+
+    # (a) red-flag row: a single line names both Axis 0 and "brief", and
+    # calls the skip out as a violation.
+    axis0_red_flag_lines = [
+        line for line in text.splitlines()
+        if "axis 0" in line.lower() and "brief" in line.lower()
+    ]
+    assert axis0_red_flag_lines, \
+        "no line names both Axis 0 and 'brief' together (expected red-flag row)"
+    assert any("violation" in line.lower() for line in axis0_red_flag_lines), \
+        "the Axis 0 red-flag row must call the skip a violation"
+
+    # (b) family pointer — loom-pipeline reception as the family map SSOT,
+    # attributed to the SessionStart hook mechanism.
+    assert "loom-pipeline" in text, \
+        "router must point to loom-pipeline (the reception's home plugin)"
+    assert "family reception" in low or "family-reception.md" in text, \
+        "router must name the loom family reception by name/path"
+    assert "sessionstart" in low or "session-start" in low, \
+        "router must attribute the reception to the SessionStart hook mechanism"
+
+    # (c) rule #1 update: historical-name clause on the SAME rule, not a
+    # rewrite.
+    rule1_match = re.search(
+        r"^1\.\s+\*\*Brainstorm before implementing\.\*\*.*$", text, re.MULTILINE
+    )
+    assert rule1_match is not None, \
+        "rule #1 ('Brainstorm before implementing') must still exist unrewritten"
+    rule1_low = rule1_match.group(0).lower()
+    assert "axis 0" in rule1_low, \
+        "rule #1 must mention Axis 0 (the walk now starts there)"
+    assert "5-axis" in rule1_low or "5 axis" in rule1_low, \
+        "rule #1 must retain '5-axis' as the framework's historical name"
+
+    # net-growth cap
+    current_lines = len(text.splitlines())
+    growth = current_lines - _ROUTER_BASELINE_LINES
+    assert growth <= _ROUTER_GROWTH_CAP, (
+        f"using-loom-code/SKILL.md grew by {growth} lines "
+        f"(baseline {_ROUTER_BASELINE_LINES} -> {current_lines}); "
+        f"cap is {_ROUTER_GROWTH_CAP} (hook-injected every session)"
+    )
