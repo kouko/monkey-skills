@@ -8,8 +8,10 @@ layer enforces each):
   on suspiciously short queries that read as context-less clarify-first,
   not a real trigger-miss.
 - trap #3 (session/rate-limit contamination): `filter_contaminated`
-  DISCARDS run-result records whose subtype signals an error or whose
-  text mentions a session limit, and reports how many were discarded.
+  DISCARDS run-result records whose subtype signals a true run failure
+  (harness_error, unknown subtypes) or whose text mentions a session
+  limit, and reports how many were discarded; `error_max_turns` records
+  are kept and graded normally (F3 accounting-debt fix).
 
 Canned fixtures only — no live `claude` calls, no network.
 """
@@ -62,7 +64,8 @@ def test_corpus_parse_and_contamination_discard():
     with pytest.raises(CorpusError):
         parse_corpus("not even json\n")
 
-    # --- contamination filter: discard error/session-limit records ---
+    # --- contamination filter: discard error/session-limit records,
+    #     but error_max_turns is a valid signal and stays (F3 debt fix) ---
     run_results = [
         {"result_subtype": "success", "text": "Skill tool_use: brainstorming"},
         {"result_subtype": "error_max_turns", "text": "hit max turns"},
@@ -70,10 +73,82 @@ def test_corpus_parse_and_contamination_discard():
         {"result_subtype": "success", "text": "Skill tool_use: using-loom-spec"},
     ]
     kept, discarded_count = filter_contaminated(run_results)
-    assert discarded_count == 2
-    assert len(kept) == 2
-    assert all(r["result_subtype"] == "success" for r in kept)
+    assert discarded_count == 1
+    assert len(kept) == 3
+    assert [r["result_subtype"] for r in kept] == [
+        "success",
+        "error_max_turns",
+        "success",
+    ]
     assert all("session limit" not in r["text"].lower() for r in kept)
+
+
+def test_error_max_turns_grades_normally_only_true_failures_discarded():
+    """F3 accounting-debt fix: a session that fires a skill and keeps
+    working past the turn cap is a SUCCESS signal, not contamination —
+    F3 dropped 6/28 records (all with useful fires) under the old
+    filter. Discarded now: harness_error, session-limit text, and any
+    unknown/absent subtype (trap #3 still guards unrecognized failure
+    modes). Kept and graded: success AND error_max_turns.
+    """
+    run_results = [
+        {"result_subtype": "success", "fired": "loom-code:brainstorming", "text": "ok"},
+        {
+            "result_subtype": "error_max_turns",
+            "fired": "loom-code:using-loom-code",
+            "text": "hit max turns after firing",
+        },
+        {"result_subtype": "harness_error", "fired": None, "text": "subprocess crash"},
+        {"result_subtype": "success", "fired": None, "text": "Session limit reached"},
+        {"result_subtype": "error_max_turns", "fired": None, "text": "session limit hit mid-run"},
+        {"result_subtype": "", "fired": None, "text": ""},  # no result event
+        {"result_subtype": "error_during_execution", "fired": None, "text": "boom"},
+    ]
+    kept, discarded_count = filter_contaminated(run_results)
+    assert discarded_count == 5
+    assert [r["result_subtype"] for r in kept] == ["success", "error_max_turns"]
+    # the kept error_max_turns record carries its fired signal into grading
+    assert kept[1]["fired"] == "loom-code:using-loom-code"
+
+
+def test_grade_aggregate_surfaces_unparsed_lines(tmp_path, capsys):
+    """F3 accounting-debt fix (2nd item): `unparsed_lines` reaches the
+    grade aggregate — summed across ALL records (including discarded
+    ones; their noise still happened) and printed by the grade CLI,
+    never swallowed at the per-record layer.
+    """
+    counts = grade_corpus(
+        [{"expected": "loom-code:brainstorming", "fired": "loom-code:brainstorming"}],
+        discarded_count=1,
+        unparsed_lines=5,
+    )
+    assert counts["unparsed_lines"] == 5
+
+    merged = [
+        {
+            "expected": "loom-code:brainstorming",
+            "fired": "loom-code:brainstorming",
+            "result_subtype": "success",
+            "text": "ok",
+            "unparsed_lines": 2,
+        },
+        {
+            "expected": "loom-code:brainstorming",
+            "fired": None,
+            "result_subtype": "harness_error",
+            "text": "crash",
+            "unparsed_lines": 3,
+        },
+    ]
+    in_path = tmp_path / "merged.jsonl"
+    in_path.write_text(
+        "\n".join(json.dumps(r) for r in merged) + "\n", encoding="utf-8"
+    )
+    loom_firing_harness.main(["grade", "--in", str(in_path)])
+    out = capsys.readouterr().out
+    assert "EXACT: 1" in out
+    assert "discarded: 1" in out
+    assert "unparsed_lines: 5" in out  # 2 (kept) + 3 (discarded) — both surfaced
 
 
 def test_grade_exact_family_miss_over():
