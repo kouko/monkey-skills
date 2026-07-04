@@ -9,6 +9,25 @@ version: 0.3.0
 If you are a subagent already dispatched with an explicit role prompt, **do not** re-route through this skill. Follow the prompt you were dispatched with directly. This router is for the parent orchestrator only.
 </SUBAGENT-STOP>
 
+## §Intake
+
+Before routing to design work, walk these three steps in order.
+
+1. **前站檢查 (upstream check).** Check the target repo against the loom
+   family reception's on-ramp criteria table
+   (`loom-pipeline/hooks/family-reception.md` — the SSOT; do not copy its
+   rows here). If the repo has no `docs/loom/PRINCIPLES.md` and the work is
+   product-shaped, recommend **`using-loom-product-principles` first** —
+   surface it once, then proceed either way per the reception's
+   recommend-once rule.
+2. **對站檢查 (adjacent-station check).** If the ask is actually a
+   requirement fan-out (multi-state/multi-object behavior, edge cases,
+   acceptance criteria) rather than a UI/UX surface, redirect to
+   `using-loom-spec`. If the ask is actually to write or change code,
+   redirect to `using-loom-code`.
+3. **Design routing.** Otherwise, proceed with this router's own modality +
+   Skill-priority routing below (Step 0 onward) — unchanged.
+
 <EXTREMELY-IMPORTANT>
 **You have loom-interface-design.** When the user wants to design a product's interface, interaction, or UX, route through this skill before producing any design artifact.
 

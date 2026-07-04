@@ -167,6 +167,9 @@ rules, edge-case fan-out, or `#### Scenario:` acceptance blocks. That belongs to
 **Flag here, fan-out there** — doing the fan-out in this skill would duplicate
 loom-spec and blur the DESIGN → spec boundary.
 
+**Next station.** Once `ui-flows.md` is done, hand off to `using-loom-spec` to
+expand the feature into a spec.
+
 ## See also
 
 - `references/ux-flow-checklist.md` — the 7 generation dimensions + flag rule.

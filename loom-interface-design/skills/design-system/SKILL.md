@@ -155,5 +155,9 @@ coordinates this). A `DESIGN.md`-only run will correctly report the missing
   *behavioral* fan-out (object state machines, edges, acceptance scenarios) is
   `spec-expansion`'s turf, seeded by `ui-flows.md` — not duplicated here.
 
+**Next station.** Once `DESIGN.md` is done, hand off to `using-loom-spec` to
+expand the feature into a spec — or to `interaction-flows` first if the
+product's flows haven't been mapped yet.
+
 This skill *writes* the visual system; it does not run TDD, write frontend
 code, or design the flows — those are downstream stations that *read* it.

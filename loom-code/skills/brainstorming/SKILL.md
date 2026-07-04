@@ -1,7 +1,7 @@
 ---
 name: brainstorming
 description: |
-  Use BEFORE implementing new behavior or non-obvious design — explore intent + alternatives via a 5-axis framework (Problem / Users / Smallest End State / Alternatives / Obsoletes) → a brief. Refuses 'this is simple' / 'just start coding'.
+  Use BEFORE implementing new behavior or non-obvious design — explore intent + alternatives via an upstream-artifact gate (Axis 0, family §Intake) + 5-axis framework (Problem / Users / Smallest End State / Alternatives / Obsoletes) → a brief. Refuses 'this is simple' / 'just start coding'.
 version: 0.12.0
 ---
 
@@ -15,7 +15,7 @@ If you are a subagent dispatched with an explicit role prompt (implementer / spe
 
 This is not a guideline. The pressure to skip — *"this is simple,"* *"I know what to build,"* *"let's just start coding"* — is exactly the failure mode this skill exists to prevent. **The first 5 minutes of brainstorming saves the next 50 minutes of building the wrong thing and the 500 minutes of refactoring out of it.**
 
-If you catch yourself drafting code, opening files, or reaching for the Skill tool to call `tdd-iron-law` *before* the user has answered the 5 axes below — **stop**. Return to this skill. Beck's *"if it's hard to test, it's probably hard to use"* (Preface, 2002) has a discovery-phase analogue: *if it's hard to articulate what success looks like, it's probably the wrong target.*
+If you catch yourself drafting code, opening files, or reaching for the Skill tool to call `tdd-iron-law` *before* the user has answered the axes below (Axis 0 through Axis 5) — **stop**. Return to this skill. Beck's *"if it's hard to test, it's probably hard to use"* (Preface, 2002) has a discovery-phase analogue: *if it's hard to articulate what success looks like, it's probably the wrong target.*
 
 ### What counts as "before implementation"
 
@@ -43,7 +43,7 @@ When uncertain, ask: *"Could a reasonable engineer pick the wrong solution from 
 
 ## The 5-axis exploration framework
 
-Walk all five. Don't skip any. If an axis returns *"don't know"* or *"need more from user"* — that is itself a discovery output and goes into Open Questions in the brief.
+"5-axis" is the framework's historical name; the walk itself now starts one step earlier. Walk all axes below, starting at Axis 0 — a mandatory member of the walk (its own negative guard is the only sanctioned skip). Don't skip any. If an axis returns *"don't know"* or *"need more from user"* — that is itself a discovery output and goes into Open Questions in the brief.
 
 When axis uncertainty requires user input, ask **at most one axis per `AskUserQuestion` call** — the single highest-uncertainty one. Bundling multiple axes (e.g. Axis 1 + Axis 3 + Axis 4 with 3-4 options each) overloads the call and will be rejected by the harness as too many options.
 
@@ -56,6 +56,25 @@ When that axis question fires, phrase it for the warm-but-interrupted user who r
 These three join the two gates already woven into the axes: gate ① (ask only when genuinely uncertain) lives in **Axis 1** as the confident-JTBD-read rule — state a confident reading as a committed interpretation rather than re-asking — and gate ② (bring a recommendation, not an open question) lives in **Axis 4** as the research-then-"My take: Recommend / Why / Conditional reversal" protocol; together the three read as one coherent set.
 
 **Above all — lead with the stakes, and brief first when the fork is complex.** The framing rules above make the *options* legible; they do not guarantee the user grasps *why they are being asked*. Before the options, the `question` field's first line must say, in plain words, *what this choice changes for the user and why it matters* — not just what the options are (a user can read three well-framed options and still not see the point). And when the fork is genuinely complex (≥3 trade-offs, ≥2 implementation paths, or architectural blast radius), **brief before you ask**: run `dev-workflow:brief-before-asking` (Mental Model → My take) first, then fire the `AskUserQuestion`. That skill is the canonical source for this framing; the rules here are its in-workflow shorthand.
+
+### Axis 0 — Upstream artifacts (family §Intake)
+
+Before Axis 1, check the target repo against **the loom family reception's**
+on-ramp criteria table (`loom-pipeline/hooks/family-reception.md`) — point to
+it, never copy its rows here (SSOT: that file owns the table body).
+
+**Negative guard (silent skip)**: if the work is a bug fix, a refactor, or a
+test-covered increment, Axis 0 is skipped silently — no noise on incremental
+work. Only proceed past this guard for product-shaped / user-facing /
+multi-state new work.
+
+If a criteria row triggers, surface the recommendation **ONCE** — name the
+concrete design-side sequence (e.g. `using-loom-product-principles` →
+`using-loom-interface-design` → `using-loom-spec`, whichever rows fired), then
+record the user's choice in the brief under a `## Design-side on-ramp` line
+("offered — user chose <direct/detour>") and proceed either way.
+Never re-raise it after a decline — the recommend-once rule holds for the
+rest of this task.
 
 ### Axis 1 — Problem
 

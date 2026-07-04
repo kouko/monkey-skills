@@ -32,6 +32,25 @@ and `loom-code`. Its entire job is: collect the run-input contract, resolve
 the driver asset's absolute path, and invoke `Workflow({scriptPath})` once
 per pipeline segment.
 
+## §Intake
+
+Run these three steps first, once per dispatch, before `§When it fires`
+below gates on this skill's own two orchestration conditions.
+
+1. **前站檢查 (upstream check)** — check the target repo against the loom
+   family reception's on-ramp criteria table
+   (`loom-pipeline/hooks/family-reception.md`, "On-ramp criteria table
+   (SSOT)") — reference it by name/path, never copy its rows here.
+2. **對站檢查 (station check)** — if the ask is interactive design/spec/code
+   work rather than a full pipeline run, hand off to that family's own
+   entry point instead of driving it from here: `using-loom-product-principles`,
+   `using-loom-interface-design`, `using-loom-spec`, or `using-loom-code`.
+3. **本站再確認 (this station's fire condition, unchanged)** — this skill
+   still only fires under `§When it fires`'s BOTH-conditions gate below;
+   its N/A-loud wording governs unchanged — nothing in this §Intake grants
+   permission to hand-drive the four stations or auto-open the Workflow
+   door.
+
 ## §When it fires — BOTH conditions, checked first
 
 1. **The Workflow tool is available** in this host (Claude Code exposes a

@@ -58,3 +58,48 @@ def test_readme_batch_mode_documented_not_committed_next():
     assert "Committed next (v1.1)" not in text, (
         "stale 'Committed next (v1.1)' heading — batch mode has shipped"
     )
+
+
+def test_readme_family_naming_convention():
+    """README documents the loom family's naming convention (Task A3,
+    docs/loom/plans/2026-07-04-loom-family-connective-tissue.md): a
+    §Family entries & naming convention section carrying the one-sentence
+    rule, the entry-vs-station distinction, brainstorming called out as
+    loom-code's discovery skill, the WHY behind using-loom-code's missing
+    duplicate §Intake heading (plan note 5), and a reception paragraph
+    pointing at the SessionStart hook.
+    """
+    text = README.read_text()
+
+    assert "Family entries" in text and "naming convention" in text, (
+        "missing §Family entries & naming convention section"
+    )
+
+    # The one-sentence rule, verbatim from hooks/family-reception.md
+    assert "要用 loom-X" in text and "using-loom-X" in text, (
+        "missing the one-sentence naming rule (要用 loom-X, 就從 using-loom-X 開始)"
+    )
+
+    # Entry vs station convention table content
+    assert "using-loom-*" in text, "missing using-loom-* entry naming convention"
+    assert "product-principles" in text and "spec-expansion" in text, (
+        "missing station artifact-name examples (product-principles / spec-expansion)"
+    )
+
+    # brainstorming called out as loom-code's discovery skill
+    assert "brainstorming" in text and "discovery" in text, (
+        "missing brainstorming = loom-code's discovery skill callout"
+    )
+
+    # WHY using-loom-code carries no duplicate §Intake heading (plan note 5)
+    assert "Axis 0" in text, (
+        "missing WHY using-loom-code has no duplicate §Intake heading "
+        "(brainstorming's Axis 0 IS its family-entry intake)"
+    )
+
+    # Reception paragraph: SessionStart hook injects the family map
+    assert "SessionStart" in text, "missing reception paragraph naming the SessionStart hook"
+    assert "family-reception.md" in text, "missing pointer to hooks/family-reception.md"
+    assert "explicit" in text.lower() and "Workflow" in text, (
+        "missing 'Workflow door remains explicit-invocation only' framing"
+    )

@@ -8,6 +8,24 @@ Versioning: [Semantic Versioning](https://semver.org/).
 > This file was reconstructed on 2026-07-02 from the git history — the plugin
 > shipped its first two versions without a CHANGELOG.
 
+## [0.4.0] — 2026-07-04
+
+### Added
+
+- **New `using-loom-product-principles` entry skill**: a thin family-entry
+  router (§Intake — 前站檢查 / 對站檢查 / handoff to `product-principles`)
+  for users who aren't sure where to start. Its description is
+  entry-framed and deliberately avoids `product-principles`' own
+  direct-ask triggers (產品原則 / north star / 憲章) so the entry never
+  steals the member's direct pull (#456 positive-specificity).
+- `product-principles` SKILL.md gains a **Next station** close-out line:
+  once `PRINCIPLES.md` is shipped, hand off to `using-loom-interface-design`
+  for UI-bearing products, or to `using-loom-spec` to expand a feature
+  directly for headless / CLI-only products.
+
+Both changes are part of the loom-family connective-tissue pass wiring the
+`using-loom-*` entry-skill convention across the pipeline.
+
 ## [0.3.0] — 2026-07-03
 
 ### Changed

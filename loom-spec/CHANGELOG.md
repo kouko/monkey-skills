@@ -5,10 +5,52 @@ All notable changes to the `loom-spec` plugin (formerly `spec-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] — 2026-07-04
+
+### Added
+
+- `using-loom-spec` — a new thin entry/router skill completing the family's
+  `using-loom-*` convention (loom family connective-tissue plan). §Intake
+  checks upstream/peer fit against the loom-pipeline reception SSOT, then
+  routes between loom-spec's two members by the specific verb: draft/expand
+  from a seed → `spec-expansion`; critique/audit an existing draft → the
+  member skill this router names — closing the #456-documented
+  adjacent mis-route where a critique-an-existing-draft ask got sent to
+  `spec-expansion` instead. Guarded by
+  `scripts/test_spec_entry_skill.py`.
+
+### Changed
+
+- `test_spec_entry_skill.py::test_intake_step2_peer_check_present` is now
+  step-2-scoped: it slices Step 2's own paragraph (between the `**Step 2`
+  and `**Step 3` markers) and asserts the three redirect-target names
+  (`using-loom-interface-design`, `using-loom-product-principles`,
+  `using-loom-code`) are present within it, rather than grepping the whole
+  file for `對站檢查`/`step 2` — the prior assertion stayed green even if
+  step 2's redirect targets were dropped (and a whole-§Intake slice was
+  still too coarse: Step 1 independently names two of the three targets).
+  Mutation-verified: all three assertions fail on a step-2-stripped copy.
+  Found during C1/C2's quality reviews.
+- README §Scope: the `using-loom-spec` PARK paragraph now reflects the
+  supersession — the thin entry shipped in 0.4.0; the park stands for the
+  tiering-capable upgrade only, re-triggers unchanged.
+
+### Verified
+
+- `spec-expansion`'s existing `loom-code:writing-plans` next-station
+  pointer (§Boundary — stops at GENERATE) already names the
+  validated-change-folder → writing-plans handoff explicitly; no edit was
+  needed — this release just confirms the wiring the brief asked to check.
+
 ## [Unreleased]
 
 ### Decided
 
+- **[SUPERSEDED by 0.4.0]** — a THIN `using-loom-spec` entry (intake +
+  member disambiguation, NO tiering judgment) shipped via the loom family
+  connective-tissue plan; the park below concerned the tiering-capable
+  router, whose re-triggers (DECLARE lands, discovery/persist scheduled)
+  remain valid for adding tiering to the now-existing entry.
 - **`using-loom-spec` router: parked, with explicit re-triggers** (audit
   close-out, reaffirming the MVP brief's v0.2 deferral). The router's
   load-bearing job per the 2026-06-11 research synthesis is the

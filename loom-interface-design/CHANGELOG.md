@@ -8,7 +8,30 @@ Versioning: [Semantic Versioning](https://semver.org/).
 > This file was reconstructed on 2026-07-02 from the git history — the plugin
 > shipped its first three versions without a CHANGELOG.
 
-## [Unreleased]
+## [0.4.0] — 2026-07-04
+
+### Added
+
+- **`## §Intake`** section on `using-loom-interface-design/SKILL.md`
+  (loom family connective-tissue work): step 1 checks the target against
+  the `loom-pipeline` family-reception on-ramp criteria (PRINCIPLES.md
+  gap recommends `using-loom-product-principles` first), step 2
+  redirects spec/code asks to their own entries, step 3 keeps the
+  existing design-system/interaction-flows routing. Guarded by
+  `test_entry_intake.py`.
+
+### Changed
+
+- **Next-station cross-refs** — `design-system/SKILL.md` (§Downstream)
+  and `interaction-flows/SKILL.md` (§Boundary) each gain a "Next
+  station." line pointing a finished `DESIGN.md` / `ui-flows.md` to
+  `using-loom-spec` to expand the feature into a spec.
+- `test_entry_intake.py`'s `§Intake`-section slice now stops at
+  whichever comes first of the next `## ` heading or the
+  `<EXTREMELY-IMPORTANT>` block — the old `\n## `-only boundary let the
+  `<EXTREMELY-IMPORTANT>` block leak into the "§Intake section" a
+  step-scoped assertion checked, mutation-proven (old test false-passed
+  a stripped mutant; fixed test fails it).
 
 ### Decided
 

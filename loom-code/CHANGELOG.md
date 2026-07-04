@@ -5,6 +5,52 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.22.0] — 2026-07-04 — **loom family connective tissue (E1/E2/F-track)**
+
+### Added
+
+- **Brainstorming Axis 0 — upstream artifacts (family §Intake)** — a new
+  section fronting the 5-axis framework: before Axis 1, check the target
+  repo against the loom family reception's on-ramp criteria table
+  (`loom-pipeline/hooks/family-reception.md`, pointed to, never copied). On
+  a triggered row, surface the recommendation ONCE (naming the concrete
+  design-side sequence), record the user's choice under a `## Design-side
+  on-ramp` brief line, and never re-raise after a decline. Negative guard:
+  bug fix / refactor / test-covered increment → skip silently. "5-axis" is
+  retained as the framework's historical name; the mandatory walk now
+  starts at Axis 0. Guarded by `scripts/test_brainstorming_axis0.py`.
+- **`using-loom-code` red-flag row + family pointer** — the router's
+  red-flags table now names skipping brainstorming's Axis 0 upstream check
+  before writing a brief as a violation; §Coexistence gains a one-line
+  pointer to the loom family reception (`loom-pipeline`'s SessionStart
+  hook) as the family map + on-ramp criteria SSOT; rule #1 gains a one-clause
+  historical-name note ("5-axis" name, walk starts at Axis 0). Net growth
+  of `using-loom-code/SKILL.md` held to 2 lines against a 15-line
+  test-asserted cap (this file is hook-injected every session). Doc sweep:
+  `brainstorming/README.md` and `references/visual-companion.md` pick up
+  the same Axis-0-inclusive wording where they asserted walk-scope
+  completeness (brand-name "5-axis" mentions elsewhere left untouched).
+- **`loom_firing_harness.py`** (new, stdlib-only) — a behavioral firing-test
+  harness for the loom family's skill-routing: JSONL corpus parser with a
+  self-containedness validator and a session-limit contamination filter
+  (discarded records surfaced with a count, never graded); a `grade` mode
+  scoring EXACT / FAMILY / MISS / OVER per record with a per-corpus
+  aggregate (expected-NONE + non-loom fire is EXACT, never OVER); a `run`
+  mode shelling out to `claude -p ... --output-format stream-json` (list-form
+  args, `--max-turns` floor of 4, first `Skill` tool_use extracted as
+  fired) with an argparse `run`/`grade` CLI. Run records tolerate non-JSON
+  stdout noise (skipped lines surfaced as `unparsed_lines`, never silent),
+  and a per-record failure is captured as a `harness_error` record that the
+  contamination filter discards downstream — one bad record never aborts
+  the batch. Six documented method traps (five from the 2026-06-24/25
+  firing-test memory + the corpus-grading trap #6) are baked in. Guarded by
+  `scripts/test_loom_firing_harness.py`.
+- **Firing corpora** — `docs/loom/firing-corpus/{goal-oriented,near-miss,
+  direct-ask}.jsonl` (8/10/10 self-contained lines): goal-oriented
+  (design-side recommendation path), near-miss (must NOT fire the two new
+  thin entries), direct-ask (#456 regression parity). Validated by the
+  harness's corpus validator.
+
 ## [0.21.2] — 2026-07-03
 
 ### Fixed

@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# SessionStart hook for loom-pipeline.
+# Reads hooks/family-reception.md and injects it as additionalContext so
+# every Claude Code / Codex CLI session starts with the loom family's front
+# door loaded — the family map, the three doors, and the on-ramp criteria
+# table (SSOT for every family entry's §Intake).
+#
+# CANONICAL key (both hosts consume): hookSpecificOutput.additionalContext
+# Per the official Codex hooks contract (developers.openai.com/codex/hooks):
+# "That additionalContext text is added as extra developer context." Claude
+# Code reads the SAME nested camelCase key, so this one shape is what both
+# hosts actually consume.
+#
+# DEFENSIVE keys (belt-and-suspenders, emitted for cross-version/host
+# portability — NOT because Codex requires snake_case):
+#   additional_context   (top-level snake_case)
+#   additionalContext    (bare top-level camelCase)
+# These are harmless extras a host ignores if it doesn't read them; we emit
+# all three so the reception survives host/version shape drift (mirrors
+# loom-code/hooks/session-start's proven mechanism).
+#
+# Reference: docs/loom/specs/2026-07-04-loom-family-connective-tissue.md
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+RECEPTION_PATH="${PLUGIN_ROOT}/hooks/family-reception.md"
+
+# Reception file missing → fail open with empty context (do not crash the
+# session). Same 3-key shape as the populated case.
+if [ ! -f "${RECEPTION_PATH}" ]; then
+  printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":""},"additional_context":"","additionalContext":""}\n'
+  exit 0
+fi
+
+content="$(cat "${RECEPTION_PATH}")"
+
+# JSON-escape via bash parameter substitution (mirror loom-code).
+escape_for_json() {
+  local s="$1"
+  s="${s//\\/\\\\}"
+  s="${s//\"/\\\"}"
+  s="${s//$'\n'/\\n}"
+  s="${s//$'\r'/\\r}"
+  s="${s//$'\t'/\\t}"
+  printf '%s' "$s"
+}
+escaped="$(escape_for_json "${content}")"
+
+# Wrap in EXTREMELY-IMPORTANT block so the agent treats the reception as
+# load-bearing awareness (not a mandate — the reception recommends, it does
+# not gate).
+banner_open='<EXTREMELY_IMPORTANT>\nYou have the loom family of plugins available. Read this reception before deciding where to route work.\n\n'
+banner_close='\n</EXTREMELY_IMPORTANT>'
+context="${banner_open}${escaped}${banner_close}"
+
+# Emit canonical nested key + both defensive top-level keys (same content).
+printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"},"additional_context":"%s","additionalContext":"%s"}\n' \
+  "${context}" "${context}" "${context}"
