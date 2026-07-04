@@ -2,7 +2,7 @@
 
 > **Process-discipline + canon-grounded コーディングワークフロー for Claude Code (+ Codex CLI)。** 12-skill プラグイン。SessionStart で router charter を自動注入し、エージェントが合理化をやめて defer し始めるよう仕向ける — 各ルールは一次情報源に grounded（Beck on TDD / Martin on naming / Fowler on refactoring / Feathers on legacy code / OWASP ASVS on security / 徳丸本 on encoding security）。
 
-**状態**：v0.21.0 — 12 skills；v0.3.0 以来フル Superpowers parity。バージョンごとの詳細（rule-sheet 注入、reviewer-discipline、parallel dispatch、spec→code seam、memory verify gate など）は [CHANGELOG.md](CHANGELOG.md) を参照。
+**状態**：v0.22.0 — 12 skills；v0.3.0 以来フル Superpowers parity。バージョンごとの詳細（rule-sheet 注入、reviewer-discipline、parallel dispatch、spec→code seam、memory verify gate など）は [CHANGELOG.md](CHANGELOG.md) を参照。
 **言語**：[English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 **Repository**：[`monkey-skills`](https://github.com/kouko/monkey-skills) の一部
 
@@ -46,7 +46,7 @@ claude plugin details loom-code           # 期待：12 skills + 1 SessionStart 
 
 ### Codex CLI（build 完了、実機検証は延期中）
 
-⚠️ Codex CLI manifest は build 済みで Claude Code 変体と同期して v0.20.0 までバンプ済み、しかし実 Codex CLI 環境での install + 検証 ritual はユーザ指示により延期中。準備ができたら [`tests/codex-cli/README.md`](tests/codex-cli/README.md) を参照。
+⚠️ Codex CLI manifest は build 済みで Claude Code 変体と同期して v0.22.0 までバンプ済み、しかし実 Codex CLI 環境での install + 検証 ritual はユーザ指示により延期中。準備ができたら [`tests/codex-cli/README.md`](tests/codex-cli/README.md) を参照。
 
 ### ローカル開発（コントリビューター向け）
 
@@ -78,6 +78,27 @@ claude plugin install loom-code@monkey-skills --scope local
 | 8 | [`finishing-a-development-branch`](skills/finishing-a-development-branch/) | Branch close | 7 ステップ orchestrator（review → verify → git-memory 必須 → commit → push → 任意 PR + worktree cleanup） |
 | Aux | [`using-git-worktrees`](skills/using-git-worktrees/) | Lateral | ネイティブ `git worktree` ワークフロー；`.worktrees/<slug>/` 慣習 |
 | Aux | [`dispatching-parallel-agents`](skills/dispatching-parallel-agents/) | Lateral（v0.8.0+） | across-domain `Agent` ディスパッチ、**1 つの assistant メッセージ内に複数の `Agent` 呼び出し**で並行実行；2+ の独立した問題ドメイン（共有ファイル無し・共有シンボル無し・順次データ依存無し）に適用；TDD iron-law は各ブランチで適用；verdict はこの skill 層で集約 |
+
+skill 粒度の実行フロー（実線 = 線形 stage フロー、点線 = 条件付き / オンデマンド）：
+
+```mermaid
+flowchart TD
+    BS["brainstorming<br/>Discovery"] --> WP["writing-plans<br/>Planning"]
+    WP --> SDD["subagent-driven-development<br/>Execution"]
+    TDD["tdd-iron-law<br/>Discipline"] -. "各 implementer を統制" .-> SDD
+    SDD -. "バグ / 行き詰まり" .-> DBG["systematic-debugging<br/>Repair"]
+    DBG -. "修正を検証済み" .-> SDD
+    SDD --> RCR["requesting-code-review<br/>Review"]
+    RCR --> VBC["verification-before-completion<br/>Verification"]
+    VBC --> FIN["finishing-a-development-branch<br/>Branch close"]
+    VBC -. "UI 変更 + ui-flows.md あり" .-> UIV["ui-verification<br/>条件付き"]
+    UIV -.-> FIN
+    subgraph AUX["補助（オンデマンド）"]
+        WT["using-git-worktrees"]
+        DPA["dispatching-parallel-agents"]
+    end
+    AUX -.-> SDD
+```
 
 ---
 
@@ -121,7 +142,7 @@ finishing-a-development-branch
 | Harness | 状態 |
 |---|---|
 | **Claude Code** | ✅ 複数 ritual サイクル完全検証 — Phase 3 orchestrator (v0.3.0)、Phase 4 prep (v0.4.0)、多言語研究 (v0.5.1)、plugin-level agent dispatch (v0.5.2 + v0.6.0)、cross-task-coherence 次元での全ブランチ code-review (v0.6.0)、reviewer-discipline SSOT extraction + Current State Evidence section (v0.7.0) |
-| **Codex CLI** | ⚠️ Manifest は build + v0.20.0 までトラック済；実機 install + 検証 ritual はユーザ指示により延期中（`tests/codex-cli/README.md` 参照） |
+| **Codex CLI** | ⚠️ Manifest は build + v0.22.0 までトラック済；実機 install + 検証 ritual はユーザ指示により延期中（`tests/codex-cli/README.md` 参照） |
 
 SessionStart hook は portable な JSON shape を発出し、Claude Code の `hookSpecificOutput.additionalContext`、Codex CLI の `additional_context`、legacy `additionalContext` keys をカバー — 同じ hook が両 harness を提供。
 

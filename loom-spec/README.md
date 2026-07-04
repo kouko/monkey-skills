@@ -7,12 +7,30 @@ GENERATE (loom-spec)  →  DECLARE (OpenSpec change-folder)  →  VERIFY (loom-c
  sparse seed → spec draft     persist / delta-track              TDD · review · execution-gate
 ```
 
+At skill level, the flow through the plugin:
+
+```mermaid
+flowchart LR
+    seed["sparse seed<br/>or ui-flows.md"] --> entry
+    subgraph gen["loom-spec — GENERATE"]
+        entry["using-loom-spec<br/>family entry: §Intake checks +<br/>expansion-vs-critic routing"]
+        exp["spec-expansion<br/>seed → spec draft<br/>OpenSpec change-folder shape"]
+        critic["completeness-critic<br/>adversarial omission pass<br/>loop-until-dry"]
+        entry -- "draft from a seed" --> exp
+        entry -- "critique an existing draft" --> critic
+        exp -- "spec draft" --> critic
+        critic -- "NEEDS_REVISION" --> exp
+    end
+    critic -- "PASS_WITH_NOTES" --> verify["loom-code VERIFY<br/>writing-plans turns Scenario criteria<br/>into RED / GREEN tasks"]
+```
+
 Agent-portable and key-free: the skills drive the host agent's own LLM — no external runtime, no API key, no install beyond the plugin.
 
 ## What it does
 
-Two skills:
+Three skills:
 
+- **`using-loom-spec`** — routing-only family entry: §Intake upstream/peer checks plus the expansion-vs-critic disambiguation ("does a draft already exist to critique, or am I starting from a seed?"). Never drafts or critiques a spec itself.
 - **`spec-expansion`** — three explicit phases, each announced and emitting a visible artifact:
   ① **USM** (journey backbone) → ② **OOUX** (per-object ORCA + state machines) → ③ **auto-expansion matrix** (`backbone × object × CTA × state` grid, pruned through state-transition / BVA / CRUD / permissions / empty-error-loading / NFR lenses). Emits candidate `#### Scenario:` acceptance criteria, every item tagged `seeded` / `inferred` / `critic-found`.
 - **`completeness-critic`** — loop-until-dry adversarial pass that hunts **omissions** (not inconsistencies) via fixed multi-lenses, and **must emit its own blind spots** (the aspects no generator can resolve from the seed — they need human/field input). Critiques the spec only; never code, never TDD.
@@ -32,6 +50,7 @@ A directory in OpenSpec change-folder *shape* (plain markdown — no OpenSpec CL
 ```
 <output-dir>/
   proposal.md                  # ## USM backbone · ## OOUX object model · ## Path × edge matrix
+                               # ## Cross-object combinations · ## Journey navigation
                                # ## Provenance · ## Blind spots — needs human/field input
   specs/<capability>/spec.md   # OpenSpec-pure delta: ## ADDED Requirements →
                                #   ### Requirement: (RFC-2119) → #### Scenario: GIVEN/WHEN/THEN
