@@ -85,26 +85,28 @@ def test_intake_step1_upstream_check_references_reception_ssot():
 
 
 def test_intake_step2_peer_check_present():
-    """Section-scoped: mirrors loom-interface-design's test_entry_intake.py
-    (scope to the §Intake body, up to the next '## ' heading) so this test
-    can actually fail on a regression — the prior version only grepped the
-    whole file for '對站檢查'/'step 2', which stayed green even if step 2's
-    redirect-target names were dropped (found during C1's quality review)."""
+    """Step-2-scoped: slice to Step 2's OWN paragraph (between the '**Step 2'
+    marker and the '**Step 3' marker) before asserting the three redirect-
+    target names. A whole-§Intake slice is too coarse — Step 1 independently
+    names using-loom-interface-design and using-loom-product-principles, so
+    only a slice ending before Step 3 makes all three assertions genuinely
+    load-bearing (found during C2's quality review; mirrors the section-
+    scoping idea from loom-interface-design's test_entry_intake.py, one
+    level narrower)."""
     text = _text()
-    intake_idx = text.find("## §Intake")
-    assert intake_idx != -1, "missing '## §Intake' heading"
-    rest = text[intake_idx + len("## §Intake"):]
-    next_heading = rest.find("\n## ")
-    section = rest if next_heading == -1 else rest[:next_heading]
-    low = section.lower()
+    step2_idx = text.find("**Step 2")
+    assert step2_idx != -1, "§Intake step 2 (對站檢查) marker must be present"
+    step3_idx = text.find("**Step 3", step2_idx)
+    assert step3_idx != -1, "§Intake step 3 marker must follow step 2"
+    step2 = text[step2_idx:step3_idx]
 
-    assert "對站檢查" in section or "step 2" in low, \
+    assert "對站檢查" in step2, \
         "§Intake step 2 (對站檢查) must be present"
-    assert "using-loom-interface-design" in section, \
+    assert "using-loom-interface-design" in step2, \
         "step 2 must redirect UI/UX design asks to using-loom-interface-design"
-    assert "using-loom-product-principles" in section, \
+    assert "using-loom-product-principles" in step2, \
         "step 2 must redirect product-constitution asks to using-loom-product-principles"
-    assert "using-loom-code" in section, \
+    assert "using-loom-code" in step2, \
         "step 2 must redirect implementation/code asks to using-loom-code"
 
 

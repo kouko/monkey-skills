@@ -22,12 +22,18 @@ Versioning: [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - `test_spec_entry_skill.py::test_intake_step2_peer_check_present` is now
-  section-scoped (mirrors loom-interface-design's sibling test): it scopes
-  to the `## §Intake` body and asserts the three redirect-target names
+  step-2-scoped: it slices Step 2's own paragraph (between the `**Step 2`
+  and `**Step 3` markers) and asserts the three redirect-target names
   (`using-loom-interface-design`, `using-loom-product-principles`,
   `using-loom-code`) are present within it, rather than grepping the whole
   file for `對站檢查`/`step 2` — the prior assertion stayed green even if
-  step 2's redirect targets were dropped. Found during C1's quality review.
+  step 2's redirect targets were dropped (and a whole-§Intake slice was
+  still too coarse: Step 1 independently names two of the three targets).
+  Mutation-verified: all three assertions fail on a step-2-stripped copy.
+  Found during C1/C2's quality reviews.
+- README §Scope: the `using-loom-spec` PARK paragraph now reflects the
+  supersession — the thin entry shipped in 0.4.0; the park stands for the
+  tiering-capable upgrade only, re-triggers unchanged.
 
 ### Verified
 
