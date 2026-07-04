@@ -220,15 +220,37 @@ def _extract_result(stream_events: list[dict]) -> tuple[str, str]:
     return "", ""
 
 
+def _parse_stream_json_lines(stdout: str) -> tuple[list[dict], int]:
+    """Parse stream-json lines tolerantly: skip non-JSON noise, count it.
+
+    Verbose CLI output can interleave banners/noise lines that aren't
+    JSON at all. Crashing the whole record on one such line would be
+    worse than skipping it — but the skip must never be silent, so the
+    count of skipped lines is returned alongside the parsed events for
+    the caller to surface as `unparsed_lines`.
+    """
+    events = []
+    unparsed = 0
+    for line in stdout.splitlines():
+        if not line.strip():
+            continue
+        try:
+            events.append(json.loads(line))
+        except json.JSONDecodeError:
+            unparsed += 1
+    return events, unparsed
+
+
 def run_one(record: dict, claude_bin: str = "claude", max_turns: int = 4) -> dict:
     """Shell out to `claude -p` for one corpus record; merge run results.
 
     Runs `claude -p "<query>" --max-turns <N> --allowedTools Skill
     --output-format stream-json --verbose` as a list-form subprocess
-    (no shell=True), parses the stream-json lines, and merges `fired`
-    (the captured skill id or None), `result_subtype`, and `text` onto
-    a copy of `record` — the exact field contract `grade_record` and
-    `_is_contaminated` read.
+    (no shell=True), tolerantly parses the stream-json lines (skipping
+    non-JSON noise, counting it into `unparsed_lines` — never silent),
+    and merges `fired` (the captured skill id or None), `result_subtype`,
+    `text`, and `unparsed_lines` onto a copy of `record` — the field
+    contract `grade_record` and `_is_contaminated` read.
 
     Raises `MaxTurnsBelowFloorError` if `max_turns` < 4 (trap #1).
     """
@@ -251,19 +273,46 @@ def run_one(record: dict, claude_bin: str = "claude", max_turns: int = 4) -> dic
         "--verbose",
     ]
     proc = subprocess.run(argv, capture_output=True, text=True, check=False)
-    events = [json.loads(line) for line in proc.stdout.splitlines() if line.strip()]
+    events, unparsed_lines = _parse_stream_json_lines(proc.stdout)
     fired = _extract_fired_skill(events)
     subtype, text = _extract_result(events)
-    return {**record, "fired": fired, "result_subtype": subtype, "text": text}
+    return {
+        **record,
+        "fired": fired,
+        "result_subtype": subtype,
+        "text": text,
+        "unparsed_lines": unparsed_lines,
+    }
 
 
 def run_corpus(
     records: list[dict], claude_bin: str = "claude", max_turns: int = 4
 ) -> list[dict]:
-    """Run every corpus record through `run_one`; return the raw merged records."""
-    return [
-        run_one(record, claude_bin=claude_bin, max_turns=max_turns) for record in records
-    ]
+    """Run every corpus record through `run_one`; isolate per-record failures.
+
+    A misconfigured `max_turns` (below the floor) still fails the whole
+    batch fast and loud — that's a batch-level config error, not a
+    per-record runtime failure. But if an individual record's subprocess
+    call or parsing raises, that record is captured as
+    `{"result_subtype": "harness_error", "text": <error>}` instead of
+    aborting the rest of the batch (trap #3's sibling: a flaky single
+    call should not lose every other record's signal). The contamination
+    filter (`filter_contaminated`) then discards `harness_error` records
+    downstream, same as any other non-"success" subtype.
+    """
+    if max_turns < _MAX_TURNS_FLOOR:
+        raise MaxTurnsBelowFloorError(
+            f"--max-turns {max_turns} is below the floor of "
+            f"{_MAX_TURNS_FLOOR} (trap #1: too-tight turns misread "
+            "orient-first queries as trigger-misses)"
+        )
+    results = []
+    for record in records:
+        try:
+            results.append(run_one(record, claude_bin=claude_bin, max_turns=max_turns))
+        except Exception as exc:  # noqa: BLE001 - isolate any per-record failure
+            results.append({**record, "fired": None, "result_subtype": "harness_error", "text": str(exc)})
+    return results
 
 
 def _cmd_run(args: argparse.Namespace) -> None:
