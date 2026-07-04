@@ -51,9 +51,3 @@
   states untestable behind a 25-minute wait; pipeline-produced apps
   should be required at design time to expose a test affordance.
   Candidate enumeration item for loom-interface-design:interaction-flows.
-
-## Interventions bucket calibration (cosmetic)
-- Status: OPEN (small)
-- Origin: live-verify seg1 ledger — a routine adopt-if-valid note was
-  filed as a bucket-A intervention; an adopt is a cost-cut record, not
-  an intervention. Station preamble wording tweak in driver_30_seg1.js.
