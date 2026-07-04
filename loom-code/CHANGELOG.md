@@ -5,6 +5,42 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.23.0] — 2026-07-04 — **mechanical gates (harness-engineering audit follow-up)**
+
+### Added
+
+- **`hooks/git-guard.py`** (new PreToolUse hook, Bash matcher) — deterministic
+  enforcement of three disciplines that previously lived in prose only
+  (audit: `docs/loom/audits/2026-07-04-harness-engineering-audit.md`):
+  blocks `git commit --no-verify`/`-n` (incl. bundled short-option clusters);
+  blocks `git push` / `gh pr create` / `gh pr merge` unless BOTH
+  `.git/loom/review-pass.json` and `.git/loom/verified.json` match the current
+  HEAD sha (stale green lights and un-reviewed pushes fail loudly at the push
+  choke point — Option 2 of the completion-gate design, chosen over a Stop
+  hook for fatigue/timeout safety); honors a ONE-SHOT `.git/loom/waiver.json`
+  (consumed atomically, fail-closed when undeletable). `git push --dry-run`/`-n`
+  exempt; non-git cwd and `LOOM_CODE_MODE=off` pass through; malformed hook
+  input fails open with a stderr note. 41 tests.
+- **`scripts/loom_gate_markers.py`** (new CLI) — the only sanctioned marker
+  writer: `review-pass --verdict-file` schema-validates the reviewer's verdict
+  text BEFORE minting (NEEDS_REVISION exit 3 / malformed exit 4 — a failed or
+  malformed review can never mint a pass; this consolidates the audit's
+  verdict-schema-validation item), `verified --suite-line` rejects
+  non-green summary lines, `waiver --reason` requires a real justification and
+  warns loudly. Atomic writes; `--repo` per-subcommand. 23 tests.
+- **SKILL.md wiring** — requesting-code-review Process step 3 mints the review
+  marker on verdict; verification-before-completion Process step 5 mints the
+  verified marker; finishing-a-development-branch gains step 9c (re-mint both
+  at the FINAL HEAD after the close-out commit; substantive post-verdict
+  changes require re-review; user-instructed waivers only, never self-minted).
+
+## [0.22.1] — 2026-07-04 — firing-harness accounting fix
+
+- `loom_firing_harness.py` grade mode keeps `{success, error_max_turns}`
+  (an over-cap session that fired is a success signal — F3 dropped 6/28 valid
+  records); `unparsed_lines` summed across kept AND discarded records into the
+  grade aggregate. loom-spec README §Scope synced in the same PR (#489).
+
 ## [0.22.0] — 2026-07-04 — **loom family connective tissue (E1/E2/F-track)**
 
 ### Added

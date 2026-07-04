@@ -167,6 +167,21 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
     - If Phase 3 returned an EMPTY trailer set (routine branch), exit 4 is expected →
       proceed to push.
     - If `--verify HEAD` exits 0: the carrier landed → proceed to push.
+9c. Gate markers at the FINAL HEAD — the `hooks/git-guard.py` PreToolUse gate blocks
+    `git push` / `gh pr create` without both markers matching current HEAD:
+    - Re-run the package suite at the final HEAD, then mint
+      `python3 <plugin-root>/scripts/loom_gate_markers.py verified --suite-line "<tail line>"`
+      — verification evidence must POSTDATE the close-out commit; a green run from before
+      it is exactly the stale-green-light failure this gate exists to kill.
+    - Mint the review marker at the final HEAD (save the Step-3 verdict text to a file,
+      run `… loom_gate_markers.py review-pass --verdict-file <file>`) — allowed ONLY when
+      the delta since the reviewed verdict is mechanical close-out content (living-spec
+      INDEX regen, memory trailers). ANY substantive post-verdict change → re-dispatch
+      requesting-code-review first: review what you ship, not what you reviewed an
+      amend ago.
+    - User explicitly waives review ("skip review, push now") → record it:
+      `… loom_gate_markers.py waiver --reason "<user's words>"` — one-shot, consumed and
+      logged by the gate on the next push. Never self-mint a waiver.
 10. git push (branch-qualified form per Step 8)
 11. ASK user: "Open a PR? (y/N)" — only if gh CLI configured
     - If yes: gh pr create with title/body from git-memory + branch name

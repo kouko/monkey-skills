@@ -2,7 +2,7 @@
 
 > **Process-discipline + canon-grounded 程式開發工作流 for Claude Code (+ Codex CLI)。** 12-skill plugin，SessionStart 自動注入 router charter，讓 agent 停止合理化、開始 deferring — 每條規則皆 grounded 於一級書目（Beck on TDD / Martin on naming / Fowler on refactoring / Feathers on legacy code / OWASP ASVS on security / 徳丸本 on encoding security）。
 
-**狀態**：v0.22.0 — 12 skills；v0.3.0 起達成完整 Superpowers parity。各版本細節（rule-sheet 注入、reviewer-discipline、parallel dispatch、spec→code seam、memory verify gate 等）見 [CHANGELOG.md](CHANGELOG.md)。
+**狀態**：v0.23.0 — 12 skills；v0.3.0 起達成完整 Superpowers parity。各版本細節（rule-sheet 注入、reviewer-discipline、parallel dispatch、spec→code seam、memory verify gate 等）見 [CHANGELOG.md](CHANGELOG.md)。
 **語言**：[English](README.md) | [日本語](README.ja.md) | **繁體中文**
 **Repository**：[`monkey-skills`](https://github.com/kouko/monkey-skills) 的一部分
 
@@ -41,12 +41,12 @@ claude plugin install loom-code@monkey-skills
 
 # 驗證
 claude plugin list | grep loom-code       # 預期：enabled
-claude plugin details loom-code           # 預期：12 skills + 1 SessionStart hook
+claude plugin details loom-code           # 預期：12 skills + SessionStart & PreToolUse hooks
 ```
 
 ### Codex CLI（build 完成、實機驗證延後）
 
-⚠️ Codex CLI manifest 已 build 並隨 Claude Code 變體同步 bump 到 v0.22.0，但在實機 Codex CLI 上的安裝與驗證流程仍按使用者指示延後。詳見 [`tests/codex-cli/README.md`](tests/codex-cli/README.md)。
+⚠️ Codex CLI manifest 已 build 並隨 Claude Code 變體同步 bump 到 v0.23.0，但在實機 Codex CLI 上的安裝與驗證流程仍按使用者指示延後。詳見 [`tests/codex-cli/README.md`](tests/codex-cli/README.md)。
 
 ### 本地開發（給貢獻者）
 
@@ -142,7 +142,7 @@ finishing-a-development-branch
 | Harness | 狀態 |
 |---|---|
 | **Claude Code** | ✅ 多輪 ritual 完整驗證 — Phase 3 orchestrator (v0.3.0)、Phase 4 prep (v0.4.0)、多語研究 (v0.5.1)、plugin-level agent dispatch (v0.5.2 + v0.6.0)、cross-task-coherence 維度全 branch 審查 (v0.6.0)、reviewer-discipline SSOT extraction + Current State Evidence section (v0.7.0) |
-| **Codex CLI** | ⚠️ Manifest 已 build 並追蹤到 v0.22.0；實機安裝與驗證流程依使用者指示延後（見 `tests/codex-cli/README.md`） |
+| **Codex CLI** | ⚠️ Manifest 已 build 並追蹤到 v0.23.0；實機安裝與驗證流程依使用者指示延後（見 `tests/codex-cli/README.md`） |
 
 SessionStart hook 發出可移植 JSON shape，涵蓋 Claude Code 的 `hookSpecificOutput.additionalContext`、Codex CLI 的 `additional_context` 以及 legacy `additionalContext` keys — 同一個 hook 服務兩種 harness。
 
