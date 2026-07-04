@@ -1,7 +1,7 @@
 ---
 name: brainstorming
 description: |
-  Use BEFORE implementing new behavior or non-obvious design — explore intent + alternatives via a 5-axis framework (Problem / Users / Smallest End State / Alternatives / Obsoletes) → a brief. Refuses 'this is simple' / 'just start coding'.
+  Use BEFORE implementing new behavior or non-obvious design — explore intent + alternatives via an upstream-artifact gate (Axis 0, family §Intake) + 5-axis framework (Problem / Users / Smallest End State / Alternatives / Obsoletes) → a brief. Refuses 'this is simple' / 'just start coding'.
 version: 0.12.0
 ---
 
@@ -15,7 +15,7 @@ If you are a subagent dispatched with an explicit role prompt (implementer / spe
 
 This is not a guideline. The pressure to skip — *"this is simple,"* *"I know what to build,"* *"let's just start coding"* — is exactly the failure mode this skill exists to prevent. **The first 5 minutes of brainstorming saves the next 50 minutes of building the wrong thing and the 500 minutes of refactoring out of it.**
 
-If you catch yourself drafting code, opening files, or reaching for the Skill tool to call `tdd-iron-law` *before* the user has answered the 5 axes below — **stop**. Return to this skill. Beck's *"if it's hard to test, it's probably hard to use"* (Preface, 2002) has a discovery-phase analogue: *if it's hard to articulate what success looks like, it's probably the wrong target.*
+If you catch yourself drafting code, opening files, or reaching for the Skill tool to call `tdd-iron-law` *before* the user has answered the axes below (Axis 0 through Axis 5) — **stop**. Return to this skill. Beck's *"if it's hard to test, it's probably hard to use"* (Preface, 2002) has a discovery-phase analogue: *if it's hard to articulate what success looks like, it's probably the wrong target.*
 
 ### What counts as "before implementation"
 
@@ -43,7 +43,7 @@ When uncertain, ask: *"Could a reasonable engineer pick the wrong solution from 
 
 ## The 5-axis exploration framework
 
-Walk all five. Don't skip any. If an axis returns *"don't know"* or *"need more from user"* — that is itself a discovery output and goes into Open Questions in the brief.
+"5-axis" is the framework's historical name; the walk itself now starts one step earlier. Walk all axes below, starting at Axis 0 — a mandatory member of the walk (its own negative guard is the only sanctioned skip). Don't skip any. If an axis returns *"don't know"* or *"need more from user"* — that is itself a discovery output and goes into Open Questions in the brief.
 
 When axis uncertainty requires user input, ask **at most one axis per `AskUserQuestion` call** — the single highest-uncertainty one. Bundling multiple axes (e.g. Axis 1 + Axis 3 + Axis 4 with 3-4 options each) overloads the call and will be rejected by the harness as too many options.
 

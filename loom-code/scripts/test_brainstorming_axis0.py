@@ -87,6 +87,26 @@ def test_axis0_recommend_once_and_record_choice():
         "Axis 0 must name a concrete station in the design-side sequence"
 
 
+# --- inclusive mandate ----------------------------------------------------
+
+
+def test_mandate_includes_axis0():
+    """The framework's walk mandate must include Axis 0 — the document may
+    keep '5-axis' as the framework's historical name, but the count language
+    ('walk all five', 'the 5 axes below') must not structurally exclude
+    Axis 0 from the mandatory walk."""
+    text = _text()
+    assert "Walk all axes below, starting at Axis 0" in text, \
+        "mandate must be inclusive: 'Walk all axes below, starting at Axis 0'"
+    # the frontmatter description must surface the Axis-0 upstream gate too
+    frontmatter = text.split("---")[1]
+    assert "Axis 0" in frontmatter, \
+        "frontmatter description must mention the Axis-0 upstream gate"
+    # the old exclusive count-mandate must be gone
+    assert "Walk all five. Don't skip any." not in text, \
+        "the old five-only walk mandate must be replaced by the inclusive one"
+
+
 # --- negative guard -------------------------------------------------------
 
 
