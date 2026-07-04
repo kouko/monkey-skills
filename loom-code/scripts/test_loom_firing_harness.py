@@ -276,6 +276,25 @@ def test_run_corpus_isolates_per_record_failures(monkeypatch):
     assert kept[0]["query"] == "ok query"
 
 
+def test_run_corpus_refuses_below_floor(monkeypatch):
+    """`run_corpus` has its OWN batch-level max-turns floor guard (trap #1),
+    distinct from `run_one`'s per-call guard: a below-floor value must fail
+    the whole batch fast and loud BEFORE any subprocess is attempted — it
+    must never be swallowed into per-record `harness_error` isolation.
+    """
+
+    def _forbidden_run(*args, **kwargs):
+        pytest.fail("subprocess.run must never be called when max_turns is below the floor")
+
+    monkeypatch.setattr(loom_firing_harness.subprocess, "run", _forbidden_run)
+
+    records = [
+        {"query": "any self-contained query", "expected": "loom-code:brainstorming", "notes": "n"},
+    ]
+    with pytest.raises(MaxTurnsBelowFloorError):
+        run_corpus(records, claude_bin="claude", max_turns=3)
+
+
 def test_shipped_corpus_validates():
     """F2: the three shipped firing corpora parse and validate cleanly.
 

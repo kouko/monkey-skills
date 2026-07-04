@@ -3,8 +3,9 @@
 Rebuilds the ad-hoc harness from the 2026-06-24/25 firing/refusal audit
 (memory: project_loom_firing_test_router_asymmetry) as versioned,
 tested scripts instead of scratchpad throwaways. That audit's method
-write-up documented five traps that nearly produced false conclusions;
-each is named here with the layer that guards against it:
+write-up documented five traps that nearly produced false conclusions
+(a sixth was added when the shipped corpora landed, Task F2); each is
+named here with the layer that guards against it:
 
 1. **max-turns too tight** — `--max-turns 1` makes orient-first queries
    hit the turn ceiling, which misreads as a trigger-miss. Enforced by
@@ -31,6 +32,16 @@ each is named here with the layer that guards against it:
    natural triggers, not mined wholesale from transcripts (mostly
    "go/OK" continuations). Enforced by hand-authored corpus files
    (Task F2), validated through `validate_corpus`.
+6. **goal-oriented corpus grades routing only; recommendation-surfacing
+   requires F3's transcript check on every reuse** — every record in
+   `docs/loom/firing-corpus/goal-oriented.jsonl` expects
+   `loom-code:using-loom-code`, so fired-skill grading alone CANNOT
+   catch a design-side on-ramp regression (deleting brainstorming's
+   Axis 0 would not move a single record off EXACT/FAMILY). That
+   corpus's real acceptance criterion is whether the design-side
+   recommendation SURFACES in the transcript text — an inspection this
+   harness does not automate; F3 (and any future reuse of that corpus)
+   must read the transcripts, not just the grade table.
 
 This module implements the corpus layer (parsing + contamination
 filtering, Task F1a), the grader (Task F1b), and the `run` mode (Task
