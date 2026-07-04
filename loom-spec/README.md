@@ -43,9 +43,9 @@ The `specs/` delta stays OpenSpec-pure (structure-only `openspec validate`-clean
 
 The engine auto-expands (strong) but cannot auto-complete (a theoretical floor): the seed sets the ceiling; combinatorial coverage ≠ aspectual completeness; a filled grid that *looks* thorough is the most dangerous failure. So the output **never claims "complete"** — it states "coverage relative to seed + N lenses" and lists its blind spots. Trust is earned by execution (loom-code's gate), not by a spec that looks finished.
 
-## Scope (v0.3.x)
+## Scope (v0.4.x)
 
-In: `spec-expansion` + `completeness-critic` + the format validator. Out (still deferred): OpenSpec CLI wiring, `spec-discovery` / `spec-persist`, knowledge-layer SSOT sharing, cross-host testing.
+In: the `using-loom-spec` family entry + `spec-expansion` + `completeness-critic` + the format validator. Out (still deferred): OpenSpec CLI wiring, `spec-discovery` / `spec-persist`, knowledge-layer SSOT sharing, cross-host testing.
 
 **`using-loom-spec` thin entry — shipped in 0.4.0** (loom family connective-tissue): a routing-only family entry (§Intake upstream/peer checks + the expansion-vs-critic disambiguation), superseding the router PARK's "no entry at all" state. The **proportional-rigor tiering upgrade remains parked** (2026-07-02 audit close-out, reaffirming the MVP brief's v0.2 deferral): the tiering judgment ("decide whether to expand at all" — No-Spec / Lite / Full) depends on `spec-discovery` / `spec-persist` and the OpenSpec DECLARE layer, none of which exist yet. Re-trigger unchanged: the OpenSpec DECLARE layer lands, or `spec-discovery` / `spec-persist` are actually scheduled — the tiering-capable router ships **with** its tiering cargo, not before it.
 
