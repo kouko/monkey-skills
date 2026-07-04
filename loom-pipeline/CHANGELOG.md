@@ -6,6 +6,26 @@ this file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.3.1] — 2026-07-04
+
+### Fixed
+
+- **Dead `args.budget` plumbing removed (segment 3)** — `runSegment3`
+  destructured a singular `budget` from args and threaded it through
+  every station's opts, but nothing supplies that field (the run-input
+  contract and the batch payload carry only `budgets` plural), so the
+  value was always `undefined` and the ambient Workflow `budget` global
+  did the real work via `resolveBudget`'s fallback. The pass-through is
+  gone; `opts.budget` stays reserved for unit-test injection. Found by
+  PR #483's whole-branch review; pre-existing since v0.1.0.
+- **Adopt-if-valid is a cost-cut record, not an intervention** — the
+  segment-1 principles preamble called an adopt a "cost-cut
+  intervention", which mis-filed routine adopts into ledger bucket A
+  (live-verify finding). The preamble now says: record the adopt in the
+  verdict summary and do NOT file it as an `interventions[]` entry —
+  interventions are for deviations needing triage (buckets A/B/C), not
+  for taking the documented cheap path.
+
 ## [0.3.0] — 2026-07-03
 
 ### Added

@@ -1,6 +1,6 @@
 {
   "name": "loom-pipeline",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Deterministic workflow driver conducting the loom principles→design→spec→code pipeline across station plugins.",
   "author": {
     "name": "kouko",
