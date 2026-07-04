@@ -2,7 +2,7 @@
 
 > **Process-discipline + canon-grounded 程式開發工作流 for Claude Code (+ Codex CLI)。** 12-skill plugin，SessionStart 自動注入 router charter，讓 agent 停止合理化、開始 deferring — 每條規則皆 grounded 於一級書目（Beck on TDD / Martin on naming / Fowler on refactoring / Feathers on legacy code / OWASP ASVS on security / 徳丸本 on encoding security）。
 
-**狀態**：v0.21.0 — 12 skills；v0.3.0 起達成完整 Superpowers parity。各版本細節（rule-sheet 注入、reviewer-discipline、parallel dispatch、spec→code seam、memory verify gate 等）見 [CHANGELOG.md](CHANGELOG.md)。
+**狀態**：v0.22.0 — 12 skills；v0.3.0 起達成完整 Superpowers parity。各版本細節（rule-sheet 注入、reviewer-discipline、parallel dispatch、spec→code seam、memory verify gate 等）見 [CHANGELOG.md](CHANGELOG.md)。
 **語言**：[English](README.md) | [日本語](README.ja.md) | **繁體中文**
 **Repository**：[`monkey-skills`](https://github.com/kouko/monkey-skills) 的一部分
 
@@ -46,7 +46,7 @@ claude plugin details loom-code           # 預期：12 skills + 1 SessionStart 
 
 ### Codex CLI（build 完成、實機驗證延後）
 
-⚠️ Codex CLI manifest 已 build 並隨 Claude Code 變體同步 bump 到 v0.20.0，但在實機 Codex CLI 上的安裝與驗證流程仍按使用者指示延後。詳見 [`tests/codex-cli/README.md`](tests/codex-cli/README.md)。
+⚠️ Codex CLI manifest 已 build 並隨 Claude Code 變體同步 bump 到 v0.22.0，但在實機 Codex CLI 上的安裝與驗證流程仍按使用者指示延後。詳見 [`tests/codex-cli/README.md`](tests/codex-cli/README.md)。
 
 ### 本地開發（給貢獻者）
 
@@ -78,6 +78,27 @@ claude plugin install loom-code@monkey-skills --scope local
 | 8 | [`finishing-a-development-branch`](skills/finishing-a-development-branch/) | 分支收尾 | 7 步 orchestrator（review → verify → git-memory 強制 → commit → push → 可選 PR + worktree 清理） |
 | Aux | [`using-git-worktrees`](skills/using-git-worktrees/) | Lateral | 原生 `git worktree` 流程；`.worktrees/<slug>/` 慣例 |
 | Aux | [`dispatching-parallel-agents`](skills/dispatching-parallel-agents/) | Lateral（v0.8.0+） | 跨 domain `Agent` 派遣，**單一 assistant message 多 `Agent` call** 同時跑；2+ 獨立問題 domain（無共用檔、無共用 symbol、無 sequential data 依賴）才適用；TDD iron-law per branch；verdict 在本 skill 層聚合 |
+
+skill 粒度的執行流程（實線 = 線性 stage 流程、虛線 = 條件式 / on-demand）：
+
+```mermaid
+flowchart TD
+    BS["brainstorming<br/>Discovery"] --> WP["writing-plans<br/>Planning"]
+    WP --> SDD["subagent-driven-development<br/>Execution"]
+    TDD["tdd-iron-law<br/>Discipline"] -. "約束每個 implementer" .-> SDD
+    SDD -. "遇 bug / 卡住" .-> DBG["systematic-debugging<br/>Repair"]
+    DBG -. "修好並驗證" .-> SDD
+    SDD --> RCR["requesting-code-review<br/>Review"]
+    RCR --> VBC["verification-before-completion<br/>Verification"]
+    VBC --> FIN["finishing-a-development-branch<br/>分支收尾"]
+    VBC -. "碰到 UI + 有 ui-flows.md" .-> UIV["ui-verification<br/>條件式"]
+    UIV -.-> FIN
+    subgraph AUX["輔助（on-demand）"]
+        WT["using-git-worktrees"]
+        DPA["dispatching-parallel-agents"]
+    end
+    AUX -.-> SDD
+```
 
 ---
 
@@ -121,7 +142,7 @@ finishing-a-development-branch
 | Harness | 狀態 |
 |---|---|
 | **Claude Code** | ✅ 多輪 ritual 完整驗證 — Phase 3 orchestrator (v0.3.0)、Phase 4 prep (v0.4.0)、多語研究 (v0.5.1)、plugin-level agent dispatch (v0.5.2 + v0.6.0)、cross-task-coherence 維度全 branch 審查 (v0.6.0)、reviewer-discipline SSOT extraction + Current State Evidence section (v0.7.0) |
-| **Codex CLI** | ⚠️ Manifest 已 build 並追蹤到 v0.20.0；實機安裝與驗證流程依使用者指示延後（見 `tests/codex-cli/README.md`） |
+| **Codex CLI** | ⚠️ Manifest 已 build 並追蹤到 v0.22.0；實機安裝與驗證流程依使用者指示延後（見 `tests/codex-cli/README.md`） |
 
 SessionStart hook 發出可移植 JSON shape，涵蓋 Claude Code 的 `hookSpecificOutput.additionalContext`、Codex CLI 的 `additional_context` 以及 legacy `additionalContext` keys — 同一個 hook 服務兩種 harness。
 
