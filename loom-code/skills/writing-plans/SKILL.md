@@ -104,7 +104,7 @@ writing-plans applies the same pattern to plan tasks. The implementer's BLOCKED 
 
 ## Self-review — plan-document-reviewer
 
-After producing the plan, writing-plans **must** dispatch [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) as an evaluator subagent — **unnamed** (no `name:`; `description:` is still required, as always). Adding `name:` turns this into a persistent mailbox-semantics teammate whose output is never delivered; see [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §A1. That prompt holds the **authoritative, full check list** — do not maintain a duplicate copy here (it drifts). The highest-value checks, so you can self-pre-screen before dispatch:
+After producing the plan, writing-plans **must** dispatch [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) as an evaluator subagent — a one-shot blocking call that waits for and returns its verdict directly (see your host's tool-mapping reference for the exact shape, and [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §A1 for a Claude-Code-specific naming pitfall to avoid — Codex has no equivalent). That prompt holds the **authoritative, full check list** — do not maintain a duplicate copy here (it drifts). The highest-value checks, so you can self-pre-screen before dispatch:
 
 - **≤5-min** per task (criterion 1);
 - **one-failing-test acceptance** — each task names a specific RED test (criterion 3);

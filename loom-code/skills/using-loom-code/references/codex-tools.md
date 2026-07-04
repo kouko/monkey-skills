@@ -86,15 +86,35 @@ Both Claude Code and Codex 0.139.0 read `hookSpecificOutput.additionalContext`, 
 
 Per TECH-SPEC §3.3-3.4, loom-code's `subagent-driven-development` skill dispatches three subagents per atomic task (implementer / spec-reviewer / code-quality-reviewer).
 
-**Assumed (not exercised in this test)**: Codex's exact agent-dispatch surface. Candidate shapes:
+**Verified 2026-07-05, mixed evidence grain (see breakdown)**: Codex's real subagent primitive is the `multi_agent` feature — not the previously-guessed `Agent(subagent_type, prompt)`-shaped call.
 
-| Option | Pattern | Status |
-|---|---|---|
-| (a) Codex `Task` / `Agent` tool | Equivalent to Claude Code's `Agent(subagent_type: ..., prompt: ...)` | most likely shape |
-| (b) Slash-command shell | `/dispatch <prompt-file>` | possible |
-| (c) Direct subprocess | Spawn Codex with a prompt arg | fallback if no native dispatch |
+- ✓ **live-exercised**: `codex features list` on a local Codex 0.139.0 install shows `multi_agent  stable  true` — the feature itself is confirmed on and stable, not merely documented.
+- **doc-confirmed, not session-exercised**: the exact verb names (`spawn_agent`, `wait_agent`, `close_agent`), the config toggle shape below, and the "explicit-trigger only" / "no blocking-toggle" / `~/.codex/agents/*.toml` behavioral claims in this section come from OpenAI's official Codex manual (§Subagents) and a direct `WebFetch` re-fetch/quote-match of `obra/superpowers`'s own `codex-tools.md` (which documents the identical mechanism) — not from actually invoking `spawn_agent`/`wait_agent`/`close_agent` in a live Codex session. Treat the verb names and behavioral claims as doc-sourced until session-exercised.
 
-The agent prompts in `skills/subagent-driven-development/agents/*.md` are plain Markdown specifically so they re-bind cleanly to whatever the actual Codex dispatch surface is. The orchestrator (parent agent) reads the prompt, substitutes `{…}` placeholders, and invokes Codex's dispatch primitive.
+If a Codex install has `multi_agent` disabled, enable it explicitly:
+
+```toml
+# ~/.codex/config.toml
+[features]
+multi_agent = true
+```
+
+Architectural differences from Claude Code's `Agent()` tool that matter for re-binding loom-code's skills onto Codex:
+
+- **Explicit-trigger only.** Codex spawns subagents only on explicit user instruction ("spawn one agent per point...") — never autonomously mid-skill the way a Claude Code orchestrator calls `Agent()` while following a SKILL.md's documented process. A loom-code skill that instructs an autonomous dispatch has no direct Codex equivalent; on Codex, the orchestrator needs the request framed as an explicit spawn instruction.
+- **No blocking/non-blocking toggle.** Codex's own runtime automatically waits for and consolidates all subagent results — there is no per-call parameter that flips a dispatch between blocking and mailbox-style async. This is why [environment-gotchas §A1](environment-gotchas.md) (Claude Code's `name:`-triggers-mailbox-semantics pitfall) is scoped Claude-Code-only: three explicit verbs (spawn/wait/close), not one overloaded call with an easy-to-miss extra parameter, structurally rules out that specific failure mode on Codex.
+- **`name` means something different.** Custom agent *identity* in Codex lives in TOML files under `~/.codex/agents/` (`name` / `description` / `developer_instructions` required fields) — a reusable, session-level profile roughly analogous to Claude Code's `subagent_type`, not a per-dispatch ephemeral tracking label.
+- **No plugin-bundled agent definitions.** Codex's plugin manifest schema has no field for shipping reusable custom-agent definitions alongside a plugin (only `skills`). loom-code's `agents/*.md` role-prompt files (`implementer.md`, `spec-reviewer.md`, `code-quality-reviewer.md`, `code-reviewer.md`) still have **no confirmed Codex-native equivalent** — this remains an open gap. See [`loom-code/research/2026-07-05-claude-code-codex-dual-compat-patterns.md`](../../../research/2026-07-05-claude-code-codex-dual-compat-patterns.md) for the full survey.
+
+The agent prompts in `loom-code/agents/*.md` are plain Markdown specifically so they re-bind cleanly to whatever the actual Codex dispatch surface is — that design intent holds, but the target primitive is now known to be `spawn_agent`/`wait_agent`/`close_agent`, not a guessed `Agent(subagent_type, prompt)`-shaped call. (Path corrected 2026-07-05: these role-prompt files live at `loom-code/agents/*.md`, not the pre-P15-12 `skills/subagent-driven-development/agents/*.md` path this section previously named.)
+
+### Re-binding loom-code's dispatch points onto Codex (doc-sourced, not session-exercised)
+
+Where a loom-code SKILL.md says "dispatch a `<role>` subagent" (e.g. `subagent-driven-development`'s implementer / spec-reviewer / code-quality-reviewer, or `requesting-code-review`'s code-reviewer), the Codex-side equivalent is: `spawn_agent` with the corresponding `loom-code/agents/<role>.md` content as the agent's instructions, then `wait_agent` for its result, then `close_agent` when done (per `subagent-driven-development`'s own guidance to close implementer/reviewer subagents once finished). Because Codex only spawns on explicit instruction, the orchestrator's own request to itself needs to read as an explicit spawn ("spawn an implementer agent for task N using `loom-code/agents/implementer.md`'s instructions"), not an autonomous background action.
+
+### Parallel fan-out (`dispatching-parallel-agents`) (doc-sourced, not session-exercised)
+
+Codex's `multi_agent` feature natively supports the same "spawn N, wait for all, consolidate" shape `dispatching-parallel-agents` calls for — this is literally the manual's own worked example: *"Spawn one agent per point, wait for all of them, and summarize the result for each point."* Unlike Claude Code (where concurrency depends on issuing multiple `Agent` calls in the same assistant message), Codex's own runtime handles the waiting and consolidation automatically once the spawn instruction names multiple agents/points.
 
 ## File operations
 

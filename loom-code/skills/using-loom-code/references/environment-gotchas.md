@@ -80,11 +80,12 @@ mailbox semantics), so it is never optional; do not confuse the two.
   `code-quality-reviewer` / `plan-document-reviewer` with `name:`
   unless you are prepared to actively poll it via `SendMessage` for
   the result.
-- Do: dispatch these plugin-level subagents exactly as this plugin's
-  own SKILL.md examples show — unnamed (`description:` still required,
-  as always). Omitting `name` makes the call
-  block and auto-return the agent's final text as the tool result,
-  which is what every dispatch step below assumes.
+- Do: dispatch these plugin-level subagents unnamed (`description:`
+  still required, as always) — see [claude-code-tools.md](claude-code-tools.md)
+  §Subagent dispatch for the concrete call shape. Omitting `name` makes
+  the call block and auto-return the agent's final text as the tool
+  result, which is what every loom-code SKILL.md's dispatch instruction
+  assumes.
 
 ## E1 — Renaming an untracked file
 

@@ -58,25 +58,19 @@ Each agent gets:
 - **Constraints** — what NOT to touch (the other domains' files, by path).
 - **Expected output** — the verdict / status shape (`status: DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED` for implementers; `PASS / PASS_WITH_NOTES / NEEDS_REVISION` for reviewers).
 
-### 3. Dispatch in ONE assistant message, multiple `Agent` calls
+### 3. Dispatch all N subagents in one fan-out step
 
-The Claude Code harness runs `Agent` tool calls concurrently **only when they appear in the same assistant message**. Sequential calls across separate messages run sequentially.
-
-Dispatch every call below **unnamed** — no `name:` (`description:` is still required, as always, on every call). Adding `name:` turns a one-shot blocking `Agent()` call into a persistent mailbox-semantics teammate whose plain-text output is never delivered (only an explicit `SendMessage` transmits it); see [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §A1.
+Your host determines exactly what "one fan-out step" looks like as a tool call — see your host's tool-mapping reference under `using-loom-code/references/` (`claude-code-tools.md`'s "concurrent calls in one assistant message" shape, or `codex-tools.md`'s native multi-agent spawn-and-wait) for the concrete syntax, and [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §A1 for a Claude-Code-specific naming pitfall to avoid (Codex has no equivalent). The invariant that holds regardless of host:
 
 ```
-# ✅ Concurrent — one message, multiple Agent calls
-Agent({subagent_type: "loom-code:implementer", prompt: "<domain A task body>"})
-Agent({subagent_type: "loom-code:implementer", prompt: "<domain B task body>"})
-Agent({subagent_type: "loom-code:implementer", prompt: "<domain C task body>"})
+✅ Concurrent — all N dispatch calls issued together, in the same fan-out step
+   implementer(domain A)  ·  implementer(domain B)  ·  implementer(domain C)
 
-# ❌ Sequential — each Agent call in its own message, blocks on the prior
-Agent({...A...})    # message 1
-# (wait for A to return)
-Agent({...B...})    # message 2
+❌ Sequential — one dispatched and awaited, THEN the next dispatched
+   implementer(domain A) → wait for A to return → implementer(domain B)
 ```
 
-The same rule applies to mixed shapes — e.g. one implementer + one Explore + one reviewer for independent domains all dispatched in one message.
+The same rule applies to mixed shapes — e.g. one implementer + one Explore + one reviewer for independent domains all dispatched in the same fan-out step.
 
 ### 4. Aggregate results
 
