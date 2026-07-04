@@ -519,7 +519,10 @@ const PRINCIPLES_STABLE_PREAMBLE = [
   '- If it exists AND is structurally valid (a north-star statement plus at',
   '  least one principle carrying a falsifiable "— check:" clause): ADOPT it',
   '  as-is. Do NOT rewrite it. Your STATION verdict summary must say the file',
-  '  was adopted, not authored (cost-cut intervention, not a fresh artifact).',
+  '  was adopted, not authored — a cost-cut record in the summary. Do NOT',
+  '  file the adopt itself as an interventions[] entry: interventions are',
+  '  for deviations needing triage (buckets A/B/C), not for taking the',
+  '  documented cheap path.',
   '  Include a `principles_text_head` field in your structured summary with',
   '  the first ~80 lines of the file, verbatim, so the driver can re-verify',
   '  the adopt decision against the real file content rather than trusting',
@@ -1128,7 +1131,7 @@ async function seg3DispatchImplementer(planPath, task, opts, remediation) {
   return runStation(
     label,
     () => agent(prompt, { agentType: 'loom-code:implementer', model: opts.models && opts.models.code }),
-    { budget: opts.budget, tokenCap: opts.tokenCap }
+    { tokenCap: opts.tokenCap }
   )
 }
 
@@ -1148,12 +1151,12 @@ async function seg3RunReviewRound(planPath, task, implementerResult, round, revi
     () => runStation(
       `seg3-spec-reviewer-${task.id}-r${round}`,
       () => agent(reviewerPrompt, { agentType: 'loom-code:spec-reviewer', model: reviewOpts.models && reviewOpts.models.review }),
-      { budget: reviewOpts.budget, tokenCap: reviewOpts.tokenCap }
+      { tokenCap: reviewOpts.tokenCap }
     ),
     () => runStation(
       `seg3-code-quality-reviewer-${task.id}-r${round}`,
       () => agent(reviewerPrompt, { agentType: 'loom-code:code-quality-reviewer', model: reviewOpts.models && reviewOpts.models.review }),
-      { budget: reviewOpts.budget, tokenCap: reviewOpts.tokenCap }
+      { tokenCap: reviewOpts.tokenCap }
     ),
   ])
 
@@ -1226,7 +1229,7 @@ async function seg3RunWholeBranchReview(opts) {
   const review = await runStation(
     'seg3-whole-branch-review',
     () => agent(prompt, { agentType: 'loom-code:code-reviewer', model: opts.models && opts.models.review }),
-    { budget: opts.budget, tokenCap: opts.tokenCap }
+    { tokenCap: opts.tokenCap }
   )
 
   const result = makeStationResult({
@@ -1261,7 +1264,7 @@ async function seg3CheckUiVerificationGate(projectPath, changeId, probeOpts) {
       ),
       { model: probeOpts.models && probeOpts.models.review, schema: SEG3_UI_GATE_SCHEMA }
     ),
-    { budget: probeOpts.budget, tokenCap: probeOpts.tokenCap }
+    { tokenCap: probeOpts.tokenCap }
   )
 }
 
@@ -1297,7 +1300,7 @@ async function seg3RunUiVerification(projectPath, changeId, probeOpts, reviewOpt
       ),
       { model: reviewOpts.models && reviewOpts.models.review }
     ),
-    { budget: reviewOpts.budget, tokenCap: reviewOpts.tokenCap }
+    { tokenCap: reviewOpts.tokenCap }
   )
 
   const result = makeStationResult({
@@ -1315,7 +1318,12 @@ async function runSegment3(args) {
   phase(meta.phases[2].title)
 
   const planPath = seg3GuardPlanPath(args)
-  const { projectPath, changeId, branch, diffScope, budget, models = {}, budgets = {} } = args
+  // No singular `budget` here: nothing supplies args.budget (the run-input
+  // contract and the batch payload carry only `budgets` plural — PR #483
+  // whole-branch review finding). runStation's opts.budget slot is reserved
+  // for unit-test injection; the ambient Workflow `budget` global is the
+  // real supply, reached via resolveBudget's fallback.
+  const { projectPath, changeId, branch, diffScope, models = {}, budgets = {} } = args
 
   // Per-station-family token caps (G1): the implementer writes code and
   // gets the code cap; both reviewers and the whole-branch code-reviewer
@@ -1330,9 +1338,9 @@ async function runSegment3(args) {
   // "seg3-implementer-T1"), which never match a STATION_TOKEN_BUDGETS key,
   // so an omitted perStation cap would silently fall through to runStation's
   // generic 20000 default instead of the code/review family's real cap.
-  const codeOpts = { budget, models, tokenCap: perStation.code || STATION_TOKEN_BUDGETS.code }
-  const reviewOpts = { budget, models, tokenCap: perStation.review || STATION_TOKEN_BUDGETS.review }
-  const probeOpts = { budget, models, tokenCap: perStation.probe || STATION_TOKEN_BUDGETS.probe }
+  const codeOpts = { models, tokenCap: perStation.code || STATION_TOKEN_BUDGETS.code }
+  const reviewOpts = { models, tokenCap: perStation.review || STATION_TOKEN_BUDGETS.review }
+  const probeOpts = { models, tokenCap: perStation.probe || STATION_TOKEN_BUDGETS.probe }
 
   const planIntake = await runStation(
     'seg3-plan-intake',
@@ -1372,7 +1380,7 @@ async function runSegment3(args) {
     results.push(await seg3RunTaskTriad(planPath, task, codeOpts, reviewOpts))
   }
 
-  results.push(await seg3RunWholeBranchReview({ branch, diffScope, budget: reviewOpts.budget, models: reviewOpts.models, tokenCap: reviewOpts.tokenCap }))
+  results.push(await seg3RunWholeBranchReview({ branch, diffScope, models: reviewOpts.models, tokenCap: reviewOpts.tokenCap }))
   results.push(await seg3RunUiVerification(projectPath, changeId, probeOpts, reviewOpts))
 
   return results

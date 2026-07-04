@@ -352,3 +352,31 @@ def test_seg3_station_results_carry_station_field():
         f"expected >=4 station-tag assignment sites (triad, whole-branch, "
         f"and both ui-verification branches), found {station_tag_count}"
     )
+
+
+def test_seg3_no_dead_args_budget_field():
+    """runSegment3 must not destructure a singular `budget` from args.
+
+    Live finding (PR #483 whole-branch review): `args.budget` is supplied by
+    NOTHING — the run-input contract and the batch payload both carry only
+    `budgets` (plural) — so a destructured `budget` is always undefined and
+    every `budget: <x>Opts.budget` pass-through is dead plumbing. runStation's
+    `opts.budget` slot stays reserved for unit-test injection (see
+    driver_20_runstation.js resolveBudget); the ambient Workflow global is
+    the real supply, reached via the fallback. The segment module must not
+    fake a supply it does not have.
+    """
+    source = MODULE_PATH.read_text(encoding="utf-8")
+
+    destructures = re.findall(r"\{[^}]*\}\s*=\s*args", source)
+    for d in destructures:
+        assert not re.search(r"[{,]\s*budget\s*[,}]", d), (
+            "runSegment3 destructures a singular `budget` from args — "
+            f"nothing supplies that field (dead plumbing): {d!r}"
+        )
+
+    assert not re.search(r"budget:\s*\w*[Oo]pts\.budget", source), (
+        "seg3 station opts still pass a `budget:` slot fed from an opts "
+        "object — that value is always undefined; drop the pass-through and "
+        "let runStation's ambient-global fallback do the real supply"
+    )

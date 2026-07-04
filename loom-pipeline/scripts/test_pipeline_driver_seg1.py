@@ -208,3 +208,36 @@ def test_seg1_every_dispatch_passes_a_schema():
     assert source.count("schema: SEG1_CRITIC_SCHEMA") >= 1, (
         "critic-lens dispatch must pass SEG1_CRITIC_SCHEMA"
     )
+
+
+def test_seg1_adopt_is_a_cost_cut_record_not_an_intervention():
+    """The principles preamble must not label the adopt an 'intervention'.
+
+    Live-verify finding (BACKLOG 'Interventions bucket calibration'): the
+    seg1 ledger filed a routine adopt-if-valid note as a bucket-A
+    intervention because the stable preamble itself called the adopt a
+    'cost-cut intervention'. An adopt is a cost-cut RECORD in the verdict
+    summary; the interventions[] array is for deviations needing triage
+    (buckets A/B/C in driver_60_ledger.js), not for taking the documented
+    cheap path.
+    """
+    source = MODULE_PATH.read_text(encoding="utf-8")
+
+    assert "cost-cut intervention" not in source, (
+        "the principles preamble still calls the adopt a 'cost-cut "
+        "intervention' — that wording is what mis-filed a routine adopt "
+        "into ledger bucket A"
+    )
+
+    preamble = re.search(
+        r"const PRINCIPLES_STABLE_PREAMBLE = \[(.*?)\]\.join", source, re.DOTALL
+    )
+    assert preamble, "PRINCIPLES_STABLE_PREAMBLE not found"
+    # DOTALL + generous gap: the phrase spans the preamble's JS string-array
+    # line breaks ("Do NOT',\n  '  file the adopt itself as an interventions").
+    assert re.search(
+        r"[Dd]o NOT.{0,60}interventions", preamble.group(1), re.DOTALL
+    ), (
+        "the preamble must explicitly tell the station NOT to file the "
+        "adopt itself as an interventions[] entry"
+    )
