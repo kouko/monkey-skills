@@ -62,6 +62,8 @@ Each agent gets:
 
 The Claude Code harness runs `Agent` tool calls concurrently **only when they appear in the same assistant message**. Sequential calls across separate messages run sequentially.
 
+Dispatch every call below **unnamed** — no `name:` (`description:` is still required, as always, on every call). Adding `name:` turns a one-shot blocking `Agent()` call into a persistent mailbox-semantics teammate whose plain-text output is never delivered (only an explicit `SendMessage` transmits it); see [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §A1.
+
 ```
 # ✅ Concurrent — one message, multiple Agent calls
 Agent({subagent_type: "loom-code:implementer", prompt: "<domain A task body>"})

@@ -5,6 +5,32 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.23.1] — 2026-07-04 — named-Agent dispatch gotcha
+
+### Fixed
+
+- **`references/environment-gotchas.md`** — new §A1: adding `name:` to an
+  `Agent({subagent_type: "loom-code:..."})` dispatch call turns a one-shot
+  blocking call into a persistent mailbox-semantics teammate whose
+  plain-text output is never delivered (only an explicit `SendMessage`
+  transmits it) — `description:` is unrelated and always required
+  regardless. Hit in production: a named `code-reviewer` dispatch
+  completed a correct review but the orchestrator only ever saw empty
+  `idle_notification` heartbeats (recorded in monkey-skills memory
+  `feedback_named_agent_dispatch_requires_sendmessage.md`). A single
+  incident was initially judged DROP (no fix) under a recurring-pattern
+  bar, but the failure has an identifiable structural trigger (the `Agent`
+  tool's own naming affordance vs. this plugin's silent unnamed-only
+  assumption) rather than being random noise, and the fix is a one-line
+  doc addition — cheap enough not to wait for a second incident.
+- `requesting-code-review`, `dispatching-parallel-agents`,
+  `subagent-driven-development`, and `writing-plans` SKILL.md — every
+  `Agent()`/evaluator-subagent dispatch site now points at §A1 and states
+  the unnamed requirement inline (`writing-plans`'s `plan-document-reviewer`
+  dispatch was the one site a first pass at this fix missed — caught by
+  whole-branch review before merge). §A1's own header consumer list in
+  `environment-gotchas.md` updated to match.
+
 ## [0.23.0] — 2026-07-04 — **mechanical gates (harness-engineering audit follow-up)**
 
 ### Added

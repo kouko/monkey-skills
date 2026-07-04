@@ -91,6 +91,8 @@ If neither trigger fires, the user goes straight to `tdd-iron-law` for implement
 
 ## Process — per-task triad
 
+Dispatch every `Agent()` call below **unnamed** — no `name:` (`description:` is still required, as always, on every call). Adding `name:` turns a one-shot blocking call into a persistent mailbox-semantics teammate whose plain-text output is never delivered (only an explicit `SendMessage` transmits it); see [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §A1.
+
 For each atomic task in the plan:
 
 1. **Dispatch `implementer`** via `Agent({subagent_type: "loom-code:implementer", prompt: <task body>})` with the task description + context paths + resource paths (input contract is defined in the plugin-level agent at [`loom-code/agents/implementer.md`](../../agents/implementer.md); that agent also carries the 12-rule engineering baseline from [`loom-code/scripts/_baseline.md`](../../scripts/_baseline.md)). Before dispatching, the orchestrator resolves the project's test command once via `verification-before-completion`'s declared-first rule (consult the declared surface; trust only if it runs and emits a test count; else fall back to detection), caches it **session-scoped** (re-resolve across sessions because declarations rot), and passes it into the implementer dispatch as a **`Resolved test command`** line so the implementer runs the project's real test command instead of re-detecting. (Optional optimization: invalidate the session cache mid-session if the declaring file's content-hash changes.) Wait for return.
@@ -168,7 +170,7 @@ The orchestrator never silently dismisses a `BLOCKED` — even if the unblock st
 
 ## Prompt templates
 
-Three role-defined plugin-level subagents (v0.6.0 / P15-12 complete); all carry the 12-rule engineering baseline ([`loom-code/scripts/_baseline.md`](../../scripts/_baseline.md)) baked into their system prompts.
+Three role-defined plugin-level subagents (v0.6.0 / P15-12 complete); all carry the 12-rule engineering baseline ([`loom-code/scripts/_baseline.md`](../../scripts/_baseline.md)) baked into their system prompts. Dispatch each one unnamed, as shown — see [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §A1.
 
 - **implementer** — worker; produces code + tests + status. [`loom-code/agents/implementer.md`](../../agents/implementer.md). Dispatch via `Agent({subagent_type: "loom-code:implementer"})`. Shipped v0.5.2 / P15-12 Phase 1.
 - **spec-reviewer** — evaluator; produces `PASS` / `NEEDS_REVISION` + gap list. [`loom-code/agents/spec-reviewer.md`](../../agents/spec-reviewer.md). Dispatch via `Agent({subagent_type: "loom-code:spec-reviewer"})`. Promoted v0.6.0 / P15-12 Phase 2.
