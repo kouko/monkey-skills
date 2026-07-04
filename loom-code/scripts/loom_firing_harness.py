@@ -32,10 +32,11 @@ each is named here with the layer that guards against it:
    "go/OK" continuations). Enforced by hand-authored corpus files
    (Task F2), validated through `validate_corpus`.
 
-This module currently implements the corpus layer only (parsing +
-contamination filtering, Task F1a). `grade` (F1b) and `run` (F1c) modes
-land in follow-up tasks; records are kept as plain dicts throughout so
-those modes can consume this layer's output directly.
+This module currently implements the corpus layer (parsing +
+contamination filtering, Task F1a) and the grader (Task F1b). `run`
+(F1c) lands in a follow-up task; records are kept as plain dicts
+throughout so that mode can produce output this layer consumes
+directly.
 
 Stdlib only.
 """
@@ -118,3 +119,64 @@ def filter_contaminated(run_results: list[dict]) -> tuple[list[dict], int]:
     kept = [r for r in run_results if not _is_contaminated(r)]
     discarded_count = len(run_results) - len(kept)
     return kept, discarded_count
+
+
+def _family(skill_id: str) -> str:
+    """Plugin prefix before ':' (the loom-family grouping key)."""
+    return skill_id.split(":", 1)[0]
+
+
+def _is_loom_skill(skill_id) -> bool:
+    """A fired skill counts as loom-family iff its prefix starts with 'loom'."""
+    if not skill_id:
+        return False
+    return _family(skill_id).startswith("loom")
+
+
+def grade_record(record: dict) -> str:
+    """Grade one merged corpus+run record (trap #4).
+
+    `record["expected"]` is a "<plugin:skill>" id or the literal
+    "NONE" (from the corpus); `record["fired"]` is the skill id the
+    run captured, or None/falsy if nothing fired.
+
+    Returns one of:
+    - "EXACT" — fired == expected, OR expected is "NONE" and no
+      loom-family skill fired (a non-loom fire, or nothing firing, is
+      the CORRECT outcome for expected=NONE — trap #4's grader rule:
+      it must never be scored as an over-trigger).
+    - "FAMILY" — fired is a DIFFERENT skill than expected, but shares
+      its plugin prefix (same loom family) — counted separately from
+      EXACT, never folded in.
+    - "MISS" — expected named a skill, and nothing fired, or a skill
+      fired that is neither an exact nor a same-family match.
+    - "OVER" — expected is "NONE", but a loom-family skill fired
+      anyway.
+    """
+    expected = record["expected"]
+    fired = record.get("fired")
+
+    if expected == "NONE":
+        if _is_loom_skill(fired):
+            return "OVER"
+        return "EXACT"
+
+    if fired == expected:
+        return "EXACT"
+    if _is_loom_skill(fired) and _family(fired) == _family(expected):
+        return "FAMILY"
+    return "MISS"
+
+
+def grade_corpus(records: list[dict], discarded_count: int = 0) -> dict:
+    """Per-corpus aggregate: a count per verdict class.
+
+    `discarded_count` passes through the contamination filter's count
+    (Task F1a) so it is always surfaced alongside the grade, never
+    computed or swallowed here.
+    """
+    counts = {"EXACT": 0, "FAMILY": 0, "MISS": 0, "OVER": 0}
+    for record in records:
+        counts[grade_record(record)] += 1
+    counts["discarded"] = discarded_count
+    return counts

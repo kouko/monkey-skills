@@ -19,6 +19,8 @@ import pytest
 from loom_firing_harness import (
     CorpusError,
     filter_contaminated,
+    grade_corpus,
+    grade_record,
     parse_corpus,
     validate_corpus,
 )
@@ -63,3 +65,55 @@ def test_corpus_parse_and_contamination_discard():
     assert len(kept) == 2
     assert all(r["result_subtype"] == "success" for r in kept)
     assert all("session limit" not in r["text"].lower() for r in kept)
+
+
+def test_grade_exact_family_miss_over():
+    """Trap #4: EXACT vs FAMILY counted separately; expected=NONE only
+    penalizes a loom-family fire, never a correct non-loom routing.
+
+    Each record here is a merged corpus+run record: `expected` (from the
+    corpus) plus `fired` (the skill id the run captured, or None if
+    nothing fired). `family` = the plugin prefix before ':'.
+    """
+    # --- exact hit ---
+    exact = {"expected": "loom-code:brainstorming", "fired": "loom-code:brainstorming"}
+    assert grade_record(exact) == "EXACT"
+
+    # --- sibling-family hit: same plugin prefix, different skill ---
+    family = {
+        "expected": "loom-spec:completeness-critic",
+        "fired": "loom-spec:spec-expansion",
+    }
+    assert grade_record(family) == "FAMILY"
+
+    # --- miss: expected a skill, nothing fired ---
+    miss_nothing = {"expected": "loom-product-principles:product-principles", "fired": None}
+    assert grade_record(miss_nothing) == "MISS"
+
+    # --- miss: expected a skill, a non-loom skill fired instead ---
+    miss_non_loom = {"expected": "loom-interface-design:design-system", "fired": "dataviz"}
+    assert grade_record(miss_non_loom) == "MISS"
+
+    # --- over-trigger: expected NONE, a loom-family skill fired anyway ---
+    over = {"expected": "NONE", "fired": "loom-code:brainstorming"}
+    assert grade_record(over) == "OVER"
+
+    # --- NOT an over-trigger: expected NONE, a non-loom skill fired ---
+    # (correct non-loom routing — the trap #4 grader rule)
+    not_over = {"expected": "NONE", "fired": "dataviz"}
+    assert grade_record(not_over) != "OVER"
+
+    # --- NOT an over-trigger: expected NONE, nothing fired at all ---
+    none_and_nothing = {"expected": "NONE", "fired": None}
+    assert grade_record(none_and_nothing) != "OVER"
+
+    # --- per-corpus aggregate: counts per verdict class + discarded passthrough ---
+    counts = grade_corpus(
+        [exact, family, miss_nothing, miss_non_loom, over, not_over, none_and_nothing],
+        discarded_count=3,
+    )
+    assert counts["EXACT"] == 3  # exact + not_over + none_and_nothing
+    assert counts["FAMILY"] == 1
+    assert counts["MISS"] == 2
+    assert counts["OVER"] == 1
+    assert counts["discarded"] == 3
