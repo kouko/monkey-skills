@@ -1,7 +1,7 @@
 ---
 name: daily-news-digest
 description: |
-  Compile one day's vault notes into a two-tier daily digest — clustered time-sensitive stories + evergreen knowledge links — at news/YYYY-MM-DD. Use for '整理今天的新聞', '每日新聞', 'daily news digest', rounding up a day's content, or summarizing what you consumed/read today. Also use for managing long-story arc books in news/arcs/ — open/pause/close a tracking book（開一本追蹤 X／暫停追蹤／不用追了）.
+  Compile one day's vault notes into a two-tier daily digest — clustered time-sensitive stories + evergreen knowledge links — at news/daily-news/YYYY-MM-DD Daily News.md. Use for '整理今天的新聞', '每日新聞', 'daily news digest', rounding up a day's content, or summarizing what you consumed/read today. Also use for managing long-story arc books in news/store-arcs/ — open/pause/close a tracking book（開一本追蹤 X／暫停追蹤／不用追了）.
 ---
 
 # Daily News Digest（每日新聞彙整）
@@ -64,8 +64,9 @@ Before spending tokens on collection, do four things:
    Every vault path below (`news/…`, collector runs, the STEP 8 Write) resolves
    against `$VAULT_ROOT`. The collector manifest's `path` fields are
    **vault-root-relative** — always read them from `$VAULT_ROOT`.
-2. **Check for an existing digest** — `ls "news/<YYYY-MM-DD>*"`. If found, ask
-   **overwrite / merge / abort** and wait for the user's answer before continuing.
+2. **Check for an existing digest** — `ls "news/daily-news/<YYYY-MM-DD>*"`. If
+   found, ask **overwrite / merge / abort** and wait for the user's answer
+   before continuing.
 3. **Resolve the skill base directory** — `SKILL_DIR="<the path shown as
    'Base directory for this skill:' in the runtime metadata header>"`;
    every script call below uses it. If the header is absent:
@@ -154,7 +155,7 @@ an earnings arc. For these, reconstruct the progression so the reader sees the
 *trend*, not just today's snapshot.
 
 **Read [arc-tracking.md](references/arc-tracking.md) first.** The vault keeps
-per-story 追蹤本 (arc books) under `news/arcs/` — they are both the memory this
+per-story 追蹤本 (arc books) under `news/store-arcs/` — they are both the memory this
 step writes to and the **material the digest's trend paragraphs read from**.
 Match today's stories against the books' frontmatter `keywords`, update matched
 active books (milestone line + number rows), open new event books per its
@@ -318,10 +319,13 @@ empty handwritten appendix is skipped silently even if the template shows a
 unreadable, fall back to: standard YAML frontmatter with title/date/type/tags/status,
 COT colour scheme from §STEP 6 — trigger green / mechanism purple / result orange /
 conclusion cyan — and the link rules in §Hard rules below.) Then create the digest file
-at `news/<YYYY-MM-DD> <title>.md` (title in the user's language; e.g.
-`news/2026-07-01 每日新聞.md` in Traditional Chinese). **Write with the
-vault-absolute path** — `$VAULT_ROOT/news/…` (pinned at STEP 1) right before
-the Write call; a relative `news/…` silently lands wherever an earlier
+at `news/daily-news/<YYYY-MM-DD> Daily News.md` — the digest's own filename,
+frontmatter `title`, and H1 are a **fixed English label** (`Daily News`),
+regardless of vault language; everything below the H1 (Table of Contents, Day
+Overview, story headings) stays in the user's language as before. **Write
+with the vault-absolute path** — `$VAULT_ROOT/news/daily-news/…` (pinned at
+STEP 1) right before the Write call; a relative `news/…` silently lands
+wherever an earlier
 scratch-dir `cd` left the shell (real failure 2026-07-02: digest written to
 `/private/tmp/...`, self-checks failed `FileNotFoundError`). **Order at the top:
 `## Table of Contents`** (in user's language, right under the title), then a
@@ -392,8 +396,9 @@ sub-heading — duplication across sub-headings is correct, not an error.
   handwritten content from its `## Note` section; skip silently if empty.
 - **Report**: digest path, story count (and sources merged), tier-2 item count,
   kept-vs-dropped one-liner, **arc books** (updated count / newly-opened list
-  for the user to veto / stale `kind: event` books to suggest closing), and
-  anything borderline to double-check.
+  for the user to veto / stale `kind: event` books to suggest closing /
+  trackable-item proposals for recurring stories with no book of their own),
+  and anything borderline to double-check.
 
 ## Hard rules
 
@@ -427,7 +432,7 @@ sub-heading — duplication across sub-headings is correct, not an error.
 
 > [!important] THE DIGEST GATE — run `digest_check.py` after writing (exit code decides; do not skip, do not paraphrase)
 > ```bash
-> python3 "$SKILL_DIR/scripts/digest_check.py" "$VAULT_ROOT" "$VAULT_ROOT/news/<YYYY-MM-DD> <title>.md"
+> python3 "$SKILL_DIR/scripts/digest_check.py" "$VAULT_ROOT" "$VAULT_ROOT/news/daily-news/<YYYY-MM-DD> Daily News.md"
 > ```
 > One command covers COT completeness + link resolution + Mermaid
 > syntax (via mermaid-cli; cli is more lenient than Obsidian — verify
@@ -449,8 +454,8 @@ sub-heading — duplication across sub-headings is correct, not an error.
 > - **NEVER fabricate a fact to fill a theme.** If a snippet is too thin to know
 >   what happened, open the source note and read it rather than guessing.
 
-- **Create `news/` if it doesn't exist** — it's a new top-level folder.
-- **One file per day.** If `news/<date> <title>.md` already exists, ask whether
+- **Create `news/daily-news/` if it doesn't exist** — a new top-level folder.
+- **One file per day.** If `news/daily-news/<date> Daily News.md` already exists, ask whether
   to overwrite or merge before clobbering it. **When merging new content**, also
   complete these before declaring done:
   - [ ] Update frontmatter `source_count` and `story_count`

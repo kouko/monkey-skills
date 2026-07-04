@@ -6,7 +6,7 @@ One command, one verdict, exit code decides:
     python3 arc_check.py <vault_root> <YYYY-MM-DD> --expect-milestones N [--titles zh-tw|off]
 
 Checks (all must pass → exit 0, "ALL PASS"):
-  1. starters   — all 16 canonical starter concepts exist in news/arcs/.
+  1. starters   — all 16 canonical starter concepts exist in news/store-arcs/.
   1b. titles    — starter title + filename match the spec table verbatim
                   (default zh-tw; --titles off for non-zh-TW vaults).
   2. anchors    — every [[<date> …#anchor|…]] in arc books resolves to a real
@@ -85,14 +85,14 @@ def check_titles(books: list[dict]) -> list[str]:
         want = CANONICAL_TITLES.get(b["concept"])
         if want is None:
             continue  # event books: free naming (dedup check governs them)
-        if b["title"] != want or b["name"] != f"Arc - {want}.md":
-            bad.append((b["name"], b["title"], f"expected 'Arc - {want}.md' / title '{want}'"))
+        if b["title"] != want or b["name"] != f"-Store Arc- {want}.md":
+            bad.append((b["name"], b["title"], f"expected '-Store Arc- {want}.md' / title '{want}'"))
     print(f"[1b titles] bad={bad or 'none'}")
     return [f"titles: starter title/filename not verbatim from the spec table {bad}"] if bad else []
 
 
 def check_anchors(books: list[dict], root: Path, date: str) -> list[str]:
-    digests = glob.glob(str(root / "news" / f"{date} *.md"))
+    digests = glob.glob(str(root / "news" / "daily-news" / f"{date} *.md"))
     heads: set[str] = set()
     if digests:
         dtext = Path(digests[0]).read_text(encoding="utf-8")
@@ -171,7 +171,7 @@ def main() -> int:
     args = ap.parse_args()
 
     root = Path(args.vault_root)
-    books = [parse_book(p) for p in sorted(glob.glob(str(root / "news" / "arcs" / "*.md")))]
+    books = [parse_book(p) for p in sorted(glob.glob(str(root / "news" / "store-arcs" / "*.md")))]
 
     failures = check_starters(books)
     if args.titles == "zh-tw":
