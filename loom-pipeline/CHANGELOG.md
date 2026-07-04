@@ -6,6 +6,26 @@ this file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] — 2026-07-04
+
+### Added
+
+- **Family reception** — `hooks/family-reception.md` + `hooks/hooks.json` +
+  `hooks/session-start` inject the loom family map, the three doors, and
+  the on-ramp criteria table (SSOT) at the start of every session, mirroring
+  loom-code's SessionStart hook mechanism (Task A1).
+- **`§Intake` for `using-loom-pipeline`** — three steps (upstream check
+  against the reception criteria, station check/handoff, and the
+  unchanged N/A-loud fire-condition reaffirmation) added ahead of
+  `§When it fires` (Task A2).
+- **README §Family entries & naming convention** — documents the
+  one-sentence rule (「要用 loom-X, 就從 using-loom-X 開始」), the
+  `using-loom-*` entry vs. plain-name station convention, why
+  `brainstorming` (loom-code's discovery skill) folds the family-entry
+  intake into its own Axis 0 rather than duplicating a `§Intake` heading
+  in `using-loom-code`, and a reception paragraph pointing at the
+  `SessionStart` hook (Task A3).
+
 ## [0.3.1] — 2026-07-04
 
 ### Fixed

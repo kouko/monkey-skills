@@ -85,6 +85,33 @@ not attempt an inline substitute. The four station plugins remain
 usable on Codex — run them interactively, one station at a time,
 instead of through this conductor.
 
+## Family entries & naming convention
+
+> **要用 loom-X, 就從 using-loom-X 開始.** Every plugin's entry point is its
+> `using-loom-*` skill — start there, it routes you the rest of the way.
+
+| Name pattern | Role | Examples |
+|---|---|---|
+| `using-loom-*` | **Entry** — the family-routing skill for one plugin. Fires on vague/goal-shaped asks, checks the on-ramp criteria, hands off to the right station. | `using-loom-product-principles`, `using-loom-interface-design`, `using-loom-spec`, `using-loom-code`, `using-loom-pipeline` |
+| plain artifact names | **Stations** — tuned to fire on direct, specific asks for their own artifact, without needing the entry skill first. | `product-principles`, `design-system`, `interaction-flows`, `spec-expansion`, `completeness-critic` |
+
+`brainstorming` is loom-code's **discovery** skill, not an artifact
+station — it explores intent before a brief exists, which is why
+`using-loom-code` carries no duplicate `§Intake` heading of its own:
+loom-code's family-entry intake work (steps 1–2, upstream/station
+checks) already lives inside brainstorming as its **Axis 0**, run
+before Axis 1. Giving `using-loom-code` a second, parallel `§Intake`
+section would duplicate that check rather than reuse it, so the four
+other entries carry `§Intake` and `using-loom-code` instead points into
+brainstorming's Axis 0.
+
+**Reception**: a `SessionStart` hook
+(`loom-pipeline/hooks/family-reception.md`) injects the family map and
+the on-ramp criteria table (the SSOT every `§Intake`/Axis 0 references)
+at the start of every session. The **Workflow door remains
+explicit-invocation only** — reception only describes it for awareness,
+it never auto-opens the full pipeline run.
+
 ## G4 — Sonnet-vs-Fable gate A/B (open question)
 
 v1 **records, not solves** G4: a documented **verdict-distribution comparison**
