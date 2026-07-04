@@ -1,7 +1,7 @@
 ---
 name: using-loom-product-principles
 description: |
-  The loom-product-principles family entry: intake + routing. Start here first when you are not sure where to begin on a new product or feature idea — checks the target repo against the loom family's on-ramp criteria, then hands off to product-principles for the actual principles-writing work. Use for 'where do I start', '不確定從哪開始', 'entry point', or a general loom-product-principles family ask.
+  The loom-product-principles family entry: intake + routing. Start here on a new product/feature idea when 不確定從哪開始 / 'where do I start' — checks the on-ramp criteria, then hands off to the member skill.
 version: 0.1.0
 ---
 

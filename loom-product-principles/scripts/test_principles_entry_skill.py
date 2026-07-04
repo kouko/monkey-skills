@@ -43,6 +43,33 @@ def _frontmatter() -> str:
     return m.group(1)
 
 
+# House description-length standard (ADOPTED 2026-06-19):
+# docs/skill-mining/2026-06-19-skill-description-standard.md — target ≤150,
+# hard cap 250. Measured on the YAML-parsed, whitespace-folded value.
+_HOUSE_DESC_CAP = 250
+
+
+def _description() -> str:
+    """YAML-parsed, whitespace-folded description value."""
+    front = _frontmatter()
+    m = re.search(
+        r"description:\s*[|>]?-?\s*\n?(.*?)(?:\n\S|\Z)", front, re.DOTALL
+    )
+    assert m and m.group(1).strip(), \
+        "frontmatter must carry a non-empty 'description:'"
+    return " ".join(m.group(1).split())
+
+
+def test_description_within_house_length_cap():
+    """Rendered description must fit the house hard cap of 250 chars
+    (target ≤150) per the adopted skill-description standard."""
+    desc = _description()
+    assert len(desc) <= _HOUSE_DESC_CAP, (
+        f"description renders to {len(desc)} chars; house hard cap is "
+        f"{_HOUSE_DESC_CAP} (target ≤150) — trim it"
+    )
+
+
 def test_using_entry_intake_contract():
     """Single comprehensive contract test (plan-named acceptance test):
     file exists, frontmatter name correct, description is entry-framed and
