@@ -1,6 +1,6 @@
 # Arc tracking — long-running story books（追蹤本）
 
-One markdown file per ongoing story under `news/arcs/`. The digest run
+One markdown file per ongoing story under `news/store-arcs/`. The digest run
 reads the books' frontmatter (cheap), matches today's stories against
 them, appends one milestone line per hit, and reports lifecycle changes.
 Books are the **material the digest's trend paragraphs read from** AND
@@ -12,15 +12,19 @@ seeded keywords); pause/close/reactivate = edit the `status:` field.
 
 ## Book format
 
-Location: `news/arcs/Arc - <topic>.md` — the **filename carries the
-fixed English prefix `Arc`, in every vault language** (the topic part
-still localizes) so book basenames never collide with wiki pages or
-notes that share the topic/event name (Obsidian resolves wikilinks
-vault-wide by basename). Example: `news/arcs/Arc - 油價與能源.md`.
-Frontmatter `title` stays the clean topic name (no prefix); links to a
-book always use the full prefixed filename + a display alias
-(`[[Arc - 油價與能源|油價]]`). Book titles and body headings are in
-the **user's language**; this spec's examples use zh-TW.
+Location: `news/store-arcs/-Store Arc- <topic>.md` — the **filename
+carries the fixed English prefix `-Store Arc- ` (including the
+trailing space before the topic), in every vault
+language** (the topic part still localizes) so book basenames never
+collide with wiki pages or notes that share the topic/event name
+(Obsidian resolves wikilinks vault-wide by basename), and so the
+basename sorts to the end of any Notebook-Navigator-style flattened
+file list next to dated `YYYY-MM-DD …` notes. Example:
+`news/store-arcs/-Store Arc- 油價與能源.md`. Frontmatter `title` stays
+the clean topic name (no prefix); links to a book always use the full
+prefixed filename + a display alias (`[[-Store Arc- 油價與能源|油價]]`).
+Book titles and body headings are in the **user's language**; this
+spec's examples use zh-TW.
 
 ```yaml
 ---
@@ -92,16 +96,17 @@ Body — two fixed sections, plus one optional:
 ## Daily integration (runs inside STEP 5)
 
 1. **Instantiate starters** — create every §Starter-books entry whose
-   `concept` is missing from `news/arcs/` (ALL 16 of them, matched or
-   not — unmatched starters are created empty). Filename = `Arc -
-   <Title column text verbatim>`. **Copy the table's Seed-keywords and
+   `concept` is missing from `news/store-arcs/` (ALL 16 of them, matched or
+   not — unmatched starters are created empty). Filename = `-Store Arc-
+   <Title column text verbatim>` (with the trailing space before the
+   topic). **Copy the table's Seed-keywords and
    Indicators columns into the frontmatter verbatim** — `keywords: []`
    is invalid (empty keywords silently break tomorrow's matching), and
    the 數字表 header must carry the indicator columns（e.g.
    `| 日期 | WTI | Brent |`）. This runs before matching, on every run,
    unconditionally — "I only created the books today's stories matched"
    is a known failure mode; the step-6 gate counts it.
-2. **Load the registry** — read frontmatter of every `news/arcs/*.md`
+2. **Load the registry** — read frontmatter of every `news/store-arcs/*.md`
    (grep/head is enough; do NOT read bodies of unmatched books).
 3. **Match** each of today's stories against the `keywords` of
    non-`closed` books. A story may update more than one topic book when
@@ -146,6 +151,14 @@ Body — two fixed sections, plus one optional:
    unconditionally during THIS run — do NOT ask permission first, do NOT
    defer creation to a future run. The user's veto is conversational and
    after the fact（「Y 不用追」→ close/delete the already-created book）.
+8. **Propose trackable items** — surface the open/pause/close feature to
+   users who may not know it exists. Take every sweep-table row marked
+   `matched book` (a story that recurred but only updated an existing
+   book, never got one of its own) and add one line each to the report:
+   "『<story>』持續出現在 <matched book>，如果想單獨追蹤可以說『開一本追蹤
+   <story>』。" No frequency/novelty filtering for now — surface every
+   eligible row every run; revisit with a dedup/noise rule only if this
+   proves repetitive after running for a while.
 
 ## Arc sweep table + red flags
 
@@ -154,7 +167,7 @@ itself a decision that must be made explicitly:
 
 | # | Story title | Multi-week arc? | Matched book / new book / skip |
 |---|---|---|---|
-| 1 | `<story 1>` | Yes / No | `arcs/Arc - 油價與能源` / new event book / skip |
+| 1 | `<story 1>` | Yes / No | `store-arcs/-Store Arc- 油價與能源` / new event book / skip |
 
 > [!warning] Red flags — stop and re-examine if you see any of these:
 > - A Financial Markets & Macro category with **"No"** across every row
@@ -172,8 +185,9 @@ identity of each book. Everything else localizes at creation time:
 - **Book title & body headings** → the user's conversation language
   (same rule as digest section names). The zh-TW titles below are the
   localized instance for this plugin's home vault — an English-vault
-  user gets `Arc - US Equities.md`; a zh-TW vault gets `Arc - 美股大盤.md` —
-  the prefix never localizes, only the topic does.
+  user gets `-Store Arc- US Equities.md`; a zh-TW vault gets
+  `-Store Arc- 美股大盤.md` — the prefix never localizes, only the
+  topic does.
 - **Keywords** → seed from the concept, then **cover the languages
   actually present in the vault's sources**: sample **~30 titles; any
   language appearing in ≥10% of the sample gets keyword coverage**. The
@@ -182,7 +196,7 @@ identity of each book. Everything else localizes at creation time:
   top up from recent `references/` filenames (glob, newest first) until
   ~30 or the vault is exhausted. (The zh/en/ja mix below reflects a
   zh-TW-primary vault consuming EN+JA media.) Worked example for an
-  EN-only vault: all 30 samples English → create `Arc - US Equities.md` with
+  EN-only vault: all 30 samples English → create `-Store Arc- US Equities.md` with
   `keywords: [US stocks, S&P 500, Nasdaq, Dow, futures, earnings]` —
   no CJK keywords, title in English, done. Keywords are vault data
   living in each book's frontmatter — once created they evolve with the
@@ -250,7 +264,7 @@ still holds a market-moving seat, drop it once they exit entirely.
 
 ## Hard rules
 
-- Books live in `news/arcs/` — inside the collector's default exclude
+- Books live in `news/store-arcs/` — inside the collector's default exclude
   (`news/`), so they are never re-ingested as daily candidates.
 - `references/` stays immutable (three-layer contract) — books link TO
   digests and sources, never edit them.

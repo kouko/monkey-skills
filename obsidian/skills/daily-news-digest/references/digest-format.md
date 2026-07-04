@@ -116,7 +116,7 @@ sub-label and the remaining one-liners**.
 
 ````markdown
 ---
-title: <YYYY-MM-DD> 每日新聞
+title: <YYYY-MM-DD> Daily News
 type: news-digest
 date: <YYYY-MM-DD>
 tags: [news, daily-digest]
@@ -125,7 +125,7 @@ story_count: <number of synthesized 時效新聞 stories>
 related_notes: []
 ---
 
-# <YYYY-MM-DD> 每日新聞
+# <YYYY-MM-DD> Daily News
 
 ## 目錄
 

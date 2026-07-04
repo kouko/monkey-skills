@@ -33,14 +33,16 @@ def book(concept, title, kind="topic", keywords=("kw-" + "x",), milestones=()):
 
 def make_vault(tmp, extra_books=(), starter_milestones=None):
     root = Path(tmp)
-    arcs = root / "news" / "arcs"
+    arcs = root / "news" / "store-arcs"
     arcs.mkdir(parents=True)
-    (root / "news" / f"{DATE} 每日新聞.md").write_text(
-        "# 每日新聞\n\n### 油價故事\n\nbody\n\n### 台股故事\n\nbody\n",
+    daily_news = root / "news" / "daily-news"
+    daily_news.mkdir(parents=True)
+    (daily_news / f"{DATE} Daily News.md").write_text(
+        "# Daily News\n\n### 油價故事\n\nbody\n\n### 台股故事\n\nbody\n",
         encoding="utf-8")
     for i, (concept, title) in enumerate(STARTERS):
         ms = starter_milestones.get(concept, ()) if starter_milestones else ()
-        (arcs / f"Arc - {title}.md").write_text(
+        (arcs / f"-Store Arc- {title}.md").write_text(
             book(concept, title, keywords=(f"kw{i}a", f"kw{i}b"), milestones=ms),
             encoding="utf-8")
     for name, text in extra_books:
@@ -56,7 +58,7 @@ def run(root, *args):
         capture_output=True, text=True)
 
 
-GOOD_MS = f"- **{DATE}** — 油價上漲（[[{DATE} 每日新聞#油價故事|當日故事]]）"
+GOOD_MS = f"- **{DATE}** — 油價上漲（[[{DATE} Daily News#油價故事|當日故事]]）"
 
 
 def test_clean_vault_passes():
@@ -70,14 +72,14 @@ def test_clean_vault_passes():
 def test_missing_starter_fails():
     with tempfile.TemporaryDirectory() as tmp:
         root = make_vault(tmp)
-        (root / "news" / "arcs" / "Arc - 台股.md").unlink()
+        (root / "news" / "store-arcs" / "-Store Arc- 台股.md").unlink()
         r = run(root)
         assert r.returncode != 0
         assert "taiwan-equities" in r.stdout
 
 
 def test_bad_anchor_fails():
-    bad = f"- **{DATE}** — 發明的錨（[[{DATE} 每日新聞#Invented Anchor|當日故事]]）"
+    bad = f"- **{DATE}** — 發明的錨（[[{DATE} Daily News#Invented Anchor|當日故事]]）"
     with tempfile.TemporaryDirectory() as tmp:
         root = make_vault(tmp, starter_milestones={"oil-energy": (bad,)})
         r = run(root)
@@ -97,7 +99,7 @@ def test_event_keyword_overlap_fails():
     ev = book("hbm-shortage", "HBM 短缺", kind="event",
               keywords=("kw0a", "unique-kw"))  # kw0a overlaps starter #0
     with tempfile.TemporaryDirectory() as tmp:
-        root = make_vault(tmp, extra_books=[("Arc - HBM 短缺.md", ev)])
+        root = make_vault(tmp, extra_books=[("-Store Arc- HBM 短缺.md", ev)])
         r = run(root)
         assert r.returncode != 0
         assert "dedup" in r.stdout.lower()
@@ -107,7 +109,7 @@ def test_event_title_containing_other_keyword_fails():
     # keywords dodge overlap, but the TITLE contains another book's keyword
     ev = book("kw3a-crisis", "kw3a 危機", kind="event", keywords=("totally-new",))
     with tempfile.TemporaryDirectory() as tmp:
-        root = make_vault(tmp, extra_books=[("Arc - kw3a 危機.md", ev)])
+        root = make_vault(tmp, extra_books=[("-Store Arc- kw3a 危機.md", ev)])
         r = run(root)
         assert r.returncode != 0
         assert "dedup" in r.stdout.lower()
@@ -116,10 +118,10 @@ def test_event_title_containing_other_keyword_fails():
 def test_invented_starter_title_fails():
     with tempfile.TemporaryDirectory() as tmp:
         root = make_vault(tmp)
-        p = root / "news" / "arcs" / "Arc - 美股大盤.md"
+        p = root / "news" / "store-arcs" / "-Store Arc- 美股大盤.md"
         text = p.read_text(encoding="utf-8").replace("title: 美股大盤", "title: 美股走勢")
         p.unlink()
-        (root / "news" / "arcs" / "Arc - 美股走勢.md").write_text(text, encoding="utf-8")
+        (root / "news" / "store-arcs" / "-Store Arc- 美股走勢.md").write_text(text, encoding="utf-8")
         r = run(root)
         assert r.returncode != 0
         assert "title" in r.stdout.lower()
@@ -128,10 +130,10 @@ def test_invented_starter_title_fails():
 def test_title_check_can_be_disabled():
     with tempfile.TemporaryDirectory() as tmp:
         root = make_vault(tmp)
-        p = root / "news" / "arcs" / "Arc - 美股大盤.md"
+        p = root / "news" / "store-arcs" / "-Store Arc- 美股大盤.md"
         text = p.read_text(encoding="utf-8").replace("title: 美股大盤", "title: US Equities")
         p.unlink()
-        (root / "news" / "arcs" / "Arc - US Equities.md").write_text(text, encoding="utf-8")
+        (root / "news" / "store-arcs" / "-Store Arc- US Equities.md").write_text(text, encoding="utf-8")
         r = run(root, "--titles", "off")
         assert r.returncode == 0, r.stdout + r.stderr
 
@@ -139,7 +141,7 @@ def test_title_check_can_be_disabled():
 def test_empty_keywords_fails():
     with tempfile.TemporaryDirectory() as tmp:
         root = make_vault(tmp)
-        p = root / "news" / "arcs" / "Arc - 台股.md"
+        p = root / "news" / "store-arcs" / "-Store Arc- 台股.md"
         p.write_text(p.read_text(encoding="utf-8").replace(
             "keywords:\n  - kw1a\n  - kw1b", "keywords: []"), encoding="utf-8")
         r = run(root)
@@ -152,7 +154,7 @@ def test_ascii_keyword_needs_word_boundary():
     ev = book("standalone-topic", "workw0adays 危機", kind="event",
               keywords=("totally-new",))
     with tempfile.TemporaryDirectory() as tmp:
-        root = make_vault(tmp, extra_books=[("Arc - workw0adays 危機.md", ev)])
+        root = make_vault(tmp, extra_books=[("-Store Arc- workw0adays 危機.md", ev)])
         r = run(root)
         assert r.returncode == 0, r.stdout + r.stderr
 
@@ -162,9 +164,9 @@ def test_cjk_keyword_substring_still_hits():
     with tempfile.TemporaryDirectory() as tmp:
         root = make_vault(tmp)
         rare = book("rare-earth", "稀土戰", kind="topic", keywords=("稀土",))
-        (root / "news" / "arcs" / "Arc - 稀土戰.md").write_text(rare, encoding="utf-8")
+        (root / "news" / "store-arcs" / "-Store Arc- 稀土戰.md").write_text(rare, encoding="utf-8")
         ev = book("cn-jp-war", "中日稀土戰", kind="event", keywords=("關鍵金屬",))
-        (root / "news" / "arcs" / "Arc - 中日稀土戰.md").write_text(ev, encoding="utf-8")
+        (root / "news" / "store-arcs" / "-Store Arc- 中日稀土戰.md").write_text(ev, encoding="utf-8")
         r = run(root, "--titles", "off")
         assert r.returncode != 0
         assert "dedup" in r.stdout.lower()
@@ -193,9 +195,9 @@ def test_milestone_without_link_fails():
 
 def test_clean_event_book_passes():
     ev = book("euro-elections", "歐洲選舉", kind="event", keywords=("歐洲選舉", "EU vote"),
-              milestones=(f"- **{DATE}** — 選情（[[{DATE} 每日新聞#台股故事|當日故事]]）",))
+              milestones=(f"- **{DATE}** — 選情（[[{DATE} Daily News#台股故事|當日故事]]）",))
     with tempfile.TemporaryDirectory() as tmp:
-        root = make_vault(tmp, extra_books=[("Arc - 歐洲選舉.md", ev)])
+        root = make_vault(tmp, extra_books=[("-Store Arc- 歐洲選舉.md", ev)])
         r = run(root, "--expect-milestones", "1")
         assert r.returncode == 0, r.stdout + r.stderr
 
