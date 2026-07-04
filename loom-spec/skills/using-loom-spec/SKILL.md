@@ -1,7 +1,7 @@
 ---
 name: using-loom-spec
 description: |
-  Entry point / router for loom-spec — the loom family's spec-layer station. Checks upstream/peer fit, then routes to spec-expansion or completeness-critic depending on whether you are drafting new spec coverage or auditing an existing draft. Use when starting spec work for a feature and unsure which loom-spec skill applies, or arriving fresh into the loom family.
+  Use when starting spec work and unsure which loom-spec skill applies. Family entry router — routes to spec-expansion (draft/expand a spec from a seed) or completeness-critic (critique an existing draft for omissions).
 version: 0.1.0
 ---
 

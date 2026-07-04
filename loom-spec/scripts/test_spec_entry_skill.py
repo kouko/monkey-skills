@@ -35,6 +35,23 @@ def _frontmatter(text: str) -> str:
     return m.group(1)
 
 
+# House description-length standard (ADOPTED 2026-06-19):
+# docs/skill-mining/2026-06-19-skill-description-standard.md — target ≤150,
+# hard cap 250. Measured on the YAML-parsed, whitespace-folded value.
+_HOUSE_DESC_CAP = 250
+
+
+def _description() -> str:
+    """YAML-parsed, whitespace-folded description value."""
+    front = _frontmatter(_text())
+    m = re.search(
+        r"description:\s*[|>]?-?\s*\n?(.*?)(?:\n\S|\Z)", front, re.DOTALL
+    )
+    assert m and m.group(1).strip(), \
+        "frontmatter must carry a non-empty 'description:'"
+    return " ".join(m.group(1).split())
+
+
 # --- existence + frontmatter -------------------------------------------------
 
 def test_skill_file_exists():
@@ -56,6 +73,19 @@ def test_description_is_entry_framed():
         "description must frame this skill as the family entry/router, not a generator"
     assert "route" in front or "routes to" in front or "routing" in front, \
         "description must state it routes to member skills"
+
+
+def test_description_within_house_length_cap():
+    """Rendered description must fit the house hard cap of 250 chars
+    (target ≤150) per the adopted skill-description standard
+    (docs/skill-mining/2026-06-19-skill-description-standard.md).
+    Truncation eats from the end, so the trigger clause must survive —
+    keeping the whole block under cap is the machine-checkable half."""
+    desc = _description()
+    assert len(desc) <= _HOUSE_DESC_CAP, (
+        f"description renders to {len(desc)} chars; house hard cap is "
+        f"{_HOUSE_DESC_CAP} (target ≤150) — trim it"
+    )
 
 
 def test_description_does_not_steal_member_direct_asks():
