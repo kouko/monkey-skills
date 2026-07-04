@@ -52,21 +52,21 @@ Knowledge & Perspectives (a link is cheaper than a forced story).
 
 ## Workflow
 
-### STEP 0 — Pre-flight
+### STEP 1 — Pre-flight
 
 Before spending tokens on collection, do four things:
 
-0. **Pin the vault root** — you are invoked with the vault as cwd; capture it
+1. **Pin the vault root** — you are invoked with the vault as cwd; capture it
    before any `cd` can move you:
    ```bash
    VAULT_ROOT="$(pwd)"   # sanity: [ -d "$VAULT_ROOT/references" ] || ask the user
    ```
-   Every vault path below (`news/…`, collector runs, the STEP 6 Write) resolves
+   Every vault path below (`news/…`, collector runs, the STEP 8 Write) resolves
    against `$VAULT_ROOT`. The collector manifest's `path` fields are
    **vault-root-relative** — always read them from `$VAULT_ROOT`.
-1. **Check for an existing digest** — `ls "news/<YYYY-MM-DD>*"`. If found, ask
+2. **Check for an existing digest** — `ls "news/<YYYY-MM-DD>*"`. If found, ask
    **overwrite / merge / abort** and wait for the user's answer before continuing.
-2. **Resolve the skill base directory** — `SKILL_DIR="<the path shown as
+3. **Resolve the skill base directory** — `SKILL_DIR="<the path shown as
    'Base directory for this skill:' in the runtime metadata header>"`;
    every script call below uses it. If the header is absent:
    ```bash
@@ -74,7 +74,7 @@ Before spending tokens on collection, do four things:
    ```
    If both fail (e.g. git checkout), **ask the user — do not guess**.
 
-3. **Multi-date requests: one heavy day per run.** For a multi-date
+4. **Multi-date requests: one heavy day per run.** For a multi-date
    request（「最近幾天都整理」）, confirm the date list, then run **heavy
    days (≥ 40 candidates) in separate invocations** — or at minimum
    checkpoint per day: a scratchpad file (never the vault) with
@@ -82,7 +82,7 @@ Before spending tokens on collection, do four things:
    Real failure 2026-06-22: five heavy days in one run exhausted
    context three times, each compaction losing already-resolved details.
 
-### STEP 1 — Collect candidates
+### STEP 2 — Collect candidates
 
 Resolve the date (default `date +%Y-%m-%d`; or the user's named date — must be
 `YYYY-MM-DD`), then run the collector. It does the cheap deterministic gathering
@@ -100,7 +100,7 @@ dot-folders by default (`--exclude` to change). **You decide what's in or out at
 triage** — the collector doesn't pre-filter by folder. If `counts.candidates` is
 0, tell the user no dated notes exist for that day and stop — don't fabricate.
 
-### STEP 2 — Triage each candidate into the buckets
+### STEP 3 — Triage each candidate into the buckets
 
 For **each** `candidates` entry, assign one of: **Time-Sensitive News** /
 **Knowledge & Perspectives** / **Research Appendix** (the user's own
@@ -110,7 +110,7 @@ research/analysis — goes to the appendix, not the body) / **drop**. Use `tags`
 clippings/references-style folder leans consumed-content) — but judge on content.
 Keep a running tally (you'll report kept-vs-dropped to the user).
 
-### STEP 3 — Cluster the news into stories, then group stories by theme
+### STEP 4 — Cluster the news into stories, then group stories by theme
 
 A single day's references cover the same event from many angles — on a heavy
 news day, 8–10 finance videos all orbit one crisis. **Cluster sources that cover
@@ -146,7 +146,7 @@ If none of the six fits, create a new heading — but add a one-line comment in
 the digest's frontmatter `notes` field explaining why, so the taxonomy can be
 reviewed and extended deliberately.
 
-### STEP 3.5 — For evolving stories, pull history and build an Event Arc
+### STEP 5 — For evolving stories, pull history and build an Event Arc
 
 Some stories are **not one-off events but ongoing arcs** — a geopolitical
 conflict, an oil-price move, a rate/inflation cycle, a stock-index trajectory,
@@ -158,7 +158,7 @@ per-story 追蹤本 (arc books) under `news/arcs/` — they are both the memory 
 step writes to and the **material the digest's trend paragraphs read from**.
 Match today's stories against the books' frontmatter `keywords`, update matched
 active books (milestone line + number rows), open new event books per its
-dedup rules, and report lifecycle changes in STEP 7. Standing topic books
+dedup rules, and report lifecycle changes in STEP 9. Standing topic books
 (美股/台股/日股/利率/油價/地緣…) are created-if-missing per its starter list.
 
 > [!important] Sweep EVERY story, across ALL categories
@@ -213,12 +213,12 @@ dedup rules, and report lifecycle changes in STEP 7. Standing topic books
 
 **Arc sweep — fill the sweep table in
 [arc-tracking.md](references/arc-tracking.md) for EVERY story before moving to
-STEP 4** (multi-week arc? → matched book / new event book / skip). Do not
+STEP 6** (multi-week arc? → matched book / new event book / skip). Do not
 skip: leaving a row blank is itself a decision that must be made explicitly,
 and its red-flag list (FX/index/inflation/yield subjects; momentum markers
 like 「創新高」「連續」 in titles) is mandatory re-examination criteria.
 
-### STEP 4 — Synthesize each story (the heart of this skill)
+### STEP 6 — Synthesize each story (the heart of this skill)
 
 > [!important] Execution model — route by load
 > - **Heavy day** (`counts.candidates` ≳ 40, OR any single cluster ≳ 6
@@ -262,9 +262,9 @@ wire feed, not summarizing notes one by one:
 4. **Add a visual only when it earns its place** (table for comparable data,
    Mermaid for a causal chain / one-cause-many-effects / timeline).
 
-### STEP 5 — Index the Knowledge & Perspectives tier
+### STEP 7 — Index the Knowledge & Perspectives tier
 
-(On a **heavy day**, this whole tier can be **one more subagent** — see STEP 4's
+(On a **heavy day**, this whole tier can be **one more subagent** — see STEP 6's
 execution model — returning each sub-category's promoted summaries + CoT node
 content; the main agent renders + assembles.)
 
@@ -296,7 +296,7 @@ in `notes` (same rule as the news tier). In **each** sub-category:
    source inline with a short label, then its own **CoT mini-diagram** (two sides
    → consensus → divergence, etc.). (e.g. a bull-case and a bear-case on the same
    stock → one bull-vs-bear synthesis.) This is the knowledge-tier analogue of
-   STEP 3–4 clustering.
+   STEP 4–6 clustering.
 3. Then a **`**Related Articles**`** sub-label (in user's language), followed by
    the *remaining* unrelated items as one-liners:
    `- [[<stem>|<short label>]] — <core argument or method, one sentence>`
@@ -307,7 +307,7 @@ Only force integration where relatedness is real; disparate items stay as a
 curated one-liner list. The value is a categorized index with synthesis where it
 earns its place.
 
-### STEP 6 — Write the digest
+### STEP 8 — Write the digest
 
 **READ `_templates/digest-format.md` first** — it holds the output template, the
 link-presentation rules, and the Mermaid house style. **Precedence when the two
@@ -316,11 +316,11 @@ inclusion rules** (what sections exist, what gets skipped when empty — e.g. an
 empty handwritten appendix is skipped silently even if the template shows a
 「今日無」 placeholder). (If the file is missing or
 unreadable, fall back to: standard YAML frontmatter with title/date/type/tags/status,
-COT colour scheme from §STEP 4 — trigger green / mechanism purple / result orange /
+COT colour scheme from §STEP 6 — trigger green / mechanism purple / result orange /
 conclusion cyan — and the link rules in §Hard rules below.) Then create the digest file
 at `news/<YYYY-MM-DD> <title>.md` (title in the user's language; e.g.
 `news/2026-07-01 每日新聞.md` in Traditional Chinese). **Write with the
-vault-absolute path** — `$VAULT_ROOT/news/…` (pinned at STEP 0) right before
+vault-absolute path** — `$VAULT_ROOT/news/…` (pinned at STEP 1) right before
 the Write call; a relative `news/…` silently lands wherever an earlier
 scratch-dir `cd` left the shell (real failure 2026-07-02: digest written to
 `/private/tmp/...`, self-checks failed `FileNotFoundError`). **Order at the top:
@@ -384,7 +384,7 @@ list under per-story `###` sub-headings** (see §Hard rules on why raw long link
 are banned in narrative). A source feeding N stories appears under each story's
 sub-heading — duplication across sub-headings is correct, not an error.
 
-### STEP 7 — Appendices & report
+### STEP 9 — Appendices & report
 
 - **Research appendix**: each item you triaged as **Research Appendix** as a
   short-labeled link + one line.
@@ -461,28 +461,28 @@ sub-heading — duplication across sub-headings is correct, not an error.
 ## Reference files
 
 - `_templates/digest-format.md` — output template, link-presentation rules,
-  Mermaid house style. **Load at STEP 6**, not before.
-- `$SKILL_DIR/scripts/digest_check.py` — the digest gate (STEP 7): COT
+  Mermaid house style. **Load at STEP 8**, not before.
+- `$SKILL_DIR/scripts/digest_check.py` — the digest gate (STEP 9): COT
   completeness / link resolution / Mermaid syntax in one exit-coded
   command. Loop until ALL PASS.
 - `references/heavy-day-dispatch.md` — heavy-day subagent execution model
-  + return contract. **Load only when STEP 4 routes heavy.**
+  + return contract. **Load only when STEP 6 routes heavy.**
 - `references/arc-tracking.md` — 追蹤本 (arc book) spec: book format
   (frontmatter keywords / status / indicators + 里程碑 + 數字表), daily
   match/update/open lifecycle, sweep table + red flags, starter topic books.
-  **Load at STEP 3.5.**
-- `$SKILL_DIR/scripts/collect_sources.py` — the single-day collector (STEP 1).
-- `$SKILL_DIR/scripts/arc_check.py` — the single arc-book gate (STEP 3.5
-  step 5): starters/keywords/anchors/milestone-count/event-dedup in one
+  **Load at STEP 5.**
+- `$SKILL_DIR/scripts/collect_sources.py` — the single-day collector (STEP 2).
+- `$SKILL_DIR/scripts/arc_check.py` — the single arc-book gate (STEP 5
+  step 6): starters/keywords/anchors/milestone-count/event-dedup in one
   exit-coded command. Run after the digest is written; loop until ALL PASS.
 - `$SKILL_DIR/scripts/collect_history.py` — the cross-date history collector for
-  evolving stories (STEP 3.5): keyword + date-window search over the whole vault
+  evolving stories (STEP 5): keyword + date-window search over the whole vault
   (minus `--exclude`, same default as collect_sources); `--folders` to restrict.
 - `$SKILL_DIR/scripts/cot_mermaid.py` — renders CoT node **content** (JSON) →
-  coloured Mermaid with the FIXED role→colour scheme (STEP 4/6). Chain
+  coloured Mermaid with the FIXED role→colour scheme (STEP 6/8). Chain
   (`flowchart LR`, positional roles) or web (`flowchart TD`, explicit roles).
   Also auto-escapes `(` `)` → `「」` (Obsidian-Mermaid safe). Use it so every
   CoT diagram is byte-consistent; subagents emit node content, the main agent
-  renders. See STEP 6 for the concrete calling pattern.
+  renders. See STEP 8 for the concrete calling pattern.
 - `scripts/test_*.py` — tests. Run with `python3 -B <file>` (the `-B` keeps
   `__pycache__` from being written — nested dirs violate the skill-folder rule).

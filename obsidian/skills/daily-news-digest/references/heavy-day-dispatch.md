@@ -1,6 +1,6 @@
-# Heavy-day dispatch — subagent execution model for STEP 4/5
+# Heavy-day dispatch — subagent execution model for STEP 6/7
 
-Load this file only when STEP 4 routes to the heavy-day path
+Load this file only when STEP 6 routes to the heavy-day path
 (`counts.candidates` ≳ 40, OR any single cluster ≳ 6 notes). Light
 days never need it — the main agent reads and synthesizes directly.
 
@@ -12,7 +12,7 @@ into the main context is the real context cost, so on a heavy day:
 - **Dispatch one subagent per story-cluster, in parallel** (one
   assistant message, multiple `Agent`/`Task` calls — they're
   independent). Dispatch them **blocking — never
-  `run_in_background: true`**: STEP 6 assembly can't start until every
+  `run_in_background: true`**: STEP 8 assembly can't start until every
   subagent returns, so background dispatch buys no parallelism and only
   creates end-of-turn stop-hook contention (real failure 2026-07-02:
   eight consecutive blocked turns after the digest was already
@@ -22,7 +22,7 @@ into the main context is the real context cost, so on a heavy day:
   reads the full notes and returns the **structured story object**
   (contract below) — the main agent never loads raw transcripts, only
   finished stories.
-- The knowledge tier (STEP 5) can be one more subagent, returning each
+- The knowledge tier (STEP 7) can be one more subagent, returning each
   sub-category's promoted summaries + CoT node content.
 - The **main agent assembles, renders every CoT via
   `$SKILL_DIR/scripts/cot_mermaid.py`, writes the file, and runs the

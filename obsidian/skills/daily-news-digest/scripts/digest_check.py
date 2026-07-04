@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""digest_check.py — consolidated digest self-check gate (STEP 7).
+"""digest_check.py — consolidated digest self-check gate (STEP 9).
 
 One command, one verdict, exit code decides:
 
