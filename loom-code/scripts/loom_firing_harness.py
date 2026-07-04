@@ -19,9 +19,14 @@ named here with the layer that guards against it:
 3. **session/rate-limit silently contaminates** — a session-limit or
    error response can produce a whole "miss" verdict that has nothing
    to do with routing. Enforced here by `filter_contaminated`: any
-   run-result record whose `result_subtype` signals an error, or whose
-   raw text mentions a session limit, is DISCARDED and excluded from
-   grading; the discard count is always surfaced, never swallowed.
+   run-result record whose `result_subtype` signals a true run failure
+   (harness_error, unknown subtypes), or whose raw text mentions a
+   session limit, is DISCARDED and excluded from grading; the discard
+   count is always surfaced, never swallowed. `error_max_turns` is NOT
+   contamination — a session that fires a skill and keeps working past
+   the turn cap is a success signal, graded normally (F3
+   accounting-debt fix; the old success-only filter dropped 6/28
+   records that all had useful fires).
 4. **grader must separate EXACT / FAMILY and gate OVER correctly** —
    expected=NONE must only penalize a LOOM-family fire (a correct
    non-loom routing is not an over-trigger), and a sibling-skill fire
@@ -110,10 +115,15 @@ def validate_corpus(records: list[dict]) -> list[str]:
     return warnings
 
 
+# Subtypes that carry a valid routing signal — rationale in the module
+# docstring, trap #3.
+_GRADEABLE_SUBTYPES = frozenset({"success", "error_max_turns"})
+
+
 def _is_contaminated(record: dict) -> bool:
     subtype = str(record.get("result_subtype", ""))
     text = str(record.get("text", ""))
-    if subtype != "success":
+    if subtype not in _GRADEABLE_SUBTYPES:
         return True
     if "session limit" in text.lower():
         return True
@@ -121,12 +131,14 @@ def _is_contaminated(record: dict) -> bool:
 
 
 def filter_contaminated(run_results: list[dict]) -> tuple[list[dict], int]:
-    """Contamination filter (trap #3): discard error/session-limit records.
+    """Contamination filter (trap #3): discard true run failures only.
 
-    A record is discarded if its `result_subtype` is anything other
-    than "success", or if its `text` mentions a session limit
-    (case-insensitive) — either signals the run itself failed, not
-    that routing failed. Returns `(kept_records, discarded_count)`;
+    A record is discarded if its `result_subtype` is outside
+    `_GRADEABLE_SUBTYPES` (harness_error, unknown/absent subtypes), or
+    if its `text` mentions a session limit (case-insensitive) — either
+    signals the run itself failed, not that routing failed.
+    "error_max_turns" records are KEPT and graded normally (see module
+    docstring, trap #3). Returns `(kept_records, discarded_count)`;
     the count must always be surfaced by callers, never swallowed.
     """
     kept = [r for r in run_results if not _is_contaminated(r)]
@@ -181,17 +193,22 @@ def grade_record(record: dict) -> str:
     return "MISS"
 
 
-def grade_corpus(records: list[dict], discarded_count: int = 0) -> dict:
+def grade_corpus(
+    records: list[dict], discarded_count: int = 0, unparsed_lines: int = 0
+) -> dict:
     """Per-corpus aggregate: a count per verdict class.
 
     `discarded_count` passes through the contamination filter's count
-    (Task F1a) so it is always surfaced alongside the grade, never
-    computed or swallowed here.
+    (Task F1a) and `unparsed_lines` passes through the caller's sum of
+    per-record skipped-noise counts (over ALL records, including
+    discarded ones — their noise still happened), so both are always
+    surfaced alongside the grade, never computed or swallowed here.
     """
     counts = {"EXACT": 0, "FAMILY": 0, "MISS": 0, "OVER": 0}
     for record in records:
         counts[grade_record(record)] += 1
     counts["discarded"] = discarded_count
+    counts["unparsed_lines"] = unparsed_lines
     return counts
 
 
@@ -309,7 +326,7 @@ def run_corpus(
     aborting the rest of the batch (trap #3's sibling: a flaky single
     call should not lose every other record's signal). The contamination
     filter (`filter_contaminated`) then discards `harness_error` records
-    downstream, same as any other non-"success" subtype.
+    downstream, same as any other non-gradeable subtype.
     """
     if max_turns < _MAX_TURNS_FLOOR:
         raise MaxTurnsBelowFloorError(
@@ -342,8 +359,11 @@ def _cmd_grade(args: argparse.Namespace) -> None:
     with open(args.in_path, encoding="utf-8") as f:
         raw_records = [json.loads(line) for line in f if line.strip()]
     kept, discarded_count = filter_contaminated(raw_records)
-    counts = grade_corpus(kept, discarded_count=discarded_count)
-    for key in ("EXACT", "FAMILY", "MISS", "OVER", "discarded"):
+    unparsed_total = sum(int(r.get("unparsed_lines") or 0) for r in raw_records)
+    counts = grade_corpus(
+        kept, discarded_count=discarded_count, unparsed_lines=unparsed_total
+    )
+    for key in ("EXACT", "FAMILY", "MISS", "OVER", "discarded", "unparsed_lines"):
         print(f"{key}: {counts[key]}")
 
 
