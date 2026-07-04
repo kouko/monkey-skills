@@ -10,14 +10,15 @@ Create and edit valid Obsidian Flavored Markdown. Obsidian extends CommonMark an
 
 ## Workflow: Creating an Obsidian Note
 
-1. **Add frontmatter** with properties (title, tags, aliases) at the top of the file. See [PROPERTIES.md](references/PROPERTIES.md) for all property types.
-2. **Write content** using standard Markdown for structure, plus Obsidian-specific syntax below.
+1. **Survey the vault first** when the request implies cross-references — Glob/search for existing related notes BEFORE drafting, so wikilink targets and `related_notes` candidates are confirmed up front rather than bolted on (this is the discovery half of §Internal Links' existence rule, which only gates emission).
+2. **Add frontmatter** with properties (title, tags, aliases) at the top of the file. See [PROPERTIES.md](references/PROPERTIES.md) for all property types.
+3. **Write content** using standard Markdown for structure, plus Obsidian-specific syntax below.
    - Each time the note needs a **diagram**, read [mermaid-quirks.md](references/mermaid-quirks.md) and check §Diagrams for whether to invoke `obsidian:obsidian-mermaid-visualizer` or write inline. Repeat for every diagram in the note — inline and delegate decisions are made per diagram, not per note.
-3. **Consider a Table of Contents** for longer notes with multiple sections. Use `[[#Heading]]` wikilinks listed after the first heading.
-4. **Link related notes** using wikilinks (`[[Note]]`) for internal vault connections that **already exist** (see §Internal Links for the existence rule), or standard Markdown links for external URLs.
-5. **Embed content** from other notes, images, or PDFs using the `![[embed]]` syntax. See [EMBEDS.md](references/EMBEDS.md) for all embed types.
-6. **Add callouts** for highlighted information using `> [!type]` syntax. See [CALLOUTS.md](references/CALLOUTS.md) for all callout types.
-7. **Verify** the note renders correctly in Obsidian's reading view.
+4. **Consider a Table of Contents** for longer notes with multiple sections. Use `[[#Heading]]` wikilinks listed after the first heading.
+5. **Link related notes** using wikilinks (`[[Note]]`) for internal vault connections that **already exist** (see §Internal Links for the existence rule), or standard Markdown links for external URLs.
+6. **Embed content** from other notes, images, or PDFs using the `![[embed]]` syntax. See [EMBEDS.md](references/EMBEDS.md) for all embed types.
+7. **Add callouts** for highlighted information using `> [!type]` syntax. See [CALLOUTS.md](references/CALLOUTS.md) for all callout types.
+8. **Verify** the note renders correctly in Obsidian's reading view.
 
 > When choosing between wikilinks and Markdown links: use `[[wikilinks]]` for notes within the vault (Obsidian tracks renames automatically) and `[text](url)` for external URLs only. Emit a `[[wikilink]]` only for a note that already exists (§Internal Links); otherwise write the term as plain bold text.
 
@@ -38,6 +39,8 @@ cssclasses:
 ```
 
 Default properties: `tags` (searchable labels), `aliases` (alternative note names for link suggestions), `cssclasses` (CSS classes for styling).
+
+Note-type-specific custom properties are expected, not exceptional — research notes typically add `type` / `status` / `related_notes`. Keep values consistent across notes instead of inventing per-session vocabularies: suggested `type`: `research` / `reference` / `journal`; `status`: `draft` / `in-progress` / `completed`. `related_notes` entries follow the same existence rule as body wikilinks (§Internal Links) — only targets confirmed in-session.
 
 See [PROPERTIES.md](references/PROPERTIES.md) for all property types, tag syntax rules, and advanced usage.
 
@@ -64,6 +67,9 @@ For longer notes with multiple sections, consider adding a TOC after the first h
 ```
 
 Place the TOC immediately after the top-level `# Heading`, before the body content.
+**Copy each heading's text verbatim — including any numeric prefix — into the `[[#Heading]]` entry**; the TOC is a literal echo of the headings, not a paraphrase (anchors are exact-match).
+
+If the user says "TOC" / "COT" / 「目錄」, confirm it means this table of contents before assuming any other in-session term (real incident: "COT" was meant as Table of Contents, misread as Chain-of-Thought).
 
 ## Internal Links (Wikilinks)
 
@@ -79,7 +85,9 @@ Place the TOC immediately after the top-level `# Heading`, before the body conte
 >
 > Before emitting a `[[link]]`, verify the note exists — Glob/search the vault for the bare basename (and any frontmatter `aliases`) first. This is a behavioral check, not a scripted gate. If the vault is not accessible in your current context, default to the plain-text `**Target**` form rather than guessing.
 >
-> **Exempt:** same-note `[[#Heading]]`, `[[#^block]]`, and same-note Table-of-Contents links always resolve and are exempt from this rule.
+> **Exempt:** same-note `[[#Heading]]`, `[[#^block]]`, and same-note Table-of-Contents links are exempt from the existence rule **at write time**. After multi-round edits of a long note, re-verify them before declaring done — heading text drifts and silently breaks anchors; a cheap check is diffing the heading set against the `[[#…]]` target set.
+>
+> **Three-way rule for research-style notes:** in-vault note → `[[wikilink]]`; external URL → `[text](url)`; external tool/brand/product name in prose → `**bold**`, no link.
 
 Define a block ID by appending `^block-id` to any paragraph:
 
@@ -123,6 +131,8 @@ See [EMBEDS.md](references/EMBEDS.md) for audio, video, search embeds, and exter
 ```
 
 Common types: `note`, `tip`, `warning`, `info`, `example`, `quote`, `bug`, `danger`, `success`, `failure`, `question`, `abstract`, `todo`.
+
+Pick the type by the sentence's job and keep one role per type within a note — e.g. `abstract` = TL;DR, `warning` = caveat, `tip` = how-to, `success` = delivery summary, `question` = open items — rather than defaulting everything to `note`/`info`.
 
 See [CALLOUTS.md](references/CALLOUTS.md) for the full list with aliases, nesting, and custom CSS callouts.
 
@@ -182,6 +192,8 @@ Write inline (without invoking the visualizer) only when **all** of the followin
 - ≤ 6 nodes, no subgraphs
 - Special characters (`"`, `()`, `#`) in labels have already been substituted per Rule 6 of mermaid-quirks — `()` → `「」`, `"` → `『』`, `#` → `&#35;`
 - Already read [mermaid-quirks.md](references/mermaid-quirks.md) and the pre-flight checklist is complete
+
+When a note carries multiple diagrams, **reuse one semantic `classDef` palette across all of them** (same role → same colour note-wide) instead of inventing colours per diagram.
 
 ### Obsidian-note links in Mermaid
 

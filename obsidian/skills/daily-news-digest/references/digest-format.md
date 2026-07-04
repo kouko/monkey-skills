@@ -1,6 +1,6 @@
 # Digest Format Reference
 
-> Loaded at STEP 6 (writing the digest) — do NOT load earlier. This file holds
+> Loaded at STEP 8 (writing the digest) — do NOT load earlier. This file holds
 > the output template, the link-presentation rules, and the Mermaid house style.
 > Keeping it out of SKILL.md's always-loaded body is deliberate.
 
@@ -188,7 +188,7 @@ flowchart LR
 
 <可選:Mermaid 因果鏈/時間線/一因多果——見 §Mermaid 房規>
 
-<演進型故事(地緣/油價/利率/指數軌跡)才加,見 SKILL STEP 3.5;一次性/前瞻事件略過>
+<演進型故事(地緣/油價/利率/指數軌跡)才加,見 SKILL STEP 5;一次性/前瞻事件略過>
 
 #### <動態標題,描述實際軌跡——例:油價三個月 104 跌破 80 / 日經過山車 創高再修正 / 升息路徑 到31年高位。不要用固定的「事件進程」字樣>
 

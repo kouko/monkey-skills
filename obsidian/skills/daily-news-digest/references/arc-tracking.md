@@ -89,9 +89,9 @@ Body — two fixed sections, plus one optional:
   view (price target, rate call, year-end forecast), append it here
   with its horizon so stale calls are visible.
 
-## Daily integration (runs inside STEP 3.5)
+## Daily integration (runs inside STEP 5)
 
-0. **Instantiate starters** — create every §Starter-books entry whose
+1. **Instantiate starters** — create every §Starter-books entry whose
    `concept` is missing from `news/arcs/` (ALL 16 of them, matched or
    not — unmatched starters are created empty). Filename = `Arc -
    <Title column text verbatim>`. **Copy the table's Seed-keywords and
@@ -101,27 +101,27 @@ Body — two fixed sections, plus one optional:
    `| 日期 | WTI | Brent |`）. This runs before matching, on every run,
    unconditionally — "I only created the books today's stories matched"
    is a known failure mode; the step-6 gate counts it.
-1. **Load the registry** — read frontmatter of every `news/arcs/*.md`
+2. **Load the registry** — read frontmatter of every `news/arcs/*.md`
    (grep/head is enough; do NOT read bodies of unmatched books).
-2. **Match** each of today's stories against the `keywords` of
+3. **Match** each of today's stories against the `keywords` of
    non-`closed` books. A story may update more than one topic book when
    it genuinely spans them (one milestone line each). `paused` books:
    never append; note the match in the report only.
-3. **Update** each matched active book: append milestone line + number
+4. **Update** each matched active book: append milestone line + number
    rows (+ house-view rows); bump `last_updated`. When the digest's own
    Event Arc subsection needs history, use the book's 里程碑/數字表
    first — `collect_history.py` is the fallback for gaps and for
    backfilling a newly-opened book.
-4. **Open** a new `kind: event` book ONLY when the arc sweep flags a
+5. **Open** a new `kind: event` book ONLY when the arc sweep flags a
    multi-week arc that matches NO existing book — meaning: **the story
    shares zero keywords with every existing book**. Any keyword overlap
    (e.g. an HBM story vs the AI 與半導體 book's `HBM` keyword) = update
    that existing book instead; if you believe the story still deserves a
-   dedicated book, PROPOSE it in the STEP 7 report for the user to
+   dedicated book, PROPOSE it in the STEP 9 report for the user to
    approve — never auto-create over an overlap. Give a legitimately new
    book canonical multi-language keywords and one frontmatter `notes:`
    line stating the multi-week justification.
-5. **THE GATE — run `arc_check.py` after the digest is written
+6. **THE GATE — run `arc_check.py` after the digest is written
    (machine-check, exit code decides; do not skip, do not paraphrase):**
    ```bash
    python3 "$SKILL_DIR/scripts/arc_check.py" "$VAULT_ROOT" <YYYY-MM-DD> \
@@ -135,21 +135,21 @@ Body — two fixed sections, plus one optional:
    code non-zero = fix the listed items in THIS run and re-run until
    `ALL PASS ✓`.** Paste the final output verbatim into your report —
    never summarize it as "passed" without the output.
-6. **Report** (STEP 7): books updated (count), event books newly opened
+7. **Report** (STEP 9): books updated (count), event books newly opened
    (list), and any `kind: event` book idle > 14 days → suggest `closed` —
    when suggesting (or executing) a close, also remind the user: a
    closed event book's timeline is ready-made distillation material for
    `wiki-ingest` (manual handoff; this skill never writes to wiki/).
    `kind: topic` books are standing: never auto-flagged, never
    auto-closed. **The report is post-hoc, never an approval gate**: all
-   creation and updating in steps 1–4 happens immediately and
+   creation and updating in steps 1–5 happens immediately and
    unconditionally during THIS run — do NOT ask permission first, do NOT
    defer creation to a future run. The user's veto is conversational and
    after the fact（「Y 不用追」→ close/delete the already-created book）.
 
 ## Arc sweep table + red flags
 
-Fill for EVERY story before moving to STEP 4 — leaving a row blank is
+Fill for EVERY story before moving to STEP 6 — leaving a row blank is
 itself a decision that must be made explicitly:
 
 | # | Story title | Multi-week arc? | Matched book / new book / skip |
@@ -178,7 +178,7 @@ identity of each book. Everything else localizes at creation time:
   actually present in the vault's sources**: sample **~30 titles; any
   language appearing in ≥10% of the sample gets keyword coverage**. The
   sampling happens once, at first-run starter-book creation (inside
-  STEP 3.5): use today's manifest `candidates` titles; if fewer than 30,
+  STEP 5): use today's manifest `candidates` titles; if fewer than 30,
   top up from recent `references/` filenames (glob, newest first) until
   ~30 or the vault is exhausted. (The zh/en/ja mix below reflects a
   zh-TW-primary vault consuming EN+JA media.) Worked example for an
