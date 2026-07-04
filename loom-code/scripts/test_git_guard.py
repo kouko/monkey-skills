@@ -44,6 +44,7 @@ from pathlib import Path
 import pytest
 
 HOOK = Path(__file__).resolve().parent.parent / "hooks" / "git-guard.py"
+MARKERS_CLI = Path(__file__).resolve().parent / "loom_gate_markers.py"
 
 
 def _iso_env(extra=None):
@@ -111,9 +112,9 @@ def loom_dir(repo_path):
     return d
 
 
-def write_review_pass(repo_path, sha=None, verdict="PASS"):
+def write_review_pass(repo_path, sha=None, verdict="PASS", schema=1):
     (loom_dir(repo_path) / "review-pass.json").write_text(json.dumps({
-        "schema": 1,
+        "schema": schema,
         "branch": "feat/x",
         "head_sha": sha or head_sha(repo_path),
         "verdict": verdict,
@@ -121,18 +122,18 @@ def write_review_pass(repo_path, sha=None, verdict="PASS"):
     }))
 
 
-def write_verified(repo_path, sha=None):
+def write_verified(repo_path, sha=None, schema=1):
     (loom_dir(repo_path) / "verified.json").write_text(json.dumps({
-        "schema": 1,
+        "schema": schema,
         "head_sha": sha or head_sha(repo_path),
         "suite_line": "42 passed in 1.00s",
         "written_at": "2026-07-04T00:00:00+08:00",
     }))
 
 
-def write_waiver(repo_path, reason="user waived"):
+def write_waiver(repo_path, reason="user waived", schema=1):
     (loom_dir(repo_path) / "waiver.json").write_text(json.dumps({
-        "schema": 1,
+        "schema": schema,
         "scope": "push",
         "reason": reason,
         "written_at": "2026-07-04T00:00:00+08:00",
@@ -314,6 +315,32 @@ def test_push_blocked_stale_verified_sha(repo):
     assert res.returncode == 2
 
 
+# --- schema field is validated on every marker -------------------------------
+
+
+def test_push_blocked_wrong_schema_review(repo):
+    write_review_pass(repo, schema=2)
+    write_verified(repo)
+    res = run_hook(bash_event("git push", cwd=repo))
+    assert res.returncode == 2
+
+
+def test_push_blocked_wrong_schema_verified(repo):
+    write_review_pass(repo)
+    write_verified(repo, schema=2)
+    res = run_hook(bash_event("git push", cwd=repo))
+    assert res.returncode == 2
+
+
+def test_waiver_wrong_schema_ignored(repo):
+    # Invalid waiver is IGNORED (not honored, not consumed): the marker
+    # gates apply and the file stays for a human to inspect.
+    write_waiver(repo, reason="bad schema waiver", schema=2)
+    res = run_hook(bash_event("git push", cwd=repo))
+    assert res.returncode == 2
+    assert (repo / ".git" / "loom" / "waiver.json").exists()
+
+
 # --- matrix row 4e: fresh markers allow the push ----------------------------
 
 
@@ -322,6 +349,35 @@ def test_push_allowed_with_fresh_markers(repo):
     write_verified(repo)
     res = run_hook(bash_event("git push origin feat/x", cwd=repo))
     assert res.returncode == 0
+
+
+def test_e2e_markers_cli_to_hook_allows_push(repo, tmp_path):
+    # Seam test: markers minted by the REAL loom_gate_markers.py CLI
+    # (not hand-written fixtures) must satisfy the hook — pins the two
+    # sides of the frozen marker contract together so neither can
+    # drift alone.
+    verdict_file = tmp_path / "verdict.txt"
+    verdict_file.write_text(
+        "standards_version: v1\n"
+        "verdict: PASS\n"
+        "dimension_scores:\n"
+        "  security: green\n"
+    )
+    mint_review = subprocess.run(
+        [sys.executable, str(MARKERS_CLI), "review-pass",
+         "--repo", str(repo), "--verdict-file", str(verdict_file)],
+        capture_output=True, text=True, env=_iso_env(),
+    )
+    assert mint_review.returncode == 0, mint_review.stderr
+    mint_verified = subprocess.run(
+        [sys.executable, str(MARKERS_CLI), "verified",
+         "--repo", str(repo), "--suite-line", "12 passed in 0.30s"],
+        capture_output=True, text=True, env=_iso_env(),
+    )
+    assert mint_verified.returncode == 0, mint_verified.stderr
+
+    res = run_hook(bash_event("git push", cwd=repo))
+    assert res.returncode == 0, res.stderr
 
 
 # --- push-family variants ----------------------------------------------------
@@ -356,6 +412,41 @@ def test_git_dash_c_push_resolves_c_path_repo(repo, tmp_path_factory):
     assert res.returncode == 2
 
 
+def test_git_dir_flag_push_blocked(repo, tmp_path_factory):
+    # --git-dir takes a value: the value must not be mistaken for the
+    # subcommand (which would let push slip through ungated), and the
+    # gate must resolve the --git-dir repo even from a non-repo cwd.
+    elsewhere = tmp_path_factory.mktemp("gd-not-a-repo")
+    res = run_hook(
+        bash_event(f"git --git-dir {repo}/.git push", cwd=elsewhere))
+    assert res.returncode == 2
+
+
+def test_git_dir_equals_form_push_blocked(repo, tmp_path_factory):
+    elsewhere = tmp_path_factory.mktemp("gdeq-not-a-repo")
+    res = run_hook(
+        bash_event(f"git --git-dir={repo}/.git push", cwd=elsewhere))
+    assert res.returncode == 2
+
+
+def test_namespace_flag_push_blocked(repo):
+    # --namespace takes a value (real git accepts this shape): the
+    # value must not eat the subcommand and let push slip through.
+    res = run_hook(bash_event("git --namespace foo push", cwd=repo))
+    assert res.returncode == 2
+
+
+def test_bogus_git_dir_push_allowed_fail_open(repo, tmp_path_factory):
+    # Pin of ACTUAL behavior: a nonexistent --git-dir makes rev-parse
+    # fail (exit 128), so the gate takes the not-a-repo path and
+    # ALLOWS. Safe fail-open — the push itself fails identically
+    # against the same bogus --git-dir, so nothing reaches a remote.
+    elsewhere = tmp_path_factory.mktemp("bogus-gd-cwd")
+    res = run_hook(bash_event(
+        "git --git-dir /nonexistent/nowhere/.git push", cwd=elsewhere))
+    assert res.returncode == 0
+
+
 def test_compound_command_segment_detected(repo):
     res = run_hook(bash_event("echo hi && git push", cwd=repo))
     assert res.returncode == 2
@@ -376,6 +467,16 @@ def test_single_ampersand_background_segment_detected(repo):
 def test_quoted_git_push_in_echo_not_matched(repo):
     res = run_hook(bash_event('echo "git push"', cwd=repo))
     assert res.returncode == 0
+
+
+def test_heredoc_git_push_line_fail_closed(repo):
+    # Accepted fail-closed limitation (documented in the hook's module
+    # docstring): newline-splitting treats heredoc body lines as
+    # segments, so a body line starting `git push` trips the gate even
+    # though it is only data. Pinned so the behavior is explicit.
+    cmd = "cat <<'EOF' > notes.txt\ngit push\nEOF"
+    res = run_hook(bash_event(cmd, cwd=repo))
+    assert res.returncode == 2
 
 
 def test_cwd_absent_falls_back_to_process_cwd(repo):

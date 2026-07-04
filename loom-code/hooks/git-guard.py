@@ -10,9 +10,14 @@ blocks two families of gate bypass:
    only) — pre-commit hooks are load-bearing; the flag is refused
    outright.
 2. Push-family commands — ``git push`` (any argv shape, incl.
-   ``git -C <path> push``), ``gh pr create``, ``gh pr merge`` — which
-   require fresh markers under ``<git-dir>/loom/`` (git-dir resolved
-   via ``git rev-parse --git-dir``, so linked worktrees work):
+   ``git -C <path> push`` and ``git --git-dir <path> push``),
+   ``gh pr create``, ``gh pr merge`` — which require fresh markers
+   under ``<git-dir>/loom/`` (git-dir resolved via ``git rev-parse
+   --git-dir``, so linked worktrees work; an explicit ``--git-dir`` /
+   ``--work-tree`` global flag — both ``--flag value`` and
+   ``--flag=value`` forms — is skipped when locating the subcommand,
+   and ``--git-dir`` is forwarded to the resolution so the gate reads
+   the same repo the push would hit):
 
    - ``review-pass.json`` — verdict PASS / PASS_WITH_NOTES pinned to
      the current HEAD sha (written after
@@ -20,6 +25,11 @@ blocks two families of gate bypass:
    - ``verified.json`` — package-level-suite-green marker pinned to
      the current HEAD sha (written after
      loom-code:verification-before-completion).
+
+   All markers (incl. the waiver) must carry ``"schema": 1``; any
+   other value makes the marker invalid — the two gate markers then
+   block, and an invalid waiver is ignored (not honored, not
+   consumed), the marker gates applying instead.
 
    A one-shot ``waiver.json`` (scope: push) bypasses both marker
    checks exactly once. The guard unlinks it BEFORE honoring it —
@@ -31,7 +41,10 @@ blocks two families of gate bypass:
 Escape hatches / fail-open behavior: ``LOOM_CODE_MODE=off`` disables
 the guard; non-Bash tools, non-git/gh segments, ``git push
 --dry-run`` (and its ``-n`` short form — push's ``-n`` IS dry-run,
-unlike commit's), and a cwd outside any git repo are allowed; malformed
+unlike commit's), and a cwd outside any git repo are allowed — the
+latter includes a bogus ``--git-dir`` (rev-parse fails → not-a-repo
+path → ALLOW; safe, because the push itself fails identically against
+the same bogus path, so nothing reaches a remote); malformed
 stdin or any internal error fails OPEN (exit 0 with a stderr note) —
 the guard must never take the session down with it.
 
@@ -41,7 +54,10 @@ in Claude Code — then tokenizes each segment with shlex (naive
 whitespace split on shlex errors) and matches on the first
 non-env-assignment token — word-boundary, not substring, so
 ``echo "git push"`` does not trigger. Quoted separators inside strings
-are an accepted limitation.
+are an accepted limitation, and so are heredocs: a heredoc BODY line
+beginning ``git push`` is newline-split into a segment and gated — a
+false positive we accept because it fails CLOSED (an over-block the
+model can rephrase around, never an under-block).
 
 Exit codes follow the PreToolUse contract: 0 = allow, 2 = block
 (stderr shown to the model). Stdlib only.
@@ -90,32 +106,54 @@ def _tokens(segment):
 
 
 def _parse_git(tokens):
-    """Split a ``git ...`` argv into (subcommand, sub_args, -C path)."""
+    """Split a ``git ...`` argv into (subcommand, sub_args, -C path,
+    --git-dir path).
+
+    Value-taking global flags (-C / -c / --git-dir / --work-tree /
+    --namespace / --config-env / --attr-source, in both
+    ``--flag value`` and ``--flag=value`` forms) are skipped so their
+    VALUES are never mistaken for the subcommand. The ``=`` forms are
+    single tokens, so all but ``--git-dir=`` (whose value we capture)
+    fall through to the generic ``-``-prefix skip.
+    """
     c_path = None
+    git_dir = None
     i = 1
     while i < len(tokens):
         tok = tokens[i]
         if tok == "-C" and i + 1 < len(tokens):
             c_path = tokens[i + 1]
             i += 2
-        elif tok == "-c" and i + 1 < len(tokens):
+        elif tok == "--git-dir" and i + 1 < len(tokens):
+            git_dir = tokens[i + 1]
+            i += 2
+        elif tok.startswith("--git-dir="):
+            git_dir = tok.split("=", 1)[1]
+            i += 1
+        elif (
+            tok in ("-c", "--work-tree", "--namespace",
+                    "--config-env", "--attr-source")
+            and i + 1 < len(tokens)
+        ):
             i += 2
         elif tok.startswith("-"):
             i += 1
         else:
-            return tok, tokens[i + 1:], c_path
-    return None, [], c_path
+            return tok, tokens[i + 1:], c_path, git_dir
+    return None, [], c_path, git_dir
 
 
-def _git(args, cwd):
+def _git(args, cwd, git_globals=()):
     return subprocess.run(
-        ["git", "-C", cwd, *args], capture_output=True, text=True
+        ["git", "-C", cwd, *git_globals, *args],
+        capture_output=True,
+        text=True,
     )
 
 
-def _loom_dir(cwd):
+def _loom_dir(cwd, git_globals=()):
     """Path to <git-dir>/loom, or None when cwd is not inside a repo."""
-    res = _git(["rev-parse", "--git-dir"], cwd)
+    res = _git(["rev-parse", "--git-dir"], cwd, git_globals)
     if res.returncode != 0:
         return None
     git_dir = res.stdout.strip()
@@ -124,8 +162,8 @@ def _loom_dir(cwd):
     return os.path.join(git_dir, "loom")
 
 
-def _head(cwd):
-    res = _git(["rev-parse", "HEAD"], cwd)
+def _head(cwd, git_globals=()):
+    res = _git(["rev-parse", "HEAD"], cwd, git_globals)
     return res.stdout.strip() if res.returncode == 0 else None
 
 
@@ -148,15 +186,15 @@ def _has_no_verify(args):
     return False
 
 
-def _gate_push(cwd):
+def _gate_push(cwd, git_globals=()):
     """Marker gate for one push-family segment → (exit_code, stderr_notes)."""
     notes = []
-    loom = _loom_dir(cwd)
+    loom = _loom_dir(cwd, git_globals)
     if loom is None:
         return 0, notes  # not a git repo — nothing to gate
     waiver_path = os.path.join(loom, "waiver.json")
-    if os.path.exists(waiver_path):
-        waiver = _load_json(waiver_path) or {}
+    waiver = _load_json(waiver_path)
+    if waiver is not None and waiver.get("schema") == 1:
         reason = str(waiver.get("reason", "no reason recorded"))
         # Unlink FIRST: a waiver only counts once it is provably consumed.
         try:
@@ -170,10 +208,16 @@ def _gate_push(cwd):
             )
         else:
             return 0, [f"loom gate: waiver consumed ({reason})"]
-    head = _head(cwd)
+    elif os.path.exists(waiver_path):
+        notes.append(
+            "loom gate: waiver.json is invalid (unparseable or wrong/"
+            "missing schema) — ignored; the marker gates apply"
+        )
+    head = _head(cwd, git_globals)
     review = _load_json(os.path.join(loom, "review-pass.json"))
     if (
         review is None
+        or review.get("schema") != 1
         or review.get("verdict") not in REVIEW_VERDICTS
         or head is None
         or review.get("head_sha") != head
@@ -181,7 +225,11 @@ def _gate_push(cwd):
         notes.append(MSG_REVIEW)
         return 2, notes
     verified = _load_json(os.path.join(loom, "verified.json"))
-    if verified is None or verified.get("head_sha") != head:
+    if (
+        verified is None
+        or verified.get("schema") != 1
+        or verified.get("head_sha") != head
+    ):
         notes.append(MSG_VERIFIED)
         return 2, notes
     return 0, notes
@@ -211,8 +259,9 @@ def main():
         if not toks:
             continue
         gate_cwd = None
+        gate_globals = ()
         if toks[0] == "git":
-            sub, args, c_path = _parse_git(toks)
+            sub, args, c_path, git_dir = _parse_git(toks)
             if sub == "commit" and _has_no_verify(args):
                 print(MSG_NO_VERIFY, file=sys.stderr)
                 return 2
@@ -225,6 +274,14 @@ def main():
                         if os.path.isabs(c_path)
                         else os.path.join(cwd, c_path)
                     )
+                if git_dir:
+                    # Forward --git-dir so the gate resolves the same
+                    # repo the push itself would hit (relative paths
+                    # resolve against the effective cwd, like git's own
+                    # -C-then---git-dir ordering).
+                    if not os.path.isabs(git_dir):
+                        git_dir = os.path.join(gate_cwd, git_dir)
+                    gate_globals = ("--git-dir", git_dir)
         elif (
             toks[0] == "gh"
             and len(toks) >= 3
@@ -233,7 +290,7 @@ def main():
         ):
             gate_cwd = cwd
         if gate_cwd is not None:
-            code, notes = _gate_push(gate_cwd)
+            code, notes = _gate_push(gate_cwd, gate_globals)
             for note in notes:
                 print(note, file=sys.stderr)
             if code != 0:

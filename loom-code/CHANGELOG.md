@@ -20,7 +20,7 @@ Versioning: [Semantic Versioning](https://semver.org/).
   hook for fatigue/timeout safety); honors a ONE-SHOT `.git/loom/waiver.json`
   (consumed atomically, fail-closed when undeletable). `git push --dry-run`/`-n`
   exempt; non-git cwd and `LOOM_CODE_MODE=off` pass through; malformed hook
-  input fails open with a stderr note. 28 tests.
+  input fails open with a stderr note. 41 tests.
 - **`scripts/loom_gate_markers.py`** (new CLI) — the only sanctioned marker
   writer: `review-pass --verdict-file` schema-validates the reviewer's verdict
   text BEFORE minting (NEEDS_REVISION exit 3 / malformed exit 4 — a failed or
