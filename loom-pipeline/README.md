@@ -34,6 +34,40 @@ Judgment stays in the four station plugins (cross-plugin delegation
 contract, repo `CLAUDE.md`); this plugin only orchestrates and
 records.
 
+## Execution flow
+
+Three `Workflow` invocations — one per segment, never one call for the
+whole run — carry the four station plugins in order (principles →
+interface-design → spec → code); the human gates (a)–(d) sit around
+them:
+
+```mermaid
+flowchart TD
+    RH["SessionStart reception hook<br/>hooks/family-reception.md"] -.->|awareness only, never auto-opens| CON
+    INV["Explicit invocation<br/>'run the loom pipeline'"] --> CON
+    CON["using-loom-pipeline conductor<br/>collects the 6-field run-input contract"]
+    CON --> GAC["Gate (a) change-id minting<br/>Gate (c) cost policy"]
+    GAC --> SEG1
+    subgraph SEG1["Workflow segment 1 - Principles + Design"]
+        PP["loom-product-principles<br/>PRINCIPLES.md"] --> IXD["loom-interface-design<br/>DESIGN.md + ui-flows.md + design-critic"]
+    end
+    SEG1 --> GC2["Gate (c) cost policy"] --> SEG2
+    subgraph SEG2["Workflow segment 2 - Spec"]
+        SPC["loom-spec<br/>spec-expansion + completeness-critic + validator gate"]
+    end
+    SEG2 --> GC3["Gate (c) cost policy"] --> SEG3
+    subgraph SEG3["Workflow segment 3 - Code"]
+        CODE["loom-code<br/>SDD build + whole-branch review + ui-verification"]
+    end
+    SEG3 --> GD["Gate (d) final merge<br/>output: PR branches + run ledger, human merges"]
+    GB["Gate (b) product forks<br/>any segment, briefed to the human"] -.- SEG1 & SEG2 & SEG3
+```
+
+Each segment delegates all judgment (drafts, critic panels, verdicts,
+validator/review gates) to its station plugin; the on-ramp criteria the
+reception hook injects live in `hooks/family-reception.md` (the SSOT),
+not here.
+
 ## Install + requirements
 
 Install from the monkey-skills marketplace like any other plugin.
@@ -135,8 +169,9 @@ to a cheaper tier; a single anecdotal run is not sufficient evidence.
 
 ## Batch mode (v1.1)
 
-A queue of **FROZEN** change-folders (loom-spec validator exit-0 +
-plan written) feeds an unattended segment-3 loop, one queued item at a
+A queue of **FROZEN** changes (change-folder form: loom-spec validator
+exit-0; or brief+plan form: reviewer-PASSed plan — plan committed
+either way) feeds an unattended segment-3 loop, one queued item at a
 time, each in its own worktree/branch with its own pre-authorized
 budget. Explicitly **time-agnostic** — no scheduler required; it runs
 whenever invoked, foreground or background. Human gates move to
