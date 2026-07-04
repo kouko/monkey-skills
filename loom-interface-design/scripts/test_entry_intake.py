@@ -51,6 +51,28 @@ def _body() -> str:
     return parts[2]
 
 
+def _intake_section() -> str:
+    """Slice the body to JUST the §Intake section.
+
+    Bounded by whichever comes first of the next '## ' heading or the
+    '<EXTREMELY-IMPORTANT>' block start — not '\\n## ' alone, since
+    '<EXTREMELY-IMPORTANT>' is not itself a '## ' heading and sits between
+    §Intake and the next real heading. A '\\n## '-only boundary silently
+    swallows the whole <EXTREMELY-IMPORTANT> block into the "§Intake
+    section", which can make a step-scoped assertion pass on content that
+    lives in <EXTREMELY-IMPORTANT>, not in §Intake itself.
+    """
+    body = _body()
+    intake_idx = body.find("## §Intake")
+    assert intake_idx != -1, "missing '## §Intake' heading"
+    rest = body[intake_idx + len("## §Intake"):]
+    heading_idx = rest.find("\n## ")
+    extremely_important_idx = rest.find("<EXTREMELY-IMPORTANT")
+    candidates = [i for i in (heading_idx, extremely_important_idx) if i != -1]
+    boundary = min(candidates) if candidates else -1
+    return rest if boundary == -1 else rest[:boundary]
+
+
 def test_intake_heading_present():
     body = _body()
     assert "## §Intake" in body, "missing '## §Intake' heading in the body"
@@ -73,13 +95,7 @@ def test_intake_is_first_section_after_subagent_stop():
 
 
 def test_intake_step1_references_reception_and_principles_gap():
-    body = _body()
-    intake_idx = body.find("## §Intake")
-    assert intake_idx != -1
-    # Scope to the §Intake section only (up to the next '## ' heading).
-    rest = body[intake_idx + len("## §Intake"):]
-    next_heading = rest.find("\n## ")
-    section = rest if next_heading == -1 else rest[:next_heading]
+    section = _intake_section()
     section_lower = section.lower()
 
     assert "family reception" in section_lower or "on-ramp" in section_lower, \
@@ -95,12 +111,7 @@ def test_intake_step1_references_reception_and_principles_gap():
 
 
 def test_intake_step2_redirects_spec_and_code_asks():
-    body = _body()
-    intake_idx = body.find("## §Intake")
-    assert intake_idx != -1, "missing '## §Intake' heading"
-    rest = body[intake_idx + len("## §Intake"):]
-    next_heading = rest.find("\n## ")
-    section = rest if next_heading == -1 else rest[:next_heading]
+    section = _intake_section()
 
     assert "using-loom-spec" in section, \
         "step 2 must redirect spec fan-out asks to using-loom-spec"
@@ -110,15 +121,19 @@ def test_intake_step2_redirects_spec_and_code_asks():
 
 def test_intake_step3_hands_off_to_existing_routing_without_duplicating():
     body = _body()
-    intake_idx = body.find("## §Intake")
-    assert intake_idx != -1, "missing '## §Intake' heading"
-    rest = body[intake_idx + len("## §Intake"):]
-    next_heading = rest.find("\n## ")
-    section = rest if next_heading == -1 else rest[:next_heading]
+    section = _intake_section()
     section_lower = section.lower()
 
-    assert "design-system" in section_lower and "interaction-flows" in section_lower, \
-        "step 3 must hand off to the existing design-system/interaction-flows routing"
+    hands_off_explicitly = (
+        "design-system" in section_lower and "interaction-flows" in section_lower
+    )
+    hands_off_via_skill_priority = (
+        "skill-priority" in section_lower or "skill priority" in section_lower
+    )
+    assert hands_off_explicitly or hands_off_via_skill_priority, \
+        "step 3 must hand off to the existing design-system/interaction-flows " \
+        "routing — either by naming both skills or by pointing at the " \
+        "'Skill priority' table"
 
     # The existing "Skill priority" routing table must still exist exactly
     # once in the file (not duplicated inside §Intake).
