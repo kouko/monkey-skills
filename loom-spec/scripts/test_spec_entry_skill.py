@@ -85,9 +85,27 @@ def test_intake_step1_upstream_check_references_reception_ssot():
 
 
 def test_intake_step2_peer_check_present():
-    low = _text().lower()
-    assert "對站檢查" in _text() or "step 2" in low, \
+    """Section-scoped: mirrors loom-interface-design's test_entry_intake.py
+    (scope to the §Intake body, up to the next '## ' heading) so this test
+    can actually fail on a regression — the prior version only grepped the
+    whole file for '對站檢查'/'step 2', which stayed green even if step 2's
+    redirect-target names were dropped (found during C1's quality review)."""
+    text = _text()
+    intake_idx = text.find("## §Intake")
+    assert intake_idx != -1, "missing '## §Intake' heading"
+    rest = text[intake_idx + len("## §Intake"):]
+    next_heading = rest.find("\n## ")
+    section = rest if next_heading == -1 else rest[:next_heading]
+    low = section.lower()
+
+    assert "對站檢查" in section or "step 2" in low, \
         "§Intake step 2 (對站檢查) must be present"
+    assert "using-loom-interface-design" in section, \
+        "step 2 must redirect UI/UX design asks to using-loom-interface-design"
+    assert "using-loom-product-principles" in section, \
+        "step 2 must redirect product-constitution asks to using-loom-product-principles"
+    assert "using-loom-code" in section, \
+        "step 2 must redirect implementation/code asks to using-loom-code"
 
 
 def test_intake_step3_names_both_members_and_disambiguates():
