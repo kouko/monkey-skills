@@ -6,7 +6,7 @@
   "plugins": [
     {
       "name": "briefing-toolkit",
-      "description": "Daily read-only morning brief over connected MCP tools (Slack/Asana/Notion; Claude Code CLI only).",
+      "description": "Daily read-only morning brief over connected MCP tools (Slack/Asana/Notion; needs interactively-authenticated MCP connections).",
       "source": "./briefing-toolkit/"
     },
     {
