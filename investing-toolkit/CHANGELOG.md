@@ -26,6 +26,14 @@ shipping a full Codex manifest — same class of bug already fixed for
 `briefing-toolkit` on this branch. Dropped the false host-restriction
 claim from all three copies.
 
+### Fixed — awkward dispatch sentence (behavioral dogfood follow-up)
+
+A blind cold-reader flagged the peer-discovery dispatch sentence as
+splitting subject from verb with a 30-word parenthetical, and naming
+only Claude Code's agent-type inline. Restructured into two sentences
+naming both hosts' agent-type symmetrically (`general-purpose` /
+`default`).
+
 ## [v2.1.0] — 2026-05-02
 
 `analysis-macro-regime` Phase 1 per-country classifier refactor. Decomposed the v1.9.0 unified IC + Hedgeye GIP classifier into 5 native per-country modules (`classify_us / jp / tw / kr / cn`). See [ADR-0004](docs/adr/0004-analysis-macro-regime-phase1-per-country-classifiers.md) for design rationale + Phase 2 deferral.
