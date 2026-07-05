@@ -3,8 +3,10 @@
 A single shared catalog of harness / dcg (dangerous-command-guard)
 friction points mined from real high-friction sessions. Pointed at by
 `subagent-driven-development`, `tdd-iron-law`,
-`finishing-a-development-branch`, and `using-git-worktrees` so each can
-defer the detail here instead of restating it.
+`finishing-a-development-branch`, `using-git-worktrees`,
+`using-loom-code`, `requesting-code-review`,
+`dispatching-parallel-agents`, and `writing-plans` so each can defer
+the detail here instead of restating it.
 
 Read this when a Bash or Edit/Write call fails for a reason that looks
 like the harness, not your code.
@@ -60,6 +62,30 @@ your last tracked Read, so `Write` reports
 - Don't: resolve a rebase conflict with Bash `cat` + `Write`.
 - Do: resolve it with the `Read` tool (re-read the conflicted file),
   then `Edit`.
+
+## A1 — Named `Agent()` dispatch = persistent mailbox teammate
+
+**Why:** Adding `name:` to an `Agent({subagent_type: "loom-code:..."})`
+call turns it from a one-shot, auto-returning blocking call into a
+persistent, addressable "teammate" running on mailbox semantics. Its
+plain assistant-text output is never delivered anywhere — only an
+explicit `SendMessage` call transmits it. The dispatching turn then
+sees nothing but content-free `idle_notification` heartbeats, even
+when the agent finished its work correctly (confirmed post-hoc by
+reading the subagent's own transcript). `description:` is unrelated —
+the host's `Agent` tool requires it on every call (it has no effect on
+mailbox semantics), so it is never optional; do not confuse the two.
+
+- Don't: dispatch `code-reviewer` / `implementer` / `spec-reviewer` /
+  `code-quality-reviewer` / `plan-document-reviewer` with `name:`
+  unless you are prepared to actively poll it via `SendMessage` for
+  the result.
+- Do: dispatch these plugin-level subagents unnamed (`description:`
+  still required, as always) — see [claude-code-tools.md](claude-code-tools.md)
+  §Subagent dispatch for the concrete call shape. Omitting `name` makes
+  the call block and auto-return the agent's final text as the tool
+  result, which is what every loom-code SKILL.md's dispatch instruction
+  assumes.
 
 ## E1 — Renaming an untracked file
 

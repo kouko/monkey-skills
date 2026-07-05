@@ -5,6 +5,69 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.23.1] — 2026-07-04 — named-Agent dispatch gotcha
+
+### Fixed
+
+- **`references/environment-gotchas.md`** — new §A1: adding `name:` to an
+  `Agent({subagent_type: "loom-code:..."})` dispatch call turns a one-shot
+  blocking call into a persistent mailbox-semantics teammate whose
+  plain-text output is never delivered (only an explicit `SendMessage`
+  transmits it) — `description:` is unrelated and always required
+  regardless. Hit in production: a named `code-reviewer` dispatch
+  completed a correct review but the orchestrator only ever saw empty
+  `idle_notification` heartbeats (recorded in monkey-skills memory
+  `feedback_named_agent_dispatch_requires_sendmessage.md`). A single
+  incident was initially judged DROP (no fix) under a recurring-pattern
+  bar, but the failure has an identifiable structural trigger (the `Agent`
+  tool's own naming affordance vs. this plugin's silent unnamed-only
+  assumption) rather than being random noise, and the fix is a one-line
+  doc addition — cheap enough not to wait for a second incident.
+- `requesting-code-review`, `dispatching-parallel-agents`,
+  `subagent-driven-development`, and `writing-plans` SKILL.md — every
+  `Agent()`/evaluator-subagent dispatch site now points at §A1 and states
+  the unnamed requirement inline (`writing-plans`'s `plan-document-reviewer`
+  dispatch was the one site a first pass at this fix missed — caught by
+  whole-branch review before merge). §A1's own header consumer list in
+  `environment-gotchas.md` updated to match.
+- **`references/codex-tools.md`** §Subagent dispatch — upgraded from
+  "Assumed (not exercised)" to **Verified, mixed evidence grain**
+  (2026-07-05): the `multi_agent` feature flag itself is live-confirmed
+  (`codex features list` on a local Codex 0.139.0 install); the exact verb
+  names and behavioral claims below it are doc-confirmed only (OpenAI's
+  official Codex manual + a direct re-fetch/quote-match of
+  `obra/superpowers`'s own `codex-tools.md`), not session-exercised — the
+  file's own §Subagent dispatch banner spells out this breakdown in full.
+  Codex's
+  real subagent primitive is the `multi_agent` feature exposing
+  `spawn_agent`/`wait_agent`/`close_agent` — not the previously-guessed
+  `Agent(subagent_type, prompt)`-shaped call. Documents why §A1's gotcha is
+  structurally Claude-Code-only (Codex's explicit-verb model has no
+  overloaded call for an extra parameter to silently hijack) and flags that
+  loom-code's plugin-bundled `agents/*.md` role-prompts still have no
+  confirmed Codex-native equivalent (open gap). Full survey:
+  `loom-code/research/2026-07-05-claude-code-codex-dual-compat-patterns.md`.
+
+### Changed
+
+- **Host-neutral SKILL.md bodies** (`requesting-code-review`,
+  `dispatching-parallel-agents`, `subagent-driven-development`,
+  `writing-plans`) — removed every literal Claude-Code-specific
+  `Agent({subagent_type: ..., prompt: ...})` call-syntax occurrence from
+  the shared skill text, replacing it with host-neutral prose ("dispatch a
+  `<role>` subagent," a fan-out invariant expressed as pseudocode) plus a
+  pointer to the reader's own host's tool-mapping reference
+  (`claude-code-tools.md` / `codex-tools.md`) for the concrete call shape.
+  Matches the pattern `obra/superpowers` already uses (confirmed via this
+  branch's own research), where the skill body stays host-neutral and all
+  host-specific syntax lives in per-harness reference files. The concrete
+  Claude Code `Agent()` examples (including the parallel-fan-out
+  concurrent-vs-sequential shape previously inline in
+  `dispatching-parallel-agents`) moved to `claude-code-tools.md`;
+  `codex-tools.md` gained a new "Re-binding loom-code's dispatch points
+  onto Codex" section mapping each role to `spawn_agent`/`wait_agent`/
+  `close_agent`.
+
 ## [0.23.0] — 2026-07-04 — **mechanical gates (harness-engineering audit follow-up)**
 
 ### Added
