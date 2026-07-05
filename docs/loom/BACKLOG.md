@@ -113,6 +113,21 @@
   (frontmatter tracks plugin version vs deliberate per-skill semver),
   then either sync or add a drift gate next to the codex-manifest one.
 
+## .claude/hooks ↔ .codex/hooks mirror has no drift gate
+- Status: OPEN
+- Start: third mirrored hook-script pair, or next touch of
+  check-codex-manifest-drift.sh — whichever comes first
+- Origin: PR (this branch) Tasks 6+7 quality review, 2026-07-06 —
+  remind-memory-mirror.sh became the SECOND byte-identical
+  .claude/.codex hook pair (first: validate-skill-folder-structure.sh,
+  since 2026-06-17); nothing enforces identity
+  (check-codex-manifest-drift.sh gates only */plugin.json; loom-code CI
+  pytests .claude/hooks/ only; CLAUDE.md documents the manifest mirror,
+  not the hook-script mirror)
+- What: Rule of Three — at the third pair (or next drift-tooling
+  touch), add a cmp-based identity test or extend the drift hook to
+  cover .claude/hooks/*.sh ↔ .codex/hooks/*.sh.
+
 ## #468 reviewer next-touch nits (loom-code TECH-SPEC + CI)
 - Status: OPEN
 - Start: next loom-code/TECH-SPEC.md touch
@@ -120,7 +135,11 @@
 - What: freshness-checked 2026-07-06 — (a) dimension-count drift STILL
   PRESENT: TECH-SPEC.md:420 `dimension_scores` lists 6 keys and :261
   says "7-dimension scores" for code-reviewer, whose actual contract is
-  10 dimensions (agents/code-reviewer.md description); (b) dual
+  10 dimensions (agents/code-reviewer.md description); the same drift
+  exists INSIDE agents/code-reviewer.md itself (verified 2026-07-06:
+  its line 10 says "7-dimension scores" while its own frontmatter
+  description and findings `dimension` enum say 10), so the fix touch
+  should sweep the agent file too; (b) dual
   path-presentation styles (mixed backtick/plain paths) STILL PRESENT
   in TECH-SPEC.md; (c) loom CI steps sharing one `run:` block appears
   ALREADY FIXED — all four loom-*-ci.yml workflows now run one command
