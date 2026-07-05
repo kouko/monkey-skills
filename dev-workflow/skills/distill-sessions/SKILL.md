@@ -144,7 +144,7 @@ write-back).
         |   merged.json + target SKILL.md         |         |   merged.json + --lang {zh-TW|en|ja}    |
         |   -> docs/skill-mining/<date>-<t>.md    |         |   -> JSON dispatch payload (stdout)     |
         +-----------------------------------------+         |   -> orchestrator dispatches subagent   |
-                              |                             |      at agents/prompt-advisory-analyst.md|
+                              |                             |    at agents/prompt-advisory-analyst.md |
                               |                             |   -> orchestrator writes returned md to |
                               |                             |      docs/skill-mining/<date>-          |
                               |                             |      advisory-report.md                 |
