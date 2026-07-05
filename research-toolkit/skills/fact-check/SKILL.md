@@ -64,6 +64,9 @@ maps onto whatever concurrent-subagent primitive the host agent provides
 (Claude Code, Codex, Cursor, …); binding to one harness's workflow primitive
 would break agent-portability. The three voters are independent (same claim,
 disjoint `voter_idx`, no shared files), exactly the case the fan-out is for.
+For the concrete per-host call shape this resolves to (including the
+Claude-Code-specific "same assistant message" concurrency detail above), see
+`loom-code/skills/using-loom-code/references/{claude-code-tools.md,codex-tools.md}`.
 
 **Independence is a GATE, not a nicety.** The quorum only means something if
 the three votes come from **independent** contexts — separate parallel
