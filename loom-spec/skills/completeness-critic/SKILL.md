@@ -108,7 +108,10 @@ complete source. The loop raises the ceiling *locally*; it never reaches it.
 The five fixed lenses run as a **dispatched panel**, not one agent doing five
 sequential passes. **Dispatch one subagent per lens, each with fresh context** —
 phrase this fan-out portably (like `research-toolkit:deep-research`'s fan-out),
-**not** bound to any one harness/tool, because this skill is agent-portable.
+**not** bound to any one harness/tool, because this skill is agent-portable (see
+[`../using-loom-spec/references/claude-code-tools.md`](../using-loom-spec/references/claude-code-tools.md)
+/ [`codex-tools.md`](../using-loom-spec/references/codex-tools.md) for the
+concrete per-host call shape).
 **Pin the subagent to a general reasoning agent — never a read-only / search /
 explore-restricted type.** Lens-critique is pure design reasoning (it reads the
 draft and reasons about omissions); a search-restricted subagent whose system

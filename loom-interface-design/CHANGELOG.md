@@ -8,6 +8,24 @@ Versioning: [Semantic Versioning](https://semver.org/).
 > This file was reconstructed on 2026-07-02 from the git history — the plugin
 > shipped its first three versions without a CHANGELOG.
 
+## [0.4.1] — 2026-07-05
+
+### Added
+
+- **`using-loom-interface-design/references/claude-code-tools.md`** +
+  **`codex-tools.md`** — `design-critic`'s multi-lens panel already phrased
+  subagent dispatch in host-neutral prose ("dispatch one subagent per
+  lens... not bound to any one harness"), but had zero concrete reference
+  for what that resolves to on either host. Added the same host-neutral
+  skill body + per-host tool-mapping reference pattern `loom-code` uses
+  (`obra/superpowers` is the confirmed prior-art source for this pattern).
+  Codex side documents `multi_agent`/`spawn_agent`/`wait_agent`/
+  `close_agent`, verified 2026-07-05 via `codex features list` on a live
+  Codex 0.139.0 install (feature flag itself live-confirmed) + OpenAI's
+  official Codex manual §Subagents (verb names/behavior doc-confirmed, not
+  independently re-exercised for this plugin's specific dispatch points).
+  `design-critic/SKILL.md`'s panel section now points at both files.
+
 ## [0.4.0] — 2026-07-04
 
 ### Added
