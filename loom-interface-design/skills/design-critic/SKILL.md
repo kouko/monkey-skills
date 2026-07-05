@@ -80,7 +80,10 @@ dispatches (one per lens). Do not blanket re-sweep every round.
 
 The lenses run as a **dispatched panel**, not one agent doing sequential passes.
 **Dispatch one subagent per lens, each with fresh context** — phrase the fan-out
-portably, not bound to any one harness. **Pin each lens-critic to a general
+portably, not bound to any one harness (see
+[`../using-loom-interface-design/references/claude-code-tools.md`](../using-loom-interface-design/references/claude-code-tools.md)
+/ [`codex-tools.md`](../using-loom-interface-design/references/codex-tools.md)
+for the concrete per-host call shape). **Pin each lens-critic to a general
 reasoning agent — never a read-only / search / explore-restricted type**, or a lens
 silently refuses the reasoning role and the panel loses it (a false negative).
 **Fresh context per lens is the mechanism that decorrelates the critics** — each

@@ -5,6 +5,25 @@ All notable changes to the `loom-spec` plugin (formerly `spec-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.4.1] — 2026-07-05
+
+### Added
+
+- **`using-loom-spec/references/claude-code-tools.md`** + **`codex-tools.md`**
+  — `completeness-critic`'s multi-lens panel already phrased subagent
+  dispatch in host-neutral prose ("phrase this fan-out portably... not
+  bound to any one harness/tool, because this skill is agent-portable"),
+  but had zero concrete reference for what that resolves to on either
+  host. Added the same host-neutral skill body + per-host tool-mapping
+  reference pattern `loom-code` uses (`obra/superpowers` is the confirmed
+  prior-art source for this pattern). Codex side documents `multi_agent`/
+  `spawn_agent`/`wait_agent`/`close_agent`, verified 2026-07-05 via `codex
+  features list` on a live Codex 0.139.0 install (feature flag itself
+  live-confirmed) + OpenAI's official Codex manual §Subagents (verb
+  names/behavior doc-confirmed, not independently re-exercised for this
+  plugin's specific dispatch points). `completeness-critic/SKILL.md`'s
+  panel section now points at both files.
+
 ## [0.4.0] — 2026-07-04
 
 ### Added
