@@ -300,4 +300,7 @@ If the router is invoked with no clear signal:
 |--------|---------|------------|
 | `loom-code:dispatching-parallel-agents` | `copywriting-ideation/protocols/{copy-ideation-parallel.md,copy-ideation-advanced.md}` | Concurrent subagent fan-out for the 発散 (divergence) stage. **Previously undeclared** (Codex dispatch-portability survey finding) — if `loom-code` isn't installed, those references dangle; this table makes the dependency explicit, mirroring `domain-teams:code-team`'s own External Plugins table. |
 
-No other cross-plugin delegation is wired in v1.0.0.
+No other cross-plugin **task** delegation is wired in v1.0.0 — the
+`loom-code` row above is a runtime library dependency for dispatch
+mechanics, not a task handoff to a sibling team like the three bullets
+above it.
