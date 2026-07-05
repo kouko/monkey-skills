@@ -18,6 +18,14 @@ Reworded to "dispatch a general-reasoning subagent" and added
 `references/{claude-code-tools.md,codex-tools.md}` mapping
 `general-purpose` onto Codex's `default`/`worker`/`explorer` built-ins.
 
+### Fixed — description self-contradiction
+
+Caught by whole-branch review: `plugin.json` + `.codex-plugin/plugin.json`
++ the root marketplace entry all said "Claude Code CLI only" while
+shipping a full Codex manifest — same class of bug already fixed for
+`briefing-toolkit` on this branch. Dropped the false host-restriction
+claim from all three copies.
+
 ## [v2.1.0] — 2026-05-02
 
 `analysis-macro-regime` Phase 1 per-country classifier refactor. Decomposed the v1.9.0 unified IC + Hedgeye GIP classifier into 5 native per-country modules (`classify_us / jp / tw / kr / cn`). See [ADR-0004](docs/adr/0004-analysis-macro-regime-phase1-per-country-classifiers.md) for design rationale + Phase 2 deferral.
