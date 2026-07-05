@@ -1,6 +1,7 @@
 # Claude Code — tool name reference for `domain-teams`
 
-> Every team's worker/evaluator launch instructions (`skill-team/standards/agent-interface.md`,
+> Every team's worker/evaluator launch instructions
+> (`domain-teams/skills/skill-team/standards/agent-interface.md`,
 > echoed in all 9 team `SKILL.md` files) are written as host-neutral
 > prose — a Resource Paths block, not a literal tool call. This file is
 > the concrete Claude Code call shape that prose resolves to.
@@ -47,8 +48,28 @@ Agent({...sub-question 2...})    # message 2
 ## Detecting "no subagent-spawning capability" (for the fan-out degradation path)
 
 `hook-parallel-fanout.md`'s degraded-mode check ("no subagent-spawning
-capability in the worker's tool set") resolves on Claude Code to: no
-`Agent` tool is present in the current agent's tool list (a plain
-in-context worker invoked without tool access, or a restricted
-subagent type). When `Agent` is absent, fall back to the degraded
-single-agent parallel-I/O path per that hook's own rules.
+capability in the worker's tool set") is a two-part check on Claude
+Code, not a single tool-presence lookup:
+
+1. **Tool present?** Is `Agent` absent from the current agent's tool
+   list (a plain in-context worker invoked without tool access, or a
+   restricted subagent type)? If absent, degrade — this part alone is
+   sound: a tool the agent cannot invoke guarantees the spawn fails.
+2. **Recursion actually permitted?** Tool presence does **not** by
+   itself guarantee a *nested* spawn is allowed — a host can hand a
+   worker the `Agent` tool while still capping recursion depth or
+   forbidding worker-spawns-worker via session/sandbox policy. There is
+   no single introspectable flag for this on Claude Code today.
+   **When you cannot positively confirm recursion is permitted, default
+   to the degraded path and emit the disclosure line** — the same
+   fail-safe Codex gets for free from its explicit
+   feature-flag-plus-profile check below. Treating "tool present" as
+   equivalent to "may recurse" is the asymmetry to avoid: it risks a
+   silent, undetected degradation where the worker believes it achieved
+   true fan-out (and skips the disclosure) but the nested spawn actually
+   no-oped.
+
+Symmetric Codex check: the `multi_agent` feature is disabled
+(`codex features list` shows `multi_agent stable false`), **or** the
+current agent's own `~/.codex/agents/*.toml` profile forbids nested
+spawns — either condition alone is sufficient to degrade.

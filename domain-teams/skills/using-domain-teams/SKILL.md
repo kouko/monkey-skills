@@ -84,7 +84,7 @@ Each team has its own protocols, standards, and evaluation criteria.
 | `worker` | Execute tasks with protocol guidance | sonnet |
 | `evaluator` | Run quality gates | opus |
 
-Launch instructions (`skill-team/standards/agent-interface.md`, echoed
-in every team's `SKILL.md`) are host-neutral prose. For the concrete
-per-host dispatch call, see `references/claude-code-tools.md` /
+Launch instructions (`../skill-team/standards/agent-interface.md`,
+echoed in every team's `SKILL.md`) are host-neutral prose. For the
+concrete per-host dispatch call, see `references/claude-code-tools.md` /
 `references/codex-tools.md`.

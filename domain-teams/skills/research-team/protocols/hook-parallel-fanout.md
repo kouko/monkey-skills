@@ -71,8 +71,11 @@ In some runtime environments the worker itself runs as a subagent
 and cannot spawn further subagents (no subagent-spawning capability
 in the worker's tool set — Claude Code: no `Agent` tool; Codex: the
 `multi_agent` feature disabled or the worker's own agent profile
-forbids nested spawns; see `using-domain-teams/references/{claude-code-tools.md,codex-tools.md}`
-for how to detect this per host). True fan-out — N independent
+forbids nested spawns; see
+`domain-teams/skills/using-domain-teams/references/{claude-code-tools.md,codex-tools.md}`
+for how to detect this per host — including why tool-presence alone
+is not sufficient on Claude Code and the fail-safe default when
+recursion-permission can't be positively confirmed). True fan-out — N independent
 agent processes each with isolated context — is impossible in
 this configuration. The hook degrades rather than aborts:
 
