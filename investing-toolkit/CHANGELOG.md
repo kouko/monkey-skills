@@ -5,6 +5,19 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.1.1] — 2026-07-05
+
+### Fixed — `report-equity-memo` Codex dispatch-portability
+
+Phase 2.5's peer-discovery step named `general-purpose` (a real
+Claude-Code built-in agent-type name) directly in `SKILL.md`, with no
+literal `Agent(...)` syntax but also no per-host reference file (Codex
+dispatch-portability survey finding, `docs/skill-mining/2026-07-05-
+codex-dispatch-portability-survey.md` — classed borderline (A)/(B)).
+Reworded to "dispatch a general-reasoning subagent" and added
+`references/{claude-code-tools.md,codex-tools.md}` mapping
+`general-purpose` onto Codex's `default`/`worker`/`explorer` built-ins.
+
 ## [v2.1.0] — 2026-05-02
 
 `analysis-macro-regime` Phase 1 per-country classifier refactor. Decomposed the v1.9.0 unified IC + Hedgeye GIP classifier into 5 native per-country modules (`classify_us / jp / tw / kr / cn`). See [ADR-0004](docs/adr/0004-analysis-macro-regime-phase1-per-country-classifiers.md) for design rationale + Phase 2 deferral.

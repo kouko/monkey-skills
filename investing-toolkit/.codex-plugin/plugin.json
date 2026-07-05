@@ -1,6 +1,6 @@
 {
   "name": "investing-toolkit",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Three-layer investing research toolkit — data, analysis, report skills (Claude Code CLI only).",
   "author": {
     "name": "kouko",

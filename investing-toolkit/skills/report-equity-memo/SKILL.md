@@ -105,7 +105,10 @@ list scales with the memo's scope.
 
 **Else** spawn research agent for peer-discovery at runtime:
 
-Use `general-purpose` subagent with this prompt template:
+Dispatch a general-reasoning subagent (Claude Code: `general-purpose` —
+see `references/claude-code-tools.md` / `references/codex-tools.md` for
+the concrete per-host dispatch call and agent-type mapping) with this
+prompt template:
 
 > Find 5–8 publicly-traded competitor tickers for {anchor_ticker} ({company_name}).
 >
