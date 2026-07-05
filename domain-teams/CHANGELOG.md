@@ -25,6 +25,17 @@ capability-detection check, which hardcoded Claude-Code tool names
 host-neutral phrasing with the per-host resolution pushed to the new
 reference files.
 
+**Follow-up (same session, behavioral dogfood)**: 3 of the new/edited
+cross-skill pointers used skill-relative path syntax that didn't
+resolve — repointed to repo-root-relative paths. A blind auditor also
+found the reworded capability-detection check asymmetric (Claude Code
+branch checked only tool presence; Codex branch checked both a feature
+flag and profile permission) — tightened to document the gap and
+default to degraded+disclosure when recursion-permission can't be
+confirmed. `copy-ideation-{parallel,advanced}.md`'s appended pointer
+sentences, flagged as "bolted on" by cold-readers, were also reworded
+inline.
+
 ### Fixed — code-team quality-gate dead standards reference
 
 `code-team/rubrics/quality-gate.md` §Rules referenced a nonexistent
