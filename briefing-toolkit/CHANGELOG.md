@@ -22,6 +22,11 @@ interactive-vs-headless axis, not a Claude-Code-vs-Codex one. Reworded
 the description in `.claude-plugin/plugin.json` + the marketplace
 entry to state the real constraint instead of the wrong host claim.
 
+**Follow-up (same session, behavioral dogfood)**: a cold-reader caught
+that the fan-out step's "same assistant message" concurrency
+requirement existed only in the new reference file, not `SKILL.md`
+itself — added it inline.
+
 ## [0.2.0] — 2026-06-05
 
 Continuity & zero-omission hardening; regression-verified via `dev-workflow:dogfood-skill-testing` (see `docs/skill-dogfood/2026-06-05-daily-brief/report.md`) — gate: no new Critical/High vs the 2026-06-04 baseline.
