@@ -12,7 +12,7 @@ into the main context is the real context cost, so on a heavy day:
 - **Dispatch one subagent per story-cluster, in parallel** (all fanned
   out in one round — they're independent; concrete per-host call shape:
   `claude-code-tools.md` / `codex-tools.md` in this folder). Dispatch
-  them **blocking — never non-blocking/background**: STEP 8 assembly
+  them **blocking — wait for every subagent to return before proceeding**: STEP 8 assembly
   can't start until every subagent returns, so background dispatch buys
   no parallelism and only creates end-of-turn stop-hook contention (real
   failure 2026-07-02: eight consecutive blocked turns after the digest
