@@ -83,3 +83,57 @@
   states untestable behind a 25-minute wait; pipeline-produced apps
   should be required at design time to expose a test affordance.
   Candidate enumeration item for loom-interface-design:interaction-flows.
+
+## Goal-oriented firing-corpus `expected` narrower than design
+- Status: OPEN
+- Start: next reuse of docs/loom/firing-corpus/goal-oriented.jsonl, or
+  next firing-harness touch
+- Origin: PR #489 residual; transcript-check requirement documented as
+  trap #6 in the loom-code/scripts/loom_firing_harness.py module
+  docstring
+- What: every goal-oriented record expects `loom-code:using-loom-code`,
+  so fired-skill grading alone cannot catch a design-side on-ramp
+  regression (deleting brainstorming's Axis 0 would not move a single
+  record off EXACT/FAMILY). The corpus's real acceptance criterion —
+  whether the design-side recommendation SURFACES in the transcript —
+  is not automated; any reuse must run the F3-style transcript check,
+  or the corpus needs `expected` widened to the design-sanctioned set.
+
+## Sibling plugin SKILL.md frontmatter versions lag plugin.json
+- Status: OPEN
+- Start: next version bump of any sibling plugin, or next touch of the
+  manifest-drift tooling (.claude/hooks/check-codex-manifest-drift.sh)
+- Origin: PR #490 loom-interface-design agent flag — drift lives in
+  SKILL.md frontmatter, not READMEs, so #490's README pass left it
+  unfixed
+- What: SKILL.md frontmatter `version:` is stale across all three
+  siblings (verified 2026-07-06): loom-interface-design 4× 0.3.0 vs
+  plugin.json 0.4.1; loom-product-principles 0.3.0/0.1.0 vs 0.4.0;
+  loom-spec 0.2.2/0.2.1/0.1.0 vs 0.4.1. Decide the contract
+  (frontmatter tracks plugin version vs deliberate per-skill semver),
+  then either sync or add a drift gate next to the codex-manifest one.
+
+## #468 reviewer next-touch nits (loom-code TECH-SPEC + CI)
+- Status: OPEN
+- Start: next loom-code/TECH-SPEC.md touch
+- Origin: PR #468 whole-branch reviewer 🟢 next-touch nits (2026-07-02)
+- What: freshness-checked 2026-07-06 — (a) dimension-count drift STILL
+  PRESENT: TECH-SPEC.md:420 `dimension_scores` lists 6 keys and :261
+  says "7-dimension scores" for code-reviewer, whose actual contract is
+  10 dimensions (agents/code-reviewer.md description); (b) dual
+  path-presentation styles (mixed backtick/plain paths) STILL PRESENT
+  in TECH-SPEC.md; (c) loom CI steps sharing one `run:` block appears
+  ALREADY FIXED — all four loom-*-ci.yml workflows now run one command
+  per step; confirm and drop sub-item (c) at next touch.
+
+## Living-spec deferred debt bundle
+- Status: OPEN
+- Start: next living-spec script touch
+  (loom-code/scripts/living_spec_*.py or check-living-spec-index.py)
+- Origin: living-spec index slices 1–4 + capstone G (#447–#455)
+  deferred-debt ledger
+- What: (a) regex suffix-vocab lockstep — two regexes must move
+  together when the suffix vocabulary changes; (b) drift-lane
+  tokenize-ization; (c) Rule-of-Three `_matched_files` extraction;
+  (d) Open-Q6 ready-signal binding for BOTH merge-boundary gates
+  (verify-index + active-coverage).
