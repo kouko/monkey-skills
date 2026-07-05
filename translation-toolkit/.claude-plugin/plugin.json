@@ -1,6 +1,6 @@
 {
   "name": "translation-toolkit",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "High-quality EN/JA/ZH translation with a bundled glossary + 6-gate verification.",
   "author": {
     "name": "kouko",

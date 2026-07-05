@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed — Codex dispatch-portability (host-neutral reference files)
+
+Following the same class of gap found and fixed in loom-code (#496) and
+loom-interface-design/loom-spec (#497), the canonical Worker/Evaluator
+launch contract (`skill-team/standards/agent-interface.md`, echoed in
+all 9 team `SKILL.md` files) and the parallel-fan-out hooks
+(`research-team/protocols/hook-parallel-fanout.md`,
+`copywriting-team/protocols/copy-ideation-advanced.md`) were already
+host-neutral prose but had zero per-host reference file explaining what
+that prose resolves to concretely on Claude Code vs Codex. Added new
+`using-domain-teams/references/{claude-code-tools.md,codex-tools.md}`
+and pointed `agent-interface.md` + `using-domain-teams/SKILL.md` at
+them. Also reworded `hook-parallel-fanout.md`'s degraded-mode
+capability-detection check, which hardcoded Claude-Code tool names
+("no `Agent` tool available") in its own detection logic, to
+host-neutral phrasing with the per-host resolution pushed to the new
+reference files.
+
+**Follow-up (same session, behavioral dogfood)**: 3 of the new/edited
+cross-skill pointers used skill-relative path syntax that didn't
+resolve — repointed to repo-root-relative paths. A blind auditor also
+found the reworded capability-detection check asymmetric (Claude Code
+branch checked only tool presence; Codex branch checked both a feature
+flag and profile permission) — tightened to document the gap and
+default to degraded+disclosure when recursion-permission can't be
+confirmed. `copy-ideation-{parallel,advanced}.md`'s appended pointer
+sentences, flagged as "bolted on" by cold-readers, were also reworded
+inline.
+
 ### Fixed — code-team quality-gate dead standards reference
 
 `code-team/rubrics/quality-gate.md` §Rules referenced a nonexistent

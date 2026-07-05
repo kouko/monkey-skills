@@ -2,6 +2,31 @@
 
 All notable changes to this plugin are documented here.
 
+## [0.2.1] — 2026-07-05
+
+### Fixed — Codex dispatch-portability + description self-contradiction
+
+`daily-brief`'s per-platform fan-out step named literal "Agent 呼叫"
+directly in `SKILL.md` (Codex dispatch-portability survey finding,
+`docs/skill-mining/2026-07-05-codex-dispatch-portability-survey.md`) —
+reworded to host-neutral prose and added
+`references/{claude-code-tools.md,codex-tools.md}`.
+
+Also fixed a side finding: the plugin's own description said "Claude
+Code CLI only" while the plugin ships a full `.codex-plugin/plugin.json`
+manifest (shortDescription/longDescription included) — a real
+self-contradiction. The actual constraint is that the skill depends on
+**interactively-authenticated MCP connections** (Slack/Asana/Notion),
+which may be unavailable in headless/cron runs on *either* host — an
+interactive-vs-headless axis, not a Claude-Code-vs-Codex one. Reworded
+the description in `.claude-plugin/plugin.json` + the marketplace
+entry to state the real constraint instead of the wrong host claim.
+
+**Follow-up (same session, behavioral dogfood)**: a cold-reader caught
+that the fan-out step's "same assistant message" concurrency
+requirement existed only in the new reference file, not `SKILL.md`
+itself — added it inline.
+
 ## [0.2.0] — 2026-06-05
 
 Continuity & zero-omission hardening; regression-verified via `dev-workflow:dogfood-skill-testing` (see `docs/skill-dogfood/2026-06-05-daily-brief/report.md`) — gate: no new Critical/High vs the 2026-06-04 baseline.

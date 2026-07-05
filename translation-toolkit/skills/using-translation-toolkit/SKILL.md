@@ -1,7 +1,7 @@
 ---
 name: using-translation-toolkit
 description: Router skill for translation-toolkit. Routes to one of 5 active translation skills based on user intent and input shape. Use when the user asks for any translation between en-US / ja-JP / zh-TW / zh-CN. 翻訳・翻譯・トランスレーション・本地化・i18n・transcreation。
-version: 0.3.0
+version: 0.3.1
 ---
 
 # using-translation-toolkit
@@ -103,6 +103,13 @@ For consistency when the user asks "what does each role do":
 - **EXTRACTOR** *(v0.3.0)* — produces character / world-glossary JSON during the `translation-novel` whole-book pre-pass (Layer 1.5); never modifies source or translation. Cheap-model split is the typical use — pin `extractor` to a haiku-class model via the dict-form `model:` parameter.
 
 (Roles are behavioral. Any LLM model can fill any role; the toolkit specifies behavior, not models. See spec § "Roles, not models".)
+
+## Subagent dispatch
+
+Every specialist's S1 back-translation gate (and `translation-novel`'s
+per-chapter EXTRACTOR pre-pass) phrases subagent dispatch in
+host-neutral prose. For the concrete per-host call shape, see
+`references/claude-code-tools.md` / `references/codex-tools.md`.
 
 ## Reference
 

@@ -1,7 +1,7 @@
 {
   "name": "briefing-toolkit",
-  "version": "0.2.0",
-  "description": "Daily read-only morning brief over connected MCP tools (Slack/Asana/Notion; Claude Code CLI only).",
+  "version": "0.2.1",
+  "description": "Daily read-only morning brief over connected MCP tools (Slack/Asana/Notion; needs interactively-authenticated MCP connections).",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"

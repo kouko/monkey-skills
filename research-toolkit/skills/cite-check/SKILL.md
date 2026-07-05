@@ -102,7 +102,8 @@ claim.
 For every **distinct cited URL** in the bound claims, retrieve what the source
 actually says. This is per-source independent work — **fan out one subagent per
 source** (per `loom-code:dispatching-parallel-agents`) when there are
-several.
+several. For the concrete per-host call shape, see
+`loom-code/skills/using-loom-code/references/{claude-code-tools.md,codex-tools.md}`.
 
 1. **Dedup the cited URLs first** so the same source is fetched once even if it
    is cited for several claims:

@@ -799,7 +799,8 @@ flow above. When the evidence set is large (typically >~80 models,
 or when manual distillation of entities/metrics would exceed a single
 context window), Phase B fans out one subagent per **domain** — a
 cohesive cluster of models sharing a business purpose (e.g. `billing`,
-`sales`, `inventory`).
+`sales`, `inventory`). For the concrete per-host dispatch call shape,
+see `references/claude-code-tools.md` / `references/codex-tools.md`.
 
 #### Before fan-out: write `.dbt-wiki/_internal/ownership.json`
 

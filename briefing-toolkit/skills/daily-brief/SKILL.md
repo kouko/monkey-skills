@@ -57,7 +57,7 @@ metadata:
 → **MANDATORY:讀 `references/prioritization-framework.md` §延續性**(定位規則 + 首份 / 跳天降級)。
 
 ### 平行 fan-out(每平台一個 sub-agent,一次發出)
-**在同一訊息發出全部就緒平台的 sub-agent(多個 Agent 呼叫並行,每平台一個、各自獨立 context)**,廣度優先。每個 sub-agent:**先用 ToolSearch 載入該平台 MCP 工具的 schema**(這些工具是 deferred,**不先載直接呼叫會 InputValidationError**),再在期間窗內多角度搜索,回傳結構化 markdown(項目 + 出處深連結 + caveats)。**把 0-A Gate 已取得的本人身份(Slack user ID、Asana GID、Notion self id、各 email、GitHub login)直接寫進每個 agent 的 prompt**——身份只該問一次,agent 拿到就不必重抓,省一輪 round-trip(見 playbook §2「身份 token 往下傳」)。**某平台過了 Gate 卻在 fan-out 中途失敗(rate-limit / timeout / token 過期)→ 標為 runtime 盲區寫進涵蓋聲明,不靜默吞掉、也不整份中止。**
+**一次性平行發出全部就緒平台的 sub-agent(每平台一個、各自獨立 context;在 Claude Code 上這代表所有呼叫要出現在同一則訊息裡才會平行執行,分開訊息發會退化成序列執行;具體 per-host 呼叫方式見 `references/claude-code-tools.md` / `references/codex-tools.md`)**,廣度優先。每個 sub-agent:**先用 ToolSearch 載入該平台 MCP 工具的 schema**(這些工具是 deferred,**不先載直接呼叫會 InputValidationError**),再在期間窗內多角度搜索,回傳結構化 markdown(項目 + 出處深連結 + caveats)。**把 0-A Gate 已取得的本人身份(Slack user ID、Asana GID、Notion self id、各 email、GitHub login)直接寫進每個 agent 的 prompt**——身份只該問一次,agent 拿到就不必重抓,省一輪 round-trip(見 playbook §2「身份 token 往下傳」)。**某平台過了 Gate 卻在 fan-out 中途失敗(rate-limit / timeout / token 過期)→ 標為 runtime 盲區寫進涵蓋聲明,不靜默吞掉、也不整份中止。**
 → **MANDATORY:讀 `references/platform-search-playbook.md`**(7 平台各自的 ToolSearch 查詢字串、搜索角度、雷區、canonical 連結形式)。
 → **Do NOT load** `references/brief-templates.md` 於此步——版型在產出階段才需要。
 

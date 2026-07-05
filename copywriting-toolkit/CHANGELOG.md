@@ -1,5 +1,22 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.14.1 — 2026-07-05 (Codex dispatch-portability + declared external dependency)
+
+`copywriting-ideation/protocols/{copy-ideation-parallel.md,copy-ideation-advanced.md}` §"Parallel dispatch"/§"Instinct-axis subagent dispatch" already named `loom-code:dispatching-parallel-agents` by delegation but never pointed to a concrete per-host call shape (Codex dispatch-portability survey finding, `docs/skill-mining/2026-07-05-codex-dispatch-portability-survey.md`). Added a one-line pointer to `loom-code/skills/using-loom-code/references/{claude-code-tools.md,codex-tools.md}` in both protocol files — kept byte-identical to the `domain-teams:copywriting-team` source files (same fix applied upstream in the same session, not a plugin-specific divergence).
+
+Also declared `loom-code:dispatching-parallel-agents` in `using-copywriting-toolkit/SKILL.md`'s new External Plugins table (survey side-finding: this dependency was undeclared, unlike `code-team/SKILL.md`'s own External Plugins table for its `feature-dev:code-architect` dependency).
+
+- `plugin.json`: 1.14.0 → 1.14.1
+
+**Follow-up (same session, behavioral dogfood)**: a cold-reader flagged
+`using-copywriting-toolkit/SKILL.md`'s "No other cross-plugin
+delegation is wired in v1.0.0" as reading self-contradictory directly
+below the new External Plugins table — reworded to qualify "task"
+delegation and clarify loom-code is a runtime dependency, not a task
+handoff. The two protocol files' appended pointer sentences (flagged
+as "bolted on") were also reworded inline, still kept byte-identical
+to the domain-teams source.
+
 ## v1.14.0 — 2026-04-23 (anchor autonomy on voice conflicts)
 
 Addresses the `anchor-honoring reflex is addition-oriented when subtraction would be correct` pattern surfaced in v1.12.1 data-collection (Briefs 1/3/4). Root cause: when `brief.form_hint` / `brief.tone_cue` / Phase 4 draft structure conflicts with anchor's voice mechanics, LLM default is compromise — producing graft-feel copy that does Xu-style language inside 3-bullet container (or any similar structural-voice mismatch). This release clarifies the conflict-resolution hierarchy: **anchor wins on voice conflicts**.

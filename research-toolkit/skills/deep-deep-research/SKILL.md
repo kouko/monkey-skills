@@ -54,7 +54,9 @@ maps onto whatever concurrent-subagent primitive the host agent provides
 (Claude Code, Codex, Cursor, …); binding to one harness's workflow primitive
 would break agent-portability. Each per-input subagent is independent (disjoint
 inputs, no shared files), which is exactly the case the fan-out convention is
-for.
+for. For the concrete per-host call shape this resolves to (including the
+Claude-Code-specific "same assistant message" concurrency detail above), see
+`loom-code/skills/using-loom-code/references/{claude-code-tools.md,codex-tools.md}`.
 
 ---
 
