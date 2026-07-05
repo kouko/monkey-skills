@@ -18,15 +18,15 @@ Codex has no naming pitfall equivalent to Claude Code's `name:` —
 its explicit three-verb model has no overloaded call for an extra
 parameter to silently hijack.
 
-## Parallel fan-out (e.g. `research-team/protocols/hook-parallel-fanout.md`, `copywriting-team/protocols/copy-ideation-advanced.md`)
+## Parallel fan-out (e.g. `research-team/protocols/hook-parallel-fanout.md`'s nested sub-worker dispatch)
 
 Codex's `multi_agent` feature natively supports "spawn N, wait for all,
 consolidate" in one combined explicit instruction — frame the fan-out
-as: "spawn one worker agent per sub-question/instinct-trigger (list
-them), each with its own Resource Paths + sub-question; wait for all;
-integrate." Codex's own runtime handles the waiting and consolidation
-once the spawn instruction names all N sub-workers — no separate
-concurrency rule is needed the way Claude Code's same-message rule is.
+as: "spawn one worker agent per sub-question (list them), each with its
+own Resource Paths + sub-question; wait for all; integrate." Codex's own
+runtime handles the waiting and consolidation once the spawn
+instruction names all N sub-workers — no separate concurrency rule is
+needed the way Claude Code's same-message rule is.
 
 ## Detecting "no subagent-spawning capability" (for the fan-out degradation path)
 

@@ -27,7 +27,7 @@ Agent({
   transcribe unchanged into whichever host's dispatch call this file
   documents.
 
-## Parallel fan-out (e.g. `research-team/protocols/hook-parallel-fanout.md`, `copywriting-team/protocols/copy-ideation-advanced.md`)
+## Parallel fan-out (e.g. `research-team/protocols/hook-parallel-fanout.md`'s nested sub-worker dispatch)
 
 Claude Code runs `Agent` calls concurrently **only when they appear in
 the same assistant message**:
