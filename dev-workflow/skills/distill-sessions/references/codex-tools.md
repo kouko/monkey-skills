@@ -21,8 +21,8 @@ as the agent's instructions plus that entry's
 `session_events`/`target_skill_path`/`target_skill_md_content` as its
 input), then `wait_agent` for all, then `close_agent` once done — Codex's
 own runtime handles the wait-for-all/consolidate step automatically once
-the spawn instruction names multiple agents (see
-`dispatching-parallel-agents`'s own `codex-tools.md`).
+the spawn instruction names multiple agents (see `using-loom-code`'s
+`references/codex-tools.md`).
 
 ## Stage 5c single dispatch (`agents/prompt-advisory-analyst.md`)
 

@@ -9,9 +9,10 @@
 ## Stage 3 parallel fan-out (`agents/prompt-failure-analysis.md` / `agents/prompt-success-analysis.md`)
 
 Delegates to `loom-code:dispatching-parallel-agents` for the concrete
-per-host call shape — see that skill's own `references/claude-code-tools.md`.
-On Claude Code this resolves to N `Agent()` calls issued in a single
-assistant message so the harness runs them concurrently:
+per-host call shape — see `using-loom-code`'s
+`references/claude-code-tools.md`. On Claude Code this resolves to N
+`Agent()` calls issued in a single assistant message so the harness
+runs them concurrently:
 
 ```
 Agent({
