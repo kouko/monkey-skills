@@ -4,6 +4,18 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.1] — 2026-07-05
+
+### Fixed — Codex dispatch-portability (per-host reference files for Phase B fan-out)
+
+`init`'s Phase B parallel orchestration (inherited by reference in
+`redistill` §Step 3) already phrased subagent dispatch in host-neutral
+prose but had zero per-host reference file (Codex dispatch-portability
+survey finding, `docs/skill-mining/2026-07-05-codex-dispatch-
+portability-survey.md`). Added `init/references/{claude-code-tools.md,
+codex-tools.md}` and pointed `init/SKILL.md` + `redistill/SKILL.md` at
+them.
+
 ## [3.1.0] — 2026-06-24
 
 ### Added — materiality triage in `sync` (Phase 2): cosmetic-only changes skip the LLM gate

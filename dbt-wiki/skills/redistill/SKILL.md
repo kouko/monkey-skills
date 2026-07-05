@@ -124,7 +124,9 @@ Per group:
      `derived_from` stays scoped to its own domain's evidence.
    - **Large groups** (a domain with many pages, or >1 context window) MAY fan
      out one subagent per domain exactly as init Phase B does — same
-     deliverable contract (files on disk, not a reply). Sequential is the
+     deliverable contract (files on disk, not a reply); concrete per-host
+     dispatch call shape: `../init/references/claude-code-tools.md` /
+     `../init/references/codex-tools.md`. Sequential is the
      default for the typical handful-of-pages redistill.
 
 ## Step 4: Clear stale flags + stamp provenance (only on rewritten pages)
