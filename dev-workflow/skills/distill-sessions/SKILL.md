@@ -189,7 +189,7 @@ one to `prompt-success-analysis.md`. **Counting caveat**: `--max-trajectories-pe
 counts dispatches, not sessions, so one such session consumes 2 of
 the budget.
 
-### Step 2 — Stage 3 subagent fan-out (Claude)
+### Step 2 — Stage 3 subagent fan-out (orchestrator + Sonnet 4.6 subagents)
 
 The orchestrator reads `top.json`, then dispatches one subagent per
 `subagent_payload[]` entry, all fanned out concurrently in a single
