@@ -43,7 +43,7 @@ Main worker receives three required inputs, then decides the combination of dive
    - Verbalized Sampling template: produce 8 candidates + probability for each (follow `verbalized-sampling.md` §Pattern A)
    - **散らかす principle** (`ideation-taniyama-discipline.md` §階段 1): no self-censorship, quantity over quality, allow "intentionally weird directions" (explicitly state the 80% safe + 20% unusual ratio)
 
-5. **Parallel dispatch**: Use the `dispatching-parallel-agents` pattern, 8 subagents concurrently. Each subagent outputs 8 candidates → 64 total (VS single-agent path outputs 40-80). Main worker performs no quality filtering at this stage.
+5. **Parallel dispatch**: Use the `dispatching-parallel-agents` pattern, 8 subagents concurrently. Each subagent outputs 8 candidates → 64 total (VS single-agent path outputs 40-80). Main worker performs no quality filtering at this stage. Concrete per-host dispatch call shape: `loom-code/skills/using-loom-code/references/{claude-code-tools.md,codex-tools.md}`.
 
 6. **Mode collapse check**: Check the aggregate output across all subagents; watch for concentration in a high-probability neighborhood. If skewed, mode collapse is not being mitigated (`verbalized-sampling.md` §Pattern C). Instruct re-generation only for the affected subagents.
 

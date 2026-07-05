@@ -83,7 +83,7 @@ Inject after base protocol Phase 1 step 2 (tool combination decision), before st
    - The ターゲットインサイト: the "I've always felt this but never said it" moment
    - The 自分事化 hook: how the first line makes the reader feel "this is about me"
 
-3. **Instinct-axis subagent dispatch**: Launch 3-5 subagents (one per instinct trigger). Each subagent produces 8 candidates using VS probability (same as base protocol), but the divergence direction comes from the instinct trigger rather than a 曼陀羅 direction.
+3. **Instinct-axis subagent dispatch**: Launch 3-5 subagents (one per instinct trigger), per the same `loom-code:dispatching-parallel-agents` pattern the base protocol uses (`copy-ideation-parallel.md` §5). Each subagent produces 8 candidates using VS probability (same as base protocol), but the divergence direction comes from the instinct trigger rather than a 曼陀羅 direction. Concrete per-host dispatch call shape: `loom-code/skills/using-loom-code/references/{claude-code-tools.md,codex-tools.md}`.
 
    Subagent prompt must contain:
    - The instinct trigger description (無意識 drive + ターゲットインサイト)
