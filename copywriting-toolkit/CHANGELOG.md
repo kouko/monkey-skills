@@ -8,6 +8,15 @@ Also declared `loom-code:dispatching-parallel-agents` in `using-copywriting-tool
 
 - `plugin.json`: 1.14.0 → 1.14.1
 
+**Follow-up (same session, behavioral dogfood)**: a cold-reader flagged
+`using-copywriting-toolkit/SKILL.md`'s "No other cross-plugin
+delegation is wired in v1.0.0" as reading self-contradictory directly
+below the new External Plugins table — reworded to qualify "task"
+delegation and clarify loom-code is a runtime dependency, not a task
+handoff. The two protocol files' appended pointer sentences (flagged
+as "bolted on") were also reworded inline, still kept byte-identical
+to the domain-teams source.
+
 ## v1.14.0 — 2026-04-23 (anchor autonomy on voice conflicts)
 
 Addresses the `anchor-honoring reflex is addition-oriented when subtraction would be correct` pattern surfaced in v1.12.1 data-collection (Briefs 1/3/4). Root cause: when `brief.form_hint` / `brief.tone_cue` / Phase 4 draft structure conflicts with anchor's voice mechanics, LLM default is compromise — producing graft-feel copy that does Xu-style language inside 3-bullet container (or any similar structural-voice mismatch). This release clarifies the conflict-resolution hierarchy: **anchor wins on voice conflicts**.
