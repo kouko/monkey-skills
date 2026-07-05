@@ -9,6 +9,13 @@ agents in domain-team skills. This is the Resource Paths Input Contract.
 - `domain-teams/agents/evaluator.md` — evaluator role definition and Input Contract
 - Repo convention SSOT: `/Users/kouko/GitHub/monkey-skills/CLAUDE.md` §"Agent Launch Convention"
 
+This contract is deliberately host-neutral prose — it describes the
+Resource Paths block shape, not a literal tool call. For the concrete
+per-host call that actually launches a `worker` / `evaluator` agent
+(Claude Code's `Agent()` vs Codex's `spawn_agent`/`wait_agent`/
+`close_agent`), see
+`using-domain-teams/references/{claude-code-tools.md,codex-tools.md}`.
+
 ## Core Rule
 
 > **Pass file paths, not file contents.**
