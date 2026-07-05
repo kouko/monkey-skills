@@ -49,6 +49,9 @@ origin: <PR / session / audit reference>
 ## Index
 
 One line per memory: `[<name>](<file>.md) — <description>`.
+`<description>` is the frontmatter `description` field copied
+byte-identical — the index line IS the description, so the pull-time
+relevance surface never diverges from the file.
 
 [argparse-subparser-default-shadows-parent](argparse-subparser-default-shadows-parent.md) — Python argparse — a subparser's default silently overwrites the parent parser's already-parsed option value (silent wrong-value bug class)
 [big-rename-operative-frozen-sweep](big-rename-operative-frozen-sweep.md) — Big-rename recipe — split operative vs frozen references, regex look-behind guards for path collisions, git mv to preserve history, closing grep-guard for zero operative survivors
