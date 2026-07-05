@@ -67,7 +67,7 @@ skill は multi-stage pipeline で動く：
               ▼
        JSON payload (stdout) + Markdown summary (stderr)
               │
-              ▼  Stage 3: Claude が loom-code:dispatching-parallel-agents
+              ▼  Stage 3: orchestrator が loom-code:dispatching-parallel-agents
               │   経由で subagent を dispatch
               │   - (skill, session) ごとに Haiku-4.5 subagent 1 つ
               │   - friction に応じて failure / success prompt を選択

@@ -4,6 +4,22 @@ All notable changes to the `obsidian` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.19.1] — 2026-07-05 `daily-news-digest` Codex dispatch-portability fix
+
+Following the same class of gap found and fixed in loom-code (#496) and
+loom-interface-design/loom-spec (#497), `daily-news-digest`'s heavy-day
+dispatch instructions named literal Claude-Code "`Agent`/`Task` calls"
+and `run_in_background: true` directly in `references/heavy-day-dispatch.md`
+and `SKILL.md` — a Codex reader hit terms it cannot resolve. Rewrote both
+to host-neutral prose ("dispatch... in one round", "wait for every
+subagent to return before proceeding") and added new
+`references/{claude-code-tools.md,codex-tools.md}`
+carrying the concrete per-host call shape, including the Claude-Code-only
+`name:`-triggers-mailbox-semantics pitfall and the 2026-07-02 real
+`run_in_background` incident (eight consecutive blocked turns), both of
+which structurally cannot recur on Codex's explicit spawn/wait/close
+verb model.
+
 ## [3.15.0] — 2026-06-01 near-duplicate detection + `wiki-merge`
 
 Adds near-duplicate awareness to the wiki layer across three surfaces:

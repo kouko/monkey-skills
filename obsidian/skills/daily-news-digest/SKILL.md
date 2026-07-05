@@ -225,8 +225,8 @@ like 「創新高」「連續」 in titles) is mandatory re-examination criteria
 > - **Heavy day** (`counts.candidates` ≳ 40, OR any single cluster ≳ 6
 >   notes): **READ [heavy-day-dispatch.md](references/heavy-day-dispatch.md)
 >   and dispatch per its contract** — one blocking subagent per
->   story-cluster (never `run_in_background`), structured story objects
->   back, main agent assembles/renders/verifies centrally.
+>   story-cluster (wait for all to return before assembling), structured
+>   story objects back, main agent assembles/renders/verifies centrally.
 > - **Light day**: skip subagents — the dispatch overhead isn't worth
 >   it; the main agent reads and synthesizes directly.
 

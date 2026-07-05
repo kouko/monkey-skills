@@ -62,7 +62,7 @@ skill 跑 multi-stage pipeline：
               ▼
        JSON payload (stdout) + Markdown summary (stderr)
               │
-              ▼  Stage 3: Claude 透過 loom-code:dispatching-parallel-agents
+              ▼  Stage 3: orchestrator 透過 loom-code:dispatching-parallel-agents
               │   dispatch subagent
               │   - 每個 (skill, session) 一個 Haiku-4.5 subagent
               │   - 依 friction 選 failure / success prompt

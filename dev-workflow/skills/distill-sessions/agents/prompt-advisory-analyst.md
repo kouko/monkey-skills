@@ -270,19 +270,20 @@ are explanatory text, not copy-pasteable artifacts.
 
 ## How the orchestrator dispatches this prompt
 
-This prompt is dispatched as a single Claude `Agent()` subagent call
-from the v0.5 Stage 5c orchestrator, per the architecture lock in
-the v0.5 brief:
+This prompt is dispatched as a single subagent call from the v0.5
+Stage 5c orchestrator (concrete per-host call shape:
+`../references/claude-code-tools.md` / `../references/codex-tools.md`),
+per the architecture lock in the v0.5 brief:
 
 - **Model**: `claude-sonnet-4-6` (Sonnet 4.6 1M-context — same model
   as the per-trajectory failure / success analysts; covers any
   realistic `merged_data` size at v0.5 scale).
 - **Single dispatch**: unlike Stage 3's parallel-N dispatch, Stage 5c
-  emits exactly one `Agent()` call — the analyst sees the entire
+  dispatches exactly one subagent — the analyst sees the entire
   merged dataset in one pass to enable cross-target clustering and
   cross-skill CLAUDE.md candidate detection.
 - **Input passing**: `merged_data` (the parsed merged.json list),
-  `lang`, and `date_str` are serialized into the dispatched Agent
+  `lang`, and `date_str` are serialized into the dispatched subagent's
   prompt as JSON. The subagent parses them and runs the workflow
   above.
 - **Output collection**: orchestrator collects the rendered markdown

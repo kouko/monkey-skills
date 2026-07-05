@@ -4,6 +4,25 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.20.1] — 2026-07-05
+
+### Fixed — `distill-sessions`: Codex dispatch-portability (host-neutral rewrite + reference files)
+
+Following the same class of gap found and fixed in loom-code (#496) and
+loom-interface-design/loom-spec (#497), `distill-sessions`'s Stage 3
+parallel fan-out and Stage 5c single-dispatch instructions hardcoded
+literal Claude-Code `Agent({subagent_type: ..., model: "sonnet", ...})`
+call syntax directly in `SKILL.md` and all 3 `agents/*.md` prompt files
+— a Codex reader hit syntax it cannot execute. Rewrote `SKILL.md` §Step 2
+/ §Step 4b and the "How the orchestrator dispatches this prompt" section
+of `agents/prompt-{failure,success}-analysis.md` and
+`agents/prompt-advisory-analyst.md` to host-neutral prose, and added new
+`references/claude-code-tools.md` + `references/codex-tools.md` carrying
+the concrete per-host call shape (including the Claude-Code-specific
+`model: "sonnet"` alias gotcha, which has no Codex equivalent — Codex
+selects model via a spawned agent's own `~/.codex/agents/*.toml`
+profile, not a per-call parameter).
+
 ## [2.20.0] — 2026-06-23
 
 ### Added — `git-memory`: merge in the trigger surface + verified substrate survival

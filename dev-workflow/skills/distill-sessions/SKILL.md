@@ -2,7 +2,7 @@
 name: distill-sessions
 description: |
   Mine past Claude Code session transcripts + /insights for friction patterns → a per-skill improvement-proposals doc. Use to audit skill-activation telemetry, or gather evidence before a refactor. For creating a skill use skill-creator-advance.
-version: 0.5.1
+version: 0.5.2
 ---
 
 # distill-sessions
@@ -104,8 +104,9 @@ referenced flow directly.
 
 ## Pipeline
 
-Five steps; Python (Stage 1+2) → Claude (Stage 3 subagent fan-out) →
-Python (Stage 5 proposal render + approval-gated write-back).
+Five steps; Python (Stage 1+2) → orchestrator + Sonnet 4.6 subagents
+(Stage 3 fan-out) → Python (Stage 5 proposal render + approval-gated
+write-back).
 
 ```
 ~/.claude/projects/**/*.jsonl                ~/.claude/usage-data/facets/*.json
@@ -123,25 +124,27 @@ Python (Stage 5 proposal render + approval-gated write-back).
                               |
                               v
         +-----------------------------------------+
-        | Claude reads top.json                   |
+        | Orchestrator reads top.json             |
         | dispatches N subagents in parallel via  |
-        | loom-code:dispatching-parallel-agents|
-        |  one Agent call per session-trajectory  |
+        | loom-code:dispatching-parallel-agents   |
+        |  one subagent per session-trajectory    |
         |  prompts: agents/prompt-{failure,       |
         |           success}-analysis.md          |
-        |  model:   claude-sonnet-4-6              |
+        |  model:   Sonnet 4.6 (per-host dispatch |
+        |           shape: references/{claude-    |
+        |           code,codex}-tools.md)         |
         +-----------------------------------------+
                               |
                               v
-                       merged.json  (Claude collects)
+                       merged.json  (orchestrator collects)
                               |
                               v
         +-----------------------------------------+         +-----------------------------------------+
         | scripts/propose.py  (Stage 5a)          |         | scripts/report.py  (Stage 5c)           |
         |   merged.json + target SKILL.md         |         |   merged.json + --lang {zh-TW|en|ja}    |
         |   -> docs/skill-mining/<date>-<t>.md    |         |   -> JSON dispatch payload (stdout)     |
-        +-----------------------------------------+         |   -> Claude dispatches subagent at      |
-                              |                             |      agents/prompt-advisory-analyst.md  |
+        +-----------------------------------------+         |   -> orchestrator dispatches subagent   |
+                              |                             |    at agents/prompt-advisory-analyst.md |
                               |                             |   -> orchestrator writes returned md to |
                               |                             |      docs/skill-mining/<date>-          |
                               |                             |      advisory-report.md                 |
@@ -189,11 +192,12 @@ one to `prompt-success-analysis.md`. **Counting caveat**: `--max-trajectories-pe
 counts dispatches, not sessions, so one such session consumes 2 of
 the budget.
 
-### Step 2 — Stage 3 subagent fan-out (Claude)
+### Step 2 — Stage 3 subagent fan-out (orchestrator + Sonnet 4.6 subagents)
 
-Claude reads `top.json`, then issues **one Agent tool call per
-`subagent_payload[]` entry inside a single assistant message** so the
-harness runs them concurrently. Each subagent:
+The orchestrator reads `top.json`, then dispatches one subagent per
+`subagent_payload[]` entry, all fanned out concurrently in a single
+round (concrete per-host call shape: `references/claude-code-tools.md` /
+`references/codex-tools.md`). Each subagent:
 
 - runs on `claude-sonnet-4-6` (model literal locked in
   `scripts/main.py`),
@@ -209,8 +213,8 @@ harness runs them concurrently. Each subagent:
   raw JSON.
 
 Use `loom-code:dispatching-parallel-agents` for the fan-out — it
-encapsulates the "one assistant message with N Agent calls" pattern,
-the per-branch TDD iron-law discipline, and verdict aggregation. See
+encapsulates the host-specific concurrent-dispatch pattern, the
+per-branch TDD iron-law discipline, and verdict aggregation. See
 its SKILL.md for parallel-eligibility rules (no shared files / no
 sequential data dependency between sibling subagents — satisfied here
 because each subagent reads a disjoint session).
@@ -219,8 +223,8 @@ because each subagent reads a disjoint session).
 
 Each subagent emits strict-markdown Memory Items (per
 `agents/prompt-{failure,success}-analysis.md` §"Memory Item schema").
-**Claude must convert these markdown blocks into JSON `memory_items[]`
-before piping to `propose.py`** — `propose.py` reads JSON, not
+**The orchestrator must convert these markdown blocks into JSON
+`memory_items[]` before piping to `propose.py`** — `propose.py` reads JSON, not
 markdown. The conversion is mechanical: each `# {Failure|Success}
 Memory Item <i>` block becomes one `memory_items[]` entry, with
 `## Title` → `title`, `## Description` → `description`, `## Content` →
@@ -340,19 +344,23 @@ The analyst — not Python — does the clustering, dedup, and prose.
 2. Read  the stdout JSON from `python report.py --input <merged.json> --lang <locale>`
          → extract `dispatch_payload.input` (merged_data / lang / date_str)
            and `output_path` (where to write the result).
-3. Agent({subagent_type: "general-purpose", model: "sonnet",
-          prompt: <prompt body + JSON input data>})
+3. Dispatch a single general-purpose subagent on the current Sonnet
+         generation, passing the prompt body + JSON input data as its task
          → wait for the subagent to return the rendered markdown.
 4. Write the subagent's response verbatim to `output_path`.
          No editing, no preamble — the response IS the file body.
 ```
 
-**Model alias note**: the prompt's YAML frontmatter declares
-`model: claude-sonnet-4-6` as documentation reference, but the actual
-`Agent()` call uses the harness-level alias `model: "sonnet"` (which
-the runtime routes to the current Sonnet generation — currently 4.6).
-Passing the literal `"claude-sonnet-4-6"` to `Agent()` will fail enum
-validation.
+Concrete per-host dispatch call shape (including the model-alias gotcha
+below): `references/claude-code-tools.md` / `references/codex-tools.md`.
+
+**Model alias note (Claude Code only)**: the prompt's YAML frontmatter
+declares `model: claude-sonnet-4-6` as documentation reference; on Claude
+Code the actual dispatch call uses the harness-level alias `model:
+"sonnet"` (which routes to the current Sonnet generation — currently
+4.6) — passing the literal `"claude-sonnet-4-6"` string fails enum
+validation. This alias quirk is Claude-Code-specific; Codex has no
+per-call model-alias parameter (see `references/codex-tools.md`).
 
 Key properties:
 
@@ -486,7 +494,7 @@ that key — `main.py` merges over the defaults.
   `~/.claude/projects/**/*.jsonl` from the user's machine. No
   network calls in `main.py`, `propose.py`, or `apply.py`. The
   Stage 3 subagent dispatch is the only step that talks to the
-  Anthropic API, and it's invoked by Claude, not by these scripts.
+  Anthropic API, and it's invoked by the orchestrator, not by these scripts.
 - **Skill-folder structure + `__pycache__`** — the repo's skill-folder
   rule forbids nested subdirs under any subfolder. pytest's
   `__pycache__` is mitigated via `scripts/conftest.py`

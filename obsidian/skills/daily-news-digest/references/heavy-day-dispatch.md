@@ -9,15 +9,16 @@ days never need it — the main agent reads and synthesizes directly.
 Reading every clustered note (full bodies, often with long transcripts)
 into the main context is the real context cost, so on a heavy day:
 
-- **Dispatch one subagent per story-cluster, in parallel** (one
-  assistant message, multiple `Agent`/`Task` calls — they're
-  independent). Dispatch them **blocking — never
-  `run_in_background: true`**: STEP 8 assembly can't start until every
-  subagent returns, so background dispatch buys no parallelism and only
-  creates end-of-turn stop-hook contention (real failure 2026-07-02:
-  eight consecutive blocked turns after the digest was already
-  written). If a `ScheduleWakeup`/cron was set to wait on results,
-  cancel it as soon as they are collected.
+- **Dispatch one subagent per story-cluster, in parallel** (all fanned
+  out in one round — they're independent; concrete per-host call shape:
+  `claude-code-tools.md` / `codex-tools.md` in this folder). Dispatch
+  them **blocking — wait for every subagent to return before proceeding**: STEP 8 assembly
+  can't start until every subagent returns, so background dispatch buys
+  no parallelism and only creates end-of-turn stop-hook contention (real
+  failure 2026-07-02: eight consecutive blocked turns after the digest
+  was already written, on Claude Code — see `claude-code-tools.md` for
+  the host-specific mechanism). If a scheduled wakeup/cron was set to
+  wait on results, cancel it as soon as they are collected.
 - Give each subagent the cluster's note **paths** + the story angle; it
   reads the full notes and returns the **structured story object**
   (contract below) — the main agent never loads raw transcripts, only
