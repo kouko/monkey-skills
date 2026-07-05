@@ -17,6 +17,7 @@ runs them concurrently:
 ```
 Agent({
   subagent_type: "general-purpose",
+  model: "sonnet",
   description: "<3-5 word task>",
   prompt: "<agents/prompt-failure-analysis.md or
             agents/prompt-success-analysis.md content +
@@ -24,6 +25,13 @@ Agent({
             target_skill_md_content JSON>"
 })
 ```
+
+`model: "sonnet"` is required here too — `scripts/main.py` locks the
+Stage 3 subagent model to `claude-sonnet-4-6` (SKILL.md's own Step 2:
+"runs on `claude-sonnet-4-6`"), and per the alias note below, only the
+harness alias reaches `Agent()` without failing enum validation; the
+`model` field is easy to drop when copying this call shape since the
+literal id in `top.json`'s payload is not directly usable.
 
 One such call per `subagent_payload[]` entry, all issued in the same
 assistant message per `dispatching-parallel-agents`'s concurrency rule.
