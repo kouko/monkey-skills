@@ -11,8 +11,9 @@ loom-interface-design/loom-spec (#497), `daily-news-digest`'s heavy-day
 dispatch instructions named literal Claude-Code "`Agent`/`Task` calls"
 and `run_in_background: true` directly in `references/heavy-day-dispatch.md`
 and `SKILL.md` — a Codex reader hit terms it cannot resolve. Rewrote both
-to host-neutral prose ("dispatch... in one round", "never non-blocking/
-background") and added new `references/{claude-code-tools.md,codex-tools.md}`
+to host-neutral prose ("dispatch... in one round", "wait for every
+subagent to return before proceeding") and added new
+`references/{claude-code-tools.md,codex-tools.md}`
 carrying the concrete per-host call shape, including the Claude-Code-only
 `name:`-triggers-mailbox-semantics pitfall and the 2026-07-02 real
 `run_in_background` incident (eight consecutive blocked turns), both of
