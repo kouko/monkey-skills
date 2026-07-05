@@ -7,6 +7,10 @@
           {
             "type": "command",
             "command": ".codex/hooks/validate-skill-folder-structure.sh"
+          },
+          {
+            "type": "command",
+            "command": ".codex/hooks/remind-memory-mirror.sh"
           }
         ]
       }

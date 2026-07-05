@@ -89,6 +89,20 @@ whether Codex resolves the `${CLAUDE_PLUGIN_ROOT}` launcher path at run time, an
 Codex exposes the MCP tools under the `mcp__<server>__*` names the skills' `allowed-tools`
 expect. Install + MCP-server auto-registration is verified; the tool-call round-trip is not.
 
+## remind-memory-mirror hook — wired, live-fire pending (2026-07-06)
+
+The loom-memory-store reminder hook is mirrored for Codex:
+`.claude/hooks/remind-memory-mirror.sh` → byte-identical copy at
+`.codex/hooks/remind-memory-mirror.sh` (executable bit preserved), registered in
+`.codex/hooks.json` under the existing PostToolUse `Write|Edit` matcher — the same
+mirror convention as `validate-skill-folder-structure.sh`. Codex's hooks engine
+(v0.124.0+) supports PostToolUse, so the wiring shape is valid
+(<https://developers.openai.com/codex/hooks>, verified 2026-07-06 web search).
+
+**Not verified — execution = truth outstanding:** the hook has NOT yet been fired
+in a live Codex session. Static wiring only; a real Write/Edit round-trip on a
+Codex instance is needed to close this item.
+
 ## Conclusion
 
 All 25 repo plugins are **verified loadable + skill-discoverable on Codex 0.139.0**, and the
