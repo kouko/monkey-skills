@@ -47,8 +47,10 @@ One dispatch per chapter, fresh context each time — no cross-chapter
 conversation memory; the accumulated state JSON is the only carry-over
 channel between dispatches.
 
-**Model-string caution**: `references/orthogonal-axes.md` §Model
-routing documents literal ids like `claude-haiku-4-5` in the toolkit's
+**Model-string caution**: `translation-toolkit/skills/translation-novel/references/orthogonal-axes.md`
+§Model routing (repo-root-relative — it's `translation-novel`'s own
+sibling-skill reference file, not this router's own `references/`)
+documents literal ids like `claude-haiku-4-5` in the toolkit's
 own `model:` config field. Whether Claude Code's `Agent()` call needs
 that literal id or the harness-level alias (`"haiku"`) is a per-harness
 detail — `dev-workflow:distill-sessions` hit exactly this gap
