@@ -2,7 +2,7 @@
 name: distill-sessions
 description: |
   Mine past Claude Code session transcripts + /insights for friction patterns → a per-skill improvement-proposals doc. Use to audit skill-activation telemetry, or gather evidence before a refactor. For creating a skill use skill-creator-advance.
-version: 0.5.1
+version: 0.5.2
 ---
 
 # distill-sessions
@@ -191,9 +191,10 @@ the budget.
 
 ### Step 2 — Stage 3 subagent fan-out (Claude)
 
-Claude reads `top.json`, then issues **one Agent tool call per
-`subagent_payload[]` entry inside a single assistant message** so the
-harness runs them concurrently. Each subagent:
+The orchestrator reads `top.json`, then dispatches one subagent per
+`subagent_payload[]` entry, all fanned out concurrently in a single
+round (concrete per-host call shape: `references/claude-code-tools.md` /
+`references/codex-tools.md`). Each subagent:
 
 - runs on `claude-sonnet-4-6` (model literal locked in
   `scripts/main.py`),
@@ -209,8 +210,8 @@ harness runs them concurrently. Each subagent:
   raw JSON.
 
 Use `loom-code:dispatching-parallel-agents` for the fan-out — it
-encapsulates the "one assistant message with N Agent calls" pattern,
-the per-branch TDD iron-law discipline, and verdict aggregation. See
+encapsulates the host-specific concurrent-dispatch pattern, the
+per-branch TDD iron-law discipline, and verdict aggregation. See
 its SKILL.md for parallel-eligibility rules (no shared files / no
 sequential data dependency between sibling subagents — satisfied here
 because each subagent reads a disjoint session).
@@ -340,19 +341,23 @@ The analyst — not Python — does the clustering, dedup, and prose.
 2. Read  the stdout JSON from `python report.py --input <merged.json> --lang <locale>`
          → extract `dispatch_payload.input` (merged_data / lang / date_str)
            and `output_path` (where to write the result).
-3. Agent({subagent_type: "general-purpose", model: "sonnet",
-          prompt: <prompt body + JSON input data>})
+3. Dispatch a single general-purpose subagent on the current Sonnet
+         generation, passing the prompt body + JSON input data as its task
          → wait for the subagent to return the rendered markdown.
 4. Write the subagent's response verbatim to `output_path`.
          No editing, no preamble — the response IS the file body.
 ```
 
-**Model alias note**: the prompt's YAML frontmatter declares
-`model: claude-sonnet-4-6` as documentation reference, but the actual
-`Agent()` call uses the harness-level alias `model: "sonnet"` (which
-the runtime routes to the current Sonnet generation — currently 4.6).
-Passing the literal `"claude-sonnet-4-6"` to `Agent()` will fail enum
-validation.
+Concrete per-host dispatch call shape (including the model-alias gotcha
+below): `references/claude-code-tools.md` / `references/codex-tools.md`.
+
+**Model alias note (Claude Code only)**: the prompt's YAML frontmatter
+declares `model: claude-sonnet-4-6` as documentation reference; on Claude
+Code the actual dispatch call uses the harness-level alias `model:
+"sonnet"` (which routes to the current Sonnet generation — currently
+4.6) — passing the literal `"claude-sonnet-4-6"` string fails enum
+validation. This alias quirk is Claude-Code-specific; Codex has no
+per-call model-alias parameter (see `references/codex-tools.md`).
 
 Key properties:
 
