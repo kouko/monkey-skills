@@ -104,8 +104,9 @@ referenced flow directly.
 
 ## Pipeline
 
-Five steps; Python (Stage 1+2) → Claude (Stage 3 subagent fan-out) →
-Python (Stage 5 proposal render + approval-gated write-back).
+Five steps; Python (Stage 1+2) → orchestrator + Sonnet 4.6 subagents
+(Stage 3 fan-out) → Python (Stage 5 proposal render + approval-gated
+write-back).
 
 ```
 ~/.claude/projects/**/*.jsonl                ~/.claude/usage-data/facets/*.json
@@ -123,25 +124,27 @@ Python (Stage 5 proposal render + approval-gated write-back).
                               |
                               v
         +-----------------------------------------+
-        | Claude reads top.json                   |
+        | Orchestrator reads top.json             |
         | dispatches N subagents in parallel via  |
-        | loom-code:dispatching-parallel-agents|
-        |  one Agent call per session-trajectory  |
+        | loom-code:dispatching-parallel-agents   |
+        |  one subagent per session-trajectory    |
         |  prompts: agents/prompt-{failure,       |
         |           success}-analysis.md          |
-        |  model:   claude-sonnet-4-6              |
+        |  model:   Sonnet 4.6 (per-host dispatch |
+        |           shape: references/{claude-    |
+        |           code,codex}-tools.md)         |
         +-----------------------------------------+
                               |
                               v
-                       merged.json  (Claude collects)
+                       merged.json  (orchestrator collects)
                               |
                               v
         +-----------------------------------------+         +-----------------------------------------+
         | scripts/propose.py  (Stage 5a)          |         | scripts/report.py  (Stage 5c)           |
         |   merged.json + target SKILL.md         |         |   merged.json + --lang {zh-TW|en|ja}    |
         |   -> docs/skill-mining/<date>-<t>.md    |         |   -> JSON dispatch payload (stdout)     |
-        +-----------------------------------------+         |   -> Claude dispatches subagent at      |
-                              |                             |      agents/prompt-advisory-analyst.md  |
+        +-----------------------------------------+         |   -> orchestrator dispatches subagent   |
+                              |                             |      at agents/prompt-advisory-analyst.md|
                               |                             |   -> orchestrator writes returned md to |
                               |                             |      docs/skill-mining/<date>-          |
                               |                             |      advisory-report.md                 |
@@ -220,8 +223,8 @@ because each subagent reads a disjoint session).
 
 Each subagent emits strict-markdown Memory Items (per
 `agents/prompt-{failure,success}-analysis.md` §"Memory Item schema").
-**Claude must convert these markdown blocks into JSON `memory_items[]`
-before piping to `propose.py`** — `propose.py` reads JSON, not
+**The orchestrator must convert these markdown blocks into JSON
+`memory_items[]` before piping to `propose.py`** — `propose.py` reads JSON, not
 markdown. The conversion is mechanical: each `# {Failure|Success}
 Memory Item <i>` block becomes one `memory_items[]` entry, with
 `## Title` → `title`, `## Description` → `description`, `## Content` →
@@ -491,7 +494,7 @@ that key — `main.py` merges over the defaults.
   `~/.claude/projects/**/*.jsonl` from the user's machine. No
   network calls in `main.py`, `propose.py`, or `apply.py`. The
   Stage 3 subagent dispatch is the only step that talks to the
-  Anthropic API, and it's invoked by Claude, not by these scripts.
+  Anthropic API, and it's invoked by the orchestrator, not by these scripts.
 - **Skill-folder structure + `__pycache__`** — the repo's skill-folder
   rule forbids nested subdirs under any subfolder. pytest's
   `__pycache__` is mitigated via `scripts/conftest.py`
