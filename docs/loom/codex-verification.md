@@ -89,6 +89,32 @@ whether Codex resolves the `${CLAUDE_PLUGIN_ROOT}` launcher path at run time, an
 Codex exposes the MCP tools under the `mcp__<server>__*` names the skills' `allowed-tools`
 expect. Install + MCP-server auto-registration is verified; the tool-call round-trip is not.
 
+## remind-memory-mirror hook — wired, live-fire pending (2026-07-06)
+
+The loom-memory-store reminder hook is mirrored for Codex:
+`.claude/hooks/remind-memory-mirror.sh` → byte-identical copy at
+`.codex/hooks/remind-memory-mirror.sh` (executable bit preserved), registered in
+`.codex/hooks.json` under the existing PostToolUse `Write|Edit` matcher — the same
+mirror convention as `validate-skill-folder-structure.sh`. Codex's hooks engine
+(v0.124.0+) supports PostToolUse, so the wiring shape is valid
+(<https://developers.openai.com/codex/hooks>, verified 2026-07-06 web search).
+
+**Live-fired 2026-07-06 on Codex 0.139.0 — hook did NOT fire; root cause is
+UPSTREAM.** `codex exec --dangerously-bypass-hook-trust` (workspace-write
+sandbox, this repo as cwd) wrote two frontmatter-typed notes to a
+memory-pattern path via `apply_patch`; both files landed on disk, but the
+session rollout log (`~/.codex/sessions/2026/07/06/rollout-…019f34f4….jsonl`)
+contains ZERO hook events and zero reminder fingerprints. Per the official
+docs the wiring is correct (`apply_patch` matches `Edit`/`Write` matchers —
+<https://developers.openai.com/codex/hooks>), but known upstream issues
+confirm the handler gap: openai/codex#16732 (ApplyPatchHandler emits no
+PreToolUse/PostToolUse events; hooks fire only for Bash) and #20204
+(inconsistent hook coverage across tool handlers). Consequence: BOTH
+mirrored repo hooks (`remind-memory-mirror.sh` AND
+`validate-skill-folder-structure.sh`) are currently inert on Codex — the
+mirror wiring is dormant-correct, blocked on the upstream fix. Tracked in
+`docs/loom/BACKLOG.md` §Codex hook events (UPSTREAM).
+
 ## Conclusion
 
 All 25 repo plugins are **verified loadable + skill-discoverable on Codex 0.139.0**, and the

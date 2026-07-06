@@ -47,3 +47,12 @@ references it — do not copy its rows elsewhere.
 **Recommend ONCE, never nag.** Surface the recommendation a single time,
 record the user's choice, then proceed either way — do not re-ask on
 follow-up turns of the same task.
+
+## Recall before you start
+
+If the target repo has `docs/loom/memory/`, run a recall pass via the
+`loom-memory` skill before starting loom work — recorded practices and
+gotchas surface before you re-commit them.
+
+> **Pointer only.** This hook preloads no memory content; recall pulls
+> on demand (pull-not-push stays intact).

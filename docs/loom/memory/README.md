@@ -1,0 +1,76 @@
+# loom family practice-memory store
+
+> Repo-native home for distilled loom-* practices, habits, processes,
+> and recurring gotchas — knowledge not bound to a single commit that
+> must travel with the repo (any machine, any host, headless agents).
+> One fact per file. Machine-local Claude memory keeps only pointers
+> here — this folder is the durable truth (versioned, host-agnostic,
+> greppable). Stale facts are deleted, not archived — git history is
+> the archive.
+
+## Charter — jurisdiction
+
+| Knowledge shape | Home |
+|---|---|
+| Open item / debt / re-trigger | `docs/loom/BACKLOG.md` (cross-plugin) or plugin README §parked (local) |
+| Decision bound to a commit | git-memory trailers (`Decision:`) |
+| Distilled practice / habit / process / recurring gotcha | **`docs/loom/memory/`** (this store) |
+| One-off event artifact | `docs/loom/{specs,plans,audits,dogfood,research}/` |
+| Harness/dcg friction (plugin-shipped) | `loom-code/.../environment-gotchas.md` — stays, NOT migrated |
+
+**Pull, not push.** Nothing auto-loads this folder. Retrieval = read
+the index below / grep on demand. This preserves the documented
+anti-preload decision (`dev-workflow/skills/git-memory/SKILL.md:193-197`);
+evidence: a 2026 ETH Zurich study found always-loaded auto-generated
+context files reduced agent task success by ~3% and raised inference
+cost by ~20% (`dev-workflow/skills/git-memory/standards/memory-conventions.md`
+§Pull retrieval).
+
+## Format — one fact per file
+
+The file is named `<name>.md` — the frontmatter `name` slug IS the
+filename, so index links never diverge from filenames.
+
+```markdown
+---
+name: <kebab-slug>
+description: <one-line — used for relevance decisions at pull time>
+type: practice | gotcha | process
+origin: <PR / session / audit reference>
+---
+
+<the fact>
+
+**Why:** <why the behavior matters>
+
+**How to apply:** <the operative rule, readable standalone>
+```
+
+## Index
+
+One line per memory: `[<name>](<file>.md) — <description>`.
+`<description>` is the frontmatter `description` field copied
+byte-identical — the index line IS the description, so the pull-time
+relevance surface never diverges from the file.
+
+[argparse-subparser-default-shadows-parent](argparse-subparser-default-shadows-parent.md) — Python argparse — a subparser's default silently overwrites the parent parser's already-parsed option value (silent wrong-value bug class)
+[big-rename-operative-frozen-sweep](big-rename-operative-frozen-sweep.md) — Big-rename recipe — split operative vs frozen references, regex look-behind guards for path collisions, git mv to preserve history, closing grep-guard for zero operative survivors
+[chrome-debug-port-ipv6-gotcha](chrome-debug-port-ipv6-gotcha.md) — A user's main Chrome can hold 127.0.0.1:9222 answering 404 while the fresh debug instance binds IPv6-only — chrome-devtools MCP dials IPv4, so fall back to puppeteer-core over the IPv6 WebSocket
+[cross-module-field-contracts-execute-probes](cross-module-field-contracts-execute-probes.md) — In build-assembled programs, cross-module field contracts are the systemic risk — review by concatenating the modules and executing behavioral probes, not by grep
+[dont-finish-flag-definitions-rename](dont-finish-flag-definitions-rename.md) — The "Flag Definitions" heading in domain-teams rubrics is a deliberate convention — do not sweep it into the loom-code flags→findings rename
+[dont-fix-guards-jtbd-isbn-and-5axis-names](dont-fix-guards-jtbd-isbn-and-5axis-names.md) — Don't-fix guards — the JTBD 1997 ISBN 978-0875845852 in four-dx-coach is CORRECT (Innovator's Dilemma context, not Competing Against Luck), and the 5-axis long/short names in loom-code brainstorming (Alternatives vs Alternatives Considered) are deliberate description-vs-body usage, not drift
+[execute-cheap-loom-simplify-upgrades-at-review](execute-cheap-loom-simplify-upgrades-at-review.md) — When a LOOM-SIMPLIFY marker's recorded upgrade turns out one-line-cheap at review time, execute it on the spot instead of leaving the marker
+[fixtures-mirror-producer-shape](fixtures-mirror-producer-shape.md) — Test fixtures must mirror the producer's actual field shape — a hand-shaped fixture can certify code that fails on the real producer's output
+[git-mv-sweeps-untracked-files](git-mv-sweeps-untracked-files.md) — git mv of a directory physically relocates UNTRACKED files too — a later git add of the new dir sweeps WIP into the commit; unstage by status A via git diff --cached --name-status
+[headless-branch-plugin-testing-recipe](headless-branch-plugin-testing-recipe.md) — Recipe for behaviorally testing an unpushed branch's Claude Code plugins headlessly — --plugin-dir wrapper, neutral empty cwd, probe hook injection first, parse_corpus takes content
+[interactive-fixups-still-route-through-implementer](interactive-fixups-still-route-through-implementer.md) — In interactive fix-up rounds outside an SDD dispatch, reviewer findings must still be routed through an implementer dispatch — the main agent fixing them by direct edit is the recorded test-skipping leak path
+[parallel-wave-commit-discipline](parallel-wave-commit-discipline.md) — Parallel subagent waves share one git index — commit orchestrator-serially with explicit pathspecs (never git add -A, never plain git commit), verify with git show --stat HEAD
+[preamble-wording-is-contract-surface](preamble-wording-is-contract-surface.md) — In prompt-artifact work, a station preamble's vocabulary steers downstream machine classification — treat preamble word choice like an API field name
+[python-path-parent-resolve-gotcha](python-path-parent-resolve-gotcha.md) — Python pathlib — Path(".").parent is still ".", so resolve() before any parent-directory lookup on a relative path
+[re-multiline-whitespace-captures-across-lines](re-multiline-whitespace-captures-across-lines.md) — Python re — \s* matches newlines even under re.M, so an empty-valued key swallows the next line and chains wrong-field parses; use [ \t]* or anchor the value
+[reviewer-dispatch-isolated-worktree](reviewer-dispatch-isolated-worktree.md) — A reviewer subagent comparing commits can overwrite tracked files in the main checkout — dispatch prompts must explicitly order an isolated scratch dir or detached worktree
+[reviewers-rerun-mutations-before-accepting-fix](reviewers-rerun-mutations-before-accepting-fix.md) — Reviewers should re-run the breaking mutation themselves (e.g. delete the guard in scratch and watch the test fail) before accepting a fix claim
+[snippet-stats-need-primary-source-check](snippet-stats-need-primary-source-check.md) — A web-search snippet paraphrasing a statistic needs a primary-source check before citing — a different-agent reviewer with web access catches what the generator's shared priors miss
+[stamp-changelog-test-counts-at-closeout](stamp-changelog-test-counts-at-closeout.md) — CHANGELOG test counts go stale during multi-round review fix-ups — stamp the number with pytest --collect-only at branch close-out, not mid-branch
+[test-except-branches-explicitly](test-except-branches-explicitly.md) — A green suite can hide a crash in an except branch with zero coverage — e.g. catching tokenize.TokenizeError, which is not a real stdlib name (it's TokenError)
+[verify-agent-mechanisms-on-disk-not-self-report](verify-agent-mechanisms-on-disk-not-self-report.md) — Behavioral verification of agent-facing mechanisms on cheap model tiers — real-session drive with unique markers, disk-verified effects, transcript grep for output fingerprints, per-verb cold-reader agents, two consecutive clean rounds; never accept the model's self-report as the oracle

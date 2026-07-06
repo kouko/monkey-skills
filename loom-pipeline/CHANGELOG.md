@@ -6,6 +6,23 @@ this file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] — 2026-07-06
+
+### Added
+
+- **`loom-memory` skill** — three verbs over the repo-native
+  practice-memory store at `docs/loom/memory/`: **record** a distilled
+  practice/gotcha/process into the store per its charter, **recall**
+  relevant memories by grepping the index then bodies (pull-based,
+  honest no-hits), **prune** stale entries into a keep/merge/retire
+  proposal (never auto-deletes). CONDITIONAL: fires only when the
+  target repo has `docs/loom/memory/README.md` — otherwise
+  `loom-memory: N/A` with the reason, loudly (Task 1).
+- **Family-reception recall pointer** — `hooks/family-reception.md`
+  gains a pointer-only recall note: when the target repo has
+  `docs/loom/memory/`, run a recall pass via `loom-memory` before
+  starting loom work; the hook preloads no memory content (Task 2).
+
 ## [0.4.0] — 2026-07-04
 
 ### Added
