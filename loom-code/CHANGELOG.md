@@ -16,9 +16,7 @@ Versioning: [Semantic Versioning](https://semver.org/).
   Evidence: `docs/loom/dogfood/2026-07-06-g4-sonnet-vs-fable-ab.md` —
   a single-Sonnet verdict missed the correct call 1-of-2 times; union
   aggregation reproduced the correct verdict with zero false positives
-  across all 4 tested arms. Reviewers still inherit the session model
-  (no pinning) — a weak-model session runs a 2×weak-tier panel, the
-  G4-validated configuration.
+  across all 4 tested arms. Reviewers still inherit the session model (no pinning) — the 2×Sonnet panel is exactly the configuration G4 measured; the report cautions against cross-tier extrapolation.
 - **`using-loom-code/references/codex-tools.md`** — corrected the
   stale "explicit-trigger only" claim about Codex subagent spawning.
   Live probes on 2026-07-06 (codex-cli 0.139.0, `multi_agent`
