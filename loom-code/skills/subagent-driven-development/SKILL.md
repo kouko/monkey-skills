@@ -63,6 +63,8 @@ When you ask a technical decision (a bug-fix approach, a design choice, error ha
 
 This ✅ example is the calibration target for every question and hand-off the orchestrator surfaces below.
 
+**Delivery form.** Every per-wave status report and checkpoint sign-off surfaced under this gate is delivered as the user-rollup card, filled in the live conversation language — see `loom-pipeline/hooks/family-relay.md §Family relay discipline`. Never copy the card template body here; point at it. Internal machine traffic (verdict tokens, wave labels) stays precise below the card.
+
 ## When to use
 
 Auto-routed by [`using-loom-code`](../using-loom-code/SKILL.md) when **either** trigger fires:
@@ -167,6 +169,8 @@ BLOCKED              → apply unblock_step if orchestrator can; else surface to
 ```
 
 The orchestrator never silently dismisses a `BLOCKED` — even if the unblock step is trivial, log what was done so the final summary names it.
+
+Whatever the user sees at this seam — a wave sign-off, a `DONE_WITH_CONCERNS` summary — is the rollup card in the live conversation language, per `loom-pipeline/hooks/family-relay.md §Family relay discipline`; this table's states are internal routing, not user-facing copy.
 
 ## Prompt templates
 
