@@ -34,7 +34,7 @@ else
 fi
 
 # -------------------------------------------------------------------------
-# Check 2 — injected context is slim: 1000 < len < 5000 chars
+# Check 2 — injected context is slim: 1000 < len < 3500 chars
 
 unset LOOM_CODE_MODE
 CTX="$("${HOOK_SCRIPT}" | python3 -c "
