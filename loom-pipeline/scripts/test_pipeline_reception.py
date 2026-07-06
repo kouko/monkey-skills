@@ -78,6 +78,16 @@ def test_reception_content_contract():
     assert "recommend" in lower and "once" in lower, "missing the recommend-once rule"
     assert "record" in lower and "choice" in lower, "missing the record-the-choice rule"
 
+    # Batch-the-intake rule (2026-07-06 /insights adoption): one ask, never
+    # serial; PRINCIPLES.md stays a recommendation, not a prerequisite.
+    assert "batch the intake" in lower, "missing the batch-the-intake rule"
+    assert "one ask" in lower and "never serially" in lower, (
+        "missing the one-ask / never-serially phrasing"
+    )
+    assert "never blocking prerequisites" in lower, (
+        "missing the recommendations-are-not-prerequisites reconciliation"
+    )
+
 
 def test_hooks_json_shape_matches_loom_code():
     assert HOOKS_JSON.exists(), f"missing {HOOKS_JSON}"

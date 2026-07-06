@@ -62,7 +62,7 @@
 
 - `/insights` 已跑（63 sessions 分析）；facets 已暖，distill-sessions
   脫離 heuristic 盲跑。報告採納項落地：CLAUDE.md 注入碼條款（四 host）、
-  reception batch-intake 規則、BACKLOG:93 優先級調升。
+  reception batch-intake 規則、BACKLOG「loom-spec station briefing gate」條目優先級調升。
 
 ## 6. 債務清掃 bundle（一個 PR 收完）
 
@@ -74,7 +74,7 @@
 
 ## 7. 儀式比例感（2026-07-06 /insights 後新增）
 
-- **證據**：insights 三大摩擦全指向「儀式擋住小請求」——TDD 儀式擋
+- **證據**：insights 三大摩擦多指向「儀式擋住小請求」——TDD 儀式擋
   小修改、intake 卡 pipeline、session 停在 brainstorming 無產出。
   這是與 token 診斷正交的軸：那邊量錢，這邊量「沒交付」。
 - **內容**：(a) 路由層 trivial 識別強化（tdd-iron-law §When-NOT-to-Use

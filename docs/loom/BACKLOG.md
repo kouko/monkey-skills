@@ -62,8 +62,9 @@
 
 ## loom-spec station briefing gate (#475 parity)
 - Status: OPEN (original 值得做 list item 3, half-covered) — **priority
-  bumped 2026-07-06**: /insights measured serial intake-stalls as the #1
-  not_achieved driver across pipeline sessions; family-reception now
+  bumped 2026-07-06**: /insights flagged serial intake-stalls as a top
+  not_achieved driver across pipeline sessions (subject to the probe-
+  contamination discount — harness-audit roadmap item 3e); family-reception now
   carries a cross-family batch-intake rule, this entry owns the deeper
   per-station briefing escalation
 - Origin: 2026-07-03 dogfood — spec station resolved a product decision
