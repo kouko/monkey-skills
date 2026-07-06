@@ -101,7 +101,7 @@
     },
     {
       "name": "research-toolkit",
-      "description": "Key-free research skills driving the host agent's own LLM + web tools (ships deep-deep-research).",
+      "description": "Key-free research skills driving the host agent's own LLM + web tools (ships using-research-toolkit, deep-deep-research, fact-check, cite-check, deep-read).",
       "source": "./research-toolkit/"
     },
     {

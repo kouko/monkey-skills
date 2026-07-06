@@ -1,7 +1,7 @@
 {
   "name": "research-toolkit",
-  "version": "0.2.1",
-  "description": "Key-free research skills driving the host agent's own LLM + web tools (ships deep-deep-research).",
+  "version": "0.3.0",
+  "description": "Key-free research skills driving the host agent's own LLM + web tools (ships using-research-toolkit, deep-deep-research, fact-check, cite-check, deep-read).",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
@@ -11,7 +11,7 @@
   "license": "MIT",
   "keywords": [
     "research-toolkit",
-    "deep-research",
+    "deep-deep-research",
     "research",
     "fact-checking",
     "adversarial-verification",
@@ -21,7 +21,7 @@
   "interface": {
     "displayName": "research-toolkit",
     "shortDescription": "Key-free deep research, fact-check, and citation auditing",
-    "longDescription": "Run multi-source, adversarially-verified research using the host agent's own LLM and web tools — no API keys to configure. deep-research fans out searches, fetches sources, and synthesizes a cited report; fact-check verifies a claim against primary sources; cite-check audits an existing document so every citation actually supports its claim; deep-read digests a long source closely. Use it for any question that demands evidence rather than recall.",
+    "longDescription": "Run multi-source, adversarially-verified research using the host agent's own LLM and web tools — no API keys to configure. deep-deep-research fans out searches, fetches sources, and synthesizes a cited report; fact-check verifies a claim against primary sources; cite-check audits an existing document so every citation actually supports its claim; deep-read digests a long source closely. Use it for any question that demands evidence rather than recall. The using-research-toolkit entry skill routes you to the right member.",
     "developerName": "kouko",
     "category": "Research",
     "capabilities": [

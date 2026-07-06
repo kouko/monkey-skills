@@ -1,7 +1,7 @@
 {
   "name": "research-toolkit",
-  "version": "0.2.1",
-  "description": "Key-free research skills driving the host agent's own LLM + web tools (ships deep-deep-research).",
+  "version": "0.3.0",
+  "description": "Key-free research skills driving the host agent's own LLM + web tools (ships using-research-toolkit, deep-deep-research, fact-check, cite-check, deep-read).",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
@@ -11,7 +11,7 @@
   "license": "MIT",
   "keywords": [
     "research-toolkit",
-    "deep-research",
+    "deep-deep-research",
     "research",
     "fact-checking",
     "adversarial-verification",

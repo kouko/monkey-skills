@@ -1,7 +1,7 @@
 ---
 name: deep-read
 description: |
-  Deeply understand ONE large document or book — structured understanding (sections, claims, methodology, caveats, argument). Use to thoroughly comprehend one long doc/paper/book — depth-on-one vs deep-research's breadth-across-many.
+  Thoroughly understands ONE long document, paper, or book — structured sections and claims. Use for "精讀這本書"; for breadth across many, use deep-deep-research.
 version: 0.1.0
 ---
 

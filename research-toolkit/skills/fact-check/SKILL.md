@@ -1,7 +1,7 @@
 ---
 name: fact-check
 description: |
-  Single-claim adversarial verdict — supported / refuted / inconclusive with cited evidence. Use when one factual claim needs checking mid-conversation: 'is it true…?', 'really?', '這個說法對嗎' — even common knowledge. Full report → deep-deep-research.
+  Single-claim adversarial verdict — supported/refuted/inconclusive with cited evidence. Use for one factual claim mid-conversation, even common knowledge: 'is it true?', 'really?', '這個說法對嗎'. Full report → deep-deep-research.
 version: 0.1.0
 ---
 
@@ -267,6 +267,12 @@ Return the verdict to the user as a short answer: the claim, the
 `reason`** (a `no-referent` answer must read as "likely fabricated", not
 "undecided"), the confidence, and the cited quotes + source URLs from Stage A
 that back it. Do **not** synthesize a full report — that is deep-research's job.
+Any supporting context claim riding along with the verdict (background
+stats, streak claims like "X years running") that was **not itself** run
+through the Stage B quorum must either get a cheap single-verifier check or
+be explicitly hedged as unverified attribution ("per <source>, not
+independently checked") — never presented bare as if it were
+quorum-verified.
 
 ---
 

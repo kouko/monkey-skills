@@ -1,7 +1,7 @@
 ---
 name: cite-check
 description: |
-  Audit a document's cited claims — fetch each cited source and check it actually supports the claim; flag unsupported / misattributed / dead-link citations. Use to verify a document's citations hold up. Key-free (host's own LLM + web tools).
+  Checks a document's citations against sources, flagging unsupported/misattributed/dead-link claims. Use on 「查證這份文件的引用」 or "check these citations". Key-free (host's own web tools).
 version: 0.1.0
 ---
 
@@ -181,7 +181,10 @@ echo '[<result rows>]' | python scripts/citecheck.py report
 stdin: the result-row array → stdout: a markdown **audit report** — a
 per-citation verdict table (claim · cited source · verdict · note/flags)
 followed by a summary of the **six counts**: supported / partial / unsupported
-/ misattributed / unresolvable / unsourced.
+/ misattributed / unresolvable / unsourced. Emit exactly ONE verdict per
+citation: when a source is about a different claim than the one it was
+cited for, `misattributed` subsumes `unsupported` — never emit a compound
+label like `misattributed / unsupported`.
 
 For just the summary counts (no table):
 
