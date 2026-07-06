@@ -39,6 +39,23 @@ No Critical finding. The one High is environmental (listing eviction),
 already documented as the deferred machine-side fix; the repo-side
 fixables are F1/F2/F3/F4/F5 — all one-to-two-line edits.
 
+## Round-3 fix outcomes (2026-07-06, same day)
+
+All five repo-side findings fixed (3 SKILL.md bodies, descriptions
+byte-frozen; spec-review PASS) and re-verified:
+
+| Finding | Outcome | Re-verification evidence |
+|---|---|---|
+| F1 invocation mechanics | **fixed** | fresh cold-reader: "Self-contained? Yes" + quotes the new invocation line |
+| F2 boundary gaps | **fixed** | cold-reader 4-question routing quiz 4/4 — both formerly-ambiguous cases resolved by the carve-outs |
+| F3 jargon | **fixed** | the four flagged terms gone; residual terms (adversarial verdict, key-free) are guessable domain words — accepted, don't chase infinite gloss |
+| F4 verdict-enum drift | **fixed** | E2E ① re-run: record 2 now single-value `misattributed`, no compound label; chain router→cite-check reproduced |
+| F5 unvetted sub-claims | **fixed** (single-run caveat) | E2E ② re-run: no bare rider claims; every supporting stat carries source+year attribution and the contested HK/Japan title is explicitly reconciled by scope. Consistent with the new clause; causality not provable from one run |
+| F6 environment eviction | **skipped** (out of repo scope) | deferred machine-side options (#1/#2: plugin-surface slimming / listing budget) |
+| F7 tsundoku capture | **no change needed** | observe-only; single occurrence in 1/2 runs — legislate only on recurrence |
+
+Round-3 raw outputs: `/private/tmp/research-firing-ab/out/{e2e-router-citecheck-r3,e2e-factcheck-r3}.jsonl`.
+
 > Target ~5–10 well-evidenced findings over volume. Every finding cites
 > an actual probe prompt + an actual subagent response (transcript
 > excerpt) — no finding asserted from reading `SKILL.md` alone.
