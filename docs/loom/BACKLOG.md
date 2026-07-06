@@ -112,6 +112,10 @@
   loom-spec 0.2.2/0.2.1/0.1.0 vs 0.4.1. Decide the contract
   (frontmatter tracks plugin version vs deliberate per-skill semver),
   then either sync or add a drift gate next to the codex-manifest one.
+  New instance: loom-pipeline shipped loom-memory SKILL.md frontmatter
+  `version: 0.1.0` while plugin.json moved to 0.5.0 (2026-07-06,
+  followed sibling practice deliberately) — the undecided contract now
+  covers loom-pipeline too.
 
 ## .claude/hooks ↔ .codex/hooks mirror has no drift gate
 - Status: OPEN
@@ -173,3 +177,20 @@
   upstream fix: verify firing, then also confirm the payload carries
   tool_input.file_path (the script's silent-no-op tolerance would mask a
   key-name mismatch; probe with a catch-all debug hook if needed).
+
+## Anti-copy acceptance greps pass paraphrase copies
+- Status: OPEN
+- Start: next touch of loom-code writing-plans SKILL.md or the
+  plan-document-reviewer prompt
+- Origin: 2026-07-06 loom-memory-skill task 1 quality review — the
+  plan's anti-copy GREEN criterion grepped for verbatim charter-row
+  text; the implementer shipped a complete five-row PARAPHRASE of the
+  charter's jurisdiction table that passed the mechanical grep while
+  violating its intent; only the quality reviewer's judgment leg
+  caught it
+- What: anti-copy / SSOT-protection acceptance criteria authored in
+  plans need TWO legs — the mechanical verbatim grep AND an explicit
+  reviewer-judgment check ("no paraphrase reproduction of the
+  protected content"); candidate: one line in writing-plans'
+  acceptance-criteria guidance + one check hint in the
+  plan-document-reviewer prompt.
