@@ -71,7 +71,7 @@ claude plugin install loom-code@monkey-skills --scope local
 
 | # | Skill | Stage | What it does |
 |---|---|---|---|
-| Router | [`using-loom-code`](skills/using-loom-code/) | Always-on | Auto-injected at SessionStart; 5 load-bearing rules + Skill Priority table |
+| Router | [`using-loom-code`](skills/using-loom-code/) | Always-on | SessionStart injects a ~2 KB router card (coding mandate + 5 load-bearing rules); the full router incl. the Skill Priority table loads on invocation (0.24.0) |
 | 1 | [`brainstorming`](skills/brainstorming/) | Discovery | HARD-GATE 5-axis exploration (Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete); refuses skip-discovery rationalizations |
 | 2 | [`writing-plans`](skills/writing-plans/) | Planning | ≤5-task plan with per-task RED-GREEN acceptance; BLOCKED → child-test fallback (Beck Part II §Child Test); v0.8.0 adds `Independent` + `Files touched` markup for parallel-dispatch eligibility |
 | 3 | [`subagent-driven-development`](skills/subagent-driven-development/) | Execution | Per-task triad dispatch (implementer + spec-reviewer + code-quality-reviewer) |

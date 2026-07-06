@@ -142,7 +142,7 @@ loom-code:finishing-a-development-branch → PR / merge
 | 風險 | 影響 | Mitigation |
 |---|---|---|
 | **Drift**：code-team 改了 standards，loom-code 沒同步 | reviewer 用過時規則評分 | `scripts/verify-drift.py` CI gate（mirror legal-toolkit Phase 1.10 模式） |
-| **Hook 干擾**：SessionStart hook 注入太多 token，每個 session 都付 cost | session 啟動慢 / token 成本 | hook 只注入 `using-loom-code/SKILL.md`（控制 ≤2000 tokens）；其他 skill 走 lazy load |
+| **Hook 干擾**：SessionStart hook 注入太多 token，每個 session 都付 cost | session 啟動慢 / token 成本 | hook 只注入 `hooks/router-card.md`（~600 tokens；0.24.0 起 SKILL.md 全文改由 Skill tool lazy load）；其他 skill 走 lazy load |
 | **與既有 skill 衝突**：使用者也裝了 `obra/superpowers` | 雙 hook 同時注入；trigger 互搶 | README 明寫 conflict；提供 `loom-code-only-mode` env var |
 | **Codex CLI plugin schema 變動**：OpenAI 更新 plugin spec | Codex 載入失敗 | Phase 1 只發 Claude Code；Phase 2 才 ship Codex variant 並寫 integration test |
 | **「鐵律措辭」過度** | 使用者覺得煩；關掉 hook | measure 強度匹配真實壓測結果（Phase 1.5 dogfood）；提供 `--soft-mode` flag |

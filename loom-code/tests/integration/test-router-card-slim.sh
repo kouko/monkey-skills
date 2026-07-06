@@ -44,10 +44,10 @@ sys.stdout.write(d.get('hookSpecificOutput', {}).get('additionalContext', ''))
 ")"
 CTX_LEN=${#CTX}
 
-if [ "${CTX_LEN}" -gt 1000 ] && [ "${CTX_LEN}" -lt 5000 ]; then
-  pass "injected context is slim (${CTX_LEN} chars, expected 1000-5000)"
+if [ "${CTX_LEN}" -gt 1000 ] && [ "${CTX_LEN}" -lt 3500 ]; then
+  pass "injected context is slim (${CTX_LEN} chars, expected 1000-3500)"
 else
-  fail "injected context is ${CTX_LEN} chars (expected 1000-5000 — full body leak or empty)"
+  fail "injected context is ${CTX_LEN} chars (expected 1000-3500 per TECH-SPEC ~600-token budget — bloat or empty)"
 fi
 
 # -------------------------------------------------------------------------

@@ -5,6 +5,10 @@
 # additionalContext. The full using-loom-code SKILL.md body is NOT
 # injected — the Skill tool loads it on invocation (pull, not push).
 # Rationale + firing gate: docs/loom/plans/2026-07-06-loom-code-router-card-slim.md.
+# DRIFT NOTE: router-card.md's five rules are a hand-maintained tightened
+# copy of skills/using-loom-code/SKILL.md's — edit BOTH on any rule change
+# (kept out of verify-drift.py scope for now; card wording is deliberately
+# compressed, not byte-identical).
 #
 # CANONICAL key (both hosts consume): hookSpecificOutput.additionalContext
 # Per the official Codex hooks contract (developers.openai.com/codex/hooks):

@@ -66,7 +66,7 @@ claude plugin install loom-code@monkey-skills --scope local
 
 | # | Skill | Stage | 何をするか |
 |---|---|---|---|
-| Router | [`using-loom-code`](skills/using-loom-code/) | Always-on | SessionStart 自動注入；5 つの load-bearing rules + Skill Priority テーブル |
+| Router | [`using-loom-code`](skills/using-loom-code/) | Always-on | SessionStart は ~2 KB の router card（coding mandate＋5 つの load-bearing rules）を注入；完全な router（Skill Priority テーブル含む）は呼び出し時にロード（0.24.0） |
 | 1 | [`brainstorming`](skills/brainstorming/) | Discovery | HARD-GATE 5-axis 探索（Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete）；v0.7.0+ ブリーフに `Current State Evidence` 5 次元 recon セクション搭載；discovery スキップの合理化を拒否 |
 | 2 | [`writing-plans`](skills/writing-plans/) | Planning | ≤5-task plan + 各タスク RED-GREEN acceptance；BLOCKED → child-test フォールバック（Beck Part II §Child Test）；v0.8.0+ で `Independent` + `Files touched` フィールドを追加（parallel-dispatch 適格条件） |
 | 3 | [`subagent-driven-development`](skills/subagent-driven-development/) | Execution | タスクごとに triad を派遣（implementer + spec-reviewer + code-quality-reviewer）；reviewer 三人組は `reviewer-discipline-v1` SSOT 注入ブロック（R1+R2）搭載 |
