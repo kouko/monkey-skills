@@ -73,9 +73,13 @@ Shared external-surface facts (referenced by tasks below):
   assistant message text (concatenate text blocks; strip code fences,
   inline code, URLs, paths, table pipes). Block ONLY when expected ∈
   {ja, zh} AND visible reply length ≥ 200 chars AND target-script char
-  ratio < 0.15 — emit decision:block with the corrective reason written
-  in the expected language. Never block when expected is en/None.
-  Register in hooks.json under Stop.
+  count < max(10, 0.05 × visible length) — emit decision:block with the
+  corrective reason written in the expected language. Never block when
+  expected is en/None. Register in hooks.json under Stop.
+  [Amended 2026-07-07 post-review: original ratio<0.15 rule false-
+  positived on legitimate zh prose dense with English identifiers
+  (Han ratio 0.089); absolute-count + low-ratio floor kills that while
+  still catching full-English narration (CJK ≈ 0). Reviewer-verified.]
 - Module: loom-pipeline/hooks/language-stop-check.py
 - Files touched: loom-pipeline/hooks/language-stop-check.py, loom-pipeline/hooks/hooks.json, loom-pipeline/scripts/test_language_stop_check.py
 - Context paths:
