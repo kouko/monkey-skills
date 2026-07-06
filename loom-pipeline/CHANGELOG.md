@@ -6,6 +6,29 @@ this file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] — 2026-07-07
+
+### Added
+
+- **Family relay discipline SSOT** — `hooks/family-relay.md` becomes the
+  single source of truth for relay behavior; `hooks/family-reception.md`
+  keeps only a 2-line pointer to it, staying within its 60-line budget
+  (Task 14 carrier).
+- **Conversation-language detection helper** — `hooks/lang_detect.py`
+  (Task 14 carrier).
+- **Tail language-anchor hook** — PostToolUse on `Skill`, reasserting the
+  conversation's target language after a skill invocation (Task 14
+  carrier).
+- **Stop-hook language-consistency validator** — enforces an absolute
+  target-script-count rule at session Stop (Task 14 carrier).
+- **Comms metrics recipe** — `scripts/comms_metrics.py` plus a baseline
+  audit doc (Task 14 carrier).
+
+### Verified
+
+- `PYTHONDONTWRITEBYTECODE=1 python3 -m pytest loom-pipeline/scripts/ -q`
+  — 150 passed.
+
 ## [0.5.0] — 2026-07-06
 
 ### Added
