@@ -19,7 +19,9 @@ The agent defaults to implementation-level detail with embedded jargon. The user
 ### Mode A — Proactive (DEFAULT for any non-trivial fork)
 **Triggered by**: You are about to ask the user to decide anything non-trivial (see *When NOT to Use*). This is the **default path** — briefing first is not optional. Firing `AskUserQuestion` with bare / jargon options *before* the user has the Mental Model + My take is a **violation**, not a shortcut.
 
-**Output**: Full 6-block briefing → ends with the specific request (the `AskUserQuestion` fires only after the briefing has landed).
+**Output**: Full 6-block briefing → ends with the specific request (the `AskUserQuestion` fires only after the briefing has landed — per the turn-ordering rule below, never stacked in the same turn as the briefing).
+
+**Turn-ordering rule (hard)**: the briefing must land as turn-final text, with the ask as inline text right after it in that same turn — **never bury a briefing and an AskUserQuestion in the same turn** by stacking them, i.e. never fire the `AskUserQuestion` dialog in the same turn as the briefing such that the dialog visually covers the briefing (it renders on top and the user never scrolls back to read the six blocks). This recurred twice on 2026-07-03 — the briefing was invisible both times. If a structured choice is needed, let the briefing's prose end the turn, then ask in the next turn.
 
 **Mini-example** — index decision briefing (compressed):
 
@@ -70,7 +72,7 @@ The agent defaults to implementation-level detail with embedded jargon. The user
 2. Lead with a **consequence-first Mental Model** + an **"if you pick A … / if you pick B …" outcome contrast** — an everyday analogy beats a precise mechanism here.
 3. *Then* My take (lean + why).
 4. **Drop or define the internal labels** (e.g. `Arm A`, `D`/`E`, `WARN`, `thin/thick-slice`) — replace them with the analogy and plain outcome words. Do not carry the raw jargon *alongside* the plain framing, or the stakes stay half-buried (a real dogfood blemish).
-5. **Do NOT** answer with more options, more detail, or a structural / dataflow diagram — those deepen the fog (see Anti-Patterns).
+5. **Do NOT** answer stakes-confusion with more options, more detail, or a structural / dataflow diagram **instead of** plain words — those deepen the fog (see Anti-Patterns). Carve-out: an explicit user request for a visual is always honored; when comparing options, default to a markdown comparison table.
 
 > **Why Mode D differs from C**: Mode C is *lost in jargon* (fix: define terms, land the Mental Model). Mode D is *the words parsed fine but the significance didn't* — the user could read three well-framed options and still not see why they're being asked. The fix is consequence + outcome-contrast, not glossary.
 
@@ -182,7 +184,7 @@ Per-block forbidden items live in each block's section above. The patterns below
 - ❌ Conclusion-first with no reasoning: "I recommend Redis, OK?" — collapses 6 blocks into 1 ask
 - ❌ Multiple forks bundled into one briefing — one fork per briefing
 - ❌ **Mode C trigger but agent dumps full 6 blocks instead of pausing** — re-drowns the user
-- ❌ **Answering stakes-confusion (Mode D) with a structural diagram** — when the user is lost on *why it matters / what changes by their choice*, a dataflow / architecture / sequence diagram makes it worse (it shows *structure*; they asked for *consequence*). Lead with an analogy + outcome contrast; a diagram only after the stakes have landed.
+- ❌ **Answering stakes-confusion (Mode D) with a structural diagram instead of plain words** — when the user is lost on *why it matters / what changes by their choice*, a dataflow / architecture / sequence diagram makes it worse (it shows *structure*; they asked for *consequence*). Lead with an analogy + outcome contrast; a diagram only after the stakes have landed. Carve-out: an explicit user request for a visual is always honored — this anti-pattern targets unprompted diagrams, never a named ask; option comparisons default to a markdown comparison table.
 - ❌ **Escalating detail after a confusion signal** — adding more tables / research / options when the user just said they're lost. The 2nd confusion signal is a STOP, not a cue for more.
 
 ## When NOT to Use
