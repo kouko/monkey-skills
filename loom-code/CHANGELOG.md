@@ -5,6 +5,28 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.26.0] — 2026-07-06 — review panel default + codex-tools autonomy correction
+
+### Changed
+
+- **`requesting-code-review`** now dispatches **two `code-reviewer`
+  subagents in parallel** (byte-identical prompts) instead of one. The
+  gate verdict comes from applying the aggregation rule to the
+  **union** of both arms' findings, not either arm's own verdict.
+  Evidence: `docs/loom/dogfood/2026-07-06-g4-sonnet-vs-fable-ab.md` —
+  a single-Sonnet verdict missed the correct call 1-of-2 times; union
+  aggregation reproduced the correct verdict with zero false positives
+  across all 4 tested arms. Reviewers still inherit the session model (no pinning) — the 2×Sonnet panel is exactly the configuration G4 measured; the report cautions against cross-tier extrapolation.
+- **`using-loom-code/references/codex-tools.md`** — corrected the
+  stale "explicit-trigger only" claim about Codex subagent spawning.
+  Live probes on 2026-07-06 (codex-cli 0.139.0, `multi_agent`
+  stable+on, `codex exec`) showed model-initiated spawning from both a
+  plain prompt instruction and an AGENTS.md standing delegation
+  directive paired with a delegation-free prompt — no per-spawn
+  approval observed. Interactive mode not yet exercised. Added a
+  panel-dispatch mapping for `requesting-code-review`'s 2-reviewer
+  panel.
+
 ## [0.25.0] — 2026-07-06 — gate friction pack
 
 ### Added
