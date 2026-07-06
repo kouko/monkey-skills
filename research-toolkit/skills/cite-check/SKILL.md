@@ -1,7 +1,7 @@
 ---
 name: cite-check
 description: |
-  Audit a document's cited claims — fetch each cited source and check it actually supports the claim; flag unsupported / misattributed / dead-link citations. Use to verify a document's citations hold up. Key-free (host's own LLM + web tools).
+  Checks a document's citations against sources, flagging unsupported/misattributed/dead-link claims. Use on 「查證這份文件的引用」 or "check these citations". Key-free (host's own web tools).
 version: 0.1.0
 ---
 
