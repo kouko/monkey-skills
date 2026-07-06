@@ -107,8 +107,8 @@ Shared external-surface facts (referenced by tasks below):
   test_brainstorming_visuals, test_design_side_pointers (parametrized over
   the three routers, ids: spec / interface-design / product-principles),
   test_brief_before_asking_ordering (those stay RED until Tasks 5-11).
-- Module: loom-pipeline/hooks/family-reception.md
-- Files touched: loom-pipeline/hooks/family-reception.md, loom-pipeline/scripts/test_family_relay.py
+- Module: loom-pipeline/hooks/family-relay.md (see Notes: post-PASS amendment 2)
+- Files touched: loom-pipeline/hooks/family-relay.md, loom-pipeline/hooks/family-reception.md, loom-pipeline/scripts/test_family_relay.py
 - Context paths:
   - loom-code/skills/requesting-code-review/SKILL.md (③ rules to point at, lines 34-56)
   - docs/loom/plans/2026-07-07-loom-user-communication-overhaul.md (§Smallest end state 2-3)
@@ -131,7 +131,7 @@ Shared external-surface facts (referenced by tasks below):
 - Module: loom-code/skills/subagent-driven-development/SKILL.md
 - Files touched: loom-code/skills/subagent-driven-development/SKILL.md
 - Context paths:
-  - loom-pipeline/hooks/family-reception.md (§Family relay discipline)
+  - loom-pipeline/hooks/family-relay.md (§Family relay discipline)
   - loom-pipeline/scripts/test_family_relay.py
 - Acceptance:
   - RED: test_family_relay.py::test_sdd_pointer fails before edit
@@ -150,7 +150,7 @@ Shared external-surface facts (referenced by tasks below):
 - Module: loom-code/skills/requesting-code-review/SKILL.md
 - Files touched: loom-code/skills/requesting-code-review/SKILL.md
 - Context paths:
-  - loom-pipeline/hooks/family-reception.md (§Family relay discipline)
+  - loom-pipeline/hooks/family-relay.md (§Family relay discipline)
   - loom-pipeline/scripts/test_family_relay.py
 - Acceptance:
   - RED: test_family_relay.py::test_review_pointer fails before edit
@@ -171,7 +171,7 @@ Shared external-surface facts (referenced by tasks below):
 - Module: loom-code/skills/brainstorming/ (one skill dir)
 - Files touched: loom-code/skills/brainstorming/references/visual-companion.md, loom-code/skills/brainstorming/references/handoff-brief-format.md, loom-code/skills/brainstorming/SKILL.md
 - Context paths:
-  - loom-pipeline/hooks/family-reception.md (§Family relay discipline)
+  - loom-pipeline/hooks/family-relay.md (§Family relay discipline)
   - loom-pipeline/scripts/test_family_relay.py
 - Acceptance:
   - RED: test_family_relay.py::test_brainstorming_visuals fails before edit
@@ -188,7 +188,7 @@ Shared external-surface facts (referenced by tasks below):
 - Module: loom-spec/skills/using-loom-spec/SKILL.md
 - Files touched: loom-spec/skills/using-loom-spec/SKILL.md
 - Context paths:
-  - loom-pipeline/hooks/family-reception.md (§Family relay discipline)
+  - loom-pipeline/hooks/family-relay.md (§Family relay discipline)
   - loom-pipeline/scripts/test_family_relay.py
 - Acceptance:
   - RED: test_family_relay.py::test_design_side_pointers[spec] fails before edit
@@ -205,7 +205,7 @@ Shared external-surface facts (referenced by tasks below):
 - Module: loom-interface-design/skills/using-loom-interface-design/SKILL.md
 - Files touched: loom-interface-design/skills/using-loom-interface-design/SKILL.md
 - Context paths:
-  - loom-pipeline/hooks/family-reception.md (§Family relay discipline)
+  - loom-pipeline/hooks/family-relay.md (§Family relay discipline)
   - loom-pipeline/scripts/test_family_relay.py
 - Acceptance:
   - RED: test_family_relay.py::test_design_side_pointers[interface-design] fails before edit
@@ -222,7 +222,7 @@ Shared external-surface facts (referenced by tasks below):
 - Module: loom-product-principles/skills/using-loom-product-principles/SKILL.md
 - Files touched: loom-product-principles/skills/using-loom-product-principles/SKILL.md
 - Context paths:
-  - loom-pipeline/hooks/family-reception.md (§Family relay discipline)
+  - loom-pipeline/hooks/family-relay.md (§Family relay discipline)
   - loom-pipeline/scripts/test_family_relay.py
 - Acceptance:
   - RED: test_family_relay.py::test_design_side_pointers[product-principles] fails before edit
@@ -442,3 +442,12 @@ Shared external-surface facts (referenced by tasks below):
   marked Independent: true (write set collides with nothing); Task 20
   traceability phrasing made self-contained. No task content, DAG, or
   acceptance changes.
+- Post-PASS amendment 2 (2026-07-07, Task 4 execution finding): the relay
+  section lives in NEW loom-pipeline/hooks/family-relay.md, with only a
+  ≤2-line pointer in family-reception.md — the reception file has a
+  test-pinned ≤60 non-empty-line budget
+  (test_pipeline_reception.py::test_reception_content_contract; it is
+  injected every SessionStart, so lines = standing token cost). Canonical
+  pointer phrase for Tasks 5-11 becomes `family-relay.md §Family relay
+  discipline`. Task 4's Files touched gains family-relay.md; downstream
+  context paths updated in place. DAG/acceptance semantics unchanged.

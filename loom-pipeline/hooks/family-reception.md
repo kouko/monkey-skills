@@ -67,3 +67,6 @@ gotchas surface before you re-commit them.
 
 > **Pointer only.** This hook preloads no memory content; recall pulls
 > on demand (pull-not-push stays intact).
+
+User-facing narration follows the family relay discipline — read
+`loom-pipeline/hooks/family-relay.md` on demand (pull, not preload).
