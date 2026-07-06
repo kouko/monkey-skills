@@ -70,6 +70,19 @@ beginning ``git push`` is newline-split into a segment and gated — a
 false positive we accept because it fails CLOSED (an over-block the
 model can rephrase around, never an under-block).
 
+A ``cd <path>`` segment updates an "effective cwd" tracked across the
+REST of the same command string (absolute, relative, and ``~`` forms;
+a bare ``cd`` means ``$HOME``); later segments in that string (without
+their own ``-C``/``--git-dir``) gate against it instead of the
+original event ``cwd`` — this closes the ``cd ~/dotfiles && git push``
+miss where the push was gated against the wrong repo. A dynamic/
+unresolvable target (``$VAR``, command substitution, ``cd -``) does
+NOT update the effective cwd — the guard keeps gating at the last
+KNOWN location (fail-closed toward gating, never toward silently
+trusting an opaque target). The effective cwd resets to the event's
+own ``cwd`` on every hook invocation — it never leaks across separate
+Bash tool calls.
+
 Exit codes follow the PreToolUse contract: 0 = allow, 2 = block
 (stderr shown to the model). Stdlib only.
 """
@@ -246,6 +259,24 @@ def _load_json(path):
         return None
 
 
+def _resolve_cd_target(raw_path, effective_cwd):
+    """Resolve one `cd` argument against `effective_cwd`; return the new
+    effective cwd, or None when the argument is dynamic/unresolvable
+    ($VAR, command substitution, `cd -`) — callers keep the previous
+    cwd on None (fail-closed toward gating: the guard would rather
+    apply the gate at the last KNOWN location than silently trust an
+    opaque target). Handles absolute, relative, and `~` forms; a bare
+    `cd` (no argument) means $HOME, same as the real shell builtin."""
+    if not raw_path:
+        raw_path = "~"
+    if raw_path == "-" or "$" in raw_path or "`" in raw_path:
+        return None
+    path = os.path.expanduser(raw_path)
+    if not os.path.isabs(path):
+        path = os.path.join(effective_cwd, path)
+    return os.path.normpath(path)
+
+
 def _has_no_verify(args):
     """True when commit args carry --no-verify or -n (incl. bundled -anm)."""
     for tok in args:
@@ -325,9 +356,17 @@ def main():
         return 0
     cwd = payload.get("cwd") or os.getcwd()
 
+    effective_cwd = cwd
     for segment in SEGMENT_SPLIT.split(command):
         toks = _tokens(segment)
         if not toks:
+            continue
+        if toks[0] == "cd":
+            target = _resolve_cd_target(
+                toks[1] if len(toks) > 1 else None, effective_cwd
+            )
+            if target is not None:
+                effective_cwd = target
             continue
         gate_cwd = None
         gate_globals = ()
@@ -338,12 +377,12 @@ def main():
                 return 2
             # push's -n means --dry-run (unlike commit's -n = --no-verify)
             if sub == "push" and "--dry-run" not in args and "-n" not in args:
-                gate_cwd = cwd
+                gate_cwd = effective_cwd
                 if c_path:
                     gate_cwd = (
                         c_path
                         if os.path.isabs(c_path)
-                        else os.path.join(cwd, c_path)
+                        else os.path.join(effective_cwd, c_path)
                     )
                 if git_dir:
                     # Forward --git-dir so the gate resolves the same
@@ -359,7 +398,7 @@ def main():
             and toks[1] == "pr"
             and toks[2] in {"create", "merge"}
         ):
-            gate_cwd = cwd
+            gate_cwd = effective_cwd
         if gate_cwd is not None:
             code, notes = _gate_push(gate_cwd, gate_globals)
             for note in notes:
