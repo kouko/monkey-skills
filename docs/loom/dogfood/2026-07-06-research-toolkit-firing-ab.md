@@ -7,8 +7,12 @@ overall AND B fires research-toolkit on ≥3 records where A missed AND
 zero new over-fires") is satisfied.
 
 - Plan: `docs/loom/plans/2026-07-06-research-toolkit-triggering.md`
-- Branch under test: `research-skill-r2` (descriptions rewrite + router,
-  commits eb33b80d…0103a68c)
+- Branch under test: `research-skill-r2` (descriptions rewrite + router;
+  the tested state = the branch commits from the static-gate test through
+  the 0.3.0 manifest ripple — original pre-rebase SHAs eb33b80d…0103a68c
+  no longer on the first-parent chain after rebases; content-level
+  anchor: all five frontmatter descriptions as shipped, byte-frozen
+  through round-3 which touched bodies only)
 - Method: `loom-code/scripts/loom_firing_harness.py` `run_corpus()` via a
   driver on the `claude_bin` seam; wrappers pass `--model sonnet` +
   `--plugin-dir` (Arm A = origin/main via git worktree; Arm B = branch).

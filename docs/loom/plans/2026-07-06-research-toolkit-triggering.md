@@ -19,7 +19,7 @@ Plan-document-reviewer verdict: PASS (2026-07-06, round 2 — round-1 gaps fixed
 - Files touched: research-toolkit/scripts/test_research_toolkit_descriptions.py
 - Context paths:
   - research-toolkit/skills/ (current four SKILL.md frontmatters)
-  - dev-workflow/.claude-plugin/test_skill_description_standard.py (house precedent for shape)
+  - skill-dev-toolkit/.claude-plugin/test_skill_description_standard.py (house precedent for shape)
 - Acceptance:
   - RED: `pytest research-toolkit/scripts/test_research_toolkit_descriptions.py` fails on router-existence + differentiation-marker assertions
   - GREEN (deferred to T6/T4): same command passes once router + rewrites land

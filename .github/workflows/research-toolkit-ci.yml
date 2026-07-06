@@ -1,0 +1,43 @@
+name: research-toolkit CI
+
+# Runs the research-toolkit scripts/ pytest suite (the static
+# description-standard gate: house length cap, router presence,
+# deep-deep-research differentiation marker) on every PR that touches
+# the plugin (or this workflow), and on every push to main that
+# changes the plugin.
+
+on:
+  pull_request:
+    paths:
+      - 'research-toolkit/**'
+      - '.github/workflows/research-toolkit-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'research-toolkit/**'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: pytest (description-standard gate)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install test deps
+        # pytest only — the gate parses SKILL.md frontmatter by
+        # line-splitting (stdlib), no PyYAML needed.
+        run: python3 -m pip install --quiet pytest
+
+      - name: Run research-toolkit scripts/ pytest suite
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m pytest research-toolkit/scripts/ -v
