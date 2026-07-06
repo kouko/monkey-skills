@@ -35,6 +35,13 @@ verdict; 4 malformed/nonconforming input. Writes are atomic
 (tmp file + os.replace); existing markers are overwritten silently
 (latest wins).
 
+`validate --verdict-file <path> [--suite-line "<text>"]` is a
+dry-run of the exact same schema checks, but reports EVERY violation
+in one pass instead of exiting on the first (today's writers exit-4
+on the first problem, forcing a fix/rerun/fix retry loop). Writes
+nothing; takes no `--repo` (no marker write, no HEAD resolution
+needed). Exit 0 when clean, 4 when any violation is found.
+
 Stdlib only.
 """
 from __future__ import annotations
@@ -279,10 +286,26 @@ def _cmd_review_pass(repo: Path, marker_dir: Path, args: argparse.Namespace) -> 
     return 0
 
 
+def validate_suite_line(line: str) -> list[str]:
+    """All problems with `line` as a green pytest-style summary; []
+    when clean. Shared by `_cmd_verified` (write path) and
+    `_cmd_validate` (dry-run path) so both apply the exact same rule."""
+    problems: list[str] = []
+    m = _PASSED_RE.search(line)
+    if not m or int(m.group(1)) == 0:
+        problems.append(
+            f'suite_line: {line!r} has no "N passed" (N > 0) — not a green run'
+        )
+    if _SUITE_REJECT_RE.search(line.lower()):
+        problems.append(
+            f"suite_line: {line!r} contains a failed/error token — not a green run"
+        )
+    return problems
+
+
 def _cmd_verified(repo: Path, marker_dir: Path, args: argparse.Namespace) -> int:
     line = args.suite_line
-    m = _PASSED_RE.search(line)
-    if not m or int(m.group(1)) == 0 or _SUITE_REJECT_RE.search(line.lower()):
+    if validate_suite_line(line):
         print(
             f"loom-gate-markers: suite line {line!r} is not a green "
             '"N passed" run (N > 0, no failed/error); no marker written.',
@@ -338,10 +361,37 @@ def _cmd_waiver(repo: Path, marker_dir: Path, args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_validate(args: argparse.Namespace) -> int:
+    """Dry-run schema check: same rules `review-pass`/`verified` apply
+    at write time, but reports EVERY violation in one pass instead of
+    exiting on the first (today's writers exit-4 on the first problem,
+    forcing a fix-rerun-fix retry loop). Writes nothing; needs no repo."""
+    try:
+        text = Path(args.verdict_file).read_text(encoding="utf-8")
+    except OSError as exc:
+        print(f"loom-gate-markers: cannot read verdict file: {exc}", file=sys.stderr)
+        return 4
+
+    _, problems = validate_verdict_text(text)
+    if args.suite_line is not None:
+        problems += validate_suite_line(args.suite_line)
+
+    if problems:
+        print("loom-gate-markers: validation found problems:", file=sys.stderr)
+        for problem in problems:
+            print(f"  - {problem}", file=sys.stderr)
+        return 4
+    print("loom-gate-markers: clean — no violations found.")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     """CLI entry: `review-pass --verdict-file <path>` /
-    `verified --suite-line "<text>"` / `waiver --reason "<text>"`,
-    each with optional `--repo <path>` (default cwd)."""
+    `verified --suite-line "<text>"` / `waiver --reason "<text>"` /
+    `validate --verdict-file <path> [--suite-line "<text>"]`,
+    each of the first three with optional `--repo <path>` (default
+    cwd). `validate` is a dry-run text check — no repo, no marker
+    write — so it takes no `--repo`."""
     parser = argparse.ArgumentParser(
         description="Write loom gate markers for hooks/git-guard.py"
     )
@@ -367,7 +417,13 @@ def main(argv: list[str] | None = None) -> int:
     wv.add_argument("--reason", required=True)
     wv.set_defaults(func=_cmd_waiver)
 
+    vd = subparsers.add_parser("validate")
+    vd.add_argument("--verdict-file", required=True)
+    vd.add_argument("--suite-line", default=None)
+
     args = parser.parse_args(argv)
+    if args.command == "validate":
+        return _cmd_validate(args)
     repo = Path(args.repo)
     marker_dir = resolve_marker_dir(repo)
     if marker_dir is None:
