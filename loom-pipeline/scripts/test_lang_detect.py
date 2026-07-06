@@ -232,3 +232,17 @@ def test_detect_and_conversation_language(tmp_path):
     transcript = tmp_path / "integration.jsonl"
     _write_transcript(transcript, [_user_entry(ZH_TEXT)] * 3)
     assert mod.conversation_language(transcript, n_turns=3) == "zh"
+
+
+# --- public wrapper contract (stable cross-module surface) ---------------
+
+
+def test_public_wrappers_exist_and_delegate():
+    """Sibling hooks (language-stop-check.py) consume these PUBLIC names;
+    they must exist and behave identically to the private helpers."""
+    mod = _load()
+    assert mod.is_kana("あ") is True and mod.is_kana("漢") is False
+    assert mod.is_han("漢") is True and mod.is_han("あ") is False
+    assert mod.extract_text([{"type": "text", "text": "hi"}]) == "hi"
+    assert mod.extract_text("plain") == "plain"
+    assert "code" not in mod.strip_noise("前置 `code` 後置")

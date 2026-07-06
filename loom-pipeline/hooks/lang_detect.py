@@ -171,6 +171,34 @@ def _iter_user_turns(transcript_path):
             yield text
 
 
+# --- public wrappers -----------------------------------------------------
+# Stable cross-module contract for sibling hooks (e.g.
+# language-stop-check.py): thin one-line delegations to the private
+# helpers above. Consumers must use THESE names, never the underscored
+# implementations — the private bodies may change; these signatures
+# will not.
+
+
+def is_kana(ch: str) -> bool:
+    """Public wrapper for :func:`_is_kana` (stable cross-module contract)."""
+    return _is_kana(ch)
+
+
+def is_han(ch: str) -> bool:
+    """Public wrapper for :func:`_is_han` (stable cross-module contract)."""
+    return _is_han(ch)
+
+
+def extract_text(message_content) -> str:
+    """Public wrapper for :func:`_extract_text` (stable cross-module contract)."""
+    return _extract_text(message_content)
+
+
+def strip_noise(text: str) -> str:
+    """Public wrapper for :func:`_strip_noise` (stable cross-module contract)."""
+    return _strip_noise(text)
+
+
 def conversation_language(transcript_path, n_turns: int = 3) -> Optional[str]:
     """Majority conversation language over the last ``n_turns`` eligible
     USER main-chain turns of a Claude Code transcript JSONL file.
