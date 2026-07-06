@@ -243,7 +243,10 @@ def test_push_allowed_after_rebase_onto_advanced_default_branch(
     _git_ok(["-c", "user.email=t@t", "-c", "user.name=t",
              "commit", "-m", "advance main", "-q"], repo)
     _git_ok(["checkout", "-q", "feature/x"], repo)
-    _git_ok(["rebase", "-q", default_branch], repo)
+    # rebase rewrites commits → needs committer identity, same as commit;
+    # CI runners have no global git config (exit 128 without this).
+    _git_ok(["-c", "user.email=t@t", "-c", "user.name=t",
+             "rebase", "-q", default_branch], repo)
 
     res = run_hook(bash_event("git push", cwd=repo))
     assert res.returncode == 0, res.stderr
