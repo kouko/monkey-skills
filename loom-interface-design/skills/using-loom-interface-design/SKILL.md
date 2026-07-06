@@ -11,7 +11,9 @@ If you are a subagent already dispatched with an explicit role prompt, **do not*
 
 ## §Intake
 
-Before routing to design work, walk these three steps in order.
+Before routing to design work, walk these three steps in order. User-facing
+narration during this routing follows `loom-pipeline/hooks/family-relay.md §Family relay discipline`
+(the SSOT; do not copy its rollup-card body here).
 
 1. **前站檢查 (upstream check).** Check the target repo against the loom
    family reception's on-ramp criteria table
