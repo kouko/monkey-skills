@@ -1,7 +1,7 @@
 ---
 name: fact-check
 description: |
-  Single-claim adversarial verdict — supported / refuted / inconclusive with cited evidence. Use when one factual claim needs checking mid-conversation: 'is it true…?', 'really?', '這個說法對嗎' — even common knowledge. Full report → deep-deep-research.
+  Single-claim adversarial verdict — supported/refuted/inconclusive with cited evidence. Use for one factual claim mid-conversation, even common knowledge: 'is it true?', 'really?', '這個說法對嗎'. Full report → deep-deep-research.
 version: 0.1.0
 ---
 
