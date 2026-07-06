@@ -125,7 +125,7 @@ Shared external-surface facts (referenced by tasks below):
   in `## Asking the user` ③ (lines ~43-61) and `## Status handling`
   (~160), add the requirement that per-wave status reports and checkpoint
   sign-offs are delivered as the family rollup card (pointer to
-  family-reception.md §Family relay discipline — no copied template body),
+  family-relay.md §Family relay discipline — no copied template body),
   in the conversation language; internal traffic (verdicts, wave labels)
   stays machine-precise below the card.
 - Module: loom-code/skills/subagent-driven-development/SKILL.md
@@ -184,7 +184,7 @@ Shared external-surface facts (referenced by tasks below):
 ## Task 8 — relay pointer in using-loom-spec §Intake
 - Description: Add one pointer line to loom-spec/skills/using-loom-spec/SKILL.md
   `## §Intake` (~line 20): all user-facing narration follows
-  family-reception.md §Family relay discipline (pointer, never copy).
+  family-relay.md §Family relay discipline (pointer, never copy).
 - Module: loom-spec/skills/using-loom-spec/SKILL.md
 - Files touched: loom-spec/skills/using-loom-spec/SKILL.md
 - Context paths:
