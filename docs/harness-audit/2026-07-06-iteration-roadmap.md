@@ -41,7 +41,10 @@
   hard limit 雙上限）；(b) firing harness 離線半套進 CI（audit Rec 5：
   validate_corpus＋grade）；(c) corpus `expected` 過窄修正（BACKLOG:107）；
   (d) `error_max_turns` 記錄正常評分（7/4 dogfood next-touch，6/28 有效
-  樣本被誤丟）。
+  樣本被誤丟）；(e) **telemetry 探針過濾**（2026-07-06 /insights 後新增）：
+  firing/dogfood harness 產生的 session 混入 facets 與 insights
+  （App-Prototyping 7 場 not_achieved 實為 A/B 探針）——harness session
+  應可識別排除（固定 cwd 前綴或標記），否則挖礦永遠混入自家探針。
 - **驗收**：CI 能在 description 超限/corpus 破損時擋 PR；live 清單 spot-check
   無 name-only skill。
 
@@ -55,11 +58,11 @@
 - **驗收**：pilot 在一次真實 SDD run 量測 latency/spend/false-block 後
   做 adopt-vs-build 決定。
 
-## 5. 證據基礎設施
+## 5. 證據基礎設施 ✅（2026-07-06 完成）
 
-- **內容**：(a) 跑一次 `/insights` 暖 facets（至今為空，distill-sessions
-  盲跑中）；(b) 教訓寫回迴圈維持現狀（本場已接 F 維護協議）。
-- **成本**：近零。順手做。
+- `/insights` 已跑（63 sessions 分析）；facets 已暖，distill-sessions
+  脫離 heuristic 盲跑。報告採納項落地：CLAUDE.md 注入碼條款（四 host）、
+  reception batch-intake 規則、BACKLOG「loom-spec station briefing gate」條目優先級調升。
 
 ## 6. 債務清掃 bundle（一個 PR 收完）
 
@@ -68,6 +71,17 @@
   longDescription、router-card「Skill tool」措辭）；sibling plugin SKILL.md
   frontmatter 版本 drift gate（BACKLOG:122）；本檔＋Codex port 設計書若
   尚未 commit 一併帶入。
+
+## 7. 儀式比例感（2026-07-06 /insights 後新增）
+
+- **證據**：insights 三大摩擦多指向「儀式擋住小請求」——TDD 儀式擋
+  小修改、intake 卡 pipeline、session 停在 brainstorming 無產出。
+  這是與 token 診斷正交的軸：那邊量錢，這邊量「沒交付」。
+- **內容**：(a) 路由層 trivial 識別強化（tdd-iron-law §When-NOT-to-Use
+  與 reception negative guard 已存在但觸發不良——需 firing 測試驗證）；
+  (b) 引導「quick fix」信號的使用慣例；(c) 測量污染折扣（見 item 3e）。
+- **不做**：不在 CLAUDE.md 放「簡單請求跳過 TDD」全域條款（與 iron law
+  打架；正解在路由層）。
 
 ## 明確不做（本輪）
 

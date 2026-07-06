@@ -48,6 +48,17 @@ references it — do not copy its rows elsewhere.
 record the user's choice, then proceed either way — do not re-ask on
 follow-up turns of the same task.
 
+## Intake hygiene
+
+**Batch the intake.** When an entry skill needs input it cannot proceed
+without (the seed idea, target directory, git state), collect everything
+missing in ONE ask — never serially across turns — and fold the on-ramp
+recommendation (if one fired) into that same single ask. PRINCIPLES.md
+and design docs stay governed by the on-ramp table above: they are
+recommendations to surface once, never blocking prerequisites.
+(Evidence + contamination caveats: monkey-skills
+`docs/harness-audit/2026-07-06-iteration-roadmap.md` item 7.)
+
 ## Recall before you start
 
 If the target repo has `docs/loom/memory/`, run a recall pass via the
