@@ -19,6 +19,10 @@ work needs, after checking whether spec work is even the right station yet.
 
 ## §Intake
 
+All user-facing narration in this router — briefs, critique summaries,
+decision asks — follows `loom-pipeline/hooks/family-relay.md §Family relay discipline`
+(pointer, never copy).
+
 **Step 1 — 前站檢查 (upstream check).** Check the target repo against the
 loom family's on-ramp criteria table (`loom-pipeline/hooks/family-reception.md`
 — the reception SSOT; reference it, don't copy its rows here). Two rows are
