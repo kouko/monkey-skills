@@ -5,6 +5,22 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.27.0] — 2026-07-07 — family rollup card adoption + channel-aware visual degradation
+
+### Changed
+
+- **SDD wave reports/sign-offs** and **`requesting-code-review`**'s
+  review relay now adopt the family rollup card — a pointer to
+  `loom-pipeline`'s `family-relay.md` — instead of restating the full
+  relay payload inline.
+- **`brainstorming`**'s visual catalog gains channel-aware
+  degradation: when the target channel is a terminal (no rich
+  rendering), diagrams degrade to `ascii-graph-toolkit` tables/ASCII
+  instead of Mermaid.
+
+Verification stamp: `loom-pipeline/scripts/test_family_relay.py` — 8
+passed (relay contract tests live in `loom-pipeline`).
+
 ## [0.26.0] — 2026-07-06 — review panel default + codex-tools autonomy correction
 
 ### Changed
