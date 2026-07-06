@@ -102,7 +102,7 @@ Phase    v0.x.0   天數     Skill 累計   重點                              
 
 | Q | 決定 |
 |---|---|
-| P1-A | `using-loom-code/SKILL.md` 必須 ≤2000 tokens（hook 注入預算限制） |
+| P1-A | `using-loom-code/SKILL.md` 必須 ≤2000 tokens（hook 注入預算限制）〔歷史決定；0.24.0 起 hook 改注入 ~600-token router card，SKILL.md 全文 lazy load——見 TECH-SPEC §2.3〕 |
 | P1-B | `tdd-iron-law` 鐵律措辭 = Superpowers 完整 copy；額外加 Beck 2002 Preface 直接引文（含 ISBN） |
 | P1-C | SDD 3 個 subagent prompt 用 frontmatter + Markdown，不用 `.txt`（Superpowers 用 `.md`） |
 | P1-D | functional copy 第一行必加 HTML comment header 指 SSOT path |
