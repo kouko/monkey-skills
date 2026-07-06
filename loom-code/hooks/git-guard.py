@@ -274,7 +274,15 @@ def _resolve_cd_target(raw_path, effective_cwd):
     path = os.path.expanduser(raw_path)
     if not os.path.isabs(path):
         path = os.path.join(effective_cwd, path)
-    return os.path.normpath(path)
+    path = os.path.normpath(path)
+    # A resolved-but-nonexistent (or non-directory) target gets the same
+    # treatment as a dynamic one: real bash's `cd` FAILS there and leaves
+    # cwd unchanged, and with `;`/`||` the next command still runs — in
+    # the ORIGINAL directory. Adopting the fictitious path would point
+    # the gate at "not a repo" and silently allow (gate bypass).
+    if not os.path.isdir(path):
+        return None
+    return path
 
 
 def _has_no_verify(args):

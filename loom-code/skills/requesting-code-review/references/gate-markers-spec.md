@@ -92,3 +92,8 @@ attribute to the right step. `git-guard.py` gates every push-family
 command independently per Bash-tool invocation regardless of ordering
 inside a single compound command, but the two-step form keeps the
 causal chain (verdict → marker → push) legible when something fails.
+
+- **`base_sha` is audit metadata only** — the guard never trusts or
+  dereferences the stored value; the comparison base is always a
+  freshly recomputed merge-base at check time (an attacker-writable
+  base would otherwise let the comparison be pinned).

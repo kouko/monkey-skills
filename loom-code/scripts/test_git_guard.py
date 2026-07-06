@@ -634,6 +634,29 @@ def test_cd_chain_dynamic_path_keeps_previous_cwd(repo):
     assert res.returncode == 2
 
 
+def test_cd_chain_nonexistent_absolute_target_keeps_previous_cwd(repo):
+    # Real bash: `cd /nope` FAILS and cwd stays unchanged; with `;` the
+    # push still runs — in the ORIGINAL repo. The guard must therefore
+    # keep gating against the previous cwd, not adopt the fictitious
+    # path (which resolves to "not a repo" → silent allow = gate bypass).
+    res = run_hook(bash_event("cd /this/path/does/not/exist; git push", cwd=repo))
+    assert res.returncode == 2
+
+
+def test_cd_chain_nonexistent_relative_target_keeps_previous_cwd(repo):
+    # Same bypass via a plain typo'd subdirectory name.
+    res = run_hook(bash_event("cd nonexistent-typo-dir; git push", cwd=repo))
+    assert res.returncode == 2
+
+
+def test_cd_chain_file_target_keeps_previous_cwd(repo):
+    # `cd` to an existing FILE also fails in real bash — same rule.
+    target = repo / "somefile.txt"
+    target.write_text("x")
+    res = run_hook(bash_event("cd somefile.txt; git push", cwd=repo))
+    assert res.returncode == 2
+
+
 def test_cd_chain_applies_only_within_same_command_string(repo, tmp_path_factory):
     # A `cd` in one Bash invocation must not leak into a later, separate
     # invocation — each hook call gets a fresh effective cwd from the
