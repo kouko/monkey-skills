@@ -5,6 +5,34 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.24.0] — 2026-07-06 — SessionStart router-card slim
+
+### Changed
+
+- **`hooks/session-start`** now injects the new `hooks/router-card.md`
+  (~2.1 KB: coding mandate + five load-bearing rules + SUBAGENT-STOP +
+  pull-pointer) instead of the full `using-loom-code` SKILL.md body
+  (~11 KB). The full body loads via the Skill tool on invocation —
+  pull, not push. Restores TECH-SPEC §2.3's original size constraint
+  (the SKILL.md had grown ~4× past it since v0.1.0). Harness-wide the
+  old embed cost ~3.1M input tokens/30d across 865 sessions
+  (docs/harness-audit/2026-07-06-a-harness-diagnosis.md diagnosis #1);
+  matcher `startup|clear|compact` and every-project reach made it the
+  single largest measured context injection.
+- Escape hatch (`LOOM_CODE_MODE=off`), 3-key defensive emission, and
+  fail-open-on-missing-file behavior unchanged.
+
+### Added
+
+- `hooks/router-card.md` — the slim pre-invocation card (wording kept
+  contract-stable per docs/loom/memory/preamble-wording-is-contract-surface.md).
+- `tests/integration/test-router-card-slim.sh` — RED→GREEN gate: size
+  1-5 KB, load-bearing tokens present, full-body markers absent, 3-key
+  shape intact.
+- Firing A/B gate (user-mandated 驗證過才准剪): 28-record corpus, both
+  arms `--model sonnet`, report at
+  docs/loom/dogfood/2026-07-06-router-card-firing-ab.md.
+
 ## [0.23.1] — 2026-07-04 — named-Agent dispatch gotcha
 
 ### Fixed

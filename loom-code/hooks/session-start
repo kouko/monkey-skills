@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # SessionStart hook for loom-code.
-# Reads skills/using-loom-code/SKILL.md and injects it as additionalContext
-# so every Claude Code / Codex CLI session starts with the router loaded.
+# Reads hooks/router-card.md (slim pre-invocation card: coding mandate +
+# five load-bearing rules + SUBAGENT-STOP) and injects it as
+# additionalContext. The full using-loom-code SKILL.md body is NOT
+# injected — the Skill tool loads it on invocation (pull, not push).
+# Rationale + firing gate: docs/loom/plans/2026-07-06-loom-code-router-card-slim.md.
 #
 # CANONICAL key (both hosts consume): hookSpecificOutput.additionalContext
 # Per the official Codex hooks contract (developers.openai.com/codex/hooks):
@@ -25,8 +28,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-SKILL_PATH="${PLUGIN_ROOT}/skills/using-loom-code/SKILL.md"
+CARD_PATH="${SCRIPT_DIR}/router-card.md"
 
 # Escape hatch — Superpowers coexistence.
 # Emit canonical nested key + both defensive top-level keys (all empty).
@@ -35,14 +37,14 @@ if [ "${LOOM_CODE_MODE:-on}" = "off" ]; then
   exit 0
 fi
 
-# Skill file missing → fail open with empty context (do not crash the session).
+# Card file missing → fail open with empty context (do not crash the session).
 # Same 3-key shape as the escape hatch.
-if [ ! -f "${SKILL_PATH}" ]; then
+if [ ! -f "${CARD_PATH}" ]; then
   printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":""},"additional_context":"","additionalContext":""}\n'
   exit 0
 fi
 
-content="$(cat "${SKILL_PATH}")"
+content="$(cat "${CARD_PATH}")"
 
 # JSON-escape via bash parameter substitution (mirror Superpowers).
 escape_for_json() {
