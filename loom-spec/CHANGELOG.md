@@ -5,6 +5,15 @@ All notable changes to the `loom-spec` plugin (formerly `spec-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.4.2] — 2026-07-07
+
+### Changed
+
+- `using-loom-spec` §Intake now points at the family relay discipline
+  (`loom-pipeline/hooks/family-relay.md`) instead of restating it inline —
+  closes the BACKLOG loom-spec briefing-gate item. Verification:
+  `test_family_relay.py::test_design_side_pointers[spec]` passed.
+
 ## [0.4.1] — 2026-07-05
 
 ### Added
