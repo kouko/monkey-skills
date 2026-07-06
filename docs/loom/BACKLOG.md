@@ -61,7 +61,11 @@
   ui-verification, driven by the merged driver against a real repo.
 
 ## loom-spec station briefing gate (#475 parity)
-- Status: OPEN (original 值得做 list item 3, half-covered)
+- Status: OPEN (original 值得做 list item 3, half-covered) — **priority
+  bumped 2026-07-06**: /insights measured serial intake-stalls as the #1
+  not_achieved driver across pipeline sessions; family-reception now
+  carries a cross-family batch-intake rule, this entry owns the deeper
+  per-station briefing escalation
 - Origin: 2026-07-03 dogfood — spec station resolved a product decision
   (ending-controls) inline. The pipeline's human gate (b) now covers
   DRIVER runs; loom-spec itself still lacks the brief-before-asking

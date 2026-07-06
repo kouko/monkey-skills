@@ -48,6 +48,12 @@ references it — do not copy its rows elsewhere.
 record the user's choice, then proceed either way — do not re-ask on
 follow-up turns of the same task.
 
+**Batch the intake.** When an entry skill finds prerequisites missing
+(seed idea, PRINCIPLES.md, target dir, git state…), collect EVERYTHING
+missing in ONE ask — never serially across turns. Serial intake is the
+top measured cause of pipeline sessions ending with no deliverable
+(2026-07-06 /insights: intake-stall = #1 not_achieved driver).
+
 ## Recall before you start
 
 If the target repo has `docs/loom/memory/`, run a recall pass via the
