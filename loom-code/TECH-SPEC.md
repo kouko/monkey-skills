@@ -30,7 +30,7 @@
 | # | 技術目標 | 對映 PRODUCT-SPEC Goal |
 |---|---|---|
 | T1 | 雙 plugin.json + marketplace.json 條目 + 3-lang README + flat subfolder 通過 monkey-skills CI | G1, G6 |
-| T2 | SessionStart hook bash 腳本注入 `using-loom-code/SKILL.md` 全內容 | G2 |
+| T2 | SessionStart hook bash 腳本注入 `hooks/router-card.md`（slim card；SKILL.md 全文改由 Skill tool 拉式載入，0.24.0） | G2 |
 | T3 | `tdd-iron-law` skill 嵌入 Beck 2002 Preface 引用 + Superpowers measure 措辭，agent 拒絕「跳測試」誘導 | G3 |
 | T4 | `subagent-driven-development` skill 含 3 個 prompt 檔（implementer / spec-reviewer / code-quality-reviewer） | G4 |
 | T5 | `scripts/canonical/` SSOT + `scripts/distribute.py` + `scripts/verify-drift.py` 跑通 | G5 |
@@ -79,7 +79,7 @@ loom-code/
 ├── CHANGELOG.md
 ├── hooks/
 │   ├── hooks.json                     # SessionStart registration
-│   └── session-start                  # bash: inject using-loom-code
+│   └── session-start                  # bash: inject hooks/router-card.md (slim)
 ├── scripts/
 │   ├── canonical/                     # pointers, NOT byte copies
 │   │   └── README.md                  # explains SSOT-and-functional-copy
@@ -98,7 +98,7 @@ loom-code/
 ├── research/
 │   └── grounding-v0.1.0.md            # version-by-version grounding rationale
 └── skills/
-    ├── using-loom-code/            # ROUTER (loaded by SessionStart hook)
+    ├── using-loom-code/            # ROUTER (Skill-tool loaded; SessionStart injects hooks/router-card.md)
     │   ├── SKILL.md
     │   ├── README.md / .ja.md / .zh-TW.md
     │   └── references/
@@ -233,7 +233,7 @@ EOF
 ```
 
 > [!important] Hook 大小控制
-> `using-loom-code/SKILL.md` 必須控制在 ~2000 tokens 以內，避免每個 session 都被注入大量 context。其他 skill 透過 `Skill` tool 走 lazy load。
+> SessionStart 注入物是 `hooks/router-card.md`（~2 KB：mandate＋五條規則＋SUBAGENT-STOP），必須控制在 ~600 tokens 以內。`using-loom-code/SKILL.md` 全文與其他 skill 一律透過 `Skill` tool 走 lazy load（0.24.0 起；先前直接注入 SKILL.md 全文，長胖到 ~11 KB 後由 router-card 取代——firing A/B 驗證見 docs/loom/dogfood/2026-07-06-router-card-firing-ab.md）。
 
 ### 2.4 Subagent 串接資料流
 
@@ -429,7 +429,7 @@ findings: [🔴 fatal / 🟡 should-fix / 🟢 nit]
 
 | Trigger | What happens |
 |---|---|
-| SessionStart (startup / clear / compact) | hooks/session-start runs → inject using-loom-code/SKILL.md |
+| SessionStart (startup / clear / compact) | hooks/session-start runs → inject hooks/router-card.md (slim) |
 | User invokes Claude `Skill` tool or Codex `skill` tool | Skill content loaded into context |
 | User writes new code | `tdd-iron-law` description triggers via "implementing any feature" |
 | User says "let's build X" | `using-loom-code` Skill Priority routes to `brainstorming` first |

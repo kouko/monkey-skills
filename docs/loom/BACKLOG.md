@@ -10,6 +10,26 @@
 > greppable). Completed items are deleted, not archived — git history is
 > the archive.
 
+## SessionStart reception slimming (loom-code + loom-pipeline)
+- Status: OPEN
+- Start: next loom-code or loom-pipeline touch, or immediately as its own
+  PR — highest measured token leak in the harness
+- Origin: harness audit 2026-07-06
+  (docs/harness-audit/2026-07-06-a-harness-diagnosis.md, diagnosis #1)
+- What: the loom-code SessionStart hook injects the full using-loom-code
+  SKILL.md body (~11 KB consumed context; wire shows 34 KB because the
+  same content ships under 3 defensive JSON keys) on matcher
+  `startup|clear|compact`, in EVERY project — ~3.1M input tokens/30d
+  floor across 865 sessions (loom-pipeline's 3.1 KB reception is already
+  pointer-only; leave it). Cut: replace the SKILL.md embed with a ~2 KB
+  router card (coding mandate + five load-bearing rules + SUBAGENT-STOP);
+  the Skill tool loads the full body on invocation anyway. FIRING GATE:
+  the cut ships only after the 28-record corpus run
+  (docs/loom/firing-corpus/, method per
+  docs/loom/dogfood/2026-07-04-family-tissue-firing-test.md) shows no
+  regression vs the 2026-07-04 baseline. Watch item (not in scope):
+  project detection to skip injection outside git repos.
+
 ## Mechanical-gates v2 candidates (loom-code 0.23.0 follow-ups)
 - Status: OPEN
 - Start: first fatigue evidence from daily use of the push gate, or next

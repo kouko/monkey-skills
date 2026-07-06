@@ -109,7 +109,7 @@ fi
 # so it must be SKIP-with-note, never a hard FAIL.
 
 # Probe via a question that ONLY makes sense if the router was injected:
-PROBE_PROMPT="Do you have loom-code loaded? Name the four load-bearing rules from the router's <EXTREMELY-IMPORTANT> block."
+PROBE_PROMPT="Do you have loom-code loaded? Name the five load-bearing rules from the injected loom-code router card."
 
 echo "  running: codex exec --sandbox read-only '<probe prompt>'"
 PROBE_OUTPUT=$(timeout 60 codex exec --sandbox read-only "${PROBE_PROMPT}" 2>&1) || true
