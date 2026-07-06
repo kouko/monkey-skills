@@ -181,7 +181,10 @@ echo '[<result rows>]' | python scripts/citecheck.py report
 stdin: the result-row array → stdout: a markdown **audit report** — a
 per-citation verdict table (claim · cited source · verdict · note/flags)
 followed by a summary of the **six counts**: supported / partial / unsupported
-/ misattributed / unresolvable / unsourced.
+/ misattributed / unresolvable / unsourced. Emit exactly ONE verdict per
+citation: when a source is about a different claim than the one it was
+cited for, `misattributed` subsumes `unsupported` — never emit a compound
+label like `misattributed / unsupported`.
 
 For just the summary counts (no table):
 

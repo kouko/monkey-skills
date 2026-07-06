@@ -267,6 +267,12 @@ Return the verdict to the user as a short answer: the claim, the
 `reason`** (a `no-referent` answer must read as "likely fabricated", not
 "undecided"), the confidence, and the cited quotes + source URLs from Stage A
 that back it. Do **not** synthesize a full report — that is deep-research's job.
+Any supporting context claim riding along with the verdict (background
+stats, streak claims like "X years running") that was **not itself** run
+through the Stage B quorum must either get a cheap single-verifier check or
+be explicitly hedged as unverified attribution ("per <source>, not
+independently checked") — never presented bare as if it were
+quorum-verified.
 
 ---
 

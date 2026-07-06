@@ -8,9 +8,15 @@ version: 0.1.0
 # Using Research Toolkit
 
 Ask first: **"What are you trying to find out — and from how many
-sources?"** Then route to the best-fit member skill below.
+sources?"** Then route to the best-fit member skill (one of the four
+skills below).
 
 ## Routing Guide
+
+Once you've picked a row, invoke that member via the host's
+skill-invocation mechanism — on Claude Code, the Skill tool, e.g.
+`Skill(skill: "research-toolkit:fact-check")`; on other hosts, their
+equivalent skill/tool-invocation call.
 
 | Situation | Skill | Notes |
 |---|---|---|
@@ -33,11 +39,20 @@ route when the user actually wants verification, citation auditing,
 structured single-document comprehension, or a synthesized multi-source
 report.
 
+Two adjacent boundaries worth naming explicitly:
+
+- Plain summarization with no comprehension goal ("summarize this
+  40-page report") → answer directly; `deep-read` is for structured
+  understanding (sections, claims, argument), not summaries.
+- Spot-checking numbers in the user's OWN data/spreadsheet against
+  their own source → not this family (`fact-check` verifies public
+  claims against published sources).
+
 ## Built-in Boundary
 
-On Claude Code, the host's own built-in `deep-research` workflow
-legitimately owns the generic "deep research this topic" ask — don't
-displace it by default. Route to `deep-deep-research` instead when the
+Claude Code's built-in `deep-research` skill legitimately owns the
+generic "deep research this topic" ask — don't displace it by default.
+Route to `deep-deep-research` instead when the
 user wants to see or tune the pipeline stages, needs a key-free/portable
 run, or is on a host with no built-in deep-research (e.g. Codex).
 
@@ -45,7 +60,8 @@ run, or is on a host with no built-in deep-research (e.g. Codex).
 
 - Does not perform any research, verification, or synthesis itself —
   it only routes to the member skill that does.
-- Does not duplicate a member skill's workflow, standards, or gate
-  logic — each member owns its own procedure.
+- Does not duplicate a member skill's workflow, standards, or the
+  quality checks each member runs itself — each member owns its own
+  procedure.
 - Does not wire hooks or automation — it is a plain routing skill,
   invoked like any other.
