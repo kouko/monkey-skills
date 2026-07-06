@@ -9,14 +9,23 @@ Dir: `<git-dir>/loom/` resolved via `git rev-parse --git-dir` from
 `--repo` (default cwd); created if missing.
 
 - `review-pass.json`  {"schema": 1, "branch", "head_sha", "verdict",
-  "written_at"} — written ONLY after the reviewer's verdict text
-  passes schema validation (the audit's schema gate: a marker can
-  only exist if a schema-valid verdict text exists). NEEDS_REVISION
-  never mints a marker (exit 3); a malformed verdict never mints one
-  either (exit 4, missing keys listed).
+  "written_at", optional "base_sha"/"patch_id"} — written ONLY after
+  the reviewer's verdict text passes schema validation (the audit's
+  schema gate: a marker can only exist if a schema-valid verdict text
+  exists). NEEDS_REVISION never mints a marker (exit 3); a malformed
+  verdict never mints one either (exit 4, missing keys listed).
 - `verified.json`     {"schema": 1, "head_sha", "suite_line",
-  "written_at"} — the suite line must look like a real green run
-  ("N passed", N > 0, no "failed"/"error").
+  "written_at", optional "base_sha"/"patch_id"} — the suite line must
+  look like a real green run ("N passed", N > 0, no "failed"/"error").
+- `base_sha`/`patch_id` (both markers, both optional): merge-base with
+  the default branch and `git diff base..HEAD | git patch-id --stable`
+  at write time, recorded ONLY when every step resolves (default
+  branch found, merge-base succeeds, diff+patch-id subprocesses
+  succeed, output non-empty). Any failure omits BOTH fields — never a
+  partial pair — so `hooks/git-guard.py` falls back to strict
+  `head_sha` equality. Lets a message-only amend or a
+  content-preserving rebase keep passing the push gate without a
+  fresh review (see `compute_patch_id`).
 - `waiver.json`       {"schema": 1, "scope": "push", "reason",
   "written_at"} — requires a real justification (>= 10 chars) and
   shouts on stderr that the review gate is being bypassed one-shot.
@@ -79,6 +88,60 @@ def _git(repo: Path, *args: str) -> str | None:
     if result.returncode != 0:
         return None
     return result.stdout.strip()
+
+
+def _default_branch_ref(repo: Path) -> str | None:
+    """Best-effort default-branch ref for merge-base computation.
+
+    Tries origin/HEAD's symbolic ref, then local `main`, then local
+    `master`. Returns None when none resolve — callers then omit the
+    patch-id fields entirely (fail-closed: the fallback never activates
+    for that marker; strict head_sha equality remains the only path).
+    """
+    origin_head = _git(repo, "symbolic-ref", "-q", "refs/remotes/origin/HEAD")
+    if origin_head:
+        ref = origin_head.removeprefix("refs/remotes/")
+        if _git(repo, "rev-parse", "--verify", "-q", ref) is not None:
+            return ref
+    for candidate in ("main", "master"):
+        if _git(repo, "rev-parse", "--verify", "-q", candidate) is not None:
+            return candidate
+    return None
+
+
+def compute_patch_id(repo: Path) -> tuple[str, str] | None:
+    """(base_sha, patch_id) for merge-base(default-branch, HEAD)..HEAD.
+
+    Returns None on ANY resolution/subprocess/parse failure — the two
+    fields are then simply omitted from the marker (fail-closed: a
+    missing pair means the patch-id fallback never activates; strict
+    head_sha equality is the only path `git-guard.py` can take).
+    """
+    ref = _default_branch_ref(repo)
+    if ref is None:
+        return None
+    base_sha = _git(repo, "merge-base", ref, "HEAD")
+    if base_sha is None:
+        return None
+    try:
+        diff = subprocess.run(
+            ["git", "-C", str(repo), "diff", f"{base_sha}..HEAD"],
+            capture_output=True,
+            text=True,
+        )
+        if diff.returncode != 0:
+            return None
+        patch_id_result = subprocess.run(
+            ["git", "-C", str(repo), "patch-id", "--stable"],
+            input=diff.stdout,
+            capture_output=True,
+            text=True,
+        )
+    except OSError:
+        return None
+    if patch_id_result.returncode != 0 or not patch_id_result.stdout.strip():
+        return None
+    return base_sha, patch_id_result.stdout.split()[0]
 
 
 def resolve_marker_dir(repo: Path) -> Path | None:
@@ -201,17 +264,17 @@ def _cmd_review_pass(repo: Path, marker_dir: Path, args: argparse.Namespace) -> 
     if branch is None or head_sha is None:
         print("loom-gate-markers: cannot resolve HEAD.", file=sys.stderr)
         return 2
-    path = _write_marker(
-        marker_dir,
-        "review-pass.json",
-        {
-            "schema": 1,
-            "branch": branch,
-            "head_sha": head_sha,
-            "verdict": verdict,
-            "written_at": _now_iso(),
-        },
-    )
+    payload = {
+        "schema": 1,
+        "branch": branch,
+        "head_sha": head_sha,
+        "verdict": verdict,
+        "written_at": _now_iso(),
+    }
+    patch_id_fields = compute_patch_id(repo)
+    if patch_id_fields is not None:
+        payload["base_sha"], payload["patch_id"] = patch_id_fields
+    path = _write_marker(marker_dir, "review-pass.json", payload)
     print(path)
     return 0
 
@@ -231,16 +294,16 @@ def _cmd_verified(repo: Path, marker_dir: Path, args: argparse.Namespace) -> int
     if head_sha is None:
         print("loom-gate-markers: cannot resolve HEAD.", file=sys.stderr)
         return 2
-    path = _write_marker(
-        marker_dir,
-        "verified.json",
-        {
-            "schema": 1,
-            "head_sha": head_sha,
-            "suite_line": line,
-            "written_at": _now_iso(),
-        },
-    )
+    payload = {
+        "schema": 1,
+        "head_sha": head_sha,
+        "suite_line": line,
+        "written_at": _now_iso(),
+    }
+    patch_id_fields = compute_patch_id(repo)
+    if patch_id_fields is not None:
+        payload["base_sha"], payload["patch_id"] = patch_id_fields
+    path = _write_marker(marker_dir, "verified.json", payload)
     print(path)
     return 0
 

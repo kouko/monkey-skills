@@ -299,6 +299,71 @@ def test_verified_accepts_green_summary_with_xfails(tmp_path):
     assert data["suite_line"] == suite_line
 
 
+# -------------------------------------------------------- patch-id relaxation
+
+
+def test_review_pass_records_base_sha_and_patch_id_when_resolvable(tmp_path):
+    repo = _init_repo(tmp_path)
+    default_branch = _git(repo, "branch", "--show-current")
+    _git(repo, "checkout", "-q", "-b", "feature/x")
+    (repo / "f.txt").write_text("hello\n", encoding="utf-8")
+    _git(repo, "add", "f.txt")
+    _git(repo, "commit", "-m", "add f.txt")
+    verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    data = json.loads(
+        (_marker_dir(repo) / "review-pass.json").read_text(encoding="utf-8")
+    )
+    expected_base = _git(repo, "merge-base", default_branch, "HEAD")
+    assert data["base_sha"] == expected_base
+    assert isinstance(data["patch_id"], str) and data["patch_id"]
+
+
+def test_verified_records_base_sha_and_patch_id_when_resolvable(tmp_path):
+    repo = _init_repo(tmp_path)
+    default_branch = _git(repo, "branch", "--show-current")
+    _git(repo, "checkout", "-q", "-b", "feature/x")
+    (repo / "f.txt").write_text("hello\n", encoding="utf-8")
+    _git(repo, "add", "f.txt")
+    _git(repo, "commit", "-m", "add f.txt")
+
+    rc = main(["verified", "--repo", str(repo), "--suite-line", "1 passed"])
+
+    assert rc == 0
+    data = json.loads(
+        (_marker_dir(repo) / "verified.json").read_text(encoding="utf-8")
+    )
+    expected_base = _git(repo, "merge-base", default_branch, "HEAD")
+    assert data["base_sha"] == expected_base
+    assert isinstance(data["patch_id"], str) and data["patch_id"]
+
+
+def test_review_pass_omits_patch_id_fields_when_diff_is_empty(tmp_path):
+    # Single-branch throwaway repo: default-branch ref IS the current
+    # branch, so merge-base(default, HEAD) == HEAD and the diff is
+    # empty. The fallback fields must be omitted entirely (fail-closed:
+    # no fields recorded → strict head_sha equality is the only path),
+    # not written as empty strings.
+    repo = _init_repo(tmp_path)
+    verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    data = json.loads(
+        (_marker_dir(repo) / "review-pass.json").read_text(encoding="utf-8")
+    )
+    assert "base_sha" not in data
+    assert "patch_id" not in data
+
+
 def test_verified_head_sha_tracks_second_commit(tmp_path):
     repo = _init_repo(tmp_path)
     first_sha = _head(repo)

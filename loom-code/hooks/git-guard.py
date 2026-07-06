@@ -26,6 +26,17 @@ blocks two families of gate bypass:
      the current HEAD sha (written after
      loom-code:verification-before-completion).
 
+   Both markers additionally accept a **patch-id fallback**: when a
+   marker's ``head_sha`` no longer matches (message-only amend,
+   content-preserving rebase) but it carries ``base_sha``/``patch_id``
+   fields (written by a patch-id-aware
+   ``loom_gate_markers.py``), the gate recomputes the patch-id for the
+   CURRENT ``merge-base(default-branch, HEAD)..HEAD`` and accepts the
+   marker if it equals the recorded one — content, not commit identity,
+   is what is being re-verified. Old-format markers (no patch_id field)
+   and any resolution/subprocess error fall back to strict ``head_sha``
+   equality (fail-closed).
+
    All markers (incl. the waiver) must carry ``"schema": 1``; any
    other value makes the marker invalid — the two gate markers then
    block, and an invalid waiver is ignored (not honored, not
@@ -167,6 +178,65 @@ def _head(cwd, git_globals=()):
     return res.stdout.strip() if res.returncode == 0 else None
 
 
+def _default_branch_ref(cwd, git_globals=()):
+    """Best-effort default-branch ref for merge-base computation, or
+    None when none resolve (mirrors loom_gate_markers._default_branch_ref;
+    duplicated here since this hook is stdlib-only/dependency-free)."""
+    res = _git(["symbolic-ref", "-q", "refs/remotes/origin/HEAD"], cwd, git_globals)
+    if res.returncode == 0:
+        ref = res.stdout.strip()
+        if ref.startswith("refs/remotes/"):
+            ref = ref[len("refs/remotes/"):]
+        if _git(["rev-parse", "--verify", "-q", ref], cwd, git_globals).returncode == 0:
+            return ref
+    for candidate in ("main", "master"):
+        if _git(["rev-parse", "--verify", "-q", candidate],
+                cwd, git_globals).returncode == 0:
+            return candidate
+    return None
+
+
+def _current_patch_id(cwd, git_globals=()):
+    """Patch-id for merge-base(default-branch, HEAD)..HEAD right now, or
+    None on any resolution/subprocess/parse failure (fail-closed)."""
+    ref = _default_branch_ref(cwd, git_globals)
+    if ref is None:
+        return None
+    base_res = _git(["merge-base", ref, "HEAD"], cwd, git_globals)
+    if base_res.returncode != 0:
+        return None
+    base_sha = base_res.stdout.strip()
+    diff_res = _git(["diff", f"{base_sha}..HEAD"], cwd, git_globals)
+    if diff_res.returncode != 0:
+        return None
+    try:
+        pid_res = subprocess.run(
+            ["git", "-C", cwd, *git_globals, "patch-id", "--stable"],
+            input=diff_res.stdout,
+            capture_output=True,
+            text=True,
+        )
+    except OSError:
+        return None
+    if pid_res.returncode != 0 or not pid_res.stdout.strip():
+        return None
+    return pid_res.stdout.split()[0]
+
+
+def _patch_id_matches(marker, cwd, git_globals=()):
+    """True iff `marker` carries a patch_id equal to one freshly
+    recomputed for the current merge-base(default-branch, HEAD)..HEAD —
+    the fail-closed fallback covering message-only amends and
+    content-preserving rebases. A missing/non-string field or ANY
+    computation error returns False, leaving strict head_sha equality
+    as the only path (backward-compatible with old-format markers)."""
+    recorded = marker.get("patch_id")
+    if not isinstance(recorded, str) or not recorded:
+        return False
+    current = _current_patch_id(cwd, git_globals)
+    return current is not None and current == recorded
+
+
 def _load_json(path):
     try:
         with open(path, encoding="utf-8") as fh:
@@ -220,16 +290,17 @@ def _gate_push(cwd, git_globals=()):
         or review.get("schema") != 1
         or review.get("verdict") not in REVIEW_VERDICTS
         or head is None
-        or review.get("head_sha") != head
     ):
         notes.append(MSG_REVIEW)
         return 2, notes
+    if review.get("head_sha") != head and not _patch_id_matches(review, cwd, git_globals):
+        notes.append(MSG_REVIEW)
+        return 2, notes
     verified = _load_json(os.path.join(loom, "verified.json"))
-    if (
-        verified is None
-        or verified.get("schema") != 1
-        or verified.get("head_sha") != head
-    ):
+    if verified is None or verified.get("schema") != 1:
+        notes.append(MSG_VERIFIED)
+        return 2, notes
+    if verified.get("head_sha") != head and not _patch_id_matches(verified, cwd, git_globals):
         notes.append(MSG_VERIFIED)
         return 2, notes
     return 0, notes
