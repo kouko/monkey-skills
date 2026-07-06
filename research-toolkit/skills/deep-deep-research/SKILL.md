@@ -1,7 +1,7 @@
 ---
 name: deep-deep-research
 description: |
-  Deep research harness — fan-out web searches, fetch sources, adversarially verify claims, synthesize a cited report. Use for a deep, multi-source, fact-checked research report on any topic. Key-free (host's own LLM + web tools).
+  Inspectable, editable, key-free deep-research pipeline. Use when 想調整研究流程, wanting a multi-source verified report via the host's own tools, or on hosts without built-in deep-research (e.g. Codex).
 version: 0.1.0
 ---
 
