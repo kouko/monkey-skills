@@ -5,6 +5,27 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.25.0] — 2026-07-06 — gate friction pack
+
+### Added
+
+- **Patch-id relaxation** — `loom_gate_markers.py` records `base_sha` +
+  `patch_id` (merge-base..HEAD, `git patch-id --stable`); `git-guard.py`
+  accepts a stale `head_sha` marker IFF the recomputed patch-id matches —
+  message-only amends and content-preserving rebases no longer force a
+  re-review. Fail-closed on any computation error; old-format markers
+  keep strict head_sha equality (backward compatible).
+- **cd-chain cwd tracking** — `cd /other/repo && git push` now gates
+  against the TARGET repo's markers (absolute/relative/~ forms; dynamic
+  paths keep the previous cwd, fail-closed). Closes the
+  loom-git-guard-evaluates-in-shell-cwd gotcha.
+- **`validate` subcommand** — dry-run schema check for verdict files +
+  suite lines reporting ALL violations in one pass (ends the
+  discover-format-by-crash retry loop).
+- **Gate-markers spec** — `skills/requesting-code-review/references/gate-markers-spec.md`.
+  Origin: docs/loom/plans/2026-07-06-gate-friction-pack.md (3 live
+  friction data points, 2026-07-06).
+
 ## [0.24.0] — 2026-07-06 — SessionStart router-card slim
 
 ### Changed

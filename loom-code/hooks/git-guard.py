@@ -26,6 +26,17 @@ blocks two families of gate bypass:
      the current HEAD sha (written after
      loom-code:verification-before-completion).
 
+   Both markers additionally accept a **patch-id fallback**: when a
+   marker's ``head_sha`` no longer matches (message-only amend,
+   content-preserving rebase) but it carries ``base_sha``/``patch_id``
+   fields (written by a patch-id-aware
+   ``loom_gate_markers.py``), the gate recomputes the patch-id for the
+   CURRENT ``merge-base(default-branch, HEAD)..HEAD`` and accepts the
+   marker if it equals the recorded one — content, not commit identity,
+   is what is being re-verified. Old-format markers (no patch_id field)
+   and any resolution/subprocess error fall back to strict ``head_sha``
+   equality (fail-closed).
+
    All markers (incl. the waiver) must carry ``"schema": 1``; any
    other value makes the marker invalid — the two gate markers then
    block, and an invalid waiver is ignored (not honored, not
@@ -58,6 +69,19 @@ are an accepted limitation, and so are heredocs: a heredoc BODY line
 beginning ``git push`` is newline-split into a segment and gated — a
 false positive we accept because it fails CLOSED (an over-block the
 model can rephrase around, never an under-block).
+
+A ``cd <path>`` segment updates an "effective cwd" tracked across the
+REST of the same command string (absolute, relative, and ``~`` forms;
+a bare ``cd`` means ``$HOME``); later segments in that string (without
+their own ``-C``/``--git-dir``) gate against it instead of the
+original event ``cwd`` — this closes the ``cd ~/dotfiles && git push``
+miss where the push was gated against the wrong repo. A dynamic/
+unresolvable target (``$VAR``, command substitution, ``cd -``) does
+NOT update the effective cwd — the guard keeps gating at the last
+KNOWN location (fail-closed toward gating, never toward silently
+trusting an opaque target). The effective cwd resets to the event's
+own ``cwd`` on every hook invocation — it never leaks across separate
+Bash tool calls.
 
 Exit codes follow the PreToolUse contract: 0 = allow, 2 = block
 (stderr shown to the model). Stdlib only.
@@ -167,6 +191,65 @@ def _head(cwd, git_globals=()):
     return res.stdout.strip() if res.returncode == 0 else None
 
 
+def _default_branch_ref(cwd, git_globals=()):
+    """Best-effort default-branch ref for merge-base computation, or
+    None when none resolve (mirrors loom_gate_markers._default_branch_ref;
+    duplicated here since this hook is stdlib-only/dependency-free)."""
+    res = _git(["symbolic-ref", "-q", "refs/remotes/origin/HEAD"], cwd, git_globals)
+    if res.returncode == 0:
+        ref = res.stdout.strip()
+        if ref.startswith("refs/remotes/"):
+            ref = ref[len("refs/remotes/"):]
+        if _git(["rev-parse", "--verify", "-q", ref], cwd, git_globals).returncode == 0:
+            return ref
+    for candidate in ("main", "master"):
+        if _git(["rev-parse", "--verify", "-q", candidate],
+                cwd, git_globals).returncode == 0:
+            return candidate
+    return None
+
+
+def _current_patch_id(cwd, git_globals=()):
+    """Patch-id for merge-base(default-branch, HEAD)..HEAD right now, or
+    None on any resolution/subprocess/parse failure (fail-closed)."""
+    ref = _default_branch_ref(cwd, git_globals)
+    if ref is None:
+        return None
+    base_res = _git(["merge-base", ref, "HEAD"], cwd, git_globals)
+    if base_res.returncode != 0:
+        return None
+    base_sha = base_res.stdout.strip()
+    diff_res = _git(["diff", f"{base_sha}..HEAD"], cwd, git_globals)
+    if diff_res.returncode != 0:
+        return None
+    try:
+        pid_res = subprocess.run(
+            ["git", "-C", cwd, *git_globals, "patch-id", "--stable"],
+            input=diff_res.stdout,
+            capture_output=True,
+            text=True,
+        )
+    except OSError:
+        return None
+    if pid_res.returncode != 0 or not pid_res.stdout.strip():
+        return None
+    return pid_res.stdout.split()[0]
+
+
+def _patch_id_matches(marker, cwd, git_globals=()):
+    """True iff `marker` carries a patch_id equal to one freshly
+    recomputed for the current merge-base(default-branch, HEAD)..HEAD —
+    the fail-closed fallback covering message-only amends and
+    content-preserving rebases. A missing/non-string field or ANY
+    computation error returns False, leaving strict head_sha equality
+    as the only path (backward-compatible with old-format markers)."""
+    recorded = marker.get("patch_id")
+    if not isinstance(recorded, str) or not recorded:
+        return False
+    current = _current_patch_id(cwd, git_globals)
+    return current is not None and current == recorded
+
+
 def _load_json(path):
     try:
         with open(path, encoding="utf-8") as fh:
@@ -174,6 +257,32 @@ def _load_json(path):
         return data if isinstance(data, dict) else None
     except (OSError, ValueError):
         return None
+
+
+def _resolve_cd_target(raw_path, effective_cwd):
+    """Resolve one `cd` argument against `effective_cwd`; return the new
+    effective cwd, or None when the argument is dynamic/unresolvable
+    ($VAR, command substitution, `cd -`) — callers keep the previous
+    cwd on None (fail-closed toward gating: the guard would rather
+    apply the gate at the last KNOWN location than silently trust an
+    opaque target). Handles absolute, relative, and `~` forms; a bare
+    `cd` (no argument) means $HOME, same as the real shell builtin."""
+    if not raw_path:
+        raw_path = "~"
+    if raw_path == "-" or "$" in raw_path or "`" in raw_path:
+        return None
+    path = os.path.expanduser(raw_path)
+    if not os.path.isabs(path):
+        path = os.path.join(effective_cwd, path)
+    path = os.path.normpath(path)
+    # A resolved-but-nonexistent (or non-directory) target gets the same
+    # treatment as a dynamic one: real bash's `cd` FAILS there and leaves
+    # cwd unchanged, and with `;`/`||` the next command still runs — in
+    # the ORIGINAL directory. Adopting the fictitious path would point
+    # the gate at "not a repo" and silently allow (gate bypass).
+    if not os.path.isdir(path):
+        return None
+    return path
 
 
 def _has_no_verify(args):
@@ -220,16 +329,17 @@ def _gate_push(cwd, git_globals=()):
         or review.get("schema") != 1
         or review.get("verdict") not in REVIEW_VERDICTS
         or head is None
-        or review.get("head_sha") != head
     ):
         notes.append(MSG_REVIEW)
         return 2, notes
+    if review.get("head_sha") != head and not _patch_id_matches(review, cwd, git_globals):
+        notes.append(MSG_REVIEW)
+        return 2, notes
     verified = _load_json(os.path.join(loom, "verified.json"))
-    if (
-        verified is None
-        or verified.get("schema") != 1
-        or verified.get("head_sha") != head
-    ):
+    if verified is None or verified.get("schema") != 1:
+        notes.append(MSG_VERIFIED)
+        return 2, notes
+    if verified.get("head_sha") != head and not _patch_id_matches(verified, cwd, git_globals):
         notes.append(MSG_VERIFIED)
         return 2, notes
     return 0, notes
@@ -254,9 +364,17 @@ def main():
         return 0
     cwd = payload.get("cwd") or os.getcwd()
 
+    effective_cwd = cwd
     for segment in SEGMENT_SPLIT.split(command):
         toks = _tokens(segment)
         if not toks:
+            continue
+        if toks[0] == "cd":
+            target = _resolve_cd_target(
+                toks[1] if len(toks) > 1 else None, effective_cwd
+            )
+            if target is not None:
+                effective_cwd = target
             continue
         gate_cwd = None
         gate_globals = ()
@@ -267,12 +385,12 @@ def main():
                 return 2
             # push's -n means --dry-run (unlike commit's -n = --no-verify)
             if sub == "push" and "--dry-run" not in args and "-n" not in args:
-                gate_cwd = cwd
+                gate_cwd = effective_cwd
                 if c_path:
                     gate_cwd = (
                         c_path
                         if os.path.isabs(c_path)
-                        else os.path.join(cwd, c_path)
+                        else os.path.join(effective_cwd, c_path)
                     )
                 if git_dir:
                     # Forward --git-dir so the gate resolves the same
@@ -288,7 +406,7 @@ def main():
             and toks[1] == "pr"
             and toks[2] in {"create", "merge"}
         ):
-            gate_cwd = cwd
+            gate_cwd = effective_cwd
         if gate_cwd is not None:
             code, notes = _gate_push(gate_cwd, gate_globals)
             for note in notes:

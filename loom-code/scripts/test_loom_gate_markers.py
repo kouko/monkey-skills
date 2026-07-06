@@ -299,6 +299,71 @@ def test_verified_accepts_green_summary_with_xfails(tmp_path):
     assert data["suite_line"] == suite_line
 
 
+# -------------------------------------------------------- patch-id relaxation
+
+
+def test_review_pass_records_base_sha_and_patch_id_when_resolvable(tmp_path):
+    repo = _init_repo(tmp_path)
+    default_branch = _git(repo, "branch", "--show-current")
+    _git(repo, "checkout", "-q", "-b", "feature/x")
+    (repo / "f.txt").write_text("hello\n", encoding="utf-8")
+    _git(repo, "add", "f.txt")
+    _git(repo, "commit", "-m", "add f.txt")
+    verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    data = json.loads(
+        (_marker_dir(repo) / "review-pass.json").read_text(encoding="utf-8")
+    )
+    expected_base = _git(repo, "merge-base", default_branch, "HEAD")
+    assert data["base_sha"] == expected_base
+    assert isinstance(data["patch_id"], str) and data["patch_id"]
+
+
+def test_verified_records_base_sha_and_patch_id_when_resolvable(tmp_path):
+    repo = _init_repo(tmp_path)
+    default_branch = _git(repo, "branch", "--show-current")
+    _git(repo, "checkout", "-q", "-b", "feature/x")
+    (repo / "f.txt").write_text("hello\n", encoding="utf-8")
+    _git(repo, "add", "f.txt")
+    _git(repo, "commit", "-m", "add f.txt")
+
+    rc = main(["verified", "--repo", str(repo), "--suite-line", "1 passed"])
+
+    assert rc == 0
+    data = json.loads(
+        (_marker_dir(repo) / "verified.json").read_text(encoding="utf-8")
+    )
+    expected_base = _git(repo, "merge-base", default_branch, "HEAD")
+    assert data["base_sha"] == expected_base
+    assert isinstance(data["patch_id"], str) and data["patch_id"]
+
+
+def test_review_pass_omits_patch_id_fields_when_diff_is_empty(tmp_path):
+    # Single-branch throwaway repo: default-branch ref IS the current
+    # branch, so merge-base(default, HEAD) == HEAD and the diff is
+    # empty. The fallback fields must be omitted entirely (fail-closed:
+    # no fields recorded → strict head_sha equality is the only path),
+    # not written as empty strings.
+    repo = _init_repo(tmp_path)
+    verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    data = json.loads(
+        (_marker_dir(repo) / "review-pass.json").read_text(encoding="utf-8")
+    )
+    assert "base_sha" not in data
+    assert "patch_id" not in data
+
+
 def test_verified_head_sha_tracks_second_commit(tmp_path):
     repo = _init_repo(tmp_path)
     first_sha = _head(repo)
@@ -347,6 +412,76 @@ def test_waiver_short_reason_exits_4(tmp_path, reason):
 
     assert rc == 4
     assert not (_marker_dir(repo) / "waiver.json").exists()
+
+
+# -------------------------------------------------------------------- validate
+
+
+def test_validate_reports_all_violations_in_one_run(tmp_path, capsys):
+    # Missing standards_version AND dimension_scores AND a bad suite
+    # line — all three must surface together, not just the first.
+    verdict_file = _write_verdict(tmp_path, "verdict: PASS\n")
+
+    rc = main(
+        ["validate", "--verdict-file", str(verdict_file),
+         "--suite-line", "0 passed in 0.01s"]
+    )
+
+    assert rc == 4
+    err = capsys.readouterr().err
+    assert "standards_version" in err
+    assert "dimension_scores" in err
+    assert "passed" in err
+
+
+def test_validate_clean_verdict_and_suite_line_exits_0(tmp_path, capsys):
+    verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
+
+    rc = main(
+        ["validate", "--verdict-file", str(verdict_file),
+         "--suite-line", "12 passed in 0.30s"]
+    )
+
+    assert rc == 0
+    assert not capsys.readouterr().err
+
+
+def test_validate_without_suite_line_checks_verdict_only(tmp_path):
+    verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
+
+    rc = main(["validate", "--verdict-file", str(verdict_file)])
+
+    assert rc == 0
+
+
+def test_validate_bad_suite_line_alone_exits_4(tmp_path, capsys):
+    verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
+
+    rc = main(
+        ["validate", "--verdict-file", str(verdict_file),
+         "--suite-line", "3 failed, 2 passed in 1.2s"]
+    )
+
+    assert rc == 4
+    assert "passed" in capsys.readouterr().err
+
+
+def test_validate_missing_verdict_file_exits_4(tmp_path, capsys):
+    rc = main(["validate", "--verdict-file", str(tmp_path / "nope.md")])
+
+    assert rc == 4
+    assert capsys.readouterr().err.strip()
+
+
+def test_validate_does_not_require_a_git_repo(tmp_path):
+    # validate is a dry-run text check — no --repo, no marker write, no
+    # git resolution needed. Running from a plain (non-repo) directory
+    # must not exit 2 the way the marker-writing subcommands do.
+    verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
+
+    rc = main(["validate", "--verdict-file", str(verdict_file)])
+
+    assert rc == 0
 
 
 # ---------------------------------------------------------------- --repo flag

@@ -152,6 +152,117 @@ def commit_again(repo_path):
     )
 
 
+def _git_ok(args, cwd):
+    subprocess.run(["git", *args], cwd=cwd, check=True, env=_iso_env())
+
+
+@pytest.fixture
+def feature_repo(repo):
+    """`repo` plus a feature branch carrying one content commit, for
+    patch-id fallback scenarios (message-only amend / content change /
+    rebase onto an advanced default branch)."""
+    default_branch = subprocess.run(
+        ["git", "branch", "--show-current"], cwd=repo,
+        capture_output=True, text=True, env=_iso_env(), check=True,
+    ).stdout.strip()
+    _git_ok(["checkout", "-q", "-b", "feature/x"], repo)
+    (repo / "f.txt").write_text("hello\n")
+    _git_ok(["add", "f.txt"], repo)
+    _git_ok(["-c", "user.email=t@t", "-c", "user.name=t",
+             "commit", "-m", "add f.txt", "-q"], repo)
+    return repo, default_branch
+
+
+def _mint_markers(repo, tmp_path):
+    """Mint review-pass + verified markers via the real CLI (seam test:
+    exercises the actual patch-id write path, not hand-crafted JSON)."""
+    verdict_file = tmp_path / "verdict.txt"
+    verdict_file.write_text(
+        "standards_version: v1\n"
+        "verdict: PASS\n"
+        "dimension_scores:\n"
+        "  security: green\n"
+    )
+    mint_review = subprocess.run(
+        [sys.executable, str(MARKERS_CLI), "review-pass",
+         "--repo", str(repo), "--verdict-file", str(verdict_file)],
+        capture_output=True, text=True, env=_iso_env(),
+    )
+    assert mint_review.returncode == 0, mint_review.stderr
+    mint_verified = subprocess.run(
+        [sys.executable, str(MARKERS_CLI), "verified",
+         "--repo", str(repo), "--suite-line", "5 passed"],
+        capture_output=True, text=True, env=_iso_env(),
+    )
+    assert mint_verified.returncode == 0, mint_verified.stderr
+
+
+# --- patch-id relaxation: message-only amend / content change / rebase ----
+
+
+def test_push_allowed_after_message_only_amend_via_patch_id(feature_repo, tmp_path):
+    repo, _default_branch = feature_repo
+    _mint_markers(repo, tmp_path)
+
+    _git_ok(["-c", "user.email=t@t", "-c", "user.name=t",
+             "commit", "--amend", "-m", "add f.txt (reworded)", "-q"], repo)
+
+    res = run_hook(bash_event("git push", cwd=repo))
+    assert res.returncode == 0, res.stderr
+
+
+def test_push_blocked_after_content_change_despite_patch_id_fields(
+    feature_repo, tmp_path
+):
+    repo, _default_branch = feature_repo
+    _mint_markers(repo, tmp_path)
+
+    # Content change, not just message: recomputed patch-id must differ,
+    # so the fallback must NOT accept this as a fresh-enough review.
+    (repo / "f.txt").write_text("hello\nmore\n")
+    _git_ok(["add", "f.txt"], repo)
+    _git_ok(["-c", "user.email=t@t", "-c", "user.name=t",
+             "commit", "--amend", "-m", "add f.txt", "-q"], repo)
+
+    res = run_hook(bash_event("git push", cwd=repo))
+    assert res.returncode == 2
+
+
+def test_push_allowed_after_rebase_onto_advanced_default_branch(
+    feature_repo, tmp_path
+):
+    repo, default_branch = feature_repo
+    _mint_markers(repo, tmp_path)
+
+    # Advance the default branch with an unrelated commit, then rebase
+    # the feature branch onto it — head_sha changes, base_sha changes,
+    # but the diff content (and thus patch-id) is unchanged.
+    _git_ok(["checkout", "-q", default_branch], repo)
+    (repo / "unrelated.txt").write_text("noise\n")
+    _git_ok(["add", "unrelated.txt"], repo)
+    _git_ok(["-c", "user.email=t@t", "-c", "user.name=t",
+             "commit", "-m", "advance main", "-q"], repo)
+    _git_ok(["checkout", "-q", "feature/x"], repo)
+    # rebase rewrites commits → needs committer identity, same as commit;
+    # CI runners have no global git config (exit 128 without this).
+    _git_ok(["-c", "user.email=t@t", "-c", "user.name=t",
+             "rebase", "-q", default_branch], repo)
+
+    res = run_hook(bash_event("git push", cwd=repo))
+    assert res.returncode == 0, res.stderr
+
+
+def test_push_blocked_without_patch_id_fields_on_stale_sha(repo):
+    # Old-format marker (no base_sha/patch_id, as written by a pre-patch-id
+    # writer): backward compatibility — stale head_sha still blocks via
+    # the strict-equality path only.
+    write_review_pass(repo)
+    write_verified(repo)
+    commit_again(repo)
+    res = run_hook(bash_event("git push", cwd=repo))
+    assert res.returncode == 2
+
+
 # --- matrix row 1: non-Bash tools pass through ---------------------------
 
 
@@ -491,6 +602,73 @@ def test_cwd_absent_falls_back_to_process_cwd(repo):
 
 
 # --- matrix row 5 + fail-open ------------------------------------------------
+
+
+# --- cd-chain cwd tracking ---------------------------------------------
+
+
+def test_cd_chain_absolute_path_gates_target_repo(repo, tmp_path_factory):
+    # The ORIGINAL cwd is not a repo; the `cd` target is. The gate must
+    # follow the cd, not stay pinned to the shell's starting cwd.
+    elsewhere = tmp_path_factory.mktemp("cd-elsewhere")
+    res = run_hook(bash_event(f"cd {repo} && git push", cwd=elsewhere))
+    assert res.returncode == 2
+
+
+def test_cd_chain_relative_path_gates_target_repo(repo):
+    parent = repo.parent
+    res = run_hook(bash_event(f"cd {repo.name} && git push", cwd=parent))
+    assert res.returncode == 2
+
+
+def test_cd_chain_tilde_path_gates_target_repo(repo, tmp_path_factory):
+    elsewhere = tmp_path_factory.mktemp("cd-tilde-elsewhere")
+    res = run_hook(bash_event("cd ~ && git push", cwd=elsewhere),
+                   env_extra={"HOME": str(repo)})
+    assert res.returncode == 2
+
+
+def test_cd_chain_dynamic_path_keeps_previous_cwd(repo):
+    # `cd $SOME_VAR` is dynamic/unresolvable — the guard must NOT trust
+    # it blindly (which could silently escape to an unknown location);
+    # it keeps the previous (known) cwd, so the push is still gated
+    # against `repo` (fail-closed toward gating, not toward allowing).
+    res = run_hook(bash_event("cd $SOME_VAR && git push", cwd=repo))
+    assert res.returncode == 2
+
+
+def test_cd_chain_nonexistent_absolute_target_keeps_previous_cwd(repo):
+    # Real bash: `cd /nope` FAILS and cwd stays unchanged; with `;` the
+    # push still runs — in the ORIGINAL repo. The guard must therefore
+    # keep gating against the previous cwd, not adopt the fictitious
+    # path (which resolves to "not a repo" → silent allow = gate bypass).
+    res = run_hook(bash_event("cd /this/path/does/not/exist; git push", cwd=repo))
+    assert res.returncode == 2
+
+
+def test_cd_chain_nonexistent_relative_target_keeps_previous_cwd(repo):
+    # Same bypass via a plain typo'd subdirectory name.
+    res = run_hook(bash_event("cd nonexistent-typo-dir; git push", cwd=repo))
+    assert res.returncode == 2
+
+
+def test_cd_chain_file_target_keeps_previous_cwd(repo):
+    # `cd` to an existing FILE also fails in real bash — same rule.
+    target = repo / "somefile.txt"
+    target.write_text("x")
+    res = run_hook(bash_event("cd somefile.txt; git push", cwd=repo))
+    assert res.returncode == 2
+
+
+def test_cd_chain_applies_only_within_same_command_string(repo, tmp_path_factory):
+    # A `cd` in one Bash invocation must not leak into a later, separate
+    # invocation — each hook call gets a fresh effective cwd from the
+    # event's own "cwd" field.
+    elsewhere = tmp_path_factory.mktemp("cd-no-leak")
+    first = run_hook(bash_event(f"cd {repo} && ls", cwd=elsewhere))
+    assert first.returncode == 0
+    second = run_hook(bash_event("git push", cwd=elsewhere))
+    assert second.returncode == 0  # elsewhere is not a repo — still allowed
 
 
 def test_unrelated_command_allowed(repo):
