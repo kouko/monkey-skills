@@ -396,7 +396,13 @@ Shared external-surface facts (referenced by tasks below):
 - Independent: true
 - Brief item covered: repo release conventions (Smallest end state 3 carrier)
 
-## Task 20 — marketplace.json version sync
+## Task 20 — marketplace.json version sync [RESOLVED N/A 2026-07-07]
+
+> Execution finding: marketplace.json carries NO per-plugin version
+> field (0/26 entries; git history never syncs versions; CI checks
+> description sync only — scripts/check-marketplace-description-sync.py).
+> The task's premise was stale; descriptions were untouched this branch,
+> so there is nothing to sync. Do not invent a version field.
 - Description: Update root .claude-plugin/marketplace.json entries for the
   six bumped plugins to match their plugin.json versions (memory:
   plugin-json-location-and-description-sync).
