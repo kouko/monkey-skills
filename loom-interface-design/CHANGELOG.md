@@ -8,6 +8,14 @@ Versioning: [Semantic Versioning](https://semver.org/).
 > This file was reconstructed on 2026-07-02 from the git history — the plugin
 > shipped its first three versions without a CHANGELOG.
 
+## [0.4.2] — 2026-07-07
+
+### Changed
+
+- `using-loom-interface-design` §Intake now points at the family relay
+  discipline (`loom-pipeline/hooks/family-relay.md`). Verification:
+  `test_family_relay.py::test_design_side_pointers[interface-design]` passed.
+
 ## [0.4.1] — 2026-07-05
 
 ### Added
