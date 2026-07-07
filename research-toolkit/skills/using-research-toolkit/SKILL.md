@@ -23,7 +23,7 @@ equivalent skill/tool-invocation call.
 | One factual claim needs a verdict mid-conversation. EN: "is this true?", "really?"; 中: 「這個說法對嗎」「查一下這個說法」 | `fact-check` | Lightweight, single-claim adversarial verdict — supported / refuted / inconclusive |
 | An existing document's citations need auditing. EN: "check these citations", "do the sources back this up?"; 中: 「查證這份文件的引用」 | `cite-check` | Audits a document you did not write; flags unsupported / misattributed / dead-link claims |
 | One long document/book needs structured deep comprehension. EN: "help me understand this paper/book"; 中:「精讀這篇論文/這本書」 | `deep-read` | Depth-on-ONE source — sections, claims, methodology, caveats, argument structure |
-| Multi-source research REPORT wanted, adversarially verified, with an inspectable/tunable pipeline (or no built-in deep-research on this host). EN: "write me a research report on X"; 中: 「幫我做一份多來源的研究報告」 | `deep-deep-research` | Key-free; reproduces scope → search → dedup → fetch → verify → synthesize as editable skill steps |
+| Heavyweight multi-source research REPORT wanted, adversarially verified, with an inspectable/tunable pipeline (or no built-in deep-research on this host). EN: "write me a research report on X", "research this exhaustively"; 中: 「幫我做一份多來源的研究報告」「徹底研究這個主題」「多輪深挖」 | `deep-deep-research` | Key-free; reproduces scope → search → dedup → fetch → verify → synthesize as editable skill steps |
 
 ## Negative Guard
 
@@ -53,7 +53,8 @@ Two adjacent boundaries worth naming explicitly:
 Claude Code's built-in `deep-research` skill legitimately owns the
 generic "deep research this topic" ask — don't displace it by default.
 Route to `deep-deep-research` instead when the
-user wants to see or tune the pipeline stages, needs a key-free/portable
+user wants an exhaustive multi-round investigation (徹底研究／多輪深挖),
+wants to see or tune the pipeline stages, needs a key-free/portable
 run, or is on a host with no built-in deep-research (e.g. Codex).
 
 ## What This Skill Does NOT Do

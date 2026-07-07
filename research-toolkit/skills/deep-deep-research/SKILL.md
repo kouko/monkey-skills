@@ -1,7 +1,7 @@
 ---
 name: deep-deep-research
 description: |
-  Inspectable, editable, key-free deep-research pipeline. Use when 想調整研究流程, wanting a multi-source verified report via the host's own tools, or on hosts without built-in deep-research (e.g. Codex).
+  Heavyweight multi-round deep research — inspectable, editable, key-free pipeline. Use for 徹底研究, exhaustive multi-source verified reports, tweaking the research pipeline itself, or hosts without built-in deep-research (e.g. Codex).
 version: 0.1.0
 ---
 
@@ -60,7 +60,7 @@ Claude-Code-specific "same assistant message" concurrency detail above), see
 
 **File-carrier rule.** Bulk data between stages travels by file path under a
 run-local `work/` directory — created at Stage-1 start as a fresh empty tree
-(including `work/claims/`) in your session's working directory, not inside the
+(including `work/claims/` and `work/verdicts/`) in your session's working directory, not inside the
 skill, clearing any prior run's leftovers — never emit the full claims pool,
 or any comparably bulky payload, inline in a command or a single response; at
 real scale that reproducibly dies mid-response. Inline payloads are fine only
