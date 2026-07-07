@@ -10,6 +10,27 @@ MCP server, a CLI, a notebook driver — whatever runs SQL against the
 project's warehouse). This guidance assumes you can execute SQL and
 read the rows back.
 
+## Pre-flight checklist (scan this first)
+
+Work the loop in §0. Scan this list per question and **drill into a
+section only when the question touches it** — the sections below are
+the details, not a linear read:
+
+- [ ] Every business term schema-linked to a real column (§1 — start
+      from `knowledge/_index.md` to find the right pages).
+- [ ] Ratios/averages use `SUM/SUM` or the metric `## Calculation`,
+      never `AVG(row_level_ratio)` (§2).
+- [ ] Every JOIN uses the full compound grain key; no SUM over
+      fanned-out rows (§3).
+- [ ] Categorical filters use the stored `value_domain` value, weighted
+      by its `(via:)` confidence tier; 0-row results probed with
+      `SELECT DISTINCT` (§4).
+- [ ] Ambiguous sources surfaced, not silently picked (§5).
+- [ ] Relative dates anchored on `CURRENT_DATE`; no `MAX(date)`-as-now
+      on forward-dated tables (§6).
+- [ ] **Query executed; rows inspected; numbers defensible.** ← the
+      real gate (§0).
+
 ---
 
 ## 0. The loop: generate → execute → inspect → iterate
@@ -54,10 +75,15 @@ physical column names in the warehouse.
 For each business term in the question:
 
 1. Locate the matching entity or metric page directly under `knowledge/`
-   (e.g. `knowledge/<entity>.md`, `knowledge/<metric>.md`). The bundle's
-   `knowledge/` is **flat** — pages sit as direct children with kebab-case
-   slugs; a page type is prefixed into the filename only on a cross-type
-   name collision (e.g. `knowledge/metric-<metric>.md`).
+   (e.g. `knowledge/<entity>.md`, `knowledge/<metric>.md`). **Start from
+   `knowledge/_index.md`** — one line per frozen page (title, status,
+   one-line summary, aliases), so a business term maps to candidate pages
+   in a single read instead of slug-guessing or grepping the whole
+   folder. (If this bundle predates `_index.md`, fall back to matching
+   kebab-case slugs / grepping.) The bundle's `knowledge/` is **flat** —
+   pages sit as direct children with kebab-case slugs; a page type is
+   prefixed into the filename only on a cross-type name collision (e.g.
+   `knowledge/metric-<metric>.md`).
 2. Read its `## Fields` table. Every entity page carries one of this
    shape:
 
@@ -70,14 +96,20 @@ For each business term in the question:
    case-insensitively and allow synonyms (e.g. "customer" → "Account").
    The **Column name** column is the physical SQL identifier to emit.
 
-3. Confirm the column actually exists before you rely on it. This bundle
-   carries the curated knowledge layer but **not** the underlying
-   `_evidence/` pages, so there is no offline column dump to cross-check
-   against — the `## Evidence` links point back to the source project, not
-   into this bundle. Use the column name exactly as the knowledge page
-   records it, and **before committing to it, probe the live warehouse**
-   (your own tool's column listing, or a `SELECT ... LIMIT 0`). Do **not**
-   synthesize or guess a column the knowledge page does not name.
+3. Confirm the column actually exists before you rely on it — via
+   `knowledge/_relations.md` first. That file is the bundle's **physical
+   anchor**: for every relation the knowledge pages cite, its schema +
+   column list. Cross-check the column name there (and pick up the
+   schema-qualified `FROM` while you're at it). **Probe the live
+   warehouse** (your own tool's column listing, or a
+   `SELECT ... LIMIT 0`) only when the relation is marked
+   "needs introspect", the column is absent from its `_relations.md`
+   entry, or execution errors suggest the snapshot has drifted.
+   `_relations.md` is still a snapshot — execution remains the gate
+   (§0) — but it answers the "does this column exist?" question offline
+   in one read instead of one warehouse round-trip per column. Do
+   **not** synthesize or guess a column that neither the knowledge page
+   nor `_relations.md` names.
 
 4. **Parallel twins may not share column names — read the per-variant
    schema map.** When a metric/entity is distilled from per-segment /
@@ -208,6 +240,20 @@ the **actual stored values** and their format:
 
 (The `value_domain:` annotation lives inline in the Description cell —
 a body annotation, not a frontmatter key.)
+
+**Weigh the annotation by its `(via: …)` confidence tier.** A
+`value_domain` may carry a provenance marker recording *how* the values
+were captured — trust accordingly:
+
+- `(via: accepted_values)` — mirrors a dbt `accepted_values` test:
+  **CI-enforced contract**; filter on it directly.
+- `(via: distinct)` — sampled with `SELECT DISTINCT` at distill time:
+  reliable then, but **unenforced** — the domain can drift; on a 0-row
+  result, re-probe before concluding "no data".
+- `(via: inferred)` — the distiller's **provisional hypothesis** (from
+  code/comments, not the warehouse): verify with `SELECT DISTINCT`
+  before building a filter on it.
+- No `(via:)` marker — treat as `inferred` (unverified).
 
 **If `value_domain:` is present**: filter on the recorded **stored**
 value — do **not** substitute the user's natural-language term.
@@ -342,22 +388,6 @@ interval syntax. When uncertain, your warehouse tool is the ground
 truth — run a trivial probe (`SELECT CURRENT_DATE`) to confirm dialect
 behavior before relying on it.
 
----
-
-## 8. Summary checklist
-
-Before you trust an answer:
-
-- [ ] Every business term schema-linked to a real column (§1).
-- [ ] Ratios/averages use `SUM/SUM` or the metric `## Calculation`,
-      never `AVG(row_level_ratio)` (§2).
-- [ ] Every JOIN uses the full compound grain key; no SUM over
-      fanned-out rows (§3).
-- [ ] Categorical filters use the stored `value_domain` value; 0-row
-      results probed with `SELECT DISTINCT` (§4).
-- [ ] Ambiguous sources surfaced, not silently picked (§5).
-- [ ] Relative dates anchored on `CURRENT_DATE`; no `MAX(date)`-as-now
-      on forward-dated tables (§6).
-- [ ] **Query executed; rows inspected; numbers defensible.** ← the
-      real gate.
-```
+The summary checklist lives at the **top of this file** ("Pre-flight
+checklist") — scan it per question; every box must hold before you
+trust an answer.

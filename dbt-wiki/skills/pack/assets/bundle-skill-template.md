@@ -42,12 +42,17 @@ All paths are **relative to this skill's directory**:
   be large; load only the pages relevant to the question). One file per
   business object / measure / rule: entities (with `## Fields` column
   cards + `value_domain` enums), metrics (with `## Calculation` +
-  `## Materialized Columns`), concepts, and relationship edges (with the
-  **full compound join key** in each edge `note`). Files sit **directly**
-  under `knowledge/` (flat — e.g. `knowledge/account.md`,
+  `## Materialized Columns`), concepts, syntheses (verified deep-dive
+  answers, when the source wiki has them), and relationship edges (with
+  the **full compound join key** in each edge `note`). Files sit
+  **directly** under `knowledge/` (flat — e.g. `knowledge/account.md`,
   `knowledge/monthly-recurring-revenue.md`; a page-type prefix like
   `knowledge/metric-monthly-recurring-revenue.md` only when names
   collide).
+- `knowledge/_index.md` — the **retrieval entry point**: one line per
+  frozen page (title, status, one-line summary, aliases). Read it
+  FIRST to find the right pages for a question instead of guessing
+  slugs or grepping the whole folder.
 - `knowledge/_relations.md` — **physical anchor**: every relation the
   knowledge pages cite → its **schema** + column list. The knowledge pages
   name relations as `model.column` (no schema); read `_relations.md` to
@@ -60,7 +65,8 @@ All paths are **relative to this skill's directory**:
 - `references/generation-guidance.md` — the SQL-generation guidance
   (schema-linking + the five semantic guardrails: aggregate level,
   compound-grain joins, value-grounding, source disambiguation,
-  temporal). Read this before generating SQL.
+  temporal). Scan its top **Pre-flight checklist** per question; drill
+  into a section only when the question touches it.
 - `examples/` — gold question → correct-SQL few-shot examples. **May be
   empty** in this snapshot; read any that exist for in-domain grounding.
 
@@ -69,23 +75,21 @@ All paths are **relative to this skill's directory**:
 This is a **generate → execute → inspect → iterate** loop, not a
 one-shot emit. You supply the execution.
 
-1. **Ground** — read the relevant pages under `knowledge/` and
-   schema-link the business terms in the question to concrete entity
-   fields / physical columns; resolve the **schema-qualified `FROM`** via
-   `knowledge/_relations.md` (introspect the live warehouse for any relation
-   it marks "needs introspect"). Follow the schema-linking procedure in
-   `references/generation-guidance.md` (§1). If a term resolves to
-   nothing, ask the user — do not invent a column.
+1. **Ground** — find the relevant pages via `knowledge/_index.md`, read
+   them, and schema-link the business terms in the question to concrete
+   entity fields / physical columns; resolve the **schema-qualified
+   `FROM`** via `knowledge/_relations.md` (introspect the live warehouse
+   for any relation it marks "needs introspect"). Follow the
+   schema-linking procedure in `references/generation-guidance.md` (§1).
+   If a term resolves to nothing, ask the user — do not invent a column.
 
 2. **Generate** — write the SQL applying the semantic guardrails in
    `references/generation-guidance.md` (correct `SUM/SUM` aggregation;
    full compound join keys / no fan-out; value-grounded categorical
    filters; surfaced source ambiguity; `CURRENT_DATE`-anchored relative
    dates — never `MAX(date)` as "now"). Consult any `examples/` for
-   worked patterns. Do **not** static-check the SQL against `knowledge/`:
-   it is a snapshot and the live warehouse drifts, so a frozen existence
-   check gives false confidence or false errors (see
-   `references/generation-guidance.md` §0). Execution is the only gate.
+   worked patterns. Do **not** static-check the SQL against `knowledge/`
+   — execution is the only gate (why: guidance §0).
 
 3. **Execute** — run the SQL via **your own warehouse-connect tool**
    (an MCP server or a CLI that runs SQL against the warehouse). This
@@ -105,16 +109,10 @@ one-shot emit. You supply the execution.
    result looks wrong, re-ground, fix the query, and re-run. Repeat
    until the numbers are defensible.
 
-> **Why execution is the only gate**: this bundle's `knowledge/` is a
-> point-in-time snapshot and the live warehouse drifts, so checking a
-> query against the frozen schema proves nothing about current truth.
-> And even a fresh schema check only proves the SQL *parses* and
-> *references real objects* — not that the answer is *correct*. The
-> dangerous errors are semantically-valid wrong-number bugs (a 3×
-> over-count from averaging pre-aggregated rows; an 84× fan-out from a
-> grain mismatch; a future date from `MAX(date)`). **Only executing the
-> query and inspecting the rows catches those.** Run it. Look at the
-> output. Iterate.
+> **Why execution is the only gate** — the full argument (snapshot
+> drift, and why even a fresh schema check can't catch wrong-number
+> bugs) lives in `references/generation-guidance.md` §0. Short version:
+> run the query, look at the rows, iterate.
 
 ## Worked shape (synthetic)
 

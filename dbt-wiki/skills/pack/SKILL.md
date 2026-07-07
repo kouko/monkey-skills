@@ -60,7 +60,7 @@ subfolders, no nesting — per the Flat-skill constraint in
 ```
 <project>-analytics/
   SKILL.md           # instantiated in Step 4
-  knowledge/         # frozen in Step 2
+  knowledge/         # frozen in Step 2 (+ _relations.md Step 2.5, _index.md Step 2.7)
   references/         # copied in Step 3
   examples/           # reserved slot (Step 5)
 ```
@@ -70,11 +70,14 @@ subfolders, no nesting — per the Flat-skill constraint in
 Copy the **curated semantic** layer from the source `.dbt-wiki/` into the
 bundle's `knowledge/`: the distilled **entities** (with their `## Fields` column
 cards + inline `value_domain` enums), **metrics** (with `## Calculation` +
-`## Materialized Columns`), **concepts**, and the **relationships** graph — and
-critically the **compound / composite join keys** carried in each relationship
-edge `note` (e.g. `joins on account_id + report_month (composite key — both
-columns required)`). Keep each frozen page's `derived_from` / provenance
-frontmatter so the snapshot's lineage stays traceable.
+`## Materialized Columns`), **concepts**, **syntheses** (verified deep-dive
+answers under `syntheses/`, when the source wiki has them — they are the
+highest-cost knowledge, human-verified, and freeze exactly like the other
+types), and the **relationships** graph — and critically the **compound /
+composite join keys** carried in each relationship edge `note` (e.g. `joins on
+account_id + report_month (composite key — both columns required)`). Keep each
+frozen page's `derived_from` / provenance frontmatter so the snapshot's lineage
+stays traceable.
 
 **Flatten-on-freeze (CRITICAL).** The source `.dbt-wiki/` **nests**
 (`entities/`, `metrics/`, `concepts/`, `_evidence/models/`, …). The emitted
@@ -102,7 +105,9 @@ frontmatter so the snapshot's lineage stays traceable.
 [bundle-format](references/bundle-format.md): the bulky `_evidence/` pages (raw
 manifest / sqlglot dumps), `index.md` / `lineage.md` / `log.md` machinery, and
 any `_internal/` artifacts. The bundle carries the curated semantic knowledge,
-not the full evidence base.
+not the full evidence base. (The source `index.md` is dropped, not copied —
+Step 2.7 regenerates the bundle's own `knowledge/_index.md` from the frozen
+pages themselves, so the index always matches exactly what was frozen.)
 
 ## Step 2.5 — Emit the physical-anchor `knowledge/_relations.md`
 
@@ -177,19 +182,44 @@ uv run <SKILL_DIR>/assets/flatten_links.py "<project>-analytics/knowledge"
 ```
 
 It rewrites, in both markdown body links AND frontmatter `target:` edges:
-- `](../{entities,concepts,metrics}/<slug>.md)` → flat sibling `](<slug>.md)`;
-- `[label](../_evidence/…)` → `label` (the `_evidence/` layer was dropped in
-  Step 2, so these are dead — delink to plain text, keeping the model name).
+- `](../{entities,concepts,metrics,syntheses}/<slug>.md)` → flat sibling
+  `](<slug>.md)`;
+- any **remaining pathed `.md` link** → `label` (delink to plain text). After
+  the flatten, a relative link that still carries a path points outside the
+  bundle — the dropped `_evidence/` layer (both `../_evidence/…` and the
+  SCHEMA-synthesis `.dbt-wiki/_evidence/…` shapes), `_archive/`, or
+  source-repo files (`../../models/…`) — all dead at a portable target.
 
 It is **idempotent** (re-run after any re-freeze) and pure path-shape logic — no
 project specifics. It exits non-zero and lists offenders if any broken
 intra-knowledge link remains; require `0 broken intra-knowledge links remain`
 before continuing. Verify the script on first run (optional):
-`uv run <SKILL_DIR>/assets/flatten_links_test.py` → "6/6 passed".
+`uv run <SKILL_DIR>/assets/flatten_links_test.py` → "10/10 passed".
 
 > Without this step the bundle's progressive-disclosure-by-link is broken: a
 > reader following `[Customer](../entities/customer.md)` hits a non-existent
 > path (it is a flat sibling `customer.md`), and every `## Evidence` link dangles.
+
+## Step 2.7 — Build the knowledge index `knowledge/_index.md`
+
+A flat `knowledge/` with hundreds of pages gives the consuming agent no way to
+*find* the right page except slug-guessing or grepping every file. Emit the
+**retrieval entry point** — one line per frozen page (title, status, one-line
+summary, aliases), grouped by page type — with the shipped generator:
+
+```bash
+uv run <SKILL_DIR>/assets/build_bundle_index.py "<project>-analytics/knowledge"
+```
+
+It derives every line from the **frozen pages' own frontmatter** (never from
+the source `index.md`, whose format varies by init version), so the index
+always matches exactly what was frozen. Files starting with `_` are excluded;
+pages with an unrecognized `type:` land in an "Other pages" section rather
+than being silently dropped. It is **idempotent** — re-run after any
+re-freeze (order with Step 2.6 doesn't matter; the index carries flat links by
+construction). It exits non-zero if `knowledge/` holds no indexable page.
+Verify the script on first run (optional):
+`uv run <SKILL_DIR>/assets/build_bundle_index_test.py` → "13/13 passed".
 
 ## Step 3 — Copy in the generation guidance
 
@@ -295,14 +325,35 @@ test -f "$BUNDLE/SKILL.md" || { echo "FAIL: no SKILL.md"; exit 1; }
 grep -q '^name: .*-analytics' "$BUNDLE/SKILL.md" || { echo "FAIL: bad/missing name"; exit 1; }
 grep -q '^source_manifest_sha:' "$BUNDLE/SKILL.md" || { echo "FAIL: missing snapshot annotation"; exit 1; }
 
+# (a2) the frontmatter actually PARSES as YAML. The highest-blast-radius manual
+#      step is the <TRIGGER_PHRASES> substitution into a folded block scalar —
+#      a bad substitution breaks the YAML and the skill silently never triggers.
+#      grep can't catch that; a real parse can.
+uv run --with pyyaml - "$BUNDLE/SKILL.md" <<'PY' || { echo "FAIL: SKILL.md frontmatter does not parse — re-do Step 4 (check the <TRIGGER_PHRASES> substitution contract)"; exit 1; }
+import sys, yaml
+text = open(sys.argv[1], encoding="utf-8").read()
+assert text.startswith("---"), "no frontmatter block"
+fm = yaml.safe_load(text[3:text.index("\n---", 3)])
+assert isinstance(fm, dict) and fm.get("name") and fm.get("description"), "frontmatter missing name/description"
+PY
+
 # (b) FLAT — no subfolder contains another subfolder (single-level only).
 NESTED=$(find "$BUNDLE" -mindepth 2 -type d)
 [ -z "$NESTED" ] || { echo "FAIL: nested subfolders found:"; echo "$NESTED"; exit 1; }
 
-# (c) the three expected subfolders exist; knowledge/ has direct-child pages.
+# (c) the three expected subfolders exist; knowledge/ has direct-child pages
+#     and the retrieval index was built (Step 2.7).
 for d in knowledge references examples; do
   test -d "$BUNDLE/$d" || { echo "FAIL: missing $d/"; exit 1; }
 done
+test -f "$BUNDLE/knowledge/_index.md" || { echo "FAIL: missing knowledge/_index.md — run Step 2.7 build_bundle_index.py"; exit 1; }
+
+# (c2) page-count parity: every source knowledge page made it into the bundle.
+#      Step 2 is a manual copy — a silently omitted page passes every other
+#      check here, so count source vs frozen (bundle _-files excluded).
+SRC_N=$(find .dbt-wiki/entities .dbt-wiki/metrics .dbt-wiki/concepts .dbt-wiki/syntheses -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+DST_N=$(find "$BUNDLE/knowledge" -name '*.md' ! -name '_*' | wc -l | tr -d ' ')
+[ "$SRC_N" = "$DST_N" ] || { echo "FAIL: page-count mismatch — source $SRC_N vs frozen $DST_N (a page was dropped or added in Step 2)"; exit 1; }
 
 # (d) no broken intra-knowledge links (Step 2.6 flattening must have run).
 python3 - "$BUNDLE/knowledge" <<'PY' || { echo "FAIL: broken links — re-run Step 2.6 flatten_links.py"; exit 1; }
@@ -349,6 +400,9 @@ NEVER:
 ALWAYS:
 - Read the source `manifest_sha` from `.dbt-wiki/log.md` and stamp it +
   `build_date` into the bundle (Step 6) — the snapshot's provenance.
+- Emit the retrieval index `knowledge/_index.md` from the frozen pages
+  (Step 2.7) and verify source-vs-frozen page-count parity (Step 7) — a
+  silently dropped page is undetectable downstream.
 - Keep frozen pages' `derived_from` / provenance frontmatter (traceable lineage).
 - Carry the full **compound join key** in each relationship edge `note` into the
   frozen `knowledge/` — dropping a key column silently fans out rows downstream.

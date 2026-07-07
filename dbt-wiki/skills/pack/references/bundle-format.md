@@ -22,6 +22,7 @@ distilled against a real warehouse is governed: it lands in the user's
 acme-analytics/                  # the emitted Agent Skill (synthetic name)
   SKILL.md                       # entry point — the consumption contract
   knowledge/                     # frozen distilled knowledge (read on-demand)
+    _index.md                    #   retrieval entry point: one line per page (Step 2.7)
     _relations.md                #   physical anchor: relation -> schema + columns (Step 2.5)
   references/                    # generation guidance (copied in from pack)
   examples/                      # gold few-shot context (MAY be empty in v1)
@@ -112,6 +113,9 @@ evidence dump:
   (correct aggregation form + grain) and any `## Materialized Columns`
   variant→`model.column` mapping.
 - **concepts** — one page per cross-cutting business rule.
+- **syntheses** — verified deep-dive answer pages (when the source wiki
+  has them). They are the highest-cost knowledge — human-verified
+  question → analysis paths — and freeze exactly like the other types.
 - **relationships** — the typed-edge graph carried in each page's
   frontmatter `relationships:` + body `## Relationships`. This is
   load-bearing for correct SQL: the edge `note` records the **full
@@ -134,6 +138,17 @@ What is **dropped** when freezing: the bulky `_evidence/` mechanical
 layer (raw manifest/sqlglot pages), `index.md`/`lineage.md`/`log.md`
 machinery, and any `_internal/` artifacts. The bundle carries the
 **curated semantic knowledge**, not the full evidence base.
+
+## `knowledge/_index.md` — retrieval entry point (generated at pack time)
+
+A flat `knowledge/` with hundreds of pages leaves the consuming agent
+slug-guessing or grepping every file to *find* the right page. Pack
+Step 2.7 generates `knowledge/_index.md` — one line per frozen page
+(title, status, one-line summary, aliases), grouped by page type — from
+the **frozen pages' own frontmatter**, so it always matches exactly what
+was frozen. The consuming contract tells the agent to read it FIRST and
+open only the pages it points to. Like `_relations.md`, it is a flat
+`_`-prefixed child of `knowledge/` and not itself an indexed page.
 
 ## `knowledge/_relations.md` — physical anchor (the one thing re-carried from `_evidence/`)
 
@@ -242,21 +257,25 @@ paths and never uses `[[wikilinks]]` (standard markdown links only,
 matching the source `.dbt-wiki/` convention).
 
 **Intra-`knowledge/` links are flattened to match the flat layout.** The source
-pages link cross-folder (`[X](../entities/x.md)`) and cite evidence
-(`[m](../_evidence/models/m.md)`); after the flatten-on-freeze those paths are
-wrong (the target is a flat sibling, and `_evidence/` was dropped). pack Step 2.6
-rewrites them: cross-folder → flat sibling `[X](x.md)`; dropped-`_evidence/`
-links → delinked to plain label text. Acceptance (Step 7) requires **zero broken
-intra-`knowledge/` links**.
+pages link cross-folder (`[X](../entities/x.md)`, `[S](../syntheses/s.md)`) and
+cite dropped or repo-local files (`[m](../_evidence/models/m.md)`,
+`[m](.dbt-wiki/_evidence/models/m.md)`, `[SPEC](../../models/…/SPEC.md)`);
+after the flatten-on-freeze those paths are wrong (the target is a flat
+sibling, or a file that does not exist at a portable target). pack Step 2.6
+rewrites them: knowledge cross-folder → flat sibling `[X](x.md)`; any other
+pathed `.md` link → delinked to plain label text. Acceptance (Step 7) requires
+**zero broken intra-`knowledge/` links**.
 
 ## Acceptance summary
 
 A conformant `pack` output is a folder `<project>-analytics/` that:
 
 - is a **flat** Agent Skill (`SKILL.md` + single-level subfolders, no
-  nested subfolders);
-- contains `knowledge/` (frozen entities/metrics/concepts + column
-  cards + relationships with **compound join-keys** + `value_domain`),
+  nested subfolders) whose `SKILL.md` frontmatter **parses as YAML**;
+- contains `knowledge/` (frozen entities/metrics/concepts/syntheses +
+  column cards + relationships with **compound join-keys** +
+  `value_domain`) at **page-count parity** with the source knowledge
+  layer, plus the generated `knowledge/_index.md` retrieval entry point,
   `references/` (generation guidance), and an `examples/` slot (MAY be
   empty in v1);
 - is **portable** — drops into `~/.claude/skills/` or any
