@@ -1,7 +1,7 @@
 ---
 name: writing-plans
 description: |
-  Use AFTER brainstorming produces a brief, BEFORE subagent-driven-development dispatches implementers. Splits it into atomic tasks — each with one RED/GREEN test and a single module boundary — into a dependency graph; ≤5 minutes is a secondary smell-check, not the primary rule.
+  Use AFTER brainstorming produces a brief, BEFORE subagent-driven-development dispatches implementers. Splits it into atomic tasks — each with one RED/GREEN test and a single module boundary — into a dependency graph.
 version: 0.12.0
 ---
 
@@ -14,8 +14,7 @@ If you are a subagent dispatched with an explicit role prompt (implementer / spe
 Takes a `brainstorming` output brief and produces a **plan**: an ordered list of atomic tasks that `subagent-driven-development` (SDD) can dispatch one at a time. Each task must be:
 
 - **Independently verifiable** — has a RED test (or RED diagnostic) that goes GREEN when the task is done. This is the primary sizing constraint — see §The splitting framework.
-- **One module** of touch surface (consistent with SDD's per-task scope);
-- **Roughly ≤5 minutes** of work for the implementer subagent (P2-B) — a secondary smell-check, not the authoritative ceiling; no rigorous source ties a fixed minute-count to LLM agent reliability (see §The splitting framework for the research this reframing rests on).
+- **One module** of touch surface (consistent with SDD's per-task scope).
 
 The plan is the **paths-not-content handoff** between brainstorming and SDD. brainstorming wrote the brief; SDD consumes the plan; this skill produces the plan and self-reviews it before declaring DONE.
 
@@ -42,7 +41,7 @@ Enumerated exemptions only.
 | Exempt category | What qualifies | What does NOT qualify |
 |---|---|---|
 | **No brief upstream** | brainstorming has not produced a brief yet — routing this skill prematurely. | "I have a vague idea" — that needs brainstorming first, not skipping to plans. |
-| **Brief explicitly says "single atomic task"** | brainstorming's Smallest End State is itself ≤5 min and Out of Scope is exhaustive. The brief IS the plan. | Brief that says "small" but Open Questions are non-empty — Open Questions block. |
+| **Brief explicitly says "single atomic task"** | brainstorming's Smallest End State is itself one file with one assertion, and Out of Scope is exhaustive. The brief IS the plan. | Brief that says "small" but Open Questions are non-empty — Open Questions block. |
 | **Implementer returned BLOCKED with a sub-task fallback request** | This is the entry condition for the §BLOCKED fallback flow below — see that section, not §When NOT to Use. | An implementer returning BLOCKED for non-decomposition reasons (broken test infra, missing dependency) — that surfaces to user, not re-planned. |
 | **Explicit user override** | User literally says "skip planning, here are the tasks" AND hands in a list that already satisfies the plan-format schema. | "Just figure it out" — that's an instruction to plan, not skip. |
 
@@ -54,12 +53,11 @@ Walk these in order for each prospective task. Stop expanding a task as soon as 
 |---|---|---|
 | 1 | **Acceptance criterion** (primary) | Can you write ONE failing test now that goes green when this task is done? If you need 3 tests, this is 3 tasks. |
 | 2 | **Module scope** | Does this touch ≤1 module / ≤1 file boundary? If it crosses, split by boundary. |
-| 3 | **Time-box** (secondary smell-check) | Could a focused implementer subagent complete this in roughly ≤5 minutes? If "maybe 10," look again at criterion 1 — a task that overruns time almost always also needs >1 assertion or crosses a module boundary. |
-| 4 | **No hidden coupling** | Could this task be done in isolation, with only its declared dependencies satisfied? If you need to "also remember to update X," that's a missing dep — declare it. |
+| 3 | **No hidden coupling** | Could this task be done in isolation, with only its declared dependencies satisfied? If you need to "also remember to update X," that's a missing dep — declare it. |
 
 **Runnable-capability note.** When a task introduces a runnable capability — a new test suite, build step, lint target, e2e suite, migration command, or similar — its `Acceptance` criterion must include a line stating that the new verb is declared in the command surface (the project's declared commands — `AGENTS.md` commands section, `make`/`just` recipes, `package.json` scripts) and verified to run. This makes command-surface accretion visible at plan time, before the implementer ships it silently without a declared entry point.
 
-**Why criterion 1 is primary, not criterion 3.** A fixed wall-clock minute-count is a poor sizing axis for an LLM agent — the agent has no experiential grounding in duration (tokens/steps are the real substrate; see arXiv:2510.23853, "Your LLM Agents are Temporally Blind"). Toby Ord's decay model (arXiv:2505.05115) is sometimes read as validating a minute-based axis for exactly this reason — it does model failure as a constant per-minute hazard — but its "minute" is an **externally-benchmarked human-difficulty rating** (how long a human expert would need, independently calibrated per the METR methodology), not a plan-writer's guess at how long an LLM implementer will take on THIS task; those are different quantities, and no equivalent calibration exists for the latter. Traditional software-engineering research on change size (Google's `eng-practices` CL-size guidance; Rigby & Bird, ESEC/FSE 2013) sizes by file/diff boundary instead, never by completion time — the "time" that appears in that literature is human *reading speed* during review, which has no agent analogue either. Criterion 1 (one failing test) needs no such external calibration — it's a fact about the task itself, checkable by writing the test — so it governs when the two conflict: if criteria 1+3 disagree (≤5 min vs one-failing-test), criterion 1 wins — even a 1-minute task that needs 3 distinct assertions is 3 tasks, and a task past 5 minutes that still resolves to exactly one assertion is not automatically split by time alone. In practice the two rarely diverge (a task that overruns the time-box has almost always also picked up a second assertion or crossed a module boundary), which is why this reframing changes little about what plans actually look like — it corrects the stated rationale, not the output.
+**No time-box criterion — why one isn't here.** A prior revision sized tasks partly by a fixed wall-clock minute estimate ("≤5 minutes for a focused implementer subagent"), demoted from primary to a secondary smell-check, before being removed entirely. Reasons it doesn't belong at any tier: an LLM agent has no experiential grounding in duration (tokens/steps are the real substrate; see arXiv:2510.23853, "Your LLM Agents are Temporally Blind"); no rigorous source ties a plan-writer's guess at an implementer's completion time to actual reliability (Toby Ord's decay model, arXiv:2505.05115, models failure against an *externally-benchmarked human-difficulty rating*, not a plan-writer's guess at agent completion time — a different, uncalibratable quantity); traditional software-engineering research on change size (Google's `eng-practices`; Rigby & Bird, ESEC/FSE 2013) sizes by file/diff boundary, never completion time; and a survey of coding-agent products (Devin, Cursor, Windsurf, Replit, Copilot Workspace, Amazon Q, Codex CLI, LangGraph/AutoGen/CrewAI reference implementations) found none with a documented time-based splitting rule — the two with any concrete secondary axis at all (Copilot Workspace, Amazon Q) both use file count, which criterion 2 above already covers. If you find yourself wanting a time-based gut check, that's a signal to look harder at criterion 1 instead — a task that "feels long" almost always also resolves to more than one assertion or crosses a module boundary.
 
 **Post-split parallel-marking pass.** After splitting, for each pair of tasks at the **same dependency level**: if their `Files touched` are disjoint **AND** there is no semantic dependency (no shared data / symbol, no doc-mirrors-code relationship), mark **both** `Independent: true`. This is the step that turns a flat task list into a parallelism-aware plan.
 
@@ -107,7 +105,6 @@ writing-plans applies the same pattern to plan tasks. The implementer's BLOCKED 
 After producing the plan, writing-plans **must** dispatch [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) as an evaluator subagent — a one-shot blocking call that waits for and returns its verdict directly (see your host's tool-mapping reference for the exact shape, and [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §A1 for a Claude-Code-specific naming pitfall to avoid — Codex has no equivalent). That prompt holds the **authoritative, full check list** — do not maintain a duplicate copy here (it drifts). The highest-value checks, so you can self-pre-screen before dispatch:
 
 - **one-failing-test acceptance** — each task names a specific RED test (criterion 1, primary);
-- **≤5-min** per task — secondary smell-check (criterion 3);
 - **every brief item covered** — every Smallest End State / Decision item maps to ≥1 task, no orphan tasks;
 - **DAG, no cycles** — `Dependencies` form an acyclic graph with critical-path depth ≤5.
 
@@ -133,7 +130,7 @@ Execution order: sequential | parallel-where-possible
 Plan-document-reviewer verdict: PENDING   ← required; reviewer will flip to PASS (timestamp)
 
 ## Task 1 — <short name>
-- Description: <≤5 min unit of work, imperative voice>
+- Description: <one-assertion unit of work, imperative voice>
 - Module: <path or module name; one only>
 - Files touched: <comma-separated paths the implementer will Write / Edit>
 - Context paths:
@@ -198,7 +195,7 @@ A **second input contract**, alongside the brainstorming brief. writing-plans ca
 
 **Who runs the validator.** In Continuous mode the FREEZE step already gated this change-folder — it ran `validate_spec_output.py` and got exit 0 — so writing-plans **trusts that exit-0** and does not re-run it. For a direct, non-freeze invocation (consuming a change-folder outside Continuous mode), run `validate_spec_output.py` once on the change-folder before consuming it, and proceed only on exit 0.
 
-**Scenario → task mapping.** Map each `#### Scenario:` (its GIVEN / WHEN / THEN) → **one task's `Acceptance: RED/GREEN`**. The THEN is the GREEN observable; the GIVEN/WHEN set up the RED. One `### Requirement:` may **fan to N tasks** — split per the same one-failing-test / ≤5-min rule in §The splitting framework (a multi-Scenario Requirement is N candidate tasks, grouped primarily by assertion boundary, with the time-box as a secondary check).
+**Scenario → task mapping.** Map each `#### Scenario:` (its GIVEN / WHEN / THEN) → **one task's `Acceptance: RED/GREEN`**. The THEN is the GREEN observable; the GIVEN/WHEN set up the RED. One `### Requirement:` may **fan to N tasks** — split per §The splitting framework (a multi-Scenario Requirement is N candidate tasks, grouped by assertion boundary).
 
 **Point-don't-copy / link back.** **NEVER** copy the spec body into the plan — loom-spec is SSOT, and a copied delta silently goes stale the moment loom-spec re-edits the change-folder, so the plan then drives implementers off a spec that no longer exists. Reference the source `### Requirement:` / `#### Scenario:` names via the stable join key `<change-id> / Requirement: <name> / Scenario: <name>` (the `Brief item covered:` field accepts this referent — see [`references/plan-format.md`](references/plan-format.md)). The plan **links back** to the spec; it does not duplicate it.
 
@@ -240,7 +237,7 @@ Delegation contract per CLAUDE.md: pass **paths + structured seed context**, not
 - Does **not** write code. Atomic-task production is metadata about future work, not the work.
 - Does **not** dispatch SDD subagents. That's SDD's job. writing-plans hands off the plan; SDD picks it up.
 - Does **not** invoke the implementer / spec-reviewer / code-quality-reviewer prompts directly. Only plan-document-reviewer (a different evaluator scope).
-- Does **not** estimate dev-time beyond the roughly-≤5-min smell-check. The authoritative split-trigger is criterion 1 (one failing test) — see §The splitting framework; time overrun is a secondary signal to re-check it, not an estimation exercise in its own right.
+- Does **not** estimate dev-time at all. The split-trigger is criterion 1 (one failing test) — see §The splitting framework, and §No time-box criterion for why a completion-time estimate isn't part of the schema.
 - Does **not** decide priority or sequencing beyond what the dependency graph requires. The user (or SDD) decides which independent tasks run first.
 
 ## See also

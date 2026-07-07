@@ -2,7 +2,7 @@
 
 **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-> Bridge between [`brainstorming`](../brainstorming) (produces the brief) and [`subagent-driven-development`](../subagent-driven-development) (dispatches subagents). Splits the brief into ≤5 atomic ≤5-minute tasks with explicit RED-GREEN acceptance, self-reviews via plan-document-reviewer, and handles BLOCKED fallback per Kent Beck (2002) §Child Test pattern (ISBN 978-0321146533).
+> Bridge between [`brainstorming`](../brainstorming) (produces the brief) and [`subagent-driven-development`](../subagent-driven-development) (dispatches subagents). Splits the brief into ≤5 atomic tasks with explicit RED-GREEN acceptance, self-reviews via plan-document-reviewer, and handles BLOCKED fallback per Kent Beck (2002) §Child Test pattern (ISBN 978-0321146533).
 
 Part of the [loom-code](../..) plugin. Operational spec the agent loads is [`SKILL.md`](SKILL.md); this README is for humans.
 
@@ -19,18 +19,19 @@ brainstorming → brief                         (Discovery stage)
               tdd-iron-law (inside each implementer)
 ```
 
-## Two hard rules
+## The hard rule
 
-1. **Per-task ≤5 minutes**. If a task can't be done in 5 minutes of focused implementer subagent work, split. (P2-B)
-2. **Plan size ≤5 atomic tasks**. If the brief produces >5 tasks, the brief is too big — route back to brainstorming OR split into N briefs each with ≤5 tasks.
+**Per-task, one failing test.** If you can't write ONE failing test that goes green when a task is done, it's not one task — split it (or if it needs 3 tests, it's 3 tasks). No time estimate is part of this criterion: an LLM agent has no experiential grounding in wall-clock duration, and no rigorous source ties a plan-writer's completion-time guess to agent reliability — see [`SKILL.md`](SKILL.md) §No time-box criterion for the full research this rests on.
 
-The 5+5 rule is a deliberate forcing function: it pushes back on briefs that try to do too much, and it pushes back on plans that hide complexity in vague tasks.
+This pushes back on briefs that try to do too much and on plans that hide complexity in vague tasks — the forcing function is the test, not a clock.
+
+*(Separately, plan size is governed by critical-path **depth** ≤5 — the longest chain of dependent tasks, not total task count; a wide-but-shallow plan with many independent tasks is fine. See [`SKILL.md`](SKILL.md) §Plan size ceiling.)*
 
 ## What each task carries
 
 Per [`references/plan-format.md`](references/plan-format.md), every task ships with:
 
-- **Description**: ≤5-minute imperative-voice action
+- **Description**: one-assertion imperative-voice action
 - **Module**: one path / module name (not two)
 - **Context paths**: existing code the implementer reads (paths-not-content)
 - **Acceptance**: RED test name + GREEN observable condition
@@ -41,7 +42,7 @@ This shape is what `subagent-driven-development` consumes when dispatching the t
 
 ## Self-review before declaring DONE
 
-After producing the plan, writing-plans dispatches [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) as an evaluator subagent. The reviewer runs 12 checks (per-task ≤5 min, brief-task coverage map, DAG no-cycles, etc.) and returns PASS / NEEDS_REVISION. If NEEDS_REVISION, writing-plans patches the plan and re-reviews. Up to 2 rounds; if still failing, escalate to user (the brief itself likely needs revisiting).
+After producing the plan, writing-plans dispatches [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) as an evaluator subagent. The reviewer runs 16 checks (2 non-blocking: one retired, one advisory — 14 can actually fail) covering per-task one-failing-test acceptance, brief-task coverage map, DAG no-cycles, etc., and returns PASS / NEEDS_REVISION. If NEEDS_REVISION, writing-plans patches the plan and re-reviews. Up to 2 rounds; if still failing, escalate to user (the brief itself likely needs revisiting).
 
 The plan-document-reviewer is **separate from** SDD's spec-reviewer / code-quality-reviewer — those evaluate code; this one evaluates plan structure.
 
@@ -58,14 +59,14 @@ writing-plans applies the same pattern to plan tasks. This is the **primary recu
 Enumerated exemptions in [`SKILL.md`](SKILL.md) §When NOT to Use:
 
 - No upstream brief yet (route to brainstorming first)
-- Brief's Smallest End State is itself ≤5 min and Out of Scope is exhaustive (brief IS the plan)
+- Brief's Smallest End State is itself one file with one assertion, and Out of Scope is exhaustive (brief IS the plan)
 - Explicit user override AND a task list that already satisfies the plan-format schema
 
 ## What this skill does NOT do
 
 - Does **not** write code. Plans are metadata about future work.
 - Does **not** dispatch SDD subagents (implementer / spec-reviewer / code-quality-reviewer) — that's SDD's job.
-- Does **not** estimate dev-time beyond "is this ≤5 min" — time-box is a split-trigger, not an estimation exercise.
+- Does **not** estimate dev-time at all — the split-trigger is "can you write one failing test," not a clock.
 - Does **not** decide priority / sequencing beyond what the dependency graph requires.
 
 ## See also

@@ -35,15 +35,18 @@ def test_plan_format_has_review_weight_field():
 
 def test_plan_document_reviewer_has_check_16():
     """
-    Task 3 adds to loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md:
-      - a new "Check 16" row
+    loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md carries:
+      - a "Check 16" row (Review-weight: mechanical)
       - the field name "Review-weight: mechanical" (referenced by the check)
-      - the updated denominator token "<15>" (replacing the old "<14>")
+      - the current applicable-checks denominator "<14>" — Check 5 (time-box,
+        retired when writing-plans dropped the time criterion) and Check 15
+        (advisory) are both excluded from the 16-check total, leaving 14
+        checks that can actually fail.
     """
     text = _read(PLAN_DOCUMENT_REVIEWER_PROMPT)
     assert "Check 16" in text
     assert "Review-weight: mechanical" in text
-    assert "<15>" in text
+    assert "<14>" in text
 
 
 def test_sdd_skill_has_mechanical_skip_branch():

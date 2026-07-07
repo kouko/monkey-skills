@@ -44,7 +44,7 @@ If `Plan-document-reviewer verdict` is `PENDING`, the plan has not been self-rev
 ```markdown
 ## Task <N> — <short imperative name>
 
-- **Description**: <≤5 min unit of work, imperative voice>
+- **Description**: <one-assertion unit of work, imperative voice>
 - **Module**: <path or module name; ONE only>
 - **Files touched**: <comma-separated paths the implementer will Write / Edit>
 - **Context paths**:

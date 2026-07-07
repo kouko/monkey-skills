@@ -5,6 +5,47 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.27.5] — 2026-07-08 — writing-plans drops the time-box criterion entirely
+
+### Changed
+
+- **`writing-plans`**'s splitting framework no longer has a time-based
+  criterion at any tier (0.27.4 demoted it to secondary; this removes
+  it). The framework is now 3 criteria: acceptance (one failing test,
+  primary), module scope, no hidden coupling. A new §No time-box
+  criterion section documents why, including a cross-system survey
+  (Devin, Cursor, Windsurf, Replit, Copilot Workspace, Amazon Q, Codex
+  CLI, LangGraph/AutoGen/CrewAI reference implementations) that found
+  no major coding-agent product with a documented time-based splitting
+  rule — the two with any concrete secondary axis (Copilot Workspace,
+  Amazon Q) both use file count, which criterion 2 (module scope)
+  already covers.
+- `plan-document-reviewer-prompt.md`'s Check 5 (the time estimate) is
+  **retired** — always N/A, never applied — rather than renumbered, so
+  every cross-reference to Checks 6-16 elsewhere in the plugin stays
+  valid. `checks_passed` denominator updated 15→14 (Checks 5 and 15
+  both now non-blocking). **This is a real behavior change**: a task
+  previously flaggable by Check 5 alone (estimated time long, but a
+  single clean assertion) now passes — only Check 6 (the RED test) can
+  fail a task on sizing grounds.
+- Cross-file consistency sweep: `agents/implementer.md` (role contract,
+  BLOCKED trigger, dispatch template — the implementer's own contract
+  no longer claims a time-box), `hooks/router-card.md` +
+  `using-loom-code/SKILL.md` (router rule #3 card text),
+  `subagent-driven-development/SKILL.md` + its `README.md`
+  (frontmatter/summary — the `>1 hour` OR `>1 module` trigger for
+  invoking SDD at all is untouched; that is a separate, independent
+  threshold from per-task sizing), `brainstorming/references/
+  handoff-brief-format.md`, `requesting-code-review/README.md`, and
+  `writing-plans/README.{md,ja.md,zh-TW.md}` (all three languages) —
+  all updated to stop describing a "≤5-minute" atomic-task unit.
+  Historical/archival files (`docs/announcement/`, `docs/example-runs/`,
+  prior CHANGELOG entries) intentionally left untouched as point-in-time
+  records.
+- `test_sdd_review_weight_marker.py::test_plan_document_reviewer_has_check_16`
+  updated to assert the new `<14>` denominator (was `<15>`).
+- Suite: 219 passed.
+
 ## [0.27.4] — 2026-07-08 — writing-plans reframes task-sizing primary axis
 
 ### Changed
