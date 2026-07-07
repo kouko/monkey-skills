@@ -117,6 +117,7 @@ Both use the same rubrics. The difference is **scope of the diff being reviewed*
 
 **Procedure when push-as-trigger fires**:
 
+0. **Check scope first: is this a full close-out, or just a review opinion?** If the trigger context matches `finishing-a-development-branch`'s own §When to use (branch is done / ready to merge / opening a PR intending to merge — not merely "let me see the diff quality mid-work") — STOP this procedure and invoke `finishing-a-development-branch` instead. It delegates to this skill as its own Step 1, so the review still runs; you additionally get verification-before-completion + same-branch memory-timing + the git-memory trailer decision, none of which steps 1-6 below get you on their own. Only continue below when the user has explicitly signaled review-without-merging (`finishing-a-development-branch`'s own named exception) — that is the one case this skill's standalone Push-as-trigger flow is the correct, complete path.
 1. **Do NOT execute the push.** Halt the planned action.
 2. **Surface the rationalization** to the user explicitly — quote which row of the table above their request matches.
 3. **Offer to run review now**: "Dispatching `requesting-code-review` — back in ~30s." Then run the §Process panel (Steps 2-3: two reviewers, union, re-aggregate) on `git diff main...HEAD` (or explicit range) — this entry point uses the same panel default, never a single-reviewer dispatch.
