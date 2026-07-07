@@ -2,7 +2,7 @@
 name: using-loom-code
 description: |
   Router for loom-code — invoke when the user wants to build, change, debug, or review code (features / fixes / refactors / migrations / reviews). Drives brainstorm → plan → SDD → TDD → debugging → code review → finish branch.
-version: 0.11.0
+version: 0.12.0
 ---
 
 <SUBAGENT-STOP>
@@ -17,7 +17,7 @@ Five load-bearing rules:
 1. **Brainstorm before implementing.** Explore intent + alternatives first. Call `brainstorming` — 5-axis framework ("5-axis" is the historical name; the walk starts at Axis 0) (Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete) → structured brief.
 2. **TDD is the iron law.** No production code without a failing test first. Call `tdd-iron-law`. Beck (2002, ISBN 978-0321146533) Preface: *"Write the test you wish you had. Make it fail. Make it pass. Make it clean."* Floor, not aspiration.
 3. **Split + dispatch (SDD).** Task >1 hour or >1 module → `subagent-driven-development`; atomic one-failing-test units; three subagents per task (implementer / spec-reviewer / code-quality-reviewer).
-4. **Never push without review.** `git push` / `gh pr create` / `gh pr merge` without prior `requesting-code-review` PASS (or `finishing-a-development-branch` flow) = violation. Push commands trigger review, not bypass.
+4. **Never push without review — and a real close-out means `finishing-a-development-branch`, not review alone.** `git push` / `gh pr create` / `gh pr merge` without prior review PASS = violation. A `requesting-code-review` PASS is the floor, not the whole close-out: if the push is meant to finish/merge the branch (not just fetch a mid-work review opinion), route the whole thing through `finishing-a-development-branch` — it delegates to `requesting-code-review` as its own Step 1, so nothing is lost, and it additionally bundles verification-before-completion + same-branch memory-timing + the git-memory trailer decision, none of which a standalone review-then-manual-push gets you. Calling `requesting-code-review` directly and pushing by hand is the narrow exception (`finishing-a-development-branch`'s own §When to use names it: "review WITHOUT merging") — not the default path for a real close-out.
 5. **Research before asking.** Non-trivial design / strategy / tech-stack question to user MUST cite WebSearch findings (2-4 industry approaches w/ sources). *"X or Y?"* without industry context = violation. Use `brainstorming` Axis 4 protocol for the research. This is gate ② of the full asking-the-user discipline — gate ① (whether to ask: do reversible/inferable steps without asking, always confirm outward/irreversible actions) and gate ③ (plain, jargon-free phrasing with a state anchor) are enforced in the downstream skills (`brainstorming` / `subagent-driven-development` / `requesting-code-review`).
 
 **Skipping any of these = violation.** "I'll just quickly…" / "just push" / "just ask" / 「ちょっと試すだけ」 / 「先 push 再說」 / 「先問再說」 are rationalizations — refuse them.

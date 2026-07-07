@@ -5,6 +5,53 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.27.6] — 2026-07-08 — close-out push routing: requesting-code-review is the floor, not the close-out
+
+### Fixed
+
+- **Root-caused a live self-violation of PR #515's memory-timing rule.**
+  This session closed out PR #511 and PR #516 by calling
+  `requesting-code-review` directly and pushing by hand — never
+  invoking `finishing-a-development-branch` — so its Step 8
+  memory-timing check (shipped in #515, already merged before either
+  branch started) never had a chance to fire. Two lessons distilled
+  from those branches ended up in a separate post-merge branch,
+  exactly the anti-pattern #515 exists to prevent.
+- **Root cause**: `requesting-code-review`'s own "Push-as-trigger"
+  section is self-contained and never mentions or defers to
+  `finishing-a-development-branch`, even though `finishing-a-
+  development-branch`'s own §When to use table says a push meant to
+  finish/merge the branch should route there instead. Its Red Flags
+  table (row: "Agent infers 'this branch is done, let me push'") already
+  *named* the correct redirect, but the numbered "Procedure when
+  push-as-trigger fires" never *operationalized* it — no decision
+  branch checked for the close-out case before running the narrower
+  review-then-push flow directly.
+- **Fix**: added Step 0 to `requesting-code-review`'s Push-as-trigger
+  procedure — an executable check: if the push is a real close-out
+  (not just a mid-work review opinion), stop and invoke
+  `finishing-a-development-branch` instead (it delegates to this skill
+  as its own Step 1, so review still runs, plus verification +
+  memory-timing + git-memory trailer decision). Numbered as Step 0
+  (not renumbering 1-6) because `§Asking the user` cross-references
+  "push-as-trigger steps 4-6" by number elsewhere in the same file —
+  same retire-in-place discipline as PR #516's Check 5.
+- Router card (`hooks/router-card.md`, SessionStart-injected every
+  session) and `using-loom-code/SKILL.md` rule #4 reworded to state
+  the same distinction — review PASS is the floor, `finishing-a-
+  development-branch` is the actual close-out path. Router card kept
+  terse (+31 words only — it's paid every session).
+- Suite: 219 passed (docs-only change; no test asserted the prior
+  Push-as-trigger wording).
+- **Addendum** (close-out review caught, fixed same release): the
+  substantive edits to `requesting-code-review/SKILL.md` and
+  `using-loom-code/SKILL.md` initially bumped only the plugin-level
+  `plugin.json` version, not these two files' own frontmatter
+  `version:` fields — breaking this repo's established per-skill
+  versioning convention (both files have bumped their own version on
+  every prior substantive edit). Fixed: `requesting-code-review`
+  0.12.0→0.13.0, `using-loom-code` 0.11.0→0.12.0.
+
 ## [0.27.5] — 2026-07-08 — writing-plans drops the time-box criterion entirely
 
 ### Changed
