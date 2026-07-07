@@ -4,6 +4,73 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] — 2026-07-07
+
+### Added — pack: `knowledge/_index.md` retrieval entry point (Step 2.7)
+
+A flat bundle `knowledge/` with hundreds of pages left the consuming agent
+slug-guessing or grepping every file to find the right page. New deterministic
+asset `pack/assets/build_bundle_index.py` (10-case TDD) emits
+`knowledge/_index.md` — one line per frozen page (title, status, one-line
+summary, aliases; syntheses use their `question`), grouped by page type —
+derived from the **frozen pages' own frontmatter** (never the source
+`index.md`, whose format varies by init version), so the index always matches
+exactly what was frozen. `_`-files excluded; unrecognized `type:` lands in an
+"Other pages" section rather than being silently dropped; idempotent; exits
+non-zero on an empty knowledge dir. The bundle template wires it as the FIRST
+read of the Ground step; generation-guidance §1 points schema-linking at it.
+
+### Added — pack: syntheses freeze into the bundle (Step 2)
+
+`syntheses/` pages (verified deep-dive answers — the highest-cost,
+human-verified knowledge in a wiki) were silently excluded from the freeze
+scope. Step 2 / bundle-format now include them alongside
+entities/metrics/concepts; they freeze and flatten exactly like the other
+types and are indexed under `## Syntheses`.
+
+### Added — pack Step 7: frontmatter YAML-parse + page-count parity checks
+
+Two acceptance gaps closed:
+
+- **(a2) YAML parse.** The most-warned pack failure mode — a bad
+  `<TRIGGER_PHRASES>` substitution breaking the template's folded block
+  scalar (bundle dead on arrival: skill never triggers) — passed Step 7,
+  whose checks were grep-only. A real `yaml.safe_load` of the emitted
+  `SKILL.md` frontmatter now gates acceptance.
+- **(c2) page-count parity.** Step 2 is a manual copy; a silently omitted
+  page passed every existing check. Step 7 now compares source knowledge
+  page count (entities/metrics/concepts/syntheses) against frozen bundle
+  count (`_`-files excluded) and fails on mismatch.
+
+### Changed — generation-guidance: `_relations.md`-first column confirmation, checklist-first structure, `(via:)` trust tiers
+
+- **§1.3 contradiction fix (consumer-efficiency).** §1.3 claimed the bundle
+  has "no offline column dump to cross-check against" and told the consumer
+  to probe the live warehouse per column — but Step 2.5 ships exactly that
+  dump as `knowledge/_relations.md`. §1.3 now routes column confirmation to
+  `_relations.md` first; live-probe only for "needs introspect" relations,
+  columns absent there, or drift suspicion. Execution remains the only gate.
+- **Checklist-first.** The summary checklist sat at the very end of a file
+  the consumer is told to read before every generation. It now leads the
+  file as a "Pre-flight checklist" with §-anchors — scan per question, drill
+  into only the guardrails the question touches. §8 reduced to a pointer.
+- **`(via:)` confidence tiers (§4).** The value_domain provenance tiers the
+  native `query` skill already teaches (`accepted_values` = CI-enforced /
+  `distinct` = sampled, can drift / `inferred` = provisional hypothesis)
+  never reached the bundle — a consumer trusted an inferred enum like a
+  CI-enforced one. §4 now states the tiers and the per-tier behavior.
+
+### Changed — bundle-skill-template: dedup the §0 rationale, wire `_index.md`
+
+The template's "Why execution is the only gate" callout duplicated guidance
+§0 almost verbatim (~10 lines loaded into every consumer's context, already
+drifting). It is now a 3-line pointer at §0; the rationale lives only in
+generation-guidance. The Ground step and folder orientation now route page
+discovery through `knowledge/_index.md`, and the guidance bullet says "scan
+the Pre-flight checklist" instead of "read the whole file".
+
+All examples remain synthetic (`acme-analytics`, `account.md`, `mrr.md`).
+
 ## [3.1.1] — 2026-07-05
 
 ### Fixed — Codex dispatch-portability (per-host reference files for Phase B fan-out)
