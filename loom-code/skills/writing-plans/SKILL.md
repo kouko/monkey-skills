@@ -1,8 +1,8 @@
 ---
 name: writing-plans
 description: |
-  Use AFTER brainstorming produces a brief, BEFORE subagent-driven-development dispatches implementers. Splits it into atomic ≤5-min tasks with RED + GREEN acceptance criteria and a dependency graph.
-version: 0.11.0
+  Use AFTER brainstorming produces a brief, BEFORE subagent-driven-development dispatches implementers. Splits it into atomic tasks — each with one RED/GREEN test and a single module boundary — into a dependency graph.
+version: 0.12.0
 ---
 
 <SUBAGENT-STOP>
@@ -13,9 +13,8 @@ If you are a subagent dispatched with an explicit role prompt (implementer / spe
 
 Takes a `brainstorming` output brief and produces a **plan**: an ordered list of atomic tasks that `subagent-driven-development` (SDD) can dispatch one at a time. Each task must be:
 
-- **≤5 minutes** of work for the implementer subagent (P2-B);
-- **One module** of touch surface (consistent with SDD's per-task scope);
-- **Independently verifiable** — has a RED test (or RED diagnostic) that goes GREEN when the task is done.
+- **Independently verifiable** — has a RED test (or RED diagnostic) that goes GREEN when the task is done. This is the primary sizing constraint — see §The splitting framework.
+- **One module** of touch surface (consistent with SDD's per-task scope).
 
 The plan is the **paths-not-content handoff** between brainstorming and SDD. brainstorming wrote the brief; SDD consumes the plan; this skill produces the plan and self-reviews it before declaring DONE.
 
@@ -42,24 +41,23 @@ Enumerated exemptions only.
 | Exempt category | What qualifies | What does NOT qualify |
 |---|---|---|
 | **No brief upstream** | brainstorming has not produced a brief yet — routing this skill prematurely. | "I have a vague idea" — that needs brainstorming first, not skipping to plans. |
-| **Brief explicitly says "single atomic task"** | brainstorming's Smallest End State is itself ≤5 min and Out of Scope is exhaustive. The brief IS the plan. | Brief that says "small" but Open Questions are non-empty — Open Questions block. |
+| **Brief explicitly says "single atomic task"** | brainstorming's Smallest End State is itself one file with one assertion, and Out of Scope is exhaustive. The brief IS the plan. | Brief that says "small" but Open Questions are non-empty — Open Questions block. |
 | **Implementer returned BLOCKED with a sub-task fallback request** | This is the entry condition for the §BLOCKED fallback flow below — see that section, not §When NOT to Use. | An implementer returning BLOCKED for non-decomposition reasons (broken test infra, missing dependency) — that surfaces to user, not re-planned. |
 | **Explicit user override** | User literally says "skip planning, here are the tasks" AND hands in a list that already satisfies the plan-format schema. | "Just figure it out" — that's an instruction to plan, not skip. |
 
 ## The splitting framework
 
-Walk these in order for each prospective task. Stop expanding a task as soon as **all four** criteria are met.
+Walk these in order for each prospective task. Stop expanding a task as soon as **all three** criteria are met.
 
 | # | Criterion | Test |
 |---|---|---|
-| 1 | **Time-box** | Could a focused implementer subagent complete this in ≤5 minutes? If "maybe 10," split. |
+| 1 | **Acceptance criterion** (primary) | Can you write ONE failing test now that goes green when this task is done? If you need 3 tests, this is 3 tasks. |
 | 2 | **Module scope** | Does this touch ≤1 module / ≤1 file boundary? If it crosses, split by boundary. |
-| 3 | **Acceptance criterion** | Can you write ONE failing test now that goes green when this task is done? If you need 3 tests, this is 3 tasks. |
-| 4 | **No hidden coupling** | Could this task be done in isolation, with only its declared dependencies satisfied? If you need to "also remember to update X," that's a missing dep — declare it. |
+| 3 | **No hidden coupling** | Could this task be done in isolation, with only its declared dependencies satisfied? If you need to "also remember to update X," that's a missing dep — declare it. |
 
 **Runnable-capability note.** When a task introduces a runnable capability — a new test suite, build step, lint target, e2e suite, migration command, or similar — its `Acceptance` criterion must include a line stating that the new verb is declared in the command surface (the project's declared commands — `AGENTS.md` commands section, `make`/`just` recipes, `package.json` scripts) and verified to run. This makes command-surface accretion visible at plan time, before the implementer ships it silently without a declared entry point.
 
-If criteria 1+3 fight (≤5 min vs one-failing-test), criterion 3 wins: even a 1-minute task that needs 3 distinct assertions is 3 tasks. Time-box is a smell threshold, not a strict ceiling.
+**No time-box criterion — why one isn't here.** A prior revision sized tasks partly by a fixed wall-clock minute estimate ("≤5 minutes for a focused implementer subagent"), demoted from primary to a secondary smell-check, before being removed entirely. Reasons it doesn't belong at any tier: an LLM agent has no experiential grounding in duration (tokens/steps are the real substrate; see arXiv:2510.23853, "Your LLM Agents are Temporally Blind"); no rigorous source ties a plan-writer's guess at an implementer's completion time to actual reliability (Toby Ord's decay model, arXiv:2505.05115, models failure against an *externally-benchmarked human-difficulty rating*, not a plan-writer's guess at agent completion time — a different, uncalibratable quantity); traditional software-engineering research on change size (Google's `eng-practices`; Rigby & Bird, ESEC/FSE 2013) sizes by file/diff boundary, never completion time; and a survey of coding-agent products (Devin, Cursor, Windsurf, Replit, Copilot Workspace, Amazon Q, Codex CLI, LangGraph/AutoGen/CrewAI reference implementations) found none with a documented time-based splitting rule — the two with any concrete secondary axis at all (Copilot Workspace, Amazon Q) both use file count, which criterion 2 above already covers. If you find yourself wanting a time-based gut check, that's a signal to look harder at criterion 1 instead — a task that "feels long" almost always also resolves to more than one assertion or crosses a module boundary.
 
 **Post-split parallel-marking pass.** After splitting, for each pair of tasks at the **same dependency level**: if their `Files touched` are disjoint **AND** there is no semantic dependency (no shared data / symbol, no doc-mirrors-code relationship), mark **both** `Independent: true`. This is the step that turns a flat task list into a parallelism-aware plan.
 
@@ -78,9 +76,9 @@ If the critical-path **depth** exceeds 5, the brief is too big. **Do not silentl
 
 The depth ceiling is a deliberate forcing function for the brainstorming HARD-GATE. A **deep chain** (critical-path depth >5) is almost always a discovery failure, not a planning failure. A **wide-but-shallow** plan (many independent leaves, shallow depth) is fine — it parallelizes cleanly and is NOT a discovery failure.
 
-**Why depth — and why `5` is a heuristic, not a law.** For an LLM agent the binding constraint is the *sequential* chain: errors **compound** across dependent steps (chain reliability ≈ per-step-success^depth) and per-step accuracy itself **decays** as the chain lengthens. A depth-5 chain at ~95% per-step reliability succeeds only ~77% of the time — about where re-cutting scope starts to pay off. But the long-horizon-execution literature finds **no universal optimal step count** — the principled limit is a *function of per-step reliability*, not a constant. So treat **`5` as a deliberate default trigger, not a measured value**; tune it if your atomic-task steps are more or less reliable. (Grounding: error-compounding / long-horizon decay in LLM agents — e.g. "The Illusion of Diminishing Returns: Measuring Long-Horizon Execution in LLMs", arXiv 2509.09677. The depth-not-count *framing* also matches Bazel critical-path scheduling and Kanban WIP limits, which cap concurrency, not backlog — but those are human/scheduling analogies; the agent-native reason is error compounding. The `5` itself is inherited from the prior count-based ceiling, not independently derived.)
+**Why depth — and why `5` is a heuristic, not a law.** For an LLM agent the binding constraint is the *sequential* chain: errors **compound** across dependent steps (chain reliability ≈ per-step-success^depth) and per-step accuracy itself **decays** as the chain lengthens. A depth-5 chain at ~95% per-step reliability succeeds only ~77% of the time — about where re-cutting scope starts to pay off. But the long-horizon-execution literature finds **no universal optimal step count** — the principled limit is a *function of per-step reliability*, not a constant. So treat **`5` as a deliberate default trigger, not a measured value**; tune it if your atomic-task steps are more or less reliable. (Grounding: error-compounding / long-horizon decay in LLM agents — e.g. "The Illusion of Diminishing Returns: Measuring Long-Horizon Execution in LLMs", arXiv 2509.09677. A related, more formal treatment — Toby Ord, "Is there a Half-Life for the Success Rates of AI Agents?", arXiv:2505.05115 — models success-rate decay as a constant hazard per minute of a task's externally-benchmarked human-difficulty rating (the METR methodology's "how long would a human expert take"), not per discrete agent step, and it names no specific step-count or step-horizon; cite it here only as further evidence that reliability decays with task magnitude on SOME axis, not as support for a "5-ish steps" figure — that number is not in the paper. The depth-not-count *framing* also matches Bazel critical-path scheduling and Kanban WIP limits, which cap concurrency, not backlog — but those are human/scheduling analogies; the agent-native reason is error compounding. The `5` itself is inherited from the prior count-based ceiling, not independently derived from either paper.)
 
-**Structural-split escape hatch (round-2 NEEDS_REVISION only):** If the plan-document-reviewer returns NEEDS_REVISION for a second round and the *sole* failure is a structural-size violation (a task is clearly >5 min but cannot be shrunk further without a brief change), split that oversized task into a fresh sibling part (a new `<topic>-part-N.md` brief → new plan) and treat it as a round-1 input to a fresh `writing-plans` run. The original plan's 2-round cap applies to the original tasks only; the new sibling part starts its own clean round count.
+**Structural-split escape hatch (round-2 NEEDS_REVISION only):** If the plan-document-reviewer returns NEEDS_REVISION for a second round and the *sole* failure is a structural-size violation (a task structurally cannot resolve to one failing test within one module boundary — Check 6 keeps failing no matter how the description is reworded — and cannot be shrunk further without a brief change), split that oversized task into a fresh sibling part (a new `<topic>-part-N.md` brief → new plan) and treat it as a round-1 input to a fresh `writing-plans` run. The original plan's 2-round cap applies to the original tasks only; the new sibling part starts its own clean round count.
 
 ## BLOCKED fallback — Beck 2002 Child Test pattern
 
@@ -106,8 +104,7 @@ writing-plans applies the same pattern to plan tasks. The implementer's BLOCKED 
 
 After producing the plan, writing-plans **must** dispatch [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) as an evaluator subagent — a one-shot blocking call that waits for and returns its verdict directly (see your host's tool-mapping reference for the exact shape, and [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §A1 for a Claude-Code-specific naming pitfall to avoid — Codex has no equivalent). That prompt holds the **authoritative, full check list** — do not maintain a duplicate copy here (it drifts). The highest-value checks, so you can self-pre-screen before dispatch:
 
-- **≤5-min** per task (criterion 1);
-- **one-failing-test acceptance** — each task names a specific RED test (criterion 3);
+- **one-failing-test acceptance** — each task names a specific RED test (criterion 1, primary);
 - **every brief item covered** — every Smallest End State / Decision item maps to ≥1 task, no orphan tasks;
 - **DAG, no cycles** — `Dependencies` form an acyclic graph with critical-path depth ≤5.
 
@@ -133,7 +130,7 @@ Execution order: sequential | parallel-where-possible
 Plan-document-reviewer verdict: PENDING   ← required; reviewer will flip to PASS (timestamp)
 
 ## Task 1 — <short name>
-- Description: <≤5 min unit of work, imperative voice>
+- Description: <one-assertion unit of work, imperative voice>
 - Module: <path or module name; one only>
 - Files touched: <comma-separated paths the implementer will Write / Edit>
 - Context paths:
@@ -198,7 +195,7 @@ A **second input contract**, alongside the brainstorming brief. writing-plans ca
 
 **Who runs the validator.** In Continuous mode the FREEZE step already gated this change-folder — it ran `validate_spec_output.py` and got exit 0 — so writing-plans **trusts that exit-0** and does not re-run it. For a direct, non-freeze invocation (consuming a change-folder outside Continuous mode), run `validate_spec_output.py` once on the change-folder before consuming it, and proceed only on exit 0.
 
-**Scenario → task mapping.** Map each `#### Scenario:` (its GIVEN / WHEN / THEN) → **one task's `Acceptance: RED/GREEN`**. The THEN is the GREEN observable; the GIVEN/WHEN set up the RED. One `### Requirement:` may **fan to N tasks** — split per the same ≤5-min / one-failing-test rule in §The splitting framework (a multi-Scenario Requirement is N candidate tasks, grouped or split by the time-box).
+**Scenario → task mapping.** Map each `#### Scenario:` (its GIVEN / WHEN / THEN) → **one task's `Acceptance: RED/GREEN`**. The THEN is the GREEN observable; the GIVEN/WHEN set up the RED. One `### Requirement:` may **fan to N tasks** — split per §The splitting framework (a multi-Scenario Requirement is N candidate tasks, grouped by assertion boundary).
 
 **Point-don't-copy / link back.** **NEVER** copy the spec body into the plan — loom-spec is SSOT, and a copied delta silently goes stale the moment loom-spec re-edits the change-folder, so the plan then drives implementers off a spec that no longer exists. Reference the source `### Requirement:` / `#### Scenario:` names via the stable join key `<change-id> / Requirement: <name> / Scenario: <name>` (the `Brief item covered:` field accepts this referent — see [`references/plan-format.md`](references/plan-format.md)). The plan **links back** to the spec; it does not duplicate it.
 
@@ -228,7 +225,7 @@ Delegation contract per CLAUDE.md: pass **paths + structured seed context**, not
 | Agent / user says | Reality | Correct response |
 |---|---|---|
 | *"Just skip planning, the brief is enough."* | The brief is the *what*; the plan is the *how-cut-into-atomic-pieces*. SDD needs atomicity, not just scope. | Refuse. Produce the plan even if it's only 1-2 tasks. If 1 task, the brief was an exemption candidate (§When NOT to Use). |
-| *"This task is roughly an hour but I don't know how to split it."* | "I don't know how to split" is a discovery failure, not a planning failure. The brief did not articulate Axis 3 (smallest end state) tightly enough. | Surface back to brainstorming for Axis 3 re-cut, do not produce a 1-hour task that violates the ≤5-min rule. |
+| *"This task is roughly an hour but I don't know how to split it."* | "I don't know how to split" is a discovery failure, not a planning failure. The brief did not articulate Axis 3 (smallest end state) tightly enough. | Surface back to brainstorming for Axis 3 re-cut, do not produce a 1-hour task that resolves to a single assertion and calls itself done — split by criterion 1 (one failing test), not by the clock. |
 | *"This chain is 8 tasks deep, that's fine."* | No — see §Plan size ceiling. Critical-path depth >5 = brief too big. (A wide-but-shallow 8-task plan is fine; a deep 8-link chain is not.) | Refuse the deep chain. Route back to brainstorming OR split into N briefs each with depth ≤5. |
 | *"Skip the plan-document-reviewer, it's overkill."* | The reviewer catches the failure modes the splitting framework misses (orphan tasks, cycle dependencies, brief-task coverage gaps). | Refuse. Self-review is non-negotiable. If you genuinely produced a perfect plan, the reviewer takes 30 seconds to confirm. |
 | *"Implementer returned BLOCKED, just retry."* | Beck Child Test pattern says split smaller, not retry. Silent retry burns SDD's 3-round cap. | Re-invoke writing-plans on the failing task per §BLOCKED fallback. |
@@ -240,7 +237,7 @@ Delegation contract per CLAUDE.md: pass **paths + structured seed context**, not
 - Does **not** write code. Atomic-task production is metadata about future work, not the work.
 - Does **not** dispatch SDD subagents. That's SDD's job. writing-plans hands off the plan; SDD picks it up.
 - Does **not** invoke the implementer / spec-reviewer / code-quality-reviewer prompts directly. Only plan-document-reviewer (a different evaluator scope).
-- Does **not** estimate dev-time beyond the ≤5-min atomic-task threshold. If a task needs >5 min, that's a split-trigger, not an estimation exercise.
+- Does **not** estimate dev-time at all. The split-trigger is criterion 1 (one failing test) — see §The splitting framework, and §No time-box criterion for why a completion-time estimate isn't part of the schema.
 - Does **not** decide priority or sequencing beyond what the dependency graph requires. The user (or SDD) decides which independent tasks run first.
 
 ## See also

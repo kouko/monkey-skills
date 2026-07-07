@@ -5,6 +5,91 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.27.5] — 2026-07-08 — writing-plans drops the time-box criterion entirely
+
+### Changed
+
+- **`writing-plans`**'s splitting framework no longer has a time-based
+  criterion at any tier (0.27.4 demoted it to secondary; this removes
+  it). The framework is now 3 criteria: acceptance (one failing test,
+  primary), module scope, no hidden coupling. A new §No time-box
+  criterion section documents why, including a cross-system survey
+  (Devin, Cursor, Windsurf, Replit, Copilot Workspace, Amazon Q, Codex
+  CLI, LangGraph/AutoGen/CrewAI reference implementations) that found
+  no major coding-agent product with a documented time-based splitting
+  rule — the two with any concrete secondary axis (Copilot Workspace,
+  Amazon Q) both use file count, which criterion 2 (module scope)
+  already covers.
+- `plan-document-reviewer-prompt.md`'s Check 5 (the time estimate) is
+  **retired** — always N/A, never applied — rather than renumbered, so
+  every cross-reference to Checks 6-16 elsewhere in the plugin stays
+  valid. `checks_passed` denominator updated 15→14 (Checks 5 and 15
+  both now non-blocking). **This is a real behavior change**: a task
+  previously flaggable by Check 5 alone (estimated time long, but a
+  single clean assertion) now passes — only Check 6 (the RED test) can
+  fail a task on sizing grounds.
+- Cross-file consistency sweep: `agents/implementer.md` (role contract,
+  BLOCKED trigger, dispatch template — the implementer's own contract
+  no longer claims a time-box), `hooks/router-card.md` +
+  `using-loom-code/SKILL.md` (router rule #3 card text),
+  `subagent-driven-development/SKILL.md` + its `README.md`
+  (frontmatter/summary — the `>1 hour` OR `>1 module` trigger for
+  invoking SDD at all is untouched; that is a separate, independent
+  threshold from per-task sizing), `brainstorming/references/
+  handoff-brief-format.md`, `requesting-code-review/README.md`, and
+  `writing-plans/README.{md,ja.md,zh-TW.md}` (all three languages) —
+  all updated to stop describing a "≤5-minute" atomic-task unit.
+  Historical/archival files (`docs/announcement/`, `docs/example-runs/`,
+  prior CHANGELOG entries) intentionally left untouched as point-in-time
+  records.
+- `test_sdd_review_weight_marker.py::test_plan_document_reviewer_has_check_16`
+  updated to assert the new `<14>` denominator (was `<15>`).
+- Suite: 219 passed.
+- **Addendum** (whole-branch review caught, fixed same release): the
+  first draft of this removal left an orphaned mechanism — the
+  "Structural-split escape hatch" still triggered on a >5-min condition
+  tied to the now-retired Check 5, unreachable in practice — plus an
+  "all four criteria" leftover from the pre-removal 4-row table, and
+  four sibling skill READMEs (subagent-driven-development +
+  requesting-code-review, ja + zh-TW each) and two living design docs
+  (PRODUCT-SPEC.md, ROADMAP.md) that still described the removed rule
+  as current. All fixed within this same 0.27.5 release before merge.
+
+## [0.27.4] — 2026-07-08 — writing-plans reframes task-sizing primary axis
+
+### Changed
+
+- **`writing-plans`**'s splitting framework reorders its four criteria:
+  the acceptance-criterion (one failing test) is now stated as the
+  **primary** sizing constraint; the ≤5-minute time-box is reframed as
+  a **secondary smell-check**, not the authoritative ceiling. An agent
+  has no experiential grounding in duration (arXiv:2510.23853); Toby
+  Ord's decay model (arXiv:2505.05115) does tie reliability to minutes,
+  but its "minute" is an externally-benchmarked human-difficulty rating
+  (the METR methodology), not a plan-writer's guess at how long an
+  LLM implementer will take — no equivalent calibration exists for the
+  latter, which is the quantity this criterion actually demoted.
+  Traditional SE research on change size (Google `eng-practices`,
+  Rigby & Bird 2013) sizes by file/diff boundary instead, never by
+  completion time.
+- Frontmatter `description` and the "What this skill does" bullets
+  reordered to match; `plan-document-reviewer-prompt.md` Check 5
+  (time estimate) gains a cross-reference noting it is secondary to
+  Check 6 (RED test) — **no change to pass/fail behavior**, framing
+  only.
+- The separate critical-path **depth**-ceiling rationale (`≤5`, a
+  different axis — chain length, not per-task minutes) gains a second
+  citation: Ord's paper models a constant per-minute failure hazard
+  against a task's human-difficulty rating and names no specific
+  step-count or step-horizon — cited only as further evidence that
+  reliability decays with task magnitude on some axis, not as support
+  for any particular number near 5 (a round of review caught an
+  earlier draft of this same citation mischaracterizing the paper as
+  step-based with a fabricated "5-7 step-horizon" figure; corrected
+  after independently re-fetching the abstract).
+- Suite: 219 passed (no test asserted the prior wording — pure framing
+  change, zero output-behavior delta expected in the common case).
+
 ## [0.27.3] — 2026-07-08 — finishing-a-development-branch enforces same-branch memory timing
 
 ### Added

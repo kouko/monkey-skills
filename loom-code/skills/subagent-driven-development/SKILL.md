@@ -1,7 +1,7 @@
 ---
 name: subagent-driven-development
 description: |
-  Use when a task takes >1 hour OR touches >1 module — splits work into atomic ≤5-min units, three subagents each (implementer / spec-reviewer / code-quality-reviewer). Implementer follows TDD iron law; reviewers return PASS / PASS_WITH_NOTES / NEEDS_REVISION (spec-reviewer: binary).
+  Use when a task takes >1 hour OR touches >1 module — splits work into atomic one-failing-test units, three subagents each (implementer / spec-reviewer / code-quality-reviewer). Implementer follows TDD iron law; reviewers return PASS / PASS_WITH_NOTES / NEEDS_REVISION (spec-reviewer: binary).
 version: 0.12.0
 ---
 

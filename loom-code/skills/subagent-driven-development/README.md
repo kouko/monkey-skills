@@ -2,7 +2,7 @@
 
 **English** | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-> Splits a >1-hour or >1-module task into atomic ≤5-min units and dispatches three subagents per unit: **implementer** (worker, under the TDD iron law) + **spec-reviewer** + **code-quality-reviewer** (both evaluators). Verdicts grounded in 7 functional-copied standards + 2 rubrics + 2 checklists from `domain-teams:code-team`.
+> Splits a >1-hour or >1-module task into atomic one-failing-test units and dispatches three subagents per unit: **implementer** (worker, under the TDD iron law) + **spec-reviewer** + **code-quality-reviewer** (both evaluators). Verdicts grounded in 7 functional-copied standards + 2 rubrics + 2 checklists from `domain-teams:code-team`.
 
 Part of the [loom-code](../..) plugin. Operational spec the agent loads is [`SKILL.md`](SKILL.md); this README is for humans.
 

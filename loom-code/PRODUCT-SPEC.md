@@ -146,7 +146,7 @@ loom-code:finishing-a-development-branch → PR / merge
 | **與既有 skill 衝突**：使用者也裝了 `obra/superpowers` | 雙 hook 同時注入；trigger 互搶 | README 明寫 conflict；提供 `loom-code-only-mode` env var |
 | **Codex CLI plugin schema 變動**：OpenAI 更新 plugin spec | Codex 載入失敗 | Phase 1 只發 Claude Code；Phase 2 才 ship Codex variant 並寫 integration test |
 | **「鐵律措辭」過度** | 使用者覺得煩；關掉 hook | measure 強度匹配真實壓測結果（Phase 1.5 dogfood）；提供 `--soft-mode` flag |
-| **subagent context 爆掉** | 大任務切不夠細，SDD 失效 | `writing-plans` 強制每任務 ≤5 分鐘；implementer 回報 BLOCKED 時 fall back 切更細 |
+| **subagent context 爆掉** | 大任務切不夠細，SDD 失效 | `writing-plans` 強制每任務一個失敗測試；implementer 回報 BLOCKED 時 fall back 切更細 |
 | **與 `dev-workflow:complexity-critique` / `git-memory` 重疊** | 使用者搞混入口 | router skill `using-loom-code` 內附決策表，明示何時 delegate 出去 |
 
 ---

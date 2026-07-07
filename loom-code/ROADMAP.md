@@ -170,7 +170,7 @@ Phase    v0.x.0   天數     Skill 累計   重點                              
 | Q | 決定 |
 |---|---|
 | P2-A | `brainstorming` HARD-GATE 措辭沿用 Superpowers；加碼「複雜度 critique」可選 delegation 到 `dev-workflow:complexity-critique` |
-| P2-B | `writing-plans` 每任務 ≤5 分鐘；BLOCKED 時 fallback 更小切割 |
+| P2-B | `writing-plans` 每任務一個失敗測試；BLOCKED 時 fallback 更小切割 |
 | P2-C | `systematic-debugging` 4-phase 沿用 Superpowers；新增 `references/character-encoding-debug.md` 連結到 code-team `character-encoding-security.md` |
 
 ### Acceptance test

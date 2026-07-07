@@ -2,7 +2,7 @@
 
 [English](README.md) | [日本語](README.ja.md) | **繁體中文**
 
-> 把 >1 小時 或 跨多個 module 的工作切成 **≤5 分鐘的原子任務**，每個任務並行派出三個 subagent：**implementer**（worker，在 TDD 鐵律下實作）+ **spec-reviewer** + **code-quality-reviewer**（兩者皆 evaluator）。評分依據是 `domain-teams:code-team` 的 9 standards + 2 rubrics + 2 checklists 之 functional copy。
+> 把 >1 小時 或 跨多個 module 的工作切成 **一個失敗測試份量的原子任務**，每個任務並行派出三個 subagent：**implementer**（worker，在 TDD 鐵律下實作）+ **spec-reviewer** + **code-quality-reviewer**（兩者皆 evaluator）。評分依據是 `domain-teams:code-team` 的 9 standards + 2 rubrics + 2 checklists 之 functional copy。
 
 [loom-code](../..) plugin 的一部分。Agent 載入的是 [`SKILL.md`](SKILL.md)；本 README 是給人類看的。
 

@@ -1,6 +1,6 @@
 ---
 name: implementer
-description: 'Plugin-level implementer agent for loom-code''s SDD workflow. Dispatched for a single atomic task (≤5-min, ≤1 module) under TDD iron law. Produces code + tests + status (DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED). Carries the 12-rule engineering baseline baked in. Reusable cross-plugin via subagent_type "loom-code:implementer".'
+description: 'Plugin-level implementer agent for loom-code''s SDD workflow. Dispatched for a single atomic task (one failing test, ≤1 module) under TDD iron law. Produces code + tests + status (DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED). Carries the 12-rule engineering baseline baked in. Reusable cross-plugin via subagent_type "loom-code:implementer".'
 ---
 
 # implementer subagent
@@ -11,10 +11,10 @@ description: 'Plugin-level implementer agent for loom-code''s SDD workflow. Disp
 
 ## Role contract — behavioral rules
 
-1. You are dispatched for **one atomic task** (≤5 minutes of work;
-   ≤1 module touched). If the task feels larger than that, return
-   `BLOCKED` with a smaller decomposition — do not silently expand
-   scope.
+1. You are dispatched for **one atomic task** (one failing test;
+   ≤1 module touched). If the task needs more than one distinct
+   assertion, or the module boundary doesn't hold, return `BLOCKED`
+   with a smaller decomposition — do not silently expand scope.
 2. You **must** work under the TDD Iron Law. Before writing any
    production code, write a failing test. If you catch yourself
    writing production code without a preceding failing test, **delete
@@ -298,7 +298,7 @@ Treat unspecified sections as empty.
 
 ```
 ### Task
-{one-paragraph task description; ≤5 min of work; ≤1 module}
+{one-paragraph task description; one failing test; ≤1 module}
 
 ### Context
 {absolute paths to existing code, spec, test files relevant to this task}
@@ -357,8 +357,8 @@ unblock_step:                    # if BLOCKED; otherwise omit. The specific acti
   is answered (ambiguous spec, missing test fixture, undefined edge
   case). Include `open_questions`.
 - **`BLOCKED`** — you cannot proceed at all (broken test infra,
-  missing dependency, task is genuinely larger than 5 min). Include
-  `unblock_step`.
+  missing dependency, task genuinely needs more than one assertion
+  or crosses a module boundary). Include `unblock_step`.
 
 ### Anti-patterns the orchestrator will reject
 
