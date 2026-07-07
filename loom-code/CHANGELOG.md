@@ -5,6 +5,21 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.27.1] — 2026-07-08 — brainstorming fork-table default (dogfood F1)
+
+### Fixed
+
+- **`brainstorming`**'s fork-guidance region (the "lead with the
+  stakes" rule) now carries the markdown-comparison-table default
+  pointer at the FORK moment itself, not only at the summary seam. A
+  weak-model actor was observed rendering a 2-option fork as bullet
+  lists because the relay pointer only fired downstream. See
+  `docs/skill-dogfood/2026-07-08-family-relay-behavioral/report.md`
+  finding F1.
+
+Verification stamp: `loom-pipeline/scripts/test_family_relay.py` — 159
+passed (relay contract tests live in `loom-pipeline`).
+
 ## [0.27.0] — 2026-07-07 — family rollup card adoption + channel-aware visual degradation
 
 ### Changed
