@@ -141,6 +141,11 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
      per-implementer / per-wave: the index is a repo-wide generated file, so a per-implementer
      regen under parallel SDD would merge-conflict the file and reflect only a partial tree.
      This mirrors loom's existing "orchestrator commits, implementers don't" rule.
+   - Memory-timing check (orchestrator-only, ONCE per branch): if this branch surfaced
+     a durable, already-known fact (practice / gotcha / process per the jurisdiction
+     table), record it into `docs/loom/memory/` NOW so it lands in THIS close-out
+     commit — see `docs/loom/memory/README.md` §"When to record" for the exact rule
+     and its one exception.
    - Run `git status --short` to confirm exactly which files are staged and untracked.
    - Stage with an explicit file list (`git add <file1> <file2> …`) — avoid `git add -A <dir>`
      which sweeps unrelated untracked files into the commit.

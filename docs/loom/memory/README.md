@@ -18,6 +18,16 @@
 | One-off event artifact | `docs/loom/{specs,plans,audits,dogfood,research}/` |
 | Harness/dcg friction (plugin-shipped) | `loom-code/.../environment-gotchas.md` — stays, NOT migrated |
 
+## When to record
+
+A fact already known before the branch closes (not merge-required to
+observe) MUST land in that same branch/PR, never a separate post-merge
+branch — a post-merge branch+PR just to record something you already
+knew is pure overhead the close-out flow should have absorbed. The one
+exception: a fact only confirmable by observing real post-merge/
+installed behavior genuinely needs a follow-up branch — but even those
+should be batched, not one-PR-per-discovery.
+
 **Pull, not push.** Nothing auto-loads this folder. Retrieval = read
 the index below / grep on demand. This preserves the documented
 anti-preload decision (`dev-workflow/skills/git-memory/SKILL.md:193-197`);
