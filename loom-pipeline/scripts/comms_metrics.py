@@ -32,7 +32,6 @@ import importlib.util
 import json
 import re
 import sys
-from collections import Counter
 from pathlib import Path
 from typing import Optional
 
@@ -142,8 +141,10 @@ def _narration_text(entry, expected_type: str) -> Optional[str]:
     """Raw narration text for an eligible main-chain turn of
     ``expected_type`` ('user' or 'assistant'), mirroring
     lang_detect._iter_user_turns' eligibility filter (excludes
-    sidechain turns and tool-result/command-wrapper XML), generalized
-    to also cover assistant turns. Returns None when not eligible."""
+    sidechain turns, tool-result/command-wrapper XML, and
+    harness-injection turns like skill-body payloads / interrupt
+    markers), generalized to also cover assistant turns. Returns None
+    when not eligible."""
     if entry.get("type") != expected_type or entry.get("isSidechain"):
         return None
     message = entry.get("message")
@@ -151,7 +152,7 @@ def _narration_text(entry, expected_type: str) -> Optional[str]:
         return None
     text = lang_detect.extract_text(message.get("content"))
     stripped = text.strip()
-    if not stripped or stripped.startswith("<"):
+    if not stripped or stripped.startswith("<") or lang_detect.is_harness_injection(stripped):
         return None
     return text
 
@@ -174,21 +175,12 @@ def _has_ask_user_question(entry) -> bool:
 
 
 def _rolling_conversation_language(user_texts_so_far, n_turns: int = _ROLLING_WINDOW) -> Optional[str]:
-    """Majority language over the last ``n_turns`` user narration texts
-    seen so far — the same majority rule as
-    lang_detect.conversation_language, applied to a point-in-time
-    prefix instead of the whole file."""
-    sampled = user_texts_so_far[-n_turns:]
-    if not sampled:
-        return None
-    langs = [lang_detect.detect_script(lang_detect.strip_noise(t)) for t in sampled]
-    counts = Counter(lang for lang in langs if lang is not None)
-    if not counts:
-        return None
-    lang, count = counts.most_common(1)[0]
-    if count > len(sampled) / 2:
-        return lang
-    return None
+    """Majority language over the last ``n_turns`` DETECTABLE user
+    narration texts seen so far — thin delegation to
+    ``lang_detect.majority_language``, the shared building block also
+    used by ``lang_detect.conversation_language``, applied to a
+    point-in-time prefix instead of the whole file."""
+    return lang_detect.majority_language(user_texts_so_far, n_turns)
 
 
 def _visible_len(text: str) -> int:

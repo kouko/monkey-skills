@@ -24,6 +24,14 @@ from pathlib import Path
 from typing import Optional
 
 _MIN_VISIBLE_CHARS = 20
+# CJK-aware detectability floor: the 20-visible-char minimum is
+# calibrated for ASCII prose, but CJK packs far more signal per char —
+# a short zh/ja turn like 「我合併了 幫我跑跑 comms 稽核」 (the dominant
+# real style of CJK users) is unambiguous well under 20 visible chars.
+# A text is detectable when visible >= 20 OR it carries >= 8 CJK
+# (kana+han) chars; a tiny quoted CJK fragment inside a short English
+# turn stays below this and remains undetectable.
+_MIN_CJK_CHARS_DETECTABLE = 8
 # Kana at or above this ratio (of script-bearing chars) is a strong
 # Japanese signal — a single stray kana in a mostly-Han sample stays
 # below this and is not enough to flip the verdict.
@@ -58,6 +66,25 @@ _LOG_LINE_RE = re.compile(
     r")"
 )
 
+# Harness-injected user-role turns: Claude Code writes a skill
+# invocation's ENTIRE (English) SKILL.md body into the transcript as a
+# user-role turn beginning with this literal prefix, and an interrupted
+# turn is recorded as a fixed marker string — neither is the user's own
+# narration, so both must be excluded from language voting (live repro:
+# a Traditional-Chinese conversation was misdetected as undetermined
+# because one skill-body turn plus one interrupt marker flooded the
+# last-n-turns window with English/no-signal text).
+_HARNESS_INJECTION_PREFIXES = (
+    "Base directory for this skill:",
+    "[Request interrupted",
+)
+# Slash-command / skill-invocation echoes ('Run the "<name>" workflow.'
+# followed by the skill's own English description) are the same failure
+# family — the harness writing machine text into a user-role turn.
+# Matched as the full quoted-name shape, NOT a bare "Run the" prefix,
+# so a genuine user typing "Run the tests" is never filtered.
+_WORKFLOW_ECHO_RE = re.compile(r'^Run the "[^"]+" workflow\.')
+
 
 def _is_kana(ch: str) -> bool:
     cp = ord(ch)
@@ -74,22 +101,25 @@ def detect_script(text: Optional[str]) -> Optional[str]:
 
     Heuristic only — see module docstring for the Han-only-Japanese
     limitation. Returns None when the text is too short (<20 visible,
-    non-whitespace characters) or has no clear script majority.
+    non-whitespace characters AND <8 CJK chars — see
+    ``_MIN_CJK_CHARS_DETECTABLE``: short-but-unambiguous CJK turns stay
+    detectable) or has no clear script majority.
     """
     if not text:
         return None
-    visible = [c for c in text if not c.isspace()]
-    if len(visible) < _MIN_VISIBLE_CHARS:
-        return None
-
     kana = sum(1 for c in text if _is_kana(c))
     han = sum(1 for c in text if _is_han(c))
+    cjk = kana + han
+
+    visible = [c for c in text if not c.isspace()]
+    if len(visible) < _MIN_VISIBLE_CHARS and cjk < _MIN_CJK_CHARS_DETECTABLE:
+        return None
+
     ascii_letters = sum(1 for c in text if c.isascii() and c.isalpha())
-    script_total = kana + han + ascii_letters
+    script_total = cjk + ascii_letters
     if script_total == 0:
         return None
 
-    cjk = kana + han
     if (
         kana / script_total >= _KANA_SIGNAL_RATIO
         and cjk / script_total >= _MIN_CJK_SHARE_FOR_JA
@@ -139,12 +169,21 @@ def _strip_noise(text: str) -> str:
     return text
 
 
+def _is_harness_injection(stripped_text: str) -> bool:
+    return stripped_text.startswith(_HARNESS_INJECTION_PREFIXES) or bool(
+        _WORKFLOW_ECHO_RE.match(stripped_text)
+    )
+
+
 def _iter_user_turns(transcript_path):
     """Yield narration text for eligible user main-chain turns, in file order.
 
-    Excludes ``isSidechain: true`` turns and turns whose text starts
-    with ``<`` (tool-result / command-wrapper / system-reminder XML —
-    not user narration).
+    Excludes ``isSidechain: true`` turns, turns whose text starts with
+    ``<`` (tool-result / command-wrapper / system-reminder XML — not
+    user narration), and harness-injection turns (see
+    ``_HARNESS_INJECTION_PREFIXES`` — skill-body payloads and interrupt
+    markers arrive as user-role turns but are machine artifacts, not
+    the user's own language).
     """
     with open(transcript_path, "r", encoding="utf-8") as fh:
         for line in fh:
@@ -166,7 +205,7 @@ def _iter_user_turns(transcript_path):
                 continue
             text = _extract_text(message.get("content"))
             stripped = text.strip()
-            if not stripped or stripped.startswith("<"):
+            if not stripped or stripped.startswith("<") or _is_harness_injection(stripped):
                 continue
             yield text
 
@@ -199,9 +238,50 @@ def strip_noise(text: str) -> str:
     return _strip_noise(text)
 
 
+def is_harness_injection(stripped_text: str) -> bool:
+    """Public wrapper for :func:`_is_harness_injection` (stable cross-module contract)."""
+    return _is_harness_injection(stripped_text)
+
+
+def _majority_language(texts, n_turns: int = 3) -> Optional[str]:
+    """Majority language over the last ``n_turns`` DETECTABLE texts.
+
+    Shared building block for both a whole-file vote
+    (``conversation_language``) and a rolling, point-in-time vote
+    (loom-pipeline/scripts/comms_metrics.py): turns whose script can't
+    be determined (too short, or no script majority) are dropped
+    BEFORE sampling rather than counted as a diluting non-vote — a run
+    of short confirmations ("好" / "修", <20 visible chars) must not
+    outvote a real, sustained-language signal. Requires an outright
+    majority among the sampled detectable texts; otherwise None.
+    """
+    if n_turns <= 0:
+        return None
+    detectable = [
+        lang
+        for lang in (detect_script(_strip_noise(t)) for t in texts)
+        if lang is not None
+    ]
+    sampled = detectable[-n_turns:]
+    if not sampled:
+        return None
+    lang, count = Counter(sampled).most_common(1)[0]
+    if count > len(sampled) / 2:
+        return lang
+    return None
+
+
+def majority_language(texts, n_turns: int = 3) -> Optional[str]:
+    """Public wrapper for :func:`_majority_language` (stable cross-module contract)."""
+    return _majority_language(texts, n_turns)
+
+
 def conversation_language(transcript_path, n_turns: int = 3) -> Optional[str]:
-    """Majority conversation language over the last ``n_turns`` eligible
-    USER main-chain turns of a Claude Code transcript JSONL file.
+    """Majority conversation language over the last ``n_turns``
+    DETECTABLE USER main-chain turns of a Claude Code transcript JSONL
+    file (turns whose script can't be determined, e.g. short
+    confirmations, are skipped rather than diluting the vote — see
+    :func:`_majority_language`).
 
     Returns 'ja' / 'zh' / 'en' only when a majority of the sampled
     turns agree; otherwise None. Fail-open: a missing file, an
@@ -212,18 +292,4 @@ def conversation_language(transcript_path, n_turns: int = 3) -> Optional[str]:
         turns = list(_iter_user_turns(transcript_path))
     except Exception:
         return None
-
-    if n_turns <= 0:
-        return None
-    sampled = turns[-n_turns:]
-    if not sampled:
-        return None
-
-    langs = [detect_script(_strip_noise(t)) for t in sampled]
-    counts = Counter(lang for lang in langs if lang is not None)
-    if not counts:
-        return None
-    lang, count = counts.most_common(1)[0]
-    if count > len(sampled) / 2:
-        return lang
-    return None
+    return _majority_language(turns, n_turns)
