@@ -5,6 +5,22 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.27.3] — 2026-07-08 — finishing-a-development-branch enforces same-branch memory timing
+
+### Added
+
+- `finishing-a-development-branch` Step 8 gains a "Memory-timing check"
+  bullet (mirrors the existing living-spec-index-regen precedent):
+  a durable, already-known fact discovered during a branch's work must
+  be recorded into `docs/loom/memory/` on THAT branch, landing in the
+  same close-out commit — never a separate post-merge branch+PR.
+- `docs/loom/memory/README.md` charter gains a "## When to record"
+  section stating the rule + its one exception (genuinely post-merge-
+  observable facts still need a follow-up branch, batched not
+  one-PR-per-discovery).
+- Suite: 219 passed (`PYTHONDONTWRITEBYTECODE=1 python3 -m pytest
+  loom-code/scripts/ -q`).
+
 ## [0.27.2] — 2026-07-08 — SDD per-task mechanical review-weight exemption
 
 ### Added
