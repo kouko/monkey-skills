@@ -115,7 +115,7 @@ Both parts passing resolves the task as `DONE` with no reviewer verdict (this ex
 **Progress ledger — maintain `Status` per task + resume from it (v0.10.0+, optional).** When the plan carries the optional per-task `Status` field (see `writing-plans/references/plan-format.md` §Progress ledger), the orchestrator **writes it back into the plan as it executes** so the plan becomes a durable, shared progress record:
 
 - On dispatch → set `Status: claimed(@<agent>)` (`<agent>` = the worktree branch name, unique per agent; for a single-orchestrator run use the current branch).
-- On resolved DONE (both reviewers PASS / PASS_WITH_NOTES) **after committing** → set `Status: done(<sha>)` with that task's commit sha.
+- On resolved DONE (both reviewers PASS / PASS_WITH_NOTES **— or, on the `Review-weight: mechanical` path above, the self-check passing in place of reviewer verdicts**) **after committing** → set `Status: done(<sha>)` with that task's commit sha.
 - On `BLOCKED` / NEEDS_CONTEXT / the 3-round cap → set `Status: blocked`.
 
 Commit the ledger update **per task** (lean: keep it maximally current so a crash loses at most the one in-flight task). The plan file is the SSOT for progress; the per-task code commits are the durable artifacts the ledger points at.
