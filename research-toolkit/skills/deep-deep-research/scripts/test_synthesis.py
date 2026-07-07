@@ -174,6 +174,161 @@ class TestBlocksCLI:
         assert '- "C2." (https://b)' in result["killed_block"]
 
 
+class TestKeyFileFlags:
+    """--key NAME=FILE / --key-dir NAME=DIR assemble the payload from files.
+
+    Any flag disables stdin; output must equal the stdin-payload run.
+    """
+
+    def test_blocks_payload_from_key_files(self, tmp_path):
+        payload = {
+            "ranked_claims": [
+                {
+                    "claim": "C1.",
+                    "sourceUrl": "https://a",
+                    "sourceQuality": "primary",
+                    "quote": "q1",
+                },
+                {"claim": "C2.", "sourceUrl": "https://b"},
+            ],
+            "vote_results": [True, False],
+            "verdicts_per_claim": [
+                [{"refuted": False, "evidence": "ev", "confidence": "high"}],
+                [],
+            ],
+        }
+        flags = []
+        for name in ("ranked_claims", "vote_results", "verdicts_per_claim"):
+            path = tmp_path / f"{name}.json"
+            path.write_text(json.dumps(payload[name]), encoding="utf-8")
+            flags += ["--key", f"{name}={path}"]
+
+        via_stdin = subprocess.run(
+            [sys.executable, "synthesis.py", "blocks"],
+            input=json.dumps(payload),
+            capture_output=True,
+            text=True,
+            cwd=_SCRIPTS_DIR,
+        )
+        assert via_stdin.returncode == 0, via_stdin.stderr
+
+        via_flags = subprocess.run(
+            [sys.executable, "synthesis.py", "blocks", *flags],
+            # deliberately NOT JSON: proves stdin is ignored when flags present
+            input="NOT JSON",
+            capture_output=True,
+            text=True,
+            cwd=_SCRIPTS_DIR,
+        )
+        assert via_flags.returncode == 0, via_flags.stderr
+        assert json.loads(via_flags.stdout) == json.loads(via_stdin.stdout)
+
+    def test_report_key_dir_merges_json_arrays_filename_sorted(self, tmp_path):
+        claims_dir = tmp_path / "claims"
+        claims_dir.mkdir()
+        # written out of filename order: merge must be filename-sorted
+        (claims_dir / "02-econ.json").write_text(
+            json.dumps([{"claim": "B1."}]), encoding="utf-8"
+        )
+        (claims_dir / "01-health.json").write_text(
+            json.dumps([{"claim": "A1."}, {"claim": "A2."}]), encoding="utf-8"
+        )
+        payload = {
+            "report": {"question": "Q?", "summary": "s", "findings": []},
+            "ranked_claims": [{"sourceUrl": "https://a"}],
+            "angles": [{}, {}],
+            "all_claims": [{"claim": "A1."}, {"claim": "A2."}, {"claim": "B1."}],
+            "confirmed": [{}],
+            "killed": [],
+        }
+        flags = ["--key-dir", f"all_claims={claims_dir}"]
+        for name in ("report", "ranked_claims", "angles", "confirmed", "killed"):
+            path = tmp_path / f"{name}.json"
+            path.write_text(json.dumps(payload[name]), encoding="utf-8")
+            flags += ["--key", f"{name}={path}"]
+
+        via_stdin = subprocess.run(
+            [sys.executable, "synthesis.py", "report"],
+            input=json.dumps(payload),
+            capture_output=True,
+            text=True,
+            cwd=_SCRIPTS_DIR,
+        )
+        assert via_stdin.returncode == 0, via_stdin.stderr
+
+        via_flags = subprocess.run(
+            [sys.executable, "synthesis.py", "report", *flags],
+            input="NOT JSON",
+            capture_output=True,
+            text=True,
+            cwd=_SCRIPTS_DIR,
+        )
+        assert via_flags.returncode == 0, via_flags.stderr
+        result = json.loads(via_flags.stdout)
+        assert result == json.loads(via_stdin.stdout)
+        # 3 claims merged from the two dir files
+        assert result["stats"]["claimsExtracted"] == 3
+
+
+class TestKeyFlagErrors:
+    """Every --key / --key-dir error branch exits 1 with a one-line stderr
+    message naming the offender (house pattern: rank.py named-offender exits).
+    No raw tracebacks may escape to the caller."""
+
+    @staticmethod
+    def _run(flags):
+        return subprocess.run(
+            [sys.executable, "synthesis.py", "blocks", *flags],
+            input="",
+            capture_output=True,
+            text=True,
+            cwd=_SCRIPTS_DIR,
+        )
+
+    def test_unknown_flag_exits_1_with_message(self):
+        out = self._run(["--bogus", "x=y"])
+        assert out.returncode == 1
+        assert "expected --key NAME=FILE or --key-dir NAME=DIR" in out.stderr
+        assert "--bogus" in out.stderr
+
+    def test_malformed_name_path_exits_1_with_message(self):
+        out = self._run(["--key", "no-equals-here"])
+        assert out.returncode == 1
+        assert "malformed" in out.stderr
+        assert "NAME=PATH" in out.stderr
+
+    def test_key_dir_non_array_file_exits_1_naming_file(self, tmp_path):
+        d = tmp_path / "claims"
+        d.mkdir()
+        (d / "01-bad.json").write_text(json.dumps({"claim": "obj"}), encoding="utf-8")
+        out = self._run(["--key-dir", f"all_claims={d}"])
+        assert out.returncode == 1
+        assert "not a JSON array" in out.stderr
+        assert "01-bad.json" in out.stderr
+
+    def test_key_dir_nonexistent_dir_exits_1_not_silent_empty(self, tmp_path):
+        missing = tmp_path / "nope"
+        out = self._run(["--key-dir", f"all_claims={missing}"])
+        assert out.returncode == 1
+        assert "not a directory" in out.stderr
+        assert str(missing) in out.stderr
+
+    def test_key_invalid_json_exits_1_naming_path(self, tmp_path):
+        bad = tmp_path / "bad.json"
+        bad.write_text("{not json", encoding="utf-8")
+        out = self._run(["--key", f"ranked_claims={bad}"])
+        assert out.returncode == 1
+        assert f"--key ranked_claims: {bad}:" in out.stderr
+        assert "Traceback" not in out.stderr
+
+    def test_key_missing_file_exits_1_clean_stderr(self, tmp_path):
+        missing = tmp_path / "absent.json"
+        out = self._run(["--key", f"ranked_claims={missing}"])
+        assert out.returncode == 1
+        assert str(missing) in out.stderr
+        assert "Traceback" not in out.stderr
+
+
 class TestReportCLI:
     def test_report_subcommand(self):
         payload = {

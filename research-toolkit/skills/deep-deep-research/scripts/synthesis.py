@@ -5,16 +5,23 @@ helpers + cli.py markdown renderer). Flat imports — this module lives in
 scripts/ and is invoked directly (NOT as deep_research.synthesis).
 
 CLI (__main__):
-  synthesis.py blocks  — stdin {ranked_claims, vote_results, verdicts_per_claim}
+  synthesis.py blocks  — payload {ranked_claims, vote_results, verdicts_per_claim}
                          → stdout {confirmed_block, killed_block}
-  synthesis.py report  — stdin {report, ranked_claims, angles, all_claims,
+  synthesis.py report  — payload {report, ranked_claims, angles, all_claims,
                                  confirmed, killed}
                          → stdout {stats, markdown}
+
+  Payload source: stdin JSON (default), or per-key file flags (repeatable;
+  when ANY flag is present, stdin is NOT read):
+    --key NAME=FILE      payload[NAME] = JSON value parsed from FILE
+    --key-dir NAME=DIR   payload[NAME] = concatenation of all *.json arrays
+                         in DIR, filename-sorted
 """
 from __future__ import annotations
 
 import json
 import sys
+from pathlib import Path
 from typing import Any
 
 from schemas import VOTES_PER_CLAIM
@@ -188,16 +195,69 @@ def _run_report(payload: dict) -> dict:
     return {"stats": stats, "markdown": markdown}
 
 
+def _load_json_file(flag: str, name: str, path: Path) -> Any:
+    """Parse one JSON file (bytes → RFC 8259 UTF-8 auto-detect).
+
+    Read/parse failures re-raise as ValueError naming the offender, so
+    main()'s handler prints a clean one-line stderr message (no traceback).
+    """
+    try:
+        return json.loads(path.read_bytes())
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(f"{flag} {name}: {path}: {exc}") from exc
+
+
+def _payload_from_flags(flag_args: list[str]) -> dict:
+    """Assemble the payload dict from repeatable --key / --key-dir flags."""
+    payload: dict = {}
+    i = 0
+    while i < len(flag_args):
+        flag = flag_args[i]
+        if flag not in ("--key", "--key-dir") or i + 1 >= len(flag_args):
+            raise ValueError(
+                f"expected --key NAME=FILE or --key-dir NAME=DIR, got {flag!r}"
+            )
+        name, sep, path = flag_args[i + 1].partition("=")
+        if not (name and sep and path):
+            raise ValueError(
+                f"malformed {flag} argument {flag_args[i + 1]!r} (expected NAME=PATH)"
+            )
+        if flag == "--key":
+            payload[name] = _load_json_file(flag, name, Path(path))
+        else:
+            dir_path = Path(path)
+            if not dir_path.is_dir():
+                raise ValueError(f"--key-dir {name}: not a directory: {path}")
+            merged: list = []
+            for part in sorted(dir_path.glob("*.json")):
+                value = _load_json_file(flag, name, part)
+                if not isinstance(value, list):
+                    raise ValueError(
+                        f"--key-dir {name}: {part} is not a JSON array"
+                    )
+                merged.extend(value)
+            payload[name] = merged
+        i += 2
+    return payload
+
+
 def main(argv: list[str] | None = None) -> int:
     args = sys.argv[1:] if argv is None else argv
-    if len(args) != 1 or args[0] not in ("blocks", "report"):
+    if not args or args[0] not in ("blocks", "report"):
         name = args[0] if args else "(none)"
         print(
             f"unknown subcommand {name!r}; expected one of {{blocks|report}}",
             file=sys.stderr,
         )
         return 1
-    payload = json.load(sys.stdin)
+    if args[1:]:
+        try:
+            payload = _payload_from_flags(args[1:])
+        except ValueError as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
+    else:
+        payload = json.load(sys.stdin)
     result = _run_blocks(payload) if args[0] == "blocks" else _run_report(payload)
     json.dump(result, sys.stdout, ensure_ascii=False)
     return 0
