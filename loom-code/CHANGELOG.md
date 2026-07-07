@@ -5,6 +5,35 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.27.4] — 2026-07-08 — writing-plans reframes task-sizing primary axis
+
+### Changed
+
+- **`writing-plans`**'s splitting framework reorders its four criteria:
+  the acceptance-criterion (one failing test) is now stated as the
+  **primary** sizing constraint; the ≤5-minute time-box is reframed as
+  a **secondary smell-check**, not the authoritative ceiling. No
+  rigorous source ties a fixed minute-count to LLM agent reliability
+  — an agent has no experiential grounding in duration (arXiv:2510.23853);
+  the closest formal treatment (Toby Ord, arXiv:2505.05115) models
+  per-**step** reliability decay, and traditional SE research on
+  change size (Google `eng-practices`, Rigby & Bird 2013) sizes by
+  file/diff boundary, never by completion time.
+- Frontmatter `description` and the "What this skill does" bullets
+  reordered to match; `plan-document-reviewer-prompt.md` Check 5
+  (time estimate) gains a cross-reference noting it is secondary to
+  Check 6 (RED test) — **no change to pass/fail behavior**, framing
+  only.
+- The separate critical-path **depth**-ceiling rationale (`≤5`, a
+  different axis — chain length, not per-task minutes) gains a second
+  citation: Ord's paper models exponential per-step reliability decay
+  and suggests step-horizons of roughly 5–7, coincidentally close to
+  this ceiling — stated explicitly as a coincidental range, not proof
+  the number 5 is independently correct (the paper itself, like the
+  prior citation, declines to name one universal optimal step count).
+- Suite: 219 passed (no test asserted the prior wording — pure framing
+  change, zero output-behavior delta expected in the common case).
+
 ## [0.27.3] — 2026-07-08 — finishing-a-development-branch enforces same-branch memory timing
 
 ### Added
