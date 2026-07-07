@@ -48,13 +48,14 @@ def test_plan_document_reviewer_has_check_16():
 
 def test_sdd_skill_has_mechanical_skip_branch():
     """
-    Task 4 adds to loom-code/skills/subagent-driven-development/SKILL.md
-    (case-insensitive check):
-      - the field name "Review-weight: mechanical"
+    Task 4 adds to loom-code/skills/subagent-driven-development/SKILL.md:
+      - the literal field name "Review-weight: mechanical"
       - "skip" (the reviewer-dispatch skip behavior)
-      - "self-check" (the deterministic grep self-check procedure)
+      - "self-check" (the deterministic self-check procedure)
+    Case-sensitive, matching production's consistent capitalization
+    (same convention as the other two marker tests in this file).
     """
-    text = _read(SDD_SKILL).lower()
-    assert "review-weight: mechanical" in text
+    text = _read(SDD_SKILL)
+    assert "Review-weight: mechanical" in text
     assert "skip" in text
     assert "self-check" in text
