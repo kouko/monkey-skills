@@ -9,7 +9,14 @@ RED targets:
 - test_rank_claims_limit: slice to limit
 """
 
+import json
+import subprocess
+import sys
+from pathlib import Path
+
 from rank import quorum_survives, rank_claims
+
+RANK_PY = str(Path(__file__).resolve().parent / "rank.py")
 
 
 # ---------------------------------------------------------------------------
@@ -89,6 +96,92 @@ def test_rank_claims_limit():
     ]
     assert len(rank_claims(claims)) == 25
     assert len(rank_claims(claims, limit=5)) == 5
+
+
+# ---------------------------------------------------------------------------
+# CLI --claims-dir
+# ---------------------------------------------------------------------------
+
+def test_claims_dir_merges_files_in_filename_order(tmp_path):
+    """--claims-dir merges *.json files filename-sorted; equals single-array rank.
+
+    b.json is written FIRST so directory/creation order differs from
+    filename order — the stable-sort tie between a-central and b-central
+    (identical sort keys) then proves the merge was a.json before b.json.
+    stdin is empty: the flag must not read stdin.
+    """
+    claims_b = [
+        {"claim": "b-central", "importance": "central", "sourceQuality": "primary"},
+    ]
+    claims_a = [
+        {"claim": "a-tangential", "importance": "tangential", "sourceQuality": "blog"},
+        {"claim": "a-central", "importance": "central", "sourceQuality": "primary"},
+    ]
+    (tmp_path / "b.json").write_text(json.dumps(claims_b))
+    (tmp_path / "a.json").write_text(json.dumps(claims_a))
+
+    result = subprocess.run(
+        [sys.executable, RANK_PY, "--claims-dir", str(tmp_path)],
+        capture_output=True, text=True, input="",
+    )
+    assert result.returncode == 0, result.stderr
+    ranked = json.loads(result.stdout)
+
+    # Equivalent single-array ranking, filename-sorted merge (a.json + b.json).
+    assert ranked == rank_claims(claims_a + claims_b)
+    # Tie-break makes filename order observable: a-central before b-central.
+    assert [c["claim"] for c in ranked[:2]] == ["a-central", "b-central"]
+
+
+def test_claims_dir_nonexistent_dir_fails_loud(tmp_path):
+    """--claims-dir on a missing dir exits nonzero (never silently ranks [])."""
+    result = subprocess.run(
+        [sys.executable, RANK_PY, "--claims-dir", str(tmp_path / "nope")],
+        capture_output=True, text=True, input="",
+    )
+    assert result.returncode != 0
+    assert "not a directory" in result.stderr
+
+
+def test_claims_dir_malformed_json_names_offending_file(tmp_path):
+    """A malformed *.json fails loud AND names the offending file (no raw traceback)."""
+    (tmp_path / "good.json").write_text("[]", encoding="utf-8")
+    (tmp_path / "mangled.json").write_text("{not json", encoding="utf-8")
+    result = subprocess.run(
+        [sys.executable, RANK_PY, "--claims-dir", str(tmp_path)],
+        capture_output=True, text=True, input="",
+    )
+    assert result.returncode != 0
+    assert "mangled.json" in result.stderr
+    assert "invalid JSON" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_claims_dir_non_array_json_names_offending_file(tmp_path):
+    """A *.json whose top level is not an array fails loud, naming the file.
+
+    Without the isinstance guard, extend() silently splats an object's keys
+    into the claims list — a data corruption, not an error.
+    """
+    (tmp_path / "obj.json").write_text('{"claim": "x"}', encoding="utf-8")
+    result = subprocess.run(
+        [sys.executable, RANK_PY, "--claims-dir", str(tmp_path)],
+        capture_output=True, text=True, input="",
+    )
+    assert result.returncode != 0
+    assert "obj.json" in result.stderr
+    assert "array" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_claims_dir_missing_argument_fails_loud():
+    """--claims-dir with no directory argument exits nonzero with the usage message."""
+    result = subprocess.run(
+        [sys.executable, RANK_PY, "--claims-dir"],
+        capture_output=True, text=True, input="",
+    )
+    assert result.returncode != 0
+    assert "requires a directory argument" in result.stderr
 
 
 def test_rank_claims_stable_sort():

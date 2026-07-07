@@ -1,7 +1,7 @@
 ---
 name: deep-deep-research
 description: |
-  Inspectable, editable, key-free deep-research pipeline. Use when 想調整研究流程, wanting a multi-source verified report via the host's own tools, or on hosts without built-in deep-research (e.g. Codex).
+  Heavyweight multi-round deep research — inspectable, editable, key-free pipeline. Use for 徹底研究, exhaustive multi-source verified reports, tweaking the research pipeline itself, or hosts without built-in deep-research (e.g. Codex).
 version: 0.1.0
 ---
 
@@ -57,6 +57,14 @@ inputs, no shared files), which is exactly the case the fan-out convention is
 for. For the concrete per-host call shape this resolves to (including the
 Claude-Code-specific "same assistant message" concurrency detail above), see
 `loom-code/skills/using-loom-code/references/{claude-code-tools.md,codex-tools.md}`.
+
+**File-carrier rule.** Bulk data between stages travels by file path under a
+run-local `work/` directory — created at Stage-1 start as a fresh empty tree
+(including `work/claims/` and `work/verdicts/`) in your session's working directory, not inside the
+skill, clearing any prior run's leftovers — never emit the full claims pool,
+or any comparably bulky payload, inline in a command or a single response; at
+real scale that reproducibly dies mid-response. Inline payloads are fine only
+at per-claim / per-source granularity.
 
 ---
 
@@ -319,26 +327,38 @@ This is again per-source independent work — **fan out one subagent per source*
    the page and, per claim, its **importance** — these tags carry forward into
    ranking and verification.
 
-Collect every extracted claim (with its source URL, quote, and quality tag)
-into one pool. That pool is the input to the ranking + adversarial verify
-stages.
+3. **Write, don't return.** The subagent writes its extracted claims to the
+   exact path the orchestrator assigned in its dispatch —
+   `work/claims/<angle-label>-<idx>.json`, with `<angle-label>` slugified to
+   lowercase `[a-z0-9-]` and `<idx>` a single fetch counter global across the
+   whole Stage-3 fan-out — a JSON **array** of claim objects, each carrying
+   its source URL, quote, and quality tags per the extract schema — and
+   returns **only `{path, count}`**, never the claims themselves
+   (file-carrier rule).
+
+The pool is the `work/claims/` directory: one file per fetch subagent, together
+holding every extracted claim. That directory is the input to the ranking +
+adversarial verify stages.
 
 ---
 
 ## Stage 4 — Rank
 
-Flatten **every** claim from every angle's every source into one JSON array,
-then rank it. This is a **barrier**: all the Stage-3 fan-out subagents must
-have returned before you rank, because ranking is global across the whole
-pool.
+Rank the whole pool. This is a **barrier**: all the Stage-3 fan-out subagents
+must have returned (i.e. every `work/claims/*.json` file is written) before
+you rank, because ranking is global across the whole pool.
 
 ```
-echo '[<all claims>]' | python scripts/rank.py
+python scripts/rank.py --claims-dir work/claims > work/ranked.json
 ```
 
-stdin: the claims array → stdout: the top **`MAX_VERIFY_CLAIMS = 25`** claims,
-stable-sorted by (importance, sourceQuality). Lower-priority claims past the
-cap are dropped — you only adversarially verify the ranked survivors.
+`--claims-dir` merges every `*.json` in the directory (filename-sorted; each
+file a claims array) — stdin is not read — and emits the top
+**`MAX_VERIFY_CLAIMS = 25`** claims, stable-sorted by
+(importance, sourceQuality). Lower-priority claims past the cap are dropped —
+you only adversarially verify the ranked survivors. Read `work/ranked.json`
+to iterate the ≤25 ranked claims in Stage 5 (per-claim payloads are small and
+stay inline).
 
 ---
 
@@ -370,19 +390,23 @@ For each `(claim, voter_idx)`:
    that fails or returns nothing is an **abstention** — record its vote as
    `null`, not as a non-refutation.
 
-3. Collect the claim's three votes into an array (abstentions as `null`) and
-   decide survival:
+3. Collect the claim's three votes into an array (abstentions as `null`),
+   write that array to `work/verdicts/claim-<rank>.json` (`<rank>` = the
+   claim's ranked index), and decide survival:
 
    ```
    echo '[<verdict>, <verdict-or-null>, <verdict>]' \
      | python scripts/rank.py quorum
    ```
 
-   stdin: the verdicts array → stdout: `true` / `false`. A claim **survives
+   stdin: the verdicts array → stdout: `true` / `false` (a per-claim payload —
+   small enough to stay inline). A claim **survives
    only if ≥2 valid (non-null) votes AND fewer than `REFUTATIONS_REQUIRED = 2`
    of them refute it.** The valid-count check gates first, so an
    **all-abstain claim is killed** (0 valid votes < 2), never falsely
-   survived on a refuted-count of 0.
+   survived on a refuted-count of 0. Once every claim's quorum is decided,
+   write the booleans in ranked order to `work/votes.json`, so that after
+   Stage 5 it holds the ordered `vote_results` array.
 
 Partition the ranked claims into **confirmed** (survived) and **killed**
 (refuted/insufficient) by their `quorum` result.
@@ -391,17 +415,24 @@ Partition the ranked claims into **confirmed** (survived) and **killed**
 
 ## Stage 6 — Synthesize
 
-1. Build the prompt blocks from the verify results:
+1. Build the prompt blocks from the verify results. First materialize
+   `work/verdicts.json` — the ordered list of per-claim verdict arrays,
+   assembled from `work/verdicts/claim-<rank>.json` in `<rank>` order (a small
+   loop; do **not** merge them as a flat directory, the payload key is a
+   list of lists). Then:
 
    ```
-   echo '{"ranked_claims": [...], "vote_results": [<bool>...], \
-          "verdicts_per_claim": [[<verdict>...], ...]}' \
-     | python scripts/synthesis.py blocks
+   python scripts/synthesis.py blocks \
+     --key ranked_claims=work/ranked.json \
+     --key vote_results=work/votes.json \
+     --key verdicts_per_claim=work/verdicts.json
    ```
 
-   stdin: the ranked claims, the per-claim survival booleans (Stage-5
-   `quorum` results, same order), and each claim's verdict list → stdout
-   `{confirmed_block, killed_block}` (two pre-formatted markdown strings).
+   Each `--key NAME=FILE` reads that payload key from a file (any flag
+   disables stdin): the ranked claims, the per-claim survival booleans
+   (Stage-5 `quorum` results, same order), and each claim's verdict list →
+   stdout `{confirmed_block, killed_block}` (two pre-formatted markdown
+   strings).
 
 2. Get the synthesis prompt, passing those two blocks back as strings plus the
    confirmed count:
@@ -600,16 +631,26 @@ and no schema.
 ---
 
 **Final render (base Stage 6 — runs in all modes).** After synthesis (with or
-without the opt-in meta-mode / purpose-fit / calibration prepends above), produce stats + the
-rendered markdown:
+without the opt-in meta-mode / purpose-fit / calibration prepends above),
+write the remaining small inputs to files — the report object from step 3 to
+`work/report.json`, the Stage-1 angles to `work/angles.json`, and the Stage-5
+confirmed/killed partitions to `work/confirmed.json` / `work/killed.json` —
+then produce stats + the rendered markdown:
 
    ```
-   echo '{"report": {...}, "ranked_claims": [...], "angles": [...], \
-          "all_claims": [...], "confirmed": [...], "killed": [...]}' \
-     | python scripts/synthesis.py report
+   python scripts/synthesis.py report \
+     --key report=work/report.json \
+     --key ranked_claims=work/ranked.json \
+     --key angles=work/angles.json \
+     --key-dir all_claims=work/claims \
+     --key confirmed=work/confirmed.json \
+     --key killed=work/killed.json > work/final.json
    ```
 
-   stdin keys as shown → stdout `{stats, markdown}`. `markdown` is the final
+   `--key-dir all_claims=work/claims` merges every `*.json` array in the
+   Stage-3 pool directory (filename-sorted) into the `all_claims` payload key,
+   so the full pool never travels inline. Read `work/final.json` for
+   `{stats, markdown}`. `markdown` is the final
    cited report to hand back to the user; `stats` is the pipeline summary
    (angles / sourcesFetched / claimsExtracted / claimsVerified / confirmed /
    killed / agentCalls).
@@ -641,7 +682,7 @@ not error out:
 
 ## Script-invocation quick reference
 
-| Stage | Command | stdin → stdout |
+| Stage | Command | input → stdout |
 |---|---|---|
 | 1 | `prompts.py scope --question Q` | — → scope prompt |
 | 1 | `schemas.py scope` | — → scope schema |
@@ -655,11 +696,11 @@ not error out:
 | 2 | `dedup.py` | `{results, seen, fetch_slots}` → `{novel, seen, slots}` |
 | 3 | `prompts.py fetch --source S --label L --question Q` | — → fetch prompt |
 | 3 | `schemas.py extract` | — → extract schema |
-| 4 | `rank.py` | claims array → ranked (≤25) array |
+| 4 | `rank.py --claims-dir work/claims` | merged `work/claims/*.json` (filename-sorted; stdin unused) → ranked (≤25) array |
 | 5 | `prompts.py verify --claim C --voter-idx I --question Q` | — → verify prompt |
 | 5 | `schemas.py verdict` | — → verdict schema |
 | 5 | `rank.py quorum` | verdicts array → `true`/`false` |
-| 6 | `synthesis.py blocks` | `{ranked_claims, vote_results, verdicts_per_claim}` → `{confirmed_block, killed_block}` |
+| 6 | `synthesis.py blocks --key ranked_claims=work/ranked.json --key vote_results=work/votes.json --key verdicts_per_claim=work/verdicts.json` | per-key files (`--key NAME=FILE`; stdin unused) → `{confirmed_block, killed_block}` |
 | 6 | `prompts.py synthesis --question Q --confirmed-block CB --killed-block KB --confirmed-count N` | — → synthesis prompt |
 | 6 | `mode_route.py schema` | — → mode-verdict schema |
 | 6 | `mode_route.py classify-prompt --confirmed-block CB --killed-block KB --question Q` | — → epistemic-mode classify prompt |
@@ -669,4 +710,4 @@ not error out:
 | 6 | `purpose_fit.py block` | `{inferred_purpose, confidence, mode, mooting_factors, frames}` → `{purpose_fit_block}` |
 | 6 | `calibrate.py block` | — → `{calibration_block}` |
 | 6 | `schemas.py report` | — → report schema |
-| 6 | `synthesis.py report` | `{report, ranked_claims, angles, all_claims, confirmed, killed}` → `{stats, markdown}` |
+| 6 | `synthesis.py report --key report=work/report.json --key ranked_claims=work/ranked.json --key angles=work/angles.json --key-dir all_claims=work/claims --key confirmed=work/confirmed.json --key killed=work/killed.json` | per-key files (`--key NAME=FILE`, `--key-dir NAME=DIR`; stdin unused) → `{stats, markdown}` |

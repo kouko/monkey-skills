@@ -5,8 +5,14 @@ operates on generic dicts).  Ported verbatim from decompiled-source.md
 §Quorum rule + §Ranking maps.
 
 CLI (consumed by SKILL.md over stdin/stdout JSON):
-    python rank.py           # stdin: claims JSON array  → stdout: ranked (≤25) JSON
-    python rank.py quorum    # stdin: verdicts JSON array → stdout: `true` / `false`
+    python rank.py                   # stdin: claims JSON array  → stdout: ranked (≤25) JSON
+    python rank.py --claims-dir DIR  # merge every *.json in DIR (filename-sorted;
+                                     #   each file = claims JSON array); stdin is
+                                     #   NOT read → stdout: ranked (≤25) JSON
+    python rank.py quorum            # stdin: verdicts JSON array → stdout: `true` / `false`
+
+--claims-dir and stdin are mutually exclusive: when the flag is given,
+stdin is never read.  The quorum subcommand takes no --claims-dir.
 """
 
 from __future__ import annotations
@@ -80,9 +86,31 @@ def quorum_survives(
 if __name__ == "__main__":
     import json
     import sys
+    from pathlib import Path
 
-    data = json.load(sys.stdin)
-    if len(sys.argv) > 1 and sys.argv[1] == "quorum":
-        print(json.dumps(quorum_survives(data)))
+    args = sys.argv[1:]
+    if args and args[0] == "quorum":
+        print(json.dumps(quorum_survives(json.load(sys.stdin))))
+    elif args and args[0] == "--claims-dir":
+        if len(args) < 2:
+            sys.exit("--claims-dir requires a directory argument")
+        claims_dir = Path(args[1])
+        if not claims_dir.is_dir():
+            sys.exit(f"--claims-dir: not a directory: {claims_dir}")
+        claims: list[dict[str, Any]] = []
+        for path in sorted(claims_dir.glob("*.json")):
+            try:
+                # read_bytes: json auto-detects UTF-8 per RFC 8259,
+                # immune to the host locale's preferred encoding.
+                loaded = json.loads(path.read_bytes())
+            except json.JSONDecodeError as e:
+                sys.exit(f"--claims-dir: invalid JSON in {path}: {e}")
+            if not isinstance(loaded, list):
+                sys.exit(
+                    f"--claims-dir: expected a JSON array in {path}, "
+                    f"got {type(loaded).__name__}"
+                )
+            claims.extend(loaded)
+        print(json.dumps(rank_claims(claims)))
     else:
-        print(json.dumps(rank_claims(data)))
+        print(json.dumps(rank_claims(json.load(sys.stdin))))
