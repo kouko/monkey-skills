@@ -2,7 +2,7 @@
 
 [English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 
-> 1 時間超 または 複数モジュールに跨るタスクを **5 分以下の原子タスク** に分解し、各タスクに 3 つのサブエージェントを並行ディスパッチする：**implementer**（worker、TDD 鉄則下で実装） + **spec-reviewer** + **code-quality-reviewer**（いずれも evaluator）。判定は `domain-teams:code-team` の 9 standards + 2 rubrics + 2 checklists を functional copy として根拠化。
+> 1 時間超 または 複数モジュールに跨るタスクを **failing test 1 つ分の原子タスク** に分解し、各タスクに 3 つのサブエージェントを並行ディスパッチする：**implementer**（worker、TDD 鉄則下で実装） + **spec-reviewer** + **code-quality-reviewer**（いずれも evaluator）。判定は `domain-teams:code-team` の 9 standards + 2 rubrics + 2 checklists を functional copy として根拠化。
 
 [loom-code](../..) プラグインの一部。エージェントが読み込むのは [`SKILL.md`](SKILL.md)、本 README は人間向け。
 

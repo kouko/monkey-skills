@@ -47,7 +47,7 @@ Enumerated exemptions only.
 
 ## The splitting framework
 
-Walk these in order for each prospective task. Stop expanding a task as soon as **all four** criteria are met.
+Walk these in order for each prospective task. Stop expanding a task as soon as **all three** criteria are met.
 
 | # | Criterion | Test |
 |---|---|---|
@@ -78,7 +78,7 @@ The depth ceiling is a deliberate forcing function for the brainstorming HARD-GA
 
 **Why depth — and why `5` is a heuristic, not a law.** For an LLM agent the binding constraint is the *sequential* chain: errors **compound** across dependent steps (chain reliability ≈ per-step-success^depth) and per-step accuracy itself **decays** as the chain lengthens. A depth-5 chain at ~95% per-step reliability succeeds only ~77% of the time — about where re-cutting scope starts to pay off. But the long-horizon-execution literature finds **no universal optimal step count** — the principled limit is a *function of per-step reliability*, not a constant. So treat **`5` as a deliberate default trigger, not a measured value**; tune it if your atomic-task steps are more or less reliable. (Grounding: error-compounding / long-horizon decay in LLM agents — e.g. "The Illusion of Diminishing Returns: Measuring Long-Horizon Execution in LLMs", arXiv 2509.09677. A related, more formal treatment — Toby Ord, "Is there a Half-Life for the Success Rates of AI Agents?", arXiv:2505.05115 — models success-rate decay as a constant hazard per minute of a task's externally-benchmarked human-difficulty rating (the METR methodology's "how long would a human expert take"), not per discrete agent step, and it names no specific step-count or step-horizon; cite it here only as further evidence that reliability decays with task magnitude on SOME axis, not as support for a "5-ish steps" figure — that number is not in the paper. The depth-not-count *framing* also matches Bazel critical-path scheduling and Kanban WIP limits, which cap concurrency, not backlog — but those are human/scheduling analogies; the agent-native reason is error compounding. The `5` itself is inherited from the prior count-based ceiling, not independently derived from either paper.)
 
-**Structural-split escape hatch (round-2 NEEDS_REVISION only):** If the plan-document-reviewer returns NEEDS_REVISION for a second round and the *sole* failure is a structural-size violation (a task is clearly >5 min but cannot be shrunk further without a brief change), split that oversized task into a fresh sibling part (a new `<topic>-part-N.md` brief → new plan) and treat it as a round-1 input to a fresh `writing-plans` run. The original plan's 2-round cap applies to the original tasks only; the new sibling part starts its own clean round count.
+**Structural-split escape hatch (round-2 NEEDS_REVISION only):** If the plan-document-reviewer returns NEEDS_REVISION for a second round and the *sole* failure is a structural-size violation (a task structurally cannot resolve to one failing test within one module boundary — Check 6 keeps failing no matter how the description is reworded — and cannot be shrunk further without a brief change), split that oversized task into a fresh sibling part (a new `<topic>-part-N.md` brief → new plan) and treat it as a round-1 input to a fresh `writing-plans` run. The original plan's 2-round cap applies to the original tasks only; the new sibling part starts its own clean round count.
 
 ## BLOCKED fallback — Beck 2002 Child Test pattern
 
