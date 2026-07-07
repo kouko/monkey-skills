@@ -8,6 +8,17 @@ Versioning: [Semantic Versioning](https://semver.org/).
 > This file was reconstructed on 2026-07-02 from the git history — the plugin
 > shipped its first two versions without a CHANGELOG.
 
+## [0.4.1] — 2026-07-07
+
+### Changed
+
+- **`using-loom-product-principles` §Intake points at the family relay
+  discipline**: the entry skill's intake now cites
+  `loom-pipeline/hooks/family-relay.md` as the shared reference for
+  how it talks to the user, rather than restating relay rules locally.
+  Verification: `test_family_relay.py::test_design_side_pointers[product-principles]`
+  passed.
+
 ## [0.4.0] — 2026-07-04
 
 ### Added

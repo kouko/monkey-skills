@@ -95,6 +95,17 @@ erDiagram
     EXPORT_REQUEST ||--|| REPORT : "exports"
 ```
 
+## Channel-aware degradation
+
+Mermaid/Excalidraw/PlantUML above assume a rendering host. Apply channel-aware degradation in a plain-text channel (terminal chat, PR text, Slack):
+
+| Channel | Comparisons (Axis 4, ≥2 options) | Flows/states (Axis 2, Axis 5) |
+|---|---|---|
+| Terminal / PR text / Slack | markdown table | `ascii-graph-toolkit` (CJK-width-aware; verify alignment with its oracle, don't hand-draw) |
+| Rendering host (GitHub / Obsidian / VS Code) | Mermaid/Excalidraw as above | Mermaid/Excalidraw as above |
+
+Diagram labels always match the live conversation language.
+
 ## Anti-patterns
 
 - ❌ **Diagram for its own sake.** If prose covers the axis in 2 sentences, draw nothing. A diagram is a tool for catching errors prose hides; if there's nothing to catch, the diagram is decoration.

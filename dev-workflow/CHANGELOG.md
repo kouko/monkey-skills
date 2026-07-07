@@ -4,6 +4,20 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.21.0] — 2026-07-07
+
+### Changed — `brief-before-asking`: hard turn-ordering rule + anti-diagram guidance rescoped
+
+A briefing must never be stacked with an `AskUserQuestion` dialog in the
+same turn — end the turn with the briefing as the final text, then ask
+inline in a following turn. This recurred (2026-07-03, observed twice)
+as a briefing getting buried under the same-turn question dialog.
+Anti-diagram guidance is rescoped: explicit visual requests are honored;
+option comparisons default to a table instead.
+
+Verification: `loom-pipeline/scripts/test_family_relay.py::test_brief_before_asking_ordering`
+passed.
+
 ## [2.20.1] — 2026-07-05
 
 ### Fixed — `distill-sessions`: Codex dispatch-portability (host-neutral rewrite + reference files)

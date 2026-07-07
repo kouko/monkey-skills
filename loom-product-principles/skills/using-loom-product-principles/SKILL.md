@@ -15,6 +15,9 @@ hands off.
 
 ## §Intake
 
+User-facing narration in this intake follows
+`loom-pipeline/hooks/family-relay.md §Family relay discipline` — reference it, do not copy its rules here.
+
 ### Step 1 — 前站檢查 (upstream check)
 
 Check the target repo against the loom family reception's on-ramp criteria
