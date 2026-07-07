@@ -257,12 +257,14 @@ paths and never uses `[[wikilinks]]` (standard markdown links only,
 matching the source `.dbt-wiki/` convention).
 
 **Intra-`knowledge/` links are flattened to match the flat layout.** The source
-pages link cross-folder (`[X](../entities/x.md)`) and cite evidence
-(`[m](../_evidence/models/m.md)`); after the flatten-on-freeze those paths are
-wrong (the target is a flat sibling, and `_evidence/` was dropped). pack Step 2.6
-rewrites them: cross-folder → flat sibling `[X](x.md)`; dropped-`_evidence/`
-links → delinked to plain label text. Acceptance (Step 7) requires **zero broken
-intra-`knowledge/` links**.
+pages link cross-folder (`[X](../entities/x.md)`, `[S](../syntheses/s.md)`) and
+cite dropped or repo-local files (`[m](../_evidence/models/m.md)`,
+`[m](.dbt-wiki/_evidence/models/m.md)`, `[SPEC](../../models/…/SPEC.md)`);
+after the flatten-on-freeze those paths are wrong (the target is a flat
+sibling, or a file that does not exist at a portable target). pack Step 2.6
+rewrites them: knowledge cross-folder → flat sibling `[X](x.md)`; any other
+pathed `.md` link → delinked to plain label text. Acceptance (Step 7) requires
+**zero broken intra-`knowledge/` links**.
 
 ## Acceptance summary
 

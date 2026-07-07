@@ -182,15 +182,19 @@ uv run <SKILL_DIR>/assets/flatten_links.py "<project>-analytics/knowledge"
 ```
 
 It rewrites, in both markdown body links AND frontmatter `target:` edges:
-- `](../{entities,concepts,metrics}/<slug>.md)` → flat sibling `](<slug>.md)`;
-- `[label](../_evidence/…)` → `label` (the `_evidence/` layer was dropped in
-  Step 2, so these are dead — delink to plain text, keeping the model name).
+- `](../{entities,concepts,metrics,syntheses}/<slug>.md)` → flat sibling
+  `](<slug>.md)`;
+- any **remaining pathed `.md` link** → `label` (delink to plain text). After
+  the flatten, a relative link that still carries a path points outside the
+  bundle — the dropped `_evidence/` layer (both `../_evidence/…` and the
+  SCHEMA-synthesis `.dbt-wiki/_evidence/…` shapes), `_archive/`, or
+  source-repo files (`../../models/…`) — all dead at a portable target.
 
 It is **idempotent** (re-run after any re-freeze) and pure path-shape logic — no
 project specifics. It exits non-zero and lists offenders if any broken
 intra-knowledge link remains; require `0 broken intra-knowledge links remain`
 before continuing. Verify the script on first run (optional):
-`uv run <SKILL_DIR>/assets/flatten_links_test.py` → "6/6 passed".
+`uv run <SKILL_DIR>/assets/flatten_links_test.py` → "10/10 passed".
 
 > Without this step the bundle's progressive-disclosure-by-link is broken: a
 > reader following `[Customer](../entities/customer.md)` hits a non-existent
@@ -215,7 +219,7 @@ than being silently dropped. It is **idempotent** — re-run after any
 re-freeze (order with Step 2.6 doesn't matter; the index carries flat links by
 construction). It exits non-zero if `knowledge/` holds no indexable page.
 Verify the script on first run (optional):
-`uv run <SKILL_DIR>/assets/build_bundle_index_test.py` → "10/10 passed".
+`uv run <SKILL_DIR>/assets/build_bundle_index_test.py` → "13/13 passed".
 
 ## Step 3 — Copy in the generation guidance
 

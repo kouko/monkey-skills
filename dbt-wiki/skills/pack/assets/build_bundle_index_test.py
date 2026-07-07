@@ -53,6 +53,24 @@ title: Mystery
 # Mystery
 """
 
+NO_FM = "# Bare Page\nNo frontmatter at all.\n"
+
+SCALAR_FM = """---
+42
+---
+# Scalar frontmatter (valid YAML, not a mapping)
+"""
+
+STR_ALIASES = """---
+type: knowledge-entity
+title: Order
+status: developing
+summary: "One row per order."
+aliases: order_id
+---
+# Order
+"""
+
 # 1. entity line shape: title｜title_local + status + summary + aliases, flat link
 line = line_for(Path("account.md"), ENTITY)
 check(
@@ -72,6 +90,21 @@ line = line_for(Path("region-code-derivation.md"), SYNTHESIS)
 check(
     "synthesis line shape",
     line == "- [How is region_code derived for EU accounts?](region-code-derivation.md) `synthesis` — verified deep-dive (2026-01-15)",
+)
+
+# 3a. page with NO frontmatter: stem title, default status, no crash
+line = line_for(Path("bare-page.md"), NO_FM)
+check("no-frontmatter fallback", line == "- [bare-page](bare-page.md) `developing`")
+
+# 3b. valid-YAML-non-mapping frontmatter (bare scalar): treated as no frontmatter
+line = line_for(Path("scalar.md"), SCALAR_FM)
+check("scalar frontmatter fallback", line == "- [scalar](scalar.md) `developing`")
+
+# 3c. scalar-string aliases: normalized to a one-item list, not per-character
+line = line_for(Path("order.md"), STR_ALIASES)
+check(
+    "string aliases normalized",
+    line == "- [Order](order.md) `developing` — One row per order. 〔aka: order_id〕",
 )
 
 with tempfile.TemporaryDirectory() as d:

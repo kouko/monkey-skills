@@ -56,9 +56,10 @@ def parse_fm(text: str) -> dict:
     if end == -1:
         return {}
     try:
-        return yaml.safe_load(text[3:end]) or {}
+        fm = yaml.safe_load(text[3:end])
     except Exception:
         return {}
+    return fm if isinstance(fm, dict) else {}
 
 
 def line_for(path: Path, text: str) -> str:
@@ -72,7 +73,10 @@ def line_for(path: Path, text: str) -> str:
     tl = fm.get("title_local")
     status = fm.get("status") or "developing"
     summary = str(fm.get("summary") or "").strip()
-    aliases = [str(a) for a in (fm.get("aliases") or []) if a is not None and str(a).strip()]
+    raw_aliases = fm.get("aliases") or []
+    if isinstance(raw_aliases, str):  # scalar string -> one alias, not per-character
+        raw_aliases = [raw_aliases]
+    aliases = [str(a) for a in raw_aliases if a is not None and str(a).strip()]
     head = f"{title}｜{tl}" if tl else f"{title}"
     line = f"- [{head}]({path.name}) `{status}`"
     if summary:

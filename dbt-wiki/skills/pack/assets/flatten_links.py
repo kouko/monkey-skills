@@ -3,13 +3,24 @@
 # ///
 """Flatten in-page links for a flat dbt-wiki:pack bundle.
 
-pack Step 2 relocates entities/metrics/concepts into a FLAT `knowledge/`
-but copies page content verbatim, so in-page relative links keep the
-NESTED source-layout paths and break in the bundle. This rewrites them:
+pack Step 2 relocates entities/metrics/concepts/syntheses into a FLAT
+`knowledge/` but copies page content verbatim, so in-page relative links
+keep the NESTED source-layout paths and break in the bundle. This rewrites
+them, in order:
 
-  - ](../{entities,concepts,metrics}/<slug>.md)  -> ](<slug>.md)   (flat sibling)
-  - target: ../{...}/<slug>.md                     -> target: <slug>.md  (frontmatter edge)
-  - [label](../_evidence/...)                      -> label             (dropped layer -> delink)
+  - ](../{entities,concepts,metrics,syntheses}/<slug>.md)
+                     -> ](<slug>.md)         (flat sibling)
+  - target: ../{...}/<slug>.md
+                     -> target: <slug>.md    (frontmatter edge)
+  - [label](<any remaining pathed .md link>)
+                     -> label                (dead in a portable bundle -> delink)
+
+The delink pass is deliberately general: after the knowledge folders are
+flattened to siblings, ANY relative `.md` link that still carries a path
+points outside the bundle — the dropped `_evidence/` layer (both the
+`../_evidence/...` and SCHEMA-synthesis `.dbt-wiki/_evidence/...` shapes),
+`_archive/`, or source-repo files (`../../models/...`) — none of which
+exist at a portable target. The label is kept as plain text.
 
 Pure path-shape logic — no project/company/personal specifics. Idempotent
 (safe to re-run after any re-freeze). Exit code 1 if any broken intra-knowledge
@@ -21,11 +32,13 @@ import sys
 import re
 from pathlib import Path
 
-KNOWLEDGE_FOLDERS = ("entities", "concepts", "metrics")
+KNOWLEDGE_FOLDERS = ("entities", "concepts", "metrics", "syntheses")
 
 _CROSS_BODY = re.compile(r"\]\(\.\./(?:" + "|".join(KNOWLEDGE_FOLDERS) + r")/([^)]+\.md)\)")
 _CROSS_FM = re.compile(r"(target:\s*)\.\./(?:" + "|".join(KNOWLEDGE_FOLDERS) + r")/([^\s]+\.md)")
-_EVIDENCE = re.compile(r"\[([^\]]+)\]\(\.\./_evidence/[^)]+\)")
+# Any markdown link to a *pathed* .md target that survived the flatten above
+# is dead in a portable bundle (dropped layer or source-repo path) -> delink.
+_DEAD_PATHED = re.compile(r"\[([^\]]+)\]\((?!https?://)[^)]*/[^)]*\.md\)")
 
 
 def _basename(path: str) -> str:
@@ -33,9 +46,9 @@ def _basename(path: str) -> str:
 
 
 def flatten_text(text: str) -> tuple[str, int, int]:
-    """Return (rewritten_text, cross_folder_count, evidence_delinked_count)."""
+    """Return (rewritten_text, cross_folder_count, dead_delinked_count)."""
     cross = 0
-    evid = 0
+    dead = 0
 
     def _body(m):
         nonlocal cross
@@ -47,15 +60,17 @@ def flatten_text(text: str) -> tuple[str, int, int]:
         cross += 1
         return f"{m.group(1)}{_basename(m.group(2))}"
 
-    def _ev(m):
-        nonlocal evid
-        evid += 1
+    def _dead(m):
+        nonlocal dead
+        dead += 1
         return m.group(1)  # keep the label, drop the dead link
 
+    # Order matters: flatten knowledge-folder links to siblings FIRST,
+    # then delink whatever pathed .md links remain (all dead by design).
     text = _CROSS_BODY.sub(_body, text)
     text = _CROSS_FM.sub(_fm, text)
-    text = _EVIDENCE.sub(_ev, text)
-    return text, cross, evid
+    text = _DEAD_PATHED.sub(_dead, text)
+    return text, cross, dead
 
 
 def count_broken(kdir: Path) -> list[str]:

@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 A flat bundle `knowledge/` with hundreds of pages left the consuming agent
 slug-guessing or grepping every file to find the right page. New deterministic
-asset `pack/assets/build_bundle_index.py` (10-case TDD) emits
+asset `pack/assets/build_bundle_index.py` (13-case TDD) emits
 `knowledge/_index.md` — one line per frozen page (title, status, one-line
 summary, aliases; syntheses use their `question`), grouped by page type —
 derived from the **frozen pages' own frontmatter** (never the source
@@ -27,6 +27,15 @@ human-verified knowledge in a wiki) were silently excluded from the freeze
 scope. Step 2 / bundle-format now include them alongside
 entities/metrics/concepts; they freeze and flatten exactly like the other
 types and are indexed under `## Syntheses`.
+
+`flatten_links.py` was extended to make that true (caught by branch review —
+a synthesis page frozen with the old flattener left broken links that
+deterministically failed Step 2.6): `syntheses` joins the knowledge-folder
+flatten set, and the `_evidence`-only delink regex is generalized to **any
+remaining pathed `.md` link** — covering the SCHEMA-synthesis
+`.dbt-wiki/_evidence/…` shape, `_archive/`, and source-repo paths
+(`../../models/…`), all dead at a portable target. Test suite 6→10 cases,
+including an end-to-end SCHEMA-shaped synthesis page.
 
 ### Added — pack Step 7: frontmatter YAML-parse + page-count parity checks
 
