@@ -45,6 +45,15 @@ Versioning: [Semantic Versioning](https://semver.org/).
 - `test_sdd_review_weight_marker.py::test_plan_document_reviewer_has_check_16`
   updated to assert the new `<14>` denominator (was `<15>`).
 - Suite: 219 passed.
+- **Addendum** (whole-branch review caught, fixed same release): the
+  first draft of this removal left an orphaned mechanism — the
+  "Structural-split escape hatch" still triggered on a >5-min condition
+  tied to the now-retired Check 5, unreachable in practice — plus an
+  "all four criteria" leftover from the pre-removal 4-row table, and
+  four sibling skill READMEs (subagent-driven-development +
+  requesting-code-review, ja + zh-TW each) and two living design docs
+  (PRODUCT-SPEC.md, ROADMAP.md) that still described the removed rule
+  as current. All fixed within this same 0.27.5 release before merge.
 
 ## [0.27.4] — 2026-07-08 — writing-plans reframes task-sizing primary axis
 
