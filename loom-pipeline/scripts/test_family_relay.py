@@ -141,6 +141,19 @@ def test_brainstorming_visuals():
     assert POINTER_PHRASE in skill
 
 
+def test_brainstorming_fork_table_default():
+    """
+    Dogfood F1 fix: the fork-guidance region in brainstorming/SKILL.md
+    (the "lead with the stakes" rule, ~line 58) must carry the
+    "markdown comparison table" default marker at the FORK moment
+    itself — not only at the summary seam (~line 181, already covered
+    by test_brainstorming_visuals). A weak-model actor rendering a
+    2-option fork as bullet lists is the failure this closes.
+    """
+    skill = _read(BRAINSTORM_SKILL)
+    assert "markdown comparison table" in skill
+
+
 @pytest.mark.parametrize("skill_id", ["spec", "interface-design", "product-principles"])
 def test_design_side_pointers(skill_id):
     """
