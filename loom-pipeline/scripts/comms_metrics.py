@@ -149,7 +149,7 @@ def _narration_text(entry, expected_type: str) -> Optional[str]:
     message = entry.get("message")
     if not isinstance(message, dict):
         return None
-    text = lang_detect._extract_text(message.get("content"))
+    text = lang_detect.extract_text(message.get("content"))
     stripped = text.strip()
     if not stripped or stripped.startswith("<"):
         return None
@@ -181,7 +181,7 @@ def _rolling_conversation_language(user_texts_so_far, n_turns: int = _ROLLING_WI
     sampled = user_texts_so_far[-n_turns:]
     if not sampled:
         return None
-    langs = [lang_detect.detect_script(lang_detect._strip_noise(t)) for t in sampled]
+    langs = [lang_detect.detect_script(lang_detect.strip_noise(t)) for t in sampled]
     counts = Counter(lang for lang in langs if lang is not None)
     if not counts:
         return None
@@ -224,7 +224,7 @@ def compute_metrics(transcript_path) -> dict:
 
         message = entry.get("message")
         content = message.get("content") if isinstance(message, dict) else None
-        raw_text = lang_detect._extract_text(content) if content is not None else ""
+        raw_text = lang_detect.extract_text(content) if content is not None else ""
 
         if _has_ask_user_question(entry):
             ask_count += 1
@@ -232,7 +232,7 @@ def compute_metrics(transcript_path) -> dict:
             if any(_has_visual(t) for t in window):
                 visual_count += 1
 
-        stripped = lang_detect._strip_noise(raw_text)
+        stripped = lang_detect.strip_noise(raw_text)
         if _visible_len(stripped) >= _MIN_VISIBLE_CHARS_FOR_LANG_CHECK:
             expected = _rolling_conversation_language(user_texts)
             actual = lang_detect.detect_script(stripped)
