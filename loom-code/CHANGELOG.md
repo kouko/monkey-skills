@@ -43,6 +43,14 @@ Versioning: [Semantic Versioning](https://semver.org/).
   terse (+31 words only — it's paid every session).
 - Suite: 219 passed (docs-only change; no test asserted the prior
   Push-as-trigger wording).
+- **Addendum** (close-out review caught, fixed same release): the
+  substantive edits to `requesting-code-review/SKILL.md` and
+  `using-loom-code/SKILL.md` initially bumped only the plugin-level
+  `plugin.json` version, not these two files' own frontmatter
+  `version:` fields — breaking this repo's established per-skill
+  versioning convention (both files have bumped their own version on
+  every prior substantive edit). Fixed: `requesting-code-review`
+  0.12.0→0.13.0, `using-loom-code` 0.11.0→0.12.0.
 
 ## [0.27.5] — 2026-07-08 — writing-plans drops the time-box criterion entirely
 

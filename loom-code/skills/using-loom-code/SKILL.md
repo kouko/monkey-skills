@@ -2,7 +2,7 @@
 name: using-loom-code
 description: |
   Router for loom-code — invoke when the user wants to build, change, debug, or review code (features / fixes / refactors / migrations / reviews). Drives brainstorm → plan → SDD → TDD → debugging → code review → finish branch.
-version: 0.11.0
+version: 0.12.0
 ---
 
 <SUBAGENT-STOP>

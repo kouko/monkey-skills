@@ -2,7 +2,7 @@
 name: requesting-code-review
 description: |
   Use BEFORE any push/merge/PR on a non-trivial branch — whole-branch review of the cumulative diff. Fires on 'review my branch', 'ready to merge?', and excuses it refuses: 'just push', 'skip review', git push / gh pr create with no prior review-PASS.
-version: 0.12.0
+version: 0.13.0
 ---
 
 <SUBAGENT-STOP>
