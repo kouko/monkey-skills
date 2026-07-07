@@ -5,6 +5,42 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.27.2] — 2026-07-08 — SDD per-task mechanical review-weight exemption
+
+### Added
+
+- **`writing-plans`**'s plan schema gains an opt-in per-task field,
+  `Review-weight: mechanical`, parallel in spirit to the existing
+  `Independent: true` marker. Default (field absent) is unchanged:
+  every task still gets the full implementer + spec-reviewer +
+  code-quality-reviewer triad. The field is **kind-gated, not
+  size-gated** — it may only be set when a task's Description is an
+  identical or near-identical edit reproducible from an exact spec
+  (a concrete string/diff the implementer must match verbatim); never
+  for logic, heuristic, hook, or security-surface changes, regardless
+  of size.
+- **`plan-document-reviewer`** gains Check 16, validating the
+  `Review-weight: mechanical` co-condition — that the field is only
+  set on tasks whose Description is genuinely an exact-spec mechanical
+  edit — following the same validation pattern as Checks 13-14
+  (`Independent: true` vs. `Files touched` disjointness).
+- **`subagent-driven-development`**'s per-task triad gains a skip
+  branch: when a task carries `Review-weight: mechanical` and the
+  implementer returns `DONE`, SDD replaces the spec-reviewer +
+  code-quality-reviewer dispatch with a deterministic grep/diff
+  self-check confirming the exact expected string landed in each
+  target file. A match resolves the task with no reviewer verdict
+  needed; any mismatch falls back to the full triad (fail-closed
+  toward review, never toward skipping on ambiguity).
+
+See `docs/loom/specs/2026-07-08-sdd-mechanical-review-weight.md` for
+the full brief, including rejected alternatives (LOC-based tiering,
+reliance on operator discipline) and the evidence that the prior
+informal "batch-mechanical" convention was inert.
+
+Verification stamp: `PYTHONDONTWRITEBYTECODE=1 python3 -m pytest
+loom-code/scripts/ -q` — 217 passed.
+
 ## [0.27.1] — 2026-07-08 — brainstorming fork-table default (dogfood F1)
 
 ### Fixed

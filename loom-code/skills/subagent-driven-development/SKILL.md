@@ -105,10 +105,17 @@ For each atomic task in the plan:
 
 **Parallel dispatch for independent tasks.** Tasks marked `Independent: true` with disjoint file sets → dispatch all their implementers in ONE fan-out step (see `dispatching-parallel-agents` §3 for the host-specific shape). When the wave completes, commit each task's `PASS` artifacts immediately — do not hold a passing task's commit while a `NEEDS_REVISION` sibling in the same wave is re-dispatched. Keeping commits atomic makes the diff bisectable.
 
+**Mechanical review-weight exemption.** When a task's plan entry declares `Review-weight: mechanical` and the implementer returns `DONE`, the orchestrator SKIPS the step-3 `spec-reviewer` + `code-quality-reviewer` dispatch entirely and instead runs a deterministic **self-check** with two concrete parts, both required:
+
+1. **Content match.** The task's `Description` names an exact-spec target — either a literal string (grep it: it must be PRESENT in each file listed in `Files touched`; for a "replace X with Y" description, the grep target is Y, the post-edit state) or a literal diff block (per Check 16's "literal string/diff" co-condition — apply the same match, verbatim, via `git diff` against the stated before/after rather than a plain grep).
+2. **Scope match.** `git diff --name-only` for the task's commit MUST be a subset of the task's declared `Files touched` — no additional file, and no line outside what the exact-spec target names, may appear in the diff.
+
+Both parts passing resolves the task as `DONE` with no reviewer verdict (this exemption bypasses the §Verdict resolution table below entirely — no spec-reviewer/code-quality-reviewer verdicts exist on this path). Either part failing (content absent, extra files touched, or any ambiguity in applying either check) falls back to the full triad — fail-closed toward review, never toward silently skipping on ambiguity. This exemption is gated upstream by `plan-document-reviewer` Check 16 (see `writing-plans/references/plan-document-reviewer-prompt.md`): a plan setting the field without satisfying Check 16 never reaches SDD, so the orchestrator trusts the marker's presence without re-validating it here.
+
 **Progress ledger — maintain `Status` per task + resume from it (v0.10.0+, optional).** When the plan carries the optional per-task `Status` field (see `writing-plans/references/plan-format.md` §Progress ledger), the orchestrator **writes it back into the plan as it executes** so the plan becomes a durable, shared progress record:
 
 - On dispatch → set `Status: claimed(@<agent>)` (`<agent>` = the worktree branch name, unique per agent; for a single-orchestrator run use the current branch).
-- On resolved DONE (both reviewers PASS / PASS_WITH_NOTES) **after committing** → set `Status: done(<sha>)` with that task's commit sha.
+- On resolved DONE (both reviewers PASS / PASS_WITH_NOTES **— or, on the `Review-weight: mechanical` path above, the self-check passing in place of reviewer verdicts**) **after committing** → set `Status: done(<sha>)` with that task's commit sha.
 - On `BLOCKED` / NEEDS_CONTEXT / the 3-round cap → set `Status: blocked`.
 
 Commit the ledger update **per task** (lean: keep it maximally current so a crash loses at most the one in-flight task). The plan file is the SSOT for progress; the per-task code commits are the durable artifacts the ledger points at.
@@ -136,6 +143,13 @@ Commit the ledger update **per task** (lean: keep it maximally current so a cras
 | `NEEDS_REVISION` | (any) | Re-dispatch implementer with `gaps` + (if any) `findings`. Same 3-round cap. |
 
 A 3-round cap prevents infinite loops on ambiguous specs. On the 4th retry, surface to the user — likely the spec is wrong, not the implementer. Phrase that escalation per [§Asking the user](#asking-the-user): lead with a state anchor and say what's actually stuck in plain words, not `NEEDS_REVISION ×3`.
+
+## Red Flags — refuse these rationalizations
+
+| Agent / user says | Reality | Correct response |
+|---|---|---|
+| *"This is basically mechanical, I'll skip review even though the plan didn't mark it."* | The `Review-weight: mechanical` marker is `plan-document-reviewer`-validated (Check 16), never an on-the-fly implementer/orchestrator judgment call. | Refuse. Run the full triad unless the plan itself declares `Review-weight: mechanical`. |
+| 「這基本上是機械式的,計畫沒標我也自己跳過審查吧 / これは機械的だからレビューを省略しよう」 | Same rationalization, localized. | Same refusal — the marker must come from the plan, not an improvised call. |
 
 ## Definition of Done — command-surface accretion
 

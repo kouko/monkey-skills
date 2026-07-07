@@ -56,6 +56,7 @@ If `Plan-document-reviewer verdict` is `PENDING`, the plan has not been self-rev
 - **External surfaces**: <v0.9.0+ — required when task touches non-stdlib external surface. See §External surfaces below. Omit field entirely if task is pure internal logic.>
 - **Dependencies**: <one of: "none" | "Task N completes first" | "Tasks N, M complete first" (multi-prerequisite — N and M must both finish before this task starts) | "Tasks N, M parallel" (both are prerequisites, may run in parallel). Cross-part ordering: use "none" at task level + a plan-level `Notes` entry; the field is within-plan only and cannot reference a sibling part's tasks.>
 - **Independent**: <true | false>  # v0.8.0+ — opt-in marker for `dispatching-parallel-agents`. Default false.
+- **Review-weight**: <mechanical | OMIT>  # v0.11.0+ — opt-in, default absent = full triad (implementer + spec-reviewer + code-quality-reviewer). May ONLY be set when this task is an identical or near-identical edit reproducible from an exact spec — never for logic, heuristic, hook, or security-surface changes. See §`Review-weight` below.
 - **Brief item covered**: <traceability referent — ONE field, two accepted referent kinds:
     (a) a quote or reference from the brief's Smallest End State / Decision section, OR
     (b) when the plan consumes a loom-spec change-folder, a **stable join key** of the form
@@ -75,6 +76,12 @@ If `Plan-document-reviewer verdict` is `PENDING`, the plan has not been self-rev
 - **`Independent: true`** is the plan author's claim that this task has no shared symbol / no sequential data dependency with other `Independent: true` tasks. Default `false`.
 - [`../../dispatching-parallel-agents/SKILL.md`](../../dispatching-parallel-agents/SKILL.md) MAY dispatch tasks concurrently only when **both** declare `Independent: true` AND their `Files touched` sets are disjoint. Otherwise SDD's sequential dispatch is the floor.
 - **Empty-recon sentinel.** When target-repo reconnaissance finds **no existing target** (greenfield target / wrong repo), the contract forbids fabricating an existing path — so `Files touched` / `Module` may be written as a **PROPOSED-new** form clearly marked NEW (`NEW: <proposed-path>`, or `greenfield — no existing target found`), **never a guessed existing path**. A task whose `Files touched` is a PROPOSED-new path defaults to **`Independent: false`**: the disjointness oracle cannot be trusted on a path that does not exist yet, so such tasks must not be marked parallel-eligible.
+
+#### `Review-weight` (v0.11.0+, optional)
+
+`Review-weight: mechanical` is an **opt-in exemption marker**, not a default. Default (field absent) is the full triad — implementer + spec-reviewer + code-quality-reviewer — unchanged.
+
+It may ONLY be set when this task is an identical or near-identical edit reproducible from an exact spec — never for logic, heuristic, hook, or security-surface changes. If the task involves any conditional branching, a heuristic threshold, a hook, or touches a security-relevant surface, do NOT set this field; leave it absent so the full triad runs.
 
 #### Progress ledger — the `Status` field (v0.10.0+, optional)
 
@@ -225,6 +232,49 @@ A high `Total tasks` count is **not** a discovery failure when the tasks fan out
 ```
 
 Tasks 1-6 are **6 disjoint `Independent: true` leaves at one dependency level** — they count as **one level**, not six. The longest chain of tasks linked by `Dependencies` is `(any of 1-6) → 7 → 8`, so the **critical-path depth is 2**. Eight tasks, depth 2: a wide-but-shallow plan that validates cleanly and is **NOT** a discovery failure. It parallelizes the 6 leaves and joins them at Task 7. (Each per-task block above is abbreviated to one line for the depth illustration; a real plan expands every task to the full per-task schema.)
+
+### `Review-weight: mechanical` example — 3 sibling tasks, identical one-line edit
+
+Consider a brief whose Smallest End State is *"bump the copyright year string in each of 3 module headers from `2025` to `2026`, verbatim, no other changes":*
+
+```markdown
+## Task 1 — Bump copyright year in csv.ts header
+- **Description**: In `src/renderers/csv.ts` line 1, replace the exact literal `// Copyright 2025` with the exact literal `// Copyright 2026`. No other changes.
+- **Module**: `src/renderers/csv.ts`
+- **Files touched**: `src/renderers/csv.ts`
+- **Acceptance**:
+  - **RED**: `csv.test.ts > header contains Copyright 2026` fails
+  - **GREEN**: header line reads `// Copyright 2026`
+- **Dependencies**: none
+- **Independent**: true
+- **Review-weight**: mechanical
+
+## Task 2 — Bump copyright year in json.ts header
+- **Description**: In `src/renderers/json.ts` line 1, replace the exact literal `// Copyright 2025` with the exact literal `// Copyright 2026`. No other changes.
+- **Module**: `src/renderers/json.ts`
+- **Files touched**: `src/renderers/json.ts`
+- **Acceptance**:
+  - **RED**: `json.test.ts > header contains Copyright 2026` fails
+  - **GREEN**: header line reads `// Copyright 2026`
+- **Dependencies**: none
+- **Independent**: true
+- **Review-weight**: mechanical
+
+## Task 3 — Bump copyright year in xml.ts header
+- **Description**: In `src/renderers/xml.ts` line 1, replace the exact literal `// Copyright 2025` with the exact literal `// Copyright 2026`. No other changes.
+- **Module**: `src/renderers/xml.ts`
+- **Files touched**: `src/renderers/xml.ts`
+- **Acceptance**:
+  - **RED**: `xml.test.ts > header contains Copyright 2026` fails
+  - **GREEN**: header line reads `// Copyright 2026`
+- **Dependencies**: none
+- **Independent**: true
+- **Review-weight**: mechanical
+```
+
+Each task is an identical one-line edit (same exact-spec literal-string replacement, different file) — the reproducible-from-exact-spec bar `Review-weight: mechanical` requires. Contrast with Task 3 in the CSV-export example above (`Wire renderer into handler + set Content-Type`): that task branches on `format=csv` and touches request-handling logic, so it must NOT declare `Review-weight: mechanical` even though it is a small task — logic changes always take the full triad.
+
+**"Near-identical" — one bounded per-file substitution, not free-form variation.** The marker also covers tasks that are the *same template with one literal swapped per file from a fixed, plan-declared list* — e.g. three sibling tasks each inserting the identical pointer sentence `"See \`family-relay.md §Family relay discipline\`."` into a different skill's `SKILL.md`, where only the surrounding one-line anchor phrase differs per file (still a verbatim literal named IN the task, not left to the implementer's judgment). This is *not* license to mark a task mechanical because it merely "feels similar" to a sibling — "add error handling similar to how Task 2 does it" is NOT reproducible-from-exact-spec (the implementer must judge what "similar" means) and must NOT declare `Review-weight: mechanical`, even though it superficially resembles a batch edit.
 
 ## Anti-patterns
 
