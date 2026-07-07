@@ -19,6 +19,14 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 MODULE_PATH = REPO / "loom-pipeline" / "hooks" / "lang_detect.py"
+# Frozen copy of a real session tail (user main-chain turns extracted
+# verbatim from a live Traditional-Chinese session's transcript;
+# machine-payload turns >2000 chars truncated to their head — the
+# injection filters only read the head). Never test against the live,
+# still-growing transcript file.
+FIXTURE_SESSION_TAIL = (
+    REPO / "loom-pipeline" / "scripts" / "fixtures" / "fixture_session_tail.jsonl"
+)
 
 
 def _load():
@@ -73,6 +81,17 @@ UNFENCED_TRACEBACK = (
     "    result = process_the_request_data(payload)\n"
     "ValueError: invalid literal for int() with base 10: 'abc'"
 )
+# A skill invocation's ENTIRE English SKILL.md body arrives as a
+# user-role turn beginning with this literal harness-injected prefix —
+# machine payload, not the user's language (live repro evidence).
+SKILL_BODY_TEXT = (
+    "Base directory for this skill: /some/plugin/skills/example\n\n"
+    "This skill helps you accomplish a repeatable workflow by walking "
+    "through several steps, each described here in plain English prose "
+    "so the assistant understands exactly what to do at each stage of "
+    "the process before producing any user-facing output at all."
+)
+INTERRUPTED_TEXT = "[Request interrupted by user]"
 
 
 # --- detect_script -----------------------------------------------------
@@ -206,6 +225,140 @@ def test_no_majority_tie(tmp_path):
     assert mod.conversation_language(transcript, n_turns=3) is None
 
 
+# --- harness-injection filtering (live repro regression) ----------------
+
+
+def test_harness_injection_turns_excluded_from_vote(tmp_path):
+    """A skill-body payload turn (starts with 'Base directory for this
+    skill:') and a '[Request interrupted...' marker turn are both
+    harness-injected artifacts, not user narration — they must not
+    enter the sampled window at all, even though they are English-only
+    user-role turns that would otherwise flip the vote away from zh."""
+    mod = _load()
+    transcript = tmp_path / "harness_injection.jsonl"
+    _write_transcript(
+        transcript,
+        [
+            _user_entry(ZH_TEXT),
+            _user_entry(ZH_TEXT),
+            _user_entry(SKILL_BODY_TEXT),
+            _user_entry(INTERRUPTED_TEXT),
+            _user_entry(ZH_TEXT),
+        ],
+    )
+    # Unfiltered, the last 3 positional turns would be [SKILL_BODY_TEXT,
+    # INTERRUPTED_TEXT, ZH_TEXT] -> majority 'en'; only excluding the
+    # two injected turns recovers the true 'zh' signal.
+    assert mod.conversation_language(transcript, n_turns=3) == "zh"
+
+
+def test_short_confirmations_do_not_dilute_vote(tmp_path):
+    """Short zh confirmations (<20 visible chars, e.g. '好'/'修') return
+    None from detect_script and must be skipped rather than counted as
+    an undetermined vote that dilutes the majority — sample the last n
+    DETECTABLE turns, not the last n turns positionally. An English
+    skill-load turn sits in between and must also be excluded (harness
+    injection, not a genuine English turn)."""
+    mod = _load()
+    transcript = tmp_path / "short_confirmations.jsonl"
+    _write_transcript(
+        transcript,
+        [
+            _user_entry(ZH_TEXT),
+            _user_entry(ZH_TEXT),
+            _user_entry(SKILL_BODY_TEXT),
+            _user_entry("好"),
+            _user_entry("修"),
+        ],
+    )
+    assert mod.conversation_language(transcript, n_turns=3) == "zh"
+
+
+def test_harness_injection_filter_does_not_fabricate_zh_in_english_conversation(
+    tmp_path,
+):
+    """An actually-English conversation with one injected skill body
+    must stay 'en' — the filter removes noise, it must not invent a
+    zh/ja signal out of nothing."""
+    mod = _load()
+    transcript = tmp_path / "english_with_injection.jsonl"
+    _write_transcript(
+        transcript,
+        [
+            _user_entry(EN_TEXT),
+            _user_entry(SKILL_BODY_TEXT),
+            _user_entry(EN_TEXT),
+            _user_entry(EN_TEXT),
+        ],
+    )
+    assert mod.conversation_language(transcript, n_turns=3) == "en"
+
+
+# --- workflow-invocation echo (third harness-injection shape) -----------
+
+
+WORKFLOW_ECHO_TEXT = (
+    'Run the "deep-research" workflow.\n\n'
+    "Deep research harness — fan-out web searches, fetch sources, "
+    "adversarially verify claims, synthesize a cited report."
+)
+
+
+def test_workflow_echo_is_harness_injection():
+    """Skill/workflow invocation echoes shaped 'Run the "<name>"
+    workflow.' are harness-injected (the skill's own description text,
+    not user narration) — but a genuine user typing 'Run the tests'
+    must NOT be filtered: the match is the full quoted-name shape, not
+    a bare 'Run the' prefix."""
+    mod = _load()
+    assert mod.is_harness_injection(WORKFLOW_ECHO_TEXT) is True
+    assert mod.is_harness_injection('Run the "x" workflow. extra prose') is True
+    # negative guards: genuine user phrasing stays eligible
+    assert mod.is_harness_injection("Run the tests") is False
+    assert mod.is_harness_injection("Run the tests and report failures") is False
+    assert mod.is_harness_injection('Run the "quoted" thing please') is False
+
+
+def test_workflow_echo_excluded_from_vote(tmp_path):
+    mod = _load()
+    transcript = tmp_path / "workflow_echo.jsonl"
+    _write_transcript(
+        transcript,
+        [
+            _user_entry(ZH_TEXT),
+            _user_entry(ZH_TEXT),
+            _user_entry(WORKFLOW_ECHO_TEXT),
+            _user_entry(ZH_TEXT),
+        ],
+    )
+    assert mod.conversation_language(transcript, n_turns=3) == "zh"
+
+
+# --- CJK-aware detectability floor ---------------------------------------
+
+
+def test_detect_script_short_but_unambiguous_cjk():
+    """Short-but-unambiguous CJK turns (<20 visible chars but >=8 CJK
+    chars) are the user's dominant real style in live sessions
+    (「我合併了 幫我跑跑 comms 稽核」) — they must be detectable, not
+    discarded by the ASCII-calibrated 20-char floor."""
+    mod = _load()
+    assert mod.detect_script("我合併了 幫我跑跑 comms 稽核") == "zh"
+    assert mod.detect_script("現在已重置額度了 請繼續") == "zh"
+    assert mod.detect_script("すぐに続けてください、お願いします") == "ja"
+    # still below BOTH floors -> undetectable
+    assert mod.detect_script("修") is None
+    assert mod.detect_script("請繼續") is None
+
+
+def test_detect_script_short_english_with_cjk_fragment_not_flipped():
+    """A tiny zh fragment quoted inside an otherwise-English short turn
+    (<20 visible, <8 CJK) must not flip the verdict to 'zh' — the CJK
+    floor lowers the length gate only for genuinely CJK turns."""
+    mod = _load()
+    assert mod.detect_script("see 你好嗎 thanks") != "zh"
+
+
 # --- fail-open ----------------------------------------------------------
 
 
@@ -221,6 +374,20 @@ def test_fail_open(tmp_path):
     binary_garbage = tmp_path / "binary.jsonl"
     binary_garbage.write_bytes(b"\xff\xfe\x00bad-bytes-not-utf8\x80\x81")
     assert mod.conversation_language(binary_garbage) is None
+
+
+# --- frozen live-session-tail regression (round-2 acceptance) -----------
+
+
+def test_session_tail_fixture_detects_zh():
+    """Frozen tail of a real Traditional-Chinese session: a workflow
+    echo, five skill-body payloads, two English orchestrator wakeup
+    prompts (deliberately UNFILTERED — genuine typed turns are
+    indistinguishable), an interrupt marker, and a run of short zh
+    turns. Combined injection filtering + CJK-aware floor must recover
+    'zh'; before the fix this shape returned 'en'/None."""
+    mod = _load()
+    assert mod.conversation_language(FIXTURE_SESSION_TAIL, n_turns=3) == "zh"
 
 
 # --- thin integration case (plan's named RED/GREEN reference) -----------

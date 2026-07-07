@@ -6,6 +6,24 @@ this file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.6.1] — 2026-07-08
+
+### Fixed
+
+- `lang_detect`: harness-injected user turns (skill-body echoes
+  `Base directory for this skill:`, `[Request interrupted`, workflow
+  echoes `Run the "<name>" workflow.`) no longer pollute
+  conversation-language detection — with the unfiltered ruler the
+  language anchor never fired in skill-heavy sessions (detection → None).
+- `lang_detect`: detectability floor is now `visible ≥ 20 OR CJK ≥ 8`
+  chars, and undetectable turns no longer dilute the majority vote —
+  short CJK confirmations (「修」-style) count again.
+- `comms_metrics` inherits both via the shared
+  `majority_language`/`is_harness_injection` helpers; ruler-v2 baseline
+  recorded in `docs/loom/audits/2026-07-08-comms-metrics-ruler-v2.md`.
+- Suite: 158 passed (`PYTHONDONTWRITEBYTECODE=1 python3 -m pytest
+  loom-pipeline/scripts/ -q`).
+
 ## [0.6.0] — 2026-07-07
 
 ### Added
