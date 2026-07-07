@@ -1,7 +1,8 @@
 """Mechanical marker-grep tests for the loom-memory same-branch timing rule.
 
-RED-first: both tests below are expected to FAIL until the charter and
-the finishing-a-development-branch pointer bullet are added.
+Pins two invariants: the charter states the rule, and
+finishing-a-development-branch points at it without copying the rule
+body (pointer-not-copy).
 
 Source: docs/loom/specs/2026-07-08-loom-memory-same-branch-timing.md
 """
