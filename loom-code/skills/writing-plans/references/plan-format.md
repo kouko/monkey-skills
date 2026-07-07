@@ -274,6 +274,8 @@ Consider a brief whose Smallest End State is *"bump the copyright year string in
 
 Each task is an identical one-line edit (same exact-spec literal-string replacement, different file) — the reproducible-from-exact-spec bar `Review-weight: mechanical` requires. Contrast with Task 3 in the CSV-export example above (`Wire renderer into handler + set Content-Type`): that task branches on `format=csv` and touches request-handling logic, so it must NOT declare `Review-weight: mechanical` even though it is a small task — logic changes always take the full triad.
 
+**"Near-identical" — one bounded per-file substitution, not free-form variation.** The marker also covers tasks that are the *same template with one literal swapped per file from a fixed, plan-declared list* — e.g. three sibling tasks each inserting the identical pointer sentence `"See \`family-relay.md §Family relay discipline\`."` into a different skill's `SKILL.md`, where only the surrounding one-line anchor phrase differs per file (still a verbatim literal named IN the task, not left to the implementer's judgment). This is *not* license to mark a task mechanical because it merely "feels similar" to a sibling — "add error handling similar to how Task 2 does it" is NOT reproducible-from-exact-spec (the implementer must judge what "similar" means) and must NOT declare `Review-weight: mechanical`, even though it superficially resembles a batch edit.
+
 ## Anti-patterns
 
 - ❌ **Vague task descriptions.** *"Add CSV support"* is not actionable. *"Add `format=csv` query param parsing to `GET /reports/:id` handler"* is.
