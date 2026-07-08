@@ -97,6 +97,14 @@ Role boundaries enforced by behavior, not reading restrictions:
   and flagging `SUSPECT`/`SUSPECT-COMPLETE` for a human operator; `reset`
   and `force-fail` are the human-operator recovery verbs for stuck or
   confirmed-dead entries.
+- **Run the dbt-wiki test suite**:
+  `python3 -m pip install -r dbt-wiki/tests/requirements.txt && python3 -m pytest dbt-wiki/tests/ -v -m "not e2e"`
+  — covers the L2 end-to-end harness (`dbt-wiki/tests/fixtures/l2-harness/`,
+  a synthetic dbt-duckdb project) and its shared `dbt_build` pytest fixture
+  (`dbt-wiki/tests/conftest.py`). `-m "not e2e"` excludes the real headless
+  `claude -p` validation run (Task 11 of the W1 L2-harness plan). Run
+  manually; no CI workflow wires this in yet — automated CI/nightly wiring
+  is Phase 4 (U1/U2) of the dbt-wiki quality campaign, not yet built.
 - **Check the loom-memory store's §Index invariants**:
   `python3 scripts/check_loom_memory_integrity.py [--store docs/loom/memory]`
   — validate-only, stdlib-only; fails rc=1 and names every offender when a

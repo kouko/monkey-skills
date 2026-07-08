@@ -1,0 +1,11 @@
+# Self-contained duckdb profile for the l2-harness fixture project.
+# Loaded via `dbt ... --profiles-dir <this-dir>` so it never touches the
+# invoking user's ~/.dbt/profiles.yml. The database file is written under
+# target/ (gitignored) and rebuilt fresh by the dbt_build fixture each run.
+l2_harness:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "target/l2_harness.duckdb"
+      threads: 4

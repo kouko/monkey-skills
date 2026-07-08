@@ -1,0 +1,21 @@
+# L2 end-to-end harness fixture project (dbt-wiki W1 plan, Task 1).
+#
+# Synthetic dbt-duckdb project used only by dbt-wiki/tests/ — never a real
+# analytics project. Trap models (Tasks 2-6) and filler models (Task 7) are
+# layered on top of this skeleton in later tasks; this file intentionally
+# ships with 0 custom models.
+name: 'l2_harness'
+version: '1.0.0'
+profile: 'l2_harness'
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  l2_harness:
+    +materialized: table

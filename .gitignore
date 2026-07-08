@@ -32,6 +32,11 @@ Thumbs.db
 *.py[cod]
 *$py.class
 
+# Project-scoped Python virtualenvs (uv venv / python -m venv) — never
+# tracked; each plugin's tests/.venv is local-machine-only.
+.venv/
+**/.venv/
+
 # Skill eval-loop ephemeral output (run_loop / skill-judge history JSONL)
 **/.run_loop-results/
 **/.skill-judge-history.jsonl

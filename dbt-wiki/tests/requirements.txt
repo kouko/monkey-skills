@@ -1,0 +1,9 @@
+# dbt-wiki/tests/ dependencies.
+#
+# dbt-duckdb pinned to the current PyPI latest as of 2026-07-08 (verified via
+# `pip index versions dbt-duckdb` / PyPI JSON API). It pulls in dbt-core
+# (>=1.8.0, resolves to latest compatible) and the duckdb Python package
+# (>=1.0.0) transitively — no dbt dependency existed anywhere else in this
+# repo before this file.
+pytest
+dbt-duckdb==1.10.1
