@@ -9,9 +9,10 @@ CLI:
   python prompts.py scope     --question Q
   python prompts.py search    --angle JSON --question Q
   python prompts.py fetch     --source JSON --label L --question Q
-  python prompts.py verify    --claim JSON --voter-idx N --question Q
-  python prompts.py synthesis --question Q --confirmed-block B \\
-                              --killed-block B --confirmed-count N
+  python prompts.py verify      --claim JSON --voter-idx N --question Q
+  python prompts.py attribution --claim JSON --question Q
+  python prompts.py synthesis   --question Q --confirmed-block B \\
+                                --killed-block B --confirmed-count N
 """
 from __future__ import annotations
 
@@ -138,6 +139,47 @@ Default to refuted=true if uncertain.
 Structured output only. Evidence MUST be specific."""
 
 
+def attribution_prompt(claim: dict, question: str) -> str:
+    """Return the ATTRIBUTION prompt for one opinion-routed claim.
+
+    Modeled structurally on verify_prompt, but asks a narrower question:
+    does the cited source actually hold/express this view, per the quote?
+    This is NOT an adversarial-refutation prompt — no "try to refute"
+    framing, no counter-evidence WebSearch instruction. Emits a verdict
+    conforming to ATTRIBUTION_VERDICT_SCHEMA.
+
+    claim must have keys: claim, quote, and one of sourceUrl or url
+    (sourceUrl preferred; url is a tolerated fallback)
+    claim may have key: heldBy (who the view is attributed to)
+    """
+    claim_text = claim["claim"]
+    source_url = claim.get("sourceUrl") or claim.get("url", "")
+    quote = claim["quote"]
+    held_by = claim.get("heldBy", "")
+    held_by_line = f"**Attributed to:** {held_by}\n" if held_by else ""
+    return f"""\
+## Attribution Checker
+
+Confirm whether the cited source actually holds/expresses this view — do NOT try to refute it.
+
+## Research question
+{question}
+
+## Claim under review
+"{claim_text}"
+
+**Source:** {source_url}
+{held_by_line}**Supporting quote:** "{quote}"
+
+## Task
+Does the quote show the source actually holding/expressing this view (not the reader's paraphrase or overreach)?
+
+**attributionConfirmed=true** if: the quote clearly shows the source holding/expressing this view.
+**attributionConfirmed=false** if: the quote does not support that attribution, is a misread, or overreaches.
+
+Structured output only. Evidence MUST be specific."""
+
+
 def synthesis_prompt(
     question: str,
     confirmed_block: str,
@@ -198,6 +240,10 @@ def _main(argv: list[str] | None = None) -> int:
     p_verify.add_argument("--voter-idx", type=int, required=True)
     p_verify.add_argument("--question", required=True)
 
+    p_attribution = sub.add_parser("attribution")
+    p_attribution.add_argument("--claim", required=True, help="JSON: {claim, sourceUrl, quote, heldBy?}")
+    p_attribution.add_argument("--question", required=True)
+
     p_synth = sub.add_parser("synthesis")
     p_synth.add_argument("--question", required=True)
     p_synth.add_argument("--confirmed-block", required=True)
@@ -214,6 +260,8 @@ def _main(argv: list[str] | None = None) -> int:
         print(fetch_prompt(source=json.loads(args.source), angle=args.label, question=args.question))
     elif args.command == "verify":
         print(verify_prompt(claim=json.loads(args.claim), voter_idx=args.voter_idx, question=args.question))
+    elif args.command == "attribution":
+        print(attribution_prompt(claim=json.loads(args.claim), question=args.question))
     elif args.command == "synthesis":
         print(synthesis_prompt(
             question=args.question,

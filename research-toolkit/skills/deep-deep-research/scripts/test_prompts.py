@@ -169,6 +169,48 @@ def test_verify_prompt_accepts_url_key_when_sourceurl_missing():
     assert "https://source.example" in result
 
 
+def test_attribution_prompt_asks_whether_source_holds_view():
+    """attribution_prompt is modeled on verify_prompt but asks a narrower
+    question: does the cited source actually hold/express this view, per
+    the quote? NOT an adversarial-refutation prompt — no 'REFUTE' framing,
+    no counter-evidence WebSearch instruction."""
+    from prompts import attribution_prompt
+    claim = {
+        "claim": "Remote work reduces productivity",
+        "sourceUrl": "https://example.com/oped",
+        "quote": "In my view, remote work quietly erodes team output.",
+        "heldBy": "Jane Analyst",
+    }
+    result = attribution_prompt(claim=claim, question="Does remote work reduce productivity?")
+
+    # interpolated fields
+    assert claim["claim"] in result
+    assert claim["sourceUrl"] in result
+    assert claim["quote"] in result
+    assert claim["heldBy"] in result
+    assert "Does remote work reduce productivity?" in result
+    assert "Structured output only." in result
+
+    # narrower attribution question, not adversarial refutation
+    assert "hold" in result.lower() or "express" in result.lower()
+    assert "REFUTE" not in result
+    assert "refuted" not in result.lower()
+    assert "WebSearch for contradicting evidence" not in result
+
+
+def test_attribution_prompt_accepts_url_key_when_sourceurl_missing():
+    """claim dicts keyed 'url' (not 'sourceUrl') must not crash — same
+    tolerant lookup as verify_prompt."""
+    from prompts import attribution_prompt
+    claim = {
+        "claim": "X is good",
+        "url": "https://source.example",
+        "quote": "X is good, I think",
+    }
+    result = attribution_prompt(claim=claim, question="Q?")
+    assert "https://source.example" in result
+
+
 def test_synthesis_prompt_interpolates_fields():
     from prompts import synthesis_prompt
     result = synthesis_prompt(
@@ -239,6 +281,23 @@ def test_cli_verify():
     assert "the quote" in out
     assert "Try to REFUTE" in out
     assert "Structured output only." in out
+
+
+def test_cli_attribution():
+    claim = json.dumps({
+        "claim": "Remote work reduces productivity",
+        "sourceUrl": "https://s.example",
+        "quote": "In my view, output drops",
+        "heldBy": "Jane Analyst",
+    })
+    out = _run_cli("attribution", "--claim", claim, "--question", "WHAT IS X")
+    assert "Remote work reduces productivity" in out
+    assert "https://s.example" in out
+    assert "In my view, output drops" in out
+    assert "Jane Analyst" in out
+    assert "WHAT IS X" in out
+    assert "Structured output only." in out
+    assert "REFUTE" not in out
 
 
 def test_cli_synthesis():
