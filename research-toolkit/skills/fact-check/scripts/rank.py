@@ -85,15 +85,25 @@ def quorum_survives(
     return len(valid) >= refutations_required and refuted < refutations_required
 
 
-def attribution_survives(verdict: dict[str, Any]) -> bool:
+def attribution_survives(verdict: dict[str, Any] | None) -> bool:
     """Return True only if the single attribution-confirmation check passed.
 
     Structurally parallels quorum_survives but for ONE opinion-attribution
     verdict, not a 3-vote adversarial quorum: an opinion claim gets one
     attribution-confirmation check (does the cited source actually hold
-    this view?), not adversarial voting.  Missing key fails closed.
+    this view?), not adversarial voting.  A missing key, an explicit
+    null value, OR a None verdict (the checker abstained — failed or
+    returned nothing) all fail closed, mirroring quorum_survives's
+    None-filtering for the same convention. ``dict.get(key, default)``
+    only applies its default when the key is ABSENT, not when the key
+    is present with value None -- ``bool(...)`` closes that gap so an
+    explicit ``{"attributionConfirmed": null}`` (plausible from an LLM
+    checker expressing uncertainty) fails closed instead of returning
+    None and breaking this function's bool contract.
     """
-    return verdict.get("attributionConfirmed", False)
+    if verdict is None:
+        return False
+    return bool(verdict.get("attributionConfirmed", False))
 
 
 if __name__ == "__main__":

@@ -472,7 +472,9 @@ fan-out).
    python scripts/schemas.py attribution-verdict
    ```
 
-   Shape: `{attributionConfirmed: bool, evidence}`.
+   Shape: `{attributionConfirmed: bool, evidence}`. A checker that fails or
+   returns nothing is an **abstention** — record its verdict as `null`, not
+   as an unconfirmed attribution.
 
 3. Wrap that single verdict object in a **one-element list** and write it to
    `work/verdicts/claim-<rank>.json` (`<rank>` = the claim's ranked index) —
@@ -492,8 +494,8 @@ fan-out).
 
    stdin: the one verdict object → stdout: `true` / `false`. An opinion claim
    **survives whenever `attributionConfirmed=true`** — there is no vote
-   count or refutation threshold, and a missing/false field fails closed
-   (never silently survives).
+   count or refutation threshold, and a missing/false field, or a `null`
+   verdict (abstention), fails closed (never silently survives).
 
 ### Merge
 
