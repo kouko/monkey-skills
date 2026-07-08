@@ -71,6 +71,25 @@ aliases: order_id
 # Order
 """
 
+LONG_SUMMARY_SENTENCE = """---
+type: knowledge-entity
+title: Ledger
+status: developing
+summary: "Double-entry ledger rows, one per posting; joins to account via account_id. Downstream of the settlement pipeline and refreshed nightly, with soft-deleted rows retained for audit."
+aliases: [ledger_id]
+---
+# Ledger
+"""
+
+LONG_SUMMARY_NO_BREAK = """---
+type: knowledge-entity
+title: Stream
+status: developing
+summary: "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789"
+---
+# Stream
+"""
+
 # 1. entity line shape: title｜title_local + status + summary + aliases, flat link
 line = line_for(Path("account.md"), ENTITY)
 check(
@@ -107,6 +126,20 @@ check(
     line == "- [Order](order.md) `developing` — One row per order. 〔aka: order_id〕",
 )
 
+# 3d. long summary capped at the first sentence boundary within the cap
+line = line_for(Path("ledger.md"), LONG_SUMMARY_SENTENCE)
+check(
+    "long summary capped at sentence boundary",
+    line == "- [Ledger](ledger.md) `developing` — Double-entry ledger rows, one per posting; joins to account via account_id. 〔aka: ledger_id〕",
+)
+
+# 3e. long summary with no boundary inside the cap: hard-capped with ellipsis
+line = line_for(Path("stream.md"), LONG_SUMMARY_NO_BREAK)
+check(
+    "long summary hard-capped with ellipsis",
+    line == "- [Stream](stream.md) `developing` — " + "0123456789" * 8 + "…",
+)
+
 with tempfile.TemporaryDirectory() as d:
     k = Path(d)
     (k / "account.md").write_text(ENTITY, encoding="utf-8")
@@ -139,6 +172,8 @@ with tempfile.TemporaryDirectory() as d:
     check("idempotent re-run", rc2 == 0 and first == second)
     # 8. total count covers all indexed pages (4 pages; _relations + _index excluded)
     check("total count line", "Total pages indexed: 4" in first)
+    # 8a. header teaches grep-first consumption (aliases as the grep surface)
+    check("header has grep-first note", "grep" in first.split("## ")[0])
 
 # 9. empty knowledge dir -> rc 1 (packing produced nothing — fail loudly)
 with tempfile.TemporaryDirectory() as d:

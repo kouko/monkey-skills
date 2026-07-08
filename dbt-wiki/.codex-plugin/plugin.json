@@ -1,6 +1,6 @@
 {
   "name": "dbt-wiki",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "Local-only two-layer knowledge base for dbt projects — semantic Q&A over manifest + column lineage.",
   "author": {
     "name": "kouko",

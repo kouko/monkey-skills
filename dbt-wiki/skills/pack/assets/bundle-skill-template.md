@@ -50,9 +50,11 @@ All paths are **relative to this skill's directory**:
   `knowledge/metric-monthly-recurring-revenue.md` only when names
   collide).
 - `knowledge/_index.md` — the **retrieval entry point**: one line per
-  frozen page (title, status, one-line summary, aliases). Read it
-  FIRST to find the right pages for a question instead of guessing
-  slugs or grepping the whole folder.
+  frozen page (title, status, one-line summary, aliases). **Grep it
+  first** for the question's business terms (the 〔aka: …〕 aliases are
+  the grep surface) and open only the pages the matching lines point
+  to; read the whole index only when grep misses. Never guess slugs or
+  grep the whole knowledge folder.
 - `knowledge/_relations.md` — **physical anchor**: every relation the
   knowledge pages cite → its **schema** + column list. The knowledge pages
   name relations as `model.column` (no schema); read `_relations.md` to

@@ -146,9 +146,13 @@ slug-guessing or grepping every file to *find* the right page. Pack
 Step 2.7 generates `knowledge/_index.md` — one line per frozen page
 (title, status, one-line summary, aliases), grouped by page type — from
 the **frozen pages' own frontmatter**, so it always matches exactly what
-was frozen. The consuming contract tells the agent to read it FIRST and
-open only the pages it points to. Like `_relations.md`, it is a flat
-`_`-prefixed child of `knowledge/` and not itself an indexed page.
+was frozen. The consuming contract is **grep-first**: grep the index
+for the question's business terms (the `〔aka: …〕` aliases are the
+designed grep surface), open only the pages the matching lines cite,
+and read the whole index only when grep misses. Index summary lines are
+capped (the full summary lives on the page). Like `_relations.md`, it
+is a flat `_`-prefixed child of `knowledge/` and not itself an indexed
+page.
 
 ## `knowledge/_relations.md` — physical anchor (the one thing re-carried from `_evidence/`)
 
