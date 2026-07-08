@@ -358,7 +358,11 @@ This is again per-source independent work — **fan out one subagent per source*
    returns **only `{path, count}`**, never the claims themselves
    (file-carrier rule). Each claim object's source-URL field must use the
    literal key `sourceUrl` (not `url`) — Stage 5's verifier reads that exact
-   key.
+   key. The extract schema's `sourceQuality` is assessed once, at the
+   object/page level — **copy that same value onto every individual claim
+   object** in the written array (not left only at the page level): Stage 5
+   reads claims as flat individual objects and requires `claim["sourceQuality"]`
+   on each one.
 
 The pool is the `work/claims/` directory: one file per fetch subagent, together
 holding every extracted claim. That directory is the input to ranking and to
@@ -727,8 +731,10 @@ and no schema.
 **Final render (base Stage 6 — runs in all modes).** After synthesis (with or
 without the opt-in meta-mode / purpose-fit / calibration prepends above),
 write the remaining small inputs to files — the report object from step 3 to
-`work/report.json`, the Stage-1 angles to `work/angles.json`, and the Stage-5
-confirmed/killed partitions to `work/confirmed.json` / `work/killed.json` —
+`work/report.json`, **the bare `angles` ARRAY** (the `angles` field's value
+from the Stage-1 scope object — NOT the full `{question, summary, angles}`
+scope object itself) to `work/angles.json`, and the Stage-5 confirmed/killed
+partitions to `work/confirmed.json` / `work/killed.json` —
 then produce stats + the rendered markdown, reusing `work/verdicts.json`
 (already materialized in Stage 6 step 1) so `agentCalls` is costed off each
 claim's actual verdict-list length (3 for a fact claim's vote quorum, 1 for

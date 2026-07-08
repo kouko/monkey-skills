@@ -95,9 +95,15 @@ def _confirmed_block(
                 block += f"\nAttributed to: {held_by}"
             lines.append(block)
             continue
-        valid = len(verdicts)
-        refuted_count = sum(1 for v in verdicts if v and v.get("refuted"))
-        non_refuting = [v for v in verdicts if v and not v.get("refuted")]
+        # None entries are abstentions (Stage 5: "A voter that fails or
+        # returns nothing ... record its vote as null") — must be dropped
+        # before counting, matching rank.py's quorum_survives convention
+        # (`[v for v in verdicts if v is not None]`), or an abstention
+        # renders as a phantom non-refuting vote.
+        valid_verdicts = [v for v in verdicts if v is not None]
+        valid = len(valid_verdicts)
+        refuted_count = sum(1 for v in valid_verdicts if v.get("refuted"))
+        non_refuting = [v for v in valid_verdicts if not v.get("refuted")]
         best = min(
             non_refuting,
             key=lambda v: _CONF_RANK.get(v.get("confidence", "low"), 2),

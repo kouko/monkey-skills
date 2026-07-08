@@ -149,6 +149,36 @@ class TestConfirmedBlock:
         assert "Vote: 2-1" in block
         assert "Verifier evidence (medium): Medium support." in block
 
+    def test_confirmed_block_excludes_abstention_from_valid_count(self):
+        """Dogfood repro: a voter that fails/returns nothing is recorded as
+        `None` (Stage 5's abstention convention) and must NOT be counted as
+        a valid vote. rank.py's quorum_survives already filters `None` via
+        `[v for v in verdicts if v is not None]` before counting; this
+        rendering path must match that convention instead of counting the
+        raw list length (which silently double-counts the abstention as an
+        implicit non-refuting vote)."""
+        from synthesis import _confirmed_block
+
+        claim = {
+            "claim": "Two real votes, one abstention.",
+            "sourceUrl": "https://example.com/abstain",
+            "sourceQuality": "secondary",
+            "quote": "q",
+        }
+        verdicts_per_claim = [
+            [
+                {"refuted": False, "evidence": "ev1", "confidence": "medium"},
+                {"refuted": False, "evidence": "ev2", "confidence": "low"},
+                None,
+            ]
+        ]
+        survived = [True]
+
+        block = _confirmed_block([claim], survived, verdicts_per_claim)
+        # 2 real votes (0 refuted) + 1 abstention dropped → 2-0, not 3-0
+        assert "Vote: 2-0" in block
+        assert "Vote: 3-0" not in block
+
 
 class TestKilledBlock:
     def test_killed_block_lists_refuted(self):
