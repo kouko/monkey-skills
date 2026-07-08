@@ -38,3 +38,16 @@ merge-commit (not squash) for memory-worthy PRs, or set
 `squash_merge_commit_message = PR_BODY` in the repo's merge settings so
 the PR body (which the both-carrier policy already writes trailers
 into) becomes the squash message.
+
+**Status (2026-07-08, this repo): mitigated at the repo-settings level.**
+`kouko/monkey-skills` now has `squash_merge_commit_title=PR_TITLE` +
+`squash_merge_commit_message=PR_BODY` set (via `gh api -X PATCH
+repos/<owner>/<repo> -f squash_merge_commit_title=PR_TITLE -f
+squash_merge_commit_message=PR_BODY` — note GitHub only accepts specific
+title/message combos, `COMMIT_OR_PR_TITLE` does NOT pair with `PR_BODY`,
+use `PR_TITLE`). Every future squash-merge in this repo now carries the
+full PR body (including `## Memory`) into the squash commit regardless
+of source-branch commit count — the single-commit-drops-body failure
+mode described above should no longer occur here. Still worth the
+post-merge `--verify` habit as a safety net, and still fully applicable
+knowledge for any OTHER repo that hasn't made this settings change.
