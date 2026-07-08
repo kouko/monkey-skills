@@ -80,6 +80,30 @@ def test_extract_schema_supports_claim_type_and_held_by():
     assert ec.held_by is None
 
 
+def test_attribution_verdict_schema():
+    from schemas import ATTRIBUTION_VERDICT_SCHEMA, AttributionVerdict, SCHEMAS_BY_NAME
+
+    assert set(ATTRIBUTION_VERDICT_SCHEMA["required"]) == {"attributionConfirmed", "evidence"}
+    assert ATTRIBUTION_VERDICT_SCHEMA["properties"]["attributionConfirmed"]["type"] == "boolean"
+    assert ATTRIBUTION_VERDICT_SCHEMA["properties"]["evidence"]["type"] == "string"
+    # Deliberately smaller than VERDICT_SCHEMA — no confidence/counterSource.
+    assert "confidence" not in ATTRIBUTION_VERDICT_SCHEMA["properties"]
+    assert "counterSource" not in ATTRIBUTION_VERDICT_SCHEMA["properties"]
+
+    assert SCHEMAS_BY_NAME["attribution-verdict"] is ATTRIBUTION_VERDICT_SCHEMA
+
+    av = AttributionVerdict(attribution_confirmed=True, evidence="the article quotes them directly")
+    assert av.attribution_confirmed is True
+    assert av.evidence == "the article quotes them directly"
+
+
+def test_cli_attribution_verdict_prints_schema():
+    proc = _run_cli("attribution-verdict")
+    assert proc.returncode == 0
+    parsed = json.loads(proc.stdout)
+    assert set(parsed["required"]) == {"attributionConfirmed", "evidence"}
+
+
 def test_report_schema_shape():
     from schemas import REPORT_SCHEMA
 

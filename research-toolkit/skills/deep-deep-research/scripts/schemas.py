@@ -3,8 +3,8 @@
 Port of the CC built-in deep-research v2.1.159 schema definitions.
 All dict shapes are byte-faithful to the decompiled-source reference.
 
-CLI: `python schemas.py {scope|search|extract|verdict|report}` prints the
-named JSON Schema to stdout. Unknown name → stderr + exit 1.
+CLI: `python schemas.py {scope|search|extract|verdict|attribution-verdict|report}`
+prints the named JSON Schema to stdout. Unknown name → stderr + exit 1.
 """
 from __future__ import annotations
 
@@ -103,6 +103,15 @@ VERDICT_SCHEMA = {
     },
 }
 
+ATTRIBUTION_VERDICT_SCHEMA = {
+    "type": "object",
+    "required": ["attributionConfirmed", "evidence"],
+    "properties": {
+        "attributionConfirmed": {"type": "boolean"},
+        "evidence": {"type": "string"},
+    },
+}
+
 REPORT_SCHEMA = {
     "type": "object",
     "required": ["summary", "findings", "caveats"],
@@ -133,6 +142,7 @@ SCHEMAS_BY_NAME = {
     "search": SEARCH_SCHEMA,
     "extract": EXTRACT_SCHEMA,
     "verdict": VERDICT_SCHEMA,
+    "attribution-verdict": ATTRIBUTION_VERDICT_SCHEMA,
     "report": REPORT_SCHEMA,
 }
 
@@ -174,6 +184,12 @@ class Verdict:
     evidence: str
     confidence: str  # "high" | "medium" | "low"
     counter_source: Optional[str] = None
+
+
+@dataclass
+class AttributionVerdict:
+    attribution_confirmed: bool
+    evidence: str
 
 
 @dataclass
