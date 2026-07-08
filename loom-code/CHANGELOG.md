@@ -5,6 +5,34 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.27.7] — 2026-07-08 — name "deterministic sync-script output" as a mechanical-exemption category
+
+### Added
+
+- **`Review-weight: mechanical` now explicitly names a second qualifying
+  category**: a task whose entire content is running an established,
+  deterministic sync/mirror script (e.g. `sync-primitives.sh`,
+  `sync_codex_manifests.py`) and committing its output, verified by a
+  checksum match or the script's own paired drift-detection test. The
+  existing wording ("an identical or near-identical edit reproducible
+  from an exact spec") already covered this case, but wasn't obvious
+  without naming it — an ambiguous-but-technically-covered gap is
+  exactly the shape that has caused real misapplication before (see
+  the two documented "compressing an exemption section flips its
+  polarity" incidents in machine-local memory). Per this repo's own
+  precedent, the fix is a named example, not a rule change.
+- `subagent-driven-development`'s mechanical self-check gained a second
+  **Content match** shape for this category: re-run the named script
+  and confirm zero diff against the committed output, or run its
+  paired drift-detection test and require exit 0 — since a sync-script
+  task has no pre-known literal string to grep the way a literal-edit
+  task does.
+- Origin: PR #519's CI-drift-fix commit (deep-deep-research bake-off-2
+  bugfixes) hit exactly this task shape twice in one commit
+  (`research-toolkit/scripts/sync-primitives.sh`,
+  `scripts/sync_codex_manifests.py`) without a clean way to mark it
+  mechanical under the prior wording.
+
 ## [0.27.6] — 2026-07-08 — close-out push routing: requesting-code-review is the floor, not the close-out
 
 ### Fixed

@@ -83,6 +83,8 @@ If `Plan-document-reviewer verdict` is `PENDING`, the plan has not been self-rev
 
 It may ONLY be set when this task is an identical or near-identical edit reproducible from an exact spec — never for logic, heuristic, hook, or security-surface changes. If the task involves any conditional branching, a heuristic threshold, a hook, or touches a security-relevant surface, do NOT set this field; leave it absent so the full triad runs.
 
+One named category worth calling out explicitly (see the worked example below): a task whose entire content is **running an established, deterministic sync/mirror script and committing its output**, verified by a checksum match or an existing drift-detection test — e.g. re-running a functional-copy sync script so a sibling skill's file matches its SSOT, or re-running a manifest-mirror script after a version bump. Zero hand-written logic, output fully determined by the script and the current SSOT state — this already satisfies "reproducible from an exact spec," it just isn't obvious without naming it.
+
 #### Progress ledger — the `Status` field (v0.10.0+, optional)
 
 The optional per-task `Status` field turns the plan into a **run-scoped, durable, shared progress
@@ -275,6 +277,36 @@ Consider a brief whose Smallest End State is *"bump the copyright year string in
 Each task is an identical one-line edit (same exact-spec literal-string replacement, different file) — the reproducible-from-exact-spec bar `Review-weight: mechanical` requires. Contrast with Task 3 in the CSV-export example above (`Wire renderer into handler + set Content-Type`): that task branches on `format=csv` and touches request-handling logic, so it must NOT declare `Review-weight: mechanical` even though it is a small task — logic changes always take the full triad.
 
 **"Near-identical" — one bounded per-file substitution, not free-form variation.** The marker also covers tasks that are the *same template with one literal swapped per file from a fixed, plan-declared list* — e.g. three sibling tasks each inserting the identical pointer sentence `"See \`family-relay.md §Family relay discipline\`."` into a different skill's `SKILL.md`, where only the surrounding one-line anchor phrase differs per file (still a verbatim literal named IN the task, not left to the implementer's judgment). This is *not* license to mark a task mechanical because it merely "feels similar" to a sibling — "add error handling similar to how Task 2 does it" is NOT reproducible-from-exact-spec (the implementer must judge what "similar" means) and must NOT declare `Review-weight: mechanical`, even though it superficially resembles a batch edit.
+
+### `Review-weight: mechanical` example — deterministic sync-script output
+
+Consider a brief whose Smallest End State is *"re-sync `deep-read`'s functional copy of `prompts.py` from the `deep-deep-research` SSOT after a fix landed there, and mirror the plugin's version bump into its Codex manifest":*
+
+```markdown
+## Task 1 — Re-sync deep-read's prompts.py from SSOT
+- **Description**: SSOT is `research-toolkit/skills/deep-deep-research/scripts/prompts.py`. Run `research-toolkit/scripts/sync-primitives.sh deep-read` (which copies that SSOT into `deep-read`'s own `scripts/`) and commit the result unmodified. No hand-written edits to the output.
+- **Module**: `research-toolkit/skills/deep-read/scripts/prompts.py`
+- **Files touched**: `research-toolkit/skills/deep-read/scripts/prompts.py`
+- **Acceptance**:
+  - **RED**: MD5 of `research-toolkit/skills/deep-read/scripts/prompts.py` differs from `research-toolkit/skills/deep-deep-research/scripts/prompts.py`
+  - **GREEN**: MD5s match; `check-script-sync` CI job (or its local equivalent) passes
+- **Dependencies**: none
+- **Independent**: true
+- **Review-weight**: mechanical
+
+## Task 2 — Mirror plugin.json version bump into the Codex manifest
+- **Description**: SSOT is `research-toolkit/.claude-plugin/plugin.json`. Run `python3 scripts/sync_codex_manifests.py research-toolkit` (which mirrors that SSOT's shared fields into the Codex manifest) and commit the result unmodified. No hand-written edits to the output.
+- **Module**: `research-toolkit/.codex-plugin/plugin.json`
+- **Files touched**: `research-toolkit/.codex-plugin/plugin.json`
+- **Acceptance**:
+  - **RED**: `test_check_codex_manifest_drift.py::test_real_batch_a_plugin_in_sync` fails (drift detected)
+  - **GREEN**: same test passes
+- **Dependencies**: none
+- **Independent**: true
+- **Review-weight**: mechanical
+```
+
+Both tasks' entire output is computed by a deterministic script from a named SSOT — there is no literal string to pre-quote in the Description the way the copyright-year example does, so the RED/GREEN pair names the **verification method** (a checksum comparison or the project's own paired drift-detection test) instead of a literal diff. That verification method is exactly what `subagent-driven-development/SKILL.md`'s mechanical self-check runs for this category — see its **Content match** step. For a straight-copy script like Task 1's, "diff the two existing files" and "re-run the script, diff its output" are the same check by construction (the script's only job is that copy); a script with side effects beyond a straight copy (e.g. one that also reformats or merges) would need the "re-run, diff output" framing specifically — the two framings are not interchangeable in general, only for this shape.
 
 ## Anti-patterns
 
