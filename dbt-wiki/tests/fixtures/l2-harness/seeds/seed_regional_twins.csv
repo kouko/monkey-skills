@@ -1,0 +1,5 @@
+entity_id,region,amount
+widget,us,100.00
+widget,eu,60.00
+gadget,us,40.00
+gadget,eu,25.00

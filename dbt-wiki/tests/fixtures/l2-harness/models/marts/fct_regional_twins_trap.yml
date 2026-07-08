@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: fct_regional_twins_trap
+    description: >
+      Trap fixture (L2 harness Task 6). Unions all region-split rows of
+      seed_regional_twins per logical entity before aggregating, so each
+      entity's full_scope_amount sums every region, guarding against the
+      scope-undercount trap where a naive single-region scan (WHERE region =
+      'us') drops the other regions' twin rows and undercounts the total.
+    columns:
+      - name: entity_id
+        description: Logical entity identifier, one row per entity.
+      - name: full_scope_amount
+        description: >
+          SUM(amount) across all of the entity's regional twin rows — the
+          full-scope total, as opposed to the single-region scan that
+          undercounts.
