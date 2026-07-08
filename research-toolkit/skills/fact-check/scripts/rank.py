@@ -10,9 +10,11 @@ CLI (consumed by SKILL.md over stdin/stdout JSON):
                                      #   each file = claims JSON array); stdin is
                                      #   NOT read → stdout: ranked (≤25) JSON
     python rank.py quorum            # stdin: verdicts JSON array → stdout: `true` / `false`
+    python rank.py attribution-check # stdin: one verdict JSON object → stdout: `true` / `false`
 
 --claims-dir and stdin are mutually exclusive: when the flag is given,
-stdin is never read.  The quorum subcommand takes no --claims-dir.
+stdin is never read.  The quorum and attribution-check subcommands
+take no --claims-dir.
 """
 
 from __future__ import annotations
@@ -83,6 +85,17 @@ def quorum_survives(
     return len(valid) >= refutations_required and refuted < refutations_required
 
 
+def attribution_survives(verdict: dict[str, Any]) -> bool:
+    """Return True only if the single attribution-confirmation check passed.
+
+    Structurally parallels quorum_survives but for ONE opinion-attribution
+    verdict, not a 3-vote adversarial quorum: an opinion claim gets one
+    attribution-confirmation check (does the cited source actually hold
+    this view?), not adversarial voting.  Missing key fails closed.
+    """
+    return verdict.get("attributionConfirmed", False)
+
+
 if __name__ == "__main__":
     import json
     import sys
@@ -91,6 +104,8 @@ if __name__ == "__main__":
     args = sys.argv[1:]
     if args and args[0] == "quorum":
         print(json.dumps(quorum_survives(json.load(sys.stdin))))
+    elif args and args[0] == "attribution-check":
+        print(json.dumps(attribution_survives(json.load(sys.stdin))))
     elif args and args[0] == "--claims-dir":
         if len(args) < 2:
             sys.exit("--claims-dir requires a directory argument")

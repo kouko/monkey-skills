@@ -1,6 +1,6 @@
 {
   "name": "research-toolkit",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "Key-free research skills driving the host agent's own LLM + web tools (ships using-research-toolkit, deep-deep-research, fact-check, cite-check, deep-read).",
   "author": {
     "name": "kouko",
