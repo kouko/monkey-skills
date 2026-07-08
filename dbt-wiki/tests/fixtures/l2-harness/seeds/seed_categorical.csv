@@ -1,0 +1,7 @@
+customer_id,status
+1,active
+2,active
+3,active
+4,churned
+5,churned
+6,trial

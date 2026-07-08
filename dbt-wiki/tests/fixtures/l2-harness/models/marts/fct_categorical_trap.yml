@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: fct_categorical_trap
+    description: >
+      Trap fixture (L2 harness Task 4). Passes seed_categorical's `status`
+      column through unchanged, preserving its fixed value_domain, and
+      declares an accepted_values generic dbt test on the column so
+      dbt build fails loudly if any value outside the accepted set ever
+      appears — guarding against the categorical trap where a silent
+      transformation leaks an out-of-domain value.
+    columns:
+      - name: customer_id
+        description: Customer identifier, one row per seed_categorical record.
+      - name: status
+        description: >
+          Categorical value_domain column, constrained to the accepted set
+          {active, churned, trial} by the accepted_values test below.
+        tests:
+          - accepted_values:
+              values: ['active', 'churned', 'trial']
