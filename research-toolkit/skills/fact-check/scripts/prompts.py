@@ -9,9 +9,10 @@ CLI:
   python prompts.py scope     --question Q
   python prompts.py search    --angle JSON --question Q
   python prompts.py fetch     --source JSON --label L --question Q
-  python prompts.py verify    --claim JSON --voter-idx N --question Q
-  python prompts.py synthesis --question Q --confirmed-block B \\
-                              --killed-block B --confirmed-count N
+  python prompts.py verify      --claim JSON --voter-idx N --question Q
+  python prompts.py attribution --claim JSON --question Q
+  python prompts.py synthesis   --question Q --confirmed-block B \\
+                                --killed-block B --confirmed-count N
 """
 from __future__ import annotations
 
@@ -84,11 +85,14 @@ Fetch and extract key claims from this source:
 ## Task
 1. Use WebFetch to retrieve the page content.
 2. Assess source quality: primary research/institution? secondary reporting? blog/opinion? forum? unreliable?
-3. Extract 2-5 FALSIFIABLE claims that bear on the research question. Each claim must:
-   - be a concrete, checkable statement (not vague generalities)
+3. Extract 2-5 claims that bear on the research question. Each claim must:
+   - be a concrete statement (not a vague generality)
    - include a direct quote from the source as support
    - be rated central/supporting/tangential to the research question
-4. Note publish date if available.
+   - be tagged with claimType: "fact" (a checkable, verifiable proposition) or "opinion" (a viewpoint, judgment, or interpretation)
+4. If a single source statement mixes a factual component with an opinion component (e.g. "GDP grew 3%, which proves the policy failed"), decompose it into TWO separate claim objects — one claimType: "fact" claim for the factual component, one claimType: "opinion" claim for the opinion component — rather than emitting one ambiguously-typed claim. If a statement cannot be cleanly decomposed, do not guess: keep it as a single claim and default claimType to "fact" (never default an undecomposable statement to "opinion" — uncertainty always resolves toward the stricter check).
+5. Whenever a claim (fact OR opinion) has a natural attributable source — a named person, organization, or institution the claim/view is attributed to — capture it in heldBy. This applies equally to both claimTypes, not just opinions.
+6. Note publish date if available.
 
 If the fetch fails or the page is irrelevant/paywalled, return claims: [] and sourceQuality: "unreliable".
 
@@ -135,6 +139,47 @@ Default to refuted=true if uncertain.
 Structured output only. Evidence MUST be specific."""
 
 
+def attribution_prompt(claim: dict, question: str) -> str:
+    """Return the ATTRIBUTION prompt for one opinion-routed claim.
+
+    Modeled structurally on verify_prompt, but asks a narrower question:
+    does the cited source actually hold/express this view, per the quote?
+    This is NOT an adversarial-refutation prompt — no "try to refute"
+    framing, no counter-evidence WebSearch instruction. Emits a verdict
+    conforming to ATTRIBUTION_VERDICT_SCHEMA.
+
+    claim must have keys: claim, quote, and one of sourceUrl or url
+    (sourceUrl preferred; url is a tolerated fallback)
+    claim may have key: heldBy (who the view is attributed to)
+    """
+    claim_text = claim["claim"]
+    source_url = claim.get("sourceUrl") or claim.get("url", "")
+    quote = claim["quote"]
+    held_by = claim.get("heldBy", "")
+    held_by_line = f"**Attributed to:** {held_by}\n" if held_by else ""
+    return f"""\
+## Attribution Checker
+
+Confirm whether the cited source actually holds/expresses this view — do NOT try to refute it.
+
+## Research question
+{question}
+
+## Claim under review
+"{claim_text}"
+
+**Source:** {source_url}
+{held_by_line}**Supporting quote:** "{quote}"
+
+## Task
+Does the quote show the source actually holding/expressing this view (not the reader's paraphrase or overreach)?
+
+**attributionConfirmed=true** if: the quote clearly shows the source holding/expressing this view.
+**attributionConfirmed=false** if: the quote does not support that attribution, is a misread, or overreaches.
+
+Structured output only. Evidence MUST be specific."""
+
+
 def synthesis_prompt(
     question: str,
     confirmed_block: str,
@@ -152,7 +197,7 @@ def synthesis_prompt(
 
 **Question:** {question}
 
-{n_confirmed} claims survived {VOTES_PER_CLAIM}-vote adversarial verification. Merge semantic duplicates and synthesize.
+{n_confirmed} claims survived verification — fact claims via {VOTES_PER_CLAIM}-vote adversarial quorum, opinion claims via single-check attribution confirmation. Merge semantic duplicates and synthesize.
 
 ## Confirmed claims
 {confirmed_block}
@@ -195,6 +240,10 @@ def _main(argv: list[str] | None = None) -> int:
     p_verify.add_argument("--voter-idx", type=int, required=True)
     p_verify.add_argument("--question", required=True)
 
+    p_attribution = sub.add_parser("attribution")
+    p_attribution.add_argument("--claim", required=True, help="JSON: {claim, sourceUrl, quote, heldBy?}")
+    p_attribution.add_argument("--question", required=True)
+
     p_synth = sub.add_parser("synthesis")
     p_synth.add_argument("--question", required=True)
     p_synth.add_argument("--confirmed-block", required=True)
@@ -211,6 +260,8 @@ def _main(argv: list[str] | None = None) -> int:
         print(fetch_prompt(source=json.loads(args.source), angle=args.label, question=args.question))
     elif args.command == "verify":
         print(verify_prompt(claim=json.loads(args.claim), voter_idx=args.voter_idx, question=args.question))
+    elif args.command == "attribution":
+        print(attribution_prompt(claim=json.loads(args.claim), question=args.question))
     elif args.command == "synthesis":
         print(synthesis_prompt(
             question=args.question,
