@@ -84,6 +84,8 @@ EXTRACT_SCHEMA = {
                     "claim": {"type": "string"},
                     "quote": {"type": "string"},
                     "importance": {"enum": ["central", "supporting", "tangential"]},
+                    "claimType": {"enum": ["fact", "opinion"]},
+                    "heldBy": {"type": "string"},
                 },
             },
         },
@@ -162,6 +164,8 @@ class ExtractedClaim:
     source_url: str = ""
     source_quality: str = "unreliable"
     publish_date: Optional[str] = None
+    claim_type: str = "fact"  # "fact" | "opinion"; missing/unrecognized -> "fact"
+    held_by: Optional[str] = None
 
 
 @dataclass

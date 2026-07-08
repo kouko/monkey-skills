@@ -64,6 +64,22 @@ def test_extract_schema_shape():
     assert set(sq["enum"]) == {"primary", "secondary", "blog", "forum", "unreliable"}
 
 
+def test_extract_schema_supports_claim_type_and_held_by():
+    from schemas import EXTRACT_SCHEMA, ExtractedClaim
+
+    claim_props = EXTRACT_SCHEMA["properties"]["claims"]["items"]["properties"]
+    assert set(claim_props["claimType"]["enum"]) == {"fact", "opinion"}
+    assert claim_props["heldBy"]["type"] == "string"
+    # claimType is NOT required — backward-compat: an extraction response
+    # that omits it must not fail schema validation.
+    required = EXTRACT_SCHEMA["properties"]["claims"]["items"]["required"]
+    assert "claimType" not in required
+
+    ec = ExtractedClaim(claim="c", quote="q", importance="central")
+    assert ec.claim_type == "fact"
+    assert ec.held_by is None
+
+
 def test_report_schema_shape():
     from schemas import REPORT_SCHEMA
 
