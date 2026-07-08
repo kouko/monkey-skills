@@ -129,6 +129,13 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
 6. Invoke dev-workflow:git-memory
    - Pass: diff, recent commits, branch name
    - Receive: trailer set (Decision: / Learning: / Gotcha: lines) + commit body suggestion
+   - **The moment this trailer set comes back non-empty, run the Memory-timing check NOW** (see
+     Step 8's Memory-timing bullet for the exact rule) — using the returned Decision/Learning/Gotcha
+     content itself as the input: does any of it also belong in `docs/loom/memory/` as a durable,
+     cross-branch-reusable practice/gotcha/process, not just this commit's local trailer? Do NOT
+     defer this question to Step 8's later checklist pass — a non-empty trailer set writing rich
+     "why" content is itself the trigger, and treating "trailers written" as "memory handled" is
+     the exact lapse this inline check exists to prevent (documented recurrence: PR #519, PR #520).
 7. Show user the proposed commit message + trailers; ASK for approval
    - If approved: proceed
    - If rejected / edited: use user's version
@@ -141,11 +148,17 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
      per-implementer / per-wave: the index is a repo-wide generated file, so a per-implementer
      regen under parallel SDD would merge-conflict the file and reflect only a partial tree.
      This mirrors loom's existing "orchestrator commits, implementers don't" rule.
-   - Memory-timing check (orchestrator-only, ONCE per branch): if this branch surfaced
-     a durable, already-known fact (practice / gotcha / process per the jurisdiction
-     table), record it into `docs/loom/memory/` NOW so it lands in THIS close-out
-     commit — see `docs/loom/memory/README.md` §"When to record" for the exact rule
-     and its one exception.
+   - Memory-timing check (orchestrator-only, ONCE per branch) — **the question itself should
+     already have been asked and answered at Step 6**, the moment git-memory's trailer set came
+     back; this bullet's remaining job at Step 8 is only to STAGE whatever `docs/loom/memory/`
+     file that Step-6 check produced (same role as the Living-spec index bullet immediately
+     above), not to be the first time the question is asked. The rule, unchanged: if this branch
+     surfaced a durable, already-known fact (practice / gotcha / process per the jurisdiction
+     table), record it into `docs/loom/memory/` NOW so it lands in THIS close-out commit — see
+     `docs/loom/memory/README.md` §"When to record" for the exact rule and its one exception. If
+     you reach this bullet at Step 8 and the question was NOT already asked at Step 6, ask it now
+     — late is still better than never — but treat that as a process miss to avoid next time, not
+     the intended flow.
    - Run `git status --short` to confirm exactly which files are staged and untracked.
    - Stage with an explicit file list (`git add <file1> <file2> …`) — avoid `git add -A <dir>`
      which sweeps unrelated untracked files into the commit.
