@@ -9,7 +9,8 @@ version: 0.1.0
 
 A multi-source, adversarially-verified research pipeline that produces a
 cited report. It reproduces the content of Claude Code's built-in
-`deep-research` workflow (scope → search → dedup → fetch → 3-vote verify →
+`deep-research` workflow (scope → search → dedup → fetch → verify [3-vote
+quorum for `fact` claims, attribution check for `opinion` claims] →
 synthesize) as an **inspectable, editable skill** you run with the host
 agent's own tools.
 
@@ -335,7 +336,18 @@ This is again per-source independent work — **fan out one subagent per source*
 
    Shape: `{sourceQuality, publishDate, claims}`. Tag the **sourceQuality** of
    the page and, per claim, its **importance** — these tags carry forward into
-   ranking and verification.
+   ranking and verification. Per claim, also tag **claimType**: `"fact"` (a
+   checkable, verifiable proposition) or `"opinion"` (a viewpoint, judgment,
+   or interpretation) — this is the tag Stage 5 routes on. If a single source
+   statement mixes a factual component with an opinion component (e.g. "GDP
+   grew 3%, which proves the policy failed"), decompose it into **two
+   separate claim objects** — one `claimType: "fact"` claim, one
+   `claimType: "opinion"` claim — rather than emitting one ambiguously-typed
+   claim; an undecomposable statement defaults to `"fact"` (never
+   `"opinion"` — uncertainty always resolves toward the stricter check).
+   Whenever a claim (fact or opinion) has a natural attributable source — a
+   named person, organization, or institution the claim/view is attributed
+   to — capture it in **heldBy**.
 
 3. **Write, don't return.** The subagent writes its extracted claims to the
    exact path the orchestrator assigned in its dispatch —
@@ -349,8 +361,9 @@ This is again per-source independent work — **fan out one subagent per source*
    key.
 
 The pool is the `work/claims/` directory: one file per fetch subagent, together
-holding every extracted claim. That directory is the input to the ranking +
-adversarial verify stages.
+holding every extracted claim. That directory is the input to ranking and to
+Stage 5's routed verification (adversarial quorum for `fact` claims,
+attribution-confirmation for `opinion` claims).
 
 ---
 
@@ -374,10 +387,23 @@ stay inline).
 
 ---
 
-## Stage 5 — Verify (adversarial quorum)
+## Stage 5 — Verify (routed by claimType)
 
-Each ranked claim faces **`VOTES_PER_CLAIM = 3`** independent adversarial
-voters whose job is to *refute* it. **Fan out one subagent per
+Each ranked claim routes on the **claimType** tag set during Stage 3
+extraction to one of two independent verification paths — `fact` claims get
+the full adversarial-refutation quorum (unchanged from before claimType
+existed); `opinion` claims get a single, narrower attribution-confirmation
+check. **Decomposition in Stage 3 already means no claim reaching Stage 5
+carries an unchecked factual assertion inside an opinion wrapper** — a mixed
+statement was split into its `fact` and `opinion` components before ranking,
+so an opinion-routed claim is purely the interpretive/judgment component; if
+it had a factual component, that component is a separate `fact`-routed claim
+still going through the full 3-voter quorum below.
+
+### 5a. `fact` claims — adversarial quorum (unchanged)
+
+Each ranked `fact` claim faces **`VOTES_PER_CLAIM = 3`** independent
+adversarial voters whose job is to *refute* it. **Fan out one subagent per
 `(claim, voter_idx)` pair** — for 25 claims that is up to 75 independent
 voter subagents, dispatched per the fan-out convention.
 
@@ -416,12 +442,66 @@ For each `(claim, voter_idx)`:
    only if ≥2 valid (non-null) votes AND fewer than `REFUTATIONS_REQUIRED = 2`
    of them refute it.** The valid-count check gates first, so an
    **all-abstain claim is killed** (0 valid votes < 2), never falsely
-   survived on a refuted-count of 0. Once every claim's quorum is decided,
-   write the booleans in ranked order to `work/votes.json`, so that after
-   Stage 5 it holds the ordered `vote_results` array.
+   survived on a refuted-count of 0.
 
-Partition the ranked claims into **confirmed** (survived) and **killed**
-(refuted/insufficient) by their `quorum` result.
+### 5b. `opinion` claims — attribution confirmation
+
+Each ranked `opinion` claim faces exactly **one** attribution-confirmation
+check — not adversarial voting, no refutation framing, no counter-evidence
+search. It only asks whether the cited source actually holds/expresses the
+view. **Fan out one subagent per opinion claim** (no `voter_idx`, no 3x
+fan-out).
+
+1. Get the attribution prompt:
+
+   ```
+   python scripts/prompts.py attribution --claim '<claim JSON>' --question "<q>"
+   ```
+
+2. The checker confirms attribution against the quote (it does NOT try to
+   refute the view, and does not need to search for counter-evidence) and
+   emits a verdict conforming to:
+
+   ```
+   python scripts/schemas.py attribution-verdict
+   ```
+
+   Shape: `{attributionConfirmed: bool, evidence}`.
+
+3. Wrap that single verdict object in a **one-element list** and write it to
+   `work/verdicts/claim-<rank>.json` (`<rank>` = the claim's ranked index) —
+   the same file 5a writes its 3-vote array to, kept a list-of-verdicts so
+   Stage 6's `synthesis.py blocks` (which iterates `verdicts_per_claim` as
+   one list per claim, fact or opinion alike) reads either path uniformly:
+
+   ```
+   echo '[<verdict>]' > work/verdicts/claim-<rank>.json
+   ```
+
+4. Decide survival:
+
+   ```
+   echo '<verdict>' | python scripts/rank.py attribution-check
+   ```
+
+   stdin: the one verdict object → stdout: `true` / `false`. An opinion claim
+   **survives whenever `attributionConfirmed=true`** — there is no vote
+   count or refutation threshold, and a missing/false field fails closed
+   (never silently survives).
+
+### Merge
+
+Both paths leave two things behind per claim: a **verdict-list** file at
+`work/verdicts/claim-<rank>.json` (5a's 3-vote array, or 5b's one-element
+list — never a bare boolean) and a **survival decision** (5a's
+`rank.py quorum` result, or 5b's `rank.py attribution-check` result). Once
+every claim (both paths) has both, write the survival booleans in ranked
+order to `work/votes.json` — the ordered `vote_results` array Stage 6
+consumes either way, so the routing is invisible downstream.
+
+Partition the ranked claims into **confirmed** (survived, whichever path) and
+**killed** (refuted/insufficient for `fact`, attribution-unconfirmed for
+`opinion`) by that same per-claim survival decision.
 
 ---
 
@@ -679,11 +759,12 @@ not error out:
    found"* report: state the question, that no verifiable claims were
    gathered, and what was attempted. Skip verify + synthesis.
 
-2. **All claims refuted** (Stage 5 leaves the confirmed set empty — every
-   ranked claim was killed by quorum) → return an *"all claims refuted —
-   inconclusive"* report: surface the killed claims (the `killed_block` is
-   already formatted for this) and mark the finding inconclusive rather than
-   asserting anything.
+2. **No claims survive verification** (Stage 5 leaves the confirmed set
+   empty — every ranked claim was killed, whether by quorum refutation for
+   `fact` claims or unconfirmed attribution for `opinion` claims) → return
+   an *"all claims refuted — inconclusive"* report: surface the killed
+   claims (the `killed_block` is already formatted for this) and mark the
+   finding inconclusive rather than asserting anything.
 
 3. **Synthesis fails** (Stage 6 step 3 produces no valid report object) →
    **salvage the confirmed claims unmerged**: emit them as a flat list (claim
@@ -712,6 +793,9 @@ not error out:
 | 5 | `prompts.py verify --claim C --voter-idx I --question Q` | — → verify prompt |
 | 5 | `schemas.py verdict` | — → verdict schema |
 | 5 | `rank.py quorum` | verdicts array → `true`/`false` |
+| 5 | `prompts.py attribution --claim C --question Q` | — → attribution prompt |
+| 5 | `schemas.py attribution-verdict` | — → attribution-verdict schema |
+| 5 | `rank.py attribution-check` | one verdict object → `true`/`false` |
 | 6 | `synthesis.py blocks --key ranked_claims=work/ranked.json --key vote_results=work/votes.json --key verdicts_per_claim=work/verdicts.json` | per-key files (`--key NAME=FILE`; stdin unused) → `{confirmed_block, killed_block}` |
 | 6 | `prompts.py synthesis --question Q --confirmed-block CB --killed-block KB --confirmed-count N` | — → synthesis prompt |
 | 6 | `mode_route.py schema` | — → mode-verdict schema |
