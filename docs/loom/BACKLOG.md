@@ -13,10 +13,10 @@
 ## Mechanical reminder hook for docs/loom/memory-worthy trailers (PARKED)
 - Status: PARKED
 - Start: the "trailers written but docs/loom/memory not checked" lapse
-  (`docs/loom/memory/feedback_fold_repo_memory_writes_into_same_branch_pr.md`
-  equivalent — repo-committed lesson lives at
-  `docs/loom/memory/per-task-review-misses-duplicated-fallback-fix.md`'s
-  sibling entries) recurs a THIRD time even after PR #521's fix (the
+  (documented only in this session's private machine-local auto-memory
+  as `feedback_fold_repo_memory_writes_into_same_branch_pr.md` — not yet
+  promoted to a repo-committed `docs/loom/memory/` entry) recurs a THIRD
+  time even after PR #521's fix (the
   finishing-a-development-branch Step 6/Step 8 re-sequencing). Two
   occurrences (PR #519, PR #520) already triggered the process fix in
   #521; a third occurrence AFTER that fix is the signal this needs

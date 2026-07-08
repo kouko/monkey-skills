@@ -44,8 +44,12 @@ into) becomes the squash message.
 `squash_merge_commit_message=PR_BODY` set (via `gh api -X PATCH
 repos/<owner>/<repo> -f squash_merge_commit_title=PR_TITLE -f
 squash_merge_commit_message=PR_BODY` — note GitHub only accepts specific
-title/message combos, `COMMIT_OR_PR_TITLE` does NOT pair with `PR_BODY`,
-use `PR_TITLE`). Every future squash-merge in this repo now carries the
+title/message combos (`PR_TITLE`+`PR_BODY`, `PR_TITLE`+`BLANK`,
+`PR_TITLE`+`COMMIT_MESSAGES`, `COMMIT_OR_PR_TITLE`+`COMMIT_MESSAGES` —
+`COMMIT_OR_PR_TITLE` does NOT pair with `PR_BODY`, use `PR_TITLE`; per
+GitHub's REST "Update a repository" API docs,
+<https://docs.github.com/en/rest/repos/repos#update-a-repository>,
+captured 2026-07-08). Every future squash-merge in this repo now carries the
 full PR body (including `## Memory`) into the squash commit regardless
 of source-branch commit count — the single-commit-drops-body failure
 mode described above should no longer occur here. Still worth the
