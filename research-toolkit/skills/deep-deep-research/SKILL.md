@@ -59,12 +59,22 @@ Claude-Code-specific "same assistant message" concurrency detail above), see
 `loom-code/skills/using-loom-code/references/{claude-code-tools.md,codex-tools.md}`.
 
 **File-carrier rule.** Bulk data between stages travels by file path under a
-run-local `work/` directory — created at Stage-1 start as a fresh empty tree
-(including `work/claims/` and `work/verdicts/`) in your session's working directory, not inside the
-skill, clearing any prior run's leftovers — never emit the full claims pool,
-or any comparably bulky payload, inline in a command or a single response; at
-real scale that reproducibly dies mid-response. Inline payloads are fine only
-at per-claim / per-source granularity.
+run-local working directory — created at Stage-1 start as a fresh empty tree
+(including `<work-dir>/claims/` and `<work-dir>/verdicts/`) in your session's
+working directory, not inside the skill, clearing any prior run's leftovers —
+never emit the full claims pool, or any comparably bulky payload, inline in a
+command or a single response; at real scale that reproducibly dies
+mid-response. Inline payloads are fine only at per-claim / per-source
+granularity.
+
+Pick the working-directory name at Stage-1 start: default to `work/` for the
+ordinary single-run case. If you know you are one of several concurrent
+deep-deep-research invocations running in the same session/cwd, pick a
+distinguishing name instead (e.g. `work-<short-id>/`) so the runs don't
+collide on the same paths. Whichever name you pick, use that SAME directory
+consistently for every stage reference below — the rest of this document
+writes `work/...` as the default-case example; substitute your chosen
+directory name throughout.
 
 ---
 
@@ -334,7 +344,9 @@ This is again per-source independent work — **fan out one subagent per source*
    whole Stage-3 fan-out — a JSON **array** of claim objects, each carrying
    its source URL, quote, and quality tags per the extract schema — and
    returns **only `{path, count}`**, never the claims themselves
-   (file-carrier rule).
+   (file-carrier rule). Each claim object's source-URL field must use the
+   literal key `sourceUrl` (not `url`) — Stage 5's verifier reads that exact
+   key.
 
 The pool is the `work/claims/` directory: one file per fetch subagent, together
 holding every extracted claim. That directory is the input to the ranking +

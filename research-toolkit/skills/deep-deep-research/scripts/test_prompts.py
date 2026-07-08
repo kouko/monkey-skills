@@ -127,6 +127,20 @@ def test_verify_prompt_voter_idx_2():
     assert "voter 3/3" in result
 
 
+def test_verify_prompt_accepts_url_key_when_sourceurl_missing():
+    """claim dicts keyed 'url' (not 'sourceUrl') must not crash — tolerant
+    lookup matches the .get(key, default) pattern used in synthesis.py."""
+    from prompts import verify_prompt
+    claim = {
+        "claim": "X",
+        "url": "https://source.example",
+        "sourceQuality": "primary",
+        "quote": "q",
+    }
+    result = verify_prompt(claim=claim, voter_idx=0, question="Q?")
+    assert "https://source.example" in result
+
+
 def test_synthesis_prompt_interpolates_fields():
     from prompts import synthesis_prompt
     result = synthesis_prompt(
