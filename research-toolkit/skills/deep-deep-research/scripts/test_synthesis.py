@@ -43,6 +43,21 @@ class TestConfirmedBlock:
         # best non-refuting verdict is highest-confidence (high)
         assert "Verifier evidence (high): Consistent with pharmacology." in block
 
+    def test_confirmed_block_falls_back_to_url_when_sourceurl_missing(self):
+        from synthesis import _confirmed_block
+
+        claim = {
+            "claim": "Url-keyed claim.",
+            "url": "https://example.com/url-keyed",
+            "sourceQuality": "primary",
+            "quote": "q",
+        }
+        verdicts_per_claim = [
+            [{"refuted": False, "evidence": "ev", "confidence": "high"}]
+        ]
+        block = _confirmed_block([claim], [True], verdicts_per_claim)
+        assert "https://example.com/url-keyed" in block
+
     def test_confirmed_block_picks_best_non_refuting(self):
         from synthesis import _confirmed_block
 
@@ -82,6 +97,13 @@ class TestKilledBlock:
         # surviving claim must NOT appear in the killed block
         assert "Survives." not in block
 
+    def test_killed_block_falls_back_to_url_when_sourceurl_missing(self):
+        from synthesis import _killed_block
+
+        claims = [{"claim": "Refuted, url-keyed.", "url": "https://c"}]
+        block = _killed_block(claims, [False])
+        assert '- "Refuted, url-keyed." (https://c)' in block
+
 
 class TestCollectSources:
     def test_unique_in_insertion_order(self):
@@ -94,6 +116,12 @@ class TestCollectSources:
             {"sourceUrl": ""},  # empty skipped
         ]
         assert _collect_sources(claims) == ["https://a", "https://b"]
+
+    def test_falls_back_to_url_when_sourceurl_missing(self):
+        from synthesis import _collect_sources
+
+        claims = [{"url": "https://d"}, {"sourceUrl": "https://e"}]
+        assert _collect_sources(claims) == ["https://d", "https://e"]
 
 
 class TestBuildStats:
@@ -140,6 +168,42 @@ class TestRenderMarkdown:
         assert "## Findings" in md
         assert "**Caffeine delays sleep onset.**" in md
         assert "<https://example.com/study1>" in md
+
+    def test_caveats_list_is_coerced_to_string(self):
+        """LLM sometimes emits caveats as a list, not the schema's plain
+        string; the renderer must not crash and must render every item."""
+        from synthesis import _render_markdown
+
+        report = {
+            "question": "Q?",
+            "summary": "s",
+            "findings": [],
+            "caveats": ["First caveat.", "Second caveat."],
+        }
+        md = _render_markdown(report)
+        assert "## Caveats" in md
+        assert "First caveat." in md
+        assert "Second caveat." in md
+
+    def test_finding_evidence_is_rendered(self):
+        """Every finding's `evidence` field is schema-required but was
+        silently dropped by the renderer; it must appear in the output."""
+        from synthesis import _render_markdown
+
+        report = {
+            "question": "Q?",
+            "summary": "s",
+            "findings": [
+                {
+                    "claim": "Caffeine delays sleep onset.",
+                    "confidence": "high",
+                    "sources": ["https://example.com/study1"],
+                    "evidence": "Because of X and Y.",
+                }
+            ],
+        }
+        md = _render_markdown(report)
+        assert "Because of X and Y." in md
 
 
 class TestBlocksCLI:

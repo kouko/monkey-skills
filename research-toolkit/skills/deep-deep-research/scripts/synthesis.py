@@ -33,6 +33,16 @@ from schemas import VOTES_PER_CLAIM
 _CONF_RANK: dict[str, int] = {"high": 0, "medium": 1, "low": 2}
 
 
+def _source_url(claim: dict) -> str:
+    """Read a claim's source URL, tolerating either key name.
+
+    Extraction is documented to emit `sourceUrl` (SKILL.md Stage 3), but a
+    claim keyed `url` instead must not silently lose its source at this
+    stage — mirrors the same fallback `prompts.py`'s `verify_prompt()` uses.
+    """
+    return claim.get("sourceUrl") or claim.get("url", "")
+
+
 def _confirmed_block(
     ranked_claims: list[dict],
     vote_results: list[bool],
@@ -65,7 +75,7 @@ def _confirmed_block(
         lines.append(
             f"### [{i}] {claim['claim']}\n"
             f"Vote: {valid - refuted_count}-{refuted_count} · "
-            f"Source: {claim.get('sourceUrl', '')} ({claim.get('sourceQuality', '')})\n"
+            f"Source: {_source_url(claim)} ({claim.get('sourceQuality', '')})\n"
             f"Quote: \"{claim.get('quote', '')}\"\n"
             f"Verifier evidence ({conf}): {evidence}"
         )
@@ -79,7 +89,7 @@ def _killed_block(ranked_claims: list[dict], vote_results: list[bool]) -> str:
         if not survived:
             lines.append(
                 f"- \"{claim['claim']}\" "
-                f"({claim.get('sourceUrl', '')})"
+                f"({_source_url(claim)})"
             )
     return "\n".join(lines)
 
@@ -93,7 +103,7 @@ def _collect_sources(ranked_claims: list[dict]) -> list[str]:
     sources: list[str] = []
     seen_sources: set[str] = set()
     for claim in ranked_claims:
-        url = claim.get("sourceUrl", "")
+        url = _source_url(claim)
         if url and url not in seen_sources:
             sources.append(url)
             seen_sources.add(url)
@@ -142,11 +152,16 @@ def _render_markdown(report: dict[str, Any]) -> str:
             confidence = f.get("confidence", "")
             claim = f.get("claim", "")
             sources = f.get("sources", [])
+            evidence = f.get("evidence", "")
             lines.append(f"- **{claim}** *(confidence: {confidence})*")
             for src in sources:
                 lines.append(f"  - <{src}>")
+            if evidence:
+                lines.append(f"  - Evidence: {evidence}")
 
     caveats = report.get("caveats", "")
+    if isinstance(caveats, list):
+        caveats = "\n".join(caveats)
     if caveats:
         lines.append("\n## Caveats\n")
         lines.append(caveats)

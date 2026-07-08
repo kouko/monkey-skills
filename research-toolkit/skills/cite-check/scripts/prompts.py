@@ -98,12 +98,13 @@ Structured output only."""
 def verify_prompt(claim: dict, voter_idx: int, question: str) -> str:
     """Return the VERIFY prompt for one voter on one claim.
 
-    claim must have keys: claim, sourceUrl, sourceQuality, quote
+    claim must have keys: claim, sourceQuality, quote, and one of
+    sourceUrl or url (sourceUrl preferred; url is a tolerated fallback)
     voter_idx is 0-based; displayed as voter_idx+1/{VOTES_PER_CLAIM}
     """
     v = voter_idx + 1
     claim_text = claim["claim"]
-    source_url = claim["sourceUrl"]
+    source_url = claim.get("sourceUrl") or claim.get("url", "")
     source_quality = claim["sourceQuality"]
     quote = claim["quote"]
     return f"""\
