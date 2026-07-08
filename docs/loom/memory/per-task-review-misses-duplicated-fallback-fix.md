@@ -1,6 +1,6 @@
 ---
 name: per-task-review-misses-duplicated-fallback-fix
-description: A defensive fix at one call site of a shared dict-shape contract can PASS individual per-task review while sibling call sites of the same contract stay unfixed — only whole-branch cross-task-coherence review catches the gap
+description: A fix at one location that shares a contract with other locations (code call-sites reading a data shape, OR a doc section's promise and its downstream enforcing check) can PASS individual per-task review while the sibling locations stay unfixed — only whole-branch cross-task-coherence review catches the gap
 type: gotcha
 origin: deep-deep-research bake-off round-2 bugfixes branch (2026-07-08)
 ---
@@ -32,3 +32,18 @@ field before declaring the task done — don't rely on per-task review
 scope to catch it. At minimum, never skip the whole-branch review step
 just because every individual task already PASSed; that step's unique
 value is exactly this class of gap.
+
+**Second occurrence (2026-07-08, same session, loom-code branch
+`loom-code-mechanical-sync-script-category`):** the same shape recurred
+in pure documentation. A change extended `plan-format.md`'s
+`Review-weight: mechanical` exemption with a new example category, but
+`plan-document-reviewer-prompt.md`'s Check 16 — the downstream consumer
+that validates whether a plan's use of that exemption is legitimate —
+was left untouched. Check 16's literal wording ("gives no concrete
+exact-spec quote" as a failure trigger) would have rejected the very
+worked example the change shipped as its own positive case. Whole-branch
+review caught it again. Generalizes the "How to apply" rule beyond code
+read-sites: a documentation section's *promise* (what qualifies for X)
+has downstream *consumers* (checks/rules that enforce the promise) just
+like a data shape has read-sites — grep for both before declaring a
+doc-only change complete, not just for code call-sites.

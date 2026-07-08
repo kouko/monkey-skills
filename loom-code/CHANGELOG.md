@@ -5,6 +5,22 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.27.8] — 2026-07-08 — fire the docs/loom/memory self-check at the git-memory step, not buried later
+
+### Fixed
+
+- **`finishing-a-development-branch`'s docs/loom/memory self-check now
+  fires at Step 6** (the moment `dev-workflow:git-memory` returns its
+  Decision/Learning/Gotcha trailer set), instead of living as one
+  easy-to-skim bullet inside Step 8's later git-hygiene checklist. Root
+  cause: the rule already existed, but was procedurally disconnected
+  from the moment trailer content is actually generated, so "trailers
+  written" got silently treated as "memory handled." Recurred twice in
+  one session (PR #519, PR #520) — crossing this repo's own
+  "2+ occurrences = fix the process, not just the memory entry"
+  threshold. Step 8's bullet is retargeted to staging-only, matching its
+  existing role for the Living-spec index bullet beside it.
+
 ## [0.27.7] — 2026-07-08 — name "deterministic sync-script output" as a mechanical-exemption category
 
 ### Added
