@@ -1,0 +1,34 @@
+version: 2
+
+models:
+  - name: stg_filler_a
+    description: >
+      Filler staging model (L2 harness Task 7). Non-trap plain pass-through
+      over seed_filler, commented column-by-column so the fixture exercises
+      dbt-wiki's comments-as-source-of-truth assumption on ordinary models,
+      not only its trap-catching behavior.
+    columns:
+      - name: id
+        description: Surrogate key, one row per filler record.
+      - name: category
+        description: Product category label (widget / gadget).
+      - name: region
+        description: Sales region label (north / south / east / west).
+      - name: amount
+        description: Transaction amount in whole currency units.
+
+  - name: stg_filler_b
+    description: >
+      Filler staging model (L2 harness Task 7). Non-trap pass-through over
+      seed_filler that upper-cases region; deliberately carries zero inline
+      SQL comments, anchoring the low-density end of the fixture's
+      comment-density spread.
+    columns:
+      - name: id
+        description: Surrogate key, one row per filler record.
+      - name: region
+        description: Sales region label, upper-cased (NORTH / SOUTH / EAST / WEST).
+      - name: category
+        description: Product category label (widget / gadget).
+      - name: amount
+        description: Transaction amount in whole currency units.

@@ -1,0 +1,7 @@
+id,category,region,amount
+1,widget,north,100.00
+2,gadget,south,200.00
+3,widget,east,150.00
+4,gadget,west,250.00
+5,widget,north,120.00
+6,gadget,south,180.00
