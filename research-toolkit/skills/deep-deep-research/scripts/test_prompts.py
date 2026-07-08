@@ -226,6 +226,30 @@ def test_synthesis_prompt_interpolates_fields():
     assert "## Refuted claims" in result
 
 
+def test_synthesis_prompt_header_does_not_overclaim_vote_quorum_for_all_confirmed():
+    """Whole-branch review Task 8 finding 2 (Reviewer A): the header used to
+    unconditionally claim EVERY confirmed claim "survived {VOTES_PER_CLAIM}
+    -vote adversarial verification" — false for opinion claims, which never
+    go through a vote quorum (they go through single-check attribution
+    confirmation, SKILL.md Stage 5b). The header must not assert a uniform
+    vote-quorum mechanism for the whole confirmed set."""
+    from prompts import synthesis_prompt
+    from schemas import VOTES_PER_CLAIM
+
+    result = synthesis_prompt(
+        question="Q?",
+        confirmed_block="",
+        killed_block="",
+        n_confirmed=2,
+    )
+    # the old, factually-false-for-opinions phrasing must be gone
+    assert f"claims survived {VOTES_PER_CLAIM}-vote adversarial verification" not in result
+    # must still name the fact-path mechanism (vote quorum) ...
+    assert f"{VOTES_PER_CLAIM}-vote" in result
+    # ... and the opinion-path mechanism, so neither is overclaimed as universal
+    assert "attribution confirmation" in result.lower()
+
+
 # ---------------------------------------------------------------------------
 # CLI tests — `python prompts.py {sub} ...` prints assembled prompt to stdout
 # ---------------------------------------------------------------------------

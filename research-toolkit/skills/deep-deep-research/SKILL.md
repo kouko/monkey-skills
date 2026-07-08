@@ -393,7 +393,9 @@ Each ranked claim routes on the **claimType** tag set during Stage 3
 extraction to one of two independent verification paths — `fact` claims get
 the full adversarial-refutation quorum (unchanged from before claimType
 existed); `opinion` claims get a single, narrower attribution-confirmation
-check. **Decomposition in Stage 3 already means no claim reaching Stage 5
+check. **Fail-safe direction at this routing decision: a claim with no
+`claimType`, or any `claimType` other than exactly `opinion`, routes through
+5a — never assume opinion.** **Decomposition in Stage 3 already means no claim reaching Stage 5
 carries an unchecked factual assertion inside an opinion wrapper** — a mixed
 statement was split into its `fact` and `opinion` components before ranking,
 so an opinion-routed claim is purely the interpretive/judgment component; if
@@ -727,7 +729,11 @@ without the opt-in meta-mode / purpose-fit / calibration prepends above),
 write the remaining small inputs to files — the report object from step 3 to
 `work/report.json`, the Stage-1 angles to `work/angles.json`, and the Stage-5
 confirmed/killed partitions to `work/confirmed.json` / `work/killed.json` —
-then produce stats + the rendered markdown:
+then produce stats + the rendered markdown, reusing `work/verdicts.json`
+(already materialized in Stage 6 step 1) so `agentCalls` is costed off each
+claim's actual verdict-list length (3 for a fact claim's vote quorum, 1 for
+an opinion claim's single attribution check) rather than assuming every
+verified claim cost a uniform `VOTES_PER_CLAIM`:
 
    ```
    python scripts/synthesis.py report \
@@ -736,7 +742,8 @@ then produce stats + the rendered markdown:
      --key angles=work/angles.json \
      --key-dir all_claims=work/claims \
      --key confirmed=work/confirmed.json \
-     --key killed=work/killed.json > work/final.json
+     --key killed=work/killed.json \
+     --key verdicts_per_claim=work/verdicts.json > work/final.json
    ```
 
    `--key-dir all_claims=work/claims` merges every `*.json` array in the
@@ -806,4 +813,4 @@ not error out:
 | 6 | `purpose_fit.py block` | `{inferred_purpose, confidence, mode, mooting_factors, frames}` → `{purpose_fit_block}` |
 | 6 | `calibrate.py block` | — → `{calibration_block}` |
 | 6 | `schemas.py report` | — → report schema |
-| 6 | `synthesis.py report --key report=work/report.json --key ranked_claims=work/ranked.json --key angles=work/angles.json --key-dir all_claims=work/claims --key confirmed=work/confirmed.json --key killed=work/killed.json` | per-key files (`--key NAME=FILE`, `--key-dir NAME=DIR`; stdin unused) → `{stats, markdown}` |
+| 6 | `synthesis.py report --key report=work/report.json --key ranked_claims=work/ranked.json --key angles=work/angles.json --key-dir all_claims=work/claims --key confirmed=work/confirmed.json --key killed=work/killed.json --key verdicts_per_claim=work/verdicts.json` | per-key files (`--key NAME=FILE`, `--key-dir NAME=DIR`; stdin unused) → `{stats, markdown}` |

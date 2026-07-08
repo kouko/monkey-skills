@@ -197,7 +197,7 @@ def synthesis_prompt(
 
 **Question:** {question}
 
-{n_confirmed} claims survived {VOTES_PER_CLAIM}-vote adversarial verification. Merge semantic duplicates and synthesize.
+{n_confirmed} claims survived verification — fact claims via {VOTES_PER_CLAIM}-vote adversarial quorum, opinion claims via single-check attribution confirmation. Merge semantic duplicates and synthesize.
 
 ## Confirmed claims
 {confirmed_block}

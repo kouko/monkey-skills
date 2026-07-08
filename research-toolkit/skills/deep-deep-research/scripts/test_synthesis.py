@@ -13,6 +13,31 @@ from pathlib import Path
 _SCRIPTS_DIR = Path(__file__).resolve().parent
 
 
+class TestIsOpinionVerdicts:
+    """`_is_opinion_verdicts` must never crash and never misclassify a
+    non-opinion-shaped verdicts list as opinion-shaped — it should fall
+    through to fact-shaped rendering (return False) on every malformed
+    input, per its own docstring's robustness claim."""
+
+    def test_empty_list_returns_false(self):
+        from synthesis import _is_opinion_verdicts
+
+        assert _is_opinion_verdicts([]) is False
+
+    def test_list_containing_none_entry_returns_false(self):
+        from synthesis import _is_opinion_verdicts
+
+        assert _is_opinion_verdicts([None]) is False
+
+    def test_malformed_dict_missing_all_expected_keys_returns_false(self):
+        from synthesis import _is_opinion_verdicts
+
+        # neither refuted/confidence (fact shape) nor attributionConfirmed
+        # (opinion shape) — an unrecognized dict must still be treated as
+        # fact-shaped, not crash and not be misclassified as opinion.
+        assert _is_opinion_verdicts([{"someOtherKey": "value"}]) is False
+
+
 class TestConfirmedBlock:
     """_confirmed_block emits `### [i] {claim}` + `Vote: {valid-refuted}-{refuted}`."""
 
@@ -57,6 +82,49 @@ class TestConfirmedBlock:
         ]
         block = _confirmed_block([claim], [True], verdicts_per_claim)
         assert "https://example.com/url-keyed" in block
+
+    def test_confirmed_block_opinion_claim_surfaces_held_by_not_fake_vote(self):
+        """Whole-branch review Task 8 finding 2 (Reviewer A): an opinion
+        claim's single attribution-confirmation verdict has no
+        `refuted`/`confidence` keys, so the fact-shaped rendering produced
+        a misleading 'Vote: 1-0' and a fabricated 'confidence: low' (an
+        artifact of `.get("confidence", "low")` defaulting, not a real
+        signal). heldBy (Task 1/3) must also reach the rendered block so
+        synthesis can preserve attribution rather than adjudicate it."""
+        from synthesis import _confirmed_block
+
+        claim = {
+            "claim": "The policy is a mistake.",
+            "sourceUrl": "https://example.com/oped",
+            "sourceQuality": "opinion",
+            "quote": "This policy is a clear mistake.",
+            "heldBy": "Jane Analyst",
+        }
+        verdicts_per_claim = [
+            [{"attributionConfirmed": True, "evidence": "Quote directly expresses the view."}]
+        ]
+        survived = [True]
+
+        block = _confirmed_block([claim], survived, verdicts_per_claim)
+
+        assert "### [0] The policy is a mistake." in block
+        assert "Attributed to: Jane Analyst" in block
+        # must not fabricate vote/confidence vocabulary for an opinion claim
+        assert "Vote:" not in block
+        assert "confidence" not in block.lower()
+
+    def test_confirmed_block_opinion_claim_without_held_by_omits_attribution_line(self):
+        from synthesis import _confirmed_block
+
+        claim = {
+            "claim": "Unattributed opinion.",
+            "sourceUrl": "https://example.com/anon",
+            "sourceQuality": "opinion",
+            "quote": "q",
+        }
+        verdicts_per_claim = [[{"attributionConfirmed": True, "evidence": "ev"}]]
+        block = _confirmed_block([claim], [True], verdicts_per_claim)
+        assert "Attributed to:" not in block
 
     def test_confirmed_block_picks_best_non_refuting(self):
         from synthesis import _confirmed_block
@@ -131,13 +199,20 @@ class TestBuildStats:
         angles = [{}, {}, {}]  # 3
         sources = ["u1", "u2"]  # 2
         all_claims = [{}, {}]  # 2 extracted
-        ranked_claims = [{}, {}]  # 2 verified
+        ranked_claims = [{}, {}]  # 2 verified, both fact-routed (3-vote quorum each)
         confirmed = [{}]  # 1
         killed = [{}]  # 1
+        verdicts_per_claim = [
+            [{"refuted": False}, {"refuted": False}, {"refuted": False}],
+            [{"refuted": True}, {"refuted": False}, {"refuted": False}],
+        ]
 
-        stats = _build_stats(angles, sources, all_claims, ranked_claims, confirmed, killed)
-        # agentCalls = 1 + angles + sources + verified*VOTES_PER_CLAIM(3) + 1
-        # = 1 + 3 + 2 + (2*3) + 1 = 13
+        stats = _build_stats(
+            angles, sources, all_claims, ranked_claims, confirmed, killed,
+            verdicts_per_claim,
+        )
+        # agentCalls = 1 + angles + sources + sum(len(verdicts) per claim) + 1
+        # = 1 + 3 + 2 + (3+3) + 1 = 13
         assert stats["agentCalls"] == 13
         assert stats["angles"] == 3
         assert stats["sourcesFetched"] == 2
@@ -145,6 +220,39 @@ class TestBuildStats:
         assert stats["claimsVerified"] == 2
         assert stats["confirmed"] == 1
         assert stats["killed"] == 1
+
+    def test_agent_calls_counts_opinion_claims_at_one_not_votes_per_claim(self):
+        """Reviewer A repro (whole-branch review, Task 8 finding 1): a
+        mixed fact+opinion input was reported at the wrong agentCalls count
+        because the old formula assumed every verified claim cost a full
+        VOTES_PER_CLAIM(3)-vote quorum. An opinion claim costs exactly 1
+        agent call (a single attribution-confirmation check per SKILL.md
+        Stage 5b), not 3. The true per-claim cost is the length of that
+        claim's verdict list (already available via verdicts_per_claim),
+        not an assumed constant.
+        """
+        from synthesis import _build_stats
+
+        angles = [{}]  # 1
+        sources = ["u1"]  # 1
+        all_claims = [{}, {}]  # 2
+        ranked_claims = [{}, {}]  # 1 fact + 1 opinion
+        confirmed = [{}, {}]
+        killed = []
+        verdicts_per_claim = [
+            # fact claim: 3-vote adversarial quorum
+            [{"refuted": False}, {"refuted": False}, {"refuted": False}],
+            # opinion claim: single attribution-confirmation check
+            [{"attributionConfirmed": True}],
+        ]
+
+        stats = _build_stats(
+            angles, sources, all_claims, ranked_claims, confirmed, killed,
+            verdicts_per_claim,
+        )
+        # verify_calls = 3 (fact) + 1 (opinion) = 4, NOT 2*VOTES_PER_CLAIM(3)=6
+        # agentCalls = 1 + 1 + 1 + 4 + 1 = 8
+        assert stats["agentCalls"] == 8
 
 
 class TestRenderMarkdown:
@@ -304,9 +412,10 @@ class TestKeyFileFlags:
             "all_claims": [{"claim": "A1."}, {"claim": "A2."}, {"claim": "B1."}],
             "confirmed": [{}],
             "killed": [],
+            "verdicts_per_claim": [[{"refuted": False}, {"refuted": False}, {"refuted": False}]],
         }
         flags = ["--key-dir", f"all_claims={claims_dir}"]
-        for name in ("report", "ranked_claims", "angles", "confirmed", "killed"):
+        for name in ("report", "ranked_claims", "angles", "confirmed", "killed", "verdicts_per_claim"):
             path = tmp_path / f"{name}.json"
             path.write_text(json.dumps(payload[name]), encoding="utf-8")
             flags += ["--key", f"{name}={path}"]
@@ -408,6 +517,10 @@ class TestReportCLI:
             "all_claims": [{}, {}],
             "confirmed": [{}],
             "killed": [{}],
+            "verdicts_per_claim": [
+                [{"refuted": False}, {"refuted": False}, {"refuted": False}],
+                [{"refuted": False}, {"refuted": False}, {"refuted": False}],
+            ],
         }
         out = subprocess.run(
             [sys.executable, "synthesis.py", "report"],
@@ -420,7 +533,7 @@ class TestReportCLI:
         result = json.loads(out.stdout)
         # 2 sources collected from ranked_claims
         assert result["stats"]["sourcesFetched"] == 2
-        # agentCalls = 1 + 3 + 2 + (2*3) + 1 = 13
+        # agentCalls = 1 + 3 + 2 + (3+3) + 1 = 13
         assert result["stats"]["agentCalls"] == 13
         assert "## Findings" in result["markdown"]
         assert "# Q?" in result["markdown"]
