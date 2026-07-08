@@ -44,7 +44,7 @@ def test_verbatim_markers():
         angle="academic/technical",
         question="Does X cause Y?",
     )
-    assert "FALSIFIABLE" in fetch
+    assert "claimType" in fetch
 
     scope = scope_prompt(question="Does X cause Y?")
     assert "complementary search angles" in scope
@@ -94,6 +94,34 @@ def test_fetch_prompt_interpolates_fields():
     assert source["title"] in result
     assert "recent news" in result
     assert "Structured output only." in result
+
+
+def test_fetch_prompt_instructs_claim_type_classification_and_decomposition():
+    """fetch_prompt stops filtering to falsifiable-only; instead it
+    classifies claimType, instructs decomposing mixed fact+opinion
+    statements into two separate claims (with a fact fail-safe when a
+    statement cannot be cleanly decomposed), and instructs capturing
+    heldBy for any claim with a natural attributable source — fact or
+    opinion, not conditional on claimType."""
+    from prompts import fetch_prompt
+    source = {"url": "https://example.com/paper", "title": "Important Paper"}
+    result = fetch_prompt(source=source, angle="recent news", question="Q?")
+
+    assert "FALSIFIABLE" not in result
+
+    # (a) classify claimType
+    assert "claimType" in result
+    assert "fact" in result
+    assert "opinion" in result
+
+    # (b) decompose mixed statements into two claims, fail-safe to fact
+    assert "decompos" in result.lower()
+    assert "fact" in result.lower() and "opinion" in result.lower()
+    # fail-safe: cannot cleanly decompose -> default to fact, never opinion
+    assert "cannot" in result.lower() or "unable" in result.lower()
+
+    # (c) heldBy captured for both fact and opinion claims, not conditional
+    assert "heldBy" in result
 
 
 def test_verify_prompt_voter_numbering():

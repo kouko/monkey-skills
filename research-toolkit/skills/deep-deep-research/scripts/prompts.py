@@ -84,11 +84,14 @@ Fetch and extract key claims from this source:
 ## Task
 1. Use WebFetch to retrieve the page content.
 2. Assess source quality: primary research/institution? secondary reporting? blog/opinion? forum? unreliable?
-3. Extract 2-5 FALSIFIABLE claims that bear on the research question. Each claim must:
-   - be a concrete, checkable statement (not vague generalities)
+3. Extract 2-5 claims that bear on the research question. Each claim must:
+   - be a concrete statement (not a vague generality)
    - include a direct quote from the source as support
    - be rated central/supporting/tangential to the research question
-4. Note publish date if available.
+   - be tagged with claimType: "fact" (a checkable, verifiable proposition) or "opinion" (a viewpoint, judgment, or interpretation)
+4. If a single source statement mixes a factual component with an opinion component (e.g. "GDP grew 3%, which proves the policy failed"), decompose it into TWO separate claim objects — one claimType: "fact" claim for the factual component, one claimType: "opinion" claim for the opinion component — rather than emitting one ambiguously-typed claim. If a statement cannot be cleanly decomposed, do not guess: keep it as a single claim and default claimType to "fact" (never default an undecomposable statement to "opinion" — uncertainty always resolves toward the stricter check).
+5. Whenever a claim (fact OR opinion) has a natural attributable source — a named person, organization, or institution the claim/view is attributed to — capture it in heldBy. This applies equally to both claimTypes, not just opinions.
+6. Note publish date if available.
 
 If the fetch fails or the page is irrelevant/paywalled, return claims: [] and sourceQuality: "unreliable".
 
