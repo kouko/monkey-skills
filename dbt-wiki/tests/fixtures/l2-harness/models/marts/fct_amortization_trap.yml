@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: fct_amortization_trap
+    description: >
+      Trap fixture (L2 harness Task 5). Returns the as-of-today amortization
+      snapshot from seed_amortization by filtering to as_of_date <= today
+      (a fixed reference date, 2026-07-01) before taking the latest snapshot,
+      guarding against the MAX(as_of_date) trap where a forward-dated
+      placeholder row (2099-12-31) would win despite not being a real snapshot.
+    columns:
+      - name: as_of_date
+        description: >
+          The as-of-today snapshot date — the latest as_of_date on or before
+          the fixed reference date 2026-07-01, one row.
+      - name: book_value
+        description: >
+          Amortized book value at the as-of-today snapshot, as opposed to the
+          naive MAX(as_of_date) trap that returns the forward-dated
+          placeholder row's value.
