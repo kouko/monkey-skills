@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: fct_fanout_trap
+    description: >
+      Trap fixture (L2 harness Task 3). Pre-aggregates seed_fanout_line_items
+      by order_id before joining to seed_fanout_orders, so each order's
+      shipping_fee (an order-grain attribute) is added exactly once per order,
+      guarding against the compound-key fan-out trap where joining orders to
+      raw line items re-adds shipping_fee once per line item.
+    columns:
+      - name: order_id
+        description: Order identifier, one row per order.
+      - name: order_total
+        description: >
+          SUM(quantity * unit_price) across the order's line items plus the
+          order's shipping_fee, added exactly once — the grain-correct order
+          total, as opposed to the fan-out trap that overcounts shipping_fee.

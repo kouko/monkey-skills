@@ -1,0 +1,4 @@
+order_id,customer_id,shipping_fee
+1,101,5.00
+2,102,10.00
+3,103,0.00
