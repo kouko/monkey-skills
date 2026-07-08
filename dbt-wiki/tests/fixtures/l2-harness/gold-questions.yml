@@ -1,0 +1,56 @@
+# Gold questions for the L2 e2e harness (Task 8).
+#
+# One entry per trap model. A blind agent, given only the dbt project (seeds +
+# models + schema.yml), should answer each `question` by inspecting the project;
+# a correct answer equals `expected_answer` AND respects every statement in
+# `required_invariants`. Each `expected_answer` is independently re-derivable
+# straight from the raw seed CSVs (see test_gold_questions.py) — never copied
+# from a trap model's own output.
+#
+# `trap` keys the seed-derived recomputation in test_gold_questions.py.
+
+- trap: avg_ratio
+  question: >-
+    Across every row in seed_avg_ratio, what is the overall ratio of the
+    numerator quantity to the denominator quantity (i.e. total numerator
+    divided by total denominator)?
+  expected_answer: 0.0875
+  required_invariants:
+    - must not compute a naive AVG over the pre-aggregated `ratio` column
+    - must weight by denominator, i.e. SUM(numerator) / SUM(denominator)
+
+- trap: fanout
+  question: >-
+    What is the total value of all orders, where each order's value is its line
+    items (quantity times unit_price) plus its shipping_fee?
+  expected_answer: 82.50
+  required_invariants:
+    - must aggregate line items to order grain before joining to orders
+    - must not re-add shipping_fee once per line item (order 1 has 2 line items)
+    - shipping_fee must be counted exactly once per order
+
+- trap: categorical
+  question: How many customers have status 'active'?
+  expected_answer: 3
+  required_invariants:
+    - the status domain is exactly {active, churned, trial}
+    - must not relabel or collapse churned/trial rows into active
+    - must count only rows whose status is literally 'active'
+
+- trap: amortization
+  question: >-
+    As of the fixture's reference date 2026-07-01, what is the latest
+    book_value in seed_amortization?
+  expected_answer: 800.00
+  required_invariants:
+    - must filter to as_of_date <= 2026-07-01 before selecting the latest row
+    - must not take MAX(as_of_date) over all rows (that selects the 2099-12-31 placeholder)
+    - the forward-dated 2099-12-31 placeholder row must be excluded
+
+- trap: regional_twins
+  question: >-
+    What is the full-scope total amount for entity 'widget' across all regions?
+  expected_answer: 160.00
+  required_invariants:
+    - must sum 'widget' rows across every region, not a single region
+    - must not scope to one region (e.g. WHERE region = 'us') and undercount
