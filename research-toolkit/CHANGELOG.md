@@ -33,9 +33,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   claims keep the unmodified `VOTES_PER_CLAIM = 3` adversarial-refutation
   quorum; `opinion` claims route to the new attribution-confirmation check.
   Both paths write into the same ordered `work/votes.json` `vote_results`
-  array Stage 6 already consumes, so synthesis is unaffected. Because
+  array Stage 6 already consumes for the final survival decision. Because
   mixed statements are already decomposed at Stage 3, no claim reaching
   Stage 5 carries an unchecked factual assertion inside an opinion wrapper.
+- **Stage 6 synthesis is claimType-aware** (whole-branch-review-driven
+  fix, not a per-task item): `_build_stats`'s `agentCalls` figure now
+  sums each claim's actual verdict-list length (3 for the fact quorum, 1
+  for an opinion attribution-check) instead of assuming 3 for every
+  verified claim; `_confirmed_block` renders an attribution-confirmed
+  opinion with its own vocabulary (surfacing `heldBy` when present) and
+  never fabricates fact-shaped "Vote: N-M" / "confidence: low" text for
+  it; `synthesis_prompt`'s header no longer overclaims that every
+  confirmed claim survived a vote-based quorum.
 - The same `claimType`/`heldBy`/attribution primitives are synced (via
   `scripts/sync-primitives.sh`) into `fact-check`, `cite-check`, and
   `deep-read`, which share the SSOT `deep-deep-research/scripts/{schemas,rank,prompts}.py`.
