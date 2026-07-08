@@ -1,0 +1,16 @@
+version: 2
+
+models:
+  - name: fct_avg_ratio_trap
+    description: >
+      Trap fixture (L2 harness Task 2). Computes the correct weighted ratio
+      (SUM(numerator) / SUM(denominator)) from seed_avg_ratio, guarding
+      against the common analytics mistake of naively averaging a
+      pre-aggregated per-row ratio column (AVG(ratio)), which is
+      mathematically wrong whenever row denominators differ.
+    columns:
+      - name: weighted_ratio
+        description: >
+          SUM(numerator) / SUM(denominator) across all seed_avg_ratio rows
+          — the correct weighted aggregate, as opposed to the naive
+          AVG(ratio) trap.
