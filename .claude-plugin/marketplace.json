@@ -133,6 +133,11 @@
       "name": "skill-dev-toolkit",
       "description": "Self-contained toolkit to author Claude Agent Skills — create, score, refactor, tune, dogfood.",
       "source": "./skill-dev-toolkit/"
+    },
+    {
+      "name": "loom-discovery",
+      "description": "The loom family's problem-space station: establishes what problem exists, for whom, and whether it's worth your time — before principles/design/spec/code start. Two skills: business-value runs an adversarial worth-it check (Shape Up betting register — GO / NO-GO / NEEDS-MORE-RESEARCH; optional, skippable for personal tools, re-entrant after research; market sizing/GTM/revenue delegates to domain-teams:planning-team, never inline) and user-insights runs evidence-linked needs research (job stories, contexts, today's workarounds) that ends in a user-ratified value commitment — the agent proposes from evidence, the user ratifies, never a self-commit. Artifacts land under docs/loom/discovery/<date>-<slug>/ (user-insights.md, evidence.md, research/, optional business-value.md) so the reasoning trail survives for future drift-prevention and re-understanding. Heavyweight research delegates to research-toolkit:deep-deep-research; light scopes use inline WebSearch. Key-free, agent-portable, no hooks.",
+      "source": "./loom-discovery/"
     }
   ]
 }
