@@ -10,6 +10,7 @@ truth.
 |---|---|
 | [`BACKLOG.md`](BACKLOG.md) | Open items SSOT — cross-plugin debts, parked decisions, re-triggers |
 | [`memory/`](memory/) | Practice-memory store — repo-native home for distilled loom-* practices, habits, processes, and recurring gotchas (one fact per file) |
+| [`discovery/`](discovery/) | Problem-space artifacts — home of loom-discovery outputs, one folder per run at `docs/loom/discovery/<date>-<slug>/` containing `business-value.md`, `user-insights.md`, `research/`, `evidence.md` |
 | [`specs/`](specs/) | Brainstorming briefs (5-axis output) |
 | [`plans/`](plans/) | Writing-plans output (atomic task lists) |
 | [`audits/`](audits/) | Audit reports and changesets |
