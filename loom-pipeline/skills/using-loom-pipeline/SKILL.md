@@ -182,10 +182,9 @@ for the human's answer before the next Workflow call.
 - The driver never produces verdicts.
 - The driver never merges.
 
-Judgment stays in the four Workflow-driven station plugins (cross-plugin
-delegation contract) — and in `loom-discovery`, the fifth loom station,
-which the conductor never drives at all — the conductor only
-orchestrates and records.
+Judgment stays in the four Workflow-driven station plugins (cross-plugin delegation contract)
+— and in `loom-discovery`, the fifth loom station, which the conductor
+never drives at all — the conductor only orchestrates and records.
 
 **Stable-prefix dispatch convention**: station preambles are
 stable/cacheable; the per-change payload is appended, never prepended —

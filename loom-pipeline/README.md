@@ -34,9 +34,10 @@ principles.
 +------------------------------------------------------------+
 ```
 
-Judgment stays in the four station plugins (cross-plugin delegation
-contract, repo `CLAUDE.md`); this plugin only orchestrates and
-records.
+Judgment stays in the four Workflow-driven station plugins and in
+`loom-discovery`, the fifth, interactive-only station (cross-plugin
+delegation contract, repo `CLAUDE.md`); this plugin only orchestrates
+and records.
 
 ## Execution flow
 
@@ -145,7 +146,7 @@ station — it explores intent before a brief exists, which is why
 loom-code's family-entry intake work (steps 1–2, upstream/station
 checks) already lives inside brainstorming as its **Axis 0**, run
 before Axis 1. Giving `using-loom-code` a second, parallel `§Intake`
-section would duplicate that check rather than reuse it, so the four
+section would duplicate that check rather than reuse it, so the five
 other entries carry `§Intake` and `using-loom-code` instead points into
 brainstorming's Axis 0.
 
