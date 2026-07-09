@@ -1,11 +1,15 @@
 # loom-pipeline
 
 The **conductor** plugin for the loom suite. It never authors an
-artifact and never produces a verdict — it only sequences the four
-station plugins (`loom-product-principles`, `loom-interface-design`,
-`loom-spec`, `loom-code`) through the principles→design→spec→code
-pipeline, one deterministic `Workflow` invocation per segment, and
-stops for the human at 4 fixed gates in between.
+artifact and never produces a verdict — it only sequences four of the
+five loom station plugins (`loom-product-principles`,
+`loom-interface-design`, `loom-spec`, `loom-code`) through the
+principles→design→spec→code pipeline, one deterministic `Workflow`
+invocation per segment, and stops for the human at 4 fixed gates in
+between. The fifth station, `loom-discovery` (the problem-space entry,
+upstream of principles), is v0.1 **interactive-only** — the conductor
+does not drive it as a Workflow segment; pipeline runs still start at
+principles.
 
 ## What it is — the human, plus a 3-layer execution stack
 
@@ -37,9 +41,11 @@ records.
 ## Execution flow
 
 Three `Workflow` invocations — one per segment, never one call for the
-whole run — carry the four station plugins in order (principles →
-interface-design → spec → code); the human gates (a)–(d) sit around
-them:
+whole run — carry four of the five station plugins in order (principles →
+interface-design → spec → code); `loom-discovery`, the fifth station,
+sits upstream of principles and is v0.1 interactive-only, not a Workflow
+segment. The human gates (a)–(d) sit around the three Workflow-driven
+segments:
 
 ```mermaid
 flowchart TD
@@ -73,8 +79,11 @@ not here.
 Install from the monkey-skills marketplace like any other plugin.
 Requirements, checked before the entry skill fires:
 
-- All four station plugins installed: `loom-product-principles`,
-  `loom-interface-design`, `loom-spec`, `loom-code`.
+- The four station plugins the conductor drives, installed:
+  `loom-product-principles`, `loom-interface-design`, `loom-spec`,
+  `loom-code`. (`loom-discovery`, the fifth loom station, sits upstream
+  of principles and is v0.1 interactive-only — not required by the
+  conductor and never driven as a Workflow segment.)
 - A Claude Code host that exposes the **Workflow** primitive (a tool
   accepting an arbitrary `scriptPath`). No Workflow tool → the skill
   reports `loom-pipeline: N/A` with the reason and stops; it never
@@ -115,9 +124,10 @@ before the next `Workflow` call:
 The driver requires the Workflow primitive, which Codex does not
 expose. On Codex this plugin is **N/A by definition** — report
 `loom-pipeline: N/A (no Workflow primitive on this host)` and stop; do
-not attempt an inline substitute. The four station plugins remain
-usable on Codex — run them interactively, one station at a time,
-instead of through this conductor.
+not attempt an inline substitute. All five loom station plugins
+(including `loom-discovery`) remain usable on Codex — run them
+interactively, one station at a time, instead of through this
+conductor.
 
 ## Family entries & naming convention
 
@@ -126,7 +136,7 @@ instead of through this conductor.
 
 | Name pattern | Role | Examples |
 |---|---|---|
-| `using-loom-*` | **Entry** — the family-routing skill for one plugin. Fires on vague/goal-shaped asks, checks the on-ramp criteria, hands off to the right station. | `using-loom-product-principles`, `using-loom-interface-design`, `using-loom-spec`, `using-loom-code`, `using-loom-pipeline` |
+| `using-loom-*` | **Entry** — the family-routing skill for one plugin. Fires on vague/goal-shaped asks, checks the on-ramp criteria, hands off to the right station. | `using-loom-discovery`, `using-loom-product-principles`, `using-loom-interface-design`, `using-loom-spec`, `using-loom-code`, `using-loom-pipeline` |
 | plain artifact names | **Stations** — tuned to fire on direct, specific asks for their own artifact, without needing the entry skill first. | `product-principles`, `design-system`, `interaction-flows`, `spec-expansion`, `completeness-critic` |
 
 `brainstorming` is loom-code's **discovery** skill, not an artifact
