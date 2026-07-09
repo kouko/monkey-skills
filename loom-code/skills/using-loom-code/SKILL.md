@@ -93,7 +93,7 @@ Walk through these stages in order. Skip a stage only when its precondition is a
 - **`domain-teams:code-team`** — passive gate entry. Use it to audit existing artifacts; this toolkit is for building from scratch. The knowledge layer (`standards/`, `rubrics/`, `checklists/`) here is a byte-identical functional copy of `code-team/`; sync via `scripts/distribute.py`, drift-checked by `scripts/verify-drift.py`.
 - **`dev-workflow:{git-memory, complexity-critique, proposal-critique}`** — loom-code **delegates** to these at the right moments. Never duplicate their logic.
 - **`obra/superpowers`** — overlapping skill names + dual SessionStart hook. To disable loom-code's hook injection: `export LOOM_CODE_MODE=off` in shell rc.
-- **loom family reception** — `loom-pipeline`'s SessionStart hook carries the family map (the five `using-loom-*` entries) + the on-ramp criteria table; `brainstorming`'s Axis 0 points to it rather than duplicating it here.
+- **loom family reception** — `loom-pipeline`'s SessionStart hook carries the family map (the six `using-loom-*` entries) + the on-ramp criteria table; `brainstorming`'s Axis 0 points to it rather than duplicating it here.
 
 ## What this router does NOT do
 
