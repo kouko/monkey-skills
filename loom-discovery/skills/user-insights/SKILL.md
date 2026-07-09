@@ -138,7 +138,7 @@ translate):
 3. **Propose** the commitment (Mode 2): present the space + an explicit
    Recommend / Why / Conditional-reversal recommendation.
 4. **Ratify**: write the commitment into §Value commitment only after the user
-   agrees; mark the ratification date.
+   ratifies; mark the ratification date.
 5. **Close** with §Risks & open questions; unsupported claims live there, never
    in Opportunity space as if settled.
 

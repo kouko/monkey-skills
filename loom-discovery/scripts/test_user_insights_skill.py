@@ -74,7 +74,7 @@ def test_template_has_no_solution_section():
     # Why: problem-space purity (Intercom rule) — a solution heading would leak HOW.
     body = INSIGHTS_TEMPLATE.read_text(encoding="utf-8")
     for line in body.splitlines():
-        if re.match(r"^#+\s*solution\b", line.strip(), re.IGNORECASE):
+        if re.match(r"^#+.*\bsolution", line.strip(), re.IGNORECASE):
             raise AssertionError(f"template leaks a solution heading: {line!r}")
 
 
