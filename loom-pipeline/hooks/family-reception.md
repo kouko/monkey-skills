@@ -7,6 +7,9 @@ You have the loom family of plugins available. One rule covers all of it:
 
 ## Family map
 
+- `using-loom-discovery` — jurisdiction: problem space (user-insights:
+  evidence-linked needs research; business-value: worth-it check). Start
+  here when the problem or users aren't yet evidence-backed.
 - `using-loom-product-principles` — jurisdiction: product constitution
   (north star + falsifiable principles). Start here for a new product idea.
 - `using-loom-interface-design` — jurisdiction: UI/UX surface (DESIGN.md +
@@ -21,9 +24,10 @@ You have the loom family of plugins available. One rule covers all of it:
 
 ## Three doors
 
-1. **Interactive design-side** — `using-loom-product-principles`,
-   `using-loom-interface-design`, `using-loom-spec` answer direct asks and
-   also recommend the next station in the journey.
+1. **Interactive design-side** — `using-loom-discovery`,
+   `using-loom-product-principles`, `using-loom-interface-design`,
+   `using-loom-spec` answer direct asks and also recommend the next
+   station in the journey.
 2. **Interactive loom-code** — `using-loom-code` answers direct asks to
    write/change/review code, and is the unskippable gate before any brief.
 3. **Explicit Workflow (pipeline + batch)** — `using-loom-pipeline` drives
@@ -43,6 +47,10 @@ references it — do not copy its rows elsewhere.
 | 2 | The work touches a user-facing surface AND no `DESIGN.md`/`ui-flows.md` already covers it | Suggest **using-loom-interface-design first** |
 | 3 | The work is multi-state/multi-object behavior AND no spec or change-folder exists for it | Suggest **using-loom-spec first** |
 | Negative guard | The work is a bug fix, a refactor, or a test-covered increment | **Do not interrupt** — proceed directly, skip the recommendation silently |
+| 4 | The work is product-shaped AND the problem/users cannot yet be articulated with evidence (the user would be guessing at who-needs-what) | Suggest **using-loom-discovery first** |
+
+When both row 4 and row 1 fire, recommend discovery first — principles
+consumes discovery's value-commitment output.
 
 **Recommend ONCE, never nag.** Surface the recommendation a single time,
 record the user's choice, then proceed either way — do not re-ask on
