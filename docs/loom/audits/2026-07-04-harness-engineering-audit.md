@@ -2,6 +2,7 @@
 
 - **Date**: 2026-07-04
 - **Scope**: all five loom plugins (loom-product-principles, loom-interface-design, loom-spec, loom-code, loom-pipeline) + family tissue (#488) + firing harness + git-memory delegation
+- **Amended 2026-07-10**: loom-discovery (problem-space station) added — see docs/loom/specs/2026-07-09-loom-discovery-station.md. Scope note above reflects the five-plugin family at audit time (2026-07-04); the family is now six plugins / five stations.
 - **Yardstick**: "harness engineering" as defined by the 2026-02 canon (term coined by Mitchell Hashimoto; formalized by OpenAI / Ryan Lopopolo): *"the discipline of designing the scaffolding — context delivery, tool interfaces, planning artifacts, verification loops, memory systems, and sandboxes — that surrounds an AI agent and determines whether it succeeds or fails on real tasks."*
 - **Status**: findings accepted; implementation decisions PENDING discussion (see §Recommendations)
 
