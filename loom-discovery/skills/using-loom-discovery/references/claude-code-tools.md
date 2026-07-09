@@ -6,6 +6,12 @@ This plugin's skills phrase host interaction in host-neutral prose
 Code call shape that prose resolves to, for both member skills reached
 through this router.
 
+> Grounding: skill/agent names below verified 2026-07-10 against shipped
+> frontmatter (`loom-discovery/skills/*/SKILL.md`,
+> `research-toolkit/skills/deep-deep-research/`,
+> `domain-teams/skills/planning-team/`) — same evidence grain as the
+> sibling `codex-tools.md`.
+
 ## Invoking the member skills
 
 | Skill | Mechanism |
