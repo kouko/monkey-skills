@@ -37,6 +37,8 @@ instead of proceeding here:
 - A spec / requirement fan-out ask (multi-state behavior, edge cases,
   acceptance criteria) → `using-loom-spec`
 - A coding ask (write, change, review, or ship code) → `using-loom-code`
+- The problem/users are unarticulated (no evidence for who needs what) →
+  `using-loom-discovery` first; resume here with its output as seed
 
 ### Step 3 — Hand off
 

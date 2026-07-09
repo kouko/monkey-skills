@@ -39,6 +39,13 @@ lightweight **decision filter**, not a business plan. Stop at the constitution;
 do not run TDD, write code, or design the UI — those are downstream stations
 that *read* this file.
 
+**Tripwire — unanswerable grilling.** If the user cannot answer the
+problem/users grilling with evidence (they would be guessing at who
+needs what), do not dead-end into a fabricated North Star: route to
+`using-loom-discovery` (user-insights) for evidence-backed needs mapping
+first, then resume this skill using its value-commitment output as the
+seed for the North Star and Product Principles.
+
 ## Procedure — principles-first
 
 ### Step 1 — Read the authoring contract
