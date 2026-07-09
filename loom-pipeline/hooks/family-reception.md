@@ -47,10 +47,10 @@ references it — do not copy its rows elsewhere.
 | 2 | The work touches a user-facing surface AND no `DESIGN.md`/`ui-flows.md` already covers it | Suggest **using-loom-interface-design first** |
 | 3 | The work is multi-state/multi-object behavior AND no spec or change-folder exists for it | Suggest **using-loom-spec first** |
 | Negative guard | The work is a bug fix, a refactor, or a test-covered increment | **Do not interrupt** — proceed directly, skip the recommendation silently |
-| 4 | The work is product-shaped AND the problem/users cannot yet be articulated with evidence (the user would be guessing at who-needs-what) | Suggest **using-loom-discovery first** |
+| 4 | The work is product-shaped AND no `docs/loom/discovery/*/user-insights.md` already covers it AND the problem/users cannot yet be articulated with evidence (the user would be guessing at who-needs-what) | Suggest **using-loom-discovery first** |
 
-When both row 4 and row 1 fire, recommend discovery first — principles
-consumes discovery's value-commitment output.
+When both row 4 and row 1 fire, recommend discovery first — the
+principles station consumes discovery's value-commitment output.
 
 **Recommend ONCE, never nag.** Surface the recommendation a single time,
 record the user's choice, then proceed either way — do not re-ask on
