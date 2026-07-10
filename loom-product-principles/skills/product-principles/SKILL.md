@@ -107,10 +107,17 @@ transition is mechanical, not optional. Dispatching a **subagent** to run
 the audit is sanctioned.
 
 - Propose **2-3 canon candidates** with **fit/tension** notes, drawn from
-  **≥2 distinct traditions**.
+  **≥2 distinct traditions**. The candidates in one proposal round MUST be
+  **same-axis** alternatives — answers to the **same question** (e.g. all
+  "how is code organized"). Canons answering different questions (data
+  ownership vs code layering vs UI pattern) are **complementary** — pin
+  them as separate `## Anchors` rows; never present them together as one
+  exclusive pick-one menu.
 - Name 1-2 **considered-but-rejected** candidates and **surface** them to
   the user with reasons — the rejection list is the honesty device, not an
-  internal note.
+  internal note. This guard is **per-round**: it applies to **every
+  section's** candidate round (Product AND Design AND Engineering), not
+  just the first.
 - Before finalizing, consult the four canon base lists as a
   **completeness audit** ("did I miss a closer tradition?"):
   `references/canon-product.md`, `references/canon-design-interaction.md`,
@@ -161,6 +168,11 @@ principle. Push back and ask for a checkable form (✅ "primary task
 completes in ≤3 steps — check: count steps in the happy-path flow"). Fewer
 than 3 is not a constitution; more than 7 dilutes the non-negotiable
 weight. See the ✅/❌ examples in `references/principles-rules.md`.
+
+**Draft-time count self-check**: count the entries in each jurisdiction
+section **before presenting** a draft (3-7 Product; 1-7 optional sections);
+if over, merge entries before showing the user — do not wait for the
+validator to catch it.
 
 **Artifact language**: the target repo convention wins when one exists;
 absent one, write `PRINCIPLES.md` in the user's **conversation language** —

@@ -455,6 +455,55 @@ def test_anchors_and_ledger_bullets_scoped_omit_when_empty():
         "the '(likewise optional; omit when empty)' scoping"
 
 
+# --- cold-operator dogfood fix pins (T6.1: F1/F2/F3, no registered REQ-ids) --
+
+def test_flow_candidate_round_is_same_axis_alternatives():
+    """F1: the 2-3 candidates in one proposal round are same-axis
+    alternatives — answers to the SAME question; canons answering different
+    questions are complementary and become separate Anchors rows, never one
+    exclusive pick-one menu (live failure: Local-First / Clean Architecture /
+    SwiftUI-MVVM / Modular Monolith offered as one menu; the user stalled)."""
+    low = _text().lower()
+    assert "same-axis" in low or "same axis" in low, \
+        "candidates in one proposal round must be same-axis alternatives"
+    assert "same question" in low, \
+        "same-axis must be defined as answers to the SAME question"
+    assert "complementary" in low, \
+        "canons answering different questions must be named complementary"
+    assert re.search(r"anchors`?\s+rows", low), \
+        "complementary canons must be pinned as separate Anchors rows, " \
+        "never one exclusive menu"
+
+
+def test_flow_rejected_guard_is_per_round_every_section():
+    """F2: the 1-2 considered-but-rejected guard applies to EVERY section's
+    candidate round (Product AND Design AND Engineering), not just the first
+    (live failure: operator did Product and Engineering, skipped Design)."""
+    low = _text().lower()
+    assert "per-round" in low or "per round" in low, \
+        "the considered-but-rejected guard must be explicitly per-round"
+    assert re.search(r"every\s+section", low), \
+        "the guard must apply to every section's candidate round"
+    assert re.search(r"not\s+just\s+the\s+first", low), \
+        "the guard must state it is not just for the first round"
+
+
+def test_draft_time_entry_count_self_check():
+    """F3: at the drafting step, count the entries BEFORE presenting a
+    draft; if over the section's cap, merge before showing the user — do
+    not wait for the validator (live failure: operator drafted 8 and only
+    the user's question caught it)."""
+    low = _text().lower()
+    assert "count the entries" in low, \
+        "drafting step must count the entries before presenting a draft"
+    assert "before presenting" in low or "before showing" in low, \
+        "the count self-check happens BEFORE presenting the draft"
+    assert "merge" in low, \
+        "an over-cap draft must be merged before showing the user"
+    assert re.search(r"wait\s+for\s+the\s+validator", low), \
+        "the self-check must not defer the count to the validator"
+
+
 # --- flat-skill structure (repo hook enforces) ------------------------------
 
 def test_skill_folder_is_flat():
