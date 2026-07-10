@@ -191,7 +191,21 @@ The markup is **opt-in**. A plan that omits it (or sets `Independent: false`) ro
 
 ## Consuming a loom-spec change-folder
 
-A **second input contract**, alongside the brainstorming brief. writing-plans can take a **validated loom-spec change-folder** — `docs/loom/<change-id>/` emitted by `loom-spec:spec-expansion` — as its input *instead of* a brief. "Validated" means the change-folder is **`validate_spec_output.py`-clean** (the validator ran and exited 0). The change-folder's `specs/<capability>/spec.md` delta is the structure `validate_spec_output.py` enforces: `### Requirement:` blocks each containing one or more `#### Scenario:` (GIVEN / WHEN / THEN) acceptance criteria.
+Alongside the brainstorming brief, writing-plans can consume a **validated loom-spec change-folder** — `docs/loom/<change-id>/` emitted by `loom-spec:spec-expansion`. "Validated" means the change-folder is **`validate_spec_output.py`-clean** (the validator ran and exited 0). The change-folder's `specs/<capability>/spec.md` delta is the structure `validate_spec_output.py` enforces: `### Requirement:` blocks each containing one or more `#### Scenario:` (GIVEN / WHEN / THEN) acceptance criteria.
+
+**Detecting which change-folder to consume.** A layered cascade, evaluated in order — stop at the first layer that resolves. Grounded in `docs/loom/research/2026-07-10-change-binding-and-lifecycle-research.md` §Resolved decisions (industry precedent: spec-kit, OpenSpec, Jira smart commits — every shipped answer shrinks the candidate pool structurally, none guesses from content).
+
+- **Layer 0 — explicit handoff wins.** If the caller (a conductor, an orchestrator, the user) hands writing-plans a change-folder path directly, bind to it immediately. Detection never runs — layers (i) and (ii) below exist only for when no path was named.
+- **Layer (i) — branch-slug match, opportunistic only.** Exact match between the current branch name and a `docs/loom/<change-id>` slug. This layer is **opportunistic**, not authoritative: a miss falls through **silently** to layer (ii) — no error, no note. When this layer DOES decide the binding, **surface it explicitly** ("bound to `<change-id>` via branch name") — never bind silently. Any **ambiguity** (the branch name could plausibly match more than one folder) skips straight to the ask sub-step of layer (ii) below — never guess.
+- **Layer (ii) — non-archived folder count.** List non-archived `docs/loom/<change-id>/` folders:
+  - **0 → N/A, loudly.** State that no change-folder was found and proceed on the brainstorming-brief input instead — never a silent skip.
+  - **1 → auto-bind, and state it.** Bind to the single folder and say so ("bound to `<change-id>`, the only non-archived change-folder found").
+  - **>1 → ask**, listing candidates sorted by **recency** (most-recent first), with the most recent as the **recommended default** — never pick without asking.
+  - **Never content-similarity.** No layer matches on spec-content similarity to the target repo — that guesswork is what every shipped precedent avoids.
+
+**Mandatory once bound.** Once a change-folder is bound by any layer (including Layer 0), consuming it is **not optional** — writing-plans MUST derive the plan from it (scenario → task mapping below), not treat it as an FYI alongside a separately-authored brief.
+
+**Wrong-bind reversal trigger.** If a real wrong-bind incident occurs (writing-plans bound to the wrong change-folder and produced a plan against it), layer (i) downgrades from opportunistic-auto to **confirm-before-use** — surface this to the user/orchestrator immediately rather than silently continuing to trust layer (i) unconfirmed.
 
 **Who runs the validator.** In Continuous mode the FREEZE step already gated this change-folder — it ran `validate_spec_output.py` and got exit 0 — so writing-plans **trusts that exit-0** and does not re-run it. For a direct, non-freeze invocation (consuming a change-folder outside Continuous mode), run `validate_spec_output.py` once on the change-folder before consuming it, and proceed only on exit 0.
 
