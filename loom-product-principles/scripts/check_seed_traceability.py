@@ -19,13 +19,35 @@ This module's `parse_oracle` DEFINES the oracle format contract:
     graders/humans (out of checker scope by design, brief §Level 2). Any
     other unrecognized key is likewise ignored.
 
-Artifact checks and the CLI (`main`) are added in a later task; this
-module currently exposes only the parser.
+`check(artifact_text, oracle_text)` verifies the artifact against the
+oracle's three token lists:
+
+  - every `named_anchors` token must appear in an `## Anchors` table data
+    row (header + GFM separator row skipped) whose version/edition cell
+    (second `|` cell) is non-empty;
+  - every `deferred_items` token must appear in a `## Open Questions`
+    ordered-list entry line that also carries the `— re-trigger:` marker
+    on that same line;
+  - every `negative` token must be absent from the artifact entirely.
+
+It returns a list of miss lines, each `<class>: <token>` (class is the
+oracle key name). This checker deliberately does NOT validate table/list
+well-formedness — that is `validate_principles_output.py`'s job; the two
+scripts compose (the CLI here just locates tokens).
+
+CLI: `python check_seed_traceability.py <artifact.md> <oracle.md>` -> exit
+0 with no output if every token traces; exit 1 with one miss line per
+line on stderr otherwise.
+
+Stdlib only.
 """
 
 from __future__ import annotations
 
+import argparse
 import re
+import sys
+from pathlib import Path
 
 _KEYS = ("named_anchors", "deferred_items", "negative")
 _EMPTY_SENTINEL = "none in this seed"
@@ -59,3 +81,126 @@ def _parse_value(value: str) -> list:
     if not value or value.lower().startswith(_EMPTY_SENTINEL):
         return []
     return [token.strip() for token in value.split(";") if token.strip()]
+
+
+# --- artifact checks ---------------------------------------------------------
+
+_ANCHORS = "## Anchors"
+_OPEN_QUESTIONS = "## Open Questions"
+_RE_TRIGGER_MARKER = "— re-trigger:"
+_ENTRY = re.compile(r"^\d+\.\s")
+_H2 = re.compile(r"^##\s", re.MULTILINE)
+_ANCHORS_SEPARATOR_RE = re.compile(r"^\|[\s:-]+\|")
+
+
+def _section_body(text: str, header: str) -> str | None:
+    """Body of the `## <header>` section (lines after the header line up to
+    the next `## ` header or end), or None if the header is absent."""
+    pat = re.compile(r"^" + re.escape(header) + r"\s*$", re.MULTILINE)
+    m = pat.search(text)
+    if m is None:
+        return None
+    nxt = _H2.search(text, m.end())
+    return text[m.end():nxt.start()] if nxt else text[m.end():]
+
+
+def _split_pipe_row(line: str) -> list:
+    """Split a `|`-delimited table row into cells, stripping the empty
+    boundary elements a leading/trailing `|` produces."""
+    parts = line.strip().split("|")
+    if parts and parts[0].strip() == "":
+        parts = parts[1:]
+    if parts and parts[-1].strip() == "":
+        parts = parts[:-1]
+    return [p.strip() for p in parts]
+
+
+def _anchor_data_rows(text: str) -> list:
+    """`## Anchors` table rows with the header + GFM separator row skipped."""
+    body = _section_body(text, _ANCHORS)
+    if body is None:
+        return []
+    pipe_lines = [
+        line for line in body.splitlines()
+        if line.strip().startswith("|") and not _ANCHORS_SEPARATOR_RE.match(line.strip())
+    ]
+    return pipe_lines[1:]  # first remaining pipe line is the header row
+
+
+def _open_questions_retrigger_entries(text: str) -> list:
+    """`## Open Questions` ordered-list entry lines that carry the
+    `— re-trigger:` marker on the same line."""
+    body = _section_body(text, _OPEN_QUESTIONS)
+    if body is None:
+        return []
+    return [
+        line for line in body.splitlines()
+        if _ENTRY.match(line) and _RE_TRIGGER_MARKER in line
+    ]
+
+
+def check_named_anchors(artifact_text: str, tokens: list) -> list:
+    """Miss lines for `named_anchors` tokens not found in an `## Anchors`
+    data row whose version cell (second `|` cell) is non-empty."""
+    rows = [
+        row for row in _anchor_data_rows(artifact_text)
+        if len(cells := _split_pipe_row(row)) > 1 and cells[1].strip()
+    ]
+    return [
+        f"named_anchors: {token}"
+        for token in tokens
+        if not any(token in row for row in rows)
+    ]
+
+
+def check_deferred_items(artifact_text: str, tokens: list) -> list:
+    """Miss lines for `deferred_items` tokens not found in a `## Open
+    Questions` entry that carries `— re-trigger:` on the same line."""
+    entries = _open_questions_retrigger_entries(artifact_text)
+    return [
+        f"deferred_items: {token}"
+        for token in tokens
+        if not any(token in entry for entry in entries)
+    ]
+
+
+def check_negative(artifact_text: str, tokens: list) -> list:
+    """Miss lines for `negative` tokens that ARE present in the artifact
+    (they must be absent)."""
+    return [f"negative: {token}" for token in tokens if token in artifact_text]
+
+
+def check(artifact_text: str, oracle_text: str) -> list:
+    """Verify `artifact_text` against `oracle_text`'s three token lists.
+
+    Returns a list of miss lines (`<class>: <token>`); empty means every
+    token traces.
+    """
+    oracle = parse_oracle(oracle_text)
+    misses = []
+    misses.extend(check_named_anchors(artifact_text, oracle["named_anchors"]))
+    misses.extend(check_deferred_items(artifact_text, oracle["deferred_items"]))
+    misses.extend(check_negative(artifact_text, oracle["negative"]))
+    return misses
+
+
+def main(argv: list | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Verify an artifact's seed traceability against an "
+                    "oracle's named_anchors/deferred_items/negative token "
+                    "lists.")
+    parser.add_argument("artifact_md", help="path to the artifact (e.g. PRINCIPLES.md)")
+    parser.add_argument("oracle_md", help="path to the oracle document")
+    args = parser.parse_args(argv)
+
+    artifact_text = Path(args.artifact_md).read_text(encoding="utf-8")
+    oracle_text = Path(args.oracle_md).read_text(encoding="utf-8")
+
+    misses = check(artifact_text, oracle_text)
+    for miss in misses:
+        print(miss, file=sys.stderr)
+    return 1 if misses else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
