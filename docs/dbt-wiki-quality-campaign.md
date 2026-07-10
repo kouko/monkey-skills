@@ -55,8 +55,9 @@ Low (next-touch, from PR reviews): flatten_links anchored-link backstop;
 
 ## Phase 3 — generalization sweep (needs W1)
 
-- [ ] G1: fixture matrix expansion — en-language project; sparse-comment
-  project (comments-as-truth assumption stress); snowflake/bigquery dialect
+- [ ] G1: fixture matrix expansion — en-language project; ~~sparse-comment
+  project (comments-as-truth assumption stress)~~ **done 2026-07-10, see
+  Journal — scored 5/5, no degradation**; snowflake/bigquery dialect
   compile targets (lineage + guidance dialect handling); 100+ model scale
 - [ ] G2: probe each matrix cell with the blind runner; triage failures into
   Phase-2-style items (distillation quality on comment-poor projects is the
@@ -98,3 +99,20 @@ Low (next-touch, from PR reviews): flatten_links anchored-link backstop;
   pass grader-side (also deferred to a future stream-json-based semantic
   check). Next candidate: W2 (cross-doc consistency lint) per the stated
   rhythm, or Phase 3 (G1-G3, gated on W1 — now unblocked).
+- 2026-07-10: G1's comment-density slice shipped — a 3-task SDD plan
+  (`docs/loom/plans/2026-07-10-g1-sparse-comment-fixture.md`) added a
+  dependency-free SQL comment stripper, a fixture-variant builder that
+  derives (never hand-duplicates) a sparse-comment copy of the W1
+  fixture, and a second real end-to-end run against that sparse variant.
+  **Result: 5/5 (100%), an exact match to W1's full-comment baseline —
+  delta 0.0pp.** Stripping every inline SQL comment from all 10 models
+  did NOT degrade dbt-wiki's answer accuracy on this gold-question set.
+  This is a genuine negative result, not a non-finding: the
+  "comments-as-source-of-truth" weak spot the campaign predicted did not
+  manifest here, at least at this fixture's scale (10 models) and
+  question difficulty (5 traps, single-project). It does NOT rule out
+  degradation on a larger or more ambiguous project — G1's remaining two
+  dimensions (dialect, 100+ model scale) and G2 (probing failures across
+  the full matrix) are exactly where a real degradation might still turn
+  up. G1 checklist item stays unchecked — only the sparse-comment slice
+  is done; dialect + scale remain.
