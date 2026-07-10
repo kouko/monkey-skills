@@ -27,6 +27,16 @@ Valid iff:
   5. No legacy `## Principles` heading remains — a whole-line legacy heading
      is invalid and yields a targeted migration message naming
      `## Product Principles` as the rename target.
+  6. `## Anchors` is OPTIONAL: absent is valid; present requires a
+     well-formed table — a header row, a GFM separator row
+     (`^\\|[\\s:-]+\\|`) immediately below it, and at least 1 data row
+     whose version/edition cell (second pipe-delimited cell) is
+     non-empty. A present-but-empty table (header + separator, zero
+     data rows) is invalid.
+  7. `## Deviation Ledger` is OPTIONAL: absent is valid; present requires
+     at least 1 ordered-list entry, and every entry carries both the
+     literal `— reason:` and `— principle:` markers on the same
+     physical line. A present-but-empty section (0 entries) is invalid.
 
 Design: each check is a function (text: str) -> list[str] of problem messages
 (empty == ok), mirroring `loom-spec/scripts/validate_spec_output.py`.
@@ -227,9 +237,11 @@ def _check_anchors(text: str) -> list[str]:
             f"must be omitted, not left empty)"
         ]
     # Trailing prose in the same section (after the table) is legal — rule 6
-    # constrains the TABLE, not the section's prose. Only lines that contain
-    # `|` are candidate data rows.
-    data_rows = [line for line in lines[2:] if "|" in line]
+    # constrains the TABLE, not the section's prose. A GFM table row always
+    # STARTS with `|`; requiring that (rather than merely containing `|`
+    # anywhere) keeps a prose line that happens to mention a pipe character
+    # (e.g. a `||` operator reference) from being mistaken for a data row.
+    data_rows = [line for line in lines[2:] if line.strip().startswith("|")]
     if not data_rows:
         return [
             f"'{_ANCHORS}' table has no data rows; a present-but-empty "

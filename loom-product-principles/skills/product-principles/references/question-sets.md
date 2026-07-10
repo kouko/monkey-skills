@@ -1,6 +1,7 @@
 # PRINCIPLES construction flow — question sets
 
-> Source of truth for facts/question texts: `instrument-v0.1.md`
+> Source of truth for facts/question texts:
+> `docs/loom/dogfood/2026-07-10-designer-pm-loop-paper/instrument-v0.1.md`
 > (dogfood report, 2026-07-10). Referenced by SKILL.md instead of
 > inlining question text. Sanctioned exception: content tagged
 > `[editorial addition — ...]` inline is a provenance-marked

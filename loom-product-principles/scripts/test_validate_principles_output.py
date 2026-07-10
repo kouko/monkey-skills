@@ -15,6 +15,12 @@ The validator checks a single PRINCIPLES.md file against the pinned contract in
      absent valid; present = 1-7 entries, same marker rules; empty invalid.
   5. No legacy `## Principles` heading (whole-line) — invalid with a
      migration message naming `## Product Principles`.
+  6. `## Anchors` is optional: absent valid; present = well-formed table
+     (header row + GFM separator row + >=1 data row with a non-empty
+     version/edition cell); present-but-empty table invalid.
+  7. `## Deviation Ledger` is optional: absent valid; present = >=1
+     ordered-list entry, every entry carrying both `— reason:` and
+     `— principle:` markers on the same line; present-but-empty invalid.
 
 Each check = a function (text/path) -> list[str] of problems (empty == ok),
 mirroring loom-spec/scripts/validate_spec_output.py. CLI:
@@ -469,6 +475,34 @@ def test_anchors_table_with_trailing_prose_valid(tmp_path):
     p.write_text(doc, encoding="utf-8")
     ok, problems = validate(p)
     assert ok, f"table + trailing prose should pass, got: {problems}"
+
+
+def test_anchors_table_with_pipe_in_trailing_prose_valid(tmp_path):
+    # Trailing prose containing a literal `|` character must NOT be
+    # mistaken for a data row — rule 6 requires a data row to be part of
+    # the TABLE (start with `|` after stripping), not merely contain a
+    # pipe character anywhere in the line. This sentence's `||` (logical
+    # OR) reference splits into an empty middle cell under the naive
+    # "contains a pipe" filter, which is exactly the false "empty
+    # version cell" flag this test guards against — a line NOT starting
+    # with `|` must never reach the version-cell check at all.
+    doc = (
+        _valid_doc(3) + "\n"
+        "## Anchors\n\n"
+        "| Canon | Pinned version/edition |\n"
+        "| --- | --- |\n"
+        "| Material Design | Material 3 |\n"
+        "\n"
+        "Note: the platform's `||` (logical OR) convention was already "
+        "covered under Engineering Principles above.\n"
+    )
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert ok, (
+        f"table + trailing prose line containing '|' characters "
+        f"should pass, got: {problems}"
+    )
 
 
 def test_anchors_missing_separator_row_flagged(tmp_path):
