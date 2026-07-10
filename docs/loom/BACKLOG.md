@@ -48,6 +48,14 @@
      Q4 "replaces X" annotation, cross-section propagation, artifact
      landing spot, FINDING-08 pattern). Cluster A's SKILL.md rewrite
      consumes v0.1, not v0.
+  5. Fast-follow debt (Cluster B whole-branch review, 2026-07-10, the
+     one 🟡): no integration test exercises the spec→plan→coverage→
+     archive CHAIN — a plan fixture with a real join key scored covered
+     by `check_scenario_coverage.py`, then the same change-id archived
+     by `archive_change_folder.py`. Grammar consistency verified
+     manually this round; the test guards future drift. Add
+     `loom-code/scripts/test_change_binding_chain.py` on the next
+     loom-code touch.
 
 ## Designer/PM loop — escalation interface, decision log, acceptance-surface contracts (OPEN)
 - Status: OPEN
