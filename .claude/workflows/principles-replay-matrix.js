@@ -80,6 +80,22 @@ if (typeof runArgs.sandboxDir !== 'string' || runArgs.sandboxDir.charAt(0) !== '
     '(received ' + JSON.stringify(runArgs.sandboxDir) + ').'
   )
 }
+// sandboxDir is ALSO interpolated into the SAME grading courier's Bash
+// instructions as runLabel (it composes artifactPath/gradeTxtPath below) —
+// a leading-'/' check alone lets a value like "/tmp/x;evil" through. Apply
+// the same allow-list per path segment (split on '/', drop the leading
+// empty segment produced by the leading '/', reject empty inner segments).
+const sandboxDirSegments = runArgs.sandboxDir.split('/').slice(1)
+for (const segment of sandboxDirSegments) {
+  if (segment === '' || !RUN_LABEL_ALLOWED_PATTERN.test(segment)) {
+    throw new Error(
+      'principles-replay-matrix: args.sandboxDir must be an absolute path whose ' +
+      'every segment matches ' + RUN_LABEL_ALLOWED_PATTERN + ' (letters, digits, ' +
+      'dot, underscore, hyphen only, no empty segments) — offending segment ' +
+      JSON.stringify(segment) + ' in ' + JSON.stringify(runArgs.sandboxDir) + '.'
+    )
+  }
+}
 
 let seedPairs = DEFAULT_SEEDS
 if (runArgs.seeds !== undefined) {

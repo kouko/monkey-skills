@@ -134,3 +134,26 @@ def test_run_label_allow_list_present():
         "instructions — it must be validated against an allow-list pattern "
         "mirroring driver_10_guard.js's changeId guard"
     )
+
+
+# --- sandboxDir per-segment allow-list (whole-branch-review fix) ------------
+
+def test_sandbox_dir_segment_allow_list_present():
+    text = _text()
+    # sandboxDir is interpolated into the SAME grading-courier Bash string as
+    # runLabel (composes artifactPath/gradeTxtPath) — a leading-'/' check
+    # alone lets values like "/tmp/x;evil" through. It must be validated
+    # per path segment against the same allow-list pattern reused from the
+    # runLabel guard, not just checked for a leading '/'.
+    assert text.count("RUN_LABEL_ALLOWED_PATTERN.test(") >= 2, (
+        "sandboxDir segments must be validated against RUN_LABEL_ALLOWED_PATTERN "
+        "(reused from the runLabel guard) — expected a second .test( call "
+        "beyond the existing runLabel one"
+    )
+    assert re.search(r"sandboxDir\.split\(", text), (
+        "sandboxDir must be split into path segments for per-segment validation"
+    )
+    assert "segment" in text.lower(), (
+        "error message should name the offending segment/value, mirroring the "
+        "runLabel guard's style"
+    )
