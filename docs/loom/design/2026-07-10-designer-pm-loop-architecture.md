@@ -109,7 +109,8 @@ coverage completeness (mature frameworks are stress-tested), and —
 system-specific — **canon names are agent-legible contracts**: "follow HIG"
 reliably activates model-internal knowledge in every downstream agent;
 a bespoke ten-paragraph philosophy re-interprets (and drifts) per agent.
-In-repo precedent: `feedback_synthesized_checklist_likely_reinvents_canon`.
+Machine-local auto-memory precedent (not a repo path):
+`feedback_synthesized_checklist_likely_reinvents_canon`.
 
 ```
 user states direction
@@ -154,7 +155,8 @@ Per-section parameters (same flow, different knobs):
 Every sentence in PRINCIPLES.md passes through user choice/statement →
 agent distillation → read-back. Canned principles are unfalsifiable
 boilerplate and short-circuit exactly the discussion this system exists to
-host. In-repo precedent: `feedback_frameworks_are_completeness_audits_not_generators`,
+host. Machine-local auto-memory precedent (not repo paths):
+`feedback_frameworks_are_completeness_audits_not_generators`,
 `feedback_worked_example_is_prescriptive`.
 
 ## 4. Canon base lists (agent-facing recall insurance)
@@ -182,8 +184,12 @@ the earlier DROP ("no static menus") as follows:
 
 ## 5. Complexity triage (2026-07-10, via dev-workflow:proposal-critique)
 
-22 items → **12 KEEP / 5 DEFER / 5 DROP** + 2 merges. Honest clause: no
-item has been dogfooded with the real persona (n=0); KEEPs are hypotheses.
+Verdicts as recorded below: **12 KEEP + 2 KEEP-WITH-CAVEAT / 5 DEFER /
+5 DROP** (the two school-menu-file DROPs — Design and Engineering — share
+one line) **+ 2 merges**; one DROP (static menus) was later resurrected in
+agent-facing form, see §4. Honest clause (at triage time): no item had
+been dogfooded with the real persona; see Status for the same-day dogfood
+outcome.
 
 **KEEP** (one-line reasons): mid-pipeline must-consume (writing-plans ↔
 change-folder; ui-verification precedent) · scenario→task coverage script
@@ -210,8 +216,9 @@ hatch (industry intuition, n=0). Post-triage addition (user-driven,
   making inconsistent same-stack choices across sessions; then per-project
   agent-authored conventions doc, NOT shipped static templates.
 
-**DROP**: static school-menu FILES as user-facing menus (superseded by §4's
-agent-facing reframe; user-facing menus stay dead) · standalone
+**DROP**: static school-menu FILES as user-facing menus (×2 — the Design
+and Engineering menu files, one line here; superseded by §4's agent-facing
+reframe; user-facing menus stay dead) · standalone
 expert-direct-dump channel (the unified flow IS user-speaks-first) ·
 expertise-probing machinery (same reason) · "gradient enforcement table" as
 a standalone doc (absorbed by two-axis test + must-consume; a second doc =
@@ -268,7 +275,7 @@ recall pass 2026-07-10).
    questions; user picks a real product idea; run the §3 flow end-to-end in
    conversation. Validates: question-set adequacy, candidate breadth (does
    §4's double guard beat popularity bias), propose-then-react feel.
-   (In-repo precedent: cheap-experiment-before-forking,
+   (Machine-local auto-memory precedent: cheap-experiment-before-forking,
    real-dogfood-catches-semantic-bugs.)
 3. Build order after dogfood: PRINCIPLES construction flow first (everything
    downstream consumes it); pipeline-hardening trio (must-consume, coverage

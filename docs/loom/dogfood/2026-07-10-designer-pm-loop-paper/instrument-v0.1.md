@@ -3,10 +3,13 @@
 > **Type**: dogfood instrument, revision of `instrument.md` (v0, kept
 > as-run for report traceability)
 > **Date**: 2026-07-10
-> **Deltas from v0** (all from `report.md` findings): Q8 added
-> (FINDING-01); Q6 annotated (FINDING-02); cross-section answer
-> propagation codified (FINDING-03); artifact landing spot specified
-> (FINDING-07). Everything else unchanged.
+> **Deltas from v0**: Q8 added (FINDING-01); Q4 annotated (FINDING-02);
+> cross-section answer propagation codified (FINDING-03); artifact
+> landing spot specified (FINDING-07); derivation-for-confirmation
+> pattern added to the tech-stack slot (FINDING-08); editorial — the
+> read-back line now names the per-section + final-total cadence, and the
+> Product-set intro now names the 4-type-split re-trigger (BACKLOG).
+> No other changes.
 > **Consumers**: skill drafting of the PRINCIPLES construction flow; the
 > pre-ship cold-operator dogfood round (operator ≠ instrument author).
 
@@ -91,16 +94,20 @@ first** — questions already answered by Product/Design decisions become
 confirmation items, not questions.
 
 1. **Iteration vs robustness**: when learning speed and polish conflict,
-   which wins by default?
+   which wins by default? (stakes: what users see breaking vs how fast
+   the product improves)
 2. **Reversibility posture**: prefer reversible-but-suboptimal choices,
-   or optimal-but-committing ones?
-3. **Cost posture**: infra appetite and what happens at the ceiling —
-   degrade features, or spend more?
+   or optimal-but-committing ones? (stakes: fewer interruptions asking
+   you to decide, vs occasionally paying a rebuild)
+3. **Cost posture**: monthly infra appetite and what happens at the ceiling —
+   degrade features, or spend more? (stakes: cost surprises vs
+   experience surprises)
 4. **Data & privacy posture**: what user data may we store, how long,
-   and what is never collected?
+   and what is never collected? (stakes: future features need data that
+   wasn't collected; trust and regulatory surface)
 5. **Escalation appetite**: which engineering decisions do you want to
    see? (full delegation / kickoff briefings only / down to architecture
-   choices)
+   choices — the per-project dial from the architecture doc §2)
 
 Plus: **tech-stack declaration slot** — name commitments if any (platform,
 language, hosting), or delegate. When the stack is already determined by

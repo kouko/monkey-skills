@@ -11,7 +11,7 @@
 > the user, explicitly *including but not limited to*. Entries carry name +
 > fits-when hint + stability note only; doctrine content stays in the model
 > (copying doctrine = canon-copy maintenance liability, per
-> `feedback_synthesized_checklist_likely_reinvents_canon`).
+> machine-local auto-memory `feedback_synthesized_checklist_likely_reinvents_canon`).
 > Each list ends with its **popularity head** — the entries an LLM
 > over-proposes without this audit; their appearance in a draft proposal is
 > the signal to re-check the full list.

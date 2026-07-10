@@ -30,12 +30,14 @@ principles (P6 規模上限是特性). A weaker operator would have missed it.
 → v0.1 candidate: add **Q8 — Lifecycle & scale**: "這些內容會活多久、
 長到多大？長大之後怎麼找到一張？"
 
-**FINDING-02 (instrument gap — Q6 annotation): "replace X" answers imply
+**FINDING-02 (instrument gap — Q4 annotation): "replace X" answers imply
 capability sets.** The success answer "取代 Bear 與 Reminders" smuggled in a
 scope fork (does replacing Reminders mean notifications?) that no question
 probed. Caught by operator judgment, not by the set.
-→ v0.1 candidate: annotate Q6 — when success is phrased as "replaces X",
-enumerate X's capabilities and force explicit in/out classification.
+→ v0.1 candidate: annotate Q4 (Success & kill) — when success is phrased
+as "replaces X", enumerate X's capabilities and force explicit in/out
+classification. (The conversation's probe round numbered this question 6;
+the instrument set numbers it 4 — instrument numbering is canonical.)
 
 **FINDING-03 (flow validation — cross-section propagation).** 3 of 5
 Engineering stance questions were partially pre-answered by earlier Product

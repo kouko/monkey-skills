@@ -20,10 +20,11 @@
   in `docs/loom/dogfood/2026-07-10-designer-pm-loop-paper/` (verdict:
   instrument works; 4 PASS + 1 PARTIAL).
 - What remains:
-  1. Apply instrument v0.1 fixes before skill-drafting: add Q8
-     lifecycle/scale; annotate Q6 ("replaces X" → enumerate X's capability
-     set, force in/out); codify cross-section answer propagation; specify
-     artifact landing spot (report FINDING-01/02/03/07).
+  1. Instrument v0.1 is already applied on this branch
+     (`instrument-v0.1.md` in the dogfood folder — Q8 lifecycle/scale,
+     Q4 "replaces X" annotation, cross-section propagation, artifact
+     landing spot, FINDING-08 pattern). Skill drafting consumes v0.1,
+     not v0.
   2. Build order: PRINCIPLES construction flow first (de-risked by the
      run); pipeline-hardening trio (must-consume, coverage script,
      existence derivation) mechanical + parallelizable.
