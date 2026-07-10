@@ -148,6 +148,26 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
      per-implementer / per-wave: the index is a repo-wide generated file, so a per-implementer
      regen under parallel SDD would merge-conflict the file and reflect only a partial tree.
      This mirrors loom's existing "orchestrator commits, implementers don't" rule.
+   - Archive-on-close (orchestrator-only, ONCE per branch — same shape as the living-spec
+     index bullet immediately above, NOT per-implementer / per-wave, since a per-implementer
+     archive under parallel SDD would race the same folder): if this branch consumed a
+     loom-spec change-folder (bound per writing-plans' detection cascade — see
+     `../writing-plans/SKILL.md` §Consuming a loom-spec change-folder) AND that change-folder's
+     scenarios shipped in this branch, run
+     `python3 loom-code/scripts/archive_change_folder.py <change-id> <repo-root>` (Read the
+     script's docstring/CLI first for the exact argv shape — change-id first, root second —
+     do NOT guess) to move `docs/loom/<change-id>/` to `docs/loom/archive/<date>-<change-id>/`,
+     then stage the resulting move (`git add docs/loom/archive/<date>-<change-id>/` and the
+     now-removed `docs/loom/<change-id>/` path) so it lands in THIS close-out commit. **Recovering
+     bound-ness at finishing time**: the binding happened in an earlier dispatch, possibly another
+     session, so derive it from the plan document itself — grep the branch's plan
+     (`docs/loom/plans/<date>-<topic>.md`) for change-folder join keys (the
+     `<change-id> / Requirement: <name> / Scenario: <name>` pattern per
+     `../writing-plans/references/plan-format.md`); a plan carrying join keys names the bound
+     change-id. No plan, or a plan with no join keys, means unbound — never guess a change-id
+     from content similarity (mirroring the detection cascade's own no-guessing discipline). If no
+     change-folder was bound for this branch, state so loudly instead of silently skipping:
+     "archive-on-close: N/A — no change-folder bound".
    - Memory-timing check (orchestrator-only, ONCE per branch) — **the question itself should
      already have been asked and answered at Step 6**, the moment git-memory's trailer set came
      back; this bullet's remaining job at Step 8 is only to STAGE whatever `docs/loom/memory/`
