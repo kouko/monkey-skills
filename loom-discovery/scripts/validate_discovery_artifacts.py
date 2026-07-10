@@ -64,7 +64,12 @@ _TABLE_HEADER = re.compile(
 
 
 def _section_present(text: str, header: str) -> bool:
-    """Whole-header-line match — a substring in prose never counts."""
+    """Whole-header-line match — a substring in prose never counts.
+
+    Case-sensitive by design: `header` is an exact "## Heading" string
+    from the shipped template (SSOT above), so a case-varied heading
+    (e.g. "## problem framing") is treated as absent, not a fuzzy match.
+    """
     pat = re.compile(r"^" + re.escape(header) + r"\s*$", re.MULTILINE)
     return pat.search(text) is not None
 

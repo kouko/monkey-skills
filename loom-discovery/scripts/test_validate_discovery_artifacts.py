@@ -20,6 +20,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 from validate_discovery_artifacts import validate
 
 
@@ -121,6 +123,19 @@ def test_rejects_missing_user_insights_section(tmp_path):
     assert any("Opportunity space" in p for p in problems), problems
 
 
+@pytest.mark.parametrize("toggle,heading", [
+    ("problem_framing", "Problem framing"),
+    ("value_commitment", "Value commitment"),
+    ("risks", "Risks & open questions"),
+])
+def test_rejects_missing_user_insights_section_other_headings(tmp_path, toggle, heading):
+    root = _write_discovery_folder(
+        tmp_path, user_insights_body=_user_insights_body(**{toggle: False}))
+    ok, problems = validate(root)
+    assert not ok
+    assert any(heading in p for p in problems), problems
+
+
 def test_rejects_missing_user_insights_file(tmp_path):
     root = _write_discovery_folder(tmp_path)
     (root / "user-insights.md").unlink()
@@ -151,6 +166,40 @@ def test_rejects_business_value_invalid_verdict(tmp_path):
     ok, problems = validate(root)
     assert not ok
     assert any("business-value.md" in p and "verdict" in p.lower() for p in problems), problems
+
+
+def test_rejects_business_value_two_verdicts_one_line(tmp_path):
+    """'Verdict: GO or NO-GO' — both a real verdict token — must be
+    rejected as ambiguous, exercising the len(hits) != 1 overcount branch
+    (validate_discovery_artifacts.py _check_business_value_verdict)."""
+    body = (
+        "# Business value — example\n\n"
+        "Date: 2026-07-10\nVerdict: GO or NO-GO\n\n"
+        "## Why now\n...\n## Why me\n...\n## Opportunity cost\n...\n"
+        "## Evidence consulted\n...\n## Recommendation\n**GO**\n...\n"
+    )
+    root = _write_discovery_folder(
+        tmp_path, include_business_value=True, business_value_body=body)
+    ok, problems = validate(root)
+    assert not ok
+    assert any("business-value.md" in p and "verdict" in p.lower() for p in problems), problems
+
+
+def test_rejects_business_value_no_verdict_line(tmp_path):
+    """No 'Verdict: ...' line at all — exercises the no-match branch
+    (m is None) in _check_business_value_verdict, distinct from the
+    invalid-token and overcount branches covered above."""
+    body = (
+        "# Business value — example\n\n"
+        "Date: 2026-07-10\n\n"
+        "## Why now\n...\n## Why me\n...\n## Opportunity cost\n...\n"
+        "## Evidence consulted\n...\n## Recommendation\n...\n"
+    )
+    root = _write_discovery_folder(
+        tmp_path, include_business_value=True, business_value_body=body)
+    ok, problems = validate(root)
+    assert not ok
+    assert any("business-value.md" in p and "Verdict" in p for p in problems), problems
 
 
 # --- CLI contract (thin __main__) -------------------------------------------
