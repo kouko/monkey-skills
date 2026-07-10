@@ -10,6 +10,27 @@
 > greppable). Completed items are deleted, not archived — git history is
 > the archive.
 
+## Designer/PM loop — implementation after paper dogfood ✅ (COMMITTED-NEXT)
+- Status: COMMITTED-NEXT
+- Start: next loom design/build session.
+- Origin: 2026-07-10 discussion session, user decision ledger §6 of
+  `docs/loom/design/2026-07-10-designer-pm-loop-architecture.md`;
+  canon lists in `docs/loom/research/2026-07-10-principles-canon-base-lists.md`.
+  Paper dogfood COMPLETED same day — run + graded report + produced artifact
+  in `docs/loom/dogfood/2026-07-10-designer-pm-loop-paper/` (verdict:
+  instrument works; 4 PASS + 1 PARTIAL).
+- What remains:
+  1. Apply instrument v0.1 fixes before skill-drafting: add Q8
+     lifecycle/scale; annotate Q6 ("replaces X" → enumerate X's capability
+     set, force in/out); codify cross-section answer propagation; specify
+     artifact landing spot (report FINDING-01/02/03/07).
+  2. Build order: PRINCIPLES construction flow first (de-risked by the
+     run); pipeline-hardening trio (must-consume, coverage script,
+     existence derivation) mechanical + parallelizable.
+  3. Cold-operator dogfood round between skill-draft and ship (operator ≠
+     instrument author; ideally weaker model) — the run's honest-limits
+     section is the rationale.
+
 ## Operationalize "product-shaped" in family reception (OPEN)
 - Status: OPEN
 - Start: next time any session or dogfood cold-reader again reports
