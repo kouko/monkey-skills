@@ -394,6 +394,209 @@ def test_all_three_sections_combined_validates_ok(tmp_path):
     assert ok, f"all three sections combined should validate OK, got: {problems}"
 
 
+# --- Anchors optional section (enforce-when-present) ------------------------
+
+def _anchors_table(rows: list[tuple[str, str]]) -> str:
+    """`## Anchors` with a well-formed table: header row, GFM separator row,
+    one data row per (canon, version) pair."""
+    lines = [
+        "## Anchors\n",
+        "\n",
+        "| Canon | Pinned version/edition |\n",
+        "| --- | --- |\n",
+    ]
+    for canon, version in rows:
+        lines.append(f"| {canon} | {version} |\n")
+    return "".join(lines)
+
+
+def test_anchors_absent_is_valid(tmp_path):
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(_valid_doc(3), encoding="utf-8")
+    ok, problems = validate(p)
+    assert ok, f"absent '## Anchors' should not affect validity, got: {problems}"
+
+
+def test_anchors_well_formed_table_valid(tmp_path):
+    doc = _valid_doc(3) + "\n" + _anchors_table(
+        [("Material Design", "Material 3, 2024 spec")]
+    )
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert ok, f"well-formed Anchors table should pass, got: {problems}"
+
+
+def test_anchors_row_with_empty_version_flagged(tmp_path):
+    # Version/edition cell (second pipe-delimited cell) is empty -> invalid.
+    doc = _valid_doc(3) + "\n" + _anchors_table([("Material Design", "")])
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert not ok
+    assert any("Anchors" in m for m in problems), problems
+
+
+def test_anchors_present_but_empty_table_flagged(tmp_path):
+    # Header + separator, zero data rows -> invalid; must be omitted, not left
+    # empty.
+    doc = (
+        _valid_doc(3) + "\n"
+        "## Anchors\n\n"
+        "| Canon | Pinned version/edition |\n"
+        "| --- | --- |\n"
+    )
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert not ok
+    assert any("Anchors" in m for m in problems), problems
+
+
+def test_anchors_table_with_trailing_prose_valid(tmp_path):
+    # A well-formed table followed by trailing prose in the same section is
+    # legal — rule 6 constrains the TABLE, not the section's prose after it.
+    doc = (
+        _valid_doc(3) + "\n"
+        "## Anchors\n\n"
+        "| Canon | Pinned version/edition |\n"
+        "| --- | --- |\n"
+        "| Material Design | Material 3 |\n"
+        "\n"
+        "Note: this anchor was chosen after a design review.\n"
+    )
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert ok, f"table + trailing prose should pass, got: {problems}"
+
+
+def test_anchors_missing_separator_row_flagged(tmp_path):
+    # No GFM separator row (`^\|[\s:-]+\|`) below the header -> not a
+    # well-formed table -> invalid.
+    doc = (
+        _valid_doc(3) + "\n"
+        "## Anchors\n\n"
+        "| Canon | Pinned version/edition |\n"
+        "| Material Design | Material 3 |\n"
+    )
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert not ok
+    assert any("Anchors" in m for m in problems), problems
+
+
+# --- Deviation Ledger optional section (enforce-when-present) --------------
+
+def test_deviation_ledger_absent_is_valid(tmp_path):
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(_valid_doc(3), encoding="utf-8")
+    ok, problems = validate(p)
+    assert ok, (
+        f"absent '## Deviation Ledger' should not affect validity, got: "
+        f"{problems}"
+    )
+
+
+def test_deviation_ledger_well_formed_entry_valid(tmp_path):
+    doc = (
+        _valid_doc(3) + "\n## Deviation Ledger\n\n"
+        f"1. Skip the confirmation modal on delete {EM} reason: users act "
+        f"20+ times per session {EM} principle: \"<=3-step primary task\"\n"
+    )
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert ok, (
+        f"well-formed Deviation Ledger entry should pass, got: {problems}"
+    )
+
+
+def test_deviation_ledger_entry_missing_principle_flagged(tmp_path):
+    # `— reason:` present, `— principle:` absent -> invalid.
+    doc = (
+        _valid_doc(3) + "\n## Deviation Ledger\n\n"
+        f"1. Skip the confirmation modal on delete {EM} reason: users act "
+        f"20+ times per session\n"
+    )
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert not ok
+    assert any("Deviation Ledger" in m for m in problems), problems
+
+
+def test_deviation_ledger_present_but_empty_flagged(tmp_path):
+    doc = _valid_doc(3) + "\n## Deviation Ledger\n\n"
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert not ok
+    assert any("Deviation Ledger" in m for m in problems), problems
+
+
+def test_deviation_ledger_entry_missing_reason_flagged(tmp_path):
+    # `— principle:` present, `— reason:` absent -> invalid.
+    doc = (
+        _valid_doc(3) + "\n## Deviation Ledger\n\n"
+        f"1. Skip the confirmation modal on delete {EM} principle: "
+        f"\"<=3-step primary task\"\n"
+    )
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert not ok
+    assert any("Deviation Ledger" in m for m in problems), problems
+
+
+def test_deviation_ledger_entry_missing_both_markers_flagged(tmp_path):
+    # Neither `— reason:` nor `— principle:` present -> invalid.
+    doc = (
+        _valid_doc(3) + "\n## Deviation Ledger\n\n"
+        "1. Skip the confirmation modal on delete, no markers at all.\n"
+    )
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert not ok
+    assert any("Deviation Ledger" in m for m in problems), problems
+
+
+def test_deviation_ledger_hyphen_markers_do_not_satisfy(tmp_path):
+    # Hyphen-typo'd `- reason:` / `- principle:` (not em dash) must NOT
+    # satisfy rule 7 — falls through to missing-marker, same as the existing
+    # `— check:` hyphen-vs-em-dash coverage above.
+    doc = (
+        _valid_doc(3) + "\n## Deviation Ledger\n\n"
+        "1. Skip the confirmation modal on delete - reason: users act "
+        "20+ times per session - principle: \"<=3-step primary task\"\n"
+    )
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert not ok
+    assert any("Deviation Ledger" in m for m in problems), problems
+
+
+def test_anchors_and_deviation_ledger_combined_valid(tmp_path):
+    doc = (
+        _valid_doc(3)
+        + "\n" + _anchors_table(
+            [("Apple Human Interface Guidelines", "2025 edition (iOS 18)")]
+        )
+        + "\n## Deviation Ledger\n\n"
+        f"1. Skip the confirmation modal on delete {EM} reason: users act "
+        f"20+ times per session {EM} principle: \"<=3-step primary task\"\n"
+    )
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert ok, (
+        f"Anchors + Deviation Ledger combined should pass, got: {problems}"
+    )
+
+
 # --- CLI contract (thin __main__) ------------------------------------------
 
 def _run_cli(target: Path):
