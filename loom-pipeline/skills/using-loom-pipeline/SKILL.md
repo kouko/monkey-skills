@@ -4,10 +4,13 @@ description: |
   Drives the loom principles→design→spec→code pipeline end-to-end via
   deterministic Claude Code Workflow segments — one Workflow invocation per
   pipeline segment, never an inline hand-rolled orchestration. It is a thin
-  conductor: judgment (verdicts, standards, gates) stays in the four station
-  plugins (loom-product-principles, loom-interface-design, loom-spec,
-  loom-code); this skill only sequences them and enforces the run-input
-  contract. CONDITIONAL: fires only when both the Workflow tool is available
+  conductor: judgment (verdicts, standards, gates) stays in the four
+  Workflow-driven station plugins (loom-product-principles,
+  loom-interface-design, loom-spec, loom-code); this skill only sequences
+  them and enforces the run-input contract. loom-discovery, the fifth loom
+  station (problem-space entry, upstream of principles), is v0.1
+  interactive-only — the conductor does not drive it as a Workflow segment.
+  CONDITIONAL: fires only when both the Workflow tool is available
   in the host AND the four station plugins are installed — otherwise
   `loom-pipeline: N/A` with the reason, loudly. Codex hosts are N/A (Codex
   has no Workflow primitive; do not fake orchestration inline there).
@@ -23,7 +26,7 @@ prompt directly — do not re-derive fire conditions or re-invoke Workflow
 yourself.
 </SUBAGENT-STOP>
 
-# using-loom-pipeline — the thin conductor over the 4 station plugins
+# using-loom-pipeline — the thin conductor over 4 of the 5 loom station plugins
 
 This skill is orchestration only. It never authors PRINCIPLES.md, DESIGN.md,
 ui-flows.md, a spec draft, or code, and it never produces a verdict — those
@@ -48,20 +51,22 @@ below gates on this skill's own two orchestration conditions.
 3. **本站再確認 (this station's fire condition, unchanged)** — this skill
    still only fires under `§When it fires`'s BOTH-conditions gate below;
    its N/A-loud wording governs unchanged — nothing in this §Intake grants
-   permission to hand-drive the four stations or auto-open the Workflow
-   door.
+   permission to hand-drive the four Workflow-driven stations or auto-open
+   the Workflow door.
 
 ## §When it fires — BOTH conditions, checked first
 
 1. **The Workflow tool is available** in this host (Claude Code exposes a
    `Workflow` primitive that accepts an arbitrary `scriptPath`).
 2. **The four station plugins are installed**: `loom-product-principles`,
-   `loom-interface-design`, `loom-spec`, `loom-code`.
+   `loom-interface-design`, `loom-spec`, `loom-code`. (`loom-discovery`,
+   the fifth loom station, is v0.1 interactive-only and not required here
+   — the conductor never drives it as a Workflow segment.)
 
 Either condition false → emit **`loom-pipeline: N/A`** with the specific
 reason (which condition failed) and stop. N/A is a first-class honest
 outcome — **never silently skip, and never fake the orchestration inline**
-(e.g. by hand-driving the four stations one Task/Skill call at a time and
+(e.g. by hand-driving the four Workflow-driven stations one Task/Skill call at a time and
 presenting it as if the conductor ran). A faked run here reproduces exactly
 the babysitting problem this plugin exists to remove.
 
@@ -139,6 +144,12 @@ maps back to a station-plugin phase.
    diff, then **ui-verify** (`loom-code:ui-verification`) exercises the
    running surface before the segment closes.
 
+`loom-discovery` is v0.1 **interactive-only** — the conductor does not
+drive it as a Workflow segment; pipeline runs start at Segment 1
+(Principles + Design), and the discovery on-ramp (family reception's
+on-ramp row 4) is surfaced to the human before minting a change-id, not
+sequenced here.
+
 ## §Human gates (between segments)
 
 Exactly 4 gates. Each is a stop, not a notification — the conductor waits
@@ -171,8 +182,9 @@ for the human's answer before the next Workflow call.
 - The driver never produces verdicts.
 - The driver never merges.
 
-Judgment stays in the four station plugins (cross-plugin delegation contract)
-— the conductor only orchestrates and records.
+Judgment stays in the four Workflow-driven station plugins (cross-plugin delegation contract)
+— and in `loom-discovery`, the fifth loom station, which the conductor
+never drives at all — the conductor only orchestrates and records.
 
 **Stable-prefix dispatch convention**: station preambles are
 stable/cacheable; the per-change payload is appended, never prepended —

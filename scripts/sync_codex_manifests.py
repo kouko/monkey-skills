@@ -66,6 +66,7 @@ CODEX_ELIGIBLE = (
     "gws-toolkit",
     "investing-toolkit",
     "legal-toolkit",
+    "loom-discovery",
     "loom-interface-design",
     "loom-product-principles",
     "loom-spec",
