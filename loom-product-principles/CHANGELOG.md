@@ -8,6 +8,42 @@ Versioning: [Semantic Versioning](https://semver.org/).
 > This file was reconstructed on 2026-07-02 from the git history — the plugin
 > shipped its first two versions without a CHANGELOG.
 
+## [0.5.1] — 2026-07-10
+
+### Fixed
+
+- **`§Headless/seeded mode` gains the seed-traceability invariant + a
+  post-draft seed walk** (the headless mirror of the interactive coverage
+  self-check): every seed item — each individual stance, named canon,
+  tech-stack choice, or deferred marker, even when several share one
+  bullet — must land in at least one of a carrying principle, an
+  `## Anchors` row, an Open Question with a re-trigger, a
+  `## Deviation Ledger` entry, or (for North-Star-bound facts) the
+  `## North Star` section; out-of-jurisdiction seed content is noted, not
+  silently skipped — no silent drops. Evidence: an n=4
+  weak-model headless seeded replay of the construction flow
+  (`docs/loom/dogfood/2026-07-10-principles-flow-cold-operator/seed.md`)
+  showed the seed's deferred stance dropped 4/4, seed-named canons
+  dropped from Anchors (Apple Design Language 0/4, Core ML 0/4,
+  JTBD 1/4), and stance coverage compressed 7→4-5 — one root cause: the
+  mode had no rule for seed content that is neither an answer nor a gap.
+- Oracle calibration in the cold-operator dogfood seed: the 「恰 7 條」
+  count assertion replaced with the coverage form (count is not the
+  invariant — merging is legitimate); the C9 negative pattern narrowed
+  to development-team-as-decision-actor phrasings.
+- The invariant's Open Question landing spot now has a defined format
+  home: `references/principles-rules.md` gains an optional
+  `## Open Questions` section (ordered list, one physical line per entry,
+  literal `— re-trigger:` marker stating when to revisit) plus validator
+  contract rule 8, and `validate_principles_output.py` enforces it when
+  present (absent stays valid).
+
+### Verified
+
+- `PYTHONDONTWRITEBYTECODE=1 python3 -m pytest loom-product-principles/scripts/ -q`
+  → 169 passed (146 baseline + 23 seed-traceability pins/checks across
+  two review rounds, RED-then-GREEN).
+
 ## [0.5.0] — 2026-07-10
 
 ### Added

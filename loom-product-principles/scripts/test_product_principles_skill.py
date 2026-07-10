@@ -504,6 +504,152 @@ def test_draft_time_entry_count_self_check():
         "the self-check must not defer the count to the validator"
 
 
+# --- seed-traceability pins (n=4 headless replay findings, no registered
+# REQ-ids) ---------------------------------------------------------------------
+
+
+def test_headless_seed_traceability_invariant_no_silent_drops():
+    """n=4 replay root cause: §Headless had no rule for seed content that is
+    neither an answer nor a gap. The invariant: EVERY seed item lands in the
+    artifact at AT LEAST one of a carrying principle, an Anchors row, an Open
+    Question, an explicit Deviation Ledger entry, or (for North-Star-bound
+    facts) the North Star — no silent drops. R2 🟡1: 'exactly one'
+    contradicted the sub-clauses and the oracle — a seed-named canon
+    legitimately lands BOTH as an Anchors row AND under a carrying
+    principle; the floor is 'at least one'."""
+    low = _section(_text(), "## Headless / seeded mode").lower()
+    assert "seed-traceability" in low, \
+        "§Headless must name the seed-traceability invariant"
+    assert "at least one" in low, \
+        "every seed item must land at AT LEAST one landing spot"
+    assert "exactly one" not in low, \
+        "'exactly one' forbids the legitimate double-landing (Anchors row " \
+        "AND carrying principle for a seed-named canon) — it must be gone"
+    assert "carrying principle" in low, \
+        "a carrying principle must be a named landing spot"
+    assert "anchors" in low, "an Anchors row must be a named landing spot"
+    assert "open question" in low, \
+        "an Open Question must be a named landing spot"
+    assert "deviation ledger" in low, \
+        "a Deviation Ledger entry must be a named landing spot"
+    assert "silent" in low, \
+        "the invariant must name the silent-drop failure it forbids"
+
+
+def test_headless_deferred_seed_stance_becomes_open_question():
+    """4/4 runs dropped the seed's deferred stance (成本=無法判斷→懸案): a
+    seed stance marked undecidable/deferred MUST become an Open Question
+    with a re-trigger condition — never dropped."""
+    low = _section(_text(), "## Headless / seeded mode").lower()
+    assert "deferred" in low or "undecidable" in low, \
+        "§Headless must handle a seed stance marked undecidable/deferred"
+    assert "open question" in low, \
+        "a deferred seed stance must become an Open Question"
+    assert "re-trigger" in low, \
+        "the Open Question must carry a re-trigger condition"
+    assert re.search(r"never\s+dropped", low), \
+        "a deferred seed stance is never dropped"
+
+
+def test_headless_seed_named_canon_lands_in_anchors():
+    """Seed-named canons/tech-stack dropped from Anchors (Apple Design
+    Language 0/4, Core ML 0/4, JTBD 1/4): every seed-named canon or
+    tech-stack choice MUST land as a version-pinned Anchors row."""
+    low = _section(_text(), "## Headless / seeded mode").lower()
+    assert "seed-named" in low, \
+        "§Headless must bind seed-NAMED canons/tech-stack to Anchors"
+    assert "tech-stack" in low, \
+        "the rule must cover tech-stack choices, not just canons"
+    assert "version-pinned" in low, \
+        "seed-named canons must land as version-pinned Anchors rows"
+
+
+def test_headless_every_seed_stance_has_carrying_principle():
+    """Stance coverage compressed 7→4-5: every seed stance MUST have a
+    carrying principle — merging stances is fine; dropping one is not."""
+    low = _section(_text(), "## Headless / seeded mode").lower()
+    assert "carrying principle" in low, \
+        "every seed stance must have a carrying principle"
+    assert "merg" in low, "merging stances must be stated as legitimate"
+    assert "dropping" in low, \
+        "dropping a stance must be stated as illegitimate"
+
+
+def test_headless_post_draft_seed_walk_self_check():
+    """The headless MIRROR of the interactive coverage self-check (B1):
+    after drafting, walk the seed item-by-item and verify each item has its
+    landing spot BEFORE finalizing."""
+    low = _section(_text(), "## Headless / seeded mode").lower()
+    assert "item-by-item" in low, \
+        "§Headless must mandate a post-draft item-by-item seed walk"
+    assert "before finalizing" in low, \
+        "the seed walk verifies landing spots BEFORE finalizing"
+    assert "coverage self-check" in low, \
+        "the seed walk must be framed as the mirror of the interactive " \
+        "coverage self-check"
+
+
+# --- round-2 seed-traceability review pins (3 🟡 findings, no registered
+# REQ-ids) ---------------------------------------------------------------------
+
+
+def test_headless_seed_item_granularity_is_decidable():
+    """R2 🟡2a: 'seed item' was not decidable — a walk at bullet granularity
+    passed while dropping 4 of 5 stances packed in one bullet. An item is
+    each INDIVIDUAL stance, named canon, tech-stack choice, or deferred
+    marker, EVEN when several share one bullet/line of the seed."""
+    low = _section(_text(), "## Headless / seeded mode").lower()
+    assert re.search(r"each\s+individual\s+stance", low), \
+        "a seed item must be defined as each INDIVIDUAL stance"
+    assert "deferred marker" in low, \
+        "the item definition must include deferred markers"
+    assert re.search(r"share\s+one\s+bullet", low), \
+        "the definition must hold even when several items share one bullet/line"
+    assert "bullet granularity" in low, \
+        "a bullet-granularity walk must be named as the violation it is"
+
+
+def test_headless_north_star_bound_facts_land_in_north_star():
+    """R2 🟡2b: the landing spots did not cover North-Star-bound seed facts
+    (the idea / the target user / the success condition) — the `## North
+    Star` section is their legitimate landing spot."""
+    section = _section(_text(), "## Headless / seeded mode")
+    assert "## North Star" in section, \
+        "§Headless must name the ## North Star section as a landing spot"
+    low = section.lower()
+    assert "north-star-bound" in low, \
+        "the North Star landing must be scoped to North-Star-bound facts"
+    assert "target user" in low, \
+        "the North-Star-bound facts must name the target user"
+
+
+def test_headless_out_of_jurisdiction_noted_not_silently_skipped():
+    """R2 🟡2b: seed content outside this skill's jurisdiction (per
+    §Boundary — market / business-model / strategy turf) is explicitly
+    noted as out-of-jurisdiction during the seed walk — not silently
+    skipped, and not laundered into a spurious Open Question."""
+    low = _section(_text(), "## Headless / seeded mode").lower()
+    assert "out-of-jurisdiction" in low, \
+        "out-of-jurisdiction must be a named outcome of the seed walk"
+    assert "boundary" in low, \
+        "the out-of-jurisdiction rule must cite §Boundary as its scope source"
+    assert re.search(r"not\s+silently\s+skipped", low), \
+        "out-of-jurisdiction content is noted, never silently skipped"
+    assert "spurious open question" in low, \
+        "out-of-jurisdiction content must not become a spurious Open Question"
+
+
+def test_headless_open_question_points_at_rules_file_format():
+    """R2 🟡3: the Open Question landing spot now has a defined format —
+    the invariant clause points at the `## Open Questions` contract in
+    references/principles-rules.md (relative path, as elsewhere)."""
+    section = _section(_text(), "## Headless / seeded mode")
+    assert "## Open Questions" in section, \
+        "§Headless must name the ## Open Questions contract section"
+    assert "references/principles-rules.md" in section, \
+        "the Open Question clause must point at the rules file by relative path"
+
+
 # --- flat-skill structure (repo hook enforces) ------------------------------
 
 def test_skill_folder_is_flat():

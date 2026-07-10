@@ -74,6 +74,9 @@
   simulated users are systematically agreeable and miss owner-only
   corrections (ground truth lives with the human; both live runs
   proved read-back catches what simulation would wave through).
+  When a SECOND station ships a headless/seeded mode, promote the
+  seed-traceability invariant from product-principles SKILL.md to a
+  family-shared convention (n=1 today, deliberately station-local).
 
 ## Designer/PM loop — escalation interface, decision log, acceptance-surface contracts (OPEN)
 - Status: OPEN

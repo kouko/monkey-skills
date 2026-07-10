@@ -21,6 +21,9 @@ The validator checks a single PRINCIPLES.md file against the pinned contract in
   7. `## Deviation Ledger` is optional: absent valid; present = >=1
      ordered-list entry, every entry carrying both `— reason:` and
      `— principle:` markers on the same line; present-but-empty invalid.
+  8. `## Open Questions` is optional: absent valid; present = >=1
+     ordered-list entry, every entry carrying the `— re-trigger:` marker
+     on the same line; present-but-empty invalid.
 
 Each check = a function (text/path) -> list[str] of problems (empty == ok),
 mirroring loom-spec/scripts/validate_spec_output.py. CLI:
@@ -611,6 +614,73 @@ def test_deviation_ledger_hyphen_markers_do_not_satisfy(tmp_path):
     ok, problems = validate(p)
     assert not ok
     assert any("Deviation Ledger" in m for m in problems), problems
+
+
+# --- Open Questions optional section (enforce-when-present, rule 8) --------
+
+def test_open_questions_absent_is_valid(tmp_path):
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(_valid_doc(3), encoding="utf-8")
+    ok, problems = validate(p)
+    assert ok, (
+        f"absent '## Open Questions' should not affect validity, got: "
+        f"{problems}"
+    )
+
+
+def test_open_questions_well_formed_entry_valid(tmp_path):
+    doc = (
+        _valid_doc(3) + "\n## Open Questions\n\n"
+        f"1. Whether capture history syncs across devices {EM} re-trigger: "
+        f"revisit when a second device platform ships\n"
+    )
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert ok, (
+        f"well-formed Open Questions entry should pass, got: {problems}"
+    )
+
+
+def test_open_questions_present_but_empty_flagged(tmp_path):
+    # Heading present, zero ordered-list entries -> invalid; must be omitted,
+    # not left empty.
+    doc = _valid_doc(3) + "\n## Open Questions\n\n"
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert not ok
+    assert any("Open Questions" in m for m in problems), problems
+
+
+def test_open_questions_entry_missing_re_trigger_flagged(tmp_path):
+    # Entry present but no `— re-trigger:` marker -> invalid: an open
+    # question with no revisit condition is a silent drop in disguise.
+    doc = (
+        _valid_doc(3) + "\n## Open Questions\n\n"
+        "1. Whether capture history syncs across devices.\n"
+    )
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert not ok
+    assert any("Open Questions" in m for m in problems), problems
+    assert any("re-trigger" in m for m in problems), problems
+
+
+def test_open_questions_hyphen_marker_does_not_satisfy(tmp_path):
+    # Hyphen-typo'd `- re-trigger:` (not em dash) must NOT satisfy rule 8 —
+    # same hyphen-vs-em-dash guard as `— check:` / `— reason:`.
+    doc = (
+        _valid_doc(3) + "\n## Open Questions\n\n"
+        "1. Whether capture history syncs across devices - re-trigger: "
+        "revisit when a second device platform ships\n"
+    )
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert not ok
+    assert any("Open Questions" in m for m in problems), problems
 
 
 def test_anchors_and_deviation_ledger_combined_valid(tmp_path):

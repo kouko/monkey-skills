@@ -65,7 +65,7 @@ user states direction (their own words)
 Read **`references/principles-rules.md`** before writing anything. It is the
 authoring contract: it pins the exact section formats (`## North Star`,
 `## Product Principles`, the optional jurisdictions, `## Anchors`,
-`## Deviation Ledger`), the **load-bearing per-principle `— check:`
+`## Deviation Ledger`, `## Open Questions`), the **load-bearing per-principle `— check:`
 falsifiable-marker rule** (an em dash `—`, a single space, lowercase `check`,
 a colon — on the same line as the principle), and the synthetic ✅/❌ examples.
 The emitted `PRINCIPLES.md` **MUST** follow that contract exactly — the
@@ -215,7 +215,7 @@ python <resolved-absolute-path-to>/loom-product-principles/scripts/validate_prin
 It mechanically enforces the contract summary in
 `references/principles-rules.md` §Validator contract — required sections,
 entry counts, the literal `— check:` marker on **every** entry, the
-`## Anchors` / `## Deviation Ledger` rules, and the legacy-heading
+`## Anchors` / `## Deviation Ledger` / `## Open Questions` rules, and the legacy-heading
 migration check (the path relative to this skill dir is
 `../../scripts/validate_principles_output.py`). The validator checks
 *structure*; the *quality* of each check (truly falsifiable vs disguised
@@ -236,6 +236,29 @@ to its **"delegate to agent"** answer:
   refusal to the conductor — state what the seed lacks and name
   `using-loom-discovery` (user-insights) as the human-side remedy. Never
   fabricate a North Star to keep the run going.
+- **Seed-traceability invariant (no silent drops)** — the headless mirror
+  of the interactive coverage self-check: EVERY seed item must land in the
+  artifact in at least one of a carrying principle, an `## Anchors` row, an
+  Open Question (with a re-trigger condition, formatted per the
+  `## Open Questions` contract in `references/principles-rules.md`), an
+  explicit `## Deviation Ledger` entry, or — for North-Star-bound facts
+  (the idea, the target user, the success condition) — the `## North Star`
+  section. A seed **item** is each individual stance, named canon,
+  tech-stack choice, or deferred marker, even when several of them share
+  one bullet or line of the seed — a walk at bullet granularity that drops
+  stances packed inside one bullet violates the invariant. Seed content
+  outside this skill's jurisdiction (per §Boundary — market /
+  business-model / strategy turf) is explicitly noted as
+  **out-of-jurisdiction** during the seed walk — not silently skipped, and
+  not laundered into a spurious Open Question. A seed stance marked
+  undecidable/deferred (e.g. 無法判斷) MUST become an Open Question with a
+  re-trigger — never dropped; every seed-named canon or tech-stack choice
+  MUST land as a version-pinned `## Anchors` row; every seed stance MUST
+  have a carrying principle — merging stances is fine, dropping one is not.
+- **Post-draft seed walk** — after drafting, walk the seed item-by-item
+  and verify each item has its landing spot **before finalizing**, exactly
+  as the interactive flow's per-section coverage self-check enumerates its
+  question set.
 - Record every choice you made alone with the literal marker
   **`(agent-decided)`**, appended at the **end of the same physical line**
   as the choice it tags — a `## Deviation Ledger` entry when it breaks an
