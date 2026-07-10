@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# SessionStart hook for ascii-graph-toolkit.
+# Reads hooks/trigger-card.md and injects it as additionalContext so every
+# session carries the diagram trigger rule at the moment drawing actually
+# happens (a reflexive act that never passes through skill routing on its
+# own) — see docs/loom/specs/2026-07-10-ascii-graph-trigger-fix.md.
+#
+# CANONICAL key (both hosts consume): hookSpecificOutput.additionalContext
+# hookEventName is REQUIRED inside hookSpecificOutput — omitting it
+# silently disables the hook (see machine memory
+# feedback_hook_specific_output_requires_hookeventname).
+#
+# DEFENSIVE keys (belt-and-suspenders, emitted for cross-version/host
+# portability): additional_context (top-level snake_case), additionalContext
+# (bare top-level camelCase). Mirrors loom-pipeline/hooks/session-start's
+# 3-key shape.
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+CARD_PATH="${PLUGIN_ROOT}/hooks/trigger-card.md"
+
+# Card file missing → fail open with empty context (do not crash the
+# session). Same 3-key shape as the populated case.
+if [ ! -f "${CARD_PATH}" ]; then
+  printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":""},"additional_context":"","additionalContext":""}\n'
+  exit 0
+fi
+
+content="$(cat "${CARD_PATH}")"
+
+# JSON-escape via bash parameter substitution (mirror loom-pipeline).
+escape_for_json() {
+  local s="$1"
+  s="${s//\\/\\\\}"
+  s="${s//\"/\\\"}"
+  s="${s//$'\n'/\\n}"
+  s="${s//$'\r'/\\r}"
+  s="${s//$'\t'/\\t}"
+  printf '%s' "$s"
+}
+escaped="$(escape_for_json "${content}")"
+
+# Emit canonical nested key + both defensive top-level keys (same content).
+printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"},"additional_context":"%s","additionalContext":"%s"}\n' \
+  "${escaped}" "${escaped}" "${escaped}"
