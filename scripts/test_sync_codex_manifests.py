@@ -255,32 +255,44 @@ def test_scaffold_does_not_clobber_existing_codex(tmp_path):
     assert after["version"] == _claude_ssot()["version"]
 
 
-# --- CODEX_ELIGIBLE: all 26 repo plugins (21 Batch-A + loom-code + 3 Phase-2b
-# --- + loom-discovery) -------------------------------------------------------
+# --- CODEX_ELIGIBLE: every repo plugin, derived from the filesystem ----------
+# Why derived, not a hardcoded count: PR #523 shipped with a red loom-code CI
+# because adding a plugin bumped the census past a hand-written "25" that no
+# per-plugin suite runs. Deriving the expected set from the repo keeps the
+# forgot-the-tuple gate (fails naming the plugin) with zero count maintenance.
 
-def test_eligible_list_covers_all_26_repo_plugins():
+# Deliberately NOT Codex-eligible, with the why. Growing this set is a
+# decision, not a bookkeeping step — each entry needs a reason like these.
+_CODEX_INELIGIBLE = {
+    # Codex has no Workflow primitive; using-loom-pipeline declares itself
+    # N/A on Codex hosts, so no Codex manifest is shipped.
+    "loom-pipeline",
+}
+
+
+def _repo_plugin_dirs() -> set:
+    """Every top-level dir that ships a Claude plugin manifest."""
+    root = Path(__file__).resolve().parent.parent
+    return {p.parent.parent.name
+            for p in root.glob("*/.claude-plugin/plugin.json")}
+
+
+def test_eligible_list_covers_every_repo_plugin():
     import sync_codex_manifests as m
 
-    batch_a = {
-        "ascii-graph-toolkit", "briefing-toolkit", "copywriting-toolkit",
-        "dbt-wiki", "deconstruct-toolkit", "domain-teams", "four-dx-coach",
-        "gws-toolkit", "investing-toolkit", "legal-toolkit",
-        "loom-interface-design", "loom-product-principles", "loom-spec",
-        "obsidian", "philosophers-toolkit", "repo-wiki", "research-toolkit",
-        "skill-dev-toolkit", "systems-thinking-toolkit", "translation-toolkit",
-        "tsundoku",
-    }
-    assert len(batch_a) == 21
+    repo_plugins = _repo_plugin_dirs()
+    assert repo_plugins, "filesystem scan found no plugins — glob broken?"
+    expected = repo_plugins - _CODEX_INELIGIBLE
 
     eligible = set(m.CODEX_ELIGIBLE)
-    assert batch_a <= eligible, batch_a - eligible
-    assert "loom-code" in eligible
-    # Phase 2b: dev-workflow (PostToolUse hook) + collab-toolkit / salesforce-toolkit
-    # (MCP servers) are now eligible too — the whole repo ships Codex manifests.
-    for added in ("dev-workflow", "collab-toolkit", "salesforce-toolkit"):
-        assert added in eligible, f"{added} must now be eligible (Phase 2b)"
-    assert "loom-discovery" in eligible  # discovery station (PR #523)
-    assert len(eligible) == 26  # 21 Batch-A + loom-code + 3 Phase-2b + loom-discovery
+    missing = expected - eligible
+    stale = eligible - expected
+    assert not missing, (
+        f"plugins on disk but absent from CODEX_ELIGIBLE (add them to the "
+        f"tuple in sync_codex_manifests.py): {sorted(missing)}")
+    assert not stale, (
+        f"CODEX_ELIGIBLE names plugins that no longer exist on disk "
+        f"(remove them): {sorted(stale)}")
 
 
 # --- CLI: --scaffold creates a manifest; --all iterates; --all --check read-only
@@ -362,8 +374,9 @@ REPO_ROOT = SCRIPT.resolve().parent.parent
 def test_all_eligible_codex_manifests_in_sync():
     import sync_codex_manifests as m
 
-    # Sanity: 21 Batch-A + loom-code + 3 Phase-2b + loom-discovery.
-    assert len(m.CODEX_ELIGIBLE) == 26, f"expected 26 eligible, got {len(m.CODEX_ELIGIBLE)}"
+    # Sanity: the tuple mirrors the on-disk plugin census minus the named
+    # exclusions (see test_eligible_list_covers_every_repo_plugin).
+    assert set(m.CODEX_ELIGIBLE) == _repo_plugin_dirs() - _CODEX_INELIGIBLE
 
     # Fold MISSING (no .codex-plugin manifest yet) into the offender list so a
     # future eligible plugin added before it is scaffolded fails CLEANLY (named),
