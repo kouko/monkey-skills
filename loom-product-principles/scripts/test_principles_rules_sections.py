@@ -165,6 +165,80 @@ def test_validator_contract_documents_deviation_ledger_rule():
         "Validator contract's Deviation Ledger rule must state it is optional"
 
 
+# --- ## Open Questions (seed-traceability round-2: 🟡3) ----------------------
+# The dogfood oracle and the SKILL.md seed-traceability invariant already
+# assume an Open Question landing spot; this pins its real format home,
+# same shape as rules 6-7.
+
+
+def test_open_questions_heading_exists():
+    assert "## Open Questions" in _text()
+
+
+def test_open_questions_is_optional():
+    text = _text()
+    section = _section(text, "## Open Questions")
+    assert "optional" in section.lower(), \
+        "## Open Questions must be documented as optional"
+
+
+def test_open_questions_entries_carry_re_trigger_marker():
+    text = _text()
+    section = _section(text, "## Open Questions")
+    assert f"{EM} re-trigger:" in section, \
+        "## Open Questions entries must carry the literal '— re-trigger:' " \
+        "marker (same em-dash idiom as '— check:' / '— reason:')"
+
+
+def test_open_questions_format_block_is_ordered_list():
+    text = _text()
+    section = _section(text, "## Open Questions")
+    assert re.search(r"(?m)^1\.\s", section), \
+        "## Open Questions format block must show a numbered ('1.') entry"
+
+
+def test_open_questions_states_single_physical_line_rule():
+    text = _text()
+    section = _section(text, "## Open Questions")
+    assert "single physical line" in section.lower(), \
+        "## Open Questions must state the single-physical-line rule, " \
+        "mirroring the ## Deviation Ledger wording"
+
+
+def test_open_questions_re_trigger_states_when_to_revisit():
+    text = _text()
+    section = _section(text, "## Open Questions")
+    assert "revisit" in section.lower(), \
+        "the re-trigger must state WHEN to revisit the open question"
+
+
+def test_open_questions_present_but_empty_is_invalid():
+    text = _text()
+    section = _section(text, "## Open Questions")
+    assert "present-but-empty" in section.lower() or \
+        ("present" in section.lower() and "empty" in section.lower()), \
+        "## Open Questions must forbid a present-but-empty section"
+
+
+def test_open_questions_has_valid_invalid_example_pair():
+    text = _text()
+    section = _section(text, "## Open Questions")
+    assert "✅" in section and "❌" in section, \
+        "## Open Questions must show a valid/invalid (✅/❌) example pair, " \
+        "per the file's own idiom"
+
+
+def test_validator_contract_documents_open_questions_rule():
+    text = _text()
+    contract = _section(text, "## Validator contract (summary)")
+    assert "## Open Questions" in contract, \
+        "Validator contract must document a rule (row 8) for '## Open Questions'"
+    assert f"{EM} re-trigger:" in contract, \
+        "the Open Questions contract rule must pin the '— re-trigger:' marker"
+    assert re.search(r"(?m)^8\.\s", contract), \
+        "the Open Questions rule must be numbered as rule 8"
+
+
 # --- Round-2 fix pins (reviewer findings) -----------------------------------
 
 def test_anchors_section_has_valid_invalid_example_pair():

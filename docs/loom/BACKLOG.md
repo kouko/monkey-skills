@@ -59,6 +59,16 @@
   verbatim transcript in
   `docs/loom/dogfood/2026-07-10-principles-flow-cold-operator/`
   `seed.md` / `transcript.md`).
+- 2026-07-10 matrix update: a 5-seed synthetic corpus now exists
+  (`docs/loom/dogfood/2026-07-10-principles-flow-seed-corpus/`, input +
+  grader-only oracle pairs) and its first 6-run matrix is graded
+  (`docs/loom/dogfood/2026-07-10-principles-flow-cold-operator/matrix-results.md`).
+  Two residuals are this entry's next inputs: (1) prose-named
+  stack/canon → Anchors drops (5/6 artifacts; prose hardening judged
+  exhausted after 3 rounds) and (2) the seed-walk self-report can be
+  FALSE (observed live, seed5) — remedy is mechanical: verify the
+  produced Anchors table against the oracle's `named_anchors` manifest
+  post-run, never trust the operator's self-attestation.
 - What: three reuse tiers over the recorded runs — (a) headless seeded
   replay: feed a seed to SKILL.md §Headless/seeded mode, assert the
   seed's Oracle section (validator exit 0, structural pins, negative
@@ -74,6 +84,9 @@
   simulated users are systematically agreeable and miss owner-only
   corrections (ground truth lives with the human; both live runs
   proved read-back catches what simulation would wave through).
+  When a SECOND station ships a headless/seeded mode, promote the
+  seed-traceability invariant from product-principles SKILL.md to a
+  family-shared convention (n=1 today, deliberately station-local).
 
 ## Designer/PM loop — escalation interface, decision log, acceptance-surface contracts (OPEN)
 - Status: OPEN

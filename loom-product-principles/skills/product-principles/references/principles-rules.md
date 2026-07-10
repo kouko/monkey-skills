@@ -260,6 +260,51 @@ omitted, not left empty.
 
 ---
 
+## Optional section — `## Open Questions`
+
+`## Open Questions` is **optional** — emitted only when a decision input
+could not be resolved into a principle, an anchor, or a deviation and must
+not be silently dropped (most commonly a stance marked undecidable/deferred
+in a seeded headless run — see the SKILL's seed-traceability invariant).
+Each entry records the unresolved decision **and when to revisit it**: an
+open question with no revisit condition is a silent drop deferred forever.
+
+**Format:** an ordered list; each entry carries the literal `— re-trigger:`
+marker — an em dash (U+2014 `—`), a single space, the lowercase word
+`re-trigger`, then a colon (the same marker idiom as `— check:` /
+`— reason:`) — stating the concrete condition or event on which the
+question must be revisited.
+
+**Write each entry as a single physical line — do not soft-wrap.** The
+validator matches `— re-trigger:` on the same physical line as the entry's
+`N.` prefix; a soft-wrapped entry silently pushes the marker onto the next
+line and fails validation even though it renders correctly.
+
+```markdown
+## Open Questions
+
+1. <the unresolved decision> — re-trigger: <the condition or event on which to revisit it>
+```
+
+**Synthetic example:**
+
+```markdown
+## Open Questions
+
+1. Whether capture history syncs across devices — re-trigger: revisit when a second device platform ships
+```
+
+**Valid vs invalid entry:**
+
+- ✅ `1. Whether capture history syncs across devices — re-trigger: revisit when a second device platform ships` — marker present, one physical line, a concrete revisit event.
+- ❌ `1. Whether capture history syncs across devices` — no `— re-trigger:` marker; nothing says when to revisit, so the question is a silent drop in disguise.
+
+**A project with no open questions emits NO section** — same rule as the
+other optional sections: a present-but-empty `## Open Questions` (heading
+with zero entries) is invalid; it must be omitted, not left empty.
+
+---
+
 ## Falsifiable vs platitude — synthetic ✅/❌ examples
 
 These contrast a falsifiable principle against a platitude, sorted under the
@@ -343,6 +388,12 @@ falsifiable condition.
    `— principle:` (em dash U+2014, single space, lowercase word, colon) —
    bound to that same entry. A present-but-empty section (0 entries) is
    invalid — it must be omitted, not left empty.
+8. `## Open Questions` is **optional**: absent is valid; present requires
+   **at least 1** ordered-list entry (a line matching `^\d+\.\s`), and
+   **every** entry carries the literal `— re-trigger:` marker (em dash
+   U+2014, single space, the lowercase word `re-trigger`, colon) on the
+   same physical line as the entry. A present-but-empty section
+   (0 entries) is invalid — it must be omitted, not left empty.
 
 **Generators MUST emit the exact `— check:` marker** (em dash, not a hyphen
 `-`/`--`; lowercase `check:`; same line). This is the load-bearing lexeme the

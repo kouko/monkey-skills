@@ -50,7 +50,10 @@ instrument v0.1 §Success criteria; labeled ground truth = `report.md`.
 
 Structural (script-checkable):
 - `validate_principles_output.py <artifact>` → exit 0
-- `## Product Principles` 恰 7 條；每條含 `— check:`（em-dash）
+- `## Product Principles` 覆蓋式斷言（條數不是不變量——合併合法）：
+  §Seed 每個立場都有承載原則；§Seed 點名的每個 canon／技術棧都出現在
+  `## Anchors`；遞延立場（成本=無法判斷）以 Open Question 呈現；
+  每條原則含 `— check:`（em-dash）
 - `## Anchors` 表含：JTBD、Kano、Apple HIG、Nielsen、Apple Design Language、Local-First、Modular Monolith、Swift/SwiftUI、Core ML——每列版本/edition 欄非空
 - 空的 `## Deviation Ledger` 必須整段省略（不得 present-but-empty）
 - Open Questions 含成本立場懸案＋再觸發條件
@@ -62,7 +65,8 @@ Negative (correction regressions — artifact must NOT contain):
 - 「零雲端依賴」字面硬措辭（C4）
 - 「分享修正數據」（C5）
 - 「鍵盤優先」作為互動原則方向（C6）
-- 「團隊」指稱開發方（C9）
+- 以開發團隊為決策主體的措辭，如「開發團隊」「團隊接受」（C9；
+  斷言對象是開發方，不含測試用戶群描述如「10～50 人團隊」）
 
 Process (transcript-checkable, per instrument v0.1 criteria):
 - 每段候選輪 ≥2 傳統＋1-2「考慮過但排除」（F2 修正後應全段成立）

@@ -37,6 +37,11 @@ Valid iff:
      at least 1 ordered-list entry, and every entry carries both the
      literal `— reason:` and `— principle:` markers on the same
      physical line. A present-but-empty section (0 entries) is invalid.
+  8. `## Open Questions` is OPTIONAL: absent is valid; present requires
+     at least 1 ordered-list entry, and every entry carries the literal
+     `— re-trigger:` marker (em dash U+2014, single space, the lowercase
+     word `re-trigger`, colon) on the same physical line. A
+     present-but-empty section (0 entries) is invalid.
 
 Design: each check is a function (text: str) -> list[str] of problem messages
 (empty == ok), mirroring `loom-spec/scripts/validate_spec_output.py`.
@@ -96,6 +101,12 @@ _ANCHORS_SEPARATOR_RE = re.compile(r"^\|[\s:-]+\|")
 _DEVIATION_LEDGER = "## Deviation Ledger"
 _REASON_MARKER = "— reason:"
 _PRINCIPLE_MARKER = "— principle:"
+
+# `## Open Questions`: optional ordered-list ledger of unresolved decisions.
+# Entries reuse the `_ENTRY` ordered-list regex; each entry carries the
+# `— re-trigger:` marker (when to revisit) on the same physical line.
+_OPEN_QUESTIONS = "## Open Questions"
+_RE_TRIGGER_MARKER = "— re-trigger:"
 
 
 def _section_body(text: str, header: str) -> str | None:
@@ -289,6 +300,33 @@ def _check_deviation_ledger(text: str) -> list[str]:
     return problems
 
 
+def _check_open_questions(text: str) -> list[str]:
+    """`## Open Questions` is optional. Present requires >=1 ordered-list
+    entry, each carrying the literal `— re-trigger:` marker on its own
+    physical line."""
+    body = _section_body(text, _OPEN_QUESTIONS)
+    if body is None:
+        return []  # optional section absent -> valid
+    entries = _principle_entries(body)
+    if not entries:
+        return [
+            f"'{_OPEN_QUESTIONS}' is present but has no ordered-list "
+            f"entries; a present-but-empty section must be omitted, not "
+            f"left empty"
+        ]
+    problems: list[str] = []
+    for entry in entries:
+        if _RE_TRIGGER_MARKER not in entry:
+            problems.append(
+                f"'{_OPEN_QUESTIONS}' entry lacks the literal "
+                f"'{_RE_TRIGGER_MARKER}' marker (em dash U+2014, single "
+                f"space, lowercase 're-trigger', colon; a hyphen or "
+                f"different casing does not count) on the same physical "
+                f"line: {entry.strip()!r}"
+            )
+    return problems
+
+
 def _check_legacy_heading(text: str) -> list[str]:
     if _LEGACY_HEADING_RE.search(text) is None:
         return []
@@ -306,6 +344,7 @@ _CHECKS = [
     _check_optional_jurisdiction_sections,
     _check_anchors,
     _check_deviation_ledger,
+    _check_open_questions,
     _check_legacy_heading,
 ]
 
