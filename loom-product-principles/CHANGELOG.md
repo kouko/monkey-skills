@@ -8,6 +8,37 @@ Versioning: [Semantic Versioning](https://semver.org/).
 > This file was reconstructed on 2026-07-02 from the git history — the plugin
 > shipped its first two versions without a CHANGELOG.
 
+## [0.5.0] — 2026-07-10
+
+### Added
+
+- **Construction-flow rewrite of `product-principles` SKILL.md's elicitation
+  core**: user-states-first → question-set probing → same-axis canon
+  candidates (with considered-but-rejected recorded per round) → the user
+  decides the mix or goes bespoke → version-pinned `## Anchors` +
+  `## Deviation Ledger` + falsifiable principles → per-section and final
+  read-backs. New `§Headless/seeded mode` covers unattended runs, including
+  a thin-seed `BLOCKED` refusal and greppable `(agent-decided)` markers for
+  choices made without a human in the loop.
+- New reference files: `references/question-sets.md` and four canon base
+  lists — `references/canon-product.md`, `references/canon-design-interaction.md`,
+  `references/canon-design-visual.md`, `references/canon-engineering.md` —
+  supplying the same-axis candidates the construction flow proposes.
+- `references/principles-rules.md` gains `## Anchors` and `## Deviation
+  Ledger` format rules (enforce-when-present) plus validator contract
+  rules 6–7 describing how `validate_principles_output.py` checks them.
+- `scripts/validate_principles_output.py`: enforce-when-present checks for
+  both the `## Anchors` and `## Deviation Ledger` sections.
+
+### Verified
+
+- Cold-operator dogfood
+  (`docs/loom/dogfood/2026-07-10-principles-flow-cold-operator/`): 4 PASS +
+  1 PARTIAL; findings F1–F3 folded back into the construction flow (see
+  the `fix(loom-product-principles)` commit above).
+- `PYTHONDONTWRITEBYTECODE=1 python3 -m pytest loom-product-principles/scripts/ --collect-only -q`
+  → 145 tests collected.
+
 ## [0.4.1] — 2026-07-07
 
 ### Changed
