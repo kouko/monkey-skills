@@ -205,3 +205,39 @@ def test_check_public_api_returns_miss_lines_without_subprocess():
     oracle = _oracle()
     misses = check(artifact, oracle)
     assert misses == ["named_anchors: HEART"]
+
+
+# --- Task 3: committed oracles conform to the parser contract ---------------
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_SEED_CORPUS = _REPO_ROOT / "docs/loom/dogfood/2026-07-10-principles-flow-seed-corpus"
+_COLD_OPERATOR_SEED = (
+    _REPO_ROOT
+    / "docs/loom/dogfood/2026-07-10-principles-flow-cold-operator"
+    / "seed.md"
+)
+
+# (label, path, expected named_anchors count, deferred_items count, negative count)
+_COMMITTED_ORACLE_EXPECTATIONS = [
+    ("seed1-oracle.md", _SEED_CORPUS / "seed1-oracle.md", 10, 0, 3),
+    ("seed2-oracle.md", _SEED_CORPUS / "seed2-oracle.md", 7, 2, 5),
+    ("seed3-oracle.md", _SEED_CORPUS / "seed3-oracle.md", 6, 0, 3),
+    ("seed4-oracle.md", _SEED_CORPUS / "seed4-oracle.md", 9, 1, 4),
+    ("seed5-oracle.md", _SEED_CORPUS / "seed5-oracle.md", 8, 2, 2),
+    ("cold-operator seed.md", _COLD_OPERATOR_SEED, 9, 1, 8),
+]
+
+
+@pytest.mark.parametrize(
+    "label,path,named_count,deferred_count,negative_count",
+    _COMMITTED_ORACLE_EXPECTATIONS,
+)
+def test_committed_oracles_conform_to_parser_contract(
+    label, path, named_count, deferred_count, negative_count
+):
+    text = path.read_text(encoding="utf-8")
+    result = parse_oracle(text)  # raises ValueError if the source can't parse
+    assert result["named_anchors"], f"{label}: named_anchors must be non-empty"
+    assert len(result["named_anchors"]) == named_count, label
+    assert len(result["deferred_items"]) == deferred_count, label
+    assert len(result["negative"]) == negative_count, label
