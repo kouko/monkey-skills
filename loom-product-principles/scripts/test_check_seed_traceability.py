@@ -7,6 +7,7 @@ fixtures/ subdir, no conftest.py — same convention as
 test_validate_principles_output.py).
 """
 
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -198,6 +199,26 @@ def test_all_three_miss_classes_reported_together(tmp_path):
     assert "negative: forced login" in proc.stderr
 
 
+def test_missing_artifact_file_exits_2_with_clean_error(tmp_path):
+    missing_artifact = tmp_path / "does-not-exist.md"
+    oracle = tmp_path / "oracle.md"
+    oracle.write_text(_oracle(), encoding="utf-8")
+    proc = _run_cli(missing_artifact, oracle)
+    assert proc.returncode == 2
+    assert "Traceback" not in proc.stderr
+    assert f"error: file not found: {missing_artifact}" in proc.stderr
+
+
+def test_missing_oracle_file_exits_2_with_clean_error(tmp_path):
+    artifact = tmp_path / "PRINCIPLES.md"
+    artifact.write_text(_artifact(), encoding="utf-8")
+    missing_oracle = tmp_path / "does-not-exist-oracle.md"
+    proc = _run_cli(artifact, missing_oracle)
+    assert proc.returncode == 2
+    assert "Traceback" not in proc.stderr
+    assert f"error: file not found: {missing_oracle}" in proc.stderr
+
+
 def test_check_public_api_returns_miss_lines_without_subprocess():
     # Public API (brief: "so tests and future consumers can call without
     # subprocess").
@@ -217,23 +238,63 @@ _COLD_OPERATOR_SEED = (
     / "seed.md"
 )
 
-# (label, path, expected named_anchors count, deferred_items count, negative count)
+# (label, path, expected named_anchors count, deferred_items count, negative
+# count, exemplars) — exemplars is a dict of {key: one stable token expected
+# in that key's list}, one entry per NON-EMPTY key for that source. These
+# pin actual extracted content (not just counts), so prose-glue regressions
+# that happen to preserve counts (e.g. seed3's old pre-normalization glued
+# token) still fail. See git show 0726d823^ for the pre-normalization seed3
+# oracle: its glued token
+# "Nielsen's 10 Usability Heuristics (MIXED-TRADITION TRAP: ...)" would trip
+# the shape assertion below.
 _COMMITTED_ORACLE_EXPECTATIONS = [
-    ("seed1-oracle.md", _SEED_CORPUS / "seed1-oracle.md", 10, 0, 3),
-    ("seed2-oracle.md", _SEED_CORPUS / "seed2-oracle.md", 7, 2, 5),
-    ("seed3-oracle.md", _SEED_CORPUS / "seed3-oracle.md", 6, 0, 3),
-    ("seed4-oracle.md", _SEED_CORPUS / "seed4-oracle.md", 9, 1, 4),
-    ("seed5-oracle.md", _SEED_CORPUS / "seed5-oracle.md", 8, 2, 2),
-    ("cold-operator seed.md", _COLD_OPERATOR_SEED, 9, 1, 8),
+    ("seed1-oracle.md", _SEED_CORPUS / "seed1-oracle.md", 10, 0, 3, {
+        "named_anchors": "Nielsen's 10 Usability Heuristics",
+        "negative": "postmortem 撰寫",
+    }),
+    ("seed2-oracle.md", _SEED_CORPUS / "seed2-oracle.md", 7, 2, 5, {
+        "named_anchors": "Calm Technology",
+        "deferred_items": "可逆性",
+        "negative": "上傳雲端",
+    }),
+    ("seed3-oracle.md", _SEED_CORPUS / "seed3-oracle.md", 6, 0, 3, {
+        "named_anchors": "Nielsen's 10 Usability Heuristics",
+        "negative": "mock server",
+    }),
+    ("seed4-oracle.md", _SEED_CORPUS / "seed4-oracle.md", 9, 1, 4, {
+        "named_anchors": "Norman's Design Principles",
+        "deferred_items": "升級胃口",
+        "negative": "強制雲端備份",
+    }),
+    ("seed5-oracle.md", _SEED_CORPUS / "seed5-oracle.md", 8, 2, 2, {
+        "named_anchors": "WCAG 2.2",
+        "deferred_items": "預約記錄保留期",
+        "negative": "企業版",
+    }),
+    ("cold-operator seed.md", _COLD_OPERATOR_SEED, 9, 1, 8, {
+        "named_anchors": "Modular Monolith",
+        "deferred_items": "成本",
+        "negative": "零雲端依賴",
+    }),
 ]
+
+# Shape assertion: a token that still carries prose-glue TRAP-style
+# annotation (e.g. "(MIXED-TRADITION TRAP: ...)") or the literal substring
+# "MUST appear" is evidence the oracle text wasn't normalized into a clean
+# `;`-separated token list — the parser would be pinning prose, not a token.
+_TRAP_ANNOTATION_RE = re.compile(r"\([A-Z]{2,}")
+
+
+def _is_prose_glued(token: str) -> bool:
+    return bool(_TRAP_ANNOTATION_RE.search(token)) or "MUST appear" in token
 
 
 @pytest.mark.parametrize(
-    "label,path,named_count,deferred_count,negative_count",
+    "label,path,named_count,deferred_count,negative_count,exemplars",
     _COMMITTED_ORACLE_EXPECTATIONS,
 )
 def test_committed_oracles_conform_to_parser_contract(
-    label, path, named_count, deferred_count, negative_count
+    label, path, named_count, deferred_count, negative_count, exemplars
 ):
     text = path.read_text(encoding="utf-8")
     result = parse_oracle(text)  # raises ValueError if the source can't parse
@@ -241,3 +302,12 @@ def test_committed_oracles_conform_to_parser_contract(
     assert len(result["named_anchors"]) == named_count, label
     assert len(result["deferred_items"]) == deferred_count, label
     assert len(result["negative"]) == negative_count, label
+
+    for key, exemplar in exemplars.items():
+        assert exemplar in result[key], (
+            f"{label}: expected exemplar {exemplar!r} in {key}, got {result[key]}"
+        )
+
+    for key in ("named_anchors", "deferred_items", "negative"):
+        glued = [t for t in result[key] if _is_prose_glued(t)]
+        assert not glued, f"{label}: prose-glued token(s) in {key}: {glued}"

@@ -37,7 +37,8 @@ scripts compose (the CLI here just locates tokens).
 
 CLI: `python check_seed_traceability.py <artifact.md> <oracle.md>` -> exit
 0 with no output if every token traces; exit 1 with one miss line per
-line on stderr otherwise.
+line on stderr otherwise; exit 2 with a single `error: file not found:
+<path>` line on stderr if either input path is not a file.
 
 Stdlib only.
 """
@@ -191,7 +192,13 @@ def main(argv: list | None = None) -> int:
                     "lists.")
     parser.add_argument("artifact_md", help="path to the artifact (e.g. PRINCIPLES.md)")
     parser.add_argument("oracle_md", help="path to the oracle document")
+    parser.epilog = "Exit codes: 0 conformant, 1 miss(es) found, 2 input file not found."
     args = parser.parse_args(argv)
+
+    for input_path in (args.artifact_md, args.oracle_md):
+        if not Path(input_path).is_file():
+            print(f"error: file not found: {input_path}", file=sys.stderr)
+            return 2
 
     artifact_text = Path(args.artifact_md).read_text(encoding="utf-8")
     oracle_text = Path(args.oracle_md).read_text(encoding="utf-8")
