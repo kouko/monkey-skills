@@ -33,6 +33,7 @@ Stdlib only (pathlib). Resolve SKILL.md relative to this test file.
 from pathlib import Path
 
 SKILL = Path(__file__).parents[1] / "skills" / "writing-plans" / "SKILL.md"
+AGENTS_MD = Path(__file__).parents[2] / "AGENTS.md"
 
 
 def _text() -> str:
@@ -122,6 +123,39 @@ def test_old_optional_instead_of_a_brief_framing_is_gone():
         "the old 'second input contract' framing must be removed"
     assert "instead of a brief" not in low, \
         "the old 'instead of a brief' optional framing must be removed"
+
+
+def test_coverage_script_wired_after_scenario_mapping():
+    """Task 12 wiring: after producing the plan, writing-plans runs
+    check_scenario_coverage.py against the bound change-folder + plan;
+    exit 1 blocks the plan from PASS until every scenario maps or the
+    drop is explicitly user-approved and recorded in the plan's Notes."""
+    text = _text()
+    low = text.lower()
+
+    assert "check_scenario_coverage.py" in text, \
+        "must name the coverage script check_scenario_coverage.py"
+    assert "exit 1" in low, \
+        "must state the exit-1 (dropped scenario) semantics"
+    assert "block" in low, \
+        "exit 1 must be stated as blocking the plan from PASS"
+    assert "user-approved" in low or "user approved" in low, \
+        "must name the user-approved-drop escape hatch"
+    assert "notes" in low, \
+        "the user-approved drop must be recorded in the plan's Notes section"
+
+
+def test_agents_md_declares_coverage_script():
+    """Command-surface accretion obligation (Task 12): AGENTS.md's managed
+    command-surface block must declare check_scenario_coverage.py so the
+    new runnable verb has a declared entry point."""
+    assert AGENTS_MD.is_file(), f"AGENTS.md is absent at {AGENTS_MD}"
+    text = AGENTS_MD.read_text(encoding="utf-8")
+    start = text.index("BEGIN command-surface (managed)")
+    end = text.index("END command-surface (managed)")
+    managed_block = text[start:end]
+    assert "check_scenario_coverage.py" in managed_block, \
+        "AGENTS.md managed command-surface block must declare check_scenario_coverage.py"
 
 
 def test_existing_change_folder_contracts_still_present():

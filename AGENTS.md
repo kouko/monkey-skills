@@ -49,6 +49,22 @@ Role boundaries enforced by behavior, not reading restrictions:
   (named on stderr); a `[deferred]` req with 0 tests is surfaced on
   stdout (informational, rc=0). Sound because CI runs it after the green
   pytest gate, so a linked test ≡ a passing test.
+- **Check writing-plans scenario coverage** (writing-plans self-check,
+  change-folder input only):
+  `python3 loom-code/scripts/check_scenario_coverage.py <change-folder> <plan-path>`
+  — compares the change-folder's `#### Scenario:` set against the
+  plan's `Brief item covered` join keys; rc=1 names every dropped
+  scenario on stderr, rc=0 on full coverage (or a vacuous zero-scenario
+  folder).
+- **Archive a shipped change-folder** (finishing-a-development-branch
+  archive-on-close step, orchestrator-only, once per branch):
+  `python3 loom-code/scripts/archive_change_folder.py <change-id> [root] [--date YYYY-MM-DD]`
+  — moves `docs/loom/<change-id>/` to
+  `docs/loom/archive/<date>-<change-id>/` and stamps `status: archived`
+  into the moved `proposal.md`'s frontmatter; rc=1 with actionable
+  stderr on any refusal (missing source, already-archived, destination
+  collision, unsafe change-id/date), zero filesystem mutation on
+  refusal.
 - **Sync a plugin's Codex manifest from its Claude SSOT**:
   `python3 scripts/sync_codex_manifests.py <plugin>` — copies the 8
   shared fields (name/version/description/author/homepage/repository/

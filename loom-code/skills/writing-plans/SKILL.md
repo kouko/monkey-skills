@@ -11,7 +11,7 @@ If you are a subagent dispatched with an explicit role prompt (implementer / spe
 
 ## What this skill does
 
-Takes a `brainstorming` output brief and produces a **plan**: an ordered list of atomic tasks that `subagent-driven-development` (SDD) can dispatch one at a time. Each task must be:
+Takes a `brainstorming` output brief and produces a **plan**: an ordered list of atomic tasks that `subagent-driven-development` (SDD) can dispatch one at a time. It can also consume a validated `loom-spec` change-folder as an alternate input — see §Consuming a loom-spec change-folder. Each task must be:
 
 - **Independently verifiable** — has a RED test (or RED diagnostic) that goes GREEN when the task is done. This is the primary sizing constraint — see §The splitting framework.
 - **One module** of touch surface (consistent with SDD's per-task scope).
@@ -221,11 +221,14 @@ Alongside the brainstorming brief, writing-plans can consume a **validated loom-
 
 **Consumer read-only.** **NEVER edit the producer's change-folder** — loom-spec is SSOT, so a consumer edit makes sibling consumers read a different spec than the one the freeze validated, and races the freeze's `validate_spec_output.py` re-run. writing-plans reads `docs/loom/<change-id>/` and writes only its own plan at `docs/loom/plans/<date>-<topic>.md` (the canonical plan path from the §Output contract; for a change-folder input the `<change-id>` fills the `<topic>` slot).
 
+**Coverage self-check (change-folder input only).** After producing the plan, run `python3 loom-code/scripts/check_scenario_coverage.py <change-folder> <plan>`. It compares the change-folder's `#### Scenario:` set against the plan's `Brief item covered` join keys. Exit 0 means every scenario maps to a task. **Exit 1 blocks the plan from PASS** — self-review may not declare PASS until either every scenario maps to a task, or the drop is **explicitly user-approved** and recorded in the plan's `Notes` section (name the dropped join key + the approval). This check applies only to the change-folder input path; a brainstorming-brief-only plan has no change-folder to check coverage against. **Gate order**: run this coverage check BEFORE dispatching the plan-document-reviewer — a coverage failure blocks the dispatch (a cheap deterministic script runs before an evaluator subagent, same economics as §Self-review's pre-patch habit; the two gates check different things — the reviewer's Check 3 verifies field presence per task, this script verifies full scenario coverage — so neither subsumes the other).
+
 ## Cross-skill contract
 
 | Direction | Skill | Contract |
 |---|---|---|
 | **Upstream** | `brainstorming` | Produces brief at `docs/loom/specs/<topic>.md`. writing-plans reads it via Read tool. |
+| **Upstream** | `loom-spec:spec-expansion` | Produces the validated change-folder consumed per §Consuming a loom-spec change-folder. |
 | **Downstream** | `subagent-driven-development` | Consumes plan at `docs/loom/plans/<topic>.md`. SDD reads plan + dispatches per-task triad. |
 | **Downstream (opt-in)** | `dispatching-parallel-agents` | Consumes tasks marked `Independent: true` with disjoint `Files touched`. Dispatches their implementers in one assistant message for concurrent execution. Fall back to SDD's sequential dispatch if either condition fails. |
 | **Self-review** | `plan-document-reviewer` (evaluator subagent) | writing-plans dispatches it after producing the plan. Returns PASS / NEEDS_REVISION. |
