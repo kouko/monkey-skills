@@ -22,6 +22,7 @@ to the injected reception context.
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -255,3 +256,24 @@ def test_reception_includes_visual_defaults():
             "session-start did not reflect the mutated family-relay.md content — "
             "extraction is not happening at runtime"
         )
+
+
+def test_brainstorming_visual_operative_line():
+    """
+    Task 4 (2026-07-10 ascii-graph-trigger-fix plan) adds an operative
+    one-liner to brainstorming/SKILL.md's "## Visual companion" section:
+    flow/state diagrams in briefs and user-facing summaries are
+    GENERATED via ascii-graph-toolkit (or Mermaid where the channel
+    renders it), never hand-drawn box art — pointing at
+    family-relay.md §(b) Visual defaults as SSOT for the channel rule.
+    Markers required WITHIN that section specifically (not just
+    anywhere in the file):
+      - "ascii-graph-toolkit"
+      - "never hand-drawn" (operative not-hand-drawn phrase)
+    """
+    text = _read(BRAINSTORM_SKILL)
+    match = re.search(r"## Visual companion\n(.*?)(?=\n## )", text, re.DOTALL)
+    assert match, "expected a '## Visual companion' section in brainstorming/SKILL.md"
+    section = match.group(1)
+    assert "ascii-graph-toolkit" in section
+    assert "never hand-drawn" in section
