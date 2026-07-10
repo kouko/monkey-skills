@@ -74,6 +74,17 @@ Process (transcript-checkable, per instrument v0.1 criteria):
 - 起草前自數條數（F3 修正後：不得先給 8 條再等人抓）
 - 使用者跳答 → 覆蓋自檢補問；「無法判斷」→ 懸案不吞
 
+### Machine-readable (checker-scope keys, per check_seed_traceability.py's
+parse_oracle contract — joins this living Oracle to the L1/L2 replay harness;
+derived from the prose assertions above, not new claims)
+
+named_anchors: JTBD; Kano; Apple HIG; Nielsen; Apple Design Language; Local-First; Modular Monolith; Swift/SwiftUI; Core ML
+deferred_items: 成本
+negative: 整理會議記錄; 追踪項目進度; 逐字稿編輯; 零雲端依賴; 分享修正數據; 鍵盤優先; 開發團隊; 團隊接受
+# note: 第 8 條原則（C3）is a count-based structural assertion, not a literal
+# presence check — stays with the "覆蓋式斷言" prose above, not encoded as a
+# negative token.
+
 ## Known operator-invented specifics (user-accepted, allowed but not required)
 
 「3-5 個視覺焦點區域」、「不超過 3 次點擊」——replay 中出現與否皆可；

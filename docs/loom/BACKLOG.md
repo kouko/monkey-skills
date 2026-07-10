@@ -45,9 +45,8 @@
 
 ## Dogfood replay/eval harness for the principles construction flow (OPEN)
 - Status: OPEN
-- Start: next quality iteration on loom-product-principles' construction
-  flow (a regression suspicion, a SKILL.md behavioral change, or a new
-  model tier to qualify), or when a third human-grounded run seed lands.
+- Start: several rounds of real L1/L2 data accumulated, or a regression
+  suspicion the manual loop is too slow to chase.
 - Origin: 2026-07-10 cold-operator dogfood close-out discussion — the
   user asked whether human-run dogfood records can become automated
   test / iteration material. Three human-grounded seeds already exist:
@@ -63,30 +62,46 @@
   (`docs/loom/dogfood/2026-07-10-principles-flow-seed-corpus/`, input +
   grader-only oracle pairs) and its first 6-run matrix is graded
   (`docs/loom/dogfood/2026-07-10-principles-flow-cold-operator/matrix-results.md`).
-  Two residuals are this entry's next inputs: (1) prose-named
-  stack/canon → Anchors drops (5/6 artifacts; prose hardening judged
-  exhausted after 3 rounds) and (2) the seed-walk self-report can be
-  FALSE (observed live, seed5) — remedy is mechanical: verify the
-  produced Anchors table against the oracle's `named_anchors` manifest
-  post-run, never trust the operator's self-attestation.
-- What: three reuse tiers over the recorded runs — (a) headless seeded
-  replay: feed a seed to SKILL.md §Headless/seeded mode, assert the
-  seed's Oracle section (validator exit 0, structural pins, negative
-  correction-regression assertions) as an EVAL (pass-rate over N runs,
-  model non-determinism), never per-push CI; (b) simulated-user replay:
-  answer-bank + correction-events from the transcripts drive a
-  simulated user that injects the recorded corrections and asserts the
-  operator applies them without collateral drift; (c) judge rubric:
-  the graded reports (5 criteria + B1-B6/F1-F7 findings) as labeled
-  ground truth for an LLM judge scoring future runs. Division of
-  labor, agreed with the user: mechanical/regression coverage goes
-  automatic; NEW failure-mode discovery and taste calls stay human —
-  simulated users are systematically agreeable and miss owner-only
-  corrections (ground truth lives with the human; both live runs
-  proved read-back catches what simulation would wave through).
-  When a SECOND station ships a headless/seeded mode, promote the
-  seed-traceability invariant from product-principles SKILL.md to a
-  family-shared convention (n=1 today, deliberately station-local).
+  Two residuals from that run — prose-named stack/canon → Anchors drops
+  (5/6 artifacts) and the seed-walk self-report being observably FALSE
+  (seed5) — are now covered mechanically; see the 2026-07-11 update
+  below.
+- 2026-07-11 update: L1 (regression matrix Workflow,
+  `.claude/workflows/principles-replay-matrix.js`) and L2 (mechanical
+  traceability gate,
+  `loom-product-principles/scripts/check_seed_traceability.py`) shipped
+  on branch `feat-principles-replay-loop-l1-l2`, closing both residuals
+  above. Design SSOT: `docs/loom/specs/2026-07-10-principles-replay-loop.md`
+  (§Level 1, §Level 2).
+- What: the remaining open item is Level 3 — the autonomous improvement
+  loop (matrix → grade → implementer proposes a SKILL.md fix → review →
+  re-run). Design + the four guardrails are SSOT'd at
+  `docs/loom/specs/2026-07-10-principles-replay-loop.md` §Level 3 — do
+  not restate them here. `skill-dev-toolkit:skill-tuning` is the
+  candidate variant-diversification engine when this builds (named in
+  the same §Level 3). Two still-unbuilt reuse tiers from the original
+  discussion remain adjacent open ideas, not folded into L1/L2/L3:
+  simulated-user replay (answer-bank + correction-events from the
+  transcripts driving a simulated user that injects recorded
+  corrections) and judge rubric (the graded reports' 5 criteria +
+  B1-B6/F1-F7 findings as labeled ground truth for an LLM judge).
+  Division of labor, agreed with the user: mechanical/regression
+  coverage goes automatic; NEW failure-mode discovery and taste calls
+  stay human — simulated users are systematically agreeable and miss
+  owner-only corrections (ground truth lives with the human; both
+  live runs proved read-back catches what simulation would wave
+  through). When a SECOND station ships a headless/seeded mode,
+  promote the seed-traceability invariant from product-principles
+  SKILL.md to a family-shared convention (n=1 today, deliberately
+  station-local). First-L1-run calibration item (whole-branch review
+  🟢, 2026-07-11): several synthetic-corpus `named_anchors:` tokens
+  carry descriptive suffixes ("… stack", "… format") while the
+  human-grounded oracle uses short forms — grepability against real
+  Anchors cells is unverified since the original matrix artifacts
+  died with their session scratchpad; on the first
+  `principles-replay-matrix` run, calibrate suffixed/long-form tokens
+  against the produced Anchors tables (also revisit the 2-char
+  `成本` deferred token, collision-prone under substring match).
 
 ## Designer/PM loop — escalation interface, decision log, acceptance-surface contracts (OPEN)
 - Status: OPEN
