@@ -20,17 +20,82 @@
   in `docs/loom/dogfood/2026-07-10-designer-pm-loop-paper/` (verdict:
   instrument works; 4 PASS + 1 PARTIAL).
 - What remains:
-  1. Instrument v0.1 is already applied on this branch
+  1. **Cluster B (loom-code pipeline-hardening trio) DONE** on branch
+     `feat-loom-code-upstream-hardening` (Tasks 8-14): writing-plans
+     layered change-folder detection cascade, `check_scenario_coverage.py`
+     + writing-plans wiring, `archive_change_folder.py` +
+     finishing-a-development-branch archive-on-close step,
+     code-reviewer principles-existence self-derivation, AGENTS.md
+     command-surface declarations, loom-code version bump + CHANGELOG.
+     See docs/loom/plans/2026-07-10-designer-pm-loop-implementation.md
+     Tasks 8-14 for per-task detail.
+  2. **Cluster A (loom-product-principles construction flow) still
+     pending** — Tasks 1-7 of the same plan: canon base list reference
+     files, question-sets reference, principles-rules.md Anchors +
+     Deviation Ledger format, validator enforce-when-present checks,
+     the SKILL.md construction-flow rewrite (incl. §Headless / seeded
+     mode), and its own version bump + CHANGELOG. Runs on a separate
+     branch/PR per the plan's Decision (Clusters are mutually
+     independent; disjoint plugins).
+  3. **Cold-operator dogfood (Task 6) still pending** — Cluster A's ship
+     gate: a fresh-context operator (not the instrument/skill author,
+     ideally weaker model) runs the shipped construction-flow skill on
+     one real product idea end-to-end, graded against the paper-dogfood
+     instrument's five success criteria; any criterion failing spawns
+     fix tasks before Cluster A's version bump (Task 7).
+  4. Instrument v0.1 is already applied
      (`instrument-v0.1.md` in the dogfood folder — Q8 lifecycle/scale,
      Q4 "replaces X" annotation, cross-section propagation, artifact
-     landing spot, FINDING-08 pattern). Skill drafting consumes v0.1,
-     not v0.
-  2. Build order: PRINCIPLES construction flow first (de-risked by the
-     run); pipeline-hardening trio (must-consume, coverage script,
-     existence derivation) mechanical + parallelizable.
-  3. Cold-operator dogfood round between skill-draft and ship (operator ≠
-     instrument author; ideally weaker model) — the run's honest-limits
-     section is the rationale.
+     landing spot, FINDING-08 pattern). Cluster A's SKILL.md rewrite
+     consumes v0.1, not v0.
+  5. Fast-follow debt (Cluster B whole-branch review, 2026-07-10, the
+     one 🟡): no integration test exercises the spec→plan→coverage→
+     archive CHAIN — a plan fixture with a real join key scored covered
+     by `check_scenario_coverage.py`, then the same change-id archived
+     by `archive_change_folder.py`. Grammar consistency verified
+     manually this round; the test guards future drift. Add
+     `loom-code/scripts/test_change_binding_chain.py` on the next
+     loom-code touch.
+
+## Designer/PM loop — escalation interface, decision log, acceptance-surface contracts (OPEN)
+- Status: OPEN
+- Start: next designer/PM-loop session after Cluster A ships.
+- Origin: `docs/loom/design/2026-07-10-designer-pm-loop-architecture.md`
+  §1-§2 (Four load-bearing inversions #2-#4; Engineering-decision
+  escalation rubric) + this branch's (`feat-loom-code-upstream-
+  hardening`) close — Cluster B shipped only the pipeline-hardening
+  trio (must-consume detection cascade, coverage script/gate,
+  archive-on-close, reviewer self-derivation); the architecture doc's
+  remaining KEEPs are behavioral contracts, not yet built into any
+  station skill.
+- What: the escalation interface / decision-log / acceptance-surface
+  behavioral contracts —
+  1. **Escalation interface**: the two-axis routing test (product
+     consequence × reversal cost, §2) wired as the actual decision
+     point for "ask the user vs agent decides"; the **kickoff briefing**
+     mechanism batching a plan's one-way-door engineering decisions into
+     one product-stakes briefing at the spec→plan transition (each
+     option: plain-language stakes → 2-3 choices with product
+     consequences → recommendation; derivation-for-confirmation framing
+     when principles already lock the choice); mid-implementation
+     escalation as the exception path of the SAME interface, not a
+     second protocol.
+  2. **Decision log**: a product-language record for every
+     agent-decided engineering choice ("chose X because Y; the day you
+     want Z, this choice costs W") — the auditable, late-vetoable
+     safety net that makes silent agent-decisions cheap while
+     escalation stays expensive.
+  3. **Acceptance-surface promotion**: ui-verification promoted from
+     side gate to the user's main acceptance stage (the only
+     product-perceivable surface a non-engineer user can judge "done"
+     by: running app, ui-verification results, product-language
+     completion reports); NEEDS_REVISION review loops digest silently
+     rather than surfacing to the user.
+  4. **Per-project escalation appetite**: a declaration living in
+     PRINCIPLES.md's Engineering Principles section, read once and
+     never re-asked (judgment-rubrics §3(c)) — needs a home in
+     whichever station skill consumes PRINCIPLES.md engineering
+     content.
 
 ## Operationalize "product-shaped" in family reception (OPEN)
 - Status: OPEN

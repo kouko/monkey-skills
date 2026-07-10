@@ -5,6 +5,49 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.28.0] — 2026-07-10 — designer/PM loop hardening trio: change-folder detection, coverage gate, archive-on-close, reviewer self-derivation
+
+### Added
+
+- **`archive_change_folder.py`**: deterministic script moving
+  `docs/loom/<change-id>/` → `docs/loom/archive/<date>-<change-id>/` and
+  stamping a `status: archived` frontmatter field on the folder's
+  `proposal.md`; refuses missing/already-archived/symlinked folders and
+  guards path-safety on both `change-id` and `--date` (OpenSpec #412 bug
+  class). `check-living-spec-index.py` stays green with an archived
+  folder present.
+- **`check_scenario_coverage.py`**: compares a change-folder's
+  `#### Scenario:` set against a plan's `<change-id> / Requirement: … /
+  Scenario: …` join keys; exit 0 on full coverage, exit 1 naming every
+  dropped scenario.
+
+### Changed
+
+- **`writing-plans`** gains a layered change-folder **detection
+  cascade** (replaces the old "optional alternate input" framing):
+  layer (0) an explicitly handed change-folder path binds immediately,
+  detection never runs; layer (i) opportunistic exact branch-slug
+  match; layer (ii) non-archived folder count 0 → N/A-loud, 1 →
+  auto-bind, >1 → ask once (recency-sorted, recommended default);
+  never content-similarity. Consumption is now mandatory-when-bound.
+- **`writing-plans`** also wires `check_scenario_coverage.py` as a
+  post-plan self-check on the change-folder-input path: exit 1 blocks
+  the plan from PASS until every scenario maps or the drop is
+  user-approved in the plan's Notes.
+- **`finishing-a-development-branch`** gains an archive-on-close step:
+  when the branch's plan carries change-folder join keys, run
+  `archive_change_folder.py` and stage the move into the close-out
+  commit; N/A-loud when the branch consumed no change-folder.
+- **`code-reviewer`**'s principles-conformance activation now
+  **self-derives** `docs/loom/PRINCIPLES.md` existence by checking the
+  target repo directly (filesystem derivation); an orchestrator-passed
+  path is an override for non-standard locations, not the activation
+  condition. `requesting-code-review` aligned in the same change.
+  N/A stays honest when the file is absent.
+- **`AGENTS.md`**: declared `archive_change_folder.py` and
+  `check_scenario_coverage.py` in the managed command-surface block
+  (new runnable capabilities added by this arc).
+
 ## [0.27.8] — 2026-07-08 — fire the docs/loom/memory self-check at the git-memory step, not buried later
 
 ### Fixed
