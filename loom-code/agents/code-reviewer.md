@@ -383,7 +383,7 @@ findings using the same 🔴 / 🟡 / 🟢 taxonomy.
 | **cross-task-coherence** | **Branch-only dimension.** Look for: inconsistent abstractions across tasks; duplicated logic that survived per-task review because each task saw only its slice; tasks that introduce dependencies on each other in non-obvious ways; scope creep (task did more than its name suggested) |
 | **external-surface-grounding** | `standards/external-surface-grounding.md` — mirrors per-task D7 (HTTP API / SDK / MCP / CLI / sibling-team contract calls need grounding cites) AND adds the whole-branch-only cross-task-conflict check |
 | **deliberate-simplification** | **Branch-only dimension.** `standards/deliberate-simplification.md` — grep the branch diff for `LOOM-SIMPLIFY:` markers, surface them as a ledger view in `summary`, and flag any marker missing `ceiling:` / `upgrade:` / `ref:` or whose `ceiling:` is vague (`later` / `someday`). See §D9 below. |
-| **principles-conformance** | **Conditional dimension — scored only when the consumer project has `docs/loom/PRINCIPLES.md`** (the orchestrator passes its path; see `requesting-code-review` §Process). Asks the **conformance** question: does the branch diff VIOLATE any of PRINCIPLES.md's falsifiable `— check:` clauses? The source is the **consumer's PRINCIPLES.md artifact**, NOT a code-team standard (code-team is generic; product principles are project-specific). When PRINCIPLES.md is absent, emit `principles-conformance: N/A` and no findings. See §D8 below for severity. |
+| **principles-conformance** | **Conditional dimension — scored only when the target repo has `docs/loom/PRINCIPLES.md`.** The agent self-derived this: it checks the target repo for that path itself; an orchestrator-passed path is an **override** for a non-standard location only (see `requesting-code-review` §Process), never the activation condition. Asks the **conformance** question: does the branch diff VIOLATE any of PRINCIPLES.md's falsifiable `— check:` clauses? The source is the **consumer's PRINCIPLES.md artifact**, NOT a code-team standard (code-team is generic; product principles are project-specific). When PRINCIPLES.md is absent, emit `principles-conformance: N/A` and no findings. See §D8 below for severity. |
 
 #### D7 — External Surface Grounding (whole-branch + cross-task)
 
@@ -400,8 +400,18 @@ The agent has no author authority over external surfaces — third-party HTTP AP
 
 #### D8 — Principles Conformance (conditional; whole-branch)
 
-Fires **only** when the orchestrator passes a `docs/loom/PRINCIPLES.md`
-path. The agent has no authority to invent principles — it judges the branch diff **against
+**Activation is self-derived, not orchestrator-gated.** The agent
+checks the target repo for `docs/loom/PRINCIPLES.md` itself before scoring this
+dimension, using the same concrete anchor pattern this file's Rule R1 uses for
+`standards_version`: anchor at the repository root via
+`git rev-parse --show-toplevel`, then check whether
+`<root>/docs/loom/PRINCIPLES.md` exists. Anchoring at the repo root (not the
+dispatch's working directory) is what keeps this derivation correct from a
+worktree or a nested cwd — a relative check from cwd would false-N/A in
+either case. An orchestrator-passed path is an **override**, used only when
+PRINCIPLES.md lives at a non-standard location — it is never the condition
+that turns this dimension on. The agent has no authority to invent principles —
+it judges the branch diff **against
 the falsifiable `— check:` clauses already written in that file** (industry analogue: Spec
 Kit's `/speckit.review` constitution gate). It is a **conformance** check (does the diff
 violate a stated principle?), distinct from the omission-hunting that `loom-spec:completeness-critic`'s
@@ -412,7 +422,7 @@ principles lens performs on the spec.
 - 🔴 **Fatal**: the diff clearly violates a `— check:` clause on a **safety / security / privacy-bearing** principle.
 - 🟡 **Should-fix**: the diff clearly violates a `— check:` clause on any other principle. Cite the principle text + the violating `file:line` in `where`.
 - 🟢 **Nit**: the diff is in tension with a principle's *spirit* but does not clearly fail its falsifiable check (ambiguous — flag for human judgment, do not manufacture a violation).
-- **`N/A`**: no `PRINCIPLES.md` was passed. Emit `principles-conformance: N/A` and no findings — never fabricate principles to score against.
+- **`N/A`**: no `PRINCIPLES.md` found in the target repo (checked directly; no override path resolves either). Emit `principles-conformance: N/A` and no findings — never fabricate principles to score against.
 
 **Jurisdiction note**: a `— check:` clause in ANY of PRINCIPLES.md's jurisdiction sections (`## Product Principles` / `## Design Principles` / `## Engineering Principles`) is judged under the same subject-matter severity rule above — e.g. a supply-chain-bearing Engineering Principles clause violation is 🔴 Fatal, a dependency-count clause violation is 🟡 Should-fix; there is no separate severity tier per jurisdiction.
 
