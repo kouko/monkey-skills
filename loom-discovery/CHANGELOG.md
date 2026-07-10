@@ -10,10 +10,13 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- Initial plugin scaffold: `.claude-plugin/plugin.json` +
-  `.codex-plugin/plugin.json` (dual manifest, Claude SSOT synced into Codex
-  via `scripts/sync_codex_manifests.py`), `README.md`, this changelog, and
-  `scripts/test_plugin_manifest.py`. No skills or hooks yet — those land in
-  subsequent tasks per `docs/loom/plans/2026-07-10-loom-discovery-station.md`.
-  Test count: stamped at branch close-out per repo memory
-  `stamp-changelog-test-counts-at-closeout`.
+- Initial plugin: dual manifest (`.claude-plugin/` + `.codex-plugin/`, Claude
+  SSOT synced via `scripts/sync_codex_manifests.py`), `README.md`, this
+  changelog; three skills — `using-loom-discovery` (family-entry router),
+  `business-value` (adversarial worth-it check, GO / NO-GO /
+  NEEDS-MORE-RESEARCH, skippable + re-entrant), `user-insights` (two-mode
+  needs research with user-ratified value commitment) — plus
+  `scripts/validate_discovery_artifacts.py` (assess-first intermediate state
+  honored) and the behavioral-dogfood fix round
+  (`docs/skill-dogfood/2026-07-10-loom-discovery/report.md`).
+  Test count at close-out: 64 (loom-discovery suite; family suites green).

@@ -1,4 +1,4 @@
-"""Validate a `docs/loom/discovery/<slug>/` folder produced by the
+"""Validate a `docs/loom/discovery/<date>-<slug>/` folder produced by the
 loom-discovery station.
 
     <folder>/

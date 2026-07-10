@@ -17,9 +17,9 @@ You have the loom family of plugins available. One rule covers all of it:
   cases, acceptance criteria). Start here to expand a feature into a spec.
 - `using-loom-code` — jurisdiction: implementation (brainstorm, plan, build,
   review, ship). Start here to write or change code.
-- `using-loom-pipeline` — jurisdiction: orchestration (drives the other four
-  end-to-end via Workflow segments, interactive or batch). Start here only
-  when you explicitly want the whole pipeline run for you.
+- `using-loom-pipeline` — jurisdiction: orchestration (drives the four
+  Workflow-driven stations end-to-end; discovery stays interactive). Start
+  here only when you explicitly want the whole pipeline run for you.
 
 ## Three doors
 
@@ -30,7 +30,7 @@ You have the loom family of plugins available. One rule covers all of it:
 2. **Interactive loom-code** — `using-loom-code` answers direct asks to
    write/change/review code, and is the unskippable gate before any brief.
 3. **Explicit Workflow (pipeline + batch)** — `using-loom-pipeline` drives
-   all four stations end-to-end, single-run or batched. This door is
+   the four Workflow-driven stations end-to-end, single-run or batched. This door is
    **described here for awareness only — it is never auto-opened**. It
    fires **only on explicit user invocation** ("run the loom pipeline",
    "全管線跑一遍"); no ambient signal ever opens it on its own.

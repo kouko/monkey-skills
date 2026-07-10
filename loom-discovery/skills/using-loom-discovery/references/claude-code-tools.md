@@ -25,12 +25,13 @@ decision needed from this file.
 
 ## Research dispatch (user-insights)
 
-- **Heavyweight** (more than 3 research questions, OR external/user
-  evidence is needed): delegate via
+- **Heavyweight** (more than 3 research questions, OR primary user
+  evidence — interviews, usage data; evidence a web search cannot
+  provide — is needed): delegate via
   `Skill(skill: "research-toolkit:deep-deep-research")` — per the
   cross-plugin delegation contract, pass paths + a structured seed
   context; never inline the analysis inside user-insights itself.
-- **Light inline scope** (≤3 questions, no external evidence needed):
+- **Light inline scope** (≤3 questions, web-researchable):
   call the `WebSearch` tool directly, one call per research question,
   and write findings straight into
   `docs/loom/discovery/<date>-<slug>/research/<question-slug>.md`.

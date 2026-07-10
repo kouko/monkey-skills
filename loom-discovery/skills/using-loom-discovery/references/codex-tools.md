@@ -19,11 +19,12 @@ routing decision needed from this file.
 
 ## Research dispatch (user-insights)
 
-- **Heavyweight** (more than 3 research questions, OR external/user
-  evidence is needed): delegate via the `skill` tool to
+- **Heavyweight** (more than 3 research questions, OR primary user
+  evidence — interviews, usage data; evidence a web search cannot
+  provide — is needed): delegate via the `skill` tool to
   `research-toolkit:deep-deep-research` — pass paths + a structured seed
   context, never inline the analysis.
-- **Light inline scope** (≤3 questions, no external evidence needed): use
+- **Light inline scope** (≤3 questions, web-researchable): use
   Codex's `web_search` tool, one call per research question, and write
   findings straight into
   `docs/loom/discovery/<date>-<slug>/research/<question-slug>.md`.
