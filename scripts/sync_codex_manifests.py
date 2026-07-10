@@ -68,6 +68,7 @@ CODEX_ELIGIBLE = (
     "legal-toolkit",
     "loom-discovery",
     "loom-interface-design",
+    "loom-pipeline",
     "loom-product-principles",
     "loom-spec",
     "obsidian",
