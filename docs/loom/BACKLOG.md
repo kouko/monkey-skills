@@ -93,7 +93,15 @@
   through). When a SECOND station ships a headless/seeded mode,
   promote the seed-traceability invariant from product-principles
   SKILL.md to a family-shared convention (n=1 today, deliberately
-  station-local).
+  station-local). First-L1-run calibration item (whole-branch review
+  🟢, 2026-07-11): several synthetic-corpus `named_anchors:` tokens
+  carry descriptive suffixes ("… stack", "… format") while the
+  human-grounded oracle uses short forms — grepability against real
+  Anchors cells is unverified since the original matrix artifacts
+  died with their session scratchpad; on the first
+  `principles-replay-matrix` run, calibrate suffixed/long-form tokens
+  against the produced Anchors tables (also revisit the 2-char
+  `成本` deferred token, collision-prone under substring match).
 
 ## Designer/PM loop — escalation interface, decision log, acceptance-surface contracts (OPEN)
 - Status: OPEN
