@@ -27,6 +27,16 @@ Valid iff:
   5. No legacy `## Principles` heading remains — a whole-line legacy heading
      is invalid and yields a targeted migration message naming
      `## Product Principles` as the rename target.
+  6. `## Anchors` is OPTIONAL: absent is valid; present requires a
+     well-formed table — a header row, a GFM separator row
+     (`^\\|[\\s:-]+\\|`) immediately below it, and at least 1 data row
+     whose version/edition cell (second pipe-delimited cell) is
+     non-empty. A present-but-empty table (header + separator, zero
+     data rows) is invalid.
+  7. `## Deviation Ledger` is OPTIONAL: absent is valid; present requires
+     at least 1 ordered-list entry, and every entry carries both the
+     literal `— reason:` and `— principle:` markers on the same
+     physical line. A present-but-empty section (0 entries) is invalid.
 
 Design: each check is a function (text: str) -> list[str] of problem messages
 (empty == ok), mirroring `loom-spec/scripts/validate_spec_output.py`.
@@ -74,6 +84,18 @@ _H2 = re.compile(r"^##\s", re.MULTILINE)
 
 _MIN_PRINCIPLES = 3
 _MAX_PRINCIPLES = 7
+
+# `## Anchors`: optional canon-pin table. GFM separator row: pipes,
+# whitespace, colons, and hyphens only.
+_ANCHORS = "## Anchors"
+_ANCHORS_SEPARATOR_RE = re.compile(r"^\|[\s:-]+\|")
+
+# `## Deviation Ledger`: optional ordered-list ledger of committed breaks
+# from the `## Anchors` canon. Entries reuse the `_ENTRY` ordered-list regex
+# above; each entry carries both sibling markers on the same physical line.
+_DEVIATION_LEDGER = "## Deviation Ledger"
+_REASON_MARKER = "— reason:"
+_PRINCIPLE_MARKER = "— principle:"
 
 
 def _section_body(text: str, header: str) -> str | None:
@@ -178,6 +200,95 @@ def _check_optional_jurisdiction_sections(text: str) -> list[str]:
     return problems
 
 
+def _split_pipe_row(line: str) -> list[str]:
+    """Split a `|`-delimited table row into cells.
+
+    Convention: a GFM row is written `| cell | cell |`, so a naive
+    `line.split("|")` produces an empty string at each end (before the
+    leading `|` and after the trailing `|`). Strip exactly those two empty
+    boundary elements — not any cell — before returning; a row missing its
+    leading/trailing pipe is left as-is.
+    """
+    parts = line.strip().split("|")
+    if parts and parts[0].strip() == "":
+        parts = parts[1:]
+    if parts and parts[-1].strip() == "":
+        parts = parts[:-1]
+    return [p.strip() for p in parts]
+
+
+def _check_anchors(text: str) -> list[str]:
+    """`## Anchors` is optional. Present requires a well-formed table:
+    header row, a GFM separator row immediately below it, and >=1 data row
+    whose version/edition cell (second pipe-delimited cell) is non-empty."""
+    body = _section_body(text, _ANCHORS)
+    if body is None:
+        return []  # optional section absent -> valid
+    lines = [line for line in body.splitlines() if line.strip()]
+    if (
+        len(lines) < 2
+        or "|" not in lines[0]
+        or not _ANCHORS_SEPARATOR_RE.match(lines[1])
+    ):
+        return [
+            f"'{_ANCHORS}' is present but has no well-formed table (a header "
+            f"row, a GFM separator row `| --- | --- |` immediately below it, "
+            f"and >=1 data row are required; a present-but-empty section "
+            f"must be omitted, not left empty)"
+        ]
+    # Trailing prose in the same section (after the table) is legal — rule 6
+    # constrains the TABLE, not the section's prose. A GFM table row always
+    # STARTS with `|`; requiring that (rather than merely containing `|`
+    # anywhere) keeps a prose line that happens to mention a pipe character
+    # (e.g. a `||` operator reference) from being mistaken for a data row.
+    data_rows = [line for line in lines[2:] if line.strip().startswith("|")]
+    if not data_rows:
+        return [
+            f"'{_ANCHORS}' table has no data rows; a present-but-empty "
+            f"section must be omitted, not left empty"
+        ]
+    problems: list[str] = []
+    for row in data_rows:
+        cells = _split_pipe_row(row)
+        version = cells[1] if len(cells) > 1 else ""
+        if not version.strip():
+            problems.append(
+                f"'{_ANCHORS}' row has an empty version/edition cell (the "
+                f"second pipe-delimited cell): {row.strip()!r}"
+            )
+    return problems
+
+
+def _check_deviation_ledger(text: str) -> list[str]:
+    """`## Deviation Ledger` is optional. Present requires >=1 ordered-list
+    entry, each carrying both `— reason:` and `— principle:` markers on its
+    own physical line."""
+    body = _section_body(text, _DEVIATION_LEDGER)
+    if body is None:
+        return []  # optional section absent -> valid
+    entries = _principle_entries(body)
+    if not entries:
+        return [
+            f"'{_DEVIATION_LEDGER}' is present but has no ordered-list "
+            f"entries; a present-but-empty section must be omitted, not "
+            f"left empty"
+        ]
+    problems: list[str] = []
+    for entry in entries:
+        missing = [
+            marker
+            for marker in (_REASON_MARKER, _PRINCIPLE_MARKER)
+            if marker not in entry
+        ]
+        if missing:
+            problems.append(
+                f"'{_DEVIATION_LEDGER}' entry is missing marker(s) "
+                f"{', '.join(repr(m) for m in missing)} on the same "
+                f"physical line: {entry.strip()!r}"
+            )
+    return problems
+
+
 def _check_legacy_heading(text: str) -> list[str]:
     if _LEGACY_HEADING_RE.search(text) is None:
         return []
@@ -193,6 +304,8 @@ _CHECKS = [
     _check_principles_count,
     _check_every_principle_has_check,
     _check_optional_jurisdiction_sections,
+    _check_anchors,
+    _check_deviation_ledger,
     _check_legacy_heading,
 ]
 

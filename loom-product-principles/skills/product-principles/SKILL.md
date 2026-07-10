@@ -2,7 +2,7 @@
 name: product-principles
 description: |
   Turn a sparse product idea into a PRINCIPLES.md project constitution — a north star + 3-7 falsifiable Product Principles, plus optional Design Principles and Engineering Principles, governing design/spec/code. Use BEFORE design/spec/build on a new product, and when the user asks what principles should guide a product/design/engineering decision or how to frame a trade-off. Triggers: product principles, project constitution, north star, 產品原則, 設計原則, 工程原則, 產品憲章, プロダクト指針, エンジニアリング原則. Not for critiquing an existing design or spec (design-critic / completeness-critic).
-version: 0.3.0
+version: 0.4.0
 ---
 
 # product-principles
@@ -25,7 +25,7 @@ full jurisdiction table.
 ## Executor model — who does what
 
 **You (the agent running this skill) are the executor.** You supply the LLM
-reasoning (eliciting intent, drafting the North Star, deriving falsifiable
+reasoning (probing, canon mapping, drafting the North Star, deriving falsifiable
 principles, pushing back on platitudes). There is no external runtime and no API
 key — the method rides the host agent you are already in. The only tool is a
 stdlib validator you run at the end.
@@ -40,138 +40,210 @@ do not run TDD, write code, or design the UI — those are downstream stations
 that *read* this file.
 
 **Tripwire — unanswerable grilling.** If the user cannot answer the
-problem/users grilling with evidence (they would be guessing at who
+problem/users probing with evidence (they would be guessing at who
 needs what), do not dead-end into a fabricated North Star: route to
 `using-loom-discovery` (user-insights) for evidence-backed needs mapping
 first, then resume this skill using its value-commitment output as the
 seed for the North Star and Product Principles.
 
-## Procedure — principles-first
+## Procedure — construction flow (user-stated-first, canon-anchored)
+
+The flow runs **per section** — Product, then Design, then Engineering —
+same shape each time:
+
+```
+user states direction (their own words)
+  → probe per question set (propose-then-react on stalls)
+  → 2-3 canon candidates + fit/tension notes  → user decides
+  → write: anchors (version-pinned) + deviation ledger
+          + falsifiable principles
+  → per-section read-back  (… final total read-back at the end)
+```
 
 ### Step 1 — Read the authoring contract
 
 Read **`references/principles-rules.md`** before writing anything. It is the
-authoring contract: it pins the exact `## North Star` and `## Product Principles`
-formats, the **load-bearing per-principle `— check:` falsifiable-marker rule**
-(an em dash `—`, a single space, lowercase `check`, a colon — on the same line
-as the principle), and the synthetic ✅/❌ examples. The emitted `PRINCIPLES.md`
-**MUST** follow that contract exactly — the validator keys on the literal
-`— check:` lexeme.
+authoring contract: it pins the exact section formats (`## North Star`,
+`## Product Principles`, the optional jurisdictions, `## Anchors`,
+`## Deviation Ledger`), the **load-bearing per-principle `— check:`
+falsifiable-marker rule** (an em dash `—`, a single space, lowercase `check`,
+a colon — on the same line as the principle), and the synthetic ✅/❌ examples.
+The emitted `PRINCIPLES.md` **MUST** follow that contract exactly — the
+validator keys on the literal `— check:` lexeme.
 
-### Step 2 — Elicit the idea and the target user
+### Step 2 — User states first, then probe
 
-Briefly elicit, from the user, **the product idea** and **the target user**
-(e.g. "a keyboard-only capture tool for a solo operator"). Keep it short — a few
-lines of intent is enough to seed the constitution; you are fixing direction,
-not gathering a full requirements set. If the idea is too sparse to name a goal
-and a target user, **ask** rather than invent one.
+The user states their direction **first, in their own words**, unprompted
+structure — including the product idea and the **target user**. Only then
+probe, using the per-section question sets in
+**`references/question-sets.md`** (Product: the generic 8-question set;
+Design: the expert lane — the user states their **design stance** and you
+map it onto canon; Engineering: the 5 stance questions + tech-stack slot,
+which elicit the **engineering stance** — "delegate to agent" is a legal
+answer to every one). Never inline the question text here — read the
+reference.
 
-### Step 3 — Write `## North Star`
+Probing rules:
 
-Write the `## North Star` section: the product's **goal** (one sentence — why
-the product exists) **plus a concrete, checkable success condition** — a
-condition you could actually evaluate against a shipped product, not an
-aspiration. Use the format in the contract:
+- **Push until falsifiable** — each answer must reach the "X > Y" shape:
+  it could lose a trade-off.
+- **Propose-then-react on stalls** — when the user stalls, offer a concrete
+  hypothesis to attack; **never repeat** the open question.
+- **Cross-section answer propagation** — before asking any question in a
+  later section, check whether an earlier section's decisions already
+  answer it. If so, do NOT **re-ask** — present the derived stance for
+  confirmation-as-durable-principle instead.
+- **Coverage self-check** — before leaving a section, **enumerate** its
+  question set and verify each question was asked, propagated, or
+  explicitly skipped with a reason. Do not trust recall: a dropped
+  question (dogfood: Q5 "why not existing") is invisible without the
+  enumeration.
 
-```markdown
-## North Star
+### Step 3 — Canon candidates (completeness audit)
 
-**Goal:** <one sentence — why this product exists>
+The moment a section's stance is collected, **immediately** run the canon
+audit and propose candidates — do not idle waiting for a prompt; this
+transition is mechanical, not optional. Dispatching a **subagent** to run
+the audit is sanctioned.
 
-**Success:** <a concrete, checkable condition that means the goal is met>
-```
+- Propose **2-3 canon candidates** with **fit/tension** notes, drawn from
+  **≥2 distinct traditions**. The candidates in one proposal round MUST be
+  **same-axis** alternatives — answers to the **same question** (e.g. all
+  "how is code organized"). Canons answering different questions (data
+  ownership vs code layering vs UI pattern) are **complementary** — pin
+  them as separate `## Anchors` rows; never present them together as one
+  exclusive pick-one menu.
+- Name 1-2 **considered-but-rejected** candidates and **surface** them to
+  the user with reasons — the rejection list is the honesty device, not an
+  internal note. This guard is **per-round**: it applies to **every
+  section's** candidate round (Product AND Design AND Engineering), not
+  just the first.
+- Before finalizing, consult the four canon base lists as a
+  **completeness audit** ("did I miss a closer tradition?"):
+  `references/canon-product.md`, `references/canon-design-interaction.md`,
+  `references/canon-design-visual.md`, `references/canon-engineering.md`.
+  If every candidate sits in a list's popularity head, re-check.
+- The user **never sees the raw lists** — only the 2-3 fitted candidates.
+  The Engineering list is consumed only by you (agent decisions + briefing
+  option generation).
 
-### Step 4 — Write `## Product Principles` (each with a falsifiable `— check:`)
+### Step 4 — User decides
 
-Write the `## Product Principles` section: **3–7 non-negotiable principles**, as a
-top-level ordered list, **each carrying the literal `— check:` falsifiable
-marker** (em dash, lowercase `check:`, same line). A good check is **observable**
-(you can point at where you'd measure it), **binary or thresholded**, and
-**artifact-bound** (it refers to the flow, the output, or a file that exists).
+The user picks. **Mix allowed** across canons; "no good canon for this
+aspect — this section is **bespoke**" is a legal **escape hatch** (a bespoke
+section loses the third-party anchor and compensates with stricter
+falsifiability + read-back). A canon settles conventions and defaults; the
+product-unique trade-off tiebreakers can never come from canon — picking a
+framework is *some* principles entries, never all of them.
 
-```markdown
-## Product Principles
+### Step 5 — Write the sections
 
-1. <principle statement> — check: <concrete, testable condition>
-2. <principle statement> — check: <concrete, testable condition>
-3. <principle statement> — check: <concrete, testable condition>
-```
+Write per the contract in `references/principles-rules.md`:
 
-**Reject platitudes — push back.** A statement with no falsifiable check, or a
-"check" no artifact could ever falsify (e.g. "feels good", "is high quality"),
-is **not** a principle. If the user offers one (❌ "be delightful", ❌ "keep it
-smooth"), **push back and ask for a checkable form** (✅ "primary task completes
-in ≤3 steps — check: count steps in the happy-path flow"). Fewer than 3 is not a
-constitution; more than 7 dilutes the non-negotiable weight. See the synthetic
-✅/❌ examples in `references/principles-rules.md`.
+- **`## North Star`** — **Goal:** one sentence why the product exists +
+  **Success:** a concrete, checkable condition (not an aspiration).
+- **`## Product Principles`** — **3–7 non-negotiable principles**, a
+  top-level ordered list, each carrying the literal `— check:` falsifiable
+  marker on the same line. A good check is **observable**, **binary or
+  thresholded**, and **artifact-bound**.
+- **`## Design Principles`** / **`## Engineering Principles`** (optional,
+  1–7 entries, same `— check:` marker) — write a clause only for a
+  decision the user actually **commit**s to (or, in seeded mode, an
+  agent-decided one — see below); never invent placeholder clauses.
+  **Never emit an empty section**: a jurisdiction with zero committed
+  clauses emits no heading at all. Any test-rigor clause is a **ceiling**
+  above the TDD iron-law floor, never below it.
+- **`## Anchors`** (likewise optional; omit when empty) — the chosen base
+  canons, **version-pinned** (edition/version cell non-empty; canon drifts
+  too — Material 2→3, HIG yearly).
+- **`## Deviation Ledger`** (likewise optional; omit when empty) — every
+  intentional break from an anchored canon:
+  `— reason:` + `— principle:` markers binding the break to the
+  product principle that licenses it. This is the guard against silent
+  hybridization; unrecorded exceptions kill the anchor.
 
-### Step 5 — Elicit design posture and engineering posture (optional)
+**Reject platitudes — push back.** A statement with no falsifiable check,
+or a "check" no artifact could ever falsify (❌ "be delightful"), is not a
+principle. Push back and ask for a checkable form (✅ "primary task
+completes in ≤3 steps — check: count steps in the happy-path flow"). Fewer
+than 3 is not a constitution; more than 7 dilutes the non-negotiable
+weight. See the ✅/❌ examples in `references/principles-rules.md`.
 
-Ask, briefly, whether the project has already **committed** to any
-**design-posture** or **engineering-posture** decisions — see the jurisdiction
-table in `references/principles-rules.md` for what belongs in each.
+**Draft-time count self-check**: count the entries in each jurisdiction
+section **before presenting** a draft (3-7 Product; 1-7 optional sections);
+if over, merge entries before showing the user — do not wait for the
+validator to catch it.
 
-For `## Engineering Principles` specifically: any test-rigor decision is a
-**ceiling** set *above* the TDD iron-law floor — never below it.
+**Artifact language**: the target repo convention wins when one exists;
+absent one, write `PRINCIPLES.md` in the user's **conversation language** —
+a designer/PM must be able to read their own constitution.
 
-**Elicit, don't imagine.** Write a clause only for a decision the user
-actually commits to right now — never invent placeholder clauses to fill out
-a jurisdiction. If the user has no committed decisions in a jurisdiction yet,
-skip it entirely for this pass.
+**Anchor-consistency check**: every `## Anchors` row must actually anchor
+the stance it is cited for — a canon named as the anchor of a decision that
+*rejects* that canon's direction (dogfood: "Local-First" cited for a
+cloud+encryption choice) is a citation bug; fix it before read-back.
 
-**Reject platitudes — push back**, the same as Step 4: a clause with no
-falsifiable `— check:`, or a check nothing could ever falsify, is not a
-principle here either. See the Design and Engineering ✅/❌ examples in
-`references/principles-rules.md`.
+### Step 6 — Read-back
 
-For each committed clause, write it under `## Design Principles` and/or
-`## Engineering Principles` in the same format as Product Principles — **1–7**
-top-level ordered entries, each carrying the identical literal `— check:`
-marker:
+Read back **per-section** (after each section closes) and once more as a
+**final total** read-back over the whole draft. The read-back must surface
+the artifact's actual **key term**s — the exact nouns written in the
+artifact, in the artifact's language — so a domain-meaning shift (dogfood:
+user's 報價單/quote rendered as "Invoice") cannot hide behind a
+conversation-language paraphrase. The user confirms or corrects; corrections
+loop back into Step 5.
 
-```markdown
-## Design Principles
-
-1. <principle statement> — check: <concrete, testable condition>
-```
-
-```markdown
-## Engineering Principles
-
-1. <principle statement> — check: <concrete, testable condition>
-```
-
-**Never emit an empty section.** A jurisdiction with zero committed clauses
-emits **no** heading at all — do not write `## Design Principles` or
-`## Engineering Principles` with nothing under it just to "look complete."
-
-### Step 6 — Emit `PRINCIPLES.md` into the consumer project
+### Step 7 — Emit `PRINCIPLES.md` into the consumer project
 
 Emit the result as **`PRINCIPLES.md`** into the **consumer project** at
-**`docs/loom/PRINCIPLES.md`** (the established
-`docs/<toolkit>/` convention). It is **project-level — one file per project**,
-not per-feature. Do not scatter it; the constitution is a single supreme file.
+**`docs/loom/PRINCIPLES.md`** (the established `docs/<toolkit>/`
+convention). It is **project-level — one file per project**, not
+per-feature. Do not scatter it; the constitution is a single supreme file.
 
-### Step 7 — Validate, then fix
+### Step 8 — Validate, then fix
 
 Run the validator and **fix any flagged issue before declaring done**.
 The script lives in the PLUGIN repo; the artifact lives in the CONSUMER
-project — the two paths have different bases, so resolve the script path
-to an absolute path and run from the consumer project root:
+project — resolve the script path to an absolute path and run from the
+consumer project root:
 
 ```
 cd <consumer-project-root>
 python <resolved-absolute-path-to>/loom-product-principles/scripts/validate_principles_output.py docs/loom/PRINCIPLES.md
 ```
 
-It mechanically enforces the full contract summary in
-`references/principles-rules.md` §Validator contract — the required
-sections, per-section entry counts, the literal `— check:` marker on
-**every** entry (all three jurisdictions), the optional-section rules, and
-the legacy-heading migration check (the path relative to this skill dir is
+It mechanically enforces the contract summary in
+`references/principles-rules.md` §Validator contract — required sections,
+entry counts, the literal `— check:` marker on **every** entry, the
+`## Anchors` / `## Deviation Ledger` rules, and the legacy-heading
+migration check (the path relative to this skill dir is
 `../../scripts/validate_principles_output.py`). The validator checks
 *structure*; the *quality* of each check (truly falsifiable vs disguised
-platitude) is your responsibility, guided by the ✅/❌ examples in the contract.
+platitude) is your responsibility.
+
+## Headless / seeded mode
+
+When this skill is driven with **no user available** (a loom-pipeline
+Segment 1 Workflow agent, a batch context), every decision point degrades
+to its **"delegate to agent"** answer:
+
+- You pick the canon candidates and stances yourself, seeded by whatever
+  intent the caller supplied; a **run-input seed** may pre-supply answers
+  to any question — a seeded answer counts as user-stated.
+- **Thin seed → refuse loudly.** The no-fabrication rule is unconditional
+  here too: if the seed is too thin to ground a North Star (you would be
+  guessing at who needs what), return a **BLOCKED**-style structured
+  refusal to the conductor — state what the seed lacks and name
+  `using-loom-discovery` (user-insights) as the human-side remedy. Never
+  fabricate a North Star to keep the run going.
+- Record every choice you made alone with the literal marker
+  **`(agent-decided)`**, appended at the **end of the same physical line**
+  as the choice it tags — a `## Deviation Ledger` entry when it breaks an
+  anchor, or the principle's `— check:` clause line otherwise — so a
+  human can late-veto it.
+- Read-back has no reader: mark it **deferred-to-human** in the run output
+  instead of silently claiming confirmation. The deferred read-back is
+  mechanical: grep `(agent-decided)` and walk the human through each hit.
 
 ## Downstream — the cross-cutting constitution
 

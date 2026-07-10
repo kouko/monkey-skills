@@ -167,6 +167,99 @@ An empty heading invites platitude-filling to make the section "look done."
 
 ---
 
+## Optional section — `## Anchors`
+
+`## Anchors` is **optional** — emitted only when the project has committed
+to a named, third-party canon (a design system, style guide, or engineering
+doctrine) as the base the Design or Engineering principles build on. It
+records the **base canon**, **version-pinned** — canon drifts too (Material
+2→3, HIG yearly), so an unpinned declaration is already stale the day it's
+written.
+
+**Format:** a markdown table; each row is one canon, pinned to a specific
+version or edition.
+
+```markdown
+## Anchors
+
+| Canon | Pinned version/edition |
+| --- | --- |
+| <canon name> | <version or edition string> |
+```
+
+**Synthetic example:**
+
+```markdown
+## Anchors
+
+| Canon | Pinned version/edition |
+| --- | --- |
+| Apple Human Interface Guidelines | 2025 edition (iOS 18) |
+| Material Design | Material 3, 2024 spec |
+```
+
+**Valid vs invalid row:**
+
+- ✅ `| Material Design | Material 3, 2024 spec |` — canon named, version/edition cell non-empty.
+- ❌ `| Material Design | |` — version/edition cell empty; an unpinned row is stale the day it's written and fails validation.
+
+**A project with no committed canon anchor emits NO section** — same rule
+as `## Design Principles` / `## Engineering Principles`: never a
+present-but-empty table minted just to "look done."
+
+---
+
+## Optional section — `## Deviation Ledger`
+
+`## Deviation Ledger` is **optional** — emitted only when the project has
+committed at least one real, already-decided break from its `## Anchors`
+canon. This is the make-or-break record against silent hybridization: pick
+a canon, twenty small decisions later the product is 60% that canon with
+unrecorded exceptions, and the anchor is dead without anyone noticing.
+
+**Format:** an ordered list; each entry binds the deviation to its reason
+and to the named product principle that licenses the break. This extends
+this file's own `— check:` marker idiom with two sibling markers,
+`— reason:` and `— principle:` (em dash U+2014, single space, lowercase
+word, colon); the general concept — documenting an intentional break with
+its justification — mirrors the engineering decision log in the
+architecture doc, though that log's format is prose, not this marker
+shape.
+
+**Write each entry as a single physical line — do not soft-wrap.** The
+validator matches `— reason:` and `— principle:` on the same physical
+line as the entry's `N.` prefix; a soft-wrapped entry silently pushes a
+marker onto the next line and fails validation even though it renders
+correctly. Reference the licensing principle **by name only** (a short
+label) — never quote its full statement or `— check:` clause; quoting in
+full is what causes the wrap in the first place.
+
+```markdown
+## Deviation Ledger
+
+1. <deviation from the anchored canon> — reason: <why the break is justified> — principle: <short name of the principle that licenses it>
+```
+
+**Synthetic example:**
+
+```markdown
+## Deviation Ledger
+
+1. Skip HIG's confirmation modal on the delete action — reason: users take this action 20+ times per session and a modal breaks flow — principle: "≤3-step primary task"
+```
+
+**Valid vs invalid entry:**
+
+- ✅ `1. Skip HIG's confirmation modal on the delete action — reason: users take this action 20+ times per session and a modal breaks flow — principle: "≤3-step primary task"` — both markers present, one physical line, principle referenced by short name.
+- ❌ `1. Skip HIG's confirmation modal on the delete action — reason: users take this action 20+ times per session` — missing the `— principle:` marker; the break has nothing licensing it.
+
+**A project with no recorded deviations from its anchor emits NO
+section** — same rule as the other optional sections: a present-but-empty
+`## Deviation Ledger` (heading with zero entries) is invalid; it must be
+omitted, not left empty.
+
+---
+
 ## Falsifiable vs platitude — synthetic ✅/❌ examples
 
 These contrast a falsifiable principle against a platitude, sorted under the
@@ -235,6 +328,20 @@ falsifiable condition.
    absent is valid; present requires **1–7** entries following the same
    ordered-list + `— check:` rules as `## Product Principles` (rule 2/3 above,
    with the floor lowered to 1). A present-but-empty section (0 entries) is
+   invalid — it must be omitted, not left empty.
+6. `## Anchors` is **optional**: absent is valid; present requires a
+   markdown table detected as: a header row (a `|`-delimited line), a GFM
+   separator row immediately below it matching `^\|[\s:-]+\|` (pipes,
+   whitespace, colons, and hyphens only), and **at least 1** data row after
+   the separator — where a data row is any `|`-delimited line following
+   the separator whose version/edition cell (the second pipe-delimited
+   cell) is non-empty. A present-but-empty table (header + separator, zero
+   data rows) is invalid — it must be omitted, not left with no rows.
+7. `## Deviation Ledger` is **optional**: absent is valid; present requires
+   **at least 1** ordered-list entry (a line matching `^\d+\.\s`), and
+   **every** entry carries both literal markers — `— reason:` and
+   `— principle:` (em dash U+2014, single space, lowercase word, colon) —
+   bound to that same entry. A present-but-empty section (0 entries) is
    invalid — it must be omitted, not left empty.
 
 **Generators MUST emit the exact `— check:` marker** (em dash, not a hyphen

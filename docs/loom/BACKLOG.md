@@ -26,52 +26,54 @@
   triage the deferred debts recorded in both PR bodies (escape_for_json
   triplication, awk §(b.1) boundary, regex-vs-YAML description test).
 
-## Designer/PM loop — implementation after paper dogfood ✅ (COMMITTED-NEXT)
-- Status: COMMITTED-NEXT
-- Start: next loom design/build session.
-- Origin: 2026-07-10 discussion session, user decision ledger §6 of
-  `docs/loom/design/2026-07-10-designer-pm-loop-architecture.md`;
-  canon lists in `docs/loom/research/2026-07-10-principles-canon-base-lists.md`.
-  Paper dogfood COMPLETED same day — run + graded report + produced artifact
-  in `docs/loom/dogfood/2026-07-10-designer-pm-loop-paper/` (verdict:
-  instrument works; 4 PASS + 1 PARTIAL).
-- What remains:
-  1. **Cluster B (loom-code pipeline-hardening trio) DONE** on branch
-     `feat-loom-code-upstream-hardening` (Tasks 8-14): writing-plans
-     layered change-folder detection cascade, `check_scenario_coverage.py`
-     + writing-plans wiring, `archive_change_folder.py` +
-     finishing-a-development-branch archive-on-close step,
-     code-reviewer principles-existence self-derivation, AGENTS.md
-     command-surface declarations, loom-code version bump + CHANGELOG.
-     See docs/loom/plans/2026-07-10-designer-pm-loop-implementation.md
-     Tasks 8-14 for per-task detail.
-  2. **Cluster A (loom-product-principles construction flow) still
-     pending** — Tasks 1-7 of the same plan: canon base list reference
-     files, question-sets reference, principles-rules.md Anchors +
-     Deviation Ledger format, validator enforce-when-present checks,
-     the SKILL.md construction-flow rewrite (incl. §Headless / seeded
-     mode), and its own version bump + CHANGELOG. Runs on a separate
-     branch/PR per the plan's Decision (Clusters are mutually
-     independent; disjoint plugins).
-  3. **Cold-operator dogfood (Task 6) still pending** — Cluster A's ship
-     gate: a fresh-context operator (not the instrument/skill author,
-     ideally weaker model) runs the shipped construction-flow skill on
-     one real product idea end-to-end, graded against the paper-dogfood
-     instrument's five success criteria; any criterion failing spawns
-     fix tasks before Cluster A's version bump (Task 7).
-  4. Instrument v0.1 is already applied
-     (`instrument-v0.1.md` in the dogfood folder — Q8 lifecycle/scale,
-     Q4 "replaces X" annotation, cross-section propagation, artifact
-     landing spot, FINDING-08 pattern). Cluster A's SKILL.md rewrite
-     consumes v0.1, not v0.
-  5. Fast-follow debt (Cluster B whole-branch review, 2026-07-10, the
-     one 🟡): no integration test exercises the spec→plan→coverage→
-     archive CHAIN — a plan fixture with a real join key scored covered
-     by `check_scenario_coverage.py`, then the same change-id archived
-     by `archive_change_folder.py`. Grammar consistency verified
-     manually this round; the test guards future drift. Add
-     `loom-code/scripts/test_change_binding_chain.py` on the next
-     loom-code touch.
+## Change-binding chain integration test (OPEN)
+- Status: OPEN
+- Start: next loom-code touch.
+- Origin: Cluster B whole-branch review 🟡 (2026-07-10, PR #526). The
+  parent designer/PM-loop implementation entry completed 2026-07-10:
+  Cluster B shipped as PR #526, Cluster A (construction flow, Tasks
+  1-7 incl. cold-operator dogfood ship gate, 4 PASS + 1 PARTIAL with
+  F1-F3 folded back) shipped on branch
+  `feat-loom-product-principles-construction-flow` — this debt item is
+  the only survivor.
+- What: no integration test exercises the spec→plan→coverage→archive
+  CHAIN — a plan fixture with a real join key scored covered by
+  `check_scenario_coverage.py`, then the same change-id archived by
+  `archive_change_folder.py`. Grammar consistency verified manually;
+  the test guards future drift. Add
+  `loom-code/scripts/test_change_binding_chain.py`.
+
+## Dogfood replay/eval harness for the principles construction flow (OPEN)
+- Status: OPEN
+- Start: next quality iteration on loom-product-principles' construction
+  flow (a regression suspicion, a SKILL.md behavioral change, or a new
+  model tier to qualify), or when a third human-grounded run seed lands.
+- Origin: 2026-07-10 cold-operator dogfood close-out discussion — the
+  user asked whether human-run dogfood records can become automated
+  test / iteration material. Three human-grounded seeds already exist:
+  pip-note-app (paper run,
+  `docs/loom/dogfood/2026-07-10-designer-pm-loop-paper/`), quote-tool
+  (simulated-user Target B,
+  `docs/loom/dogfood/2026-07-10-weak-model-dual-dogfood/`), and
+  meeting-transcriber (live cold-operator run — structured seed +
+  verbatim transcript in
+  `docs/loom/dogfood/2026-07-10-principles-flow-cold-operator/`
+  `seed.md` / `transcript.md`).
+- What: three reuse tiers over the recorded runs — (a) headless seeded
+  replay: feed a seed to SKILL.md §Headless/seeded mode, assert the
+  seed's Oracle section (validator exit 0, structural pins, negative
+  correction-regression assertions) as an EVAL (pass-rate over N runs,
+  model non-determinism), never per-push CI; (b) simulated-user replay:
+  answer-bank + correction-events from the transcripts drive a
+  simulated user that injects the recorded corrections and asserts the
+  operator applies them without collateral drift; (c) judge rubric:
+  the graded reports (5 criteria + B1-B6/F1-F7 findings) as labeled
+  ground truth for an LLM judge scoring future runs. Division of
+  labor, agreed with the user: mechanical/regression coverage goes
+  automatic; NEW failure-mode discovery and taste calls stay human —
+  simulated users are systematically agreeable and miss owner-only
+  corrections (ground truth lives with the human; both live runs
+  proved read-back catches what simulation would wave through).
 
 ## Designer/PM loop — escalation interface, decision log, acceptance-surface contracts (OPEN)
 - Status: OPEN
