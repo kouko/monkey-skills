@@ -126,7 +126,7 @@
     },
     {
       "name": "ascii-graph-toolkit",
-      "description": "CJK-width-aware ASCII/Unicode diagram & table toolkit for channels that can't render Mermaid.",
+      "description": "CJK-width-aware ASCII/Unicode diagram & table toolkit — invoke BEFORE hand-drawing any CJK or ≥3-box ASCII diagram.",
       "source": "./ascii-graph-toolkit/"
     },
     {

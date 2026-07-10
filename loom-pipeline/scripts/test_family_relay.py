@@ -13,7 +13,19 @@ its file — never a copy of the section body. The SSOT body lives in its
 own sibling file (loom-pipeline/hooks/family-relay.md) because
 family-reception.md is injected verbatim every SessionStart and is
 test-pinned to ≤60 non-empty lines; reception carries only a pointer.
+
+Task 3 (2026-07-10 ascii-graph-trigger-fix plan) adds
+test_reception_includes_visual_defaults: session-start additionally
+extracts family-relay.md §(b) Visual defaults AT RUNTIME and appends it
+to the injected reception context.
 """
+
+import json
+import os
+import re
+import shutil
+import subprocess
+import tempfile
 
 import pytest
 from pathlib import Path
@@ -24,6 +36,8 @@ POINTER_PHRASE = "family-relay.md §Family relay discipline"
 
 FAMILY_RECEPTION = REPO_ROOT / "loom-pipeline/hooks/family-reception.md"
 FAMILY_RELAY = REPO_ROOT / "loom-pipeline/hooks/family-relay.md"
+HOOKS_DIR = REPO_ROOT / "loom-pipeline/hooks"
+SESSION_START = HOOKS_DIR / "session-start"
 SDD_SKILL = REPO_ROOT / "loom-code/skills/subagent-driven-development/SKILL.md"
 REVIEW_SKILL = REPO_ROOT / "loom-code/skills/requesting-code-review/SKILL.md"
 BRAINSTORM_VISUAL_COMPANION = REPO_ROOT / "loom-code/skills/brainstorming/references/visual-companion.md"
@@ -178,3 +192,88 @@ def test_brief_before_asking_ordering():
     text = _read(BRIEF_BEFORE_ASKING_SKILL)
     assert "never bury a briefing and an AskUserQuestion" in text
     assert "explicit user request for a visual is always honored" in text
+
+
+def test_reception_includes_visual_defaults():
+    """
+    session-start must extract the "### (b) Visual defaults" section of
+    family-relay.md at RUNTIME and append it to the injected reception
+    context — never duplicate the rule text into session-start itself
+    (pointer-not-copy stays intact; family-relay.md remains SSOT).
+
+    (a) Running the real session-start emits additionalContext containing
+        both "ascii-graph-toolkit" and "markdown comparison table" (the
+        two canonical §(b) markers already pinned in family-relay.md by
+        test_relay_section above).
+    (b) Runtime-extraction proof: copy hooks/ to a temp plugin root,
+        mutate the COPIED family-relay.md's §(b) body with a unique
+        sentinel, run the byte-identical, unmodified session-start
+        script from that temp root, and assert the sentinel shows up in
+        its output. session-start's own code is untouched in this
+        step — only the data file changed — so a passing assertion
+        proves the section is read from family-relay.md at runtime, not
+        hard-coded into the script.
+    """
+    env = dict(os.environ)
+    env["CLAUDE_PLUGIN_ROOT"] = str(HOOKS_DIR.parent)
+    result = subprocess.run(
+        [str(SESSION_START)],
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=10,
+    )
+    assert result.returncode == 0, f"session-start exited {result.returncode}: {result.stderr}"
+    payload = json.loads(result.stdout)
+    nested = payload["hookSpecificOutput"]["additionalContext"]
+    assert "ascii-graph-toolkit" in nested
+    assert "markdown comparison table" in nested
+
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_hooks = Path(tmp) / "hooks"
+        shutil.copytree(HOOKS_DIR, tmp_hooks)
+
+        relay_path = tmp_hooks / "family-relay.md"
+        original = relay_path.read_text(encoding="utf-8")
+        sentinel = "SENTINEL-RUNTIME-EXTRACTION-9f3a"
+        mutated = original.replace(
+            "markdown comparison table", f"markdown comparison table {sentinel}"
+        )
+        assert mutated != original, "expected to find the marker text to mutate"
+        relay_path.write_text(mutated, encoding="utf-8")
+
+        tmp_session_start = tmp_hooks / "session-start"
+        result2 = subprocess.run(
+            [str(tmp_session_start)],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        assert result2.returncode == 0, f"session-start exited {result2.returncode}: {result2.stderr}"
+        payload2 = json.loads(result2.stdout)
+        nested2 = payload2["hookSpecificOutput"]["additionalContext"]
+        assert sentinel in nested2, (
+            "session-start did not reflect the mutated family-relay.md content — "
+            "extraction is not happening at runtime"
+        )
+
+
+def test_brainstorming_visual_operative_line():
+    """
+    Task 4 (2026-07-10 ascii-graph-trigger-fix plan) adds an operative
+    one-liner to brainstorming/SKILL.md's "## Visual companion" section:
+    flow/state diagrams in briefs and user-facing summaries are
+    GENERATED via ascii-graph-toolkit (or Mermaid where the channel
+    renders it), never hand-drawn box art — pointing at
+    family-relay.md §(b) Visual defaults as SSOT for the channel rule.
+    Markers required WITHIN that section specifically (not just
+    anywhere in the file):
+      - "ascii-graph-toolkit"
+      - "never hand-drawn" (operative not-hand-drawn phrase)
+    """
+    text = _read(BRAINSTORM_SKILL)
+    match = re.search(r"## Visual companion\n(.*?)(?=\n## )", text, re.DOTALL)
+    assert match, "expected a '## Visual companion' section in brainstorming/SKILL.md"
+    section = match.group(1)
+    assert "ascii-graph-toolkit" in section
+    assert "never hand-drawn" in section

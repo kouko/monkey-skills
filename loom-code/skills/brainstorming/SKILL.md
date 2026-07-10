@@ -219,6 +219,8 @@ Delegation contract (see CLAUDE.md cross-plugin section): pass **paths + structu
 
 For non-trivial system design — especially when axes 1+2 (problem + users) need a flow / interaction diagram, or axis 5 (what becomes obsolete) needs an architecture-before-and-after — see [`references/visual-companion.md`](references/visual-companion.md). The companion documents when a Mermaid sequence / C4 / ER diagram pays for itself vs when prose is enough.
 
+Flow / state diagrams in briefs and user-facing summaries are GENERATED via `ascii-graph-toolkit` (or Mermaid where the channel renders it) — never hand-drawn box art. SSOT for the channel rule: `loom-pipeline/hooks/family-relay.md §(b) Visual defaults`.
+
 ## What this skill does NOT do
 
 - Does **not** write code. The brief is text + diagrams; implementation starts in `writing-plans` → SDD → `tdd-iron-law`.

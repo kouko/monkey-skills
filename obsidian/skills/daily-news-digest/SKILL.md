@@ -115,12 +115,19 @@ Keep a running tally (you'll report kept-vs-dropped to the user).
 
 A single day's references cover the same event from many angles — on a heavy
 news day, 8–10 finance videos all orbit one crisis. **Cluster sources that cover
-the same underlying story** so you can merge them. A "story" is one
-event/development covered by ≥1 source; group by what actually happened, not by
+the same underlying story OR question/debate** so you can merge them. A "story"
+is one event/development — **or one open question the sources argue over** —
+covered by ≥1 source; group by what actually happened or is debated, not by
 folder or language. The same crisis told through a military lens, an oil-price
 lens, a market-reaction lens, and a diplomat lens is **one story with four
 sources**. Aim for **4–7 stories** on a busy day. A lone source is a valid
 one-source story; just don't pad it.
+
+> [!important] Cluster by DEBATE, not just by event
+> Bull, bear, and neutral takes on one question ("correction healthy or bubble
+> bursting?") are **one debate-cluster**, not three stories — cluster them so
+> STEP 6 can lay the disagreement side by side (real failure 2026-07-04: that
+> exact debate shipped as three disconnected items across two tiers).
 
 Then **group the stories under 2–4 thematic category headings** using the
 **anchored-open** taxonomy below (**anchored-open**: pick from the fixed list;
@@ -244,6 +251,15 @@ wire feed, not summarizing notes one by one:
    at 80.3 vs 81, say so), combine the timeline, assemble the fullest picture.
    Where sources disagree on interpretation, **surface the disagreement** — that
    tension is signal.
+
+   **When the cluster holds ≥2 sources taking materially-differing stances on the
+   SAME question, emit a compact 多空對照/分歧點 block** (`| 立場 | 誰 | 核心論據 |`
+   stance rows + MANDATORY final **分歧點** row). ALL rules:
+   `digest-format.md` §多空對照/分歧點 — **READ it before emitting**:
+   trigger (real-disagreement judgment, NOT a category gate),
+   stance-counting test, 分歧點 false-balance guard, do-not-over-fire
+   (complementary angles = integration), zero 漏引 (every stance
+   source reaches `## Source Index`).
 3. **Write a one-line TL;DR — the bottom-line takeaway / so-what**, NOT a
    restating of the causal steps (the COT diagram below carries those). Then a
    **COT (Chain-of-Thought) mini-diagram** directly (a compact `flowchart LR` of the story's causal
