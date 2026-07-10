@@ -60,6 +60,20 @@ if (typeof runArgs.runLabel !== 'string' || runArgs.runLabel === '' || runArgs.r
     'timestamps/labels must come in via args; this script never generates its own timestamp.'
   )
 }
+// runLabel becomes a path segment (sandboxDir/runLabel/seed.id/...) AND is
+// interpolated into the grading courier's Bash instructions below — allow-list
+// rather than deny-list, mirroring loom-pipeline/scripts/driver_10_guard.js's
+// changeId guard: only [A-Za-z0-9._-] is safe in both positions. A deny-list
+// (reject "/" and "..") lets shell-metacharacter labels like "foo$(x)" through;
+// an allow-list closes that hole by construction.
+const RUN_LABEL_ALLOWED_PATTERN = /^[A-Za-z0-9._-]+$/
+if (!RUN_LABEL_ALLOWED_PATTERN.test(runArgs.runLabel)) {
+  throw new Error(
+    'principles-replay-matrix: args.runLabel must match ' + RUN_LABEL_ALLOWED_PATTERN +
+    ' (letters, digits, dot, underscore, hyphen only) — received ' +
+    JSON.stringify(runArgs.runLabel) + '.'
+  )
+}
 if (typeof runArgs.sandboxDir !== 'string' || runArgs.sandboxDir.charAt(0) !== '/') {
   throw new Error(
     'principles-replay-matrix: args.sandboxDir must be an absolute path string ' +
@@ -173,6 +187,18 @@ Save the raw stdout+stderr and exit code of BOTH commands, clearly labeled per c
 Return: validatorExit (command 1's exit code, a number), checkerExit (command 2's exit code, a number), checkerMisses (every stderr line command 2 printed, each already in \`<class>: <token>\` form — empty array when checkerExit is 0), gradeTxtPath (the path you wrote), artifactPath (echo back ${artifactPath}).`,
       { phase: 'Grade', label: `grade:${seed.id}`, schema: GRADE_SCHEMA }
     )
+    if (!g) {
+      log(`grade:${seed.id}: grading courier produced no result — recording as a hard miss.`)
+      return {
+        seedId: seed.id,
+        pass: false,
+        validatorExit: null,
+        checkerExit: null,
+        misses: ['grade: courier produced no result'],
+        artifactPath,
+        gradeTxtPath: null,
+      }
+    }
     const pass = g.validatorExit === 0 && g.checkerExit === 0
     log(`grade:${seed.id}: validatorExit=${g.validatorExit} checkerExit=${g.checkerExit} -> ${pass ? 'PASS' : 'FAIL'}`)
     return {

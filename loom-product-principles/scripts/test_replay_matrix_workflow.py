@@ -6,7 +6,8 @@ Workflow scripts run inside Claude Code's Workflow-tool sandbox (ambient
 runtime globals `agent`/`phase`/`pipeline`/`log`/`args` injected at run
 time — see `.claude/workflows/code-toolkit-sweep.js` and
 `loom-pipeline/scripts/driver_10_guard.js` for the only other in-repo
-evidence of this contract). They are not Python-importable and this suite
+evidence of this contract, plus the in-context Workflow tool schema
+captured 2026-07-10). They are not Python-importable and this suite
 never executes the file — every assertion here is a STATIC check on the
 committed .js TEXT: the meta block, the 6 committed seed pairs, and the
 grade-stage's deterministic verdict inputs (validator + traceability
@@ -112,3 +113,24 @@ def test_no_typescript_syntax():
     assert ": Array<" not in text
     assert "as unknown as" not in text
     assert "import type" not in text
+
+
+# --- grade stage guards a null courier result (round-2 fix) -----------------
+
+def test_grade_courier_null_guard_present():
+    text = _text()
+    assert "courier produced no result" in text, (
+        "grade stage must guard against agent() returning null/skipped for "
+        "the grading courier — mirroring the existing Replay-stage guard"
+    )
+
+
+# --- runLabel path-segment allow-list (round-2 fix) -------------------------
+
+def test_run_label_allow_list_present():
+    text = _text()
+    assert "^[A-Za-z0-9._-]+$" in text, (
+        "runLabel is interpolated as a path segment and into courier Bash "
+        "instructions — it must be validated against an allow-list pattern "
+        "mirroring driver_10_guard.js's changeId guard"
+    )
