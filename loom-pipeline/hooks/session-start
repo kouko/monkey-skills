@@ -25,6 +25,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 RECEPTION_PATH="${PLUGIN_ROOT}/hooks/family-reception.md"
+FAMILY_RELAY_PATH="${PLUGIN_ROOT}/hooks/family-relay.md"
 
 # Reception file missing → fail open with empty context (do not crash the
 # session). Same 3-key shape as the populated case.
@@ -34,6 +35,19 @@ if [ ! -f "${RECEPTION_PATH}" ]; then
 fi
 
 content="$(cat "${RECEPTION_PATH}")"
+
+# Extract "### (b) Visual defaults" from family-relay.md AT RUNTIME (heading-
+# boundary awk range) and append it to the injected reception. family-relay.md
+# stays the SSOT — this script must never carry a copy of the rule text.
+# Fail open: missing file or missing section → skip silently, reception still
+# injects without it.
+if [ -f "${FAMILY_RELAY_PATH}" ]; then
+  visual_defaults="$(awk '/^### \(b\) Visual defaults/{flag=1} /^### \(c\)/{flag=0} flag' "${FAMILY_RELAY_PATH}")"
+  if [ -n "${visual_defaults}" ]; then
+    content="${content}
+${visual_defaults}"
+  fi
+fi
 
 # JSON-escape via bash parameter substitution (mirror loom-code).
 escape_for_json() {
