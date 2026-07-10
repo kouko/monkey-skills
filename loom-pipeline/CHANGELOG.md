@@ -6,6 +6,26 @@ this file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.7.0] — 2026-07-10
+
+### Added
+
+- **Reception preloads Visual defaults** — `hooks/session-start` now
+  extracts `family-relay.md §(b) Visual defaults` at runtime (awk
+  heading-range over the SSOT file; zero rule text duplicated in the
+  script) and appends it to the injected reception context. Motivation:
+  session-log telemetry showed the pull-based relay file was actually
+  Read in 1/216 loom sessions — the visual contract existed on paper
+  only. Weak-model dogfood
+  (`docs/loom/dogfood/2026-07-10-visual-trigger-weak-model-dogfood.md`)
+  shows the preload fixes rule *visibility*; triggering behavior is
+  carried by ascii-graph-toolkit 0.5.0's imperative card (sibling PR).
+- `test_family_relay.py::test_reception_includes_visual_defaults` —
+  proves runtime extraction via a copy-mutate-rerun-same-script
+  mechanism; fail-open (missing relay file) preserved.
+- Suite: 161 passed (`PYTHONDONTWRITEBYTECODE=1 python3 -m pytest
+  loom-pipeline/scripts/ -q`).
+
 ## [0.6.1] — 2026-07-08
 
 ### Fixed
