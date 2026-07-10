@@ -2,10 +2,16 @@
 loom-discovery station.
 
     <folder>/
-      user-insights.md   # REQUIRED
-      evidence.md        # REQUIRED
+      user-insights.md   # REQUIRED — except in the assess-first state below
+      evidence.md        # REQUIRED — same exception
       business-value.md  # OPTIONAL
       research/          # OPTIONAL
+
+Assess-first intermediate state: business-value is re-entrant and may run
+on rough evidence BEFORE user-insights exists (business-value SKILL.md
+§Re-entrant). A folder holding ONLY business-value.md is therefore valid;
+its verdict contract still applies. Once user-insights.md exists, the full
+required set applies again.
 
 Checks:
   - user-insights.md: present, and carries every required section heading.
@@ -76,10 +82,21 @@ def _section_present(text: str, header: str) -> bool:
 
 # --- checks: each returns list[str] of problems (empty == ok) --------------
 
+def _is_assess_first_intermediate(root: Path) -> bool:
+    """business-value.md exists but user-insights.md does not — the
+    sanctioned assess-before-research state (business-value §Re-entrant)."""
+    return ((root / "business-value.md").is_file()
+            and not (root / "user-insights.md").is_file())
+
+
 def _check_user_insights_present(root: Path) -> list[str]:
+    if _is_assess_first_intermediate(root):
+        return []  # sanctioned intermediate state
     if not (root / "user-insights.md").is_file():
         return [f"missing user-insights.md at {root / 'user-insights.md'} "
-                f"(every discovery folder needs a user-insights.md)"]
+                f"(every completed discovery folder needs a user-insights.md; "
+                f"only the assess-first state — business-value.md alone — "
+                f"is exempt)"]
     return []
 
 
@@ -97,9 +114,12 @@ def _check_user_insights_sections(root: Path) -> list[str]:
 
 
 def _check_evidence_present(root: Path) -> list[str]:
+    if _is_assess_first_intermediate(root):
+        return []  # rough-evidence state: no registry demanded yet
     if not (root / "evidence.md").is_file():
         return [f"missing evidence.md at {root / 'evidence.md'} "
-                f"(every discovery folder needs an evidence.md claims registry)"]
+                f"(every completed discovery folder needs an evidence.md "
+                f"claims registry)"]
     return []
 
 

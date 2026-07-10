@@ -10,6 +10,44 @@
 > greppable). Completed items are deleted, not archived — git history is
 > the archive.
 
+## Operationalize "product-shaped" in family reception (OPEN)
+- Status: OPEN
+- Start: next time any session or dogfood cold-reader again reports
+  guessing at whether work is "product-shaped" vs "an increment" (one
+  more occurrence past the 2026-07-10 loom-discovery dogfood, per the
+  two-occurrence rule).
+- Origin: loom-discovery dogfood
+  (`docs/skill-dogfood/2026-07-10-loom-discovery/report.md` FINDING-010)
+  — three independent cold-readers flagged "product-shaped" as never
+  operationalized; it gates on-ramp rows 1 AND 4, so the ambiguity is
+  family-wide, not loom-discovery's.
+- What: add a one-line decidable test (or 2 worked examples) to
+  `loom-pipeline/hooks/family-reception.md` — mind the 60 non-empty-line
+  budget enforced by `test_pipeline_reception.py`; may need to land in
+  the entry skills' §Intake instead.
+
+## Grounding notes for sibling stations' claude-code-tools.md (OPEN)
+- Status: OPEN
+- Start: next touch of loom-spec or loom-interface-design references/.
+- Origin: loom-discovery SDD Task 3 code-quality review (2026-07-10) —
+  loom-discovery's claude-code-tools.md now carries a verified-against-
+  frontmatter grounding note; loom-spec's and loom-interface-design's
+  equivalents lack one (same gap, inherited convention).
+- What: add the same one-paragraph grounding note (verification date +
+  evidence grain) to each sibling's references/claude-code-tools.md.
+
+## On-ramp row 4 vs rows 2/3 precedence unstated (OPEN)
+- Status: OPEN
+- Start: a real session where discovery and interface-design/spec
+  on-ramp rows fire together and the session visibly picks wrong (the
+  row-4-vs-row-1 case is already resolved in the reception file).
+- Origin: loom-discovery dogfood FINDING-007 + router cold-reader
+  (2026-07-10); Probe A q9 live-confirmed the adjacent row-4-vs-row-1
+  seam splits 50/50 at description level.
+- What: one precedence sentence covering row 4 vs rows 2/3 — but the
+  reception file sits exactly at its 60-line budget, so this likely
+  lands in `using-loom-discovery` §Intake as a tie-break note instead.
+
 ## Automate research-toolkit's sync-primitives.sh (PARKED)
 - Status: PARKED
 - Start: a second real drift incident (a synced primitive shipped out of

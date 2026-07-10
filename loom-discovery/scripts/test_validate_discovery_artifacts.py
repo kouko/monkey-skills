@@ -113,6 +113,35 @@ def test_good_folder_with_valid_business_value_passes(tmp_path):
     assert problems == []
 
 
+def test_assess_first_business_value_only_folder_is_valid_intermediate(tmp_path):
+    """business-value is re-entrant: it may run on rough evidence BEFORE
+    user-insights exists (its SKILL.md §Re-entrant). A folder holding only a
+    valid business-value.md is therefore a sanctioned INTERMEDIATE state, not
+    a violation — dogfood FINDING-011 (validator contradicted the workflow)."""
+    (tmp_path / "business-value.md").write_text(
+        _business_value_body("NEEDS-MORE-RESEARCH"), encoding="utf-8")
+    ok, problems = validate(tmp_path)
+    assert ok, f"assess-first intermediate state should pass, got: {problems}"
+
+
+def test_assess_first_intermediate_still_checks_verdict(tmp_path):
+    """The intermediate state relaxes the required-file set, never the
+    verdict contract — a bad verdict still fails."""
+    (tmp_path / "business-value.md").write_text(
+        _business_value_body("MAYBE"), encoding="utf-8")
+    ok, problems = validate(tmp_path)
+    assert not ok
+    assert any("verdict" in p.lower() for p in problems), problems
+
+
+def test_empty_folder_is_not_a_valid_state(tmp_path):
+    """No user-insights.md AND no business-value.md — nothing sanctioned
+    produced this; still invalid."""
+    ok, problems = validate(tmp_path)
+    assert not ok
+    assert any("user-insights.md" in p for p in problems), problems
+
+
 # --- BAD fixtures ------------------------------------------------------------
 
 def test_rejects_missing_user_insights_section(tmp_path):

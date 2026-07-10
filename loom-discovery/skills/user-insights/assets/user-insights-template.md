@@ -23,7 +23,9 @@ its lived context and today's workaround. (Torres opportunity-space semantics.)
 ### Need N1 — <short label>
 
 - **Job story**: When <situation / trigger>, I want <motivation / goal>, so I
-  can <expected outcome>.
+  can <expected outcome>. _(Outcome words only — no mechanism nouns: folder
+  layouts, UI elements, "automatically X" all belong in Risks/open questions,
+  not inside the story.)_
 - **Evidence**: `evidence.md` C1, C2 (never assert a need with no claim row).
 - **Context / journey stage**: where in the user's journey this arises.
 - **Today's workaround**: what the user does now instead (the cost of the gap).
@@ -48,6 +50,8 @@ its lived context and today's workaround. (Torres opportunity-space semantics.)
 - **Appetite** (Shape Up): how much time/effort this is worth — a budget, not
   an estimate.
 - **Ratified by user on** <YYYY-MM-DD>.
+- **Divergence from recommendation** (only when the user ratified a different
+  set than the agent recommended): what changed and the user's stated reason.
 
 ## Risks & open questions
 

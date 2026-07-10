@@ -48,6 +48,11 @@ world** (users, competitors, prior art, the repo). Therefore this is
 - Output: the **Opportunity space** section of `user-insights.md` — each need as
   a job story ("When …, I want …, so I can …"), evidence-linked, with its
   context / journey stage and today's workaround.
+- **Purity self-check per job story**: before writing one, strip mechanism
+  nouns (folder structures, UI elements, automation verbs like "automatically
+  moved") — state the *outcome* the user wants; park any mechanism in §Risks &
+  open questions. The no-`## Solution`-heading rule alone does not catch
+  mechanism baked *inside* a job story.
 - Every asserted need cites a claim row in `evidence.md`. A need with no evidence
   is an open question, not a finding.
 
@@ -66,7 +71,11 @@ Axis 4.
    - **Why** — the evidence and reasoning behind it.
    - **Conditional reversal** — what fact, if true, would flip the call.
 2. The commitment is written into `user-insights.md` **only after the user
-   ratifies** it (mark it "ratified by user on <date>").
+   ratifies** it (ratification = an **explicit affirmative user reply in
+   conversation** to the presented recommendation — no keyword or sign-off
+   ritual needed; mark it "ratified by user on <date>"). If the user ratifies
+   a **different** set than recommended, write what was **ratified** and record
+   the divergence.
 3. **Agents never self-commit on the user's behalf.** Mapping and proposing is
    the agent's job; deciding is the user's. A commitment written without
    ratification is a contract violation, not a shortcut.
@@ -76,8 +85,9 @@ Axis 4.
 Pick the research path by scope (resolves the brief's Open Q2):
 
 - **Delegate to `research-toolkit:deep-deep-research`** when the discovery needs
-  **more than 3 research questions**, OR when **external evidence or direct user
-  evidence** is required. Pass paths + seed context per the cross-plugin
+  **more than 3 research questions**, OR when **primary user evidence**
+  (interviews, usage data — evidence a web search cannot provide) is required.
+  Pass paths + seed context per the cross-plugin
   delegation contract (monkey-skills `CLAUDE.md` §Cross-Plugin Delegation
   Contract) — pass file paths and a structured seed, never inline analysis; the
   delegate loads its own standards, runs its own pipeline, returns findings.
@@ -91,7 +101,9 @@ reports — never as unsourced assertions.
 
 ## Artifact set
 
-All under `docs/loom/discovery/<date>-<slug>/`:
+All under `docs/loom/discovery/<date>-<slug>/` (`<date>` = today, `YYYY-MM-DD`;
+`<slug>` = kebab-case topic; reuse the folder when the same topic already has
+one):
 
 | File | Role |
 |---|---|
@@ -135,8 +147,10 @@ translate):
 2. **Map** the opportunity space (Mode 1): research the world / repo, record
    claims in `evidence.md`, write each need as an evidence-linked job story.
    Route research per the delegation boundary above.
-3. **Propose** the commitment (Mode 2): present the space + an explicit
-   Recommend / Why / Conditional-reversal recommendation.
+3. **Propose** the commitment (Mode 2): first gather the user's value inputs
+   (priorities among the mapped needs, appetite) — these are value judgments,
+   the legitimate user questions — then present the space + an explicit
+   Recommend / Why / Conditional-reversal recommendation grounded in them.
 4. **Ratify**: write the commitment into §Value commitment only after the user
    ratifies; mark the ratification date.
 5. **Close** with §Risks & open questions; unsupported claims live there, never
@@ -149,3 +163,6 @@ translate):
 - loom-code brainstorming `references/axis4-research-protocol.md` — the
   research-then-"my take" protocol Mode 2 reuses (EN+JA queries, recommendation
   shape).
+- `../using-loom-discovery/references/claude-code-tools.md` (Codex:
+  `codex-tools.md` beside it) — host invocation shapes for the delegation
+  targets named above.

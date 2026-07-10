@@ -17,8 +17,12 @@
 ## Confidence rubric
 
 - **high** — multiple independent sources agree, or direct primary observation.
-- **med** — single credible source, or cross-language agreement not yet checked.
+- **med** — single credible source (an authoritative page: official docs, a
+  maintained registry, a primary repo). "Cross-language agreement not yet
+  checked" caps a row at med — it never lifts a low row up.
 - **low** — anecdote, single blog, or inference; flag downstream as provisional.
+- One row = one atomic claim. A compound claim (several checkable statements)
+  gets one row each — sub-claims must not share a single confidence label.
 
 ## Notes
 

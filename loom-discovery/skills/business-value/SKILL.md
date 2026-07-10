@@ -15,10 +15,12 @@ months later.
 
 ## Register — Shape Up betting, NOT Cagan viability
 
-This is a **betting** call in the Shape Up sense: *"is this worth my time
-budget?"* — a personal appetite decision, bounded and reversible. It is
-explicitly **NOT** Cagan business viability: no market sizing, no revenue model,
-no GTM. Those are a different profession (see the delegation boundary below).
+This is a **betting** call in the Shape Up sense (Basecamp's method: bet a
+**fixed time-box** on an idea — *"is this worth my time budget?"*) — a personal
+appetite decision, bounded and reversible. It is explicitly **NOT** Cagan-style
+business viability (SVPG's market-level assessment): no market sizing, no
+revenue model, no GTM. Those are a different profession (see the delegation
+boundary below).
 Frame every question as *how I spend a fixed time budget*, never *how big the
 market is*.
 
@@ -38,7 +40,8 @@ This step is **optional**. A weak-model session must be able to decide fire-vs-s
 **Fire when ANY of:**
 
 - **(a)** the outcome is **for others** — it will be **published** or **maintained**
-  (someone other than you-right-now depends on it);
+  (someone other than you-right-now depends on it; a **team-internal tool counts
+  as for-others**);
 - **(b)** **multiple ideas compete** for the **same time budget** (you can only
   build one now);
 - **(c)** it means a **meaningful resource spend** (non-trivial hours, money, or
@@ -48,11 +51,15 @@ This step is **optional**. A weak-model session must be able to decide fire-vs-s
 the skip):
 
 - it is a **personal tool** for yourself only (throwaway, private, unpublished); OR
-- a **GO is already decided** by the user (they have committed; do not re-litigate).
+- a **GO is already decided** by the user (they have committed; do not re-litigate
+  — an **incremental feature on an already-shipped product is a decided GO**,
+  fire only if the increment itself meets (b) or (c)).
 
 When skipped, **proceeding downstream is the implicit GO** — do **not** write an
 empty `business-value.md`. A skipped check leaves no artifact; the absence *is*
-the signal, and a blank file would be a false audit record.
+the signal, and a blank file would be a false audit record. ("Silently" bounds
+the workflow — no artifact, no interrogation; a one-line conversational note
+that you are proceeding is fine, going mute is not the goal.)
 
 ## Re-entrant — a checkpoint, not a one-way gate
 
@@ -116,6 +123,10 @@ Every non-skipped run ends in exactly one of:
   route to `user-insights` (or planning-team for market economics), then revisit
   (re-entrant).
 
+Weak-axis guidance: **one** weak axis with two concrete ones may still net GO —
+name the weak axis in the rationale, never bury it. **Two or more** weak axes →
+NEEDS-MORE-RESEARCH, not a hopeful GO.
+
 ## Procedure
 
 1. **Check the triggers.** If a skip condition holds, stop silently — no artifact,
@@ -123,12 +134,20 @@ Every non-skipped run ends in exactly one of:
 2. **Read the template** — `assets/business-value-template.md` — so the artifact
    shape (and its verdict enum) is fixed before you write.
 3. **Run the interrogation** one question at a time across why-now / why-me /
-   opportunity-cost. Consult `user-insights.md` for evidence when it exists.
+   opportunity-cost. Consult the sibling artifact at
+   `docs/loom/discovery/<date>-<slug>/user-insights.md` for evidence when it
+   exists. When an answer's factual claim is web-checkable in one search,
+   check it and cite — don't leave every axis purely self-attested.
 4. **Delegate** any market/GTM/revenue sub-question to `domain-teams:planning-team`
-   (pass paths + seed context); fold only its returned verdict back in.
+   (pass paths + seed context); fold only its returned verdict back in. Host
+   invocation shapes for delegation/handoff live in
+   `../using-loom-discovery/references/claude-code-tools.md` (Codex:
+   `codex-tools.md` beside it).
 5. **Emit `business-value.md`** into the change's discovery folder at
-   `docs/loom/discovery/<date>-<slug>/business-value.md`, following the template,
-   with a **GO / NO-GO / NEEDS-MORE-RESEARCH** recommendation + one-paragraph
+   `docs/loom/discovery/<date>-<slug>/business-value.md` (`<date>` = today,
+   `YYYY-MM-DD`; `<slug>` = kebab-case topic; reuse the folder when the same
+   topic already has one), following the template, with a
+   **GO / NO-GO / NEEDS-MORE-RESEARCH** recommendation + one-paragraph
    rationale.
 6. On `NEEDS-MORE-RESEARCH`, hand off to `user-insights`; revisit this checkpoint
    once evidence deepens.
