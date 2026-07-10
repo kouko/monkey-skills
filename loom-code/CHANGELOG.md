@@ -5,6 +5,21 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.28.1] — 2026-07-10
+
+### Changed
+
+- **`brainstorming` §Visual companion** gains the operative line: flow /
+  state diagrams in briefs and user-facing summaries are GENERATED via
+  `ascii-graph-toolkit` (or Mermaid where the channel renders it), never
+  hand-drawn box art; SSOT pointer to
+  `loom-pipeline/hooks/family-relay.md §(b) Visual defaults`. The
+  operative restatement (vs a bare pointer) is a documented trade-off:
+  telemetry showed the pull-based reference chain was Read 0/56
+  brainstorming sessions, so the rule must live in the always-read body.
+  Pinned by `test_family_relay.py::test_brainstorming_visual_operative_line`;
+  CHK-SKL-010 word count 3,596 / 4,500.
+
 ## [0.28.0] — 2026-07-10 — designer/PM loop hardening trio: change-folder detection, coverage gate, archive-on-close, reviewer self-derivation
 
 ### Added
