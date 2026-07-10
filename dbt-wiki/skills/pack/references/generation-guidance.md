@@ -16,8 +16,8 @@ Work the loop in §0. Scan this list per question and **drill into a
 section only when the question touches it** — the sections below are
 the details, not a linear read:
 
-- [ ] Every business term schema-linked to a real column (§1 — start
-      from `knowledge/_index.md` to find the right pages).
+- [ ] Every business term schema-linked to a real column (§1 — grep
+      `knowledge/_index.md` for the term to find the right pages).
 - [ ] Ratios/averages use `SUM/SUM` or the metric `## Calculation`,
       never `AVG(row_level_ratio)` (§2).
 - [ ] Every JOIN uses the full compound grain key; no SUM over
@@ -75,14 +75,17 @@ physical column names in the warehouse.
 For each business term in the question:
 
 1. Locate the matching entity or metric page directly under `knowledge/`
-   (e.g. `knowledge/<entity>.md`, `knowledge/<metric>.md`). **Start from
-   `knowledge/_index.md`** — one line per frozen page (title, status,
-   one-line summary, aliases), so a business term maps to candidate pages
-   in a single read instead of slug-guessing or grepping the whole
-   folder. (If this bundle predates `_index.md`, fall back to matching
-   kebab-case slugs / grepping.) The bundle's `knowledge/` is **flat** —
-   pages sit as direct children with kebab-case slugs; a page type is
-   prefixed into the filename only on a cross-type name collision (e.g.
+   (e.g. `knowledge/<entity>.md`, `knowledge/<metric>.md`). **Grep
+   `knowledge/_index.md` for the question's business terms first**
+   (`grep -i "<term>" _index.md`) — each frozen page has one line there
+   (title, status, one-line summary, aliases), and the 〔aka: …〕
+   aliases are designed as the grep surface — then open only the pages
+   the matching lines point to. Read the whole index only when grep
+   misses; never slug-guess or grep the whole folder. (If this bundle
+   predates `_index.md`, fall back to matching kebab-case slugs /
+   grepping.) The bundle's `knowledge/` is **flat** — pages sit as
+   direct children with kebab-case slugs; a page type is prefixed into
+   the filename only on a cross-type name collision (e.g.
    `knowledge/metric-<metric>.md`).
 2. Read its `## Fields` table. Every entity page carries one of this
    shape:

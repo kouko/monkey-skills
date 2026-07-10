@@ -1,14 +1,16 @@
 name: loom-siblings CI
 
-# Runs the pytest suites of the two loom sibling plugins that previously had
+# Runs the pytest suites of the loom sibling plugins that previously had
 # NO CI coverage: loom-interface-design (validators + skill/manifest
-# behavioral tests) and loom-product-principles (validator + skill/manifest
-# behavioral tests). loom-code and loom-spec already have their own workflows
-# (loom-code-ci.yml / loom-spec-ci.yml); this closes the remaining gap —
-# loom-product-principles' suite sat silently RED from #456 (2026-06-26)
-# until #468's audit precisely because nothing ran it.
+# behavioral tests), loom-product-principles (validator + skill/manifest
+# behavioral tests), and loom-discovery (plugin manifest + marketplace
+# entry + skill/manifest behavioral tests). loom-code and loom-spec
+# already have their own workflows (loom-code-ci.yml / loom-spec-ci.yml);
+# this closes the remaining gap — loom-product-principles' suite sat
+# silently RED from #456 (2026-06-26) until #468's audit precisely
+# because nothing ran it.
 #
-# The two suites MUST run as separate pytest invocations: both plugins (and
+# The suites MUST run as separate pytest invocations: these plugins (and
 # loom-spec) ship same-basename test files (test_marketplace_entry.py /
 # test_plugin_manifest.py) with no __init__.py, so a single combined
 # invocation dies with "import file mismatch" at collection. Separate jobs
@@ -22,6 +24,7 @@ on:
     paths:
       - 'loom-interface-design/**'
       - 'loom-product-principles/**'
+      - 'loom-discovery/**'
       # Both plugins' test_marketplace_entry.py read the repo-root
       # marketplace.json, so an edit there must fire this gate too —
       # else a removed/renamed entry merges ungated (fail-open).
@@ -32,6 +35,7 @@ on:
     paths:
       - 'loom-interface-design/**'
       - 'loom-product-principles/**'
+      - 'loom-discovery/**'
       - '.claude-plugin/marketplace.json'
 
 permissions:
@@ -78,3 +82,23 @@ jobs:
         env:
           PYTHONDONTWRITEBYTECODE: "1"
         run: python3 -m pytest loom-product-principles/scripts/ -v
+
+  discovery:
+    name: loom-discovery pytest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install test deps
+        run: python3 -m pip install --quiet pytest
+
+      - name: Run loom-discovery scripts/ pytest suite
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m pytest loom-discovery/scripts/ -v

@@ -8,7 +8,7 @@ CLI (__main__):
   synthesis.py blocks  — payload {ranked_claims, vote_results, verdicts_per_claim}
                          → stdout {confirmed_block, killed_block}
   synthesis.py report  — payload {report, ranked_claims, angles, all_claims,
-                                 confirmed, killed}
+                                 confirmed, killed, verdicts_per_claim}
                          → stdout {stats, markdown}
 
   Payload source: stdin JSON (default), or per-key file flags (repeatable;
@@ -24,13 +24,33 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from schemas import VOTES_PER_CLAIM
-
 # ---------------------------------------------------------------------------
 # Synthesis helpers
 # ---------------------------------------------------------------------------
 
 _CONF_RANK: dict[str, int] = {"high": 0, "medium": 1, "low": 2}
+
+
+def _source_url(claim: dict) -> str:
+    """Read a claim's source URL, tolerating either key name.
+
+    Extraction is documented to emit `sourceUrl` (SKILL.md Stage 3), but a
+    claim keyed `url` instead must not silently lose its source at this
+    stage — mirrors the same fallback `prompts.py`'s `verify_prompt()` uses.
+    """
+    return claim.get("sourceUrl") or claim.get("url", "")
+
+
+def _is_opinion_verdicts(verdicts: list[dict]) -> bool:
+    """True when `verdicts` is Stage 5b's one-element attribution-verdict list.
+
+    Discriminator: the attribution-verdict shape carries `attributionConfirmed`
+    (schemas.ATTRIBUTION_VERDICT_SCHEMA) and never `refuted`/`confidence` — the
+    fact-path verdict shape (schemas.VERDICT_SCHEMA). Checking key presence
+    (rather than list length) stays correct even though both are, by design,
+    "a list of verdict dicts" (SKILL.md Stage 5 Merge: "never a bare boolean").
+    """
+    return any(v and "attributionConfirmed" in v for v in verdicts)
 
 
 def _confirmed_block(
@@ -40,11 +60,19 @@ def _confirmed_block(
 ) -> str:
     """Build the confirmed-claims block for the synthesis prompt.
 
-    Format per claim (spec §SYNTHESIS {block}):
+    Fact-shaped claims (spec §SYNTHESIS {block}):
       ### [i] {claim}
       Vote: {valid-refuted}-{refuted} · Source: {url} ({quality})
       Quote: "{quote}"
       Verifier evidence ({confidence}): {evidence}
+
+    Opinion-shaped claims (Stage 5b attribution-confirmation, single verdict,
+    no refuted/confidence keys — must NOT be rendered with fact vocabulary):
+      ### [i] {claim}
+      Attributed opinion · Source: {url} ({quality})
+      Quote: "{quote}"
+      Attribution evidence: {evidence}
+      Attributed to: {heldBy}   (only when heldBy is present)
     """
     lines: list[str] = []
     for i, (claim, survived, verdicts) in enumerate(
@@ -52,9 +80,30 @@ def _confirmed_block(
     ):
         if not survived:
             continue
-        valid = len(verdicts)
-        refuted_count = sum(1 for v in verdicts if v and v.get("refuted"))
-        non_refuting = [v for v in verdicts if v and not v.get("refuted")]
+        if _is_opinion_verdicts(verdicts):
+            verdict = verdicts[0] if verdicts else {}
+            evidence = verdict.get("evidence", "") if verdict else ""
+            held_by = claim.get("heldBy", "")
+            block = (
+                f"### [{i}] {claim['claim']}\n"
+                f"Attributed opinion · "
+                f"Source: {_source_url(claim)} ({claim.get('sourceQuality', '')})\n"
+                f"Quote: \"{claim.get('quote', '')}\"\n"
+                f"Attribution evidence: {evidence}"
+            )
+            if held_by:
+                block += f"\nAttributed to: {held_by}"
+            lines.append(block)
+            continue
+        # None entries are abstentions (Stage 5: "A voter that fails or
+        # returns nothing ... record its vote as null") — must be dropped
+        # before counting, matching rank.py's quorum_survives convention
+        # (`[v for v in verdicts if v is not None]`), or an abstention
+        # renders as a phantom non-refuting vote.
+        valid_verdicts = [v for v in verdicts if v is not None]
+        valid = len(valid_verdicts)
+        refuted_count = sum(1 for v in valid_verdicts if v.get("refuted"))
+        non_refuting = [v for v in valid_verdicts if not v.get("refuted")]
         best = min(
             non_refuting,
             key=lambda v: _CONF_RANK.get(v.get("confidence", "low"), 2),
@@ -65,7 +114,7 @@ def _confirmed_block(
         lines.append(
             f"### [{i}] {claim['claim']}\n"
             f"Vote: {valid - refuted_count}-{refuted_count} · "
-            f"Source: {claim.get('sourceUrl', '')} ({claim.get('sourceQuality', '')})\n"
+            f"Source: {_source_url(claim)} ({claim.get('sourceQuality', '')})\n"
             f"Quote: \"{claim.get('quote', '')}\"\n"
             f"Verifier evidence ({conf}): {evidence}"
         )
@@ -79,7 +128,7 @@ def _killed_block(ranked_claims: list[dict], vote_results: list[bool]) -> str:
         if not survived:
             lines.append(
                 f"- \"{claim['claim']}\" "
-                f"({claim.get('sourceUrl', '')})"
+                f"({_source_url(claim)})"
             )
     return "\n".join(lines)
 
@@ -93,7 +142,7 @@ def _collect_sources(ranked_claims: list[dict]) -> list[str]:
     sources: list[str] = []
     seen_sources: set[str] = set()
     for claim in ranked_claims:
-        url = claim.get("sourceUrl", "")
+        url = _source_url(claim)
         if url and url not in seen_sources:
             sources.append(url)
             seen_sources.add(url)
@@ -107,9 +156,21 @@ def _build_stats(
     ranked_claims: list[dict],
     confirmed: list[dict],
     killed: list[dict],
+    verdicts_per_claim: list[list[dict]],
 ) -> dict[str, int]:
-    """Compute pipeline stats dict. agentCalls formula: 1+angles+sources+(verified×VOTES)+1."""
+    """Compute pipeline stats dict.
+
+    agentCalls formula: 1 + angles + sources + verify_calls + 1, where
+    verify_calls = sum(len(v) for v in verdicts_per_claim). A fact-routed
+    claim's verdict list has VOTES_PER_CLAIM(3) elements (SKILL.md Stage
+    5a's 3-voter quorum); an opinion-routed claim's has exactly 1 (Stage
+    5b's single attribution-confirmation check). Reading the per-claim
+    call cost off the actual verdict-list length — rather than assuming
+    every verified claim cost a uniform VOTES_PER_CLAIM — is what makes
+    this correct for a mixed fact+opinion claim set.
+    """
     n_verified = len(ranked_claims)
+    verify_calls = sum(len(v) for v in verdicts_per_claim)
     return {
         "angles": len(angles),
         "sourcesFetched": len(sources),
@@ -117,7 +178,7 @@ def _build_stats(
         "claimsVerified": n_verified,
         "confirmed": len(confirmed),
         "killed": len(killed),
-        "agentCalls": 1 + len(angles) + len(sources) + (n_verified * VOTES_PER_CLAIM) + 1,
+        "agentCalls": 1 + len(angles) + len(sources) + verify_calls + 1,
     }
 
 
@@ -142,11 +203,16 @@ def _render_markdown(report: dict[str, Any]) -> str:
             confidence = f.get("confidence", "")
             claim = f.get("claim", "")
             sources = f.get("sources", [])
+            evidence = f.get("evidence", "")
             lines.append(f"- **{claim}** *(confidence: {confidence})*")
             for src in sources:
                 lines.append(f"  - <{src}>")
+            if evidence:
+                lines.append(f"  - Evidence: {evidence}")
 
     caveats = report.get("caveats", "")
+    if isinstance(caveats, list):
+        caveats = "\n".join(caveats)
     if caveats:
         lines.append("\n## Caveats\n")
         lines.append(caveats)
@@ -190,6 +256,7 @@ def _run_report(payload: dict) -> dict:
         ranked_claims,
         payload["confirmed"],
         payload["killed"],
+        payload["verdicts_per_claim"],
     )
     markdown = _render_markdown(payload["report"])
     return {"stats": stats, "markdown": markdown}

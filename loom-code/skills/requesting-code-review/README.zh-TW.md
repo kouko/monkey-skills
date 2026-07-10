@@ -10,7 +10,7 @@
 
 | | SDD per-task reviewer | 本 skill（whole-branch） |
 |---|---|---|
-| Scope | 1 個原子 ≤5 分鐘 task | main 比 branch 累積變更 |
+| Scope | 1 個原子（一個失敗測試）task | main 比 branch 累積變更 |
 | 觸發時機 | 每個 SDD task triad 中 | 全 SDD 工作 DONE 後、merge 前 |
 | 抓什麼 | per-task 品質失誤 | 跨任務交互作用、scope creep、架構一致性 |
 

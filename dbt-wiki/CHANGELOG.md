@@ -4,6 +4,33 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.1] — 2026-07-08
+
+### Changed — pack: `_index.md` consumption is grep-first; summaries capped
+
+A live efficiency probe on a real ~200-page bundle showed the consuming
+agent reading the entire `_index.md` into context — at that scale the
+index exceeds a single read (~35K tokens) and the full-read costs two
+round-trips per question, while the probe's actual page hits all came
+from grep-visible alias text. For an LLM consumer a large index is a
+cheap **grep surface**, not a document to read:
+
+- **Consumption contract reworded to grep-first** in all three places a
+  consumer meets the index (the generated `_index.md` header, the
+  bundle template's folder orientation, generation-guidance §1 step 1 +
+  the Pre-flight checklist): grep the index for the question's business
+  terms (the `〔aka: …〕` aliases are the designed grep surface), open
+  only the pages the matching lines cite; whole-file read is the
+  fallback when grep misses.
+- **Index summaries capped at 80 chars** (`build_bundle_index.py
+  cap_summary`, break at the latest sentence boundary inside the cap,
+  ellipsis on hard cap) — the full summary lives on the page; the index
+  line only needs enough gloss to disambiguate a grep hit. Measured on
+  the probe bundle: summaries were 36% of index bytes. Tests 13 → 16
+  cases.
+
+All examples synthetic (`acme` / `ledger` / `stream`).
+
 ## [3.2.0] — 2026-07-07
 
 ### Added — pack: `knowledge/_index.md` retrieval entry point (Step 2.7)

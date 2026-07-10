@@ -5,6 +5,225 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.28.0] — 2026-07-10 — designer/PM loop hardening trio: change-folder detection, coverage gate, archive-on-close, reviewer self-derivation
+
+### Added
+
+- **`archive_change_folder.py`**: deterministic script moving
+  `docs/loom/<change-id>/` → `docs/loom/archive/<date>-<change-id>/` and
+  stamping a `status: archived` frontmatter field on the folder's
+  `proposal.md`; refuses missing/already-archived/symlinked folders and
+  guards path-safety on both `change-id` and `--date` (OpenSpec #412 bug
+  class). `check-living-spec-index.py` stays green with an archived
+  folder present.
+- **`check_scenario_coverage.py`**: compares a change-folder's
+  `#### Scenario:` set against a plan's `<change-id> / Requirement: … /
+  Scenario: …` join keys; exit 0 on full coverage, exit 1 naming every
+  dropped scenario.
+
+### Changed
+
+- **`writing-plans`** gains a layered change-folder **detection
+  cascade** (replaces the old "optional alternate input" framing):
+  layer (0) an explicitly handed change-folder path binds immediately,
+  detection never runs; layer (i) opportunistic exact branch-slug
+  match; layer (ii) non-archived folder count 0 → N/A-loud, 1 →
+  auto-bind, >1 → ask once (recency-sorted, recommended default);
+  never content-similarity. Consumption is now mandatory-when-bound.
+- **`writing-plans`** also wires `check_scenario_coverage.py` as a
+  post-plan self-check on the change-folder-input path: exit 1 blocks
+  the plan from PASS until every scenario maps or the drop is
+  user-approved in the plan's Notes.
+- **`finishing-a-development-branch`** gains an archive-on-close step:
+  when the branch's plan carries change-folder join keys, run
+  `archive_change_folder.py` and stage the move into the close-out
+  commit; N/A-loud when the branch consumed no change-folder.
+- **`code-reviewer`**'s principles-conformance activation now
+  **self-derives** `docs/loom/PRINCIPLES.md` existence by checking the
+  target repo directly (filesystem derivation); an orchestrator-passed
+  path is an override for non-standard locations, not the activation
+  condition. `requesting-code-review` aligned in the same change.
+  N/A stays honest when the file is absent.
+- **`AGENTS.md`**: declared `archive_change_folder.py` and
+  `check_scenario_coverage.py` in the managed command-surface block
+  (new runnable capabilities added by this arc).
+
+## [0.27.8] — 2026-07-08 — fire the docs/loom/memory self-check at the git-memory step, not buried later
+
+### Fixed
+
+- **`finishing-a-development-branch`'s docs/loom/memory self-check now
+  fires at Step 6** (the moment `dev-workflow:git-memory` returns its
+  Decision/Learning/Gotcha trailer set), instead of living as one
+  easy-to-skim bullet inside Step 8's later git-hygiene checklist. Root
+  cause: the rule already existed, but was procedurally disconnected
+  from the moment trailer content is actually generated, so "trailers
+  written" got silently treated as "memory handled." Recurred twice in
+  one session (PR #519, PR #520) — crossing this repo's own
+  "2+ occurrences = fix the process, not just the memory entry"
+  threshold. Step 8's bullet is retargeted to staging-only, matching its
+  existing role for the Living-spec index bullet beside it.
+
+## [0.27.7] — 2026-07-08 — name "deterministic sync-script output" as a mechanical-exemption category
+
+### Added
+
+- **`Review-weight: mechanical` now explicitly names a second qualifying
+  category**: a task whose entire content is running an established,
+  deterministic sync/mirror script (e.g. `sync-primitives.sh`,
+  `sync_codex_manifests.py`) and committing its output, verified by a
+  checksum match or the script's own paired drift-detection test. The
+  existing wording ("an identical or near-identical edit reproducible
+  from an exact spec") already covered this case, but wasn't obvious
+  without naming it — an ambiguous-but-technically-covered gap is
+  exactly the shape that has caused real misapplication before (see
+  the two documented "compressing an exemption section flips its
+  polarity" incidents in machine-local memory). Per this repo's own
+  precedent, the fix is a named example, not a rule change.
+- `subagent-driven-development`'s mechanical self-check gained a second
+  **Content match** shape for this category: re-run the named script
+  and confirm zero diff against the committed output, or run its
+  paired drift-detection test and require exit 0 — since a sync-script
+  task has no pre-known literal string to grep the way a literal-edit
+  task does.
+- Origin: PR #519's CI-drift-fix commit (deep-deep-research bake-off-2
+  bugfixes) hit exactly this task shape twice in one commit
+  (`research-toolkit/scripts/sync-primitives.sh`,
+  `scripts/sync_codex_manifests.py`) without a clean way to mark it
+  mechanical under the prior wording.
+
+## [0.27.6] — 2026-07-08 — close-out push routing: requesting-code-review is the floor, not the close-out
+
+### Fixed
+
+- **Root-caused a live self-violation of PR #515's memory-timing rule.**
+  This session closed out PR #511 and PR #516 by calling
+  `requesting-code-review` directly and pushing by hand — never
+  invoking `finishing-a-development-branch` — so its Step 8
+  memory-timing check (shipped in #515, already merged before either
+  branch started) never had a chance to fire. Two lessons distilled
+  from those branches ended up in a separate post-merge branch,
+  exactly the anti-pattern #515 exists to prevent.
+- **Root cause**: `requesting-code-review`'s own "Push-as-trigger"
+  section is self-contained and never mentions or defers to
+  `finishing-a-development-branch`, even though `finishing-a-
+  development-branch`'s own §When to use table says a push meant to
+  finish/merge the branch should route there instead. Its Red Flags
+  table (row: "Agent infers 'this branch is done, let me push'") already
+  *named* the correct redirect, but the numbered "Procedure when
+  push-as-trigger fires" never *operationalized* it — no decision
+  branch checked for the close-out case before running the narrower
+  review-then-push flow directly.
+- **Fix**: added Step 0 to `requesting-code-review`'s Push-as-trigger
+  procedure — an executable check: if the push is a real close-out
+  (not just a mid-work review opinion), stop and invoke
+  `finishing-a-development-branch` instead (it delegates to this skill
+  as its own Step 1, so review still runs, plus verification +
+  memory-timing + git-memory trailer decision). Numbered as Step 0
+  (not renumbering 1-6) because `§Asking the user` cross-references
+  "push-as-trigger steps 4-6" by number elsewhere in the same file —
+  same retire-in-place discipline as PR #516's Check 5.
+- Router card (`hooks/router-card.md`, SessionStart-injected every
+  session) and `using-loom-code/SKILL.md` rule #4 reworded to state
+  the same distinction — review PASS is the floor, `finishing-a-
+  development-branch` is the actual close-out path. Router card kept
+  terse (+31 words only — it's paid every session).
+- Suite: 219 passed (docs-only change; no test asserted the prior
+  Push-as-trigger wording).
+- **Addendum** (close-out review caught, fixed same release): the
+  substantive edits to `requesting-code-review/SKILL.md` and
+  `using-loom-code/SKILL.md` initially bumped only the plugin-level
+  `plugin.json` version, not these two files' own frontmatter
+  `version:` fields — breaking this repo's established per-skill
+  versioning convention (both files have bumped their own version on
+  every prior substantive edit). Fixed: `requesting-code-review`
+  0.12.0→0.13.0, `using-loom-code` 0.11.0→0.12.0.
+
+## [0.27.5] — 2026-07-08 — writing-plans drops the time-box criterion entirely
+
+### Changed
+
+- **`writing-plans`**'s splitting framework no longer has a time-based
+  criterion at any tier (0.27.4 demoted it to secondary; this removes
+  it). The framework is now 3 criteria: acceptance (one failing test,
+  primary), module scope, no hidden coupling. A new §No time-box
+  criterion section documents why, including a cross-system survey
+  (Devin, Cursor, Windsurf, Replit, Copilot Workspace, Amazon Q, Codex
+  CLI, LangGraph/AutoGen/CrewAI reference implementations) that found
+  no major coding-agent product with a documented time-based splitting
+  rule — the two with any concrete secondary axis (Copilot Workspace,
+  Amazon Q) both use file count, which criterion 2 (module scope)
+  already covers.
+- `plan-document-reviewer-prompt.md`'s Check 5 (the time estimate) is
+  **retired** — always N/A, never applied — rather than renumbered, so
+  every cross-reference to Checks 6-16 elsewhere in the plugin stays
+  valid. `checks_passed` denominator updated 15→14 (Checks 5 and 15
+  both now non-blocking). **This is a real behavior change**: a task
+  previously flaggable by Check 5 alone (estimated time long, but a
+  single clean assertion) now passes — only Check 6 (the RED test) can
+  fail a task on sizing grounds.
+- Cross-file consistency sweep: `agents/implementer.md` (role contract,
+  BLOCKED trigger, dispatch template — the implementer's own contract
+  no longer claims a time-box), `hooks/router-card.md` +
+  `using-loom-code/SKILL.md` (router rule #3 card text),
+  `subagent-driven-development/SKILL.md` + its `README.md`
+  (frontmatter/summary — the `>1 hour` OR `>1 module` trigger for
+  invoking SDD at all is untouched; that is a separate, independent
+  threshold from per-task sizing), `brainstorming/references/
+  handoff-brief-format.md`, `requesting-code-review/README.md`, and
+  `writing-plans/README.{md,ja.md,zh-TW.md}` (all three languages) —
+  all updated to stop describing a "≤5-minute" atomic-task unit.
+  Historical/archival files (`docs/announcement/`, `docs/example-runs/`,
+  prior CHANGELOG entries) intentionally left untouched as point-in-time
+  records.
+- `test_sdd_review_weight_marker.py::test_plan_document_reviewer_has_check_16`
+  updated to assert the new `<14>` denominator (was `<15>`).
+- Suite: 219 passed.
+- **Addendum** (whole-branch review caught, fixed same release): the
+  first draft of this removal left an orphaned mechanism — the
+  "Structural-split escape hatch" still triggered on a >5-min condition
+  tied to the now-retired Check 5, unreachable in practice — plus an
+  "all four criteria" leftover from the pre-removal 4-row table, and
+  four sibling skill READMEs (subagent-driven-development +
+  requesting-code-review, ja + zh-TW each) and two living design docs
+  (PRODUCT-SPEC.md, ROADMAP.md) that still described the removed rule
+  as current. All fixed within this same 0.27.5 release before merge.
+
+## [0.27.4] — 2026-07-08 — writing-plans reframes task-sizing primary axis
+
+### Changed
+
+- **`writing-plans`**'s splitting framework reorders its four criteria:
+  the acceptance-criterion (one failing test) is now stated as the
+  **primary** sizing constraint; the ≤5-minute time-box is reframed as
+  a **secondary smell-check**, not the authoritative ceiling. An agent
+  has no experiential grounding in duration (arXiv:2510.23853); Toby
+  Ord's decay model (arXiv:2505.05115) does tie reliability to minutes,
+  but its "minute" is an externally-benchmarked human-difficulty rating
+  (the METR methodology), not a plan-writer's guess at how long an
+  LLM implementer will take — no equivalent calibration exists for the
+  latter, which is the quantity this criterion actually demoted.
+  Traditional SE research on change size (Google `eng-practices`,
+  Rigby & Bird 2013) sizes by file/diff boundary instead, never by
+  completion time.
+- Frontmatter `description` and the "What this skill does" bullets
+  reordered to match; `plan-document-reviewer-prompt.md` Check 5
+  (time estimate) gains a cross-reference noting it is secondary to
+  Check 6 (RED test) — **no change to pass/fail behavior**, framing
+  only.
+- The separate critical-path **depth**-ceiling rationale (`≤5`, a
+  different axis — chain length, not per-task minutes) gains a second
+  citation: Ord's paper models a constant per-minute failure hazard
+  against a task's human-difficulty rating and names no specific
+  step-count or step-horizon — cited only as further evidence that
+  reliability decays with task magnitude on some axis, not as support
+  for any particular number near 5 (a round of review caught an
+  earlier draft of this same citation mischaracterizing the paper as
+  step-based with a fabricated "5-7 step-horizon" figure; corrected
+  after independently re-fetching the abstract).
+- Suite: 219 passed (no test asserted the prior wording — pure framing
+  change, zero output-behavior delta expected in the common case).
+
 ## [0.27.3] — 2026-07-08 — finishing-a-development-branch enforces same-branch memory timing
 
 ### Added

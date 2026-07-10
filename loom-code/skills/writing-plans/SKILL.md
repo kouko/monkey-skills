@@ -1,8 +1,8 @@
 ---
 name: writing-plans
 description: |
-  Use AFTER brainstorming produces a brief, BEFORE subagent-driven-development dispatches implementers. Splits it into atomic ≤5-min tasks with RED + GREEN acceptance criteria and a dependency graph.
-version: 0.11.0
+  Use AFTER brainstorming produces a brief, BEFORE subagent-driven-development dispatches implementers. Splits it into atomic tasks — each with one RED/GREEN test and a single module boundary — into a dependency graph.
+version: 0.12.0
 ---
 
 <SUBAGENT-STOP>
@@ -11,11 +11,10 @@ If you are a subagent dispatched with an explicit role prompt (implementer / spe
 
 ## What this skill does
 
-Takes a `brainstorming` output brief and produces a **plan**: an ordered list of atomic tasks that `subagent-driven-development` (SDD) can dispatch one at a time. Each task must be:
+Takes a `brainstorming` output brief and produces a **plan**: an ordered list of atomic tasks that `subagent-driven-development` (SDD) can dispatch one at a time. It can also consume a validated `loom-spec` change-folder as an alternate input — see §Consuming a loom-spec change-folder. Each task must be:
 
-- **≤5 minutes** of work for the implementer subagent (P2-B);
-- **One module** of touch surface (consistent with SDD's per-task scope);
-- **Independently verifiable** — has a RED test (or RED diagnostic) that goes GREEN when the task is done.
+- **Independently verifiable** — has a RED test (or RED diagnostic) that goes GREEN when the task is done. This is the primary sizing constraint — see §The splitting framework.
+- **One module** of touch surface (consistent with SDD's per-task scope).
 
 The plan is the **paths-not-content handoff** between brainstorming and SDD. brainstorming wrote the brief; SDD consumes the plan; this skill produces the plan and self-reviews it before declaring DONE.
 
@@ -42,24 +41,23 @@ Enumerated exemptions only.
 | Exempt category | What qualifies | What does NOT qualify |
 |---|---|---|
 | **No brief upstream** | brainstorming has not produced a brief yet — routing this skill prematurely. | "I have a vague idea" — that needs brainstorming first, not skipping to plans. |
-| **Brief explicitly says "single atomic task"** | brainstorming's Smallest End State is itself ≤5 min and Out of Scope is exhaustive. The brief IS the plan. | Brief that says "small" but Open Questions are non-empty — Open Questions block. |
+| **Brief explicitly says "single atomic task"** | brainstorming's Smallest End State is itself one file with one assertion, and Out of Scope is exhaustive. The brief IS the plan. | Brief that says "small" but Open Questions are non-empty — Open Questions block. |
 | **Implementer returned BLOCKED with a sub-task fallback request** | This is the entry condition for the §BLOCKED fallback flow below — see that section, not §When NOT to Use. | An implementer returning BLOCKED for non-decomposition reasons (broken test infra, missing dependency) — that surfaces to user, not re-planned. |
 | **Explicit user override** | User literally says "skip planning, here are the tasks" AND hands in a list that already satisfies the plan-format schema. | "Just figure it out" — that's an instruction to plan, not skip. |
 
 ## The splitting framework
 
-Walk these in order for each prospective task. Stop expanding a task as soon as **all four** criteria are met.
+Walk these in order for each prospective task. Stop expanding a task as soon as **all three** criteria are met.
 
 | # | Criterion | Test |
 |---|---|---|
-| 1 | **Time-box** | Could a focused implementer subagent complete this in ≤5 minutes? If "maybe 10," split. |
+| 1 | **Acceptance criterion** (primary) | Can you write ONE failing test now that goes green when this task is done? If you need 3 tests, this is 3 tasks. |
 | 2 | **Module scope** | Does this touch ≤1 module / ≤1 file boundary? If it crosses, split by boundary. |
-| 3 | **Acceptance criterion** | Can you write ONE failing test now that goes green when this task is done? If you need 3 tests, this is 3 tasks. |
-| 4 | **No hidden coupling** | Could this task be done in isolation, with only its declared dependencies satisfied? If you need to "also remember to update X," that's a missing dep — declare it. |
+| 3 | **No hidden coupling** | Could this task be done in isolation, with only its declared dependencies satisfied? If you need to "also remember to update X," that's a missing dep — declare it. |
 
 **Runnable-capability note.** When a task introduces a runnable capability — a new test suite, build step, lint target, e2e suite, migration command, or similar — its `Acceptance` criterion must include a line stating that the new verb is declared in the command surface (the project's declared commands — `AGENTS.md` commands section, `make`/`just` recipes, `package.json` scripts) and verified to run. This makes command-surface accretion visible at plan time, before the implementer ships it silently without a declared entry point.
 
-If criteria 1+3 fight (≤5 min vs one-failing-test), criterion 3 wins: even a 1-minute task that needs 3 distinct assertions is 3 tasks. Time-box is a smell threshold, not a strict ceiling.
+**No time-box criterion — why one isn't here.** A prior revision sized tasks by a fixed wall-clock estimate, later demoted to a smell-check, then removed. An LLM agent has no grounding in duration (arXiv:2510.23853); no source ties a plan-writer's time guess to actual reliability (arXiv:2505.05115 models decay against externally-benchmarked human-difficulty, a different quantity). Traditional size research uses file/diff boundary; surveyed coding-agent products document no time-based rule. Conclusion: no time-based sizing here. A task that "feels long" signals to re-examine criterion 1 — it likely resolves to more than one assertion or crosses a module boundary.
 
 **Post-split parallel-marking pass.** After splitting, for each pair of tasks at the **same dependency level**: if their `Files touched` are disjoint **AND** there is no semantic dependency (no shared data / symbol, no doc-mirrors-code relationship), mark **both** `Independent: true`. This is the step that turns a flat task list into a parallelism-aware plan.
 
@@ -78,9 +76,9 @@ If the critical-path **depth** exceeds 5, the brief is too big. **Do not silentl
 
 The depth ceiling is a deliberate forcing function for the brainstorming HARD-GATE. A **deep chain** (critical-path depth >5) is almost always a discovery failure, not a planning failure. A **wide-but-shallow** plan (many independent leaves, shallow depth) is fine — it parallelizes cleanly and is NOT a discovery failure.
 
-**Why depth — and why `5` is a heuristic, not a law.** For an LLM agent the binding constraint is the *sequential* chain: errors **compound** across dependent steps (chain reliability ≈ per-step-success^depth) and per-step accuracy itself **decays** as the chain lengthens. A depth-5 chain at ~95% per-step reliability succeeds only ~77% of the time — about where re-cutting scope starts to pay off. But the long-horizon-execution literature finds **no universal optimal step count** — the principled limit is a *function of per-step reliability*, not a constant. So treat **`5` as a deliberate default trigger, not a measured value**; tune it if your atomic-task steps are more or less reliable. (Grounding: error-compounding / long-horizon decay in LLM agents — e.g. "The Illusion of Diminishing Returns: Measuring Long-Horizon Execution in LLMs", arXiv 2509.09677. The depth-not-count *framing* also matches Bazel critical-path scheduling and Kanban WIP limits, which cap concurrency, not backlog — but those are human/scheduling analogies; the agent-native reason is error compounding. The `5` itself is inherited from the prior count-based ceiling, not independently derived.)
+**Why depth — and why `5` is a heuristic, not a law.** For an LLM agent, errors **compound** across dependent steps and per-step accuracy itself decays as a chain lengthens — a depth-5 chain at ~95% per-step reliability succeeds only ~77% of the time. But the long-horizon literature finds no universal optimal step count — the limit is a function of per-step reliability, not a constant. So treat **`5` as a deliberate default, not a measured value**; tune it if your steps are more or less reliable. (Grounding: arXiv:2509.09677 on long-horizon error-compounding; Toby Ord, arXiv:2505.05115, models decay per minute of externally-benchmarked human-difficulty, not per agent step, and names no step-count — cited only as further decay-with-magnitude evidence, not support for "5". The `5` itself is inherited from the prior count-based ceiling, not independently derived.)
 
-**Structural-split escape hatch (round-2 NEEDS_REVISION only):** If the plan-document-reviewer returns NEEDS_REVISION for a second round and the *sole* failure is a structural-size violation (a task is clearly >5 min but cannot be shrunk further without a brief change), split that oversized task into a fresh sibling part (a new `<topic>-part-N.md` brief → new plan) and treat it as a round-1 input to a fresh `writing-plans` run. The original plan's 2-round cap applies to the original tasks only; the new sibling part starts its own clean round count.
+**Structural-split escape hatch (round-2 NEEDS_REVISION only):** If the plan-document-reviewer returns NEEDS_REVISION for a second round and the *sole* failure is a structural-size violation (a task structurally cannot resolve to one failing test within one module boundary — Check 6 keeps failing no matter how the description is reworded — and cannot be shrunk further without a brief change), split that oversized task into a fresh sibling part (a new `<topic>-part-N.md` brief → new plan) and treat it as a round-1 input to a fresh `writing-plans` run. The original plan's 2-round cap applies to the original tasks only; the new sibling part starts its own clean round count.
 
 ## BLOCKED fallback — Beck 2002 Child Test pattern
 
@@ -106,8 +104,7 @@ writing-plans applies the same pattern to plan tasks. The implementer's BLOCKED 
 
 After producing the plan, writing-plans **must** dispatch [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) as an evaluator subagent — a one-shot blocking call that waits for and returns its verdict directly (see your host's tool-mapping reference for the exact shape, and [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §A1 for a Claude-Code-specific naming pitfall to avoid — Codex has no equivalent). That prompt holds the **authoritative, full check list** — do not maintain a duplicate copy here (it drifts). The highest-value checks, so you can self-pre-screen before dispatch:
 
-- **≤5-min** per task (criterion 1);
-- **one-failing-test acceptance** — each task names a specific RED test (criterion 3);
+- **one-failing-test acceptance** — each task names a specific RED test (criterion 1, primary);
 - **every brief item covered** — every Smallest End State / Decision item maps to ≥1 task, no orphan tasks;
 - **DAG, no cycles** — `Dependencies` form an acyclic graph with critical-path depth ≤5.
 
@@ -133,7 +130,7 @@ Execution order: sequential | parallel-where-possible
 Plan-document-reviewer verdict: PENDING   ← required; reviewer will flip to PASS (timestamp)
 
 ## Task 1 — <short name>
-- Description: <≤5 min unit of work, imperative voice>
+- Description: <one-assertion unit of work, imperative voice>
 - Module: <path or module name; one only>
 - Files touched: <comma-separated paths the implementer will Write / Edit>
 - Context paths:
@@ -194,11 +191,27 @@ The markup is **opt-in**. A plan that omits it (or sets `Independent: false`) ro
 
 ## Consuming a loom-spec change-folder
 
-A **second input contract**, alongside the brainstorming brief. writing-plans can take a **validated loom-spec change-folder** — `docs/loom/<change-id>/` emitted by `loom-spec:spec-expansion` — as its input *instead of* a brief. "Validated" means the change-folder is **`validate_spec_output.py`-clean** (the validator ran and exited 0). The change-folder's `specs/<capability>/spec.md` delta is the structure `validate_spec_output.py` enforces: `### Requirement:` blocks each containing one or more `#### Scenario:` (GIVEN / WHEN / THEN) acceptance criteria.
+Alongside the brainstorming brief, writing-plans can consume a **validated loom-spec change-folder** — `docs/loom/<change-id>/` emitted by `loom-spec:spec-expansion`. "Validated" means the change-folder is **`validate_spec_output.py`-clean** (the validator ran and exited 0). The change-folder's `specs/<capability>/spec.md` delta is the structure `validate_spec_output.py` enforces: `### Requirement:` blocks each containing one or more `#### Scenario:` (GIVEN / WHEN / THEN) acceptance criteria.
+
+**Detecting which change-folder to consume.** A layered cascade, evaluated in order — stop at the first layer that resolves. Grounded in `docs/loom/research/2026-07-10-change-binding-and-lifecycle-research.md` §Resolved decisions (industry precedent: spec-kit, OpenSpec, Jira smart commits — every shipped answer shrinks the candidate pool structurally, none guesses from content).
+
+**All detection layers anchor at the TARGET repo's root, not the ambient working directory.** Before evaluating layer (i) or layer (ii), resolve the target repo's root via `git rev-parse --show-toplevel` run **in the repo being planned for** — never in whatever directory the dispatch happened to start in. Branch name (layer i) and the `docs/loom/` folder count (layer ii) are both evaluated **against that resolved root**, not a relative guess from cwd. This mirrors `code-reviewer.md`'s D8 "Activation is self-derived" anchor pattern, which fixed the identical bug class (a relative check from cwd false-N/A's from a worktree or nested cwd — here it makes a weak operator run detection against the wrong repo entirely).
+
+- **Layer 0 — explicit handoff wins.** If the caller (a conductor, an orchestrator, the user) hands writing-plans a change-folder path directly, bind to it immediately. Detection never runs — layers (i) and (ii) below exist only for when no path was named.
+- **Layer (i) — branch-slug match, opportunistic only.** Exact match between the current branch name and a `docs/loom/<change-id>` slug. This layer is **opportunistic**, not authoritative: a miss falls through **silently** to layer (ii) — no error, no note. When this layer DOES decide the binding, **surface it explicitly** ("bound to `<change-id>` via branch name") — never bind silently. Any **ambiguity** (the branch name could plausibly match more than one folder) skips straight to the ask sub-step of layer (ii) below — never guess.
+- **Layer (ii) — non-archived folder count.** List non-archived `docs/loom/<change-id>/` folders:
+  - **0 → N/A, loudly.** State that no change-folder was found and proceed on the brainstorming-brief input instead — never a silent skip.
+  - **1 → auto-bind, and state it.** Bind to the single folder and say so ("bound to `<change-id>`, the only non-archived change-folder found").
+  - **>1 → ask**, listing candidates sorted by **recency** (most-recent first), with the most recent as the **recommended default** — never pick without asking.
+  - **Never content-similarity.** No layer matches on spec-content similarity to the target repo — that guesswork is what every shipped precedent avoids.
+
+**Mandatory once bound.** Once a change-folder is bound by any layer (including Layer 0), consuming it is **not optional** — writing-plans MUST derive the plan from it (scenario → task mapping below), not treat it as an FYI alongside a separately-authored brief.
+
+**Wrong-bind reversal trigger.** If a real wrong-bind incident occurs (writing-plans bound to the wrong change-folder and produced a plan against it), layer (i) downgrades from opportunistic-auto to **confirm-before-use** — surface this to the user/orchestrator immediately rather than silently continuing to trust layer (i) unconfirmed.
 
 **Who runs the validator.** In Continuous mode the FREEZE step already gated this change-folder — it ran `validate_spec_output.py` and got exit 0 — so writing-plans **trusts that exit-0** and does not re-run it. For a direct, non-freeze invocation (consuming a change-folder outside Continuous mode), run `validate_spec_output.py` once on the change-folder before consuming it, and proceed only on exit 0.
 
-**Scenario → task mapping.** Map each `#### Scenario:` (its GIVEN / WHEN / THEN) → **one task's `Acceptance: RED/GREEN`**. The THEN is the GREEN observable; the GIVEN/WHEN set up the RED. One `### Requirement:` may **fan to N tasks** — split per the same ≤5-min / one-failing-test rule in §The splitting framework (a multi-Scenario Requirement is N candidate tasks, grouped or split by the time-box).
+**Scenario → task mapping.** Map each `#### Scenario:` (its GIVEN / WHEN / THEN) → **one task's `Acceptance: RED/GREEN`**. The THEN is the GREEN observable; the GIVEN/WHEN set up the RED. One `### Requirement:` may **fan to N tasks** — split per §The splitting framework (a multi-Scenario Requirement is N candidate tasks, grouped by assertion boundary).
 
 **Point-don't-copy / link back.** **NEVER** copy the spec body into the plan — loom-spec is SSOT, and a copied delta silently goes stale the moment loom-spec re-edits the change-folder, so the plan then drives implementers off a spec that no longer exists. Reference the source `### Requirement:` / `#### Scenario:` names via the stable join key `<change-id> / Requirement: <name> / Scenario: <name>` (the `Brief item covered:` field accepts this referent — see [`references/plan-format.md`](references/plan-format.md)). The plan **links back** to the spec; it does not duplicate it.
 
@@ -210,11 +223,14 @@ A **second input contract**, alongside the brainstorming brief. writing-plans ca
 
 **Consumer read-only.** **NEVER edit the producer's change-folder** — loom-spec is SSOT, so a consumer edit makes sibling consumers read a different spec than the one the freeze validated, and races the freeze's `validate_spec_output.py` re-run. writing-plans reads `docs/loom/<change-id>/` and writes only its own plan at `docs/loom/plans/<date>-<topic>.md` (the canonical plan path from the §Output contract; for a change-folder input the `<change-id>` fills the `<topic>` slot).
 
+**Coverage self-check (change-folder input only).** After producing the plan, run `python3 loom-code/scripts/check_scenario_coverage.py <change-folder> <plan>`. It compares the change-folder's `#### Scenario:` set against the plan's `Brief item covered` join keys. Exit 0 means every scenario maps to a task. **Exit 1 blocks the plan from PASS** — self-review may not declare PASS until either every scenario maps to a task, or the drop is **explicitly user-approved** and recorded in the plan's `Notes` section (name the dropped join key + the approval). This check applies only to the change-folder input path; a brainstorming-brief-only plan has no change-folder to check coverage against. **Gate order**: run this coverage check BEFORE dispatching the plan-document-reviewer — a coverage failure blocks the dispatch (a cheap deterministic script runs before an evaluator subagent, same economics as §Self-review's pre-patch habit; the two gates check different things — the reviewer's Check 3 verifies field presence per task, this script verifies full scenario coverage — so neither subsumes the other).
+
 ## Cross-skill contract
 
 | Direction | Skill | Contract |
 |---|---|---|
 | **Upstream** | `brainstorming` | Produces brief at `docs/loom/specs/<topic>.md`. writing-plans reads it via Read tool. |
+| **Upstream** | `loom-spec:spec-expansion` | Produces the validated change-folder consumed per §Consuming a loom-spec change-folder. |
 | **Downstream** | `subagent-driven-development` | Consumes plan at `docs/loom/plans/<topic>.md`. SDD reads plan + dispatches per-task triad. |
 | **Downstream (opt-in)** | `dispatching-parallel-agents` | Consumes tasks marked `Independent: true` with disjoint `Files touched`. Dispatches their implementers in one assistant message for concurrent execution. Fall back to SDD's sequential dispatch if either condition fails. |
 | **Self-review** | `plan-document-reviewer` (evaluator subagent) | writing-plans dispatches it after producing the plan. Returns PASS / NEEDS_REVISION. |
@@ -228,7 +244,7 @@ Delegation contract per CLAUDE.md: pass **paths + structured seed context**, not
 | Agent / user says | Reality | Correct response |
 |---|---|---|
 | *"Just skip planning, the brief is enough."* | The brief is the *what*; the plan is the *how-cut-into-atomic-pieces*. SDD needs atomicity, not just scope. | Refuse. Produce the plan even if it's only 1-2 tasks. If 1 task, the brief was an exemption candidate (§When NOT to Use). |
-| *"This task is roughly an hour but I don't know how to split it."* | "I don't know how to split" is a discovery failure, not a planning failure. The brief did not articulate Axis 3 (smallest end state) tightly enough. | Surface back to brainstorming for Axis 3 re-cut, do not produce a 1-hour task that violates the ≤5-min rule. |
+| *"This task is roughly an hour but I don't know how to split it."* | "I don't know how to split" is a discovery failure, not a planning failure. The brief did not articulate Axis 3 (smallest end state) tightly enough. | Surface back to brainstorming for Axis 3 re-cut, do not produce a 1-hour task that resolves to a single assertion and calls itself done — split by criterion 1 (one failing test), not by the clock. |
 | *"This chain is 8 tasks deep, that's fine."* | No — see §Plan size ceiling. Critical-path depth >5 = brief too big. (A wide-but-shallow 8-task plan is fine; a deep 8-link chain is not.) | Refuse the deep chain. Route back to brainstorming OR split into N briefs each with depth ≤5. |
 | *"Skip the plan-document-reviewer, it's overkill."* | The reviewer catches the failure modes the splitting framework misses (orphan tasks, cycle dependencies, brief-task coverage gaps). | Refuse. Self-review is non-negotiable. If you genuinely produced a perfect plan, the reviewer takes 30 seconds to confirm. |
 | *"Implementer returned BLOCKED, just retry."* | Beck Child Test pattern says split smaller, not retry. Silent retry burns SDD's 3-round cap. | Re-invoke writing-plans on the failing task per §BLOCKED fallback. |
@@ -240,7 +256,7 @@ Delegation contract per CLAUDE.md: pass **paths + structured seed context**, not
 - Does **not** write code. Atomic-task production is metadata about future work, not the work.
 - Does **not** dispatch SDD subagents. That's SDD's job. writing-plans hands off the plan; SDD picks it up.
 - Does **not** invoke the implementer / spec-reviewer / code-quality-reviewer prompts directly. Only plan-document-reviewer (a different evaluator scope).
-- Does **not** estimate dev-time beyond the ≤5-min atomic-task threshold. If a task needs >5 min, that's a split-trigger, not an estimation exercise.
+- Does **not** estimate dev-time at all. The split-trigger is criterion 1 (one failing test) — see §The splitting framework, and §No time-box criterion for why a completion-time estimate isn't part of the schema.
 - Does **not** decide priority or sequencing beyond what the dependency graph requires. The user (or SDD) decides which independent tasks run first.
 
 ## See also

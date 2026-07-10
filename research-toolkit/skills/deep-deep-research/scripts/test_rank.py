@@ -14,7 +14,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from rank import quorum_survives, rank_claims
+from rank import attribution_survives, quorum_survives, rank_claims
 
 RANK_PY = str(Path(__file__).resolve().parent / "rank.py")
 
@@ -71,6 +71,79 @@ def test_quorum_rule_all_abstain():
     """All None → killed (unadjudicated, 0 valid < required=2)."""
     verdicts = [None, None, None]
     assert quorum_survives(verdicts) is False
+
+
+# ---------------------------------------------------------------------------
+# attribution_survives
+# ---------------------------------------------------------------------------
+
+def test_attribution_survives_reads_attribution_confirmed():
+    """A confirmed attribution verdict survives; single check, no quorum voting."""
+    verdict = {"attributionConfirmed": True, "evidence": "the source says so"}
+    assert attribution_survives(verdict) is True
+
+
+def test_attribution_survives_false_when_not_confirmed():
+    """An unconfirmed attribution verdict does not survive."""
+    verdict = {"attributionConfirmed": False, "evidence": "no such statement found"}
+    assert attribution_survives(verdict) is False
+
+
+def test_attribution_survives_missing_key_defaults_false():
+    """A verdict missing attributionConfirmed fails closed (defaults to False)."""
+    assert attribution_survives({"evidence": "malformed verdict"}) is False
+
+
+def test_attribution_survives_none_fails_closed():
+    """A None verdict (abstention — checker failed or returned nothing) fails closed.
+
+    Symmetric to quorum_survives's None-filtering: a checker that fails or
+    returns nothing is an abstention, not a crash.
+    """
+    assert attribution_survives(None) is False
+
+
+def test_attribution_survives_explicit_null_field_fails_closed():
+    """attributionConfirmed present but explicitly null fails closed, not None.
+
+    dict.get(key, default) only applies the default when the key is
+    ABSENT, not when it is present with value None -- a checker emitting
+    an explicit null (plausible when expressing uncertainty) must not
+    break this function's bool contract.
+    """
+    assert attribution_survives({"attributionConfirmed": None, "evidence": "unsure"}) is False
+
+
+def test_attribution_check_cli_reads_stdin_verdict():
+    """`python rank.py attribution-check` reads one verdict JSON object from stdin."""
+    verdict = json.dumps({"attributionConfirmed": True, "evidence": "confirmed"})
+    result = subprocess.run(
+        [sys.executable, RANK_PY, "attribution-check"],
+        capture_output=True, text=True, input=verdict,
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "true"
+
+
+def test_attribution_check_cli_prints_false(tmp_path):
+    """`attribution-check` prints `false` for an unconfirmed verdict."""
+    verdict = json.dumps({"attributionConfirmed": False, "evidence": "not found"})
+    result = subprocess.run(
+        [sys.executable, RANK_PY, "attribution-check"],
+        capture_output=True, text=True, input=verdict,
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "false"
+
+
+def test_attribution_check_cli_null_stdin_fails_closed():
+    """`attribution-check` on a `null` stdin payload fails closed, not crashes."""
+    result = subprocess.run(
+        [sys.executable, RANK_PY, "attribution-check"],
+        capture_output=True, text=True, input="null",
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "false"
 
 
 # ---------------------------------------------------------------------------

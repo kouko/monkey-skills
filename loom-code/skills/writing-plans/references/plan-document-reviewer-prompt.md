@@ -34,8 +34,8 @@ You **must** load all three via the Read tool before producing a verdict.
 | 2 | **Critical-path DEPTH ≤ 5** — the longest chain of tasks linked by `Dependencies` (N independent same-level tasks count as ONE level, not N). A wide-but-shallow plan with >5 total tasks but depth ≤5 PASSES. | Critical-path depth >5 (writing-plans should have split into sequential briefs / routed back to brainstorming) |
 | 3 | Each task has all required fields (Description, Module, Context paths, Acceptance.RED, Acceptance.GREEN, Dependencies, Brief item covered). The `Brief item covered` field is satisfied by EITHER referent kind: (a) a brief item, OR (b) when the plan consumes a loom-spec change-folder, a stable join key `<change-id> / Requirement: <name> / Scenario: <name>` (R5). Field-PRESENCE is the requirement — accept the spec join-key referent as valid provenance, do not require a brief item specifically. | Any required field missing or empty |
 | 4 | Each task's `Module` field names exactly ONE module / file path | Task lists 2+ modules |
-| 5 | Each task's Description is estimated ≤5 min for a focused implementer subagent | Task is clearly larger (e.g. "Implement entire CSV pipeline" — too vague + too big) |
-| 6 | Each task's `Acceptance.RED` names a specific failing test (file + test name) OR a specific failing diagnostic | RED field is vague ("write a test that fails") or absent |
+| 5 | **RETIRED (v0.13.0+) — always N/A, never applied.** writing-plans/SKILL.md's splitting framework no longer has a time-based criterion (removed — no rigorous source ties a plan-writer's completion-time guess to agent reliability; see that file's §No time-box criterion). This slot is kept out of the numbering (not reassigned, not renumbered) so Checks 6–16 and every cross-reference to them elsewhere in this plugin stay valid. | **Never fails.** Do not emit a gap for this check_id under any circumstance. |
+| 6 | Each task's `Acceptance.RED` names a specific failing test (file + test name) OR a specific failing diagnostic — the **primary sizing constraint** (criterion 1) | RED field is vague ("write a test that fails") or absent |
 | 7 | Each task's `Acceptance.GREEN` names an observable condition (not "it works") | GREEN field is vague |
 | 8 | Every item in the brief's `Smallest End State` + `Decision` sections maps to ≥1 task's `Brief item covered` field | Brief item not covered by any task |
 | 9 | No orphan tasks — every task's `Brief item covered` quotes / references the brief | Task exists with no brief traceability |
@@ -45,15 +45,15 @@ You **must** load all three via the Read tool before producing a verdict.
 | 13 | (v0.8.0+) Each task has the optional `Files touched` field. If absent on any task that declares `Independent: true`, fail — the disjointness oracle is missing. Tasks without `Independent: true` may omit `Files touched`. | `Independent: true` task missing `Files touched` |
 | 14 | (v0.8.0+) For any two tasks both declaring `Independent: true`, their `Files touched` sets MUST be disjoint (no shared path). If they share any file, the claim is wrong — flip one to `Independent: false` OR split the shared file. | Two `Independent: true` tasks share at least one file in `Files touched` |
 | 15 | **(advisory / non-fatal — NEVER triggers NEEDS_REVISION)** For any two tasks whose `Files touched` sets are disjoint AND that have no dependency edge between them (neither depends on the other in `Dependencies`) but where neither is marked `Independent: true`, emit a **NOTE** ("possible missed parallel opportunity"). This is the symmetric counterpart to Check 14: Check 14 catches OVER-claiming (two `Independent: true` tasks sharing a file); Check 15 catches UNDER-marking (parallel-eligible tasks left unmarked). Advisory only — the planner may have a real semantic reason the file sets do not reveal (e.g. doc-mirrors-code, shared symbol). | **Never fails.** Emit a `notes` entry only; do **not** set NEEDS_REVISION. |
-| 16 | If a task declares `Review-weight: mechanical`, its Description must read as an identical/near-identical edit reproducible from an exact spec (quote a concrete literal string/diff) — never for logic/heuristic/hook/security-surface work. | Task claims `Review-weight: mechanical` but Description describes logic/heuristic/hook/security-surface work, OR gives no concrete exact-spec quote |
+| 16 | If a task declares `Review-weight: mechanical`, its Description must read as an identical/near-identical edit reproducible from an exact spec — never for logic/heuristic/hook/security-surface work. Two shapes satisfy "exact spec": (a) a literal string/diff quoted directly in the Description, or (b) for the deterministic sync-script category (`plan-format.md`'s matching worked example), the Description names the exact script invocation AND its SSOT — the script's own deterministic output stands in for the literal quote, so this shape does NOT require a literal string/diff. | Task claims `Review-weight: mechanical` but Description describes logic/heuristic/hook/security-surface work, OR (for shape (a)) gives no concrete exact-spec quote, OR (for shape (b)) names a script without naming both the exact invocation and its SSOT |
 
 ## Output contract — what you return
 
 ```
 verdict: PASS | NEEDS_REVISION
-checks_passed: <N>/<15>          # Check 15 is advisory; it never counts toward pass/fail
+checks_passed: <N>/<14>          # Checks 5 and 15 never count toward pass/fail (5 retired, 15 advisory)
 gaps:                            # mandatory when NEEDS_REVISION; omit when PASS
-  - check_id: <1-14, 16>          # Check 15 NEVER appears here — it is advisory, surfaces in notes
+  - check_id: <1-4, 6-14, 16>     # Checks 5 and 15 NEVER appear here — 5 is retired, 15 is advisory (surfaces in notes)
     rule: "<quoted schema rule from plan-format.md or this prompt>"
     where: "<plan path + task number or brief section>"
     gap: "<1-sentence description of what is missing or violates the rule>"
@@ -64,8 +64,8 @@ notes:                           # optional; ≤3 bullets
 
 ### Verdict mapping
 
-- **PASS**: all applicable checks passed. Check 12 is N/A when the plan is not a BLOCKED-fallback. Checks 13–14 are N/A when no task declares `Independent: true` (the parallel-dispatch markup is opt-in). Check 15 is **advisory and runs regardless** of whether any task is marked `Independent: true` — it can only add a `notes` entry, never a gap, so it can coexist with a `PASS` verdict. Check 16 is N/A when no task declares `Review-weight: mechanical` (opt-in).
-- **NEEDS_REVISION**: any applicable check **1–14, 16** failed. List EVERY failure, not just the first — writing-plans fixes them in one re-dispatch round. Check 15 never contributes to NEEDS_REVISION.
+- **PASS**: all applicable checks passed. Check 5 is **retired** — always N/A, never applied (see its row above). Check 12 is N/A when the plan is not a BLOCKED-fallback. Checks 13–14 are N/A when no task declares `Independent: true` (the parallel-dispatch markup is opt-in). Check 15 is **advisory and runs regardless** of whether any task is marked `Independent: true` — it can only add a `notes` entry, never a gap, so it can coexist with a `PASS` verdict. Check 16 is N/A when no task declares `Review-weight: mechanical` (opt-in).
+- **NEEDS_REVISION**: any applicable check **1–4, 6–14, 16** failed. List EVERY failure, not just the first — writing-plans fixes them in one re-dispatch round. Check 5 is retired (never contributes) and Check 15 never contributes to NEEDS_REVISION.
 
 ### Anti-patterns the writing-plans orchestrator will reject
 

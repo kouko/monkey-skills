@@ -10,7 +10,7 @@ Part of the [loom-code](../..) plugin. Operational spec the agent loads is [`SKI
 
 | | SDD per-task reviewer | This skill (whole-branch) |
 |---|---|---|
-| Scope | One atomic ≤5-min task | All cumulative branch changes vs main |
+| Scope | One atomic one-failing-test task | All cumulative branch changes vs main |
 | Fires | During each SDD task triad | After all SDD work DONE; before merge |
 | Catches | Per-task quality lapses | Cross-task interactions, scope creep, architectural coherence |
 

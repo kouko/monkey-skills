@@ -67,7 +67,7 @@ In: the `using-loom-product-principles` family entry + the `product-principles` 
 
 The writer≠judge **conformance gate** ("does this artifact violate a principle?") is now **live downstream** as a **lens** on the existing critics — `loom-interface-design:design-critic` (conditional PRINCIPLES lens), `loom-spec:completeness-critic` (lens 6), and loom-code's whole-branch `code-reviewer` (`principles-conformance` dimension D8) — not a new gate engine.
 
-Out (deferred): a second `principles-conformance` skill; business/market/strategy framing (that stays `planning-team`'s `PRODUCT-SPEC.md` turf). See `docs/loom/specs/2026-06-14-product-principles-toolkit-mvp.md` (brief).
+Out (deferred): a second `principles-conformance` skill; business/market/strategy framing (that stays `planning-team`'s `PRODUCT-SPEC.md` turf); user/problem research (that is now `loom-discovery` turf) (supersedes-in-part the 2026-06-14 MVP brief's Out list, 2026-07-10). See `docs/loom/specs/2026-06-14-product-principles-toolkit-mvp.md` (brief).
 
 ## License
 

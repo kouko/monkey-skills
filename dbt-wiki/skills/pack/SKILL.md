@@ -219,7 +219,7 @@ than being silently dropped. It is **idempotent** — re-run after any
 re-freeze (order with Step 2.6 doesn't matter; the index carries flat links by
 construction). It exits non-zero if `knowledge/` holds no indexable page.
 Verify the script on first run (optional):
-`uv run <SKILL_DIR>/assets/build_bundle_index_test.py` → "13/13 passed".
+`uv run <SKILL_DIR>/assets/build_bundle_index_test.py` → "16/16 passed".
 
 ## Step 3 — Copy in the generation guidance
 

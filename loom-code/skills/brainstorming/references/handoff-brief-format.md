@@ -4,7 +4,7 @@
 
 ## Why a structured format
 
-`writing-plans` splits work into atomic ≤5-minute tasks. To do that well, it needs:
+`writing-plans` splits work into atomic one-failing-test tasks. To do that well, it needs:
 
 - A clear problem statement (so each task ladders to the goal).
 - A scoped end state (so it knows when to stop splitting).

@@ -10,6 +10,183 @@
 > greppable). Completed items are deleted, not archived — git history is
 > the archive.
 
+## Designer/PM loop — implementation after paper dogfood ✅ (COMMITTED-NEXT)
+- Status: COMMITTED-NEXT
+- Start: next loom design/build session.
+- Origin: 2026-07-10 discussion session, user decision ledger §6 of
+  `docs/loom/design/2026-07-10-designer-pm-loop-architecture.md`;
+  canon lists in `docs/loom/research/2026-07-10-principles-canon-base-lists.md`.
+  Paper dogfood COMPLETED same day — run + graded report + produced artifact
+  in `docs/loom/dogfood/2026-07-10-designer-pm-loop-paper/` (verdict:
+  instrument works; 4 PASS + 1 PARTIAL).
+- What remains:
+  1. **Cluster B (loom-code pipeline-hardening trio) DONE** on branch
+     `feat-loom-code-upstream-hardening` (Tasks 8-14): writing-plans
+     layered change-folder detection cascade, `check_scenario_coverage.py`
+     + writing-plans wiring, `archive_change_folder.py` +
+     finishing-a-development-branch archive-on-close step,
+     code-reviewer principles-existence self-derivation, AGENTS.md
+     command-surface declarations, loom-code version bump + CHANGELOG.
+     See docs/loom/plans/2026-07-10-designer-pm-loop-implementation.md
+     Tasks 8-14 for per-task detail.
+  2. **Cluster A (loom-product-principles construction flow) still
+     pending** — Tasks 1-7 of the same plan: canon base list reference
+     files, question-sets reference, principles-rules.md Anchors +
+     Deviation Ledger format, validator enforce-when-present checks,
+     the SKILL.md construction-flow rewrite (incl. §Headless / seeded
+     mode), and its own version bump + CHANGELOG. Runs on a separate
+     branch/PR per the plan's Decision (Clusters are mutually
+     independent; disjoint plugins).
+  3. **Cold-operator dogfood (Task 6) still pending** — Cluster A's ship
+     gate: a fresh-context operator (not the instrument/skill author,
+     ideally weaker model) runs the shipped construction-flow skill on
+     one real product idea end-to-end, graded against the paper-dogfood
+     instrument's five success criteria; any criterion failing spawns
+     fix tasks before Cluster A's version bump (Task 7).
+  4. Instrument v0.1 is already applied
+     (`instrument-v0.1.md` in the dogfood folder — Q8 lifecycle/scale,
+     Q4 "replaces X" annotation, cross-section propagation, artifact
+     landing spot, FINDING-08 pattern). Cluster A's SKILL.md rewrite
+     consumes v0.1, not v0.
+  5. Fast-follow debt (Cluster B whole-branch review, 2026-07-10, the
+     one 🟡): no integration test exercises the spec→plan→coverage→
+     archive CHAIN — a plan fixture with a real join key scored covered
+     by `check_scenario_coverage.py`, then the same change-id archived
+     by `archive_change_folder.py`. Grammar consistency verified
+     manually this round; the test guards future drift. Add
+     `loom-code/scripts/test_change_binding_chain.py` on the next
+     loom-code touch.
+
+## Designer/PM loop — escalation interface, decision log, acceptance-surface contracts (OPEN)
+- Status: OPEN
+- Start: next designer/PM-loop session after Cluster A ships.
+- Origin: `docs/loom/design/2026-07-10-designer-pm-loop-architecture.md`
+  §1-§2 (Four load-bearing inversions #2-#4; Engineering-decision
+  escalation rubric) + this branch's (`feat-loom-code-upstream-
+  hardening`) close — Cluster B shipped only the pipeline-hardening
+  trio (must-consume detection cascade, coverage script/gate,
+  archive-on-close, reviewer self-derivation); the architecture doc's
+  remaining KEEPs are behavioral contracts, not yet built into any
+  station skill.
+- What: the escalation interface / decision-log / acceptance-surface
+  behavioral contracts —
+  1. **Escalation interface**: the two-axis routing test (product
+     consequence × reversal cost, §2) wired as the actual decision
+     point for "ask the user vs agent decides"; the **kickoff briefing**
+     mechanism batching a plan's one-way-door engineering decisions into
+     one product-stakes briefing at the spec→plan transition (each
+     option: plain-language stakes → 2-3 choices with product
+     consequences → recommendation; derivation-for-confirmation framing
+     when principles already lock the choice); mid-implementation
+     escalation as the exception path of the SAME interface, not a
+     second protocol.
+  2. **Decision log**: a product-language record for every
+     agent-decided engineering choice ("chose X because Y; the day you
+     want Z, this choice costs W") — the auditable, late-vetoable
+     safety net that makes silent agent-decisions cheap while
+     escalation stays expensive.
+  3. **Acceptance-surface promotion**: ui-verification promoted from
+     side gate to the user's main acceptance stage (the only
+     product-perceivable surface a non-engineer user can judge "done"
+     by: running app, ui-verification results, product-language
+     completion reports); NEEDS_REVISION review loops digest silently
+     rather than surfacing to the user.
+  4. **Per-project escalation appetite**: a declaration living in
+     PRINCIPLES.md's Engineering Principles section, read once and
+     never re-asked (judgment-rubrics §3(c)) — needs a home in
+     whichever station skill consumes PRINCIPLES.md engineering
+     content.
+
+## Operationalize "product-shaped" in family reception (OPEN)
+- Status: OPEN
+- Start: next time any session or dogfood cold-reader again reports
+  guessing at whether work is "product-shaped" vs "an increment" (one
+  more occurrence past the 2026-07-10 loom-discovery dogfood, per the
+  two-occurrence rule).
+- Origin: loom-discovery dogfood
+  (`docs/skill-dogfood/2026-07-10-loom-discovery/report.md` FINDING-010)
+  — three independent cold-readers flagged "product-shaped" as never
+  operationalized; it gates on-ramp rows 1 AND 4, so the ambiguity is
+  family-wide, not loom-discovery's.
+- What: add a one-line decidable test (or 2 worked examples) to
+  `loom-pipeline/hooks/family-reception.md` — mind the 60 non-empty-line
+  budget enforced by `test_pipeline_reception.py`; may need to land in
+  the entry skills' §Intake instead.
+
+## Grounding notes for sibling stations' claude-code-tools.md (OPEN)
+- Status: OPEN
+- Start: next touch of loom-spec or loom-interface-design references/.
+- Origin: loom-discovery SDD Task 3 code-quality review (2026-07-10) —
+  loom-discovery's claude-code-tools.md now carries a verified-against-
+  frontmatter grounding note; loom-spec's and loom-interface-design's
+  equivalents lack one (same gap, inherited convention).
+- What: add the same one-paragraph grounding note (verification date +
+  evidence grain) to each sibling's references/claude-code-tools.md.
+
+## On-ramp row 4 vs rows 2/3 precedence unstated (OPEN)
+- Status: OPEN
+- Start: a real session where discovery and interface-design/spec
+  on-ramp rows fire together and the session visibly picks wrong (the
+  row-4-vs-row-1 case is already resolved in the reception file).
+- Origin: loom-discovery dogfood FINDING-007 + router cold-reader
+  (2026-07-10); Probe A q9 live-confirmed the adjacent row-4-vs-row-1
+  seam splits 50/50 at description level.
+- What: one precedence sentence covering row 4 vs rows 2/3 — but the
+  reception file sits exactly at its 60-line budget, so this likely
+  lands in `using-loom-discovery` §Intake as a tie-break note instead.
+
+## Automate research-toolkit's sync-primitives.sh (PARKED)
+- Status: PARKED
+- Start: a second real drift incident (a synced primitive shipped out of
+  sync with its SSOT and reached `main` before CI's MD5 drift gate
+  caught it — not just failed a PR check, actually merged wrong). One
+  incident (PR #519) was caught by the existing CI gate before merge,
+  which is the gate working as designed, not a failure of it.
+- Origin: raised during review of
+  `docs/loom/specs/2026-07-08-deep-deep-research-fact-opinion-classification.md`
+  (2026-07-08) — an external critique suggested moving
+  `research-toolkit/scripts/sync-primitives.sh` from a manual step
+  (backstopped only by a CI-side MD5 drift gate) to a git pre-commit
+  hook or build-pipeline dependency, for local "fail loud" instead of
+  async CI-only catch. Valid idea, evaluated and deliberately deferred
+  from that brief because it targets the *pre-existing, repo-wide*
+  SSOT-sync convention shared by every synced primitive in
+  `research-toolkit` (not something that brief's `claimType` change
+  introduced) — out of scope for a single-feature brief.
+- What: if triggered, add a local pre-commit hook (or equivalent) that
+  detects an edit to a declared SSOT primitive
+  (`research-toolkit/skills/deep-deep-research/scripts/{schemas,rank,prompts,dedup}.py`)
+  and either auto-runs `sync-primitives.sh` for the known sibling skills
+  or blocks the commit until it's run manually. Keep the existing CI MD5
+  gate regardless — this is a local speed-up, not a replacement for the
+  CI backstop.
+
+## Mechanical reminder hook for docs/loom/memory-worthy trailers (PARKED)
+- Status: PARKED
+- Start: the "trailers written but docs/loom/memory not checked" lapse
+  (documented only in this session's private machine-local auto-memory
+  as `feedback_fold_repo_memory_writes_into_same_branch_pr.md` — not yet
+  promoted to a repo-committed `docs/loom/memory/` entry) recurs a THIRD
+  time even after PR #521's fix (the
+  finishing-a-development-branch Step 6/Step 8 re-sequencing). Two
+  occurrences (PR #519, PR #520) already triggered the process fix in
+  #521; a third occurrence AFTER that fix is the signal this needs
+  mechanical backup, not just better sequencing.
+- Origin: PR #521 review discussion (2026-07-08) — an external critique
+  suggested a `PostToolUse` hook enforcing this "100% declaratively";
+  evaluated and deliberately deferred, not built, because (a) PR #521's
+  process fix hasn't had a single real-world data point yet, (b) "is
+  this content memory-worthy" is a semantic judgment a hook can't
+  reliably make — at best a heuristic reminder (git-memory returned a
+  non-empty trailer set AND no docs/loom/memory/ file touched in this
+  commit → warn), which risks false-positive noise on the many routine
+  commits that correctly have local-only trailers.
+- What: if triggered, build a lightweight `PostToolUse` hook on `git
+  commit` that fires the heuristic above as a non-blocking reminder
+  (never a hard block — the judgment call stays with the agent/user).
+  Do not attempt to make the memory-worthiness decision itself
+  mechanical.
+
 ## Mechanical-gates v2 candidates (loom-code 0.23.0 follow-ups)
 - Status: OPEN
 - Start: first fatigue evidence from daily use of the push gate, or next
