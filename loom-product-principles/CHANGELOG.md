@@ -37,12 +37,24 @@ Versioning: [Semantic Versioning](https://semver.org/).
   literal `— re-trigger:` marker stating when to revisit) plus validator
   contract rule 8, and `validate_principles_output.py` enforces it when
   present (absent stays valid).
+- **Never-out-of-jurisdiction guard for seed-named canons**: a post-fix
+  weak-model replay (n=2) showed the out-of-jurisdiction landing being
+  used as an escape hatch to drop seed-named canons/tech-stack choices,
+  rationalized as "TECH-SPEC turf" or "downstream spec"; the invariant
+  now states categorically that a seed-named canon, tradition, or
+  tech-stack choice is never out-of-jurisdiction — that landing is
+  scoped only to §Boundary's own categories (market / business-model /
+  strategy-document content) — and names the misclassification a
+  violation.
 
 ### Verified
 
 - `PYTHONDONTWRITEBYTECODE=1 python3 -m pytest loom-product-principles/scripts/ -q`
-  → 169 passed (146 baseline + 23 seed-traceability pins/checks across
-  two review rounds, RED-then-GREEN).
+  → 170 passed (146 baseline + 24 new pins across three review rounds:
+  5 validator + 9 rules + 10 skill, RED-then-GREEN). A follow-up 6-run
+  replay matrix (deferred→Open Question 0/4→6/6, bait 5/5, validator
+  6/6) confirmed the fix; residual prose-named-anchor gaps deferred to
+  a future mechanical post-run verification.
 
 ## [0.5.0] — 2026-07-10
 
