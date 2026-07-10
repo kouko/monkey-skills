@@ -1,7 +1,7 @@
 # Dogfood report — daily-news-digest multi-viewpoint (多空對照/分歧點) behavior
 
-- Date: 2026-07-08
-- Target: `obsidian/skills/daily-news-digest/` @ branch feat/digest-multiview-synthesis (commit 929bb294, post-review-remediation)
+- Date: 2026-07-08 (re-run: 2026-07-10, see §Re-run below)
+- Target: `obsidian/skills/daily-news-digest/` @ branch feat/digest-multiview-synthesis (original run: commit 929bb294 — a pre-squash object, not reachable from any branch after the squash into baaf7fda; the re-run below anchors to 109b3866, on-branch)
 - Scope: the NEW multi-view block behavior only (STEP 4 cluster-by-debate, STEP 6 block, digest-format §房規, arc-tracking 機構觀點). Probe A (activation harness) SKIPPED — the change does not touch the skill's `description`/triggering.
 - Probes run: B (executor+cold-reader firewall, ×2 input classes: fire / over-fire), C (blind cold-reader).
 
@@ -51,3 +51,14 @@
 ## Raw outputs
 
 Executor transcripts (fire / over-fire) and the cold-reader Q&A are in this session's subagent results (2026-07-08). Both executor artifacts reproduced verbatim in the session log; behavioral PASS is evidenced by the fire-case block presence + over-fire-case block absence, each with the executor's cited governing rule.
+
+## Re-run — 2026-07-10 @ commit 109b3866 (post-CHK-SKL-010-trim remediation)
+
+Why: whole-branch review found (a) the original PASS anchored a pre-squash commit while the shipped text carried ~90 lines of post-dogfood remediation, and (b) the unified exactly-2-stance form (F1's fix) had never been behaviorally exercised — B-1 had 3 stances. The review remediation also trimmed SKILL.md STEP 6 to a pointer at digest-format §多空對照/分歧點 (CHK-SKL-010), which itself warranted re-testing the over-fire guard through the pointer.
+
+Probes (same method: blind executor, synthetic 2-source clusters, no mention of the multi-view feature in the dispatch):
+
+- **B-3 Fire, exactly 2 stances** (2026-07-09 synthetic: 高盛「健康回檔逢低買」 vs GMO「泡沫破裂減持」): **PASS.** Executor followed the trimmed STEP 6 pointer, read the 房規 before emitting, and produced the unified 3-column table in the exactly-2 form — 2 stance rows (canonical enum 多/空) + mandatory 分歧點 row. False-balance guard executed (named 高盛 = sell-side mainstream vs GMO = self-acknowledged long-term bear — not a 50/50 split), using only in-cluster context. Zero 漏引 (both sources in 來源索引). Explicitly cited the "Fires (2 stances)" calibration case (F2's fix working).
+- **B-4 Do-not-over-fire via the pointer** (2026-07-09 synthetic: 台積電 CoWoS 供應鏈盤點 + 法說前瞻, complementary facets): **PASS.** Executor read the 房規 via the pointer, applied the stance-counting test, classified both sources as complementary/no-verdict → NO block; noted the complementarity in-narrative instead. Zero 漏引.
+
+**Re-run verdict: PASS on both dimensions at the shipped text** (fire in the exactly-2 form; no over-fire through the trimmed pointer). F1/F2/F3 fixes observed working in-run; F5 label drift (論據 → 核心論據) remediated in the same commit. Probe fixtures + raw executor outputs: session subagent results 2026-07-10.
