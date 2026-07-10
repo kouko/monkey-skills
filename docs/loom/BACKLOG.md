@@ -85,6 +85,15 @@
   transcripts driving a simulated user that injects recorded
   corrections) and judge rubric (the graded reports' 5 criteria +
   B1-B6/F1-F7 findings as labeled ground truth for an LLM judge).
+  Division of labor, agreed with the user: mechanical/regression
+  coverage goes automatic; NEW failure-mode discovery and taste calls
+  stay human — simulated users are systematically agreeable and miss
+  owner-only corrections (ground truth lives with the human; both
+  live runs proved read-back catches what simulation would wave
+  through). When a SECOND station ships a headless/seeded mode,
+  promote the seed-traceability invariant from product-principles
+  SKILL.md to a family-shared convention (n=1 today, deliberately
+  station-local).
 
 ## Designer/PM loop — escalation interface, decision log, acceptance-surface contracts (OPEN)
 - Status: OPEN
