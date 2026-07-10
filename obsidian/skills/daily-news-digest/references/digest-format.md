@@ -135,12 +135,12 @@ the form rule below.
 
 **Test — "would removing this source change the answer-set?"** If it only adds a
 supporting fact to a stance already present, it is integration (fold it into that
-stance's 論據 or the narrative), not a new slot. Two calibration cases:
+stance's 核心論據 or the narrative), not a new slot. Two calibration cases:
 - **Fires (2 stances):** A = "修正是健康回檔,逢低買" · B = "泡沫破裂起點,清倉" —
   opposing *verdicts* on one question. Two slots → block.
 - **Does NOT fire (1 stance):** A = "逢低買,因估值已修正" · B = "逢低買,因財報強勁" —
   **same verdict (多), different reasons.** ONE 多 slot; the two reasons merge into
-  its 論據. Reasons differing ≠ stances differing. Likewise a supply-chain note
+  its 核心論據. Reasons differing ≠ stances differing. Likewise a supply-chain note
   ("晶片供給轉緊") is integration feeding whatever stance it supports — it becomes
   its own slot **only if it explicitly answers the question** ("…所以這波修正過頭
   了"), not from an implied lean.
@@ -165,7 +165,7 @@ market vocabulary.
 
 **Mandatory rows/fields:**
 - Each stance row: the stance label + the source as `[[<stem>|<短標籤>]]` (real
-  wikilink stem, short label — same link rules as everywhere) + a one-line 論據.
+  wikilink stem, short label — same link rules as everywhere) + a one-line 核心論據.
 - **分歧點 (mandatory, load-bearing):** names *what they actually disagree on* and
   **whether it is a genuine split or one side is consensus / the other a minority**.
   This is the **false-balance guard** — never present a lopsided dispute as
@@ -265,7 +265,7 @@ flowchart LR
 
 <**多空對照/分歧點區塊**——當叢集內 ≥2 來源對同一問題持實質對立立場才放(觸發=判斷有無真分歧,
 非固定類別;見 SKILL STEP 6 與下方 §多空對照/分歧點 房規)。**分歧點列必填**。緊接敘事、可選視覺之前。
-恰好 2 方用三行式;≥3 方用表格式。>
+兩種情況同一張三欄表:恰好 2 方=2 立場列+分歧點列;≥3 方加立場列。>
 
 **市場分歧 — <爭點一句話,例:這波修正是健康回檔還是泡沫破裂?>**
 

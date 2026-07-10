@@ -115,26 +115,19 @@ Keep a running tally (you'll report kept-vs-dropped to the user).
 
 A single day's references cover the same event from many angles — on a heavy
 news day, 8–10 finance videos all orbit one crisis. **Cluster sources that cover
-the same underlying story OR the same underlying question/debate** so you can
-merge them. A "story" is one event/development — **or one open question the
-sources argue over** — covered by ≥1 source; group by what actually happened (or
-what is being debated), not by folder or language. The same crisis told through a
-military lens, an oil-price lens, a market-reaction lens, and a diplomat lens is
-**one story with four sources**. Aim for **4–7 stories** on a busy day. A lone
-source is a valid one-source story; just don't pad it.
+the same underlying story OR question/debate** so you can merge them. A "story"
+is one event/development — **or one open question the sources argue over** —
+covered by ≥1 source; group by what actually happened or is debated, not by
+folder or language. The same crisis told through a military lens, an oil-price
+lens, a market-reaction lens, and a diplomat lens is **one story with four
+sources**. Aim for **4–7 stories** on a busy day. A lone source is a valid
+one-source story; just don't pad it.
 
-> [!important] Cluster by DEBATE, not just by event — don't split a disagreement
-> On the disagreement-heavy domains (markets / macro / investing / geopolitics),
-> the sources are often not covering different *events* but taking **different
-> stances on the same question**. Bull, bear, and neutral takes on "is this
-> correction healthy or a bubble bursting?" are **one debate-cluster**, not three
-> separate stories — cluster them together so STEP 6 can lay the disagreement side
-> by side. **Worked failure to avoid** (2026-07-04): the "correction healthy vs
-> bubble" question got split into three disconnected items across two tiers — a
-> technical-risk take as one news story, a Grantham "bubble, sell" take as a
-> *separate* news story, and a "stay the course" take demoted to a lone knowledge
-> link. That is the fragmentation this clustering rule exists to prevent: it is one
-> question with three stances → one debate-cluster.
+> [!important] Cluster by DEBATE, not just by event
+> Bull, bear, and neutral takes on one question ("correction healthy or bubble
+> bursting?") are **one debate-cluster**, not three stories — cluster them so
+> STEP 6 can lay the disagreement side by side (real failure 2026-07-04: that
+> exact debate shipped as three disconnected items across two tiers).
 
 Then **group the stories under 2–4 thematic category headings** using the
 **anchored-open** taxonomy below (**anchored-open**: pick from the fixed list;
@@ -260,34 +253,13 @@ wire feed, not summarizing notes one by one:
    tension is signal.
 
    **When the cluster holds ≥2 sources taking materially-differing stances on the
-   SAME question, this is not optional prose — emit a compact 多空對照/分歧點
-   block** (rendering spec in `digest-format.md` §多空對照/分歧點; a `| 立場 | 誰 |
-   核心論據 |` table + 分歧點 row — 3-row when exactly 2 stances, more rows when ≥3).
-   Rules:
-   - **Trigger = your judgment**, reading the cluster you just opened — *does a
-     real disagreement on one question exist here?* — **NOT a fixed category gate.**
-     The category anchor list (markets/macro, AI/tech, business, energy,
-     geopolitics) is an **anchored-open HINT** of where real disagreement usually
-     lives ("look actively here"), not a hard gate: a signed ceasefire under
-     Geopolitics has no dispute; an oil-price *outlook* under it has a big one. The
-     "≥2 materially-differing stances on the *same* question" bar self-concentrates
-     the block in the right domains without a rigid list.
-   - **The 分歧點 row is MANDATORY and load-bearing** — it names *what they actually
-     disagree on*, and whether it is a genuine ~50/50 split or one side is the
-     consensus and the other a minority view. This is the **false-balance guard**:
-     never let a bare 正/反 layout dress a lopsided dispute up as symmetric (the
-     failure mode both AllSides-style aggregation and 両論併記 are documented to
-     fall into). If the sources merely take *complementary* angles rather than
-     *opposing* stances, there is no debate — do NOT force a block.
-   - **Do not over-fire.** Complementary facets of one story (a military lens + an
-     oil-price lens on the same crisis) are integration, not a debate. The block is
-     for genuine *opposing stances on one question* only.
-   - **Every source in the cluster MUST appear in the `## Source Index` (in the
-     user's language, e.g. 來源索引) under this story — including every stance in the
-     多空對照 block. Zero 漏引:** a source you
-     read and weighed but did not headline is still cited in the index (a source
-     feeding N stories appears under each — see §Hard rules). Do not silently drop
-     a clustered source.
+   SAME question, emit a compact 多空對照/分歧點 block** (`| 立場 | 誰 | 核心論據 |`
+   stance rows + MANDATORY final **分歧點** row). ALL rules:
+   `digest-format.md` §多空對照/分歧點 — **READ it before emitting**:
+   trigger (real-disagreement judgment, NOT a category gate),
+   stance-counting test, 分歧點 false-balance guard, do-not-over-fire
+   (complementary angles = integration), zero 漏引 (every stance
+   source reaches `## Source Index`).
 3. **Write a one-line TL;DR — the bottom-line takeaway / so-what**, NOT a
    restating of the causal steps (the COT diagram below carries those). Then a
    **COT (Chain-of-Thought) mini-diagram** directly (a compact `flowchart LR` of the story's causal
