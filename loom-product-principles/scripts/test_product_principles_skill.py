@@ -639,6 +639,33 @@ def test_headless_out_of_jurisdiction_noted_not_silently_skipped():
         "out-of-jurisdiction content must not become a spurious Open Question"
 
 
+def test_headless_seed_named_canon_never_out_of_jurisdiction():
+    """Round-3 replay leak (n=2, ADL 0/2, Swift 0/2, Core ML 0/2): the weak
+    model used the out-of-jurisdiction escape hatch to drop seed-NAMED
+    canons/tech-stack, rationalizing them as 'TECH-SPEC turf' or 'downstream
+    spec'. Close the hatch: a seed-NAMED canon, tradition, or tech-stack
+    choice is NEVER out-of-jurisdiction — that landing applies ONLY to the
+    §Boundary-listed categories (market / business-model / strategy-document
+    content); classifying a named canon/stack choice as out-of-
+    jurisdiction during the seed walk is itself a violation."""
+    low = _section(_text(), "## Headless / seeded mode").lower()
+    assert re.search(r"never\s+out-of-jurisdiction", low), \
+        "a seed-named canon/tradition/tech-stack choice must be stated as " \
+        "NEVER out-of-jurisdiction"
+    assert "only to the §boundary-listed categories" in low, \
+        "the out-of-jurisdiction landing must be scoped ONLY to the " \
+        "§Boundary-listed categories"
+    assert "tech-spec turf" in low, \
+        "classifying a named canon/stack choice as TECH-SPEC turf must be " \
+        "named as the violation"
+    assert "downstream spec" in low, \
+        "classifying a named canon/stack choice as downstream spec must be " \
+        "named as the violation"
+    assert "violation" in low, \
+        "misclassifying a seed-named canon/stack choice must be named a " \
+        "violation of the invariant"
+
+
 def test_headless_open_question_points_at_rules_file_format():
     """R2 🟡3: the Open Question landing spot now has a defined format —
     the invariant clause points at the `## Open Questions` contract in

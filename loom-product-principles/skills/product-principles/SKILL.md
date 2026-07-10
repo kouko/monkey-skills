@@ -250,7 +250,13 @@ to its **"delegate to agent"** answer:
   outside this skill's jurisdiction (per §Boundary — market /
   business-model / strategy turf) is explicitly noted as
   **out-of-jurisdiction** during the seed walk — not silently skipped, and
-  not laundered into a spurious Open Question. A seed stance marked
+  not laundered into a spurious Open Question. A seed-named canon,
+  tradition, or tech-stack choice is never out-of-jurisdiction — that
+  landing applies **only to the §Boundary-listed categories** (market /
+  business-model / strategy-document content); classifying a named canon
+  or stack choice as "downstream spec" or "TECH-SPEC turf" during the seed
+  walk is a **violation** of this invariant. Name it as such (the flow's
+  own tech-stack slot proves stack choices are in-jurisdiction). A seed stance marked
   undecidable/deferred (e.g. 無法判斷) MUST become an Open Question with a
   re-trigger — never dropped; every seed-named canon or tech-stack choice
   MUST land as a version-pinned `## Anchors` row; every seed stance MUST
