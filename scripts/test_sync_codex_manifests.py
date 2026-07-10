@@ -261,15 +261,10 @@ def test_scaffold_does_not_clobber_existing_codex(tmp_path):
 # per-plugin suite runs. Deriving the expected set from the repo keeps the
 # forgot-the-tuple gate (fails naming the plugin) with zero count maintenance.
 
-# Deliberately NOT Codex-eligible, with the why. Growing this set is a
-# decision, not a bookkeeping step — each entry needs a reason like these.
-_CODEX_INELIGIBLE = {
-    # Codex has no Workflow primitive; using-loom-pipeline declares itself
-    # N/A on Codex hosts, so no Codex manifest is shipped.
-    "loom-pipeline",
-}
-
-
+# Every plugin that ships a .claude-plugin manifest also ships (and syncs) a
+# .codex-plugin manifest — including loom-pipeline, whose skills are N/A at
+# Codex RUNTIME (no Workflow primitive) but whose manifest still exists and
+# must not drift. Manifest-sync eligibility ≠ runtime availability.
 def _repo_plugin_dirs() -> set:
     """Every top-level dir that ships a Claude plugin manifest."""
     root = Path(__file__).resolve().parent.parent
@@ -280,9 +275,8 @@ def _repo_plugin_dirs() -> set:
 def test_eligible_list_covers_every_repo_plugin():
     import sync_codex_manifests as m
 
-    repo_plugins = _repo_plugin_dirs()
-    assert repo_plugins, "filesystem scan found no plugins — glob broken?"
-    expected = repo_plugins - _CODEX_INELIGIBLE
+    expected = _repo_plugin_dirs()
+    assert expected, "filesystem scan found no plugins — glob broken?"
 
     eligible = set(m.CODEX_ELIGIBLE)
     missing = expected - eligible
@@ -374,9 +368,9 @@ REPO_ROOT = SCRIPT.resolve().parent.parent
 def test_all_eligible_codex_manifests_in_sync():
     import sync_codex_manifests as m
 
-    # Sanity: the tuple mirrors the on-disk plugin census minus the named
-    # exclusions (see test_eligible_list_covers_every_repo_plugin).
-    assert set(m.CODEX_ELIGIBLE) == _repo_plugin_dirs() - _CODEX_INELIGIBLE
+    # Sanity: the tuple mirrors the on-disk plugin census
+    # (see test_eligible_list_covers_every_repo_plugin).
+    assert set(m.CODEX_ELIGIBLE) == _repo_plugin_dirs()
 
     # Fold MISSING (no .codex-plugin manifest yet) into the offender list so a
     # future eligible plugin added before it is scaffolded fails CLEANLY (named),
