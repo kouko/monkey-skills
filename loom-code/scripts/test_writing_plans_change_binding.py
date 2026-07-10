@@ -158,6 +158,28 @@ def test_agents_md_declares_coverage_script():
         "AGENTS.md managed command-surface block must declare check_scenario_coverage.py"
 
 
+def test_detection_cascade_anchors_at_target_repo_root():
+    """The detection cascade (layers 0/i/ii) must anchor at the TARGET
+    repo's root via `git rev-parse --show-toplevel`, mirroring D8's
+    self-derived anchor pattern in code-reviewer.md's "Activation is
+    self-derived" block. Weak-tier dogfood finding: 2/4 haiku
+    cold-operators ran `git branch` / globbed `docs/loom/` in their
+    ambient working directory (a different repo) because no layer told
+    them WHERE to run detection. Branch name and docs/loom/ globs must
+    all be evaluated against that resolved root, never the ambient
+    working directory."""
+    text = _text()
+    low = text.lower()
+    start = low.index("detecting which change-folder to consume")
+    end = low.index("mandatory once bound")
+    section = low[start:end]
+
+    assert "git rev-parse --show-toplevel" in section, \
+        "cascade must anchor detection via git rev-parse --show-toplevel"
+    assert "ambient" in section or "working directory" in section, \
+        "cascade must explicitly rule out the ambient/dispatch working directory"
+
+
 def test_existing_change_folder_contracts_still_present():
     """Sibling contracts in the same section that the task says to PRESERVE:
     validator trust-gate, scenario->task mapping, point-don't-copy,
