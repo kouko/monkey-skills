@@ -65,10 +65,16 @@ Body — two fixed sections, plus one optional:
 
 ## 機構觀點
 
-| 日期 | 機構 | 觀點 | 時效 |
-|---|---|---|---|
-| 2026-06-28 | GS | Brent 年底看 90 | 2026 年底 |
+| 日期 | 來源/機構 | 立場 | 觀點 | 時效 |
+|---|---|---|---|---|
+| 2026-06-28 | GS | — | Brent 年底看 90 | 2026 年底 |
+| 2026-07-04 | 艾財說/Grantham | 空 | 美股史上最貴、AI 最大泡沫，籲減碼美股 | 2 週–2 年 |
+| 2026-07-04 | 有錢邏輯 | 中性 | 修正是常態，續抱定期定額 | 長期 |
+
+> 分歧點：這波修正是「健康回檔」還是「泡沫破裂起點」——空方看估值極端、多方看資金輪動。
 ```
+(heading stays `## 機構觀點` for cross-book consistency; the `立場` column +
+分歧點 note are the 觀點交鋒 extension — a price-target row leaves 立場 as `—`.)
 
 - **數字表** (numeric table): date × 1–3 columns per `indicators`.
   Append a row only when today's sources actually state the number —
@@ -87,11 +93,30 @@ Body — two fixed sections, plus one optional:
   "nothing today" filler. **Central-bank speak** is an entry type here,
   not a separate book: prefix `〔發言〕`, name the speaker, and tag the
   lean（鷹/鴿/中性）.
-- **機構觀點** (house views, optional): sell-side / investment-bank
+- **機構觀點/觀點交鋒** (house views + debate tracking, optional): two
+  uses of one section. (1) **House views** — sell-side / investment-bank
   calls are a **source type feeding a topic**, not a topic — a GS oil
   call belongs in the oil book. When a source carries a concrete bank
   view (price target, rate call, year-end forecast), append it here
-  with its horizon so stale calls are visible.
+  with its horizon so stale calls are visible. (2) **觀點交鋒 (debate
+  stance-over-time)** — for a recurring debate the digest keeps
+  surfacing (e.g. "美股修正是健康回檔還是泡沫破裂?"), append one dated row
+  **per notable stance**, tagging the `立場` column with the **canonical
+  enum shared with `digest-format.md` §多空對照/分歧點 房規 — 多 / 空 / 中性**
+  (same words, no ad-hoc labels) and naming the source (KOL or bank).
+  This is how the in-story 多空對照 block (STEP 6) accumulates into a
+  **timeline of who was bull/bear when** — read it back to see whether a
+  call aged well. Keep a one-line 分歧點 note under the table naming the
+  real axis of contention (same false-balance discipline as the digest
+  block: if one side is consensus and the other a minority, say so). The
+  `立場` column is optional for pure price-target rows (leave `—`);
+  mandatory for 觀點交鋒 rows.
+  **Which book gets the debate rows:** put 觀點交鋒 rows in the **single
+  most-central topic book** for the question (the 美股修正 debate → 美股
+  大盤, not duplicated into every sibling) — UNLESS a stance is
+  **asset-specific** (a call explicitly about semis/HBM → also the AI 與
+  半導體 book). Don't fan one general market-view stance across every
+  book the day's story happened to touch.
 
 ## Daily integration (runs inside STEP 5)
 

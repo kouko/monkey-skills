@@ -102,6 +102,88 @@ last node 青, the node before last 橙 (when ≥4 hops), the rest 紫. For the
 results 橙, analysis/mechanism 紫, the day's conclusion 青). Emit one
 `style <id> <fill…>` line per node.
 
+## 多空對照/分歧點 房規 (multi-view block house style)
+
+One shared spec for the structured multi-stance block **whenever one is
+rendered** — the news-tier in-story 市場分歧 block (STEP 6) and, **when a
+knowledge-tier `整合分析` is itself a genuine bull/bear debate**, that block too
+(STEP 7). It governs the block's *shape* when it fires — it does **not** force
+every 整合分析 into a table: a non-debate 整合分析 stays its default 2–3-sentence
+prose. When the block form IS used (either tier), it uses this shape + the
+mandatory 分歧點 row.
+
+**Three names, one thing:** 多空對照/分歧點 = the name of *this spec*; 市場分歧 =
+its rendered `**…**` header inside a news story; 整合分析 = its rendered form in
+the knowledge tier. Same shape, three labels by where it appears.
+
+**When it fires:** only when ≥2 sources take **materially-differing stances on
+the same question** (judgment call — see SKILL STEP 6). Complementary angles on
+one story are integration, not a debate — no block. Category is a hint, not a gate.
+
+**Canonical 立場 enum (shared with arc-tracking §機構觀點 — use the same words in
+both places):** **多**（看多／樂觀）· **空**（看空／悲觀）· **中性**（謹慎／條件式：
+takes a position on the *risk balance* but renders no bull/bear verdict). Nothing
+else — no ad-hoc labels like 「中性偏空」.
+
+**Does a source count as a stance?** A source is a stance **only if it answers (or
+takes a risk position on) the debate's question.** A cautious "I flag the
+fragility but don't call a top" take **is** a `中性` stance (it positions on the
+risk). A source that merely adds facts on a *different facet* of the story
+(a supply-chain lens, a numbers reconciliation) is **integration, not a stance** —
+give it narrative space, not a block row. **Count only actual stance slots** for
+the form rule below.
+
+**Test — "would removing this source change the answer-set?"** If it only adds a
+supporting fact to a stance already present, it is integration (fold it into that
+stance's 核心論據 or the narrative), not a new slot. Two calibration cases:
+- **Fires (2 stances):** A = "修正是健康回檔,逢低買" · B = "泡沫破裂起點,清倉" —
+  opposing *verdicts* on one question. Two slots → block.
+- **Does NOT fire (1 stance):** A = "逢低買,因估值已修正" · B = "逢低買,因財報強勁" —
+  **same verdict (多), different reasons.** ONE 多 slot; the two reasons merge into
+  its 核心論據. Reasons differing ≠ stances differing. Likewise a supply-chain note
+  ("晶片供給轉緊") is integration feeding whatever stance it supports — it becomes
+  its own slot **only if it explicitly answers the question** ("…所以這波修正過頭
+  了"), not from an implied lean.
+
+**Form by stance count (of actual stances):** both forms use the **same 3
+columns** `| 立場 | 誰 | 核心論據 |` + a final **分歧點** row — the only difference
+is how many stance rows sit above 分歧點.
+- **Exactly 2 stances** → 2 stance rows + 分歧點 (a tight 3-row table):
+
+  | 立場 | 誰 | 核心論據 |
+  |---|---|---|
+  | 空 | [[<stem>\|<短標籤>]] | <一句> |
+  | 多 | [[<stem>\|<短標籤>]] | <一句> |
+  | **分歧點** | — | <爭點；是否真對稱> |
+- **≥3 stances** → 3+ stance rows + 分歧點, same columns.
+
+**立場 label:** use the canonical enum **多/空/中性** for sentiment/market debates.
+For a non-sentiment debate where 多/空 doesn't fit (geopolitics, policy, a
+factual dispute), use a **short position word** as the label instead
+(e.g. 主戰／主和, 升息／降息, 樂觀／悲觀) — the column is the *side*, not forced into
+market vocabulary.
+
+**Mandatory rows/fields:**
+- Each stance row: the stance label + the source as `[[<stem>|<短標籤>]]` (real
+  wikilink stem, short label — same link rules as everywhere) + a one-line 核心論據.
+- **分歧點 (mandatory, load-bearing):** names *what they actually disagree on* and
+  **whether it is a genuine split or one side is consensus / the other a minority**.
+  This is the **false-balance guard** — never present a lopsided dispute as
+  symmetric. A block without a 分歧點 row is invalid. Judging consensus-vs-minority
+  **may draw on context across the cluster's sources** (e.g. one source noting most
+  banks disagree with the outlier) — that is the guard working, not editorializing;
+  don't import facts from outside the cluster.
+
+**Placement:**
+- News tier: after the narrative, before any optional data table / Mermaid visual.
+- Knowledge tier: as the `整合分析` block (its existing slot) — **only when the
+  整合分析 is a real multi-stance debate**; otherwise 整合分析 stays 2–3-sentence
+  prose and no block / mandatory 分歧點 row is required (note the divergence
+  in-sentence instead).
+
+**Sources → index:** every source named in a block MUST also appear in the story's
+`## 來源索引` entry (zero 漏引).
+
 ## Output template
 
 ALWAYS use this structure. There is no single "時效新聞" umbrella heading —
@@ -181,6 +263,23 @@ flowchart LR
 來源觀點分歧時並陳。不在敘事中插入長 wikilink。
 **適當分段**:每段 ≈ 2–4 句、一段一個重點(框架/條款/市場反應/分歧…),段間空行,避免大塊文字牆。>
 
+<**多空對照/分歧點區塊**——當叢集內 ≥2 來源對同一問題持實質對立立場才放(觸發=判斷有無真分歧,
+非固定類別;見 SKILL STEP 6 與下方 §多空對照/分歧點 房規)。**分歧點列必填**。緊接敘事、可選視覺之前。
+兩種情況同一張三欄表:恰好 2 方=2 立場列+分歧點列;≥3 方加立場列。>
+
+**市場分歧 — <爭點一句話,例:這波修正是健康回檔還是泡沫破裂?>**
+
+| 立場 | 誰 | 核心論據 |
+|---|---|---|
+| 多 | [[<stem>\|<短標籤>]] | <一句> |
+| 空 | [[<stem>\|<短標籤>]] | <一句> |
+| 中性 | [[<stem>\|<短標籤>]] | <一句> |
+| **分歧點** | — | <爭在哪、是否真五五開;若一方是共識另一方少數,明講,勿假平衡> |
+
+<立場欄用標準列舉 多/空/中性(非市場辯論用短立場詞,見下方 §多空對照/分歧點 房規);
+恰好 2 方=2 列立場+分歧點列(同三欄),≥3 方多加列。無定論的示警型算「中性」;
+純補充另一面向的來源不算立場、走敘事。>
+
 <可選:資料型表格>
 | 指標 | 數值 | 說明 |
 |------|------|------|
@@ -238,11 +337,12 @@ flowchart LR
 <每個精選摘要、整合分析也各加一張 CoT 小圖(同新聞 COT 樣式:清單節點、3–5 跳),
 緊接在 callout 來源行 / 整合段之後,把該篇的論證邏輯視覺化。「其他相關文章」純連結不加圖。>
 
-<同類有相關性時,直接整合分析(非各列一行):>
+<同類有相關性時,直接整合分析(非各列一行);遵循 §多空對照/分歧點 房規——多空辯論型
+用同一形制,**分歧點必填**、避免假平衡:>
 
 **整合分析 — <主題,例:Nvidia 多空辯論>**
 
-<2–3 句:綜合 ≥2 篇,點出共識與分歧,來源以短標籤 inline>[[<stem>|<短標籤>]]……
+<2–3 句:綜合 ≥2 篇,點出共識與分歧(分歧點寫明是否真對稱),來源以短標籤 inline>[[<stem>|<短標籤>]]……
 
 ```mermaid
 flowchart LR
