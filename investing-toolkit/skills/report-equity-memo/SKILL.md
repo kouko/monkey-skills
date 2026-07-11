@@ -56,6 +56,50 @@ Set `${COUNTRY}` accordingly for the rest of the pipeline (used as the
 > confirmed. If a phase produced no artifact (blocked, skipped, errored),
 > say so explicitly — do not describe output as if it were saved.
 
+### Phase 0 — Recall Prior Verdicts
+
+> Runs **before** Phase 1. Pure grep + read — no judgment call, weak-model-safe.
+
+**Resolve a search root** (best-effort; no error if none resolves):
+
+```bash
+if [ -d .obsidian ] || [ -n "${VAULT_PATH:-}" ]; then
+  SEARCH_ROOT="${VAULT_PATH:-.}"          # cwd is a vault, or user named one
+elif ls /tmp/*-memo.md >/dev/null 2>&1; then
+  SEARCH_ROOT=/tmp                        # prior memo output from this session
+else
+  SEARCH_ROOT=""                          # nothing resolved
+fi
+```
+
+**No root resolved**: silent skip — no error, proceed straight to Phase 1. Note
+the skip in the memo's Limitations section (Phase 4).
+
+**Search** (when a root resolved) for the ticker's frontmatter, per
+`references/vault-frontmatter.md`'s `ticker` field:
+
+```bash
+grep -rl "^ticker: ${TICKER}$" "$SEARCH_ROOT" --include="*.md" 2>/dev/null
+# NOTE: escape regex dots in suffixed tickers first, e.g. TICKER_RE=${TICKER//./\\.}
+# and grep for "^ticker: ${TICKER_RE}$" — a bare . would match any character.
+```
+
+**No hits**: silent skip — mirrors Phase 5b's graceful-skip shape (see its closing artifact-gate paragraph).
+No error, proceed to Phase 1. Note in the memo's Limitations section that no
+prior verdict was found.
+
+**Hits found**: read the most recent match's frontmatter (highest `date`),
+extract `verdict`, `date`, `price_at_analysis`. Surface before Phase 1 starts:
+
+> Prior verdict for {ticker}: {verdict} @ {date}, price_at_analysis {price}.
+
+After Phase 1's fetch completes, compute delta = current `fetch.json`
+`current_price` − prior `price_at_analysis` (value and %) and surface it too.
+Carry {prior verdict, date, price_at_analysis, delta} into the Phase 4 seed
+context so the new memo's Limitations section discloses the recall outcome
+(hit-and-cited / no-hits / skipped) — exactly one of these three, never
+silent about which.
+
 ### Phase 1 — Data Fetch
 
 > **`scope=quick` note**: quick mode runs Phase 1 only (snapshot data) and skips Phase 2 (regime) + Phase 2.5 (comps) + Phase 3 DCF. The pipeline jumps straight to Phase 4 with snapshot-only inputs; investing-team protocol routing handles the lighter analysis depth.
@@ -242,7 +286,10 @@ Launch `domain-teams:investing-team` with the **Deep Equity Research Memo** prot
 **Per Cross-Plugin Delegation Contract (CLAUDE.md §Cross-Plugin Delegation Contract):**
 
 1. Pass **paths** to the Phase 1 / 2 / 2.5 / 3 JSONs as `### Resource Paths` — never file content. Specifically: `fetch.json` (Phase 1), `regime-card.json` (Phase 2), `comps.json` (Phase 2.5), `dcf.json` (Phase 3).
-2. Pass the ticker, scope, output_language, country code as `### Input` seed context
+2. Pass the ticker, scope, output_language, country code as `### Input` seed
+   context — plus Phase 0's recall outcome (prior verdict/date/price/delta,
+   or the no-hits/skipped fact) so investing-team can disclose it in the
+   memo's Limitations section
 3. The investing-team worker self-loads its standards / protocols / rubrics and runs the full gate stack — relative-valuation gates consume the structured `comps.json`, not prose
 4. Gate verdicts (PASS / NEEDS_REVISION) flow back from investing-team's evaluators — this skill does not produce verdicts
 5. Visibility Convention: include the skill-team TaskUpdate cadence clause (phase transitions / milestones / heartbeat ≤60s) so the user sees progress during the multi-minute investing-team run
@@ -265,13 +312,25 @@ Launch `domain-teams:investing-team` with the **Deep Equity Research Memo** prot
 
 For non-US tickers (.T / .TW / .KS / .KQ / .HK / .SS / .SZ), substitute the `data-markets/scripts/pack.py --pack memo-fetch` output (market auto-detected from the ticker) for `--anchor-base`. Compute-mode US-first; non-US compute mode lands in per-country PRs (until then, falls back to direct with stderr warning).
 
-The investing-team output is the memo body (Markdown). Persist it to
-`/tmp/${TICKER_SAFE}-memo.md` before replying to the user.
+The investing-team output is the memo body (Markdown). Before persisting,
+prepend the toolkit frontmatter block (schema SSOT:
+`references/vault-frontmatter.md`) — the 8 fields (`type`, `ticker`,
+`market`, `date`, `verdict`, `confidence`, `price_at_analysis`,
+`intrinsic_mid`; `confidence` is omitted when the memo reports none — see
+the schema SSOT), values sourced from this run (verdict/confidence from
+the memo's §一 執行摘要, `price_at_analysis` from Phase 1 `fetch.json`
+`current_price`, `intrinsic_mid` from Phase 3 `dcf.json` `mid`) — so the
+file is `---\n<8 fields>\n---\n` followed by the memo body. This emission
+is unconditional, regardless of destination (Phase 5a/5b optional or
+skipped). Persist the result to `/tmp/${TICKER_SAFE}-memo.md` before
+replying to the user.
 
 **Artifact gate**: Phase 4 — and the memo overall — is not complete until
-`/tmp/${TICKER_SAFE}-memo.md` exists — verify with `ls /tmp/${TICKER_SAFE}-memo.md`.
-Do not tell the user the memo is ready until that `ls` has been run and the
-path cited in the reply.
+`/tmp/${TICKER_SAFE}-memo.md` exists AND starts with the frontmatter
+block — verify with `ls /tmp/${TICKER_SAFE}-memo.md` and
+`head -1 /tmp/${TICKER_SAFE}-memo.md` (must print `---`). Do not tell the
+user the memo is ready until both checks have been run and the path cited
+in the reply.
 
 ### Phase 5a — Format (optional, `domain-teams:docs-team`)
 
@@ -283,9 +342,17 @@ when the memo is already in a target-ready shape.
 ### Phase 5b — Obsidian vault delivery (optional, `obsidian:obsidian-markdown`)
 
 For Obsidian vault delivery (`output=obsidian` or natural-language intent),
-call `obsidian:obsidian-markdown` after docs-team formatting to apply
-frontmatter / wikilinks / callouts and write to the resolved vault path.
-If Phase 5a is skipped, 5b reads the Phase 4 memo directly.
+call `obsidian:obsidian-markdown` after docs-team formatting to write to
+the resolved vault path. If Phase 5a is skipped, 5b reads the Phase 4
+memo directly.
+
+**Field ownership**: the frontmatter fields are already present — Phase 4
+prepended them per the toolkit schema SSOT (`references/vault-frontmatter.md`).
+obsidian-markdown MUST respect these fields as-is and MUST NOT re-invent
+or overwrite them; it owns placement, wikilinks, callouts, and vault
+conventions only. Default vault folder: `investing/memos/` — a
+default-unless-user-says-otherwise convention, not a hard requirement;
+follow a user-named or vault-configured path when given one.
 
 > **Cross-Plugin Contract recap (Phase 5b)**: Pass the docs-team Markdown
 > output **path** (not content) as input to obsidian-markdown — same
