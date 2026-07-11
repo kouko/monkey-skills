@@ -26,7 +26,7 @@ brainstorming → brief (docs/loom/specs/<topic>.md)
               writing-plans
                   ↓
               plan + plan-document-reviewer self-review
-                  ↓ (PASS)
+                  ↓ (PASS) → kickoff briefing (one-way-door decisions)
               subagent-driven-development
                   ↓ (per task: implementer → spec-reviewer + code-quality-reviewer)
               tdd-iron-law (inside each implementer)
@@ -115,6 +115,10 @@ The prompt also enforces parallel-dispatch checks (`Independent: true` tasks nee
 If reviewer returns `NEEDS_REVISION`, writing-plans **fixes the plan** and re-runs the reviewer. Up to 2 rounds; if still NEEDS_REVISION after round 2, escalate to user (likely the brief itself needs revisiting).
 
 **Amending a PASS plan:** If the plan is changed after the reviewer returned PASS (e.g., a task description is tightened, a dependency is updated), either (a) re-run the plan-document-reviewer on the amended plan, OR (b) record a one-line skip note in the plan's `Notes` section explaining why the amendment is additive and schema-safe (e.g., "amended Task 2 description for clarity; all required fields and DAG structure unchanged — re-review skipped"). A stale PASS without a skip note is a silent gap.
+
+## Kickoff briefing
+
+After PASS, before SDD handoff: run the kickoff briefing — read [`references/kickoff-briefing.md`](references/kickoff-briefing.md) and batch-brief the round's one-way-door decisions (expect 1-3); the rest route to the Decision Log.
 
 ## Output contract — the plan
 

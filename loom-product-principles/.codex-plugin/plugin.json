@@ -1,6 +1,6 @@
 {
   "name": "loom-product-principles",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Key-free generator for a PRINCIPLES.md project constitution — north star + falsifiable Product Principles, plus optional Design/Engineering Principles.",
   "author": {
     "name": "kouko",

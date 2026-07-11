@@ -108,46 +108,6 @@
   no mechanical rule yet separates it from a reproduced true positive);
   revisit when L1 data shows drop-signal distortion attributable to it.
 
-## Designer/PM loop — escalation interface, decision log, acceptance-surface contracts (OPEN)
-- Status: OPEN
-- Start: next designer/PM-loop session after Cluster A ships.
-- Origin: `docs/loom/design/2026-07-10-designer-pm-loop-architecture.md`
-  §1-§2 (Four load-bearing inversions #2-#4; Engineering-decision
-  escalation rubric) + this branch's (`feat-loom-code-upstream-
-  hardening`) close — Cluster B shipped only the pipeline-hardening
-  trio (must-consume detection cascade, coverage script/gate,
-  archive-on-close, reviewer self-derivation); the architecture doc's
-  remaining KEEPs are behavioral contracts, not yet built into any
-  station skill.
-- What: the escalation interface / decision-log / acceptance-surface
-  behavioral contracts —
-  1. **Escalation interface**: the two-axis routing test (product
-     consequence × reversal cost, §2) wired as the actual decision
-     point for "ask the user vs agent decides"; the **kickoff briefing**
-     mechanism batching a plan's one-way-door engineering decisions into
-     one product-stakes briefing at the spec→plan transition (each
-     option: plain-language stakes → 2-3 choices with product
-     consequences → recommendation; derivation-for-confirmation framing
-     when principles already lock the choice); mid-implementation
-     escalation as the exception path of the SAME interface, not a
-     second protocol.
-  2. **Decision log**: a product-language record for every
-     agent-decided engineering choice ("chose X because Y; the day you
-     want Z, this choice costs W") — the auditable, late-vetoable
-     safety net that makes silent agent-decisions cheap while
-     escalation stays expensive.
-  3. **Acceptance-surface promotion**: ui-verification promoted from
-     side gate to the user's main acceptance stage (the only
-     product-perceivable surface a non-engineer user can judge "done"
-     by: running app, ui-verification results, product-language
-     completion reports); NEEDS_REVISION review loops digest silently
-     rather than surfacing to the user.
-  4. **Per-project escalation appetite**: a declaration living in
-     PRINCIPLES.md's Engineering Principles section, read once and
-     never re-asked (judgment-rubrics §3(c)) — needs a home in
-     whichever station skill consumes PRINCIPLES.md engineering
-     content.
-
 ## Operationalize "product-shaped" in family reception (OPEN)
 - Status: OPEN
 - Start: next time any session or dogfood cold-reader again reports

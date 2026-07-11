@@ -159,6 +159,37 @@ with a lower floor:
 1. <principle statement> — check: <concrete, testable condition>
 ```
 
+### Escalation appetite — landing shape (`## Engineering Principles` only)
+
+The construction flow's escalation-appetite question (question-sets.md,
+Engineering section Q5) has **no dedicated slot or marker** — it lands as a
+normal top-level `## Engineering Principles` entry like any other. The
+entry's text MUST contain the greppable phrase `escalation appetite` and
+carry the standard `— check:` marker; no new validator rule is needed
+because the entry is checked by the existing "every entry needs `— check:`"
+rule above. Consumers (loom-code's kickoff briefing and subagent-driven-development's
+mid-execution appetite read) locate the dial by
+grepping `escalation appetite` in the consuming repo's
+`docs/loom/PRINCIPLES.md` — never this rules file or other docs — bounded
+to the region between the `## Engineering Principles` heading and the
+next `##` heading, so an unscoped repo-wide grep can't false-match this
+rules file's own synthetic example. The entry is **optional** — a project may omit it, in which case
+consumers default to briefing all two-axis hits. Read once at kickoff,
+never re-asked (a documented decision beats re-asking).
+
+**Synthetic example:**
+
+```markdown
+## Engineering Principles
+
+1. Escalation appetite: brief one-way-door decisions only, log the rest — check: kickoff briefing greps "escalation appetite" under this heading and applies the dial without re-asking
+```
+
+**Valid vs invalid entry:**
+
+- ✅ `1. Escalation appetite: brief one-way-door decisions only, log the rest — check: kickoff briefing greps "escalation appetite" under this heading and applies the dial without re-asking` — contains the greppable phrase `escalation appetite` and the `— check:` marker.
+- ❌ `1. Escalation appetite: brief one-way-door decisions only, log the rest` — missing the `— check:` marker; the entry fails the same "every entry needs `— check:`" rule as any other `## Engineering Principles` entry.
+
 **A jurisdiction with no committed clauses emits NO section — never a
 present-but-empty heading.** A `## Design Principles` or `## Engineering
 Principles` heading with zero entries is invalid; if the project hasn't
@@ -222,9 +253,10 @@ and to the named product principle that licenses the break. This extends
 this file's own `— check:` marker idiom with two sibling markers,
 `— reason:` and `— principle:` (em dash U+2014, single space, lowercase
 word, colon); the general concept — documenting an intentional break with
-its justification — mirrors the engineering decision log in the
-architecture doc, though that log's format is prose, not this marker
-shape.
+its justification — mirrors the engineering decision log that now lives
+in loom-code's `plan-format.md` §Decision Log, with its own
+`— cost-of-change:` marker: one conceptual record format, two views with
+per-view marker idioms.
 
 **Write each entry as a single physical line — do not soft-wrap.** The
 validator matches `— reason:` and `— principle:` on the same physical

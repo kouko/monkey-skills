@@ -87,6 +87,8 @@ questions.
    per-project escalation dial,
    docs/loom/design/2026-07-10-designer-pm-loop-architecture.md §2;
    not in instrument v0.1]
+   Lands as a normal `## Engineering Principles` entry (see
+   principles-rules.md §Escalation appetite — landing shape); optional.
 
 ### Tech-stack declaration slot
 

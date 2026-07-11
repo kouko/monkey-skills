@@ -148,6 +148,55 @@ Parent declared DONE when all children DONE.
 (Free-form notes to SDD orchestrator — e.g. "Tasks 2+3 can run parallel after Task 1; Task 4 needs Task 2 only, not Task 3")
 ```
 
+#### `Decision Log` plan section (v0.29.0+, optional)
+
+Unlike `## Notes` (free-form, author-written), `## Decision Log` is
+**runtime content**: `writing-plans` never authors it — a fresh plan has
+no `## Decision Log` section — `subagent-driven-development` **appends to
+it** during execution whenever an agent decides an engineering choice with
+product stakes, and `plan-document-reviewer` **accepts and ignores it**,
+mirroring the per-task `Status` field's reviewer-ignores contract (see
+§Progress ledger above). The precise when-to-append trigger — the
+two-axis test that adjudicates "product stakes" — is owned by
+`subagent-driven-development`'s Decision Log maintenance clause; this
+section only defines the record shape, not the trigger.
+
+One entry per agent-decided choice: one conceptual record format
+(single-line, reason-bearing, cost-aware) shared with `product-principles`'
+Deviation Ledger, but the two views use different marker idioms — the
+Deviation Ledger's `— reason:`/`— principle:` vs this section's
+`— cost-of-change:` (design SSOT:
+`docs/loom/design/2026-07-10-designer-pm-loop-architecture.md:228`). Each
+entry is a **single physical line — do not soft-wrap** (same reason as the
+Deviation Ledger: a wrapped entry breaks downstream parsing).
+
+```markdown
+## Decision Log
+
+N. chose <X> because <Y> — cost-of-change: the day you want <Z>, this choice costs <W>
+```
+
+Product language, no jargon — this is the record a non-engineer PM reads,
+not a technical rationale. Worked example:
+
+```markdown
+## Decision Log
+
+1. chose in-memory caching because it needs no new infra — cost-of-change: the day you want multi-instance sync, this choice costs a full cache-layer rewrite
+```
+
+**Placement rationale** (brief §Alternatives): plan-embedded, not a
+standalone `docs/loom/decisions/` directory — the decision lives next to
+the reasoning that produced it, and the plan is already the per-arc
+artifact the user reads. **Reversal conditions** (recorded, user-approved):
+switch to standalone `docs/loom/decisions/` if (a) >15-20 entries
+accumulate in one arc, or (b) a cross-arc lookup need emerges ("did we
+already decide this?").
+
+Commit trailers remain the engineer-facing greppable index — this section
+is the product-language narrative, not a replacement for trailers (two
+views of one record format, not two competing records).
+
 ## Worked example
 
 For a brief at `docs/loom/specs/2026-05-16-csv-export.md` whose Smallest End State is *"add `?format=csv` query param to the existing `/reports/<id>` endpoint":*

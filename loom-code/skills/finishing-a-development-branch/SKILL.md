@@ -24,8 +24,11 @@ finishing-a-development-branch (this skill)
   │     runs package-level test command → exit 0 + N>0 tests → PASS
   │     blocks on test failure
   │     + ui-verification (CONDITIONAL): branch touched UI AND a
-  │       ui-flows.md exists → drive the rendered app through its
-  │       enumerated states; otherwise N/A (honest skip, stated)
+  │       ui-flows.md exists → this is the user's main acceptance stage
+  │       (design SSOT: docs/loom/design/2026-07-10-designer-pm-loop-architecture.md §1 #4)
+  │       (what "done" means for a UI-bearing branch) — drives the
+  │       rendered app through its enumerated states; otherwise N/A
+  │       (honest skip, stated)
   │
   ├─→ Phase 3: dev-workflow:git-memory (P3-D MANDATORY)
   │     decides on Decision: / Learning: / Gotcha: trailers for the close-out commit
@@ -81,7 +84,7 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
 |---|---|---|
 | 1 | `requesting-code-review` | Human-judgment quality review is its own skill with its own subagent; this orchestrator just dispatches |
 | 2 | `verification-before-completion` | Package-level test invocation has its own per-stack command table; this orchestrator just invokes the gate |
-| 2b | `ui-verification` (conditional) | Rendered-UI runtime gate has its own tooling/degradation contract (browser/device automation, N/A-loud); fires only when the branch touched UI and a `ui-flows.md` exists |
+| 2b | `ui-verification` (conditional) | The user's main acceptance stage for a UI-bearing branch — what "done" means to them — has its own tooling/degradation contract (browser/device automation, N/A-loud); fires only when the branch touched UI and a `ui-flows.md` exists |
 | 3 | `dev-workflow:git-memory` | P3-D MANDATORY — git-memory decides whether memory trailers are warranted on this commit. Orchestrator passes the diff + recent commits; git-memory returns the trailer set (or empty, if routine) |
 | 4 | git CLI | Standard `git commit -m "<msg>" -m "<body with trailers>"` |
 | 5 | git CLI | `git push -u origin <branch>` if new; `git push` if upstream set |
@@ -111,6 +114,10 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
      exactly 1 🟡 → PASS_WITH_NOTES; all 🟢 → PASS) and apply the gate above. NEVER suggest
      `/ultrareview` or any external review command in AskUserQuestion options or in the PR body
      without first verifying it exists via `claude --help`.
+   - Explicit contract: NEEDS_REVISION review loops — fix → re-review, whether inside
+     SDD's per-task triad during development or this step's own fix-up cycle — digest
+     silently; the user sees only the terminal verdict, never each iteration. The
+     PASS_WITH_NOTES user-ask gate above is UNCHANGED by this — it still asks.
 4. Before applying any review findings from Step 3: Read each file you intend to Edit
    (Bash inspection does NOT satisfy the Edit/Write precondition) — details in
    [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §S1.
@@ -120,7 +127,9 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
    - If test failure: surface output; STOP. Route user to tdd-iron-law or systematic-debugging.
    - If 0 tests ran: surface as failure (configuration bug, not a pass).
    - If PASS: proceed silently.
-5b. Dispatch ui-verification (CONDITIONAL — skip as N/A when the branch touched no UI
+5b. Dispatch ui-verification — for a UI-bearing branch, this IS the user's main
+    acceptance stage: what the user judges "done" by is the rendered product,
+    not test counts (CONDITIONAL — skip as N/A when the branch touched no UI
     surface or no ui-flows.md exists; state the N/A, don't silently omit)
    - NEEDS_REVISION (state mismatch, or unreachable state whose ui-flows.md row is NOT
      marked future/deferred): surface findings; STOP — route to the
@@ -232,7 +241,11 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
 12. ASK user: "Branch was in .worktrees/; remove the worktree? (y/N)"
     - If yes: cd to repo root; git worktree remove .worktrees/<slug>
     - If no: leave it
-13. Report final state: commit SHA, push status, PR URL if created, worktree status
+13. Report final state as a product-language completion report — lead with what
+    the product now does, in user terms (not with mechanism); commit SHA, push
+    status, test counts, and review verdicts sink to sub-lines below that
+    headline. Format authority: `loom-pipeline/hooks/family-relay.md` §(a)
+    User-rollup card. Include: PR URL if created, worktree status.
 ```
 
 **ASK = stop and wait for user.** This is deliberately NOT autonomous — close-out is a high-blast-radius operation (shipping code → teammates / production). Each user-visible action has a confirmation.
