@@ -80,6 +80,15 @@ def test_multi_token_values_are_stripped_of_surrounding_whitespace():
     assert result["named_anchors"] == ["HEART", "MoSCoW", "IBM Carbon"]
 
 
+@pytest.mark.parametrize("bad_token", ["a||b", "|b", "a|", "a|  |b", "|"])
+def test_malformed_pipe_alternative_raises_value_error(bad_token):
+    # Empty alternatives (leading/trailing `|`, or `||`) are a parse error —
+    # contract precision, not a matching edge case.
+    text = f"named_anchors: {bad_token}\n"
+    with pytest.raises(ValueError):
+        parse_oracle(text)
+
+
 # --- Task 2: artifact checks + CLI ------------------------------------------
 
 SCRIPT = Path(__file__).with_name("check_seed_traceability.py")
@@ -226,6 +235,39 @@ def test_check_public_api_returns_miss_lines_without_subprocess():
     oracle = _oracle()
     misses = check(artifact, oracle)
     assert misses == ["named_anchors: HEART"]
+
+
+# --- Task 1 (plan 2026-07-11): `|` OR-alternatives ---------------------------
+
+
+def test_pipe_alternatives_match_any_form():
+    # RED: a `JTBD|Jobs-to-be-Done` anchor item must pass when the artifact's
+    # Anchors row carries only the long form.
+    artifact = _artifact(anchor_row="| Jobs-to-be-Done | usability framework |")
+    oracle = _oracle(named="JTBD|Jobs-to-be-Done")
+    assert check(artifact, oracle) == []
+
+
+def test_pipe_alternatives_match_any_form_deferred_items():
+    artifact = _artifact(
+        open_question="1. Reversibility posture unclear — re-trigger: revisit later\n"
+    )
+    oracle = _oracle(deferred="可逆性|Reversibility posture")
+    assert check(artifact, oracle) == []
+
+
+def test_pipe_alternatives_negative_violated_by_any_alternative():
+    # A negative item is violated if ANY alternative is present, even if the
+    # oracle's first-listed alternative is absent.
+    artifact = _artifact(extra_negative="We considered an API gateway here.")
+    oracle = _oracle(negative="mock server|API gateway")
+    assert check(artifact, oracle) == ["negative: mock server|API gateway"]
+
+
+def test_pipe_alternatives_miss_line_echoes_full_item_when_no_alternative_matches():
+    artifact = _artifact(anchor_row=None)
+    oracle = _oracle(named="JTBD|Jobs-to-be-Done")
+    assert check(artifact, oracle) == ["named_anchors: JTBD|Jobs-to-be-Done"]
 
 
 # --- Task 3: committed oracles conform to the parser contract ---------------
