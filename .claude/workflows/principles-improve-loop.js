@@ -122,6 +122,9 @@ phase('Baseline')
 
 async function runBaselineOnce(label) {
   try {
+    // grounding: call shape (runLabel/sandboxDir/seeds) sourced from
+    // principles-replay-matrix.js:41-122 (its own args-guard defines these
+    // exact param names/types) — this nested call must match that shape.
     return await workflow('principles-replay-matrix', {
       runLabel: `${runArgs.runLabel}-${label}`,
       sandboxDir: runArgs.sandboxDir,
@@ -172,10 +175,205 @@ log(
   Object.keys(baselineBySeed).map((id) => `${id}=${baselineBySeed[id].pass ? 'PASS' : 'FAIL'}`).join(', ')
 )
 
-// --- Fix phase (STUB — wired in Task 4: fixer stage) --------------------------
+// --- Fix phase (fixer stage + apply/revert couriers) --------------------------
+//
+// One agent() proposes EXACTLY ONE invariant-level fix per round, schema-
+// forced to {invariant, rationale, edits:[{file, old, new}]}. The prompt is
+// built ONLY from: the aggregated failing rows (from Baseline), the station
+// file path, a dominant-failure-class description, and the station-wording
+// warning below — it never references any oracle path/content (the seed
+// corpus's grader-only files, docs/loom/dogfood/2026-07-10-principles-flow-
+// seed-corpus/README.md:18-23), only seed IDs. Task 5's round loop calls
+// runFixer -> applyProposal (on accept-candidate) / revertProposal (on
+// reject) each round; this task only defines the building blocks.
 
 phase('Fix')
-log('Fix phase: stub — Task 4 adds the fixer agent (schema-forced ONE-invariant proposal) plus apply/revert couriers.')
+
+const STATION_DIR = 'loom-product-principles/skills/product-principles'
+const STATION_SKILL_MD = `${STATION_DIR}/SKILL.md`
+
+// Fixer edit paths are restricted to STATION_DIR by an allow-list (per path
+// segment, reusing RUN_LABEL_ALLOWED_PATTERN), mirroring args.sandboxDir's
+// allow-list above and guard obligation 2 in
+// docs/loom/memory/workflow-agent-results-and-courier-args-need-guards.md
+// (any agent-supplied arg reaching a courier's Bash/Edit surface needs a
+// character allow-list, not just a prefix check).
+function assertStationPath(filePath) {
+  if (typeof filePath !== 'string' || filePath.indexOf(STATION_DIR + '/') !== 0) {
+    throw new Error(
+      'principles-improve-loop: fixer edit path must be under ' + STATION_DIR +
+      '/ — received ' + JSON.stringify(filePath) + '.'
+    )
+  }
+  const relSegments = filePath.slice(STATION_DIR.length + 1).split('/')
+  for (const segment of relSegments) {
+    if (segment === '' || !RUN_LABEL_ALLOWED_PATTERN.test(segment)) {
+      throw new Error(
+        'principles-improve-loop: fixer edit path segment ' + JSON.stringify(segment) +
+        ' in ' + JSON.stringify(filePath) + ' failed the allow-list ' + RUN_LABEL_ALLOWED_PATTERN + '.'
+      )
+    }
+  }
+}
+
+// Groups checkerMisses' `<class>: <token>` lines (convention set by
+// principles-replay-matrix.js's grading courier, :218) by class prefix and
+// names the most frequent one — a deterministic, non-LLM description fed
+// into the fixer's prompt (Rule 5: code answers where code can answer).
+function describeDominantFailureClass(failingRows) {
+  const allMisses = []
+  for (const row of failingRows || []) {
+    if (row && Array.isArray(row.misses)) {
+      for (const miss of row.misses) allMisses.push(miss)
+    }
+  }
+  if (allMisses.length === 0) return 'unspecified (no miss detail available on the failing rows)'
+  const counts = {}
+  for (const miss of allMisses) {
+    const key = String(miss).split(':')[0].trim()
+    counts[key] = (counts[key] || 0) + 1
+  }
+  let best = null
+  for (const key of Object.keys(counts)) {
+    if (best === null || counts[key] > counts[best]) best = key
+  }
+  return `${best} (${counts[best]}/${allMisses.length} miss lines)`
+}
+
+const FIXER_SCHEMA = {
+  type: 'object',
+  required: ['invariant', 'rationale', 'edits'],
+  properties: {
+    // EXACTLY ONE invariant per proposal — a fixer round is scoped to a
+    // single mechanical wording/rule fix, never a bundle.
+    invariant: { type: 'string' },
+    rationale: { type: 'string' },
+    edits: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['file', 'old', 'new'],
+        properties: {
+          file: { type: 'string' },
+          old: { type: 'string' },
+          new: { type: 'string' },
+        },
+      },
+    },
+  },
+}
+
+async function runFixer(round, failingRows) {
+  const failingSummary = (failingRows || [])
+    .map((r) => `${r.seedId}: ${(r.misses || []).join('; ') || 'unspecified failure'}`)
+    .join('\n')
+  try {
+    return await agent(
+      `You are the FIXER stage, round ${round}, of an autonomous improvement loop over the loom-product-principles \`product-principles\` skill.
+
+STATION FILE you may propose edits to — the ONLY file you may target:
+${STATION_SKILL_MD}
+
+FAILING ROWS (aggregated from the visible-seed baseline, per-seed):
+${failingSummary}
+
+DOMINANT FAILURE CLASS: ${describeDominantFailureClass(failingRows)}
+
+WARNING — station wording is contract surface (docs/loom/memory/preamble-wording-is-contract-surface.md): this station file's prose is read by a downstream LLM replay as its classification vocabulary, not merely its tone — a casual word choice becomes a wrong machine-readable outcome with no error raised. Treat every noun/verb you touch with the same care as renaming an API field.
+
+TASK: propose EXACTLY ONE invariant-level fix — never a bundle of unrelated edits — that would plausibly turn one or more of the failing rows above into passes, expressed as the smallest set of literal old->new edits against the station file above. Do not propose edits to any other file.
+
+Return: invariant (one sentence naming the single rule/wording fix you propose — exactly one, never more than one), rationale (why it should address the dominant failure class), edits (array of {file, old, new} — file must be ${STATION_SKILL_MD}, old must be an exact literal substring currently present in that file, new is its replacement).`,
+      { phase: 'Fix', label: `fix:round${round}`, schema: FIXER_SCHEMA }
+    )
+  } catch (e) {
+    const message = e && e.message ? e.message : String(e)
+    log(`fix:round${round}: fixer agent() threw — recording as a hard miss. (${message})`)
+    return null
+  }
+}
+
+// --- Apply courier ------------------------------------------------------------
+//
+// Verifies a clean `git status --porcelain` on the station path BEFORE
+// touching anything (an already-dirty tree means some other change is in
+// flight — abort the round as a recorded failure rather than risk
+// clobbering it), then applies the proposal's edits via the Edit tool
+// (Read before Edit), restricted to STATION_DIR by the allow-list above.
+
+const APPLY_SCHEMA = {
+  type: 'object',
+  required: ['applied', 'dirtyStatus'],
+  properties: {
+    applied: { type: 'boolean' },
+    dirtyStatus: { type: 'string' },
+  },
+}
+
+async function applyProposal(round, proposal) {
+  if (!proposal || !Array.isArray(proposal.edits) || proposal.edits.length === 0) {
+    log(`fix:round${round}: fixer produced no usable proposal/edits — recording as a hard miss.`)
+    return null
+  }
+  for (const edit of proposal.edits) {
+    if (!edit || typeof edit.file !== 'string') {
+      log(`fix:round${round}: malformed edit entry — aborting apply.`)
+      return null
+    }
+    assertStationPath(edit.file)
+  }
+  try {
+    return await agent(
+      `You are the APPLY COURIER, round ${round}, of an autonomous improvement loop.
+
+STEP 1 — clean-status precondition: run \`git status --porcelain -- ${STATION_DIR}\` from the repo root. If it prints ANY output, the target path is already dirty (another change is in flight) — do NOT proceed to Step 2; return applied:false and dirtyStatus set to the raw command output.
+
+STEP 2 — apply (ONLY if Step 1 printed nothing): for each edit below, Read the target file first, then use the Edit tool to replace the exact literal 'old' substring with 'new'. Only touch files under ${STATION_DIR}/ — refuse (return applied:false, dirtyStatus:'') if any edit targets a path outside that directory.
+
+EDITS:
+${JSON.stringify(proposal.edits)}
+
+Return: applied (boolean — true only if every edit above was applied successfully), dirtyStatus (the raw git status --porcelain output when Step 1 was non-empty, otherwise an empty string).`,
+      { phase: 'Fix', label: `apply:round${round}`, schema: APPLY_SCHEMA }
+    )
+  } catch (e) {
+    const message = e && e.message ? e.message : String(e)
+    log(`fix:round${round}: apply courier threw — recording as a hard miss. (${message})`)
+    return null
+  }
+}
+
+// --- Revert courier ------------------------------------------------------------
+//
+// On rejection, restores the station file via `git checkout --` — same
+// allow-listed STATION_SKILL_MD target as the apply courier above.
+
+const REVERT_SCHEMA = {
+  type: 'object',
+  required: ['reverted'],
+  properties: {
+    reverted: { type: 'boolean' },
+  },
+}
+
+async function revertProposal(round) {
+  try {
+    return await agent(
+      `You are the REVERT COURIER, round ${round}. Run EXACTLY this one command from the repo root and nothing else:
+
+git checkout -- ${STATION_SKILL_MD}
+
+This restores the station file to its last-committed state, discarding this round's rejected edits. Return reverted (boolean — true only if the command exited 0).`,
+      { phase: 'Fix', label: `revert:round${round}`, schema: REVERT_SCHEMA }
+    )
+  } catch (e) {
+    const message = e && e.message ? e.message : String(e)
+    log(`fix:round${round}: revert courier threw. (${message})`)
+    return null
+  }
+}
+
+log('Fix phase: fixer stage + apply/revert couriers defined (schema-forced, ONE invariant per proposal) — Task 5 wires the per-round loop that invokes runFixer/applyProposal/revertProposal.')
 
 // --- Verify phase (STUB — wired in Task 5: round loop) ------------------------
 

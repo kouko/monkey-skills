@@ -97,6 +97,60 @@ def test_meta_seed_split_and_guards_present():
     assert "stub" in text.lower()
 
 
+def test_fixer_prompt_excludes_oracle_paths():
+    """Plan Task 4 (docs/loom/plans/2026-07-11-principles-replay-l3-loop.md):
+    fixer stage schema-forced ONE-invariant proposal + apply/revert couriers.
+    The fixer's own prompt text must never carry an oracle file path/fragment
+    — station wording is contract surface, but oracle content is grader-only
+    and must never leak into what a downstream LLM (the fixer) reads.
+    """
+    assert WORKFLOW.exists(), f"workflow script missing: {WORKFLOW}"
+    text = _text()
+
+    # --- fixer schema: invariant/rationale/edits present ---
+    assert "FIXER_SCHEMA" in text
+    assert "invariant" in text
+    assert "rationale" in text
+    assert "edits" in text
+
+    # --- exactly ONE invariant per proposal, stated explicitly ---
+    assert re.search(r"exactly one invariant", text, re.IGNORECASE), (
+        "schema/prompt must state EXACTLY ONE invariant per proposal"
+    )
+
+    # --- oracle path fragments must be absent from the fixer's OWN prompt
+    # text specifically (not just anywhere in the file) ---
+    fixer_call = re.search(
+        r"agent\(\s*`(.*?)`\s*,\s*\{[\s\S]*?schema:\s*FIXER_SCHEMA", text, re.DOTALL
+    )
+    assert fixer_call, "fixer agent() call (schema: FIXER_SCHEMA) not found"
+    fixer_prompt = fixer_call.group(1)
+    assert "2026-07-10-principles-flow-seed-corpus" not in fixer_prompt, (
+        "fixer prompt must not reference the oracle seed-corpus directory"
+    )
+    assert "oracle" not in fixer_prompt.lower(), (
+        "fixer prompt must not mention oracle content/paths at all"
+    )
+
+    # --- station-wording-is-contract-surface warning must be cited verbatim ---
+    assert "preamble-wording-is-contract-surface" in text
+
+    # --- apply courier: clean-status precondition + station path allow-list ---
+    assert "git status --porcelain" in text, "apply courier needs a clean-status precondition"
+    assert "STATION_DIR" in text
+    assert "loom-product-principles/skills/product-principles" in text
+
+    # --- revert courier ---
+    assert "git checkout --" in text, "revert courier must restore via git checkout --"
+
+    # --- folded-in review fix: grounding-cite comment for the nested
+    # workflow('principles-replay-matrix', ...) call ---
+    assert "principles-replay-matrix.js:41-122" in text, (
+        "nested workflow() call needs a grounding-cite comment naming its "
+        "call-shape source (principles-replay-matrix.js:41-122)"
+    )
+
+
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_workflow_file_dry_parses():
     assert WORKFLOW.exists(), f"workflow script missing: {WORKFLOW}"
