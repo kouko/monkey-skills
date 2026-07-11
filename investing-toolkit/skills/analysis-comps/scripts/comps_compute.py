@@ -130,6 +130,34 @@ def _resolve_ticker(pack: dict, fallback: str) -> str:
     return fallback
 
 
+def _expand_peer_tickers(pack: dict, path: Path) -> tuple[list[str], list[str]]:
+    """Resolve the ticker(s) a --peers pack represents.
+
+    Single-ticker packs (top-level `ticker` field, or `info`/`tickers` with
+    exactly one key) resolve to a 1-element list — same behavior as before.
+    Batch packs (`info`/`tickers` with >1 keys, no top-level `ticker` —
+    the data-markets batch-fetch shape, `pack.py --tickers T1,T2`, per
+    us-schema-comps-multiples.json / pack_us.py pack_comps_multiples batch
+    branch) expand to one entry per key.
+
+    Returns (tickers, warnings). When no ticker can be resolved at all
+    (empty info/tickers, no top-level ticker field — e.g. a batch-fetch
+    failure envelope), returns ([], [<loud warning>]) rather than falling
+    back to a bogus filename-stem ticker with all-null multiples.
+    """
+    if isinstance(pack.get("ticker"), str) and pack["ticker"]:
+        return [pack["ticker"]], []
+    info = pack.get("info") or {}
+    if len(info) == 1:
+        return [next(iter(info.keys()))], []
+    if len(info) > 1:
+        return sorted(info.keys()), []
+    return [], [
+        f"Peer file {path} has no resolvable ticker (unresolvable: empty info/tickers "
+        "and no top-level ticker field); skipped rather than nulled"
+    ]
+
+
 def _extract_multiples(pack: dict, ticker: str, multiple_ids: list[str]) -> dict:
     """Pull the requested multiples out of pack.info[ticker], normalising aliases.
     Missing values become None.
@@ -1376,24 +1404,32 @@ def main() -> int:
     peer_packs: list[tuple[str, dict, str, ClassificationResult | None, dict]] = []
     for p in peer_paths:
         pack = _load_pack(p)
-        ticker = _resolve_ticker(pack, fallback=p.stem.upper())
-        if ticker == anchor_ticker:
-            warnings.append(f"Peer file {p} resolves to anchor ticker {ticker}; skipped")
-            continue
-        mults = _extract_multiples(pack, ticker, anchor_multiple_ids)
-        peer_class: ClassificationResult | None = None
-        if effective_mode == "compute":
-            peer_class = classify_pack(pack)
-            if (
-                anchor_classification is not None
-                and peer_class.schema_id != anchor_classification.schema_id
-            ):
-                warnings.append(
-                    f"Peer {ticker} classified as schema {peer_class.schema_id}; "
-                    f"anchor schema is {anchor_classification.schema_id}. "
-                    f"Statistics may be misleading; recommend per-sector peer set."
-                )
-        peer_packs.append((ticker, mults, _provenance_label(pack, p), peer_class, pack))
+        peer_tickers, resolve_warnings = _expand_peer_tickers(pack, p)
+        warnings.extend(resolve_warnings)
+        for ticker in peer_tickers:
+            if ticker == anchor_ticker:
+                warnings.append(f"Peer file {p} resolves to anchor ticker {ticker}; skipped")
+                continue
+            mults = _extract_multiples(pack, ticker, anchor_multiple_ids)
+            peer_class: ClassificationResult | None = None
+            if effective_mode == "compute":
+                # Classify per-ticker: a batch pack's info{} carries N tickers,
+                # so classify_pack (which reads pack["ticker"] / sole info key)
+                # must see a single-ticker view, not the whole batch.
+                peer_class = classify_pack({
+                    "ticker": ticker,
+                    "info": {ticker: (pack.get("info") or {}).get(ticker)},
+                })
+                if (
+                    anchor_classification is not None
+                    and peer_class.schema_id != anchor_classification.schema_id
+                ):
+                    warnings.append(
+                        f"Peer {ticker} classified as schema {peer_class.schema_id}; "
+                        f"anchor schema is {anchor_classification.schema_id}. "
+                        f"Statistics may be misleading; recommend per-sector peer set."
+                    )
+            peer_packs.append((ticker, mults, _provenance_label(pack, p), peer_class, pack))
 
     if not peer_packs:
         warnings.append("No peers supplied or all peers de-duplicated against anchor; statistics use anchor-only fallback")

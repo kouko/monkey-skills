@@ -257,6 +257,68 @@ def test_missing_multiple_in_one_peer(runner, fixtures_dir):
     assert amzn_peer["multiples"].get("trailingPE") == pytest.approx(42.0)
 
 
+def test_batch_peer_file_multiple_tickers_not_silently_nulled(runner, fixtures_dir):
+    """A single --peers path may point at a *batch* comps-multiples pack —
+    `info: {T1:{...}, T2:{...}}` — the shape data-markets' batch fetch
+    (`pack.py --tickers T1,T2`, us-schema-comps-multiples.json) actually
+    produces. The script must expand it into one peer entry per real
+    ticker with non-null multiples, not collapse it into a single bogus
+    peer keyed by the filename stem with every multiple null (diagnosed
+    bug: peers[0].ticker became "COMPS_PEER_BATCH_TWO_TICKERS").
+    """
+    res = runner(
+        COMPS_SCRIPT,
+        "--anchor", _anchor_arg(fixtures_dir),
+        "--peers", _peers_arg(fixtures_dir, "comps_peer_batch_two_tickers.json"),
+    )
+    assert res.returncode == 0, res.stderr
+    payload = json.loads(res.stdout)
+    tickers = {p["ticker"] for p in payload["peers"]}
+    assert tickers == {"NVDA", "AVGO"}, (
+        f"batch peer file did not expand to real tickers: {tickers!r}"
+    )
+    for p in payload["peers"]:
+        assert p["multiples"]["trailingPE"] is not None, (
+            f"{p['ticker']} trailingPE unexpectedly null after batch expansion"
+        )
+    nvda = next(p for p in payload["peers"] if p["ticker"] == "NVDA")
+    assert nvda["multiples"]["trailingPE"] == pytest.approx(45.2, abs=1e-6)
+    avgo = next(p for p in payload["peers"] if p["ticker"] == "AVGO")
+    assert avgo["multiples"]["trailingPE"] == pytest.approx(38.0, abs=1e-6)
+
+
+def test_unresolvable_peer_ticker_is_loud_not_silent(runner, tmp_path, fixtures_dir):
+    """A peer pack with no resolvable ticker at all (empty `info`/`tickers`,
+    no top-level `ticker` field — the data-markets batch-fetch-failure
+    shape per pack_us.py's `pack_comps_multiples` error branch) must
+    surface a loud warning and be excluded from peers — never silently
+    added as a bogus filename-stem peer with all-null multiples.
+    """
+    unresolvable = tmp_path / "unresolvable.json"
+    unresolvable.write_text(json.dumps({
+        "pack": "comps-multiples",
+        "fetched_at": "2026-05-01T00:00:00Z",
+        "tickers": {},
+        "info": {},
+        "error": {"message": "batch fetch failed"},
+    }))
+    res = runner(
+        COMPS_SCRIPT,
+        "--anchor", _anchor_arg(fixtures_dir),
+        "--peers", str(unresolvable),
+    )
+    assert res.returncode == 0, res.stderr
+    payload = json.loads(res.stdout)
+    assert payload["peers"] == [], (
+        f"unresolvable peer file should not produce a bogus peer entry; got {payload['peers']!r}"
+    )
+    warnings = payload["_provenance"].get("warnings", [])
+    joined = " ".join(warnings).lower()
+    assert "unresolvable" in joined or "could not resolve" in joined, (
+        f"expected a loud unresolvable-ticker warning; got: {warnings!r}"
+    )
+
+
 def test_self_as_peer_dedupe(runner, fixtures_dir):
     """Self-as-peer dedupe: anchor file passed as its own peer is filtered.
 
