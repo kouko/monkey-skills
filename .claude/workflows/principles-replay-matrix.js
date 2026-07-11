@@ -127,6 +127,14 @@ const REPLAY_SCHEMA = {
   type: 'object',
   required: ['artifactPath'],
   properties: {
+    // ADVISORY-ONLY: this is the REPLAY agent's own echo of the path it
+    // wrote — an unconstrained, agent-authored string. It must NEVER be
+    // interpolated into Bash instruction text (or used for anything
+    // load-bearing) — every stage that needs the artifact path uses its
+    // own locally-computed, allow-listed `artifactPath` const instead. The
+    // Replay stage below overrides this field with that trusted local
+    // constant before returning its row, so no downstream stage (incl.
+    // Grade) ever sees the raw agent-echoed value.
     artifactPath: { type: 'string' },
     notes: { type: 'string' },
   },
@@ -231,9 +239,15 @@ Return the artifact path you wrote.`,
         }
       }
       log(`selfcheck:${seed.id}: dispatching self-check courier -> ${inventoryPath}`)
-      const selfCheck = await runSelfCheckCourier(seed, replayResult.artifactPath, inventoryPath)
+      const selfCheck = await runSelfCheckCourier(seed, artifactPath, inventoryPath)
       return {
         ...replayResult,
+        // override the agent's schema-echoed field (advisory-only, see
+        // REPLAY_SCHEMA) with the local, allow-listed constant — this is
+        // the ONLY artifactPath value any downstream stage (Grade) will
+        // ever see on this row, closing the same Bash-injection surface
+        // one stage further down too.
+        artifactPath,
         selfCheckExit: selfCheck && typeof selfCheck.exitCode === 'number' ? selfCheck.exitCode : null,
         selfCheckMisses: selfCheck && Array.isArray(selfCheck.missLines) ? selfCheck.missLines : [],
       }

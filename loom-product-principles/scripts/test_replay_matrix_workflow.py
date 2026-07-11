@@ -269,8 +269,9 @@ def test_inventory_step_and_selfcheck_courier_present():
     assert "missLines" in text
 
     # --- per-seed row gains ADDITIVE fields; Grade's oracle verdict intact ---
-    assert text.count("selfCheckExit") >= 2
-    assert text.count("selfCheckMisses") >= 2
+    # (shape pins for selfCheckExit/selfCheckMisses live in the dedicated
+    # test below — count-only pins here would pass even on two accidental
+    # occurrences, per docs/loom/memory/count-only-regression-pins-false-confidence.md)
     assert re.search(r"validatorExit\s*===\s*0", text), (
         "Grade stage's pass computation must stay validatorExit===0 && "
         "checkerExit===0 — self-check fields must never feed it"
@@ -290,3 +291,113 @@ def test_inventory_step_and_selfcheck_courier_present():
             ["node", "--check", str(WORKFLOW)], capture_output=True, text=True
         )
         assert result.returncode == 0, f"node --check failed: {result.stderr}"
+
+
+# --- Task 2 round-2 security fix: the self-check courier call site must
+# receive the LOCALLY-computed, allow-listed `artifactPath` const, never
+# `replayResult.artifactPath` (the REPLAY agent's own schema-echoed,
+# unconstrained string) — the latter flows straight into the courier's
+# Bash instruction text (docs/loom/plans/2026-07-12-principles-mechanical-
+# seed-gate.md round-2 review finding).
+
+def test_selfcheck_courier_receives_local_artifact_path_not_agent_echo():
+    text = _text()
+    assert "runSelfCheckCourier(seed, artifactPath, inventoryPath)" in text, (
+        "self-check courier call site must pass the local artifactPath const"
+    )
+    assert "runSelfCheckCourier(seed, replayResult.artifactPath" not in text, (
+        "self-check courier must never receive the agent's schema-echoed "
+        "artifactPath field"
+    )
+
+
+def test_selfcheck_courier_executable_probe_marker_path_lands_verbatim():
+    """Executable pin mirroring test_improve_loop_workflow.py's SEC-1
+    precedent: extract the real runSelfCheckCourier function from the
+    committed .js and eval it in a throwaway `node -e` with stubbed
+    agent()/log() globals, proving whatever path is passed as the 2nd
+    argument lands verbatim in the Bash instruction text the courier
+    receives — independent of the static pin above (which proves the call
+    SITE passes the right argument; this proves the function's own
+    plumbing doesn't mangle or drop it)."""
+    if shutil.which("node"):
+        text = _text()
+        fn_m = re.search(
+            r"async function runSelfCheckCourier\(seed, artifactPath, inventoryPath\) \{[\s\S]*?\n\}\n",
+            text,
+        )
+        assert fn_m, "runSelfCheckCourier function not found"
+        script = (
+            "const ROOT = '/x';\n"
+            "const SELF_CHECK_SCHEMA = {};\n"
+            "let capturedPrompt = null;\n"
+            "async function agent(prompt, opts) { capturedPrompt = prompt; return { exitCode: 0, missLines: [] } }\n"
+            "function log() {}\n"
+            + fn_m.group(0)
+            + "(async () => {\n"
+            "  const marker = '/MARKER/seedX/PRINCIPLES.md';\n"
+            "  await runSelfCheckCourier({ id: 'seedX' }, marker, '/tmp/inv.md');\n"
+            "  console.log(capturedPrompt.includes(marker) ? 'MARKER_LANDED' : 'MARKER_MISSING');\n"
+            "})();\n"
+        )
+        result = subprocess.run(["node", "-e", script], capture_output=True, text=True)
+        assert "MARKER_LANDED" in result.stdout, f"{result.stdout}{result.stderr}"
+
+
+# --- 🟢 fix: count-only pins (`text.count("selfCheckExit") >= 2`) pass even
+# if both occurrences are accidental (e.g. two comments, or one row
+# duplicated) — per docs/loom/memory/count-only-regression-pins-false-
+# confidence.md. Pin the field to two DISTINCT, load-bearing row shapes:
+# a degraded row and the success row, each anchored by unique surrounding
+# context so the assertion can only pass if that SPECIFIC site carries it.
+
+def test_selfcheck_fields_present_in_degraded_and_success_rows():
+    text = _text()
+
+    # degraded row: Replay stage's "no artifact produced" branch must still
+    # carry selfCheckExit: null / selfCheckMisses: [] right after its other
+    # null fields — not just present somewhere in the file.
+    degraded_row = re.search(
+        r"misses:\s*\['replay: no artifact produced'\],\s*"
+        r"artifactPath:\s*null,\s*"
+        r"gradeTxtPath:\s*null,\s*"
+        r"selfCheckExit:\s*null,\s*"
+        r"selfCheckMisses:\s*\[\],",
+        text,
+    )
+    assert degraded_row, (
+        "the Replay stage's 'no artifact produced' degraded row must carry "
+        "selfCheckExit: null / selfCheckMisses: [] immediately after its "
+        "other null fields"
+    )
+
+    # success row: computed from the self-check courier's actual result,
+    # not a hardcoded placeholder.
+    success_row = re.search(
+        r"selfCheckExit:\s*selfCheck\s*&&\s*typeof\s*selfCheck\.exitCode\s*===\s*'number'\s*"
+        r"\?\s*selfCheck\.exitCode\s*:\s*null,\s*"
+        r"selfCheckMisses:\s*selfCheck\s*&&\s*Array\.isArray\(selfCheck\.missLines\)\s*"
+        r"\?\s*selfCheck\.missLines\s*:\s*\[\],",
+        text,
+    )
+    assert success_row, (
+        "the Replay stage's success path must compute selfCheckExit/"
+        "selfCheckMisses from the actual self-check courier result "
+        "(selfCheck.exitCode / selfCheck.missLines), not a placeholder"
+    )
+
+    # Grade stage must read the SAME fields back off `replay` (carrying
+    # Replay-stage telemetry through), anchored on its distinct
+    # extraction-from-replay context.
+    carry_through = re.search(
+        r"const selfCheckExit = replay && typeof replay\.selfCheckExit === 'number' "
+        r"\? replay\.selfCheckExit : null\s*\n"
+        r"\s*const selfCheckMisses = replay && Array\.isArray\(replay\.selfCheckMisses\) "
+        r"\? replay\.selfCheckMisses : \[\]",
+        text,
+    )
+    assert carry_through, (
+        "the Grade stage must read selfCheckExit/selfCheckMisses back off "
+        "its `replay` argument (carrying Replay-stage telemetry through), "
+        "not recompute or drop it"
+    )
