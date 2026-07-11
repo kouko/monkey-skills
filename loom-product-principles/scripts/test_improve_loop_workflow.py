@@ -243,3 +243,75 @@ def test_apply_courier_wraps_edits_json_in_inert_data_boundary():
     assert re.search(r"never|not.*instruction", prompt, re.IGNORECASE), (
         "must instruct the courier never to follow embedded instruction-shaped text"
     )
+
+
+def test_two_stage_accept_and_brakes_wired():
+    """Task 5 (docs/loom/plans/2026-07-11-principles-replay-l3-loop.md): the
+    per-round loop wires two-stage accept (verify -> confirm -> held-out
+    smoke), the wordcap gate, ROUND_CAP/maxRounds brakes, a validated
+    per-round ledger (imitating driver_60_ledger.js's recordLedger), and a
+    final loop-report.md (NEVER basename report.md) — with no auto-merge/
+    push capability anywhere in the script.
+    """
+    text = _text()
+
+    # --- ordered stage markers: verify -> confirm -> held-out (source order) ---
+    verify_idx = text.find("verify:round")
+    confirm_idx = text.find("confirm:round")
+    heldout_idx = text.find("heldout:round")
+    assert verify_idx != -1, "verify-stage marker missing"
+    assert confirm_idx != -1, "confirm-stage marker missing"
+    assert heldout_idx != -1, "held-out-stage marker missing"
+    assert verify_idx < confirm_idx < heldout_idx, (
+        "verify/confirm/held-out stage markers must appear in that source order"
+    )
+
+    # --- all four verdict subcommand invocations present ---
+    assert "improve_loop_verdict.py" in text
+    assert "VERDICT_CLI} compare" in text
+    assert "VERDICT_CLI} smoke" in text
+    assert "VERDICT_CLI} wordcap" in text
+    assert "VERDICT_CLI} plateau" in text
+
+    # --- ROUND_CAP hard cap (literal 3) + maxRounds wiring together ---
+    assert "const ROUND_CAP = 3" in text
+    assert re.search(r"Math\.min\(\s*maxRounds\s*,\s*ROUND_CAP\s*\)", text), (
+        "the loop bound must be derived from BOTH maxRounds and the hard ROUND_CAP"
+    )
+
+    # --- per-round ledger: validated entries (imitate, don't import,
+    # loom-pipeline/scripts/driver_60_ledger.js:33-55) ---
+    assert "ROUND_LEDGER" in text
+    assert "recordRoundLedgerEntry" in text
+    for key in [
+        "round", "invariant", "applied", "compareExit", "confirmExit",
+        "smokeExit", "wordcapExit", "accepted", "reason",
+    ]:
+        assert f"'{key}'" in text, f"ledger entry shape missing required key {key!r}"
+
+    # --- plateau brake consulted between rounds ---
+    assert "runPlateauCourier" in text
+    assert "plateau:round" in text
+
+    # --- stash accumulation fix (T4 review 🟢): drop the just-created
+    # stash entry after a successful revert, verified by round label first ---
+    assert "git stash drop" in text
+    assert "stash@{0}" in text
+    assert "revert:round" in text
+
+    # --- report: loop-report.md written, NEVER bare report.md ---
+    assert "loop-report.md" in text
+    assert not re.search(r"(?<!loop-)report\.md", text), (
+        "must never create a file with basename report.md — only loop-report.md"
+    )
+
+    # --- return shape: {runLabel, rounds, accepted, ledger} ---
+    assert re.search(r"return\s*\{\s*runLabel[\s\S]*?rounds[\s\S]*?accepted[\s\S]*?ledger", text), (
+        "final return must be {runLabel, rounds, accepted, ledger}"
+    )
+
+    # --- no auto-merge / auto-push capability anywhere in the script: the
+    # loop never merges and never pushes (brief §Smallest End State item 6) ---
+    assert "git merge" not in text
+    assert "git push" not in text
+    assert "gh pr " not in text
