@@ -8,8 +8,10 @@
 > SDD's mid-implementation ask paths point back at this same file (§f) —
 > one interface, two firing points. Design SSOT for the rubric itself:
 > `docs/loom/design/2026-07-10-designer-pm-loop-architecture.md` §2
-> (:64-97) + §6 item 1 (:227 merge decision). This file cites that
-> rubric's operative test; it does not restate its rationale.
+> (:64-97) + §5 (:227 merge decision — "ONE escalation interface, two
+> firing points") + §6 item 1 (:232 bottom-right-cell surfacing
+> decision). This file cites that rubric's operative test; it does not
+> restate its rationale.
 
 ## (a) The two-axis test
 
