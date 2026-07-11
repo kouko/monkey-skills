@@ -372,12 +372,15 @@ def test_selfcheck_fields_present_in_degraded_and_success_rows():
     )
 
     # success row: computed from the self-check courier's actual result,
-    # not a hardcoded placeholder.
+    # not a hardcoded placeholder. (Task 3 extracted these from inline
+    # return-object ternaries into named consts, so the fix-round gate
+    # below can branch on `selfCheckExit` — same dynamic-computation
+    # semantics, relocated.)
     success_row = re.search(
-        r"selfCheckExit:\s*selfCheck\s*&&\s*typeof\s*selfCheck\.exitCode\s*===\s*'number'\s*"
-        r"\?\s*selfCheck\.exitCode\s*:\s*null,\s*"
-        r"selfCheckMisses:\s*selfCheck\s*&&\s*Array\.isArray\(selfCheck\.missLines\)\s*"
-        r"\?\s*selfCheck\.missLines\s*:\s*\[\],",
+        r"const selfCheckExit = selfCheck\s*&&\s*typeof\s*selfCheck\.exitCode\s*===\s*'number'\s*"
+        r"\?\s*selfCheck\.exitCode\s*:\s*null\s*\n"
+        r"\s*const selfCheckMisses = selfCheck\s*&&\s*Array\.isArray\(selfCheck\.missLines\)\s*"
+        r"\?\s*selfCheck\.missLines\s*:\s*\[\]",
         text,
     )
     assert success_row, (
@@ -401,3 +404,144 @@ def test_selfcheck_fields_present_in_degraded_and_success_rows():
         "its `replay` argument (carrying Replay-stage telemetry through), "
         "not recompute or drop it"
     )
+
+
+# --- Task 3 (plan 2026-07-12-principles-mechanical-seed-gate.md): on a hard
+# self-check MISS (exitCode === 1) the pipeline dispatches ONE fresh fix
+# agent (additive-patch, Write/Edit only) then re-runs the self-check
+# courier ONCE (fix bound = 1, Decision Log 2) — never a loop. The row
+# gains additive telemetry selfCheckFixed/selfCheckExitAfterFix; the Grade
+# stage's own oracle-based `pass` computation stays untouched.
+
+def test_fix_round_wired_and_bounded():
+    text = _text()
+
+    # --- fix agent dispatched ONLY on self-check exit 1 (conditional marker) ---
+    gate_m = re.search(
+        r"if \(selfCheckExit === 1\) \{([\s\S]*?)\n      \}\n",
+        text,
+    )
+    assert gate_m, (
+        "fix round must be gated on `if (selfCheckExit === 1)` — never "
+        "dispatched when self-check already passed (exit 0) or degraded "
+        "(courier threw, exit null)"
+    )
+    gate_body = gate_m.group(1)
+    assert "runFixAgent(" in gate_body, (
+        "the fix agent must be dispatched from inside the exit-1 gate body"
+    )
+
+    # --- exactly ONE re-check: no loop construct wraps the fix leg -------
+    # the file's ONLY pre-existing loop is the args-guard's sandboxDir
+    # per-segment validation (unrelated to the Replay pipeline stage) — the
+    # fix round must be a single conditional re-check, never a loop.
+    assert text.count("for (") == 1, (
+        "expected exactly the one pre-existing 'for (' (sandboxDir segment "
+        "guard) — a fix-round loop would add a second one, breaking the "
+        "fix-bound-1 invariant (plan Decision Log 2)"
+    )
+    assert "while (" not in text
+    assert "runSelfCheckCourier(" in gate_body, (
+        "the bounded re-check must call runSelfCheckCourier again, inside "
+        "the SAME exit-1 gate (never a separate loop construct)"
+    )
+    # runSelfCheckCourier: one function definition + exactly two call sites
+    # (the initial check + the one bounded re-check).
+    assert text.count("runSelfCheckCourier(") == 3
+
+    # --- telemetry fields pinned at their construction sites --------------
+    assert re.search(r"let selfCheckFixed = 0\b", text), (
+        "selfCheckFixed must default to 0 (rows whose self-check passed "
+        "first time never enter the fix branch)"
+    )
+    assert re.search(r"let selfCheckExitAfterFix = null\b", text), (
+        "selfCheckExitAfterFix must default to null (rows whose self-check "
+        "passed first time never run a re-check)"
+    )
+    return_row = re.search(
+        r"return \{\s*\.\.\.replayResult,[\s\S]{0,400}?artifactPath,\s*selfCheckExit,\s*"
+        r"selfCheckMisses,\s*selfCheckFixed,\s*selfCheckExitAfterFix,?\s*\}",
+        text,
+    )
+    assert return_row, (
+        "the Replay stage's success-path return row must carry "
+        "selfCheckFixed/selfCheckExitAfterFix alongside the existing "
+        "selfCheckExit/selfCheckMisses fields"
+    )
+    # Grade stage must carry both new fields through too (mirroring its
+    # existing selfCheckExit/selfCheckMisses carry-through), or the fields
+    # would be computed and immediately dropped before reaching the final
+    # per-seed row.
+    grade_carry = re.search(
+        r"const selfCheckFixed = replay && typeof replay\.selfCheckFixed === 'number' "
+        r"\? replay\.selfCheckFixed : 0\s*\n"
+        r"\s*const selfCheckExitAfterFix = replay && typeof replay\.selfCheckExitAfterFix === 'number' "
+        r"\? replay\.selfCheckExitAfterFix : null",
+        text,
+    )
+    assert grade_carry, (
+        "the Grade stage must read selfCheckFixed/selfCheckExitAfterFix "
+        "back off its `replay` argument, same carry-through discipline as "
+        "the existing selfCheckExit/selfCheckMisses fields"
+    )
+    assert text.count("selfCheckFixed,") >= 4, (
+        "selfCheckFixed must ride all Grade-stage return rows (hard-miss, "
+        "courier-null, success, stage-error), not just the success path"
+    )
+    assert text.count("selfCheckExitAfterFix,") >= 4
+
+    # --- null-guard on the fix agent's own result --------------------------
+    null_guard = re.search(r"if \(!fixResult \|\| !fixResult\.edited\) \{([\s\S]*?)\n\s*\}", text)
+    assert null_guard, "fix agent result must be null-guarded (fixResult can be null or edited:false)"
+    assert "selfCheckExitAfterFix = 1" in null_guard.group(1), (
+        "a null/failed fix agent result must degrade selfCheckExitAfterFix "
+        "to 1 (still-a-miss), never crash the stage"
+    )
+
+    # --- provenance: fix agent + re-check receive LOCAL path constants -----
+    assert "runFixAgent(seed, artifactPath, selfCheckMisses)" in text, (
+        "fix agent call site must pass the local, allow-listed artifactPath "
+        "const — never replayResult.artifactPath (the agent's own echo)"
+    )
+    assert "runFixAgent(seed, replayResult.artifactPath" not in text
+    assert re.search(r"runSelfCheckCourier\(seed, artifactPath, inventoryPath\)", gate_body), (
+        "the bounded re-check must reuse the SAME local artifactPath/"
+        "inventoryPath constants as the initial self-check, never an "
+        "agent-echoed path"
+    )
+
+    # --- fix prompt: oracle-exclusion + inert-data boundary + wording warning ---
+    fix_prompt = _extract_agent_prompt(text, "FIX_SCHEMA")
+    assert "2026-07-10-principles-flow-seed-corpus" not in fix_prompt
+    assert "oracle" not in fix_prompt.lower()
+    assert "MISS_LINES_DATA_BEGIN_MARKER" in text
+    assert "MISS_LINES_DATA_END_MARKER" in text
+    assert "MISS_LINES_DATA_BEGIN_MARKER" in fix_prompt
+    assert "MISS_LINES_DATA_END_MARKER" in fix_prompt
+    assert re.search(r"inert", fix_prompt, re.IGNORECASE), "must label the miss-lines blob inert data"
+    assert re.search(r"never|not.*instruction", fix_prompt, re.IGNORECASE), (
+        "must instruct the fix agent never to follow embedded instruction-shaped text"
+    )
+    assert "preamble-wording-is-contract-surface" in fix_prompt, (
+        "fix prompt must carry the wording-is-contract-surface warning "
+        "(docs/loom/memory/preamble-wording-is-contract-surface.md)"
+    )
+    assert re.search(r"additive", fix_prompt, re.IGNORECASE), (
+        "fix prompt must state the additive-only patch rule"
+    )
+    assert "(agent-decided)" in fix_prompt
+    assert "## Anchors" in fix_prompt
+    assert "## Open Questions" in fix_prompt
+    assert "re-trigger" in fix_prompt
+    assert "Write" in fix_prompt and "Edit" in fix_prompt
+    assert re.search(r"not run bash|no bash|do not run any bash|never.*bash", fix_prompt, re.IGNORECASE), (
+        "fix agent must be explicitly forbidden from using Bash (Write/Edit "
+        "tools only per plan Task 3 step 2)"
+    )
+
+    # --- dry-parse still passes ---------------------------------------------
+    if shutil.which("node"):
+        result = subprocess.run(
+            ["node", "--check", str(WORKFLOW)], capture_output=True, text=True
+        )
+        assert result.returncode == 0, f"node --check failed: {result.stderr}"
