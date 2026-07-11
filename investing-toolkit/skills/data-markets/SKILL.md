@@ -107,6 +107,8 @@ limits, and caveats: see `references/market-us.md`,
 `references/market-jp.md`, `references/market-tw.md`,
 `references/market-kr.md`, `references/market-cn.md`. External-surface
 grounding for the cache-layer migration itself: `references/migration-grounding.md`.
+Per-pack output JSON Schemas (market-prefixed, e.g. `tw-schema-snapshot.json`)
+for validating each pack's emitted shape: `schemas/`.
 
 ---
 

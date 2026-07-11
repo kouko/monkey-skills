@@ -17,9 +17,18 @@ below are byte-identical migrations (cache-layer only) — see
 | `ndc_client.py` | **A primary** | 國發會：景氣對策信號 五色燈號、領先/同時指標、台灣 PMI/NMI |
 | `statgov_client.py` | **A primary** | stat.gov.tw 隱藏 chart data：GDP/IPI/失業率/出口/外匯/TAIEX 等 17 presets |
 
-Canonical financials (income statement / balance sheet / cash flow) ARE
-Tier-A here via MOPS — TW is one of the two markets (with US) that has
-real primary-source financials wired, not a Tier-2 placeholder.
+**Honest gap**: canonical financials (top-level `income_statement` /
+`balance_sheet` / `cash_flow`) are Tier 2 (yfinance) here too — MOPS
+Tier-A normalization into the flat canonical shape is deferred to a
+follow-up PR (`pack_tw.py`'s `_build_canonical_from_yf_financials_tw`
+docstring and `tw_specific.primary_source_status` both say so
+explicitly). This mirrors JP/KR/CN's own canonical-financials gap; only
+US has a wired Tier-3 canonical path (SEC EDGAR). What TW *does* have
+that the others don't: MOPS Tier-A **raw** financial statements are
+available unnormalized under `out.mops.income_statement` /
+`balance_sheet` / `cash_flow` (中文 ROC-dated, both 母公司/合併 basis) —
+see `tw_specific.report_basis_note` — a real primary-source block, just
+not yet folded into the canonical 5-country shape.
 
 ## API keys + rate limits
 
