@@ -49,6 +49,33 @@ views:
         direction: DESC
 ```
 
+## Filename & folder convention (vault delivery)
+
+Folder: `investing/memos/` (default-unless-user-says-otherwise — see
+SKILL.md Phase 5b). Filename, all-English:
+
+```
+YYYY-MM-DD {identifier} Equity Memo.md
+e.g. 2026-07-12 2330.TW Equity Memo.md
+```
+
+- `{identifier}` for equities is the Yahoo/RIC ticker **as-is**, dot
+  suffix included (`2330.TW`, `7203.T`, `AAPL`). Interior dots are safe
+  in Obsidian note names; only leading/trailing dots are not.
+- The type descriptor is the literal `Equity Memo`, aligned with
+  `type: equity-memo`. Future non-equity memo skills follow the same
+  shape with their own descriptor (`FX Memo`, `Commodity Memo`) and a
+  **clean identifier — NEVER a raw vendor symbol**: FX = ISO 4217
+  concatenation (`USDTWD`), metals = ISO pseudo-currency (`XAUUSD`),
+  energy = house codes documented at introduction time (`WTI`, `BRENT`,
+  `NATGAS`), indices = caret stripped (`TWII`, `SPX`). Rationale: Yahoo
+  sigils `=X` / `=F` / `^` are link-hostile in Obsidian (`^` is a
+  block-reference char); vendor symbols belong in frontmatter fields,
+  not filenames (RESOLVED 2026-07-12 with the user; industry pattern:
+  Ghostfolio/Beancount strip vendor sigils at the storage boundary).
+- Same ticker re-analyzed the same day: update the existing note (one
+  note per ticker per day; earlier days are never touched).
+
 ## Casing status
 
 RESOLVED (2026-07-11): the user's vault standardizes on all-lowercase
