@@ -1,7 +1,7 @@
 ---
 name: ui-verification
 description: |
-  Use AFTER UI code lands and BEFORE the branch closes — drives the real rendered app through every state ui-flows.md enumerates (render variants, flows, entry/exit) using the host's browser/device automation tools. CONDITIONAL: fires only when a ui-flows.md exists AND the branch touched a UI surface; otherwise N/A. Not for package tests (verification-before-completion), not DESIGN.md token conformance (parked), not TUI/CLI (v1 is GUI). Triggers: "verify the UI", "did the screens actually render", 畫面驗證, UI 検証.
+  The user's main acceptance stage when a UI exists — used AFTER UI code lands and BEFORE the branch closes to drive the real rendered app through every state ui-flows.md enumerates (render variants, flows, entry/exit) using the host's browser/device automation tools. CONDITIONAL: fires only when a ui-flows.md exists AND the branch touched a UI surface; otherwise N/A. Not for package tests (verification-before-completion), not DESIGN.md token conformance (parked), not TUI/CLI (v1 is GUI). Triggers: "verify the UI", "did the screens actually render", 畫面驗證, UI 検証.
 version: 0.1.0
 ---
 
@@ -17,9 +17,11 @@ The 2026-07-03 pipeline dogfood shipped a GUI product whose test suite was
 28/28 green while **the rendered half had zero behavioral verification** —
 "no live browser was used" (the code station's own ledger). Package tests
 verify logic; they cannot verify that the empty state renders, that the error
-toast is reachable, that pause actually swaps the controls. This skill is the
-runtime gate for that half: **open the real app, walk the states the design
-station already enumerated, and report what you observed.**
+toast is reachable, that pause actually swaps the controls. For a UI-bearing
+branch, this skill is the user's main acceptance stage — the running app is
+the only surface a non-engineer user can adjudicate "done" by, not test
+counts: **open the real app, walk the states the design station already
+enumerated, and report what you observed.**
 
 ## The gate is CONDITIONAL — check both conditions first
 
