@@ -140,8 +140,20 @@ def test_fixer_prompt_excludes_oracle_paths():
     assert "STATION_DIR" in text
     assert "loom-product-principles/skills/product-principles" in text
 
-    # --- revert courier ---
-    assert "git checkout --" in text, "revert courier must restore via git checkout --"
+    # --- revert courier: stash, not checkout (EXT-1 fix — dcg blocks
+    # `git checkout --`, environment-gotchas.md:36-38, "Undo with stash,
+    # not checkout"). The substring may still appear in an explanatory
+    # comment; what must be gone is the actual command line. ---
+    assert "git checkout -- ${STATION_SKILL_MD}" not in text, (
+        "revert courier must not RUN `git checkout --` — this repo's "
+        "dangerous-command-guard blocks it (environment-gotchas.md:36-38)"
+    )
+    assert "git stash push -m" in text and "-- ${STATION_SKILL_MD}" in text, (
+        "revert courier must restore via git stash push"
+    )
+    assert "environment-gotchas.md:36-38" in text, (
+        "revert-surface change must cite its grounding source"
+    )
 
     # --- folded-in review fix: grounding-cite comment for the nested
     # workflow('principles-replay-matrix', ...) call ---
@@ -158,3 +170,76 @@ def test_workflow_file_dry_parses():
         ["node", "--check", str(WORKFLOW)], capture_output=True, text=True
     )
     assert result.returncode == 0, f"node --check failed: {result.stderr}"
+
+
+def test_assert_station_path_rejects_dot_dot_segments_static():
+    """SEC-1 fix: the per-segment allow-list regex admits whole '.'/'..'
+    segments (dot is in the char class), so a static marker pins the
+    explicit dot-segment rejection alongside it."""
+    text = _text()
+    assert "segment === '..'" in text and "segment === '.'" in text, (
+        "assertStationPath must explicitly reject '.'/'..' segments — the "
+        "char-class regex alone admits them"
+    )
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_assert_station_path_rejects_dot_dot_segments_executable():
+    """SEC-1 executable pin, mirroring the reviewer's live Node repro:
+    extract the real assertStationPath function + its two constants from
+    the committed .js and eval them in a throwaway `node -e` against the
+    exact traversal payload the reviewer used."""
+    text = _text()
+    station_dir_m = re.search(r"const STATION_DIR = '[^']+'", text)
+    pattern_m = re.search(r"const RUN_LABEL_ALLOWED_PATTERN = /[^\n]+/", text)
+    fn_m = re.search(r"function assertStationPath\(filePath\) \{[\s\S]*?\n\}\n", text)
+    assert station_dir_m and pattern_m and fn_m, "assertStationPath + constants not found"
+    script = (
+        station_dir_m.group(0) + "\n" + pattern_m.group(0) + "\n" + fn_m.group(0) + "\n"
+        "try { assertStationPath(STATION_DIR + '/../../../../etc/x'); console.log('NOT_REJECTED') }\n"
+        "catch (e) { console.log('REJECTED') }\n"
+        "assertStationPath(STATION_DIR + '/SKILL.md'); console.log('VALID_OK')\n"
+    )
+    result = subprocess.run(["node", "-e", script], capture_output=True, text=True)
+    assert "REJECTED" in result.stdout, f"traversal must be rejected: {result.stdout}{result.stderr}"
+    assert "NOT_REJECTED" not in result.stdout
+    assert "VALID_OK" in result.stdout, f"legit path must still pass: {result.stdout}{result.stderr}"
+
+
+def test_apply_proposal_validates_paths_inside_try():
+    """ARCH-1 fix: a malformed edit path must degrade via applyProposal's
+    catch (recorded failure), never throw uncaught past the stage boundary."""
+    text = _text()
+    fn_m = re.search(r"async function applyProposal\(round, proposal\) \{[\s\S]*?\n\}\n", text)
+    assert fn_m, "applyProposal function not found"
+    body = fn_m.group(0)
+    try_idx = body.index("try {")
+    assert_idx = body.index("assertStationPath(edit.file)")
+    assert assert_idx > try_idx, (
+        "assertStationPath must be called INSIDE the try block, so a bad "
+        "path degrades via the catch instead of crashing the run"
+    )
+
+
+def test_apply_courier_wraps_edits_json_in_inert_data_boundary():
+    """SEC-2 fix: the fixer-produced edits JSON is untrusted content
+    embedded in the courier prompt — it must be wrapped in explicit
+    delimiters plus an inert-data instruction."""
+    text = _text()
+    assert "EDITS_DATA_BEGIN_MARKER" in text
+    assert "EDITS_DATA_END_MARKER" in text
+    # Anchor on the apply courier's own unique opener/closer text rather
+    # than a generic `agent(...schema: APPLY_SCHEMA` scan (the fixer's
+    # agent() call comes first in the file and a non-greedy `[\s\S]*?`
+    # between backtick and APPLY_SCHEMA walks straight through it), and
+    # rather than a `[^`]*` backtick-boundary scan (the prompt contains
+    # escaped `\`` backticks around the embedded git command).
+    apply_call = re.search(r"You are the APPLY COURIER([\s\S]*?)Return: applied \(boolean", text)
+    assert apply_call, "apply courier prompt not found"
+    prompt = apply_call.group(1)
+    assert "EDITS_DATA_BEGIN_MARKER" in prompt
+    assert "EDITS_DATA_END_MARKER" in prompt
+    assert re.search(r"inert", prompt, re.IGNORECASE), "must label the JSON blob inert data"
+    assert re.search(r"never|not.*instruction", prompt, re.IGNORECASE), (
+        "must instruct the courier never to follow embedded instruction-shaped text"
+    )
