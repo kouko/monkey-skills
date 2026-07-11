@@ -91,10 +91,12 @@ def test_meta_seed_split_and_guards_present():
     assert "return await workflow(" in text
     assert "catch (e)" in text
 
-    # --- Fix / Verify phases present as stubs (Task 4/5 wire the bodies) ---
+    # --- Fix / Verify phase titles present (Task 4/5 wired their bodies —
+    # this file's own Task-3-era "stub" markers are gone as of Task 5;
+    # test_two_stage_accept_and_brakes_wired below covers the wired Verify
+    # phase's actual content) ---
     assert "title: 'Fix'" in text
     assert "title: 'Verify'" in text
-    assert "stub" in text.lower()
 
 
 def test_fixer_prompt_excludes_oracle_paths():
