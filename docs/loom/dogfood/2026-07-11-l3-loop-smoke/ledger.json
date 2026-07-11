@@ -1,0 +1,27 @@
+{
+  "runLabel": "l3-smoke-r1",
+  "workflowRunId": "wf_108fd031-d1c",
+  "date": "2026-07-11",
+  "maxRounds": 1,
+  "rounds": 1,
+  "accepted": 0,
+  "ledger": [
+    {
+      "round": 1,
+      "invariant": "Every canon or technology the seed names (language, framework, library, database, platform capability — wherever it appears, including inline in prose) MUST get its own version-pinned `## Anchors` row; a carrying principle that mentions the name cites that row but never substitutes for it, and a missing seed version is pinned to current stable tagged `(agent-decided)`.",
+      "applied": true,
+      "compareExit": 1,
+      "confirmExit": null,
+      "smokeExit": null,
+      "wordcapExit": null,
+      "accepted": false,
+      "reason": "compare: no win (exit 1)"
+    }
+  ],
+  "agents": {"total": 28, "errors": 0, "skipped": 0},
+  "postRunVerification": {
+    "stationCleanAfterRevert": true,
+    "revertStashDropped": true,
+    "subagentTokens": 1641856
+  }
+}
