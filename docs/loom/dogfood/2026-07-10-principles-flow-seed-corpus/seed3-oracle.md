@@ -13,9 +13,12 @@ out_of_jurisdiction_bait: "MIT license 開源後續 SaaS 付費規劃" (business
 
 stances: task=diff+分類+報告only; user=後端工程師; quality order=召回>速度>美觀; success=98% recall/100案例; why-new=誤報率高/無GraphQL; language=英文輸出; lifecycle=無狀態單次呼叫; design=雙格式人機可讀; interaction=Shneiderman+Nielsen mix; eng 可逆性=opt-out覆寫; privacy=純本地不上傳; eng 升級胃口=agent自行決定; product=Working Backwards; eng canon=Hexagonal+12-Factor; Rust tech-stack in prose
 
-negative: 上傳 schema 到雲端
+negative: none in this seed (machine-checked items demoted to grader-side notes — see # note lines)
 # note: 上傳 schema 到雲端 must not read as accepted behavior (privacy stance
-# is 純本地不上傳). mock server support / API gateway support are bait-leak
+# is 純本地不上傳) — demoted from machine-checked `negative:` (round-3): a
+# rejection sentence like 「絕不上傳 schema 到雲端」 contains this token as a
+# substring, so the checker fired a reproduced false positive; grader-checked
+# only now. mock server support / API gateway support are bait-leak
 # coverage, grader-checked only (not machine-checked): mock server/API
 # gateway are Scope-out items, and any acceptance phrase is a substring of
 # its own natural rejection (negation-superstring — e.g. "does not offer

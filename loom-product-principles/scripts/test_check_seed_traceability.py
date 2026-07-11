@@ -318,19 +318,17 @@ _COMMITTED_ORACLE_EXPECTATIONS = [
         "deferred_items": "可逆性|Reversibility posture",
         "negative": "上傳雲端",
     }),
-    ("seed3-oracle.md", _SEED_CORPUS / "seed3-oracle.md", 6, 0, 1, {
+    ("seed3-oracle.md", _SEED_CORPUS / "seed3-oracle.md", 6, 0, 0, {
         "named_anchors": "Nielsen's 10 Usability Heuristics",
-        "negative": "上傳 schema 到雲端",
     }),
     ("seed4-oracle.md", _SEED_CORPUS / "seed4-oracle.md", 10, 1, 4, {
         "named_anchors": "Norman's Design Principles",
         "deferred_items": "升級胃口|Upgrade appetite",
         "negative": "強制雲端備份",
     }),
-    ("seed5-oracle.md", _SEED_CORPUS / "seed5-oracle.md", 8, 2, 1, {
+    ("seed5-oracle.md", _SEED_CORPUS / "seed5-oracle.md", 8, 2, 0, {
         "named_anchors": "WCAG",
         "deferred_items": "預約記錄保留期",
-        "negative": "簡訊通知作為 v1 原則",
     }),
     ("cold-operator seed.md", _COLD_OPERATOR_SEED, 9, 1, 8, {
         "named_anchors": "JTBD|Jobs-to-be-Done",

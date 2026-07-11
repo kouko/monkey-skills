@@ -26,9 +26,12 @@ stances:          # each individual stance needs a carrying principle (merging O
   - 個資最小化＋電話遮罩
   - 工程全委派（只看結果）            # escalation appetite → may be process-context; must not be silently dropped (explicit note or principle)
 
-negative: 簡訊通知作為 v1 原則
+negative: none in this seed (machine-checked items demoted to grader-side notes — see # note lines)
 # note: 簡訊通知作為 v1 原則 is a deferred channel (SMS is out for v1, LINE +
-# email only) — presence as a committed principle is a regression.
+# email only) — presence as a committed principle is a regression. Demoted
+# from machine-checked `negative:` (round-3): a natural rejection sentence
+# containing this token as a substring reproduced a false positive against
+# check(); grader-checked only now.
 # note: 支援企業版|enterprise edition support (企業版 explicitly scoped out) is
 # bait-leak coverage, grader-checked only (not machine-checked):
 # negation-superstring — any acceptance phrase is a substring of its own
