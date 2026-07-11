@@ -256,9 +256,15 @@ def test_wordcap_respects_custom_cap(tmp_path):
 
 
 def test_wordcap_missing_file_exits_2(tmp_path):
+    # Assert on stderr CONTENT (not just exit code): at the pre-Task-2
+    # revision, the `wordcap` subcommand did not exist yet, so this same
+    # invocation exited 2 via argparse's "invalid choice: 'wordcap'"
+    # without ever reaching the missing-file branch. Pinning the actual
+    # handler's message closes that shadow-pass.
     missing = tmp_path / "does-not-exist.md"
     proc = _run(["wordcap", str(missing)])
     assert proc.returncode == 2
+    assert "file not found" in proc.stderr
 
 
 # --- plateau -----------------------------------------------------------------
@@ -306,14 +312,21 @@ def test_plateau_continues_on_single_miss(tmp_path):
 
 
 def test_plateau_malformed_json_exits_2(tmp_path):
+    # Same argparse-shadow risk as wordcap's missing-file test: `plateau`
+    # did not exist at the pre-Task-2 revision either, so an exit-code-only
+    # assertion would have shadow-passed via argparse's "invalid choice"
+    # rather than exercising the malformed-JSON branch. Assert stderr content.
     ledger = tmp_path / "ledger.json"
     ledger.write_text("not json", encoding="utf-8")
     proc = _run(["plateau", str(ledger)])
     assert proc.returncode == 2
+    assert "invalid JSON" in proc.stderr
 
 
 def test_plateau_missing_accepted_key_exits_2(tmp_path):
+    # Same argparse-shadow risk — see test_plateau_malformed_json_exits_2.
     ledger = tmp_path / "ledger.json"
     ledger.write_text(json.dumps([{"round": 1}]), encoding="utf-8")
     proc = _run(["plateau", str(ledger)])
     assert proc.returncode == 2
+    assert "accepted" in proc.stderr

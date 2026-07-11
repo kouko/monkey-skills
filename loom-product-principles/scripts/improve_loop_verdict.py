@@ -283,14 +283,7 @@ def _cmd_plateau(args) -> int:
     return 1 if stop else 0
 
 
-def main(argv: list | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        description="Verdict helper for the L3 principles-improve-loop: "
-                    "'compare' judges a visible-seed round (no seed worse AND >=1 "
-                    "better); 'smoke' judges the held-out confirmation (no seed "
-                    "newly failing); 'wordcap' and 'plateau' are the loop's brakes.")
-    subparsers = parser.add_subparsers(dest="command", required=True)
-
+def _add_compare_parser(subparsers) -> None:
     compare_parser = subparsers.add_parser(
         "compare",
         help="compare >=1 baseline row-sets (aggregated: pass if ANY run passed) "
@@ -307,6 +300,8 @@ def main(argv: list | None = None) -> int:
     compare_parser.epilog = "Exit codes: 0 win (no worse, >=1 better), 1 no win, 2 malformed input."
     compare_parser.set_defaults(func=_cmd_compare)
 
+
+def _add_smoke_parser(subparsers) -> None:
     smoke_parser = subparsers.add_parser(
         "smoke",
         help="compare one held-out baseline row-set against one held-out "
@@ -323,6 +318,8 @@ def main(argv: list | None = None) -> int:
     smoke_parser.epilog = "Exit codes: 0 no newly-failing seed, 1 newly-failing seed(s) (named on stdout), 2 malformed input."
     smoke_parser.set_defaults(func=_cmd_smoke)
 
+
+def _add_wordcap_parser(subparsers) -> None:
     wordcap_parser = subparsers.add_parser(
         "wordcap",
         help="check a target file's word count against a hard cap",
@@ -335,6 +332,8 @@ def main(argv: list | None = None) -> int:
     wordcap_parser.epilog = "Exit codes: 0 at-or-under cap, 1 over cap, 2 file not found."
     wordcap_parser.set_defaults(func=_cmd_wordcap)
 
+
+def _add_plateau_parser(subparsers) -> None:
     plateau_parser = subparsers.add_parser(
         "plateau",
         help="check a round-ledger for 2 consecutive no-accept rounds (stop signal)",
@@ -345,6 +344,20 @@ def main(argv: list | None = None) -> int:
     )
     plateau_parser.epilog = "Exit codes: 0 continue, 1 stop (plateaued), 2 malformed input."
     plateau_parser.set_defaults(func=_cmd_plateau)
+
+
+def main(argv: list | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Verdict helper for the L3 principles-improve-loop: "
+                    "'compare' judges a visible-seed round (no seed worse AND >=1 "
+                    "better); 'smoke' judges the held-out confirmation (no seed "
+                    "newly failing); 'wordcap' and 'plateau' are the loop's brakes.")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    _add_compare_parser(subparsers)
+    _add_smoke_parser(subparsers)
+    _add_wordcap_parser(subparsers)
+    _add_plateau_parser(subparsers)
 
     args = parser.parse_args(argv)
     return args.func(args)
