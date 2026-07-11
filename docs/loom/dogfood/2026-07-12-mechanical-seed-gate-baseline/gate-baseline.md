@@ -47,7 +47,7 @@ baseline).
    deferred item accounts for 2 of 4 residual failures — the same item
    that recurred in the calibration baseline. Extraction-at-reading
    misses skew toward deferred/stance-like items over concrete tech
-   nouns (3 of 6 residual miss LINES are deferred_items).
+   nouns (3 of 8 residual miss LINES are deferred_items).
 4. **No regression**: validator exits 0 across all 12 (per-row
    `validatorExit` recorded in `runs.json`, copied from the two workflow
    returns); no `negative:` violations (no `negative:`-prefixed entry in
