@@ -80,6 +80,8 @@ the skip in the memo's Limitations section (Phase 4).
 
 ```bash
 grep -rl "^ticker: ${TICKER}$" "$SEARCH_ROOT" --include="*.md" 2>/dev/null
+# NOTE: escape regex dots in suffixed tickers first, e.g. TICKER_RE=${TICKER//./\\.}
+# and grep for "^ticker: ${TICKER_RE}$" — a bare . would match any character.
 ```
 
 **No hits**: silent skip — mirrors Phase 5b's graceful-skip shape (see its closing artifact-gate paragraph).
@@ -314,7 +316,8 @@ The investing-team output is the memo body (Markdown). Before persisting,
 prepend the toolkit frontmatter block (schema SSOT:
 `references/vault-frontmatter.md`) — the 8 fields (`type`, `ticker`,
 `market`, `date`, `verdict`, `confidence`, `priceAtAnalysis`,
-`intrinsicMid`), values sourced from this run (verdict/confidence from
+`intrinsicMid`; `confidence` is omitted when the memo reports none — see
+the schema SSOT), values sourced from this run (verdict/confidence from
 the memo's §一 執行摘要, `priceAtAnalysis` from Phase 1 `fetch.json`
 `current_price`, `intrinsicMid` from Phase 3 `dcf.json` `mid`) — so the
 file is `---\n<8 fields>\n---\n` followed by the memo body. This emission
