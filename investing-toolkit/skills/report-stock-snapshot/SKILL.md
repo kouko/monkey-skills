@@ -1,7 +1,7 @@
 ---
 name: report-stock-snapshot
 description: |
-  Layer-3 single-page Markdown snapshot card for any equity (US/JP/TW/KR/CN/HK). Auto-detects market by suffix, dispatches data-{country} snapshot (disclosures + price + valuation), renders a card. No analysis; hands off to report-equity-memo.
+  Layer-3 single-page Markdown snapshot card for any equity (US/JP/TW/KR/CN/HK). Auto-detects market by suffix, dispatches data-markets snapshot (disclosures + price + valuation), renders a card. No analysis; hands off to report-equity-memo.
 ---
 
 # report-stock-snapshot
@@ -30,28 +30,29 @@ Replaces three v1 skills (`us-stock-snapshot`, `japan-stock-snapshot`,
 
 ### Step 1 — Country auto-routing (ticker suffix detection)
 
-Parse the ticker (case-insensitive, trimmed) and pick the country bundle:
+Parse the ticker (case-insensitive, trimmed) and pick the market:
 
-| Pattern | Country | Data skill |
+| Pattern | Country | market code |
 |---|---|---|
-| Ends with `.TW` or `.TWO` | TW | `data-tw` |
-| Ends with `.T` or `.TO`, **or** matches `^\d{4}$` (bare 4-digit JP 証券コード) | JP | `data-jp` |
-| Ends with `.KS` or `.KQ` | KR | `data-kr` |
-| Ends with `.SS`, `.SZ`, or `.HK` | CN/HK | `data-cn` |
-| Otherwise (alphabetic ticker, e.g. `AAPL`, `MSFT`, `BRK.B`) | US | `data-us` |
+| Ends with `.TW` or `.TWO` | TW | `tw` |
+| Ends with `.T` or `.TO`, **or** matches `^\d{4}$` (bare 4-digit JP 証券コード) | JP | `jp` |
+| Ends with `.KS` or `.KQ` | KR | `kr` |
+| Ends with `.SS`, `.SZ`, or `.HK` | CN/HK | `cn` |
+| Otherwise (alphabetic ticker, e.g. `AAPL`, `MSFT`, `BRK.B`) | US | `us` |
 
 Edge cases:
-- Bare 6-digit numeric (`005930`) → ambiguous between KR and CN; assume KR if a `.KS`/`.KQ` hint follows context, else CN. **Default for bare 6-digit: KR** (data-kr auto-suffixes `.KS`; data-cn requires the user to disambiguate via suffix).
-- Bare 4-digit numeric (`7203`) → JP (data-jp auto-appends `.T`).
+- Bare 6-digit numeric (`005930`) → ambiguous between KR and CN; assume KR if a `.KS`/`.KQ` hint follows context, else CN. **Default for bare 6-digit: KR** (`--market kr` auto-suffixes `.KS`; `--market cn` requires the user to disambiguate via suffix).
+- Bare 4-digit numeric (`7203`) → JP (`data-markets` auto-appends `.T`).
 - Bare 4-/5-digit numeric ending pattern is JP first, HK second; suffix is the disambiguator.
 
 ### Step 2 — Fetch snapshot pack
 
-Run the country-routed pack script and capture JSON:
+Run `data-markets/scripts/pack.py` and capture JSON (market auto-detected
+from the ticker; the routing above documents what `pack.py` does
+internally):
 
 ```bash
-INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache \
-  uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-{detected_country}/scripts/pack.py \
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-markets/scripts/pack.py \
     --ticker {ticker} --pack snapshot \
     > /tmp/{ticker_safe}-snap.json
 ```
@@ -156,7 +157,7 @@ This skill does NOT call any of the above. Orchestration is the user / parent ag
 
 ## See also
 
-- `data-us` / `data-jp` / `data-tw` / `data-kr` / `data-cn` — Layer 1 fetch packs
+- `data-markets` — Layer 1 fetch packs (5 markets, auto-detected)
 - `report-equity-memo` — full memo orchestrator (memo-fetch pack → analysis-* → investing-team)
 - `report-portfolio-review` — multi-position review with country-grouped fetches
 - `docs/superpowers/specs/2026-05-01-investing-toolkit-v2.0.0-three-layer-design.md` §4.4

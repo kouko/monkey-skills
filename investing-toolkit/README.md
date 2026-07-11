@@ -2,7 +2,7 @@
 
 > Read this in: [English](README.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
-> Cross-country investing plugin for Claude Code — three-layer architecture (Data / Analysis / Report) across 5 markets (US/JP/TW/KR/CN). 16 skills enforce strict separation: country-bundled `data-*` skills do pure I/O, `analysis-*` skills do pure compute, `report-*` skills orchestrate and delegate analysis to `domain-teams:investing-team`.
+> Cross-country investing plugin for Claude Code — three-layer architecture (Data / Analysis / Report) across 5 markets (US/JP/TW/KR/CN). 12 skills enforce strict separation: `data-markets` does pure I/O (market auto-detected), `analysis-*` skills do pure compute, `report-*` skills orchestrate and delegate analysis to `domain-teams:investing-team`.
 
 ## Cowork compatibility
 
@@ -25,8 +25,8 @@ investing-toolkit is the **toolkit layer** for cross-country investing research.
 ## Architecture: three-layer + router
 
 ```
-┌─ Layer 1: Data (5 skills, country-bundled, pure I/O) ────┐
-│  data-us  data-jp  data-tw  data-kr  data-cn             │
+┌─ Layer 1: Data (1 skill, 5 markets, pure I/O) ───────────┐
+│  data-markets — market auto-detected from ticker         │
 └──────────────────────────────────────────────────────────┘
         ↓ pack.py outputs JSON (5 pack types: snapshot /
         ↓ memo-fetch / comps-multiples / screener-batch /
@@ -64,21 +64,21 @@ Layer-to-layer hand-off uses subprocess + temp file — deterministic, observabl
 | `/report-equity-memo {ticker}` | `report-equity-memo` | Full memo pipeline → `domain-teams:investing-team` |
 | `/report-screener-list {tickers}` | `report-screener-list` | Cross-country grouped screen with composite ranking |
 | `/report-portfolio-review` | `report-portfolio-review` | P&L snapshot + regime overlay + rebalance |
-| `/report-stock-snapshot {ticker}` | `report-stock-snapshot` | Snapshot card; auto-routes by ticker suffix to `data-{country}` |
+| `/report-stock-snapshot {ticker}` | `report-stock-snapshot` | Snapshot card; auto-routes by ticker suffix to `data-markets` |
 
-## Skill catalog (16)
+## Skill catalog (12)
 
-### Layer 1: Data (5 skills)
+### Layer 1: Data (1 skill, 5 markets)
 
-Each `data-{country}/scripts/pack.py` exposes 5 pack modes — `snapshot` / `memo-fetch` / `comps-multiples` / `screener-batch` / `regime-pack` — and supports both `--ticker` (single) and `--tickers` (batch) modes.
+`data-markets/scripts/pack.py` exposes 5 pack modes — `snapshot` / `memo-fetch` / `comps-multiples` / `screener-batch` / `regime-pack` — and supports both `--ticker` (single) and `--tickers` (batch) modes. Market is auto-detected from the ticker suffix; `--market` overrides (required for `--pack regime-pack`, which has no ticker dimension).
 
-| Skill | Clients bundled | Notes |
+| Market | Clients bundled | Notes |
 |-------|----------------|-------|
-| `data-us` | yfinance, sec_edgar, fred | SEC EDGAR Tier A primary; yfinance batch native |
-| `data-jp` | yfinance, edinet, tdnet, boj, estat, ecb | EDINET-key tier routing inside `pack.py` |
-| `data-tw` | yfinance, mops, twse_openapi, finmind, cbc, dgbas, ndc, statgov | MOPS + TWSE Tier A; FinMind Tier 2 fallback |
-| `data-kr` | yfinance, fdr | FDR via BOK ECOS-KEYSTAT |
-| `data-cn` | yfinance, nbs, akshare, fred | NBS new-SPA API |
+| `us` | yfinance, sec_edgar, fred | SEC EDGAR Tier A primary; yfinance batch native |
+| `jp` | yfinance, edinet, tdnet, boj, estat, ecb | EDINET-key tier routing inside `pack.py` |
+| `tw` | yfinance, mops, twse_openapi, finmind, cbc, dgbas, ndc, statgov | MOPS + TWSE Tier A; FinMind Tier 2 fallback |
+| `kr` | yfinance, fdr | FDR via BOK ECOS-KEYSTAT |
+| `cn` | yfinance, nbs, akshare, fred | NBS new-SPA API |
 
 ### Layer 2: Analysis (6 skills, pure compute)
 
@@ -96,26 +96,26 @@ Each `data-{country}/scripts/pack.py` exposes 5 pack modes — `snapshot` / `mem
 | Skill | Orchestration | Final output |
 |-------|---------------|--------------|
 | `report-equity-memo` | data → analysis-* → delegate to `domain-teams:investing-team` (Deep Equity Research Memo + 2 MUST + 4 SHOULD + 1 MAY gates) → optional `domain-teams:docs-team` | Investment memo (Markdown) |
-| `report-stock-snapshot` | Auto-detects country via ticker suffix → `data-{country}/pack.py --pack snapshot` → format card | Snapshot card (Markdown) |
-| `report-portfolio-review` | Per position → batch `data-{country}` per country → `analysis-portfolio` → `analysis-macro-regime` overlay → format | Portfolio review (Markdown) |
-| `report-screener-list` | Parse list → group by country → parallel `data-{country} --pack screener-batch` → concatenate → `analysis-screener` → format top-N | Screener result table (Markdown) |
+| `report-stock-snapshot` | Auto-detects country via ticker suffix → `data-markets/pack.py --pack snapshot` → format card | Snapshot card (Markdown) |
+| `report-portfolio-review` | Per position → batch `data-markets` per country → `analysis-portfolio` → `analysis-macro-regime` overlay → format | Portfolio review (Markdown) |
+| `report-screener-list` | Parse list → group by country → parallel `data-markets --pack screener-batch` → concatenate → `analysis-screener` → format top-N | Screener result table (Markdown) |
 
 ### Router
 
 | Skill | Description |
 |-------|-------------|
-| `using-investing-toolkit` | Entry point — intent routing for the 15 skills above |
+| `using-investing-toolkit` | Entry point — intent routing for the 11 skills above |
 
 ## Quick start examples
 
 ```bash
-# Equity memo for AAPL — orchestrates data-us → analysis-dcf + analysis-comps + analysis-technical → investing-team
+# Equity memo for AAPL — orchestrates data-markets (US) → analysis-dcf + analysis-comps + analysis-technical → investing-team
 /report-equity-memo AAPL
 
 # Cross-country screener over a mixed list
 /report-screener-list AAPL,MSFT,2330.TW,7203.T --preset quality
 
-# Snapshot card; ticker suffix auto-routes to data-tw
+# Snapshot card; ticker suffix auto-routes data-markets to the TW market
 /report-stock-snapshot 2330.TW
 
 # Macro regime dashboard for Asia-Pac
@@ -149,7 +149,9 @@ Full troubleshooting and the Cowork retrospective: [`docs/mcp-setup.md`](docs/mc
 
 ## Data sources
 
-Adapters live in [`scripts/`](scripts/) as the **canonical home**. Each `data-{country}/scripts/` folder receives MD5-locked copies; CI fails any drift. See [`scripts/README.md`](scripts/README.md) and [`docs/adr/0001-data-analysis-report-layers.md`](docs/adr/0001-data-analysis-report-layers.md) §Acceptable Duplications.
+Adapters live in `data-markets/scripts/` as the single canonical copy (the
+Layer-1 merge retired the former per-market MD5-locked-copy sync). See
+[`docs/adr/0001-data-analysis-report-layers.md`](docs/adr/0001-data-analysis-report-layers.md).
 
 | Region | Adapter | Source |
 |--------|---------|--------|
@@ -180,7 +182,7 @@ investing-toolkit owns data fetch + mechanical compute + orchestration. Investme
 ```
 investing-toolkit                              domain-teams:investing-team
   report-equity-memo                ───→       Deep Equity Research Memo protocol
-    Layer 1: data-{country}/pack.py              2 MUST gates
+    Layer 1: data-markets/pack.py                2 MUST gates
     Layer 2: analysis-dcf + analysis-comps       4 SHOULD gates
              + analysis-technical                1 MAY gate (Taiwan Local Rigor)
                                                verdict: BUY / HOLD / SELL  ───→ back to caller
@@ -210,7 +212,7 @@ See [`ROADMAP.md`](ROADMAP.md) for full version history (v1.0.0 → v2.1.0). Rec
 
 - Bug reports and PRs: [github.com/kouko/monkey-skills/issues](https://github.com/kouko/monkey-skills/issues)
 - For Cowork-related issues, please check [`docs/mcp-setup.md`](docs/mcp-setup.md) first — it is almost certainly the documented sandbox limitation, not a plugin bug
-- New data adapter PRs welcome; please follow the existing `*_client.py` pattern (`register_mcp_tools()` + subprocess CLI + cache TTL header) and add a contract test fixture. Place the adapter in `scripts/` (canonical) and add the consuming `data-{country}` skill to `scripts/sync-clients.sh`
+- New data adapter PRs welcome; please follow the existing `*_client.py` pattern (`register_mcp_tools()` + subprocess CLI + cache TTL header) and add a contract test fixture. Place the adapter directly in `data-markets/scripts/` (the canonical, single-copy home) and wire it into the relevant `pack_<market>.py`
 
 ## License
 

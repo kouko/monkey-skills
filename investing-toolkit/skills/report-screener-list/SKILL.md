@@ -1,13 +1,14 @@
 ---
 name: report-screener-list
 description: |
-  Layer-3 orchestrator for cross-country stock screening. Parses a mixed ticker list (US/TW/JP/KR/CN), groups by suffix, fans out parallel data-{country} screener-batch, runs analysis-screener (filter+score+rank), renders a top-N table. 8 presets.
+  Layer-3 orchestrator for cross-country stock screening. Parses a mixed ticker list (US/TW/JP/KR/CN), groups by suffix, fans out parallel data-markets screener-batch, runs analysis-screener (filter+score+rank), renders a top-N table. 8 presets.
 ---
 
 # report-screener-list
 
 > **Layer 3 contract (v2.0.0)**: Orchestration only. Data fetch is delegated to
-> `data-{country}/pack.py --pack screener-batch`. Filtering / scoring / ranking
+> `data-markets/scripts/pack.py --pack screener-batch` (market auto-detected
+> per ticker group). Filtering / scoring / ranking
 > is delegated to `analysis-screener/scripts/screener_compute.py` (pure compute,
 > no I/O). This skill only does **(1) ticker routing**, **(2) parallel batch
 > dispatch**, **(3) batch concatenation**, **(4) Markdown formatting** of the
@@ -15,7 +16,7 @@ description: |
 
 Replaces the orchestration portion of legacy `stock-screener`. The compute
 portion moved to `analysis-screener`. The fetch portion moved to
-`data-{country}/pack.py --pack screener-batch`.
+`data-markets/scripts/pack.py --pack screener-batch`.
 
 ---
 
@@ -73,14 +74,14 @@ as `analysis-screener/SKILL.md` — kept here for orchestrator-side discoverabil
 The same suffix→country map used by `report-stock-snapshot` and
 `report-portfolio-review`. Apply the **first** rule that matches:
 
-| Suffix / Pattern | Country | data-{country} | Examples |
+| Suffix / Pattern | Country | market code (`data-markets --market`) | Examples |
 |---|---|---|---|
-| `.TW`, `.TWO` | `tw` | `data-tw` | `2330.TW`, `2454.TWO` |
-| `.T`, `.TO` | `jp` | `data-jp` | `7203.T`, `9984.TO` |
-| 4-digit numeric only (no suffix) | `jp` | `data-jp` | `7203`, `9984` |
-| `.KS`, `.KQ` | `kr` | `data-kr` | `005930.KS`, `035720.KQ` |
-| `.SS`, `.SZ`, `.HK` | `cn` | `data-cn` | `600519.SS`, `000333.SZ`, `0700.HK` |
-| Alphabetic (no suffix) | `us` | `data-us` | `AAPL`, `MSFT`, `BRK-B` |
+| `.TW`, `.TWO` | `tw` | `tw` | `2330.TW`, `2454.TWO` |
+| `.T`, `.TO` | `jp` | `jp` | `7203.T`, `9984.TO` |
+| 4-digit numeric only (no suffix) | `jp` | `jp` | `7203`, `9984` |
+| `.KS`, `.KQ` | `kr` | `kr` | `005930.KS`, `035720.KQ` |
+| `.SS`, `.SZ`, `.HK` | `cn` | `cn` | `600519.SS`, `000333.SZ`, `0700.HK` |
+| Alphabetic (no suffix) | `us` | `us` | `AAPL`, `MSFT`, `BRK-B` |
 
 Tickers that do not match any rule are surfaced as an `unrouted` warning
 (included in the formatter footer).
@@ -101,15 +102,14 @@ message, multiple tool calls — see superpowers `dispatching-parallel-agents`).
 Each call writes its country-scoped batch JSON to a unique temp file:
 
 ```bash
-INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache \
-  uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-us/scripts/pack.py \
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-markets/scripts/pack.py \
   --tickers AAPL,MSFT --pack screener-batch > /tmp/screener-us.json
 
-INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache \
-  uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-tw/scripts/pack.py \
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-markets/scripts/pack.py \
   --tickers 2330.TW,2454.TWO --pack screener-batch > /tmp/screener-tw.json
 
-# … similarly for jp / kr / cn groups when present
+# … similarly for jp / kr / cn groups when present (market auto-detected;
+# each --tickers group must share one market)
 ```
 
 If any country batch fails entirely (network error, all tickers invalid), keep
@@ -233,8 +233,8 @@ score of 70 means this ticker ranks well against the others in your input list
 - TW / JP / KR / CN packs may have country-specific field gaps — surfaced as
   per-record `warnings` (neutral defaults applied, see `analysis-screener`)
 - TW OTC stocks (`.TWO`) sometimes lack PE / PB via yfinance
-- **US growth/quality preset gap**: `data-us/pack.py --pack screener-batch`
-  currently returns yfinance lightweight fields (price/multiples/info) but
+- **US growth/quality preset gap**: `data-markets/scripts/pack.py --pack screener-batch`
+  (US market) currently returns yfinance lightweight fields (price/multiples/info) but
   may omit `returnOnEquity`, `revenueGrowth`, `earningsGrowth`. The
   `quality`, `growth`, and `growth-value` presets fall back to neutral
   defaults (0.50) for missing fields, with a `_warnings` entry per ticker.
@@ -246,13 +246,13 @@ score of 70 means this ticker ranks well against the others in your input list
 <!-- i18n -->
 日本語: クロスカントリー個別銘柄スクリーナーのオーケストレーター。
 ティッカーリスト（US / TW / JP / KR / CN 混在可）を国別に分割し、
-`data-{country}/pack.py --pack screener-batch` を並列実行してデータを取得、
+`data-markets/scripts/pack.py --pack screener-batch` を並列実行してデータを取得、
 `analysis-screener` で純計算（プリセット 8 種：value / deep-value / quality /
 high-dividend / growth / growth-value / momentum / balanced）+ ランキングを
 行い、`screener_format.py` で Markdown のトップ N 表に整形する。
 
 繁體中文：跨市場個股篩選器的編排層。將使用者的個股列表（US / TW / JP / KR /
-CN 混合皆可）依後綴分組，並行呼叫 `data-{country}/pack.py --pack
+CN 混合皆可）依後綴分組，並行呼叫 `data-markets/scripts/pack.py --pack
 screener-batch` 取得資料，交由 `analysis-screener` 進行純計算（八種策略：
 value / deep-value / quality / high-dividend / growth / growth-value /
 momentum / balanced）+ 排序，最後以 `screener_format.py` 輸出 Markdown 排名表。

@@ -2,7 +2,7 @@
 name: analysis-dcf
 description: >-
   Pure compute 3-stage DCF on pre-fetched data JSON. Input: --input
-  <pack-json-path> from data-{country}/pack.py --pack memo-fetch. Output:
+  <pack-json-path> from data-markets/scripts/pack.py --pack memo-fetch. Output:
   intrinsic value range JSON with 3×3 sensitivity (WACC × terminal growth).
   DCF 内在価値純計算層。DCF 內在價值純計算層。
 ---
@@ -21,10 +21,10 @@ Reference template: `references/dcf-template.md`
 This skill performs **zero network or external file I/O** beyond reading
 the single `--input <json-path>` argument. No SEC EDGAR / MOPS / yfinance /
 FRED clients are imported here. Fetching is the responsibility of the
-caller — typically `data-{country}/pack.py --pack memo-fetch`.
+caller — typically `data-markets/scripts/pack.py --ticker <t> --pack memo-fetch`.
 
 ```
-data-{country}/pack.py --pack memo-fetch  →  pre-fetched JSON
+data-markets/scripts/pack.py --ticker <t> --pack memo-fetch  →  pre-fetched JSON
                                               ↓
                                        analysis-dcf (this skill)
                                               ↓
@@ -36,7 +36,7 @@ Callers (e.g. `report-equity-memo`) compose this skill with the data layer.
 ## Input Contract
 
 `--input <path>` must point to a JSON file produced by
-`data-{country}/pack.py --pack memo-fetch`. Minimum shape:
+`data-markets/scripts/pack.py --ticker <t> --pack memo-fetch`. Minimum shape:
 
 ```json
 {
@@ -59,9 +59,10 @@ Callers (e.g. `report-equity-memo`) compose this skill with the data layer.
 }
 ```
 
-Both the `data-us` (SEC EDGAR XBRL facts) and `data-tw` (MOPS t164sb04 /
-sb05 / sb03) shapes conform — `pack.py --pack memo-fetch` is responsible
-for normalising into this contract.
+Both the US (SEC EDGAR XBRL facts) and TW (MOPS t164sb04 / sb05 / sb03)
+market shapes conform — `data-markets/scripts/pack.py --pack memo-fetch`
+(market auto-detected from ticker) is responsible for normalising into
+this contract.
 
 **Contract notes (no auto-correction):**
 
@@ -222,7 +223,7 @@ This skill outputs JSON only. Memo composition and prose verdict belong
 upstream:
 
 ```
-data-{country}:pack.py --pack memo-fetch
+data-markets:scripts/pack.py --pack memo-fetch
   → analysis-dcf (this skill, pure compute)
   → report-equity-memo (orchestrates full memo)
        → domain-teams:investing-team (variant perception, conviction)

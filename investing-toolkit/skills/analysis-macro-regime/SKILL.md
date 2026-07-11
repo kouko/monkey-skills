@@ -3,7 +3,7 @@ name: analysis-macro-regime
 description: >-
   Pure-compute Investment Clock + Hedgeye GIP regime classification across
   US/JP/TW/KR/CN. Input: --input <country=path,country=path,...> macro
-  indicator JSONs from data-{country}/pack.py --pack regime-pack. Output:
+  indicator JSONs from data-markets/scripts/pack.py --pack regime-pack --market <cc>. Output:
   regime card JSON.
 ---
 
@@ -13,12 +13,13 @@ description: >-
 > pre-fetched macro indicator JSONs (one per country) and classifies each
 > country into an Investment Clock (IC) phase + Hedgeye GIP quadrant. It
 > does NOT call any data source; all fetching happens upstream in
-> `data-{country}/pack.py --pack regime-pack`.
+> `data-markets/scripts/pack.py --pack regime-pack --market <cc>`.
 
 Five-country macro regime classifier (US / JP / TW / KR / CN) using the
 Investment Clock + Hedgeye GIP framework, extended with US real-rate
 decomposition (breakeven + TIPS). Input JSONs follow the regime-pack
-contract from each `data-{country}` skill. Output is a structured
+contract from `data-markets` (one call per market, `--market <cc>`).
+Output is a structured
 regime-card JSON suitable for downstream report skills (e.g.
 `report-equity-memo`, `report-portfolio-review`).
 
@@ -43,7 +44,7 @@ uv run scripts/regime_compose.py \
 ### `--input` contract
 
 Comma-separated `country=path` pairs. Each `path` points to a JSON
-emitted by `data-{country}/pack.py --pack regime-pack`. Country codes:
+emitted by `data-markets/scripts/pack.py --pack regime-pack --market <cc>`. Country codes:
 `us` / `jp` / `tw` / `kr` / `cn`. Any subset is allowed (single country
 to all five).
 
@@ -281,13 +282,13 @@ non-US countries, US in v2.0.0 always supported).
 - **JP real-rate deferred**: v1.10.0's C+D+E framework (ECB ex-post +
   Tankan + JGBi auction) is not in the v2.0.0 minimum regime-pack.
   Signalled as `null` with `notes`. Restoration roadmap +
-  data-jp regime-pack requirements: `references/japan-real-rate-roadmap.md`.
+  data-markets JP regime-pack requirements: `references/japan-real-rate-roadmap.md`.
 - **Series-key resolver permissiveness (v2.1 follow-up)**: `GROWTH_KEYS`
   / `INFLATION_KEYS` accept multiple naming conventions per country to
   tolerate evolving regime-pack contracts. Trade-off: permissive
   resolvers can mask data-contract drift (e.g. a renamed key silently
   falls through to a fallback). v2.1 plan: tighten to a single canonical
-  key per country once `data-{country}/pack.py --pack regime-pack`
+  key per country once `data-markets/scripts/pack.py --pack regime-pack`
   contracts stabilise.
 
 ---
@@ -300,8 +301,8 @@ non-US countries, US in v2.0.0 always supported).
 - `references/recalibration-protocol.md` — when & how to re-verify
   threshold files against primary sources
 - `references/japan-real-rate-roadmap.md` — v1.10.0 C+D+E framework
-  (ECB ex-post + Tankan + JGBi), what data-jp regime-pack needs to
-  emit to restore the JP real-rate block, and v2.1 timeline
+  (ECB ex-post + Tankan + JGBi), what the data-markets JP regime-pack
+  needs to emit to restore the JP real-rate block, and v2.1 timeline
 - `references/thresholds-us.md` — Fed 2% target, CBO NROU ~4.4%, HLW /
   Lubik-Matthes / NY Fed r* estimates, real-rate four-tier thresholds
 - `references/thresholds-japan.md` — BOJ 2% target, JILPT NAIRU

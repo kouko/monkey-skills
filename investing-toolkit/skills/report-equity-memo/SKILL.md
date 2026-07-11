@@ -1,7 +1,7 @@
 ---
 name: report-equity-memo
 description: |
-  Layer-3 orchestrator for a full equity investment memo (Markdown). Routes by ticker suffix to data-{country} memo-fetch, runs analysis-dcf + macro-regime, then delegates the memo protocol + gates to domain-teams:investing-team. Pure orchestration.
+  Layer-3 orchestrator for a full equity investment memo (Markdown). Routes by ticker to data-markets memo-fetch (market auto-detected), runs analysis-dcf + macro-regime, then delegates the memo protocol + gates to domain-teams:investing-team. Pure orchestration.
 ---
 
 # report-equity-memo
@@ -9,7 +9,7 @@ description: |
 Layer 3 orchestrator in the v2.0.0 three-layer architecture
 (Data → Analysis → Report). This skill owns **pipeline assembly only** — it
 does not fetch data, compute indicators, or render verdicts inline. All
-fetching is delegated to Layer 1 (`data-{country}`), all numerical compute
+fetching is delegated to Layer 1 (`data-markets`), all numerical compute
 to Layer 2 (`analysis-*`), and all analytical judgement + gates to
 `domain-teams:investing-team` per the Cross-Plugin Delegation Contract.
 
@@ -31,17 +31,20 @@ to Layer 2 (`analysis-*`), and all analytical judgement + gates to
 
 ### Country detection
 
-Ticker suffix → `data-{country}` skill (preserves v1.x convention):
+Ticker suffix → market code (preserves v1.x convention). `data-markets/scripts/pack.py`
+auto-detects this from the ticker; pass `--market <cc>` explicitly to override
+(required for `--pack regime-pack`, which has no ticker dimension):
 
-| Suffix / pattern | Country | data skill | yfinance ticker rewrite |
+| Suffix / pattern | Country | market code | yfinance ticker rewrite |
 |---|---|---|---|
-| `.TW`, `.TWO` | Taiwan | `data-tw` | unchanged (e.g. `2330.TW`) |
-| `.T`, `.TO`, bare 4-digit (e.g. `7203`) | Japan | `data-jp` | auto-append `.T` (handled inside `data-jp/pack.py`) |
-| `.KS`, `.KQ` | Korea | `data-kr` | unchanged |
-| `.SS`, `.SZ`, `.HK` | China / HK | `data-cn` | unchanged |
-| anything else (e.g. `AAPL`, `NVDA`) | US | `data-us` | unchanged |
+| `.TW`, `.TWO` | Taiwan | `tw` | unchanged (e.g. `2330.TW`) |
+| `.T`, `.TO`, bare 4-digit (e.g. `7203`) | Japan | `jp` | auto-append `.T` (handled inside `data-markets/scripts/pack_jp.py`) |
+| `.KS`, `.KQ` | Korea | `kr` | unchanged |
+| `.SS`, `.SZ`, `.HK` | China / HK | `cn` | unchanged |
+| anything else (e.g. `AAPL`, `NVDA`) | US | `us` | unchanged |
 
-Set `${COUNTRY}` accordingly for the rest of the pipeline.
+Set `${COUNTRY}` accordingly for the rest of the pipeline (used as the
+`--market` override where a pack type has no ticker dimension, e.g. Phase 2).
 
 ---
 
@@ -51,14 +54,14 @@ Set `${COUNTRY}` accordingly for the rest of the pipeline.
 
 > **`scope=quick` note**: quick mode runs Phase 1 only (snapshot data) and skips Phase 2 (regime) + Phase 2.5 (comps) + Phase 3 DCF. The pipeline jumps straight to Phase 4 with snapshot-only inputs; investing-team protocol routing handles the lighter analysis depth.
 
-Single subprocess call per ticker. The country-bundled `pack.py --pack memo-fetch`
-facade composes all required clients (e.g. SEC EDGAR + yfinance + FRED for US;
-EDINET + TDnet + yfinance for JP with Tier-A / Tier-2 routing on `EDINET_API_KEY`;
-MOPS + TWSE OpenAPI + FinMind gap-fill for TW; FDR for KR; NBS + akshare for CN).
+Single subprocess call per ticker. The merged `data-markets/scripts/pack.py --pack memo-fetch`
+facade auto-detects the market from the ticker and composes all required clients
+(e.g. SEC EDGAR + yfinance + FRED for US; EDINET + TDnet + yfinance for JP with
+Tier-A / Tier-2 routing on `EDINET_API_KEY`; MOPS + TWSE OpenAPI + FinMind
+gap-fill for TW; FDR for KR; NBS + akshare for CN).
 
 ```bash
-INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache \
-  uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-${COUNTRY}/scripts/pack.py \
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-markets/scripts/pack.py \
     --ticker ${TICKER} --pack memo-fetch \
     > /tmp/${TICKER_SAFE}-fetch.json
 ```
@@ -84,9 +87,8 @@ Fetch the macro regime-pack(s) relevant to the ticker.
 
 ```bash
 # Per relevant country (always at minimum the ticker's home country)
-INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache \
-  uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-${COUNTRY}/scripts/pack.py \
-    --pack regime-pack \
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-markets/scripts/pack.py \
+    --pack regime-pack --market ${COUNTRY} \
     > /tmp/${COUNTRY}-regime.json
 # (repeat for additional countries as needed: us / jp / tw / kr / cn)
 
@@ -155,15 +157,13 @@ The reader never wonders "Comps against whom?"
 #    as /tmp/peer-rationales.json — analysis-comps reads this for provenance.
 
 # 1. Fetch anchor multiples
-INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run \
-  ${CLAUDE_PLUGIN_ROOT}/skills/data-${COUNTRY}/scripts/pack.py \
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-markets/scripts/pack.py \
     --ticker ${TICKER} --pack comps-multiples \
     > /tmp/${TICKER_SAFE}-anchor-comps.json
 
 # 2. Fetch peer multiples (group peers by country, run per-country batch)
 # Per peer country group:
-INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run \
-  ${CLAUDE_PLUGIN_ROOT}/skills/data-${COUNTRY}/scripts/pack.py \
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-markets/scripts/pack.py \
     --tickers ${PEERS_FOR_COUNTRY} --pack comps-multiples \
     > /tmp/${COUNTRY}-peers-comps.json
 # Repeat for each country present in the peer list.
@@ -249,7 +249,7 @@ Launch `domain-teams:investing-team` with the **Deep Equity Research Memo** prot
 
 **Sector-aware Comps narrative (v2.2.0-c+)**: lead the Comps section with `anchor.schema_id` context — e.g. "JPM (bank schema): P/B 1.81x, ROE 16.2%; sector peers ..." — because the multiples Phase 4 sees depend on schema. For non-default schemas, REIT P/FFO and EV/EBITDAre are NAREIT approximations (gains_on_sale / impairment not available in standard XBRL); the per-multiple `compute_provenance.note` discloses this — surface it in the memo when the multiple is load-bearing for the verdict. Indicators (`anchor.indicators`) are sector-specific operating-context metrics rendered as `pct` units (e.g. `{"ROE": {"value": 16.2, "unit": "pct"}}`); cite them alongside multiples to give the reader a profitability anchor that the multiple alone doesn't convey.
 
-For non-US tickers (.T / .TW / .KS / .KQ / .HK / .SS / .SZ), substitute the appropriate `data-{country}/pack.py --pack memo-fetch` output for `--anchor-base`. Compute-mode US-first; non-US compute mode lands in per-country PRs (until then, falls back to direct with stderr warning).
+For non-US tickers (.T / .TW / .KS / .KQ / .HK / .SS / .SZ), substitute the `data-markets/scripts/pack.py --pack memo-fetch` output (market auto-detected from the ticker) for `--anchor-base`. Compute-mode US-first; non-US compute mode lands in per-country PRs (until then, falls back to direct with stderr warning).
 
 The investing-team output is the memo body (Markdown).
 
@@ -291,14 +291,14 @@ This skill is the canonical example of the contract codified in CLAUDE.md:
 ## Limitations
 
 - yfinance is an unofficial scraper (Tier 2). Tier A primary-source paths
-  are used per `data-{country}` skill defaults (SEC EDGAR for US; EDINET for
+  are used per market defaults (SEC EDGAR for US; EDINET for
   JP when `EDINET_API_KEY` set; MOPS + TWSE OpenAPI for TW always; FDR /
-  BOK ECOS-KEYSTAT for KR; NBS new-SPA + akshare for CN). See each
-  `data-*` skill SKILL.md for the per-country tier matrix.
+  BOK ECOS-KEYSTAT for KR; NBS new-SPA + akshare for CN). See
+  `data-markets/references/market-{us,jp,tw,kr,cn}.md` for the per-country tier matrix.
 - Analyst consensus + forward guidance are not in scope (philosophy:
   primary-source equity research). If consensus context is needed, surface
   the data gap in the memo's "Limitations" rather than mocking it.
-- `data-{country}/pack.py --pack memo-fetch` is single-ticker by design
+- `data-markets/scripts/pack.py --pack memo-fetch` is single-ticker by design
   (heavy SEC / EDINET / MOPS calls). Batch memo runs over many tickers
   must be sequenced at the user level.
 
@@ -306,19 +306,19 @@ This skill is the canonical example of the contract codified in CLAUDE.md:
 
 ## i18n footer
 
-- 日本語: 株式投資メモの編成層（Layer 3）。ticker suffix で
-  `data-{us,jp,tw,kr,cn}` の memo-fetch / regime-pack を country-route し、
+- 日本語: 株式投資メモの編成層（Layer 3）。ticker から market を自動判定し、
+  `data-markets` の memo-fetch / regime-pack を呼び出したうえで、
   `analysis-dcf` + `analysis-macro-regime` + `analysis-comps` を pure compute で走らせ、Deep
   Equity Research Memo protocol（2 MUST + 4 SHOULD + 1 MAY gate）の実行を
   `domain-teams:investing-team` に委譲。最終整形は任意で
   `domain-teams:docs-team`。
-- 繁體中文: 權益投資備忘錄編排層（Layer 3）。依 ticker 後綴路由至
-  `data-{us,jp,tw,kr,cn}` 的 memo-fetch / regime-pack，於
+- 繁體中文: 權益投資備忘錄編排層（Layer 3）。依 ticker 自動判定市場，呼叫
+  `data-markets` 的 memo-fetch / regime-pack，於
   `analysis-dcf` + `analysis-macro-regime` + `analysis-comps` 進行純計算，再將 Deep Equity
   Research Memo protocol（2 MUST + 4 SHOULD + 1 MAY 閘）委派給
   `domain-teams:investing-team`。最終排版可選 `domain-teams:docs-team`。
-- English: Layer 3 orchestrator for equity investment memos. Country-routes
-  by ticker suffix to `data-{us,jp,tw,kr,cn}` memo-fetch / regime-pack,
+- English: Layer 3 orchestrator for equity investment memos. Auto-detects
+  the market from the ticker and calls `data-markets` memo-fetch / regime-pack,
   runs `analysis-dcf` + `analysis-macro-regime` + `analysis-comps` (pure compute), delegates
   the Deep Equity Research Memo protocol (2 MUST + 4 SHOULD + 1 MAY gates)
   to `domain-teams:investing-team`, optional final formatting via
