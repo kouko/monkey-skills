@@ -14,11 +14,12 @@ subprocess.run calls are monkeypatched):
       Scoped to content markers rather than file-existence, since
       fred_client.py may or may not exist yet under data-markets/scripts
       depending on Task 3a's concurrent progress.
-  (c) pack_cn.build_pack() produces the same top-level section-key shape
-      as the current data-cn/scripts/pack.py builder functions, for all
-      5 pack types.
-  (d) pack_cn.SUPPORTED_PACKS matches the pack-type set data-cn/pack.py's
-      CLI currently exposes via `--pack {choices}`.
+  (c) pack_cn.build_pack() rejects an unknown pack name (self-contained
+      build_pack behavior check).
+  (d) pack_cn.SUPPORTED_PACKS matches the expected pack-type set
+      (hardcoded — the legacy data-cn/scripts/pack.py this used to
+      parity-check against is deleted; migration-fidelity for section-key
+      shape was already verified pre-deletion).
 """
 from __future__ import annotations
 
@@ -30,10 +31,8 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-LEGACY_DIR = ROOT / "skills" / "data-cn" / "scripts"
 NEW_DIR = ROOT / "skills" / "data-markets" / "scripts"
 
-LEGACY_PACK = LEGACY_DIR / "pack.py"
 NEW_AKSHARE = NEW_DIR / "akshare_client.py"
 NEW_NBS = NEW_DIR / "nbs_client.py"
 NEW_PACK = NEW_DIR / "pack_cn.py"
@@ -42,8 +41,8 @@ SHIPPED_FILES = (NEW_AKSHARE, NEW_NBS, NEW_PACK)
 
 TICKER = "600519.SS"
 
-# data-cn/scripts/pack.py:709-711 `--pack` argparse choices — the ground
-# truth SUPPORTED_PACKS must match.
+# Ground truth for (d) below — matches the old data-cn/scripts/pack.py:709-711
+# `--pack` argparse choices.
 EXPECTED_SUPPORTED_PACKS = (
     "snapshot", "memo-fetch", "comps-multiples", "screener-batch", "regime-pack",
 )
@@ -94,13 +93,6 @@ def _fake_subprocess_run(cmd, **kwargs):
 
 
 @pytest.fixture
-def legacy_pack(monkeypatch):
-    module = _load_module(LEGACY_PACK, "legacy_data_cn_pack_for_migration_test")
-    monkeypatch.setattr(module.subprocess, "run", _fake_subprocess_run)
-    return module
-
-
-@pytest.fixture
 def new_pack(monkeypatch):
     module = _load_module(NEW_PACK, "data_markets_pack_cn_for_migration_test")
     monkeypatch.setattr(module.subprocess, "run", _fake_subprocess_run)
@@ -140,47 +132,6 @@ def test_shipped_files_carry_no_fred_or_yfinance_fetch_logic():
             f"{path.name} contains a yfinance-specific marker — CN must not "
             "own a local yfinance_client.py copy (canonical copy is Task 3a's)"
         )
-
-
-# ---------------------------------------------------------------------------
-# (c) pack_cn.build_pack() section-key shape matches data-cn/pack.py
-# ---------------------------------------------------------------------------
-
-
-def test_build_pack_snapshot_matches_legacy_shape(legacy_pack, new_pack):
-    legacy_out = legacy_pack.pack_snapshot(TICKER)
-    new_out = new_pack.build_pack("snapshot", [TICKER])
-    assert set(new_out.keys()) == set(legacy_out.keys())
-    assert new_out["pack"] == "snapshot"
-    assert new_out["country"] == "CN"
-
-
-def test_build_pack_memo_fetch_matches_legacy_shape(legacy_pack, new_pack):
-    legacy_out = legacy_pack.pack_memo_fetch(TICKER)
-    new_out = new_pack.build_pack("memo-fetch", [TICKER])
-    assert set(new_out.keys()) == set(legacy_out.keys())
-
-
-def test_build_pack_comps_multiples_matches_legacy_batch_shape(legacy_pack, new_pack):
-    legacy_out = legacy_pack.pack_comps_multiples_batch([TICKER])
-    new_out = new_pack.build_pack("comps-multiples", [TICKER])
-    assert set(new_out.keys()) == set(legacy_out.keys())
-    assert "info" in new_out
-
-
-def test_build_pack_screener_batch_matches_legacy_shape(legacy_pack, new_pack):
-    tickers = [TICKER, "000858.SZ"]
-    legacy_out = legacy_pack.pack_screener_batch(tickers)
-    new_out = new_pack.build_pack("screener-batch", tickers)
-    assert set(new_out.keys()) == set(legacy_out.keys())
-
-
-def test_build_pack_regime_pack_matches_legacy_shape(legacy_pack, new_pack):
-    legacy_out = legacy_pack.pack_regime_pack()
-    new_out = new_pack.build_pack("regime-pack", [])
-    assert set(new_out.keys()) == set(legacy_out.keys())
-    for source in ("nbs", "akshare", "fred", "markets"):
-        assert source in new_out
 
 
 def test_build_pack_rejects_unknown_pack_name(new_pack):

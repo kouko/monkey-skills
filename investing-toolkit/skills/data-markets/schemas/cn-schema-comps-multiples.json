@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://monkey-skills/investing-toolkit/data-cn/comps-multiples.json",
+  "title": "data-cn comps-multiples pack",
+  "description": "Multiples bundle for analysis-comps. Anchor (single ticker) or peers (batch). Always shaped as a list under tickers[] regardless of single/batch mode — analysis-comps consumes a uniform list. Tier 2 (yfinance).",
+  "type": "object",
+  "required": ["pack", "country", "tickers"],
+  "additionalProperties": true,
+  "properties": {
+    "pack": { "const": "comps-multiples" },
+    "country": { "const": "CN" },
+    "tickers": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/tickerEntry" }
+    },
+    "info": {
+      "type": "object",
+      "description": "T1 canonical multiples alias — dict keyed by ticker. analysis-comps reads pack.info[ticker]. Cross-country symmetric per docs/normalization-contract.md.",
+      "additionalProperties": {
+        "type": "object",
+        "description": "Per-ticker multiples (trailingPE / forwardPE / enterpriseToEbitda / priceToSalesTrailing12Months / priceToBook). Missing fields omitted.",
+        "additionalProperties": true
+      }
+    }
+  },
+  "$defs": {
+    "tickerEntry": {
+      "type": "object",
+      "required": ["ticker", "country", "multiples", "_yfinance_info"],
+      "additionalProperties": true,
+      "properties": {
+        "ticker": { "type": "string" },
+        "country": { "const": "CN" },
+        "multiples": {
+          "type": "object",
+          "description": "Filtered multiples extracted from yfinance info. Keys absent when the underlying value is null. Currency-agnostic: ratios are unitless; market-cap-derived figures inherit yfinance currency (CNY for .SS/.SZ, HKD for .HK).",
+          "additionalProperties": true,
+          "properties": {
+            "trailingPE": { "type": ["number", "null"] },
+            "forwardPE": { "type": ["number", "null"] },
+            "enterpriseToEbitda": { "type": ["number", "null"] },
+            "priceToSalesTrailing12Months": { "type": ["number", "null"] },
+            "priceToBook": { "type": ["number", "null"] }
+          }
+        },
+        "_yfinance_info": {
+          "$ref": "cn-schema-snapshot.json#/$defs/yfinanceInfo",
+          "description": "Full yfinance info dict, retained for downstream optional fields. analysis-comps reads `multiples` only."
+        }
+      }
+    }
+  }
+}

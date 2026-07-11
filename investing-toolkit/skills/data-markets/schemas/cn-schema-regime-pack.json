@@ -1,0 +1,501 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://monkey-skills/investing-toolkit/data-cn/regime-pack.json",
+  "title": "data-cn regime-pack pack",
+  "description": "Macro regime data for China. Composes 4 sub-fetches into 36 series: NBS new-SPA (21 indicators) + akshare PBOC/Caixin (8) + FRED (2: DEXCHUS, TRESEGCNM052N) + market indices (5: 000300.SS, 000001.SS, 399006.SZ, ^HSI, ^HSCE). No ticker dimension. Consumed by analysis-macro-regime.",
+  "type": "object",
+  "required": [
+    "pack",
+    "country",
+    "nbs",
+    "akshare",
+    "fred",
+    "markets",
+    "_provenance"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "pack": {
+      "const": "regime-pack"
+    },
+    "country": {
+      "const": "CN"
+    },
+    "nbs": {
+      "$ref": "#/$defs/nbsBlock"
+    },
+    "akshare": {
+      "$ref": "#/$defs/akshareBlock"
+    },
+    "fred": {
+      "$ref": "#/$defs/fredBlock"
+    },
+    "markets": {
+      "$ref": "cn-schema-screener-batch.json#/$defs/batchHistory"
+    },
+    "_provenance": {
+      "type": "object",
+      "required": [
+        "nbs_indicators",
+        "akshare_indicators",
+        "fred_series",
+        "market_tickers"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "nbs_indicators": {
+          "type": "array",
+          "description": "21 NBS preset names (inflation/growth/trade/labor/PMI/money/realestate/services).",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 21,
+          "maxItems": 21
+        },
+        "akshare_indicators": {
+          "type": "array",
+          "description": "8 akshare preset names (LPRx2, RRR, SHIBOR-3M, 社融增量, new loans, Caixin Mfg PMI, Caixin Svc PMI).",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 8,
+          "maxItems": 8
+        },
+        "fred_series": {
+          "type": "array",
+          "description": "FRED series codes (DEXCHUS = CNY/USD; TRESEGCNM052N = FX reserves ex-gold).",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "market_tickers": {
+          "type": "array",
+          "description": "Market index tickers (CSI300, SSEC, ChiNext, HSI, HSCEI).",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 5,
+          "maxItems": 5
+        }
+      }
+    },
+    "series": {
+      "type": "object",
+      "description": "T2 canonical flat alias per ADR-0002. Indicator-keyed dict of [floats]. analysis-macro-regime / regime_compose.resolve_series reads this.",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "cn_specific": {
+      "type": "object",
+      "description": "CN-specific computed helpers (Phase 1 ADR-0004). Currently exposes credit_impulse computed from akshare shrzgm + NBS m2-yoy via CICC convention. See analysis-macro-regime/references/credit-impulse-methodology.md.",
+      "additionalProperties": true,
+      "properties": {
+        "credit_impulse": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Credit impulse block per CICC convention (TSF stock yoy 12-month change). Null when neither TSF flow nor M2 yoy series are available.",
+          "additionalProperties": true,
+          "properties": {
+            "value": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "Impulse magnitude in pp (percentage points)."
+            },
+            "trend": {
+              "type": "string",
+              "enum": [
+                "expanding",
+                "contracting",
+                "neutral"
+              ]
+            },
+            "threshold_pp": {
+              "type": "number"
+            },
+            "methodology": {
+              "type": "string"
+            },
+            "source": {
+              "type": "string"
+            },
+            "tsf_stock_yoy_proxy_now": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "tsf_stock_yoy_proxy_12mo_prior": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
+        },
+        "credit_impulse_methodology_doc": {
+          "type": "string",
+          "description": "Path to methodology reference doc."
+        }
+      }
+    }
+  },
+  "$defs": {
+    "nbsBlock": {
+      "type": "object",
+      "required": [
+        "fetched_at",
+        "_source",
+        "indicators"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "fetched_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "_source": {
+          "const": "nbs_spa"
+        },
+        "indicators": {
+          "type": "object",
+          "description": "Map of preset slug -> indicator observation block.",
+          "additionalProperties": {
+            "$ref": "#/$defs/indicatorBlock"
+          }
+        }
+      }
+    },
+    "akshareBlock": {
+      "type": "object",
+      "required": [
+        "fetched_at",
+        "_source",
+        "indicators"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "fetched_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "_source": {
+          "const": "akshare"
+        },
+        "indicators": {
+          "type": "object",
+          "description": "Map of preset slug -> indicator observation block. Akshare blocks add an 'fn' field naming the underlying akshare function (e.g. macro_china_lpr).",
+          "additionalProperties": {
+            "$ref": "#/$defs/indicatorBlock"
+          }
+        }
+      }
+    },
+    "fredBlock": {
+      "type": "object",
+      "required": [
+        "fetched_at",
+        "series"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "fetched_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "series": {
+          "type": "object",
+          "description": "Map of FRED series code -> observation block.",
+          "additionalProperties": {
+            "$ref": "#/$defs/fredSeries"
+          }
+        }
+      }
+    },
+    "indicatorBlock": {
+      "type": "object",
+      "description": "Common shape for NBS and akshare indicators. NBS observations use YYYYMMDD strings; akshare observations also use YYYYMMDD strings. Latest/prior pre-computed for analysis-macro-regime.",
+      "required": [
+        "preset",
+        "name",
+        "unit",
+        "freq",
+        "observations",
+        "_source"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "preset": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "description": "Bilingual EN / ZH name."
+        },
+        "fn": {
+          "type": "string",
+          "description": "akshare function name (akshare-only)."
+        },
+        "unit": {
+          "type": "string",
+          "examples": [
+            "%",
+            "亿元",
+            "index"
+          ]
+        },
+        "freq": {
+          "type": "string",
+          "enum": [
+            "daily",
+            "monthly",
+            "quarterly",
+            "event"
+          ],
+          "description": "'event' is used for event-driven indicators (e.g. RRR cuts, which only print on policy change)."
+        },
+        "fetched_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "_cache": {
+          "type": "string",
+          "enum": [
+            "hit",
+            "miss"
+          ]
+        },
+        "_source": {
+          "type": "string",
+          "enum": [
+            "nbs_spa",
+            "akshare"
+          ]
+        },
+        "observations": {
+          "type": "array",
+          "description": "Time-series observations sorted ascending. Date strings are YYYYMMDD (NBS) or YYYYMMDD (akshare).",
+          "items": {
+            "type": "object",
+            "required": [
+              "date",
+              "value"
+            ],
+            "additionalProperties": true,
+            "properties": {
+              "date": {
+                "type": "string"
+              },
+              "value": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "latest": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true,
+          "properties": {
+            "date": {
+              "type": "string"
+            },
+            "value": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
+        },
+        "prior": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true,
+          "properties": {
+            "date": {
+              "type": "string"
+            },
+            "value": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
+        },
+        "direction": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "Rising",
+            "Falling",
+            "Flat",
+            null
+          ],
+          "description": "Pre-computed direction tag (latest vs prior). Used by analysis-macro-regime."
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "_notes": {
+          "type": "string"
+        },
+        "_provenance": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "source": {
+              "type": "string"
+            },
+            "source_authority": {
+              "type": "string"
+            },
+            "data_type": {
+              "type": "string"
+            },
+            "fetched_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "reference_period": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "staleness_days": {
+              "type": [
+                "integer",
+                "number",
+                "null"
+              ]
+            },
+            "cid": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "NBS catalogue ID (NBS-only)."
+            },
+            "indicator_id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "NBS indicator UUID (NBS-only)."
+            }
+          }
+        }
+      }
+    },
+    "fredSeries": {
+      "type": "object",
+      "required": [
+        "series",
+        "observations"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "series": {
+          "type": "string"
+        },
+        "periods_requested": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fetched_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "_cache": {
+          "type": "string",
+          "enum": [
+            "hit",
+            "miss"
+          ]
+        },
+        "_source": {
+          "const": "csv"
+        },
+        "_warning": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "date",
+              "value"
+            ],
+            "additionalProperties": true,
+            "properties": {
+              "date": {
+                "type": "string",
+                "description": "ISO date YYYY-MM-DD."
+              },
+              "value": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "latest": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true,
+          "properties": {
+            "date": {
+              "type": "string"
+            },
+            "value": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "_provenance": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}

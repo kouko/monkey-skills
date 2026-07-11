@@ -26,7 +26,12 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS_DIR = ROOT / "skills" / "data-markets" / "scripts"
-OLD_PACK_PATH = ROOT / "skills" / "data-tw" / "scripts" / "pack.py"
+
+# Ground truth for (c) below — matches the old data-tw/scripts/pack.py's
+# module-level `PACK_TYPES` set (migration-fidelity already verified; that
+# skill dir is now deleted, so this is a hardcoded expectation rather than a
+# runtime parity parse).
+EXPECTED_PACK_TYPES = {"snapshot", "memo-fetch", "comps-multiples", "screener-batch", "regime-pack"}
 
 MIGRATED_CLIENTS = [
     "cbc_client.py",
@@ -98,15 +103,17 @@ def test_tw_migration_contract(monkeypatch):
     )
 
     # ------------------------------------------------------------------
-    # (c) pack_tw.py exists + SUPPORTED_PACKS matches data-tw/pack.py
+    # (c) pack_tw.py exists + SUPPORTED_PACKS matches the expected pack-type
+    # set (hardcoded — the legacy data-tw/scripts/pack.py this used to
+    # parity-check against is deleted; migration-fidelity was already
+    # verified pre-deletion).
     # ------------------------------------------------------------------
     pack_tw_path = SCRIPTS_DIR / "pack_tw.py"
     assert pack_tw_path.exists(), "pack_tw.py not created"
     pack_tw = _load_module(pack_tw_path, "data_markets_pack_tw")
 
     assert isinstance(pack_tw.SUPPORTED_PACKS, tuple)
-    old_pack = _load_module(OLD_PACK_PATH, "data_tw_pack_orig")
-    assert set(pack_tw.SUPPORTED_PACKS) == old_pack.PACK_TYPES
+    assert set(pack_tw.SUPPORTED_PACKS) == EXPECTED_PACK_TYPES
 
     assert hasattr(pack_tw, "build_pack")
 

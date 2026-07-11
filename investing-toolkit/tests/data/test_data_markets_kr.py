@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import importlib.util
 import json
-import re
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -30,7 +29,13 @@ SCRIPTS = ROOT / "skills" / "data-markets" / "scripts"
 FDR_CLIENT = SCRIPTS / "fdr_client.py"
 PACK_KR = SCRIPTS / "pack_kr.py"
 
-OLD_PACK = ROOT / "skills" / "data-kr" / "scripts" / "pack.py"
+# Ground truth for (d) below — matches the old data-kr/scripts/pack.py's
+# `--pack` argparse choices (migration-fidelity already verified; that
+# skill dir is now deleted, so this is a hardcoded expectation rather than a
+# runtime parity parse).
+EXPECTED_SUPPORTED_PACKS = (
+    "snapshot", "memo-fetch", "comps-multiples", "screener-batch", "regime-pack",
+)
 
 
 def _load_module(path: Path, name: str):
@@ -96,20 +101,18 @@ def test_kr_migration_contract():
 
 
 # ---------------------------------------------------------------------------
-# (d) SUPPORTED_PACKS matches data-kr pack.py's --pack choices
+# (d) SUPPORTED_PACKS matches the expected --pack choices (hardcoded — the
+# legacy data-kr/scripts/pack.py this used to parity-check against is
+# deleted; migration-fidelity was already verified pre-deletion).
 # ---------------------------------------------------------------------------
 
 
 def test_supported_packs_matches_data_kr_choices():
     pack_kr = _load_module(PACK_KR, "pack_kr_contract")
-    old_src = OLD_PACK.read_text()
-    block = re.search(r"choices=\[(.*?)\]", old_src, re.S)
-    assert block, "could not locate --pack choices in data-kr/pack.py — has it moved?"
-    expected = tuple(re.findall(r'"([^"]+)"', block.group(1)))
 
     assert isinstance(pack_kr.SUPPORTED_PACKS, tuple)
-    assert set(pack_kr.SUPPORTED_PACKS) == set(expected)
-    assert len(pack_kr.SUPPORTED_PACKS) == len(expected)
+    assert set(pack_kr.SUPPORTED_PACKS) == set(EXPECTED_SUPPORTED_PACKS)
+    assert len(pack_kr.SUPPORTED_PACKS) == len(EXPECTED_SUPPORTED_PACKS)
 
 
 # ---------------------------------------------------------------------------

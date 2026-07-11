@@ -262,4 +262,4 @@ When the spec changes major version, helper `CACHE_SCHEMA_VERSION` constant bump
 - [ADR-0007](adr/0007-skill-self-contained-cache-helpers.md) — *why* we embed instead of import
 - [ADR-0001](adr/0001-data-analysis-report-layers.md) — three-layer architecture (data layer owns cache)
 - [industry-indicator-cadence.md](industry-indicator-cadence.md) — companion doc; covers publication-lag taxonomy from a data-quality perspective. This policy borrows its cadence labels for consistency.
-- [check-script-sync.yml](../../.github/workflows/check-script-sync.yml) — CI guard enforcing the helper block byte-equality (Group 10, added in Phase 2 of v2.2.0-j)
+- [ADR-0009](adr/0009-data-markets-consolidation-and-cache-util.md) — the data-markets consolidation: per-skill cache helpers (and the `check-script-sync.yml` CI guard that enforced their byte-equality) are retired; every client now imports one shared `cache_util.py` module, so there is no cross-copy drift left to sync-check

@@ -12,7 +12,7 @@ tests/data/test_pack_schemas.py fixture convention
 """
 from __future__ import annotations
 
-import importlib.util
+import importlib
 import json
 import os
 import re
@@ -24,8 +24,15 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS_DIR = ROOT / "skills" / "data-markets" / "scripts"
-OLD_PACK_PY = ROOT / "skills" / "data-jp" / "scripts" / "pack.py"
 FIXTURES_DIR = ROOT / "tests" / "data" / "fixtures"
+
+# Ground truth for (d) below — matches the old data-jp/scripts/pack.py's
+# module-level `PACKS` set (migration-fidelity already verified; that skill
+# dir is now deleted, so this is a hardcoded expectation rather than a
+# runtime parity parse).
+EXPECTED_SUPPORTED_PACKS = (
+    "snapshot", "memo-fetch", "comps-multiples", "screener-batch", "regime-pack",
+)
 
 MIGRATED_CLIENTS = [
     "boj_client",
@@ -150,16 +157,13 @@ def test_jp_migration_contract(tmp_path, monkeypatch):
         sys.path.remove(str(SCRIPTS_DIR))
 
     # ------------------------------------------------------------------
-    # (d) SUPPORTED_PACKS matches data-jp pack.py's PACKS set.
+    # (d) SUPPORTED_PACKS matches the expected pack-type set (hardcoded —
+    # the legacy data-jp/scripts/pack.py this used to parity-check against
+    # is deleted; migration-fidelity was already verified pre-deletion).
     # ------------------------------------------------------------------
-    assert OLD_PACK_PY.exists(), f"reference old pack.py missing: {OLD_PACK_PY}"
-    spec = importlib.util.spec_from_file_location("_old_data_jp_pack", OLD_PACK_PY)
-    old_pack = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(old_pack)
-
-    assert set(pack_jp.SUPPORTED_PACKS) == set(old_pack.PACKS), (
+    assert set(pack_jp.SUPPORTED_PACKS) == set(EXPECTED_SUPPORTED_PACKS), (
         f"pack_jp.SUPPORTED_PACKS {sorted(pack_jp.SUPPORTED_PACKS)} != "
-        f"data-jp pack.py PACKS {sorted(old_pack.PACKS)}"
+        f"expected {sorted(EXPECTED_SUPPORTED_PACKS)}"
     )
     assert isinstance(pack_jp.SUPPORTED_PACKS, tuple), (
         "SUPPORTED_PACKS must be a tuple per the shared cross-market interface"
