@@ -316,4 +316,63 @@ def test_two_stage_accept_and_brakes_wired():
     # loop never merges and never pushes (brief §Smallest End State item 6) ---
     assert "git merge" not in text
     assert "git push" not in text
+
+
+def test_accept_commit_uses_message_file_not_interpolated_dash_m():
+    """Round-2 fix (security 🔴): fixer-authored proposal.invariant/
+    proposal.rationale must never be embedded as literal `git commit -m`
+    arguments — same untrusted-blob-to-file discipline as the edits JSON
+    (EDITS_DATA_*_MARKER) and row-sets (ROW_SET_DATA_*_MARKER) elsewhere in
+    this file. The courier must instead Write the message to a file under
+    the run's sandbox dir and commit via `git commit -F <path>`."""
+    text = _text()
+    fn_m = re.search(r"async function commitAcceptedRound\(round, proposal\) \{[\s\S]*?\n\}\n", text)
+    assert fn_m, "commitAcceptedRound function not found"
+    body = fn_m.group(0)
+
+    # the message-file path must live under sandboxDir/runLabel, mirroring
+    # verdictArtifactPath's convention
+    assert re.search(r"sandboxDir\}/\$\{runArgs\.runLabel\}/commit-msg-round\$\{round\}", body), (
+        "commit message path must be under ${sandboxDir}/${runLabel}/commit-msg-round${round}.txt"
+    )
+    assert "commit-msg-round${round}.txt" in body
+
+    # `git commit -F` must be the actual command instruction, and the
+    # round-1 `-m`/`-m` invocation instruction must be gone (a passing
+    # mention of `-m` in explanatory prose, e.g. "never as a -m argument",
+    # is fine — only an actual `git commit ... -m` invocation is banned)
+    assert "git commit -F" in body, "must commit via git commit -F <message-file>"
+    assert not re.search(r"^\d+\.\s*git commit\b[^\n]*-m\b", body, re.MULTILINE), (
+        "no numbered-step `git commit -m` invocation — fixer-authored text "
+        "must never appear as a shell -m argument"
+    )
+    # explicit: the literal two-dash-m-arg instruction from round 1 must be gone
+    assert "SUBJECT above as the first" not in body, (
+        "round-1's '-m ... -m' instruction phrasing must be removed"
+    )
+
+
+def test_accept_commit_escapes_git_memory_trailer_lines():
+    """Round-2 fix (security 🔴, content-injection axis): the courier prompt
+    must instruct escaping any BODY line that starts with Decision:/Learning:/
+    Gotcha: (a leading `> `) so fixer-authored rationale/invariant text
+    cannot fabricate this repo's git-memory trailers in committed history."""
+    text = _text()
+    fn_m = re.search(r"async function commitAcceptedRound\(round, proposal\) \{[\s\S]*?\n\}\n", text)
+    assert fn_m, "commitAcceptedRound function not found"
+    body = fn_m.group(0)
+    assert "Decision:" in body and "Learning:" in body and "Gotcha:" in body, (
+        "must name all three git-memory trailer prefixes to escape"
+    )
+    assert "> " in body, "must instruct prefixing offending lines with an escape (e.g. leading '> ')"
+
+
+def test_accept_round_baseline_update_keeps_two_run_aggregation():
+    """Round-2 fix (architecture 🟡): on accept, currentBaselineRuns must be
+    set to BOTH verifyRun and confirmRun (not just confirmRun) — collapsing
+    to 1 run silently drops this file's established 2-run OR-aggregation
+    convention for subsequent rounds."""
+    text = _text()
+    assert "currentBaselineRuns = [verifyRun, confirmRun]" in text
+    assert "currentBaselineRuns = [confirmRun]" not in text
     assert "gh pr " not in text
