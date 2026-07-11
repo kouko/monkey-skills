@@ -153,11 +153,12 @@ const results = await pipeline(
   // REPLAY STAGE — one haiku headless replay per seed, written to a
   // per-seed sandbox path. No cross-seed barrier (pipeline runs each
   // seed's Replay->Grade independently).
-  (seed) => {
+  async (seed) => {
     const artifactPath = `${runArgs.sandboxDir}/${runArgs.runLabel}/${seed.id}/PRINCIPLES.md`
-    log(`replay:${seed.id}: dispatching headless replay (haiku) -> ${artifactPath}`)
-    return agent(
-      `You are replaying the loom-product-principles \`product-principles\` skill in its "Headless / seeded mode" — no user is available; this is an on-demand regression replay, not a live authoring session.
+    try {
+      log(`replay:${seed.id}: dispatching headless replay (haiku) -> ${artifactPath}`)
+      return await agent(
+        `You are replaying the loom-product-principles \`product-principles\` skill in its "Headless / seeded mode" — no user is available; this is an on-demand regression replay, not a live authoring session.
 
 STEPS:
 1. Read ${SKILL_MD} in full (the whole file — its "## Headless / seeded mode" section is the exact procedure to follow; earlier sections define the artifact contract it references, incl. references/principles-rules.md's — check: marker rule).
@@ -167,8 +168,21 @@ STEPS:
 5. Do NOT run the validator or the traceability checker yourself — a separate Grade stage does that mechanically. Do NOT self-report pass/fail; an operator self-report has already been proven false once on this seed corpus.
 
 Return the artifact path you wrote.`,
-      { model: 'haiku', phase: 'Replay', label: `replay:${seed.id}`, schema: REPLAY_SCHEMA }
-    )
+        { model: 'haiku', phase: 'Replay', label: `replay:${seed.id}`, schema: REPLAY_SCHEMA }
+      )
+    } catch (e) {
+      const message = e && e.message ? e.message : String(e)
+      log(`replay:${seed.id}: stage threw — recording as a hard miss. (${message})`)
+      return {
+        seedId: seed.id,
+        pass: false,
+        validatorExit: null,
+        checkerExit: null,
+        misses: ['replay: stage error — ' + message],
+        artifactPath: null,
+        gradeTxtPath: null,
+      }
+    }
   },
   // GRADE STAGE — a courier only: runs the two deterministic scripts and
   // returns their raw exit codes + stderr. The SCRIPT (not the agent)
@@ -179,21 +193,22 @@ Return the artifact path you wrote.`,
   async (replay, seed) => {
     const artifactPath = replay && replay.artifactPath
     const gradeTxtPath = `${runArgs.sandboxDir}/${runArgs.runLabel}/${seed.id}/grade.txt`
-    if (!artifactPath) {
-      log(`grade:${seed.id}: Replay stage produced no artifactPath — recording as a hard miss.`)
-      return {
-        seedId: seed.id,
-        pass: false,
-        validatorExit: null,
-        checkerExit: null,
-        misses: ['replay: no artifact produced'],
-        artifactPath: null,
-        gradeTxtPath: null,
+    try {
+      if (!artifactPath) {
+        log(`grade:${seed.id}: Replay stage produced no artifactPath — recording as a hard miss.`)
+        return {
+          seedId: seed.id,
+          pass: false,
+          validatorExit: null,
+          checkerExit: null,
+          misses: ['replay: no artifact produced'],
+          artifactPath: null,
+          gradeTxtPath: null,
+        }
       }
-    }
-    log(`grade:${seed.id}: dispatching grading courier -> ${gradeTxtPath}`)
-    const g = await agent(
-      `You are a GRADING COURIER. Run EXACTLY these two commands via Bash from the repo root ${ROOT}, and nothing else — do not open or read the artifact yourself, do not form an opinion about correctness, do not run any script other than these two:
+      log(`grade:${seed.id}: dispatching grading courier -> ${gradeTxtPath}`)
+      const g = await agent(
+        `You are a GRADING COURIER. Run EXACTLY these two commands via Bash from the repo root ${ROOT}, and nothing else — do not open or read the artifact yourself, do not form an opinion about correctness, do not run any script other than these two:
 
 1. python3 loom-product-principles/scripts/validate_principles_output.py ${artifactPath}
 2. python3 loom-product-principles/scripts/check_seed_traceability.py ${artifactPath} ${seed.oracle}
@@ -201,30 +216,43 @@ Return the artifact path you wrote.`,
 Save the raw stdout+stderr and exit code of BOTH commands, clearly labeled per command, to this exact path via the Write tool: ${gradeTxtPath}
 
 Return: validatorExit (command 1's exit code, a number), checkerExit (command 2's exit code, a number), checkerMisses (every stderr line command 2 printed, each already in \`<class>: <token>\` form — empty array when checkerExit is 0), gradeTxtPath (the path you wrote), artifactPath (echo back ${artifactPath}).`,
-      { phase: 'Grade', label: `grade:${seed.id}`, schema: GRADE_SCHEMA }
-    )
-    if (!g) {
-      log(`grade:${seed.id}: grading courier produced no result — recording as a hard miss.`)
+        { phase: 'Grade', label: `grade:${seed.id}`, schema: GRADE_SCHEMA }
+      )
+      if (!g) {
+        log(`grade:${seed.id}: grading courier produced no result — recording as a hard miss.`)
+        return {
+          seedId: seed.id,
+          pass: false,
+          validatorExit: null,
+          checkerExit: null,
+          misses: ['grade: courier produced no result'],
+          artifactPath,
+          gradeTxtPath: null,
+        }
+      }
+      const pass = g.validatorExit === 0 && g.checkerExit === 0
+      log(`grade:${seed.id}: validatorExit=${g.validatorExit} checkerExit=${g.checkerExit} -> ${pass ? 'PASS' : 'FAIL'}`)
+      return {
+        seedId: seed.id,
+        pass,
+        validatorExit: g.validatorExit,
+        checkerExit: g.checkerExit,
+        misses: g.checkerMisses || [],
+        artifactPath: g.artifactPath,
+        gradeTxtPath: g.gradeTxtPath,
+      }
+    } catch (e) {
+      const message = e && e.message ? e.message : String(e)
+      log(`grade:${seed.id}: stage threw — recording as a hard miss. (${message})`)
       return {
         seedId: seed.id,
         pass: false,
         validatorExit: null,
         checkerExit: null,
-        misses: ['grade: courier produced no result'],
-        artifactPath,
+        misses: ['grade: stage error — ' + message],
+        artifactPath: artifactPath || null,
         gradeTxtPath: null,
       }
-    }
-    const pass = g.validatorExit === 0 && g.checkerExit === 0
-    log(`grade:${seed.id}: validatorExit=${g.validatorExit} checkerExit=${g.checkerExit} -> ${pass ? 'PASS' : 'FAIL'}`)
-    return {
-      seedId: seed.id,
-      pass,
-      validatorExit: g.validatorExit,
-      checkerExit: g.checkerExit,
-      misses: g.checkerMisses || [],
-      artifactPath: g.artifactPath,
-      gradeTxtPath: g.gradeTxtPath,
     }
   }
 )
