@@ -73,13 +73,17 @@
   on branch `feat-principles-replay-loop-l1-l2`, closing both residuals
   above. Design SSOT: `docs/loom/specs/2026-07-10-principles-replay-loop.md`
   (§Level 1, §Level 2).
-- What: the remaining open item is Level 3 — the autonomous improvement
-  loop (matrix → grade → implementer proposes a SKILL.md fix → review →
-  re-run). Design + the four guardrails are SSOT'd at
-  `docs/loom/specs/2026-07-10-principles-replay-loop.md` §Level 3 — do
-  not restate them here. `skill-dev-toolkit:skill-tuning` is the
-  candidate variant-diversification engine when this builds (named in
-  the same §Level 3). Two still-unbuilt reuse tiers from the original
+- What: Level 3 — the autonomous improvement loop (matrix → grade →
+  implementer proposes a SKILL.md fix → review → re-run) — is now
+  BUILT: `.claude/workflows/principles-improve-loop.js` (saved workflow
+  `principles-improve-loop`), brief SSOT
+  `docs/loom/specs/2026-07-11-principles-replay-l3-loop.md`. Design
+  history remains at `docs/loom/specs/2026-07-10-principles-replay-loop.md`
+  §Level 3 — do not restate it here. `skill-dev-toolkit:skill-tuning`
+  remains the candidate variant-diversification engine, deliberately
+  NOT wired in yet (re-trigger: single-fixer plateaus and
+  diversification is needed — per the L3 brief's §Decision). Two
+  still-unbuilt reuse tiers from the original
   discussion remain adjacent open ideas, not folded into L1/L2/L3:
   simulated-user replay (answer-bank + correction-events from the
   transcripts driving a simulated user that injects recorded
