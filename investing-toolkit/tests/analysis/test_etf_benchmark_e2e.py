@@ -51,9 +51,12 @@ def _write_aggregate(
     """Write a sector-etf-aggregate-<ETF>.json with sensible defaults.
 
     `as_of` defaults to today (freshness_days=0). Override to test stale guard.
+
+    Dates are UTC — etf_aggregator.py stamps as_of in UTC and comps_compute.py
+    measures freshness in UTC; local dates run a day ahead in UTC+ mornings.
     """
     if as_of is None:
-        as_of = datetime.date.today().isoformat()
+        as_of = datetime.datetime.now(datetime.timezone.utc).date().isoformat()
     target = aggregates_dir / f"sector-etf-aggregate-{etf}.json"
     target.write_text(json.dumps({
         "etf": etf,
@@ -297,7 +300,8 @@ def test_e2e_stale_aggregate_emits_warning(tmp_path):
     anchor = FIXTURES / "comps_anchor_jpm.json"
     base = FIXTURES / "memo_fetch_jpm_minimal.json"
     peer = FIXTURES / "comps_peer_bac.json"
-    stale_date = (datetime.date.today() - datetime.timedelta(days=20)).isoformat()
+    stale_date = (datetime.datetime.now(datetime.timezone.utc).date()
+                  - datetime.timedelta(days=20)).isoformat()
     _write_aggregate(tmp_path, etf="XLF", schema_id="bank",
         as_of=stale_date,
         multiples={"trailingPE": 16.0, "forwardPE": None, "priceToBook": 2.5, "priceToTangibleBook": 2.0},
