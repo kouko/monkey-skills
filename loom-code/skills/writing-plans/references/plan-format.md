@@ -148,7 +148,7 @@ Parent declared DONE when all children DONE.
 (Free-form notes to SDD orchestrator — e.g. "Tasks 2+3 can run parallel after Task 1; Task 4 needs Task 2 only, not Task 3")
 ```
 
-#### `## Decision Log` (optional section)
+#### `Decision Log` plan section (v0.29.0+, optional)
 
 Unlike `## Notes` (free-form, author-written), `## Decision Log` is
 **runtime content**: `writing-plans` never authors it — a fresh plan has
@@ -156,10 +156,16 @@ no `## Decision Log` section — `subagent-driven-development` **appends to
 it** during execution whenever an agent decides an engineering choice with
 product stakes, and `plan-document-reviewer` **accepts and ignores it**,
 mirroring the per-task `Status` field's reviewer-ignores contract (see
-§Progress ledger above).
+§Progress ledger above). The precise when-to-append trigger — the
+two-axis test that adjudicates "product stakes" — is owned by
+`subagent-driven-development`'s Decision Log maintenance clause; this
+section only defines the record shape, not the trigger.
 
-One entry per agent-decided choice, in the record shape shared with
-`product-principles`' Deviation Ledger — one format, two views (design SSOT:
+One entry per agent-decided choice: one conceptual record format
+(single-line, reason-bearing, cost-aware) shared with `product-principles`'
+Deviation Ledger, but the two views use different marker idioms — the
+Deviation Ledger's `— reason:`/`— principle:` vs this section's
+`— cost-of-change:` (design SSOT:
 `docs/loom/design/2026-07-10-designer-pm-loop-architecture.md:228`). Each
 entry is a **single physical line — do not soft-wrap** (same reason as the
 Deviation Ledger: a wrapped entry breaks downstream parsing).
