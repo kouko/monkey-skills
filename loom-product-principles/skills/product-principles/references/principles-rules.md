@@ -252,9 +252,10 @@ and to the named product principle that licenses the break. This extends
 this file's own `— check:` marker idiom with two sibling markers,
 `— reason:` and `— principle:` (em dash U+2014, single space, lowercase
 word, colon); the general concept — documenting an intentional break with
-its justification — mirrors the engineering decision log in the
-architecture doc, though that log's format is prose, not this marker
-shape.
+its justification — mirrors the engineering decision log that now lives
+in loom-code's `plan-format.md` §Decision Log, with its own
+`— cost-of-change:` marker: one conceptual record format, two views with
+per-view marker idioms.
 
 **Write each entry as a single physical line — do not soft-wrap.** The
 validator matches `— reason:` and `— principle:` on the same physical
