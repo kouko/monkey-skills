@@ -22,13 +22,19 @@ round 2):
     checks across the now-merged per-country clients) that no longer apply
     once the copies became one canonical file under data-markets/scripts/ —
     correctly retired, nothing to restore.
-  - 32 were structural parametrization over the old 5 separate skill
-    directories (one parametrized case per market × pack-type/section, e.g.
-    "does skills/data-{market}/scripts/pack.py exist and expose section X")
-    — superseded by the single data-markets skill's own structural
-    assertions in tests/data/test_data_markets_{market}.py; nothing to
-    restore, the shape those cases checked is asserted once now instead of
-    5 times.
+  - 32 (net: 40 removed / 8 added) were parametrized instances of 8 test
+    functions in tests/test_skill_structure.py (test_skill_md_present,
+    test_skill_frontmatter_required_keys,
+    test_skill_description_length_under_1024,
+    test_scripts_subdir_present_when_required) and
+    tests/test_path_conventions.py
+    (test_data_analysis_self_refs_no_cross_skill_drift,
+    test_no_absolute_user_paths, test_no_skill_dir_parent_escape,
+    test_skill_dir_not_followed_by_skills_subpath), each reparametrized
+    from the 5-item DATA_SKILLS list down to ["data-markets"]. They check
+    SKILL.md presence/frontmatter/description-length and path-safety —
+    the same checks now run once against data-markets in those SAME two
+    files; nothing to restore.
   - 5 were CN-specific legacy output-shape assertions tied to the old
     data-cn/scripts/pack.py's pre-consolidation JSON envelope, superseded by
     pack_cn.py's current shape (already covered by
