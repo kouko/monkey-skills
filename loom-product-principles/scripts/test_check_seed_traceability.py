@@ -80,6 +80,15 @@ def test_multi_token_values_are_stripped_of_surrounding_whitespace():
     assert result["named_anchors"] == ["HEART", "MoSCoW", "IBM Carbon"]
 
 
+@pytest.mark.parametrize("bad_token", ["a||b", "|b", "a|", "a|  |b", "|"])
+def test_malformed_pipe_alternative_raises_value_error(bad_token):
+    # Empty alternatives (leading/trailing `|`, or `||`) are a parse error —
+    # contract precision, not a matching edge case.
+    text = f"named_anchors: {bad_token}\n"
+    with pytest.raises(ValueError):
+        parse_oracle(text)
+
+
 # --- Task 2: artifact checks + CLI ------------------------------------------
 
 SCRIPT = Path(__file__).with_name("check_seed_traceability.py")
@@ -228,6 +237,58 @@ def test_check_public_api_returns_miss_lines_without_subprocess():
     assert misses == ["named_anchors: HEART"]
 
 
+# --- Task 1 (plan 2026-07-11): `|` OR-alternatives ---------------------------
+
+
+def test_pipe_alternatives_match_any_form():
+    # RED: a `JTBD|Jobs-to-be-Done` anchor item must pass when the artifact's
+    # Anchors row carries only the long form.
+    artifact = _artifact(anchor_row="| Jobs-to-be-Done | usability framework |")
+    oracle = _oracle(named="JTBD|Jobs-to-be-Done")
+    assert check(artifact, oracle) == []
+
+
+def test_pipe_alternatives_match_any_form_deferred_items():
+    artifact = _artifact(
+        open_question="1. Reversibility posture unclear — re-trigger: revisit later\n"
+    )
+    oracle = _oracle(deferred="可逆性|Reversibility posture")
+    assert check(artifact, oracle) == []
+
+
+def test_pipe_alternatives_negative_violated_by_any_alternative():
+    # A negative item is violated if ANY alternative is present, even if the
+    # oracle's first-listed alternative is absent.
+    artifact = _artifact(extra_negative="We considered an API gateway here.")
+    oracle = _oracle(negative="mock server|API gateway")
+    assert check(artifact, oracle) == ["negative: mock server|API gateway"]
+
+
+def test_pipe_alternatives_miss_line_echoes_full_item_when_no_alternative_matches():
+    artifact = _artifact(anchor_row=None)
+    oracle = _oracle(named="JTBD|Jobs-to-be-Done")
+    assert check(artifact, oracle) == ["named_anchors: JTBD|Jobs-to-be-Done"]
+
+
+# --- Calibration round-2: negation-superstring characterization -------------
+
+
+def test_negative_token_fires_on_its_own_rejection_sentence_characterization():
+    # CHARACTERIZATION (not a bug): `check_negative` cannot distinguish a
+    # bait item being ACCEPTED from the artifact correctly REJECTING it — a
+    # negative token is a substring of its own natural-language rejection
+    # ("不支援企業版多店管理" contains "支援企業版"). This is WHY the three
+    # bait-leak tokens (mock server support / API gateway support / 支援企業版)
+    # were demoted out of `negative:` to grader-side `# note:` prose in the
+    # oracle calibration round-2 fix — no acceptance-phrase choice escapes
+    # this under substring semantics.
+    artifact = _artifact(
+        extra_negative="不支援企業版多店管理，功能優化針對單一店家。"
+    )
+    oracle = _oracle(negative="支援企業版")
+    assert check(artifact, oracle) == ["negative: 支援企業版"]
+
+
 # --- Task 3: committed oracles conform to the parser contract ---------------
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -248,45 +309,53 @@ _COLD_OPERATOR_SEED = (
 # "Nielsen's 10 Usability Heuristics (MIXED-TRADITION TRAP: ...)" would trip
 # the shape assertion below.
 _COMMITTED_ORACLE_EXPECTATIONS = [
-    ("seed1-oracle.md", _SEED_CORPUS / "seed1-oracle.md", 10, 0, 3, {
-        "named_anchors": "Nielsen's 10 Usability Heuristics",
+    ("seed1-oracle.md", _SEED_CORPUS / "seed1-oracle.md", 12, 0, 3, {
+        "named_anchors": "Nielsen",
         "negative": "postmortem 撰寫",
     }),
-    ("seed2-oracle.md", _SEED_CORPUS / "seed2-oracle.md", 7, 2, 5, {
+    ("seed2-oracle.md", _SEED_CORPUS / "seed2-oracle.md", 8, 2, 2, {
         "named_anchors": "Calm Technology",
-        "deferred_items": "可逆性",
-        "negative": "上傳雲端",
+        "deferred_items": "可逆性|Reversibility posture",
+        "negative": "兒童聲音資料分享",
     }),
-    ("seed3-oracle.md", _SEED_CORPUS / "seed3-oracle.md", 6, 0, 3, {
-        "named_anchors": "Nielsen's 10 Usability Heuristics",
-        "negative": "mock server",
+    ("seed3-oracle.md", _SEED_CORPUS / "seed3-oracle.md", 6, 0, 0, {
+        "named_anchors": "Nielsen",
     }),
-    ("seed4-oracle.md", _SEED_CORPUS / "seed4-oracle.md", 9, 1, 4, {
+    ("seed4-oracle.md", _SEED_CORPUS / "seed4-oracle.md", 10, 1, 4, {
         "named_anchors": "Norman's Design Principles",
-        "deferred_items": "升級胃口",
+        "deferred_items": "升級胃口|Upgrade appetite",
         "negative": "強制雲端備份",
     }),
-    ("seed5-oracle.md", _SEED_CORPUS / "seed5-oracle.md", 8, 2, 2, {
-        "named_anchors": "WCAG 2.2",
-        "deferred_items": "預約記錄保留期",
-        "negative": "企業版",
+    ("seed5-oracle.md", _SEED_CORPUS / "seed5-oracle.md", 8, 2, 0, {
+        "named_anchors": "WCAG",
+        "deferred_items": "預約記錄|retention",
     }),
     ("cold-operator seed.md", _COLD_OPERATOR_SEED, 9, 1, 8, {
-        "named_anchors": "Modular Monolith",
-        "deferred_items": "成本",
+        "named_anchors": "JTBD|Jobs-to-be-Done",
+        "deferred_items": "成本|Cost|cost",
         "negative": "零雲端依賴",
     }),
 ]
 
 # Shape assertion: a token that still carries prose-glue TRAP-style
-# annotation (e.g. "(MIXED-TRADITION TRAP: ...)") or the literal substring
-# "MUST appear" is evidence the oracle text wasn't normalized into a clean
-# `;`-separated token list — the parser would be pinning prose, not a token.
+# annotation (e.g. "(MIXED-TRADITION TRAP: ...)"), the literal substring
+# "MUST appear", or a descriptive " stack"/" format" suffix (e.g. "C++/Qt
+# stack", "SVG format") is evidence the oracle text wasn't normalized into a
+# clean `;`-separated token list — the parser would be pinning prose, not a
+# stable token fragment. Checked per `|` alternative so a class-B pair can't
+# hide a glued alternative.
 _TRAP_ANNOTATION_RE = re.compile(r"\([A-Z]{2,}")
+_GLUED_SUFFIXES = (" stack", " format")
 
 
 def _is_prose_glued(token: str) -> bool:
-    return bool(_TRAP_ANNOTATION_RE.search(token)) or "MUST appear" in token
+    for alt in token.split("|"):
+        alt = alt.strip()
+        if _TRAP_ANNOTATION_RE.search(alt) or "MUST appear" in alt:
+            return True
+        if alt.endswith(_GLUED_SUFFIXES):
+            return True
+    return False
 
 
 @pytest.mark.parametrize(

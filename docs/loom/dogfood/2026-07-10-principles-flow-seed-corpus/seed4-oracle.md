@@ -1,11 +1,17 @@
 # Oracle 4 — local-first vector sketchbook (grader-only)
 
-named_anchors: Apple Human Interface Guidelines; Norman's Design Principles; Kenya Hara / MUJI "Emptiness"; Local-First; Vertical Slice Architecture; Jobs-to-be-Done; Blue Ocean Strategy; C++/Qt stack; SVG format
+named_anchors: Apple Human Interface Guidelines; Norman's Design Principles; Kenya Hara; Local-First; Vertical Slice Architecture; Jobs-to-be-Done; Blue Ocean Strategy; C++; Qt; SVG
 # note: MIXED-TRADITION TRAP — Apple HIG + Norman's Design Principles are
 # both named in one Design/Interaction bullet, each needs its own Anchors
 # row.
+# note: named_anchors token shortened from `Kenya Hara / MUJI "Emptiness"`
+# to `Kenya Hara` (stable-fragment re-tokenization, calib-r2 evidence) — r2
+# wrote 「Kenya Hara / MUJI Design Principles」; the quoted-English-Emptiness
+# long form is paraphrase-fragile, `Kenya Hara` appears in every observed
+# variant. Intent (MUJI "Emptiness" visual canon) still carried by the
+# stances: line below (visual=Kenya Hara/MUJI).
 
-deferred_items: 升級胃口
+deferred_items: 升級胃口|Upgrade appetite
 # note: single deferred item (升級胃口=無法判斷 → Open Question +
 # re-trigger) — must not be dropped even though it's not the ≥2-deferred
 # seed.

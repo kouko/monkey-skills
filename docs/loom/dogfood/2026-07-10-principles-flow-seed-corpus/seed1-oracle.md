@@ -1,6 +1,11 @@
 # Oracle 1 — B2B incident-response dashboard (grader-only)
 
-named_anchors: HEART; MoSCoW; Nielsen's 10 Usability Heuristics; IBM Carbon; Swiss / International Typographic Style; Layered/N-Tier; Hexagonal/Ports & Adapters; TypeScript+React; Go; PostgreSQL+Redis
+named_anchors: HEART; MoSCoW; Nielsen; IBM Carbon; Swiss / International Typographic Style; Layered|N-Tier; Hexagonal|Ports & Adapters; TypeScript; React; Go; PostgreSQL; Redis
+# note: SPACED-SLASH calibration (calib-r2/r3 seed1 evidence) — re-tokenized `Layered/N-Tier` and `Hexagonal/Ports & Adapters` to `|` alternatives: r2 anchored "Layered / N-Tier Architecture" / "Hexagonal / Ports & Adapters Architecture", r3 anchored "Layered / N-Tier Architecture" / "Hexagonal Architecture / Ports & Adapters" (reversed word order); the bare-slash token never matched the spaced form (class-A spacing miss, misclassified as class-D); mirrors seed3's existing `Hexagonal|Ports & Adapters` alternative form.
+# note: SURNAME-FRAGMENT calibration (calib-r3 evidence, transferred from
+# seed3) — "Nielsen's 10 Usability Heuristics" re-tokenized to the bare
+# surname; same fragility as seed3 (CJK-output artifacts anchor it as
+# "Nielsen 十項可用性啟發法則", never the full English name).
 
 deferred_items: none in this seed (2-deferred trap lives in seed 2)
 

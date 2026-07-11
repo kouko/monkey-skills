@@ -1,15 +1,22 @@
 # Oracle — seed5 線上預約排班 SaaS (grader only; operator never sees this)
 
-named_anchors: Working Backwards; Material Design; WCAG 2.2; React; TypeScript; FastAPI; PostgreSQL; 12-Factor App
+named_anchors: Working Backwards; Material Design; WCAG; React; TypeScript; FastAPI; PostgreSQL; 12-Factor App
 # note: each MUST appear in ## Anchors with a non-empty version/edition cell.
 # WCAG 2.2 — named standard counts as canon; AA level stated. React/FastAPI —
 # frontend/backend stack, named in prose, must still anchor. 12-Factor App —
 # deployment convention named in passing prose. Dual-stack (frontend +
 # backend) both must anchor.
 
-deferred_items: 預約記錄保留期; SLA/uptime 目標
+deferred_items: 預約記錄|retention; SLA
 # note: each MUST appear in ## Open Questions with a — re-trigger:.
-# 預約記錄保留期（法規待查，Q8）; SLA/uptime 目標（待首批店家營業時間分布）.
+# 預約記錄保留期（法規待查，Q8，legal retention period）; SLA/uptime 目標
+# （待首批店家營業時間分布）.
+# note: deferred_items tokens re-tokenized (calib-r2 evidence,
+# stable-fragment calibration): `預約記錄保留期`→`預約記錄|retention` — r2 OQ
+# wrote 「預約記錄的法律保留期限」, the 「的法律」insertion breaks the
+# contiguous substring; `預約記錄` is present and distinctive, `retention`
+# covers English replays. `SLA/uptime`→`SLA` — r2 OQ wrote 「SLA 目標設定」/
+# 「可用性 SLA」; the `/uptime` suffix is fragile, bare `SLA` is distinctive.
 
 out_of_jurisdiction_bait:  # must be explicitly noted OUT, never become principles
   - 月費三檔（免費/390/990）          # pricing
@@ -26,9 +33,16 @@ stances:          # each individual stance needs a carrying principle (merging O
   - 個資最小化＋電話遮罩
   - 工程全委派（只看結果）            # escalation appetite → may be process-context; must not be silently dropped (explicit note or principle)
 
-negative: 企業版; 簡訊通知作為 v1 原則
-# note: 企業版 is explicitly scoped out; 簡訊通知作為 v1 原則 is a deferred
-# channel (SMS is out for v1, LINE + email only) — presence of either as a
-# committed principle is a regression.
+negative: none in this seed (machine-checked items demoted to grader-side notes — see # note lines)
+# note: 簡訊通知作為 v1 原則 is a deferred channel (SMS is out for v1, LINE +
+# email only) — presence as a committed principle is a regression. Demoted
+# from machine-checked `negative:` (round-3): a natural rejection sentence
+# containing this token as a substring reproduced a false positive against
+# check(); grader-checked only now.
+# note: 支援企業版|enterprise edition support (企業版 explicitly scoped out) is
+# bait-leak coverage, grader-checked only (not machine-checked):
+# negation-superstring — any acceptance phrase is a substring of its own
+# natural rejection (e.g. 「不優化企業版多店管理」 contains "企業版") — no
+# phrase choice fixes this under substring semantics.
 
 traps_summary: 5-stance single bullet; stack named in prose; canon (Material Design/12-Factor) in passing prose; TWO deferred items; cost stance is decided (trap: don't confuse with deferred); dual-stack (frontend+backend) both must anchor.

@@ -8,6 +8,15 @@ This module's `parse_oracle` DEFINES the oracle format contract:
     single line: `<key>: <value>`.
   - A value is a `;`-separated list of exact-match tokens; each token is
     stripped of surrounding whitespace before being returned.
+  - A token may itself be an OR-alternative group `alt1|alt2|…`: at check
+    time the item matches if ANY alternative substring-matches, uniformly
+    across all three checkers (an anchors/deferred item matches if any
+    alternative is found; a negative item is VIOLATED if any alternative is
+    present). Plain tokens (no `|`) are unaffected — a single-element
+    alternative group behaves byte-identically to a bare token. An empty
+    alternative (`a||b`, or a leading/trailing `|` such as `|b` or `a|`)
+    raises `ValueError` at parse time — malformed `|` syntax is a parse
+    error, not a matching edge case.
   - The empty sentinel `none in this seed` (optionally followed by
     trailing parenthetical commentary, e.g. "none in this seed (2-deferred
     trap lives in seed 2)") parses to an empty list `[]`. A key absent
@@ -31,9 +40,10 @@ oracle's three token lists:
   - every `negative` token must be absent from the artifact entirely.
 
 It returns a list of miss lines, each `<class>: <token>` (class is the
-oracle key name). This checker deliberately does NOT validate table/list
-well-formedness — that is `validate_principles_output.py`'s job; the two
-scripts compose (the CLI here just locates tokens).
+oracle key name, `<token>` is the item exactly as written in the oracle,
+including any `|` alternatives). This checker deliberately does NOT
+validate table/list well-formedness — that is `validate_principles_output.py`'s
+job; the two scripts compose (the CLI here just locates tokens).
 
 CLI: `python check_seed_traceability.py <artifact.md> <oracle.md>` -> exit
 0 with no output if every token traces; exit 1 with one miss line per
@@ -81,7 +91,29 @@ def parse_oracle(text: str) -> dict:
 def _parse_value(value: str) -> list:
     if not value or value.lower().startswith(_EMPTY_SENTINEL):
         return []
-    return [token.strip() for token in value.split(";") if token.strip()]
+    tokens = [token.strip() for token in value.split(";") if token.strip()]
+    for token in tokens:
+        _alternatives(token)  # raises ValueError on malformed `|` syntax
+    return tokens
+
+
+_ALT_SEP = "|"
+
+
+def _alternatives(token: str) -> list:
+    """Split an oracle token into its OR-alternatives on `|`. A plain token
+    (no `|`) returns `[token]` unchanged — byte-identical to today's
+    single-string matching. Raises `ValueError` for an empty alternative
+    (`a||b`, or a leading/trailing `|` such as `|b`/`a|`)."""
+    if _ALT_SEP not in token:
+        return [token]
+    alternatives = [part.strip() for part in token.split(_ALT_SEP)]
+    if any(not alt for alt in alternatives):
+        raise ValueError(
+            f"malformed alternative syntax in oracle token (empty "
+            f"alternative): {token!r}"
+        )
+    return alternatives
 
 
 # --- artifact checks ---------------------------------------------------------
@@ -142,7 +174,8 @@ def _open_questions_retrigger_entries(text: str) -> list:
 
 def check_named_anchors(artifact_text: str, tokens: list) -> list:
     """Miss lines for `named_anchors` tokens not found in an `## Anchors`
-    data row whose version cell (second `|` cell) is non-empty."""
+    data row whose version cell (second `|` cell) is non-empty. A `|`
+    alternative-group token matches if ANY alternative is found."""
     rows = [
         row for row in _anchor_data_rows(artifact_text)
         if len(cells := _split_pipe_row(row)) > 1 and cells[1].strip()
@@ -150,25 +183,31 @@ def check_named_anchors(artifact_text: str, tokens: list) -> list:
     return [
         f"named_anchors: {token}"
         for token in tokens
-        if not any(token in row for row in rows)
+        if not any(alt in row for row in rows for alt in _alternatives(token))
     ]
 
 
 def check_deferred_items(artifact_text: str, tokens: list) -> list:
     """Miss lines for `deferred_items` tokens not found in a `## Open
-    Questions` entry that carries `— re-trigger:` on the same line."""
+    Questions` entry that carries `— re-trigger:` on the same line. A `|`
+    alternative-group token matches if ANY alternative is found."""
     entries = _open_questions_retrigger_entries(artifact_text)
     return [
         f"deferred_items: {token}"
         for token in tokens
-        if not any(token in entry for entry in entries)
+        if not any(alt in entry for entry in entries for alt in _alternatives(token))
     ]
 
 
 def check_negative(artifact_text: str, tokens: list) -> list:
     """Miss lines for `negative` tokens that ARE present in the artifact
-    (they must be absent)."""
-    return [f"negative: {token}" for token in tokens if token in artifact_text]
+    (they must be absent). A `|` alternative-group token is VIOLATED if ANY
+    alternative is present."""
+    return [
+        f"negative: {token}"
+        for token in tokens
+        if any(alt in artifact_text for alt in _alternatives(token))
+    ]
 
 
 def check(artifact_text: str, oracle_text: str) -> list:
