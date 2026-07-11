@@ -10,9 +10,8 @@ collected file).
     pytest -m "not network"  # offline-safe (CI default)
 
 The cross-cutting test files at this level (test_skill_structure.py,
-test_plugin_metadata.py, test_sync_clients.py, test_path_conventions.py,
-test_pipeline_integration.py) use this marker for end-to-end pipeline tests
-that require real data fetches.
+test_plugin_metadata.py, test_path_conventions.py, test_pipeline_integration.py)
+use this marker for end-to-end pipeline tests that require real data fetches.
 """
 from __future__ import annotations
 

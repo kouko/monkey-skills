@@ -87,7 +87,7 @@ Material features. ~1-3 weeks each. Do one at a time.
 
 - **What**: Restore the v1.10.0-deferred C+D+E real-rate decomposition for JP. C = ECB ex-post real-yield (already in v2.1.0 classify_jp); D = Tankan ex-ante inflation outlook (already wired in v1.x `boj_tankan_inflation_outlook`); E = JGBi (Japanese inflation-linked bonds) compared with nominal JGB.
 - **Why**: 1-axis C-only is the weakest of the 5 countries. C+D+E is the framework `references/japan-real-rate-roadmap.md` describes; restoring it makes JP real-rate match US's 4-tier rigor.
-- **Files**: `investing-toolkit/skills/data-jp/scripts/` new `mof_jgbi_client.py` (MoF publishes JGBi via PDF/XLSX, no API); `data-jp/pack.py` regime-pack JGBi block; `classify_jp.py` _build_real_rate_block extension.
+- **Files**: `investing-toolkit/skills/data-markets/scripts/` new `mof_jgbi_client.py` (MoF publishes JGBi via PDF/XLSX, no API); `pack_jp.py` regime-pack JGBi block; `classify_jp.py` _build_real_rate_block extension.
 - **Blocker**: MoF JGBi data is PDF-scraped or Excel-downloaded — fragile parser.
 - **Acceptance**: classify_jp `real_rate_block` has 3 sub-blocks (ex_post / ex_ante / jgbi) all populated; cross-method central tendency derived.
 - **Reference**: `analysis-macro-regime/references/japan-real-rate-roadmap.md`; v1.10.0 deferred list; v2.0.0 deferred list.
@@ -127,7 +127,7 @@ Material features. ~1-3 weeks each. Do one at a time.
 
 - **What**: Replace fdr_client KEYSTAT 'sentiment' fallback with native ECOS (한국은행 경제통계시스템) API call for 경제심리지수 K269.
 - **Why**: KR Phase 1 PR-5 #186 noted ESI deferred; current code degrades gracefully but full primary-source integration is preferred.
-- **Files**: `investing-toolkit/skills/data-kr/scripts/ecos_client.py` (new — needs ECOS API key); pack.py wiring; classify_kr.py read path.
+- **Files**: `investing-toolkit/skills/data-markets/scripts/ecos_client.py` (new — needs ECOS API key); `pack_kr.py` wiring; classify_kr.py read path.
 - **Blocker**: **Apply for free key at ecos.bok.or.kr/api/#/AuthKeyApply** (~1 week審 review).
 - **Acceptance**: classify_kr `esi_status: "fetched"` (not `"unavailable_via_fdr"`); ESI 91.7 (2026-04 latest) surfaces.
 - **Reference**: PR-5 #186 grounding-kr-2026-05.md; ADR-0004 §"KR ECOS vs fdr trade-off".
@@ -170,26 +170,31 @@ Material features. ~1-3 weeks each. Do one at a time.
 - **Acceptance**: classify_cn `credit_impulse.methodology` no longer mentions "flow-yoy second-derivative"; Path 2 fires.
 - **Reference**: PR-6 #189; `analysis-macro-regime/references/credit-impulse-methodology.md`.
 
-### v2.2.0-j — Cadence-aware adaptive cache TTL across all 14 clients
+### ~~v2.2.0-j — Cadence-aware adaptive cache TTL across all 14 clients~~ ✅ superseded 2026-07-11 (ADR-0009)
 
-- **Status**: Phase 0+1 ✅ landed (PR #224, 2026-05-03). Phase 3 effort halved by ADR-0008 (MCP server removed → 14 file edits instead of 28).
-- **What**: Replace per-client `CACHE_TTL_SECONDS` constants (1h/6h/24h, no rationale) with cadence-aware adaptive TTL. Each preset declares its publication cadence (`monthly`/`quarterly`/`daily`/`tick`/`event`/`immutable`/...); cache helper computes TTL from `cadence × staleness_days` per the [TTL bands](docs/cache-policy.md#ttl-bands) in cache-policy.md. Cache envelope upgraded to schema v2.0 with `_cache_meta.fetched_at` (replaces fragile `path.stat().st_mtime`). Block-level CI sync guard enforces byte-equality of the helper across all 14 single-skill clients (post-ADR-0008).
-- **Why**: (1) Monthly CPI cached for 24h means ~30 wasted cache misses per release cycle — cadence-aware caches it for 7 days when fresh and tightens to 4 hours during the release window. (2) `mtime`-based TTL is fragile — `cp` / `rsync` / Docker volume mount / `tar -xzf` (without `-p`) all reset mtime to "now" while data is old. JSON envelope `fetched_at` removes that hazard. (3) DRY policy without breaking PEP 723 self-contained scripts (see ADR-0007 for *why* we embed instead of import a central `_cache.py`).
-- **Architecture decision**: ADR-0007 explicitly rejects a central `_cache.py` shared module (would break PEP 723 self-containment + Anthropic skill convention). Each client embeds an identical `# === BEGIN cache helpers === … # === END cache helpers ===` block; CI block-level MD5 enforces equality.
-- **Phases**:
+- **Status**: Phase 0+1 landed (PR #224, 2026-05-03). Phases 2-4's
+  block-level MD5-sync mechanism (below) was never built past the
+  dgbas PoC and is now **superseded, not completed**: ADR-0009
+  collapsed the 5 per-country data skills into one `data-markets`
+  skill, so cadence-aware TTL is implemented exactly once in
+  `skills/data-markets/scripts/cache_util.compute_ttl` and applied to
+  all clients directly — there is no second copy left to sync, so the
+  synced-block-plus-CI-guard design this item planned has nothing
+  left to enforce. See ADR-0009 §"What is retained from ADR-0007" for
+  the full accounting.
+- **What (original plan, kept for history)**: Replace per-client `CACHE_TTL_SECONDS` constants (1h/6h/24h, no rationale) with cadence-aware adaptive TTL. Each preset declares its publication cadence (`monthly`/`quarterly`/`daily`/`tick`/`event`/`immutable`/...); cache helper computes TTL from `cadence × staleness_days` per the [TTL bands](docs/cache-policy.md#ttl-bands) in cache-policy.md. Cache envelope upgraded to schema v2.0 with `_cache_meta.fetched_at` (replaces fragile `path.stat().st_mtime`). Block-level CI sync guard enforces byte-equality of the helper across all 14 single-skill clients (post-ADR-0008).
+- **Why**: (1) Monthly CPI cached for 24h means ~30 wasted cache misses per release cycle — cadence-aware caches it for 7 days when fresh and tightens to 4 hours during the release window. (2) `mtime`-based TTL is fragile — `cp` / `rsync` / Docker volume mount / `tar -xzf` (without `-p`) all reset mtime to "now" while data is old. JSON envelope `fetched_at` removes that hazard. (3) DRY policy without breaking PEP 723 self-contained scripts (see ADR-0007 for *why* we originally embedded instead of importing a central `_cache.py` — ADR-0009 revisits this once the skill count drops to 1).
+- **Architecture decision (superseded)**: ADR-0007 rejected a central `_cache.py` shared *across skill directories*. ADR-0009 does not reopen that rejection — `cache_util.py` lives *inside* `skills/data-markets/scripts/` and is imported only by its own skill's sibling clients (same-skill imports were always fine); what changed is the skill count (5 → 1).
+- **Phases (historical)**:
   1. ✅ **Phase 0** — ADR-0007 + cache-policy.md + ROADMAP entry (PR #224)
-  2. ✅ **Phase 1** — dgbas PoC: `data-tw/scripts/dgbas_client.py` refactored end-to-end. Validates block-delimiter pattern, schema v2.0 envelope, cadence-aware TTL. (PR #224, original incl MCP copy; MCP copy deleted by ADR-0008.)
-  3. **Phase 2** — Extend `check-script-sync.yml` with block-level MD5 group (across 14 single-skill clients). Initially the only client with the block is dgbas; check is trivially green. Group expands as Phase 3 migrates more clients.
-  4. **Phase 3** — Bulk migration of remaining 13 clients to the synced block + per-preset cadence. **Effort halved by ADR-0008** (13 single-skill files instead of original 26 = 13 × 2 with MCP). Likely staged across 2-3 PRs by domain (TW data clients; KR/CN data clients; JP + US global clients).
-  5. **Phase 4** — Close out: deprecate any leftover top-level `fetched_at` fields on data dicts (canonical now lives in `_cache_meta`); update `industry-indicator-cadence.md` cross-reference; update output-schema-overview.md docs across 5 data skills.
-- **Files (overall, post-ADR-0008)**: 14 single-skill client files (cross-skill yfinance × 5 + fred × 2 still need same block but propagate via existing `sync-clients.sh` data-us reference); `check-script-sync.yml`; `sync-clients.sh`; `docs/adr/0007-*.md`; `docs/cache-policy.md`; `industry-indicator-cadence.md`; 5 `data-{country}/references/output-schema-overview.md`.
-- **Blocker**: None for Phases 2-3. Phase 4 docs touch is bookkeeping.
-- **Acceptance** (per phase):
+  2. ✅ **Phase 1** — dgbas PoC: `dgbas_client.py` refactored end-to-end. Validates block-delimiter pattern, schema v2.0 envelope, cadence-aware TTL. (PR #224, original incl MCP copy; MCP copy deleted by ADR-0008.)
+  3. ❌ **Phase 2-4** — not built; superseded by ADR-0009's single-`cache_util.py` design, which reaches all clients directly instead of via a synced block.
+- **Files**: `skills/data-markets/scripts/cache_util.py` (new, single copy — replaces the planned per-client synced block); `docs/cache-policy.md`; `docs/adr/0009-data-markets-consolidation-and-cache-util.md`.
+- **Blocker**: None — superseded, not blocked.
+- **Acceptance (historical, Phase 1 only — later phases retired)**:
   - Phase 1: dgbas cache file shows `_cache_meta.version: "2.0"` + cadence-aware TTL; pytest unchanged; live fetch shows `_cache: hit` + `_cache_age_seconds` + `_cache_ttl_seconds` on second invocation. ✅ verified in PR #224.
-  - Phase 2: check-script-sync.yml block-level group runs green on dgbas alone; deliberate-drift smoke test (mutate one helper line) → CI fails.
-  - Phase 3 (per migration PR): `pytest -m "not network"` green; `bash sync-clients.sh --check` 0 drift; cache file inspection on each migrated client shows v2.0 envelope.
-  - Phase 4: `grep -r "CACHE_TTL_SECONDS" investing-toolkit/` returns 0 matches.
-- **Reference**: ADR-0007; ADR-0008 (halves Phase 3 cost); cache-policy.md; 2026-05-03 design session (per-client copy-paste rejected for cache helper drift; central `_cache.py` rejected for PEP 723 / Anthropic violation).
+  - Phases 2-4's acceptance criteria (block-level CI sync guard; per-migration-PR sync-check) are **retired per ADR-0009** — the synced-block mechanism they gated no longer exists. ADR-0009's own acceptance is cache_util's `pytest -m "not network"` suite + live `_cache_meta.version` inspection, superseding this item's Phase 3 criterion.
+- **Reference**: ADR-0007 (cadence-TTL policy retained); ADR-0008 (halves original Phase 3 cost estimate, now moot); ADR-0009 (supersedes the sync mechanism); cache-policy.md.
 
 ### v2.2.0-k — Immutable cadence tag for historical filings
 
@@ -310,7 +315,7 @@ For each item, the brief above should be sufficient to start a fresh session wit
 ### Architecture
 - [x] ADR-0001: Three-Layer Skill Architecture
 - [x] CI MD5 sync workflow (yfinance × 5, fred × 2, nbs × 1, akshare × 1)
-- [x] sync-clients.sh canonical → copies helper
+- [x] script-copy MD5-sync helper (canonical → copies; retired 2026-07-11 per ADR-0009 — `data-markets` consolidation removed the duplicate client copies this synced, so the helper no longer has anything to sync)
 - [x] 296 non-network + 27 network automated pytest tests
 
 ### Deferred to v2.1+

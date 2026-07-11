@@ -138,6 +138,22 @@ def test_outlier_drop_high_value(monkeypatch):
     assert out["multiples"]["priceToSales"] == pytest.approx(3e12 / 4e11, rel=1e-3)
 
 
+def test_data_markets_pack_and_yfinance_client_paths_exist():
+    """etf_aggregator subprocess-calls data-markets pack.py + yfinance_client.py
+    (the merged facade). This is the cheap regression lock for the breakage
+    that shipped when data-us was deleted but etf_aggregator still pointed at
+    the deleted skills/data-us/scripts/*.py paths (round-1 gap)."""
+    if "etf_aggregator" in sys.modules:
+        del sys.modules["etf_aggregator"]
+    mod = importlib.import_module("etf_aggregator")
+    assert mod._DATA_MARKETS_PACK.exists(), f"missing: {mod._DATA_MARKETS_PACK}"
+    assert mod._YFINANCE_CLIENT.exists(), f"missing: {mod._YFINANCE_CLIENT}"
+    assert mod._DATA_MARKETS_PACK.name == "pack.py"
+    assert mod._YFINANCE_CLIENT.name == "yfinance_client.py"
+    assert "data-markets" in mod._DATA_MARKETS_PACK.parts
+    assert "data-markets" in mod._YFINANCE_CLIENT.parts
+
+
 def test_weight_coverage_partial_when_holding_skipped(monkeypatch):
     """When a holding fetch raises, it's logged into skipped_holdings;
     weight_coverage_pct reflects only successfully-fetched weight."""

@@ -19,11 +19,11 @@ over pre-fetched data packs — the second estimation pillar alongside
 This skill performs **zero network or external file I/O** beyond reading
 the `--anchor` and `--peers` JSON paths. No yfinance / SEC EDGAR / MOPS
 clients are imported. Fetching is the responsibility of the caller —
-typically `data-{country}/pack.py --pack comps-multiples` for both anchor
-and each peer.
+typically `data-markets/scripts/pack.py --ticker <t> --pack comps-multiples`
+for both anchor and each peer.
 
 ```
-data-{country}/pack.py --pack comps-multiples (anchor + N peers)
+data-markets/scripts/pack.py --ticker <t> --pack comps-multiples (anchor + N peers)
                                               ↓
                                        analysis-comps (this skill)
                                               ↓
@@ -44,7 +44,7 @@ By the time JSON paths arrive at this skill, the peer set is final.
 ## Input Contract
 
 `--anchor <path>` and each comma-separated `--peers` path must point to
-JSON files produced by `data-{country}/pack.py --pack comps-multiples`.
+JSON files produced by `data-markets/scripts/pack.py --ticker <t> --pack comps-multiples`.
 Minimum shape per file:
 
 ```json
@@ -61,7 +61,7 @@ Minimum shape per file:
       "enterpriseToEbitda": 21.3
     }
   },
-  "_provenance": { "skill": "data-us", ... }
+  "_provenance": { "skill": "data-markets", ... }
 }
 ```
 
@@ -217,8 +217,8 @@ For compute mode, the anchor block additionally carries `multiples_compute`
   ],
   "_provenance": {
     "skill":              "analysis-comps",
-    "anchor_data_source": "data-us/pack.py --pack comps-multiples",
-    "peer_data_sources":  ["data-us/pack.py --pack comps-multiples", ...],
+    "anchor_data_source": "data-markets/scripts/pack.py --pack comps-multiples",
+    "peer_data_sources":  ["data-markets/scripts/pack.py --pack comps-multiples", ...],
     "computed_at":        "2026-05-01T12:00:00Z",
     "io":                 "none",
     "mode":               "direct",
@@ -352,7 +352,7 @@ This skill outputs JSON only. Memo composition and prose verdict belong
 upstream:
 
 ```
-data-{country}:pack.py --pack comps-multiples (anchor + N peers)
+data-markets:scripts/pack.py --pack comps-multiples (anchor + N peers)
   → analysis-comps (this skill, pure compute)
   → report-equity-memo (orchestrates Comps section into full memo)
        → domain-teams:investing-team (variant perception, conviction)

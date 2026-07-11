@@ -1,6 +1,9 @@
 # ADR-0007: Skill-Self-Contained Cache Helpers (no central `_cache.py`)
 
-- **Status**: Accepted
+- **Status**: Accepted — §"What CI enforces" (block-level guard design)
+  superseded by [ADR-0009](0009-data-markets-consolidation-and-cache-util.md)
+  (2026-07-11); cadence-aware TTL policy retained, see that ADR's "What is
+  retained from ADR-0007" section
 - **Date**: 2026-05-03
 - **Version target**: investing-toolkit v2.2.0 (`v2.2.0-j` cadence-aware adaptive TTL)
 - **Spec**: `investing-toolkit/docs/cache-policy.md`
@@ -133,6 +136,16 @@ PRESETS = {
 > File-level MD5 now enforces only the 2 true cross-skill groups
 > (yfinance × 5, fred × 2). Block-level MD5 spans 14 single-skill
 > client files instead of the original 28 (skill + MCP) — half the cost.
+
+> **2026-07-11 amendment (per ADR-0009)**: the 5 data skills (and their
+> 23 client files) merged into one `data-markets` skill with a single
+> `cache_util.py`. The block-level MD5 guard described below was never
+> actually built (0 of the planned Phase 2/3/4 rollout landed beyond the
+> 1-client `dgbas_client.py` PoC) and, post-merge, has nothing left to
+> enforce — there is exactly one copy of the cache-helper code, not N
+> copies to keep byte-equal. This section is superseded; see ADR-0009
+> "What is retained from ADR-0007" for what still stands (the
+> cadence-aware TTL design, now implemented once in `cache_util.compute_ttl`).
 
 - **File-level MD5** (existing, scoped down by ADR-0008): `data-jp/scripts/yfinance_client.py` etc. must equal `data-us/scripts/yfinance_client.py` byte-for-byte (yfinance × 4 cross-skill copies; fred × 1 cross-skill copy).
 - **Block-level MD5** (new, this ADR's Phase 2): the `# === BEGIN cache helpers === … # === END cache helpers ===` region must be byte-identical across all 14 clients. (1 new check group in `check-script-sync.yml`; 14 file scope post-ADR-0008.)

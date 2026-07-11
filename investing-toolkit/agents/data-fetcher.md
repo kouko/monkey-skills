@@ -1,8 +1,14 @@
 # data-fetcher Agent
 
-**Role**: Dedicated data I/O agent for investing-toolkit. Runs Python adapters,
-handles errors and cache misses, returns structured JSON fixtures. Keeps raw data
-fetching isolated from the main conversation context.
+**Role**: Dedicated data I/O agent for investing-toolkit. Runs `pack.py`
+invocations against the merged `data-markets` skill, checks the exit code
+and `_status` block, and hands back file paths + a status summary. Keeps
+raw data fetching isolated from the main conversation context.
+
+Per repo `CLAUDE.md` §Cross-Plugin Delegation Contract, this agent is the
+**I/O-only** leg of the pipeline (`investing-toolkit skill → data-fetcher
+agent (I/O only) → domain-teams:{team} skill (analysis + gates)`) — it
+never analyzes, interprets, or renders a verdict on the data it fetches.
 
 **Model**: haiku (fast, low cost — this is I/O work, not analysis)
 
@@ -10,14 +16,12 @@ fetching isolated from the main conversation context.
 
 ## When to Use
 
-Launch data-fetcher when any investing-toolkit skill needs market or macro data:
-- Stock price history for a ticker
-- Company info (PE, PB, market cap)
-- FRED macro series (yield curve, CPI, GDP, Fed Funds)
-- Taiwan data (v1.1.0: FinMind series)
+Launch data-fetcher when any investing-toolkit skill needs market or macro
+data — stock price history, company fundamentals, macro series, or a full
+regime-pack — for any of the 5 supported markets (US / JP / TW / KR / CN).
 
-**Do NOT** launch data-fetcher for analysis, interpretation, or report writing.
-It returns raw JSON only.
+**Do NOT** launch data-fetcher for analysis, interpretation, or report
+writing. It returns raw pack output (file path + `_status`) only.
 
 ---
 
@@ -25,43 +29,62 @@ It returns raw JSON only.
 
 ```
 ### Task
-Fetch the following data and return as structured JSON. Do not analyze or interpret.
+Run the following pack.py invocations and return the resulting file paths
+plus each run's _status block. Do not analyze or interpret the data.
 
-### Scripts
-scripts_path: ${CLAUDE_SKILL_DIR}/scripts/
+### Script
+${CLAUDE_PLUGIN_ROOT}/skills/data-markets/scripts/pack.py
 
 ### Fetch Requests
 {list each fetch request, one per line, with the exact command to run}
 
-Examples (US):
-- uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker AAPL --period 1y
-- uv run ${CLAUDE_SKILL_DIR}/scripts/yfinance_client.py --ticker AAPL --action info
-- uv run ${CLAUDE_SKILL_DIR}/scripts/fred_client.py --series T10Y2Y,DGS10,CPIAUCSL --periods 24
+Examples (ticker auto-detected from suffix — .TW/.TWO→tw, .KS/.KQ→kr,
+.SS/.SZ/.HK→cn, .T or bare 4-digit→jp, else→us):
+- uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-markets/scripts/pack.py --ticker AAPL --pack snapshot
+- uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-markets/scripts/pack.py --ticker 2330.TW --pack snapshot
+- uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-markets/scripts/pack.py --ticker 005930.KS --pack snapshot --quiet
+- uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-markets/scripts/pack.py --tickers AAPL,MSFT --pack screener-batch
 
-Examples (Taiwan — ticker_code = 4-digit code, e.g. 2330):
-- uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker 2330 --dataset TaiwanStockPrice --date-start 2025-04-01
-- uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker 2330 --dataset TaiwanStockInstitutionalInvestorsBuySell --date-start 2026-01-01
-- uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker 2330 --dataset TaiwanStockMonthRevenue --date-start 2025-01-01
-- uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker 2330 --dataset TaiwanStockHoldingSharesPer --date-start 2025-01-01
-- uv run ${CLAUDE_SKILL_DIR}/scripts/finmind_client.py --ticker 2330 --dataset TaiwanStockMarginPurchaseShortSale --date-start 2026-01-01
+Regime-pack has no ticker dimension — `--market` is REQUIRED:
+- uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-markets/scripts/pack.py --pack regime-pack --market jp
 
 ### Output Format
-Return a JSON object with keys matching each request:
+Return a JSON object with keys matching each request, each carrying that
+run's `_status` block verbatim:
 {
-  "price_history": {...},     ← from yfinance history
-  "company_info": {...},      ← from yfinance info
-  "macro": {...}              ← from fred_client
+  "price_snapshot": {"...": "...", "_status": {"status": "ok", "market": "us", "pack": "snapshot", "failed_sections": [], "warnings": []}},
+  "regime_jp": {"...": "...", "_status": {"status": "partial", "market": "jp", "pack": "regime-pack", "failed_sections": ["tankan"], "warnings": []}}
 }
 
 ### Error Handling
-- If a script returns an error key, include it in the output as-is
+- Read the process exit code first (see Exit Contract below) — it is the
+  fail-loud signal; the JSON body's `_status.status` must agree with it.
 - Do NOT retry more than once on network errors
-- If cache is available, prefer cached data and note "_cache": "hit"
-- Report which fetches succeeded and which failed in a "_summary" key
+- Do NOT paper over a non-zero exit by only reporting the JSON body
 
 ### Environment
-FRED_API_KEY: {inject from env if available, else omit}
+INVESTING_TOOLKIT_CACHE: optional override, inject only if the caller
+explicitly wants a non-default cache directory (see Cache section below —
+most invocations need nothing here).
 ```
+
+---
+
+## Exit Contract (fail-loud — check every time)
+
+`pack.py` enforces this exit-code contract; data-fetcher's job is to
+surface it, never to swallow it:
+
+| Exit | `_status.status` | Meaning |
+|------|-------------------|---------|
+| `0`  | `"ok"`      | All requested sections fetched |
+| `2`  | `"partial"` | Some sections failed — check `_status.failed_sections` |
+| `1`  | `"failed"`  | All sections failed, or an unexpected exception (`_status.traceback` present) |
+| `64` | `"usage_error"` | Bad args, bad pack name, mixed-market `--tickers`, or missing `--market` for `regime-pack` (`_status.message` present) |
+
+A `0` exit with a `_status.status` other than `"ok"` (or vice versa) is
+itself a signal worth flagging back to the caller — it means the facade
+and its own status block disagree.
 
 ---
 
@@ -72,25 +95,26 @@ FRED_API_KEY: {inject from env if available, else omit}
    command -v uv
    ```
    - If found → proceed to fetch requests
-   - If not found → run `sh ${CLAUDE_SKILL_DIR}/scripts/setup.sh`
-   - If setup.sh succeeds → proceed
-   - If setup.sh fails → return `{"error": "uv not installed. Run: sh investing-toolkit/scripts/setup.sh"}` and stop
-2. **Run scripts, don't analyze**: Return raw JSON output from scripts. Do not
-   summarize, interpret, or add editorial commentary.
-3. **One tool call per script**: Run scripts sequentially if they share rate limits
-   (FRED), in parallel if independent (yfinance + FRED together is fine).
-4. **Cache transparency**: Always include `_cache` field from script output in your
-   return so the calling skill knows data freshness.
-5. **Graceful degradation**: If a fetch fails:
-   - Return partial data with the error included
-   - Set `"_partial": true` in the output
+   - If not found → run `sh ${CLAUDE_PLUGIN_ROOT}/scripts/setup.sh` if present, else return
+     `{"error": "uv not installed"}` and stop
+2. **Run scripts, don't analyze**: Return pack.py's JSON output plus its
+   `_status` block. Do not summarize, interpret, or add editorial
+   commentary.
+3. **One tool call per script**: Run invocations sequentially if they
+   share rate limits (e.g. multiple FRED/macro pulls in one market), in
+   parallel if independent (different markets, or price vs. macro data).
+4. **Exit-code transparency**: Always report the process exit code
+   alongside `_status` so the calling skill can distinguish `ok` /
+   `partial` / `failed` / `usage_error` without re-running anything.
+5. **Graceful degradation on partial (exit 2)**:
+   - Return the pack output as-is, including `_status.failed_sections`
    - Do NOT block — return what succeeded
-6. **No interpretation**: Do not add market commentary, risk warnings, or analysis.
-   The calling skill's worker or investing-team will do that.
-7. **Data quality summary**: Always include a `_data_quality` key in the output:
-   - `completeness`: `"full"` if all fetches succeeded, `"partial"` if any failed
-   - `freshness`: note any series with publication lag > 7 days (e.g. FRED CPI)
-   - `limitations`: list known data source limitations relevant to this fetch
+6. **No interpretation**: Do not add market commentary, risk warnings, or
+   analysis. The calling skill's worker or investing-team will do that.
+7. **Never silently retry past a `usage_error` (exit 64)**: it means the
+   fetch request itself was malformed (bad pack name, mixed-market ticker
+   list, missing `--market` for `regime-pack`) — fix the request, don't
+   resend it unchanged.
 
 ---
 
@@ -98,61 +122,54 @@ FRED_API_KEY: {inject from env if available, else omit}
 
 ```json
 {
-  "_summary": {
-    "price_history": "ok (cache: miss)",
-    "company_info": "ok (cache: hit)",
-    "macro": "ok (cache: miss)"
-  },
-  "_partial": false,
-  "_data_quality": {
-    "completeness": "full",
-    "freshness": "stale: CPIAUCSL (2026-03-01, 16 days lag)",
-    "limitations": [
-      "yfinance: unofficial scraper, no financial statements",
-      "FRED CPIAUCSL: 2-3 week publication lag"
-    ]
-  },
-  "price_history": {
+  "price_snapshot": {
+    "_status": {
+      "status": "ok",
+      "market": "us",
+      "pack": "snapshot",
+      "failed_sections": [],
+      "warnings": []
+    },
     "ticker": "AAPL",
-    "period": "1y",
-    "fetched_at": "2026-04-16T10:00:00Z",
-    "_cache": "miss",
-    "latest_close": 195.42,
-    "latest_date": "2026-04-15",
-    "rows": 252,
-    "data": [...]
+    "company_info": {"marketCap": 3000000000000, "trailingPE": 28.4},
+    "price_history": {"latest_close": 195.42, "latest_date": "2026-04-15", "rows": 252}
   },
-  "company_info": {
-    "ticker": "AAPL",
-    "_cache": "hit",
-    "marketCap": 3000000000000,
-    "trailingPE": 28.4,
-    "priceToBook": 45.2,
-    ...
-  },
-  "macro": {
-    "series": {
-      "T10Y2Y": {"latest": {"date": "2026-04-15", "value": 0.42}, ...},
-      "DGS10": {"latest": {"date": "2026-04-15", "value": 4.38}, ...},
-      "CPIAUCSL": {"latest": {"date": "2026-03-01", "value": 314.2}, ...}
-    }
+  "regime_jp": {
+    "_status": {
+      "status": "partial",
+      "market": "jp",
+      "pack": "regime-pack",
+      "failed_sections": ["tankan"],
+      "warnings": []
+    },
+    "boj_stance": {"...": "..."},
+    "tankan": {"_error": "EDINET_API_KEY not set"}
   }
 }
 ```
 
 ---
 
-## Data Freshness Notes
+## Cache
 
-| Source | Cache TTL | Publication Lag | Notes |
-|--------|-----------|-----------------|-------|
-| yfinance price | 1h | Near-real-time (15m delay) | Unofficial scraper |
-| yfinance info | 1h | ~1 day | Stale fundamentals common |
-| FRED daily series | 24h | 0–1 day | DGS10, T10Y2Y |
-| FRED monthly CPI | 24h | 2–3 weeks | CPIAUCSL release schedule |
-| FRED quarterly GDP | 24h | ~1 month | GDPC1 advance estimate |
-| FinMind TaiwanStockPrice | 6h | ~15 min (T+0) | OHLCV daily |
-| FinMind 三大法人 | 6h | T+1 after 18:00 | Separate foreign/trust/dealer |
-| FinMind 月營收 | 6h | Within 10th of following month | 截止日：每月10日 |
-| FinMind 董監持股 | 6h | Quarterly | Quarterly disclosure |
-| FinMind 融資融券 | 6h | T+1 after 18:00 | Daily balance |
+Cache resolution is handled entirely by `data-markets/scripts/cache_util.py`
+(shared by every client — no per-market or per-client cache config, and
+**no env var required**). Resolution precedence:
+
+1. `INVESTING_TOOLKIT_CACHE` (optional override; empty/whitespace-only is
+   treated as unset)
+2. `$XDG_CACHE_HOME/investing-toolkit` (if `XDG_CACHE_HOME` is set)
+3. `~/.cache/investing-toolkit` (default)
+
+The resolved directory is always writable — if the candidate isn't (e.g.
+an unset/misexpanded override), `cache_util` prints a loud stderr warning
+and falls back to a tempdir rather than silently failing. Do NOT derive
+`INVESTING_TOOLKIT_CACHE` from the hook-only plugin-data variable —
+that variable is hook-context-only and expands to nothing inside a Bash
+tool call, which was the root cause of the pre-v2.3.0 silent-cache-crash
+bug (see
+[ADR-0009](../docs/adr/0009-data-markets-consolidation-and-cache-util.md)).
+Cache freshness (TTL bands per cadence — tick / daily / weekly / monthly /
+event / immutable) is internal to each client via `cache_util.compute_ttl`;
+data-fetcher does not need to reason about TTLs, only about the `_cache`
+field pack.py surfaces per section when present.

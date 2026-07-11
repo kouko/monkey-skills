@@ -1,8 +1,10 @@
 """test_pack_schemas.py — validate pack sample fixtures against per-pack JSON Schemas.
 
-Each `data-{country}/references/schema-{pack}.json` defines the contract;
-each `tests/data/fixtures/data-{country}-{pack}-sample.json` is the example output;
-this test ensures example matches schema (drift guard).
+Each `data-markets/schemas/{country}-schema-{pack}.json` defines the contract
+(flat single-level subfolder, country-prefixed — schemas differ per market so
+each of the 5×7 files is distinct, per the skill-structure no-nested-subfolder
+rule); each `tests/data/fixtures/data-{country}-{pack}-sample.json` is the
+example output; this test ensures example matches schema (drift guard).
 
 Plus an opt-in @pytest.mark.network variant that fetches LIVE pack output and
 validates against schema (catches contract drift between schema and pack.py).
@@ -11,10 +13,11 @@ Dependencies:
     pytest, jsonschema (install via `uv run --with pytest --with jsonschema pytest ...`).
 
 Sequence note:
-    The 5 country schemas + 25 sample fixtures are produced by sibling agents
-    S1-S5 in parallel. This test gracefully skips per (country, pack) cell when
-    its schema or fixture is not yet committed, so it can run before S1-S5 land.
-    Once schemas/fixtures are committed, the skip→pass transition is automatic.
+    The 5 country schemas + 25 sample fixtures were produced by sibling agents
+    S1-S5 in parallel, then relocated from data-{country}/references/ into
+    data-markets/schemas/ by the Task 5c consolidation. This test gracefully
+    skips per (country, pack) cell when its schema or fixture is not yet
+    committed.
 
 Run:
     uv run --with pytest --with jsonschema pytest tests/data/test_pack_schemas.py -v
@@ -30,6 +33,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 SKILLS = ROOT / "skills"
+SCHEMAS = SKILLS / "data-markets" / "schemas"
 FIXTURES = ROOT / "tests" / "data" / "fixtures"
 
 COUNTRIES = ["us", "jp", "tw", "kr", "cn"]
@@ -106,7 +110,7 @@ def test_pack_sample_validates_against_schema(country, pack):
 
     Skipped if schema or sample is not yet committed (pre-S1-S5 state).
     """
-    schema_path = SKILLS / f"data-{country}" / "references" / f"schema-{pack}.json"
+    schema_path = SCHEMAS / f"{country}-schema-{pack}.json"
     sample_path = FIXTURES / f"data-{country}-{pack}-sample.json"
 
     if not schema_path.exists():
@@ -156,7 +160,7 @@ def test_pack_live_output_matches_schema(country, pack, ticker):
 
     Skipped if the country's schema is not yet committed.
     """
-    schema_path = SKILLS / f"data-{country}" / "references" / f"schema-{pack}.json"
+    schema_path = SCHEMAS / f"{country}-schema-{pack}.json"
     if not schema_path.exists():
         pytest.skip(f"schema not yet committed: {schema_path.relative_to(ROOT)}")
 
@@ -165,13 +169,15 @@ def test_pack_live_output_matches_schema(country, pack, ticker):
     except ImportError:
         pytest.skip("jsonschema not installed; run with `uv run --with jsonschema pytest ...`")
 
-    pack_script = SKILLS / f"data-{country}" / "scripts" / "pack.py"
+    pack_script = SKILLS / "data-markets" / "scripts" / "pack.py"
     if not pack_script.exists():
         pytest.skip(f"pack.py not found: {pack_script.relative_to(ROOT)}")
 
     args = [str(pack_script), "--pack", pack]
     if pack != "regime-pack" and ticker is not None:
         args.extend(["--ticker", ticker])
+    if pack == "regime-pack":
+        args.extend(["--market", country])
 
     try:
         proc = subprocess.run(

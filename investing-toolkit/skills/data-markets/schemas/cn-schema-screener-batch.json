@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://monkey-skills/investing-toolkit/data-cn/screener-batch.json",
+  "title": "data-cn screener-batch pack",
+  "description": "Lightweight batch fetch for screener input. Two parallel maps: yfinance_info_batch (ticker -> info dict) and yfinance_history_batch (ticker -> 6mo OHLCV). Each batch carries a _summary {ticker: 'ok'|'error'} and a _partial flag.",
+  "type": "object",
+  "required": ["pack", "country", "tickers", "yfinance_info_batch", "yfinance_history_batch"],
+  "additionalProperties": true,
+  "properties": {
+    "pack": { "const": "screener-batch" },
+    "country": { "const": "CN" },
+    "tickers": {
+      "type": "array",
+      "description": "List of normalised tickers (CN/HK suffix-tagged).",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "yfinance_info_batch": { "$ref": "#/$defs/batchInfo" },
+    "yfinance_history_batch": { "$ref": "#/$defs/batchHistory" }
+  },
+  "$defs": {
+    "batchEnvelope": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["mode", "action", "tickers", "_partial", "_summary"],
+      "properties": {
+        "mode": { "type": "string", "examples": ["batch"] },
+        "action": { "type": "string" },
+        "_partial": {
+          "type": "boolean",
+          "description": "True iff at least one ticker in the batch returned an error sentinel."
+        },
+        "_summary": {
+          "type": "object",
+          "description": "Map of upper-case ticker -> 'ok' | error string.",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "batchInfo": {
+      "allOf": [
+        { "$ref": "#/$defs/batchEnvelope" },
+        {
+          "properties": {
+            "action": { "const": "info" },
+            "tickers": {
+              "type": "object",
+              "description": "Map of ticker -> yfinance info dict. Errored tickers carry a single _error key.",
+              "additionalProperties": {
+                "$ref": "cn-schema-snapshot.json#/$defs/yfinanceInfo"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "batchHistory": {
+      "allOf": [
+        { "$ref": "#/$defs/batchEnvelope" },
+        {
+          "properties": {
+            "action": { "const": "history" },
+            "tickers": {
+              "type": "object",
+              "description": "Map of ticker -> yfinance OHLCV history dict.",
+              "additionalProperties": {
+                "$ref": "cn-schema-snapshot.json#/$defs/yfinanceHistory"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

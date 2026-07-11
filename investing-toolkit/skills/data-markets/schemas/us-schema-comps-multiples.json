@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/kouko/monkey-skills/blob/main/investing-toolkit/skills/data-markets/schemas/us-schema-comps-multiples.json",
+  "title": "data-us pack=comps-multiples output",
+  "description": "Pack output for `data-us/scripts/pack.py --ticker {T} --pack comps-multiples` (anchor only) OR `--tickers T1,T2,...` (peers). Filters yfinance info to the multiples-only field set: trailingPE, forwardPE, priceToSales, priceToBook, enterpriseToEbitda, enterpriseToRevenue, marketCap, enterpriseValue. Tier 2 (yfinance unofficial).",
+  "type": "object",
+  "required": ["pack", "fetched_at", "tickers"],
+  "additionalProperties": true,
+  "properties": {
+    "pack": {"const": "comps-multiples"},
+    "fetched_at": {"type": "string", "format": "date-time"},
+    "tickers": {
+      "type": "object",
+      "description": "Map of upper-case ticker → multiples fields. Empty `{}` when batch fetch failed entirely (top-level `error` then carries the client error blob).",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Per-ticker multiples slice. Missing fields surface as null (not omitted).",
+        "properties": {
+          "trailingPE": {"type": ["number", "null"]},
+          "forwardPE": {"type": ["number", "null"]},
+          "priceToSales": {"type": ["number", "null"]},
+          "priceToBook": {"type": ["number", "null"]},
+          "enterpriseToEbitda": {"type": ["number", "null"]},
+          "enterpriseToRevenue": {"type": ["number", "null"]},
+          "marketCap": {"type": ["number", "null"], "description": "USD raw."},
+          "enterpriseValue": {"type": ["number", "null"], "description": "USD raw."},
+          "ticker": {"type": "string"},
+          "_provenance": {"$ref": "us-schema-error-envelope.json#/definitions/provenance"},
+          "error": {"type": "string"}
+        }
+      }
+    },
+    "error": {
+      "description": "Top-level client error blob when batch fetch failed entirely. `tickers` will be `{}` in that case. Aligned with shared error envelope.",
+      "$ref": "us-schema-error-envelope.json#/definitions/error_wrapper"
+    },
+    "info": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "T1 canonical multiples alias — same dict reference as `tickers`. Top-level key for analysis-comps / comps_compute (which reads pack.info[ticker]). See docs/normalization-contract.md."
+    }
+  }
+}

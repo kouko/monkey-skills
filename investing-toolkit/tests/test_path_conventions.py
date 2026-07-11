@@ -28,7 +28,8 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS_DIR = ROOT / "skills"
 
-DATA_SKILLS = ["data-us", "data-jp", "data-tw", "data-kr", "data-cn"]
+# Post-ADR-0009: the 5 per-country data skills are merged into data-markets.
+DATA_SKILLS = ["data-markets"]
 ANALYSIS_SKILLS = [
     "analysis-dcf",
     "analysis-screener",

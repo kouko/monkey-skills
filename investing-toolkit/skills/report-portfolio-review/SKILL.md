@@ -1,13 +1,13 @@
 ---
 name: report-portfolio-review
 description: |
-  Layer-3 orchestrator for a portfolio P&L review (Markdown), optional macro-regime overlay. Parses holdings, groups by country, batch-fetches prices via data-{country} screener-batch, runs analysis-portfolio, renders Markdown.
+  Layer-3 orchestrator for a portfolio P&L review (Markdown), optional macro-regime overlay. Parses holdings, groups by country, batch-fetches prices via data-markets screener-batch, runs analysis-portfolio, renders Markdown.
 ---
 
 # report-portfolio-review
 
 Layer 3 (Report) orchestrator for portfolio review. Composes:
-- **Layer 1** — `data-{country}/pack.py --pack screener-batch` (per country, parallel)
+- **Layer 1** — `data-markets/scripts/pack.py --pack screener-batch` (per country, parallel)
 - **Layer 2** — `analysis-portfolio/scripts/portfolio_compute.py` (pure P&L compute)
 - **Layer 2** — `analysis-macro-regime/scripts/regime_compose.py` (optional overlay)
 - **Layer 3** — `report-portfolio-review/scripts/review_format.py` (pure Markdown formatter)
@@ -34,13 +34,13 @@ delegate to `domain-teams:investing-team` Portfolio Review workflow when needed
 
 Read the holdings file (CSV or JSON). For each ticker, classify by suffix:
 
-| Suffix pattern | Country code | Skill |
+| Suffix pattern | Country code | market code (`data-markets --market`) |
 |---|---|---|
-| `.TW` / `.TWO` | `tw` | `data-tw` |
-| `.T` (Tokyo) **or** bare 4-digit (e.g. `7203`) | `jp` | `data-jp` |
-| `.KS` / `.KQ` | `kr` | `data-kr` |
-| `.SS` / `.SZ` / `.HK` | `cn` | `data-cn` |
-| anything else | `us` | `data-us` |
+| `.TW` / `.TWO` | `tw` | `tw` |
+| `.T` (Tokyo) **or** bare 4-digit (e.g. `7203`) | `jp` | `jp` |
+| `.KS` / `.KQ` | `kr` | `kr` |
+| `.SS` / `.SZ` / `.HK` | `cn` | `cn` |
+| anything else | `us` | `us` |
 
 Notes:
 - Bare 4-digit Japanese tickers (`7203`, `9984`) are normalised to `<ticker>.T` for yfinance compatibility before fetch — emit the normalised form into the per-country `--tickers` argument.
@@ -51,12 +51,14 @@ Notes:
 For each non-empty country group, dispatch in parallel (main agent issues one Bash call per country in a single message):
 
 ```
-INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-us/scripts/pack.py --tickers AAPL,MSFT --pack screener-batch > /tmp/portfolio-prices-us.json
-INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-tw/scripts/pack.py --tickers 2330.TW,2317.TW --pack screener-batch > /tmp/portfolio-prices-tw.json
-INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-jp/scripts/pack.py --tickers 7203.T,9984.T --pack screener-batch > /tmp/portfolio-prices-jp.json
-INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-kr/scripts/pack.py --tickers 005930.KS --pack screener-batch > /tmp/portfolio-prices-kr.json
-INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-cn/scripts/pack.py --tickers 600519.SS,0700.HK --pack screener-batch > /tmp/portfolio-prices-cn.json
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-markets/scripts/pack.py --tickers AAPL,MSFT --pack screener-batch > /tmp/portfolio-prices-us.json
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-markets/scripts/pack.py --tickers 2330.TW,2317.TW --pack screener-batch > /tmp/portfolio-prices-tw.json
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-markets/scripts/pack.py --tickers 7203.T,9984.T --pack screener-batch > /tmp/portfolio-prices-jp.json
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-markets/scripts/pack.py --tickers 005930.KS --pack screener-batch > /tmp/portfolio-prices-kr.json
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-markets/scripts/pack.py --tickers 600519.SS,0700.HK --pack screener-batch > /tmp/portfolio-prices-cn.json
 ```
+
+(market auto-detected per `--tickers` group; each Bash call's ticker list must share one market since `--tickers` is batch-single-market)
 
 Each pack returns `{tickers: {<TICKER>: {...screener fields including regularMarketPrice...}}}`.
 
@@ -78,7 +80,7 @@ json.dump(combined, open("/tmp/portfolio-prices-combined.json", "w"))
 ```
 
 If a holdings ticker is bare 4-digit JP (e.g. `7203`), the prices map will
-key it as `7203.T` (data-jp normalises bare 4-digit → `.T` before fetch).
+key it as `7203.T` (data-markets normalises bare 4-digit JP tickers → `.T` before fetch).
 `portfolio_compute.py` auto-resolves the suffix mismatch via its
 `_resolve_price` fallback (JP `.T` / `.TO`, KR `.KS` / `.KQ`) and records
 the resolution in `_provenance.ticker_resolutions`. No special handling
@@ -104,10 +106,10 @@ If `regime_overlay = true`:
 
 5a. Determine which countries have positions (the same set computed in Step 1).
 
-5b. Dispatch `data-{country}/pack.py --pack regime-pack` per country in parallel:
+5b. Dispatch `data-markets/scripts/pack.py --pack regime-pack --market <cc>` per country in parallel:
 
 ```
-INVESTING_TOOLKIT_CACHE=${CLAUDE_PLUGIN_DATA}/cache uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-us/scripts/pack.py --pack regime-pack > /tmp/regime-us.json
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-markets/scripts/pack.py --pack regime-pack --market us > /tmp/regime-us.json
 # ...repeat for each country with positions
 ```
 
@@ -174,7 +176,7 @@ Renders fractional `pnl_ratio` as `{ratio*100:.2f}%`.
 
 Per repo `CLAUDE.md` §Cross-Plugin Delegation Contract:
 - This skill = orchestration + Markdown rendering only. Data fetch lives in
-  `data-{country}` skills; pure compute lives in `analysis-portfolio` and
+  `data-markets`; pure compute lives in `analysis-portfolio` and
   `analysis-macro-regime`.
 - Rebalance / Kelly-sizing / regime-aligned sector tilts are
   `domain-teams:investing-team` territory — pass paths (not file content)

@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-SCRIPT_DIR = ROOT / "skills" / "data-us" / "scripts"
+SCRIPT_DIR = ROOT / "skills" / "data-markets" / "scripts"
 
 
 def _import_yf_client(monkeypatch):
@@ -25,7 +25,7 @@ def _import_yf_client(monkeypatch):
 
 def test_get_holdings_returns_holdings_weights_for_etf(monkeypatch, tmp_path):
     yf_client, fake_yf = _import_yf_client(monkeypatch)
-    monkeypatch.setattr(yf_client, "get_cache_path",
+    monkeypatch.setattr(yf_client.cache_util, "cache_path",
                         lambda *a, **kw: tmp_path / "holdings.json")
 
     ticker_mock = MagicMock(name="Ticker")
@@ -47,7 +47,7 @@ def test_get_holdings_returns_holdings_weights_for_etf(monkeypatch, tmp_path):
 
 def test_get_holdings_non_etf_returns_empty_list(monkeypatch, tmp_path):
     yf_client, fake_yf = _import_yf_client(monkeypatch)
-    monkeypatch.setattr(yf_client, "get_cache_path",
+    monkeypatch.setattr(yf_client.cache_util, "cache_path",
                         lambda *a, **kw: tmp_path / "holdings.json")
     ticker_mock = MagicMock(name="Ticker")
     ticker_mock.funds_data = None  # non-fund tickers expose no funds_data

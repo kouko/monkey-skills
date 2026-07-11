@@ -13,7 +13,7 @@ under the holding's own schema, then takes a holdings-weighted average over each
 multiple/indicator in the ETF's mapped schema (per references/etf-schema-map.json).
 
 This is a build-time CLI tool — runs in GitHub Actions weekly cron. NOT pure-compute
-(does network I/O via subprocess data-us pack.py + yfinance_client.py). Output JSONs
+(does network I/O via subprocess data-markets pack.py + yfinance_client.py). Output JSONs
 land in references/sector-etf-aggregate-<ETF>.json and are committed by the GHA bot.
 
 CLI:
@@ -65,8 +65,8 @@ from sector_classifier import KNOWN_SCHEMA_IDS, classify  # noqa: E402
 _REFERENCES_DIR = _SCRIPT_DIR.parent / "references"
 _ETF_SCHEMA_MAP_PATH = _REFERENCES_DIR / "etf-schema-map.json"
 _ROOT = _SCRIPT_DIR.parents[3]   # repo root
-_DATA_US_PACK = _ROOT / "investing-toolkit" / "skills" / "data-us" / "scripts" / "pack.py"
-_YFINANCE_CLIENT = _ROOT / "investing-toolkit" / "skills" / "data-us" / "scripts" / "yfinance_client.py"
+_DATA_MARKETS_PACK = _ROOT / "investing-toolkit" / "skills" / "data-markets" / "scripts" / "pack.py"
+_YFINANCE_CLIENT = _ROOT / "investing-toolkit" / "skills" / "data-markets" / "scripts" / "yfinance_client.py"
 
 # Outlier bounds (per spec §6.2):
 #   multiples can be negative (P/E on a loss-making issuer); bound [0, 200]
@@ -101,17 +101,19 @@ def fetch_holdings(etf: str) -> dict:
 
 
 def fetch_memo_fetch(ticker: str) -> dict:
-    """Subprocess data-us pack.py --pack memo-fetch --ticker <ticker>.
+    """Subprocess data-markets pack.py --pack memo-fetch --ticker <ticker>.
 
-    Cache-aware: data-us pack.py reuses its own cache; back-to-back calls in the
-    same session for the same ticker hit the cache.
+    Cache-aware: data-markets pack.py reuses its own cache; back-to-back calls in
+    the same session for the same ticker hit the cache. Holding tickers are bare
+    US symbols (no market suffix), so pack.py's market auto-detect resolves to
+    "us" without needing an explicit --market flag.
     """
     proc = subprocess.run(
-        ["uv", "run", str(_DATA_US_PACK), "--pack", "memo-fetch", "--ticker", ticker],
+        ["uv", "run", str(_DATA_MARKETS_PACK), "--pack", "memo-fetch", "--ticker", ticker],
         capture_output=True, text=True, timeout=420,
     )
     if proc.returncode != 0:
-        raise RuntimeError(f"data-us memo-fetch failed for {ticker}: {proc.stderr[:300]}")
+        raise RuntimeError(f"data-markets memo-fetch failed for {ticker}: {proc.stderr[:300]}")
     return json.loads(proc.stdout)
 
 
@@ -225,7 +227,7 @@ def aggregate_etf(etf: str) -> dict:
             "outliers_dropped":    outliers_dropped,
             "skipped_holdings":    skipped,
             "schema_dispatch":     {k: len(v) for k, v in schema_dispatch.items()},
-            "source":              "yfinance funds_data + data-us memo-fetch",
+            "source":              "yfinance funds_data + data-markets memo-fetch",
         },
         "multiples":  multiples_out,
         "indicators": indicators_out,

@@ -32,8 +32,8 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 SKILLS = ROOT / "skills"
-PACK_SCRIPT = SKILLS / "data-us" / "scripts" / "pack.py"
-YF_CLIENT = SKILLS / "data-us" / "scripts" / "yfinance_client.py"
+PACK_SCRIPT = SKILLS / "data-markets" / "scripts" / "pack.py"
+YF_CLIENT = SKILLS / "data-markets" / "scripts" / "yfinance_client.py"
 COMPS_SCRIPT = SKILLS / "analysis-comps" / "scripts" / "comps_compute.py"
 
 ENV = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}

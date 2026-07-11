@@ -84,31 +84,37 @@ autonomy-required work (`investing-team` Worker / Evaluator), not
 layer-to-layer hand-off — subprocess+temp-file is deterministic,
 debuggable, replayable, and round-trip lossless.
 
-### Acceptable duplications (CI-enforced sync)
+### Canonical client scripts (single copy, no sync)
 
-Bundling clients into multiple skill folders is a deliberate trade-off:
-preserves "skill folder is self-contained" at the cost of file
-duplication. Drift is prevented by MD5 check.
+The 5 country data skills were merged into one `data-markets` skill
+(ADR-0009), so client scripts collapsed from N per-country copies to a
+single canonical copy each, imported by the market-specific
+`pack_{market}.py` modules that live in the same `scripts/` directory:
 
-| File | Copies | Skills |
+| File | Copies | Consumers |
 |---|---|---|
-| `yfinance_client.py` | 5 | `data-us`, `data-jp`, `data-tw`, `data-kr`, `data-cn` |
-| `fred_client.py` | 2 | `data-us`, `data-cn` |
-| `nbs_client.py` | 1 | `data-cn` |
-| `akshare_client.py` | 1 | `data-cn` |
+| `yfinance_client.py` | 1 | `pack_us`, `pack_jp`, `pack_tw`, `pack_kr`, `pack_cn` |
+| `fred_client.py` | 1 | `pack_us`, `pack_cn` |
+| `nbs_client.py` | 1 | `pack_cn` |
+| `akshare_client.py` | 1 | `pack_cn` |
 | `ta_client.py` | canonical only | `analysis-technical` (no second consumer yet) |
 
-Mechanism: `scripts/sync-clients.sh --check` (local) +
-`.github/workflows/check-script-sync.yml` (CI, advisory in PR 1 →
-required in PR 3). On drift the workflow prints canonical/drift MD5
-plus up to 50 lines of unified diff.
+Cache handling is likewise one shared `cache_util.py` in
+`skills/data-markets/scripts/`, imported by every client in that same
+skill directory — same-skill imports were always fine under the
+Anthropic skill-self-containment convention; what changed is the
+skill count (5 skills each needing a copy → 1 skill needing exactly
+one). See ADR-0009 for the full rationale.
 
 ### What this prevents
 
 - Mixed fetch+compute+format in a single skill (the v1.x lesson).
 - Cross-skill orchestration via sub-agent dispatch (token cost +
   serialization-layer waste for pure-function compute).
-- Silent duplication drift — CI catches MD5 mismatch before merge.
+- Duplication drift — there is exactly one copy of each client and of
+  `cache_util.py`, so there is no second copy left to drift from (the
+  MD5-sync CI guard this used to require is retired along with the
+  duplication it guarded — ADR-0009).
 
 ### What this enables
 
