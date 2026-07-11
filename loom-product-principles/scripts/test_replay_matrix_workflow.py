@@ -472,17 +472,23 @@ def test_fix_round_wired_and_bounded():
     # existing selfCheckExit/selfCheckMisses carry-through), or the fields
     # would be computed and immediately dropped before reaching the final
     # per-seed row.
+    # T3 round-2 correctness fix: selfCheckFixed can now be an explicit
+    # `null` (unknown — re-check courier errored), distinct from its `0`
+    # default — the Grade-stage carry-through must preserve that null
+    # rather than coercing it back to 0 via a bare `typeof ... === 'number'`
+    # check (which would silently undo the fix one stage later).
     grade_carry = re.search(
-        r"const selfCheckFixed = replay && typeof replay\.selfCheckFixed === 'number' "
-        r"\? replay\.selfCheckFixed : 0\s*\n"
+        r"const selfCheckFixed = replay && \(typeof replay\.selfCheckFixed === 'number' "
+        r"\|\| replay\.selfCheckFixed === null\) \? replay\.selfCheckFixed : 0\s*\n"
         r"\s*const selfCheckExitAfterFix = replay && typeof replay\.selfCheckExitAfterFix === 'number' "
         r"\? replay\.selfCheckExitAfterFix : null",
         text,
     )
     assert grade_carry, (
         "the Grade stage must read selfCheckFixed/selfCheckExitAfterFix "
-        "back off its `replay` argument, same carry-through discipline as "
-        "the existing selfCheckExit/selfCheckMisses fields"
+        "back off its `replay` argument, preserving an explicit `null` "
+        "selfCheckFixed rather than coercing it to 0, same carry-through "
+        "discipline as the existing selfCheckExit/selfCheckMisses fields"
     )
     assert text.count("selfCheckFixed,") >= 4, (
         "selfCheckFixed must ride all Grade-stage return rows (hard-miss, "
@@ -545,3 +551,162 @@ def test_fix_round_wired_and_bounded():
             ["node", "--check", str(WORKFLOW)], capture_output=True, text=True
         )
         assert result.returncode == 0, f"node --check failed: {result.stderr}"
+
+
+# --- T3 round-2 security fix (🔴): dot-segment traversal in the args guard's
+# own per-segment allow-list. RUN_LABEL_ALLOWED_PATTERN's char class includes
+# '.', so a segment that is exactly '.' or '..' passes the regex test even
+# though it is a path-traversal segment — a reviewer live-probe demonstrated
+# `/tmp/sandbox/../../etc` as an ACCEPTED sandboxDir pre-fix. Backports the
+# sibling guard in principles-improve-loop.js's assertStationPath :213-218
+# (same char-class hole, already fixed there) to BOTH runLabel and the
+# sandboxDir per-segment loop, plus a NEW structural check inside
+# runFixAgent (the 🟡 architecture fix below).
+
+def test_sandbox_dir_dot_segment_rejection_present():
+    text = _text()
+    # Two distinct sites must reject '.'/'..' explicitly: the sandboxDir
+    # args-guard loop AND the runFixAgent structural scope-check (below) —
+    # a count-only pin here is intentional BECAUSE both sites independently
+    # matter (defense in depth, not just one shared helper).
+    assert text.count("segment === '..'") >= 2, (
+        "expected '..' rejection at both the sandboxDir args-guard loop and "
+        "the runFixAgent structural scope-check"
+    )
+    assert text.count("segment === '.'") >= 2, (
+        "expected '.' rejection at both the sandboxDir args-guard loop and "
+        "the runFixAgent structural scope-check"
+    )
+
+
+def test_run_label_dot_segment_rejected():
+    text = _text()
+    assert "runArgs.runLabel === '.'" in text, (
+        "runLabel becomes a whole path segment (sandboxDir/runLabel/seed.id/...) "
+        "— a runLabel of exactly '.' or '..' passes the char-class regex and "
+        "must be explicitly rejected"
+    )
+    assert "runArgs.runLabel === '..'" in text
+
+
+def _extract_args_guard_block(text: str) -> str:
+    """Extract the top-level args-guard statements (from `let runArgs = args`
+    through the sandboxDir per-segment loop) so they can be eval'd standalone
+    in a throwaway `node -e` with a synthetic `args` — mirrors this file's
+    existing executable-pin precedent
+    (test_selfcheck_courier_executable_probe_marker_path_lands_verbatim),
+    applied to the top-level guard instead of an async function."""
+    start_marker = "let runArgs = args"
+    end_marker = "let seedPairs = DEFAULT_SEEDS"
+    start = text.index(start_marker)
+    end = text.index(end_marker)
+    assert start < end, "expected the args-guard block to precede the seeds block"
+    return text[start:end]
+
+
+def test_traversal_probe_rejects_dot_dot_sandbox_dir_accepts_clean_path():
+    """Executable pin mirroring the reviewer's live probe (T3 round-2
+    security finding): a sandboxDir containing a '..' segment
+    (`/tmp/sandbox/../../etc`, the reviewer's exact repro) must be REJECTED
+    by the args guard, while a clean absolute sandboxDir is ACCEPTED.
+    Evaluates the REAL args-guard block extracted from the committed .js,
+    standalone in node — independent of the static literal pins above."""
+    if not shutil.which("node"):
+        return
+    text = _text()
+    guard_block = _extract_args_guard_block(text)
+
+    def run_probe(sandbox_dir: str) -> str:
+        script = (
+            "function log() {}\n"
+            f"const args = {{ runLabel: 'run1', sandboxDir: {sandbox_dir!r} }};\n"
+            "try {\n"
+            + guard_block
+            + "\n  console.log('ACCEPTED');\n"
+            "} catch (e) {\n"
+            "  console.log('REJECTED: ' + e.message);\n"
+            "}\n"
+        )
+        result = subprocess.run(["node", "-e", script], capture_output=True, text=True)
+        return (result.stdout + result.stderr).strip()
+
+    traversal_output = run_probe("/tmp/sandbox/../../etc")
+    assert traversal_output.startswith("REJECTED"), (
+        f"reviewer's exact repro '/tmp/sandbox/../../etc' must be REJECTED, "
+        f"got: {traversal_output!r}"
+    )
+
+    clean_output = run_probe("/tmp/sandbox")
+    assert clean_output.startswith("ACCEPTED"), (
+        f"a clean absolute sandboxDir must still be ACCEPTED (no regression "
+        f"on the legitimate path), got: {clean_output!r}"
+    )
+
+
+# --- T3 round-2 architecture fix (🟡): runFixAgent trusted its caller
+# completely before building an Edit-authorizing prompt. It must now assert,
+# independently, that artifactPath is provably under
+# sandboxDir/runLabel/ AND every remaining segment passes the (now
+# dot-rejecting) allow-list — mirrors principles-improve-loop.js's
+# assertStationPath :201-226, adapted to this file's sandboxDir/runLabel
+# prefix instead of a fixed STATION_DIR.
+
+def test_run_fix_agent_has_structural_scope_check():
+    text = _text()
+    assert "function assertArtifactPathWithinSandbox(" in text
+    # the check must run as the FIRST statement inside runFixAgent's try
+    # block — before any Edit-authorizing prompt is built — so a bad path
+    # never reaches the agent() call at all.
+    gated = re.search(
+        r"async function runFixAgent\(seed, artifactPath, missLines\) \{\s*\n"
+        r"\s*try \{\s*\n"
+        r"\s*assertArtifactPathWithinSandbox\(artifactPath\)",
+        text,
+    )
+    assert gated, (
+        "runFixAgent must call assertArtifactPathWithinSandbox(artifactPath) "
+        "as the first statement in its try block, before constructing the "
+        "Edit-authorizing prompt"
+    )
+    # the helper degrades through runFixAgent's EXISTING catch (e) — never a
+    # separate crash path — consistent with every other stage's guard
+    # conventions in this file.
+    assert text.count("async function runFixAgent") == 1
+    assert text.count("catch (e) {") >= 3
+
+
+# --- T3 round-2 correctness fix (🟡): selfCheckFixed miscounts on a
+# re-check courier error. runSelfCheckCourier's catch returns a synthetic
+# 1-line missLines array; the arithmetic
+# `selfCheckMisses.length - reCheckMisses.length` then reports a phantom
+# partial fix (e.g. 3 real misses vs 1 synthetic line -> a false fixed=2).
+# The courier-error case must be tagged (`errored: true`) and, in that
+# branch, selfCheckFixed must be `null` (unknown — not re-verified),
+# keeping selfCheckExitAfterFix's existing degraded (1) value.
+
+def test_recheck_courier_error_yields_unknown_selfcheck_fixed_not_phantom_count():
+    text = _text()
+
+    # runSelfCheckCourier's catch must tag its synthetic fallback distinctly.
+    assert re.search(
+        r"return \{ exitCode: null, missLines: \[.*?\], errored: true \}",
+        text,
+    ), "runSelfCheckCourier's catch must set errored: true on its synthetic fallback row"
+
+    # the re-check consumption must branch on reCheck.errored — never
+    # blindly subtract missLines lengths regardless of whether the re-check
+    # courier itself errored.
+    recheck_branch = re.search(
+        r"selfCheckExitAfterFix = reCheckExit === null \? 1 : reCheckExit\s*\n"
+        r"[\s\S]{0,800}?"
+        r"selfCheckFixed = \(reCheck && reCheck\.errored\)\s*\n"
+        r"\s*\? null\s*\n"
+        r"\s*: Math\.max\(0, selfCheckMisses\.length - reCheckMisses\.length\)",
+        text,
+    )
+    assert recheck_branch, (
+        "the re-check branch must set selfCheckFixed to null when "
+        "reCheck.errored is true, and only otherwise compute the "
+        "misses-length diff — selfCheckExitAfterFix keeps its existing "
+        "degraded (1) value in both cases"
+    )
