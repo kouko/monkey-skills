@@ -5,6 +5,74 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.3.0] — 2026-07-11
+
+`data-markets` consolidation: 5 per-country data skills merged into one,
+a live-reproduced silent-cache-crash bug closed, and a fail-loud exit
+contract added to the data layer. See
+[ADR-0009](docs/adr/0009-data-markets-consolidation-and-cache-util.md)
+for the full design record.
+
+### Added
+
+- **`skills/data-markets/`** — replaces `skills/data-{us,jp,tw,kr,cn}/`.
+  Thin `SKILL.md` (routing + shared contract + worked examples) +
+  `references/market-{us,jp,tw,kr,cn}.md` (per-market sources, tiers,
+  key requirements, caveats). 18 unique clients (deduplicated from 23:
+  yfinance ×5 → 1, fred ×2 → 1) + one per-market `pack_{market}.py`
+  module each, behind a single `pack.py` facade with ticker-suffix
+  market auto-detection (`--market` required for `regime-pack`).
+- **`skills/data-markets/scripts/cache_util.py`** — single cache module
+  for all clients: XDG/uv-style path precedence (explicit arg >
+  `INVESTING_TOOLKIT_CACHE` > `$XDG_CACHE_HOME/investing-toolkit` >
+  `~/.cache/investing-toolkit`), empty-string-safe env parsing,
+  post-resolution writability check with loud stderr warning + tempdir
+  fallback, cadence-aware `compute_ttl()` (generalizes `dgbas_client.py`'s
+  `_compute_ttl` to all 18 clients), schema-versioned roundtrip helpers.
+- **Fail-loud `pack.py` exit contract**: `0` = all sections ok, `2` =
+  partial (was silently exit `0` in 4 of 5 old `pack.py`s), `1` = all
+  failed / unexpected exception, `64` = usage error (bad args/pack name,
+  mixed-market ticker list, missing `--market` for `regime-pack`). A
+  top-level `_status` block (`status`, `market`, `pack`,
+  `failed_sections`, `warnings`) is injected into every response.
+- `agents/data-fetcher.md` rewritten against the merged skill (`pack.py`
+  invocations, exit-contract table, `cache_util` cache section) —
+  replaces v1.x content referencing pre-v2.0.0 per-client scripts and
+  flat `1h`/`6h`/`24h` TTLs.
+
+### Fixed
+
+- **Silent cache-directory crash (live-reproduced)**: the old canonical
+  invocation set `INVESTING_TOOLKIT_CACHE` from a hook-only variable that
+  is empty inside a Bash tool call, collapsing to the literal path
+  `/cache`. Every client's unguarded cache-dir `mkdir()` then crashed,
+  and 4 of 5 `pack.py` implementations swallowed the crash into an error
+  slot while still exiting `0` — reports silently received `None` prices
+  with no failure signal. `cache_util.resolve_cache_dir()` now strips +
+  empty-checks the override, probes writability, and falls back loudly
+  instead of crashing.
+
+### Changed — BREAKING
+
+- **`data-{us,jp,tw,kr,cn}` skill names removed.** All invocations
+  (slash commands, agent dispatch, downstream `SKILL.md` references)
+  migrate to `data-markets` — see `agents/data-fetcher.md` and
+  `skills/data-markets/SKILL.md` for the new invocation form.
+- **`INVESTING_TOOLKIT_CACHE` is now fully optional.** Previously
+  required by the (silently broken) canonical invocation; omit it
+  entirely for the default `~/.cache/investing-toolkit` path, or set it
+  deliberately to override.
+- **`sync-clients.sh` and its MD5-sync CI discipline removed** — a
+  single-copy skill has no cross-copy drift to guard against.
+
+### Removed
+
+- `skills/data-{us,jp,tw,kr,cn}/` (5 skills, ~4-5k net LOC reduction
+  including 4 duplicate `yfinance_client.py` copies + 1 duplicate
+  `fred_client.py` + ~1,077 LOC of per-client cache boilerplate
+  collapsing into one `cache_util.py`).
+- `scripts/sync-clients.sh`, `tests/test_sync_clients.py`.
+
 ## [v2.1.1] — 2026-07-05
 
 ### Fixed — `report-equity-memo` Codex dispatch-portability
