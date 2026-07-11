@@ -39,6 +39,8 @@ Plan-document-reviewer verdict: PASS (2026-07-11, round 2 — round-1 Check-8 dr
 2. chose **working-tree apply + git-restore over worktree isolation** because replays resolve the plugin from the repo checkout and the arc branch is dedicated — cost of change: low (courier-local).
 3. chose **held-out = cold-operator + seed5** per brief §Open Questions (human-grounded seed must be unseen; seed5's run variance makes regressions visible) — **one-way door, user-confirmed at kickoff briefing 2026-07-11** (a fixer-exposed seed can never return to clean held-out duty). Reversal condition recorded: if 4 visible seeds prove too thin (rounds rejected for lack of failure diversity), seed5 may move visible — irreversibly.
 
+4. chose **folding T1's 🟡 review finding (duplicate-seedId silent dict-overwrite on the verdict path → must exit 2) into T2's dispatch** because T2 touches the same module next and the fix is exemplar-testable there — cost of change: low (revertible edit); alternative (separate fix task) rejected as dispatch overhead for a ~10-line change.
+
 ## Task 1 — verdict helper: compare + held-out smoke
 
 - Description: create `improve_loop_verdict.py` with `compare` (aggregate ≥1
