@@ -98,3 +98,56 @@ def test_us_migration_contract():
     assert result["ticker"] == "AAPL"
     assert result["company_info"] == fixture["company_info"]
     assert result["price_history"] == fixture["price_history"]
+
+
+def _mock_run_client_for_memo_fetch(fixture: dict):
+    """Route mocked run_client calls to fixture sections by script + args,
+    so pack_memo_fetch's ~40 DCF-concept sub-calls (one per XBRL concept in
+    DCF_CONCEPT_MAPPING) don't need individually-ordered side_effect entries.
+    Concept-fetch calls return {} (no `observations`) — pack_us._fetch_dcf_concepts
+    drops those, so income_statement/cash_flow/balance_sheet still assemble
+    (as empty-series dicts) without asserting on their inner values here.
+    """
+    import pack_us  # noqa: E402  (module under test, already on sys.path)
+
+    def _side_effect(script, extra_args, timeout=pack_us.CLIENT_TIMEOUT_SECONDS):
+        if script == pack_us.YF:
+            if "info" in extra_args:
+                return fixture["company_info"]
+            return fixture["price_history"]
+        if script == pack_us.SEC:
+            if "filings" in extra_args:
+                return fixture["sec_filings"]
+            if "--concept" in extra_args:
+                return {}
+            return fixture["sec_facts"]
+        raise AssertionError(f"unexpected run_client script: {script}")
+
+    return _side_effect
+
+
+def test_us_migration_memo_fetch_section_keys():
+    """pack_us.build_pack("memo-fetch", ...) top-level section keys match
+    the data-us memo-fetch fixture (fixture-fed / mocked subprocess —
+    offline, no network). Separate from the snapshot test above for
+    F.I.R.S.T independence (one pack type's assertion failing must not
+    hide the other's)."""
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack_us  # noqa: E402  (path-dependent import, must follow sys.path insert)
+
+    fixture = json.loads((FIXTURES / "data-us-memo-fetch-sample.json").read_text())
+    expected_keys = set(fixture.keys())
+
+    with mock.patch.object(pack_us, "run_client") as mock_run_client:
+        mock_run_client.side_effect = _mock_run_client_for_memo_fetch(fixture)
+        result = pack_us.build_pack("memo-fetch", ["AAPL"])
+
+    assert set(result.keys()) == expected_keys, (
+        f"pack_us memo-fetch section keys diverge from data-us fixture: "
+        f"missing={expected_keys - set(result.keys())} "
+        f"extra={set(result.keys()) - expected_keys}"
+    )
+    assert result["ticker"] == "AAPL"
+    assert result["company_info"] == fixture["company_info"]
+    assert result["sec_filings"] == fixture["sec_filings"]
