@@ -134,6 +134,13 @@ def _get(url: str, timeout: int = 30) -> list | dict:
     raise TwseOpenApiError(f"Failed after {MAX_RETRIES} retries: {last_err}")
 
 
+# Keys cache_util.load_cache injects into the dict it returns on a hit
+# (see cache_util.py's `out["_cache"] = ...` block). Must be stripped from
+# dict-shaped payloads before returning, so a cache hit's shape matches a
+# cache miss's shape exactly.
+_CACHE_BOOKKEEPING_KEYS = ("_cache", "_cache_age_seconds", "_cache_ttl_seconds")
+
+
 def _cached_get(url: str, cache_key: str, *, ttl: int) -> tuple[list | dict, str]:
     """GET with cache; returns (data, cache_status).
 
@@ -142,12 +149,18 @@ def _cached_get(url: str, cache_key: str, *, ttl: int) -> tuple[list | dict, str
     Several TWSE endpoints (e.g. STOCK_DAY_ALL) return a bare JSON *list*
     of rows, not a dict — wrap those in `{"_rows": [...]}` for the round
     trip and unwrap on load (no real TWSE/TPEx payload uses `_rows` as a
-    field name, so this is an unambiguous marker).
+    field name, so this is an unambiguous marker). Dict-payload endpoints
+    (e.g. get_stock_day_history_month's raw /rwd/ response) round-trip
+    as-is, but load_cache's injected bookkeeping keys are stripped on a
+    hit so the returned shape matches a miss exactly.
     """
     path = cache_util.cache_path("twse_openapi", cache_key)
     cached = cache_util.load_cache(path, ttl)
     if cached is not None:
-        return (cached["_rows"] if "_rows" in cached else cached), "hit"
+        if "_rows" in cached:
+            return cached["_rows"], "hit"
+        stripped = {k: v for k, v in cached.items() if k not in _CACHE_BOOKKEEPING_KEYS}
+        return stripped, "hit"
     data = _get(url)
     payload = {"_rows": data} if isinstance(data, list) else data
     cache_util.save_cache(path, payload)

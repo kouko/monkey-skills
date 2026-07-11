@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import ast
 import importlib.util
+import sys
 from pathlib import Path
 
 import pytest
@@ -77,9 +78,14 @@ def test_tw_migration_contract(monkeypatch):
         assert not leaked, f"{filename} still defines local cache helper(s): {leaked}"
         assert "import cache_util" in source, f"{filename} must `import cache_util`"
 
-    # yfinance is explicitly NOT part of this task — the US sibling owns
-    # the canonical copy. Migrating it here would be scope creep.
-    assert not (SCRIPTS_DIR / "yfinance_client.py").exists() or True  # documented, not enforced (US sibling may land it)
+    # yfinance was explicitly NOT part of this (TW) task's scope — the US
+    # migration (T3a, commit 792936ef) owns the canonical copy and has
+    # since landed it at SCRIPTS_DIR/yfinance_client.py, so its presence
+    # here is expected, not a TW scope violation. TW's own scope
+    # discipline was enforced at commit time: `git show 92ed1fb9 --stat`
+    # contains no yfinance file. No assertion here — an existence check
+    # would be testing T3a's landing, not TW's scope; that isn't this
+    # test's responsibility to gate.
 
     # dgbas special case: cadence machinery fully deleted, delegates to
     # cache_util's compute_ttl / CACHE_SCHEMA_VERSION.
@@ -153,3 +159,50 @@ def test_tw_migration_contract(monkeypatch):
     out_comps = pack_tw.build_pack("comps-multiples", ["2330.TW", "2454.TW"])
     assert out_comps["pack"] == "comps-multiples"
     assert set(out_comps["tickers"].keys()) == {"2330.TW", "2454.TW"}
+
+
+def test_cached_get_dict_payload_hit_matches_miss_shape(monkeypatch):
+    """twse_openapi_client._cached_get: dict-payload endpoints (e.g.
+    get_stock_day_history_month, which caches the raw TWSE /rwd/ response
+    dict — not a list) must return the SAME shape on a cache hit as on a
+    cache miss.
+
+    cache_util.load_cache injects `_cache`/`_cache_age_seconds`/
+    `_cache_ttl_seconds` bookkeeping keys into the dict it hands back on a
+    hit. The list-payload path (`{"_rows": [...]}`) already unwraps clean
+    of these by construction (`cached["_rows"]` only ever pulls out the
+    original rows). The dict-payload path took the `else cached` branch
+    and returned cache_util's dict AS-IS — bookkeeping keys and all — so
+    a caller reading `get_stock_day_history_month`'s dict on a cache HIT
+    would see extra `_cache*` keys that are absent on a MISS. Assert the
+    hit path strips them so hit and miss are indistinguishable in shape.
+    """
+    sys.path.insert(0, str(SCRIPTS_DIR))
+    try:
+        import twse_openapi_client as twse
+
+        importlib.reload(twse)
+
+        original_payload = {"stat": "OK", "date": "20260710", "data": [[1, 2, 3]]}
+        hit_from_cache_util = {
+            **original_payload,
+            "_cache": "hit",
+            "_cache_age_seconds": 5,
+            "_cache_ttl_seconds": 1800,
+        }
+        monkeypatch.setattr(
+            twse.cache_util, "load_cache", lambda path, ttl: dict(hit_from_cache_util)
+        )
+
+        data, status = twse._cached_get(
+            "https://example.invalid/rwd/x", "some-cache-key", ttl=1800
+        )
+
+        assert status == "hit"
+        assert data == original_payload, (
+            "dict-payload cache hit must strip cache_util's _cache/"
+            "_cache_age_seconds/_cache_ttl_seconds bookkeeping keys so the "
+            f"hit shape matches the miss shape; got {data!r}"
+        )
+    finally:
+        sys.path.remove(str(SCRIPTS_DIR))
