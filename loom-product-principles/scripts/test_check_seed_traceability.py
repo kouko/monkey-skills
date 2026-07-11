@@ -310,7 +310,7 @@ _COLD_OPERATOR_SEED = (
 # the shape assertion below.
 _COMMITTED_ORACLE_EXPECTATIONS = [
     ("seed1-oracle.md", _SEED_CORPUS / "seed1-oracle.md", 12, 0, 3, {
-        "named_anchors": "Nielsen's 10 Usability Heuristics",
+        "named_anchors": "Nielsen",
         "negative": "postmortem 撰寫",
     }),
     ("seed2-oracle.md", _SEED_CORPUS / "seed2-oracle.md", 8, 2, 2, {
@@ -319,7 +319,7 @@ _COMMITTED_ORACLE_EXPECTATIONS = [
         "negative": "兒童聲音資料分享",
     }),
     ("seed3-oracle.md", _SEED_CORPUS / "seed3-oracle.md", 6, 0, 0, {
-        "named_anchors": "Nielsen's 10 Usability Heuristics",
+        "named_anchors": "Nielsen",
     }),
     ("seed4-oracle.md", _SEED_CORPUS / "seed4-oracle.md", 10, 1, 4, {
         "named_anchors": "Norman's Design Principles",
@@ -332,7 +332,7 @@ _COMMITTED_ORACLE_EXPECTATIONS = [
     }),
     ("cold-operator seed.md", _COLD_OPERATOR_SEED, 9, 1, 8, {
         "named_anchors": "JTBD|Jobs-to-be-Done",
-        "deferred_items": "成本|Cost",
+        "deferred_items": "成本|Cost|cost",
         "negative": "零雲端依賴",
     }),
 ]

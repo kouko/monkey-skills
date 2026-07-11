@@ -1,6 +1,10 @@
 # Oracle 1 — B2B incident-response dashboard (grader-only)
 
-named_anchors: HEART; MoSCoW; Nielsen's 10 Usability Heuristics; IBM Carbon; Swiss / International Typographic Style; Layered/N-Tier; Hexagonal/Ports & Adapters; TypeScript; React; Go; PostgreSQL; Redis
+named_anchors: HEART; MoSCoW; Nielsen; IBM Carbon; Swiss / International Typographic Style; Layered/N-Tier; Hexagonal/Ports & Adapters; TypeScript; React; Go; PostgreSQL; Redis
+# note: SURNAME-FRAGMENT calibration (calib-r3 evidence, transferred from
+# seed3) — "Nielsen's 10 Usability Heuristics" re-tokenized to the bare
+# surname; same fragility as seed3 (CJK-output artifacts anchor it as
+# "Nielsen 十項可用性啟發法則", never the full English name).
 
 deferred_items: none in this seed (2-deferred trap lives in seed 2)
 

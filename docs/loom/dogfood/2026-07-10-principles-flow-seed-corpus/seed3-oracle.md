@@ -1,11 +1,18 @@
 # Oracle 3 — API schema-diff CLI (grader-only)
 
-named_anchors: Shneiderman's Eight Golden Rules; Nielsen's 10 Usability Heuristics; Hexagonal|Ports & Adapters; 12-Factor App; Working Backwards / PR-FAQ; Rust
+named_anchors: Shneiderman; Nielsen; Hexagonal|Ports & Adapters; 12-Factor App; Working Backwards / PR-FAQ; Rust
 # note: MIXED-TRADITION TRAP — Shneiderman + Nielsen are both named together
 # in one Design/Interaction bullet; each is a separate canon needing its own
 # Anchors row, not collapsed into one. TECH-STACK-IN-PROSE TRAP — Rust is
 # named only inside the Idea sentence, no labeled "Tech-stack:" line — must
 # still land as an Anchors row.
+# note: SURNAME-FRAGMENT calibration (calib-r3 evidence) — both tokens
+# re-tokenized from full-English-name form ("Shneiderman's Eight Golden
+# Rules" / "Nielsen's 10 Usability Heuristics") to the bare surname: the
+# r3 artifact anchored both in Chinese ("Shneiderman 八大金律" / "Nielsen
+# 十項可用性啟發法則"), so the full-name token never appears verbatim in a
+# CJK-output artifact. The surname is the stable fragment across every
+# observed language variant.
 
 deferred_items: none in this seed (2-deferred trap lives in seed 2)
 
