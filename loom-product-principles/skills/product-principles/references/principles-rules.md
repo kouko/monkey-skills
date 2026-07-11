@@ -168,8 +168,11 @@ entry's text MUST contain the greppable phrase `escalation appetite` and
 carry the standard `— check:` marker; no new validator rule is needed
 because the entry is checked by the existing "every entry needs `— check:`"
 rule above. Consumers (loom-code's kickoff briefing) locate the dial by
-grepping `escalation appetite` under the `## Engineering Principles`
-heading. The entry is **optional** — a project may omit it, in which case
+grepping `escalation appetite` in the consuming repo's
+`docs/loom/PRINCIPLES.md` — never this rules file or other docs — bounded
+to the region between the `## Engineering Principles` heading and the
+next `##` heading, so an unscoped repo-wide grep can't false-match this
+rules file's own synthetic example. The entry is **optional** — a project may omit it, in which case
 consumers default to briefing all two-axis hits. Read once at kickoff,
 never re-asked (a documented decision beats re-asking).
 
@@ -180,6 +183,11 @@ never re-asked (a documented decision beats re-asking).
 
 1. Escalation appetite: brief one-way-door decisions only, log the rest — check: kickoff briefing greps "escalation appetite" under this heading and applies the dial without re-asking
 ```
+
+**Valid vs invalid entry:**
+
+- ✅ `1. Escalation appetite: brief one-way-door decisions only, log the rest — check: kickoff briefing greps "escalation appetite" under this heading and applies the dial without re-asking` — contains the greppable phrase `escalation appetite` and the `— check:` marker.
+- ❌ `1. Escalation appetite: brief one-way-door decisions only, log the rest` — missing the `— check:` marker; the entry fails the same "every entry needs `— check:`" rule as any other `## Engineering Principles` entry.
 
 **A jurisdiction with no committed clauses emits NO section — never a
 present-but-empty heading.** A `## Design Principles` or `## Engineering
