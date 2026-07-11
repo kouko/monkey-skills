@@ -26,9 +26,13 @@ stances:          # each individual stance needs a carrying principle (merging O
   - 個資最小化＋電話遮罩
   - 工程全委派（只看結果）            # escalation appetite → may be process-context; must not be silently dropped (explicit note or principle)
 
-negative: 支援企業版|enterprise edition support; 簡訊通知作為 v1 原則
-# note: 企業版 is explicitly scoped out; 簡訊通知作為 v1 原則 is a deferred
-# channel (SMS is out for v1, LINE + email only) — presence of either as a
-# committed principle is a regression.
+negative: 簡訊通知作為 v1 原則
+# note: 簡訊通知作為 v1 原則 is a deferred channel (SMS is out for v1, LINE +
+# email only) — presence as a committed principle is a regression.
+# note: 支援企業版|enterprise edition support (企業版 explicitly scoped out) is
+# bait-leak coverage, grader-checked only (not machine-checked):
+# negation-superstring — any acceptance phrase is a substring of its own
+# natural rejection (e.g. 「不優化企業版多店管理」 contains "企業版") — no
+# phrase choice fixes this under substring semantics.
 
 traps_summary: 5-stance single bullet; stack named in prose; canon (Material Design/12-Factor) in passing prose; TWO deferred items; cost stance is decided (trap: don't confuse with deferred); dual-stack (frontend+backend) both must anchor.

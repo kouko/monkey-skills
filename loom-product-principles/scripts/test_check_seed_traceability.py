@@ -270,6 +270,25 @@ def test_pipe_alternatives_miss_line_echoes_full_item_when_no_alternative_matche
     assert check(artifact, oracle) == ["named_anchors: JTBD|Jobs-to-be-Done"]
 
 
+# --- Calibration round-2: negation-superstring characterization -------------
+
+
+def test_negative_token_fires_on_its_own_rejection_sentence_characterization():
+    # CHARACTERIZATION (not a bug): `check_negative` cannot distinguish a
+    # bait item being ACCEPTED from the artifact correctly REJECTING it — a
+    # negative token is a substring of its own natural-language rejection
+    # ("不支援企業版多店管理" contains "支援企業版"). This is WHY the three
+    # bait-leak tokens (mock server support / API gateway support / 支援企業版)
+    # were demoted out of `negative:` to grader-side `# note:` prose in the
+    # oracle calibration round-2 fix — no acceptance-phrase choice escapes
+    # this under substring semantics.
+    artifact = _artifact(
+        extra_negative="不支援企業版多店管理，功能優化針對單一店家。"
+    )
+    oracle = _oracle(negative="支援企業版")
+    assert check(artifact, oracle) == ["negative: 支援企業版"]
+
+
 # --- Task 3: committed oracles conform to the parser contract ---------------
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -294,24 +313,24 @@ _COMMITTED_ORACLE_EXPECTATIONS = [
         "named_anchors": "Nielsen's 10 Usability Heuristics",
         "negative": "postmortem 撰寫",
     }),
-    ("seed2-oracle.md", _SEED_CORPUS / "seed2-oracle.md", 7, 2, 5, {
+    ("seed2-oracle.md", _SEED_CORPUS / "seed2-oracle.md", 8, 2, 5, {
         "named_anchors": "Calm Technology",
         "deferred_items": "可逆性|Reversibility posture",
         "negative": "上傳雲端",
     }),
-    ("seed3-oracle.md", _SEED_CORPUS / "seed3-oracle.md", 6, 0, 3, {
+    ("seed3-oracle.md", _SEED_CORPUS / "seed3-oracle.md", 6, 0, 1, {
         "named_anchors": "Nielsen's 10 Usability Heuristics",
-        "negative": "mock server support",
+        "negative": "上傳 schema 到雲端",
     }),
     ("seed4-oracle.md", _SEED_CORPUS / "seed4-oracle.md", 10, 1, 4, {
         "named_anchors": "Norman's Design Principles",
         "deferred_items": "升級胃口|Upgrade appetite",
         "negative": "強制雲端備份",
     }),
-    ("seed5-oracle.md", _SEED_CORPUS / "seed5-oracle.md", 8, 2, 2, {
+    ("seed5-oracle.md", _SEED_CORPUS / "seed5-oracle.md", 8, 2, 1, {
         "named_anchors": "WCAG",
         "deferred_items": "預約記錄保留期",
-        "negative": "支援企業版|enterprise edition support",
+        "negative": "簡訊通知作為 v1 原則",
     }),
     ("cold-operator seed.md", _COLD_OPERATOR_SEED, 9, 1, 8, {
         "named_anchors": "JTBD|Jobs-to-be-Done",
