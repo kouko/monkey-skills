@@ -1,11 +1,11 @@
 # Oracle 2 — bedtime-story audio app (grader-only)
 
-named_anchors: Apple Human Interface Guidelines; Calm Technology; Kenya Hara / MUJI "Emptiness"; Local-First; Kano Model; Jobs-to-be-Done; React Native + on-device TTS stack
+named_anchors: Apple Human Interface Guidelines; Calm Technology; Kenya Hara / MUJI "Emptiness"; Local-First; Kano Model; Jobs-to-be-Done; React Native
 # note: Calm Technology is a PROSE-ONLY TRAP — named only inside the
 # Design-stance sentence, no labeled "Design canon:" line — must still land
 # as its own Anchors row.
 
-deferred_items: 可逆性; 升級胃口
+deferred_items: 可逆性|Reversibility posture; 升級胃口|Upgrade appetite
 # note: DEFERRED TRAP — 2 distinct undecidable stances (可逆性=無法判斷 →
 # separate Open Question + re-trigger; 升級胃口=無法判斷 → separate Open
 # Question + re-trigger); neither may be dropped or merged into one vague

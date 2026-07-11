@@ -1,11 +1,11 @@
 # Oracle 4 — local-first vector sketchbook (grader-only)
 
-named_anchors: Apple Human Interface Guidelines; Norman's Design Principles; Kenya Hara / MUJI "Emptiness"; Local-First; Vertical Slice Architecture; Jobs-to-be-Done; Blue Ocean Strategy; C++/Qt stack; SVG format
+named_anchors: Apple Human Interface Guidelines; Norman's Design Principles; Kenya Hara / MUJI "Emptiness"; Local-First; Vertical Slice Architecture; Jobs-to-be-Done; Blue Ocean Strategy; C++; Qt; SVG
 # note: MIXED-TRADITION TRAP — Apple HIG + Norman's Design Principles are
 # both named in one Design/Interaction bullet, each needs its own Anchors
 # row.
 
-deferred_items: 升級胃口
+deferred_items: 升級胃口|Upgrade appetite
 # note: single deferred item (升級胃口=無法判斷 → Open Question +
 # re-trigger) — must not be dropped even though it's not the ≥2-deferred
 # seed.

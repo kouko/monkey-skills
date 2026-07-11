@@ -1,6 +1,6 @@
 # Oracle 1 — B2B incident-response dashboard (grader-only)
 
-named_anchors: HEART; MoSCoW; Nielsen's 10 Usability Heuristics; IBM Carbon; Swiss / International Typographic Style; Layered/N-Tier; Hexagonal/Ports & Adapters; TypeScript+React; Go; PostgreSQL+Redis
+named_anchors: HEART; MoSCoW; Nielsen's 10 Usability Heuristics; IBM Carbon; Swiss / International Typographic Style; Layered/N-Tier; Hexagonal/Ports & Adapters; TypeScript; React; Go; PostgreSQL; Redis
 
 deferred_items: none in this seed (2-deferred trap lives in seed 2)
 

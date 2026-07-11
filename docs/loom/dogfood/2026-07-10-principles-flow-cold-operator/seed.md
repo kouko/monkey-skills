@@ -78,8 +78,8 @@ Process (transcript-checkable, per instrument v0.1 criteria):
 parse_oracle contract — joins this living Oracle to the L1/L2 replay harness;
 derived from the prose assertions above, not new claims)
 
-named_anchors: JTBD; Kano; Apple HIG; Nielsen; Apple Design Language; Local-First; Modular Monolith; Swift/SwiftUI; Core ML
-deferred_items: 成本
+named_anchors: JTBD|Jobs-to-be-Done; Kano; Apple HIG|Human Interface Guidelines; Nielsen; Apple Design Language; Local-First; Modular Monolith; SwiftUI; Core ML
+deferred_items: 成本|Cost posture
 negative: 整理會議記錄; 追踪項目進度; 逐字稿編輯; 零雲端依賴; 分享修正數據; 鍵盤優先; 開發團隊; 團隊接受
 # note: 第 8 條原則（C3）is a count-based structural assertion, not a literal
 # presence check — stays with the "覆蓋式斷言" prose above, not encoded as a
