@@ -159,6 +159,28 @@ with a lower floor:
 1. <principle statement> — check: <concrete, testable condition>
 ```
 
+### Escalation appetite — landing shape (`## Engineering Principles` only)
+
+The construction flow's escalation-appetite question (question-sets.md,
+Engineering section Q5) has **no dedicated slot or marker** — it lands as a
+normal top-level `## Engineering Principles` entry like any other. The
+entry's text MUST contain the greppable phrase `escalation appetite` and
+carry the standard `— check:` marker; no new validator rule is needed
+because the entry is checked by the existing "every entry needs `— check:`"
+rule above. Consumers (loom-code's kickoff briefing) locate the dial by
+grepping `escalation appetite` under the `## Engineering Principles`
+heading. The entry is **optional** — a project may omit it, in which case
+consumers default to briefing all two-axis hits. Read once at kickoff,
+never re-asked (a documented decision beats re-asking).
+
+**Synthetic example:**
+
+```markdown
+## Engineering Principles
+
+1. Escalation appetite: brief one-way-door decisions only, log the rest — check: kickoff briefing greps "escalation appetite" under this heading and applies the dial without re-asking
+```
+
 **A jurisdiction with no committed clauses emits NO section — never a
 present-but-empty heading.** A `## Design Principles` or `## Engineering
 Principles` heading with zero entries is invalid; if the project hasn't
