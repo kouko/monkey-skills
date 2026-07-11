@@ -6,12 +6,12 @@ across multiple skills, asserting the contracts that bind them together.
 Three end-to-end flows:
 
   A. AAPL snapshot card  [@pytest.mark.network]
-       data-us/pack.py --pack snapshot
+       data-markets/pack.py --pack snapshot
          → report-stock-snapshot/snapshot_format.py
          → Markdown card with ticker + company name + valuation field
 
   B. US screener list  [@pytest.mark.network]
-       data-us/pack.py --pack screener-batch (AAPL, MSFT)
+       data-markets/pack.py --pack screener-batch (AAPL, MSFT)
          → analysis-screener/screener_compute.py
          → report-screener-list/screener_format.py
          → Markdown with "Rank" column and ≥2 ranked rows
@@ -39,7 +39,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SKILLS = ROOT / "skills"
 
 # Layer 1 — data
-PACK_US = SKILLS / "data-us" / "scripts" / "pack.py"
+PACK_US = SKILLS / "data-markets" / "scripts" / "pack.py"
 
 # Layer 2 — analysis
 SCREENER_COMPUTE = SKILLS / "analysis-screener" / "scripts" / "screener_compute.py"
@@ -85,7 +85,7 @@ def _python_run(script: Path, *args: str, timeout: int = 60) -> subprocess.Compl
 
 @pytest.mark.network
 def test_pipeline_aapl_snapshot(tmp_path):
-    """data-us/pack.py --pack snapshot AAPL → snapshot_format → Markdown card."""
+    """data-markets/pack.py --pack snapshot AAPL → snapshot_format → Markdown card."""
     pack_path = tmp_path / "aapl-snap.json"
 
     cache = os.environ.get("INVESTING_TOOLKIT_CACHE", str(tmp_path / "cache"))
@@ -133,7 +133,7 @@ def test_pipeline_aapl_snapshot(tmp_path):
 
 @pytest.mark.network
 def test_pipeline_us_screener(tmp_path):
-    """data-us/pack.py --pack screener-batch → analysis-screener → report-screener-list."""
+    """data-markets/pack.py --pack screener-batch → analysis-screener → report-screener-list."""
     cache = os.environ.get("INVESTING_TOOLKIT_CACHE", str(tmp_path / "cache"))
     env = {"INVESTING_TOOLKIT_CACHE": cache}
 
