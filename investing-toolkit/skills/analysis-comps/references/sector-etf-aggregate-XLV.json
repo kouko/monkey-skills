@@ -1,10 +1,10 @@
 {
   "etf": "XLV",
   "schema_id": "default",
-  "as_of": "2026-05-05",
+  "as_of": "2026-07-11",
   "_meta": {
     "holdings_count": 10,
-    "weight_coverage_pct": 59.01,
+    "weight_coverage_pct": 61.45,
     "outliers_dropped": {
       "priceToBook": 1
     },
@@ -12,18 +12,18 @@
     "schema_dispatch": {
       "default": 10
     },
-    "source": "yfinance funds_data + data-us memo-fetch"
+    "source": "yfinance funds_data + data-markets memo-fetch"
   },
   "multiples": {
-    "trailingPE": 36.0351291777928,
+    "trailingPE": 42.62716621634637,
     "forwardPE": null,
-    "evEbitda": 20.253279372743695,
-    "priceToSales": 7.21142751487681,
-    "priceToBook": 13.699765203880723
+    "evEbitda": 22.776681899099128,
+    "priceToSales": 8.415184921672754,
+    "priceToBook": 17.361585906802016
   },
   "indicators": {
-    "gross_margin": 67.46927633824544,
-    "operating_margin": 21.74099727509984,
-    "FCF_yield": 4.225273796157957
+    "gross_margin": 67.52619558999126,
+    "operating_margin": 20.683791596471778,
+    "FCF_yield": 3.8236967106766357
   }
 }
