@@ -8,6 +8,31 @@ Versioning: [Semantic Versioning](https://semver.org/).
 > This file was reconstructed on 2026-07-02 from the git history — the plugin
 > shipped its first two versions without a CHANGELOG.
 
+## [0.6.1] — 2026-07-12
+
+### Added
+
+- **Mechanical seed-coverage gate** (#545): `§Headless/seeded mode` gains an
+  inventory-authoring step (extract every seed-named entity into
+  `seed-inventory.md` in the checker's oracle format BEFORE drafting;
+  `named_anchors:`/`deferred_items:` only, `negative:` forbidden); Step 8
+  now also runs `check_seed_traceability.py <artifact> <inventory>`
+  exit-0-gated (interactive sessions derive the inventory from confirmed
+  user answers). The prose "post-draft seed walk" self-report is
+  superseded by the mechanical gate. Acceptance: replay-matrix pass-rate
+  22% → 67% with the dominant failure class displaced
+  (`docs/loom/dogfood/2026-07-12-mechanical-seed-gate-baseline/`).
+
+## [0.6.0] — 2026-07-11
+
+### Added
+
+- (entry backfilled 2026-07-12 — release shipped without one) **Escalation
+  appetite landing shape** (#537): `references/principles-rules.md` gains
+  §Escalation appetite — the greppable `escalation appetite` entry contract
+  under `## Engineering Principles`, consumed read-once by loom-code's
+  kickoff briefing and SDD mid-implementation escalation.
+
 ## [0.5.1] — 2026-07-10
 
 ### Fixed
