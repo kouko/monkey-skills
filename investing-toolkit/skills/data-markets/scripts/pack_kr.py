@@ -640,25 +640,23 @@ def build_pack(pack_name: str, tickers: list[str]) -> dict:
     generalized interface; call `pack_regime_pack(indicators)` directly
     for a scoped subset).
 
-    Never calls `sys.exit` — errors (unsupported pack, missing tickers,
-    unknown regime-pack indicator group) are returned as `{"error": ...,
-    "_partial": True}` dicts. T4's facade owns exit-code translation.
+    Never calls `sys.exit` — no exit-code logic here, shared identically
+    across all 5 market pack modules; the unified pack.py facade (Task 4)
+    owns the fail-loud exit contract. This raises ValueError on a bad
+    pack_name/empty ticker list for the facade to catch and slot (matching
+    pack_us/jp/tw/cn's validation contract). The unknown regime-pack
+    indicator group case stays a `{"error": ..., "_partial": True}` dict —
+    that is data-kr's preserved domain behavior inside pack_regime_pack,
+    not interface validation.
     """
     if pack_name not in SUPPORTED_PACKS:
-        return {
-            "error": f"unsupported pack: {pack_name}",
-            "available": list(SUPPORTED_PACKS),
-            "_partial": True,
-        }
+        raise ValueError(f"unsupported pack: {pack_name!r} (expected one of {SUPPORTED_PACKS})")
 
     if pack_name == "regime-pack":
         return pack_regime_pack("all")
 
     if not tickers:
-        return {
-            "error": f"--pack {pack_name} requires at least one ticker",
-            "_partial": True,
-        }
+        raise ValueError(f"pack {pack_name!r} requires at least one ticker")
 
     normalized = [normalize_ticker(t) for t in tickers]
 

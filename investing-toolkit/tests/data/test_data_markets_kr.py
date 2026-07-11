@@ -232,13 +232,12 @@ def test_pack_regime_pack_partial_flag_preserved_on_unknown_group(monkeypatch):
     assert "error" in out
 
 
-def test_build_pack_never_calls_sys_exit_behavioral(monkeypatch):
+def test_build_pack_rejects_unknown_pack_name(monkeypatch):
     """Behavioral check (c): even on an unsupported pack name, build_pack
-    returns an error dict rather than raising SystemExit."""
+    raises ValueError rather than SystemExit — matching the sibling
+    contract (pack_us/jp/tw/cn all raise ValueError for validation
+    branches; T4's facade owns exit-code translation)."""
     pack_kr = _load_module(PACK_KR, "pack_kr_no_exit")
 
-    out = pack_kr.build_pack("not-a-real-pack", ["005930.KS"])
-
-    assert isinstance(out, dict)
-    assert out.get("_partial") is True
-    assert "error" in out
+    with pytest.raises(ValueError):
+        pack_kr.build_pack("not-a-real-pack", ["005930.KS"])
