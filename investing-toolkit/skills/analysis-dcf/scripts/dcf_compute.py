@@ -21,7 +21,7 @@ Input JSON contract (minimum required fields)
 {
   "ticker": "AAPL",
   "income_statement": {
-    "revenue": [r_t0, r_t-1, r_t-2, ...],         # most-recent-first, $M
+    "revenue": [r_t0, r_t-1, r_t-2, ...],         # most-recent-first, absolute currency (not $M)
     "net_income": [...],                          # optional, used for margin fallback
     "ebit": [...]                                 # optional, preferred over net_income
   },
@@ -129,18 +129,20 @@ def _intrinsic_per_share(
     tv = fcf_year10 * (1.0 + terminal_g) / (wacc - terminal_g)
     pv_tv = tv / ((1.0 + wacc) ** 10)
 
-    equity_value = pv_fcf_sum + pv_tv - net_debt  # in $M (revenue input is $M)
-    # Unit-normalisation: revenue / FCF / debt / cash inputs are in $M (the
-    # SEC EDGAR XBRL + MOPS pack convention). Shares outstanding is absolute
-    # count (yfinance / EDGAR convention) per the input contract. To get
-    # $/share, convert equity from $M to $ before dividing.
+    equity_value = pv_fcf_sum + pv_tv - net_debt  # absolute currency
+    # Unit contract: revenue / FCF / debt / cash inputs are absolute currency
+    # (data-markets' pack.py memo-fetch convention across all 5 markets —
+    # e.g. pack_tw.py emits "unit": "TWD" absolute, not $M). Shares
+    # outstanding is also an absolute count (yfinance / EDGAR convention).
+    # Both sides of the division are already in the same absolute unit, so
+    # no scaling factor is applied here.
     #
     # NOTE: No heuristic auto-conversion. The contract is explicit
     # (shares_outstanding = absolute count). Auto-detecting "millions" via
     # a threshold misclassifies low-share-count issuers like BRK.A
     # (~550K shares outstanding). Validation/warning happens at parse time.
     if shares_outstanding > 0:
-        per_share = (equity_value * 1_000_000) / shares_outstanding  # $ / shares
+        per_share = equity_value / shares_outstanding  # currency / share
     else:
         per_share = 0.0
 
