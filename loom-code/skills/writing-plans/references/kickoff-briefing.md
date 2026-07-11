@@ -23,7 +23,7 @@ not *whether* a one-way-door decision gets briefed:
 | | two-way door | one-way door |
 |---|---|---|
 | **product consequence** | agent decides; entry in the product-language report; late-vetoable | **escalate — kickoff briefing** |
-| **no product consequence** | agent decides silently; log only | agent decides + **kickoff briefing** (user decision 2026-07-10: the invisible×one-way-door cell also surfaces — an irreversible choice is worth flagging even when its product consequence isn't obviously visible yet) |
+| **no product consequence** | agent decides silently; log only | agent decides + **kickoff briefing** (user decision 2026-07-10: bottom-right cell also surfaces) |
 
 **Net collection rule**: any **one-way-door** decision briefs (both
 right-column cells); every **two-way-door** decision never briefs — it
@@ -124,10 +124,11 @@ Sweeping the tasks (§b):
   one-way-door → top-right cell → **collected for the kickoff briefing**.
 - **Task 3** names an internal cache-key variable — no product
   consequence, trivially reversible → bottom-left cell → **agent decides
-  silently, no log entry** (this cell doesn't even reach the Decision
-  Log; only the two right-column one-way-door cells brief, and only the
-  top-left product-consequence×two-way cell earns a report entry — see
-  §a's table).
+  silently; one Decision Log entry, nothing surfaced to the user** (§a's
+  table: both two-way-door cells route to the Decision Log — only the two
+  right-column one-way-door cells brief; the top-left
+  product-consequence×two-way cell's Decision Log entry is late-vetoable,
+  this bottom-left cell's is not).
 
 Only Task 2's decision batches into ONE kickoff briefing (§c): Mental
 Model in plain language ("who runs the login you'll depend on"), 2

@@ -167,7 +167,8 @@ normal top-level `## Engineering Principles` entry like any other. The
 entry's text MUST contain the greppable phrase `escalation appetite` and
 carry the standard `— check:` marker; no new validator rule is needed
 because the entry is checked by the existing "every entry needs `— check:`"
-rule above. Consumers (loom-code's kickoff briefing) locate the dial by
+rule above. Consumers (loom-code's kickoff briefing and subagent-driven-development's
+mid-execution appetite read) locate the dial by
 grepping `escalation appetite` in the consuming repo's
 `docs/loom/PRINCIPLES.md` — never this rules file or other docs — bounded
 to the region between the `## Engineering Principles` heading and the
