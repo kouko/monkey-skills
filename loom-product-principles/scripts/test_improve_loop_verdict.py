@@ -207,3 +207,113 @@ def test_smoke_seed_set_mismatch_exits_2(tmp_path):
     ])
     proc = _run(["smoke", "--baseline", str(baseline), "--candidate", str(candidate)])
     assert proc.returncode == 2
+
+
+# --- duplicate seedId within one row-set (code-quality review fold-in) ------
+
+def test_duplicate_seed_id_in_rowset_exits_2(tmp_path):
+    # Exemplar: without this fix, dict-overwrite in _pass_map_from_rows lets
+    # the LAST duplicate row win — a baseline row-set carrying seed1:False
+    # then seed1:True would silently score seed1 as passing, masking a
+    # regression and flipping the compare verdict. Must exit 2 instead.
+    baseline = _write(tmp_path, "baseline.json", [
+        {"seedId": "seed1", "pass": False},
+        {"seedId": "seed1", "pass": True},
+    ])
+    candidate = _write(tmp_path, "candidate.json", [
+        {"seedId": "seed1", "pass": False},
+    ])
+    proc = _run(["compare", "--baseline", str(baseline), "--candidate", str(candidate)])
+    assert proc.returncode == 2
+
+
+# --- wordcap -----------------------------------------------------------------
+
+def _wordcap_file(tmp_path: Path, name: str, n_words: int) -> Path:
+    path = tmp_path / name
+    path.write_text(" ".join(f"w{i}" for i in range(n_words)), encoding="utf-8")
+    return path
+
+
+def test_wordcap_passes_at_cap_boundary(tmp_path):
+    # Boundary: exactly 4500 words (the default cap) must pass.
+    target = _wordcap_file(tmp_path, "skill.md", 4500)
+    proc = _run(["wordcap", str(target)])
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_wordcap_fails_just_over_cap(tmp_path):
+    # Boundary: 4501 words (one over the default cap) must fail.
+    target = _wordcap_file(tmp_path, "skill.md", 4501)
+    proc = _run(["wordcap", str(target)])
+    assert proc.returncode == 1
+
+
+def test_wordcap_respects_custom_cap(tmp_path):
+    target = _wordcap_file(tmp_path, "skill.md", 10)
+    proc = _run(["wordcap", str(target), "--cap", "5"])
+    assert proc.returncode == 1
+
+
+def test_wordcap_missing_file_exits_2(tmp_path):
+    missing = tmp_path / "does-not-exist.md"
+    proc = _run(["wordcap", str(missing)])
+    assert proc.returncode == 2
+
+
+# --- plateau -----------------------------------------------------------------
+
+def _ledger(tmp_path: Path, name: str, accepted_flags: list) -> Path:
+    path = tmp_path / name
+    path.write_text(
+        json.dumps([
+            {"round": i + 1, "accepted": flag} for i, flag in enumerate(accepted_flags)
+        ]),
+        encoding="utf-8",
+    )
+    return path
+
+
+def test_plateau_stops_after_two_empty_rounds(tmp_path):
+    # RED test: `plateau` subcommand is not implemented yet.
+    ledger = _ledger(tmp_path, "ledger.json", [False, False])
+    proc = _run(["plateau", str(ledger)])
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+
+
+def test_plateau_continues_after_hit_then_miss(tmp_path):
+    ledger = _ledger(tmp_path, "ledger.json", [True, False])
+    proc = _run(["plateau", str(ledger)])
+    assert proc.returncode == 0
+
+
+def test_plateau_stops_after_miss_hit_miss_miss(tmp_path):
+    ledger = _ledger(tmp_path, "ledger.json", [False, True, False, False])
+    proc = _run(["plateau", str(ledger)])
+    assert proc.returncode == 1
+
+
+def test_plateau_continues_on_empty_ledger(tmp_path):
+    ledger = _ledger(tmp_path, "ledger.json", [])
+    proc = _run(["plateau", str(ledger)])
+    assert proc.returncode == 0
+
+
+def test_plateau_continues_on_single_miss(tmp_path):
+    ledger = _ledger(tmp_path, "ledger.json", [False])
+    proc = _run(["plateau", str(ledger)])
+    assert proc.returncode == 0
+
+
+def test_plateau_malformed_json_exits_2(tmp_path):
+    ledger = tmp_path / "ledger.json"
+    ledger.write_text("not json", encoding="utf-8")
+    proc = _run(["plateau", str(ledger)])
+    assert proc.returncode == 2
+
+
+def test_plateau_missing_accepted_key_exits_2(tmp_path):
+    ledger = tmp_path / "ledger.json"
+    ledger.write_text(json.dumps([{"round": 1}]), encoding="utf-8")
+    proc = _run(["plateau", str(ledger)])
+    assert proc.returncode == 2
