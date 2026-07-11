@@ -1,7 +1,7 @@
 ---
 name: analysis-screener
 description: |
-  Pure-compute screener: filter + composite score + ranking on pre-batched ticker data. Input: a data-pack JSON from data-{country}/pack.py --pack screener-batch (single or multi-country). Output: ranked top-N JSON.
+  Pure-compute screener: filter + composite score + ranking on pre-batched ticker data. Input: a data-pack JSON from data-markets/scripts/pack.py --pack screener-batch --market <cc> (single or multi-country). Output: ranked top-N JSON.
 ---
 
 # analysis-screener
@@ -10,11 +10,11 @@ description: |
 > **NO** yfinance / requests / urllib / httpx imports. Reads pre-batched
 > ticker data JSON from disk, applies preset filters + composite scoring +
 > ranking, emits ranked top-N JSON. Orchestration (parse ticker list,
-> group by country, parallel `data-{country}/pack.py --pack screener-batch`,
+> group by country, parallel `data-markets/scripts/pack.py --pack screener-batch --market <cc>`,
 > concatenate batches) is **`report-screener-list`**'s job (Phase 2).
 
 Replaces the compute portion of legacy `stock-screener`. The fetch portion
-moved to `data-{country}/pack.py --pack screener-batch`.
+moved to `data-markets/scripts/pack.py --pack screener-batch`.
 
 ---
 
@@ -64,7 +64,7 @@ either:
    ]
    ```
 
-2. **Wrapped pack** (production — concatenated `data-{country}/pack.py
+2. **Wrapped pack** (production — concatenated `data-markets/scripts/pack.py
    --pack screener-batch` output):
    ```json
    {
