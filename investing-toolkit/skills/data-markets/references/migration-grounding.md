@@ -31,11 +31,11 @@ migration; live-verified pre-migration"** unless noted otherwise.
 | BOJ / e-Stat / ECB | HTTP | JP | `skills/data-jp/SKILL.md` §Regime pack indicator list (L126-129) | keyless |
 | FinanceDataReader SDK + BOK ECOS-KEYSTAT endpoint | SDK + HTTP | KR | `skills/data-kr/SKILL.md` §Tier status (L24) + §Underlying clients (L189-196) | keyless (free ECOS API key improves reliability, not required — see Limitations §221-223) |
 | TWSE/TPEx OpenAPI | HTTP, `verify=False` | TW | `skills/data-tw/SKILL.md` §Bundled clients (L25-38); `scripts/twse_openapi_client.py` L54, L120 | keyless |
-| MOPS | HTTP, `verify=False` | TW | `skills/data-tw/SKILL.md` §Bundled clients (L25-38); `scripts/mops_client.py` L54, L175 | keyless |
+| MOPS | HTTP, `verify=False` | TW | `skills/data-tw/SKILL.md` §Bundled clients (L25-38); `scripts/mops_client.py` L54 (comment), L143 (call site) | keyless |
 | FinMind | HTTP | TW | `skills/data-tw/SKILL.md` §Bundled clients (L31), §Tier policy (L67-75) — Tier-2 by-design gap, not an auto-fallback | keyless |
 | CBC / DGBAS / NDC / stat.gov.tw | HTTP, `verify=False` | TW | `skills/data-tw/SKILL.md` §Bundled clients (L33-36); `scripts/{cbc,dgbas,ndc,statgov}_client.py` (SSL cert workaround documented at each file's top) | keyless |
-| akshare SDK (PBOC chinamoney + SHIBOR + Caixin via eastmoney mirror) | SDK | CN | `skills/data-cn/SKILL.md` §Sources (L17) + §Indicator coverage (L128-131) | keyless |
-| NBS new-SPA API (`data.stats.gov.cn`) | HTTP | CN | `skills/data-cn/SKILL.md` §Sources (L16) | keyless |
+| akshare SDK (PBOC chinamoney + SHIBOR + Caixin via eastmoney mirror) | SDK | CN | `skills/data-cn/SKILL.md` unlabeled source table after the intro paragraph (L17, no "Sources" heading exists in this file) + §Indicator coverage (L128-131) | keyless |
+| NBS new-SPA API (`data.stats.gov.cn`) | HTTP | CN | `skills/data-cn/SKILL.md` unlabeled source table after the intro paragraph (L16, no "Sources" heading exists in this file) | keyless |
 | `uv run` CLI invocation pattern | CLI | all 5 | `scripts/pack_kr.py` `_run()` (L171-173) — identical pattern in every `pack_*.py` | n/a |
 
 ## Notes

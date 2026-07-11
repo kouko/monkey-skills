@@ -132,8 +132,8 @@ def _client_timeout() -> int:
 def _run_client(script: str, args: list[str]) -> dict[str, Any]:
     """Run a sibling client script and return its parsed JSON.
 
-    Cache is honored via env (INVESTING_TOOLKIT_CACHE / CLAUDE_PLUGIN_DATA);
-    we just inherit the parent's environment.
+    Cache location resolves via cache_util's ladder (INVESTING_TOOLKIT_CACHE
+    override > XDG default); we just inherit the parent's environment.
 
     Subprocess wall-clock timeout defaults to 300s; override with the
     DATA_JP_CLIENT_TIMEOUT env var. On timeout, returns a structured-error
