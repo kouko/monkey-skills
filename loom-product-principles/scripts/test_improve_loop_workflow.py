@@ -316,6 +316,7 @@ def test_two_stage_accept_and_brakes_wired():
     # loop never merges and never pushes (brief §Smallest End State item 6) ---
     assert "git merge" not in text
     assert "git push" not in text
+    assert "gh pr " not in text
 
 
 def test_accept_commit_uses_message_file_not_interpolated_dash_m():
@@ -375,4 +376,3 @@ def test_accept_round_baseline_update_keeps_two_run_aggregation():
     text = _text()
     assert "currentBaselineRuns = [verifyRun, confirmRun]" in text
     assert "currentBaselineRuns = [confirmRun]" not in text
-    assert "gh pr " not in text
