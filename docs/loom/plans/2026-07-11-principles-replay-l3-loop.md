@@ -41,6 +41,8 @@ Plan-document-reviewer verdict: PASS (2026-07-11, round 2 — round-1 Check-8 dr
 
 4. chose **folding T1's 🟡 review finding (duplicate-seedId silent dict-overwrite on the verdict path → must exit 2) into T2's dispatch** because T2 touches the same module next and the fix is exemplar-testable there — cost of change: low (revertible edit); alternative (separate fix task) rejected as dispatch overhead for a ~10-line change.
 
+5. chose **stash-push + verified stash-drop for the revert courier, superseding the planned `git checkout -- <paths>`** because this repo's dangerous-command-guard blocks `checkout --` (in-repo evidence: loom-code environment-gotchas.md:36-38 "Undo with stash, not checkout"; surfaced by T4's quality review as EXT-1 🔴) — cost of change: low (courier-local); this entry recorded at close-out per the whole-branch review's coherence nit. The plan Notes' and Task 4's original `git checkout --` wording is superseded by this entry.
+
 ## Task 1 — verdict helper: compare + held-out smoke
 
 - Description: create `improve_loop_verdict.py` with `compare` (aggregate ≥1
