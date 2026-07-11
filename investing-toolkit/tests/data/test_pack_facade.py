@@ -229,10 +229,14 @@ def test_unexpected_exception_exit_1_status_failed_with_traceback(monkeypatch, c
     assert "boom-unexpected" in status["traceback"]
 
 
-def test_kr_tw_whole_pack_partial_dialect_exit_2(monkeypatch, capsys):
-    """kr/tw dialect: failures nest two levels deep and are invisible to a
-    top-level scan; the whole-pack `_partial: true` flag is the only signal
-    a shallow top-level scan can see (see LOOM-SIMPLIFY in pack.py)."""
+def test_tw_mops_nested_error_now_detected_directly(monkeypatch, capsys):
+    """Round-2 upgrade: mops.balance_sheet._error sits exactly ONE level
+    below the "mops" section, so the one-level dict-walk now trips "mops"
+    directly -- the kr/tw dialect's synthetic "_partial" fallback is no
+    longer needed for this shape (this is the LOOM-SIMPLIFY ceiling that
+    got lifted; see pack.py). Was
+    test_kr_tw_whole_pack_partial_dialect_exit_2 asserting
+    failed_sections == ["_partial"]; now asserts the real section name."""
 
     def fake_build_pack(pack_name, tickers):
         return {
@@ -240,7 +244,40 @@ def test_kr_tw_whole_pack_partial_dialect_exit_2(monkeypatch, capsys):
             "country": "tw",
             "ticker": tickers[0],
             "yfinance": {"info": {"ok": True}},
-            "mops": {"balance_sheet": {"_error": "nested, invisible to top-level scan"}},
+            "mops": {"balance_sheet": {"_error": "now visible via one-level walk"}},
+            "_partial": True,
+        }
+
+    rc, payload = _call_main_capture(
+        monkeypatch,
+        capsys,
+        ["--ticker", "2330.TW", "--pack", "snapshot"],
+        fake_build_pack,
+        market_module_name="pack_tw",
+    )
+    assert rc == 2
+    assert payload["_status"]["status"] == "partial"
+    assert payload["_status"]["failed_sections"] == ["mops"]
+
+
+def test_kr_tw_partial_fallback_when_nested_two_levels_deep(monkeypatch, capsys):
+    """A failure nested TWO levels below a section (source -> field ->
+    subfield carrying "_error") is still invisible to the one-level walk;
+    the whole-pack `_partial: true` flag remains the only signal -- this is
+    the LOOM-SIMPLIFY ceiling that stays in place after the Round-2
+    upgrade (see pack.py)."""
+
+    def fake_build_pack(pack_name, tickers):
+        return {
+            "pack": "snapshot",
+            "country": "tw",
+            "ticker": tickers[0],
+            "yfinance": {"info": {"ok": True}},
+            "mops": {
+                "balance_sheet": {
+                    "rows": {"assets": {"_error": "two levels below mops, still invisible"}}
+                }
+            },
             "_partial": True,
         }
 
@@ -254,3 +291,264 @@ def test_kr_tw_whole_pack_partial_dialect_exit_2(monkeypatch, capsys):
     assert rc == 2
     assert payload["_status"]["status"] == "partial"
     assert payload["_status"]["failed_sections"] == ["_partial"]
+
+
+# ---------------------------------------------------------------------------
+# Round-2 regression: realistic per-market TOTAL-failure shapes that the
+# shallow (direct-key-only) classifier misclassified as ('ok', []) -- exit 0
+# -- because each market's failure marker is nested one level below the
+# section (or inside a list item), invisible to a top-level-only scan.
+# Shapes are copied verbatim from the cited code paths, not idealized.
+# ---------------------------------------------------------------------------
+
+
+def test_us_single_ticker_comps_multiples_total_failure_real_shape(monkeypatch, capsys):
+    """pack_us.py:599-616: run_client's non-zero-exit branch returns
+    {"error": "client_failed", ...}; filter_fields (pack_us.py:227-236)
+    preserves that "error" key alongside None-valued whitelisted fields, so
+    both "tickers" and "info" carry the SAME per-ticker dict with a direct
+    "error" key one level below the section."""
+
+    def fake_build_pack(pack_name, tickers):
+        failed_ticker = {
+            "trailingPE": None,
+            "forwardPE": None,
+            "priceToSales": None,
+            "priceToBook": None,
+            "enterpriseToEbitda": None,
+            "enterpriseToRevenue": None,
+            "marketCap": None,
+            "enterpriseValue": None,
+            "sector": None,
+            "industry": None,
+            "error": "client_failed",
+        }
+        return {
+            "pack": "comps-multiples",
+            "fetched_at": "2026-07-11T00:00:00+00:00",
+            "tickers": {"AAPL": failed_ticker},
+            "info": {"AAPL": failed_ticker},
+        }
+
+    rc, payload = _call_main_capture(
+        monkeypatch, capsys, ["--ticker", "AAPL", "--pack", "comps-multiples"], fake_build_pack
+    )
+    assert rc == 1, f"stdout={payload}"
+    assert payload["_status"]["status"] == "failed"
+
+
+def test_kr_single_ticker_comps_multiples_total_failure_real_shape(monkeypatch, capsys):
+    """pack_kr.py:445-464: _run's empty-stdout branch (pack_kr.py:183-189)
+    returns {"error": ..., "stderr": ..., "returncode": ..., "_partial":
+    True} stored directly as info_by_ticker[ticker] -- no top-level
+    `_partial` is ever set on the RESULT dict itself, it only lives inside
+    the per-ticker error dict, one level below "info"."""
+
+    def fake_build_pack(pack_name, tickers):
+        failed = {
+            "error": "empty stdout from yfinance_client.py",
+            "stderr": "",
+            "returncode": 1,
+            "_partial": True,
+        }
+        return {
+            "pack": "comps-multiples",
+            "country": "kr",
+            "tickers": tickers,
+            "info": {tickers[0]: failed},
+            "_provenance": {"tier": "Tier 2 (yfinance unofficial)"},
+        }
+
+    rc, payload = _call_main_capture(
+        monkeypatch,
+        capsys,
+        ["--ticker", "005930.KS", "--pack", "comps-multiples"],
+        fake_build_pack,
+        market_module_name="pack_kr",
+    )
+    assert rc == 1, f"stdout={payload}"
+    assert payload["_status"]["status"] == "failed"
+
+
+def test_jp_comps_multiples_total_failure_real_shape(monkeypatch, capsys):
+    """pack_jp.py:514-561: "tickers" is a LIST of per-ticker dicts where the
+    batch-level error is nested one level inside each item's "multiples"
+    sub-dict (_filter_multiples, pack_jp.py:493-499, propagates "error"
+    through unchanged); "info" stays an entirely empty dict since only
+    non-error multiples get promoted into it."""
+
+    def fake_build_pack(pack_name, tickers):
+        return {
+            "pack": "comps-multiples",
+            "fetched_at": "2026-07-11T00:00:00+00:00",
+            "tickers": [
+                {
+                    "ticker": "7203",
+                    "yf_ticker": "7203.T",
+                    "multiples": {"error": "ticker missing from batch response"},
+                }
+            ],
+            "_provenance": {"tier": "tier_1"},
+            "info": {},
+        }
+
+    rc, payload = _call_main_capture(
+        monkeypatch,
+        capsys,
+        ["--ticker", "7203.T", "--pack", "comps-multiples"],
+        fake_build_pack,
+        market_module_name="pack_jp",
+    )
+    assert rc == 1, f"stdout={payload}"
+    assert payload["_status"]["status"] == "failed"
+
+
+def test_cn_comps_multiples_total_failure_real_shape(monkeypatch, capsys):
+    """pack_cn.py:365-436: pack_comps_multiples_batch's "tickers" is a LIST
+    of per-ticker dicts whose error lives inside "_yfinance_info" (_run's
+    non-zero-exit branch, pack_cn.py:154-168, returns {"_error": ...});
+    "multiples"/"info" on the item stay empty dicts (no direct
+    "error"/"_error" key on the item itself); the outer "info" aggregate
+    stays an entirely empty dict too since a failed ticker's falsy
+    `multiples` is never promoted into it."""
+
+    def fake_build_pack(pack_name, tickers):
+        return {
+            "pack": "comps-multiples",
+            "country": "CN",
+            "tickers": [
+                {
+                    "ticker": "600519.SS",
+                    "country": "CN",
+                    "multiples": {},
+                    "_yfinance_info": {
+                        "_error": "client exited rc=1",
+                        "_cmd": "uv run yfinance_client.py --ticker 600519.SS --action info",
+                        "_stderr": "",
+                    },
+                    "info": {},
+                }
+            ],
+            "info": {},
+        }
+
+    rc, payload = _call_main_capture(
+        monkeypatch,
+        capsys,
+        ["--ticker", "600519.SS", "--pack", "comps-multiples"],
+        fake_build_pack,
+        market_module_name="pack_cn",
+    )
+    assert rc == 1, f"stdout={payload}"
+    assert payload["_status"]["status"] == "failed"
+
+
+def test_tw_comps_multiples_total_failure_real_shape(monkeypatch, capsys):
+    """pack_tw.py:510-539: wrap() (pack_tw.py:172-186) nests the client's
+    raw "_error" directly onto the wrapped dict stored at
+    out["tickers"][ticker]; "info" stays entirely empty since only a
+    truthy `multiples` gets promoted. Neither this function nor
+    pack_screener_batch ever sets a top-level `_partial` flag (verified:
+    grep _partial pack_tw.py only hits pack_snapshot/pack_memo_fetch/
+    pack_regime)."""
+
+    def fake_build_pack(pack_name, tickers):
+        return {
+            "pack": "comps-multiples",
+            "country": "TW",
+            "tickers": {
+                "2330.TW": {
+                    "_tier": "2",
+                    "_source": "yfinance",
+                    "_action": "info-multiples",
+                    "_error": "exit_1",
+                    "_stderr": "",
+                    "_cmd": "uv run yfinance_client.py --ticker 2330.TW --action info",
+                }
+            },
+            "info": {},
+        }
+
+    rc, payload = _call_main_capture(
+        monkeypatch,
+        capsys,
+        ["--ticker", "2330.TW", "--pack", "comps-multiples"],
+        fake_build_pack,
+        market_module_name="pack_tw",
+    )
+    assert rc == 1, f"stdout={payload}"
+    assert payload["_status"]["status"] == "failed"
+
+
+def test_tw_screener_batch_total_failure_real_shape(monkeypatch, capsys):
+    """pack_tw.py:541-568: both "yfinance" sub-fetches AND the per-ticker
+    "mops" fetch are wrap()-wrapped with a direct "_error" key when every
+    underlying client call fails; no top-level `_partial` flag is set by
+    this function."""
+
+    def fake_build_pack(pack_name, tickers):
+        info_err = {
+            "_tier": "2", "_source": "yfinance", "_action": "info-batch",
+            "_error": "exit_1", "_stderr": "", "_cmd": "uv run yfinance_client.py ...",
+        }
+        hist_err = {**info_err, "_action": "history-batch"}
+        mops_err = {
+            "_tier": "A", "_source": "mops", "_action": "company-basic",
+            "_error": "exit_1", "_stderr": "", "_cmd": "uv run mops_client.py ...",
+        }
+        return {
+            "pack": "screener-batch",
+            "country": "TW",
+            "yfinance": {"info_batch": info_err, "history_batch": hist_err},
+            "mops": {"2330.TW": mops_err},
+        }
+
+    rc, payload = _call_main_capture(
+        monkeypatch,
+        capsys,
+        ["--ticker", "2330.TW", "--pack", "screener-batch"],
+        fake_build_pack,
+        market_module_name="pack_tw",
+    )
+    assert rc == 1, f"stdout={payload}"
+    assert payload["_status"]["status"] == "failed"
+
+
+def test_tw_screener_batch_partial_mops_only_real_shape(monkeypatch, capsys):
+    """Same dialect as the total-failure case above, but only the
+    per-ticker mops fetch fails while both yfinance batch fetches succeed
+    -- exercises the SOME-but-not-all partial-contribution path per
+    section, still with no top-level `_partial` flag anywhere in the
+    result."""
+
+    def fake_build_pack(pack_name, tickers):
+        ok_info = {
+            "_tier": "2", "_source": "yfinance", "_action": "info-batch",
+            "data": {"mode": "batch", "tickers": {"2330.TW": {"trailingPE": 15.2}}},
+        }
+        ok_hist = {
+            "_tier": "2", "_source": "yfinance", "_action": "history-batch",
+            "data": {"mode": "batch", "tickers": {"2330.TW": {"data": []}}},
+        }
+        mops_err = {
+            "_tier": "A", "_source": "mops", "_action": "company-basic",
+            "_error": "exit_1", "_stderr": "", "_cmd": "uv run mops_client.py ...",
+        }
+        return {
+            "pack": "screener-batch",
+            "country": "TW",
+            "yfinance": {"info_batch": ok_info, "history_batch": ok_hist},
+            "mops": {"2330.TW": mops_err},
+        }
+
+    rc, payload = _call_main_capture(
+        monkeypatch,
+        capsys,
+        ["--ticker", "2330.TW", "--pack", "screener-batch"],
+        fake_build_pack,
+        market_module_name="pack_tw",
+    )
+    assert rc == 2, f"stdout={payload}"
+    assert payload["_status"]["status"] == "partial"
+    assert "mops" in payload["_status"]["failed_sections"]
+    assert "yfinance" not in payload["_status"]["failed_sections"]

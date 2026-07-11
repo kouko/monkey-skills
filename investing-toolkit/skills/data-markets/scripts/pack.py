@@ -49,9 +49,13 @@ Exit contract:
 
 The 5 markets speak different error dialects (see `_classify_result`
 below): us/cn/jp fail per-section (`{"error": ...}` / `{"_error": ...}`
-nested directly under a top-level section key); kr/tw fail via a
-whole-pack top-level `_partial: true` flag with no per-section attribution
-at the top level.
+nested directly under a top-level section key, or one level below it —
+inside a ticker-keyed sub-dict, or inside a per-ticker list item); kr/tw
+also usually fail one level below a section (wrap()-nested `_error`, or a
+ticker-keyed dict whose entries carry the raw client error) — visible to
+the same one-level walk. Only a failure nested TWO OR MORE levels below a
+section still relies on the whole-pack top-level `_partial: true` flag
+with no per-section attribution (see the LOOM-SIMPLIFY note below).
 
 Dropped flags: the old per-market CLIs' `--indicators` (data-kr
 regime-pack indicator-group subset) and `--kosdaq` (data-kr force-.KQ
@@ -185,46 +189,120 @@ def _resolve_market(
     return distinct[0], warnings
 
 
-def _section_failed(value: object) -> bool:
+def _has_error_marker(value: object) -> bool:
+    """A dict directly carries a failure marker at its own top level."""
     return isinstance(value, dict) and ("error" in value or "_error" in value)
+
+
+def _dict_section_status(value: dict) -> str:
+    """Classify a dict-valued section (or list item) as ok/partial/failed,
+    walking exactly ONE level: a direct "error"/"_error" key is immediate
+    failure; otherwise inspect this dict's own NON-EMPTY dict-valued
+    sub-fields (an empty sub-dict carries no signal either way — it is
+    absent data, not a checked-and-ok result, so it is skipped rather than
+    counted as non-failed) — if every non-empty sub-dict carries a direct
+    error, the whole thing is "failed"; if only some do, "partial";
+    otherwise "ok"."""
+    if _has_error_marker(value):
+        return "failed"
+    subdicts = [v for v in value.values() if isinstance(v, dict) and v]
+    if not subdicts:
+        return "ok"
+    flags = [_has_error_marker(v) for v in subdicts]
+    if all(flags):
+        return "failed"
+    if any(flags):
+        return "partial"
+    return "ok"
+
+
+def _list_section_status(value: list) -> str | None:
+    """Classify a list-valued section as ok/partial/failed, or None if it
+    is not classifiable (its items are not dicts — e.g. a bare
+    ticker-string list, which stays outside the ok/failed vocabulary
+    entirely). An empty list from a known ticker-fan-out pack is itself a
+    failure signal: zero entries for a requested batch means nothing came
+    back, not "nothing to report"."""
+    if not value:
+        return "failed"
+    dict_items = [item for item in value if isinstance(item, dict)]
+    if not dict_items:
+        return None
+    statuses = [_dict_section_status(item) for item in dict_items]
+    if all(s == "failed" for s in statuses):
+        return "failed"
+    if any(s != "ok" for s in statuses):
+        return "partial"
+    return "ok"
+
+
+def _section_status(value: object) -> str | None:
+    """Classify one top-level result key as ok/partial/failed, or None if
+    it is not a classifiable section at all — a plain scalar, a list of
+    non-dict items, or a dict that is completely empty (zero keys carries
+    no directly-checkable signal on its own; see LOOM-SIMPLIFY below)."""
+    if isinstance(value, dict):
+        if not value:
+            return None
+        return _dict_section_status(value)
+    if isinstance(value, list):
+        return _list_section_status(value)
+    return None
 
 
 def _classify_result(result: dict) -> tuple[str, list[str]]:
     """Classify a build_pack() result into (status, failed_sections).
 
-    us/cn/jp dialect: each top-level section is itself a dict; a failed
-    section carries "error" or "_error" directly. Section names in
-    failed_sections come straight from these keys.
+    Walks exactly ONE level into each top-level section: a direct
+    "error"/"_error" key is immediate failure (as before); a dict section
+    whose own dict-valued sub-fields ALL carry that marker is also failed
+    (SOME-but-not-all contributes "partial"); a list section (e.g. jp/cn's
+    "tickers", which is a list of per-ticker dicts) gets the identical
+    one-level treatment per item. failed_sections lists every section that
+    is not fully "ok" (failed OR partial).
 
-    kr/tw dialect: failures nest two levels deep (out[source][field] carries
-    "_error"), invisible to a top-level-only scan; these markets instead
-    set a whole-pack top-level `_partial: true` flag.
-
-    LOOM-SIMPLIFY: shallow top-level-only detection | ceiling: a kr/tw pack
-    where `_partial` is true and no top-level section independently trips
-    the error check is reported as one synthetic "_partial" failed section
-    rather than the true nested source name(s) | upgrade: walk one level
-    into each section's sub-dict for the kr/tw dialect once cross-market
-    provenance normalization (T5+) gives every market the same section
-    shape | ref: docs/loom/plans/2026-07-11-investing-toolkit-data-consolidation.md Task 4
+    LOOM-SIMPLIFY: one-level-deep dict/list section walk | ceiling: (a) a
+    failure nested TWO OR MORE levels below a section (source -> field ->
+    subfield carrying "_error", e.g. mops.balance_sheet.rows.assets._error)
+    stays invisible to this classifier — the whole-pack `_partial: true`
+    flag remains the only signal for that case; (b) a section that
+    degrades to a completely empty dict (zero keys, e.g. a per-ticker
+    "info" alias with nothing promoted into it) is excluded from
+    classification entirely rather than read as a failure signal on its
+    own — correctness for the 5 current market packs relies on a sibling
+    section (their "tickers" list/dict view of the same fetch)
+    independently carrying the signal | upgrade: general recursive
+    per-source provenance walk once cross-market provenance normalization
+    (T5+) gives every market the same section shape | ref:
+    docs/loom/plans/2026-07-11-investing-toolkit-data-consolidation.md
+    Task 4 round 2
     """
-    # Only dict-valued top-level keys are classifiable "sections" — plain
-    # metadata fields (pack/country/ticker strings) are neither ok nor
-    # failed, so they must not dilute the all-failed vs some-failed count.
-    sections = [
-        k for k in result if not k.startswith("_") and isinstance(result[k], dict)
+    # Only dict/list-valued top-level keys are even candidates for
+    # classification — plain metadata fields (pack/country/ticker strings)
+    # are neither ok nor failed, so they must not dilute the count.
+    candidate_keys = [
+        k for k in result
+        if not k.startswith("_") and isinstance(result[k], (dict, list))
     ]
-    failed = [k for k in sections if _section_failed(result[k])]
+    statuses: dict[str, str] = {}
+    for k in candidate_keys:
+        status = _section_status(result[k])
+        if status is not None:
+            statuses[k] = status
 
-    if not failed and ("error" in result or "_error" in result):
+    degraded = [k for k, s in statuses.items() if s != "ok"]
+
+    if not degraded and ("error" in result or "_error" in result):
         # The whole result is itself one error envelope (no real sections
-        # beneath it) — e.g. a market module's own unreachable/guard path.
-        return "failed", sections or ["_root"]
+        # beneath it, or none of them independently signal failure) — e.g.
+        # a market module's own unreachable/guard path.
+        return "failed", list(statuses) or ["_root"]
 
-    if failed:
-        if sections and len(failed) == len(sections):
-            return "failed", failed
-        return "partial", failed
+    if statuses and all(s == "failed" for s in statuses.values()):
+        return "failed", degraded
+
+    if degraded:
+        return "partial", degraded
 
     if result.get("_partial"):
         return "partial", ["_partial"]
