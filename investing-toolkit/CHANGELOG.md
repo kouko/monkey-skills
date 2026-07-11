@@ -5,6 +5,30 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.3.1] — 2026-07-11
+
+Dogfood fix package (PR #539) — version bump so the fixes deploy via
+`plugin update`; full findings in `docs/skill-dogfood/2026-07-11-data-markets/report.md`.
+
+### Fixed
+
+- **`analysis-dcf`** — per-share intrinsic value was exactly 1,000,000×
+  too large on every market (script assumed $M inputs; all data-markets
+  packs emit absolute currency). Fixtures reshaped to real producer shape.
+- **`analysis-comps`** — multi-ticker batch peer packs now expand to N
+  peer entries; unresolvable tickers fail loud via `_provenance.warnings`
+  instead of silent all-null.
+- **`data-markets`** — TWSE cache hits re-attach the declared
+  `_cache_age_seconds`/`_cache_ttl_seconds` pair; description gains
+  data-layer vocabulary, source names, and a regime-routing clause;
+  cache-metadata docs clarify per-section injection.
+- **`analysis-screener` / `analysis-macro-regime`** — stale
+  `data-{country}` paths replaced; regime description now leads with the
+  classification job.
+- **`report-equity-memo`** — every phase requires an ls-verified on-disk
+  artifact before it counts as complete (anti fake-completion gates;
+  Phase 4 gains a defined artifact).
+
 ## [v2.3.0] — 2026-07-11
 
 `data-markets` consolidation: 5 per-country data skills merged into one,
