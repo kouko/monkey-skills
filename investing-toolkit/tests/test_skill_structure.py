@@ -57,6 +57,13 @@ SKILLS_WITHOUT_SCRIPTS = {"using-investing-toolkit", "report-equity-memo"}
 # Optional skills (PR 2+). When present, must still satisfy structural rules.
 OPTIONAL_SKILLS = ["analysis-comps"]
 
+# Skills under construction by the data-layer consolidation plan
+# (docs/loom/specs/2026-07-11-investing-toolkit-data-consolidation.md).
+# data-markets will replace data-{us,jp,tw,cn,kr} once its SKILL.md + full
+# script set land; until then it's a legitimate WIP dir (scripts/ only, no
+# SKILL.md yet) and is exempt from the "unexpected skill dirs" guard below.
+WIP_SKILLS = {"data-markets"}
+
 
 def _present(skill: str) -> bool:
     return (SKILLS_DIR / skill / "SKILL.md").is_file()
@@ -99,7 +106,7 @@ def test_no_unexpected_skills():
     # OPTIONAL_SKILLS not yet present are still allowed in the future
     allowed_unknown = set(OPTIONAL_SKILLS) - expected
     actual = {p.name for p in SKILLS_DIR.iterdir() if p.is_dir()}
-    extras = actual - expected - allowed_unknown
+    extras = actual - expected - allowed_unknown - WIP_SKILLS
     assert not extras, (
         f"unexpected skill dirs (not in v2.0.0 inventory): {sorted(extras)}"
     )
