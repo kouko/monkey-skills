@@ -575,18 +575,23 @@ def test_headless_every_seed_stance_has_carrying_principle():
         "dropping a stance must be stated as illegitimate"
 
 
-def test_headless_post_draft_seed_walk_self_check():
-    """The headless MIRROR of the interactive coverage self-check (B1):
-    after drafting, walk the seed item-by-item and verify each item has its
-    landing spot BEFORE finalizing."""
+def test_headless_seed_walk_is_mechanical_not_self_report():
+    """Superseded per plan 2026-07-12-principles-mechanical-seed-gate Decision
+    Log 4: the old prose "Post-draft seed walk" self-report bullet is GONE
+    (pinned negatively in test_inventory_step_and_checker_gate_present); in
+    its place, §Headless points at Step 8's mechanical checker gate
+    (check_seed_traceability.py against seed-inventory.md) as the thing that
+    now enforces this invariant — never a memory-based re-walk."""
     low = _section(_text(), "## Headless / seeded mode").lower()
-    assert "item-by-item" in low, \
-        "§Headless must mandate a post-draft item-by-item seed walk"
-    assert "before finalizing" in low, \
-        "the seed walk verifies landing spots BEFORE finalizing"
-    assert "coverage self-check" in low, \
-        "the seed walk must be framed as the mirror of the interactive " \
-        "coverage self-check"
+    assert "check_seed_traceability.py" in low, \
+        "§Headless must point at the check_seed_traceability.py mechanical " \
+        "gate as the seed-coverage enforcement mechanism"
+    assert "mechanical" in low, \
+        "the seed-coverage gate must be framed as mechanical, not a " \
+        "self-report walk"
+    assert "seed-inventory.md" in low, \
+        "the mechanical gate must be run against the seed-inventory.md " \
+        "written by the inventory-authoring step"
 
 
 # --- round-2 seed-traceability review pins (3 🟡 findings, no registered
@@ -664,6 +669,63 @@ def test_headless_seed_named_canon_never_out_of_jurisdiction():
     assert "violation" in low, \
         "misclassifying a seed-named canon/stack choice must be named a " \
         "violation of the invariant"
+
+
+def test_inventory_step_and_checker_gate_present():
+    """Mechanical seed-coverage gate (plan Task 1, no registered REQ-ids):
+    (a) §Headless/seeded gains an inventory-authoring step BEFORE drafting
+    that names both checker-format keys (`named_anchors:` / `deferred_items:`)
+    and explicitly warns never to use `negative:` (must-be-ABSENT semantics,
+    the wrong sense for an inventory); (b) Step 8 is extended so interactive
+    sessions ALSO run check_seed_traceability.py and gate on exit 0; (c) the
+    old prose "Post-draft seed walk" self-report bullet is superseded and
+    gone — the mechanical gate replaces it (Decision Log 4)."""
+    text = _text()
+    low = text.lower()
+
+    headless = _section(text, "## Headless / seeded mode")
+    headless_low = headless.lower()
+    assert "seed-inventory.md" in headless_low, \
+        "§Headless must instruct writing a seed-inventory.md file before drafting"
+    assert "named_anchors:" in headless, \
+        "the inventory step must name the `named_anchors:` checker key"
+    assert "deferred_items:" in headless, \
+        "the inventory step must name the `deferred_items:` checker key"
+    assert re.search(r"never\s+use\s+`?negative:", headless_low) or \
+        re.search(r"never.{0,40}negative:", headless_low), \
+        "the inventory step must warn to NEVER use `negative:` " \
+        "(must-be-absent semantics, wrong for an inventory)"
+    assert "write-only" in headless_low, \
+        "the inventory step must be write-only (no scripts) for the drafting agent"
+
+    assert "check_seed_traceability.py" in text, \
+        "Step 8 must name the check_seed_traceability.py checker command"
+    assert re.search(r"exit\s*0", low), \
+        "Step 8's checker gate must proceed only on exit 0"
+
+    assert "post-draft seed walk" not in low, \
+        "the old prose 'Post-draft seed walk' self-report bullet must be " \
+        "gone — superseded by the mechanical checker gate (Decision Log 4)"
+
+
+def test_step8_interactive_seed_inventory_has_derivation_source():
+    """R2 fix (spec-reviewer NEEDS_REVISION + quality 🟡, same root): Step 8's
+    interactive-extension paragraph references "the seed-inventory document"
+    but no interactive-flow step ever authors one — a dangling antecedent.
+    Pin that interactive sessions derive it from the confirmed user answers
+    (Steps 2-4), BEFORE running the checker."""
+    text = _text()
+    m = re.search(r"### Step 8.*?(?=\n## )", text, re.DOTALL)
+    assert m, "SKILL.md must carry a Step 8 section"
+    step8_low = m.group(0).lower()
+
+    assert "derive" in step8_low, \
+        "Step 8 must instruct deriving the interactive seed-inventory.md " \
+        "(not just reference a document that nothing authors)"
+    assert re.search(r"user'?s?\s+answers", step8_low), \
+        "Step 8's derivation must be anchored in the confirmed user answers"
+    assert "seed-inventory.md" in step8_low, \
+        "Step 8 must name the seed-inventory.md artifact for interactive sessions"
 
 
 def test_headless_open_question_points_at_rules_file_format():

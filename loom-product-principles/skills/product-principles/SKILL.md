@@ -221,6 +221,18 @@ migration check (the path relative to this skill dir is
 *structure*; the *quality* of each check (truly falsifiable vs disguised
 platitude) is your responsibility.
 
+**Interactive sessions ALSO run the seed-coverage checker.** After the
+structural validator passes, also run
+`check_seed_traceability.py <artifact> <inventory>` (path relative to this
+skill dir: `../../scripts/check_seed_traceability.py`) against the
+`docs/loom/PRINCIPLES.md` artifact and the seed-inventory document, fix
+any miss line it reports, and **proceed only on exit 0** — mirroring the
+same gate-then-proceed shape as `writing-plans/SKILL.md`'s validator
+gating. Interactive sessions have no run-input seed to inventory ahead of
+time, so **derive `seed-inventory.md` from the confirmed user answers**
+(the entities named across Steps 2-4) BEFORE running this checker, using
+the same format as §Headless / seeded mode's inventory-authoring step.
+
 ## Headless / seeded mode
 
 When this skill is driven with **no user available** (a loom-pipeline
@@ -236,6 +248,20 @@ to its **"delegate to agent"** answer:
   refusal to the conductor — state what the seed lacks and name
   `using-loom-discovery` (user-insights) as the human-side remedy. Never
   fabricate a North Star to keep the run going.
+- **Inventory authoring — BEFORE drafting.** Before writing any
+  `PRINCIPLES.md` section, extract every seed-named entity (canon,
+  guideline, model, framework, language, library, format, technology,
+  or deferred/undecidable stance) into a `seed-inventory.md` file, one
+  token per named entity, using the checker's oracle key format (the
+  format contract in `../../scripts/check_seed_traceability.py`): a
+  `named_anchors:` line for canons/traditions/tech-stack choices, a
+  `deferred_items:` line for undecidable/deferred stances, each a
+  `;`-separated token list, empty sentinel `none in this seed` when a
+  key has nothing to list. **Never use `negative:`** — that key's
+  semantics is must-be-**ABSENT** (the checker fails if a `negative:`
+  token IS present), the opposite sense of an inventory, which lists
+  what the seed DOES contain. This step is **write-only** — author the
+  file with your own Write tool; do not run any script here.
 - **Seed-traceability invariant (no silent drops)** — the headless mirror
   of the interactive coverage self-check: EVERY seed item must land in the
   artifact in at least one of a carrying principle, an `## Anchors` row, an
@@ -261,10 +287,12 @@ to its **"delegate to agent"** answer:
   re-trigger — never dropped; every seed-named canon or tech-stack choice
   MUST land as a version-pinned `## Anchors` row; every seed stance MUST
   have a carrying principle — merging stances is fine, dropping one is not.
-- **Post-draft seed walk** — after drafting, walk the seed item-by-item
-  and verify each item has its landing spot **before finalizing**, exactly
-  as the interactive flow's per-section coverage self-check enumerates its
-  question set.
+- **Seed-coverage gate — mechanical, not a self-report walk.** The
+  item-by-item seed walk is no longer a self-report step here: Step 8's
+  checker gate (`check_seed_traceability.py`, run against the
+  `seed-inventory.md` written above) enforces this invariant
+  mechanically after drafting — see Step 8. Do not additionally rely on
+  memory to re-walk the seed; the pipeline runs the check.
 - Record every choice you made alone with the literal marker
   **`(agent-decided)`**, appended at the **end of the same physical line**
   as the choice it tags — a `## Deviation Ledger` entry when it breaks an

@@ -1,8 +1,8 @@
 ---
 name: workflow-agent-results-and-courier-args-need-guards
-description: Workflow scripts — every agent() result can be null (skip/terminal error) and must degrade to a failed item; agent() can also THROW (schema-forced output failure), and a sync try/catch around a RETURNED promise cannot catch its rejection — the stage must be async with await inside the try; and any operator arg interpolated into a courier agent's Bash instruction text needs a per-segment character allow-list
+description: Workflow scripts — every agent() result can be null (skip/terminal error) and must degrade to a failed item; agent() can also THROW (schema-forced output failure), and a sync try/catch around a RETURNED promise cannot catch its rejection — the stage must be async with await inside the try; any operator arg interpolated into a courier agent's Bash instruction text needs a per-segment character allow-list; and the allow-list MUST explicitly reject '.'/'..' segments — the character class ^[A-Za-z0-9._-]+$ admits them (traversal found live TWICE: improve-loop T4 and the matrix guard it was never back-ported to)
 type: gotcha
-origin: branch feat-principles-replay-loop-l1-l2 (2026-07-11) — round-1 🔴 + whole-branch 🟡; extended by branch feat-replay-matrix-stage-guard (stage-throw dropped rows in 2/3 real matrix runs)
+origin: branch feat-principles-replay-loop-l1-l2 (2026-07-11) — round-1 🔴 + whole-branch 🟡; extended by branch feat-replay-matrix-stage-guard (stage-throw dropped rows in 2/3 real matrix runs); extended by branch l3-loop-run-20260711 (2026-07-12) — dot-segment traversal second occurrence
 ---
 
 In `.claude/workflows/*.js` scripts, two guard obligations recur and were
@@ -28,6 +28,15 @@ in the dispatch:
    `^[A-Za-z0-9._-]+$` allow-list — per path segment for absolute
    paths. A "starts with /" or "non-empty" check lets `;`-payloads
    through to the command line.
+3. That character class ALONE is not enough: `.` is in the allowed
+   set, so bare `.`/`..` segments pass and compose into path
+   traversal (`/tmp/sandbox/../../etc` accepted — reviewer-probed
+   live). Every per-segment loop must ALSO explicitly reject
+   `segment === '.' || segment === '..'`. Found twice: fixed in
+   improve-loop's assertStationPath (2026-07-11) but NOT back-ported
+   to the matrix's own guard until a reviewer re-probed it a day
+   later — when a guard is fixed in one workflow file, sweep the
+   sibling files for the same pattern in the same PR.
 
 **Why:** static text tests on the .js cannot see either runtime hole;
 both surfaced only in review. A crashed stage loses the whole seed's

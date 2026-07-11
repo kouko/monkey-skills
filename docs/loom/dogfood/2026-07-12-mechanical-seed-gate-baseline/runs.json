@@ -1,0 +1,173 @@
+{
+  "date": "2026-07-12",
+  "branchHead": "fbb9784d",
+  "comparisonBaseline": "docs/loom/dogfood/2026-07-10-principles-flow-seed-corpus/calibration-baseline-2026-07-11.md (4/18 PASS)",
+  "runs": [
+    {
+      "runLabel": "gate-r1",
+      "workflowRunId": "wf_1cf2301b-1c2",
+      "passRate": 0.5,
+      "agents": {
+        "total": 28,
+        "errors": 0
+      },
+      "rows": [
+        {
+          "seedId": "seed1",
+          "pass": false,
+          "selfCheckExit": 1,
+          "selfCheckMisses": 2,
+          "selfCheckFixed": 2,
+          "selfCheckExitAfterFix": 0,
+          "oracleMisses": [
+            "named_anchors: TypeScript",
+            "named_anchors: React",
+            "named_anchors: PostgreSQL",
+            "named_anchors: Redis"
+          ],
+          "validatorExit": 0
+        },
+        {
+          "seedId": "seed2",
+          "pass": false,
+          "selfCheckExit": 1,
+          "selfCheckMisses": 6,
+          "selfCheckFixed": 6,
+          "selfCheckExitAfterFix": 0,
+          "oracleMisses": [
+            "deferred_items: 升級胃口|Upgrade appetite"
+          ],
+          "validatorExit": 0
+        },
+        {
+          "seedId": "seed3",
+          "pass": true,
+          "selfCheckExit": 1,
+          "selfCheckMisses": 4,
+          "selfCheckFixed": 4,
+          "selfCheckExitAfterFix": 0,
+          "oracleMisses": [],
+          "validatorExit": 0
+        },
+        {
+          "seedId": "seed4",
+          "pass": false,
+          "selfCheckExit": 0,
+          "selfCheckMisses": 0,
+          "selfCheckFixed": 0,
+          "selfCheckExitAfterFix": null,
+          "oracleMisses": [
+            "deferred_items: 升級胃口|Upgrade appetite"
+          ],
+          "note": "pure inventory blindness — self-check clean, oracle caught the omission",
+          "validatorExit": 0
+        },
+        {
+          "seedId": "seed5",
+          "pass": true,
+          "selfCheckExit": 1,
+          "selfCheckMisses": 7,
+          "selfCheckFixed": 7,
+          "selfCheckExitAfterFix": 0,
+          "oracleMisses": [],
+          "validatorExit": 0
+        },
+        {
+          "seedId": "cold-operator",
+          "pass": true,
+          "selfCheckExit": 1,
+          "selfCheckMisses": 4,
+          "selfCheckFixed": 4,
+          "selfCheckExitAfterFix": 0,
+          "oracleMisses": [],
+          "validatorExit": 0
+        }
+      ]
+    },
+    {
+      "runLabel": "gate-r2",
+      "workflowRunId": "wf_7875db0d-637",
+      "passRate": 0.8333,
+      "agents": {
+        "total": 28,
+        "errors": 0
+      },
+      "rows": [
+        {
+          "seedId": "seed1",
+          "pass": true,
+          "selfCheckExit": 1,
+          "selfCheckMisses": 2,
+          "selfCheckFixed": 2,
+          "selfCheckExitAfterFix": 0,
+          "oracleMisses": [],
+          "validatorExit": 0
+        },
+        {
+          "seedId": "seed2",
+          "pass": false,
+          "selfCheckExit": 1,
+          "selfCheckMisses": 3,
+          "selfCheckFixed": 3,
+          "selfCheckExitAfterFix": 0,
+          "oracleMisses": [
+            "named_anchors: on-device TTS",
+            "deferred_items: 可逆性|Reversibility posture"
+          ],
+          "validatorExit": 0
+        },
+        {
+          "seedId": "seed3",
+          "pass": true,
+          "selfCheckExit": 1,
+          "selfCheckMisses": 6,
+          "selfCheckFixed": 6,
+          "selfCheckExitAfterFix": 0,
+          "oracleMisses": [],
+          "validatorExit": 0
+        },
+        {
+          "seedId": "seed4",
+          "pass": true,
+          "selfCheckExit": 1,
+          "selfCheckMisses": 4,
+          "selfCheckFixed": 4,
+          "selfCheckExitAfterFix": 0,
+          "oracleMisses": [],
+          "validatorExit": 0
+        },
+        {
+          "seedId": "seed5",
+          "pass": true,
+          "selfCheckExit": 1,
+          "selfCheckMisses": 5,
+          "selfCheckFixed": 5,
+          "selfCheckExitAfterFix": 0,
+          "oracleMisses": [],
+          "validatorExit": 0
+        },
+        {
+          "seedId": "cold-operator",
+          "pass": true,
+          "selfCheckExit": 0,
+          "selfCheckMisses": 0,
+          "selfCheckFixed": 0,
+          "selfCheckExitAfterFix": null,
+          "oracleMisses": [],
+          "validatorExit": 0
+        }
+      ]
+    }
+  ],
+  "aggregate": {
+    "pass": 8,
+    "total": 12,
+    "baselinePass": 4,
+    "baselineTotal": 18,
+    "selfCheckCaughtTotal": 43,
+    "fixRoundClearedAll": true,
+    "residualFailureClass": "inventory omission (extraction-at-reading), 4/4 residual failures",
+    "validatorExitZeroAll": true,
+    "provenanceNote": "validatorExit per row copied from the workflow return values (task outputs wf_1cf2301b-1c2 / wf_7875db0d-637); grade.txt raw files are ephemeral per the record note"
+  }
+}

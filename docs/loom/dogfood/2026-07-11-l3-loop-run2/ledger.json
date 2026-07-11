@@ -1,0 +1,43 @@
+{
+  "runLabel": "l3-run2",
+  "workflowRunId": "wf_1fc6fcd0-724",
+  "date": "2026-07-11",
+  "maxRounds": 3,
+  "rounds": 2,
+  "accepted": 0,
+  "stoppedBy": "plateau (2 consecutive rounds without an accepted proposal)",
+  "ledger": [
+    {
+      "round": 1,
+      "invariant": "Every seed-named canon or tech-stack item must land as its own `## Anchors` row whose name cell reproduces the seed's exact spelling verbatim — never abbreviated, translated, or paraphrased (a gloss may be appended, never substituted).",
+      "applied": true,
+      "compareExit": 1,
+      "confirmExit": null,
+      "smokeExit": null,
+      "wordcapExit": null,
+      "accepted": false,
+      "reason": "compare: no win (exit 1)"
+    },
+    {
+      "round": 2,
+      "invariant": "The post-draft seed walk must be a mechanical verbatim-grep, not a from-memory review: every name the seed states — canon, guideline, model, framework, language, library, format, or technology — must be found by grepping the draft for the seed's exact name string (landing as a version-pinned `## Anchors` row for canons/tech choices), and every deferred/undecidable marker's own wording must be found under `## Open Questions`; any grep miss is fixed by adding the missing row before finalizing.",
+      "applied": true,
+      "compareExit": 1,
+      "confirmExit": null,
+      "smokeExit": null,
+      "wordcapExit": null,
+      "accepted": false,
+      "reason": "compare: no win (exit 1)"
+    }
+  ],
+  "agents": {"total": 43, "errors": 0, "skipped": 0},
+  "signalReading": [
+    "Three consecutive rejected proposals across two runs (smoke r1 + run2 r1-r2) — the skill-tuning variant-engine re-trigger (single-fixer plateau) is now MET with committed evidence.",
+    "Round 2's proposal PRESCRIBED a mechanical grep seed-walk as prose instruction and still produced no win — prose prescribing mechanization is not mechanization; consistent with the family's recorded weak-model evidence (read != obeyed).",
+    "Plateau brake fired exactly as designed: stopped at round 2 of an authorized 3."
+  ],
+  "postRunVerification": {
+    "stationCleanAfterReverts": true,
+    "subagentTokens": 2504313
+  }
+}
