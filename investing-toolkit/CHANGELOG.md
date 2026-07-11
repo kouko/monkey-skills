@@ -5,6 +5,30 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.4.0] — 2026-07-11
+
+Investing analysis memory layer (Obsidian-carried), pilot on
+`report-equity-memo`. Brief: `docs/loom/specs/2026-07-11-investing-obsidian-memory-layer.md`.
+
+### Added
+
+- **`skills/report-equity-memo/references/vault-frontmatter.md`** — toolkit-owned
+  frontmatter schema SSOT (8 fields: type/ticker/market/date/verdict/confidence/
+  priceAtAnalysis/intrinsicMid), Obsidian Bases date-typing note, sample
+  track-record `.base` snippet.
+- **Phase 0 — Recall Prior Verdicts**: before any data fetch, grep prior memos'
+  frontmatter for the same ticker; surface last verdict/date/price + delta;
+  three-way disclosure (hit / no-hits / no-vault) in the memo's Limitations.
+- **Phase 4 always-on frontmatter**: the memo file begins with the schema block
+  regardless of destination; artifact gate additionally verifies `head -1` is `---`.
+
+### Changed
+
+- **Phase 5b field ownership**: `obsidian:obsidian-markdown` must respect the
+  toolkit frontmatter fields (placement/wikilinks/vault conventions only; never
+  re-invent or overwrite); default vault folder `investing/memos/`
+  (default-unless-user-says-otherwise).
+
 ## [v2.3.1] — 2026-07-11
 
 Dogfood fix package (PR #539) — version bump so the fixes deploy via
