@@ -1,16 +1,20 @@
 name: check-script-sync
 
-# Verifies that cross-skill duplicated client scripts in investing-toolkit
-# stay byte-identical.
+# Verifies that cross-skill duplicated client scripts stay byte-identical.
 #
 # Post-ADR-0008 (2026-05-03): MCP server removed. The
 # `investing-toolkit/scripts/` canonical-vs-skill-copy duality is gone;
-# only true cross-skill duplications remain. Two groups enforced:
+# only true cross-skill duplications remain.
 #
-#   - yfinance_client.py: data-us reference; data-jp / data-tw / data-kr /
-#                         data-cn (4 cross-skill copies must equal data-us)
-#   - fred_client.py:     data-us reference; data-cn (1 cross-skill copy
-#                         must equal data-us)
+# investing-toolkit (2026-07-11): the former yfinance_client.py / fred_client.py
+# cross-skill duplication groups (data-us reference; data-jp/tw/kr/cn copies)
+# were removed here — the five per-country data-{us,jp,tw,kr,cn} skills were
+# consolidated into a single data-markets skill (see
+# docs/loom/plans/2026-07-11-investing-toolkit-data-consolidation.md), so
+# yfinance_client.py and fred_client.py now each have exactly one copy
+# (skills/data-markets/scripts/) — nothing left to sync-check.
+# `investing-toolkit/scripts/sync-clients.sh` was deleted in that same
+# consolidation for the same reason.
 #
 # All other clients (nbs/akshare/dgbas/ndc/cbc/statgov/fdr/boj/ecb/estat/
 # sec_edgar/mops/edinet/finmind/twse_openapi/tdnet/ta) are single-skill —
@@ -35,7 +39,7 @@ permissions:
 
 jobs:
   check-script-sync:
-    name: investing-toolkit script MD5 sync
+    name: research-toolkit script MD5 sync
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -53,8 +57,6 @@ jobs:
           import subprocess
           import sys
           from pathlib import Path
-
-          ROOT = Path("investing-toolkit/skills")
 
           def md5(path: Path) -> str:
               return hashlib.md5(path.read_bytes()).hexdigest()
@@ -101,34 +103,9 @@ jobs:
 
           errors = 0
 
-          # Group 1: yfinance_client.py — cross-skill duplication.
-          # data-us is the reference; 4 country copies must equal it.
-          yf_reference = ROOT / "data-us" / "scripts" / "yfinance_client.py"
-          yf_copies = [
-              ROOT / skill / "scripts" / "yfinance_client.py"
-              for skill in ["data-jp", "data-tw", "data-kr", "data-cn"]
-          ]
-          errors += check_group(
-              "yfinance_client.py (data-us reference; jp/tw/kr/cn copies)",
-              yf_reference,
-              yf_copies,
-          )
-
-          # Group 2: fred_client.py — cross-skill duplication.
-          # data-us is the reference; data-cn copy must equal it.
-          fred_reference = ROOT / "data-us" / "scripts" / "fred_client.py"
-          fred_copies = [ROOT / "data-cn" / "scripts" / "fred_client.py"]
-          errors += check_group(
-              "fred_client.py (data-us reference; data-cn copy)",
-              fred_reference,
-              fred_copies,
-          )
-
           # research-toolkit groups: deep-deep-research primitives are the SSOT;
           # sibling skills functional-copy them byte-identical. One group per
           # primitive. Copies may be absent (check_group [skip]s them).
-          # NOTE: ROOT above points at investing-toolkit; build the
-          # research-toolkit paths explicitly (also relative to checkout root).
           rt_skills = Path("research-toolkit/skills")
           rt_siblings = ["fact-check", "cite-check", "deep-read"]
           for primitive in ["schemas.py", "rank.py", "prompts.py", "dedup.py"]:
@@ -146,8 +123,7 @@ jobs:
           if errors:
               print()
               print(f"FAIL: {errors} group(s) out of sync.")
-              print("Fix locally: bash investing-toolkit/scripts/sync-clients.sh")
-              print("         or: bash research-toolkit/scripts/sync-primitives.sh")
+              print("Fix locally: bash research-toolkit/scripts/sync-primitives.sh")
               sys.exit(1)
 
           print()

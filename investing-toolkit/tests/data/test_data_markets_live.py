@@ -4,12 +4,36 @@ docs/loom/plans/2026-07-11-investing-toolkit-data-consolidation.md).
 
 Migrates the network-marked tests that used to live in
 tests/data/test_data_{us,jp,tw,kr,cn}.py (one section per market below,
-preserving each original test's intent) — those 5 files, and the offline
-pure-logic tests they also carried (ROC-quarter math, ticker
-auto-suffix normalisation), are deleted in the same task: their skill
-paths (skills/data-{us,jp,tw,kr,cn}/) no longer exist, and the
-migration-fidelity purpose those pure-logic tests served is now covered by
-the fixture/shape-parity assertions in tests/data/test_data_markets_{market}.py.
+preserving each original test's intent) — those 5 files are deleted in the
+same task, since their skill paths (skills/data-{us,jp,tw,kr,cn}/) no longer
+exist.
+
+Coverage accounting for the deleted files' 56 tests (round-1 gap: this
+docstring previously overclaimed the drop was "covered by fixture/
+shape-parity assertions" without saying which tests or where; corrected in
+round 2):
+  - 10 pure-logic tests (ROC-quarter-math for TW, ticker auto-suffix
+    normalisation for KR/CN) covered still-live functions
+    (pack_tw.latest_roc_quarter, pack_kr.normalize_ticker,
+    pack_cn._normalise_ticker) that merely moved into pack_{market}.py.
+    These were dropped by the round-1 deletion and are now RESTORED in
+    tests/data/test_data_markets_{tw,kr,cn}.py (1 TW + 3 KR + 6 CN).
+  - 9 were migration-era cross-skill sync assertions (byte-identical-copy
+    checks across the now-merged per-country clients) that no longer apply
+    once the copies became one canonical file under data-markets/scripts/ —
+    correctly retired, nothing to restore.
+  - 32 were structural parametrization over the old 5 separate skill
+    directories (one parametrized case per market × pack-type/section, e.g.
+    "does skills/data-{market}/scripts/pack.py exist and expose section X")
+    — superseded by the single data-markets skill's own structural
+    assertions in tests/data/test_data_markets_{market}.py; nothing to
+    restore, the shape those cases checked is asserted once now instead of
+    5 times.
+  - 5 were CN-specific legacy output-shape assertions tied to the old
+    data-cn/scripts/pack.py's pre-consolidation JSON envelope, superseded by
+    pack_cn.py's current shape (already covered by
+    tests/data/test_data_markets_cn.py's migration-contract test).
+  (10 + 9 + 32 + 5 = 56, matching the round-1 net test-count drop.)
 
 All tests here hit real external APIs (yfinance / SEC EDGAR / FRED / TDnet /
 BOJ / e-Stat / ECB / MOPS / TWSE / FinMind / CBC / DGBAS / NDC / stat.gov.tw /

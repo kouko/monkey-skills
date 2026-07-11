@@ -24,8 +24,10 @@ subprocess.run calls are monkeypatched):
 from __future__ import annotations
 
 import importlib.util
+import io
 import json
 import subprocess
+from contextlib import redirect_stderr
 from pathlib import Path
 
 import pytest
@@ -97,6 +99,68 @@ def new_pack(monkeypatch):
     module = _load_module(NEW_PACK, "data_markets_pack_cn_for_migration_test")
     monkeypatch.setattr(module.subprocess, "run", _fake_subprocess_run)
     return module
+
+
+# ---------------------------------------------------------------------------
+# Pure-logic: _normalise_ticker auto-suffix heuristic (no network) —
+# restored from the deleted tests/data/test_data_cn.py (round-1 gap: this
+# offline unit test covered a still-live function, pack_cn._normalise_ticker,
+# and was dropped along with the per-country skill deletion instead of
+# migrating with the function).
+# ---------------------------------------------------------------------------
+
+
+def _load_pack_cn():
+    return _load_module(NEW_PACK, "data_markets_pack_cn_for_normalise_test")
+
+
+def test_cn_normalise_six_digit_starting_with_6_appends_ss():
+    pack = _load_pack_cn()
+    assert pack._normalise_ticker("600519") == "600519.SS"
+    assert pack._normalise_ticker("601318") == "601318.SS"
+    assert pack._normalise_ticker("603259") == "603259.SS"
+    assert pack._normalise_ticker("688981") == "688981.SS"
+
+
+def test_cn_normalise_six_digit_starting_with_0_appends_sz():
+    pack = _load_pack_cn()
+    assert pack._normalise_ticker("000858") == "000858.SZ"
+    assert pack._normalise_ticker("000001") == "000001.SZ"
+    assert pack._normalise_ticker("002594") == "002594.SZ"
+    assert pack._normalise_ticker("300750") == "300750.SZ"
+
+
+def test_cn_normalise_four_digit_appends_hk():
+    pack = _load_pack_cn()
+    assert pack._normalise_ticker("0700") == "0700.HK"
+    assert pack._normalise_ticker("0005") == "0005.HK"
+
+
+def test_cn_normalise_five_digit_appends_hk():
+    """5-digit HK leading-zero form (e.g. 09988)."""
+    pack = _load_pack_cn()
+    assert pack._normalise_ticker("09988") == "09988.HK"
+    assert pack._normalise_ticker("02318") == "02318.HK"
+    assert pack._normalise_ticker("03690") == "03690.HK"
+
+
+def test_cn_normalise_already_suffixed_passthrough():
+    pack = _load_pack_cn()
+    assert pack._normalise_ticker("600519.SS") == "600519.SS"
+    assert pack._normalise_ticker("000858.SZ") == "000858.SZ"
+    assert pack._normalise_ticker("0700.HK") == "0700.HK"
+    # lowercase → uppercase
+    assert pack._normalise_ticker("600519.ss") == "600519.SS"
+
+
+def test_cn_normalise_bse_six_digit_warns_and_passthrough():
+    """BSE codes (4xx/8xx 6-digit) — yfinance has no BSE; warn + passthrough."""
+    pack = _load_pack_cn()
+    buf = io.StringIO()
+    with redirect_stderr(buf):
+        out = pack._normalise_ticker("830799")
+    assert out == "830799", "BSE ticker should pass through unchanged"
+    assert "BSE" in buf.getvalue(), "expected stderr warning to mention BSE"
 
 
 # ---------------------------------------------------------------------------

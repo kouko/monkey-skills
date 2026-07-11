@@ -247,7 +247,7 @@ def get_holdings(ticker: str) -> dict:
             "holdings": [],
             "warnings": [f"non_fund: {ticker} has no yfinance funds_data block"],
             "_provenance": {
-                "skill":      "data-us",
+                "skill":      "data-markets",
                 "source":     "yfinance.Ticker.funds_data",
                 "fetched_at": fetched_at,
             },
@@ -278,7 +278,7 @@ def get_holdings(ticker: str) -> dict:
         "ticker":   ticker,
         "holdings": holdings,
         "_provenance": {
-            "skill":      "data-us",
+            "skill":      "data-markets",
             "source":     "yfinance.Ticker.funds_data.top_holdings",
             "fetched_at": fetched_at,
         },

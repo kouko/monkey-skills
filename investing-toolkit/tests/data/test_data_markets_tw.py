@@ -20,6 +20,7 @@ from __future__ import annotations
 import ast
 import importlib.util
 import sys
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -65,6 +66,44 @@ def _load_module(path: Path, name: str):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+# ---------------------------------------------------------------------------
+# Pure-logic: latest_roc_quarter (no network) — restored from the deleted
+# tests/data/test_data_tw.py (round-1 gap: this offline unit test covered a
+# still-live function, pack_tw.latest_roc_quarter, and was dropped along with
+# the per-country skill deletion instead of migrating with the function).
+# ---------------------------------------------------------------------------
+
+
+def test_tw_latest_roc_quarter_boundary_cases():
+    """Filing-aware ROC quarter math — exact boundary days the spec calls out.
+
+    Filing deadlines (TWSE/TPEx-listed, consolidated):
+      Q4 (年報): by Mar 31 of next year → safe Apr 1+
+      Q1:       by May 15 → safe May 16+
+      Q2 (半年報): by Aug 14 → safe Aug 15+
+      Q3:       by Nov 14 → safe Nov 15+
+
+    Q1 not yet filed on May 1 → fall back to prior-year Q4 (114, 4).
+    Q1 filed by May 16 onward → (115, 1).
+    Q2 not yet filed on Aug 14 → still (115, 1).
+    Q2 filed by Aug 15 onward → (115, 2).
+    """
+    pack_tw = _load_module(SCRIPTS_DIR / "pack_tw.py", "data_markets_pack_tw_roc")
+    fn = pack_tw.latest_roc_quarter
+
+    # 2026 = ROC 115. May 1 is before May 16 buffer → previous-year Q4.
+    assert fn(date(2026, 5, 1)) == (114, 4), "Q1 not yet filed → prior-year Q4"
+
+    # May 20 is past May 16 buffer → Q1 filed.
+    assert fn(date(2026, 5, 20)) == (115, 1), "Q1 filed by May 16+"
+
+    # Aug 14 still before Aug 15 buffer → Q2 not yet filed (stay at Q1).
+    assert fn(date(2026, 8, 14)) == (115, 1), "Q2 not yet filed → stay at Q1"
+
+    # Aug 15 deadline buffer → Q2 filed.
+    assert fn(date(2026, 8, 15)) == (115, 2), "Q2 filed by Aug 15+"
 
 
 def test_tw_migration_contract(monkeypatch):

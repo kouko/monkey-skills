@@ -66,6 +66,36 @@ def _mock_run(monkeypatch, module, responses: list[dict]):
 
 
 # ---------------------------------------------------------------------------
+# Pure-logic: normalize_ticker auto-suffix (no network) — restored from the
+# deleted tests/data/test_data_kr.py (round-1 gap: this offline unit test
+# covered a still-live function, pack_kr.normalize_ticker, and was dropped
+# along with the per-country skill deletion instead of migrating with the
+# function).
+# ---------------------------------------------------------------------------
+
+
+def test_kr_normalize_bare_six_digit_appends_ks():
+    """Bare 6-digit numeric ticker → .KS (KOSPI default)."""
+    pack_kr = _load_module(PACK_KR, "data_markets_pack_kr_normalize")
+    assert pack_kr.normalize_ticker("005930") == "005930.KS"
+
+
+def test_kr_normalize_kosdaq_flag_appends_kq():
+    """force_kosdaq=True → .KQ instead of .KS."""
+    pack_kr = _load_module(PACK_KR, "data_markets_pack_kr_normalize")
+    assert pack_kr.normalize_ticker("005930", force_kosdaq=True) == "005930.KQ"
+
+
+def test_kr_normalize_already_suffixed_passthrough():
+    """Already-suffixed ticker → unchanged (uppercase preserved)."""
+    pack_kr = _load_module(PACK_KR, "data_markets_pack_kr_normalize")
+    assert pack_kr.normalize_ticker("005930.KS") == "005930.KS"
+    assert pack_kr.normalize_ticker("068270.KQ") == "068270.KQ"
+    # lowercase normalises to uppercase
+    assert pack_kr.normalize_ticker("005930.ks") == "005930.KS"
+
+
+# ---------------------------------------------------------------------------
 # (a) no local cache helpers survive the migration
 # ---------------------------------------------------------------------------
 
