@@ -708,6 +708,26 @@ def test_inventory_step_and_checker_gate_present():
         "gone — superseded by the mechanical checker gate (Decision Log 4)"
 
 
+def test_step8_interactive_seed_inventory_has_derivation_source():
+    """R2 fix (spec-reviewer NEEDS_REVISION + quality 🟡, same root): Step 8's
+    interactive-extension paragraph references "the seed-inventory document"
+    but no interactive-flow step ever authors one — a dangling antecedent.
+    Pin that interactive sessions derive it from the confirmed user answers
+    (Steps 2-4), BEFORE running the checker."""
+    text = _text()
+    m = re.search(r"### Step 8.*?(?=\n## )", text, re.DOTALL)
+    assert m, "SKILL.md must carry a Step 8 section"
+    step8_low = m.group(0).lower()
+
+    assert "derive" in step8_low, \
+        "Step 8 must instruct deriving the interactive seed-inventory.md " \
+        "(not just reference a document that nothing authors)"
+    assert re.search(r"user'?s?\s+answers", step8_low), \
+        "Step 8's derivation must be anchored in the confirmed user answers"
+    assert "seed-inventory.md" in step8_low, \
+        "Step 8 must name the seed-inventory.md artifact for interactive sessions"
+
+
 def test_headless_open_question_points_at_rules_file_format():
     """R2 🟡3: the Open Question landing spot now has a defined format —
     the invariant clause points at the `## Open Questions` contract in

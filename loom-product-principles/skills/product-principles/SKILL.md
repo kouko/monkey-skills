@@ -228,7 +228,10 @@ skill dir: `../../scripts/check_seed_traceability.py`) against the
 `docs/loom/PRINCIPLES.md` artifact and the seed-inventory document, fix
 any miss line it reports, and **proceed only on exit 0** — mirroring the
 same gate-then-proceed shape as `writing-plans/SKILL.md`'s validator
-gating.
+gating. Interactive sessions have no run-input seed to inventory ahead of
+time, so **derive `seed-inventory.md` from the confirmed user answers**
+(the entities named across Steps 2-4) BEFORE running this checker, using
+the same format as §Headless / seeded mode's inventory-authoring step.
 
 ## Headless / seeded mode
 
