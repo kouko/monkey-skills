@@ -39,7 +39,14 @@ permissions:
 
 jobs:
   check-script-sync:
-    name: research-toolkit script MD5 sync
+    # NOTE: this display name is pinned by main's branch-protection
+    # required-status-checks config (exact-string match). The job now
+    # only covers research-toolkit sync groups (investing-toolkit's
+    # groups retired with the data-markets consolidation, ADR-0009),
+    # but renaming it would leave the required check permanently
+    # pending and block all merges. Rename only together with a
+    # branch-protection settings update (repo admin action).
+    name: investing-toolkit script MD5 sync
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
