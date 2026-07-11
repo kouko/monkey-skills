@@ -205,6 +205,28 @@ def test_ttl_and_roundtrip_contract(monkeypatch, tmp_path):
     assert load_cache(path, ttl=-1) is None
 
 
+def test_load_cache_preserves_caller_provenance_on_hit(monkeypatch, tmp_path):
+    """Task 3d requires _provenance.primary_source_status to survive a
+    save -> load(hit) roundtrip. save_cache(path, data) never writes a
+    top-level envelope _provenance — it only ever nests whatever the
+    caller put in `data`. load_cache must not clobber a caller-supplied
+    `data["_provenance"]` with `{}` on a cache hit."""
+    monkeypatch.setenv("INVESTING_TOOLKIT_CACHE", str(tmp_path / "cache-root"))
+    monkeypatch.delenv("XDG_CACHE_HOME", raising=False)
+
+    path = cache_path("dgbas", "cpi-provenance")
+    data = {
+        "observations": [{"date": "202603", "value": 101.2}],
+        "_provenance": {"primary_source_status": "real"},
+    }
+
+    save_cache(path, data)
+    cached = load_cache(path, ttl=3600)
+
+    assert cached is not None
+    assert cached["_provenance"] == {"primary_source_status": "real"}
+
+
 def test_load_cache_missing_file_returns_none(tmp_path):
     assert load_cache(tmp_path / "does-not-exist.json", ttl=3600) is None
 

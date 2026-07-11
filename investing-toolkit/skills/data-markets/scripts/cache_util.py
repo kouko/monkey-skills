@@ -19,7 +19,8 @@ run through a single writability gate: create it if missing, probe with a
 real write. If either step fails, a loud one-line warning naming the
 rejected path and the fallback is printed to stderr, and resolution falls
 back to <tempfile.gettempdir()>/investing-toolkit. Contract: this function
-ALWAYS returns a writable directory Path.
+returns a writable directory Path, or raises RuntimeError when neither
+the candidate nor the tempdir fallback is writable.
 """
 from __future__ import annotations
 
@@ -123,8 +124,9 @@ def compute_ttl(cadence: str, staleness_days: int | None) -> int:
     exercise the distinction. | ceiling: a caller needs `tick` TTL to
     differ between market-open and market-closed | upgrade: add a
     `market: str | None` param, port the `_is_market_open` table from
-    cache-policy.md §"Trading-hours awareness" | ref: investing-toolkit/
-    docs/cache-policy.md §"Trading-hours awareness"
+    cache-policy.md §"Trading-hours awareness" | ref: docs/loom/plans/
+    2026-07-11-investing-toolkit-data-consolidation.md / Task 2 (see also
+    investing-toolkit/docs/cache-policy.md §"Trading-hours awareness")
     """
     if cadence == "immutable":
         return 100 * 365 * 24 * 3600
@@ -171,6 +173,9 @@ def cache_path(source: str, key: str) -> Path:
     Sanitization replaces any character outside `[A-Za-z0-9_-]` (including
     `/`, `\\`, and `.`) with `_`, so a malicious/malformed key (e.g.
     containing `../`) can never escape the `<source>/` directory.
+
+    `source` must be a trusted hardcoded literal (a client name), not
+    external input; only `key` is sanitized.
     """
     sanitized = _UNSAFE_KEY_CHARS.sub("_", key) or "_"
     return resolve_cache_dir() / source / f"{sanitized}.json"
@@ -214,7 +219,6 @@ def load_cache(path: Path, ttl: int) -> dict | None:
     out["_cache"] = "hit"
     out["_cache_age_seconds"] = int(age)
     out["_cache_ttl_seconds"] = ttl
-    out["_provenance"] = envelope.get("_provenance", {})
     return out
 
 
