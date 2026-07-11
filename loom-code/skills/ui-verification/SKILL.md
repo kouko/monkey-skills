@@ -18,10 +18,11 @@ The 2026-07-03 pipeline dogfood shipped a GUI product whose test suite was
 "no live browser was used" (the code station's own ledger). Package tests
 verify logic; they cannot verify that the empty state renders, that the error
 toast is reachable, that pause actually swaps the controls. For a UI-bearing
-branch, this skill is the user's main acceptance stage — the running app is
-the only surface a non-engineer user can adjudicate "done" by, not test
-counts: **open the real app, walk the states the design station already
-enumerated, and report what you observed.**
+branch, this skill is the user's main acceptance stage (design SSOT:
+docs/loom/design/2026-07-10-designer-pm-loop-architecture.md §1 #4) — the
+running app is the only surface a non-engineer user can adjudicate "done" by,
+not test counts: **open the real app, walk the states the design station
+already enumerated, and report what you observed.**
 
 ## The gate is CONDITIONAL — check both conditions first
 
@@ -128,8 +129,9 @@ untestable: …" — never "the UI is verified".
 ## Where it runs in the branch flow
 
 Invoked by `finishing-a-development-branch` alongside
-`verification-before-completion` (the two verification halves: suite + UI —
-Phase 2, after the review phase in that orchestrator's fixed order), and
+`verification-before-completion` (the user's main acceptance stage, run
+beside the package suite — Phase 2, after the review phase in that
+orchestrator's fixed order), and
 available on demand after any UI-touching SDD task lands. The **earlier**
 run is the on-demand one: walking the states right after the last UI task
 lands gives the whole-branch reviewer observation evidence instead of

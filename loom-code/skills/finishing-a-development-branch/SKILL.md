@@ -25,6 +25,7 @@ finishing-a-development-branch (this skill)
   │     blocks on test failure
   │     + ui-verification (CONDITIONAL): branch touched UI AND a
   │       ui-flows.md exists → this is the user's main acceptance stage
+  │       (design SSOT: docs/loom/design/2026-07-10-designer-pm-loop-architecture.md §1 #4)
   │       (what "done" means for a UI-bearing branch) — drives the
   │       rendered app through its enumerated states; otherwise N/A
   │       (honest skip, stated)
@@ -244,10 +245,7 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
     the product now does, in user terms (not with mechanism); commit SHA, push
     status, test counts, and review verdicts sink to sub-lines below that
     headline. Format authority: `loom-pipeline/hooks/family-relay.md` §(a)
-    User-rollup card (pointer, not copy) — task restated / current state / what
-    changed / impact on you / next + decision; internal traffic (SHAs, verdict
-    tokens) stays machine-precise below the card. Include: PR URL if created,
-    worktree status.
+    User-rollup card. Include: PR URL if created, worktree status.
 ```
 
 **ASK = stop and wait for user.** This is deliberately NOT autonomous — close-out is a high-blast-radius operation (shipping code → teammates / production). Each user-visible action has a confirmation.
