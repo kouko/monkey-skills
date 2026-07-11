@@ -23,7 +23,8 @@ Tier-A normalization into the flat canonical shape is deferred to a
 follow-up PR (`pack_tw.py`'s `_build_canonical_from_yf_financials_tw`
 docstring and `tw_specific.primary_source_status` both say so
 explicitly). This mirrors JP/KR/CN's own canonical-financials gap; only
-US has a wired Tier-3 canonical path (SEC EDGAR). What TW *does* have
+US has its T3 canonical-staging step wired to a Tier-A source
+(SEC EDGAR) instead of yfinance. What TW *does* have
 that the others don't: MOPS Tier-A **raw** financial statements are
 available unnormalized under `out.mops.income_statement` /
 `balance_sheet` / `cash_flow` (中文 ROC-dated, both 母公司/合併 basis) —
