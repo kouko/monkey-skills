@@ -48,9 +48,11 @@ baseline).
    that recurred in the calibration baseline. Extraction-at-reading
    misses skew toward deferred/stance-like items over concrete tech
    nouns (3 of 6 residual miss LINES are deferred_items).
-4. **No regression**: validator exits 0 across all 12; no `negative:`
-   violations; cold-operator (human-grounded, held-out in L3 contexts)
-   passed both runs.
+4. **No regression**: validator exits 0 across all 12 (per-row
+   `validatorExit` recorded in `runs.json`, copied from the two workflow
+   returns); no `negative:` violations (no `negative:`-prefixed entry in
+   any `oracleMisses` list); cold-operator (human-grounded, held-out in
+   L3 contexts) passed both runs.
 
 ## Residual + re-trigger (recorded, not actioned in this arc)
 
