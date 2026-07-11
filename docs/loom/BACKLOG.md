@@ -96,15 +96,17 @@
   station-local). Calibration DONE 2026-07-11 (3 matrix runs, 18
   artifacts, stable-fragment + `|`-alternative tokens; committed
   baseline: `docs/loom/dogfood/2026-07-10-principles-flow-seed-corpus/calibration-baseline-2026-07-11.md`).
-  Two harness next-touch candidates from that baseline:
-  (1) grade-courier robustness — in 2/3 workflow runs one seed's grade
-  agent failed schema-forced output and the pipeline dropped the row
-  (null) instead of a degraded failed row; catch stage errors into
-  failed rows in `principles-replay-matrix.js`;
-  (2) anchor-match precision — short tokens can false-negative by
-  matching an unrelated row's version cell (r3 `Qt` vs the HIG row's
-  "via Qt styling"); candidate: restrict anchor match to the first
-  (canon-name) cell in `check_seed_traceability.py`.
+  Grade-courier robustness (stage-throw guard) shipped 2026-07-11 on
+  branch `feat-replay-matrix-stage-guard` — both stage bodies in
+  `principles-replay-matrix.js` now catch stage errors into degraded
+  failed rows instead of `pipeline()` dropping the seed to null. The
+  other harness next-touch candidate, anchor-match precision
+  (`check_seed_traceability.py` restricting anchor match to the
+  first/canon-name cell), is DEFERRED — see
+  `docs/loom/specs/2026-07-11-replay-matrix-stage-guard.md` §Companion
+  decision for the reason (n=1 observed false-negative, under-report-only,
+  no mechanical rule yet separates it from a reproduced true positive);
+  revisit when L1 data shows drop-signal distortion attributable to it.
 
 ## Designer/PM loop — escalation interface, decision log, acceptance-surface contracts (OPEN)
 - Status: OPEN

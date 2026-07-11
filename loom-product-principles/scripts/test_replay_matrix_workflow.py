@@ -157,3 +157,51 @@ def test_sandbox_dir_segment_allow_list_present():
         "error message should name the offending segment/value, mirroring the "
         "runLabel guard's style"
     )
+
+
+# --- stage-throw guard: a stage that THROWS must degrade to a failed row ---
+# (2026-07-11 fix — brief docs/loom/specs/2026-07-11-replay-matrix-stage-guard.md)
+#
+# Observed in the committed calibration baseline: in 2/3 real matrix runs the
+# grading courier failed schema-forced output and the stage THREW. The
+# existing `if (!g)` null-guard only covers `agent()` RESOLVING to null, not
+# the stage throwing — an uncaught throw let `pipeline()` drop that seed's
+# row to null entirely (silently corrupting the pass table). Both stage
+# bodies (Replay, Grade) must wrap their logic in try/catch and degrade to a
+# failed row on catch, mirroring the existing null-guards' row shape.
+
+def test_stage_throw_guard_present_in_both_stages():
+    text = _text()
+    # The args guard already has one try/catch (JSON.parse of a string
+    # args payload) — the fix adds one more try and one more catch (e),
+    # one per pipeline stage (Replay, Grade), for >=3 total each.
+    assert text.count("try {") >= 3, (
+        "expected the pre-existing args-guard try plus one try each in the "
+        "Replay and Grade stage bodies (>=3 total 'try {' occurrences)"
+    )
+    assert text.count("catch (e)") >= 3, (
+        "expected the pre-existing args-guard catch plus one catch each in "
+        "the Replay and Grade stage bodies (>=3 total 'catch (e)' occurrences)"
+    )
+
+
+def test_stage_throw_guard_error_message_literals():
+    text = _text()
+    assert "replay: stage error — " in text, (
+        "Replay stage's catch must produce a degraded row with a "
+        "'replay: stage error — <message>' miss, mirroring the existing "
+        "artifactPath-missing guard's row shape"
+    )
+    assert "grade: stage error — " in text, (
+        "Grade stage's catch must produce a degraded row with a "
+        "'grade: stage error — <message>' miss"
+    )
+
+
+def test_existing_null_guards_still_present_untouched():
+    # The fix adds catches for THROWN stage errors — it must not remove or
+    # rewrite the pre-existing guards for `agent()` RESOLVING to null/no
+    # artifact.
+    text = _text()
+    assert "replay: no artifact produced" in text
+    assert "grade: courier produced no result" in text
