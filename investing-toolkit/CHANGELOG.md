@@ -5,6 +5,20 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.4.1] — 2026-07-12
+
+### Added
+
+- **Vault filename & folder convention** (`vault-frontmatter.md` new section,
+  referenced from Phase 5b): all-English `YYYY-MM-DD {identifier} Equity Memo.md`
+  under `investing/memos/`; equity identifier = Yahoo/RIC ticker as-is (dot
+  suffix included, e.g. `2330.TW`); future non-equity descriptors (`FX Memo`,
+  `Commodity Memo`) use clean identifiers (ISO 4217 `USDTWD`, `XAUUSD`, house
+  energy codes, caret-stripped indices) — raw vendor sigils (`=X`/`=F`/`^`) are
+  Obsidian-link-hostile and stay in frontmatter, never filenames. Same-day
+  re-analysis updates the existing note. (RESOLVED 2026-07-12 with the user;
+  grounded in an Obsidian-constraints + multi-asset-symbology survey.)
+
 ## [v2.4.0] — 2026-07-11
 
 Investing analysis memory layer (Obsidian-carried), pilot on

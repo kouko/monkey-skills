@@ -352,7 +352,11 @@ obsidian-markdown MUST respect these fields as-is and MUST NOT re-invent
 or overwrite them; it owns placement, wikilinks, callouts, and vault
 conventions only. Default vault folder: `investing/memos/` — a
 default-unless-user-says-otherwise convention, not a hard requirement;
-follow a user-named or vault-configured path when given one.
+follow a user-named or vault-configured path when given one. Filename:
+`YYYY-MM-DD {ticker} Equity Memo.md` (e.g. `2026-07-12 2330.TW Equity
+Memo.md`) per the naming section of `references/vault-frontmatter.md` —
+ticker as-is including its dot suffix; same-day re-analysis updates the
+existing note instead of minting a sibling.
 
 > **Cross-Plugin Contract recap (Phase 5b)**: Pass the docs-team Markdown
 > output **path** (not content) as input to obsidian-markdown — same
