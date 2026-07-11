@@ -79,11 +79,17 @@ parse_oracle contract — joins this living Oracle to the L1/L2 replay harness;
 derived from the prose assertions above, not new claims)
 
 named_anchors: JTBD|Jobs-to-be-Done; Kano; Apple HIG|Human Interface Guidelines; Nielsen; Apple Design Language; Local-First; Modular Monolith; SwiftUI; Core ML
-deferred_items: 成本|Cost posture
+deferred_items: 成本|Cost
 negative: 整理會議記錄; 追踪項目進度; 逐字稿編輯; 零雲端依賴; 分享修正數據; 鍵盤優先; 開發團隊; 團隊接受
 # note: 第 8 條原則（C3）is a count-based structural assertion, not a literal
 # presence check — stays with the "覆蓋式斷言" prose above, not encoded as a
 # negative token.
+# note: deferred_items token re-tokenized (calib-r2 evidence,
+# stable-fragment calibration): `成本|Cost posture`→`成本|Cost` — r2 OQ wrote
+# "Cost and monetization posture", so "Cost posture" was not a contiguous
+# substring. Bare `Cost` is safe here because check_deferred_items only
+# matches inside `## Open Questions` lines carrying `— re-trigger:`, not
+# the whole artifact.
 
 ## Known operator-invented specifics (user-accepted, allowed but not required)
 

@@ -313,10 +313,10 @@ _COMMITTED_ORACLE_EXPECTATIONS = [
         "named_anchors": "Nielsen's 10 Usability Heuristics",
         "negative": "postmortem 撰寫",
     }),
-    ("seed2-oracle.md", _SEED_CORPUS / "seed2-oracle.md", 8, 2, 5, {
+    ("seed2-oracle.md", _SEED_CORPUS / "seed2-oracle.md", 8, 2, 2, {
         "named_anchors": "Calm Technology",
         "deferred_items": "可逆性|Reversibility posture",
-        "negative": "上傳雲端",
+        "negative": "兒童聲音資料分享",
     }),
     ("seed3-oracle.md", _SEED_CORPUS / "seed3-oracle.md", 6, 0, 0, {
         "named_anchors": "Nielsen's 10 Usability Heuristics",
@@ -328,11 +328,11 @@ _COMMITTED_ORACLE_EXPECTATIONS = [
     }),
     ("seed5-oracle.md", _SEED_CORPUS / "seed5-oracle.md", 8, 2, 0, {
         "named_anchors": "WCAG",
-        "deferred_items": "預約記錄保留期",
+        "deferred_items": "預約記錄|retention",
     }),
     ("cold-operator seed.md", _COLD_OPERATOR_SEED, 9, 1, 8, {
         "named_anchors": "JTBD|Jobs-to-be-Done",
-        "deferred_items": "成本|Cost posture",
+        "deferred_items": "成本|Cost",
         "negative": "零雲端依賴",
     }),
 ]

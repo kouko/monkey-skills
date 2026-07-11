@@ -7,9 +7,16 @@ named_anchors: Working Backwards; Material Design; WCAG; React; TypeScript; Fast
 # deployment convention named in passing prose. Dual-stack (frontend +
 # backend) both must anchor.
 
-deferred_items: 預約記錄保留期; SLA/uptime
+deferred_items: 預約記錄|retention; SLA
 # note: each MUST appear in ## Open Questions with a — re-trigger:.
-# 預約記錄保留期（法規待查，Q8）; SLA/uptime 目標（待首批店家營業時間分布）.
+# 預約記錄保留期（法規待查，Q8，legal retention period）; SLA/uptime 目標
+# （待首批店家營業時間分布）.
+# note: deferred_items tokens re-tokenized (calib-r2 evidence,
+# stable-fragment calibration): `預約記錄保留期`→`預約記錄|retention` — r2 OQ
+# wrote 「預約記錄的法律保留期限」, the 「的法律」insertion breaks the
+# contiguous substring; `預約記錄` is present and distinctive, `retention`
+# covers English replays. `SLA/uptime`→`SLA` — r2 OQ wrote 「SLA 目標設定」/
+# 「可用性 SLA」; the `/uptime` suffix is fragile, bare `SLA` is distinctive.
 
 out_of_jurisdiction_bait:  # must be explicitly noted OUT, never become principles
   - 月費三檔（免費/390/990）          # pricing
