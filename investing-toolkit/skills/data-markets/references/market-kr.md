@@ -1,6 +1,6 @@
 # Market reference — KR
 
-Distilled from the pre-migration `skills/data-kr/SKILL.md`. All clients
+Distilled from the pre-migration `data-kr` skill's `SKILL.md`. All clients
 below are byte-identical migrations (cache-layer only) — see
 `references/migration-grounding.md` for the external-surface grounding.
 

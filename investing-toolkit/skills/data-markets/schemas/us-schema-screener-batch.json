@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://github.com/kouko/monkey-skills/blob/main/investing-toolkit/skills/data-us/references/schema-screener-batch.json",
+  "$id": "https://github.com/kouko/monkey-skills/blob/main/investing-toolkit/skills/data-markets/schemas/us-schema-screener-batch.json",
   "title": "data-us pack=screener-batch output",
   "description": "Pack output for `data-us/scripts/pack.py --tickers T1,T2,... --pack screener-batch`. Batch only (≥2 tickers required). Filters yfinance info to a lightweight screener-input field set: trailingPE, priceToBook, marketCap, dividendYield, beta, fiftyTwoWeekHigh, fiftyTwoWeekLow, regularMarketPrice, sector, industry, shortName. Tier 2 (yfinance unofficial).",
   "type": "object",

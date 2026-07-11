@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://github.com/kouko/monkey-skills/blob/main/investing-toolkit/skills/data-us/references/schema-regime-pack.json",
+  "$id": "https://github.com/kouko/monkey-skills/blob/main/investing-toolkit/skills/data-markets/schemas/us-schema-regime-pack.json",
   "title": "data-us pack=regime-pack output",
   "description": "Pack output for `data-us/scripts/pack.py --pack regime-pack`. No ticker dimension — fetches FRED macro indicator groups for US regime diagnosis. Tier A (FRED CSV, official Fed primary source). Groups: rates / inflation / growth / nowcast / wei / real_rates / swap_spreads.",
   "type": "object",

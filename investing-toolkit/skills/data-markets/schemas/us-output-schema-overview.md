@@ -1,8 +1,14 @@
-# data-us output schema overview
+# US output schema overview
+
+> This document describes the US pack payload shapes. Invocation now
+> goes through the unified `data-markets` facade —
+> `skills/data-markets/scripts/pack.py` (ticker suffix auto-detects
+> the US market; `--market us` is required for `regime-pack`, which
+> has no ticker dimension).
 
 Schemas in this directory document the JSON output produced by
-`investing-toolkit/skills/data-us/scripts/pack.py` for each of the five US
-pack types. Each schema is JSON-Schema draft-07, validated by the
+`investing-toolkit/skills/data-markets/scripts/pack.py` for each of the
+five US pack types. Each schema is JSON-Schema draft-07, validated by the
 `jsonschema` Python library (used in `tests/data/test_pack_schemas.py`).
 Schemas are descriptive, not strictly closed — `additionalProperties: true`
 is the default because upstream sources (yfinance / FRED / SEC EDGAR) evolve
@@ -12,12 +18,12 @@ and we want forward compatibility, not lockdown.
 
 | Pack | Schema file | Tier | Use case |
 |------|-------------|------|----------|
-| `snapshot` | [`schema-snapshot.json`](schema-snapshot.json) | 2 | Quick yfinance overview (info + 2y price) for a single ticker. Feeds `analysis-screener` lightweight paths and `report-stock-snapshot`. |
-| `memo-fetch` | [`schema-memo-fetch.json`](schema-memo-fetch.json) | A + 2 | Heavy bundle: yfinance + SEC EDGAR (10-K/10-Q/8-K + XBRL facts). Feeds `analysis-dcf` and `report-equity-memo`. |
-| `comps-multiples` | [`schema-comps-multiples.json`](schema-comps-multiples.json) | 2 | Multiples-only filter on yfinance info. Single (anchor) or batch (peers). Feeds `analysis-comps`. |
-| `screener-batch` | [`schema-screener-batch.json`](schema-screener-batch.json) | 2 | Lightweight screener-input fields, batch only (≥2 tickers). Feeds `analysis-screener`. |
-| `regime-pack` | [`schema-regime-pack.json`](schema-regime-pack.json) | A | FRED macro indicator groups, no ticker dimension. Feeds `analysis-macro-regime`. |
-| Shared | [`schema-error-envelope.json`](schema-error-envelope.json) | — | Reusable provenance + error wrapper definitions, `$ref`-d by all five packs. |
+| `snapshot` | [`us-schema-snapshot.json`](us-schema-snapshot.json) | 2 | Quick yfinance overview (info + 2y price) for a single ticker. Feeds `analysis-screener` lightweight paths and `report-stock-snapshot`. |
+| `memo-fetch` | [`us-schema-memo-fetch.json`](us-schema-memo-fetch.json) | A + 2 | Heavy bundle: yfinance + SEC EDGAR (10-K/10-Q/8-K + XBRL facts). Feeds `analysis-dcf` and `report-equity-memo`. |
+| `comps-multiples` | [`us-schema-comps-multiples.json`](us-schema-comps-multiples.json) | 2 | Multiples-only filter on yfinance info. Single (anchor) or batch (peers). Feeds `analysis-comps`. |
+| `screener-batch` | [`us-schema-screener-batch.json`](us-schema-screener-batch.json) | 2 | Lightweight screener-input fields, batch only (≥2 tickers). Feeds `analysis-screener`. |
+| `regime-pack` | [`us-schema-regime-pack.json`](us-schema-regime-pack.json) | A | FRED macro indicator groups, no ticker dimension. Feeds `analysis-macro-regime`. |
+| Shared | [`us-schema-error-envelope.json`](us-schema-error-envelope.json) | — | Reusable provenance + error wrapper definitions, `$ref`-d by all five packs. |
 
 ## Sample fixture trim convention
 
@@ -79,7 +85,7 @@ and we want forward compatibility, not lockdown.
 
 Every fetched payload carries a `_provenance` object with at minimum
 `source`, `source_authority`, `data_type`, `update_cycle`, `typical_lag`,
-`fetched_at`. See `schema-error-envelope.json#/definitions/provenance` for
+`fetched_at`. See `us-schema-error-envelope.json#/definitions/provenance` for
 the full field set including the `tier` enum (`A`, `2`, `2-gap`,
 `tier_1`, `tier_2`). `data_type` common values: `official_regulatory_filing`
 (SEC filings), `official_macro_indicator` / `official_government_statistics`
@@ -114,16 +120,19 @@ authoritative TTL values; the schemas accept any string for `_cache`.
 
 ## Error envelope
 
-All five packs implement **partial-failure semantics** (the pack itself
-exits 0 even when an underlying client fails). Failure surfaces in two
-ways:
+All five packs implement **partial-failure semantics** at the section
+level: a failed client is replaced by an error slot rather than
+crashing the whole pack. The unified `pack.py` facade's top-level exit
+code reflects the outcome (0 ok / 1 all sections failed / 2 partial /
+64 usage error — see `pack.py`'s docstring for the full contract).
+Failure surfaces in two ways:
 
 1. **Nested slot replaced.** When the `yfinance_client.py` /
    `sec_edgar_client.py` / `fred_client.py` subprocess fails, the
    corresponding slot (`company_info`, `price_history`, `sec_filings`,
    `sec_facts`, `groups.<name>`, or `groups.<name>.series.<series_id>`)
    is replaced by an `error_wrapper` object — see
-   `schema-error-envelope.json#/definitions/error_wrapper`. Consumers
+   `us-schema-error-envelope.json#/definitions/error_wrapper`. Consumers
    detect this via `error` (or `_error`) key presence.
 
 2. **Top-level `error` for batch packs.** When the entire batch fetch

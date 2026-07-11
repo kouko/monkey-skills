@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://github.com/kouko/monkey-skills/blob/main/investing-toolkit/skills/data-us/references/schema-snapshot.json",
+  "$id": "https://github.com/kouko/monkey-skills/blob/main/investing-toolkit/skills/data-markets/schemas/us-schema-snapshot.json",
   "title": "data-us pack=snapshot output",
   "description": "Pack output for `data-us/scripts/pack.py --ticker {T} --pack snapshot`. Composes yfinance info + 2y price history for a single US ticker.",
   "type": "object",

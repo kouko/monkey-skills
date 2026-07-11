@@ -1,8 +1,14 @@
-# data-cn output schema overview
+# CN output schema overview
+
+> This document describes the CN pack payload shapes. Invocation now
+> goes through the unified `data-markets` facade —
+> `skills/data-markets/scripts/pack.py` (ticker suffix auto-detects
+> the CN market; `--market cn` is required for `regime-pack`, which
+> has no ticker dimension).
 
 Schemas in this directory document the JSON output produced by
-`investing-toolkit/skills/data-cn/scripts/pack.py` for each of the five CN
-pack types. Each schema is JSON Schema **draft-2020-12**, validated by the
+`investing-toolkit/skills/data-markets/scripts/pack.py` for each of the
+five CN pack types. Each schema is JSON Schema **draft-2020-12**, validated by the
 `jsonschema` Python library (used in `tests/data/test_pack_schemas.py`).
 Schemas are descriptive, not strictly closed — `additionalProperties: true`
 is the default because upstream sources (NBS new-SPA / akshare / FRED /
@@ -12,12 +18,12 @@ yfinance) evolve and we want forward compatibility, not lockdown.
 
 | Pack | Schema file | Tier | Use case |
 |------|-------------|------|----------|
-| `snapshot` | [`schema-snapshot.json`](schema-snapshot.json) | 2 | Quick yfinance overview (info + 6mo daily) for a single .SS / .SZ / .HK ticker. Feeds `analysis-screener` lightweight paths and `report-stock-snapshot`. |
-| `memo-fetch` | [`schema-memo-fetch.json`](schema-memo-fetch.json) | **2 only** | Equity memo bundle (yfinance info + 2y price + annual + quarterly financials). **Tier 2 floor — CN primary-source disclosure (cninfo / HKEXnews) deferred from v2.0.0.** Feeds `analysis-dcf` and `report-equity-memo` with explicit tier-status warning. |
-| `comps-multiples` | [`schema-comps-multiples.json`](schema-comps-multiples.json) | 2 | Multiples-only filter on yfinance info. Single (anchor) or batch (peers); both modes uniformly shaped as `tickers: []`. Feeds `analysis-comps`. |
-| `screener-batch` | [`schema-screener-batch.json`](schema-screener-batch.json) | 2 | Lightweight screener-input fields, batch only (≥2 tickers). Feeds `analysis-screener`. |
-| `regime-pack` | [`schema-regime-pack.json`](schema-regime-pack.json) | A + 2 | NBS (21) + akshare (8) + FRED (2) + market indices (5) = **36 series**. Feeds `analysis-macro-regime`. No ticker dimension. |
-| Shared | [`schema-error-envelope.json`](schema-error-envelope.json) | — | Reusable error sentinels; documents stderr-only ticker-normalisation warnings for orchestrators. |
+| `snapshot` | [`cn-schema-snapshot.json`](cn-schema-snapshot.json) | 2 | Quick yfinance overview (info + 6mo daily) for a single .SS / .SZ / .HK ticker. Feeds `analysis-screener` lightweight paths and `report-stock-snapshot`. |
+| `memo-fetch` | [`cn-schema-memo-fetch.json`](cn-schema-memo-fetch.json) | **2 only** | Equity memo bundle (yfinance info + 2y price + annual + quarterly financials). **Tier 2 floor — CN primary-source disclosure (cninfo / HKEXnews) deferred from v2.0.0.** Feeds `analysis-dcf` and `report-equity-memo` with explicit tier-status warning. |
+| `comps-multiples` | [`cn-schema-comps-multiples.json`](cn-schema-comps-multiples.json) | 2 | Multiples-only filter on yfinance info. Single (anchor) or batch (peers); both modes uniformly shaped as `tickers: []`. Feeds `analysis-comps`. |
+| `screener-batch` | [`cn-schema-screener-batch.json`](cn-schema-screener-batch.json) | 2 | Lightweight screener-input fields, batch only (≥2 tickers). Feeds `analysis-screener`. |
+| `regime-pack` | [`cn-schema-regime-pack.json`](cn-schema-regime-pack.json) | A + 2 | NBS (21) + akshare (8) + FRED (2) + market indices (5) = **36 series**. Feeds `analysis-macro-regime`. No ticker dimension. |
+| Shared | [`cn-schema-error-envelope.json`](cn-schema-error-envelope.json) | — | Reusable error sentinels; documents stderr-only ticker-normalisation warnings for orchestrators. |
 
 ## Source mix and tier per pack
 
@@ -29,7 +35,7 @@ yfinance) evolve and we want forward compatibility, not lockdown.
 | **yfinance** | Tier 2 unofficial scraper | All ticker-level packs + market indices in `regime-pack` |
 
 CN memo-fetch is **deliberately Tier 2 only** in v2.0.0 — see
-`schema-memo-fetch.json#/properties/_provenance` for the locked
+`cn-schema-memo-fetch.json#/properties/_provenance` for the locked
 `tier: 2 (integer) / primary_source_status: "deferred"` block. Compare
 with data-us where memo-fetch composes Tier A SEC EDGAR filings + XBRL
 facts on top of yfinance.
@@ -60,7 +66,7 @@ facts on top of yfinance.
 | Other digit length | **passthrough + warning** | "Unrecognized CN ticker format" |
 
 Warnings are stderr-only — see
-`schema-error-envelope.json#/ticker_normalization_warnings`. They are
+`cn-schema-error-envelope.json#/ticker_normalization_warnings`. They are
 **not** part of the JSON output. Consumers that want to surface them
 must capture stderr separately. Downstream yfinance failure (likely for
 BSE codes) propagates as a normal `_error` entry inside the batch
@@ -180,7 +186,7 @@ exits 0 even when an underlying client fails). Failure surfaces in three
 ways:
 
 1. **Nested slot replaced** by an error sentinel — see
-   `schema-error-envelope.json#/$defs/clientError` and `/$defs/invalidJson`.
+   `cn-schema-error-envelope.json#/$defs/clientError` and `/$defs/invalidJson`.
    Consumers detect via `_error` key presence.
 2. **Per-ticker error inside batch payload** — when a single ticker fails
    inside `yfinance --tickers ...` batch mode, that ticker's entry under
@@ -191,7 +197,7 @@ ways:
 3. **Stderr-only ticker-normalisation warnings** — BSE codes (`/4,8`)
    and unrecognised digit lengths emit stderr warnings and pass through
    unchanged. Documented at
-   `schema-error-envelope.json#/$defs/tickerNormalizationWarnings`
+   `cn-schema-error-envelope.json#/$defs/tickerNormalizationWarnings`
    (under `$defs` since this is stderr-only and not a schema-validated
    stdout field).
 

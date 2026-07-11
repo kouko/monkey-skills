@@ -1,19 +1,25 @@
-# data-kr — Output Schema Overview
+# KR — Output Schema Overview
 
-JSON Schemas (Draft 2020-12) for every pack type emitted by
-`skills/data-kr/scripts/pack.py`. Layer 2 / Layer 3 skills consume these
-contracts; this document is the human-readable index.
+> This document describes the KR pack payload shapes emitted by the
+> unified `data-markets` facade. Invocation goes through
+> `skills/data-markets/scripts/pack.py` (ticker suffix auto-detects
+> the KR market; `--market kr` is required for `regime-pack`, which
+> has no ticker dimension) — see the Validation recipe below.
+
+JSON Schemas (Draft 2020-12) for every KR pack type emitted by
+`skills/data-markets/scripts/pack.py`. Layer 2 / Layer 3 skills consume
+these contracts; this document is the human-readable index.
 
 ## Schema files (this directory)
 
 | Pack mode | Schema | Status notes |
 |-----------|--------|--------------|
-| `--pack snapshot` | [`schema-snapshot.json`](./schema-snapshot.json) | Tier 2 only (yfinance .KS / .KQ); DART deferred |
-| `--pack memo-fetch` | [`schema-memo-fetch.json`](./schema-memo-fetch.json) | **Tier 2 only** — `_provenance.primary_source_status` always `"deferred"`; treat all financials as unverified scraper output |
-| `--pack comps-multiples` | [`schema-comps-multiples.json`](./schema-comps-multiples.json) | Single + batch produce the **same** shape: `info: {ticker: {...}}` |
-| `--pack screener-batch` | [`schema-screener-batch.json`](./schema-screener-batch.json) | Raw yfinance batch envelope under `batch` |
-| `--pack regime-pack` | [`schema-regime-pack.json`](./schema-regime-pack.json) | Tier A primary — BOK ECOS-KEYSTAT (54 indicators / 13 groups) + FRED DEXKOUS fallback |
-| (any pack) error path | [`schema-error-envelope.json`](./schema-error-envelope.json) | Top-level `error / _partial: true` envelope; pack.py exits 1 |
+| `--pack snapshot` | [`kr-schema-snapshot.json`](./kr-schema-snapshot.json) | Tier 2 only (yfinance .KS / .KQ); DART deferred |
+| `--pack memo-fetch` | [`kr-schema-memo-fetch.json`](./kr-schema-memo-fetch.json) | **Tier 2 only** — `_provenance.primary_source_status` always `"deferred"`; treat all financials as unverified scraper output |
+| `--pack comps-multiples` | [`kr-schema-comps-multiples.json`](./kr-schema-comps-multiples.json) | Single + batch produce the **same** shape: `info: {ticker: {...}}` |
+| `--pack screener-batch` | [`kr-schema-screener-batch.json`](./kr-schema-screener-batch.json) | Raw yfinance batch envelope under `batch` |
+| `--pack regime-pack` | [`kr-schema-regime-pack.json`](./kr-schema-regime-pack.json) | Tier A primary — BOK ECOS-KEYSTAT (54 indicators / 13 groups) + FRED DEXKOUS fallback |
+| (any pack) error path | [`kr-schema-error-envelope.json`](./kr-schema-error-envelope.json) | Top-level `error / _partial: true` envelope; contributes to exit 1 (all sections failed) or 2 (partial) per pack.py's exit contract — a single failed section alone does not change the exit code |
 
 ## Sample fixtures (in `investing-toolkit/tests/data/fixtures/`)
 
@@ -91,7 +97,7 @@ yfinance batch envelope so consumers always see:
 
 This matches `analysis-comps`'s expectation: one access pattern,
 `info[ticker][multiple]`, regardless of single vs batch invocation.
-Verified live for both shapes against `schema-comps-multiples.json`.
+Verified live for both shapes against `kr-schema-comps-multiples.json`.
 
 ### screener-batch
 
@@ -161,9 +167,9 @@ Per-indicator payload shape:
 
 ### error envelope
 
-Used both at the top level (pack.py exits 1) and inline for nested
-failures. Always carries `_partial: true`. For regime-pack with an
-unknown group name:
+Used both at the top level (contributes to pack.py exit 1 or 2, per
+the exit contract above) and inline for nested failures. Always
+carries `_partial: true`. For regime-pack with an unknown group name:
 
 ```jsonc
 {
@@ -202,13 +208,13 @@ mixed list is normalized in one pass without overrides.
 
 ```bash
 INVESTING_TOOLKIT_CACHE=/tmp/kr-cache \
-  uv run skills/data-kr/scripts/pack.py \
+  uv run skills/data-markets/scripts/pack.py \
   --ticker 005930.KS --pack snapshot > /tmp/kr-snap.json
 
 uv run --with jsonschema python3 - <<'PY'
 import json, jsonschema
 schema = json.load(open(
-    'investing-toolkit/skills/data-kr/references/schema-snapshot.json'))
+    'investing-toolkit/skills/data-markets/schemas/kr-schema-snapshot.json'))
 sample = json.load(open('/tmp/kr-snap.json'))
 jsonschema.validate(sample, schema)
 print('KR snapshot live output validates')

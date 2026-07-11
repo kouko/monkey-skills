@@ -1,22 +1,28 @@
-# data-tw output schemas — overview
+# TW output schemas — overview
+
+> This document describes the TW pack payload shapes. Invocation now
+> goes through the unified `data-markets` facade —
+> `skills/data-markets/scripts/pack.py` (ticker suffix auto-detects
+> the TW market; `--market tw` is required for `regime-pack`, which
+> has no ticker dimension).
 
 JSON Schema (Draft 2020-12) definitions for the 5 pack types emitted by
-`scripts/pack.py`, plus a reusable error-envelope schema. Layer 2 (`analysis-*`)
-and Layer 3 (`report-*`) skills consume `data-tw` output exclusively through
-these contracts.
+`skills/data-markets/scripts/pack.py`, plus a reusable error-envelope
+schema. Layer 2 (`analysis-*`) and Layer 3 (`report-*`) skills consume
+`data-tw` output exclusively through these contracts.
 
 ## Files
 
 | Schema | Pack | Sample fixture |
 |---|---|---|
-| `schema-snapshot.json` | `--pack snapshot` | `tests/data/fixtures/data-tw-snapshot-sample.json` |
-| `schema-memo-fetch.json` | `--pack memo-fetch` | `tests/data/fixtures/data-tw-memo-fetch-sample.json` |
-| `schema-comps-multiples.json` | `--pack comps-multiples` | `tests/data/fixtures/data-tw-comps-multiples-sample.json` |
-| `schema-screener-batch.json` | `--pack screener-batch` | `tests/data/fixtures/data-tw-screener-batch-sample.json` |
-| `schema-regime-pack.json` | `--pack regime-pack` | `tests/data/fixtures/data-tw-regime-pack-sample.json` |
-| `schema-error-envelope.json` | (reusable building block) | — |
+| `tw-schema-snapshot.json` | `--pack snapshot` | `tests/data/fixtures/data-tw-snapshot-sample.json` |
+| `tw-schema-memo-fetch.json` | `--pack memo-fetch` | `tests/data/fixtures/data-tw-memo-fetch-sample.json` |
+| `tw-schema-comps-multiples.json` | `--pack comps-multiples` | `tests/data/fixtures/data-tw-comps-multiples-sample.json` |
+| `tw-schema-screener-batch.json` | `--pack screener-batch` | `tests/data/fixtures/data-tw-screener-batch-sample.json` |
+| `tw-schema-regime-pack.json` | `--pack regime-pack` | `tests/data/fixtures/data-tw-regime-pack-sample.json` |
+| `tw-schema-error-envelope.json` | (reusable building block) | — |
 
-All five pack schemas reference `schema-error-envelope.json` for every leaf
+All five pack schemas reference `tw-schema-error-envelope.json` for every leaf
 node — the wrapper produced by `pack.py wrap()`.
 
 > **Fixture trim convention**: To keep fixtures small while preserving
@@ -178,7 +184,7 @@ because pre-day-15 falls back two months).
 
 ## NDC cycle signal score — IMPORTANT scale clarification
 
-`schema-regime-pack.json` exposes `ndc.signal.data` containing two time series:
+`tw-schema-regime-pack.json` exposes `ndc.signal.data` containing two time series:
 **score** (`景氣對策信號綜合分數`) and **color** (`景氣對策信號` 五色燈號).
 
 The score is the **9-component composite**, each component scored 1–5, summed:
@@ -214,7 +220,7 @@ All ticker fields use the yfinance suffix form after normalization:
 - `otc` → MOPS + TWSE OpenAPI primary; **price history via FinMind** (TPEx
   has no `/rwd/`); yfinance `.TWO`
 
-In `schema-memo-fetch.json` this routing manifests structurally:
+In `tw-schema-memo-fetch.json` this routing manifests structurally:
 
 - `twse.stock_day_history` is **present iff `_normalized.market == "sii"`**
 - `finmind.price_history` is **present iff `_normalized.market == "otc"`**
@@ -228,7 +234,7 @@ The schemas mark both as optional rather than encoding the conditional with
 
 ```bash
 INVESTING_TOOLKIT_CACHE=/tmp/tw-cache uv run \
-  investing-toolkit/skills/data-tw/scripts/pack.py \
+  investing-toolkit/skills/data-markets/scripts/pack.py \
   --ticker 2330.TW --pack snapshot > /tmp/tw-snap.json
 
 uv run --with jsonschema --with referencing python3 - <<'PY'
@@ -237,18 +243,18 @@ from pathlib import Path
 from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
 
-ref_dir = Path("investing-toolkit/skills/data-tw/references")
+ref_dir = Path("investing-toolkit/skills/data-markets/schemas")
 BASE = "file:///schemas/"
 def load(name):
     return BASE + name, Resource.from_contents(json.loads((ref_dir / name).read_text()))
 registry = Registry().with_resources([
     load(n) for n in [
-        "schema-error-envelope.json", "schema-snapshot.json",
-        "schema-memo-fetch.json",     "schema-comps-multiples.json",
-        "schema-screener-batch.json", "schema-regime-pack.json",
+        "tw-schema-error-envelope.json", "tw-schema-snapshot.json",
+        "tw-schema-memo-fetch.json",     "tw-schema-comps-multiples.json",
+        "tw-schema-screener-batch.json", "tw-schema-regime-pack.json",
     ]
 ])
-schema = json.loads((ref_dir / "schema-snapshot.json").read_text())
+schema = json.loads((ref_dir / "tw-schema-snapshot.json").read_text())
 
 # rewrite relative $refs to BASE+name so the registry resolves them
 def rewrite(node):
@@ -270,7 +276,7 @@ PY
 ```
 
 The cross-file `$ref` rewrite is required because the schemas use relative
-filenames (`{"$ref": "schema-error-envelope.json"}`) — natural for an on-disk
+filenames (`{"$ref": "tw-schema-error-envelope.json"}`) — natural for an on-disk
 reference set, but the `jsonschema` library needs a base URI to resolve them.
 
 ---
@@ -286,7 +292,7 @@ Across all 5 packs:
 3. `_partial: bool` appears on `snapshot`, `memo-fetch`, `regime-pack`. It
    is **absent** on `comps-multiples` and `screener-batch` — those callers
    walk per-leaf `_error` directly.
-4. Every leaf is a `schema-error-envelope.json` instance — even `null` /
+4. Every leaf is a `tw-schema-error-envelope.json` instance — even `null` /
    missing data is represented through the wrapper, not by omitting the key.
 
 ---

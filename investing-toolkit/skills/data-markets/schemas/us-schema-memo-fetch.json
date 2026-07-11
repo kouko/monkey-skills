@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://github.com/kouko/monkey-skills/blob/main/investing-toolkit/skills/data-us/references/schema-memo-fetch.json",
+  "$id": "https://github.com/kouko/monkey-skills/blob/main/investing-toolkit/skills/data-markets/schemas/us-schema-memo-fetch.json",
   "title": "data-us pack=memo-fetch output",
   "description": "Pack output for `data-us/scripts/pack.py --ticker {T} --pack memo-fetch`. Heavy bundle: yfinance info + 2y price + SEC EDGAR filings index (10-K/10-Q/8-K, configurable; default 8 — use --filings-limit to override) + SEC XBRL us-gaap concept facts. Single ticker only by design (SEC EDGAR is rate-limited 10 req/s).",
   "type": "object",

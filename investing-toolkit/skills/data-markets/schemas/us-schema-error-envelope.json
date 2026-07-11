@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://github.com/kouko/monkey-skills/blob/main/investing-toolkit/skills/data-us/references/schema-error-envelope.json",
+  "$id": "https://github.com/kouko/monkey-skills/blob/main/investing-toolkit/skills/data-markets/schemas/us-schema-error-envelope.json",
   "title": "data-us shared provenance + error envelope",
   "description": "Reusable definitions for tier-aware provenance metadata and partial-failure error wrappers used across all data-us pack outputs. Referenced via $ref by the per-pack schemas.",
   "type": "object",

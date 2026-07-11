@@ -1,23 +1,30 @@
-# data-jp output schema overview
+# JP output schema overview
+
+> This document describes the JP pack payload shapes. Invocation now
+> goes through the unified `data-markets` facade —
+> `skills/data-markets/scripts/pack.py` (ticker suffix auto-detects
+> the JP market; `--market jp` is required for `regime-pack`, which
+> has no ticker dimension).
 
 JSON Schema (draft-07) contracts for every `pack.py` output shape and the
 embedded client-error envelope. Layer 2 (`analysis-*`) and Layer 3
 (`report-*`) consumers should validate against these schemas before
 treating a payload as well-formed.
 
-All schema files live in `investing-toolkit/skills/data-jp/references/`
-(flat layout — one level deep, no sub-folders, prefix-naming convention).
+All schema files live in `investing-toolkit/skills/data-markets/schemas/`
+(flat layout — one level deep, no sub-folders, market-prefix naming
+convention).
 
 ## Schemas
 
-| Schema file                    | Pack            | Required `EDINET_API_KEY`? | Tier      |
-|--------------------------------|-----------------|:--------------------------:|-----------|
-| `schema-snapshot.json`         | `snapshot`      | no                         | tier_1    |
-| `schema-memo-fetch.json`       | `memo-fetch`    | optional (tier-routed)     | tier_a / tier_2 |
-| `schema-comps-multiples.json`  | `comps-multiples` | no                       | tier_1    |
-| `schema-screener-batch.json`   | `screener-batch` | no                        | tier_1    |
-| `schema-regime-pack.json`      | `regime-pack`   | no                         | tier_a    |
-| `schema-error-envelope.json`   | (referenced from every pack schema) | n/a    | n/a       |
+| Schema file                       | Pack            | Required `EDINET_API_KEY`? | Tier      |
+|------------------------------------|-----------------|:--------------------------:|-----------|
+| `jp-schema-snapshot.json`         | `snapshot`      | no                         | tier_1    |
+| `jp-schema-memo-fetch.json`       | `memo-fetch`    | optional (tier-routed)     | tier_a / tier_2 |
+| `jp-schema-comps-multiples.json`  | `comps-multiples` | no                       | tier_1    |
+| `jp-schema-screener-batch.json`   | `screener-batch` | no                        | tier_1    |
+| `jp-schema-regime-pack.json`      | `regime-pack`   | no                         | tier_a    |
+| `jp-schema-error-envelope.json`   | (referenced from every pack schema) | n/a    | n/a       |
 
 ## Common envelope
 
@@ -92,7 +99,7 @@ as a soft-missing condition, not an error. The schema permits `null` and
 
 When a sibling client subprocess fails (uv missing, JSON-decode error,
 non-zero exit, timeout), `pack.py:_run_client(...)` returns the
-`schema-error-envelope.json` shape **embedded inline** at the position
+`jp-schema-error-envelope.json` shape **embedded inline** at the position
 where the successful payload would have appeared:
 
 ```json
@@ -125,16 +132,16 @@ from jsonschema import Draft7Validator
 from referencing import Registry, Resource
 from referencing.jsonschema import DRAFT7
 
-base = Path("investing-toolkit/skills/data-jp/references")
+base = Path("investing-toolkit/skills/data-markets/schemas")
 resources = []
-for p in base.glob("schema-*.json"):
+for p in base.glob("jp-schema-*.json"):
     s = json.load(open(p))
     sid = s.get("$id")
     if sid:
         resources.append((sid, Resource(contents=s, specification=DRAFT7)))
 registry = Registry().with_resources(resources)
 
-schema = json.load(open(base / "schema-snapshot.json"))
+schema = json.load(open(base / "jp-schema-snapshot.json"))
 sample = json.load(open("/tmp/jp-snap.json"))
 Draft7Validator(schema, registry=registry).validate(sample)
 ```
@@ -179,7 +186,7 @@ a live `EDINET_API_KEY`. To verify the Tier A schema branch locally:
 
 ```bash
 EDINET_API_KEY=... INVESTING_TOOLKIT_CACHE=/tmp/jp-cache \
-  uv run skills/data-jp/scripts/pack.py --ticker 7203 --pack memo-fetch \
+  uv run skills/data-markets/scripts/pack.py --ticker 7203 --pack memo-fetch \
   > /tmp/jp-memo-tier-a.json
 
 uv run --with jsonschema --with referencing python3 -c "
@@ -188,14 +195,14 @@ from pathlib import Path
 from jsonschema import Draft7Validator
 from referencing import Registry, Resource
 from referencing.jsonschema import DRAFT7
-base = Path('investing-toolkit/skills/data-jp/references')
+base = Path('investing-toolkit/skills/data-markets/schemas')
 resources = []
-for p in base.glob('schema-*.json'):
+for p in base.glob('jp-schema-*.json'):
     s = json.load(open(p))
     sid = s.get('\$id')
     if sid: resources.append((sid, Resource(contents=s, specification=DRAFT7)))
 registry = Registry().with_resources(resources)
-schema = json.load(open(base / 'schema-memo-fetch.json'))
+schema = json.load(open(base / 'jp-schema-memo-fetch.json'))
 sample = json.load(open('/tmp/jp-memo-tier-a.json'))
 Draft7Validator(schema, registry=registry).validate(sample)
 print('Tier A memo-fetch validates')
@@ -204,8 +211,8 @@ print('Tier A memo-fetch validates')
 
 ## See also
 
-- `investing-toolkit/skills/data-jp/SKILL.md` — pack contracts + tier-routing rationale
-- `investing-toolkit/skills/data-jp/scripts/pack.py` — implementation
+- `investing-toolkit/skills/data-markets/SKILL.md` — pack contracts + tier-routing rationale
+- `investing-toolkit/skills/data-markets/scripts/pack.py` — implementation
 - `investing-toolkit/skills/analysis-macro-regime/references/japan-real-rate-roadmap.md`
   — context for the JP real-rate null-allowed contract
 - `investing-toolkit/docs/adr/0001-data-analysis-report-layers.md` — three-layer ADR

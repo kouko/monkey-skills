@@ -120,21 +120,15 @@ The canonical mapping lives in [ADR-0001 §Slash-Command Rename Map](adr/0001-da
 ## Path convention changes
 
 - **v1.x**: each skill had its own `scripts/` directory with copies of all clients (50+ duplicates across the toolkit).
-- **v2.0.0**: canonical clients live at `investing-toolkit/scripts/`. `data-{country}/scripts/` keeps MD5-locked copies (CI-enforced via `.github/workflows/check-script-sync.yml`). `analysis-*` and `report-*` skills have **no client copies** — only their own compute or format scripts.
+- **v2.0.0** (superseded — see below): canonical clients lived at `investing-toolkit/scripts/`. Per-country `data-{country}/scripts/` kept MD5-locked copies (CI-enforced), synced via a helper script.
+- **Current (v2.3.0+, ADR-0009)**: the 5 per-country data skills were merged into one `skills/data-markets/` skill. Every client now has exactly **one** canonical copy in `skills/data-markets/scripts/`, imported directly by the market-specific `pack_{market}.py` modules — there are no more per-country copies, and nothing to sync. `analysis-*` and `report-*` skills still have **no client copies** — only their own compute or format scripts.
 - **Cross-skill calls**: use `${CLAUDE_PLUGIN_ROOT}/skills/<skill>/scripts/<file>` (not `${CLAUDE_SKILL_DIR}/../<skill>/`).
 
-To re-sync data-pack copies after editing a canonical client:
+## Removed mechanisms
 
-```bash
-investing-toolkit/scripts/sync-clients.sh         # update copies
-investing-toolkit/scripts/sync-clients.sh --check # CI dry-run mode
-```
-
-## Removed v1.x mechanisms
-
-- `investing-toolkit/scripts/sync-scripts.sh` — replaced by `sync-clients.sh`.
-- `investing-toolkit/scripts/sync-check.sh` — replaced by `sync-clients.sh --check`.
+- `investing-toolkit/scripts/sync-scripts.sh` (v1.x) — replaced by the v2.0.0 client-sync helper.
 - `investing-toolkit/tests/test_skill_md_sync.py` — v1.16.1 dual-mode validation; v2.0.0 uses main-agent + Bash so per-skill MCP sync is no longer needed.
+- The v2.0.0 client-sync helper and its `--check` CI mode — retired 2026-07-11 per ADR-0009: the `data-markets` consolidation collapsed per-country client copies into one canonical copy each, so there is no second copy left to sync.
 
 ## Known v2.1+ items (deferred)
 

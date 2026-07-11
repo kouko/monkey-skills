@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://github.com/kouko/monkey-skills/blob/main/investing-toolkit/skills/data-us/references/schema-comps-multiples.json",
+  "$id": "https://github.com/kouko/monkey-skills/blob/main/investing-toolkit/skills/data-markets/schemas/us-schema-comps-multiples.json",
   "title": "data-us pack=comps-multiples output",
   "description": "Pack output for `data-us/scripts/pack.py --ticker {T} --pack comps-multiples` (anchor only) OR `--tickers T1,T2,...` (peers). Filters yfinance info to the multiples-only field set: trailingPE, forwardPE, priceToSales, priceToBook, enterpriseToEbitda, enterpriseToRevenue, marketCap, enterpriseValue. Tier 2 (yfinance unofficial).",
   "type": "object",

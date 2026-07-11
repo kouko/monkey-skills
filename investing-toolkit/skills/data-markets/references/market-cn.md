@@ -1,6 +1,6 @@
 # Market reference — CN
 
-Distilled from the pre-migration `skills/data-cn/SKILL.md`. All clients
+Distilled from the pre-migration `data-cn` skill's `SKILL.md`. All clients
 below are byte-identical migrations (cache-layer only) — see
 `references/migration-grounding.md` for the external-surface grounding.
 
