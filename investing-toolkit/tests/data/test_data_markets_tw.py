@@ -223,6 +223,15 @@ def test_cached_get_dict_payload_hit_matches_miss_shape(monkeypatch):
     would see extra `_cache*` keys that are absent on a MISS. Assert the
     hit path strips them so hit and miss are indistinguishable in shape.
     """
+    pytest.importorskip(
+        "requests",
+        reason=(
+            "twse_openapi_client.py imports requests/urllib3 at module load; "
+            "CI installs only pytest+pyyaml — run with `uv run --with requests==2.33.1`"
+        ),
+    )
+    pytest.importorskip("urllib3")
+
     sys.path.insert(0, str(SCRIPTS_DIR))
     try:
         import twse_openapi_client as twse
