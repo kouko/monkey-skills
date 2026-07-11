@@ -1,10 +1,12 @@
 ---
 name: analysis-macro-regime
 description: >-
-  Pure-compute Investment Clock + Hedgeye GIP regime classification across
-  US/JP/TW/KR/CN. Input: --input <country=path,country=path,...> macro
-  indicator JSONs from data-markets/scripts/pack.py --pack regime-pack --market <cc>. Output:
-  regime card JSON.
+  Classifies the current macro regime (判斷當前總經 regime／regime 分類) for
+  US/JP/TW/KR/CN using the Investment Clock + Hedgeye GIP framework — a
+  verdict, not a fetch. Pure-compute analysis step: takes pre-fetched macro
+  indicator JSONs and does NOT call any data source. Input: --input
+  <country=path,country=path,...> from data-markets/scripts/pack.py --pack
+  regime-pack --market <cc>. Output: regime card JSON.
 ---
 
 # analysis-macro-regime

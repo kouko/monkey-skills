@@ -141,6 +141,23 @@ def test_high_growth_warning(runner, fixtures_dir):
     assert "growth_1_5 > 20%" in warnings or "ROIC" in warnings
 
 
+def test_per_share_sane_magnitude_absolute_currency_input(runner, fixtures_dir):
+    """data-markets emits absolute-currency financials (not $M) — see
+    pack_tw.py:264 `"unit": "TWD"` absolute, verified across all 5 markets.
+    dcf_compute.py must NOT apply a $M->$ conversion factor on top of an
+    already-absolute input, or per-share intrinsic value comes out ~1e6x
+    too high (2330.TW repro: mid=1,685,938,388.84 instead of ~1685.94).
+    """
+    res = runner(DCF_SCRIPT, "--input", str(fixtures_dir / "dcf_tw_absolute_currency.json"))
+    assert res.returncode == 0, res.stderr
+    payload = json.loads(res.stdout)
+    mid = payload["intrinsic_value"]["mid"]
+    assert 50 <= mid <= 20000, (
+        f"intrinsic mid {mid} outside plausible per-share band — "
+        "likely a $M->$ unit-conversion bug on already-absolute-currency input"
+    )
+
+
 def test_sensitivity_grid_is_3x3(runner, fixtures_dir):
     res = runner(DCF_SCRIPT, "--input", str(fixtures_dir / "aapl_memo_fetch.json"))
     payload = json.loads(res.stdout)

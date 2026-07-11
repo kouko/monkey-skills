@@ -141,8 +141,10 @@ def _get(url: str, timeout: int = 30) -> list | dict:
 _CACHE_BOOKKEEPING_KEYS = ("_cache", "_cache_age_seconds", "_cache_ttl_seconds")
 
 
-def _cached_get(url: str, cache_key: str, *, ttl: int) -> tuple[list | dict, str]:
-    """GET with cache; returns (data, cache_status).
+def _cached_get(
+    url: str, cache_key: str, *, ttl: int
+) -> tuple[list | dict, str, dict | None]:
+    """GET with cache; returns (data, cache_status, cache_meta).
 
     cache_util.save_cache/load_cache assume dict-shaped `data` (they merge
     `_cache`/`_cache_age_seconds`/`_cache_ttl_seconds` into it on a hit).
@@ -153,18 +155,29 @@ def _cached_get(url: str, cache_key: str, *, ttl: int) -> tuple[list | dict, str
     (e.g. get_stock_day_history_month's raw /rwd/ response) round-trip
     as-is, but load_cache's injected bookkeeping keys are stripped on a
     hit so the returned shape matches a miss exactly.
+
+    `cache_meta` carries the age/ttl trio SKILL.md's "Cache-hit metadata"
+    contract declares (`_cache_age_seconds` + `_cache_ttl_seconds`) so a
+    caller can re-attach it at the *envelope* level (sibling to `data`,
+    not merged into it — that would reintroduce the shape-parity bug
+    `_CACHE_BOOKKEEPING_KEYS` stripping fixed). `None` on a miss, since
+    the trio only describes a hit.
     """
     path = cache_util.cache_path("twse_openapi", cache_key)
     cached = cache_util.load_cache(path, ttl)
     if cached is not None:
+        cache_meta = {
+            "cache_age_seconds": cached.get("_cache_age_seconds"),
+            "cache_ttl_seconds": cached.get("_cache_ttl_seconds"),
+        }
         if "_rows" in cached:
-            return cached["_rows"], "hit"
+            return cached["_rows"], "hit", cache_meta
         stripped = {k: v for k, v in cached.items() if k not in _CACHE_BOOKKEEPING_KEYS}
-        return stripped, "hit"
+        return stripped, "hit", cache_meta
     data = _get(url)
     payload = {"_rows": data} if isinstance(data, list) else data
     cache_util.save_cache(path, payload)
-    return data, "miss"
+    return data, "miss", None
 
 
 # ---------------------------------------------------------------------------
@@ -443,7 +456,8 @@ def _extract_date(rows: list) -> str | None:
 
 def _envelope(action: str, data, *, cache_status: str, prov_kwargs: dict,
               reference_period: str | None = None,
-              extra: dict | None = None) -> dict:
+              extra: dict | None = None,
+              cache_meta: dict | None = None) -> dict:
     out = {
         "action": action,
         "fetched_at": _now_iso(),
@@ -453,6 +467,14 @@ def _envelope(action: str, data, *, cache_status: str, prov_kwargs: dict,
         ),
         "data": data,
     }
+    # SKILL.md §Cache-hit metadata: a hit carries the full trio
+    # (_cache/_cache_age_seconds/_cache_ttl_seconds); a miss carries none
+    # of the age/ttl pair. `cache_meta` is `_cached_get`'s per-fetch
+    # age/ttl, threaded through so this is true at the envelope level,
+    # not just inside `_cached_get`'s return value.
+    if cache_status == "hit" and cache_meta:
+        out["_cache_age_seconds"] = cache_meta["cache_age_seconds"]
+        out["_cache_ttl_seconds"] = cache_meta["cache_ttl_seconds"]
     if extra:
         out.update(extra)
     return out
@@ -470,7 +492,7 @@ def _run_action(args) -> dict:
 
     # ── TWSE metadata ──
     if action == "listed-companies":
-        rows, cache = client.get_listed_companies()
+        rows, cache, cache_meta = client.get_listed_companies()
         if ticker:
             rows = _filter_by_ticker(rows, ticker)
             data = rows[0] if rows else {}
@@ -478,27 +500,30 @@ def _run_action(args) -> dict:
             data = rows
         return _envelope(
             action, data, cache_status=cache, prov_kwargs=TWSE_PROV,
+            cache_meta=cache_meta,
             extra={"ticker": ticker, "count": len(rows) if not ticker else (1 if data else 0)},
         )
 
     # ── TWSE price ──
     if action == "daily-price-all":
-        rows, cache = client.get_daily_price_all()
+        rows, cache, cache_meta = client.get_daily_price_all()
         ref = _extract_date(rows)
         return _envelope(
             action, rows, cache_status=cache, prov_kwargs=TWSE_PROV,
+            cache_meta=cache_meta,
             reference_period=ref, extra={"count": len(rows)},
         )
 
     if action == "daily-price":
         if not ticker:
             raise SystemExit("--ticker required for daily-price")
-        rows, cache = client.get_daily_price_all()
+        rows, cache, cache_meta = client.get_daily_price_all()
         matched = _filter_by_ticker(rows, ticker)
         ref = _extract_date(matched or rows)
         data = matched[0] if matched else {}
         return _envelope(
             action, data, cache_status=cache, prov_kwargs=TWSE_PROV,
+            cache_meta=cache_meta,
             reference_period=ref,
             extra={
                 "ticker": ticker,
@@ -512,40 +537,44 @@ def _run_action(args) -> dict:
         )
 
     if action == "pe-pb-yield":
-        rows, cache = client.get_pe_pb_yield()
+        rows, cache, cache_meta = client.get_pe_pb_yield()
         ref = _extract_date(rows)
         if ticker:
             matched = _filter_by_ticker(rows, ticker)
             data = matched[0] if matched else {}
             return _envelope(
                 action, data, cache_status=cache, prov_kwargs=TWSE_PROV,
+                cache_meta=cache_meta,
                 reference_period=ref, extra={"ticker": ticker},
             )
         return _envelope(
             action, rows, cache_status=cache, prov_kwargs=TWSE_PROV,
+            cache_meta=cache_meta,
             reference_period=ref, extra={"count": len(rows)},
         )
 
     # ── TWSE margin / investors ──
     if action == "margin-balance":
-        rows, cache = client.get_margin_balance()
+        rows, cache, cache_meta = client.get_margin_balance()
         # MI_MARGN has no Date field on rows — use today as ref
         if ticker:
             matched = _filter_by_ticker(rows, ticker)
             data = matched[0] if matched else {}
             return _envelope(
                 action, data, cache_status=cache, prov_kwargs=TWSE_PROV,
+                cache_meta=cache_meta,
                 extra={"ticker": ticker},
             )
         return _envelope(
             action, rows, cache_status=cache, prov_kwargs=TWSE_PROV,
+            cache_meta=cache_meta,
             extra={"count": len(rows)},
         )
 
     if action == "three-investor":
         # Gap: daily 三大法人 per-stock flow (T86 / BFI82U) not in OpenAPI.
         # Best approximation: MI_QFIIS_sort_20 (top-20 foreign-holding snapshot).
-        rows, cache = client.get_qfiis_holdings()
+        rows, cache, cache_meta = client.get_qfiis_holdings()
         matched = _filter_by_ticker(rows, ticker) if ticker else rows
         data = (matched[0] if ticker and matched else matched) if matched else (
             {} if ticker else []
@@ -558,52 +587,59 @@ def _run_action(args) -> dict:
         )
         return _envelope(
             action, data, cache_status=cache, prov_kwargs=TWSE_PROV,
+            cache_meta=cache_meta,
             extra={"ticker": ticker, "note": gap_note},
         )
 
     # ── TWSE reference ──
     if action == "industry-eps":
-        rows, cache = client.get_industry_eps_summary()
+        rows, cache, cache_meta = client.get_industry_eps_summary()
         return _envelope(
             action, rows, cache_status=cache, prov_kwargs=TWSE_PROV,
+            cache_meta=cache_meta,
             extra={"count": len(rows)},
         )
 
     if action == "ex-dividend-calendar":
-        rows, cache = client.get_ex_dividend_calendar()
+        rows, cache, cache_meta = client.get_ex_dividend_calendar()
         return _envelope(
             action, rows, cache_status=cache, prov_kwargs=TWSE_PROV,
+            cache_meta=cache_meta,
             extra={"count": len(rows)},
         )
 
     # ── TPEx ──
     if action == "tpex-daily-close":
-        rows, cache = client.get_tpex_daily_close()
+        rows, cache, cache_meta = client.get_tpex_daily_close()
         ref = _extract_date(rows)
         if ticker:
             matched = _filter_by_ticker(rows, ticker)
             data = matched[0] if matched else {}
             return _envelope(
                 action, data, cache_status=cache, prov_kwargs=TPEX_PROV,
+                cache_meta=cache_meta,
                 reference_period=ref, extra={"ticker": ticker},
             )
         return _envelope(
             action, rows, cache_status=cache, prov_kwargs=TPEX_PROV,
+            cache_meta=cache_meta,
             reference_period=ref, extra={"count": len(rows)},
         )
 
     if action == "tpex-margin-balance":
-        rows, cache = client.get_tpex_margin_balance()
+        rows, cache, cache_meta = client.get_tpex_margin_balance()
         ref = _extract_date(rows)
         if ticker:
             matched = _filter_by_ticker(rows, ticker)
             data = matched[0] if matched else {}
             return _envelope(
                 action, data, cache_status=cache, prov_kwargs=TPEX_PROV,
+                cache_meta=cache_meta,
                 reference_period=ref, extra={"ticker": ticker},
             )
         return _envelope(
             action, rows, cache_status=cache, prov_kwargs=TPEX_PROV,
+            cache_meta=cache_meta,
             reference_period=ref, extra={"count": len(rows)},
         )
 
@@ -618,6 +654,19 @@ def _run_action(args) -> dict:
         all_rows: list[dict] = []
         any_miss = False
         per_month_status: list[str] = []
+        # LOOM-SIMPLIFY: stock-day-history fetches one cache entry per
+        # month and reports a single aggregate `_cache_age_seconds` /
+        # `_cache_ttl_seconds` pair rather than a per-month breakdown —
+        # it keeps the LAST hit month's meta (oldest month processed,
+        # since the loop walks current→past), not a max-age/min-ttl
+        # aggregate across all N cached months. `_months_fetched` already
+        # gives the per-month hit/miss breakdown for callers who need
+        # more granularity than the top-level trio. | ceiling: a caller
+        # needs per-month age/ttl (not just per-month hit/miss) | upgrade:
+        # emit a `_cache_meta_by_month` dict alongside `_months_fetched`
+        # | ref: docs/loom/plans/2026-07-11-investing-dogfood-fixes.md
+        # Task 3 (FINDING-005)
+        last_hit_meta: dict | None = None
         for offset in range(months):
             y = today.year
             m = today.month - offset
@@ -626,12 +675,14 @@ def _run_action(args) -> dict:
                 y -= 1
             yyyymmdd = f"{y:04d}{m:02d}01"
             try:
-                raw, cache = client.get_stock_day_history_month(ticker, yyyymmdd)
+                raw, cache, month_meta = client.get_stock_day_history_month(ticker, yyyymmdd)
             except TwseOpenApiError as e:
                 per_month_status.append(f"{y:04d}-{m:02d}=error:{e}")
                 continue
             if cache == "miss":
                 any_miss = True
+            else:
+                last_hit_meta = month_meta
             per_month_status.append(f"{y:04d}-{m:02d}={cache}")
             all_rows.extend(_normalize_stock_day_rows(raw))
 
@@ -645,6 +696,7 @@ def _run_action(args) -> dict:
         return _envelope(
             action, data, cache_status=("miss" if any_miss else "hit"),
             prov_kwargs=TWSE_PROV,
+            cache_meta=(None if any_miss else last_hit_meta),
             reference_period=latest["date"] if latest else None,
             extra={
                 "ticker": ticker,

@@ -4,9 +4,15 @@ description: |
   Layer-1 unified data fetch across US/JP/TW/KR/CN equities + macro — one
   pack.py facade, auto market detection from ticker suffix (.TW/.KS/.SS/.T/
   bare-4-digit), 5 pack types (snapshot / memo-fetch / comps-multiples /
-  screener-batch / regime-pack). Pure I/O, no analysis. Consolidates the
-  per-country data-{us,jp,tw,kr,cn} client scripts behind one CLI + shared
-  cache layer.
+  screener-batch / regime-pack). Emits a raw data pack（原始資料包，非渲染卡片）—
+  structured JSON straight from source clients including SEC EDGAR,
+  EDINET, TWSE, and FRED (+14 more) through a shared cache layer; use
+  this for a 資料層 health check, verifying cache writes/hits (快取),
+  or fetching by source name (EDINET/EDGAR/TWSE/etc). Pure I/O, no
+  analysis — for regime classification/判斷 (e.g. an Investment Clock
+  verdict), use analysis-macro-regime instead. Consolidates the
+  per-country data-{us,jp,tw,kr,cn} client scripts behind one CLI +
+  shared cache layer.
 ---
 
 # data-markets
@@ -92,7 +98,9 @@ A payload served from cache carries three bookkeeping keys injected by
 `cache_util.load_cache`: `_cache: "hit"`, `_cache_age_seconds`,
 `_cache_ttl_seconds`. A fresh fetch has no `_cache` key (or `_cache:
 "miss"` where the client sets it explicitly). Downstream skills may use
-these to decide whether to force a re-fetch.
+these to decide whether to force a re-fetch. These keys are injected
+per fetched section (e.g. `.yfinance.info.data._cache`), never at
+document top level; miss-marking varies by client.
 
 ## API keys
 

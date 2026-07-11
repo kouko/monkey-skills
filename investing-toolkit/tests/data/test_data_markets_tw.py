@@ -249,11 +249,15 @@ def test_cached_get_dict_payload_hit_matches_miss_shape(monkeypatch):
             twse.cache_util, "load_cache", lambda path, ttl: dict(hit_from_cache_util)
         )
 
-        data, status = twse._cached_get(
+        data, status, cache_meta = twse._cached_get(
             "https://example.invalid/rwd/x", "some-cache-key", ttl=1800
         )
 
         assert status == "hit"
+        assert cache_meta == {"cache_age_seconds": 5, "cache_ttl_seconds": 1800}, (
+            "FINDING-005 fix: _cached_get now returns a 3rd cache_meta element "
+            "carrying the age/ttl trio for envelope-level re-attachment"
+        )
         assert data == original_payload, (
             "dict-payload cache hit must strip cache_util's _cache/"
             "_cache_age_seconds/_cache_ttl_seconds bookkeeping keys so the "

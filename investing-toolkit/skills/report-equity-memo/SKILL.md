@@ -50,6 +50,12 @@ Set `${COUNTRY}` accordingly for the rest of the pipeline (used as the
 
 ## Pipeline
 
+> **MUST — no narration-only completion.** A phase is done only when its
+> artifact exists on disk, confirmed by `ls`. Never tell the user the memo
+> (or any phase) is complete without citing the artifact path(s) `ls`
+> confirmed. If a phase produced no artifact (blocked, skipped, errored),
+> say so explicitly — do not describe output as if it were saved.
+
 ### Phase 1 — Data Fetch
 
 > **`scope=quick` note**: quick mode runs Phase 1 only (snapshot data) and skips Phase 2 (regime) + Phase 2.5 (comps) + Phase 3 DCF. The pipeline jumps straight to Phase 4 with snapshot-only inputs; investing-team protocol routing handles the lighter analysis depth.
@@ -67,6 +73,8 @@ uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-markets/scripts/pack.py \
 ```
 
 `${TICKER_SAFE}` strips the suffix (`AAPL`, `7203`, `2330`, `005930`, `600519`) for filesystem safety.
+
+**Artifact gate**: Phase 1 is not complete until `/tmp/${TICKER_SAFE}-fetch.json` exists — verify with `ls /tmp/${TICKER_SAFE}-fetch.json` before proceeding.
 
 The data layer owns Tier-A / Tier-2 routing; this skill never decides which
 client to call — `pack.py` returns a single normalised JSON regardless of
@@ -100,6 +108,8 @@ uv run ${CLAUDE_PLUGIN_ROOT}/skills/analysis-macro-regime/scripts/regime_compose
 
 `analysis-macro-regime` accepts any subset of `us/jp/tw/kr/cn` so the cross-country
 list scales with the memo's scope.
+
+**Artifact gate**: Phase 2 is not complete until `/tmp/regime-card.json` exists — verify with `ls /tmp/regime-card.json` before proceeding.
 
 ### Phase 2.5 — Peer Discovery + Comps Multiples
 
@@ -185,6 +195,8 @@ uv run ${CLAUDE_PLUGIN_ROOT}/skills/analysis-comps/scripts/comps_compute.py \
   > /tmp/${TICKER_SAFE}-comps.json
 ```
 
+**Artifact gate**: Phase 2.5 is not complete until `/tmp/${TICKER_SAFE}-comps.json` exists — verify with `ls /tmp/${TICKER_SAFE}-comps.json` before proceeding.
+
 Pass `/tmp/${TICKER_SAFE}-comps.json` to investing-team in Phase 4 alongside `dcf.json` / `regime.json`.
 
 **Sector-aware shape (v2.2.0-c+)**: the comps JSON now carries
@@ -209,6 +221,8 @@ uv run ${CLAUDE_PLUGIN_ROOT}/skills/analysis-dcf/scripts/dcf_compute.py \
   --input /tmp/${TICKER_SAFE}-fetch.json \
   > /tmp/${TICKER_SAFE}-dcf.json
 ```
+
+**Artifact gate**: Phase 3 is not complete until `/tmp/${TICKER_SAFE}-dcf.json` exists — verify with `ls /tmp/${TICKER_SAFE}-dcf.json` before proceeding.
 
 > **Comps note**: relative valuation is computed in **Phase 2.5** (peer
 > discovery + `analysis-comps`). The resulting `/tmp/${TICKER_SAFE}-comps.json`
@@ -251,7 +265,13 @@ Launch `domain-teams:investing-team` with the **Deep Equity Research Memo** prot
 
 For non-US tickers (.T / .TW / .KS / .KQ / .HK / .SS / .SZ), substitute the `data-markets/scripts/pack.py --pack memo-fetch` output (market auto-detected from the ticker) for `--anchor-base`. Compute-mode US-first; non-US compute mode lands in per-country PRs (until then, falls back to direct with stderr warning).
 
-The investing-team output is the memo body (Markdown).
+The investing-team output is the memo body (Markdown). Persist it to
+`/tmp/${TICKER_SAFE}-memo.md` before replying to the user.
+
+**Artifact gate**: Phase 4 — and the memo overall — is not complete until
+`/tmp/${TICKER_SAFE}-memo.md` exists — verify with `ls /tmp/${TICKER_SAFE}-memo.md`.
+Do not tell the user the memo is ready until that `ls` has been run and the
+path cited in the reply.
 
 ### Phase 5a — Format (optional, `domain-teams:docs-team`)
 
@@ -270,6 +290,11 @@ If Phase 5a is skipped, 5b reads the Phase 4 memo directly.
 > **Cross-Plugin Contract recap (Phase 5b)**: Pass the docs-team Markdown
 > output **path** (not content) as input to obsidian-markdown — same
 > paths-not-content discipline as Phase 4.
+
+**Artifact gate**: if Phase 5a or 5b runs, the same rule applies — confirm
+the resulting file exists (`ls` the docs-team output / vault path) before
+citing it as done; if it was skipped, tell the user `/tmp/${TICKER_SAFE}-memo.md`
+(Phase 4) is the final artifact.
 
 ---
 

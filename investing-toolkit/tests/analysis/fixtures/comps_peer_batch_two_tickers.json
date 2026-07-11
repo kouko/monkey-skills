@@ -1,0 +1,37 @@
+{
+  "pack": "comps-multiples",
+  "fetched_at": "2026-05-01T00:00:00Z",
+  "tickers": {
+    "NVDA": {
+      "trailingPE": 45.2,
+      "forwardPE": 30.1,
+      "priceToSales": 18.5,
+      "priceToBook": 40.0,
+      "enterpriseToEbitda": 33.0
+    },
+    "AVGO": {
+      "trailingPE": 38.0,
+      "forwardPE": 24.0,
+      "priceToSales": 14.0,
+      "priceToBook": 15.0,
+      "enterpriseToEbitda": 22.0
+    }
+  },
+  "info": {
+    "NVDA": {
+      "trailingPE": 45.2,
+      "forwardPE": 30.1,
+      "priceToSales": 18.5,
+      "priceToBook": 40.0,
+      "enterpriseToEbitda": 33.0
+    },
+    "AVGO": {
+      "trailingPE": 38.0,
+      "forwardPE": 24.0,
+      "priceToSales": 14.0,
+      "priceToBook": 15.0,
+      "enterpriseToEbitda": 22.0
+    }
+  },
+  "_provenance": { "skill": "data-us", "source": "pack.py --pack comps-multiples --tickers NVDA,AVGO" }
+}

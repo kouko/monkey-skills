@@ -65,6 +65,31 @@ Minimum shape per file:
 }
 ```
 
+**Batch peer files** — a single `--peers` path may instead point at a
+*batch* pack produced by `data-markets/scripts/pack.py --tickers T1,T2,...
+--pack comps-multiples` (per `us-schema-comps-multiples.json`): no
+top-level `ticker` field, and `info` (== `tickers`) keyed by **N**
+tickers instead of 1. The script expands this into one peer entry per
+key — e.g. one `--peers batch.json` file with `info: {"MSFT": {...},
+"GOOGL": {...}}` yields two peer entries (`MSFT`, `GOOGL`), each with
+its own multiples. Batch and single-ticker peer paths may be mixed
+freely in one comma-separated `--peers` list.
+
+```json
+{
+  "pack": "comps-multiples",
+  "fetched_at": "2026-05-01T00:00:00Z",
+  "tickers": { "MSFT": { "trailingPE": 33.1, ... }, "GOOGL": { "trailingPE": 24.5, ... } },
+  "info":    { "MSFT": { "trailingPE": 33.1, ... }, "GOOGL": { "trailingPE": 24.5, ... } }
+}
+```
+
+If a `--peers` path resolves to **no** ticker at all (empty `info`/
+`tickers` and no top-level `ticker` field — e.g. a batch-fetch-failure
+envelope), the file is skipped and a warning naming the path is added to
+`_provenance.warnings`; it is never silently added as a bogus
+filename-stem peer with every multiple null.
+
 **Field aliasing** — yfinance reports `enterpriseToEbitda`; the Spec §5.4
 informal name is `evEbitda`. Either is accepted on input; the output
 schema normalises to `evEbitda`.
@@ -95,7 +120,7 @@ uv run scripts/comps_compute.py \
 | Flag                | Required | Notes                                                                              |
 |---------------------|----------|------------------------------------------------------------------------------------|
 | `--anchor`          | yes      | Path to anchor ticker's `comps-multiples` pack JSON                                |
-| `--peers`           | yes      | One or more peer JSON paths, comma-separated                                       |
+| `--peers`           | yes      | One or more peer JSON paths, comma-separated. Each path may be a single-ticker pack or a batch pack (`info` keyed by N tickers) — see §Input Contract. |
 | `--mode`            | no       | `direct` (use multiples from comps-multiples pack) / `compute` (recompute from memo-fetch raw fundamentals; v2.2.0-b+). Default `direct`. |
 | `--anchor-base`     | only when `--mode compute` | Path to anchor's memo-fetch pack JSON (Layer-1 raw fundamentals; required for compute mode). |
 | `--rationale-map`   | no       | Optional JSON map `{ticker: rationale}` to merge into output `peers[*].rationale`. |
