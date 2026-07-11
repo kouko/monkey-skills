@@ -20,6 +20,8 @@ Stdlib only; no fixtures/ subdir (flat-folder repo convention).
 """
 
 import re
+import shutil
+import subprocess
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -205,3 +207,86 @@ def test_existing_null_guards_still_present_untouched():
     text = _text()
     assert "replay: no artifact produced" in text
     assert "grade: courier produced no result" in text
+
+
+# --- Task 2 (plan 2026-07-12-principles-mechanical-seed-gate.md): replay
+# prompt gains an inventory-authoring step (Write-only, before drafting),
+# and a self-check courier stage runs check_seed_traceability.py against
+# that inventory, riding the same per-seed row as ADDITIVE telemetry only
+# — the Grade stage's own oracle-based `pass` computation stays untouched.
+
+def _extract_agent_prompt(text: str, schema_name: str) -> str:
+    """Extract the template-literal prompt text of the `agent(...)` call
+    whose options object names `schema: <schema_name>` — mirrors
+    test_improve_loop_workflow.py's fixer-prompt extraction, but bounds the
+    schema search to each call's own span (up to the NEXT `agent(`
+    occurrence, or EOF): with multiple agent() calls now in this file, an
+    unbounded lazy scan can walk PAST one call's closing paren and match a
+    LATER call's schema name, misattributing that later call's schema to
+    an earlier call's prompt text."""
+    starts = [m.start() for m in re.finditer(r"agent\(", text)]
+    assert starts, "no agent() calls found"
+    for i, start in enumerate(starts):
+        end = starts[i + 1] if i + 1 < len(starts) else len(text)
+        chunk = text[start:end]
+        prompt_m = re.match(r"agent\(\s*`(.*?)`\s*,", chunk, re.DOTALL)
+        if prompt_m and re.search(r"schema:\s*" + re.escape(schema_name) + r"\b", chunk):
+            return prompt_m.group(1)
+    raise AssertionError(f"agent() call with schema: {schema_name} not found")
+
+
+def test_inventory_step_and_selfcheck_courier_present():
+    text = _text()
+
+    # --- inventory step lives in the REPLAY prompt, BEFORE drafting -----
+    replay_prompt = _extract_agent_prompt(text, "REPLAY_SCHEMA")
+    assert "named_anchors:" in replay_prompt
+    assert "deferred_items:" in replay_prompt
+    # never-negative warning: the checker's third key means "must be
+    # absent" — using it in a seed-extracted inventory would be wrong.
+    assert re.search(r"NEVER[^\n]*negative:", replay_prompt), (
+        "replay prompt must explicitly warn never to use a `negative:` key "
+        "in the inventory"
+    )
+    assert ";`-separated" in replay_prompt or "list of exact-match tokens" in replay_prompt
+    assert "none in this seed" in replay_prompt
+    assert "${inventoryPath}" in replay_prompt
+    assert "${seed.id}-inventory.md" in text
+    assert re.search(r"BEFORE drafting", replay_prompt), (
+        "inventory step must run before the artifact is drafted"
+    )
+    # replay agent stays Write-only — still forbidden from running scripts.
+    assert (
+        "Do NOT run the validator or the traceability checker yourself"
+        in replay_prompt
+    )
+
+    # --- self-check courier: invokes ONLY the checker (never the validator) ---
+    selfcheck_prompt = _extract_agent_prompt(text, "SELF_CHECK_SCHEMA")
+    assert "check_seed_traceability.py" in selfcheck_prompt
+    assert "validate_principles_output.py" not in selfcheck_prompt
+    assert "exitCode" in text
+    assert "missLines" in text
+
+    # --- per-seed row gains ADDITIVE fields; Grade's oracle verdict intact ---
+    assert text.count("selfCheckExit") >= 2
+    assert text.count("selfCheckMisses") >= 2
+    assert re.search(r"validatorExit\s*===\s*0", text), (
+        "Grade stage's pass computation must stay validatorExit===0 && "
+        "checkerExit===0 — self-check fields must never feed it"
+    )
+    assert re.search(r"checkerExit\s*===\s*0", text)
+
+    # --- oracle isolation: neither NEW prompt may name the seed-corpus dir
+    # or the word "oracle" (existing Grade prompt legitimately does, via
+    # `seed.oracle`, and is exempt — only the two NEW prompts are pinned) ---
+    for prompt in (replay_prompt, selfcheck_prompt):
+        assert "2026-07-10-principles-flow-seed-corpus" not in prompt
+        assert "oracle" not in prompt.lower()
+
+    # --- dry-parse still passes ---
+    if shutil.which("node"):
+        result = subprocess.run(
+            ["node", "--check", str(WORKFLOW)], capture_output=True, text=True
+        )
+        assert result.returncode == 0, f"node --check failed: {result.stderr}"
