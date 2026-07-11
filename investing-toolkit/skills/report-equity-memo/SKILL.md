@@ -89,13 +89,13 @@ No error, proceed to Phase 1. Note in the memo's Limitations section that no
 prior verdict was found.
 
 **Hits found**: read the most recent match's frontmatter (highest `date`),
-extract `verdict`, `date`, `priceAtAnalysis`. Surface before Phase 1 starts:
+extract `verdict`, `date`, `price_at_analysis`. Surface before Phase 1 starts:
 
-> Prior verdict for {ticker}: {verdict} @ {date}, priceAtAnalysis {price}.
+> Prior verdict for {ticker}: {verdict} @ {date}, price_at_analysis {price}.
 
 After Phase 1's fetch completes, compute delta = current `fetch.json`
-`current_price` − prior `priceAtAnalysis` (value and %) and surface it too.
-Carry {prior verdict, date, priceAtAnalysis, delta} into the Phase 4 seed
+`current_price` − prior `price_at_analysis` (value and %) and surface it too.
+Carry {prior verdict, date, price_at_analysis, delta} into the Phase 4 seed
 context so the new memo's Limitations section discloses the recall outcome
 (hit-and-cited / no-hits / skipped) — exactly one of these three, never
 silent about which.
@@ -315,11 +315,11 @@ For non-US tickers (.T / .TW / .KS / .KQ / .HK / .SS / .SZ), substitute the `dat
 The investing-team output is the memo body (Markdown). Before persisting,
 prepend the toolkit frontmatter block (schema SSOT:
 `references/vault-frontmatter.md`) — the 8 fields (`type`, `ticker`,
-`market`, `date`, `verdict`, `confidence`, `priceAtAnalysis`,
-`intrinsicMid`; `confidence` is omitted when the memo reports none — see
+`market`, `date`, `verdict`, `confidence`, `price_at_analysis`,
+`intrinsic_mid`; `confidence` is omitted when the memo reports none — see
 the schema SSOT), values sourced from this run (verdict/confidence from
-the memo's §一 執行摘要, `priceAtAnalysis` from Phase 1 `fetch.json`
-`current_price`, `intrinsicMid` from Phase 3 `dcf.json` `mid`) — so the
+the memo's §一 執行摘要, `price_at_analysis` from Phase 1 `fetch.json`
+`current_price`, `intrinsic_mid` from Phase 3 `dcf.json` `mid`) — so the
 file is `---\n<8 fields>\n---\n` followed by the memo body. This emission
 is unconditional, regardless of destination (Phase 5a/5b optional or
 skipped). Persist the result to `/tmp/${TICKER_SAFE}-memo.md` before

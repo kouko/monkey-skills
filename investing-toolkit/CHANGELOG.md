@@ -14,7 +14,7 @@ Investing analysis memory layer (Obsidian-carried), pilot on
 
 - **`skills/report-equity-memo/references/vault-frontmatter.md`** — toolkit-owned
   frontmatter schema SSOT (8 fields: type/ticker/market/date/verdict/confidence/
-  priceAtAnalysis/intrinsicMid), Obsidian Bases date-typing note, sample
+  price_at_analysis/intrinsic_mid), Obsidian Bases date-typing note, sample
   track-record `.base` snippet.
 - **Phase 0 — Recall Prior Verdicts**: before any data fetch, grep prior memos'
   frontmatter for the same ticker; surface last verdict/date/price + delta;

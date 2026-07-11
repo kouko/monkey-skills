@@ -5,7 +5,7 @@
 > re-invent these fields — it owns placement / wikilinks / conventions
 > only. See SKILL.md Phase 4 and Phase 5b.
 
-## Fields (flat camelCase)
+## Fields (flat snake_case — vault convention)
 
 | Field | Type | Source (this run) |
 |---|---|---|
@@ -15,8 +15,8 @@
 | `date` | Date | today's date, ISO `YYYY-MM-DD` — **must be typed Date** in Obsidian properties, not text (see Bases gotcha below) |
 | `verdict` | string | investing-team's memo §一 執行摘要 (HOLD/BUY/SELL/…) |
 | `confidence` | string enum: `high` / `medium` / `low` | investing-team's memo §一 — map its wording onto this enum (e.g. 信心中等 → `medium`); if the memo reports none, omit the field rather than guessing |
-| `priceAtAnalysis` | number | Phase 1 `fetch.json` → `current_price` |
-| `intrinsicMid` | number | Phase 3 `dcf.json` → `mid` |
+| `price_at_analysis` | number | Phase 1 `fetch.json` → `current_price` |
+| `intrinsic_mid` | number | Phase 3 `dcf.json` → `mid` |
 
 ## Bases date-typing gotcha
 
@@ -42,8 +42,8 @@ views:
       - date
       - verdict
       - confidence
-      - priceAtAnalysis
-      - intrinsicMid
+      - price_at_analysis
+      - intrinsic_mid
     sort:
       - property: date
         direction: DESC
@@ -51,9 +51,8 @@ views:
 
 ## Casing status
 
-Pending: casing to be re-checked against live vault properties.
-`obsidian-cli` was not available in this environment / no vault
-configured — this pilot ships flat camelCase per the brief's default
-(docs/loom/specs/2026-07-11-investing-obsidian-memory-layer.md
-Alternatives §4); re-check when a live vault is reachable and follow the
-vault's existing casing if it already standardizes differently.
+RESOLVED (2026-07-11): the user's vault standardizes on all-lowercase
+snake_case properties — the brief's conditional reversal (Alternatives §4,
+docs/loom/specs/2026-07-11-investing-obsidian-memory-layer.md) fired, so
+this schema uses flat snake_case (`price_at_analysis`, `intrinsic_mid`;
+single-word fields unchanged). Do not reintroduce camelCase.
