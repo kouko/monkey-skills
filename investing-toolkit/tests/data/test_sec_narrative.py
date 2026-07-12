@@ -46,6 +46,25 @@ test_data_markets_live.py::test_edgartools_segment_real_10k_shape —
   AAPL FY2024 10-K (0000320193-24-000123) + AAPL latest 10-Q; sources PyPI
   edgartools JSON + GitHub dgunning/edgartools.
 
+Task-4 8-K grounding (D7): the _MockEightK / _MockPressRelease mocks below
+mirror the REAL edgartools 5.42.0 8-K shape captured LIVE 2026-07-12 against
+AAPL's earnings 8-K accession 0000320193-26-000011 (Item 2.02 + Exhibit 99.1),
+anchored by test_data_markets_live.py::test_edgartools_segment_real_8k_shape.
+Two plan-grounding corrections found live (documented so a re-reader trusts the
+mock over the plan):
+  - filing.obj() on an 8-K returns type ``CurrentReport``, NOT ``EightK`` (the
+    plan's documented type name was wrong).
+  - the press-release exhibits, ``obj.press_releases`` -> a ``PressReleases``
+    collection of ``PressRelease`` objects, each exposing ``.document`` (the
+    EX-99.x filename, e.g. ``a8-kex991q2202603282026.htm``) + ``.text()`` (a
+    METHOD returning the exhibit body) — but NO ``.document_type`` attr (that
+    attr lives only on ``filing.attachments``' ``Attachment`` objects, a
+    distinct surface). So the exhibit-following path reads ``obj.press_releases``
+    (already narrowed to EX-99.x press releases by edgartools) and needs no
+    ``document_type`` filtering. ``obj.items`` is a list of item-id strings
+    (``['Item 2.02', 'Item 9.01']``). Sources: live edgartools 5.42.0 + PyPI
+    edgartools JSON + GitHub dgunning/edgartools, captured 2026-07-12.
+
 Section-object contract established by Task 3 (reused by Tasks 4-12):
 `segment_filing(filing)` returns a LIST of per-item section dicts, in requested
 order. A SUCCESS section is a plain dict `{"item": <item id>, "text": <text>}`
@@ -367,3 +386,108 @@ def test_segment_unsupported_form_fails_loud(sec_client):
     )
     with pytest.raises(ValueError):
         sec_client.segment_filing(filing)
+
+
+# ---------------------------------------------------------------------------
+# Task 4 — segment an 8-K by reported item code (2.02 / 7.01 / 8.01), sourcing
+# each item's narrative text from its Exhibit 99.x attachment (the 8-K body
+# carries only the announcement; the substance lives in the exhibit), and
+# recording the source exhibit filename in the section provenance.
+# ---------------------------------------------------------------------------
+# _MockEightK / _MockPressRelease mirror the REAL edgartools 5.42.0 8-K shape
+# captured by test_data_markets_live.py::test_edgartools_segment_real_8k_shape
+# (see the Task-4 8-K grounding in this module's docstring). Plain-attribute
+# classes so a renamed producer attr RAISES rather than silently reading as
+# absent (fixtures-mirror-producer-shape). Deliberately NO __getitem__ on
+# _MockEightK: the 8-K BODY announcement (obj["Item 2.02"]) must NOT be the text
+# source — reading it would raise here, proving the text comes from the exhibit.
+
+
+class _MockPressRelease:
+    """Mirror an edgartools 5.42.0 ``PressRelease`` (an EX-99.x press-release
+    exhibit yielded by ``CurrentReport.press_releases``).
+
+    Live capture confirmed ``.document`` (the EX-99.x filename) is an attribute
+    and ``.text()`` is a METHOD returning the exhibit body; a ``PressRelease``
+    has NO ``.document_type`` (that attr is on ``filing.attachments``'
+    ``Attachment`` objects, a distinct surface)."""
+
+    def __init__(self, *, document, text):
+        self.document = document
+        self._text = text
+
+    def text(self):
+        return self._text
+
+
+class _MockEightK:
+    """Mirror an edgartools 5.42.0 8-K typed object (``filing.obj()``; the real
+    runtime type is ``CurrentReport``, not ``EightK`` — plan-grounding
+    correction).
+
+    ``items`` is a list of reported item-id strings (e.g.
+    ``['Item 2.02', 'Item 9.01']``); ``press_releases`` is the collection of
+    EX-99.x press-release exhibits. No ``__getitem__`` on purpose (see the
+    section comment above)."""
+
+    def __init__(self, *, items, press_releases):
+        self.items = list(items)
+        self.press_releases = list(press_releases)
+
+
+def test_segment_8k_item_2_02_from_ex99_1(sec_client):
+    # No @req tag: this dispatch's plan/spec trace by
+    # `<change-id> / Requirement / Scenario` join keys, not registered REQ-ids
+    # (see report) — @req omitted per the implementer contract.
+    # Scenario: `8-K Item Segmentation with Exhibit-Following / 8-K Item 2.02
+    # with Exhibit 99.1 present`.
+    exhibit_text = (
+        "Exhibit 99.1\nApple reports second quarter results\n"
+        "March quarter records for total company revenue ..."
+    )
+    eightk = _MockEightK(
+        items=["Item 2.02", "Item 9.01"],  # 9.01 = the exhibit-list item, not a narrative item
+        press_releases=[
+            _MockPressRelease(document="a8-kex991q2202603282026.htm", text=exhibit_text),
+        ],
+    )
+    filing = _segmentable_filing("8-K", eightk)
+
+    sections = sec_client.segment_filing(filing)
+
+    by_item = {s["item"]: s for s in sections}
+    assert set(by_item) == {"Item 2.02"}, (
+        "8-K emits a section for the reported exhibit-following item; Item 9.01 "
+        "(exhibit list) is not itself a narrative item"
+    )
+    slot = by_item["Item 2.02"]
+    assert "error" not in slot, f"exhibit-present item must be a success section: {slot!r}"
+    # text is sourced from the EX-99.1 exhibit, NOT the 8-K body announcement
+    assert slot["text"] == exhibit_text
+    assert "second quarter results" in slot["text"]
+    # the source exhibit filename is recorded in provenance
+    assert slot["exhibit"] == "a8-kex991q2202603282026.htm"
+
+
+@pytest.mark.parametrize("item_code", ["Item 7.01", "Item 8.01"])
+def test_segment_8k_item_7_01_8_01_from_ex99_x(sec_client, item_code):
+    # No @req tag (see test_segment_8k_item_2_02_from_ex99_1).
+    # Scenario: `8-K Item Segmentation with Exhibit-Following / 8-K Item
+    # 7.01/8.01 with Exhibit 99.x present`.
+    exhibit_text = f"Exhibit 99.1\nMaterial disclosure body for {item_code} ..."
+    eightk = _MockEightK(
+        items=[item_code, "Item 9.01"],
+        press_releases=[_MockPressRelease(document="ex99-1.htm", text=exhibit_text)],
+    )
+    filing = _segmentable_filing("8-K", eightk)
+
+    sections = sec_client.segment_filing(filing)
+
+    by_item = {s["item"]: s for s in sections}
+    assert set(by_item) == {item_code}
+    slot = by_item[item_code]
+    assert "error" not in slot
+    # text sourced from the corresponding exhibit, not the 8-K body alone
+    assert slot["text"] == exhibit_text
+    assert item_code in slot["text"]
+    assert slot["exhibit"] == "ex99-1.htm"

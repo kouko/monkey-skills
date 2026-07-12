@@ -805,43 +805,94 @@ def acquire_filing(
 #
 # SECTION-OBJECT CONTRACT (established here, reused by Tasks 4-12) --------------
 # `segment_filing()` returns a LIST of per-item section dicts in requested order:
-#   SUCCESS section: {"item": "<item id>", "text": "<extracted text>"}
+#   SUCCESS section: {"item": "<item id>", "text": "<extracted text>", **extra}
 #     — a plain dict later tasks EXTEND in place (T6 provenance, T7 `text_path`,
-#       T9 `disclosure_status`).
+#       T9 `disclosure_status`). `extra` is a per-section provenance dict merged
+#       in by `_build_section`; empty for 10-K/10-Q, and for 8-K it carries
+#       `{"exhibit": "<EX-99.x filename>"}` (Task 4) — the source-exhibit
+#       filename the item's narrative text was followed to.
 #   FAILURE slot:    {"item": "<item id>", "error": "<why>",
 #                     "error_class": "absent_item"}
 #     — a sentinel-compatible dict; the top-level `error` key is read unchanged
 #       by pack.py's `_status`, and the slot NAMES the missing item so a
 #       requested-but-absent item is never dropped or fabricated.
 # A multi-section result is a list later tasks append to / extend.
+#
+# EXTRACTOR CONTRACT (widened by Task 4) ---------------------------------------
+# A registered extractor is called `extractor(obj, filing)` and returns a LIST
+# of per-item entries; each entry is either a 2-tuple `(item_id, text-or-None)`
+# or a 3-tuple `(item_id, text-or-None, extra_dict)` where `extra_dict` is the
+# per-section provenance merged into a SUCCESS section (see `extra` above). The
+# `filing` arg is passed to every extractor (10-K/10-Q ignore it); 8-K needs it
+# to reach the filing's exhibit attachments. The 3rd tuple element widens the
+# T3 2-tuple contract WITHOUT breaking it — 2-tuples still work (extra = {}).
 
 
-def _segment_10k(obj) -> list[tuple[str, object]]:
+def _segment_10k(obj, filing) -> list[tuple[str, object]]:
     """Requested (item id, text-or-None) pairs for a 10-K TenK typed object.
 
     Item 7 (MD&A) / Item 1A (Risk Factors) via the grounded `str` properties;
-    each is `None` when the item is absent from this filing (issue #710)."""
+    each is `None` when the item is absent from this filing (issue #710).
+    `filing` is unused here (10-K text is on `obj`); it is in the signature for
+    the uniform extractor contract that 8-K's exhibit-following needs."""
     return [
         ("Item 7", obj.management_discussion),
         ("Item 1A", obj.risk_factors),
     ]
 
 
-def _segment_10q(obj) -> list[tuple[str, object]]:
+def _segment_10q(obj, filing) -> list[tuple[str, object]]:
     """Requested (item id, text-or-None) pairs for a 10-Q TenQ typed object.
 
     TenQ exposes no MD&A property; Item 2 is read via the subscript
-    `obj["Part I, Item 2"]` (`str`, or `None` when absent)."""
+    `obj["Part I, Item 2"]` (`str`, or `None` when absent). `filing` unused
+    (uniform extractor signature)."""
     return [
         ("Item 2", obj["Part I, Item 2"]),
     ]
 
 
-# form -> extractor returning [(item id, text-or-None), ...] from filing.obj().
-# Later tasks register additional forms (T4 adds 8-K exhibit-following).
+# 8-K reported-item codes whose substantive narrative lives in an Exhibit 99.x
+# (the 8-K body carries only the announcement). Item 9.01 (Financial Statements
+# and Exhibits) merely lists the exhibits and is not itself a narrative item.
+_EIGHTK_EXHIBIT_ITEMS = ("Item 2.02", "Item 7.01", "Item 8.01")
+
+
+def _segment_8k(obj, filing) -> list[tuple[str, object, dict]]:
+    """Requested (item id, exhibit text, {"exhibit": filename}) triples for an
+    8-K, following each reported exhibit-bearing item to its Exhibit 99.x text.
+
+    Live-captured shape (edgartools 5.42.0; ``filing.obj()`` -> ``CurrentReport``,
+    NOT ``EightK`` — plan-grounding correction): ``obj.items`` is a list of
+    reported item-id strings; ``obj.press_releases`` is the collection of EX-99.x
+    press-release exhibits, each a ``PressRelease`` with ``.document`` (the
+    EX-99.x filename) + ``.text()`` (the exhibit body). We read the exhibit text
+    (not the 8-K body announcement) and record the source exhibit filename in the
+    section's `exhibit` provenance field.
+
+    LOOM-SIMPLIFY: shortcut=pair reported exhibit-bearing items to EX-99.x
+    exhibits POSITIONALLY (item[i] -> press_releases[i]) rather than resolving
+    each item body's "Exhibit 99.x" cross-reference | ceiling=a real 8-K
+    reporting >=2 exhibit-bearing items whose item->exhibit correspondence is
+    non-positional (e.g. Item 2.02->EX-99.2, Item 7.01->EX-99.1) |
+    upgrade=parse each reported item's body text for its referenced exhibit
+    number and map by that | ref=spec Requirement "8-K Item Segmentation with
+    Exhibit-Following". (Present path only; the missing-exhibit gap is Task 5.)
+    """
+    following = [item_id for item_id in obj.items if item_id in _EIGHTK_EXHIBIT_ITEMS]
+    releases = list(obj.press_releases)
+    return [
+        (item_id, releases[i].text(), {"exhibit": releases[i].document})
+        for i, item_id in enumerate(following)
+    ]
+
+
+# form -> extractor(obj, filing) returning per-item entries (see EXTRACTOR
+# CONTRACT above): [(item id, text-or-None[, extra_dict]), ...] from filing.obj().
 _ITEM_EXTRACTORS = {
     "10-K": _segment_10k,
     "10-Q": _segment_10q,
+    "8-K": _segment_8k,
 }
 
 
@@ -859,12 +910,18 @@ def _section_gap(item_id: str, filing) -> dict:
     }
 
 
-def _build_section(item_id: str, text, filing) -> dict:
-    """A success section (`{"item", "text"}`) when text is present, else a named
-    absent-item error slot — never an empty or fabricated section."""
+def _build_section(item_id: str, text, filing, extra: dict | None = None) -> dict:
+    """A success section (`{"item", "text", **extra}`) when text is present, else
+    a named absent-item error slot — never an empty or fabricated section.
+
+    `extra` is the per-section provenance merged into a success section (8-K's
+    `{"exhibit": ...}`, Task 4); empty/None for 10-K/10-Q."""
     if text is None or (isinstance(text, str) and not text.strip()):
         return _section_gap(item_id, filing)
-    return {"item": item_id, "text": text}
+    section = {"item": item_id, "text": text}
+    if extra:
+        section.update(extra)
+    return section
 
 
 def segment_filing(filing) -> list[dict]:
@@ -875,6 +932,9 @@ def segment_filing(filing) -> list[dict]:
     Returns a LIST of section dicts (see the SECTION-OBJECT CONTRACT above):
       - 10-K -> distinct Item 7 (MD&A) + Item 1A (Risk Factors) sections.
       - 10-Q -> an Item 2 (MD&A) section.
+      - 8-K  -> one section per reported exhibit-bearing item (2.02/7.01/8.01),
+        each sourced from its Exhibit 99.x with the exhibit filename in
+        provenance (Task 4).
     A requested item absent from THIS filing (edgartools returns ``None``,
     issue #710) becomes a per-section error slot naming the missing item, never
     an empty/fabricated section. An unregistered form fails loud (``ValueError``)
@@ -885,10 +945,15 @@ def segment_filing(filing) -> list[dict]:
     if extractor is None:
         raise ValueError(
             f"segment_filing: no section extractor registered for form {form!r} "
-            "(10-K/10-Q supported in this migration slice; 8-K follows in a later task)"
+            "(10-K/10-Q/8-K supported)"
         )
     obj = filing.obj()
-    return [_build_section(item_id, text, filing) for item_id, text in extractor(obj)]
+    sections = []
+    for entry in extractor(obj, filing):
+        item_id, text = entry[0], entry[1]
+        extra = entry[2] if len(entry) > 2 else None
+        sections.append(_build_section(item_id, text, filing, extra))
+    return sections
 
 
 def action_narrative(accession: str) -> dict:

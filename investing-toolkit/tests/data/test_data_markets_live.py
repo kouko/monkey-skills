@@ -380,6 +380,67 @@ def test_edgartools_segment_real_10k_shape():
     assert q_sections["Item 2"]["text"].strip()
 
 
+@pytest.mark.network
+def test_edgartools_segment_real_8k_shape():
+    """Anchor the REAL edgartools 8-K exhibit-following shape + segment_filing (Task 4).
+
+    fixtures-mirror-producer-shape: the offline _MockEightK / _MockPressRelease
+    mocks in tests/data/test_sec_narrative.py mirror THIS captured shape. Two
+    plan-grounding corrections surfaced live and are asserted here so a v5->v6
+    churn (or a re-reader trusting the stale plan) fails LOUD:
+      - filing.obj() on an 8-K returns type ``CurrentReport`` (NOT ``EightK``).
+      - press-release exhibits (``obj.press_releases`` -> ``PressReleases`` of
+        ``PressRelease``) expose ``.document`` + ``.text()`` but NO
+        ``.document_type`` (that attr is on ``filing.attachments``' Attachments).
+    Captured live 2026-07-12 against AAPL earnings 8-K 0000320193-26-000011
+    (Item 2.02 + Exhibit 99.1). Run live:
+      uv run --with pytest --with edgartools==5.42.0 --with 'pyyaml>=6.0' \
+        pytest investing-toolkit/tests/data/test_data_markets_live.py \
+        -k edgartools_segment_real_8k -m network
+    """
+    import sys
+
+    import edgar
+
+    edgar.set_identity("kouko investing-toolkit noreply@anthropic.com")
+
+    # An earnings 8-K reporting Item 2.02 with an EX-99.1 press release.
+    filings = edgar.Company("AAPL").get_filings(form="8-K")
+    eightk_filing = None
+    for f in filings:
+        obj = f.obj()
+        if any("2.02" in str(it) for it in getattr(obj, "items", [])):
+            eightk_filing = f
+            break
+    assert eightk_filing is not None, "expected an AAPL 8-K reporting Item 2.02"
+    obj = eightk_filing.obj()
+
+    assert type(obj).__name__ == "CurrentReport", (
+        "filing.obj() on an 8-K is a CurrentReport, not an EightK (plan correction)"
+    )
+    assert isinstance(obj.items, list) and any("Item 2.02" in str(it) for it in obj.items)
+    prs = list(obj.press_releases)
+    assert prs, "earnings 8-K must carry at least one EX-99.x press release"
+    pr = prs[0]
+    assert isinstance(pr.document, str) and pr.document, "PressRelease.document is the EX-99.x filename"
+    assert isinstance(pr.text(), str) and pr.text().strip(), "PressRelease.text() is the exhibit body"
+    assert not hasattr(pr, "document_type"), (
+        "a PressRelease has NO document_type — that attr is on filing.attachments' Attachments"
+    )
+
+    # segment_filing mirrors that shape end-to-end.
+    if str(SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(SCRIPTS))
+    import sec_edgar_client
+
+    sections = {s["item"]: s for s in sec_edgar_client.segment_filing(eightk_filing)}
+    assert "Item 2.02" in sections, "8-K segments into a section for reported Item 2.02"
+    slot = sections["Item 2.02"]
+    assert "error" not in slot
+    assert slot["text"].strip(), "Item 2.02 text sourced from its EX-99.x exhibit"
+    assert slot["exhibit"] == pr.document, "section provenance records the source exhibit filename"
+
+
 # ---------------------------------------------------------------------------
 # JP — 7203 Toyota (yfinance + TDnet + EDINET + BOJ/e-Stat/ECB)
 # ---------------------------------------------------------------------------
