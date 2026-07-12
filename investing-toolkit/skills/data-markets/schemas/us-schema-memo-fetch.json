@@ -4,7 +4,7 @@
   "title": "data-us pack=memo-fetch output",
   "description": "Pack output for `data-us/scripts/pack.py --ticker {T} --pack memo-fetch`. Heavy bundle: yfinance info + 2y price + SEC EDGAR filings index (10-K/10-Q/8-K, configurable; default 8 — use --filings-limit to override) + SEC XBRL us-gaap concept facts. Single ticker only by design (SEC EDGAR is rate-limited 10 req/s).",
   "type": "object",
-  "required": ["pack", "ticker", "fetched_at", "company_info", "price_history", "sec_filings", "sec_facts"],
+  "required": ["pack", "ticker", "fetched_at", "company_info", "price_history", "sec_filings", "sec_narrative", "sec_facts"],
   "additionalProperties": true,
   "properties": {
     "pack": {"const": "memo-fetch"},
@@ -58,6 +58,69 @@
         "fetched_at": {"type": "string"},
         "_provenance": {"$ref": "us-schema-error-envelope.json#/definitions/provenance"},
         "error": {"type": "string"}
+      }
+    },
+    "sec_narrative": {
+      "type": "object",
+      "description": "Memo-feed narrative bundle (Tier A): management's filed text for the latest 10-K, latest 10-Q, and one earnings 8-K (item 2.02) per quarter for the last N quarters, per `sec_edgar_client.select_narrative_filings`'s policy. A depth-1 wrapper around per-filing `--action narrative` results (`sec_edgar_client.fetch_narrative_sections`) — see the two consumer-contract notes below before reading `failed_items`/`succeeded`/`failed`.",
+      "additionalProperties": true,
+      "required": ["filings", "failed_items", "requested", "succeeded", "failed", "_status"],
+      "properties": {
+        "filings": {
+          "type": "array",
+          "description": "One entry per SELECTED filing (accession chosen by the selection policy), in selection order (10-K, 10-Q, then 8-Ks newest-quarter-first). Each entry is `{role, quarter?: <YYYYQn> (8-K only), ...fetch_narrative_sections result}` — i.e. `accession`/`cik`/`form`/`filingDate`/`sections`/`section_count`/`narrative_status`/`failed_items`/`_cache`, OR (on acquisition failure) a loud `{role, quarter?, error, ...}` slot in place of the narrative fields.",
+          "items": {
+            "type": "object",
+            "required": ["role"],
+            "additionalProperties": true,
+            "properties": {
+              "role": {"type": "string", "enum": ["10-K", "10-Q", "8-K"]},
+              "quarter": {"type": "string", "description": "YYYYQn label; 8-K entries only."},
+              "accession": {"type": "string"},
+              "sections": {
+                "type": "array",
+                "description": "Per-item section objects (`item`, `text_path`, `disclosure_status`, provenance) OR per-item error slots (`item`, `error`, `error_class`) — see the consumer-contract note: a classifier that only walks dict-valued sub-fields cannot see failures nested in THIS list; use `narrative_status`/`failed_items` on this same filing entry, or the wrapper's own depth-1 `failed_items` below, instead.",
+                "items": {"type": "object", "additionalProperties": true}
+              },
+              "narrative_status": {"type": "string", "enum": ["ok", "partial", "failed"], "description": "This filing's own section-extraction health."},
+              "error": {"type": "string", "description": "Present only when the filing acquisition itself failed (no sections were ever fetched)."}
+            }
+          }
+        },
+        "failed_items": {
+          "type": "array",
+          "description": "CONSUMER CONTRACT: this is the load-bearing failure signal for the whole `sec_narrative` bundle, hoisted to THIS wrapper's own depth 1 — do NOT rely on a classifier walking into any filing's `sections` list to detect failure (`pack.py`'s own classifier walks exactly one level and cannot see into a list-valued sub-field, so a per-section failure living inside `filings[].sections` is structurally invisible to it). Combines per-section failures (from filings whose `narrative_status` was `partial`) and selection gaps (a requested role/quarter with no qualifying filing at all, e.g. no earnings 8-K found for a quarter).",
+          "items": {
+            "type": "object",
+            "required": ["role", "error", "error_class"],
+            "additionalProperties": true,
+            "properties": {
+              "role": {"type": "string", "enum": ["10-K", "10-Q", "8-K"]},
+              "quarter": {"type": "string", "description": "YYYYQn label; 8-K entries only."},
+              "accession": {"type": "string", "description": "Present for a section-level failure inside an acquired filing; absent for a selection gap (no such filing existed)."},
+              "item": {"type": "string", "description": "The failing item id (e.g. 'Item 1A'); present for section-level failures, absent for selection gaps."},
+              "error": {"type": "string"},
+              "error_class": {"type": "string", "description": "e.g. 'no_filing', 'no_earnings_8k' (selection gaps); 'absent_item', 'extraction_error', 'narrative_failed' (section/filing-level failures)."}
+            }
+          }
+        },
+        "requested": {
+          "type": "integer",
+          "description": "Policy-fixed count = 2 + n_quarters (10-K + 10-Q + one 8-K per quarter), decided by the SELECTION policy — never by what came back. Reconciles by construction: `succeeded + failed == requested`."
+        },
+        "succeeded": {
+          "type": "integer",
+          "description": "CONSUMER CONTRACT: counts FILINGS OBTAINED, not sections fully extracted. A filing that was fetched but whose own `narrative_status` is `partial` (some of its sections failed) still counts as succeeded here — the filing itself was not a gap. Its section-level failures are carried separately in `failed_items` and force this wrapper's own `_status` to `partial`. So `succeeded + failed == requested` can reconcile cleanly while some section text is still missing; do not read a clean count triple as \"nothing is missing\" — check `_status` and `failed_items` too."
+        },
+        "failed": {
+          "type": "integer",
+          "description": "Filings never obtained at all: selection gaps (no qualifying filing existed) plus filings whose acquisition itself failed. `succeeded + failed == requested` by construction."
+        },
+        "_status": {
+          "type": "string",
+          "enum": ["ok", "partial", "failed"],
+          "description": "Derived from the count triple AND each filing's own `narrative_status`: `failed` (== requested, and requested > 0) when nothing was obtained; `partial` when any filing failed outright OR any obtained filing itself reports `narrative_status: partial`; else `ok`."
+        }
       }
     },
     "sec_facts": {
