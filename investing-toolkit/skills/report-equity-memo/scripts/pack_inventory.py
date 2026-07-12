@@ -63,6 +63,7 @@ _METADATA_SCALAR_KEYS = frozenset({
     "_cmd", "_returncode", "script", "args", "returncode", "stderr", "_stderr",
     "detail", "stdout_head", "_stdout_head", "stdout_tail",
     "_tier", "_source", "_action", "_partial",
+    "_skipped",
 })
 
 
@@ -108,12 +109,17 @@ def _is_failed_section(section: dict) -> bool:
     siblings (~10 separate subprocess calls) succeed. Generic on purpose —
     no section-name special-casing — so any future section (any market)
     gets this for free.
+
+    A `_skipped` sentinel (e.g. JP `material_events` when EDINET_API_KEY is
+    absent — pack_jp.py:439) is treated the same way as `error`/`_error`:
+    skipped is a species of absent, never present, UNLESS real sibling data
+    sits alongside it (same merged-section rule as above).
     """
     if section.get("_status") == "failed":
         return True
     if all(key in section for key in _COUNT_TRIPLE_KEYS) and section["succeeded"] == 0:
         return True
-    if "error" in section or "_error" in section:
+    if "error" in section or "_error" in section or "_skipped" in section:
         return not _has_data_signal(section)
     return False
 

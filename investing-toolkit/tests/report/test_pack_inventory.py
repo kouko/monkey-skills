@@ -261,6 +261,55 @@ def test_kr_partial_dialect_bare_error_is_not_present(tmp_path):
     assert sections["kr_history_dead"]["present"] is False
 
 
+def test_lone_skipped_sentinel_is_not_present(tmp_path):
+    """JP `material_events` emits `{"_skipped": "<reason>"}` in the Tier-2
+    fallback when EDINET_API_KEY is absent (pack_jp.py:439) — the data was
+    deliberately never fetched. A `_skipped` sentinel with no data-bearing
+    sibling key must read present: False, or the memo LLM is licensed to
+    cite material-events data that was never fetched (false-presence,
+    same fabrication class as #548, opposite direction from the error case).
+    """
+    pack = {
+        "pack": "memo-fetch",
+        "material_events": {"_skipped": "EDINET_API_KEY not set"},
+    }
+    input_path = tmp_path / "synthetic_pack.json"
+    input_path.write_text(json.dumps(pack), encoding="utf-8")
+
+    cp = _run(["--input", str(input_path)])
+    assert cp.returncode == 0, cp.stderr
+    out = json.loads(cp.stdout)
+    sections = out["sections"]
+
+    assert sections["material_events"]["present"] is False
+    assert sections["material_events"]["kind"] == "dict"
+    assert sections["material_events"]["keys"] == 1  # keys count unaffected
+
+
+def test_skipped_sentinel_merged_with_real_data_is_present(tmp_path):
+    """Mirrors the F1 merged-section rule (`error` beside real data ==
+    present): a `_skipped` sentinel sitting ALONGSIDE real sibling data
+    means the section is populated, not absent. No producer emits this
+    shape today, but the rule must hold coherently regardless.
+    """
+    pack = {
+        "pack": "memo-fetch",
+        "material_events": {
+            "_skipped": "partial fetch note",
+            "events": [{"date": "2025-01-01", "type": "8-K"}],
+        },
+    }
+    input_path = tmp_path / "synthetic_pack.json"
+    input_path.write_text(json.dumps(pack), encoding="utf-8")
+
+    cp = _run(["--input", str(input_path)])
+    assert cp.returncode == 0, cp.stderr
+    out = json.loads(cp.stdout)
+    sections = out["sections"]
+
+    assert sections["material_events"]["present"] is True
+
+
 def test_missing_input_file_exits_64(tmp_path):
     missing = tmp_path / "does_not_exist.json"
     cp = _run(["--input", str(missing)])
