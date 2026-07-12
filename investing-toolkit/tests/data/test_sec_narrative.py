@@ -491,3 +491,89 @@ def test_segment_8k_item_7_01_8_01_from_ex99_x(sec_client, item_code):
     assert slot["text"] == exhibit_text
     assert item_code in slot["text"]
     assert slot["exhibit"] == "ex99-1.htm"
+
+
+# ---------------------------------------------------------------------------
+# Task 5 — a reported 8-K exhibit-bearing item (2.02 / 7.01 / 8.01) that LACKS a
+# resolvable Exhibit 99.x is a LOUD named gap (naming accession + item code),
+# never a silent skip, an empty section, or an uncaught IndexError. Also folds
+# in the T4 code-quality finding on `_segment_8k`'s positional item[i] ->
+# releases[i] pairing: it must NOT silently mis-attribute an exhibit when >= 2
+# exhibit-bearing items are reported (per-item correspondence not determinable),
+# nor raise an uncaught IndexError on a count mismatch — both become loud gaps.
+# ---------------------------------------------------------------------------
+# Reuses the Task-4 8-K grounding (this module's docstring) UNCHANGED — the
+# missing / ambiguous exhibit is modelled on the same ``obj.press_releases``
+# path (an empty or count-mismatched press_releases list is the real
+# missing-exhibit signal there, per the live 5.42.0 capture), so no NEW
+# edgartools attribute is touched by Task 5.
+
+
+def test_8k_reported_item_without_exhibit_emits_gap(sec_client):
+    # No @req tag: this dispatch's plan/spec trace by
+    # `<change-id> / Requirement / Scenario` join keys, not registered REQ-ids
+    # (see report) — @req omitted per the implementer contract.
+    # Scenario: `8-K Missing-Exhibit Gap / Reported item without exhibit`.
+    eightk = _MockEightK(
+        items=["Item 2.02", "Item 9.01"],  # 2.02 reported, but no EX-99.x present
+        press_releases=[],  # empty press_releases = the missing-exhibit signal
+    )
+    filing = _segmentable_filing("8-K", eightk)
+
+    sections = sec_client.segment_filing(filing)
+
+    by_item = {s["item"]: s for s in sections}
+    # the reported exhibit-bearing item is NOT omitted from output
+    assert "Item 2.02" in by_item, (
+        "a reported item lacking its exhibit must still appear as a gap slot, "
+        "never be dropped from output"
+    )
+    slot = by_item["Item 2.02"]
+    assert "error" in slot, f"missing-exhibit item must be a loud slot: {slot!r}"
+    assert slot["error_class"] == "missing_exhibit"
+    assert "Item 2.02" in slot["error"], "gap must name the item code"
+    assert "0000320193-24-000123" in slot["error"], "gap must name the accession"
+    assert not slot.get("text"), "no fabricated/empty text for a missing-exhibit item"
+
+
+@pytest.mark.parametrize(
+    "release_count",
+    [
+        # (i) >= 2 exhibit-bearing items reported with >= 2 exhibits — per-item
+        # correspondence is NOT determinable; positional pairing would SILENTLY
+        # mis-attribute an exhibit to the wrong item.
+        pytest.param(2, id="two-items-two-releases-nonpositional"),
+        # (ii) count mismatch — positional releases[i] would raise an UNCAUGHT
+        # IndexError out of segment_filing.
+        pytest.param(1, id="two-items-one-release-count-mismatch"),
+    ],
+)
+def test_8k_unsafe_pairing_emits_gap_per_item(sec_client, release_count):
+    # No @req tag (see test_8k_reported_item_without_exhibit_emits_gap).
+    # Folds the T4 code-quality finding: silent positional mis-attribution +
+    # uncaught IndexError -> a loud named gap per affected item (arc mandate:
+    # silent-wrong is the enemy — fail loud, never mis-attribute).
+    press = [
+        _MockPressRelease(document=f"ex99-{n}.htm", text=f"exhibit body {n}")
+        for n in range(1, release_count + 1)
+    ]
+    eightk = _MockEightK(
+        items=["Item 2.02", "Item 7.01", "Item 9.01"],  # 2 exhibit-bearing items
+        press_releases=press,
+    )
+    filing = _segmentable_filing("8-K", eightk)
+
+    # must NOT raise an uncaught IndexError out of segment_filing
+    sections = sec_client.segment_filing(filing)
+
+    by_item = {s["item"]: s for s in sections}
+    for item_code in ("Item 2.02", "Item 7.01"):
+        assert item_code in by_item, f"{item_code} must not be dropped from output"
+        slot = by_item[item_code]
+        assert "error" in slot, (
+            f"unsafe pairing must be a loud gap, not a positional guess: {slot!r}"
+        )
+        assert slot["error_class"] == "missing_exhibit"
+        assert item_code in slot["error"], "gap must name the item code"
+        assert "0000320193-24-000123" in slot["error"], "gap must name the accession"
+        assert not slot.get("text"), "no mis-attributed exhibit text on an unsafe gap"

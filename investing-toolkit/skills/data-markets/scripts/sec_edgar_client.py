@@ -822,10 +822,14 @@ def acquire_filing(
 # A registered extractor is called `extractor(obj, filing)` and returns a LIST
 # of per-item entries; each entry is either a 2-tuple `(item_id, text-or-None)`
 # or a 3-tuple `(item_id, text-or-None, extra_dict)` where `extra_dict` is the
-# per-section provenance merged into a SUCCESS section (see `extra` above). The
-# `filing` arg is passed to every extractor (10-K/10-Q ignore it); 8-K needs it
-# to reach the filing's exhibit attachments. The 3rd tuple element widens the
-# T3 2-tuple contract WITHOUT breaking it — 2-tuples still work (extra = {}).
+# per-section provenance merged into a SUCCESS section (see `extra` above), OR a
+# ready-made section/gap dict (Task 4/5) — used when the extractor ALONE can
+# detect a gap the shared absent-item logic can't classify (8-K's missing or
+# ambiguous Exhibit 99.x -> a `"missing_exhibit"` gap slot); `segment_filing`
+# passes such a dict through unchanged. The `filing` arg is passed to every
+# extractor (10-K/10-Q ignore it); 8-K needs it to reach the filing's exhibit
+# attachments. The 3rd tuple element widens the T3 2-tuple contract WITHOUT
+# breaking it — 2-tuples still work (extra = {}).
 
 
 def _segment_10k(obj, filing) -> list[tuple[str, object]]:
@@ -858,9 +862,31 @@ def _segment_10q(obj, filing) -> list[tuple[str, object]]:
 _EIGHTK_EXHIBIT_ITEMS = ("Item 2.02", "Item 7.01", "Item 8.01")
 
 
-def _segment_8k(obj, filing) -> list[tuple[str, object, dict]]:
-    """Requested (item id, exhibit text, {"exhibit": filename}) triples for an
-    8-K, following each reported exhibit-bearing item to its Exhibit 99.x text.
+def _exhibit_gap(item_id: str, filing, *, item_count: int, release_count: int) -> dict:
+    """A loud, sentinel-compatible gap slot for a reported 8-K exhibit-bearing
+    item whose Exhibit 99.x cannot be resolved to source its narrative — either
+    absent (no press-release exhibit) or ambiguous (>=2 exhibit-bearing items, so
+    per-item correspondence isn't determinable). Names the accession + item code;
+    read unchanged by pack.py's ``_status`` (Task 5)."""
+    return {
+        "item": item_id,
+        "error": (
+            f"8-K item {item_id!r} reported in filing "
+            f"{getattr(filing, 'accession_no', None)!r} but its Exhibit 99.x "
+            f"could not be resolved to source its narrative "
+            f"({item_count} exhibit-bearing item(s), {release_count} EX-99.x "
+            f"press-release exhibit(s); safe pairing requires exactly one of each)"
+        ),
+        "error_class": "missing_exhibit",
+    }
+
+
+def _segment_8k(obj, filing) -> list[object]:
+    """Per-item entries for an 8-K, following each reported exhibit-bearing item
+    to its Exhibit 99.x text — a success triple ``(item id, exhibit text,
+    {"exhibit": filename})`` when resolvable, else a loud missing-exhibit gap
+    dict (never a silent skip, an empty section, a positional guess, or an
+    uncaught IndexError).
 
     Live-captured shape (edgartools 5.42.0; ``filing.obj()`` -> ``CurrentReport``,
     NOT ``EightK`` — plan-grounding correction): ``obj.items`` is a list of
@@ -870,20 +896,34 @@ def _segment_8k(obj, filing) -> list[tuple[str, object, dict]]:
     (not the 8-K body announcement) and record the source exhibit filename in the
     section's `exhibit` provenance field.
 
-    LOOM-SIMPLIFY: shortcut=pair reported exhibit-bearing items to EX-99.x
-    exhibits POSITIONALLY (item[i] -> press_releases[i]) rather than resolving
-    each item body's "Exhibit 99.x" cross-reference | ceiling=a real 8-K
-    reporting >=2 exhibit-bearing items whose item->exhibit correspondence is
-    non-positional (e.g. Item 2.02->EX-99.2, Item 7.01->EX-99.1) |
-    upgrade=parse each reported item's body text for its referenced exhibit
-    number and map by that | ref=spec Requirement "8-K Item Segmentation with
-    Exhibit-Following". (Present path only; the missing-exhibit gap is Task 5.)
+    Only the unambiguous 1:1 case (exactly one reported exhibit-bearing item and
+    exactly one press-release exhibit) is paired — there the correspondence is
+    determined, not guessed. Any other shape (no exhibit for a reported item, a
+    count mismatch, or >=2 exhibit-bearing items whose item->exhibit mapping is
+    non-positional) emits a loud named gap per affected item: silent-wrong is the
+    enemy, so we never mis-attribute an exhibit to the wrong item (T4 review
+    finding, folded in by Task 5).
+
+    LOOM-SIMPLIFY: shortcut=a >=2-exhibit-item 8-K (or count mismatch) is emitted
+    as loud per-item gaps rather than resolving each reported item body's
+    "Exhibit 99.x" cross-reference to map it to the right exhibit | ceiling=a real
+    8-K reporting >=2 exhibit-bearing items each with its own recoverable EX-99.x
+    (e.g. Item 2.02->EX-99.1, Item 7.01->EX-99.2) whose content we want extracted,
+    not gapped | upgrade=parse each reported item's body text for its referenced
+    exhibit number and map by that | ref=spec Requirement "8-K Item Segmentation
+    with Exhibit-Following". (The gap itself is loud + tested; this cut defers the
+    multi-exhibit RESOLUTION, not the fail-loud behaviour.)
     """
     following = [item_id for item_id in obj.items if item_id in _EIGHTK_EXHIBIT_ITEMS]
     releases = list(obj.press_releases)
+    if len(following) == 1 and len(releases) == 1:
+        item_id, release = following[0], releases[0]
+        return [(item_id, release.text(), {"exhibit": release.document})]
     return [
-        (item_id, releases[i].text(), {"exhibit": releases[i].document})
-        for i, item_id in enumerate(following)
+        _exhibit_gap(
+            item_id, filing, item_count=len(following), release_count=len(releases)
+        )
+        for item_id in following
     ]
 
 
@@ -950,6 +990,13 @@ def segment_filing(filing) -> list[dict]:
     obj = filing.obj()
     sections = []
     for entry in extractor(obj, filing):
+        # An extractor may yield a ready-made section/gap dict for a gap it alone
+        # can detect (8-K missing/ambiguous exhibit, Task 5); pass it through
+        # unchanged. Otherwise it is a (item id, text[, extra]) tuple built via
+        # the shared success/absent-item logic.
+        if isinstance(entry, dict):
+            sections.append(entry)
+            continue
         item_id, text = entry[0], entry[1]
         extra = entry[2] if len(entry) > 2 else None
         sections.append(_build_section(item_id, text, filing, extra))
