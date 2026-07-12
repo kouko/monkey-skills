@@ -2,8 +2,8 @@
 
 > **Type**: research note (web-grounded, per-paradigm sourcing)
 > **Date**: 2026-07-12
-> **Consumer**: the Axis-B visual-style canon entry (a later task) in
-> `loom-product-principles/skills/product-principles/references/`, mirroring
+> **Consumer**: the Axis-B visual-style canon entry in
+> `loom-product-principles/skills/product-principles/references/canon-design-surface.md`, mirroring
 > how `canon-design-visual.md` cites
 > `docs/loom/research/2026-07-10-principles-canon-base-lists.md` §3.
 > **Method**: single research pass, well-established public facts per

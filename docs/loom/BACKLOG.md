@@ -132,6 +132,24 @@
   no mechanical rule yet separates it from a reproduced true positive);
   revisit when L1 data shows drop-signal distortion attributable to it.
 
+## Visual-style canon catalog expansion — Phase 2 (OPEN)
+- Status: OPEN
+- Start: re-trigger = a user wants richer style candidates, OR a real
+  product needs a surface/movement treatment not in the seed catalogs.
+- Origin: PR #550 (visual-style movement-anchor Phase 1, loom-product-
+  principles 0.7.0). Phase 1 shipped the mechanism + a runnable Axis-B
+  seed; the brief `docs/loom/specs/2026-07-12-visual-style-movement-anchor-and-quality-separation.md`
+  §Phasing split catalog growth out as additive Phase 2.
+- What: grow both canon reference files with more grounded entries —
+  Axis A (`references/canon-design-visual.md`) with more cultural/graphic-
+  design movements, Axis B (`references/canon-design-surface.md`) with more
+  UI surface-treatment paradigms. Purely additive to the reference files;
+  NO SDD needed beyond per-entry grounding research (each entry carries a
+  live-verified source URL — the fabricated-URL lesson from #550 review
+  applies). Divergent-candidate surprise value grows with catalog richness.
+  Bumping either shipped reference file is skill-content → requires a
+  plugin version bump (see the mechanical version-bump gate entry below).
+
 ## Operationalize "product-shaped" in family reception (OPEN)
 - Status: OPEN
 - Start: next time any session or dogfood cold-reader again reports

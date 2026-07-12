@@ -2,7 +2,7 @@
 
 This doc grounds the ~6 UI surface-treatment paradigms (skeuomorphism, flat,
 material-as-surface-treatment, neumorphism, glassmorphism, spatial / Liquid
-Glass) that a later task's Axis-B canon file will cite — mirroring how
+Glass) that the Axis-B canon file cites — mirroring how
 canon-design-visual.md cites
 docs/loom/research/2026-07-10-principles-canon-base-lists.md §3. House
 discipline: "ground in sources before cataloging."
@@ -17,8 +17,6 @@ file (loom-product-principles/scripts/ -> repo root -> docs/loom/research/).
 import re
 from pathlib import Path
 
-import pytest
-
 REPO_ROOT = Path(__file__).parents[2]
 RESEARCH_DOC = (
     REPO_ROOT / "docs" / "loom" / "research"
@@ -28,7 +26,7 @@ RESEARCH_DOC = (
 MIN_SOURCE_LINKS = 5
 MIN_YEAR_TOKENS = 5
 LINK_RE = re.compile(r"https?://\S+")
-YEAR_RE = re.compile(r"\b(19|20)\d{2}\b")
+YEAR_RE = re.compile(r"\b(?:19|20)\d{2}\b")
 
 SEED_TREATMENT_NAMES = [
     "skeuomorphism",
