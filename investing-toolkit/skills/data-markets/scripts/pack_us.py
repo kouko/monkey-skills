@@ -549,6 +549,118 @@ def _normalize_dcf(raw_concepts: dict[str, dict]) -> dict:
     }
 
 
+def _fetch_sec_narrative(filings_rows: list[dict]) -> dict:
+    """Assemble the `sec_narrative` memo-feed contract (brief §Decision):
+    management's filed text for the latest 10-K, the latest 10-Q, and the
+    earnings 8-K of each of the last N quarters (Task 2's
+    `select_narrative_filings` policy). One `--action narrative` subprocess
+    per SELECTED accession; the producer's own cache
+    (`narrative_sections_{accession}`, immutable TTL) is reused unchanged —
+    this introduces no new cache key.
+
+    Failure must be STRUCTURALLY visible, not merely a status string
+    (brief Fork A — the researched EN/JA sources agree a status string
+    alone is the documented ignored-by-structural-readers failure mode):
+    `failed_items` is hoisted to THIS wrapper's OWN top level (depth 1) —
+    `pack.py`'s `_classify_result` walks exactly one level and cannot see
+    into a list-valued `sections` sub-field, so a per-item failure living
+    inside a selected filing's `sections` list would otherwise be
+    structurally invisible. The required count triple `{requested,
+    succeeded, failed}` turns "is this complete?" into arithmetic
+    reconciliation: `requested` is fixed by the selection POLICY (never by
+    what came back), and `succeeded + failed == requested` holds by
+    construction — every selected filing resolves to exactly one bucket,
+    and every selection gap is counted as failed.
+
+    `_status` (ok/partial/failed) is derived from those counts AND each
+    producer's own `narrative_status`: a filing that is itself fetched but
+    reports `narrative_status: "partial"` still counts as "succeeded" in
+    the triple (the FILING was obtained), but its section-level failures
+    are surfaced in `failed_items` and force the wrapper's own `_status` to
+    "partial" too — Task 4 taught `pack.py` to honor this self-declared
+    `_status`, winning over its own dict-shape inference that structurally
+    cannot see into `sections` (a list).
+    """
+    if str(SCRIPT_DIR) not in sys.path:
+        sys.path.insert(0, str(SCRIPT_DIR))
+    # Lazy import: sec_edgar_client.py's top-level `import requests` would
+    # otherwise force its runtime deps (requests/edgartools) onto every
+    # pack type at MODULE-IMPORT time, not just memo-fetch's narrative path
+    # — this module's own PEP 723 header stays dependency-free (see the
+    # module docstring); only calling this function pays that cost.
+    from sec_edgar_client import select_narrative_filings
+
+    selection = select_narrative_filings(filings_rows)
+    requested = selection["requested"]
+
+    filings_out: list[dict] = []
+    failed_items: list[dict] = []
+    succeeded = 0
+    failed = 0
+    any_partial = False
+
+    for row in selection["selected"]:
+        role = row["role"]
+        quarter = row.get("quarter")
+        accession = row.get("accessionNumber")
+        _log(
+            "pack [narrative]",
+            f"{role}{(' ' + quarter) if quarter else ''} accession={accession}",
+        )
+        narrative = run_client(SEC, ["--action", "narrative", "--accession", accession])
+        entry = {"role": role, **({"quarter": quarter} if quarter else {}), **narrative}
+        filings_out.append(entry)
+
+        if "error" in narrative or narrative.get("narrative_status") == "failed":
+            failed += 1
+            failed_items.append({
+                "role": role,
+                "quarter": quarter,
+                "accession": accession,
+                "error": narrative.get("error")
+                or f"narrative_status={narrative.get('narrative_status')!r} — all sections failed",
+                "error_class": narrative.get("error_class", "narrative_failed"),
+            })
+            continue
+
+        succeeded += 1
+        if narrative.get("narrative_status") == "partial":
+            any_partial = True
+            sections_by_item = {
+                s.get("item"): s for s in narrative.get("sections", []) if isinstance(s, dict)
+            }
+            for item_id in narrative.get("failed_items", []):
+                section = sections_by_item.get(item_id, {})
+                failed_items.append({
+                    "role": role,
+                    "quarter": quarter,
+                    "accession": accession,
+                    "item": item_id,
+                    "error": section.get("error", f"section {item_id!r} failed"),
+                    "error_class": section.get("error_class", "unknown"),
+                })
+
+    for gap in selection["gaps"]:
+        failed += 1
+        failed_items.append(dict(gap))
+
+    if failed == requested:
+        status = "failed"
+    elif failed > 0 or any_partial:
+        status = "partial"
+    else:
+        status = "ok"
+
+    return {
+        "filings": filings_out,
+        "failed_items": failed_items,
+        "requested": requested,
+        "succeeded": succeeded,
+        "failed": failed,
+        "_status": status,
+    }
+
+
 def pack_memo_fetch(ticker: str) -> dict:
     """Heavy single-ticker bundle for equity memo: yfinance + SEC EDGAR."""
     _log("memo-fetch start", ticker)
@@ -569,6 +681,9 @@ def pack_memo_fetch(ticker: str) -> dict:
     raw_concepts = _fetch_dcf_concepts(ticker)
     _log("pack [normalize]", "DCF concept merge")
     canonical = _normalize_dcf(raw_concepts)
+    _log("pack [narrative selection]", ticker)
+    filings_rows = filings.get("filings", []) if isinstance(filings, dict) else []
+    sec_narrative = _fetch_sec_narrative(filings_rows)
     _log("memo-fetch done", f"{ticker} in {time.monotonic() - t0:.1f}s")
     rows = history.get("data", []) if isinstance(history, dict) else []
     info_dict = info if isinstance(info, dict) else {}
@@ -580,6 +695,7 @@ def pack_memo_fetch(ticker: str) -> dict:
         "price_history": history,
         "history": rows,  # T1 canonical OHLCV alias
         "sec_filings": filings,
+        "sec_narrative": sec_narrative,
         "sec_facts": {
             **facts,
             "concepts": raw_concepts,  # T3 raw — concept-keyed time-series

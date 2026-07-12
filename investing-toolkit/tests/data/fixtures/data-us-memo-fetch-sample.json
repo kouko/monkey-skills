@@ -7049,5 +7049,156 @@
   "us_specific": {
     "non_gaap_eps_note": "Out of scope for T3 v1; lives in 8-K narratives.",
     "segment_revenue_note": "Out of scope for T3 v1; future enhancement (us-gaap:RevenuesFromExternalCustomers by segment)."
+  },
+  "sec_narrative": {
+    "filings": [
+      {
+        "role": "10-K",
+        "accession": "0000320193-25-000079",
+        "cik": 320193,
+        "form": "10-K",
+        "filingDate": "2025-10-31",
+        "sections": [
+          {
+            "item": "Item 1",
+            "text_path": "~/.cache/investing-toolkit/sec_edgar/sections/000032019325000079/Item_1.txt",
+            "disclosure_status": "filed",
+            "accession": "0000320193-25-000079",
+            "cik": 320193,
+            "filingDate": "2025-10-31",
+            "period_of_report": "2025-09-27",
+            "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm"
+          }
+        ],
+        "section_count": 1,
+        "narrative_status": "ok",
+        "failed_items": [],
+        "_cache": "miss",
+        "action": "narrative"
+      },
+      {
+        "role": "10-Q",
+        "accession": "0000320193-26-000013",
+        "cik": 320193,
+        "form": "10-Q",
+        "filingDate": "2026-05-01",
+        "sections": [
+          {
+            "item": "Item 1",
+            "text_path": "~/.cache/investing-toolkit/sec_edgar/sections/000032019326000013/Item_1.txt",
+            "disclosure_status": "filed",
+            "accession": "0000320193-26-000013",
+            "cik": 320193,
+            "filingDate": "2026-05-01",
+            "period_of_report": "2026-03-28",
+            "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000013/aapl-20260328.htm"
+          }
+        ],
+        "section_count": 1,
+        "narrative_status": "ok",
+        "failed_items": [],
+        "_cache": "miss",
+        "action": "narrative"
+      },
+      {
+        "role": "8-K",
+        "quarter": "2026Q2",
+        "accession": "0000320193-26-000011",
+        "cik": 320193,
+        "form": "8-K",
+        "filingDate": "2026-04-30",
+        "sections": [
+          {
+            "item": "Item 2.02",
+            "text_path": "~/.cache/investing-toolkit/sec_edgar/sections/000032019326000011/Item_2_02.txt",
+            "disclosure_status": "furnished",
+            "exhibit": "a8-kex991q2202603282026.htm",
+            "accession": "0000320193-26-000011",
+            "cik": 320193,
+            "filingDate": "2026-04-30",
+            "period_of_report": "2026-04-30",
+            "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000011/a8-kex991q2202603282026.htm"
+          }
+        ],
+        "section_count": 1,
+        "narrative_status": "ok",
+        "failed_items": [],
+        "_cache": "miss",
+        "action": "narrative"
+      },
+      {
+        "role": "8-K",
+        "quarter": "2026Q1",
+        "accession": "0001140361-26-015711",
+        "cik": 320193,
+        "form": "8-K",
+        "filingDate": "2026-04-20",
+        "sections": [
+          {
+            "item": "Item 2.02",
+            "text_path": "~/.cache/investing-toolkit/sec_edgar/sections/000114036126015711/Item_2_02.txt",
+            "disclosure_status": "furnished",
+            "exhibit": "ef20071035_8kex991.htm",
+            "accession": "0001140361-26-015711",
+            "cik": 320193,
+            "filingDate": "2026-04-20",
+            "period_of_report": "2026-04-20",
+            "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126015711/ef20071035_8kex991.htm"
+          }
+        ],
+        "section_count": 1,
+        "narrative_status": "ok",
+        "failed_items": [],
+        "_cache": "miss",
+        "action": "narrative"
+      },
+      {
+        "role": "8-K",
+        "quarter": "2025Q4",
+        "accession": "0000320193-26-000005",
+        "cik": 320193,
+        "form": "8-K",
+        "filingDate": "2026-01-29",
+        "sections": [
+          {
+            "item": "Item 2.02",
+            "text_path": "~/.cache/investing-toolkit/sec_edgar/sections/000032019326000005/Item_2_02.txt",
+            "disclosure_status": "furnished",
+            "exhibit": "a8-kex991q1fy2026.htm",
+            "accession": "0000320193-26-000005",
+            "cik": 320193,
+            "filingDate": "2026-01-29",
+            "period_of_report": "2026-01-29",
+            "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000005/a8-kex991q1fy2026.htm"
+          }
+        ],
+        "section_count": 1,
+        "narrative_status": "ok",
+        "failed_items": [],
+        "_cache": "miss",
+        "action": "narrative"
+      },
+      {
+        "role": "8-K",
+        "quarter": "2025Q3",
+        "accession": "0001045810-25-000010",
+        "error": "client timeout after 300s",
+        "_cmd": ["uv", "run", "sec_edgar_client.py", "--action", "narrative", "--accession", "0001045810-25-000010"],
+        "_returncode": -1
+      }
+    ],
+    "failed_items": [
+      {
+        "role": "8-K",
+        "quarter": "2025Q3",
+        "accession": "0001045810-25-000010",
+        "error": "client timeout after 300s",
+        "error_class": "narrative_failed"
+      }
+    ],
+    "requested": 6,
+    "succeeded": 5,
+    "failed": 1,
+    "_status": "partial"
   }
 }

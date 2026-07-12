@@ -19,15 +19,33 @@ mocked in test (b).
 """
 from __future__ import annotations
 
+import datetime as _dt
 import json
 import re
 import sys
 from pathlib import Path
 from unittest import mock
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[2]
 MARKETS_SCRIPTS = ROOT / "skills" / "data-markets" / "scripts"
 FIXTURES = ROOT / "tests" / "data" / "fixtures"
+
+
+@pytest.fixture(autouse=True)
+def _stub_requests_for_sec_edgar_client(monkeypatch):
+    """pack_us.pack_memo_fetch lazily imports
+    sec_edgar_client.select_narrative_filings (a pure function) to decide
+    which filings the narrative fetch covers. Offline CI installs
+    pytest+pyyaml ONLY, so sec_edgar_client's top-level `import requests`
+    would fail without a stub — breaking every test in this file that
+    reaches pack_memo_fetch (mirrors test_sec_narrative.py's `sec_client`
+    fixture; only `requests` is stubbed here, not `edgar`, because
+    select_narrative_filings is a pure function that never reaches the
+    edgartools boundary)."""
+    if "requests" not in sys.modules:
+        monkeypatch.setitem(sys.modules, "requests", mock.MagicMock(name="requests"))
 
 CLIENT_FILES = ["yfinance_client.py", "fred_client.py", "sec_edgar_client.py"]
 
@@ -110,6 +128,14 @@ def _mock_run_client_for_memo_fetch(fixture: dict):
     """
     import pack_us  # noqa: E402  (module under test, already on sys.path)
 
+    # accession -> producer-shaped narrative result, keyed from the fixture's
+    # own sec_narrative.filings entries (each already carries "accession").
+    narrative_by_accession = {
+        entry["accession"]: entry
+        for entry in fixture.get("sec_narrative", {}).get("filings", [])
+        if "accession" in entry
+    }
+
     def _side_effect(script, extra_args, timeout=pack_us.CLIENT_TIMEOUT_SECONDS):
         if script == pack_us.YF:
             if "info" in extra_args:
@@ -120,6 +146,11 @@ def _mock_run_client_for_memo_fetch(fixture: dict):
                 return fixture["sec_filings"]
             if "--concept" in extra_args:
                 return {}
+            if "narrative" in extra_args:
+                accession = extra_args[extra_args.index("--accession") + 1]
+                return narrative_by_accession.get(accession, {
+                    "error": f"no fixture narrative entry for accession {accession!r}",
+                })
             return fixture["sec_facts"]
         raise AssertionError(f"unexpected run_client script: {script}")
 
@@ -151,3 +182,200 @@ def test_us_migration_memo_fetch_section_keys():
     assert result["ticker"] == "AAPL"
     assert result["company_info"] == fixture["company_info"]
     assert result["sec_filings"] == fixture["sec_filings"]
+
+
+# ---------------------------------------------------------------------------
+# Task 3 — pack_memo_fetch wires the SEC narrative into a top-level
+# `sec_narrative` key (brief §Decision memo-feed contract).
+# ---------------------------------------------------------------------------
+
+def _quarter_of(d: _dt.date) -> tuple[int, int]:
+    return (d.year, (d.month - 1) // 3 + 1)
+
+
+def _shift_quarter(year_quarter: tuple[int, int], n: int) -> tuple[int, int]:
+    year, q = year_quarter
+    total = year * 4 + (q - 1) - n
+    return (total // 4, total % 4 + 1)
+
+
+def _date_in_quarter(year_quarter: tuple[int, int]) -> str:
+    year, q = year_quarter
+    month = (q - 1) * 3 + 1
+    return _dt.date(year, month, 15).isoformat()
+
+
+def _synthetic_narrative_filings_rows() -> list[dict]:
+    """Filings rows (Task 1 shape: `items` + `reportDate`) covering exactly
+    what `select_narrative_filings` needs to pick 6/6 with zero gaps: a
+    10-K, a 10-Q, and one item-2.02 earnings 8-K per quarter for the last 4
+    quarters. Computed off *today* (mirroring `select_narrative_filings`'s
+    own `as_of` default, which `pack_memo_fetch` does not override) so this
+    test never goes stale."""
+    today = _dt.date.today()
+    rows = [
+        {
+            "form": "10-K", "filingDate": today.isoformat(),
+            "accessionNumber": "0000320193-26-100001",
+            "primaryDocument": "10k.htm", "primaryDocDescription": "10-K",
+            "items": "", "reportDate": today.isoformat(),
+        },
+        {
+            "form": "10-Q", "filingDate": today.isoformat(),
+            "accessionNumber": "0000320193-26-100002",
+            "primaryDocument": "10q.htm", "primaryDocDescription": "10-Q",
+            "items": "", "reportDate": today.isoformat(),
+        },
+    ]
+    anchor_yq = _quarter_of(today)
+    for n in range(4):
+        yq = _shift_quarter(anchor_yq, n)
+        rows.append({
+            "form": "8-K",
+            "filingDate": _date_in_quarter(yq),
+            "accessionNumber": f"0000320193-26-20000{n}",
+            "primaryDocument": f"8k-{n}.htm",
+            "primaryDocDescription": "8-K",
+            "items": "2.02,9.01",
+            "reportDate": _date_in_quarter(yq),
+        })
+    return rows
+
+
+def _producer_narrative(accession: str, *, status: str = "ok", failed_item: str | None = None) -> dict:
+    """A producer-shaped `--action narrative` result — mirrors
+    sec_edgar_client.fetch_narrative_sections's real emission
+    (sec_edgar_client.py:1417-1435): accession/cik/form/filingDate/
+    sections/section_count/narrative_status/failed_items/_cache."""
+    sections = [{
+        "item": "Item 1",
+        "text_path": f"/tmp/sections/{accession}/Item_1.txt",
+        "disclosure_status": "filed",
+        "accession": accession,
+        "cik": 320193,
+        "filingDate": "2026-05-01",
+        "period_of_report": None,
+        "url": f"https://www.sec.gov/Archives/edgar/data/320193/{accession}/10k.htm",
+    }]
+    failed_items: list[str] = []
+    if status == "partial" and failed_item:
+        sections.append({
+            "item": failed_item,
+            "error": f"section {failed_item!r} extraction failed for filing {accession!r}",
+            "error_class": "extraction_error",
+        })
+        failed_items = [failed_item]
+    return {
+        "accession": accession, "cik": 320193, "form": "10-K",
+        "filingDate": "2026-05-01", "sections": sections,
+        "section_count": len(sections), "narrative_status": status,
+        "failed_items": failed_items, "_cache": "miss", "action": "narrative",
+    }
+
+
+def _mock_run_client_for_narrative(filings_rows: list[dict], narrative_by_index: dict | None = None):
+    """run_client side_effect for the sec_narrative tests: YF calls return
+    `{}` (untested here), the filings call returns `filings_rows`, and each
+    `--action narrative` call returns a producer-shaped result.
+    `narrative_by_index` maps the Nth narrative call (0-indexed, in
+    selection order — 10-K, 10-Q, then one 8-K per quarter n=0..3, per
+    `select_narrative_filings`'s own construction order) to an
+    `(status, failed_item)` pair; unlisted calls default to "ok"."""
+    import pack_us  # noqa: E402  (module under test, already on sys.path)
+
+    narrative_by_index = narrative_by_index or {}
+    call_count = {"n": 0}
+
+    def _side_effect(script, extra_args, timeout=pack_us.CLIENT_TIMEOUT_SECONDS):
+        if script == pack_us.YF:
+            return {}
+        if script == pack_us.SEC:
+            if "filings" in extra_args:
+                return {"filings": filings_rows}
+            if "--concept" in extra_args:
+                return {}
+            if "narrative" in extra_args:
+                accession = extra_args[extra_args.index("--accession") + 1]
+                idx = call_count["n"]
+                call_count["n"] += 1
+                status, failed_item = narrative_by_index.get(idx, ("ok", None))
+                return _producer_narrative(accession, status=status, failed_item=failed_item)
+            return {}
+        raise AssertionError(f"unexpected run_client script: {script}")
+
+    return _side_effect
+
+
+def test_memo_fetch_emits_sec_narrative_with_counts():
+    """pack_memo_fetch wires Task 2's selection + one `--action narrative`
+    subprocess per selected accession into a new top-level `sec_narrative`
+    key: requested is fixed by the policy (2 + 4 quarters = 6), succeeded +
+    failed reconciles to requested, failed_items is a top-level list, and
+    _status is "ok" when every selected filing narrates cleanly."""
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack_us  # noqa: E402
+
+    filings_rows = _synthetic_narrative_filings_rows()
+
+    with mock.patch.object(pack_us, "run_client") as mock_run_client:
+        mock_run_client.side_effect = _mock_run_client_for_narrative(filings_rows)
+        result = pack_us.build_pack("memo-fetch", ["AAPL"])
+
+    assert "sec_narrative" in result, "pack_memo_fetch did not emit sec_narrative"
+    sec_narrative = result["sec_narrative"]
+    assert sec_narrative["requested"] == 6
+    assert sec_narrative["succeeded"] + sec_narrative["failed"] == sec_narrative["requested"]
+    assert isinstance(sec_narrative["failed_items"], list)
+    assert sec_narrative["failed_items"] == []
+    assert sec_narrative["_status"] == "ok"
+    assert len(sec_narrative["filings"]) == 6
+
+
+def test_memo_fetch_sec_narrative_partial_status_visible_at_depth_1():
+    """A selected filing's producer result carrying narrative_status=
+    "partial" must (a) flip the wrapper's own _status to "partial" and
+    (b) surface that filing's failed item ids in the wrapper's TOP-LEVEL
+    failed_items — readable without walking into any nested `sections`
+    list (brief Fork A: a status string alone is the documented
+    ignored-by-structural-readers failure mode)."""
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack_us  # noqa: E402
+
+    filings_rows = _synthetic_narrative_filings_rows()
+
+    with mock.patch.object(pack_us, "run_client") as mock_run_client:
+        mock_run_client.side_effect = _mock_run_client_for_narrative(
+            filings_rows, narrative_by_index={2: ("partial", "Item 1A")}
+        )
+        result = pack_us.build_pack("memo-fetch", ["AAPL"])
+
+    sec_narrative = result["sec_narrative"]
+    assert sec_narrative["_status"] == "partial"
+    assert any(entry.get("item") == "Item 1A" for entry in sec_narrative["failed_items"]), (
+        f"failed item not hoisted to depth 1: {sec_narrative['failed_items']}"
+    )
+
+
+def test_memo_fetch_partial_sec_narrative_classifies_whole_pack_partial():
+    """End-to-end proof the seam actually works: pack.py's own
+    `_classify_result` (Task 4's self-declared-`_status` reader) reports
+    the whole pack as partial when sec_narrative degrades — not just that
+    the field exists, but that the real structural reader honors it."""
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack  # noqa: E402
+    import pack_us  # noqa: E402
+
+    filings_rows = _synthetic_narrative_filings_rows()
+
+    with mock.patch.object(pack_us, "run_client") as mock_run_client:
+        mock_run_client.side_effect = _mock_run_client_for_narrative(
+            filings_rows, narrative_by_index={2: ("partial", "Item 1A")}
+        )
+        result = pack_us.build_pack("memo-fetch", ["AAPL"])
+
+    status, failed_sections = pack._classify_result(result)
+    assert status == "partial"
+    assert "sec_narrative" in failed_sections
