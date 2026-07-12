@@ -119,6 +119,16 @@ def sec_client():
             sys.modules.pop("sec_edgar_client", None)
 
 
+@pytest.fixture(autouse=True)
+def _isolated_cache(tmp_path, monkeypatch):
+    """Pin the toolkit cache dir at a pytest tmp_path so the section-text files
+    Task 7 writes at RUNTIME (`text_path`) stay isolated and never pollute the
+    real cache or the repo tree (F.I.R.S.T). Exercises the real
+    cache_util.resolve_cache_dir precedence (INVESTING_TOOLKIT_CACHE wins)."""
+    monkeypatch.setenv("INVESTING_TOOLKIT_CACHE", str(tmp_path))
+    yield
+
+
 def test_acquire_rejects_when_identity_unset(sec_client, monkeypatch):
     # No @req tag: this dispatch's plan/spec traces by
     # `<change-id> / Requirement / Scenario` join keys, not registered REQ-ids,
@@ -312,6 +322,15 @@ def _segmentable_filing(form: str, typed_obj) -> SimpleNamespace:
     )
 
 
+def _read_text_path(section) -> str:
+    """Read a SUCCESS section's file-backed body, asserting the text is NOT
+    inlined (Task 7 contract: a section carries a `text_path` to a file, never
+    an inline `text` key). Used by every SUCCESS-section text assertion below."""
+    assert "text" not in section, f"section text must NOT be inlined: {section!r}"
+    assert "text_path" in section, f"success section must carry text_path: {section!r}"
+    return Path(section["text_path"]).read_text(encoding="utf-8")
+
+
 def test_segment_10k_item7_and_item1a(sec_client):
     # No @req tag: this dispatch's plan/spec trace by
     # `<change-id> / Requirement / Scenario` join keys, not registered REQ-ids
@@ -332,8 +351,10 @@ def test_segment_10k_item7_and_item1a(sec_client):
     assert by_item["Item 7"] is not by_item["Item 1A"], "distinct section objects"
     assert "error" not in by_item["Item 7"]
     assert "error" not in by_item["Item 1A"]
-    assert by_item["Item 7"]["text"] == "Item 7.\xa0\xa0Management's Discussion body ..."
-    assert by_item["Item 1A"]["text"] == "Item 1A.\xa0\xa0Risk Factors body ..."
+    # text is file-backed (Task 7): read it back from text_path, assert the SAME
+    # content the inline `text` key previously carried (no weakening).
+    assert _read_text_path(by_item["Item 7"]) == "Item 7.\xa0\xa0Management's Discussion body ..."
+    assert _read_text_path(by_item["Item 1A"]) == "Item 1A.\xa0\xa0Risk Factors body ..."
 
 
 def test_segment_10q_item2(sec_client):
@@ -347,7 +368,8 @@ def test_segment_10q_item2(sec_client):
     by_item = {s["item"]: s for s in sections}
     assert set(by_item) == {"Item 2"}, "10-Q must emit an Item 2 section"
     assert "error" not in by_item["Item 2"]
-    assert by_item["Item 2"]["text"] == "Item 2.\xa0\xa010-Q MD&A body ..."
+    # text is file-backed (Task 7): read it back, assert the SAME content.
+    assert _read_text_path(by_item["Item 2"]) == "Item 2.\xa0\xa010-Q MD&A body ..."
 
 
 def test_segment_absent_item_emits_error_slot(sec_client):
@@ -364,9 +386,9 @@ def test_segment_absent_item_emits_error_slot(sec_client):
     sections = sec_client.segment_filing(filing)
 
     by_item = {s["item"]: s for s in sections}
-    # the present item is still emitted normally
+    # the present item is still emitted normally (text is file-backed, Task 7)
     assert "error" not in by_item["Item 7"]
-    assert by_item["Item 7"]["text"]
+    assert _read_text_path(by_item["Item 7"])
     # the absent item is a loud, named error slot — never empty/fabricated
     slot = by_item["Item 1A"]
     assert "error" in slot, f"absent item must be a loud slot: {slot!r}"
@@ -462,9 +484,11 @@ def test_segment_8k_item_2_02_from_ex99_1(sec_client):
     )
     slot = by_item["Item 2.02"]
     assert "error" not in slot, f"exhibit-present item must be a success section: {slot!r}"
-    # text is sourced from the EX-99.1 exhibit, NOT the 8-K body announcement
-    assert slot["text"] == exhibit_text
-    assert "second quarter results" in slot["text"]
+    # text is sourced from the EX-99.1 exhibit, NOT the 8-K body announcement;
+    # file-backed via text_path (Task 7), read back to assert the SAME content.
+    section_text = _read_text_path(slot)
+    assert section_text == exhibit_text
+    assert "second quarter results" in section_text
     # the source exhibit filename is recorded in provenance
     assert slot["exhibit"] == "a8-kex991q2202603282026.htm"
 
@@ -487,9 +511,11 @@ def test_segment_8k_item_7_01_8_01_from_ex99_x(sec_client, item_code):
     assert set(by_item) == {item_code}
     slot = by_item[item_code]
     assert "error" not in slot
-    # text sourced from the corresponding exhibit, not the 8-K body alone
-    assert slot["text"] == exhibit_text
-    assert item_code in slot["text"]
+    # text sourced from the corresponding exhibit, not the 8-K body alone;
+    # file-backed via text_path (Task 7), read back to assert the SAME content.
+    section_text = _read_text_path(slot)
+    assert section_text == exhibit_text
+    assert item_code in section_text
     assert slot["exhibit"] == "ex99-1.htm"
 
 
@@ -653,3 +679,72 @@ def test_every_section_carries_full_provenance(sec_client):
         "https://www.sec.gov/Archives/edgar/data/320193/"
         "000032019324000123/a8-kex991q2202603282026.htm"
     )
+
+
+# ---------------------------------------------------------------------------
+# Task 7 — paths-not-content: each SUCCESS section's text is written to a file
+# under the toolkit cache dir and referenced by `text_path`; the section dict
+# (and thus the JSON result) does NOT inline the section body.
+# ---------------------------------------------------------------------------
+# Reuses the Task-3 TenK grounding UNCHANGED — no NEW edgartools attribute is
+# touched: the section text is already extracted, Task 7 only moves it out of
+# the section dict into a file. The cache dir is pinned to a pytest tmp_path by
+# the autouse `_isolated_cache` fixture so these runtime-written files never
+# pollute the real cache or the repo tree.
+
+
+def test_section_text_written_to_path_not_inlined(sec_client):
+    # No @req tag: this dispatch's plan/spec trace by
+    # `<change-id> / Requirement / Scenario` join keys, not registered REQ-ids
+    # (see report) — @req omitted per the implementer contract.
+    # Scenario: `Paths-Not-Content Section Emission / Section text written to
+    # file`.
+    mda_text = "Item 7.\xa0\xa0Management's Discussion body — long narrative ..."
+    risk_text = "Item 1A.\xa0\xa0Risk Factors body — long narrative ..."
+    tenk = _MockTenK(management_discussion=mda_text, risk_factors=risk_text)
+    filing = _segmentable_filing("10-K", tenk)
+
+    sections = sec_client.segment_filing(filing)
+
+    by_item = {s["item"]: s for s in sections}
+    # the section dict does NOT inline the body; it carries a path to a file
+    # whose contents equal the extracted section text (assert BOTH sections so
+    # per-(accession,item) keying is exercised — two files, distinct bodies).
+    assert _read_text_path(by_item["Item 7"]) == mda_text
+    assert _read_text_path(by_item["Item 1A"]) == risk_text
+
+    # re-running is deterministic (same path per accession+item, stable body) —
+    # never wall-clock-derived; a warm re-run reads back the same content.
+    resegmented = {s["item"]: s for s in sec_client.segment_filing(filing)}
+    assert resegmented["Item 7"]["text_path"] == by_item["Item 7"]["text_path"]
+    assert _read_text_path(resegmented["Item 7"]) == mda_text
+
+
+def test_section_text_path_contains_traversal_attempt(sec_client, tmp_path):
+    # No @req tag: this dispatch's plan/spec trace by
+    # `<change-id> / Requirement / Scenario` join keys, not registered REQ-ids
+    # (see report). Defense-in-depth hardening (security-checklist CHK-SEC-004,
+    # path traversal): a crafted accession / item id containing `../` must be
+    # sanitized + containment-guarded so the section-text write can NEVER escape
+    # <cache>/sec_edgar/sections/ — structurally certifiable for ANY segment,
+    # not just the digit-dash accessions the real SEC flow produces.
+    sections_root = (tmp_path / "sec_edgar" / "sections").resolve()
+
+    crafted_accession = "../../../../etc/0000-99-000001"  # traversal in accession
+    crafted_item = "../../Item ../evil"                    # traversal in item id
+
+    # 1) the computed path is contained (pure computation, no I/O) — this is the
+    #    line that fails RED before the accession segment is sanitized.
+    computed = sec_client._section_text_path(crafted_accession, crafted_item).resolve()
+    assert computed.is_relative_to(sections_root), (
+        f"crafted accession/item escaped the sections dir: {computed}"
+    )
+
+    # 2) the write lands under the sections dir and reads back the exact body.
+    written = Path(
+        sec_client._write_section_text(crafted_accession, crafted_item, "sensitive body")
+    ).resolve()
+    assert written.is_relative_to(sections_root), (
+        f"section-text write escaped the sections dir: {written}"
+    )
+    assert written.read_text(encoding="utf-8") == "sensitive body"

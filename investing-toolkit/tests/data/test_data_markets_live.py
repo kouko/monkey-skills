@@ -370,14 +370,19 @@ def test_edgartools_segment_real_10k_shape():
         sys.path.insert(0, str(SCRIPTS))
     import sec_edgar_client
 
+    # section text is file-backed via text_path (Task 7), never inlined.
+    def _section_text(section):
+        assert "text" not in section, f"section text must not be inlined: {section!r}"
+        return Path(section["text_path"]).read_text(encoding="utf-8")
+
     k_sections = {s["item"]: s for s in sec_edgar_client.segment_filing(tenk_filing)}
     assert set(k_sections) == {"Item 7", "Item 1A"}, "10-K segments into Item 7 + Item 1A"
-    assert k_sections["Item 7"]["text"].strip()
-    assert k_sections["Item 1A"]["text"].strip()
+    assert _section_text(k_sections["Item 7"]).strip()
+    assert _section_text(k_sections["Item 1A"]).strip()
 
     q_sections = {s["item"]: s for s in sec_edgar_client.segment_filing(tenq_filing)}
     assert set(q_sections) == {"Item 2"}, "10-Q segments into Item 2"
-    assert q_sections["Item 2"]["text"].strip()
+    assert _section_text(q_sections["Item 2"]).strip()
 
 
 @pytest.mark.network
@@ -437,7 +442,11 @@ def test_edgartools_segment_real_8k_shape():
     assert "Item 2.02" in sections, "8-K segments into a section for reported Item 2.02"
     slot = sections["Item 2.02"]
     assert "error" not in slot
-    assert slot["text"].strip(), "Item 2.02 text sourced from its EX-99.x exhibit"
+    # section text is file-backed via text_path (Task 7), never inlined.
+    assert "text" not in slot, f"section text must not be inlined: {slot!r}"
+    assert Path(slot["text_path"]).read_text(encoding="utf-8").strip(), (
+        "Item 2.02 text sourced from its EX-99.x exhibit"
+    )
     assert slot["exhibit"] == pr.document, "section provenance records the source exhibit filename"
 
 

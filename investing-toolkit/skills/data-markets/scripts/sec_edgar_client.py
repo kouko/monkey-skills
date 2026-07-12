@@ -47,6 +47,7 @@ import sys
 import time
 from datetime import datetime, timezone
 from html.parser import HTMLParser
+from pathlib import Path
 
 import requests as _requests
 
@@ -813,9 +814,12 @@ def acquire_filing(
 #
 # SECTION-OBJECT CONTRACT (established here, reused by Tasks 4-12) --------------
 # `segment_filing()` returns a LIST of per-item section dicts in requested order:
-#   SUCCESS section: {"item": "<item id>", "text": "<extracted text>", **extra}
-#     — a plain dict later tasks EXTEND in place (T6 provenance, T7 `text_path`,
-#       T9 `disclosure_status`). `extra` is a per-section provenance dict merged
+#   SUCCESS section: {"item": "<item id>", "text_path": "<file path>", **extra}
+#     — a plain dict later tasks EXTEND in place. The extracted body is written
+#       to a file and referenced by `text_path` (paths-not-content, Task 7 —
+#       which REPLACED the earlier inline `text` key), never inlined in the
+#       section dict / JSON result; T6 added provenance, T9 adds
+#       `disclosure_status`. `extra` is a per-section provenance dict merged
 #       in by `_build_section`; empty for 10-K/10-Q, and for 8-K it carries
 #       `{"exhibit": "<EX-99.x filename>"}` (Task 4) — the source-exhibit
 #       filename the item's narrative text was followed to.
@@ -984,18 +988,79 @@ def _section_provenance(filing, document: str | None) -> dict:
     }
 
 
+# Any char outside the cache-key-safe set is collapsed to `_` so a sanitized
+# item id (e.g. "Item 2.02") can never escape the sections dir (mirrors
+# cache_util._UNSAFE_KEY_CHARS's path-safety contract).
+_UNSAFE_ITEM_CHARS = re.compile(r"[^A-Za-z0-9_-]+")
+
+
+def _section_text_path(accession: str, item_id: str) -> Path:
+    """The deterministic per-(accession, item) file path for a section's text,
+    under the toolkit cache dir: ``<cache>/sec_edgar/sections/<sanitized-
+    accession>/<sanitized-item>.txt``.
+
+    Keyed by disclosure identity (accession + item), NEVER wall-clock, so a
+    re-run of the same section is byte-stable and re-uses the same file (as_of
+    invariant). BOTH path segments — accession AND item id — are run through the
+    ``[A-Za-z0-9_-]`` allowlist (defense in depth, CHK-SEC-004), so ``/``, ``.``,
+    and ``..`` can never survive into either segment; neither can escape the
+    ``sections`` dir. Real SEC accessions are digit-dash so the accession
+    sanitization is a no-op on them (matching the provenance URL's
+    ``_accession_nodash``), and only hardens against a crafted/malformed value."""
+    accession_seg = _UNSAFE_ITEM_CHARS.sub("_", _accession_nodash(accession)) or "_"
+    sanitized = _UNSAFE_ITEM_CHARS.sub("_", item_id) or "_"
+    return (
+        cache_util.resolve_cache_dir()
+        / "sec_edgar"
+        / "sections"
+        / accession_seg
+        / f"{sanitized}.txt"
+    )
+
+
+def _write_section_text(accession: str, item_id: str, text: str) -> str:
+    """Write a section's extracted ``text`` to its deterministic per-(accession,
+    item) file and return that path as a string — the section's ``text_path``.
+
+    Paths-not-content (Task 7): the section body is file-backed, not inlined in
+    the section dict / JSON result. Parent dir is created; the file lives
+    strictly under the toolkit cache dir, never the repo tree.
+
+    Structural traversal guard (CHK-SEC-004, belt-and-suspenders with the
+    segment sanitization in ``_section_text_path``): the resolved target MUST be
+    contained under the resolved cache dir, else fail loud — an explicit raise
+    (not a bare ``assert`` that ``-O`` would strip), making an escape structurally
+    impossible for ANY segment regardless of input."""
+    cache_root = cache_util.resolve_cache_dir()
+    path = _section_text_path(accession, item_id)
+    resolved = path.resolve()
+    if not resolved.is_relative_to(cache_root.resolve()):
+        raise ValueError(
+            f"refusing to write section text outside the cache dir: {resolved!r} "
+            f"escapes {cache_root!r} (accession={accession!r}, item={item_id!r})"
+        )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+    return str(path)
+
+
 def _build_section(item_id: str, text, filing, extra: dict | None = None) -> dict:
     """A success section when text is present, else a named absent-item error slot
     — never an empty or fabricated section.
 
-    A success section is `{"item", "text", **extra, **provenance}`: `extra` is the
-    per-section extra merged in (8-K's `{"exhibit": ...}`, Task 4; empty/None for
-    10-K/10-Q), and `provenance` (Task 6) is the complete provenance tuple whose
+    A success section is `{"item", "text_path", **extra, **provenance}`: the
+    extracted body is written to a file and referenced by ``text_path``
+    (paths-not-content, Task 7) rather than inlined. ``extra`` is the per-section
+    extra merged in (8-K's `{"exhibit": ...}`, Task 4; empty/None for 10-K/10-Q),
+    and ``provenance`` (Task 6) is the complete provenance tuple whose
     reconstructable URL targets the section's OWN source doc — the Exhibit 99.x
     for an 8-K (``extra["exhibit"]``), else the filing's primary doc."""
     if text is None or (isinstance(text, str) and not text.strip()):
         return _section_gap(item_id, filing)
-    section = {"item": item_id, "text": text}
+    section = {
+        "item": item_id,
+        "text_path": _write_section_text(filing.accession_no, item_id, text),
+    }
     if extra:
         section.update(extra)
     document = (extra or {}).get("exhibit") or _primary_document(filing)
