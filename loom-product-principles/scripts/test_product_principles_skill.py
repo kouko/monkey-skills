@@ -739,6 +739,55 @@ def test_headless_open_question_points_at_rules_file_format():
         "the Open Question clause must point at the rules file by relative path"
 
 
+def test_canon_audit_lists_surface_file():
+    """Task 4a: Step 3's canon-audit list must name BOTH visual canon files
+    (canon-design-visual.md for Axis A cultural/graphic-design movements,
+    canon-design-surface.md for Axis B UI-surface-treatment eras), and the
+    body must describe the visual lens running as TWO axis-typed candidate
+    rounds, each reading ONLY its own file (contamination guard), each
+    landing as its own version-pinned ## Anchors row since the axes are
+    complementary (different questions), never one pick-one menu."""
+    text = _text()
+    low = text.lower()
+    assert "references/canon-design-surface.md" in text, \
+        "Step 3's canon-audit list must also name references/canon-design-surface.md"
+    assert "references/canon-design-visual.md" in text, \
+        "Step 3's canon-audit list must still name references/canon-design-visual.md"
+    assert "axis a" in low, \
+        "body must name Axis A (cultural/graphic-design movements) round"
+    assert "axis b" in low, \
+        "body must name Axis B (UI-surface-treatment eras) round"
+    assert "its own file" in low, \
+        "body must state each axis-typed round reads ONLY its own file " \
+        "(contamination guard)"
+    assert "complementary" in low, \
+        "the two axes must be named complementary, extending the existing " \
+        "separate-Anchors-rows rule"
+
+
+def test_visual_lens_3_5_carveout():
+    """Task 5a: the VISUAL lens carves out 3-5 canon candidates (overriding
+    the generic 2-3), including 1-2 deliberately divergent/exploratory
+    candidates that deviate from the user's stated stance but stay
+    defensible against the PRINCIPLES values (anti-costume: exploration
+    never overrides the non-negotiable values). The generic 2-3 rule for
+    Product/Engineering must remain unchanged — no global bump."""
+    text = _text()
+    low = text.lower()
+    assert "3-5" in text or "3–5" in text, \
+        "Step 3 must carve out 3-5 candidates for the visual lens"
+    assert "divergent" in low or "exploratory" in low, \
+        "the visual carve-out must name a divergent/exploratory candidate subset"
+    assert "defensible" in low, \
+        "the divergent candidates must be guarded as defensible against the values"
+    # Guard: the generic 2-3 rule for Product/Engineering must still be present
+    # (no global bump to 3-5). Anchored on the generic rule's own phrase so a
+    # stray "2-3" (e.g. the carve-out's "overriding the generic 2-3") can't
+    # satisfy it — the invariant is the propose-count rule itself.
+    assert "2-3 canon candidates" in low or "2–3 canon candidates" in low, \
+        "the generic '2-3 canon candidates' rule must remain for Product/Engineering"
+
+
 # --- flat-skill structure (repo hook enforces) ------------------------------
 
 def test_skill_folder_is_flat():

@@ -8,6 +8,32 @@ Versioning: [Semantic Versioning](https://semver.org/).
 > This file was reconstructed on 2026-07-02 from the git history — the plugin
 > shipped its first two versions without a CHANGELOG.
 
+## [0.7.0] — 2026-07-12
+
+### Added
+
+- **Visual-style movement anchoring, Phase 1** — the Design section's visual
+  lens now runs as **two axis-typed candidate rounds**: Axis A (cultural /
+  graphic movements, `references/canon-design-visual.md`) and Axis B (UI
+  surface treatments, new `references/canon-design-surface.md`), each round
+  reading ONLY its own file (a contamination guard so reasoning about one axis
+  is not polluted by the other). The visual lens widens from 2-3 to **3-5
+  candidates**, deliberately including **1-2 divergent/exploratory** candidates
+  that deviate from the user's stated stance but stay defensible against the
+  PRINCIPLES values (anti-costume: exploration never overrides the
+  non-negotiable values). The generic 2-3 count for the Product and Engineering
+  sections is unchanged.
+- **`references/canon-design-surface.md`** — new Axis-B seed (~6 UI surface
+  treatments with a `Currency` column and risk flags, e.g. neumorphism's
+  low-contrast WCAG risk), grounded in
+  `docs/loom/research/2026-07-12-ui-surface-treatments-canon.md`. Kept out of
+  the ≥14-entry `CANON_FILES` contract by design (small, extensible seed).
+
+### Changed
+
+- `references/canon-design-visual.md` is now Axis-A-only — the collapsed
+  surface-treatment cycle row was rehomed to `canon-design-surface.md`.
+
 ## [0.6.1] — 2026-07-12
 
 ### Added

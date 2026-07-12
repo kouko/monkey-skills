@@ -9,6 +9,11 @@ source only).
 
 Grounded in `docs/loom/research/2026-07-10-principles-canon-base-lists.md` §3.
 
+**Axis A — cultural/graphic movements only.** This file covers movements,
+identity philosophy, and typographic/color systems. UI surface treatments
+(flat / skeuomorphic / neumorphic / glassmorphic and their era-boundaries)
+are Axis B — see `canon-design-surface.md`.
+
 | Entry (originator, era) | Fits when… | Stability | Source |
 |---|---|---|---|
 | Bauhaus (Gropius/Bayer/Moholy-Nagy, 1919-33) | Form-follows-function, geometric universality, teachable system | Canon | [Met essay](https://www.metmuseum.org/essays/the-bauhaus-1919-1933) |
@@ -28,11 +33,10 @@ Grounded in `docs/loom/research/2026-07-10-principles-canon-base-lists.md` §3.
 | Itten contrasts vs Munsell notation (1961 / 1905) | Defensible color-harmony *system*, not picked-by-eye | Canon (two competing systems) | [munsell.com](https://munsell.com/color-blog/why-that-color-theory/) |
 | 8pt grid + modular scale (2010s-) | Cross-platform spacing/type rhythm at implementation level | Canon (contemporary) | [freeCodeCamp](https://www.freecodecamp.org/news/8-point-grid-typography-on-the-web-be5dc97db6bc/) |
 | Google Material Design (2014-) | Physicality/motion-carries-meaning cross-device system (overlaps interaction list) | Canon | [design.google](https://design.google/library/material-design-eras) |
-| Flat → skeuo → neumorphic → glassmorphic cycle (2007-) | Any "modern UI surface" ask — must name which era, not the genre | Trend cycle, not canon | [overview](https://vishakachandak.medium.com/design-wars-glassmorphism-vs-neumorphism-vs-skeuomorphism-b32905c63750) |
 | Web brutalism / neo-brutalism (2014-) | Anti-polish raw honesty as differentiation | Trend, established sub-genre | [NN/g](https://www.nngroup.com/articles/brutalism-antidesign/) |
 | Japanese postwar graphic tradition (Kamekura/Tanaka, 1950s-70s) | Constructivist composition + dynamic photography; non-Western anchor | Canon (regional) | [legends.jp](https://legends.jp/yusaku-kamekura/) |
 
-**Popularity head**: Swiss Style, Bauhaus, Material Design, the digital
-surface-treatment trend cycle — crowd out e.g. Memphis, Kapferer's Prism,
+**Popularity head**: Swiss Style, Bauhaus, Material Design — crowd out
+e.g. Memphis, Kapferer's Prism,
 Kenya Hara/MUJI, Japanese postwar tradition. If a draft's candidate set is
 only these, re-check the full list above before proposing.

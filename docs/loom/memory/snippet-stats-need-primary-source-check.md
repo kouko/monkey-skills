@@ -25,3 +25,16 @@ snippet, open the primary source and verify the number, its scope
 (one project vs field-wide), and the attribution. For research
 syntheses, have a separate agent with web access do the citation
 check rather than relying on the author's self-review.
+
+**Second instance — wholly fabricated URL (loom-product-principles
+0.7.0, 2026-07-12):** the same failure mode extends past misread
+statistics to *fabricated citations*. Authoring a grounding doc
+(`docs/loom/research/2026-07-12-ui-surface-treatments-canon.md`), the
+implementer cited a plausible-looking Smashing Magazine URL that
+404'd — the titled article never existed. The accurate underlying
+claim (neumorphism's low-contrast WCAG risk) was real, but the URL was
+invented. The code-quality reviewer (different agent, web access)
+caught it; it was replaced with a verified source. **A doc whose sole
+purpose is sourcing cannot carry an unverifiable link — verify every
+URL live, not just the claim it supports.** Reinforces the same
+different-agent-review remedy above.
