@@ -118,11 +118,21 @@ the audit is sanctioned.
   internal note. This guard is **per-round**: it applies to **every
   section's** candidate round (Product AND Design AND Engineering), not
   just the first.
-- Before finalizing, consult the four canon base lists as a
+- Before finalizing, consult the five canon base lists as a
   **completeness audit** ("did I miss a closer tradition?"):
   `references/canon-product.md`, `references/canon-design-interaction.md`,
-  `references/canon-design-visual.md`, `references/canon-engineering.md`.
-  If every candidate sits in a list's popularity head, re-check.
+  `references/canon-design-visual.md`, `references/canon-design-surface.md`,
+  `references/canon-engineering.md`. If every candidate sits in a list's
+  popularity head, re-check.
+- The visual lens splits into **two axis-typed candidate rounds** —
+  **Axis A** (cultural/graphic-design movements, `canon-design-visual.md`)
+  and **Axis B** (UI-surface-treatment eras, `canon-design-surface.md`).
+  Each round reads **ONLY its own file** — a contamination guard, so Axis-A
+  reasoning is never polluted by Axis-B entries or vice versa. The axes are
+  **complementary** (different questions — "which design tradition" vs
+  "which screen-surface treatment era"), so per the same-axis/complementary
+  rule above each round pins its own version-pinned `## Anchors` row; never
+  merge them into one pick-one menu.
 - The user **never sees the raw lists** — only the 2-3 fitted candidates.
   The Engineering list is consumed only by you (agent decisions + briefing
   option generation).

@@ -739,6 +739,32 @@ def test_headless_open_question_points_at_rules_file_format():
         "the Open Question clause must point at the rules file by relative path"
 
 
+def test_canon_audit_lists_surface_file():
+    """Task 4a: Step 3's canon-audit list must name BOTH visual canon files
+    (canon-design-visual.md for Axis A cultural/graphic-design movements,
+    canon-design-surface.md for Axis B UI-surface-treatment eras), and the
+    body must describe the visual lens running as TWO axis-typed candidate
+    rounds, each reading ONLY its own file (contamination guard), each
+    landing as its own version-pinned ## Anchors row since the axes are
+    complementary (different questions), never one pick-one menu."""
+    text = _text()
+    low = text.lower()
+    assert "references/canon-design-surface.md" in text, \
+        "Step 3's canon-audit list must also name references/canon-design-surface.md"
+    assert "references/canon-design-visual.md" in text, \
+        "Step 3's canon-audit list must still name references/canon-design-visual.md"
+    assert "axis a" in low, \
+        "body must name Axis A (cultural/graphic-design movements) round"
+    assert "axis b" in low, \
+        "body must name Axis B (UI-surface-treatment eras) round"
+    assert "its own file" in low, \
+        "body must state each axis-typed round reads ONLY its own file " \
+        "(contamination guard)"
+    assert "complementary" in low, \
+        "the two axes must be named complementary, extending the existing " \
+        "separate-Anchors-rows rule"
+
+
 # --- flat-skill structure (repo hook enforces) ------------------------------
 
 def test_skill_folder_is_flat():
