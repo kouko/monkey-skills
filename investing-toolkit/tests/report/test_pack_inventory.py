@@ -101,6 +101,48 @@ def test_empty_and_null_sections_present_false(tmp_path):
     assert out["_status"] == "partial"
 
 
+def test_all_failed_section_is_not_present(tmp_path):
+    pack = {
+        "pack": "memo-fetch",
+        "error_only_section": {
+            "error": "fetch failed",
+            "requested": 6,
+            "succeeded": 0,
+            "failed": 6,
+        },
+        "status_failed_section": {
+            "_status": "failed",
+            "data": {"foo": "bar"},
+        },
+        "underscore_error_section": {
+            "_error": "boom",
+        },
+        "partially_succeeded_section": {
+            "requested": 6,
+            "succeeded": 3,
+            "failed": 3,
+            "data": {"foo": "bar"},
+        },
+    }
+    input_path = tmp_path / "synthetic_pack.json"
+    input_path.write_text(json.dumps(pack), encoding="utf-8")
+
+    cp = _run(["--input", str(input_path)])
+    assert cp.returncode == 0, cp.stderr
+    out = json.loads(cp.stdout)
+    sections = out["sections"]
+
+    assert sections["error_only_section"]["present"] is False
+    assert sections["error_only_section"]["kind"] == "dict"
+    assert sections["error_only_section"]["keys"] == 4  # keys count unaffected
+
+    assert sections["status_failed_section"]["present"] is False
+    assert sections["underscore_error_section"]["present"] is False
+
+    # a section that actually succeeded at least once stays present
+    assert sections["partially_succeeded_section"]["present"] is True
+
+
 def test_missing_input_file_exits_64(tmp_path):
     missing = tmp_path / "does_not_exist.json"
     cp = _run(["--input", str(missing)])

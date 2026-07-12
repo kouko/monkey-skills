@@ -38,11 +38,33 @@ from pathlib import Path
 EX_USAGE = 64
 
 
+_COUNT_TRIPLE_KEYS = ("requested", "succeeded", "failed")
+
+
+def _is_failed_section(section: dict) -> bool:
+    """Shape-based predicate: does this section report no usable data?
+
+    A section reports no data when it declares `_status: "failed"`, carries
+    a direct `error`/`_error` marker at its own top level, or reports a
+    {requested, succeeded, failed} count triple with `succeeded == 0`.
+    Generic on purpose — no section-name special-casing — so any future
+    section (any market) gets this for free.
+    """
+    if section.get("_status") == "failed":
+        return True
+    if "error" in section or "_error" in section:
+        return True
+    if all(key in section for key in _COUNT_TRIPLE_KEYS) and section["succeeded"] == 0:
+        return True
+    return False
+
+
 def _classify(value: object) -> dict:
     """Return the {present, kind, rows|keys} entry for one section value."""
     if isinstance(value, dict):
         keys = len(value)
-        return {"present": keys > 0, "kind": "dict", "keys": keys}
+        present = keys > 0 and not _is_failed_section(value)
+        return {"present": present, "kind": "dict", "keys": keys}
     if isinstance(value, list):
         rows = len(value)
         return {"present": rows > 0, "kind": "list", "rows": rows}
