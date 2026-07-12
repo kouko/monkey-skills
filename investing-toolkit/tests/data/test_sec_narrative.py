@@ -1147,11 +1147,17 @@ def test_form_requested_items_match_segmenters(sec_client):
 # cache_util.py:170-252, captured 2026-07-12.
 
 
-def test_filing_cache_avoids_refetch(sec_client, monkeypatch):
+def test_filing_cache_avoids_refetch(sec_client):
     # No @req tag: this dispatch's plan/spec trace by
     # `<change-id> / Requirement / Scenario` join keys, not registered REQ-ids
     # (see report) — @req omitted per the implementer contract.
     # Scenario: `SEC EDGAR fair-access compliance / Filing cache avoids re-fetch`.
+    # Mocks the REAL edgartools producer boundary (`edgar.get_by_accession_number`
+    # returning a RAW Filing), NOT `acquire_filing` — so the acquire->segment seam
+    # (`fetch_narrative_sections` must obtain the RAW filing, never the JSON ref
+    # dict) runs end-to-end and a masked dict-crash cannot slip through
+    # (fixtures-mirror-producer-shape). The call-count spy is the stub's own
+    # `.call_count` on the edgartools boundary.
     accession = "0000320193-24-000123"
     tenk = _MockTenK(
         management_discussion="Item 7.\xa0\xa0Management's Discussion body ...",
@@ -1159,27 +1165,23 @@ def test_filing_cache_avoids_refetch(sec_client, monkeypatch):
     )
     filing = _segmentable_filing("10-K", tenk)
 
-    calls = {"acquire": 0}
-
-    def _counting_acquire(*args, **kwargs):
-        calls["acquire"] += 1
-        return filing
-
-    # spy on acquire_filing — the edgartools acquisition boundary. A warm
-    # accession must NOT re-enter it (assert ZERO additional acquire calls).
-    monkeypatch.setattr(sec_client, "acquire_filing", _counting_acquire)
+    stub = sec_client.edgar_stub
+    stub.get_by_accession_number.return_value = filing
 
     first = sec_client.fetch_narrative_sections(accession)
-    assert calls["acquire"] == 1, "a cold accession must acquire exactly once"
+    assert stub.get_by_accession_number.call_count == 1, (
+        "a cold accession must hit the edgartools boundary exactly once"
+    )
     assert first.get("_cache") == "miss", f"cold run must be a cache miss: {first!r}"
     first_items = {s["item"] for s in first["sections"]}
     assert first_items == {"Item 7", "Item 1A"}, "cold run segments the 10-K"
 
     second = sec_client.fetch_narrative_sections(accession)
 
-    # the warm re-run read cache — ZERO additional acquire/edgartools calls
-    assert calls["acquire"] == 1, (
-        f"a warm accession must read cache, not re-acquire: {calls['acquire']} calls"
+    # the warm re-run read cache — ZERO additional edgartools calls
+    assert stub.get_by_accession_number.call_count == 1, (
+        "a warm accession must read cache, not re-hit edgartools: "
+        f"{stub.get_by_accession_number.call_count} calls"
     )
     assert second.get("_cache") == "hit", f"warm run must be a cache hit: {second!r}"
     second_items = {s["item"] for s in second["sections"]}
@@ -1220,15 +1222,20 @@ def test_rate_limit_backoff_not_swallowed(sec_client):
     assert "error" in result, f"a transient 429/403 must surface loudly: {result!r}"
     assert not result.get("sections"), "no fabricated sections on a failed acquisition"
     # (3) the failure is NOT cached as success — a re-run re-enters acquisition
-    #     (no poisoned cache), so edgartools' backoff stays authoritative
-    path = sec_client.cache_util.cache_path("sec_edgar", f"narrative_{accession}")
+    #     (no poisoned cache), so edgartools' backoff stays authoritative. Checks
+    #     the ACTUAL edgartools cache key (`narrative_sections_`), the one this
+    #     function writes — not the retired legacy `narrative_` key (which this
+    #     function never touches, so asserting on it would pass vacuously).
+    path = sec_client.cache_util.cache_path(
+        "sec_edgar", f"narrative_sections_{accession}"
+    )
     assert not path.exists(), "a failed acquisition must NOT be cached as success"
 
 
-def test_edgartools_cache_key_distinct_from_legacy(sec_client, monkeypatch):
+def test_edgartools_cache_key_distinct_from_legacy(sec_client):
     # No @req tag (see test_filing_cache_avoids_refetch).
     # Scenario: `SEC EDGAR fair-access compliance / Filing cache avoids re-fetch`
-    # — regression guard. The LEGACY regex `fetch_narrative` writes
+    # — regression guard. The LEGACY regex `fetch_narrative` wrote
     # `narrative_{accession}` with `sections` as a DICT (item->body); the new
     # edgartools `fetch_narrative_sections` emits `sections` as a LIST. Both share
     # the immutable TTL + envelope v2.0, so if they shared the SAME cache key a
@@ -1236,6 +1243,10 @@ def test_edgartools_cache_key_distinct_from_legacy(sec_client, monkeypatch):
     # shape (dict where a list is expected) — a never-self-healing landmine under
     # immutable TTL. This asserts the edgartools payload uses a DISTINCT key: a
     # pre-seeded legacy dict-shaped entry must NOT be read by the new function.
+    # Mocks the REAL edgartools producer boundary (get_by_accession_number) and
+    # spies its call count — so the legacy key NOT being aliased shows up as a
+    # fresh edgartools hit (fixtures-mirror-producer-shape; the acquire->segment
+    # seam runs end-to-end).
     accession = "0000320193-24-000123"
 
     # pre-seed the LEGACY key with a legacy DICT-shaped payload (as fetch_narrative
@@ -1251,23 +1262,115 @@ def test_edgartools_cache_key_distinct_from_legacy(sec_client, monkeypatch):
         risk_factors="Item 1A.\xa0\xa0Risk Factors body ...",
     )
     filing = _segmentable_filing("10-K", tenk)
-    calls = {"acquire": 0}
-
-    def _counting_acquire(*args, **kwargs):
-        calls["acquire"] += 1
-        return filing
-
-    monkeypatch.setattr(sec_client, "acquire_filing", _counting_acquire)
+    stub = sec_client.edgar_stub
+    stub.get_by_accession_number.return_value = filing
 
     result = sec_client.fetch_narrative_sections(accession)
 
     # the legacy dict-shaped entry is NOT aliased — the new function used its own
-    # distinct key, so it was a MISS and freshly acquired + segmented
-    assert calls["acquire"] == 1, (
+    # distinct key, so it was a MISS and freshly acquired + segmented via edgartools
+    assert stub.get_by_accession_number.call_count == 1, (
         "the edgartools fetch must NOT read the legacy narrative_ key — distinct "
-        f"cache key required (acquire calls={calls['acquire']})"
+        f"cache key required (edgartools calls={stub.get_by_accession_number.call_count})"
     )
     assert isinstance(result["sections"], list), (
         f"sections must be the edgartools LIST shape, never the legacy dict: {result!r}"
     )
     assert {s["item"] for s in result["sections"]} == {"Item 7", "Item 1A"}
+
+
+# ---------------------------------------------------------------------------
+# Task 12 — Preserve the `--action narrative` CLI surface across the edgartools
+# migration + retire the legacy regex internals. `action_narrative(accession)`
+# must return the SAME contract keys (accession/cik/form/filingDate/sections)
+# with the SAME exit-code discipline (1 iff `error`), now populated via
+# edgartools (`fetch_narrative_sections`), NOT the legacy regex `fetch_narrative`.
+# And the retired TOC-vs-body regex path (`parse_item_sections`,
+# `_ITEM_HEADER_RE`, the legacy `fetch_narrative` + its `_TextExtractor` /
+# exhibit-index skip heuristic) must no longer be on the code path — asserted via
+# removal (`not hasattr`). No new edgartools attribute is touched: the wiring
+# reuses acquire_filing + segment_filing (mocked as in Tasks 2-11).
+# ---------------------------------------------------------------------------
+
+
+def test_cli_narrative_contract_preserved(sec_client, monkeypatch):
+    # No @req tag: this dispatch's plan/spec trace by
+    # `<change-id> / Requirement / Scenario` join keys, not registered REQ-ids
+    # (see report) — @req omitted per the implementer contract.
+    # Scenario: `CLI Surface Preserved Across the edgartools Migration / Existing
+    # CLI invocation still resolves`. The narrative action returns the SAME
+    # contract keys, now populated via edgartools, with exit-code discipline
+    # `1 iff error` — on BOTH a cold (miss) and a warm (hit) invocation.
+    accession = "0000320193-24-000123"
+    tenk = _MockTenK(
+        management_discussion="Item 7.\xa0\xa0Management's Discussion body ...",
+        risk_factors="Item 1A.\xa0\xa0Risk Factors body ...",
+    )
+    filing = _segmentable_filing("10-K", tenk)
+    # Mock the REAL edgartools producer boundary (get_by_accession_number returns
+    # a RAW Filing), NOT acquire_filing — so the acquire->segment seam runs
+    # end-to-end. Mocking acquire_filing would inject a RAW filing acquire_filing
+    # never actually produces (it returns a JSON ref DICT), masking the dict-crash
+    # on the real path (fixtures-mirror-producer-shape).
+    stub = sec_client.edgar_stub
+    stub.get_by_accession_number.return_value = filing
+
+    # --- cold run (cache miss): contract keys populated via edgartools ---
+    result = sec_client.action_narrative(accession)
+
+    for key in ("accession", "cik", "form", "filingDate", "sections"):
+        assert key in result, (
+            f"CLI narrative contract dropped key {key!r}: {result!r}"
+        )
+    assert result["accession"] == accession
+    assert result["cik"] == 320193
+    assert result["form"] == "10-K"
+    assert result["filingDate"] == "2024-11-01"  # disclosure date, ISO str
+    # `sections` preserves the KEY; the VALUE is now the edgartools LIST shape
+    # (the new internal representation), not the legacy dict
+    assert isinstance(result["sections"], list), (
+        f"sections must be the edgartools LIST shape: {result!r}"
+    )
+    assert {s["item"] for s in result["sections"]} == {"Item 7", "Item 1A"}
+    assert result.get("action") == "narrative"
+    # exit-code discipline: a success carries NO top-level error → sys.exit(0)
+    assert "error" not in result, f"a successful narrative must not carry error: {result!r}"
+
+    # --- warm run (cache hit): the contract keys survive the cache round-trip ---
+    warm = sec_client.action_narrative(accession)
+    assert warm.get("_cache") == "hit", f"warm run must be a cache hit: {warm!r}"
+    for key in ("accession", "cik", "form", "filingDate", "sections"):
+        assert key in warm, (
+            f"warm-cache narrative dropped contract key {key!r}: {warm!r}"
+        )
+    assert warm["cik"] == 320193 and warm["form"] == "10-K"
+    assert warm["filingDate"] == "2024-11-01"
+
+    # --- error leg: exit-code discipline `1 iff error` (identity unset) ---
+    monkeypatch.setattr(sec_client, "USER_AGENT", "")
+    err = sec_client.action_narrative(accession)
+    assert "error" in err, f"identity-unset narrative must surface a loud error: {err!r}"
+    assert err.get("action") == "narrative"
+
+
+def test_regex_internals_off_code_path(sec_client):
+    # No @req tag (see test_cli_narrative_contract_preserved).
+    # Scenario: `CLI Surface Preserved Across the edgartools Migration / Regex
+    # internals no longer on the code path`. The legacy TOC-vs-body regex
+    # segmentation is RETIRED from the module — asserted via removal, the
+    # strongest form of "not invoked on any narrative segmentation".
+    assert not hasattr(sec_client, "parse_item_sections"), (
+        "legacy parse_item_sections (TOC-vs-body regex) must be retired from the "
+        "code path — edgartools' section API performs segmentation instead"
+    )
+    assert not hasattr(sec_client, "_ITEM_HEADER_RE"), (
+        "legacy _ITEM_HEADER_RE regex must be retired from the code path"
+    )
+    assert not hasattr(sec_client, "fetch_narrative"), (
+        "legacy regex fetch_narrative must be retired — action_narrative now "
+        "resolves via the edgartools fetch_narrative_sections"
+    )
+    assert not hasattr(sec_client, "_TextExtractor"), (
+        "the regex-only HTML _TextExtractor must be retired once its sole "
+        "consumer (fetch_narrative) is gone"
+    )

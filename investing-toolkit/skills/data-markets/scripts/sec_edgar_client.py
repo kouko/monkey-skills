@@ -9,7 +9,7 @@ Fetches US regulatory filings & XBRL structured facts from data.sec.gov.
 
 Two layers:
   (a) XBRL structured facts via JSON API (companyfacts + companyconcept)
-  (b) HTML filing narrative via Item-section regex parsing
+  (b) Filing narrative via the edgartools typed section API (10-K/10-Q/8-K)
 
 Usage:
   # Ticker → CIK lookup
@@ -46,7 +46,6 @@ import re
 import sys
 import time
 from datetime import datetime, timezone
-from html.parser import HTMLParser
 from pathlib import Path
 
 import requests as _requests
@@ -349,171 +348,11 @@ def list_filings(cik: int, forms: list[str] | None, limit: int) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# HTML narrative parsing
+# Accession helper (shared by the provenance URL + section-text path builders)
 # ---------------------------------------------------------------------------
-
-class _TextExtractor(HTMLParser):
-    """Strip HTML, collapse whitespace, preserve line breaks at block boundaries."""
-
-    BLOCK_TAGS = {
-        "p", "div", "br", "tr", "li", "h1", "h2", "h3", "h4", "h5", "h6",
-        "table", "section", "article", "hr",
-    }
-
-    def __init__(self):
-        super().__init__(convert_charrefs=True)
-        self._parts: list[str] = []
-        self._skip_depth = 0
-
-    def handle_starttag(self, tag, attrs):
-        if tag in ("script", "style"):
-            self._skip_depth += 1
-        if tag in self.BLOCK_TAGS:
-            self._parts.append("\n")
-
-    def handle_endtag(self, tag):
-        if tag in ("script", "style") and self._skip_depth > 0:
-            self._skip_depth -= 1
-        if tag in self.BLOCK_TAGS:
-            self._parts.append("\n")
-
-    def handle_data(self, data):
-        if self._skip_depth == 0:
-            self._parts.append(data)
-
-    def text(self) -> str:
-        raw = "".join(self._parts)
-        # Collapse runs of whitespace except newlines
-        raw = re.sub(r"[ \t\u00a0]+", " ", raw)
-        # Collapse multiple newlines
-        raw = re.sub(r"\n\s*\n+", "\n\n", raw)
-        return raw.strip()
-
-
-_ITEM_HEADER_RE = re.compile(
-    r"^\s*Item\s+(\d+[A-Z]?)\.\s*(.{2,150}?)\s*$",
-    re.MULTILINE | re.IGNORECASE,
-)
-
-
-def parse_item_sections(plain_text: str) -> dict[str, str]:
-    """Split plain text into Item sections by regex-detected headers."""
-    matches = list(_ITEM_HEADER_RE.finditer(plain_text))
-    if not matches:
-        return {}
-
-    # SEC 10-K/10-Q bodies usually repeat the TOC Item headers; we want
-    # the section boundaries, not the TOC. Strategy: collect all hits;
-    # for each unique Item key, keep the span to next distinct Item header
-    # whose starting offset is after the current, but skip if the detected
-    # "title" field is empty/too short (TOC-like).
-    sections: dict[str, str] = {}
-    for idx, m in enumerate(matches):
-        num = m.group(1).upper()
-        title = m.group(2).strip()
-        # Skip likely TOC hits: title shorter than 5 chars or purely numeric
-        if len(title) < 5:
-            continue
-        key = f"Item {num}. {title}"
-        start = m.end()
-        end = matches[idx + 1].start() if idx + 1 < len(matches) else len(plain_text)
-        body = plain_text[start:end].strip()
-        # Keep only the longest body per Item number (body text vs TOC entry)
-        existing_key = next(
-            (k for k in sections if k.startswith(f"Item {num}.")),
-            None,
-        )
-        if existing_key is None or len(body) > len(sections[existing_key]):
-            if existing_key and existing_key != key:
-                del sections[existing_key]
-            sections[key] = body
-    return sections
-
 
 def _accession_nodash(accession: str) -> str:
     return accession.replace("-", "")
-
-
-def fetch_narrative(accession: str) -> dict:
-    """Fetch primary doc HTML for an accession and parse Item sections."""
-    path = cache_util.cache_path("sec_edgar", f"narrative_{accession}")
-    cached = cache_util.load_cache(path, TTL_NARRATIVE)
-    if cached:
-        cached["_cache"] = "hit"
-        return cached
-
-    # Need CIK for accession → look it up via EDGAR's accession redirect.
-    # Accession format: XXXXXXXXXX-YY-NNNNNN where first 10 digits = filer CIK.
-    try:
-        cik_int = int(accession.split("-")[0])
-    except (ValueError, IndexError):
-        return {"error": f"Malformed accession number: {accession}"}
-
-    # Must look up primaryDocument via submissions or filing index.
-    # Quickest: fetch filing-index.json at the accession folder.
-    accn_nodash = _accession_nodash(accession)
-    index_url = (
-        f"https://data.sec.gov/submissions/CIK{cik_int:010d}.json"
-    )
-    sub = fetch_submissions(cik_int)
-    primary_doc = None
-    form_type = None
-    filing_date = None
-    if "error" not in sub:
-        recent = sub.get("data", {}).get("filings", {}).get("recent", {})
-        accn_list = recent.get("accessionNumber", [])
-        try:
-            idx = accn_list.index(accession)
-            primary_doc = recent.get("primaryDocument", [None])[idx]
-            form_type = recent.get("form", [None])[idx]
-            filing_date = recent.get("filingDate", [None])[idx]
-        except ValueError:
-            pass
-
-    if not primary_doc:
-        # Fall back: fetch index.json from Archives
-        idx_url = f"https://www.sec.gov/Archives/edgar/data/{cik_int}/{accn_nodash}/index.json"
-        idx = _sec_get(idx_url)
-        if isinstance(idx, dict) and "error" not in idx:
-            items = idx.get("directory", {}).get("item", [])
-            # Pick first htm/html that isn't an exhibit index
-            for item in items:
-                name = item.get("name", "")
-                if name.endswith((".htm", ".html")) and "index" not in name.lower():
-                    primary_doc = name
-                    break
-
-    if not primary_doc:
-        return {"error": f"Could not resolve primary document for accession {accession}"}
-
-    doc_url = SEC_ARCHIVES_URL.format(
-        cik_int=cik_int, accession_nodash=accn_nodash, doc=primary_doc
-    )
-    # Override Host header for this endpoint
-    html = _sec_get(doc_url, as_json=False)
-    if isinstance(html, dict) and "error" in html:
-        return html
-
-    extractor = _TextExtractor()
-    extractor.feed(html)
-    plain = extractor.text()
-    sections = parse_item_sections(plain)
-
-    result = {
-        "accession": accession,
-        "cik": cik_int,
-        "form": form_type,
-        "filingDate": filing_date,
-        "primaryDocument": primary_doc,
-        "doc_url": doc_url,
-        "fetched_at": _now_iso(),
-        "_cache": "miss",
-        "sections": sections,
-        "section_count": len(sections),
-        "_provenance": _make_provenance(filing_date),
-    }
-    cache_util.save_cache(path, result)
-    return result
 
 
 # ---------------------------------------------------------------------------
@@ -721,6 +560,47 @@ def _acquire_error(error_class: str, detail: str, *, identifier=None,
     return slot
 
 
+def _acquire_raw_filing(accession: str) -> object:
+    """Acquire the RAW edgartools ``Filing`` object for an accession — the SHARED
+    producer boundary the acquire→segment seam is built on.
+
+    Returns the raw edgartools Filing (which exposes ``.obj()`` / ``.form`` /
+    ``.cik`` / ``.filing_date`` — the surface both segmentation and metadata
+    reads need) on success, or a loud ``{"error": ...}`` resolution slot when the
+    identity is unset, edgartools raised, or the accession did not resolve to a
+    filing — never a silent ``None``.
+
+    Both ``acquire_filing`` (which projects this to a JSON ``_filing_ref`` dict)
+    and ``fetch_narrative_sections`` (which segments the raw filing + reads its
+    disclosure metadata) go through here, so the two callers can NEVER diverge on
+    the producer shape: passing the JSON ref dict to ``segment_filing`` would
+    crash on ``filing.obj()`` / ``filing.form`` (a ``dict`` has neither). Keeping
+    the raw filing at this seam is what preserves the live ``--action narrative``
+    contract against real edgartools.
+    """
+    identity_error = _ensure_edgar_identity()
+    if identity_error is not None:
+        return identity_error
+
+    import edgar
+
+    try:
+        filing = edgar.get_by_accession_number(accession)
+    except Exception as exc:  # noqa: BLE001 — fail loud, don't guess the shape
+        return _acquire_error(
+            "resolution",
+            f"accession {accession!r} did not resolve to a filing ({exc})",
+            identifier=accession,
+        )
+    if filing is None:
+        return _acquire_error(
+            "resolution",
+            f"accession {accession!r} did not resolve to a filing",
+            identifier=accession,
+        )
+    return filing
+
+
 def acquire_filing(
     identifier: str | int | None = None,
     *,
@@ -730,7 +610,9 @@ def acquire_filing(
     """Acquire a 10-K/10-Q/8-K filing reference via edgartools.
 
     Two acquisition modes (edgartools 5.42.0):
-      - by ``accession``: ``edgar.get_by_accession_number(accession)``
+      - by ``accession``: ``edgar.get_by_accession_number(accession)`` (via the
+        shared ``_acquire_raw_filing`` producer boundary), then projected to a
+        JSON ``_filing_ref`` dict.
       - by ``identifier`` (ticker or CIK) + optional ``form`` filter:
         ``edgar.Company(identifier).get_filings(form=form).latest()``
 
@@ -749,30 +631,19 @@ def acquire_filing(
     a falsy company, ``company.not_found``, or a falsy ``company.cik`` all map to
     the resolution slot.
     """
+    if accession is not None:
+        filing = _acquire_raw_filing(accession)
+        if isinstance(filing, dict):  # a loud error slot (never a raw Filing)
+            return filing
+        return _filing_ref(filing)
+
+    # ticker / CIK path
     identity_error = _ensure_edgar_identity()
     if identity_error is not None:
         return identity_error
 
     import edgar
 
-    if accession is not None:
-        try:
-            filing = edgar.get_by_accession_number(accession)
-        except Exception as exc:  # noqa: BLE001 — fail loud, don't guess the shape
-            return _acquire_error(
-                "resolution",
-                f"accession {accession!r} did not resolve to a filing ({exc})",
-                identifier=accession,
-            )
-        if filing is None:
-            return _acquire_error(
-                "resolution",
-                f"accession {accession!r} did not resolve to a filing",
-                identifier=accession,
-            )
-        return _filing_ref(filing)
-
-    # ticker / CIK path
     try:
         company = edgar.Company(identifier)
     except Exception as exc:  # noqa: BLE001 — fail loud, don't guess the shape
@@ -1306,10 +1177,13 @@ def fetch_narrative_sections(accession: str) -> dict:
     Task 12 wires into ``--action narrative``).
 
     Cache HIT — a warm accession within the immutable window — returns the cached
-    section list WITHOUT re-hitting edgartools/``acquire_filing`` (SEC fair-access:
-    never re-fetch what we already have). Cache MISS acquires the filing via
-    edgartools (``acquire_filing``) then segments it (``segment_filing``), and
-    caches the resulting section-list wrapper.
+    section list WITHOUT re-hitting edgartools (SEC fair-access: never re-fetch
+    what we already have). Cache MISS acquires the RAW edgartools Filing via the
+    shared ``_acquire_raw_filing`` producer boundary — NOT ``acquire_filing``'s
+    JSON ref dict, which would crash ``segment_filing`` (a dict has no ``.obj()``/
+    ``.form``) — then segments it (``segment_filing``) and reads its contract
+    metadata (cik/form/filingDate) off the same raw filing, caching the resulting
+    section-list wrapper.
 
     The cache key derives from the disclosure IDENTITY (the accession), NEVER
     wall-clock, so a same-day re-run of the same accession is a HIT, not a
@@ -1334,8 +1208,11 @@ def fetch_narrative_sections(accession: str) -> dict:
         cached["_cache"] = "hit"
         return cached
 
-    filing = acquire_filing(accession=accession)
-    if isinstance(filing, dict) and "error" in filing:
+    # Obtain the RAW edgartools Filing (NOT acquire_filing's JSON ref dict) so
+    # segment_filing gets a real Filing (`.obj()`/`.form`) and the contract-key
+    # reads below hit `.cik`/`.form`/`.filing_date` — a dict ref would crash both.
+    filing = _acquire_raw_filing(accession)
+    if isinstance(filing, dict):  # a loud error slot (never a raw Filing)
         # Loud acquisition failure (e.g. a 429/403 that escaped edgartools' own
         # backoff) — surface it; do NOT segment, do NOT cache it as success.
         return filing
@@ -1343,6 +1220,14 @@ def fetch_narrative_sections(accession: str) -> dict:
     sections = segment_filing(filing)
     result = {
         "accession": accession,
+        # Contract keys the CLI `--action narrative` surface preserves
+        # (Task 12): cik/form/filingDate derived from the RAW filing's disclosure
+        # identity (NEVER wall-clock), and STORED in the cached payload so a
+        # warm-cache HIT carries them too — otherwise a warm run would be missing
+        # contract keys.
+        "cik": filing.cik,
+        "form": filing.form,
+        "filingDate": _filing_date_iso(filing.filing_date),
         "sections": sections,
         "section_count": len(sections),
         "_cache": "miss",
@@ -1358,7 +1243,7 @@ def action_narrative(accession: str) -> dict:
         return identity_error
     _log("narrative fetch", accession)
     t0 = time.monotonic()
-    res = fetch_narrative(accession)
+    res = fetch_narrative_sections(accession)
     res["action"] = "narrative"
     cache_label = "cache hit" if res.get("_cache") == "hit" else f"{res.get('section_count', 0)} sections in {time.monotonic() - t0:.1f}s"
     _log("narrative done", f"{accession} {cache_label}")
@@ -1416,7 +1301,13 @@ def main():
                         if p.exists():
                             p.unlink()
         if args.accession:
-            p = cache_util.cache_path("sec_edgar", f"narrative_{args.accession}")
+            # The edgartools narrative cache key (Task 12) is
+            # narrative_sections_{accession} — DISTINCT from the retired regex
+            # fetch_narrative's narrative_{accession}; unlink the NEW key so
+            # --no-cache actually clears what fetch_narrative_sections writes.
+            p = cache_util.cache_path(
+                "sec_edgar", f"narrative_sections_{args.accession}"
+            )
             if p.exists():
                 p.unlink()
 

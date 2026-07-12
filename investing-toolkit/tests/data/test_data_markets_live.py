@@ -450,6 +450,62 @@ def test_edgartools_segment_real_8k_shape():
     assert slot["exhibit"] == pr.document, "section provenance records the source exhibit filename"
 
 
+@pytest.mark.network
+def test_edgartools_fetch_narrative_sections_end_to_end():
+    """Anchor the FULL acquire→segment seam end-to-end against REAL edgartools
+    (Task 12): `fetch_narrative_sections(<real accession>)` chains
+    `_acquire_raw_filing` (edgar.get_by_accession_number) -> `segment_filing`.
+
+    This is the seam the offline units mock at the edgartools boundary; it can
+    NEVER be masked again because THIS test runs the real chain. It would have
+    caught the acquire→segment dict-crash the offline tests hid when they mocked
+    `acquire_filing` (which returns a JSON ref dict, a shape acquire never feeds
+    segment_filing). Asserts the five CLI contract keys the `--action narrative`
+    surface preserves (accession/cik/form/filingDate/sections) + the edgartools
+    LIST-shaped sections. Run live:
+      uv run --with pytest --with edgartools==5.42.0 --with 'pyyaml>=6.0' \
+        pytest investing-toolkit/tests/data/test_data_markets_live.py \
+        -k fetch_narrative_sections_end_to_end -m network
+    """
+    import sys
+
+    import edgar
+
+    edgar.set_identity("kouko investing-toolkit noreply@anthropic.com")
+
+    if str(SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(SCRIPTS))
+    import sec_edgar_client
+
+    accession = "0000320193-24-000123"  # AAPL FY2024 10-K
+    result = sec_edgar_client.fetch_narrative_sections(accession)
+
+    # the five CLI contract keys are all present (Scenario 1: CLI still resolves)
+    for key in ("accession", "cik", "form", "filingDate", "sections"):
+        assert key in result, (
+            f"live narrative contract dropped key {key!r}: {result!r}"
+        )
+    assert result["accession"] == accession
+    assert result["cik"] == 320193
+    assert result["form"] == "10-K"
+    assert isinstance(result["filingDate"], str) and result["filingDate"], (
+        "filingDate must be a non-empty ISO disclosure date"
+    )
+    # sections is the edgartools LIST shape, with the real 10-K MD&A + Risk Factors
+    assert isinstance(result["sections"], list) and result["sections"], (
+        f"sections must be a non-empty edgartools LIST: {result!r}"
+    )
+    assert {s["item"] for s in result["sections"]} == {"Item 7", "Item 1A"}, (
+        "a real 10-K segments into Item 7 (MD&A) + Item 1A (Risk Factors)"
+    )
+    # action_narrative surfaces the SAME result with the action tag + exit-0 shape
+    action_result = sec_edgar_client.action_narrative(accession)
+    assert action_result.get("action") == "narrative"
+    assert "error" not in action_result, (
+        f"a resolvable accession must be exit-0 (no error): {action_result!r}"
+    )
+
+
 # ---------------------------------------------------------------------------
 # JP — 7203 Toyota (yfinance + TDnet + EDINET + BOJ/e-Stat/ECB)
 # ---------------------------------------------------------------------------
