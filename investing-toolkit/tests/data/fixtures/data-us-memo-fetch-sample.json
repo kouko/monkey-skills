@@ -136,7 +136,9 @@
       "10-Q",
       "8-K"
     ],
-    "limit": 8,
+    "limit": 20,
+    "since_days": 501,
+    "min_filing_date": "2025-02-27",
     "count": 6,
     "filings": [
       {
@@ -194,6 +196,7 @@
         "reportDate": "2025-11-10"
       }
     ],
+    "fetched_at": "2026-07-13T03:24:00Z",
     "_provenance": {
       "source": "SEC EDGAR (data.sec.gov)",
       "source_authority": "U.S. Securities and Exchange Commission",
@@ -7093,7 +7096,7 @@
         "sections": [
           {
             "item": "Item 1",
-            "text_path": "/Users/kouko/.cache/investing-toolkit/sec_edgar/sections/000032019325000079/Item_1.txt",
+            "text_path": "/home/user/.cache/investing-toolkit/sec_edgar/sections/000032019325000079/Item_1.txt",
             "disclosure_status": "filed",
             "accession": "0000320193-25-000079",
             "cik": 320193,
@@ -7117,7 +7120,7 @@
         "sections": [
           {
             "item": "Item 1",
-            "text_path": "/Users/kouko/.cache/investing-toolkit/sec_edgar/sections/000032019326000013/Item_1.txt",
+            "text_path": "/home/user/.cache/investing-toolkit/sec_edgar/sections/000032019326000013/Item_1.txt",
             "disclosure_status": "filed",
             "accession": "0000320193-26-000013",
             "cik": 320193,
@@ -7142,7 +7145,7 @@
         "sections": [
           {
             "item": "Item 2.02",
-            "text_path": "/Users/kouko/.cache/investing-toolkit/sec_edgar/sections/000032019326000501/Item_2_02.txt",
+            "text_path": "/home/user/.cache/investing-toolkit/sec_edgar/sections/000032019326000501/Item_2_02.txt",
             "disclosure_status": "furnished",
             "exhibit": "a8-kex991q3fy2026.htm",
             "accession": "0000320193-26-000501",
@@ -7168,7 +7171,7 @@
         "sections": [
           {
             "item": "Item 2.02",
-            "text_path": "/Users/kouko/.cache/investing-toolkit/sec_edgar/sections/000032019326000011/Item_2_02.txt",
+            "text_path": "/home/user/.cache/investing-toolkit/sec_edgar/sections/000032019326000011/Item_2_02.txt",
             "disclosure_status": "furnished",
             "exhibit": "a8-kex991q2202603282026.htm",
             "accession": "0000320193-26-000011",
@@ -7194,7 +7197,7 @@
         "sections": [
           {
             "item": "Item 2.02",
-            "text_path": "/Users/kouko/.cache/investing-toolkit/sec_edgar/sections/000114036126015711/Item_2_02.txt",
+            "text_path": "/home/user/.cache/investing-toolkit/sec_edgar/sections/000114036126015711/Item_2_02.txt",
             "disclosure_status": "furnished",
             "exhibit": "ef20071035_8kex991.htm",
             "accession": "0001140361-26-015711",
@@ -7217,7 +7220,7 @@
         "_cmd": [
           "uv",
           "run",
-          "investing-toolkit/skills/data-markets/scripts/sec_edgar_client.py",
+          "/repo/investing-toolkit/skills/data-markets/scripts/sec_edgar_client.py",
           "--action",
           "narrative",
           "--accession",
