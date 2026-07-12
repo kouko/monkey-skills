@@ -327,11 +327,18 @@ def list_filings(
     filing date.
 
     `min_filing_date` (an ISO ``YYYY-MM-DD`` string), when given, OVERRIDES
-    `limit`'s row-count truncation as the stop condition: the SEC submissions
-    `recent` arrays are already date-descending ACROSS ALL forms combined
-    (live-verified), so once a row's `filingDate` drops below the cutoff every
-    later row is older too and the scan stops there -- rows are never dropped
-    early just because `limit` matching-form rows were already collected.
+    `limit`'s row-count truncation as the stop condition: every row is scanned
+    to the end of the `recent` arrays and a row is kept only if its
+    `filingDate` is on or after the cutoff -- rows are never dropped early
+    just because `limit` matching-form rows were already collected. This
+    filters rather than breaks early specifically so it does NOT depend on
+    the `recent` arrays being date-descending -- that ordering assumption is
+    unverified beyond a handful of live probes, and an early `break` on an
+    unverified ordering claim is the same "truncate early on an assumption"
+    shape as the original `--limit 8` bug this fixes, just relocated to
+    dates. The arrays are already fully in memory and small (one company's
+    filing history), so a full scan costs nothing worth trading correctness
+    for.
 
     This exists to fix a live-observed false gap (2026-07-13, real AAPL run):
     a `limit`-only (row-count) window is capped ACROSS ALL forms combined, so
@@ -366,9 +373,14 @@ def list_filings(
             and filing_date is not None
             and filing_date < min_filing_date
         ):
-            # `recent` is date-descending across ALL forms combined -- once
-            # we're past the window, every remaining row is older too.
-            break
+            # A row-by-row FILTER, never an early `break`: whether `recent`
+            # is date-descending across all forms is not something this code
+            # verifies, and breaking on an unverified ordering assumption is
+            # the same "truncate early on an assumption" shape as the
+            # original `--limit 8` bug, just relocated to dates. The arrays
+            # are already fully in memory and small, so scanning to the end
+            # costs nothing worth trading correctness for.
+            continue
         form = forms_list[i]
         if forms and form not in forms:
             continue
@@ -518,9 +530,19 @@ def select_narrative_filings(
 
 # SEC 10-K filing deadlines (Exchange Act reporting-company categories): large
 # accelerated filers must file within 60 days of fiscal year end, accelerated
-# filers within 75, all other filers within 90 -- 90 is the WORST case across
-# categories, i.e. the longest a real 10-K can lag its own fiscal year end.
-_MAX_10K_FILING_LAG_DAYS = 90
+# filers within 75, all other filers within 90 of fiscal year end. But 90 is
+# NOT the worst case: Rule 12b-25 lets ANY filer submit a Form 12b-25 (NT
+# 10-K) and receive an automatic 15-calendar-day extension on top of its own
+# deadline -- routine for non-accelerated/small-cap filers. The true worst
+# case is 90 + 15 = 105 days.
+_MAX_10K_FILING_LAG_DAYS = 105
+# Deliberate buffer ON TOP of the true worst case above -- not shaved to the
+# boundary. A prior implementation used a 1-day margin (455 worst-case vs a
+# 456-day window) with no test covering it; this margin exists so the window
+# tolerates minor calendar edge cases (e.g. a deadline landing on a
+# weekend/holiday, which SEC rules roll to the next business day) without
+# re-deriving exact worst-case arithmetic each time.
+_FILING_LAG_SAFETY_MARGIN_DAYS = 30
 _DAYS_PER_YEAR = 366  # leap-safe
 _DAYS_PER_QUARTER = 92  # calendar-quarter upper bound (Jan-Mar=90 .. Jul-Sep=92)
 
@@ -545,14 +567,22 @@ def narrative_filings_window_days(n_quarters: int = 4) -> int:
 
     Two lower bounds; the wider one wins:
       - the LATEST 10-K: filed once per fiscal year, up to
-        `_MAX_10K_FILING_LAG_DAYS` (the longest of the three SEC filer-
-        category deadlines) after the fiscal year it reports. One full year
-        back plus that lag guarantees the most recent 10-K is in-window even
-        for the slowest-deadline filer.
+        `_MAX_10K_FILING_LAG_DAYS` (105 -- the 90-day non-accelerated
+        deadline PLUS Rule 12b-25's automatic 15-day NT-10-K extension) after
+        the fiscal year it reports, plus `_FILING_LAG_SAFETY_MARGIN_DAYS` of
+        deliberate buffer. One full year back plus that lag+margin is
+        provably sufficient against a filer using the Rule 12b-25 extension
+        -- but NOT against a filer who blows even the EXTENDED deadline
+        (genuinely delinquent, > 105 days late). That residual case is
+        accepted deliberately, not overlooked: if a 10-K is that late, the
+        filing really is overdue, and `select_narrative_filings` reporting a
+        gap for it is arguably correct behavior, not a false negative.
       - `n_quarters` of earnings 8-Ks: `n_quarters` calendar quarters back
         (`_DAYS_PER_QUARTER` upper-bounds one quarter's length).
     """
-    annual_bound = _DAYS_PER_YEAR + _MAX_10K_FILING_LAG_DAYS  # 456
+    annual_bound = (
+        _DAYS_PER_YEAR + _MAX_10K_FILING_LAG_DAYS + _FILING_LAG_SAFETY_MARGIN_DAYS
+    )  # 366 + 105 + 30 = 501
     quarterly_bound = n_quarters * _DAYS_PER_QUARTER
     return max(annual_bound, quarterly_bound)
 

@@ -322,6 +322,46 @@ def test_list_filings_min_filing_date_recovers_crowded_out_10k(sec_client, monke
     ), f"expected the 10-K recovered via min_filing_date, got: {fixed_rows}"
 
 
+def test_list_filings_min_filing_date_recovers_nt_10k_extension_lag(sec_client, monkeypatch):
+    # No @req tag (see test_list_filings_min_filing_date_recovers_crowded_out_10k).
+    """SEC Rule 12b-25 lets a filer submit an NT 10-K and receive an automatic
+    15-calendar-day extension on top of the 90-day non-accelerated deadline --
+    a true worst-case lag of 105 days, not 90. A filer that used the extension
+    for a PRIOR fiscal year and is now late again can leave the previous
+    (still-current) 10-K as far back as 366 + 104 days from `as_of` -- inside
+    the Rule-12b-25 worst case, but the pre-fix 456-day window (366 + 90)
+    drops it, reproducing the exact phantom-gap defect Task 8 exists to
+    eliminate. Must go RED against the pre-fix window and GREEN once the
+    window accounts for the extension (verified manually this round; see
+    implementer report)."""
+    anchor = datetime.date(2026, 7, 13)
+    lag_days = 366 + 104  # one leap-safe year + a near-worst-case NT-10-K lag
+    old_tenk_date = (anchor - datetime.timedelta(days=lag_days)).isoformat()
+    recent_8k_date = (anchor - datetime.timedelta(days=5)).isoformat()
+    monkeypatch.setattr(
+        sec_client, "fetch_submissions",
+        lambda cik: _stub_submissions(
+            forms=["10-K", "8-K"],
+            dates=[old_tenk_date, recent_8k_date],
+            accessions=["acc-tenk-late", "acc-8k-recent"],
+        ),
+    )
+
+    window_days = sec_client.narrative_filings_window_days(n_quarters=4)
+    min_filing_date = (anchor - datetime.timedelta(days=window_days)).isoformat()
+    rows = sec_client.list_filings(
+        320193, ["10-K", "8-K"], 8, min_filing_date=min_filing_date,
+    )
+
+    assert any(
+        r["form"] == "10-K" and r["accessionNumber"] == "acc-tenk-late"
+        for r in rows
+    ), (
+        "expected the late (Rule-12b-25-extension) 10-K recovered within the "
+        f"window -- got rows: {rows}"
+    )
+
+
 def test_list_filings_min_filing_date_reports_true_absence_not_papered_over(
     sec_client, monkeypatch,
 ):
