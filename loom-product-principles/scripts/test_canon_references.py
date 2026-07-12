@@ -114,19 +114,46 @@ def test_visual_canon_is_axis_a_only():
     """canon-design-visual.md is Axis A (cultural/graphic movements) only.
 
     The collapsed surface-treatment row ("Flat -> skeuo -> neumorphic ->
-    glassmorphic cycle") duplicated content whose expanded home is now
-    canon-design-surface.md — it must be gone from this file, and this
-    file must point agents at canon-design-surface.md for UI surface
-    treatments (docs/loom/plans/2026-07-12-visual-style-movement-anchor-
-    and-quality-separation.md, Task 3)."""
+    glassmorphic cycle") must be gone from this file, and this file must
+    point agents at the surface-treatment axis's real home. That home is no
+    longer a sibling in this plugin: Task 3 of
+    docs/loom/plans/2026-07-13-axis-b-relocation-and-tone-manner-seam.md
+    moved canon-design-surface.md into loom-interface-design's design-system
+    skill, so the pointer must name the DESIGN station.
+
+    Guard precision (assertion-must-encode-the-property-it-claims): the old
+    pin was a bare `"canon-design-surface.md" in text` — a membership check
+    that stayed green across the very relocation it was supposed to notice.
+    The pointer's claim is "the referent exists and is reachable", so the
+    assertions below pin the DESIGN-station referent AND check that the
+    referent it names actually exists on disk.
+    """
     text = _text("canon-design-visual.md")
+    low = text.lower()
     assert "glassmorphic cycle" not in text, (
         "canon-design-visual.md must not contain the collapsed "
-        "surface-treatment row; its expanded home is canon-design-surface.md"
+        "surface-treatment row; its home is the DESIGN station's canon list"
     )
-    assert "canon-design-surface.md" in text, (
-        "canon-design-visual.md must point to canon-design-surface.md "
-        "for UI surface treatments (Axis A vs surface-treatment split)"
+    assert "loom-interface-design" in low, (
+        "canon-design-visual.md must point at the DESIGN station plugin "
+        "(loom-interface-design) for UI surface treatments — the "
+        "surface-treatment canon no longer lives in this plugin"
+    )
+    assert "design station" in low, (
+        "canon-design-visual.md must say the surface-treatment axis is "
+        "decided downstream at the DESIGN station"
+    )
+    referent = (
+        Path(__file__).parents[2]
+        / "loom-interface-design"
+        / "skills"
+        / "design-system"
+        / "references"
+        / "canon-design-surface.md"
+    )
+    assert referent.is_file(), (
+        f"the DESIGN-station surface canon this file points at is absent at "
+        f"{referent} — the pointer is dangling again"
     )
 
 

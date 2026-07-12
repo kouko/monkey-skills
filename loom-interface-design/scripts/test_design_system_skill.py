@@ -34,6 +34,14 @@ SKILL = (
     / "SKILL.md"
 )
 
+SCHEMA = (
+    Path(__file__).parents[1]
+    / "skills"
+    / "design-system"
+    / "references"
+    / "design-md-schema.md"
+)
+
 # Codex hard limit on a skill description.
 _CODEX_DESC_LIMIT = 1024
 
@@ -119,6 +127,223 @@ def test_body_reads_principles_as_governing_constraint():
         "body must frame PRINCIPLES.md as the governing constraint"
     assert "absent" in low or "missing" in low or "surface" in low, \
         "body must surface when PRINCIPLES.md is absent"
+
+
+def _step2_block() -> str:
+    """The Step 2 section of the body — lowercased, whitespace-flattened.
+
+    Scoped to the block that must carry the anchor-inheritance instruction —
+    a whole-file membership pin would pass on a SKILL.md that mentions the
+    anchor anywhere at all (see docs/loom/memory/
+    grep-tests-scope-to-measured-neighborhood.md). Flattened so a pinned
+    phrase still matches across the prose's line wraps.
+    """
+    text = _text()
+    start = text.index("### Step 2")
+    end = text.index("### Step 3", start)
+    return re.sub(r"\s+", " ", text[start:end]).lower()
+
+
+def test_step2_inherits_tone_and_manner_anchor():
+    """Step 2 INHERITS the upstream tone & manner anchor as the governing mood
+    (it does not re-derive it), and falls back LOUDLY when no anchor exists.
+
+    Every phrase is pinned inside the Step 2 block, and the fallback is pinned
+    as coming AFTER the inherit rule (a fallback that precedes the rule it
+    falls back from is not a fallback) — a positional assertion, because the
+    claim is relational (see docs/loom/memory/
+    assertion-must-encode-the-property-it-claims.md).
+    """
+    block = _step2_block()
+
+    # (a) the `## Anchors` section of PRINCIPLES.md is a named read target
+    assert "## anchors" in block, \
+        "Step 2 must name the `## Anchors` section of PRINCIPLES.md as a read target"
+
+    # (b) the 3-5 tone & manner adjectives ARE the governing mood
+    assert "3-5 tone & manner adjectives" in block, \
+        "Step 2 must name the 3-5 tone & manner adjectives (upstream vocabulary)"
+    assert "governing mood" in block, \
+        "Step 2 must state the adjectives are the GOVERNING mood"
+
+    # (c) inherited, NOT re-derived
+    inherit_at = block.index("inherit")
+    assert "re-derive" in block, \
+        "Step 2 must state the mood is NOT re-derived"
+    assert "do not re-derive" in block or "never re-derive" in block, \
+        "Step 2 must forbid re-deriving the mood when an anchor exists"
+
+    # (d) the loud fallback — absent anchor: derive as before AND say so
+    fallback_at = block.index("no `## anchors` tone & manner row")
+    assert "say so explicitly" in block, \
+        "Step 2's fallback must require saying explicitly that the mood was derived"
+    assert "never silently invent" in block, \
+        "Step 2's fallback must forbid silently inventing a mood while appearing to inherit"
+    assert inherit_at < fallback_at, (
+        "the inherit rule must come BEFORE the absent-anchor fallback — "
+        "the fallback is subordinate to it, not the primary path"
+    )
+
+
+def _surface_block() -> str:
+    """The surface-treatment candidate-round block of the body — lowercased,
+    whitespace-flattened.
+
+    Scoped to the block that must carry the pick protocol; a whole-file
+    membership pin would false-green on a SKILL.md that merely mentions a
+    treatment (and a bare "3-5" already occurs elsewhere in this repo's
+    skills — see docs/loom/memory/
+    grep-tests-scope-to-measured-neighborhood.md). Flattened so a pinned
+    phrase still matches across the prose's line wraps.
+    """
+    text = _text()
+    start = text.index("**Surface treatment — the candidate round")
+    end = text.index("### Step 4b", start)
+    return re.sub(r"\s+", " ", text[start:end]).lower()
+
+
+def test_surface_treatment_candidate_pick_protocol():
+    """The GUI beat runs a real surface-treatment PICK — a candidate round from
+    the Axis-B canon, a surfaced rejection list, and a USER decision — whose
+    result is named in prose in Overview / Brand and constrains the Elevation &
+    Depth + Shapes tokens.
+
+    Full phrases are pinned inside the block (never bare "3-5"), and both
+    ordering claims — the round is downstream of the tone & manner anchor, and
+    the constraint is stated before the proposal — are positional assertions,
+    because the claims are relational (see docs/loom/memory/
+    assertion-must-encode-the-property-it-claims.md).
+    """
+    text = _text()
+    block = _surface_block()
+
+    # (a) the Axis-B canon is cited by relative path
+    assert "references/canon-design-surface.md" in text, \
+        "body must cite the surface canon by relative path"
+    assert "references/canon-design-surface.md" in block, \
+        "the candidate round must draw its candidates from the surface canon"
+
+    # (b) 3-5 candidates with fit/tension
+    assert "propose 3-5 surface-treatment candidates" in block, \
+        "the round must propose 3-5 surface-treatment candidates"
+    assert "fit/tension" in block, \
+        "each candidate must carry fit/tension notes"
+
+    # (c) 1-2 considered-but-rejected, SURFACED with reasons
+    assert "1-2 considered-but-rejected candidates" in block, \
+        "the round must name 1-2 considered-but-rejected candidates"
+    assert "surface them to the user with reasons" in block, \
+        "the rejection list must be surfaced to the user with reasons"
+
+    # (d) the USER decides, with the bespoke escape hatch
+    assert "the user decides" in block, \
+        "the USER — not the agent — picks the surface treatment"
+    assert "bespoke — no canon treatment fits" in block, \
+        "the bespoke escape hatch must be legal and named"
+    assert "escape hatch" in block, \
+        "the bespoke option must be framed as a legal escape hatch"
+
+    # (e) the pick is NAMED + rationalized in prose in Overview / Brand,
+    #     riding inside the frozen 8-section contract (no 9th section)
+    assert "overview / brand" in block, \
+        "the pick must be named in the existing Overview / Brand section"
+    assert "surface treatment: x — because" in block, \
+        "the pick must be named AND rationalized in prose (name + because)"
+    assert "do not add a 9th" in block, \
+        "the pick rides in prose — it must NOT add a 9th `##` section"
+    assert "all 8 `##` sections in order" in text, \
+        "the frozen 8-section contract must remain stated verbatim"
+
+    # (f) the pick constrains the Elevation & Depth + Shapes token blocks
+    constrains_at = block.index("constrains the `## elevation & depth`")
+    assert "`## shapes`" in block[constrains_at:], \
+        "the pick must constrain BOTH the Elevation & Depth and Shapes tokens"
+
+    # (g) the anti-costume law carries over
+    assert "anti-costume law" in block, \
+        "the anti-costume law must carry over to the surface axis"
+    assert "never overrides a principles value" in block, \
+        "a treatment may enrich candidates but never override a PRINCIPLES value"
+
+    # (h) the WCAG risk flag is a BLOCKER, not a note
+    wcag_at = block.index("wcag risk flag")
+    assert "blocker" in block[wcag_at:wcag_at + 200], \
+        "an unresolved WCAG risk flag must be a BLOCKER, not a note"
+
+    # ordering 1 — the round is DOWNSTREAM of the Step-2 tone & manner anchor
+    assert text.index("### Step 2") < text.index(
+        "**Surface treatment — the candidate round"
+    ), "the candidate round must sit downstream of the Step-2 anchor"
+
+    # ordering 2 — the anchor CONSTRAINS the proposal, so it is stated first
+    anchor_at = block.index("downstream of the tone & manner anchor")
+    propose_at = block.index("propose 3-5 surface-treatment candidates")
+    assert anchor_at < propose_at, (
+        "the anchor constraint must be stated BEFORE the proposal instruction "
+        "— it governs which treatments are proposable at all"
+    )
+
+
+def _schema_overview_block() -> str:
+    """The `## Overview / Brand` section of the schema — lowercased,
+    whitespace-flattened.
+
+    Scoped to the section that carries the Derivation contract (Visual concept
+    / Mood / Generative visual principles); a whole-file pin would pass on a
+    schema that mentions the anchor anywhere at all (see docs/loom/memory/
+    grep-tests-scope-to-measured-neighborhood.md). Flattened so a pinned phrase
+    still matches across the prose's line wraps.
+    """
+    assert SCHEMA.is_file(), f"design-md-schema.md is absent at {SCHEMA}"
+    text = SCHEMA.read_text(encoding="utf-8")
+    start = text.index("## Overview / Brand")
+    end = text.index("## Colors", start)
+    return re.sub(r"\s+", " ", text[start:end]).lower()
+
+
+def test_schema_mood_is_inherited_from_anchor():
+    """The schema's Derivation contract must state Mood is INHERITED from
+    PRINCIPLES.md's `## Anchors` tone & manner anchor (feeding `brand_voice`),
+    not invented by the agent — mirroring SKILL.md Step 2's vocabulary — and
+    must carry the same LOUD fallback when no anchor exists.
+
+    The fallback is pinned as coming AFTER the inherit rule (a fallback that
+    precedes the rule it falls back from is not a fallback) — a positional
+    assertion, because the claim is relational (see docs/loom/memory/
+    assertion-must-encode-the-property-it-claims.md).
+    """
+    block = _schema_overview_block()
+
+    # (a) the anchor's source is named: PRINCIPLES.md's `## Anchors` section
+    assert "principles.md" in block, \
+        "the Derivation contract must name PRINCIPLES.md as the mood's source"
+    assert "## anchors" in block, \
+        "the Derivation contract must name PRINCIPLES.md's `## Anchors` section"
+
+    # (b) the 3-5 tone & manner adjectives ARE the governing mood (SKILL.md
+    #     Step 2's exact vocabulary — a paraphrase makes the two files disagree)
+    assert "3-5 tone & manner adjectives" in block, \
+        "the Derivation contract must name the 3-5 tone & manner adjectives"
+    assert "governing mood" in block, \
+        "the Derivation contract must state the adjectives are the GOVERNING mood"
+
+    # (c) Mood feeds `brand_voice`, and is inherited — NOT re-derived / invented
+    assert "brand_voice" in block, \
+        "the Derivation contract must keep Mood feeding the `brand_voice` token"
+    inherit_at = block.index("inherit")
+    assert "do not re-derive" in block or "never re-derive" in block, \
+        "the Derivation contract must forbid re-deriving the mood when an anchor exists"
+
+    # (d) the loud fallback — absent anchor: derive as before AND say so
+    fallback_at = block.index("no `## anchors` tone & manner row")
+    assert "say so explicitly" in block, \
+        "the fallback must require saying explicitly that the mood was derived here"
+    assert "never silently invent" in block, \
+        "the fallback must forbid silently inventing a mood while appearing to inherit"
+    assert inherit_at < fallback_at, (
+        "the inherit rule must come BEFORE the absent-anchor fallback — "
+        "the fallback is subordinate to it, not the primary path"
+    )
 
 
 def test_body_detects_modality():

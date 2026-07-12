@@ -761,30 +761,48 @@ def test_headless_open_question_points_at_rules_file_format():
         "the Open Question clause must point at the rules file by relative path"
 
 
-def test_canon_audit_lists_surface_file():
-    """Task 4a: Step 3's canon-audit list must name BOTH visual canon files
-    (canon-design-visual.md for Axis A cultural/graphic-design movements,
-    canon-design-surface.md for Axis B UI-surface-treatment eras), and the
-    body must describe the visual lens running as TWO axis-typed candidate
-    rounds, each reading ONLY its own file (contamination guard), each
-    landing as its own version-pinned ## Anchors row since the axes are
-    complementary (different questions), never one pick-one menu."""
+def test_visual_lens_is_single_axis_a_round():
+    """Task 6 (supersedes the old two-round pin): Axis B left this plugin.
+
+    Task 3 `git mv`'d canon-design-surface.md into loom-interface-design's
+    design-system skill, so at THIS station the visual lens runs ONE Axis-A
+    candidate round (cultural/graphic-design movements, canon-design-visual.md)
+    and the surface-treatment axis is decided downstream at the DESIGN station.
+    The old contamination guard ("each round reads ONLY its own file") is now
+    structural — the two axes live in different plugins — so SKILL.md must
+    restate that truth rather than instruct a guard it no longer owns.
+
+    Guard precision: the surface-treatment relocation must be asserted as an
+    ABSENCE (a dangling `canon-design-surface.md` reference anywhere in SKILL.md
+    is the regression), and the downstream referent must CO-OCCUR in the bullet
+    that hands the axis off — the plugin name appearing elsewhere must not
+    satisfy the pin.
+    """
     text = _text()
-    low = text.lower()
-    assert "references/canon-design-surface.md" in text, \
-        "Step 3's canon-audit list must also name references/canon-design-surface.md"
-    assert "references/canon-design-visual.md" in text, \
+    flat = _skill_flat()
+    assert "canon-design-surface.md" not in text, (
+        "SKILL.md must not reference canon-design-surface.md — the file no "
+        "longer lives in this plugin (Task 3 moved it to loom-interface-design)"
+    )
+    assert "axis b" not in flat and "axis-b" not in flat, (
+        "SKILL.md must not instruct an Axis-B round — the surface-treatment "
+        "axis is not decided at this station"
+    )
+    assert "references/canon-design-visual.md" in text, (
         "Step 3's canon-audit list must still name references/canon-design-visual.md"
-    assert "axis a" in low, \
-        "body must name Axis A (cultural/graphic-design movements) round"
-    assert "axis b" in low, \
-        "body must name Axis B (UI-surface-treatment eras) round"
-    assert "its own file" in low, \
-        "body must state each axis-typed round reads ONLY its own file " \
-        "(contamination guard)"
-    assert "complementary" in low, \
-        "the two axes must be named complementary, extending the existing " \
-        "separate-Anchors-rows rule"
+    )
+    assert "single axis-a candidate round" in flat, (
+        "the visual lens must be described as a SINGLE Axis-A candidate round"
+    )
+    handoff = [b for b in flat.split("\n- ") if "surface-treatment axis" in b]
+    assert handoff, "Step 3 must carry a bullet naming the surface-treatment axis"
+    assert any(
+        "downstream at the design station" in b and "loom-interface-design" in b
+        for b in handoff
+    ), (
+        "the surface-treatment axis must be handed off in that same bullet — "
+        "decided downstream at the DESIGN station (loom-interface-design)"
+    )
 
 
 def test_visual_lens_3_5_carveout():
@@ -848,20 +866,20 @@ def test_tone_and_manner_primary_anchor():
         "downstream of the tone & manner anchor" in low
         or "downstream of this anchor" in low
     ), (
-        "the canon axes (Axis A / Axis B) must be stated as DOWNSTREAM of the "
+        "the Axis-A canon round must be stated as DOWNSTREAM of the "
         "tone & manner anchor"
     )
-    # Ordering: the anchor derivation must come BEFORE the canon rounds.
+    # Ordering: the anchor derivation must come BEFORE the canon round.
     # A substring pin ("before" in low) is vacuous here — both words occur in
     # SKILL.md regardless of order, so a reorder regression would pass green
     # (the #550 guard-imprecision class). Compare positions, as the
     # question-sets sibling does.
     flat = _skill_flat()
     anchor_at = flat.index("3-5 tone & manner adjectives")
-    rounds_at = flat.index("two axis-typed candidate rounds")
-    assert anchor_at < rounds_at, (
-        "the tone & manner derivation must be ordered BEFORE the axis-typed "
-        "canon candidate rounds, not after them"
+    round_at = flat.index("single axis-a candidate round")
+    assert anchor_at < round_at, (
+        "the tone & manner derivation must be ordered BEFORE the Axis-A "
+        "canon candidate round, not after it"
     )
 
 
@@ -903,8 +921,8 @@ def test_question_sets_carries_tone_and_manner_anchor():
     """Task 2: question-sets.md's Design lane must AGREE with SKILL.md's Step 3
     flow (Task 1) — the visual lens FIRST derives 3-5 tone & manner adjectives
     from the product's values, pins them as the PRIMARY visual anchor in their
-    own version-pinned ## Anchors row, and only THEN runs the axis-typed canon
-    rounds (which stay downstream inspiration).
+    own version-pinned ## Anchors row, and only THEN runs the Axis-A canon
+    round (which stays downstream inspiration).
 
     Guard precision (#550 lesson): pins are FULL PHRASES — a bare "3-5" already
     appears (the visual carve-out) and a bare "values" already appears (the
@@ -933,12 +951,66 @@ def test_question_sets_carries_tone_and_manner_anchor():
     )
     assert "downstream of the tone & manner anchor" in flat, \
         "the canon axes must be stated as DOWNSTREAM of the tone & manner anchor"
-    # Ordering: the anchor derivation must come BEFORE the canon rounds.
+    # Ordering: the anchor derivation must come BEFORE the canon round.
+    # Retargeted by Task 7: the needle moved from the old two-round phrasing
+    # ("two axis-typed candidate rounds", which .index() would now raise on) to
+    # the single-round phrasing — the ORDERING property itself is unchanged.
     anchor_at = flat.index("3-5 tone & manner adjectives")
-    rounds_at = flat.index("two axis-typed candidate rounds")
-    assert anchor_at < rounds_at, (
-        "the tone & manner derivation must be ordered BEFORE the axis-typed "
-        "canon candidate rounds, not after them"
+    round_at = flat.index("single axis-a candidate round")
+    assert anchor_at < round_at, (
+        "the tone & manner derivation must be ordered BEFORE the Axis-A "
+        "canon candidate round, not after it"
+    )
+
+
+def test_question_sets_visual_lens_is_single_axis_a_round():
+    """Task 7 (supersedes the old two-round wording): Axis B left this plugin.
+
+    Task 3 `git mv`'d canon-design-surface.md into loom-interface-design's
+    design-system skill, so question-sets.md's Design lane must AGREE with
+    SKILL.md (Task 6): the visual lens runs ONE Axis-A candidate round
+    (cultural/graphic-design movements, canon-design-visual.md) and the
+    surface-treatment axis is decided downstream at the DESIGN station. The old
+    contamination guard ("each round reads only its own file") is now
+    structural — the two axes live in different plugins — so the lane must
+    restate that truth rather than instruct a guard it no longer owns.
+
+    Guard precision: the relocation is asserted as an ABSENCE (a dangling
+    `canon-design-surface.md` reference anywhere in the file is the
+    regression), and the downstream referent must CO-OCCUR in the paragraph
+    that hands the axis off — the plugin name appearing elsewhere in the lane
+    must not satisfy the pin.
+    """
+    text = QUESTION_SETS.read_text(encoding="utf-8")
+    flat = _question_sets_flat()
+    assert "canon-design-surface.md" not in text, (
+        "question-sets.md must not reference canon-design-surface.md — the "
+        "file no longer lives in this plugin (Task 3 moved it to "
+        "loom-interface-design)"
+    )
+    assert "axis b" not in flat and "axis-b" not in flat, (
+        "question-sets.md must not instruct an Axis-B round — the "
+        "surface-treatment axis is not decided at this station"
+    )
+    assert "canon-design-visual.md" in text, (
+        "the Design lane must still name canon-design-visual.md as the "
+        "Axis-A round's source"
+    )
+    assert "single axis-a candidate round" in flat, (
+        "the visual lens must be described as a SINGLE Axis-A candidate round"
+    )
+    handoff = [p for p in flat.split("\n\n") if "surface-treatment axis" in p]
+    assert handoff, "the Design lane must carry a paragraph naming the surface-treatment axis"
+    assert any(
+        "downstream at the design station" in p and "loom-interface-design" in p
+        for p in handoff
+    ), (
+        "the surface-treatment axis must be handed off in that same paragraph "
+        "— decided downstream at the DESIGN station (loom-interface-design)"
+    )
+    assert any("structural, not instructional" in p for p in handoff), (
+        "the old contamination guard must be restated as STRUCTURAL, not "
+        "instructional (the axes now live in different plugins)"
     )
 
 

@@ -8,6 +8,57 @@ Versioning: [Semantic Versioning](https://semver.org/).
 > This file was reconstructed on 2026-07-02 from the git history — the plugin
 > shipped its first two versions without a CHANGELOG.
 
+## [0.9.0] — 2026-07-13
+
+### Changed
+
+- **The visual lens is now a SINGLE Axis-A round.** The surface-treatment axis
+  (flat / skeuomorphic / neumorphic / glassmorphic eras) is **no longer decided
+  here** — industry research placed it at **stage 4 (the visual design language)**,
+  so it is now decided **downstream at the DESIGN station**
+  (`loom-interface-design`), which owns the canon and names its pick in prose
+  there. The Axis-A round (cultural / graphic-design movements) is unchanged:
+  it keeps the 3-5 carve-out, the 1-2 divergent candidates, and the anti-costume
+  law. The old cross-axis contamination guard is now **structural, not
+  instructional** — the two axes live in different plugins, so their contexts
+  cannot co-occur in one round by construction.
+- The canon completeness-audit list drops to **four** files (the fifth,
+  `canon-design-surface.md`, moved out — see Removed).
+
+### Removed
+
+- **`references/canon-design-surface.md`** — relocated to
+  `loom-interface-design/skills/design-system/references/` (its correct station).
+  The forward-note added in 0.8.0 ("relocation deferred to Step 2") is spent and
+  gone. `scripts/test_surface_canon.py` was deleted here; its contract test and
+  research-doc guard now live in the receiving plugin.
+  Rationale: `docs/loom/specs/2026-07-13-axis-b-relocation-and-tone-manner-seam.md`.
+
+## [0.8.0] — 2026-07-12
+
+> Retroactive entry (2026-07-13): 0.8.0 shipped without a CHANGELOG record —
+> reconstructed here from PR #553 so the file is not missing a version.
+
+### Added
+
+- **Tone & manner primary anchor** — the Design lane's visual flow now derives
+  **3-5 tone & manner adjectives** from the product's values BEFORE any canon
+  round. They are the **primary visual anchor** and land as their own
+  version-pinned `## Anchors` row (existing machinery, reused).
+- 16 live-verified cultural entries in `references/canon-design-visual.md`
+  (canon 19 → 35 rows): 6 Euro-American, 4 Japan, 1 Soviet, 5 Greater China.
+  Six high-costume-risk rows carry per-row caveats; the two propaganda-origin
+  rows additionally state "formal visual vocabulary only, never the propaganda
+  freight."
+
+### Changed
+
+- **Axis A reframed as value-constrained mood inspiration** — it is downstream
+  of the tone & manner anchor, supplies **mood / creative-direction inspiration**,
+  and is **never a pick-one menu**. The anti-costume rule is generalized into a
+  law: a movement **never overrides a PRINCIPLES value** (the low-stimulus /
+  Memphis case is demoted to its worked example).
+
 ## [0.7.0] — 2026-07-12
 
 ### Added

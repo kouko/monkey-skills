@@ -79,26 +79,31 @@ def test_design_section_is_expert_lane_no_fixed_question_set():
         "in their own words"
 
 
-def test_design_lane_two_axis_rounds():
-    """The visual lens is not one monolithic candidate round — it runs as
-    two axis-typed rounds so each stays uncontaminated by the other:
-    Axis A (cultural) reads only canon-design-visual.md, Axis B (surface)
-    reads only canon-design-surface.md."""
+def test_design_lane_single_axis_a_round():
+    """Task 7 (supersedes the old two-round pin): Axis B left this plugin.
+
+    canon-design-surface.md now lives in loom-interface-design's design-system
+    skill, so at THIS station the visual lens runs ONE Axis-A candidate round
+    (cultural/graphic-design movements, canon-design-visual.md); the
+    surface-treatment axis is decided downstream at the DESIGN station. The old
+    contamination guard is now STRUCTURAL (the axes live in different plugins),
+    not an instruction this lane can enforce."""
     text = _text()
     low = text.lower()
     assert "canon-design-visual.md" in text, \
-        "Design lane must name canon-design-visual.md as Axis A's source"
-    assert "canon-design-surface.md" in text, \
-        "Design lane must name canon-design-surface.md as Axis B's source"
+        "Design lane must name canon-design-visual.md as the Axis-A round's source"
+    assert "canon-design-surface.md" not in text, \
+        "Design lane must not reference canon-design-surface.md — the file " \
+        "no longer lives in this plugin"
+    assert "axis b" not in low and "axis-b" not in low, \
+        "Design lane must not instruct an Axis-B round"
     assert "cultural" in low, \
         "Design lane must name the cultural axis"
-    assert "surface" in low, \
-        "Design lane must name the surface axis"
-    assert "axis a" in low and "axis b" in low, \
-        "Design lane must frame the visual lens as Axis A / Axis B rounds"
-    assert "contamination guard" in low and "its own file" in low, \
-        "Design lane must state the isolation guarantee (each round reads " \
-        "only its own file) — the load-bearing reason the canon is split"
+    assert "single axis-a candidate round" in low.replace("*", ""), \
+        "Design lane must frame the visual lens as a SINGLE Axis-A round"
+    assert "structural, not instructional" in low.replace("*", ""), \
+        "Design lane must restate the old contamination guard as structural " \
+        "(the axes live in different plugins), not as an instruction"
 
 
 def test_visual_lens_offers_3_5_with_divergent():

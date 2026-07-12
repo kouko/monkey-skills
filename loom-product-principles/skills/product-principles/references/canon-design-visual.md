@@ -12,7 +12,10 @@ Grounded in `docs/loom/research/2026-07-10-principles-canon-base-lists.md` §3.
 **Axis A — cultural/graphic movements only.** This file covers movements,
 identity philosophy, and typographic/color systems. UI surface treatments
 (flat / skeuomorphic / neumorphic / glassmorphic and their era-boundaries)
-are Axis B — see `canon-design-surface.md`.
+are the **surface-treatment axis**, which is **not decided at this station**:
+it is decided downstream at the **DESIGN station** (the `loom-interface-design`
+plugin's `design-system` skill), which owns that canon list. Do not propose
+surface treatments from here.
 
 **Downstream of the tone & manner anchor.** The primary visual anchor is the
 product's 3-5 **tone & manner** adjectives, derived from its values / Product
