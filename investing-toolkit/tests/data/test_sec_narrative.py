@@ -273,8 +273,8 @@ class _MockTenK:
     ``risk_factors`` (Item 1A) are ``str`` properties; an item absent from the
     filing yields ``None`` (edgartools issue #710). Plain attributes so a
     renamed property RAISES ``AttributeError`` rather than silently reading as
-    absent (fixtures-mirror-producer-shape; the version-drift shape guard is a
-    later task).
+    absent (fixtures-mirror-producer-shape; the version-drift shape guard on a
+    non-``str`` return value is Task 10, below).
     """
 
     def __init__(self, *, management_discussion, risk_factors):
@@ -952,4 +952,171 @@ def test_8k_exhibit_section_marked_furnished(sec_client):
     # the tag is DISTINCT across source types, not a single constant
     assert furnished["disclosure_status"] != filed_sections[0]["disclosure_status"], (
         "furnished (8-K exhibit) must be distinct from filed (10-K)"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Task 10 — Distinct acquisition failure classes: timeout (retryable) + version
+# drift (shape guard). A timed-out fetch is its OWN `error_class="timeout"` — NOT
+# merged into the generic `extraction_error`/gap — carved out ABOVE the generic
+# `except Exception` in BOTH the inner per-thunk and the outer
+# obj()/extractor-build handlers (narrower-except-first). A successfully-thunked
+# section value that is not the pinned-5.42.0 `str` (a plausible post-upgrade
+# shape) fails loud as `error_class="version_drift"`, never emitted as
+# possibly-wrong section text. Plus a static drift-guard test that
+# `_FORM_REQUESTED_ITEMS` (the wholesale-all-fail enumeration map — a SECOND
+# source of truth) cannot silently diverge from the segmenters' actual requested
+# item ids (folded T8 code-quality finding).
+# ---------------------------------------------------------------------------
+# D7 grounding: on the pinned edgartools 5.42.0, a TenK/TenQ section accessor
+# (`management_discussion` / `risk_factors` / `obj["Part I, Item 2"]`) resolves
+# to a `str` (or `None` when the item is absent — issue #710) — the shape the
+# segmenters and `_build_section` already assume. edgartools does its HTTP over
+# `httpx`, so a real fetch timeout surfaces as `httpx.TimeoutException` (a family
+# NOT importable in offline CI); the builtin `TimeoutError` stands in for it here
+# and the module classifies both via `_TIMEOUT_EXC_TYPES`. A future major (v5 was
+# itself a rewrite; `TenK.items` canonicalization already changed across 3.x)
+# could change a section accessor to return a structured object instead of a
+# `str`; the shape guard turns that drift into a loud `version_drift` slot rather
+# than silently emitting a wrong body. Source: plan Notes §edgartools grounding
+# (Drift) + Task 10 External surfaces, captured 2026-07-12.
+
+
+class _TimeoutRiskFactorsTenK:
+    """A ``TenK`` whose Item 1A (``risk_factors``) extraction raises the builtin
+    ``TimeoutError`` on access while Item 7 (``management_discussion``) extracts
+    normally — models a per-item fetch that exceeds the timeout
+    (fixtures-mirror-producer-shape: edgartools does its HTTP over ``httpx``, so a
+    real per-item timeout is an ``httpx.TimeoutException``, not importable in
+    offline CI; the builtin ``TimeoutError`` is its offline stand-in and both are
+    classified by the module's ``_TIMEOUT_EXC_TYPES``)."""
+
+    def __init__(self, *, management_discussion):
+        self.management_discussion = management_discussion
+
+    @property
+    def risk_factors(self):
+        raise TimeoutError("edgartools fetch of Item 1A exceeded the timeout")
+
+
+def test_timeout_is_distinct_class(sec_client):
+    # No @req tag: this dispatch's plan/spec trace by
+    # `<change-id> / Requirement / Scenario` join keys, not registered REQ-ids
+    # (see report) — @req omitted per the implementer contract.
+    # Scenario: `Distinct acquisition failure classes / Network timeout is its
+    # own class` (inner per-thunk handler).
+    tenk = _TimeoutRiskFactorsTenK(
+        management_discussion="Item 7.\xa0\xa0Management's Discussion body ..."
+    )
+    filing = _segmentable_filing("10-K", tenk)
+
+    sections = sec_client.segment_filing(filing)
+
+    by_item = {s["item"]: s for s in sections}
+    assert set(by_item) == {"Item 7", "Item 1A"}, (
+        "the timed-out item is isolated, not dropped; the other item still segments"
+    )
+    # Item 7 still segments normally (text file-backed, Task 7)
+    assert "error" not in by_item["Item 7"]
+    assert (
+        _read_text_path(by_item["Item 7"])
+        == "Item 7.\xa0\xa0Management's Discussion body ..."
+    )
+    # Item 1A is a DISTINCT timeout class — NOT merged into extraction_error/gap
+    slot = by_item["Item 1A"]
+    assert "error" in slot, f"timed-out item must be a loud slot: {slot!r}"
+    assert slot["error_class"] == "timeout", (
+        f"a timeout must be its own class, not extraction_error/absent_item: {slot!r}"
+    )
+    assert slot["error_class"] not in ("extraction_error", "absent_item"), (
+        "timeout must NOT be merged into the generic gap/error classes"
+    )
+    assert slot.get("retryable") is True, "a timeout is a retryable failure class"
+    assert not slot.get("text"), "no fabricated text for a timed-out item"
+
+
+def test_timeout_all_sections_when_obj_times_out(sec_client):
+    # No @req tag (see test_timeout_is_distinct_class).
+    # Scenario: `Distinct acquisition failure classes / Network timeout is its
+    # own class` — the OUTER handler (filing.obj()/extractor build) timing out
+    # must ALSO carve timeout out above the generic all-fail extraction_error, so
+    # a wholesale timeout classifies every requested section as timeout.
+    filing = _segmentable_filing("10-K", None)
+
+    def _timeout():
+        raise TimeoutError("edgartools timed out building the typed filing object")
+
+    filing.obj = _timeout
+
+    sections = sec_client.segment_filing(filing)
+
+    by_item = {s["item"]: s for s in sections}
+    assert set(by_item) == {"Item 7", "Item 1A"}, (
+        "every requested 10-K item gets a slot when obj() times out wholesale"
+    )
+    for item_id in ("Item 7", "Item 1A"):
+        slot = by_item[item_id]
+        assert slot["error_class"] == "timeout", (
+            f"a wholesale timeout must classify every section as timeout: {slot!r}"
+        )
+        assert slot.get("retryable") is True
+        assert not slot.get("text"), "no fabricated text on a wholesale timeout"
+
+
+def test_version_drift_fails_loud(sec_client):
+    # No @req tag (see test_timeout_is_distinct_class).
+    # Scenario: `Distinct acquisition failure classes / edgartools version-drift
+    # is caught, not silently trusted`. On the pinned 5.42.0 a section accessor
+    # returns a `str`; a post-upgrade structured shape must fail loud, not be
+    # written out as possibly-wrong text.
+    tenk = _MockTenK(
+        # a plausible post-upgrade structured shape instead of the pinned `str`
+        management_discussion={"heading": "MD&A", "body": "structured, not a str"},
+        risk_factors="Item 1A.\xa0\xa0Risk Factors body ...",  # still a valid str
+    )
+    filing = _segmentable_filing("10-K", tenk)
+
+    sections = sec_client.segment_filing(filing)
+
+    by_item = {s["item"]: s for s in sections}
+    assert set(by_item) == {"Item 7", "Item 1A"}
+    # Item 1A (a valid str) still segments normally (text file-backed, Task 7)
+    assert "error" not in by_item["Item 1A"]
+    assert _read_text_path(by_item["Item 1A"])
+    # Item 7 returned an unexpected shape → a loud version-drift slot, never text
+    slot = by_item["Item 7"]
+    assert "error" in slot, f"unexpected shape must be a loud slot: {slot!r}"
+    assert slot["error_class"] == "version_drift", (
+        f"a shape mismatch must fail loud on version drift: {slot!r}"
+    )
+    assert "text_path" not in slot, "possibly-wrong section text must NOT be emitted"
+    assert not slot.get("text"), "no fabricated/possibly-wrong text on a shape mismatch"
+
+
+def test_form_requested_items_match_segmenters(sec_client):
+    # No @req tag: a static drift-GUARD test (folded T8 code-quality finding), not
+    # one of the two named Task-10 scenarios — @req omitted per contract rule 11.
+    # This is a GREEN-on-arrival characterization guard (it locks an existing
+    # invariant, so no production code drives it): `_FORM_REQUESTED_ITEMS` (the
+    # wholesale-all-fail enumeration map) is a SECOND source of truth for the
+    # 10-K/10-Q requested item ids, distinct from what the segmenters actually
+    # request. If a segmenter adds/renames an item and the map is not updated, the
+    # all-fail path would silently under-report — this test makes that drift fail
+    # loud instead.
+    tenk = _MockTenK(management_discussion="x", risk_factors="y")
+    tenk_ids = tuple(
+        entry[0]
+        for entry in sec_client._segment_10k(tenk, _segmentable_filing("10-K", tenk))
+    )
+    assert tenk_ids == sec_client._FORM_REQUESTED_ITEMS["10-K"], (
+        "_FORM_REQUESTED_ITEMS['10-K'] drifted from _segment_10k's requested items"
+    )
+
+    tenq = _MockTenQ({"Part I, Item 2": "z"})
+    tenq_ids = tuple(
+        entry[0]
+        for entry in sec_client._segment_10q(tenq, _segmentable_filing("10-Q", tenq))
+    )
+    assert tenq_ids == sec_client._FORM_REQUESTED_ITEMS["10-Q"], (
+        "_FORM_REQUESTED_ITEMS['10-Q'] drifted from _segment_10q's requested items"
     )

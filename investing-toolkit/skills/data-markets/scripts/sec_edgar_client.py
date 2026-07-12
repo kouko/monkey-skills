@@ -980,14 +980,48 @@ _FORM_REQUESTED_ITEMS = {
 }
 
 
-def _all_sections_failed(form: str, filing, exc: BaseException) -> list[dict]:
-    """Every requested section as a loud extraction-error slot (Task 8), for when
-    `filing.obj()` or extractor building failed wholesale — no top-level success
-    is claimed. 10-K/10-Q requested items are enumerated form-statically; a form
-    whose requested items live on the now-unreadable `obj` (8-K) falls back to a
-    single filing-level slot so the failure is never silently dropped."""
+def _timeout_exc_types() -> tuple:
+    """The exception types that classify as a distinct ``timeout`` acquisition
+    failure (Task 10) — the builtin ``TimeoutError`` plus edgartools' ``httpx``
+    timeout family when ``httpx`` is importable (edgartools does its HTTP over
+    ``httpx``, so a real fetch timeout surfaces as ``httpx.TimeoutException``).
+
+    ``httpx`` is NOT guaranteed importable in offline CI, so its timeout type is
+    added only when reachable — a soft, conditional import, never a hard top-level
+    one (which would break offline). In production a real ``httpx`` timeout means
+    ``httpx`` IS installed (edgartools raised it), so it is in the tuple then; the
+    builtin ``TimeoutError`` is always present as the offline-testable stand-in."""
+    types: list = [TimeoutError]
+    try:
+        import httpx
+
+        types.append(httpx.TimeoutException)
+    except Exception:  # noqa: BLE001 — httpx absent offline; builtin TimeoutError suffices
+        pass
+    return tuple(types)
+
+
+# Narrower-than-Exception timeout family, resolved once at import (see Task 10).
+_TIMEOUT_EXC_TYPES = _timeout_exc_types()
+
+
+def _all_sections_failed(form: str, filing, exc: BaseException, slot=None) -> list[dict]:
+    """Every requested section as a loud error slot, for when `filing.obj()` or
+    extractor building failed wholesale — no top-level success is claimed. 10-K/
+    10-Q requested items are enumerated form-statically; a form whose requested
+    items live on the now-unreadable `obj` (8-K) falls back to a single
+    filing-level slot so the failure is never silently dropped.
+
+    `slot` is the per-item slot builder (signature ``(item_id, filing, exc)``);
+    defaults to ``_extraction_error_slot`` (Task 8's generic wholesale-failure
+    class) but the timeout carve-out (Task 10) passes ``_timeout_error_slot`` so a
+    wholesale TIMEOUT classifies every requested section as the distinct
+    ``timeout`` class, not the generic ``extraction_error``. (Default resolved in
+    the body, not the signature, because ``_extraction_error_slot`` is defined
+    below this function.)"""
+    slot = slot or _extraction_error_slot
     requested = _FORM_REQUESTED_ITEMS.get(form) or (f"form {form}",)
-    return [_extraction_error_slot(item_id, filing, exc) for item_id in requested]
+    return [slot(item_id, filing, exc) for item_id in requested]
 
 
 def _section_gap(item_id: str, filing) -> dict:
@@ -1021,6 +1055,49 @@ def _extraction_error_slot(item_id: str, filing, exc: BaseException) -> dict:
             f"(form {getattr(filing, 'form', None)!r}): {exc}"
         ),
         "error_class": "extraction_error",
+    }
+
+
+def _timeout_error_slot(item_id: str, filing, exc: BaseException) -> dict:
+    """A loud, sentinel-compatible per-section error slot for an item whose
+    extraction TIMED OUT (Task 10) — a DISTINCT, retryable class carved out of the
+    generic ``extraction_error`` (Task 8) so a transient network timeout is not
+    merged into a content gap. Same ``(item_id, filing, exc)`` signature as
+    ``_extraction_error_slot`` so the wholesale-failure path (`_all_sections_failed`)
+    can swap it in. Carries ``retryable: True`` — the timeout class is safe to
+    retry, unlike a content gap or a version-drift shape mismatch; the top-level
+    ``error`` key is still read unchanged by pack.py's ``_status``."""
+    return {
+        "item": item_id,
+        "error": (
+            f"section {item_id!r} fetch timed out for filing "
+            f"{getattr(filing, 'accession_no', None)!r} "
+            f"(form {getattr(filing, 'form', None)!r}): {exc}"
+        ),
+        "error_class": "timeout",
+        "retryable": True,
+    }
+
+
+def _version_drift_slot(item_id: str, filing, value) -> dict:
+    """A loud, sentinel-compatible per-section error slot for a section whose
+    successfully-thunked value is NOT the pinned-edgartools-5.42.0 ``str`` shape
+    (Task 10) — a plausible post-upgrade API drift (a section accessor changed to
+    return a structured object). DISTINCT from ``extraction_error`` (a throw) and
+    the content gaps: here nothing raised, the value simply has an unexpected
+    shape. Fail loud on the mismatch — the value's text is NEVER written out (no
+    ``text_path``) — rather than emit possibly-wrong section text. The top-level
+    ``error`` key is read unchanged by pack.py's ``_status``."""
+    return {
+        "item": item_id,
+        "error": (
+            f"section {item_id!r} for filing "
+            f"{getattr(filing, 'accession_no', None)!r} "
+            f"(form {getattr(filing, 'form', None)!r}) returned an unexpected "
+            f"shape ({type(value).__name__}, expected str) — possible edgartools "
+            f"version drift; refusing to emit possibly-wrong section text"
+        ),
+        "error_class": "version_drift",
     }
 
 
@@ -1160,6 +1237,14 @@ def segment_filing(filing) -> list[dict]:
     `extraction_error` slot while the other items still segment. The resulting
     list classifies through pack.py's `_status` as partial (some fail) / failed
     (all fail), never a fabricated/silent-empty section.
+
+    Distinct failure classes (Task 10) carved out ABOVE the generic
+    `extraction_error` (narrower-except-first): a TIMEOUT (builtin `TimeoutError`
+    or edgartools' `httpx` timeout family — see `_TIMEOUT_EXC_TYPES`) in either
+    handler becomes a distinct retryable `timeout` slot, never merged into a
+    content gap; and a successfully-thunked section value that is not the expected
+    `str` (a plausible post-upgrade edgartools shape) becomes a loud
+    `version_drift` slot rather than possibly-wrong emitted text.
     """
     form = filing.form
     extractor = _ITEM_EXTRACTORS.get(form)
@@ -1171,6 +1256,11 @@ def segment_filing(filing) -> list[dict]:
     try:
         obj = filing.obj()
         entries = list(extractor(obj, filing))
+    except _TIMEOUT_EXC_TYPES as exc:  # noqa: BLE001 — timeout is its OWN retryable class
+        # Wholesale TIMEOUT (Task 10): obj()/extractor build exceeded the timeout.
+        # Every requested section becomes the DISTINCT retryable `timeout` slot,
+        # NOT the generic extraction_error — narrower-except-first, above Exception.
+        return _all_sections_failed(form, filing, exc, slot=_timeout_error_slot)
     except Exception as exc:  # noqa: BLE001 — fail loud per requested section, don't crash
         # Wholesale failure: obj() or extractor building threw, so no per-item
         # text-thunk was ever reached. Every requested section becomes a loud
@@ -1190,8 +1280,22 @@ def segment_filing(filing) -> list[dict]:
         extra = entry[2] if len(entry) > 2 else None
         try:
             text = text_thunk()
+        except _TIMEOUT_EXC_TYPES as exc:  # noqa: BLE001 — timeout is its OWN retryable class
+            # Per-item TIMEOUT (Task 10): a DISTINCT retryable slot, carved above
+            # the generic extraction_error (narrower-except-first) so a transient
+            # timeout is never merged into a content gap; the other items still
+            # segment.
+            sections.append(_timeout_error_slot(item_id, filing, exc))
+            continue
         except Exception as exc:  # noqa: BLE001 — isolate this item's throw
             sections.append(_extraction_error_slot(item_id, filing, exc))
+            continue
+        if text is not None and not isinstance(text, str):
+            # Version-drift shape guard (Task 10): a successfully-thunked section
+            # value must be the pinned-5.42.0 `str` (or None → absent-item gap in
+            # `_build_section`). Any other shape is possible post-upgrade API drift
+            # — fail loud on the mismatch, NEVER emit possibly-wrong section text.
+            sections.append(_version_drift_slot(item_id, filing, text))
             continue
         sections.append(_build_section(item_id, text, filing, extra))
     return sections
