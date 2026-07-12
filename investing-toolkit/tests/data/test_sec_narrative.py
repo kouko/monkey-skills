@@ -166,6 +166,70 @@ def test_acquire_rejects_when_identity_unset(sec_client, monkeypatch):
 
 
 # ---------------------------------------------------------------------------
+# Task 1 (this plan, 2026-07-13-us-sec-narrative-memo-wiring) — list_filings
+# preserves the submissions API's `items` and `reportDate` fields.
+# ---------------------------------------------------------------------------
+# Live-verified 2026-07-13 against CIK 0000320193: `data.sec.gov` submissions
+# `filings.recent` is a dict of parallel, index-aligned arrays that already
+# includes `items` (comma-joined 8-K item codes, e.g. "2.02,9.01") and
+# `reportDate` (period of report); a 10-K row's `items` is an empty string,
+# not a missing entry. Stubs fetch_submissions directly (the real producer
+# boundary list_filings calls), per fixtures-mirror-producer-shape.
+
+
+def test_list_filings_preserves_items_and_report_date(sec_client, monkeypatch):
+    # No @req tag: this dispatch's plan/spec trace by
+    # `<change-id> / Requirement / Scenario` join keys, not registered REQ-ids
+    # (see report) — @req omitted per the implementer contract.
+    stub_submissions = {
+        "data": {
+            "filings": {
+                "recent": {
+                    "form": ["10-K", "8-K", "8-K"],
+                    "filingDate": ["2024-11-01", "2024-05-01", "2024-02-01"],
+                    "accessionNumber": [
+                        "0000320193-24-000123",
+                        "0000320193-24-000099",
+                        "0000320193-24-000050",
+                    ],
+                    "primaryDocument": [
+                        "aapl-20240928.htm",
+                        "a8-k-may.htm",
+                        "a8-k-feb.htm",
+                    ],
+                    "primaryDocDescription": ["10-K", "8-K", "8-K"],
+                    # 3rd row's items/reportDate entries are MISSING (short
+                    # arrays) — exercises the index-guard idiom below.
+                    "items": ["", "2.02,9.01"],
+                    "reportDate": ["2024-09-28", "2024-03-30"],
+                }
+            }
+        }
+    }
+    monkeypatch.setattr(sec_client, "fetch_submissions", lambda cik: stub_submissions)
+
+    rows = sec_client.list_filings(320193, None, limit=10)
+
+    by_accn = {r["accessionNumber"]: r for r in rows}
+    tenk = by_accn["0000320193-24-000123"]
+    eightk_recent = by_accn["0000320193-24-000099"]
+    eightk_short = by_accn["0000320193-24-000050"]
+
+    # 10-K: items is the API's own empty-string representation, NOT None/missing.
+    assert tenk["items"] == ""
+    assert tenk["reportDate"] == "2024-09-28"
+
+    # 8-K carries the comma-joined item codes verbatim, un-parsed/un-interpreted.
+    assert eightk_recent["items"] == "2.02,9.01"
+    assert eightk_recent["reportDate"] == "2024-03-30"
+
+    # index-guard: a row past the end of the items/reportDate arrays mirrors the
+    # existing `i < len(...)` idiom used for the other parallel arrays -> None.
+    assert eightk_short["items"] is None
+    assert eightk_short["reportDate"] is None
+
+
+# ---------------------------------------------------------------------------
 # Task 2 — acquire_filing (edgartools acquisition + two distinct error classes)
 # ---------------------------------------------------------------------------
 # Fixtures mirror the REAL edgartools 5.42.0 Filing shape captured by the live

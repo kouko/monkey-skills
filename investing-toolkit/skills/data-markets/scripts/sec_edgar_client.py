@@ -329,6 +329,8 @@ def list_filings(cik: int, forms: list[str] | None, limit: int) -> list[dict]:
     accn_list = recent.get("accessionNumber", [])
     primary_doc_list = recent.get("primaryDocument", [])
     primary_desc_list = recent.get("primaryDocDescription", [])
+    items_list = recent.get("items", [])
+    report_date_list = recent.get("reportDate", [])
 
     rows: list[dict] = []
     for i in range(len(forms_list)):
@@ -341,6 +343,8 @@ def list_filings(cik: int, forms: list[str] | None, limit: int) -> list[dict]:
             "accessionNumber": accn_list[i] if i < len(accn_list) else None,
             "primaryDocument": primary_doc_list[i] if i < len(primary_doc_list) else None,
             "primaryDocDescription": primary_desc_list[i] if i < len(primary_desc_list) else None,
+            "items": items_list[i] if i < len(items_list) else None,
+            "reportDate": report_date_list[i] if i < len(report_date_list) else None,
         })
         if len(rows) >= limit:
             break
