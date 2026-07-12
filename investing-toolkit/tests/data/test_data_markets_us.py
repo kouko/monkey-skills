@@ -444,6 +444,33 @@ def test_memo_fetch_partial_sec_narrative_classifies_whole_pack_partial():
     )
 
 
+def test_us_specific_drops_stale_non_gaap_note():
+    """Task 6: `us_specific.non_gaap_eps_note` claimed the non-GAAP EPS gap
+    "lives in 8-K narratives" -- true only while the pack had no 8-K
+    narrative. Task 3 wired sec_narrative in, so the note is now a stale
+    pointer at a gap that no longer exists and must be removed.
+    `segment_revenue_note` describes a genuinely still-open gap (XBRL
+    segment revenue is NOT wired by this branch) and must survive --
+    the guard that this removal did not overreach."""
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack_us  # noqa: E402
+
+    filings_rows = _synthetic_narrative_filings_rows()
+
+    with mock.patch.object(pack_us, "run_client") as mock_run_client:
+        mock_run_client.side_effect = _mock_run_client_for_narrative(filings_rows)
+        result = pack_us.build_pack("memo-fetch", ["AAPL"])
+
+    us_specific = result["us_specific"]
+    assert "non_gaap_eps_note" not in us_specific, (
+        "non_gaap_eps_note is stale now that sec_narrative is wired in"
+    )
+    assert "segment_revenue_note" in us_specific, (
+        "segment_revenue_note describes a still-open gap and must survive"
+    )
+
+
 def test_fetch_sec_narrative_empty_selection_is_not_vacuously_failed():
     """`failed == requested` is vacuously true when `requested == 0` (an
     empty selection: nothing requested, nothing failed) — that must NOT

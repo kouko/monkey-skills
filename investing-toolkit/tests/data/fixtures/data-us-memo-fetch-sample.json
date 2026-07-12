@@ -7080,7 +7080,6 @@
   "shares_outstanding": 14667688000,
   "current_price": 280.14,
   "us_specific": {
-    "non_gaap_eps_note": "Out of scope for T3 v1; lives in 8-K narratives.",
     "segment_revenue_note": "Out of scope for T3 v1; future enhancement (us-gaap:RevenuesFromExternalCustomers by segment)."
   },
   "sec_narrative": {
@@ -7218,7 +7217,7 @@
         "_cmd": [
           "uv",
           "run",
-          "/Users/kouko/.supacode/repos/monkey-skills/finacial-analytics-r2/investing-toolkit/skills/data-markets/scripts/sec_edgar_client.py",
+          "investing-toolkit/skills/data-markets/scripts/sec_edgar_client.py",
           "--action",
           "narrative",
           "--accession",

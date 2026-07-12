@@ -758,7 +758,6 @@ def pack_memo_fetch(ticker: str) -> dict:
         "shares_outstanding": info_dict.get("sharesOutstanding"),
         "current_price": info_dict.get("regularMarketPrice"),
         "us_specific": {
-            "non_gaap_eps_note": "Out of scope for T3 v1; lives in 8-K narratives.",
             "segment_revenue_note": "Out of scope for T3 v1; future enhancement (us-gaap:RevenuesFromExternalCustomers by segment).",
         },
     }
