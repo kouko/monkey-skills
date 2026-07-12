@@ -132,23 +132,49 @@
   no mechanical rule yet separates it from a reproduced true positive);
   revisit when L1 data shows drop-signal distortion attributable to it.
 
-## Visual-style canon catalog expansion — Phase 2 (OPEN)
+## Axis B relocation to the DESIGN station + surface catalog expansion — Step 2 (OPEN)
 - Status: OPEN
-- Start: re-trigger = a user wants richer style candidates, OR a real
-  product needs a surface/movement treatment not in the seed catalogs.
-- Origin: PR #550 (visual-style movement-anchor Phase 1, loom-product-
-  principles 0.7.0). Phase 1 shipped the mechanism + a runnable Axis-B
-  seed; the brief `docs/loom/specs/2026-07-12-visual-style-movement-anchor-and-quality-separation.md`
-  §Phasing split catalog growth out as additive Phase 2.
-- What: grow both canon reference files with more grounded entries —
-  Axis A (`references/canon-design-visual.md`) with more cultural/graphic-
-  design movements, Axis B (`references/canon-design-surface.md`) with more
-  UI surface-treatment paradigms. Purely additive to the reference files;
-  NO SDD needed beyond per-entry grounding research (each entry carries a
-  live-verified source URL — the fabricated-URL lesson from #550 review
-  applies). Divergent-candidate surprise value grows with catalog richness.
-  Bumping either shipped reference file is skill-content → requires a
-  plugin version bump (see the mechanical version-bump gate entry below).
+- Start: re-trigger = a real product needs a surface treatment outside the
+  6-entry seed, OR the next substantive touch of either
+  loom-product-principles or loom-interface-design.
+- Origin: PR #553 (tone & manner primary anchor, loom-product-principles
+  0.8.0). **Supersedes the old "Visual-style canon catalog expansion — Phase 2"
+  entry** (from #550/#551), which framed the work as "grow BOTH catalogs".
+  Industry research during #553 (brief
+  `docs/loom/specs/2026-07-12-visual-anchor-realignment-tone-and-manner.md`
+  §Research, EN+JA, all sources live-verified) established the real stage map:
+  the tone & manner adjectives are the stage-2 primary anchor; art movements
+  (Axis A) are stage-3 mood input; **UI surface treatments (Axis B) are a
+  stage-4 design-language sub-decision** — i.e. they belong to the DESIGN
+  station (loom-interface-design), NOT to PRINCIPLES. #553 shipped the Axis-A
+  half (reframing + 16 cultural entries, canon 19→35 rows) and left Axis B
+  in place with an honest forward-note; this entry is the remainder.
+- What (two parts, in order):
+  1. **Relocate Axis B** — move `canon-design-surface.md` from
+     loom-product-principles to the loom-interface-design station, where the
+     visual design language (color / type / shape / surface-depth / motion) is
+     defined and tokens are emitted. Cross-plugin: touches both plugins'
+     SKILL.md flows, `question-sets.md`, the CANON_FILES/surface-canon test
+     contracts, and both plugin versions. The forward-note now in
+     `canon-design-surface.md` records the intent and is the starting point.
+     Note the design constraint discovered in #550: the two-file split (Axis A
+     cultural vs Axis B surface) exists as a **contamination guard** — whatever
+     lands in interface-design must preserve "each round reads only its own
+     file".
+  2. **Expand the surface catalog** — 12 already-researched, URL-live-verified
+     candidates are held in the #553 session's scratchpad research (Frutiger
+     Aero, Web 2.0 gel, long-shadow/Flat 2.0, dark mode, Material You, Aurora
+     mesh-gradient, Claymorphism, neubrutalism, retro-terminal/CRT, anti-design,
+     GeoCities maximalism, Bento grid). They must be **re-grounded into a dated
+     research doc** before use (the scratchpad is not a durable carrier). Note
+     the round-1 finding: neubrutalism is a genuine Axis-B **surface** treatment,
+     not the Axis-A cultural neo-brutalism already in the visual canon.
+- Discipline (both parts): every new entry carries a **live-verified** source URL
+  (a wholly fabricated URL was caught in #550's review, and a second
+  plausible-looking 404 was caught during #553's research — re-typing a URL from
+  memory is a defect). Any change to a shipped reference file is skill-content →
+  **requires a plugin version bump** (see the mechanical version-bump gate entry
+  below).
 
 ## Operationalize "product-shaped" in family reception (OPEN)
 - Status: OPEN
