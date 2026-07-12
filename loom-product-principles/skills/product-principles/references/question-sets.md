@@ -50,12 +50,36 @@ this set misses — that is the re-trigger for the 4-type split
 
 No fixed question set. Open invitation: state your design stance in
 your own words (schools you identify with, products whose feel you
-want, anti-references you reject). Agent maps the statement onto
+want, anti-references you reject).
+
+**Tone & manner — the primary visual anchor (do this FIRST).** Before
+any visual canon **candidate round**, the visual lens derives
+**3-5 tone & manner adjectives** from the product's **values** —
+the North Star + the **Product Principles**
+(e.g. *calm, precise, unhurried*).
+These adjectives — **not** a movement name — are the
+**primary visual anchor**, so they MUST land as their own
+**version-pinned `## Anchors` row**. The canon rounds below are
+**downstream of the tone & manner anchor** — mood/creative-direction
+inspiration that must serve the adjectives, never a substitute for
+them.
+
+Agent then maps the statement onto
 canon: the interaction lens (list 2) runs as one candidate round; the
 visual lens runs as **two axis-typed candidate rounds** — Axis A
 (cultural) reads only `canon-design-visual.md`, Axis B (surface) reads
 only `canon-design-surface.md` (contamination guard: each round reads
-only its own file).
+only its own file). Axis A is **not** a co-equal anchoring round: it
+sits **downstream of the tone & manner anchor**, supplying
+**mood / creative-direction inspiration** for candidates the adjectives
+have already constrained. It is **never a pick-one menu** — never ask
+the user to choose a movement *as* the visual direction, and never let
+a movement be a selection criterion in its own right.
+
+**Anti-costume law (general).** A movement may enrich candidates but
+**never overrides a PRINCIPLES value**. Its formal vocabulary is
+inspiration; the values are non-negotiable — when the two collide, the
+movement loses.
 
 The interaction lens returns 2-3 candidates with fit notes, probes
 only the deviation points. The visual lens returns **3-5 candidates**

@@ -31,6 +31,14 @@ SKILL = (
     / "SKILL.md"
 )
 
+QUESTION_SETS = (
+    Path(__file__).parents[1]
+    / "skills"
+    / "product-principles"
+    / "references"
+    / "question-sets.md"
+)
+
 # Codex hard limit on a skill description.
 _CODEX_DESC_LIMIT = 1024
 
@@ -38,6 +46,20 @@ _CODEX_DESC_LIMIT = 1024
 def _text() -> str:
     assert SKILL.is_file(), f"SKILL.md is absent at {SKILL}"
     return SKILL.read_text(encoding="utf-8")
+
+
+def _skill_flat() -> str:
+    """SKILL.md, lowercased with markdown emphasis markers stripped — so phrase
+    pins survive **bold** spans landing mid-phrase (same device as
+    _question_sets_flat)."""
+    return _text().lower().replace("*", "")
+
+
+def _question_sets_flat() -> str:
+    """question-sets.md, lowercased with markdown emphasis markers stripped —
+    so phrase pins survive **bold** spans landing mid-phrase."""
+    assert QUESTION_SETS.is_file(), f"question-sets.md is absent at {QUESTION_SETS}"
+    return QUESTION_SETS.read_text(encoding="utf-8").lower().replace("*", "")
 
 
 def _frontmatter() -> str:
@@ -786,6 +808,169 @@ def test_visual_lens_3_5_carveout():
     # satisfy it — the invariant is the propose-count rule itself.
     assert "2-3 canon candidates" in low or "2–3 canon candidates" in low, \
         "the generic '2-3 canon candidates' rule must remain for Product/Engineering"
+
+
+def test_tone_and_manner_primary_anchor():
+    """Task 1: the Design lane's visual flow derives 3-5 tone & manner
+    adjectives from the product's values / Product Principles BEFORE any
+    canon candidate round. Those adjectives are the PRIMARY visual anchor
+    and land as their own version-pinned ## Anchors row (reusing the
+    existing Anchors machinery); the canon axes (Axis A / Axis B) are
+    DOWNSTREAM of that anchor, not co-equal anchoring rounds.
+
+    Guard precision (#550 lesson): a bare "3-5" already appears in the
+    visual carve-out, so every assertion below pins a FULL PHRASE — a stray
+    substring must not be able to satisfy it.
+    """
+    text = _text()
+    low = text.lower()
+    assert "tone & manner" in low, \
+        "Step 3 must name the tone & manner step by that term"
+    assert (
+        "3-5 tone & manner adjectives" in low
+        or "3–5 tone & manner adjectives" in low
+    ), (
+        "the flow must require 3-5 tone & manner adjectives (full phrase — a "
+        "bare '3-5' is the visual carve-out, not this anchor)"
+    )
+    assert "values" in low and "product principles" in low, \
+        "the adjectives must be derived from the product's values / Product Principles"
+    assert "primary visual anchor" in low, \
+        "the adjectives must be stated as the PRIMARY visual anchor"
+    assert (
+        "version-pinned `## anchors` row" in low
+        or "version-pinned ## anchors row" in low
+    ), (
+        "the tone & manner adjectives must land as their own version-pinned "
+        "`## Anchors` row (reusing the existing Anchors machinery)"
+    )
+    assert (
+        "downstream of the tone & manner anchor" in low
+        or "downstream of this anchor" in low
+    ), (
+        "the canon axes (Axis A / Axis B) must be stated as DOWNSTREAM of the "
+        "tone & manner anchor"
+    )
+    # Ordering: the anchor derivation must come BEFORE the canon rounds.
+    # A substring pin ("before" in low) is vacuous here — both words occur in
+    # SKILL.md regardless of order, so a reorder regression would pass green
+    # (the #550 guard-imprecision class). Compare positions, as the
+    # question-sets sibling does.
+    flat = _skill_flat()
+    anchor_at = flat.index("3-5 tone & manner adjectives")
+    rounds_at = flat.index("two axis-typed candidate rounds")
+    assert anchor_at < rounds_at, (
+        "the tone & manner derivation must be ordered BEFORE the axis-typed "
+        "canon candidate rounds, not after them"
+    )
+
+
+def test_skill_md_axis_a_framed_as_value_constrained_mood():
+    """Task 4a: SKILL.md must AGREE with canon-design-visual.md's reframing
+    (the vocabulary SSOT) — Axis A supplies mood / creative-direction
+    inspiration DOWNSTREAM of the tone & manner anchor, is never a pick-one
+    menu, and is value-constrained by the general anti-costume law (a movement
+    never overrides a PRINCIPLES value; the low-stimulus/Memphis case is that
+    law's worked EXAMPLE, not the law itself). The flow must no longer present
+    Axis A as a co-equal anchoring round.
+
+    Guard precision (#550 lesson): pins are FULL PHRASES on the emphasis-
+    stripped body (a line-wrap inside a **bold** span is invisible to a raw
+    substring match), and the reframing phrases must CO-OCCUR in the bullet
+    that names Axis A — the same phrase elsewhere in Step 3 must not satisfy
+    the pin.
+    """
+    flat = _skill_flat()
+    assert "never overrides a principles value" in flat, (
+        "the anti-costume law must be stated as a GENERAL law — a movement "
+        "never overrides a PRINCIPLES value (the Memphis case is its example)"
+    )
+    axis_a_bullets = [b for b in flat.split("\n- ") if "axis a" in b]
+    assert axis_a_bullets, "Step 3 must carry a bullet naming Axis A"
+    assert any(
+        "downstream of the tone & manner anchor" in b
+        and "mood / creative-direction inspiration" in b
+        and "never a pick-one menu" in b
+        for b in axis_a_bullets
+    ), (
+        "the Axis-A bullet must state Axis A is mood / creative-direction "
+        "inspiration downstream of the tone & manner anchor and never a "
+        "pick-one menu (canon-design-visual.md's exact vocabulary)"
+    )
+
+
+def test_question_sets_carries_tone_and_manner_anchor():
+    """Task 2: question-sets.md's Design lane must AGREE with SKILL.md's Step 3
+    flow (Task 1) — the visual lens FIRST derives 3-5 tone & manner adjectives
+    from the product's values, pins them as the PRIMARY visual anchor in their
+    own version-pinned ## Anchors row, and only THEN runs the axis-typed canon
+    rounds (which stay downstream inspiration).
+
+    Guard precision (#550 lesson): pins are FULL PHRASES — a bare "3-5" already
+    appears (the visual carve-out) and a bare "values" already appears (the
+    divergent-candidate guard), so neither could be load-bearing here.
+    """
+    flat = _question_sets_flat()
+    assert "tone & manner" in flat, \
+        "the Design lane must name the tone & manner step by that term"
+    assert (
+        "3-5 tone & manner adjectives" in flat
+        or "3–5 tone & manner adjectives" in flat
+    ), (
+        "the Design lane must require 3-5 tone & manner adjectives (full phrase "
+        "— a bare '3-5' is the visual carve-out, not this anchor)"
+    )
+    assert "from the product's values" in flat, \
+        "the adjectives must be derived from the product's values"
+    assert "primary visual anchor" in flat, \
+        "the adjectives must be stated as the PRIMARY visual anchor"
+    assert (
+        "version-pinned `## anchors` row" in flat
+        or "version-pinned ## anchors row" in flat
+    ), (
+        "the tone & manner adjectives must land as their own version-pinned "
+        "`## Anchors` row (reusing the existing Anchors machinery)"
+    )
+    assert "downstream of the tone & manner anchor" in flat, \
+        "the canon axes must be stated as DOWNSTREAM of the tone & manner anchor"
+    # Ordering: the anchor derivation must come BEFORE the canon rounds.
+    anchor_at = flat.index("3-5 tone & manner adjectives")
+    rounds_at = flat.index("two axis-typed candidate rounds")
+    assert anchor_at < rounds_at, (
+        "the tone & manner derivation must be ordered BEFORE the axis-typed "
+        "canon candidate rounds, not after them"
+    )
+
+
+def test_question_sets_axis_a_framed_as_value_constrained_mood():
+    """Task 4b: question-sets.md's Design lane must AGREE with SKILL.md (Task 4a)
+    and canon-design-visual.md (the vocabulary SSOT) — Axis A supplies mood /
+    creative-direction inspiration DOWNSTREAM of the tone & manner anchor, is
+    never a pick-one menu, and is value-constrained by the general anti-costume
+    law (a movement never overrides a PRINCIPLES value; the low-stimulus/Memphis
+    case is that law's worked EXAMPLE, not the law itself).
+
+    Guard precision (#550 lesson): pins are FULL PHRASES on the emphasis-stripped
+    body, and the reframing phrases must CO-OCCUR in the paragraph that names
+    Axis A — the same phrase elsewhere in the lane must not satisfy the pin.
+    """
+    flat = _question_sets_flat()
+    assert "never overrides a principles value" in flat, (
+        "the Design lane must state the anti-costume law as a GENERAL law — a "
+        "movement never overrides a PRINCIPLES value (Memphis is its example)"
+    )
+    axis_a_paras = [p for p in flat.split("\n\n") if "axis a" in p]
+    assert axis_a_paras, "the Design lane must carry a paragraph naming Axis A"
+    assert any(
+        "downstream of the tone & manner anchor" in p
+        and "mood / creative-direction inspiration" in p
+        and "never a pick-one menu" in p
+        for p in axis_a_paras
+    ), (
+        "the Axis-A paragraph must state Axis A is mood / creative-direction "
+        "inspiration downstream of the tone & manner anchor and never a "
+        "pick-one menu (canon-design-visual.md's exact vocabulary)"
+    )
 
 
 # --- flat-skill structure (repo hook enforces) ------------------------------

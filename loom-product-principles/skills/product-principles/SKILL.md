@@ -124,6 +124,16 @@ the audit is sanctioned.
   `references/canon-design-visual.md`, `references/canon-design-surface.md`,
   `references/canon-engineering.md`. If every candidate sits in a list's
   popularity head, re-check.
+- **Tone & manner — the primary visual anchor (do this FIRST).** Before any
+  visual canon **candidate round**, derive **3-5 tone & manner adjectives**
+  from the product's **values** — the North Star + the **Product Principles**
+  (e.g. *calm, precise, unhurried*). These adjectives — **not** a movement
+  name — are the **primary visual anchor**, so they MUST land as their own
+  **version-pinned `## Anchors` row** (the same Anchors machinery as any
+  canon row: name + version pin; the pin is the PRINCIPLES.md version the
+  adjectives were derived under). The canon axes below (Axis A / Axis B) are
+  **downstream of the tone & manner anchor** — mood/creative-direction
+  inspiration that must serve the adjectives, never a substitute for them.
 - The visual lens splits into **two axis-typed candidate rounds** —
   **Axis A** (cultural/graphic-design movements, `canon-design-visual.md`)
   and **Axis B** (UI-surface-treatment eras, `canon-design-surface.md`).
@@ -133,6 +143,12 @@ the audit is sanctioned.
   "which screen-surface treatment era"), so per the same-axis/complementary
   rule above each round pins its own version-pinned `## Anchors` row; never
   merge them into one pick-one menu.
+  Axis A is **not** a co-equal anchoring round: it sits
+  **downstream of the tone & manner anchor**, supplying
+  **mood / creative-direction inspiration** for candidates the adjectives
+  have already constrained. It is **never a pick-one menu** — never ask the
+  user to choose a movement *as* the visual direction, and never let a
+  movement be a selection criterion in its own right.
 - The user **never sees the raw lists** — only the fitted candidates.
   The Engineering list is consumed only by you (agent decisions + briefing
   option generation).
@@ -145,9 +161,12 @@ the audit is sanctioned.
   that deviate from the user's stated stance on aesthetic expression, not
   a costume-change on the constitution. Every divergent candidate MUST
   stay **defensible against the Product Principles values**: it may
-  challenge the stance, never the non-negotiable values (e.g. a
-  low-stimulus constitution still excludes Memphis, however divergent the
-  exploration).
+  challenge the stance, never the non-negotiable values.
+- **Anti-costume law (general).** A movement may enrich candidates but
+  **never overrides a PRINCIPLES value**. Its formal vocabulary is
+  inspiration; the values are non-negotiable — when the two collide, the
+  movement loses. Worked example: a low-stimulus constitution still excludes
+  Memphis, however apt the mood or divergent the exploration.
 
 ### Step 4 — User decides
 
