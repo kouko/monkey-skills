@@ -91,18 +91,29 @@ MARKETS_SCRIPTS = ROOT / "skills" / "data-markets" / "scripts"
 
 @pytest.fixture
 def sec_client():
-    """Import sec_edgar_client with `edgar` stubbed in sys.modules.
+    """Import sec_edgar_client with `edgar` AND `requests` stubbed in sys.modules.
 
-    Offline CI has no edgartools; the stub persists in sys.modules so the
-    module's lazy `import edgar` resolves to it. The fixture restores the
-    prior sys.modules state on teardown so tests stay isolated.
+    Offline CI installs ONLY pytest + pyyaml, so neither edgartools nor requests
+    is importable there. Both are stubbed BEFORE the import:
+      - `edgar`: the module's lazy `import edgar` resolves to the stub.
+      - `requests`: sec_edgar_client's top-level `import requests` serves the
+        LEGACY XBRL/`_sec_get` HTTP path only, which these narrative tests never
+        exercise (they mock the edgartools boundary and, where `_sec_get` is
+        relevant, monkeypatch it directly). Stubbing it keeps these offline unit
+        tests free of a real HTTP client — without a stub the whole module fails
+        to import and every test errors at setup ("works on my machine" gap).
+    The fixture restores the prior sys.modules state on teardown so tests stay
+    isolated.
     """
     if str(MARKETS_SCRIPTS) not in sys.path:
         sys.path.insert(0, str(MARKETS_SCRIPTS))
     edgar_stub = mock.MagicMock(name="edgar")
+    requests_stub = mock.MagicMock(name="requests")
     saved_edgar = sys.modules.get("edgar")
+    saved_requests = sys.modules.get("requests")
     saved_client = sys.modules.get("sec_edgar_client")
     sys.modules["edgar"] = edgar_stub
+    sys.modules["requests"] = requests_stub
     sys.modules.pop("sec_edgar_client", None)
     module = importlib.import_module("sec_edgar_client")
     module.edgar_stub = edgar_stub
@@ -113,6 +124,10 @@ def sec_client():
             sys.modules["edgar"] = saved_edgar
         else:
             sys.modules.pop("edgar", None)
+        if saved_requests is not None:
+            sys.modules["requests"] = saved_requests
+        else:
+            sys.modules.pop("requests", None)
         if saved_client is not None:
             sys.modules["sec_edgar_client"] = saved_client
         else:
