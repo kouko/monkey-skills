@@ -203,6 +203,64 @@ def test_merged_section_with_error_and_sibling_data_is_present(tmp_path):
     assert sections["sec_facts_client_failed_variant"]["present"] is True
 
 
+def test_jp_cn_stdout_head_dialect_bare_error_is_not_present(tmp_path):
+    """Regression for bfe0353e: that fix's denylist was derived from ONLY
+    pack_us.py `run_client` + pack_tw.py `mops` wrap(). It never looked at
+    pack_jp.py/pack_cn.py, whose `_run`/`_run_client` failure branches emit
+    `_stdout_head` (pack_jp.py:161-165, pack_cn.py:172-178) — a key absent
+    from that denylist. A genuinely all-failed JP/CN section (e.g. a dead
+    `info` subprocess with no sibling data) must NOT read present: True just
+    because `_stdout_head` wasn't on the old US/TW-only list.
+    """
+    pack = {
+        "pack": "memo-fetch",
+        "jp_info_dead": {
+            "error": "client returned non-JSON: Expecting value: line 1 column 1",
+            "_stdout_head": "<html>500 Internal Server Error</html>",
+        },
+        "cn_fin_annual_dead": {
+            "_error": "invalid JSON from client: Expecting value",
+            "_cmd": "uv run yfinance_client.py --ticker 600519.SS --action financials",
+            "_stdout_head": "Traceback (most recent call last):",
+            "_stderr": "ValueError: boom",
+        },
+    }
+    input_path = tmp_path / "synthetic_pack.json"
+    input_path.write_text(json.dumps(pack), encoding="utf-8")
+
+    cp = _run(["--input", str(input_path)])
+    assert cp.returncode == 0, cp.stderr
+    out = json.loads(cp.stdout)
+    sections = out["sections"]
+
+    assert sections["jp_info_dead"]["present"] is False
+    assert sections["cn_fin_annual_dead"]["present"] is False
+
+
+def test_kr_partial_dialect_bare_error_is_not_present(tmp_path):
+    """Regression for bfe0353e: pack_kr.py's `_run` failure branches
+    (pack_kr.py:179-189) emit `_partial: True` alongside `error` — also
+    absent from the old US/TW-only denylist. A genuinely all-failed KR
+    section must not read present: True either.
+    """
+    pack = {
+        "pack": "memo-fetch",
+        "kr_history_dead": {
+            "error": "uv not found: [Errno 2] No such file or directory: 'uv'",
+            "_partial": True,
+        },
+    }
+    input_path = tmp_path / "synthetic_pack.json"
+    input_path.write_text(json.dumps(pack), encoding="utf-8")
+
+    cp = _run(["--input", str(input_path)])
+    assert cp.returncode == 0, cp.stderr
+    out = json.loads(cp.stdout)
+    sections = out["sections"]
+
+    assert sections["kr_history_dead"]["present"] is False
+
+
 def test_missing_input_file_exits_64(tmp_path):
     missing = tmp_path / "does_not_exist.json"
     cp = _run(["--input", str(missing)])
