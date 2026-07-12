@@ -157,6 +157,52 @@ def test_all_failed_section_is_not_present(tmp_path):
     assert sections["partially_succeeded_section"]["present"] is True
 
 
+def test_merged_section_with_error_and_sibling_data_is_present(tmp_path):
+    """F1 regression: `sec_facts` is a MERGED dict — `{**facts, "concepts":
+    ..., "canonical_dcf": ...}` — where `facts` is one subprocess (run_client)
+    and `concepts`/`canonical_dcf` come from ~10 SEPARATE subprocess calls.
+    If `facts` times out while its siblings succeed, the merged dict carries
+    run_client's timeout envelope (`error`, `_cmd`, `_returncode` —
+    pack_us.py:201-206) ALONGSIDE fully-populated sibling data. An `error`
+    marker sitting next to real data means PARTIAL, not absent: this must
+    report present: True, or the memo layer is licensed to claim "SEC facts
+    unavailable" about data that is sitting right there
+    (phase4-seed-contract.md:9,36-39).
+    """
+    pack = {
+        "pack": "memo-fetch",
+        "sec_facts": {
+            "error": "client timeout after 300s",
+            "_cmd": ["uv", "run", "sec_edgar_client.py", "--action", "facts"],
+            "_returncode": -1,
+            "concepts": {
+                "revenue": {"2025": 100, "2024": 90},
+                "net_income": {"2025": 10, "2024": 8},
+            },
+            "canonical_dcf": {"free_cash_flow": {"2025": 12}},
+        },
+        # client_failed branch (pack_us.py:207-214) merged with real data too
+        "sec_facts_client_failed_variant": {
+            "error": "client_failed",
+            "script": "sec_edgar_client.py",
+            "args": ["--action", "facts"],
+            "returncode": 1,
+            "stderr": "boom",
+            "concepts": {"revenue": {"2025": 100}},
+        },
+    }
+    input_path = tmp_path / "synthetic_pack.json"
+    input_path.write_text(json.dumps(pack), encoding="utf-8")
+
+    cp = _run(["--input", str(input_path)])
+    assert cp.returncode == 0, cp.stderr
+    out = json.loads(cp.stdout)
+    sections = out["sections"]
+
+    assert sections["sec_facts"]["present"] is True
+    assert sections["sec_facts_client_failed_variant"]["present"] is True
+
+
 def test_missing_input_file_exits_64(tmp_path):
     missing = tmp_path / "does_not_exist.json"
     cp = _run(["--input", str(missing)])
