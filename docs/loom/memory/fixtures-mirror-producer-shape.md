@@ -20,3 +20,23 @@ disagree with the code; only the producer's real shape can.
 producing module's actual output (run the producer, copy its real
 emission), and when a producer's shape changes, update fixtures from
 the producer side — never patch the fixture to match the consumer.
+
+**Second instance — mock the real PRODUCER boundary, not an
+intermediate projection (US SEC edgartools migration, branch
+feat-us-sec-narrative-edgartools, 2026-07-12):** the offline tests
+mocked `acquire_filing` (a *projection* fn returning a JSON **dict**
+ref) instead of the real producer boundary `edgar.get_by_accession_
+number` (which returns a raw edgartools Filing OBJECT). Downstream
+`segment_filing` needs the raw object (`.obj()`/`.form`), so the
+production path crashed (`'dict' object has no attribute 'form'`)
+while the whole offline suite stayed green — the mock invented a
+shape the projection never emits, masking a cross-function seam. Fix:
+mock the real producer boundary so the acquire→segment seam runs
+faithfully. **Corollary — a network-marked LIVE shape-anchor that
+captures the producer's actual attributes is worth the flake budget:
+it caught the plan's edgartools grounding wrong THREE times**
+(`Filing.primary_document` doesn't exist → derive from `filing_url`;
+`TenQ` has no `management_discussion` property → subscript
+`obj["Part I, Item 2"]`; 8-K `obj()` is `CurrentReport`, not
+`EightK`). Mocking one layer up from the real producer, and skipping
+a live anchor, are the two ways a green suite certifies a crash.

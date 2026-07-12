@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["requests==2.33.1"]
+# dependencies = ["requests==2.33.1", "edgartools==5.42.0"]
 # ///
 """
 sec_edgar_client.py — investing-toolkit SEC EDGAR data adapter
@@ -9,7 +9,7 @@ Fetches US regulatory filings & XBRL structured facts from data.sec.gov.
 
 Two layers:
   (a) XBRL structured facts via JSON API (companyfacts + companyconcept)
-  (b) HTML filing narrative via Item-section regex parsing
+  (b) Filing narrative via the edgartools typed section API (10-K/10-Q/8-K)
 
 Usage:
   # Ticker → CIK lookup
@@ -27,7 +27,7 @@ Usage:
   # Recent filings filtered by form
   uv run sec_edgar_client.py --ticker NVDA --action filings --forms 10-K,10-Q,8-K --limit 10
 
-  # Parse Item sections of a specific filing
+  # Segment a specific filing into its enumerated item sections
   uv run sec_edgar_client.py --accession 0001045810-24-000316 --action narrative
 
 Auth: none required. SEC EDGAR MANDATES identified User-Agent header with
@@ -46,7 +46,7 @@ import re
 import sys
 import time
 from datetime import datetime, timezone
-from html.parser import HTMLParser
+from pathlib import Path
 
 import requests as _requests
 
@@ -348,171 +348,11 @@ def list_filings(cik: int, forms: list[str] | None, limit: int) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# HTML narrative parsing
+# Accession helper (shared by the provenance URL + section-text path builders)
 # ---------------------------------------------------------------------------
-
-class _TextExtractor(HTMLParser):
-    """Strip HTML, collapse whitespace, preserve line breaks at block boundaries."""
-
-    BLOCK_TAGS = {
-        "p", "div", "br", "tr", "li", "h1", "h2", "h3", "h4", "h5", "h6",
-        "table", "section", "article", "hr",
-    }
-
-    def __init__(self):
-        super().__init__(convert_charrefs=True)
-        self._parts: list[str] = []
-        self._skip_depth = 0
-
-    def handle_starttag(self, tag, attrs):
-        if tag in ("script", "style"):
-            self._skip_depth += 1
-        if tag in self.BLOCK_TAGS:
-            self._parts.append("\n")
-
-    def handle_endtag(self, tag):
-        if tag in ("script", "style") and self._skip_depth > 0:
-            self._skip_depth -= 1
-        if tag in self.BLOCK_TAGS:
-            self._parts.append("\n")
-
-    def handle_data(self, data):
-        if self._skip_depth == 0:
-            self._parts.append(data)
-
-    def text(self) -> str:
-        raw = "".join(self._parts)
-        # Collapse runs of whitespace except newlines
-        raw = re.sub(r"[ \t\u00a0]+", " ", raw)
-        # Collapse multiple newlines
-        raw = re.sub(r"\n\s*\n+", "\n\n", raw)
-        return raw.strip()
-
-
-_ITEM_HEADER_RE = re.compile(
-    r"^\s*Item\s+(\d+[A-Z]?)\.\s*(.{2,150}?)\s*$",
-    re.MULTILINE | re.IGNORECASE,
-)
-
-
-def parse_item_sections(plain_text: str) -> dict[str, str]:
-    """Split plain text into Item sections by regex-detected headers."""
-    matches = list(_ITEM_HEADER_RE.finditer(plain_text))
-    if not matches:
-        return {}
-
-    # SEC 10-K/10-Q bodies usually repeat the TOC Item headers; we want
-    # the section boundaries, not the TOC. Strategy: collect all hits;
-    # for each unique Item key, keep the span to next distinct Item header
-    # whose starting offset is after the current, but skip if the detected
-    # "title" field is empty/too short (TOC-like).
-    sections: dict[str, str] = {}
-    for idx, m in enumerate(matches):
-        num = m.group(1).upper()
-        title = m.group(2).strip()
-        # Skip likely TOC hits: title shorter than 5 chars or purely numeric
-        if len(title) < 5:
-            continue
-        key = f"Item {num}. {title}"
-        start = m.end()
-        end = matches[idx + 1].start() if idx + 1 < len(matches) else len(plain_text)
-        body = plain_text[start:end].strip()
-        # Keep only the longest body per Item number (body text vs TOC entry)
-        existing_key = next(
-            (k for k in sections if k.startswith(f"Item {num}.")),
-            None,
-        )
-        if existing_key is None or len(body) > len(sections[existing_key]):
-            if existing_key and existing_key != key:
-                del sections[existing_key]
-            sections[key] = body
-    return sections
-
 
 def _accession_nodash(accession: str) -> str:
     return accession.replace("-", "")
-
-
-def fetch_narrative(accession: str) -> dict:
-    """Fetch primary doc HTML for an accession and parse Item sections."""
-    path = cache_util.cache_path("sec_edgar", f"narrative_{accession}")
-    cached = cache_util.load_cache(path, TTL_NARRATIVE)
-    if cached:
-        cached["_cache"] = "hit"
-        return cached
-
-    # Need CIK for accession → look it up via EDGAR's accession redirect.
-    # Accession format: XXXXXXXXXX-YY-NNNNNN where first 10 digits = filer CIK.
-    try:
-        cik_int = int(accession.split("-")[0])
-    except (ValueError, IndexError):
-        return {"error": f"Malformed accession number: {accession}"}
-
-    # Must look up primaryDocument via submissions or filing index.
-    # Quickest: fetch filing-index.json at the accession folder.
-    accn_nodash = _accession_nodash(accession)
-    index_url = (
-        f"https://data.sec.gov/submissions/CIK{cik_int:010d}.json"
-    )
-    sub = fetch_submissions(cik_int)
-    primary_doc = None
-    form_type = None
-    filing_date = None
-    if "error" not in sub:
-        recent = sub.get("data", {}).get("filings", {}).get("recent", {})
-        accn_list = recent.get("accessionNumber", [])
-        try:
-            idx = accn_list.index(accession)
-            primary_doc = recent.get("primaryDocument", [None])[idx]
-            form_type = recent.get("form", [None])[idx]
-            filing_date = recent.get("filingDate", [None])[idx]
-        except ValueError:
-            pass
-
-    if not primary_doc:
-        # Fall back: fetch index.json from Archives
-        idx_url = f"https://www.sec.gov/Archives/edgar/data/{cik_int}/{accn_nodash}/index.json"
-        idx = _sec_get(idx_url)
-        if isinstance(idx, dict) and "error" not in idx:
-            items = idx.get("directory", {}).get("item", [])
-            # Pick first htm/html that isn't an exhibit index
-            for item in items:
-                name = item.get("name", "")
-                if name.endswith((".htm", ".html")) and "index" not in name.lower():
-                    primary_doc = name
-                    break
-
-    if not primary_doc:
-        return {"error": f"Could not resolve primary document for accession {accession}"}
-
-    doc_url = SEC_ARCHIVES_URL.format(
-        cik_int=cik_int, accession_nodash=accn_nodash, doc=primary_doc
-    )
-    # Override Host header for this endpoint
-    html = _sec_get(doc_url, as_json=False)
-    if isinstance(html, dict) and "error" in html:
-        return html
-
-    extractor = _TextExtractor()
-    extractor.feed(html)
-    plain = extractor.text()
-    sections = parse_item_sections(plain)
-
-    result = {
-        "accession": accession,
-        "cik": cik_int,
-        "form": form_type,
-        "filingDate": filing_date,
-        "primaryDocument": primary_doc,
-        "doc_url": doc_url,
-        "fetched_at": _now_iso(),
-        "_cache": "miss",
-        "sections": sections,
-        "section_count": len(sections),
-        "_provenance": _make_provenance(filing_date),
-    }
-    cache_util.save_cache(path, result)
-    return result
 
 
 # ---------------------------------------------------------------------------
@@ -603,10 +443,874 @@ def action_filings(ticker: str, forms: list[str] | None, limit: int) -> dict:
     }
 
 
+def _looks_like_email(token: str) -> bool:
+    """True if a whitespace token — stripped of the angle brackets SEC's
+    `<name> <email>` convention allows — is email-shaped (local@dotted.domain)."""
+    candidate = token.strip("<>").strip()
+    if candidate.count("@") != 1:
+        return False
+    local, _, domain = candidate.partition("@")
+    return bool(local) and "." in domain and not domain.startswith(".") and not domain.endswith(".")
+
+
+def _is_compliant_identity(identity: str) -> bool:
+    """SEC fair-access mandates a `<name> <email>` User-Agent. Compliant means at
+    least one name token precedes an email-shaped token (an email alone, or an
+    empty string, is non-compliant)."""
+    tokens = (identity or "").split()
+    email_idx = next(
+        (i for i, tok in enumerate(tokens) if _looks_like_email(tok)), None
+    )
+    return email_idx is not None and email_idx >= 1
+
+
+def _ensure_edgar_identity(identity: str | None = None) -> dict | None:
+    """Configure edgartools' SEC identity from USER_AGENT BEFORE any network request.
+
+    Returns a loud ``{"error": ...}`` slot — rejecting before send — when no
+    compliant `<name> <email>` identity is configured; otherwise sets the identity
+    on edgartools and returns None.
+
+    This pre-send guard is load-bearing: edgartools does NOT fail-fast on an unset
+    identity (``get_identity()`` prompts interactively, then raises ``TimeoutError``
+    after ~60s), so the SEC fair-access identity requirement is enforced here, not
+    by the library default.
+    """
+    ident = (USER_AGENT if identity is None else identity or "").strip()
+    if not _is_compliant_identity(ident):
+        return {
+            "error": (
+                "SEC EDGAR identity not configured: a compliant "
+                "'<name> <email>' User-Agent is required before any sec.gov "
+                f"request (got {ident!r})"
+            )
+        }
+    import edgar
+
+    edgar.set_identity(ident)
+    return None
+
+
+# ---------------------------------------------------------------------------
+# edgartools-based filing acquisition (edgartools 5.42.0)
+# ---------------------------------------------------------------------------
+# Real Filing shape captured live 2026-07-12 (AAPL FY2024 10-K, accession
+# 0000320193-24-000123; anchored by test_data_markets_live.py
+# ::test_edgartools_acquire_real_10k_shape):
+#   accession_no:str  cik:int  form:str  filing_date:datetime.date(!)
+#   period_of_report:str  filing_url:str (primary-doc URL)  homepage_url:str
+# edgartools has NO `primary_document` attr — the primary-doc filename is the
+# last path segment of filing_url, which is itself the reconstructable SEC
+# Archives URL `.../data/{cik}/{accession-no-dashes}/{document}`.
+
+
+def _filing_date_iso(value) -> str | None:
+    """Serialize edgartools' ``Filing.filing_date`` (a ``datetime.date``, not a
+    string) to an ISO ``YYYY-MM-DD`` string; pass None/str through defensively."""
+    if value is None:
+        return None
+    if hasattr(value, "isoformat"):
+        return value.isoformat()
+    return str(value)
+
+
+def _primary_document(filing) -> str | None:
+    """The filing's primary-document filename — the tail of edgartools'
+    ``Filing.filing_url`` (edgartools exposes no ``primary_document`` attr, so the
+    last path segment of ``filing_url`` is the reconstructable filename)."""
+    filing_url = filing.filing_url
+    return filing_url.rsplit("/", 1)[-1] if filing_url else None
+
+
+def _filing_ref(filing) -> dict:
+    """Build a JSON-safe filing reference from a real edgartools ``Filing``.
+
+    Carries the six provenance fields the spec requires (accession, CIK, form,
+    filingDate, period_of_report, primaryDocument) plus the reconstructable SEC
+    Archives ``url``. ``filingDate`` derives from the filing's disclosure date
+    (never wall-clock — as_of invariant); ``primaryDocument`` and ``url`` come
+    from ``filing_url`` (edgartools exposes no ``primary_document`` attribute).
+    """
+    filing_url = filing.filing_url
+    primary_document = _primary_document(filing)
+    return {
+        "accession": filing.accession_no,
+        "cik": filing.cik,
+        "form": filing.form,
+        "filingDate": _filing_date_iso(filing.filing_date),
+        "period_of_report": filing.period_of_report,
+        "primaryDocument": primary_document,
+        "url": filing_url,
+    }
+
+
+def _acquire_error(error_class: str, detail: str, *, identifier=None,
+                   form: str | None = None) -> dict:
+    """A loud, flat ``{"error": ...}`` acquisition-failure slot (read by
+    pack_inventory/_status), tagged with a distinguishing ``error_class`` so the
+    resolution and form-unavailable failure modes stay distinct."""
+    slot: dict = {
+        "error": f"SEC EDGAR filing acquisition failed: {detail}",
+        "error_class": error_class,
+    }
+    if identifier is not None:
+        slot["identifier"] = str(identifier)
+    if form is not None:
+        slot["form"] = form
+    return slot
+
+
+def _acquire_raw_filing(accession: str) -> object:
+    """Acquire the RAW edgartools ``Filing`` object for an accession — the SHARED
+    producer boundary the acquire→segment seam is built on.
+
+    Returns the raw edgartools Filing (which exposes ``.obj()`` / ``.form`` /
+    ``.cik`` / ``.filing_date`` — the surface both segmentation and metadata
+    reads need) on success, or a loud ``{"error": ...}`` resolution slot when the
+    identity is unset, edgartools raised, or the accession did not resolve to a
+    filing — never a silent ``None``.
+
+    Both ``acquire_filing`` (which projects this to a JSON ``_filing_ref`` dict)
+    and ``fetch_narrative_sections`` (which segments the raw filing + reads its
+    disclosure metadata) go through here, so the two callers can NEVER diverge on
+    the producer shape: passing the JSON ref dict to ``segment_filing`` would
+    crash on ``filing.obj()`` / ``filing.form`` (a ``dict`` has neither). Keeping
+    the raw filing at this seam is what preserves the live ``--action narrative``
+    contract against real edgartools.
+    """
+    identity_error = _ensure_edgar_identity()
+    if identity_error is not None:
+        return identity_error
+
+    import edgar
+
+    try:
+        filing = edgar.get_by_accession_number(accession)
+    except Exception as exc:  # noqa: BLE001 — fail loud, don't guess the shape
+        return _acquire_error(
+            "resolution",
+            f"accession {accession!r} did not resolve to a filing ({exc})",
+            identifier=accession,
+        )
+    if filing is None:
+        return _acquire_error(
+            "resolution",
+            f"accession {accession!r} did not resolve to a filing",
+            identifier=accession,
+        )
+    return filing
+
+
+def acquire_filing(
+    identifier: str | int | None = None,
+    *,
+    form: str | None = None,
+    accession: str | None = None,
+) -> dict:
+    """Acquire a 10-K/10-Q/8-K filing reference via edgartools.
+
+    Two acquisition modes (edgartools 5.42.0):
+      - by ``accession``: ``edgar.get_by_accession_number(accession)`` (via the
+        shared ``_acquire_raw_filing`` producer boundary), then projected to a
+        JSON ``_filing_ref`` dict.
+      - by ``identifier`` (ticker or CIK) + optional ``form`` filter:
+        ``edgar.Company(identifier).get_filings(form=form).latest()``
+
+    Returns a filing-reference dict (see ``_filing_ref``) on success, or one of
+    two DISTINCT loud ``{"error": ...}`` slots on failure, tagged by
+    ``error_class``:
+      - ``"resolution"``       — the ticker/CIK/accession did not resolve to a
+        registered SEC filer (never a silent-empty result).
+      - ``"form_unavailable"`` — the filer resolved but never filed ``form``
+        within the lookup window (empirically an empty ``Filings`` whose
+        ``.latest()`` is ``None``), distinct from a resolution error and never a
+        silent substitution.
+
+    The not-found shape is unverified as an exception, so resolution failure is
+    detected defensively: an exception from ``Company``/``get_by_accession_number``,
+    a falsy company, ``company.not_found``, or a falsy ``company.cik`` all map to
+    the resolution slot.
+    """
+    if accession is not None:
+        filing = _acquire_raw_filing(accession)
+        if isinstance(filing, dict):  # a loud error slot (never a raw Filing)
+            return filing
+        return _filing_ref(filing)
+
+    # ticker / CIK path
+    identity_error = _ensure_edgar_identity()
+    if identity_error is not None:
+        return identity_error
+
+    import edgar
+
+    try:
+        company = edgar.Company(identifier)
+    except Exception as exc:  # noqa: BLE001 — fail loud, don't guess the shape
+        return _acquire_error(
+            "resolution",
+            f"identifier {identifier!r} did not resolve to a registered SEC filer ({exc})",
+            identifier=identifier,
+        )
+    if company is None or getattr(company, "not_found", False) or not getattr(company, "cik", None):
+        return _acquire_error(
+            "resolution",
+            f"identifier {identifier!r} did not resolve to a registered SEC filer",
+            identifier=identifier,
+        )
+
+    filings = company.get_filings(form=form)
+    latest = filings.latest() if filings is not None else None
+    if latest is None:
+        return _acquire_error(
+            "form_unavailable",
+            f"form {form!r} not available for identifier {identifier!r} within the lookup window",
+            identifier=identifier,
+            form=form,
+        )
+    return _filing_ref(latest)
+
+
+# ---------------------------------------------------------------------------
+# edgartools-based item segmentation (edgartools 5.42.0)
+# ---------------------------------------------------------------------------
+# Real TenK/TenQ section-API shape captured live 2026-07-12 (AAPL FY2024 10-K
+# 0000320193-24-000123 + AAPL latest 10-Q; anchored by test_data_markets_live.py
+# ::test_edgartools_segment_real_10k_shape):
+#   filing.obj() -> TenK / TenQ.
+#   TenK / TenQ / CurrentReport: `obj.items` enumerates the FULL item-id set;
+#     each item's text is read via the subscript `obj[item_id]` -> `str` (or
+#     `None` when absent from this filing, issue #710). (edgartools also exposes
+#     convenience props like `management_discussion`/`risk_factors`, but
+#     segmentation enumerates ALL items so it uses the generic subscript.)
+#
+# SECTION-OBJECT CONTRACT (established here, reused by Tasks 4-12) --------------
+# `segment_filing()` returns a LIST of per-item section dicts in enumerated order:
+#   SUCCESS section: {"item": "<item id>", "text_path": "<file path>", **extra}
+#     — a plain dict later tasks EXTEND in place. The extracted body is written
+#       to a file and referenced by `text_path` (paths-not-content, Task 7 —
+#       which REPLACED the earlier inline `text` key), never inlined in the
+#       section dict / JSON result; T6 added provenance, T9 adds
+#       `disclosure_status`. `extra` is a per-section provenance dict merged
+#       in by `_build_section`; empty for 10-K/10-Q, and for 8-K it carries
+#       `{"exhibit": "<EX-99.x filename>"}` (Task 4) — the source-exhibit
+#       filename the item's narrative text was followed to.
+#   FAILURE slot:    {"item": "<item id>", "error": "<why>",
+#                     "error_class": "absent_item"}
+#     — a sentinel-compatible dict; the top-level `error` key is read unchanged
+#       by pack.py's `_status`, and the slot NAMES the missing item so an
+#       enumerated-but-absent item is never dropped or fabricated.
+# A multi-section result is a list later tasks append to / extend.
+#
+# EXTRACTOR CONTRACT (widened by Task 4; text made lazy by Task 8) -------------
+# A registered extractor is called `extractor(obj, filing)` and returns a LIST
+# of per-item entries; each entry is either a 2-tuple `(item_id, text_thunk)`
+# or a 3-tuple `(item_id, text_thunk, extra_dict)` where `text_thunk` is a
+# ZERO-ARG CALLABLE returning the item's text-or-None (Task 8: the text is
+# resolved lazily, NOT at list-build time, so `segment_filing` can call each
+# thunk under its own try/except and ISOLATE a mid-parse throw to that one item's
+# error slot while the other items still segment), and `extra_dict` is the
+# per-section provenance merged into a SUCCESS section (see `extra` above), OR a
+# ready-made section/gap dict (Task 4/5) — used when the extractor ALONE can
+# detect a gap the shared absent-item logic can't classify (8-K's missing or
+# ambiguous Exhibit 99.x -> a `"missing_exhibit"` gap slot); `segment_filing`
+# passes such a dict through unchanged. The `filing` arg is passed to every
+# extractor (10-K/10-Q ignore it); 8-K needs it to reach the filing's exhibit
+# attachments. The 3rd tuple element widens the T3 2-tuple contract WITHOUT
+# breaking it — 2-tuples still work (extra = {}).
+
+
+def _segment_all_body_items(obj, filing) -> list[tuple[str, object]]:
+    """Every item edgartools enumerates on a 10-K/10-Q typed object — one
+    ``(item id, text-thunk)`` pair per id in ``obj.items`` (the full ordered
+    item-id list; a live probe 2026-07-12 showed an AAPL 10-K's ``obj.items``
+    enumerating all 23 items). Pure data-acquisition (design pivot): the layer
+    preserves EVERY body item (Business, Risk Factors, MD&A, Financial Statements,
+    Controls, Governance, ...) and NO curated Item-7/1A subset — the read/relevance
+    decision is deferred to downstream consumers.
+
+    Each pair's text element is a ZERO-ARG THUNK reading ``obj[item_id]`` (the
+    item's text as ``str``, or ``None`` when the item is absent from THIS filing
+    -> the shared absent-item gap in ``_build_section``; issue #710), so
+    ``segment_filing`` evaluates each subscript under its own try/except and
+    ISOLATES a mid-parse throw to that one item's error slot (Task 8) — the other
+    items still segment. Each lambda binds ``item=item_id`` as a default arg so the
+    thunk captures ITS OWN id, not the shared loop variable (the classic Python
+    late-binding closure bug). ``filing`` is unused here (10-K/10-Q text is on
+    ``obj``); it is in the signature for the uniform extractor contract that 8-K's
+    exhibit-following needs."""
+    return [(item_id, lambda item=item_id: obj[item]) for item_id in obj.items]
+
+
+def _segment_10k(obj, filing) -> list[tuple[str, object]]:
+    """All-item ``(item id, text-thunk)`` pairs for a 10-K ``TenK`` typed object
+    (design pivot: every ``obj.items`` id, not the retired Item 7 + Item 1A
+    subset). See ``_segment_all_body_items`` for the enumeration + closure-capture
+    contract."""
+    return _segment_all_body_items(obj, filing)
+
+
+def _segment_10q(obj, filing) -> list[tuple[str, object]]:
+    """All-item ``(item id, text-thunk)`` pairs for a 10-Q ``TenQ`` typed object
+    (design pivot: every ``obj.items`` id, not the retired single Item 2). See
+    ``_segment_all_body_items`` for the enumeration + closure-capture contract."""
+    return _segment_all_body_items(obj, filing)
+
+
+# 8-K reported-item codes whose substantive narrative lives in an Exhibit 99.x
+# (the 8-K body carries only the announcement). Item 9.01 (Financial Statements
+# and Exhibits) merely lists the exhibits and is not itself a narrative item.
+_EIGHTK_EXHIBIT_ITEMS = ("Item 2.02", "Item 7.01", "Item 8.01")
+
+
+def _exhibit_gap(item_id: str, filing, *, item_count: int, release_count: int) -> dict:
+    """A loud, sentinel-compatible gap slot for a reported 8-K exhibit-bearing
+    item whose Exhibit 99.x cannot be resolved to source its narrative — either
+    absent (no press-release exhibit) or ambiguous (>=2 exhibit-bearing items, so
+    per-item correspondence isn't determinable). Names the accession + item code;
+    read unchanged by pack.py's ``_status`` (Task 5)."""
+    return {
+        "item": item_id,
+        "error": (
+            f"8-K item {item_id!r} reported in filing "
+            f"{getattr(filing, 'accession_no', None)!r} but its Exhibit 99.x "
+            f"could not be resolved to source its narrative "
+            f"({item_count} exhibit-bearing item(s), {release_count} EX-99.x "
+            f"press-release exhibit(s); safe pairing requires exactly one of each)"
+        ),
+        "error_class": "missing_exhibit",
+    }
+
+
+def _segment_8k(obj, filing) -> list[object]:
+    """Per-item entries for an 8-K — one entry for EVERY reported item in
+    ``obj.items`` (design pivot: pure acquisition, NOT a curated 2.02/7.01/8.01
+    subset), the read/relevance decision deferred to downstream consumers.
+
+    An exhibit-bearing item (2.02/7.01/8.01 — ``_EIGHTK_EXHIBIT_ITEMS``, whose
+    substance lives in an Exhibit 99.x while the 8-K body carries only the
+    announcement) is FOLLOWED to its exhibit: a success triple ``(item id,
+    exhibit text, {"exhibit": filename, "disclosure_status": "furnished"})`` when
+    resolvable, else a loud missing-exhibit gap dict (never a silent skip, an
+    empty section, a positional guess, or an uncaught IndexError). Every OTHER
+    reported item carries its OWN body text via a ``(item id, obj[item_id])``
+    thunk — resolved lazily by ``segment_filing`` (str, or None → the shared
+    absent-item gap) and defaulting to ``disclosure_status: "filed"`` in
+    ``_build_section`` (a body-sourced 8-K item is filed, not furnished).
+
+    Live-captured shape (edgartools 5.42.0; ``filing.obj()`` -> ``CurrentReport``,
+    NOT ``EightK`` — plan-grounding correction): ``obj.items`` is a list of
+    reported item-id strings (a live probe 2026-07-12 showed AAPL's 8-K reporting
+    ``['Item 2.02', 'Item 9.01']``); ``obj[item_id]`` gives an item's body text;
+    ``obj.press_releases`` is the collection of EX-99.x press-release exhibits,
+    each a ``PressRelease`` with ``.document`` (the EX-99.x filename) + ``.text()``
+    (the exhibit body). We read the exhibit text (not the 8-K body announcement)
+    for an exhibit-bearing item and record the source exhibit filename in the
+    section's `exhibit` provenance field.
+
+    Only the unambiguous 1:1 case (exactly one reported exhibit-bearing item and
+    exactly one press-release exhibit) is paired — there the correspondence is
+    determined, not guessed. Any other shape (no exhibit for a reported item, a
+    count mismatch, or >=2 exhibit-bearing items whose item->exhibit mapping is
+    non-positional) emits a loud named gap per affected exhibit-bearing item:
+    silent-wrong is the enemy, so we never mis-attribute an exhibit to the wrong
+    item (T4 review finding, folded in by Task 5). Non-exhibit items are
+    unaffected by exhibit ambiguity — they always source their own body text.
+
+    LOOM-SIMPLIFY: shortcut: a >=2-exhibit-item 8-K (or count mismatch) is emitted
+    as loud per-item gaps rather than resolving each reported item body's
+    "Exhibit 99.x" cross-reference to map it to the right exhibit | ceiling: a real
+    8-K reporting >=2 exhibit-bearing items each with its own recoverable EX-99.x
+    (e.g. Item 2.02->EX-99.1, Item 7.01->EX-99.2) whose content we want extracted,
+    not gapped | upgrade: parse each reported item's body text for its referenced
+    exhibit number and map by that | ref: spec Requirement "8-K Full-Item
+    Segmentation with Exhibit-Following". (The gap itself is loud + tested; this
+    cut defers the multi-exhibit RESOLUTION, not the fail-loud behaviour.)
+    """
+    following = [item_id for item_id in obj.items if item_id in _EIGHTK_EXHIBIT_ITEMS]
+    releases = list(obj.press_releases)
+    # Resolve each exhibit-bearing item to its exhibit entry (success triple) or a
+    # loud gap, keyed by item id so the all-items enumeration below can look it up.
+    if len(following) == 1 and len(releases) == 1:
+        item_id, release = following[0], releases[0]
+        # ``release.text`` is a zero-arg method → pass it AS the text-thunk so
+        # `segment_filing` evaluates the exhibit body under its own try/except
+        # (Task 8 per-item isolation); ``release.document`` (the filename) is
+        # read eagerly for provenance. ``disclosure_status: "furnished"`` (Task 9)
+        # is derived from the SOURCE TYPE (an 8-K Item 2.02/7.01/8.01 Exhibit 99.x
+        # is FURNISHED, not filed) — NOT read from edgartools — so a downstream
+        # consumer can weight it distinctly from filed 10-K/10-Q content.
+        exhibit_entries = {
+            item_id: (
+                item_id, release.text,
+                {"exhibit": release.document, "disclosure_status": "furnished"},
+            )
+        }
+    else:
+        exhibit_entries = {
+            item_id: _exhibit_gap(
+                item_id, filing, item_count=len(following), release_count=len(releases)
+            )
+            for item_id in following
+        }
+    # Emit a section for EVERY reported item, in reported order: exhibit-bearing
+    # items use their resolved exhibit entry; every other item sources its own
+    # body text (``obj[item_id]``, lazily thunked so a mid-parse throw is isolated
+    # to that item — Task 8; ``item=item_id`` default binds each thunk's own id,
+    # avoiding the late-binding closure bug).
+    return [
+        exhibit_entries[item_id]
+        if item_id in exhibit_entries
+        else (item_id, lambda item=item_id: obj[item])
+        for item_id in obj.items
+    ]
+
+
+# form -> extractor(obj, filing) returning per-item entries (see EXTRACTOR
+# CONTRACT above): [(item id, text-or-None[, extra_dict]), ...] from filing.obj().
+_ITEM_EXTRACTORS = {
+    "10-K": _segment_10k,
+    "10-Q": _segment_10q,
+    "8-K": _segment_8k,
+}
+
+
+def _timeout_exc_types() -> tuple:
+    """The exception types that classify as a distinct ``timeout`` acquisition
+    failure (Task 10) — the builtin ``TimeoutError`` plus edgartools' ``httpx``
+    timeout family when ``httpx`` is importable (edgartools does its HTTP over
+    ``httpx``, so a real fetch timeout surfaces as ``httpx.TimeoutException``).
+
+    ``httpx`` is NOT guaranteed importable in offline CI, so its timeout type is
+    added only when reachable — a soft, conditional import, never a hard top-level
+    one (which would break offline). In production a real ``httpx`` timeout means
+    ``httpx`` IS installed (edgartools raised it), so it is in the tuple then; the
+    builtin ``TimeoutError`` is always present as the offline-testable stand-in."""
+    types: list = [TimeoutError]
+    try:
+        import httpx
+
+        types.append(httpx.TimeoutException)
+    except Exception:  # noqa: BLE001 — httpx absent offline; builtin TimeoutError suffices
+        pass
+    return tuple(types)
+
+
+# Narrower-than-Exception timeout family, resolved once at import (see Task 10).
+_TIMEOUT_EXC_TYPES = _timeout_exc_types()
+
+
+def _all_sections_failed(form: str, filing, exc: BaseException, slot=None) -> list[dict]:
+    """A single loud FORM-LEVEL error slot, for when `filing.obj()` or extractor
+    building failed wholesale — no top-level success is claimed. Post design-pivot
+    the item set is DYNAMIC (every ``obj.items`` id), so once ``obj()`` itself
+    fails the items are UNKNOWABLE and cannot be enumerated; every form (10-K/
+    10-Q/8-K) falls back to a single ``"form <FORM>"`` slot so the failure is
+    never silently dropped (there is no static per-item map to reconstruct).
+
+    `slot` is the per-item slot builder (signature ``(item_id, filing, exc)``);
+    defaults to ``_extraction_error_slot`` (Task 8's generic wholesale-failure
+    class) but the timeout carve-out (Task 10) passes ``_timeout_error_slot`` so a
+    wholesale TIMEOUT classifies the form-level slot as the distinct ``timeout``
+    class, not the generic ``extraction_error``. (Default resolved in the body,
+    not the signature, because ``_extraction_error_slot`` is defined below this
+    function.)"""
+    slot = slot or _extraction_error_slot
+    return [slot(f"form {form}", filing, exc)]
+
+
+def _section_gap(item_id: str, filing) -> dict:
+    """A loud, sentinel-compatible per-section error slot naming the missing
+    item + its accession (read by pack.py's `_status`)."""
+    return {
+        "item": item_id,
+        "error": (
+            f"section {item_id!r} not present in filing "
+            f"{getattr(filing, 'accession_no', None)!r} "
+            f"(form {getattr(filing, 'form', None)!r})"
+        ),
+        "error_class": "absent_item",
+    }
+
+
+def _extraction_error_slot(item_id: str, filing, exc: BaseException) -> dict:
+    """A loud, sentinel-compatible per-section error slot for an item whose
+    extraction RAISED (Task 8) — distinct from the `"absent_item"` (None) and
+    `"missing_exhibit"` gaps: here edgartools threw while parsing/building the
+    section (a single item's property/subscript access, or `filing.obj()`
+    wholesale). The throw is isolated to this slot so the OTHER items still
+    segment and nothing crashes `segment_filing`; the top-level `error` key is
+    read unchanged by pack.py's `_status`, classifying the aggregate as partial
+    (some fail) / failed (all fail)."""
+    return {
+        "item": item_id,
+        "error": (
+            f"section {item_id!r} extraction failed for filing "
+            f"{getattr(filing, 'accession_no', None)!r} "
+            f"(form {getattr(filing, 'form', None)!r}): {exc}"
+        ),
+        "error_class": "extraction_error",
+    }
+
+
+def _timeout_error_slot(item_id: str, filing, exc: BaseException) -> dict:
+    """A loud, sentinel-compatible per-section error slot for an item whose
+    extraction TIMED OUT (Task 10) — a DISTINCT, retryable class carved out of the
+    generic ``extraction_error`` (Task 8) so a transient network timeout is not
+    merged into a content gap. Same ``(item_id, filing, exc)`` signature as
+    ``_extraction_error_slot`` so the wholesale-failure path (`_all_sections_failed`)
+    can swap it in. Carries ``retryable: True`` — the timeout class is safe to
+    retry, unlike a content gap or a version-drift shape mismatch; the top-level
+    ``error`` key is still read unchanged by pack.py's ``_status``."""
+    return {
+        "item": item_id,
+        "error": (
+            f"section {item_id!r} fetch timed out for filing "
+            f"{getattr(filing, 'accession_no', None)!r} "
+            f"(form {getattr(filing, 'form', None)!r}): {exc}"
+        ),
+        "error_class": "timeout",
+        "retryable": True,
+    }
+
+
+def _version_drift_slot(item_id: str, filing, value) -> dict:
+    """A loud, sentinel-compatible per-section error slot for a section whose
+    successfully-thunked value is NOT the pinned-edgartools-5.42.0 ``str`` shape
+    (Task 10) — a plausible post-upgrade API drift (a section accessor changed to
+    return a structured object). DISTINCT from ``extraction_error`` (a throw) and
+    the content gaps: here nothing raised, the value simply has an unexpected
+    shape. Fail loud on the mismatch — the value's text is NEVER written out (no
+    ``text_path``) — rather than emit possibly-wrong section text. The top-level
+    ``error`` key is read unchanged by pack.py's ``_status``."""
+    return {
+        "item": item_id,
+        "error": (
+            f"section {item_id!r} for filing "
+            f"{getattr(filing, 'accession_no', None)!r} "
+            f"(form {getattr(filing, 'form', None)!r}) returned an unexpected "
+            f"shape ({type(value).__name__}, expected str) — possible edgartools "
+            f"version drift; refusing to emit possibly-wrong section text"
+        ),
+        "error_class": "version_drift",
+    }
+
+
+def _section_provenance(filing, document: str | None) -> dict:
+    """The complete provenance tuple stamped on every SUCCESS section (Task 6):
+    accession, cik, filingDate, period_of_report (where available), and a
+    reconstructable SEC Archives ``url`` to ``document`` — the SECTION'S OWN
+    source doc (the filing's primary doc for a 10-K/10-Q section, the sourced
+    Exhibit 99.x for an 8-K section).
+
+    Reconstructable WITHOUT an additional lookup: the URL is built from the same
+    tuple fields (cik + accession-no-dashes + document). ``filingDate`` derives
+    from the filing's disclosure date, never wall-clock (as_of invariant).
+    ``period_of_report`` may be absent on some forms — passed through as-is
+    (edgartools yields ``None`` there)."""
+    accession = filing.accession_no
+    return {
+        "accession": accession,
+        "cik": filing.cik,
+        "filingDate": _filing_date_iso(filing.filing_date),
+        "period_of_report": filing.period_of_report,
+        "url": SEC_ARCHIVES_URL.format(
+            cik_int=filing.cik,
+            accession_nodash=_accession_nodash(accession),
+            doc=document,
+        ),
+    }
+
+
+# Any char outside the cache-key-safe set is collapsed to `_` so a sanitized
+# item id (e.g. "Item 2.02") can never escape the sections dir (mirrors
+# cache_util._UNSAFE_KEY_CHARS's path-safety contract).
+_UNSAFE_ITEM_CHARS = re.compile(r"[^A-Za-z0-9_-]+")
+
+
+def _section_text_path(accession: str, item_id: str) -> Path:
+    """The deterministic per-(accession, item) file path for a section's text,
+    under the toolkit cache dir: ``<cache>/sec_edgar/sections/<sanitized-
+    accession>/<sanitized-item>.txt``.
+
+    Keyed by disclosure identity (accession + item), NEVER wall-clock, so a
+    re-run of the same section is byte-stable and re-uses the same file (as_of
+    invariant). BOTH path segments — accession AND item id — are run through the
+    ``[A-Za-z0-9_-]`` allowlist (defense in depth, CHK-SEC-004), so ``/``, ``.``,
+    and ``..`` can never survive into either segment; neither can escape the
+    ``sections`` dir. Real SEC accessions are digit-dash so the accession
+    sanitization is a no-op on them (matching the provenance URL's
+    ``_accession_nodash``), and only hardens against a crafted/malformed value."""
+    accession_seg = _UNSAFE_ITEM_CHARS.sub("_", _accession_nodash(accession)) or "_"
+    sanitized = _UNSAFE_ITEM_CHARS.sub("_", item_id) or "_"
+    return (
+        cache_util.resolve_cache_dir()
+        / "sec_edgar"
+        / "sections"
+        / accession_seg
+        / f"{sanitized}.txt"
+    )
+
+
+def _write_section_text(accession: str, item_id: str, text: str) -> str:
+    """Write a section's extracted ``text`` to its deterministic per-(accession,
+    item) file and return that path as a string — the section's ``text_path``.
+
+    Paths-not-content (Task 7): the section body is file-backed, not inlined in
+    the section dict / JSON result. Parent dir is created; the file lives
+    strictly under the toolkit cache dir, never the repo tree.
+
+    Structural traversal guard (CHK-SEC-004, belt-and-suspenders with the
+    segment sanitization in ``_section_text_path``): the resolved target MUST be
+    contained under the resolved cache dir, else fail loud — an explicit raise
+    (not a bare ``assert`` that ``-O`` would strip), making an escape structurally
+    impossible for ANY segment regardless of input."""
+    cache_root = cache_util.resolve_cache_dir()
+    path = _section_text_path(accession, item_id)
+    resolved = path.resolve()
+    if not resolved.is_relative_to(cache_root.resolve()):
+        raise ValueError(
+            f"refusing to write section text outside the cache dir: {resolved!r} "
+            f"escapes {cache_root!r} (accession={accession!r}, item={item_id!r})"
+        )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+    return str(path)
+
+
+def _build_section(item_id: str, text, filing, extra: dict | None = None) -> dict:
+    """A success section when text is present, else a named absent-item error slot
+    — never an empty or fabricated section.
+
+    A success section is `{"item", "text_path", **extra, **provenance}`: the
+    extracted body is written to a file and referenced by ``text_path``
+    (paths-not-content, Task 7) rather than inlined. ``extra`` is the per-section
+    extra merged in (8-K's `{"exhibit": ...}`, Task 4; empty/None for 10-K/10-Q),
+    and ``provenance`` (Task 6) is the complete provenance tuple whose
+    reconstructable URL targets the section's OWN source doc — the Exhibit 99.x
+    for an 8-K (``extra["exhibit"]``), else the filing's primary doc."""
+    if text is None or (isinstance(text, str) and not text.strip()):
+        return _section_gap(item_id, filing)
+    section = {
+        "item": item_id,
+        "text_path": _write_section_text(filing.accession_no, item_id, text),
+        # disclosure_status (Task 9) defaults to "filed" — the legal status of a
+        # 10-K/10-Q section — derived from the SOURCE TYPE, never read from
+        # edgartools. The 8-K exhibit-following path overrides this to "furnished"
+        # via its `extra` dict (merged below), the one source type that is
+        # furnished rather than filed. GAP slots return above and never reach here.
+        "disclosure_status": "filed",
+    }
+    if extra:
+        section.update(extra)
+    document = (extra or {}).get("exhibit") or _primary_document(filing)
+    section.update(_section_provenance(filing, document))
+    return section
+
+
+def segment_filing(filing) -> list[dict]:
+    """Segment a 10-K / 10-Q / 8-K filing into per-item section objects via
+    edgartools' typed section API (``filing.obj()`` -> ``TenK`` / ``TenQ`` /
+    ``CurrentReport``), NOT the retired regex ``parse_item_sections``.
+
+    Pure data acquisition — NO analysis filtering: every item the primary
+    document enumerates is emitted. Returns a LIST of section dicts (see the
+    SECTION-OBJECT CONTRACT above):
+      - 10-K / 10-Q -> one section per item in ``obj.items`` (the FULL body
+        item set — e.g. a 10-K's Item 1..16 including Business + Financial
+        Statements), each read via ``obj[item_id]``.
+      - 8-K -> one section per reported item in ``obj.items``; an exhibit-
+        bearing item (2.02/7.01/8.01) is sourced from its Exhibit 99.x
+        (``disclosure_status: furnished``, exhibit filename in provenance),
+        every other reported item from its own body text (``filed``).
+    An enumerated item absent from THIS filing (edgartools returns ``None``,
+    issue #710) becomes a per-section error slot naming the missing item, never
+    an empty/fabricated section. An unregistered form fails loud (``ValueError``)
+    rather than silently returning no sections.
+
+    Fail-loud per-section isolation (Task 8): an extraction that RAISES never
+    aborts the whole segmentation. A throw building `filing.obj()` or the
+    extractor's entry list (the primary document cannot be fetched/parsed at all)
+    turns the whole filing into a single loud form-level `extraction_error` slot
+    (all-fail — the dynamic item set is unknowable once `obj()` itself fails);
+    a throw evaluating ONE item's text-thunk turns just that item into an
+    `extraction_error` slot while the other items still segment. The resulting
+    list classifies through pack.py's `_status` as partial (some fail) / failed
+    (all fail), never a fabricated/silent-empty section.
+
+    Distinct failure classes (Task 10) carved out ABOVE the generic
+    `extraction_error` (narrower-except-first): a TIMEOUT (builtin `TimeoutError`
+    or edgartools' `httpx` timeout family — see `_TIMEOUT_EXC_TYPES`) in either
+    handler becomes a distinct retryable `timeout` slot, never merged into a
+    content gap; and a successfully-thunked section value that is not the expected
+    `str` (a plausible post-upgrade edgartools shape) becomes a loud
+    `version_drift` slot rather than possibly-wrong emitted text.
+    """
+    form = filing.form
+    extractor = _ITEM_EXTRACTORS.get(form)
+    if extractor is None:
+        raise ValueError(
+            f"segment_filing: no section extractor registered for form {form!r} "
+            "(10-K/10-Q/8-K supported)"
+        )
+    try:
+        obj = filing.obj()
+        entries = list(extractor(obj, filing))
+    except _TIMEOUT_EXC_TYPES as exc:  # noqa: BLE001 — timeout is its OWN retryable class
+        # Wholesale TIMEOUT (Task 10): obj()/extractor build exceeded the timeout.
+        # Every enumerated section becomes the DISTINCT retryable `timeout` slot,
+        # NOT the generic extraction_error — narrower-except-first, above Exception.
+        return _all_sections_failed(form, filing, exc, slot=_timeout_error_slot)
+    except Exception as exc:  # noqa: BLE001 — fail loud per enumerated section, don't crash
+        # Wholesale failure: obj() or extractor building threw, so no per-item
+        # text-thunk was ever reached. Every enumerated section becomes a loud
+        # extraction-error slot; no top-level success is claimed.
+        return _all_sections_failed(form, filing, exc)
+    sections = []
+    for entry in entries:
+        # An extractor may yield a ready-made section/gap dict for a gap it alone
+        # can detect (8-K missing/ambiguous exhibit, Task 5); pass it through
+        # unchanged. Otherwise it is a (item id, text_thunk[, extra]) tuple whose
+        # text is resolved lazily HERE so a mid-parse throw is isolated to this
+        # one item (Task 8).
+        if isinstance(entry, dict):
+            sections.append(entry)
+            continue
+        item_id, text_thunk = entry[0], entry[1]
+        extra = entry[2] if len(entry) > 2 else None
+        try:
+            text = text_thunk()
+        except _TIMEOUT_EXC_TYPES as exc:  # noqa: BLE001 — timeout is its OWN retryable class
+            # Per-item TIMEOUT (Task 10): a DISTINCT retryable slot, carved above
+            # the generic extraction_error (narrower-except-first) so a transient
+            # timeout is never merged into a content gap; the other items still
+            # segment.
+            sections.append(_timeout_error_slot(item_id, filing, exc))
+            continue
+        except Exception as exc:  # noqa: BLE001 — isolate this item's throw
+            sections.append(_extraction_error_slot(item_id, filing, exc))
+            continue
+        if text is not None and not isinstance(text, str):
+            # Version-drift shape guard (Task 10): a successfully-thunked section
+            # value must be the pinned-5.42.0 `str` (or None → absent-item gap in
+            # `_build_section`). Any other shape is possible post-upgrade API drift
+            # — fail loud on the mismatch, NEVER emit possibly-wrong section text.
+            sections.append(_version_drift_slot(item_id, filing, text))
+            continue
+        sections.append(_build_section(item_id, text, filing, extra))
+    return sections
+
+
+def fetch_narrative_sections(accession: str) -> dict:
+    """Cache-backed edgartools narrative-section fetch for an accession (the unit
+    Task 12 wires into ``--action narrative``).
+
+    Cache HIT — a warm accession within the immutable window — returns the cached
+    section list WITHOUT re-hitting edgartools (SEC fair-access: never re-fetch
+    what we already have). Cache MISS acquires the RAW edgartools Filing via the
+    shared ``_acquire_raw_filing`` producer boundary — NOT ``acquire_filing``'s
+    JSON ref dict, which would crash ``segment_filing`` (a dict has no ``.obj()``/
+    ``.form``) — then segments it (``segment_filing``) and reads its contract
+    metadata (cik/form/filingDate) off the same raw filing, caching the resulting
+    section-list wrapper.
+
+    The cache key derives from the disclosure IDENTITY (the accession), NEVER
+    wall-clock, so a same-day re-run of the same accession is a HIT, not a
+    double-fetch (as_of invariant). It is DISTINCT from the legacy regex
+    ``fetch_narrative``'s ``narrative_{accession}`` key: the edgartools payload
+    stores ``sections`` as a LIST of section dicts whereas the legacy payload
+    stored it as a DICT (item->body), and both share the immutable TTL + envelope
+    v2.0 — so a shared key would let a machine with a warm LEGACY entry get a
+    schema-passing HIT of the WRONG shape (never self-healing under immutable TTL).
+    The ``narrative_sections_`` prefix ensures the two caches can never alias.
+    A failed acquisition is a loud ``{"error": ...}`` slot that is SURFACED, never
+    cached as success — so a transient 429/403 that edgartools' own backoff could
+    not recover from is not poisoned into the cache. This wrapper adds NO
+    retry-defeating catch around the edgartools call: ``acquire_filing`` reaches
+    edgartools directly, leaving its built-in ``pyrate-limiter``/``stamina``
+    backoff authoritative (edgartools does its own HTTP over ``httpx``; the
+    ``requests``-based ``_sec_get`` throttle does not cover this path).
+
+    The returned wrapper carries its OWN extraction-health summary derived from
+    the section list: ``narrative_status`` (``"ok"`` / ``"partial"`` / ``"failed"``
+    — pack.py's vocabulary) and ``failed_items`` (the item ids whose section
+    carries an ``error`` key; ``[]`` when healthy). This exists because the
+    per-section fail-loud slots live INSIDE ``sections``: a downstream consumer
+    that embeds this wrapper as a sub-field and inspects the whole thing (a
+    classifier walking one level into dict-valued sub-fields) never reaches a
+    LIST-nested error, so the partial/failed state would silently read as ``ok``.
+    A downstream consumer therefore reads THIS summary rather than relying on a
+    classifier walking into ``sections``. It is ADDITIVE (the 5 CLI contract keys
+    accession/cik/form/filingDate/sections are unchanged) and is NOT a top-level
+    ``error`` key — a partial extraction is not a wholesale acquisition failure,
+    so exit-1-iff-``error`` stays unchanged. Both fields are cached alongside the
+    rest, so a warm HIT carries them too.
+    """
+    path = cache_util.cache_path("sec_edgar", f"narrative_sections_{accession}")
+    cached = cache_util.load_cache(path, TTL_NARRATIVE)
+    if cached is not None:
+        cached["_cache"] = "hit"
+        return cached
+
+    # Obtain the RAW edgartools Filing (NOT acquire_filing's JSON ref dict) so
+    # segment_filing gets a real Filing (`.obj()`/`.form`) and the contract-key
+    # reads below hit `.cik`/`.form`/`.filing_date` — a dict ref would crash both.
+    filing = _acquire_raw_filing(accession)
+    if isinstance(filing, dict):  # a loud error slot (never a raw Filing)
+        # Loud acquisition failure (e.g. a 429/403 that escaped edgartools' own
+        # backoff) — surface it; do NOT segment, do NOT cache it as success.
+        return filing
+
+    sections = segment_filing(filing)
+    # Extraction-health summary carried ON THE WRAPPER (review 🟡): the
+    # per-section fail-loud slots live inside `sections`, so a consumer that
+    # inspects the whole wrapper as one dict sub-field (e.g. the future memo
+    # pipeline embedding this result) never reaches them — a one-level classifier
+    # only walks a dict's dict-valued sub-fields, and `sections` is a LIST. Derive
+    # the partial/failed state HERE from the section list (NO pack.py import — data
+    # layer must not depend on the report-equity-memo facade) and surface it as
+    # top-level, non-`_`-prefixed fields so the failure state travels WITH the
+    # wrapper: `narrative_status` (ok/partial/failed, pack.py's vocabulary) plus
+    # `failed_items` naming each erroring item id. A downstream consumer reads THIS
+    # summary rather than relying on a classifier walking into `sections`.
+    failed_items = [s["item"] for s in sections if "error" in s]
+    if not failed_items:
+        narrative_status = "ok"
+    elif len(failed_items) == len(sections):
+        narrative_status = "failed"
+    else:
+        narrative_status = "partial"
+    result = {
+        "accession": accession,
+        # Contract keys the CLI `--action narrative` surface preserves
+        # (Task 12): cik/form/filingDate derived from the RAW filing's disclosure
+        # identity (NEVER wall-clock), and STORED in the cached payload so a
+        # warm-cache HIT carries them too — otherwise a warm run would be missing
+        # contract keys.
+        "cik": filing.cik,
+        "form": filing.form,
+        "filingDate": _filing_date_iso(filing.filing_date),
+        "sections": sections,
+        "section_count": len(sections),
+        # Additive extraction-health summary (cached alongside the rest → present
+        # on HIT + MISS). NOT a top-level `error` key: a partial extraction is not
+        # a wholesale acquisition failure, so exit-1-iff-error is unchanged.
+        "narrative_status": narrative_status,
+        "failed_items": failed_items,
+        "_cache": "miss",
+    }
+    cache_util.save_cache(path, result)
+    return result
+
+
 def action_narrative(accession: str) -> dict:
+    identity_error = _ensure_edgar_identity()
+    if identity_error is not None:
+        identity_error["action"] = "narrative"
+        return identity_error
     _log("narrative fetch", accession)
     t0 = time.monotonic()
-    res = fetch_narrative(accession)
+    res = fetch_narrative_sections(accession)
     res["action"] = "narrative"
     cache_label = "cache hit" if res.get("_cache") == "hit" else f"{res.get('section_count', 0)} sections in {time.monotonic() - t0:.1f}s"
     _log("narrative done", f"{accession} {cache_label}")
@@ -664,7 +1368,13 @@ def main():
                         if p.exists():
                             p.unlink()
         if args.accession:
-            p = cache_util.cache_path("sec_edgar", f"narrative_{args.accession}")
+            # The edgartools narrative cache key (Task 12) is
+            # narrative_sections_{accession} — DISTINCT from the retired regex
+            # fetch_narrative's narrative_{accession}; unlink the NEW key so
+            # --no-cache actually clears what fetch_narrative_sections writes.
+            p = cache_util.cache_path(
+                "sec_edgar", f"narrative_sections_{args.accession}"
+            )
             if p.exists():
                 p.unlink()
 

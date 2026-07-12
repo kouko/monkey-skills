@@ -58,6 +58,18 @@ regime-pack test below was adapted accordingly: it no longer restricts to
 asserts those two groups are present within the full default group set —
 preserving the assertion's intent (rates + inflation populate) without the
 now-removed restriction flag.
+
+Task-2 edgartools acquisition anchor (D7 grounding): the section
+"US — edgartools acquisition shape anchor" below captures the REAL edgartools
+5.42.0 Filing attribute shape that the offline mocks in
+tests/data/test_sec_narrative.py mirror (fixtures-mirror-producer-shape).
+grounding: edgartools 5.42.0 — edgar.get_by_accession_number / Company.
+get_filings; Filing.accession_no(str) / cik(int) / form(str) /
+filing_date(datetime.date, NOT str) / period_of_report(str) / filing_url /
+homepage_url; `primary_document` does NOT exist (filing_url's tail is the
+primary-doc filename). Captured live 2026-07-12 against AAPL FY2024 10-K,
+accession 0000320193-24-000123. Sources: PyPI edgartools JSON + GitHub
+dgunning/edgartools.
 """
 from __future__ import annotations
 
@@ -70,6 +82,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 PACK = ROOT / "skills" / "data-markets" / "scripts" / "pack.py"
+SCRIPTS = ROOT / "skills" / "data-markets" / "scripts"
 
 
 def _run_pack(args: list[str], extra_env: dict | None = None, timeout: int = 900) -> dict:
@@ -250,6 +263,293 @@ def test_us_regime_pack_fred_groups():
     rates = groups["rates"]
     assert isinstance(rates, dict)
     assert rates, "rates group empty"
+
+
+# ---------------------------------------------------------------------------
+# US — edgartools acquisition shape anchor (Task 2, edgartools migration)
+# ---------------------------------------------------------------------------
+# fixtures-mirror-producer-shape: this live anchor captures the REAL edgartools
+# 5.42.0 Filing attribute shape that the offline mocks in
+# tests/data/test_sec_narrative.py mirror. `import edgar` / `import
+# sec_edgar_client` are inside the test body so offline collection (edgartools
+# not installed, deselected by `-m "not network"`) stays clean.
+
+
+@pytest.mark.network
+def test_edgartools_acquire_real_10k_shape():
+    """Anchor the REAL edgartools Filing shape + acquire_filing end-to-end.
+
+    Documents the producer shape the offline mocks mirror; a v5->v6 attribute
+    churn surfaces HERE, not silently inside the mocked unit tests. Run live:
+      uv run --with pytest --with edgartools==5.42.0 --with 'pyyaml>=6.0' \
+        pytest investing-toolkit/tests/data/test_data_markets_live.py \
+        -k edgartools_acquire -m network
+    """
+    import datetime
+    import sys
+
+    import edgar
+
+    edgar.set_identity("kouko investing-toolkit noreply@anthropic.com")
+    accession = "0000320193-24-000123"  # AAPL FY2024 10-K
+    f = edgar.get_by_accession_number(accession)
+    assert f is not None, "known AAPL 10-K accession must resolve"
+    assert f.accession_no == accession
+    assert f.cik == 320193
+    assert f.form == "10-K"
+    assert isinstance(f.filing_date, datetime.date), (
+        "filing_date is a datetime.date, not a str — the client must serialize it"
+    )
+    assert f.period_of_report == "2024-09-28"
+    assert not hasattr(f, "primary_document"), (
+        "edgartools has NO primary_document attr — filing_url carries the doc"
+    )
+    assert f.filing_url.startswith(
+        "https://www.sec.gov/Archives/edgar/data/320193/000032019324000123/"
+    )
+    assert f.filing_url.endswith("aapl-20240928.htm")
+    assert f.homepage_url.endswith("-index.html")
+
+    # acquire_filing mirrors that shape end-to-end (by-accession mode).
+    if str(SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(SCRIPTS))
+    import sec_edgar_client
+
+    ref = sec_edgar_client.acquire_filing(accession=accession)
+    assert ref["accession"] == accession
+    assert ref["cik"] == 320193
+    assert ref["form"] == "10-K"
+    assert ref["filingDate"] == "2024-11-01"
+    assert ref["period_of_report"] == "2024-09-28"
+    assert ref["primaryDocument"] == "aapl-20240928.htm"
+    assert ref["url"] == f.filing_url
+
+
+@pytest.mark.network
+def test_edgartools_segment_real_10k_shape():
+    """Anchor the REAL edgartools TenK/TenQ section API + segment_filing end-to-end.
+
+    fixtures-mirror-producer-shape (Task 3): the offline TenK/TenQ mocks in
+    tests/data/test_sec_narrative.py mirror THIS captured shape. A v5->v6
+    section-API churn (a renamed property, a changed subscript key) surfaces
+    HERE, loud, not silently inside the mocked unit tests. Run live:
+      uv run --with pytest --with edgartools==5.42.0 --with 'pyyaml>=6.0' \
+        pytest investing-toolkit/tests/data/test_data_markets_live.py \
+        -k edgartools_segment -m network
+    """
+    import sys
+
+    import edgar
+
+    edgar.set_identity("kouko investing-toolkit noreply@anthropic.com")
+
+    # 10-K: obj.items is the FULL ordered item-id list (design pivot: the
+    # segmenter enumerates EVERY item, not the curated Item 7 + 1A subset) and
+    # obj[item_id] returns the item text as str (or None when absent — issue #710).
+    tenk_filing = edgar.get_by_accession_number("0000320193-24-000123")  # AAPL FY2024 10-K
+    tenk = tenk_filing.obj()
+    assert type(tenk).__name__ == "TenK"
+    assert isinstance(tenk.items, list) and set(tenk.items) >= {
+        "Item 1", "Item 1A", "Item 7", "Item 8",
+    }, (
+        "TenK.obj.items must enumerate the full item set (incl. Item 1 Business + "
+        f"Item 8 Financial Statements): {getattr(tenk, 'items', None)!r}"
+    )
+    for item_id in ("Item 1", "Item 1A", "Item 7", "Item 8"):
+        assert isinstance(tenk[item_id], str) and tenk[item_id].strip(), (
+            f"TenK[{item_id!r}] must be non-empty str via the obj[item_id] subscript"
+        )
+
+    # 10-Q: obj.items enumerates the full item set; the MD&A id is the grounded
+    # subscript key "Part I, Item 2".
+    tenq_filing = edgar.Company("AAPL").get_filings(form="10-Q").latest()
+    tenq = tenq_filing.obj()
+    assert type(tenq).__name__ == "TenQ"
+    assert isinstance(tenq.items, list) and "Part I, Item 2" in set(tenq.items), (
+        f"TenQ.obj.items must enumerate the full item set incl. the MD&A id "
+        f"'Part I, Item 2': {getattr(tenq, 'items', None)!r}"
+    )
+    assert isinstance(tenq["Part I, Item 2"], str) and tenq["Part I, Item 2"].strip(), (
+        "TenQ Item 2 (MD&A) must be non-empty str via obj['Part I, Item 2']"
+    )
+
+    # segment_filing mirrors that shape end-to-end.
+    if str(SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(SCRIPTS))
+    import sec_edgar_client
+
+    # section text is file-backed via text_path (Task 7), never inlined.
+    def _section_text(section):
+        assert "text" not in section, f"section text must not be inlined: {section!r}"
+        return Path(section["text_path"]).read_text(encoding="utf-8")
+
+    # design pivot: segment_filing emits a section for EVERY enumerated item, so
+    # the emitted set is a SUPERSET of the four anchor items (proving all-item
+    # capture, esp. the newly-included Item 1 Business + Item 8 Financial
+    # Statements), never just the retired Item 7 + 1A subset.
+    k_sections = {s["item"]: s for s in sec_edgar_client.segment_filing(tenk_filing)}
+    assert set(k_sections) >= {"Item 1", "Item 1A", "Item 7", "Item 8"}, (
+        f"10-K must segment into ALL body items (superset of Item 1/1A/7/8): "
+        f"{sorted(k_sections)}"
+    )
+    for item_id in ("Item 1", "Item 1A", "Item 7", "Item 8"):
+        assert _section_text(k_sections[item_id]).strip()
+
+    q_sections = {s["item"]: s for s in sec_edgar_client.segment_filing(tenq_filing)}
+    assert set(q_sections) >= {"Part I, Item 2"}, (
+        f"10-Q must segment into ALL body items (superset of the MD&A id "
+        f"'Part I, Item 2'): {sorted(q_sections)}"
+    )
+    assert _section_text(q_sections["Part I, Item 2"]).strip()
+
+
+@pytest.mark.network
+def test_edgartools_segment_real_8k_shape():
+    """Anchor the REAL edgartools 8-K exhibit-following shape + segment_filing (Task 4).
+
+    fixtures-mirror-producer-shape: the offline _MockEightK / _MockPressRelease
+    mocks in tests/data/test_sec_narrative.py mirror THIS captured shape. Two
+    plan-grounding corrections surfaced live and are asserted here so a v5->v6
+    churn (or a re-reader trusting the stale plan) fails LOUD:
+      - filing.obj() on an 8-K returns type ``CurrentReport`` (NOT ``EightK``).
+      - press-release exhibits (``obj.press_releases`` -> ``PressReleases`` of
+        ``PressRelease``) expose ``.document`` + ``.text()`` but NO
+        ``.document_type`` (that attr is on ``filing.attachments``' Attachments).
+    Captured live 2026-07-12 against AAPL earnings 8-K 0000320193-26-000011
+    (Item 2.02 + Exhibit 99.1). Run live:
+      uv run --with pytest --with edgartools==5.42.0 --with 'pyyaml>=6.0' \
+        pytest investing-toolkit/tests/data/test_data_markets_live.py \
+        -k edgartools_segment_real_8k -m network
+    """
+    import sys
+
+    import edgar
+
+    edgar.set_identity("kouko investing-toolkit noreply@anthropic.com")
+
+    # An earnings 8-K reporting Item 2.02 with an EX-99.1 press release.
+    filings = edgar.Company("AAPL").get_filings(form="8-K")
+    eightk_filing = None
+    for f in filings:
+        obj = f.obj()
+        if any("2.02" in str(it) for it in getattr(obj, "items", [])):
+            eightk_filing = f
+            break
+    assert eightk_filing is not None, "expected an AAPL 8-K reporting Item 2.02"
+    obj = eightk_filing.obj()
+
+    assert type(obj).__name__ == "CurrentReport", (
+        "filing.obj() on an 8-K is a CurrentReport, not an EightK (plan correction)"
+    )
+    assert isinstance(obj.items, list) and any("Item 2.02" in str(it) for it in obj.items)
+    prs = list(obj.press_releases)
+    assert prs, "earnings 8-K must carry at least one EX-99.x press release"
+    pr = prs[0]
+    assert isinstance(pr.document, str) and pr.document, "PressRelease.document is the EX-99.x filename"
+    assert isinstance(pr.text(), str) and pr.text().strip(), "PressRelease.text() is the exhibit body"
+    assert not hasattr(pr, "document_type"), (
+        "a PressRelease has NO document_type — that attr is on filing.attachments' Attachments"
+    )
+
+    # segment_filing mirrors that shape end-to-end.
+    if str(SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(SCRIPTS))
+    import sec_edgar_client
+
+    sections = {s["item"]: s for s in sec_edgar_client.segment_filing(eightk_filing)}
+    # Post-pivot the data layer emits a section for EVERY reported item, not a
+    # curated exhibit-item subset: the emitted set equals the real reported-item
+    # set (a superset of {Item 2.02}), proving all-item capture against real
+    # edgartools.
+    reported = {str(it) for it in obj.items}
+    assert set(sections) == reported, (
+        "8-K must emit a section for EVERY reported item, not just the "
+        f"exhibit-bearing subset (emitted={set(sections)}, reported={reported})"
+    )
+    assert "Item 2.02" in sections, "8-K segments into a section for reported Item 2.02"
+    slot = sections["Item 2.02"]
+    assert "error" not in slot
+    # section text is file-backed via text_path (Task 7), never inlined.
+    assert "text" not in slot, f"section text must not be inlined: {slot!r}"
+    assert Path(slot["text_path"]).read_text(encoding="utf-8").strip(), (
+        "Item 2.02 text sourced from its EX-99.x exhibit"
+    )
+    assert slot["exhibit"] == pr.document, "section provenance records the source exhibit filename"
+    # Item 2.02 (exhibit-bearing) is furnished-from-exhibit; every OTHER reported
+    # item (e.g. Item 9.01) is filed-from-body — a success section with its own
+    # text_path, or a loud named gap, but NEVER furnished and NEVER an exhibit.
+    assert slot["disclosure_status"] == "furnished"
+    for item_id, sec in sections.items():
+        if item_id == "Item 2.02":
+            continue
+        if "error" in sec:
+            continue  # a permitted absent-item / gap slot on the real filing
+        assert sec["disclosure_status"] == "filed", (
+            f"a non-exhibit reported item must be filed-from-body: {sec!r}"
+        )
+        assert "exhibit" not in sec, "a body-sourced item carries no exhibit provenance"
+
+
+@pytest.mark.network
+def test_edgartools_fetch_narrative_sections_end_to_end():
+    """Anchor the FULL acquire→segment seam end-to-end against REAL edgartools
+    (Task 12): `fetch_narrative_sections(<real accession>)` chains
+    `_acquire_raw_filing` (edgar.get_by_accession_number) -> `segment_filing`.
+
+    This is the seam the offline units mock at the edgartools boundary; it can
+    NEVER be masked again because THIS test runs the real chain. It would have
+    caught the acquire→segment dict-crash the offline tests hid when they mocked
+    `acquire_filing` (which returns a JSON ref dict, a shape acquire never feeds
+    segment_filing). Asserts the five CLI contract keys the `--action narrative`
+    surface preserves (accession/cik/form/filingDate/sections) + the edgartools
+    LIST-shaped sections. Run live:
+      uv run --with pytest --with edgartools==5.42.0 --with 'pyyaml>=6.0' \
+        pytest investing-toolkit/tests/data/test_data_markets_live.py \
+        -k fetch_narrative_sections_end_to_end -m network
+    """
+    import sys
+
+    import edgar
+
+    edgar.set_identity("kouko investing-toolkit noreply@anthropic.com")
+
+    if str(SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(SCRIPTS))
+    import sec_edgar_client
+
+    accession = "0000320193-24-000123"  # AAPL FY2024 10-K
+    result = sec_edgar_client.fetch_narrative_sections(accession)
+
+    # the five CLI contract keys are all present (Scenario 1: CLI still resolves)
+    for key in ("accession", "cik", "form", "filingDate", "sections"):
+        assert key in result, (
+            f"live narrative contract dropped key {key!r}: {result!r}"
+        )
+    assert result["accession"] == accession
+    assert result["cik"] == 320193
+    assert result["form"] == "10-K"
+    assert isinstance(result["filingDate"], str) and result["filingDate"], (
+        "filingDate must be a non-empty ISO disclosure date"
+    )
+    # sections is the edgartools LIST shape; design pivot: a real 10-K segments
+    # into ALL body items, so the emitted set is a SUPERSET of the four anchor
+    # items (incl. Item 1 Business + Item 8 Financial Statements), never just the
+    # retired Item 7 + 1A subset.
+    assert isinstance(result["sections"], list) and result["sections"], (
+        f"sections must be a non-empty edgartools LIST: {result!r}"
+    )
+    assert {s["item"] for s in result["sections"]} >= {
+        "Item 1", "Item 1A", "Item 7", "Item 8",
+    }, (
+        "a real 10-K must segment into ALL body items (superset of Item 1/1A/7/8): "
+        f"{sorted({s['item'] for s in result['sections']})}"
+    )
+    # action_narrative surfaces the SAME result with the action tag + exit-0 shape
+    action_result = sec_edgar_client.action_narrative(accession)
+    assert action_result.get("action") == "narrative"
+    assert "error" not in action_result, (
+        f"a resolvable accession must be exit-0 (no error): {action_result!r}"
+    )
 
 
 # ---------------------------------------------------------------------------

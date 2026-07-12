@@ -18,31 +18,31 @@ The system MUST acquire 10-K, 10-Q, and 8-K filings for a resolved ticker/CIK us
 - WHEN the narrative action requests that form type
 - THEN the system returns a loud "form not available" result distinct from a resolution error, and does not silently substitute a different form or a different filing
 
-### Requirement: 10-K/10-Q Item Segmentation
-The system MUST segment a 10-K filing's primary document into Item 7 (MD&A) and Item 1A (Risk Factors) sections, and a 10-Q filing's primary document into Item 2 (MD&A), using edgartools' section API rather than regex header-detection.
+### Requirement: Full-Body Item Segmentation (10-K/10-Q)
+The system MUST segment a 10-K or 10-Q filing's primary document into ALL items present in that document — enumerated via edgartools' typed-object item API (`obj.items`) — emitting one section object per item, NOT a curated analysis-selected subset. This is a pure data-acquisition contract: the data layer preserves every body item (Business, Risk Factors, MD&A, Financial Statements, Controls, Governance, etc.) and defers the read/relevance decision to downstream consumers; it MUST NOT filter to a hand-picked item set. Segmentation uses edgartools' section API, never regex header-detection.
 
-#### Scenario: 10-K MD&A and Risk Factors segmentation
-- GIVEN a 10-K primary document
+#### Scenario: 10-K all-item segmentation
+- GIVEN a 10-K primary document whose `obj.items` enumerates the full item set (e.g. Item 1 through Item 16, including 1A/1B/1C/7A/9A/9B/9C)
 - WHEN the system segments it
-- THEN it emits a distinct section object for Item 7 and a distinct section object for Item 1A, each carrying its own item id and extracted text
+- THEN it emits a distinct section object for EVERY enumerated item — not only MD&A + Risk Factors — each carrying its own item id and extracted text (e.g. Item 1 Business, Item 7 MD&A, Item 8 Financial Statements are all present)
 
-#### Scenario: 10-Q MD&A segmentation
+#### Scenario: 10-Q all-item segmentation
 - GIVEN a 10-Q primary document
 - WHEN the system segments it
-- THEN it emits a section object for Item 2 carrying its item id and extracted text
+- THEN it emits a distinct section object for every item `obj.items` enumerates, each carrying its item id and extracted text
 
-#### Scenario: Requested item absent from this filing
-- GIVEN a form/item combination not present in this specific filing (e.g. Item 1A omitted under a permitted disclosure exception)
+#### Scenario: Enumerated item absent or empty in this filing
+- GIVEN an enumerated item whose text is absent (`None`) in this specific filing (e.g. an item incorporated by reference or permitted-omitted)
 - WHEN segmentation runs
-- THEN the system returns a per-section error slot naming the missing item, rather than emitting an empty or fabricated section for it
+- THEN the system returns a per-section error slot naming the item, rather than emitting an empty or fabricated section for it
 
-### Requirement: 8-K Item Segmentation with Exhibit-Following
-The system MUST segment 8-K filings by reported item code (2.02, 7.01, 8.01) and, for each reported item, MUST follow the filing's Exhibit 99.x attachment to source the narrative text, since the 8-K body itself typically contains only the item announcement and the substantive content lives in the exhibit.
+### Requirement: 8-K Full-Item Segmentation with Exhibit-Following
+The system MUST segment an 8-K by ALL reported item codes it declares (enumerated via `obj.items`), emitting one section per reported item — not a curated subset. For an item whose substantive content lives in an Exhibit 99.x (the results/announcement items 2.02/7.01/8.01, where the 8-K body carries only the announcement), the section text MUST be sourced from that item's Exhibit 99.x; every other reported item carries its own body text. No attachment other than an exhibit-bearing item's own Exhibit 99.x is fetched (other exhibits — material contracts, certifications, XBRL — are out of scope for this narrative layer).
 
-#### Scenario: 8-K Item 2.02 with Exhibit 99.1 present
-- GIVEN an 8-K filing reporting item 2.02 with an attached Exhibit 99.1
+#### Scenario: 8-K all reported items, exhibit-bearing item sourced from Exhibit 99.1
+- GIVEN an 8-K reporting multiple items (e.g. Item 2.02 and Item 9.01) with an attached Exhibit 99.1
 - WHEN the system segments it
-- THEN it emits a section object for item 2.02 whose text is sourced from Exhibit 99.1, with the exhibit filename recorded in provenance
+- THEN it emits a section object for EVERY reported item; the exhibit-bearing item (2.02) is sourced from Exhibit 99.1 with the exhibit filename in provenance, and the other reported items carry their own body text
 
 #### Scenario: 8-K Item 7.01/8.01 with Exhibit 99.x present
 - GIVEN an 8-K filing reporting item 7.01 or item 8.01 with an attached Exhibit 99.x
