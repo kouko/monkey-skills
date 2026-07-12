@@ -60,6 +60,20 @@ def test_tw_fixture_happy_path():
     assert mops_sub["income_statement"]["kind"] == "dict"
     assert mops_sub["income_statement"]["keys"] == 4
 
+    # Real fixture pin: these two MOPS subsections carry a genuine `_error:
+    # "exit_1"` (the mops_* CLI failed with a missing --year/--month arg on
+    # fetch). Pre-Task-5 code reported them as present: True (phantom-present
+    # on real data) because it only checked `keys > 0`. This guards the
+    # intentional Taiwan-side semantic change against the actual bundled
+    # fixture, not just a synthetic pack.
+    assert mops_sub["director_holdings"]["present"] is False
+    assert mops_sub["director_holdings"]["kind"] == "dict"
+    assert mops_sub["director_holdings"]["keys"] == 6
+
+    assert mops_sub["insider_trades"]["present"] is False
+    assert mops_sub["insider_trades"]["kind"] == "dict"
+    assert mops_sub["insider_trades"]["keys"] == 6
+
     history = sections["history"]
     assert history["kind"] == "list"
     assert history["rows"] == 5
