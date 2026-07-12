@@ -236,14 +236,33 @@ def _list_section_status(value: list) -> str | None:
     return "ok"
 
 
+_VALID_SELF_DECLARED_STATUSES = {"ok", "partial", "failed"}
+
+
 def _section_status(value: object) -> str | None:
     """Classify one top-level result key as ok/partial/failed, or None if
     it is not a classifiable section at all — a plain scalar, a list of
     non-dict items, or a dict that is completely empty (zero keys carries
-    no directly-checkable signal on its own; see LOOM-SIMPLIFY below)."""
+    no directly-checkable signal on its own; see LOOM-SIMPLIFY below).
+
+    A dict section may self-declare its own status via a `_status` key
+    (ok/partial/failed) — when present, that declaration WINS over
+    inference and the dict-only sub-field walk below never runs for this
+    section. This is how a producer whose per-item failures live inside a
+    LIST (structurally invisible to `_dict_section_status`'s dict-only
+    walk) can still surface degradation: it says so directly instead of
+    waiting to be structurally inferred. A `_status` value outside the
+    known vocabulary is untrusted and fails closed to "failed" rather than
+    silently passing as ok. Sections with no `_status` key are entirely
+    unaffected — the inference path below runs byte-for-byte unchanged."""
     if isinstance(value, dict):
         if not value:
             return None
+        if "_status" in value:
+            declared = value["_status"]
+            if declared in _VALID_SELF_DECLARED_STATUSES:
+                return declared
+            return "failed"
         return _dict_section_status(value)
     if isinstance(value, list):
         return _list_section_status(value)
