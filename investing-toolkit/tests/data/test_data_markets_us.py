@@ -306,6 +306,50 @@ def _mock_run_client_for_narrative(filings_rows: list[dict], narrative_by_index:
     return _side_effect
 
 
+def test_pack_memo_fetch_filings_call_uses_policy_derived_window_not_count_limit():
+    """Task 8 (post-live-anchor defect fix): the live-observed false gap
+    (2026-07-13, real AAPL run) traced to this exact call site fetching
+    filings with `--limit 8` -- a row-COUNT window applied across ALL forms
+    combined, so 8-K/10-Q volume could crowd the once-a-year 10-K out
+    entirely. Fixed by switching to a policy-derived `--since-days` DATE
+    window (`sec_edgar_client.narrative_filings_window_days`) -- a count
+    argument must never reach this call again."""
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack_us  # noqa: E402
+    import sec_edgar_client  # noqa: E402  (pure window function; no edgar/requests call)
+
+    filings_rows = _synthetic_narrative_filings_rows()
+    captured_args = {}
+
+    def _side_effect(script, extra_args, timeout=pack_us.CLIENT_TIMEOUT_SECONDS):
+        if script == pack_us.YF:
+            return {}
+        if script == pack_us.SEC:
+            if "filings" in extra_args:
+                captured_args["filings"] = list(extra_args)
+                return {"filings": filings_rows}
+            if "--concept" in extra_args:
+                return {}
+            if "narrative" in extra_args:
+                accession = extra_args[extra_args.index("--accession") + 1]
+                return _producer_narrative(accession)
+            return {}
+        raise AssertionError(f"unexpected run_client script: {script}")
+
+    with mock.patch.object(pack_us, "run_client") as mock_run_client:
+        mock_run_client.side_effect = _side_effect
+        pack_us.build_pack("memo-fetch", ["AAPL"])
+
+    args = captured_args["filings"]
+    assert "--limit" not in args, f"filings fetch must not be a count window: {args}"
+    assert "--since-days" in args, f"filings fetch must be a date window: {args}"
+    since_days = int(args[args.index("--since-days") + 1])
+    assert since_days == sec_edgar_client.narrative_filings_window_days(), (
+        f"since-days must be the policy-derived window, got {since_days}"
+    )
+
+
 def test_memo_fetch_emits_sec_narrative_with_counts():
     """pack_memo_fetch wires Task 2's selection + one `--action narrative`
     subprocess per selected accession into a new top-level `sec_narrative`

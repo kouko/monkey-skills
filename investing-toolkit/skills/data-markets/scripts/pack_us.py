@@ -705,11 +705,26 @@ def pack_memo_fetch(ticker: str) -> dict:
     info = run_client(YF, ["--ticker", ticker, "--action", "info"])
     _log("pack [history 2y]", ticker)
     history = run_client(YF, ["--ticker", ticker, "--period", "2y"])
-    _log("pack [filings]", f"{ticker} 10-K/10-Q/8-K limit=8")
+    # Policy-derived DATE window, not a filing-count `--limit` (Task 8 fix for
+    # a live-observed false gap, 2026-07-13 real AAPL run): `--limit 8` capped
+    # across ALL forms combined, so 8-K/10-Q volume crowded the once-a-year
+    # 10-K out of the returned rows entirely -- `select_narrative_filings`
+    # then reported a PHANTOM "no 10-K" gap. A count window drifts with a
+    # company's filing frequency; `narrative_filings_window_days` (a single
+    # cached submissions call either way, so a deeper window is nearly free)
+    # does not. Lazy import mirrors `_fetch_sec_narrative`'s own pattern below
+    # (sec_edgar_client's top-level `import requests` must not become a
+    # module-import-time cost for other pack types).
+    if str(SCRIPT_DIR) not in sys.path:
+        sys.path.insert(0, str(SCRIPT_DIR))
+    from sec_edgar_client import narrative_filings_window_days
+
+    since_days = narrative_filings_window_days()
+    _log("pack [filings]", f"{ticker} 10-K/10-Q/8-K since_days={since_days}")
     filings = run_client(
         SEC,
         ["--ticker", ticker, "--action", "filings",
-         "--forms", "10-K,10-Q,8-K", "--limit", "8"],
+         "--forms", "10-K,10-Q,8-K", "--since-days", str(since_days)],
     )
     _log("pack [facts]", ticker)
     facts = run_client(SEC, ["--ticker", ticker, "--action", "facts"])

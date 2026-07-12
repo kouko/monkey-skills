@@ -230,6 +230,129 @@ def test_list_filings_preserves_items_and_report_date(sec_client, monkeypatch):
 
 
 # ---------------------------------------------------------------------------
+# Task 8 (2026-07-13-us-sec-narrative-memo-wiring, post-live-anchor defect) —
+# `list_filings`'s `min_filing_date` fix for the live-observed false-gap bug.
+# ---------------------------------------------------------------------------
+# Live-observed 2026-07-13, real AAPL run: `pack_memo_fetch` fetched filings
+# with `--limit 8` -- a row-COUNT cutoff applied ACROSS ALL forms combined,
+# not per form. AAPL's own 8-K/10-Q volume crowded the once-a-year 10-K out
+# of the returned rows entirely, so `select_narrative_filings` (correctly,
+# given what it was handed) reported a PHANTOM "no 10-K" gap for a filer that
+# obviously has one. The fix is `min_filing_date`: a DATE cutoff never drifts
+# with a company's filing frequency the way a row count does.
+
+
+def _stub_submissions(forms: list[str], dates: list[str], accessions: list[str]) -> dict:
+    n = len(forms)
+    assert len(dates) == n == len(accessions)
+    return {
+        "data": {
+            "filings": {
+                "recent": {
+                    "form": forms,
+                    "filingDate": dates,
+                    "accessionNumber": accessions,
+                    "primaryDocument": ["" for _ in range(n)],
+                    "primaryDocDescription": ["" for _ in range(n)],
+                    "items": ["" for _ in range(n)],
+                    "reportDate": ["" for _ in range(n)],
+                }
+            }
+        }
+    }
+
+
+def test_narrative_filings_window_days_is_time_not_count_anchored(sec_client):
+    # No @req tag (see test_list_filings_min_filing_date_recovers_crowded_out_10k).
+    """The window a raw filings fetch must cover so `select_narrative_filings`
+    can find the latest 10-K + n_quarters of earnings 8-Ks is derived from
+    TIME (SEC filing deadlines / quarter length), never a magic row count --
+    that is what makes it provably sufficient regardless of a company's
+    filing frequency (the root cause of the crowd-out bug this replaces)."""
+    # Must reach back at least one full year plus SEC's longest 10-K filing
+    # deadline (90 days, non-accelerated filers) -- else a late-filed 10-K
+    # can fall outside the window even with zero intervening filings.
+    assert sec_client.narrative_filings_window_days(n_quarters=4) >= 366 + 90
+
+    # Must also reach back n_quarters full calendar quarters for the 8-Ks --
+    # a large n_quarters must widen the window, not leave it flat.
+    assert (
+        sec_client.narrative_filings_window_days(n_quarters=20)
+        > sec_client.narrative_filings_window_days(n_quarters=4)
+    )
+
+
+def test_list_filings_min_filing_date_recovers_crowded_out_10k(sec_client, monkeypatch):
+    # No @req tag: this dispatch's plan/spec trace by
+    # `<change-id> / Requirement / Scenario` join keys, not registered REQ-ids
+    # (see report) — @req omitted per the implementer contract.
+    """Live-observed defect: a `limit`-only (count) window truncates before
+    ever reaching an old, once-a-year 10-K once >= `limit` more-recent
+    8-K/10-Q rows intervened. `min_filing_date` (a date cutoff) recovers it
+    regardless of how many other filings intervened."""
+    # 10 more-recent 8-K/10-Q rows (descending, mirroring the real SEC
+    # submissions `recent` ordering), THEN an older 10-K at index 10 -- a
+    # `limit=8` count window stops at index 7, never reaching it.
+    recent_dates = [f"2026-{m:02d}-01" for m in range(6, 0, -1)] + [
+        f"2025-{m:02d}-01" for m in (12, 11, 10, 9)
+    ]
+    forms = ["8-K" if i % 2 == 0 else "10-Q" for i in range(10)] + ["10-K"]
+    dates = recent_dates + ["2025-08-01"]
+    accessions = [f"acc-{i}" for i in range(10)] + ["acc-tenk"]
+    monkeypatch.setattr(
+        sec_client, "fetch_submissions",
+        lambda cik: _stub_submissions(forms, dates, accessions),
+    )
+
+    # OLD behavior reproduced: a count-only window (no min_filing_date)
+    # truncates before the 10-K's row is ever reached.
+    old_rows = sec_client.list_filings(320193, ["10-K", "10-Q", "8-K"], 8)
+    assert not any(r["form"] == "10-K" for r in old_rows), (
+        "test setup sanity: with the OLD count-only window the 10-K must be "
+        f"crowded out -- got rows: {old_rows}"
+    )
+
+    # FIX: a date cutoff recovers it regardless of the intervening row count.
+    fixed_rows = sec_client.list_filings(
+        320193, ["10-K", "10-Q", "8-K"], 8, min_filing_date="2025-01-01",
+    )
+    assert any(
+        r["form"] == "10-K" and r["accessionNumber"] == "acc-tenk"
+        for r in fixed_rows
+    ), f"expected the 10-K recovered via min_filing_date, got: {fixed_rows}"
+
+
+def test_list_filings_min_filing_date_reports_true_absence_not_papered_over(
+    sec_client, monkeypatch,
+):
+    # No @req tag (see test_list_filings_min_filing_date_recovers_crowded_out_10k).
+    """A date-widened window must not manufacture a false PRESENCE to undo the
+    false-gap bug: a filer with genuinely no 10-K inside the window still
+    yields no 10-K row, and the real selection policy still reports an
+    explicit gap for it -- never silence, never a fabricated filing."""
+    forms = ["8-K", "10-Q"]
+    dates = ["2026-06-01", "2026-05-01"]
+    accessions = ["acc-0", "acc-1"]
+    monkeypatch.setattr(
+        sec_client, "fetch_submissions",
+        lambda cik: _stub_submissions(forms, dates, accessions),
+    )
+
+    rows = sec_client.list_filings(
+        320193, ["10-K", "10-Q", "8-K"], 8, min_filing_date="2025-01-01",
+    )
+    assert not any(r["form"] == "10-K" for r in rows), (
+        f"no 10-K exists in the stubbed data -- must NOT be fabricated: {rows}"
+    )
+
+    selection = sec_client.select_narrative_filings(rows, n_quarters=1)
+    tenk_gaps = [g for g in selection["gaps"] if g["role"] == "10-K"]
+    assert tenk_gaps, (
+        f"expected an explicit 10-K gap for a genuinely absent filing: {selection}"
+    )
+
+
+# ---------------------------------------------------------------------------
 # Task 2 (this plan, 2026-07-13-us-sec-narrative-memo-wiring) —
 # select_narrative_filings: a pure, offline-testable quarter-anchored
 # filing-selection policy over already-fetched `list_filings` rows.

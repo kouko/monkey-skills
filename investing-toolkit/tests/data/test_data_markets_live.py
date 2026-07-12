@@ -602,6 +602,24 @@ def test_live_memo_fetch_narrative_seam():
     )
     assert succeeded >= 1, f"expected >=1 succeeded narrative fetch: {narrative}"
 
+    # Task 8 regression guard: the raw filings fetch used to be a row-COUNT
+    # window (`--limit 8`, capped across ALL forms combined), so AAPL's own
+    # 8-K/10-Q volume crowded the once-a-year 10-K out of the returned rows
+    # entirely — turning role="10-K" into a PHANTOM gap (live-observed
+    # 2026-07-13). Fixed by switching to a policy-derived DATE window
+    # (`sec_edgar_client.narrative_filings_window_days`); this must never
+    # regress, so assert the 10-K is actually SELECTED, not merely absent
+    # from `failed_items`.
+    tenk_entries = [f for f in narrative["filings"] if f.get("role") == "10-K"]
+    assert tenk_entries, (
+        "expected the latest 10-K to be SELECTED (not a false gap) now that "
+        "the raw-filings window is time-anchored, not count-limited: "
+        f"failed_items={narrative.get('failed_items')}"
+    )
+    assert "error" not in tenk_entries[0], (
+        f"selected 10-K entry carries an error: {tenk_entries[0]}"
+    )
+
     # at least one selected filing is an earnings 8-K whose REAL submissions
     # `items` field (re-fetched independently here, not just the segmented
     # section labels already in `narrative`) includes "2.02" — the selection
@@ -638,15 +656,12 @@ def test_live_memo_fetch_narrative_seam():
 
     # ---- shape-anchor: does the REAL emission agree with the offline
     # fixture's assumed shape? Compare via the 8-K role specifically (not the
-    # raw list position, and not the 10-K): a live run's raw filings fetch
-    # (`pack_memo_fetch`'s upstream `--limit 8`, capped across ALL forms
-    # combined, not per-form) can crowd the 10-K out of the last 8 filings
-    # entirely, turning role="10-K" into a policy-level GAP rather than a
-    # selected filing — observed on THIS run (see the loud gap-surfacing
-    # assertion below) — whereas an 8-K is guaranteed selected/verified above.
-    # Comparing via 8-K also means both sides carry the `quarter` key and an
-    # 8-K section's `exhibit` key, so the diff is a true apples-to-apples
-    # structural check, not an artifact of which role happened to resolve.
+    # raw list position): both the 10-K and the 8-K are now reliably selected
+    # (Task 8 fixed the count-window crowd-out that used to make the 10-K a
+    # false gap — see the assertion above), so either role would do here;
+    # 8-K is kept because both sides carry the `quarter` key and an 8-K
+    # section's `exhibit` key, making the diff a true apples-to-apples
+    # structural check independent of which role happens to resolve.
     fixture_path = ROOT / "tests" / "data" / "fixtures" / "data-us-memo-fetch-sample.json"
     fixture_narrative = json.loads(fixture_path.read_text())["sec_narrative"]
 
@@ -688,17 +703,17 @@ def test_live_memo_fetch_narrative_seam():
     )
 
     # ---- loud gap surfacing: name any role/quarter the live selection could
-    # not resolve, rather than letting a partial run pass silently. A 10-K gap
-    # here is a REAL finding about `pack_memo_fetch`'s upstream `--limit 8`
-    # raw-filings window (shared across all forms, so 8-K/10-Q volume can
-    # crowd the once-a-year 10-K out entirely) — not a defect in this test.
+    # not resolve, rather than letting a partial run pass silently. Post-Task-8
+    # the raw-filings window is time-anchored (not count-limited), so the
+    # 10-K/10-Q false-gap class is fixed (asserted above) — any remaining
+    # gap here would be a GENUINE absence (e.g. a quarter with no item-2.02
+    # earnings 8-K) or a fresh regression, either way worth surfacing loudly
+    # rather than letting a partial run pass silently.
     if narrative.get("failed_items"):
         import warnings
 
         warnings.warn(
-            "live run had unresolved narrative slots (see test docstring "
-            "note on pack_memo_fetch's shared --limit 8 raw-filings window): "
-            f"{narrative['failed_items']}",
+            f"live run had unresolved narrative slots: {narrative['failed_items']}",
             stacklevel=1,
         )
 
