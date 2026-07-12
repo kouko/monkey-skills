@@ -16,6 +16,14 @@ whether plugin.json was touched — a description-only edit is not a bump).
 The Codex mirror (`.codex-plugin/plugin.json`) stays enforced by the separate
 `sync_codex_manifests.py --check --all` gate; this script does not duplicate it.
 
+Plugin discovery is the `CODEX_ELIGIBLE` tuple, so a plugin missing from it would
+be invisible to THIS gate — and, because `--check --all` iterates the same tuple,
+invisible to the Codex drift gate too (both blind at once, not one backstopping
+the other). What actually keeps the tuple honest is
+`test_eligible_list_covers_every_repo_plugin` in scripts/test_sync_codex_manifests.py,
+which asserts the tuple equals the on-disk plugin census. That test is this gate's
+registration backstop; do not remove it.
+
 Usage:
     python3 scripts/check_version_bump.py --base <sha> --head <sha> [--repo DIR]
 
@@ -46,7 +54,10 @@ def _git(repo: Path, *args: str) -> str:
 
 
 def changed_paths(repo: Path, base: str, head: str) -> list[str]:
-    out = _git(repo, "diff", "--name-only", base, head)
+    # --no-renames: with rename detection ON (the default), a file MOVED OUT of a
+    # plugin prints only its destination path, so the plugin's shipped content
+    # changed but the gate sees no hit (fail-open). Off, both paths are printed.
+    out = _git(repo, "diff", "--no-renames", "--name-only", base, head)
     return [line for line in out.splitlines() if line]
 
 

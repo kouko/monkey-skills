@@ -18,6 +18,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 SCRIPT = Path(__file__).resolve().parent / "check_version_bump.py"
 
 
@@ -155,19 +157,55 @@ def test_non_skill_content_change_inside_a_plugin_needs_no_bump(tmp_path):
     assert result.returncode == 0, result.stdout + result.stderr
 
 
-def test_hooks_agents_references_count_as_skill_content(tmp_path):
-    """The gate is wider than skills/ — hooks/, agents/, references/ ship too."""
+@pytest.mark.parametrize(
+    "rel",
+    [
+        "loom-code/skills/tdd-iron-law/SKILL.md",
+        "loom-code/hooks/hooks.json",
+        "loom-code/agents/implementer.md",
+        "loom-code/references/environment-gotchas.md",
+    ],
+)
+def test_every_skill_content_dir_counts_as_skill_content(tmp_path, rel):
+    """The gate is wider than skills/ — hooks/, agents/, references/ ship too.
+
+    One case per entry in SKILL_CONTENT_DIRS: each of those subdirs is shipped
+    plugin content, so a change under ANY of them without a bump must fail.
+    """
     repo = _init_repo(tmp_path)
     _manifest(repo, "loom-code", "1.0.0")
-    _write(repo, "loom-code/agents/implementer.md", "v1\n")
+    _write(repo, rel, "v1\n")
     base = _commit(repo, "base")
 
-    _write(repo, "loom-code/agents/implementer.md", "v2\n")
-    head = _commit(repo, "agent change, no bump")
+    _write(repo, rel, "v2\n")
+    head = _commit(repo, "shipped-content change, no bump")
 
     result = _run(repo, base, head)
 
     assert result.returncode != 0
+    assert "loom-code" in result.stdout
+
+
+def test_skill_content_moved_out_of_a_plugin_is_a_violation(tmp_path):
+    """A file MOVED OUT of a plugin still changes that plugin's shipped content.
+
+    Git's default rename detection collapses a move to its DESTINATION path only,
+    so `loom-code/skills/x/SKILL.md -> docs/x.md` would print just `docs/x.md` —
+    the plugin loses a shipped skill and the gate sees no hit (fail-open). The
+    diff must therefore run with rename detection off.
+    """
+    repo = _init_repo(tmp_path)
+    _manifest(repo, "loom-code", "1.0.0")
+    _write(repo, "loom-code/skills/retired/SKILL.md", "aaa\nbbb\nccc\n")
+    base = _commit(repo, "base")
+
+    (repo / "docs").mkdir()
+    _git(repo, "mv", "loom-code/skills/retired/SKILL.md", "docs/retired.md")
+    head = _commit(repo, "move a skill out of the plugin, no bump")
+
+    result = _run(repo, base, head)
+
+    assert result.returncode != 0, result.stdout + result.stderr
     assert "loom-code" in result.stdout
 
 
