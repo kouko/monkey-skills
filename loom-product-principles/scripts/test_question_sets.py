@@ -79,6 +79,28 @@ def test_design_section_is_expert_lane_no_fixed_question_set():
         "in their own words"
 
 
+def test_design_lane_two_axis_rounds():
+    """The visual lens is not one monolithic candidate round — it runs as
+    two axis-typed rounds so each stays uncontaminated by the other:
+    Axis A (cultural) reads only canon-design-visual.md, Axis B (surface)
+    reads only canon-design-surface.md."""
+    text = _text()
+    low = text.lower()
+    assert "canon-design-visual.md" in text, \
+        "Design lane must name canon-design-visual.md as Axis A's source"
+    assert "canon-design-surface.md" in text, \
+        "Design lane must name canon-design-surface.md as Axis B's source"
+    assert "cultural" in low, \
+        "Design lane must name the cultural axis"
+    assert "surface" in low, \
+        "Design lane must name the surface axis"
+    assert "axis a" in low and "axis b" in low, \
+        "Design lane must frame the visual lens as Axis A / Axis B rounds"
+    assert "contamination guard" in low and "its own file" in low, \
+        "Design lane must state the isolation guarantee (each round reads " \
+        "only its own file) — the load-bearing reason the canon is split"
+
+
 # --- Engineering section — 5 stance questions with stakes --------------------
 
 def test_engineering_has_five_stance_questions():
