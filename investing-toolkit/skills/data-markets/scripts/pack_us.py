@@ -549,6 +549,154 @@ def _normalize_dcf(raw_concepts: dict[str, dict]) -> dict:
     }
 
 
+def _classify_narrative_entry(
+    role: str, quarter: str | None, accession: str | None, narrative: dict,
+) -> tuple[bool, bool, list[dict]]:
+    """Classify ONE selected filing's `--action narrative` result into
+    ``(succeeded, is_partial, failed_item_entries)`` — the per-row bucketing
+    logic `_fetch_sec_narrative`'s loop applies to every selected filing,
+    split out so that loop body stays short and does one thing (read the
+    subprocess result, decide succeeded/failed, hoist any section-level
+    failures).
+
+    A wholesale failure (subprocess `error`, or the producer's own
+    `narrative_status: "failed"`) yields ``(False, False, [<one failed_items
+    entry>])``. A clean success yields ``(True, False, [])``. A `"partial"`
+    success (the filing was fetched but >=1 of its sections failed) yields
+    ``(True, True, [<one failed_items entry per failed section>])`` — the
+    depth-1 hoisting `_fetch_sec_narrative`'s own docstring documents (brief
+    Fork A: `pack.py`'s `_classify_result` cannot see into the list-valued
+    `sections` sub-field, so this hoist is what makes the degradation
+    structurally visible at depth 1)."""
+    if "error" in narrative or narrative.get("narrative_status") == "failed":
+        return False, False, [{
+            "role": role,
+            "quarter": quarter,
+            "accession": accession,
+            "error": narrative.get("error")
+            or f"narrative_status={narrative.get('narrative_status')!r} — all sections failed",
+            "error_class": narrative.get("error_class", "narrative_failed"),
+        }]
+
+    if narrative.get("narrative_status") != "partial":
+        return True, False, []
+
+    sections_by_item = {
+        s.get("item"): s for s in narrative.get("sections", []) if isinstance(s, dict)
+    }
+    failed_item_entries = [
+        {
+            "role": role,
+            "quarter": quarter,
+            "accession": accession,
+            "item": item_id,
+            "error": sections_by_item.get(item_id, {}).get(
+                "error", f"section {item_id!r} failed"
+            ),
+            "error_class": sections_by_item.get(item_id, {}).get("error_class", "unknown"),
+        }
+        for item_id in narrative.get("failed_items", [])
+    ]
+    return True, True, failed_item_entries
+
+
+def _fetch_sec_narrative(filings_rows: list[dict]) -> dict:
+    """Assemble the `sec_narrative` memo-feed contract (brief §Decision):
+    management's filed text for the latest 10-K, the latest 10-Q, and the
+    earnings 8-K of each of the last N quarters (Task 2's
+    `select_narrative_filings` policy). One `--action narrative` subprocess
+    per SELECTED accession; the producer's own cache
+    (`narrative_sections_{accession}`, immutable TTL) is reused unchanged —
+    this introduces no new cache key.
+
+    Failure must be STRUCTURALLY visible, not merely a status string
+    (brief Fork A — the researched EN/JA sources agree a status string
+    alone is the documented ignored-by-structural-readers failure mode):
+    `failed_items` is hoisted to THIS wrapper's OWN top level (depth 1) —
+    `pack.py`'s `_classify_result` walks exactly one level and cannot see
+    into a list-valued `sections` sub-field, so a per-item failure living
+    inside a selected filing's `sections` list would otherwise be
+    structurally invisible. The required count triple `{requested,
+    succeeded, failed}` turns "is this complete?" into arithmetic
+    reconciliation: `requested` is fixed by the selection POLICY (never by
+    what came back), and `succeeded + failed == requested` holds by
+    construction — every selected filing resolves to exactly one bucket,
+    and every selection gap is counted as failed.
+
+    `_status` (ok/partial/failed) is derived from those counts AND each
+    producer's own `narrative_status`: a filing that is itself fetched but
+    reports `narrative_status: "partial"` still counts as "succeeded" in
+    the triple (the FILING was obtained), but its section-level failures
+    are surfaced in `failed_items` and force the wrapper's own `_status` to
+    "partial" too — Task 4 taught `pack.py` to honor this self-declared
+    `_status`, winning over its own dict-shape inference that structurally
+    cannot see into `sections` (a list).
+    """
+    if str(SCRIPT_DIR) not in sys.path:
+        sys.path.insert(0, str(SCRIPT_DIR))
+    # Lazy import: sec_edgar_client.py's top-level `import requests` would
+    # otherwise force its runtime deps (requests/edgartools) onto every
+    # pack type at MODULE-IMPORT time, not just memo-fetch's narrative path
+    # — this module's own PEP 723 header stays dependency-free (see the
+    # module docstring); only calling this function pays that cost.
+    from sec_edgar_client import select_narrative_filings
+
+    selection = select_narrative_filings(filings_rows)
+    requested = selection["requested"]
+
+    filings_out: list[dict] = []
+    failed_items: list[dict] = []
+    succeeded = 0
+    failed = 0
+    any_partial = False
+
+    for row in selection["selected"]:
+        role = row["role"]
+        quarter = row.get("quarter")
+        accession = row.get("accessionNumber")
+        _log(
+            "pack [narrative]",
+            f"{role}{(' ' + quarter) if quarter else ''} accession={accession}",
+        )
+        narrative = run_client(SEC, ["--action", "narrative", "--accession", accession])
+        entry = {"role": role, **({"quarter": quarter} if quarter else {}), **narrative}
+        filings_out.append(entry)
+
+        row_succeeded, row_partial, row_failed_items = _classify_narrative_entry(
+            role, quarter, accession, narrative
+        )
+        if row_succeeded:
+            succeeded += 1
+            any_partial = any_partial or row_partial
+        else:
+            failed += 1
+        failed_items.extend(row_failed_items)
+
+    for gap in selection["gaps"]:
+        failed += 1
+        failed_items.append(dict(gap))
+
+    # `requested > 0` guards against the vacuous `failed == requested`
+    # when nothing was requested at all (an empty selection: 0 == 0 is
+    # true but is NOT a failure) — see
+    # test_fetch_sec_narrative_empty_selection_is_not_vacuously_failed.
+    if requested > 0 and failed == requested:
+        status = "failed"
+    elif failed > 0 or any_partial:
+        status = "partial"
+    else:
+        status = "ok"
+
+    return {
+        "filings": filings_out,
+        "failed_items": failed_items,
+        "requested": requested,
+        "succeeded": succeeded,
+        "failed": failed,
+        "_status": status,
+    }
+
+
 def pack_memo_fetch(ticker: str) -> dict:
     """Heavy single-ticker bundle for equity memo: yfinance + SEC EDGAR."""
     _log("memo-fetch start", ticker)
@@ -557,11 +705,26 @@ def pack_memo_fetch(ticker: str) -> dict:
     info = run_client(YF, ["--ticker", ticker, "--action", "info"])
     _log("pack [history 2y]", ticker)
     history = run_client(YF, ["--ticker", ticker, "--period", "2y"])
-    _log("pack [filings]", f"{ticker} 10-K/10-Q/8-K limit=8")
+    # Policy-derived DATE window, not a filing-count `--limit` (Task 8 fix for
+    # a live-observed false gap, 2026-07-13 real AAPL run): `--limit 8` capped
+    # across ALL forms combined, so 8-K/10-Q volume crowded the once-a-year
+    # 10-K out of the returned rows entirely -- `select_narrative_filings`
+    # then reported a PHANTOM "no 10-K" gap. A count window drifts with a
+    # company's filing frequency; `narrative_filings_window_days` (a single
+    # cached submissions call either way, so a deeper window is nearly free)
+    # does not. Lazy import mirrors `_fetch_sec_narrative`'s own pattern below
+    # (sec_edgar_client's top-level `import requests` must not become a
+    # module-import-time cost for other pack types).
+    if str(SCRIPT_DIR) not in sys.path:
+        sys.path.insert(0, str(SCRIPT_DIR))
+    from sec_edgar_client import narrative_filings_window_days
+
+    since_days = narrative_filings_window_days()
+    _log("pack [filings]", f"{ticker} 10-K/10-Q/8-K since_days={since_days}")
     filings = run_client(
         SEC,
         ["--ticker", ticker, "--action", "filings",
-         "--forms", "10-K,10-Q,8-K", "--limit", "8"],
+         "--forms", "10-K,10-Q,8-K", "--since-days", str(since_days)],
     )
     _log("pack [facts]", ticker)
     facts = run_client(SEC, ["--ticker", ticker, "--action", "facts"])
@@ -569,6 +732,9 @@ def pack_memo_fetch(ticker: str) -> dict:
     raw_concepts = _fetch_dcf_concepts(ticker)
     _log("pack [normalize]", "DCF concept merge")
     canonical = _normalize_dcf(raw_concepts)
+    _log("pack [narrative selection]", ticker)
+    filings_rows = filings.get("filings", []) if isinstance(filings, dict) else []
+    sec_narrative = _fetch_sec_narrative(filings_rows)
     _log("memo-fetch done", f"{ticker} in {time.monotonic() - t0:.1f}s")
     rows = history.get("data", []) if isinstance(history, dict) else []
     info_dict = info if isinstance(info, dict) else {}
@@ -580,6 +746,7 @@ def pack_memo_fetch(ticker: str) -> dict:
         "price_history": history,
         "history": rows,  # T1 canonical OHLCV alias
         "sec_filings": filings,
+        "sec_narrative": sec_narrative,
         "sec_facts": {
             **facts,
             "concepts": raw_concepts,  # T3 raw — concept-keyed time-series
@@ -591,7 +758,6 @@ def pack_memo_fetch(ticker: str) -> dict:
         "shares_outstanding": info_dict.get("sharesOutstanding"),
         "current_price": info_dict.get("regularMarketPrice"),
         "us_specific": {
-            "non_gaap_eps_note": "Out of scope for T3 v1; lives in 8-K narratives.",
             "segment_revenue_note": "Out of scope for T3 v1; future enhancement (us-gaap:RevenuesFromExternalCustomers by segment).",
         },
     }

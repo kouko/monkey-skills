@@ -45,7 +45,7 @@ import json
 import re
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import requests as _requests
@@ -317,8 +317,41 @@ def fetch_submissions(cik: int) -> dict:
     return result
 
 
-def list_filings(cik: int, forms: list[str] | None, limit: int) -> list[dict]:
-    """Return recent filings, optionally filtered by form."""
+def list_filings(
+    cik: int,
+    forms: list[str] | None,
+    limit: int,
+    min_filing_date: str | None = None,
+) -> list[dict]:
+    """Return recent filings, optionally filtered by form and/or a minimum
+    filing date.
+
+    `min_filing_date` (an ISO ``YYYY-MM-DD`` string), when given, OVERRIDES
+    `limit`'s row-count truncation as the stop condition: every row is scanned
+    to the end of the `recent` arrays and a row is kept only if its
+    `filingDate` is on or after the cutoff -- rows are never dropped early
+    just because `limit` matching-form rows were already collected. This
+    filters rather than breaks early specifically so it does NOT depend on
+    the `recent` arrays being date-descending -- that ordering assumption is
+    unverified beyond a handful of live probes, and an early `break` on an
+    unverified ordering claim is the same "truncate early on an assumption"
+    shape as the original `--limit 8` bug this fixes, just relocated to
+    dates. The arrays are already fully in memory and small (one company's
+    filing history), so a full scan costs nothing worth trading correctness
+    for.
+
+    This exists to fix a live-observed false gap (2026-07-13, real AAPL run):
+    a `limit`-only (row-count) window is capped ACROSS ALL forms combined, so
+    a company's own 8-K/10-Q filing volume can crowd a once-a-year 10-K out
+    of the returned rows entirely -- `select_narrative_filings` then
+    (correctly, given what it was handed) reports a PHANTOM "no 10-K" gap. A
+    count window drifts with filing frequency; a date window does not, so
+    `min_filing_date` is what a caller wanting a policy-sufficient depth
+    should pass (see `narrative_filings_window_days`), not a bigger `limit`.
+
+    `limit` alone (`min_filing_date=None`) preserves the original count-based
+    behavior unchanged for other callers (e.g. ad hoc CLI browsing).
+    """
     sub = fetch_submissions(cik)
     if "error" in sub:
         return []
@@ -329,22 +362,229 @@ def list_filings(cik: int, forms: list[str] | None, limit: int) -> list[dict]:
     accn_list = recent.get("accessionNumber", [])
     primary_doc_list = recent.get("primaryDocument", [])
     primary_desc_list = recent.get("primaryDocDescription", [])
+    items_list = recent.get("items", [])
+    report_date_list = recent.get("reportDate", [])
 
     rows: list[dict] = []
     for i in range(len(forms_list)):
+        filing_date = dates_list[i] if i < len(dates_list) else None
+        if (
+            min_filing_date is not None
+            and filing_date is not None
+            and filing_date < min_filing_date
+        ):
+            # A row-by-row FILTER, never an early `break`: whether `recent`
+            # is date-descending across all forms is not something this code
+            # verifies, and breaking on an unverified ordering assumption is
+            # the same "truncate early on an assumption" shape as the
+            # original `--limit 8` bug, just relocated to dates. The arrays
+            # are already fully in memory and small, so scanning to the end
+            # costs nothing worth trading correctness for.
+            continue
         form = forms_list[i]
         if forms and form not in forms:
             continue
         rows.append({
             "form": form,
-            "filingDate": dates_list[i] if i < len(dates_list) else None,
+            "filingDate": filing_date,
             "accessionNumber": accn_list[i] if i < len(accn_list) else None,
             "primaryDocument": primary_doc_list[i] if i < len(primary_doc_list) else None,
             "primaryDocDescription": primary_desc_list[i] if i < len(primary_desc_list) else None,
+            "items": items_list[i] if i < len(items_list) else None,
+            "reportDate": report_date_list[i] if i < len(report_date_list) else None,
         })
-        if len(rows) >= limit:
+        if min_filing_date is None and len(rows) >= limit:
             break
     return rows
+
+
+# ---------------------------------------------------------------------------
+# select_narrative_filings — quarter-anchored filing-selection policy (pure
+# function, no I/O) over already-fetched `list_filings` rows. Decides WHICH
+# filings the memo's narrative reads: the latest 10-K, the latest 10-Q, and
+# one earnings 8-K per quarter for the last `n_quarters` quarters.
+#
+# Two non-negotiable design laws:
+#   1. Selection is by ITEM CODE, never recency rank. An 8-K's most recent
+#      filing is often a 5.02 executive-change filing, not the earnings
+#      release (live-observed on AAPL, 2026-07-13: the latest 8-K was
+#      items="5.02"; the actual earnings 8-K was an older one in the same
+#      quarter, items="2.02,9.01"). Item-code membership is checked by
+#      splitting the comma-separated `items` field into a set, never by
+#      substring (so a hypothetical "12.02" never matches "2.02").
+#   2. The window is anchored in TIME (quarters), never in filing count.
+#      8-K volume is unpredictable (it is the "any material event" form), so
+#      a count-based window drifts with a company's filing frequency.
+# ---------------------------------------------------------------------------
+
+def _quarter_of(date_str: str | None) -> tuple[int, int] | None:
+    """(year, quarter) for an ISO date string, or None if unparseable/absent."""
+    if not date_str:
+        return None
+    try:
+        d = date.fromisoformat(date_str)
+    except (ValueError, TypeError):
+        return None
+    return (d.year, (d.month - 1) // 3 + 1)
+
+
+def _quarter_label(year_quarter: tuple[int, int]) -> str:
+    year, quarter = year_quarter
+    return f"{year}Q{quarter}"
+
+
+def _quarter_shift(year_quarter: tuple[int, int], n: int) -> tuple[int, int]:
+    """(year, quarter) shifted back by `n` quarters (n >= 0)."""
+    year, quarter = year_quarter
+    total = year * 4 + (quarter - 1) - n
+    return (total // 4, total % 4 + 1)
+
+
+def _has_item_code(items: str | None, code: str) -> bool:
+    """Exact set-membership over the comma-separated `items` field — never a
+    substring search (a hypothetical "12.02" must not match "2.02")."""
+    if not items:
+        return False
+    return code in {part.strip() for part in items.split(",")}
+
+
+def _latest_filing(filings: list[dict], form: str) -> dict | None:
+    rows = [r for r in filings if r.get("form") == form and r.get("filingDate")]
+    if not rows:
+        return None
+    return max(rows, key=lambda r: r["filingDate"])
+
+
+def select_narrative_filings(
+    filings: list[dict],
+    n_quarters: int = 4,
+    as_of: date | None = None,
+) -> dict:
+    """Select the filings the memo's narrative reads from `filings` rows (as
+    returned by `list_filings`): the latest 10-K, the latest 10-Q, and one
+    earnings 8-K (submissions `items` containing "2.02") per quarter for the
+    last `n_quarters` quarters, anchored at `as_of` (defaults to
+    `date.today()` — injectable for deterministic tests; no wall-clock read
+    happens inside the selection logic below this point).
+
+    Returns:
+      {
+        "selected": [ <filing row> + {"role": "10-K"|"10-Q"|"8-K",
+                                       "quarter": "<YYYYQn>" for 8-K only}, ... ],
+        "gaps": [ {"role": ..., "quarter": ..., "error": "...",
+                    "error_class": "no_filing"|"no_earnings_8k"}, ... ],
+        "requested": 2 + n_quarters,  # fixed by the policy, never by outcome
+      }
+
+    A quarter with no qualifying item-2.02 8-K yields an explicit gap entry
+    naming the quarter and the reason — never a silent omission, mirroring
+    the repo's `_section_gap` gap-slot idiom (`error` + `error_class`).
+    """
+    anchor = as_of or date.today()
+    anchor_yq = (anchor.year, (anchor.month - 1) // 3 + 1)
+
+    selected: list[dict] = []
+    gaps: list[dict] = []
+
+    for role, form in (("10-K", "10-K"), ("10-Q", "10-Q")):
+        latest = _latest_filing(filings, form)
+        if latest:
+            selected.append({**latest, "role": role})
+        else:
+            gaps.append({
+                "role": role,
+                "error": f"no {form} filing found",
+                "error_class": "no_filing",
+            })
+
+    earnings_by_quarter: dict[tuple[int, int], list[dict]] = {}
+    for row in filings:
+        if row.get("form") != "8-K" or not _has_item_code(row.get("items"), "2.02"):
+            continue
+        year_quarter = _quarter_of(row.get("reportDate") or row.get("filingDate"))
+        if year_quarter is None:
+            continue
+        earnings_by_quarter.setdefault(year_quarter, []).append(row)
+
+    for n in range(n_quarters):
+        target_yq = _quarter_shift(anchor_yq, n)
+        label = _quarter_label(target_yq)
+        candidates = earnings_by_quarter.get(target_yq)
+        if candidates:
+            pick = max(candidates, key=lambda r: r.get("filingDate") or "")
+            selected.append({**pick, "role": "8-K", "quarter": label})
+        else:
+            gaps.append({
+                "role": "8-K",
+                "quarter": label,
+                "error": f"no earnings 8-K (item 2.02) found for quarter {label}",
+                "error_class": "no_earnings_8k",
+            })
+
+    return {
+        "selected": selected,
+        "gaps": gaps,
+        "requested": 2 + n_quarters,
+    }
+
+
+# SEC 10-K filing deadlines (Exchange Act reporting-company categories): large
+# accelerated filers must file within 60 days of fiscal year end, accelerated
+# filers within 75, all other filers within 90 of fiscal year end. But 90 is
+# NOT the worst case: Rule 12b-25 lets ANY filer submit a Form 12b-25 (NT
+# 10-K) and receive an automatic 15-calendar-day extension on top of its own
+# deadline -- routine for non-accelerated/small-cap filers. The true worst
+# case is 90 + 15 = 105 days.
+_MAX_10K_FILING_LAG_DAYS = 105
+# Deliberate buffer ON TOP of the true worst case above -- not shaved to the
+# boundary. A prior implementation used a 1-day margin (455 worst-case vs a
+# 456-day window) with no test covering it; this margin exists so the window
+# tolerates minor calendar edge cases (e.g. a deadline landing on a
+# weekend/holiday, which SEC rules roll to the next business day) without
+# re-deriving exact worst-case arithmetic each time.
+_FILING_LAG_SAFETY_MARGIN_DAYS = 30
+_DAYS_PER_YEAR = 366  # leap-safe
+_DAYS_PER_QUARTER = 92  # calendar-quarter upper bound (Jan-Mar=90 .. Jul-Sep=92)
+
+
+def narrative_filings_window_days(n_quarters: int = 4) -> int:
+    """The lookback window (in days) a raw filings fetch MUST cover so that
+    `select_narrative_filings` can find every filing its policy asks for --
+    the latest 10-K, the latest 10-Q, and an earnings 8-K per quarter for the
+    last `n_quarters` -- regardless of how many OTHER filings (8-Ks/10-Qs)
+    intervened.
+
+    This is the fix for a live-observed false gap (2026-07-13, real AAPL
+    run): the raw filings fetch used to cap on a filing COUNT (`--limit 8`,
+    applied across ALL forms combined), and AAPL's own 8-K/10-Q volume
+    crowded the once-a-year 10-K out of the last 8 rows entirely --
+    `select_narrative_filings` then (correctly, given what it was handed)
+    reported a PHANTOM "no 10-K" gap for a filer that obviously has one. A
+    count window drifts with a company's filing frequency; a TIME window
+    does not -- so this returns DAYS, never a row count, and a caller should
+    pass the result to `list_filings`'s `min_filing_date`, never bump a
+    `limit` integer.
+
+    Two lower bounds; the wider one wins:
+      - the LATEST 10-K: filed once per fiscal year, up to
+        `_MAX_10K_FILING_LAG_DAYS` (105 -- the 90-day non-accelerated
+        deadline PLUS Rule 12b-25's automatic 15-day NT-10-K extension) after
+        the fiscal year it reports, plus `_FILING_LAG_SAFETY_MARGIN_DAYS` of
+        deliberate buffer. One full year back plus that lag+margin is
+        provably sufficient against a filer using the Rule 12b-25 extension
+        -- but NOT against a filer who blows even the EXTENDED deadline
+        (genuinely delinquent, > 105 days late). That residual case is
+        accepted deliberately, not overlooked: if a 10-K is that late, the
+        filing really is overdue, and `select_narrative_filings` reporting a
+        gap for it is arguably correct behavior, not a false negative.
+      - `n_quarters` of earnings 8-Ks: `n_quarters` calendar quarters back
+        (`_DAYS_PER_QUARTER` upper-bounds one quarter's length).
+    """
+    annual_bound = (
+        _DAYS_PER_YEAR + _MAX_10K_FILING_LAG_DAYS + _FILING_LAG_SAFETY_MARGIN_DAYS
+    )  # 366 + 105 + 30 = 501
+    quarterly_bound = n_quarters * _DAYS_PER_QUARTER
+    return max(annual_bound, quarterly_bound)
 
 
 # ---------------------------------------------------------------------------
@@ -418,15 +658,33 @@ def action_facts(ticker: str, concept: str | None) -> dict:
     return out
 
 
-def action_filings(ticker: str, forms: list[str] | None, limit: int) -> dict:
-    _log("filings fetch", f"{ticker} forms={forms or 'ALL'} limit={limit}")
+def action_filings(
+    ticker: str,
+    forms: list[str] | None,
+    limit: int,
+    since_days: int | None = None,
+) -> dict:
+    """`since_days`, when given, fetches by a DATE window (today - since_days)
+    instead of `limit`'s row count -- see `list_filings`'s `min_filing_date`
+    and `narrative_filings_window_days` for why: a count window drifts with a
+    company's filing frequency (the root cause of a live-observed false gap),
+    a date window does not."""
+    min_filing_date = (
+        (date.today() - timedelta(days=since_days)).isoformat()
+        if since_days is not None else None
+    )
+    _log(
+        "filings fetch",
+        f"{ticker} forms={forms or 'ALL'} "
+        + (f"since_days={since_days}" if since_days is not None else f"limit={limit}"),
+    )
     t0 = time.monotonic()
     cik_info = resolve_cik(ticker)
     if "error" in cik_info:
         return cik_info
     cik = cik_info["cik"]
 
-    rows = list_filings(cik, forms, limit)
+    rows = list_filings(cik, forms, limit, min_filing_date=min_filing_date)
     latest_date = rows[0]["filingDate"] if rows else None
     _log("filings done", f"{ticker} {len(rows)} rows in {time.monotonic() - t0:.1f}s")
     return {
@@ -436,6 +694,8 @@ def action_filings(ticker: str, forms: list[str] | None, limit: int) -> dict:
         "action": "filings",
         "forms_filter": forms,
         "limit": limit,
+        "since_days": since_days,
+        "min_filing_date": min_filing_date,
         "count": len(rows),
         "filings": rows,
         "fetched_at": _now_iso(),
@@ -1341,6 +1601,14 @@ def main():
         "--limit", type=int, default=20,
         help="Max filings to return for --action filings (default 20)",
     )
+    parser.add_argument(
+        "--since-days", type=int, default=None,
+        help=(
+            "Fetch --action filings by a DATE window (today - N days) instead "
+            "of --limit's row count -- overrides --limit's truncation (see "
+            "narrative_filings_window_days for a policy-derived value)"
+        ),
+    )
     parser.add_argument("--no-cache", action="store_true", help="Bypass cache for this run")
     parser.add_argument("--quiet", action="store_true",
                         help="Suppress progress logging on stderr (default: verbose)")
@@ -1398,7 +1666,7 @@ def main():
             [f.strip() for f in args.forms.split(",") if f.strip()]
             if args.forms else None
         )
-        result = action_filings(args.ticker, forms, args.limit)
+        result = action_filings(args.ticker, forms, args.limit, args.since_days)
 
     elif args.action == "narrative":
         if not args.accession:

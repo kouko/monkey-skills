@@ -19,7 +19,7 @@ and we want forward compatibility, not lockdown.
 | Pack | Schema file | Tier | Use case |
 |------|-------------|------|----------|
 | `snapshot` | [`us-schema-snapshot.json`](us-schema-snapshot.json) | 2 | Quick yfinance overview (info + 2y price) for a single ticker. Feeds `analysis-screener` lightweight paths and `report-stock-snapshot`. |
-| `memo-fetch` | [`us-schema-memo-fetch.json`](us-schema-memo-fetch.json) | A + 2 | Heavy bundle: yfinance + SEC EDGAR (10-K/10-Q/8-K + XBRL facts). Feeds `analysis-dcf` and `report-equity-memo`. |
+| `memo-fetch` | [`us-schema-memo-fetch.json`](us-schema-memo-fetch.json) | A + 2 | Heavy bundle: yfinance + SEC EDGAR (10-K/10-Q/8-K filings index + XBRL facts + filed narrative sections). Feeds `analysis-dcf` and `report-equity-memo`. |
 | `comps-multiples` | [`us-schema-comps-multiples.json`](us-schema-comps-multiples.json) | 2 | Multiples-only filter on yfinance info. Single (anchor) or batch (peers). Feeds `analysis-comps`. |
 | `screener-batch` | [`us-schema-screener-batch.json`](us-schema-screener-batch.json) | 2 | Lightweight screener-input fields, batch only (≥2 tickers). Feeds `analysis-screener`. |
 | `regime-pack` | [`us-schema-regime-pack.json`](us-schema-regime-pack.json) | A | FRED macro indicator groups, no ticker dimension. Feeds `analysis-macro-regime`. |
@@ -77,6 +77,29 @@ and we want forward compatibility, not lockdown.
   arrays of XBRL concept names; consumers fetch a specific concept's
   values via a separate `sec_edgar_client.py --action facts --concept X`
   call, not bundled here for size.
+- `sec_narrative` (`memo-fetch` only, Tier A) is management's filed text
+  for the latest 10-K, the latest 10-Q, and one earnings 8-K (item 2.02)
+  per quarter for the last N quarters (`sec_edgar_client.select_narrative_filings`'s
+  policy). It is a depth-1 wrapper: `filings` (one entry per selected
+  filing — `{role, quarter?, ...fetch_narrative_sections result}`,
+  including `sections`, a list of per-item narrative sections or
+  per-item error slots), `failed_items`, `requested` (policy-fixed =
+  `2 + n_quarters`), `succeeded`, `failed`, `_status` (`ok`/`partial`/
+  `failed`). Two consumer-contract notes:
+  - **The failure signal is depth-1, not `sections`-nested.** A
+    consumer MUST read the wrapper's own `_status` + `failed_items` —
+    it must NOT rely on a classifier walking into any filing's
+    `sections` list to detect failure, because `pack.py`'s own
+    classifier walks exactly one level and cannot see into a
+    list-valued sub-field; a per-section failure living inside
+    `filings[].sections` is structurally invisible to it.
+  - **`succeeded` counts filings obtained, not sections fully
+    extracted.** A filing fetched with its own `narrative_status:
+    "partial"` (some sections failed) still counts as `succeeded` —
+    the filing itself was not a gap. So `succeeded + failed ==
+    requested` can reconcile cleanly while some section text is still
+    missing; the missing-ness is carried by `_status` + `failed_items`,
+    not by the count triple.
 - ROC (民國) year is **N/A** for data-us. Documented here as a
   cross-skill reminder: `data-tw` returns Western years in `date` fields,
   but report-layer formatting may need ROC conversion.

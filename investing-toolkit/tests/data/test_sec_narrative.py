@@ -166,6 +166,388 @@ def test_acquire_rejects_when_identity_unset(sec_client, monkeypatch):
 
 
 # ---------------------------------------------------------------------------
+# Task 1 (this plan, 2026-07-13-us-sec-narrative-memo-wiring) — list_filings
+# preserves the submissions API's `items` and `reportDate` fields.
+# ---------------------------------------------------------------------------
+# Live-verified 2026-07-13 against CIK 0000320193: `data.sec.gov` submissions
+# `filings.recent` is a dict of parallel, index-aligned arrays that already
+# includes `items` (comma-joined 8-K item codes, e.g. "2.02,9.01") and
+# `reportDate` (period of report); a 10-K row's `items` is an empty string,
+# not a missing entry. Stubs fetch_submissions directly (the real producer
+# boundary list_filings calls), per fixtures-mirror-producer-shape.
+
+
+def test_list_filings_preserves_items_and_report_date(sec_client, monkeypatch):
+    # No @req tag: this dispatch's plan/spec trace by
+    # `<change-id> / Requirement / Scenario` join keys, not registered REQ-ids
+    # (see report) — @req omitted per the implementer contract.
+    stub_submissions = {
+        "data": {
+            "filings": {
+                "recent": {
+                    "form": ["10-K", "8-K", "8-K"],
+                    "filingDate": ["2024-11-01", "2024-05-01", "2024-02-01"],
+                    "accessionNumber": [
+                        "0000320193-24-000123",
+                        "0000320193-24-000099",
+                        "0000320193-24-000050",
+                    ],
+                    "primaryDocument": [
+                        "aapl-20240928.htm",
+                        "a8-k-may.htm",
+                        "a8-k-feb.htm",
+                    ],
+                    "primaryDocDescription": ["10-K", "8-K", "8-K"],
+                    # 3rd row's items/reportDate entries are MISSING (short
+                    # arrays) — exercises the index-guard idiom below.
+                    "items": ["", "2.02,9.01"],
+                    "reportDate": ["2024-09-28", "2024-03-30"],
+                }
+            }
+        }
+    }
+    monkeypatch.setattr(sec_client, "fetch_submissions", lambda cik: stub_submissions)
+
+    rows = sec_client.list_filings(320193, None, limit=10)
+
+    by_accn = {r["accessionNumber"]: r for r in rows}
+    tenk = by_accn["0000320193-24-000123"]
+    eightk_recent = by_accn["0000320193-24-000099"]
+    eightk_short = by_accn["0000320193-24-000050"]
+
+    # 10-K: items is the API's own empty-string representation, NOT None/missing.
+    assert tenk["items"] == ""
+    assert tenk["reportDate"] == "2024-09-28"
+
+    # 8-K carries the comma-joined item codes verbatim, un-parsed/un-interpreted.
+    assert eightk_recent["items"] == "2.02,9.01"
+    assert eightk_recent["reportDate"] == "2024-03-30"
+
+    # index-guard: a row past the end of the items/reportDate arrays mirrors the
+    # existing `i < len(...)` idiom used for the other parallel arrays -> None.
+    assert eightk_short["items"] is None
+    assert eightk_short["reportDate"] is None
+
+
+# ---------------------------------------------------------------------------
+# Task 8 (2026-07-13-us-sec-narrative-memo-wiring, post-live-anchor defect) —
+# `list_filings`'s `min_filing_date` fix for the live-observed false-gap bug.
+# ---------------------------------------------------------------------------
+# Live-observed 2026-07-13, real AAPL run: `pack_memo_fetch` fetched filings
+# with `--limit 8` -- a row-COUNT cutoff applied ACROSS ALL forms combined,
+# not per form. AAPL's own 8-K/10-Q volume crowded the once-a-year 10-K out
+# of the returned rows entirely, so `select_narrative_filings` (correctly,
+# given what it was handed) reported a PHANTOM "no 10-K" gap for a filer that
+# obviously has one. The fix is `min_filing_date`: a DATE cutoff never drifts
+# with a company's filing frequency the way a row count does.
+
+
+def _stub_submissions(forms: list[str], dates: list[str], accessions: list[str]) -> dict:
+    n = len(forms)
+    assert len(dates) == n == len(accessions)
+    return {
+        "data": {
+            "filings": {
+                "recent": {
+                    "form": forms,
+                    "filingDate": dates,
+                    "accessionNumber": accessions,
+                    "primaryDocument": ["" for _ in range(n)],
+                    "primaryDocDescription": ["" for _ in range(n)],
+                    "items": ["" for _ in range(n)],
+                    "reportDate": ["" for _ in range(n)],
+                }
+            }
+        }
+    }
+
+
+def test_narrative_filings_window_days_is_time_not_count_anchored(sec_client):
+    # No @req tag (see test_list_filings_min_filing_date_recovers_crowded_out_10k).
+    """The window a raw filings fetch must cover so `select_narrative_filings`
+    can find the latest 10-K + n_quarters of earnings 8-Ks is derived from
+    TIME (SEC filing deadlines / quarter length), never a magic row count --
+    that is what makes it provably sufficient regardless of a company's
+    filing frequency (the root cause of the crowd-out bug this replaces)."""
+    # Must reach back at least one full year plus SEC's longest 10-K filing
+    # deadline (90 days, non-accelerated filers) -- else a late-filed 10-K
+    # can fall outside the window even with zero intervening filings.
+    assert sec_client.narrative_filings_window_days(n_quarters=4) >= 366 + 90
+
+    # Must also reach back n_quarters full calendar quarters for the 8-Ks --
+    # a large n_quarters must widen the window, not leave it flat.
+    assert (
+        sec_client.narrative_filings_window_days(n_quarters=20)
+        > sec_client.narrative_filings_window_days(n_quarters=4)
+    )
+
+
+def test_list_filings_min_filing_date_recovers_crowded_out_10k(sec_client, monkeypatch):
+    # No @req tag: this dispatch's plan/spec trace by
+    # `<change-id> / Requirement / Scenario` join keys, not registered REQ-ids
+    # (see report) — @req omitted per the implementer contract.
+    """Live-observed defect: a `limit`-only (count) window truncates before
+    ever reaching an old, once-a-year 10-K once >= `limit` more-recent
+    8-K/10-Q rows intervened. `min_filing_date` (a date cutoff) recovers it
+    regardless of how many other filings intervened."""
+    # 10 more-recent 8-K/10-Q rows (descending, mirroring the real SEC
+    # submissions `recent` ordering), THEN an older 10-K at index 10 -- a
+    # `limit=8` count window stops at index 7, never reaching it.
+    recent_dates = [f"2026-{m:02d}-01" for m in range(6, 0, -1)] + [
+        f"2025-{m:02d}-01" for m in (12, 11, 10, 9)
+    ]
+    forms = ["8-K" if i % 2 == 0 else "10-Q" for i in range(10)] + ["10-K"]
+    dates = recent_dates + ["2025-08-01"]
+    accessions = [f"acc-{i}" for i in range(10)] + ["acc-tenk"]
+    monkeypatch.setattr(
+        sec_client, "fetch_submissions",
+        lambda cik: _stub_submissions(forms, dates, accessions),
+    )
+
+    # OLD behavior reproduced: a count-only window (no min_filing_date)
+    # truncates before the 10-K's row is ever reached.
+    old_rows = sec_client.list_filings(320193, ["10-K", "10-Q", "8-K"], 8)
+    assert not any(r["form"] == "10-K" for r in old_rows), (
+        "test setup sanity: with the OLD count-only window the 10-K must be "
+        f"crowded out -- got rows: {old_rows}"
+    )
+
+    # FIX: a date cutoff recovers it regardless of the intervening row count.
+    fixed_rows = sec_client.list_filings(
+        320193, ["10-K", "10-Q", "8-K"], 8, min_filing_date="2025-01-01",
+    )
+    assert any(
+        r["form"] == "10-K" and r["accessionNumber"] == "acc-tenk"
+        for r in fixed_rows
+    ), f"expected the 10-K recovered via min_filing_date, got: {fixed_rows}"
+
+
+def test_list_filings_min_filing_date_recovers_nt_10k_extension_lag(sec_client, monkeypatch):
+    # No @req tag (see test_list_filings_min_filing_date_recovers_crowded_out_10k).
+    """SEC Rule 12b-25 lets a filer submit an NT 10-K and receive an automatic
+    15-calendar-day extension on top of the 90-day non-accelerated deadline --
+    a true worst-case lag of 105 days, not 90. A filer that used the extension
+    for a PRIOR fiscal year and is now late again can leave the previous
+    (still-current) 10-K as far back as 366 + 104 days from `as_of` -- inside
+    the Rule-12b-25 worst case, but the pre-fix 456-day window (366 + 90)
+    drops it, reproducing the exact phantom-gap defect Task 8 exists to
+    eliminate. Must go RED against the pre-fix window and GREEN once the
+    window accounts for the extension (verified manually this round; see
+    implementer report)."""
+    anchor = datetime.date(2026, 7, 13)
+    lag_days = 366 + 104  # one leap-safe year + a near-worst-case NT-10-K lag
+    old_tenk_date = (anchor - datetime.timedelta(days=lag_days)).isoformat()
+    recent_8k_date = (anchor - datetime.timedelta(days=5)).isoformat()
+    monkeypatch.setattr(
+        sec_client, "fetch_submissions",
+        lambda cik: _stub_submissions(
+            forms=["10-K", "8-K"],
+            dates=[old_tenk_date, recent_8k_date],
+            accessions=["acc-tenk-late", "acc-8k-recent"],
+        ),
+    )
+
+    window_days = sec_client.narrative_filings_window_days(n_quarters=4)
+    min_filing_date = (anchor - datetime.timedelta(days=window_days)).isoformat()
+    rows = sec_client.list_filings(
+        320193, ["10-K", "8-K"], 8, min_filing_date=min_filing_date,
+    )
+
+    assert any(
+        r["form"] == "10-K" and r["accessionNumber"] == "acc-tenk-late"
+        for r in rows
+    ), (
+        "expected the late (Rule-12b-25-extension) 10-K recovered within the "
+        f"window -- got rows: {rows}"
+    )
+
+
+def test_list_filings_min_filing_date_reports_true_absence_not_papered_over(
+    sec_client, monkeypatch,
+):
+    # No @req tag (see test_list_filings_min_filing_date_recovers_crowded_out_10k).
+    """A date-widened window must not manufacture a false PRESENCE to undo the
+    false-gap bug: a filer with genuinely no 10-K inside the window still
+    yields no 10-K row, and the real selection policy still reports an
+    explicit gap for it -- never silence, never a fabricated filing."""
+    forms = ["8-K", "10-Q"]
+    dates = ["2026-06-01", "2026-05-01"]
+    accessions = ["acc-0", "acc-1"]
+    monkeypatch.setattr(
+        sec_client, "fetch_submissions",
+        lambda cik: _stub_submissions(forms, dates, accessions),
+    )
+
+    rows = sec_client.list_filings(
+        320193, ["10-K", "10-Q", "8-K"], 8, min_filing_date="2025-01-01",
+    )
+    assert not any(r["form"] == "10-K" for r in rows), (
+        f"no 10-K exists in the stubbed data -- must NOT be fabricated: {rows}"
+    )
+
+    selection = sec_client.select_narrative_filings(rows, n_quarters=1)
+    tenk_gaps = [g for g in selection["gaps"] if g["role"] == "10-K"]
+    assert tenk_gaps, (
+        f"expected an explicit 10-K gap for a genuinely absent filing: {selection}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Task 2 (this plan, 2026-07-13-us-sec-narrative-memo-wiring) —
+# select_narrative_filings: a pure, offline-testable quarter-anchored
+# filing-selection policy over already-fetched `list_filings` rows.
+# ---------------------------------------------------------------------------
+# Live-verified 2026-07-13 against AAPL: the MOST RECENT 8-K at probe time was
+# items="5.02" (an executive-change filing), while the actual earnings release
+# was an OLDER 8-K in the same quarter, items="2.02,9.01". "Take the latest
+# 8-K" silently selects the wrong filing — selection must be by item code
+# (exact membership in the comma-separated `items`, never substring), and the
+# window must be anchored in TIME (quarters), never filing count.
+
+
+def _filing_row(
+    *, form, accession, filing_date, report_date="", items="", primary_document=""
+):
+    """A row shaped exactly like `list_filings`'s output (Task 1, landed)."""
+    return {
+        "form": form,
+        "filingDate": filing_date,
+        "accessionNumber": accession,
+        "primaryDocument": primary_document,
+        "primaryDocDescription": form,
+        "items": items,
+        "reportDate": report_date,
+    }
+
+
+def test_select_narrative_filings_picks_earnings_8k_by_item_not_recency(sec_client):
+    # No @req tag: this dispatch's plan/spec trace by
+    # `<change-id> / Requirement / Scenario` join keys, not registered REQ-ids
+    # (see report) — @req omitted per the implementer contract.
+    import datetime as _dt
+
+    rows = [
+        _filing_row(
+            form="10-K", accession="10K-OLD", filing_date="2024-11-01",
+            report_date="2024-09-28",
+        ),
+        _filing_row(
+            form="10-K", accession="10K-LATEST", filing_date="2025-11-01",
+            report_date="2025-09-27",
+        ),
+        _filing_row(
+            form="10-Q", accession="10Q-OLD", filing_date="2025-08-01",
+            report_date="2025-06-28",
+        ),
+        _filing_row(
+            form="10-Q", accession="10Q-LATEST", filing_date="2026-05-01",
+            report_date="2026-03-28",
+        ),
+        # 2026Q2: the MOST RECENT 8-K is a 5.02 executive-change filing; an
+        # OLDER 8-K in the SAME quarter is the real 2.02 earnings release.
+        _filing_row(
+            form="8-K", accession="8K-EXEC-CHANGE", filing_date="2026-05-05",
+            report_date="2026-05-01", items="5.02",
+        ),
+        _filing_row(
+            form="8-K", accession="8K-EARNINGS-Q2", filing_date="2026-04-30",
+            report_date="2026-04-30", items="2.02,9.01",
+        ),
+        # 2026Q1: a normal earnings 8-K.
+        _filing_row(
+            form="8-K", accession="8K-EARNINGS-Q1", filing_date="2026-02-01",
+            report_date="2026-01-31", items="2.02,9.01",
+        ),
+        # 2025Q4: an 8-K exists, but NONE carries item 2.02 -> must be a gap.
+        _filing_row(
+            form="8-K", accession="8K-Q4-OTHER", filing_date="2025-11-15",
+            report_date="2025-11-01", items="5.07",
+        ),
+        # 2026Q3 (the anchor quarter itself): no 8-K at all -> must be a gap.
+    ]
+    as_of = _dt.date(2026, 7, 15)  # anchors the window at 2026Q3
+
+    result = sec_client.select_narrative_filings(rows, n_quarters=4, as_of=as_of)
+
+    selected_by_role_quarter = {
+        (r["role"], r.get("quarter")): r for r in result["selected"]
+    }
+
+    tenk = selected_by_role_quarter[("10-K", None)]
+    assert tenk["accessionNumber"] == "10K-LATEST", "must pick the LATEST 10-K"
+
+    tenq = selected_by_role_quarter[("10-Q", None)]
+    assert tenq["accessionNumber"] == "10Q-LATEST", "must pick the LATEST 10-Q"
+
+    q2 = selected_by_role_quarter[("8-K", "2026Q2")]
+    assert q2["accessionNumber"] == "8K-EARNINGS-Q2", (
+        "must select the item-2.02 filing, NOT the more-recent 5.02 filing "
+        "in the same quarter (selection is by item code, never recency)"
+    )
+    assert "8K-EXEC-CHANGE" not in {r["accessionNumber"] for r in result["selected"]}
+
+    q1 = selected_by_role_quarter[("8-K", "2026Q1")]
+    assert q1["accessionNumber"] == "8K-EARNINGS-Q1"
+
+    # 2025Q4 has an 8-K, but none with item 2.02 -> explicit gap, not silence.
+    gaps_by_quarter = {g.get("quarter"): g for g in result["gaps"]}
+    assert "2025Q4" in gaps_by_quarter, (
+        f"expected an explicit gap for 2025Q4, got gaps: {result['gaps']!r}"
+    )
+    gap_q4 = gaps_by_quarter["2025Q4"]
+    assert "error" in gap_q4, f"gap must be a loud error slot: {gap_q4!r}"
+    assert "2025Q4" in gap_q4["error"], "gap error must name the quarter"
+
+    # 2026Q3 (the anchor quarter) has no 8-K at all -> also an explicit gap.
+    assert "2026Q3" in gaps_by_quarter
+
+    # requested is FIXED by the policy (2 + n_quarters), independent of what
+    # actually matched — this is what makes an incomplete result arithmetically
+    # detectable downstream rather than a short list that looks complete.
+    assert result["requested"] == 2 + 4 == 6
+
+
+def test_select_narrative_filings_requested_is_policy_fixed(sec_client):
+    # No @req tag (see test_select_narrative_filings_picks_earnings_8k_by_item_not_recency).
+    # `requested` must equal `2 + n_quarters` regardless of how many filings
+    # actually matched — even an EMPTY filings list still reports the full
+    # policy-fixed count, with every slot showing up as a gap.
+    result = sec_client.select_narrative_filings([], n_quarters=4)
+    assert result["requested"] == 6
+    assert len(result["selected"]) + len(result["gaps"]) == 6
+
+    result3 = sec_client.select_narrative_filings([], n_quarters=3)
+    assert result3["requested"] == 5
+
+
+def test_select_narrative_filings_item_code_is_exact_not_substring(sec_client):
+    # No @req tag (see test_select_narrative_filings_picks_earnings_8k_by_item_not_recency).
+    # A hypothetical "12.02" must NOT be treated as an earnings 8-K: membership
+    # of "2.02" must be a proper set-membership check over the comma-split
+    # `items` field, never a substring search.
+    import datetime as _dt
+
+    rows = [
+        _filing_row(
+            form="8-K", accession="8K-DECOY", filing_date="2026-05-05",
+            report_date="2026-05-01", items="12.02",
+        ),
+    ]
+    as_of = _dt.date(2026, 5, 15)  # anchors the window at 2026Q2
+
+    result = sec_client.select_narrative_filings(rows, n_quarters=1, as_of=as_of)
+
+    assert not any(
+        r["role"] == "8-K" and r["accessionNumber"] == "8K-DECOY"
+        for r in result["selected"]
+    ), "items='12.02' must NOT match item code '2.02' via substring"
+    gaps_by_quarter = {g.get("quarter"): g for g in result["gaps"]}
+    assert "2026Q2" in gaps_by_quarter, (
+        "the decoy-only quarter must still surface as an explicit gap"
+    )
+
+
+# ---------------------------------------------------------------------------
 # Task 2 — acquire_filing (edgartools acquisition + two distinct error classes)
 # ---------------------------------------------------------------------------
 # Fixtures mirror the REAL edgartools 5.42.0 Filing shape captured by the live

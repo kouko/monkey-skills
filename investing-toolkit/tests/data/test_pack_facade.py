@@ -514,6 +514,97 @@ def test_tw_screener_batch_total_failure_real_shape(monkeypatch, capsys):
     assert payload["_status"]["status"] == "failed"
 
 
+# ---------------------------------------------------------------------------
+# Task 4: a section may self-declare `_status`, overriding inference. This
+# is what makes a LIST-nested failure (structurally invisible to the
+# one-level dict-only walk) visible: the producer that KNOWS it degraded
+# says so directly, and the declaration wins over the classifier's own
+# inference -- exercised straight against `_classify_result`, per the
+# dispatch's acceptance criteria (no subprocess / no main() needed since
+# there is no network-touching branch cache involved here).
+# ---------------------------------------------------------------------------
+
+
+def test_classify_honors_self_declared_status():
+    pack = importlib.import_module("pack")
+
+    # Per-item errors live inside a LIST ("sections") -- invisible to
+    # _dict_section_status's dict-only sub-field walk, which only inspects
+    # non-empty DICT-valued sub-fields. Without a self-declared `_status`,
+    # this section has no dict-valued sub-fields at all and infers "ok".
+    result = {
+        "pack": "memo-fetch",
+        "sec_narrative": {
+            "_status": "partial",
+            "sections": [
+                {"item": "2.02-Q1", "error": "fetch failed"},
+                {"item": "2.02-Q2", "ok": True},
+            ],
+        },
+    }
+    status, failed_sections = pack._classify_result(result)
+    assert status == "partial"
+    assert failed_sections == ["sec_narrative"]
+
+
+def test_classify_self_declared_status_failed_and_ok():
+    pack = importlib.import_module("pack")
+
+    failed_result = {
+        "sec_narrative": {"_status": "failed", "sections": [{"error": "x"}]},
+    }
+    status, failed_sections = pack._classify_result(failed_result)
+    assert status == "failed"
+    assert failed_sections == ["sec_narrative"]
+
+    ok_result = {
+        "sec_narrative": {"_status": "ok", "sections": [{"ok": True}]},
+    }
+    status, failed_sections = pack._classify_result(ok_result)
+    assert status == "ok"
+    assert failed_sections == []
+
+
+def test_classify_self_declared_status_unknown_value_fails_closed():
+    """An invalid/unknown `_status` value must not silently pass as ok --
+    fail-closed choice: treat it as "failed" so an untrusted declaration
+    cannot masquerade as a clean section."""
+    pack = importlib.import_module("pack")
+
+    result = {"sec_narrative": {"_status": "bogus-value", "sections": []}}
+    status, failed_sections = pack._classify_result(result)
+    assert status == "failed"
+    assert failed_sections == ["sec_narrative"]
+
+
+def test_classify_no_status_key_inference_unchanged():
+    """Regression guard: a section with NO `_status` key must be classified
+    EXACTLY as before -- the other four market packs never set `_status`
+    and depend on this inference path being byte-for-byte unchanged."""
+    pack = importlib.import_module("pack")
+
+    # direct error marker -> failed
+    assert pack._classify_result({"info": {"error": "boom"}}) == ("failed", ["info"])
+
+    # all non-empty sub-dicts erroring -> failed
+    assert pack._classify_result(
+        {"mops": {"balance_sheet": {"_error": "x"}, "income": {"_error": "y"}}}
+    ) == ("failed", ["mops"])
+
+    # some non-empty sub-dicts erroring -> partial
+    assert pack._classify_result(
+        {"mops": {"balance_sheet": {"_error": "x"}, "income": {"ok": True}}}
+    ) == ("partial", ["mops"])
+
+    # none erroring -> ok
+    assert pack._classify_result(
+        {"mops": {"balance_sheet": {"ok": True}, "income": {"ok": True}}}
+    ) == ("ok", [])
+
+    # empty dict -> not classified (contributes no signal either way)
+    assert pack._classify_result({"info": {}}) == ("ok", [])
+
+
 def test_tw_screener_batch_partial_mops_only_real_shape(monkeypatch, capsys):
     """Same dialect as the total-failure case above, but only the
     per-ticker mops fetch fails while both yfinance batch fetches succeed

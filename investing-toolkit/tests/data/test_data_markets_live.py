@@ -552,6 +552,172 @@ def test_edgartools_fetch_narrative_sections_end_to_end():
     )
 
 
+@pytest.mark.network
+def test_live_memo_fetch_narrative_seam():
+    """Task 7 (fixtures-mirror-producer-shape live anchor, 2nd instance on this
+    arc): run the REAL `pack_us.pack_memo_fetch` narrative path against the
+    live SEC API for AAPL and shape-anchor its `sec_narrative` wrapper against
+    the offline fixture (tests/data/fixtures/data-us-memo-fetch-sample.json)
+    that Task 3's implementer hand-reconstructed by READING the producer's
+    code — no live SEC identity was available on that run, so the fixture's
+    shape was never actually verified against the real producer until now. A
+    disagreement here is the finding this test exists to produce, not a test
+    bug — do not loosen an assertion to make it pass.
+
+    `pack_memo_fetch` is imported and called IN-PROCESS (mirroring this
+    file's other direct edgartools-boundary anchors above), not through
+    `_run_pack`'s CLI subprocess: its own `run_client` calls to
+    `sec_edgar_client.py --action narrative`/`--action filings` etc. each run
+    as a real `uv run` subprocess with edgartools/requests auto-provisioned
+    per that script's own PEP 723 header, regardless of what this outer test
+    process has installed. This outer process only needs `requests` (for the
+    `from sec_edgar_client import select_narrative_filings` lazy import inside
+    `_fetch_sec_narrative`) and `edgartools` (for this test's own
+    `sec_edgar_client.list_filings` cross-check below) — hence `--with
+    edgartools --with requests` on the live invocation. Run live:
+      uv run --quiet --with pytest --with 'pyyaml>=6.0' --with edgartools \
+        --with requests pytest \
+        investing-toolkit/tests/data/test_data_markets_live.py \
+        -k live_memo_fetch_narrative_seam -m network
+    """
+    import sys
+    from pathlib import Path as _Path
+
+    if str(SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(SCRIPTS))
+    import pack_us
+    import sec_edgar_client
+
+    out = pack_us.pack_memo_fetch(US_TICKER)
+    assert "sec_narrative" in out, f"pack_memo_fetch dropped sec_narrative: keys={sorted(out)}"
+    narrative = out["sec_narrative"]
+
+    # the required count triple reconciles by construction.
+    requested, succeeded, failed = (
+        narrative["requested"], narrative["succeeded"], narrative["failed"],
+    )
+    assert succeeded + failed == requested, (
+        f"count triple must reconcile: requested={requested} "
+        f"succeeded={succeeded} failed={failed}"
+    )
+    assert succeeded >= 1, f"expected >=1 succeeded narrative fetch: {narrative}"
+
+    # Task 8 regression guard: the raw filings fetch used to be a row-COUNT
+    # window (`--limit 8`, capped across ALL forms combined), so AAPL's own
+    # 8-K/10-Q volume crowded the once-a-year 10-K out of the returned rows
+    # entirely — turning role="10-K" into a PHANTOM gap (live-observed
+    # 2026-07-13). Fixed by switching to a policy-derived DATE window
+    # (`sec_edgar_client.narrative_filings_window_days`); this must never
+    # regress, so assert the 10-K is actually SELECTED, not merely absent
+    # from `failed_items`.
+    tenk_entries = [f for f in narrative["filings"] if f.get("role") == "10-K"]
+    assert tenk_entries, (
+        "expected the latest 10-K to be SELECTED (not a false gap) now that "
+        "the raw-filings window is time-anchored, not count-limited: "
+        f"failed_items={narrative.get('failed_items')}"
+    )
+    assert "error" not in tenk_entries[0], (
+        f"selected 10-K entry carries an error: {tenk_entries[0]}"
+    )
+
+    # at least one selected filing is an earnings 8-K whose REAL submissions
+    # `items` field (re-fetched independently here, not just the segmented
+    # section labels already in `narrative`) includes "2.02" — the selection
+    # policy's own contract (Task 2: item code, never recency rank).
+    eightk_ok = [f for f in narrative["filings"] if f.get("form") == "8-K"]
+    assert eightk_ok, f"expected a successfully-fetched 8-K entry: {narrative['filings']}"
+    cik = eightk_ok[0]["cik"]
+    submissions_by_accession = {
+        r["accessionNumber"]: r for r in sec_edgar_client.list_filings(cik, ["8-K"], 50)
+    }
+    matched = [
+        f for f in eightk_ok
+        if "2.02" in {
+            p.strip()
+            for p in (submissions_by_accession.get(f["accession"], {}).get("items") or "").split(",")
+        }
+    ]
+    assert matched, (
+        "expected >=1 selected 8-K whose submissions items include 2.02; "
+        f"accessions={[f['accession'] for f in eightk_ok]} "
+        f"submissions_items={[(a, r.get('items')) for a, r in submissions_by_accession.items()]}"
+    )
+
+    # at least one returned section carries a text_path that EXISTS ON DISK
+    # (paths-not-content is the producer's contract — a dangling path is real).
+    all_sections = [
+        s for f in narrative["filings"] for s in f.get("sections", []) if isinstance(s, dict)
+    ]
+    text_path_sections = [s for s in all_sections if s.get("text_path")]
+    assert text_path_sections, f"expected >=1 section with text_path: {narrative['filings']}"
+    resolved_paths = [_Path(s["text_path"]).expanduser() for s in text_path_sections]
+    existing = [p for p in resolved_paths if p.exists()]
+    assert existing, f"no text_path resolved to a file that exists on disk: {resolved_paths}"
+
+    # ---- shape-anchor: does the REAL emission agree with the offline
+    # fixture's assumed shape? Compare via the 8-K role specifically (not the
+    # raw list position): both the 10-K and the 8-K are now reliably selected
+    # (Task 8 fixed the count-window crowd-out that used to make the 10-K a
+    # false gap — see the assertion above), so either role would do here;
+    # 8-K is kept because both sides carry the `quarter` key and an 8-K
+    # section's `exhibit` key, making the diff a true apples-to-apples
+    # structural check independent of which role happens to resolve.
+    fixture_path = ROOT / "tests" / "data" / "fixtures" / "data-us-memo-fetch-sample.json"
+    fixture_narrative = json.loads(fixture_path.read_text())["sec_narrative"]
+
+    wrapper_diff = set(fixture_narrative) ^ set(narrative)
+    assert not wrapper_diff, (
+        f"LIVE sec_narrative wrapper key set DISAGREES with the offline "
+        f"fixture's assumed shape: {wrapper_diff} — "
+        f"fixture={sorted(fixture_narrative)} live={sorted(narrative)}"
+    )
+
+    # `cache_util.load_cache` (not sec_edgar_client's own code, the module the
+    # fixture-authoring context path pointed at) injects TWO extra keys on a
+    # warm cache HIT: `_cache_age_seconds` / `_cache_ttl_seconds`. This IS a
+    # real disagreement the fixture never anticipated (it was hand-built only
+    # from the cold-MISS dict literal in `fetch_narrative_sections`) — worth
+    # naming here rather than silently allowing — but it is an already-known,
+    # cache-LAYER-wide concern (every cached payload in this toolkit gets
+    # these two on HIT), not narrative-producer drift, and HIT is the common
+    # case for a warm-cached ticker. Normalized out so the anchor stays
+    # meaningful (and green) on both a cold and a warm cache, while any OTHER
+    # unexpected key still fails loud below.
+    _CACHE_HIT_METADATA_KEYS = {"_cache_age_seconds", "_cache_ttl_seconds"}
+    fixture_8k = next(f for f in fixture_narrative["filings"] if f.get("role") == "8-K" and "error" not in f)
+    live_8k = eightk_ok[0]
+    filing_diff = (set(fixture_8k) ^ set(live_8k)) - _CACHE_HIT_METADATA_KEYS
+    assert not filing_diff, (
+        f"LIVE per-filing (8-K) entry key set DISAGREES with the offline "
+        f"fixture (beyond the known cache-HIT metadata keys): {filing_diff} — "
+        f"fixture={sorted(fixture_8k)} live={sorted(live_8k)}"
+    )
+
+    fixture_section = fixture_8k["sections"][0]
+    live_section = live_8k["sections"][0]
+    section_diff = set(fixture_section) ^ set(live_section)
+    assert not section_diff, (
+        f"LIVE section key set DISAGREES with the offline fixture: "
+        f"{section_diff} — "
+        f"fixture={sorted(fixture_section)} live={sorted(live_section)}"
+    )
+
+    # ---- loud gap surfacing: name any role/quarter the live selection could
+    # not resolve, rather than letting a partial run pass silently. Post-Task-8
+    # the raw-filings window is time-anchored (not count-limited), so the
+    # 10-K/10-Q false-gap class is fixed (asserted above) — any remaining
+    # gap here would be a GENUINE absence (e.g. a quarter with no item-2.02
+    # earnings 8-K) or a fresh regression, either way worth surfacing loudly
+    # rather than letting a partial run pass silently.
+    if narrative.get("failed_items"):
+        import warnings
+
+        warnings.warn(
+            f"live run had unresolved narrative slots: {narrative['failed_items']}",
+            stacklevel=1,
+        )
+
+
 # ---------------------------------------------------------------------------
 # JP — 7203 Toyota (yfinance + TDnet + EDINET + BOJ/e-Stat/ECB)
 # ---------------------------------------------------------------------------
