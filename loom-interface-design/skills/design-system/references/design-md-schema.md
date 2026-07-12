@@ -58,6 +58,16 @@ Carry, in the **prose body** of this section (the YAML keys below stay thin):
   Commit to a specific aesthetic; a non-committal concept yields non-committal
   tokens.
 - **Mood** — the emotional target as a few adjectives (the `brand_voice` token).
+  **Mood is INHERITED, not invented.** `PRINCIPLES.md` pins **3-5 tone & manner
+  adjectives** in its **`## Anchors`** section (the *primary visual anchor*);
+  those adjectives ARE this design system's **governing mood** — **inherit**
+  them verbatim into `brand_voice` and **do not re-derive** a mood of your own.
+  A visual concept that fights the adjectives is a defect, not a style choice.
+  **Fallback — when there is no `## Anchors` tone & manner row** (an older
+  `PRINCIPLES.md`): derive the mood from the North Star + Product Principles,
+  exactly as before — **and say so explicitly** to the user ("no tone & manner
+  anchor found; mood derived here, ungoverned upstream"). **Never silently
+  invent** a mood while presenting it as inherited.
 - **Generative visual principles** — the small set of *canonical* visual-design
   principles this concept leans on, each with one line on how it shows up here.
   Draw from the established canon — **hierarchy, contrast, balance, rhythm /

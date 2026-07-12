@@ -59,17 +59,28 @@ the North Star + the **Product Principles**
 (e.g. *calm, precise, unhurried*).
 These adjectives — **not** a movement name — are the
 **primary visual anchor**, so they MUST land as their own
-**version-pinned `## Anchors` row**. The canon rounds below are
+**version-pinned `## Anchors` row**. The Axis-A canon round below is
 **downstream of the tone & manner anchor** — mood/creative-direction
 inspiration that must serve the adjectives, never a substitute for
 them.
 
-Agent then maps the statement onto
-canon: the interaction lens (list 2) runs as one candidate round; the
-visual lens runs as **two axis-typed candidate rounds** — Axis A
-(cultural) reads only `canon-design-visual.md`, Axis B (surface) reads
-only `canon-design-surface.md` (contamination guard: each round reads
-only its own file). Axis A is **not** a co-equal anchoring round: it
+Agent then maps the statement onto canon: the interaction lens (list 2)
+runs as one candidate round; the visual lens runs a
+**single Axis-A candidate round** — cultural/graphic-design movements,
+read from `canon-design-visual.md`, the only visual canon list this
+station carries.
+
+The **surface-treatment axis** (flat / skeuomorphic / neumorphic /
+glassmorphic eras) is **not decided here**: it is decided
+**downstream at the DESIGN station** (`loom-interface-design`), which
+owns that canon list and names its pick in prose there. The old
+cross-axis contamination guard is therefore
+**structural, not instructional** — the two axes live in different
+plugins, so a round at this station cannot read the surface list even
+by accident; there is nothing left for you to enforce, and no
+surface-treatment `## Anchors` row to pin in PRINCIPLES.md.
+
+Axis A is **not** a co-equal anchoring round: it
 sits **downstream of the tone & manner anchor**, supplying
 **mood / creative-direction inspiration** for candidates the adjectives
 have already constrained. It is **never a pick-one menu** — never ask

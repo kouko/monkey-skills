@@ -1,17 +1,24 @@
-"""Structural grep-test guarding the UI surface-treatments research doc.
+"""Structural grep-test guarding the Axis-B UI surface-treatment canon.
 
-This doc grounds the ~6 UI surface-treatment paradigms (skeuomorphism, flat,
-material-as-surface-treatment, neumorphism, glassmorphism, spatial / Liquid
-Glass) that the Axis-B canon file cites — mirroring how
-canon-design-visual.md cites
-docs/loom/research/2026-07-10-principles-canon-base-lists.md §3. House
-discipline: "ground in sources before cataloging."
+The canon lives in this plugin because a surface treatment is a stage-4
+design-language sub-decision — it is picked at the DESIGN stage, downstream
+of the PRINCIPLES-stage tone & manner anchor. (It previously sat in
+loom-product-principles with a forward-note recording the mis-placement;
+this file is its home now.)
+
+Two guards:
+  - the canon file's own contract (extensible framing, agent-facing framing,
+    the Currency column, a WCAG risk flag, a per-row source URL);
+  - the repo-level research doc that grounds it — mirroring how
+    canon-design-visual.md cites its own grounding doc. House discipline:
+    "ground in sources before cataloging."
 
 No REQ-ids are registered for this dispatch; @req tags are intentionally
 omitted per the implementer contract.
 
-Stdlib + pytest only, path-based. Resolve the research doc relative to this
-file (loom-product-principles/scripts/ -> repo root -> docs/loom/research/).
+Stdlib + pytest only, path-based. The canon resolves inside this plugin;
+the research doc resolves at the repo root (loom-interface-design/scripts/
+-> repo root -> docs/loom/research/).
 """
 
 import re
@@ -38,17 +45,48 @@ SEED_TREATMENT_NAMES = [
 ]
 
 SURFACE_CANON = (
-    REPO_ROOT
-    / "loom-product-principles"
+    Path(__file__).parents[1]
     / "skills"
-    / "product-principles"
+    / "design-system"
     / "references"
     / "canon-design-surface.md"
 )
 
-MIN_SURFACE_ROWS = 5
+# Raised from the 5-row relocation floor once the catalog was grown to the
+# full era cycle (6 seed rows + the 12 researched expansion candidates).
+MIN_SURFACE_ROWS = 15
 ROW_LINK_RE = re.compile(r"\]\(https?://[^)]+\)")
 _SEPARATOR_CELL_RE = re.compile(r":?-{2,}:?")
+
+# One row per treatment — pinned as EXACTLY one match apiece, which also
+# encodes the research doc's finding that Frutiger Aero's 2023- revival is a
+# Currency-cell update, NOT a second row.
+EXPANSION_ENTRY_NAMES = [
+    "geocities",
+    "gel",
+    "frutiger aero",
+    "long-shadow",
+    "dark mode",
+    "aurora",
+    "claymorphism",
+    "material you",
+    "neubrutalism",
+    "retro-terminal",
+    "anti-design",
+    "bento",
+]
+
+# The six entries the research doc's "WCAG risk flags" subsection names.
+# Each must carry the flag in its OWN row — a reader picking a candidate
+# reads the row, not the prose below the table.
+WCAG_FLAGGED_ENTRIES = [
+    "dark mode",
+    "material you",
+    "aurora",
+    "claymorphism",
+    "neubrutalism",
+    "anti-design",
+]
 
 
 def _surface_table_data_rows(text: str) -> list[str]:
@@ -90,8 +128,7 @@ def test_surface_canon_file_contract():
         "— agent-facing framing"
     )
     assert "2026-07-12-ui-surface-treatments-canon" in text, (
-        "canon-design-surface.md must cite the Task-1 grounding research "
-        "doc path"
+        "canon-design-surface.md must cite the grounding research doc path"
     )
     assert "wcag" in lower, (
         "canon-design-surface.md must carry >=1 risk-flag note mentioning "
@@ -129,37 +166,50 @@ def test_surface_canon_file_contract():
         )
 
 
-def test_surface_canon_carries_design_stage_forward_note():
-    """Axis B is a stage-4 design-language sub-decision, not a PRINCIPLES one.
+def _entry_cell(row: str) -> str:
+    """First cell of a markdown table row — the treatment's own name.
 
-    The file must say so in place — its correct home is the design-language
-    (DESIGN) stage — and must record that the actual relocation to
-    loom-interface-design is deferred to Step 2, so the mis-placement is
-    honest rather than silent.
+    'One row per treatment' is a claim about the ENTRY column: another row's
+    Currency cell may legitimately cross-reference a treatment (the Web 2.0
+    gel row cites Frutiger Aero's shared era) without being a second row for
+    it. Matching the whole row would mistake that prose for a duplicate.
+    """
+    return row.strip("|").split("|")[0].strip()
+
+
+def test_surface_canon_covers_the_full_era_cycle():
+    """The catalog spans the whole cycle, not just the 6 seed treatments.
+
+    A 6-row canon cannot fuel a real 3-5 candidate round at the DESIGN
+    stage — the popularity head (flat / Material) eats the whole set. This
+    pins the 12 researched expansion candidates, one row apiece, each still
+    source-linked, and each WCAG-risky entry flagging its risk IN ITS ROW.
     """
     text = SURFACE_CANON.read_text(encoding="utf-8")
-    lower = text.lower()
+    rows = _surface_table_data_rows(text)
 
-    assert "design-language" in lower and "design" in lower, (
-        "canon-design-surface.md must state that this axis's home is the "
-        "design-language (DESIGN) stage"
+    assert len(rows) >= MIN_SURFACE_ROWS, (
+        f"canon-design-surface.md has {len(rows)} table entries; the full "
+        f"era cycle needs >= {MIN_SURFACE_ROWS}"
     )
-    assert "stage 4" in lower or "stage-4" in lower, (
-        "canon-design-surface.md forward-note must name the industry stage "
-        "(stage 4 — design language) this axis belongs to"
-    )
-    assert "loom-interface-design" in lower, (
-        "canon-design-surface.md forward-note must name the destination "
-        "station (loom-interface-design)"
-    )
-    assert "step 2" in lower, (
-        "canon-design-surface.md forward-note must record that the "
-        "relocation is deferred to Step 2"
-    )
-    assert "defer" in lower, (
-        "canon-design-surface.md forward-note must say the relocation is "
-        "deferred (not done in this change)"
-    )
+
+    for name in EXPANSION_ENTRY_NAMES:
+        matches = [row for row in rows if name in _entry_cell(row).lower()]
+        assert len(matches) == 1, (
+            f"expansion entry {name!r} must name exactly one canon row's "
+            f"Entry cell; found {len(matches)}"
+        )
+        assert ROW_LINK_RE.search(matches[0]), (
+            f"expansion entry {name!r} row missing a markdown-link source "
+            f"URL: {matches[0]}"
+        )
+
+    for name in WCAG_FLAGGED_ENTRIES:
+        row = next(row for row in rows if name in _entry_cell(row).lower())
+        assert "wcag" in row.lower(), (
+            f"entry {name!r} carries a WCAG risk in the grounding research "
+            f"doc; its canon row must flag it: {row}"
+        )
 
 
 def test_surface_research_doc_grounds_seed():

@@ -118,10 +118,10 @@ the audit is sanctioned.
   internal note. This guard is **per-round**: it applies to **every
   section's** candidate round (Product AND Design AND Engineering), not
   just the first.
-- Before finalizing, consult the five canon base lists as a
+- Before finalizing, consult the four canon base lists as a
   **completeness audit** ("did I miss a closer tradition?"):
   `references/canon-product.md`, `references/canon-design-interaction.md`,
-  `references/canon-design-visual.md`, `references/canon-design-surface.md`,
+  `references/canon-design-visual.md`,
   `references/canon-engineering.md`. If every candidate sits in a list's
   popularity head, re-check.
 - **Tone & manner — the primary visual anchor (do this FIRST).** Before any
@@ -131,18 +131,20 @@ the audit is sanctioned.
   name — are the **primary visual anchor**, so they MUST land as their own
   **version-pinned `## Anchors` row** (the same Anchors machinery as any
   canon row: name + version pin; the pin is the PRINCIPLES.md version the
-  adjectives were derived under). The canon axes below (Axis A / Axis B) are
+  adjectives were derived under). The Axis-A canon round below is
   **downstream of the tone & manner anchor** — mood/creative-direction
   inspiration that must serve the adjectives, never a substitute for them.
-- The visual lens splits into **two axis-typed candidate rounds** —
-  **Axis A** (cultural/graphic-design movements, `canon-design-visual.md`)
-  and **Axis B** (UI-surface-treatment eras, `canon-design-surface.md`).
-  Each round reads **ONLY its own file** — a contamination guard, so Axis-A
-  reasoning is never polluted by Axis-B entries or vice versa. The axes are
-  **complementary** (different questions — "which design tradition" vs
-  "which screen-surface treatment era"), so per the same-axis/complementary
-  rule above each round pins its own version-pinned `## Anchors` row; never
-  merge them into one pick-one menu.
+- The visual lens runs a **single Axis-A candidate round** here —
+  cultural/graphic-design movements, read from `canon-design-visual.md`, the
+  only visual canon list this station carries. The **surface-treatment axis**
+  (flat / skeuomorphic / neumorphic / glassmorphic eras) is **not decided
+  here**: it is decided **downstream at the DESIGN station**
+  (`loom-interface-design`), which owns that canon list and pins its own
+  anchor row there. The old cross-axis contamination guard is therefore
+  **structural, not instructional** — the two axes live in different plugins,
+  so a round at this station cannot read the surface list even by accident;
+  there is nothing left for you to enforce, and no surface-treatment
+  `## Anchors` row to pin in PRINCIPLES.md.
   Axis A is **not** a co-equal anchoring round: it sits
   **downstream of the tone & manner anchor**, supplying
   **mood / creative-direction inspiration** for candidates the adjectives
@@ -154,7 +156,7 @@ the audit is sanctioned.
   option generation).
 - **Visual carve-out — 3-5 candidates, not the generic 2-3.** Because
   aesthetic fit is under-determined by stance alone, the VISUAL lens
-  (Axis A and/or Axis B) proposes **3-5 canon candidates** per round —
+  (the Axis-A round) proposes **3-5 canon candidates** —
   overriding the generic 2-3 above. Product and Engineering candidate
   rounds are **unaffected** and keep the generic **2-3**. Of the visual
   round's 3-5, **1-2 are deliberately divergent/exploratory** — candidates

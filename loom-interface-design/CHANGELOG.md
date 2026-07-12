@@ -8,6 +8,38 @@ Versioning: [Semantic Versioning](https://semver.org/).
 > This file was reconstructed on 2026-07-02 from the git history — the plugin
 > shipped its first three versions without a CHANGELOG.
 
+## [0.5.0] — 2026-07-13
+
+### Added
+
+- **Surface-treatment candidate pick** (`design-system`) — the station now
+  proposes **3-5 surface-treatment candidates** from the new
+  `references/canon-design-surface.md` (fit/tension notes), surfaces **1-2
+  considered-but-rejected** with reasons, and the **user decides** (a
+  `bespoke — no canon treatment fits` escape hatch is legal). The pick is
+  **named + rationalized in prose** in Overview / Brand and then constrains the
+  `## Elevation & Depth` and `## Shapes` token blocks. The anti-costume law
+  carries over (a treatment never overrides a PRINCIPLES value) and a canon
+  row's **WCAG risk flag is a blocker, not a note**. No 9th `##` section was
+  added — the 8-section DESIGN.md contract is unchanged.
+- **`references/canon-design-surface.md`** — relocated here from
+  `loom-product-principles` (it is a stage-4 design-language sub-decision, not a
+  constitution-stage one) and expanded **6 → 18 rows**, each with a
+  live-verified source URL, era, currency note and WCAG risk flag. Grounded in
+  `docs/loom/research/2026-07-12-ui-surface-treatments-canon.md`.
+
+### Changed
+
+- **`design-system` now INHERITS the visual mood instead of inventing it.**
+  Step 2 reads the `## Anchors` section of `PRINCIPLES.md` and treats the
+  **3-5 tone & manner adjectives** as the **governing mood** — it does **not**
+  re-derive them (`design-md-schema.md`'s derivation contract agrees; `brand_voice`
+  is fed from the anchor). When no anchor row exists, it derives as before **and
+  says so explicitly** — never silently inventing while appearing to inherit.
+  This is a **read-and-honor prose instruction, not a parser** (rationale +
+  reversal trigger: `docs/loom/specs/2026-07-13-axis-b-relocation-and-tone-manner-seam.md`
+  §Alternatives). Closes the unwired seam left by loom-product-principles 0.8.0.
+
 ## [0.4.2] — 2026-07-07
 
 ### Changed

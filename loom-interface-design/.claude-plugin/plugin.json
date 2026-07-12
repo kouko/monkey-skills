@@ -1,6 +1,6 @@
 {
   "name": "loom-interface-design",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "Key-free cross-modal (GUI/TUI/CLI) UX design generator — emits portable DESIGN.md + ui-flows.md.",
   "author": {
     "name": "kouko",

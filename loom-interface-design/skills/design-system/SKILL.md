@@ -65,6 +65,24 @@ principle constrains the palette to few colors and a restrained component set;
 a "calm, low-stimulus" principle constrains accent usage and motion. Every
 design choice should be defensible against a principle.
 
+**Read its `## Anchors` section — the tone & manner row is the governing
+mood.** `PRINCIPLES.md` pins **3-5 tone & manner adjectives** (e.g. *calm,
+precise, unhurried*) as its own version-pinned `## Anchors` row — upstream
+calls them the **primary visual anchor**. Those adjectives ARE this design
+system's **governing mood**: **inherit** them verbatim as the mood of the
+visual concept (Step 4a) — **do not re-derive** a mood of your own, and never
+contradict them. A palette, type scale, or component default that fights the
+adjectives is a defect, not a style choice. This is a **read-and-honor**
+instruction: read the section as prose and honor it — do not parse, grep, or
+regex the row (the row's formatting is not a contract).
+
+**Fallback — when there is no `## Anchors` tone & manner row** (an older
+`PRINCIPLES.md`, written before the anchor existed): derive the mood yourself
+from the North Star + Product Principles, exactly as before — **and say so
+explicitly** to the user ("no tone & manner anchor found; mood derived here,
+ungoverned upstream"). **Never silently invent** a mood while presenting it as
+inherited.
+
 **If `PRINCIPLES.md` is absent, surface it** — do not invent a constitution.
 Tell the user the design system will be ungoverned and recommend running
 `loom-product-principles:product-principles` first; proceed only on their
@@ -84,20 +102,61 @@ Emit a **`DESIGN.md`** following the schema contract from Step 1:
 
 1. Confirm the exact YAML token keys against the authoritative Google
    `DESIGN.md` spec at generation time.
-2. **First commit the visual concept** in **Overview / Brand** — one specific
+2. **Run the surface-treatment candidate round** (below) — the pick is the
+   generative choice the concept and the depth/shape tokens hang off.
+3. **Commit the visual concept** in **Overview / Brand** — one specific
    art-direction idea plus the **3-5 generative visual principles** it leans on
-   (per the schema's *Derivation contract*). This is the conceptual ground for
+   (per the schema's *Derivation contract*), with the chosen surface treatment
+   named in its prose. This is the conceptual ground for
    everything below; a generic identity here is what makes output look
    "AI-generated."
-3. Emit **all 8 `##` sections in order**, each with a short prose rationale
+4. Emit **all 8 `##` sections in order**, each with a short prose rationale
    plus its YAML token block (Overview / Brand → Colors → Typography → Layout →
    Elevation & Depth → Shapes → Components → Do's & Don'ts), then **derive every
    token from that committed concept + the `PRINCIPLES.md` constraints** — each
    token defensible against the concept, never an arbitrary default.
-4. **Verify WCAG-AA contrast** for every foreground/background pairing (body
+5. **Verify WCAG-AA contrast** for every foreground/background pairing (body
    text ≥ 4.5:1, large text ≥ 3:1). Treat an AA failure as a **blocker**.
-5. Run the spec lint `npx @google/design.md` where available and resolve
+6. Run the spec lint `npx @google/design.md` where available and resolve
    violations.
+
+**Surface treatment — the candidate round (step 2 above, in full).** The
+surface-treatment axis (skeuomorphic / flat / material-elevation / neumorphic /
+glassmorphic / neubrutalist …) is a **choice over the very tokens the schema
+already ships** — `surface`, `shadows`, radii and borders. This station owns
+that choice; it is never an unnamed default.
+
+- **This round is downstream of the tone & manner anchor** (Step 2): the
+  inherited **3-5 tone & manner adjectives** are the governing mood and they
+  **constrain which treatments are even proposable**. Run this round only with
+  the anchor in hand — never before it.
+- **Propose 3-5 surface-treatment candidates**, drawn from
+  **`references/canon-design-surface.md`**, each with **fit/tension** notes.
+  The canon is agent-facing recall insurance — a completeness audit ("did I
+  miss a closer treatment?"); the user **never sees the raw list**, only the
+  fitted candidates.
+- **Name 1-2 considered-but-rejected candidates** and **surface them to the
+  user with reasons** — the rejection list is the honesty device, not an
+  internal note.
+- **The user decides.** Present the candidates and let them pick;
+  "**bespoke — no canon treatment fits**" is a legal **escape hatch** (a
+  bespoke treatment loses the third-party anchor, so it compensates with a
+  stricter written rationale against the adjectives).
+- **Name and rationalize the pick in prose** in **Overview / Brand**:
+  `Surface treatment: X — because <the tone & manner adjectives> +
+  <constraint>`. It rides inside that existing section — **do not add a 9th
+  `##` section**; the 8-section contract is frozen.
+- **The pick then constrains the `## Elevation & Depth` and `## Shapes` token
+  blocks** — `surface`, `shadows`, `radius` and border tokens are **derived
+  from the chosen treatment**, never an arbitrary default. A flat pick with a
+  deep shadow ramp is a defect.
+- **Anti-costume law.** A treatment may enrich candidates but **never
+  overrides a PRINCIPLES value**. Its vocabulary is inspiration; the values are
+  non-negotiable — when the two collide, the treatment loses.
+- **The canon's WCAG risk flag is a BLOCKER, not a note.** A flagged treatment
+  (e.g. neumorphism, dark-mode surfaces, mesh-gradient backdrops) **cannot
+  ship until the flag is resolved** against WCAG-AA — surface the flag when you
+  propose it, and if the resolution fails contrast, the treatment is out.
 
 ### Step 4b — TUI / CLI: lightweight conventions stub (phase-2)
 
