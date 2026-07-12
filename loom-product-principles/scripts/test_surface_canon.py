@@ -129,6 +129,39 @@ def test_surface_canon_file_contract():
         )
 
 
+def test_surface_canon_carries_design_stage_forward_note():
+    """Axis B is a stage-4 design-language sub-decision, not a PRINCIPLES one.
+
+    The file must say so in place — its correct home is the design-language
+    (DESIGN) stage — and must record that the actual relocation to
+    loom-interface-design is deferred to Step 2, so the mis-placement is
+    honest rather than silent.
+    """
+    text = SURFACE_CANON.read_text(encoding="utf-8")
+    lower = text.lower()
+
+    assert "design-language" in lower and "design" in lower, (
+        "canon-design-surface.md must state that this axis's home is the "
+        "design-language (DESIGN) stage"
+    )
+    assert "stage 4" in lower or "stage-4" in lower, (
+        "canon-design-surface.md forward-note must name the industry stage "
+        "(stage 4 — design language) this axis belongs to"
+    )
+    assert "loom-interface-design" in lower, (
+        "canon-design-surface.md forward-note must name the destination "
+        "station (loom-interface-design)"
+    )
+    assert "step 2" in lower, (
+        "canon-design-surface.md forward-note must record that the "
+        "relocation is deferred to Step 2"
+    )
+    assert "defer" in lower, (
+        "canon-design-surface.md forward-note must say the relocation is "
+        "deferred (not done in this change)"
+    )
+
+
 def test_surface_research_doc_grounds_seed():
     assert RESEARCH_DOC.is_file(), f"research doc absent at {RESEARCH_DOC}"
     text = RESEARCH_DOC.read_text(encoding="utf-8")

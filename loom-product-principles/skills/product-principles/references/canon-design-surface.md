@@ -13,6 +13,17 @@ tradition" vs "which screen-surface treatment era").
 
 Grounded in `docs/loom/research/2026-07-12-ui-surface-treatments-canon.md`.
 
+**Forward-note — this axis's correct home is the DESIGN stage.** Industry
+practice places surface/depth treatment at **stage 4, the visual
+design-language step** (the concrete look components inherit), downstream of
+the stage-3 tone & manner anchor — not at the PRINCIPLES stage where this
+file currently lives. Surface treatments are typically *derived* from
+platform / era / tech constraints rather than user-anchored, so their proper
+owner is `loom-interface-design`, not `loom-product-principles`. **Relocating
+this axis to `loom-interface-design` is deferred to Step 2** (cross-plugin
+move; out of scope for this change). Until then the entries below stay here
+and stay usable — the mis-placement is recorded, not hidden.
+
 | Entry (originator, era) | Fits when… | Stability | Currency | Source |
 |---|---|---|---|---|
 | Skeuomorphism (Apple iOS, 2007-13) | Novice users need physical-object intuition transferred to the screen | Historical reference | Retired 2013 (WWDC iOS 7) | [NN/g](https://www.nngroup.com/articles/flat-material-design/) |
