@@ -137,28 +137,61 @@
       "8-K"
     ],
     "limit": 8,
-    "count": 8,
+    "count": 6,
     "filings": [
+      {
+        "form": "10-K",
+        "filingDate": "2025-10-31",
+        "accessionNumber": "0000320193-25-000079",
+        "primaryDocument": "aapl-20250927.htm",
+        "primaryDocDescription": "10-K",
+        "items": "",
+        "reportDate": "2025-09-27"
+      },
       {
         "form": "10-Q",
         "filingDate": "2026-05-01",
         "accessionNumber": "0000320193-26-000013",
         "primaryDocument": "aapl-20260328.htm",
-        "primaryDocDescription": "10-Q"
+        "primaryDocDescription": "10-Q",
+        "items": "",
+        "reportDate": "2026-03-28"
+      },
+      {
+        "form": "8-K",
+        "filingDate": "2026-07-05",
+        "accessionNumber": "0000320193-26-000501",
+        "primaryDocument": "a8-kex991q3fy2026.htm",
+        "primaryDocDescription": "8-K",
+        "items": "2.02,9.01",
+        "reportDate": "2026-07-05"
       },
       {
         "form": "8-K",
         "filingDate": "2026-04-30",
         "accessionNumber": "0000320193-26-000011",
-        "primaryDocument": "aapl-20260430.htm",
-        "primaryDocDescription": "8-K"
+        "primaryDocument": "a8-kex991q2202603282026.htm",
+        "primaryDocDescription": "8-K",
+        "items": "2.02,9.01",
+        "reportDate": "2026-04-30"
       },
       {
         "form": "8-K",
-        "filingDate": "2026-04-20",
+        "filingDate": "2026-02-15",
         "accessionNumber": "0001140361-26-015711",
-        "primaryDocument": "ef20071035_8k.htm",
-        "primaryDocDescription": "8-K"
+        "primaryDocument": "ef20071035_8kex991.htm",
+        "primaryDocDescription": "8-K",
+        "items": "2.02,9.01",
+        "reportDate": "2026-02-15"
+      },
+      {
+        "form": "8-K",
+        "filingDate": "2025-11-10",
+        "accessionNumber": "0001045810-25-000010",
+        "primaryDocument": "a8-kex991q4fy2025.htm",
+        "primaryDocDescription": "8-K",
+        "items": "2.02,9.01",
+        "reportDate": "2025-11-10"
       }
     ],
     "_provenance": {
@@ -167,9 +200,9 @@
       "data_type": "official_regulatory_filing",
       "update_cycle": "filing-driven",
       "typical_lag": "0-60 days depending on form",
-      "fetched_at": "2026-05-02T01:29:25Z",
-      "reference_period": "2026-05-01",
-      "staleness_days": 1
+      "fetched_at": "2026-07-13T03:24:00Z",
+      "reference_period": "2026-07-05",
+      "staleness_days": 8
     }
   },
   "sec_facts": {
@@ -7061,7 +7094,7 @@
         "sections": [
           {
             "item": "Item 1",
-            "text_path": "~/.cache/investing-toolkit/sec_edgar/sections/000032019325000079/Item_1.txt",
+            "text_path": "/Users/kouko/.cache/investing-toolkit/sec_edgar/sections/000032019325000079/Item_1.txt",
             "disclosure_status": "filed",
             "accession": "0000320193-25-000079",
             "cik": 320193,
@@ -7085,13 +7118,39 @@
         "sections": [
           {
             "item": "Item 1",
-            "text_path": "~/.cache/investing-toolkit/sec_edgar/sections/000032019326000013/Item_1.txt",
+            "text_path": "/Users/kouko/.cache/investing-toolkit/sec_edgar/sections/000032019326000013/Item_1.txt",
             "disclosure_status": "filed",
             "accession": "0000320193-26-000013",
             "cik": 320193,
             "filingDate": "2026-05-01",
             "period_of_report": "2026-03-28",
             "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000013/aapl-20260328.htm"
+          }
+        ],
+        "section_count": 1,
+        "narrative_status": "ok",
+        "failed_items": [],
+        "_cache": "miss",
+        "action": "narrative"
+      },
+      {
+        "role": "8-K",
+        "quarter": "2026Q3",
+        "accession": "0000320193-26-000501",
+        "cik": 320193,
+        "form": "8-K",
+        "filingDate": "2026-07-05",
+        "sections": [
+          {
+            "item": "Item 2.02",
+            "text_path": "/Users/kouko/.cache/investing-toolkit/sec_edgar/sections/000032019326000501/Item_2_02.txt",
+            "disclosure_status": "furnished",
+            "exhibit": "a8-kex991q3fy2026.htm",
+            "accession": "0000320193-26-000501",
+            "cik": 320193,
+            "filingDate": "2026-07-05",
+            "period_of_report": "2026-07-05",
+            "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000501/a8-kex991q3fy2026.htm"
           }
         ],
         "section_count": 1,
@@ -7110,7 +7169,7 @@
         "sections": [
           {
             "item": "Item 2.02",
-            "text_path": "~/.cache/investing-toolkit/sec_edgar/sections/000032019326000011/Item_2_02.txt",
+            "text_path": "/Users/kouko/.cache/investing-toolkit/sec_edgar/sections/000032019326000011/Item_2_02.txt",
             "disclosure_status": "furnished",
             "exhibit": "a8-kex991q2202603282026.htm",
             "accession": "0000320193-26-000011",
@@ -7132,17 +7191,17 @@
         "accession": "0001140361-26-015711",
         "cik": 320193,
         "form": "8-K",
-        "filingDate": "2026-04-20",
+        "filingDate": "2026-02-15",
         "sections": [
           {
             "item": "Item 2.02",
-            "text_path": "~/.cache/investing-toolkit/sec_edgar/sections/000114036126015711/Item_2_02.txt",
+            "text_path": "/Users/kouko/.cache/investing-toolkit/sec_edgar/sections/000114036126015711/Item_2_02.txt",
             "disclosure_status": "furnished",
             "exhibit": "ef20071035_8kex991.htm",
             "accession": "0001140361-26-015711",
             "cik": 320193,
-            "filingDate": "2026-04-20",
-            "period_of_report": "2026-04-20",
+            "filingDate": "2026-02-15",
+            "period_of_report": "2026-02-15",
             "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126015711/ef20071035_8kex991.htm"
           }
         ],
@@ -7155,42 +7214,23 @@
       {
         "role": "8-K",
         "quarter": "2025Q4",
-        "accession": "0000320193-26-000005",
-        "cik": 320193,
-        "form": "8-K",
-        "filingDate": "2026-01-29",
-        "sections": [
-          {
-            "item": "Item 2.02",
-            "text_path": "~/.cache/investing-toolkit/sec_edgar/sections/000032019326000005/Item_2_02.txt",
-            "disclosure_status": "furnished",
-            "exhibit": "a8-kex991q1fy2026.htm",
-            "accession": "0000320193-26-000005",
-            "cik": 320193,
-            "filingDate": "2026-01-29",
-            "period_of_report": "2026-01-29",
-            "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000005/a8-kex991q1fy2026.htm"
-          }
-        ],
-        "section_count": 1,
-        "narrative_status": "ok",
-        "failed_items": [],
-        "_cache": "miss",
-        "action": "narrative"
-      },
-      {
-        "role": "8-K",
-        "quarter": "2025Q3",
-        "accession": "0001045810-25-000010",
         "error": "client timeout after 300s",
-        "_cmd": ["uv", "run", "sec_edgar_client.py", "--action", "narrative", "--accession", "0001045810-25-000010"],
+        "_cmd": [
+          "uv",
+          "run",
+          "/Users/kouko/.supacode/repos/monkey-skills/finacial-analytics-r2/investing-toolkit/skills/data-markets/scripts/sec_edgar_client.py",
+          "--action",
+          "narrative",
+          "--accession",
+          "0001045810-25-000010"
+        ],
         "_returncode": -1
       }
     ],
     "failed_items": [
       {
         "role": "8-K",
-        "quarter": "2025Q3",
+        "quarter": "2025Q4",
         "accession": "0001045810-25-000010",
         "error": "client timeout after 300s",
         "error_class": "narrative_failed"

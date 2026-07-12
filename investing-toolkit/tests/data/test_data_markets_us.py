@@ -362,7 +362,15 @@ def test_memo_fetch_partial_sec_narrative_classifies_whole_pack_partial():
     """End-to-end proof the seam actually works: pack.py's own
     `_classify_result` (Task 4's self-declared-`_status` reader) reports
     the whole pack as partial when sec_narrative degrades — not just that
-    the field exists, but that the real structural reader honors it."""
+    the field exists, but that the real structural reader honors it.
+
+    Also pins the depth-1 hoisting itself (not just the derived `_status`
+    flag): `_status` alone can go "partial" via `any_partial` even if the
+    hoisting loop that populates top-level `failed_items` is deleted, so a
+    status-only assertion here would pass under that mutation and prove
+    nothing about hoisting. Asserting the hoisted item is present makes
+    that mutation fail this test.
+    """
     if str(MARKETS_SCRIPTS) not in sys.path:
         sys.path.insert(0, str(MARKETS_SCRIPTS))
     import pack  # noqa: E402
@@ -379,3 +387,38 @@ def test_memo_fetch_partial_sec_narrative_classifies_whole_pack_partial():
     status, failed_sections = pack._classify_result(result)
     assert status == "partial"
     assert "sec_narrative" in failed_sections
+
+    sec_narrative = result["sec_narrative"]
+    assert sec_narrative["failed_items"], (
+        "top-level failed_items is empty — the depth-1 hoisting loop that "
+        "populates it from a partial filing's own failed_items appears to "
+        "have been removed"
+    )
+    assert any(entry.get("item") == "Item 1A" for entry in sec_narrative["failed_items"]), (
+        f"expected the partial filing's failed item 'Item 1A' hoisted to "
+        f"depth 1: {sec_narrative['failed_items']}"
+    )
+
+
+def test_fetch_sec_narrative_empty_selection_is_not_vacuously_failed():
+    """`failed == requested` is vacuously true when `requested == 0` (an
+    empty selection: nothing requested, nothing failed) — that must NOT
+    read as `_status: "failed"`. select_narrative_filings never actually
+    returns requested=0 through today's fixed `2 + n_quarters` policy, but
+    _fetch_sec_narrative must not rely on that invariant holding forever."""
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack_us  # noqa: E402
+    import sec_edgar_client  # noqa: E402
+
+    with mock.patch.object(
+        sec_edgar_client, "select_narrative_filings",
+        return_value={"selected": [], "gaps": [], "requested": 0},
+    ):
+        result = pack_us._fetch_sec_narrative([])
+
+    assert result["requested"] == 0
+    assert result["failed"] == 0
+    assert result["_status"] == "ok", (
+        f"empty selection (requested=0) must not read as failed: {result}"
+    )

@@ -549,6 +549,57 @@ def _normalize_dcf(raw_concepts: dict[str, dict]) -> dict:
     }
 
 
+def _classify_narrative_entry(
+    role: str, quarter: str | None, accession: str | None, narrative: dict,
+) -> tuple[bool, bool, list[dict]]:
+    """Classify ONE selected filing's `--action narrative` result into
+    ``(succeeded, is_partial, failed_item_entries)`` — the per-row bucketing
+    logic `_fetch_sec_narrative`'s loop applies to every selected filing,
+    split out so that loop body stays short and does one thing (read the
+    subprocess result, decide succeeded/failed, hoist any section-level
+    failures).
+
+    A wholesale failure (subprocess `error`, or the producer's own
+    `narrative_status: "failed"`) yields ``(False, False, [<one failed_items
+    entry>])``. A clean success yields ``(True, False, [])``. A `"partial"`
+    success (the filing was fetched but >=1 of its sections failed) yields
+    ``(True, True, [<one failed_items entry per failed section>])`` — the
+    depth-1 hoisting `_fetch_sec_narrative`'s own docstring documents (brief
+    Fork A: `pack.py`'s `_classify_result` cannot see into the list-valued
+    `sections` sub-field, so this hoist is what makes the degradation
+    structurally visible at depth 1)."""
+    if "error" in narrative or narrative.get("narrative_status") == "failed":
+        return False, False, [{
+            "role": role,
+            "quarter": quarter,
+            "accession": accession,
+            "error": narrative.get("error")
+            or f"narrative_status={narrative.get('narrative_status')!r} — all sections failed",
+            "error_class": narrative.get("error_class", "narrative_failed"),
+        }]
+
+    if narrative.get("narrative_status") != "partial":
+        return True, False, []
+
+    sections_by_item = {
+        s.get("item"): s for s in narrative.get("sections", []) if isinstance(s, dict)
+    }
+    failed_item_entries = [
+        {
+            "role": role,
+            "quarter": quarter,
+            "accession": accession,
+            "item": item_id,
+            "error": sections_by_item.get(item_id, {}).get(
+                "error", f"section {item_id!r} failed"
+            ),
+            "error_class": sections_by_item.get(item_id, {}).get("error_class", "unknown"),
+        }
+        for item_id in narrative.get("failed_items", [])
+    ]
+    return True, True, failed_item_entries
+
+
 def _fetch_sec_narrative(filings_rows: list[dict]) -> dict:
     """Assemble the `sec_narrative` memo-feed contract (brief §Decision):
     management's filed text for the latest 10-K, the latest 10-Q, and the
@@ -611,40 +662,25 @@ def _fetch_sec_narrative(filings_rows: list[dict]) -> dict:
         entry = {"role": role, **({"quarter": quarter} if quarter else {}), **narrative}
         filings_out.append(entry)
 
-        if "error" in narrative or narrative.get("narrative_status") == "failed":
+        row_succeeded, row_partial, row_failed_items = _classify_narrative_entry(
+            role, quarter, accession, narrative
+        )
+        if row_succeeded:
+            succeeded += 1
+            any_partial = any_partial or row_partial
+        else:
             failed += 1
-            failed_items.append({
-                "role": role,
-                "quarter": quarter,
-                "accession": accession,
-                "error": narrative.get("error")
-                or f"narrative_status={narrative.get('narrative_status')!r} — all sections failed",
-                "error_class": narrative.get("error_class", "narrative_failed"),
-            })
-            continue
-
-        succeeded += 1
-        if narrative.get("narrative_status") == "partial":
-            any_partial = True
-            sections_by_item = {
-                s.get("item"): s for s in narrative.get("sections", []) if isinstance(s, dict)
-            }
-            for item_id in narrative.get("failed_items", []):
-                section = sections_by_item.get(item_id, {})
-                failed_items.append({
-                    "role": role,
-                    "quarter": quarter,
-                    "accession": accession,
-                    "item": item_id,
-                    "error": section.get("error", f"section {item_id!r} failed"),
-                    "error_class": section.get("error_class", "unknown"),
-                })
+        failed_items.extend(row_failed_items)
 
     for gap in selection["gaps"]:
         failed += 1
         failed_items.append(dict(gap))
 
-    if failed == requested:
+    # `requested > 0` guards against the vacuous `failed == requested`
+    # when nothing was requested at all (an empty selection: 0 == 0 is
+    # true but is NOT a failure) — see
+    # test_fetch_sec_narrative_empty_selection_is_not_vacuously_failed.
+    if requested > 0 and failed == requested:
         status = "failed"
     elif failed > 0 or any_partial:
         status = "partial"
