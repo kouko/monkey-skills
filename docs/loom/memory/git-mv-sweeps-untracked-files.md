@@ -23,3 +23,10 @@ inspect `git diff --cached --name-status`: keep `R` (rename) and `M`
 `git diff --cached --name-status | awk '$1=="A"'` to list them.
 Leave the WIP untracked (updating paths inside those files for
 consistency is fine).
+
+This is the **over-inclusion** twin of
+[[untracked-replacement-while-deletion-staged]] (that one is
+*under*-inclusion — a staged deletion whose replacement is left
+untracked, so the deletion ships alone). Both stem from the same blind
+spot: **untracked files are invisible in `git diff` during a
+relocation** — trust `git status`, not the diff.
