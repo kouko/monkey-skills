@@ -133,9 +133,21 @@ the audit is sanctioned.
   "which screen-surface treatment era"), so per the same-axis/complementary
   rule above each round pins its own version-pinned `## Anchors` row; never
   merge them into one pick-one menu.
-- The user **never sees the raw lists** — only the 2-3 fitted candidates.
+- The user **never sees the raw lists** — only the fitted candidates.
   The Engineering list is consumed only by you (agent decisions + briefing
   option generation).
+- **Visual carve-out — 3-5 candidates, not the generic 2-3.** Because
+  aesthetic fit is under-determined by stance alone, the VISUAL lens
+  (Axis A and/or Axis B) proposes **3-5 canon candidates** per round —
+  overriding the generic 2-3 above. Product and Engineering candidate
+  rounds are **unaffected** and keep the generic **2-3**. Of the visual
+  round's 3-5, **1-2 are deliberately divergent/exploratory** — candidates
+  that deviate from the user's stated stance on aesthetic expression, not
+  a costume-change on the constitution. Every divergent candidate MUST
+  stay **defensible against the Product Principles values**: it may
+  challenge the stance, never the non-negotiable values (e.g. a
+  low-stimulus constitution still excludes Memphis, however divergent the
+  exploration).
 
 ### Step 4 — User decides
 

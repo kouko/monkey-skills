@@ -765,6 +765,29 @@ def test_canon_audit_lists_surface_file():
         "separate-Anchors-rows rule"
 
 
+def test_visual_lens_3_5_carveout():
+    """Task 5a: the VISUAL lens carves out 3-5 canon candidates (overriding
+    the generic 2-3), including 1-2 deliberately divergent/exploratory
+    candidates that deviate from the user's stated stance but stay
+    defensible against the PRINCIPLES values (anti-costume: exploration
+    never overrides the non-negotiable values). The generic 2-3 rule for
+    Product/Engineering must remain unchanged — no global bump."""
+    text = _text()
+    low = text.lower()
+    assert "3-5" in text or "3–5" in text, \
+        "Step 3 must carve out 3-5 candidates for the visual lens"
+    assert "divergent" in low or "exploratory" in low, \
+        "the visual carve-out must name a divergent/exploratory candidate subset"
+    assert "defensible" in low, \
+        "the divergent candidates must be guarded as defensible against the values"
+    # Guard: the generic 2-3 rule for Product/Engineering must still be present
+    # (no global bump to 3-5). Anchored on the generic rule's own phrase so a
+    # stray "2-3" (e.g. the carve-out's "overriding the generic 2-3") can't
+    # satisfy it — the invariant is the propose-count rule itself.
+    assert "2-3 canon candidates" in low or "2–3 canon candidates" in low, \
+        "the generic '2-3 canon candidates' rule must remain for Product/Engineering"
+
+
 # --- flat-skill structure (repo hook enforces) ------------------------------
 
 def test_skill_folder_is_flat():
