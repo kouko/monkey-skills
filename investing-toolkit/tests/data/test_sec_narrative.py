@@ -267,33 +267,52 @@ def test_acquire_filing_by_accession(sec_client, found):
 
 
 class _MockTenK:
-    """Mirror edgartools 5.42.0 ``TenK`` typed object (``filing.obj()``).
+    """Mirror edgartools 5.42.0 ``TenK`` typed object (``filing.obj()``) — the
+    ALL-ITEM surface ``_segment_10k`` enumerates post-pivot.
 
-    Live capture confirmed ``management_discussion`` (Item 7) and
-    ``risk_factors`` (Item 1A) are ``str`` properties; an item absent from the
-    filing yields ``None`` (edgartools issue #710). Plain attributes so a
-    renamed property RAISES ``AttributeError`` rather than silently reading as
-    absent (fixtures-mirror-producer-shape; the version-drift shape guard on a
-    non-``str`` return value is Task 10, below).
+    Live probe 2026-07-12: ``obj.items`` is the full ordered item-id list (an
+    AAPL 10-K enumerates all 23 items — Item 1, 1A, 1B, 1C, 2..16 incl 7A/9A/
+    9B/9C) and ``obj[item_id]`` returns that item's text as ``str`` (or ``None``
+    when the item is absent from THIS filing — issue #710). Plain ``items`` /
+    ``__getitem__`` (no MagicMock) so a subscript on a NON-enumerated key reads
+    as absent (``None``) exactly as the live capture, and a renamed producer
+    surface RAISES rather than silently passing (fixtures-mirror-producer-shape;
+    the version-drift guard on a non-``str`` return value is Task 10, below).
+
+    Two construction modes — both a faithful subset of the SAME producer surface:
+      - ``item_texts={id: text-or-None, ...}``: an explicit ordered item set
+        (the all-item shape); ``obj.items`` enumerates EVERY id, including one
+        whose text is ``None`` (enumerated-but-absent — issue #710).
+      - ``management_discussion=`` / ``risk_factors=``: the legacy 2-item
+        (Item 7 + Item 1A) convenience the pre-pivot tests use — sugar for
+        ``item_texts={"Item 7": md, "Item 1A": rf}``.
     """
 
-    def __init__(self, *, management_discussion, risk_factors):
-        self.management_discussion = management_discussion
-        self.risk_factors = risk_factors
+    def __init__(self, *, management_discussion=None, risk_factors=None, item_texts=None):
+        if item_texts is None:
+            item_texts = {"Item 7": management_discussion, "Item 1A": risk_factors}
+        self._item_texts = dict(item_texts)
+        self.items = list(self._item_texts)
+
+    def __getitem__(self, key):
+        return self._item_texts.get(key)
 
 
 class _MockTenQ:
-    """Mirror edgartools 5.42.0 ``TenQ`` typed object (``filing.obj()``).
+    """Mirror edgartools 5.42.0 ``TenQ`` typed object (``filing.obj()``) — the
+    ALL-ITEM surface ``_segment_10q`` enumerates post-pivot.
 
-    Live capture confirmed ``TenQ`` has NO ``management_discussion`` property;
-    Item 2 (MD&A) is read via the subscript ``obj["Part I, Item 2"]`` -> ``str``
-    (or ``None`` when the item is absent). Mirrors that subscript-returns-None
-    -on-absent shape; a real ``TenQ`` subscript on a 10-K's missing key returned
-    ``None``, not ``KeyError``.
+    Like ``TenK``, ``obj.items`` is the full ordered item-id list and each item's
+    text is read via the ``obj[item_id]`` subscript -> ``str`` (or ``None`` when
+    absent). Mirrors the subscript-returns-None-on-absent shape; a real ``TenQ``
+    subscript on a missing key returned ``None``, not ``KeyError``. The MD&A item
+    id is ``"Part I, Item 2"`` (the grounded subscript key), now enumerated on
+    ``obj.items`` alongside the filing's other items.
     """
 
     def __init__(self, sections):
         self._sections = dict(sections)
+        self.items = list(self._sections)
 
     def __getitem__(self, key):
         return self._sections.get(key)
@@ -331,15 +350,27 @@ def _read_text_path(section) -> str:
     return Path(section["text_path"]).read_text(encoding="utf-8")
 
 
-def test_segment_10k_item7_and_item1a(sec_client):
+def test_segment_10k_emits_all_items(sec_client):
     # No @req tag: this dispatch's plan/spec trace by
     # `<change-id> / Requirement / Scenario` join keys, not registered REQ-ids
     # (see report) — @req omitted per the implementer contract.
-    # Scenario: `10-K/10-Q Item Segmentation / 10-K MD&A and Risk Factors
-    # segmentation`.
+    # Scenario: `Full-Body Item Segmentation (10-K/10-Q) / 10-K all-item
+    # segmentation` + `Enumerated item absent or empty in this filing`.
+    # D7 grounding (live probe 2026-07-12): ``obj.items`` on a TenK is the full
+    # ordered item-id list (AAPL 10-K = 23 items) and ``obj[item_id]`` -> str-or
+    # -None (issue #710) — anchored live by
+    # test_data_markets_live.py::test_edgartools_segment_real_10k_shape. Post-pivot
+    # the data layer emits a section for EVERY enumerated item (pure acquisition,
+    # no curated Item-7/1A filter); an enumerated item whose subscript is None is a
+    # loud named gap, never dropped or fabricated.
     tenk = _MockTenK(
-        management_discussion="Item 7.\xa0\xa0Management's Discussion body ...",
-        risk_factors="Item 1A.\xa0\xa0Risk Factors body ...",
+        item_texts={
+            "Item 1": "Item 1.\xa0\xa0Business body ...",
+            "Item 1A": "Item 1A.\xa0\xa0Risk Factors body ...",
+            "Item 1B": None,  # enumerated but absent in THIS filing (issue #710)
+            "Item 7": "Item 7.\xa0\xa0Management's Discussion body ...",
+            "Item 8": "Item 8.\xa0\xa0Financial Statements body ...",
+        }
     )
     filing = _segmentable_filing("10-K", tenk)
 
@@ -347,29 +378,52 @@ def test_segment_10k_item7_and_item1a(sec_client):
 
     assert isinstance(sections, list)
     by_item = {s["item"]: s for s in sections}
-    assert set(by_item) == {"Item 7", "Item 1A"}, "10-K must emit distinct Item 7 + Item 1A"
-    assert by_item["Item 7"] is not by_item["Item 1A"], "distinct section objects"
-    assert "error" not in by_item["Item 7"]
-    assert "error" not in by_item["Item 1A"]
-    # text is file-backed (Task 7): read it back from text_path, assert the SAME
-    # content the inline `text` key previously carried (no weakening).
-    assert _read_text_path(by_item["Item 7"]) == "Item 7.\xa0\xa0Management's Discussion body ..."
+    # EVERY enumerated item is emitted — incl. Item 1 Business + Item 8 Financial
+    # Statements, not just the retired Item 7 + Item 1A curated subset.
+    assert set(by_item) == {"Item 1", "Item 1A", "Item 1B", "Item 7", "Item 8"}, (
+        "10-K must emit a section for EVERY item obj.items enumerates, not a "
+        "hand-picked subset"
+    )
+    # present items are distinct success sections with file-backed text (Task 7)
+    for item_id in ("Item 1", "Item 1A", "Item 7", "Item 8"):
+        assert "error" not in by_item[item_id], f"{item_id} must be a success section"
+    assert _read_text_path(by_item["Item 1"]) == "Item 1.\xa0\xa0Business body ..."
     assert _read_text_path(by_item["Item 1A"]) == "Item 1A.\xa0\xa0Risk Factors body ..."
+    assert _read_text_path(by_item["Item 7"]) == "Item 7.\xa0\xa0Management's Discussion body ..."
+    assert _read_text_path(by_item["Item 8"]) == "Item 8.\xa0\xa0Financial Statements body ..."
+    # the enumerated-but-absent item is a loud, named gap — never empty/fabricated
+    gap = by_item["Item 1B"]
+    assert "error" in gap, f"absent enumerated item must be a loud slot: {gap!r}"
+    assert gap["error_class"] == "absent_item"
+    assert "Item 1B" in gap["error"], "gap must name the absent item"
+    assert not gap.get("text"), "no fabricated text for an absent item"
 
 
-def test_segment_10q_item2(sec_client):
-    # No @req tag (see test_segment_10k_item7_and_item1a).
-    # Scenario: `10-K/10-Q Item Segmentation / 10-Q MD&A segmentation`.
-    tenq = _MockTenQ({"Part I, Item 2": "Item 2.\xa0\xa010-Q MD&A body ..."})
+def test_segment_10q_emits_all_items(sec_client):
+    # No @req tag (see test_segment_10k_emits_all_items).
+    # Scenario: `Full-Body Item Segmentation (10-K/10-Q) / 10-Q all-item
+    # segmentation`. Same all-item contract as the 10-K: EVERY item obj.items
+    # enumerates is its own section (the MD&A id "Part I, Item 2" among them),
+    # never a curated subset.
+    tenq = _MockTenQ(
+        {
+            "Part I, Item 1": "Item 1.\xa0\xa0Financial Statements body ...",
+            "Part I, Item 2": "Item 2.\xa0\xa010-Q MD&A body ...",
+            "Part II, Item 1A": "Item 1A.\xa0\xa0Risk Factors update ...",
+        }
+    )
     filing = _segmentable_filing("10-Q", tenq)
 
     sections = sec_client.segment_filing(filing)
 
     by_item = {s["item"]: s for s in sections}
-    assert set(by_item) == {"Item 2"}, "10-Q must emit an Item 2 section"
-    assert "error" not in by_item["Item 2"]
+    assert set(by_item) == {"Part I, Item 1", "Part I, Item 2", "Part II, Item 1A"}, (
+        "10-Q must emit a section for EVERY item obj.items enumerates"
+    )
+    for item_id in ("Part I, Item 1", "Part I, Item 2", "Part II, Item 1A"):
+        assert "error" not in by_item[item_id], f"{item_id} must be a success section"
     # text is file-backed (Task 7): read it back, assert the SAME content.
-    assert _read_text_path(by_item["Item 2"]) == "Item 2.\xa0\xa010-Q MD&A body ..."
+    assert _read_text_path(by_item["Part I, Item 2"]) == "Item 2.\xa0\xa010-Q MD&A body ..."
 
 
 def test_segment_absent_item_emits_error_slot(sec_client):
@@ -420,9 +474,11 @@ def test_segment_unsupported_form_fails_loud(sec_client):
 # captured by test_data_markets_live.py::test_edgartools_segment_real_8k_shape
 # (see the Task-4 8-K grounding in this module's docstring). Plain-attribute
 # classes so a renamed producer attr RAISES rather than silently reading as
-# absent (fixtures-mirror-producer-shape). Deliberately NO __getitem__ on
-# _MockEightK: the 8-K BODY announcement (obj["Item 2.02"]) must NOT be the text
-# source — reading it would raise here, proving the text comes from the exhibit.
+# absent (fixtures-mirror-producer-shape). Post-pivot _MockEightK DOES expose
+# __getitem__ (the body subscript): every reported item is emitted, and a
+# non-exhibit-bearing item is sourced from its own body text. An exhibit-bearing
+# item's section text still comes from the EXHIBIT, not the body — the RED
+# assertion below (section text == exhibit) is what proves that.
 
 
 class _MockPressRelease:
@@ -449,12 +505,28 @@ class _MockEightK:
 
     ``items`` is a list of reported item-id strings (e.g.
     ``['Item 2.02', 'Item 9.01']``); ``press_releases`` is the collection of
-    EX-99.x press-release exhibits. No ``__getitem__`` on purpose (see the
-    section comment above)."""
+    EX-99.x press-release exhibits.
 
-    def __init__(self, *, items, press_releases):
+    Post-pivot the data layer emits a section for EVERY reported item, so a
+    non-exhibit-bearing item (e.g. Item 9.01) is read from its OWN body text via
+    the ``obj[item_id]`` subscript — the SAME surface the real ``CurrentReport``
+    exposes (a live probe 2026-07-12 showed AAPL's 8-K reporting
+    ``['Item 2.02', 'Item 9.01']`` with each item's body reachable by subscript).
+    ``body_texts={item_id: str-or-None}`` supplies those bodies; a subscript on a
+    key absent from the map reads as ``None`` (the enumerated-but-absent gap),
+    mirroring the producer. An exhibit-bearing item's body MAY be seeded too — the
+    RED assertion that its section text equals the EXHIBIT (not the body) is what
+    proves the exhibit-following path never sources from the 8-K body announcement
+    (fixtures-mirror-producer-shape: the real object DOES expose the body; the code
+    simply doesn't read it for exhibit-bearing items)."""
+
+    def __init__(self, *, items, press_releases, body_texts=None):
         self.items = list(items)
         self.press_releases = list(press_releases)
+        self._body_texts = dict(body_texts or {})
+
+    def __getitem__(self, key):
+        return self._body_texts.get(key)
 
 
 def test_segment_8k_item_2_02_from_ex99_1(sec_client):
@@ -468,20 +540,21 @@ def test_segment_8k_item_2_02_from_ex99_1(sec_client):
         "March quarter records for total company revenue ..."
     )
     eightk = _MockEightK(
-        items=["Item 2.02", "Item 9.01"],  # 9.01 = the exhibit-list item, not a narrative item
+        items=["Item 2.02", "Item 9.01"],  # 9.01 = the exhibit-list item, own body text
         press_releases=[
             _MockPressRelease(document="a8-kex991q2202603282026.htm", text=exhibit_text),
         ],
+        body_texts={"Item 9.01": "Item 9.01.\xa0\xa0Financial Statements and Exhibits"},
     )
     filing = _segmentable_filing("8-K", eightk)
 
     sections = sec_client.segment_filing(filing)
 
     by_item = {s["item"]: s for s in sections}
-    assert set(by_item) == {"Item 2.02"}, (
-        "8-K emits a section for the reported exhibit-following item; Item 9.01 "
-        "(exhibit list) is not itself a narrative item"
-    )
+    # post-pivot every reported item is emitted; this test focuses on the
+    # exhibit-bearing 2.02 → EX-99.1 following (Item 9.01's body leg is covered by
+    # test_segment_8k_emits_all_reported_items).
+    assert "Item 2.02" in by_item, "the reported exhibit-following item is emitted"
     slot = by_item["Item 2.02"]
     assert "error" not in slot, f"exhibit-present item must be a success section: {slot!r}"
     # text is sourced from the EX-99.1 exhibit, NOT the 8-K body announcement;
@@ -502,13 +575,17 @@ def test_segment_8k_item_7_01_8_01_from_ex99_x(sec_client, item_code):
     eightk = _MockEightK(
         items=[item_code, "Item 9.01"],
         press_releases=[_MockPressRelease(document="ex99-1.htm", text=exhibit_text)],
+        body_texts={"Item 9.01": "Item 9.01.\xa0\xa0Financial Statements and Exhibits"},
     )
     filing = _segmentable_filing("8-K", eightk)
 
     sections = sec_client.segment_filing(filing)
 
     by_item = {s["item"]: s for s in sections}
-    assert set(by_item) == {item_code}
+    assert set(by_item) == {item_code, "Item 9.01"}, (
+        "post-pivot the 8-K emits a section for EVERY reported item — the "
+        "exhibit-bearing item AND Item 9.01 (its own body text)"
+    )
     slot = by_item[item_code]
     assert "error" not in slot
     # text sourced from the corresponding exhibit, not the 8-K body alone;
@@ -517,6 +594,98 @@ def test_segment_8k_item_7_01_8_01_from_ex99_x(sec_client, item_code):
     assert section_text == exhibit_text
     assert item_code in section_text
     assert slot["exhibit"] == "ex99-1.htm"
+    # Item 9.01 (non-exhibit) carries its own body text, filed (not furnished).
+    nine = by_item["Item 9.01"]
+    assert "error" not in nine, f"Item 9.01 must be a filed success section: {nine!r}"
+    assert nine["disclosure_status"] == "filed"
+    assert "exhibit" not in nine, "a body-sourced item carries no exhibit provenance"
+
+
+def test_segment_8k_emits_all_reported_items(sec_client):
+    # No @req tag: this dispatch's plan/spec trace by
+    # `<change-id> / Requirement / Scenario` join keys, not registered REQ-ids
+    # (see report) — @req omitted per the implementer contract.
+    # Scenario: `8-K Full-Item Segmentation with Exhibit-Following / 8-K all
+    # reported items, exhibit-bearing item sourced from Exhibit 99.1` +
+    # `Furnished-vs-filed status propagates to the memo / Exhibit 99.x marked
+    # furnished`.
+    # D7 grounding (live probe 2026-07-12): a real AAPL 8-K reported
+    # ``obj.items == ['Item 2.02', 'Item 9.01']`` — the exhibit-bearing item's
+    # substance lives in ``obj.press_releases`` (EX-99.x) while every OTHER
+    # reported item is read from ``obj[item_id]`` body text; anchored live by
+    # test_data_markets_live.py::test_edgartools_segment_real_8k_shape. Post-pivot
+    # (pure acquisition, no curated 2.02/7.01/8.01 filter) the layer emits a
+    # section for EVERY reported item: exhibit-bearing → furnished-from-exhibit,
+    # others → filed-from-body.
+    exhibit_text = (
+        "Exhibit 99.1\nApple reports second quarter results\n"
+        "March quarter records for total company revenue ..."
+    )
+    ninety_body = "Item 9.01.\xa0\xa0Financial Statements and Exhibits\n(d) Exhibit 99.1"
+    eightk = _MockEightK(
+        items=["Item 2.02", "Item 9.01"],
+        press_releases=[
+            _MockPressRelease(document="a8-kex991q2202603282026.htm", text=exhibit_text),
+        ],
+        body_texts={
+            # the 8-K BODY announcement for 2.02 — a sentinel that must NOT be the
+            # text source (the exhibit is); if the code read this the text assert
+            # below would catch it.
+            "Item 2.02": "8-K BODY ANNOUNCEMENT for Item 2.02 — must NOT be sourced",
+            "Item 9.01": ninety_body,
+        },
+    )
+    filing = _segmentable_filing("8-K", eightk)
+
+    sections = sec_client.segment_filing(filing)
+
+    by_item = {s["item"]: s for s in sections}
+    # EVERY reported item is emitted — the exhibit-bearing 2.02 AND Item 9.01,
+    # not only the curated exhibit-item subset.
+    assert set(by_item) == {"Item 2.02", "Item 9.01"}, (
+        "8-K must emit a section for EVERY reported item obj.items enumerates"
+    )
+
+    # --- exhibit-bearing item: sourced from EX-99.1, furnished ---
+    two = by_item["Item 2.02"]
+    assert "error" not in two, f"exhibit-present item must be a success: {two!r}"
+    two_text = _read_text_path(two)
+    assert two_text == exhibit_text, (
+        "the exhibit-bearing item's text must come from the EX-99.x exhibit, "
+        "NEVER the 8-K body announcement"
+    )
+    assert two["disclosure_status"] == "furnished"
+    assert two["exhibit"] == "a8-kex991q2202603282026.htm"
+
+    # --- every other reported item: own body text, filed (not furnished) ---
+    nine = by_item["Item 9.01"]
+    assert "error" not in nine, f"Item 9.01 must be a filed success section: {nine!r}"
+    assert _read_text_path(nine) == ninety_body, (
+        "a non-exhibit reported item carries its own obj[item] body text"
+    )
+    assert nine["disclosure_status"] == "filed", (
+        "a body-sourced 8-K item is filed, not furnished"
+    )
+    assert "exhibit" not in nine, "a body-sourced item carries no exhibit provenance"
+
+    # --- T5 missing-exhibit gap still fires for an exhibit-bearing item whose
+    #     99.x is absent (re-asserted here per the plan) ---
+    no_exhibit = _MockEightK(
+        items=["Item 2.02", "Item 9.01"],
+        press_releases=[],  # exhibit-bearing 2.02 reported, but no EX-99.x present
+        body_texts={"Item 9.01": ninety_body},
+    )
+    gap_sections = {
+        s["item"]: s for s in sec_client.segment_filing(_segmentable_filing("8-K", no_exhibit))
+    }
+    assert set(gap_sections) == {"Item 2.02", "Item 9.01"}
+    gap = gap_sections["Item 2.02"]
+    assert gap["error_class"] == "missing_exhibit", (
+        "an exhibit-bearing item lacking its 99.x must still be a loud gap"
+    )
+    assert not gap.get("text_path"), "no fabricated text on a missing-exhibit gap"
+    # the non-exhibit item is unaffected — still filed-from-body
+    assert gap_sections["Item 9.01"]["disclosure_status"] == "filed"
 
 
 # ---------------------------------------------------------------------------
@@ -543,6 +712,7 @@ def test_8k_reported_item_without_exhibit_emits_gap(sec_client):
     eightk = _MockEightK(
         items=["Item 2.02", "Item 9.01"],  # 2.02 reported, but no EX-99.x present
         press_releases=[],  # empty press_releases = the missing-exhibit signal
+        body_texts={"Item 9.01": "Item 9.01.\xa0\xa0Financial Statements and Exhibits"},
     )
     filing = _segmentable_filing("8-K", eightk)
 
@@ -586,6 +756,7 @@ def test_8k_unsafe_pairing_emits_gap_per_item(sec_client, release_count):
     eightk = _MockEightK(
         items=["Item 2.02", "Item 7.01", "Item 9.01"],  # 2 exhibit-bearing items
         press_releases=press,
+        body_texts={"Item 9.01": "Item 9.01.\xa0\xa0Financial Statements and Exhibits"},
     )
     filing = _segmentable_filing("8-K", eightk)
 
@@ -663,10 +834,14 @@ def test_every_section_carries_full_provenance(sec_client):
         press_releases=[
             _MockPressRelease(document="a8-kex991q2202603282026.htm", text=exhibit_text),
         ],
+        body_texts={"Item 9.01": "Item 9.01.\xa0\xa0Financial Statements and Exhibits"},
     )
     eightk_filing = _segmentable_filing("8-K", eightk)
 
-    (section,) = sec_client.segment_filing(eightk_filing)
+    # post-pivot the 8-K emits a section per reported item; the exhibit-doc URL
+    # branch under test is Item 2.02's (its URL points at ITS OWN exhibit).
+    eightk_by_item = {s["item"]: s for s in sec_client.segment_filing(eightk_filing)}
+    section = eightk_by_item["Item 2.02"]
 
     assert "error" not in section, f"exhibit-present item must be a success: {section!r}"
     assert section["item"] == "Item 2.02"
@@ -767,18 +942,21 @@ def test_section_text_path_contains_traversal_attempt(sec_client, tmp_path):
 
 
 class _RaisingRiskFactorsTenK:
-    """A ``TenK`` whose Item 1A (``risk_factors``) extraction RAISES on access
-    while Item 7 (``management_discussion``) extracts normally — mirrors
-    edgartools raising mid-parse for a single item
-    (fixtures-mirror-producer-shape: a real property that raises, not an invented
-    shape)."""
+    """A ``TenK`` whose Item 1A subscript RAISES on access while Item 7 extracts
+    normally — mirrors edgartools raising mid-parse for a single item
+    (fixtures-mirror-producer-shape: a real subscript that raises, not an invented
+    shape). Item 1A stays ENUMERATED on ``obj.items`` (the throw is at extraction,
+    not enumeration), so ``segment_filing`` isolates the throw to that one item's
+    slot while Item 7 still segments."""
 
     def __init__(self, *, management_discussion):
-        self.management_discussion = management_discussion
+        self._management_discussion = management_discussion
+        self.items = ["Item 7", "Item 1A"]
 
-    @property
-    def risk_factors(self):
-        raise ValueError("edgartools failed to parse Item 1A (risk_factors)")
+    def __getitem__(self, key):
+        if key == "Item 1A":
+            raise ValueError("edgartools failed to parse Item 1A (risk_factors)")
+        return {"Item 7": self._management_discussion}.get(key)
 
 
 def _obj_raising_filing(form: str = "10-K") -> SimpleNamespace:
@@ -846,23 +1024,27 @@ def test_segment_one_section_throws_isolated_partial(sec_client):
     )
 
 
-def test_segment_all_sections_fail_when_obj_raises(sec_client):
+def test_all_sections_fail_form_level_when_obj_raises(sec_client):
     # No @req tag (see test_segment_one_section_throws_isolated_partial).
     # Scenario: `Fail-Loud Per-Section Extraction / All requested sections fail`.
+    # Post-pivot the item set is DYNAMIC (`obj.items`), so once `filing.obj()`
+    # fails wholesale the items are UNKNOWABLE — the all-fail path emits a SINGLE
+    # form-level error slot (as the 8-K path already does), never a hardcoded
+    # item list.
     filing = _obj_raising_filing("10-K")
 
     # must NOT crash out of segment_filing (RED: the filing.obj() raise propagates)
     sections = sec_client.segment_filing(filing)
 
     by_item = {s["item"]: s for s in sections}
-    assert set(by_item) == {"Item 7", "Item 1A"}, (
-        "every requested 10-K item gets an error slot when obj() fails wholesale"
+    assert set(by_item) == {"form 10-K"}, (
+        "a wholesale 10-K obj() failure emits a single form-level slot — the item "
+        "set is unknowable once obj() itself raises"
     )
-    for item_id in ("Item 7", "Item 1A"):
-        slot = by_item[item_id]
-        assert "error" in slot, f"all-fail slot must be loud: {slot!r}"
-        assert slot["error_class"] == "extraction_error"
-        assert not slot.get("text"), "no fabricated text on a wholesale failure"
+    slot = by_item["form 10-K"]
+    assert "error" in slot, f"all-fail slot must be loud: {slot!r}"
+    assert slot["error_class"] == "extraction_error"
+    assert not slot.get("text"), "no fabricated text on a wholesale failure"
     # feeds _status: the REAL pack.py classifier calls this FAILED — no top-level
     # success is claimed.
     status, degraded = _pack_classify(sections)
@@ -924,10 +1106,15 @@ def test_8k_exhibit_section_marked_furnished(sec_client):
         press_releases=[
             _MockPressRelease(document="a8-kex991q2202603282026.htm", text=exhibit_text),
         ],
+        body_texts={"Item 9.01": "Item 9.01.\xa0\xa0Financial Statements and Exhibits"},
     )
     eightk_filing = _segmentable_filing("8-K", eightk)
 
-    (furnished,) = sec_client.segment_filing(eightk_filing)
+    # post-pivot the 8-K emits a section per reported item; the exhibit-bearing
+    # Item 2.02 is the furnished-from-exhibit leg under test here (Item 9.01's
+    # body leg is filed, covered by test_segment_8k_emits_all_reported_items).
+    eightk_by_item = {s["item"]: s for s in sec_client.segment_filing(eightk_filing)}
+    furnished = eightk_by_item["Item 2.02"]
 
     assert "error" not in furnished, f"exhibit-present item must be a success: {furnished!r}"
     assert furnished["disclosure_status"] == "furnished", (
@@ -963,10 +1150,7 @@ def test_8k_exhibit_section_marked_furnished(sec_client):
 # obj()/extractor-build handlers (narrower-except-first). A successfully-thunked
 # section value that is not the pinned-5.42.0 `str` (a plausible post-upgrade
 # shape) fails loud as `error_class="version_drift"`, never emitted as
-# possibly-wrong section text. Plus a static drift-guard test that
-# `_FORM_REQUESTED_ITEMS` (the wholesale-all-fail enumeration map — a SECOND
-# source of truth) cannot silently diverge from the segmenters' actual requested
-# item ids (folded T8 code-quality finding).
+# possibly-wrong section text.
 # ---------------------------------------------------------------------------
 # D7 grounding: on the pinned edgartools 5.42.0, a TenK/TenQ section accessor
 # (`management_discussion` / `risk_factors` / `obj["Part I, Item 2"]`) resolves
@@ -983,20 +1167,22 @@ def test_8k_exhibit_section_marked_furnished(sec_client):
 
 
 class _TimeoutRiskFactorsTenK:
-    """A ``TenK`` whose Item 1A (``risk_factors``) extraction raises the builtin
-    ``TimeoutError`` on access while Item 7 (``management_discussion``) extracts
-    normally — models a per-item fetch that exceeds the timeout
-    (fixtures-mirror-producer-shape: edgartools does its HTTP over ``httpx``, so a
-    real per-item timeout is an ``httpx.TimeoutException``, not importable in
-    offline CI; the builtin ``TimeoutError`` is its offline stand-in and both are
-    classified by the module's ``_TIMEOUT_EXC_TYPES``)."""
+    """A ``TenK`` whose Item 1A subscript raises the builtin ``TimeoutError`` on
+    access while Item 7 extracts normally — models a per-item fetch that exceeds
+    the timeout (fixtures-mirror-producer-shape: edgartools does its HTTP over
+    ``httpx``, so a real per-item timeout is an ``httpx.TimeoutException``, not
+    importable in offline CI; the builtin ``TimeoutError`` is its offline stand-in
+    and both are classified by the module's ``_TIMEOUT_EXC_TYPES``). Item 1A stays
+    ENUMERATED on ``obj.items`` so the timeout is isolated to its slot."""
 
     def __init__(self, *, management_discussion):
-        self.management_discussion = management_discussion
+        self._management_discussion = management_discussion
+        self.items = ["Item 7", "Item 1A"]
 
-    @property
-    def risk_factors(self):
-        raise TimeoutError("edgartools fetch of Item 1A exceeded the timeout")
+    def __getitem__(self, key):
+        if key == "Item 1A":
+            raise TimeoutError("edgartools fetch of Item 1A exceeded the timeout")
+        return {"Item 7": self._management_discussion}.get(key)
 
 
 def test_timeout_is_distinct_class(sec_client):
@@ -1040,7 +1226,7 @@ def test_timeout_all_sections_when_obj_times_out(sec_client):
     # Scenario: `Distinct acquisition failure classes / Network timeout is its
     # own class` — the OUTER handler (filing.obj()/extractor build) timing out
     # must ALSO carve timeout out above the generic all-fail extraction_error, so
-    # a wholesale timeout classifies every requested section as timeout.
+    # a wholesale timeout classifies the form-level slot as timeout.
     filing = _segmentable_filing("10-K", None)
 
     def _timeout():
@@ -1051,16 +1237,16 @@ def test_timeout_all_sections_when_obj_times_out(sec_client):
     sections = sec_client.segment_filing(filing)
 
     by_item = {s["item"]: s for s in sections}
-    assert set(by_item) == {"Item 7", "Item 1A"}, (
-        "every requested 10-K item gets a slot when obj() times out wholesale"
+    assert set(by_item) == {"form 10-K"}, (
+        "a wholesale 10-K obj() timeout emits a single form-level slot — the item "
+        "set is unknowable once obj() itself times out"
     )
-    for item_id in ("Item 7", "Item 1A"):
-        slot = by_item[item_id]
-        assert slot["error_class"] == "timeout", (
-            f"a wholesale timeout must classify every section as timeout: {slot!r}"
-        )
-        assert slot.get("retryable") is True
-        assert not slot.get("text"), "no fabricated text on a wholesale timeout"
+    slot = by_item["form 10-K"]
+    assert slot["error_class"] == "timeout", (
+        f"a wholesale timeout must classify the form-level slot as timeout: {slot!r}"
+    )
+    assert slot.get("retryable") is True
+    assert not slot.get("text"), "no fabricated text on a wholesale timeout"
 
 
 def test_version_drift_fails_loud(sec_client):
@@ -1091,35 +1277,6 @@ def test_version_drift_fails_loud(sec_client):
     )
     assert "text_path" not in slot, "possibly-wrong section text must NOT be emitted"
     assert not slot.get("text"), "no fabricated/possibly-wrong text on a shape mismatch"
-
-
-def test_form_requested_items_match_segmenters(sec_client):
-    # No @req tag: a static drift-GUARD test (folded T8 code-quality finding), not
-    # one of the two named Task-10 scenarios — @req omitted per contract rule 11.
-    # This is a GREEN-on-arrival characterization guard (it locks an existing
-    # invariant, so no production code drives it): `_FORM_REQUESTED_ITEMS` (the
-    # wholesale-all-fail enumeration map) is a SECOND source of truth for the
-    # 10-K/10-Q requested item ids, distinct from what the segmenters actually
-    # request. If a segmenter adds/renames an item and the map is not updated, the
-    # all-fail path would silently under-report — this test makes that drift fail
-    # loud instead.
-    tenk = _MockTenK(management_discussion="x", risk_factors="y")
-    tenk_ids = tuple(
-        entry[0]
-        for entry in sec_client._segment_10k(tenk, _segmentable_filing("10-K", tenk))
-    )
-    assert tenk_ids == sec_client._FORM_REQUESTED_ITEMS["10-K"], (
-        "_FORM_REQUESTED_ITEMS['10-K'] drifted from _segment_10k's requested items"
-    )
-
-    tenq = _MockTenQ({"Part I, Item 2": "z"})
-    tenq_ids = tuple(
-        entry[0]
-        for entry in sec_client._segment_10q(tenq, _segmentable_filing("10-Q", tenq))
-    )
-    assert tenq_ids == sec_client._FORM_REQUESTED_ITEMS["10-Q"], (
-        "_FORM_REQUESTED_ITEMS['10-Q'] drifted from _segment_10q's requested items"
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -1302,9 +1459,15 @@ def test_cli_narrative_contract_preserved(sec_client, monkeypatch):
     # contract keys, now populated via edgartools, with exit-code discipline
     # `1 iff error` — on BOTH a cold (miss) and a warm (hit) invocation.
     accession = "0000320193-24-000123"
+    # Post-pivot the 10-K enumerates its FULL item set (not the retired Item 7/1A
+    # subset), so the contract must hold with an all-items `sections` list.
     tenk = _MockTenK(
-        management_discussion="Item 7.\xa0\xa0Management's Discussion body ...",
-        risk_factors="Item 1A.\xa0\xa0Risk Factors body ...",
+        item_texts={
+            "Item 1": "Item 1.\xa0\xa0Business body ...",
+            "Item 1A": "Item 1A.\xa0\xa0Risk Factors body ...",
+            "Item 7": "Item 7.\xa0\xa0Management's Discussion body ...",
+            "Item 8": "Item 8.\xa0\xa0Financial Statements body ...",
+        }
     )
     filing = _segmentable_filing("10-K", tenk)
     # Mock the REAL edgartools producer boundary (get_by_accession_number returns
@@ -1331,7 +1494,12 @@ def test_cli_narrative_contract_preserved(sec_client, monkeypatch):
     assert isinstance(result["sections"], list), (
         f"sections must be the edgartools LIST shape: {result!r}"
     )
-    assert {s["item"] for s in result["sections"]} == {"Item 7", "Item 1A"}
+    assert {s["item"] for s in result["sections"]} == {
+        "Item 1",
+        "Item 1A",
+        "Item 7",
+        "Item 8",
+    }, f"sections must enumerate the full item set post-pivot: {result!r}"
     assert result.get("action") == "narrative"
     # exit-code discipline: a success carries NO top-level error → sys.exit(0)
     assert "error" not in result, f"a successful narrative must not carry error: {result!r}"

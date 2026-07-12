@@ -678,10 +678,11 @@ def acquire_filing(
 # 0000320193-24-000123 + AAPL latest 10-Q; anchored by test_data_markets_live.py
 # ::test_edgartools_segment_real_10k_shape):
 #   filing.obj() -> TenK / TenQ.
-#   TenK: `management_discussion` (Item 7) + `risk_factors` (Item 1A) are `str`
-#     properties; an item absent from THIS filing yields `None` (issue #710).
-#   TenQ: NO `management_discussion` property — Item 2 (MD&A) is read via the
-#     subscript `obj["Part I, Item 2"]` -> `str` (also `None` when absent).
+#   TenK / TenQ / CurrentReport: `obj.items` enumerates the FULL item-id set;
+#     each item's text is read via the subscript `obj[item_id]` -> `str` (or
+#     `None` when absent from this filing, issue #710). (edgartools also exposes
+#     convenience props like `management_discussion`/`risk_factors`, but
+#     segmentation enumerates ALL items so it uses the generic subscript.)
 #
 # SECTION-OBJECT CONTRACT (established here, reused by Tasks 4-12) --------------
 # `segment_filing()` returns a LIST of per-item section dicts in requested order:
@@ -719,33 +720,41 @@ def acquire_filing(
 # breaking it — 2-tuples still work (extra = {}).
 
 
-def _segment_10k(obj, filing) -> list[tuple[str, object]]:
-    """Requested (item id, text-thunk) pairs for a 10-K TenK typed object.
+def _segment_all_body_items(obj, filing) -> list[tuple[str, object]]:
+    """Every item edgartools enumerates on a 10-K/10-Q typed object — one
+    ``(item id, text-thunk)`` pair per id in ``obj.items`` (the full ordered
+    item-id list; a live probe 2026-07-12 showed an AAPL 10-K's ``obj.items``
+    enumerating all 23 items). Pure data-acquisition (design pivot): the layer
+    preserves EVERY body item (Business, Risk Factors, MD&A, Financial Statements,
+    Controls, Governance, ...) and NO curated Item-7/1A subset — the read/relevance
+    decision is deferred to downstream consumers.
 
-    Item 7 (MD&A) / Item 1A (Risk Factors) via the grounded `str` properties;
-    each yields `None` when the item is absent from this filing (issue #710).
-    The text element is a ZERO-ARG THUNK (not the resolved text) so
-    `segment_filing` can evaluate each item's property access under its own
-    try/except and ISOLATE a mid-parse throw to that one item's error slot
-    (Task 8) — the other items still segment. `filing` is unused here (10-K text
-    is on `obj`); it is in the signature for the uniform extractor contract that
-    8-K's exhibit-following needs."""
-    return [
-        ("Item 7", lambda: obj.management_discussion),
-        ("Item 1A", lambda: obj.risk_factors),
-    ]
+    Each pair's text element is a ZERO-ARG THUNK reading ``obj[item_id]`` (the
+    item's text as ``str``, or ``None`` when the item is absent from THIS filing
+    -> the shared absent-item gap in ``_build_section``; issue #710), so
+    ``segment_filing`` evaluates each subscript under its own try/except and
+    ISOLATES a mid-parse throw to that one item's error slot (Task 8) — the other
+    items still segment. Each lambda binds ``item=item_id`` as a default arg so the
+    thunk captures ITS OWN id, not the shared loop variable (the classic Python
+    late-binding closure bug). ``filing`` is unused here (10-K/10-Q text is on
+    ``obj``); it is in the signature for the uniform extractor contract that 8-K's
+    exhibit-following needs."""
+    return [(item_id, lambda item=item_id: obj[item]) for item_id in obj.items]
+
+
+def _segment_10k(obj, filing) -> list[tuple[str, object]]:
+    """All-item ``(item id, text-thunk)`` pairs for a 10-K ``TenK`` typed object
+    (design pivot: every ``obj.items`` id, not the retired Item 7 + Item 1A
+    subset). See ``_segment_all_body_items`` for the enumeration + closure-capture
+    contract."""
+    return _segment_all_body_items(obj, filing)
 
 
 def _segment_10q(obj, filing) -> list[tuple[str, object]]:
-    """Requested (item id, text-thunk) pairs for a 10-Q TenQ typed object.
-
-    TenQ exposes no MD&A property; Item 2 is read via the subscript
-    `obj["Part I, Item 2"]` (`str`, or `None` when absent). The text element is a
-    ZERO-ARG THUNK so a subscript throw is isolated per item by `segment_filing`
-    (Task 8). `filing` unused (uniform extractor signature)."""
-    return [
-        ("Item 2", lambda: obj["Part I, Item 2"]),
-    ]
+    """All-item ``(item id, text-thunk)`` pairs for a 10-Q ``TenQ`` typed object
+    (design pivot: every ``obj.items`` id, not the retired single Item 2). See
+    ``_segment_all_body_items`` for the enumeration + closure-capture contract."""
+    return _segment_all_body_items(obj, filing)
 
 
 # 8-K reported-item codes whose substantive narrative lives in an Exhibit 99.x
@@ -774,27 +783,39 @@ def _exhibit_gap(item_id: str, filing, *, item_count: int, release_count: int) -
 
 
 def _segment_8k(obj, filing) -> list[object]:
-    """Per-item entries for an 8-K, following each reported exhibit-bearing item
-    to its Exhibit 99.x text — a success triple ``(item id, exhibit text,
-    {"exhibit": filename})`` when resolvable, else a loud missing-exhibit gap
-    dict (never a silent skip, an empty section, a positional guess, or an
-    uncaught IndexError).
+    """Per-item entries for an 8-K — one entry for EVERY reported item in
+    ``obj.items`` (design pivot: pure acquisition, NOT a curated 2.02/7.01/8.01
+    subset), the read/relevance decision deferred to downstream consumers.
+
+    An exhibit-bearing item (2.02/7.01/8.01 — ``_EIGHTK_EXHIBIT_ITEMS``, whose
+    substance lives in an Exhibit 99.x while the 8-K body carries only the
+    announcement) is FOLLOWED to its exhibit: a success triple ``(item id,
+    exhibit text, {"exhibit": filename, "disclosure_status": "furnished"})`` when
+    resolvable, else a loud missing-exhibit gap dict (never a silent skip, an
+    empty section, a positional guess, or an uncaught IndexError). Every OTHER
+    reported item carries its OWN body text via a ``(item id, obj[item_id])``
+    thunk — resolved lazily by ``segment_filing`` (str, or None → the shared
+    absent-item gap) and defaulting to ``disclosure_status: "filed"`` in
+    ``_build_section`` (a body-sourced 8-K item is filed, not furnished).
 
     Live-captured shape (edgartools 5.42.0; ``filing.obj()`` -> ``CurrentReport``,
     NOT ``EightK`` — plan-grounding correction): ``obj.items`` is a list of
-    reported item-id strings; ``obj.press_releases`` is the collection of EX-99.x
-    press-release exhibits, each a ``PressRelease`` with ``.document`` (the
-    EX-99.x filename) + ``.text()`` (the exhibit body). We read the exhibit text
-    (not the 8-K body announcement) and record the source exhibit filename in the
+    reported item-id strings (a live probe 2026-07-12 showed AAPL's 8-K reporting
+    ``['Item 2.02', 'Item 9.01']``); ``obj[item_id]`` gives an item's body text;
+    ``obj.press_releases`` is the collection of EX-99.x press-release exhibits,
+    each a ``PressRelease`` with ``.document`` (the EX-99.x filename) + ``.text()``
+    (the exhibit body). We read the exhibit text (not the 8-K body announcement)
+    for an exhibit-bearing item and record the source exhibit filename in the
     section's `exhibit` provenance field.
 
     Only the unambiguous 1:1 case (exactly one reported exhibit-bearing item and
     exactly one press-release exhibit) is paired — there the correspondence is
     determined, not guessed. Any other shape (no exhibit for a reported item, a
     count mismatch, or >=2 exhibit-bearing items whose item->exhibit mapping is
-    non-positional) emits a loud named gap per affected item: silent-wrong is the
-    enemy, so we never mis-attribute an exhibit to the wrong item (T4 review
-    finding, folded in by Task 5).
+    non-positional) emits a loud named gap per affected exhibit-bearing item:
+    silent-wrong is the enemy, so we never mis-attribute an exhibit to the wrong
+    item (T4 review finding, folded in by Task 5). Non-exhibit items are
+    unaffected by exhibit ambiguity — they always source their own body text.
 
     LOOM-SIMPLIFY: shortcut=a >=2-exhibit-item 8-K (or count mismatch) is emitted
     as loud per-item gaps rather than resolving each reported item body's
@@ -802,12 +823,14 @@ def _segment_8k(obj, filing) -> list[object]:
     8-K reporting >=2 exhibit-bearing items each with its own recoverable EX-99.x
     (e.g. Item 2.02->EX-99.1, Item 7.01->EX-99.2) whose content we want extracted,
     not gapped | upgrade=parse each reported item's body text for its referenced
-    exhibit number and map by that | ref=spec Requirement "8-K Item Segmentation
-    with Exhibit-Following". (The gap itself is loud + tested; this cut defers the
-    multi-exhibit RESOLUTION, not the fail-loud behaviour.)
+    exhibit number and map by that | ref=spec Requirement "8-K Full-Item
+    Segmentation with Exhibit-Following". (The gap itself is loud + tested; this
+    cut defers the multi-exhibit RESOLUTION, not the fail-loud behaviour.)
     """
     following = [item_id for item_id in obj.items if item_id in _EIGHTK_EXHIBIT_ITEMS]
     releases = list(obj.press_releases)
+    # Resolve each exhibit-bearing item to its exhibit entry (success triple) or a
+    # loud gap, keyed by item id so the all-items enumeration below can look it up.
     if len(following) == 1 and len(releases) == 1:
         item_id, release = following[0], releases[0]
         # ``release.text`` is a zero-arg method → pass it AS the text-thunk so
@@ -817,15 +840,29 @@ def _segment_8k(obj, filing) -> list[object]:
         # is derived from the SOURCE TYPE (an 8-K Item 2.02/7.01/8.01 Exhibit 99.x
         # is FURNISHED, not filed) — NOT read from edgartools — so a downstream
         # consumer can weight it distinctly from filed 10-K/10-Q content.
-        return [
-            (item_id, release.text,
-             {"exhibit": release.document, "disclosure_status": "furnished"})
-        ]
+        exhibit_entries = {
+            item_id: (
+                item_id, release.text,
+                {"exhibit": release.document, "disclosure_status": "furnished"},
+            )
+        }
+    else:
+        exhibit_entries = {
+            item_id: _exhibit_gap(
+                item_id, filing, item_count=len(following), release_count=len(releases)
+            )
+            for item_id in following
+        }
+    # Emit a section for EVERY reported item, in reported order: exhibit-bearing
+    # items use their resolved exhibit entry; every other item sources its own
+    # body text (``obj[item_id]``, lazily thunked so a mid-parse throw is isolated
+    # to that item — Task 8; ``item=item_id`` default binds each thunk's own id,
+    # avoiding the late-binding closure bug).
     return [
-        _exhibit_gap(
-            item_id, filing, item_count=len(following), release_count=len(releases)
-        )
-        for item_id in following
+        exhibit_entries[item_id]
+        if item_id in exhibit_entries
+        else (item_id, lambda item=item_id: obj[item])
+        for item_id in obj.items
     ]
 
 
@@ -835,19 +872,6 @@ _ITEM_EXTRACTORS = {
     "10-K": _segment_10k,
     "10-Q": _segment_10q,
     "8-K": _segment_8k,
-}
-
-
-# The requested item ids that are knowable form-statically, WITHOUT reading
-# `filing.obj()` — used by the all-fail path (Task 8) when `obj()`/extractor
-# building itself raises, so every requested section still gets a loud error slot
-# (never a silent-empty result). A 10-K always requests Item 7 + Item 1A; a 10-Q
-# Item 2. An 8-K's requested items are the filing-SPECIFIC reported item codes
-# that live on `obj.items`; once `obj()` has failed they are unreadable, so the
-# all-fail handler falls back to a single filing-level slot for it.
-_FORM_REQUESTED_ITEMS = {
-    "10-K": ("Item 7", "Item 1A"),
-    "10-Q": ("Item 2",),
 }
 
 
@@ -877,22 +901,22 @@ _TIMEOUT_EXC_TYPES = _timeout_exc_types()
 
 
 def _all_sections_failed(form: str, filing, exc: BaseException, slot=None) -> list[dict]:
-    """Every requested section as a loud error slot, for when `filing.obj()` or
-    extractor building failed wholesale — no top-level success is claimed. 10-K/
-    10-Q requested items are enumerated form-statically; a form whose requested
-    items live on the now-unreadable `obj` (8-K) falls back to a single
-    filing-level slot so the failure is never silently dropped.
+    """A single loud FORM-LEVEL error slot, for when `filing.obj()` or extractor
+    building failed wholesale — no top-level success is claimed. Post design-pivot
+    the item set is DYNAMIC (every ``obj.items`` id), so once ``obj()`` itself
+    fails the items are UNKNOWABLE and cannot be enumerated; every form (10-K/
+    10-Q/8-K) falls back to a single ``"form <FORM>"`` slot so the failure is
+    never silently dropped (there is no static per-item map to reconstruct).
 
     `slot` is the per-item slot builder (signature ``(item_id, filing, exc)``);
     defaults to ``_extraction_error_slot`` (Task 8's generic wholesale-failure
     class) but the timeout carve-out (Task 10) passes ``_timeout_error_slot`` so a
-    wholesale TIMEOUT classifies every requested section as the distinct
-    ``timeout`` class, not the generic ``extraction_error``. (Default resolved in
-    the body, not the signature, because ``_extraction_error_slot`` is defined
-    below this function.)"""
+    wholesale TIMEOUT classifies the form-level slot as the distinct ``timeout``
+    class, not the generic ``extraction_error``. (Default resolved in the body,
+    not the signature, because ``_extraction_error_slot`` is defined below this
+    function.)"""
     slot = slot or _extraction_error_slot
-    requested = _FORM_REQUESTED_ITEMS.get(form) or (f"form {form}",)
-    return [slot(item_id, filing, exc) for item_id in requested]
+    return [slot(f"form {form}", filing, exc)]
 
 
 def _section_gap(item_id: str, filing) -> dict:
@@ -1085,17 +1109,21 @@ def _build_section(item_id: str, text, filing, extra: dict | None = None) -> dic
 
 
 def segment_filing(filing) -> list[dict]:
-    """Segment a 10-K / 10-Q filing into per-item section objects via edgartools'
-    typed section API (``filing.obj()`` -> ``TenK`` / ``TenQ``), NOT the retired
-    regex ``parse_item_sections``.
+    """Segment a 10-K / 10-Q / 8-K filing into per-item section objects via
+    edgartools' typed section API (``filing.obj()`` -> ``TenK`` / ``TenQ`` /
+    ``CurrentReport``), NOT the retired regex ``parse_item_sections``.
 
-    Returns a LIST of section dicts (see the SECTION-OBJECT CONTRACT above):
-      - 10-K -> distinct Item 7 (MD&A) + Item 1A (Risk Factors) sections.
-      - 10-Q -> an Item 2 (MD&A) section.
-      - 8-K  -> one section per reported exhibit-bearing item (2.02/7.01/8.01),
-        each sourced from its Exhibit 99.x with the exhibit filename in
-        provenance (Task 4).
-    A requested item absent from THIS filing (edgartools returns ``None``,
+    Pure data acquisition — NO analysis filtering: every item the primary
+    document enumerates is emitted. Returns a LIST of section dicts (see the
+    SECTION-OBJECT CONTRACT above):
+      - 10-K / 10-Q -> one section per item in ``obj.items`` (the FULL body
+        item set — e.g. a 10-K's Item 1..16 including Business + Financial
+        Statements), each read via ``obj[item_id]``.
+      - 8-K -> one section per reported item in ``obj.items``; an exhibit-
+        bearing item (2.02/7.01/8.01) is sourced from its Exhibit 99.x
+        (``disclosure_status: furnished``, exhibit filename in provenance),
+        every other reported item from its own body text (``filed``).
+    An enumerated item absent from THIS filing (edgartools returns ``None``,
     issue #710) becomes a per-section error slot naming the missing item, never
     an empty/fabricated section. An unregistered form fails loud (``ValueError``)
     rather than silently returning no sections.
@@ -1103,7 +1131,8 @@ def segment_filing(filing) -> list[dict]:
     Fail-loud per-section isolation (Task 8): an extraction that RAISES never
     aborts the whole segmentation. A throw building `filing.obj()` or the
     extractor's entry list (the primary document cannot be fetched/parsed at all)
-    turns EVERY requested section into a loud `extraction_error` slot (all-fail);
+    turns the whole filing into a single loud form-level `extraction_error` slot
+    (all-fail — the dynamic item set is unknowable once `obj()` itself fails);
     a throw evaluating ONE item's text-thunk turns just that item into an
     `extraction_error` slot while the other items still segment. The resulting
     list classifies through pack.py's `_status` as partial (some fail) / failed

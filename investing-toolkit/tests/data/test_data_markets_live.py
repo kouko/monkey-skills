@@ -343,23 +343,31 @@ def test_edgartools_segment_real_10k_shape():
 
     edgar.set_identity("kouko investing-toolkit noreply@anthropic.com")
 
-    # 10-K: management_discussion (Item 7) / risk_factors (Item 1A) are str props.
+    # 10-K: obj.items is the FULL ordered item-id list (design pivot: the
+    # segmenter enumerates EVERY item, not the curated Item 7 + 1A subset) and
+    # obj[item_id] returns the item text as str (or None when absent — issue #710).
     tenk_filing = edgar.get_by_accession_number("0000320193-24-000123")  # AAPL FY2024 10-K
     tenk = tenk_filing.obj()
     assert type(tenk).__name__ == "TenK"
-    assert isinstance(tenk.management_discussion, str) and tenk.management_discussion.strip(), (
-        "TenK.management_discussion (Item 7) must be non-empty str"
+    assert isinstance(tenk.items, list) and set(tenk.items) >= {
+        "Item 1", "Item 1A", "Item 7", "Item 8",
+    }, (
+        "TenK.obj.items must enumerate the full item set (incl. Item 1 Business + "
+        f"Item 8 Financial Statements): {getattr(tenk, 'items', None)!r}"
     )
-    assert isinstance(tenk.risk_factors, str) and tenk.risk_factors.strip(), (
-        "TenK.risk_factors (Item 1A) must be non-empty str"
-    )
+    for item_id in ("Item 1", "Item 1A", "Item 7", "Item 8"):
+        assert isinstance(tenk[item_id], str) and tenk[item_id].strip(), (
+            f"TenK[{item_id!r}] must be non-empty str via the obj[item_id] subscript"
+        )
 
-    # 10-Q: NO management_discussion property; Item 2 via obj["Part I, Item 2"] subscript.
+    # 10-Q: obj.items enumerates the full item set; the MD&A id is the grounded
+    # subscript key "Part I, Item 2".
     tenq_filing = edgar.Company("AAPL").get_filings(form="10-Q").latest()
     tenq = tenq_filing.obj()
     assert type(tenq).__name__ == "TenQ"
-    assert not hasattr(tenq, "management_discussion"), (
-        "TenQ has NO management_discussion property — Item 2 is read via subscript"
+    assert isinstance(tenq.items, list) and "Part I, Item 2" in set(tenq.items), (
+        f"TenQ.obj.items must enumerate the full item set incl. the MD&A id "
+        f"'Part I, Item 2': {getattr(tenq, 'items', None)!r}"
     )
     assert isinstance(tenq["Part I, Item 2"], str) and tenq["Part I, Item 2"].strip(), (
         "TenQ Item 2 (MD&A) must be non-empty str via obj['Part I, Item 2']"
@@ -375,14 +383,24 @@ def test_edgartools_segment_real_10k_shape():
         assert "text" not in section, f"section text must not be inlined: {section!r}"
         return Path(section["text_path"]).read_text(encoding="utf-8")
 
+    # design pivot: segment_filing emits a section for EVERY enumerated item, so
+    # the emitted set is a SUPERSET of the four anchor items (proving all-item
+    # capture, esp. the newly-included Item 1 Business + Item 8 Financial
+    # Statements), never just the retired Item 7 + 1A subset.
     k_sections = {s["item"]: s for s in sec_edgar_client.segment_filing(tenk_filing)}
-    assert set(k_sections) == {"Item 7", "Item 1A"}, "10-K segments into Item 7 + Item 1A"
-    assert _section_text(k_sections["Item 7"]).strip()
-    assert _section_text(k_sections["Item 1A"]).strip()
+    assert set(k_sections) >= {"Item 1", "Item 1A", "Item 7", "Item 8"}, (
+        f"10-K must segment into ALL body items (superset of Item 1/1A/7/8): "
+        f"{sorted(k_sections)}"
+    )
+    for item_id in ("Item 1", "Item 1A", "Item 7", "Item 8"):
+        assert _section_text(k_sections[item_id]).strip()
 
     q_sections = {s["item"]: s for s in sec_edgar_client.segment_filing(tenq_filing)}
-    assert set(q_sections) == {"Item 2"}, "10-Q segments into Item 2"
-    assert _section_text(q_sections["Item 2"]).strip()
+    assert set(q_sections) >= {"Part I, Item 2"}, (
+        f"10-Q must segment into ALL body items (superset of the MD&A id "
+        f"'Part I, Item 2'): {sorted(q_sections)}"
+    )
+    assert _section_text(q_sections["Part I, Item 2"]).strip()
 
 
 @pytest.mark.network
@@ -439,6 +457,15 @@ def test_edgartools_segment_real_8k_shape():
     import sec_edgar_client
 
     sections = {s["item"]: s for s in sec_edgar_client.segment_filing(eightk_filing)}
+    # Post-pivot the data layer emits a section for EVERY reported item, not a
+    # curated exhibit-item subset: the emitted set equals the real reported-item
+    # set (a superset of {Item 2.02}), proving all-item capture against real
+    # edgartools.
+    reported = {str(it) for it in obj.items}
+    assert set(sections) == reported, (
+        "8-K must emit a section for EVERY reported item, not just the "
+        f"exhibit-bearing subset (emitted={set(sections)}, reported={reported})"
+    )
     assert "Item 2.02" in sections, "8-K segments into a section for reported Item 2.02"
     slot = sections["Item 2.02"]
     assert "error" not in slot
@@ -448,6 +475,19 @@ def test_edgartools_segment_real_8k_shape():
         "Item 2.02 text sourced from its EX-99.x exhibit"
     )
     assert slot["exhibit"] == pr.document, "section provenance records the source exhibit filename"
+    # Item 2.02 (exhibit-bearing) is furnished-from-exhibit; every OTHER reported
+    # item (e.g. Item 9.01) is filed-from-body — a success section with its own
+    # text_path, or a loud named gap, but NEVER furnished and NEVER an exhibit.
+    assert slot["disclosure_status"] == "furnished"
+    for item_id, sec in sections.items():
+        if item_id == "Item 2.02":
+            continue
+        if "error" in sec:
+            continue  # a permitted absent-item / gap slot on the real filing
+        assert sec["disclosure_status"] == "filed", (
+            f"a non-exhibit reported item must be filed-from-body: {sec!r}"
+        )
+        assert "exhibit" not in sec, "a body-sourced item carries no exhibit provenance"
 
 
 @pytest.mark.network
@@ -491,12 +531,18 @@ def test_edgartools_fetch_narrative_sections_end_to_end():
     assert isinstance(result["filingDate"], str) and result["filingDate"], (
         "filingDate must be a non-empty ISO disclosure date"
     )
-    # sections is the edgartools LIST shape, with the real 10-K MD&A + Risk Factors
+    # sections is the edgartools LIST shape; design pivot: a real 10-K segments
+    # into ALL body items, so the emitted set is a SUPERSET of the four anchor
+    # items (incl. Item 1 Business + Item 8 Financial Statements), never just the
+    # retired Item 7 + 1A subset.
     assert isinstance(result["sections"], list) and result["sections"], (
         f"sections must be a non-empty edgartools LIST: {result!r}"
     )
-    assert {s["item"] for s in result["sections"]} == {"Item 7", "Item 1A"}, (
-        "a real 10-K segments into Item 7 (MD&A) + Item 1A (Risk Factors)"
+    assert {s["item"] for s in result["sections"]} >= {
+        "Item 1", "Item 1A", "Item 7", "Item 8",
+    }, (
+        "a real 10-K must segment into ALL body items (superset of Item 1/1A/7/8): "
+        f"{sorted({s['item'] for s in result['sections']})}"
     )
     # action_narrative surfaces the SAME result with the action tag + exit-0 shape
     action_result = sec_edgar_client.action_narrative(accession)
