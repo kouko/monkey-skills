@@ -674,6 +674,14 @@ def _filing_date_iso(value) -> str | None:
     return str(value)
 
 
+def _primary_document(filing) -> str | None:
+    """The filing's primary-document filename — the tail of edgartools'
+    ``Filing.filing_url`` (edgartools exposes no ``primary_document`` attr, so the
+    last path segment of ``filing_url`` is the reconstructable filename)."""
+    filing_url = filing.filing_url
+    return filing_url.rsplit("/", 1)[-1] if filing_url else None
+
+
 def _filing_ref(filing) -> dict:
     """Build a JSON-safe filing reference from a real edgartools ``Filing``.
 
@@ -684,7 +692,7 @@ def _filing_ref(filing) -> dict:
     from ``filing_url`` (edgartools exposes no ``primary_document`` attribute).
     """
     filing_url = filing.filing_url
-    primary_document = filing_url.rsplit("/", 1)[-1] if filing_url else None
+    primary_document = _primary_document(filing)
     return {
         "accession": filing.accession_no,
         "cik": filing.cik,
@@ -950,17 +958,48 @@ def _section_gap(item_id: str, filing) -> dict:
     }
 
 
-def _build_section(item_id: str, text, filing, extra: dict | None = None) -> dict:
-    """A success section (`{"item", "text", **extra}`) when text is present, else
-    a named absent-item error slot — never an empty or fabricated section.
+def _section_provenance(filing, document: str | None) -> dict:
+    """The complete provenance tuple stamped on every SUCCESS section (Task 6):
+    accession, cik, filingDate, period_of_report (where available), and a
+    reconstructable SEC Archives ``url`` to ``document`` — the SECTION'S OWN
+    source doc (the filing's primary doc for a 10-K/10-Q section, the sourced
+    Exhibit 99.x for an 8-K section).
 
-    `extra` is the per-section provenance merged into a success section (8-K's
-    `{"exhibit": ...}`, Task 4); empty/None for 10-K/10-Q."""
+    Reconstructable WITHOUT an additional lookup: the URL is built from the same
+    tuple fields (cik + accession-no-dashes + document). ``filingDate`` derives
+    from the filing's disclosure date, never wall-clock (as_of invariant).
+    ``period_of_report`` may be absent on some forms — passed through as-is
+    (edgartools yields ``None`` there)."""
+    accession = filing.accession_no
+    return {
+        "accession": accession,
+        "cik": filing.cik,
+        "filingDate": _filing_date_iso(filing.filing_date),
+        "period_of_report": filing.period_of_report,
+        "url": SEC_ARCHIVES_URL.format(
+            cik_int=filing.cik,
+            accession_nodash=_accession_nodash(accession),
+            doc=document,
+        ),
+    }
+
+
+def _build_section(item_id: str, text, filing, extra: dict | None = None) -> dict:
+    """A success section when text is present, else a named absent-item error slot
+    — never an empty or fabricated section.
+
+    A success section is `{"item", "text", **extra, **provenance}`: `extra` is the
+    per-section extra merged in (8-K's `{"exhibit": ...}`, Task 4; empty/None for
+    10-K/10-Q), and `provenance` (Task 6) is the complete provenance tuple whose
+    reconstructable URL targets the section's OWN source doc — the Exhibit 99.x
+    for an 8-K (``extra["exhibit"]``), else the filing's primary doc."""
     if text is None or (isinstance(text, str) and not text.strip()):
         return _section_gap(item_id, filing)
     section = {"item": item_id, "text": text}
     if extra:
         section.update(extra)
+    document = (extra or {}).get("exhibit") or _primary_document(filing)
+    section.update(_section_provenance(filing, document))
     return section
 
 

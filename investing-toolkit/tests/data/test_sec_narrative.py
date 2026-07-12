@@ -577,3 +577,79 @@ def test_8k_unsafe_pairing_emits_gap_per_item(sec_client, release_count):
         assert item_code in slot["error"], "gap must name the item code"
         assert "0000320193-24-000123" in slot["error"], "gap must name the accession"
         assert not slot.get("text"), "no mis-attributed exhibit text on an unsafe gap"
+
+
+# ---------------------------------------------------------------------------
+# Task 6 — every SUCCESS section carries a complete provenance tuple (accession,
+# cik, item id, filingDate + period_of_report where available) AND a
+# reconstructable SEC Archives URL to the SECTION'S OWN source document: the
+# filing's primary doc for a 10-K/10-Q section, the sourced Exhibit 99.x for an
+# 8-K section — reconstructable WITHOUT an additional lookup.
+# ---------------------------------------------------------------------------
+# Reuses the Task-2 Filing-shape grounding (D7) UNCHANGED — provenance reads only
+# accession_no / cik / filing_date / period_of_report / filing_url, the SAME
+# attrs _filing_ref already reads (anchored live by test_data_markets_live.py::
+# test_edgartools_acquire_real_10k_shape; filing_date a datetime.date, NOT str).
+# No NEW edgartools attribute is touched by Task 6, so no new live anchor is
+# required. The exact URL exemplars below are pinned against the fixture values.
+
+
+def test_every_section_carries_full_provenance(sec_client):
+    # No @req tag: this dispatch's plan/spec trace by
+    # `<change-id> / Requirement / Scenario` join keys, not registered REQ-ids
+    # (see report) — @req omitted per the implementer contract.
+    # Scenario: `Section Provenance Completeness / Provenance tuple present on
+    # every section`. Exercises BOTH URL branches: a 10-K (primary-doc) AND an
+    # 8-K (exhibit-doc), so a section's URL points at its OWN source, not always
+    # the primary doc.
+
+    # --- 10-K: primary-doc URL branch (both Item 7 + Item 1A sections) ---
+    tenk = _MockTenK(
+        management_discussion="Item 7.\xa0\xa0Management's Discussion body ...",
+        risk_factors="Item 1A.\xa0\xa0Risk Factors body ...",
+    )
+    tenk_filing = _segmentable_filing("10-K", tenk)
+
+    tenk_sections = sec_client.segment_filing(tenk_filing)
+
+    assert tenk_sections, "10-K must emit at least one section"
+    for section in tenk_sections:
+        assert "error" not in section, f"expected a success section: {section!r}"
+        assert section["item"], "provenance carries the item id"
+        assert section["accession"] == "0000320193-24-000123"
+        assert section["cik"] == 320193
+        assert section["filingDate"] == "2024-11-01"  # disclosure date, ISO str
+        assert section["period_of_report"] == "2024-09-28"
+        # URL points at the filing's PRIMARY document, reconstructable from the
+        # tuple fields alone: data/{cik}/{accession-no-dashes}/{primary doc}.
+        assert section["url"] == (
+            "https://www.sec.gov/Archives/edgar/data/320193/"
+            "000032019324000123/aapl-20240928.htm"
+        )
+
+    # --- 8-K: exhibit-doc URL branch (URL is the section's OWN exhibit) ---
+    exhibit_text = (
+        "Exhibit 99.1\nApple reports second quarter results\n"
+        "March quarter records for total company revenue ..."
+    )
+    eightk = _MockEightK(
+        items=["Item 2.02", "Item 9.01"],
+        press_releases=[
+            _MockPressRelease(document="a8-kex991q2202603282026.htm", text=exhibit_text),
+        ],
+    )
+    eightk_filing = _segmentable_filing("8-K", eightk)
+
+    (section,) = sec_client.segment_filing(eightk_filing)
+
+    assert "error" not in section, f"exhibit-present item must be a success: {section!r}"
+    assert section["item"] == "Item 2.02"
+    assert section["accession"] == "0000320193-24-000123"
+    assert section["cik"] == 320193
+    assert section["filingDate"] == "2024-11-01"
+    assert section["period_of_report"] == "2024-09-28"
+    # the 8-K section's URL points at ITS OWN source exhibit, not the primary doc
+    assert section["url"] == (
+        "https://www.sec.gov/Archives/edgar/data/320193/"
+        "000032019324000123/a8-kex991q2202603282026.htm"
+    )
