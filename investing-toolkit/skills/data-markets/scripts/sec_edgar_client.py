@@ -651,6 +651,146 @@ def _ensure_edgar_identity(identity: str | None = None) -> dict | None:
     return None
 
 
+# ---------------------------------------------------------------------------
+# edgartools-based filing acquisition (edgartools 5.42.0)
+# ---------------------------------------------------------------------------
+# Real Filing shape captured live 2026-07-12 (AAPL FY2024 10-K, accession
+# 0000320193-24-000123; anchored by test_data_markets_live.py
+# ::test_edgartools_acquire_real_10k_shape):
+#   accession_no:str  cik:int  form:str  filing_date:datetime.date(!)
+#   period_of_report:str  filing_url:str (primary-doc URL)  homepage_url:str
+# edgartools has NO `primary_document` attr — the primary-doc filename is the
+# last path segment of filing_url, which is itself the reconstructable SEC
+# Archives URL `.../data/{cik}/{accession-no-dashes}/{document}`.
+
+
+def _filing_date_iso(value) -> str | None:
+    """Serialize edgartools' ``Filing.filing_date`` (a ``datetime.date``, not a
+    string) to an ISO ``YYYY-MM-DD`` string; pass None/str through defensively."""
+    if value is None:
+        return None
+    if hasattr(value, "isoformat"):
+        return value.isoformat()
+    return str(value)
+
+
+def _filing_ref(filing) -> dict:
+    """Build a JSON-safe filing reference from a real edgartools ``Filing``.
+
+    Carries the six provenance fields the spec requires (accession, CIK, form,
+    filingDate, period_of_report, primaryDocument) plus the reconstructable SEC
+    Archives ``url``. ``filingDate`` derives from the filing's disclosure date
+    (never wall-clock — as_of invariant); ``primaryDocument`` and ``url`` come
+    from ``filing_url`` (edgartools exposes no ``primary_document`` attribute).
+    """
+    filing_url = filing.filing_url
+    primary_document = filing_url.rsplit("/", 1)[-1] if filing_url else None
+    return {
+        "accession": filing.accession_no,
+        "cik": filing.cik,
+        "form": filing.form,
+        "filingDate": _filing_date_iso(filing.filing_date),
+        "period_of_report": filing.period_of_report,
+        "primaryDocument": primary_document,
+        "url": filing_url,
+    }
+
+
+def _acquire_error(error_class: str, detail: str, *, identifier=None,
+                   form: str | None = None) -> dict:
+    """A loud, flat ``{"error": ...}`` acquisition-failure slot (read by
+    pack_inventory/_status), tagged with a distinguishing ``error_class`` so the
+    resolution and form-unavailable failure modes stay distinct."""
+    slot: dict = {
+        "error": f"SEC EDGAR filing acquisition failed: {detail}",
+        "error_class": error_class,
+    }
+    if identifier is not None:
+        slot["identifier"] = str(identifier)
+    if form is not None:
+        slot["form"] = form
+    return slot
+
+
+def acquire_filing(
+    identifier: str | int | None = None,
+    *,
+    form: str | None = None,
+    accession: str | None = None,
+) -> dict:
+    """Acquire a 10-K/10-Q/8-K filing reference via edgartools.
+
+    Two acquisition modes (edgartools 5.42.0):
+      - by ``accession``: ``edgar.get_by_accession_number(accession)``
+      - by ``identifier`` (ticker or CIK) + optional ``form`` filter:
+        ``edgar.Company(identifier).get_filings(form=form).latest()``
+
+    Returns a filing-reference dict (see ``_filing_ref``) on success, or one of
+    two DISTINCT loud ``{"error": ...}`` slots on failure, tagged by
+    ``error_class``:
+      - ``"resolution"``       — the ticker/CIK/accession did not resolve to a
+        registered SEC filer (never a silent-empty result).
+      - ``"form_unavailable"`` — the filer resolved but never filed ``form``
+        within the lookup window (empirically an empty ``Filings`` whose
+        ``.latest()`` is ``None``), distinct from a resolution error and never a
+        silent substitution.
+
+    The not-found shape is unverified as an exception, so resolution failure is
+    detected defensively: an exception from ``Company``/``get_by_accession_number``,
+    a falsy company, ``company.not_found``, or a falsy ``company.cik`` all map to
+    the resolution slot.
+    """
+    identity_error = _ensure_edgar_identity()
+    if identity_error is not None:
+        return identity_error
+
+    import edgar
+
+    if accession is not None:
+        try:
+            filing = edgar.get_by_accession_number(accession)
+        except Exception as exc:  # noqa: BLE001 — fail loud, don't guess the shape
+            return _acquire_error(
+                "resolution",
+                f"accession {accession!r} did not resolve to a filing ({exc})",
+                identifier=accession,
+            )
+        if filing is None:
+            return _acquire_error(
+                "resolution",
+                f"accession {accession!r} did not resolve to a filing",
+                identifier=accession,
+            )
+        return _filing_ref(filing)
+
+    # ticker / CIK path
+    try:
+        company = edgar.Company(identifier)
+    except Exception as exc:  # noqa: BLE001 — fail loud, don't guess the shape
+        return _acquire_error(
+            "resolution",
+            f"identifier {identifier!r} did not resolve to a registered SEC filer ({exc})",
+            identifier=identifier,
+        )
+    if company is None or getattr(company, "not_found", False) or not getattr(company, "cik", None):
+        return _acquire_error(
+            "resolution",
+            f"identifier {identifier!r} did not resolve to a registered SEC filer",
+            identifier=identifier,
+        )
+
+    filings = company.get_filings(form=form)
+    latest = filings.latest() if filings is not None else None
+    if latest is None:
+        return _acquire_error(
+            "form_unavailable",
+            f"form {form!r} not available for identifier {identifier!r} within the lookup window",
+            identifier=identifier,
+            form=form,
+        )
+    return _filing_ref(latest)
+
+
 def action_narrative(accession: str) -> dict:
     identity_error = _ensure_edgar_identity()
     if identity_error is not None:

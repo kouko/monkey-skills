@@ -58,6 +58,18 @@ regime-pack test below was adapted accordingly: it no longer restricts to
 asserts those two groups are present within the full default group set —
 preserving the assertion's intent (rates + inflation populate) without the
 now-removed restriction flag.
+
+Task-2 edgartools acquisition anchor (D7 grounding): the section
+"US — edgartools acquisition shape anchor" below captures the REAL edgartools
+5.42.0 Filing attribute shape that the offline mocks in
+tests/data/test_sec_narrative.py mirror (fixtures-mirror-producer-shape).
+grounding: edgartools 5.42.0 — edgar.get_by_accession_number / Company.
+get_filings; Filing.accession_no(str) / cik(int) / form(str) /
+filing_date(datetime.date, NOT str) / period_of_report(str) / filing_url /
+homepage_url; `primary_document` does NOT exist (filing_url's tail is the
+primary-doc filename). Captured live 2026-07-12 against AAPL FY2024 10-K,
+accession 0000320193-24-000123. Sources: PyPI edgartools JSON + GitHub
+dgunning/edgartools.
 """
 from __future__ import annotations
 
@@ -70,6 +82,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 PACK = ROOT / "skills" / "data-markets" / "scripts" / "pack.py"
+SCRIPTS = ROOT / "skills" / "data-markets" / "scripts"
 
 
 def _run_pack(args: list[str], extra_env: dict | None = None, timeout: int = 900) -> dict:
@@ -250,6 +263,66 @@ def test_us_regime_pack_fred_groups():
     rates = groups["rates"]
     assert isinstance(rates, dict)
     assert rates, "rates group empty"
+
+
+# ---------------------------------------------------------------------------
+# US — edgartools acquisition shape anchor (Task 2, edgartools migration)
+# ---------------------------------------------------------------------------
+# fixtures-mirror-producer-shape: this live anchor captures the REAL edgartools
+# 5.42.0 Filing attribute shape that the offline mocks in
+# tests/data/test_sec_narrative.py mirror. `import edgar` / `import
+# sec_edgar_client` are inside the test body so offline collection (edgartools
+# not installed, deselected by `-m "not network"`) stays clean.
+
+
+@pytest.mark.network
+def test_edgartools_acquire_real_10k_shape():
+    """Anchor the REAL edgartools Filing shape + acquire_filing end-to-end.
+
+    Documents the producer shape the offline mocks mirror; a v5->v6 attribute
+    churn surfaces HERE, not silently inside the mocked unit tests. Run live:
+      uv run --with pytest --with edgartools==5.42.0 --with 'pyyaml>=6.0' \
+        pytest investing-toolkit/tests/data/test_data_markets_live.py \
+        -k edgartools_acquire -m network
+    """
+    import datetime
+    import sys
+
+    import edgar
+
+    edgar.set_identity("kouko investing-toolkit noreply@anthropic.com")
+    accession = "0000320193-24-000123"  # AAPL FY2024 10-K
+    f = edgar.get_by_accession_number(accession)
+    assert f is not None, "known AAPL 10-K accession must resolve"
+    assert f.accession_no == accession
+    assert f.cik == 320193
+    assert f.form == "10-K"
+    assert isinstance(f.filing_date, datetime.date), (
+        "filing_date is a datetime.date, not a str — the client must serialize it"
+    )
+    assert f.period_of_report == "2024-09-28"
+    assert not hasattr(f, "primary_document"), (
+        "edgartools has NO primary_document attr — filing_url carries the doc"
+    )
+    assert f.filing_url.startswith(
+        "https://www.sec.gov/Archives/edgar/data/320193/000032019324000123/"
+    )
+    assert f.filing_url.endswith("aapl-20240928.htm")
+    assert f.homepage_url.endswith("-index.html")
+
+    # acquire_filing mirrors that shape end-to-end (by-accession mode).
+    if str(SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(SCRIPTS))
+    import sec_edgar_client
+
+    ref = sec_edgar_client.acquire_filing(accession=accession)
+    assert ref["accession"] == accession
+    assert ref["cik"] == 320193
+    assert ref["form"] == "10-K"
+    assert ref["filingDate"] == "2024-11-01"
+    assert ref["period_of_report"] == "2024-09-28"
+    assert ref["primaryDocument"] == "aapl-20240928.htm"
+    assert ref["url"] == f.filing_url
 
 
 # ---------------------------------------------------------------------------
