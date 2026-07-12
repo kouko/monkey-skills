@@ -942,8 +942,14 @@ def _segment_8k(obj, filing) -> list[object]:
         # ``release.text`` is a zero-arg method → pass it AS the text-thunk so
         # `segment_filing` evaluates the exhibit body under its own try/except
         # (Task 8 per-item isolation); ``release.document`` (the filename) is
-        # read eagerly for provenance.
-        return [(item_id, release.text, {"exhibit": release.document})]
+        # read eagerly for provenance. ``disclosure_status: "furnished"`` (Task 9)
+        # is derived from the SOURCE TYPE (an 8-K Item 2.02/7.01/8.01 Exhibit 99.x
+        # is FURNISHED, not filed) — NOT read from edgartools — so a downstream
+        # consumer can weight it distinctly from filed 10-K/10-Q content.
+        return [
+            (item_id, release.text,
+             {"exhibit": release.document, "disclosure_status": "furnished"})
+        ]
     return [
         _exhibit_gap(
             item_id, filing, item_count=len(following), release_count=len(releases)
@@ -1116,6 +1122,12 @@ def _build_section(item_id: str, text, filing, extra: dict | None = None) -> dic
     section = {
         "item": item_id,
         "text_path": _write_section_text(filing.accession_no, item_id, text),
+        # disclosure_status (Task 9) defaults to "filed" — the legal status of a
+        # 10-K/10-Q section — derived from the SOURCE TYPE, never read from
+        # edgartools. The 8-K exhibit-following path overrides this to "furnished"
+        # via its `extra` dict (merged below), the one source type that is
+        # furnished rather than filed. GAP slots return above and never reach here.
+        "disclosure_status": "filed",
     }
     if extra:
         section.update(extra)

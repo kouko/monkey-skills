@@ -891,3 +891,65 @@ def test_segment_8k_all_fail_when_obj_raises(sec_client):
     assert status == "failed", (
         f"8-K wholesale failure must classify failed via pack.py, got {status!r}"
     )
+
+
+# ---------------------------------------------------------------------------
+# Task 9 — furnished-vs-filed disclosure status: an 8-K Item 2.02/7.01/8.01
+# section sourced from an Exhibit 99.x carries `disclosure_status == "furnished"`
+# (a legal-status tag derived from the SOURCE TYPE — 8-K exhibit = furnished — NOT
+# read from edgartools), DISTINCT from a 10-K/10-Q section's `"filed"`.
+# ---------------------------------------------------------------------------
+# Reuses the Task-3 TenK grounding + Task-4 8-K grounding UNCHANGED — no NEW
+# edgartools attribute is touched: disclosure_status is derived form-statically
+# (8-K exhibit-following path vs 10-K/10-Q filed path), not read from any
+# producer surface.
+
+
+def test_8k_exhibit_section_marked_furnished(sec_client):
+    # No @req tag: this dispatch's plan/spec trace by
+    # `<change-id> / Requirement / Scenario` join keys, not registered REQ-ids
+    # (see report) — @req omitted per the implementer contract.
+    # Scenario: `Furnished-vs-filed status propagates to the memo / Exhibit 99.x
+    # marked furnished`. Asserts BOTH legs so the distinction is proven, not just
+    # the presence of the key: an 8-K exhibit section is "furnished" AND a 10-K
+    # section is "filed".
+
+    # --- 8-K exhibit-sourced section → "furnished" ---
+    exhibit_text = (
+        "Exhibit 99.1\nApple reports second quarter results\n"
+        "March quarter records for total company revenue ..."
+    )
+    eightk = _MockEightK(
+        items=["Item 2.02", "Item 9.01"],
+        press_releases=[
+            _MockPressRelease(document="a8-kex991q2202603282026.htm", text=exhibit_text),
+        ],
+    )
+    eightk_filing = _segmentable_filing("8-K", eightk)
+
+    (furnished,) = sec_client.segment_filing(eightk_filing)
+
+    assert "error" not in furnished, f"exhibit-present item must be a success: {furnished!r}"
+    assert furnished["disclosure_status"] == "furnished", (
+        f"8-K exhibit-sourced section must be tagged furnished: {furnished!r}"
+    )
+
+    # --- 10-K section → "filed" (the distinct filed status) ---
+    tenk = _MockTenK(
+        management_discussion="Item 7.\xa0\xa0Management's Discussion body ...",
+        risk_factors="Item 1A.\xa0\xa0Risk Factors body ...",
+    )
+    tenk_filing = _segmentable_filing("10-K", tenk)
+
+    filed_sections = sec_client.segment_filing(tenk_filing)
+
+    assert filed_sections, "10-K must emit at least one section"
+    for section in filed_sections:
+        assert "error" not in section, f"expected a success section: {section!r}"
+        assert section["disclosure_status"] == "filed", (
+            f"10-K section must be tagged filed: {section!r}"
+        )
+    # the tag is DISTINCT across source types, not a single constant
+    assert furnished["disclosure_status"] != filed_sections[0]["disclosure_status"], (
+        "furnished (8-K exhibit) must be distinct from filed (10-K)"
+    )
