@@ -325,6 +325,61 @@ def test_edgartools_acquire_real_10k_shape():
     assert ref["url"] == f.filing_url
 
 
+@pytest.mark.network
+def test_edgartools_segment_real_10k_shape():
+    """Anchor the REAL edgartools TenK/TenQ section API + segment_filing end-to-end.
+
+    fixtures-mirror-producer-shape (Task 3): the offline TenK/TenQ mocks in
+    tests/data/test_sec_narrative.py mirror THIS captured shape. A v5->v6
+    section-API churn (a renamed property, a changed subscript key) surfaces
+    HERE, loud, not silently inside the mocked unit tests. Run live:
+      uv run --with pytest --with edgartools==5.42.0 --with 'pyyaml>=6.0' \
+        pytest investing-toolkit/tests/data/test_data_markets_live.py \
+        -k edgartools_segment -m network
+    """
+    import sys
+
+    import edgar
+
+    edgar.set_identity("kouko investing-toolkit noreply@anthropic.com")
+
+    # 10-K: management_discussion (Item 7) / risk_factors (Item 1A) are str props.
+    tenk_filing = edgar.get_by_accession_number("0000320193-24-000123")  # AAPL FY2024 10-K
+    tenk = tenk_filing.obj()
+    assert type(tenk).__name__ == "TenK"
+    assert isinstance(tenk.management_discussion, str) and tenk.management_discussion.strip(), (
+        "TenK.management_discussion (Item 7) must be non-empty str"
+    )
+    assert isinstance(tenk.risk_factors, str) and tenk.risk_factors.strip(), (
+        "TenK.risk_factors (Item 1A) must be non-empty str"
+    )
+
+    # 10-Q: NO management_discussion property; Item 2 via obj["Part I, Item 2"] subscript.
+    tenq_filing = edgar.Company("AAPL").get_filings(form="10-Q").latest()
+    tenq = tenq_filing.obj()
+    assert type(tenq).__name__ == "TenQ"
+    assert not hasattr(tenq, "management_discussion"), (
+        "TenQ has NO management_discussion property — Item 2 is read via subscript"
+    )
+    assert isinstance(tenq["Part I, Item 2"], str) and tenq["Part I, Item 2"].strip(), (
+        "TenQ Item 2 (MD&A) must be non-empty str via obj['Part I, Item 2']"
+    )
+
+    # segment_filing mirrors that shape end-to-end.
+    if str(SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(SCRIPTS))
+    import sec_edgar_client
+
+    k_sections = {s["item"]: s for s in sec_edgar_client.segment_filing(tenk_filing)}
+    assert set(k_sections) == {"Item 7", "Item 1A"}, "10-K segments into Item 7 + Item 1A"
+    assert k_sections["Item 7"]["text"].strip()
+    assert k_sections["Item 1A"]["text"].strip()
+
+    q_sections = {s["item"]: s for s in sec_edgar_client.segment_filing(tenq_filing)}
+    assert set(q_sections) == {"Item 2"}, "10-Q segments into Item 2"
+    assert q_sections["Item 2"]["text"].strip()
+
+
 # ---------------------------------------------------------------------------
 # JP — 7203 Toyota (yfinance + TDnet + EDINET + BOJ/e-Stat/ECB)
 # ---------------------------------------------------------------------------

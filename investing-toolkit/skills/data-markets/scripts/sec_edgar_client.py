@@ -791,6 +791,106 @@ def acquire_filing(
     return _filing_ref(latest)
 
 
+# ---------------------------------------------------------------------------
+# edgartools-based item segmentation (edgartools 5.42.0)
+# ---------------------------------------------------------------------------
+# Real TenK/TenQ section-API shape captured live 2026-07-12 (AAPL FY2024 10-K
+# 0000320193-24-000123 + AAPL latest 10-Q; anchored by test_data_markets_live.py
+# ::test_edgartools_segment_real_10k_shape):
+#   filing.obj() -> TenK / TenQ.
+#   TenK: `management_discussion` (Item 7) + `risk_factors` (Item 1A) are `str`
+#     properties; an item absent from THIS filing yields `None` (issue #710).
+#   TenQ: NO `management_discussion` property — Item 2 (MD&A) is read via the
+#     subscript `obj["Part I, Item 2"]` -> `str` (also `None` when absent).
+#
+# SECTION-OBJECT CONTRACT (established here, reused by Tasks 4-12) --------------
+# `segment_filing()` returns a LIST of per-item section dicts in requested order:
+#   SUCCESS section: {"item": "<item id>", "text": "<extracted text>"}
+#     — a plain dict later tasks EXTEND in place (T6 provenance, T7 `text_path`,
+#       T9 `disclosure_status`).
+#   FAILURE slot:    {"item": "<item id>", "error": "<why>",
+#                     "error_class": "absent_item"}
+#     — a sentinel-compatible dict; the top-level `error` key is read unchanged
+#       by pack.py's `_status`, and the slot NAMES the missing item so a
+#       requested-but-absent item is never dropped or fabricated.
+# A multi-section result is a list later tasks append to / extend.
+
+
+def _segment_10k(obj) -> list[tuple[str, object]]:
+    """Requested (item id, text-or-None) pairs for a 10-K TenK typed object.
+
+    Item 7 (MD&A) / Item 1A (Risk Factors) via the grounded `str` properties;
+    each is `None` when the item is absent from this filing (issue #710)."""
+    return [
+        ("Item 7", obj.management_discussion),
+        ("Item 1A", obj.risk_factors),
+    ]
+
+
+def _segment_10q(obj) -> list[tuple[str, object]]:
+    """Requested (item id, text-or-None) pairs for a 10-Q TenQ typed object.
+
+    TenQ exposes no MD&A property; Item 2 is read via the subscript
+    `obj["Part I, Item 2"]` (`str`, or `None` when absent)."""
+    return [
+        ("Item 2", obj["Part I, Item 2"]),
+    ]
+
+
+# form -> extractor returning [(item id, text-or-None), ...] from filing.obj().
+# Later tasks register additional forms (T4 adds 8-K exhibit-following).
+_ITEM_EXTRACTORS = {
+    "10-K": _segment_10k,
+    "10-Q": _segment_10q,
+}
+
+
+def _section_gap(item_id: str, filing) -> dict:
+    """A loud, sentinel-compatible per-section error slot naming the missing
+    item + its accession (read by pack.py's `_status`)."""
+    return {
+        "item": item_id,
+        "error": (
+            f"section {item_id!r} not present in filing "
+            f"{getattr(filing, 'accession_no', None)!r} "
+            f"(form {getattr(filing, 'form', None)!r})"
+        ),
+        "error_class": "absent_item",
+    }
+
+
+def _build_section(item_id: str, text, filing) -> dict:
+    """A success section (`{"item", "text"}`) when text is present, else a named
+    absent-item error slot — never an empty or fabricated section."""
+    if text is None or (isinstance(text, str) and not text.strip()):
+        return _section_gap(item_id, filing)
+    return {"item": item_id, "text": text}
+
+
+def segment_filing(filing) -> list[dict]:
+    """Segment a 10-K / 10-Q filing into per-item section objects via edgartools'
+    typed section API (``filing.obj()`` -> ``TenK`` / ``TenQ``), NOT the retired
+    regex ``parse_item_sections``.
+
+    Returns a LIST of section dicts (see the SECTION-OBJECT CONTRACT above):
+      - 10-K -> distinct Item 7 (MD&A) + Item 1A (Risk Factors) sections.
+      - 10-Q -> an Item 2 (MD&A) section.
+    A requested item absent from THIS filing (edgartools returns ``None``,
+    issue #710) becomes a per-section error slot naming the missing item, never
+    an empty/fabricated section. An unregistered form fails loud (``ValueError``)
+    rather than silently returning no sections.
+    """
+    form = filing.form
+    extractor = _ITEM_EXTRACTORS.get(form)
+    if extractor is None:
+        raise ValueError(
+            f"segment_filing: no section extractor registered for form {form!r} "
+            "(10-K/10-Q supported in this migration slice; 8-K follows in a later task)"
+        )
+    obj = filing.obj()
+    return [_build_section(item_id, text, filing) for item_id, text in extractor(obj)]
+
+
 def action_narrative(accession: str) -> dict:
     identity_error = _ensure_edgar_identity()
     if identity_error is not None:
