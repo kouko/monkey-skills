@@ -1301,6 +1301,56 @@ def segment_filing(filing) -> list[dict]:
     return sections
 
 
+def fetch_narrative_sections(accession: str) -> dict:
+    """Cache-backed edgartools narrative-section fetch for an accession (the unit
+    Task 12 wires into ``--action narrative``).
+
+    Cache HIT — a warm accession within the immutable window — returns the cached
+    section list WITHOUT re-hitting edgartools/``acquire_filing`` (SEC fair-access:
+    never re-fetch what we already have). Cache MISS acquires the filing via
+    edgartools (``acquire_filing``) then segments it (``segment_filing``), and
+    caches the resulting section-list wrapper.
+
+    The cache key derives from the disclosure IDENTITY (the accession), NEVER
+    wall-clock, so a same-day re-run of the same accession is a HIT, not a
+    double-fetch (as_of invariant). It is DISTINCT from the legacy regex
+    ``fetch_narrative``'s ``narrative_{accession}`` key: the edgartools payload
+    stores ``sections`` as a LIST of section dicts whereas the legacy payload
+    stored it as a DICT (item->body), and both share the immutable TTL + envelope
+    v2.0 — so a shared key would let a machine with a warm LEGACY entry get a
+    schema-passing HIT of the WRONG shape (never self-healing under immutable TTL).
+    The ``narrative_sections_`` prefix ensures the two caches can never alias.
+    A failed acquisition is a loud ``{"error": ...}`` slot that is SURFACED, never
+    cached as success — so a transient 429/403 that edgartools' own backoff could
+    not recover from is not poisoned into the cache. This wrapper adds NO
+    retry-defeating catch around the edgartools call: ``acquire_filing`` reaches
+    edgartools directly, leaving its built-in ``pyrate-limiter``/``stamina``
+    backoff authoritative (edgartools does its own HTTP over ``httpx``; the
+    ``requests``-based ``_sec_get`` throttle does not cover this path).
+    """
+    path = cache_util.cache_path("sec_edgar", f"narrative_sections_{accession}")
+    cached = cache_util.load_cache(path, TTL_NARRATIVE)
+    if cached is not None:
+        cached["_cache"] = "hit"
+        return cached
+
+    filing = acquire_filing(accession=accession)
+    if isinstance(filing, dict) and "error" in filing:
+        # Loud acquisition failure (e.g. a 429/403 that escaped edgartools' own
+        # backoff) — surface it; do NOT segment, do NOT cache it as success.
+        return filing
+
+    sections = segment_filing(filing)
+    result = {
+        "accession": accession,
+        "sections": sections,
+        "section_count": len(sections),
+        "_cache": "miss",
+    }
+    cache_util.save_cache(path, result)
+    return result
+
+
 def action_narrative(accession: str) -> dict:
     identity_error = _ensure_edgar_identity()
     if identity_error is not None:

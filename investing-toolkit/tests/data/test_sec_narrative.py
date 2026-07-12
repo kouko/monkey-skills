@@ -1120,3 +1120,154 @@ def test_form_requested_items_match_segmenters(sec_client):
     assert tenq_ids == sec_client._FORM_REQUESTED_ITEMS["10-Q"], (
         "_FORM_REQUESTED_ITEMS['10-Q'] drifted from _segment_10q's requested items"
     )
+
+
+# ---------------------------------------------------------------------------
+# Task 11 — SEC fair-access: rate-limit backoff preserved + filing cache reuse.
+# A cached narrative-section fetch (`fetch_narrative_sections`) reads OUR
+# cache_util layer on a warm accession instead of re-hitting edgartools
+# (Scenario "Filing cache avoids re-fetch"); a simulated transient 429/403 on
+# the edgartools acquisition path is surfaced LOUDLY and never swallowed into a
+# silent drop / fabricated success / poisoned cache, leaving edgartools' OWN
+# pyrate-limiter/stamina backoff authoritative (Scenario "Rate-limit backoff").
+# ---------------------------------------------------------------------------
+# D7 grounding: edgartools 5.42.0 ships its own rate-limit + retry stack
+# (`pyrate-limiter` + `stamina` + `httpxthrottlecache`) OVER `httpx` — NOT the
+# legacy `requests`-based `_sec_get` throttle (which never covered the
+# edgartools path). A 429/403 is retried WITH jitter INSIDE the edgartools
+# acquisition call (edgar.get_by_accession_number / Company(...).get_filings),
+# so the retry itself is edgartools-internal and exercised only on the network
+# path. The offline-testable slice AT OUR WRAPPER BOUNDARY is that we (a) actually
+# ENTER the edgartools acquisition path (never pre-empt it before that backoff
+# can act) and (b) surface a transient failure loudly WITHOUT swallowing it or
+# caching it as success. The cache layer is cache_util envelope v2.0 (immutable
+# TTL, key `narrative_{accession}`) — keyed by disclosure IDENTITY, never
+# wall-clock (the as_of invariant: a same-day re-run of the same accession is a
+# HIT, not a double-fetch). Sources: plan Notes §edgartools grounding + in-repo
+# cache_util.py:170-252, captured 2026-07-12.
+
+
+def test_filing_cache_avoids_refetch(sec_client, monkeypatch):
+    # No @req tag: this dispatch's plan/spec trace by
+    # `<change-id> / Requirement / Scenario` join keys, not registered REQ-ids
+    # (see report) — @req omitted per the implementer contract.
+    # Scenario: `SEC EDGAR fair-access compliance / Filing cache avoids re-fetch`.
+    accession = "0000320193-24-000123"
+    tenk = _MockTenK(
+        management_discussion="Item 7.\xa0\xa0Management's Discussion body ...",
+        risk_factors="Item 1A.\xa0\xa0Risk Factors body ...",
+    )
+    filing = _segmentable_filing("10-K", tenk)
+
+    calls = {"acquire": 0}
+
+    def _counting_acquire(*args, **kwargs):
+        calls["acquire"] += 1
+        return filing
+
+    # spy on acquire_filing — the edgartools acquisition boundary. A warm
+    # accession must NOT re-enter it (assert ZERO additional acquire calls).
+    monkeypatch.setattr(sec_client, "acquire_filing", _counting_acquire)
+
+    first = sec_client.fetch_narrative_sections(accession)
+    assert calls["acquire"] == 1, "a cold accession must acquire exactly once"
+    assert first.get("_cache") == "miss", f"cold run must be a cache miss: {first!r}"
+    first_items = {s["item"] for s in first["sections"]}
+    assert first_items == {"Item 7", "Item 1A"}, "cold run segments the 10-K"
+
+    second = sec_client.fetch_narrative_sections(accession)
+
+    # the warm re-run read cache — ZERO additional acquire/edgartools calls
+    assert calls["acquire"] == 1, (
+        f"a warm accession must read cache, not re-acquire: {calls['acquire']} calls"
+    )
+    assert second.get("_cache") == "hit", f"warm run must be a cache hit: {second!r}"
+    second_items = {s["item"] for s in second["sections"]}
+    assert second_items == first_items, "cached sections must match the cold-run sections"
+
+
+def test_rate_limit_backoff_not_swallowed(sec_client):
+    # No @req tag (see test_filing_cache_avoids_refetch).
+    # Scenario: `SEC EDGAR fair-access compliance / Rate-limit backoff`.
+    # Honest offline slice (edgartools owns the internal retry, see the D7 note
+    # above): a transient 429/403 escaping the edgartools acquisition path AFTER
+    # edgartools' own backoff is surfaced LOUDLY — never swallowed into a silent
+    # drop / fabricated success / poisoned cache — and the edgartools acquisition
+    # path IS entered (we never pre-empt it before that backoff can act).
+    stub = sec_client.edgar_stub
+    accession = "0000320193-24-000123"
+
+    class _RateLimited(Exception):
+        """Stand-in for the edgartools httpx 429/403 that escapes
+        get_by_accession_number AFTER edgartools' own `stamina` retries are
+        exhausted (real type: httpx.HTTPStatusError, status 429 — not importable
+        offline; edgartools does its HTTP over httpx per plan Notes)."""
+
+    stub.get_by_accession_number.side_effect = _RateLimited(
+        "429 Too Many Requests (SEC fair-access ceiling)"
+    )
+
+    result = sec_client.fetch_narrative_sections(accession)
+
+    # (1) the edgartools acquisition path was actually ENTERED — we never
+    #     short-circuit before edgartools' own pyrate-limiter/stamina backoff runs
+    assert stub.get_by_accession_number.called, (
+        "the edgartools acquisition path must be entered, not pre-empted"
+    )
+    # (2) the transient failure is surfaced LOUDLY, not swallowed into a silent
+    #     drop or a fabricated empty-sections success
+    assert isinstance(result, dict)
+    assert "error" in result, f"a transient 429/403 must surface loudly: {result!r}"
+    assert not result.get("sections"), "no fabricated sections on a failed acquisition"
+    # (3) the failure is NOT cached as success — a re-run re-enters acquisition
+    #     (no poisoned cache), so edgartools' backoff stays authoritative
+    path = sec_client.cache_util.cache_path("sec_edgar", f"narrative_{accession}")
+    assert not path.exists(), "a failed acquisition must NOT be cached as success"
+
+
+def test_edgartools_cache_key_distinct_from_legacy(sec_client, monkeypatch):
+    # No @req tag (see test_filing_cache_avoids_refetch).
+    # Scenario: `SEC EDGAR fair-access compliance / Filing cache avoids re-fetch`
+    # — regression guard. The LEGACY regex `fetch_narrative` writes
+    # `narrative_{accession}` with `sections` as a DICT (item->body); the new
+    # edgartools `fetch_narrative_sections` emits `sections` as a LIST. Both share
+    # the immutable TTL + envelope v2.0, so if they shared the SAME cache key a
+    # machine with a warm LEGACY entry would get a schema-passing HIT of the WRONG
+    # shape (dict where a list is expected) — a never-self-healing landmine under
+    # immutable TTL. This asserts the edgartools payload uses a DISTINCT key: a
+    # pre-seeded legacy dict-shaped entry must NOT be read by the new function.
+    accession = "0000320193-24-000123"
+
+    # pre-seed the LEGACY key with a legacy DICT-shaped payload (as fetch_narrative
+    # would have written it on a real machine before the T12 rewire)
+    legacy_path = sec_client.cache_util.cache_path("sec_edgar", f"narrative_{accession}")
+    sec_client.cache_util.save_cache(
+        legacy_path,
+        {"accession": accession, "sections": {"Item 7": "legacy dict body ..."}},
+    )
+
+    tenk = _MockTenK(
+        management_discussion="Item 7.\xa0\xa0Management's Discussion body ...",
+        risk_factors="Item 1A.\xa0\xa0Risk Factors body ...",
+    )
+    filing = _segmentable_filing("10-K", tenk)
+    calls = {"acquire": 0}
+
+    def _counting_acquire(*args, **kwargs):
+        calls["acquire"] += 1
+        return filing
+
+    monkeypatch.setattr(sec_client, "acquire_filing", _counting_acquire)
+
+    result = sec_client.fetch_narrative_sections(accession)
+
+    # the legacy dict-shaped entry is NOT aliased — the new function used its own
+    # distinct key, so it was a MISS and freshly acquired + segmented
+    assert calls["acquire"] == 1, (
+        "the edgartools fetch must NOT read the legacy narrative_ key — distinct "
+        f"cache key required (acquire calls={calls['acquire']})"
+    )
+    assert isinstance(result["sections"], list), (
+        f"sections must be the edgartools LIST shape, never the legacy dict: {result!r}"
+    )
+    assert {s["item"] for s in result["sections"]} == {"Item 7", "Item 1A"}
