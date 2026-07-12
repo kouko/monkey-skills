@@ -230,6 +230,161 @@ def test_list_filings_preserves_items_and_report_date(sec_client, monkeypatch):
 
 
 # ---------------------------------------------------------------------------
+# Task 2 (this plan, 2026-07-13-us-sec-narrative-memo-wiring) —
+# select_narrative_filings: a pure, offline-testable quarter-anchored
+# filing-selection policy over already-fetched `list_filings` rows.
+# ---------------------------------------------------------------------------
+# Live-verified 2026-07-13 against AAPL: the MOST RECENT 8-K at probe time was
+# items="5.02" (an executive-change filing), while the actual earnings release
+# was an OLDER 8-K in the same quarter, items="2.02,9.01". "Take the latest
+# 8-K" silently selects the wrong filing — selection must be by item code
+# (exact membership in the comma-separated `items`, never substring), and the
+# window must be anchored in TIME (quarters), never filing count.
+
+
+def _filing_row(
+    *, form, accession, filing_date, report_date="", items="", primary_document=""
+):
+    """A row shaped exactly like `list_filings`'s output (Task 1, landed)."""
+    return {
+        "form": form,
+        "filingDate": filing_date,
+        "accessionNumber": accession,
+        "primaryDocument": primary_document,
+        "primaryDocDescription": form,
+        "items": items,
+        "reportDate": report_date,
+    }
+
+
+def test_select_narrative_filings_picks_earnings_8k_by_item_not_recency(sec_client):
+    # No @req tag: this dispatch's plan/spec trace by
+    # `<change-id> / Requirement / Scenario` join keys, not registered REQ-ids
+    # (see report) — @req omitted per the implementer contract.
+    import datetime as _dt
+
+    rows = [
+        _filing_row(
+            form="10-K", accession="10K-OLD", filing_date="2024-11-01",
+            report_date="2024-09-28",
+        ),
+        _filing_row(
+            form="10-K", accession="10K-LATEST", filing_date="2025-11-01",
+            report_date="2025-09-27",
+        ),
+        _filing_row(
+            form="10-Q", accession="10Q-OLD", filing_date="2025-08-01",
+            report_date="2025-06-28",
+        ),
+        _filing_row(
+            form="10-Q", accession="10Q-LATEST", filing_date="2026-05-01",
+            report_date="2026-03-28",
+        ),
+        # 2026Q2: the MOST RECENT 8-K is a 5.02 executive-change filing; an
+        # OLDER 8-K in the SAME quarter is the real 2.02 earnings release.
+        _filing_row(
+            form="8-K", accession="8K-EXEC-CHANGE", filing_date="2026-05-05",
+            report_date="2026-05-01", items="5.02",
+        ),
+        _filing_row(
+            form="8-K", accession="8K-EARNINGS-Q2", filing_date="2026-04-30",
+            report_date="2026-04-30", items="2.02,9.01",
+        ),
+        # 2026Q1: a normal earnings 8-K.
+        _filing_row(
+            form="8-K", accession="8K-EARNINGS-Q1", filing_date="2026-02-01",
+            report_date="2026-01-31", items="2.02,9.01",
+        ),
+        # 2025Q4: an 8-K exists, but NONE carries item 2.02 -> must be a gap.
+        _filing_row(
+            form="8-K", accession="8K-Q4-OTHER", filing_date="2025-11-15",
+            report_date="2025-11-01", items="5.07",
+        ),
+        # 2026Q3 (the anchor quarter itself): no 8-K at all -> must be a gap.
+    ]
+    as_of = _dt.date(2026, 7, 15)  # anchors the window at 2026Q3
+
+    result = sec_client.select_narrative_filings(rows, n_quarters=4, as_of=as_of)
+
+    selected_by_role_quarter = {
+        (r["role"], r.get("quarter")): r for r in result["selected"]
+    }
+
+    tenk = selected_by_role_quarter[("10-K", None)]
+    assert tenk["accessionNumber"] == "10K-LATEST", "must pick the LATEST 10-K"
+
+    tenq = selected_by_role_quarter[("10-Q", None)]
+    assert tenq["accessionNumber"] == "10Q-LATEST", "must pick the LATEST 10-Q"
+
+    q2 = selected_by_role_quarter[("8-K", "2026Q2")]
+    assert q2["accessionNumber"] == "8K-EARNINGS-Q2", (
+        "must select the item-2.02 filing, NOT the more-recent 5.02 filing "
+        "in the same quarter (selection is by item code, never recency)"
+    )
+    assert "8K-EXEC-CHANGE" not in {r["accessionNumber"] for r in result["selected"]}
+
+    q1 = selected_by_role_quarter[("8-K", "2026Q1")]
+    assert q1["accessionNumber"] == "8K-EARNINGS-Q1"
+
+    # 2025Q4 has an 8-K, but none with item 2.02 -> explicit gap, not silence.
+    gaps_by_quarter = {g.get("quarter"): g for g in result["gaps"]}
+    assert "2025Q4" in gaps_by_quarter, (
+        f"expected an explicit gap for 2025Q4, got gaps: {result['gaps']!r}"
+    )
+    gap_q4 = gaps_by_quarter["2025Q4"]
+    assert "error" in gap_q4, f"gap must be a loud error slot: {gap_q4!r}"
+    assert "2025Q4" in gap_q4["error"], "gap error must name the quarter"
+
+    # 2026Q3 (the anchor quarter) has no 8-K at all -> also an explicit gap.
+    assert "2026Q3" in gaps_by_quarter
+
+    # requested is FIXED by the policy (2 + n_quarters), independent of what
+    # actually matched — this is what makes an incomplete result arithmetically
+    # detectable downstream rather than a short list that looks complete.
+    assert result["requested"] == 2 + 4 == 6
+
+
+def test_select_narrative_filings_requested_is_policy_fixed(sec_client):
+    # No @req tag (see test_select_narrative_filings_picks_earnings_8k_by_item_not_recency).
+    # `requested` must equal `2 + n_quarters` regardless of how many filings
+    # actually matched — even an EMPTY filings list still reports the full
+    # policy-fixed count, with every slot showing up as a gap.
+    result = sec_client.select_narrative_filings([], n_quarters=4)
+    assert result["requested"] == 6
+    assert len(result["selected"]) + len(result["gaps"]) == 6
+
+    result3 = sec_client.select_narrative_filings([], n_quarters=3)
+    assert result3["requested"] == 5
+
+
+def test_select_narrative_filings_item_code_is_exact_not_substring(sec_client):
+    # No @req tag (see test_select_narrative_filings_picks_earnings_8k_by_item_not_recency).
+    # A hypothetical "12.02" must NOT be treated as an earnings 8-K: membership
+    # of "2.02" must be a proper set-membership check over the comma-split
+    # `items` field, never a substring search.
+    import datetime as _dt
+
+    rows = [
+        _filing_row(
+            form="8-K", accession="8K-DECOY", filing_date="2026-05-05",
+            report_date="2026-05-01", items="12.02",
+        ),
+    ]
+    as_of = _dt.date(2026, 5, 15)  # anchors the window at 2026Q2
+
+    result = sec_client.select_narrative_filings(rows, n_quarters=1, as_of=as_of)
+
+    assert not any(
+        r["role"] == "8-K" and r["accessionNumber"] == "8K-DECOY"
+        for r in result["selected"]
+    ), "items='12.02' must NOT match item code '2.02' via substring"
+    gaps_by_quarter = {g.get("quarter"): g for g in result["gaps"]}
+    assert "2026Q2" in gaps_by_quarter, (
+        "the decoy-only quarter must still surface as an explicit gap"
+    )
+
+
+# ---------------------------------------------------------------------------
 # Task 2 — acquire_filing (edgartools acquisition + two distinct error classes)
 # ---------------------------------------------------------------------------
 # Fixtures mirror the REAL edgartools 5.42.0 Filing shape captured by the live

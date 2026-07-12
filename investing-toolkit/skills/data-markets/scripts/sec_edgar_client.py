@@ -45,7 +45,7 @@ import json
 import re
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 import requests as _requests
@@ -349,6 +349,136 @@ def list_filings(cik: int, forms: list[str] | None, limit: int) -> list[dict]:
         if len(rows) >= limit:
             break
     return rows
+
+
+# ---------------------------------------------------------------------------
+# select_narrative_filings — quarter-anchored filing-selection policy (pure
+# function, no I/O) over already-fetched `list_filings` rows. Decides WHICH
+# filings the memo's narrative reads: the latest 10-K, the latest 10-Q, and
+# one earnings 8-K per quarter for the last `n_quarters` quarters.
+#
+# Two non-negotiable design laws:
+#   1. Selection is by ITEM CODE, never recency rank. An 8-K's most recent
+#      filing is often a 5.02 executive-change filing, not the earnings
+#      release (live-observed on AAPL, 2026-07-13: the latest 8-K was
+#      items="5.02"; the actual earnings 8-K was an older one in the same
+#      quarter, items="2.02,9.01"). Item-code membership is checked by
+#      splitting the comma-separated `items` field into a set, never by
+#      substring (so a hypothetical "12.02" never matches "2.02").
+#   2. The window is anchored in TIME (quarters), never in filing count.
+#      8-K volume is unpredictable (it is the "any material event" form), so
+#      a count-based window drifts with a company's filing frequency.
+# ---------------------------------------------------------------------------
+
+def _quarter_of(date_str: str | None) -> tuple[int, int] | None:
+    """(year, quarter) for an ISO date string, or None if unparseable/absent."""
+    if not date_str:
+        return None
+    try:
+        d = date.fromisoformat(date_str)
+    except (ValueError, TypeError):
+        return None
+    return (d.year, (d.month - 1) // 3 + 1)
+
+
+def _quarter_label(year_quarter: tuple[int, int]) -> str:
+    year, quarter = year_quarter
+    return f"{year}Q{quarter}"
+
+
+def _quarter_shift(year_quarter: tuple[int, int], n: int) -> tuple[int, int]:
+    """(year, quarter) shifted back by `n` quarters (n >= 0)."""
+    year, quarter = year_quarter
+    total = year * 4 + (quarter - 1) - n
+    return (total // 4, total % 4 + 1)
+
+
+def _has_item_code(items: str | None, code: str) -> bool:
+    """Exact set-membership over the comma-separated `items` field — never a
+    substring search (a hypothetical "12.02" must not match "2.02")."""
+    if not items:
+        return False
+    return code in {part.strip() for part in items.split(",")}
+
+
+def _latest_filing(filings: list[dict], form: str) -> dict | None:
+    rows = [r for r in filings if r.get("form") == form and r.get("filingDate")]
+    if not rows:
+        return None
+    return max(rows, key=lambda r: r["filingDate"])
+
+
+def select_narrative_filings(
+    filings: list[dict],
+    n_quarters: int = 4,
+    as_of: date | None = None,
+) -> dict:
+    """Select the filings the memo's narrative reads from `filings` rows (as
+    returned by `list_filings`): the latest 10-K, the latest 10-Q, and one
+    earnings 8-K (submissions `items` containing "2.02") per quarter for the
+    last `n_quarters` quarters, anchored at `as_of` (defaults to
+    `date.today()` — injectable for deterministic tests; no wall-clock read
+    happens inside the selection logic below this point).
+
+    Returns:
+      {
+        "selected": [ <filing row> + {"role": "10-K"|"10-Q"|"8-K",
+                                       "quarter": "<YYYYQn>" for 8-K only}, ... ],
+        "gaps": [ {"role": ..., "quarter": ..., "error": "...",
+                    "error_class": "no_filing"|"no_earnings_8k"}, ... ],
+        "requested": 2 + n_quarters,  # fixed by the policy, never by outcome
+      }
+
+    A quarter with no qualifying item-2.02 8-K yields an explicit gap entry
+    naming the quarter and the reason — never a silent omission, mirroring
+    the repo's `_section_gap` gap-slot idiom (`error` + `error_class`).
+    """
+    anchor = as_of or date.today()
+    anchor_yq = (anchor.year, (anchor.month - 1) // 3 + 1)
+
+    selected: list[dict] = []
+    gaps: list[dict] = []
+
+    for role, form in (("10-K", "10-K"), ("10-Q", "10-Q")):
+        latest = _latest_filing(filings, form)
+        if latest:
+            selected.append({**latest, "role": role})
+        else:
+            gaps.append({
+                "role": role,
+                "error": f"no {form} filing found",
+                "error_class": "no_filing",
+            })
+
+    earnings_by_quarter: dict[tuple[int, int], list[dict]] = {}
+    for row in filings:
+        if row.get("form") != "8-K" or not _has_item_code(row.get("items"), "2.02"):
+            continue
+        year_quarter = _quarter_of(row.get("reportDate") or row.get("filingDate"))
+        if year_quarter is None:
+            continue
+        earnings_by_quarter.setdefault(year_quarter, []).append(row)
+
+    for n in range(n_quarters):
+        target_yq = _quarter_shift(anchor_yq, n)
+        label = _quarter_label(target_yq)
+        candidates = earnings_by_quarter.get(target_yq)
+        if candidates:
+            pick = max(candidates, key=lambda r: r.get("filingDate") or "")
+            selected.append({**pick, "role": "8-K", "quarter": label})
+        else:
+            gaps.append({
+                "role": "8-K",
+                "quarter": label,
+                "error": f"no earnings 8-K (item 2.02) found for quarter {label}",
+                "error_class": "no_earnings_8k",
+            })
+
+    return {
+        "selected": selected,
+        "gaps": gaps,
+        "requested": 2 + n_quarters,
+    }
 
 
 # ---------------------------------------------------------------------------
