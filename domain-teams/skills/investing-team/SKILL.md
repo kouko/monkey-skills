@@ -163,6 +163,14 @@ Guard rails:
 - Each retry launches a fresh evaluator (no accumulated context)
 - Do NOT compress artifacts before passing to evaluator — evaluator needs full
   citations (ticker, date, source URL) to judge compliance
+- **Any edit to the artifact body after a gate verdict voids that gate for
+  the edited content** — re-run the affected gate(s) on the current artifact
+  (diff-scoped: an evaluator told what changed may focus there, but verdicts
+  always describe the artifact as it will ship). Gate verdicts that describe
+  a pre-edit text are misreporting. The 2-round retry cap limits
+  fix-and-re-evaluate rounds; it never licenses shipping un-evaluated edits —
+  if the cap is exhausted and the text still needs changes, escalate to the
+  user instead of editing past the gates.
 
 ## Resource Manifest
 

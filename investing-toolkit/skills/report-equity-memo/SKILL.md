@@ -290,6 +290,12 @@ Launch `domain-teams:investing-team` with the **Deep Equity Research Memo** prot
    context — plus Phase 0's recall outcome (prior verdict/date/price/delta,
    or the no-hits/skipped fact) so investing-team can disclose it in the
    memo's Limitations section
+2b. The seed context MUST also carry the four verdict-layer defense elements
+   — `rule_verdict` (binding-or-gated), the pack-section inventory (generate
+   via `scripts/pack_inventory.py`), date-anchoring rule, and the
+   verbatim-disclosure pass bar — per
+   `references/phase4-seed-contract.md`, which also defines the
+   orchestrator's acceptance greps on the returned memo
 3. The investing-team worker self-loads its standards / protocols / rubrics and runs the full gate stack — relative-valuation gates consume the structured `comps.json`, not prose
 4. Gate verdicts (PASS / NEEDS_REVISION) flow back from investing-team's evaluators — this skill does not produce verdicts
 5. Visibility Convention: include the skill-team TaskUpdate cadence clause (phase transitions / milestones / heartbeat ≤60s) so the user sees progress during the multi-minute investing-team run

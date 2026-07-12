@@ -5,6 +5,33 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.5.0] — 2026-07-12
+
+Verdict-layer defenses — hardening the memo pipeline against weak-model
+failure at the judgment layer (a controlled strong-vs-weak comparison on
+identical 2330.TW data surfaced rule-deviation, false data-unavailability
+claims, dropped disclosures, and UTC date leakage after #539's artifact
+gates already closed fake-completion). Plan:
+`docs/loom/plans/2026-07-12-verdict-layer-defenses.md`. Pairs with
+domain-teams v5.7.0 (the gate-side enforcement).
+
+### Added
+
+- **`analysis-dcf` `rule_verdict`**: `verdict_thresholds` now carries a
+  deterministic `rule_verdict` (SELL / HOLD / BUY-string / null when no
+  price) + `rule_verdict_basis` (price + thresholds compared) — the
+  mechanical verdict-rule application moves into code so the memo LLM
+  adopts it or files a gated Deviation Block rather than re-deriving it.
+- **`report-equity-memo/scripts/pack_inventory.py`**: pure-stdlib CLI
+  turning a data pack into a machine-readable section inventory
+  (present/kind/rows|keys + `_status` echo), so a memo's "data unavailable"
+  claims are checkable against ground truth.
+- **`report-equity-memo/references/phase4-seed-contract.md`**: the four
+  verdict-layer defense elements the Phase 4 packet must carry
+  (`rule_verdict` binding-or-gated, pack inventory, issuer-timezone date
+  anchoring, verbatim-disclosure pass bar) + the orchestrator's acceptance
+  greps; SKILL.md Phase 4 gains a pointer (step 2b).
+
 ## [v2.4.1] — 2026-07-12
 
 ### Added

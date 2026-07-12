@@ -170,3 +170,54 @@ def test_sensitivity_grid_is_3x3(runner, fixtures_dir):
     # 9 cells total
     flat = [c for row in sens["table"] for c in row]
     assert len(flat) == 9
+
+
+# ---------------------------------------------------------------------------
+# rule_verdict — mechanical BUY/HOLD/SELL application (moved out of the
+# downstream memo-writing LLM's hands and into deterministic code)
+# ---------------------------------------------------------------------------
+
+
+def test_rule_verdict_sell_when_price_above_sell_threshold(runner, fixtures_dir):
+    """AAPL fixture: current_price 175.0 > sell_threshold 165.02 -> SELL."""
+    res = runner(DCF_SCRIPT, "--input", str(fixtures_dir / "aapl_memo_fetch.json"))
+    assert res.returncode == 0, res.stderr
+    payload = json.loads(res.stdout)
+    vt = payload["verdict_thresholds"]
+    assert vt["rule_verdict"] == "SELL"
+    assert vt["rule_verdict_basis"]["price"] == payload["current_price"]
+    assert vt["rule_verdict_basis"]["compared_to"]["sell_threshold"] == vt["sell_threshold"]
+    assert vt["rule_verdict_basis"]["compared_to"]["buy_threshold_grade_a"] == vt["buy_threshold_grade_a"]
+
+
+def test_rule_verdict_hold_when_price_between_buy_a_and_hold_threshold(runner, fixtures_dir):
+    """current_price 150.0 falls between buy_threshold_grade_a (100.45) and
+    hold_threshold (165.02) -> HOLD."""
+    res = runner(DCF_SCRIPT, "--input", str(fixtures_dir / "dcf_rule_verdict_hold.json"))
+    assert res.returncode == 0, res.stderr
+    payload = json.loads(res.stdout)
+    vt = payload["verdict_thresholds"]
+    assert vt["buy_threshold_grade_a"] < payload["current_price"] <= vt["hold_threshold"]
+    assert vt["rule_verdict"] == "HOLD"
+
+
+def test_rule_verdict_buy_when_price_at_or_below_buy_threshold_grade_a(runner, fixtures_dir):
+    """current_price 90.0 <= buy_threshold_grade_a (100.45) -> BUY string,
+    grading left to the analyst per the existing `rule` text."""
+    res = runner(DCF_SCRIPT, "--input", str(fixtures_dir / "dcf_rule_verdict_buy.json"))
+    assert res.returncode == 0, res.stderr
+    payload = json.loads(res.stdout)
+    vt = payload["verdict_thresholds"]
+    assert payload["current_price"] <= vt["buy_threshold_grade_a"]
+    assert vt["rule_verdict"] == "BUY (grade per analyst conviction)"
+
+
+def test_rule_verdict_null_when_current_price_absent(runner, fixtures_dir):
+    """No current_price in input -> rule_verdict must be null, never guessed."""
+    res = runner(DCF_SCRIPT, "--input", str(fixtures_dir / "dcf_rule_verdict_no_price.json"))
+    assert res.returncode == 0, res.stderr
+    payload = json.loads(res.stdout)
+    vt = payload["verdict_thresholds"]
+    assert payload["current_price"] is None
+    assert vt["rule_verdict"] is None
+    assert vt.get("rule_verdict_basis") is None

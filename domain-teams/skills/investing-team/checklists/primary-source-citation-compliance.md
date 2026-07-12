@@ -33,9 +33,11 @@ allows it — you must provide a justification.
 
 - [ ] **CHK-CIT-006 (Taiwan Claims Cite Statutory Source)**: Claims about 三大法人 flows, 月營收 reporting rules, 董監持股 thresholds, 融資融券 ratios, or other TWSE/FSC-governed metrics cite `standards/taiwan-equity-frameworks.md` or the underlying TWSE/MOPS/FSC statutory source. Wikipedia, analyst blog posts, and news articles do not satisfy this item.
 
+- [ ] **CHK-CIT-007 (Upstream Warnings and Disclosures Transcribed Verbatim)**: Every `_status` block, `warnings[]` entry, and seed-context mandatory disclosure from the input data files appears in the output's Limitations (or the directly relevant section) at verbatim grade — the substance intact, no silent dropping, softening, or relabeling (e.g. re-labeling an FY-basis multiple as "TTM" is a FAIL; claiming a data section is unavailable when the input files or a provided section inventory show it present is a FAIL). The evaluator cross-checks against the input files / inventory, not against the memo's own claims.
+
 ## Verdict Rules
 
-- ✅ All 6 items PASS (or N/A with justification) → **PASS**
+- ✅ All 7 items PASS (or N/A with justification) → **PASS**
 - ❌ Any item FAIL → **NEEDS_REVISION** — list each failed item by ID with the specific unsourced claim
 
 ## Output Format
