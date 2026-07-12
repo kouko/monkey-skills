@@ -40,10 +40,12 @@ permitted and provide a justification.
 
 - [ ] **CHK-THX-006 (Provenance Footer Records Data Sources)**: Each factual claim used to build the thesis traces to a Provenance Footer entry per CHK-CIT-005 in `checklists/primary-source-citation-compliance.md`. This item directly delegates to the citation compliance gate — if CHK-CIT-005 already passed, this item passes.
 
+- [ ] **CHK-THX-007 (Rule-Verdict Adoption or Valid Deviation Block)**: When the input carries a machine-computed `rule_verdict`, the declared verdict either matches it, or the output contains a Deviation Block (per the protocol's Verdict section). For a Deviation Block, the evaluator MUST recompute: (a) every adjustment figure traces to a data file or cited primary source — an adjustment appearing in no source is a FAIL; (b) applying the adjustment, the recomputed threshold(s) no longer trigger the original `rule_verdict` — if the recomputed threshold is still breached by the current price, the deviation is arithmetically void and this item is a FAIL; (c) the block contains the anchoring/endowment self-check. Mark N/A when no `rule_verdict` was provided in the input.
+
 ## Verdict Rules
 
 - ✅ All applicable items PASS → **PASS**
-- ❌ Any of CHK-THX-001 through CHK-THX-004 FAIL → **NEEDS_REVISION**
+- ❌ Any of CHK-THX-001 through CHK-THX-004, or CHK-THX-007, FAIL → **NEEDS_REVISION**
 - ❌ Only CHK-THX-005 or CHK-THX-006 FAIL with a Grade C verdict → **PASS_WITH_NOTES** (note the gap; do not escalate to full revision)
 
 ## Output Format

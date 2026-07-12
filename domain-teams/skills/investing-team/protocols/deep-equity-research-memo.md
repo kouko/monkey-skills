@@ -221,6 +221,32 @@ State the explicit margin-of-safety calculation:
 A HOLD verdict on a currently owned position requires a different standard
 than a new BUY — state which case applies.
 
+**Mechanical rule verdict is binding-or-gated.** When the seed context (or a
+DCF input file) carries a machine-computed `rule_verdict` (the mechanical
+application of the DCF verdict rule to the current price), the memo MUST
+state it verbatim in this section and then either:
+
+1. **Adopt it** — the declared verdict matches `rule_verdict`; or
+2. **File a Deviation Block** — a clearly-titled block containing:
+   - `rule_verdict` as received, and the declared verdict;
+   - the specific quantified adjustment that justifies deviating (each
+     number traceable to a data file or cited primary source — an
+     adjustment figure that appears in no source is a fabrication, not an
+     argument);
+   - the recomputed threshold(s) after the adjustment, shown against the
+     current price. **If the recomputed threshold still triggers the same
+     `rule_verdict`, the deviation is arithmetically void — the memo must
+     adopt `rule_verdict`.**
+   - a one-line bias self-check against §Bias Catalog anchoring/endowment
+     signatures ("would not buy at this price, but holding" is the
+     canonical endowment marker — per
+     `standards/decision-framework-and-verdict.md`, the replacement test
+     applies).
+
+A deviation without a Deviation Block, or with an untraceable adjustment
+figure, is a NEEDS_REVISION defect at the thesis-soundness gate
+(CHK-THX-007).
+
 ### Conviction Grade
 
 **A / B / C** with justification on three dimensions:
@@ -324,6 +350,9 @@ sector favored/neutral/disfavored in current regime]
 
 #### Verdict: {BUY / HOLD / SELL}
 [Margin of safety calculation]
+[rule_verdict as received (when provided): adopted, or Deviation Block —
+ rule_verdict / declared verdict / quantified adjustment with source /
+ recomputed thresholds vs price / bias self-check]
 
 #### Conviction Grade: {A / B / C}
 [3-dimension justification table]

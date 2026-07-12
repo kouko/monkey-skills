@@ -276,17 +276,40 @@ def _sensitivity_grid(a: dict[str, Any], wacc_step: float, g_step: float) -> dic
 # Verdict thresholds
 # ---------------------------------------------------------------------------
 
-def _verdict_thresholds(intrinsic_mid: float) -> dict[str, Any]:
+def _verdict_thresholds(intrinsic_mid: float, current_price: Any) -> dict[str, Any]:
+    buy_threshold_grade_a = round(intrinsic_mid * (1.0 - 0.30), 2)
+    hold_threshold = round(intrinsic_mid * 1.15, 2)
+    sell_threshold = round(intrinsic_mid * 1.15, 2)
+
+    rule_verdict = None
+    rule_verdict_basis = None
+    if isinstance(current_price, (int, float)):
+        if current_price > sell_threshold:
+            rule_verdict = "SELL"
+        elif current_price <= buy_threshold_grade_a:
+            rule_verdict = "BUY (grade per analyst conviction)"
+        else:
+            rule_verdict = "HOLD"
+        rule_verdict_basis = {
+            "price": current_price,
+            "compared_to": {
+                "sell_threshold": sell_threshold,
+                "buy_threshold_grade_a": buy_threshold_grade_a,
+            },
+        }
+
     return {
-        "buy_threshold_grade_a": round(intrinsic_mid * (1.0 - 0.30), 2),
+        "buy_threshold_grade_a": buy_threshold_grade_a,
         "buy_threshold_grade_b": round(intrinsic_mid * (1.0 - 0.40), 2),
         "buy_threshold_grade_c": round(intrinsic_mid * (1.0 - 0.50), 2),
-        "hold_threshold": round(intrinsic_mid * 1.15, 2),
-        "sell_threshold": round(intrinsic_mid * 1.15, 2),
+        "hold_threshold": hold_threshold,
+        "sell_threshold": sell_threshold,
         "rule": (
             "BUY if price <= intrinsic * (1 - MoS); HOLD if price <= intrinsic * 1.15; "
             "SELL if price > intrinsic * 1.15. Conviction grade set by analyst."
         ),
+        "rule_verdict": rule_verdict,
+        "rule_verdict_basis": rule_verdict_basis,
     }
 
 
@@ -434,7 +457,7 @@ def main() -> int:
             "high": bull,   # bull (low WACC, high g)
         },
         "sensitivity_table": sens,
-        "verdict_thresholds": _verdict_thresholds(mid),
+        "verdict_thresholds": _verdict_thresholds(mid, current_price),
         "current_price": current_price,
         "margin_of_safety_base": margin_of_safety,
         "assumptions": {

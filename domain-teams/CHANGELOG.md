@@ -5,9 +5,35 @@ All notable changes to the `domain-teams` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v5.7.0] — 2026-07-12
+
+### Added — investing-team verdict-layer defenses
+
+Origin: a controlled strong-vs-weak model comparison on identical
+report-equity-memo pipeline data (2330.TW) — the weak run deviated from
+the DCF rule verdict behind an unsourced uplift, shipped post-gate edits
+un-evaluated, claimed present data was unavailable, and dropped upstream
+warnings. Plan: `docs/loom/plans/2026-07-12-verdict-layer-defenses.md`.
+
+- **Deviation Block** (`protocols/deep-equity-research-memo.md` §Verdict +
+  output template): a machine-computed `rule_verdict` in the input is
+  binding-or-gated — the memo adopts it or files a structured deviation
+  whose adjustment figures must be source-traceable and whose recomputed
+  thresholds must actually clear the original verdict.
+- **CHK-THX-007** (`checklists/investment-thesis-soundness-checklist.md`):
+  evaluator recomputes Deviation Blocks; unsourced adjustment or
+  still-breached threshold → NEEDS_REVISION.
+- **CHK-CIT-007** (`checklists/primary-source-citation-compliance.md`):
+  upstream `_status`/`warnings[]`/seed disclosures must appear verbatim-grade
+  in Limitations; silent dropping, softening, or relabeling (FY→"TTM") and
+  false unavailability claims (cross-checked against the input files /
+  section inventory) are FAILs.
+- **Gate-integrity guard rail** (`SKILL.md` §Gate Protocol): any post-gate
+  edit voids the affected gate → diff-scoped re-eval; the 2-round cap never
+  licenses shipping un-evaluated edits.
 
 ### Fixed — Codex dispatch-portability (host-neutral reference files)
+(previously listed under Unreleased; ships with this version)
 
 Following the same class of gap found and fixed in loom-code (#496) and
 loom-interface-design/loom-spec (#497), the canonical Worker/Evaluator
