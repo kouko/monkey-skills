@@ -161,14 +161,18 @@
      cultural vs Axis B surface) exists as a **contamination guard** — whatever
      lands in interface-design must preserve "each round reads only its own
      file".
-  2. **Expand the surface catalog** — 12 already-researched, URL-live-verified
-     candidates are held in the #553 session's scratchpad research (Frutiger
-     Aero, Web 2.0 gel, long-shadow/Flat 2.0, dark mode, Material You, Aurora
-     mesh-gradient, Claymorphism, neubrutalism, retro-terminal/CRT, anti-design,
-     GeoCities maximalism, Bento grid). They must be **re-grounded into a dated
-     research doc** before use (the scratchpad is not a durable carrier). Note
-     the round-1 finding: neubrutalism is a genuine Axis-B **surface** treatment,
-     not the Axis-A cultural neo-brutalism already in the visual canon.
+  2. **Expand the surface catalog** — the 12 researched candidates are already
+     grounded and committed: `docs/loom/research/2026-07-12-ui-surface-treatments-canon.md`
+     **§Part 2** (Frutiger Aero, Web 2.0 gel, long-shadow/Flat 2.0, dark mode,
+     Material You, Aurora mesh-gradient, Claymorphism, neubrutalism,
+     retro-terminal/CRT, anti-design, GeoCities maximalism, Bento grid) — each
+     with a live-verified source URL, era, fits-when hint, currency note, scope
+     tag (surface / trend / layout) and its WCAG risk flag. Re-check each URL is
+     still live at use time (link rot), but do NOT re-derive them from memory.
+     Two findings recorded there: **neubrutalism is Axis B, not Axis A** (a first
+     pass wrongly folded it into the cultural neo-brutalism already in the visual
+     canon), and **Frutiger Aero's 2023- revival is a Currency update, not a new
+     row**.
 - Discipline (both parts): every new entry carries a **live-verified** source URL
   (a wholly fabricated URL was caught in #550's review, and a second
   plausible-looking 404 was caught during #553's research — re-typing a URL from
