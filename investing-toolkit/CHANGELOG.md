@@ -5,6 +5,53 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.6.0] — 2026-07-12
+
+US SEC primary-source narrative layer — the memo pipeline can now read what
+management actually wrote, not just XBRL numbers. Segmentation is pure data
+acquisition: every item the filing's primary document enumerates is emitted,
+never a curated analysis-selected subset (the downstream consumer decides what
+to read). Ships the narrative capability of the US SEC primary-source spec
+(`docs/loom/2026-07-12-us-sec-primary-source-layer/specs/narrative/spec.md`);
+plans: `docs/loom/plans/2026-07-12-us-sec-narrative.md` +
+`docs/loom/plans/2026-07-12-us-sec-narrative-all-items.md`.
+
+### Added
+
+- **`data-markets` / `sec_edgar_client.py` narrative via edgartools**: a 10-K
+  or 10-Q is segmented into one section per item in the filing's item list
+  (a real AAPL 10-K yields all 23 items — Business, Risk Factors, MD&A,
+  Financial Statements + notes, Controls, Governance…); an 8-K is segmented by
+  every reported item, with exhibit-bearing items (2.02 / 7.01 / 8.01) followed
+  to their **Exhibit 99.x** (where an 8-K's substance lives) and tagged
+  `disclosure_status: furnished` — other reported items carry their body text,
+  tagged `filed`. No non-99.x attachment is fetched.
+- **Section provenance**: every section carries accession, CIK, item id, filing
+  date, period of report, and a reconstructable SEC Archives URL pointing at
+  *that section's own* source document (an 8-K section's URL points at the
+  exhibit, not the body).
+- **Paths-not-content**: section text is written to files under the toolkit
+  cache and returned as `text_path`, never inlined into the JSON result. Both
+  path segments are allowlist-sanitized and the write is containment-checked.
+- **Per-section fail-loud** feeding `pack.py`'s `_status`: five distinct error
+  classes (`absent_item`, `missing_exhibit`, `extraction_error`, `timeout`
+  (retryable), `version_drift`) — a section is never silently empty or
+  fabricated. The result wrapper carries `narrative_status` (ok / partial /
+  failed) + `failed_items` so the failure state is visible without unwrapping
+  `sections`.
+- **SEC fair-access**: a non-compliant `<name> <email>` identity is rejected
+  *before* any request is sent (edgartools does not fail fast); its built-in
+  jittered backoff is preserved; filings are cached per accession under a
+  dedicated key.
+
+### Changed
+
+- **`--action narrative` internals**: the legacy regex parser
+  (`parse_item_sections` / `_ITEM_HEADER_RE` / `_TextExtractor` / the old
+  `fetch_narrative`) is **retired**; segmentation now runs through edgartools'
+  typed section API. The CLI contract (action name, `--accession`, result keys,
+  exit-1-iff-error) is unchanged.
+
 ## [v2.5.0] — 2026-07-12
 
 Verdict-layer defenses — hardening the memo pipeline against weak-model

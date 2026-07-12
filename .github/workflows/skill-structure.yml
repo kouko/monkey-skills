@@ -276,3 +276,30 @@ jobs:
             pytest investing-toolkit/tests/ \
               -m "not network" \
               -q --tb=short
+
+  plugin-version-bump:
+    name: plugin version bump
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check skill-content PRs bump their plugin version
+        # The marketplace publishes plugins BY VERSION: skill content changed
+        # without a plugin.json version bump means `plugin update` is a silent
+        # no-op and users keep running the stale skill (missed at PR#539, #545,
+        # #552). The Codex mirror stays enforced by the separate
+        # sync_codex_manifests --check --all gate; this does not duplicate it.
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 scripts/check_version_bump.py --base "$BASE_SHA" --head "$HEAD_SHA"

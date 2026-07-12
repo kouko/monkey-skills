@@ -425,24 +425,3 @@
   sibling deep-deep-research — since the using-research-toolkit router
   now reserves "deep-research" for the host BUILT-IN skill, the bare
   term is newly ambiguous to readers (2026-07-06 review-panel nit).
-
-## Mechanical version-bump gate for skill-content PRs (OPEN)
-- Status: OPEN
-- Start: next repo-CI touch, or the NEXT recurrence of a skill-content
-  merge without a plugin.json bump — whichever first.
-- Origin: PR #545 shipped SKILL.md changes to loom-product-principles
-  with no version bump (follow-up bump PR = the 0.6.1 chore); the same
-  miss already happened at PR #539→#540 and is recorded in machine-local
-  memory (feedback_skill_content_pr_requires_plugin_version_bump) — the
-  lesson exists but nothing mechanical enforces it, so it recurred at the
-  very next skill-content arc's close-out.
-- What: add a mechanical check (CI job or PreToolUse/pre-push hook) —
-  a PR whose diff touches `<plugin>/skills/**` (or hooks/, agents/,
-  references/) must also touch that plugin's `.claude-plugin/plugin.json`
-  version field; codex mirror stays enforced by the existing
-  check-codex-manifest-drift.sh + sync_codex_manifests.py. Alternative
-  placement: a Step-8-adjacent check in loom-code's
-  finishing-a-development-branch (grep the branch diff for skill-content
-  paths sans version bump) — pick whichever surface is cheaper to keep
-  honest; two recurrences justify legislation per the house
-  one-memory/two-rules threshold.

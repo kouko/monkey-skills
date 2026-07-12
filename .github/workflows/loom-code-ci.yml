@@ -34,7 +34,12 @@ on:
       # a drift in a non-loom-code plugin merges ungated (fail-open).
       - '**/.claude-plugin/plugin.json'
       - '**/.codex-plugin/plugin.json'
-      - 'scripts/sync_codex_manifests.py'
+      # Same rule for the pytest step: it runs the WHOLE `scripts/` dir, so the
+      # trigger must be the whole dir too. Enumerating filenames here is what
+      # already drifted once — scripts/check_version_bump.py was added with its
+      # 9 tests and never listed, so a PR editing only that gate ran none of
+      # them (fail-open on the gate's own maintenance).
+      - 'scripts/**'
       - '.github/workflows/loom-code-ci.yml'
   push:
     branches: [main]
@@ -43,7 +48,7 @@ on:
       - 'docs/loom/**'
       - '**/.claude-plugin/plugin.json'
       - '**/.codex-plugin/plugin.json'
-      - 'scripts/sync_codex_manifests.py'
+      - 'scripts/**'
 
 permissions:
   contents: read
