@@ -830,10 +830,14 @@ def acquire_filing(
 #       requested-but-absent item is never dropped or fabricated.
 # A multi-section result is a list later tasks append to / extend.
 #
-# EXTRACTOR CONTRACT (widened by Task 4) ---------------------------------------
+# EXTRACTOR CONTRACT (widened by Task 4; text made lazy by Task 8) -------------
 # A registered extractor is called `extractor(obj, filing)` and returns a LIST
-# of per-item entries; each entry is either a 2-tuple `(item_id, text-or-None)`
-# or a 3-tuple `(item_id, text-or-None, extra_dict)` where `extra_dict` is the
+# of per-item entries; each entry is either a 2-tuple `(item_id, text_thunk)`
+# or a 3-tuple `(item_id, text_thunk, extra_dict)` where `text_thunk` is a
+# ZERO-ARG CALLABLE returning the item's text-or-None (Task 8: the text is
+# resolved lazily, NOT at list-build time, so `segment_filing` can call each
+# thunk under its own try/except and ISOLATE a mid-parse throw to that one item's
+# error slot while the other items still segment), and `extra_dict` is the
 # per-section provenance merged into a SUCCESS section (see `extra` above), OR a
 # ready-made section/gap dict (Task 4/5) — used when the extractor ALONE can
 # detect a gap the shared absent-item logic can't classify (8-K's missing or
@@ -845,26 +849,31 @@ def acquire_filing(
 
 
 def _segment_10k(obj, filing) -> list[tuple[str, object]]:
-    """Requested (item id, text-or-None) pairs for a 10-K TenK typed object.
+    """Requested (item id, text-thunk) pairs for a 10-K TenK typed object.
 
     Item 7 (MD&A) / Item 1A (Risk Factors) via the grounded `str` properties;
-    each is `None` when the item is absent from this filing (issue #710).
-    `filing` is unused here (10-K text is on `obj`); it is in the signature for
-    the uniform extractor contract that 8-K's exhibit-following needs."""
+    each yields `None` when the item is absent from this filing (issue #710).
+    The text element is a ZERO-ARG THUNK (not the resolved text) so
+    `segment_filing` can evaluate each item's property access under its own
+    try/except and ISOLATE a mid-parse throw to that one item's error slot
+    (Task 8) — the other items still segment. `filing` is unused here (10-K text
+    is on `obj`); it is in the signature for the uniform extractor contract that
+    8-K's exhibit-following needs."""
     return [
-        ("Item 7", obj.management_discussion),
-        ("Item 1A", obj.risk_factors),
+        ("Item 7", lambda: obj.management_discussion),
+        ("Item 1A", lambda: obj.risk_factors),
     ]
 
 
 def _segment_10q(obj, filing) -> list[tuple[str, object]]:
-    """Requested (item id, text-or-None) pairs for a 10-Q TenQ typed object.
+    """Requested (item id, text-thunk) pairs for a 10-Q TenQ typed object.
 
     TenQ exposes no MD&A property; Item 2 is read via the subscript
-    `obj["Part I, Item 2"]` (`str`, or `None` when absent). `filing` unused
-    (uniform extractor signature)."""
+    `obj["Part I, Item 2"]` (`str`, or `None` when absent). The text element is a
+    ZERO-ARG THUNK so a subscript throw is isolated per item by `segment_filing`
+    (Task 8). `filing` unused (uniform extractor signature)."""
     return [
-        ("Item 2", obj["Part I, Item 2"]),
+        ("Item 2", lambda: obj["Part I, Item 2"]),
     ]
 
 
@@ -930,7 +939,11 @@ def _segment_8k(obj, filing) -> list[object]:
     releases = list(obj.press_releases)
     if len(following) == 1 and len(releases) == 1:
         item_id, release = following[0], releases[0]
-        return [(item_id, release.text(), {"exhibit": release.document})]
+        # ``release.text`` is a zero-arg method → pass it AS the text-thunk so
+        # `segment_filing` evaluates the exhibit body under its own try/except
+        # (Task 8 per-item isolation); ``release.document`` (the filename) is
+        # read eagerly for provenance.
+        return [(item_id, release.text, {"exhibit": release.document})]
     return [
         _exhibit_gap(
             item_id, filing, item_count=len(following), release_count=len(releases)
@@ -948,6 +961,29 @@ _ITEM_EXTRACTORS = {
 }
 
 
+# The requested item ids that are knowable form-statically, WITHOUT reading
+# `filing.obj()` — used by the all-fail path (Task 8) when `obj()`/extractor
+# building itself raises, so every requested section still gets a loud error slot
+# (never a silent-empty result). A 10-K always requests Item 7 + Item 1A; a 10-Q
+# Item 2. An 8-K's requested items are the filing-SPECIFIC reported item codes
+# that live on `obj.items`; once `obj()` has failed they are unreadable, so the
+# all-fail handler falls back to a single filing-level slot for it.
+_FORM_REQUESTED_ITEMS = {
+    "10-K": ("Item 7", "Item 1A"),
+    "10-Q": ("Item 2",),
+}
+
+
+def _all_sections_failed(form: str, filing, exc: BaseException) -> list[dict]:
+    """Every requested section as a loud extraction-error slot (Task 8), for when
+    `filing.obj()` or extractor building failed wholesale — no top-level success
+    is claimed. 10-K/10-Q requested items are enumerated form-statically; a form
+    whose requested items live on the now-unreadable `obj` (8-K) falls back to a
+    single filing-level slot so the failure is never silently dropped."""
+    requested = _FORM_REQUESTED_ITEMS.get(form) or (f"form {form}",)
+    return [_extraction_error_slot(item_id, filing, exc) for item_id in requested]
+
+
 def _section_gap(item_id: str, filing) -> dict:
     """A loud, sentinel-compatible per-section error slot naming the missing
     item + its accession (read by pack.py's `_status`)."""
@@ -959,6 +995,26 @@ def _section_gap(item_id: str, filing) -> dict:
             f"(form {getattr(filing, 'form', None)!r})"
         ),
         "error_class": "absent_item",
+    }
+
+
+def _extraction_error_slot(item_id: str, filing, exc: BaseException) -> dict:
+    """A loud, sentinel-compatible per-section error slot for an item whose
+    extraction RAISED (Task 8) — distinct from the `"absent_item"` (None) and
+    `"missing_exhibit"` gaps: here edgartools threw while parsing/building the
+    section (a single item's property/subscript access, or `filing.obj()`
+    wholesale). The throw is isolated to this slot so the OTHER items still
+    segment and nothing crashes `segment_filing`; the top-level `error` key is
+    read unchanged by pack.py's `_status`, classifying the aggregate as partial
+    (some fail) / failed (all fail)."""
+    return {
+        "item": item_id,
+        "error": (
+            f"section {item_id!r} extraction failed for filing "
+            f"{getattr(filing, 'accession_no', None)!r} "
+            f"(form {getattr(filing, 'form', None)!r}): {exc}"
+        ),
+        "error_class": "extraction_error",
     }
 
 
@@ -1083,6 +1139,15 @@ def segment_filing(filing) -> list[dict]:
     issue #710) becomes a per-section error slot naming the missing item, never
     an empty/fabricated section. An unregistered form fails loud (``ValueError``)
     rather than silently returning no sections.
+
+    Fail-loud per-section isolation (Task 8): an extraction that RAISES never
+    aborts the whole segmentation. A throw building `filing.obj()` or the
+    extractor's entry list (the primary document cannot be fetched/parsed at all)
+    turns EVERY requested section into a loud `extraction_error` slot (all-fail);
+    a throw evaluating ONE item's text-thunk turns just that item into an
+    `extraction_error` slot while the other items still segment. The resulting
+    list classifies through pack.py's `_status` as partial (some fail) / failed
+    (all fail), never a fabricated/silent-empty section.
     """
     form = filing.form
     extractor = _ITEM_EXTRACTORS.get(form)
@@ -1091,18 +1156,31 @@ def segment_filing(filing) -> list[dict]:
             f"segment_filing: no section extractor registered for form {form!r} "
             "(10-K/10-Q/8-K supported)"
         )
-    obj = filing.obj()
+    try:
+        obj = filing.obj()
+        entries = list(extractor(obj, filing))
+    except Exception as exc:  # noqa: BLE001 — fail loud per requested section, don't crash
+        # Wholesale failure: obj() or extractor building threw, so no per-item
+        # text-thunk was ever reached. Every requested section becomes a loud
+        # extraction-error slot; no top-level success is claimed.
+        return _all_sections_failed(form, filing, exc)
     sections = []
-    for entry in extractor(obj, filing):
+    for entry in entries:
         # An extractor may yield a ready-made section/gap dict for a gap it alone
         # can detect (8-K missing/ambiguous exhibit, Task 5); pass it through
-        # unchanged. Otherwise it is a (item id, text[, extra]) tuple built via
-        # the shared success/absent-item logic.
+        # unchanged. Otherwise it is a (item id, text_thunk[, extra]) tuple whose
+        # text is resolved lazily HERE so a mid-parse throw is isolated to this
+        # one item (Task 8).
         if isinstance(entry, dict):
             sections.append(entry)
             continue
-        item_id, text = entry[0], entry[1]
+        item_id, text_thunk = entry[0], entry[1]
         extra = entry[2] if len(entry) > 2 else None
+        try:
+            text = text_thunk()
+        except Exception as exc:  # noqa: BLE001 — isolate this item's throw
+            sections.append(_extraction_error_slot(item_id, filing, exc))
+            continue
         sections.append(_build_section(item_id, text, filing, extra))
     return sections
 

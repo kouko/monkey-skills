@@ -748,3 +748,146 @@ def test_section_text_path_contains_traversal_attempt(sec_client, tmp_path):
         f"section-text write escaped the sections dir: {written}"
     )
     assert written.read_text(encoding="utf-8") == "sensitive body"
+
+
+# ---------------------------------------------------------------------------
+# Task 8 — fail-loud per-section aggregation: a per-item extraction THROW is
+# ISOLATED into that item's error slot (the other items still segment, nothing
+# crashes segment_filing), and the aggregate section list classifies through
+# pack.py's REAL _classify_result as partial (some fail) / failed (all fail) —
+# never a fabricated/silent-empty section, never a propagated exception.
+# ---------------------------------------------------------------------------
+# Reuses the Task-3 TenK grounding: management_discussion (Item 7) / risk_factors
+# (Item 1A) are the real edgartools 5.42.0 TenK properties. To model a real
+# extraction failure (edgartools raising WHILE parsing one item), the mock below
+# makes the risk_factors PROPERTY raise on access while management_discussion
+# returns text normally (fixtures-mirror-producer-shape — a property that raises
+# mid-parse is a real edgartools failure mode, sibling to issue #710's None). The
+# all-fail case models filing.obj() itself raising (primary doc unparseable).
+
+
+class _RaisingRiskFactorsTenK:
+    """A ``TenK`` whose Item 1A (``risk_factors``) extraction RAISES on access
+    while Item 7 (``management_discussion``) extracts normally — mirrors
+    edgartools raising mid-parse for a single item
+    (fixtures-mirror-producer-shape: a real property that raises, not an invented
+    shape)."""
+
+    def __init__(self, *, management_discussion):
+        self.management_discussion = management_discussion
+
+    @property
+    def risk_factors(self):
+        raise ValueError("edgartools failed to parse Item 1A (risk_factors)")
+
+
+def _obj_raising_filing(form: str = "10-K") -> SimpleNamespace:
+    """A mock ``Filing`` whose ``.obj()`` itself RAISES — the whole primary
+    document cannot be fetched/parsed (all-requested-sections-fail scenario).
+    Carries the T2 provenance attrs ``segment_filing`` reads for its error
+    slots."""
+    filing = _segmentable_filing(form, None)
+
+    def _raise():
+        raise RuntimeError(
+            "edgartools could not build the typed filing object (obj())"
+        )
+
+    filing.obj = _raise
+    return filing
+
+
+def _pack_classify(sections: list) -> tuple:
+    """Classify a section LIST through pack.py's REAL ``_classify_result`` — the
+    same downstream ``_status`` classifier the memo pipeline feeds. Proves
+    partial-vs-failed is what the real classifier returns, not merely the
+    per-section dict shape. pack.py is pure stdlib, importable offline, and lives
+    in the same scripts dir already on sys.path."""
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    pack = importlib.import_module("pack")
+    return pack._classify_result({"sections": sections})
+
+
+def test_segment_one_section_throws_isolated_partial(sec_client):
+    # No @req tag: this dispatch's plan/spec trace by
+    # `<change-id> / Requirement / Scenario` join keys, not registered REQ-ids
+    # (see report) — @req omitted per the implementer contract.
+    # Scenario: `Fail-Loud Per-Section Extraction / One section fails within a
+    # multi-section filing`.
+    tenk = _RaisingRiskFactorsTenK(
+        management_discussion="Item 7.\xa0\xa0Management's Discussion body ..."
+    )
+    filing = _segmentable_filing("10-K", tenk)
+
+    # must NOT crash out of segment_filing (RED: the raising property propagates)
+    sections = sec_client.segment_filing(filing)
+
+    by_item = {s["item"]: s for s in sections}
+    assert set(by_item) == {"Item 7", "Item 1A"}, (
+        "the throwing item is isolated, not dropped; the other item still segments"
+    )
+    # Item 7 emitted normally (text file-backed, Task 7)
+    assert "error" not in by_item["Item 7"]
+    assert (
+        _read_text_path(by_item["Item 7"])
+        == "Item 7.\xa0\xa0Management's Discussion body ..."
+    )
+    # Item 1A is a loud, named extraction-error slot — never empty/fabricated
+    slot = by_item["Item 1A"]
+    assert "error" in slot, f"throwing item must be a loud slot: {slot!r}"
+    assert slot["error_class"] == "extraction_error"
+    assert "Item 1A" in slot["error"], "error slot must name the failing item"
+    assert not slot.get("text"), "no fabricated text for a failed item"
+    # feeds _status: the REAL pack.py classifier calls this PARTIAL, not success
+    status, degraded = _pack_classify(sections)
+    assert status == "partial", (
+        f"one-fails-within-many must classify partial via pack.py, got {status!r}"
+    )
+
+
+def test_segment_all_sections_fail_when_obj_raises(sec_client):
+    # No @req tag (see test_segment_one_section_throws_isolated_partial).
+    # Scenario: `Fail-Loud Per-Section Extraction / All requested sections fail`.
+    filing = _obj_raising_filing("10-K")
+
+    # must NOT crash out of segment_filing (RED: the filing.obj() raise propagates)
+    sections = sec_client.segment_filing(filing)
+
+    by_item = {s["item"]: s for s in sections}
+    assert set(by_item) == {"Item 7", "Item 1A"}, (
+        "every requested 10-K item gets an error slot when obj() fails wholesale"
+    )
+    for item_id in ("Item 7", "Item 1A"):
+        slot = by_item[item_id]
+        assert "error" in slot, f"all-fail slot must be loud: {slot!r}"
+        assert slot["error_class"] == "extraction_error"
+        assert not slot.get("text"), "no fabricated text on a wholesale failure"
+    # feeds _status: the REAL pack.py classifier calls this FAILED — no top-level
+    # success is claimed.
+    status, degraded = _pack_classify(sections)
+    assert status == "failed", (
+        f"all-requested-fail must classify failed via pack.py, got {status!r}"
+    )
+
+
+def test_segment_8k_all_fail_when_obj_raises(sec_client):
+    # No @req tag: DEFENSIVE completeness for the all-fail branch on a form whose
+    # requested items (8-K reported item codes) live on obj() and are unreadable
+    # once obj() itself raises — the handler must still fail loud with a named
+    # slot, never crash on an unenumerable form (contract rule 11; the recall
+    # lesson test-except-branches-explicitly — every branch of the all-fail
+    # handler is exercised, not just the 10-K static-item path).
+    filing = _obj_raising_filing("8-K")
+
+    sections = sec_client.segment_filing(filing)
+
+    assert sections, "8-K wholesale failure must still emit at least one loud slot"
+    for slot in sections:
+        assert "error" in slot, f"8-K all-fail slot must be loud: {slot!r}"
+        assert slot["error_class"] == "extraction_error"
+        assert not slot.get("text"), "no fabricated text on a wholesale 8-K failure"
+    status, _ = _pack_classify(sections)
+    assert status == "failed", (
+        f"8-K wholesale failure must classify failed via pack.py, got {status!r}"
+    )
