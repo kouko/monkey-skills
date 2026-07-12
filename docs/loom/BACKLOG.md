@@ -73,6 +73,19 @@
   on branch `feat-principles-replay-loop-l1-l2`, closing both residuals
   above. Design SSOT: `docs/loom/specs/2026-07-10-principles-replay-loop.md`
   (§Level 1, §Level 2).
+- 2026-07-12 update: the mechanical seed-coverage gate shipped (PR #545)
+  — drafting agent authors `seed-inventory.md` at reading time, the
+  PIPELINE runs `check_seed_traceability.py` (headless: matrix courier;
+  interactive: SKILL.md Step 8), verbatim miss list feeds ONE fix-agent
+  round. Acceptance 4/18 (22%) → 8/12 (67%); the fix round cleared
+  43/43 caught misses (baseline:
+  `docs/loom/dogfood/2026-07-12-mechanical-seed-gate-baseline/`). The
+  residual failure class is now inventory OMISSIONS at
+  extraction-at-reading time — displaced upstream, not eliminated.
+  Inventory quality is the current improvement frontier (recorded
+  next-arc candidate: independent second extraction agent diffed against
+  the first, or extraction-checklist emphasis on deferred/stance items;
+  re-trigger: omission failures capping the pass-rate in future runs).
 - What: Level 3 — the autonomous improvement loop (matrix → grade →
   implementer proposes a SKILL.md fix → review → re-run) — is now
   BUILT: `.claude/workflows/principles-improve-loop.js` (saved workflow
@@ -81,8 +94,15 @@
   history remains at `docs/loom/specs/2026-07-10-principles-replay-loop.md`
   §Level 3 — do not restate it here. `skill-dev-toolkit:skill-tuning`
   remains the candidate variant-diversification engine, deliberately
-  NOT wired in yet (re-trigger: single-fixer plateaus and
-  diversification is needed — per the L3 brief's §Decision). Two
+  NOT wired in yet. Re-evaluation note (2026-07-12): its recorded
+  re-trigger (single-fixer plateau — per the L3 brief's §Decision) was
+  formally MET on 2026-07-11 (L3 run2 hit the plateau brake after
+  consecutive rejected rounds,
+  `docs/loom/dogfood/2026-07-11-l3-loop-run2/`), but the plateau's
+  underlying failure class was resolved by the mechanical seed-coverage
+  gate (PR #545), not by fixer diversification — so meeting the trigger
+  does NOT activate this entry; it needs a NEW plateau observed on
+  post-gate L3 runs before wiring in. Two
   still-unbuilt reuse tiers from the original
   discussion remain adjacent open ideas, not folded into L1/L2/L3:
   simulated-user replay (answer-bank + correction-events from the
