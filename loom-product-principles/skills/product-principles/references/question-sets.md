@@ -55,8 +55,16 @@ canon: the interaction lens (list 2) runs as one candidate round; the
 visual lens runs as **two axis-typed candidate rounds** — Axis A
 (cultural) reads only `canon-design-visual.md`, Axis B (surface) reads
 only `canon-design-surface.md` (contamination guard: each round reads
-only its own file). Returns 2-3 candidates per lens with fit notes,
-probes only the deviation points.
+only its own file).
+
+The interaction lens returns 2-3 candidates with fit notes, probes
+only the deviation points. The visual lens returns **3-5 candidates**
+with fit notes (widened from 2-3): of the 3-5, deliberately include
+1-2 **divergent** candidates — transparently labeled **exploratory** —
+that deviate from the stated design stance yet stay **defensible**
+against the PRINCIPLES **values**. Divergent candidates deviate on
+aesthetic expression, never on values: a low-stimulus constitution
+still excludes Memphis.
 
 ## Engineering section — stance questions (5 questions)
 

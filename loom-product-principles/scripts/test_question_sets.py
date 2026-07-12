@@ -101,6 +101,30 @@ def test_design_lane_two_axis_rounds():
         "only its own file) — the load-bearing reason the canon is split"
 
 
+def test_visual_lens_offers_3_5_with_divergent():
+    """The visual lens widens from 2-3 to 3-5 candidates so it can deliberately
+    include 1-2 divergent/exploratory candidates that deviate from the stated
+    design stance — while staying defensible against the PRINCIPLES values
+    (deviate on aesthetic expression, not values: a low-stimulus constitution
+    still excludes Memphis). The interaction lens is untouched — still 2-3."""
+    text = _text()
+    low = text.lower()
+    assert "3-5" in text, \
+        "Design lane must state the visual lens returns 3-5 candidates"
+    assert "interaction lens returns 2-3" in low, \
+        "Interaction lens must still return 2-3 candidates (visual bump must " \
+        "not wipe the interaction count) — anchored on the interaction-lens " \
+        "phrasing so a stray '2-3' (e.g. 'widened from 2-3') can't satisfy it"
+    assert "divergent" in low or "exploratory" in low, \
+        "Design lane must name the divergent/exploratory candidate concept"
+    assert "defensible" in low and "values" in low, \
+        "Design lane must state the divergent candidates stay defensible " \
+        "against the PRINCIPLES values"
+    assert "deviate" in low and "stance" in low, \
+        "Design lane must state divergent candidates deviate from the " \
+        "stated stance"
+
+
 # --- Engineering section — 5 stance questions with stakes --------------------
 
 def test_engineering_has_five_stance_questions():
