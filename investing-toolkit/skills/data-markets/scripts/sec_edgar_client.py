@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["requests==2.33.1"]
+# dependencies = ["requests==2.33.1", "edgartools==5.42.0"]
 # ///
 """
 sec_edgar_client.py — investing-toolkit SEC EDGAR data adapter
@@ -603,7 +603,59 @@ def action_filings(ticker: str, forms: list[str] | None, limit: int) -> dict:
     }
 
 
+def _looks_like_email(token: str) -> bool:
+    """True if a whitespace token — stripped of the angle brackets SEC's
+    `<name> <email>` convention allows — is email-shaped (local@dotted.domain)."""
+    candidate = token.strip("<>").strip()
+    if candidate.count("@") != 1:
+        return False
+    local, _, domain = candidate.partition("@")
+    return bool(local) and "." in domain and not domain.startswith(".") and not domain.endswith(".")
+
+
+def _is_compliant_identity(identity: str) -> bool:
+    """SEC fair-access mandates a `<name> <email>` User-Agent. Compliant means at
+    least one name token precedes an email-shaped token (an email alone, or an
+    empty string, is non-compliant)."""
+    tokens = (identity or "").split()
+    email_idx = next(
+        (i for i, tok in enumerate(tokens) if _looks_like_email(tok)), None
+    )
+    return email_idx is not None and email_idx >= 1
+
+
+def _ensure_edgar_identity(identity: str | None = None) -> dict | None:
+    """Configure edgartools' SEC identity from USER_AGENT BEFORE any network request.
+
+    Returns a loud ``{"error": ...}`` slot — rejecting before send — when no
+    compliant `<name> <email>` identity is configured; otherwise sets the identity
+    on edgartools and returns None.
+
+    This pre-send guard is load-bearing: edgartools does NOT fail-fast on an unset
+    identity (``get_identity()`` prompts interactively, then raises ``TimeoutError``
+    after ~60s), so the SEC fair-access identity requirement is enforced here, not
+    by the library default.
+    """
+    ident = (USER_AGENT if identity is None else identity or "").strip()
+    if not _is_compliant_identity(ident):
+        return {
+            "error": (
+                "SEC EDGAR identity not configured: a compliant "
+                "'<name> <email>' User-Agent is required before any sec.gov "
+                f"request (got {ident!r})"
+            )
+        }
+    import edgar
+
+    edgar.set_identity(ident)
+    return None
+
+
 def action_narrative(accession: str) -> dict:
+    identity_error = _ensure_edgar_identity()
+    if identity_error is not None:
+        identity_error["action"] = "narrative"
+        return identity_error
     _log("narrative fetch", accession)
     t0 = time.monotonic()
     res = fetch_narrative(accession)
