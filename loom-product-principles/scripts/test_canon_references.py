@@ -110,6 +110,26 @@ def test_canon_file_has_at_least_14_entries_each_with_url(name):
         )
 
 
+def test_visual_canon_is_axis_a_only():
+    """canon-design-visual.md is Axis A (cultural/graphic movements) only.
+
+    The collapsed surface-treatment row ("Flat -> skeuo -> neumorphic ->
+    glassmorphic cycle") duplicated content whose expanded home is now
+    canon-design-surface.md — it must be gone from this file, and this
+    file must point agents at canon-design-surface.md for UI surface
+    treatments (docs/loom/plans/2026-07-12-visual-style-movement-anchor-
+    and-quality-separation.md, Task 3)."""
+    text = _text("canon-design-visual.md")
+    assert "glassmorphic cycle" not in text, (
+        "canon-design-visual.md must not contain the collapsed "
+        "surface-treatment row; its expanded home is canon-design-surface.md"
+    )
+    assert "canon-design-surface.md" in text, (
+        "canon-design-visual.md must point to canon-design-surface.md "
+        "for UI surface treatments (Axis A vs surface-treatment split)"
+    )
+
+
 @pytest.mark.parametrize("name", CANON_FILES)
 def test_canon_file_has_no_doctrine_body(name):
     """Entries carry name + fits-when + stability + source only — doctrine
