@@ -27,7 +27,7 @@ Usage:
   # Recent filings filtered by form
   uv run sec_edgar_client.py --ticker NVDA --action filings --forms 10-K,10-Q,8-K --limit 10
 
-  # Parse Item sections of a specific filing
+  # Segment a specific filing into its enumerated item sections
   uv run sec_edgar_client.py --accession 0001045810-24-000316 --action narrative
 
 Auth: none required. SEC EDGAR MANDATES identified User-Agent header with
@@ -685,7 +685,7 @@ def acquire_filing(
 #     segmentation enumerates ALL items so it uses the generic subscript.)
 #
 # SECTION-OBJECT CONTRACT (established here, reused by Tasks 4-12) --------------
-# `segment_filing()` returns a LIST of per-item section dicts in requested order:
+# `segment_filing()` returns a LIST of per-item section dicts in enumerated order:
 #   SUCCESS section: {"item": "<item id>", "text_path": "<file path>", **extra}
 #     — a plain dict later tasks EXTEND in place. The extracted body is written
 #       to a file and referenced by `text_path` (paths-not-content, Task 7 —
@@ -698,8 +698,8 @@ def acquire_filing(
 #   FAILURE slot:    {"item": "<item id>", "error": "<why>",
 #                     "error_class": "absent_item"}
 #     — a sentinel-compatible dict; the top-level `error` key is read unchanged
-#       by pack.py's `_status`, and the slot NAMES the missing item so a
-#       requested-but-absent item is never dropped or fabricated.
+#       by pack.py's `_status`, and the slot NAMES the missing item so an
+#       enumerated-but-absent item is never dropped or fabricated.
 # A multi-section result is a list later tasks append to / extend.
 #
 # EXTRACTOR CONTRACT (widened by Task 4; text made lazy by Task 8) -------------
@@ -817,13 +817,13 @@ def _segment_8k(obj, filing) -> list[object]:
     item (T4 review finding, folded in by Task 5). Non-exhibit items are
     unaffected by exhibit ambiguity — they always source their own body text.
 
-    LOOM-SIMPLIFY: shortcut=a >=2-exhibit-item 8-K (or count mismatch) is emitted
+    LOOM-SIMPLIFY: shortcut: a >=2-exhibit-item 8-K (or count mismatch) is emitted
     as loud per-item gaps rather than resolving each reported item body's
-    "Exhibit 99.x" cross-reference to map it to the right exhibit | ceiling=a real
+    "Exhibit 99.x" cross-reference to map it to the right exhibit | ceiling: a real
     8-K reporting >=2 exhibit-bearing items each with its own recoverable EX-99.x
     (e.g. Item 2.02->EX-99.1, Item 7.01->EX-99.2) whose content we want extracted,
-    not gapped | upgrade=parse each reported item's body text for its referenced
-    exhibit number and map by that | ref=spec Requirement "8-K Full-Item
+    not gapped | upgrade: parse each reported item's body text for its referenced
+    exhibit number and map by that | ref: spec Requirement "8-K Full-Item
     Segmentation with Exhibit-Following". (The gap itself is loud + tested; this
     cut defers the multi-exhibit RESOLUTION, not the fail-loud behaviour.)
     """
@@ -1158,12 +1158,12 @@ def segment_filing(filing) -> list[dict]:
         entries = list(extractor(obj, filing))
     except _TIMEOUT_EXC_TYPES as exc:  # noqa: BLE001 — timeout is its OWN retryable class
         # Wholesale TIMEOUT (Task 10): obj()/extractor build exceeded the timeout.
-        # Every requested section becomes the DISTINCT retryable `timeout` slot,
+        # Every enumerated section becomes the DISTINCT retryable `timeout` slot,
         # NOT the generic extraction_error — narrower-except-first, above Exception.
         return _all_sections_failed(form, filing, exc, slot=_timeout_error_slot)
-    except Exception as exc:  # noqa: BLE001 — fail loud per requested section, don't crash
+    except Exception as exc:  # noqa: BLE001 — fail loud per enumerated section, don't crash
         # Wholesale failure: obj() or extractor building threw, so no per-item
-        # text-thunk was ever reached. Every requested section becomes a loud
+        # text-thunk was ever reached. Every enumerated section becomes a loud
         # extraction-error slot; no top-level success is claimed.
         return _all_sections_failed(form, filing, exc)
     sections = []
@@ -1230,6 +1230,21 @@ def fetch_narrative_sections(accession: str) -> dict:
     edgartools directly, leaving its built-in ``pyrate-limiter``/``stamina``
     backoff authoritative (edgartools does its own HTTP over ``httpx``; the
     ``requests``-based ``_sec_get`` throttle does not cover this path).
+
+    The returned wrapper carries its OWN extraction-health summary derived from
+    the section list: ``narrative_status`` (``"ok"`` / ``"partial"`` / ``"failed"``
+    — pack.py's vocabulary) and ``failed_items`` (the item ids whose section
+    carries an ``error`` key; ``[]`` when healthy). This exists because the
+    per-section fail-loud slots live INSIDE ``sections``: a downstream consumer
+    that embeds this wrapper as a sub-field and inspects the whole thing (a
+    classifier walking one level into dict-valued sub-fields) never reaches a
+    LIST-nested error, so the partial/failed state would silently read as ``ok``.
+    A downstream consumer therefore reads THIS summary rather than relying on a
+    classifier walking into ``sections``. It is ADDITIVE (the 5 CLI contract keys
+    accession/cik/form/filingDate/sections are unchanged) and is NOT a top-level
+    ``error`` key — a partial extraction is not a wholesale acquisition failure,
+    so exit-1-iff-``error`` stays unchanged. Both fields are cached alongside the
+    rest, so a warm HIT carries them too.
     """
     path = cache_util.cache_path("sec_edgar", f"narrative_sections_{accession}")
     cached = cache_util.load_cache(path, TTL_NARRATIVE)
@@ -1247,6 +1262,24 @@ def fetch_narrative_sections(accession: str) -> dict:
         return filing
 
     sections = segment_filing(filing)
+    # Extraction-health summary carried ON THE WRAPPER (review 🟡): the
+    # per-section fail-loud slots live inside `sections`, so a consumer that
+    # inspects the whole wrapper as one dict sub-field (e.g. the future memo
+    # pipeline embedding this result) never reaches them — a one-level classifier
+    # only walks a dict's dict-valued sub-fields, and `sections` is a LIST. Derive
+    # the partial/failed state HERE from the section list (NO pack.py import — data
+    # layer must not depend on the report-equity-memo facade) and surface it as
+    # top-level, non-`_`-prefixed fields so the failure state travels WITH the
+    # wrapper: `narrative_status` (ok/partial/failed, pack.py's vocabulary) plus
+    # `failed_items` naming each erroring item id. A downstream consumer reads THIS
+    # summary rather than relying on a classifier walking into `sections`.
+    failed_items = [s["item"] for s in sections if "error" in s]
+    if not failed_items:
+        narrative_status = "ok"
+    elif len(failed_items) == len(sections):
+        narrative_status = "failed"
+    else:
+        narrative_status = "partial"
     result = {
         "accession": accession,
         # Contract keys the CLI `--action narrative` surface preserves
@@ -1259,6 +1292,11 @@ def fetch_narrative_sections(accession: str) -> dict:
         "filingDate": _filing_date_iso(filing.filing_date),
         "sections": sections,
         "section_count": len(sections),
+        # Additive extraction-health summary (cached alongside the rest → present
+        # on HIT + MISS). NOT a top-level `error` key: a partial extraction is not
+        # a wholesale acquisition failure, so exit-1-iff-error is unchanged.
+        "narrative_status": narrative_status,
+        "failed_items": failed_items,
         "_cache": "miss",
     }
     cache_util.save_cache(path, result)

@@ -1436,6 +1436,71 @@ def test_edgartools_cache_key_distinct_from_legacy(sec_client):
     assert {s["item"] for s in result["sections"]} == {"Item 7", "Item 1A"}
 
 
+def test_fetch_narrative_sections_wrapper_surfaces_partial_failure(sec_client):
+    # No @req tag: this dispatch's plan/spec trace by
+    # `<change-id> / Requirement / Scenario` join keys, not registered REQ-ids
+    # (see report) — @req omitted per the implementer contract.
+    # Scenario: whole-branch review 🟡 remediation — the per-section fail-loud
+    # state must be visible on the RESULT WRAPPER itself, not only on the bare
+    # `sections` list. A downstream consumer (e.g. the future memo pipeline
+    # embedding this wrapper as a sub-field) inspects the WHOLE wrapper; the
+    # section-level error slots sit below `sections` where a one-level classifier
+    # walking a dict sub-field never reaches them, so the wrapper must carry its
+    # OWN `narrative_status` + `failed_items` health summary. Drives
+    # `fetch_narrative_sections` at the edgartools boundary (the established
+    # `edgar_stub.get_by_accession_number` mock), NOT a bare-list reclassification.
+    stub = sec_client.edgar_stub
+
+    # --- PARTIAL: Item 7 extracts, Item 1A raises mid-parse (one of two fails) ---
+    partial_acc = "0000320193-24-000123"
+    partial_filing = _segmentable_filing(
+        "10-K",
+        _RaisingRiskFactorsTenK(
+            management_discussion="Item 7.\xa0\xa0Management's Discussion body ..."
+        ),
+    )
+    stub.get_by_accession_number.return_value = partial_filing
+    partial = sec_client.fetch_narrative_sections(partial_acc)
+    assert partial.get("narrative_status") == "partial", (
+        "a wrapper with one failed section must surface narrative_status=partial "
+        f"WITHOUT a consumer unwrapping `sections`: {partial!r}"
+    )
+    assert partial.get("failed_items") == ["Item 1A"], (
+        f"the wrapper must NAME the failing item id, not hide it in sections: {partial!r}"
+    )
+    # additive-only: the 5 CLI contract keys survive unchanged alongside the summary
+    assert {"accession", "cik", "form", "filingDate", "sections"} <= set(partial)
+
+    # --- FAILED: obj() raises wholesale → a single form-level error slot ---
+    failed_acc = "0000320193-24-000900"
+    stub.get_by_accession_number.return_value = _obj_raising_filing("10-K")
+    failed = sec_client.fetch_narrative_sections(failed_acc)
+    assert failed.get("narrative_status") == "failed", (
+        f"a wrapper whose every section errors must surface failed: {failed!r}"
+    )
+    assert failed.get("failed_items") == ["form 10-K"], (
+        f"the wholesale form-level failed slot must be named on the wrapper: {failed!r}"
+    )
+
+    # --- HEALTHY: every section extracts → ok, no failure signal ---
+    ok_acc = "0000320193-24-000700"
+    ok_filing = _segmentable_filing(
+        "10-K",
+        _MockTenK(
+            management_discussion="Item 7.\xa0\xa0MD&A body ...",
+            risk_factors="Item 1A.\xa0\xa0Risk Factors body ...",
+        ),
+    )
+    stub.get_by_accession_number.return_value = ok_filing
+    healthy = sec_client.fetch_narrative_sections(ok_acc)
+    assert healthy.get("narrative_status") == "ok", (
+        f"an all-sections-ok wrapper must read healthy: {healthy!r}"
+    )
+    assert healthy.get("failed_items") == [], (
+        f"a healthy wrapper carries no failed items: {healthy!r}"
+    )
+
+
 # ---------------------------------------------------------------------------
 # Task 12 — Preserve the `--action narrative` CLI surface across the edgartools
 # migration + retire the legacy regex internals. `action_narrative(accession)`
