@@ -358,6 +358,50 @@ def test_classify_bands(xval_module, doc_value, xbrl_value, expected_pct, expect
     assert entry["concept"] == "us-gaap:Revenues"
 
 
+def test_undefined_divergence_is_na_not_dropped(xval_module):
+    """Task 9: an undefined divergence — xbrl_value == 0 (pct_diff
+    undefined), or either side None — is classified `alert == "n/a"` with
+    an explanatory `note`, and the entry is STILL PRESENT in
+    `classify_divergence`'s return value — never silently dropped (plan
+    Notes §Anti-fabrication invariant; spec :85-90 "Undefined divergence
+    is classified n/a, not dropped"). Both values are always retained on
+    the entry, even when one side is None, mirroring comps'
+    n/a-never-drop discipline (comps_compute.py `_compute_divergence`
+    :968-979).
+    """
+    # Case 1: xbrl_value == 0 -> pct_diff undefined.
+    doc_cell, xbrl_fact = _classify_fixture_pair(100_000_000.0, 0)
+    entry = xval_module.classify_divergence(doc_cell, xbrl_fact)
+    assert entry is not None
+    assert entry["alert"] == "n/a"
+    assert entry["note"]
+    assert entry["pct_diff"] is None
+    assert entry["doc_value"] == 100_000_000.0
+    assert entry["xbrl_value"] == 0
+
+    # Case 2: xbrl side None (e.g. companyfacts fact carries no value).
+    doc_cell2, xbrl_fact2 = _classify_fixture_pair(100_000_000.0, 100_000_000)
+    xbrl_fact2["value"] = None
+    entry2 = xval_module.classify_divergence(doc_cell2, xbrl_fact2)
+    assert entry2 is not None
+    assert entry2["alert"] == "n/a"
+    assert entry2["note"]
+    assert entry2["pct_diff"] is None
+    assert entry2["doc_value"] == 100_000_000.0
+    assert entry2["xbrl_value"] is None
+
+    # Case 3: doc side None (e.g. doc cell's numeric_value is missing).
+    doc_cell3, xbrl_fact3 = _classify_fixture_pair(100_000_000.0, 100_000_000)
+    doc_cell3["numeric_value"] = None
+    entry3 = xval_module.classify_divergence(doc_cell3, xbrl_fact3)
+    assert entry3 is not None
+    assert entry3["alert"] == "n/a"
+    assert entry3["note"]
+    assert entry3["pct_diff"] is None
+    assert entry3["doc_value"] is None
+    assert entry3["xbrl_value"] == 100_000_000
+
+
 def test_no_counterpart_routes_to_single_source(xval_module):
     """Task 7: a Source-A doc cell whose (concept, period, dimension) triple
     has NO Source-B counterpart is recorded UNMATCHED and routed to the
