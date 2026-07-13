@@ -271,9 +271,9 @@ Always-included for skills with user-input steps. Skills with no user-input step
 
 #### Writing Patterns
 
-Prefer using the imperative form in instructions.
+Prefer the imperative form in instructions.
 
-**Defining output formats** - You can do it like this:
+**Defining output formats** — for example:
 ```markdown
 ## Report structure
 ALWAYS use this exact template:
@@ -283,7 +283,7 @@ ALWAYS use this exact template:
 ## Recommendations
 ```
 
-**Examples pattern** - It's useful to include examples. You can format them like this (but if "Input" and "Output" are in the examples you might want to deviate a little):
+**Examples pattern** - Examples are useful. Format them like this (deviate a little if "Input"/"Output" already appear in them):
 ```markdown
 ## Commit message format
 **Example 1:**
@@ -293,7 +293,9 @@ Output: feat(auth): implement JWT-based authentication
 
 ### Writing Style
 
-Try to explain to the model why things are important in lieu of heavy-handed musty MUSTs. Use theory of mind and try to make the skill general and not super-narrow to specific examples. Start by writing a draft and then look at it with fresh eyes and improve it.
+Explain to the model why things matter instead of heavy-handed MUSTs. Use theory of mind; keep the skill general, not narrowed to specific examples. Draft first, then revisit with fresh eyes and improve.
+
+For writing lean from the start — token economy, bloat self-review, thin-orchestrator design — read [references/writing-lean.md](references/writing-lean.md).
 
 ### Test Cases
 
