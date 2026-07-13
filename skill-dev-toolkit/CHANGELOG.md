@@ -4,6 +4,27 @@ All notable changes to the `skill-dev-toolkit` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] — 2026-07-13
+
+### Changed — skill-creator-advance token refactor (equivalence-gated, first 0.2.0-machinery run)
+
+- `skill-creator-advance/SKILL.md` 6,069 → 4,497 words (−25.9%), back under the
+  4,500 CHK-SKL-010 cap. First real-world run of 0.2.0's taxonomy-guided
+  candidate pre-pass (ranked 16 moves; estimates within ±20% of actuals) +
+  the skill-refactor Q1/Q2/Q3 gate (4 test prompts, sonnet runners, 3-judge
+  opus ensemble: P1/P3/P4 equivalent 3/3, P2 pass at moderate confidence —
+  2 equivalent + 1 uncertain on a pre-existing doc ambiguity both versions
+  carry, now BACKLOG'd).
+- Extractions absorbed into existing references (no new files):
+  `description-design.md` +479w (§Trigger eval query design, §triggering
+  mechanism), `asking-user-questions.md` +328w (§Empty-Prompt Onboarding).
+- User-approved sediment removals: §Description Best Practices → ~70w pointer
+  (killed the items-6/7 contradiction with §House standard), "make
+  descriptions a little 'pushy'" sentence deleted (contradicted the
+  anti-over-trigger MUST).
+- `test-prompts.json`: +P4 (description-optimization coverage, added
+  pre-baseline so both gate sides ran identical prompts).
+
 ## [0.2.0] — 2026-07-13
 
 ### Added — Pocock compression-philosophy candidate-generation techniques
