@@ -40,6 +40,31 @@ engineering decisions using the test in §a. Expect **1-3 hits** per
 round (design SSOT precedent). Two-way-door decisions are NOT collected
 here; they route silently to the Decision Log (§e).
 
+**Same-pass fork harvest.** The sweep also catches **foreseeable
+implementation forks** — unpinned library/pattern/format choices a
+task's description leaves open that an implementer would otherwise
+hit mid-task with no decision on record. Classify each found fork per
+`subagent-driven-development/SKILL.md` §Asking the user gate ①'s
+three-way triage (point, don't copy the arms here). A fork that also
+clears §a's one-way-door test routes via the two-axis path — briefed
+as a one-way-door decision; fork harvest covers only the remainder.
+Run **Axis-4-lite** research — the batched form of `brainstorming`'s
+Axis-4 protocol (pointer, not restated) — **only** over forks the triage marks
+researchable, and **only** over forks the sweep actually finds: a
+zero-fork plan pays zero research (**pay-per-hit**). Record each
+resolved fork in the plan's existing `## Notes` section, one line per
+fork, in this exact pinned format — it is the grep key SDD's dispatch
+step reads:
+
+```
+Kickoff decision: <fork> → <resolution>
+```
+
+Only forks resolved via triage arm 2 (direct ask) or arm 3 (researched,
+awaiting approval) fold into §c; arm-1 look-ups are RECORDED as
+`Kickoff decision:` lines, unbriefed — mirroring §a's
+agent-decides-silently cell.
+
 ## (c) ONE batched briefing
 
 Batch the round's 1-3 one-way-door hits into **ONE** briefing — never

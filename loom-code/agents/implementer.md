@@ -355,7 +355,12 @@ unblock_step:                    # if BLOCKED; otherwise omit. The specific acti
   not assert it.
 - **`NEEDS_CONTEXT`** — you cannot proceed until a specific question
   is answered (ambiguous spec, missing test fixture, undefined edge
-  case). Include `open_questions`.
+  case). Include `open_questions`. Returning NEEDS_CONTEXT is always
+  better than guessing — it is a correct outcome, not a failure. Use
+  it freely when the trigger conditions hold. The orchestrator triages
+  your question (task-scoped fact / user-fact / researchable
+  fork) per SDD §Asking the user — state which kind you believe it
+  is when you can.
 - **`BLOCKED`** — you cannot proceed at all (broken test infra,
   missing dependency, task genuinely needs more than one assertion
   or crosses a module boundary). Include `unblock_step`.

@@ -116,7 +116,7 @@ If reviewer returns `NEEDS_REVISION`, writing-plans **fixes the plan** and re-ru
 
 ## Kickoff briefing
 
-After PASS, before SDD handoff: run the kickoff briefing — read [`references/kickoff-briefing.md`](references/kickoff-briefing.md) and batch-brief the round's one-way-door decisions (expect 1-3); the rest route to the Decision Log.
+After PASS, before SDD handoff: run the kickoff briefing — read [`references/kickoff-briefing.md`](references/kickoff-briefing.md) and batch-brief the round's one-way-door decisions (expect 1-3) and foreseeable implementation forks; the rest route to the Decision Log.
 
 ## Output contract — the plan
 

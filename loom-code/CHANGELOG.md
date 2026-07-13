@@ -5,6 +5,50 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.30.0] — 2026-07-14 — mid-task ask layered defense (L1-lite + L2 hook + L3 valve)
+
+### Added
+
+- **`ask-triage.py`** (NEW): a PreToolUse hook on `AskUserQuestion` —
+  `loom-code/hooks/hooks.json` gains a matcher entry alongside the existing
+  git-guard entry. Emits `hookSpecificOutput.additionalContext` carrying a
+  three-way triage card: (1) a fact checkable within the task's own sources
+  → look it up, never ask; (2) a user-only fact, preference, or confirmation
+  of an irreversible/outward-facing action → ask directly, freely; (3) a
+  researchable design fork → research first, then ask with a cited
+  recommendation. Fail-open; Claude-Code-only (git-guard precedent — no
+  Codex hook surface).
+
+### Changed
+
+- **`writing-plans` kickoff briefing** (`references/kickoff-briefing.md` +
+  SKILL.md §Kickoff briefing): the existing one-way-door sweep now ALSO
+  harvests foreseeable implementation forks — unpinned library/pattern/
+  format choices an implementer would otherwise hit mid-task. Research runs
+  pay-per-hit (Axis-4-lite, only over forks actually found); resolutions
+  land in the plan's `## Notes` as pinned `Kickoff decision: <fork> →
+  <resolution>` lines. One-way-door/fork overlap routes via the existing
+  two-axis path.
+- **`subagent-driven-development` SKILL.md**: gate ① now names the
+  three-way triage as its SSOT (checkable fact / user-fact / researchable
+  fork; arms and card each transcribed verbatim from the plan's pins —
+  semantically identical two-copy design); step 1 propagates
+  relevant `Kickoff decision:` lines into the implementer's task packet;
+  step 2 triages a relayed NEEDS_CONTEXT question before surfacing it —
+  checkable facts get re-dispatched, researchable forks get researched
+  first.
+- **`implementer.md`**: the NEEDS_CONTEXT status definition gains a
+  legitimacy clause — "always better than guessing … a correct outcome, not
+  a failure. Use it freely" — closing the asymmetry with
+  DONE_WITH_CONCERNS's existing "use this freely," plus a pointer (not a
+  copy) to the SDD gate ① triage vocabulary.
+
+Provenance: `complexity-critique` RESHAPE + a completeness counter-review
+applied pre-plan; industry grounding EN+JA included CyberAgent's HITL
+measurement (~30% of interventions avoidable). The ask-moment hook shape
+itself has no shipped industry precedent found — novel, and dogfooded
+before ship.
+
 ## [0.29.1] — 2026-07-13 — writing-plans token refactor (equivalence-gated) + test-prompts baseline
 
 ### Changed
