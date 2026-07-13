@@ -167,6 +167,13 @@ def _require_accession_derived_as_of(point: dict) -> None:
         )
 
 
+_DEDUP_KEY_FIELDS = ("company", "kpi_id", "period", "as_of", "source_accession")
+
+
+def _dedup_key(point: dict) -> tuple:
+    return tuple(point.get(field) for field in _DEDUP_KEY_FIELDS)
+
+
 def append(point: dict) -> None:
     """Append one series-point to its file-per-series JSON, verbatim.
 
@@ -176,15 +183,35 @@ def append(point: dict) -> None:
     NOT interpreted this slice). Preconditions — provenance completeness
     and an accession-derived `as_of` (see `_require_accession_derived_as_of`
     for the wall-clock marker convention) — are ALL checked BEFORE any file
-    is touched — a rejected point writes nothing, no partial state. This
-    slice does no dedup or query — those guards land in Tasks 4-7. The
-    point is stored unchanged so a later point-in-time query reads back
-    exactly what was written.
+    is touched — a rejected point writes nothing, no partial state.
+
+    Idempotent dedup: the 5-tuple `(company, kpi_id, period, as_of,
+    source_accession)` is the dedup key. Re-appending a point whose key
+    already exists in the series is a NO-OP (no second record written) —
+    this is the "re-run the same accession" case. A corrected value MUST
+    carry a new `as_of` (and typically a new `source_accession`) to
+    supersede — that is a DIFFERENT dedup key, so it appends a new record
+    and both are retained (append-only, bitemporal — never overwrite). A
+    same-dedup-key point carrying a DIFFERENT `value` (a same-accession
+    correction that didn't bump `as_of`) is treated as the no-op case too
+    — the FIRST record wins and is kept; detecting/rejecting that
+    collision as an error is OUT OF SCOPE for this task (a later slice's
+    job if needed).
+
+    This slice does no point-in-time/latest query or locking — those
+    guards land in Tasks 5-7. The point is stored unchanged so a later
+    point-in-time query reads back exactly what was written.
     """
     _require_provenance(point)
     _require_accession_derived_as_of(point)
 
     path = _series_path(point["company"], point["kpi_id"])
     envelope = _load_series(path)
+
+    new_key = _dedup_key(point)
+    for existing in envelope["points"]:
+        if _dedup_key(existing) == new_key:
+            return  # identical dedup key already present — no-op
+
     envelope["points"].append(point)
     _atomic_write(path, envelope)

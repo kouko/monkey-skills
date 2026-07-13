@@ -192,3 +192,86 @@ def test_append_rejects_wallclock_or_absent_as_of(kpi_store_module, tmp_path, mo
     envelope = json.loads(series_files[0].read_text(encoding="utf-8"))
     assert len(envelope["points"]) == 1
     assert envelope["points"][0] == point_valid
+
+
+def test_reappend_same_accession_is_noop(kpi_store_module, tmp_path, monkeypatch):
+    """Re-appending the IDENTICAL point (same dedup key = company, kpi_id,
+    period, as_of, source_accession) is a no-op — no second record. A
+    corrected value carrying a NEW as_of + source_accession is a DIFFERENT
+    dedup key, so it appends a new record and BOTH are retained
+    (append-only, bitemporal — never overwrite).
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+
+    point = {
+        "company": "AAPL",
+        "kpi_id": "iphone_units",
+        "period": "FY2024",
+        "as_of": "2024-11-01",
+        "value": 231000000,
+        "source_accession": "0000320193-24-000123",
+        "source_table_id": "ex99-1-operating-summary",
+        "source_cell_ref": "r5c2",
+    }
+
+    # (1) append once, then append the IDENTICAL point again → still ONE record.
+    kpi_store_module.append(point)
+    kpi_store_module.append(dict(point))
+
+    series_files = list(tmp_path.rglob("*.json"))
+    assert len(series_files) == 1
+    envelope = json.loads(series_files[0].read_text(encoding="utf-8"))
+    assert len(envelope["points"]) == 1, (
+        "re-appending the identical dedup key must be a no-op"
+    )
+
+    # (2) same (company, kpi_id, period) but a NEW as_of + accession →
+    # a DIFFERENT dedup key, so it appends → TWO records total, both retained.
+    corrected = {
+        **point,
+        "as_of": "2024-12-15",
+        "source_accession": "0000320193-24-000456",
+        "value": 232000000,
+    }
+    kpi_store_module.append(corrected)
+
+    envelope = json.loads(series_files[0].read_text(encoding="utf-8"))
+    assert len(envelope["points"]) == 2, (
+        "a new as_of + source_accession is a different dedup key — "
+        "both records must be retained"
+    )
+
+
+def test_same_dedup_key_different_value_keeps_first(
+    kpi_store_module, tmp_path, monkeypatch
+):
+    """Documented contract: a same-dedup-key re-append with a DIFFERENT value
+    is still a no-op that keeps the FIRST record. A corrected value must carry
+    a new as_of (or accession) to supersede — that is the bitemporal rule;
+    silently overwriting on an unchanged key would break append-only history.
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+
+    point = {
+        "company": "AAPL",
+        "kpi_id": "services_revenue",
+        "period": "FY2024",
+        "as_of": "2024-11-01",
+        "value": 96000,
+        "source_accession": "0000320193-24-000123",
+        "source_table_id": "ex99-1-operating-summary",
+        "source_cell_ref": "r7c2",
+    }
+    kpi_store_module.append(point)
+    # Same 5-tuple dedup key, different value → no-op, first record kept.
+    kpi_store_module.append({**point, "value": 99999})
+
+    series_files = list(tmp_path.rglob("*.json"))
+    assert len(series_files) == 1
+    envelope = json.loads(series_files[0].read_text(encoding="utf-8"))
+    assert len(envelope["points"]) == 1, (
+        "same dedup key must stay a no-op even when the value differs"
+    )
+    assert envelope["points"][0]["value"] == 96000, (
+        "first-wins: the original value is kept; a correction needs a new as_of"
+    )
