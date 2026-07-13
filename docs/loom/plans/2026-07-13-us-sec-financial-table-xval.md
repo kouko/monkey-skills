@@ -203,22 +203,35 @@
 - **Independent**: false
 - **Brief item covered**: `2026-07-12-us-sec-primary-source-layer / Requirement: Classify divergence with a tolerance band / Scenario: Undefined divergence is classified n/a, not dropped`
 
-## Task 10 — Recognize scale/rounding as a legitimate divergence (single-source, off `decimals`)
+## Task 10 — Recognize scale/rounding as a legitimate divergence (TWO-SOURCE tolerance label)
 
-- **Description**: Per the brief's scale refinement: there is **no separate `scale` field** — model this
-  as a **single-source structural check** on Source A. Compare the doc-table's DISPLAYED (rendered,
-  rounded) `value_displayed` against the full-magnitude `numeric_value`, using `decimals` as the rounding
-  grain; when the difference is fully explained by display rounding, annotate the entry `scale/rounding`
-  and keep the alert within the low band — MUST NOT flag it as a tagging error. Never diff two
-  full-magnitude values for this check (that is naturally ~0). Never read a nonexistent `scale` field.
+> **REVISED 2026-07-13 (grounding verdict B + user decision A).** The brief's original single-source
+> framing (reconcile a rendered display value vs the full-magnitude fact) is **not implementable** —
+> a live probe confirmed edgartools exposes NO retrievable rendered/scaled display value across ANY
+> structured surface (`get_statement` rows, `facts.to_dataframe()`, even `render().to_dataframe()`/
+> `.to_dict()` all return full-magnitude floats; the "$39,777" mantissa exists only as a transient
+> `render().__str__()` formatting side-effect via `CellFormatter`). So `value_displayed == numeric_value`
+> on all 152 real cells — there is no second number to reconcile single-source. **User chose (A):
+> reframe as a TWO-SOURCE rounding-tolerance label** on a matched pair. See Notes §Grounding.
+
+- **Description**: Operate on a **matched (doc_cell, xbrl_fact) pair** (the `route_cells` matched bucket).
+  Compute the divergence between the doc `numeric_value` and the companyfacts `value` (both
+  full-magnitude), then check whether that divergence is fully explained by the rounding grain implied by
+  the doc cell's `decimals` (e.g. `decimals="-6"` → grain `10**6`). When a NON-ZERO divergence falls
+  within the rounding tolerance (≈ half a grain — the maximum a same-underlying-value can differ once each
+  side is rounded to that grain) → annotate the entry `category: "scale/rounding"`, keep `alert: "low"`,
+  set `source_mode: "two-source"`, and add a note — MUST NOT flag it as a tagging error. A divergence
+  BEYOND the tolerance is a real divergence (leave it for the classifier's band, do NOT label
+  scale/rounding). Model the grain off `decimals` only; NEVER read a nonexistent `scale` field, and NEVER
+  invent a rendered-display value.
 - **Module**: `investing-toolkit/skills/analysis-xval/scripts/xval_compute.py`
 - **Files touched**: `investing-toolkit/skills/analysis-xval/scripts/xval_compute.py`, `investing-toolkit/tests/analysis/test_analysis_xval.py`
 - **Context paths**:
-  - `/Users/kouko/.supacode/repos/monkey-skills/finacial-analytics-r2/investing-toolkit/skills/analysis-xval/scripts/xval_compute.py`  (in-progress module from Task 3)
-  - `/Users/kouko/.supacode/repos/monkey-skills/finacial-analytics-r2/docs/loom/specs/2026-07-13-us-sec-financial-table-xval.md`  (brief §Grounding — the scale-field refinement)
+  - `/Users/kouko/.supacode/repos/monkey-skills/finacial-analytics-r2/investing-toolkit/skills/analysis-xval/scripts/xval_compute.py`  (in-progress module; `classify_divergence`/`_compute_divergence` from Task 8, `route_cells` matched pairs from Task 7)
+  - `/Users/kouko/.supacode/repos/monkey-skills/finacial-analytics-r2/investing-toolkit/tests/analysis/fixtures/xval_source_a_aapl_bs.json`  (real Source-A shape: `value_displayed == numeric_value`, `decimals` like `"-6"` — code to THIS shape, never the invented `$1,234` mantissa)
 - **Acceptance**:
-  - **RED**: `test_analysis_xval.py::test_millions_scale_rounding_within_tolerance` — a doc cell `value_displayed` `$1,234` (millions) against `numeric_value` `1233800000` with `decimals="-6"` → after rounding-grain reconciliation the entry is annotated `scale/rounding`, within the low band, NOT a tagging error.
-  - **GREEN**: display-rounding-explained divergence is annotated `scale/rounding`, low band.
+  - **RED**: `test_analysis_xval.py::test_within_grain_divergence_annotated_scale_rounding` — a matched pair whose doc `numeric_value` and companyfacts `value` differ by an amount WITHIN the `decimals`-implied rounding grain (e.g. doc `1234000000` vs xbrl `1233800000`, `decimals="-6"`, |diff| 200000 ≤ half-grain 500000) → entry annotated `category == "scale/rounding"`, `alert == "low"`, `source_mode == "two-source"`, NOT a tagging error. Plus a NEGATIVE case: a divergence BEYOND the grain is NOT labeled scale/rounding (non-vacuous).
+  - **GREEN**: a within-rounding-grain two-source divergence is labeled `scale/rounding` (low); a beyond-grain one is not.
 - **Dependencies**: Task 8 completes first
 - **Independent**: false
 - **Brief item covered**: `2026-07-12-us-sec-primary-source-layer / Requirement: Recognize scale/rounding as a legitimate divergence source / Scenario: Millions-scale rounding stays within tolerance`
@@ -352,6 +365,25 @@
 ---
 
 ## Notes
+
+### Scale/rounding grounding correction — Task 10 reframed (2026-07-13)
+A SECOND grounding conflict in the scale/decimals neighborhood (the first was the companyfacts
+scale/decimals DROP below). During SDD, the Task-10 code-quality reviewer caught a 🔴: the brief's
+single-source scale/rounding check (reconcile a rendered display value vs the full-magnitude fact) is
+**not implementable** on real data. A live probe (AAPL 10-K, edgartools 5.42.0) confirmed
+**no retrievable rendered/scaled display value exists** on ANY structured edgartools surface —
+`get_statement` rows, `facts.to_dataframe()`, and even `render().to_dataframe()`/`.to_dict()` all
+return full-magnitude floats; the "$39,777" millions mantissa is only a transient `render().__str__()`
+formatting artifact (`CellFormatter`). Hence `value_displayed == numeric_value` on all 152 real cells
+(NOT a Task-1 capture bug — it faithfully reflects edgartools' data model). **User decision (A),
+2026-07-13:** reframe scale/rounding as a **TWO-SOURCE rounding-tolerance label** — on a matched
+doc↔companyfacts pair, a non-zero divergence within the `decimals`-implied rounding grain is annotated
+`scale/rounding` (low, `source_mode:"two-source"`), never a tagging error; a beyond-grain divergence is
+a real divergence. This honors the spec Requirement's intent ("MUST NOT classify a divergence fully
+explained by display rounding as a tagging error") while being honest about the API. Rejected: (B) drop
+the check; (C) a weak single-source decimals-consistency check overlapping DQC 2.4.1 (Task 13). The
+brief's §Grounding "scale is not a separate field" refinement is superseded by this note; carry it when
+the change-folder is archived.
 
 ### Post-PASS amendment (review-skip note)
 Two cosmetic edits after the plan-document-reviewer returned PASS (14/14), both additive + schema-safe
