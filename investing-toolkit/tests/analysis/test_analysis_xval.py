@@ -1106,3 +1106,97 @@ def test_no_counterpart_routes_to_single_source(xval_module):
     assert result["single_source"][0]["concept"] == "us-gaap:ResearchAndDevelopmentExpense"
     # Never silently paired with the unrelated Revenues fact.
     assert result["single_source"][0] is unmatched_cell
+
+
+def test_doc_only_cell_stated_not_guessed(xval_module):
+    """Task 15: an unmatched doc-table cell (no companyfacts counterpart for
+    its concept+period+dimension triple, per `route_cells`'s single_source
+    bucket) MUST appear in `build_report`'s `single_source` output with
+    `status == "doc-only, no XBRL counterpart"`, carrying its doc value +
+    doc citation, and NO synthesized `xbrl_value`/`xbrl_citation` invented to
+    fill the gap (plan Notes §Anti-fabrication invariant; spec :167-172).
+
+    A matched cell is included alongside it so the partition is genuinely
+    exercised — the matched cell must NOT be marked doc-only.
+    """
+    period = {"type": "duration", "start": "2023-10-01", "end": "2024-09-28"}
+
+    matched_cell = {
+        "concept": "us-gaap:Revenues",
+        "period": period,
+        "dimension": None,
+        "value_displayed": "391035000000",
+        "numeric_value": 391035000000.0,
+        "decimals": "-6",
+        "citation": {
+            "accession": "0000320193-24-000123",
+            "statement_name": "IncomeStatement",
+            "row": 5,
+            "col": "duration_2023-10-01_2024-09-28",
+            "label": "Total net sales",
+            "context_ref": "c-1",
+            "fact_id": "f-1",
+        },
+    }
+    # No companyfacts fact exists for this concept at all -> unmatched ->
+    # must be stated doc-only, never gap-filled with a synthesized xbrl value.
+    unmatched_cell = {
+        "concept": "us-gaap:ResearchAndDevelopmentExpense",
+        "period": period,
+        "dimension": None,
+        "value_displayed": "31370000000",
+        "numeric_value": 31370000000.0,
+        "decimals": "-6",
+        "citation": {
+            "accession": "0000320193-24-000123",
+            "statement_name": "IncomeStatement",
+            "row": 6,
+            "col": "duration_2023-10-01_2024-09-28",
+            "label": "R&D expense",
+            "context_ref": "c-2",
+            "fact_id": "f-2",
+        },
+    }
+
+    source_a_pack = {"cells": [matched_cell, unmatched_cell]}
+    source_b_pack = {
+        "cik": 320193,
+        "facts": {
+            "us-gaap": {
+                "Revenues": [
+                    {
+                        "start": "2023-10-01",
+                        "end": "2024-09-28",
+                        "value": 391035000000,
+                        "accn": "0000320193-24-000123",
+                        "form": "10-K",
+                        "fy": 2024,
+                        "fp": "FY",
+                        "filed": "2024-11-01",
+                    }
+                ]
+            }
+        },
+    }
+
+    report = xval_module.build_report(source_a_pack, source_b_pack)
+
+    doc_only_entries = [
+        e for e in report["single_source"]
+        if e.get("status") == "doc-only, no XBRL counterpart"
+    ]
+    assert len(doc_only_entries) == 1
+    entry = doc_only_entries[0]
+    assert entry["concept"] == "us-gaap:ResearchAndDevelopmentExpense"
+    assert entry["doc_value"] == 31370000000.0
+    assert entry["doc_citation"] == unmatched_cell["citation"]
+    # No synthesized XBRL counterpart invented to fill the gap.
+    assert entry.get("xbrl_value") is None
+    assert "xbrl_citation" not in entry
+
+    # The matched cell is NOT marked doc-only anywhere in single_source.
+    assert not any(
+        e.get("status") == "doc-only, no XBRL counterpart"
+        and e.get("concept") == "us-gaap:Revenues"
+        for e in report["single_source"]
+    )

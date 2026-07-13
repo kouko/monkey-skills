@@ -19,10 +19,13 @@ index (Task 4), full `(concept, period, dimension)` triple matching
 (Tasks 5-6), the matched/single-source routing partition (Task 7),
 divergence classification incl. scale/rounding + n/a handling (Tasks 8-10),
 non-GAAP non-force-matching (Task 11), restatement-signal /
-decimal-disagreement structural checks (Tasks 12-13), and `build_report`
+decimal-disagreement structural checks (Tasks 12-13), `build_report`
 (Task 14), which assembles all of the above into the populated report and
 is wired into `main()` — `comparisons`/`high_alerts`/`single_source` are no
-longer empty.
+longer empty — and single-source honesty for unmatched doc cells (Task 15):
+every `route_cells` unmatched cell is stated `"doc-only, no XBRL
+counterpart"` in `single_source`, never gap-filled with a synthesized
+XBRL value.
 
 Declared schemas (plan Notes §Declared schemas — producer/consumer contract):
 - Source A cell: {concept, period:{type:"instant"|"duration", instant?,
@@ -571,9 +574,22 @@ def build_report(source_a_pack: dict, source_b_pack: dict) -> dict:
         companyfacts counterpart exists.
       - restatement-signal entries, verbatim from
         `detect_restatement_signals` (its own earlier/later shape, unchanged).
-    Task 15 (doc-only unmatched cells) adds a third shape to this same
-    bucket later; each shape's own fields plus `category`/`source_mode`
-    let a consumer tell them apart without guessing.
+      - doc-only entries (Task 15), one per `routed["single_source"]` cell —
+        every Source-A cell `route_cells` (T7) could NOT pair with a
+        companyfacts counterpart, per the `(concept, period, dimension)`
+        triple match (plan Notes §Anti-fabrication invariant). Each carries
+        `status: "doc-only, no XBRL counterpart"`, the doc `doc_value` +
+        `doc_citation`, and `source_mode: "single-source"` (the cell WAS
+        checked against companyfacts and found no match — a genuine
+        single-source finding, not an unattempted lookup). No `xbrl_value`
+        or `xbrl_citation` is ever set on this entry — never a synthesized
+        counterpart invented to fill the gap. An unmatched cell that is ALSO
+        flagged by `check_decimal_disagreement` legitimately produces TWO
+        independent single_source entries (doc-only + DQC) — neither
+        collapses the other, same never-drop discipline as the two-bucket
+        case in `test_matched_cell_with_decimal_disagreement_surfaces_in_both_buckets`.
+    Each shape's own fields plus `category`/`status`/`source_mode` let a
+    consumer tell them apart without guessing.
     """
     source_b_index = build_source_b_index(source_b_pack)
     routed = route_cells(source_a_pack, source_b_index)
@@ -603,6 +619,17 @@ def build_report(source_a_pack: dict, source_b_pack: dict) -> dict:
                 **disagreement,
             })
     single_source.extend(detect_restatement_signals(source_b_pack))
+
+    for cell in routed["single_source"]:
+        single_source.append({
+            "concept": cell.get("concept"),
+            "period": cell.get("period"),
+            "dimension": cell.get("dimension"),
+            "doc_value": cell.get("numeric_value"),
+            "status": "doc-only, no XBRL counterpart",
+            "source_mode": "single-source",
+            "doc_citation": cell.get("citation"),
+        })
 
     return {
         "comparisons": comparisons,
