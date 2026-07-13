@@ -49,6 +49,16 @@ decimals:str, citation:{accession, statement_name, row, col, label,
 context_ref, fact_id}}`. `concept` uses edgartools colon form (e.g.
 `us-gaap:Revenues`).
 
+> **Envelope-wrap seam (for the eventual memo-wiring layer):**
+> `data-markets/sec_edgar_client.py::extract_statement_cells` returns a **bare
+> `list[dict]` of cells**, NOT this pack. Whoever wires the producer to this
+> skill MUST wrap that list into the `{"cells": [...]}` envelope (optionally
+> adding `accession`/`statement_name` at the top level) before passing it to
+> `--source-a`. Passing the bare list writes a top-level JSON array, and
+> `build_report` reads `source_a_pack.get("cells", [])` — a bare list has no
+> `.get`, so the wrap is the wiring layer's responsibility, by design (data
+> layer stays pure I/O; this compute layer consumes packs).
+
 **Source B** — a companyfacts pack: `{"cik": <int>, "facts":
 {"<taxonomy>": {"<tag>": [<row>, ...]}}}` where each row is
 `summarize_concept()`'s shape — `{start, end, value:int
