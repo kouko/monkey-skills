@@ -718,6 +718,72 @@ def test_live_memo_fetch_narrative_seam():
         )
 
 
+@pytest.mark.network
+def test_extract_statement_cells_live_shape():
+    """Anchor the REAL edgartools XBRL statement-cell shape (Task 1,
+    docs/loom/plans/2026-07-13-us-sec-financial-table-xval.md): Source A's
+    `extract_statement_cells` pulls doc-table cells from a filing's real
+    XBRL statement data (`get_statement` for the rendered row order +
+    `facts.to_dataframe()` for the per-cell fact graph) — NEVER free-text /
+    regex the document body. A v5->v6 statement/facts-API churn surfaces
+    HERE, loud, not silently inside an offline mock (this arc's grounding
+    has gone stale three times already). Run live:
+      uv run --with pytest --with edgartools==5.42.0 --with 'pyyaml>=6.0' \
+        pytest investing-toolkit/tests/data/test_data_markets_live.py \
+        -k extract_statement_cells_live_shape -m network
+    """
+    import sys
+
+    import edgar
+
+    edgar.set_identity("kouko investing-toolkit noreply@anthropic.com")
+
+    if str(SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(SCRIPTS))
+    import sec_edgar_client
+
+    accession = "0000320193-25-000079"  # AAPL FY2025 10-K
+    filing = edgar.get_by_accession_number(accession)
+    assert filing is not None, "known AAPL 10-K accession must resolve"
+
+    cells = sec_edgar_client.extract_statement_cells(filing, "BalanceSheet")
+    assert isinstance(cells, list) and cells, "BalanceSheet must yield >=1 real cell"
+
+    for cell in cells:
+        assert {
+            "concept", "period", "dimension", "value_displayed",
+            "numeric_value", "decimals", "citation",
+        } <= set(cell), f"cell missing a declared-schema field: {sorted(cell)}"
+        assert isinstance(cell["numeric_value"], float)
+        assert isinstance(cell["decimals"], str)
+        dim = cell["dimension"]
+        assert dim is None or (isinstance(dim, dict) and {"axis", "member"} <= set(dim)), (
+            f"dimension must be null or {{axis, member}}: {dim!r}"
+        )
+        citation = cell["citation"]
+        assert citation.get("accession") == accession
+        assert citation.get("statement_name") == "BalanceSheet"
+        assert "row" in citation and "col" in citation, (
+            f"citation must carry row/col table position: {citation!r}"
+        )
+        assert citation.get("context_ref") or citation.get("fact_id"), (
+            f"citation must carry context_ref/fact_id: {citation!r}"
+        )
+
+    # A real dimensional fact is reachable: AAPL's iPhone segment sits in the
+    # income statement, tagged srt:ProductOrServiceAxis / aapl:IPhoneMember
+    # (live-verified 2026-07-13) — proves the dimension path isn't dead code.
+    income_cells = sec_edgar_client.extract_statement_cells(filing, "IncomeStatement")
+    iphone_cells = [
+        c for c in income_cells
+        if c["dimension"] == {"axis": "srt:ProductOrServiceAxis", "member": "aapl:IPhoneMember"}
+    ]
+    assert iphone_cells, (
+        "expected a real iPhone segment dimensional fact "
+        "(srt:ProductOrServiceAxis / aapl:IPhoneMember) to be reachable"
+    )
+
+
 # ---------------------------------------------------------------------------
 # JP — 7203 Toyota (yfinance + TDnet + EDINET + BOJ/e-Stat/ECB)
 # ---------------------------------------------------------------------------

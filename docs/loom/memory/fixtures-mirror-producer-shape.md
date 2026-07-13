@@ -40,3 +40,25 @@ it caught the plan's edgartools grounding wrong THREE times**
 `obj["Part I, Item 2"]`; 8-K `obj()` is `CurrentReport`, not
 `EightK`). Mocking one layer up from the real producer, and skipping
 a live anchor, are the two ways a green suite certifies a crash.
+
+**Third instance — a hand-shaped fixture can encode a SPEC ASSUMPTION
+the real producer contradicts (US SEC financial-table xval, branch
+feat-us-sec-financial-table-xval, 2026-07-13):** the brief assumed
+edgartools exposes a rendered/scaled DISPLAY value (e.g. "$1,234"
+millions) distinct from the full-magnitude fact. Task 10's tests
+hand-shaped a `value_displayed: "$1,234"` cell to match that
+assumption and passed — but the REAL captured fixture
+(`xval_source_a_aapl_bs.json`, from the live anchor) shows
+`value_displayed == numeric_value` on all 152 cells (edgartools has NO
+retrievable scaled-display field across `get_statement` /
+`facts.to_dataframe()` / even `render().to_dict()` — the "$" mantissa
+is only a transient `__str__` formatting artifact). The whole-branch
+code-quality reviewer caught it by running the check against the real
+committed fixture (133/152 real cells produced garbage), not the
+invented one — the exact fixture-grounding check that turns "tests
+green" into "green on real data". Resolution required a live probe +
+a user-approved design reframe (single-source → two-source), not a
+test patch. **Takeaway: a fixture is only as trustworthy as its
+distance from the real producer; when a spec ASSERTS an external
+library's field, capture the library's real output before encoding
+the assumption into a fixture.**
