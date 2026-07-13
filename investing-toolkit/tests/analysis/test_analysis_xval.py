@@ -291,3 +291,75 @@ def test_dimensional_match_requires_member_agreement(xval_module):
     non_dim_match = xval_module.match_cell(non_dim_doc_cell, non_dim_index)
     assert non_dim_match is not None
     assert non_dim_match["dimension"] is None
+
+
+def test_no_counterpart_routes_to_single_source(xval_module):
+    """Task 7: a Source-A doc cell whose (concept, period, dimension) triple
+    has NO Source-B counterpart is recorded UNMATCHED and routed to the
+    single-source bucket — never paired with an unrelated fact (plan Notes
+    §Anti-fabrication invariant). A genuinely-matching cell is included
+    alongside it so the partition is actually exercised, not vacuously
+    all-unmatched.
+    """
+    matched_period = {"type": "duration", "start": "2023-10-01", "end": "2024-09-28"}
+
+    def _doc_cell(concept: str, period: dict, label: str) -> dict:
+        return {
+            "concept": concept,
+            "period": period,
+            "dimension": None,
+            "value_displayed": "391035000000",
+            "numeric_value": 391035000000.0,
+            "decimals": "-6",
+            "citation": {
+                "accession": "0000320193-24-000123",
+                "statement_name": "IncomeStatement",
+                "row": 5,
+                "col": "duration_2023-10-01_2024-09-28",
+                "label": label,
+                "context_ref": "c-1",
+                "fact_id": "f-1",
+            },
+        }
+
+    matched_cell = _doc_cell("us-gaap:Revenues", matched_period, "Total net sales")
+    # No Source-B fact exists for this concept at all -> must NOT be paired
+    # with the unrelated us-gaap:Revenues fact above (a position/label-based
+    # matcher would wrongly grab it).
+    unmatched_cell = _doc_cell(
+        "us-gaap:ResearchAndDevelopmentExpense", matched_period, "R&D expense"
+    )
+
+    source_b_pack = {
+        "cik": 320193,
+        "facts": {
+            "us-gaap": {
+                "Revenues": [
+                    {
+                        "start": "2023-10-01",
+                        "end": "2024-09-28",
+                        "value": 391035000000,
+                        "accn": "0000320193-24-000123",
+                        "form": "10-K",
+                        "fy": 2024,
+                        "fp": "FY",
+                        "filed": "2024-11-01",
+                    }
+                ]
+            }
+        },
+    }
+    index = xval_module.build_source_b_index(source_b_pack)
+    source_a_pack = {"cells": [matched_cell, unmatched_cell]}
+
+    result = xval_module.route_cells(source_a_pack, index)
+
+    assert len(result["matched"]) == 1
+    doc_cell, xbrl_fact = result["matched"][0]
+    assert doc_cell["concept"] == "us-gaap:Revenues"
+    assert xbrl_fact["value"] == 391035000000
+
+    assert len(result["single_source"]) == 1
+    assert result["single_source"][0]["concept"] == "us-gaap:ResearchAndDevelopmentExpense"
+    # Never silently paired with the unrelated Revenues fact.
+    assert result["single_source"][0] is unmatched_cell

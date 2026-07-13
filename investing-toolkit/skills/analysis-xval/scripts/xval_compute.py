@@ -15,9 +15,10 @@ analysis-comps CLI template:
 - Source B = a companyfacts fact pack (`summarize_concept` shape).
 
 This module currently ships the CLI + report-envelope skeleton (Task 3),
-the Source-B fact index (Task 4), and full `(concept, period, dimension)`
-triple matching (Tasks 5-6) — classification is not yet wired into the
-CLI. `comparisons` is still always empty for now.
+the Source-B fact index (Task 4), full `(concept, period, dimension)`
+triple matching (Tasks 5-6), and the matched/single-source routing
+partition (Task 7) — classification is not yet wired into the CLI.
+`comparisons` is still always empty for now.
 
 Declared schemas (plan Notes §Declared schemas — producer/consumer contract):
 - Source A cell: {concept, period:{type:"instant"|"duration", instant?,
@@ -180,6 +181,37 @@ def match_cell(doc_cell: dict, source_b_index: dict) -> dict | None:
     if candidate["dimension"] != doc_cell.get("dimension"):
         return None
     return candidate
+
+
+def route_cells(source_a_pack: dict, source_b_index: dict) -> dict:
+    """Partition every Source-A cell into a matched bucket or a single-source
+    (unmatched) bucket via `match_cell` (Task 7; plan Notes
+    §Anti-fabrication invariant) — this is the routing seam Task 8
+    (classify matched pairs), Task 14 (high-alert surfacing), and Task 15
+    (single-source honesty output) build on.
+
+    Reads `source_a_pack["cells"]` (the declared Source-A pack shape,
+    plan Notes §Declared schemas). For each cell, `match_cell` returns
+    either the Source-B counterpart or `None`; a `None` result means NO
+    counterpart exists for that cell's (concept, period, dimension) triple
+    -> the cell is recorded unmatched and routed to single-source, never
+    paired with an unrelated fact. `citation.label` is never consulted here
+    (already true of `match_cell`).
+
+    Returns: {"matched": [(doc_cell, xbrl_fact), ...],
+    "single_source": [doc_cell, ...]} — plain data; no report-entry
+    shaping (classification, citations envelope) happens here, that is
+    later tasks' job.
+    """
+    matched: list[tuple[dict, dict]] = []
+    single_source: list[dict] = []
+    for cell in source_a_pack.get("cells", []):
+        fact = match_cell(cell, source_b_index)
+        if fact is None:
+            single_source.append(cell)
+        else:
+            matched.append((cell, fact))
+    return {"matched": matched, "single_source": single_source}
 
 
 def main() -> int:
