@@ -493,3 +493,128 @@ def test_fetch_sec_narrative_empty_selection_is_not_vacuously_failed():
     assert result["_status"] == "ok", (
         f"empty selection (requested=0) must not read as failed: {result}"
     )
+
+
+def test_fetch_xval_source_a_wraps_cells_envelope():
+    """Task 2: `_fetch_xval_source_a` selects the latest 10-K accession from
+    `sec_filings` rows, acquires it, and calls `extract_statement_cells` per
+    primary statement. `extract_statement_cells` returns a BARE cell list on
+    success -- this must be WRAPPED into the Source-A envelope
+    {accession, statement_name, cells} per statement, never passed through
+    bare. A statement whose extraction returns an error dict (StatementNotFound
+    surfaces this way, sec_edgar_client.py:1645) is a loud per-statement skip
+    recorded in the depth-1 status -- never a crash, never a fabricated
+    cells entry."""
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack_us  # noqa: E402
+    import sec_edgar_client  # noqa: E402
+
+    filings_rows = _synthetic_narrative_filings_rows()
+    latest_10k_accession = "0000320193-26-100001"  # the 10-K row above
+
+    bare_cells = [{"concept": "Revenues", "numeric_value": 100.0}]
+    stub_filing = mock.MagicMock(name="filing")
+
+    def _extract_side_effect(filing, statement_name):
+        assert filing is stub_filing, "extract_statement_cells must receive the acquired filing"
+        if statement_name == "IncomeStatement":
+            return {
+                "statement_name": statement_name,
+                "error": f"statement {statement_name!r} extraction failed: StatementNotFound",
+                "error_class": "statement_not_found",
+            }
+        return list(bare_cells)
+
+    with mock.patch.object(
+        sec_edgar_client, "_acquire_raw_filing", return_value=stub_filing
+    ) as mock_acquire, mock.patch.object(
+        sec_edgar_client, "extract_statement_cells", side_effect=_extract_side_effect
+    ):
+        result = pack_us._fetch_xval_source_a(filings_rows)
+
+    mock_acquire.assert_called_once_with(latest_10k_accession)
+
+    balance_entry = next(
+        s for s in result["statements"] if s["statement_name"] == "BalanceSheet"
+    )
+    assert balance_entry == {
+        "accession": latest_10k_accession,
+        "statement_name": "BalanceSheet",
+        "cells": bare_cells,
+    }, f"bare cell list must be WRAPPED into the envelope, not passed through: {balance_entry}"
+
+    assert result["requested"] == len(pack_us.XVAL_PRIMARY_STATEMENTS)
+    assert result["succeeded"] + result["failed"] == result["requested"]
+    assert any(
+        item.get("statement_name") == "IncomeStatement"
+        and item.get("error_class") == "statement_not_found"
+        for item in result["failed_items"]
+    ), f"IncomeStatement failure not recorded as a loud per-statement skip: {result['failed_items']}"
+    assert not any(s["statement_name"] == "IncomeStatement" for s in result["statements"]), (
+        "a failed statement must never appear as a fabricated cells entry"
+    )
+    assert result["_status"] == "partial", (
+        "one failed statement among several succeeding must read as partial, not ok/failed"
+    )
+
+
+def test_latest_10k_accession_multi_10k_tiebreak_by_filing_date():
+    """`_latest_10k_accession` must select the LATEST-FILED 10-K's
+    accession when `filings_rows` carries more than one 10-K (e.g. a
+    restated/amended-year overlap) -- max by `filingDate`, not first- or
+    last-in-list order."""
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack_us  # noqa: E402
+
+    rows = [
+        {"form": "10-K", "filingDate": "2024-10-25", "accessionNumber": "0000320193-24-000123"},
+        {"form": "10-K", "filingDate": "2025-10-31", "accessionNumber": "0000320193-25-000079"},
+        {"form": "10-K", "filingDate": "2023-10-27", "accessionNumber": "0000320193-23-000106"},
+        {"form": "10-Q", "filingDate": "2026-01-30", "accessionNumber": "0000320193-26-000001"},
+    ]
+
+    assert pack_us._latest_10k_accession(rows) == "0000320193-25-000079", (
+        "must pick the latest-filed 10-K by filingDate, not list order"
+    )
+
+
+def test_fetch_xval_source_a_no_10k_is_wholesale_failure_not_crash():
+    """When `filings_rows` has NO 10-K row, `_latest_10k_accession` returns
+    None -- `_acquire_raw_filing(None)` still returns a loud resolution-error
+    slot (never a crash, sec_edgar_client.py:906-911), and `_fetch_xval_source_a`
+    must read that as a WHOLESALE failure (`_status: "failed"`, every
+    statement recorded in `failed_items`) -- never a vacuous/silent success
+    with an empty `statements` list passed off as `_status: "ok"`."""
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack_us  # noqa: E402
+    import sec_edgar_client  # noqa: E402
+
+    filings_rows = [
+        {"form": "10-Q", "filingDate": "2026-01-30", "accessionNumber": "0000320193-26-000001"},
+        {"form": "8-K", "filingDate": "2026-02-02", "accessionNumber": "0000320193-26-000002"},
+    ]
+    acquire_error = {
+        "error": "SEC EDGAR filing acquisition failed: accession None did not resolve to a filing",
+        "error_class": "resolution",
+    }
+
+    with mock.patch.object(
+        sec_edgar_client, "_acquire_raw_filing", return_value=acquire_error
+    ) as mock_acquire:
+        result = pack_us._fetch_xval_source_a(filings_rows)
+
+    mock_acquire.assert_called_once_with(None)
+    assert result["statements"] == [], "no 10-K acquired must never fabricate a statements entry"
+    assert result["requested"] == len(pack_us.XVAL_PRIMARY_STATEMENTS)
+    assert result["succeeded"] == 0
+    assert result["failed"] == result["requested"]
+    assert len(result["failed_items"]) == result["requested"], (
+        "every primary statement must be recorded as a failed_items entry, one per statement"
+    )
+    assert all(item.get("error_class") == "resolution" for item in result["failed_items"])
+    assert result["_status"] == "failed", (
+        "no 10-K resolved must read as a wholesale failure, not a vacuous ok/partial"
+    )

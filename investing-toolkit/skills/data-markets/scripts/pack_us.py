@@ -697,6 +697,121 @@ def _fetch_sec_narrative(filings_rows: list[dict]) -> dict:
     }
 
 
+# The primary financial statements Source-A extracts cells from, per the
+# latest 10-K -- these are the `statement_name` values edgartools'
+# `get_statement`/`facts.to_dataframe()["statement_type"]` recognize. ALL
+# FOUR are live-confirmed (not merely API-familiarity assumed) by
+# test_data_markets_live.py::test_xval_primary_statements_names_live_confirmed
+# (2026-07-13, AAPL FY2025 10-K accession 0000320193-25-000079) -- that test
+# is the citation, not sec_edgar_client.py:1645's module-header note, which
+# only demonstrates BalanceSheet/IncomeStatement.
+XVAL_PRIMARY_STATEMENTS = (
+    "BalanceSheet", "IncomeStatement", "CashFlowStatement", "StatementOfEquity",
+)
+
+
+def _latest_10k_accession(filings_rows: list[dict]) -> str | None:
+    """Latest 10-K `accessionNumber` from already-fetched `sec_filings` rows
+    -- mirrors `sec_edgar_client._latest_filing`'s own form+filingDate
+    selection (sec_edgar_client.py:451), reused here rather than re-running
+    `select_narrative_filings` (which also selects 10-Q/8-K rows this
+    producer does not need)."""
+    rows = [r for r in filings_rows if r.get("form") == "10-K" and r.get("filingDate")]
+    if not rows:
+        return None
+    return max(rows, key=lambda r: r["filingDate"]).get("accessionNumber")
+
+
+def _fetch_xval_source_a(filings_rows: list[dict]) -> dict:
+    """Assemble the `xval_source_a` memo-feed contract (Task 2): the latest
+    10-K's primary financial-statement cells, one per
+    `XVAL_PRIMARY_STATEMENTS` entry, mirroring `_fetch_sec_narrative`'s own
+    depth-1 status discipline (:603) -- `requested`/`succeeded`/`failed`
+    reconcile by construction and `_status` (ok/partial/failed) is derived
+    from the counts, so completeness never requires walking into a nested
+    `statements` list.
+
+    `extract_statement_cells` returns a BARE `list[dict]` of cells on
+    success or a loud error `dict` on failure (`StatementNotFound` or an
+    unrecognized statement variant, sec_edgar_client.py:1645) -- the two
+    are discriminated via `isinstance(result, dict)`, the same
+    success/failure discriminator `_acquire_raw_filing`'s callers use. A
+    successful statement's bare list is WRAPPED into the Source-A pack
+    envelope `{accession, statement_name, cells}` (defusing the documented
+    envelope seam); a failed statement is recorded as a per-statement
+    entry in `failed_items`, never a crash and never a fabricated
+    `statements` entry.
+
+    A missing 10-K (no matching row in `filings_rows`) still reaches
+    `_acquire_raw_filing(None)`, which already returns a loud resolution
+    error slot for any accession it cannot resolve -- no separate guard
+    is needed here to avoid a crash.
+    """
+    if str(SCRIPT_DIR) not in sys.path:
+        sys.path.insert(0, str(SCRIPT_DIR))
+    # Lazy import: mirrors `_fetch_sec_narrative`'s own pattern above (keeps
+    # sec_edgar_client's top-level `import requests` off this module's
+    # import-time cost for other pack types).
+    from sec_edgar_client import _acquire_raw_filing, extract_statement_cells
+
+    requested = len(XVAL_PRIMARY_STATEMENTS)
+    accession = _latest_10k_accession(filings_rows)
+
+    _log("pack [xval source-a]", f"accession={accession}")
+    filing = _acquire_raw_filing(accession)
+    filing_error = filing if isinstance(filing, dict) and "error" in filing else None
+
+    statements_out: list[dict] = []
+    failed_items: list[dict] = []
+    succeeded = 0
+    failed = 0
+
+    for statement_name in XVAL_PRIMARY_STATEMENTS:
+        if filing_error is not None:
+            failed += 1
+            failed_items.append({
+                "accession": accession,
+                "statement_name": statement_name,
+                "error": filing_error.get("error"),
+                "error_class": filing_error.get("error_class", "acquisition_failed"),
+            })
+            continue
+
+        result = extract_statement_cells(filing, statement_name)
+        if isinstance(result, dict):
+            failed += 1
+            failed_items.append({
+                "accession": accession,
+                "statement_name": statement_name,
+                "error": result.get("error"),
+                "error_class": result.get("error_class", "statement_not_found"),
+            })
+            continue
+
+        succeeded += 1
+        statements_out.append({
+            "accession": accession,
+            "statement_name": statement_name,
+            "cells": result,
+        })
+
+    if requested > 0 and failed == requested:
+        status = "failed"
+    elif failed > 0:
+        status = "partial"
+    else:
+        status = "ok"
+
+    return {
+        "statements": statements_out,
+        "failed_items": failed_items,
+        "requested": requested,
+        "succeeded": succeeded,
+        "failed": failed,
+        "_status": status,
+    }
+
+
 def pack_memo_fetch(ticker: str) -> dict:
     """Heavy single-ticker bundle for equity memo: yfinance + SEC EDGAR."""
     _log("memo-fetch start", ticker)

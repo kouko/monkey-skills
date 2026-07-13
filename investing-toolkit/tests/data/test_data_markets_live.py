@@ -784,6 +784,58 @@ def test_extract_statement_cells_live_shape():
     )
 
 
+@pytest.mark.network
+def test_xval_primary_statements_names_live_confirmed():
+    """Pins that every `pack_us.XVAL_PRIMARY_STATEMENTS` entry is a REAL,
+    live-accepted edgartools `get_statement()` name -- not an assumed/
+    API-familiarity guess (code-quality-reviewer round-1 fatal: two of the
+    four names, `CashFlowStatement` + `StatementOfEquity`, had zero live
+    grounding in this repo before this test).
+
+    Live-probed 2026-07-13 against the same AAPL FY2025 10-K anchor as
+    `test_extract_statement_cells_live_shape` above (accession
+    0000320193-25-000079): all four resolve via `get_statement()` without
+    raising `StatementNotFound`, and `xbrl.facts.to_dataframe()["statement_type"]`
+    carries all four values verbatim -- `BalanceSheet` (80 rendered rows / 152
+    cells), `IncomeStatement` (50 rows / 132 cells), `CashFlowStatement` (38
+    rows / 85 cells), `StatementOfEquity` (33 rows / 25 cells, reachable via
+    edgartools' `.statement_of_equity()` accessor per `xbrl.statements`).
+    `StatementOfStockholdersEquity` / `StatementOfComprehensiveIncome` were
+    live-probed as candidate names and REJECTED (`StatementNotFound`, 0.10
+    confidence match) -- confirming the shipped tuple's four names are the
+    correct ones, not those plausible-looking alternates.
+
+    Reads `pack_us.XVAL_PRIMARY_STATEMENTS` directly (not a hardcoded
+    literal copy) so this test re-verifies whichever names are actually
+    shipped if the tuple changes later. Run live:
+      uv run --with pytest --with edgartools==5.42.0 --with 'pyyaml>=6.0' \
+        pytest investing-toolkit/tests/data/test_data_markets_live.py \
+        -k xval_primary_statements_names_live_confirmed -m network
+    """
+    import sys
+
+    import edgar
+
+    edgar.set_identity("kouko investing-toolkit noreply@anthropic.com")
+
+    if str(SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(SCRIPTS))
+    import pack_us
+    import sec_edgar_client
+
+    accession = "0000320193-25-000079"  # AAPL FY2025 10-K, same anchor as above
+    filing = edgar.get_by_accession_number(accession)
+    assert filing is not None, "known AAPL 10-K accession must resolve"
+
+    for statement_name in pack_us.XVAL_PRIMARY_STATEMENTS:
+        cells = sec_edgar_client.extract_statement_cells(filing, statement_name)
+        assert isinstance(cells, list) and cells, (
+            f"{statement_name!r} must be a REAL, live-accepted edgartools "
+            f"statement name yielding >=1 cell -- got a StatementNotFound "
+            f"error slot instead of a cell list: {cells!r}"
+        )
+
+
 # ---------------------------------------------------------------------------
 # JP — 7203 Toyota (yfinance + TDnet + EDINET + BOJ/e-Stat/ECB)
 # ---------------------------------------------------------------------------
