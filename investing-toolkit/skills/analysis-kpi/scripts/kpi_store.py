@@ -215,3 +215,43 @@ def append(point: dict) -> None:
 
     envelope["points"].append(point)
     _atomic_write(path, envelope)
+
+
+def _matching_points(company: str, kpi_id: str, period: str) -> list:
+    """Read-only: load the series file for (company, kpi_id) and return the
+    points matching `period`, or [] if the series file doesn't exist. Never
+    writes, mutates, or reorders the stored points.
+    """
+    path = _series_path(company, kpi_id)
+    if not path.exists():
+        return []
+    envelope = _load_series(path)
+    return [p for p in envelope["points"] if p.get("period") == period]
+
+
+def query_point_in_time(company: str, kpi_id: str, period: str, as_of_date: str):
+    """Return the record for (company, kpi_id, period) with the greatest
+    `as_of` that is `<= as_of_date`, or None if none qualify (including a
+    missing series file).
+
+    `as_of` values are ISO date strings (e.g. "2024-11-01"); ISO date
+    strings compare correctly under plain string `<=`/max(), so no date
+    parsing is needed here.
+    """
+    candidates = [
+        p for p in _matching_points(company, kpi_id, period)
+        if p.get("as_of", "") <= as_of_date
+    ]
+    if not candidates:
+        return None
+    return max(candidates, key=lambda p: p.get("as_of", ""))
+
+
+def query_latest(company: str, kpi_id: str, period: str):
+    """Return the record for (company, kpi_id, period) with the greatest
+    `as_of` overall, or None if the series has no matching record.
+    """
+    candidates = _matching_points(company, kpi_id, period)
+    if not candidates:
+        return None
+    return max(candidates, key=lambda p: p.get("as_of", ""))

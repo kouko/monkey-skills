@@ -275,3 +275,104 @@ def test_same_dedup_key_different_value_keeps_first(
     assert envelope["points"][0]["value"] == 96000, (
         "first-wins: the original value is kept; a correction needs a new as_of"
     )
+
+
+def test_point_in_time_excludes_later_recast(kpi_store_module, tmp_path, monkeypatch):
+    """A point-in-time query at a date BETWEEN an early point's as_of and a
+    later recast's as_of must return the EARLY point, not the recast — a
+    later restatement must never retroactively change what an earlier-dated
+    query sees (no look-ahead bias). A query dated BEFORE the earliest as_of
+    must return None (nothing qualifies yet).
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+
+    prov = {
+        "source_accession": "0000320193-24-000123",
+        "source_table_id": "ex99-1-operating-summary",
+        "source_cell_ref": "r5c2",
+    }
+    early = {
+        "company": "AAPL",
+        "kpi_id": "iphone_units",
+        "period": "FY2024",
+        "as_of": "2024-11-01",
+        "value": "A",
+        **prov,
+    }
+    recast = {
+        **early,
+        "as_of": "2025-02-15",
+        "value": "B",
+        "source_accession": "0000320193-25-000045",
+    }
+    kpi_store_module.append(early)
+    kpi_store_module.append(recast)
+
+    result = kpi_store_module.query_point_in_time(
+        "AAPL", "iphone_units", "FY2024", "2024-12-31"
+    )
+    assert result is not None and result["value"] == "A", (
+        "a query dated before the recast's as_of must see only the early point"
+    )
+
+    before_earliest = kpi_store_module.query_point_in_time(
+        "AAPL", "iphone_units", "FY2024", "2024-01-01"
+    )
+    assert before_earliest is None, (
+        "a query dated before ANY as_of must return None"
+    )
+
+    # Inclusive boundary: a query dated EXACTLY on an as_of returns that
+    # record (the `<=` contract) — a regression to `<` would break this while
+    # leaving the strictly-after/strictly-before cases above green.
+    on_early = kpi_store_module.query_point_in_time(
+        "AAPL", "iphone_units", "FY2024", "2024-11-01"
+    )
+    assert on_early is not None and on_early["value"] == "A", (
+        "as_of_date exactly on the early point's as_of must return it (<= is inclusive)"
+    )
+    on_recast = kpi_store_module.query_point_in_time(
+        "AAPL", "iphone_units", "FY2024", "2025-02-15"
+    )
+    assert on_recast is not None and on_recast["value"] == "B", (
+        "as_of_date exactly on the recast's as_of must return the recast"
+    )
+
+
+def test_latest_returns_greatest_asof(kpi_store_module, tmp_path, monkeypatch):
+    """query_latest returns the record with the greatest as_of overall for a
+    (company, kpi_id, period) — the later recast, not the early point.
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+
+    prov = {
+        "source_accession": "0000320193-24-000123",
+        "source_table_id": "ex99-1-operating-summary",
+        "source_cell_ref": "r5c2",
+    }
+    early = {
+        "company": "AAPL",
+        "kpi_id": "iphone_units",
+        "period": "FY2024",
+        "as_of": "2024-11-01",
+        "value": "A",
+        **prov,
+    }
+    recast = {
+        **early,
+        "as_of": "2025-02-15",
+        "value": "B",
+        "source_accession": "0000320193-25-000045",
+    }
+    kpi_store_module.append(early)
+    kpi_store_module.append(recast)
+
+    result = kpi_store_module.query_latest("AAPL", "iphone_units", "FY2024")
+    assert result is not None and result["value"] == "B", (
+        "query_latest must return the greatest-as_of record (the recast)"
+    )
+
+    # Symmetry with point-in-time: no matching series (or period) → None,
+    # not a raise.
+    assert kpi_store_module.query_latest("AAPL", "iphone_units", "FY1999") is None
+    assert kpi_store_module.query_latest("NOPE", "nope", "FY2024") is None
