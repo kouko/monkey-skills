@@ -129,16 +129,61 @@ def _atomic_write(path: Path, envelope: dict) -> None:
     tmp.rename(path)
 
 
+_REQUIRED_PROVENANCE_FIELDS = ("source_accession", "source_table_id", "source_cell_ref")
+
+
+def _require_provenance(point: dict) -> None:
+    """Reject a point missing any provenance field (absent/None/empty) —
+    fail loud BEFORE any file is touched, never write an unattributed record.
+    """
+    for field in _REQUIRED_PROVENANCE_FIELDS:
+        if not point.get(field):
+            raise ValueError(
+                f"kpi_store.append: point missing required provenance field "
+                f"{field!r} (absent, None, or empty) — rejected, nothing written"
+            )
+
+
+def _require_accession_derived_as_of(point: dict) -> None:
+    """Reject a point whose `as_of` is absent/empty, or explicitly flagged
+    wall-clock-derived — fail loud BEFORE any file is touched.
+
+    Wall-clock marker convention (pick-one, documented here): a point flags
+    itself wall-clock-derived by carrying `as_of_is_wallclock: True`. This
+    slice only validates the invariant; deriving `as_of` from an accession
+    is an upstream slice's job (plan Task 3 note).
+    """
+    if not point.get("as_of"):
+        raise ValueError(
+            "kpi_store.append: point missing required 'as_of' (absent, "
+            "None, or empty) — as_of must be accession-derived, rejected, "
+            "nothing written"
+        )
+    if point.get("as_of_is_wallclock"):
+        raise ValueError(
+            "kpi_store.append: point's 'as_of' is flagged "
+            "as_of_is_wallclock=True — as_of must be accession/disclosure-"
+            "derived, not wall-clock, rejected, nothing written"
+        )
+
+
 def append(point: dict) -> None:
     """Append one series-point to its file-per-series JSON, verbatim.
 
     A point is a dict keyed by `(company, kpi_id, period, as_of)` carrying
     `value` + provenance (`source_accession`, `source_table_id`,
     `source_cell_ref`) and optional `lineage`/`restates` (persisted as-is,
-    NOT interpreted this slice). This slice does no validation, dedup, or
-    query — those guards land in Tasks 2-7. The point is stored unchanged so
-    a later point-in-time query reads back exactly what was written.
+    NOT interpreted this slice). Preconditions — provenance completeness
+    and an accession-derived `as_of` (see `_require_accession_derived_as_of`
+    for the wall-clock marker convention) — are ALL checked BEFORE any file
+    is touched — a rejected point writes nothing, no partial state. This
+    slice does no dedup or query — those guards land in Tasks 4-7. The
+    point is stored unchanged so a later point-in-time query reads back
+    exactly what was written.
     """
+    _require_provenance(point)
+    _require_accession_derived_as_of(point)
+
     path = _series_path(point["company"], point["kpi_id"])
     envelope = _load_series(path)
     envelope["points"].append(point)

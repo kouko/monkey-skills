@@ -117,3 +117,78 @@ def test_distinct_series_never_share_a_file(kpi_store_module, tmp_path, monkeypa
         for f in series_files
     )
     assert stored_values == [1, 2]
+
+
+def test_append_rejects_missing_provenance(kpi_store_module, tmp_path, monkeypatch):
+    """A point missing (empty) `source_cell_ref` must raise loud and write
+    NOTHING — never an unattributed record slipping into the durable store.
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+
+    point = {
+        "company": "AAPL",
+        "kpi_id": "iphone_units",
+        "period": "FY2024",
+        "as_of": "2024-11-01",
+        "value": 231000000,
+        "source_accession": "0000320193-24-000123",
+        "source_table_id": "ex99-1-operating-summary",
+        "source_cell_ref": "",  # empty — must be rejected
+    }
+
+    with pytest.raises(ValueError, match="source_cell_ref"):
+        kpi_store_module.append(point)
+
+    assert list(tmp_path.rglob("*.json")) == [], (
+        "rejecting a point for missing provenance must write nothing"
+    )
+
+
+def test_append_rejects_wallclock_or_absent_as_of(kpi_store_module, tmp_path, monkeypatch):
+    """`as_of` must be accession/disclosure-derived, never wall-clock:
+
+    (a) an empty `as_of` is rejected loud, nothing written;
+    (b) a point explicitly flagged `as_of_is_wallclock: True` is rejected
+        loud, nothing written — even though `as_of` itself looks valid;
+    (c) a point with a valid accession-derived `as_of` (no wall-clock flag)
+        still appends normally — exactly one file, one point.
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+
+    prov = {
+        "source_accession": "0000320193-24-000123",
+        "source_table_id": "ex99-1-operating-summary",
+        "source_cell_ref": "r5c2",
+    }
+    base = {
+        "company": "AAPL",
+        "kpi_id": "iphone_units",
+        "period": "FY2024",
+        "value": 231000000,
+        **prov,
+    }
+
+    # (a) as_of absent/empty
+    point_no_asof = {**base, "as_of": ""}
+    with pytest.raises(ValueError, match="as_of"):
+        kpi_store_module.append(point_no_asof)
+    assert list(tmp_path.rglob("*.json")) == [], (
+        "rejecting a point for absent as_of must write nothing"
+    )
+
+    # (b) as_of present but explicitly wall-clock-derived
+    point_wallclock = {**base, "as_of": "2024-11-01", "as_of_is_wallclock": True}
+    with pytest.raises(ValueError, match="as_of"):
+        kpi_store_module.append(point_wallclock)
+    assert list(tmp_path.rglob("*.json")) == [], (
+        "rejecting a wall-clock-flagged as_of must write nothing"
+    )
+
+    # (c) valid accession-derived as_of still appends
+    point_valid = {**base, "as_of": "2024-11-01"}
+    kpi_store_module.append(point_valid)
+    series_files = list(tmp_path.rglob("*.json"))
+    assert len(series_files) == 1
+    envelope = json.loads(series_files[0].read_text(encoding="utf-8"))
+    assert len(envelope["points"]) == 1
+    assert envelope["points"][0] == point_valid
