@@ -5,6 +5,21 @@ All notable changes to the `domain-teams` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v5.7.1] — 2026-07-13
+
+### Changed
+
+- **skill-team §Top-Level Files** (`standards/file-conventions.md` +
+  `checklists/skill-completeness-checklist.md` CHK-SKL-012): sanction
+  `test-prompts.json` as an optional skill-top-level file. The
+  skill-refactor / skill-tuning shared schema
+  (`skill-dev-toolkit:skill-refactor/references/test-prompts-schema.md`)
+  mandates exactly this location and several plugins already follow it
+  (dev-workflow, skill-dev-toolkit, four-dx-coach); the first such file
+  in a structure-scanned plugin (loom-code writing-plans, PR #559)
+  exposed the checker/schema conflict. `scripts/check-skill-structure.py`
+  allowlist updated in the same commit.
+
 ## [v5.7.0] — 2026-07-12
 
 ### Added — investing-team verdict-layer defenses
