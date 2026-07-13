@@ -1,0 +1,3322 @@
+{
+  "accession": "0000320193-25-000079",
+  "statement_name": "BalanceSheet",
+  "cells": [
+    {
+      "concept": "us-gaap:AccountsReceivableNetCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "39777000000",
+      "numeric_value": 39777000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 30,
+        "col": "instant_2025-09-27",
+        "label": "Accounts receivable, net",
+        "context_ref": "c-20",
+        "fact_id": "f-163"
+      }
+    },
+    {
+      "concept": "us-gaap:AccountsReceivableNetCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "33410000000",
+      "numeric_value": 33410000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 30,
+        "col": "instant_2024-09-28",
+        "label": "Accounts receivable, net",
+        "context_ref": "c-21",
+        "fact_id": "f-164"
+      }
+    },
+    {
+      "concept": "us-gaap:NontradeReceivablesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "33180000000",
+      "numeric_value": 33180000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 31,
+        "col": "instant_2025-09-27",
+        "label": "Vendor non-trade receivables",
+        "context_ref": "c-20",
+        "fact_id": "f-165"
+      }
+    },
+    {
+      "concept": "us-gaap:NontradeReceivablesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "32833000000",
+      "numeric_value": 32833000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 31,
+        "col": "instant_2024-09-28",
+        "label": "Vendor non-trade receivables",
+        "context_ref": "c-21",
+        "fact_id": "f-166"
+      }
+    },
+    {
+      "concept": "us-gaap:InventoryNet",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "5718000000",
+      "numeric_value": 5718000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 32,
+        "col": "instant_2025-09-27",
+        "label": "Inventories",
+        "context_ref": "c-20",
+        "fact_id": "f-167"
+      }
+    },
+    {
+      "concept": "us-gaap:InventoryNet",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "7286000000",
+      "numeric_value": 7286000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 32,
+        "col": "instant_2024-09-28",
+        "label": "Inventories",
+        "context_ref": "c-21",
+        "fact_id": "f-168"
+      }
+    },
+    {
+      "concept": "us-gaap:OtherAssetsCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "14585000000",
+      "numeric_value": 14585000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 33,
+        "col": "instant_2025-09-27",
+        "label": "Other current assets",
+        "context_ref": "c-20",
+        "fact_id": "f-169"
+      }
+    },
+    {
+      "concept": "us-gaap:OtherAssetsCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "14287000000",
+      "numeric_value": 14287000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 33,
+        "col": "instant_2024-09-28",
+        "label": "Other current assets",
+        "context_ref": "c-21",
+        "fact_id": "f-170"
+      }
+    },
+    {
+      "concept": "us-gaap:AssetsCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "147957000000",
+      "numeric_value": 147957000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 34,
+        "col": "instant_2025-09-27",
+        "label": "Total current assets",
+        "context_ref": "c-20",
+        "fact_id": "f-171"
+      }
+    },
+    {
+      "concept": "us-gaap:AssetsCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "152987000000",
+      "numeric_value": 152987000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 34,
+        "col": "instant_2024-09-28",
+        "label": "Total current assets",
+        "context_ref": "c-21",
+        "fact_id": "f-172"
+      }
+    },
+    {
+      "concept": "us-gaap:AssetsNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "211284000000",
+      "numeric_value": 211284000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 51,
+        "col": "instant_2025-09-27",
+        "label": "Total non-current assets",
+        "context_ref": "c-20",
+        "fact_id": "f-179"
+      }
+    },
+    {
+      "concept": "us-gaap:AssetsNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "211993000000",
+      "numeric_value": 211993000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 51,
+        "col": "instant_2024-09-28",
+        "label": "Total non-current assets",
+        "context_ref": "c-21",
+        "fact_id": "f-180"
+      }
+    },
+    {
+      "concept": "us-gaap:Assets",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "359241000000",
+      "numeric_value": 359241000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 52,
+        "col": "instant_2025-09-27",
+        "label": "Total assets",
+        "context_ref": "c-20",
+        "fact_id": "f-181"
+      }
+    },
+    {
+      "concept": "us-gaap:Assets",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "364980000000",
+      "numeric_value": 364980000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 52,
+        "col": "instant_2024-09-28",
+        "label": "Total assets",
+        "context_ref": "c-21",
+        "fact_id": "f-182"
+      }
+    },
+    {
+      "concept": "us-gaap:AccountsPayableCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "69860000000",
+      "numeric_value": 69860000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 55,
+        "col": "instant_2025-09-27",
+        "label": "Accounts payable",
+        "context_ref": "c-20",
+        "fact_id": "f-183"
+      }
+    },
+    {
+      "concept": "us-gaap:AccountsPayableCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "68960000000",
+      "numeric_value": 68960000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 55,
+        "col": "instant_2024-09-28",
+        "label": "Accounts payable",
+        "context_ref": "c-21",
+        "fact_id": "f-184"
+      }
+    },
+    {
+      "concept": "us-gaap:ContractWithCustomerLiabilityCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "9055000000",
+      "numeric_value": 9055000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 57,
+        "col": "instant_2025-09-27",
+        "label": "Deferred revenue",
+        "context_ref": "c-20",
+        "fact_id": "f-187"
+      }
+    },
+    {
+      "concept": "us-gaap:ContractWithCustomerLiabilityCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "8249000000",
+      "numeric_value": 8249000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 57,
+        "col": "instant_2024-09-28",
+        "label": "Deferred revenue",
+        "context_ref": "c-21",
+        "fact_id": "f-188"
+      }
+    },
+    {
+      "concept": "us-gaap:CommercialPaper",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "7979000000",
+      "numeric_value": 7979000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 58,
+        "col": "instant_2025-09-27",
+        "label": "Commercial paper",
+        "context_ref": "c-20",
+        "fact_id": "f-189"
+      }
+    },
+    {
+      "concept": "us-gaap:CommercialPaper",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "9967000000",
+      "numeric_value": 9967000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 58,
+        "col": "instant_2024-09-28",
+        "label": "Commercial paper",
+        "context_ref": "c-21",
+        "fact_id": "f-190"
+      }
+    },
+    {
+      "concept": "us-gaap:LiabilitiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "165631000000",
+      "numeric_value": 165631000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 61,
+        "col": "instant_2025-09-27",
+        "label": "Total current liabilities",
+        "context_ref": "c-20",
+        "fact_id": "f-193"
+      }
+    },
+    {
+      "concept": "us-gaap:LiabilitiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "176392000000",
+      "numeric_value": 176392000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 61,
+        "col": "instant_2024-09-28",
+        "label": "Total current liabilities",
+        "context_ref": "c-21",
+        "fact_id": "f-194"
+      }
+    },
+    {
+      "concept": "us-gaap:OtherLiabilitiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "41549000000",
+      "numeric_value": 41549000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 64,
+        "col": "instant_2025-09-27",
+        "label": "Other non-current liabilities",
+        "context_ref": "c-20",
+        "fact_id": "f-197"
+      }
+    },
+    {
+      "concept": "us-gaap:OtherLiabilitiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "45888000000",
+      "numeric_value": 45888000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 64,
+        "col": "instant_2024-09-28",
+        "label": "Other non-current liabilities",
+        "context_ref": "c-21",
+        "fact_id": "f-198"
+      }
+    },
+    {
+      "concept": "us-gaap:LiabilitiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "119877000000",
+      "numeric_value": 119877000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 65,
+        "col": "instant_2025-09-27",
+        "label": "Total non-current liabilities",
+        "context_ref": "c-20",
+        "fact_id": "f-199"
+      }
+    },
+    {
+      "concept": "us-gaap:LiabilitiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "131638000000",
+      "numeric_value": 131638000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 65,
+        "col": "instant_2024-09-28",
+        "label": "Total non-current liabilities",
+        "context_ref": "c-21",
+        "fact_id": "f-200"
+      }
+    },
+    {
+      "concept": "us-gaap:Liabilities",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "285508000000",
+      "numeric_value": 285508000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 66,
+        "col": "instant_2025-09-27",
+        "label": "Total liabilities",
+        "context_ref": "c-20",
+        "fact_id": "f-201"
+      }
+    },
+    {
+      "concept": "us-gaap:Liabilities",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "308030000000",
+      "numeric_value": 308030000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 66,
+        "col": "instant_2024-09-28",
+        "label": "Total liabilities",
+        "context_ref": "c-21",
+        "fact_id": "f-202"
+      }
+    },
+    {
+      "concept": "us-gaap:CommonStockSharesIssued",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "14773260000",
+      "numeric_value": 14773260000.0,
+      "decimals": "-3",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 70,
+        "col": "instant_2025-09-27",
+        "label": "Common stock, shares issued (in shares)",
+        "context_ref": "c-20",
+        "fact_id": "f-209"
+      }
+    },
+    {
+      "concept": "us-gaap:CommonStockSharesOutstanding",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "14773260000",
+      "numeric_value": 14773260000.0,
+      "decimals": "-3",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 68,
+        "col": "instant_2025-09-27",
+        "label": "Common stock, shares outstanding (in shares)",
+        "context_ref": "c-20",
+        "fact_id": "f-210"
+      }
+    },
+    {
+      "concept": "us-gaap:CommonStockSharesIssued",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "15116786000",
+      "numeric_value": 15116786000.0,
+      "decimals": "-3",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 70,
+        "col": "instant_2024-09-28",
+        "label": "Common stock, shares issued (in shares)",
+        "context_ref": "c-21",
+        "fact_id": "f-211"
+      }
+    },
+    {
+      "concept": "us-gaap:CommonStockSharesOutstanding",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "15116786000",
+      "numeric_value": 15116786000.0,
+      "decimals": "-3",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 68,
+        "col": "instant_2024-09-28",
+        "label": "Common stock, shares outstanding (in shares)",
+        "context_ref": "c-21",
+        "fact_id": "f-212"
+      }
+    },
+    {
+      "concept": "us-gaap:CommonStocksIncludingAdditionalPaidInCapital",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "93568000000",
+      "numeric_value": 93568000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 72,
+        "col": "instant_2025-09-27",
+        "label": "Common stock and additional paid-in capital, $0.00001 par value: 50,400,000 shares authorized; 14,773,260 and 15,116,786 shares issued and outstanding, respectively",
+        "context_ref": "c-20",
+        "fact_id": "f-213"
+      }
+    },
+    {
+      "concept": "us-gaap:CommonStocksIncludingAdditionalPaidInCapital",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "83276000000",
+      "numeric_value": 83276000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 72,
+        "col": "instant_2024-09-28",
+        "label": "Common stock and additional paid-in capital, $0.00001 par value: 50,400,000 shares authorized; 14,773,260 and 15,116,786 shares issued and outstanding, respectively",
+        "context_ref": "c-21",
+        "fact_id": "f-214"
+      }
+    },
+    {
+      "concept": "us-gaap:RetainedEarningsAccumulatedDeficit",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "-14264000000",
+      "numeric_value": -14264000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 73,
+        "col": "instant_2025-09-27",
+        "label": "Accumulated deficit",
+        "context_ref": "c-20",
+        "fact_id": "f-215"
+      }
+    },
+    {
+      "concept": "us-gaap:RetainedEarningsAccumulatedDeficit",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "-19154000000",
+      "numeric_value": -19154000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 73,
+        "col": "instant_2024-09-28",
+        "label": "Accumulated deficit",
+        "context_ref": "c-21",
+        "fact_id": "f-216"
+      }
+    },
+    {
+      "concept": "us-gaap:AccumulatedOtherComprehensiveIncomeLossNetOfTax",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "-5571000000",
+      "numeric_value": -5571000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 74,
+        "col": "instant_2025-09-27",
+        "label": "Accumulated other comprehensive loss",
+        "context_ref": "c-20",
+        "fact_id": "f-217"
+      }
+    },
+    {
+      "concept": "us-gaap:AccumulatedOtherComprehensiveIncomeLossNetOfTax",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "-7172000000",
+      "numeric_value": -7172000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 74,
+        "col": "instant_2024-09-28",
+        "label": "Accumulated other comprehensive loss",
+        "context_ref": "c-21",
+        "fact_id": "f-218"
+      }
+    },
+    {
+      "concept": "us-gaap:LiabilitiesAndStockholdersEquity",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "359241000000",
+      "numeric_value": 359241000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 79,
+        "col": "instant_2025-09-27",
+        "label": "Total liabilities and shareholders’ equity",
+        "context_ref": "c-20",
+        "fact_id": "f-221"
+      }
+    },
+    {
+      "concept": "us-gaap:LiabilitiesAndStockholdersEquity",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "364980000000",
+      "numeric_value": 364980000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 79,
+        "col": "instant_2024-09-28",
+        "label": "Total liabilities and shareholders’ equity",
+        "context_ref": "c-21",
+        "fact_id": "f-222"
+      }
+    },
+    {
+      "concept": "us-gaap:StockholdersEquity",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "56950000000",
+      "numeric_value": 56950000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 75,
+        "col": "instant_2024-09-28",
+        "label": "Total shareholders’ equity",
+        "context_ref": "c-21",
+        "fact_id": "f-220"
+      }
+    },
+    {
+      "concept": "us-gaap:StockholdersEquity",
+      "period": {
+        "type": "instant",
+        "instant": "2022-09-24"
+      },
+      "dimension": null,
+      "value_displayed": "50672000000",
+      "numeric_value": 50672000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 75,
+        "col": "instant_2022-09-24",
+        "label": "Total shareholders’ equity",
+        "context_ref": "c-23",
+        "fact_id": "f-225"
+      }
+    },
+    {
+      "concept": "us-gaap:StockholdersEquity",
+      "period": {
+        "type": "instant",
+        "instant": "2022-09-24"
+      },
+      "dimension": {
+        "axis": "us-gaap:StatementEquityComponentsAxis",
+        "member": "us-gaap:CommonStockIncludingAdditionalPaidInCapitalMember"
+      },
+      "value_displayed": "64849000000",
+      "numeric_value": 64849000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 75,
+        "col": "instant_2022-09-24",
+        "label": "Common stock and additional paid-in capital",
+        "context_ref": "c-26",
+        "fact_id": "f-228"
+      }
+    },
+    {
+      "concept": "us-gaap:StockholdersEquity",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:StatementEquityComponentsAxis",
+        "member": "us-gaap:CommonStockIncludingAdditionalPaidInCapitalMember"
+      },
+      "value_displayed": "93568000000",
+      "numeric_value": 93568000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 75,
+        "col": "instant_2025-09-27",
+        "label": "Common stock and additional paid-in capital",
+        "context_ref": "c-30",
+        "fact_id": "f-238"
+      }
+    },
+    {
+      "concept": "us-gaap:StockholdersEquity",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:StatementEquityComponentsAxis",
+        "member": "us-gaap:CommonStockIncludingAdditionalPaidInCapitalMember"
+      },
+      "value_displayed": "83276000000",
+      "numeric_value": 83276000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 75,
+        "col": "instant_2024-09-28",
+        "label": "Common stock and additional paid-in capital",
+        "context_ref": "c-24",
+        "fact_id": "f-226"
+      }
+    },
+    {
+      "concept": "us-gaap:StockholdersEquity",
+      "period": {
+        "type": "instant",
+        "instant": "2023-09-30"
+      },
+      "dimension": {
+        "axis": "us-gaap:StatementEquityComponentsAxis",
+        "member": "us-gaap:CommonStockIncludingAdditionalPaidInCapitalMember"
+      },
+      "value_displayed": "73812000000",
+      "numeric_value": 73812000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 75,
+        "col": "instant_2023-09-30",
+        "label": "Common stock and additional paid-in capital",
+        "context_ref": "c-25",
+        "fact_id": "f-227"
+      }
+    },
+    {
+      "concept": "us-gaap:StockholdersEquity",
+      "period": {
+        "type": "instant",
+        "instant": "2022-09-24"
+      },
+      "dimension": {
+        "axis": "us-gaap:StatementEquityComponentsAxis",
+        "member": "us-gaap:RetainedEarningsMember"
+      },
+      "value_displayed": "-3068000000",
+      "numeric_value": -3068000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 75,
+        "col": "instant_2022-09-24",
+        "label": "Retained earnings/(Accumulated deficit)",
+        "context_ref": "c-33",
+        "fact_id": "f-243"
+      }
+    },
+    {
+      "concept": "us-gaap:StockholdersEquity",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:StatementEquityComponentsAxis",
+        "member": "us-gaap:RetainedEarningsMember"
+      },
+      "value_displayed": "-14264000000",
+      "numeric_value": -14264000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 75,
+        "col": "instant_2025-09-27",
+        "label": "Retained earnings/(Accumulated deficit)",
+        "context_ref": "c-37",
+        "fact_id": "f-256"
+      }
+    },
+    {
+      "concept": "us-gaap:StockholdersEquity",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:StatementEquityComponentsAxis",
+        "member": "us-gaap:RetainedEarningsMember"
+      },
+      "value_displayed": "-19154000000",
+      "numeric_value": -19154000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 75,
+        "col": "instant_2024-09-28",
+        "label": "Retained earnings/(Accumulated deficit)",
+        "context_ref": "c-31",
+        "fact_id": "f-241"
+      }
+    },
+    {
+      "concept": "us-gaap:StockholdersEquity",
+      "period": {
+        "type": "instant",
+        "instant": "2023-09-30"
+      },
+      "dimension": {
+        "axis": "us-gaap:StatementEquityComponentsAxis",
+        "member": "us-gaap:RetainedEarningsMember"
+      },
+      "value_displayed": "-214000000",
+      "numeric_value": -214000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 75,
+        "col": "instant_2023-09-30",
+        "label": "Retained earnings/(Accumulated deficit)",
+        "context_ref": "c-32",
+        "fact_id": "f-242"
+      }
+    },
+    {
+      "concept": "us-gaap:StockholdersEquity",
+      "period": {
+        "type": "instant",
+        "instant": "2022-09-24"
+      },
+      "dimension": {
+        "axis": "us-gaap:StatementEquityComponentsAxis",
+        "member": "us-gaap:AccumulatedOtherComprehensiveIncomeMember"
+      },
+      "value_displayed": "-11109000000",
+      "numeric_value": -11109000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 75,
+        "col": "instant_2022-09-24",
+        "label": "Accumulated other comprehensive income/(loss)",
+        "context_ref": "c-40",
+        "fact_id": "f-261"
+      }
+    },
+    {
+      "concept": "us-gaap:StockholdersEquity",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:StatementEquityComponentsAxis",
+        "member": "us-gaap:AccumulatedOtherComprehensiveIncomeMember"
+      },
+      "value_displayed": "-5571000000",
+      "numeric_value": -5571000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 75,
+        "col": "instant_2025-09-27",
+        "label": "Accumulated other comprehensive income/(loss)",
+        "context_ref": "c-44",
+        "fact_id": "f-265"
+      }
+    },
+    {
+      "concept": "us-gaap:StockholdersEquity",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:StatementEquityComponentsAxis",
+        "member": "us-gaap:AccumulatedOtherComprehensiveIncomeMember"
+      },
+      "value_displayed": "-7172000000",
+      "numeric_value": -7172000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 75,
+        "col": "instant_2024-09-28",
+        "label": "Accumulated other comprehensive income/(loss)",
+        "context_ref": "c-38",
+        "fact_id": "f-259"
+      }
+    },
+    {
+      "concept": "us-gaap:StockholdersEquity",
+      "period": {
+        "type": "instant",
+        "instant": "2023-09-30"
+      },
+      "dimension": {
+        "axis": "us-gaap:StatementEquityComponentsAxis",
+        "member": "us-gaap:AccumulatedOtherComprehensiveIncomeMember"
+      },
+      "value_displayed": "-11452000000",
+      "numeric_value": -11452000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 75,
+        "col": "instant_2023-09-30",
+        "label": "Accumulated other comprehensive income/(loss)",
+        "context_ref": "c-39",
+        "fact_id": "f-260"
+      }
+    },
+    {
+      "concept": "us-gaap:StockholdersEquity",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "73733000000",
+      "numeric_value": 73733000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 75,
+        "col": "instant_2025-09-27",
+        "label": "Total shareholders’ equity",
+        "context_ref": "c-20",
+        "fact_id": "f-219"
+      }
+    },
+    {
+      "concept": "us-gaap:StockholdersEquity",
+      "period": {
+        "type": "instant",
+        "instant": "2023-09-30"
+      },
+      "dimension": null,
+      "value_displayed": "62146000000",
+      "numeric_value": 62146000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 75,
+        "col": "instant_2023-09-30",
+        "label": "Total shareholders’ equity",
+        "context_ref": "c-22",
+        "fact_id": "f-224"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FinancialInstrumentAxis",
+        "member": "us-gaap:CashMember"
+      },
+      "value_displayed": "28267000000",
+      "numeric_value": 28267000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2025-09-27",
+        "label": "Cash",
+        "context_ref": "c-62",
+        "fact_id": "f-433"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel1Member"
+      },
+      "value_displayed": "5272000000",
+      "numeric_value": 5272000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2025-09-27",
+        "label": "Level 1",
+        "context_ref": "c-63",
+        "fact_id": "f-438"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel1Member"
+      },
+      "value_displayed": "0",
+      "numeric_value": 0.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2025-09-27",
+        "label": "Level 1",
+        "context_ref": "c-63",
+        "fact_id": "f-439"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel1Member"
+      },
+      "value_displayed": "0",
+      "numeric_value": 0.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2025-09-27",
+        "label": "Level 1",
+        "context_ref": "c-63",
+        "fact_id": "f-440"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel1Member"
+      },
+      "value_displayed": "0",
+      "numeric_value": 0.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2025-09-27",
+        "label": "Level 1",
+        "context_ref": "c-64",
+        "fact_id": "f-445"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel1Member"
+      },
+      "value_displayed": "854000000",
+      "numeric_value": 854000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2025-09-27",
+        "label": "Level 1",
+        "context_ref": "c-64",
+        "fact_id": "f-446"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel1Member"
+      },
+      "value_displayed": "0",
+      "numeric_value": 0.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2025-09-27",
+        "label": "Level 1",
+        "context_ref": "c-64",
+        "fact_id": "f-447"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel1Member"
+      },
+      "value_displayed": "5272000000",
+      "numeric_value": 5272000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2025-09-27",
+        "label": "Level 1",
+        "context_ref": "c-65",
+        "fact_id": "f-452"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel1Member"
+      },
+      "value_displayed": "854000000",
+      "numeric_value": 854000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2025-09-27",
+        "label": "Level 1",
+        "context_ref": "c-65",
+        "fact_id": "f-453"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel1Member"
+      },
+      "value_displayed": "0",
+      "numeric_value": 0.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2025-09-27",
+        "label": "Level 1",
+        "context_ref": "c-65",
+        "fact_id": "f-454"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "1190000000",
+      "numeric_value": 1190000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-66",
+        "fact_id": "f-459"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "3712000000",
+      "numeric_value": 3712000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-66",
+        "fact_id": "f-460"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "10946000000",
+      "numeric_value": 10946000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-66",
+        "fact_id": "f-461"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "251000000",
+      "numeric_value": 251000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-67",
+        "fact_id": "f-466"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "2456000000",
+      "numeric_value": 2456000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-67",
+        "fact_id": "f-467"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "2413000000",
+      "numeric_value": 2413000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-67",
+        "fact_id": "f-468"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "0",
+      "numeric_value": 0.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-68",
+        "fact_id": "f-473"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "855000000",
+      "numeric_value": 855000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-68",
+        "fact_id": "f-474"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "5418000000",
+      "numeric_value": 5418000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-68",
+        "fact_id": "f-475"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "904000000",
+      "numeric_value": 904000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-69",
+        "fact_id": "f-480"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "0",
+      "numeric_value": 0.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-69",
+        "fact_id": "f-481"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "13000000",
+      "numeric_value": 13000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-69",
+        "fact_id": "f-482"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "50000000",
+      "numeric_value": 50000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-70",
+        "fact_id": "f-487"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "50000000",
+      "numeric_value": 50000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-70",
+        "fact_id": "f-488"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "0",
+      "numeric_value": 0.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-70",
+        "fact_id": "f-489"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "0",
+      "numeric_value": 0.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-71",
+        "fact_id": "f-494"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "10623000000",
+      "numeric_value": 10623000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-71",
+        "fact_id": "f-495"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "35937000000",
+      "numeric_value": 35937000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-71",
+        "fact_id": "f-496"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "0",
+      "numeric_value": 0.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-72",
+        "fact_id": "f-501"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "119000000",
+      "numeric_value": 119000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-72",
+        "fact_id": "f-502"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "86000000",
+      "numeric_value": 86000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-72",
+        "fact_id": "f-503"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "0",
+      "numeric_value": 0.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-73",
+        "fact_id": "f-508"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "94000000",
+      "numeric_value": 94000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-73",
+        "fact_id": "f-509"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "22910000000",
+      "numeric_value": 22910000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-73",
+        "fact_id": "f-510"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "2395000000",
+      "numeric_value": 2395000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-74",
+        "fact_id": "f-515"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "17909000000",
+      "numeric_value": 17909000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-74",
+        "fact_id": "f-516"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "77723000000",
+      "numeric_value": 77723000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2025-09-27",
+        "label": "Level 2",
+        "context_ref": "c-74",
+        "fact_id": "f-517"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "35934000000",
+      "numeric_value": 35934000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2025-09-27",
+        "label": "Cash and cash equivalents",
+        "context_ref": "c-20",
+        "fact_id": "f-159"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "18763000000",
+      "numeric_value": 18763000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2025-09-27",
+        "label": "Marketable securities",
+        "context_ref": "c-20",
+        "fact_id": "f-161"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "77723000000",
+      "numeric_value": 77723000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2025-09-27",
+        "label": "Marketable securities",
+        "context_ref": "c-20",
+        "fact_id": "f-173"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FinancialInstrumentAxis",
+        "member": "us-gaap:CashMember"
+      },
+      "value_displayed": "27199000000",
+      "numeric_value": 27199000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2024-09-28",
+        "label": "Cash",
+        "context_ref": "c-75",
+        "fact_id": "f-527"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel1Member"
+      },
+      "value_displayed": "778000000",
+      "numeric_value": 778000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2024-09-28",
+        "label": "Level 1",
+        "context_ref": "c-76",
+        "fact_id": "f-532"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel1Member"
+      },
+      "value_displayed": "0",
+      "numeric_value": 0.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2024-09-28",
+        "label": "Level 1",
+        "context_ref": "c-76",
+        "fact_id": "f-533"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel1Member"
+      },
+      "value_displayed": "0",
+      "numeric_value": 0.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2024-09-28",
+        "label": "Level 1",
+        "context_ref": "c-76",
+        "fact_id": "f-534"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel1Member"
+      },
+      "value_displayed": "0",
+      "numeric_value": 0.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2024-09-28",
+        "label": "Level 1",
+        "context_ref": "c-77",
+        "fact_id": "f-539"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel1Member"
+      },
+      "value_displayed": "617000000",
+      "numeric_value": 617000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2024-09-28",
+        "label": "Level 1",
+        "context_ref": "c-77",
+        "fact_id": "f-540"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel1Member"
+      },
+      "value_displayed": "0",
+      "numeric_value": 0.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2024-09-28",
+        "label": "Level 1",
+        "context_ref": "c-77",
+        "fact_id": "f-541"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel1Member"
+      },
+      "value_displayed": "778000000",
+      "numeric_value": 778000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2024-09-28",
+        "label": "Level 1",
+        "context_ref": "c-78",
+        "fact_id": "f-546"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel1Member"
+      },
+      "value_displayed": "617000000",
+      "numeric_value": 617000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2024-09-28",
+        "label": "Level 1",
+        "context_ref": "c-78",
+        "fact_id": "f-547"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel1Member"
+      },
+      "value_displayed": "0",
+      "numeric_value": 0.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2024-09-28",
+        "label": "Level 1",
+        "context_ref": "c-78",
+        "fact_id": "f-548"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "212000000",
+      "numeric_value": 212000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-79",
+        "fact_id": "f-553"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "4087000000",
+      "numeric_value": 4087000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-79",
+        "fact_id": "f-554"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "11380000000",
+      "numeric_value": 11380000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-79",
+        "fact_id": "f-555"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "155000000",
+      "numeric_value": 155000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-80",
+        "fact_id": "f-560"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "703000000",
+      "numeric_value": 703000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-80",
+        "fact_id": "f-561"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "4301000000",
+      "numeric_value": 4301000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-80",
+        "fact_id": "f-562"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "1158000000",
+      "numeric_value": 1158000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-81",
+        "fact_id": "f-567"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "10810000000",
+      "numeric_value": 10810000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-81",
+        "fact_id": "f-568"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "5600000000",
+      "numeric_value": 5600000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-81",
+        "fact_id": "f-569"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "387000000",
+      "numeric_value": 387000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-82",
+        "fact_id": "f-574"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "478000000",
+      "numeric_value": 478000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-82",
+        "fact_id": "f-575"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "8000000",
+      "numeric_value": 8000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-82",
+        "fact_id": "f-576"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "28000000",
+      "numeric_value": 28000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-83",
+        "fact_id": "f-581"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "1038000000",
+      "numeric_value": 1038000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-83",
+        "fact_id": "f-582"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "0",
+      "numeric_value": 0.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-83",
+        "fact_id": "f-583"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "26000000",
+      "numeric_value": 26000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-84",
+        "fact_id": "f-588"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "16027000000",
+      "numeric_value": 16027000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-84",
+        "fact_id": "f-589"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "47886000000",
+      "numeric_value": 47886000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-84",
+        "fact_id": "f-590"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "0",
+      "numeric_value": 0.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-85",
+        "fact_id": "f-595"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "190000000",
+      "numeric_value": 190000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-85",
+        "fact_id": "f-596"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "215000000",
+      "numeric_value": 215000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-85",
+        "fact_id": "f-597"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "0",
+      "numeric_value": 0.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-86",
+        "fact_id": "f-602"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "1278000000",
+      "numeric_value": 1278000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-86",
+        "fact_id": "f-603"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "22089000000",
+      "numeric_value": 22089000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-86",
+        "fact_id": "f-604"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "1966000000",
+      "numeric_value": 1966000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-87",
+        "fact_id": "f-609"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "34611000000",
+      "numeric_value": 34611000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-87",
+        "fact_id": "f-610"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:FairValueByFairValueHierarchyLevelAxis",
+        "member": "us-gaap:FairValueInputsLevel2Member"
+      },
+      "value_displayed": "91479000000",
+      "numeric_value": 91479000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2024-09-28",
+        "label": "Level 2",
+        "context_ref": "c-87",
+        "fact_id": "f-611"
+      }
+    },
+    {
+      "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "29943000000",
+      "numeric_value": 29943000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2024-09-28",
+        "label": "Cash and cash equivalents",
+        "context_ref": "c-21",
+        "fact_id": "f-160"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "35228000000",
+      "numeric_value": 35228000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 17,
+        "col": "instant_2024-09-28",
+        "label": "Marketable securities",
+        "context_ref": "c-21",
+        "fact_id": "f-162"
+      }
+    },
+    {
+      "concept": "us-gaap:MarketableSecuritiesNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "91479000000",
+      "numeric_value": 91479000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 36,
+        "col": "instant_2024-09-28",
+        "label": "Marketable securities",
+        "context_ref": "c-21",
+        "fact_id": "f-174"
+      }
+    },
+    {
+      "concept": "us-gaap:PropertyPlantAndEquipmentNet",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "49834000000",
+      "numeric_value": 49834000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 49,
+        "col": "instant_2025-09-27",
+        "label": "Property, plant and equipment, net",
+        "context_ref": "c-20",
+        "fact_id": "f-175"
+      }
+    },
+    {
+      "concept": "us-gaap:PropertyPlantAndEquipmentNet",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "45680000000",
+      "numeric_value": 45680000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 49,
+        "col": "instant_2024-09-28",
+        "label": "Property, plant and equipment, net",
+        "context_ref": "c-21",
+        "fact_id": "f-176"
+      }
+    },
+    {
+      "concept": "us-gaap:OtherAssetsNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "83727000000",
+      "numeric_value": 83727000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 50,
+        "col": "instant_2025-09-27",
+        "label": "Other non-current assets",
+        "context_ref": "c-20",
+        "fact_id": "f-177"
+      }
+    },
+    {
+      "concept": "us-gaap:OtherAssetsNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "74834000000",
+      "numeric_value": 74834000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 50,
+        "col": "instant_2024-09-28",
+        "label": "Other non-current assets",
+        "context_ref": "c-21",
+        "fact_id": "f-178"
+      }
+    },
+    {
+      "concept": "us-gaap:OtherLiabilitiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "66387000000",
+      "numeric_value": 66387000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 56,
+        "col": "instant_2025-09-27",
+        "label": "Other current liabilities",
+        "context_ref": "c-20",
+        "fact_id": "f-185"
+      }
+    },
+    {
+      "concept": "us-gaap:OtherLiabilitiesCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "78304000000",
+      "numeric_value": 78304000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 56,
+        "col": "instant_2024-09-28",
+        "label": "Other current liabilities",
+        "context_ref": "c-21",
+        "fact_id": "f-186"
+      }
+    },
+    {
+      "concept": "us-gaap:CommercialPaper",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:ShortTermDebtTypeAxis",
+        "member": "us-gaap:CommercialPaperMember"
+      },
+      "value_displayed": "8000000000.0",
+      "numeric_value": 8000000000.0,
+      "decimals": "-8",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 58,
+        "col": "instant_2025-09-27",
+        "label": "Commercial paper",
+        "context_ref": "c-120",
+        "fact_id": "f-894"
+      }
+    },
+    {
+      "concept": "us-gaap:CommercialPaper",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:ShortTermDebtTypeAxis",
+        "member": "us-gaap:CommercialPaperMember"
+      },
+      "value_displayed": "10000000000.0",
+      "numeric_value": 10000000000.0,
+      "decimals": "-8",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 58,
+        "col": "instant_2024-09-28",
+        "label": "Commercial paper",
+        "context_ref": "c-121",
+        "fact_id": "f-895"
+      }
+    },
+    {
+      "concept": "us-gaap:LongTermDebtCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "12350000000",
+      "numeric_value": 12350000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 60,
+        "col": "instant_2025-09-27",
+        "label": "Term debt",
+        "context_ref": "c-20",
+        "fact_id": "f-191"
+      }
+    },
+    {
+      "concept": "us-gaap:LongTermDebtCurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "10912000000",
+      "numeric_value": 10912000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 60,
+        "col": "instant_2024-09-28",
+        "label": "Term debt",
+        "context_ref": "c-21",
+        "fact_id": "f-192"
+      }
+    },
+    {
+      "concept": "us-gaap:LongTermDebtNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": null,
+      "value_displayed": "78328000000",
+      "numeric_value": 78328000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 63,
+        "col": "instant_2025-09-27",
+        "label": "Term debt",
+        "context_ref": "c-20",
+        "fact_id": "f-195"
+      }
+    },
+    {
+      "concept": "us-gaap:LongTermDebtNoncurrent",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": null,
+      "value_displayed": "85750000000",
+      "numeric_value": 85750000000.0,
+      "decimals": "-6",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 63,
+        "col": "instant_2024-09-28",
+        "label": "Term debt",
+        "context_ref": "c-21",
+        "fact_id": "f-196"
+      }
+    },
+    {
+      "concept": "us-gaap:CommonStockSharesOutstanding",
+      "period": {
+        "type": "instant",
+        "instant": "2022-09-24"
+      },
+      "dimension": {
+        "axis": "us-gaap:StatementEquityComponentsAxis",
+        "member": "us-gaap:CommonStockMember"
+      },
+      "value_displayed": "15943425000",
+      "numeric_value": 15943425000.0,
+      "decimals": "-3",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 68,
+        "col": "instant_2022-09-24",
+        "label": "Common Stock, $0.00001 par value per share",
+        "context_ref": "c-137",
+        "fact_id": "f-962"
+      }
+    },
+    {
+      "concept": "us-gaap:CommonStockSharesOutstanding",
+      "period": {
+        "type": "instant",
+        "instant": "2025-09-27"
+      },
+      "dimension": {
+        "axis": "us-gaap:StatementEquityComponentsAxis",
+        "member": "us-gaap:CommonStockMember"
+      },
+      "value_displayed": "14773260000",
+      "numeric_value": 14773260000.0,
+      "decimals": "-3",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 68,
+        "col": "instant_2025-09-27",
+        "label": "Common Stock, $0.00001 par value per share",
+        "context_ref": "c-141",
+        "fact_id": "f-969"
+      }
+    },
+    {
+      "concept": "us-gaap:CommonStockSharesOutstanding",
+      "period": {
+        "type": "instant",
+        "instant": "2024-09-28"
+      },
+      "dimension": {
+        "axis": "us-gaap:StatementEquityComponentsAxis",
+        "member": "us-gaap:CommonStockMember"
+      },
+      "value_displayed": "15116786000",
+      "numeric_value": 15116786000.0,
+      "decimals": "-3",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 68,
+        "col": "instant_2024-09-28",
+        "label": "Common Stock, $0.00001 par value per share",
+        "context_ref": "c-135",
+        "fact_id": "f-960"
+      }
+    },
+    {
+      "concept": "us-gaap:CommonStockSharesOutstanding",
+      "period": {
+        "type": "instant",
+        "instant": "2023-09-30"
+      },
+      "dimension": {
+        "axis": "us-gaap:StatementEquityComponentsAxis",
+        "member": "us-gaap:CommonStockMember"
+      },
+      "value_displayed": "15550061000",
+      "numeric_value": 15550061000.0,
+      "decimals": "-3",
+      "citation": {
+        "accession": "0000320193-25-000079",
+        "statement_name": "BalanceSheet",
+        "row": 68,
+        "col": "instant_2023-09-30",
+        "label": "Common Stock, $0.00001 par value per share",
+        "context_ref": "c-136",
+        "fact_id": "f-961"
+      }
+    }
+  ]
+}

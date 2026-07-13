@@ -1577,6 +1577,167 @@ def action_narrative(accession: str) -> dict:
     return res
 
 # ---------------------------------------------------------------------------
+# Source A: statement-cell extraction (edgartools XBRL statement API)
+# ---------------------------------------------------------------------------
+# Live shape captured 2026-07-13 (AAPL FY2025 10-K, accession
+# 0000320193-25-000079; anchored by test_data_markets_live.py
+# ::test_extract_statement_cells_live_shape):
+#   filing.xbrl().get_statement(name) -> list[dict] of RENDERED rows, one per
+#     line item, in table row order; each row carries `concept` (underscore
+#     form, e.g. "us-gaap_CashAndCashEquivalentsAtCarryingValue") and
+#     `values`/`decimals` dicts keyed by a `period_key` (e.g.
+#     "instant_2025-09-27"). Raises `StatementNotFound` on an absent/
+#     unrecognized statement (Task 2 wraps this; not handled here).
+#   filing.xbrl().facts.to_dataframe() -> per-CELL fact table (~1044x55 for
+#     an AAPL 10-K); columns read here: `concept` (COLON form, e.g.
+#     "us-gaap:CashAndCashEquivalentsAtCarryingValue"), `statement_type`
+#     (matches the `get_statement` name argument verbatim, e.g.
+#     "BalanceSheet"), `context_ref`/`fact_id` (citation), `value` (str) /
+#     `numeric_value` (float) / `decimals` (str), `period_type`
+#     ("instant"|"duration") + `period_instant`/`period_start`/`period_end`,
+#     `period_key` (the join key back to a rendered row's `values`/`decimals`
+#     dict — reused here as the cell's `col`), `is_dimensioned` (bool) +
+#     `dimension`/`member` (colon form, e.g. "srt:ProductOrServiceAxis" /
+#     "aapl:IPhoneMember"), `label`. A live probe found every BalanceSheet
+#     fact's colon-concept, with `:` -> `_`, resolves to a `get_statement` row
+#     (0/154 misses) — the join this extractor relies on.
+# DEAD TRAPS (NOT-EXPOSED on 5.42.0) — do NOT use: filing.xbrl().instance,
+# Company(...).financials (returns None).
+
+
+def _is_nan(value: object) -> bool:
+    """True for a pandas/NumPy float NaN (the fact-table's null marker) —
+    NaN is the only float that is not equal to itself, so this needs neither
+    a ``math`` nor a ``pandas`` import."""
+    return isinstance(value, float) and value != value
+
+
+def _statement_row_index(rendered_rows: list[dict]) -> dict[str, int]:
+    """Map each rendered row's underscore-form `concept` to its FIRST row
+    index in `get_statement`'s row-ordered list — the doc-table's own row
+    position, reused as a cell citation's `row`."""
+    index: dict[str, int] = {}
+    for i, row in enumerate(rendered_rows):
+        index.setdefault(row.get("concept"), i)
+    return index
+
+
+def extract_statement_cells(filing, statement_name: str) -> list[dict]:
+    """Extract a primary financial-statement table's cells from a filing's
+    REAL XBRL statement data — NEVER free-text / regex the document body.
+
+    Combines two edgartools 5.42.0 surfaces (see the module-header shape
+    note above): `get_statement(statement_name)` for the rendered row order
+    (a cell's table `row` position) and `facts.to_dataframe()` filtered to
+    `statement_type == statement_name` for the per-cell fact graph (the
+    numeric value + full citation, incl. `context_ref`/`fact_id`). A fact
+    with no reported numeric value (e.g. a placeholder concept such as
+    `CommitmentsAndContingencies`, live-observed on this filing) is not a
+    doc-table cell with a number to compare — skipped, never fabricated as
+    0/None.
+
+    Returns a list of cells in the declared Source-A schema (plan
+    docs/loom/plans/2026-07-13-us-sec-financial-table-xval.md Notes
+    §Declared schemas):
+      {concept, period:{type, instant?|start?+end?}, dimension:null|{axis,
+       member}, value_displayed, numeric_value, decimals, citation:
+       {accession, statement_name, row, col, label, context_ref, fact_id}}
+
+    Raises whatever `get_statement` raises (e.g. `StatementNotFound` on an
+    absent/unrecognized statement) — Task 2 wraps this into a loud
+    extraction-failure slot; this function builds only the success path.
+
+    A fact whose concept does NOT resolve to a rendered `get_statement` row
+    (empirically 0/152 on the AAPL fixture, but this extractor is reused
+    across other statements/filers) is not silently dropped to
+    `citation.row: None` — the miss is logged via `_log` (module-level
+    stderr helper) naming the orphaned concept, so a future join gap is
+    visible rather than a silent citation degradation. The emitted cell
+    schema is unchanged either way (`row` may still be `None`).
+
+    Filtering + record conversion happens here (the only spot that touches
+    the pandas-shaped `facts.to_dataframe()`); the actual cell-building
+    logic lives in `_build_statement_cells`, which operates on plain dict
+    records and is offline-unit-testable without pandas or edgartools
+    installed (see tests/data/test_sec_xval.py).
+    """
+    xb = filing.xbrl()
+    rendered_rows = xb.get_statement(statement_name)
+    row_index = _statement_row_index(rendered_rows)
+
+    facts_records = xb.facts.to_dataframe().to_dict("records")
+    statement_facts = [
+        fact for fact in facts_records if fact.get("statement_type") == statement_name
+    ]
+
+    return _build_statement_cells(
+        statement_facts, row_index, filing.accession_no, statement_name
+    )
+
+
+def _build_statement_cells(
+    statement_facts: list[dict],
+    row_index: dict[str, int],
+    accession: str,
+    statement_name: str,
+) -> list[dict]:
+    """Pure cell-building logic for `extract_statement_cells`: NaN-skip,
+    instant/duration period branching, dimension building, row/col citation
+    join. Operates on plain dict records (already filtered to
+    `statement_name`, already off of pandas) — no pandas/edgartools import
+    needed to exercise this, which is what makes it offline-unit-testable
+    (tests/data/test_sec_xval.py)."""
+    cells: list[dict] = []
+    for fact in statement_facts:
+        if _is_nan(fact.get("numeric_value")):
+            continue  # placeholder concept, no reported number — never fabricate one
+
+        concept = fact["concept"]
+        row_key = concept.replace(":", "_")
+        row = row_index.get(row_key)
+        if row is None:
+            _log(
+                "row index miss",
+                f"{concept} (statement={statement_name!r}) has no matching "
+                f"get_statement row — citation.row will be None",
+            )
+
+        if fact["period_type"] == "instant":
+            period = {"type": "instant", "instant": fact.get("period_instant")}
+        else:
+            period = {
+                "type": "duration",
+                "start": fact.get("period_start"),
+                "end": fact.get("period_end"),
+            }
+
+        dimension = (
+            {"axis": fact.get("dimension"), "member": fact.get("member")}
+            if fact.get("is_dimensioned")
+            else None
+        )
+
+        cells.append({
+            "concept": concept,
+            "period": period,
+            "dimension": dimension,
+            "value_displayed": fact.get("value"),
+            "numeric_value": float(fact["numeric_value"]),
+            "decimals": str(fact.get("decimals")),
+            "citation": {
+                "accession": accession,
+                "statement_name": statement_name,
+                "row": row,
+                "col": fact.get("period_key"),
+                "label": fact.get("label"),
+                "context_ref": fact.get("context_ref"),
+                "fact_id": fact.get("fact_id"),
+            },
+        })
+    return cells
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
