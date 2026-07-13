@@ -12,7 +12,7 @@ version: 0.12.0
 Pause points the user **does** see:
 
 - The plan itself, before any task is dispatched (user approves the task list).
-- A `NEEDS_CONTEXT` from any implementer (orchestrator surfaces the question, waits for an answer).
+- A `NEEDS_CONTEXT` from any implementer that survives the step-2 triage (orchestrator surfaces the question, waits for an answer; task-scoped checkable facts are resolved and re-dispatched without pausing).
 - A `BLOCKED` from any implementer that the orchestrator cannot unblock by re-dispatch (e.g. missing dependency the user must install).
 - The final summary after all tasks `DONE` (or `DONE_WITH_CONCERNS` triaged). At this pause point the orchestrator **proactively recommends [`finishing-a-development-branch`](../finishing-a-development-branch/SKILL.md) as the default next step** — it covers review + verification + push in one pass. Surface peer alternatives (keep iterating, hand off, leave the branch open) only if the user explicitly defers close-out.
 

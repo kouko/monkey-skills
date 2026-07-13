@@ -31,7 +31,8 @@ Versioning: [Semantic Versioning](https://semver.org/).
   two-axis path.
 - **`subagent-driven-development` SKILL.md**: gate ① now names the
   three-way triage as its SSOT (checkable fact / user-fact / researchable
-  fork, arm wording shared verbatim with the L2 card); step 1 propagates
+  fork; arms and card each transcribed verbatim from the plan's pins —
+  semantically identical two-copy design); step 1 propagates
   relevant `Kickoff decision:` lines into the implementer's task packet;
   step 2 triages a relayed NEEDS_CONTEXT question before surfacing it —
   checkable facts get re-dispatched, researchable forks get researched
