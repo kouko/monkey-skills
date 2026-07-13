@@ -293,6 +293,71 @@ def test_dimensional_match_requires_member_agreement(xval_module):
     assert non_dim_match["dimension"] is None
 
 
+def _classify_fixture_pair(doc_value: float, xbrl_value: int) -> tuple[dict, dict]:
+    """A minimal matched (doc_cell, xbrl_fact) pair — the `route_cells`
+    matched-tuple shape — carrying only what Task 8's classifier reads
+    (concept/period/dimension identity + the two values to diff).
+    """
+    period = {"type": "duration", "start": "2023-10-01", "end": "2024-09-28"}
+    doc_cell = {
+        "concept": "us-gaap:Revenues",
+        "period": period,
+        "dimension": None,
+        "value_displayed": str(doc_value),
+        "numeric_value": doc_value,
+        "decimals": "-6",
+        "citation": {
+            "accession": "0000320193-24-000123",
+            "statement_name": "IncomeStatement",
+            "row": 5,
+            "col": "duration_2023-10-01_2024-09-28",
+            "label": "Total net sales",
+            "context_ref": "c-1",
+            "fact_id": "f-1",
+        },
+    }
+    xbrl_fact = {
+        "concept": "us-gaap:Revenues",
+        "period": period,
+        "dimension": None,
+        "value": xbrl_value,
+        "accn": "0000320193-24-000123",
+    }
+    return doc_cell, xbrl_fact
+
+
+@pytest.mark.parametrize(
+    "doc_value, xbrl_value, expected_pct, expected_alert",
+    [
+        pytest.param(100_400_000.0, 100_000_000, 0.4, "low", id="low"),
+        pytest.param(108_000_000.0, 100_000_000, 8.0, "high", id="high"),
+        # Negative divergence (doc 8% BELOW xbrl): classification is by
+        # MAGNITUDE, not sign — a -8% gap is still `high`, never slipped
+        # through as `low`. Encodes the load-bearing abs() in the classifier:
+        # drop it and `-8.0 <= 1` would wrongly band this `low`, silently
+        # hiding a high-alert under-statement. pct_diff keeps its sign.
+        pytest.param(92_000_000.0, 100_000_000, -8.0, "high", id="negative_high"),
+    ],
+)
+def test_classify_bands(xval_module, doc_value, xbrl_value, expected_pct, expected_alert):
+    """Task 8: classify a matched pair's divergence with xval's OWN 1%/5%
+    bands (`XVAL_BAND_LOW`/`XVAL_BAND_HIGH` — NOT comps' 5%/15% bands).
+    Classification is sign-agnostic (by magnitude); the signed pct_diff is
+    retained. Both values are always retained on the entry (plan Notes §Band
+    constants; §Anti-fabrication invariant).
+    """
+    doc_cell, xbrl_fact = _classify_fixture_pair(doc_value, xbrl_value)
+
+    entry = xval_module.classify_divergence(doc_cell, xbrl_fact)
+
+    assert entry["pct_diff"] == pytest.approx(expected_pct)
+    assert entry["alert"] == expected_alert
+    # Both values always retained on the entry.
+    assert entry["doc_value"] == doc_value
+    assert entry["xbrl_value"] == xbrl_value
+    assert entry["concept"] == "us-gaap:Revenues"
+
+
 def test_no_counterpart_routes_to_single_source(xval_module):
     """Task 7: a Source-A doc cell whose (concept, period, dimension) triple
     has NO Source-B counterpart is recorded UNMATCHED and routed to the

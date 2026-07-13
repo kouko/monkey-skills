@@ -214,6 +214,83 @@ def route_cells(source_a_pack: dict, source_b_index: dict) -> dict:
     return {"matched": matched, "single_source": single_source}
 
 
+def _classify_divergence_alert(pct_diff: float) -> str:
+    """Mirrors analysis-comps' `_classify_divergence_alert` structure
+    (comps_compute.py:946) but off xval's OWN bands (plan Notes §Band
+    constants) — NOT comps' `DIVERGENCE_BAND_LOW`/`_HIGH` (5%/15%, different
+    tuning). `pct_diff` is percent-scaled input (e.g. 8.0 means 8%); bands
+    are fraction-scaled, so compared ×100 (same convention as comps).
+    """
+    abs_pct = abs(pct_diff)
+    if abs_pct <= XVAL_BAND_LOW * 100:
+        return "low"
+    if abs_pct <= XVAL_BAND_HIGH * 100:
+        return "medium"
+    return "high"
+
+
+def _compute_divergence(doc_value: float | None, xbrl_value: int | float | None) -> dict:
+    """Diff math mirroring analysis-comps' `_compute_divergence`
+    (comps_compute.py:955): `abs_diff = doc_value - xbrl_value`,
+    `pct_diff = (abs_diff / xbrl_value) * 100.0` (percent units, xbrl_value
+    as divisor per plan Notes §Band constants). Both values are always
+    retained by the caller regardless of which branch fires here.
+
+    Edge cases (mirrors comps' n/a-never-drop discipline — full dedicated
+    coverage is Task 9's scope, but the math needs these guards to avoid a
+    ZeroDivisionError / crash on a None side):
+    - either side `None` -> `pct_diff=None`, `alert="n/a"` + note.
+    - `xbrl_value == 0` -> `pct_diff` undefined -> `alert="n/a"` + note
+      (`abs_diff` still computed where possible).
+    """
+    if doc_value is None or xbrl_value is None:
+        return {
+            "abs_diff": None,
+            "pct_diff": None,
+            "alert": "n/a",
+            "note": "doc_value or xbrl_value missing — cannot diff",
+        }
+    abs_diff = doc_value - xbrl_value
+    if xbrl_value == 0:
+        return {
+            "abs_diff": abs_diff,
+            "pct_diff": None,
+            "alert": "n/a",
+            "note": "xbrl value zero — pct_diff undefined",
+        }
+    pct_diff = (abs_diff / xbrl_value) * 100.0
+    return {
+        "abs_diff": abs_diff,
+        "pct_diff": pct_diff,
+        "alert": _classify_divergence_alert(pct_diff),
+    }
+
+
+def classify_divergence(doc_cell: dict, xbrl_fact: dict) -> dict:
+    """Build a classified report entry (plan Notes §Declared schemas) for one
+    matched `(doc_cell, xbrl_fact)` pair — the output of `route_cells`'s
+    `matched` bucket. Diffs the doc cell's full-magnitude `numeric_value`
+    against the matched Source-B fact's full-magnitude `value` (both
+    full-magnitude per the live probe, so a genuinely-agreeing pair yields
+    ~0 pct_diff -> low; the doc-table's DISPLAYED/rounded value is a
+    separate, later concern — Task 10's scale/rounding check, not here).
+
+    Both `doc_value` and `xbrl_value` are always retained on the entry,
+    regardless of alert level (plan Notes §Anti-fabrication invariant).
+    """
+    doc_value = doc_cell.get("numeric_value")
+    xbrl_value = xbrl_fact.get("value")
+    divergence = _compute_divergence(doc_value, xbrl_value)
+    return {
+        "concept": doc_cell["concept"],
+        "period": doc_cell["period"],
+        "dimension": doc_cell.get("dimension"),
+        "doc_value": doc_value,
+        "xbrl_value": xbrl_value,
+        **divergence,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Pure-compute cross-validation: doc-table cells vs XBRL companyfacts (Layer 2)."
