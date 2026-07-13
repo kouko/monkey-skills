@@ -292,6 +292,57 @@ def summarize_concept(raw_concept: dict) -> list[dict]:
     ]
 
 
+def _companyfacts_pack_error_slot(cik: int, detail: str) -> dict:
+    """A loud, sentinel-compatible error slot for a companyfacts fetch failure
+    (Open-Q2 keystone, `build_companyfacts_pack`) — mirrors this file's
+    error-slot convention (`_acquire_error`/`_statement_extraction_error_slot`):
+    a typed dict the caller can branch on, never a fabricated/empty Source-B
+    pack. Not `_acquire_error` itself — that helper's message is hardcoded to
+    filing acquisition, which would misdescribe a companyfacts JSON-fetch
+    failure."""
+    return {
+        "error": f"SEC EDGAR companyfacts fetch failed for CIK {cik}: {detail}",
+        "error_class": "companyfacts_fetch_failed",
+        "identifier": str(cik),
+    }
+
+
+def build_companyfacts_pack(cik: int) -> dict:
+    """Reshape the CIK's full companyfacts payload into the exact Source-B
+    pack shape `analysis-xval/scripts/xval_compute.py::build_source_b_index`
+    requires (the Open-Q2 keystone it declares but leaves unwired):
+      {"cik": <int>, "facts": {"<taxonomy>": {"<tag>": [<row>, ...]}}}
+    where each row is exactly `summarize_concept`'s output shape (`{start,
+    end, value, accn, form, fy, fp, filed}`).
+
+    Fetches via the existing `fetch_facts(cik, concept=None)` (full
+    companyfacts, cached). The raw SEC endpoint nests each tag one level
+    deeper than the consumer expects — `data["facts"][taxonomy][tag]` is a
+    `{label, description, units: {"USD": [rows]}}` object, not a bare row
+    list — so this flattens `units.USD` into the per-tag row list by
+    reusing `summarize_concept` (which already knows how to prefer USD and
+    fall back to the first available unit) rather than re-implementing that
+    unit-selection logic divergently.
+
+    On a companyfacts fetch error, returns a loud `_companyfacts_pack_error_slot`
+    (this file's `_acquire_error` convention) — NEVER a fabricated or empty
+    Source-B pack.
+    """
+    fetched = fetch_facts(cik, None)
+    if "error" in fetched:
+        return _companyfacts_pack_error_slot(cik, fetched["error"])
+
+    raw_facts = fetched.get("data", {}).get("facts", {})
+    facts = {
+        taxonomy: {
+            tag: summarize_concept(concept_obj)
+            for tag, concept_obj in tags.items()
+        }
+        for taxonomy, tags in raw_facts.items()
+    }
+    return {"cik": cik, "facts": facts}
+
+
 # ---------------------------------------------------------------------------
 # Filings index
 # ---------------------------------------------------------------------------
