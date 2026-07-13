@@ -529,6 +529,116 @@ def test_scale_rounding_guards_skip_non_rounding_cases(xval_module):
     assert entry2["category"] != "scale/rounding"
 
 
+def test_decimal_disagreement_dqc_241(xval_module):
+    """Task 13: XBRL US DQC rule 2.4.1 — a fact's `decimals` attribute
+    implies a rounding grain (e.g. decimals="-6" -> grain 10**6); if the
+    reported value itself carries NON-ZERO digits below that grain, the
+    `decimals` attribute disagrees with the digits actually reported — a
+    structural defect in the filing's own tagging, distinct from a doc/XBRL
+    value MISMATCH (Task 8's classifier bands) and from Task 10's
+    two-source `scale/rounding` label. Single-source: this is a property of
+    ONE fact's own (value, decimals) pair — no second source is consulted
+    (plan Notes §Declared schemas `source_mode`).
+    """
+    period = {"type": "duration", "start": "2023-10-01", "end": "2024-09-28"}
+
+    def _doc_cell(value: float, decimals: str) -> dict:
+        return {
+            "concept": "us-gaap:Revenues",
+            "period": period,
+            "dimension": None,
+            "value_displayed": str(value),
+            "numeric_value": value,
+            "decimals": decimals,
+            "citation": {
+                "accession": "0000320193-24-000123",
+                "statement_name": "IncomeStatement",
+                "row": 5,
+                "col": "duration_2023-10-01_2024-09-28",
+                "label": "Total net sales",
+                "context_ref": "c-1",
+                "fact_id": "f-1",
+            },
+        }
+
+    # POSITIVE: value carries non-zero digits below the decimals="-6" grain
+    # (10**6) -> decimals disagrees with the digits actually reported.
+    disagreeing_cell = _doc_cell(1233800000.0, "-6")
+    entry = xval_module.check_decimal_disagreement(disagreeing_cell)
+    assert entry is not None
+    assert entry["category"] == "decimal-disagreement (DQC 2.4.1)"
+    assert entry["source_mode"] == "single-source"
+    assert entry["note"]
+
+    # NEGATIVE/control (non-vacuous): a clean multiple of the grain -> no
+    # sub-grain digits -> NOT flagged. Also proves this is a genuinely
+    # distinct category from Task 10's two-source `scale/rounding` label —
+    # this single-source check never emits that category.
+    clean_cell = _doc_cell(1234000000.0, "-6")
+    assert xval_module.check_decimal_disagreement(clean_cell) is None
+
+    # POSITIVE-decimals clean multiple (fractional grain, decimals="2" ->
+    # grain 0.01): 1_000_000.45 is an exact multiple of 0.01 and must NOT
+    # be flagged. This is the regression case for a fixed-absolute-
+    # tolerance bug: `value % grain` float noise scales with `value`'s
+    # magnitude (not `grain`'s), so a large clean value against a small
+    # fractional grain produces modulo noise far above a `grain * 1e-9`
+    # tolerance band and false-flags. A magnitude-relative check (scaling
+    # to integer space) must not repeat that.
+    positive_clean_cell = _doc_cell(1000000.45, "2")
+    assert xval_module.check_decimal_disagreement(positive_clean_cell) is None
+
+    # POSITIVE-decimals genuine disagreement: 1_000_000.456 carries a
+    # non-zero digit below the decimals="2" grain (0.01) -> flagged.
+    positive_disagreeing_cell = _doc_cell(1000000.456, "2")
+    entry3 = xval_module.check_decimal_disagreement(positive_disagreeing_cell)
+    assert entry3 is not None
+    assert entry3["category"] == "decimal-disagreement (DQC 2.4.1)"
+    assert entry3["source_mode"] == "single-source"
+    assert entry3["note"]
+
+
+def test_decimal_disagreement_guards_skip_non_evaluable_cases(xval_module):
+    """Task 13 guard branches: `check_decimal_disagreement` fails soft
+    (`None`, no crash) when the fact cannot be evaluated at all — a
+    missing `numeric_value`, or a missing/malformed `decimals` from which
+    no grain can be derived.
+    """
+    period = {"type": "duration", "start": "2023-10-01", "end": "2024-09-28"}
+
+    def _doc_cell(value, decimals) -> dict:
+        return {
+            "concept": "us-gaap:Revenues",
+            "period": period,
+            "dimension": None,
+            "value_displayed": str(value),
+            "numeric_value": value,
+            "decimals": decimals,
+            "citation": {
+                "accession": "0000320193-24-000123",
+                "statement_name": "IncomeStatement",
+                "row": 5,
+                "col": "duration_2023-10-01_2024-09-28",
+                "label": "Total net sales",
+                "context_ref": "c-1",
+                "fact_id": "f-1",
+            },
+        }
+
+    # (a) numeric_value is None -> underivable -> skip, no crash.
+    none_value_cell = _doc_cell(None, "-6")
+    assert xval_module.check_decimal_disagreement(none_value_cell) is None
+
+    # (b) decimals is None -> grain underivable -> skip, no crash.
+    none_decimals_cell = _doc_cell(1233800000.0, None)
+    assert xval_module.check_decimal_disagreement(none_decimals_cell) is None
+
+    # (c) decimals is malformed (non-numeric string) -> grain underivable
+    # -> skip, no crash.
+    malformed_decimals_cell = _doc_cell(1233800000.0, "not-a-number")
+    assert xval_module.check_decimal_disagreement(malformed_decimals_cell) is None
+
+
 def test_restatement_signal_cites_both_accessions(xval_module):
     """Task 12: a companyfacts (concept, period) tagged with a DIFFERENT
     value under a DIFFERENT `accn` in two filings (e.g. the FY2023 10-K's

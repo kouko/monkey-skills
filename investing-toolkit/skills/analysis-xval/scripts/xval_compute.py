@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -437,6 +438,63 @@ def check_scale_rounding(doc_cell: dict, divergence: dict) -> dict | None:
             f"|abs_diff|={abs(abs_diff)} within half the decimals-implied "
             f"rounding grain ({tolerance} of grain {grain}, decimals="
             f"{doc_cell.get('decimals')!r}) — benign rounding, not a tagging error"
+        ),
+    }
+
+
+def check_decimal_disagreement(doc_cell: dict) -> dict | None:
+    """Task 13 (single-source, distinct category — plan Notes §Declared
+    schemas): detect XBRL US DQC rule 2.4.1 on ONE Source-A doc cell's own
+    (`numeric_value`, `decimals`) pair — no second source consulted
+    (`source_mode: "single-source"`).
+
+    `decimals` states the precision the value is reported to: decimals=-6
+    means the value is accurate to the nearest 10**6 (millions), so its
+    digits below that grain SHOULD be zero. If the reported value carries
+    NON-ZERO digits below the grain implied by its own `decimals`, the
+    `decimals` attribute disagrees with the digits actually reported — a
+    structural tagging defect in the filing itself, distinct from a
+    doc/XBRL value MISMATCH (Task 8's classifier bands) and from Task 10's
+    two-source `scale/rounding` tolerance label (that compares doc vs xbrl
+    across sources; this compares a fact against its OWN claimed precision,
+    single-source).
+
+    Rule: `ndigits = int(decimals)`; `grain = 10 ** (-ndigits)` (mirrors
+    `check_scale_rounding`'s grain derivation, generalizes to a positive
+    `decimals` too, e.g. `"2"` -> `grain = 0.01`, fractional precision).
+    Flag when `value` is not a clean multiple of `grain`. The clean-multiple
+    test is done in SCALED integer space (`value * 10**ndigits` should be
+    an integer), not via `value % grain` float modulo — modulo noise scales
+    with `value`'s magnitude, not `grain`'s, so a fixed absolute tolerance
+    misfires for a fractional (positive-decimals) grain against a large,
+    genuinely-clean value (e.g. 1_000_000.45 at decimals="2" false-flags
+    under `%`). `math.isclose` with a magnitude-relative tolerance on the
+    scaled value avoids this. Missing/None `numeric_value`, or a
+    missing/malformed `decimals`, fails soft (`None`), never crashes.
+
+    Returns an annotation dict (`category`, `source_mode`, `note`) when the
+    fact disagrees with its own claimed precision, or `None` when it is
+    consistent (or the check cannot be evaluated).
+    """
+    value = doc_cell.get("numeric_value")
+    if value is None:
+        return None
+    try:
+        ndigits = int(doc_cell.get("decimals"))
+    except (TypeError, ValueError):
+        return None
+    grain = 10 ** (-ndigits)
+    scaled = value * (10 ** ndigits)
+    nearest = round(scaled)
+    if math.isclose(scaled, nearest, rel_tol=1e-9, abs_tol=1e-6):
+        return None
+    return {
+        "category": "decimal-disagreement (DQC 2.4.1)",
+        "source_mode": "single-source",
+        "note": (
+            f"value {value} carries sub-grain precision inconsistent with "
+            f"its own decimals={doc_cell.get('decimals')!r} (grain {grain}) "
+            "— DQC 2.4.1 decimal-disagreement, not a doc/XBRL value mismatch"
         ),
     }
 
