@@ -121,3 +121,88 @@ def test_source_b_index_rejects_source_a_pack(xval_module):
     source_a_pack = {"cells": [{"concept": "us-gaap:Assets"}]}
     with pytest.raises(ValueError, match="Source-B companyfacts pack"):
         xval_module.build_source_b_index(source_a_pack)
+
+
+def test_match_non_dimensional_by_concept_period(xval_module):
+    """A non-dimensional Source-A doc cell pairs with the Source-B fact
+    sharing (concept, period), dimension=None both sides — matched on the
+    (concept, period) key alone, never by row-label text or table position
+    (anti-fabrication invariant, plan Notes).
+
+    Two decoys prove the label/row is never consulted:
+    1. Two doc cells share the SAME (concept, period) but carry DIFFERENT
+       citation labels ("Total net sales" vs "Net sales (decoy label)") —
+       both must resolve to the identical Source-B fact, since changing
+       only the label must never change the match.
+    2. The Source-B index also holds a same-concept fact for a DIFFERENT
+       period with a wildly different value — a label- or
+       first-same-concept-hit matcher could wrongly grab it; concept+period
+       matching must not.
+    """
+    correct_period = {"type": "duration", "start": "2023-10-01", "end": "2024-09-28"}
+
+    def _doc_cell(label: str) -> dict:
+        return {
+            "concept": "us-gaap:Revenues",
+            "period": correct_period,
+            "dimension": None,
+            "value_displayed": "391035000000",
+            "numeric_value": 391035000000.0,
+            "decimals": "-6",
+            "citation": {
+                "accession": "0000320193-24-000123",
+                "statement_name": "IncomeStatement",
+                "row": 5,
+                "col": "duration_2023-10-01_2024-09-28",
+                "label": label,
+                "context_ref": "c-1",
+                "fact_id": "f-1",
+            },
+        }
+
+    source_b_pack = {
+        "cik": 320193,
+        "facts": {
+            "us-gaap": {
+                "Revenues": [
+                    # Decoy listed FIRST (insertion order = index iteration
+                    # order): same concept, DIFFERENT period, wildly different
+                    # value. A first-same-concept-hit matcher (ignoring period)
+                    # would grab THIS entry and the value assertion below would
+                    # fail — so this ordering makes the period-load-bearing
+                    # property genuinely testable, not vacuously satisfied.
+                    {
+                        "start": "2022-09-25",
+                        "end": "2023-09-30",
+                        "value": 1,
+                        "accn": "0000320193-23-000106",
+                        "form": "10-K",
+                        "fy": 2023,
+                        "fp": "FY",
+                        "filed": "2023-11-03",
+                    },
+                    {
+                        "start": "2023-10-01",
+                        "end": "2024-09-28",
+                        "value": 391035000000,
+                        "accn": "0000320193-24-000123",
+                        "form": "10-K",
+                        "fy": 2024,
+                        "fp": "FY",
+                        "filed": "2024-11-01",
+                    },
+                ]
+            }
+        },
+    }
+
+    index = xval_module.build_source_b_index(source_b_pack)
+
+    for label in ("Total net sales", "Net sales (decoy label)"):
+        match = xval_module.match_cell(_doc_cell(label), index)
+        assert match is not None
+        assert match["concept"] == "us-gaap:Revenues"
+        assert match["period"] == correct_period
+        assert match["dimension"] is None
+        assert match["value"] == 391035000000
+        assert match["accn"] == "0000320193-24-000123"
