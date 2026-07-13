@@ -267,6 +267,36 @@ def test_extract_statement_cells_filters_to_requested_statement_type(sec_client)
     assert cells[0]["citation"]["fact_id"] == "f-163"
 
 
+def test_extract_raises_on_absent_statement(sec_client):
+    """Task 2: an absent/unparseable statement (edgartools' `StatementNotFound`
+    on `get_statement`) must surface as a loud extraction-failure slot — never
+    an uncaught crash bubbling out unclassified, and never a silent empty
+    cell list or a regex/free-text-scraped fallback value."""
+
+    class _StatementNotFound(Exception):
+        """Stand-in for edgartools' real StatementNotFound; the production
+        code catches broadly (matching this file's existing acquire-error
+        convention at `_acquire_raw_filing`/`_extraction_error_slot`), so a
+        plain Exception subclass is sufficient here."""
+
+    class _RaisingXBRL:
+        def get_statement(self, name):
+            raise _StatementNotFound(f"statement {name!r} not found")
+
+    filing = _FakeFiling(ACCESSION, RENDERED_ROWS, [])
+    filing._xb = _RaisingXBRL()
+
+    result = sec_client.extract_statement_cells(filing, "CashFlowStatement")
+
+    assert isinstance(result, dict), (
+        "an absent statement must surface a loud error-slot dict — not raise "
+        "uncaught, and not return a silent empty/fabricated cell list"
+    )
+    assert result["error_class"] == "statement_not_found"
+    assert result["statement_name"] == "CashFlowStatement"
+    assert "CashFlowStatement" in result["error"]
+
+
 def test_extract_statement_cells_logs_on_row_index_miss(sec_client, capsys):
     """FINDING 1: a fact concept with no matching get_statement row must
     surface via `_log` (sec_edgar_client.py's `row = row_index.get(row_key)`

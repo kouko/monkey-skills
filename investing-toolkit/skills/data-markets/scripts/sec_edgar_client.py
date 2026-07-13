@@ -1622,7 +1622,27 @@ def _statement_row_index(rendered_rows: list[dict]) -> dict[str, int]:
     return index
 
 
-def extract_statement_cells(filing, statement_name: str) -> list[dict]:
+def _statement_extraction_error_slot(statement_name: str, filing, exc: BaseException) -> dict:
+    """A loud, sentinel-compatible extraction-failure slot for a statement whose
+    `get_statement` call RAISED (Task 2) — e.g. edgartools' `StatementNotFound`
+    on a pre-XBRL filing or an unrecognized/unparseable statement variant.
+    Mirrors this file's existing per-item error-slot convention
+    (`_extraction_error_slot`/`_acquire_error`): the failure is returned as a
+    typed dict the caller can branch on (`isinstance(result, dict)`, same
+    discriminator `_acquire_raw_filing`'s callers use) — never raised further
+    uncaught, and never masked by an LLM-guessed or regex/free-text-scraped
+    fallback cell value."""
+    return {
+        "statement_name": statement_name,
+        "error": (
+            f"statement {statement_name!r} extraction failed for filing "
+            f"{getattr(filing, 'accession_no', None)!r}: {exc}"
+        ),
+        "error_class": "statement_not_found",
+    }
+
+
+def extract_statement_cells(filing, statement_name: str) -> list[dict] | dict:
     """Extract a primary financial-statement table's cells from a filing's
     REAL XBRL statement data — NEVER free-text / regex the document body.
 
@@ -1638,14 +1658,19 @@ def extract_statement_cells(filing, statement_name: str) -> list[dict]:
 
     Returns a list of cells in the declared Source-A schema (plan
     docs/loom/plans/2026-07-13-us-sec-financial-table-xval.md Notes
-    §Declared schemas):
+    §Declared schemas) on success:
       {concept, period:{type, instant?|start?+end?}, dimension:null|{axis,
        member}, value_displayed, numeric_value, decimals, citation:
        {accession, statement_name, row, col, label, context_ref, fact_id}}
 
-    Raises whatever `get_statement` raises (e.g. `StatementNotFound` on an
-    absent/unrecognized statement) — Task 2 wraps this into a loud
-    extraction-failure slot; this function builds only the success path.
+    Task 2: when the filing/statement variant has no XBRL-backed statement
+    (pre-XBRL filing, or a statement edgartools cannot parse — surfaces as
+    `StatementNotFound`), `get_statement`'s exception is caught here and
+    converted into a loud `_statement_extraction_error_slot` dict — NEVER
+    left to propagate uncaught, and NEVER papered over with a regex-scraped
+    or LLM-guessed cell value. Callers discriminate success vs failure the
+    same way `_acquire_raw_filing`'s callers do: `isinstance(result, dict)`
+    (success is always a `list`, failure is always a `dict`).
 
     A fact whose concept does NOT resolve to a rendered `get_statement` row
     (empirically 0/152 on the AAPL fixture, but this extractor is reused
@@ -1662,7 +1687,10 @@ def extract_statement_cells(filing, statement_name: str) -> list[dict]:
     installed (see tests/data/test_sec_xval.py).
     """
     xb = filing.xbrl()
-    rendered_rows = xb.get_statement(statement_name)
+    try:
+        rendered_rows = xb.get_statement(statement_name)
+    except Exception as exc:  # noqa: BLE001 — fail loud, don't guess the shape; never a scrape fallback
+        return _statement_extraction_error_slot(statement_name, filing, exc)
     row_index = _statement_row_index(rendered_rows)
 
     facts_records = xb.facts.to_dataframe().to_dict("records")
