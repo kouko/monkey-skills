@@ -1200,3 +1200,130 @@ def test_doc_only_cell_stated_not_guessed(xval_module):
         and e.get("concept") == "us-gaap:Revenues"
         for e in report["single_source"]
     )
+
+
+def test_compared_pair_carries_both_citations(xval_module):
+    """Task 16: EVERY matched-and-classified pair in `comparisons` carries
+    BOTH provenance citations — regardless of alert level. The existing
+    `test_high_alert_surfaced_both_values_and_label` only pins this at
+    `alert == "high"`; this test covers `low` and `medium` so a regression
+    that special-cased citation attachment to high alerts only (e.g. an
+    `if entry["alert"] == "high":` guard around the attach lines) would be
+    caught here, not just at the high tier.
+
+    `doc_citation` == the doc cell's own citation dict verbatim (accession +
+    statement_name + row/col cell location + context_ref, plan Notes
+    §Declared schemas' Source A cell schema) — never a subset, never
+    reshaped. `xbrl_citation` == `{concept, context_ref, accn}`: spec
+    Scenario `financial-table-xval/spec.md:174-178` requires "concept id +
+    context ref". Companyfacts (Source B) itself carries no iXBRL
+    `context_ref` field (plan Notes §Declared schemas' Source B fact schema
+    has no such field). But a MATCHED pair is the same underlying fact, so
+    the doc cell's own `context_ref` — pulled from the real XBRL instance by
+    Source A's iXBRL statement extraction — IS the genuine context reference
+    for this exact fact. Reusing it here is not fabrication: it is citing the
+    real value from the one source that actually carries it, for a fact both
+    sides agree is the same one. `accn` (from the companyfacts fact) is kept
+    as the filing-level provenance.
+    """
+    period = {"type": "duration", "start": "2023-10-01", "end": "2024-09-28"}
+
+    low_citation = {
+        "accession": "0000320193-24-000123",
+        "statement_name": "BalanceSheet",
+        "row": 2,
+        "col": "instant_2024-09-28",
+        "label": "Cash and cash equivalents",
+        "context_ref": "c-10",
+        "fact_id": "f-10",
+    }
+    low_cell = {
+        "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+        "period": period,
+        "dimension": None,
+        "value_displayed": "100000000",
+        "numeric_value": 100_000_000.0,
+        "decimals": "-6",
+        "citation": low_citation,
+    }
+
+    medium_citation = {
+        "accession": "0000320193-24-000123",
+        "statement_name": "BalanceSheet",
+        "row": 3,
+        "col": "instant_2024-09-28",
+        "label": "Accounts receivable, net",
+        "context_ref": "c-11",
+        "fact_id": "f-11",
+    }
+    medium_cell = {
+        "concept": "us-gaap:AccountsReceivableNetCurrent",
+        "period": period,
+        "dimension": None,
+        "value_displayed": "103000000",
+        "numeric_value": 103_000_000.0,
+        "decimals": "-6",
+        "citation": medium_citation,
+    }
+
+    source_a_pack = {"cells": [low_cell, medium_cell]}
+    source_b_pack = {
+        "cik": 320193,
+        "facts": {
+            "us-gaap": {
+                "CashAndCashEquivalentsAtCarryingValue": [
+                    {
+                        "start": "2023-10-01",
+                        "end": "2024-09-28",
+                        "value": 100_000_000,
+                        "accn": "0000320193-24-000123",
+                        "form": "10-K",
+                        "fy": 2024,
+                        "fp": "FY",
+                        "filed": "2024-11-01",
+                    }
+                ],
+                "AccountsReceivableNetCurrent": [
+                    {
+                        "start": "2023-10-01",
+                        "end": "2024-09-28",
+                        "value": 100_000_000,
+                        "accn": "0000320193-24-000123",
+                        "form": "10-K",
+                        "fy": 2024,
+                        "fp": "FY",
+                        "filed": "2024-11-01",
+                    }
+                ],
+            }
+        },
+    }
+
+    report = xval_module.build_report(source_a_pack, source_b_pack)
+    by_concept = {e["concept"]: e for e in report["comparisons"]}
+
+    low_entry = by_concept["us-gaap:CashAndCashEquivalentsAtCarryingValue"]
+    assert low_entry["alert"] == "low"
+    assert low_entry["doc_citation"] == low_citation
+    assert low_entry["doc_citation"]["accession"] == "0000320193-24-000123"
+    assert low_entry["doc_citation"]["statement_name"] == "BalanceSheet"
+    assert low_entry["doc_citation"]["row"] == 2
+    assert low_entry["doc_citation"]["col"] == "instant_2024-09-28"
+    assert low_entry["xbrl_citation"] == {
+        "concept": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+        "context_ref": "c-10",
+        "accn": "0000320193-24-000123",
+    }
+
+    medium_entry = by_concept["us-gaap:AccountsReceivableNetCurrent"]
+    assert medium_entry["alert"] == "medium"
+    assert medium_entry["doc_citation"] == medium_citation
+    assert medium_entry["doc_citation"]["accession"] == "0000320193-24-000123"
+    assert medium_entry["doc_citation"]["statement_name"] == "BalanceSheet"
+    assert medium_entry["doc_citation"]["row"] == 3
+    assert medium_entry["doc_citation"]["col"] == "instant_2024-09-28"
+    assert medium_entry["xbrl_citation"] == {
+        "concept": "us-gaap:AccountsReceivableNetCurrent",
+        "context_ref": "c-11",
+        "accn": "0000320193-24-000123",
+    }

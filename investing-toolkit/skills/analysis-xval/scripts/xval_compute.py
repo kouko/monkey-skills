@@ -599,8 +599,14 @@ def build_report(source_a_pack: dict, source_b_pack: dict) -> dict:
     for doc_cell, xbrl_fact in routed["matched"]:
         entry = classify_divergence(doc_cell, xbrl_fact)
         entry["doc_citation"] = doc_cell.get("citation")
+        # context_ref is the real iXBRL context reference for this SAME
+        # matched fact, pulled from Source A's XBRL instance via the doc
+        # cell's own citation — not fabricated. Companyfacts (Source B)
+        # itself carries no context_ref field, only accn (the filing
+        # reference), which is kept alongside it.
         entry["xbrl_citation"] = {
             "concept": xbrl_fact.get("concept"),
+            "context_ref": doc_cell["citation"].get("context_ref"),
             "accn": xbrl_fact.get("accn"),
         }
         comparisons.append(entry)
