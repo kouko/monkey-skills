@@ -15,9 +15,9 @@ analysis-comps CLI template:
 - Source B = a companyfacts fact pack (`summarize_concept` shape).
 
 This module currently ships the CLI + report-envelope skeleton (Task 3),
-the Source-B fact index (Task 4), and non-dimensional concept+period
-matching (Task 5) — dimensional matching (Task 6) and classification are
-not yet wired into the CLI. `comparisons` is still always empty for now.
+the Source-B fact index (Task 4), and full `(concept, period, dimension)`
+triple matching (Tasks 5-6) — classification is not yet wired into the
+CLI. `comparisons` is still always empty for now.
 
 Declared schemas (plan Notes §Declared schemas — producer/consumer contract):
 - Source A cell: {concept, period:{type:"instant"|"duration", instant?,
@@ -139,39 +139,47 @@ def build_source_b_index(source_b_pack: dict) -> dict:
 
 
 def match_cell(doc_cell: dict, source_b_index: dict) -> dict | None:
-    """Match a Source-A doc-table cell to its Source-B fact by the
+    """Match a Source-A doc-table cell to its Source-B fact by the FULL
     `(concept, period, dimension)` triple (plan Notes §Anti-fabrication
     invariant) — NEVER by table position, row-label text, or label
     similarity. `doc_cell["citation"]["label"]` is never read here.
 
-    Task 5 scope: non-dimensional cells only (`doc_cell["dimension"] is
-    None`). Matched by the `(concept, period)` key alone — Task 4's
-    Source-B index stores every fact with `dimension=None` (companyfacts
-    is consolidated-only), so the dimension side of the triple is
-    trivially satisfied for this case. Concept is already like-for-like
-    colon-form on both sides (Source A: edgartools `"taxonomy:tag"`;
-    Source B index: built by `build_source_b_index`'s own
-    `"<taxonomy>:<tag>"` join) — no extra normalization needed here.
-    Period is compared via `_period_key`, the same hashable-key helper
-    Task 4 uses to build the index.
+    Concept is already like-for-like colon-form on both sides (Source A:
+    edgartools `"taxonomy:tag"`; Source B index: built by
+    `build_source_b_index`'s own `"<taxonomy>:<tag>"` join) — no extra
+    normalization needed here. Period is compared via `_period_key`, the
+    same hashable-key helper Task 4 uses to build the index.
 
-    Dimensional matching (member-agreement) is Task 6 — NOT handled here.
-    Calling this with a dimensional `doc_cell` raises rather than silently
-    ignoring the dimension and returning a same-concept/same-period match
-    that hasn't had its member checked (never fabricate a match).
+    Dimension (Task 6): after a (concept, period) candidate is found, it is
+    accepted ONLY if its `dimension` equals `doc_cell["dimension"]` exactly
+    — both `None` (non-dimensional, Task 5's case), or both the identical
+    `{axis, member}` dict. A same-concept/same-period candidate under a
+    DIFFERENT member, or with NO member at all, is a dimension mismatch and
+    is rejected (returns `None`) rather than silently accepted — matching a
+    segment number against a differently-segmented or consolidated fact
+    would silently cross-validate the wrong number.
+
+    HYBRID reality: companyfacts (Source B) is consolidated-only, so
+    `build_source_b_index` sets `dimension=None` on EVERY entry (there is no
+    real dimensional companyfacts fact). Consequence: in production a
+    dimensional doc cell will find at most a `dimension=None` candidate ->
+    dimension mismatch -> `None` -> routed to single-source (Task 7); its
+    member agreement is then checked single-source on the iXBRL side (per
+    the brief's HYBRID model), NOT here.
 
     Returns the matched Source-B index entry, or `None` when the
-    `(concept, period)` key has no counterpart (Task 7 routes that to
-    single-source).
+    `(concept, period)` key has no counterpart, or when a counterpart
+    exists but its dimension does not match (both cases route to Task 7's
+    single-source handling).
     """
-    if doc_cell.get("dimension") is not None:
-        raise NotImplementedError(
-            "match_cell: dimensional matching (member-agreement) is Task 6, "
-            "not yet implemented"
-        )
     concept = doc_cell["concept"]
     period_key = _period_key(doc_cell["period"])
-    return source_b_index.get((concept, period_key))
+    candidate = source_b_index.get((concept, period_key))
+    if candidate is None:
+        return None
+    if candidate["dimension"] != doc_cell.get("dimension"):
+        return None
+    return candidate
 
 
 def main() -> int:

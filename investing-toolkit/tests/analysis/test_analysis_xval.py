@@ -206,3 +206,88 @@ def test_match_non_dimensional_by_concept_period(xval_module):
         assert match["dimension"] is None
         assert match["value"] == 391035000000
         assert match["accn"] == "0000320193-24-000123"
+
+
+def test_dimensional_match_requires_member_agreement(xval_module):
+    """A dimensional doc cell (concept+period+dimension triple, plan Notes
+    §Anti-fabrication invariant) is accepted ONLY when the candidate's
+    dimension is the identical {axis, member} dict — never on axis+concept+
+    period alone, and never against a consolidated (dimension=None) fact.
+
+    Case 1 (accept) hand-constructs a Source-B index entry directly, rather
+    than going through `build_source_b_index` on a companyfacts fixture:
+    companyfacts is consolidated-only (`build_source_b_index` always sets
+    `dimension=None`; see its docstring), so it can never itself produce a
+    dimensional candidate. This is a unit test of the `match_cell` predicate
+    in isolation, not a companyfacts-pack fixture — it does not violate
+    fixtures-mirror-producer-shape (plan Notes §Fixture discipline).
+
+    Case 3 IS the real production shape: `build_source_b_index` output
+    (dimension=None) is what a dimensional doc cell actually meets in
+    practice; per the brief's HYBRID note this is expected to miss here and
+    route to single-source (Task 7), with member agreement re-checked
+    single-source on the iXBRL side — NOT in this matcher.
+    """
+    concept = "us-gaap:Revenues"
+    period = {"type": "duration", "start": "2023-10-01", "end": "2024-09-28"}
+    axis = "srt:ProductOrServiceAxis"
+
+    def _dimensional_doc_cell(member: str) -> dict:
+        return {
+            "concept": concept,
+            "period": period,
+            "dimension": {"axis": axis, "member": member},
+            "value_displayed": "200000000000",
+            "numeric_value": 200000000000.0,
+            "decimals": "-6",
+            "citation": {
+                "accession": "0000320193-24-000123",
+                "statement_name": "SegmentReporting",
+                "row": 12,
+                "col": "duration_2023-10-01_2024-09-28",
+                "label": "iPhone",
+                "context_ref": "c-2",
+                "fact_id": "f-2",
+            },
+        }
+
+    def _index_with_candidate_dimension(candidate_dimension) -> dict:
+        return {
+            (concept, xval_module._period_key(period)): {
+                "concept": concept,
+                "period": period,
+                "dimension": candidate_dimension,
+                "value": 200000000000,
+                "accn": "0000320193-24-000123",
+            }
+        }
+
+    doc_cell = _dimensional_doc_cell("aapl:IPhoneMember")
+
+    # 1. Accept on equal member (hand-constructed candidate — see docstring).
+    same_member_index = _index_with_candidate_dimension(
+        {"axis": axis, "member": "aapl:IPhoneMember"}
+    )
+    match = xval_module.match_cell(doc_cell, same_member_index)
+    assert match is not None
+    assert match["dimension"] == {"axis": axis, "member": "aapl:IPhoneMember"}
+    assert match["value"] == 200000000000
+
+    # 2. Reject on a different member (same concept+period, wrong segment).
+    diff_member_index = _index_with_candidate_dimension(
+        {"axis": axis, "member": "aapl:MacMember"}
+    )
+    assert xval_module.match_cell(doc_cell, diff_member_index) is None
+
+    # 3. Reject on no member — the real companyfacts case: consolidated-only
+    # facts carry dimension=None (build_source_b_index's actual output
+    # shape), which must NOT satisfy a dimensional doc cell.
+    no_dimension_index = _index_with_candidate_dimension(None)
+    assert xval_module.match_cell(doc_cell, no_dimension_index) is None
+
+    # Regression: the Task-5 non-dimensional case still matches unchanged.
+    non_dim_doc_cell = dict(doc_cell, dimension=None)
+    non_dim_index = _index_with_candidate_dimension(None)
+    non_dim_match = xval_module.match_cell(non_dim_doc_cell, non_dim_index)
+    assert non_dim_match is not None
+    assert non_dim_match["dimension"] is None
