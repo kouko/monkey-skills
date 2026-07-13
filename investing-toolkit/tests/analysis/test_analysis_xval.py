@@ -293,6 +293,83 @@ def test_dimensional_match_requires_member_agreement(xval_module):
     assert non_dim_match["dimension"] is None
 
 
+def test_non_gaap_not_force_matched(xval_module):
+    """Task 11: an adjusted/non-GAAP doc-table row ("Adjusted EBITDA",
+    carrying a company-extension concept with no us-gaap counterpart) MUST
+    be recorded doc-only/single-source, and MUST NOT be paired with a
+    similarly-labeled but conceptually different GAAP fact
+    (`us-gaap:OperatingIncomeLoss`) for the SAME period, on label-similarity
+    grounds (plan Notes §Anti-fabrication invariant; brief Requirement: Do
+    not force-match adjusted or non-GAAP figures to a GAAP tag).
+
+    The temptation fixture: the Source-B index DOES contain
+    `us-gaap:OperatingIncomeLoss` for the exact same period as the
+    "Adjusted EBITDA" doc cell — a label-based matcher ("Adjusted EBITDA"
+    ~ "Operating Income") would be tempted to grab it. `match_cell` keys
+    strictly on `(concept, period)` (xval_compute.py:176-183) and never
+    reads `doc_cell["citation"]["label"]`, so the company-extension concept
+    `aapl:AdjustedEBITDA` simply has no key in the index -> None -> routed
+    to single_source by `route_cells`, never paired with the GAAP fact.
+    """
+    period = {"type": "duration", "start": "2023-10-01", "end": "2024-09-28"}
+
+    non_gaap_cell = {
+        "concept": "aapl:AdjustedEBITDA",
+        "period": period,
+        "dimension": None,
+        "value_displayed": "150000000000",
+        "numeric_value": 150000000000.0,
+        "decimals": "-6",
+        "citation": {
+            "accession": "0000320193-24-000123",
+            "statement_name": "IncomeStatement",
+            "row": 9,
+            "col": "duration_2023-10-01_2024-09-28",
+            "label": "Adjusted EBITDA",
+            "context_ref": "c-9",
+            "fact_id": "f-9",
+        },
+    }
+
+    # Tempting decoy: the SAME period's us-gaap:OperatingIncomeLoss fact IS
+    # present in Source B, so a label-similarity matcher ("Adjusted EBITDA"
+    # ~ "Operating Income") could wrongly grab it.
+    source_b_pack = {
+        "cik": 320193,
+        "facts": {
+            "us-gaap": {
+                "OperatingIncomeLoss": [
+                    {
+                        "start": "2023-10-01",
+                        "end": "2024-09-28",
+                        "value": 123216000000,
+                        "accn": "0000320193-24-000123",
+                        "form": "10-K",
+                        "fy": 2024,
+                        "fp": "FY",
+                        "filed": "2024-11-01",
+                    }
+                ]
+            }
+        },
+    }
+    index = xval_module.build_source_b_index(source_b_pack)
+
+    # Unit-level check: match_cell itself must reject the label-tempting
+    # OperatingIncomeLoss candidate for the non-GAAP concept.
+    assert xval_module.match_cell(non_gaap_cell, index) is None
+
+    # Routing-level check: the non-GAAP cell lands in single_source (doc-only),
+    # never in matched — and specifically never paired with OperatingIncomeLoss.
+    source_a_pack = {"cells": [non_gaap_cell]}
+    result = xval_module.route_cells(source_a_pack, index)
+
+    assert result["matched"] == []
+    assert len(result["single_source"]) == 1
+    assert result["single_source"][0] is non_gaap_cell
+    assert result["single_source"][0]["concept"] == "aapl:AdjustedEBITDA"
+
+
 def _classify_fixture_pair(doc_value: float, xbrl_value: int) -> tuple[dict, dict]:
     """A minimal matched (doc_cell, xbrl_fact) pair — the `route_cells`
     matched-tuple shape — carrying only what Task 8's classifier reads
