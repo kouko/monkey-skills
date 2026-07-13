@@ -4,6 +4,42 @@ Detail behind `SKILL.md` §Ablation mode. Use this to find which sections of a
 skill add words without adding behavioral capability, **without** needing a
 control group (ancestor / sibling skill) to compare against.
 
+## Taxonomy-guided candidate pre-pass
+
+Leave-one-out is expensive per section — `(1 + N_sections) × N_relevant_prompts`
+runs plus judges (see Cost below). **Before** running it, do a cheap read-through
+pass: scan each section of the target skill against a bloat taxonomy and count
+hits. This produces no verdicts by itself — it only **orders** which sections get
+the expensive ablation treatment first, so the budget lands on likely-bloat
+sections instead of being spent in file order.
+
+Taxonomy (five categories to scan for, per section):
+
+- **No-op sentences** — text that asserts nothing checkable; deleting it changes
+  no behavior (e.g. "this is an important step" with no test attached).
+- **Sediment** — leftovers of a superseded revision that no longer binds anything
+  current (an old workflow's vocabulary, a caveat for a mechanism since removed).
+- **Negative instructions** — "don't do X" phrasing ("don't think of an elephant" —
+  naming the forbidden move can itself trigger it); prefer restating the rule as
+  the positive behavior wanted instead of the thing to avoid.
+- **Premature completion claims** — text that declares success or done-ness the
+  workflow hasn't actually earned yet (asserting an outcome before the step that
+  produces it).
+- **Duplication with a bundled reference** — body prose restates content a
+  `references/*.md` file already owns, instead of pointing to it.
+
+Rank sections by taxonomy-hit count (most hits first) and run the leave-one-out
+procedure below in that descending-suspicion order.
+
+**This pre-pass orders candidates only.** It does not cut anything, and it does
+not change the gate: every actual cut — regardless of how it was surfaced —
+still passes the Q1/Q2/Q3 gate before landing. The "candidate-finder, not
+auto-deleter" discipline (`SKILL.md` §Ablation mode) is unchanged; the pre-pass
+is just a cheaper way to decide which candidate to check first.
+
+Taxonomy adapted from Matt Pocock's `mattpocock/skills` (`writing-great-skills`,
+MIT) / aihero.dev.
+
 ## Section splitter (leave-one-out)
 
 Split the target SKILL.md into top-level `## ` sections (keep the frontmatter +
