@@ -47,6 +47,49 @@ def _stub_requests_for_sec_edgar_client(monkeypatch):
     if "requests" not in sys.modules:
         monkeypatch.setitem(sys.modules, "requests", mock.MagicMock(name="requests"))
 
+
+@pytest.fixture(autouse=True)
+def _stub_xval_producers_for_memo_fetch(monkeypatch):
+    """Task 3: `pack_memo_fetch` now unconditionally calls
+    `_fetch_xval_source_a` (which reaches edgartools' real `import edgar`,
+    unlike the pure `select_narrative_filings` the fixture above already
+    covers) and `build_companyfacts_pack` (a real SEC companyfacts fetch)
+    for every memo-fetch. Tests in this file that exercise `pack_memo_fetch`
+    but don't assert on xval (the pre-Task-3 narrative/DCF tests) must not
+    crash on `ModuleNotFoundError: edgar` or attempt a real network call.
+
+    Stubs at the PRODUCER'S OWN boundary (`sec_edgar_client._acquire_raw_filing`
+    / `sec_edgar_client.build_companyfacts_pack`), not `pack_us._fetch_xval_source_a`
+    itself -- Task 2's own direct-call tests
+    (`test_fetch_xval_source_a_wraps_cells_envelope`,
+    `test_fetch_xval_source_a_no_10k_is_wholesale_failure_not_crash`) exercise
+    that real function's own logic and would break if this fixture shadowed
+    it wholesale. Stubbing `_acquire_raw_filing` with a resolution-error slot
+    lets `_fetch_xval_source_a`'s REAL implementation run unmodified, naturally
+    producing its own already-tested wholesale-failure shape (harmless for
+    tests that don't assert on it); `build_companyfacts_pack` has no direct
+    unit test in THIS file (its own is in test_sec_xval.py), so stubbing it
+    outright is safe. Tests that DO assert on xval
+    (`test_pack_memo_fetch_emits_xval_packs_with_status`,
+    `test_us_migration_memo_fetch_section_keys`) override this default with
+    their own narrower `mock.patch.object` for the scope of their own `with`
+    block."""
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import sec_edgar_client  # noqa: E402
+
+    monkeypatch.setattr(
+        sec_edgar_client, "_acquire_raw_filing",
+        lambda accession: {
+            "error": f"SEC EDGAR filing acquisition failed: accession {accession!r} did not resolve to a filing",
+            "error_class": "resolution",
+        },
+    )
+    monkeypatch.setattr(
+        sec_edgar_client, "build_companyfacts_pack",
+        lambda cik: {"cik": cik, "facts": {}},
+    )
+
 CLIENT_FILES = ["yfinance_client.py", "fred_client.py", "sec_edgar_client.py"]
 
 # Local cache boilerplate being deleted per Task 3a — module-level
@@ -162,15 +205,33 @@ def test_us_migration_memo_fetch_section_keys():
     the data-us memo-fetch fixture (fixture-fed / mocked subprocess —
     offline, no network). Separate from the snapshot test above for
     F.I.R.S.T independence (one pack type's assertion failing must not
-    hide the other's)."""
+    hide the other's).
+
+    Task 3 added two new top-level keys (`xval_source_a`/`xval_source_b`)
+    not present in the pre-Task-3 fixture -- added to `expected_keys`
+    directly rather than editing the fixture (out of this task's file
+    scope). Their own producers (`_fetch_xval_source_a` /
+    `build_companyfacts_pack`) are mocked here too, so this section-keys
+    test never reaches the real edgartools/companyfacts network boundary
+    those two producers touch."""
     if str(MARKETS_SCRIPTS) not in sys.path:
         sys.path.insert(0, str(MARKETS_SCRIPTS))
     import pack_us  # noqa: E402  (path-dependent import, must follow sys.path insert)
+    import sec_edgar_client  # noqa: E402
 
     fixture = json.loads((FIXTURES / "data-us-memo-fetch-sample.json").read_text())
-    expected_keys = set(fixture.keys())
+    expected_keys = set(fixture.keys()) | {"xval_source_a", "xval_source_b"}
 
-    with mock.patch.object(pack_us, "run_client") as mock_run_client:
+    with mock.patch.object(pack_us, "run_client") as mock_run_client, mock.patch.object(
+        pack_us, "_fetch_xval_source_a",
+        return_value={
+            "statements": [], "failed_items": [], "requested": 4,
+            "succeeded": 4, "failed": 0, "_status": "ok",
+        },
+    ), mock.patch.object(
+        sec_edgar_client, "build_companyfacts_pack",
+        return_value={"cik": 320193, "facts": {}},
+    ):
         mock_run_client.side_effect = _mock_run_client_for_memo_fetch(fixture)
         result = pack_us.build_pack("memo-fetch", ["AAPL"])
 
@@ -617,4 +678,118 @@ def test_fetch_xval_source_a_no_10k_is_wholesale_failure_not_crash():
     assert all(item.get("error_class") == "resolution" for item in result["failed_items"])
     assert result["_status"] == "failed", (
         "no 10-K resolved must read as a wholesale failure, not a vacuous ok/partial"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Task 3 — pack_memo_fetch wires xval_source_a (Task 2) + xval_source_b
+# (Task 1's build_companyfacts_pack) into two new top-level keys, each
+# carrying a depth-1 `_status` envelope.
+# ---------------------------------------------------------------------------
+
+def _run_client_for_xval_wiring(filings_rows: list[dict], *, cik: int = 320193):
+    """run_client side_effect for the Task 3 wiring test: YF calls return
+    `{}` (untested here), the filings call returns `filings_rows`, DCF
+    `--concept` calls return `{}`, narrative calls return a producer-shaped
+    result, and the plain `--action facts` call (no `--concept`) returns a
+    CIK-bearing facts result -- `pack_memo_fetch` reuses this `cik` for
+    `xval_source_b` rather than re-resolving it."""
+    import pack_us  # noqa: E402  (module under test, already on sys.path)
+
+    def _side_effect(script, extra_args, timeout=pack_us.CLIENT_TIMEOUT_SECONDS):
+        if script == pack_us.YF:
+            return {}
+        if script == pack_us.SEC:
+            if "filings" in extra_args:
+                return {"filings": filings_rows}
+            if "--concept" in extra_args:
+                return {}
+            if "narrative" in extra_args:
+                accession = extra_args[extra_args.index("--accession") + 1]
+                return _producer_narrative(accession)
+            # plain `--action facts` (no --concept): the CIK-bearing result
+            return {"ticker": "AAPL", "cik": cik, "action": "facts"}
+        raise AssertionError(f"unexpected run_client script: {script}")
+
+    return _side_effect
+
+
+def test_pack_memo_fetch_emits_xval_packs_with_status():
+    """Task 3: pack_memo_fetch wires `build_companyfacts_pack` (Task 1) +
+    `_fetch_xval_source_a` (Task 2) into two new top-level keys,
+    `xval_source_a` and `xval_source_b`, each carrying a depth-1 `_status`
+    envelope with a `{requested, succeeded, failed}` count-triple --
+    mirroring `_fetch_sec_narrative`'s own status discipline (never require
+    walking into nested `cells`/`facts` to learn completeness). A mocked
+    companyfacts fetch failure must surface as a depth-1 failed `_status`
+    on `xval_source_b`, not a silent empty."""
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack_us  # noqa: E402
+    import sec_edgar_client  # noqa: E402
+
+    filings_rows = _synthetic_narrative_filings_rows()
+    xval_source_a_stub = {
+        "statements": [{
+            "accession": "0000320193-26-100001",
+            "statement_name": "BalanceSheet",
+            "cells": [],
+        }],
+        "failed_items": [], "requested": 4, "succeeded": 4, "failed": 0,
+        "_status": "ok",
+    }
+    run_client_side_effect = _run_client_for_xval_wiring(filings_rows)
+
+    # -- success path --
+    with mock.patch.object(
+        pack_us, "run_client", side_effect=run_client_side_effect
+    ), mock.patch.object(
+        pack_us, "_fetch_xval_source_a", return_value=dict(xval_source_a_stub)
+    ), mock.patch.object(
+        sec_edgar_client, "build_companyfacts_pack",
+        return_value={"cik": 320193, "facts": {"us-gaap": {"Revenues": []}}},
+    ) as mock_build:
+        result = pack_us.build_pack("memo-fetch", ["AAPL"])
+
+    mock_build.assert_called_once_with(320193)  # reuse the already-resolved CIK, not re-resolve it
+
+    assert "xval_source_a" in result, "pack_memo_fetch did not emit xval_source_a"
+    assert "xval_source_b" in result, "pack_memo_fetch did not emit xval_source_b"
+
+    for section, name in (
+        (result["xval_source_a"], "xval_source_a"),
+        (result["xval_source_b"], "xval_source_b"),
+    ):
+        assert "_status" in section, f"{name} missing depth-1 _status"
+        assert {"requested", "succeeded", "failed"} <= section.keys(), (
+            f"{name} missing depth-1 {{requested, succeeded, failed}} triple: {section}"
+        )
+        assert section["succeeded"] + section["failed"] == section["requested"]
+
+    assert result["xval_source_b"]["_status"] == "ok"
+    assert result["xval_source_b"]["facts"] == {"us-gaap": {"Revenues": []}}
+
+    # -- failure path: companyfacts fetch fails --
+    with mock.patch.object(
+        pack_us, "run_client", side_effect=run_client_side_effect
+    ), mock.patch.object(
+        pack_us, "_fetch_xval_source_a", return_value=dict(xval_source_a_stub)
+    ), mock.patch.object(
+        sec_edgar_client, "build_companyfacts_pack",
+        return_value={
+            "error": "SEC EDGAR companyfacts fetch failed for CIK 320193: boom",
+            "error_class": "companyfacts_fetch_failed",
+            "identifier": "320193",
+        },
+    ):
+        failed_result = pack_us.build_pack("memo-fetch", ["AAPL"])
+
+    xval_source_b_failed = failed_result["xval_source_b"]
+    assert xval_source_b_failed["_status"] == "failed", (
+        f"a companyfacts fetch failure must surface as a depth-1 failed "
+        f"_status on xval_source_b, not a silent empty: {xval_source_b_failed}"
+    )
+    assert xval_source_b_failed["failed"] == xval_source_b_failed["requested"] > 0
+    assert "error" in xval_source_b_failed, (
+        "depth-1 failed status must carry the error, not swallow it"
     )

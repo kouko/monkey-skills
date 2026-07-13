@@ -812,6 +812,58 @@ def _fetch_xval_source_a(filings_rows: list[dict]) -> dict:
     }
 
 
+def _wrap_xval_source_b(cik: int | None) -> dict:
+    """Assemble the `xval_source_b` memo-feed contract (Task 3): wraps
+    `build_companyfacts_pack` (Task 1) in a depth-1 `_status` envelope with
+    the `{requested, succeeded, failed}` count-triple, mirroring
+    `_fetch_sec_narrative`'s (:603) and `_fetch_xval_source_a`'s (:725) own
+    status discipline -- so pack_inventory (Task 4) and the memo can read
+    completeness at depth 1 without walking into the nested `facts` field.
+
+    `requested` is always 1 (a single companyfacts fetch). `cik` is REUSED
+    from the CIK already resolved earlier in `pack_memo_fetch` (via the
+    `sec_facts` fetch) -- never re-resolved here. A missing `cik` (the
+    upstream facts fetch itself failed to resolve one) and a
+    `build_companyfacts_pack` error slot are both treated as a depth-1
+    `_status: "failed"` -- never a fabricated or silently empty Source-B
+    pack.
+    """
+    if str(SCRIPT_DIR) not in sys.path:
+        sys.path.insert(0, str(SCRIPT_DIR))
+    # Lazy import: mirrors `_fetch_sec_narrative`'s/`_fetch_xval_source_a`'s
+    # own pattern above (keeps sec_edgar_client's top-level `import requests`
+    # off this module's import-time cost for other pack types).
+    from sec_edgar_client import build_companyfacts_pack
+
+    if cik is None:
+        return {
+            "error": "no CIK resolved for companyfacts fetch (upstream sec_facts fetch failed)",
+            "error_class": "cik_unresolved",
+            "requested": 1,
+            "succeeded": 0,
+            "failed": 1,
+            "_status": "failed",
+        }
+
+    pack = build_companyfacts_pack(cik)
+    if "error" in pack:
+        return {
+            **pack,
+            "requested": 1,
+            "succeeded": 0,
+            "failed": 1,
+            "_status": "failed",
+        }
+
+    return {
+        **pack,
+        "requested": 1,
+        "succeeded": 1,
+        "failed": 0,
+        "_status": "ok",
+    }
+
+
 def pack_memo_fetch(ticker: str) -> dict:
     """Heavy single-ticker bundle for equity memo: yfinance + SEC EDGAR."""
     _log("memo-fetch start", ticker)
@@ -850,6 +902,14 @@ def pack_memo_fetch(ticker: str) -> dict:
     _log("pack [narrative selection]", ticker)
     filings_rows = filings.get("filings", []) if isinstance(filings, dict) else []
     sec_narrative = _fetch_sec_narrative(filings_rows)
+    _log("pack [xval source-a]", ticker)
+    xval_source_a = _fetch_xval_source_a(filings_rows)
+    # Reuse the CIK already resolved by the `sec_facts` fetch above -- never
+    # re-resolve it (Task 3's own design note; `resolve_cik` is a second SEC
+    # request `_wrap_xval_source_b` must not duplicate).
+    cik = facts.get("cik") if isinstance(facts, dict) else None
+    _log("pack [xval source-b]", f"{ticker} cik={cik}")
+    xval_source_b = _wrap_xval_source_b(cik)
     _log("memo-fetch done", f"{ticker} in {time.monotonic() - t0:.1f}s")
     rows = history.get("data", []) if isinstance(history, dict) else []
     info_dict = info if isinstance(info, dict) else {}
@@ -862,6 +922,8 @@ def pack_memo_fetch(ticker: str) -> dict:
         "history": rows,  # T1 canonical OHLCV alias
         "sec_filings": filings,
         "sec_narrative": sec_narrative,
+        "xval_source_a": xval_source_a,
+        "xval_source_b": xval_source_b,
         "sec_facts": {
             **facts,
             "concepts": raw_concepts,  # T3 raw — concept-keyed time-series
