@@ -133,7 +133,7 @@ on a stronger tier than production will actually run.
   original test — see his book on test-driven development,
   published by Addison-Wesley in 2002"
 - After: "Kent Beck's 'Child Test' pattern (*TDD: By Example*, 2002,
-  Part II)"
+  Part III)"
 - Grounded case: PR #559 compressed a full citation to exactly this
   line, with equivalence proven on the weakest tier.
 
