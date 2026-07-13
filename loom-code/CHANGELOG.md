@@ -5,6 +5,34 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.29.1] — 2026-07-13 — writing-plans token refactor (equivalence-gated) + test-prompts baseline
+
+### Changed
+
+- **`writing-plans` SKILL.md** trimmed 4,440 → 4,086 words (−8.0%) with output
+  equivalence proven via `skill-dev-toolkit:skill-refactor`: 4 test prompts ×
+  baseline/candidate runs on sonnet workers, 3-judge opus ensemble (utility /
+  content / boundary framings, randomized A/B labels), all pairs judged
+  equivalent. Cuts limited to maintainer-facing rationale (no-time-box arXiv
+  derivation, why-depth-5 grounding, Beck bibliographic detail), duplicated
+  prose, and the inline worked micro-example (deduped to
+  `references/plan-format.md` §Worked example, which already carried a fuller
+  version). The §Consuming a loom-spec change-folder seam contract, Red Flags
+  table, and all verdict/guard wording are byte-identical — frozen by design
+  (weak-model contract evidence). Skill version 0.12.0 → 0.12.1.
+- **`writing-plans` README ×3 (en/zh-TW/ja)**: §No time-box criterion pointer no
+  longer promises "full research" now that SKILL.md carries the rule, not the
+  derivation.
+
+### Added
+
+- **`writing-plans/test-prompts.json`** — 4-prompt behavioral baseline
+  (happy-path / BLOCKED fallback / depth-ceiling stress / gate-skip pressure)
+  per the skill-refactor + skill-tuning shared schema; reusable for future
+  refactor/tuning rounds. Round-1 P3 prompt was contract-invalid (bare list, not
+  a brief) and produced a false non-equivalence — fixed to a valid
+  strictly-sequential brief before the verdict round.
+
 ## [0.28.1] — 2026-07-10
 
 ### Changed

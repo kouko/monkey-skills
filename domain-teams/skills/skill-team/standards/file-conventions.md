@@ -250,6 +250,7 @@ A skill directory may contain these files at the top level:
 | `SKILL.md` | Required | LLM-discovery SSOT — frontmatter + workflows + gate triggers. Read by Claude when the skill is invoked. |
 | `README.md` | Optional | Human-facing GitHub-rendered overview. Optional sibling to `SKILL.md`; the two serve different audiences. See §README.md and SKILL.md Coexistence below. |
 | `README.{lang}.md` | Optional | i18n translations of `README.md` using BCP 47 tags (e.g., `README.ja.md`, `README.zh-TW.md`). Only meaningful when `README.md` exists. |
+| `test-prompts.json` | Optional | Behavioral eval input set for the skill — evaluation data, not skill content. Schema SoT: `skill-dev-toolkit:skill-refactor/references/test-prompts-schema.md` (which mandates this exact location, "same level as SKILL.md"). Consumed by skill-refactor / skill-tuning / skill-creator-advance. |
 
 No other files at the skill top level.
 

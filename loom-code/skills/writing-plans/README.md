@@ -21,7 +21,7 @@ brainstorming → brief                         (Discovery stage)
 
 ## The hard rule
 
-**Per-task, one failing test.** If you can't write ONE failing test that goes green when a task is done, it's not one task — split it (or if it needs 3 tests, it's 3 tasks). No time estimate is part of this criterion: an LLM agent has no experiential grounding in wall-clock duration, and no rigorous source ties a plan-writer's completion-time guess to agent reliability — see [`SKILL.md`](SKILL.md) §No time-box criterion for the full research this rests on.
+**Per-task, one failing test.** If you can't write ONE failing test that goes green when a task is done, it's not one task — split it (or if it needs 3 tests, it's 3 tasks). No time estimate is part of this criterion: an LLM agent has no experiential grounding in wall-clock duration, and no rigorous source ties a plan-writer's completion-time guess to agent reliability — see [`SKILL.md`](SKILL.md) §No time-box criterion.
 
 This pushes back on briefs that try to do too much and on plans that hide complexity in vague tasks — the forcing function is the test, not a clock.
 

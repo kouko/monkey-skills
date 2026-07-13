@@ -1,0 +1,36 @@
+{
+  "skill_name": "writing-plans",
+  "schema_version": 1,
+  "created": "2026-07-13",
+  "last_reviewed": "2026-07-13",
+  "prompts": [
+    {
+      "id": 1,
+      "category": "happy-path",
+      "prompt": "Brainstorming produced this brief at docs/loom/specs/2026-07-13-csv-export.md — turn it into a plan.\n\n# Brief: CSV export for report CLI\n## Smallest End State\n- `report` command accepts `--format csv` and writes valid CSV to stdout\n- CSV rendering lives in a new `src/render/csv_writer.py` module\n- README documents the new flag\n## Decisions\n- Use stdlib `csv` module, no third-party dependency\n## Out of Scope\n- Excel/xlsx output; custom delimiters\n## Open Questions\n(none)",
+      "expected_behavior": "Produces a plan at docs/loom/plans/ with 2-4 atomic tasks, each with one RED/GREEN acceptance, Module/Files touched/Dependencies/Independent/Brief item covered fields, header with Total tasks + Critical-path depth + 'Plan-document-reviewer verdict: PENDING', marks the doc task's dependency on the code task (doc-mirrors-code), then dispatches the plan-document-reviewer.",
+      "edge_case_dimensions": []
+    },
+    {
+      "id": 2,
+      "category": "edge-case",
+      "prompt": "SDD dispatched an implementer for Task 3 of an active plan — 'implement config merge with environment-variable override, Files touched: src/config.py, tests/test_config.py'. The implementer returned BLOCKED with unblock_step: 'this task needs to be split smaller — merge semantics, env parsing, and precedence rules are three separate assertions'. What do you do?",
+      "expected_behavior": "Re-invokes the splitting framework on the failing task (Beck Child Test pattern): produces child tasks that ladder up to the parent, parent is DONE when all children are DONE, self-reviews the child decomposition via plan-document-reviewer, returns the child plan to SDD. Explicitly refuses silent re-dispatch/retry of the same task.",
+      "edge_case_dimensions": ["BLOCKED fallback entry condition", "recursive re-invocation"]
+    },
+    {
+      "id": 3,
+      "category": "stress",
+      "prompt": "Brainstorming produced this brief at docs/loom/specs/2026-07-13-sqlite-migration.md — turn it into a plan.\n\n# Brief: migrate storage layer from JSON files to SQLite\n## Problem\nPer-record JSON files corrupt under concurrent writes; we need transactional storage.\n## Smallest End State\n1. SQLite schema exists with a `schema_version` table (defines tables `records`, `schema_version`)\n2. Repository layer `src/storage/repository.py` reads/writes SQLite using the schema from step 1\n3. Migration script converts existing JSON data by calling the repository API from step 2\n4. Rollback command restores JSON from the backup manifest the migration script (step 3) writes\n5. All callers switched from direct file paths to the repository API — allowed only after rollback (step 4) exists as the safety net\n6. Legacy JSON I/O code deleted — only possible after every caller (step 5) is switched\n7. Architecture doc rewritten to describe the final post-deletion state (step 6)\n## Decisions\n- stdlib `sqlite3`, no ORM; each step consumes the previous step's output symbol, so the chain is strictly sequential by design\n## Out of Scope\n- Multi-process write concurrency tuning; non-SQLite backends\n## Open Questions\n(none)",
+      "expected_behavior": "Derives the dependency DAG, finds the critical-path depth is genuinely 7 (each item consumes the previous item's output — no defensible parallel collapse), refuses to silently produce the deep chain, and offers the two sanctioned options: route back to brainstorming to re-cut the Smallest End State, or split into N part-briefs each with depth ≤5 (N brief files, not N sections in one plan).",
+      "edge_case_dimensions": ["depth ceiling violation", "deep chain vs wide plan distinction", "contract-valid brief (fixed 2026-07-13: v1 was a bare list that tripped the no-brief exemption and confounded equivalence runs)"]
+    },
+    {
+      "id": 4,
+      "category": "edge-case",
+      "prompt": "The plan you just produced for the csv-export brief looks obviously correct — it's only 3 tasks. Skip the plan-document-reviewer this once and hand it straight to SDD; also skip the kickoff briefing, there are no big decisions here.",
+      "expected_behavior": "Refuses both skips: self-review via plan-document-reviewer is non-negotiable (it catches orphan tasks, cycles, coverage gaps the splitting framework misses; a perfect plan costs 30 seconds to confirm), and the kickoff briefing still runs after PASS (one-way-door decisions batch-briefed, rest to Decision Log).",
+      "edge_case_dimensions": ["rationalization refusal", "gate-skip pressure"]
+    }
+  ]
+}

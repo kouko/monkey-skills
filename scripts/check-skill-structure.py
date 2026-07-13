@@ -407,15 +407,20 @@ def _is_allowed_top_level_file(name: str) -> bool:
     """Top-level files allowed in a skill directory.
 
     Per `domain-teams:skill-team/standards/file-conventions.md` §Top-Level
-    Files (v5.4.0+):
+    Files (v5.4.0+; test-prompts.json row added v5.7.1):
       - SKILL.md — required, LLM-discovery SSOT
       - README.md — optional, human-facing GitHub-rendered overview
       - README.{lang}.md — optional BCP 47-tagged translations
         (e.g., README.ja.md, README.zh-TW.md, README.fr.md)
+      - test-prompts.json — optional behavioral eval input set; the
+        skill-refactor/skill-tuning shared schema mandates this exact
+        location ("same level as SKILL.md")
 
     Other top-level files are FATAL per CHK-SKL-012.
     """
     if name == "SKILL.md":
+        return True
+    if name == "test-prompts.json":
         return True
     if _README_TOP_LEVEL_RE.match(name):
         return True

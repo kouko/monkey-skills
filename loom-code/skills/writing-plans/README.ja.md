@@ -21,7 +21,7 @@ brainstorming → brief                            (Discovery 段階)
 
 ## 厳格ルール
 
-**タスク 1 つにつき、失敗するテスト 1 つ。** そのタスクが完了したら green になる failing test を 1 つ書けないなら、それは 1 タスクではない — 分割する（3 つ必要なら 3 タスク）。この基準に時間見積りは含まれない：LLM エージェントには wall-clock の経験的な感覚がなく、「plan-writer が推測した完了時間」を agent の信頼性に結びつける厳密な根拠は存在しない — 詳しい根拠は [`SKILL.md`](SKILL.md) §No time-box criterion 参照。
+**タスク 1 つにつき、失敗するテスト 1 つ。** そのタスクが完了したら green になる failing test を 1 つ書けないなら、それは 1 タスクではない — 分割する（3 つ必要なら 3 タスク）。この基準に時間見積りは含まれない：LLM エージェントには wall-clock の経験的な感覚がなく、「plan-writer が推測した完了時間」を agent の信頼性に結びつける厳密な根拠は存在しない — [`SKILL.md`](SKILL.md) §No time-box criterion 参照。
 
 これは欲張りすぎなブリーフを押し返し、曖昧なタスクで複雑さを隠したプランを押し返す forcing function だが、その基準は時計ではなくテストである。
 
