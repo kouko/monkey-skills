@@ -111,6 +111,38 @@ the prompt.
 **Equivalence risk**: medium. Order matters for some Claude
 behaviors; test if the section's effect changes.
 
+### Leading-Word Substitution
+
+Replace an in-file explanation or derivation with the NAME of a
+pre-trained concept the model already holds (a Fowler smell name, a
+Beck pattern, a spec identifier like BCP 47) — the name recruits the
+model's prior instead of the prose re-teaching it from scratch.
+
+**Guard (mandatory)**: equivalence runs for this move MUST execute
+on the weakest model tier that will run the target skill in
+production. Priors vary by tier — a leading word that lands on Opus
+may not fire on Haiku (Anthropic's own skill best-practices carries
+the same Haiku-vs-Opus warning; this repo's explicit-contract
+weak-tier evidence backs it independently). Never sign this move off
+on a stronger tier than production will actually run.
+
+**Example**:
+- Before: "Kent Beck's approach where, if a test turns out too big
+  to make pass in one step, you write a smaller test representing
+  the broken-off part, get that one green, then return to the
+  original test — see his book on test-driven development,
+  published by Addison-Wesley in 2002"
+- After: "Kent Beck's 'Child Test' pattern (*TDD: By Example*, 2002,
+  Part II)"
+- Grounded case: PR #559 compressed a full citation to exactly this
+  line, with equivalence proven on the weakest tier.
+
+**Equivalence risk**: medium (tier-dependent priors) — proceed only
+after the weakest-tier run above passes.
+
+Attribution: technique from Matt Pocock's mattpocock/skills
+`writing-great-skills` (MIT) / aihero.dev.
+
 ## High-risk moves (require explicit user opt-in)
 
 ### Remove Section Considered Redundant
@@ -193,6 +225,7 @@ even if each round individually passed.
 | Extract to references/ | Medium | Auto with extra Q1 scrutiny |
 | Move examples to companion | Medium | Auto with extra Q1 scrutiny |
 | Reorder sections | Medium | User-confirm before |
+| Leading-word substitution | Medium | Auto with weakest-tier equivalence run |
 | Remove redundant section | High | User-confirm explicitly |
 | Compress list to prose | High | User-confirm explicitly |
 | Replace specific with abstract | Out-of-scope | Don't |
