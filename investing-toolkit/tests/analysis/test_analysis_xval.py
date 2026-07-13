@@ -402,6 +402,56 @@ def test_undefined_divergence_is_na_not_dropped(xval_module):
     assert entry3["xbrl_value"] == 100_000_000
 
 
+def test_within_grain_divergence_annotated_scale_rounding(xval_module):
+    """Task 10 (REVISED, two-source tolerance): on a matched (doc_cell,
+    xbrl_fact) pair, a NON-ZERO divergence that falls fully within the
+    rounding grain implied by the doc cell's `decimals` (e.g. decimals="-6"
+    -> grain 10**6, half-grain tolerance 500000) is a benign artifact of the
+    doc side's rounding, not a tagging error -> annotated
+    `category: "scale/rounding"`, `alert` forced "low",
+    `source_mode: "two-source"`, with an explanatory note (plan Notes
+    §Scale/rounding grounding correction; brief Requirement: Recognize
+    scale/rounding as a legitimate divergence source).
+
+    NEGATIVE (non-vacuous): a divergence BEYOND the grain is a real
+    divergence and must NOT be labeled scale/rounding — the classifier's
+    normal band stands.
+    """
+    # Positive: |diff| 200000 <= half-grain 500000 (decimals="-6" -> grain 10**6).
+    doc_cell, xbrl_fact = _classify_fixture_pair(1234000000.0, 1233800000)
+    entry = xval_module.classify_divergence(doc_cell, xbrl_fact)
+
+    assert entry["category"] == "scale/rounding"
+    assert entry["alert"] == "low"
+    assert entry["source_mode"] == "two-source"
+    assert entry["note"]
+
+    # Negative: |diff| 6200000 > half-grain 500000 -> a real divergence, NOT
+    # labeled scale/rounding.
+    doc_cell2, xbrl_fact2 = _classify_fixture_pair(1240000000.0, 1233800000)
+    entry2 = xval_module.classify_divergence(doc_cell2, xbrl_fact2)
+
+    assert entry2["category"] != "scale/rounding"
+
+
+def test_scale_rounding_guards_skip_non_rounding_cases(xval_module):
+    """Task 10 guard branches: the scale/rounding label must NOT fire when
+    (a) there is ZERO divergence (a clean match is not a rounding artifact),
+    or (b) the doc cell's `decimals` is missing/malformed (no grain can be
+    derived) — in both cases `category` stays unlabeled and no crash occurs.
+    """
+    # (a) Zero divergence -> not a rounding artifact.
+    doc_cell, xbrl_fact = _classify_fixture_pair(1234000000.0, 1234000000)
+    entry = xval_module.classify_divergence(doc_cell, xbrl_fact)
+    assert entry["category"] != "scale/rounding"
+
+    # (b) Malformed/missing `decimals` -> grain underivable -> skip, no crash.
+    doc_cell2, xbrl_fact2 = _classify_fixture_pair(1234000000.0, 1233800000)
+    doc_cell2["decimals"] = None
+    entry2 = xval_module.classify_divergence(doc_cell2, xbrl_fact2)
+    assert entry2["category"] != "scale/rounding"
+
+
 def test_no_counterpart_routes_to_single_source(xval_module):
     """Task 7: a Source-A doc cell whose (concept, period, dimension) triple
     has NO Source-B counterpart is recorded UNMATCHED and routed to the

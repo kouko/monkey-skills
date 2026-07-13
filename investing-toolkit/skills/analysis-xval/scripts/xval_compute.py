@@ -266,14 +266,65 @@ def _compute_divergence(doc_value: float | None, xbrl_value: int | float | None)
     }
 
 
+def check_scale_rounding(doc_cell: dict, divergence: dict) -> dict | None:
+    """Task 10 (REVISED, two-source tolerance — plan Notes §Scale/rounding
+    grounding correction): on a matched pair's already-computed divergence
+    (both sides full-magnitude, per the live probe that killed the original
+    single-source rendered-vs-full framing — `value_displayed ==
+    numeric_value` on every real cell), decide whether a NON-ZERO divergence
+    is fully explained by the doc cell's rounding grain rather than a real
+    tagging error.
+
+    Grain comes ONLY from the doc cell's `decimals` field (e.g. "-6" ->
+    `ndigits=-6` -> `grain=10**6`) — NEVER a `scale` field (companyfacts has
+    none; Source A has none either) and NEVER an invented rendered-display
+    mantissa. Tolerance is half a grain: the maximum two same-underlying
+    values can differ once each is rounded to that grain.
+
+    Returns an annotation dict (`category`, `alert`, `source_mode`, `note`)
+    to be merged onto the report entry when the divergence qualifies, or
+    `None` when it does not — either because the divergence is zero (a
+    clean match, not a rounding artifact), beyond tolerance (a real
+    divergence — left for the classifier's normal band), undefined
+    (`alert == "n/a"` — no valid abs_diff to reason about), or `decimals` is
+    missing/malformed (fails soft, never crashes).
+    """
+    if divergence.get("alert") == "n/a":
+        return None
+    abs_diff = divergence.get("abs_diff")
+    if abs_diff is None or abs_diff == 0:
+        return None
+    try:
+        ndigits = int(doc_cell.get("decimals"))
+    except (TypeError, ValueError):
+        return None
+    grain = 10 ** (-ndigits)
+    tolerance = grain / 2
+    if abs(abs_diff) > tolerance:
+        return None
+    return {
+        "category": "scale/rounding",
+        "alert": "low",
+        "source_mode": "two-source",
+        "note": (
+            f"|abs_diff|={abs(abs_diff)} within half the decimals-implied "
+            f"rounding grain ({tolerance} of grain {grain}, decimals="
+            f"{doc_cell.get('decimals')!r}) — benign rounding, not a tagging error"
+        ),
+    }
+
+
 def classify_divergence(doc_cell: dict, xbrl_fact: dict) -> dict:
     """Build a classified report entry (plan Notes §Declared schemas) for one
     matched `(doc_cell, xbrl_fact)` pair — the output of `route_cells`'s
     `matched` bucket. Diffs the doc cell's full-magnitude `numeric_value`
     against the matched Source-B fact's full-magnitude `value` (both
     full-magnitude per the live probe, so a genuinely-agreeing pair yields
-    ~0 pct_diff -> low; the doc-table's DISPLAYED/rounded value is a
-    separate, later concern — Task 10's scale/rounding check, not here).
+    ~0 pct_diff -> low). A matched pair is always two-source by construction
+    (both a doc cell AND its companyfacts counterpart exist), so
+    `source_mode` is set here unconditionally; `category` defaults to `None`
+    and is only overridden by `check_scale_rounding` (Task 10) when the
+    divergence is fully explained by the doc side's rounding grain.
 
     Both `doc_value` and `xbrl_value` are always retained on the entry,
     regardless of alert level (plan Notes §Anti-fabrication invariant).
@@ -281,14 +332,20 @@ def classify_divergence(doc_cell: dict, xbrl_fact: dict) -> dict:
     doc_value = doc_cell.get("numeric_value")
     xbrl_value = xbrl_fact.get("value")
     divergence = _compute_divergence(doc_value, xbrl_value)
-    return {
+    entry = {
         "concept": doc_cell["concept"],
         "period": doc_cell["period"],
         "dimension": doc_cell.get("dimension"),
         "doc_value": doc_value,
         "xbrl_value": xbrl_value,
+        "source_mode": "two-source",
+        "category": None,
         **divergence,
     }
+    scale_rounding = check_scale_rounding(doc_cell, divergence)
+    if scale_rounding is not None:
+        entry.update(scale_rounding)
+    return entry
 
 
 def main() -> int:
