@@ -856,6 +856,186 @@ def test_restatement_signal_survives_reverted_middle_value(xval_module):
     assert "us-gaap:ResearchAndDevelopmentExpense" not in signaled
 
 
+def test_high_alert_surfaced_both_values_and_label(xval_module, runner, tmp_path):
+    """Task 14: a `high` matched pair is surfaced loudly under `high_alerts`
+    with doc value, XBRL value, `pct_diff`, and BOTH citations intact —
+    nothing dropped or overwritten (plan Notes §Anti-fabrication invariant) —
+    and its `source_mode == "two-source"`. A structural (decimal-disagreement)
+    finding alongside it carries `source_mode == "single-source"` — the
+    load-bearing two/single-source honesty label stamped on every entry.
+    Also confirms `main()` is wired: the CLI emits the SAME populated report,
+    not the earlier empty scaffold (Task 3).
+    """
+    period = {"type": "duration", "start": "2023-10-01", "end": "2024-09-28"}
+
+    high_cell = {
+        "concept": "us-gaap:Revenues",
+        "period": period,
+        "dimension": None,
+        "value_displayed": "108000000",
+        "numeric_value": 108_000_000.0,
+        "decimals": "-6",
+        "citation": {
+            "accession": "0000320193-24-000123",
+            "statement_name": "IncomeStatement",
+            "row": 5,
+            "col": "duration_2023-10-01_2024-09-28",
+            "label": "Total net sales",
+            "context_ref": "c-1",
+            "fact_id": "f-1",
+        },
+    }
+    # A decimal-disagreement structural finding: sub-grain digits inconsistent
+    # with its own decimals="-6" claim — single-source, no companyfacts
+    # counterpart consulted (Task 13).
+    disagreement_cell = {
+        "concept": "us-gaap:CostOfRevenue",
+        "period": period,
+        "dimension": None,
+        "value_displayed": "210352001234",
+        "numeric_value": 210352001234.0,
+        "decimals": "-6",
+        "citation": {
+            "accession": "0000320193-24-000123",
+            "statement_name": "IncomeStatement",
+            "row": 6,
+            "col": "duration_2023-10-01_2024-09-28",
+            "label": "Cost of sales",
+            "context_ref": "c-2",
+            "fact_id": "f-2",
+        },
+    }
+
+    source_a_pack = {"cells": [high_cell, disagreement_cell]}
+    source_b_pack = {
+        "cik": 320193,
+        "facts": {
+            "us-gaap": {
+                "Revenues": [
+                    {
+                        "start": "2023-10-01",
+                        "end": "2024-09-28",
+                        "value": 100_000_000,
+                        "accn": "0000320193-24-000123",
+                        "form": "10-K",
+                        "fy": 2024,
+                        "fp": "FY",
+                        "filed": "2024-11-01",
+                    }
+                ]
+            }
+        },
+    }
+
+    report = xval_module.build_report(source_a_pack, source_b_pack)
+
+    assert len(report["high_alerts"]) == 1
+    alert = report["high_alerts"][0]
+    assert alert["alert"] == "high"
+    assert alert["source_mode"] == "two-source"
+    assert alert["doc_value"] == 108_000_000.0
+    assert alert["xbrl_value"] == 100_000_000
+    assert alert["pct_diff"] == pytest.approx(8.0)
+    assert alert["doc_citation"] == high_cell["citation"]
+    assert alert["xbrl_citation"]["accn"] == "0000320193-24-000123"
+
+    # Structural finding: source_mode == single-source, nothing dropped.
+    disagreement_entries = [
+        e for e in report["single_source"]
+        if e.get("category") == "decimal-disagreement (DQC 2.4.1)"
+    ]
+    assert len(disagreement_entries) == 1
+    assert disagreement_entries[0]["source_mode"] == "single-source"
+    assert disagreement_entries[0]["concept"] == "us-gaap:CostOfRevenue"
+
+    # CLI wiring: main() must emit the SAME populated report, not the
+    # earlier empty scaffold.
+    source_a_path = tmp_path / "source_a.json"
+    source_b_path = tmp_path / "source_b.json"
+    source_a_path.write_text(json.dumps(source_a_pack), encoding="utf-8")
+    source_b_path.write_text(json.dumps(source_b_pack), encoding="utf-8")
+
+    res = runner(XVAL_SCRIPT, "--source-a", str(source_a_path), "--source-b", str(source_b_path))
+    assert res.returncode == 0, res.stderr
+    payload = json.loads(res.stdout)
+    assert len(payload["high_alerts"]) == 1
+    assert payload["high_alerts"][0]["source_mode"] == "two-source"
+    assert any(
+        e.get("category") == "decimal-disagreement (DQC 2.4.1)"
+        for e in payload["single_source"]
+    )
+
+
+def test_matched_cell_with_decimal_disagreement_surfaces_in_both_buckets(xval_module):
+    """Task 14: a single doc cell that is BOTH matched to a companyfacts fact
+    (a two-source comparison) AND self-inconsistent on its own `decimals` (a
+    single-source DQC-2.4.1 finding) must surface as TWO independent findings —
+    a two-source entry in `comparisons` and a single-source entry in
+    `single_source` — never collided, deduped, or one silently dropped (the
+    "never drop a finding" premise, plan Notes §Anti-fabrication invariant).
+    """
+    period = {"type": "duration", "start": "2023-10-01", "end": "2024-09-28"}
+    # numeric_value 210352001234 is NOT a clean multiple of 10**6 (decimals=-6)
+    # -> decimal-disagreement; AND it has a companyfacts counterpart -> matched.
+    cell = {
+        "concept": "us-gaap:Revenues",
+        "period": period,
+        "dimension": None,
+        "value_displayed": "210352001234",
+        "numeric_value": 210352001234.0,
+        "decimals": "-6",
+        "citation": {
+            "accession": "0000320193-24-000123",
+            "statement_name": "IncomeStatement",
+            "row": 5,
+            "col": "duration_2023-10-01_2024-09-28",
+            "label": "Total net sales",
+            "context_ref": "c-1",
+            "fact_id": "f-1",
+        },
+    }
+    source_a_pack = {"cells": [cell]}
+    source_b_pack = {
+        "cik": 320193,
+        "facts": {
+            "us-gaap": {
+                "Revenues": [
+                    {
+                        "start": "2023-10-01",
+                        "end": "2024-09-28",
+                        "value": 210352000000,
+                        "accn": "0000320193-24-000123",
+                        "form": "10-K",
+                        "fy": 2024,
+                        "fp": "FY",
+                        "filed": "2024-11-01",
+                    }
+                ]
+            }
+        },
+    }
+
+    report = xval_module.build_report(source_a_pack, source_b_pack)
+
+    # Two-source comparison entry (matched pair) present.
+    matched = [e for e in report["comparisons"] if e["concept"] == "us-gaap:Revenues"]
+    assert len(matched) == 1
+    assert matched[0]["source_mode"] == "two-source"
+
+    # Single-source DQC finding for the SAME cell present, independently.
+    dqc = [
+        e for e in report["single_source"]
+        if e.get("category") == "decimal-disagreement (DQC 2.4.1)"
+        and e["concept"] == "us-gaap:Revenues"
+    ]
+    assert len(dqc) == 1
+    assert dqc[0]["source_mode"] == "single-source"
+
+    # The two findings are distinct objects — no collision, overwrite, or dedupe.
+    assert matched[0] is not dqc[0]
+    assert matched[0].get("category") != "decimal-disagreement (DQC 2.4.1)"
+
+
 def test_no_counterpart_routes_to_single_source(xval_module):
     """Task 7: a Source-A doc cell whose (concept, period, dimension) triple
     has NO Source-B counterpart is recorded UNMATCHED and routed to the

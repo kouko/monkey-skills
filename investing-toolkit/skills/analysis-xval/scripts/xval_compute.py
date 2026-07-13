@@ -14,11 +14,15 @@ analysis-comps CLI template:
   produced by data-markets/scripts/sec_edgar_client.py::extract_statement_cells).
 - Source B = a companyfacts fact pack (`summarize_concept` shape).
 
-This module currently ships the CLI + report-envelope skeleton (Task 3),
-the Source-B fact index (Task 4), full `(concept, period, dimension)`
-triple matching (Tasks 5-6), and the matched/single-source routing
-partition (Task 7) — classification is not yet wired into the CLI.
-`comparisons` is still always empty for now.
+This module ships the CLI + report-envelope (Task 3), the Source-B fact
+index (Task 4), full `(concept, period, dimension)` triple matching
+(Tasks 5-6), the matched/single-source routing partition (Task 7),
+divergence classification incl. scale/rounding + n/a handling (Tasks 8-10),
+non-GAAP non-force-matching (Task 11), restatement-signal /
+decimal-disagreement structural checks (Tasks 12-13), and `build_report`
+(Task 14), which assembles all of the above into the populated report and
+is wired into `main()` — `comparisons`/`high_alerts`/`single_source` are no
+longer empty.
 
 Declared schemas (plan Notes §Declared schemas — producer/consumer contract):
 - Source A cell: {concept, period:{type:"instant"|"duration", instant?,
@@ -533,6 +537,80 @@ def classify_divergence(doc_cell: dict, xbrl_fact: dict) -> dict:
     return entry
 
 
+def build_report(source_a_pack: dict, source_b_pack: dict) -> dict:
+    """Task 14: assemble the full xval report — wires `route_cells` (T5-T7),
+    `classify_divergence` (T8-T10), `check_decimal_disagreement` (T13), and
+    `detect_restatement_signals` (T12) into the declared report envelope
+    (plan Notes §Declared schemas): `{comparisons, single_source,
+    high_alerts}` (caller adds `_provenance`).
+
+    `comparisons`: every matched `(doc_cell, xbrl_fact)` pair, classified via
+    `classify_divergence`, with BOTH provenance citations attached —
+    `doc_citation` (the doc cell's own citation dict: accession + statement
+    name + cell location) and `xbrl_citation` (`{concept, accn}` from the
+    matched companyfacts fact) — never dropped, never overwritten (plan
+    Notes §Anti-fabrication invariant).
+
+    `high_alerts`: every `comparisons` entry classified `alert == "high"`
+    ALSO appears here — the SAME dict (doc_value, xbrl_value, pct_diff, both
+    citations all present, untouched) — surfaced loudly, never silently
+    reconciled (Task 14's own requirement). Nothing is picked, discarded, or
+    averaged; both sides of a high divergence are always visible together.
+
+    `single_source`: a documented HETEROGENEOUS bucket of single-source-mode
+    structural findings, discriminated by `category` — deliberately NOT
+    forced into the doc-vs-xbrl `comparisons` shape (Task 12 code-quality
+    reviewer flag: a restatement signal's `earlier_value`/`later_value`/
+    `earlier_accn`/`later_accn` fields are never renamed to `doc_value`/
+    `xbrl_value` — that would misrepresent a cross-filing XBRL-vs-XBRL signal
+    as a doc-vs-XBRL pair, an honesty violation of `source_mode`):
+      - decimal-disagreement (DQC 2.4.1) entries, one per Source-A cell that
+        `check_decimal_disagreement` flags. ALL cells are checked regardless
+        of match status — a cell's own value/decimals precision consistency
+        is a structural property of that one fact, independent of whether a
+        companyfacts counterpart exists.
+      - restatement-signal entries, verbatim from
+        `detect_restatement_signals` (its own earlier/later shape, unchanged).
+    Task 15 (doc-only unmatched cells) adds a third shape to this same
+    bucket later; each shape's own fields plus `category`/`source_mode`
+    let a consumer tell them apart without guessing.
+    """
+    source_b_index = build_source_b_index(source_b_pack)
+    routed = route_cells(source_a_pack, source_b_index)
+
+    comparisons: list[dict] = []
+    high_alerts: list[dict] = []
+    for doc_cell, xbrl_fact in routed["matched"]:
+        entry = classify_divergence(doc_cell, xbrl_fact)
+        entry["doc_citation"] = doc_cell.get("citation")
+        entry["xbrl_citation"] = {
+            "concept": xbrl_fact.get("concept"),
+            "accn": xbrl_fact.get("accn"),
+        }
+        comparisons.append(entry)
+        if entry.get("alert") == "high":
+            high_alerts.append(entry)
+
+    single_source: list[dict] = []
+    for cell in source_a_pack.get("cells", []):
+        disagreement = check_decimal_disagreement(cell)
+        if disagreement is not None:
+            single_source.append({
+                "concept": cell.get("concept"),
+                "period": cell.get("period"),
+                "dimension": cell.get("dimension"),
+                "doc_citation": cell.get("citation"),
+                **disagreement,
+            })
+    single_source.extend(detect_restatement_signals(source_b_pack))
+
+    return {
+        "comparisons": comparisons,
+        "high_alerts": high_alerts,
+        "single_source": single_source,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Pure-compute cross-validation: doc-table cells vs XBRL companyfacts (Layer 2)."
@@ -548,21 +626,20 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        _load_pack(args.source_a)
+        source_a_pack = _load_pack(args.source_a)
     except (OSError, json.JSONDecodeError) as exc:
         sys.stderr.write(f"[analysis-xval ERROR] --source-a {args.source_a}: {exc}\n")
         return 2
 
     try:
-        _load_pack(args.source_b)
+        source_b_pack = _load_pack(args.source_b)
     except (OSError, json.JSONDecodeError) as exc:
         sys.stderr.write(f"[analysis-xval ERROR] --source-b {args.source_b}: {exc}\n")
         return 2
 
+    report = build_report(source_a_pack, source_b_pack)
     payload = {
-        "comparisons": [],
-        "high_alerts": [],
-        "single_source": [],
+        **report,
         "_provenance": {
             "skill": "analysis-xval",
             "io": "none",
