@@ -213,3 +213,28 @@ filesystem watch, etc.).
 - [neonwatty.com — Interview skills with AskUserQuestion](https://neonwatty.com/posts/interview-skills-claude-code/) — practitioner walk-through of mandatory-gate patterns
 - [ClaudeLog — AskUserQuestion FAQ](https://claudelog.com/faqs/what-is-ask-user-question-tool-in-claude-code/)
 - [GitHub: claude-code#9846 — AskUserQuestion inert until plan mode toggled](https://github.com/anthropics/claude-code/issues/9846) — known bug requiring plan-mode framing
+
+---
+
+## Empty-Prompt Onboarding (companion intake pattern, moved from SKILL.md body)
+
+A related user-interaction-at-intake pattern — recommended for conversational / multi-workflow skills. When a user invokes a skill with no prompt or a very sparse prompt, consider including a "surface orientation" behavior so the skill can introduce itself, explain how it works with the user, and ask for the minimum inputs needed. This is an opt-in pattern — single-shot utility skills (file transforms, fixed-format generators) don't need it; conversational or multi-workflow skills benefit significantly.
+
+**Recommended pattern** (adapt to your skill's shape):
+
+1. **Surface orientation** — present the user with:
+   - What the skill does (top 3 triggers from the description's "Use when" clause)
+   - What it doesn't do (delegation hints for adjacent skills)
+   - How the interaction will unfold (intake questions + workflow phases + delivery)
+   - What inputs help most (2-3 prerequisite bullets)
+2. **Route to intake** — either invoke a dedicated brainstorming protocol OR ask 2-3 bootstrap questions covering scope / inputs / output expectation
+3. **Sufficient-context skip** — bypass orientation when any context source already provides an actionable brief. Check **all** of these, not just the current prompt:
+   - (a) Current-turn prompt ≥50 chars with a concrete ask
+   - (b) Prior conversation turns state scope / artifact / output expectation
+   - (c) IDE context (`<ide_selection>`, opened files) identifies the target
+   - (d) Referenced plan / memory file encodes the brief
+   - (e) Upstream skill handoff (main agent provided a prior skill's output)
+
+**Common pitfall**: triggering orientation on "empty current prompt" alone creates friction for returning users — Claude's context often already carries the brief. Always check the full context, not just the current prompt's length.
+
+For domain-team skills (which follow a stricter structural-gate convention), this pattern is a hard requirement encoded in the CHK-SKL-013 gate — consult your domain-team plugin's structure standard for the rigorous version (Empty Invocation Fallback Rules + a Surface Orientation Format skeleton, with a hard-gate exception for skills with mandatory intake).

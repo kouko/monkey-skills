@@ -2,7 +2,7 @@
   "skill_name": "skill-creator-advance",
   "schema_version": 1,
   "created": "2026-04-29",
-  "last_reviewed": "2026-04-29",
+  "last_reviewed": "2026-07-13",
   "prompts": [
     {
       "id": 1,
@@ -24,6 +24,13 @@
       "prompt": "improve my skill",
       "expected_behavior": "Skill triggers the Improving Existing Skill router; asks the user to clarify which type of improvement (a) token / structure refactor [→ skill-refactor], (b) output quality A/B [→ skill-tuning], or (c) structural rewrite [→ continue here]. Does NOT default into the creation flow.",
       "edge_case_dimensions": ["vague intent", "router behavior test", "ambiguous request"]
+    },
+    {
+      "id": 4,
+      "category": "edge-case",
+      "prompt": "My skill 'daily-notes-cleaner' never auto-triggers — when I say 'clean up my notes' Claude just does it manually without invoking the skill. Current frontmatter description: 'A skill for note maintenance.' Fix the description so it actually triggers.",
+      "expected_behavior": "Skill routes to the description-optimization path: diagnoses why the description fails (too vague, no trigger phrases, no use-cases), rewrites it per the description design guidance (what-it-does + when-to-use + concrete trigger phrases incl. user's own words), and recommends how to verify triggering improved.",
+      "edge_case_dimensions": ["description triggering", "added 2026-07-13 pre-baseline: covers the documented description-optimization use case before the token-refactor round (likely extraction target must stay behaviorally covered)"]
     }
   ]
 }
