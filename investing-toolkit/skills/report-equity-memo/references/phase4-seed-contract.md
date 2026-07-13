@@ -1,6 +1,6 @@
 # Phase 4 seed contract — verdict-layer defenses
 
-> Toolkit-owned. Phase 4's delegation packet MUST carry the five elements
+> Toolkit-owned. Phase 4's delegation packet MUST carry the six elements
 > below, and the orchestrator MUST verify the returned memo against them
 > before accepting the Phase 4 artifact. Elements 1-4 origin: 2026-07-12
 > strong-vs-weak model comparison on identical pipeline data (plan:
@@ -9,7 +9,11 @@
 > present data was unavailable, dropped upstream warnings, and stamped the
 > memo with the fetch's UTC date. Element 5 origin: 2026-07-13 whole-branch
 > review 🟡 F2 — the US SEC narrative fetch shipped with no memo-side
-> instruction to read it. Each element closes one observed hole.
+> instruction to read it. Element 6 origin: 2026-07-13 US SEC financial-
+> table cross-validation wiring (plan: `docs/loom/plans/2026-07-13-us-sec-
+> financial-table-xval.md`) — the xval compute layer surfaces doc-vs-XBRL
+> divergences and doc-only findings, but nothing told the memo writer to
+> read them before citing a number. Each element closes one observed hole.
 
 ## 1. `rule_verdict` — adopt or file a Deviation Block
 
@@ -84,10 +88,51 @@ does not carry it.**
   while some section text is missing. §4's verbatim-transcription rule
   already covers transcribing that gap.
 
+## 6. `xval` — read before you cite a financial number
+
+`analysis-xval`'s report (US tickers with a filed statement, only) carries
+`comparisons` (every matched doc-vs-XBRL cell pair), `high_alerts` (the
+subset of `comparisons` with `alert == "high"`, surfaced a second time,
+verbatim), and `single_source` (doc-only cells with no XBRL counterpart,
+plus `decimal-disagreement (DQC 2.4.1)` and `restatement-signal`
+findings). Each entry's `source_mode` is `"two-source"` (independently
+matched to XBRL) or `"single-source"` (no independent cross-check
+happened).
+
+- **Iron rule**: before citing a statement-table number in the memo,
+  check whether that `(concept, period, dimension)` appears in
+  `high_alerts`. If it does, the memo MUST surface the divergence — show
+  BOTH `doc_value` and `xbrl_value` — and weight or challenge the number
+  accordingly, rather than citing the doc figure alone as if it were
+  uncontested.
+- **Respect `source_mode`**: a `"two-source"` figure was independently
+  cross-validated (doc-table cell vs an independent companyfacts fact). A
+  `"single-source"` finding was NOT — it is either a structural check on
+  one filing's own tags (doc-only, `decimal-disagreement (DQC 2.4.1)`) or a
+  cross-FILING XBRL comparison (`restatement-signal`, which cites
+  `earlier_accn`/`later_accn` and `earlier_value`/`later_value`, not a
+  `doc_value`/`xbrl_value` pair). Do not present a single-source finding
+  with the same confidence as a two-source one.
+- **A doc-only cell is un-cross-validated, not confirmed**: a
+  `single_source` entry with `status: "doc-only, no XBRL counterpart"`
+  means the cell could not be matched to a companyfacts fact at all —
+  state that plainly ("not independently verified against XBRL"), don't
+  imply XBRL agreement was checked and passed.
+- **Failure signal is depth-1 only** (mirrors §5): trust `high_alerts`
+  and `single_source` as already-computed — never re-derive alert
+  levels by walking `comparisons` and re-checking thresholds yourself.
+  `analysis-xval` has no partial-report mode (a bad `--source-a`/`-b`
+  path exits 2 with no report emitted at all — SKILL.md `## CLI`), so
+  an empty `high_alerts` means no high-divergence pairs were found, not
+  a truncated run.
+
 ## Orchestrator acceptance check (before Phase 4 artifact gate)
 
 On receiving the memo: (a) grep the Verdict section for `rule_verdict` —
 absent, or deviating without a Deviation Block → send back, do not accept;
 (b) spot-check any "data unavailable" sentence against the inventory;
-(c) confirm the memo date matches the issuer-timezone execution date.
+(c) confirm the memo date matches the issuer-timezone execution date;
+(d) if the run carried an xval report, spot-check any statement-table
+number cited in the memo against `high_alerts` — a `high`-alert number
+cited without surfacing both values → send back, do not accept.
 These are orchestrator-side cheap greps, not a re-run of the gates.
