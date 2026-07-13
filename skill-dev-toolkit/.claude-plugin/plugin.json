@@ -1,6 +1,6 @@
 {
   "name": "skill-dev-toolkit",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Self-contained toolkit to author Claude Agent Skills — create, score, refactor, tune, dogfood.",
   "author": {
     "name": "kouko",
