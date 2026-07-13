@@ -529,6 +529,223 @@ def test_scale_rounding_guards_skip_non_rounding_cases(xval_module):
     assert entry2["category"] != "scale/rounding"
 
 
+def test_restatement_signal_cites_both_accessions(xval_module):
+    """Task 12: a companyfacts (concept, period) tagged with a DIFFERENT
+    value under a DIFFERENT `accn` in two filings (e.g. the FY2023 10-K's
+    own tagging of FY2023 vs the FY2024 10-K's FY2023 comparative) is
+    classified `restatement-signal`, citing BOTH accession numbers and
+    retaining both values — NOT a doc-vs-XBRL tagging error (spec :129-136,
+    "Prior-year comparative restated in the current filing").
+
+    Built via `build_source_b_accn_groups`, NOT `build_source_b_index` —
+    the latter is last-write-wins (Task 4's docstring) and would silently
+    drop the earlier filing's row for this same period; restatement
+    detection needs BOTH.
+
+    NEGATIVE controls (non-vacuous):
+    1. `us-gaap:CostOfRevenue` appears in only ONE filing (single accn) —
+       no restatement-signal for it.
+    2. `us-gaap:OperatingIncomeLoss` appears in TWO filings but with the
+       IDENTICAL value both times — a same-period re-tag with no value
+       change is not a restatement either.
+    """
+    source_b_pack = {
+        "cik": 320193,
+        "facts": {
+            "us-gaap": {
+                "Revenues": [
+                    # FY2023 10-K's own-year tagging of the FY2023 period.
+                    {
+                        "start": "2022-10-01",
+                        "end": "2023-09-30",
+                        "value": 383285000000,
+                        "accn": "0000320193-23-000106",
+                        "form": "10-K",
+                        "fy": 2023,
+                        "fp": "FY",
+                        "filed": "2023-11-03",
+                    },
+                    # FY2024 10-K's PRIOR-YEAR comparative for the SAME
+                    # FY2023 period — restated to a DIFFERENT value.
+                    {
+                        "start": "2022-10-01",
+                        "end": "2023-09-30",
+                        "value": 383800000000,
+                        "accn": "0000320193-24-000123",
+                        "form": "10-K",
+                        "fy": 2024,
+                        "fp": "FY",
+                        "filed": "2024-11-01",
+                    },
+                ],
+                # Control 1: only ONE filing tags this period at all.
+                "CostOfRevenue": [
+                    {
+                        "start": "2023-10-01",
+                        "end": "2024-09-28",
+                        "value": 210352000000,
+                        "accn": "0000320193-24-000123",
+                        "form": "10-K",
+                        "fy": 2024,
+                        "fp": "FY",
+                        "filed": "2024-11-01",
+                    },
+                ],
+                # Control 2: TWO filings, IDENTICAL value both times — not a
+                # restatement (no divergence).
+                "OperatingIncomeLoss": [
+                    {
+                        "start": "2022-10-01",
+                        "end": "2023-09-30",
+                        "value": 114301000000,
+                        "accn": "0000320193-23-000106",
+                        "form": "10-K",
+                        "fy": 2023,
+                        "fp": "FY",
+                        "filed": "2023-11-03",
+                    },
+                    {
+                        "start": "2022-10-01",
+                        "end": "2023-09-30",
+                        "value": 114301000000,
+                        "accn": "0000320193-24-000123",
+                        "form": "10-K",
+                        "fy": 2024,
+                        "fp": "FY",
+                        "filed": "2024-11-01",
+                    },
+                ],
+            }
+        },
+    }
+
+    signals = xval_module.detect_restatement_signals(source_b_pack)
+
+    assert len(signals) == 1
+    signal = signals[0]
+    assert signal["concept"] == "us-gaap:Revenues"
+    assert signal["category"] == "restatement-signal"
+    assert signal["source_mode"] == "single-source"
+    assert signal["earlier_accn"] == "0000320193-23-000106"
+    assert signal["later_accn"] == "0000320193-24-000123"
+    assert signal["earlier_value"] == 383285000000
+    assert signal["later_value"] == 383800000000
+
+    # Negative controls: neither the single-filing nor the identical-value
+    # concept produces a signal.
+    signaled_concepts = {s["concept"] for s in signals}
+    assert "us-gaap:CostOfRevenue" not in signaled_concepts
+    assert "us-gaap:OperatingIncomeLoss" not in signaled_concepts
+
+
+def test_restatement_signal_survives_reverted_middle_value(xval_module):
+    """Task 12 fix (round 1, code-quality 🟡): a (concept, period) with 3+
+    accns where the FIRST and LAST filings happen to report the SAME value
+    but a MIDDLE filing diverges (restated, then reverted) must still emit
+    a restatement-signal. A naive first-vs-last-only comparison silently
+    drops this shape because `earlier["value"] == later["value"]`
+    short-circuits even though a genuine divergence occurred. This is NOT
+    a rare edge: US SEC income-statement/cash-flow tables routinely carry
+    3 years of comparative figures per filing, so 3+ accns tagging one
+    (concept, period) is the common case for this data.
+
+    The cited pair must be two accns whose values ACTUALLY DIFFER — never
+    the identical first/last pair.
+    """
+    source_b_pack = {
+        "cik": 320193,
+        "facts": {
+            "us-gaap": {
+                # Restated-then-reverted: filed order 100 -> 120 -> 100.
+                # First and last values coincide; the middle filing is
+                # the genuine divergence.
+                "GrossProfit": [
+                    {
+                        "start": "2021-10-01",
+                        "end": "2022-09-24",
+                        "value": 100,
+                        "accn": "0000320193-22-000100",
+                        "form": "10-K",
+                        "fy": 2022,
+                        "fp": "FY",
+                        "filed": "2022-10-28",
+                    },
+                    {
+                        "start": "2021-10-01",
+                        "end": "2022-09-24",
+                        "value": 120,
+                        "accn": "0000320193-23-000106",
+                        "form": "10-K",
+                        "fy": 2023,
+                        "fp": "FY",
+                        "filed": "2023-11-03",
+                    },
+                    {
+                        "start": "2021-10-01",
+                        "end": "2022-09-24",
+                        "value": 100,
+                        "accn": "0000320193-24-000123",
+                        "form": "10-K",
+                        "fy": 2024,
+                        "fp": "FY",
+                        "filed": "2024-11-01",
+                    },
+                ],
+                # Control: 3 accns, ALL identical values -> no signal.
+                "ResearchAndDevelopmentExpense": [
+                    {
+                        "start": "2021-10-01",
+                        "end": "2022-09-24",
+                        "value": 26251000000,
+                        "accn": "0000320193-22-000100",
+                        "form": "10-K",
+                        "fy": 2022,
+                        "fp": "FY",
+                        "filed": "2022-10-28",
+                    },
+                    {
+                        "start": "2021-10-01",
+                        "end": "2022-09-24",
+                        "value": 26251000000,
+                        "accn": "0000320193-23-000106",
+                        "form": "10-K",
+                        "fy": 2023,
+                        "fp": "FY",
+                        "filed": "2023-11-03",
+                    },
+                    {
+                        "start": "2021-10-01",
+                        "end": "2022-09-24",
+                        "value": 26251000000,
+                        "accn": "0000320193-24-000123",
+                        "form": "10-K",
+                        "fy": 2024,
+                        "fp": "FY",
+                        "filed": "2024-11-01",
+                    },
+                ],
+            }
+        },
+    }
+
+    signals = xval_module.detect_restatement_signals(source_b_pack)
+    signaled = {s["concept"]: s for s in signals}
+
+    assert "us-gaap:GrossProfit" in signaled, (
+        "restated-then-reverted (first == last, middle diverges) must still signal"
+    )
+    signal = signaled["us-gaap:GrossProfit"]
+    assert signal["earlier_value"] != signal["later_value"], (
+        "cited pair must be two accns whose values actually differ"
+    )
+    assert signal["earlier_accn"] == "0000320193-23-000106"
+    assert signal["earlier_value"] == 120
+    assert signal["later_accn"] == "0000320193-24-000123"
+    assert signal["later_value"] == 100
+
+    assert "us-gaap:ResearchAndDevelopmentExpense" not in signaled
+
+
 def test_no_counterpart_routes_to_single_source(xval_module):
     """Task 7: a Source-A doc cell whose (concept, period, dimension) triple
     has NO Source-B counterpart is recorded UNMATCHED and routed to the

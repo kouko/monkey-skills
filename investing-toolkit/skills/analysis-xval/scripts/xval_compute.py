@@ -139,6 +139,133 @@ def build_source_b_index(source_b_pack: dict) -> dict:
     return index
 
 
+def build_source_b_accn_groups(source_b_pack: dict) -> dict:
+    """Group EVERY companyfacts row by `(concept, period_key)`, preserving
+    each filing's own `accn` + `value` — unlike `build_source_b_index`
+    (Task 4), which is last-write-wins and silently drops an earlier
+    same-period row from a different filing (see that function's docstring).
+    Task 12 (restatement-signal) needs BOTH filings' values for the same
+    period, so it groups here rather than reusing the last-wins index.
+
+    Same pack shape as `build_source_b_index` (companyfacts-only, no
+    Source A — plan Notes §Open question Q2 confirms `accn` is on every
+    row): {"cik", "facts": {"<taxonomy>": {"<tag>": [rows]}}}, each row
+    {start, end, value, accn, form, fy, fp, filed}.
+
+    Returns: {(concept, period_key): [{concept, period, value, accn,
+    filed}, ...]} — a LIST per key (every row kept), not a single
+    last-write-wins entry.
+    """
+    if "cells" in source_b_pack:
+        raise ValueError(
+            "got a Source-A doc-table-cells pack (has 'cells'); "
+            "build_source_b_accn_groups must be built ONLY from a Source-B companyfacts pack"
+        )
+
+    facts = source_b_pack.get("facts", {})
+    groups: dict = {}
+    for taxonomy, tags in facts.items():
+        for tag, rows in tags.items():
+            concept = f"{taxonomy}:{tag}"
+            for row in rows:
+                period = _row_period(row)
+                key = (concept, _period_key(period))
+                groups.setdefault(key, []).append({
+                    "concept": concept,
+                    "period": period,
+                    "value": row.get("value"),
+                    "accn": row.get("accn"),
+                    "filed": row.get("filed"),
+                })
+    return groups
+
+
+def detect_restatement_signals(source_b_pack: dict) -> list[dict]:
+    """Task 12: detect a cross-filing comparative divergence — the SAME
+    `(concept, period)` tagged with a DIFFERENT value under a DIFFERENT
+    `accn` (i.e. the same period as reported in two different filings, e.g.
+    the FY2023 10-K's own tagging vs the FY2024 10-K's prior-year
+    comparative) — and classify it `restatement-signal`, citing BOTH
+    accession numbers, rather than a doc-vs-XBRL tagging error (spec
+    :129-136, "Prior-year comparative restated in the current filing").
+
+    Built ONLY off `build_source_b_accn_groups` (accn-preserving), never
+    `build_source_b_index` (last-write-wins — would silently drop the
+    earlier filing's row for the same period, plan Notes §Anti-fabrication
+    invariant / Task 4 docstring).
+
+    `source_mode`: this compares two companyfacts (XBRL) rows across
+    filings — it is NOT a doc-vs-companyfacts two-source pair. It is
+    labelled `"single-source"` (an XBRL-internal, structural finding, per
+    the declared `source_mode` enum — plan Notes §Declared schemas), never
+    `"two-source"`, so the label stays honest about what was actually
+    compared: two filings of ONE source (XBRL), not two independent
+    sources.
+
+    A `(concept, period)` with only ONE distinct `accn`, or with 2+ accns
+    all reporting the IDENTICAL value, is NOT a restatement (no divergence
+    to signal) and is skipped.
+
+    Ordering of "earlier"/"later" is by each row's `filed` date (ISO
+    strings sort chronologically); `accn` is the tiebreaker for a missing
+    `filed`. With 3+ accns in a group (the common case — US SEC
+    income-statement/cash-flow tables routinely carry 3 years of
+    comparative figures per filing), the group is a restatement as soon
+    as 2+ distinct values exist anywhere in it; the LAST-filed row is
+    always `later`, and `earlier` is the EARLIEST-filed row whose value
+    actually differs from `later`'s — never a naive first-vs-last
+    comparison, which would silently miss a "restated then reverted"
+    shape (e.g. filed order 100 -> 120 -> 100) where the first and last
+    values happen to coincide but a genuine mid-series divergence
+    occurred.
+
+    Returns a list of entries: {concept, period, dimension: None,
+    category: "restatement-signal", source_mode: "single-source",
+    earlier_value, earlier_accn, later_value, later_accn, note}. Both
+    values and both accns are always retained (plan Notes
+    §Anti-fabrication invariant — never silently reconciled).
+    """
+    groups = build_source_b_accn_groups(source_b_pack)
+    signals: list[dict] = []
+    for rows in groups.values():
+        by_accn: dict = {}
+        for row in rows:
+            by_accn.setdefault(row["accn"], row)
+        if len(by_accn) < 2:
+            continue
+        distinct_values = {row["value"] for row in by_accn.values()}
+        if len(distinct_values) < 2:
+            continue
+
+        ordered = sorted(by_accn.values(), key=lambda r: (r.get("filed") or "", r["accn"]))
+        later = ordered[-1]
+        # `distinct_values` (>= 2) already proved a genuine divergence
+        # exists in this group, so some row's value must differ from
+        # `later`'s — find the EARLIEST-filed such row. This is never a
+        # first-vs-last-only comparison: with 3+ accns a "restated then
+        # reverted" middle value (100 -> 120 -> 100) would otherwise be
+        # silently dropped even though it diverged.
+        earlier = next(row for row in ordered if row["value"] != later["value"])
+
+        signals.append({
+            "concept": earlier["concept"],
+            "period": earlier["period"],
+            "dimension": None,
+            "category": "restatement-signal",
+            "source_mode": "single-source",
+            "earlier_value": earlier["value"],
+            "earlier_accn": earlier["accn"],
+            "later_value": later["value"],
+            "later_accn": later["accn"],
+            "note": (
+                f"{earlier['concept']} for this period diverges across filings "
+                f"({earlier['accn']} -> {later['accn']}) — a restatement signal, "
+                "not a doc-vs-XBRL tagging error"
+            ),
+        })
+    return signals
+
+
 def match_cell(doc_cell: dict, source_b_index: dict) -> dict | None:
     """Match a Source-A doc-table cell to its Source-B fact by the FULL
     `(concept, period, dimension)` triple (plan Notes §Anti-fabrication
