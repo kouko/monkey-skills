@@ -56,6 +56,87 @@ def _load_pack(path: Path) -> dict:
         return json.load(f)
 
 
+def _row_period(row: dict) -> dict:
+    """Derive a Source-A-shaped period dict from a companyfacts row.
+
+    Mirrors Source A's period shape (plan Notes §Declared schemas) so T5 can
+    compare like-for-like: a companyfacts row with no `start` is an instant
+    fact (`{type:"instant", instant:<end>}`); a row with both `start` and
+    `end` is a duration fact (`{type:"duration", start, end}`).
+    """
+    if row.get("start") is None:
+        return {"type": "instant", "instant": row.get("end")}
+    return {"type": "duration", "start": row.get("start"), "end": row.get("end")}
+
+
+def _period_key(period: dict) -> tuple:
+    """Hashable key for a period dict (dicts aren't hashable, tuples are)."""
+    if period["type"] == "instant":
+        return ("instant", period["instant"])
+    return ("duration", period["start"], period["end"])
+
+
+def build_source_b_index(source_b_pack: dict) -> dict:
+    """Build the Source-B fact index, reconstructed ONLY from a companyfacts
+    pack — this is the genuinely-independent second source of each fact
+    (plan Notes §Anti-fabrication invariant). This function's signature
+    takes no Source-A input by construction; it must never be called with,
+    or derive facts from, a Source-A doc-table cells pack.
+
+    Source-B pack shape consumed here (declared producer/consumer contract;
+    the data-markets side of a full companyfacts-pack fetcher isn't wired
+    yet — plan Notes §Open question Q2):
+      {"cik": <int>, "facts": {"<taxonomy>": {"<tag>": [<rows>]}}}
+    where each row is exactly `sec_edgar_client.py::summarize_concept()`'s
+    output shape: {start, end, value, accn, form, fy, fp, filed} — no
+    `concept` field on the row itself (the concept lives in the taxonomy/tag
+    keys), no dimension/scale/decimals (companyfacts is consolidated-only,
+    per live probe).
+
+    Concept-form normalization (flag for T5's matcher): index concept keys
+    are joined "<taxonomy>:<tag>" (e.g. "us-gaap:Revenues") to match
+    Source-A's edgartools colon-form concept (e.g. "us-gaap:Revenues" from
+    `extract_statement_cells`). T5 MUST use this same taxonomy:tag join when
+    comparing a Source-A cell's concept against this index's keys.
+
+    Returns: {(concept, period_key): {concept, period, dimension: None,
+    value, accn}} — dimension is always None (companyfacts carries no
+    dimension).
+
+    Last-write-wins on a duplicate (concept, period) key: a later row for the
+    same period silently replaces an earlier one. Task 4's own scope never
+    hits this, but Task 12 (restatement-signal, cross-`accn`) needs BOTH
+    filings' values for the same period — T12 must key differently (e.g.
+    list-per-key or include `accn` in the key), not reuse this last-wins index.
+
+    Q2 (real companyfacts fetcher, not wired yet): the live SEC endpoint nests
+    rows one level deeper — `data["facts"][taxonomy][tag]["units"]["USD"]` —
+    so whoever builds the producer must flatten `units.USD` into the per-tag
+    row list this consumer expects, not pass the raw endpoint dict through.
+    """
+    if "cells" in source_b_pack:
+        raise ValueError(
+            "got a Source-A doc-table-cells pack (has 'cells'); "
+            "build_source_b_index must be built ONLY from a Source-B companyfacts pack"
+        )
+
+    facts = source_b_pack.get("facts", {})
+    index: dict = {}
+    for taxonomy, tags in facts.items():
+        for tag, rows in tags.items():
+            concept = f"{taxonomy}:{tag}"
+            for row in rows:
+                period = _row_period(row)
+                index[(concept, _period_key(period))] = {
+                    "concept": concept,
+                    "period": period,
+                    "dimension": None,
+                    "value": row.get("value"),
+                    "accn": row.get("accn"),
+                }
+    return index
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Pure-compute cross-validation: doc-table cells vs XBRL companyfacts (Layer 2)."
