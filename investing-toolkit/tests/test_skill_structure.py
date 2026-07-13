@@ -58,7 +58,7 @@ ROUTER_SKILLS = ["using-investing-toolkit"]
 SKILLS_WITHOUT_SCRIPTS = {"using-investing-toolkit", "report-equity-memo"}
 
 # Optional skills (PR 2+). When present, must still satisfy structural rules.
-OPTIONAL_SKILLS = ["analysis-comps"]
+OPTIONAL_SKILLS = ["analysis-comps", "analysis-xval"]
 
 
 def _present(skill: str) -> bool:

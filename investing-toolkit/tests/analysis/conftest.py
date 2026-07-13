@@ -28,6 +28,7 @@ TA_SCRIPT = SKILLS / "analysis-technical" / "scripts" / "ta_compute.py"
 PORTFOLIO_SCRIPT = SKILLS / "analysis-portfolio" / "scripts" / "portfolio_compute.py"
 REGIME_SCRIPT = SKILLS / "analysis-macro-regime" / "scripts" / "regime_compose.py"
 COMPS_SCRIPT = SKILLS / "analysis-comps" / "scripts" / "comps_compute.py"
+XVAL_SCRIPT = SKILLS / "analysis-xval" / "scripts" / "xval_compute.py"
 
 
 def run_script(script: Path, *args: str, timeout: int = 60) -> subprocess.CompletedProcess:
