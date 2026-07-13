@@ -2,7 +2,7 @@
 name: writing-plans
 description: |
   Use AFTER brainstorming produces a brief, BEFORE subagent-driven-development dispatches implementers. Splits it into atomic tasks — each with one RED/GREEN test and a single module boundary — into a dependency graph.
-version: 0.12.0
+version: 0.12.1
 ---
 
 <SUBAGENT-STOP>
@@ -16,7 +16,7 @@ Takes a `brainstorming` output brief and produces a **plan**: an ordered list of
 - **Independently verifiable** — has a RED test (or RED diagnostic) that goes GREEN when the task is done. This is the primary sizing constraint — see §The splitting framework.
 - **One module** of touch surface (consistent with SDD's per-task scope).
 
-The plan is the **paths-not-content handoff** between brainstorming and SDD. brainstorming wrote the brief; SDD consumes the plan; this skill produces the plan and self-reviews it before declaring DONE.
+The plan is the **paths-not-content handoff** between brainstorming and SDD; this skill produces it and self-reviews it before declaring DONE.
 
 ## The pipeline
 
@@ -57,7 +57,7 @@ Walk these in order for each prospective task. Stop expanding a task as soon as 
 
 **Runnable-capability note.** When a task introduces a runnable capability — a new test suite, build step, lint target, e2e suite, migration command, or similar — its `Acceptance` criterion must include a line stating that the new verb is declared in the command surface (the project's declared commands — `AGENTS.md` commands section, `make`/`just` recipes, `package.json` scripts) and verified to run. This makes command-surface accretion visible at plan time, before the implementer ships it silently without a declared entry point.
 
-**No time-box criterion — why one isn't here.** A prior revision sized tasks by a fixed wall-clock estimate, later demoted to a smell-check, then removed. An LLM agent has no grounding in duration (arXiv:2510.23853); no source ties a plan-writer's time guess to actual reliability (arXiv:2505.05115 models decay against externally-benchmarked human-difficulty, a different quantity). Traditional size research uses file/diff boundary; surveyed coding-agent products document no time-based rule. Conclusion: no time-based sizing here. A task that "feels long" signals to re-examine criterion 1 — it likely resolves to more than one assertion or crosses a module boundary.
+**No time-box criterion.** Tasks are never sized by wall-clock estimate — an LLM agent has no grounding in duration; sizing follows file/diff boundaries. A task that "feels long" signals to re-examine criterion 1 — it likely resolves to more than one assertion or crosses a module boundary.
 
 **Post-split parallel-marking pass.** After splitting, for each pair of tasks at the **same dependency level**: if their `Files touched` are disjoint **AND** there is no semantic dependency (no shared data / symbol, no doc-mirrors-code relationship), mark **both** `Independent: true`. This is the step that turns a flat task list into a parallelism-aware plan.
 
@@ -67,22 +67,20 @@ Walk these in order for each prospective task. Stop expanding a task as soon as 
 
 The ceiling is on **critical-path depth**, NOT total task count. Critical-path depth is the **longest chain of tasks linked by `Dependencies`** (the longest sequential path through the dependency DAG). N independent tasks at the **same dependency level** (disjoint `Files touched`, no semantic dependency) count as **ONE level**, not N. A plan with 8 tasks where 6 are parallel leaves at one level has a depth of ~2-3, not 8.
 
-**No hard width cap in the plan.** Mark every parallel-eligible task `Independent: true` and let the dispatch / harness layer queue the concurrency — `dispatching-parallel-agents` names no numeric cap, so the plan declares eligibility and defers throttling downstream. A very wide wave (many `Independent: true` leaves) gets at most a soft "sanity-check that these really are independent" advisory; it is **never** a hard split-trigger. The only hard split-trigger is **depth >5**.
+**No hard width cap in the plan.** Mark every parallel-eligible task `Independent: true` and let the dispatch layer queue the concurrency. A very wide wave gets at most a soft "sanity-check that these really are independent" advisory — it is **never** a hard split-trigger. The only hard split-trigger is **depth >5**.
 
 If the critical-path **depth** exceeds 5, the brief is too big. **Do not silently produce a deep chain.** Two options:
 
 1. **Route back to brainstorming**: the Smallest End State (Axis 3) was not actually smallest — it baked in a long sequential dependency chain. Surface this and ask the user to re-cut.
-2. **Split into multiple sequential briefs**: if the work genuinely needs a chain deeper than 5 and the user agrees, write *N* separate brief files (each with depth ≤5), explicitly labeled `<topic>-part-{1..N}.md`. Each brief is a standalone input to its own `writing-plans` run and its own SDD run. **Split = N brief files, not N plans from one brief.** A plan is 1-to-1 with one brief; producing two `## Part 1 / ## Part 2` sections inside a single plan file is not valid splitting.
+2. **Split into multiple sequential briefs**: if the work genuinely needs a chain deeper than 5 and the user agrees, write *N* separate brief files (each with depth ≤5), explicitly labeled `<topic>-part-{1..N}.md`. Each brief is a standalone input to its own `writing-plans` run and its own SDD run. **Split = N brief files, not N plans from one brief.** A plan is 1-to-1 with one brief — `## Part 1 / ## Part 2` sections inside a single plan file are not valid splitting.
 
-The depth ceiling is a deliberate forcing function for the brainstorming HARD-GATE. A **deep chain** (critical-path depth >5) is almost always a discovery failure, not a planning failure. A **wide-but-shallow** plan (many independent leaves, shallow depth) is fine — it parallelizes cleanly and is NOT a discovery failure.
+A **deep chain** (critical-path depth >5) is almost always a discovery failure, not a planning failure; a **wide-but-shallow** plan (many independent leaves, shallow depth) parallelizes cleanly and is NOT a discovery failure.
 
-**Why depth — and why `5` is a heuristic, not a law.** For an LLM agent, errors **compound** across dependent steps and per-step accuracy itself decays as a chain lengthens — a depth-5 chain at ~95% per-step reliability succeeds only ~77% of the time. But the long-horizon literature finds no universal optimal step count — the limit is a function of per-step reliability, not a constant. So treat **`5` as a deliberate default, not a measured value**; tune it if your steps are more or less reliable. (Grounding: arXiv:2509.09677 on long-horizon error-compounding; Toby Ord, arXiv:2505.05115, models decay per minute of externally-benchmarked human-difficulty, not per agent step, and names no step-count — cited only as further decay-with-magnitude evidence, not support for "5". The `5` itself is inherited from the prior count-based ceiling, not independently derived.)
+**Why depth — and why `5` is a heuristic, not a law.** Errors **compound** across dependent steps — a depth-5 chain at ~95% per-step reliability succeeds only ~77% of the time — and no universal optimal step count exists. Treat **`5` as a deliberate default, not a measured value**; tune it if your steps are more or less reliable.
 
 **Structural-split escape hatch (round-2 NEEDS_REVISION only):** If the plan-document-reviewer returns NEEDS_REVISION for a second round and the *sole* failure is a structural-size violation (a task structurally cannot resolve to one failing test within one module boundary — Check 6 keeps failing no matter how the description is reworded — and cannot be shrunk further without a brief change), split that oversized task into a fresh sibling part (a new `<topic>-part-N.md` brief → new plan) and treat it as a round-1 input to a fresh `writing-plans` run. The original plan's 2-round cap applies to the original tasks only; the new sibling part starts its own clean round count.
 
 ## BLOCKED fallback — Beck 2002 Child Test pattern
-
-This is the **primary defining mechanism** of writing-plans's recursive value.
 
 When SDD dispatches an implementer subagent and the implementer returns `BLOCKED` with `unblock_step: "this task needs to be split smaller"`, the orchestrator re-invokes writing-plans on the failing task. writing-plans then:
 
@@ -92,11 +90,11 @@ When SDD dispatches an implementer subagent and the implementer returns `BLOCKED
 4. Self-reviews the child decomposition via plan-document-reviewer.
 5. Returns the child plan to SDD.
 
-This is **Kent Beck (2002) *Test-Driven Development: By Example*, Addison-Wesley, ISBN 978-0321146533, Part II §"Child Test"** verbatim:
+This is **Kent Beck's "Child Test" pattern (*Test-Driven Development: By Example*, 2002, Part II)** verbatim:
 
 > *"When you are working on a test and it gets too big, write a smaller test that represents the broken part of the bigger test. Get the smaller test working. Then go back to the bigger test."*
 
-writing-plans applies the same pattern to plan tasks. The implementer's BLOCKED signal is the equivalent of "the test got too big to make pass in one step" — the fix is to write smaller tests (= split into child tasks), get them green, then re-attempt the parent.
+The implementer's BLOCKED signal is "the test got too big to make pass in one step" — write smaller tests (= split into child tasks), get them green, then re-attempt the parent.
 
 **Anti-pattern**: silently ignoring BLOCKED and re-dispatching the same task hoping the implementer will figure it out. That violates SDD's 3-round retry cap and burns subagent budget. Always re-invoke writing-plans when BLOCKED carries a decomposition signal.
 
@@ -108,7 +106,7 @@ After producing the plan, writing-plans **must** dispatch [`references/plan-docu
 - **every brief item covered** — every Smallest End State / Decision item maps to ≥1 task, no orphan tasks;
 - **DAG, no cycles** — `Dependencies` form an acyclic graph with critical-path depth ≤5.
 
-The prompt also enforces parallel-dispatch checks (`Independent: true` tasks need disjoint `Files touched`; missed-parallel advisory) — see it for the complete list.
+The prompt also enforces parallel-dispatch checks — see it for the complete list.
 
 **Pre-patch before dispatch (saves a NEEDS_REVISION round):** Before dispatching the reviewer, Read [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) and scan Check 1 and Check 3. If the plan is missing `Plan-document-reviewer verdict: PENDING` in the top-level header, or if any task is missing a `Brief item covered:` line, patch those fields now. These two omissions are the most common Check-1 / Check-3 failures; pre-patching costs one Read and saves one full round-trip.
 
@@ -128,7 +126,7 @@ Schema in [`references/plan-format.md`](references/plan-format.md). Plan lives a
 # Plan: <topic>
 
 Source brief: docs/loom/specs/<date>-<topic>.md
-Total tasks: <N>   ← uncapped; width is fine (many parallel leaves OK)
+Total tasks: <N>   ← uncapped
 Critical-path depth: <D> (≤5)   ← longest Dependencies chain; this is the ceiling
 Execution order: sequential | parallel-where-possible
 Plan-document-reviewer verdict: PENDING   ← required; reviewer will flip to PASS (timestamp)
@@ -142,9 +140,8 @@ Plan-document-reviewer verdict: PENDING   ← required; reviewer will flip to PA
 - Acceptance:
   - RED: <failing test name / diagnostic>
   - GREEN: <observable condition when done>
-- External surfaces: <per-task field — required when the task touches a non-stdlib
-    external surface (the five categories in `references/plan-format.md` §External surfaces;
-    a third-party lib like `packaging` for version/format work counts — prefer stdlib).
+- External surfaces: <required when the task touches a non-stdlib external surface —
+    five categories + stdlib-preference rule in `references/plan-format.md` §External surfaces.
     Omit if pure internal logic. Per-task field, not a Notes catch-all.>
 - Dependencies: <"none" | "Task N completes first" | "Tasks N, M complete first" |
     "Tasks N, M parallel" — semantics in `references/plan-format.md`; cross-part ordering
@@ -156,40 +153,11 @@ Plan-document-reviewer verdict: PENDING   ← required; reviewer will flip to PA
 ## Task 2 — ...
 ```
 
-**Worked micro-example** — two tasks, one `Independent: true` pair (disjoint files, no semantic dependency):
-
-```markdown
-## Task 1 — add slugify() helper
-- Module: src/text/slug.py
-- Files touched: src/text/slug.py, tests/test_slug.py
-- Acceptance:
-  - RED: tests/test_slug.py::test_slugify_lowercases_and_dashes fails (slugify undefined)
-  - GREEN: slugify("Hello World") == "hello-world"
-- Dependencies: none
-- Independent: true
-- Brief item covered: "URL slugs derived from titles"
-
-## Task 2 — add truncate() helper
-- Module: src/text/truncate.py
-- Files touched: src/text/truncate.py, tests/test_truncate.py
-- Acceptance:
-  - RED: tests/test_truncate.py::test_truncate_adds_ellipsis fails (truncate undefined)
-  - GREEN: truncate("abcdef", 3) == "abc…"
-- Dependencies: none
-- Independent: true
-- Brief item covered: "preview text capped at N chars"
-```
-
-Both tasks touch disjoint files and share no symbol → both `Independent: true`, so `dispatching-parallel-agents` may dispatch them in one wave.
+Worked examples — including an `Independent: true` pair (disjoint files, no semantic dependency) and a wide-but-shallow 8-task depth-2 plan — live in [`references/plan-format.md`](references/plan-format.md) §Worked example.
 
 ### Parallel-dispatch markup (v0.8.0+)
 
-Two per-task fields signal eligibility for [`../dispatching-parallel-agents/SKILL.md`](../dispatching-parallel-agents/SKILL.md):
-
-- **`Independent: true`** — the plan author's claim that this task has no shared symbol / no sequential data dependency with other `Independent: true` tasks. Default is `false`.
-- **`Files touched: <paths>`** — the disjointness oracle. Two tasks are dispatch-parallel-safe **only when** both declare `Independent: true` AND their `Files touched` sets are disjoint.
-
-If both conditions hold across N tasks, `dispatching-parallel-agents` MAY dispatch their implementers in one assistant message with N `Agent` calls. If either condition fails, SDD's sequential dispatch is the floor.
+Two per-task fields signal eligibility for [`../dispatching-parallel-agents/SKILL.md`](../dispatching-parallel-agents/SKILL.md): **`Independent: true`** — the plan author's claim that this task has no shared symbol / no sequential data dependency with other `Independent: true` tasks (default `false`) — and **`Files touched`**, the disjointness oracle. Dispatch may go parallel **only when** both declare `Independent: true` AND their `Files touched` sets are disjoint; if either condition fails, SDD's sequential dispatch is the floor. Full field semantics: [`references/plan-format.md`](references/plan-format.md) §`Files touched` and `Independent`.
 
 The markup is **opt-in**. A plan that omits it (or sets `Independent: false`) routes through SDD's standard sequential per-task triad. Claiming `Independent: true` with overlapping `Files touched` is a plan error — `plan-document-reviewer` should catch it; if not, `dispatching-parallel-agents` will refuse to dispatch.
 
@@ -260,7 +228,7 @@ Delegation contract per CLAUDE.md: pass **paths + structured seed context**, not
 - Does **not** write code. Atomic-task production is metadata about future work, not the work.
 - Does **not** dispatch SDD subagents. That's SDD's job. writing-plans hands off the plan; SDD picks it up.
 - Does **not** invoke the implementer / spec-reviewer / code-quality-reviewer prompts directly. Only plan-document-reviewer (a different evaluator scope).
-- Does **not** estimate dev-time at all. The split-trigger is criterion 1 (one failing test) — see §The splitting framework, and §No time-box criterion for why a completion-time estimate isn't part of the schema.
+- Does **not** estimate dev-time at all — the split-trigger is criterion 1 (one failing test); see §No time-box criterion.
 - Does **not** decide priority or sequencing beyond what the dependency graph requires. The user (or SDD) decides which independent tasks run first.
 
 ## See also

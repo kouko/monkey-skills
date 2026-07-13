@@ -21,7 +21,7 @@ brainstorming → brief                             (Discovery 階段)
 
 ## 硬性規則
 
-**每任務一個失敗測試。** 寫不出一個「任務做完就變綠」的失敗測試，就不算一個任務——拆掉（需要 3 個測試就是 3 個任務）。這條準則不含任何時間估計：LLM agent 對 wall-clock 時長沒有體感基礎，也沒有嚴謹文獻把「plan-writer 猜 agent 要花多久」跟 agent 可靠度綁在一起——完整依據見 [`SKILL.md`](SKILL.md) §No time-box criterion。
+**每任務一個失敗測試。** 寫不出一個「任務做完就變綠」的失敗測試，就不算一個任務——拆掉（需要 3 個測試就是 3 個任務）。這條準則不含任何時間估計：LLM agent 對 wall-clock 時長沒有體感基礎，也沒有嚴謹文獻把「plan-writer 猜 agent 要花多久」跟 agent 可靠度綁在一起——見 [`SKILL.md`](SKILL.md) §No time-box criterion。
 
 這條規則擋下太貪心的 brief，也擋下用模糊任務藏複雜度的 plan——但擋的依據是測試，不是時鐘。
 
