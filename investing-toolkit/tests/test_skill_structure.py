@@ -58,7 +58,7 @@ ROUTER_SKILLS = ["using-investing-toolkit"]
 SKILLS_WITHOUT_SCRIPTS = {"using-investing-toolkit", "report-equity-memo"}
 
 # Optional skills (PR 2+). When present, must still satisfy structural rules.
-OPTIONAL_SKILLS = ["analysis-comps", "analysis-xval"]
+OPTIONAL_SKILLS = ["analysis-comps", "analysis-xval", "analysis-kpi"]
 
 
 def _present(skill: str) -> bool:
@@ -86,14 +86,15 @@ def test_skill_count_pr1_floor():
     """At minimum the 11 post-ADR-0009 PR-1 skills must be present
     (5 per-country data skills merged into 1 data-markets). analysis-comps
     pushed this to 12; analysis-xval (the US SEC financial-table cross-validation
-    skill) pushes it to 13 once its SKILL.md is present."""
+    skill) to 13; analysis-kpi (the operational-KPI bitemporal store) to 14 —
+    each once its SKILL.md is present."""
     expected = _expected_skills()
     actual = sorted(p.name for p in SKILLS_DIR.iterdir() if p.is_dir())
     # All expected skills must exist
     missing = sorted(set(expected) - set(actual))
     assert not missing, f"missing skills: {missing}"
-    # Total is 11 (PR 1), 12 (analysis-comps), or 13 (analysis-xval)
-    assert len(expected) in (11, 12, 13), (
+    # Total is 11 (PR 1), 12 (analysis-comps), 13 (analysis-xval), 14 (analysis-kpi)
+    assert len(expected) in (11, 12, 13, 14), (
         f"unexpected expected-skill count: {len(expected)} (got {expected})"
     )
 
