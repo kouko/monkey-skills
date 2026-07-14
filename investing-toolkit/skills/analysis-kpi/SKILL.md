@@ -51,6 +51,34 @@ immutable append-only, no expiry). Stdlib only.
 
 ## CLI
 
-*Stub — lands in a later task.* A thin `append` / `query` argparse CLI over
-`scripts/kpi_store.py` is declared in a later slice (plan Task 8); this
-slice ships the library surface (`append`) only.
+```
+# append: reads ONE point as JSON from stdin (or --file PATH)
+echo '{"company": "AAPL", "kpi_id": "iphone_units", "period": "FY2024", \
+  "as_of": "2024-11-01", "value": 231000000, \
+  "source_accession": "0000320193-24-000123", \
+  "source_table_id": "ex99-1-operating-summary", "source_cell_ref": "r5c2"}' \
+  | uv run scripts/kpi_store.py append
+
+# query --latest: greatest as_of overall
+uv run scripts/kpi_store.py query --latest \
+    --company AAPL --kpi-id iphone_units --period FY2024
+
+# query --as-of: point-in-time (greatest as_of <= the given date)
+uv run scripts/kpi_store.py query --as-of 2024-12-31 \
+    --company AAPL --kpi-id iphone_units --period FY2024
+```
+
+| Subcommand | Flag         | Required | Notes                                                        |
+|------------|--------------|----------|---------------------------------------------------------------|
+| `append`   | `--file`     | no       | Path to a JSON file holding the point (default: read stdin)    |
+| `query`    | `--company`  | yes      | Company identifier                                             |
+| `query`    | `--kpi-id`   | yes      | KPI identifier                                                  |
+| `query`    | `--period`   | yes      | Reporting period                                                |
+| `query`    | `--latest`   | one-of   | Return the greatest-as_of record overall                       |
+| `query`    | `--as-of`    | one-of   | Return the greatest-as_of record with `as_of <= DATE` (point-in-time) |
+
+`append` exits **0** on success; a rejected point (missing provenance, or
+`as_of` absent/wall-clock-flagged) prints the `ValueError` message to stderr
+and exits **1** — fail loud, nothing written. `query` prints the matched
+record as JSON to stdout (or `null` if none matched) and exits **0**.
+`--latest` and `--as-of` are mutually exclusive and one is required.

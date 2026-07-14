@@ -15,6 +15,8 @@ from __future__ import annotations
 import concurrent.futures
 import importlib.util
 import json
+import os
+import subprocess
 import sys
 import threading
 import time
@@ -491,4 +493,99 @@ def test_append_degrades_loud_when_fcntl_unavailable(
     err = capsys.readouterr().err
     assert err.count("fcntl unavailable") == 1, (
         "the degradation warning must fire exactly once, not per append"
+    )
+
+
+def test_cli_append_then_query_roundtrip(tmp_path):
+    """Task 8: the kpi_store.py CLI's `append` and `query --latest` subcommands
+    round-trip a point through a real subprocess invocation (not the library
+    surface directly) — the CLI is a thin wrapper over `append`/`query_latest`,
+    not a reimplementation, so a point appended via stdin JSON must be
+    readable back via `query --latest`, byte-for-byte.
+
+    conftest.run_script does NOT pass a custom env (it inherits the parent's),
+    so this test invokes `uv run --script` itself with `KPI_STORE_DIR` pointed
+    at tmp_path, keeping this test's store isolated from any other test/run.
+    """
+    env = {**os.environ, "KPI_STORE_DIR": str(tmp_path)}
+    point = {
+        "company": "AAPL",
+        "kpi_id": "iphone_units",
+        "period": "FY2024",
+        "as_of": "2024-11-01",
+        "value": 231000000,
+        "source_accession": "0000320193-24-000123",
+        "source_table_id": "ex99-1-operating-summary",
+        "source_cell_ref": "r5c2",
+    }
+
+    append_result = subprocess.run(
+        ["uv", "run", "--script", str(KPI_STORE_SCRIPT), "append"],
+        input=json.dumps(point),
+        capture_output=True,
+        text=True,
+        timeout=60,
+        env=env,
+    )
+    assert append_result.returncode == 0, (
+        f"append subcommand failed: stdout={append_result.stdout!r} "
+        f"stderr={append_result.stderr!r}"
+    )
+
+    query_result = subprocess.run(
+        [
+            "uv", "run", "--script", str(KPI_STORE_SCRIPT), "query",
+            "--latest",
+            "--company", "AAPL",
+            "--kpi-id", "iphone_units",
+            "--period", "FY2024",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=60,
+        env=env,
+    )
+    assert query_result.returncode == 0, (
+        f"query subcommand failed: stdout={query_result.stdout!r} "
+        f"stderr={query_result.stderr!r}"
+    )
+    assert json.loads(query_result.stdout) == point, (
+        "query --latest must return the exact point just appended via the CLI"
+    )
+
+
+def test_cli_append_fail_loud_exit_codes(tmp_path):
+    """The CLI's reason for existing is fail-loud exit codes — assert them at
+    the subprocess boundary (the library guards are unit-tested; the CLI's
+    exit-code translation must be tested too):
+      - a point that fails a guard (missing provenance) → exit 1, stderr set,
+        nothing written;
+      - malformed JSON on stdin → exit 2;
+      - valid JSON that is not an object (a list) → exit 2.
+    """
+    env = {**os.environ, "KPI_STORE_DIR": str(tmp_path)}
+
+    def run_append(stdin_text):
+        return subprocess.run(
+            ["uv", "run", "--script", str(KPI_STORE_SCRIPT), "append"],
+            input=stdin_text, capture_output=True, text=True, timeout=60, env=env,
+        )
+
+    # (1) rejected point (no provenance) → exit 1, stderr, nothing written
+    bad_point = {"company": "AAPL", "kpi_id": "iphone_units",
+                 "period": "FY2024", "as_of": "2024-11-01", "value": 1}
+    rejected = run_append(json.dumps(bad_point))
+    assert rejected.returncode == 1, rejected.stderr
+    assert rejected.stderr.strip(), "a rejected point must explain itself on stderr"
+    assert list(tmp_path.rglob("*.json")) == [], "rejected point must write nothing"
+
+    # (2) malformed JSON → exit 2
+    malformed = run_append("this is not json")
+    assert malformed.returncode == 2, malformed.stderr
+
+    # (3) valid JSON but not an object → exit 2 (clean, not a traceback)
+    not_a_dict = run_append("[1, 2, 3]")
+    assert not_a_dict.returncode == 2, not_a_dict.stderr
+    assert "Traceback" not in not_a_dict.stderr, (
+        "a non-object point must fail cleanly, not with a raw traceback"
     )

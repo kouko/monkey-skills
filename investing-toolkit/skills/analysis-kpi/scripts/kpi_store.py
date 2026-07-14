@@ -13,10 +13,10 @@ DATA dir, so a later restatement/re-extraction APPENDS a superseding record
 instead of overwriting history, and a point-in-time query "as of" an earlier
 date sees only what was known then (no look-ahead bias).
 
-This slice ships the store scaffold + `append(point)` ONLY. Provenance/
-as_of rejection, idempotent dedup, point-in-time/latest queries,
-concurrency-safe locking, and the CLI land in later tasks (plan
-docs/loom/plans/2026-07-14-operational-kpi-bitemporal-store.md, Tasks 2-8).
+This slice ships the store scaffold, `append(point)`, provenance/as_of
+rejection, idempotent dedup, point-in-time/latest queries,
+concurrency-safe locking, and a thin `append`/`query` CLI (plan
+docs/loom/plans/2026-07-14-operational-kpi-bitemporal-store.md, Tasks 1-8).
 
 Persistence PATTERN mirrors data-markets/scripts/cache_util.py (key
 sanitization `:170`, atomic tmp+rename write `:225`) but does NOT import it
@@ -28,6 +28,7 @@ atomic-write duplication is a deliberate, flagged Rule-of-Three candidate
 """
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import os
@@ -318,3 +319,92 @@ def query_latest(company: str, kpi_id: str, period: str):
     if not candidates:
         return None
     return max(candidates, key=lambda p: p.get("as_of", ""))
+
+
+def _cli_append(args: argparse.Namespace) -> int:
+    """`append` subcommand: read ONE point as JSON from `--file` (or stdin
+    when omitted), call `append(point)`. A rejection (ValueError from the
+    provenance/as_of guards) is printed to stderr and exits non-zero — fail
+    loud, never a silent swallow.
+    """
+    if args.file is not None:
+        raw = Path(args.file).read_text(encoding="utf-8")
+    else:
+        raw = sys.stdin.read()
+
+    try:
+        point = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        print(f"kpi_store append: invalid JSON input: {exc}", file=sys.stderr)
+        return 2
+
+    if not isinstance(point, dict):
+        print(
+            "kpi_store append: expected a JSON object (point), got "
+            f"{type(point).__name__} — nothing written",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        append(point)
+    except ValueError as exc:
+        print(f"kpi_store append: {exc}", file=sys.stderr)
+        return 1
+    return 0
+
+
+def _cli_query(args: argparse.Namespace) -> int:
+    """`query` subcommand: dispatch to `query_point_in_time` (`--as-of`) or
+    `query_latest` (`--latest`), printing the resulting record as JSON to
+    stdout (or `null` if none matched).
+    """
+    if args.as_of is not None:
+        record = query_point_in_time(args.company, args.kpi_id, args.period, args.as_of)
+    else:
+        record = query_latest(args.company, args.kpi_id, args.period)
+
+    json.dump(record, sys.stdout, ensure_ascii=False)
+    sys.stdout.write("\n")
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Append-only bitemporal KPI store CLI (append / query)."
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    append_parser = subparsers.add_parser(
+        "append", help="Append one KPI point (JSON) to its series file."
+    )
+    append_parser.add_argument(
+        "--file", type=Path, default=None,
+        help="Path to a JSON file holding the point (default: read stdin).",
+    )
+    append_parser.set_defaults(func=_cli_append)
+
+    query_parser = subparsers.add_parser(
+        "query", help="Query a KPI series (point-in-time or latest)."
+    )
+    query_parser.add_argument("--company", required=True)
+    query_parser.add_argument("--kpi-id", required=True, dest="kpi_id")
+    query_parser.add_argument("--period", required=True)
+    query_mode = query_parser.add_mutually_exclusive_group(required=True)
+    query_mode.add_argument(
+        "--latest", action="store_true",
+        help="Return the greatest-as_of record overall.",
+    )
+    query_mode.add_argument(
+        "--as-of", default=None, dest="as_of",
+        help="Return the greatest-as_of record with as_of <= this date "
+             "(point-in-time).",
+    )
+    query_parser.set_defaults(func=_cli_query)
+
+    args = parser.parse_args()
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
