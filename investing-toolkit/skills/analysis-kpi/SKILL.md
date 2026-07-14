@@ -244,3 +244,74 @@ rejection (ValueError) exits **1**. `verdict` always exits **0**, printing
 NO gate record reads `{"verdict": "WITHHELD", "trusted": false}` (fail-closed:
 never trusted by omission), never an error. A missing required flag on any
 subcommand is handled by argparse itself and exits **2**.
+
+## CLI (kpi_break)
+
+`scripts/kpi_break.py` — break-event detection + human adjudication
+lifecycle (slice 6). Reuses `_store_fs.resolve_store_dir` for the durable
+dir (`KPI_STORE_DIR` env override applies here too), and routes
+`confirm`/`dismiss` through `review_queue`'s human-confirm seam.
+
+```
+# detect: reads {"prev": {...}, "curr": {...}} (two consecutive-period KPI
+# summaries) from stdin (or --file PATH); PURE COMPUTE, no persistence
+echo '{"prev": {"segments": ["iPhone"], "kpi_labels": {}}, \
+  "curr": {"segments": ["iPhone", "Wearables"], "kpi_labels": {}}}' \
+  | uv run scripts/kpi_break.py detect
+
+# flag: reads ONE candidate ({"trigger": ..., "detail": ...}) as JSON from
+# stdin (or --file PATH); persists a FLAGGED break-event + enqueues its
+# review-item
+echo '{"trigger": "resegmentation", \
+  "detail": {"prev_segments": ["iPhone"], "curr_segments": ["iPhone", "Wearables"]}}' \
+  | uv run scripts/kpi_break.py flag \
+      --company AAPL --schema-version v1 --review-item-id ri-break-0001
+
+# confirm: reads the mapping (old->new correspondence) as JSON from stdin
+# (or --file PATH); adjudicates the break's review-item through the
+# review-queue human-confirm seam, then flips it CONFIRMED
+echo '{"iPhone": "iPhone", "Wearables": "Wearables (new)"}' \
+  | uv run scripts/kpi_break.py confirm \
+      --company AAPL --break-id AAPL:v1:0 --by alice
+
+# dismiss: no request body; adjudicates through the same seam, flips
+# the break DISMISSED
+uv run scripts/kpi_break.py dismiss --company AAPL --break-id AAPL:v1:1 --by alice
+
+# list: print all break-event records for a company as a JSON array
+uv run scripts/kpi_break.py list --company AAPL
+```
+
+| Subcommand | Flag                | Required | Notes                                                        |
+|------------|---------------------|----------|-----------------------------------------------------------------|
+| `detect`   | `--file`            | no       | Path to a JSON file holding `{prev, curr}` summaries (default: stdin) |
+| `flag`     | `--company`         | yes      | Company identifier                                               |
+| `flag`     | `--schema-version`  | yes      | Schema version the candidate was detected under                   |
+| `flag`     | `--review-item-id`  | yes      | Id for the review-item enqueued to gate this break-event           |
+| `flag`     | `--file`            | no       | Path to a JSON file holding the candidate (default: stdin)         |
+| `confirm`  | `--company`         | yes      | Company identifier                                                |
+| `confirm`  | `--break-id`        | yes      | The `break_id` to confirm                                          |
+| `confirm`  | `--by`              | yes      | Human adjudicator identity (`adjudicated_by`) — never empty        |
+| `confirm`  | `--at`              | no       | Caller-supplied `adjudicated_at` timestamp                         |
+| `confirm`  | `--file`            | no       | Path to a JSON file holding the mapping (default: stdin)           |
+| `dismiss`  | `--company`         | yes      | Company identifier                                                |
+| `dismiss`  | `--break-id`        | yes      | The `break_id` to dismiss                                          |
+| `dismiss`  | `--by`              | yes      | Human adjudicator identity (`adjudicated_by`) — never empty        |
+| `dismiss`  | `--at`              | no       | Caller-supplied `adjudicated_at` timestamp                         |
+| `list`     | `--company`         | yes      | Company identifier                                                |
+
+`detect` always exits **0**, printing the candidate list (`[]` if no drift);
+malformed JSON or a body missing `prev`/`curr` exits **2**. `flag` exits
+**0** on success, printing the new FLAGGED record; malformed JSON or a
+non-object candidate exits **2** (nothing written); a rejection
+(ValueError, or a candidate missing `trigger`/`detail`) exits **1**.
+`confirm` exits **0** on success, printing the now-CONFIRMED record;
+malformed JSON exits **2**; every fail-loud guard (unknown break_id, a
+break not currently FLAGGED, a missing/empty mapping, or a rejected
+identity from the reused review-queue human-confirm seam) is a ValueError
+and exits **1**. `dismiss` exits **0** on success, printing the now-
+DISMISSED record; the same fail-loud guards (minus the mapping check)
+apply and exit **1**. `list` always exits **0**, printing all of a
+company's break-event records as a JSON array (`[]` if none flagged yet).
+A missing required flag on any subcommand is handled by argparse itself
+and exits **2**.

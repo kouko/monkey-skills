@@ -16,6 +16,9 @@ rationale).
 from __future__ import annotations
 
 import importlib.util
+import json
+import os
+import subprocess
 import sys
 
 from conftest import KPI_BREAK_SCRIPT
@@ -170,3 +173,186 @@ def test_flag_break_persists_and_enqueues(kpi_break_module, tmp_path, monkeypatc
     record2 = flag_break("AAPL", "v1", candidate, review_item_id="ri-break-2")
     assert record2["break_id"] != break_id, "each flag must get a distinct break_id"
     assert len(list_breaks("AAPL")) == 2
+
+
+def test_confirm_and_dismiss_break_via_human_seam(kpi_break_module, tmp_path, monkeypatch):
+    """confirm_break/dismiss_break must route through review_queue.adjudicate
+    (the REUSED human-confirm auth boundary) BEFORE flipping the break
+    record, so a rejected identity leaves the break FLAGGED and its
+    review-item OPEN. A confirm additionally requires a non-empty `mapping`,
+    rejected loud before any adjudicate/write.
+
+    Why this matters: if the adjudicate call ran AFTER the record flip (or
+    were skipped), an empty/pipeline identity could silently confirm a
+    break-event mapping — exactly the self-confirm hole review_queue's auth
+    boundary exists to close for kpi_schema.confirm; this test proves
+    kpi_break wires the same seam, not a parallel weaker check.
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+
+    flag_break = kpi_break_module.flag_break
+    confirm_break = kpi_break_module.confirm_break
+    dismiss_break = kpi_break_module.dismiss_break
+    get_break = kpi_break_module.get_break
+    review_queue = kpi_break_module.review_queue
+
+    candidate = {
+        "trigger": "resegmentation",
+        "detail": {"prev_segments": ["iPhone"], "curr_segments": ["iPhone", "Wearables"]},
+    }
+    mapping = {"iPhone": "iPhone", "Wearables": "Wearables (new)"}
+
+    # (a) happy path: flag -> confirm(mapping, by="alice") -> CONFIRMED,
+    # mapping stored, review-item resolved (no longer OPEN).
+    record = flag_break("AAPL", "v1", candidate, review_item_id="ri-confirm-1")
+    break_id = record["break_id"]
+    confirmed = confirm_break("AAPL", break_id, adjudicated_by="alice", mapping=mapping)
+    assert confirmed["status"] == "CONFIRMED"
+    assert confirmed["mapping"] == mapping
+    assert get_break("AAPL", break_id)["status"] == "CONFIRMED"
+    assert not any(
+        item.get("subject_id") == break_id for item in review_queue.list_open()
+    ), "the break's review-item must no longer be OPEN once confirmed"
+
+    # (b) confirm with an empty mapping -> raises loud, break stays FLAGGED,
+    # nothing adjudicated.
+    record2 = flag_break("AAPL", "v1", candidate, review_item_id="ri-confirm-2")
+    break_id2 = record2["break_id"]
+    with pytest.raises(ValueError):
+        confirm_break("AAPL", break_id2, adjudicated_by="alice", mapping={})
+    assert get_break("AAPL", break_id2)["status"] == "FLAGGED"
+    assert any(
+        item.get("subject_id") == break_id2 and item.get("status") == "OPEN"
+        for item in review_queue.list_open()
+    ), "an empty-mapping rejection must not touch the review-item either"
+
+    # (c) confirm with adjudicated_by="" -> rejected BY review_queue.adjudicate
+    # (the reused seam) -> break stays FLAGGED, review-item still OPEN.
+    record3 = flag_break("AAPL", "v1", candidate, review_item_id="ri-confirm-3")
+    break_id3 = record3["break_id"]
+    with pytest.raises(ValueError):
+        confirm_break("AAPL", break_id3, adjudicated_by="", mapping=mapping)
+    assert get_break("AAPL", break_id3)["status"] == "FLAGGED"
+    assert any(
+        item.get("subject_id") == break_id3 and item.get("status") == "OPEN"
+        for item in review_queue.list_open()
+    ), "a rejected identity must leave the review-item OPEN"
+
+    # (d) a second confirm/dismiss on an already-resolved break -> illegal
+    # transition, raises loud.
+    with pytest.raises(ValueError):
+        confirm_break("AAPL", break_id, adjudicated_by="bob", mapping=mapping)
+    with pytest.raises(ValueError):
+        dismiss_break("AAPL", break_id, adjudicated_by="bob")
+
+    # (e) a separate FLAGGED break, dismissed -> DISMISSED.
+    record4 = flag_break("AAPL", "v1", candidate, review_item_id="ri-confirm-4")
+    break_id4 = record4["break_id"]
+    dismissed = dismiss_break("AAPL", break_id4, adjudicated_by="carol")
+    assert dismissed["status"] == "DISMISSED"
+    assert get_break("AAPL", break_id4)["status"] == "DISMISSED"
+
+    # Unknown break_id -> raises loud for both confirm and dismiss.
+    with pytest.raises(ValueError):
+        confirm_break("AAPL", "nonexistent", adjudicated_by="alice", mapping=mapping)
+    with pytest.raises(ValueError):
+        dismiss_break("AAPL", "nonexistent", adjudicated_by="alice")
+
+
+def test_cli_detect_flag_confirm_roundtrip(tmp_path):
+    """Task 4: the kpi_break.py CLI's `detect`/`flag`/`confirm`/`list`
+    subcommands round-trip a break-event through real subprocess
+    invocations (not the library surface directly) — the CLI is a thin
+    argparse wrapper over detect_breaks/flag_break/confirm_break/
+    list_breaks, not a reimplementation, mirroring
+    test_kpi_schema.py::test_cli_propose_confirm_status_roundtrip.
+
+    flag (stdin candidate JSON) -> list shows it FLAGGED -> confirm (stdin
+    mapping JSON) -> list shows CONFIRMED. Also: malformed JSON -> exit 2,
+    and --help lists all five subcommands.
+    """
+    env = {**os.environ, "KPI_STORE_DIR": str(tmp_path)}
+
+    def run_list(company="AAPL"):
+        result = subprocess.run(
+            ["uv", "run", "--script", str(KPI_BREAK_SCRIPT), "list", "--company", company],
+            capture_output=True, text=True, timeout=60, env=env,
+        )
+        assert result.returncode == 0, (
+            f"list subcommand failed: stdout={result.stdout!r} stderr={result.stderr!r}"
+        )
+        return json.loads(result.stdout)
+
+    candidate = {
+        "trigger": "resegmentation",
+        "detail": {"prev_segments": ["iPhone"], "curr_segments": ["iPhone", "Wearables"]},
+    }
+    flag_result = subprocess.run(
+        [
+            "uv", "run", "--script", str(KPI_BREAK_SCRIPT), "flag",
+            "--company", "AAPL", "--schema-version", "v1",
+            "--review-item-id", "ri-cli-1",
+        ],
+        input=json.dumps(candidate),
+        capture_output=True, text=True, timeout=60, env=env,
+    )
+    assert flag_result.returncode == 0, (
+        f"flag subcommand failed: stdout={flag_result.stdout!r} stderr={flag_result.stderr!r}"
+    )
+    flagged_record = json.loads(flag_result.stdout)
+    assert flagged_record["status"] == "FLAGGED"
+    break_id = flagged_record["break_id"]
+
+    flagged_list = run_list()
+    assert len(flagged_list) == 1
+    assert flagged_list[0]["break_id"] == break_id
+    assert flagged_list[0]["status"] == "FLAGGED"
+
+    mapping = {"iPhone": "iPhone", "Wearables": "Wearables (new)"}
+    confirm_result = subprocess.run(
+        [
+            "uv", "run", "--script", str(KPI_BREAK_SCRIPT), "confirm",
+            "--company", "AAPL", "--break-id", break_id, "--by", "alice",
+        ],
+        input=json.dumps(mapping),
+        capture_output=True, text=True, timeout=60, env=env,
+    )
+    assert confirm_result.returncode == 0, (
+        f"confirm subcommand failed: stdout={confirm_result.stdout!r} "
+        f"stderr={confirm_result.stderr!r}"
+    )
+    confirmed_record = json.loads(confirm_result.stdout)
+    assert confirmed_record["status"] == "CONFIRMED"
+    assert confirmed_record["mapping"] == mapping
+
+    confirmed_list = run_list()
+    assert confirmed_list[0]["status"] == "CONFIRMED"
+    assert confirmed_list[0]["mapping"] == mapping
+
+    # Fail-loud: malformed JSON on flag -> exit 2, nothing written, no raw
+    # traceback.
+    fail_result = subprocess.run(
+        [
+            "uv", "run", "--script", str(KPI_BREAK_SCRIPT), "flag",
+            "--company", "MSFT", "--schema-version", "v1",
+            "--review-item-id", "ri-cli-2",
+        ],
+        input="{not valid json",
+        capture_output=True, text=True, timeout=60, env=env,
+    )
+    assert fail_result.returncode == 2, fail_result.stderr
+    assert "Traceback" not in fail_result.stderr, (
+        "malformed JSON must fail cleanly, not with a raw traceback"
+    )
+    assert run_list("MSFT") == [], "a rejected flag must write nothing for MSFT"
+
+    # --help lists every subcommand.
+    help_result = subprocess.run(
+        ["uv", "run", "--script", str(KPI_BREAK_SCRIPT), "--help"],
+        capture_output=True, text=True, timeout=60, env=env,
+    )
+    assert help_result.returncode == 0
+    for subcommand in ("detect", "flag", "confirm", "dismiss", "list"):
+        assert subcommand in help_result.stdout, (
+            f"--help must list the {subcommand!r} subcommand"
+        )
