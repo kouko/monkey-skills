@@ -12,24 +12,25 @@ versioned envelope under the same DATA dir as `kpi_store.py` / `review_queue.py`
 so a later confirm/amend transitions an existing version in place rather than
 overwriting history.
 
-This slice ships the module scaffold + `propose(company, kpi_defs,
-review_item_id)` (Task 2): on a company's first propose it writes version 1,
-status "PROPOSED", storing the caller-supplied `kpi_defs` verbatim (the LLM
-produces them upstream — NOT this module's job), AND enqueues a
-`subject_type="kpi-schema"` review-item via `review_queue.enqueue` so a human
-can later confirm it through the review queue's existing human-confirm seam
-(reused, not reimplemented).
-
-Task 3 adds `confirm(company, adjudicated_by, adjudicated_at=None)`: locates
-the latest PROPOSED version and its OPEN review-item, adjudicates it through
-`review_queue.adjudicate` (the reused human-confirm seam, auth boundary
-included) BEFORE flipping the schema to CONFIRMED, so a rejected identity
-leaves the schema PROPOSED.
-
-Task 6 adds a thin argparse CLI (`propose` / `confirm` / `status`) over the
-library functions above — no new logic, same fail-loud exit-code convention
-as `review_queue.py`'s CLI (0 success / 1 ValueError / 2 malformed or
-malshaped input).
+The module surface:
+- `propose(company, kpi_defs, review_item_id)` writes a new PROPOSED version
+  (version 1 on a first propose), storing the caller-supplied `kpi_defs`
+  verbatim (the LLM produces them upstream — NOT this module's job), AND
+  enqueues a `subject_type="kpi-schema"` review-item via `review_queue.enqueue`
+  so a human can later confirm it (reused seam, not reimplemented).
+- `confirm(company, adjudicated_by, adjudicated_at=None)` locates the latest
+  PROPOSED version and its OPEN review-item, adjudicates it through
+  `review_queue.adjudicate` (the reused human-confirm seam, auth boundary
+  included) BEFORE flipping the schema to CONFIRMED — a rejected identity
+  leaves the schema PROPOSED — and supersedes any prior CONFIRMED version so
+  only one is CONFIRMED at a time.
+- `amend(company, new_kpi_defs, review_item_id)` proposes a new version through
+  the same path; `confirmed_kpi_ids` / `is_kpi_in_confirmed_schema` expose the
+  schema-scoped extraction boundary (only a CONFIRMED schema's kpi_ids are
+  extractable; PROPOSED-only and SUPERSEDED-only yield none).
+- a thin argparse CLI (`propose` / `confirm` / `status`) wraps the above with
+  the same fail-loud exit-code convention as `review_queue.py`'s CLI (0 success
+  / 1 ValueError / 2 malformed or malshaped input).
 
 Durable-dir resolution, atomic tmp+rename write, and series locking are ALL
 REUSED from the shared `_store_fs.py` module (same-dir import below), NOT
@@ -156,7 +157,7 @@ def propose(company: str, kpi_defs: list, review_item_id: str) -> dict:
 
 def amend(company: str, new_kpi_defs: list, review_item_id: str) -> dict:
     """Propose a NEW schema version for a company that already has one —
-    the evolve-a-schema path (Task 5).
+    the evolve-a-schema path.
 
     Delegates entirely to `propose`: `propose` already computes
     `next_version = len(envelope["versions"]) + 1` from the company's
@@ -164,8 +165,8 @@ def amend(company: str, new_kpi_defs: list, review_item_id: str) -> dict:
     versions naturally proposes version 2, 3, ... through the exact same
     locked store-write + review-queue-enqueue mechanism — no separate
     version-bumping logic to keep in sync. `confirm`'s supersede-prior-
-    CONFIRMED step (above) is what later retires the version this amend
-    supersedes, once the new one is confirmed.
+    CONFIRMED step is what later retires the version this amend supersedes,
+    once the new one is confirmed.
     """
     return propose(company, new_kpi_defs, review_item_id)
 
