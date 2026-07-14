@@ -118,3 +118,83 @@ def enqueue(item: dict) -> None:
         _atomic_write(path, envelope)
     finally:
         kpi_store._release_series_lock(lock_file)
+
+
+def list_open() -> list:
+    """Return all review-items whose `status == "OPEN"`.
+
+    Read-only: never mutates or reorders the stored items. A missing queue
+    file (nothing enqueued yet) returns `[]` — not an error, since "no
+    pending work" is the normal starting state.
+    """
+    path = _queue_path()
+    if not path.exists():
+        return []
+    envelope = _load_queue(path)
+    return [item for item in envelope["items"] if item.get("status") == "OPEN"]
+
+
+# decision -> resolved status. Unknown decisions are rejected loud in
+# `adjudicate` rather than silently falling through.
+_DECISION_TO_STATUS = {
+    "approve": "APPROVED",
+    "reject": "REJECTED",
+    "edit": "EDITED",
+}
+
+
+def adjudicate(
+    review_item_id: str, decision: str, adjudicated_by: str, resolution=None
+) -> None:
+    """Move an OPEN item to a resolved status per `decision`, storing
+    `resolution` on the item.
+
+    `decision` maps to a resolved status: "approve" -> APPROVED, "reject"
+    -> REJECTED, "edit" -> EDITED; any other value is rejected loud
+    (ValueError), nothing written. Adjudicating an unknown `review_item_id`,
+    or an item that is NOT currently OPEN (an already-resolved item needs
+    `reopen` first — Task 6), is also rejected loud, nothing written.
+
+    `adjudicated_by` is accepted this task but not yet persisted: the
+    append-only adjudicator-identity record (Task 4) and the no-self-confirm
+    authorization boundary (Task 5) land in later tasks — this task is
+    deliberately minimal: status transition + resolution + lock.
+
+    Concurrency: mirrors `enqueue`'s locking — the full read-modify-write
+    cycle (load -> find -> mutate -> write) is guarded by kpi_store's
+    per-path `fcntl.flock` lock on the SAME shared queue file, so a
+    concurrent adjudicate/enqueue never tears or loses an update.
+    """
+    if decision not in _DECISION_TO_STATUS:
+        raise ValueError(
+            f"review_queue.adjudicate: unknown decision {decision!r} — "
+            f"expected one of {sorted(_DECISION_TO_STATUS)}, nothing written"
+        )
+
+    path = _queue_path()
+    lock_file = kpi_store._acquire_series_lock(path)
+    try:
+        envelope = _load_queue(path)
+        target = None
+        for existing in envelope["items"]:
+            if existing.get("review_item_id") == review_item_id:
+                target = existing
+                break
+
+        if target is None:
+            raise ValueError(
+                f"review_queue.adjudicate: unknown review_item_id "
+                f"{review_item_id!r} — nothing written"
+            )
+        if target.get("status") != "OPEN":
+            raise ValueError(
+                f"review_queue.adjudicate: review_item_id {review_item_id!r} "
+                f"is not OPEN (status={target.get('status')!r}) — illegal "
+                f"transition, reopen it first, nothing written"
+            )
+
+        target["status"] = _DECISION_TO_STATUS[decision]
+        target["resolution"] = resolution
+        _atomic_write(path, envelope)
+    finally:
+        kpi_store._release_series_lock(lock_file)

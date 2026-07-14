@@ -197,3 +197,100 @@ def test_concurrent_enqueues_all_persist(
         f"{len(envelope['items'])} — lost update from an unlocked "
         f"read-modify-write race"
     )
+
+
+def test_list_open_returns_only_open_items(
+    review_queue_module, tmp_path, monkeypatch
+):
+    """`list_open` must return exactly the items whose `status == "OPEN"`,
+    and [] (never raise) when the queue file doesn't exist yet.
+
+    Why this matters: list_open is the operator's view of pending work — a
+    resolved item leaking back in would re-surface work already adjudicated;
+    a missing queue file must read as "nothing pending yet", not an error.
+
+    Uses `enqueue`'s status-preserving `setdefault` (an explicit
+    caller-supplied `status` survives enqueue unchanged) to construct a
+    resolved item directly, since `adjudicate` (Task 3) doesn't exist yet
+    when this test is written.
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+
+    assert review_queue_module.list_open() == [], (
+        "a missing queue file must return [], not raise"
+    )
+
+    open_item = {
+        "review_item_id": "rev-2000",
+        "subject_type": "kpi_point",
+        "subject_id": "AAPL:iphone_units:FY2024",
+        "reason": "value deviates >20% from prior as_of",
+        "created_at": "2026-07-14T09:00:00Z",
+    }
+    resolved_item = {
+        "review_item_id": "rev-2001",
+        "subject_type": "kpi_point",
+        "subject_id": "AAPL:services_revenue:FY2024",
+        "reason": "provenance table_id changed since last as_of",
+        "created_at": "2026-07-14T09:05:00Z",
+        "status": "APPROVED",
+    }
+    review_queue_module.enqueue(open_item)
+    review_queue_module.enqueue(resolved_item)
+
+    open_items = review_queue_module.list_open()
+    assert [i["review_item_id"] for i in open_items] == ["rev-2000"], (
+        "list_open must return exactly the OPEN item, excluding the "
+        "already-resolved one"
+    )
+
+
+def test_adjudicate_resolves_open_item(
+    review_queue_module, tmp_path, monkeypatch
+):
+    """`adjudicate` moves an OPEN item to a resolved status per `decision`
+    and stores the `resolution`; it rejects loud (ValueError) for an
+    unknown `review_item_id` and for an illegal transition (adjudicating an
+    item that is NOT currently OPEN — resolved items need reopen first,
+    Task 6).
+
+    Why this matters: adjudication is the human-confirm seam for a flagged
+    KPI point — silently accepting an unknown id or double-resolving an
+    already-resolved item would corrupt the audit trail the whole review
+    queue exists to produce.
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+
+    item = {
+        "review_item_id": "rev-3000",
+        "subject_type": "kpi_point",
+        "subject_id": "AAPL:iphone_units:FY2024",
+        "reason": "value deviates >20% from prior as_of",
+        "created_at": "2026-07-14T09:00:00Z",
+    }
+    review_queue_module.enqueue(item)
+
+    review_queue_module.adjudicate(
+        "rev-3000", "approve", adjudicated_by="alice",
+        resolution="confirmed correct against 10-K",
+    )
+
+    queue_files = list(tmp_path.rglob("*.json"))
+    assert len(queue_files) == 1
+    envelope = json.loads(queue_files[0].read_text(encoding="utf-8"))
+    stored = next(
+        i for i in envelope["items"] if i["review_item_id"] == "rev-3000"
+    )
+    assert stored["status"] == "APPROVED"
+    assert stored["resolution"] == "confirmed correct against 10-K"
+
+    with pytest.raises(ValueError):
+        review_queue_module.adjudicate(
+            "rev-unknown", "approve", adjudicated_by="alice"
+        )
+
+    with pytest.raises(ValueError):
+        # already resolved (APPROVED above) — illegal transition without reopen
+        review_queue_module.adjudicate(
+            "rev-3000", "reject", adjudicated_by="bob"
+        )
