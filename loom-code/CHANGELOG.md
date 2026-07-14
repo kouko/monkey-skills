@@ -5,6 +5,24 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.31.0] — 2026-07-14 — AFK research lane (kickoff fork-harvest parallel research subagents)
+
+### Added
+
+- **`writing-plans` `kickoff-briefing.md` §(b) fan-out/join execution rule**:
+  M researchable forks identified at kickoff now dispatch M background
+  research subagents in one fan-out step, joined once, and distilled into
+  `Kickoff decision:` pins with citation tails; oversized findings spill to
+  `docs/loom/research/` instead of bloating the pin. Adds the worker
+  research-packet contract (what each dispatched subagent receives) and
+  degradation notes: WebSearch-unavailable falls back to an explicit report
+  plus the arm-2 fallback path; the Codex host has no background-agent
+  primitive and falls back to a sequential research floor.
+- **`kickoff-briefing.md` §(f) single-fork case**: now fires one background
+  research subagent instead of doing the research inline.
+
+See `docs/loom/specs/2026-07-14-afk-research-lane.md` for the full brief.
+
 ## [0.30.2] — 2026-07-14 — description token-economy sweep (six skill descriptions)
 
 ### Changed
