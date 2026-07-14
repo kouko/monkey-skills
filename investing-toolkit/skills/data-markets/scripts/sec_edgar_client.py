@@ -1866,6 +1866,61 @@ def _dimensional_revenue_error_slot(ticker: str, form: str, detail: str) -> dict
     }
 
 
+def _is_dimensional_revenue_fact(fact: dict) -> bool:
+    """The combined filter predicate for `extract_dimensional_revenue`:
+    dimensioned + axis is one of the three local names (both namespaces,
+    `_is_dimensional_revenue_axis`) + concept is revenue-shaped
+    (`_is_revenue_concept`) + a reported numeric value (never NaN — mirrors
+    `_build_statement_cells`'s `_is_nan` skip; a placeholder concept with no
+    reported number is never fabricated as 0)."""
+    if not fact.get("is_dimensioned"):
+        return False
+    if not _is_dimensional_revenue_axis(fact.get("dimension")):
+        return False
+    if not _is_revenue_concept(fact.get("concept")):
+        return False
+    return not _is_nan(fact.get("numeric_value"))
+
+
+def _build_dimensional_revenue_fact(fact: dict, ticker: str, accession: str, filed) -> dict:
+    """Build one normalized fact-pack row from an edgartools fact record
+    already known to pass `_is_dimensional_revenue_fact`.
+
+    Fails loud (`ValueError` naming `period_end`) instead of silently
+    emitting a null-dated fact: a revenue fact with no period_end cannot be
+    placed on the fiscal timeline, and this extractor's anti-fabrication
+    posture never emits a fact it cannot date — plan amendment (a),
+    spec-reviewer NEEDS_REVISION.
+
+    fiscal_year is DERIVED from period_end (the year the fiscal period
+    ENDS) — NEVER taken from edgartools' raw `fiscal_year` column, which is
+    unreliable for prior-year comparatives: live-verified on AAPL's 2025
+    10-K, the iPhone fact with period_end 2024-09-28 is column-labeled
+    fiscal_year=2025 but is really FY2024. Shipping the raw column mislabels
+    every prior-year comparative point."""
+    axis = fact.get("dimension")
+    period_end = (
+        fact.get("period_end") if fact.get("period_type") == "duration"
+        else fact.get("period_instant")
+    )
+    if not period_end:
+        raise ValueError(
+            f"dimensional revenue fact for {ticker!r} has no period_end "
+            f"(cannot be dated): concept={fact.get('concept')!r} "
+            f"axis={axis!r} member={fact.get('member')!r}"
+        )
+    return {
+        "concept": fact.get("concept"),
+        "axis": axis,
+        "member": fact.get("member"),
+        "value": float(fact.get("numeric_value")),
+        "period_end": period_end,
+        "fiscal_year": int(period_end[:4]),
+        "accession": accession,
+        "filed": filed,
+    }
+
+
 def extract_dimensional_revenue(ticker: str, form: str = "10-K") -> dict:
     """Fetch `ticker`'s latest `form` filing's XBRL via edgartools and emit
     the normalized dimensional-revenue fact-pack (the declared shape —
@@ -1915,51 +1970,11 @@ def extract_dimensional_revenue(ticker: str, form: str = "10-K") -> dict:
     accession = filing.accession_no
     filed = _filing_date_iso(filing.filing_date)
 
-    facts = []
-    for fact in facts_records:
-        if not fact.get("is_dimensioned"):
-            continue
-        axis = fact.get("dimension")
-        if not _is_dimensional_revenue_axis(axis):
-            continue
-        if not _is_revenue_concept(fact.get("concept")):
-            continue
-        if _is_nan(fact.get("numeric_value")):
-            continue  # placeholder concept, no reported number — never fabricate one
-
-        period_end = (
-            fact.get("period_end") if fact.get("period_type") == "duration"
-            else fact.get("period_instant")
-        )
-        if not period_end:
-            # Fail loud instead of silently emitting a null-dated fact: a
-            # revenue fact with no period_end cannot be placed on the fiscal
-            # timeline, and this extractor's anti-fabrication posture (see
-            # the numeric_value NaN skip above) never emits a fact it cannot
-            # date — plan amendment (a), spec-reviewer NEEDS_REVISION.
-            raise ValueError(
-                f"dimensional revenue fact for {ticker!r} has no period_end "
-                f"(cannot be dated): concept={fact.get('concept')!r} "
-                f"axis={axis!r} member={fact.get('member')!r}"
-            )
-
-        # fiscal_year is DERIVED from period_end (the year the fiscal period
-        # ENDS) — NEVER taken from edgartools' raw `fiscal_year` column, which
-        # is unreliable for prior-year comparatives: live-verified on AAPL's
-        # 2025 10-K, the iPhone fact with period_end 2024-09-28 is
-        # column-labeled fiscal_year=2025 but is really FY2024. Shipping the
-        # raw column mislabels every prior-year comparative point.
-        fiscal_year = int(period_end[:4])
-        facts.append({
-            "concept": fact.get("concept"),
-            "axis": axis,
-            "member": fact.get("member"),
-            "value": fact.get("numeric_value"),
-            "period_end": period_end,
-            "fiscal_year": fiscal_year,
-            "accession": accession,
-            "filed": filed,
-        })
+    facts = [
+        _build_dimensional_revenue_fact(fact, ticker, accession, filed)
+        for fact in facts_records
+        if _is_dimensional_revenue_fact(fact)
+    ]
 
     return {"company": ticker, "facts": facts}
 
