@@ -210,3 +210,156 @@ def test_confirm_transitions_to_confirmed_via_human_seam(
     # No schema at all for this company -> raises loud.
     with pytest.raises(ValueError):
         kpi_schema_module.confirm("MSFT", adjudicated_by="alice", adjudicated_at="2024-01-01")
+
+
+def test_confirmed_schema_scopes_kpi_ids(
+    kpi_schema_module, review_queue_module, tmp_path, monkeypatch
+):
+    """confirmed_kpi_ids(company) / is_kpi_in_confirmed_schema(company, kpi_id)
+    must scope extraction to ONLY the company's CONFIRMED schema version:
+      (a) before confirm, a PROPOSED-only schema yields no confirmed kpi_ids
+          (extraction stays blocked until a human confirms it);
+      (b) after confirm, confirmed_kpi_ids lists exactly the confirmed
+          version's kpi_ids, and is_kpi_in_confirmed_schema is True for a
+          listed id, False for an unlisted one.
+
+    Why this matters: this is the schema-scoped extraction boundary — a
+    later extraction step must never read from a PROPOSED (unreviewed)
+    schema, and must never accept a KPI id the human never confirmed.
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+
+    kpi_defs = [
+        {"kpi_id": "a", "label": "A", "unit": "units", "locate_hint": "hint a"},
+        {"kpi_id": "b", "label": "B", "unit": "units", "locate_hint": "hint b"},
+    ]
+    kpi_schema_module.propose("AAPL", kpi_defs, review_item_id="rev-schema-0003")
+
+    # (a) PROPOSED-only -> blocked, no confirmed kpi_ids.
+    assert kpi_schema_module.confirmed_kpi_ids("AAPL") == []
+    assert kpi_schema_module.is_kpi_in_confirmed_schema("AAPL", "a") is False
+
+    kpi_schema_module.confirm("AAPL", adjudicated_by="alice", adjudicated_at="2024-01-01")
+
+    # (b) CONFIRMED -> scoped to exactly this version's kpi_ids.
+    assert kpi_schema_module.confirmed_kpi_ids("AAPL") == ["a", "b"]
+    assert kpi_schema_module.is_kpi_in_confirmed_schema("AAPL", "a") is True
+    assert kpi_schema_module.is_kpi_in_confirmed_schema("AAPL", "zzz") is False
+
+
+def test_amend_new_version_and_superseded_blocks(
+    kpi_schema_module, review_queue_module, tmp_path, monkeypatch
+):
+    """amend(company, new_kpi_defs, review_item_id) must:
+      (a) propose a NEW version (version 2, PROPOSED) through the SAME
+          store+enqueue path as propose — a fresh OPEN review-item appears
+          for it, and confirmed_kpi_ids is still scoped to the OLD (v1)
+          CONFIRMED version until the new one is confirmed;
+      (b) on confirming the new version, the prior CONFIRMED version (v1)
+          transitions to SUPERSEDED (only ONE CONFIRMED version at a time)
+          and confirmed_kpi_ids now reflects the new (v2) kpi_defs;
+      (c) a company whose only non-PROPOSED version is SUPERSEDED (no
+          CONFIRMED successor) yields no confirmed kpi_ids — consistent
+          with Task 4's PROPOSED-blocks behavior (the orphaned-supersede
+          scenario re-proposes rather than silently extracting stale ids).
+
+    Why this matters: amend is how a company's schema evolves without
+    losing history; the supersede transition is what keeps "only one
+    CONFIRMED version" true so confirmed_kpi_ids never has to choose
+    between two simultaneously-CONFIRMED versions.
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+
+    v1_defs = [{"kpi_id": "a", "label": "A", "unit": "units", "locate_hint": "hint a"}]
+    kpi_schema_module.propose("AAPL", v1_defs, review_item_id="rev-schema-0004")
+    kpi_schema_module.confirm("AAPL", adjudicated_by="alice", adjudicated_at="2024-01-01")
+    assert kpi_schema_module.confirmed_kpi_ids("AAPL") == ["a"]
+
+    v2_defs = [
+        {"kpi_id": "a", "label": "A", "unit": "units", "locate_hint": "hint a"},
+        {"kpi_id": "c", "label": "C", "unit": "units", "locate_hint": "hint c"},
+    ]
+    amended = kpi_schema_module.amend("AAPL", v2_defs, review_item_id="rev-schema-0005")
+    assert amended["version"] == 2
+    assert amended["status"] == "PROPOSED"
+    assert amended["kpi_defs"] == v2_defs
+
+    # (a) new OPEN review-item for v2; v1 still the confirmed one.
+    open_items = review_queue_module.list_open()
+    assert len(open_items) == 1
+    assert open_items[0]["review_item_id"] == "rev-schema-0005"
+    assert kpi_schema_module.confirmed_kpi_ids("AAPL") == ["a"]
+
+    confirmed_v2 = kpi_schema_module.confirm(
+        "AAPL", adjudicated_by="bob", adjudicated_at="2024-02-01"
+    )
+
+    # (b) v2 CONFIRMED, v1 SUPERSEDED, confirmed_kpi_ids reflects v2.
+    assert confirmed_v2["version"] == 2
+    assert confirmed_v2["status"] == "CONFIRMED"
+    assert kpi_schema_module.confirmed_kpi_ids("AAPL") == ["a", "c"]
+
+    schema_files = [
+        p for p in tmp_path.rglob("*.json") if p.name != "review-queue.json"
+    ]
+    assert len(schema_files) == 1
+    envelope = json.loads(schema_files[0].read_text(encoding="utf-8"))
+    versions_by_number = {v["version"]: v for v in envelope["versions"]}
+    assert versions_by_number[1]["status"] == "SUPERSEDED"
+    assert versions_by_number[2]["status"] == "CONFIRMED"
+
+    # (c) a company whose ONLY version is SUPERSEDED (no CONFIRMED
+    # successor — e.g. hand-constructed here to exercise the orphaned-
+    # supersede scenario directly) yields no confirmed kpi_ids: blocked,
+    # signalling re-propose rather than silently extracting stale ids.
+    orphan_path = kpi_schema_module._schema_path("ORCL")
+    orphan_path.write_text(
+        json.dumps({
+            "_kpi_schema_meta": {"version": "1.0"},
+            "versions": [{
+                "schema_id": "ORCL:v1",
+                "company": "ORCL",
+                "version": 1,
+                "status": "SUPERSEDED",
+                "kpi_defs": [{"kpi_id": "stale", "label": "Stale", "unit": "units", "locate_hint": "n/a"}],
+                "confirmed_by": "alice",
+                "confirmed_at": "2023-01-01",
+            }],
+        }),
+        encoding="utf-8",
+    )
+    assert kpi_schema_module.confirmed_kpi_ids("ORCL") == []
+
+
+def test_rejected_amend_confirm_leaves_prior_confirmed_intact(
+    kpi_schema_module, review_queue_module, tmp_path, monkeypatch
+):
+    """The load-bearing supersede-ordering property: when an amended version's
+    confirm is REJECTED (bad identity), the in-memory supersede of the prior
+    CONFIRMED version must be DISCARDED — v1 stays CONFIRMED, v2 stays
+    PROPOSED, nothing persisted. (The single _atomic_write runs only after
+    adjudicate succeeds; a rejection raises before it.)
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+
+    v1_defs = [{"kpi_id": "a", "label": "A", "unit": "u", "locate_hint": "h"}]
+    kpi_schema_module.propose("NVDA", v1_defs, review_item_id="rev-nv-1")
+    kpi_schema_module.confirm("NVDA", adjudicated_by="alice", adjudicated_at="2024-01-01")
+    assert kpi_schema_module.confirmed_kpi_ids("NVDA") == ["a"]
+
+    v2_defs = v1_defs + [{"kpi_id": "b", "label": "B", "unit": "u", "locate_hint": "h"}]
+    kpi_schema_module.amend("NVDA", v2_defs, review_item_id="rev-nv-2")
+
+    # A rejected identity (whitespace) must change nothing on disk.
+    with pytest.raises(ValueError):
+        kpi_schema_module.confirm("NVDA", adjudicated_by="   ")
+
+    # v1 still CONFIRMED (NOT superseded), v2 still PROPOSED, confirmed set unchanged.
+    schema_files = [p for p in tmp_path.rglob("*.json") if p.name != "review-queue.json"]
+    envelope = json.loads(schema_files[0].read_text(encoding="utf-8"))
+    by_num = {v["version"]: v for v in envelope["versions"]}
+    assert by_num[1]["status"] == "CONFIRMED", "rejected confirm must not supersede v1"
+    assert by_num[2]["status"] == "PROPOSED", "rejected confirm must not confirm v2"
+    assert kpi_schema_module.confirmed_kpi_ids("NVDA") == ["a"]
+    # v2's review-item stays OPEN (adjudication was rejected).
+    assert any(i["review_item_id"] == "rev-nv-2" for i in review_queue_module.list_open())

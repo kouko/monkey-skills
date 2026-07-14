@@ -148,6 +148,22 @@ def propose(company: str, kpi_defs: list, review_item_id: str) -> dict:
     return record
 
 
+def amend(company: str, new_kpi_defs: list, review_item_id: str) -> dict:
+    """Propose a NEW schema version for a company that already has one —
+    the evolve-a-schema path (Task 5).
+
+    Delegates entirely to `propose`: `propose` already computes
+    `next_version = len(envelope["versions"]) + 1` from the company's
+    EXISTING versions list, so calling it again for a company with prior
+    versions naturally proposes version 2, 3, ... through the exact same
+    locked store-write + review-queue-enqueue mechanism — no separate
+    version-bumping logic to keep in sync. `confirm`'s supersede-prior-
+    CONFIRMED step (above) is what later retires the version this amend
+    supersedes, once the new one is confirmed.
+    """
+    return propose(company, new_kpi_defs, review_item_id)
+
+
 def confirm(company: str, adjudicated_by: str, adjudicated_at=None) -> dict:
     """Confirm the LATEST PROPOSED schema version for `company` through the
     review queue's existing human-confirm seam (reused, not reimplemented).
@@ -196,6 +212,14 @@ def confirm(company: str, adjudicated_by: str, adjudicated_at=None) -> dict:
                 "to confirm"
             )
 
+        # Only ONE version may be CONFIRMED at a time. Any pre-existing
+        # CONFIRMED version (from an earlier propose/confirm cycle, before
+        # this amend) is superseded IN THE SAME locked read-modify-write as
+        # the new confirm below — never a second unlocked pass.
+        prior_confirmed = [v for v in versions if v is not latest and v["status"] == "CONFIRMED"]
+        for version in prior_confirmed:
+            version["status"] = "SUPERSEDED"
+
         schema_id = latest["schema_id"]
         review_item = next(
             (
@@ -227,3 +251,42 @@ def confirm(company: str, adjudicated_by: str, adjudicated_at=None) -> dict:
         _store_fs._release_series_lock(lock_file)
 
     return latest
+
+
+def _confirmed_version(company: str) -> dict | None:
+    """Locate the company's CONFIRMED schema version, or None if none
+    exists (no schema proposed yet, still PROPOSED, or only SUPERSEDED
+    versions with no CONFIRMED successor — Task 5's supersede-blocks
+    scenario). Read-only, no lock needed (a single read of a file that is
+    only ever replaced atomically).
+
+    Only one version is ever CONFIRMED at a time (Task 5's confirm flips
+    any prior CONFIRMED version to SUPERSEDED in the same locked write as
+    the new confirm), so the first CONFIRMED match found is sufficient.
+    """
+    envelope = _load_schema_file(_schema_path(company))
+    for version in envelope["versions"]:
+        if version["status"] == "CONFIRMED":
+            return version
+    return None
+
+
+def confirmed_kpi_ids(company: str) -> list:
+    """The kpi_ids of `company`'s CONFIRMED schema version — the
+    schema-scoped extraction boundary. A PROPOSED (unconfirmed) or
+    SUPERSEDED-only schema yields `[]` (extraction blocked), matching
+    `confirm`'s confirm-once / human-in-the-loop gate: nothing may be
+    extracted against a schema a human has not confirmed.
+    """
+    confirmed = _confirmed_version(company)
+    if confirmed is None:
+        return []
+    return [kpi_def["kpi_id"] for kpi_def in confirmed["kpi_defs"]]
+
+
+def is_kpi_in_confirmed_schema(company: str, kpi_id: str) -> bool:
+    """True only if `kpi_id` is listed under `company`'s CONFIRMED schema
+    version. Delegates to `confirmed_kpi_ids` so the two functions can
+    never disagree about what "confirmed" means.
+    """
+    return kpi_id in confirmed_kpi_ids(company)
