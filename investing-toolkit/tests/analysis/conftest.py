@@ -17,6 +17,18 @@ from pathlib import Path
 
 import pytest
 
+
+def pytest_configure(config):
+    """Register the `network` marker (mirrors tests/data/conftest.py) so
+    the later live XBRL tests (T5/T6) in this subtree can be selected via
+    `-m network` / deselected via `-m "not network"`.
+    """
+    config.addinivalue_line(
+        "markers",
+        "network: requires external API calls (skip in offline CI)",
+    )
+
+
 # Repo root resolves from tests/analysis/conftest.py → up 2 = investing-toolkit
 ROOT = Path(__file__).resolve().parents[2]
 SKILLS = ROOT / "skills"
@@ -39,6 +51,7 @@ KPI_GATE_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_gate.py"
 KPI_BREAK_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_break.py"
 KPI_SERIES_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_series.py"
 KPI_MEMO_FEED_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_memo_feed.py"
+KPI_XBRL_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_xbrl.py"
 
 
 def run_script(script: Path, *args: str, timeout: int = 60) -> subprocess.CompletedProcess:
