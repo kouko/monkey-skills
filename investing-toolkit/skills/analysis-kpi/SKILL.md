@@ -424,3 +424,36 @@ and exits **1** (nothing returned) — an unattributed value is never
 bundled into the feed. Malformed JSON or a non-array `kpi_series` body
 exits **2** (nothing computed, no raw traceback). A missing required flag
 is handled by argparse itself and exits **2**.
+
+## CLI (kpi_xbrl)
+
+`scripts/kpi_xbrl.py` — the XBRL fact -> kpi_store point adapter
+(operational-kpi tier-② XBRL pilot). PURE-COMPUTE: stdlib only, no
+`_store_fs`/durable dir/locking, no network — it reads an already-fetched
+fact-pack (the shape `sec_edgar_client.extract_dimensional_revenue`
+emits) and an era-specific binding, and resolves each to kpi_store-shaped
+points.
+
+```
+# build: reads a fact-pack JSON ({company, facts: [...]}) from stdin (or
+# --file PATH); --binding points to a JSON file holding the era-specific
+# binding ({kpi_id, sources: [{concept, axis, member, fy_min, fy_max,
+# source_kind}, ...]}); resolves it via resolve_binding and prints the
+# points list
+echo '{"company": "AAPL", "facts": [...]}' \
+  | uv run scripts/kpi_xbrl.py build \
+      --company AAPL --binding /path/to/iphone_revenue_binding.json
+```
+
+| Subcommand | Flag         | Required | Notes                                                        |
+|------------|--------------|----------|-----------------------------------------------------------------|
+| `build`    | `--company`  | yes      | Company identifier passed through to `resolve_binding`            |
+| `build`    | `--binding`  | yes      | Path to a JSON file holding the binding                           |
+| `build`    | `--file`     | no       | Path to a JSON file holding the fact_pack (default: read stdin)   |
+
+`build` exits **0** on success, printing the resolved points list. A
+`resolve_binding` rejection (ValueError — e.g. a fact matching >1 source,
+an ambiguous binding) exits **1**. Malformed JSON, or a non-object
+fact-pack or `--binding` body, exits **2** (nothing computed, no raw
+traceback). A missing required flag is handled by argparse itself and
+exits **2**.

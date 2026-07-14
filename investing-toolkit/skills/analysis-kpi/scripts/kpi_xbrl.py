@@ -36,9 +36,18 @@ carrying a non-numeric `value`, or a malformed (non-YYYY-MM-DD) `period_end`,
 RAISES a distinct `ValueError` naming the offending field — this module
 never emits a fabricated `0` or a period `"None"`. A true numeric `0` is a
 real value, not a missing one.
+
+Task 6 adds a thin argparse CLI (`build`), mirroring `kpi_memo_feed.py`'s
+CLI shape and fail-loud exit-code convention: reads a fact-pack JSON from
+`--file`/stdin and a binding JSON from `--binding`, calls `resolve_binding`
+and prints the resulting points. 0 on success; 1 on a `resolve_binding`
+ValueError (e.g. ambiguous binding); 2 on malformed or non-object
+fact-pack JSON (nothing computed, no raw traceback).
 """
 from __future__ import annotations
 
+import argparse
+import json
 import sys
 from datetime import date
 from pathlib import Path
@@ -226,3 +235,86 @@ def build_series_with_break(points: list[dict], break_at_period: str) -> dict:
     """
     applied_breaks = [{"break_period": break_at_period}]
     return kpi_series.split_series(points, applied_breaks)
+
+
+def _cli_build(args: argparse.Namespace) -> int:
+    """`build` subcommand: read a fact-pack JSON from `--file` (or stdin
+    when omitted) and a binding JSON from `--binding`, call
+    `resolve_binding(fact_pack, binding, company)` and print the resulting
+    points list. Mirrors `kpi_memo_feed._cli_build`'s exit-code contract:
+    malformed JSON or a non-object fact_pack/binding -> 2 (nothing
+    computed); a `resolve_binding` rejection (ValueError, e.g. an
+    ambiguous binding) -> 1; success -> 0.
+    """
+    if args.file is not None:
+        raw = Path(args.file).read_text(encoding="utf-8")
+    else:
+        raw = sys.stdin.read()
+
+    try:
+        fact_pack = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        print(f"kpi_xbrl build: invalid fact-pack JSON input: {exc}", file=sys.stderr)
+        return 2
+
+    if not isinstance(fact_pack, dict):
+        print(
+            "kpi_xbrl build: expected a JSON object (fact_pack), got "
+            f"{type(fact_pack).__name__} — nothing computed",
+            file=sys.stderr,
+        )
+        return 2
+
+    binding_raw = Path(args.binding).read_text(encoding="utf-8")
+    try:
+        binding = json.loads(binding_raw)
+    except json.JSONDecodeError as exc:
+        print(f"kpi_xbrl build: invalid --binding JSON: {exc}", file=sys.stderr)
+        return 2
+
+    if not isinstance(binding, dict):
+        print(
+            "kpi_xbrl build: expected a JSON object (--binding), got "
+            f"{type(binding).__name__} — nothing computed",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        points = resolve_binding(fact_pack, binding, args.company)
+    except ValueError as exc:
+        print(f"kpi_xbrl build: {exc}", file=sys.stderr)
+        return 1
+
+    json.dump(points, sys.stdout, ensure_ascii=False)
+    sys.stdout.write("\n")
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="XBRL fact -> kpi_store point adapter CLI (build)."
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    build_parser = subparsers.add_parser(
+        "build",
+        help="Resolve an era-specific binding against a fact-pack and print the points.",
+    )
+    build_parser.add_argument("--company", required=True)
+    build_parser.add_argument(
+        "--binding", type=Path, required=True,
+        help="Path to a JSON file holding the binding ({kpi_id, sources: [...]}).",
+    )
+    build_parser.add_argument(
+        "--file", type=Path, default=None,
+        help="Path to a JSON file holding the fact_pack (default: read stdin).",
+    )
+    build_parser.set_defaults(func=_cli_build)
+
+    args = parser.parse_args()
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

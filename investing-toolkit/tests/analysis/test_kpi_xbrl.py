@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 import sys
 
 from conftest import FIXTURES, KPI_XBRL_SCRIPT
@@ -251,3 +252,76 @@ def test_declared_break_splits_series_not_concat(kpi_xbrl_module, fact_pack):
     )
     assert all_periods == ["2016", "2024", "2025"]
     assert result["break_markers"] == [{"break_period": "2018"}]
+
+
+def test_cli_build_resolves_binding_and_prints_points(tmp_path):
+    """Task 6 GREEN: the `build` subcommand reads a fact-pack JSON from
+    stdin and a binding JSON from --binding, resolves it via
+    resolve_binding, and prints the points list. Mirrors
+    kpi_memo_feed.py's CLI + exit-code convention: 0 success, 1 on a
+    resolve ValueError (e.g. ambiguous binding), 2 on malformed/non-object
+    fact-pack JSON — no raw traceback either way.
+    """
+    fact_pack = json.loads((FIXTURES / "xbrl_aapl_factpack.json").read_text(encoding="utf-8"))
+    binding_path = tmp_path / "binding.json"
+    binding_path.write_text(json.dumps(IPHONE_REVENUE_BINDING), encoding="utf-8")
+
+    # (a) success: fact-pack via stdin, binding via --binding -> exit 0.
+    ok_result = subprocess.run(
+        [
+            "uv", "run", "--script", str(KPI_XBRL_SCRIPT), "build",
+            "--company", "AAPL", "--binding", str(binding_path),
+        ],
+        input=json.dumps(fact_pack),
+        capture_output=True, text=True, timeout=60,
+    )
+    assert ok_result.returncode == 0, ok_result.stderr
+    points = json.loads(ok_result.stdout)
+    assert len(points) == 3
+    assert all(p["kpi_id"] == "iphone_revenue" for p in points)
+
+    # (b) ambiguous binding -> resolve_binding ValueError -> exit 1.
+    ambiguous_path = tmp_path / "ambiguous.json"
+    ambiguous_path.write_text(json.dumps(AMBIGUOUS_OVERLAPPING_BINDING), encoding="utf-8")
+    ambiguous_result = subprocess.run(
+        [
+            "uv", "run", "--script", str(KPI_XBRL_SCRIPT), "build",
+            "--company", "AAPL", "--binding", str(ambiguous_path),
+        ],
+        input=json.dumps(fact_pack),
+        capture_output=True, text=True, timeout=60,
+    )
+    assert ambiguous_result.returncode == 1, ambiguous_result.stderr
+    assert "ambiguous" in ambiguous_result.stderr
+    assert "Traceback" not in ambiguous_result.stderr
+
+    # (c) malformed fact-pack JSON on stdin -> exit 2, no raw traceback.
+    malformed_result = subprocess.run(
+        [
+            "uv", "run", "--script", str(KPI_XBRL_SCRIPT), "build",
+            "--company", "AAPL", "--binding", str(binding_path),
+        ],
+        input="{not valid json",
+        capture_output=True, text=True, timeout=60,
+    )
+    assert malformed_result.returncode == 2, malformed_result.stderr
+    assert "Traceback" not in malformed_result.stderr
+
+    # (d) non-object fact-pack JSON (a JSON array) -> exit 2.
+    non_object_result = subprocess.run(
+        [
+            "uv", "run", "--script", str(KPI_XBRL_SCRIPT), "build",
+            "--company", "AAPL", "--binding", str(binding_path),
+        ],
+        input="[]",
+        capture_output=True, text=True, timeout=60,
+    )
+    assert non_object_result.returncode == 2, non_object_result.stderr
+
+    # (e) --help lists the `build` subcommand.
+    help_result = subprocess.run(
+        ["uv", "run", "--script", str(KPI_XBRL_SCRIPT), "--help"],
+        capture_output=True, text=True, timeout=60,
+    )
+    assert help_result.returncode == 0
+    assert "build" in help_result.stdout
