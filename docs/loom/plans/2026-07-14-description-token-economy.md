@@ -55,6 +55,7 @@ Plan-document-reviewer verdict: PASS (2026-07-14, round 2 — round-1 NEEDS_REVI
   pre-merge: per-record corpus-intent preservation verified by both
   reviewers for every swept skill. Plan-authoring error acknowledged: the
   original T8 assumed working-tree visibility.
+- Amendment (2026-07-14, T4 quality-review 🔴): Task 4 Files touched gains
   domain-teams/skills/skill-team/standards/skill-md-structure.md — the
   checklist's grounding standard still stated the flat ≤250 rule (:34, :73)
   and the two files cross-reference each other; no plan task owned the
@@ -70,13 +71,6 @@ Plan-document-reviewer verdict: PASS (2026-07-14, round 2 — round-1 NEEDS_REVI
 
 ## Decision Log
 
-2. chose YAML-comment placement for the router firing-evidence note (a
-   `# firing-evidence: <date> <result> (<baseline path>)` line above
-   `description:` in frontmatter) because it is greppable, colocated, and
-   costs zero listing chars — cost-of-change: the day tooling wants to
-   parse the note mechanically, this choice costs moving it to a real
-   frontmatter field. (Principle 5 codification of placement = next-touch.)
-
 1. chose the strict reading for evidence-less new routers (stay in the
    normal band until a corpus/live run supplies firing evidence, then the
    ≤500 band opens) because it is the literal consequence of the pinned
@@ -85,6 +79,13 @@ Plan-document-reviewer verdict: PASS (2026-07-14, round 2 — round-1 NEEDS_REVI
    this choice costs one extra corpus run before shipping the longer
    description. (Source: T9 cold-reader MISREAD-1 ambiguity; grader
    expectation, not rule text, was the looser side.)
+
+2. chose YAML-comment placement for the router firing-evidence note (a
+   `# firing-evidence: <date> <result> (<baseline path>)` line above
+   `description:` in frontmatter) because it is greppable, colocated, and
+   costs zero listing chars — cost-of-change: the day tooling wants to
+   parse the note mechanically, this choice costs moving it to a real
+   frontmatter field. (Principle 5 codification of placement = next-touch.)
 
 ## Task 1 — description-design.md: two-tier number reconciliation + provenance
 

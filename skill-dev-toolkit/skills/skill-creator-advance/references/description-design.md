@@ -130,7 +130,11 @@ It supersedes `docs/skill-mining/2026-06-19-skill-description-standard.md`
 (see the dated note at the top of that doc).
 
 - **Normal skills**: target ≤150 chars; 250 is a SOFT lint line (not
-  a hard cap).
+  a hard cap). A normal skill MAY exceed the soft lint line when a
+  colocated YAML justification comment directly above `description:`
+  names the retained trigger surfaces that make ≤250 unachievable
+  (same comment mechanism as the router firing-evidence note below);
+  unjustified >250 remains the violation.
 - **Router / CONDITIONAL skills**: exception band ≤500, admission
   REQUIRES a firing-evidence note (cite a corpus run or live A/B) —
   no evidence, no exception. A NEW router/CONDITIONAL skill with no

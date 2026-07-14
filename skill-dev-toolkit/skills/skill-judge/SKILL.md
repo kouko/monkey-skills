@@ -301,7 +301,10 @@ This is useless — Agent has no idea when to activate it.
 Number authority: `skill-dev-toolkit/skills/skill-creator-advance/references/description-design.md`
 §Principle 5 (supersedes `docs/skill-mining/2026-06-19-skill-description-standard.md`).
 - [ ] **Length: two-tier** — normal skills target ≤150 chars; 250 is a SOFT lint line
-  (150–250 = flag, not a hard penalty; >250 without router/CONDITIONAL status = penalize).
+  (150–250 = flag, not a hard penalty). A normal skill >250 with a colocated YAML
+  justification comment above `description:` naming the retained trigger surfaces =
+  flag + verify the justification, not a penalty; >250 with NO justification and no
+  router/CONDITIONAL status = penalize.
   Router/CONDITIONAL skills get an exception band ≤500 REQUIRING a firing-evidence note —
   missing note = penalize. Over-long descriptions evict other skills from the shared
   listing budget.

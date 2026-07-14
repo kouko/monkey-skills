@@ -13,8 +13,8 @@ Versioning: [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - `product-principles` skill description rewritten under the two-tier
-  token-economy standard (570 → 329 rendered chars; "rendered" = length
-  of the YAML-parsed description string). The 150-250 soft band is
+  token-economy standard (569 → 329 rendered chars; "rendered" = length
+  of the YAML-parsed description string, trailing newline stripped). The 150-250 soft band is
   exceeded with an in-file justification comment: the description
   retains three-jurisdiction principle-guidance triggers (product /
   design / engineering decisions, 設計原則 / 工程原則) that the routing

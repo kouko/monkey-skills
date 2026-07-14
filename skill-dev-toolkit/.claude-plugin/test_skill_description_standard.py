@@ -60,7 +60,7 @@ def test_ssot_principle5_pins_two_tier_semantics():
     assert m, "description-design.md must contain a '### 5.' length principle section"
     p5 = re.sub(r"\s+", " ", m.group(0).lower())
     for needle in ("soft lint line", "not a hard cap", "≤150", "≤500",
-                   "firing-evidence"):
+                   "firing-evidence", "justification comment"):
         assert needle in p5, \
             f"Principle 5 two-tier statement broken: missing {needle!r}"
 
@@ -109,7 +109,7 @@ def test_judge_scores_length_against_two_tier_ssot():
         ("flat 'Penalize >250' claim retired: 250 is a SOFT lint line, not a "
          "hard penalty (two-tier standard)")
     for needle in ("description-design.md", "principle 5", "soft lint",
-                   "≤150", "≤500", "firing-evidence"):
+                   "≤150", "≤500", "firing-evidence", "justification comment"):
         assert needle in sec, \
             f"judge two-tier length scoring broken: missing {needle!r}"
 

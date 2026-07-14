@@ -1,7 +1,7 @@
 ---
 name: ui-verification
 description: |
-  Use when the branch touched UI and ui-flows.md exists — drive the app through each state before branch close. GUI only; not package tests (verification-before-completion). Triggers: "verify the UI", "did the screens actually render", 畫面驗證, UI 検証.
+  Use when the branch touched UI and ui-flows.md exists — drive each state before branch close, otherwise N/A. GUI only; not for package tests (verification-before-completion). Triggers: "verify the UI", "did the screens actually render", 畫面驗證, UI 検証.
 version: 0.1.0
 ---
 

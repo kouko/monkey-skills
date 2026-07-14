@@ -9,21 +9,23 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- **`ui-verification` description**: rewritten from 566 to 246 rendered chars
+- **`ui-verification` description**: rewritten from 566 to 249 rendered chars
   to fit the normal band (target ≤150 / soft lint 250 per
   `skill-dev-toolkit` description-design two-tier standard). Identity and
   mechanism prose cut (body carries it); kept the CONDITIONAL trigger
-  semantics (branch touched UI + ui-flows.md exists), the GUI-only scope,
-  the verification-before-completion negative pointer, and all four
-  distinct triggers ("verify the UI", "did the screens actually render",
-  畫面驗證, UI 検証).
+  semantics (branch touched UI + ui-flows.md exists) including the
+  "otherwise N/A" outcome, the GUI-only scope, the
+  verification-before-completion negative pointer ("not for package
+  tests"), and all four distinct triggers ("verify the UI", "did the
+  screens actually render", 畫面驗證, UI 検証).
 - **Quality pass over the 250–310 band** (cutting rules only — no forced
   shortening, zero trigger-phrase loss):
   - `subagent-driven-development`: cut the verdict-taxonomy sentence
     (TDD iron law / PASS_WITH_NOTES enumeration) — body-carried identity
     beyond the one-sentence WHAT (292 → 176).
-  - `brainstorming`: cut the mechanism parenthetical (Axis 0 gate +
-    5-axis framework enumeration) — body-carried (289 → 149).
+  - `brainstorming`: cut the 5-axis framework enumeration — body-carried;
+    the Axis-0 upstream-artifact gate stays named in the description
+    (guard-tested routing surface) (289 → 188).
   - `verification-before-completion`: cut the rule-restatement sentence
     ("Tests MUST run at package level…") — body HARD-GATE carries it
     (247 → 176).
