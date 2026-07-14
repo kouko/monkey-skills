@@ -31,9 +31,14 @@ description: >-
 
 **`name`**: kebab-case, matches directory name exactly (e.g. `qa-team`).
 
-**`description`**: **≤250 characters** (house standard — target ~150;
-see `docs/skill-mining/2026-06-19-skill-description-standard.md`), with a
-**≥30 word-token floor** so a team description stays substantive. MUST contain:
+**`description`**: two-tier length standard — normal skills target
+**≤150 chars** with **250 as a SOFT lint line (not a hard cap)**;
+router/CONDITIONAL skills get an exception band **≤500 REQUIRING a
+firing-evidence note**. Number authority (SSOT):
+`skill-dev-toolkit/skills/skill-creator-advance/references/description-design.md`
+§Principle 5 (supersedes the 2026-06-19 skill-mining doc's flat ≤250
+rule). Plus a **≥30 word-token floor** so a team description stays
+substantive. MUST contain:
 - A one-sentence mission statement
 - A "Use when" clause listing trigger verbs (write, audit, design, refactor …)
 - A **positive delegation redirect** for adjacent work (e.g. "Docs → docs-team")
@@ -70,7 +75,8 @@ Do NOT use for / Delivers) are kept concise and non-repetitive.
 An earlier 80-word floor was aspirational and never matched observed
 precedent — it was lowered to 40 in v4.6.1 so the standard matches
 reality, then to **30 in the 2026-06-20 house-description-standard
-reconciliation**: the repo-wide lean ≤250-char standard caps descriptions
+reconciliation**: the repo-wide lean two-tier length standard (≤150-char
+target for normal skills; see the `description` rule above) caps descriptions
 shorter than a 40-word floor allows for verb-heavy team skills (e.g.
 investing-team / research-team), so the floor drops to 30 to keep a
 substantive minimum while admitting the lean style. See `CHK-SKL-001` in

@@ -13,7 +13,7 @@ Grounds on: `standards/skill-md-structure.md`, `standards/file-conventions.md`.
 
 ## Checklist
 
-- [ ] **CHK-SKL-001 (Frontmatter)** [FIXABLE]: SKILL.md opens with YAML frontmatter containing `name` (matching directory name, kebab-case) and `description` (**≤250 chars / ≥30 word-token floor** per the house standard). Description contains a "Use when" trigger sentence AND a positive delegation redirect ("→ sibling-team", not "Do NOT use for X") AND (optional) a "Delivers" clause.
+- [ ] **CHK-SKL-001 (Frontmatter)** [FIXABLE]: SKILL.md opens with YAML frontmatter containing `name` (matching directory name, kebab-case) and `description` (two-tier length: normal skills **target ≤150 chars, 250 is a SOFT lint line** (not a hard cap); router/CONDITIONAL skills exception band **≤500** REQUIRING a firing-evidence note in the evidence field; **≥30 word-token floor** either way — number authority: `skill-dev-toolkit/skills/skill-creator-advance/references/description-design.md` §Principle 5). Description contains a "Use when" trigger sentence AND a positive delegation redirect ("→ sibling-team", not "Do NOT use for X") AND (optional) a "Delivers" clause.
 
     **Word count rule** (matches `standards/skill-md-structure.md` §Frontmatter Schema): count only the English prose body. **Exclude** YAML tokens (`>-`, `|`, `|-`), CJK / bilingual keyword suffix lines, punctuation characters, and markdown list bullets / block-quote markers.
 
