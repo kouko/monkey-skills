@@ -26,22 +26,6 @@
   triage the deferred debts recorded in both PR bodies (escape_for_json
   triplication, awk §(b.1) boundary, regex-vs-YAML description test).
 
-## writing-plans Beck Child Test citation: Part II → Part III (OPEN)
-- Status: OPEN
-- Start: next touch of loom-code/skills/writing-plans/SKILL.md (any PR
-  already editing that file — one-word fix, not worth its own
-  loom-code version bump).
-- Origin: feat/pocock-compression-port whole-branch review (2026-07-13):
-  Child Test lives in *TDD: By Example* Part III (Testing Patterns
-  chapter), not Part II; the error predates PR #559 and its
-  equivalence-gated compression preserved it verbatim — the gate checks
-  behavior, not facts.
-- What: in writing-plans SKILL.md §BLOCKED fallback, change "Part II"
-  to "Part III" in the Beck citation. The catalog copy in
-  skill-dev-toolkit was already fixed on this branch. While there,
-  also address the parked README×3 "no rigorous source" pointer nit
-  from PR #559 (same file family, same touch).
-
 ## skill-creator-advance Case (c) gate inheritance ambiguity (OPEN)
 - Status: OPEN
 - Start: next structural redesign touching skill-dev-toolkit/skills/

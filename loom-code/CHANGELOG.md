@@ -5,6 +5,25 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.30.1] — 2026-07-14 — writing-plans Beck citation fix + CHANGELOG 0.29.0 backfill
+
+### Fixed
+
+- **`writing-plans` SKILL.md §BLOCKED fallback**: corrected the Kent Beck
+  "Child Test" citation from *Test-Driven Development: By Example* (2002)
+  "Part II" to "Part III" — the Child Test pattern lives in Part III
+  (Testing Patterns). The error predated PR #559 and its equivalence-gated
+  compression preserved it verbatim (the gate checks behavior, not facts).
+- **This CHANGELOG**: backfilled the missing **[0.29.0]** entry (PR #537
+  shipped as 0.29.0 but no changelog stanza was written; the file jumped
+  0.29.1 → 0.28.1).
+
+Housekeeping only — no behavior change. The writing-plans README ×3
+"no rigorous source" pointer nit deferred from PR #559 was re-evaluated
+and closed as no-change-needed: the tri-language pointers already resolve
+(fixed in 0.29.1), and the only "cleaner" fix would restructure the
+#559-frozen §The splitting framework — net-negative.
+
 ## [0.30.0] — 2026-07-14 — mid-task ask layered defense (L1-lite + L2 hook + L3 valve)
 
 ### Added
@@ -76,6 +95,42 @@ before ship.
   refactor/tuning rounds. Round-1 P3 prompt was contract-invalid (bare list, not
   a brief) and produced a false non-equivalence — fixed to a valid
   strictly-sequential brief before the verdict round.
+
+## [0.29.0] — 2026-07-11 — designer/PM-loop contracts: escalation interface, decision log, acceptance surface, escalation appetite
+
+> Backfilled 2026-07-14 (0.30.1). PR #537 shipped these as 0.29.0 but
+> the changelog stanza was never written — reconstructed from the PR body.
+
+### Added
+
+- **`writing-plans/references/kickoff-briefing.md`** (NEW) — escalation
+  interface: a two-axis test (product consequence × reversal cost) collects
+  a plan's one-way-door engineering decisions after plan-review PASS and
+  batches them into ONE product-stakes briefing (per decision: plain-language
+  stakes → 2–3 options with product consequences → recommendation;
+  `brief-before-asking` is the format authority; derivation-for-confirmation
+  when PRINCIPLES.md locks the choice). SDD's mid-implementation ask path
+  fires the SAME interface (one interface, two firing points). SKILL.md
+  carries a ≤40-word pointer.
+
+### Changed
+
+- **`plan-format.md`** gains the optional `## Decision Log` plan section
+  (v0.29.0+) — one single-line product-language entry per agent-decided
+  engineering choice; SDD maintains it like the Status ledger,
+  plan-document-reviewer accepts-and-ignores, commit trailers stay the
+  engineer-facing index. Placement (plan-embedded vs standalone ADR dir)
+  researched EN+JA; reversal conditions recorded.
+- **`finishing-a-development-branch` + `ui-verification`**: acceptance-surface
+  promotion — ui-verification is the user's main acceptance stage when a UI
+  exists (CONDITIONAL + N/A-loud unchanged); Step 13 becomes a
+  product-language completion report (SHAs/test counts sink to sub-lines);
+  NEEDS_REVISION loops digest silently.
+- **`principles-rules.md` §Escalation appetite** (loom-product-principles
+  0.6.0 companion): per-project escalation appetite lands as a normal
+  Engineering Principles entry carrying a greppable phrase + `— check:`
+  marker; consumers grep the repo's `docs/loom/PRINCIPLES.md` only; absent →
+  default to briefing all two-axis hits.
 
 ## [0.28.1] — 2026-07-10
 
