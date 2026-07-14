@@ -30,9 +30,9 @@ import pytest
 
 @pytest.fixture(scope="module")
 def kpi_gate_module():
-    """Load kpi_gate.py as an importable module for unit tests of its
-    library surface (add_labels/get_labels) before evaluate/gate_verdict/
-    is_trusted/CLI are added (Tasks 2-4).
+    """Load kpi_gate.py as an importable module for unit tests of its library
+    surface (add_labels/get_labels/evaluate/gate_verdict/is_trusted); the CLI
+    is exercised via a real `uv run --script` subprocess.
     """
     spec = importlib.util.spec_from_file_location("kpi_gate_test", KPI_GATE_SCRIPT)
     assert spec is not None and spec.loader is not None
