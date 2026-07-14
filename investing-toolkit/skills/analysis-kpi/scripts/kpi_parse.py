@@ -27,10 +27,16 @@ fabricated `0`) for the not-a-number token taxonomy: `NM`/`nm`, `n/a` /
 or a bare hyphen `-` ALONE — `-45` is still a negative number), and
 blank / whitespace-only text. A true `"0"` -> 0.0 is NOT missing.
 
-The `parse` CLI subcommand is a later task in this slice's plan — not yet
-present here.
+The `parse` CLI subcommand reads the cell text from `--cell` (or stdin when
+omitted), prints the parsed number to stdout on success. An `UnparseableCell`
+is a normal fail-loud outcome (not a bug) -- a clean stderr message, exit 1,
+never a raw traceback. A malformed invocation (e.g. no subcommand) is an
+argparse-level error, exit 2.
 """
 from __future__ import annotations
+
+import argparse
+import sys
 
 # Dash-as-"not applicable" tokens: em dash, en dash, figure dash, and a
 # bare ASCII hyphen used ALONE (a lone dash with no digits attached is
@@ -83,3 +89,46 @@ def parse_cell(cell_text: str) -> float:
         raise UnparseableCell(f"unparseable cell token: {cell_text!r}") from exc
 
     return -value if negative else value
+
+
+def _cli_parse(args: argparse.Namespace) -> int:
+    """`parse` subcommand: read the cell text from `--cell` (or stdin when
+    omitted), call `parse_cell`, print the parsed number to stdout on
+    success and exit 0. An `UnparseableCell` is a normal fail-loud outcome
+    (a genuinely-unparseable cell) -- print a clean message to stderr and
+    exit 1, never a raw traceback.
+    """
+    cell_text = args.cell if args.cell is not None else sys.stdin.read()
+
+    try:
+        value = parse_cell(cell_text)
+    except UnparseableCell as exc:
+        print(f"kpi_parse parse: {exc}", file=sys.stderr)
+        return 1
+
+    print(value)
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Deterministic operational-KPI cell parser CLI (parse)."
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    parse_parser = subparsers.add_parser(
+        "parse",
+        help="Parse one spreadsheet-style cell's text into its numeric value.",
+    )
+    parse_parser.add_argument(
+        "--cell", type=str, default=None,
+        help="The cell text to parse (default: read stdin).",
+    )
+    parse_parser.set_defaults(func=_cli_parse)
+
+    args = parser.parse_args()
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

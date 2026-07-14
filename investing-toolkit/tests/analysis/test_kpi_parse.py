@@ -7,6 +7,8 @@ network or an LLM. No `KPI_STORE_DIR` fixture is needed.
 
 The library function is exercised by loading `kpi_parse.py` via importlib
 (same convention as test_kpi_validate.py's `kpi_validate_module` fixture).
+The Task 3 CLI (`parse` subcommand) is exercised via subprocess, mirroring
+test_kpi_validate.py::test_cli_validate_roundtrip.
 
 No `@req` tags: this dispatch's plan/spec trace work by named change-folder
 Requirements (operational-kpi / "Locate-then-parse parser-emits-number
@@ -16,6 +18,7 @@ the implementer contract.
 from __future__ import annotations
 
 import importlib.util
+import subprocess
 import sys
 
 from conftest import KPI_PARSE_SCRIPT
@@ -79,3 +82,54 @@ def test_parse_cell_fails_loud_on_unparseable_tokens(kpi_parse_module):
     assert kpi_parse_module.parse_cell("0") == pytest.approx(0.0)
     # a negative number is NOT a dash-token
     assert kpi_parse_module.parse_cell("-45") == pytest.approx(-45.0)
+
+
+def test_cli_parse_roundtrip():
+    """Task 3: the `parse` subcommand reads the cell text from stdin (or
+    --cell), prints the parsed number, and exits 0 on success. An
+    UnparseableCell (a genuinely-unparseable cell) is a normal fail-loud
+    outcome — clean stderr, no raw traceback, exit 1. A malformed
+    invocation (no subcommand) is an argparse-level error, exit 2.
+    `--help` must list the `parse` subcommand.
+    """
+
+    def run_parse(stdin_text):
+        return subprocess.run(
+            ["uv", "run", "--script", str(KPI_PARSE_SCRIPT), "parse"],
+            input=stdin_text, capture_output=True, text=True, timeout=60,
+        )
+
+    # (1) a numeric cell via stdin → stdout the parsed number, exit 0
+    numeric = run_parse("$1,234")
+    assert numeric.returncode == 0, numeric.stderr
+    assert numeric.stdout.strip() == "1234.0"
+
+    # (2) an unparseable cell via stdin → exit 1, non-empty clean stderr,
+    # no raw traceback
+    unparseable = run_parse("NM")
+    assert unparseable.returncode == 1, unparseable.stdout
+    assert unparseable.stderr.strip() != ""
+    assert "Traceback" not in unparseable.stderr
+
+    # (3) --cell flag also works (no stdin needed)
+    via_flag = subprocess.run(
+        ["uv", "run", "--script", str(KPI_PARSE_SCRIPT), "parse", "--cell", "(123)"],
+        capture_output=True, text=True, timeout=60,
+    )
+    assert via_flag.returncode == 0, via_flag.stderr
+    assert via_flag.stdout.strip() == "-123.0"
+
+    # (4) malformed invocation (no subcommand) → argparse exit 2
+    no_subcommand = subprocess.run(
+        ["uv", "run", "--script", str(KPI_PARSE_SCRIPT)],
+        capture_output=True, text=True, timeout=60,
+    )
+    assert no_subcommand.returncode == 2, no_subcommand.stdout
+
+    # (5) --help lists the parse subcommand
+    help_result = subprocess.run(
+        ["uv", "run", "--script", str(KPI_PARSE_SCRIPT), "--help"],
+        capture_output=True, text=True, timeout=60,
+    )
+    assert help_result.returncode == 0, help_result.stderr
+    assert "parse" in help_result.stdout

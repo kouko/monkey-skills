@@ -194,6 +194,31 @@ since a validly-rejected value is not a CLI error — and exits **2** on
 malformed JSON or a non-object payload (nothing computed, no raw
 traceback).
 
+## CLI (kpi_parse)
+
+`scripts/kpi_parse.py` — the deterministic cell parser (slice 9). PURE-
+COMPUTE: stdlib only, no `_store_fs`/durable dir/locking — text in, number
+out. FAIL-LOUD: an unparseable/missing cell RAISES (`UnparseableCell`),
+never coerces to 0; a true `0`/`0.0` still parses to 0.0 (a real value).
+
+```
+# parse: reads the cell text from --cell (or stdin when omitted)
+echo '$1,234' | uv run scripts/kpi_parse.py parse
+
+uv run scripts/kpi_parse.py parse --cell '(123)'
+```
+
+| Subcommand | Flag     | Required | Notes                                                    |
+|------------|----------|----------|-----------------------------------------------------------|
+| `parse`    | `--cell` | no       | The cell text to parse (default: read stdin)               |
+
+`parse` prints the parsed number to stdout and exits **0** on success. A
+genuinely-unparseable cell (`UnparseableCell` — NM, n/a, dash-as-NA, blank/
+whitespace-only, or other non-numeric junk) is a normal fail-loud outcome,
+NOT a bug: it prints a clean message to stderr (no raw traceback) and exits
+**1**. A malformed invocation (e.g. no subcommand) is handled by argparse
+itself and exits **2**.
+
 ## CLI (kpi_gate)
 
 `scripts/kpi_gate.py` — the reliability gate: a ground-truth label-set
