@@ -1,7 +1,7 @@
 ---
 name: verification-before-completion
 description: |
-  Use BEFORE declaring 'done' — claiming complete without running the package-level test suite. Fires on 'I'm done', 'ready to ship', 'tests pass' (no invocation shown), 'merge'. Tests MUST run at package level (pytest / npm test), not a spot-check.
+  Use BEFORE declaring 'done' — claiming complete without running the package-level test suite. Fires on 'I'm done', 'ready to ship', 'tests pass' (no invocation shown), 'merge'.
 version: 0.9.0
 ---
 

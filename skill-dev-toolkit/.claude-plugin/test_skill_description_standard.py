@@ -2,9 +2,11 @@
 the two skill-dev-toolkit skills that author / judge descriptions.
 
 The standard (SSOT rationale: docs/skill-mining/2026-06-19-skill-description-standard.md)
-is inlined into each consuming skill per this repo's self-contained-skill convention
-(skills carry their own operative rules; we do NOT cross-reference at runtime). This
-test guards that both copies carry the load-bearing rules, tolerant of wording.
+is inlined into each consuming skill per this repo's self-contained-skill convention —
+EXCEPT the length numbers, whose authority is description-design.md §Principle 5: the
+creator copy DEFERS to it (no standalone cap figures), while the judge's D4 block
+INLINES ≤150/≤500 with a cite back to that authority — both postures guarded here.
+This test also guards that the other craft rules stay inlined in both copies.
 
 Stdlib only (pathlib + re).
 """
@@ -15,6 +17,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 CREATOR = ROOT / "skill-dev-toolkit" / "skills" / "skill-creator-advance" / "SKILL.md"
 JUDGE = ROOT / "skill-dev-toolkit" / "skills" / "skill-judge" / "SKILL.md"
+DESIGN = (ROOT / "skill-dev-toolkit" / "skills" / "skill-creator-advance"
+          / "references" / "description-design.md")
 
 
 def _low(p: Path) -> str:
@@ -26,9 +30,39 @@ def _low(p: Path) -> str:
 
 # --- skill-creator-advance: authoring must target the standard -------------
 
-def test_creator_has_length_cap():
+def test_creator_defers_length_numbers_to_ssot():
+    """Length numbers live ONLY in description-design.md Principle 5 (the
+    number authority); the SCA body may name the two-tier shape but must not
+    carry standalone cap figures that can drift from the SSOT."""
     t = _low(CREATOR)
-    assert "250" in t and "150" in t, "creator must state the ≤150 target / 250 cap"
+    assert "references/description-design.md" in t and "number authority" in t, \
+        "creator body must defer to description-design.md as the length number authority"
+    # Phrasing-independent drift guard: slice the section that owns the house
+    # description standard and ban ANY standalone cap figure inside it. Section
+    # scoping is deliberate — the unrelated '4,500 words' body-size figure
+    # elsewhere in SKILL.md must stay legal (no full-file ban).
+    raw = CREATOR.read_text(encoding="utf-8")
+    sec_m = re.search(r"^## Description Optimization\b.*?(?=^## |\Z)", raw,
+                      re.M | re.S)
+    assert sec_m, "creator must keep a '## Description Optimization' section"
+    for tok in ("150", "250", "500"):
+        assert not re.search(rf"(?<!\d){tok}(?!\d)", sec_m.group(0)), \
+            (f"standalone {tok!r} in SCA §Description Optimization: length caps "
+             f"belong ONLY in description-design.md §Principle 5 (drift risk)")
+
+
+def test_ssot_principle5_pins_two_tier_semantics():
+    """description-design.md §Principle 5 is the number authority; the guard
+    must FAIL if the two-tier statement is broken, not merely if substrings
+    vanish elsewhere in the file (assertion-must-encode-the-property)."""
+    text = DESIGN.read_text(encoding="utf-8")
+    m = re.search(r"^### 5\..*?(?=### 6\.|\Z)", text, re.M | re.S)
+    assert m, "description-design.md must contain a '### 5.' length principle section"
+    p5 = re.sub(r"\s+", " ", m.group(0).lower())
+    for needle in ("soft lint line", "not a hard cap", "≤150", "≤500",
+                   "firing-evidence", "justification comment"):
+        assert needle in p5, \
+            f"Principle 5 two-tier statement broken: missing {needle!r}"
 
 
 def test_creator_what_plus_when():
@@ -60,9 +94,24 @@ def test_creator_links_standard_doc():
 
 # --- skill-judge: D4 must score against the standard -----------------------
 
-def test_judge_has_length_cap():
-    t = _low(JUDGE)
-    assert "250" in t and "150" in t, "judge D4 must penalize over-250 / target ≤150"
+def test_judge_scores_length_against_two_tier_ssot():
+    """Judge D4 must score length against the two-tier standard (normal ≤150
+    target / 250 soft lint; router-CONDITIONAL band ≤500 gated on a
+    firing-evidence note) and cite description-design.md §Principle 5 as the
+    number authority — the retired flat 'Penalize >250' rule must be gone
+    (assertion-must-encode-the-property, mirrors the SCA/SSOT guards above)."""
+    raw = JUDGE.read_text(encoding="utf-8")
+    sec_m = re.search(r"^\*\*House description standard\b.*?(?=^### )", raw,
+                      re.M | re.S)
+    assert sec_m, "judge must keep the '**House description standard' D4 block"
+    sec = re.sub(r"\s+", " ", sec_m.group(0).lower())
+    assert "penalize >250" not in sec, \
+        ("flat 'Penalize >250' claim retired: 250 is a SOFT lint line, not a "
+         "hard penalty (two-tier standard)")
+    for needle in ("description-design.md", "principle 5", "soft lint",
+                   "≤150", "≤500", "firing-evidence", "justification comment"):
+        assert needle in sec, \
+            f"judge two-tier length scoring broken: missing {needle!r}"
 
 
 def test_judge_no_cjk_redundancy():

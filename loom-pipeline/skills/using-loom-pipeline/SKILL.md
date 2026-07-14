@@ -1,21 +1,14 @@
 ---
 name: using-loom-pipeline
-description: |
+# firing-evidence: 2026-07-14 baseline 4/4 EXACT (docs/skill-dogfood/2026-07-14-description-token-economy/baseline.md)
+description: >-
   Drives the loom principles→design→spec→code pipeline end-to-end via
-  deterministic Claude Code Workflow segments — one Workflow invocation per
-  pipeline segment, never an inline hand-rolled orchestration. It is a thin
-  conductor: judgment (verdicts, standards, gates) stays in the four
-  Workflow-driven station plugins (loom-product-principles,
-  loom-interface-design, loom-spec, loom-code); this skill only sequences
-  them and enforces the run-input contract. loom-discovery, the fifth loom
-  station (problem-space entry, upstream of principles), is v0.1
-  interactive-only — the conductor does not drive it as a Workflow segment.
-  CONDITIONAL: fires only when both the Workflow tool is available
-  in the host AND the four station plugins are installed — otherwise
-  `loom-pipeline: N/A` with the reason, loudly. Codex hosts are N/A (Codex
-  has no Workflow primitive; do not fake orchestration inline there).
-  Triggers: "run the loom pipeline", "全管線", "全流程跑一遍",
-  自動實作 this change, "drive principles through code", "run the conductor".
+  deterministic Claude Code Workflow segments. Use when asked to run the
+  whole pipeline or to auto-implement a change from principles through
+  code. CONDITIONAL: fires only when the Workflow tool is available AND
+  the four station plugins are installed — otherwise `loom-pipeline: N/A`
+  with the reason, loudly (Codex hosts are N/A). Triggers: "run the loom
+  pipeline", "全管線", "全流程跑一遍", 自動實作, "run the conductor".
 version: 0.1.0
 ---
 

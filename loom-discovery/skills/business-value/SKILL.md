@@ -1,7 +1,6 @@
 ---
 name: business-value
-description: |
-  The adversarial "is this worth my time?" check before you commit to building a product-shaped thing. Use when asking "worth it?", "should I build this", weighing one idea against another for the same time budget, or before spending real effort on something you'll publish or maintain. A lightweight one-pager (Shape-Up betting, not a business plan) — heavier market / GTM / revenue analysis delegates to domain-teams:planning-team. Triggers: worth it?, should I build this, 值不值得做, 商業價值, ビジネスバリュー, 時間の使い方, opportunity cost. Not for mapping user needs (that is user-insights) and not for market sizing (planning-team).
+description: Adversarial worth-it check before betting real time on a product-shaped idea. Use for worth it? / should I build this / weighing ideas against one time budget. Market sizing → domain-teams:planning-team. 值不值得做 / ビジネスバリュー / 時間の使い方.
 version: 0.1.0
 ---
 

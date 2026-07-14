@@ -1,5 +1,12 @@
 # House standard — SKILL.md `description`
 
+> **SUPERSEDED for length numbers (2026-07-14)**: the number authority is now
+> `skill-dev-toolkit/skills/skill-creator-advance/references/description-design.md`
+> Principle 5 (two-tier: normal skills target ≤150, 250 = SOFT lint line;
+> router/CONDITIONAL exception band ≤500 with firing evidence). This doc's
+> 250-hard-cap derivation predates the Claude Code v2.1.105 rescission of the
+> listing cap introduced in v2.1.86 (raised to 1,536).
+
 > Status: ADOPTED 2026-06-19 (length target 150 / cap 250). Evidence basis + refuted alternatives:
 > `docs/skill-mining/2026-06-19-skill-description-research.md` (deep-research, 9 claims verified).
 > This doc is the human-readable SSOT (rationale + evidence). The operative rules are **inlined

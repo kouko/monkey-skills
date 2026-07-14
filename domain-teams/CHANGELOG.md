@@ -5,6 +5,26 @@ All notable changes to the `domain-teams` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v5.8.0] — 2026-07-14
+
+### Changed
+
+- **CHK-SKL-001 description length: flat cap → two-tier standard**
+  (`skill-team/checklists/skill-completeness-checklist.md`): the flat
+  "≤250 chars" is replaced by the two-tier rule — normal skills target
+  ≤150 chars with 250 as a SOFT lint line (not a hard cap);
+  router/CONDITIONAL skills get an exception band ≤500 REQUIRING a
+  firing-evidence note. The ≥30 word-token floor, "Use when" trigger
+  sentence, and positive delegation redirect requirements are unchanged.
+  Number authority (SSOT):
+  `skill-dev-toolkit/skills/skill-creator-advance/references/description-design.md`
+  §Principle 5. Provenance: industry-calibrated 2026-07-14 (n=88 shipped
+  skills, medians 106/156/304/339); the old 250 figure descended from a
+  Claude Code listing cap rescinded in v2.1.105. The checklist's grounding
+  standard `skill-team/standards/skill-md-structure.md` (§description rule +
+  30-word-floor rationale) is aligned to the same two-tier wording and
+  §Principle 5 number authority in this release.
+
 ## [v5.7.1] — 2026-07-13
 
 ### Changed

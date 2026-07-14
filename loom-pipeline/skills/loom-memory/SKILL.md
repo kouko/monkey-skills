@@ -1,22 +1,15 @@
 ---
 name: loom-memory
-description: |
-  Manage the repo-native loom practice-memory store (`docs/loom/memory/`)
-  via three verbs — **record** a distilled practice/gotcha/process into
-  the store per its charter, **recall** relevant memories by grepping the
-  index then bodies (pull-based, honest no-hits), **prune** stale entries
-  into a keep/merge/retire proposal (never auto-deletes). Use when saving
-  a reusable lesson, checking for prior experience before starting loom
-  work in a repo with a `docs/loom/` tree, or tidying the store.
-  CONDITIONAL: fires only when the target repo has
+# firing-evidence: 2026-07-14 baseline 4/4 EXACT (docs/skill-dogfood/2026-07-14-description-token-economy/baseline.md)
+description: >-
+  Record, recall, or prune the repo-native loom practice-memory store
+  (`docs/loom/memory/`) — save a distilled lesson/gotcha, check prior
+  experience before loom work, or propose keep/merge/retire cleanup
+  (never auto-deletes). CONDITIONAL: fires only when the repo has
   `docs/loom/memory/README.md` — otherwise `loom-memory: N/A` with the
-  reason, loudly. NOT for git commit memory trailers (that is
-  dev-workflow:git-memory) and NOT for Claude's machine-local
-  auto-memory (that layer keeps only pointers, per the store charter).
-  Triggers: "record this practice", "remember this
-  lesson", "any prior experience with…", "prune the memory store",
-  "記住這個做法", "有沒有相關經驗", "記憶整理", "この教訓を残して",
-  "メモリ整理", "過去の知見はある？".
+  reason, loudly. NOT for git commit trailers (dev-workflow:git-memory)
+  nor Claude auto-memory. Triggers: "有沒有相關經驗", "記住這個做法",
+  "記憶整理", "この教訓を残して", "過去の知見はある？".
 version: 0.1.0
 ---
 

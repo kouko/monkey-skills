@@ -123,29 +123,39 @@ Skill authors over-formalize their description's vocabulary. The
 matcher does not care about elegant phrasing; it cares about word
 overlap with the user's prompt.
 
-### 5. Length: aim for 100–250 chars, ceiling at ~500
+### 5. Length: two-tier standard (single number authority)
 
-Empirical data from 14 superpowers SKILL.md descriptions:
+This section is the repo's number authority for description length.
+It supersedes `docs/skill-mining/2026-06-19-skill-description-standard.md`
+(see the dated note at the top of that doc).
 
-- Min 79, median ~107, max 234 chars
-- All 14 are well under the 1,024-char Agent Skills spec ceiling
-- All 14 are well under a self-imposed ~500-char heuristic the
-  superpowers author uses
+- **Normal skills**: target ≤150 chars; 250 is a SOFT lint line (not
+  a hard cap). A normal skill MAY exceed the soft lint line when a
+  colocated YAML justification comment directly above `description:`
+  names the retained trigger surfaces that make ≤250 unachievable
+  (same comment mechanism as the router firing-evidence note below);
+  unjustified >250 remains the violation.
+- **Router / CONDITIONAL skills**: exception band ≤500, admission
+  REQUIRES a firing-evidence note (cite a corpus run or live A/B) —
+  no evidence, no exception. A NEW router/CONDITIONAL skill with no
+  firing evidence yet stays within the normal band until a corpus or
+  live A/B run supplies the note; only then does the ≤500 band open.
 
-> **Caveat (sample size and selection bias)**: n=14 is a small,
-> single-author sample (obra/superpowers). The numbers are
-> **indicative, not authoritative** — they describe one
-> well-regarded skill collection's house style, not a measured
-> industry-wide best practice. As counter-points: Anthropic's own
-> `skill-creator` ships at ~640 chars (~6× the superpowers median),
-> and many production skills in the broader ecosystem run longer.
-> Treat the 100–250 target as a default-cheap heuristic for new
-> skills; over the ~500 ceiling is where the case for trimming
-> becomes hard to ignore.
+Harness facts: Agent Skills spec max 1,024 chars; Claude Code listing
+truncation 1,536 chars (combined description + when_to_use).
+
+Provenance of the old 250 figure: it descends from a Claude Code
+listing cap introduced in v2.1.86 and RESCINDED in v2.1.105 (raised
+to 1,536) — recorded here so the number never re-fossilizes as a
+hard cap.
+
+Industry calibration (n=88 shipped skills, measured 2026-07-14):
+medians 106 (obra/superpowers) / 156 (mattpocock) / 304 (anthropics
+official) / 339 (planning-with-files).
 
 Long descriptions burn system-prompt context that competes with the
-SKILL.md body itself. If your description is over 500 chars, audit
-for prose that belongs in SKILL.md `## Overview`, not the metadata.
+SKILL.md body itself. Over the soft lint line, audit for prose that
+belongs in SKILL.md `## Overview`, not the metadata.
 
 ### 6. Multilingual keyword belt (optional)
 
@@ -161,6 +171,33 @@ Claude semantic-matches across languages without it. The belt's
 marginal benefit is small but its cost (a few chars at the end)
 is also small — include it if your repo's prompts are routinely
 non-English; skip it otherwise.
+
+## Token economy: three cutting rules
+
+Principle 5 says HOW MUCH; these rules say HOW to cut. Framing:
+model-invoked descriptions cost **context load** — every description
+is re-paid in the system prompt each session, whether or not the
+skill fires. User-invoked (slash-command) skills cost **cognitive
+load** — the human must remember they exist; the cure for cognitive
+load is a router skill, not a longer description. Decide what a
+description must carry by which currency it spends.
+
+1. **One trigger per branch.** Each distinct routing branch gets one
+   trigger phrase. Piling variant phrasings onto the same branch is
+   duplication — it buys no new routing, only chars.
+2. **Synonyms = duplication.** An English synonym of an existing
+   trigger adds cost, not recall — the matcher already covers it
+   semantically. Carve-out: Principle 6's multilingual keyword belt
+   (中/日 trigger words) is NOT synonym-duplication — different
+   languages are distinct routing surfaces; keep them.
+3. **Cut identity already in the body.** The body loads on
+   activation, so the description must not restate what the skill
+   IS when the body says it. Budget goes to WHEN / triggers.
+   Principle 1's one-sentence WHAT is exempt — identity restatement
+   means anything beyond that one-liner.
+
+Rules ported from Matt Pocock's `mattpocock/skills` repository,
+`writing-great-skills` (MIT License, © 2026 Matt Pocock).
 
 ## Length is rendered, not source
 
@@ -191,9 +228,15 @@ Before shipping a description, verify:
       should fire pre-action (`before X`, `about to X`)
 - [ ] At least one concrete natural-language trigger keyword the
       user would actually type
-- [ ] Rendered length < 500 chars (audit via YAML parse, not source
-      lines)
+- [ ] Rendered length per Principle 5 two-tier standard: ≤150 target,
+      250 soft lint line; router/CONDITIONAL exception ≤500 only with
+      firing evidence (a NEW router with no evidence yet stays in the
+      normal band; audit via YAML parse, not source lines)
 - [ ] No workflow / process steps ("first do A, then B, then C")
+- [ ] No English synonym pairs among triggers — one trigger per
+      routing branch (multilingual belt keywords exempt)
+- [ ] No identity restatement the SKILL.md body already carries
+      (Principle 1's one-sentence WHAT is exempt)
 - [ ] No vague filler ("helps with documents", "does stuff with files")
 - [ ] If multilingual repo: short keyword belt at end, ≤ 50 chars
 - [ ] If close skills exist: explicit negative trigger ("Do NOT use

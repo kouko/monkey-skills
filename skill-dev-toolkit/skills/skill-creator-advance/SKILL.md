@@ -437,7 +437,8 @@ The frontmatter description is the primary mechanism determining whether Claude 
 Any description you write or optimize MUST follow the house standard (rationale + evidence:
 `docs/skill-mining/2026-06-19-skill-description-standard.md`):
 
-- **Length: target ≤150 chars, hard cap 250** (never over the 1024 spec limit). Descriptions
+- **Length: two-tier** (normal vs router/CONDITIONAL) — number authority:
+  [references/description-design.md](references/description-design.md) §Principle 5. Descriptions
   share a context-listing budget; over-long ones silently evict OTHER skills from what Claude sees.
 - **Content: what it does + when to use it** — positive, specific triggers front-loaded (real
   user phrasings). Keep the step-by-step **procedure / workflow / grounding citations OUT of the

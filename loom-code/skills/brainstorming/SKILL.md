@@ -1,7 +1,7 @@
 ---
 name: brainstorming
 description: |
-  Use BEFORE implementing new behavior or non-obvious design — explore intent + alternatives via an upstream-artifact gate (Axis 0, family §Intake) + 5-axis framework (Problem / Users / Smallest End State / Alternatives / Obsoletes) → a brief. Refuses 'this is simple' / 'just start coding'.
+  Use BEFORE implementing new behavior or non-obvious design — explore intent + alternatives via an upstream-artifact gate (Axis 0) → a brief. Refuses 'this is simple' / 'just start coding'.
 version: 0.12.0
 ---
 

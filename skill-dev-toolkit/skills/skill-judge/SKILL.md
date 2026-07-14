@@ -298,9 +298,16 @@ This is useless — Agent has no idea when to activate it.
 - [ ] Includes scenarios where this skill MUST be used (not just "can be used")
 
 **House description standard (additional D4 criteria — deduct when violated)**
-Rationale + evidence: `docs/skill-mining/2026-06-19-skill-description-standard.md`.
-- [ ] **Length ≤250 chars (target ≤150; 1024 = absolute spec ceiling)** — over-long descriptions
-  evict other skills from the shared listing budget. Penalize >250; flag >150.
+Number authority: `skill-dev-toolkit/skills/skill-creator-advance/references/description-design.md`
+§Principle 5 (supersedes `docs/skill-mining/2026-06-19-skill-description-standard.md`).
+- [ ] **Length: two-tier** — normal skills target ≤150 chars; 250 is a SOFT lint line
+  (150–250 = flag, not a hard penalty). A normal skill >250 with a colocated YAML
+  justification comment above `description:` naming the retained trigger surfaces =
+  flag + verify the justification, not a penalty; >250 with NO justification and no
+  router/CONDITIONAL status = penalize.
+  Router/CONDITIONAL skills get an exception band ≤500 REQUIRING a firing-evidence note —
+  missing note = penalize. Over-long descriptions evict other skills from the shared
+  listing budget.
 - [ ] **what + when only** — step-by-step **procedure / workflow / grounding** belongs in the
   body, NOT the description. Penalize procedure dumped into the description.
 - [ ] **Positive specific triggers**, not reliance on "ALWAYS invoke" directives (over-trigger at
