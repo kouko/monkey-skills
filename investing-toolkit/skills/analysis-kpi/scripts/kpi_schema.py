@@ -12,14 +12,19 @@ versioned envelope under the same DATA dir as `kpi_store.py` / `review_queue.py`
 so a later confirm/amend transitions an existing version in place rather than
 overwriting history.
 
-This slice (Task 2) ships the module scaffold + `propose(company, kpi_defs,
-review_item_id)`: on a company's first propose it writes version 1,
+This slice ships the module scaffold + `propose(company, kpi_defs,
+review_item_id)` (Task 2): on a company's first propose it writes version 1,
 status "PROPOSED", storing the caller-supplied `kpi_defs` verbatim (the LLM
 produces them upstream — NOT this module's job), AND enqueues a
 `subject_type="kpi-schema"` review-item via `review_queue.enqueue` so a human
 can later confirm it through the review queue's existing human-confirm seam
-(reused, not reimplemented — Task 3). No extraction, no confirm, no amend, no
-CLI here (Tasks 3-6).
+(reused, not reimplemented).
+
+Task 3 adds `confirm(company, adjudicated_by, adjudicated_at=None)`: locates
+the latest PROPOSED version and its OPEN review-item, adjudicates it through
+`review_queue.adjudicate` (the reused human-confirm seam, auth boundary
+included) BEFORE flipping the schema to CONFIRMED, so a rejected identity
+leaves the schema PROPOSED. No extraction, no amend, no CLI here (Tasks 4-6).
 
 Durable-dir resolution, atomic tmp+rename write, and series locking are ALL
 REUSED from the shared `_store_fs.py` module (same-dir import below), NOT
@@ -141,3 +146,84 @@ def propose(company: str, kpi_defs: list, review_item_id: str) -> dict:
     })
 
     return record
+
+
+def confirm(company: str, adjudicated_by: str, adjudicated_at=None) -> dict:
+    """Confirm the LATEST PROPOSED schema version for `company` through the
+    review queue's existing human-confirm seam (reused, not reimplemented).
+
+    Steps:
+      1. Load the company's schema envelope; the latest PROPOSED version is
+         the head of the (append-only) `versions` list. No versions at all,
+         or a head that is not PROPOSED (already CONFIRMED — confirm-once),
+         is rejected loud (ValueError), nothing written.
+      2. Find that version's OPEN review-item via `review_queue.list_open`,
+         matching `subject_id == schema_id`. No matching OPEN item is
+         rejected loud.
+      3. Adjudicate it via `review_queue.adjudicate(..., "approve",
+         adjudicated_by=adjudicated_by, adjudicated_at=adjudicated_at)`
+         BEFORE flipping the schema. This call IS the auth boundary — an
+         empty/whitespace/pipeline `adjudicated_by` is rejected there
+         (ValueError), and since it happens before this function mutates the
+         in-memory envelope or writes it back, a rejected identity leaves
+         the schema PROPOSED and the review-item still OPEN.
+      4. Only after the adjudicate call succeeds: set the version's `status`
+         to "CONFIRMED", `confirmed_by=adjudicated_by`,
+         `confirmed_at=adjudicated_at` (caller-supplied — this module never
+         reads the wall clock), and write back.
+
+    The schema-file read-modify-write is guarded by
+    `_store_fs._acquire_series_lock`, mirroring `propose`.
+
+    Returns the now-CONFIRMED version record.
+    """
+    path = _schema_path(company)
+    lock_file = _store_fs._acquire_series_lock(path)
+    try:
+        envelope = _load_schema_file(path)
+        versions = envelope["versions"]
+        if not versions:
+            raise ValueError(
+                f"kpi_schema.confirm: no schema proposed for {company!r} — "
+                "nothing to confirm"
+            )
+
+        latest = versions[-1]
+        if latest["status"] != "PROPOSED":
+            raise ValueError(
+                f"kpi_schema.confirm: latest schema version for {company!r} "
+                f"is not PROPOSED (status={latest['status']!r}) — nothing "
+                "to confirm"
+            )
+
+        schema_id = latest["schema_id"]
+        review_item = next(
+            (
+                item for item in review_queue.list_open()
+                if item.get("subject_id") == schema_id
+            ),
+            None,
+        )
+        if review_item is None:
+            raise ValueError(
+                f"kpi_schema.confirm: no OPEN review-item found for schema "
+                f"{schema_id!r} — nothing to confirm"
+            )
+
+        # Auth boundary lives in review_queue.adjudicate — reused, not
+        # reimplemented. Runs BEFORE the schema is mutated/written, so a
+        # rejection here (empty/whitespace/pipeline identity) leaves the
+        # schema PROPOSED and the review-item OPEN.
+        review_queue.adjudicate(
+            review_item["review_item_id"], "approve",
+            adjudicated_by=adjudicated_by, adjudicated_at=adjudicated_at,
+        )
+
+        latest["status"] = "CONFIRMED"
+        latest["confirmed_by"] = adjudicated_by
+        latest["confirmed_at"] = adjudicated_at
+        _store_fs._atomic_write(path, envelope)
+    finally:
+        _store_fs._release_series_lock(lock_file)
+
+    return latest

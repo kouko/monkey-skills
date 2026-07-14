@@ -129,3 +129,84 @@ def test_propose_stores_proposed_schema_and_enqueues(
     assert item["subject_type"] == "kpi-schema"
     assert item["subject_id"] == stored["schema_id"]
     assert item["status"] == "OPEN"
+
+
+def test_confirm_transitions_to_confirmed_via_human_seam(
+    kpi_schema_module, review_queue_module, tmp_path, monkeypatch
+):
+    """confirm(company, adjudicated_by, adjudicated_at) must:
+      (a) locate the latest PROPOSED schema version and its OPEN review-item,
+          adjudicate it through `review_queue.adjudicate` (the REUSED
+          human-confirm seam — an empty/whitespace `adjudicated_by` must be
+          rejected BY that seam, not reimplemented here) BEFORE flipping the
+          schema, so a rejected identity leaves the schema PROPOSED and the
+          review-item still OPEN;
+      (b) on a valid identity, transition the schema version to CONFIRMED
+          with confirmed_by/confirmed_at set, and resolve the review-item
+          (no longer OPEN);
+      (c) reject loud a second confirm once the head is already CONFIRMED
+          (confirm-once), and a confirm for a company with no schema at all.
+
+    Why this matters: propose-then-confirm is a human-in-the-loop gate — if
+    an empty identity could slip through, or a second confirm could silently
+    no-op/duplicate, the whole point of the seam (no pipeline self-confirm,
+    no double-confirmation) would be defeated.
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+
+    kpi_defs = [
+        {
+            "kpi_id": "iphone_units",
+            "label": "iPhone units sold",
+            "unit": "units",
+            "locate_hint": "Segment Information, Products and Services table",
+        },
+    ]
+    record = kpi_schema_module.propose(
+        "AAPL", kpi_defs, review_item_id="rev-schema-0002"
+    )
+    schema_files = [
+        p for p in tmp_path.rglob("*.json") if p.name != "review-queue.json"
+    ]
+    assert len(schema_files) == 1
+    schema_file = schema_files[0]
+
+    # Empty / whitespace adjudicated_by is rejected BY review_queue.adjudicate
+    # (the reused seam) — the schema must stay PROPOSED, unchanged.
+    with pytest.raises(ValueError):
+        kpi_schema_module.confirm("AAPL", adjudicated_by="", adjudicated_at="2024-01-01")
+    with pytest.raises(ValueError):
+        kpi_schema_module.confirm("AAPL", adjudicated_by="   ", adjudicated_at="2024-01-01")
+
+    envelope = json.loads(schema_file.read_text(encoding="utf-8"))
+    stored = envelope["versions"][0]
+    assert stored["status"] == "PROPOSED"
+    assert stored["confirmed_by"] is None
+    assert stored["confirmed_at"] is None
+    assert len(review_queue_module.list_open()) == 1, (
+        "a rejected confirm attempt must leave the review-item OPEN"
+    )
+
+    confirmed = kpi_schema_module.confirm(
+        "AAPL", adjudicated_by="alice", adjudicated_at="2024-01-01"
+    )
+    assert confirmed["status"] == "CONFIRMED"
+    assert confirmed["confirmed_by"] == "alice"
+    assert confirmed["confirmed_at"] == "2024-01-01"
+
+    envelope = json.loads(schema_file.read_text(encoding="utf-8"))
+    stored = envelope["versions"][0]
+    assert stored["status"] == "CONFIRMED"
+    assert stored["confirmed_by"] == "alice"
+    assert stored["confirmed_at"] == "2024-01-01"
+    assert review_queue_module.list_open() == [], (
+        "the schema's review-item must no longer be OPEN once confirmed"
+    )
+
+    # Confirm-once: already-CONFIRMED head raises loud, nothing changes.
+    with pytest.raises(ValueError):
+        kpi_schema_module.confirm("AAPL", adjudicated_by="bob", adjudicated_at="2024-01-02")
+
+    # No schema at all for this company -> raises loud.
+    with pytest.raises(ValueError):
+        kpi_schema_module.confirm("MSFT", adjudicated_by="alice", adjudicated_at="2024-01-01")
