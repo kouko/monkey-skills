@@ -315,3 +315,51 @@ apply and exit **1**. `list` always exits **0**, printing all of a
 company's break-event records as a JSON array (`[]` if none flagged yet).
 A missing required flag on any subcommand is handled by argparse itself
 and exits **2**.
+
+## CLI (kpi_series)
+
+`scripts/kpi_series.py` — dual as-reported/recast series split + a
+basis-required view (slice 7). PURE-COMPUTE library surface
+(`split_series`/`series_view`) — no store dir, no `KPI_STORE_DIR`. The
+`apply` subcommand is the one exception: it is a thin wrapper over
+`kpi_break.apply_break` (imported via the same-dir shim, reused not
+reimplemented), so it DOES touch the durable break-event store
+(`KPI_STORE_DIR` env override applies to `apply` only).
+
+```
+# apply: no request body; wraps kpi_break.apply_break(company, break_id,
+# break_period) — requires the break is already CONFIRMED (slice 6),
+# transitions it CONFIRMED -> APPLIED, prints the updated record
+uv run scripts/kpi_series.py apply \
+    --company AAPL --break-id AAPL:v1:0 --break-period FY2024
+
+# view: reads {"points": [...], "applied_breaks": [...]} as JSON from
+# stdin (or --file PATH); --basis selects as-reported/recast/dual. A
+# series across an applied break with NO --basis is REJECTED loud (a
+# naive concatenation across two incompatible lineages)
+echo '{"points": [{"period": "FY2023", "value": 110}, \
+  {"period": "FY2024", "value": 120}], \
+  "applied_breaks": [{"break_period": "FY2024"}]}' \
+  | uv run scripts/kpi_series.py view --company AAPL --basis dual
+```
+
+| Subcommand | Flag              | Required | Notes                                                        |
+|------------|-------------------|----------|-------------------------------------------------------------------|
+| `apply`    | `--company`       | yes      | Company identifier                                                 |
+| `apply`    | `--break-id`      | yes      | The `break_id` to apply (must be CONFIRMED)                        |
+| `apply`    | `--break-period`  | yes      | The period at/after which the recast lineage begins                |
+| `view`     | `--company`       | yes      | Company identifier                                                 |
+| `view`     | `--basis`         | no       | `as-reported` \| `recast` \| `dual`; omitted -> `None` (raises if the series has an applied break) |
+| `view`     | `--file`          | no       | Path to a JSON file holding `{points, applied_breaks}` (default: stdin) |
+
+`apply` exits **0** on success, printing the now-APPLIED break record;
+every fail-loud guard in `kpi_break.apply_break` (unknown break_id, a
+break not currently CONFIRMED, an empty break_period) is a ValueError and
+exits **1**. `view` exits **0** on success, printing the `series_view`
+result (a list for `as-reported`/`recast`, or the full
+`{as_reported, recast, break_markers}` dict for `dual`); malformed JSON or
+a body missing `points`/`applied_breaks` exits **2** (nothing computed); a
+`series_view` rejection — a series with an applied break and no
+`--basis`, or an unrecognized `--basis` string — is a ValueError and exits
+**1**. A missing required flag on either subcommand is handled by argparse
+itself and exits **2**.
