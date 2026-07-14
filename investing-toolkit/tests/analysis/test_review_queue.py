@@ -593,3 +593,33 @@ def test_cli_enqueue_fail_loud_exit_codes(tmp_path):
     assert list(tmp_path.rglob("*.json")) == [], (
         "a rejected non-object item must write nothing"
     )
+
+
+def test_adjudicate_rejects_unknown_decision_and_none_identity(
+    review_queue_module, tmp_path, monkeypatch
+):
+    """Two more fail-loud guards on adjudicate, each leaving the item OPEN:
+      - an unknown `decision` (not approve/reject/edit) is rejected loud;
+      - `adjudicated_by=None` is rejected by the auth boundary (None is the
+        short-circuit arm of `adjudicated_by and adjudicated_by.strip()`).
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+    item = {
+        "review_item_id": "rev-9100",
+        "subject_type": "kpi-schema",
+        "subject_id": "AAPL:v1",
+        "reason": "first-time schema",
+    }
+    review_queue_module.enqueue(item)
+
+    with pytest.raises(ValueError):
+        review_queue_module.adjudicate("rev-9100", "maybe", adjudicated_by="alice")
+    with pytest.raises(ValueError):
+        review_queue_module.adjudicate("rev-9100", "approve", adjudicated_by=None)
+
+    envelope = json.loads(
+        list(tmp_path.rglob("*.json"))[0].read_text(encoding="utf-8")
+    )
+    stored = next(i for i in envelope["items"] if i["review_item_id"] == "rev-9100")
+    assert stored["status"] == "OPEN", "both rejections must leave the item OPEN"
+    assert "adjudications" not in stored, "neither rejection may append a record"
