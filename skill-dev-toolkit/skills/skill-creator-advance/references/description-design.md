@@ -133,7 +133,9 @@ It supersedes `docs/skill-mining/2026-06-19-skill-description-standard.md`
   a hard cap).
 - **Router / CONDITIONAL skills**: exception band ≤500, admission
   REQUIRES a firing-evidence note (cite a corpus run or live A/B) —
-  no evidence, no exception.
+  no evidence, no exception. A NEW router/CONDITIONAL skill with no
+  firing evidence yet stays within the normal band until a corpus or
+  live A/B run supplies the note; only then does the ≤500 band open.
 
 Harness facts: Agent Skills spec max 1,024 chars; Claude Code listing
 truncation 1,536 chars (combined description + when_to_use).
@@ -224,7 +226,8 @@ Before shipping a description, verify:
       user would actually type
 - [ ] Rendered length per Principle 5 two-tier standard: ≤150 target,
       250 soft lint line; router/CONDITIONAL exception ≤500 only with
-      firing evidence (audit via YAML parse, not source lines)
+      firing evidence (a NEW router with no evidence yet stays in the
+      normal band; audit via YAML parse, not source lines)
 - [ ] No workflow / process steps ("first do A, then B, then C")
 - [ ] No English synonym pairs among triggers — one trigger per
       routing branch (multilingual belt keywords exempt)
