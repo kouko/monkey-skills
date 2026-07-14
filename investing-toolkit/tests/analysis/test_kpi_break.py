@@ -1,11 +1,11 @@
-"""Tests for analysis-kpi/scripts/kpi_break.py — break-event detection
-(operational-kpi capability, slice 6).
+"""Tests for analysis-kpi/scripts/kpi_break.py — break-event detection +
+lifecycle (operational-kpi capability, slices 6-7).
 
-This slice's Task 1 ships `detect_breaks(prev_summary, curr_summary)`: a
-PURE-COMPUTE comparison of two consecutive-period KPI summaries that
-returns break-event candidates (resegmentation / relabel /
-arithmetic-mismatch). No persistence, no `_store_fs` / `review_queue`
-calls — those land in Tasks 2-3.
+Covers detect_breaks (pure-compute drift detection: resegmentation / relabel
+/ arithmetic-mismatch), flag_break (persist FLAGGED + enqueue), confirm_break
+/ dismiss_break (via the review_queue human-confirm seam), the CLI (slice 6),
+and apply_break (CONFIRMED → APPLIED, the slice-7 lifecycle step that records
+the break_period the dual as-reported/recast series splits on).
 
 No `@req` tags: this dispatch's plan/spec trace work by named
 change-folder Requirements (operational-kpi / "Definition-drift detection
