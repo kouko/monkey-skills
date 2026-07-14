@@ -5,6 +5,35 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.30.2] — 2026-07-14 — description token-economy sweep (six skill descriptions)
+
+### Changed
+
+- **`ui-verification` description**: rewritten from 566 to 246 rendered chars
+  to fit the normal band (target ≤150 / soft lint 250 per
+  `skill-dev-toolkit` description-design two-tier standard). Identity and
+  mechanism prose cut (body carries it); kept the CONDITIONAL trigger
+  semantics (branch touched UI + ui-flows.md exists), the GUI-only scope,
+  the verification-before-completion negative pointer, and all four
+  distinct triggers ("verify the UI", "did the screens actually render",
+  畫面驗證, UI 検証).
+- **Quality pass over the 250–310 band** (cutting rules only — no forced
+  shortening, zero trigger-phrase loss):
+  - `subagent-driven-development`: cut the verdict-taxonomy sentence
+    (TDD iron law / PASS_WITH_NOTES enumeration) — body-carried identity
+    beyond the one-sentence WHAT (292 → 176).
+  - `brainstorming`: cut the mechanism parenthetical (Axis 0 gate +
+    5-axis framework enumeration) — body-carried (289 → 149).
+  - `verification-before-completion`: cut the rule-restatement sentence
+    ("Tests MUST run at package level…") — body HARD-GATE carries it
+    (247 → 176).
+  - `requesting-code-review` and `dispatching-parallel-agents`: left
+    unchanged — nothing the cutting rules condemn (no synonym pairs, no
+    identity beyond the one-sentence WHAT).
+
+Description-only change; no skill body or behavior touched. Part of the
+2026-07-14 description-token-economy plan (Task 7c).
+
 ## [0.30.1] — 2026-07-14 — writing-plans Beck citation fix + CHANGELOG 0.29.0 backfill
 
 ### Fixed
