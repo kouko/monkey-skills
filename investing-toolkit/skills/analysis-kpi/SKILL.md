@@ -363,3 +363,39 @@ a body missing `points`/`applied_breaks` exits **2** (nothing computed); a
 `--basis`, or an unrecognized `--basis` string — is a ValueError and exits
 **1**. A missing required flag on either subcommand is handled by argparse
 itself and exits **2**.
+
+## CLI (kpi_memo_feed)
+
+`scripts/kpi_memo_feed.py` — the memo-feed contract assembly (slice 8,
+final offline slice). PURE-ASSEMBLY: stdlib only, no `_store_fs`/durable
+dir/locking — it reuses `kpi_gate.is_trusted` (same-skill import) for the
+trust verdict and takes the series data as a caller-supplied argument
+rather than querying `kpi_store` directly.
+
+```
+# build: reads kpi_series as a JSON ARRAY from stdin (or --file PATH);
+# TRUSTED (company, schema_version) -> a feed bundling kpi_series;
+# any other verdict -> a WITHHELD feed with NO series values
+echo '[{"kpi_id": "iphone_units", "points": [{"period": "2024-Q1", \
+  "value": 61600000, "source_accession": "0000320193-24-000123", \
+  "source_table_id": "ex99-1-operating-summary", "source_cell_ref": "r5c2"}]}]' \
+  | uv run scripts/kpi_memo_feed.py build \
+      --company AAPL --schema-version v1 --generated-at 2026-07-14T00:00:00Z
+```
+
+| Subcommand | Flag               | Required | Notes                                                        |
+|------------|--------------------|----------|-----------------------------------------------------------------|
+| `build`    | `--company`        | yes      | Company identifier                                               |
+| `build`    | `--schema-version` | yes      | The schema version to check the reliability gate for             |
+| `build`    | `--generated-at`   | no       | Caller-supplied `generated_at` timestamp (this module never reads the wall clock) |
+| `build`    | `--file`           | no       | Path to a JSON file holding the kpi_series array (default: stdin) |
+
+`build` exits **0** on success, printing the assembled feed — INCLUDING a
+WITHHELD feed, since a validly-withheld company is not a CLI error.
+Every series-point in a TRUSTED feed must carry complete provenance
+(`source_accession`/`source_table_id`/`source_cell_ref`, all three,
+directly on the point dict); a point missing any of them is a ValueError
+and exits **1** (nothing returned) — an unattributed value is never
+bundled into the feed. Malformed JSON or a non-array `kpi_series` body
+exits **2** (nothing computed, no raw traceback). A missing required flag
+is handled by argparse itself and exits **2**.
