@@ -1,14 +1,16 @@
 """Tests for analysis-kpi/scripts/kpi_store.py — the append-only bitemporal
 KPI store (operational-kpi capability, slice 1).
 
-Task 1 (plan: docs/loom/plans/2026-07-14-operational-kpi-bitemporal-store.md)
-ships the skill scaffold + `append(point)` writing ONE fully-provenanced
-point to a versioned file-per-series JSON under a durable DATA dir. The
-store dir is redirected to a tmp path via the `KPI_STORE_DIR` env override.
+Covers the full slice (plan: docs/loom/plans/2026-07-14-operational-kpi-
+bitemporal-store.md, Tasks 1-8): the skill scaffold + `append(point)`
+(versioned file-per-series JSON under a durable DATA dir), provenance/as_of
+rejection, 5-tuple idempotent dedup, point-in-time/latest queries,
+concurrency-safe locking, and the `append`/`query` CLI. The store dir is
+redirected to a tmp path via the `KPI_STORE_DIR` env override.
 
-`kpi_store.py` is loaded directly via importlib (same convention as
-tests/analysis/test_analysis_xval.py's `xval_module` fixture) — its functions
-are a library surface, not (yet) a subprocess CLI (the CLI lands in Task 8).
+The library functions are exercised by loading `kpi_store.py` via importlib
+(same convention as tests/analysis/test_analysis_xval.py's `xval_module`
+fixture); the CLI is exercised via real `uv run --script` subprocesses.
 """
 from __future__ import annotations
 
