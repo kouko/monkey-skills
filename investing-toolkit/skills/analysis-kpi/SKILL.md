@@ -167,3 +167,29 @@ identity from the reused human-confirm seam) is a ValueError and exits
 [{version, status}, ...], confirmed_kpi_ids}` — a company with no schema
 proposed yet reads as `{"versions": [], "confirmed_kpi_ids": []}` rather
 than an error.
+
+## CLI (kpi_validate)
+
+`scripts/kpi_validate.py` — rule-based operational-KPI value validation
+(slice 4). PURE-COMPUTE: stdlib only, no `_store_fs`/durable dir/locking —
+it reads an already-parsed value + a kpi_def and returns a rule verdict.
+
+```
+# validate: reads {value_record, kpi_def} JSON from stdin (or --file PATH)
+echo '{"value_record": {"value": 231000000, "unit": "units", \
+  "segments": [100000000, 131000000], "total": 231000000}, \
+  "kpi_def": {"sign": "non-negative", "unit": "units"}}' \
+  | uv run scripts/kpi_validate.py validate
+```
+
+| Subcommand | Flag     | Required | Notes                                                    |
+|------------|----------|----------|-----------------------------------------------------------|
+| `validate` | `--file` | no       | Path to a JSON file holding `{value_record, kpi_def}` (default: read stdin) |
+
+`validate` runs every applicable rule (sign/unit/subtotal/gaap — a rule
+whose precondition isn't met returns N/A and is skipped, never a failure)
+and prints `{"eligible": bool, "failures": [{"rule","detail"}, ...]}` to
+stdout. It exits **0** on ANY valid verdict — INCLUDING `eligible: false`,
+since a validly-rejected value is not a CLI error — and exits **2** on
+malformed JSON or a non-object payload (nothing computed, no raw
+traceback).

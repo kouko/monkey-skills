@@ -24,7 +24,11 @@ validate/CLI.
 """
 from __future__ import annotations
 
+import argparse
+import json
 import math
+import sys
+from pathlib import Path
 
 
 def check_sign(value: float, kpi_def: dict) -> dict:
@@ -124,3 +128,91 @@ def check_gaap(kpi_def: dict, has_gaap_match: bool) -> dict:
         "passed": True,
         "detail": "kpi_def declared gaap=True and a GAAP match was found",
     }
+
+
+def validate(value_record: dict, kpi_def: dict) -> dict:
+    """Run every applicable rule (sign/unit/subtotal/gaap) against
+    `value_record` + `kpi_def` and aggregate into one eligibility verdict.
+
+    A rule's `passed is None` is N/A (the rule's precondition wasn't met —
+    e.g. no declared unit, no segments to sum) and is excluded from
+    `failures`; it never blocks eligibility. Only `passed is False` is a
+    failure. Side-effect-free: reads its inputs, returns a new dict.
+    """
+    results = [
+        check_sign(value_record["value"], kpi_def),
+        check_unit(value_record.get("unit"), kpi_def),
+        check_subtotal(value_record.get("segments"), value_record.get("total")),
+        check_gaap(kpi_def, value_record.get("has_gaap_match", False)),
+    ]
+    failures = [
+        {"rule": result["rule"], "detail": result["detail"]}
+        for result in results
+        if result["passed"] is False
+    ]
+    return {"eligible": len(failures) == 0, "failures": failures}
+
+
+def _cli_validate(args: argparse.Namespace) -> int:
+    """`validate` subcommand: read `{"value_record":..., "kpi_def":...}` JSON
+    from `--file` (or stdin when omitted), call `validate`, print the
+    verdict JSON to stdout. Exits 0 on ANY valid verdict — INCLUDING
+    eligible:false, since a validly-rejected value is not a CLI error;
+    exits 2 on malformed/non-object JSON, cleanly (no raw traceback).
+    """
+    if args.file is not None:
+        raw = Path(args.file).read_text(encoding="utf-8")
+    else:
+        raw = sys.stdin.read()
+
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        print(f"kpi_validate validate: invalid JSON input: {exc}", file=sys.stderr)
+        return 2
+
+    if not isinstance(payload, dict):
+        print(
+            "kpi_validate validate: expected a JSON object with "
+            f"'value_record'/'kpi_def', got {type(payload).__name__}",
+            file=sys.stderr,
+        )
+        return 2
+
+    value_record = payload.get("value_record")
+    if not isinstance(value_record, dict) or "value" not in value_record:
+        print(
+            "kpi_validate validate: payload.value_record must be a JSON object "
+            "with a 'value' key — nothing to validate",
+            file=sys.stderr,
+        )
+        return 2
+
+    verdict = validate(value_record, payload.get("kpi_def", {}))
+    json.dump(verdict, sys.stdout, ensure_ascii=False)
+    sys.stdout.write("\n")
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Rule-based operational-KPI value validation CLI (validate)."
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    validate_parser = subparsers.add_parser(
+        "validate",
+        help="Validate one value_record against a kpi_def, printing the eligibility verdict.",
+    )
+    validate_parser.add_argument(
+        "--file", type=Path, default=None,
+        help="Path to a JSON file holding {value_record, kpi_def} (default: read stdin).",
+    )
+    validate_parser.set_defaults(func=_cli_validate)
+
+    args = parser.parse_args()
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
