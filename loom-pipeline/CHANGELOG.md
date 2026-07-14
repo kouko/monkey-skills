@@ -6,6 +6,22 @@ this file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.7.1] — 2026-07-14
+
+### Changed
+
+- **Description token economy** — rewrote `using-loom-pipeline` and
+  `loom-memory` frontmatter descriptions under the two-tier standard
+  (router/CONDITIONAL exception band ≤500 chars, firing-evidence
+  required): 1,019→475 and 974→492 rendered chars. CONDITIONAL
+  firing conditions + `N/A`-loud announcement semantics and the
+  strongest multilingual triggers preserved; thin-conductor/station
+  exposition and synonym triggers cut per skill-dev-toolkit
+  description-design cutting rules. Firing-evidence YAML comments
+  cite the 2026-07-14 pre-sweep baseline (4/4 EXACT each,
+  `docs/skill-dogfood/2026-07-14-description-token-economy/baseline.md`).
+  Bodies untouched.
+
 ## [0.7.0] — 2026-07-10
 
 ### Added
