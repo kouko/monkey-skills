@@ -18,6 +18,9 @@ the implementer contract (mirrors test_kpi_schema.py's rationale).
 from __future__ import annotations
 
 import importlib.util
+import json
+import os
+import subprocess
 import sys
 
 from conftest import KPI_GATE_SCRIPT
@@ -220,3 +223,158 @@ def test_missing_extraction_counts_incorrect(kpi_gate_module, tmp_path, monkeypa
         "1/3 accuracy is well below a 0.95 threshold -> WITHHELD, never TRUSTED"
     )
     assert record["sample_size"] == 3
+
+
+def test_unevaluated_company_is_fail_closed(kpi_gate_module, tmp_path, monkeypatch):
+    """gate_verdict(company, schema_version) must default to WITHHELD when
+    NO gate record exists for that (company, schema_version) pair — a
+    never-evaluated company is fail-closed, never trusted by omission.
+    is_trusted must be True ONLY when the recorded verdict is exactly
+    TRUSTED; WITHHELD/NOT_EVALUATED/absent must all read False.
+
+    Why this matters: if an absent gate record defaulted to anything other
+    than WITHHELD (e.g. treating "no record" as "no opinion, let it
+    through"), a company nobody ever evaluated would silently pass as
+    trusted — exactly the omission the reliability gate exists to close.
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+
+    # No evaluate has ever run for this (company, schema_version) pair.
+    assert kpi_gate_module.gate_verdict("NEVERCO", "v1") == "WITHHELD"
+    assert kpi_gate_module.is_trusted("NEVERCO", "v1") is False
+
+    labels = [
+        {"kpi_id": f"kpi_{i}", "period": "2024-Q1", "value": 100 + i}
+        for i in range(5)
+    ]
+    kpi_gate_module.add_labels("GATECO", labels)
+
+    # After a TRUSTED evaluate -> is_trusted True.
+    kpi_gate_module.evaluate(
+        "GATECO", "v-trusted", [dict(label) for label in labels],
+        threshold=0.95, min_samples=5, evaluated_at="2026-07-14T00:00:00Z",
+    )
+    assert kpi_gate_module.gate_verdict("GATECO", "v-trusted") == "TRUSTED"
+    assert kpi_gate_module.is_trusted("GATECO", "v-trusted") is True
+
+    # After a WITHHELD evaluate (below threshold) -> is_trusted False.
+    below_threshold = [dict(label) for label in labels]
+    below_threshold[0]["value"] = labels[0]["value"] + 1_000_000
+    kpi_gate_module.evaluate(
+        "GATECO", "v-withheld", below_threshold,
+        threshold=0.95, min_samples=5, evaluated_at="2026-07-14T00:00:00Z",
+    )
+    assert kpi_gate_module.gate_verdict("GATECO", "v-withheld") == "WITHHELD"
+    assert kpi_gate_module.is_trusted("GATECO", "v-withheld") is False
+
+    # After a NOT_EVALUATED evaluate (sub-min-samples) -> is_trusted False.
+    few_labels = [{"kpi_id": "only_one", "period": "2024-Q1", "value": 1}]
+    kpi_gate_module.add_labels("GATECO_FEW", few_labels)
+    kpi_gate_module.evaluate(
+        "GATECO_FEW", "v-not-eval", [dict(label) for label in few_labels],
+        threshold=0.95, min_samples=5, evaluated_at="2026-07-14T00:00:00Z",
+    )
+    assert kpi_gate_module.gate_verdict("GATECO_FEW", "v-not-eval") == "NOT_EVALUATED"
+    assert kpi_gate_module.is_trusted("GATECO_FEW", "v-not-eval") is False
+
+
+def test_cli_add_labels_evaluate_verdict_roundtrip(tmp_path):
+    """Task 4: the kpi_gate.py CLI's `add-labels`, `evaluate`, and `verdict`
+    subcommands round-trip a company's reliability gate through real
+    subprocess invocations (not the library surface directly) — the CLI is
+    a thin wrapper over add_labels/evaluate/gate_verdict/is_trusted, not a
+    reimplementation, mirroring
+    test_kpi_schema.py::test_cli_propose_confirm_status_roundtrip.
+
+    add-labels (stdin labels JSON list, >=5 cells) -> evaluate (stdin
+    matching all-correct extracted_values, --threshold 0.95) -> gate record
+    TRUSTED -> verdict shows {"verdict": "TRUSTED", "trusted": true}.
+
+    ALSO: a never-evaluated (company, schema_version) `verdict` call must
+    read WITHHELD/false (fail-closed, Task 3's contract exposed through the
+    CLI); a malformed `evaluate` JSON body must exit 2 with no raw
+    traceback; and `--help` must list all three subcommands.
+    """
+    env = {**os.environ, "KPI_STORE_DIR": str(tmp_path)}
+
+    labels = [
+        {"kpi_id": f"kpi_{i}", "period": "2024-Q1", "value": 100 + i}
+        for i in range(5)
+    ]
+
+    add_labels_result = subprocess.run(
+        [
+            "uv", "run", "--script", str(KPI_GATE_SCRIPT), "add-labels",
+            "--company", "CLICO",
+        ],
+        input=json.dumps(labels),
+        capture_output=True, text=True, timeout=60, env=env,
+    )
+    assert add_labels_result.returncode == 0, (
+        f"add-labels subcommand failed: stdout={add_labels_result.stdout!r} "
+        f"stderr={add_labels_result.stderr!r}"
+    )
+
+    all_correct = [dict(label) for label in labels]
+    evaluate_result = subprocess.run(
+        [
+            "uv", "run", "--script", str(KPI_GATE_SCRIPT), "evaluate",
+            "--company", "CLICO", "--schema-version", "v1",
+            "--threshold", "0.95", "--at", "2026-07-14T00:00:00Z",
+        ],
+        input=json.dumps(all_correct),
+        capture_output=True, text=True, timeout=60, env=env,
+    )
+    assert evaluate_result.returncode == 0, (
+        f"evaluate subcommand failed: stdout={evaluate_result.stdout!r} "
+        f"stderr={evaluate_result.stderr!r}"
+    )
+    record = json.loads(evaluate_result.stdout)
+    assert record["verdict"] == "TRUSTED"
+
+    def run_verdict(company, schema_version):
+        result = subprocess.run(
+            [
+                "uv", "run", "--script", str(KPI_GATE_SCRIPT), "verdict",
+                "--company", company, "--schema-version", schema_version,
+            ],
+            capture_output=True, text=True, timeout=60, env=env,
+        )
+        assert result.returncode == 0, (
+            f"verdict subcommand failed: stdout={result.stdout!r} "
+            f"stderr={result.stderr!r}"
+        )
+        return json.loads(result.stdout)
+
+    assert run_verdict("CLICO", "v1") == {"verdict": "TRUSTED", "trusted": True}
+
+    # A never-evaluated (company, schema_version) reads fail-closed.
+    assert run_verdict("CLICO", "v-never-evaluated") == {
+        "verdict": "WITHHELD", "trusted": False,
+    }
+
+    # Malformed evaluate JSON -> exit 2, no raw traceback.
+    fail_result = subprocess.run(
+        [
+            "uv", "run", "--script", str(KPI_GATE_SCRIPT), "evaluate",
+            "--company", "CLICO", "--schema-version", "v-malformed",
+            "--threshold", "0.95",
+        ],
+        input="{not valid json",
+        capture_output=True, text=True, timeout=60, env=env,
+    )
+    assert fail_result.returncode == 2, fail_result.stderr
+    assert "Traceback" not in fail_result.stderr, (
+        "malformed evaluate input must fail cleanly, not with a raw traceback"
+    )
+
+    # --help lists all three subcommands.
+    help_result = subprocess.run(
+        ["uv", "run", "--script", str(KPI_GATE_SCRIPT), "--help"],
+        capture_output=True, text=True, timeout=60, env=env,
+    )
+    assert help_result.returncode == 0
+    for subcommand in ("add-labels", "evaluate", "verdict"):
+        assert subcommand in help_result.stdout, (
+            f"--help must list the {subcommand!r} subcommand"
+        )

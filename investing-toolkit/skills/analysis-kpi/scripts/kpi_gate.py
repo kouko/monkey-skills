@@ -29,8 +29,15 @@ threshold=None, min_samples=5, evaluated_at=None)`: matches every labeled
 computes cell-level accuracy, and persists a fail-closed gate record keyed
 by `(company, schema_version)`.
 
-`gate_verdict` / `is_trusted` / the CLI are NOT part of this task
-(Tasks 3-4).
+Task 3 adds `gate_verdict(company, schema_version)` / `is_trusted(company,
+schema_version)`: a fail-closed read of the recorded verdict, defaulting
+WITHHELD when no gate record exists (a never-evaluated company is never
+trusted by omission).
+
+Task 4 adds a thin argparse CLI (`add-labels` / `evaluate` / `verdict`)
+wrapping the library surface above, mirroring `kpi_schema.py`'s CLI shape
+and fail-loud exit-code convention (0 success / 1 ValueError / 2 malformed
+or malshaped input).
 
 Durable-dir resolution, atomic tmp+rename write, and series locking are
 ALL REUSED from the shared `_store_fs.py` module (same-dir import below),
@@ -41,6 +48,7 @@ schema lifecycle.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import math
 import sys
@@ -281,3 +289,180 @@ def evaluate(
         _store_fs._release_series_lock(lock_file)
 
     return record
+
+
+def gate_verdict(company: str, schema_version) -> str:
+    """The RECORDED verdict for `(company, schema_version)`, or
+    `VERDICT_WITHHELD` if NO gate record exists yet — fail-closed: a
+    company/schema_version pair that `evaluate` has never run against is
+    NEVER trusted by omission, mirroring `confirmed_kpi_ids`'s
+    blocked-until-confirmed default in kpi_schema.py.
+
+    Read-only, no lock needed (a single read of a file that is only ever
+    replaced atomically), reusing the same gate-record load path `evaluate`
+    writes through.
+    """
+    envelope = _load_gate_records_file(_gate_records_path(company))
+    record = envelope["records"].get(str(schema_version))
+    if record is None:
+        return VERDICT_WITHHELD
+    return record["verdict"]
+
+
+def is_trusted(company: str, schema_version) -> bool:
+    """True ONLY when `gate_verdict` is exactly `VERDICT_TRUSTED` —
+    WITHHELD, NOT_EVALUATED, and "no record at all" (via `gate_verdict`'s
+    own fail-closed default) all read False. Delegates to `gate_verdict` so
+    the two functions can never disagree about what "trusted" means,
+    mirroring `is_kpi_in_confirmed_schema`'s delegation to
+    `confirmed_kpi_ids`.
+    """
+    return gate_verdict(company, schema_version) == VERDICT_TRUSTED
+
+
+def _cli_add_labels(args: argparse.Namespace) -> int:
+    """`add-labels` subcommand: read `labels` as a JSON array from `--file`
+    (or stdin when omitted), call `add_labels(company, labels)`. Mirrors
+    `kpi_schema._cli_propose`'s exit-code contract: malformed JSON or a
+    non-array body -> 2 (nothing written); a rejection (ValueError) -> 1;
+    success -> 0, prints the company's full accumulated label list as JSON
+    (not just the newly-added batch) so the caller can see the durable
+    result of the append.
+    """
+    if args.file is not None:
+        raw = Path(args.file).read_text(encoding="utf-8")
+    else:
+        raw = sys.stdin.read()
+
+    try:
+        labels = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        print(f"kpi_gate add-labels: invalid JSON input: {exc}", file=sys.stderr)
+        return 2
+
+    if not isinstance(labels, list):
+        print(
+            "kpi_gate add-labels: expected a JSON array (labels), got "
+            f"{type(labels).__name__} — nothing written",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        add_labels(args.company, labels)
+    except ValueError as exc:
+        print(f"kpi_gate add-labels: {exc}", file=sys.stderr)
+        return 1
+
+    json.dump(get_labels(args.company), sys.stdout, ensure_ascii=False)
+    sys.stdout.write("\n")
+    return 0
+
+
+def _cli_evaluate(args: argparse.Namespace) -> int:
+    """`evaluate` subcommand: read `extracted_values` as a JSON array or
+    object from `--file` (or stdin when omitted), call `evaluate(company,
+    schema_version, extracted_values, threshold, min_samples, evaluated_at)`
+    and print the resulting gate record. Mirrors `kpi_schema._cli_propose`'s
+    exit-code contract: malformed JSON or a body that is neither a JSON
+    array nor object -> 2 (nothing persisted); a rejection (ValueError) ->
+    1; success -> 0.
+    """
+    if args.file is not None:
+        raw = Path(args.file).read_text(encoding="utf-8")
+    else:
+        raw = sys.stdin.read()
+
+    try:
+        extracted_values = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        print(f"kpi_gate evaluate: invalid JSON input: {exc}", file=sys.stderr)
+        return 2
+
+    if not isinstance(extracted_values, (list, dict)):
+        print(
+            "kpi_gate evaluate: expected a JSON array or object "
+            f"(extracted_values), got {type(extracted_values).__name__}",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        record = evaluate(
+            args.company, args.schema_version, extracted_values,
+            threshold=args.threshold, min_samples=args.min_samples,
+            evaluated_at=args.at,
+        )
+    except ValueError as exc:
+        print(f"kpi_gate evaluate: {exc}", file=sys.stderr)
+        return 1
+
+    json.dump(record, sys.stdout, ensure_ascii=False)
+    sys.stdout.write("\n")
+    return 0
+
+
+def _cli_verdict(args: argparse.Namespace) -> int:
+    """`verdict` subcommand: print `{"verdict": ..., "trusted": bool}` for
+    `(company, schema_version)` via `gate_verdict`/`is_trusted`. Always
+    exits 0 (read-only, fail-closed by construction — an absent record
+    reads WITHHELD/false rather than erroring, mirroring
+    `kpi_schema._cli_status`'s always-0 read convention).
+    """
+    verdict = gate_verdict(args.company, args.schema_version)
+    trusted = is_trusted(args.company, args.schema_version)
+    json.dump({"verdict": verdict, "trusted": trusted}, sys.stdout, ensure_ascii=False)
+    sys.stdout.write("\n")
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="KPI reliability gate CLI (add-labels / evaluate / verdict)."
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    add_labels_parser = subparsers.add_parser(
+        "add-labels", help="Append ground-truth labels for a company."
+    )
+    add_labels_parser.add_argument("--company", required=True)
+    add_labels_parser.add_argument(
+        "--file", type=Path, default=None,
+        help="Path to a JSON file holding the labels array (default: read stdin).",
+    )
+    add_labels_parser.set_defaults(func=_cli_add_labels)
+
+    evaluate_parser = subparsers.add_parser(
+        "evaluate", help="Evaluate extraction accuracy against a company's labels."
+    )
+    evaluate_parser.add_argument("--company", required=True)
+    evaluate_parser.add_argument(
+        "--schema-version", required=True, dest="schema_version"
+    )
+    evaluate_parser.add_argument("--threshold", type=float, default=None)
+    evaluate_parser.add_argument(
+        "--min-samples", type=int, default=5, dest="min_samples"
+    )
+    evaluate_parser.add_argument("--at", default=None, dest="at")
+    evaluate_parser.add_argument(
+        "--file", type=Path, default=None,
+        help="Path to a JSON file holding extracted_values (default: read stdin).",
+    )
+    evaluate_parser.set_defaults(func=_cli_evaluate)
+
+    verdict_parser = subparsers.add_parser(
+        "verdict",
+        help="Print the recorded gate verdict + trust for a company/schema_version.",
+    )
+    verdict_parser.add_argument("--company", required=True)
+    verdict_parser.add_argument(
+        "--schema-version", required=True, dest="schema_version"
+    )
+    verdict_parser.set_defaults(func=_cli_verdict)
+
+    args = parser.parse_args()
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

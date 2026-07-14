@@ -193,3 +193,54 @@ stdout. It exits **0** on ANY valid verdict — INCLUDING `eligible: false`,
 since a validly-rejected value is not a CLI error — and exits **2** on
 malformed JSON or a non-object payload (nothing computed, no raw
 traceback).
+
+## CLI (kpi_gate)
+
+`scripts/kpi_gate.py` — the reliability gate: a ground-truth label-set
+store + accuracy-based TRUSTED/WITHHELD/NOT_EVALUATED verdict per
+(company, schema_version) (slice 5). Reuses `_store_fs.resolve_store_dir`
+for the durable dir (`KPI_STORE_DIR` env override applies here too).
+
+```
+# add-labels: reads a JSON ARRAY of {kpi_id, period, value} entries from
+# stdin (or --file PATH); APPENDS to the company's accumulated label set
+echo '[{"kpi_id": "iphone_units", "period": "2024-Q1", "value": 61600000}]' \
+  | uv run scripts/kpi_gate.py add-labels --company AAPL
+
+# evaluate: reads extracted_values (a JSON array shaped like labels, or a
+# {kpi_id: {period: value}} object) from stdin (or --file PATH); computes
+# cell-level accuracy against the company's labels and persists a gate
+# record keyed by (company, schema_version)
+echo '[{"kpi_id": "iphone_units", "period": "2024-Q1", "value": 61600000}]' \
+  | uv run scripts/kpi_gate.py evaluate \
+      --company AAPL --schema-version v1 --threshold 0.95 --min-samples 5 \
+      --at 2026-07-14T00:00:00Z
+
+# verdict: print the recorded verdict + trust for (company, schema_version)
+uv run scripts/kpi_gate.py verdict --company AAPL --schema-version v1
+```
+
+| Subcommand   | Flag              | Required | Notes                                                        |
+|--------------|-------------------|----------|-----------------------------------------------------------------|
+| `add-labels` | `--company`       | yes      | Company identifier                                               |
+| `add-labels` | `--file`          | no       | Path to a JSON file holding the labels array (default: stdin)    |
+| `evaluate`   | `--company`       | yes      | Company identifier                                               |
+| `evaluate`   | `--schema-version`| yes      | The schema version this evaluation is scoped to                  |
+| `evaluate`   | `--threshold`     | no       | Accuracy bar (inclusive); omitted/unset -> never TRUSTED (deferred calibration) |
+| `evaluate`   | `--min-samples`   | no       | Minimum labeled cells required for a verdict (default 5)         |
+| `evaluate`   | `--at`            | no       | Caller-supplied `evaluated_at` timestamp                         |
+| `evaluate`   | `--file`          | no       | Path to a JSON file holding extracted_values (default: stdin)    |
+| `verdict`    | `--company`       | yes      | Company identifier                                               |
+| `verdict`    | `--schema-version`| yes      | The schema version to look up                                    |
+
+`add-labels` exits **0** on success, printing the company's full
+accumulated label list; malformed JSON or a non-array body exits **2**
+(nothing written); a rejection (ValueError) exits **1**. `evaluate` exits
+**0** on success, printing the gate record (`{company, schema_version,
+metric, sample_size, verdict, evaluated_at}`); malformed JSON or a body
+that is neither a JSON array nor object exits **2** (nothing persisted); a
+rejection (ValueError) exits **1**. `verdict` always exits **0**, printing
+`{"verdict": ..., "trusted": bool}` — a (company, schema_version) pair with
+NO gate record reads `{"verdict": "WITHHELD", "trusted": false}` (fail-closed:
+never trusted by omission), never an error. A missing required flag on any
+subcommand is handled by argparse itself and exits **2**.
