@@ -310,6 +310,124 @@ def test_skipped_sentinel_merged_with_real_data_is_present(tmp_path):
     assert sections["material_events"]["present"] is True
 
 
+def test_xval_packs_present_by_positive_allowlist(tmp_path):
+    """Task 4 (2026-07-13 us-sec-xval-memo-wiring plan): pack_inventory must
+    classify the new `xval_source_a`/`xval_source_b` memo-fetch pack keys by
+    a POSITIVE data-shape allowlist (a data-bearing `_status: "ok"` pack is
+    present; a depth-1 `_status: "failed"` pack is absent) — never by an
+    error-key denylist (shared-classifier-over-open-dialects-needs-allowlist
+    memory: a denylist derived from a sample of producers silently
+    misclassifies an unsampled producer's dialect as present).
+
+    `_is_failed_section`'s FIRST branch already honors a self-declared
+    `_status: "failed"` generically (added for `sec_narrative`'s own depth-1
+    status envelope, exercised by `test_all_failed_section_is_not_present`'s
+    `status_failed_section` case) — this test PINS that generic behavior
+    against the REAL xval_source_a/xval_source_b shapes emitted by
+    `pack_us.py::_fetch_xval_source_a`/`_wrap_xval_source_b` (Tasks 2/3), so
+    a future xval-specific dialect change cannot silently regress without
+    tripping this test. It also carries a CONTROL assertion (an unrelated
+    all-failed section, same shape as the existing
+    `test_all_failed_section_is_not_present` case) to prove the xval wiring
+    did not reopen the false-presence hole for the other 4 markets'
+    sections.
+    """
+    pack = {
+        "pack": "memo-fetch",
+        "ticker": "AAPL",
+        "xval_source_a": {
+            "statements": [
+                {
+                    "accession": "0000320193-25-000079",
+                    "statement_name": "BalanceSheet",
+                    "cells": [{"concept": "Assets", "value": 100}],
+                },
+            ],
+            "failed_items": [],
+            "requested": 4,
+            "succeeded": 4,
+            "failed": 0,
+            "_status": "ok",
+        },
+        "xval_source_a_failed": {
+            "statements": [],
+            "failed_items": [
+                {
+                    "accession": "0000320193-25-000079",
+                    "statement_name": "BalanceSheet",
+                    "error": "acquisition failed",
+                    "error_class": "acquisition_failed",
+                },
+            ],
+            "requested": 4,
+            "succeeded": 0,
+            "failed": 4,
+            "_status": "failed",
+        },
+        "xval_source_b": {
+            "cik": 320193,
+            "facts": {
+                "us-gaap": {
+                    "Revenues": [
+                        {
+                            "start": "2024-01-01",
+                            "end": "2024-12-31",
+                            "value": 391000000000,
+                            "accn": "0000320193-25-000079",
+                            "form": "10-K",
+                            "fy": 2025,
+                            "fp": "FY",
+                            "filed": "2025-11-01",
+                        },
+                    ],
+                },
+            },
+            "requested": 1,
+            "succeeded": 1,
+            "failed": 0,
+            "_status": "ok",
+        },
+        "xval_source_b_failed": {
+            "error": "no CIK resolved for companyfacts fetch (upstream sec_facts fetch failed)",
+            "error_class": "cik_unresolved",
+            "requested": 1,
+            "succeeded": 0,
+            "failed": 1,
+            "_status": "failed",
+        },
+        # CONTROL: an unrelated section, same denylist-era shape as
+        # test_all_failed_section_is_not_present's `error_only_section` --
+        # must stay classified exactly as it already is, proving this task
+        # did not reopen the false-presence hole for the other 4 markets.
+        "control_error_only_section": {
+            "error": "fetch failed",
+            "requested": 6,
+            "succeeded": 0,
+            "failed": 6,
+        },
+    }
+    input_path = tmp_path / "xval_pack.json"
+    input_path.write_text(json.dumps(pack), encoding="utf-8")
+
+    cp = _run(["--input", str(input_path)])
+    assert cp.returncode == 0, cp.stderr
+    out = json.loads(cp.stdout)
+    sections = out["sections"]
+
+    assert sections["xval_source_a"]["present"] is True
+    assert sections["xval_source_a"]["kind"] == "dict"
+
+    assert sections["xval_source_a_failed"]["present"] is False
+
+    assert sections["xval_source_b"]["present"] is True
+    assert sections["xval_source_b"]["kind"] == "dict"
+
+    assert sections["xval_source_b_failed"]["present"] is False
+
+    # control: unrelated section's classification is unaffected
+    assert sections["control_error_only_section"]["present"] is False
+
+
 def test_missing_input_file_exits_64(tmp_path):
     missing = tmp_path / "does_not_exist.json"
     cp = _run(["--input", str(missing)])

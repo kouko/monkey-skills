@@ -24,7 +24,7 @@ to Layer 2 (`analysis-*`), and all analytical judgement + gates to
 | Parameter | Required | Default | Notes |
 |-----------|----------|---------|-------|
 | `ticker` | yes | — | e.g. `AAPL`, `7203` (or `7203.T`), `2330.TW`, `005930.KS`, `600519.SS` |
-| `scope` | no | `deep` | `deep` = full memo; `quick` = summary snapshot (skips Phase 2 regime fan-out + Phase 2.5 comps + Phase 3 DCF; uses snapshot data only). investing-team protocol routing decides depth from this value. |
+| `scope` | no | `deep` | `deep` = full memo; `quick` = summary snapshot (skips Phase 2 regime fan-out + Phase 2.5 comps + Phase 2.6 xval + Phase 3 DCF; uses snapshot data only). investing-team protocol routing decides depth from this value. |
 | `output_language` | no | auto-detect | `.TW` / `.TWO` → `zh-TW`; `.T` / `.TO` / 4-digit JP → `ja`; `.KS` / `.KQ` → `ko`; `.SS` / `.SZ` / `.HK` → `zh-CN`; otherwise infer from user message |
 | `peers` | no | auto-discovery via runtime research agent | Comma-separated peer list (e.g., `MSFT,GOOGL,META,AMZN`); skips runtime peer-discovery if provided. |
 | `--interactive` | no | `false` (auto mode) | When `true`, peer-discovery agent's output is presented for user confirmation before Comps fetch + analysis. |
@@ -102,7 +102,7 @@ silent about which.
 
 ### Phase 1 — Data Fetch
 
-> **`scope=quick` note**: quick mode runs Phase 1 only (snapshot data) and skips Phase 2 (regime) + Phase 2.5 (comps) + Phase 3 DCF. The pipeline jumps straight to Phase 4 with snapshot-only inputs; investing-team protocol routing handles the lighter analysis depth.
+> **`scope=quick` note**: quick mode runs Phase 1 only (snapshot data) and skips Phase 2 (regime) + Phase 2.5 (comps) + Phase 2.6 (xval) + Phase 3 DCF. The pipeline jumps straight to Phase 4 with snapshot-only inputs; investing-team protocol routing handles the lighter analysis depth.
 
 Single subprocess call per ticker. The merged `data-markets/scripts/pack.py --pack memo-fetch`
 facade auto-detects the market from the ticker and composes all required clients
@@ -255,6 +255,81 @@ evEbitda`). Phase 4 investing-team consumes this shape transparently —
 relative-valuation gates iterate the schema's multiple set rather than
 assuming a fixed-5 schema.
 
+### Phase 2.6 — xval Cross-Validation (US tickers only)
+
+**US tickers only.** `xval_source_a` / `xval_source_b` are SEC-specific keys
+`data-markets/scripts/pack_us.py::pack_memo_fetch` emits — non-US fetch packs
+never carry them. For a non-US ticker, skip this phase silently (no error,
+no `xval.json`) and note in the memo's Limitations section that xval
+cross-validation is US-only.
+
+**Layer discipline**: the COMPUTE runs **here** (this analysis phase), not
+in the data-markets pack layer — `pack_memo_fetch` only fetches + wraps the
+two source packs (`xval_source_a` doc-table cells, `xval_source_b`
+companyfacts), it never runs `xval_compute.py` itself. This mirrors the
+Phase 2.5 / Phase 3 split (comps/DCF compute in the analysis phase, not in
+`pack.py`), NOT `sec_narrative`'s eager-in-pack pattern.
+
+**Depth-1 status check** (mirrors the DCF/comps artifact-gate discipline):
+read `/tmp/${TICKER_SAFE}-fetch.json`'s `xval_source_a._status` and
+`xval_source_b._status`. If either key is **absent** or its `_status` is
+`"failed"`, this is a **loud skip** — do not run `xval_compute.py`, do not
+write `xval.json`, and note in the memo's Limitations section which side
+failed (e.g. "xval skipped: xval_source_b._status=failed,
+error=cik_unresolved"). Never fabricate an empty-but-present `xval.json` to
+paper over a failed/absent source. A `_status: "partial"` `xval_source_a`
+(some of the 4 primary statements failed, `failed_items` populated) still
+proceeds — the cells that did succeed are cross-validated; the memo's
+Limitations section separately discloses the partial per-statement gap from
+`failed_items`.
+
+**Else, extract + run:**
+
+```bash
+# 1. Extract the two xval source packs from the memo-fetch JSON.
+#    xval_source_a wraps FOUR per-statement envelopes under "statements"
+#    (BalanceSheet/IncomeStatement/CashFlowStatement/StatementOfEquity);
+#    xval_compute.py's --source-a expects ONE flat pack with a top-level
+#    "cells" list (mirrors the declared Source-A cell schema, whose own
+#    per-cell citation.statement_name already preserves which statement a
+#    cell came from) -- so flatten the 4 statements' cells into one list,
+#    same combine-then-single-call pattern report-screener-list uses for
+#    multi-country screener packs (SKILL.md's Step 3).
+#    xval_source_b is already the flat {cik, facts, ...} shape
+#    build_source_b_index expects -- pass it through as-is.
+python3 -c "
+import json, sys
+from pathlib import Path
+fetch = json.loads(Path(sys.argv[1]).read_text())
+src_a = fetch.get('xval_source_a', {})
+cells = [cell for stmt in src_a.get('statements', []) for cell in stmt.get('cells', [])]
+combined_a = {'accession': next((s['accession'] for s in src_a.get('statements', [])), None),
+              'statement_name': 'combined-primary-statements', 'cells': cells}
+print(json.dumps(combined_a))
+" /tmp/${TICKER_SAFE}-fetch.json > /tmp/${TICKER_SAFE}-xval-source-a.json
+
+python3 -c "
+import json, sys
+from pathlib import Path
+fetch = json.loads(Path(sys.argv[1]).read_text())
+print(json.dumps(fetch.get('xval_source_b', {})))
+" /tmp/${TICKER_SAFE}-fetch.json > /tmp/${TICKER_SAFE}-xval-source-b.json
+
+# 2. Run analysis-xval in compute mode
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/analysis-xval/scripts/xval_compute.py \
+  --source-a /tmp/${TICKER_SAFE}-xval-source-a.json \
+  --source-b /tmp/${TICKER_SAFE}-xval-source-b.json \
+  > /tmp/${TICKER_SAFE}-xval.json
+```
+
+**Artifact gate**: when this phase runs (non-US tickers and loud-skip cases
+are exempt), Phase 2.6 is not complete until `/tmp/${TICKER_SAFE}-xval.json`
+exists — verify with `ls /tmp/${TICKER_SAFE}-xval.json` before proceeding.
+
+Pass `/tmp/${TICKER_SAFE}-xval.json` to investing-team in Phase 4 alongside
+`dcf.json` / `comps.json` / `regime.json` (omit it from the Resource Paths
+list when this phase was skipped, and say so in the seed context instead).
+
 ### Phase 3 — Analysis
 
 Run pure-compute analysis skills on the Phase 1 fetch JSON.
@@ -285,17 +360,19 @@ Launch `domain-teams:investing-team` with the **Deep Equity Research Memo** prot
 
 **Per Cross-Plugin Delegation Contract (CLAUDE.md §Cross-Plugin Delegation Contract):**
 
-1. Pass **paths** to the Phase 1 / 2 / 2.5 / 3 JSONs as `### Resource Paths` — never file content. Specifically: `fetch.json` (Phase 1), `regime-card.json` (Phase 2), `comps.json` (Phase 2.5), `dcf.json` (Phase 3).
+1. Pass **paths** to the Phase 1 / 2 / 2.5 / 2.6 / 3 JSONs as `### Resource Paths` — never file content. Specifically: `fetch.json` (Phase 1), `regime-card.json` (Phase 2), `comps.json` (Phase 2.5), `xval.json` (Phase 2.6 — US tickers only; omit + state the skip reason when Phase 2.6 was skipped), `dcf.json` (Phase 3).
 2. Pass the ticker, scope, output_language, country code as `### Input` seed
    context — plus Phase 0's recall outcome (prior verdict/date/price/delta,
    or the no-hits/skipped fact) so investing-team can disclose it in the
    memo's Limitations section
-2b. The seed context MUST also carry the five verdict-layer defense elements
+2b. The seed context MUST also carry the six verdict-layer defense elements
    — `rule_verdict` (binding-or-gated), the pack-section inventory (generate
    via `scripts/pack_inventory.py`), date-anchoring rule, the
-   verbatim-disclosure pass bar, and the `sec_narrative` read-before-cite
+   verbatim-disclosure pass bar, the `sec_narrative` read-before-cite
    rule (US tickers: `text_path` is a path, not text — open it before
-   citing) — per
+   citing), and the `xval` read-before-cite rule (US tickers with an xval
+   report: check `high_alerts` before citing a statement-table number) —
+   per
    `references/phase4-seed-contract.md`, which also defines the
    orchestrator's acceptance greps on the returned memo
 3. The investing-team worker self-loads its standards / protocols / rubrics and runs the full gate stack — relative-valuation gates consume the structured `comps.json`, not prose
@@ -412,18 +489,19 @@ This skill is the canonical example of the contract codified in CLAUDE.md:
 
 - 日本語: 株式投資メモの編成層（Layer 3）。ticker から market を自動判定し、
   `data-markets` の memo-fetch / regime-pack を呼び出したうえで、
-  `analysis-dcf` + `analysis-macro-regime` + `analysis-comps` を pure compute で走らせ、Deep
+  `analysis-dcf` + `analysis-macro-regime` + `analysis-comps` + `analysis-xval`（US のみ）を pure compute で走らせ、Deep
   Equity Research Memo protocol（2 MUST + 4 SHOULD + 1 MAY gate）の実行を
   `domain-teams:investing-team` に委譲。最終整形は任意で
   `domain-teams:docs-team`。
 - 繁體中文: 權益投資備忘錄編排層（Layer 3）。依 ticker 自動判定市場，呼叫
   `data-markets` 的 memo-fetch / regime-pack，於
-  `analysis-dcf` + `analysis-macro-regime` + `analysis-comps` 進行純計算，再將 Deep Equity
+  `analysis-dcf` + `analysis-macro-regime` + `analysis-comps` + `analysis-xval`（僅美股）進行純計算，再將 Deep Equity
   Research Memo protocol（2 MUST + 4 SHOULD + 1 MAY 閘）委派給
   `domain-teams:investing-team`。最終排版可選 `domain-teams:docs-team`。
 - English: Layer 3 orchestrator for equity investment memos. Auto-detects
   the market from the ticker and calls `data-markets` memo-fetch / regime-pack,
-  runs `analysis-dcf` + `analysis-macro-regime` + `analysis-comps` (pure compute), delegates
+  runs `analysis-dcf` + `analysis-macro-regime` + `analysis-comps` + `analysis-xval`
+  (pure compute; xval is US-only), delegates
   the Deep Equity Research Memo protocol (2 MUST + 4 SHOULD + 1 MAY gates)
   to `domain-teams:investing-team`, optional final formatting via
   `domain-teams:docs-team`.

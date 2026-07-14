@@ -44,6 +44,7 @@ Task 1) carries no registered REQ-ids — see implementer report.
 from __future__ import annotations
 
 import importlib
+import importlib.util
 import sys
 from pathlib import Path
 from unittest import mock
@@ -52,6 +53,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 MARKETS_SCRIPTS = ROOT / "skills" / "data-markets" / "scripts"
+XVAL_SCRIPT = ROOT / "skills" / "analysis-xval" / "scripts" / "xval_compute.py"
 
 
 @pytest.fixture
@@ -295,6 +297,114 @@ def test_extract_raises_on_absent_statement(sec_client):
     assert result["error_class"] == "statement_not_found"
     assert result["statement_name"] == "CashFlowStatement"
     assert "CashFlowStatement" in result["error"]
+
+
+def _load_xval_compute():
+    """Load xval_compute.py directly via importlib (same convention as
+    tests/analysis/test_analysis_xval.py's `xval_module` fixture) so the
+    Source-B pack producer/consumer contract round-trip below exercises the
+    REAL `build_source_b_index`, not a re-implementation of its logic."""
+    spec = importlib.util.spec_from_file_location("xval_compute_roundtrip", XVAL_SCRIPT)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["xval_compute_roundtrip"] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _raw_companyfacts_payload():
+    """Mirror the REAL SEC companyfacts JSON nesting: `data["facts"][taxonomy][tag]`
+    is a units-object (label/description/units), NOT a bare row list — `units.USD`
+    carries the row series `summarize_concept` already knows how to flatten."""
+    return {
+        "cik": 320193,
+        "entityName": "Apple Inc.",
+        "facts": {
+            "us-gaap": {
+                "Revenues": {
+                    "label": "Revenues",
+                    "description": "Amount of revenue recognized from goods sold...",
+                    "units": {
+                        "USD": [
+                            {
+                                "start": "2023-10-01",
+                                "end": "2024-09-28",
+                                "val": 391035000000,
+                                "accn": "0000320193-24-000123",
+                                "fy": 2024,
+                                "fp": "FY",
+                                "form": "10-K",
+                                "filed": "2024-11-01",
+                                "frame": "CY2024",
+                            },
+                        ]
+                    },
+                }
+            }
+        },
+    }
+
+
+def test_build_companyfacts_pack_shape(sec_client):
+    """Task 1 (plan: docs/loom/plans/2026-07-13-us-sec-xval-memo-wiring.md) —
+    the Open-Q2 keystone: `build_companyfacts_pack(cik)` fetches via the
+    existing `fetch_facts` and reshapes the raw companyfacts payload into the
+    EXACT Source-B pack shape `xval_compute.build_source_b_index` requires:
+    `{"cik", "facts": {"<taxonomy>": {"<tag>": [<row>, ...]}}}`, each row in
+    the `summarize_concept` shape."""
+    cik = 320193
+    fetched = {
+        "cik": cik,
+        "concept": None,
+        "fetched_at": "2026-07-13T00:00:00Z",
+        "_cache": "miss",
+        "data": _raw_companyfacts_payload(),
+    }
+    with mock.patch.object(sec_client, "fetch_facts", return_value=fetched) as mocked:
+        pack = sec_client.build_companyfacts_pack(cik)
+
+    mocked.assert_called_once_with(cik, None)
+    assert pack["cik"] == cik
+    assert set(pack["facts"].keys()) == {"us-gaap"}
+    rows = pack["facts"]["us-gaap"]["Revenues"]
+    assert rows == [
+        {
+            "start": "2023-10-01",
+            "end": "2024-09-28",
+            "value": 391035000000,
+            "accn": "0000320193-24-000123",
+            "form": "10-K",
+            "fy": 2024,
+            "fp": "FY",
+            "filed": "2024-11-01",
+        }
+    ], "each row must be exactly the summarize_concept shape (start/end/value/accn/form/fy/fp/filed)"
+
+    # Contract round-trip (the seam that bit the arc): the built pack must
+    # feed the REAL build_source_b_index without error and produce a
+    # non-empty index, proving the producer emits exactly what the consumer
+    # needs.
+    xval_compute = _load_xval_compute()
+    index = xval_compute.build_source_b_index(pack)
+    assert index, "round-trip through build_source_b_index must be non-empty"
+    assert ("us-gaap:Revenues", ("duration", "2023-10-01", "2024-09-28")) in index
+
+
+def test_build_companyfacts_pack_returns_error_slot_on_fetch_failure(sec_client):
+    """On a companyfacts fetch error, `build_companyfacts_pack` must return a
+    loud error slot (mirroring this file's `_acquire_error` convention) —
+    NEVER a fabricated/empty Source-B pack."""
+    cik = 320193
+    with mock.patch.object(
+        sec_client,
+        "fetch_facts",
+        return_value={"error": "SEC EDGAR rate-limited (429) after retries"},
+    ):
+        pack = sec_client.build_companyfacts_pack(cik)
+
+    assert "error" in pack
+    assert "error_class" in pack
+    assert "facts" not in pack, "a fetch failure must never fabricate a Source-B pack"
 
 
 def test_extract_statement_cells_logs_on_row_index_miss(sec_client, capsys):

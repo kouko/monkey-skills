@@ -94,8 +94,9 @@ def build_source_b_index(source_b_pack: dict) -> dict:
     or derive facts from, a Source-A doc-table cells pack.
 
     Source-B pack shape consumed here (declared producer/consumer contract;
-    the data-markets side of a full companyfacts-pack fetcher isn't wired
-    yet — plan Notes §Open question Q2):
+    the data-markets producer is `sec_edgar_client.py::build_companyfacts_pack`,
+    which flattens the raw companyfacts `units.USD` into this exact shape —
+    do NOT re-implement that flatten, reuse the producer):
       {"cik": <int>, "facts": {"<taxonomy>": {"<tag>": [<rows>]}}}
     where each row is exactly `sec_edgar_client.py::summarize_concept()`'s
     output shape: {start, end, value, accn, form, fy, fp, filed} — no
@@ -119,10 +120,11 @@ def build_source_b_index(source_b_pack: dict) -> dict:
     filings' values for the same period — T12 must key differently (e.g.
     list-per-key or include `accn` in the key), not reuse this last-wins index.
 
-    Q2 (real companyfacts fetcher, not wired yet): the live SEC endpoint nests
-    rows one level deeper — `data["facts"][taxonomy][tag]["units"]["USD"]` —
-    so whoever builds the producer must flatten `units.USD` into the per-tag
-    row list this consumer expects, not pass the raw endpoint dict through.
+    Real companyfacts nesting (handled by the producer): the live SEC endpoint
+    nests rows one level deeper — `data["facts"][taxonomy][tag]["units"]["USD"]`
+    — and `build_companyfacts_pack` flattens `units.USD` (via `summarize_concept`)
+    into the per-tag row list this consumer expects; it never passes the raw
+    endpoint dict through. Live-verified end-to-end on AAPL (memo-wiring slice).
     """
     if "cells" in source_b_pack:
         raise ValueError(
