@@ -35,6 +35,12 @@ The module surface:
   required, non-empty) or FLAGGED -> DISMISSED. A rejected identity leaves
   the break FLAGGED and its review-item OPEN; adjudicating an
   already-resolved break, or an unknown break_id, is rejected loud.
+- `apply_break(company, break_id, break_period)` (slice 7) is the
+  MECHANICAL follow-through of a prior `confirm_break` — no second human
+  adjudication, so it does NOT call `review_queue.adjudicate`. Requires
+  the break is CONFIRMED; transitions CONFIRMED -> APPLIED and records
+  `break_period`. Rejects loud (unchanged) on FLAGGED / DISMISSED /
+  already-APPLIED / unknown break_id.
 - a thin argparse CLI (`detect` / `flag` / `confirm` / `dismiss` / `list`)
   wraps the above with the same fail-loud exit-code convention as
   `kpi_schema.py`'s CLI (0 success / 1 ValueError / 2 malformed or
@@ -339,6 +345,53 @@ def dismiss_break(
         new_status="DISMISSED", adjudicated_at=adjudicated_at,
         extra_fields={},
     )
+
+
+def apply_break(company: str, break_id: str, break_period: str) -> dict:
+    """Apply a CONFIRMED break-event for `company`, transitioning it
+    CONFIRMED -> APPLIED and recording `break_period` (the period at/after
+    which the dual as-reported/recast series split occurs, slice 7).
+
+    Unlike `confirm_break`/`dismiss_break`, this is NOT a human-confirm
+    step — the human already adjudicated the break via `confirm_break`.
+    Applying is a mechanical follow-through of that prior decision, so it
+    does NOT call `review_queue.adjudicate` (there is no review-item left
+    to resolve; `confirm_break` already closed it). Only the CONFIRMED ->
+    APPLIED transition is legal here: a break that is FLAGGED (never
+    confirmed), DISMISSED, or already APPLIED is rejected loud, unchanged.
+
+    Lock-guarded read-modify-write via `_store_fs`, mirroring
+    `confirm_break`'s store write (but without the review-queue call).
+    """
+    if not break_period:
+        raise ValueError(
+            f"kpi_break.apply_break: break_period is required (empty/None for "
+            f"break {break_id!r}) — nothing written"
+        )
+    path = _break_path(company)
+    lock_file = _store_fs._acquire_series_lock(path)
+    try:
+        envelope = _load_break_file(path)
+        record = _find_break(envelope, break_id)
+        if record is None:
+            raise ValueError(
+                f"kpi_break: unknown break_id {break_id!r} for {company!r} — "
+                "nothing to apply"
+            )
+        if record["status"] != "CONFIRMED":
+            raise ValueError(
+                f"kpi_break: break {break_id!r} is not CONFIRMED "
+                f"(status={record['status']!r}) — illegal transition, "
+                "nothing written"
+            )
+
+        record["status"] = "APPLIED"
+        record["break_period"] = break_period
+        _store_fs._atomic_write(path, envelope)
+    finally:
+        _store_fs._release_series_lock(lock_file)
+
+    return record
 
 
 def _read_json_arg(args) -> object:

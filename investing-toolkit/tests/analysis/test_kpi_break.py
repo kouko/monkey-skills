@@ -259,6 +259,86 @@ def test_confirm_and_dismiss_break_via_human_seam(kpi_break_module, tmp_path, mo
         dismiss_break("AAPL", "nonexistent", adjudicated_by="alice")
 
 
+def test_apply_break_confirmed_to_applied(kpi_break_module, tmp_path, monkeypatch):
+    """apply_break(company, break_id, break_period) is the MECHANICAL
+    follow-through of a slice-6 human confirm — it requires the break is
+    already CONFIRMED (flag_break -> confirm_break happened earlier) and
+    transitions CONFIRMED -> APPLIED, recording `break_period` on the
+    record. Unlike confirm_break/dismiss_break it does NOT call
+    review_queue.adjudicate — the human already confirmed; applying is not
+    a second human-confirm decision.
+
+    Why this matters: if apply_break accepted a FLAGGED or DISMISSED break,
+    a break-event could be "applied" to a series split without ever having
+    been reviewed by a human — exactly the adjudication bypass the
+    CONFIRMED-only guard exists to prevent.
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+
+    flag_break = kpi_break_module.flag_break
+    confirm_break = kpi_break_module.confirm_break
+    apply_break = kpi_break_module.apply_break
+    get_break = kpi_break_module.get_break
+
+    candidate = {
+        "trigger": "resegmentation",
+        "detail": {"prev_segments": ["iPhone"], "curr_segments": ["iPhone", "Wearables"]},
+    }
+    mapping = {"iPhone": "iPhone", "Wearables": "Wearables (new)"}
+
+    # (a) happy path: flag -> confirm(mapping, by="alice") -> apply_break
+    # (break_period="FY2024") -> APPLIED, break_period stored.
+    record = flag_break("AAPL", "v1", candidate, review_item_id="ri-apply-1")
+    break_id = record["break_id"]
+    confirm_break("AAPL", break_id, adjudicated_by="alice", mapping=mapping)
+    applied = apply_break("AAPL", break_id, break_period="FY2024")
+    assert applied["status"] == "APPLIED"
+    assert applied["break_period"] == "FY2024"
+    fetched = get_break("AAPL", break_id)
+    assert fetched["status"] == "APPLIED"
+    assert fetched["break_period"] == "FY2024"
+
+    # (b) apply on a FLAGGED break (never confirmed) -> raises, stays
+    # FLAGGED, no break_period recorded.
+    flagged_record = flag_break("AAPL", "v1", candidate, review_item_id="ri-apply-2")
+    flagged_id = flagged_record["break_id"]
+    with pytest.raises(ValueError):
+        apply_break("AAPL", flagged_id, break_period="FY2024")
+    still_flagged = get_break("AAPL", flagged_id)
+    assert still_flagged["status"] == "FLAGGED"
+    assert "break_period" not in still_flagged
+
+    # (c) apply on a DISMISSED break -> raises AND stays DISMISSED (unchanged).
+    dismissed_record = flag_break("AAPL", "v1", candidate, review_item_id="ri-apply-3")
+    dismissed_id = dismissed_record["break_id"]
+    kpi_break_module.dismiss_break("AAPL", dismissed_id, adjudicated_by="carol")
+    with pytest.raises(ValueError):
+        apply_break("AAPL", dismissed_id, break_period="FY2024")
+    still_dismissed = get_break("AAPL", dismissed_id)
+    assert still_dismissed["status"] == "DISMISSED"
+    assert "break_period" not in still_dismissed
+
+    # (d) apply on an already-APPLIED break -> raises (no double-apply) AND the
+    # original break_period is NOT overwritten (nothing written on rejection).
+    with pytest.raises(ValueError):
+        apply_break("AAPL", break_id, break_period="FY2025")
+    still_applied = get_break("AAPL", break_id)
+    assert still_applied["status"] == "APPLIED"
+    assert still_applied["break_period"] == "FY2024", "rejected re-apply must not overwrite"
+
+    # (e) unknown break_id -> raises.
+    with pytest.raises(ValueError):
+        apply_break("AAPL", "nonexistent", break_period="FY2024")
+
+    # (f) empty break_period on an otherwise-confirmed break -> raises, unchanged.
+    empty_record = flag_break("AAPL", "v1", candidate, review_item_id="ri-apply-4")
+    empty_id = empty_record["break_id"]
+    confirm_break("AAPL", empty_id, adjudicated_by="dave", mapping=mapping)
+    with pytest.raises(ValueError):
+        apply_break("AAPL", empty_id, break_period="")
+    assert get_break("AAPL", empty_id)["status"] == "CONFIRMED"
+
+
 def test_cli_detect_flag_confirm_roundtrip(tmp_path):
     """Task 4: the kpi_break.py CLI's `detect`/`flag`/`confirm`/`list`
     subcommands round-trip a break-event through real subprocess
