@@ -13,10 +13,10 @@ trusted. The queue file is the single source of pending work: enqueue appends
 an OPEN item; later slices list the OPEN items, adjudicate them (carrying an
 immutable append-only adjudicator identity), and reopen resolved items.
 
-This slice ships the scaffold + `enqueue(item)` only (plan
-docs/loom/plans/2026-07-14-operational-kpi-review-queue.md, Task 1);
-list_open / adjudicate / reopen / the confirm-seam authorization boundary /
-the CLI are later tasks.
+This slice ships the full library surface (enqueue / list_open / adjudicate /
+reopen / the confirm-seam authorization boundary) plus a thin `enqueue` /
+`list` / `adjudicate` CLI (plan
+docs/loom/plans/2026-07-14-operational-kpi-review-queue.md, Tasks 1-7).
 
 Durable-dir resolution is REUSED from slice-1 `kpi_store.resolve_store_dir`
 (same-skill import below), NOT re-implemented and NOT sourced from cache_util:
@@ -33,6 +33,7 @@ guard.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 import tempfile
@@ -265,3 +266,99 @@ def reopen(review_item_id: str) -> None:
         _atomic_write(path, envelope)
     finally:
         kpi_store._release_series_lock(lock_file)
+
+
+def _cli_enqueue(args: argparse.Namespace) -> int:
+    """`enqueue` subcommand: read ONE item as JSON from `--file` (or stdin
+    when omitted), call `enqueue(item)`. Mirrors kpi_store._cli_append's
+    exit-code contract: malformed JSON or a non-object -> 2 (nothing
+    written); a rejection (ValueError) -> 1; success -> 0.
+    """
+    if args.file is not None:
+        raw = Path(args.file).read_text(encoding="utf-8")
+    else:
+        raw = sys.stdin.read()
+
+    try:
+        item = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        print(f"review_queue enqueue: invalid JSON input: {exc}", file=sys.stderr)
+        return 2
+
+    if not isinstance(item, dict):
+        print(
+            "review_queue enqueue: expected a JSON object (item), got "
+            f"{type(item).__name__} — nothing written",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        enqueue(item)
+    except ValueError as exc:
+        print(f"review_queue enqueue: {exc}", file=sys.stderr)
+        return 1
+    return 0
+
+
+def _cli_list(args: argparse.Namespace) -> int:
+    """`list` subcommand: print the OPEN items as a JSON array to stdout."""
+    json.dump(list_open(), sys.stdout, ensure_ascii=False)
+    sys.stdout.write("\n")
+    return 0
+
+
+def _cli_adjudicate(args: argparse.Namespace) -> int:
+    """`adjudicate` subcommand: call `adjudicate(id, decision,
+    adjudicated_by=by, resolution=..., adjudicated_at=...)`. A rejection
+    (unknown id, illegal transition, or the confirm-seam auth guard) is a
+    ValueError -> exit 1; argparse itself handles missing required args
+    with its own exit 2.
+    """
+    try:
+        adjudicate(
+            args.id, args.decision, adjudicated_by=args.by,
+            resolution=args.resolution, adjudicated_at=args.at,
+        )
+    except ValueError as exc:
+        print(f"review_queue adjudicate: {exc}", file=sys.stderr)
+        return 1
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Review-item queue CLI (enqueue / list / adjudicate)."
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    enqueue_parser = subparsers.add_parser(
+        "enqueue", help="Append one review-item (JSON) to the queue."
+    )
+    enqueue_parser.add_argument(
+        "--file", type=Path, default=None,
+        help="Path to a JSON file holding the item (default: read stdin).",
+    )
+    enqueue_parser.set_defaults(func=_cli_enqueue)
+
+    list_parser = subparsers.add_parser(
+        "list", help="Print the OPEN review-items as a JSON array."
+    )
+    list_parser.set_defaults(func=_cli_list)
+
+    adjudicate_parser = subparsers.add_parser(
+        "adjudicate", help="Resolve an OPEN review-item."
+    )
+    adjudicate_parser.add_argument("--id", required=True, dest="id")
+    adjudicate_parser.add_argument("--decision", required=True)
+    adjudicate_parser.add_argument("--by", required=True, dest="by")
+    adjudicate_parser.add_argument("--resolution", default=None)
+    adjudicate_parser.add_argument("--at", default=None, dest="at")
+    adjudicate_parser.set_defaults(func=_cli_adjudicate)
+
+    args = parser.parse_args()
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

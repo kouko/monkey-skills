@@ -20,6 +20,8 @@ from __future__ import annotations
 import concurrent.futures
 import importlib.util
 import json
+import os
+import subprocess
 import sys
 import threading
 import time
@@ -496,4 +498,98 @@ def test_adjudicate_rejects_whitespace_only_adjudicated_by(
     assert "adjudications" not in stored, (
         "a rejected whitespace-only self-confirm attempt must append no "
         "adjudication record"
+    )
+
+
+def test_cli_enqueue_list_adjudicate_roundtrip(tmp_path):
+    """Task 7: the review_queue.py CLI's `enqueue`, `list`, and `adjudicate`
+    subcommands round-trip a review item through real subprocess invocations
+    (not the library surface directly) — the CLI is a thin wrapper over
+    enqueue/list_open/adjudicate, not a reimplementation, mirroring
+    test_kpi_store.py::test_cli_append_then_query_roundtrip.
+
+    enqueue a valid item via stdin -> list shows it OPEN -> adjudicate
+    (approve) -> list no longer shows it (resolved).
+    """
+    env = {**os.environ, "KPI_STORE_DIR": str(tmp_path)}
+    item = {
+        "review_item_id": "rev-cli-0001",
+        "subject_type": "kpi_point",
+        "subject_id": "AAPL:iphone_units:FY2024",
+        "reason": "value deviates >20% from prior as_of",
+        "created_at": "2026-07-14T09:00:00Z",
+    }
+
+    enqueue_result = subprocess.run(
+        ["uv", "run", "--script", str(REVIEW_QUEUE_SCRIPT), "enqueue"],
+        input=json.dumps(item),
+        capture_output=True, text=True, timeout=60, env=env,
+    )
+    assert enqueue_result.returncode == 0, (
+        f"enqueue subcommand failed: stdout={enqueue_result.stdout!r} "
+        f"stderr={enqueue_result.stderr!r}"
+    )
+
+    def run_list():
+        result = subprocess.run(
+            ["uv", "run", "--script", str(REVIEW_QUEUE_SCRIPT), "list"],
+            capture_output=True, text=True, timeout=60, env=env,
+        )
+        assert result.returncode == 0, (
+            f"list subcommand failed: stdout={result.stdout!r} "
+            f"stderr={result.stderr!r}"
+        )
+        return json.loads(result.stdout)
+
+    open_items = run_list()
+    assert [i["review_item_id"] for i in open_items] == ["rev-cli-0001"], (
+        f"expected the enqueued item OPEN in list output, got {open_items!r}"
+    )
+    assert open_items[0]["status"] == "OPEN"
+
+    adjudicate_result = subprocess.run(
+        [
+            "uv", "run", "--script", str(REVIEW_QUEUE_SCRIPT), "adjudicate",
+            "--id", "rev-cli-0001", "--decision", "approve", "--by", "alice",
+        ],
+        capture_output=True, text=True, timeout=60, env=env,
+    )
+    assert adjudicate_result.returncode == 0, (
+        f"adjudicate subcommand failed: stdout={adjudicate_result.stdout!r} "
+        f"stderr={adjudicate_result.stderr!r}"
+    )
+
+    remaining_open = run_list()
+    assert remaining_open == [], (
+        "after adjudication the item must no longer appear in list (OPEN) "
+        f"output, got {remaining_open!r}"
+    )
+
+
+def test_cli_enqueue_fail_loud_exit_codes(tmp_path):
+    """The CLI's reason for existing is fail-loud exit codes — assert them at
+    the subprocess boundary, mirroring
+    test_kpi_store.py::test_cli_append_fail_loud_exit_codes:
+      - malformed JSON on stdin -> exit 2;
+      - valid JSON that is not an object (a list) -> exit 2, no traceback,
+        nothing written.
+    """
+    env = {**os.environ, "KPI_STORE_DIR": str(tmp_path)}
+
+    def run_enqueue(stdin_text):
+        return subprocess.run(
+            ["uv", "run", "--script", str(REVIEW_QUEUE_SCRIPT), "enqueue"],
+            input=stdin_text, capture_output=True, text=True, timeout=60, env=env,
+        )
+
+    malformed = run_enqueue("this is not json")
+    assert malformed.returncode == 2, malformed.stderr
+
+    not_a_dict = run_enqueue("[1, 2]")
+    assert not_a_dict.returncode == 2, not_a_dict.stderr
+    assert "Traceback" not in not_a_dict.stderr, (
+        "a non-object item must fail cleanly, not with a raw traceback"
+    )
+    assert list(tmp_path.rglob("*.json")) == [], (
+        "a rejected non-object item must write nothing"
     )

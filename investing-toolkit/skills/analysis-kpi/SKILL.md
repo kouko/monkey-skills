@@ -82,3 +82,43 @@ uv run scripts/kpi_store.py query --as-of 2024-12-31 \
 and exits **1** — fail loud, nothing written. `query` prints the matched
 record as JSON to stdout (or `null` if none matched) and exits **0**.
 `--latest` and `--as-of` are mutually exclusive and one is required.
+
+## CLI (review_queue)
+
+`scripts/review_queue.py` — the review-item queue + human-confirm seam
+(slice 2). Reuses `kpi_store.resolve_store_dir` for the durable dir
+(`KPI_STORE_DIR` env override applies here too).
+
+```
+# enqueue: reads ONE review-item as JSON from stdin (or --file PATH)
+echo '{"review_item_id": "rev-0001", "subject_type": "kpi_point", \
+  "subject_id": "AAPL:iphone_units:FY2024", \
+  "reason": "value deviates >20% from prior as_of", \
+  "created_at": "2026-07-14T09:00:00Z"}' \
+  | uv run scripts/review_queue.py enqueue
+
+# list: print the OPEN items as a JSON array
+uv run scripts/review_queue.py list
+
+# adjudicate: resolve an OPEN item
+uv run scripts/review_queue.py adjudicate \
+    --id rev-0001 --decision approve --by alice \
+    --resolution "confirmed correct against 10-K"
+```
+
+| Subcommand   | Flag          | Required | Notes                                                        |
+|--------------|---------------|----------|---------------------------------------------------------------|
+| `enqueue`    | `--file`      | no       | Path to a JSON file holding the item (default: read stdin)    |
+| `adjudicate` | `--id`        | yes      | The `review_item_id` to resolve                               |
+| `adjudicate` | `--decision`  | yes      | One of `approve` / `reject` / `edit`                           |
+| `adjudicate` | `--by`        | yes      | Human adjudicator identity (`adjudicated_by`) — never empty    |
+| `adjudicate` | `--resolution`| no       | Free-text resolution note                                      |
+| `adjudicate` | `--at`        | no       | Caller-supplied `adjudicated_at` timestamp                     |
+
+`enqueue` exits **0** on success; a rejection (ValueError) exits **1**;
+malformed JSON or a non-object item exits **2** — same fail-loud contract as
+`kpi_store append`. `list` prints the OPEN items as a JSON array to stdout
+and exits **0**. `adjudicate` exits **0** on success; an unknown id, an
+illegal transition (item not OPEN), or the confirm-seam auth guard (empty/
+pipeline `adjudicated_by`) rejects loud and exits **1**; a missing required
+flag is handled by argparse itself and exits **2**.
