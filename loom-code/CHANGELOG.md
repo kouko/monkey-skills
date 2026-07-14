@@ -16,8 +16,8 @@ Versioning: [Semantic Versioning](https://semver.org/).
   `docs/loom/research/` instead of bloating the pin. Adds the worker
   research-packet contract (what each dispatched subagent receives) and
   degradation notes: WebSearch-unavailable falls back to an explicit report
-  plus the arm-2 fallback path; the Codex host has no background-agent
-  primitive and falls back to a sequential research floor.
+  plus the arm-2 fallback path; a Codex host falls back to a sequential
+  research floor when parallel fan-out is unavailable.
 - **`kickoff-briefing.md` §(f) single-fork case**: now fires one background
   research subagent instead of doing the research inline.
 
