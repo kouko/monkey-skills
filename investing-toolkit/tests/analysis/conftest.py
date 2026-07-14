@@ -36,6 +36,7 @@ KPI_SCHEMA_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_schema.py"
 KPI_VALIDATE_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_validate.py"
 KPI_GATE_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_gate.py"
 KPI_BREAK_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_break.py"
+KPI_SERIES_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_series.py"
 
 
 def run_script(script: Path, *args: str, timeout: int = 60) -> subprocess.CompletedProcess:
