@@ -166,6 +166,33 @@ marginal benefit is small but its cost (a few chars at the end)
 is also small — include it if your repo's prompts are routinely
 non-English; skip it otherwise.
 
+## Token economy: three cutting rules
+
+Principle 5 says HOW MUCH; these rules say HOW to cut. Framing:
+model-invoked descriptions cost **context load** — every description
+is re-paid in the system prompt each session, whether or not the
+skill fires. User-invoked (slash-command) skills cost **cognitive
+load** — the human must remember they exist; the cure for cognitive
+load is a router skill, not a longer description. Decide what a
+description must carry by which currency it spends.
+
+1. **One trigger per branch.** Each distinct routing branch gets one
+   trigger phrase. Piling variant phrasings onto the same branch is
+   duplication — it buys no new routing, only chars.
+2. **Synonyms = duplication.** An English synonym of an existing
+   trigger adds cost, not recall — the matcher already covers it
+   semantically. Carve-out: Principle 6's multilingual keyword belt
+   (中/日 trigger words) is NOT synonym-duplication — different
+   languages are distinct routing surfaces; keep them.
+3. **Cut identity already in the body.** The body loads on
+   activation, so the description must not restate what the skill
+   IS when the body says it. Budget goes to WHEN / triggers.
+   Principle 1's one-sentence WHAT is exempt — identity restatement
+   means anything beyond that one-liner.
+
+Rules ported from Matt Pocock's `mattpocock/skills` repository,
+`writing-great-skills` (MIT License, © 2026 Matt Pocock).
+
 ## Length is rendered, not source
 
 YAML's `>-` (block-folded with chomp-strip) joins newlines with
@@ -199,6 +226,10 @@ Before shipping a description, verify:
       250 soft lint line; router/CONDITIONAL exception ≤500 only with
       firing evidence (audit via YAML parse, not source lines)
 - [ ] No workflow / process steps ("first do A, then B, then C")
+- [ ] No English synonym pairs among triggers — one trigger per
+      routing branch (multilingual belt keywords exempt)
+- [ ] No identity restatement the SKILL.md body already carries
+      (Principle 1's one-sentence WHAT is exempt)
 - [ ] No vague filler ("helps with documents", "does stuff with files")
 - [ ] If multilingual repo: short keyword belt at end, ≤ 50 chars
 - [ ] If close skills exist: explicit negative trigger ("Do NOT use
