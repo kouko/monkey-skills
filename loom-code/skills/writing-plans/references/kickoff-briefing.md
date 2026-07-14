@@ -78,6 +78,19 @@ finding too large for a pin lands as a file under
 at that file. The pay-per-hit rule above is untouched: zero
 researchable forks means zero subagents dispatched.
 
+**Degradation — WebSearch unavailable.** A worker that finds WebSearch
+unavailable mid-research reports the limitation per
+`axis4-research-protocol.md`'s `## If WebSearch is unavailable` section
+(pointer, not restated) — report the gap, never imagine alternatives
+unflagged. That fork then falls back to triage arm 2 (direct ask,
+vintage-flagged) instead of completing as a researched pin.
+
+**Degradation — Codex host.** When the host cannot fan out in parallel,
+sequential dispatch of the same M workers is the floor — the lane's
+research-then-pin semantics hold unchanged; host tool mappings stay
+owned by `using-loom-code/references/{claude-code-tools,codex-tools}.md`
+(pointer only, not restated here).
+
 Record each resolved fork in the plan's existing `## Notes` section,
 one line per fork, in this exact pinned format — it is the grep key
 SDD's dispatch step reads:
