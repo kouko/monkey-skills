@@ -92,3 +92,7 @@
 - Blast radius (recon): no committed test asserts `kickoff-briefing.md` content — prose RED checks are the grep diagnostics above. Consumers `subagent-driven-development/SKILL.md:34,:128` and `writing-plans/SKILL.md:119` reference the file by pointer only; the `Kickoff decision:` pin format is unchanged, so zero downstream schema impact.
 - Tasks 1-3 all edit the same file — no parallel eligibility anywhere in this plan; SDD sequential dispatch throughout. Tasks 2 and 3 sit at the same dependency level (both need only Task 1) but share `Files touched`, so they stay sequential in listed order — Task 3's pointer sentence needs §(b)'s packet (Task 1), not Task 2's degradation notes.
 - marketplace.json needs no edit: it carries per-plugin description (unchanged), not version (recon fact 7).
+
+## Decision Log
+
+1. chose host-agnostic conditional wording for the CHANGELOG's Codex note ("falls back to a sequential research floor when parallel fan-out is unavailable") because live verification shows Codex 0.139 can spawn subagents, so an absolute "no background-agent primitive" claim was false — cost-of-change: none; the conditional stays true whichever way host capabilities move
