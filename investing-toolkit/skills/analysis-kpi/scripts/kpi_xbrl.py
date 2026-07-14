@@ -139,3 +139,61 @@ def facts_to_points(
             }
         )
     return points
+
+
+def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
+    """Resolve an era-specific logical-KPI binding: `binding` =
+    `{kpi_id, sources: [{concept, axis, member, fy_min, fy_max, source_kind}]}`.
+
+    Each fact is matched against `sources` — a source matches when
+    concept+axis+member are equal AND the fact's fiscal year (derived from
+    `period_end[:4]`, same as `facts_to_points` — never the raw `fiscal_year`
+    field) falls within `[fy_min, fy_max]`. A matched fact is emitted (via
+    `facts_to_points`, reusing its provenance mapping) under the single
+    logical `kpi_id`. A fact matching no source is skipped, never fabricated.
+    A fact matching more than one source RAISES — an ambiguous binding.
+    """
+    kpi_id = binding["kpi_id"]
+    sources = binding["sources"]
+
+    facts_by_source_idx: list[list[dict]] = [[] for _ in sources]
+
+    for fact in fact_pack.get("facts", []):
+        matched_indices = []
+        for idx, source in enumerate(sources):
+            selector = {
+                "concept": source["concept"],
+                "axis": source.get("axis"),
+                "member": source.get("member"),
+            }
+            if not _fact_matches(fact, selector):
+                continue
+            fiscal_year = int(_require_period(fact))
+            if source["fy_min"] <= fiscal_year <= source["fy_max"]:
+                matched_indices.append(idx)
+
+        if len(matched_indices) > 1:
+            raise ValueError(
+                f"kpi_xbrl.resolve_binding: fact matches {len(matched_indices)} "
+                f"sources for kpi_id {kpi_id!r} (concept={fact.get('concept')!r}, "
+                f"period_end={fact.get('period_end')!r}) — ambiguous binding, "
+                f"never resolved arbitrarily"
+            )
+        if matched_indices:
+            facts_by_source_idx[matched_indices[0]].append(fact)
+
+    points = []
+    for idx, source in enumerate(sources):
+        matched_facts = facts_by_source_idx[idx]
+        if not matched_facts:
+            continue
+        sub_pack = {"company": fact_pack.get("company"), "facts": matched_facts}
+        selector = {
+            "concept": source["concept"],
+            "axis": source.get("axis"),
+            "member": source.get("member"),
+        }
+        points.extend(
+            facts_to_points(sub_pack, kpi_id, selector, company, source["source_kind"])
+        )
+    return points

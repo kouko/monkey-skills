@@ -134,3 +134,94 @@ def test_facts_to_points_malformed_period_end_raises(kpi_xbrl_module, fact_pack)
         kpi_xbrl_module.facts_to_points(
             mutated, "iphone_revenue", NEW_IPHONE_MATCH, "AAPL", "xbrl-dimensional"
         )
+
+
+IPHONE_REVENUE_BINDING = {
+    "kpi_id": "iphone_revenue",
+    "sources": [
+        {
+            "concept": "us-gaap:SalesRevenueNet",
+            "axis": "us-gaap:ProductOrServiceAxis",
+            "member": "aapl:AppleIphoneMember",
+            "fy_min": 2007,
+            "fy_max": 2017,
+            "source_kind": "xbrl-dimensional",
+        },
+        {
+            "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+            "axis": "srt:ProductOrServiceAxis",
+            "member": "aapl:IPhoneMember",
+            "fy_min": 2018,
+            "fy_max": 2099,
+            "source_kind": "xbrl-dimensional",
+        },
+    ],
+}
+
+
+def test_resolve_binding_stitches_two_eras_into_one_kpi_id(kpi_xbrl_module, fact_pack):
+    """Task 2 GREEN: the iphone_revenue binding resolves the fixture's
+    FY2016 (OLD-era SalesRevenueNet) + FY2024 + FY2025 (NEW-era
+    RevenueFromContract) iPhone facts all under kpi_id "iphone_revenue" —
+    a multi-facet remap stitching two tagging eras into one logical KPI.
+    The GrossProfit facts match no iphone source and are skipped, not
+    fabricated.
+    """
+    points = kpi_xbrl_module.resolve_binding(fact_pack, IPHONE_REVENUE_BINDING, "AAPL")
+
+    assert len(points) == 3
+    assert all(p["kpi_id"] == "iphone_revenue" for p in points)
+    periods = sorted(p["period"] for p in points)
+    assert periods == ["2016", "2024", "2025"]
+
+    by_period = {p["period"]: p for p in points}
+    assert by_period["2016"]["value"] == 136700000000
+    assert by_period["2016"]["source_cell_ref"] == (
+        "us-gaap:SalesRevenueNet|aapl:AppleIphoneMember"
+    )
+    assert by_period["2024"]["value"] == 201183000000
+    assert by_period["2025"]["value"] == 209586000000
+    assert by_period["2025"]["source_cell_ref"] == (
+        "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax|aapl:IPhoneMember"
+    )
+
+    # GrossProfit facts match no iphone source — skipped, not fabricated.
+    assert not any(p["source_cell_ref"].startswith("us-gaap:GrossProfit") for p in points)
+
+
+AMBIGUOUS_OVERLAPPING_BINDING = {
+    "kpi_id": "iphone_revenue",
+    "sources": [
+        {
+            "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+            "axis": "srt:ProductOrServiceAxis",
+            "member": "aapl:IPhoneMember",
+            "fy_min": 2018,
+            "fy_max": 2099,
+            "source_kind": "xbrl-dimensional",
+        },
+        {
+            # Same concept+axis+member as the source above, with an
+            # OVERLAPPING fy range — any NEW-era iPhone fact (e.g. the
+            # fixture's FY2025 fact) falls inside both [2018,2099] and
+            # [2020,2099], so it matches two sources at once.
+            "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+            "axis": "srt:ProductOrServiceAxis",
+            "member": "aapl:IPhoneMember",
+            "fy_min": 2020,
+            "fy_max": 2099,
+            "source_kind": "xbrl-dimensional",
+        },
+    ],
+}
+
+
+def test_resolve_binding_raises_on_ambiguous_multi_source_match(kpi_xbrl_module, fact_pack):
+    """The >1-source-match RAISE branch is the anti-fabrication guard: a
+    fact matching two sources at once must never be resolved to one of
+    them arbitrarily. Two sources here share concept+axis+member with
+    OVERLAPPING fy ranges, so the fixture's real FY2025 iPhone fact
+    matches both — resolve_binding MUST raise, not silently pick one.
+    """
+    with pytest.raises(ValueError, match="ambiguous"):
+        kpi_xbrl_module.resolve_binding(fact_pack, AMBIGUOUS_OVERLAPPING_BINDING, "AAPL")
