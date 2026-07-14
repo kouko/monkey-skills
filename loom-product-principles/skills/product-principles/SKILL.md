@@ -1,7 +1,12 @@
 ---
 name: product-principles
-description: |
-  Turn a sparse product idea into a PRINCIPLES.md project constitution — a north star + 3-7 falsifiable Product Principles, plus optional Design Principles and Engineering Principles, governing design/spec/code. Use BEFORE design/spec/build on a new product, and when the user asks what principles should guide a product/design/engineering decision or how to frame a trade-off. Triggers: product principles, project constitution, north star, 產品原則, 設計原則, 工程原則, 產品憲章, プロダクト指針, エンジニアリング原則. Not for critiquing an existing design or spec (design-critic / completeness-critic).
+# soft-lint 150-250 exceeded (329 rendered): retains three-jurisdiction principle-guidance triggers the corpus doesn't yet cover
+description: >-
+  Turn a sparse product idea into a PRINCIPLES.md constitution (north star +
+  falsifiable principles). Use BEFORE design/spec/build, or when asked what
+  principles should guide a product/design/engineering decision or trade-off.
+  Design/spec critique → design-critic/completeness-critic. Triggers: 產品原則 /
+  設計原則 / 工程原則 / 產品憲章 / プロダクト指針.
 version: 0.4.0
 ---
 
