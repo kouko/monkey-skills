@@ -177,6 +177,11 @@ collection at plan handoff, §b-§c) and mid-implementation (SDD — one
 decision at a time, as discovered). Both consult §a for whether a
 decision escalates.
 
+When the mid-implementation decision is itself researchable, it fires
+**one** background research subagent carrying the same worker packet
+as §b's execution-shape block (single fork, no join needed) — SDD's
+ask-gate mechanics above are unchanged.
+
 ## Worked micro-example
 
 A 3-task plan for "add user preference sync" passes `plan-document-reviewer`.
