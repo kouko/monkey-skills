@@ -51,10 +51,36 @@ as a one-way-door decision; fork harvest covers only the remainder.
 Run **Axis-4-lite** research — the batched form of `brainstorming`'s
 Axis-4 protocol (pointer, not restated) — **only** over forks the triage marks
 researchable, and **only** over forks the sweep actually finds: a
-zero-fork plan pays zero research (**pay-per-hit**). Record each
-resolved fork in the plan's existing `## Notes` section, one line per
-fork, in this exact pinned format — it is the grep key SDD's dispatch
-step reads:
+zero-fork plan pays zero research (**pay-per-hit**).
+
+**Execution shape — fan-out / join.** Axis-4-lite runs as parallel
+subagent research, never inline serial in the orchestrator. When
+triage marks **M** forks researchable, dispatch M research subagents
+in **one fan-out step** — shape owned by
+`dispatching-parallel-agents/SKILL.md` §3 ("Dispatch all N subagents
+in one fan-out step"); do not re-derive its mechanics here. Each
+worker carries a compact research packet:
+
+1. the fork statement, verbatim from the sweep;
+2. a pointer to `brainstorming/references/axis4-research-protocol.md`
+   — the method SSOT: its EN+JA bilingual query rule and its
+   shipped-options + recommendation contract govern the worker;
+3. the report contract: approaches found with citations + a
+   recommendation + the condition that would reverse it, **≤30
+   lines**, no file dumps.
+
+Kickoff then blocks at a **single join point** until all M workers
+return — pins are written once, after the join, so their ordering
+stays deterministic. Distill each return into the pinned
+`Kickoff decision:` format below plus a one-line citation tail; a
+finding too large for a pin lands as a file under
+`docs/loom/research/` per the existing convention, and the pin points
+at that file. The pay-per-hit rule above is untouched: zero
+researchable forks means zero subagents dispatched.
+
+Record each resolved fork in the plan's existing `## Notes` section,
+one line per fork, in this exact pinned format — it is the grep key
+SDD's dispatch step reads:
 
 ```
 Kickoff decision: <fork> → <resolution>
