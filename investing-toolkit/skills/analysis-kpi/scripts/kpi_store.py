@@ -19,64 +19,50 @@ concurrency-safe locking, and a thin `append`/`query` CLI (plan
 docs/loom/plans/2026-07-14-operational-kpi-bitemporal-store.md, Tasks 1-8).
 
 Persistence PATTERN mirrors data-markets/scripts/cache_util.py (key
-sanitization `:170`, atomic tmp+rename write `:225`) but does NOT import it
-and does NOT reuse its TTL envelope — a bitemporal series is durable,
-immutable, append-only, so it roots under the DATA dir (~/.local/share),
-not the evictable cache dir, and never expires. The small sanitize +
-atomic-write duplication is a deliberate, flagged Rule-of-Three candidate
-(extract a shared module only when a THIRD durable store appears).
+sanitization, atomic tmp+rename write) but does NOT import it and does
+NOT reuse its TTL envelope — a bitemporal series is durable, immutable,
+append-only, so it roots under the DATA dir (~/.local/share), not the
+evictable cache dir, and never expires. The shared fs primitives
+(`resolve_store_dir`, sanitize, `_atomic_write`, series locking) now live
+in `_store_fs.py` — a Rule-of-Three extract triggered by a third durable
+store; `_series_key`'s digest logic stays here (kpi_store-specific).
 """
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
-import os
-import re
 import sys
-import tempfile
 from pathlib import Path
 
-try:
-    import fcntl
-except ImportError:  # pragma: no cover — non-POSIX host (e.g. Windows)
-    fcntl = None
-
-_warned_no_fcntl = False
+# Resolve same-dir modules without a package, so `import _store_fs` works
+# both under `uv run --script` and under importlib test loading (mirrors
+# analysis-comps/scripts/comps_compute.py's sector_classifier import shim).
+_SCRIPT_DIR = Path(__file__).resolve().parent
+if str(_SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPT_DIR))
+import _store_fs  # noqa: E402
 
 # Distinct from cache_util's CACHE_SCHEMA_VERSION / `_cache_meta` — a
 # record-shape change here is a detectable migration, not a silent misread
 # (brief Open Question 2: version the envelope).
 STORE_SCHEMA_VERSION = "1.0"
 
-# Mirrors cache_util._UNSAFE_KEY_CHARS: any char outside [A-Za-z0-9_-] is
-# replaced with `_`, so a company/kpi_id can never escape the store dir via
-# `../` or a path separator.
-_UNSAFE_KEY_CHARS = re.compile(r"[^A-Za-z0-9_-]+")
+# Re-exported for callers/tests that import resolve_store_dir from
+# kpi_store — the primitive itself now lives in _store_fs (Rule-of-Three
+# extract, shared with review_queue.py).
+resolve_store_dir = _store_fs.resolve_store_dir
 
+# Re-exported: kpi_store's own sanitize usage (_series_key below) still
+# needs this regex; it now lives in _store_fs.
+_UNSAFE_KEY_CHARS = _store_fs._UNSAFE_KEY_CHARS
 
-def resolve_store_dir() -> Path:
-    """Resolve the durable DATA dir for the KPI store.
-
-    Precedence ladder (highest to lowest):
-      1. KPI_STORE_DIR env var (stripped; empty after strip = unset) — test
-         override + explicit operator control.
-      2. $XDG_DATA_HOME/investing-toolkit/kpi-store (only if XDG_DATA_HOME
-         set + non-empty).
-      3. ~/.local/share/investing-toolkit/kpi-store (default).
-
-    A DATA dir, NOT cache_util's cache dir: a bitemporal series is
-    irreplaceable history that must survive cache eviction.
-    """
-    override = os.environ.get("KPI_STORE_DIR", "").strip()
-    if override:
-        return Path(override)
-
-    xdg_data_home = os.environ.get("XDG_DATA_HOME", "").strip()
-    if xdg_data_home:
-        return Path(xdg_data_home) / "investing-toolkit" / "kpi-store"
-
-    return Path.home() / ".local" / "share" / "investing-toolkit" / "kpi-store"
+# Re-exported so a caller/test can simulate a non-POSIX host (no fcntl) the
+# same way as before the extract, by patching THIS module's `fcntl` name —
+# `append`'s degrade-loud gate below reads its own `fcntl`/`_warned_no_fcntl`
+# (not _store_fs's), so the patch takes effect without touching _store_fs.
+fcntl = _store_fs.fcntl
+_warned_no_fcntl = False
 
 
 def _series_key(company: str, kpi_id: str) -> str:
@@ -124,20 +110,6 @@ def _load_series(path: Path) -> dict:
     }
 
 
-def _atomic_write(path: Path, envelope: dict) -> None:
-    """Write the series envelope atomically (tmp + rename), mirroring
-    cache_util.save_cache's write pattern (:225).
-    """
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile(
-        mode="w", encoding="utf-8", dir=str(path.parent),
-        prefix=f".{path.name}.", suffix=".tmp", delete=False,
-    ) as f:
-        json.dump(envelope, f, ensure_ascii=False, indent=2)
-        tmp = Path(f.name)
-    tmp.rename(path)
-
-
 _REQUIRED_PROVENANCE_FIELDS = ("source_accession", "source_table_id", "source_cell_ref")
 
 
@@ -183,44 +155,6 @@ def _dedup_key(point: dict) -> tuple:
     return tuple(point.get(field) for field in _DEDUP_KEY_FIELDS)
 
 
-def _acquire_series_lock(series_path: Path):
-    """Open (creating if absent) a STABLE per-series lock file and take an
-    exclusive `fcntl.flock` on it, to guard the FULL read-modify-write cycle
-    in `append` (from `_load_series` through `_atomic_write`).
-
-    The lock is taken on `<series_path>.lock`, NOT the series JSON itself:
-    the JSON is replaced via tmp+rename (`_atomic_write`), so its inode
-    changes on every write and a lock held on it would not span the rename.
-    A dedicated lock file's inode is stable across the whole critical
-    section.
-
-    Returns the open lock-file handle (caller releases via
-    `fcntl.flock(..., LOCK_UN)` then `.close()`), or `None` if `fcntl` is
-    unavailable on this platform — a stated, single-warning degradation
-    (see `append`), never a silent skip.
-    """
-    if fcntl is None:
-        return None
-    series_path.parent.mkdir(parents=True, exist_ok=True)
-    lock_path = Path(str(series_path) + ".lock")
-    lock_file = open(lock_path, "a+")
-    try:
-        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
-    except OSError:
-        # Don't leak the just-opened fd if the blocking lock wait is
-        # interrupted (e.g. EINTR) — close before propagating.
-        lock_file.close()
-        raise
-    return lock_file
-
-
-def _release_series_lock(lock_file) -> None:
-    if lock_file is None:
-        return
-    fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
-    lock_file.close()
-
-
 def append(point: dict) -> None:
     """Append one series-point to its file-per-series JSON, verbatim.
 
@@ -257,7 +191,7 @@ def append(point: dict) -> None:
 
     path = _series_path(point["company"], point["kpi_id"])
 
-    lock_file = _acquire_series_lock(path)
+    lock_file = _store_fs._acquire_series_lock(path) if fcntl is not None else None
     if lock_file is None:
         global _warned_no_fcntl
         if not _warned_no_fcntl:
@@ -276,9 +210,9 @@ def append(point: dict) -> None:
                 return  # identical dedup key already present — no-op
 
         envelope["points"].append(point)
-        _atomic_write(path, envelope)
+        _store_fs._atomic_write(path, envelope)
     finally:
-        _release_series_lock(lock_file)
+        _store_fs._release_series_lock(lock_file)
 
 
 def _matching_points(company: str, kpi_id: str, period: str) -> list:

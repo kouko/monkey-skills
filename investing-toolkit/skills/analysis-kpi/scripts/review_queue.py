@@ -18,14 +18,12 @@ reopen / the confirm-seam authorization boundary) plus a thin `enqueue` /
 `list` / `adjudicate` CLI (plan
 docs/loom/plans/2026-07-14-operational-kpi-review-queue.md, Tasks 1-7).
 
-Durable-dir resolution is REUSED from slice-1 `kpi_store.resolve_store_dir`
-(same-skill import below), NOT re-implemented and NOT sourced from cache_util:
-a review queue is durable, human-in-the-loop state that must survive cache
-eviction, so it roots under the same DATA dir as the KPI store. The small
-atomic tmp+rename write mirrors kpi_store._atomic_write's pattern; per
-docs/loom/memory/durable-store-mirrors-cache-util-not-imports-it.md the shared
-extract is deferred until a THIRD durable store appears — import, do not copy
-the dir-resolution; mirror the tiny write helper locally.
+Durable-dir resolution, atomic tmp+rename write, and series locking are ALL
+REUSED from the shared `_store_fs.py` module (same-dir import below,
+Rule-of-Three extract out of kpi_store.py triggered by a third durable
+store), NOT re-implemented and NOT sourced from cache_util: a review queue
+is durable, human-in-the-loop state that must survive cache eviction, so
+it roots under the same DATA dir as the KPI store.
 
 A review-item's `created_at` is a RUNTIME event (caller-supplied) and is
 preserved verbatim — it is NOT held to slice-1's accession-derived `as_of`
@@ -36,16 +34,15 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-import tempfile
 from pathlib import Path
 
-# Resolve same-dir modules without a package, so `import kpi_store` works both
+# Resolve same-dir modules without a package, so `import _store_fs` works both
 # under `uv run --script` and under importlib test loading (mirrors
 # analysis-comps/scripts/comps_compute.py's sector_classifier import shim).
 _SCRIPT_DIR = Path(__file__).resolve().parent
 if str(_SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPT_DIR))
-import kpi_store  # noqa: E402
+import _store_fs  # noqa: E402
 
 # A record-shape change here is a detectable migration, not a silent misread
 # (mirrors kpi_store.STORE_SCHEMA_VERSION's rationale).
@@ -56,7 +53,7 @@ QUEUE_FILENAME = "review-queue.json"
 
 def _queue_path() -> Path:
     """The single durable queue file under the reused slice-1 store root."""
-    return kpi_store.resolve_store_dir() / QUEUE_FILENAME
+    return _store_fs.resolve_store_dir() / QUEUE_FILENAME
 
 
 def _load_queue(path: Path) -> dict:
@@ -74,20 +71,6 @@ def _load_queue(path: Path) -> dict:
         "_review_queue_meta": {"version": QUEUE_SCHEMA_VERSION},
         "items": [],
     }
-
-
-def _atomic_write(path: Path, envelope: dict) -> None:
-    """Write the queue envelope atomically (tmp + rename), mirroring
-    kpi_store._atomic_write's pattern.
-    """
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile(
-        mode="w", encoding="utf-8", dir=str(path.parent),
-        prefix=f".{path.name}.", suffix=".tmp", delete=False,
-    ) as f:
-        json.dump(envelope, f, ensure_ascii=False, indent=2)
-        tmp = Path(f.name)
-    tmp.rename(path)
 
 
 def enqueue(item: dict) -> None:
@@ -112,13 +95,13 @@ def enqueue(item: dict) -> None:
     stored.setdefault("status", "OPEN")
 
     path = _queue_path()
-    lock_file = kpi_store._acquire_series_lock(path)
+    lock_file = _store_fs._acquire_series_lock(path)
     try:
         envelope = _load_queue(path)
         envelope["items"].append(stored)
-        _atomic_write(path, envelope)
+        _store_fs._atomic_write(path, envelope)
     finally:
-        kpi_store._release_series_lock(lock_file)
+        _store_fs._release_series_lock(lock_file)
 
 
 def list_open() -> list:
@@ -196,7 +179,7 @@ def adjudicate(
         )
 
     path = _queue_path()
-    lock_file = kpi_store._acquire_series_lock(path)
+    lock_file = _store_fs._acquire_series_lock(path)
     try:
         envelope = _load_queue(path)
         target = None
@@ -224,9 +207,9 @@ def adjudicate(
             "adjudicated_at": adjudicated_at,
             "decision": decision,
         })
-        _atomic_write(path, envelope)
+        _store_fs._atomic_write(path, envelope)
     finally:
-        kpi_store._release_series_lock(lock_file)
+        _store_fs._release_series_lock(lock_file)
 
 
 def reopen(review_item_id: str) -> None:
@@ -242,7 +225,7 @@ def reopen(review_item_id: str) -> None:
     shared queue file.
     """
     path = _queue_path()
-    lock_file = kpi_store._acquire_series_lock(path)
+    lock_file = _store_fs._acquire_series_lock(path)
     try:
         envelope = _load_queue(path)
         target = None
@@ -263,9 +246,9 @@ def reopen(review_item_id: str) -> None:
             )
 
         target["status"] = "OPEN"
-        _atomic_write(path, envelope)
+        _store_fs._atomic_write(path, envelope)
     finally:
-        kpi_store._release_series_lock(lock_file)
+        _store_fs._release_series_lock(lock_file)
 
 
 def _cli_enqueue(args: argparse.Namespace) -> int:
