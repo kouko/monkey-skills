@@ -294,3 +294,206 @@ def test_adjudicate_resolves_open_item(
         review_queue_module.adjudicate(
             "rev-3000", "reject", adjudicated_by="bob"
         )
+
+
+def test_reopen_moves_resolved_to_open(review_queue_module, tmp_path, monkeypatch):
+    """`reopen` moves a RESOLVED item back to status OPEN (legal transition)
+    so it can be re-adjudicated; it surfaces again in `list_open`. Reopening
+    an already-OPEN item, or an unknown review_item_id, rejects loud
+    (ValueError) — nothing written.
+
+    Why this matters: Task 4's immutable-adjudicator-identity re-adjudication
+    scenario depends on reopen existing first — without it, a resolved item
+    is a dead end and can never collect a second adjudication record.
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+
+    item = {
+        "review_item_id": "rev-4000",
+        "subject_type": "kpi_point",
+        "subject_id": "AAPL:iphone_units:FY2024",
+        "reason": "value deviates >20% from prior as_of",
+        "created_at": "2026-07-14T09:00:00Z",
+    }
+    review_queue_module.enqueue(item)
+    review_queue_module.adjudicate(
+        "rev-4000", "approve", adjudicated_by="alice",
+        resolution="confirmed correct against 10-K",
+    )
+
+    review_queue_module.reopen("rev-4000")
+
+    queue_files = list(tmp_path.rglob("*.json"))
+    envelope = json.loads(queue_files[0].read_text(encoding="utf-8"))
+    stored = next(
+        i for i in envelope["items"] if i["review_item_id"] == "rev-4000"
+    )
+    assert stored["status"] == "OPEN"
+    assert [i["review_item_id"] for i in review_queue_module.list_open()] == [
+        "rev-4000"
+    ], "the reopened item must surface again in list_open"
+
+    with pytest.raises(ValueError):
+        # already OPEN — reopening an OPEN item is illegal
+        review_queue_module.reopen("rev-4000")
+
+    with pytest.raises(ValueError):
+        review_queue_module.reopen("rev-unknown")
+
+
+def test_readjudication_appends_never_overwrites(
+    review_queue_module, tmp_path, monkeypatch
+):
+    """Every `adjudicate` call APPENDS an adjudication record
+    `{adjudicated_by, adjudicated_at, decision}` to the item's append-only
+    `adjudications` list. A later re-adjudication (after reopen) appends a
+    NEW record — it never overwrites or drops the first.
+
+    Why this matters: the adjudications list IS the audit trail for a
+    flagged KPI point — losing alice's original record when bob
+    re-adjudicates would erase who actually confirmed the value first.
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+
+    item = {
+        "review_item_id": "rev-5000",
+        "subject_type": "kpi_point",
+        "subject_id": "AAPL:iphone_units:FY2024",
+        "reason": "value deviates >20% from prior as_of",
+        "created_at": "2026-07-14T09:00:00Z",
+    }
+    review_queue_module.enqueue(item)
+
+    review_queue_module.adjudicate(
+        "rev-5000", "approve", adjudicated_by="alice",
+        adjudicated_at="2024-01-01",
+    )
+    review_queue_module.reopen("rev-5000")
+    review_queue_module.adjudicate(
+        "rev-5000", "reject", adjudicated_by="bob",
+        adjudicated_at="2024-02-01",
+    )
+
+    queue_files = list(tmp_path.rglob("*.json"))
+    envelope = json.loads(queue_files[0].read_text(encoding="utf-8"))
+    stored = next(
+        i for i in envelope["items"] if i["review_item_id"] == "rev-5000"
+    )
+
+    adjudications = stored["adjudications"]
+    assert len(adjudications) == 2, (
+        "re-adjudication must APPEND a new record, not overwrite the first "
+        f"— got {adjudications!r}"
+    )
+    assert adjudications[0] == {
+        "adjudicated_by": "alice",
+        "adjudicated_at": "2024-01-01",
+        "decision": "approve",
+    }, "alice's original record must be retained verbatim at index 0"
+    assert adjudications[1] == {
+        "adjudicated_by": "bob",
+        "adjudicated_at": "2024-02-01",
+        "decision": "reject",
+    }
+
+
+def test_adjudicate_rejects_pipeline_self_confirm(
+    review_queue_module, tmp_path, monkeypatch
+):
+    """`adjudicate` REQUIRES a non-empty human `adjudicated_by`. A call with
+    `adjudicated_by=""` or `actor_is_pipeline=True` is a pipeline
+    self-confirm attempt and is rejected loud (ValueError) BEFORE the
+    lock/write — the item stays OPEN and gets no adjudication record. A
+    real human identity still adjudicates normally.
+
+    Why this matters: this is the confirm-seam authorization boundary —
+    without it an automated pipeline could confirm its own flagged KPI
+    point, defeating the entire human-in-the-loop review queue.
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+
+    item = {
+        "review_item_id": "rev-6000",
+        "subject_type": "kpi_point",
+        "subject_id": "AAPL:iphone_units:FY2024",
+        "reason": "value deviates >20% from prior as_of",
+        "created_at": "2026-07-14T09:00:00Z",
+    }
+    review_queue_module.enqueue(item)
+
+    with pytest.raises(ValueError):
+        review_queue_module.adjudicate("rev-6000", "approve", adjudicated_by="")
+
+    with pytest.raises(ValueError):
+        review_queue_module.adjudicate(
+            "rev-6000", "approve", adjudicated_by="alice", actor_is_pipeline=True
+        )
+
+    queue_files = list(tmp_path.rglob("*.json"))
+    envelope = json.loads(queue_files[0].read_text(encoding="utf-8"))
+    stored = next(
+        i for i in envelope["items"] if i["review_item_id"] == "rev-6000"
+    )
+    assert stored["status"] == "OPEN", (
+        "a rejected self-confirm attempt must leave the item's state "
+        "untouched"
+    )
+    assert "adjudications" not in stored, (
+        "a rejected self-confirm attempt must append no adjudication record"
+    )
+
+    # a real human identity still adjudicates + appends the record
+    review_queue_module.adjudicate(
+        "rev-6000", "approve", adjudicated_by="alice",
+        adjudicated_at="2024-01-01",
+    )
+    envelope = json.loads(queue_files[0].read_text(encoding="utf-8"))
+    stored = next(
+        i for i in envelope["items"] if i["review_item_id"] == "rev-6000"
+    )
+    assert stored["status"] == "APPROVED"
+    assert len(stored["adjudications"]) == 1
+
+
+def test_adjudicate_rejects_whitespace_only_adjudicated_by(
+    review_queue_module, tmp_path, monkeypatch
+):
+    """A whitespace-only `adjudicated_by` (e.g. a single space) is NOT a
+    non-empty human identity — `not " "` is falsy in Python, so a naive
+    `not adjudicated_by` guard lets it slip through. `adjudicate` MUST
+    reject it loud (ValueError) BEFORE the lock/write, leaving the item
+    OPEN with no adjudication record — same as the empty-string case.
+
+    Why this matters: the docstring's confirm-seam contract says
+    `adjudicated_by` MUST be a non-empty human identity. A whitespace-only
+    string is not a human identity either — a pipeline could self-confirm
+    by passing " " instead of "", defeating the same anti-fabrication seam
+    `test_adjudicate_rejects_pipeline_self_confirm` covers for "".
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+
+    item = {
+        "review_item_id": "rev-7000",
+        "subject_type": "kpi_point",
+        "subject_id": "AAPL:iphone_units:FY2024",
+        "reason": "value deviates >20% from prior as_of",
+        "created_at": "2026-07-14T09:00:00Z",
+    }
+    review_queue_module.enqueue(item)
+
+    with pytest.raises(ValueError):
+        review_queue_module.adjudicate("rev-7000", "approve", adjudicated_by=" ")
+
+    queue_files = list(tmp_path.rglob("*.json"))
+    envelope = json.loads(queue_files[0].read_text(encoding="utf-8"))
+    stored = next(
+        i for i in envelope["items"] if i["review_item_id"] == "rev-7000"
+    )
+    assert stored["status"] == "OPEN", (
+        "a rejected whitespace-only self-confirm attempt must leave the "
+        "item's state untouched"
+    )
+    assert "adjudications" not in stored, (
+        "a rejected whitespace-only self-confirm attempt must append no "
+        "adjudication record"
+    )

@@ -144,10 +144,16 @@ _DECISION_TO_STATUS = {
 
 
 def adjudicate(
-    review_item_id: str, decision: str, adjudicated_by: str, resolution=None
+    review_item_id: str,
+    decision: str,
+    adjudicated_by: str,
+    resolution=None,
+    adjudicated_at=None,
+    actor_is_pipeline: bool = False,
 ) -> None:
     """Move an OPEN item to a resolved status per `decision`, storing
-    `resolution` on the item.
+    `resolution` on the item and APPENDING an adjudication record to its
+    append-only `adjudications` list.
 
     `decision` maps to a resolved status: "approve" -> APPROVED, "reject"
     -> REJECTED, "edit" -> EDITED; any other value is rejected loud
@@ -155,16 +161,33 @@ def adjudicate(
     or an item that is NOT currently OPEN (an already-resolved item needs
     `reopen` first — Task 6), is also rejected loud, nothing written.
 
-    `adjudicated_by` is accepted this task but not yet persisted: the
-    append-only adjudicator-identity record (Task 4) and the no-self-confirm
-    authorization boundary (Task 5) land in later tasks — this task is
-    deliberately minimal: status transition + resolution + lock.
+    Immutable adjudicator identity (Task 4): every call APPENDS a record
+    `{adjudicated_by, adjudicated_at, decision}` to the item's `adjudications`
+    list (created on first adjudication). A later re-adjudication (after
+    reopen) appends a NEW record — it never overwrites or drops prior ones.
+    `adjudicated_at` is a caller-supplied RUNTIME event (the module never
+    reads the wall clock — pass a timestamp in, or omit it for None).
+
+    Confirm-seam authorization boundary (Task 5): `adjudicated_by` MUST be a
+    non-empty human identity. A call with an empty/None `adjudicated_by`, or
+    an explicit `actor_is_pipeline=True`, is a self-confirm attempt by the
+    pipeline and is rejected loud (ValueError) BEFORE the lock/write — the
+    item's state and adjudications are untouched. This is the seam that
+    keeps an automated pipeline from confirming its own flagged KPI point;
+    only a real human adjudicator identity may resolve a review item.
 
     Concurrency: mirrors `enqueue`'s locking — the full read-modify-write
     cycle (load -> find -> mutate -> write) is guarded by kpi_store's
     per-path `fcntl.flock` lock on the SAME shared queue file, so a
     concurrent adjudicate/enqueue never tears or loses an update.
     """
+    if actor_is_pipeline or not (adjudicated_by and adjudicated_by.strip()):
+        raise ValueError(
+            "review_queue.adjudicate: adjudicated_by must be a non-empty "
+            "human identity — pipeline self-confirmation is rejected, "
+            "nothing written"
+        )
+
     if decision not in _DECISION_TO_STATUS:
         raise ValueError(
             f"review_queue.adjudicate: unknown decision {decision!r} — "
@@ -195,6 +218,50 @@ def adjudicate(
 
         target["status"] = _DECISION_TO_STATUS[decision]
         target["resolution"] = resolution
+        target.setdefault("adjudications", []).append({
+            "adjudicated_by": adjudicated_by,
+            "adjudicated_at": adjudicated_at,
+            "decision": decision,
+        })
+        _atomic_write(path, envelope)
+    finally:
+        kpi_store._release_series_lock(lock_file)
+
+
+def reopen(review_item_id: str) -> None:
+    """Move a RESOLVED item (APPROVED/REJECTED/EDITED) back to status OPEN,
+    so it can be re-adjudicated (Task 4's re-adjudication depends on this).
+
+    Reopening an item that is already OPEN, or an unknown `review_item_id`,
+    is rejected loud (ValueError), nothing written — mirrors `adjudicate`'s
+    illegal-transition guard.
+
+    Concurrency: mirrors `adjudicate`'s locking — the full read-modify-write
+    cycle is guarded by kpi_store's per-path `fcntl.flock` lock on the SAME
+    shared queue file.
+    """
+    path = _queue_path()
+    lock_file = kpi_store._acquire_series_lock(path)
+    try:
+        envelope = _load_queue(path)
+        target = None
+        for existing in envelope["items"]:
+            if existing.get("review_item_id") == review_item_id:
+                target = existing
+                break
+
+        if target is None:
+            raise ValueError(
+                f"review_queue.reopen: unknown review_item_id "
+                f"{review_item_id!r} — nothing written"
+            )
+        if target.get("status") == "OPEN":
+            raise ValueError(
+                f"review_queue.reopen: review_item_id {review_item_id!r} "
+                f"is already OPEN — illegal transition, nothing written"
+            )
+
+        target["status"] = "OPEN"
         _atomic_write(path, envelope)
     finally:
         kpi_store._release_series_lock(lock_file)
