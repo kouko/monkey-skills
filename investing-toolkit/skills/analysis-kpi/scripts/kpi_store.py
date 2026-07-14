@@ -32,8 +32,16 @@ import hashlib
 import json
 import os
 import re
+import sys
 import tempfile
 from pathlib import Path
+
+try:
+    import fcntl
+except ImportError:  # pragma: no cover — non-POSIX host (e.g. Windows)
+    fcntl = None
+
+_warned_no_fcntl = False
 
 # Distinct from cache_util's CACHE_SCHEMA_VERSION / `_cache_meta` — a
 # record-shape change here is a detectable migration, not a silent misread
@@ -174,6 +182,44 @@ def _dedup_key(point: dict) -> tuple:
     return tuple(point.get(field) for field in _DEDUP_KEY_FIELDS)
 
 
+def _acquire_series_lock(series_path: Path):
+    """Open (creating if absent) a STABLE per-series lock file and take an
+    exclusive `fcntl.flock` on it, to guard the FULL read-modify-write cycle
+    in `append` (from `_load_series` through `_atomic_write`).
+
+    The lock is taken on `<series_path>.lock`, NOT the series JSON itself:
+    the JSON is replaced via tmp+rename (`_atomic_write`), so its inode
+    changes on every write and a lock held on it would not span the rename.
+    A dedicated lock file's inode is stable across the whole critical
+    section.
+
+    Returns the open lock-file handle (caller releases via
+    `fcntl.flock(..., LOCK_UN)` then `.close()`), or `None` if `fcntl` is
+    unavailable on this platform — a stated, single-warning degradation
+    (see `append`), never a silent skip.
+    """
+    if fcntl is None:
+        return None
+    series_path.parent.mkdir(parents=True, exist_ok=True)
+    lock_path = Path(str(series_path) + ".lock")
+    lock_file = open(lock_path, "a+")
+    try:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+    except OSError:
+        # Don't leak the just-opened fd if the blocking lock wait is
+        # interrupted (e.g. EINTR) — close before propagating.
+        lock_file.close()
+        raise
+    return lock_file
+
+
+def _release_series_lock(lock_file) -> None:
+    if lock_file is None:
+        return
+    fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+    lock_file.close()
+
+
 def append(point: dict) -> None:
     """Append one series-point to its file-per-series JSON, verbatim.
 
@@ -198,23 +244,40 @@ def append(point: dict) -> None:
     collision as an error is OUT OF SCOPE for this task (a later slice's
     job if needed).
 
-    This slice does no point-in-time/latest query or locking — those
-    guards land in Tasks 5-7. The point is stored unchanged so a later
-    point-in-time query reads back exactly what was written.
+    Concurrency: the full read-modify-write cycle below is guarded by an
+    exclusive per-series file lock (`_acquire_series_lock`), so parallel
+    appends to the same series serialize and never lose an update; if
+    `fcntl` is unavailable the append proceeds unlocked with one loud
+    warning. The point is stored unchanged so a later point-in-time query
+    reads back exactly what was written.
     """
     _require_provenance(point)
     _require_accession_derived_as_of(point)
 
     path = _series_path(point["company"], point["kpi_id"])
-    envelope = _load_series(path)
 
-    new_key = _dedup_key(point)
-    for existing in envelope["points"]:
-        if _dedup_key(existing) == new_key:
-            return  # identical dedup key already present — no-op
+    lock_file = _acquire_series_lock(path)
+    if lock_file is None:
+        global _warned_no_fcntl
+        if not _warned_no_fcntl:
+            print(
+                "kpi_store: fcntl unavailable, append not concurrency-safe "
+                "on this platform",
+                file=sys.stderr,
+            )
+            _warned_no_fcntl = True
+    try:
+        envelope = _load_series(path)
 
-    envelope["points"].append(point)
-    _atomic_write(path, envelope)
+        new_key = _dedup_key(point)
+        for existing in envelope["points"]:
+            if _dedup_key(existing) == new_key:
+                return  # identical dedup key already present — no-op
+
+        envelope["points"].append(point)
+        _atomic_write(path, envelope)
+    finally:
+        _release_series_lock(lock_file)
 
 
 def _matching_points(company: str, kpi_id: str, period: str) -> list:

@@ -12,9 +12,12 @@ are a library surface, not (yet) a subprocess CLI (the CLI lands in Task 8).
 """
 from __future__ import annotations
 
+import concurrent.futures
 import importlib.util
 import json
 import sys
+import threading
+import time
 
 from conftest import KPI_STORE_SCRIPT
 
@@ -376,3 +379,116 @@ def test_latest_returns_greatest_asof(kpi_store_module, tmp_path, monkeypatch):
     # not a raise.
     assert kpi_store_module.query_latest("AAPL", "iphone_units", "FY1999") is None
     assert kpi_store_module.query_latest("NOPE", "nope", "FY2024") is None
+
+
+def test_concurrent_appends_both_persist(kpi_store_module, tmp_path, monkeypatch):
+    """Two+ concurrent writers appending DISTINCT points to the SAME series
+    must ALL persist — no lost update from the read-modify-write race in
+    `append()` (load series -> dedup-scan -> atomic write). A
+    `threading.Barrier` forces every writer to enter `append()` at
+    (approximately) the same instant; `_load_series` is monkeypatched with a
+    deliberate sleep AFTER the read to widen the load->write race window to
+    something a thread-scheduling accident can't paper over — this is what
+    makes the test a real exercise of the lock rather than a
+    serialized-by-luck pass.
+
+    Regression for the lost-update bug: without a lock spanning the FULL
+    read-modify-write cycle, two writers can both read the same
+    (empty-of-each-other's-point) series, each append their own point in
+    memory, and the second `_atomic_write`'s rename clobbers the first —
+    losing one point. With the lock, only one writer holds the series at a
+    time, so every point survives.
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+
+    original_load_series = kpi_store_module._load_series
+
+    def slow_load_series(path):
+        envelope = original_load_series(path)
+        time.sleep(0.05)  # widen the race window between read and write
+        return envelope
+
+    monkeypatch.setattr(kpi_store_module, "_load_series", slow_load_series)
+
+    prov = {
+        "source_table_id": "ex99-1-operating-summary",
+        "source_cell_ref": "r5c2",
+    }
+    n_writers = 6
+    barrier = threading.Barrier(n_writers)
+
+    def make_point(i):
+        return {
+            "company": "AAPL",
+            "kpi_id": "concurrent_kpi",
+            "period": "FY2024",
+            "as_of": f"2024-11-{i + 1:02d}",
+            "value": i,
+            "source_accession": f"0000320193-24-00{i:04d}",
+            **prov,
+        }
+
+    def writer(i):
+        barrier.wait()  # force all writers to hit append() simultaneously
+        kpi_store_module.append(make_point(i))
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=n_writers) as executor:
+        futures = [executor.submit(writer, i) for i in range(n_writers)]
+        for f in futures:
+            f.result()
+
+    series_files = list(tmp_path.rglob("*.json"))
+    assert len(series_files) == 1, (
+        f"expected exactly one series file, found {series_files}"
+    )
+    envelope = json.loads(series_files[0].read_text(encoding="utf-8"))
+    assert len(envelope["points"]) == n_writers, (
+        f"expected all {n_writers} concurrent appends to persist, found "
+        f"{len(envelope['points'])} — lost update from an unlocked "
+        f"read-modify-write race"
+    )
+    values = sorted(p["value"] for p in envelope["points"])
+    assert values == list(range(n_writers)), (
+        "every writer's distinct point must be present, none lost"
+    )
+
+
+def test_append_degrades_loud_when_fcntl_unavailable(
+    kpi_store_module, tmp_path, monkeypatch, capsys
+):
+    """On a host with no `fcntl` (non-POSIX), append must still WRITE the
+    point (degrade, not crash or silently drop) and emit exactly ONE loud
+    stderr warning that it is not concurrency-safe — never per-call spam,
+    never a silent skip.
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+    # Simulate the non-POSIX host: no fcntl module, warn-once flag reset.
+    monkeypatch.setattr(kpi_store_module, "fcntl", None)
+    monkeypatch.setattr(kpi_store_module, "_warned_no_fcntl", False)
+
+    base = {
+        "company": "AAPL",
+        "kpi_id": "iphone_units",
+        "period": "FY2024",
+        "source_accession": "0000320193-24-000123",
+        "source_table_id": "ex99-1-operating-summary",
+        "source_cell_ref": "r5c2",
+    }
+    kpi_store_module.append({**base, "as_of": "2024-11-01", "value": 1})
+    # Second append (distinct dedup key) must NOT re-warn — warn-once.
+    kpi_store_module.append(
+        {**base, "as_of": "2025-02-15", "value": 2,
+         "source_accession": "0000320193-25-000045"}
+    )
+
+    series_files = list(tmp_path.rglob("*.json"))
+    assert len(series_files) == 1
+    envelope = json.loads(series_files[0].read_text(encoding="utf-8"))
+    assert len(envelope["points"]) == 2, (
+        "append must still persist points when running unlocked (degraded)"
+    )
+
+    err = capsys.readouterr().err
+    assert err.count("fcntl unavailable") == 1, (
+        "the degradation warning must fire exactly once, not per append"
+    )
