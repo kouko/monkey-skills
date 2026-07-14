@@ -1817,6 +1817,154 @@ def _build_statement_cells(
 
 
 # ---------------------------------------------------------------------------
+# Dimensional-revenue fact-pack extractor (Task 5, operational-kpi tier-②
+# XBRL pilot — docs/loom/plans/2026-07-14-operational-kpi-companyfacts-pilot.md)
+# ---------------------------------------------------------------------------
+# The Apple false-negative lesson (plan Task 5, grounding the axis-namespace
+# set below): Apple's product-line dimension moved from
+# us-gaap:ProductOrServiceAxis (pre-2018) to srt:ProductOrServiceAxis
+# (post-2018) across the 2018 revenue-recognition tagging-regime shift —
+# filtering a single namespace silently drops half the fact's history.
+_DIMENSIONAL_REVENUE_AXIS_LOCAL_NAMES = {
+    "ProductOrServiceAxis",
+    "StatementBusinessSegmentsAxis",
+    "StatementGeographicalAxis",
+}
+
+
+def _is_dimensional_revenue_axis(axis: str | None) -> bool:
+    """True when `axis` (colon form, e.g. "srt:ProductOrServiceAxis") is one
+    of the three axis local names, REGARDLESS of its `us-gaap:`/`srt:`
+    namespace prefix — see the module note above: never filter a single
+    namespace."""
+    if not axis:
+        return False
+    return axis.rsplit(":", 1)[-1] in _DIMENSIONAL_REVENUE_AXIS_LOCAL_NAMES
+
+
+def _is_revenue_concept(concept: str | None) -> bool:
+    """True when `concept`'s local name (post `:`) contains "Revenue" — e.g.
+    `us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax` (post-2018)
+    or `us-gaap:SalesRevenueNet` (pre-2018)."""
+    if not concept:
+        return False
+    return "Revenue" in concept.rsplit(":", 1)[-1]
+
+
+def _dimensional_revenue_error_slot(ticker: str, form: str, detail: str) -> dict:
+    """A loud, sentinel-compatible error slot for
+    `extract_dimensional_revenue` (mirrors this file's `_acquire_error`/
+    `_companyfacts_pack_error_slot` convention) — never a fabricated/empty
+    fact-pack."""
+    return {
+        "error": (
+            f"SEC EDGAR dimensional-revenue extraction failed for "
+            f"{ticker!r} ({form}): {detail}"
+        ),
+        "error_class": "dimensional_revenue_extraction_failed",
+        "identifier": ticker,
+    }
+
+
+def extract_dimensional_revenue(ticker: str, form: str = "10-K") -> dict:
+    """Fetch `ticker`'s latest `form` filing's XBRL via edgartools and emit
+    the normalized dimensional-revenue fact-pack (the declared shape —
+    tests/analysis/fixtures/xbrl_aapl_factpack.json):
+      {"company": <ticker>, "facts": [{"concept", "axis", "member", "value",
+       "period_end", "fiscal_year", "accession", "filed"}, ...]}
+
+    Emits every REVENUE fact (`_is_revenue_concept`) carrying a
+    product/segment/geographic dimensional axis (`_is_dimensional_revenue_axis`
+    — matching BOTH `us-gaap:*` and `srt:*` namespaces; see the module note
+    above for why filtering one namespace is wrong). A fact with no reported
+    numeric value (NaN — mirrors `_build_statement_cells`'s `_is_nan` skip,
+    e.g. a placeholder concept) is not emitted — never fabricated as 0.
+
+    Returns a loud `{"error": ...}` slot (never a fabricated/empty fact-pack)
+    when the ticker does not resolve to a registered SEC filer, or `form`
+    was never filed within the lookup window.
+    """
+    ticker = ticker.upper()
+    identity_error = _ensure_edgar_identity()
+    if identity_error is not None:
+        return identity_error
+
+    import edgar
+
+    try:
+        company = edgar.Company(ticker)
+    except Exception as exc:  # noqa: BLE001 — fail loud, don't guess the shape
+        return _dimensional_revenue_error_slot(
+            ticker, form,
+            f"identifier did not resolve to a registered SEC filer ({exc})",
+        )
+    if company is None or getattr(company, "not_found", False) or not getattr(company, "cik", None):
+        return _dimensional_revenue_error_slot(
+            ticker, form, "identifier did not resolve to a registered SEC filer",
+        )
+
+    filings = company.get_filings(form=form)
+    filing = filings.latest() if filings is not None else None
+    if filing is None:
+        return _dimensional_revenue_error_slot(
+            ticker, form, f"form {form!r} not available within the lookup window",
+        )
+
+    xb = filing.xbrl()
+    facts_records = xb.facts.to_dataframe().to_dict("records")
+    accession = filing.accession_no
+    filed = _filing_date_iso(filing.filing_date)
+
+    facts = []
+    for fact in facts_records:
+        if not fact.get("is_dimensioned"):
+            continue
+        axis = fact.get("dimension")
+        if not _is_dimensional_revenue_axis(axis):
+            continue
+        if not _is_revenue_concept(fact.get("concept")):
+            continue
+        if _is_nan(fact.get("numeric_value")):
+            continue  # placeholder concept, no reported number — never fabricate one
+
+        period_end = (
+            fact.get("period_end") if fact.get("period_type") == "duration"
+            else fact.get("period_instant")
+        )
+        if not period_end:
+            # Fail loud instead of silently emitting a null-dated fact: a
+            # revenue fact with no period_end cannot be placed on the fiscal
+            # timeline, and this extractor's anti-fabrication posture (see
+            # the numeric_value NaN skip above) never emits a fact it cannot
+            # date — plan amendment (a), spec-reviewer NEEDS_REVISION.
+            raise ValueError(
+                f"dimensional revenue fact for {ticker!r} has no period_end "
+                f"(cannot be dated): concept={fact.get('concept')!r} "
+                f"axis={axis!r} member={fact.get('member')!r}"
+            )
+
+        # fiscal_year is DERIVED from period_end (the year the fiscal period
+        # ENDS) — NEVER taken from edgartools' raw `fiscal_year` column, which
+        # is unreliable for prior-year comparatives: live-verified on AAPL's
+        # 2025 10-K, the iPhone fact with period_end 2024-09-28 is
+        # column-labeled fiscal_year=2025 but is really FY2024. Shipping the
+        # raw column mislabels every prior-year comparative point.
+        fiscal_year = int(period_end[:4])
+        facts.append({
+            "concept": fact.get("concept"),
+            "axis": axis,
+            "member": fact.get("member"),
+            "value": fact.get("numeric_value"),
+            "period_end": period_end,
+            "fiscal_year": fiscal_year,
+            "accession": accession,
+            "filed": filed,
+        })
+
+    return {"company": ticker, "facts": facts}
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
