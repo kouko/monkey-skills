@@ -29,6 +29,16 @@ PORTFOLIO_SCRIPT = SKILLS / "analysis-portfolio" / "scripts" / "portfolio_comput
 REGIME_SCRIPT = SKILLS / "analysis-macro-regime" / "scripts" / "regime_compose.py"
 COMPS_SCRIPT = SKILLS / "analysis-comps" / "scripts" / "comps_compute.py"
 XVAL_SCRIPT = SKILLS / "analysis-xval" / "scripts" / "xval_compute.py"
+KPI_STORE_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_store.py"
+REVIEW_QUEUE_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "review_queue.py"
+STORE_FS_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "_store_fs.py"
+KPI_SCHEMA_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_schema.py"
+KPI_VALIDATE_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_validate.py"
+KPI_PARSE_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_parse.py"
+KPI_GATE_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_gate.py"
+KPI_BREAK_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_break.py"
+KPI_SERIES_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_series.py"
+KPI_MEMO_FEED_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_memo_feed.py"
 
 
 def run_script(script: Path, *args: str, timeout: int = 60) -> subprocess.CompletedProcess:

@@ -1,0 +1,344 @@
+#!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.10"
+# dependencies = []
+# ///
+"""
+Append-only bitemporal KPI store (operational-kpi capability, slice 1).
+
+Layer 2 (Analysis) internal persistence — NOT external I/O. Persists a
+validated operational-KPI series-point to a **file-per-series JSON** (one
+file per company+kpi_id, holding a list of point records) under a durable
+DATA dir, so a later restatement/re-extraction APPENDS a superseding record
+instead of overwriting history, and a point-in-time query "as of" an earlier
+date sees only what was known then (no look-ahead bias).
+
+This slice ships the store scaffold, `append(point)`, provenance/as_of
+rejection, idempotent dedup, point-in-time/latest queries,
+concurrency-safe locking, and a thin `append`/`query` CLI (plan
+docs/loom/plans/2026-07-14-operational-kpi-bitemporal-store.md, Tasks 1-8).
+
+Persistence PATTERN mirrors data-markets/scripts/cache_util.py (key
+sanitization, atomic tmp+rename write) but does NOT import it and does
+NOT reuse its TTL envelope — a bitemporal series is durable, immutable,
+append-only, so it roots under the DATA dir (~/.local/share), not the
+evictable cache dir, and never expires. The shared fs primitives
+(`resolve_store_dir`, sanitize, `_atomic_write`, series locking) now live
+in `_store_fs.py` — a Rule-of-Three extract triggered by a third durable
+store; `_series_key`'s digest logic stays here (kpi_store-specific).
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import sys
+from pathlib import Path
+
+# Resolve same-dir modules without a package, so `import _store_fs` works
+# both under `uv run --script` and under importlib test loading (mirrors
+# analysis-comps/scripts/comps_compute.py's sector_classifier import shim).
+_SCRIPT_DIR = Path(__file__).resolve().parent
+if str(_SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPT_DIR))
+import _store_fs  # noqa: E402
+
+# Distinct from cache_util's CACHE_SCHEMA_VERSION / `_cache_meta` — a
+# record-shape change here is a detectable migration, not a silent misread
+# (brief Open Question 2: version the envelope).
+STORE_SCHEMA_VERSION = "1.0"
+
+# Re-exported for callers/tests that import resolve_store_dir from
+# kpi_store — the primitive itself now lives in _store_fs (Rule-of-Three
+# extract, shared with review_queue.py).
+resolve_store_dir = _store_fs.resolve_store_dir
+
+# Re-exported: kpi_store's own sanitize usage (_series_key below) still
+# needs this regex; it now lives in _store_fs.
+_UNSAFE_KEY_CHARS = _store_fs._UNSAFE_KEY_CHARS
+
+# Re-exported so a caller/test can simulate a non-POSIX host (no fcntl) the
+# same way as before the extract, by patching THIS module's `fcntl` name —
+# `append`'s degrade-loud gate below reads its own `fcntl`/`_warned_no_fcntl`
+# (not _store_fs's), so the patch takes effect without touching _store_fs.
+fcntl = _store_fs.fcntl
+_warned_no_fcntl = False
+
+
+def _series_key(company: str, kpi_id: str) -> str:
+    """Collision-proof `<company>__<kpi_id>__<digest>` filename stem — one
+    file per series, for arbitrary input.
+
+    Both components are sanitized independently for PATH SAFETY (every char
+    outside `[A-Za-z0-9_-]` → `_`), so a malicious/malformed company or
+    kpi_id can never escape the store dir via `../` or a separator. But
+    sanitization alone is NOT collision-proof: `_` is in the allowed set, so
+    input underscores survive and a shared separator cannot disambiguate —
+    e.g. (company="AAPL_", kpi_id="X") and (company="AAPL", kpi_id="_X") both
+    sanitize to `AAPL___X`. A 12-hex-char digest of the EXACT raw
+    (company, kpi_id) pair, NUL-separated, is appended so distinct raw pairs
+    always map to distinct files — preserving the file-per-series invariant
+    the later dedup/query/lock slices rely on, while keeping the sanitized
+    prefix human-readable.
+    """
+    company_key = _UNSAFE_KEY_CHARS.sub("_", str(company)) or "_"
+    kpi_key = _UNSAFE_KEY_CHARS.sub("_", str(kpi_id)) or "_"
+    digest = hashlib.sha1(
+        f"{company}\x00{kpi_id}".encode("utf-8")
+    ).hexdigest()[:12]
+    return f"{company_key}__{kpi_key}__{digest}"
+
+
+def _series_path(company: str, kpi_id: str) -> Path:
+    return resolve_store_dir() / f"{_series_key(company, kpi_id)}.json"
+
+
+def _load_series(path: Path) -> dict:
+    """Read an existing series envelope, or return a fresh empty one.
+
+    Append-only: an existing file's `points` list is preserved and never
+    overwritten. A fresh series starts with a versioned `_kpi_store_meta`
+    envelope and an empty `points` list.
+    """
+    if path.exists():
+        envelope = json.loads(path.read_text(encoding="utf-8"))
+        envelope.setdefault("points", [])
+        return envelope
+    return {
+        "_kpi_store_meta": {"version": STORE_SCHEMA_VERSION},
+        "points": [],
+    }
+
+
+_REQUIRED_PROVENANCE_FIELDS = ("source_accession", "source_table_id", "source_cell_ref")
+
+
+def _require_provenance(point: dict) -> None:
+    """Reject a point missing any provenance field (absent/None/empty) —
+    fail loud BEFORE any file is touched, never write an unattributed record.
+    """
+    for field in _REQUIRED_PROVENANCE_FIELDS:
+        if not point.get(field):
+            raise ValueError(
+                f"kpi_store.append: point missing required provenance field "
+                f"{field!r} (absent, None, or empty) — rejected, nothing written"
+            )
+
+
+def _require_accession_derived_as_of(point: dict) -> None:
+    """Reject a point whose `as_of` is absent/empty, or explicitly flagged
+    wall-clock-derived — fail loud BEFORE any file is touched.
+
+    Wall-clock marker convention (pick-one, documented here): a point flags
+    itself wall-clock-derived by carrying `as_of_is_wallclock: True`. This
+    slice only validates the invariant; deriving `as_of` from an accession
+    is an upstream slice's job (plan Task 3 note).
+    """
+    if not point.get("as_of"):
+        raise ValueError(
+            "kpi_store.append: point missing required 'as_of' (absent, "
+            "None, or empty) — as_of must be accession-derived, rejected, "
+            "nothing written"
+        )
+    if point.get("as_of_is_wallclock"):
+        raise ValueError(
+            "kpi_store.append: point's 'as_of' is flagged "
+            "as_of_is_wallclock=True — as_of must be accession/disclosure-"
+            "derived, not wall-clock, rejected, nothing written"
+        )
+
+
+_DEDUP_KEY_FIELDS = ("company", "kpi_id", "period", "as_of", "source_accession")
+
+
+def _dedup_key(point: dict) -> tuple:
+    return tuple(point.get(field) for field in _DEDUP_KEY_FIELDS)
+
+
+def append(point: dict) -> None:
+    """Append one series-point to its file-per-series JSON, verbatim.
+
+    A point is a dict keyed by `(company, kpi_id, period, as_of)` carrying
+    `value` + provenance (`source_accession`, `source_table_id`,
+    `source_cell_ref`) and optional `lineage`/`restates` (persisted as-is,
+    NOT interpreted this slice). Preconditions — provenance completeness
+    and an accession-derived `as_of` (see `_require_accession_derived_as_of`
+    for the wall-clock marker convention) — are ALL checked BEFORE any file
+    is touched — a rejected point writes nothing, no partial state.
+
+    Idempotent dedup: the 5-tuple `(company, kpi_id, period, as_of,
+    source_accession)` is the dedup key. Re-appending a point whose key
+    already exists in the series is a NO-OP (no second record written) —
+    this is the "re-run the same accession" case. A corrected value MUST
+    carry a new `as_of` (and typically a new `source_accession`) to
+    supersede — that is a DIFFERENT dedup key, so it appends a new record
+    and both are retained (append-only, bitemporal — never overwrite). A
+    same-dedup-key point carrying a DIFFERENT `value` (a same-accession
+    correction that didn't bump `as_of`) is treated as the no-op case too
+    — the FIRST record wins and is kept; detecting/rejecting that
+    collision as an error is OUT OF SCOPE for this task (a later slice's
+    job if needed).
+
+    Concurrency: the full read-modify-write cycle below is guarded by an
+    exclusive per-series file lock (`_acquire_series_lock`), so parallel
+    appends to the same series serialize and never lose an update; if
+    `fcntl` is unavailable the append proceeds unlocked with one loud
+    warning. The point is stored unchanged so a later point-in-time query
+    reads back exactly what was written.
+    """
+    _require_provenance(point)
+    _require_accession_derived_as_of(point)
+
+    path = _series_path(point["company"], point["kpi_id"])
+
+    lock_file = _store_fs._acquire_series_lock(path) if fcntl is not None else None
+    if lock_file is None:
+        global _warned_no_fcntl
+        if not _warned_no_fcntl:
+            print(
+                "kpi_store: fcntl unavailable, append not concurrency-safe "
+                "on this platform",
+                file=sys.stderr,
+            )
+            _warned_no_fcntl = True
+    try:
+        envelope = _load_series(path)
+
+        new_key = _dedup_key(point)
+        for existing in envelope["points"]:
+            if _dedup_key(existing) == new_key:
+                return  # identical dedup key already present — no-op
+
+        envelope["points"].append(point)
+        _store_fs._atomic_write(path, envelope)
+    finally:
+        _store_fs._release_series_lock(lock_file)
+
+
+def _matching_points(company: str, kpi_id: str, period: str) -> list:
+    """Read-only: load the series file for (company, kpi_id) and return the
+    points matching `period`, or [] if the series file doesn't exist. Never
+    writes, mutates, or reorders the stored points.
+    """
+    path = _series_path(company, kpi_id)
+    if not path.exists():
+        return []
+    envelope = _load_series(path)
+    return [p for p in envelope["points"] if p.get("period") == period]
+
+
+def query_point_in_time(company: str, kpi_id: str, period: str, as_of_date: str):
+    """Return the record for (company, kpi_id, period) with the greatest
+    `as_of` that is `<= as_of_date`, or None if none qualify (including a
+    missing series file).
+
+    `as_of` values are ISO date strings (e.g. "2024-11-01"); ISO date
+    strings compare correctly under plain string `<=`/max(), so no date
+    parsing is needed here.
+    """
+    candidates = [
+        p for p in _matching_points(company, kpi_id, period)
+        if p.get("as_of", "") <= as_of_date
+    ]
+    if not candidates:
+        return None
+    return max(candidates, key=lambda p: p.get("as_of", ""))
+
+
+def query_latest(company: str, kpi_id: str, period: str):
+    """Return the record for (company, kpi_id, period) with the greatest
+    `as_of` overall, or None if the series has no matching record.
+    """
+    candidates = _matching_points(company, kpi_id, period)
+    if not candidates:
+        return None
+    return max(candidates, key=lambda p: p.get("as_of", ""))
+
+
+def _cli_append(args: argparse.Namespace) -> int:
+    """`append` subcommand: read ONE point as JSON from `--file` (or stdin
+    when omitted), call `append(point)`. A rejection (ValueError from the
+    provenance/as_of guards) is printed to stderr and exits non-zero — fail
+    loud, never a silent swallow.
+    """
+    if args.file is not None:
+        raw = Path(args.file).read_text(encoding="utf-8")
+    else:
+        raw = sys.stdin.read()
+
+    try:
+        point = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        print(f"kpi_store append: invalid JSON input: {exc}", file=sys.stderr)
+        return 2
+
+    if not isinstance(point, dict):
+        print(
+            "kpi_store append: expected a JSON object (point), got "
+            f"{type(point).__name__} — nothing written",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        append(point)
+    except ValueError as exc:
+        print(f"kpi_store append: {exc}", file=sys.stderr)
+        return 1
+    return 0
+
+
+def _cli_query(args: argparse.Namespace) -> int:
+    """`query` subcommand: dispatch to `query_point_in_time` (`--as-of`) or
+    `query_latest` (`--latest`), printing the resulting record as JSON to
+    stdout (or `null` if none matched).
+    """
+    if args.as_of is not None:
+        record = query_point_in_time(args.company, args.kpi_id, args.period, args.as_of)
+    else:
+        record = query_latest(args.company, args.kpi_id, args.period)
+
+    json.dump(record, sys.stdout, ensure_ascii=False)
+    sys.stdout.write("\n")
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Append-only bitemporal KPI store CLI (append / query)."
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    append_parser = subparsers.add_parser(
+        "append", help="Append one KPI point (JSON) to its series file."
+    )
+    append_parser.add_argument(
+        "--file", type=Path, default=None,
+        help="Path to a JSON file holding the point (default: read stdin).",
+    )
+    append_parser.set_defaults(func=_cli_append)
+
+    query_parser = subparsers.add_parser(
+        "query", help="Query a KPI series (point-in-time or latest)."
+    )
+    query_parser.add_argument("--company", required=True)
+    query_parser.add_argument("--kpi-id", required=True, dest="kpi_id")
+    query_parser.add_argument("--period", required=True)
+    query_mode = query_parser.add_mutually_exclusive_group(required=True)
+    query_mode.add_argument(
+        "--latest", action="store_true",
+        help="Return the greatest-as_of record overall.",
+    )
+    query_mode.add_argument(
+        "--as-of", default=None, dest="as_of",
+        help="Return the greatest-as_of record with as_of <= this date "
+             "(point-in-time).",
+    )
+    query_parser.set_defaults(func=_cli_query)
+
+    args = parser.parse_args()
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
