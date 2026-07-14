@@ -16,11 +16,20 @@ returns a rule verdict; persistence (kpi_store.py) and schema lifecycle
 A rule FAILURE is a normal `{"passed": False, ...}` verdict, not an
 exception; only MALFORMED input (wrong types) is a loud error.
 
-This slice's Task 1 ships the module scaffold + `check_sign(value,
-kpi_def)`: a kpi_def declared `sign == "non-negative"` FAILS (passed False)
-when `value` is negative; `sign` absent or `"any"` means no constraint
-applies (passed True). Tasks 2-6 add check_unit/check_subtotal/check_gaap/
-validate/CLI.
+Four deterministic checks, each returning `{"rule","passed","detail"}` with a
+TRI-STATE `passed`: True (pass) / False (violation) / None (N/A — the
+constraint does not apply, distinct from a failure):
+- `check_sign` — a `sign == "non-negative"` kpi_def fails on a negative value
+  (0 passes); `sign` absent or `"any"` → no constraint (passes).
+- `check_unit` — the value's unit must equal the def's `unit`; no declared
+  unit → N/A.
+- `check_subtotal` — segments must sum to total within a relative tolerance;
+  absent parts → N/A.
+- `check_gaap` — a company-defined non-GAAP KPI is NEVER failed for lacking a
+  GAAP tag (non-GAAP → N/A); only a `gaap: true` def with no match fails.
+`validate(value_record, kpi_def)` aggregates the applicable rules into
+`{"eligible", "failures"}` (an N/A rule is excluded from failures and never
+blocks eligibility), and a thin `validate` CLI wraps it.
 """
 from __future__ import annotations
 

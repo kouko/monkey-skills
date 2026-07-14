@@ -1,12 +1,12 @@
 """Tests for analysis-kpi/scripts/kpi_validate.py — rule-based value
 validation (operational-kpi capability, slice 4).
 
-This slice's Task 1 ships the module scaffold + `check_sign(value, kpi_def)`:
-a kpi_def declared `sign == "non-negative"` FAILS (passed False) when `value`
-is negative; `sign` absent or `"any"` means no constraint applies (passed
-True). kpi_validate.py is PURE-COMPUTE (stdlib only) — it does NOT import
-`_store_fs`, resolve a store dir, lock, or persist anything; it only reads
-values + kpi_defs and returns verdicts. No `KPI_STORE_DIR` fixture is needed.
+Covers the four checks (check_sign/check_unit/check_subtotal/check_gaap, each
+returning a tri-state `passed` True/False/None where None = N/A), the
+`validate` aggregate, and the `validate` CLI. kpi_validate.py is PURE-COMPUTE
+(stdlib only) — it does NOT import `_store_fs`, resolve a store dir, lock, or
+persist anything; it only reads values + kpi_defs and returns verdicts. No
+`KPI_STORE_DIR` fixture is needed.
 
 The library function is exercised by loading `kpi_validate.py` via importlib
 (same convention as test_kpi_store.py's `kpi_store_module` fixture).
@@ -31,8 +31,8 @@ import pytest
 @pytest.fixture(scope="module")
 def kpi_validate_module():
     """Load kpi_validate.py as an importable module for unit tests of its
-    library surface (check_sign/...) before check_unit/check_subtotal/
-    check_gaap/validate/CLI are added (Tasks 2-6).
+    library surface (the four checks + validate); the CLI is exercised via a
+    real `uv run --script` subprocess.
     """
     spec = importlib.util.spec_from_file_location("kpi_validate_test", KPI_VALIDATE_SCRIPT)
     assert spec is not None and spec.loader is not None
