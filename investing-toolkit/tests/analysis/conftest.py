@@ -30,6 +30,7 @@ REGIME_SCRIPT = SKILLS / "analysis-macro-regime" / "scripts" / "regime_compose.p
 COMPS_SCRIPT = SKILLS / "analysis-comps" / "scripts" / "comps_compute.py"
 XVAL_SCRIPT = SKILLS / "analysis-xval" / "scripts" / "xval_compute.py"
 KPI_STORE_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_store.py"
+REVIEW_QUEUE_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "review_queue.py"
 
 
 def run_script(script: Path, *args: str, timeout: int = 60) -> subprocess.CompletedProcess:
