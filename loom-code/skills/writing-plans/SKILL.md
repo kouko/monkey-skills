@@ -90,7 +90,7 @@ When SDD dispatches an implementer subagent and the implementer returns `BLOCKED
 4. Self-reviews the child decomposition via plan-document-reviewer.
 5. Returns the child plan to SDD.
 
-This is **Kent Beck's "Child Test" pattern (*Test-Driven Development: By Example*, 2002, Part II)** verbatim:
+This is **Kent Beck's "Child Test" pattern (*Test-Driven Development: By Example*, 2002, Part III)** verbatim:
 
 > *"When you are working on a test and it gets too big, write a smaller test that represents the broken part of the bigger test. Get the smaller test working. Then go back to the bigger test."*
 
