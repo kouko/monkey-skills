@@ -4,6 +4,30 @@ All notable changes to the `skill-dev-toolkit` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] — 2026-07-14
+
+### Changed — two-tier description length standard + Pocock token-economy rules
+
+- **Two-tier length standard, single SSOT** in `skill-creator-advance`'s
+  `description-design.md` §Principle 5: normal skills ≤150 chars target
+  (250 soft lint); router/CONDITIONAL skills ≤500 chars **only with a
+  firing-evidence note** — an evidence-less new router stays in the
+  normal band until telemetry earns the extension. Rescinds the flat
+  250-char cap (provenance recorded in-section); calibrated against an
+  n=88 industry description survey.
+- **Pocock token-economy cutting rules ported** into the same SSOT: one
+  trigger phrase per decision branch; synonyms are duplication (with a
+  carve-out for the multilingual trigger belt); cut identity prose beyond
+  the one-sentence WHAT. Framed as context-load vs cognitive-load — the
+  description spends the reader's context budget, not just their
+  attention. Attribution: [mattpocock/skills](https://github.com/mattpocock/skills) (MIT).
+- `skill-creator-advance/SKILL.md` body now defers all length numbers to
+  the SSOT (no second copy to drift).
+- `skill-judge` D4 rescored against the two-tier standard (router-band
+  lengths no longer penalized when evidence-backed).
+- Description drift guard now encodes the two-tier property itself:
+  section-scoped digit ban + semantic pin, injection-tested.
+
 ## [0.2.1] — 2026-07-13
 
 ### Changed — skill-creator-advance token refactor (equivalence-gated, first 0.2.0-machinery run)
