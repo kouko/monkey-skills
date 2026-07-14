@@ -278,6 +278,59 @@ def test_unevaluated_company_is_fail_closed(kpi_gate_module, tmp_path, monkeypat
     assert kpi_gate_module.is_trusted("GATECO_FEW", "v-not-eval") is False
 
 
+def test_attest_source_records_trusted_for_xbrl_only(kpi_gate_module, tmp_path, monkeypatch):
+    """attest_source(company, schema_version, source_kinds, attested_at) must
+    auto-qualify a company/schema_version as TRUSTED when EVERY source_kind
+    is a trusted-by-source XBRL kind (xbrl-companyfacts / xbrl-dimensional)
+    — no sampled ground-truth label set or evaluate() call required, since
+    XBRL provenance is itself the trust signal (tier-3 trusted-by-source).
+
+    Why this matters: if attest_source silently accepted an untrusted kind
+    like "llm-located" (alongside or instead of XBRL kinds), an LLM-located
+    extraction could piggyback on the XBRL trust path and get recorded as
+    TRUSTED without ever passing the sampled-accuracy gate (evaluate) —
+    defeating the one-trust-authority design is_trusted/gate_verdict rely on.
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+
+    record = kpi_gate_module.attest_source(
+        "AAPL", "1.0", {"xbrl-dimensional"}, attested_at="2026-07-14"
+    )
+    assert record["verdict"] == "TRUSTED"
+    assert kpi_gate_module.is_trusted("AAPL", "1.0") is True
+
+    # No label set and no evaluate() record were ever created for this pair
+    # — is_trusted must read True from the attestation alone.
+    assert kpi_gate_module.get_labels("AAPL") == []
+
+    with pytest.raises(ValueError, match="llm-located"):
+        kpi_gate_module.attest_source(
+            "AAPL", "2.0", {"llm-located"}, attested_at="2026-07-14"
+        )
+    assert kpi_gate_module.is_trusted("AAPL", "2.0") is False
+
+
+def test_attest_source_empty_source_kinds_refuses(kpi_gate_module, tmp_path, monkeypatch):
+    """attest_source must REFUSE an EMPTY `source_kinds` — the offending-kind
+    check `source_kinds - TRUSTED_SOURCE_KINDS` is vacuously empty for an
+    empty set, so without an explicit guard a caller who accidentally passes
+    `set()` would get a TRUSTED record persisted from ZERO source evidence.
+
+    Why this matters: this is exactly the anti-fabrication hole attest_source
+    exists to close (Plan Notes AMENDMENT (b)) — trust must be backed by at
+    least one real source_kind, never manufactured from an empty set.
+    Fail-closed: RAISES ValueError naming the empty-source_kinds condition
+    and writes NOTHING, so is_trusted stays False for that pair.
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+
+    with pytest.raises(ValueError, match="empty"):
+        kpi_gate_module.attest_source(
+            "AAPL", "3.0", set(), attested_at="2026-07-14"
+        )
+    assert kpi_gate_module.is_trusted("AAPL", "3.0") is False
+
+
 def test_cli_add_labels_evaluate_verdict_roundtrip(tmp_path):
     """Task 4: the kpi_gate.py CLI's `add-labels`, `evaluate`, and `verdict`
     subcommands round-trip a company's reliability gate through real
