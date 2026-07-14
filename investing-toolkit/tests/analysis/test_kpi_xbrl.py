@@ -225,3 +225,29 @@ def test_resolve_binding_raises_on_ambiguous_multi_source_match(kpi_xbrl_module,
     """
     with pytest.raises(ValueError, match="ambiguous"):
         kpi_xbrl_module.resolve_binding(fact_pack, AMBIGUOUS_OVERLAPPING_BINDING, "AAPL")
+
+
+def test_declared_break_splits_series_not_concat(kpi_xbrl_module, fact_pack):
+    """Task 3 GREEN: the resolved iphone_revenue points (FY2016 old-tagged,
+    FY2024/FY2025 new-tagged) run through build_series_with_break(points,
+    "2018") and land in split_series's as_reported/recast partition by
+    period — NOT a single concatenated run. FY2016 (period "2016" < "2018")
+    -> as_reported; FY2024/FY2025 (period >= "2018") -> recast. All 3
+    points accounted for exactly once (nothing dropped, nothing duplicated).
+    """
+    points = kpi_xbrl_module.resolve_binding(fact_pack, IPHONE_REVENUE_BINDING, "AAPL")
+    assert len(points) == 3
+
+    result = kpi_xbrl_module.build_series_with_break(points, "2018")
+
+    as_reported_periods = sorted(p["period"] for p in result["as_reported"])
+    recast_periods = sorted(p["period"] for p in result["recast"])
+    assert as_reported_periods == ["2016"]
+    assert recast_periods == ["2024", "2025"]
+
+    # nothing dropped, nothing duplicated across the two partitions
+    all_periods = sorted(
+        p["period"] for p in result["as_reported"] + result["recast"]
+    )
+    assert all_periods == ["2016", "2024", "2025"]
+    assert result["break_markers"] == [{"break_period": "2018"}]

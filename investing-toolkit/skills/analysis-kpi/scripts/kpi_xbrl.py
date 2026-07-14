@@ -39,7 +39,20 @@ real value, not a missing one.
 """
 from __future__ import annotations
 
+import sys
 from datetime import date
+from pathlib import Path
+
+# Resolve same-dir modules without a package (mirrors kpi_series.py's own
+# import shim for kpi_break) so `import kpi_series` works both under
+# `uv run --script` and importlib test loading. Only kpi_series is
+# imported — NOT kpi_break: the declared/pre-applied break here
+# intentionally bypasses kpi_break's persisted FLAGGED->CONFIRMED->APPLIED
+# review-queue lifecycle.
+_SCRIPT_DIR = Path(__file__).resolve().parent
+if str(_SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPT_DIR))
+import kpi_series  # noqa: E402
 
 
 def _fact_matches(fact: dict, match: dict) -> bool:
@@ -197,3 +210,19 @@ def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
             facts_to_points(sub_pack, kpi_id, selector, company, source["source_kind"])
         )
     return points
+
+
+def build_series_with_break(points: list[dict], break_at_period: str) -> dict:
+    """Split `points` at a declared structural boundary `break_at_period`,
+    delegating to `kpi_series.split_series` (plain-args pure compute, NO
+    persisted break lifecycle) — never a naive concatenation across a
+    tagging-regime change.
+
+    Builds a local `applied_breaks = [{"break_period": break_at_period}]`
+    from the declared boundary and returns `split_series`'s dict
+    (`{as_reported, recast, break_markers}`) unchanged. This is NOT a
+    reimplementation of the partitioning logic — kpi_series.split_series
+    owns it.
+    """
+    applied_breaks = [{"break_period": break_at_period}]
+    return kpi_series.split_series(points, applied_breaks)
