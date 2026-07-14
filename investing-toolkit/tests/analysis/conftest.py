@@ -34,6 +34,7 @@ REVIEW_QUEUE_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "review_queue.py"
 STORE_FS_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "_store_fs.py"
 KPI_SCHEMA_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_schema.py"
 KPI_VALIDATE_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_validate.py"
+KPI_GATE_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_gate.py"
 
 
 def run_script(script: Path, *args: str, timeout: int = 60) -> subprocess.CompletedProcess:
