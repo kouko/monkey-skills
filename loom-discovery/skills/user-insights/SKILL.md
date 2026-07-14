@@ -1,6 +1,19 @@
 ---
 name: user-insights
-description: Map user needs with recorded evidence, before any design or spec work. Use for needs research / opportunity mapping / 使用者需求 / ユーザーインサイト. Worth-it checks → business-value.
+description: |
+  The problem-space research verb of loom-discovery — map, with recorded
+  evidence, WHAT users need and which needs are worth serving, before any
+  design or spec work. Two modes: opportunity-space mapping (knowledge work —
+  research the world, never interrogate the user for researchable facts) and
+  value commitment (a value judgment — the agent proposes a recommendation and
+  writes the commitment only after the user ratifies it). Produces
+  user-insights.md + evidence.md + per-question research/ reports under
+  docs/loom/discovery/<date>-<slug>/. Problem-space-pure: states needs and
+  outcomes, never solutions. Delegates heavyweight research to
+  research-toolkit:deep-deep-research. Use for: user needs / what do users need
+  / needs research / 使用者需求 / 使用者洞察 / ユーザーインサイト. Not for
+  business worth-it verdicts (that is business-value) nor for designing the
+  solution (that is loom-interface-design / loom-spec).
 version: 0.1.0
 ---
 

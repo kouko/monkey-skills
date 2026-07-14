@@ -55,6 +55,17 @@ Plan-document-reviewer verdict: PASS (2026-07-14, round 2 — round-1 NEEDS_REVI
   pre-merge: per-record corpus-intent preservation verified by both
   reviewers for every swept skill. Plan-authoring error acknowledged: the
   original T8 assumed working-tree visibility.
+- Amendment (2026-07-14, T8 EXECUTED post-merge): B-leg ran at main
+  47bc1316 against the deployed 0.1.1/0.7.1/0.30.2/0.9.1 cache — 11
+  EXACT / 5 FAMILY / 2 MISS / 0 OVER. Bar verdict FAIL on ONE skill:
+  user-insights 100%→33% via sibling attraction (loom-memory's
+  before-clause). Remedy (b) targeted 217-char restore cache-experimented
+  and FAILED (1/3, ja record newly flipped) → pin-literal full revert
+  (899 chars, byte-identical to pre-sweep) shipped via follow-up PR;
+  loom-memory guard held 4/4 throughout. Five other swept skills: 100%
+  combined preserved, ship as-is. Evidence: ab-results.md
+  §remedy-experiment; durable lesson recorded in docs/loom/memory/
+  sibling-attractor-makes-lexical-tuning-unstable.md.
 - Amendment (2026-07-14, T4 quality-review 🔴): Task 4 Files touched gains
   domain-teams/skills/skill-team/standards/skill-md-structure.md — the
   checklist's grounding standard still stated the flat ≤250 rule (:34, :73)
