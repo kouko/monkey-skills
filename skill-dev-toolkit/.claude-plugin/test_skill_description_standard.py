@@ -3,9 +3,10 @@ the two skill-dev-toolkit skills that author / judge descriptions.
 
 The standard (SSOT rationale: docs/skill-mining/2026-06-19-skill-description-standard.md)
 is inlined into each consuming skill per this repo's self-contained-skill convention —
-EXCEPT the length numbers, which live ONLY in description-design.md §Principle 5 (the
-number authority); the creator copy defers to it. This test guards that the other
-craft rules stay inlined in both copies and no cap figure drifts back into SCA.
+EXCEPT the length numbers, whose authority is description-design.md §Principle 5: the
+creator copy DEFERS to it (no standalone cap figures), while the judge's D4 block
+INLINES ≤150/≤500 with a cite back to that authority — both postures guarded here.
+This test also guards that the other craft rules stay inlined in both copies.
 
 Stdlib only (pathlib + re).
 """
@@ -93,9 +94,24 @@ def test_creator_links_standard_doc():
 
 # --- skill-judge: D4 must score against the standard -----------------------
 
-def test_judge_has_length_cap():
-    t = _low(JUDGE)
-    assert "250" in t and "150" in t, "judge D4 must penalize over-250 / target ≤150"
+def test_judge_scores_length_against_two_tier_ssot():
+    """Judge D4 must score length against the two-tier standard (normal ≤150
+    target / 250 soft lint; router-CONDITIONAL band ≤500 gated on a
+    firing-evidence note) and cite description-design.md §Principle 5 as the
+    number authority — the retired flat 'Penalize >250' rule must be gone
+    (assertion-must-encode-the-property, mirrors the SCA/SSOT guards above)."""
+    raw = JUDGE.read_text(encoding="utf-8")
+    sec_m = re.search(r"^\*\*House description standard\b.*?(?=^### )", raw,
+                      re.M | re.S)
+    assert sec_m, "judge must keep the '**House description standard' D4 block"
+    sec = re.sub(r"\s+", " ", sec_m.group(0).lower())
+    assert "penalize >250" not in sec, \
+        ("flat 'Penalize >250' claim retired: 250 is a SOFT lint line, not a "
+         "hard penalty (two-tier standard)")
+    for needle in ("description-design.md", "principle 5", "soft lint",
+                   "≤150", "≤500", "firing-evidence"):
+        assert needle in sec, \
+            f"judge two-tier length scoring broken: missing {needle!r}"
 
 
 def test_judge_no_cjk_redundancy():
