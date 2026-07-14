@@ -122,3 +122,48 @@ and exits **0**. `adjudicate` exits **0** on success; an unknown id, an
 illegal transition (item not OPEN), or the confirm-seam auth guard (empty/
 pipeline `adjudicated_by`) rejects loud and exits **1**; a missing required
 flag is handled by argparse itself and exits **2**.
+
+## CLI (kpi_schema)
+
+`scripts/kpi_schema.py` — the KPI schema propose-then-confirm lifecycle
+(slice 3). Reuses `_store_fs.resolve_store_dir` for the durable dir
+(`KPI_STORE_DIR` env override applies here too), and routes `confirm`
+through `review_queue`'s human-confirm seam.
+
+```
+# propose: reads kpi_defs as a JSON ARRAY from stdin (or --file PATH)
+echo '[{"kpi_id": "iphone_units", "label": "iPhone units sold", \
+  "unit": "units", "locate_hint": "Segment Information table"}]' \
+  | uv run scripts/kpi_schema.py propose \
+      --company AAPL --review-item-id rev-schema-0001
+
+# confirm: adjudicates the latest PROPOSED version through the
+# review-queue human-confirm seam, then flips it CONFIRMED
+uv run scripts/kpi_schema.py confirm \
+    --company AAPL --by alice --at 2024-01-01
+
+# status: print the company's schema versions + confirmed_kpi_ids
+uv run scripts/kpi_schema.py status --company AAPL
+```
+
+| Subcommand | Flag               | Required | Notes                                                        |
+|------------|--------------------|----------|-----------------------------------------------------------------|
+| `propose`  | `--company`        | yes      | Company identifier                                               |
+| `propose`  | `--review-item-id` | yes      | Id for the review-item enqueued to gate this proposal             |
+| `propose`  | `--file`           | no       | Path to a JSON file holding the kpi_defs array (default: stdin)   |
+| `confirm`  | `--company`        | yes      | Company identifier                                                |
+| `confirm`  | `--by`             | yes      | Human adjudicator identity (`adjudicated_by`) — never empty       |
+| `confirm`  | `--at`             | no       | Caller-supplied `adjudicated_at` timestamp                        |
+| `status`   | `--company`        | yes      | Company identifier                                                |
+
+`propose` exits **0** on success, printing the new version record as JSON;
+malformed JSON or a non-array `kpi_defs` body exits **2** (nothing written);
+a rejection (ValueError) exits **1**. `confirm` exits **0** on success,
+printing the now-CONFIRMED version record; every fail-loud guard (no
+PROPOSED schema for the company, an already-CONFIRMED head, or a rejected
+identity from the reused human-confirm seam) is a ValueError and exits
+**1**; a missing required flag is handled by argparse itself and exits
+**2**. `status` always exits **0**, printing `{company, versions:
+[{version, status}, ...], confirmed_kpi_ids}` — a company with no schema
+proposed yet reads as `{"versions": [], "confirmed_kpi_ids": []}` rather
+than an error.

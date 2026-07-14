@@ -24,7 +24,12 @@ Task 3 adds `confirm(company, adjudicated_by, adjudicated_at=None)`: locates
 the latest PROPOSED version and its OPEN review-item, adjudicates it through
 `review_queue.adjudicate` (the reused human-confirm seam, auth boundary
 included) BEFORE flipping the schema to CONFIRMED, so a rejected identity
-leaves the schema PROPOSED. No extraction, no amend, no CLI here (Tasks 4-6).
+leaves the schema PROPOSED.
+
+Task 6 adds a thin argparse CLI (`propose` / `confirm` / `status`) over the
+library functions above — no new logic, same fail-loud exit-code convention
+as `review_queue.py`'s CLI (0 success / 1 ValueError / 2 malformed or
+malshaped input).
 
 Durable-dir resolution, atomic tmp+rename write, and series locking are ALL
 REUSED from the shared `_store_fs.py` module (same-dir import below), NOT
@@ -34,6 +39,7 @@ under the same DATA dir as the KPI store and review queue.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -290,3 +296,121 @@ def is_kpi_in_confirmed_schema(company: str, kpi_id: str) -> bool:
     never disagree about what "confirmed" means.
     """
     return kpi_id in confirmed_kpi_ids(company)
+
+
+def _cli_propose(args: argparse.Namespace) -> int:
+    """`propose` subcommand: read `kpi_defs` as a JSON array from `--file`
+    (or stdin when omitted), call `propose(company, kpi_defs,
+    review_item_id)`. Mirrors review_queue._cli_enqueue's exit-code
+    contract: malformed JSON or a non-array body -> 2 (nothing written); a
+    rejection (ValueError) -> 1; success -> 0, prints the new version
+    record as JSON to stdout.
+    """
+    if args.file is not None:
+        raw = Path(args.file).read_text(encoding="utf-8")
+    else:
+        raw = sys.stdin.read()
+
+    try:
+        kpi_defs = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        print(f"kpi_schema propose: invalid JSON input: {exc}", file=sys.stderr)
+        return 2
+
+    if not isinstance(kpi_defs, list):
+        print(
+            "kpi_schema propose: expected a JSON array (kpi_defs), got "
+            f"{type(kpi_defs).__name__} — nothing written",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        record = propose(args.company, kpi_defs, args.review_item_id)
+    except ValueError as exc:
+        print(f"kpi_schema propose: {exc}", file=sys.stderr)
+        return 1
+
+    json.dump(record, sys.stdout, ensure_ascii=False)
+    sys.stdout.write("\n")
+    return 0
+
+
+def _cli_confirm(args: argparse.Namespace) -> int:
+    """`confirm` subcommand: call `confirm(company, adjudicated_by=by,
+    adjudicated_at=at)`. Every fail-loud guard (no PROPOSED schema, an
+    already-CONFIRMED head, a rejected identity) surfaces as ValueError ->
+    exit 1; argparse itself handles a missing required flag with its own
+    exit 2.
+    """
+    try:
+        record = confirm(args.company, adjudicated_by=args.by, adjudicated_at=args.at)
+    except ValueError as exc:
+        print(f"kpi_schema confirm: {exc}", file=sys.stderr)
+        return 1
+
+    json.dump(record, sys.stdout, ensure_ascii=False)
+    sys.stdout.write("\n")
+    return 0
+
+
+def _cli_status(args: argparse.Namespace) -> int:
+    """`status` subcommand: print the company's schema versions (version +
+    status only) plus `confirmed_kpi_ids` as JSON. A company with no schema
+    proposed yet reads as an empty/blocked status (`versions: []`,
+    `confirmed_kpi_ids: []`) rather than an error — "nothing proposed yet"
+    is a normal starting state, mirroring review_queue.list_open's
+    missing-file -> [] convention. Always exits 0 (read-only, no fail-loud
+    guard to trip).
+    """
+    envelope = _load_schema_file(_schema_path(args.company))
+    status = {
+        "company": args.company,
+        "versions": [
+            {"version": v["version"], "status": v["status"]}
+            for v in envelope["versions"]
+        ],
+        "confirmed_kpi_ids": confirmed_kpi_ids(args.company),
+    }
+    json.dump(status, sys.stdout, ensure_ascii=False)
+    sys.stdout.write("\n")
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="KPI schema propose-then-confirm lifecycle CLI (propose / confirm / status)."
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    propose_parser = subparsers.add_parser(
+        "propose", help="Propose a new KPI schema version for a company."
+    )
+    propose_parser.add_argument("--company", required=True)
+    propose_parser.add_argument("--review-item-id", required=True, dest="review_item_id")
+    propose_parser.add_argument(
+        "--file", type=Path, default=None,
+        help="Path to a JSON file holding the kpi_defs array (default: read stdin).",
+    )
+    propose_parser.set_defaults(func=_cli_propose)
+
+    confirm_parser = subparsers.add_parser(
+        "confirm", help="Confirm the latest PROPOSED schema version for a company."
+    )
+    confirm_parser.add_argument("--company", required=True)
+    confirm_parser.add_argument("--by", required=True, dest="by")
+    confirm_parser.add_argument("--at", default=None, dest="at")
+    confirm_parser.set_defaults(func=_cli_confirm)
+
+    status_parser = subparsers.add_parser(
+        "status", help="Print a company's schema versions + confirmed_kpi_ids as JSON."
+    )
+    status_parser.add_argument("--company", required=True)
+    status_parser.set_defaults(func=_cli_status)
+
+    args = parser.parse_args()
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

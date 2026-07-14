@@ -23,6 +23,8 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
+import subprocess
 import sys
 
 from conftest import KPI_SCHEMA_SCRIPT, REVIEW_QUEUE_SCRIPT
@@ -363,3 +365,92 @@ def test_rejected_amend_confirm_leaves_prior_confirmed_intact(
     assert kpi_schema_module.confirmed_kpi_ids("NVDA") == ["a"]
     # v2's review-item stays OPEN (adjudication was rejected).
     assert any(i["review_item_id"] == "rev-nv-2" for i in review_queue_module.list_open())
+
+
+def test_cli_propose_confirm_status_roundtrip(tmp_path):
+    """Task 6: the kpi_schema.py CLI's `propose`, `confirm`, and `status`
+    subcommands round-trip a schema through real subprocess invocations (not
+    the library surface directly) — the CLI is a thin wrapper over
+    propose/confirm/confirmed_kpi_ids, not a reimplementation, mirroring
+    test_review_queue.py::test_cli_enqueue_list_adjudicate_roundtrip.
+
+    propose (stdin kpi_defs JSON list) -> status shows PROPOSED with no
+    confirmed_kpi_ids -> confirm -> status shows CONFIRMED with
+    confirmed_kpi_ids populated.
+
+    ALSO a fail-loud CLI assertion: `propose` given a non-list JSON body
+    (a JSON object instead of an array) must exit 2, write nothing, and
+    never leak a raw traceback to stderr — mirrors
+    test_review_queue.py::test_cli_enqueue_fail_loud_exit_codes.
+    """
+    env = {**os.environ, "KPI_STORE_DIR": str(tmp_path)}
+    kpi_defs = [
+        {"kpi_id": "a", "label": "A", "unit": "units", "locate_hint": "hint a"},
+        {"kpi_id": "b", "label": "B", "unit": "units", "locate_hint": "hint b"},
+    ]
+
+    def run_status(company="AAPL"):
+        result = subprocess.run(
+            ["uv", "run", "--script", str(KPI_SCHEMA_SCRIPT), "status", "--company", company],
+            capture_output=True, text=True, timeout=60, env=env,
+        )
+        assert result.returncode == 0, (
+            f"status subcommand failed: stdout={result.stdout!r} "
+            f"stderr={result.stderr!r}"
+        )
+        return json.loads(result.stdout)
+
+    propose_result = subprocess.run(
+        [
+            "uv", "run", "--script", str(KPI_SCHEMA_SCRIPT), "propose",
+            "--company", "AAPL", "--review-item-id", "rev-cli-schema-0001",
+        ],
+        input=json.dumps(kpi_defs),
+        capture_output=True, text=True, timeout=60, env=env,
+    )
+    assert propose_result.returncode == 0, (
+        f"propose subcommand failed: stdout={propose_result.stdout!r} "
+        f"stderr={propose_result.stderr!r}"
+    )
+
+    proposed_status = run_status()
+    assert proposed_status["company"] == "AAPL"
+    assert proposed_status["versions"] == [{"version": 1, "status": "PROPOSED"}]
+    assert proposed_status["confirmed_kpi_ids"] == [], (
+        "an unconfirmed (PROPOSED) schema must report no confirmed_kpi_ids"
+    )
+
+    confirm_result = subprocess.run(
+        [
+            "uv", "run", "--script", str(KPI_SCHEMA_SCRIPT), "confirm",
+            "--company", "AAPL", "--by", "alice", "--at", "2024-01-01",
+        ],
+        capture_output=True, text=True, timeout=60, env=env,
+    )
+    assert confirm_result.returncode == 0, (
+        f"confirm subcommand failed: stdout={confirm_result.stdout!r} "
+        f"stderr={confirm_result.stderr!r}"
+    )
+
+    confirmed_status = run_status()
+    assert confirmed_status["versions"] == [{"version": 1, "status": "CONFIRMED"}]
+    assert confirmed_status["confirmed_kpi_ids"] == ["a", "b"]
+
+    # Fail-loud: a non-list JSON body (an object) must exit 2, nothing
+    # written, no raw traceback.
+    fail_result = subprocess.run(
+        [
+            "uv", "run", "--script", str(KPI_SCHEMA_SCRIPT), "propose",
+            "--company", "MSFT", "--review-item-id", "rev-cli-schema-0002",
+        ],
+        input=json.dumps({"x": 1}),
+        capture_output=True, text=True, timeout=60, env=env,
+    )
+    assert fail_result.returncode == 2, fail_result.stderr
+    assert "Traceback" not in fail_result.stderr, (
+        "a non-list kpi_defs body must fail cleanly, not with a raw traceback"
+    )
+    msft_status = run_status("MSFT")
+    assert msft_status["versions"] == [], (
+        "a rejected non-list propose must write nothing for MSFT"
+    )
