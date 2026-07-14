@@ -32,6 +32,7 @@ XVAL_SCRIPT = SKILLS / "analysis-xval" / "scripts" / "xval_compute.py"
 KPI_STORE_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_store.py"
 REVIEW_QUEUE_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "review_queue.py"
 STORE_FS_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "_store_fs.py"
+KPI_SCHEMA_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_schema.py"
 
 
 def run_script(script: Path, *args: str, timeout: int = 60) -> subprocess.CompletedProcess:
