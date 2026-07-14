@@ -6,6 +6,24 @@ file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.1.2] — 2026-07-14
+
+### Fixed
+
+- **`user-insights` description reverted to the full pre-sweep 899-char
+  version** (byte-identical to the 0.1.0 text). The post-merge A/B B-leg
+  (plan Task 8) measured combined firing 100%→33%: two records were
+  cross-family-attracted by loom-pipeline:loom-memory's pre-existing
+  "check prior experience before loom work" clause once the slimmed
+  170-char description lost its needs-research lexical thickness. A
+  targeted 217-char restore was cache-experimented and ALSO failed
+  (1/3 — the ja record newly flipped), demonstrating that mid-band
+  lexical tuning near a sibling attractor is unstable — pin-literal
+  revert per the plan's A/B bar. Evidence:
+  `docs/skill-dogfood/2026-07-14-description-token-economy/ab-results.md`
+  §remedy-experiment. Net sweep for this plugin stands at
+  using-loom-discovery −566 / business-value −386 chars.
+
 ## [0.1.1] — 2026-07-14
 
 ### Changed
