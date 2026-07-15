@@ -133,15 +133,18 @@ def test_extract_dimensional_revenue_raises_on_missing_period_end(sec_client, mo
     """A dimensional revenue fact with no period_end must never enter the
     pack as a null-dated point — fail loud with a ValueError naming
     period_end, matching the module's anti-fabrication posture (plan
-    amendment (a), spec-reviewer NEEDS_REVISION)."""
+    amendment (a), spec-reviewer NEEDS_REVISION).
+
+    Uses the full-signature `dim_<axis>` per-row column shape (Task 4,
+    docs/loom/plans/2026-07-15-operational-kpi-full-dimensional-signature.md)
+    — NOT the retired singular `dimension`/`member` convenience columns."""
     filing = _real_shape_filing()
     xb = mock.MagicMock(name="xbrl")
     xb.facts.to_dataframe.return_value.to_dict.return_value = [
         {
             "is_dimensioned": True,
-            "dimension": "srt:ProductOrServiceAxis",
+            "dim_srt_ProductOrServiceAxis": "aapl:IPhoneMember",
             "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
-            "member": "aapl:IPhoneMember",
             "numeric_value": 100.0,
             "period_type": "duration",
             "period_end": None,
@@ -158,3 +161,65 @@ def test_extract_dimensional_revenue_raises_on_missing_period_end(sec_client, mo
 
     with pytest.raises(ValueError, match="period_end"):
         sec_client.extract_dimensional_revenue("AAPL")
+
+
+# ---------------------------------------------------------------------------
+# Task 4 — full-signature fact-pack: `dimensions` map (ALL real breakdown
+# axes) + separate `consolidation` qualifier, replacing single {axis, member}
+# ---------------------------------------------------------------------------
+
+def test_build_fact_full_signature():
+    """`_build_dimensional_revenue_fact` builds `dimensions` from the ROW'S
+    per-axis `dim_<namespace>_<AxisLocalName>` columns (a single row/context
+    can carry MULTIPLE populated dim_<axis> columns at once — live-verified
+    on a real NFLX 10-K row 2026-07-15: `dim_srt_ProductOrServiceAxis` AND
+    `dim_srt_StatementGeographicalAxis` both populated on the SAME row) —
+    never from the singular `dimension`/`member` convenience columns (the
+    wrong-layer trap: those expose only ONE axis)."""
+    mod = _load_helpers()
+
+    # NFLX-shaped row: two REAL breakdown axes on one row, no consolidation
+    # qualifier — matches the committed fixture's US&Canada streaming slice.
+    nflx_row = {
+        "concept": "us-gaap:Revenues",
+        "dim_srt_ProductOrServiceAxis": "nflx:StreamingMember",
+        "dim_srt_StatementGeographicalAxis": "nflx:UnitedStatesAndCanadaMember",
+        "numeric_value": 19957152000.0,
+        "period_type": "duration",
+        "period_end": "2025-12-31",
+    }
+    fact = mod._build_dimensional_revenue_fact(nflx_row, "NFLX", "0001065280-26-000034", "2026-01-23")
+    assert fact["dimensions"] == {
+        "ProductOrService": "StreamingMember",
+        "StatementGeographical": "UnitedStatesAndCanadaMember",
+    }
+    assert fact["consolidation"] is None
+    assert "axis" not in fact and "member" not in fact
+
+    # AAPL-shaped row: a segment breakdown QUALIFIED by
+    # srt:ConsolidationItemsAxis — the qualifier is captured separately as
+    # `consolidation`, never folded into `dimensions` as a second axis.
+    aapl_row = {
+        "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "dim_us-gaap_StatementBusinessSegmentsAxis": "aapl:AmericasSegmentMember",
+        "dim_srt_ConsolidationItemsAxis": "us-gaap:OperatingSegmentsMember",
+        "numeric_value": 178353000000.0,
+        "period_type": "duration",
+        "period_end": "2025-09-27",
+    }
+    fact2 = mod._build_dimensional_revenue_fact(aapl_row, "AAPL", "0000320193-25-000079", "2025-10-31")
+    assert fact2["dimensions"] == {"StatementBusinessSegments": "AmericasSegmentMember"}
+    assert fact2["consolidation"] == "OperatingSegmentsMember"
+
+    # Both-namespace matching (the Apple pre/post-2018 lesson) stays intact
+    # for the dim_<axis> per-row columns too: a us-gaap:-namespaced
+    # ProductOrServiceAxis column resolves the same as srt:-namespaced.
+    pre2018_row = {
+        "concept": "us-gaap:SalesRevenueNet",
+        "dim_us-gaap_ProductOrServiceAxis": "aapl:IPhoneMember",
+        "numeric_value": 1000.0,
+        "period_type": "duration",
+        "period_end": "2017-09-30",
+    }
+    fact3 = mod._build_dimensional_revenue_fact(pre2018_row, "AAPL", "acc", "filed")
+    assert fact3["dimensions"] == {"ProductOrService": "IPhoneMember"}

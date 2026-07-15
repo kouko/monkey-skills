@@ -1,16 +1,20 @@
 """test_sec_edgar_dimensional_live.py — live-API anchor for
 `sec_edgar_client.extract_dimensional_revenue` (Task 5,
-docs/loom/plans/2026-07-14-operational-kpi-companyfacts-pilot.md).
+docs/loom/plans/2026-07-14-operational-kpi-companyfacts-pilot.md; fact
+shape updated to the full-signature model by Task 4,
+docs/loom/plans/2026-07-15-operational-kpi-full-dimensional-signature.md).
 
 Fetches AAPL's latest 10-K XBRL via real edgartools and asserts the
-extractor's normalized dimensional-revenue fact-pack (the shape
-tests/analysis/fixtures/xbrl_aapl_factpack.json declares) contains a real
-aapl:IPhoneMember (srt:ProductOrServiceAxis) revenue fact — proving BOTH the
-srt:* namespace path is reachable AND the full declared key set is emitted.
-The 2018 tagging-regime shift moved Apple's product-line axis from
+extractor's normalized full-signature dimensional-revenue fact-pack (the
+shape tests/analysis/fixtures/xbrl_signature_factpack.json declares)
+contains a real ProductOrService=IPhoneMember revenue fact — proving BOTH
+the srt:* namespace path is reachable AND the full declared key set is
+emitted. The 2018 tagging-regime shift moved Apple's product-line axis from
 us-gaap:ProductOrServiceAxis to srt:ProductOrServiceAxis (the "Apple
 false-negative lesson" the plan names) — a single-namespace filter would
-silently drop this fact.
+silently drop this fact; `dimensions` collapses both namespaces to the same
+axis-local-name key ("ProductOrService"), so this test no longer needs to
+assert the raw axis string.
 
 Marked @pytest.mark.network (registered in tests/data/conftest.py) so the
 offline suite (`pytest -m "not network"`) stays green; `edgar` /
@@ -31,7 +35,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "skills" / "data-markets" / "scripts"
 
 _FACT_PACK_KEYS = {
-    "concept", "axis", "member", "value",
+    "concept", "dimensions", "consolidation", "value",
     "period_end", "fiscal_year", "accession", "filed",
 }
 
@@ -57,14 +61,15 @@ def test_extract_dimensional_revenue_aapl_live():
     # The srt:* namespace path is reachable: Apple's post-2018 iPhone
     # product-line revenue is tagged srt:ProductOrServiceAxis /
     # aapl:IPhoneMember, NOT the pre-2018 us-gaap:ProductOrServiceAxis —
-    # filtering a single namespace would silently drop this fact.
+    # filtering a single namespace would silently drop this fact. `dimensions`
+    # collapses both namespaces to the same axis-local-name key.
     iphone_facts = [
         f for f in facts
-        if f["member"] == "aapl:IPhoneMember" and f["axis"] == "srt:ProductOrServiceAxis"
+        if f["dimensions"].get("ProductOrService") == "IPhoneMember"
     ]
     assert iphone_facts, (
-        "expected a real aapl:IPhoneMember revenue fact under "
-        f"srt:ProductOrServiceAxis; got members={sorted({f['member'] for f in facts})}"
+        "expected a real ProductOrService=IPhoneMember revenue fact; got "
+        f"dimensions={[f['dimensions'] for f in facts]}"
     )
     assert any(f["value"] > 100e9 for f in iphone_facts), (
         f"expected an iPhone revenue value > 100e9: {iphone_facts}"
