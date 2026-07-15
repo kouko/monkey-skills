@@ -26,6 +26,22 @@ def _text() -> str:
     return SKILL.read_text(encoding="utf-8")
 
 
+def _package_docs_text() -> str:
+    """SKILL.md + its bundled references/ — the skill's full documentation
+    surface. Used ONLY by the intent-layer tests below: that content moved to
+    `references/intent-layer.md` (slim round 2, trigger-loaded pointer stays
+    in the body), and the doc-mirrors-code lockstep must follow the content,
+    not the file split. Every other test keeps grepping the body via
+    `_text()` — do not widen them to this helper (a wider corpus silently
+    loosens positive assertions)."""
+    text = _text()
+    refs_dir = SKILL.parent / "references"
+    if refs_dir.is_dir():
+        for ref in sorted(refs_dir.glob("*.md")):
+            text += "\n" + ref.read_text(encoding="utf-8")
+    return text
+
+
 # --- YAML frontmatter -------------------------------------------------------
 
 def test_yaml_frontmatter_name_and_description():
@@ -345,9 +361,18 @@ def test_skill_documents_intent_layer():
     """The skill MUST document how to author the PERSISTENT intent layer:
     the TOP/MID locations, the three canonical TOP MODEL.md sections (which
     MUST mirror validate_intent_layer.py's _TOP_SECTIONS), the per-capability
-    MID README.md, cut rule #4, and the MID-no-restate anti-pattern."""
-    text = _text()
+    MID README.md, cut rule #4, and the MID-no-restate anti-pattern.
+
+    Since slim round 2 the full authoring rules live in
+    references/intent-layer.md with a trigger-carrying pointer in the body —
+    the contract is checked over the package docs (body + references), plus
+    the body must actually point at the reference."""
+    text = _package_docs_text()
     low = text.lower()
+
+    # the body pointer that routes the agent to the extracted rules
+    assert "references/intent-layer.md" in _text(), \
+        "SKILL.md body must point at references/intent-layer.md"
 
     # an explicitly-named intent-layer authoring section
     assert "persistent intent layer" in low, \
@@ -406,8 +431,13 @@ def test_skill_documents_prior_state_intake():
     content), (b) a seam-mapping table routing each persisted prior-state to
     the phase it feeds (5 rows), (c) the empty base case (additive / may be
     empty / absent → treat as a generic seed, no cold-start deadlock), and
-    (d) the INDEX referenced WHEN-PRESENT."""
-    text = _text()
+    (d) the INDEX referenced WHEN-PRESENT.
+
+    Since slim round 2 the seam-mapping table lives in
+    references/intent-layer.md (body keeps a pointer + the binding rules in
+    brief) — the contract is checked over the package docs (body +
+    references)."""
+    text = _package_docs_text()
     low = text.lower()
 
     # an explicitly-named prior-state intake section
