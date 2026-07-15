@@ -70,6 +70,12 @@ import kpi_series  # noqa: E402
 
 _DEFAULT_CONSOLIDATION_MEMBER = "OperatingSegmentsMember"
 
+# Scope A (this pilot) does NOT model quarters — it always emits the
+# constant annual period_type "FY". This reserves the identity-key slot
+# scope B (quarterly, loom-spec follow-up) extends without a core rewrite;
+# scope B owns the real period_type enumeration (see plan Decision Log).
+_PERIOD_TYPE_FY = "FY"
+
 
 def _normalize_consolidation(value):
     """Normalize a `consolidation` qualifier (srt:ConsolidationItemsAxis
@@ -184,6 +190,7 @@ def facts_to_points(
             {
                 "company": company,
                 "kpi_id": kpi_id,
+                "period_type": _PERIOD_TYPE_FY,
                 "period": period,
                 "as_of": filed,
                 "value": value,
@@ -216,7 +223,9 @@ def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
     mapping) under the single logical `kpi_id`. A fact matching no source is
     skipped, never fabricated. A fact matching more than one source RAISES —
     an ambiguous binding. INVARIANT: exactly ONE point per (signature,
-    period). When a single source's signature matches TWO OR MORE facts for
+    period_type, period) — `period_type` reserves the slot scope B
+    (quarterly) extends later; scope A always sets it to the constant
+    `"FY"`. When a single source's signature matches TWO OR MORE facts for
     the SAME period, they collapse to exactly one point — if every matched
     fact agrees on `value`, the identical duplicate(s) are DEDUPED down to
     one point (never double-counted downstream); if the matched facts
@@ -259,11 +268,12 @@ def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
     deduped_facts_by_source_idx: list[list[dict]] = [[] for _ in sources]
     for idx, source in enumerate(sources):
         matched_facts = facts_by_source_idx[idx]
-        by_period: dict[str, list[dict]] = {}
+        by_period: dict[tuple[str, str], list[dict]] = {}
         for fact in matched_facts:
             period_key = (fact.get("period_end") or "")[:4] or fact.get("period_end")
-            by_period.setdefault(period_key, []).append(fact)
-        for period_key, group in by_period.items():
+            identity_key = (_PERIOD_TYPE_FY, period_key)
+            by_period.setdefault(identity_key, []).append(fact)
+        for (_, period_key), group in by_period.items():
             values = {fact.get("value") for fact in group}
             if len(values) > 1:
                 raise ValueError(

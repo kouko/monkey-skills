@@ -373,6 +373,44 @@ def test_resolve_binding_dedupes_identical_duplicate(kpi_xbrl_module, signature_
     assert by_period["2025"]["value"] == 45183036000
 
 
+def test_resolve_binding_identity_key_carries_period_type_fy(
+    kpi_xbrl_module, signature_fact_pack
+):
+    """Task 3 GREEN: the anti-fabrication identity/dedup key extends from
+    (signature, period) to (signature, period_type, period) — scope A
+    always sets period_type to the constant "FY" (scope B, quarterly, owns
+    the real enumeration later; see Decision Log). Every emitted point
+    carries period_type == "FY", and an identical-value duplicate (same
+    signature, same period) still dedupes to exactly ONE point under the
+    extended key — annual grouping is unchanged since every scope-A point
+    is FY.
+    """
+    points = kpi_xbrl_module.resolve_binding(
+        signature_fact_pack, STREAMING_TOTAL_BINDING, "NFLX"
+    )
+    assert len(points) == 3
+    assert all(p["period_type"] == "FY" for p in points)
+
+    mutated = json.loads(json.dumps(signature_fact_pack))
+    duplicate_2025_total = next(
+        f
+        for f in mutated["facts"]
+        if f["concept"] == "us-gaap:Revenues"
+        and f["dimensions"] == {"ProductOrService": "StreamingMember"}
+        and f["period_end"] == "2025-12-31"
+    )
+    identical_duplicate = json.loads(json.dumps(duplicate_2025_total))  # SAME value
+    mutated["facts"].append(identical_duplicate)
+
+    deduped_points = kpi_xbrl_module.resolve_binding(
+        mutated, STREAMING_TOTAL_BINDING, "NFLX"
+    )
+    assert len(deduped_points) == 3
+    by_period = {p["period"]: p for p in deduped_points}
+    assert by_period["2025"]["value"] == 45183036000
+    assert by_period["2025"]["period_type"] == "FY"
+
+
 AMERICAS_SEGMENT_BINDING = {
     "kpi_id": "americas_segment_revenue",
     "sources": [
