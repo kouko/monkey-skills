@@ -146,3 +146,45 @@ def test_extract_dimensional_revenue_tsla_skips_amendment_live():
         f"extract_dimensional_revenue selected a non-exact-10-K filing: "
         f"{matching_filings[0].form!r} (accession {accession})"
     )
+
+
+@pytest.mark.network
+def test_extract_dimensional_revenue_multifiling_live_aapl():
+    """Live shape-anchor for the `since_year` multi-filing path (Task 6,
+    docs/loom/plans/2026-07-15-multi-filing-historical-fetch.md). Guards the
+    REAL edgartools multi-filing shape at the boundary offline fixtures can
+    drift from (loom-memory `fixtures-mirror-producer-shape` — a live anchor
+    caught edgartools grounding wrong 3x historically): concatenating facts
+    from every in-range exact-form 10-K must actually span more than one
+    filing's worth of fiscal years, across more than one distinct accession,
+    each fact still carrying a non-null dimensional signature.
+    """
+    if str(SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(SCRIPTS))
+    import sec_edgar_client
+
+    pack = sec_edgar_client.extract_dimensional_revenue("AAPL", since_year=2015)
+
+    assert "error" not in pack, f"extract_dimensional_revenue failed: {pack}"
+    assert pack["company"] == "AAPL"
+    facts = pack["facts"]
+    assert isinstance(facts, list) and facts, "expected a non-empty facts list"
+
+    for fact in facts:
+        assert _FACT_PACK_KEYS <= set(fact), (
+            f"fact missing a declared fact-pack key: {sorted(fact)}"
+        )
+        assert fact["dimensions"], (
+            f"expected a non-null dimensional signature: {fact}"
+        )
+
+    accessions = {f["accession"] for f in facts}
+    assert len(accessions) > 1, (
+        f"expected facts drawn from more than one filing (accession): {accessions}"
+    )
+
+    fiscal_years = {f["fiscal_year"] for f in facts}
+    assert len(fiscal_years) > 3, (
+        f"expected facts spanning more than 3 distinct fiscal years: "
+        f"{sorted(fiscal_years)}"
+    )
