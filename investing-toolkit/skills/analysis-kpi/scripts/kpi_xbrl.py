@@ -189,7 +189,15 @@ def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
     matched fact is emitted (via `facts_to_points`, reusing its provenance
     mapping) under the single logical `kpi_id`. A fact matching no source is
     skipped, never fabricated. A fact matching more than one source RAISES —
-    an ambiguous binding.
+    an ambiguous binding. INVARIANT: exactly ONE point per (signature,
+    period). When a single source's signature matches TWO OR MORE facts for
+    the SAME period, they collapse to exactly one point — if every matched
+    fact agrees on `value`, the identical duplicate(s) are DEDUPED down to
+    one point (never double-counted downstream); if the matched facts
+    DISAGREE on `value`, resolve_binding RAISES ValueError naming the
+    kpi_id + period — a genuine value conflict is never resolved
+    arbitrarily. A period with exactly one matching fact resolves cleanly,
+    unchanged.
     """
     kpi_id = binding["kpi_id"]
     sources = binding["sources"]
@@ -216,9 +224,34 @@ def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
         if matched_indices:
             facts_by_source_idx[matched_indices[0]].append(fact)
 
-    points = []
+    # Reduce each source's matched facts to exactly ONE fact per period: a
+    # period with >1 matching fact that all AGREE on value is deduped down
+    # to a single representative fact (never double-counted downstream as
+    # two identical points); a period with matching facts that DISAGREE on
+    # value RAISES (a genuine conflict, never resolved arbitrarily).
+    deduped_facts_by_source_idx: list[list[dict]] = [[] for _ in sources]
     for idx, source in enumerate(sources):
         matched_facts = facts_by_source_idx[idx]
+        by_period: dict[str, list[dict]] = {}
+        for fact in matched_facts:
+            period_key = (fact.get("period_end") or "")[:4] or fact.get("period_end")
+            by_period.setdefault(period_key, []).append(fact)
+        for period_key, group in by_period.items():
+            values = {fact.get("value") for fact in group}
+            if len(values) > 1:
+                raise ValueError(
+                    f"kpi_xbrl.resolve_binding: signature for kpi_id {kpi_id!r} "
+                    f"matches {len(group)} facts with different values for "
+                    f"period {period_key!r} (concept={source.get('concept')!r}) "
+                    f"— ambiguous, never resolved arbitrarily"
+                )
+            # exactly one distinct value across the group (1 or more identical
+            # facts) -> keep exactly one representative fact for this period.
+            deduped_facts_by_source_idx[idx].append(group[0])
+
+    points = []
+    for idx, source in enumerate(sources):
+        matched_facts = deduped_facts_by_source_idx[idx]
         if not matched_facts:
             continue
         sub_pack = {"company": fact_pack.get("company"), "facts": matched_facts}

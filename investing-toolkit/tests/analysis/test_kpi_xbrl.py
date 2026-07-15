@@ -307,6 +307,67 @@ def test_resolve_binding_exact_signature_deconflates(kpi_xbrl_module, signature_
         assert p["source_cell_ref"]
 
 
+def test_resolve_binding_raises_on_ambiguous_signature_period(kpi_xbrl_module, signature_fact_pack):
+    """Task 2 GREEN: a bound signature that matches TWO facts for the SAME
+    period with DIFFERENT values RAISES ValueError naming the period — the
+    anti-fabrication guard extended to the full-signature era (never
+    silently pick one of the conflicting values). The signature's clean
+    periods (single fact each) still resolve fine on the unmutated pack.
+    """
+    mutated = json.loads(json.dumps(signature_fact_pack))
+    duplicate_2025_total = next(
+        f
+        for f in mutated["facts"]
+        if f["concept"] == "us-gaap:Revenues"
+        and f["dimensions"] == {"ProductOrService": "StreamingMember"}
+        and f["period_end"] == "2025-12-31"
+    )
+    conflicting_fact = json.loads(json.dumps(duplicate_2025_total))
+    conflicting_fact["value"] = 45000000000  # differs from the real 45183036000
+    mutated["facts"].append(conflicting_fact)
+
+    with pytest.raises(ValueError, match="2025"):
+        kpi_xbrl_module.resolve_binding(mutated, STREAMING_TOTAL_BINDING, "NFLX")
+
+    # single-value signature+period (unmutated pack) still resolves cleanly.
+    clean_points = kpi_xbrl_module.resolve_binding(
+        signature_fact_pack, STREAMING_TOTAL_BINDING, "NFLX"
+    )
+    assert len(clean_points) == 3
+    by_period = {p["period"]: p for p in clean_points}
+    assert by_period["2025"]["value"] == 45183036000
+
+
+def test_resolve_binding_dedupes_identical_duplicate(kpi_xbrl_module, signature_fact_pack):
+    """REVISION (code-quality 🟡): two facts sharing the SAME dimensional
+    signature AND the SAME period AND the SAME value must resolve to
+    exactly ONE point — never two identical points (which would silently
+    double-count downstream). Dedupe on agreement; a genuine value
+    conflict (test_resolve_binding_raises_on_ambiguous_signature_period)
+    still RAISES.
+    """
+    mutated = json.loads(json.dumps(signature_fact_pack))
+    duplicate_2025_total = next(
+        f
+        for f in mutated["facts"]
+        if f["concept"] == "us-gaap:Revenues"
+        and f["dimensions"] == {"ProductOrService": "StreamingMember"}
+        and f["period_end"] == "2025-12-31"
+    )
+    identical_duplicate = json.loads(json.dumps(duplicate_2025_total))  # SAME value
+    mutated["facts"].append(identical_duplicate)
+
+    points = kpi_xbrl_module.resolve_binding(mutated, STREAMING_TOTAL_BINDING, "NFLX")
+
+    # still exactly 3 points (2023, 2024, 2025) — the duplicate collapsed
+    # to ONE point for 2025, not two.
+    assert len(points) == 3
+    periods = sorted(p["period"] for p in points)
+    assert periods == ["2023", "2024", "2025"]
+    by_period = {p["period"]: p for p in points}
+    assert by_period["2025"]["value"] == 45183036000
+
+
 def test_facts_to_points_fails_loud_new_shape(kpi_xbrl_module, signature_fact_pack):
     """REVISION (code-quality 🔴): the anti-fabrication guards were only
     exercised via the OLD axis/member shape (inside a now-xfailed test) —
