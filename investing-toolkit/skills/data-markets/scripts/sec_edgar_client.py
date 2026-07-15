@@ -1849,13 +1849,26 @@ def _is_dimensional_revenue_axis(axis: str | None) -> bool:
     return axis.rsplit(":", 1)[-1] in _DIMENSIONAL_REVENUE_AXIS_LOCAL_NAMES
 
 
+_DEFERRED_REVENUE_CONCEPT_PREFIXES = (
+    "ContractWithCustomerLiabilityRevenue",
+)
+
+
 def _is_revenue_concept(concept: str | None) -> bool:
     """True when `concept`'s local name (post `:`) contains "Revenue" — e.g.
     `us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax` (post-2018)
-    or `us-gaap:SalesRevenueNet` (pre-2018)."""
+    or `us-gaap:SalesRevenueNet` (pre-2018) — EXCLUDING deferred-revenue /
+    contract-liability reconciliation concepts (e.g.
+    `ContractWithCustomerLiabilityRevenueRecognized`,
+    `...RecognizedExcludingOpeningBalance`) that merely contain "Revenue"
+    but are not operating revenue (plan Task 5,
+    docs/loom/plans/2026-07-15-operational-kpi-full-dimensional-signature.md)."""
     if not concept:
         return False
-    return "Revenue" in concept.rsplit(":", 1)[-1]
+    local_name = concept.rsplit(":", 1)[-1]
+    if "Revenue" not in local_name:
+        return False
+    return not local_name.startswith(_DEFERRED_REVENUE_CONCEPT_PREFIXES)
 
 
 def _dimensional_revenue_error_slot(ticker: str, form: str, detail: str) -> dict:

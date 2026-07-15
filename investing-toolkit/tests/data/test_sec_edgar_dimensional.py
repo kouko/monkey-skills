@@ -118,6 +118,36 @@ def test_is_revenue_concept_matches_pre_and_post_2018_concepts():
     assert mod._is_revenue_concept(None) is False
 
 
+def test_is_revenue_concept_excludes_deferred_revenue():
+    """Deferred-revenue / contract-liability rollforward concepts merely
+    CONTAIN "Revenue" but are NOT operating revenue — plan Task 5
+    (docs/loom/plans/2026-07-15-operational-kpi-full-dimensional-signature.md).
+    Real operating-revenue concepts across tagging regimes must stay True;
+    the ContractWithCustomerLiabilityRevenue* reconciliation family must be
+    excluded."""
+    mod = _load_helpers()
+
+    for real_concept in (
+        "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "us-gaap:SalesRevenueNet",
+        "us-gaap:Revenues",
+        "us-gaap:RevenuesNetOfInterestExpense",
+        "us-gaap:AdvertisingRevenue",
+    ):
+        assert mod._is_revenue_concept(real_concept) is True, (
+            f"{real_concept} is real operating revenue and must stay True"
+        )
+
+    for deferred_concept in (
+        "us-gaap:ContractWithCustomerLiabilityRevenueRecognized",
+        "us-gaap:ContractWithCustomerLiabilityRevenueRecognizedExcludingOpeningBalance",
+    ):
+        assert mod._is_revenue_concept(deferred_concept) is False, (
+            f"{deferred_concept} is a deferred-revenue/contract-liability "
+            "reconciliation item, not operating revenue — must be excluded"
+        )
+
+
 # ---------------------------------------------------------------------------
 # extract_dimensional_revenue — fail-loud on a null period_end
 # ---------------------------------------------------------------------------
