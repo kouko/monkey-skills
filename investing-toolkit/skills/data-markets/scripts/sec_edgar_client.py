@@ -1982,14 +1982,56 @@ def _build_dimensional_revenue_fact(fact: dict, ticker: str, accession: str, fil
     }
 
 
-def extract_dimensional_revenue(ticker: str, form: str = "10-K") -> dict:
-    """Fetch `ticker`'s latest `form` filing's XBRL via edgartools and emit
-    the normalized full-signature dimensional-revenue fact-pack (Task 4,
+def _filing_period_year(filing) -> int | None:
+    """The fiscal year a filing REPORTS, from its filings-list metadata
+    (`period_of_report`, the fiscal-period-end date string) — NOT by fetching
+    its `.xbrl()`. edgartools exposes `period_of_report` on every real 10-K
+    Filing (live-verified 2026-07-15, `_filing_ref`:851 relies on it; see the
+    real-Filing-shape header at :808), so range selection reads it directly.
+    Returns None when it is absent/unparseable (never guessed)."""
+    period = getattr(filing, "period_of_report", None)
+    if not period:
+        return None
+    try:
+        return int(str(period)[:4])
+    except (ValueError, TypeError):
+        return None
+
+
+def extract_dimensional_revenue(
+    ticker: str,
+    form: str = "10-K",
+    since_year: int | None = None,
+    until_year: int | None = None,
+) -> dict:
+    """Fetch `ticker`'s `form` XBRL via edgartools and emit the normalized
+    full-signature dimensional-revenue fact-pack (Task 4,
     docs/loom/plans/2026-07-15-operational-kpi-full-dimensional-signature.md
     — the declared shape, tests/analysis/fixtures/xbrl_signature_factpack.json):
       {"company": <ticker>, "facts": [{"concept", "dimensions": {axis_local:
        member_local, ...}, "consolidation": member_local|None, "value",
        "period_end", "fiscal_year", "accession", "filed"}, ...]}
+
+    Range-bounded consecutive multi-filing fetch (Task 1,
+    docs/loom/plans/2026-07-15-multi-filing-historical-fetch.md):
+
+    - `since_year=None, until_year=None` (default): latest filing only —
+      today's behavior, UNCHANGED (no cold-fetch surprise: pulling all ~16
+      historical `.xbrl()`s is too heavy for a default).
+    - `since_year` set: every exact-form filing whose fiscal period (from the
+      filings-list `period_of_report` metadata) falls in the INCLUSIVE year
+      range `[since_year, until_year]` is fetched and its facts concatenated
+      into the one flat `facts` list. `until_year=None` → `[since_year, latest]`.
+      CONSECUTIVE — every in-range filing, never strided (striding risks silent
+      year-gaps and breaks the overlap policy). Filing selection reads the
+      filings-list metadata; only the selected filings' `.xbrl()` is fetched.
+
+    `until_year` WITHOUT `since_year` is UNSUPPORTED and raises loudly: the
+    range is `[since_year, until_year]`, and with no lower bound the call would
+    silently fall to latest-only and could return a filing NEWER than the
+    stated `until_year` — a silent contradiction of the caller's request
+    (fail-loud: silent-wrong is the enemy). The Decision Log defines only
+    both-None (latest-only) and `since_year`-alone (`[since_year, latest]`).
 
     Emits every REVENUE fact (`_is_revenue_concept`) carrying at least one
     REAL breakdown dimensional axis (`_dimension_signature`, via
@@ -2000,10 +2042,17 @@ def extract_dimensional_revenue(ticker: str, form: str = "10-K") -> dict:
     e.g. a placeholder concept) is not emitted — never fabricated as 0.
 
     Returns a loud `{"error": ...}` slot (never a fabricated/empty fact-pack)
-    when the ticker does not resolve to a registered SEC filer, or `form`
-    was never filed within the lookup window.
+    when the ticker does not resolve to a registered SEC filer, or no `form`
+    filing matches the requested window/range.
     """
     ticker = ticker.upper()
+    if since_year is None and until_year is not None:
+        raise ValueError(
+            "until_year requires since_year: an upper bound with no lower "
+            "bound is unsupported (the range is [since_year, until_year]; "
+            "without since_year the call would fall to latest-only and could "
+            f"return a filing newer than until_year={until_year})"
+        )
     identity_error = _ensure_edgar_identity()
     if identity_error is not None:
         return identity_error
@@ -2034,24 +2083,56 @@ def extract_dimensional_revenue(ticker: str, form: str = "10-K") -> dict:
         [f for f in filings if getattr(f, "form", None) == form]
         if filings is not None else []
     )
-    filing = max(exact_filings, key=lambda f: f.filing_date) if exact_filings else None
-    if filing is None:
+    if not exact_filings:
         return _dimensional_revenue_error_slot(
             ticker, form, f"form {form!r} not available within the lookup window",
         )
 
-    xb = filing.xbrl()
-    facts_records = xb.facts.to_dataframe().to_dict("records")
-    accession = filing.accession_no
-    filed = _filing_date_iso(filing.filing_date)
+    if since_year is None:
+        # Default (latest-only) path — pick the single most-recent exact-form
+        # filing. Behaviorally identical to the pre-range collapse.
+        selected = [max(exact_filings, key=lambda f: f.filing_date)]
+    else:
+        # Range path — select from filings-list metadata (period_of_report),
+        # NOT by fetching every `.xbrl()` first (the plan's kickoff decision).
+        selected = sorted(
+            (
+                f for f in exact_filings
+                if _filing_in_year_range(f, since_year, until_year)
+            ),
+            key=lambda f: f.filing_date,
+        )
+        if not selected:
+            return _dimensional_revenue_error_slot(
+                ticker, form,
+                f"no {form!r} filing reports a fiscal period within "
+                f"[{since_year}, {until_year if until_year is not None else 'latest'}]",
+            )
 
-    facts = [
-        _build_dimensional_revenue_fact(fact, ticker, accession, filed)
-        for fact in facts_records
-        if _is_dimensional_revenue_fact(fact)
-    ]
+    facts = []
+    for filing in selected:
+        xb = filing.xbrl()
+        facts_records = xb.facts.to_dataframe().to_dict("records")
+        accession = filing.accession_no
+        filed = _filing_date_iso(filing.filing_date)
+        facts.extend(
+            _build_dimensional_revenue_fact(fact, ticker, accession, filed)
+            for fact in facts_records
+            if _is_dimensional_revenue_fact(fact)
+        )
 
     return {"company": ticker, "facts": facts}
+
+
+def _filing_in_year_range(filing, since_year: int, until_year: int | None) -> bool:
+    """Whether `filing`'s reported fiscal year (`_filing_period_year`) falls in
+    the INCLUSIVE range `[since_year, until_year]`; `until_year=None` leaves the
+    upper bound open ([since_year, latest]). A filing whose period year is
+    unknown is not range-selectable (never guessed into the range)."""
+    year = _filing_period_year(filing)
+    if year is None or year < since_year:
+        return False
+    return until_year is None or year <= until_year
 
 
 # ---------------------------------------------------------------------------
