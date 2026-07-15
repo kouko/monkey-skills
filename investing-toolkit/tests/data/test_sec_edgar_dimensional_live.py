@@ -94,3 +94,55 @@ def test_extract_dimensional_revenue_aapl_live():
         "fiscal_year must derive from period_end, not edgartools' raw "
         f"fiscal_year column: {prior_year_iphone_facts}"
     )
+
+
+@pytest.mark.network
+def test_extract_dimensional_revenue_tsla_skips_amendment_live():
+    """TSLA's `company.get_filings(form="10-K").latest()` returns a
+    "10-K/A" amendment (edgartools' form filter is a loose/prefix match,
+    live-verified 2026-07-15: TSLA's most recent filing by date is a
+    10-K/A, which carries 0 dimensional-revenue facts) — Task 6,
+    docs/loom/plans/2026-07-15-operational-kpi-full-dimensional-signature.md.
+    `extract_dimensional_revenue` must select the latest filing whose
+    form is EXACTLY "10-K" (never an amendment), so the amendment never
+    shadows the real annual report.
+    """
+    if str(SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(SCRIPTS))
+    import sec_edgar_client
+
+    pack = sec_edgar_client.extract_dimensional_revenue("TSLA")
+
+    assert "error" not in pack, f"extract_dimensional_revenue failed: {pack}"
+    assert pack["company"] == "TSLA"
+    facts = pack["facts"]
+    assert isinstance(facts, list) and facts, (
+        "expected a non-empty facts list from the exact 10-K (not the "
+        "0-dimensional 10-K/A amendment)"
+    )
+
+    for fact in facts:
+        assert _FACT_PACK_KEYS <= set(fact), (
+            f"fact missing a declared fact-pack key: {sorted(fact)}"
+        )
+
+    accessions = {f["accession"] for f in facts}
+    assert len(accessions) == 1, (
+        f"expected all facts from a single filing: {accessions}"
+    )
+    (accession,) = accessions
+
+    # Directly resolve the filing edgartools selected for this accession and
+    # assert its form is exactly "10-K", never "10-K/A".
+    import edgar
+
+    edgar.set_identity(sec_edgar_client.USER_AGENT)
+    company = edgar.Company("TSLA")
+    matching_filings = [
+        f for f in company.get_filings(form="10-K") if f.accession_no == accession
+    ]
+    assert matching_filings, f"could not resolve filing for accession {accession}"
+    assert matching_filings[0].form == "10-K", (
+        f"extract_dimensional_revenue selected a non-exact-10-K filing: "
+        f"{matching_filings[0].form!r} (accession {accession})"
+    )

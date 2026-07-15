@@ -2023,7 +2023,18 @@ def extract_dimensional_revenue(ticker: str, form: str = "10-K") -> dict:
         )
 
     filings = company.get_filings(form=form)
-    filing = filings.latest() if filings is not None else None
+    # `filings.latest()` is a loose/prefix match on `form` — live-verified
+    # 2026-07-15 that TSLA's most recent filing is a "10-K/A" amendment
+    # (0 dimensional-revenue facts), which `.latest()` would return and
+    # let shadow the real annual report. Filter to an EXACT form match
+    # first, then take the most recent by filing_date — an amendment
+    # never wins even when it postdates the real filing (Task 6,
+    # docs/loom/plans/2026-07-15-operational-kpi-full-dimensional-signature.md).
+    exact_filings = (
+        [f for f in filings if getattr(f, "form", None) == form]
+        if filings is not None else []
+    )
+    filing = max(exact_filings, key=lambda f: f.filing_date) if exact_filings else None
     if filing is None:
         return _dimensional_revenue_error_slot(
             ticker, form, f"form {form!r} not available within the lookup window",

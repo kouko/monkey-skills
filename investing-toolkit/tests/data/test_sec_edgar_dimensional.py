@@ -152,10 +152,11 @@ def test_is_revenue_concept_excludes_deferred_revenue():
 # extract_dimensional_revenue — fail-loud on a null period_end
 # ---------------------------------------------------------------------------
 
-def _real_shape_filing(*, accession="0000320193-24-000123"):
+def _real_shape_filing(*, accession="0000320193-24-000123", form="10-K"):
     return SimpleNamespace(
         accession_no=accession,
         filing_date=datetime.date(2024, 11, 1),
+        form=form,
     )
 
 
@@ -186,7 +187,11 @@ def test_extract_dimensional_revenue_raises_on_missing_period_end(sec_client, mo
     company = mock.MagicMock(name="Company")
     company.not_found = False
     company.cik = 320193
-    company.get_filings.return_value.latest.return_value = filing
+    # Task 6 exact-form-match selection (docs/loom/plans/2026-07-15-
+    # operational-kpi-full-dimensional-signature.md) iterates
+    # `get_filings(...)` and filters to an EXACT form match rather than
+    # calling the loose-matching `.latest()` — the mock must be iterable.
+    company.get_filings.return_value = [filing]
     sec_client.edgar_stub.Company.return_value = company
 
     with pytest.raises(ValueError, match="period_end"):
@@ -253,3 +258,76 @@ def test_build_fact_full_signature():
     }
     fact3 = mod._build_dimensional_revenue_fact(pre2018_row, "AAPL", "acc", "filed")
     assert fact3["dimensions"] == {"ProductOrService": "IPhoneMember"}
+
+
+# ---------------------------------------------------------------------------
+# extract_dimensional_revenue — Task 6 exact-form-match filing selection
+# (offline guard; code-quality-reviewer 🟡 on Task 6: the amendment-skip
+# filter — exact `f.form == form` + max-by-filing_date, rejecting a 10-K/A —
+# was asserted ONLY by the network-marked live test, so a regression to
+# `.latest()` (loose/prefix form match, single most-recent filing) would
+# leave the offline suite green)
+# ---------------------------------------------------------------------------
+
+def _make_dimensional_filing(*, accession, form, filing_date, revenue_value):
+    """Build a fake edgartools Filing whose `.xbrl()` yields exactly one
+    dimensional-revenue fact row, so a wrong filing pick is visible in the
+    returned fact-pack's accession/value."""
+    xb = mock.MagicMock(name=f"xbrl-{accession}")
+    xb.facts.to_dataframe.return_value.to_dict.return_value = [
+        {
+            "is_dimensioned": True,
+            "dim_srt_ProductOrServiceAxis": "aapl:IPhoneMember",
+            "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+            "numeric_value": revenue_value,
+            "period_type": "duration",
+            "period_end": filing_date.isoformat(),
+            "period_instant": None,
+        },
+    ]
+    filing = SimpleNamespace(accession_no=accession, filing_date=filing_date, form=form)
+    filing.xbrl = lambda: xb
+    return filing
+
+
+def test_extract_dimensional_revenue_skips_amendment_offline(sec_client):
+    """`extract_dimensional_revenue` must select the exact-form "10-K"
+    filing, never a "10-K/A" amendment — even when the amendment's
+    `filing_date` is MORE RECENT than the real 10-K's. A regression to
+    `.latest()` (a loose/prefix form match that just takes the single
+    most-recent filing) would pick the amendment here, since it postdates
+    the 10-K and carries its own usable dimensional-revenue row. This is the
+    offline counterpart to test_sec_edgar_dimensional_live.py's network-only
+    anchor for the same invariant."""
+    amendment = _make_dimensional_filing(
+        accession="0000320193-24-000200",
+        form="10-K/A",
+        filing_date=datetime.date(2024, 11, 15),  # more recent than the 10-K
+        revenue_value=999.0,
+    )
+    real_10k = _make_dimensional_filing(
+        accession="0000320193-24-000123",
+        form="10-K",
+        filing_date=datetime.date(2024, 11, 1),  # earlier, but the exact form
+        revenue_value=100.0,
+    )
+
+    company = mock.MagicMock(name="Company")
+    company.not_found = False
+    company.cik = 320193
+    # List order must not matter — the exact-form filter + max-by-date must
+    # find the 10-K regardless of position.
+    company.get_filings.return_value = [amendment, real_10k]
+    sec_client.edgar_stub.Company.return_value = company
+
+    result = sec_client.extract_dimensional_revenue("AAPL")
+
+    assert "error" not in result
+    assert result["facts"], "expected at least one dimensional revenue fact"
+    accessions = {fact["accession"] for fact in result["facts"]}
+    assert accessions == {"0000320193-24-000123"}, (
+        "must select the exact-form 10-K (0000320193-24-000123), not the "
+        f"more-recent 10-K/A amendment (0000320193-24-000200) — got {accessions}"
+    )
+    values = {fact["value"] for fact in result["facts"]}
+    assert 999.0 not in values, "the amendment's revenue value leaked into the fact-pack"
