@@ -1,0 +1,449 @@
+{
+  "_comment": "REAL full-signature XBRL facts, machine-captured exact-integer via edgartools (never hand-typed). NFLX = cross-dim (streaming total {ProductOrService:Streaming} vs region slices {Streaming, Geographical:X}); AAPL = a ConsolidationItems-qualified segment fact + a single-dim iPhone product fact. `dimensions` = real breakdown axes only; `consolidation` = the ConsolidationItems reconciliation qualifier (or null). APPENDED old-era iPhone (SalesRevenueNet+AppleIphoneMember, FY2014-2016) for the era-stitching migration test \u2014 machine-captured exact-integer from the 2016 10-K.",
+  "facts": [
+    {
+      "concept": "us-gaap:Revenues",
+      "dimensions": {
+        "ProductOrService": "StreamingMember",
+        "StatementGeographical": "UnitedStatesAndCanadaMember"
+      },
+      "consolidation": null,
+      "value": 19957152000,
+      "period_end": "2025-12-31",
+      "fiscal_year": 2025,
+      "accession": "0001065280-26-000034",
+      "filed": "2026-01-23"
+    },
+    {
+      "concept": "us-gaap:Revenues",
+      "dimensions": {
+        "ProductOrService": "StreamingMember",
+        "StatementGeographical": "UnitedStatesAndCanadaMember"
+      },
+      "consolidation": null,
+      "value": 17359369000,
+      "period_end": "2024-12-31",
+      "fiscal_year": 2024,
+      "accession": "0001065280-26-000034",
+      "filed": "2026-01-23"
+    },
+    {
+      "concept": "us-gaap:Revenues",
+      "dimensions": {
+        "ProductOrService": "StreamingMember",
+        "StatementGeographical": "UnitedStatesAndCanadaMember"
+      },
+      "consolidation": null,
+      "value": 14873783000,
+      "period_end": "2023-12-31",
+      "fiscal_year": 2023,
+      "accession": "0001065280-26-000034",
+      "filed": "2026-01-23"
+    },
+    {
+      "concept": "us-gaap:Revenues",
+      "dimensions": {
+        "ProductOrService": "StreamingMember",
+        "StatementGeographical": "EMEAMember"
+      },
+      "consolidation": null,
+      "value": 14514646000,
+      "period_end": "2025-12-31",
+      "fiscal_year": 2025,
+      "accession": "0001065280-26-000034",
+      "filed": "2026-01-23"
+    },
+    {
+      "concept": "us-gaap:Revenues",
+      "dimensions": {
+        "ProductOrService": "StreamingMember",
+        "StatementGeographical": "EMEAMember"
+      },
+      "consolidation": null,
+      "value": 12387035000,
+      "period_end": "2024-12-31",
+      "fiscal_year": 2024,
+      "accession": "0001065280-26-000034",
+      "filed": "2026-01-23"
+    },
+    {
+      "concept": "us-gaap:Revenues",
+      "dimensions": {
+        "ProductOrService": "StreamingMember",
+        "StatementGeographical": "EMEAMember"
+      },
+      "consolidation": null,
+      "value": 10556487000,
+      "period_end": "2023-12-31",
+      "fiscal_year": 2023,
+      "accession": "0001065280-26-000034",
+      "filed": "2026-01-23"
+    },
+    {
+      "concept": "us-gaap:Revenues",
+      "dimensions": {
+        "ProductOrService": "StreamingMember",
+        "StatementGeographical": "LatinAmericaMember"
+      },
+      "consolidation": null,
+      "value": 5357521000,
+      "period_end": "2025-12-31",
+      "fiscal_year": 2025,
+      "accession": "0001065280-26-000034",
+      "filed": "2026-01-23"
+    },
+    {
+      "concept": "us-gaap:Revenues",
+      "dimensions": {
+        "ProductOrService": "StreamingMember",
+        "StatementGeographical": "LatinAmericaMember"
+      },
+      "consolidation": null,
+      "value": 4839816000,
+      "period_end": "2024-12-31",
+      "fiscal_year": 2024,
+      "accession": "0001065280-26-000034",
+      "filed": "2026-01-23"
+    },
+    {
+      "concept": "us-gaap:Revenues",
+      "dimensions": {
+        "ProductOrService": "StreamingMember",
+        "StatementGeographical": "LatinAmericaMember"
+      },
+      "consolidation": null,
+      "value": 4446461000,
+      "period_end": "2023-12-31",
+      "fiscal_year": 2023,
+      "accession": "0001065280-26-000034",
+      "filed": "2026-01-23"
+    },
+    {
+      "concept": "us-gaap:Revenues",
+      "dimensions": {
+        "ProductOrService": "StreamingMember",
+        "StatementGeographical": "AsiaPacificMember"
+      },
+      "consolidation": null,
+      "value": 5353717000,
+      "period_end": "2025-12-31",
+      "fiscal_year": 2025,
+      "accession": "0001065280-26-000034",
+      "filed": "2026-01-23"
+    },
+    {
+      "concept": "us-gaap:Revenues",
+      "dimensions": {
+        "ProductOrService": "StreamingMember",
+        "StatementGeographical": "AsiaPacificMember"
+      },
+      "consolidation": null,
+      "value": 4414746000,
+      "period_end": "2024-12-31",
+      "fiscal_year": 2024,
+      "accession": "0001065280-26-000034",
+      "filed": "2026-01-23"
+    },
+    {
+      "concept": "us-gaap:Revenues",
+      "dimensions": {
+        "ProductOrService": "StreamingMember",
+        "StatementGeographical": "AsiaPacificMember"
+      },
+      "consolidation": null,
+      "value": 3763727000,
+      "period_end": "2023-12-31",
+      "fiscal_year": 2023,
+      "accession": "0001065280-26-000034",
+      "filed": "2026-01-23"
+    },
+    {
+      "concept": "us-gaap:Revenues",
+      "dimensions": {
+        "ProductOrService": "StreamingMember"
+      },
+      "consolidation": null,
+      "value": 45183036000,
+      "period_end": "2025-12-31",
+      "fiscal_year": 2025,
+      "accession": "0001065280-26-000034",
+      "filed": "2026-01-23"
+    },
+    {
+      "concept": "us-gaap:Revenues",
+      "dimensions": {
+        "ProductOrService": "StreamingMember"
+      },
+      "consolidation": null,
+      "value": 39000966000,
+      "period_end": "2024-12-31",
+      "fiscal_year": 2024,
+      "accession": "0001065280-26-000034",
+      "filed": "2026-01-23"
+    },
+    {
+      "concept": "us-gaap:Revenues",
+      "dimensions": {
+        "ProductOrService": "StreamingMember"
+      },
+      "consolidation": null,
+      "value": 33640458000,
+      "period_end": "2023-12-31",
+      "fiscal_year": 2023,
+      "accession": "0001065280-26-000034",
+      "filed": "2026-01-23"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "ProductOrService": "IPhoneMember"
+      },
+      "consolidation": null,
+      "value": 209586000000,
+      "period_end": "2025-09-27",
+      "fiscal_year": 2025,
+      "accession": "0000320193-25-000079",
+      "filed": "2025-10-31"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "ProductOrService": "IPhoneMember"
+      },
+      "consolidation": null,
+      "value": 201183000000,
+      "period_end": "2024-09-28",
+      "fiscal_year": 2024,
+      "accession": "0000320193-25-000079",
+      "filed": "2025-10-31"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "ProductOrService": "IPhoneMember"
+      },
+      "consolidation": null,
+      "value": 200583000000,
+      "period_end": "2023-09-30",
+      "fiscal_year": 2023,
+      "accession": "0000320193-25-000079",
+      "filed": "2025-10-31"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "StatementBusinessSegments": "AmericasSegmentMember"
+      },
+      "consolidation": "OperatingSegmentsMember",
+      "value": 178353000000,
+      "period_end": "2025-09-27",
+      "fiscal_year": 2025,
+      "accession": "0000320193-25-000079",
+      "filed": "2025-10-31"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "StatementBusinessSegments": "EuropeSegmentMember"
+      },
+      "consolidation": "OperatingSegmentsMember",
+      "value": 111032000000,
+      "period_end": "2025-09-27",
+      "fiscal_year": 2025,
+      "accession": "0000320193-25-000079",
+      "filed": "2025-10-31"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "StatementBusinessSegments": "GreaterChinaSegmentMember"
+      },
+      "consolidation": "OperatingSegmentsMember",
+      "value": 64377000000,
+      "period_end": "2025-09-27",
+      "fiscal_year": 2025,
+      "accession": "0000320193-25-000079",
+      "filed": "2025-10-31"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "StatementBusinessSegments": "JapanSegmentMember"
+      },
+      "consolidation": "OperatingSegmentsMember",
+      "value": 28703000000,
+      "period_end": "2025-09-27",
+      "fiscal_year": 2025,
+      "accession": "0000320193-25-000079",
+      "filed": "2025-10-31"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "StatementBusinessSegments": "RestOfAsiaPacificSegmentMember"
+      },
+      "consolidation": "OperatingSegmentsMember",
+      "value": 33696000000,
+      "period_end": "2025-09-27",
+      "fiscal_year": 2025,
+      "accession": "0000320193-25-000079",
+      "filed": "2025-10-31"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "StatementBusinessSegments": "AmericasSegmentMember"
+      },
+      "consolidation": "OperatingSegmentsMember",
+      "value": 167045000000,
+      "period_end": "2024-09-28",
+      "fiscal_year": 2024,
+      "accession": "0000320193-25-000079",
+      "filed": "2025-10-31"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "StatementBusinessSegments": "EuropeSegmentMember"
+      },
+      "consolidation": "OperatingSegmentsMember",
+      "value": 101328000000,
+      "period_end": "2024-09-28",
+      "fiscal_year": 2024,
+      "accession": "0000320193-25-000079",
+      "filed": "2025-10-31"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "StatementBusinessSegments": "GreaterChinaSegmentMember"
+      },
+      "consolidation": "OperatingSegmentsMember",
+      "value": 66952000000,
+      "period_end": "2024-09-28",
+      "fiscal_year": 2024,
+      "accession": "0000320193-25-000079",
+      "filed": "2025-10-31"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "StatementBusinessSegments": "JapanSegmentMember"
+      },
+      "consolidation": "OperatingSegmentsMember",
+      "value": 25052000000,
+      "period_end": "2024-09-28",
+      "fiscal_year": 2024,
+      "accession": "0000320193-25-000079",
+      "filed": "2025-10-31"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "StatementBusinessSegments": "RestOfAsiaPacificSegmentMember"
+      },
+      "consolidation": "OperatingSegmentsMember",
+      "value": 30658000000,
+      "period_end": "2024-09-28",
+      "fiscal_year": 2024,
+      "accession": "0000320193-25-000079",
+      "filed": "2025-10-31"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "StatementBusinessSegments": "AmericasSegmentMember"
+      },
+      "consolidation": "OperatingSegmentsMember",
+      "value": 162560000000,
+      "period_end": "2023-09-30",
+      "fiscal_year": 2023,
+      "accession": "0000320193-25-000079",
+      "filed": "2025-10-31"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "StatementBusinessSegments": "EuropeSegmentMember"
+      },
+      "consolidation": "OperatingSegmentsMember",
+      "value": 94294000000,
+      "period_end": "2023-09-30",
+      "fiscal_year": 2023,
+      "accession": "0000320193-25-000079",
+      "filed": "2025-10-31"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "StatementBusinessSegments": "GreaterChinaSegmentMember"
+      },
+      "consolidation": "OperatingSegmentsMember",
+      "value": 72559000000,
+      "period_end": "2023-09-30",
+      "fiscal_year": 2023,
+      "accession": "0000320193-25-000079",
+      "filed": "2025-10-31"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "StatementBusinessSegments": "JapanSegmentMember"
+      },
+      "consolidation": "OperatingSegmentsMember",
+      "value": 24257000000,
+      "period_end": "2023-09-30",
+      "fiscal_year": 2023,
+      "accession": "0000320193-25-000079",
+      "filed": "2025-10-31"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "StatementBusinessSegments": "RestOfAsiaPacificSegmentMember"
+      },
+      "consolidation": "OperatingSegmentsMember",
+      "value": 29615000000,
+      "period_end": "2023-09-30",
+      "fiscal_year": 2023,
+      "accession": "0000320193-25-000079",
+      "filed": "2025-10-31"
+    },
+    {
+      "concept": "us-gaap:SalesRevenueNet",
+      "dimensions": {
+        "ProductOrService": "AppleIphoneMember"
+      },
+      "consolidation": null,
+      "value": 101991000000,
+      "period_end": "2014-09-27",
+      "fiscal_year": 2014,
+      "accession": "0001628280-16-020309",
+      "filed": "2016-10-26"
+    },
+    {
+      "concept": "us-gaap:SalesRevenueNet",
+      "dimensions": {
+        "ProductOrService": "AppleIphoneMember"
+      },
+      "consolidation": null,
+      "value": 155041000000,
+      "period_end": "2015-09-26",
+      "fiscal_year": 2015,
+      "accession": "0001628280-16-020309",
+      "filed": "2016-10-26"
+    },
+    {
+      "concept": "us-gaap:SalesRevenueNet",
+      "dimensions": {
+        "ProductOrService": "AppleIphoneMember"
+      },
+      "consolidation": null,
+      "value": 136700000000,
+      "period_end": "2016-09-24",
+      "fiscal_year": 2016,
+      "accession": "0001628280-16-020309",
+      "filed": "2016-10-26"
+    }
+  ]
+}

@@ -437,9 +437,11 @@ points.
 ```
 # build: reads a fact-pack JSON ({company, facts: [...]}) from stdin (or
 # --file PATH); --binding points to a JSON file holding the era-specific
-# binding ({kpi_id, sources: [{concept, axis, member, fy_min, fy_max,
-# source_kind}, ...]}); resolves it via resolve_binding and prints the
-# points list
+# binding ({kpi_id, sources: [{concept, dimensions, consolidation?,
+# source_kind}, ...]} — dimensions is a dict of ALL real breakdown axes,
+# e.g. {"ProductOrService": "IPhoneMember"}; consolidation is an optional
+# srt:ConsolidationItemsAxis reconciliation qualifier, not a breakdown
+# axis); resolves it via resolve_binding and prints the points list
 echo '{"company": "AAPL", "facts": [...]}' \
   | uv run scripts/kpi_xbrl.py build \
       --company AAPL --binding /path/to/iphone_revenue_binding.json

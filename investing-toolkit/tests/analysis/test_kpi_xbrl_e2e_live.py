@@ -19,9 +19,20 @@ from the latest filing, and this extractor is deliberately single-filing
 chain on the REACHABLE data: the live NEW-era facts land in the `recast`
 segment (period >= "2018") and `as_reported` is legitimately EMPTY — a
 pre-2018 point is NEVER fabricated to fill it. The break-spanning dual
-segment with a real FY2016 OLD-era value is proven OFFLINE by
-test_kpi_xbrl.py::test_declared_break_splits_series_not_concat against the
-committed fixture.
+segment with real FY2014-2016 OLD-era values is proven OFFLINE by
+test_kpi_xbrl.py::test_build_series_with_break_splits_stitched_era_both_segments
+against the committed fixture.
+
+TASK 7 (2026-07-15, full-signature rewire): the iphone_revenue binding
+below was rewired from the pilot's single {axis, member, fy_min, fy_max}
+model to the full-signature `{concept, dimensions}` shape (no fy ranges —
+the concept+member signature alone is the era discriminant). A second live
+test, `test_nflx_streaming_deconflated_end_to_end_live`, proves live
+de-conflation end-to-end: a NFLX streaming_revenue full-signature binding
+naming ONLY `{ProductOrService: StreamingMember}` resolves the streaming
+TOTAL as one value per period, never the conflated per-region slice
+values that share the same ProductOrService member plus an extra
+StatementGeographical axis.
 
 TRUSTED here comes from `kpi_gate.attest_source` (trusted-by-source: XBRL
 dimensional provenance is itself the trust signal — no sampled ground-truth
@@ -52,29 +63,42 @@ from conftest import KPI_GATE_SCRIPT, KPI_MEMO_FEED_SCRIPT, KPI_XBRL_SCRIPT
 ROOT = Path(__file__).resolve().parents[2]
 DATA_SCRIPTS = ROOT / "skills" / "data-markets" / "scripts"
 
-# The era-specific iphone_revenue binding (same shape as
-# test_kpi_xbrl.py's IPHONE_REVENUE_BINDING): OLD-era SalesRevenueNet under
-# us-gaap:ProductOrServiceAxis / aapl:AppleIphoneMember for fy <= 2017; the
-# NEW-era RevenueFromContract under srt:ProductOrServiceAxis /
-# aapl:IPhoneMember for fy >= 2018. Only the NEW-era source matches the
-# reachable live facts; the OLD-era source matches nothing live (correctly).
+# The era-specific iphone_revenue binding (Task 7, full-signature shape —
+# same shape as test_kpi_xbrl.py's IPHONE_REVENUE_FULL_SIGNATURE_BINDING):
+# OLD-era SalesRevenueNet + {ProductOrService: AppleIphoneMember}; NEW-era
+# RevenueFromContract... + {ProductOrService: IPhoneMember}. No fy_min/
+# fy_max ranges — the concept+member signature alone is the era
+# discriminant. Only the NEW-era source matches the reachable live facts
+# (a single latest 10-K never carries pre-2018 comparatives); the OLD-era
+# source matches nothing live (correctly, not an error).
 IPHONE_REVENUE_BINDING = {
     "kpi_id": "iphone_revenue",
     "sources": [
         {
             "concept": "us-gaap:SalesRevenueNet",
-            "axis": "us-gaap:ProductOrServiceAxis",
-            "member": "aapl:AppleIphoneMember",
-            "fy_min": 2007,
-            "fy_max": 2017,
+            "dimensions": {"ProductOrService": "AppleIphoneMember"},
             "source_kind": "xbrl-dimensional",
         },
         {
             "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
-            "axis": "srt:ProductOrServiceAxis",
-            "member": "aapl:IPhoneMember",
-            "fy_min": 2018,
-            "fy_max": 2099,
+            "dimensions": {"ProductOrService": "IPhoneMember"},
+            "source_kind": "xbrl-dimensional",
+        },
+    ],
+}
+
+# NFLX streaming_revenue full-signature binding: names ONLY the
+# {ProductOrService: StreamingMember} axis — a NFLX 10-K also carries
+# per-region streaming slices (StreamingMember + an extra
+# StatementGeographical axis) that must NOT match this narrower selector
+# (dict-equality on `dimensions` rejects the extra key), proving live
+# de-conflation end-to-end.
+STREAMING_REVENUE_BINDING = {
+    "kpi_id": "streaming_revenue",
+    "sources": [
+        {
+            "concept": "us-gaap:Revenues",
+            "dimensions": {"ProductOrService": "StreamingMember"},
             "source_kind": "xbrl-dimensional",
         },
     ],
@@ -171,3 +195,48 @@ def test_apple_iphone_revenue_end_to_end_live(tmp_path, monkeypatch):
     feed_iphone = next(s for s in feed["kpi_feeds"] if s["kpi_id"] == "iphone_revenue")
     assert feed_iphone["points"] == recast
     assert all(p["value"] > 100e9 for p in feed_iphone["points"])
+
+
+@pytest.mark.network
+def test_nflx_streaming_deconflated_end_to_end_live():
+    """Task 7 GREEN: live full-signature de-conflation proof. NFLX's real
+    10-K XBRL tags a streaming-revenue TOTAL fact ({ProductOrService:
+    StreamingMember}) alongside per-region slice facts that ALSO carry
+    ProductOrService=StreamingMember plus an extra StatementGeographical
+    axis. A full-signature binding naming ONLY {ProductOrService:
+    StreamingMember} (dict-equality on `dimensions` — no extra key allowed)
+    must resolve exactly ONE value per period (the TOTAL, > 30e9) — never
+    the conflated per-region slice values — proving live de-conflation
+    end-to-end. The offline complement is
+    test_kpi_xbrl.py::test_resolve_binding_exact_signature_deconflates
+    against the committed fixture.
+    """
+    if str(DATA_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(DATA_SCRIPTS))
+    import sec_edgar_client
+
+    sys.modules.pop("kpi_xbrl_e2e_nflx", None)
+    kpi_xbrl = _load_module("kpi_xbrl_e2e_nflx", KPI_XBRL_SCRIPT)
+
+    # (1) live dimensional-revenue fact-pack extraction
+    pack = sec_edgar_client.extract_dimensional_revenue("NFLX")
+    assert "error" not in pack, f"extract_dimensional_revenue failed: {pack}"
+    assert pack["company"] == "NFLX"
+
+    # (2) full-signature streaming_revenue binding resolves the live facts
+    points = kpi_xbrl.resolve_binding(pack, STREAMING_REVENUE_BINDING, "NFLX")
+    assert points, "expected at least one resolved streaming_revenue point from live data"
+    assert all(p["kpi_id"] == "streaming_revenue" for p in points)
+
+    # (3) de-conflation invariant: exactly ONE point per period (never a
+    # conflated total+slice double-count), and each is the TOTAL magnitude
+    # (> 30e9), never a smaller per-region slice value.
+    periods = [p["period"] for p in points]
+    assert len(periods) == len(set(periods)), (
+        f"expected exactly one point per period (de-conflated), got: {periods}"
+    )
+    for p in points:
+        assert p["value"] > 30e9, (
+            f"expected the streaming TOTAL (> 30e9), not a conflated/regional "
+            f"slice value: {p}"
+        )

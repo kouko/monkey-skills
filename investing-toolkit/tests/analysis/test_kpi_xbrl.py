@@ -54,55 +54,11 @@ NEW_IPHONE_MATCH = {
     "member": "aapl:IPhoneMember",
 }
 
-GROSS_PROFIT_MATCH = {"concept": "us-gaap:GrossProfit", "axis": None, "member": None}
-
-
-@pytest.mark.xfail(
-    reason="OLD single-axis/member fixture+match shape → Task 7 rewire to full "
-    "dimensional signatures (kpi_xbrl.facts_to_points no longer reads axis/member)",
-    strict=False,
-)
-def test_facts_to_points_maps_provenance_and_fails_loud(kpi_xbrl_module, fact_pack):
-    """Task 1 GREEN: dimensional NEW-era iPhone fact -> provenance-mapped
-    point; a fact missing `value` RAISES (never a fabricated 0); a flat
-    GrossProfit fact -> companyfacts source_table_id + plain concept
-    source_cell_ref (no `|member` suffix).
-    """
-    # (1) dimensional NEW-era iPhone fact -> full provenance mapping
-    points = kpi_xbrl_module.facts_to_points(
-        fact_pack, "iphone_revenue", NEW_IPHONE_MATCH, "AAPL", "xbrl-dimensional"
-    )
-    new_era = [p for p in points if p["period"] == "2025"]
-    assert len(new_era) == 1
-    point = new_era[0]
-    assert point["value"] == 209586000000
-    assert point["period"] == "2025"
-    assert point["source_accession"] == "0000320193-25-000079"
-    assert point["source_table_id"] == "xbrl:srt:ProductOrServiceAxis"
-    assert point["source_cell_ref"] == (
-        "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax|aapl:IPhoneMember"
-    )
-    assert point["as_of"] == "2025-10-31"
-    assert point["source_kind"] == "xbrl-dimensional"
-
-    # (2) a fact missing `value` RAISES — never emits a fabricated 0
-    mutated = json.loads(json.dumps(fact_pack))
-    for fact in mutated["facts"]:
-        if fact["concept"] == NEW_IPHONE_MATCH["concept"] and fact["member"] == "aapl:IPhoneMember":
-            del fact["value"]
-    with pytest.raises(ValueError, match="value"):
-        kpi_xbrl_module.facts_to_points(
-            mutated, "iphone_revenue", NEW_IPHONE_MATCH, "AAPL", "xbrl-dimensional"
-        )
-
-    # (3) flat GrossProfit fact -> companyfacts table id, plain cell_ref
-    gp_points = kpi_xbrl_module.facts_to_points(
-        fact_pack, "gross_profit", GROSS_PROFIT_MATCH, "AAPL", "xbrl-companyfacts"
-    )
-    assert len(gp_points) == 2
-    for p in gp_points:
-        assert p["source_table_id"] == "xbrl:companyfacts"
-        assert p["source_cell_ref"] == "us-gaap:GrossProfit"
+# NOTE: test_facts_to_points_maps_provenance_and_fails_loud (OLD axis/member
+# shape) was DELETED (Task 7) — its provenance-mapping + fail-loud coverage
+# is REPLACED by test_facts_to_points_fails_loud_new_shape below, which
+# exercises the same anti-fabrication guards on the NEW full-signature
+# `dimensions`-map shape against the real signature_fact_pack fixture.
 
 
 def test_facts_to_points_period_derives_from_period_end_not_fiscal_year(kpi_xbrl_module, fact_pack):
@@ -172,39 +128,88 @@ IPHONE_REVENUE_BINDING = {
 }
 
 
-@pytest.mark.xfail(
-    reason="OLD single-axis/member fixture+binding shape → Task 7 rewire to full "
-    "dimensional signatures (source_cell_ref no longer joins on member)",
-    strict=False,
-)
-def test_resolve_binding_stitches_two_eras_into_one_kpi_id(kpi_xbrl_module, fact_pack):
-    """Task 2 GREEN: the iphone_revenue binding resolves the fixture's
-    FY2016 (OLD-era SalesRevenueNet) + FY2024 + FY2025 (NEW-era
-    RevenueFromContract) iPhone facts all under kpi_id "iphone_revenue" —
-    a multi-facet remap stitching two tagging eras into one logical KPI.
-    The GrossProfit facts match no iphone source and are skipped, not
-    fabricated.
-    """
-    points = kpi_xbrl_module.resolve_binding(fact_pack, IPHONE_REVENUE_BINDING, "AAPL")
+IPHONE_REVENUE_FULL_SIGNATURE_BINDING = {
+    "kpi_id": "iphone_revenue",
+    "sources": [
+        {
+            "concept": "us-gaap:SalesRevenueNet",
+            "dimensions": {"ProductOrService": "AppleIphoneMember"},
+            "source_kind": "xbrl-dimensional",
+        },
+        {
+            "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+            "dimensions": {"ProductOrService": "IPhoneMember"},
+            "source_kind": "xbrl-dimensional",
+        },
+    ],
+}
 
-    assert len(points) == 3
+
+def test_resolve_binding_stitches_two_eras_into_one_kpi_id(kpi_xbrl_module, signature_fact_pack):
+    """Task 7 GREEN (migrated from the OLD axis/member shape): the
+    iphone_revenue binding's two full-signature sources (OLD:
+    SalesRevenueNet + {ProductOrService: AppleIphoneMember}; NEW:
+    RevenueFromContract... + {ProductOrService: IPhoneMember}) resolve ALL
+    6 iPhone facts in the fixture (3 OLD-era FY2014-2016 + 3 NEW-era
+    FY2023-2025) under one kpi_id "iphone_revenue" — the concept+member
+    signature alone is the era discriminant; no fy_min/fy_max ranges
+    needed anymore.
+    """
+    points = kpi_xbrl_module.resolve_binding(
+        signature_fact_pack, IPHONE_REVENUE_FULL_SIGNATURE_BINDING, "AAPL"
+    )
+
+    assert len(points) == 6
     assert all(p["kpi_id"] == "iphone_revenue" for p in points)
     periods = sorted(p["period"] for p in points)
-    assert periods == ["2016", "2024", "2025"]
+    assert periods == ["2014", "2015", "2016", "2023", "2024", "2025"]
 
     by_period = {p["period"]: p for p in points}
-    assert by_period["2016"]["value"] == 136700000000
-    assert by_period["2016"]["source_cell_ref"] == (
-        "us-gaap:SalesRevenueNet|aapl:AppleIphoneMember"
+    assert by_period["2014"]["value"] == 101991000000
+    assert by_period["2014"]["source_cell_ref"] == (
+        "us-gaap:SalesRevenueNet|ProductOrService=AppleIphoneMember"
     )
+    assert by_period["2015"]["value"] == 155041000000
+    assert by_period["2016"]["value"] == 136700000000
+    assert by_period["2023"]["value"] == 200583000000
     assert by_period["2024"]["value"] == 201183000000
     assert by_period["2025"]["value"] == 209586000000
     assert by_period["2025"]["source_cell_ref"] == (
-        "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax|aapl:IPhoneMember"
+        "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax"
+        "|ProductOrService=IPhoneMember"
     )
 
-    # GrossProfit facts match no iphone source — skipped, not fabricated.
-    assert not any(p["source_cell_ref"].startswith("us-gaap:GrossProfit") for p in points)
+
+def test_build_series_with_break_splits_stitched_era_both_segments(
+    kpi_xbrl_module, signature_fact_pack
+):
+    """Task 7 GREEN: the offline complement to the live e2e's recast-only
+    reach. The full-signature era-stitched iphone_revenue points (3
+    OLD-era FY2014-2016 + 3 NEW-era FY2023-2025, from the REAL committed
+    fixture) split at the 2018 tagging-regime break into BOTH segments
+    populated: as_reported holds FY2014-2016, recast holds FY2023-2025 —
+    a single live 10-K's XBRL never carries pre-2018 comparatives, so
+    only this offline test (against the committed fixture) can prove the
+    as_reported segment is non-empty.
+    """
+    points = kpi_xbrl_module.resolve_binding(
+        signature_fact_pack, IPHONE_REVENUE_FULL_SIGNATURE_BINDING, "AAPL"
+    )
+    assert len(points) == 6
+
+    result = kpi_xbrl_module.build_series_with_break(points, "2018")
+
+    as_reported_periods = sorted(p["period"] for p in result["as_reported"])
+    recast_periods = sorted(p["period"] for p in result["recast"])
+    assert as_reported_periods == ["2014", "2015", "2016"]
+    assert recast_periods == ["2023", "2024", "2025"]
+
+    # nothing dropped, nothing duplicated across the two partitions
+    all_periods = sorted(
+        p["period"] for p in result["as_reported"] + result["recast"]
+    )
+    assert all_periods == ["2014", "2015", "2016", "2023", "2024", "2025"]
+    assert result["break_markers"] == [{"break_period": "2018"}]
 
 
 AMBIGUOUS_OVERLAPPING_BINDING = {
