@@ -68,17 +68,36 @@ if str(_SCRIPT_DIR) not in sys.path:
 import kpi_series  # noqa: E402
 
 
+_DEFAULT_CONSOLIDATION_MEMBER = "OperatingSegmentsMember"
+
+
+def _normalize_consolidation(value):
+    """Normalize a `consolidation` qualifier (srt:ConsolidationItemsAxis
+    member): an absent/None value means the fact/source carries no
+    reconciliation tag at all, which defaults to the top-level
+    OperatingSegmentsMember view — never a distinct falsy category of its
+    own. `consolidation` is a QUALIFIER, not a breakdown axis: it is never
+    part of the `dimensions` equality check in `_fact_matches`.
+    """
+    return value if value else _DEFAULT_CONSOLIDATION_MEMBER
+
+
 def _fact_matches(fact: dict, match: dict) -> bool:
     """EXACT-match a fact's full dimensional signature against `match` =
-    `{concept, dimensions}`. `dimensions` is compared by dict EQUALITY — a
-    match with an empty/absent `dimensions` matches ONLY a fact whose own
-    `dimensions` is empty (the top-level total); a fact carrying EXTRA
-    breakdown axes beyond `match`'s does NOT match (de-conflates e.g. a
-    NFLX streaming total from its per-region slices).
+    `{concept, dimensions, consolidation}`. `dimensions` is compared by dict
+    EQUALITY — a match with an empty/absent `dimensions` matches ONLY a fact
+    whose own `dimensions` is empty (the top-level total); a fact carrying
+    EXTRA breakdown axes beyond `match`'s does NOT match (de-conflates e.g.
+    a NFLX streaming total from its per-region slices). `consolidation` is
+    compared separately as a reconciliation QUALIFIER (normalized default
+    "OperatingSegmentsMember" on both sides) — it is NEVER folded into the
+    `dimensions` signature, so a segment binding is not falsely cross-dim.
     """
     return (
         fact.get("concept") == match.get("concept")
         and fact.get("dimensions", {}) == match.get("dimensions", {})
+        and _normalize_consolidation(fact.get("consolidation"))
+        == _normalize_consolidation(match.get("consolidation"))
     )
 
 
@@ -180,12 +199,19 @@ def facts_to_points(
 def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
     """Resolve a logical-KPI binding onto the fact-pack's full dimensional
     signatures: `binding` = `{kpi_id, sources: [{concept, dimensions,
-    source_kind}]}`.
+    consolidation, source_kind}]}` (`consolidation` optional).
 
     A fact matches a source when `fact["concept"] == source["concept"]` AND
     `fact["dimensions"] == source["dimensions"]` EXACTLY (dict equality — an
     absent/empty `dimensions` matches ONLY the top-level total; a fact
-    carrying extra breakdown axes does NOT match a narrower source). A
+    carrying extra breakdown axes does NOT match a narrower source) AND the
+    fact's `consolidation` (srt:ConsolidationItemsAxis member — a
+    reconciliation QUALIFIER, NEVER a breakdown axis) matches the source's
+    `consolidation`, each normalized with default "OperatingSegmentsMember"
+    when absent/None. A source may specify `consolidation` to disambiguate a
+    non-default view (e.g. an eliminations view); otherwise a segment
+    binding resolves the operating-segments view without falsely colliding
+    with a different consolidation view sharing the same `dimensions`. A
     matched fact is emitted (via `facts_to_points`, reusing its provenance
     mapping) under the single logical `kpi_id`. A fact matching no source is
     skipped, never fabricated. A fact matching more than one source RAISES —
@@ -210,6 +236,7 @@ def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
             selector = {
                 "concept": source["concept"],
                 "dimensions": source.get("dimensions", {}),
+                "consolidation": source.get("consolidation"),
             }
             if _fact_matches(fact, selector):
                 matched_indices.append(idx)
@@ -258,6 +285,7 @@ def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
         selector = {
             "concept": source["concept"],
             "dimensions": source.get("dimensions", {}),
+            "consolidation": source.get("consolidation"),
         }
         points.extend(
             facts_to_points(sub_pack, kpi_id, selector, company, source["source_kind"])

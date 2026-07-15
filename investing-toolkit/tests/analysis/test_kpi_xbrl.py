@@ -368,6 +368,119 @@ def test_resolve_binding_dedupes_identical_duplicate(kpi_xbrl_module, signature_
     assert by_period["2025"]["value"] == 45183036000
 
 
+AMERICAS_SEGMENT_BINDING = {
+    "kpi_id": "americas_segment_revenue",
+    "sources": [
+        {
+            "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+            "dimensions": {"StatementBusinessSegments": "AmericasSegmentMember"},
+            "source_kind": "xbrl-dimensional",
+        },
+    ],
+}
+
+
+def test_resolve_binding_consolidation_qualifier_operating_segments(
+    kpi_xbrl_module, signature_fact_pack
+):
+    """Task 3 GREEN: `consolidation` (srt:ConsolidationItemsAxis member) is a
+    reconciliation QUALIFIER, never a breakdown axis. resolve_binding matches
+    a fact's (defaulted) `consolidation` against the source's (defaulted)
+    `consolidation` — default "OperatingSegmentsMember" on both sides, so a
+    segment binding with no `consolidation` key still resolves the
+    operating-segments view without treating ConsolidationItems as a second
+    breakdown axis (no false cross-dim rejection).
+    """
+    # (1) real fixture: AmericasSegmentMember segment binding resolves the
+    # OperatingSegmentsMember-qualified FY2025 fact — exactly one clean point.
+    points = kpi_xbrl_module.resolve_binding(
+        signature_fact_pack, AMERICAS_SEGMENT_BINDING, "AAPL"
+    )
+    fy2025 = [p for p in points if p["period"] == "2025"]
+    assert len(fy2025) == 1
+    assert fy2025[0]["value"] == 178353000000
+
+    # (2) synthetic pack: two facts share the SAME dimensions + period but
+    # differ in `consolidation` (OperatingSegmentsMember vs an eliminations
+    # view) — these are different consolidation VIEWS, not a value conflict
+    # on the same signature. The default-OperatingSegments binding resolves
+    # ONLY the operating-segments fact and must NOT raise.
+    op_seg_fact = {
+        "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "dimensions": {"StatementBusinessSegments": "AmericasSegmentMember"},
+        "consolidation": "OperatingSegmentsMember",
+        "value": 178353000000,
+        "period_end": "2025-09-27",
+        "fiscal_year": 2025,
+        "accession": "0000320193-25-000079",
+        "filed": "2025-10-31",
+    }
+    elimination_fact = {
+        **op_seg_fact,
+        "consolidation": "IntersegmentEliminationMember",
+        "value": -5000000000,
+    }
+    synthetic_pack = {"company": "AAPL", "facts": [op_seg_fact, elimination_fact]}
+
+    synthetic_points = kpi_xbrl_module.resolve_binding(
+        synthetic_pack, AMERICAS_SEGMENT_BINDING, "AAPL"
+    )
+    assert len(synthetic_points) == 1
+    assert synthetic_points[0]["value"] == 178353000000
+
+
+ELIMINATIONS_SEGMENT_BINDING = {
+    "kpi_id": "americas_segment_elimination",
+    "sources": [
+        {
+            "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+            "dimensions": {"StatementBusinessSegments": "AmericasSegmentMember"},
+            "consolidation": "IntersegmentEliminationMember",
+            "source_kind": "xbrl-dimensional",
+        },
+    ],
+}
+
+
+def test_resolve_binding_explicit_nondefault_consolidation(kpi_xbrl_module):
+    """REVISION (code-quality 🔴): resolve_binding's first pass correctly
+    groups a fact under a source whose `consolidation` explicitly names a
+    NON-default view (e.g. "IntersegmentEliminationMember"), but the second
+    pass (the per-source facts_to_points call) previously rebuilt its
+    selector from only {concept, dimensions} — dropping `consolidation` —
+    so facts_to_points re-filtered with the DEFAULT
+    "OperatingSegmentsMember" and silently dropped the very fact the first
+    pass just matched, returning [] instead of the eliminations point. A
+    binding naming `consolidation="IntersegmentEliminationMember"` against a
+    pack holding both an OperatingSegmentsMember fact and an
+    IntersegmentEliminationMember fact (same dimensions+period, different
+    values) must resolve ONLY the eliminations fact — exactly one point.
+    """
+    op_seg_fact = {
+        "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "dimensions": {"StatementBusinessSegments": "AmericasSegmentMember"},
+        "consolidation": "OperatingSegmentsMember",
+        "value": 178353000000,
+        "period_end": "2025-09-27",
+        "fiscal_year": 2025,
+        "accession": "0000320193-25-000079",
+        "filed": "2025-10-31",
+    }
+    elimination_fact = {
+        **op_seg_fact,
+        "consolidation": "IntersegmentEliminationMember",
+        "value": -5000000000,
+    }
+    synthetic_pack = {"company": "AAPL", "facts": [op_seg_fact, elimination_fact]}
+
+    points = kpi_xbrl_module.resolve_binding(
+        synthetic_pack, ELIMINATIONS_SEGMENT_BINDING, "AAPL"
+    )
+    assert len(points) == 1
+    assert points[0]["value"] == -5000000000
+    assert points[0]["kpi_id"] == "americas_segment_elimination"
+
+
 def test_facts_to_points_fails_loud_new_shape(kpi_xbrl_module, signature_fact_pack):
     """REVISION (code-quality 🔴): the anti-fabrication guards were only
     exercised via the OLD axis/member shape (inside a now-xfailed test) —
