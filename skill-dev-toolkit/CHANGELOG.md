@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
-- **`skill-judge` SKILL.md 5,429 → 4,533 words (−16.5%)**: the domain-team
+- **`skill-judge` SKILL.md 5,459 → 4,533 words (−17.0%)**: the domain-team
   adaptation rules extracted to `references/domain-team-adaptation.md`
   (loaded only for `domain-teams/skills/{team}/` targets, with a "Do NOT
   load" guard) and the nine Common Failure Pattern bodies to
