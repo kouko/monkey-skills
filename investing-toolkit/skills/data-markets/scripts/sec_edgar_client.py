@@ -2121,7 +2121,72 @@ def extract_dimensional_revenue(
             if _is_dimensional_revenue_fact(fact)
         )
 
-    return {"company": ticker, "facts": facts}
+    return {
+        "company": ticker,
+        "facts": facts,
+        "coverage": _dimensional_revenue_coverage(
+            since_year, until_year, exact_filings, facts, form,
+        ),
+    }
+
+
+def _dimensional_revenue_coverage(
+    since_year: int | None,
+    until_year: int | None,
+    exact_filings,
+    facts: list[dict],
+    form: str,
+) -> dict:
+    """Coverage report + availability clamp (Task 2,
+    docs/loom/plans/2026-07-15-multi-filing-historical-fetch.md — DQC
+    honesty): `{requested:{since,until}, actual:{min_year,max_year},
+    clamp_reason: str|None}`.
+
+    `actual` is the real span of the facts actually returned (their
+    `fiscal_year`s) — never a fabricated echo of the request. `clamp_reason`
+    fires when the request reaches outside the company's real filing
+    availability (the earliest/latest EXACT-form filing's own fiscal
+    period, from ALL `exact_filings` — not just the ones selected for this
+    call), i.e. no filing exists to satisfy the requested bound; it is
+    `None` when the request is fully within availability, even though the
+    returned facts' span may legitimately fall short of the request for
+    other reasons (e.g. a filing's comparative years don't reach that far)."""
+    fact_years = [f["fiscal_year"] for f in facts]
+    actual = {
+        "min_year": min(fact_years) if fact_years else None,
+        "max_year": max(fact_years) if fact_years else None,
+    }
+    available_years = [
+        y for y in (_filing_period_year(f) for f in exact_filings) if y is not None
+    ]
+    available_min_year = min(available_years) if available_years else None
+    available_max_year = max(available_years) if available_years else None
+
+    reasons = []
+    if (
+        since_year is not None
+        and available_min_year is not None
+        and since_year < available_min_year
+    ):
+        reasons.append(
+            f"requested since_year={since_year} precedes the earliest "
+            f"available {form!r} filing (fiscal period {available_min_year})"
+        )
+    if (
+        until_year is not None
+        and available_max_year is not None
+        and until_year > available_max_year
+    ):
+        reasons.append(
+            f"requested until_year={until_year} exceeds the latest "
+            f"available {form!r} filing (fiscal period {available_max_year})"
+        )
+
+    return {
+        "requested": {"since": since_year, "until": until_year},
+        "actual": actual,
+        "clamp_reason": "; ".join(reasons) if reasons else None,
+    }
 
 
 def _filing_in_year_range(filing, since_year: int, until_year: int | None) -> bool:

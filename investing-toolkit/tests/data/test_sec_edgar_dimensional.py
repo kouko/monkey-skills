@@ -474,3 +474,62 @@ def test_extract_dimensional_revenue_until_year_excludes_later_filing(sec_client
     assert by_year["2023"] not in accessions, (
         f"the 2023 filing (fiscal year > until_year=2021) leaked in: {accessions}"
     )
+
+
+# ---------------------------------------------------------------------------
+# Task 2 — coverage report + availability clamp (DQC honesty)
+# (docs/loom/plans/2026-07-15-multi-filing-historical-fetch.md). When the
+# requested range exceeds the real availability floor/ceiling (the fixture's
+# earliest/latest exact-form filing is 2019/2023), the pack still returns
+# whatever facts DO exist AND reports the clamp — never a silent truncation.
+# ---------------------------------------------------------------------------
+
+def test_extract_dimensional_revenue_reports_coverage_clamp(sec_client):
+    """`since_year` earlier than the earliest available filing (2019, per the
+    fixture) is clamped: the facts stop at the real floor (no filing older
+    than 2019 exists to fetch) and `coverage.clamp_reason` records why. An
+    in-availability request over the SAME selected filings records no clamp
+    — isolating clamp-reason logic from the returned-facts range, which is
+    identical in both calls."""
+    fixture = _multifiling_company(sec_client)
+
+    # since_year=2010 precedes the earliest available filing (2019) ->
+    # clamped. until_year=2021 is within availability (max is 2023) -> the
+    # 2019 + 2021 filings are selected, same as the in-availability call below.
+    clamped_pack = sec_client.extract_dimensional_revenue(
+        "AAPL", since_year=2010, until_year=2021
+    )
+    assert "error" not in clamped_pack, clamped_pack
+    clamped_coverage = clamped_pack["coverage"]
+    assert clamped_coverage["requested"] == {"since": 2010, "until": 2021}
+    assert clamped_coverage["actual"] == {"min_year": 2017, "max_year": 2021}, (
+        "actual must reflect the real floor the facts stop at (2017, the "
+        "earliest comparative year reported inside the selected 2019 filing) "
+        f"— got {clamped_coverage['actual']}"
+    )
+    assert clamped_coverage["clamp_reason"], (
+        "since_year=2010 precedes the earliest available filing (2019) and "
+        "must record why the facts stop short of the request"
+    )
+    assert "2010" in clamped_coverage["clamp_reason"]
+    assert "2019" in clamped_coverage["clamp_reason"]
+
+    # since_year=2019 is exactly the earliest available filing -> no clamp,
+    # even though the returned facts span is identical to the clamped call.
+    inrange_pack = sec_client.extract_dimensional_revenue(
+        "AAPL", since_year=2019, until_year=2021
+    )
+    assert "error" not in inrange_pack, inrange_pack
+    inrange_coverage = inrange_pack["coverage"]
+    assert inrange_coverage["requested"] == {"since": 2019, "until": 2021}
+    assert inrange_coverage["actual"] == {"min_year": 2017, "max_year": 2021}
+    assert inrange_coverage["clamp_reason"] is None, (
+        f"in-availability request must record no clamp; got {inrange_coverage['clamp_reason']!r}"
+    )
+
+    # never a silent truncation: the clamped call's facts must be the exact
+    # same set as the in-availability call's (both select the 2019 + 2021
+    # filings) — the clamp is REPORTED, not hidden by returning fewer facts.
+    clamped_accessions = {f["accession"] for f in clamped_pack["facts"]}
+    inrange_accessions = {f["accession"] for f in inrange_pack["facts"]}
+    assert clamped_accessions == inrange_accessions

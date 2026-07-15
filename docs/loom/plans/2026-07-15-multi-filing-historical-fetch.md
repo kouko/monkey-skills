@@ -156,3 +156,9 @@ on the Filings collection, else falls back to fetch-then-filter (arm-1 library l
   the Decision Log defines only both-None=latest-only and since_year-alone=[since_year,
   latest]). Chosen over silently ignoring it (fail-loud law) or inventing
   `[earliest, until_year]` semantics. (two-way, agent-decided per code-quality 🟡)
+- `coverage.actual` source (T2): min/max of the RETURNED FACTS' `fiscal_year` (the
+  period_end-derived field, NOT the raw edgartools column) — so it can legitimately
+  overshoot the request earlier (a 10-K carries prior-year comparatives). (two-way)
+- `coverage.clamp_reason` basis (T2): compares the request against the earliest/latest
+  period across ALL exact_filings (company-wide availability), not just the selected
+  subset; both since/until directions checked, joined with "; ". (two-way)
