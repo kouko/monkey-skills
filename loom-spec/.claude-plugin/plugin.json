@@ -1,6 +1,6 @@
 {
   "name": "loom-spec",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Key-free GENERATE-layer spec skills — expand a seed into a high-recall spec + critique omissions.",
   "author": {
     "name": "kouko",
