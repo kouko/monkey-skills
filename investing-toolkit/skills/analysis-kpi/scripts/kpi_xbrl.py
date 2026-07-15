@@ -186,20 +186,24 @@ def facts_to_points(
             source_table_id = "xbrl:companyfacts"
             source_cell_ref = concept
 
-        points.append(
-            {
-                "company": company,
-                "kpi_id": kpi_id,
-                "period_type": _PERIOD_TYPE_FY,
-                "period": period,
-                "as_of": filed,
-                "value": value,
-                "source_accession": accession,
-                "source_table_id": source_table_id,
-                "source_cell_ref": source_cell_ref,
-                "source_kind": source_kind,
-            }
-        )
+        point = {
+            "company": company,
+            "kpi_id": kpi_id,
+            "period_type": _PERIOD_TYPE_FY,
+            "period": period,
+            "as_of": filed,
+            "value": value,
+            "source_accession": accession,
+            "source_table_id": source_table_id,
+            "source_cell_ref": source_cell_ref,
+            "source_kind": source_kind,
+        }
+        # A cross-filing restatement (overlap policy C, resolved upstream in
+        # resolve_binding) tags the kept fact with a machine-readable `dqc`
+        # flag; carry it through onto the emitted point unchanged.
+        if fact.get("dqc"):
+            point["dqc"] = fact["dqc"]
+        points.append(point)
     return points
 
 
@@ -228,10 +232,18 @@ def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
     `"FY"`. When a single source's signature matches TWO OR MORE facts for
     the SAME period, they collapse to exactly one point — if every matched
     fact agrees on `value`, the identical duplicate(s) are DEDUPED down to
-    one point (never double-counted downstream); if the matched facts
-    DISAGREE on `value`, resolve_binding RAISES ValueError naming the
-    kpi_id + period — a genuine value conflict is never resolved
-    arbitrarily. A period with exactly one matching fact resolves cleanly,
+    one point (never double-counted downstream). If the matched facts
+    DISAGREE on `value`, the disagreement is discriminated by ACCESSION
+    (overlap policy C): a SINGLE accession reporting conflicting values for
+    the same (signature, period) is a genuine INTRA-filing ambiguity and
+    RAISES ValueError naming the kpi_id + period — never resolved
+    arbitrarily; but a CROSS-filing disagreement (distinct accessions, as
+    adjacent 10-Ks recast a value over the multi-filing span) is a
+    RESTATEMENT — resolve_binding keeps the value from the most-recently-
+    FILED 10-K (tie-break higher accession) and surfaces a machine-readable
+    `dqc` restatement flag `{type, old, new, superseded_accession,
+    kept_accession}` on the emitted point, rather than aborting the whole
+    series. A period with exactly one matching fact resolves cleanly,
     unchanged.
     """
     kpi_id = binding["kpi_id"]
@@ -275,16 +287,57 @@ def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
             by_period.setdefault(identity_key, []).append(fact)
         for (_, period_key), group in by_period.items():
             values = {fact.get("value") for fact in group}
-            if len(values) > 1:
+            if len(values) == 1:
+                # exactly one distinct value across the group (1 or more
+                # identical facts) -> keep one representative for this period.
+                deduped_facts_by_source_idx[idx].append(group[0])
+                continue
+
+            # The group DISAGREES on value. Discriminate an INTRA-filing
+            # ambiguity (a SINGLE accession reporting conflicting numbers for
+            # the same (signature, period) — a genuine defect, still fatal)
+            # from a CROSS-filing restatement (overlap policy C): adjacent
+            # 10-Ks over the multi-filing span recast the same value, which
+            # must NOT abort the whole series.
+            values_by_accession: dict[str, set] = {}
+            for fact in group:
+                values_by_accession.setdefault(
+                    fact.get("accession"), set()
+                ).add(fact.get("value"))
+            if any(len(vals) > 1 for vals in values_by_accession.values()):
                 raise ValueError(
                     f"kpi_xbrl.resolve_binding: signature for kpi_id {kpi_id!r} "
                     f"matches {len(group)} facts with different values for "
-                    f"period {period_key!r} (concept={source.get('concept')!r}) "
-                    f"— ambiguous, never resolved arbitrarily"
+                    f"period {period_key!r} within a SINGLE filing "
+                    f"(concept={source.get('concept')!r}) — intra-filing "
+                    f"ambiguity, never resolved arbitrarily"
                 )
-            # exactly one distinct value across the group (1 or more identical
-            # facts) -> keep exactly one representative fact for this period.
-            deduped_facts_by_source_idx[idx].append(group[0])
+
+            # Cross-filing restatement (policy C): keep the value from the
+            # most-recently-FILED 10-K (tie-break higher accession) and tag
+            # the superseded value onto the kept fact as a machine-readable
+            # `dqc` restatement flag (carried through to the emitted point by
+            # facts_to_points). The superseded fact is the most recent OLDER
+            # fact whose value differs from the kept one.
+            ordered = sorted(
+                group,
+                key=lambda f: ((f.get("filed") or ""), (f.get("accession") or "")),
+            )
+            kept = ordered[-1]
+            superseded = next(
+                fact
+                for fact in reversed(ordered[:-1])
+                if fact.get("value") != kept.get("value")
+            )
+            kept_with_dqc = dict(kept)
+            kept_with_dqc["dqc"] = {
+                "type": "restatement",
+                "old": superseded.get("value"),
+                "new": kept.get("value"),
+                "superseded_accession": superseded.get("accession"),
+                "kept_accession": kept.get("accession"),
+            }
+            deduped_facts_by_source_idx[idx].append(kept_with_dqc)
 
     points = []
     for idx, source in enumerate(sources):
