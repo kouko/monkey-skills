@@ -58,6 +58,7 @@ import importlib.util
 import json
 import sys
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
@@ -81,14 +82,26 @@ def kpi_xbrl_module():
 
 @pytest.fixture(scope="module")
 def sec_edgar_helpers():
-    """Import sec_edgar_client's PURE fact-builder helpers only — no
-    `edgar`/network stubbing needed since this file never calls
-    `extract_dimensional_revenue` itself, only `_is_dimensional_revenue_fact`
-    and `_build_dimensional_revenue_fact` (mirrors
-    tests/data/test_sec_edgar_dimensional.py's `_load_helpers` convention)."""
+    """Import sec_edgar_client's PURE fact-builder helpers only. sec_edgar_client
+    does a MODULE-LEVEL `import requests` (and lazily imports `edgar`) — neither of
+    which the offline CI env installs — so importing the module (not just calling a
+    network function) needs both stubbed in sys.modules first. Mirror
+    tests/data/test_sec_edgar_dimensional.py's `sec_client` fixture: this file only
+    calls the pure dict->dict/bool fact-builders, so the MagicMock stubs are never
+    exercised."""
+    saved = {name: sys.modules.get(name) for name in ("requests", "edgar")}
+    sys.modules["requests"] = mock.MagicMock(name="requests")
+    sys.modules["edgar"] = mock.MagicMock(name="edgar")
     if str(MARKETS_SCRIPTS) not in sys.path:
         sys.path.insert(0, str(MARKETS_SCRIPTS))
-    return importlib.import_module("sec_edgar_client")
+    try:
+        yield importlib.import_module("sec_edgar_client")
+    finally:
+        for name, mod in saved.items():
+            if mod is not None:
+                sys.modules[name] = mod
+            else:
+                sys.modules.pop(name, None)
 
 
 @pytest.fixture
