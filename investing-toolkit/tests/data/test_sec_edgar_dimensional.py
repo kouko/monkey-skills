@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import datetime
 import importlib
+import json
 import sys
 from pathlib import Path
 from types import SimpleNamespace
@@ -37,6 +38,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 MARKETS_SCRIPTS = ROOT / "skills" / "data-markets" / "scripts"
+FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
 
 @pytest.fixture
@@ -358,3 +360,176 @@ def test_extract_dimensional_revenue_skips_amendment_offline(sec_client):
     )
     values = {fact["value"] for fact in result["facts"]}
     assert 999.0 not in values, "the amendment's revenue value leaked into the fact-pack"
+
+
+# ---------------------------------------------------------------------------
+# Task 1 — range-bounded consecutive multi-filing fetch (since_year/until_year)
+# (docs/loom/plans/2026-07-15-multi-filing-historical-fetch.md). Default (both
+# None) preserves latest-only; since_year opts into a consecutive multi-filing
+# concatenation. Driven by the MACHINE-CAPTURED multi-filing fixture
+# (fixtures/xbrl_multifiling_aapl.json — 3 historical AAPL 10-Ks, distinct
+# accessions, verified live 2026-07-15), NOT hand-typed facts.
+# ---------------------------------------------------------------------------
+
+def _filing_from_fixture(record):
+    """Build a fake edgartools Filing from one captured fixture filing record.
+    Carries per-filing selection metadata (`form`, `filing_date`,
+    `period_of_report`) plus a `.xbrl()` yielding the captured raw fact rows —
+    so the range selection can key on filings-list metadata WITHOUT fetching
+    every `.xbrl()` first (the plan's kickoff decision)."""
+    xb = mock.MagicMock(name=f"xbrl-{record['accession']}")
+    xb.facts.to_dataframe.return_value.to_dict.return_value = list(record["raw_facts"])
+    year, month, day = (int(part) for part in record["filing_date"].split("-"))
+    filing = SimpleNamespace(
+        accession_no=record["accession"],
+        filing_date=datetime.date(year, month, day),
+        form=record["form"],
+        period_of_report=record["period_of_report"],
+    )
+    filing.xbrl = lambda bound=xb: bound
+    return filing
+
+
+def _multifiling_company(sec_client):
+    """Wire the captured multi-filing fixture behind a mocked edgartools
+    Company whose `get_filings` returns the fake Filings. Returns the parsed
+    fixture for the test to assert against."""
+    fixture = json.loads((FIXTURES / "xbrl_multifiling_aapl.json").read_text())
+    filings = [_filing_from_fixture(r) for r in fixture["filings"]]
+    company = mock.MagicMock(name="Company")
+    company.not_found = False
+    company.cik = 320193
+    company.get_filings.return_value = filings
+    sec_client.edgar_stub.Company.return_value = company
+    return fixture
+
+
+def test_extract_dimensional_revenue_since_year_spans_multiple_filings(sec_client):
+    """`extract_dimensional_revenue` with `since_year` set concatenates facts
+    from EVERY in-range exact-form 10-K (>1 distinct accession), while the
+    default call (no `since_year`) preserves today's latest-only behavior
+    (facts from exactly one — the latest — accession). This un-collapses the
+    single-filing seam without regressing the default path."""
+    fixture = _multifiling_company(sec_client)
+    all_accessions = {r["accession"] for r in fixture["filings"]}
+    latest_accession = max(
+        fixture["filings"], key=lambda r: r["filing_date"]
+    )["accession"]
+
+    # Default (both bounds None) → latest filing only: facts from exactly one
+    # accession, unchanged from the pre-range behavior.
+    default_pack = sec_client.extract_dimensional_revenue("AAPL")
+    assert "error" not in default_pack, default_pack
+    default_accessions = {f["accession"] for f in default_pack["facts"]}
+    assert default_accessions == {latest_accession}, (
+        "default (no since_year) must return facts from exactly the latest "
+        f"filing ({latest_accession}); got {default_accessions}"
+    )
+
+    # since_year set → consecutive multi-filing fetch: facts drawn from >1
+    # distinct accession, one per in-range exact-form 10-K.
+    multi_pack = sec_client.extract_dimensional_revenue("AAPL", since_year=2019)
+    assert "error" not in multi_pack, multi_pack
+    multi_accessions = {f["accession"] for f in multi_pack["facts"]}
+    assert len(multi_accessions) > 1, (
+        "since_year must span multiple filings; got a single accession "
+        f"{multi_accessions}"
+    )
+    assert multi_accessions == all_accessions, (
+        "every in-range filing's facts must be concatenated (consecutive, "
+        f"not strided); expected {all_accessions}, got {multi_accessions}"
+    )
+    # Concatenation is additive — the multi-filing pack carries strictly more
+    # facts than the single latest filing.
+    assert len(multi_pack["facts"]) > len(default_pack["facts"])
+
+
+def test_extract_dimensional_revenue_until_year_without_since_year_raises(sec_client):
+    """`until_year` set WITHOUT `since_year` is unsupported and must fail loud:
+    with no lower bound the call would silently fall to latest-only and could
+    return a filing NEWER than the stated upper bound (silent-wrong is the
+    enemy). The Decision Log defines only both-None (latest-only) and
+    `since_year`-alone (`[since_year, latest]`) — an upper-bound-only call is
+    rejected with a ValueError, not silently reinterpreted. The raise must
+    precede any network I/O, so no edgartools mock is needed."""
+    with pytest.raises(ValueError, match="until_year requires since_year"):
+        sec_client.extract_dimensional_revenue("AAPL", until_year=2021)
+
+
+def test_extract_dimensional_revenue_until_year_excludes_later_filing(sec_client):
+    """The INCLUSIVE upper bound is honored: `since_year=2019, until_year=2021`
+    selects the 2019 + 2021 filings and EXCLUDES the 2023 one (whose fiscal
+    period year 2023 > until_year). Proves the `year <= until_year` branch of
+    the range predicate, using the machine-captured 2019/2021/2023 fixture."""
+    fixture = _multifiling_company(sec_client)
+    by_year = {r["period_of_report"][:4]: r["accession"] for r in fixture["filings"]}
+
+    pack = sec_client.extract_dimensional_revenue("AAPL", since_year=2019, until_year=2021)
+    assert "error" not in pack, pack
+    accessions = {f["accession"] for f in pack["facts"]}
+    assert accessions == {by_year["2019"], by_year["2021"]}, (
+        "inclusive upper bound: [2019, 2021] must include the 2019 + 2021 "
+        f"filings and exclude the 2023 one ({by_year['2023']}); got {accessions}"
+    )
+    assert by_year["2023"] not in accessions, (
+        f"the 2023 filing (fiscal year > until_year=2021) leaked in: {accessions}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Task 2 — coverage report + availability clamp (DQC honesty)
+# (docs/loom/plans/2026-07-15-multi-filing-historical-fetch.md). When the
+# requested range exceeds the real availability floor/ceiling (the fixture's
+# earliest/latest exact-form filing is 2019/2023), the pack still returns
+# whatever facts DO exist AND reports the clamp — never a silent truncation.
+# ---------------------------------------------------------------------------
+
+def test_extract_dimensional_revenue_reports_coverage_clamp(sec_client):
+    """`since_year` earlier than the earliest available filing (2019, per the
+    fixture) is clamped: the facts stop at the real floor (no filing older
+    than 2019 exists to fetch) and `coverage.clamp_reason` records why. An
+    in-availability request over the SAME selected filings records no clamp
+    — isolating clamp-reason logic from the returned-facts range, which is
+    identical in both calls."""
+    fixture = _multifiling_company(sec_client)
+
+    # since_year=2010 precedes the earliest available filing (2019) ->
+    # clamped. until_year=2021 is within availability (max is 2023) -> the
+    # 2019 + 2021 filings are selected, same as the in-availability call below.
+    clamped_pack = sec_client.extract_dimensional_revenue(
+        "AAPL", since_year=2010, until_year=2021
+    )
+    assert "error" not in clamped_pack, clamped_pack
+    clamped_coverage = clamped_pack["coverage"]
+    assert clamped_coverage["requested"] == {"since": 2010, "until": 2021}
+    assert clamped_coverage["actual"] == {"min_year": 2017, "max_year": 2021}, (
+        "actual must reflect the real floor the facts stop at (2017, the "
+        "earliest comparative year reported inside the selected 2019 filing) "
+        f"— got {clamped_coverage['actual']}"
+    )
+    assert clamped_coverage["clamp_reason"], (
+        "since_year=2010 precedes the earliest available filing (2019) and "
+        "must record why the facts stop short of the request"
+    )
+    assert "2010" in clamped_coverage["clamp_reason"]
+    assert "2019" in clamped_coverage["clamp_reason"]
+
+    # since_year=2019 is exactly the earliest available filing -> no clamp,
+    # even though the returned facts span is identical to the clamped call.
+    inrange_pack = sec_client.extract_dimensional_revenue(
+        "AAPL", since_year=2019, until_year=2021
+    )
+    assert "error" not in inrange_pack, inrange_pack
+    inrange_coverage = inrange_pack["coverage"]
+    assert inrange_coverage["requested"] == {"since": 2019, "until": 2021}
+    assert inrange_coverage["actual"] == {"min_year": 2017, "max_year": 2021}
+    assert inrange_coverage["clamp_reason"] is None, (
+        f"in-availability request must record no clamp; got {inrange_coverage['clamp_reason']!r}"
+    )
+
+    # never a silent truncation: the clamped call's facts must be the exact
+    # same set as the in-availability call's (both select the 2019 + 2021
+    # filings) — the clamp is REPORTED, not hidden by returning fewer facts.
+    clamped_accessions = {f["accession"] for f in clamped_pack["facts"]}
+    inrange_accessions = {f["accession"] for f in inrange_pack["facts"]}
+    assert clamped_accessions == inrange_accessions

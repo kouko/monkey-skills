@@ -48,6 +48,13 @@ def signature_fact_pack():
     )
 
 
+@pytest.fixture
+def restatement_fact_pack():
+    return json.loads(
+        (FIXTURES / "xbrl_restatement_factpack.json").read_text(encoding="utf-8")
+    )
+
+
 NEW_IPHONE_MATCH = {
     "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
     "axis": "srt:ProductOrServiceAxis",
@@ -371,6 +378,110 @@ def test_resolve_binding_dedupes_identical_duplicate(kpi_xbrl_module, signature_
     assert periods == ["2023", "2024", "2025"]
     by_period = {p["period"]: p for p in points}
     assert by_period["2025"]["value"] == 45183036000
+
+
+def test_resolve_binding_identity_key_carries_period_type_fy(
+    kpi_xbrl_module, signature_fact_pack
+):
+    """Task 3 GREEN: the anti-fabrication identity/dedup key extends from
+    (signature, period) to (signature, period_type, period) — scope A
+    always sets period_type to the constant "FY" (scope B, quarterly, owns
+    the real enumeration later; see Decision Log). Every emitted point
+    carries period_type == "FY", and an identical-value duplicate (same
+    signature, same period) still dedupes to exactly ONE point under the
+    extended key — annual grouping is unchanged since every scope-A point
+    is FY.
+    """
+    points = kpi_xbrl_module.resolve_binding(
+        signature_fact_pack, STREAMING_TOTAL_BINDING, "NFLX"
+    )
+    assert len(points) == 3
+    assert all(p["period_type"] == "FY" for p in points)
+
+    mutated = json.loads(json.dumps(signature_fact_pack))
+    duplicate_2025_total = next(
+        f
+        for f in mutated["facts"]
+        if f["concept"] == "us-gaap:Revenues"
+        and f["dimensions"] == {"ProductOrService": "StreamingMember"}
+        and f["period_end"] == "2025-12-31"
+    )
+    identical_duplicate = json.loads(json.dumps(duplicate_2025_total))  # SAME value
+    mutated["facts"].append(identical_duplicate)
+
+    deduped_points = kpi_xbrl_module.resolve_binding(
+        mutated, STREAMING_TOTAL_BINDING, "NFLX"
+    )
+    assert len(deduped_points) == 3
+    by_period = {p["period"]: p for p in deduped_points}
+    assert by_period["2025"]["value"] == 45183036000
+    assert by_period["2025"]["period_type"] == "FY"
+
+
+CCG_SEGMENT_BINDING = {
+    "kpi_id": "ccg_segment_revenue",
+    "sources": [
+        {
+            "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+            "dimensions": {"StatementBusinessSegments": "ClientComputingGroupMember"},
+            "source_kind": "xbrl-dimensional",
+        },
+    ],
+}
+
+
+def test_resolve_binding_restatement_newest_wins_with_dqc_flag(
+    kpi_xbrl_module, restatement_fact_pack
+):
+    """Task 4 (overlap policy C): over a multi-filing span the SAME
+    (signature, FY, period) is reported by two ADJACENT 10-Ks with a
+    RESTATED value (different accession). Rather than aborting the whole
+    series with the intra-filing ValueError, resolve_binding keeps the
+    value from the most-recently-FILED 10-K and surfaces a machine-readable
+    restatement DQC flag on the emitted point — never silently averaging or
+    dropping. The REAL captured fixture is INTC's ClientComputingGroup
+    FY2020 segment revenue, recast between the FY2021 10-K
+    (0000050863-22-000007, filed 2022-01-27, 40057000000.0) and the FY2022
+    10-K (0000050863-23-000006, filed 2023-01-27, 40535000000.0).
+    """
+    points = kpi_xbrl_module.resolve_binding(
+        restatement_fact_pack, CCG_SEGMENT_BINDING, "INTC"
+    )
+
+    # cross-filing restatement is NOT a fatal conflict — exactly one point.
+    assert len(points) == 1
+    point = points[0]
+    assert point["period"] == "2020"
+    # newest-FILED 10-K wins.
+    assert point["value"] == 40535000000.0
+    assert point["source_accession"] == "0000050863-23-000006"
+
+    dqc = point["dqc"]
+    assert dqc["type"] == "restatement"
+    assert dqc["old"] == 40057000000.0
+    assert dqc["new"] == 40535000000.0
+    assert dqc["superseded_accession"] == "0000050863-22-000007"
+    assert dqc["kept_accession"] == "0000050863-23-000006"
+
+
+def test_resolve_binding_same_accession_value_conflict_still_raises(
+    kpi_xbrl_module, restatement_fact_pack
+):
+    """The intra-filing discriminator is UNCHANGED by policy C: two facts
+    sharing the SAME signature AND period AND the SAME accession but
+    DIFFERENT values are a genuine INTRA-filing ambiguity (one 10-K
+    reporting a KPI twice with conflicting numbers) — that must still RAISE,
+    never be silently resolved as a "restatement". Force both real
+    restatement facts onto one accession (same filing) -> RAISE naming the
+    period; only a CROSS-accession disagreement is a restatement.
+    """
+    mutated = json.loads(json.dumps(restatement_fact_pack))
+    for fact in mutated["facts"]:
+        fact["accession"] = "0000050863-22-000007"
+        fact["filed"] = "2022-01-27"
+
+    with pytest.raises(ValueError, match="2020"):
+        kpi_xbrl_module.resolve_binding(mutated, CCG_SEGMENT_BINDING, "INTC")
 
 
 AMERICAS_SEGMENT_BINDING = {
