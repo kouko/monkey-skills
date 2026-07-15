@@ -13,15 +13,19 @@ or write files, and touches neither the network nor an LLM.
 
 `facts_to_points(fact_pack, kpi_id, match, company, source_kind)` selects
 every fact in `fact_pack["facts"]` matching `match` (a
-`{"concept", "axis", "member"}` selector — `axis`/`member` compared
-directly, so `None` matches a flat fact's `None` axis/member) and maps each
-matched fact into a kpi_store-shaped point:
+`{"concept", "dimensions"}` selector — `dimensions` compared by dict
+EQUALITY, so an absent/empty `dimensions` matches only a flat fact's own
+empty `dimensions`, i.e. the top-level total) and maps each matched fact
+into a kpi_store-shaped point:
 
   - `source_accession` = fact `accession`
-  - `source_table_id`  = `"xbrl:" + axis` (dimensional) or
-                          `"xbrl:companyfacts"` (axis is `None`, flat)
-  - `source_cell_ref`  = `concept` (flat) or `concept + "|" + member`
-                          (dimensional)
+  - `source_table_id`  = `"xbrl:dimensional"` (fact has real breakdown
+                          axes) or `"xbrl:companyfacts"` (fact `dimensions`
+                          is empty, flat)
+  - `source_cell_ref`  = `concept` (flat) or
+                          `concept + "|" + <stable-sorted "axis=member" join>`
+                          (dimensional, e.g.
+                          `"concept|ProductOrService=StreamingMember"`)
   - `as_of`            = fact `filed`
   - `period`           = the year the fiscal period ENDS, taken from
                           `period_end[:4]` (e.g. `"2025-09-27"` -> `"2025"`)
@@ -65,10 +69,16 @@ import kpi_series  # noqa: E402
 
 
 def _fact_matches(fact: dict, match: dict) -> bool:
+    """EXACT-match a fact's full dimensional signature against `match` =
+    `{concept, dimensions}`. `dimensions` is compared by dict EQUALITY — a
+    match with an empty/absent `dimensions` matches ONLY a fact whose own
+    `dimensions` is empty (the top-level total); a fact carrying EXTRA
+    breakdown axes beyond `match`'s does NOT match (de-conflates e.g. a
+    NFLX streaming total from its per-region slices).
+    """
     return (
         fact.get("concept") == match.get("concept")
-        and fact.get("axis") == match.get("axis")
-        and fact.get("member") == match.get("member")
+        and fact.get("dimensions", {}) == match.get("dimensions", {})
     )
 
 
@@ -140,12 +150,16 @@ def facts_to_points(
         filed = _require_field(fact, "filed")
         period = _require_period(fact)
 
-        axis = fact.get("axis")
-        member = fact.get("member")
         concept = fact.get("concept")
+        dimensions = fact.get("dimensions") or {}
 
-        source_table_id = f"xbrl:{axis}" if axis else "xbrl:companyfacts"
-        source_cell_ref = f"{concept}|{member}" if member else concept
+        if dimensions:
+            source_table_id = "xbrl:dimensional"
+            dims_joined = ",".join(f"{k}={v}" for k, v in sorted(dimensions.items()))
+            source_cell_ref = f"{concept}|{dims_joined}"
+        else:
+            source_table_id = "xbrl:companyfacts"
+            source_cell_ref = concept
 
         points.append(
             {
@@ -164,16 +178,18 @@ def facts_to_points(
 
 
 def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
-    """Resolve an era-specific logical-KPI binding: `binding` =
-    `{kpi_id, sources: [{concept, axis, member, fy_min, fy_max, source_kind}]}`.
+    """Resolve a logical-KPI binding onto the fact-pack's full dimensional
+    signatures: `binding` = `{kpi_id, sources: [{concept, dimensions,
+    source_kind}]}`.
 
-    Each fact is matched against `sources` — a source matches when
-    concept+axis+member are equal AND the fact's fiscal year (derived from
-    `period_end[:4]`, same as `facts_to_points` — never the raw `fiscal_year`
-    field) falls within `[fy_min, fy_max]`. A matched fact is emitted (via
-    `facts_to_points`, reusing its provenance mapping) under the single
-    logical `kpi_id`. A fact matching no source is skipped, never fabricated.
-    A fact matching more than one source RAISES — an ambiguous binding.
+    A fact matches a source when `fact["concept"] == source["concept"]` AND
+    `fact["dimensions"] == source["dimensions"]` EXACTLY (dict equality — an
+    absent/empty `dimensions` matches ONLY the top-level total; a fact
+    carrying extra breakdown axes does NOT match a narrower source). A
+    matched fact is emitted (via `facts_to_points`, reusing its provenance
+    mapping) under the single logical `kpi_id`. A fact matching no source is
+    skipped, never fabricated. A fact matching more than one source RAISES —
+    an ambiguous binding.
     """
     kpi_id = binding["kpi_id"]
     sources = binding["sources"]
@@ -185,13 +201,9 @@ def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
         for idx, source in enumerate(sources):
             selector = {
                 "concept": source["concept"],
-                "axis": source.get("axis"),
-                "member": source.get("member"),
+                "dimensions": source.get("dimensions", {}),
             }
-            if not _fact_matches(fact, selector):
-                continue
-            fiscal_year = int(_require_period(fact))
-            if source["fy_min"] <= fiscal_year <= source["fy_max"]:
+            if _fact_matches(fact, selector):
                 matched_indices.append(idx)
 
         if len(matched_indices) > 1:
@@ -212,8 +224,7 @@ def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
         sub_pack = {"company": fact_pack.get("company"), "facts": matched_facts}
         selector = {
             "concept": source["concept"],
-            "axis": source.get("axis"),
-            "member": source.get("member"),
+            "dimensions": source.get("dimensions", {}),
         }
         points.extend(
             facts_to_points(sub_pack, kpi_id, selector, company, source["source_kind"])

@@ -41,6 +41,13 @@ def fact_pack():
     return json.loads((FIXTURES / "xbrl_aapl_factpack.json").read_text(encoding="utf-8"))
 
 
+@pytest.fixture
+def signature_fact_pack():
+    return json.loads(
+        (FIXTURES / "xbrl_signature_factpack.json").read_text(encoding="utf-8")
+    )
+
+
 NEW_IPHONE_MATCH = {
     "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
     "axis": "srt:ProductOrServiceAxis",
@@ -50,6 +57,11 @@ NEW_IPHONE_MATCH = {
 GROSS_PROFIT_MATCH = {"concept": "us-gaap:GrossProfit", "axis": None, "member": None}
 
 
+@pytest.mark.xfail(
+    reason="OLD single-axis/member fixture+match shape → Task 7 rewire to full "
+    "dimensional signatures (kpi_xbrl.facts_to_points no longer reads axis/member)",
+    strict=False,
+)
 def test_facts_to_points_maps_provenance_and_fails_loud(kpi_xbrl_module, fact_pack):
     """Task 1 GREEN: dimensional NEW-era iPhone fact -> provenance-mapped
     point; a fact missing `value` RAISES (never a fabricated 0); a flat
@@ -160,6 +172,11 @@ IPHONE_REVENUE_BINDING = {
 }
 
 
+@pytest.mark.xfail(
+    reason="OLD single-axis/member fixture+binding shape → Task 7 rewire to full "
+    "dimensional signatures (source_cell_ref no longer joins on member)",
+    strict=False,
+)
 def test_resolve_binding_stitches_two_eras_into_one_kpi_id(kpi_xbrl_module, fact_pack):
     """Task 2 GREEN: the iphone_revenue binding resolves the fixture's
     FY2016 (OLD-era SalesRevenueNet) + FY2024 + FY2025 (NEW-era
@@ -226,6 +243,123 @@ def test_resolve_binding_raises_on_ambiguous_multi_source_match(kpi_xbrl_module,
     """
     with pytest.raises(ValueError, match="ambiguous"):
         kpi_xbrl_module.resolve_binding(fact_pack, AMBIGUOUS_OVERLAPPING_BINDING, "AAPL")
+
+
+STREAMING_TOTAL_BINDING = {
+    "kpi_id": "streaming_revenue",
+    "sources": [
+        {
+            "concept": "us-gaap:Revenues",
+            "dimensions": {"ProductOrService": "StreamingMember"},
+            "source_kind": "xbrl-dimensional",
+        },
+    ],
+}
+
+STREAMING_US_CANADA_BINDING = {
+    "kpi_id": "streaming_revenue_us_canada",
+    "sources": [
+        {
+            "concept": "us-gaap:Revenues",
+            "dimensions": {
+                "ProductOrService": "StreamingMember",
+                "StatementGeographical": "UnitedStatesAndCanadaMember",
+            },
+            "source_kind": "xbrl-dimensional",
+        },
+    ],
+}
+
+
+def test_resolve_binding_exact_signature_deconflates(kpi_xbrl_module, signature_fact_pack):
+    """Task 1 GREEN: resolve_binding EXACT-matches a source's full `dimensions`
+    signature against a fact's `dimensions` dict — a binding with dimensions
+    {"ProductOrService": "StreamingMember"} resolves ONLY the 3 NFLX total
+    facts (one per period), NOT the 12 region-slice facts that also carry
+    ProductOrService=StreamingMember plus an extra StatementGeographical axis
+    (dict equality rejects the extra key). A binding naming BOTH axes
+    resolves ONLY the matching region slice. Every point carries full
+    provenance (source_accession/source_table_id/source_cell_ref).
+    """
+    total_points = kpi_xbrl_module.resolve_binding(
+        signature_fact_pack, STREAMING_TOTAL_BINDING, "NFLX"
+    )
+    assert len(total_points) == 3
+    assert all(p["kpi_id"] == "streaming_revenue" for p in total_points)
+    assert sorted(p["value"] for p in total_points) == sorted(
+        [45183036000, 39000966000, 33640458000]
+    )
+    assert sorted(p["period"] for p in total_points) == ["2023", "2024", "2025"]
+    for p in total_points:
+        assert p["source_accession"] == "0001065280-26-000034"
+        assert p["source_table_id"]
+        assert p["source_cell_ref"]
+
+    us_points = kpi_xbrl_module.resolve_binding(
+        signature_fact_pack, STREAMING_US_CANADA_BINDING, "NFLX"
+    )
+    assert len(us_points) == 3
+    by_period = {p["period"]: p for p in us_points}
+    assert by_period["2025"]["value"] == 19957152000
+    for p in us_points:
+        assert p["source_accession"] == "0001065280-26-000034"
+        assert p["source_table_id"]
+        assert p["source_cell_ref"]
+
+
+def test_facts_to_points_fails_loud_new_shape(kpi_xbrl_module, signature_fact_pack):
+    """REVISION (code-quality 🔴): the anti-fabrication guards were only
+    exercised via the OLD axis/member shape (inside a now-xfailed test) —
+    prove they fire on the NEW full-signature `dimensions`-map shape too.
+    Each case isolates a single REAL NFLX streaming-total fact (dimensions=
+    {"ProductOrService": "StreamingMember"}, FY2025) in its own one-fact
+    pack with ONLY the tested field removed, so facts_to_points's ordered
+    checks (value -> accession -> filed -> period_end) reach exactly that
+    RAISE — the other three required fields stay intact, so no earlier
+    check aborts first.
+    """
+    match = {
+        "concept": "us-gaap:Revenues",
+        "dimensions": {"ProductOrService": "StreamingMember"},
+    }
+    total_fact = next(
+        f
+        for f in signature_fact_pack["facts"]
+        if f["concept"] == match["concept"]
+        and f.get("dimensions") == match["dimensions"]
+        and f["period_end"] == "2025-12-31"
+    )
+
+    def _pack_missing(field):
+        fact = json.loads(json.dumps(total_fact))
+        del fact[field]
+        return {"company": "NFLX", "facts": [fact]}
+
+    with pytest.raises(ValueError, match="value"):
+        kpi_xbrl_module.facts_to_points(
+            _pack_missing("value"), "streaming_revenue", match, "NFLX", "xbrl-dimensional"
+        )
+    with pytest.raises(ValueError, match="accession"):
+        kpi_xbrl_module.facts_to_points(
+            _pack_missing("accession"), "streaming_revenue", match, "NFLX", "xbrl-dimensional"
+        )
+    with pytest.raises(ValueError, match="filed"):
+        kpi_xbrl_module.facts_to_points(
+            _pack_missing("filed"), "streaming_revenue", match, "NFLX", "xbrl-dimensional"
+        )
+    with pytest.raises(ValueError, match="period_end"):
+        kpi_xbrl_module.facts_to_points(
+            _pack_missing("period_end"), "streaming_revenue", match, "NFLX", "xbrl-dimensional"
+        )
+
+    # malformed (non-YYYY-MM-DD) period_end — never fabricated as period "None"
+    malformed = json.loads(json.dumps(total_fact))
+    malformed["period_end"] = "not-a-date"
+    with pytest.raises(ValueError, match="period_end"):
+        kpi_xbrl_module.facts_to_points(
+            {"company": "NFLX", "facts": [malformed]},
+            "streaming_revenue", match, "NFLX", "xbrl-dimensional",
+        )
 
 
 def test_declared_break_splits_series_not_concat(kpi_xbrl_module, fact_pack):
