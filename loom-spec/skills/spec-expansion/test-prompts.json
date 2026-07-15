@@ -1,0 +1,36 @@
+{
+  "skill_name": "spec-expansion",
+  "schema_version": 1,
+  "created": "2026-07-15",
+  "last_reviewed": "2026-07-15",
+  "prompts": [
+    {
+      "id": 1,
+      "category": "happy-path",
+      "prompt": "Expand this seed into a spec: readers can bookmark articles into a reading list; a bookmark can be archived or deleted; editors can pin an article so it cannot be deleted while pinned. Target repo has no docs/loom/PRINCIPLES.md.",
+      "expected_behavior": "Surfaces the missing PRINCIPLES.md loudly (ungoverned-expansion caveat recorded), runs the three announced phases in order (USM backbone → OOUX fan-out via N parallel subagents → auto-expansion matrix with lens pruning + ③b density gate + ③c 0-switch walk), emits the change-folder (proposal.md seven sections + specs/<capability>/spec.md OpenSpec-pure delta), tags provenance on every item, keeps Blind spots non-empty, closes with a coverage-relative statement, and validates with validate_spec_output.py.",
+      "edge_case_dimensions": []
+    },
+    {
+      "id": 2,
+      "category": "edge-case",
+      "prompt": "Spec this out for me: make sharing better.",
+      "expected_behavior": "Seed-adequacy pre-flight tripwires fire (no nameable actors/objects, no lifecycle) — stops BEFORE fanning out, names the specific gaps, asks the user (or flags blind spots) instead of inventing actors/objects/lifecycle to fill the grid.",
+      "edge_case_dimensions": ["too-sparse seed", "manufacture-fiction guard"]
+    },
+    {
+      "id": 3,
+      "category": "edge-case",
+      "prompt": "把這個 seed 展開成一份完整、詳盡、涵蓋所有情況的 spec：會員可以儲值點數、用點數兌換優惠券、優惠券有效期限 30 天到期自動失效。",
+      "expected_behavior": "Runs the expansion but REFUSES the completeness framing: never claims complete/exhaustive/all-cases, closes with a coverage-relative-to-seed+N-lenses statement plus listed blind spots; BVA lens dominates the numeric/dated inputs (30-day boundary); reply in the user's language.",
+      "edge_case_dimensions": ["ban-the-word-complete guardrail", "non-English prompt", "BVA-dominant seed"]
+    },
+    {
+      "id": 4,
+      "category": "stress",
+      "prompt": "The billing capability already has a persisted intent layer: docs/loom/spec/MODEL.md (with Invariants / Object state machines / Out of scope) and docs/loom/spec/billing/README.md. Expand this new change on top of it: subscriptions can now be paused for up to 3 months.",
+      "expected_behavior": "Reads the persisted layer as prior-state (READ-ONLY, point-don't-copy: references MODEL.md sections by path, extends the subscription state machine rather than redefining it, respects Out of scope in pruning), fans NET-NEW only, and emits the per-change folder without editing the persisted layer.",
+      "edge_case_dimensions": ["persisted prior-state intake", "point-don't-copy discipline", "spec→spec loop"]
+    }
+  ]
+}

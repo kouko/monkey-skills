@@ -4,6 +4,21 @@ All notable changes to the `skill-dev-toolkit` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] — 2026-07-15
+
+### Changed
+
+- **`skill-judge` SKILL.md 5,459 → 4,533 words (−17.0%)**: the domain-team
+  adaptation rules extracted to `references/domain-team-adaptation.md`
+  (loaded only for `domain-teams/skills/{team}/` targets, with a "Do NOT
+  load" guard) and the nine Common Failure Pattern bodies to
+  `references/failure-patterns.md` (loaded at Step 5 diagnosis); the
+  score-history section compressed to a pointer at the script docstring.
+  Clears the pre-existing over-budget disclosed in #566. Behavior
+  equivalence proven via 4 test prompts × 3-judge ensemble (12/12
+  EQUIVALENT); `test-prompts.json` gained prompt id:4 covering the
+  adaptation path. Slim round 2 of the Pocock token-economy roadmap.
+
 ## [0.3.0] — 2026-07-14
 
 ### Changed — two-tier description length standard + Pocock token-economy rules

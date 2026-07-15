@@ -5,6 +5,23 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.31.1] — 2026-07-15 — requesting-code-review token slim (equivalence-gated)
+
+### Changed
+
+- **`requesting-code-review` SKILL.md 4,325 → 3,706 words (−14.3%)**: the
+  §Asking the user relay rules (three gates + seven phrasing rules +
+  calibration example) extracted to `references/relay-phrasing.md`, loaded
+  before composing any verdict relay; the R2 machine-precision boundary
+  clause AND the complex-fork briefing clause with its threshold triple
+  stay inline (the latter is lockstep-guarded by
+  `test_asking_user_briefing_escalation.py`, which caught the first cut
+  moving it out — restored, reference now points back). Behavior
+  equivalence proven via 4 test prompts × 3-judge ensemble (12/12
+  EQUIVALENT); first `test-prompts.json` shipped for this skill. Also
+  fixes a stale internal xref (Surface-to-user is Process Step 5). Slim
+  round 2 of the Pocock token-economy roadmap.
+
 ## [0.31.0] — 2026-07-14 — AFK research lane (kickoff fork-harvest parallel research subagents)
 
 ### Added

@@ -100,35 +100,17 @@ it. If no `ui-flows.md` exists, ignore this section and treat the input as a gen
 
 ## Consuming the persisted intent layer as prior-state
 
-When the capability you are spec-ing **already has a persisted intent layer** (the
-durable `docs/loom/spec/` root this skill authors — see *Authoring the persistent
-intent layer* below), read it as **prior-state** so this cycle extends the last one
-rather than re-deriving it from scratch. This closes the spec→spec loop: loom-spec
-reads its own persisted output as the seed-context for the next change.
-
-**Point-don't-copy.** REFERENCE the persisted files by path and **link back** to the
-named sections — **NEVER copy their content** into the change-folder. A copy is a
-second source of truth that drifts from the layer it duplicates; the persisted layer
-stays the single source, and the change-folder points at it. This read path is
-**READ-ONLY** — it never authors or edits the persisted layer (that is the *Authoring
-the persistent intent layer* section's job).
-
-Map each persisted prior-state to the phase it feeds (read each WHEN PRESENT):
-
-| persisted prior-state | feeds |
-|---|---|
-| MID `docs/loom/spec/<capability>/README.md` (intent / why / scope) | Phase ① seed-adequacy + USM backbone |
-| TOP `docs/loom/spec/MODEL.md` `## Object state machines` | Phase ② OOUX object/state model (extend, don't redefine) |
-| TOP `MODEL.md` `## Invariants` | Phase ③ matrix guard-rule lenses |
-| TOP `MODEL.md` `## Out of scope` | Phase ③ pruning (don't fan deliberately-excluded paths) |
-| the generated INDEX (capability→req→test), when present | the fan boundary — fan NET-NEW only (#406 semantics) |
-
-**The empty base case — prior-state intake is ADDITIVE and may be empty.** A net-new
-capability (or a repo mid-adoption with no layer or index yet) reads whatever exists,
-possibly nothing. An empty or absent layer is **never authoritative** — there is no
-cold-start deadlock: if no persisted layer exists, ignore this section and treat the
-input as a generic seed. The INDEX in particular lives at a later (capstone) repo
-location, so reference it **when present**; its absence is covered by this base case.
+When the capability you are spec-ing **already has a persisted intent layer**
+(the durable `docs/loom/spec/` root this skill authors — see *Authoring the
+persistent intent layer* below), Read
+[`references/intent-layer.md`](references/intent-layer.md) §Consuming
+**before Phase ①** — it maps each prior-state file to the phase it feeds.
+The binding rules, in brief: this intake is **READ-ONLY**;
+**point-don't-copy** (reference persisted files by path and section, never
+copy content — a copy is a second source of truth that drifts); fan
+**NET-NEW only** where an INDEX exists. **Empty base case:** an empty or
+absent layer is never authoritative — no cold-start deadlock; if nothing is
+persisted, skip this intake and treat the input as a generic seed.
 
 ## The three phases
 
@@ -414,46 +396,16 @@ directory) before handoff.
 
 The hybrid output above is the **per-change** artifact (a `docs/loom/<change-id>/`
 folder, consumed once by VERIFY then frozen). The **persistent intent layer** is
-the durable spec root that outlives any single change — the cross-cutting model
-and per-capability intent that tests cannot encode. It lives in **two altitudes**:
-
-- **TOP** — `docs/loom/spec/MODEL.md`: the cross-cutting model that spans
-  capabilities (system-wide invariants, object lifecycles, the global scope
-  boundary).
-- **MID** — `docs/loom/spec/<capability>/README.md`: one per capability,
-  carrying that capability's intent / why / scope.
-
-**TOP `MODEL.md` carries exactly these three canonical sections** (the header
-text is load-bearing — `../../scripts/validate_intent_layer.py` enforces it
-via `_TOP_SECTIONS`, so match it verbatim):
-
-```
-## Invariants
-## Object state machines
-## Out of scope
-```
-
-`## Invariants` are the rules that must always hold across capabilities;
-`## Object state machines` are the cross-cutting object lifecycles; `## Out of
-scope` is the global boundary of what the system deliberately does not do.
-
-**MID `README.md`** carries the capability's **intent / why / scope** — the
-reason this capability exists and what it is responsible for, not how any one
-flow behaves.
-
-**Cut rule #4 — TOP vs MID placement.**
-Ask: *"remove this capability — does this content get deleted?"*
-- **YES** → it belongs in the capability's **MID** `README.md`.
-- **NO** (it survives the capability's removal because it spans others) → it
-  belongs in **TOP** `MODEL.md`.
-
-**Anti-pattern — MID must NOT restate behavior a test owns.** A MID `README.md`
-that re-describes step-by-step what a flow does duplicates what the `####
-Scenario:` acceptance tests already own — the residual-rot surface: the prose
-and the tests drift apart, and the prose silently goes stale. Keep MID at the
-intent/why/scope altitude; let the tests be the single source of truth for
-behavior. This discipline is **human-reviewed, NOT a CI gate** — no script
-detects restated behavior, so a reviewer must hold the line at authoring time.
+the durable spec root that outlives any single change (TOP `docs/loom/spec/MODEL.md`
++ MID `docs/loom/spec/<capability>/README.md`). When authoring or extending it,
+Read [`references/intent-layer.md`](references/intent-layer.md) §Authoring
+**first** — it carries the TOP file's three canonical section headers
+(validator-enforced **verbatim** via the plugin root's
+`scripts/validate_intent_layer.py` `_TOP_SECTIONS`), the MID
+intent/why/scope altitude, cut rule #4 (TOP-vs-MID placement: "remove this
+capability — does this content get deleted?"), and the anti-pattern that MID
+must never restate behavior a `#### Scenario:` test owns (human-reviewed
+discipline, not a CI gate).
 
 ### Requirement status — `[active|deferred]`
 
@@ -474,25 +426,12 @@ suffix on the heading:
   structural lane** of the drift gate — it needs no index and is RED-phase-safe,
   so it is enforced on every push, PR and main alike.
 
-**Canonical vs inspirational (Tessl framing).** A requirement's status maps onto
-Tessl's spec-authority distinction — tests are what turn an *inspirational* spec
-into a *canonical* one:
-
-- a **verified `active`** requirement (has passing tests bound via `@req`) =
-  **canonical** — authority from test-binding;
-- a **`deferred` or unverified** requirement = **inspirational** — intent stated,
-  not yet test-bound.
-
-**Merge-boundary gate behavior.** The `active`-coverage check is a
-**post-finishing, pre-merge required PR check** (it needs `@req` resolution +
-test results, so it is merge-pinned, not run on req emission and not mid-RED):
-
-- **`active` + 0 passing tests = FAIL** — blocks the merge. By the merge boundary
-  the TDD RED must have gone GREEN; this is **not** failed mid-RED, where a
-  freshly-specced `active` req legitimately has 0 tests (failing it then would
-  invert the iron law).
-- **`deferred` + 0 tests = surfaced** — shown in the index as *inspirational*,
-  **never** a FAIL.
+Status maps onto spec **authority** — a verified `active` requirement is
+*canonical* (test-bound), a `deferred`/unverified one is *inspirational* —
+and the `active`-coverage check is a merge-pinned PR gate, not a mid-RED
+one: full semantics in
+[`references/intent-layer.md`](references/intent-layer.md) §Requirement
+status.
 
 ## Boundary — stops at GENERATE
 

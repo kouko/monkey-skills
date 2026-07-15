@@ -5,6 +5,18 @@ All notable changes to the `loom-spec` plugin (formerly `spec-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.4.3] — 2026-07-15
+
+### Changed
+
+- **`spec-expansion` SKILL.md 4,113 → 3,584 words (−12.9%)**: the persisted
+  intent-layer sections (§Consuming prior-state + §Authoring TOP/MID) extracted
+  to `references/intent-layer.md` with trigger-carrying pointers; the
+  `[active|deferred]` declaration syntax and the ui-flows seam table stay
+  inline. Behavior equivalence proven via 4 test prompts × 3-judge ensemble
+  (12/12 EQUIVALENT); first `test-prompts.json` shipped for this skill.
+  Slim round 2 of the Pocock token-economy roadmap.
+
 ## [0.4.2] — 2026-07-07
 
 ### Changed

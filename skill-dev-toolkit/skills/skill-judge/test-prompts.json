@@ -24,6 +24,13 @@
       "prompt": "is this skill good",
       "expected_behavior": "Skill asks for the SKILL.md content (not in current context). If the user provides it, runs the full rubric. If they refuse, explains that scoring requires the actual SKILL.md text and offers a brief checklist for the user to self-evaluate.",
       "edge_case_dimensions": ["vague request", "no skill content provided", "intake clarification"]
+    },
+    {
+      "id": 4,
+      "category": "edge-case",
+      "prompt": "Score domain-teams/skills/code-team/ (a monkey-skills domain-team skill: 4-tier SELF/MUST/SHOULD/MAY gates, ~420-line SKILL.md, phased workflow with checkpoints, standards/protocols/checklists/rubrics subfolders).",
+      "expected_behavior": "Applies the domain-team adaptation rules: D7 scored as Process pattern on merit with NO deduction for exceeding upstream typical line count; CHK-SKL-001/CHK-SKL-010 run as supplementary checks whose failures land under Critical Issues WITHOUT capping D4/D5 scores; prioritizes D1/D3/D6 as the net-new-value dimensions; produces the normal 8-dimension report with Pattern field = Process.",
+      "edge_case_dimensions": ["domain-team adaptation", "advisory-vs-authoritative gate boundary", "no-invented-caps rule"]
     }
   ]
 }
