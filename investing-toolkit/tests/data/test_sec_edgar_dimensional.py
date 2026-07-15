@@ -260,6 +260,33 @@ def test_build_fact_full_signature():
     assert fact3["dimensions"] == {"ProductOrService": "IPhoneMember"}
 
 
+def test_build_fact_includes_subsegments_axis():
+    """`SubsegmentsAxis` (srt namespace) was added to
+    `_DIMENSIONAL_REVENUE_AXIS_LOCAL_NAMES` but had no offline test exercising
+    it (whole-branch review 🟡, feat-operational-kpi-xbrl-pilot) — a mocked
+    row carrying `dim_srt_SubsegmentsAxis` alongside another real breakdown
+    axis (`dim_us-gaap_StatementBusinessSegmentsAxis`) must fold BOTH into
+    `dimensions`, proving SubsegmentsAxis is recognized as a real breakdown
+    axis (not dropped, and not mistaken for the `ConsolidationItemsAxis`
+    qualifier). Mirrors test_build_fact_full_signature's mock shape."""
+    mod = _load_helpers()
+
+    row = {
+        "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "dim_us-gaap_StatementBusinessSegmentsAxis": "jnj:ConsumerHealthSegmentMember",
+        "dim_srt_SubsegmentsAxis": "jnj:SomeSubsegmentMember",
+        "numeric_value": 500000000.0,
+        "period_type": "duration",
+        "period_end": "2025-12-31",
+    }
+    fact = mod._build_dimensional_revenue_fact(row, "JNJ", "0000200406-26-000012", "2026-02-01")
+    assert fact["dimensions"] == {
+        "StatementBusinessSegments": "ConsumerHealthSegmentMember",
+        "Subsegments": "SomeSubsegmentMember",
+    }, "SubsegmentsAxis must be folded into dimensions alongside the other real breakdown axis"
+    assert fact["consolidation"] is None
+
+
 # ---------------------------------------------------------------------------
 # extract_dimensional_revenue — Task 6 exact-form-match filing selection
 # (offline guard; code-quality-reviewer 🟡 on Task 6: the amendment-skip
