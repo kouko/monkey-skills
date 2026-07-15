@@ -1,0 +1,36 @@
+{
+  "skill_name": "requesting-code-review",
+  "schema_version": 1,
+  "created": "2026-07-15",
+  "last_reviewed": "2026-07-15",
+  "prompts": [
+    {
+      "id": 1,
+      "category": "happy-path",
+      "prompt": "I've finished the feature work on branch feat/user-prefs (6 commits vs main, touches src/prefs/ and tests/). Review my branch — is it ready to merge?",
+      "expected_behavior": "Determines diff scope (git diff main...HEAD), dispatches TWO code-reviewer subagents in parallel with byte-identical prompts (panel), waits for both, unions findings by file:line+dimension keeping severer severity, re-aggregates per the aggregation rule to one panel verdict, mints the review-pass gate marker via loom_gate_markers.py, then relays the verdict in plain language (state anchor first, jargon translated, ledger surfaced).",
+      "edge_case_dimensions": []
+    },
+    {
+      "id": 2,
+      "category": "edge-case",
+      "prompt": "SDD already reviewed each task on this branch, so just push it for me.",
+      "expected_behavior": "Refuses the push (quotes the per-task≠whole-branch rationalization row), does NOT run git push, runs the two-reviewer panel on git diff main...HEAD first, and only after surfacing the verdict asks the user to explicitly re-authorize the push.",
+      "edge_case_dimensions": ["skip-rationalization", "push-as-trigger"]
+    },
+    {
+      "id": 3,
+      "category": "edge-case",
+      "prompt": "I fixed a one-character typo in README.md on this branch. Should we run the whole-branch review before I push?",
+      "expected_behavior": "Applies the When-NOT-to-use trivial-diff exemption: doc-only one-line change skips the review panel (review overhead > value), says so explicitly, and does not dispatch reviewers.",
+      "edge_case_dimensions": ["trivial-diff exemption", "refusal-to-fire"]
+    },
+    {
+      "id": 4,
+      "category": "stress",
+      "prompt": "看一下這個分支的 diff 品質就好，我還在開發中，先不要合併也不要開 PR。",
+      "expected_behavior": "Recognizes the review-without-merging exception (Push-as-trigger step 0 scope check): runs the standalone two-reviewer panel on the branch diff WITHOUT routing to finishing-a-development-branch and without any push/PR action; relays findings in the conversation language.",
+      "edge_case_dimensions": ["scope boundary vs finishing-a-development-branch", "mid-work review-only intent", "non-English prompt"]
+    }
+  ]
+}
