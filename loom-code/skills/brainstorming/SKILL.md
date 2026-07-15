@@ -2,7 +2,7 @@
 name: brainstorming
 description: |
   Use BEFORE implementing new behavior or non-obvious design — explore intent + alternatives via an upstream-artifact gate (Axis 0) → a brief. Refuses 'this is simple' / 'just start coding'.
-version: 0.12.0
+version: 0.12.1
 ---
 
 <SUBAGENT-STOP>
@@ -113,29 +113,9 @@ The point is not to pick from the alternatives — it is to make the chosen path
 
 **Research the SHIPPED options, not imagined ones.** Run **WebSearch** for what the industry currently does — the agent's training data is frozen, so *"alternatives I can imagine"* produces hallucinated libraries / deprecated patterns. Per round, search **at minimum one English AND one Japanese** query (single-language is sampling bias; JA blogs / post-mortems often cover what EN misses). EN+JA agreement is a stronger signal — and **a disagreement between EN and JA is itself a finding** worth surfacing, not a tie to resolve silently. End in an explicit recommendation ("my take"), citing sources in **both languages**, each labeled by source language.
 
-**Output format** — when surfacing alternatives to the user:
+**Output format** — surface each alternative with source + pros/cons + who ships it, then end in a "My take: Recommend / Why / Conditional reversal" block. Concrete template in [`references/axis4-research-protocol.md`](references/axis4-research-protocol.md) §Output format.
 
-```
-Industry approaches found (3, via WebSearch):
-
-1. <Approach name> — <source citation, e.g. RFC 6585, Cloudflare blog, Stripe API docs>
-   • Pros: <2-3 bullets>
-   • Cons: <2-3 bullets>
-   • Used by: <named vendors / open-source projects>
-
-2. <Approach name> — <source>
-   ...
-
-3. <Approach name> — <source>
-   ...
-
-My take (given your context):
-  Recommend: <approach #N>
-  Why: <1-2 sentences tying recommendation to user's brief + constraints>
-  Conditional reversal: <if X changes, prefer approach #M instead>
-```
-
-Full protocol — the bilingual query-pattern tables, the why-both-languages rationale, WebSearch-unavailable handling, the "only ≤3 alternatives exist" case, and the anti-patterns — in [`references/axis4-research-protocol.md`](references/axis4-research-protocol.md). That protocol is also referenced by **router rule #5** (Research before asking) for decisions arising outside Axis 4 (e.g. an SDD implementer asking "which retry strategy?" mid-execution).
+Full protocol — the bilingual query-pattern tables, the why-both-languages rationale, WebSearch-unavailable handling, the "only ≤3 alternatives exist" case, the anti-patterns, and the output-format template — in [`references/axis4-research-protocol.md`](references/axis4-research-protocol.md). That protocol is also referenced by **router rule #5** (Research before asking) for decisions arising outside Axis 4 (e.g. an SDD implementer asking "which retry strategy?" mid-execution).
 
 ### Axis 5 — What Becomes Obsolete
 
@@ -192,16 +172,7 @@ It does **not** fire in brownfield (the Current-State-Evidence recon — Forward
 
 ## Red Flags — refuse these rationalizations
 
-| Agent / user says | Reality | Correct response |
-|---|---|---|
-| *"This is simple, no need to brainstorm."* | The framing *"this is simple"* almost always means *"I have already picked a solution and am defending against discovery friction."* | Refuse. Walk Axis 1+2 with one clarifying question each; if both come back trivial, the §When NOT to Use exemption may apply — name it explicitly. |
-| *"I know what to build, let's just start."* | Same rationalization, agent-side. Common after the user has framed the task and the agent feels the cost of asking back. | Refuse. Articulate Axis 3 (smallest end state) in writing first; if it matches the user's first ask exactly, the discovery was redundant — but the writing-down made it visible. |
-| *"Let's just start coding and see what happens."* | Iterative-prototyping rationalization. Discovery and prototyping are different — prototyping happens INSIDE the smallest end state, not in place of articulating one. | Refuse. The smallest-end-state articulation is the prototype-scope decision; do that first. |
-| *"The user already gave me a spec."* | Maybe — but specs that skip Axis 4 (alternatives) and Axis 5 (what becomes obsolete) leave the agent unable to make follow-on decisions intelligently. | Read the spec against the 5 axes. If any axis is empty, ask the user — do not invent. |
-| *"It's just refactoring, no new behavior."* | Refactoring under existing test coverage is the §When NOT to Use exemption — but architecture-shifting refactor (new module boundary, new contract) is NOT covered by that exemption. | Distinguish: rename / extract-under-coverage = exempt; new boundary / new contract = brainstorm. |
-| *「太簡單了不用討論 / 簡単すぎる / こんな簡単な話」* | Same rationalization, localized. | Same refusal — walk the 5 axes minimally; if trivial after, name the §When NOT to Use exemption. |
-| *"I'll fill Current State Evidence from memory."* | Hallucinated reconnaissance. The whole point of the section is grounded `file:line` citations; bullets without them defeat it. | Refuse. Run `grep` / `Read` / dispatch `Explore` first; quote what you actually read. If the codebase is unfamiliar enough that recon is genuinely expensive, surface that as an Open Question — do not invent. |
-| *"It's greenfield, skip Current State Evidence."* | Valid only when nothing pre-existing is touched (new module from scratch, no integration points). Adding a method to an existing class, integrating with an existing API, or extending existing config is NOT greenfield. | Distinguish honestly. If any touch point is pre-existing, fill the relevant sub-bullets and mark only the irrelevant ones `N/A`. |
+Rationalizations that push to skip discovery — *"this is simple," "I know what to build, let's just start," "let's just start coding and see," "the user already gave me a spec," "it's just refactoring," "I'll fill Current State Evidence from memory," "it's greenfield, skip Evidence"* (and localized variants 「太簡單了 / 簡単すぎる」). Refuse each; walk Axis 1+2 minimally, then name a §When NOT to Use exemption only if the task is genuinely trivial after. Full table (rationalization → why it is one → correct response) in [`references/red-flags.md`](references/red-flags.md).
 
 ## Cross-skill delegation
 

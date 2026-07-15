@@ -84,3 +84,25 @@ pad with bad alternatives to hit 3.
 - ❌ **No "my take"** — research that doesn't end in a recommendation pushes the
   synthesis cost back to the user. Compress research INTO a recommendation,
   surface it, and document the reasoning so the user can override.
+
+## Output format — surfacing alternatives to the user
+
+```
+Industry approaches found (3, via WebSearch):
+
+1. <Approach name> — <source citation, e.g. RFC 6585, Cloudflare blog, Stripe API docs>
+   • Pros: <2-3 bullets>
+   • Cons: <2-3 bullets>
+   • Used by: <named vendors / open-source projects>
+
+2. <Approach name> — <source>
+   ...
+
+3. <Approach name> — <source>
+   ...
+
+My take (given your context):
+  Recommend: <approach #N>
+  Why: <1-2 sentences tying recommendation to user's brief + constraints>
+  Conditional reversal: <if X changes, prefer approach #M instead>
+```
