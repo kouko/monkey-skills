@@ -10,6 +10,44 @@
 > greppable). Completed items are deleted, not archived — git history is
 > the archive.
 
+## loom-code ask-triage 0.30.0 — live telemetry A/B (OPEN)
+- Status: OPEN
+- Start: ~2-4 weeks after 2026-07-14 (needs organic session volume on the
+  shipped ask-triage hook + kickoff L1-lite harvest; same pattern as the
+  ascii-graph re-run below — run both in one telemetry pass if timing
+  aligns).
+- Origin: PR #564 (loom-code 0.30.0 layered ask-autonomy defense);
+  HANDOFF-2026-07-14 P2.
+- What: session-log telemetry over `~/.claude/projects/**/*.jsonl` —
+  mid-task ask turns that cite research/recommendation vs bare "X or Y?"
+  asks, against the pre-0.30.0 baseline. Also the deferred hook-card
+  escape-hatch sentence (PR #564 next-touch).
+
+## Pocock loom roadmap — arcs C/D/E remainder (OPEN)
+- Status: OPEN
+- Start: C rides the next writing-lean.md / compression-catalog touch;
+  D is schedulable any time (equivalence-gated slim round 2); E needs
+  its own brainstorm arc.
+- Origin: 2026-07-14 Pocock loom-* design review (5-option roadmap,
+  user-approved order T8→B→C→D→E); arcs A (#565/#566/#568) and B (#569,
+  loom-code 0.31.0 AFK research lane) shipped.
+- What: C = Negation failure mode + sentence-level no-op test into
+  skill-dev-toolkit writing-lean.md / compression catalog (two-currencies
+  framing already shipped in A). D = equivalence-gated slim round 2 over
+  requesting-code-review (4,325 w) + spec-expansion (4,113 w) + skill-judge
+  (5,429 w, over-proxy pre-existing, disclosed in #566). E = wayfinder-style
+  persistent decision map (mechanism research done 2026-07-14, needs its
+  own brainstorm arc).
+
+## AFK research lane (#569) next-touches (OPEN)
+- Status: OPEN
+- Start: next kickoff-briefing.md touch.
+- Origin: PR #569 per-task + whole-branch reviews (all 🟢).
+- What: unify §(b) "compact research packet" vs §(f) "worker packet" on one
+  term; add one clause pinning arm-3 pin write timing (pre- vs
+  post-approval); note "arm 1/2/3" numbering is kickoff-briefing-local
+  convention (SDD §Asking the user SSOT has no literal numbering).
+
 ## ascii-graph trigger fix — post-ship telemetry A/B re-run (OPEN)
 - Status: OPEN
 - Start: ~2-4 weeks after PR #529 + PR #530 merge (needs organic session
