@@ -86,6 +86,19 @@ VERDICT_NOT_EVALUATED = "NOT_EVALUATED"
 VERDICT_TRUSTED = "TRUSTED"
 VERDICT_WITHHELD = "WITHHELD"
 
+# Trusted-by-source: XBRL provenance (structured company-facts data, flat or
+# dimensional) is itself the trust signal — a company/schema_version whose
+# extraction came ONLY from these source_kinds needs no sampled ground-truth
+# label set / evaluate() run to earn TRUSTED (operational-kpi XBRL pilot,
+# Smallest End State #5). Any other source_kind (e.g. "llm-located") is NOT
+# in this set and must never ride along with it into a TRUSTED attestation.
+TRUSTED_SOURCE_KINDS = frozenset({"xbrl-companyfacts", "xbrl-dimensional"})
+
+# Distinguishes an attest_source record from an evaluate() record in the
+# same gate-records file — both share the "verdict" field is_trusted/
+# gate_verdict read, but only evaluate() records carry "metric"/"sample_size".
+GATE_RECORD_KIND_SOURCE_ATTESTATION = "source-attestation"
+
 
 def _labels_path(company: str) -> Path:
     """One file per company, sanitized the same way as kpi_store's /
@@ -277,6 +290,76 @@ def evaluate(
         "sample_size": sample_size,
         "verdict": verdict,
         "evaluated_at": evaluated_at,
+    }
+
+    path = _gate_records_path(company)
+    lock_file = _store_fs._acquire_series_lock(path)
+    try:
+        envelope = _load_gate_records_file(path)
+        envelope["records"][str(schema_version)] = record
+        _store_fs._atomic_write(path, envelope)
+    finally:
+        _store_fs._release_series_lock(lock_file)
+
+    return record
+
+
+def attest_source(company: str, schema_version, source_kinds, attested_at=None) -> dict:
+    """Record a trusted-by-source gate attestation for `(company,
+    schema_version)` WITHOUT running `evaluate` — when every kind in
+    `source_kinds` is in `TRUSTED_SOURCE_KINDS` (currently
+    `xbrl-companyfacts` / `xbrl-dimensional`), the structured XBRL
+    provenance itself is the trust signal, so no sampled ground-truth
+    label set is required.
+
+    FAIL LOUD: if `source_kinds` contains ANY kind outside
+    `TRUSTED_SOURCE_KINDS` (e.g. `"llm-located"`), this RAISES a
+    `ValueError` naming the offending kind(s) and writes NOTHING — an
+    untrusted kind must never ride along with a trusted one into a
+    TRUSTED record, and `is_trusted` stays fail-closed for that pair.
+
+    Also RAISES `ValueError` (writes NOTHING) when `source_kinds` is
+    EMPTY: `source_kinds - TRUSTED_SOURCE_KINDS` is vacuously empty for
+    an empty set, so without this explicit guard an empty `source_kinds`
+    would fall through the offending-kind check and manufacture a
+    TRUSTED record from ZERO source evidence — the trust signal must be
+    backed by at least one real source_kind, never fabricated from
+    nothing.
+
+    Persists via the SAME lock-guarded read-modify-write on the company's
+    gate-records file that `evaluate` uses (`_gate_records_path` /
+    `_load_gate_records_file` / `_store_fs._acquire_series_lock` /
+    `_store_fs._atomic_write`), keyed by `str(schema_version)` — so
+    `gate_verdict`/`is_trusted` (unchanged) transparently read whichever
+    verdict was last recorded for that pair, attested or evaluated.
+
+    `attested_at` is caller-supplied — mirrors `evaluate`'s
+    `evaluated_at`, this module never reads the wall clock.
+
+    Returns the gate record.
+    """
+    kinds = set(source_kinds)
+    if not kinds:
+        raise ValueError(
+            f"attest_source: empty source_kinds for {company}/{schema_version} "
+            "— at least one trusted source_kind is required, TRUSTED can "
+            "never be attested from zero source evidence"
+        )
+    offending = sorted(kinds - TRUSTED_SOURCE_KINDS)
+    if offending:
+        raise ValueError(
+            f"attest_source: untrusted source_kind(s) {offending} for "
+            f"{company}/{schema_version} — only {sorted(TRUSTED_SOURCE_KINDS)} "
+            "auto-qualify for TRUSTED-by-source"
+        )
+
+    record = {
+        "company": company,
+        "schema_version": schema_version,
+        "kind": GATE_RECORD_KIND_SOURCE_ATTESTATION,
+        "source_kinds": sorted(kinds),
+        "verdict": VERDICT_TRUSTED,
+        "attested_at": attested_at,
     }
 
     path = _gate_records_path(company)

@@ -1817,6 +1817,244 @@ def _build_statement_cells(
 
 
 # ---------------------------------------------------------------------------
+# Dimensional-revenue fact-pack extractor (Task 5, operational-kpi tier-②
+# XBRL pilot — docs/loom/plans/2026-07-14-operational-kpi-companyfacts-pilot.md)
+# ---------------------------------------------------------------------------
+# The Apple false-negative lesson (plan Task 5, grounding the axis-namespace
+# set below): Apple's product-line dimension moved from
+# us-gaap:ProductOrServiceAxis (pre-2018) to srt:ProductOrServiceAxis
+# (post-2018) across the 2018 revenue-recognition tagging-regime shift —
+# filtering a single namespace silently drops half the fact's history.
+_DIMENSIONAL_REVENUE_AXIS_LOCAL_NAMES = {
+    "ProductOrServiceAxis",
+    "StatementBusinessSegmentsAxis",
+    "StatementGeographicalAxis",
+    "SubsegmentsAxis",
+}
+
+# srt:ConsolidationItemsAxis is a reconciliation QUALIFIER (e.g.
+# "OperatingSegmentsMember" disambiguating a segment total from a
+# consolidating-adjustments view), never a breakdown axis — captured
+# separately as `consolidation`, never folded into `dimensions`.
+_CONSOLIDATION_AXIS_LOCAL_NAME = "ConsolidationItemsAxis"
+
+
+def _is_dimensional_revenue_axis(axis: str | None) -> bool:
+    """True when `axis` (colon form, e.g. "srt:ProductOrServiceAxis") is one
+    of the three axis local names, REGARDLESS of its `us-gaap:`/`srt:`
+    namespace prefix — see the module note above: never filter a single
+    namespace."""
+    if not axis:
+        return False
+    return axis.rsplit(":", 1)[-1] in _DIMENSIONAL_REVENUE_AXIS_LOCAL_NAMES
+
+
+_DEFERRED_REVENUE_CONCEPT_PREFIXES = (
+    "ContractWithCustomerLiabilityRevenue",
+)
+
+
+def _is_revenue_concept(concept: str | None) -> bool:
+    """True when `concept`'s local name (post `:`) contains "Revenue" — e.g.
+    `us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax` (post-2018)
+    or `us-gaap:SalesRevenueNet` (pre-2018) — EXCLUDING deferred-revenue /
+    contract-liability reconciliation concepts (e.g.
+    `ContractWithCustomerLiabilityRevenueRecognized`,
+    `...RecognizedExcludingOpeningBalance`) that merely contain "Revenue"
+    but are not operating revenue (plan Task 5,
+    docs/loom/plans/2026-07-15-operational-kpi-full-dimensional-signature.md)."""
+    if not concept:
+        return False
+    local_name = concept.rsplit(":", 1)[-1]
+    if "Revenue" not in local_name:
+        return False
+    return not local_name.startswith(_DEFERRED_REVENUE_CONCEPT_PREFIXES)
+
+
+def _dimensional_revenue_error_slot(ticker: str, form: str, detail: str) -> dict:
+    """A loud, sentinel-compatible error slot for
+    `extract_dimensional_revenue` (mirrors this file's `_acquire_error`/
+    `_companyfacts_pack_error_slot` convention) — never a fabricated/empty
+    fact-pack."""
+    return {
+        "error": (
+            f"SEC EDGAR dimensional-revenue extraction failed for "
+            f"{ticker!r} ({form}): {detail}"
+        ),
+        "error_class": "dimensional_revenue_extraction_failed",
+        "identifier": ticker,
+    }
+
+
+def _dimension_signature(fact: dict) -> tuple[dict[str, str], str | None]:
+    """Build (dimensions, consolidation) from `fact`'s per-row
+    `dim_<namespace>_<AxisLocalName>` columns — e.g. `dim_srt_ProductOrServiceAxis`,
+    `dim_us-gaap_StatementBusinessSegmentsAxis` — NEVER from the singular
+    `dimension`/`member` convenience columns (the wrong-layer trap: those
+    expose only ONE axis per fact). A single row/context routinely carries
+    MULTIPLE populated `dim_<axis>` columns at once — live-verified
+    2026-07-15 on a real NFLX 10-K row: `dim_srt_ProductOrServiceAxis`
+    ("nflx:StreamingMember") AND `dim_srt_StatementGeographicalAxis`
+    ("nflx:UnitedStatesAndCanadaMember") both populated on the SAME row.
+
+    `dimensions` collects only the REAL breakdown axes
+    (`_DIMENSIONAL_REVENUE_AXIS_LOCAL_NAMES`, matching BOTH `us-gaap:`/`srt:`
+    namespaces via `_is_dimensional_revenue_axis` — the Apple false-negative
+    lesson applies here too), keyed by the axis local name with the trailing
+    "Axis" dropped (e.g. "ProductOrService"), valued by the member's local
+    name (namespace prefix stripped). `srt:ConsolidationItemsAxis` is a
+    reconciliation QUALIFIER, not a breakdown axis — captured separately as
+    `consolidation`, never folded into `dimensions` as a second axis."""
+    dimensions: dict[str, str] = {}
+    consolidation: str | None = None
+    for key, value in fact.items():
+        if not key.startswith("dim_") or value is None or _is_nan(value):
+            continue
+        _prefix, namespace, axis_local = key.split("_", 2)
+        member_local = str(value).rsplit(":", 1)[-1]
+        if axis_local == _CONSOLIDATION_AXIS_LOCAL_NAME:
+            consolidation = member_local
+        elif _is_dimensional_revenue_axis(f"{namespace}:{axis_local}"):
+            dimensions[axis_local[: -len("Axis")]] = member_local
+    return dimensions, consolidation
+
+
+def _is_dimensional_revenue_fact(fact: dict) -> bool:
+    """The combined filter predicate for `extract_dimensional_revenue`:
+    dimensioned + at least one REAL breakdown axis present on the row
+    (`_dimension_signature`, both namespaces via `_is_dimensional_revenue_axis`)
+    + concept is revenue-shaped (`_is_revenue_concept`) + a reported numeric
+    value (never NaN — mirrors `_build_statement_cells`'s `_is_nan` skip; a
+    placeholder concept with no reported number is never fabricated as 0)."""
+    if not fact.get("is_dimensioned"):
+        return False
+    if not _is_revenue_concept(fact.get("concept")):
+        return False
+    if _is_nan(fact.get("numeric_value")):
+        return False
+    dimensions, _consolidation = _dimension_signature(fact)
+    return bool(dimensions)
+
+
+def _build_dimensional_revenue_fact(fact: dict, ticker: str, accession: str, filed) -> dict:
+    """Build one normalized fact-pack row from an edgartools fact record
+    already known to pass `_is_dimensional_revenue_fact`.
+
+    Emits the full-signature shape (Task 4,
+    docs/loom/plans/2026-07-15-operational-kpi-full-dimensional-signature.md):
+    `dimensions` — a dict of ALL real breakdown axes present on the row
+    (`_dimension_signature`) — and a separate `consolidation` field (the
+    srt:ConsolidationItemsAxis reconciliation qualifier, or None). Replaces
+    the pilot's single `{axis, member}` model in the same change.
+
+    Fails loud (`ValueError` naming `period_end`) instead of silently
+    emitting a null-dated fact: a revenue fact with no period_end cannot be
+    placed on the fiscal timeline, and this extractor's anti-fabrication
+    posture never emits a fact it cannot date — plan amendment (a),
+    spec-reviewer NEEDS_REVISION.
+
+    fiscal_year is DERIVED from period_end (the year the fiscal period
+    ENDS) — NEVER taken from edgartools' raw `fiscal_year` column, which is
+    unreliable for prior-year comparatives: live-verified on AAPL's 2025
+    10-K, the iPhone fact with period_end 2024-09-28 is column-labeled
+    fiscal_year=2025 but is really FY2024. Shipping the raw column mislabels
+    every prior-year comparative point."""
+    dimensions, consolidation = _dimension_signature(fact)
+    period_end = (
+        fact.get("period_end") if fact.get("period_type") == "duration"
+        else fact.get("period_instant")
+    )
+    if not period_end:
+        raise ValueError(
+            f"dimensional revenue fact for {ticker!r} has no period_end "
+            f"(cannot be dated): concept={fact.get('concept')!r} "
+            f"dimensions={dimensions!r} consolidation={consolidation!r}"
+        )
+    return {
+        "concept": fact.get("concept"),
+        "dimensions": dimensions,
+        "consolidation": consolidation,
+        "value": float(fact.get("numeric_value")),
+        "period_end": period_end,
+        "fiscal_year": int(period_end[:4]),
+        "accession": accession,
+        "filed": filed,
+    }
+
+
+def extract_dimensional_revenue(ticker: str, form: str = "10-K") -> dict:
+    """Fetch `ticker`'s latest `form` filing's XBRL via edgartools and emit
+    the normalized full-signature dimensional-revenue fact-pack (Task 4,
+    docs/loom/plans/2026-07-15-operational-kpi-full-dimensional-signature.md
+    — the declared shape, tests/analysis/fixtures/xbrl_signature_factpack.json):
+      {"company": <ticker>, "facts": [{"concept", "dimensions": {axis_local:
+       member_local, ...}, "consolidation": member_local|None, "value",
+       "period_end", "fiscal_year", "accession", "filed"}, ...]}
+
+    Emits every REVENUE fact (`_is_revenue_concept`) carrying at least one
+    REAL breakdown dimensional axis (`_dimension_signature`, via
+    `_is_dimensional_revenue_axis` — matching BOTH `us-gaap:*` and `srt:*`
+    namespaces; see the module note above for why filtering one namespace
+    is wrong). A fact with no reported
+    numeric value (NaN — mirrors `_build_statement_cells`'s `_is_nan` skip,
+    e.g. a placeholder concept) is not emitted — never fabricated as 0.
+
+    Returns a loud `{"error": ...}` slot (never a fabricated/empty fact-pack)
+    when the ticker does not resolve to a registered SEC filer, or `form`
+    was never filed within the lookup window.
+    """
+    ticker = ticker.upper()
+    identity_error = _ensure_edgar_identity()
+    if identity_error is not None:
+        return identity_error
+
+    import edgar
+
+    try:
+        company = edgar.Company(ticker)
+    except Exception as exc:  # noqa: BLE001 — fail loud, don't guess the shape
+        return _dimensional_revenue_error_slot(
+            ticker, form,
+            f"identifier did not resolve to a registered SEC filer ({exc})",
+        )
+    if company is None or getattr(company, "not_found", False) or not getattr(company, "cik", None):
+        return _dimensional_revenue_error_slot(
+            ticker, form, "identifier did not resolve to a registered SEC filer",
+        )
+
+    filings = company.get_filings(form=form)
+    # `filings.latest()` is a loose/prefix match on `form` — live-verified
+    # 2026-07-15 that TSLA's most recent filing is a "10-K/A" amendment
+    # (0 dimensional-revenue facts), which `.latest()` would return and
+    # let shadow the real annual report. Filter to an EXACT form match
+    # first, then take the most recent by filing_date — an amendment
+    # never wins even when it postdates the real filing (Task 6,
+    # docs/loom/plans/2026-07-15-operational-kpi-full-dimensional-signature.md).
+    exact_filings = (
+        [f for f in filings if getattr(f, "form", None) == form]
+        if filings is not None else []
+    )
+    filing = max(exact_filings, key=lambda f: f.filing_date) if exact_filings else None
+    if filing is None:
+        return _dimensional_revenue_error_slot(
+            ticker, form, f"form {form!r} not available within the lookup window",
+        )
+
+    xb = filing.xbrl()
+    facts_records = xb.facts.to_dataframe().to_dict("records")
+    accession = filing.accession_no
+    filed = _filing_date_iso(filing.filing_date)
+
+    facts = [
+        _build_dimensional_revenue_fact(fact, ticker, accession, filed)
+        for fact in facts_records
+        if _is_dimensional_revenue_fact(fact)
+    ]
+
+    return {"company": ticker, "facts": facts}
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
