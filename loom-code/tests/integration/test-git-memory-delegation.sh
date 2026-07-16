@@ -89,7 +89,7 @@ fi
 # `## Memory`-only check while violating that mandate (the #575 failure
 # class). Scoped to the PR-carrier check's own neighborhood.
 
-PR_CARRIER_BLOCK="$(grep -A 8 -- 'PR-carrier check' "${FINISH_SKILL}")"
+PR_CARRIER_BLOCK="$(grep -A 12 -- 'PR-carrier check' "${FINISH_SKILL}")"
 
 if echo "${PR_CARRIER_BLOCK}" | grep -qi 'raw trailer'; then
   pass "PR-carrier check also names the raw trailer footer carrier"
@@ -101,6 +101,20 @@ if echo "${PR_CARRIER_BLOCK}" | grep -q 'compose-pr.md'; then
   pass "PR-carrier check points to compose-pr.md Step 4's both-carrier mandate"
 else
   fail "PR-carrier check does NOT point to compose-pr.md Step 4 — placement rules would need restating instead of pointing"
+fi
+
+# -------------------------------------------------------------------------
+# Check 3e — offline: F4 PR-carrier check gives an inline discriminator for
+# what a raw trailer block LOOKS like, so a context-blind executor can judge
+# without opening compose-pr.md. A context-blind haiku run rejected a valid
+# single-line `Decision: …` last block as "prose" because Step 11's text
+# never states the shape (the #576 finding). "single such line qualifies"
+# is the minimal pinned phrase for the fix.
+
+if echo "${PR_CARRIER_BLOCK}" | grep -qi 'single such line qualifies'; then
+  pass "PR-carrier check names the inline raw-trailer-block discriminator"
+else
+  fail "PR-carrier check does NOT define what a raw trailer block looks like inline — a context-blind executor must guess (the #576 failure class)"
 fi
 
 # -------------------------------------------------------------------------
