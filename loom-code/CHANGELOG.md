@@ -5,6 +5,45 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.31.2] — 2026-07-16 — brainstorming + finishing token slim (equivalence-gated + weak-model verified)
+
+### Changed
+
+- **`brainstorming` SKILL.md 3,580 → 3,183 words (−11.1%)**: the Red Flags
+  rationalization table extracted to `references/red-flags.md`; the Axis-4
+  output-format template folded into the existing
+  `references/axis4-research-protocol.md` §Output format. Body keeps
+  gist-inline pointers (each rationalization named; "walk Axis 1+2";
+  Recommend/Why/Conditional-reversal shape). Skill 0.12.0 → 0.12.1.
+- **`finishing-a-development-branch` SKILL.md 3,194 → 2,824 words (−11.6%)**:
+  the Red Flags table extracted to `references/red-flags.md`; the When-NOT-to-use
+  exemption table to `references/when-not-to-use.md`; the redundant
+  "What this skill does NOT do" list deduped against the delegation table +
+  Red Flags. Step 8 archive/memory-timing region (lockstep-guarded by
+  `test_finishing_archive_step.py` + `test_loom_memory_timing_convention.py`)
+  untouched. Skill 0.10.0 → 0.10.1.
+
+Behavior equivalence proven per skill via 3 test prompts × baseline/candidate
+sonnet runners × 3-judge ensemble (neutral / skeptical / UX framings); an opus
+adjudicator resolved the brainstorming split as inherent open-ended runner
+variance, not slimming regression (moved rules stay reachable — gist-inline
+pointer + verbatim reference). `loom-code/scripts/` pytest stayed 287 green.
+
+### Fixed
+
+- **Weak-model regression caught by haiku cold-read (not the sonnet gate)**:
+  extracting finishing's exemption table to `references/when-not-to-use.md`
+  severed its proximity to the git-memory P3-D mandate — a haiku reader loaded
+  the exemption and wrongly waived `dev-workflow:git-memory`, while baseline
+  haiku (inline) kept it mandatory. Fixed by carrying the cross-reference into
+  `when-not-to-use.md` + the SKILL.md pointer ("these exemptions NEVER waive
+  git-memory"); haiku re-verified. Lesson: extraction that separates a rule
+  from its cross-referenced context must be weak-model-tested — the sonnet
+  equivalence gate passed it, the weak model caught it.
+
+Evidence: `docs/loom/audits/2026-07-16-loom-weak-model-behavioral-audit.md`
+(26/26 loom-* skills weak-tested) + `docs/loom/audits/2026-07-15-skill-token-reduction-triage.md`.
+
 ## [0.31.1] — 2026-07-15 — requesting-code-review token slim (equivalence-gated)
 
 ### Changed

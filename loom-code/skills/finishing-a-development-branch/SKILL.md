@@ -2,7 +2,7 @@
 name: finishing-a-development-branch
 description: |
   Use when ready to close out a development branch — about to merge or open a PR. Fires on 'finish this branch', 'wrap up', 'ready to merge', 'open a PR', 'ship it'. Orchestrates review → verification → git-memory commit → git push. No auto-merge.
-version: 0.10.0
+version: 0.10.1
 ---
 
 <SUBAGENT-STOP>
@@ -58,12 +58,7 @@ and "Step N" are distinct numbering schemes.)
 
 ## When NOT to use
 
-| Exempt category | What qualifies | What does NOT qualify |
-|---|---|---|
-| **Mid-task work** | The SDD task plan is not yet complete; tasks still pending | "I'm tired of this branch" — that's bailing, not finishing. SDD plan completes first. |
-| **Trivial direct-to-main commits** | Solo project, no review process, tiny doc fix | Feature branch with multiple commits — even solo, the discipline catches regressions |
-| **Branch you're abandoning** | The work isn't merging; you're discarding | Skill doesn't apply — just delete the branch. But re-examine whether the work was real: if so, the branch deserves close-out before deletion (decisions worth recording via git-memory) |
-| **Explicit user override** | User says "skip review, just push" AND there's a real reason (cherry-pick to release branch / known-trivial cleanup) | "I trust myself" — that's the rationalization this skill exists for |
+Exempt: **mid-task work** (SDD plan not yet complete), **trivial direct-to-main commits** (solo, no review, tiny doc fix), a **branch you're abandoning** (not merging — just delete, but close out first if the work was real), and **explicit user override** with a real reason (cherry-pick / known-trivial). Each has a near-miss rationalization that does NOT qualify ("I'm tired of this branch," "I trust myself"). These exemptions waive the close-out orchestration (review / verification / PR) but **NEVER waive `dev-workflow:git-memory`** — it gates every commit, even a trivial direct-to-main one. Full table in [`references/when-not-to-use.md`](references/when-not-to-use.md).
 
 ## When to use
 
@@ -94,8 +89,7 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
 **The orchestrator does NOT**:
 - Duplicate git-memory's trailer-decision logic (P3-D — would create drift)
 - Decide commit messages from scratch (delegates to git-memory output)
-- Force the merge (user agency for the final merge decision)
-- Auto-create PRs without user opt-in (PR creation is visible to teammates → user must explicitly authorize)
+- Force the merge or auto-create PRs without user opt-in (both visible to teammates → user agency; see §What this skill does NOT do)
 
 ## Default flow — what happens if user just says "finish this branch"
 
@@ -252,27 +246,11 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
 
 ## Red Flags — refuse these rationalizations
 
-| Agent / user says | Reality | Correct response |
-|---|---|---|
-| *"Skip review, just push."* | Review-skip rationalization — same shape as `requesting-code-review`'s. | Refuse; dispatch requesting-code-review (Phase 1). If reviewer PASSes in 30 seconds, you lose 30 seconds; if NEEDS_REVISION, you gain a fix-before-prod. |
-| *"Tests passed locally yesterday, skip the verification step."* | Code may have changed since yesterday. Test results have a half-life of "current uncommitted state". | Re-run verification-before-completion. |
-| *"Don't bother with git-memory, message is obvious."* | P3-D MANDATORY — git-memory itself decides whether memory trailers are warranted. *"Message is obvious"* may be true (git-memory returns "no trailers needed for this routine commit"); the determination is the skill's job, not the user's pre-decision. | Invoke git-memory anyway. The skill outputs an empty trailer set for routine commits; the invocation itself is the discipline (audit trail of "we considered memory and decided no"). See git-memory §Invocation policy. |
-| *"Auto-merge after push."* | Merge into main is a visible action with consequences for teammates. Always user-decision. | Push only; report PR URL if created. Let user merge via UI / explicit command. |
-| *"Force-push to clean up history."* | Force-push to shared branches is destructive. Force-push to your own feature branch may be appropriate but always requires explicit user authorization. | Refuse unless user explicitly authorizes; warn about implications for any teammates with the branch checked out. |
-| *"Just amend the last commit."* | Amend loses the previous commit's SHA → loses any in-flight reviews referencing that SHA. Per CLAUDE.md commit policy: *"Always create NEW commits rather than amending."* | Refuse; create new commit. |
-| *"I already have a commit message from SDD."* | Per-task SDD commits cover per-task work. The close-out commit captures the full branch; its Decision/Learning/Gotcha trailers require a fresh git-memory call over the whole diff. | Invoke `dev-workflow:git-memory` (Skill call, not an orchestrator-composed message). Even if it returns no trailers ("routine commit"), the invocation is the audit trail. |
-| 「review skip / 跳過審查」 | Same rationalization, localized. | Same refusal — dispatch requesting-code-review (Phase 1). |
+Close-out shortcuts to refuse — *"skip review just push," "tests passed yesterday skip verification," "message is obvious skip git-memory," "auto-merge after push," "force-push to clean up history," "just amend the last commit," "I already have an SDD commit message"* (and localized 「review skip / 跳過審查」). Default posture: refuse the shortcut, dispatch the gate it bypasses. Full table (rationalization → why it is one → correct response) in [`references/red-flags.md`](references/red-flags.md).
 
 ## What this skill does NOT do
 
-- Does **not** review code itself (delegates to `requesting-code-review`).
-- Does **not** run tests itself (delegates to `verification-before-completion`).
-- Does **not** decide memory trailers itself (delegates to `dev-workflow:git-memory` per P3-D).
-- Does **not** merge into main (user agency).
-- Does **not** force-push without authorization.
-- Does **not** amend commits (creates new commits per CLAUDE.md policy).
-- Does **not** auto-create PRs without opt-in.
-- Does **not** auto-remove worktrees without confirmation.
+Delegates rather than duplicates: review → `requesting-code-review`, tests → `verification-before-completion`, memory trailers → `dev-workflow:git-memory` (P3-D). Does **not** merge into main, force-push, amend commits (creates new per CLAUDE.md), or auto-create PRs / auto-remove worktrees — each needs explicit user authorization (refusal rationale in [`references/red-flags.md`](references/red-flags.md)).
 
 ## See also
 

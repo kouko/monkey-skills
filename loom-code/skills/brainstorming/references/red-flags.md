@@ -1,0 +1,14 @@
+# Red Flags — rationalizations to refuse
+
+Load when an agent (or the user) is pushing to skip discovery. Each row: the rationalization → why it is one → the correct response. Refuse the rationalization; walk the axes minimally. If the task is genuinely trivial after Axis 1+2, name the §When NOT to Use exemption explicitly.
+
+| Agent / user says | Reality | Correct response |
+|---|---|---|
+| *"This is simple, no need to brainstorm."* | The framing *"this is simple"* almost always means *"I have already picked a solution and am defending against discovery friction."* | Refuse. Walk Axis 1+2 with one clarifying question each; if both come back trivial, the §When NOT to Use exemption may apply — name it explicitly. |
+| *"I know what to build, let's just start."* | Same rationalization, agent-side. Common after the user has framed the task and the agent feels the cost of asking back. | Refuse. Articulate Axis 3 (smallest end state) in writing first; if it matches the user's first ask exactly, the discovery was redundant — but the writing-down made it visible. |
+| *"Let's just start coding and see what happens."* | Iterative-prototyping rationalization. Discovery and prototyping are different — prototyping happens INSIDE the smallest end state, not in place of articulating one. | Refuse. The smallest-end-state articulation is the prototype-scope decision; do that first. |
+| *"The user already gave me a spec."* | Maybe — but specs that skip Axis 4 (alternatives) and Axis 5 (what becomes obsolete) leave the agent unable to make follow-on decisions intelligently. | Read the spec against the 5 axes. If any axis is empty, ask the user — do not invent. |
+| *"It's just refactoring, no new behavior."* | Refactoring under existing test coverage is the §When NOT to Use exemption — but architecture-shifting refactor (new module boundary, new contract) is NOT covered by that exemption. | Distinguish: rename / extract-under-coverage = exempt; new boundary / new contract = brainstorm. |
+| *「太簡單了不用討論 / 簡単すぎる / こんな簡単な話」* | Same rationalization, localized. | Same refusal — walk the 5 axes minimally; if trivial after, name the §When NOT to Use exemption. |
+| *"I'll fill Current State Evidence from memory."* | Hallucinated reconnaissance. The whole point of the section is grounded `file:line` citations; bullets without them defeat it. | Refuse. Run `grep` / `Read` / dispatch `Explore` first; quote what you actually read. If the codebase is unfamiliar enough that recon is genuinely expensive, surface that as an Open Question — do not invent. |
+| *"It's greenfield, skip Current State Evidence."* | Valid only when nothing pre-existing is touched (new module from scratch, no integration points). Adding a method to an existing class, integrating with an existing API, or extending existing config is NOT greenfield. | Distinguish honestly. If any touch point is pre-existing, fill the relevant sub-bullets and mark only the irrelevant ones `N/A`. |
