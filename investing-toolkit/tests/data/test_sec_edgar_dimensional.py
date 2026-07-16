@@ -619,3 +619,47 @@ def test_extract_emits_duration_months():
     malformed_start_row["period_start"] = "not-a-date"
     with pytest.raises(ValueError, match="period_start"):
         mod._build_dimensional_revenue_fact(malformed_start_row, "MSFT", "acc", "filed")
+
+
+# ---------------------------------------------------------------------------
+# code-quality-reviewer 🟡 (Task 1 follow-up) — `_duration_months`'s day-span
+# -> month-integer mapping pinned across the realistic bands the review
+# brief itself named as risk (52/53-week filers, 13-week vs 14-week
+# quarters, 371-day FY): test_extract_emits_duration_months above only
+# exercises MSFT's ordinary calendar-aligned 3/9/12-month spans, leaving the
+# heuristic with zero regression protection on exactly the axis a future
+# `_AVG_DAYS_PER_MONTH`/rounding change could silently drift. Exact integer
+# assertions (never a range) — see RED-evidence perturbation in the SDD
+# dispatch report.
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    "period_start,period_end,expected_months",
+    [
+        # ordinary quarter, 89/90/92 days.
+        ("2026-01-01", "2026-03-31", 3),
+        ("2026-01-01", "2026-04-01", 3),
+        ("2026-01-01", "2026-04-03", 3),
+        # 13-week quarter = 91 days.
+        ("2026-01-01", "2026-04-02", 3),
+        # 14-week quarter (52/53-week filer's extra week) = 98 days.
+        ("2026-01-01", "2026-04-09", 3),
+        # H1 half-year, 180/182/184 days.
+        ("2026-01-01", "2026-06-30", 6),
+        ("2026-01-01", "2026-07-02", 6),
+        ("2026-01-01", "2026-07-04", 6),
+        # three-quarter YTD, 271/273/275 days.
+        ("2026-01-01", "2026-09-29", 9),
+        ("2026-01-01", "2026-10-01", 9),
+        ("2026-01-01", "2026-10-03", 9),
+        # ordinary FY, 364/365 days.
+        ("2026-01-01", "2026-12-31", 12),
+        ("2026-01-01", "2027-01-01", 12),
+        # 53-week FY = 371 days.
+        ("2026-01-01", "2027-01-07", 12),
+    ],
+)
+def test_duration_months_pins_realistic_span_bands(period_start, period_end, expected_months):
+    mod = _load_helpers()
+    fact = {"period_start": period_start}
+    assert mod._duration_months(fact, "TEST", period_end) == expected_months
