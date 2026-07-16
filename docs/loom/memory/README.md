@@ -43,6 +43,10 @@ context files reduced agent task success by ~3% and raised inference
 cost by ~20% (`dev-workflow/skills/git-memory/standards/memory-conventions.md`
 §Pull retrieval).
 
+Before recording, grep the store for entries the new fact contradicts —
+on a hit, update or replace that entry (git history is the archive);
+never add a contradicting sibling.
+
 ## Format — one fact per file
 
 The file is named `<name>.md` — the frontmatter `name` slug IS the

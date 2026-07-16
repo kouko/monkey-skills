@@ -62,6 +62,23 @@ else
 fi
 
 # -------------------------------------------------------------------------
+# Check 2 — pinned contradiction-check sentence present in the neighborhood
+# of the "## When to record" section (transcribed VERBATIM per the plan's
+# ## Notes pinned wording — same pin loom-memory SKILL.md record step 2
+# carries).
+
+WIN2="$(window_after "## When to record" 20 "$README")"
+if [ -z "$WIN2" ]; then
+  fail "anchor '## When to record' not found in README.md"
+elif echo "$WIN2" | grep -qF "grep the store for entries the new fact contradicts" \
+  && echo "$WIN2" | grep -qF "update or replace that entry" \
+  && echo "$WIN2" | grep -qF "never add a contradicting sibling"; then
+  pass "pinned contradiction-check sentence present near When-to-record section"
+else
+  fail "pinned contradiction-check sentence missing near When-to-record section"
+fi
+
+# -------------------------------------------------------------------------
 # Summary
 
 echo ""
