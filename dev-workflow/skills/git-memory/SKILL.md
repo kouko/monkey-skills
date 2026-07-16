@@ -6,8 +6,12 @@ description: |
 
 # Git Memory
 
-Portable, tool-agnostic project memory using git commit messages and
-PR body as the durable substrate.
+Durable lessons live in the repo's committed memory store
+(`docs/loom/memory/` here) — the authoritative carrier. Commit trailers are
+commit-bound capture: best-effort, secondary, and never the retrieval path
+a durable lesson depends on. This skill mechanizes that commit-bound
+capture — portable, tool-agnostic decision context riding in git commit
+messages and PR bodies.
 
 ## Invocation policy
 
@@ -21,13 +25,15 @@ Two distinct decisions must not be conflated:
 | **Should this commit carry memory trailers?** | The skill | Inside the skill — routine commits exit cleanly with no trailers |
 
 `gh pr merge` (esp. `--squash`) is the **last checkpoint before the
-branch closes** and the substrate can end up empty. A squash *relocates*
+branch closes** and the capture can end up empty. A squash *relocates*
 each commit's trailers into the squash commit's mid-body — still
 retrievable via `git log --grep`, though no longer footer-parseable
-(`%(trailers)`) — so on a squash `main` there are **two** durable
-carriers: the grep-able mid-body trailers and the PR `## Memory` section
-(which additionally survives and renders on GitHub). Fire the gate here
-too — the *always yes* rule holds, only the trailer outcome varies.
+(`%(trailers)`) — so on a squash `main` there are **two** commit-bound
+capture locations (best-effort, not the durable carrier — see the
+hierarchy above): the grep-able mid-body trailers and the PR `## Memory`
+section (which additionally survives and renders on GitHub). Fire the
+gate here too — the *always yes* rule holds, only the trailer outcome
+varies.
 
 Pre-deciding "this commit is routine, I'll skip the skill" is the bug.
 The skill's classification logic (routine vs non-routine, see *When not to
@@ -42,18 +48,21 @@ non-trivial commit as routine.
 
 ## Core thesis
 
-Write the **why** of a decision into commit messages and PR bodies so
-that any future session — Claude Code, Cursor, Codex, aider, or a human
-reader — can reconstruct project knowledge from `git log` alone.
-The git repository itself becomes the memory store; no separate
-database, embedding index, or vendor-specific memory file is required.
+Write the **why** of a decision into commit messages and PR bodies —
+best-effort, commit-bound capture that any future session (Claude Code,
+Cursor, Codex, aider, or a human reader) can reconstruct from `git log`.
+No database, embedding index, or vendor-specific memory file is needed
+for this capture step; where the repo has a committed memory store, that
+store — not `git log` — is the durable carrier (see the hierarchy above).
 
 ## Three pillars
 
-### Pillar 1 — Carrier: git artifacts themselves
+### Pillar 1 — Carrier: git artifacts as commit-bound capture
 
-Memory lives in commit messages and PR descriptions, not in a
-separate file. Consequences:
+Decision context rides in commit messages and PR descriptions as
+best-effort capture — not the durable carrier (that's the repo's
+committed memory store, per the hierarchy above, where one exists).
+Consequences for this capture layer:
 
 - Any tool that can read git can read the memory (Claude / Cursor /
   Codex / aider / `cat` / a human).
@@ -89,26 +98,30 @@ Structured facts ride in **git trailers** — the same mechanism as
 > footer. `git log --pretty='%(trailers)'` and `git interpret-trailers
 > --parse` read **only the footer**, so on a squash-merge `main` they
 > miss the buried trailers. `git log --grep='^Decision:'` is a **text**
-> match, so it still finds them on `main`.
+> match that still finds them on `main` — useful for spot-checking, but
+> this is commit-bound capture, never the durable retrieval path (that's
+> the repo's committed memory store, per the hierarchy above).
 
-Retrieval path by repo style:
+Best-effort capture location by repo style (not a durable-retrieval
+ranking — see the hierarchy above):
 
-| Repo merge style | Reliable retrieval |
+| Repo merge style | Where the capture survives |
 |---|---|
 | **Squash merge** (default branch) | `git log --grep` + the PR `## Memory` section (GitHub-hosted, survives squash) |
-| **Feature branch** (pre-squash) | `%(trailers)` structured parse is reliable |
-| **Merge-commit / rebase-merge** | `%(trailers)` structured parse is reliable |
+| **Feature branch** (pre-squash) | `%(trailers)` structured parse |
+| **Merge-commit / rebase-merge** | `%(trailers)` structured parse |
 
 **Verification is required before a memory-worthy PR closes.** The
 confirmed failure mode is authoring-time under-recording — a
-memory-worthy PR closing with an empty substrate, *not* a squash-loss
-problem. So before merge, **verify the memory actually landed in a
-durable carrier**:
+memory-worthy PR closing with an empty capture, *not* a squash-loss
+problem. So before merge, **verify the commit-bound capture actually
+landed** (this verifies capture, not durable filing — see the hierarchy
+above):
 
 - Run `scripts/memory-grep.sh --verify <ref>` against the commit
   carrier. It exits `0` when a `Decision:`/`Learning:`/`Gotcha:`
   trailer is retrievable from the ref's message body (text match, so it
-  works mid-body on a squash `main`), and `4` when the substrate is
+  works mid-body on a squash `main`), and `4` when the capture is
   empty.
 - Confirm the PR `## Memory` section is present (per
   `protocols/compose-pr.md`).
