@@ -1925,8 +1925,15 @@ def _is_dimensional_revenue_fact(fact: dict) -> bool:
     (`_dimension_signature`, both namespaces via `_is_dimensional_revenue_axis`)
     + concept is revenue-shaped (`_is_revenue_concept`) + a reported numeric
     value (never NaN — mirrors `_build_statement_cells`'s `_is_nan` skip; a
-    placeholder concept with no reported number is never fabricated as 0)."""
+    placeholder concept with no reported number is never fabricated as 0)
+    + a DURATION context (Task 1, docs/loom/plans/2026-07-16-operational-kpi-
+    quarterly.md — 'Period duration is emitted per fact'). Revenue is a
+    duration-flow concept; an instant (point-in-time, balance-sheet-shaped)
+    context is excluded here, never emitted with a fabricated/guessed
+    duration_months."""
     if not fact.get("is_dimensioned"):
+        return False
+    if fact.get("period_type") != "duration":
         return False
     if not _is_revenue_concept(fact.get("concept")):
         return False
@@ -1934,6 +1941,53 @@ def _is_dimensional_revenue_fact(fact: dict) -> bool:
         return False
     dimensions, _consolidation = _dimension_signature(fact)
     return bool(dimensions)
+
+
+_AVG_DAYS_PER_MONTH = 30.44
+
+
+def _duration_months(fact: dict, ticker: str, period_end: str) -> int:
+    """Derive the whole-month span of a duration-context fact from its XBRL
+    `period_start` -> `period_end` context (Task 1,
+    docs/loom/plans/2026-07-16-operational-kpi-quarterly.md — 'Period
+    duration is emitted per fact'): a 10-Q routinely tags BOTH a 3-month
+    quarter AND a year-to-date cumulative under the SAME period_end — e.g.
+    MSFT's FY26-Q3 10-Q ProductivityAndBusinessProcesses segment revenue:
+    3mo ending 2026-03-31 = $35,013M vs 9mo ending 2026-03-31 = $102,149M
+    (live-verified 2026-07-16, accession 0001193125-26-191507) — without
+    this discriminator the two silently conflate downstream.
+
+    Fails loud (`ValueError` naming `period_start`) on a missing/malformed
+    `period_start` instead of guessing or defaulting: a guessed duration
+    fabricates financial data, matching this module's anti-fabrication
+    posture (mirrors the `period_end` fail-loud check above)."""
+    period_start = fact.get("period_start")
+    if not isinstance(period_start, str) or not period_start.strip():
+        raise ValueError(
+            f"dimensional revenue fact for {ticker!r} has a missing/malformed "
+            f"period_start (cannot derive duration_months): "
+            f"concept={fact.get('concept')!r} period_start={period_start!r} "
+            f"period_end={period_end!r}"
+        )
+    try:
+        start_date = date.fromisoformat(period_start)
+        end_date = date.fromisoformat(period_end)
+    except ValueError as exc:
+        raise ValueError(
+            f"dimensional revenue fact for {ticker!r} has a missing/malformed "
+            f"period_start (cannot derive duration_months): "
+            f"concept={fact.get('concept')!r} period_start={period_start!r} "
+            f"period_end={period_end!r} ({exc})"
+        ) from exc
+    span_days = (end_date - start_date).days
+    if span_days <= 0:
+        raise ValueError(
+            f"dimensional revenue fact for {ticker!r} has a missing/malformed "
+            f"period_start (period_start={period_start!r} is not before "
+            f"period_end={period_end!r}, cannot derive duration_months): "
+            f"concept={fact.get('concept')!r}"
+        )
+    return round(span_days / _AVG_DAYS_PER_MONTH)
 
 
 def _build_dimensional_revenue_fact(fact: dict, ticker: str, accession: str, filed) -> dict:
@@ -1958,7 +2012,15 @@ def _build_dimensional_revenue_fact(fact: dict, ticker: str, accession: str, fil
     unreliable for prior-year comparatives: live-verified on AAPL's 2025
     10-K, the iPhone fact with period_end 2024-09-28 is column-labeled
     fiscal_year=2025 but is really FY2024. Shipping the raw column mislabels
-    every prior-year comparative point."""
+    every prior-year comparative point.
+
+    A duration-context fact also carries `duration_months` (Task 1,
+    docs/loom/plans/2026-07-16-operational-kpi-quarterly.md — `_duration_months`,
+    fail-loud on a missing/malformed period_start). An instant-context fact
+    (reached only via a direct caller — `extract_dimensional_revenue`'s
+    `_is_dimensional_revenue_fact` predicate excludes instant contexts before
+    this function is ever called) carries no `duration_months` key: it is
+    not a duration flow and never gets a fabricated/guessed duration."""
     dimensions, consolidation = _dimension_signature(fact)
     period_end = (
         fact.get("period_end") if fact.get("period_type") == "duration"
@@ -1970,7 +2032,7 @@ def _build_dimensional_revenue_fact(fact: dict, ticker: str, accession: str, fil
             f"(cannot be dated): concept={fact.get('concept')!r} "
             f"dimensions={dimensions!r} consolidation={consolidation!r}"
         )
-    return {
+    built = {
         "concept": fact.get("concept"),
         "dimensions": dimensions,
         "consolidation": consolidation,
@@ -1980,6 +2042,9 @@ def _build_dimensional_revenue_fact(fact: dict, ticker: str, accession: str, fil
         "accession": accession,
         "filed": filed,
     }
+    if fact.get("period_type") == "duration":
+        built["duration_months"] = _duration_months(fact, ticker, period_end)
+    return built
 
 
 def _filing_period_year(filing) -> int | None:

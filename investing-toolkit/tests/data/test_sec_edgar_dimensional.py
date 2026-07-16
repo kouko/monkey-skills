@@ -223,6 +223,7 @@ def test_build_fact_full_signature():
         "dim_srt_StatementGeographicalAxis": "nflx:UnitedStatesAndCanadaMember",
         "numeric_value": 19957152000.0,
         "period_type": "duration",
+        "period_start": "2025-01-01",
         "period_end": "2025-12-31",
     }
     fact = mod._build_dimensional_revenue_fact(nflx_row, "NFLX", "0001065280-26-000034", "2026-01-23")
@@ -242,6 +243,7 @@ def test_build_fact_full_signature():
         "dim_srt_ConsolidationItemsAxis": "us-gaap:OperatingSegmentsMember",
         "numeric_value": 178353000000.0,
         "period_type": "duration",
+        "period_start": "2024-09-29",
         "period_end": "2025-09-27",
     }
     fact2 = mod._build_dimensional_revenue_fact(aapl_row, "AAPL", "0000320193-25-000079", "2025-10-31")
@@ -256,6 +258,7 @@ def test_build_fact_full_signature():
         "dim_us-gaap_ProductOrServiceAxis": "aapl:IPhoneMember",
         "numeric_value": 1000.0,
         "period_type": "duration",
+        "period_start": "2016-09-25",
         "period_end": "2017-09-30",
     }
     fact3 = mod._build_dimensional_revenue_fact(pre2018_row, "AAPL", "acc", "filed")
@@ -279,6 +282,7 @@ def test_build_fact_includes_subsegments_axis():
         "dim_srt_SubsegmentsAxis": "jnj:SomeSubsegmentMember",
         "numeric_value": 500000000.0,
         "period_type": "duration",
+        "period_start": "2025-01-01",
         "period_end": "2025-12-31",
     }
     fact = mod._build_dimensional_revenue_fact(row, "JNJ", "0000200406-26-000012", "2026-02-01")
@@ -310,6 +314,7 @@ def _make_dimensional_filing(*, accession, form, filing_date, revenue_value):
             "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
             "numeric_value": revenue_value,
             "period_type": "duration",
+            "period_start": (filing_date - datetime.timedelta(days=365)).isoformat(),
             "period_end": filing_date.isoformat(),
             "period_instant": None,
         },
@@ -533,3 +538,84 @@ def test_extract_dimensional_revenue_reports_coverage_clamp(sec_client):
     clamped_accessions = {f["accession"] for f in clamped_pack["facts"]}
     inrange_accessions = {f["accession"] for f in inrange_pack["facts"]}
     assert clamped_accessions == inrange_accessions
+
+
+# ---------------------------------------------------------------------------
+# Task 1 — duration_months per fact (docs/loom/plans/2026-07-16-operational-
+# kpi-quarterly.md, "Period duration is emitted per fact"). Driven by the
+# MACHINE-CAPTURED xbrl_quarterly_msft.json fixture: a real MSFT 10-Q
+# (accession 0001193125-26-191507, period_of_report 2026-03-31) tags BOTH a
+# 3-month quarter AND a 9-month YTD cumulative for the SAME concept +
+# dimensions + period_end — the dual-duration collision this task exists to
+# de-conflate. The 12-month case is a real MSFT 10-K (accession
+# 0000950170-25-100235) for the SAME segment axis.
+# ---------------------------------------------------------------------------
+
+def test_extract_emits_duration_months():
+    """`_build_dimensional_revenue_fact` emits `duration_months` derived from
+    period_start->period_end for a duration-context fact — 3 for a 3-month
+    quarter, 9 for a 9-month YTD, 12 for an annual fact, all over the
+    machine-captured MSFT fixture (real accessions, real integers, never
+    hand-typed). `_is_dimensional_revenue_fact` excludes an instant-context
+    fact from the duration-flow output entirely (revenue is a duration-flow
+    concept). A missing/malformed period_start on a duration-context fact
+    raises loud instead of guessing — never a fabricated/defaulted duration
+    (docs/loom/memory/fail-closed-default-must-be-enforced-not-emergent.md)."""
+    mod = _load_helpers()
+    fixture = json.loads((FIXTURES / "xbrl_quarterly_msft.json").read_text())
+    raw = fixture["raw_facts"]
+    q_accession = fixture["quarterly_filing"]["accession"]
+    q_filed = fixture["quarterly_filing"]["filing_date"]
+
+    # 3-month quarter fact.
+    q3_fact = mod._build_dimensional_revenue_fact(
+        raw["three_month"], "MSFT", q_accession, q_filed,
+    )
+    assert q3_fact["duration_months"] == 3
+    assert q3_fact["value"] == 35013000000.0  # exemplar value, pinned exact
+
+    # 9-month YTD fact — SAME period_end as the 3-month fact above (the
+    # dual-duration collision duration_months exists to de-conflate).
+    ytd9_fact = mod._build_dimensional_revenue_fact(
+        raw["nine_month_ytd"], "MSFT", q_accession, q_filed,
+    )
+    assert ytd9_fact["duration_months"] == 9
+    assert ytd9_fact["period_end"] == q3_fact["period_end"] == "2026-03-31", (
+        "the 3-month and 9-month facts must share the SAME period_end — "
+        "exactly the collision duration_months exists to de-conflate"
+    )
+    assert ytd9_fact["value"] == 102149000000.0
+
+    # 12-month annual fact (real MSFT FY2025 10-K, same segment axis).
+    annual_fact = mod._build_dimensional_revenue_fact(
+        raw["annual"], "MSFT",
+        fixture["annual_filing"]["accession"], fixture["annual_filing"]["filing_date"],
+    )
+    assert annual_fact["duration_months"] == 12
+    assert annual_fact["value"] == 120810000000.0
+
+    # An instant-context fact is EXCLUDED from the duration-flow output —
+    # tested at the `_is_dimensional_revenue_fact` predicate that filters
+    # extract_dimensional_revenue's returned facts list. Same shape as a
+    # real dimensioned revenue-concept row, only period_type flipped to
+    # "instant" (revenue is never actually tagged instant in real filings —
+    # this proves the filter, not a captured shape).
+    instant_row = dict(raw["three_month"])
+    instant_row["period_type"] = "instant"
+    assert mod._is_dimensional_revenue_fact(instant_row) is False, (
+        "an instant-context fact must be excluded from the duration-flow "
+        "output, never assigned a duration_months"
+    )
+
+    # A missing period_start on a duration-context fact raises loud — never
+    # a silently defaulted/fabricated duration.
+    missing_start_row = dict(raw["three_month"])
+    missing_start_row["period_start"] = None
+    with pytest.raises(ValueError, match="period_start"):
+        mod._build_dimensional_revenue_fact(missing_start_row, "MSFT", "acc", "filed")
+
+    # A malformed (non-ISO) period_start also raises loud.
+    malformed_start_row = dict(raw["three_month"])
+    malformed_start_row["period_start"] = "not-a-date"
+    with pytest.raises(ValueError, match="period_start"):
+        mod._build_dimensional_revenue_fact(malformed_start_row, "MSFT", "acc", "filed")
