@@ -18,6 +18,13 @@
 | One-off event artifact | `docs/loom/{specs,plans,audits,dogfood,research}/` |
 | Harness/dcg friction (plugin-shipped) | `loom-code/.../environment-gotchas.md` — stays, NOT migrated |
 
+> Durable lessons live in the repo's committed memory store
+> (`docs/loom/memory/` here) — the authoritative carrier. Commit trailers are
+> commit-bound capture: best-effort, secondary, and never the retrieval path
+> a durable lesson depends on. This is why the "Decision bound to a commit"
+> row above points at git-memory trailers for commit-bound capture only —
+> not as a durable retrieval path.
+
 ## When to record
 
 A fact already known before the branch closes (not merge-required to
