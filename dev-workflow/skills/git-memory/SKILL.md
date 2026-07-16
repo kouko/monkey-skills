@@ -100,14 +100,18 @@ Structured facts ride in **git trailers** — the same mechanism as
 > miss the buried trailers. `git log --grep='^Decision:'` is a **text**
 > match that still finds them on `main` — useful for spot-checking, but
 > this is commit-bound capture, never the durable retrieval path (that's
-> the repo's committed memory store, per the hierarchy above).
+> the repo's committed memory store, per the hierarchy above). This
+> caveat has a mandated escape: when the PR body ends with the raw
+> trailer footer required by the O2 mandate below (see
+> `protocols/compose-pr.md`), `%(trailers)` parses correctly even on squash
+> `main`.
 
 Best-effort capture location by repo style (not a durable-retrieval
 ranking — see the hierarchy above):
 
 | Repo merge style | Where the capture survives |
 |---|---|
-| **Squash merge** (default branch) | `git log --grep` + the PR `## Memory` section (GitHub-hosted, survives squash) |
+| **Squash merge** (default branch) | `git log --grep` + the PR `## Memory` section (always survive); `%(trailers)` too, once the PR body ends with the mandated raw trailer footer (see caveat above) |
 | **Feature branch** (pre-squash) | `%(trailers)` structured parse |
 | **Merge-commit / rebase-merge** | `%(trailers)` structured parse |
 
@@ -132,15 +136,18 @@ This verification is **enforced as an executable gate by
 runs `memory-grep.sh --verify HEAD` and STOPs when a memory-worthy
 branch's commit carrier is empty (exit `4`).
 
-Two **opt-in** escape hatches — needed **only** if you want structured
-`%(trailers)` footer-parse on `main`; they are **not** required,
-because `git log --grep` text-retrieval of the mid-body trailers is the
-supported path (see table above):
-
-- Set `squash_merge_commit_message = PR_BODY` and end the PR body with
-  the raw trailer footer, so the squash commit's footer carries them.
-- Use a **merge-commit** (not squash) for memory-worthy PRs, preserving
-  each commit's footer.
+Structured `%(trailers)` footer-parse on `main` is not an opt-in escape
+hatch — it is the **mechanized mandate** in `protocols/compose-pr.md`
+(Step 4): a memory-worthy PR body MUST end with a raw trailer block
+(`Decision:` / `Learning:` / `Gotcha:`, unbolded) as the absolute last
+block, placed after even the `🤖 Generated with` footer. This repo's
+squash mode is `squash_merge_commit_message = PR_BODY`, so the PR body
+becomes the squash commit's message verbatim — only a trailer block
+that is that message's true last block parses via `%(trailers)`. See
+`protocols/compose-pr.md` for the exact placement rule, the
+anti-pattern that empties `%(trailers)`, and a worked before/after
+example. A **merge-commit** (not squash) for memory-worthy PRs remains
+a valid alternative, preserving each commit's footer natively.
 
 See `standards/memory-conventions.md` for the full schema, line-length
 rules, and examples.

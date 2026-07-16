@@ -89,16 +89,63 @@ Guidelines per sub-heading:
 
 ## Step 4 — Placement and anchoring
 
-Insert `## Memory` **after `## Test plan`** (or after the last CC
-standard section) and **before the `🤖 Generated with` footer**.
+Two carriers land in the PR body, in this exact order — **both are
+mandatory** for a memory-worthy PR:
 
-Anchor rule (for automation):
+1. **`## Memory` prose section** — inserted **after `## Test plan`**
+   (or after the last CC standard section) and **before the
+   `🤖 Generated with` footer**.
+2. **Raw trailer footer** — a blank-line-separated raw trailer block
+   (`Decision:` / `Learning:` / `Gotcha:` — unbolded, one key per
+   line) as the **absolute last block in the PR body**, placed
+   **after even the `🤖 Generated with` footer**. This repo's squash
+   mode is `squash_merge_commit_message = PR_BODY`, so the PR body
+   becomes the squash commit's message verbatim — and only a trailer
+   block that is the message's true last block parses via
+   `%(trailers)` / `git interpret-trailers`. **Any non-trailer line
+   after this block — another heading, a stray comment, an unclosed
+   fence — empties `%(trailers)`** (live-found in #575). This is IN
+   ADDITION to the `## Memory` section, not a replacement for it.
+
+Anchor rule for the `## Memory` section (carrier 1 above):
 
 1. Search PR body for the line starting with `🤖 Generated with`
 2. Insert one blank line + `## Memory` section + one blank line,
    immediately before that line
 3. If the footer is absent (user has set `attribution.pr = ""`),
    append `## Memory` to the end of the body
+
+Anchor rule for the raw trailer footer (carrier 2 above):
+
+1. After everything else is assembled (Summary, Test plan,
+   `## Memory`, the `🤖 Generated with` footer), append one blank
+   line, then the raw trailer block, with **nothing after it**.
+2. The trailer block is blank-line-separated from the prose above
+   it — not internally; its own lines run consecutively.
+
+### Worked example — before (broken) / after (parses)
+
+Before — the trailer block is present but is **not** the true last
+block (a stray line follows it), so `%(trailers)` parses empty:
+
+```
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Decision: adopt two-layer i18n split
+Learning: Google Auth Console 2025-01 UI relabels scopes
+
+<!-- opened via gh pr create -->
+```
+
+After — the raw trailer block IS the true last block; nothing
+follows it, so `%(trailers)` parses correctly:
+
+```
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Decision: adopt two-layer i18n split
+Learning: Google Auth Console 2025-01 UI relabels scopes
+```
 
 ## Step 5 — Diagram venue choice
 
@@ -163,6 +210,9 @@ flowchart LR
 ```
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Decision: two-layer i18n split — technical EN-native, design trilingual
+Learning: Google Auth Console 2025-01 UI relabels scopes in JP
 ```
 
 ## When to skip `## Memory` entirely
