@@ -129,6 +129,15 @@ above):
   empty.
 - Confirm the PR `## Memory` section is present (per
   `protocols/compose-pr.md`).
+- `--verify-merged <ref>` — the post-merge CI predicate: exits `0` when
+  the ref's body has no `## Memory` heading (nothing to check) or the
+  heading plus a memory key both survive; `4` on the #574 silent-drop
+  case (heading present, no key).
+- `--verify-strict <ref>` — a diagnostic, not the durable-lesson path:
+  requires the memory key to survive `git interpret-trailers --parse
+  --unfold` (a true trailing footer), catching the #575 case where a
+  non-trailer line after the trailer block empties the structured parse
+  even though plain `--verify` still passes on the text match.
 
 An empty result is a flag to fix **before** merge, not to ignore.
 This verification is **enforced as an executable gate by
