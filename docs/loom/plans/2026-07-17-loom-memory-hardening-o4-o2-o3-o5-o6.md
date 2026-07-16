@@ -86,6 +86,12 @@ Plan-document-reviewer verdict: PASS (2026-07-17T00:20+08:00, 14/14 checks; advi
   unchanged at 4) — re-review skipped per writing-plans §Amending a PASS
   plan, skip note recorded here.
 
+- Execution decision (2026-07-17, Task 10 review round): loom-pipeline ships
+  **0.8.0**, not the plan's original 0.7.2 — the plugin's own CHANGELOG
+  precedent bumps MINOR for behavior additions (0.5.0/0.6.0/0.7.0) and this
+  branch adds a mandatory record-verb step; quality reviewer flagged, fix
+  applied via implementer dispatch. (Two-way door, logged not briefed.)
+
 ## Task 1 — O4a: git-memory SKILL.md carrier-doctrine rewrite + plugin sweep
 
 - Description: Rewrite `dev-workflow/skills/git-memory/SKILL.md`'s carrier
