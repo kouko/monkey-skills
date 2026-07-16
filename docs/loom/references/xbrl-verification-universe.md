@@ -24,7 +24,12 @@ is regime-verified but mostly out-of-scope (see §ADR / foreign).
 
 | Condition | Tickers | What it stresses |
 |---|---|---|
-| **Non-December fiscal year** | AAPL(Sep), COST(Aug/Sep), MSFT(Jun), PG(Jun), ORCL(May), NKE(May), CRM(Jan), WMT(Jan), HD(Jan), NVDA(Jan), MDT(**Apr**), TM/BABA/SONY(Mar) | fiscal-calendar classification; quarter boundaries ≠ calendar quarters |
+| **Non-December fiscal year** | AAPL(Sep), COST(Aug/Sep), MSFT(Jun), PG(Jun), ORCL(May), NKE(May), CRM(Jan), WMT(Jan), HD(Jan), NVDA(Jan), MDT(**Apr**), TM/BABA/SONY(Mar), **INTU/CSCO(Jul)**, **ACN(Aug-fixed)**, **HPQ/AMAT/ADI(Oct/Nov)**, **LRCX(Jun-floating)** | fiscal-calendar classification; quarter boundaries ≠ calendar quarters |
+| **July fiscal year** | INTU(Jul-31 fixed), CSCO(Jul floating 52/53wk) | the only July anchors — a FYE quarter unseen elsewhere |
+| **Short XBRL history (post-2021 IPO)** | SNOW, PLTR | ~6 10-Ks only — a truncated multi-filing history (fewer years to stitch) |
+| **Fintech / payments** | PYPL | plain `us-gaap:Revenues`, clean P,S,G — distinct from bank/insurer/asset-mgr concepts |
+| **All 5 breakdown axes at once (P,S,G,Sub,Con)** | HPQ | the richest signature — stresses full dimensional + consolidation qualifier together |
+| **Pure-SaaS revenue** | NOW, SNOW, WDAY | subscription revenue; NOW/WDAY leak CostOfRevenue/RPO false positives, SNOW is clean |
 | **52/53-week (floating) calendar** | COST, HD, NVDA, AVGO, QCOM, ADBE, SBUX, PEP, DIS | odd quarter day-counts (13 vs 14 weeks), 53rd-week years, `fiscal_period` col sometimes absent |
 | **Fixed-calendar retailer (NOT floating)** | WMT | looks like a 52/53-wk retailer but has fixed Jan-31 calendar quarters (irregular day counts) |
 | **Bank revenue concept** | JPM, BAC, WFC, C | `RevenuesNetOfInterestExpense`; WFC tags BOTH `Revenues` + `RevenuesNetOfInterestExpense` (summation-collision risk) |
@@ -33,8 +38,8 @@ is regime-verified but mostly out-of-scope (see §ADR / foreign).
 | **Utility (non-ASC-606 + fuel-type)** | NEE, DUK, SO | `RevenueFromContractWithCustomer**Including**AssessedTax` (not Excluding!); DUK splits by fuel-type CONCEPTS not axes; SO `RevenueNotFromContractWithCustomer` |
 | **ADR / foreign 20-F + 6-K (no 10-Q)** | TSM, ASML, SAP, NVO, AZN, SHEL, TM, BABA, UL, NU, SONY | out-of-scope regime; IFRS/US-GAAP basis; 6-K semi-annual or zero-XBRL (see §ADR) |
 | **Multi-concept `us-gaap:Revenues`** | NFLX, KO, NVDA, T, VZ, DIS, PG, PEP, MCD, SBUX, ADBE, ORCL, XOM, COP | dimensional revenue under plain `Revenues`, not `RevenueFromContractWithCustomer` |
-| **CostOfRevenue false-positive (dimensioned)** | **CAT**, AVGO, ADBE, TSLA, WMT, HD, CL, T, QCOM | `us-gaap:CostOfRevenue`/COGS extensions tagged with breakdown axes → emitted as fake revenue by the current filter |
-| **Percentage-value false-positive** | BA, HON | `*RevenuePercentage` extension concepts (value is a %, not $) pass the filter, dimensioned |
+| **CostOfRevenue false-positive (dimensioned)** | **CAT**, AVGO, ADBE, TSLA, WMT, HD, CL, T, QCOM, NOW, IBM, DELL, HPQ | `us-gaap:CostOfRevenue`/COGS extensions tagged with breakdown axes → emitted as fake revenue by the current filter |
+| **Percentage-value false-positive** | BA, HON, IBM, ADI, AMAT | `*RevenuePercentage`/`*RevenueChangePercent` extension concepts (value is a %, not $) pass the filter, dimensioned |
 | **Deferred-revenue false-positive (dimensioned)** | SBUX, BLK | `DeferredRevenue*` liability concepts tagged dimensionally |
 | **Geographic axis 10-K-only** | AAPL, JPM | a dimension present annually but absent from the 10-Qs → "no quarterly coverage" case |
 | **ConsolidationItems intermittent** | KO | axis present in Q1 10-Q + 10-K, absent in Q3 10-Q — varies quarter-to-quarter |
@@ -139,6 +144,28 @@ would wrongly emit · Q4-directly-tagged (N everywhere observed).
 - **UPS** · 10-K/10-Q · Dec-31 · RFCC · P,S,G · none · Q4:N
 - **GE** · 10-K/10-Q · Dec-31 · `Revenues`+RFCC · P,S(,G) · ContractAsset*(not-dim) · Q4:N
 
+### Technology — big-tech cohort extension (SaaS / fintech / IT / semi-equipment)
+Added to complete the big-tech cohort; each earns a slot by a NEW shape (record-only duplicates below).
+- **CSCO** (networking) · 10-K/10-Q · **Jul(floating 52/53wk: 07-29→07-27→07-26)** · RFCC-Excl · P,S,G,Con · RPO · Q4:N
+- **TXN** (analog semis) · 10-K/10-Q · Dec-31 · RFCC-Excl · **S,G only (no P, no Con)** · **none (zero-FP surface)** · Q4:N
+- **LRCX** (semi equipment) · 10-K/10-Q · **Jun(floating: 06-25→06-30→06-29)** · RFCC-Excl · P,S,G,Con · none · Q4:N
+- **NOW** (ServiceNow, SaaS) · 10-K/10-Q · Dec-31 · RFCC-Excl · P,G (no S) · **CostOfRevenue(dim)** · Q4:N
+- **INTU** (Intuit) · 10-K/10-Q · **Jul-31 (fixed)** · `Revenues`+RFCC-Excl · P,S; Con qualifier · none · Q4:N
+- **SNOW** (Snowflake) · 10-K/10-Q · Jan-31 · RFCC-Excl · P,S,G · **none (clean)** · Q4:N · **~6 10-Ks (2021 IPO)**
+- **PLTR** (Palantir) · 10-K/10-Q · Dec-31 · RFCC-Excl · **S,G (no P); Con qualifier** · none · Q4:N · **~6 10-Ks (2021 IPO)**
+- **ACN** (Accenture, services) · 10-K/10-Q · **Aug-31 (fixed, not floating)** · `Revenues` · P,S (no G) · none · Q4:N
+- **PYPL** (PayPal, fintech) · 10-K/10-Q · Dec-31 · `us-gaap:Revenues` · P,S,G · none · Q4:N
+- **HPQ** (HP Inc) · 10-K/10-Q · **~Oct(floating)** · `Revenues` · **P,S,G,Sub + Con (all 5 at once)** · CostOfRevenue · Q4:N
+
+### Record-only — verified but shape-duplicates (checked, do NOT occupy a slot)
+Kept so a future prober knows these were verified and why they add nothing new:
+- **IBM** — Dec-fixed + dual RFCC/`Revenues` (≈ORCL); CostOfRevenue + `*RevenueChangePercent`(%) FP (≈existing groups); P,S,G,Con (≈NVDA).
+- **MU** — Aug/Sep floating (≈COST); G 10-K-only (≈AAPL/JPM).
+- **ADI** — Nov floating (≈AVGO cluster); S,G (≈TXN); `*PercentageOfRevenue`(%) (≈BA/HON).
+- **AMAT** — S,G,Con-no-P (≈TRV); `*ChangeInRevenuePercentage`(%) (≈BA/HON); Oct (≈AVGO/ADI cluster).
+- **DELL** — Jan-30 floating (≈HD); CostOfRevenue-dim (≈CAT group); G 10-K-only (≈AAPL).
+- **WDAY** — Jan-31 + RFCC-Excl + P,G-no-S + RPO-dim FP (≈CRM, near-exact duplicate).
+
 ---
 
 ## ADR / foreign private issuers — OUT OF SCOPE (regime edge cases)
@@ -207,3 +234,11 @@ an allow of known legit non-RFCC concepts**, not a substring. This is a scope-A
 - Sweep run as 4 parallel verification agents + 3 earlier probe passes (AAPL/NFLX
   deep; WMT/COST/MSFT/HD; JPM/TSLA/KO/NVDA). INTC carried from the scope-A
   restatement fixture.
+- Big-tech cohort extension (2026-07-16, 2 parallel agents, 16 filers verified):
+  10 earned new slots (CSCO, TXN, LRCX, NOW, INTU, SNOW, PLTR, ACN, PYPL, HPQ);
+  6 verified as shape-duplicates → record-only (IBM, MU, ADI, AMAT, DELL, WDAY).
+  The Magnificent Seven (AAPL, MSFT, GOOGL, AMZN, NVDA, META, TSLA) + NFLX are all
+  in-set. **Total: ~87 slotted filers + 6 record-only, all live-verified 2026-07-16.**
+- Selection principle: a filer earns a slot ONLY by adding a data shape not already
+  covered (a new FYE anchor, axis combo, revenue-concept class, filter-bug class, or
+  history length) — this is a diversity set, not a market-cap or cohort-completeness list.
