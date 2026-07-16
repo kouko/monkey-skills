@@ -4,6 +4,24 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.22.0] — 2026-07-17
+
+### Changed — loom-memory hardening (O2/O3/O4/O5/O6b)
+
+`git-memory` carrier doctrine rewritten: the committed file store is now
+named the authoritative durable-lesson carrier, with commit trailers as
+commit-bound/secondary — plugin-wide sweep for contradicting "durable
+substrate" claims. `compose-pr` mechanizes the raw trailer footer as a
+distinct required block; `memory-grep.sh` gains `--verify-merged`
+(post-squash predicate) and `--verify-strict` (trailer-parse diagnostic).
+A post-merge `memory-verify` GitHub Actions workflow runs on push to
+main. Orphan shell tests wired into CI.
+
+Verification: `for t in dev-workflow/tests/test-*.sh; do bash "$t"; done`
+green.
+
+---
+
 ## [2.21.0] — 2026-07-07
 
 ### Changed — `brief-before-asking`: hard turn-ordering rule + anti-diagram guidance rescoped

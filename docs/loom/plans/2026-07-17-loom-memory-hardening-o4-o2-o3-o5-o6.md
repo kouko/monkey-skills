@@ -1,8 +1,8 @@
 # Plan: loom memory hardening — O4 → O2 → O3 → O5 → O6
 
 Source brief: docs/loom/specs/2026-07-17-loom-memory-hardening-o4-o2-o3-o5-o6.md
-Total tasks: 10
-Critical-path depth: 4 (≤5)
+Total tasks: 11
+Critical-path depth: 4 (≤5) — Task 11 chains 1→3→11→10, still depth 4
 Execution order: parallel-where-possible
 Plan-document-reviewer verdict: PASS (2026-07-17T00:20+08:00, 14/14 checks; advisory notes: Tasks 2/3 and 6/7/9 parallel-eligible but conservatively sequential — shared test files / SKILL.md chain)
 
@@ -73,6 +73,18 @@ Plan-document-reviewer verdict: PASS (2026-07-17T00:20+08:00, 14/14 checks; advi
   could never fire on pushes outside dev-workflow/**, which is exactly the
   class of push it exists to catch. Spec-reviewer accepted as
   intent-conforming. (Two-way door, logged not briefed.)
+
+- Execution decision (2026-07-17, Task 3 round 2): code-quality-reviewer
+  surfaced a cross-plugin coherence gap — compose-pr.md's new both-carrier
+  mandate is not enforced by finishing-a-development-branch's Step-11
+  PR-carrier check (greps `## Memory` only; the raw footer can be missing and
+  the gate still passes, the exact #575 failure class). Two-axis test:
+  reversible additive text edit, no product consequence → agent decides +
+  log. Resolution: **Task 11 added** (below); Task 10 widened to bump
+  loom-code 0.31.2 → 0.31.3. Plan amendment is additive and schema-safe
+  (new task + widened Task 10 description; DAG still acyclic, depth
+  unchanged at 4) — re-review skipped per writing-plans §Amending a PASS
+  plan, skip note recorded here.
 
 ## Task 1 — O4a: git-memory SKILL.md carrier-doctrine rewrite + plugin sweep
 
@@ -318,17 +330,48 @@ Plan-document-reviewer verdict: PASS (2026-07-17T00:20+08:00, 14/14 checks; advi
 - Brief item covered: Smallest End State #5 "Charter §record guidance gains
   the matching one-liner"
 
+## Task 11 — finishing-branch PR-carrier check covers the raw footer
+
+- Description: In `loom-code/skills/finishing-a-development-branch/SKILL.md`,
+  extend the PR-carrier `## Memory` check (around :229-233) so a
+  memory-worthy PR's body is ALSO checked for the raw trailer footer as the
+  true last block (pointer to
+  `dev-workflow/skills/git-memory/protocols/compose-pr.md`'s mandate — do
+  not restate its rules). Additive edit; do not touch Step 8/9b regions
+  (lockstep-test-pinned). Write/extend a test FIRST pinning the new check
+  text (grep-pin in the existing integration test
+  `loom-code/tests/integration/test-git-memory-delegation.sh` or a scoped
+  pytest in loom-code/scripts/ — follow whichever pins that section today).
+- Module: loom-code/skills/finishing-a-development-branch
+- Files touched: loom-code/skills/finishing-a-development-branch/SKILL.md, loom-code/tests/integration/test-git-memory-delegation.sh
+- Context paths:
+  - loom-code/skills/finishing-a-development-branch/SKILL.md
+  - dev-workflow/skills/git-memory/protocols/compose-pr.md (the mandate, as amended by Task 3)
+  - loom-code/scripts/test_loom_memory_timing_convention.py (pins that must stay green)
+- Acceptance:
+  - RED: the extended assertion in the pinning test fails against current
+    SKILL.md (no raw-footer mention in the PR-carrier check).
+  - GREEN: pinning test passes; `PYTHONDONTWRITEBYTECODE=1 python3 -m pytest
+    loom-code/scripts/ -q` green; `bash loom-code/tests/integration/test-git-memory-delegation.sh`
+    green.
+- Dependencies: Task 3 completes first
+- Independent: false
+- Brief item covered: Decision Log "Execution decision (2026-07-17, Task 3
+  round 2)" — consumer-side enforcement of Smallest End State #2's mandate
+
 ## Task 10 — Version bumps + manifest sync
 
 - Description: Bump `dev-workflow/.claude-plugin/plugin.json` `"version":
-  "2.21.0"` → `"2.22.0"` and `loom-pipeline/.claude-plugin/plugin.json`
-  `"version": "0.7.1"` → `"0.7.2"` (skill content changed in both plugins —
+  "2.21.0"` → `"2.22.0"`, `loom-pipeline/.claude-plugin/plugin.json`
+  `"version": "0.7.1"` → `"0.7.2"`, and `loom-code/.claude-plugin/plugin.json`
+  `"version": "0.31.2"` → `"0.31.3"` (Task 11 changed finishing-a-development-
+  branch skill content; skill content changed in all three plugins —
   marketplace publishes by version; an unbumped plugin update is a silent
   no-op). Then grep `.claude-plugin/marketplace.json` and any codex-mirror
   manifests for those plugins' version strings and sync if pinned there; run
   the repo's script-sync check if one covers these plugins.
 - Module: dev-workflow/.claude-plugin/plugin.json
-- Files touched: dev-workflow/.claude-plugin/plugin.json, loom-pipeline/.claude-plugin/plugin.json, .claude-plugin/marketplace.json (only if versions are pinned there)
+- Files touched: dev-workflow/.claude-plugin/plugin.json, loom-pipeline/.claude-plugin/plugin.json, loom-code/.claude-plugin/plugin.json, .claude-plugin/marketplace.json (only if versions are pinned there)
 - Context paths:
   - dev-workflow/.claude-plugin/plugin.json
   - loom-pipeline/.claude-plugin/plugin.json
@@ -340,7 +383,7 @@ Plan-document-reviewer verdict: PASS (2026-07-17T00:20+08:00, 14/14 checks; advi
     these two plugins in `.claude-plugin/marketplace.json` or codex-mirror
     manifests; `python3 -m pytest loom-pipeline/scripts/ -q` and
     `for t in dev-workflow/tests/test-*.sh; do bash "$t"; done` green.
-- Dependencies: Tasks 6, 7, 9 complete first
+- Dependencies: Tasks 6, 7, 9, 11 complete first
 - Independent: false
 - Brief item covered: Decision "dev-workflow plugin bumps 2.21.0 → 2.22.0
   (skill content changed); loom-pipeline bumps 0.7.1 → 0.7.2"

@@ -6,6 +6,18 @@ this file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.8.0] — 2026-07-17
+
+### Added
+
+- **`loom-memory` record-verb contradiction check (0.2.0)** — mandatory
+  contradiction check between classify and write: grep the store for
+  contradicted entries, update or replace on hit, never add a
+  contradicting sibling. Mirrors `git-memory`'s backward-pointing
+  Supersedes doctrine by pointer.
+
+Verification: `python3 -m pytest loom-pipeline/scripts/ -q` green.
+
 ## [0.7.1] — 2026-07-14
 
 ### Changed
