@@ -151,6 +151,128 @@ def test_is_revenue_concept_excludes_deferred_revenue():
 
 
 # ---------------------------------------------------------------------------
+# Task 2 — revenue-concept allow/deny + $-unit gate (folds a scope-A bug)
+# (docs/loom/plans/2026-07-16-operational-kpi-quarterly.md). The shipped
+# `_is_revenue_concept` substring test ("Revenue" in local_name) is too
+# permissive across sectors — live evidence (docs/loom/references/
+# xbrl-verification-universe.md, Filter-bug findings section) reproduced
+# dimensioned CostOfRevenue (CAT) being emitted AS revenue, percentage-valued
+# `*Revenue*Percentage` concepts (BA/HON) being emitted with a % as if it were
+# a dollar value, and deferred-revenue LIABILITY concepts (SBUX) being
+# emitted as earned revenue. Fixtures are MACHINE-CAPTURED (never hand-typed)
+# — see fixtures/xbrl_concept_filter_cases.json's `_provenance`.
+#
+# No `@req` tags: this dispatch's plan (docs/loom/plans/2026-07-16-
+# operational-kpi-quarterly.md) traces work by named plan Tasks, NOT by
+# registered loom-spec REQ-ids — so `@req` is omitted per the implementer
+# contract.
+# ---------------------------------------------------------------------------
+
+def _concept_filter_fixture() -> dict:
+    return json.loads((FIXTURES / "xbrl_concept_filter_cases.json").read_text())
+
+
+def test_revenue_concept_filter_deny_allow_unit():
+    """The three RED scenarios named in the plan/spec, over the machine-
+    captured real-filing fixture:
+      1. a dimensioned CostOfRevenue fact (CAT) is EXCLUDED — deny-list.
+      2. a *RevenuePercentage fact (BA/HON) is REJECTED by the $-unit guard
+         (unit_ref="number"/currency=None, never a currency amount).
+      3. a RevenueNotFromContractWithCustomer fact (XOM) is KEPT — allow-list.
+    Exercised at BOTH layers: the pure `_is_revenue_concept` (concept-string
+    only) and the full `_is_dimensional_revenue_fact` predicate (concept +
+    $-unit gate together) — a concept-only check cannot see the unit, so the
+    BA/HON percentage case is asserted only at the full-fact layer."""
+    mod = _load_helpers()
+    fixture = _concept_filter_fixture()
+
+    # 1. CAT dimensioned CostOfRevenue — excluded by the deny-list, at both
+    # layers (the concept alone is enough to deny it, regardless of unit).
+    cat_fact = fixture["cat_cost_of_revenue_dimensioned"]["raw_fact"]
+    assert mod._is_revenue_concept(cat_fact["concept"]) is False, (
+        "us-gaap:CostOfRevenue must be denied — a cost is not revenue"
+    )
+    assert mod._is_dimensional_revenue_fact(cat_fact) is False, (
+        "a dimensioned CostOfRevenue fact must never be emitted as revenue "
+        "(the CAT reproducer — 20 bogus facts on the shipped substring test)"
+    )
+
+    # 2. BA / HON percentage-valued *Revenue*Percentage — the concept string
+    # alone still contains "Revenue" (so a concept-only allow/deny pass is
+    # not sufficient here); the $-unit guard at the full-fact layer is what
+    # must reject it. Pinning value=1.0 (=100%) / 0.49 (=49%) as evidence
+    # these are NOT dollar amounts.
+    ba_fact = fixture["ba_revenue_percentage"]["raw_fact"]
+    assert ba_fact["numeric_value"] == 1.0
+    assert mod._is_dimensional_revenue_fact(ba_fact) is False, (
+        "ba:RevenuefromContractwithCustomerexcludingassessedtaxPercentage "
+        "(unit_ref='number', not a currency) must be rejected by the "
+        "$-unit guard — its value is a percentage, not dollars"
+    )
+
+    hon_fact = fixture["hon_revenue_percentage"]["raw_fact"]
+    assert hon_fact["numeric_value"] == 0.49
+    assert mod._is_dimensional_revenue_fact(hon_fact) is False, (
+        "hon:RevenueFromContractWithCustomerPercentage must be rejected by "
+        "the $-unit guard"
+    )
+
+    # 3. XOM RevenueNotFromContractWithCustomer — a legitimate energy-sector
+    # non-RFCC concept, currency-denominated. Must be KEPT at both layers.
+    xom_fact = fixture["xom_revenue_not_from_contract"]["raw_fact"]
+    assert mod._is_revenue_concept(xom_fact["concept"]) is True, (
+        "RevenueNotFromContractWithCustomer is legitimate operating revenue "
+        "(energy/utilities) and must stay allowed"
+    )
+    assert mod._is_dimensional_revenue_fact(xom_fact) is True, (
+        "the XOM dimensioned RevenueNotFromContractWithCustomer fact is a "
+        "real, currency-denominated revenue fact and must be KEPT"
+    )
+    assert xom_fact["numeric_value"] == 26295000000.0  # exemplar value, pinned exact
+
+
+def test_revenue_concept_filter_deny_list_additional_cases():
+    """The additional deny cases named in the plan beyond the 3 RED
+    scenarios: OtherCostOfOperatingRevenue (the "Operating" infix that
+    defeats a literal "CostOfRevenue" substring check — WFC), *ChangePercent
+    ratio concepts (AMAT), RemainingPerformanceObligation (RPO/backlog — BA),
+    deferred-revenue liabilities (SBUX, at the concept layer independent of
+    the instant/duration gate), and non-operating CollaborativeArrangement
+    revenue (PFE). Every concept string here is REAL — live-verified
+    2026-07-17 against each filer's latest 10-Q (see inline accessions),
+    never a fabricated/pattern-matched name."""
+    mod = _load_helpers()
+    fixture = _concept_filter_fixture()
+
+    denied_real_concepts = [
+        # WFC 10-Q 0000072971-26-000217 (2026-04-29): the "Operating" infix
+        # defeats a literal "CostOfRevenue" substring check.
+        "us-gaap:OtherCostOfOperatingRevenue",
+        # AMAT 10-Q 0001628280-26-037227 (2026-05-21): *ChangePercent-shaped
+        # ratio concept.
+        "amat:ChangeInRevenuePercentage",
+        # BA 10-Q 0001628280-26-026458 (2026-04-22): RPO/backlog, not
+        # recognized revenue.
+        "us-gaap:RevenueRemainingPerformanceObligation",
+        # PFE 10-Q 0000078003-26-000054 (2026-05-05): non-operating
+        # collaborative-arrangement revenue.
+        "us-gaap:RevenueFromCollaborativeArrangementExcludingRevenueFromContractWithCustomer",
+    ]
+    for concept in denied_real_concepts:
+        assert mod._is_revenue_concept(concept) is False, (
+            f"{concept} must be denied (not operating revenue)"
+        )
+
+    # SBUX dimensioned DeferredRevenueCurrent (deny at the concept layer,
+    # independent of the instant/duration gate that would also exclude it).
+    sbux_fact = fixture["sbux_deferred_revenue_dimensioned"]["raw_fact"]
+    assert mod._is_revenue_concept(sbux_fact["concept"]) is False, (
+        "DeferredRevenueCurrent is a balance-sheet liability, not earned "
+        "revenue — must be denied even before the instant-context gate"
+    )
+
+
+# ---------------------------------------------------------------------------
 # extract_dimensional_revenue — fail-loud on a null period_end
 # ---------------------------------------------------------------------------
 
@@ -179,6 +301,8 @@ def test_extract_dimensional_revenue_raises_on_missing_period_end(sec_client, mo
             "dim_srt_ProductOrServiceAxis": "aapl:IPhoneMember",
             "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
             "numeric_value": 100.0,
+            "unit_ref": "usd",
+            "currency": "USD",
             "period_type": "duration",
             "period_end": None,
             "period_instant": None,
@@ -313,6 +437,8 @@ def _make_dimensional_filing(*, accession, form, filing_date, revenue_value):
             "dim_srt_ProductOrServiceAxis": "aapl:IPhoneMember",
             "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
             "numeric_value": revenue_value,
+            "unit_ref": "usd",
+            "currency": "USD",
             "period_type": "duration",
             "period_start": (filing_date - datetime.timedelta(days=365)).isoformat(),
             "period_end": filing_date.isoformat(),

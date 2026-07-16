@@ -1849,26 +1849,103 @@ def _is_dimensional_revenue_axis(axis: str | None) -> bool:
     return axis.rsplit(":", 1)[-1] in _DIMENSIONAL_REVENUE_AXIS_LOCAL_NAMES
 
 
-_DEFERRED_REVENUE_CONCEPT_PREFIXES = (
-    "ContractWithCustomerLiabilityRevenue",
+# ALLOW: legitimate non-RFCC operating-revenue concept local names (Task 2,
+# docs/loom/plans/2026-07-16-operational-kpi-quarterly.md — "Revenue-concept
+# matching is an allow/deny + $-unit gate, not a substring"). Checked BEFORE
+# the deny-list so a future deny pattern can never accidentally swallow one
+# of these named-safe concepts. `RevenueFromContractWithCustomer*` (the
+# ASC-606 standard concept family) is NOT listed here — it already passes
+# the general "Revenue"-substring path below and hits no deny pattern.
+# Sources: docs/loom/references/xbrl-verification-universe.md (Filter-bug
+# findings + Special-condition index, live-verified 2026-07-16/17).
+_REVENUE_ALLOW_CONCEPT_LOCAL_NAMES = (
+    "Revenues",
+    "RevenuesNetOfInterestExpense",                              # banks (JPM/BAC/WFC/C)
+    "RevenueNotFromContractWithCustomer",                        # energy/utilities (SO/COP)
+    "RevenueNotFromContractWithCustomerExcludingInterestIncome",  # XOM's exact tag
+    "RevenueFromContractWithCustomerIncludingAssessedTax",       # utilities (NEE/DUK/SO/DOW)
+)
+
+# DENY: `*Revenue*`-substring concepts that are NOT operating revenue (Task 2
+# plan/spec). Substring (not prefix) matching — WFC's
+# `OtherCostOfOperatingRevenue` has the "Operating" infix that defeats a
+# literal "CostOfRevenue" prefix/substring check, so the deny key is the
+# narrower "CostOf" fragment. Live-verified real concepts each pattern
+# catches (docs/loom/references/xbrl-verification-universe.md, Filter-bug
+# findings section + 2026-07-17 spot-checks):
+#   CostOf                    -> CostOfRevenue (CAT), OtherCostOfOperatingRevenue (WFC)
+#   Percent                   -> *Percentage / *ChangePercent ratio concepts (BA/HON/AMAT)
+#   RemainingPerformanceObligation -> RPO/backlog disclosure (widespread)
+#   DeferredRevenue           -> deferred-revenue liability concepts (SBUX/BLK)
+#   ContractWithCustomerLiability -> contract-liability reconciliation items (pre-existing exclusion, generalized)
+#   CollaborativeArrangement  -> non-operating collaborative-arrangement revenue (PFE/MRK)
+_REVENUE_DENY_SUBSTRINGS = (
+    "CostOf",
+    "Percent",
+    "RemainingPerformanceObligation",
+    "DeferredRevenue",
+    "ContractWithCustomerLiability",
+    "CollaborativeArrangement",
 )
 
 
 def _is_revenue_concept(concept: str | None) -> bool:
-    """True when `concept`'s local name (post `:`) contains "Revenue" — e.g.
-    `us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax` (post-2018)
-    or `us-gaap:SalesRevenueNet` (pre-2018) — EXCLUDING deferred-revenue /
-    contract-liability reconciliation concepts (e.g.
-    `ContractWithCustomerLiabilityRevenueRecognized`,
-    `...RecognizedExcludingOpeningBalance`) that merely contain "Revenue"
-    but are not operating revenue (plan Task 5,
-    docs/loom/plans/2026-07-15-operational-kpi-full-dimensional-signature.md)."""
+    """True when `concept` is real operating revenue — an ALLOW/DENY gate
+    (Task 2, docs/loom/plans/2026-07-16-operational-kpi-quarterly.md;
+    folds a scope-A/2.21.0 correctness defect), NOT the old shipped
+    substring test (`"Revenue" in local_name`) that admitted dimensioned
+    `CostOfRevenue` as revenue (CAT: 20 bogus facts, live-reproduced),
+    percentage-valued `*RevenuePercentage` concepts as if they were dollar
+    amounts (BA/HON), and RemainingPerformanceObligation / deferred-revenue
+    liability concepts as earned revenue (SBUX).
+
+    Algorithm: (1) an explicit ALLOW of named legitimate non-RFCC concepts
+    (`_REVENUE_ALLOW_CONCEPT_LOCAL_NAMES`) short-circuits True; (2) local
+    name must contain "Revenue" at all (rejects `CostOfGoodsSold` etc.);
+    (3) a DENY substring (`_REVENUE_DENY_SUBSTRINGS`) rejects the known
+    false-positive classes. This stays generalizable to unenumerable
+    company-extension revenue concepts (e.g. `us-gaap:AdvertisingRevenue`,
+    `nflx:*`) via step (2)'s general pass — an exhaustive allow-list alone
+    cannot cover every filer's extension taxonomy.
+
+    NOTE: this checks the CONCEPT NAME only — it cannot see the fact's
+    XBRL unit. The $-unit guard (`_is_currency_amount_fact`) is a SEPARATE
+    check applied at the full-fact layer in `_is_dimensional_revenue_fact`,
+    because a percentage-valued concept's local name still legitimately
+    contains "Revenue" (e.g. HON's
+    `RevenueFromContractWithCustomerPercentage`) and is not reliably
+    distinguishable by name alone."""
     if not concept:
         return False
     local_name = concept.rsplit(":", 1)[-1]
+    if local_name in _REVENUE_ALLOW_CONCEPT_LOCAL_NAMES:
+        return True
     if "Revenue" not in local_name:
         return False
-    return not local_name.startswith(_DEFERRED_REVENUE_CONCEPT_PREFIXES)
+    return not any(deny in local_name for deny in _REVENUE_DENY_SUBSTRINGS)
+
+
+def _is_currency_amount_fact(fact: dict) -> bool:
+    """$-unit guard (Task 2, docs/loom/plans/2026-07-16-operational-kpi-
+    quarterly.md — 'a $-UNIT guard that rejects any fact whose XBRL unit is
+    not a currency amount'): True only when `fact`'s XBRL unit is a currency
+    amount, never a percentage/ratio. edgartools' `facts.to_dataframe()`
+    carries a `currency` column (an ISO code, e.g. "USD") populated for a
+    currency-unit fact and None/NaN for a percentage/ratio fact tagged
+    `unit_ref="number"`/"pure" — live-verified 2026-07-17: BA's
+    `ba:RevenuefromContractwithCustomerexcludingassessedtaxPercentage`
+    (unit_ref="number", currency=None, value=1.0 i.e. 100%) vs
+    `us-gaap:CostOfRevenue` / `us-gaap:RevenueNotFromContractWithCustomer...`
+    (unit_ref="usd", currency="USD").
+
+    Fail-closed (docs/loom/memory/fail-closed-default-must-be-enforced-not-
+    emergent.md): a missing/NaN/empty currency is treated as NOT a currency
+    fact — an explicit check, never an emergent side effect of a later
+    numeric comparison."""
+    currency = fact.get("currency")
+    if currency is None or _is_nan(currency):
+        return False
+    return bool(str(currency).strip())
 
 
 def _dimensional_revenue_error_slot(ticker: str, form: str, detail: str) -> dict:
@@ -1923,7 +2000,9 @@ def _is_dimensional_revenue_fact(fact: dict) -> bool:
     """The combined filter predicate for `extract_dimensional_revenue`:
     dimensioned + at least one REAL breakdown axis present on the row
     (`_dimension_signature`, both namespaces via `_is_dimensional_revenue_axis`)
-    + concept is revenue-shaped (`_is_revenue_concept`) + a reported numeric
+    + concept is revenue-shaped (`_is_revenue_concept`) + the fact's XBRL
+    unit is a currency amount (`_is_currency_amount_fact`, Task 2 — never a
+    percentage/ratio masquerading as a dollar value) + a reported numeric
     value (never NaN — mirrors `_build_statement_cells`'s `_is_nan` skip; a
     placeholder concept with no reported number is never fabricated as 0)
     + a DURATION context (Task 1, docs/loom/plans/2026-07-16-operational-kpi-
@@ -1936,6 +2015,8 @@ def _is_dimensional_revenue_fact(fact: dict) -> bool:
     if fact.get("period_type") != "duration":
         return False
     if not _is_revenue_concept(fact.get("concept")):
+        return False
+    if not _is_currency_amount_fact(fact):
         return False
     if _is_nan(fact.get("numeric_value")):
         return False
