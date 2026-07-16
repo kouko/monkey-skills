@@ -83,6 +83,27 @@ else
 fi
 
 # -------------------------------------------------------------------------
+# Check 3d — offline: F4 PR-carrier check verifies BOTH carriers, not just
+# `## Memory`. compose-pr.md Step 4 (both-carrier mandate) also requires a
+# raw trailer footer as the PR body's true last block — a PR can pass the
+# `## Memory`-only check while violating that mandate (the #575 failure
+# class). Scoped to the PR-carrier check's own neighborhood.
+
+PR_CARRIER_BLOCK="$(grep -A 8 -- 'PR-carrier check' "${FINISH_SKILL}")"
+
+if echo "${PR_CARRIER_BLOCK}" | grep -qi 'raw trailer'; then
+  pass "PR-carrier check also names the raw trailer footer carrier"
+else
+  fail "PR-carrier check does NOT verify the raw trailer footer — a PR can pass with ## Memory present but the raw trailer footer missing/broken (the #575 failure class)"
+fi
+
+if echo "${PR_CARRIER_BLOCK}" | grep -q 'compose-pr.md'; then
+  pass "PR-carrier check points to compose-pr.md Step 4's both-carrier mandate"
+else
+  fail "PR-carrier check does NOT point to compose-pr.md Step 4 — placement rules would need restating instead of pointing"
+fi
+
+# -------------------------------------------------------------------------
 # Check 4 — prerequisite: dev-workflow:git-memory installed
 
 if [ -f "${GIT_MEMORY_SKILL}" ]; then

@@ -231,6 +231,11 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
       returned a non-empty trailer set and the body has no `## Memory` section,
       flag it and add the section (both-carrier policy — commit AND PR carry the
       memory). No new tooling: it is a grep on the body you are about to submit.
+      Also verify the raw trailer footer carrier — the PR body's true last
+      block must be a raw trailer block, per
+      `dev-workflow/skills/git-memory/protocols/compose-pr.md` Step 4's
+      both-carrier mandate; fix the body before submitting if it is missing
+      or not the true last block.
     - If no: stop after push
 12. ASK user: "Branch was in .worktrees/; remove the worktree? (y/N)"
     - If yes: cd to repo root; git worktree remove .worktrees/<slug>
