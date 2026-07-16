@@ -91,15 +91,24 @@ series, and MUST NOT silently mix a quarterly point into an annual trend.
 - WHEN a single-granularity series is requested
 - THEN the off-granularity points are excluded (or the mix is rejected), never silently averaged or concatenated
 
-### Requirement: Q4 single-quarter may be derived by subtraction and MUST be flagged [deferred]
-The analysis layer MAY derive an untagged Q4 single-quarter as (FY total − 9-month YTD), and
-when it does it MUST flag the point as computed (a DQC flag), never presenting a derived value
-as directly reported; when the inputs to derive it are absent it MUST skip rather than fabricate.
+### Requirement: Q4 single-quarter is derived by subtraction, guarded, and segregated
+The analysis layer MUST derive an untagged Q4 single-quarter as (FY total − 9-month YTD)
+— live evidence (~50 filers) confirms Q4 is NEVER directly XBRL-tagged, so derivation is the
+only path to a Q4 point — and it MUST (a) flag the point as computed (a DQC flag), (b) keep
+derived points in a SEGREGATED lane distinguishable from directly-reported points so a
+consumer can request reported-only, and (c) skip rather than fabricate when an input is
+absent or the inputs are basis/vintage/unit-incompatible. A derived value MUST NEVER
+masquerade as a directly-reported value. (User governance decision A, 2026-07-16.)
 
-#### Scenario: Q4 derived when both inputs exist
+#### Scenario: Q4 derived when both inputs exist, and segregated
 - GIVEN an FY total and a 9-month YTD for the same signature and fiscal year, and no directly-tagged Q4 3-month fact
 - WHEN Q4 derivation runs
-- THEN it emits a Q4 point equal to FY minus 9-month YTD, flagged as derived (computed, not reported)
+- THEN it emits a Q4 point equal to FY minus 9-month YTD, flagged as derived (computed, not reported) and marked so a reported-only request excludes it
+
+#### Scenario: a reported-only request excludes derived Q4
+- GIVEN a quarterly series containing directly-reported Q1–Q3 and a derived Q4
+- WHEN the caller requests reported-only points
+- THEN the derived Q4 is excluded, and the reported Q1–Q3 remain
 
 #### Scenario: Q4 not derived when a source is missing
 - GIVEN an FY total but no 9-month YTD for that signature and fiscal year
@@ -116,23 +125,33 @@ as directly reported; when the inputs to derive it are absent it MUST skip rathe
 - WHEN Q4 derivation runs
 - THEN it either refuses to derive (flag basis-mismatch) or emits a distinct cross-basis/cross-vintage DQC flag — never the same generic "derived" flag as a clean same-basis case, and never a silent subtraction across incompatible bases
 
-### Requirement: The fiscal calendar is a sourced, time-versioned per-company object (critic-found)
-The system MUST treat each company's fiscal calendar (fiscal-year-end + quarter-end boundaries) as a first-class object with a recorded source and effective-date versioning, and MUST establish it before classifying that company's facts (a two-pass collect-then-classify order), so a mid-history fiscal-year-end change does not misclassify facts by ingestion order.
+### Requirement: The fiscal calendar is read per-filing from dei tags, never cached per ticker
+Live evidence (~87 filers) shows the fiscal calendar is DIRECTLY READABLE from each filing's
+dei tags — `dei:DocumentFiscalPeriodFocus` (Q1/Q2/Q3/FY, the filing's own focus period) and
+`dei:CurrentFiscalYearEndDate` (fiscal-year-end) — so the system MUST read them per-filing
+rather than deriving quarter boundaries from scratch or caching a fiscal-year-end per ticker.
+It MUST NOT cache/hardcode the fiscal-year-end per company (it DRIFTS across filings for
+52/53-week filers — e.g. NVDA `--01-31` vs `--01-25`) and MUST treat it as NOMINAL for
+floating-calendar filers, deriving the actual period boundaries from each fact's own
+`period_start`/`period_end`. The `fiscal_period` dataframe column is NOT relied upon (it is
+absent from some 10-Qs, e.g. COST) — period_type is derived from `period_end`/`period_start`,
+cross-checked against the dei focus, never from the unreliable `fiscal_year`/`fiscal_period`
+columns.
 
-#### Scenario: non-December fiscal-year-end classifies by the company calendar
-- GIVEN a company whose fiscal year ends June 30 and a 10-Q for "3 months ended 12/31"
+#### Scenario: non-December fiscal-year-end classifies by the filing's dei calendar
+- GIVEN a company whose `dei:CurrentFiscalYearEndDate` is late September and a 10-Q with `dei:DocumentFiscalPeriodFocus=Q2` for a fact ending in late March
 - WHEN the fact is classified
-- THEN the fiscal calendar (from its recorded source) yields fiscal-Q2, not calendar-Q4
+- THEN it is fiscal-Q2 (per the filing's dei calendar), not calendar-Q1
 
-#### Scenario: a mid-history fiscal-year-end change is versioned
-- GIVEN a company that changed its fiscal-year-end partway through the requested history
-- WHEN facts before and after the change are classified
-- THEN each is classified against the fiscal-calendar version effective for its period_end, and the transition is recorded, never applied uniformly
+#### Scenario: fiscal-year-end is read per-filing, not cached
+- GIVEN two filings from the same 52/53-week filer whose `dei:CurrentFiscalYearEndDate` differs (`--01-31` vs `--01-25`)
+- WHEN each filing's facts are classified
+- THEN each uses that filing's own dei value, and a mid-history fiscal-year-end change is handled naturally by the per-filing read — never a single cached value applied uniformly
 
-#### Scenario: classification is deferred until the calendar is established
-- GIVEN a streaming multi-year fetch where a company's fiscal calendar is inferred from its own period_end sequence
-- WHEN facts arrive before the full sequence (and any FYE change) is known
-- THEN classification does not commit a period_type until the calendar is established (collect-then-classify), never guessing from a partial sequence
+#### Scenario: a prior-year comparative fact is classified from its own period, not the filing focus
+- GIVEN a 10-Q whose `DocumentFiscalPeriodFocus=Q3` that also carries prior-year comparative facts
+- WHEN a comparative fact is classified
+- THEN its period_type is derived from its OWN period_start/period_end + the fiscal-year-end (the focus applies only to the filing's current-period facts, not comparatives)
 
 ### Requirement: Every emitted point and DQC flag carries structured provenance (critic-found)
 Every emitted series point MUST carry its source accession(s), source form (10-K \| 10-Q), and duration_class; and every DQC flag MUST follow one defined schema (flag type, old value, new value, contributing accession(s), reason), so a downstream consumer or auditor can trace and filter any point.
@@ -169,3 +188,40 @@ The coverage report MUST extend scope-A's range-level clamp to per-filing/per-qu
 - GIVEN a dimensional signature present in a company's 10-K but not tagged in any of that year's 10-Qs
 - WHEN the quarterly series is built for that dimension
 - THEN it is reported as "no quarterly coverage for this dimension", distinct from a real zero and from a discontinued segment — never silently zero-filled or dropped
+
+### Requirement: Revenue-concept matching is an allow/deny + $-unit gate, not a substring (folds a scope-A fix)
+Live evidence (~87 filers) shows the shipped `_is_revenue_concept` substring test is too
+permissive across sectors, so the data layer MUST replace it with: (a) an ALLOW of legitimate
+operating-revenue concepts beyond `RevenueFromContractWithCustomer*` — at least `us-gaap:Revenues`,
+`RevenuesNetOfInterestExpense` (banks), `RevenueNotFromContractWithCustomer` (energy/utilities),
+`RevenueFromContractWithCustomerIncludingAssessedTax` (utilities), and recognized company-extension
+revenue concepts; (b) a DENY of `*Revenue*`-substring concepts that are NOT operating revenue —
+`CostOfRevenue`/COGS (incl. `OtherCostOfOperatingRevenue`), `*Percentage`/`*ChangePercent` ratio
+concepts, `RemainingPerformanceObligation` (RPO/backlog), deferred-revenue liabilities, and
+non-operating `CollaborativeRevenue`; and (c) a $-UNIT guard that rejects any fact whose XBRL unit
+is not a currency amount (e.g. a percentage or ratio). This is a scope-A (2.21.0) correctness
+defect folded into this change (user decision, 2026-07-16); fixtures come from the verification
+universe (CAT=dimensioned CostOfRevenue, BA/HON=percentage, SBUX=deferred, XOM=keep RevenueNotFromContract).
+
+#### Scenario: dimensioned CostOfRevenue is not emitted as revenue
+- GIVEN a filer (e.g. CAT) that tags `us-gaap:CostOfRevenue` dimensionally by segment
+- WHEN the data layer extracts dimensional revenue
+- THEN those COGS facts are excluded (deny-list), not emitted as revenue
+
+#### Scenario: a percentage-valued *Revenue* concept is rejected by the unit guard
+- GIVEN a `*RevenuePercentage`/`*RevenueChangePercent` extension fact whose unit is a ratio, not a currency
+- WHEN the data layer extracts dimensional revenue
+- THEN it is rejected by the $-unit guard, never emitted with a percentage as its "value"
+
+#### Scenario: a legitimate non-RFCC revenue concept is kept
+- GIVEN an energy filer (e.g. XOM) tagging dimensional `RevenueNotFromContractWithCustomer`, or a bank tagging `RevenuesNetOfInterestExpense`
+- WHEN the data layer extracts dimensional revenue
+- THEN the concept is KEPT (allow-list), not dropped as a non-RFCC concept
+
+### Requirement: A foreign/ADR filer with no 10-Q is detected and returned N/A, never silently empty
+Live evidence (11 ADR filers) shows foreign private issuers file 20-F + 6-K with no 10-Q (and 6-K interim XBRL is often absent or semi-annual), so a quarterly request for such a ticker MUST be detected and returned as an explicit N/A with a reason, never a silently-empty series.
+
+#### Scenario: a 20-F-only filer returns an explicit quarterly-N/A
+- GIVEN a ticker (e.g. TSM) whose submissions history has 20-F + 6-K but no 10-Q
+- WHEN a quarterly KPI series is requested
+- THEN the system returns an explicit "no quarterly XBRL (foreign 20-F/6-K regime)" N/A with the reason, not an empty or fabricated series

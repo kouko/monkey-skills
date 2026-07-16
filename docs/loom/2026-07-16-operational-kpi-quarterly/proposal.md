@@ -16,6 +16,34 @@ lenses are adapted honestly: "actors" = the calling analysis/agent layer + the d
 stitch pipeline. Per §single-surface collapse, the linear journey is short; the structure
 lives in the object state machines + the period-classification matrix.
 
+## Empirical grounding + resolved decisions (2026-07-16)
+
+A ~87-filer live probe (see `docs/loom/references/xbrl-verification-universe.md`) grounded
+this spec against real SEC XBRL across ~15 sectors, 5 fiscal-year-ends, 52/53-week filers,
+banks/insurers/REITs/utilities, and an ADR/foreign 20-F cluster. What it changed:
+
+- **Dual-duration collision CONFIRMED** universally (3mo + YTD share a period_end) — the
+  de-conflation core stands.
+- **Q4 is NEVER directly XBRL-tagged** (~50 filers) → derivation is the only path.
+  **User decision A:** derive FY−9moYTD, guard basis/vintage/unit, keep in a SEGREGATED
+  flagged lane, never masquerade as reported. R "Q4 … derived, guarded, segregated" is now
+  active (no longer `[deferred]`).
+- **FiscalCalendar SIMPLIFIED** from the critic's heavy "sourced/versioned/two-pass" object:
+  the calendar is directly readable per-filing from `dei:DocumentFiscalPeriodFocus` +
+  `dei:CurrentFiscalYearEndDate` (don't cache — drifts for 52/53-week filers; nominal for
+  floaters; comparatives classified from their own period_end). The heavy machinery dissolves.
+- **`_is_revenue_concept` is buggy across many sectors** (dimensioned CostOfRevenue at CAT,
+  percentage concepts at BA/HON, RPO, deferred at SBUX; must KEEP bank/energy/utility non-RFCC
+  concepts). **User decision:** fold the fix into this change — a new allow/deny + $-unit
+  requirement, with fixtures drawn from the verification universe.
+- **ADR/foreign (20-F, no 10-Q)** → new requirement: detect the regime and return explicit
+  quarterly-N/A, never a silently-empty series.
+- **`fiscal_period` column is unreliable** (absent from COST's 10-Q) → derive period_type from
+  period_end/period_start (the `edgartools-fiscal-year-column-unreliable` lesson extended).
+
+The verification universe is the standing **live-anchor sampling source** for this change's
+network-marked tests.
+
 ## USM backbone
 
 The happy-path spine (Phase ①), one ordered pipeline (nodes = stages; typed nav edges in
