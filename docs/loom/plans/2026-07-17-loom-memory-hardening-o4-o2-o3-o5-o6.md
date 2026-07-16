@@ -54,6 +54,26 @@ Plan-document-reviewer verdict: PASS (2026-07-17T00:20+08:00, 14/14 checks; advi
   concatenations must not false-fail; `--verify-strict` ships as a diagnostic
   tool (Task 7).
 
+- Execution decision (2026-07-17, Task 1 verdict split): spec-reviewer PASS
+  (scope-clean per Task-3-owns-the-hatch boundary), code-quality-reviewer
+  NEEDS_REVISION (🔴 the untouched hatch paragraph "git log --grep … is the
+  supported path", SKILL.md:135-138, contradicts the new top-of-file
+  doctrine). Resolution: the flagged lines are exactly the region Task 3
+  rewrites into a pointer — the finding is folded into Task 3's dispatch as a
+  MUST (eliminate "is the supported path" framing + add a whole-file absence
+  assertion in the raw-footer test). Task 1 committed within its declared
+  scope; the contradiction cannot survive the branch because Task 3's test
+  pins its absence. (Two-way door — same-PR sequencing choice, logged not
+  briefed.)
+
+- Execution decision (2026-07-17, Task 6): the post-merge verify job ships as
+  a SEPARATE workflow file `.github/workflows/memory-verify-merged.yml`, not
+  a second job inside dev-workflow-ci.yml as the task text literally said —
+  GitHub Actions `paths:` filters gate at the `on:` level, so an in-file job
+  could never fire on pushes outside dev-workflow/**, which is exactly the
+  class of push it exists to catch. Spec-reviewer accepted as
+  intent-conforming. (Two-way door, logged not briefed.)
+
 ## Task 1 — O4a: git-memory SKILL.md carrier-doctrine rewrite + plugin sweep
 
 - Description: Rewrite `dev-workflow/skills/git-memory/SKILL.md`'s carrier

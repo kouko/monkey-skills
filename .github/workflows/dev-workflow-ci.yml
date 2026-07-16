@@ -8,9 +8,13 @@ name: dev-workflow CI
 # contract. A regression there had no CI gate to catch it.
 #
 # This job only runs the existing shell tests (glob over
-# dev-workflow/tests/test-*.sh). A second job that verifies HEAD's
-# post-merge commit body on push-to-main (memory-grep.sh --verify-merged)
-# is added separately — this file is left cleanly extensible for it.
+# dev-workflow/tests/test-*.sh). The post-merge HEAD-body check
+# (memory-grep.sh --verify-merged) lives in its own workflow file,
+# memory-verify-merged.yml — it needs an unfiltered push-to-main trigger
+# (a memory-worthy PR usually touches paths OTHER than dev-workflow/**),
+# which this file's `paths:`-scoped triggers cannot provide without
+# losing their scoping for this job. See that file's header for the
+# full reasoning.
 #
 # Status: intended for `main` branch protection.
 
