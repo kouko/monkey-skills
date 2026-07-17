@@ -965,3 +965,119 @@ def test_duration_months_pins_realistic_span_bands(period_start, period_end, exp
     mod = _load_helpers()
     fact = {"period_start": period_start}
     assert mod._duration_months(fact, "TEST", period_end) == expected_months
+
+
+# ---------------------------------------------------------------------------
+# Task 3 — fiscal calendar read per-filing from dei tags, never cached per
+# ticker (docs/loom/plans/2026-07-16-operational-kpi-quarterly.md). Real NVDA
+# dei values, MACHINE-CAPTURED 2026-07-17 (edgartools 5.42.0, live
+# `filing.xbrl().facts.to_dataframe()` -- both are real filed 10-Ks, not
+# hand-typed):
+#   accession 0001045810-21-000010 (period_of_report 2021-01-31)
+#     -> dei:DocumentFiscalPeriodFocus="FY", dei:CurrentFiscalYearEndDate="--01-31"
+#   accession 0001045810-26-000021 (period_of_report 2026-01-25)
+#     -> dei:DocumentFiscalPeriodFocus="FY", dei:CurrentFiscalYearEndDate="--01-25"
+# This drift (NVDA is a 52/53-week filer, docs/loom/references/
+# xbrl-verification-universe.md:49) is the load-bearing evidence the whole
+# task exists to protect: a per-ticker cache would apply ONE filing's
+# calendar to the other's facts and silently mislabel its quarters.
+# ---------------------------------------------------------------------------
+
+def _make_dei_filing(*, accession, form, filing_date, period_of_report,
+                      fiscal_period_focus, fiscal_year_end):
+    """Fake edgartools Filing whose `.xbrl()` yields one dimensional-revenue
+    row PLUS the filing's own dei cover-page rows -- same shape as a real
+    filing's facts dataframe (dei rows and us-gaap rows share ONE records
+    list; live-verified in the module docstring above `extract_dimensional_revenue`,
+    and directly in this task's live capture)."""
+    xb = mock.MagicMock(name=f"xbrl-{accession}")
+    xb.facts.to_dataframe.return_value.to_dict.return_value = [
+        {
+            "is_dimensioned": True,
+            "dim_srt_ProductOrServiceAxis": "nvda:ComputeMember",
+            "concept": "us-gaap:Revenues",
+            "numeric_value": 1000.0,
+            "unit_ref": "usd",
+            "currency": "USD",
+            "period_type": "duration",
+            "period_start": (filing_date - datetime.timedelta(days=365)).isoformat(),
+            "period_end": filing_date.isoformat(),
+            "period_instant": None,
+        },
+        {"concept": "dei:DocumentFiscalPeriodFocus", "value": fiscal_period_focus},
+        {"concept": "dei:CurrentFiscalYearEndDate", "value": fiscal_year_end},
+    ]
+    filing = SimpleNamespace(
+        accession_no=accession, filing_date=filing_date, form=form,
+        period_of_report=period_of_report,
+    )
+    filing.xbrl = lambda bound=xb: bound
+    return filing
+
+
+def test_extract_emits_dei_fiscal_calendar(sec_client):
+    """Two filings from the SAME 52/53-week filer (NVDA) with DIFFERING real
+    dei:CurrentFiscalYearEndDate (--01-31 vs --01-25) must each keep their OWN
+    value in the pack's `fiscal_calendars` -- never one cached/shared value
+    applied uniformly across both. This is the heart of Task 3: it must
+    genuinely fail if a per-ticker cache were introduced (see the SDD
+    dispatch report for the RED-under-cache proof)."""
+    filing_2021 = _make_dei_filing(
+        accession="0001045810-21-000010", form="10-K",
+        filing_date=datetime.date(2021, 2, 26), period_of_report="2021-01-31",
+        fiscal_period_focus="FY", fiscal_year_end="--01-31",
+    )
+    filing_2026 = _make_dei_filing(
+        accession="0001045810-26-000021", form="10-K",
+        filing_date=datetime.date(2026, 2, 25), period_of_report="2026-01-25",
+        fiscal_period_focus="FY", fiscal_year_end="--01-25",
+    )
+
+    company = mock.MagicMock(name="Company")
+    company.not_found = False
+    company.cik = 1045810
+    company.get_filings.return_value = [filing_2021, filing_2026]
+    sec_client.edgar_stub.Company.return_value = company
+
+    pack = sec_client.extract_dimensional_revenue("NVDA", since_year=2021, until_year=2026)
+
+    assert "error" not in pack, pack
+    calendars = pack["fiscal_calendars"]
+    assert calendars["0001045810-21-000010"] == {
+        "fiscal_period_focus": "FY", "fiscal_year_end": "--01-31",
+    }, calendars
+    assert calendars["0001045810-26-000021"] == {
+        "fiscal_period_focus": "FY", "fiscal_year_end": "--01-25",
+    }, calendars
+    assert (
+        calendars["0001045810-21-000010"]["fiscal_year_end"]
+        != calendars["0001045810-26-000021"]["fiscal_year_end"]
+    ), (
+        "the two filings' fiscal-year-end must differ -- proves each filing's "
+        "OWN dei value is retained, not one cached value applied to both"
+    )
+
+
+def test_extract_dei_fiscal_calendar_absent_tag_is_none_not_fabricated(sec_client):
+    """A filing whose facts_records carry no dei rows at all (a test-double
+    gap -- every real 10-K/10-Q carries both per SEC dei taxonomy
+    requirements) must record `None`, never a guessed/fabricated value. Uses
+    the existing amendment-skip fixture builder (`_make_dimensional_filing`),
+    which carries no dei rows, to prove the absence path doesn't raise or
+    invent a value."""
+    filing = _make_dimensional_filing(
+        accession="0000320193-24-000123", form="10-K",
+        filing_date=datetime.date(2024, 11, 1), revenue_value=100.0,
+    )
+    company = mock.MagicMock(name="Company")
+    company.not_found = False
+    company.cik = 320193
+    company.get_filings.return_value = [filing]
+    sec_client.edgar_stub.Company.return_value = company
+
+    pack = sec_client.extract_dimensional_revenue("AAPL")
+
+    assert "error" not in pack, pack
+    assert pack["fiscal_calendars"]["0000320193-24-000123"] == {
+        "fiscal_period_focus": None, "fiscal_year_end": None,
+    }

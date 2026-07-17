@@ -2272,11 +2272,18 @@ def extract_dimensional_revenue(
             )
 
     facts = []
+    fiscal_calendars: dict[str, dict] = {}
     for filing in selected:
         xb = filing.xbrl()
         facts_records = xb.facts.to_dataframe().to_dict("records")
         accession = filing.accession_no
         filed = _filing_date_iso(filing.filing_date)
+        # Task 3 (docs/loom/plans/2026-07-16-operational-kpi-quarterly.md —
+        # 'the fiscal calendar is read per-filing from dei tags, never cached
+        # per ticker'): read straight from THIS filing's own facts_records,
+        # keyed by ITS OWN accession, inside this per-filing loop iteration —
+        # never a module-level/ticker-level cache. See `_extract_dei_calendar`.
+        fiscal_calendars[accession] = _extract_dei_calendar(facts_records)
         facts.extend(
             _build_dimensional_revenue_fact(fact, ticker, accession, filed)
             for fact in facts_records
@@ -2289,6 +2296,42 @@ def extract_dimensional_revenue(
         "coverage": _dimensional_revenue_coverage(
             since_year, until_year, exact_filings, facts, form,
         ),
+        "fiscal_calendars": fiscal_calendars,
+    }
+
+
+def _extract_dei_calendar(facts_records: list[dict]) -> dict:
+    """Read ONE filing's own `dei:DocumentFiscalPeriodFocus` +
+    `dei:CurrentFiscalYearEndDate` from its ALREADY-FETCHED `facts_records`
+    (Task 3, docs/loom/plans/2026-07-16-operational-kpi-quarterly.md — 'the
+    fiscal calendar is read per-filing from dei tags, never cached per
+    ticker'). dei rows share the SAME records list as the us-gaap facts
+    (live-verified 2026-07-17, edgartools 5.42.0: a filing's
+    `xbrl().facts.to_dataframe()` carries both `dei:*` and `us-gaap:*`
+    concepts in one frame), so this reads the list callers already fetched —
+    no extra `.xbrl()` call.
+
+    Reads ONLY rows from THIS filing's own records — never a module-level or
+    ticker-level cache — so a 52/53-week filer's fiscal-year-end that DRIFTS
+    between filings (live-verified: NVDA's `dei:CurrentFiscalYearEndDate` was
+    `--01-31` in accession 0001045810-21-000010 and `--01-25` in accession
+    0001045810-26-000021) is captured correctly per filing instead of one
+    filing's calendar silently overwriting or shadowing another's.
+
+    Returns `{"fiscal_period_focus": <value>|None, "fiscal_year_end":
+    <value>|None}` — `None` when a tag is absent from this filing's records,
+    never fabricated/guessed (a real 10-K/10-Q always carries both per SEC
+    dei taxonomy requirements; an absence here is a test-double gap, not a
+    real-filing shape)."""
+    def _first_value(concept: str):
+        for row in facts_records:
+            if row.get("concept") == concept:
+                return row.get("value")
+        return None
+
+    return {
+        "fiscal_period_focus": _first_value("dei:DocumentFiscalPeriodFocus"),
+        "fiscal_year_end": _first_value("dei:CurrentFiscalYearEndDate"),
     }
 
 
