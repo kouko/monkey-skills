@@ -59,7 +59,6 @@ no inter-task Dependencies → one DAG level). period from period_end, never fis
 - External surfaces: edgartools (network) — dei string facts (absent from bulk companyfacts; read via filing.xbrl()); fixture from NVDA (drifting FYE) + AAPL (Sep).
 - Dependencies: none
 - Independent: false
-- Brief item covered: 2026-07-16-operational-kpi-quarterly / Requirement: The fiscal calendar is read per-filing from dei tags, never cached per ticker / Scenario: non-December fiscal-year-end classifies by the filing's dei calendar
 - Brief item covered: 2026-07-16-operational-kpi-quarterly / Requirement: The fiscal calendar is read per-filing from dei tags, never cached per ticker / Scenario: fiscal-year-end is read per-filing, not cached
 
 ## Task 4 — ADR / 20-F regime detect → explicit N/A
@@ -84,7 +83,9 @@ no inter-task Dependencies → one DAG level). period from period_end, never fis
   - investing-toolkit/skills/analysis-kpi/scripts/kpi_xbrl.py (_require_period ~:121, facts_to_points ~:151)
 - Acceptance:
   - RED: `test_classify_period_type` — 3mo at fiscal Q1 end → Q1/single; non-Dec (Sep) 3mo ending late-Dec → Q1; 9mo → 9mo-YTD/cumulative; 6mo → 6mo-YTD/cumulative; a comparative fact classified from its own period; a stub/unclassifiable period surfaced.
-  - GREEN: period_type + duration_class + cumulative correct across the cases; unclassifiable surfaced.
+  - RED: `test_classify_uses_filing_dei_focus_not_calendar` — the spec's own Q2 example (spec.md, Requirement "The fiscal calendar is read per-filing…", Scenario "non-December fiscal-year-end classifies by the filing's dei calendar") must be asserted LITERALLY — a fiscal-Q2 fact from a non-December filer classifies as Q2 by the filing's dei calendar, not by its calendar-quarter position. The Q1/September case above does NOT stand in for it. (Re-homed from Task 3 — 2026-07-17, see Decision Log.)
+  - RED: `test_fact_pack_na_slot_is_not_read_as_empty_series` — a fact-pack carrying `error_class == "foreign_private_issuer_no_quarterly_xbrl"` (Task 4's N/A slot) MUST be branched on BEFORE `fact_pack.get("facts", [])`; today both read sites (kpi_xbrl.py ~:169 facts_to_points, ~:254 resolve_binding) use a defaulted `.get()`, so an N/A slot is silently consumed as a real-empty series — the exact silent-empty failure Task 4 exists to prevent, live right now. A `fiscal_calendars[accession]` entry of `None` must likewise route to the "unclassifiable period is surfaced, not guessed" path, never default to a calendar. (Both carried from Task 3/Task 4 reviews — 2026-07-17, see Decision Log.)
+  - GREEN: period_type + duration_class + cumulative correct across the cases; unclassifiable surfaced; the dei-focus Q2 case classifies by the filing's calendar; an N/A slot and a None calendar are both surfaced, never silently emptied or guessed.
 - Dependencies: Tasks 1, 3 complete first
 - Independent: false
 - Brief item covered: 2026-07-16-operational-kpi-quarterly / Requirement: Period type is classified from duration and the fiscal calendar / Scenario: 3-month fact at a fiscal quarter end
@@ -93,6 +94,7 @@ no inter-task Dependencies → one DAG level). period from period_end, never fis
 - Brief item covered: 2026-07-16-operational-kpi-quarterly / Requirement: Period type is classified from duration and the fiscal calendar / Scenario: a 6-month fact is an H1 YTD cumulative (critic-found)
 - Brief item covered: 2026-07-16-operational-kpi-quarterly / Requirement: Period type is classified from duration and the fiscal calendar / Scenario: a transition or unclassifiable period is surfaced, not guessed
 - Brief item covered: 2026-07-16-operational-kpi-quarterly / Requirement: The fiscal calendar is read per-filing from dei tags, never cached per ticker / Scenario: a prior-year comparative fact is classified from its own period, not the filing focus
+- Brief item covered: 2026-07-16-operational-kpi-quarterly / Requirement: The fiscal calendar is read per-filing from dei tags, never cached per ticker / Scenario: non-December fiscal-year-end classifies by the filing's dei calendar
 
 ## Task 6 — Identity key gains duration_class; de-conflate single-quarter vs YTD
 - Description: Extend the resolve_binding identity key from (signature, period_type, period) to include duration_class so a single-quarter and a YTD fact sharing signature+period_end resolve to DISTINCT points (never deduped/raised against each other); identical cross-filing single-quarter dedupes; a restated quarter applies policy C on the duration-qualified key.
@@ -117,11 +119,13 @@ no inter-task Dependencies → one DAG level). period from period_end, never fis
   - investing-toolkit/skills/analysis-kpi/scripts/kpi_xbrl.py (build_series_with_break ~:296)
 - Acceptance:
   - RED: `test_series_single_granularity` — a quarterly request returns only sub-annual points (no FY); a set mixing FY + single-quarter for one fiscal year excludes the off-granularity points (or rejects), never averaged/concatenated.
-  - GREEN: single-granularity enforced both ways.
+  - RED: `test_series_flags_dimension_absent_from_quarterlies` — a dimensional signature present in the 10-K but tagged in none of that year's 10-Qs surfaces as `no_quarterly_coverage` in the built series, distinct from a real zero and from a discontinued segment; never zero-filled or dropped. Call the data layer's existing pure helper `_dimension_quarterly_absence` (sec_edgar_client.py) rather than reimplementing it. (Re-homed from Task 10 — 2026-07-17, see Decision Log.)
+  - GREEN: single-granularity enforced both ways; the dimension-absent flag surfaces end-to-end from the built series.
 - Dependencies: Task 6 completes first
 - Independent: false
 - Brief item covered: 2026-07-16-operational-kpi-quarterly / Requirement: A series carries a single granularity / Scenario: a quarterly request returns only sub-annual points
 - Brief item covered: 2026-07-16-operational-kpi-quarterly / Requirement: A series carries a single granularity / Scenario: mixing granularities is rejected
+- Brief item covered: 2026-07-16-operational-kpi-quarterly / Requirement: Coverage honesty extends to per-filing completeness (critic-found) / Scenario: a dimension absent from the quarterlies is flagged, not zero-filled
 
 ## Task 8 — Q4 derive FY−9moYTD, guarded + segregated
 - Description: Derive an untagged Q4 single-quarter as (FY − 9-month YTD); flag it as computed AND keep it in a segregated lane so a reported-only request excludes it; skip (never fabricate) when a source is absent OR the FY and 9mo-YTD are basis/vintage/unit-incompatible; record both contributing accessions on the derived point's DQC flag.
@@ -156,19 +160,25 @@ no inter-task Dependencies → one DAG level). period from period_end, never fis
 - Brief item covered: 2026-07-16-operational-kpi-quarterly / Requirement: Every emitted point and DQC flag carries structured provenance (critic-found) / Scenario: a restatement DQC flag carries the full audit content (parity with scope-A policy C)
 
 ## Task 10 — Per-filing / per-quarter coverage honesty
-- Description: Extend scope-A's coverage report to per-filing/per-quarter completeness within a covered year; distinguish not-yet-filed from fetch-error from out-of-range; flag a dimension present in the 10-K but absent from the 10-Qs as "no quarterly coverage" (distinct from a real zero / discontinued), never zero-filled.
+- Description: Extend scope-A's coverage report to per-filing/per-quarter completeness within a covered year; distinguish the absence states from one another, never collapsing them into one silent "gap".
+  REVISED 2026-07-17 (see Decision Log): the dimension-absent flag moved to T7. And the absence states are
+  not-yet-filed / out-of-requested-range / unclassified — NOT the spec's "fetch-error": this report is built
+  purely from already-fetched filings-list metadata, so no path can ever ground a retryable-fetch-failure
+  claim, and a filings-list absence cannot separate a fetch gap from a never-filed period (mid-year IPO).
+  Real fetch failures are reported at the fetch site via the existing `error_class` gap-slot idiom. A spec
+  fix is pending for `spec.md:175,182-185` (spec-reviewer-authored replacement text is queued for the
+  loom-spec pass); this plan entry tracks the reviewed-correct behavior in the meantime.
 - Module: investing-toolkit/skills/data-markets/scripts/sec_edgar_client.py
 - Files touched: investing-toolkit/skills/data-markets/scripts/sec_edgar_client.py, investing-toolkit/tests/data/test_sec_edgar_dimensional.py
 - Context paths:
   - investing-toolkit/skills/data-markets/scripts/sec_edgar_client.py (_dimensional_revenue_coverage from scope-A T2, the coverage key)
 - Acceptance:
-  - RED: `test_coverage_per_quarter_completeness` — a covered year with 10-K+Q1+Q2 but no Q3 reports partial (3/4, Q3 missing + reason); the three fetch-failure states are distinguished; a 10-K-only dimension is flagged "no quarterly coverage", not zero-filled.
-  - GREEN: per-quarter coverage + failure-state distinction + dimension-absent flag.
+  - RED: `test_coverage_per_quarter_completeness` — a covered year with 10-K+Q1+Q2 but no Q3 reports partial (3/4, Q3 missing + reason); the absence states (not_yet_filed / out_of_requested_range / unclassified) are pairwise distinguished, never collapsed.
+  - GREEN: per-quarter coverage + absence-state distinction. Fiscal-year grouping must be FY-aware (window-match each 10-Q against the 10-K's expected period ends), not calendar-year slicing — a non-December filer's Q1 ends in the PRIOR calendar year (AAPL FY2025 Q1 ends 2024-12-28), and calendar slicing fabricates a fetch-failure for a filing already in hand plus a phantom prior year. Fixtures machine-captured from AAPL/NVDA, never hand-typed (a hand-typed MSFT-with-December-FYE fixture is what hid this bug in round 1).
 - Dependencies: Tasks 1, 4 complete first
 - Independent: false
 - Brief item covered: 2026-07-16-operational-kpi-quarterly / Requirement: Coverage honesty extends to per-filing completeness (critic-found) / Scenario: a partial year reports which filings are missing
 - Brief item covered: 2026-07-16-operational-kpi-quarterly / Requirement: Coverage honesty extends to per-filing completeness (critic-found) / Scenario: fetch-failure states are distinguished
-- Brief item covered: 2026-07-16-operational-kpi-quarterly / Requirement: Coverage honesty extends to per-filing completeness (critic-found) / Scenario: a dimension absent from the quarterlies is flagged, not zero-filled
 
 ## Task 11 — Offline end-to-end quarterly seam test
 - Description: A deterministic offline test driving the full quarterly chain (multi-filing quarterly facts with a dual-duration collision + a derived Q4 → classify → de-conflate identity key → series) over real machine-captured fixtures, asserting single-quarter and YTD stay distinct and a segregated derived Q4 flows through.
@@ -208,4 +218,28 @@ no inter-task Dependencies → one DAG level). period from period_end, never fis
 - Fixtures per task are machine-captured from the verification-universe tickers named inline; never hand-typed.
 - Scope B builds on scope-A's multi-filing fetch (since_year/until_year) — the quarterly path fetches
   10-K + 10-Q; granularity-gated fetching (only fetch 10-Qs when quarterly requested) is a usage-cost
-  lever folded into T1/T10's extract path.
+  lever folded into T1/T10's extract path. NOTE (2026-07-17): this deferral no longer implies T10 will
+  later wire the dimension-absent flag in-place — that scenario moved to T7 (see Decision Log), so the
+  cost-lever deferral and the flag's ownership are now decoupled.
+
+## Decision Log
+
+- 2026-07-17 — **Re-home "a dimension absent from the quarterlies is flagged, not zero-filled" from T10 to T7.**
+  WHY: both T10 reviewers ruled the scenario unmet end-to-end — T10 shipped `_dimension_quarterly_absence`
+  as a pure function with no production caller and no other task claiming the scenario, silently orphaning a
+  critic-found requirement. The spec's own WHEN ("when the quarterly series is built") locates it in the
+  analysis layer (kpi_xbrl.py), not the data layer; wiring it into `extract_dimensional_revenue` would force a
+  10-K `.xbrl()` fetch on every quarterly call — the usage-cost lever the user's 2026-07-16 decision
+  explicitly protects ("correctness machinery is runtime-cheap, build it all; only fetch VOLUME is the
+  cost lever"). T7 is where the series is built. Agent-decided (two-way door, no product consequence: the
+  requirement ships either way, only its owning task changes). Rejected: forcing T10 to eat the double fetch.
+- 2026-07-17 — **Carry T4's `error_class` consumption + T3's `None`-calendar handling into T5's acceptance.**
+  WHY: T4's `foreign_private_issuer_no_quarterly_xbrl` N/A slot currently has ZERO production consumers; both
+  T4 reviewers and T10's spec-reviewer independently found that kpi_xbrl.py reads `fact_pack.get("facts", [])`
+  with a default, so an N/A slot is silently consumed as a real-empty series — the exact failure T4 exists to
+  prevent, live today. Same shape for a `None` dei calendar from T3. Neither has a spec scenario of its own
+  (both are integration seams under existing requirements), so they land as T5 acceptance criteria without a
+  new `Brief item covered` line. Agent-decided (two-way door).
+- 2026-07-17 — **Re-home the spec's Q2/dei-focus scenario assertion from T3 to T5.** WHY: T3's spec-reviewer
+  ruled T3 structurally cannot satisfy it — T3 emits the calendar, classification is T5's module. The plan had
+  mapped it to T3. Agent-decided (two-way door; scenario coverage preserved, owner corrected).
