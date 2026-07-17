@@ -26,6 +26,16 @@ Plan-document-reviewer verdict: PASS (2026-07-17T09:15+08:00, round 3, 14/14; no
 - Grep-tests: prose assertions scope to a measured neighborhood around the
   §Token Budget anchor; RED verified against pre-change content.
 
+## Decision Log
+
+- Execution decision (2026-07-17, T2 review round): quality reviewer found
+  residual single-tier "~6,000-token cap" framing (hard cap only, no soft
+  aim — incomplete, not factually wrong) in skill-judge README×3 languages
+  and the skill-creator-advance file family. Out of the brief's named
+  propagation targets; skill-creator-advance is deliberately line-pinned.
+  Resolution: recorded as follow-up debt (ride a future skill-dev-toolkit
+  touch), NOT swept into this arc. (Two-way door, logged not briefed.)
+
 ## Task 1 — Recalibrate the skill-team SSOT + siblings
 
 - Description: In domain-teams/skills/skill-team/, recalibrate every
