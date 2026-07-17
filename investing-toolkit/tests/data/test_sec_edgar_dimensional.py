@@ -1321,17 +1321,27 @@ def test_coverage_per_quarter_completeness_partial_missing_quarter(sec_client):
 
 
 def test_coverage_per_quarter_completeness_no_10k_reports_unclassified(sec_client):
-    """A fiscal year with NO 10-K anywhere in the filings list has no
-    fiscal year end to derive expected quarter windows from — Task 10
-    revision round 1 finding 3: this 'cannot classify' case must NOT be
+    """A fiscal year with NO 10-K ANYWHERE in the company's filing history
+    has no fiscal year end to derive expected quarter windows from, and
+    (unlike an in-progress current year) no other known 10-K anywhere to
+    PROJECT one forward from either — Task 10 revision round 1 finding 3:
+    this genuinely-unprojectable 'cannot classify' case must NOT be
     reported as `fetch_error` (a specific, actionable, retryable claim the
-    code has no grounds for); it is `unclassified`. Uses the real AAPL Q1
-    filing (calendar year 2024) with no 10-K supplied, so it falls back to
-    its own calendar year (the one case `_assign_quarterly_filings_to_
-    fiscal_years` cannot resolve, by design)."""
+    code has no grounds for); the 10-K's absence is `unclassified`. Uses
+    the real AAPL Q1 filing (calendar year 2024) with no 10-K supplied, so
+    it falls back to its own calendar year (the one case
+    `_assign_quarterly_filings_to_fiscal_years` cannot resolve, by design).
+
+    Task 10 revision round 2 fix: the Q1 filing itself is ALREADY IN HAND
+    and must never be discarded/reported missing just because its specific
+    Q-label can't be derived without a fiscal calendar — that was the
+    `_quarterly_year_completeness` fiscal_year_end=None branch silently
+    ignoring its own `quarterly_filings` parameter (round 2 finding 1's
+    residual). It is reported PRESENT under the generic `"quarter"` label
+    (no fabricated Q1/Q2/Q3 identity claim), never `missing`."""
     fixture = _load_aapl_quarterly_fixture()
     q1 = _filing_from_quarterly_fixture_record(fixture["fy2025_q1"])
-    _aapl_company_stub(sec_client, [q1])  # no 10-K at all
+    _aapl_company_stub(sec_client, [q1])  # no 10-K at all, ever
 
     pack = sec_client.extract_dimensional_revenue(
         "AAPL", form="10-Q", since_year=2024, until_year=2024,
@@ -1341,12 +1351,77 @@ def test_coverage_per_quarter_completeness_no_10k_reports_unclassified(sec_clien
     quarterly = pack["coverage"]["quarterly_coverage"]
     year_record = next(r for r in quarterly if r["fiscal_year"] == 2024)
 
-    assert year_record["present"] == [], year_record
-    reasons = {m["filing"]: m["reason"] for m in year_record["missing"]}
-    assert reasons == {
-        "10-K": "unclassified", "Q1": "unclassified",
-        "Q2": "unclassified", "Q3": "unclassified",
-    }, reasons
+    assert len(year_record["present"]) == 1, (
+        f"the in-hand Q1 filing must be reported PRESENT, never discarded "
+        f"-- {year_record}"
+    )
+    present_entry = year_record["present"][0]
+    assert present_entry["filing"] == "quarter", present_entry
+    assert present_entry["accession"] == fixture["fy2025_q1"]["accession"]
+    assert present_entry["period_of_report"] == "2024-12-28"
+
+    missing_by_label = {m["filing"]: m["reason"] for m in year_record["missing"]}
+    assert missing_by_label == {"10-K": "unclassified"}, (
+        f"only the 10-K (genuinely absent, no fiscal reference to classify "
+        f"it against) is missing -- {missing_by_label}"
+    )
+
+
+def test_coverage_per_quarter_completeness_in_progress_fy_projects_forward(sec_client):
+    """FATAL regression (Task 10 revision round 2): every filer's CURRENT
+    in-progress fiscal year has NO 10-K yet -- real AAPL FY2026 (10-K not
+    due until ~Oct 2026) already has TWO real 10-Qs in hand: Q1 (period
+    2025-12-27) and Q2 (period 2026-03-28). The pre-fix calendar-year
+    fallback put FY2026-Q1 into FY2025's bucket (both share CALENDAR year
+    2025) where it silently rotted in FY2025's `remaining`, and minted a
+    phantom FY2026 record with fiscal_year_end=None reporting BOTH
+    filings absent -- 'two filings in hand, reported absent', the exact
+    bug this task exists to remove, reinstated on the in-progress-year
+    path. The fix projects FY2026's fiscal year end forward from FY2025's
+    real 10-K (`_subtract_months(fye, -12)`) and window-matches against
+    the projection, so a projected year's not-yet-due 10-K/Q3 report
+    `not_yet_filed` (never `unclassified`)."""
+    fixture = _load_aapl_quarterly_fixture()
+    filings = [
+        _filing_from_quarterly_fixture_record(fixture[key])
+        for key in (
+            "fy2025_10k", "fy2025_q1", "fy2025_q2", "fy2025_q3",
+            "fy2026_q1", "fy2026_q2",
+        )
+    ]
+    _aapl_company_stub(sec_client, filings)
+
+    pack = sec_client.extract_dimensional_revenue(
+        "AAPL", form="10-Q", since_year=2025, until_year=2026,
+        as_of=datetime.date(2026, 6, 1),
+    )
+    assert "error" not in pack, pack
+    quarterly = pack["coverage"]["quarterly_coverage"]
+    by_year = {r["fiscal_year"]: r for r in quarterly}
+    assert set(by_year) == {2025, 2026}, (
+        f"no phantom fiscal year -- got {set(by_year)}"
+    )
+
+    fy2025 = by_year[2025]
+    assert fy2025["status"] == "full", fy2025
+    assert fy2025["present_count"] == 4, fy2025
+    assert fy2025["missing"] == [], (
+        f"FY2026's quarters must not be misfiled into FY2025's bucket -- {fy2025}"
+    )
+
+    fy2026 = by_year[2026]
+    present_by_label = {p["filing"]: p for p in fy2026["present"]}
+    assert present_by_label.keys() == {"Q1", "Q2"}, (
+        f"both real in-hand FY2026 quarters must be PRESENT, never absent -- {fy2026}"
+    )
+    assert present_by_label["Q1"]["accession"] == fixture["fy2026_q1"]["accession"]
+    assert present_by_label["Q2"]["accession"] == fixture["fy2026_q2"]["accession"]
+
+    missing_by_label = {m["filing"]: m["reason"] for m in fy2026["missing"]}
+    assert missing_by_label == {"10-K": "not_yet_filed", "Q3": "not_yet_filed"}, (
+        f"10-K and Q3 aren't due yet under the projected FYE (~2026-09-27, "
+        f"as_of=2026-06-01) -- must be not_yet_filed, never unclassified -- {fy2026}"
+    )
 
 
 def test_coverage_per_quarter_completeness_unfiled_q1_never_matches_q3s_filing(sec_client):
@@ -1446,4 +1521,56 @@ def test_dimension_quarterly_absence_flags_10k_only_dimension(sec_client):
     assert flags[0]["flag"] == "no_quarterly_coverage"
     assert "value" not in flags[0], (
         "the absence flag must never carry a synthesized/zero-filled 'value'"
+    )
+
+
+def test_dimension_quarterly_absence_january_fye_no_false_flag(sec_client):
+    """Task 10 revision round 2, finding 2: `_dimension_quarterly_absence`
+    keyed on `fact['fiscal_year']` (the CALENDAR year of `period_end`) —
+    the same defect class the filing-level grouping fix (round 1/round 2)
+    removed. For a January-FYE filer (real example: NVDA, FYE ~01-26)
+    EVERY quarter's `period_end` calendar year is one behind its fiscal
+    year (FY2025 ends 2025-01-26; Q1/Q2/Q3 period ends fall in calendar
+    2024) — reviewer's live probe measured a 100% false-flag rate: full
+    quarterly coverage of both real NVDA dimensions, still flagged
+    'no_quarterly_coverage'. Synthetic facts here mirror that exact shape
+    (annual fact period_end/fiscal_year=2025-01-26/2025; quarterly facts
+    period_end in 2024 tagged fiscal_year=2024, calendar-correct but
+    fiscal-wrong) — the fix must window-match each quarterly fact against
+    the annual fact's fiscal calendar (mirrors `_assign_quarterly_filings_
+    to_fiscal_years` at fact granularity), not trust its own tagged
+    'fiscal_year', so full coverage produces ZERO flags."""
+    annual_facts = [
+        {
+            "concept": "us-gaap:Revenues",
+            "dimensions": {"ProductOrService": "Datacenter"},
+            "consolidation": None, "fiscal_year": 2025,
+            "period_end": "2025-01-26", "value": 1000.0,
+        },
+    ]
+    quarterly_facts = [
+        {
+            "concept": "us-gaap:Revenues",
+            "dimensions": {"ProductOrService": "Datacenter"},
+            "consolidation": None, "fiscal_year": 2024,
+            "period_end": "2024-04-27", "value": 200.0,
+        },
+        {
+            "concept": "us-gaap:Revenues",
+            "dimensions": {"ProductOrService": "Datacenter"},
+            "consolidation": None, "fiscal_year": 2024,
+            "period_end": "2024-07-27", "value": 250.0,
+        },
+        {
+            "concept": "us-gaap:Revenues",
+            "dimensions": {"ProductOrService": "Datacenter"},
+            "consolidation": None, "fiscal_year": 2024,
+            "period_end": "2024-10-26", "value": 260.0,
+        },
+    ]
+    flags = sec_client._dimension_quarterly_absence(annual_facts, quarterly_facts)
+    assert flags == [], (
+        f"full quarterly coverage of a January-FYE dimension must not be "
+        f"false-flagged just because the quarters' own tagged fiscal_year "
+        f"(calendar year of period_end) diverges from the fiscal year -- {flags}"
     )

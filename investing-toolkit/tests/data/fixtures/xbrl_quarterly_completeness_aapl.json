@@ -1,5 +1,5 @@
 {
-  "_provenance": "MACHINE-CAPTURED 2026-07-17 via edgartools==5.42.0, edgar.Company('AAPL').get_filings(form=\"10-K\") / get_filings(form=\"10-Q\"); accession/filing_date/period_of_report dumped exactly as returned, never hand-typed. AAPL's FYE is 2025-09-27 (September) -- a NON-DECEMBER fiscal year end. FY2025's Q1 period_of_report (2024-12-28) falls in CALENDAR year 2024, one year off from its FISCAL year (2025). This is exactly the case that exposed the calendar-vs-fiscal quarterly-coverage grouping bug (Task 10 revision round 1, reviewer's live probe on AAPL/NVDA). Capture command: `edgar.set_identity(...); c = edgar.Company('AAPL'); sorted(c.get_filings(form='10-K'), key=lambda f: f.filing_date, reverse=True)[:1]` and the analogous `form='10-Q'` call, reading `.accession_no / .filing_date / .period_of_report` off each real Filing.",
+  "_provenance": "MACHINE-CAPTURED 2026-07-17 via edgartools==5.42.0, edgar.Company('AAPL').get_filings(form=\"10-K\") / get_filings(form=\"10-Q\"); accession/filing_date/period_of_report dumped exactly as returned, never hand-typed. AAPL's FYE is 2025-09-27 (September) -- a NON-DECEMBER fiscal year end. FY2025's Q1 period_of_report (2024-12-28) falls in CALENDAR year 2024, one year off from its FISCAL year (2025). This is exactly the case that exposed the calendar-vs-fiscal quarterly-coverage grouping bug (Task 10 revision round 1, reviewer's live probe on AAPL/NVDA). fy2026_q1/fy2026_q2 (added revision round 2) are AAPL's real IN-PROGRESS FY2026 10-Qs -- captured with NO FY2026 10-K on file yet (not due until ~Oct 2026), exposing the calendar-year-fallback regression (round 2 fatal finding): fy2026_q1's period_of_report (2025-12-27) shares CALENDAR year 2025 with FY2025's own filings, so the pre-fix fallback misfiled it into FY2025's bucket instead of projecting FY2026's fiscal calendar forward. Capture command: `edgar.set_identity(...); c = edgar.Company('AAPL'); sorted(c.get_filings(form='10-K'), key=lambda f: f.filing_date, reverse=True)[:2]` and the analogous `form='10-Q'` call (top 5), reading `.accession_no / .filing_date / .period_of_report` off each real Filing.",
   "fy2025_10k": {
     "accession": "0000320193-25-000079",
     "form": "10-K",
@@ -23,5 +23,17 @@
     "form": "10-Q",
     "filing_date": "2025-08-01",
     "period_of_report": "2025-06-28"
+  },
+  "fy2026_q1": {
+    "accession": "0000320193-26-000006",
+    "form": "10-Q",
+    "filing_date": "2026-01-30",
+    "period_of_report": "2025-12-27"
+  },
+  "fy2026_q2": {
+    "accession": "0000320193-26-000013",
+    "form": "10-Q",
+    "filing_date": "2026-05-01",
+    "period_of_report": "2026-03-28"
   }
 }

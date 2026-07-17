@@ -2559,9 +2559,11 @@ def _missing_quarter_reason(
     as_of: date,
 ) -> tuple[str, str]:
     """Classify WHY an expected filing (a quarter's 10-Q, or the 10-K
-    itself) is absent — one of FOUR EXPLICIT states (Task 10 revision
-    round 1, finding 3 — never inferred by falling through a comparison to
-    a specific-sounding claim the code has no grounds for, docs/loom/
+    itself) is absent — one of FOUR MODELED states, THREE of which this
+    function actually returns (`fetch_error` is RESERVED, see below — Task
+    10 revision round 2, finding 4: the spec, not this code, owns closing
+    that gap) — never inferred by falling through a comparison to a
+    specific-sounding claim the code has no grounds for, docs/loom/
     memory/fail-closed-default-must-be-enforced-not-emergent.md):
 
     - "not_yet_filed": `expected_end` is still in the future relative to
@@ -2644,13 +2646,23 @@ def _quarterly_year_completeness(
         })
 
     if fiscal_year_end is None:
-        for label in _QUARTER_LABELS:
-            missing.append({
-                "filing": label, "reason": "unclassified",
-                "detail": (
-                    "fiscal year end unknown (no 10-K found for this year); "
-                    "cannot compute the expected quarter period"
-                ),
+        # Task 10 revision round 2 fatal fix: this branch used to DISCARD
+        # `quarterly_filings` outright — reporting Q1/Q2/Q3 all missing even
+        # when a filing was already in hand, because no fiscal calendar was
+        # available to derive expected period ends from. Reaching here means
+        # NO 10-K exists ANYWHERE for this ticker to project a calendar from
+        # (an in-progress year with a KNOWN prior 10-K instead gets a
+        # PROJECTED `fiscal_year_end` from `_assign_quarterly_filings_to_
+        # fiscal_years` — see below — so it never lands here). Genuinely
+        # unprojectable: a specific Q1/Q2/Q3 label can't be derived without
+        # a fiscal calendar, but the filing itself is NOT reported missing —
+        # it is present, under the generic "quarter" label (no fabricated
+        # per-quarter identity claim).
+        for filing in quarterly_filings:
+            present.append({
+                "filing": "quarter",
+                "accession": getattr(filing, "accession_no", None),
+                "period_of_report": str(getattr(filing, "period_of_report", None)),
             })
     else:
         expected = _expected_quarterly_period_ends(fiscal_year_end)
@@ -2681,18 +2693,30 @@ def _quarterly_year_completeness(
     }
 
 
+_MAX_PROJECTED_FISCAL_YEARS_FORWARD = 2
+# LOOM-SIMPLIFY: shortcut=cap forward fiscal-calendar projection at 2 years
+# past the latest known 10-K instead of projecting indefinitely |
+# ceiling=a real filer whose quarterly filings still don't match after 2
+# projected years (i.e. >2 consecutive fiscal years with zero 10-Ks on
+# file) | upgrade=make the cap a parameter or grow it dynamically until
+# `unmatched` is exhausted | ref=docs/loom/plans/2026-07-16-operational-kpi-
+# quarterly.md Task 10 revision round 2 — every real filer's in-progress
+# year is exactly 1 year past its latest 10-K, so 2 is generous headroom,
+# never load-bearing for the shipped scenario (tested via AAPL FY2026 above).
+
+
 def _assign_quarterly_filings_to_fiscal_years(
     annual_filings: list, quarterly_filings: list,
-) -> tuple[dict[int, list], list]:
-    """Assign each quarterly filing to the fiscal year whose 10-K-derived
-    expected-quarter window (`_expected_quarterly_period_ends`) it falls
-    within — NOT by the calendar year of the filing's OWN `period_of_report`
-    (Task 10 revision round 1, fatal finding: a non-December fiscal-year-end
-    quarter's calendar year and fiscal year diverge — live-verified AAPL
-    FY2025 Q1 ends 2024-12-28, calendar year 2024, fiscal year 2025 —
-    calendar-year bucketing put it in the wrong year, fabricating a
-    `fetch_error`/`unclassified` for a filing already in hand plus a
-    phantom prior-year record).
+) -> tuple[dict[int, list], dict[int, date], list]:
+    """Assign each quarterly filing to the fiscal year whose expected-quarter
+    window (`_expected_quarterly_period_ends`) it falls within — NOT by the
+    calendar year of the filing's OWN `period_of_report` (Task 10 revision
+    round 1, fatal finding: a non-December fiscal-year-end quarter's
+    calendar year and fiscal year diverge — live-verified AAPL FY2025 Q1
+    ends 2024-12-28, calendar year 2024, fiscal year 2025 — calendar-year
+    bucketing put it in the wrong year, fabricating a `fetch_error`/
+    `unclassified` for a filing already in hand plus a phantom prior-year
+    record).
 
     Builds one expected-quarter window per KNOWN fiscal year (every
     `annual_filings` 10-K's own `period_of_report` fixes that year's fiscal
@@ -2701,12 +2725,30 @@ def _assign_quarterly_filings_to_fiscal_years(
     tolerance) — a filing lands in the one fiscal year whose window it
     actually falls inside.
 
-    Returns `(by_year, unmatched)`. `unmatched` holds filings that fall
-    inside NO known 10-K's window — e.g. an in-progress fiscal year whose
-    10-K hasn't been filed yet, so there is no window to match against yet.
-    The caller falls back to the filing's own calendar year for those
-    (`_filing_period_year`), preserving prior behavior for the one case
-    this function has no fiscal reference to resolve."""
+    For filings that match no KNOWN window, PROJECTS the fiscal calendar
+    FORWARD from the latest known 10-K's fiscal year end
+    (`_subtract_months(fye, -12)` per year, up to
+    `_MAX_PROJECTED_FISCAL_YEARS_FORWARD`) and re-matches against each
+    projected window in turn (Task 10 revision round 2 fatal fix: every
+    filer's CURRENT in-progress fiscal year has no 10-K yet, by definition
+    — falling straight to the calendar-year fallback for that case
+    reinstated the exact bug round 1 removed. Live-verified: AAPL FY2026's
+    real Q1/Q2 10-Qs, filed months before FY2026's 10-K, match the
+    projected FYE within 0-1 day — well inside tolerance).
+
+    Returns `(by_year, projected_fiscal_year_ends, unmatched)`.
+    `projected_fiscal_year_ends` maps a fiscal year that has NO 10-K yet but
+    WAS resolved via forward projection to its projected fiscal year end —
+    the caller (`_quarterly_completeness_report`) passes this through so
+    that year's 10-K/Q3 absence is classified `not_yet_filed` (not
+    `unclassified`) when its projected due date hasn't arrived.
+    `unmatched` holds filings that fall inside NO known OR projected
+    window — i.e. no 10-K exists ANYWHERE to derive/project a fiscal
+    calendar from at all. The caller falls back to the filing's own
+    calendar year for those (`_filing_period_year`), preserving prior
+    behavior for the one case this function has no fiscal reference to
+    resolve."""
+    known_fiscal_year_ends: dict[int, date] = {}
     windows: list[tuple[int, date]] = []
     for annual in annual_filings:
         year = _filing_period_year(annual)
@@ -2717,34 +2759,67 @@ def _assign_quarterly_filings_to_fiscal_years(
             fiscal_year_end = date.fromisoformat(str(period))
         except ValueError:
             continue
+        known_fiscal_year_ends[year] = fiscal_year_end
         windows.extend(
             (year, expected_end)
             for expected_end in _expected_quarterly_period_ends(fiscal_year_end).values()
         )
 
-    by_year: dict[int, list] = {}
-    unmatched: list = []
-    for filing in quarterly_filings:
+    def _parsed_period(filing) -> date | None:
         period = getattr(filing, "period_of_report", None)
-        actual = None
-        if period:
-            try:
-                actual = date.fromisoformat(str(period))
-            except ValueError:
-                actual = None
-        matched_year = next(
+        if not period:
+            return None
+        try:
+            return date.fromisoformat(str(period))
+        except ValueError:
+            return None
+
+    def _match(actual: date, candidate_windows: list[tuple[int, date]]) -> int | None:
+        return next(
             (
-                year for year, expected_end in windows
-                if actual is not None
-                and abs((actual - expected_end).days) <= _QUARTER_MATCH_TOLERANCE_DAYS
+                year for year, expected_end in candidate_windows
+                if abs((actual - expected_end).days) <= _QUARTER_MATCH_TOLERANCE_DAYS
             ),
             None,
         )
+
+    by_year: dict[int, list] = {}
+    remaining: list = []
+    for filing in quarterly_filings:
+        actual = _parsed_period(filing)
+        matched_year = _match(actual, windows) if actual is not None else None
         if matched_year is not None:
             by_year.setdefault(matched_year, []).append(filing)
         else:
-            unmatched.append(filing)
-    return by_year, unmatched
+            remaining.append(filing)
+
+    projected_fiscal_year_ends: dict[int, date] = {}
+    if known_fiscal_year_ends and remaining:
+        year = max(known_fiscal_year_ends)
+        fye = known_fiscal_year_ends[year]
+        for _ in range(_MAX_PROJECTED_FISCAL_YEARS_FORWARD):
+            if not remaining:
+                break
+            year += 1
+            fye = _subtract_months(fye, -12)
+            projected_windows = [
+                (year, expected_end)
+                for expected_end in _expected_quarterly_period_ends(fye).values()
+            ]
+            still_remaining = []
+            matched_any = False
+            for filing in remaining:
+                actual = _parsed_period(filing)
+                if actual is not None and _match(actual, projected_windows) is not None:
+                    by_year.setdefault(year, []).append(filing)
+                    matched_any = True
+                else:
+                    still_remaining.append(filing)
+            if matched_any:
+                projected_fiscal_year_ends[year] = fye
+            remaining = still_remaining
+
+    return by_year, projected_fiscal_year_ends, remaining
 
 
 def _quarterly_completeness_report(
@@ -2764,16 +2839,19 @@ def _quarterly_completeness_report(
     the fiscal year end). Quarterly filings are grouped into fiscal years
     by `_assign_quarterly_filings_to_fiscal_years` (window-matched against
     the 10-K's fiscal calendar, never the quarter's own calendar year —
-    Task 10 revision round 1 fatal finding), with a calendar-year fallback
-    ONLY for a filing that matches no known 10-K window."""
+    Task 10 revision round 1 fatal finding), with a PROJECTED-forward
+    fiscal calendar for a year with no 10-K yet (Task 10 revision round 2
+    fatal fix — every filer's in-progress current year, always), and a
+    calendar-year fallback ONLY for a filing that matches no known OR
+    projected window."""
     by_year_10k: dict[int, object] = {}
     for f in annual_filings:
         y = _filing_period_year(f)
         if y is not None:
             by_year_10k[y] = f
 
-    by_year_10q, unmatched = _assign_quarterly_filings_to_fiscal_years(
-        annual_filings, quarterly_filings
+    by_year_10q, projected_fiscal_year_ends, unmatched = (
+        _assign_quarterly_filings_to_fiscal_years(annual_filings, quarterly_filings)
     )
     for f in unmatched:
         y = _filing_period_year(f)
@@ -2797,6 +2875,8 @@ def _quarterly_completeness_report(
                     fiscal_year_end = date.fromisoformat(str(period))
                 except ValueError:
                     fiscal_year_end = None
+        elif year in projected_fiscal_year_ends:
+            fiscal_year_end = projected_fiscal_year_ends[year]
         report.append(
             _quarterly_year_completeness(
                 fiscal_year=year,
@@ -2823,18 +2903,76 @@ def _fact_dimensional_signature(fact: dict) -> tuple:
     )
 
 
+def _fact_effective_fiscal_year(
+    fact: dict, annual_windows: list[tuple[int, date]],
+) -> int | None:
+    """The FISCAL year `fact` belongs to, window-matched against
+    `annual_windows` (each known 10-K's `_expected_quarterly_period_ends`,
+    built by the caller) — mirrors `_assign_quarterly_filings_to_fiscal_
+    years` at fact granularity, NEVER `fact['fiscal_year']` alone (Task 10
+    revision round 2, finding 2: that field is the CALENDAR year of
+    `period_end`, which diverges from the fiscal year for any non-December
+    FYE — e.g. a January-FYE filer's quarters ALL fall in the PRIOR
+    calendar year, a 100% false-flag rate live-verified on NVDA). Falls
+    back to `fact['fiscal_year']` when `period_end` is absent/unparseable
+    or matches no known window — the same escape `_assign_quarterly_
+    filings_to_fiscal_years` uses for a filing it has no fiscal reference
+    to place (never a crash, never a guess beyond what's derivable)."""
+    period = fact.get("period_end")
+    try:
+        actual = date.fromisoformat(str(period)) if period else None
+    except ValueError:
+        actual = None
+    if actual is not None:
+        matched = next(
+            (
+                year for year, expected_end in annual_windows
+                if abs((actual - expected_end).days) <= _QUARTER_MATCH_TOLERANCE_DAYS
+            ),
+            None,
+        )
+        if matched is not None:
+            return matched
+    return fact.get("fiscal_year")
+
+
 def _dimension_quarterly_absence(
     annual_facts: list[dict], quarterly_facts: list[dict]
 ) -> list[dict]:
     """Flag every dimensional-revenue signature present in `annual_facts`
     (10-K) that carries NO fact in `quarterly_facts` (10-Q) for the SAME
-    `fiscal_year` — Task 10: 'a dimension present in the 10-K but absent
+    FISCAL year — Task 10: 'a dimension present in the 10-K but absent
     from the 10-Qs' is reported as `"no_quarterly_coverage"`, distinct from
     a real zero and from a discontinued segment (never inferable from a
     flag alone — that judgment is the caller's). Never zero-filled: the
-    returned entry carries no `value` key, only the identifying signature."""
+    returned entry carries no `value` key, only the identifying signature.
+
+    A quarterly fact's fiscal year is resolved via `_fact_effective_fiscal_
+    year` (window-matched against each annual fact's OWN `period_end`,
+    which for a 10-K IS the fiscal year end) — never the quarterly fact's
+    own tagged `fiscal_year`, which is a calendar-year label that diverges
+    from the fiscal year for a non-December FYE (Task 10 revision round 2,
+    finding 2 — same defect class as the filing-level grouping fix)."""
+    annual_windows: list[tuple[int, date]] = []
+    seen_years: set = set()
+    for f in annual_facts:
+        fy = f.get("fiscal_year")
+        period = f.get("period_end")
+        if fy is None or period is None or fy in seen_years:
+            continue
+        try:
+            fye = date.fromisoformat(str(period))
+        except ValueError:
+            continue
+        seen_years.add(fy)
+        annual_windows.extend(
+            (fy, expected_end)
+            for expected_end in _expected_quarterly_period_ends(fye).values()
+        )
+
     quarterly_signatures = {
-        (f.get("fiscal_year"), _fact_dimensional_signature(f)) for f in quarterly_facts
+        (_fact_effective_fiscal_year(f, annual_windows), _fact_dimensional_signature(f))
+        for f in quarterly_facts
     }
     seen = set()
     flags = []
