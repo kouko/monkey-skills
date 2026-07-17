@@ -1159,12 +1159,25 @@ def test_quarterly_foreign_filer_returns_na(sec_client, monkeypatch):
 # (_dimensional_revenue_coverage) with a `quarterly_coverage` per-fiscal-year
 # breakdown: 10-K + up to 3 standalone 10-Qs = 4 expected filings per year
 # (Q4 has no standalone 10-Q — derived downstream, Task 8). A missing
-# filing's absence is classified into one of THREE EXPLICIT, mutually
+# filing's absence is classified into one of FOUR EXPLICIT, mutually
 # exclusive reasons (never inferred from a bare absence — docs/loom/memory/
-# fail-closed-default-must-be-enforced-not-emergent.md):
-#   not_yet_filed | fetch_error | out_of_requested_range
+# fail-closed-default-must-be-enforced-not-emergent.md; the 4th,
+# "unclassified", was added in revision round 1 finding 3 — see below):
+#   not_yet_filed | fetch_error (reserved) | out_of_requested_range | unclassified
 # A dimensional signature present in the 10-K but absent from every 10-Q of
 # its fiscal year is flagged "no_quarterly_coverage" — never zero-filled.
+#
+# Revision round 1 fixed a FATAL finding: year grouping was calendar-based
+# (`period_of_report[:4]`), not fiscal — for a non-December fiscal year end
+# a 10-Q's calendar year and fiscal year diverge (AAPL FY2025 Q1 ends
+# 2024-12-28, calendar 2024, fiscal 2025), fabricating a `fetch_error`/
+# `unclassified` for a filing already in hand plus a phantom prior-year
+# record. The tests below are driven by a MACHINE-CAPTURED real AAPL filing
+# set (fixtures/xbrl_quarterly_completeness_aapl.json, edgartools 5.42.0,
+# captured 2026-07-17) — chosen BECAUSE AAPL's September fiscal year end
+# exposes exactly this bug, unlike the prior hand-typed December-FYE MSFT
+# double (which accidentally hid it — the single FYE where calendar-year
+# grouping happens to equal fiscal-year grouping).
 # ---------------------------------------------------------------------------
 
 def _make_quarterly_filing(*, accession, form, filing_date, period_of_report,
@@ -1196,47 +1209,97 @@ def _make_quarterly_filing(*, accession, form, filing_date, period_of_report,
     return filing
 
 
-def test_coverage_per_quarter_completeness(sec_client):
-    """A quarterly request's `coverage` gains a `quarterly_coverage`
-    per-fiscal-year completeness breakdown: a covered year with a 10-K +
-    Q1 + Q2 but no Q3 reports partial (3/4, Q3 missing + reason); the three
-    fetch-failure states are distinguished (pure `_missing_quarter_reason`,
-    proven pairwise distinct); a 10-K-only dimension is flagged
-    'no_quarterly_coverage' by `_dimension_quarterly_absence`, never
-    zero-filled (no synthesized 'value' key on the flag)."""
-    tenk = _make_quarterly_filing(
-        accession="0000789019-26-000010", form="10-K",
-        filing_date=datetime.date(2026, 2, 10), period_of_report="2025-12-31",
-        concept="us-gaap:Revenues", dim_member="msft:ProductivityMember",
-        revenue_value=500.0,
+def _load_aapl_quarterly_fixture():
+    return json.loads(
+        (FIXTURES / "xbrl_quarterly_completeness_aapl.json").read_text()
     )
-    q1 = _make_quarterly_filing(
-        accession="0000789019-25-000031", form="10-Q",
-        filing_date=datetime.date(2025, 4, 24), period_of_report="2025-03-31",
-        concept="us-gaap:Revenues", dim_member="msft:ProductivityMember",
-        revenue_value=100.0,
-    )
-    q2 = _make_quarterly_filing(
-        accession="0000789019-25-000032", form="10-Q",
-        filing_date=datetime.date(2025, 7, 24), period_of_report="2025-06-30",
-        concept="us-gaap:Revenues", dim_member="msft:ProductivityMember",
-        revenue_value=110.0,
-    )
-    # Q3 (expected ~2025-09-30) never filed.
 
+
+def _filing_from_quarterly_fixture_record(record):
+    """Build a fake edgartools Filing + one dimensional-revenue fact from a
+    MACHINE-CAPTURED record in xbrl_quarterly_completeness_aapl.json (real
+    accession/filing_date/period_of_report, never hand-typed)."""
+    return _make_quarterly_filing(
+        accession=record["accession"], form=record["form"],
+        filing_date=datetime.date.fromisoformat(record["filing_date"]),
+        period_of_report=record["period_of_report"],
+        concept="us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        dim_member="us-gaap:ProductMember", revenue_value=1.0,
+    )
+
+
+def _aapl_company_stub(sec_client, filings):
     company = mock.MagicMock(name="Company")
     company.not_found = False
-    company.cik = 789019
-    company.get_filings.return_value = [tenk, q1, q2]
+    company.cik = 320193
+    company.get_filings.return_value = filings
     sec_client.edgar_stub.Company.return_value = company
+    return company
+
+
+def test_coverage_per_quarter_completeness_all_present_no_phantom_year(sec_client):
+    """FATAL regression (Task 10 revision round 1): AAPL's real FY2025 10-K
+    + Q1 + Q2 + Q3 are ALL present in EDGAR. AAPL's FYE is 2025-09-27
+    (September) — Q1's real period_of_report is 2024-12-28, CALENDAR year
+    2024, one year off from its FISCAL year 2025. The buggy calendar-year
+    grouping (`period[:4]`) put Q1 in a phantom bucket year 2024 (fabricating
+    a fetch_error for a filing already in hand) while FY2025 fell to 3/4
+    with Q1 wrongly reported missing. The fix must report exactly ONE
+    fiscal-year record (2025), full 4/4, no phantom 2024 entry."""
+    fixture = _load_aapl_quarterly_fixture()
+    filings = [
+        _filing_from_quarterly_fixture_record(fixture[key])
+        for key in ("fy2025_10k", "fy2025_q1", "fy2025_q2", "fy2025_q3")
+    ]
+    _aapl_company_stub(sec_client, filings)
 
     pack = sec_client.extract_dimensional_revenue(
-        "MSFT", form="10-Q", since_year=2025, until_year=2025,
+        "AAPL", form="10-Q", since_year=2024, until_year=2025,
         as_of=datetime.date(2026, 1, 1),
     )
     assert "error" not in pack, pack
     quarterly = pack["coverage"]["quarterly_coverage"]
     assert quarterly is not None, "form='10-Q' must populate quarterly_coverage"
+    fiscal_years = {r["fiscal_year"] for r in quarterly}
+    assert fiscal_years == {2025}, (
+        f"no phantom fiscal-year record — got {fiscal_years}"
+    )
+
+    year_record = next(r for r in quarterly if r["fiscal_year"] == 2025)
+    assert year_record["status"] == "full", year_record
+    assert year_record["present_count"] == 4, year_record
+    assert year_record["missing"] == [], year_record
+
+    present_by_label = {p["filing"]: p for p in year_record["present"]}
+    assert present_by_label.keys() == {"10-K", "Q1", "Q2", "Q3"}, present_by_label
+    assert present_by_label["Q1"]["accession"] == fixture["fy2025_q1"]["accession"], (
+        "Q1 (period_of_report 2024-12-28, calendar year 2024) must be "
+        f"grouped into FISCAL year 2025 — got {present_by_label['Q1']}"
+    )
+    assert present_by_label["Q1"]["period_of_report"] == "2024-12-28"
+    assert present_by_label["Q2"]["accession"] == fixture["fy2025_q2"]["accession"]
+    assert present_by_label["Q3"]["accession"] == fixture["fy2025_q3"]["accession"]
+
+
+def test_coverage_per_quarter_completeness_partial_missing_quarter(sec_client):
+    """A covered year with a 10-K + Q1 + Q2 but no Q3 reports partial
+    (3/4, Q3 missing + reason) — the AAPL fixture's real Q1 (calendar year
+    2024, fiscal year 2025) must still land correctly in FY2025, proving
+    the grouping fix under a partial-year scenario too (not just the
+    all-present case above)."""
+    fixture = _load_aapl_quarterly_fixture()
+    filings = [
+        _filing_from_quarterly_fixture_record(fixture[key])
+        for key in ("fy2025_10k", "fy2025_q1", "fy2025_q2")
+    ]  # Q3 (expected ~2025-06-27) never filed in this scenario.
+    _aapl_company_stub(sec_client, filings)
+
+    pack = sec_client.extract_dimensional_revenue(
+        "AAPL", form="10-Q", since_year=2025, until_year=2025,
+        as_of=datetime.date(2026, 1, 1),
+    )
+    assert "error" not in pack, pack
+    quarterly = pack["coverage"]["quarterly_coverage"]
     year_record = next(r for r in quarterly if r["fiscal_year"] == 2025)
 
     assert year_record["status"] == "partial", year_record
@@ -1249,36 +1312,115 @@ def test_coverage_per_quarter_completeness(sec_client):
         f"Q3 must be the ONLY missing filing (3/4 present) — got {missing_labels}"
     )
     missing_q3 = year_record["missing"][0]
-    assert missing_q3["reason"] == "fetch_error", (
-        "Q3's expected period end (2025-09-30) is already due and within "
-        f"the requested [2025,2025] range — got {missing_q3['reason']!r}"
+    assert missing_q3["reason"] == "unclassified", (
+        "Q3's expected period end is already due and within the requested "
+        f"[2025,2025] range, with no positive fetch-failure evidence — got "
+        f"{missing_q3['reason']!r}"
     )
     assert missing_q3["detail"], "the missing entry must carry a human-readable reason string"
 
-    # Three fetch-failure states are distinguished — pure classifier, each
-    # proven independently, never collapsed into one silent 'gap'.
+
+def test_coverage_per_quarter_completeness_no_10k_reports_unclassified(sec_client):
+    """A fiscal year with NO 10-K anywhere in the filings list has no
+    fiscal year end to derive expected quarter windows from — Task 10
+    revision round 1 finding 3: this 'cannot classify' case must NOT be
+    reported as `fetch_error` (a specific, actionable, retryable claim the
+    code has no grounds for); it is `unclassified`. Uses the real AAPL Q1
+    filing (calendar year 2024) with no 10-K supplied, so it falls back to
+    its own calendar year (the one case `_assign_quarterly_filings_to_
+    fiscal_years` cannot resolve, by design)."""
+    fixture = _load_aapl_quarterly_fixture()
+    q1 = _filing_from_quarterly_fixture_record(fixture["fy2025_q1"])
+    _aapl_company_stub(sec_client, [q1])  # no 10-K at all
+
+    pack = sec_client.extract_dimensional_revenue(
+        "AAPL", form="10-Q", since_year=2024, until_year=2024,
+        as_of=datetime.date(2026, 1, 1),
+    )
+    assert "error" not in pack, pack
+    quarterly = pack["coverage"]["quarterly_coverage"]
+    year_record = next(r for r in quarterly if r["fiscal_year"] == 2024)
+
+    assert year_record["present"] == [], year_record
+    reasons = {m["filing"]: m["reason"] for m in year_record["missing"]}
+    assert reasons == {
+        "10-K": "unclassified", "Q1": "unclassified",
+        "Q2": "unclassified", "Q3": "unclassified",
+    }, reasons
+
+
+def test_coverage_per_quarter_completeness_unfiled_q1_never_matches_q3s_filing(sec_client):
+    """Q1 unfiled, Q3 filed: the greedy first-match-in-tolerance walk
+    (`_match_quarter_filing`, label order Q1→Q2→Q3) must never let Q3's
+    real filing get consumed by an earlier label. Task 10 revision round 1
+    finding 5: reviewer's mutation widening `_QUARTER_MATCH_TOLERANCE_DAYS`
+    to 100000 does exactly that (Q1 greedily grabs Q3's filing, leaving Q3
+    reported missing) while the full suite stays green at the shipped
+    tolerance — pin the correct Q1-missing/Q3-present assignment directly."""
+    fixture = _load_aapl_quarterly_fixture()
+    tenk = _filing_from_quarterly_fixture_record(fixture["fy2025_10k"])
+    q3 = _filing_from_quarterly_fixture_record(fixture["fy2025_q3"])
+    _aapl_company_stub(sec_client, [tenk, q3])  # Q1, Q2 never filed
+
+    pack = sec_client.extract_dimensional_revenue(
+        "AAPL", form="10-Q", since_year=2025, until_year=2025,
+        as_of=datetime.date(2026, 1, 1),
+    )
+    assert "error" not in pack, pack
+    year_record = next(
+        r for r in pack["coverage"]["quarterly_coverage"] if r["fiscal_year"] == 2025
+    )
+    present_by_label = {p["filing"]: p for p in year_record["present"]}
+    missing_labels = {m["filing"] for m in year_record["missing"]}
+    assert missing_labels == {"Q1", "Q2"}, missing_labels
+    assert "Q3" in present_by_label, present_by_label
+    assert present_by_label["Q3"]["accession"] == fixture["fy2025_q3"]["accession"], (
+        present_by_label["Q3"]
+    )
+
+
+def test_missing_quarter_reason_pairwise_distinct_states(sec_client):
+    """The FOUR explicit `_missing_quarter_reason` states are distinguished
+    — pure classifier, each proven independently, never collapsed into one
+    silent 'gap'. Covers finding 4 (Task 10 revision round 1): the
+    `until_year`-EXCEEDS branch is a distinct code path from the
+    `since_year`-PRECEDES branch and must be pinned separately — reviewer's
+    mutation collapsing 'exceeds' into the catch-all left the suite green."""
     reason_not_yet, _ = sec_client._missing_quarter_reason(
         datetime.date(2026, 6, 30), since_year=2026, until_year=2026,
         as_of=datetime.date(2026, 1, 1),
     )
-    reason_fetch_error, _ = sec_client._missing_quarter_reason(
+    reason_unclassified, _ = sec_client._missing_quarter_reason(
         datetime.date(2025, 9, 30), since_year=2025, until_year=2025,
         as_of=datetime.date(2026, 1, 1),
     )
-    reason_out_of_range, _ = sec_client._missing_quarter_reason(
+    reason_precedes_since, _ = sec_client._missing_quarter_reason(
         datetime.date(2019, 9, 30), since_year=2025, until_year=2025,
         as_of=datetime.date(2026, 1, 1),
     )
+    reason_exceeds_until, detail_exceeds_until = sec_client._missing_quarter_reason(
+        datetime.date(2030, 3, 31), since_year=2025, until_year=2028,
+        as_of=datetime.date(2032, 1, 1),
+    )
     assert reason_not_yet == "not_yet_filed", reason_not_yet
-    assert reason_fetch_error == "fetch_error", reason_fetch_error
-    assert reason_out_of_range == "out_of_requested_range", reason_out_of_range
-    assert len({reason_not_yet, reason_fetch_error, reason_out_of_range}) == 3, (
-        "the three states must be pairwise distinct — a design that lets two "
-        "collapse to the same value would silently conflate them"
+    assert reason_unclassified == "unclassified", reason_unclassified
+    assert reason_precedes_since == "out_of_requested_range", reason_precedes_since
+    assert reason_exceeds_until == "out_of_requested_range", reason_exceeds_until
+    assert "exceeds" in detail_exceeds_until, detail_exceeds_until
+    assert len({reason_not_yet, reason_unclassified, reason_precedes_since}) == 3, (
+        "the three DISTINCT VALUES must be pairwise distinct — a design "
+        "that lets two collapse to the same value would silently conflate "
+        "them (precedes/exceeds share the 'out_of_requested_range' value "
+        "by design — same meaning to the caller — but must fire from "
+        "genuinely separate code paths, asserted above via the detail text)"
     )
 
-    # A dimension present in the 10-K but absent from every 10-Q of its
-    # fiscal year is flagged, never zero-filled.
+
+def test_dimension_quarterly_absence_flags_10k_only_dimension(sec_client):
+    """A dimension present in the 10-K but absent from every 10-Q of its
+    fiscal year is flagged 'no_quarterly_coverage' by
+    `_dimension_quarterly_absence`, never zero-filled (no synthesized
+    'value' key on the flag)."""
     annual_facts = [
         {
             "concept": "us-gaap:Revenues",

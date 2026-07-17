@@ -1,0 +1,27 @@
+{
+  "_provenance": "MACHINE-CAPTURED 2026-07-17 via edgartools==5.42.0, edgar.Company('AAPL').get_filings(form=\"10-K\") / get_filings(form=\"10-Q\"); accession/filing_date/period_of_report dumped exactly as returned, never hand-typed. AAPL's FYE is 2025-09-27 (September) -- a NON-DECEMBER fiscal year end. FY2025's Q1 period_of_report (2024-12-28) falls in CALENDAR year 2024, one year off from its FISCAL year (2025). This is exactly the case that exposed the calendar-vs-fiscal quarterly-coverage grouping bug (Task 10 revision round 1, reviewer's live probe on AAPL/NVDA). Capture command: `edgar.set_identity(...); c = edgar.Company('AAPL'); sorted(c.get_filings(form='10-K'), key=lambda f: f.filing_date, reverse=True)[:1]` and the analogous `form='10-Q'` call, reading `.accession_no / .filing_date / .period_of_report` off each real Filing.",
+  "fy2025_10k": {
+    "accession": "0000320193-25-000079",
+    "form": "10-K",
+    "filing_date": "2025-10-31",
+    "period_of_report": "2025-09-27"
+  },
+  "fy2025_q1": {
+    "accession": "0000320193-25-000008",
+    "form": "10-Q",
+    "filing_date": "2025-01-31",
+    "period_of_report": "2024-12-28"
+  },
+  "fy2025_q2": {
+    "accession": "0000320193-25-000057",
+    "form": "10-Q",
+    "filing_date": "2025-05-02",
+    "period_of_report": "2025-03-29"
+  },
+  "fy2025_q3": {
+    "accession": "0000320193-25-000073",
+    "form": "10-Q",
+    "filing_date": "2025-08-01",
+    "period_of_report": "2025-06-28"
+  }
+}

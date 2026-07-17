@@ -2389,16 +2389,8 @@ def extract_dimensional_revenue(
             [f for f in annual_company_filings if getattr(f, "form", None) == annual_form]
             if annual_company_filings is not None else []
         )
-        fiscal_years = sorted({
-            y for y in (
-                _filing_period_year(f) for f in exact_filings + annual_exact_filings
-            )
-            if y is not None
-            and (since_year is None or y >= since_year)
-            and (until_year is None or y <= until_year)
-        })
         quarterly_coverage = _quarterly_completeness_report(
-            fiscal_years, annual_exact_filings, exact_filings,
+            annual_exact_filings, exact_filings,
             since_year, until_year, as_of or date.today(),
         )
 
@@ -2567,8 +2559,9 @@ def _missing_quarter_reason(
     as_of: date,
 ) -> tuple[str, str]:
     """Classify WHY an expected filing (a quarter's 10-Q, or the 10-K
-    itself) is absent — one of THREE EXPLICIT, mutually exclusive states
-    (Task 10 — never inferred by falling through a comparison, docs/loom/
+    itself) is absent — one of FOUR EXPLICIT states (Task 10 revision
+    round 1, finding 3 — never inferred by falling through a comparison to
+    a specific-sounding claim the code has no grounds for, docs/loom/
     memory/fail-closed-default-must-be-enforced-not-emergent.md):
 
     - "not_yet_filed": `expected_end` is still in the future relative to
@@ -2576,13 +2569,21 @@ def _missing_quarter_reason(
     - "out_of_requested_range": `expected_end`'s year falls outside the
       caller's requested `[since_year, until_year]` window — the caller
       never asked for this period.
-    - "fetch_error": `expected_end` is in the past AND within the
-      requested range, so the filing SHOULD exist and be reachable —
-      reported as a retryable fetch gap, never silently assumed skipped
-      by the filer.
+    - "fetch_error": RESERVED for a filing the code has POSITIVE grounds
+      to believe failed to fetch (e.g. a caught network/parse exception on
+      a filing known to exist). This function never has such grounds — a
+      filings-list absence is equally consistent with "never filed" (e.g.
+      a company IPO'd mid-year and an early quarter never existed) as with
+      a genuine fetch gap — so it never returns this value.
+    - "unclassified": `expected_end` is in the past AND within the
+      requested range, so the filing SHOULD exist by now, but its absence
+      has no more specific explanation available. This branch used to
+      return "fetch_error" — a caller reading that as "retry me" would
+      retry FOREVER for a filing that will never exist (the mid-FY-IPO
+      case above). "unclassified" makes no retryability claim either way.
 
     Exactly one branch fires per call (checked in this order — a future
-    date can't simultaneously be a fetch failure)."""
+    date can't simultaneously be out-of-range or unclassified)."""
     if expected_end > as_of:
         return (
             "not_yet_filed",
@@ -2602,10 +2603,12 @@ def _missing_quarter_reason(
             f"requested until_year={until_year}",
         )
     return (
-        "fetch_error",
+        "unclassified",
         f"expected period end {expected_end.isoformat()} is within the "
         "requested range and already due, but no matching filing was "
-        "found (retryable)",
+        "found and there is no positive evidence of why (could be a "
+        "genuine fetch gap, or a period the filer never filed — e.g. "
+        "pre-IPO; not assumed retryable)",
     )
 
 
@@ -2636,14 +2639,14 @@ def _quarterly_year_completeness(
         missing.append({"filing": "10-K", "reason": reason, "detail": detail})
     else:
         missing.append({
-            "filing": "10-K", "reason": "fetch_error",
+            "filing": "10-K", "reason": "unclassified",
             "detail": "fiscal year end unknown; cannot classify 10-K absence",
         })
 
     if fiscal_year_end is None:
         for label in _QUARTER_LABELS:
             missing.append({
-                "filing": label, "reason": "fetch_error",
+                "filing": label, "reason": "unclassified",
                 "detail": (
                     "fiscal year end unknown (no 10-K found for this year); "
                     "cannot compute the expected quarter period"
@@ -2678,32 +2681,113 @@ def _quarterly_year_completeness(
     }
 
 
+def _assign_quarterly_filings_to_fiscal_years(
+    annual_filings: list, quarterly_filings: list,
+) -> tuple[dict[int, list], list]:
+    """Assign each quarterly filing to the fiscal year whose 10-K-derived
+    expected-quarter window (`_expected_quarterly_period_ends`) it falls
+    within — NOT by the calendar year of the filing's OWN `period_of_report`
+    (Task 10 revision round 1, fatal finding: a non-December fiscal-year-end
+    quarter's calendar year and fiscal year diverge — live-verified AAPL
+    FY2025 Q1 ends 2024-12-28, calendar year 2024, fiscal year 2025 —
+    calendar-year bucketing put it in the wrong year, fabricating a
+    `fetch_error`/`unclassified` for a filing already in hand plus a
+    phantom prior-year record).
+
+    Builds one expected-quarter window per KNOWN fiscal year (every
+    `annual_filings` 10-K's own `period_of_report` fixes that year's fiscal
+    year end via `_expected_quarterly_period_ends`), then matches each
+    quarterly filing against ALL of them (`_QUARTER_MATCH_TOLERANCE_DAYS`
+    tolerance) — a filing lands in the one fiscal year whose window it
+    actually falls inside.
+
+    Returns `(by_year, unmatched)`. `unmatched` holds filings that fall
+    inside NO known 10-K's window — e.g. an in-progress fiscal year whose
+    10-K hasn't been filed yet, so there is no window to match against yet.
+    The caller falls back to the filing's own calendar year for those
+    (`_filing_period_year`), preserving prior behavior for the one case
+    this function has no fiscal reference to resolve."""
+    windows: list[tuple[int, date]] = []
+    for annual in annual_filings:
+        year = _filing_period_year(annual)
+        period = getattr(annual, "period_of_report", None)
+        if year is None or not period:
+            continue
+        try:
+            fiscal_year_end = date.fromisoformat(str(period))
+        except ValueError:
+            continue
+        windows.extend(
+            (year, expected_end)
+            for expected_end in _expected_quarterly_period_ends(fiscal_year_end).values()
+        )
+
+    by_year: dict[int, list] = {}
+    unmatched: list = []
+    for filing in quarterly_filings:
+        period = getattr(filing, "period_of_report", None)
+        actual = None
+        if period:
+            try:
+                actual = date.fromisoformat(str(period))
+            except ValueError:
+                actual = None
+        matched_year = next(
+            (
+                year for year, expected_end in windows
+                if actual is not None
+                and abs((actual - expected_end).days) <= _QUARTER_MATCH_TOLERANCE_DAYS
+            ),
+            None,
+        )
+        if matched_year is not None:
+            by_year.setdefault(matched_year, []).append(filing)
+        else:
+            unmatched.append(filing)
+    return by_year, unmatched
+
+
 def _quarterly_completeness_report(
-    fiscal_years: list[int],
     annual_filings: list,
     quarterly_filings: list,
     since_year: int | None,
     until_year: int | None,
     as_of: date,
 ) -> list[dict]:
-    """Build one `_quarterly_year_completeness` record per year in
-    `fiscal_years` (Task 10, docs/loom/plans/2026-07-16-operational-kpi-
-    quarterly.md — 'per-filing/per-quarter completeness within a covered
-    year'), from ALREADY-FETCHED filing-list metadata (never a fresh
-    fetch per year)."""
+    """Build one `_quarterly_year_completeness` record per covered fiscal
+    year (Task 10, docs/loom/plans/2026-07-16-operational-kpi-quarterly.md
+    — 'per-filing/per-quarter completeness within a covered year'), from
+    ALREADY-FETCHED filing-list metadata (never a fresh fetch per year).
+
+    Fiscal years are keyed off each 10-K's OWN `period_of_report` calendar
+    year (`_filing_period_year` — correct for a 10-K, whose period end IS
+    the fiscal year end). Quarterly filings are grouped into fiscal years
+    by `_assign_quarterly_filings_to_fiscal_years` (window-matched against
+    the 10-K's fiscal calendar, never the quarter's own calendar year —
+    Task 10 revision round 1 fatal finding), with a calendar-year fallback
+    ONLY for a filing that matches no known 10-K window."""
     by_year_10k: dict[int, object] = {}
     for f in annual_filings:
         y = _filing_period_year(f)
         if y is not None:
             by_year_10k[y] = f
-    by_year_10q: dict[int, list] = {}
-    for f in quarterly_filings:
+
+    by_year_10q, unmatched = _assign_quarterly_filings_to_fiscal_years(
+        annual_filings, quarterly_filings
+    )
+    for f in unmatched:
         y = _filing_period_year(f)
         if y is not None:
             by_year_10q.setdefault(y, []).append(f)
 
+    fiscal_years = sorted(
+        y for y in set(by_year_10k) | set(by_year_10q)
+        if (since_year is None or y >= since_year)
+        and (until_year is None or y <= until_year)
+    )
+
     report = []
-    for year in sorted(fiscal_years):
+    for year in fiscal_years:
         tenk = by_year_10k.get(year)
         fiscal_year_end = None
         if tenk is not None:
