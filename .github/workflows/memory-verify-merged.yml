@@ -1,0 +1,47 @@
+name: memory verify-merged
+
+# Post-merge carrier-check for a squash-shaped commit landing on `main`:
+# fails the workflow when a memory-worthy squash (body has a `## Memory`
+# heading) landed without a Decision:/Learning:/Gotcha: key surviving
+# under it — the #574 silent-drop case.
+#
+# WHY THIS IS A SEPARATE FILE, not a second job in dev-workflow-ci.yml:
+# dev-workflow-ci.yml's `on:` block scopes its pull_request/push triggers
+# with `paths: dev-workflow/**` (+ its own workflow file), so unrelated
+# pushes don't spend CI minutes re-running the dev-workflow shell-test
+# suite. But a memory-worthy PR usually touches OTHER paths (that's the
+# #574 case exactly), so gating this check behind the same path filter
+# would silently skip it on precisely the pushes it exists to catch.
+# GitHub Actions path filters gate at the `on:` (workflow-trigger) level,
+# not per-job, so no job inside dev-workflow-ci.yml can ever see a push
+# its path filter excluded. An unfiltered push-to-main trigger in its own
+# file is the only way to run this check on every merge while leaving
+# dev-workflow-ci.yml's path scoping intact for its own job.
+#
+# fetch-depth: 1 (the actions/checkout@v4 default) is sufficient — the
+# script only inspects HEAD's own commit body (`git log -1 --format=%B
+# HEAD`), never its ancestry.
+#
+# Status: intended for `main` branch protection.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify-merged:
+    name: memory verify-merged
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Verify HEAD's memory carrier survived the squash
+        run: |
+          bash dev-workflow/skills/git-memory/scripts/memory-grep.sh --verify-merged HEAD

@@ -6,8 +6,12 @@ description: |
 
 # Git Memory
 
-Portable, tool-agnostic project memory using git commit messages and
-PR body as the durable substrate.
+Durable lessons live in the repo's committed memory store
+(`docs/loom/memory/` here) — the authoritative carrier. Commit trailers are
+commit-bound capture: best-effort, secondary, and never the retrieval path
+a durable lesson depends on. This skill mechanizes that commit-bound
+capture — portable, tool-agnostic decision context riding in git commit
+messages and PR bodies.
 
 ## Invocation policy
 
@@ -21,13 +25,15 @@ Two distinct decisions must not be conflated:
 | **Should this commit carry memory trailers?** | The skill | Inside the skill — routine commits exit cleanly with no trailers |
 
 `gh pr merge` (esp. `--squash`) is the **last checkpoint before the
-branch closes** and the substrate can end up empty. A squash *relocates*
+branch closes** and the capture can end up empty. A squash *relocates*
 each commit's trailers into the squash commit's mid-body — still
 retrievable via `git log --grep`, though no longer footer-parseable
-(`%(trailers)`) — so on a squash `main` there are **two** durable
-carriers: the grep-able mid-body trailers and the PR `## Memory` section
-(which additionally survives and renders on GitHub). Fire the gate here
-too — the *always yes* rule holds, only the trailer outcome varies.
+(`%(trailers)`) — so on a squash `main` there are **two** commit-bound
+capture locations (best-effort, not the durable carrier — see the
+hierarchy above): the grep-able mid-body trailers and the PR `## Memory`
+section (which additionally survives and renders on GitHub). Fire the
+gate here too — the *always yes* rule holds, only the trailer outcome
+varies.
 
 Pre-deciding "this commit is routine, I'll skip the skill" is the bug.
 The skill's classification logic (routine vs non-routine, see *When not to
@@ -42,18 +48,21 @@ non-trivial commit as routine.
 
 ## Core thesis
 
-Write the **why** of a decision into commit messages and PR bodies so
-that any future session — Claude Code, Cursor, Codex, aider, or a human
-reader — can reconstruct project knowledge from `git log` alone.
-The git repository itself becomes the memory store; no separate
-database, embedding index, or vendor-specific memory file is required.
+Write the **why** of a decision into commit messages and PR bodies —
+best-effort, commit-bound capture that any future session (Claude Code,
+Cursor, Codex, aider, or a human reader) can reconstruct from `git log`.
+No database, embedding index, or vendor-specific memory file is needed
+for this capture step; where the repo has a committed memory store, that
+store — not `git log` — is the durable carrier (see the hierarchy above).
 
 ## Three pillars
 
-### Pillar 1 — Carrier: git artifacts themselves
+### Pillar 1 — Carrier: git artifacts as commit-bound capture
 
-Memory lives in commit messages and PR descriptions, not in a
-separate file. Consequences:
+Decision context rides in commit messages and PR descriptions as
+best-effort capture — not the durable carrier (that's the repo's
+committed memory store, per the hierarchy above, where one exists).
+Consequences for this capture layer:
 
 - Any tool that can read git can read the memory (Claude / Cursor /
   Codex / aider / `cat` / a human).
@@ -89,29 +98,46 @@ Structured facts ride in **git trailers** — the same mechanism as
 > footer. `git log --pretty='%(trailers)'` and `git interpret-trailers
 > --parse` read **only the footer**, so on a squash-merge `main` they
 > miss the buried trailers. `git log --grep='^Decision:'` is a **text**
-> match, so it still finds them on `main`.
+> match that still finds them on `main` — useful for spot-checking, but
+> this is commit-bound capture, never the durable retrieval path (that's
+> the repo's committed memory store, per the hierarchy above). This
+> caveat has a mandated escape: when the PR body ends with the raw
+> trailer footer required by the O2 mandate below (see
+> `protocols/compose-pr.md`), `%(trailers)` parses correctly even on squash
+> `main`.
 
-Retrieval path by repo style:
+Best-effort capture location by repo style (not a durable-retrieval
+ranking — see the hierarchy above):
 
-| Repo merge style | Reliable retrieval |
+| Repo merge style | Where the capture survives |
 |---|---|
-| **Squash merge** (default branch) | `git log --grep` + the PR `## Memory` section (GitHub-hosted, survives squash) |
-| **Feature branch** (pre-squash) | `%(trailers)` structured parse is reliable |
-| **Merge-commit / rebase-merge** | `%(trailers)` structured parse is reliable |
+| **Squash merge** (default branch) | `git log --grep` + the PR `## Memory` section (always survive); `%(trailers)` too, once the PR body ends with the mandated raw trailer footer (see caveat above) |
+| **Feature branch** (pre-squash) | `%(trailers)` structured parse |
+| **Merge-commit / rebase-merge** | `%(trailers)` structured parse |
 
 **Verification is required before a memory-worthy PR closes.** The
 confirmed failure mode is authoring-time under-recording — a
-memory-worthy PR closing with an empty substrate, *not* a squash-loss
-problem. So before merge, **verify the memory actually landed in a
-durable carrier**:
+memory-worthy PR closing with an empty capture, *not* a squash-loss
+problem. So before merge, **verify the commit-bound capture actually
+landed** (this verifies capture, not durable filing — see the hierarchy
+above):
 
 - Run `scripts/memory-grep.sh --verify <ref>` against the commit
   carrier. It exits `0` when a `Decision:`/`Learning:`/`Gotcha:`
   trailer is retrievable from the ref's message body (text match, so it
-  works mid-body on a squash `main`), and `4` when the substrate is
+  works mid-body on a squash `main`), and `4` when the capture is
   empty.
 - Confirm the PR `## Memory` section is present (per
   `protocols/compose-pr.md`).
+- `--verify-merged <ref>` — the post-merge CI predicate: exits `0` when
+  the ref's body has no `## Memory` heading (nothing to check) or the
+  heading plus a memory key both survive; `4` on the #574 silent-drop
+  case (heading present, no key).
+- `--verify-strict <ref>` — a diagnostic, not the durable-lesson path:
+  requires the memory key to survive `git interpret-trailers --parse
+  --unfold` (a true trailing footer), catching the #575 case where a
+  non-trailer line after the trailer block empties the structured parse
+  even though plain `--verify` still passes on the text match.
 
 An empty result is a flag to fix **before** merge, not to ignore.
 This verification is **enforced as an executable gate by
@@ -119,15 +145,18 @@ This verification is **enforced as an executable gate by
 runs `memory-grep.sh --verify HEAD` and STOPs when a memory-worthy
 branch's commit carrier is empty (exit `4`).
 
-Two **opt-in** escape hatches — needed **only** if you want structured
-`%(trailers)` footer-parse on `main`; they are **not** required,
-because `git log --grep` text-retrieval of the mid-body trailers is the
-supported path (see table above):
-
-- Set `squash_merge_commit_message = PR_BODY` and end the PR body with
-  the raw trailer footer, so the squash commit's footer carries them.
-- Use a **merge-commit** (not squash) for memory-worthy PRs, preserving
-  each commit's footer.
+Structured `%(trailers)` footer-parse on `main` is not an opt-in escape
+hatch — it is the **mechanized mandate** in `protocols/compose-pr.md`
+(Step 4): a memory-worthy PR body MUST end with a raw trailer block
+(`Decision:` / `Learning:` / `Gotcha:`, unbolded) as the absolute last
+block, placed after even the `🤖 Generated with` footer. This repo's
+squash mode is `squash_merge_commit_message = PR_BODY`, so the PR body
+becomes the squash commit's message verbatim — only a trailer block
+that is that message's true last block parses via `%(trailers)`. See
+`protocols/compose-pr.md` for the exact placement rule, the
+anti-pattern that empties `%(trailers)`, and a worked before/after
+example. A **merge-commit** (not squash) for memory-worthy PRs remains
+a valid alternative, preserving each commit's footer natively.
 
 See `standards/memory-conventions.md` for the full schema, line-length
 rules, and examples.

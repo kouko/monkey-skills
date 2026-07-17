@@ -1,0 +1,50 @@
+name: dev-workflow CI
+
+# Runs the dev-workflow plugin's shell test suite
+# (dev-workflow/tests/test-*.sh), which previously ran in NO workflow —
+# including the three memory-grep tests
+# (test-memory-grep-match.sh / test-memory-grep-supersedes.sh /
+# test-memory-grep-verify.sh) that pin memory-grep.sh's frozen exit-code
+# contract. A regression there had no CI gate to catch it.
+#
+# This job only runs the existing shell tests (glob over
+# dev-workflow/tests/test-*.sh). The post-merge HEAD-body check
+# (memory-grep.sh --verify-merged) lives in its own workflow file,
+# memory-verify-merged.yml — it needs an unfiltered push-to-main trigger
+# (a memory-worthy PR usually touches paths OTHER than dev-workflow/**),
+# which this file's `paths:`-scoped triggers cannot provide without
+# losing their scoping for this job. See that file's header for the
+# full reasoning.
+#
+# Status: intended for `main` branch protection.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'dev-workflow/**'
+      - '.github/workflows/dev-workflow-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'dev-workflow/**'
+      - '.github/workflows/dev-workflow-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  shell-tests:
+    name: dev-workflow shell tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run dev-workflow/tests shell suite
+        run: |
+          for t in dev-workflow/tests/test-*.sh; do
+            echo "::group::$t"
+            bash "$t"
+            echo "::endgroup::"
+          done

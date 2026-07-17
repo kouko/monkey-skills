@@ -18,6 +18,13 @@
 | One-off event artifact | `docs/loom/{specs,plans,audits,dogfood,research}/` |
 | Harness/dcg friction (plugin-shipped) | `loom-code/.../environment-gotchas.md` — stays, NOT migrated |
 
+> Durable lessons live in the repo's committed memory store
+> (`docs/loom/memory/` here) — the authoritative carrier. Commit trailers are
+> commit-bound capture: best-effort, secondary, and never the retrieval path
+> a durable lesson depends on. This is why the "Decision bound to a commit"
+> row above points at git-memory trailers for commit-bound capture only —
+> not as a durable retrieval path.
+
 ## When to record
 
 A fact already known before the branch closes (not merge-required to
@@ -35,6 +42,10 @@ evidence: a 2026 ETH Zurich study found always-loaded auto-generated
 context files reduced agent task success by ~3% and raised inference
 cost by ~20% (`dev-workflow/skills/git-memory/standards/memory-conventions.md`
 §Pull retrieval).
+
+Before recording, grep the store for entries the new fact contradicts —
+on a hit, update or replace that entry (git history is the archive);
+never add a contradicting sibling.
 
 ## Format — one fact per file
 
@@ -90,6 +101,7 @@ relevance surface never diverges from the file.
 [fixtures-mirror-producer-shape](fixtures-mirror-producer-shape.md) — Test fixtures must mirror the producer's actual field shape — a hand-shaped fixture can certify code that fails on the real producer's output
 [gate-review-weight-on-task-kind-not-loc](gate-review-weight-on-task-kind-not-loc.md) — When deciding how much review a change deserves, gate on task KIND (mechanical/prose/version-bump vs logic/heuristic/hook/security-surface), never on diff LOC size — LOC is a weak, sometimes wrong proxy
 [git-mv-sweeps-untracked-files](git-mv-sweeps-untracked-files.md) — git mv of a directory physically relocates UNTRACKED files too — a later git add of the new dir sweeps WIP into the commit; unstage by status A via git diff --cached --name-status
+[gha-paths-filter-gates-at-workflow-level](gha-paths-filter-gates-at-workflow-level.md) — GitHub Actions `paths:` filters gate at the `on:`/workflow-trigger level, never per-job — a job that must see EVERY push to a branch (post-merge verifiers, repo-wide sweeps) cannot live inside a path-filtered workflow file; give it its own unfiltered workflow
 [github-squash-merge-single-commit-drops-body](github-squash-merge-single-commit-drops-body.md) — GitHub's default squash-merge message for a single-commit PR keeps only the PR/commit title — the full body (including git-memory Decision/Learning/Gotcha trailers) is silently dropped from main's git history; a multi-commit PR concatenates all bodies instead
 [grep-tests-scope-to-measured-neighborhood](grep-tests-scope-to-measured-neighborhood.md) — Whole-file substring grep-tests over prose files go false-green when the asserted phrase pre-exists elsewhere in the file — scope assertions to a measured window around the feature's anchor string and verify RED against the pre-change content
 [hand-authored-fixture-is-a-fabrication-risk](hand-authored-fixture-is-a-fabrication-risk.md) — A hand-built test fixture for an anti-fabrication feature is itself a fabrication risk — verify every value against the real source, ideally by cross-checking the live extractor

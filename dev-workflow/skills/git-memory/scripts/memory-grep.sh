@@ -17,6 +17,8 @@
 #   memory-grep.sh [--since=<period>] [--limit=<n>] [--repo=<path>]
 #                  [--format=plain|json] [--no-pr] [--no-commit]
 #   memory-grep.sh --verify <ref> [--repo=<path>]
+#   memory-grep.sh --verify-merged <ref> [--repo=<path>]
+#   memory-grep.sh --verify-strict <ref> [--repo=<path>]
 #
 # Defaults:
 #   --since='3 months ago'
@@ -40,6 +42,15 @@
 #   3  external dependency missing (jq always required; gh required if PR path enabled)
 #   4  --verify only: a memory check was requested but NO memory trailer
 #      (^Decision:/^Learning:/^Gotcha:) was found in the ref's message body
+#   4  --verify-merged only: the ref's body has a `## Memory` heading but
+#      no Decision:/Learning:/Gotcha: key survived under it (the #574
+#      silent-drop case — a memory-worthy squash landed without its
+#      trailer carrier)
+#   4  --verify-strict only: no Decision:/Learning:/Gotcha: key survives
+#      `git interpret-trailers --parse --unfold` (the #575 refinement — a
+#      trailer block followed by any non-trailer line stops being the
+#      message's true footer, so the parser yields nothing even when a
+#      plain text grep still matches the line mid-body)
 
 set -euo pipefail
 
@@ -55,12 +66,17 @@ PATHSPEC=''
 TOP=''
 VERIFY_MODE=0
 VERIFY_REF=''
+VERIFY_MERGED_MODE=0
+VERIFY_MERGED_REF=''
+VERIFY_STRICT_MODE=0
+VERIFY_STRICT_REF=''
 
 # Extraction includes Related: (relationship context). Verify does NOT —
 # the memory-worthy predicate is the three keys Decision/Learning/Gotcha
 # only (a Related:-only commit captured no actual memory).
 TRAILER_KEYS_REGEX='^(Decision|Learning|Gotcha|Related):'
 VERIFY_KEYS_REGEX='^(Decision|Learning|Gotcha):'
+MEMORY_HEADING_REGEX='^## Memory'
 
 usage() {
   cat <<'EOF'
@@ -70,6 +86,8 @@ Usage:
   memory-grep.sh [--since=<period>] [--limit=<n>] [--repo=<path>]
                  [--format=plain|json] [--no-pr] [--no-commit]
   memory-grep.sh --verify <ref> [--repo=<path>]
+  memory-grep.sh --verify-merged <ref> [--repo=<path>]
+  memory-grep.sh --verify-strict <ref> [--repo=<path>]
 
 Options:
   --since=<period>   date filter for COMMITS (default: "3 months ago")
@@ -95,6 +113,23 @@ Options:
                      present, 4 if absent, 2 if <ref> does not resolve.
                      Text match on the full body — survives squash mid-body
                      under the COMMIT_MESSAGES setting; does not footer-parse.
+  --verify-merged <ref>
+                     post-merge predicate for a squash-shaped commit: if
+                     the body has NO `## Memory` heading, exits 0 (not
+                     memory-worthy — nothing to check). If the heading IS
+                     present, requires a Decision:/Learning:/Gotcha: key
+                     under it — exits 0 if found, 4 if not (the #574
+                     silent-drop case: heading survived, trailer carrier
+                     didn't). Exits 2 if <ref> does not resolve.
+  --verify-strict <ref>
+                     diagnostic, parser-strict variant of --verify: the
+                     memory key must survive `git interpret-trailers
+                     --parse --unfold` (a true trailing footer), not just
+                     a text match anywhere in the body. Exits 0 on a
+                     parse-level hit, 4 otherwise (the #575 case: a
+                     trailer block followed by any non-trailer line
+                     empties the parse even though --verify still passes
+                     on a text match). Exits 2 if <ref> does not resolve.
 
 Note: --since filters commits by date; --limit caps PR count.
       PRs are not date-filtered (newest N are always taken).
@@ -107,6 +142,8 @@ Examples:
   memory-grep.sh --history           # include superseded decisions
   memory-grep.sh --format=json | jq '.commits[]'
   memory-grep.sh --verify HEAD        # did this commit capture memory?
+  memory-grep.sh --verify-merged HEAD # did a squash-merge drop its memory?
+  memory-grep.sh --verify-strict HEAD # does the memory key survive a strict parse?
 EOF
 }
 
@@ -132,13 +169,27 @@ render_group() {
 
 # ─── argument parsing ──────────────────────────────────────────────
 
-# --verify takes the FOLLOWING token as its ref. The for-loop has no
-# lookahead, so a one-shot flag (expect_ref) captures the next token.
+# --verify / --verify-merged / --verify-strict each take the FOLLOWING
+# token as their ref. The for-loop has no lookahead, so a one-shot flag
+# per option (expect_ref / expect_merged_ref / expect_strict_ref) captures
+# the next token.
 expect_ref=0
+expect_merged_ref=0
+expect_strict_ref=0
 for arg in "$@"; do
   if [ "$expect_ref" = 1 ]; then
     VERIFY_REF="$arg"
     expect_ref=0
+    continue
+  fi
+  if [ "$expect_merged_ref" = 1 ]; then
+    VERIFY_MERGED_REF="$arg"
+    expect_merged_ref=0
+    continue
+  fi
+  if [ "$expect_strict_ref" = 1 ]; then
+    VERIFY_STRICT_REF="$arg"
+    expect_strict_ref=0
     continue
   fi
   case "$arg" in
@@ -153,10 +204,38 @@ for arg in "$@"; do
     --path=*)    PATHSPEC="${arg#*=}" ;;
     --top=*)     TOP="${arg#*=}" ;;
     --verify)    VERIFY_MODE=1; expect_ref=1 ;;
+    --verify-merged) VERIFY_MERGED_MODE=1; expect_merged_ref=1 ;;
+    --verify-strict) VERIFY_STRICT_MODE=1; expect_strict_ref=1 ;;
     -h|--help)   usage; exit 0 ;;
     *) echo "Unknown argument: $arg" >&2; usage; exit 1 ;;
   esac
 done
+
+# ─── shared ref-resolution guard (--verify / --verify-merged / --verify-strict) ───
+#
+# All three verify modes need the same three checks before touching git
+# log: a non-empty ref, a valid git repo, and a resolvable commit. Called
+# as a bare statement (never inside an `if`/`while` test), so `exit`
+# inside it terminates the whole script under `set -e` exactly like the
+# inlined checks it replaces.
+#   $1 — the ref string to resolve (may be empty)
+#   $2 — the flag name, for the usage-error message (e.g. "--verify")
+resolve_ref_or_die() {
+  local ref="$1" flag="$2"
+  if [ -z "$ref" ]; then
+    echo "$flag requires a <ref>" >&2
+    usage
+    exit 1
+  fi
+  if ! git -C "$REPO" rev-parse --git-dir >/dev/null 2>&1; then
+    echo "Not a git repository: $REPO" >&2
+    exit 2
+  fi
+  if ! git -C "$REPO" rev-parse --verify --quiet "${ref}^{commit}" >/dev/null 2>&1; then
+    echo "Unresolvable ref: $ref" >&2
+    exit 2
+  fi
+}
 
 # ─── verify mode (memory-substrate check) ──────────────────────────
 #
@@ -165,24 +244,54 @@ done
 # full message body for a memory trailer (text match, so it survives a
 # squash that pushes the trailer mid-body under COMMIT_MESSAGES).
 if [ "$VERIFY_MODE" = 1 ]; then
-  if [ -z "$VERIFY_REF" ]; then
-    echo "--verify requires a <ref>" >&2
-    usage
-    exit 1
-  fi
-  if ! git -C "$REPO" rev-parse --git-dir >/dev/null 2>&1; then
-    echo "Not a git repository: $REPO" >&2
-    exit 2
-  fi
-  if ! git -C "$REPO" rev-parse --verify --quiet "${VERIFY_REF}^{commit}" >/dev/null 2>&1; then
-    echo "Unresolvable ref: $VERIFY_REF" >&2
-    exit 2
-  fi
+  resolve_ref_or_die "$VERIFY_REF" "--verify"
   if git -C "$REPO" log -1 --format='%B' "$VERIFY_REF" \
        | grep -qE "$VERIFY_KEYS_REGEX"; then
     exit 0
   else
     echo "No memory trailer found in $VERIFY_REF" >&2
+    exit 4
+  fi
+fi
+
+# ─── verify-merged mode (post-merge squash-carrier check) ──────────
+#
+# Post-merge CI predicate for a squash-shaped commit body: no `## Memory`
+# heading means the commit was never claimed to be memory-worthy, so
+# there is nothing to check (exit 0). A heading present WITHOUT a
+# Decision:/Learning:/Gotcha: key surviving under it is the #574
+# silent-drop case — the commit claimed memory but the trailer carrier
+# was lost (exit 4).
+if [ "$VERIFY_MERGED_MODE" = 1 ]; then
+  resolve_ref_or_die "$VERIFY_MERGED_REF" "--verify-merged"
+  merged_body=$(git -C "$REPO" log -1 --format='%B' "$VERIFY_MERGED_REF")
+  if ! printf '%s\n' "$merged_body" | grep -qE "$MEMORY_HEADING_REGEX"; then
+    exit 0
+  fi
+  if printf '%s\n' "$merged_body" | grep -qE "$VERIFY_KEYS_REGEX"; then
+    exit 0
+  else
+    echo "## Memory heading present but no memory key found in $VERIFY_MERGED_REF" >&2
+    exit 4
+  fi
+fi
+
+# ─── verify-strict mode (parser-strict diagnostic check) ───────────
+#
+# Diagnostic variant of --verify: the #575 refinement. Plain --verify
+# text-greps the full body, so it still finds a Decision:/Learning:/
+# Gotcha: line even when a non-trailer line follows it — but
+# `git interpret-trailers` only reads the message's true trailing
+# footer, so that same commit parses to nothing structurally. This mode
+# requires the parse-level hit, catching exactly that silent gap.
+if [ "$VERIFY_STRICT_MODE" = 1 ]; then
+  resolve_ref_or_die "$VERIFY_STRICT_REF" "--verify-strict"
+  if git -C "$REPO" log -1 --format='%B' "$VERIFY_STRICT_REF" \
+       | git interpret-trailers --parse --unfold 2>/dev/null \
+       | grep -qE "$VERIFY_KEYS_REGEX"; then
+    exit 0
+  else
+    echo "No memory trailer survives strict parse in $VERIFY_STRICT_REF" >&2
     exit 4
   fi
 fi

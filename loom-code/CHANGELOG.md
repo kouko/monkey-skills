@@ -5,6 +5,21 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.31.3] — 2026-07-17 — finishing PR-carrier check verifies raw trailer footer
+
+### Changed
+
+- **`finishing-a-development-branch`**: the close-out PR check now also
+  verifies the raw trailer block is the body's true last block
+  (pointer to `git-memory`'s compose-pr Step 4 both-carrier mandate, no
+  restated rules) — closes the #575 class at the gate that let it
+  through.
+
+Verification: `for t in loom-code/tests/integration/test-*.sh; do bash "$t"; done`
+green (includes `test-git-memory-delegation.sh`).
+
+---
+
 ## [0.31.2] — 2026-07-16 — brainstorming + finishing token slim (equivalence-gated + weak-model verified)
 
 ### Changed

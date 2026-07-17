@@ -10,7 +10,7 @@ description: >-
   reason, loudly. NOT for git commit trailers (dev-workflow:git-memory)
   nor Claude auto-memory. Triggers: "有沒有相關經驗", "記住這個做法",
   "記憶整理", "この教訓を残して", "過去の知見はある？".
-version: 0.1.0
+version: 0.2.0
 ---
 
 # loom-memory — record / recall / prune for the practice-memory store
@@ -51,12 +51,20 @@ Given a fact worth keeping:
    gotchas reference. Everything else: classify per the charter's
    jurisdiction table (read it — it wins). Tell the user where you
    routed the fact and why.
-2. **Write `<slug>.md`** in `docs/loom/memory/` following the
+2. **Check the store for contradictions.** Before writing, grep the
+   store — the index and the file bodies — for entries the new fact
+   contradicts. On a hit, update or replace that entry (delete and
+   rewrite it; git history is the archive) instead of adding a
+   contradicting sibling, and note the replacement in the index line.
+   This mirrors git-memory's backward-pointing `Supersedes:` doctrine
+   (`dev-workflow/skills/git-memory/standards/memory-conventions.md`)
+   — point at it, don't copy its table (SSOT above).
+3. **Write `<slug>.md`** in `docs/loom/memory/` following the
    charter's format block exactly (frontmatter fields, body sections).
-3. **Append the index line** in the charter's index format, with the
+4. **Append the index line** in the charter's index format, with the
    description copied **byte-identical** from the file's frontmatter
    `description`.
-4. **Re-verify the two invariants** before declaring done:
+5. **Re-verify the two invariants** before declaring done:
    - filename (minus `.md`) equals the frontmatter `name` slug;
    - the index line's description equals the frontmatter
      `description`, byte for byte.
