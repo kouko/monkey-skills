@@ -237,6 +237,13 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
       NOTHING after them — a single such line qualifies), per
       `dev-workflow/skills/git-memory/protocols/compose-pr.md` Step 4 for full
       placement rules; fix the body before submitting if missing/not last.
+    - Offer BOTH merge paths in the report: the PR web URL — with a reminder
+      to glance that the merge dialog's description box is prefilled before
+      confirming — AND the ready-to-run `gh pr merge <N> --squash` CLI
+      alternative, framed for the human to run themselves (e.g. via the `!`
+      prefix). Web-dialog prefill is unreliable; see
+      `docs/loom/memory/squash-dialog-can-drop-entire-pr-body.md`. The
+      orchestrator prepares the command, never runs it — no auto-merge.
     - If no: stop after push
 12. ASK user: "Branch was in .worktrees/; remove the worktree? (y/N)"
     - If yes: cd to repo root; git worktree remove .worktrees/<slug>
@@ -245,7 +252,10 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
     the product now does, in user terms (not with mechanism); commit SHA, push
     status, test counts, and review verdicts sink to sub-lines below that
     headline. Format authority: `loom-pipeline/hooks/family-relay.md` §(a)
-    User-rollup card. Include: PR URL if created, worktree status.
+    User-rollup card. Include: PR URL if created — same both-paths merge
+    guidance as Step 11 (glance the prefilled dialog before confirming,
+    plus the ready-to-run `gh pr merge <N> --squash` CLI alternative) —
+    and worktree status.
 ```
 
 **ASK = stop and wait for user.** This is deliberately NOT autonomous — close-out is a high-blast-radius operation (shipping code → teammates / production). Each user-visible action has a confirmation.
