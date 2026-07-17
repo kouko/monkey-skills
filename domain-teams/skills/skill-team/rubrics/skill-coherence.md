@@ -17,9 +17,9 @@ structural work is done.
 
 ### Token Budget
 
-- :red_circle: **Fatal**: SKILL.md exceeds ~6,000 tokens (~4,500 words). Hard cap from `standards/skill-md-structure.md`.
-- :yellow_circle: **Warning**: SKILL.md is ~4,500–6,000 tokens — approaching the budget. Usually means workflow tables have grown too verbose or the Resource Manifest is duplicating content better kept in the standards files themselves.
-- :green_circle: **Clear**: SKILL.md is under ~4,500 tokens, ideally in the ~3,000–4,500 sweet spot.
+- :red_circle: **Fatal**: SKILL.md exceeds ~6,000 tokens / ~4,500 words. Hard cap from `standards/skill-md-structure.md`.
+- :yellow_circle: **Warning**: SKILL.md is ~5,000–6,000 tokens / ~3,750–4,500 words — over the soft aim, approaching the hard cap. Usually means workflow tables have grown too verbose or the Resource Manifest is duplicating content better kept in the standards files themselves. Justify the exceedance with a one-line note per `standards/skill-md-structure.md` §Token Budget.
+- :green_circle: **Clear**: SKILL.md is under the ~5,000 tokens / ~3,750 words soft aim (`standards/skill-md-structure.md` §Token Budget).
 
 ### Workflow Completeness
 
