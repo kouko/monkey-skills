@@ -6,6 +6,22 @@ this file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.8.1] — 2026-07-17
+
+### Added
+
+- **Close-out card** (`hooks/family-relay.md` §(a)) — a 10-row table
+  specialization of the user-rollup card for close-out reporting
+  (finishing Step 13, any loom seam reporting a PR-open): PR, Purpose,
+  Changes, Impact scope, Verification, Review, Review focus, Version,
+  🌐 Web merge, 💻 CLI merge, plus conditional screenshots/rollback-plan
+  rows. Cell rules (one line, " ・ " separator, ≤3 points/cell, no
+  `<br>` in chat cards) mirror the existing rollup card's discipline.
+  Provenance: converges Google eng-practices CL-description convention
+  with the JA 影響範囲/動作確認/レビューポイント PR-template convention.
+
+Verification: `python3 -m pytest loom-pipeline/scripts/ -q` green.
+
 ## [0.8.0] — 2026-07-17
 
 ### Added

@@ -5,6 +5,27 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.31.4] — 2026-07-17 — finishing offers both merge paths at PR-open
+
+### Changed
+
+- **`finishing-a-development-branch`**: Step 11 (gh pr create) and Step 13
+  (final report) now both offer the PR web URL — with a reminder to glance
+  that the merge dialog's description box is prefilled before confirming
+  — AND the ready-to-run `gh pr merge <N> --squash` CLI alternative for the
+  human to run themselves. Prompted by a live incident: two of four PRs
+  merged via the web UI in one session shipped title-only because the
+  dialog's prefill silently failed (repo squash settings verified correct
+  throughout); the CLI path bypasses the dialog and faithfully uses the PR
+  body. Pointer to `docs/loom/memory/squash-dialog-can-drop-entire-pr-body.md`
+  — no incident restated inline. Still never auto-merges. Step 13's format
+  authority now points at `loom-pipeline/hooks/family-relay.md` §(a)'s new
+  Close-out card specialization (not the generic User-rollup card).
+
+Verification: `PYTHONDONTWRITEBYTECODE=1 python3 -m pytest loom-code/scripts/ -q`
+294 passed (287 + 7 new); `bash loom-code/tests/integration/test-git-memory-delegation.sh`
+11/11.
+
 ## [0.31.3] — 2026-07-17 — finishing PR-carrier check verifies raw trailer footer
 
 ### Changed
