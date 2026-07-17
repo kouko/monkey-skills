@@ -4,6 +4,17 @@ All notable changes to the `skill-dev-toolkit` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] — 2026-07-17
+
+### Changed
+
+- **`skill-judge` domain-team-adaptation reference states the two-tier token
+  budget**: `references/domain-team-adaptation.md` now documents the softer
+  aim of ~5,000 tokens / ~3,750 words per the official standard, alongside
+  the existing CHK-SKL-010 structural budget — clarifying that the two are
+  distinct (hard machine-enforced gate vs. soft calibration aim), not to be
+  conflated.
+
 ## [0.3.1] — 2026-07-15
 
 ### Changed
