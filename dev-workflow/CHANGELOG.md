@@ -4,6 +4,27 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.22.1] — 2026-07-17
+
+### Fixed — git-memory raw-trailer-footer mandate overclaim (live-refuted by PR #576)
+
+`git-memory` SKILL.md's squash-merge caveat and `compose-pr.md`'s Step 4
+mandate both claimed "PR body ends with the raw trailer footer ⇒
+`%(trailers)` parses correctly even on squash `main`." PR #576's squash
+merge refuted this: `--verify-strict` exited `4` even though the PR body
+ended with the mandated footer, because GitHub's own merge UI appended a
+`---------`/`Co-authored-by:` block after the body and hard-wrapped long
+trailer lines. Both docs are corrected to best-effort framing — the
+mandate's guaranteed floor is grep-level retrieval (`git log --grep`),
+not a `%(trailers)` guarantee. The mandate itself (raw footer as the PR
+body's absolute last block) is unchanged — it still prevents the #575
+in-body-breakage class. Recorded as
+`docs/loom/memory/github-ui-squash-appends-coauthor-and-wraps-body.md`.
+
+Verification: `for t in dev-workflow/tests/test-*.sh; do bash "$t"; done`
+green (8 suites); `test-git-memory-raw-footer-mandate.sh` Check 5
+RED-verified against the pre-fix wording, GREEN against the fix.
+
 ## [2.22.0] — 2026-07-17
 
 ### Changed — loom-memory hardening (O2/O3/O4/O5/O6b)
