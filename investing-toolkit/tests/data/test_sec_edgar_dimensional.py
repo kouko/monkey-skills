@@ -172,17 +172,57 @@ def _concept_filter_fixture() -> dict:
     return json.loads((FIXTURES / "xbrl_concept_filter_cases.json").read_text())
 
 
+def test_is_revenue_concept_allow_list_checked_before_deny_list(monkeypatch):
+    """Revision round 1, Finding 3 (spec-reviewer 🟡): all five real entries
+    in `_REVENUE_ALLOW_CONCEPT_LOCAL_NAMES` are admitted by the general
+    "Revenue"-substring path anyway, so statically the allow-list looks like
+    dead weight. Its REAL (defensive) purpose is ORDERING: it is checked
+    FIRST, so a future deny substring can never accidentally swallow a
+    named-legitimate concept. That property was unpinned — this test pins
+    it directly.
+
+    No real allow-list entry today also happens to contain a deny substring
+    (verified: none of the 5 names contain "CostOf"/"Percent"/etc.), so this
+    monkeypatches ONE SYNTHETIC entry onto the allow-list for the duration
+    of this test only — the shipped tuple is never modified. This tests
+    `_is_revenue_concept`'s ORDERING LOGIC directly, per the dispatch's
+    synthetic-concept allowance, not a claimed real-filing value."""
+    mod = _load_helpers()
+    synthetic_local_name = "RevenuesWithCostOfSomethingSynthetic"
+    assert any(deny in synthetic_local_name for deny in mod._REVENUE_DENY_SUBSTRINGS), (
+        "test setup bug: the synthetic name must actually collide with a "
+        "deny substring, or this test proves nothing"
+    )
+    monkeypatch.setattr(
+        mod,
+        "_REVENUE_ALLOW_CONCEPT_LOCAL_NAMES",
+        mod._REVENUE_ALLOW_CONCEPT_LOCAL_NAMES + (synthetic_local_name,),
+    )
+    assert mod._is_revenue_concept(f"us-gaap:{synthetic_local_name}") is True, (
+        "an allow-listed concept must be KEPT even when its local name also "
+        "matches a deny substring — the allow-list must be checked BEFORE "
+        "the deny-list"
+    )
+
+
 def test_revenue_concept_filter_deny_allow_unit():
     """The three RED scenarios named in the plan/spec, over the machine-
     captured real-filing fixture:
       1. a dimensioned CostOfRevenue fact (CAT) is EXCLUDED — deny-list.
-      2. a *RevenuePercentage fact (BA/HON) is REJECTED by the $-unit guard
-         (unit_ref="number"/currency=None, never a currency amount).
+      2. a *RevenuePercentage fact (BA/HON) is REJECTED — via the "Percent"
+         DENY SUBSTRING at the concept layer (both local names literally
+         contain "Percent"), NOT the $-unit guard. CORRECTED 2026-07-17
+         (revision round 1, code-quality-reviewer 🔴 fatal, mutation-proved:
+         deleting the `_is_currency_amount_fact` call-site left the suite
+         fully green because these two fixtures never reach the guard — the
+         concept-level deny already shorts them out first). The $-unit
+         guard's own direct coverage is
+         `test_is_currency_amount_fact_direct_unit_coverage` /
+         `test_is_dimensional_revenue_fact_rejects_noncurrency_unit_synthetic`
+         below.
       3. a RevenueNotFromContractWithCustomer fact (XOM) is KEPT — allow-list.
     Exercised at BOTH layers: the pure `_is_revenue_concept` (concept-string
-    only) and the full `_is_dimensional_revenue_fact` predicate (concept +
-    $-unit gate together) — a concept-only check cannot see the unit, so the
-    BA/HON percentage case is asserted only at the full-fact layer."""
+    only) and the full `_is_dimensional_revenue_fact` predicate."""
     mod = _load_helpers()
     fixture = _concept_filter_fixture()
 
@@ -197,24 +237,26 @@ def test_revenue_concept_filter_deny_allow_unit():
         "(the CAT reproducer — 20 bogus facts on the shipped substring test)"
     )
 
-    # 2. BA / HON percentage-valued *Revenue*Percentage — the concept string
-    # alone still contains "Revenue" (so a concept-only allow/deny pass is
-    # not sufficient here); the $-unit guard at the full-fact layer is what
-    # must reject it. Pinning value=1.0 (=100%) / 0.49 (=49%) as evidence
-    # these are NOT dollar amounts.
+    # 2. BA / HON percentage-valued *Revenue*Percentage — denied at the
+    # CONCEPT layer by the "Percent" deny substring (both local names
+    # literally contain "Percent"); the $-unit guard is never reached for
+    # these two fixtures specifically (CORRECTED 2026-07-17 — see this
+    # function's docstring). Pinning value=1.0 (=100%) / 0.49 (=49%) here
+    # only as readability evidence that these are NOT dollar amounts, not
+    # because this assertion exercises the guard on them.
     ba_fact = fixture["ba_revenue_percentage"]["raw_fact"]
     assert ba_fact["numeric_value"] == 1.0
     assert mod._is_dimensional_revenue_fact(ba_fact) is False, (
         "ba:RevenuefromContractwithCustomerexcludingassessedtaxPercentage "
-        "(unit_ref='number', not a currency) must be rejected by the "
-        "$-unit guard — its value is a percentage, not dollars"
+        "must be rejected — denied at the concept layer by the 'Percent' "
+        "substring"
     )
 
     hon_fact = fixture["hon_revenue_percentage"]["raw_fact"]
     assert hon_fact["numeric_value"] == 0.49
     assert mod._is_dimensional_revenue_fact(hon_fact) is False, (
-        "hon:RevenueFromContractWithCustomerPercentage must be rejected by "
-        "the $-unit guard"
+        "hon:RevenueFromContractWithCustomerPercentage must be rejected — "
+        "denied at the concept layer by the 'Percent' substring"
     )
 
     # 3. XOM RevenueNotFromContractWithCustomer — a legitimate energy-sector
@@ -229,6 +271,71 @@ def test_revenue_concept_filter_deny_allow_unit():
         "real, currency-denominated revenue fact and must be KEPT"
     )
     assert xom_fact["numeric_value"] == 26295000000.0  # exemplar value, pinned exact
+
+
+def test_is_currency_amount_fact_direct_unit_coverage():
+    """Revision round 1, Finding 2 (code-quality-reviewer 🔴 fatal,
+    mutation-proved): deleting the `_is_currency_amount_fact` call-site in
+    `_is_dimensional_revenue_fact` left the full suite green (688 passed,
+    identical) because BA/HON's fixtures both contain "Percent" — a deny
+    substring — so `_is_revenue_concept` already returns False before the
+    guard is ever reached; no test exercised the guard itself.
+
+    Route 2 (per the dispatch): a live search across BA/HON/IBM/ADI/AMAT/
+    NOW/WDAY/SNOW/CAT/WFC/SBUX/PFE/MRK/SO/XOM/PLD/O/AAPL/MSFT/NFLX
+    (2026-07-17, edgartools 5.42.0, latest 10-Q/10-K each) for a REAL
+    numeric `*Revenue*`-named concept without "Percent" in the name and a
+    non-currency unit found NONE — every non-currency Revenue-named fact in
+    that sweep was a TextBlock/Policy/enum/duration-string disclosure
+    concept with no numeric value, never a live case that would reach the
+    guard through the deny-list today. So this is a DIRECT unit test of the
+    guard's own logic (no real-filing fixture claims a value here)."""
+    mod = _load_helpers()
+    assert mod._is_currency_amount_fact({"currency": "USD"}) is True
+    assert mod._is_currency_amount_fact({"currency": "usd"}) is True
+    # BA/HON real shape: unit_ref="number", currency=None/NaN.
+    assert mod._is_currency_amount_fact({"unit_ref": "number", "currency": None}) is False
+    assert mod._is_currency_amount_fact({"unit_ref": "number"}) is False  # missing-unit case
+    assert mod._is_currency_amount_fact({}) is False
+    assert mod._is_currency_amount_fact({"currency": ""}) is False
+
+
+def test_is_dimensional_revenue_fact_rejects_noncurrency_unit_synthetic():
+    """Integration-level companion to the direct unit test above: proves the
+    $-unit guard is actually WIRED INTO `_is_dimensional_revenue_fact`, not
+    just correct in isolation. This is the test that fails if the guard's
+    CALL SITE (not just its body) is deleted — the mutation the reviewer
+    actually ran.
+
+    SYNTHETIC fact — deliberately NOT a real-filing fixture (Route 2,
+    Finding 2: the real-filing search above found no qualifying real case).
+    Mirrors Finding 3's sanctioned synthetic-concept allowance: this tests
+    `_is_dimensional_revenue_fact`'s OWN LOGIC directly, not a claimed real
+    filing value. Every other gate is satisfied (dimensioned, duration,
+    allow-listed concept, numeric value) so the currency guard is the ONLY
+    thing standing between this fact and being wrongly emitted."""
+    mod = _load_helpers()
+    synthetic_fact = {
+        "concept": "us-gaap:Revenues",  # on the allow-list; unambiguously "real revenue"
+        "is_dimensioned": True,
+        "dim_us-gaap_ProductOrServiceAxis": "test:SyntheticMember",
+        "numeric_value": 42.0,
+        "unit_ref": "shares",  # NOT a currency unit
+        "currency": None,
+        "period_type": "duration",
+    }
+    assert mod._is_dimensional_revenue_fact(synthetic_fact) is False, (
+        "a dimensioned, duration, allow-listed revenue concept with a "
+        "non-currency unit (shares, currency=None) must still be rejected "
+        "by the $-unit guard wired into _is_dimensional_revenue_fact"
+    )
+    # Sanity: flip the unit to currency and confirm it WOULD be kept —
+    # proves the rejection above is caused by the unit, not some other gate.
+    currency_fact = dict(synthetic_fact, unit_ref="usd", currency="USD")
+    assert mod._is_dimensional_revenue_fact(currency_fact) is True, (
+        "the same fact with a currency unit must be kept — isolates the "
+        "guard as the cause of the non-currency rejection above"
+    )
 
 
 def test_revenue_concept_filter_deny_list_additional_cases():
@@ -269,6 +376,75 @@ def test_revenue_concept_filter_deny_list_additional_cases():
     assert mod._is_revenue_concept(sbux_fact["concept"]) is False, (
         "DeferredRevenueCurrent is a balance-sheet liability, not earned "
         "revenue — must be denied even before the instant-context gate"
+    )
+
+
+def test_revenue_concept_filter_denies_reit_class6_artifacts():
+    """Revision round 1, Finding 1 (code-quality-reviewer 🔴 fatal): class 6
+    of the six false-positive classes named in
+    docs/loom/references/xbrl-verification-universe.md:198-213 — 'REIT
+    artifacts — PLD ladder-schedule, O pro-forma-M&A revenue' — had no deny
+    coverage. Reviewer live-reproduced both as ADMITTED by the landed
+    predicate. Real concepts, machine-captured 2026-07-17:
+      - O's `us-gaap:BusinessAcquisitionsProFormaRevenue` — HYPOTHETICAL
+        revenue as if a business acquisition had closed at period start;
+        admitting it double-counts against actual revenue for the period.
+      - PLD's `pld:NetIncreaseDecreaseToRentalRevenueNextTwelveMonths` — a
+        forward-looking lease-ladder roll-forward figure, not revenue
+        recognized in the period.
+    Both must now be DENIED at the concept layer."""
+    mod = _load_helpers()
+    fixture = _concept_filter_fixture()
+
+    o_fact = fixture["o_pro_forma_revenue_dimensioned"]["raw_fact"]
+    assert mod._is_revenue_concept(o_fact["concept"]) is False, (
+        "BusinessAcquisitionsProFormaRevenue is hypothetical pro-forma "
+        "M&A revenue, not actual recognized revenue — must be denied"
+    )
+
+    pld_fact = fixture["pld_rental_revenue_ladder"]["raw_fact"]
+    assert mod._is_revenue_concept(pld_fact["concept"]) is False, (
+        "NetIncreaseDecreaseToRentalRevenue* is a lease-ladder schedule "
+        "roll-forward, not recognized revenue — must be denied"
+    )
+
+    # PLD's real (non-ladder) revenue concept must stay allowed — the new
+    # deny substring is deliberately the LONGER "NetIncreaseDecreaseTo
+    # RentalRevenue" fragment, not the bare "RentalRevenue" substring, so it
+    # cannot over-deny the actual revenue line.
+    assert mod._is_revenue_concept("pld:RentalRevenue") is True, (
+        "pld:RentalRevenue (the real revenue concept, not the ladder "
+        "schedule) must stay allowed — the class-6 deny substring must not "
+        "over-deny it"
+    )
+
+
+def test_revenue_concept_filter_unbilled_revenue_not_double_denied():
+    """Revision round 1, Finding 1 judgment call on `so:UnbilledRevenuesCurrent`
+    (judged on merit per the dispatch, NOT added to the deny-list): a
+    contract-asset receivable (revenue earned but not yet billed), real
+    filing shape is instant-context and non-dimensioned (machine-captured
+    2026-07-17, SO 10-Q). `_is_revenue_concept` legitimately stays True
+    (no deny substring matches "UnbilledRevenuesCurrent" — it is not
+    fabricated/hypothetical/liability-shaped like the other classes); the
+    existing is_dimensioned + period_type=='duration' gates in
+    `_is_dimensional_revenue_fact` already exclude it, so a concept-level
+    deny would be redundant. This test pins that existing-gate protection so
+    a future accidental addition of an "Unbilled"/"Current" deny substring
+    is caught as an unnecessary over-denial regression."""
+    mod = _load_helpers()
+    fixture = _concept_filter_fixture()
+    so_fact = fixture["so_unbilled_revenue_current"]["raw_fact"]
+
+    assert mod._is_revenue_concept(so_fact["concept"]) is True, (
+        "so:UnbilledRevenuesCurrent is not one of the six false-positive "
+        "classes — it must NOT be concept-denied"
+    )
+    assert mod._is_dimensional_revenue_fact(so_fact) is False, (
+        "so:UnbilledRevenuesCurrent's real filing shape is instant-context "
+        "and non-dimensioned — already excluded by the existing "
+        "is_dimensioned/period_type gates, without needing a concept-level "
+        "deny"
     )
 
 

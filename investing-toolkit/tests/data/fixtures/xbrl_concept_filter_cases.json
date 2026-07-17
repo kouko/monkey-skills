@@ -1,5 +1,5 @@
 {
-  "_provenance": "MACHINE-CAPTURED 2026-07-17 via edgartools==5.42.0 against each filer's latest 10-Q, exact values dumped from xb.facts.to_dataframe().to_dict('records') (concept/dim_*/numeric_value/unit_ref/currency/period_*), never hand-typed. Reproduces the filter-bug findings in docs/loom/references/xbrl-verification-universe.md (Filter-bug findings section) for Task 2 (docs/loom/plans/2026-07-16-operational-kpi-quarterly.md).",
+  "_provenance": "MACHINE-CAPTURED 2026-07-17 via edgartools==5.42.0 against each filer's latest 10-Q (10-K for o_pro_forma_revenue_dimensioned / pld_rental_revenue_ladder, the annual disclosures where those schedules live), exact values dumped from xb.facts.to_dataframe().to_dict('records') (concept/dim_*/numeric_value/unit_ref/currency/period_*), never hand-typed. Reproduces the filter-bug findings in docs/loom/references/xbrl-verification-universe.md (Filter-bug findings section, incl. class 6 REIT artifacts) for Task 2 revision round 1 (docs/loom/plans/2026-07-16-operational-kpi-quarterly.md).",
   "cat_cost_of_revenue_dimensioned": {
     "ticker": "CAT",
     "form": "10-Q",
@@ -91,6 +91,57 @@
       "period_type": "instant",
       "period_instant": "2026-03-29",
       "is_dimensioned": true
+    }
+  },
+  "o_pro_forma_revenue_dimensioned": {
+    "ticker": "O",
+    "form": "10-K",
+    "accession": "0000726728-26-000011",
+    "filing_date": "2026-02-25",
+    "note": "us-gaap:BusinessAcquisitionsProFormaRevenue dimensioned by BusinessAcquisitionAxis=o:SpiritRealtyCapitalIncMember — REIT M&A false-positive class 6 (docs/loom/references/xbrl-verification-universe.md line 213): HYPOTHETICAL revenue as if the acquisition had closed at period start, not actual recognized revenue; admitting it double-counts against real revenue for the same period. BusinessAcquisitionAxis is not one of this module's tracked breakdown axes, so this exact row is also excluded via the empty-dimensions path in _is_dimensional_revenue_fact — the concept-level deny is added as defense-in-depth for filers/periods where this concept is broken out by a TRACKED axis (segment/geography) instead.",
+    "raw_fact": {
+      "concept": "us-gaap:BusinessAcquisitionsProFormaRevenue",
+      "dim_us-gaap_BusinessAcquisitionAxis": "o:SpiritRealtyCapitalIncMember",
+      "numeric_value": 5319100000.0,
+      "unit_ref": "usd",
+      "currency": "USD",
+      "period_type": "duration",
+      "period_start": "2024-01-01",
+      "period_end": "2024-12-31",
+      "is_dimensioned": true
+    }
+  },
+  "pld_rental_revenue_ladder": {
+    "ticker": "PLD",
+    "form": "10-K",
+    "accession": "0001193125-26-051453",
+    "filing_date": "2026-02-13",
+    "note": "pld:NetIncreaseDecreaseToRentalRevenueNextTwelveMonths — REIT lease-ladder schedule false-positive class 6 (docs/loom/references/xbrl-verification-universe.md line 213): a forward-looking increase/decrease roll-forward figure, not recognized revenue for the period. Real row is NOT dimensioned in this capture (is_dimensioned=false, a schedule-level total) — denied purely at the concept layer.",
+    "raw_fact": {
+      "concept": "pld:NetIncreaseDecreaseToRentalRevenueNextTwelveMonths",
+      "numeric_value": 398221000.0,
+      "unit_ref": "U_USD",
+      "currency": "USD",
+      "period_type": "duration",
+      "period_start": "2025-01-01",
+      "period_end": "2025-12-31",
+      "is_dimensioned": false
+    }
+  },
+  "so_unbilled_revenue_current": {
+    "ticker": "SO",
+    "form": "10-Q",
+    "accession": "0000092122-26-000034",
+    "filing_date": "2026-04-30",
+    "note": "so:UnbilledRevenuesCurrent — a contract-asset RECEIVABLE (revenue earned but not yet billed), not a double-counting risk: real row is instant-context (period_type='instant', matching the 'Current' balance-sheet-item taxonomy convention) and NOT dimensioned in this capture. Deliberately NOT added to the deny-list (Task 2 revision, Finding 1 judgment call): _is_revenue_concept legitimately stays True for this concept (no deny substring matches 'UnbilledRevenuesCurrent'), and it is excluded by the existing is_dimensioned + period_type=='duration' gates in _is_dimensional_revenue_fact instead — a redundant concept-level deny would duplicate protection an existing gate already provides.",
+    "raw_fact": {
+      "concept": "so:UnbilledRevenuesCurrent",
+      "numeric_value": 740000000.0,
+      "unit_ref": "usd",
+      "currency": "USD",
+      "period_type": "instant",
+      "period_instant": "2026-03-31",
+      "is_dimensioned": false
     }
   }
 }

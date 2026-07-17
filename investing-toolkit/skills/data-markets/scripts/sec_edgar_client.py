@@ -1879,6 +1879,20 @@ _REVENUE_ALLOW_CONCEPT_LOCAL_NAMES = (
 #   DeferredRevenue           -> deferred-revenue liability concepts (SBUX/BLK)
 #   ContractWithCustomerLiability -> contract-liability reconciliation items (pre-existing exclusion, generalized)
 #   CollaborativeArrangement  -> non-operating collaborative-arrangement revenue (PFE/MRK)
+#   ProForma                  -> class 6 REIT M&A pro-forma revenue: O's
+#                                 us-gaap:BusinessAcquisitionsProFormaRevenue
+#                                 (10-K 0000726728-26-000011) and
+#                                 o:AssetAcquisitionProFormaInformationRevenue...
+#                                 — HYPOTHETICAL revenue as if an acquisition
+#                                 had closed at period start; admitting it
+#                                 double-counts against actual revenue.
+#   NetIncreaseDecreaseToRentalRevenue -> class 6 REIT lease-ladder schedule:
+#                                 PLD's pld:NetIncreaseDecreaseToRentalRevenue*
+#                                 family (10-K 0001193125-26-051453) — a
+#                                 forward-looking roll-forward figure, not
+#                                 recognized revenue. Deliberately the LONGER
+#                                 fragment (not bare "RentalRevenue") so the
+#                                 real pld:RentalRevenue concept stays allowed.
 _REVENUE_DENY_SUBSTRINGS = (
     "CostOf",
     "Percent",
@@ -1886,6 +1900,8 @@ _REVENUE_DENY_SUBSTRINGS = (
     "DeferredRevenue",
     "ContractWithCustomerLiability",
     "CollaborativeArrangement",
+    "ProForma",
+    "NetIncreaseDecreaseToRentalRevenue",
 )
 
 
