@@ -123,25 +123,32 @@ else
 fi
 
 # -------------------------------------------------------------------------
-# Check 5 — the "Squash-merge caveat" neighborhood (SKILL.md:95-112, caveat
-# paragraph + capture-location table) must point at the O2 mandate as the
-# escape from the caveat, not just assert '%(trailers) is unreliable' in
-# isolation — a top-to-bottom reader would otherwise form the wrong model
-# before reaching the mandate paragraph at :135-146. Window scoped after
+# Check 5 — the "Squash-merge caveat" neighborhood (SKILL.md:95-120, caveat
+# paragraph + capture-location table) must frame the O2 mandate's raw
+# trailer footer as BEST-EFFORT, not a guarantee — live-refuted on PR #576
+# (squash-merged main): GitHub's own merge-commit-message UI appended a
+# `---------` divider + `Co-authored-by:` block after the PR body's raw
+# trailer footer and hard-wrapped long trailer lines, so `%(trailers)`
+# did not reliably parse the body's own keys even though the PR body
+# itself ended with the mandated footer correctly. Window scoped after
 # the "Squash-merge caveat" anchor so it spans both the caveat blockquote
 # and the table below it.
 
-WIN5="$(window_after "Squash-merge caveat" 20 "$SKILL_MD")"
+WIN5="$(window_after "Squash-merge caveat" 26 "$SKILL_MD")"
 if [ -z "$WIN5" ]; then
   fail "anchor 'Squash-merge caveat' not found in SKILL.md"
-elif ! echo "$WIN5" | grep -qF "mandated escape"; then
-  fail "SKILL.md caveat neighborhood missing 'mandated escape' pointer to the O2 mandate"
-elif ! echo "$WIN5" | grep -qF "parses correctly even on squash"; then
-  fail "SKILL.md caveat neighborhood missing the squash-main parse-works escape clause"
-elif ! echo "$WIN5" | grep -qF "once the PR body ends with the mandated raw trailer footer"; then
-  fail "SKILL.md capture-location table missing the mandate pointer in the squash-merge row"
+elif ! echo "$WIN5" | grep -qF "best-effort"; then
+  fail "SKILL.md caveat neighborhood missing 'best-effort' framing for the O2 mandate escape"
+elif ! echo "$WIN5" | grep -qF "PR #576"; then
+  fail "SKILL.md caveat neighborhood missing the PR #576 live-finding citation"
+elif ! echo "$WIN5" | grep -qF "Co-authored-by"; then
+  fail "SKILL.md caveat neighborhood missing the GitHub-UI Co-authored-by append behavior"
+elif ! echo "$WIN5" | grep -qF "guaranteed floor"; then
+  fail "SKILL.md caveat neighborhood missing the grep-level 'guaranteed floor' framing"
+elif echo "$WIN5" | grep -qF "parses correctly even on squash"; then
+  fail "SKILL.md caveat neighborhood still asserts the refuted squash-main parse-guarantee phrase"
 else
-  pass "SKILL.md caveat + table neighborhood points at the O2 mandate as the escape"
+  pass "SKILL.md caveat + table neighborhood reframes the O2 mandate escape as best-effort (PR #576 live finding)"
 fi
 
 # -------------------------------------------------------------------------

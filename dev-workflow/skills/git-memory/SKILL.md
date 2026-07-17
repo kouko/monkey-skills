@@ -100,18 +100,24 @@ Structured facts ride in **git trailers** — the same mechanism as
 > miss the buried trailers. `git log --grep='^Decision:'` is a **text**
 > match that still finds them on `main` — useful for spot-checking, but
 > this is commit-bound capture, never the durable retrieval path (that's
-> the repo's committed memory store, per the hierarchy above). This
-> caveat has a mandated escape: when the PR body ends with the raw
-> trailer footer required by the O2 mandate below (see
-> `protocols/compose-pr.md`), `%(trailers)` parses correctly even on squash
-> `main`.
+> the repo's committed memory store, per the hierarchy above). Ending
+> the PR body with the raw trailer footer required by the O2 mandate
+> below (see `protocols/compose-pr.md`) is a **best-effort** measure,
+> not a guarantee: GitHub's own squash-merge UI can append a
+> `---------` divider + `Co-authored-by:` block AFTER the body and
+> hard-wrap long trailer lines (both live-observed on PR #576), which
+> breaks `%(trailers)` for the body's own keys even when the PR body
+> itself ends with the footer correctly. The reliable paths stay
+> `git log --grep` + the PR `## Memory` section + the repo's committed
+> memory store; the footer's guaranteed floor is that its keys stay at
+> line starts for grep — not a `%(trailers)`-parses guarantee.
 
 Best-effort capture location by repo style (not a durable-retrieval
 ranking — see the hierarchy above):
 
 | Repo merge style | Where the capture survives |
 |---|---|
-| **Squash merge** (default branch) | `git log --grep` + the PR `## Memory` section (always survive); `%(trailers)` too, once the PR body ends with the mandated raw trailer footer (see caveat above) |
+| **Squash merge** (default branch) | `git log --grep` + the PR `## Memory` section (always survive); `%(trailers)` is best-effort only — GitHub's squash-merge UI can append a `Co-authored-by:` block/divider after the body even when it ends with the mandated raw trailer footer (see caveat above) |
 | **Feature branch** (pre-squash) | `%(trailers)` structured parse |
 | **Merge-commit / rebase-merge** | `%(trailers)` structured parse |
 

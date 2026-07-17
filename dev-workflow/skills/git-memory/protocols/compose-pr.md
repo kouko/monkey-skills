@@ -100,12 +100,24 @@ mandatory** for a memory-worthy PR:
    line) as the **absolute last block in the PR body**, placed
    **after even the `🤖 Generated with` footer**. This repo's squash
    mode is `squash_merge_commit_message = PR_BODY`, so the PR body
-   becomes the squash commit's message verbatim — and only a trailer
-   block that is the message's true last block parses via
-   `%(trailers)` / `git interpret-trailers`. **Any non-trailer line
-   after this block — another heading, a stray comment, an unclosed
-   fence — empties `%(trailers)`** (live-found in #575). This is IN
-   ADDITION to the `## Memory` section, not a replacement for it.
+   becomes the squash commit's message verbatim — a trailer block
+   that is the message's true last block is a **precondition** for
+   `%(trailers)` / `git interpret-trailers` to parse it, but not a
+   guarantee: GitHub's own squash-merge UI can append a
+   `---------` divider + `Co-authored-by:` block AFTER the body and
+   hard-wrap long trailer lines (both live-observed on PR #576),
+   which breaks the structured parse for the body's own keys even
+   when the mandate above was followed correctly. Treat strict
+   `%(trailers)` parsing as best-effort — the mandate's **guaranteed
+   floor** is grep-level retrieval (`git log --grep`), because the
+   keys still start at a line start regardless of what gets appended
+   after them. **Any non-trailer line after this block — another
+   heading, a stray comment, an unclosed fence — still empties
+   `%(trailers)` outright** (live-found in #575, a distinct failure
+   mode from #576's GitHub-appended block). This is IN ADDITION to
+   the `## Memory` section, not a replacement for it. Practical tip:
+   keep each trailer line short — a wrapped continuation without
+   leading whitespace breaks trailer parsing too.
 
 Anchor rule for the `## Memory` section (carrier 1 above):
 
@@ -137,8 +149,14 @@ Learning: Google Auth Console 2025-01 UI relabels scopes
 <!-- opened via gh pr create -->
 ```
 
-After — the raw trailer block IS the true last block; nothing
-follows it, so `%(trailers)` parses correctly:
+After — the raw trailer block IS the true last block in the PR body;
+nothing follows it here, so `%(trailers)` parses correctly against
+this body as authored. This satisfies the mandate's guaranteed floor
+(grep-level retrieval) and gives the structured parse its best shot —
+but a GitHub UI squash-merge can still append its own
+`---------`/`Co-authored-by:` block or hard-wrap these lines at merge
+time (PR #576 live), which is outside the PR author's control; see
+the caveat in `SKILL.md`:
 
 ```
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
