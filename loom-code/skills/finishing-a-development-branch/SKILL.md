@@ -251,8 +251,9 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
 13. Report final state as a product-language completion report — lead with what
     the product now does, in user terms (not with mechanism); commit SHA, push
     status, test counts, and review verdicts sink to sub-lines below that
-    headline. Format authority: `loom-pipeline/hooks/family-relay.md` §(a)
-    User-rollup card. Include: PR URL if created — same both-paths merge
+    headline. Format authority: `loom-pipeline/hooks/family-relay.md` §(a)'s
+    Close-out card (not the generic User-rollup card — the close-out
+    specialization). Include: PR URL if created — same both-paths merge
     guidance as Step 11 (glance the prefilled dialog before confirming,
     plus the ready-to-run `gh pr merge <N> --squash` CLI alternative) —
     and worktree status.

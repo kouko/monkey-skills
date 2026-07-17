@@ -142,6 +142,17 @@ def test_step11_carrier_check_precedes_merge_paths_bullet():
         "PR-carrier check bullet must precede the merge-paths bullet in Step 11"
 
 
+def test_step13_points_at_close_out_card():
+    """Step 13's report format authority must point at family-relay.md
+    §(a)'s Close-out card specialization, not the generic user-rollup
+    card — the close-out report renders as that 10-row table."""
+    step13 = _step13_slice(_text())
+    assert "family-relay.md" in step13, \
+        "Step 13 must point at family-relay.md"
+    assert "Close-out card" in step13, \
+        "Step 13 must point at family-relay.md §(a)'s Close-out card, not just the generic rollup card"
+
+
 def test_memory_pointer_appears_exactly_once():
     """The incident record is pointed at once (Step 11); Step 13 reuses
     the guidance by reference instead of restating the path — avoids the

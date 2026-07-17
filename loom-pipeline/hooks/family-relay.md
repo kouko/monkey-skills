@@ -26,6 +26,44 @@ Internal traffic (verdict tokens, wave labels, findings IDs) stays
 machine-precise **below** the card — the card is the user-facing
 headline, not a replacement for the record.
 
+#### Close-out card
+
+A close-out report (finishing Step 13, and any loom seam reporting a
+PR-open) renders as this specialized table instead — prose details
+go **below** the table, never inside it. Same language-neutral-slot /
+localized-content rule as the rollup card above.
+
+| Slot | Semantics |
+|---|---|
+| PR | linked number + title (+ version) |
+| Purpose | why this change exists — the problem/intent |
+| Changes | what was done |
+| Impact scope | what is affected / explicitly NOT affected — standing row, not conditional |
+| Verification | test/evidence numbers |
+| Review | reviewer verdicts trajectory |
+| Review focus | where the merge decision deserves attention; MAY merge into the Review row for small PRs |
+| Version | plugin/package bumps |
+| 🌐 Web merge | PR URL + one-line reminder to glance the merge dialog's description prefill before confirming |
+| 💻 CLI merge | the ready `gh pr merge <N> --squash` command, framed for the human to run |
+
+Conditional rows (add only when applicable): screenshots (UI changes
+only), rollback plan (irreversible/infra changes only).
+
+Cell rules: each cell is ONE line; multiple points join with " ・ "
+(half-width space, U+30FB interpunct, half-width space); cap: at most
+3 points per cell — anything larger becomes "one-line conclusion +
+see below" with the detail as prose under the card. Paragraphs never
+go in cells.
+
+Channel degradation: chat renderers may not honor `<br>` in cells
+(live-confirmed) — chat cards NEVER use `<br>`; a GitHub-rendered PR
+body MAY use `<br>` + `•` bullets, but the " ・ " separator form is
+the default everywhere else.
+
+Provenance: row set converges Google eng-practices CL-description
+conventions with the JA 影響範囲/動作確認/レビューポイント PR-template
+convention — same grounding logic as §(d)'s jargon-and-stakes gate.
+
 ### (b) Visual defaults
 
 - **≥2 options at a fork** → a markdown comparison table is the

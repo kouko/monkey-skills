@@ -258,6 +258,61 @@ def test_reception_includes_visual_defaults():
         )
 
 
+def test_close_out_card():
+    """
+    Close-out card specialization block (finishing Step 13 / any loom
+    seam reporting a PR-open) must live in family-relay.md §(a), AFTER
+    the existing user-rollup card table and BEFORE §(b) Visual defaults.
+
+    Required markers:
+      - "Close-out card" heading
+      - 7 of 10 distinctive labels (PR/Review/Version omitted as
+        false-positive-prone); English anchor form, language-neutral
+      - " ・ " separator (half-width space + U+30FB interpunct +
+        half-width space) and the "3 points per cell" cap
+      - the chat-cards-never-use-<br> degradation rule
+      - the two conditional rows: screenshots, rollback plan
+      - a one-line provenance note citing Google eng-practices CL
+        descriptions AND the JA 影響範囲/動作確認/レビューポイント
+        template convention (no URL dump)
+    """
+    text = _read(FAMILY_RELAY)
+    assert "Close-out card" in text
+
+    rollup_idx = text.find("next + decision")
+    close_out_idx = text.find("Close-out card")
+    visual_defaults_idx = text.find("### (b) Visual defaults")
+    assert rollup_idx != -1 and close_out_idx != -1 and visual_defaults_idx != -1
+    assert rollup_idx < close_out_idx < visual_defaults_idx, (
+        "Close-out card block must sit after the user-rollup card and "
+        "before §(b) Visual defaults"
+    )
+
+    for label in (
+        "Purpose",
+        "Changes",
+        "Impact scope",
+        "Verification",
+        "Review focus",
+        "🌐 Web merge",
+        "💻 CLI merge",
+    ):
+        assert label in text, f"missing close-out card row label: {label!r}"
+
+    assert " ・ " in text, "expected the half-width-space + U+30FB + half-width-space separator"
+    assert "3 points per cell" in text
+
+    assert "chat cards" in text.lower() and "never" in text.lower() and "<br>" in text, (
+        "expected the chat-cards-never-use-<br> degradation rule"
+    )
+
+    assert "screenshots" in text.lower()
+    assert "rollback plan" in text.lower()
+
+    assert "Google eng-practices" in text
+    assert "影響範囲" in text or "動作確認" in text or "レビューポイント" in text
+
+
 def test_brainstorming_visual_operative_line():
     """
     Task 4 (2026-07-10 ascii-graph-trigger-fix plan) adds an operative

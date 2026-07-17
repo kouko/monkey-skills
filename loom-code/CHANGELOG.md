@@ -18,7 +18,9 @@ Versioning: [Semantic Versioning](https://semver.org/).
   dialog's prefill silently failed (repo squash settings verified correct
   throughout); the CLI path bypasses the dialog and faithfully uses the PR
   body. Pointer to `docs/loom/memory/squash-dialog-can-drop-entire-pr-body.md`
-  — no incident restated inline. Still never auto-merges.
+  — no incident restated inline. Still never auto-merges. Step 13's format
+  authority now points at `loom-pipeline/hooks/family-relay.md` §(a)'s new
+  Close-out card specialization (not the generic User-rollup card).
 
 Verification: `PYTHONDONTWRITEBYTECODE=1 python3 -m pytest loom-code/scripts/ -q`
 294 passed (287 + 7 new); `bash loom-code/tests/integration/test-git-memory-delegation.sh`
