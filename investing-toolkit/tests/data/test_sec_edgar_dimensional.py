@@ -1151,3 +1151,157 @@ def test_quarterly_foreign_filer_returns_na(sec_client, monkeypatch):
         "shows 20-F + 6-K filings, no '10-Q'"
     ), result["reason"]
     assert result["identifier"] == "TSM"
+
+
+# ---------------------------------------------------------------------------
+# Task 10 (2026-07-16-operational-kpi-quarterly) — per-filing/per-quarter
+# coverage honesty. Extends scope-A's year-level coverage clamp
+# (_dimensional_revenue_coverage) with a `quarterly_coverage` per-fiscal-year
+# breakdown: 10-K + up to 3 standalone 10-Qs = 4 expected filings per year
+# (Q4 has no standalone 10-Q — derived downstream, Task 8). A missing
+# filing's absence is classified into one of THREE EXPLICIT, mutually
+# exclusive reasons (never inferred from a bare absence — docs/loom/memory/
+# fail-closed-default-must-be-enforced-not-emergent.md):
+#   not_yet_filed | fetch_error | out_of_requested_range
+# A dimensional signature present in the 10-K but absent from every 10-Q of
+# its fiscal year is flagged "no_quarterly_coverage" — never zero-filled.
+# ---------------------------------------------------------------------------
+
+def _make_quarterly_filing(*, accession, form, filing_date, period_of_report,
+                            concept, dim_member, revenue_value):
+    """Fake edgartools Filing carrying one dimensional-revenue row, with
+    `period_of_report` set (unlike `_make_dimensional_filing`, which omits
+    it) — Task 10's per-quarter matching reads `period_of_report`, not
+    `filing_date`, to place a filing on the fiscal calendar."""
+    xb = mock.MagicMock(name=f"xbrl-{accession}")
+    xb.facts.to_dataframe.return_value.to_dict.return_value = [
+        {
+            "is_dimensioned": True,
+            "dim_srt_ProductOrServiceAxis": dim_member,
+            "concept": concept,
+            "numeric_value": revenue_value,
+            "unit_ref": "usd",
+            "currency": "USD",
+            "period_type": "duration",
+            "period_start": (filing_date - datetime.timedelta(days=90)).isoformat(),
+            "period_end": period_of_report,
+            "period_instant": None,
+        },
+    ]
+    filing = SimpleNamespace(
+        accession_no=accession, filing_date=filing_date, form=form,
+        period_of_report=period_of_report,
+    )
+    filing.xbrl = lambda bound=xb: bound
+    return filing
+
+
+def test_coverage_per_quarter_completeness(sec_client):
+    """A quarterly request's `coverage` gains a `quarterly_coverage`
+    per-fiscal-year completeness breakdown: a covered year with a 10-K +
+    Q1 + Q2 but no Q3 reports partial (3/4, Q3 missing + reason); the three
+    fetch-failure states are distinguished (pure `_missing_quarter_reason`,
+    proven pairwise distinct); a 10-K-only dimension is flagged
+    'no_quarterly_coverage' by `_dimension_quarterly_absence`, never
+    zero-filled (no synthesized 'value' key on the flag)."""
+    tenk = _make_quarterly_filing(
+        accession="0000789019-26-000010", form="10-K",
+        filing_date=datetime.date(2026, 2, 10), period_of_report="2025-12-31",
+        concept="us-gaap:Revenues", dim_member="msft:ProductivityMember",
+        revenue_value=500.0,
+    )
+    q1 = _make_quarterly_filing(
+        accession="0000789019-25-000031", form="10-Q",
+        filing_date=datetime.date(2025, 4, 24), period_of_report="2025-03-31",
+        concept="us-gaap:Revenues", dim_member="msft:ProductivityMember",
+        revenue_value=100.0,
+    )
+    q2 = _make_quarterly_filing(
+        accession="0000789019-25-000032", form="10-Q",
+        filing_date=datetime.date(2025, 7, 24), period_of_report="2025-06-30",
+        concept="us-gaap:Revenues", dim_member="msft:ProductivityMember",
+        revenue_value=110.0,
+    )
+    # Q3 (expected ~2025-09-30) never filed.
+
+    company = mock.MagicMock(name="Company")
+    company.not_found = False
+    company.cik = 789019
+    company.get_filings.return_value = [tenk, q1, q2]
+    sec_client.edgar_stub.Company.return_value = company
+
+    pack = sec_client.extract_dimensional_revenue(
+        "MSFT", form="10-Q", since_year=2025, until_year=2025,
+        as_of=datetime.date(2026, 1, 1),
+    )
+    assert "error" not in pack, pack
+    quarterly = pack["coverage"]["quarterly_coverage"]
+    assert quarterly is not None, "form='10-Q' must populate quarterly_coverage"
+    year_record = next(r for r in quarterly if r["fiscal_year"] == 2025)
+
+    assert year_record["status"] == "partial", year_record
+    assert year_record["present_count"] == 3, year_record
+    assert year_record["expected_count"] == 4, year_record
+    present_labels = {p["filing"] for p in year_record["present"]}
+    assert present_labels == {"10-K", "Q1", "Q2"}, present_labels
+    missing_labels = {m["filing"] for m in year_record["missing"]}
+    assert missing_labels == {"Q3"}, (
+        f"Q3 must be the ONLY missing filing (3/4 present) — got {missing_labels}"
+    )
+    missing_q3 = year_record["missing"][0]
+    assert missing_q3["reason"] == "fetch_error", (
+        "Q3's expected period end (2025-09-30) is already due and within "
+        f"the requested [2025,2025] range — got {missing_q3['reason']!r}"
+    )
+    assert missing_q3["detail"], "the missing entry must carry a human-readable reason string"
+
+    # Three fetch-failure states are distinguished — pure classifier, each
+    # proven independently, never collapsed into one silent 'gap'.
+    reason_not_yet, _ = sec_client._missing_quarter_reason(
+        datetime.date(2026, 6, 30), since_year=2026, until_year=2026,
+        as_of=datetime.date(2026, 1, 1),
+    )
+    reason_fetch_error, _ = sec_client._missing_quarter_reason(
+        datetime.date(2025, 9, 30), since_year=2025, until_year=2025,
+        as_of=datetime.date(2026, 1, 1),
+    )
+    reason_out_of_range, _ = sec_client._missing_quarter_reason(
+        datetime.date(2019, 9, 30), since_year=2025, until_year=2025,
+        as_of=datetime.date(2026, 1, 1),
+    )
+    assert reason_not_yet == "not_yet_filed", reason_not_yet
+    assert reason_fetch_error == "fetch_error", reason_fetch_error
+    assert reason_out_of_range == "out_of_requested_range", reason_out_of_range
+    assert len({reason_not_yet, reason_fetch_error, reason_out_of_range}) == 3, (
+        "the three states must be pairwise distinct — a design that lets two "
+        "collapse to the same value would silently conflate them"
+    )
+
+    # A dimension present in the 10-K but absent from every 10-Q of its
+    # fiscal year is flagged, never zero-filled.
+    annual_facts = [
+        {
+            "concept": "us-gaap:Revenues",
+            "dimensions": {"ProductOrService": "ProductivityMember"},
+            "consolidation": None, "fiscal_year": 2025, "value": 500.0,
+        },
+        {
+            "concept": "us-gaap:Revenues",
+            "dimensions": {"ProductOrService": "DiscontinuedSegmentMember"},
+            "consolidation": None, "fiscal_year": 2025, "value": 20.0,
+        },
+    ]
+    quarterly_facts = [
+        {
+            "concept": "us-gaap:Revenues",
+            "dimensions": {"ProductOrService": "ProductivityMember"},
+            "consolidation": None, "fiscal_year": 2025, "value": 100.0,
+        },
+    ]
+    flags = sec_client._dimension_quarterly_absence(annual_facts, quarterly_facts)
+    assert len(flags) == 1, flags
+    assert flags[0]["dimensions"] == {"ProductOrService": "DiscontinuedSegmentMember"}
+    assert flags[0]["flag"] == "no_quarterly_coverage"
+    assert "value" not in flags[0], (
+        "the absence flag must never carry a synthesized/zero-filled 'value'"
+    )

@@ -41,6 +41,7 @@ Cache: $INVESTING_TOOLKIT_CACHE/sec_edgar/
 """
 
 import argparse
+import calendar
 import json
 import re
 import sys
@@ -2235,6 +2236,7 @@ def extract_dimensional_revenue(
     form: str = "10-K",
     since_year: int | None = None,
     until_year: int | None = None,
+    as_of: date | None = None,
 ) -> dict:
     """Fetch `ticker`'s `form` XBRL via edgartools and emit the normalized
     full-signature dimensional-revenue fact-pack (Task 4,
@@ -2276,6 +2278,17 @@ def extract_dimensional_revenue(
     Returns a loud `{"error": ...}` slot (never a fabricated/empty fact-pack)
     when the ticker does not resolve to a registered SEC filer, or no `form`
     filing matches the requested window/range.
+
+    When `form="10-Q"`, `coverage` also carries `quarterly_coverage` (Task
+    10, docs/loom/plans/2026-07-16-operational-kpi-quarterly.md — 'per-
+    filing/per-quarter completeness within a covered year'): one record per
+    covered fiscal year reporting which of the 4 expected filings (10-K +
+    Q1/Q2/Q3) are present vs. missing-with-reason (`_quarterly_completeness_
+    report`). `quarterly_coverage` is `None` for any other `form` (not
+    applicable — never a silently-empty list). `as_of` anchors the
+    not-yet-filed/fetch-error classification (defaults to `date.today()`,
+    injectable for deterministic tests — same convention as
+    `select_narrative_filings`'s `as_of`).
     """
     ticker = ticker.upper()
     if since_year is None and until_year is not None:
@@ -2363,12 +2376,41 @@ def extract_dimensional_revenue(
             if _is_dimensional_revenue_fact(fact)
         )
 
+    quarterly_coverage = None
+    annual_form = _QUARTERLY_COMPANION_ANNUAL_FORM.get(form)
+    if annual_form is not None:
+        # Task 10: a per-quarter completeness report needs to know whether
+        # the COMPANION 10-K exists for each year — a cheap filings-list
+        # lookup only (never its full `.xbrl()`, the usage-cost lever the
+        # plan flags), reusing the SAME `company` object already resolved
+        # above.
+        annual_company_filings = company.get_filings(form=annual_form)
+        annual_exact_filings = (
+            [f for f in annual_company_filings if getattr(f, "form", None) == annual_form]
+            if annual_company_filings is not None else []
+        )
+        fiscal_years = sorted({
+            y for y in (
+                _filing_period_year(f) for f in exact_filings + annual_exact_filings
+            )
+            if y is not None
+            and (since_year is None or y >= since_year)
+            and (until_year is None or y <= until_year)
+        })
+        quarterly_coverage = _quarterly_completeness_report(
+            fiscal_years, annual_exact_filings, exact_filings,
+            since_year, until_year, as_of or date.today(),
+        )
+
     return {
         "company": ticker,
         "facts": facts,
-        "coverage": _dimensional_revenue_coverage(
-            since_year, until_year, exact_filings, facts, form,
-        ),
+        "coverage": {
+            **_dimensional_revenue_coverage(
+                since_year, until_year, exact_filings, facts, form,
+            ),
+            "quarterly_coverage": quarterly_coverage,
+        },
         "fiscal_calendars": fiscal_calendars,
     }
 
@@ -2465,6 +2507,266 @@ def _dimensional_revenue_coverage(
         "actual": actual,
         "clamp_reason": "; ".join(reasons) if reasons else None,
     }
+
+
+_QUARTERLY_COMPANION_ANNUAL_FORM = {"10-Q": "10-K"}
+_QUARTER_LABELS = ("Q1", "Q2", "Q3")
+_QUARTER_MATCH_TOLERANCE_DAYS = 20
+
+
+def _subtract_months(d: date, months: int) -> date:
+    """`d` minus `months` calendar months, clamping the day to the target
+    month's real length (e.g. Mar 31 - 1mo -> Feb 28/29, never a raise).
+    Pure, no clock read — used to derive expected quarter-end dates from a
+    fiscal year end."""
+    month_index = d.month - 1 - months
+    year = d.year + month_index // 12
+    month = month_index % 12 + 1
+    day = min(d.day, calendar.monthrange(year, month)[1])
+    return date(year, month, day)
+
+
+def _expected_quarterly_period_ends(fiscal_year_end: date) -> dict[str, date]:
+    """The approximate period-end date of each of a fiscal year's THREE
+    separately-filed 10-Qs (Task 10, docs/loom/plans/2026-07-16-operational-
+    kpi-quarterly.md — Q4 has no standalone 10-Q; it is derived from
+    FY-9moYTD, Task 8), as `fiscal_year_end` minus 9/6/3 months. A
+    month-only approximation: a 52/53-week filer's real quarter-end can
+    drift several days from the calendar month-end (NVDA: --01-25 vs
+    --01-31), so callers match against this with a day-count TOLERANCE
+    (`_QUARTER_MATCH_TOLERANCE_DAYS`), never an exact-date compare."""
+    return {
+        "Q1": _subtract_months(fiscal_year_end, 9),
+        "Q2": _subtract_months(fiscal_year_end, 6),
+        "Q3": _subtract_months(fiscal_year_end, 3),
+    }
+
+
+def _match_quarter_filing(expected_end: date, quarterly_filings: list):
+    """The first filing in `quarterly_filings` whose `period_of_report`
+    falls within `_QUARTER_MATCH_TOLERANCE_DAYS` days of `expected_end`, or
+    None. A filing with no/unparseable `period_of_report` never matches
+    (never guessed)."""
+    for filing in quarterly_filings:
+        period = getattr(filing, "period_of_report", None)
+        if not period:
+            continue
+        try:
+            actual = date.fromisoformat(str(period))
+        except ValueError:
+            continue
+        if abs((actual - expected_end).days) <= _QUARTER_MATCH_TOLERANCE_DAYS:
+            return filing
+    return None
+
+
+def _missing_quarter_reason(
+    expected_end: date,
+    since_year: int | None,
+    until_year: int | None,
+    as_of: date,
+) -> tuple[str, str]:
+    """Classify WHY an expected filing (a quarter's 10-Q, or the 10-K
+    itself) is absent — one of THREE EXPLICIT, mutually exclusive states
+    (Task 10 — never inferred by falling through a comparison, docs/loom/
+    memory/fail-closed-default-must-be-enforced-not-emergent.md):
+
+    - "not_yet_filed": `expected_end` is still in the future relative to
+      `as_of` — the period hasn't happened yet (current in-progress FY).
+    - "out_of_requested_range": `expected_end`'s year falls outside the
+      caller's requested `[since_year, until_year]` window — the caller
+      never asked for this period.
+    - "fetch_error": `expected_end` is in the past AND within the
+      requested range, so the filing SHOULD exist and be reachable —
+      reported as a retryable fetch gap, never silently assumed skipped
+      by the filer.
+
+    Exactly one branch fires per call (checked in this order — a future
+    date can't simultaneously be a fetch failure)."""
+    if expected_end > as_of:
+        return (
+            "not_yet_filed",
+            f"expected period end {expected_end.isoformat()} is in the "
+            f"future (as of {as_of.isoformat()})",
+        )
+    if since_year is not None and expected_end.year < since_year:
+        return (
+            "out_of_requested_range",
+            f"expected period end {expected_end.isoformat()} precedes "
+            f"requested since_year={since_year}",
+        )
+    if until_year is not None and expected_end.year > until_year:
+        return (
+            "out_of_requested_range",
+            f"expected period end {expected_end.isoformat()} exceeds "
+            f"requested until_year={until_year}",
+        )
+    return (
+        "fetch_error",
+        f"expected period end {expected_end.isoformat()} is within the "
+        "requested range and already due, but no matching filing was "
+        "found (retryable)",
+    )
+
+
+def _quarterly_year_completeness(
+    fiscal_year: int,
+    fiscal_year_end: date | None,
+    has_10k: bool,
+    quarterly_filings: list,
+    since_year: int | None,
+    until_year: int | None,
+    as_of: date,
+) -> dict:
+    """Per-fiscal-year completeness record (Task 10): a 10-K + up to 3
+    standalone 10-Qs = 4 expected filings. `present` lists what was found;
+    `missing` lists each absent expected filing with an EXPLICIT reason
+    (`_missing_quarter_reason`). Filing-level completeness only — never
+    zero-fills a dimension's value (see `_dimension_quarterly_absence`)."""
+    expected_total = 4
+    present: list[dict] = []
+    missing: list[dict] = []
+
+    if has_10k:
+        present.append({"filing": "10-K"})
+    elif fiscal_year_end is not None:
+        reason, detail = _missing_quarter_reason(
+            fiscal_year_end, since_year, until_year, as_of
+        )
+        missing.append({"filing": "10-K", "reason": reason, "detail": detail})
+    else:
+        missing.append({
+            "filing": "10-K", "reason": "fetch_error",
+            "detail": "fiscal year end unknown; cannot classify 10-K absence",
+        })
+
+    if fiscal_year_end is None:
+        for label in _QUARTER_LABELS:
+            missing.append({
+                "filing": label, "reason": "fetch_error",
+                "detail": (
+                    "fiscal year end unknown (no 10-K found for this year); "
+                    "cannot compute the expected quarter period"
+                ),
+            })
+    else:
+        expected = _expected_quarterly_period_ends(fiscal_year_end)
+        remaining = list(quarterly_filings)
+        for label in _QUARTER_LABELS:
+            expected_end = expected[label]
+            match = _match_quarter_filing(expected_end, remaining)
+            if match is not None:
+                remaining.remove(match)
+                present.append({
+                    "filing": label,
+                    "accession": getattr(match, "accession_no", None),
+                    "period_of_report": str(getattr(match, "period_of_report", None)),
+                })
+            else:
+                reason, detail = _missing_quarter_reason(
+                    expected_end, since_year, until_year, as_of
+                )
+                missing.append({"filing": label, "reason": reason, "detail": detail})
+
+    return {
+        "fiscal_year": fiscal_year,
+        "status": "full" if len(present) == expected_total else "partial",
+        "present_count": len(present),
+        "expected_count": expected_total,
+        "present": present,
+        "missing": missing,
+    }
+
+
+def _quarterly_completeness_report(
+    fiscal_years: list[int],
+    annual_filings: list,
+    quarterly_filings: list,
+    since_year: int | None,
+    until_year: int | None,
+    as_of: date,
+) -> list[dict]:
+    """Build one `_quarterly_year_completeness` record per year in
+    `fiscal_years` (Task 10, docs/loom/plans/2026-07-16-operational-kpi-
+    quarterly.md — 'per-filing/per-quarter completeness within a covered
+    year'), from ALREADY-FETCHED filing-list metadata (never a fresh
+    fetch per year)."""
+    by_year_10k: dict[int, object] = {}
+    for f in annual_filings:
+        y = _filing_period_year(f)
+        if y is not None:
+            by_year_10k[y] = f
+    by_year_10q: dict[int, list] = {}
+    for f in quarterly_filings:
+        y = _filing_period_year(f)
+        if y is not None:
+            by_year_10q.setdefault(y, []).append(f)
+
+    report = []
+    for year in sorted(fiscal_years):
+        tenk = by_year_10k.get(year)
+        fiscal_year_end = None
+        if tenk is not None:
+            period = getattr(tenk, "period_of_report", None)
+            if period:
+                try:
+                    fiscal_year_end = date.fromisoformat(str(period))
+                except ValueError:
+                    fiscal_year_end = None
+        report.append(
+            _quarterly_year_completeness(
+                fiscal_year=year,
+                fiscal_year_end=fiscal_year_end,
+                has_10k=tenk is not None,
+                quarterly_filings=by_year_10q.get(year, []),
+                since_year=since_year,
+                until_year=until_year,
+                as_of=as_of,
+            )
+        )
+    return report
+
+
+def _fact_dimensional_signature(fact: dict) -> tuple:
+    """(concept, sorted dimensions items, consolidation) — the identity a
+    dimensional-revenue fact is compared by, ignoring value/period/accession
+    so a 10-K fact and a 10-Q fact for the SAME breakdown match regardless
+    of which filing reported them."""
+    return (
+        fact.get("concept"),
+        tuple(sorted(fact.get("dimensions", {}).items())),
+        fact.get("consolidation"),
+    )
+
+
+def _dimension_quarterly_absence(
+    annual_facts: list[dict], quarterly_facts: list[dict]
+) -> list[dict]:
+    """Flag every dimensional-revenue signature present in `annual_facts`
+    (10-K) that carries NO fact in `quarterly_facts` (10-Q) for the SAME
+    `fiscal_year` — Task 10: 'a dimension present in the 10-K but absent
+    from the 10-Qs' is reported as `"no_quarterly_coverage"`, distinct from
+    a real zero and from a discontinued segment (never inferable from a
+    flag alone — that judgment is the caller's). Never zero-filled: the
+    returned entry carries no `value` key, only the identifying signature."""
+    quarterly_signatures = {
+        (f.get("fiscal_year"), _fact_dimensional_signature(f)) for f in quarterly_facts
+    }
+    seen = set()
+    flags = []
+    for fact in annual_facts:
+        key = (fact.get("fiscal_year"), _fact_dimensional_signature(fact))
+        if key in quarterly_signatures or key in seen:
+            continue
+        seen.add(key)
+        flags.append({
+            "concept": fact.get("concept"),
+            "dimensions": fact.get("dimensions"),
+            "consolidation": fact.get("consolidation"),
+            "fiscal_year": fact.get("fiscal_year"),
+            "flag": "no_quarterly_coverage",
+        })
+    return flags
 
 
 def _filing_in_year_range(filing, since_year: int, until_year: int | None) -> bool:
