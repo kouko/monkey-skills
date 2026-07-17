@@ -1081,3 +1081,73 @@ def test_extract_dei_fiscal_calendar_absent_tag_is_none_not_fabricated(sec_clien
     assert pack["fiscal_calendars"]["0000320193-24-000123"] == {
         "fiscal_period_focus": None, "fiscal_year_end": None,
     }
+
+
+# ---------------------------------------------------------------------------
+# Task 4 (2026-07-16-operational-kpi-quarterly) — ADR/20-F foreign-private-
+# issuer regime: a quarterly request for a ticker with no 10-Q must return an
+# EXPLICIT N/A with reason, never a silently-empty fact-pack. Detected from
+# the REAL submissions form histogram (`fetch_submissions`), never a
+# hardcoded ticker list.
+#
+# Histogram MACHINE-CAPTURED 2026-07-17 against the real SEC submissions API
+# (never hand-typed):
+#   curl -s -A "monkeyskills research kouko.d@gmail.com" \
+#     https://data.sec.gov/submissions/CIK0001046179.json
+# `filings.recent.form` (1002 rows) counts: 20-F=15, 6-K=750, 6-K/A=6, 4=136,
+# 3=42, 3/A=3, SD=13, SC 13G/A=17, SC 13G=8, S-8=1, 424B2=2, FWP=2, 424B5=2,
+# F-3ASR=1, UPLOAD=2, CORRESP=1 — ZERO 10-Q, ZERO 10-K anywhere in the window.
+# ---------------------------------------------------------------------------
+
+def _tsm_submissions_stub() -> dict:
+    """Rebuilds the real captured `filings.recent.form` array from TSM's
+    live counts (only `.form` is read by the regime detector, so the other
+    parallel arrays — filingDate/accessionNumber/etc — are omitted; a real
+    submissions response always carries them, but the detector never reads
+    them, so adding them here would be unused clutter)."""
+    forms = (
+        ["20-F"] * 15
+        + ["6-K"] * 750
+        + ["6-K/A"] * 6
+        + ["4"] * 136
+        + ["3"] * 42
+        + ["SD"] * 13
+    )
+    return {"data": {"filings": {"recent": {"form": forms}}}}
+
+
+def test_quarterly_foreign_filer_returns_na(sec_client, monkeypatch):
+    """A ticker whose submissions history has 20-F + 6-K but NO 10-Q (TSM,
+    live-verified above) must return an explicit 'no quarterly XBRL (foreign
+    20-F/6-K regime)' N/A carrying a reason, distinguishable from BOTH the
+    generic form-not-available error and a real empty result — never a
+    silently-empty fact-pack (spec: 'A foreign/ADR filer with no 10-Q is
+    detected and returned N/A, never silently empty')."""
+    company = mock.MagicMock(name="Company")
+    company.not_found = False
+    company.cik = 1046179
+    # No 10-Q filings at all -- matches TSM's real filing history.
+    company.get_filings.return_value = []
+    sec_client.edgar_stub.Company.return_value = company
+    monkeypatch.setattr(
+        sec_client, "fetch_submissions", lambda cik: _tsm_submissions_stub()
+    )
+
+    result = sec_client.extract_dimensional_revenue("TSM", form="10-Q")
+
+    assert "error" in result, "must be an explicit N/A slot, not a silent success"
+    assert "facts" not in result, (
+        "must not ALSO carry a facts key (a silently-empty facts=[] alongside "
+        "the error would let a facts-or-empty caller mis-read this as a real "
+        "empty result)"
+    )
+    assert result["error_class"] == "foreign_private_issuer_no_quarterly_xbrl", (
+        "must carry a DISTINCT error_class from the generic "
+        "'dimensional_revenue_extraction_failed' (fetch-error/out-of-range) "
+        "class, so a caller can tell the regime-N/A apart without re-deriving it"
+    )
+    assert result["reason"] == (
+        "no quarterly XBRL (foreign 20-F/6-K regime) — submissions history "
+        "shows 20-F + 6-K filings, no '10-Q'"
+    ), result["reason"]
+    assert result["identifier"] == "TSM"

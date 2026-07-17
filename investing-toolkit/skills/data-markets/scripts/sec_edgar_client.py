@@ -1979,6 +1979,65 @@ def _dimensional_revenue_error_slot(ticker: str, form: str, detail: str) -> dict
     }
 
 
+_FOREIGN_PRIVATE_ISSUER_ANNUAL_FORM = "20-F"
+_FOREIGN_PRIVATE_ISSUER_INTERIM_FORMS = ("6-K", "6-K/A")
+
+
+def _foreign_private_issuer_no_quarterly_reason(cik: int, form: str) -> str | None:
+    """Detect the ADR/foreign-private-issuer 20-F+6-K filing regime from
+    `cik`'s REAL submissions form histogram (`fetch_submissions` — the SEC
+    submissions REST API's `filings.recent.form` array), never a hardcoded
+    ticker list (a hardcoded list is a fabrication risk and rots — Task 4,
+    docs/loom/plans/2026-07-16-operational-kpi-quarterly.md). Live-verified
+    2026-07-17 against TSM (CIK 1046179): 15x 20-F + 750x 6-K + 6x 6-K/A,
+    ZERO 10-Q/10-K anywhere in the 1002-row recent window.
+
+    Returns a reason string only when `form` is ABSENT from the histogram
+    AND the histogram carries the annual FPI form (20-F) AND at least one
+    interim FPI form (6-K/6-K-A) — the permanent regime signature the spec
+    names, distinct from a merely-transient form gap. Returns None when the
+    signature does not match (never guessed) or submissions can't be read."""
+    sub = fetch_submissions(cik)
+    if not isinstance(sub, dict) or "error" in sub:
+        return None
+    forms = set(
+        sub.get("data", {}).get("filings", {}).get("recent", {}).get("form", [])
+    )
+    if form in forms:
+        return None
+    if _FOREIGN_PRIVATE_ISSUER_ANNUAL_FORM not in forms:
+        return None
+    if not any(f in forms for f in _FOREIGN_PRIVATE_ISSUER_INTERIM_FORMS):
+        return None
+    return (
+        "no quarterly XBRL (foreign 20-F/6-K regime) — submissions history "
+        f"shows {_FOREIGN_PRIVATE_ISSUER_ANNUAL_FORM} + 6-K filings, "
+        f"no {form!r}"
+    )
+
+
+def _foreign_private_issuer_na_slot(ticker: str, form: str, reason: str) -> dict:
+    """An explicit, loud N/A slot for the foreign-private-issuer 20-F/6-K
+    regime (spec: docs/loom/2026-07-16-operational-kpi-quarterly/specs/
+    operational-kpi-quarterly/spec.md — 'A foreign/ADR filer with no 10-Q is
+    detected and returned N/A, never silently empty'). Carries its own
+    DISTINCT `error_class` — never the generic
+    `dimensional_revenue_extraction_failed` used for fetch errors and
+    out-of-range requests — plus a `reason` string, so a caller (Task 10's
+    coverage report) can tell this apart from a fetch error, an
+    out-of-range request, or a real empty result without re-deriving the
+    distinction itself."""
+    return {
+        "error": (
+            f"SEC EDGAR dimensional-revenue extraction failed for "
+            f"{ticker!r} ({form}): {reason}"
+        ),
+        "error_class": "foreign_private_issuer_no_quarterly_xbrl",
+        "identifier": ticker,
+        "reason": reason,
+    }
+
+
 def _dimension_signature(fact: dict) -> tuple[dict[str, str], str | None]:
     """Build (dimensions, consolidation) from `fact`'s per-row
     `dim_<namespace>_<AxisLocalName>` columns — e.g. `dim_srt_ProductOrServiceAxis`,
@@ -2246,6 +2305,9 @@ def extract_dimensional_revenue(
         if filings is not None else []
     )
     if not exact_filings:
+        regime_reason = _foreign_private_issuer_no_quarterly_reason(company.cik, form)
+        if regime_reason is not None:
+            return _foreign_private_issuer_na_slot(ticker, form, regime_reason)
         return _dimensional_revenue_error_slot(
             ticker, form, f"form {form!r} not available within the lookup window",
         )
