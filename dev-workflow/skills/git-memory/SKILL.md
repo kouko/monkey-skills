@@ -138,7 +138,10 @@ above):
 - `--verify-merged <ref>` — the post-merge CI predicate: exits `0` when
   the ref's body has no `## Memory` heading (nothing to check) or the
   heading plus a memory key both survive; `4` on the #574 silent-drop
-  case (heading present, no key).
+  case (heading present, no key), and also `4` when the body is
+  title-only with a squash-of-PR `(#N)` title — the merge dialog
+  dropped the entire PR body before the heading check could even run
+  (the #578 case).
 - `--verify-strict <ref>` — a diagnostic, not the durable-lesson path:
   requires the memory key to survive `git interpret-trailers --parse
   --unfold` (a true trailing footer), catching the #575 case where a
