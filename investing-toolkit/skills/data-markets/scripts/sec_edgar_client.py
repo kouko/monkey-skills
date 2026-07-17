@@ -2021,12 +2021,23 @@ def _foreign_private_issuer_na_slot(ticker: str, form: str, reason: str) -> dict
     regime (spec: docs/loom/2026-07-16-operational-kpi-quarterly/specs/
     operational-kpi-quarterly/spec.md — 'A foreign/ADR filer with no 10-Q is
     detected and returned N/A, never silently empty'). Carries its own
-    DISTINCT `error_class` — never the generic
-    `dimensional_revenue_extraction_failed` used for fetch errors and
-    out-of-range requests — plus a `reason` string, so a caller (Task 10's
-    coverage report) can tell this apart from a fetch error, an
-    out-of-range request, or a real empty result without re-deriving the
-    distinction itself."""
+    DISTINCT `error_class` (`foreign_private_issuer_no_quarterly_xbrl`) —
+    never the generic `dimensional_revenue_extraction_failed` used for
+    fetch errors and out-of-range requests — plus a `reason` string.
+
+    CONTRACT (corrected — see docs/loom/memory/fail-closed-default-must-
+    be-enforced-not-emergent.md): this slot deliberately omits the
+    `facts` key, but that omission is NOT a structural guarantee by
+    itself. A caller that reads `fact_pack.get("facts", [])` (a `.get()`
+    WITH A DEFAULT — e.g. `investing-toolkit/skills/analysis-kpi/scripts/
+    kpi_xbrl.py:169,254`) does NOT raise on a missing key; it silently
+    treats this slot as a real empty series, which is exactly the
+    silent-empty failure this slot exists to prevent. The safety
+    property is EMERGENT on the consumer's access pattern, not enforced
+    by this shape. Every caller MUST branch on `error_class ==
+    "foreign_private_issuer_no_quarterly_xbrl"` (or at minimum check for
+    the `"error"` key) BEFORE reading `facts` — never assume the absent
+    key alone will fail loud."""
     return {
         "error": (
             f"SEC EDGAR dimensional-revenue extraction failed for "
