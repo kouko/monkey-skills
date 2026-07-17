@@ -118,6 +118,136 @@ else
 fi
 
 # -------------------------------------------------------------------------
+# Fixture: two more commits for the #578 suspicious-empty-body case.
+
+# Commit D — title-only body AND the title matches the squash-of-PR
+# signature "(#N)" — the #578 live incident: the merge dialog emptied
+# the entire body, so no heading logic ever runs. This must be caught
+# BEFORE the heading check, exit 4.
+echo "d" > "$TMP_REPO/d.txt"
+git -C "$TMP_REPO" add d.txt
+git -C "$TMP_REPO" commit -q -m "feat(git-memory): harden verify-merged (#578)"
+SHA_D="$(git -C "$TMP_REPO" rev-parse HEAD)"
+
+# Commit E — title-only body WITHOUT a "(#N)" suffix: a routine direct
+# commit (not a squash-of-PR shape at all) — NOT suspicious, exit 0.
+echo "e" > "$TMP_REPO/e.txt"
+git -C "$TMP_REPO" add e.txt
+git -C "$TMP_REPO" commit -q -m "chore: bump version string"
+SHA_E="$(git -C "$TMP_REPO" rev-parse HEAD)"
+
+# Commit F — multi-line body, no `## Memory` heading: still exit 0
+# (existing heading-absent path, unaffected by the new check).
+echo "f" > "$TMP_REPO/f.txt"
+git -C "$TMP_REPO" add f.txt
+git -C "$TMP_REPO" commit -q -m "feat: add f" -m "First body line.
+Second body line, still no heading."
+SHA_F="$(git -C "$TMP_REPO" rev-parse HEAD)"
+
+# -------------------------------------------------------------------------
+# Check 6 — title-only body + "(#N)" suffix: suspicious squash-shaped
+# commit whose PR body never reached the squash message (#578 case).
+# Exit 4.
+
+set +e
+bash "$SCRIPT" --repo="$TMP_REPO" --verify-merged "$SHA_D"
+rc=$?
+set -e 2>/dev/null || true
+if [ "$rc" -eq 4 ]; then
+  pass "--verify-merged on title-only squash-shaped commit D exits 4 (#578 case)"
+else
+  fail "--verify-merged on title-only squash-shaped commit D should exit 4 (got $rc)"
+fi
+
+# -------------------------------------------------------------------------
+# Check 7 — title-only body WITHOUT "(#N)" suffix: routine direct
+# commit, not suspicious. Exit 0.
+
+if bash "$SCRIPT" --repo="$TMP_REPO" --verify-merged "$SHA_E"; then
+  pass "--verify-merged on title-only non-squash commit E exits 0"
+else
+  fail "--verify-merged on title-only non-squash commit E should exit 0 (got $?)"
+fi
+
+# -------------------------------------------------------------------------
+# Check 8 — multi-line body without `## Memory` heading: still exit 0.
+
+if bash "$SCRIPT" --repo="$TMP_REPO" --verify-merged "$SHA_F"; then
+  pass "--verify-merged on multi-line heading-absent commit F exits 0"
+else
+  fail "--verify-merged on multi-line heading-absent commit F should exit 0 (got $?)"
+fi
+
+# -------------------------------------------------------------------------
+# Fixture: commit G — title-only body (title + a WHITESPACE-ONLY second
+# line) whose title matches the squash-of-PR "(#N)" signature. A regular
+# `git commit -m ... -m ...` invocation would strip a trailing
+# whitespace-only line (cleanup=strip default), so this shape is built via
+# `git commit-tree -F` directly, which bypasses that cleanup and preserves
+# the whitespace-only line verbatim — reproducing what the GitHub merge
+# dialog / API can actually compose.
+
+MSG_G="$TMP_REPO/msg-g.txt"
+printf 'feat(git-memory): whitespace-title bug (#888)\n   \n' > "$MSG_G"
+echo "g" > "$TMP_REPO/g.txt"
+git -C "$TMP_REPO" add g.txt
+TREE_G="$(git -C "$TMP_REPO" write-tree)"
+PARENT_G="$(git -C "$TMP_REPO" rev-parse HEAD)"
+SHA_G="$(git -C "$TMP_REPO" commit-tree "$TREE_G" -p "$PARENT_G" -F "$MSG_G")"
+
+# -------------------------------------------------------------------------
+# Check 9 — title + "(#N)" line followed by a WHITESPACE-ONLY line: the
+# body is still title-only in substance (no real second line of content),
+# so this must be caught by the same #578 suspicious-empty-body check as
+# commit D. A naive `grep -c .` non-empty-line count would (wrongly) count
+# the whitespace-only line as content and miss this. Exit 4.
+
+set +e
+bash "$SCRIPT" --repo="$TMP_REPO" --verify-merged "$SHA_G"
+rc=$?
+set -e 2>/dev/null || true
+if [ "$rc" -eq 4 ]; then
+  pass "--verify-merged on title+(#N)+whitespace-only-line commit G exits 4"
+else
+  fail "--verify-merged on title+(#N)+whitespace-only-line commit G should exit 4 (got $rc)"
+fi
+
+# -------------------------------------------------------------------------
+# Fixture: commit H — a heading that STARTS WITH but is not exactly
+# `## Memory` (here "## Memory management"), and NO Decision/Learning/
+# Gotcha key anywhere in the body. A prefix-only heading regex would
+# wrongly treat this as the memory-worthy heading and then fail it (exit
+# 4) for lacking a key. The heading match must be exact-line, so this
+# should read as "no `## Memory` heading at all" — exit 0.
+
+echo "h" > "$TMP_REPO/h.txt"
+git -C "$TMP_REPO" add h.txt
+git -C "$TMP_REPO" commit -q -m "feat: add h" -m "## Memory management
+
+Some notes about managing memory allocation, no trailer keys here."
+SHA_H="$(git -C "$TMP_REPO" rev-parse HEAD)"
+
+# -------------------------------------------------------------------------
+# Check 10 — "## Memory management" heading (not the exact `## Memory`
+# heading) with no memory key: exit 0 (not memory-worthy).
+
+if bash "$SCRIPT" --repo="$TMP_REPO" --verify-merged "$SHA_H"; then
+  pass "--verify-merged on non-exact '## Memory management' heading commit H exits 0"
+else
+  fail "--verify-merged on non-exact '## Memory management' heading commit H should exit 0 (got $?)"
+fi
+
+# -------------------------------------------------------------------------
+# Check 11 — exact `## Memory` heading + key still detected (regression
+# guard for the exact-line-anchor tightening): reuses commit B.
+
+if bash "$SCRIPT" --repo="$TMP_REPO" --verify-merged "$SHA_B"; then
+  pass "--verify-merged still detects exact '## Memory' heading + key on commit B"
+else
+  fail "--verify-merged should still detect exact '## Memory' heading + key on commit B (got $?)"
+fi
+
+# -------------------------------------------------------------------------
 # Summary
 
 echo ""

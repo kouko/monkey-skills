@@ -42,10 +42,13 @@
 #   3  external dependency missing (jq always required; gh required if PR path enabled)
 #   4  --verify only: a memory check was requested but NO memory trailer
 #      (^Decision:/^Learning:/^Gotcha:) was found in the ref's message body
-#   4  --verify-merged only: the ref's body has a `## Memory` heading but
-#      no Decision:/Learning:/Gotcha: key survived under it (the #574
+#   4  --verify-merged only: the ref's body has a `## Memory` heading AND
+#      no Decision:/Learning:/Gotcha: key anywhere in the body (the #574
 #      silent-drop case — a memory-worthy squash landed without its
-#      trailer carrier)
+#      trailer carrier), OR the ref's body is title-only (exactly one
+#      non-empty line) AND the title matches the squash-of-PR signature
+#      `(#N)` (the #578 case — the merge dialog dropped the entire PR
+#      body, so the heading check never got a chance to run)
 #   4  --verify-strict only: no Decision:/Learning:/Gotcha: key survives
 #      `git interpret-trailers --parse --unfold` (the #575 refinement — a
 #      trailer block followed by any non-trailer line stops being the
@@ -76,7 +79,7 @@ VERIFY_STRICT_REF=''
 # only (a Related:-only commit captured no actual memory).
 TRAILER_KEYS_REGEX='^(Decision|Learning|Gotcha|Related):'
 VERIFY_KEYS_REGEX='^(Decision|Learning|Gotcha):'
-MEMORY_HEADING_REGEX='^## Memory'
+MEMORY_HEADING_REGEX='^## Memory[[:space:]]*$'
 
 usage() {
   cat <<'EOF'
@@ -114,11 +117,17 @@ Options:
                      Text match on the full body — survives squash mid-body
                      under the COMMIT_MESSAGES setting; does not footer-parse.
   --verify-merged <ref>
-                     post-merge predicate for a squash-shaped commit: if
-                     the body has NO `## Memory` heading, exits 0 (not
-                     memory-worthy — nothing to check). If the heading IS
-                     present, requires a Decision:/Learning:/Gotcha: key
-                     under it — exits 0 if found, 4 if not (the #574
+                     post-merge predicate for a squash-shaped commit.
+                     First checks for a suspicious empty body: a
+                     title-only body (exactly one non-empty line) whose
+                     title matches the squash-of-PR signature `(#N)`
+                     exits 4 immediately (the #578 case — the merge
+                     dialog dropped the entire PR body, so nothing below
+                     can be checked). Otherwise, if the body has NO
+                     `## Memory` heading, exits 0 (not memory-worthy —
+                     nothing to check). If the heading IS present,
+                     requires a Decision:/Learning:/Gotcha: key anywhere
+                     in the body — exits 0 if found, 4 if not (the #574
                      silent-drop case: heading survived, trailer carrier
                      didn't). Exits 2 if <ref> does not resolve.
   --verify-strict <ref>
@@ -258,13 +267,30 @@ fi
 #
 # Post-merge CI predicate for a squash-shaped commit body: no `## Memory`
 # heading means the commit was never claimed to be memory-worthy, so
-# there is nothing to check (exit 0). A heading present WITHOUT a
-# Decision:/Learning:/Gotcha: key surviving under it is the #574
-# silent-drop case — the commit claimed memory but the trailer carrier
-# was lost (exit 4).
+# there is nothing to check (exit 0). The `## Memory` heading present
+# AND no Decision:/Learning:/Gotcha: key anywhere in the body is the
+# #574 silent-drop case — the commit claimed memory but the trailer
+# carrier was lost (exit 4).
 if [ "$VERIFY_MERGED_MODE" = 1 ]; then
   resolve_ref_or_die "$VERIFY_MERGED_REF" "--verify-merged"
   merged_body=$(git -C "$REPO" log -1 --format='%B' "$VERIFY_MERGED_REF")
+
+  # Suspicious-empty-body check (the #578 case), runs BEFORE the heading
+  # logic: a squash-of-PR-shaped commit (title ends "(#N)") whose body is
+  # title-only (exactly one non-empty line) means the merge dialog dropped
+  # the entire PR body — the heading check below never even gets a chance
+  # to see a missing/present `## Memory` heading, so it silently reads as
+  # "not memory-worthy" (exit 0) when it is actually unknowable. A
+  # title-only body WITHOUT a "(#N)" suffix is a routine direct commit,
+  # not a squash-of-PR shape, so it is not suspicious.
+  merged_body_nonempty_lines=$(printf '%s\n' "$merged_body" | grep -c '[^[:space:]]')
+  merged_body_title=$(printf '%s\n' "$merged_body" | grep -m1 .)
+  if [ "$merged_body_nonempty_lines" -eq 1 ] \
+       && printf '%s' "$merged_body_title" | grep -qE '\(#[0-9]+\)$'; then
+    echo "suspicious: squash-shaped commit (#N) with title-only body — the PR body did not reach the squash message" >&2
+    exit 4
+  fi
+
   if ! printf '%s\n' "$merged_body" | grep -qE "$MEMORY_HEADING_REGEX"; then
     exit 0
   fi

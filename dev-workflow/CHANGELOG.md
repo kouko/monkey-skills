@@ -4,6 +4,29 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.23.0] — 2026-07-17
+
+### Added — `git-memory`: `--verify-merged` catches the suspicious-empty-body case (#578 live)
+
+PR #578's squash commit on `main` (`2c147cd7`) shipped a body of exactly
+one line (the title, ending `(#578)`) even though repo squash settings
+were confirmed correct (`PR_TITLE`+`PR_BODY`) and two same-day PRs
+carried full bodies. `--verify-merged` exited `0` because its
+heading-based check ("no `## Memory` heading → not memory-worthy")
+never got a chance to run against a real body — the whole body had
+vanished. `memory-grep.sh --verify-merged` now runs a check BEFORE the
+heading logic: a title-only body (exactly one non-empty line) whose
+title matches the squash-of-PR signature `(#N)` exits `4` immediately
+with a stderr message naming the suspicious-empty-body case. A
+title-only body WITHOUT a `(#N)` suffix (a routine direct commit) is
+unaffected and still exits `0`. Recorded as
+`docs/loom/memory/squash-dialog-can-drop-entire-pr-body.md`.
+
+Verification: `for t in dev-workflow/tests/test-*.sh; do bash "$t"; done`
+green (8 suites); `test-memory-grep-verify-merged.sh` new cases 6-8
+RED-verified against the pre-fix script (case 6 returned 0, expected
+4), GREEN against the fix.
+
 ## [2.22.1] — 2026-07-17
 
 ### Fixed — git-memory raw-trailer-footer mandate overclaim (live-refuted by PR #576)

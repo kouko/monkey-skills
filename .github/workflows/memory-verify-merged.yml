@@ -35,7 +35,6 @@ jobs:
   verify-merged:
     name: memory verify-merged
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
