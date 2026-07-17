@@ -223,6 +223,114 @@ an allow of known legit non-RFCC concepts**, not a substring. This is a scope-A
 
 ---
 
+## Fiscal-calendar findings (live-verified 2026-07-17, 6 filers × 5 FYs)
+
+Probed: NVDA, AAPL, MSFT, COST, WMT, JNJ — chosen to span 52/53-week (NVDA/AAPL/
+COST), fixed non-Dec (MSFT Jun), Jan (WMT), and calendar (JNJ) fiscal years.
+
+**The filing DECLARES its own fiscal year and quarter on its cover page.** Every
+10-Q/10-K carries these dei cover-page facts (read via `filing.xbrl()`, absent
+from bulk companyfacts):
+
+- `dei:DocumentFiscalYearFocus` — the fiscal year the filing reports.
+  **Present 90/90, correct 90/90.** Decisive cases: AAPL FY2025-Q1 has
+  `period_of_report = 2024-12-28` (a CALENDAR-2024 date) and declares
+  `DocumentFiscalYearFocus = 2025`; NVDA (Jan FYE) has every quarter in the prior
+  calendar year and declares correctly on all 15.
+- `dei:DocumentFiscalPeriodFocus` — Q1/Q2/Q3 on a 10-Q, FY on a 10-K.
+  **Correct 90/90**, and identical across the three 10-Qs of one fiscal year.
+- `dei:CurrentFiscalYearEndDate` — the year-end month-day. **Exact 90/90 (0-day
+  error).** It is NOT nominal: for 52/53-week filers it drifts year-to-year in
+  lockstep with the audited year-end (NVDA `--01-30 → --01-29 → --01-28 → --01-26
+  → --01-25`).
+
+**Projecting a fiscal year forward by +12 months is inferior but safe.** Against
+the same 30 filer-years: dei = 0-day error on all; a `+12mo`-from-last-known-FYE
+projection = 1-6 day error (dist: 10×0d, 14×1d, 4×2d, 2×6d). The two 6-day
+misses are AAPL and COST FY2023 — both **53-week years**, which only the filer
+knows about and no projection can predict. Neither source ever exceeds a 20-day
+window-match tolerance, so projection is a safe FALLBACK; the declared tag is the
+authority.
+
+**Sample caveat:** all six are large, mature filers. Small-cap / recently-IPO'd /
+immature-XBRL filers were NOT probed — `DocumentFiscalYearFocus` presence is not
+guaranteed there, so a consumer must fail loud (never guess the calendar year)
+when the tag is absent, not assume 90/90 holds universally.
+
+## Root-cause defect this surfaced (scope-A artifact, inherited by scope B)
+
+`_filing_period_year` returns `int(period_of_report[:4])` — the **calendar** year —
+while its docstring claims "the fiscal year a filing REPORTS". True for a 10-K by
+SEC convention (year-end's calendar year == FY label); **false for a 10-Q at every
+non-December-FYE filer.** Scope A only ever fetched 10-Ks, so it shipped harmlessly
+in 2.21.0. Live-verified failure on the 10-Q path: `extract_dimensional_revenue(
+"NVDA", form="10-Q", since_year=2026, until_year=2026)` selects **0 of the 3 real
+FY2026 quarters** (all end in calendar 2025) and **1 FY2027 quarter** instead, and
+every emitted fact is labelled `fiscal_year: 2025`. Three call sites inherit the
+calendar-year lie: pre-fetch selection (`_filing_in_year_range`), the per-fact
+`fiscal_year` label (`_build_dimensional_revenue_fact`), and the coverage report.
+The `fiscal_year` field itself is currently unread downstream — `kpi_xbrl.py`'s
+`period` key derives from `period_end[:4]` and its docstring says "NEVER from the
+`fiscal_year` column". Correct label source = each fact's own `period_end` measured
+against the filing's dei fiscal calendar (what T5 is specced to do), NOT the
+filing's single focus stamped onto every fact (which mislabels prior-year
+comparatives — verified on AAPL FY2019 10-K: its FY2017/2018/2019 facts all
+collapse to 2019 under a filing-level stamp).
+
+## Filing-deadline mechanics (published SEC regulation — exact, not estimated)
+
+Whether a missing quarter is "not yet due" vs "overdue" is DERIVABLE, not guessable:
+
+- **10-Q**: period-end + 40 days (large-accelerated & accelerated) / 45 days
+  (non-accelerated). **10-K**: FYE + 60 / 75 / 90 days by the same tiers. Rules
+  13a-13 / 13a-1 (17 CFR 240); filer tier defined by Rule 12b-2. Source: SEC
+  form instructions + Release 33-8644.
+- Filer tier is machine-readable: `dei:EntityFilerCategory` per filing, and the
+  top-level `category` field on `data.sec.gov/submissions/CIK########.json`
+  (AAPL → "Large accelerated filer").
+- A late filer must file **Form 12b-25 (NT 10-Q / NT 10-K)** by the next business
+  day; these appear as distinct form types in the EDGAR submissions histogram, so
+  "this quarter is late, and here is the filer's own stated reason" is directly
+  detectable, not inferred. (Corroborating late signals, unverified for
+  completeness: SEC Delinquent-Filings program; NYSE ".LF" ticker suffix.)
+- 52/53-week forward projection has **no published standard** — DQC_0006 gives a
+  period-LENGTH validation tolerance (Q1 65-115d, FY 340-390d), not a projection
+  rule. The authoritative next-FYE source is the filer's own
+  `dei:CurrentFiscalYearEndDate`.
+
+## Calculation-linkbase coverage (for the parked "read the filer's own rollup" option)
+
+22-filer stratified probe (2026-07-17): every filer exposes a non-empty
+`xbrl.calculation_linkbase()` (22/22) with an identifiable income-statement
+revenue rollup (22/22). Dimensional-fact concept coverage: **18/21 at 100%**, 3
+partial (MET 33%, BA 50%, JPM 89% — concepts living only in a footnote schedule,
+never in the calc tree; fact-weighted, BA/MET miss ~60% of their volume). REIT
+pro-forma (`BusinessAcquisitionsProFormaRevenue`) and PLD ladder concepts are
+**structurally absent** from the linkbase → cannot leak. Insurance verdict
+(PGR/TRV 100%, MET partial) is real BUT its unique value is now small: the three
+insurers' DIMENSIONAL revenue concepts (`pgr:PremiumsEarnedFeesAndOtherRevenue`,
+`trv:RevenuesExcludingRealizedGainLoss`, `us-gaap:Revenues`) all already contain
+"Revenue" and pass the name path; `us-gaap:PremiumsEarnedNet` appears only in the
+income-statement total, which we do not extract dimensionally. So the linkbase
+layer is a defense-in-depth option, not a prerequisite. (Raw per-filer data:
+scratchpad `coverage_results.json`, this session.)
+
+## Industry practice for data-absence reporting (2 research passes, cited)
+
+No published industry standard exists for a filer-period "coverage / why-is-this-
+absent" report — confirmed after a hard second look; hand-rolling is the norm.
+Closest public art: **Compustat** documents missing-data codes (`.C` combined /
+`.I` insignificant / `.S` reports only Q2+Q4 / `.A` reports only Q4 / `.` NA);
+**point-in-time** databases (Compustat PIT, `RDQ` = report-date-of-quarterly
+separate from `DATADATE`) solve the closest analog — "was this known as of date
+X" vs "does it exist at all". Most transferable idea: treat absence as
+**time-relative**, splitting (a) not-yet-due (SEC deadline) / (b) due-but-unfiled
+(Form NT signal) / (c) filed-but-facts-absent (XBRL). XBRL is sparse by design
+(no forced zero-fill), so "never zero-fill a discontinued segment" follows the
+data model, not a house rule.
+
+---
+
 ## Provenance
 
 - All rows verified live 2026-07-16 via edgartools 5.42.0 against real 10-K + a
@@ -239,6 +347,11 @@ an allow of known legit non-RFCC concepts**, not a substring. This is a scope-A
   6 verified as shape-duplicates → record-only (IBM, MU, ADI, AMAT, DELL, WDAY).
   The Magnificent Seven (AAPL, MSFT, GOOGL, AMZN, NVDA, META, TSLA) + NFLX are all
   in-set. **Total: ~87 slotted filers + 6 record-only, all live-verified 2026-07-16.**
+- Fiscal-calendar + filing-deadline + calc-linkbase + industry-practice sections
+  added 2026-07-17 (edgartools 5.42.0): dei-tag reliability from a 6-filer × 5-FY
+  probe (90/90); the `_filing_period_year` calendar-vs-fiscal root cause; the
+  22-filer calc-linkbase coverage probe; SEC deadline mechanics + 2 industry
+  research passes. These fed the scope-B rebuild decision, not the 07-16 sweep.
 - Selection principle: a filer earns a slot ONLY by adding a data shape not already
   covered (a new FYE anchor, axis combo, revenue-concept class, filter-bug class, or
   history length) — this is a diversity set, not a market-cap or cohort-completeness list.
