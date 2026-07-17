@@ -49,10 +49,17 @@ Run CHK-SKL-001 **in addition to** the upstream WHAT/WHEN/KEYWORDS check.
 
 ## D5 Progressive Disclosure — supplementary check
 
-monkey-skills caps SKILL.md at ~6,000 tokens via CHK-SKL-010 (FATAL
-gate). This is a structural budget, not a D5 quality measure — a 7K-token
-skill with excellent reference-disclosure design could legitimately
-score 12-15 on D5 while still failing CHK-SKL-010.
+monkey-skills caps SKILL.md at a hard **~6,000 tokens / ~4,500 words**
+via CHK-SKL-010 (FATAL gate, the only machine-enforced tier). This is a
+structural budget, not a D5 quality measure — a 7K-token skill with
+excellent reference-disclosure design could legitimately score 12-15
+on D5 while still failing CHK-SKL-010.
+
+monkey-skills also documents a softer aim of **~5,000 tokens / ~3,750
+words** (aligned to official Anthropic Level-2 guidance) — a review/PR
+convention, not checker-enforced; see your domain-team plugin's
+`standards/skill-md-structure.md` §Token Budget for the
+justified-exceedance convention.
 
 - If CHK-SKL-010 fails → list it under **Critical Issues** in the Step 5
   report.
