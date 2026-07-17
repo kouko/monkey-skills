@@ -50,16 +50,52 @@ defect + §Fiscal-calendar findings; the durable lesson:
   codes + point-in-time (RDQ) "known-as-of-date" modeling. Absence should be
   time-relative: not-yet-due / due-but-unfiled / filed-but-facts-absent.
 
-## Open design question the rebuild must answer (do not pre-decide)
+## RESOLVED design decision — carry calendar AND fiscal period in parallel (2026-07-17)
 
-**Should the per-fact `fiscal_year` field exist at all?** The sole downstream
-consumer (`kpi_xbrl.py:143`) derives its period key from `period_end[:4]` and its
-docstring says "NEVER from the `fiscal_year` column". The field this session spent
-two failed rounds trying to label correctly is a field nothing reads. Options for
-the rebuild: (a) delete it, classify fiscal period only where a consumer needs it
-(T5's job, from period_end vs the dei calendar); (b) keep it but source it
-correctly per-fact. Deleting removes the whole trap class; the rebuild plan should
-rule on this explicitly rather than inherit the field.
+The original question was "should the per-fact `fiscal_year` field exist at all?"
+(the sole consumer `kpi_xbrl.py:143` keys on `period_end[:4]` and its docstring
+says "NEVER from the `fiscal_year` column"). Discussion + cited research
+(verification-universe.md §Industry practice; the cross-company-alignment research
+2026-07-17) settled it: **keep BOTH a calendar period and a fiscal period as
+parallel, honestly-named fields per fact — never one collapsed into the other.**
+
+WHY: the two bases serve different, both-live jobs, and every serious financial-data
+system carries both:
+- **Calendar basis** (cross-company snapshot comps, consensus estimates) — companies
+  with different fiscal year-ends are compared by "calendarization", a named industry
+  technique that aligns them onto common calendar quarters. The shipped analysis layer
+  already keys by calendar (`kpi_xbrl.py:143` = `period_end[:4]`), so this basis is
+  live, not speculative.
+- **Fiscal basis** (LTM/TTM, same-company trend, "most recent reported quarter") —
+  each company's own fiscal periods. `analysis-comps` already carries `fiscal_year_end`,
+  so this basis is live too.
+- **Prior art**: Compustat exposes three distinct fields — `DATADATE` (period-end,
+  calendar-anchored), `DATACQTR` (which calendar quarter a fiscal quarter ends in),
+  `DATAFQTR`/`FYEARQ`/`FQTR` (fiscal). FactSet (`calendarize_from_freq`), Bloomberg
+  (`FA_PERIOD_YEAR_END`), Capital IQ, Visible Alpha, Koyfin all expose both bases. A
+  single field cannot serve both cross-peer (needs calendar) and same-company/LTM
+  (needs fiscal).
+
+The root defect was a NAME lying (a calendar value called `fiscal_year`). Two honestly-
+named field groups make the lie structurally impossible. Target schema per fact
+(mirrors Compustat `DATADATE` + `DATACQTR` + `DATAFQTR`):
+
+1. **Raw window** — `period_start`, `period_end`, `duration_months` (already emitted).
+2. **Calendar label** — `calendar_year` + `calendar_quarter`, mechanically derived from
+   `period_end` (the calendar quarter containing the period-end date — Compustat's
+   `DATACQTR` rule). Trivially correct; not the dangerous one.
+3. **Fiscal label** — `fiscal_year` + `fiscal_quarter`, derived from each fact's OWN
+   `period_end` measured against the filing's dei fiscal calendar, per-fact, **fail loud
+   when the calendar is unreadable** (never fall back to the calendar year — that was the
+   root trap). See `docs/loom/memory/fiscal-year-derive-per-fact-against-filing-calendar.md`.
+
+Sub-questions still open for the rebuild BRAINSTORM (implementation locus, not "whether"):
+(a) which layer derives the fiscal label — data layer (co-located with T3's dei read,
+serves the data-layer T10 coverage report) or analysis layer (cleaner I/O boundary,
+but T10's fiscal grouping must then move to analysis); (b) the analysis-layer period-key
+basis — is `kpi_xbrl.py:143`'s calendar keying intended cross-company behaviour or a
+latent bug for quarterly non-December filers (NVDA's own FY splits across two calendar
+buckets under it).
 
 ## Spec defects to fix (route via loom-spec — change-folder is read-only to SDD)
 
