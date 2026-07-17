@@ -5,6 +5,26 @@ All notable changes to the `domain-teams` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v5.8.1] — 2026-07-17
+
+### Changed
+
+- **Token-budget two-tier recalibration** (skill-team SSOT + siblings):
+  the soft aim is recalibrated to `~5,000 tokens / ~3,750 words`,
+  aligned to official Anthropic Level-2 guidance (live-verified
+  2026-07-15), replacing the old "~3,000–4,500 tokens" /
+  "~4,500–6,000 tokens" soft/warning numbers. The hard cap
+  (`~6,000 tokens / ~4,500 words`, the only machine-enforced tier) is
+  unchanged. Adds a justified-exceedance convention: exceeding the
+  soft aim requires a one-line justification in the PR. Touches
+  `skill-team/standards/skill-md-structure.md` (SSOT),
+  `skill-team/rubrics/skill-coherence.md`,
+  `skill-team/protocols/new-skill-creation.md`, and
+  `skill-team/checklists/skill-completeness-checklist.md`
+  (CHK-SKL-010 wording). `scripts/check-skill-structure.py`
+  (`WORD_HARD_CAP`) is untouched — docs-only, no checker behavior
+  change.
+
 ## [v5.8.0] — 2026-07-14
 
 ### Changed

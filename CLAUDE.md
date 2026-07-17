@@ -36,7 +36,7 @@ skills/init/references/v1/spec.md     ← references/ 下開 v1/
 
 - 每個 skill 是自包含目錄：SKILL.md + 任意數量的**單層** subfolder（assets/、protocols/、agents/、scripts/、references/、checklists/、rubrics/、standards/ 等）
 - 任一 subfolder 內**不可再開 subfolder**（這是 Anthropic 官方 skill convention）
-- SKILL.md body 控制在 ~6,000 tokens 以內（約 4,500 words）；Anthropic 官方建議 <500 lines，本 repo 改用 token 計量因為行數密度差異大
+- SKILL.md body 硬上限 ~6,000 tokens（約 4,500 words）；軟目標 ~5,000 tokens（約 3,750 words，對齊官方建議）；超過軟目標需在 PR 註明一行理由。Anthropic 官方建議 <500 lines，本 repo 改用 token 計量因為行數密度差異大
 - Domain knowledge 用目錄慣例 + 描述性檔名路由，不用靜態清單
 - Reference files 從 SKILL.md 直接引用，路徑都是 `<subfolder>/<file>` 一層 deep
 - **違規會被 `.claude/hooks/validate-skill-folder-structure.sh` 擋下**（PostToolUse on Write|Edit）

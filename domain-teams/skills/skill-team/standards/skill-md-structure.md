@@ -399,10 +399,10 @@ enforces compliance.
 
 ## Token Budget
 
-- **Hard cap**: ~6,000 tokens / ~4,500 words (triggers Skill Coherence rubric 🔴)
-- **Soft target**: ~3,000–4,500 tokens
-- **Warning zone**: ~4,500–6,000 tokens (🟡 in coherence rubric)
-- Use word/token count rather than line count — lines vary too much in density
+- **Hard cap**: ~6,000 tokens / ~4,500 words (the only machine-enforced tier — triggers Skill Coherence rubric 🔴)
+- **Soft aim**: ~5,000 tokens / ~3,750 words (aligned to official Anthropic Level-2 guidance; the 🟡 band in the Skill Coherence rubric spans soft-aim-to-hard-cap, ~5,000–6,000 tokens / ~3,750–4,500 words)
+- **Justified exceedance**: exceeding the soft aim is fine with a one-line justification in the PR description or CHANGELOG entry (e.g. a deliberately frozen dense contract); this is a documentation/review convention, not checker-enforced
+- **Words-proxy**: word count (`wc -w`) is the deterministic proxy for token count used throughout this budget (~1.33 tokens/word); line count is not used — lines vary too much in density
 
 Historical precedent:
 - qa-team: 268 lines
