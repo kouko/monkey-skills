@@ -142,3 +142,89 @@ def test_blocked_window_names_semantics_dispute_trigger():
         "the mount must scope itself to a semantics/convention dispute, not "
         "every BLOCKED (e.g. a missing dependency must NOT trigger research)"
     )
+
+
+# --- v2 addition (plan task 10): reviewer evidence_needed tag ---------------
+# Source: docs/loom/plans/2026-07-18-knowledge-triage-three-buckets.md task 10
+# ("loom-code (0.32.0 -> 0.33.0): reviewer agents gain the optional
+# evidence_needed tag ... SDD SKILL.md one-line mount: a reviewer finding
+# carrying the tag triggers the research-escalation triage IMMEDIATELY").
+
+_IMMEDIATE_TRIGGER_ANCHOR = (
+    "before the 3rd re-dispatch — so research evidence rides that round."
+)
+_IMMEDIATE_TRIGGER_RADIUS = 250
+
+AGENTS_DIR = REPO_ROOT / "loom-code/agents"
+CODE_QUALITY_REVIEWER = AGENTS_DIR / "code-quality-reviewer.md"
+CODE_REVIEWER = AGENTS_DIR / "code-reviewer.md"
+
+_EVIDENCE_NEEDED_FIELD = "evidence_needed: craft | domain-convention | project-local"
+
+
+def test_cap_paragraph_window_names_evidence_needed_immediate_trigger():
+    """The 2nd-round mount's neighborhood must also cover the reviewer-tag
+    immediate trigger — a finding carrying evidence_needed: triggers the
+    triage NOW, not just at the 2nd same-question round (the tag is the
+    Loop-Breaker SWITCH signal; no round-burning)."""
+    text = _read(SDD_SKILL)
+    window = _window(text, _IMMEDIATE_TRIGGER_ANCHOR, _IMMEDIATE_TRIGGER_RADIUS)
+    assert "evidence_needed" in window, (
+        "the 2nd-round mount's neighborhood must name the evidence_needed "
+        "immediate trigger"
+    )
+    assert "before any re-dispatch" in window or "immediately" in window.lower(), (
+        "the immediate-trigger sentence must say the triage runs before any "
+        "re-dispatch, not wait for the 2nd round"
+    )
+
+
+def test_code_quality_reviewer_findings_schema_carries_evidence_needed():
+    text = _read(CODE_QUALITY_REVIEWER)
+    assert _EVIDENCE_NEEDED_FIELD in text, (
+        "code-quality-reviewer.md's findings schema must gain the optional "
+        "evidence_needed tag (plan task 10)"
+    )
+    assert "never runs the research" in text, (
+        "the schema addition needs its one-sentence flag-don't-search rule "
+        "(reviewer flags, never searches)"
+    )
+
+
+def test_code_reviewer_findings_schema_carries_evidence_needed():
+    text = _read(CODE_REVIEWER)
+    assert _EVIDENCE_NEEDED_FIELD in text, (
+        "code-reviewer.md's findings schema must gain the optional "
+        "evidence_needed tag (plan task 10)"
+    )
+    assert "never runs the research" in text, (
+        "the schema addition needs its one-sentence flag-don't-search rule "
+        "(reviewer flags, never searches)"
+    )
+
+
+def test_reference_file_carries_reviewer_tag_supplement_after_existing_sections():
+    """The supplement must land AFTER the pin block AND after the existing
+    'Mount doctrine' / 'Cap unchanged' sections — never inside the pin
+    (docs/loom/memory/pin-shared-wording-in-plan-copies-transcribe-from-pin.md
+    supplement-after-pin rule)."""
+    text = _read(REFERENCE)
+    cap_idx = text.find("## Cap unchanged")
+    assert cap_idx != -1, "existing '## Cap unchanged' section must survive"
+    supplement_idx = text.find("Reviewer-tag trigger")
+    assert supplement_idx != -1, (
+        "research-escalation.md must gain a reviewer-tag-trigger supplement"
+    )
+    assert supplement_idx > cap_idx, (
+        "the supplement must come AFTER the existing sections (including "
+        "'## Cap unchanged'), never inside the pin or before it"
+    )
+    assert "pre-classif" in text.lower() or "already named it" in text.lower(), (
+        "the supplement must say the tag pre-classifies the bucket, so this "
+        "trigger only verifies (and reclassifies if obviously wrong) rather "
+        "than re-deriving the bucket from scratch"
+    )
+    assert text.count("unchanged") >= 2, (
+        "the supplement must restate caps-unchanged (existing section already "
+        "has one 'unchanged'; the new supplement adds a second)"
+    )

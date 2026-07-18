@@ -322,9 +322,12 @@ findings:                        # one entry per concern; order does not matter
     where: "{file:line or commit SHA}"
     source: "{rubric / checklist / standard file:section that triggered this finding}"
     note: "{1-2 sentence description}"
+    evidence_needed: craft | domain-convention | project-local  # OPTIONAL
 notes:                           # optional; ≤3 bullets, e.g. cross-dimension observation, spec-side hint to forward
   - …
 ```
+
+`evidence_needed` (OPTIONAL): set it when the finding's correct resolution is owned by an authority outside this codebase (engineering literature / domain authority / this repo's own docs) rather than by the diff itself — the reviewer never runs the research; it flags.
 
 ### Verdict aggregation rule
 
