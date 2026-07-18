@@ -147,6 +147,8 @@ Commit the ledger update **per task** (lean: keep it maximally current so a cras
 | `PASS` | `NEEDS_REVISION` | Re-dispatch implementer with `findings`. Up to **3 rounds** then escalate to user. |
 | `NEEDS_REVISION` | (any) | Re-dispatch implementer with `gaps` + (if any) `findings`. Same 3-round cap. |
 
+When the 2nd round's `NEEDS_REVISION` repeats the SAME unresolved question, read [`references/research-escalation.md`](references/research-escalation.md) and run its triage FIRST — before the 3rd re-dispatch — so research evidence rides that round.
+
 A 3-round cap prevents infinite loops on ambiguous specs. On the 4th retry, surface to the user — likely the spec is wrong, not the implementer. Phrase that escalation per [§Asking the user](#asking-the-user): lead with a state anchor and say what's actually stuck in plain words, not `NEEDS_REVISION ×3`.
 
 ## Red Flags — refuse these rationalizations
@@ -188,6 +190,8 @@ BLOCKED              → apply unblock_step if orchestrator can; else surface to
 ```
 
 The orchestrator never silently dismisses a `BLOCKED` — even if the unblock step is trivial, log what was done so the final summary names it. A `NEEDS_CONTEXT` question with product stakes goes through the same two-axis framing (§Asking the user ①) before it reaches the user.
+
+Before surfacing a `BLOCKED` that hinges on a semantics or convention dispute (not a missing dependency, not broken test infra) → read [`references/research-escalation.md`](references/research-escalation.md) and run its triage FIRST, same as the 2nd-round trigger above.
 
 Whatever the user sees at this seam — a wave sign-off, a `DONE_WITH_CONCERNS` summary — is the rollup card in the live conversation language, per `loom-pipeline/hooks/family-relay.md §Family relay discipline`; this table's states are internal routing, not user-facing copy.
 
