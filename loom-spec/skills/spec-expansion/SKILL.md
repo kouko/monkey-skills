@@ -206,6 +206,14 @@ legal transitions).
 `backbone × object × CTA × state`. Each cell is a candidate path/edge. This
 is mechanical and deliberately over-generates — pruning happens next.
 
+**Domain-tag triage FIRST.** Before writing the expected behavior of any
+edge case or acceptance criterion NOT derivable from the seed,
+`PRINCIPLES.md`, or `ui-flows.md`, read
+[`references/domain-tag-triage.md`](references/domain-tag-triage.md) and
+classify it FIRST: craft / project-local → expand normally; domain-convention
+→ write a tagged open question (`evidence_needed: domain-convention`), never
+an invented answer.
+
 **Prune through the lens layer.** Walk the grid through fixed **lenses**,
 dropping illegal cells and surfacing aspects the cartesian grid cannot see.
 Each lens below teaches **when it dominates** and a **keep / flag / drop**
@@ -387,6 +395,12 @@ blind spots:
   aspects no generator can manufacture, e.g. business-domain reality that
   needs human/field input). Never delete this section; never claim it is
   empty because the spec is "complete".
+
+**Gate rule — before declaring the draft VERIFY-ready, check for unresolved
+SHAPING-class `evidence_needed: domain-convention` tags FIRST** (see
+[`references/domain-tag-triage.md`](references/domain-tag-triage.md)): any
+such tag blocks VERIFY unless it carries an explicit `deferred: <reason>`
+note.
 
 Validate the emitted directory with
 `../../scripts/validate_spec_output.py <output-dir>` (relative to this skill's
