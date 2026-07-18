@@ -338,6 +338,103 @@ def test_is_dimensional_revenue_fact_rejects_noncurrency_unit_synthetic():
     )
 
 
+def test_unit_guard_backstop_synthetic(sec_client):
+    """T21 (docs/loom/plans/2026-07-16-operational-kpi-quarterly.md) — the
+    spec's own backstop scenario ('the $-unit guard backstops a non-currency
+    fact that passes the name gates'): a SYNTHETIC `*Revenue*` concept —
+    no real filer case exists in the verification universe today, per the
+    spec's note — that clears BOTH the ALLOW/DENY name gates (contains
+    "Revenue", matches none of `_REVENUE_DENY_SUBSTRINGS` — no "Percent",
+    "CostOf", etc.) but carries a ratio/pure XBRL unit, not a currency
+    amount.
+
+    Unlike `test_is_dimensional_revenue_fact_rejects_noncurrency_unit_
+    synthetic` above (which calls the pure `_is_dimensional_revenue_fact`
+    predicate directly), this drives the FULL `extract_dimensional_revenue`
+    path end-to-end over an in-test staged filing (the `_make_dimensional_
+    filing` convention, T6/T13-era) carrying TWO dimensioned *Revenue*-named
+    rows on the SAME accession: a legitimate currency-unit control fact and
+    the synthetic ratio-unit backstop target — proving the guard is wired
+    into the real extraction output, not just correct in isolation."""
+    mod = sec_client
+    synthetic_concept = "xyz:SyntheticServiceRevenueYield"
+
+    # Fixture-sanity / RED-premise check: the synthetic concept must clear
+    # the name gate ON ITS OWN MERITS — otherwise this test would not
+    # isolate the $-unit guard as the thing doing the rejecting below.
+    assert mod._is_revenue_concept(synthetic_concept) is True, (
+        "fixture sanity: the synthetic concept must pass the ALLOW/DENY "
+        "name gate by itself (no deny substring hits) — if this fails, "
+        "the concept string needs picking again, not the unit guard"
+    )
+
+    accession = "0000320193-24-000555"
+    xb = mock.MagicMock(name=f"xbrl-{accession}")
+    rows = [
+        {  # control: a legitimate currency-unit revenue fact, proving
+            # extraction actually runs and isolating the rejection below.
+            "is_dimensioned": True,
+            "dim_srt_ProductOrServiceAxis": "aapl:IPhoneMember",
+            "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+            "numeric_value": 50000000000.0,
+            "unit_ref": "usd",
+            "currency": "USD",
+            "period_type": "duration",
+            "period_start": "2023-10-01",
+            "period_end": "2024-09-28",
+            "period_instant": None,
+        },
+        {  # SYNTHETIC backstop target: clears both name gates, non-currency
+            # unit (ratio/"pure", currency=None) — must be rejected by the
+            # $-unit guard alone.
+            "is_dimensioned": True,
+            "dim_srt_ProductOrServiceAxis": "aapl:IPhoneMember",
+            "concept": synthetic_concept,
+            "numeric_value": 0.85,
+            "unit_ref": "pure",
+            "currency": None,
+            "period_type": "duration",
+            "period_start": "2023-10-01",
+            "period_end": "2024-09-28",
+            "period_instant": None,
+        },
+        {"concept": "dei:DocumentFiscalPeriodFocus", "value": "FY"},
+        {"concept": "dei:CurrentFiscalYearEndDate", "value": "--09-28"},
+        {"concept": "dei:DocumentFiscalYearFocus", "value": "2024"},
+    ]
+    xb.facts.to_dataframe.return_value.to_dict.return_value = rows
+    filing = SimpleNamespace(
+        accession_no=accession, filing_date=datetime.date(2024, 11, 1), form="10-K",
+    )
+    filing.xbrl = lambda: xb
+
+    company = mock.MagicMock(name="Company")
+    company.not_found = False
+    company.cik = 320193
+    company.get_filings.return_value = [filing]
+    mod.edgar_stub.Company.return_value = company
+
+    result = mod.extract_dimensional_revenue("AAPL")
+
+    assert "error" not in result
+    concepts = {fact["concept"] for fact in result["facts"]}
+    assert synthetic_concept not in concepts, (
+        "the synthetic ratio-unit *Revenue* fact cleared the name gates but "
+        "must still be rejected by the $-unit guard — never emitted"
+    )
+    values = {fact["value"] for fact in result["facts"]}
+    assert 0.85 not in values, (
+        "the synthetic non-currency 'value' must never reach the emitted "
+        "fact-pack, even disguised as a plausible number"
+    )
+    # Control: the legitimate fact IS emitted — isolates the synthetic row's
+    # rejection above as caused by the $-unit guard, not a broken fixture.
+    assert 50000000000.0 in values, (
+        "the legitimate control fact must be emitted — proves extraction "
+        "ran and the backstop rejection above is real"
+    )
+
+
 def test_revenue_concept_filter_deny_list_additional_cases():
     """The additional deny cases named in the plan beyond the 3 RED
     scenarios: OtherCostOfOperatingRevenue (the "Operating" infix that
