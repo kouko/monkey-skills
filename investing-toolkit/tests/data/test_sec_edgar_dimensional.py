@@ -1070,6 +1070,79 @@ def test_extract_emits_duration_months():
         )
 
 
+def test_extract_emits_duration_weeks():
+    """Task 1 (docs/loom/plans/2026-07-18-52-53-week-filer-support.md) —
+    `_build_dimensional_revenue_fact` emits `duration_weeks` alongside
+    `duration_months` for EVERY duration-context fact (week-count honesty
+    rides the per-point field on every fact, independent of which lane
+    classifies it — plan Notes, class-lane precedence; Q4-derivation
+    arithmetic needs FY_weeks - YTD_weeks regardless of classification).
+
+    The pure `_week_lane_class` span->band mapper is the single shared
+    primitive (docs/loom/memory/shared-classifier-over-open-dialects-
+    needs-allowlist.md) both Gate P and Gate C will decide through: a
+    251-day span (36wk-ish) classifies to the YTD-through-Q3 band, a
+    111-day span (16wk-ish) classifies to the week-Q4 band, and an
+    ordinary ~365-day calendar-year span (month-lane territory) makes NO
+    week-lane claim — the allowlist is narrow observed-week clusters with
+    gaps, never one wide contiguous range that would swallow month-lane
+    spans (fail-closed unchanged)."""
+    mod = _load_helpers()
+    fixture = json.loads((FIXTURES / "xbrl_quarterly_msft.json").read_text())
+    raw = fixture["raw_facts"]
+    q_accession = fixture["quarterly_filing"]["accession"]
+    q_filed = fixture["quarterly_filing"]["filing_date"]
+    q_dei = {
+        "fiscal_period_focus": "Q3", "fiscal_year_end": "--06-30",
+        "fiscal_year_focus": "2026",
+    }
+
+    # 251-day synthetic span (36wk-ish YTD-through-Q3 week band), period_end
+    # on a real fiscal quarter boundary (Mar 31) so Gate P's label
+    # derivation does not raise — only the dates are overridden on the
+    # real fixture row (existing test-file convention, e.g. the
+    # missing/malformed period_start rows above).
+    ytd3q_row = dict(raw["three_month"])
+    ytd3q_row["period_start"] = "2025-07-23"
+    ytd3q_row["period_end"] = "2026-03-31"
+    ytd3q_fact = mod._build_dimensional_revenue_fact(
+        ytd3q_row, "TEST", q_accession, q_filed, q_dei,
+    )
+    assert ytd3q_fact["duration_weeks"] == 36
+
+    # 111-day synthetic span (16wk-ish week-Q4 band), period_end on the
+    # fiscal year end (Jun 30).
+    weekq4_row = dict(raw["three_month"])
+    weekq4_row["period_start"] = "2026-03-11"
+    weekq4_row["period_end"] = "2026-06-30"
+    weekq4_fact = mod._build_dimensional_revenue_fact(
+        weekq4_row, "TEST", q_accession, q_filed, q_dei,
+    )
+    assert weekq4_fact["duration_weeks"] == 16
+
+    # Ordinary ~365-day calendar-year span (month-lane territory, NOT a
+    # 52/53-week filer) still gets a duration_weeks count — week-count
+    # honesty on EVERY fact — but the pure mapper below must make no
+    # week-lane claim for it.
+    fy_row = dict(raw["three_month"])
+    fy_row["period_start"] = "2025-06-30"
+    fy_row["period_end"] = "2026-06-30"
+    fy_fact = mod._build_dimensional_revenue_fact(
+        fy_row, "TEST", q_accession, q_filed, q_dei,
+    )
+    assert fy_fact["duration_weeks"] == 52
+    assert fy_fact["duration_months"] == 12
+
+    # The pure span -> week-lane-class mapper, exercised directly.
+    assert mod._week_lane_class(251) == "YTD-through-Q3"
+    assert mod._week_lane_class(111) == "week-Q4"
+    assert mod._week_lane_class(365) is None, (
+        "an ordinary ~365d calendar-year span must make NO week-lane "
+        "claim — the allowlist is narrow week-multiple clusters with "
+        "gaps, never a wide range that swallows month-lane spans"
+    )
+
+
 # ---------------------------------------------------------------------------
 # code-quality-reviewer 🟡 (Task 1 follow-up) — `_duration_months`'s day-span
 # -> month-integer mapping pinned across the realistic bands the review

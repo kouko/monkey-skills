@@ -2114,26 +2114,24 @@ def _is_dimensional_revenue_fact(fact: dict) -> bool:
 _AVG_DAYS_PER_MONTH = 30.44
 
 
-def _duration_months(fact: dict, ticker: str, period_end: str) -> int:
-    """Derive the whole-month span of a duration-context fact from its XBRL
-    `period_start` -> `period_end` context (Task 1,
-    docs/loom/plans/2026-07-16-operational-kpi-quarterly.md — 'Period
-    duration is emitted per fact'): a 10-Q routinely tags BOTH a 3-month
-    quarter AND a year-to-date cumulative under the SAME period_end — e.g.
-    MSFT's FY26-Q3 10-Q ProductivityAndBusinessProcesses segment revenue:
-    3mo ending 2026-03-31 = $35,013M vs 9mo ending 2026-03-31 = $102,149M
-    (live-verified 2026-07-16, accession 0001193125-26-191507) — without
-    this discriminator the two silently conflate downstream.
+def _duration_span_days(fact: dict, ticker: str, period_end: str, *, field: str) -> int:
+    """Shared fail-loud `period_start` -> `period_end` day-span extraction
+    used by BOTH `_duration_months` and `_duration_weeks` (Task 1,
+    docs/loom/plans/2026-07-18-52-53-week-filer-support.md) — one date-
+    parsing path, never two copies that could silently drift (mirrors the
+    single-shared-week-band-table constraint this module also carries).
 
     Fails loud (`ValueError` naming `period_start`) on a missing/malformed
     `period_start` instead of guessing or defaulting: a guessed duration
     fabricates financial data, matching this module's anti-fabrication
-    posture (mirrors the `period_end` fail-loud check above)."""
+    posture (mirrors the `period_end` fail-loud check above). `field` names
+    the caller's derived quantity (`"duration_months"` / `"duration_weeks"`)
+    in the error message only."""
     period_start = fact.get("period_start")
     if not isinstance(period_start, str) or not period_start.strip():
         raise ValueError(
             f"dimensional revenue fact for {ticker!r} has a missing/malformed "
-            f"period_start (cannot derive duration_months): "
+            f"period_start (cannot derive {field}): "
             f"concept={fact.get('concept')!r} period_start={period_start!r} "
             f"period_end={period_end!r}"
         )
@@ -2143,7 +2141,7 @@ def _duration_months(fact: dict, ticker: str, period_end: str) -> int:
     except ValueError as exc:
         raise ValueError(
             f"dimensional revenue fact for {ticker!r} has a missing/malformed "
-            f"period_start (cannot derive duration_months): "
+            f"period_start (cannot derive {field}): "
             f"concept={fact.get('concept')!r} period_start={period_start!r} "
             f"period_end={period_end!r} ({exc})"
         ) from exc
@@ -2152,10 +2150,80 @@ def _duration_months(fact: dict, ticker: str, period_end: str) -> int:
         raise ValueError(
             f"dimensional revenue fact for {ticker!r} has a missing/malformed "
             f"period_start (period_start={period_start!r} is not before "
-            f"period_end={period_end!r}, cannot derive duration_months): "
+            f"period_end={period_end!r}, cannot derive {field}): "
             f"concept={fact.get('concept')!r}"
         )
+    return span_days
+
+
+def _duration_months(fact: dict, ticker: str, period_end: str) -> int:
+    """Derive the whole-month span of a duration-context fact from its XBRL
+    `period_start` -> `period_end` context (Task 1,
+    docs/loom/plans/2026-07-16-operational-kpi-quarterly.md — 'Period
+    duration is emitted per fact'): a 10-Q routinely tags BOTH a 3-month
+    quarter AND a year-to-date cumulative under the SAME period_end — e.g.
+    MSFT's FY26-Q3 10-Q ProductivityAndBusinessProcesses segment revenue:
+    3mo ending 2026-03-31 = $35,013M vs 9mo ending 2026-03-31 = $102,149M
+    (live-verified 2026-07-16, accession 0001193125-26-191507) — without
+    this discriminator the two silently conflate downstream."""
+    span_days = _duration_span_days(fact, ticker, period_end, field="duration_months")
     return round(span_days / _AVG_DAYS_PER_MONTH)
+
+
+# Week-based duration bands (positive allowlist, Task 1,
+# docs/loom/plans/2026-07-18-52-53-week-filer-support.md — the SINGLE
+# shared table both Gate P (fiscal-boundary labeling, this module) and
+# Gate C (duration-class mapping, kpi_xbrl.py lazy-imports this SAME
+# function per the module's `-toolkit-r2` two-path-desync lesson,
+# edgartools issue #816: no parallel patched copies) decide through.
+# Live recon (plan Notes, 2026-07-18) observed 52/53-week filers' XBRL
+# duration spans land EXACTLY on a whole-week multiple, or one day short
+# of it (12wk=83-84d, 16wk≈111d, 17wk≈119d, 24wk=167d, 36wk≈251d) — never
+# a wider drift. Each band is (label, week-counts); a span classifies only
+# when it lands in [weeks*7 - 1, weeks*7] for one of the band's week
+# counts — deliberately narrow clusters WITH GAPS between them, never one
+# wide contiguous range (an ordinary ~365d calendar year must never fall
+# into the FY band merely by proximity to 364/371 — fail-closed unchanged,
+# docs/loom/memory/shared-classifier-over-open-dialects-needs-allowlist.md).
+_WEEK_BANDS: tuple[tuple[str, tuple[int, ...]], ...] = (
+    ("quarter", (12, 13)),
+    ("week-Q4", (16, 17)),
+    ("H1", (24, 26)),
+    ("YTD-through-Q3", (36, 39)),
+    ("FY", (52, 53)),
+)
+
+
+def _week_lane_class(span_days: int) -> str | None:
+    """Pure day-span -> week-lane band label, via the `_WEEK_BANDS`
+    positive allowlist. Out-of-band spans return None — fail-closed
+    unchanged, never a nearest-guess. This is the single shared
+    classification decision both Gate P and Gate C route through."""
+    for label, week_counts in _WEEK_BANDS:
+        for weeks in week_counts:
+            exact_days = weeks * 7
+            if exact_days - 1 <= span_days <= exact_days:
+                return label
+    return None
+
+
+def _week_count(span_days: int) -> int:
+    """Pure day-span -> whole-week-count helper: `round(span_days / 7)`.
+    Emitted on EVERY duration fact as `duration_weeks` regardless of which
+    lane (month or week) classifies it — Q4-derivation arithmetic
+    (FY_weeks - YTD_weeks) needs week-count honesty independent of
+    classification (plan Notes, class-lane precedence)."""
+    return round(span_days / 7)
+
+
+def _duration_weeks(fact: dict, ticker: str, period_end: str) -> int:
+    """Derive the whole-week span of a duration-context fact from its XBRL
+    `period_start` -> `period_end` context, mirroring `_duration_months`'s
+    fail-loud posture (never a guessed/defaulted duration). Emitted
+    alongside `duration_months` on EVERY duration fact — week-count
+    honesty independent of which lane ultimately classifies the fact."""
+    span_days = _duration_span_days(fact, ticker, period_end, field="duration_weeks")
+    return _week_count(span_days)
 
 
 # Fiscal-boundary matching tolerance (Task 13; the plan's ruling on the
@@ -2488,11 +2556,15 @@ def _build_dimensional_revenue_fact(
 
     A duration-context fact also carries `duration_months` (Task 1,
     docs/loom/plans/2026-07-16-operational-kpi-quarterly.md — `_duration_months`,
-    fail-loud on a missing/malformed period_start). An instant-context fact
-    (reached only via a direct caller — `extract_dimensional_revenue`'s
-    `_is_dimensional_revenue_fact` predicate excludes instant contexts before
-    this function is ever called) carries no `duration_months` key: it is
-    not a duration flow and never gets a fabricated/guessed duration."""
+    fail-loud on a missing/malformed period_start) AND `duration_weeks`
+    (Task 1, docs/loom/plans/2026-07-18-52-53-week-filer-support.md —
+    `_duration_weeks`, same fail-loud posture, emitted on EVERY duration
+    fact regardless of which lane ultimately classifies it). An
+    instant-context fact (reached only via a direct caller —
+    `extract_dimensional_revenue`'s `_is_dimensional_revenue_fact`
+    predicate excludes instant contexts before this function is ever
+    called) carries neither key: it is not a duration flow and never gets
+    a fabricated/guessed duration."""
     dimensions, consolidation = _dimension_signature(fact)
     period_end = (
         fact.get("period_end") if fact.get("period_type") == "duration"
@@ -2524,6 +2596,7 @@ def _build_dimensional_revenue_fact(
     }
     if fact.get("period_type") == "duration":
         built["duration_months"] = _duration_months(fact, ticker, period_end)
+        built["duration_weeks"] = _duration_weeks(fact, ticker, period_end)
     fiscal_year, fiscal_quarter = _derive_fiscal_label(
         period_end_date, built.get("duration_months"), dei_calendar,
         ticker, accession,
