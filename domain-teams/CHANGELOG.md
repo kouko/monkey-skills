@@ -15,9 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   memo-feed 1.1 quarterly output. Rules: each derived-Q4 cell (mint
   gap-filled from FY minus 9-month YTD) is tagged per-cell and must
   carry its `dqc.reason` footnote verbatim — never paraphrased or
-  dropped; any `gaps` entries are reconciled against the feed's
-  `coverage_flags` before the block renders, and unreconciled gaps
-  block the memo rather than silently omitting a quarter; a full
+  dropped; genuine per-series `gaps` entries truncate the trend table
+  at the gap with a verbatim footnote (never spliced or interpolated
+  across), while top-level `coverage_flags` (DQC restatement/label
+  conflicts) are disclosed inline on the affected cells, never by
+  truncation; a full
   quarterly table lands as an appendix exhibit; non-US tickers (no
   quarterly feed available) render a single explicit N/A line instead
   of a missing section.
