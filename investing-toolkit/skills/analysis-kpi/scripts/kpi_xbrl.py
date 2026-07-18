@@ -27,10 +27,29 @@ into a kpi_store-shaped point:
                           (dimensional, e.g.
                           `"concept|ProductOrService=StreamingMember"`)
   - `as_of`            = fact `filed`
-  - `period`           = the year the fiscal period ENDS, taken from
-                          `period_end[:4]` (e.g. `"2025-09-27"` -> `"2025"`)
-                          — NEVER from the `fiscal_year` column, which
-                          edgartools mislabels for prior-year comparatives
+  - `period`           = the fact's EMITTED `fiscal_year` label (Task 5,
+                          docs/loom/plans/2026-07-16-operational-kpi-quarterly.md
+                          — the data layer derives it per-fact from the fact's
+                          own period_end against the filing's dei calendar,
+                          dei-grounded and fail-loud; this module is a pure
+                          CONSUMER of that label and never re-derives fiscal
+                          geometry). NEVER `period_end[:4]` — that is the
+                          CALENDAR year (the scope-B ruled latent bug: NVDA
+                          FY2026-Q3 ends 2025-10-26), carried instead on each
+                          point as the honest `calendar_year`/`calendar_quarter`
+                          pair (the calendarization basis). And STILL never
+                          edgartools' raw `fiscal_year` dataframe COLUMN, which
+                          mislabels prior-year comparatives — the historical
+                          trap holds; our derived label is distinguished from
+                          that column by the full emitted label group
+                          (`fiscal_year` + `fiscal_quarter` + `duration_months`):
+                          a fact carrying a bare `fiscal_year` without its group
+                          is treated as unclassifiable, never trusted.
+  - `period_type`      = classified from the emitted labels (Task 5):
+                          `fiscal_quarter` (Q1|Q2|Q3|Q4|FY) consumed as-is,
+                          with `duration_class` (3mo|6mo-YTD|9mo-YTD|12mo-FY)
+                          and the `cumulative` flag derived from
+                          `duration_months` — see `classify_fact_period`.
   - `value`            = fact `value`
   - plus `company`, `kpi_id`, `source_kind`
 
@@ -39,7 +58,14 @@ discipline): a matched fact missing `value`/`accession`/`filed`/`period_end`,
 carrying a non-numeric `value`, or a malformed (non-YYYY-MM-DD) `period_end`,
 RAISES a distinct `ValueError` naming the offending field — this module
 never emits a fabricated `0` or a period `"None"`. A true numeric `0` is a
-real value, not a missing one.
+real value, not a missing one. Two further fail-loud branches (Task 5):
+(a) a fact pack carrying an `error`/`error_class` slot (e.g. the
+foreign-private-issuer `foreign_private_issuer_no_quarterly_xbrl` N/A) is
+branched on BEFORE `facts` is read — it RAISES, never consumed as a real
+empty series; (b) a fact missing the emitted label group (a pre-schema
+stub, or a filing whose per-filing dei calendar was unreadable/None) is
+surfaced as UNCLASSIFIABLE — never guessed from period_end/calendar
+position, never keyed by the calendar year.
 
 Task 6 adds a thin argparse CLI (`build`), mirroring `kpi_memo_feed.py`'s
 CLI shape and fail-loud exit-code convention: reads a fact-pack JSON from
@@ -70,11 +96,98 @@ import kpi_series  # noqa: E402
 
 _DEFAULT_CONSOLIDATION_MEMBER = "OperatingSegmentsMember"
 
-# Scope A (this pilot) does NOT model quarters — it always emits the
-# constant annual period_type "FY". This reserves the identity-key slot
-# scope B (quarterly, loom-spec follow-up) extends without a core rewrite;
-# scope B owns the real period_type enumeration (see plan Decision Log).
-_PERIOD_TYPE_FY = "FY"
+# Task 5 (scope B quarterly): period_type is CLASSIFIED from the data
+# layer's emitted labels — `fiscal_quarter` ∈ {Q1..Q4, FY} consumed as-is,
+# `duration_class` + the cumulative flag mapped from `duration_months`.
+# The producer derives fiscal_quarter JOINTLY with the duration (a
+# 12-month fact is FY, never a bare Q4), so the two must agree here.
+_DURATION_CLASS_BY_MONTHS = {3: "3mo", 6: "6mo-YTD", 9: "9mo-YTD", 12: "12mo-FY"}
+_CUMULATIVE_DURATION_CLASSES = frozenset({"6mo-YTD", "9mo-YTD"})
+_FISCAL_QUARTERS = frozenset({"Q1", "Q2", "Q3", "Q4", "FY"})
+
+
+def _unclassifiable(fact: dict, reason: str) -> ValueError:
+    """A distinct, loud unclassifiable-fact error (spec: 'a transition or
+    unclassifiable period is surfaced, not guessed'): the fact is SURFACED
+    by name — period_type is never inferred from period_end/calendar
+    position, the period key is never `period_end[:4]` (the calendar year),
+    and a bare `fiscal_year` without its emitted label group (the old
+    edgartools raw-column shape, unreliable for comparatives) is never
+    trusted."""
+    return ValueError(
+        f"kpi_xbrl: fact is unclassifiable — {reason} "
+        f"(concept={fact.get('concept')!r}, period_end="
+        f"{fact.get('period_end')!r}, accession={fact.get('accession')!r}) "
+        f"— surfaced, never guessed: no period_type is inferred and the "
+        f"calendar year is never keyed in its place"
+    )
+
+
+def classify_fact_period(fact: dict) -> dict:
+    """Classify one fact's `{period_type, cumulative, duration_class}` by
+    CONSUMING the data layer's emitted label group — `fiscal_quarter` +
+    `duration_months` + `fiscal_year` (Task 5; rebuild-findings §RESOLVED:
+    the data layer derives, the analysis layer consumes — fiscal geometry
+    is NEVER re-derived here). A comparative fact classifies from its OWN
+    labels (the producer derives them per-fact, never the filing focus).
+
+    Raises the distinct unclassifiable `ValueError` when the label group is
+    missing/invalid (a pre-schema stub pack, or a filing whose dei calendar
+    was unreadable — e.g. a `None` entry in the pack's `fiscal_calendars`
+    leaves its facts with no derivable labels) or internally inconsistent
+    (FY without a 12-month duration or vice versa — the producer derives
+    them jointly, so disagreement is producer corruption, surfaced rather
+    than resolved by guessing which label to trust)."""
+    fiscal_year = fact.get("fiscal_year")
+    fiscal_quarter = fact.get("fiscal_quarter")
+    duration_months = fact.get("duration_months")
+    if not isinstance(fiscal_year, int) or isinstance(fiscal_year, bool):
+        raise _unclassifiable(fact, "missing/non-integer emitted fiscal_year label")
+    if fiscal_quarter not in _FISCAL_QUARTERS:
+        raise _unclassifiable(
+            fact,
+            f"missing/unknown emitted fiscal_quarter label ({fiscal_quarter!r})",
+        )
+    duration_class = _DURATION_CLASS_BY_MONTHS.get(duration_months)
+    if duration_class is None:
+        raise _unclassifiable(
+            fact,
+            f"missing/non-standard duration_months ({duration_months!r}, "
+            f"expected one of {sorted(_DURATION_CLASS_BY_MONTHS)})",
+        )
+    if (fiscal_quarter == "FY") != (duration_class == "12mo-FY"):
+        raise _unclassifiable(
+            fact,
+            f"inconsistent labels: fiscal_quarter={fiscal_quarter!r} with "
+            f"duration_class={duration_class!r} (the producer derives them "
+            f"jointly — a 12-month fact is FY, never a bare quarter)",
+        )
+    return {
+        "period_type": fiscal_quarter,
+        "cumulative": duration_class in _CUMULATIVE_DURATION_CLASSES,
+        "duration_class": duration_class,
+    }
+
+
+def _require_facts(fact_pack: dict) -> list:
+    """Read `fact_pack["facts"]` AFTER branching on an explicit error/N-A
+    slot (Task 5, Wave-1 review finding): the data layer's gap-slot idiom
+    (`error` + `error_class`, e.g. the foreign-private-issuer
+    `foreign_private_issuer_no_quarterly_xbrl` N/A, which deliberately
+    omits `facts`) must NEVER be consumed as a real empty series by a
+    `.get()` default — exactly the silent-empty failure the slot exists to
+    prevent (see `_foreign_private_issuer_na_slot`'s contract in
+    sec_edgar_client.py)."""
+    error_class = fact_pack.get("error_class")
+    if error_class is not None or "error" in fact_pack:
+        raise ValueError(
+            f"kpi_xbrl: fact pack is an explicit error/N-A slot "
+            f"(error_class={error_class!r}, identifier="
+            f"{fact_pack.get('identifier')!r}): "
+            f"{fact_pack.get('reason') or fact_pack.get('error')!r} — "
+            f"never consumed as an empty series"
+        )
+    return fact_pack.get("facts", [])
 
 
 def _normalize_consolidation(value):
@@ -125,6 +238,13 @@ def _require_value(fact: dict) -> float:
 
 
 def _require_period(fact: dict) -> str:
+    """The fact's series period key = its EMITTED `fiscal_year` label
+    (Task 5 migration — `period_end[:4]` is the CALENDAR year, the ruled
+    latent bug: NVDA's FY2026-Q3 ends 2025-10-26 and must key under 2026).
+    Still validates `period_end` (the raw window stays a required,
+    well-formed field) and requires the FULL label group via
+    `classify_fact_period` — a bare `fiscal_year` without its group is the
+    untrusted edgartools raw column, surfaced unclassifiable instead."""
     period_end = fact.get("period_end")
     if not isinstance(period_end, str) or not period_end:
         raise ValueError(
@@ -140,7 +260,8 @@ def _require_period(fact: dict) -> str:
             f"({period_end!r}, concept={fact.get('concept')!r}) — expected "
             f'YYYY-MM-DD, rejected, never fabricated as period "None"'
         ) from None
-    return period_end[:4]
+    classify_fact_period(fact)  # label-group guard; raises unclassifiable
+    return str(fact["fiscal_year"])
 
 
 def _require_field(fact: dict, field: str) -> str:
@@ -166,13 +287,14 @@ def facts_to_points(
     mapping and the fail-loud field-by-field taxonomy.
     """
     points = []
-    for fact in fact_pack.get("facts", []):
+    for fact in _require_facts(fact_pack):
         if not _fact_matches(fact, match):
             continue
 
         value = _require_value(fact)
         accession = _require_field(fact, "accession")
         filed = _require_field(fact, "filed")
+        classification = classify_fact_period(fact)
         period = _require_period(fact)
 
         concept = fact.get("concept")
@@ -189,8 +311,15 @@ def facts_to_points(
         point = {
             "company": company,
             "kpi_id": kpi_id,
-            "period_type": _PERIOD_TYPE_FY,
+            "period_type": classification["period_type"],
+            "cumulative": classification["cumulative"],
+            "duration_class": classification["duration_class"],
             "period": period,
+            # The parallel CALENDAR basis stays available on every point
+            # (cross-company calendarization — rebuild-findings §RESOLVED),
+            # honestly named, never conflated with the fiscal period key.
+            "calendar_year": fact.get("calendar_year"),
+            "calendar_quarter": fact.get("calendar_quarter"),
             "as_of": filed,
             "value": value,
             "source_accession": accession,
@@ -227,9 +356,10 @@ def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
     mapping) under the single logical `kpi_id`. A fact matching no source is
     skipped, never fabricated. A fact matching more than one source RAISES —
     an ambiguous binding. INVARIANT: exactly ONE point per (signature,
-    period_type, period) — `period_type` reserves the slot scope B
-    (quarterly) extends later; scope A always sets it to the constant
-    `"FY"`. When a single source's signature matches TWO OR MORE facts for
+    period_type, period) — `period_type` is the CLASSIFIED fiscal quarter
+    (Q1..Q4|FY, consumed from the emitted labels via `classify_fact_period`)
+    and `period` is the emitted `fiscal_year` label (Task 5 — never the
+    calendar year). When a single source's signature matches TWO OR MORE facts for
     the SAME period, they collapse to exactly one point — if every matched
     fact agrees on `value`, the identical duplicate(s) are DEDUPED down to
     one point (never double-counted downstream). If the matched facts
@@ -251,7 +381,7 @@ def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
 
     facts_by_source_idx: list[list[dict]] = [[] for _ in sources]
 
-    for fact in fact_pack.get("facts", []):
+    for fact in _require_facts(fact_pack):
         matched_indices = []
         for idx, source in enumerate(sources):
             selector = {
@@ -282,8 +412,11 @@ def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
         matched_facts = facts_by_source_idx[idx]
         by_period: dict[tuple[str, str], list[dict]] = {}
         for fact in matched_facts:
-            period_key = (fact.get("period_end") or "")[:4] or fact.get("period_end")
-            identity_key = (_PERIOD_TYPE_FY, period_key)
+            # Task 5: the identity key is (classified period_type, emitted
+            # fiscal_year) — never the calendar year of period_end.
+            # LOOM-SIMPLIFY: shortcut=identity key omits duration_class, so a single-quarter and a YTD fact sharing one fiscal quarter+year collide on the key (surfaced via the value-disagreement RAISE below, never silently merged) | ceiling=first binding resolved over a fact pack carrying dual-duration facts for one signature (every real Q2/Q3 10-Q) | upgrade=extend the key with duration_class per plan Task 6 | ref=docs/loom/plans/2026-07-16-operational-kpi-quarterly.md §Task 6
+            period_key = _require_period(fact)
+            identity_key = (classify_fact_period(fact)["period_type"], period_key)
             by_period.setdefault(identity_key, []).append(fact)
         for (_, period_key), group in by_period.items():
             values = {fact.get("value") for fact in group}

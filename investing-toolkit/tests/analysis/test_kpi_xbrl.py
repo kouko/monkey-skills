@@ -68,19 +68,37 @@ NEW_IPHONE_MATCH = {
 # `dimensions`-map shape against the real signature_fact_pack fixture.
 
 
-def test_facts_to_points_period_derives_from_period_end_not_fiscal_year(kpi_xbrl_module, fact_pack):
-    """period MUST come from period_end[:4] — edgartools' raw fiscal_year
-    column is unreliable for prior-year comparatives (AMENDMENT a). Corrupt
-    fiscal_year while leaving period_end correct -> period still follows
-    period_end, proving the derivation source, not just the output value.
-    """
+def test_facts_to_points_rejects_raw_column_shape_never_calendar_keyed(kpi_xbrl_module, fact_pack):
+    """UPDATED for Task 5 (was test_facts_to_points_period_derives_from_
+    period_end_not_fiscal_year — that test asserted `period == period_end[:4]`,
+    the CALENDAR year, ruled a latent bug at the 2026-07-18 re-plan:
+    rebuild-findings §RESOLVED (b)). Its historical intent — never trust
+    edgartools' raw `fiscal_year` COLUMN, which mislabels prior-year
+    comparatives — is PRESERVED, re-encoded for the migrated keying: a fact
+    stripped down to the old raw-column shape (bare `fiscal_year`, no
+    emitted fiscal_quarter/duration_months group) is surfaced
+    UNCLASSIFIABLE — never silently keyed from the raw column, and never
+    silently re-keyed from period_end[:4] either."""
     mutated = json.loads(json.dumps(fact_pack))
     for fact in mutated["facts"]:
         if fact["concept"] == NEW_IPHONE_MATCH["concept"] and fact.get("member") == "aapl:IPhoneMember" and fact["period_end"] == "2025-09-27":
-            fact["fiscal_year"] = 1999  # deliberately wrong; period_end is the source of truth
+            # Strip the emitted label group back to the pre-schema raw-column
+            # shape: fiscal_year survives as a bare int (the untrusted
+            # edgartools dataframe column), the group's other fields go.
+            for field in ("fiscal_quarter", "duration_months",
+                          "calendar_year", "calendar_quarter",
+                          "derivation_basis"):
+                fact.pop(field, None)
 
+    with pytest.raises(ValueError, match="unclassifiable"):
+        kpi_xbrl_module.facts_to_points(
+            mutated, "iphone_revenue", NEW_IPHONE_MATCH, "AAPL", "xbrl-dimensional"
+        )
+
+    # The intact producer-labeled pack still keys on the emitted fiscal
+    # label (which coincides with 2025 for this real annual AAPL fact).
     points = kpi_xbrl_module.facts_to_points(
-        mutated, "iphone_revenue", NEW_IPHONE_MATCH, "AAPL", "xbrl-dimensional"
+        fact_pack, "iphone_revenue", NEW_IPHONE_MATCH, "AAPL", "xbrl-dimensional"
     )
     matched = [p for p in points if p["value"] == 209586000000]
     assert len(matched) == 1
@@ -527,7 +545,15 @@ def test_resolve_binding_consolidation_qualifier_operating_segments(
         "consolidation": "OperatingSegmentsMember",
         "value": 178353000000,
         "period_end": "2025-09-27",
+        # Task 5: the producer now emits the full parallel-label group on
+        # every fact — this synthetic fact mirrors that shape (annual 10-K
+        # fact: 12mo → FY), per fixtures-mirror-producer-shape.
+        "duration_months": 12,
+        "calendar_year": 2025,
+        "calendar_quarter": "Q3",
         "fiscal_year": 2025,
+        "fiscal_quarter": "FY",
+        "derivation_basis": "dei-declared",
         "accession": "0000320193-25-000079",
         "filed": "2025-10-31",
     }
@@ -578,7 +604,15 @@ def test_resolve_binding_explicit_nondefault_consolidation(kpi_xbrl_module):
         "consolidation": "OperatingSegmentsMember",
         "value": 178353000000,
         "period_end": "2025-09-27",
+        # Task 5: the producer now emits the full parallel-label group on
+        # every fact — this synthetic fact mirrors that shape (annual 10-K
+        # fact: 12mo → FY), per fixtures-mirror-producer-shape.
+        "duration_months": 12,
+        "calendar_year": 2025,
+        "calendar_quarter": "Q3",
         "fiscal_year": 2025,
+        "fiscal_quarter": "FY",
+        "derivation_basis": "dei-declared",
         "accession": "0000320193-25-000079",
         "filed": "2025-10-31",
     }
