@@ -163,7 +163,10 @@ analysis-kpi SKILL.md beyond the memo-feed surface this slice ships.
 
 **Derived-Q4 presentation policy (user-ratified 2026-07-18: option a): the memo
 trend table INCLUDES derived-Q4 cells, each tagged per-cell as derived with a
-footnote naming the formula (FY − ΣQ1-3) and the plural source accessions. Two
+footnote naming the real derivation basis (FY total − reported 9-month-YTD
+cumulative; colloquially "FY minus first three quarters", but the mechanical
+basis is the 9mo-YTD cumulative, which differs under restatement — wording
+corrected during T5 review, policy unchanged) and the plural source accessions. Two
 standing safeguards: a series with <4 reported quarters renders appendix-only
 (never in the body); non-US tickers with true reported Q4 never receive the
 derived tag (out of scope this slice anyway — US-only).**

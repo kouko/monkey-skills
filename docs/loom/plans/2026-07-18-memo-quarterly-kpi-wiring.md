@@ -155,19 +155,30 @@ belongs to the already-shipped US SEC arc (housekeeping note surfaced to user).
   (thesis-support position near P3, buy-side convention) + the output template
   (:286-370): consumes ONLY the kpi memo-feed JSON (never recompute, never read
   raw facts); trend table = last 8 quarters, fiscal label + calendar pair shown;
-  derived-Q4 cells tagged per-cell with footnote naming FY−ΣQ1-3 + source
-  accessions; coverage gaps truncate + footnote (reason verbatim from
-  coverage_flags); <4 reported quarters → appendix-only; WITHHELD/absent feed →
-  section states the reason verbatim (no fabricated series). TW 月營收 block
-  (:136-143) untouched.
+  derived-Q4 cells tagged per-cell with a footnote naming the REAL derivation
+  basis — FY total − reported 9-month-YTD cumulative (NOT "ΣQ1-3"; they differ
+  under restatement) — transcribing the feed's `derived_points[].dqc.reason`
+  verbatim + plural source accessions; per-series `gaps[]` → truncate + footnote
+  reason verbatim; top-level `coverage_flags[]` (DQC restatement/label flags) →
+  inline disclosure on the affected cell, NEVER truncation; <4 reported
+  quarters → appendix-only; feed absent from the seed context's Resource Paths
+  or status ≠ TRUSTED → state the fact + any recorded reason verbatim (the 1.1
+  arm has no WITHHELD state — a refusal produces no feed at all; no
+  `withheld_reason` field exists on this arm). Use the protocol's canonical
+  "seed context" term. TW 月營收 block (:136-143) untouched.
+  [Amended during T5 review round: reviewers proved the original wording
+  (FY−ΣQ1-3 / coverage_flags truncation / WITHHELD vocabulary) contradicted the
+  real 1.1 feed schema — policy unchanged, mechanism description corrected.]
 - Module: domain-teams investing-team (protocol prose)
 - Files touched: domain-teams/skills/investing-team/protocols/deep-equity-research-memo.md
 - Context paths:
   - domain-teams/skills/investing-team/checklists/primary-source-citation-compliance.md (gate language the block must be compatible with)
 - Acceptance:
   - RED: grep diagnostic — `grep -c 'Operating KPI' protocols/deep-equity-research-memo.md`
-    returns 0 today; target-state grep set (block heading present + "derived"
-    tagging rule + "WITHHELD" handling + appendix rule each ≥1 hit) fails now.
+    returns 0 today; target-state grep set (block heading present + "derived-Q4"
+    tagging rule + feed-absent/not-TRUSTED handling + "9mo-YTD"/dqc.reason
+    transcription + gaps-vs-coverage_flags separation + appendix rule each ≥1 hit)
+    fails now.
   - GREEN: all greps hit; no diff outside the new block + template insertion
     (surgical-edit check via `git diff --stat`).
 - Dependencies: Task 3 completes first (block mirrors feed schema fields — semantic dep)
