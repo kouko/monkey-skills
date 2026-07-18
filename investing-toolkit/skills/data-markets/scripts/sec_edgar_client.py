@@ -2308,11 +2308,22 @@ def _derive_fiscal_label(
     ).days > FISCAL_BOUNDARY_TOLERANCE_DAYS:
         year += 1
     fiscal_year = year
+    fiscal_year_end = _nominal_fiscal_year_end(fiscal_year, month, day)
 
     if duration_months == 12:
-        return fiscal_year, "FY"
+        # The annual path carries the SAME boundary tolerance as the
+        # sub-annual paths (Task 16 round-2 fix): a 12-month comparative
+        # ending on an OLD fiscal-year-end inside an FYE-change filing
+        # lands far from the new calendar's nominal year-end — quarantine
+        # it, never silently label it FY.
+        if abs((period_end - fiscal_year_end).days) <= (
+            FISCAL_BOUNDARY_TOLERANCE_DAYS
+        ):
+            return fiscal_year, "FY"
+        raise UnclassifiablePeriodError(
+            ticker, accession, period_end, fiscal_year, fiscal_year_end
+        )
 
-    fiscal_year_end = _nominal_fiscal_year_end(fiscal_year, month, day)
     boundaries = {
         "Q1": _subtract_months(fiscal_year_end, 9),
         "Q2": _subtract_months(fiscal_year_end, 6),

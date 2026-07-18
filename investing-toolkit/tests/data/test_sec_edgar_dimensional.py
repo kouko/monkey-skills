@@ -639,8 +639,13 @@ def _make_dimensional_filing(*, accession, form, filing_date, revenue_value,
             "unit_ref": "usd",
             "currency": "USD",
             "period_type": "duration",
-            "period_start": (filing_date - datetime.timedelta(days=365)).isoformat(),
-            "period_end": filing_date.isoformat(),
+            # 12-month window aligned to the staged dei fiscal-year-end
+            # (--09-28): the annual path carries the same boundary tolerance
+            # as the sub-annual paths (Task 16 round-2), so a realistic FY
+            # fact must end at the declared year-end — never at filing_date
+            # (a 10-K files weeks AFTER its fiscal year ends).
+            "period_start": "2023-10-01",
+            "period_end": "2024-09-28",
             "period_instant": None,
         },
     ]
@@ -2135,3 +2140,86 @@ def test_label_tolerance_and_projection_basis(sec_client):
     # the in-progress year's 10-Qs.
     for fact in pack2["facts"]:
         assert fact["derivation_basis"] == "dei-declared", fact
+
+
+def test_annual_out_of_tolerance_unclassifiable(sec_client):
+    """The never-guess property covers ANNUAL facts too (Task 16 round-2
+    fix): a 12-month fact whose period_end lands beyond
+    FISCAL_BOUNDARY_TOLERANCE_DAYS of the filing's nominal fiscal-year-end
+    (an old-FYE comparative inside an FYE-change/transition filing) is
+    QUARANTINED with the unclassifiable DQC flag — never silently labeled
+    FY by the first at-or-after nominal year-end. A 12-month fact WITHIN
+    tolerance still labels FY (regression guard)."""
+
+    def _staged_pack(period_start, period_end):
+        # T14/T16 counterfactual-row convention: freshly-parsed COPY of the
+        # machine-captured NVDA range records (file never touched); ONLY the
+        # Q2 filing's one revenue row's period window is mutated in-test.
+        fixture = json.loads(
+            (FIXTURES / "xbrl_quarterly_nvda_range.json").read_text()
+        )
+        records = fixture["filings"]
+        staged = [
+            row for row in records[1]["raw_facts"]
+            if row["concept"] == "us-gaap:Revenues"
+        ]
+        assert len(staged) == 1, "fixture sanity: exactly one revenue row"
+        staged[0]["period_start"] = period_start
+        staged[0]["period_end"] = period_end
+
+        tenqs = [_filing_from_fixture(r) for r in records]
+        tenks = [
+            _metadata_only_filing(
+                r, reason="10-K index anchors serve pre-fetch selection "
+                          "from metadata only; their xbrl must never be "
+                          "fetched here",
+            )
+            for r in fixture["annual_filings_index"]
+        ]
+        company = mock.MagicMock(name="Company")
+        company.not_found = False
+        company.cik = 1045810
+        company.get_filings.side_effect = (
+            lambda form=None, **_kw: {"10-Q": tenqs, "10-K": tenks}.get(form, [])
+        )
+        sec_client.edgar_stub.Company.return_value = company
+        pack = sec_client.extract_dimensional_revenue(
+            "NVDA", form="10-Q", since_year=2026, until_year=2026,
+            as_of=datetime.date(2026, 7, 18),
+        )
+        assert "error" not in pack, pack
+        return pack, records[1]["accession"]
+
+    # --- out of tolerance: 12-month window ending 2025-06-15, which is
+    # 141/224 days from the FY2025/FY2026 nominal year-ends (2025-01-25 /
+    # 2026-01-25 per the captured --01-25 declaration) — beyond
+    # FISCAL_BOUNDARY_TOLERANCE_DAYS=10 of every nominal FYE. 364-day span
+    # -> duration_months == 12 (the annual early-return path).
+    pack, staged_accession = _staged_pack("2024-06-16", "2025-06-15")
+    assert not any(f["period_end"] == "2025-06-15" for f in pack["facts"]), (
+        "a 12-month fact ending beyond tolerance of the nominal "
+        "fiscal-year-end must be quarantined, never silently FY-labeled by "
+        "the first at-or-after nominal year-end"
+    )
+    flags = pack["coverage"]["unclassifiable_periods"]
+    assert len(flags) == 1, flags
+    flag = flags[0]
+    assert set(flag) == {"type", "old", "new", "accessions", "reason"}, flag
+    assert flag["type"] == "unclassifiable_period", flag
+    assert flag["accessions"] == [staged_accession], flag
+    assert "2025-06-15" in flag["reason"], flag
+
+    # --- within tolerance (regression guard): 12-month window ending
+    # 2025-01-26, 1 day from the FY2025 nominal year-end 2025-01-25 —
+    # still labels FY2025/FY, no flag.
+    pack, _ = _staged_pack("2024-01-28", "2025-01-26")
+    assert pack["coverage"]["unclassifiable_periods"] == [], (
+        "a 12-month fact WITHIN tolerance of the nominal fiscal-year-end "
+        "is classifiable — no quarantine"
+    )
+    annual = [f for f in pack["facts"] if f["period_end"] == "2025-01-26"]
+    assert len(annual) == 1, pack["facts"]
+    assert annual[0]["duration_months"] == 12, annual[0]
+    assert (annual[0]["fiscal_year"], annual[0]["fiscal_quarter"]) == (2025, "FY"), (
+        annual[0]
+    )
