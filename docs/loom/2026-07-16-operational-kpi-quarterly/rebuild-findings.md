@@ -97,6 +97,32 @@ basis — is `kpi_xbrl.py:143`'s calendar keying intended cross-company behaviou
 latent bug for quarterly non-December filers (NVDA's own FY splits across two calendar
 buckets under it).
 
+**Sub-questions RESOLVED at the 2026-07-18 re-plan (agent-decided; both answers are
+entailed by the ratified parallel-label design + repo evidence, so per the ask-gate they
+were ruled, not re-asked):**
+
+(a) **The DATA layer derives both label groups.** The spec binds the labels to "each
+emitted dimensional fact" — the emitter is `extract_dimensional_revenue`; the selection
+fix (declared-FY range membership + post-fetch reconciliation) and the coverage report
+(fiscal grouping, absence states) are data-layer duties that need the dei-derivation
+machinery regardless, so deriving the labels there avoids duplicating that machinery in
+two layers. The analysis layer becomes a pure CONSUMER of trustworthy labels. Rejected:
+analysis-layer derivation — it would strand T10's fiscal grouping without the derivation
+or force a second copy of it.
+
+(b) **`kpi_xbrl.py:143`'s `period_end[:4]` keying is a LATENT BUG being made load-bearing,
+not intended behaviour — the analysis layer migrates to keying on the emitted fiscal
+label.** Evidence: for scope-A annual facts at FY-named-by-end-year filers the two keys
+coincide (why it shipped green); for quarterly non-December filers calendar keying splits
+one fiscal year across two buckets (NVDA FY2026 → 2025+2026); even for ANNUAL facts a
+floating-December FYE that crosses Jan-1 (52/53-week) mislabels under it. The docstring's
+"NEVER from the fiscal_year column" guarded against edgartools' unreliable COLUMN — that
+reason dissolves once the data layer emits an honestly-derived per-fact fiscal label
+(dei-grounded, fail-loud). Cross-company calendar comps remain served by the parallel
+`calendar_year`/`calendar_quarter` fields (calendarization basis), so nothing is lost.
+Zero production callers of `extract_dimensional_revenue` (verified 2026-07-17) → the
+keying migration has no live-consumer impact.
+
 ## Spec defects to fix (route via loom-spec — change-folder is read-only to SDD)
 
 1. `spec.md:198` — `CollaborativeRevenue` names a tag that does not exist; the real

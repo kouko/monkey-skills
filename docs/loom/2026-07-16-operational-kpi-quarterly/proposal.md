@@ -235,3 +235,100 @@ single-surface collapse; not omitted, genuinely absent).
 **Coverage statement:** coverage relative to seed + 5 lenses (principles lens N/A — no
 PRINCIPLES.md), round 1. NOT a completeness claim — the blind spots above are the load-bearing
 honest output; residual gaps beyond them are expected.
+
+## Rebuild revision (2026-07-18) — targeted spec-fix pass
+
+Wave-1 execution surfaced a root-cause defect (calendar-vs-fiscal year; full record:
+`rebuild-findings.md` §Root cause) and 6 spec defects + 1 missing requirement
+(§Spec defects). This pass applied exactly those changes to `specs/operational-kpi-quarterly/
+spec.md` — a targeted revision, NOT a re-expansion; the phase artifacts above are the
+round-1 record and were deliberately left untouched. Governance caveat unchanged
+(**UNGOVERNED** — still no PRINCIPLES.md).
+
+Changes (provenance: all `seeded` — each is stated in rebuild-findings.md, which the user
+ratified 2026-07-17; none is fresh model inference):
+
+1. Deny-list: fake tag `CollaborativeRevenue` → real family `RevenueFromCollaborativeArrangement*`
+   (denied via `CollaborativeArrangement` substring). (defect 1)
+2. Deny-list: added false-positive class 6 — REIT pro-forma/ladder
+   (`BusinessAcquisitionsProFormaRevenue`, `pld:NetIncreaseDecreaseToRentalRevenue*`). (defect 2)
+3. Split the $-unit-guard scenario: name-deny scenario (BA/HON — the gate that actually
+   fires) + a synthetic-fixture unit-guard backstop scenario. (defect 3)
+4. Coverage absence triple re-scoped: not-yet-filed / out-of-requested-range / unclassified;
+   `fetch_error` removed (index absence can't ground a retryable-fetch claim). (defect 4)
+5. dei-read MUST scoped to the CLASSIFICATION layer; pre-fetch SELECTION sanctioned to derive
+   candidate periods from filings-index metadata, selection-only. (defect 5)
+6. ADR requirement title narrowed to its 20-F+6-K grounding. (defect 6)
+7. NEW requirement: parallel calendar+fiscal period labels per fact (rebuild design decision,
+   user-ratified 2026-07-17; mirrors Compustat DATADATE/DATACQTR/DATAFQTR; fail-loud fiscal
+   derivation per `docs/loom/memory/fiscal-year-derive-per-fact-against-filing-calendar.md`).
+8. NEW requirement: fiscal-year range selection by DECLARED fiscal year, never
+   `period_of_report[:4]` — the root-cause defect's spec home. (defect 7)
+
+**Object-model deltas implied (not rewritten into the round-1 sections above):** XbrlFact
+gains `calendar_year`/`calendar_quarter`/`fiscal_year`/`fiscal_quarter` attributes;
+PeriodIdentity's `fiscal_year` attribute is now backed by the per-fact dei derivation, and a
+parallel calendar label exists alongside it; Filing selection keys on declared fiscal year.
+
+**Left to the re-plan (implementation locus, not "whether"):** (a) which layer derives the
+fiscal label (data vs analysis); (b) whether `kpi_xbrl.py:143`'s calendar period-keying is
+intended cross-company behaviour or a latent quarterly bug. Recorded in
+`rebuild-findings.md` §RESOLVED tail.
+
+### Critic round 2 (2026-07-18) — delta-scoped panel on the revision
+
+5 fresh-context lens-critics (NFR / audit / source-entailment / state-BVA / system-seam;
+principles lens N/A — no PRINCIPLES.md). Source-entailment ran requirements-only-view: its
+25-item checklist reconciled clean — every MUST-STATE obligation from rebuild-findings +
+the fiscal-derivation memory has a spec locus. Overlap diagnostic: qualitatively LOW-TO-
+MODERATE (~30-40%) — the seam-class findings converged across 3-4 lenses while each lens
+also surfaced unique gaps (cache aliasing, fiscal_quarter semantics, fetch-state orphan,
+derivation-basis disclosure) → panel diverse enough; convergence read as rank confidence,
+never as completeness. After write-back, the loop terminated dry by the targeted rule (all
+re-seeds are new instances of already-hunted classes; no lens input opened a new
+object/actor/state-class).
+
+Consolidated `critic-found` re-seeds (lens convergence in brackets), all now scenarios/
+clauses in spec.md:
+
+1. Selection guess→dei-truth reconciliation: out-of-range declaration excluded + surfaced;
+   unreadable declaration flagged, never calendar-bucketed [NFR+audit+BVA+seam, sev 3].
+2. Coverage universe = full filings index; selection-missed quarter = its own surfaced
+   state; plus `attempted-fetch-failed` (grounded by in-hand exception — refines, not
+   reverts, the defect-4 `fetch_error` removal) and `filed-but-unlabelable` with quarantine
+   blast-radius (run continues) [NFR+state+seam, sev 3].
+3. `fiscal_quarter` joint semantics with duration_class (12mo→FY, never bare Q4) [BVA, sev 3].
+4. Boundary tolerance rule + out-of-tolerance→unclassifiable, never nearest-guess (52/53-week
+   drift ≤6 days verified; constant deferred to plan) [BVA+NFR+seam, sev 3].
+5. Fiscal-label derivation basis recorded (`dei-declared` vs `projected`); projection
+   sanctioned as fallback only [audit+NFR, sev 3].
+6. Cache schema/key versioning — pre-revision payloads never merged (repo precedent:
+   `docs/loom/memory/cache-key-collision-across-migration.md`) [NFR, sev 3].
+7. Cross-filing fiscal-label divergence at dedup: flagged + deterministic later-filed
+   survivor [audit+seam+BVA, sev 2 ×3-lens convergence].
+8. Derived Q4 carries the three label groups, minted against the 10-K's calendar [audit+BVA,
+   sev 2].
+9. Emitted points range-filtered by each fact's OWN fiscal label (filing selection never
+   leaks out-of-range facts) [seam, sev 2].
+10. December no-op scenario narrowed to FIXED-December FYEs (floating year-ends excluded
+    from the no-op claim) [NFR, sev 2].
+
+**Coverage statement (round 2):** coverage relative to seed + 5 lenses, delta-scoped. NOT a
+completeness claim.
+
+### Critic round 2 blind spots — needs human/field input (appended)
+
+- **calendar_quarter non-uniformity for floating-week filers:** under the ratified
+  containing-quarter (DATACQTR) rule, a "Saturday nearest June 30" filer's same fiscal
+  quarter flips calendar-Q2/Q3 across years (Jun-28 vs Jul-2). Vendors differ in how they
+  smooth this; accept-and-document vs flag is a product call — needs a decision, not
+  inferable.
+- **The boundary-tolerance constant:** the spec mandates a declared tolerance; the value
+  (bounded by the verified ≤6-day drift) is a plan decision, ideally re-probed against the
+  22-filer verification universe before fixing.
+- **Cross-label consistency DQC (a calendar/fiscal pair impossible under the filing's dei
+  FYE):** cheap implementation-level self-check; carried as residue, not promoted (sev 1).
+- **FYE-change comparatives:** comparatives predating a mid-history fiscal-year-end change
+  are measured against the carrying filing's CURRENT calendar; the tolerance rule routes
+  out-of-tolerance cases to unclassifiable, but whether an OLD-calendar re-derivation is
+  ever warranted needs field data on real FYE-change filers.
