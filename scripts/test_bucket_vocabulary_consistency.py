@@ -1,15 +1,17 @@
 """Drift guard: the three-bucket research-routing vocabulary (craft /
-domain-convention / project-local) across the three plugins that carry it —
-loom-code, loom-spec, loom-discovery.
+domain-convention / project-local) across the five plugins that carry it —
+loom-code, loom-spec, loom-discovery, loom-product-principles,
+loom-interface-design.
 
-Source: docs/loom/plans/2026-07-18-knowledge-triage-three-buckets.md task 5 +
-§Notes §Pinned bucket vocabulary. By design there is no shared physical file
-between plugins (see the plan's "Contract surface vs per-station freedom" —
-each skill restates its own minimal copy, precedent: per-plugin
-references/{claude-code,codex}-tools.md). This file is the grep-level CI
-drift guard replacing a shared file: it pins the vocabulary spelling and,
-for the two files that transcribe the full pin block verbatim, pins their
-byte-identity to each other and to the plan's own fenced source.
+Source: docs/loom/plans/2026-07-18-knowledge-triage-three-buckets.md task 5,
+extended by task 11 + §Notes §Pinned bucket vocabulary. By design there is no
+shared physical file between plugins (see the plan's "Contract surface vs
+per-station freedom" — each skill restates its own minimal copy, precedent:
+per-plugin references/{claude-code,codex}-tools.md). This file is the
+grep-level CI drift guard replacing a shared file: it pins the vocabulary
+spelling and, for the files that transcribe the full pin block verbatim
+(PIN_CARRIER_FILES), pins their byte-identity to each other and to the
+plan's own fenced source.
 
 Stdlib only.
 """
@@ -32,20 +34,38 @@ DOMAIN_TAG_TRIAGE = (
 EVIDENCE_TEMPLATE = (
     REPO_ROOT / "loom-discovery/skills/user-insights/assets/evidence-template.md"
 )
+PRODUCT_PRINCIPLES_TRIAGE = (
+    REPO_ROOT
+    / "loom-product-principles/skills/product-principles/references/knowledge-triage.md"
+)
+INTERACTION_FLOWS_TRIAGE = (
+    REPO_ROOT
+    / "loom-interface-design/skills/interaction-flows/references/knowledge-triage.md"
+)
+DESIGN_SYSTEM_TRIAGE = (
+    REPO_ROOT
+    / "loom-interface-design/skills/design-system/references/knowledge-triage.md"
+)
 
-# All three carrier files must use the three exact bucket-name spellings.
+# All carrier files must use the three exact bucket-name spellings.
 CARRIER_FILES = {
     "loom-code/research-escalation.md": RESEARCH_ESCALATION,
     "loom-spec/domain-tag-triage.md": DOMAIN_TAG_TRIAGE,
     "loom-discovery/evidence-template.md": EVIDENCE_TEMPLATE,
+    "loom-product-principles/knowledge-triage.md": PRODUCT_PRINCIPLES_TRIAGE,
+    "loom-interface-design/interaction-flows/knowledge-triage.md": INTERACTION_FLOWS_TRIAGE,
+    "loom-interface-design/design-system/knowledge-triage.md": DESIGN_SYSTEM_TRIAGE,
 }
 
-# Only these two transcribe the FULL pin block verbatim (evidence-template.md
-# carries just the source-type legend, no fenced pin block — see the plan's
+# These transcribe the FULL pin block verbatim (evidence-template.md carries
+# just the source-type legend, no fenced pin block — see the plan's
 # §Pin usage rules: "Each consuming task transcribes the fenced block...").
 PIN_CARRIER_FILES = {
     "loom-code/research-escalation.md": RESEARCH_ESCALATION,
     "loom-spec/domain-tag-triage.md": DOMAIN_TAG_TRIAGE,
+    "loom-product-principles/knowledge-triage.md": PRODUCT_PRINCIPLES_TRIAGE,
+    "loom-interface-design/interaction-flows/knowledge-triage.md": INTERACTION_FLOWS_TRIAGE,
+    "loom-interface-design/design-system/knowledge-triage.md": DESIGN_SYSTEM_TRIAGE,
 }
 
 BUCKET_NAMES = ("craft", "domain-convention", "project-local")

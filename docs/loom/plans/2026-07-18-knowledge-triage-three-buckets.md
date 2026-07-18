@@ -302,4 +302,21 @@ resolved test command, references/ placement for near-cap SKILL.md files.
     leg (reviewer tags → orchestrator immediate triage), plus one negative
     control (craft-derivable design case must NOT tag). Record results
     in-file.
+
+    RESULTS (2026-07-18): 4/4 PASS.
+    - P1 principles: fintech-retention-median check → domain-convention,
+      principle held at DRAFT, punt + `— assumption:` + Open-Questions
+      routes all cited correctly (agent even derived the legitimate
+      reframe-to-project-local alternative unprompted).
+    - P2 design SHAPING: TW-market gain/loss colors → domain-convention
+      SHAPING via the color-semantic worked example; refused to draft
+      green=up; tagged open question; routed research before critic
+      verdict; no self-WebSearch. Agent independently noted the TW
+      red-up/green-down inversion risk.
+    - P3 critic-tag: round-1 tagged finding (treaty withholding rates) →
+      IMMEDIATE triage, verify-not-blind-trust of the reviewer's bucket,
+      evidence rides next re-dispatch, caps unchanged.
+    - P4 negative control: loading/error/empty states → non-trigger
+      ("derivable from baseline UX convention"), no tag, flag-only
+      variant behavior preserved. No over-firing.
 13. Version bumps, whole-branch review, PR. No auto-merge.
