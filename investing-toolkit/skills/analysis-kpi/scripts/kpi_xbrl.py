@@ -467,6 +467,167 @@ def facts_to_points(
     return points
 
 
+def _reduce_window_group(
+    kpi_id: str,
+    source: dict,
+    fiscal_calendars: dict,
+    period_end: str,
+    duration_class: str,
+    group: list[dict],
+) -> dict:
+    """Reduce ONE identity window's matched facts (same signature,
+    period_end, duration_class — Task 6's duration-qualified key) to
+    exactly one representative fact (extracted from `resolve_binding`'s
+    dedup loop, Task 9 opportunistic refactor — behavior unchanged):
+
+    - all facts AGREE on value, one fiscal label -> the first fact, as-is;
+    - agree on value, labels DIVERGE (two filings' dei calendars label the
+      same window differently — FYE drift/change) -> `label_conflict` DQC
+      (both labels + both source calendars), later-filed label survives
+      deterministically;
+    - DISAGREE on value within a SINGLE accession -> intra-filing
+      ambiguity, RAISES — never resolved arbitrarily;
+    - disagree across accessions -> cross-filing RESTATEMENT (overlap
+      policy C): newest-filed wins, `restatement` DQC preserves old value,
+      new value, and both accessions ([superseded, kept] + reason)."""
+    period_key = _require_period(group[0])
+    values = {fact.get("value") for fact in group}
+    if len(values) == 1:
+        # exactly one distinct value across the group (1 or more identical
+        # facts) -> keep one representative for this window.
+        labels = {
+            (fact.get("fiscal_year"), fact.get("fiscal_quarter"))
+            for fact in group
+        }
+        if len(labels) == 1:
+            return group[0]
+        return _label_conflict_survivor(
+            group, fiscal_calendars, period_end, duration_class,
+        )
+
+    # The group DISAGREES on value. Discriminate an INTRA-filing ambiguity
+    # (a SINGLE accession reporting conflicting numbers for the same
+    # (signature, period) — a genuine defect, still fatal) from a
+    # CROSS-filing restatement (overlap policy C): adjacent 10-Ks over the
+    # multi-filing span recast the same value, which must NOT abort the
+    # whole series.
+    values_by_accession: dict[str, set] = {}
+    for fact in group:
+        values_by_accession.setdefault(
+            fact.get("accession"), set()
+        ).add(fact.get("value"))
+    if any(len(vals) > 1 for vals in values_by_accession.values()):
+        raise ValueError(
+            f"kpi_xbrl.resolve_binding: signature for kpi_id {kpi_id!r} "
+            f"matches {len(group)} facts with different values for "
+            f"period {period_key!r} within a SINGLE filing "
+            f"(concept={source.get('concept')!r}) — intra-filing "
+            f"ambiguity, never resolved arbitrarily"
+        )
+    return _restatement_survivor(group, period_end, duration_class)
+
+
+def _later_filed_order(group: list[dict]) -> list[dict]:
+    """`group` sorted oldest-first by (filed, accession) — the shared
+    policy-C/label-conflict ordering: the LAST element is the kept
+    (most-recently-filed, tie-break higher accession) fact."""
+    return sorted(
+        group,
+        key=lambda f: ((f.get("filed") or ""), (f.get("accession") or "")),
+    )
+
+
+def _label_conflict_survivor(
+    group: list[dict], fiscal_calendars: dict, period_end: str,
+    duration_class: str,
+) -> dict:
+    """Identical-value duplicates whose fiscal labels DIVERGE: keep the
+    later-filed filing's fact/label deterministically, flagged
+    `label_conflict` with both labels AND both source filings' dei
+    calendars (the ONE DQC schema; old/new carry the diverging labels)."""
+    ordered = _later_filed_order(group)
+    kept = ordered[-1]
+    kept_label = (kept.get("fiscal_year"), kept.get("fiscal_quarter"))
+    superseded = next(
+        fact
+        for fact in reversed(ordered[:-1])
+        if (fact.get("fiscal_year"), fact.get("fiscal_quarter")) != kept_label
+    )
+    kept_with_dqc = dict(kept)
+    kept_with_dqc["dqc"] = assert_dqc_schema({
+        "type": "label_conflict",
+        "old": {
+            "fiscal_year": superseded.get("fiscal_year"),
+            "fiscal_quarter": superseded.get("fiscal_quarter"),
+            "accession": superseded.get("accession"),
+            "fiscal_calendar": fiscal_calendars.get(
+                superseded.get("accession")
+            ),
+        },
+        "new": {
+            "fiscal_year": kept.get("fiscal_year"),
+            "fiscal_quarter": kept.get("fiscal_quarter"),
+            "accession": kept.get("accession"),
+            "fiscal_calendar": fiscal_calendars.get(kept.get("accession")),
+        },
+        "accessions": [
+            superseded.get("accession"), kept.get("accession"),
+        ],
+        "reason": (
+            f"identical value reported for period_end "
+            f"{period_end!r} ({duration_class}) by two filings "
+            f"whose dei calendars yield different fiscal labels "
+            f"(FY{superseded.get('fiscal_year')}-"
+            f"{superseded.get('fiscal_quarter')} vs "
+            f"FY{kept.get('fiscal_year')}-"
+            f"{kept.get('fiscal_quarter')}) — later-filed label "
+            f"kept deterministically, never an arbitrary pick"
+        ),
+    })
+    return kept_with_dqc
+
+
+def _restatement_survivor(
+    group: list[dict], period_end: str, duration_class: str,
+) -> dict:
+    """Cross-filing restatement (policy C): keep the value from the
+    most-recently-FILED filing (tie-break higher accession) and tag the
+    superseded value onto the kept fact as a machine-readable `dqc`
+    restatement flag (carried through to the emitted point by
+    facts_to_points). The superseded fact is the most recent OLDER fact
+    whose value differs from the kept one. The ONE DQC schema (Task 9
+    migrated the former superseded_accession/kept_accession field names):
+    accessions ordered [superseded, kept] — old-first, the same convention
+    as label_conflict — with the roles named in `reason`; the audit
+    content is fully preserved (policy-C parity with scope-A)."""
+    ordered = _later_filed_order(group)
+    kept = ordered[-1]
+    superseded = next(
+        fact
+        for fact in reversed(ordered[:-1])
+        if fact.get("value") != kept.get("value")
+    )
+    kept_with_dqc = dict(kept)
+    kept_with_dqc["dqc"] = assert_dqc_schema({
+        "type": "restatement",
+        "old": superseded.get("value"),
+        "new": kept.get("value"),
+        "accessions": [
+            superseded.get("accession"), kept.get("accession"),
+        ],
+        "reason": (
+            f"cross-filing restatement (overlap policy C) for "
+            f"period_end {period_end!r} ({duration_class}): value "
+            f"{superseded.get('value')!r} from filing "
+            f"{superseded.get('accession')!r} superseded by "
+            f"{kept.get('value')!r} from the later-filed "
+            f"{kept.get('accession')!r} — newest-filed wins, the "
+            f"superseded value preserved for audit"
+        ),
+    })
+    return kept_with_dqc
+
+
 def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
     """Resolve a logical-KPI binding onto the fact-pack's full dimensional
     signatures: `binding` = `{kpi_id, sources: [{concept, dimensions,
@@ -560,7 +721,7 @@ def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
     # inside the group flagged and resolved to the later-filed label; a
     # window with matching facts that DISAGREE on value RAISES intra-filing
     # (a genuine conflict, never resolved arbitrarily) or resolves
-    # cross-filing per policy C below.
+    # cross-filing per policy C — all four branches in `_reduce_window_group`.
     fiscal_calendars = fact_pack.get("fiscal_calendars") or {}
     deduped_facts_by_source_idx: list[list[dict]] = [[] for _ in sources]
     for idx, source in enumerate(sources):
@@ -576,134 +737,13 @@ def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
                 classify_fact_period(fact)["duration_class"],
             )
             by_window.setdefault(identity_key, []).append(fact)
-        for (period_end, _duration_class), group in by_window.items():
-            period_key = _require_period(group[0])
-            values = {fact.get("value") for fact in group}
-            if len(values) == 1:
-                # exactly one distinct value across the group (1 or more
-                # identical facts) -> keep one representative for this
-                # window. If the duplicates' fiscal labels DIVERGE (two
-                # filings' dei calendars label the same window differently —
-                # FYE drift/change), the conflict is flagged and the
-                # LATER-FILED filing's label survives deterministically.
-                labels = {
-                    (fact.get("fiscal_year"), fact.get("fiscal_quarter"))
-                    for fact in group
-                }
-                if len(labels) == 1:
-                    deduped_facts_by_source_idx[idx].append(group[0])
-                    continue
-                ordered = sorted(
-                    group,
-                    key=lambda f: (
-                        (f.get("filed") or ""), (f.get("accession") or "")
-                    ),
+        for (period_end, duration_class), group in by_window.items():
+            deduped_facts_by_source_idx[idx].append(
+                _reduce_window_group(
+                    kpi_id, source, fiscal_calendars,
+                    period_end, duration_class, group,
                 )
-                kept = ordered[-1]
-                kept_label = (kept.get("fiscal_year"), kept.get("fiscal_quarter"))
-                superseded = next(
-                    fact
-                    for fact in reversed(ordered[:-1])
-                    if (fact.get("fiscal_year"), fact.get("fiscal_quarter"))
-                    != kept_label
-                )
-                kept_with_dqc = dict(kept)
-                kept_with_dqc["dqc"] = assert_dqc_schema({
-                    "type": "label_conflict",
-                    "old": {
-                        "fiscal_year": superseded.get("fiscal_year"),
-                        "fiscal_quarter": superseded.get("fiscal_quarter"),
-                        "accession": superseded.get("accession"),
-                        "fiscal_calendar": fiscal_calendars.get(
-                            superseded.get("accession")
-                        ),
-                    },
-                    "new": {
-                        "fiscal_year": kept.get("fiscal_year"),
-                        "fiscal_quarter": kept.get("fiscal_quarter"),
-                        "accession": kept.get("accession"),
-                        "fiscal_calendar": fiscal_calendars.get(
-                            kept.get("accession")
-                        ),
-                    },
-                    "accessions": [
-                        superseded.get("accession"), kept.get("accession"),
-                    ],
-                    "reason": (
-                        f"identical value reported for period_end "
-                        f"{period_end!r} ({_duration_class}) by two filings "
-                        f"whose dei calendars yield different fiscal labels "
-                        f"(FY{superseded.get('fiscal_year')}-"
-                        f"{superseded.get('fiscal_quarter')} vs "
-                        f"FY{kept.get('fiscal_year')}-"
-                        f"{kept.get('fiscal_quarter')}) — later-filed label "
-                        f"kept deterministically, never an arbitrary pick"
-                    ),
-                })
-                deduped_facts_by_source_idx[idx].append(kept_with_dqc)
-                continue
-
-            # The group DISAGREES on value. Discriminate an INTRA-filing
-            # ambiguity (a SINGLE accession reporting conflicting numbers for
-            # the same (signature, period) — a genuine defect, still fatal)
-            # from a CROSS-filing restatement (overlap policy C): adjacent
-            # 10-Ks over the multi-filing span recast the same value, which
-            # must NOT abort the whole series.
-            values_by_accession: dict[str, set] = {}
-            for fact in group:
-                values_by_accession.setdefault(
-                    fact.get("accession"), set()
-                ).add(fact.get("value"))
-            if any(len(vals) > 1 for vals in values_by_accession.values()):
-                raise ValueError(
-                    f"kpi_xbrl.resolve_binding: signature for kpi_id {kpi_id!r} "
-                    f"matches {len(group)} facts with different values for "
-                    f"period {period_key!r} within a SINGLE filing "
-                    f"(concept={source.get('concept')!r}) — intra-filing "
-                    f"ambiguity, never resolved arbitrarily"
-                )
-
-            # Cross-filing restatement (policy C): keep the value from the
-            # most-recently-FILED 10-K (tie-break higher accession) and tag
-            # the superseded value onto the kept fact as a machine-readable
-            # `dqc` restatement flag (carried through to the emitted point by
-            # facts_to_points). The superseded fact is the most recent OLDER
-            # fact whose value differs from the kept one.
-            ordered = sorted(
-                group,
-                key=lambda f: ((f.get("filed") or ""), (f.get("accession") or "")),
             )
-            kept = ordered[-1]
-            superseded = next(
-                fact
-                for fact in reversed(ordered[:-1])
-                if fact.get("value") != kept.get("value")
-            )
-            kept_with_dqc = dict(kept)
-            # The ONE DQC schema (Task 9 migrated the former
-            # superseded_accession/kept_accession field names): accessions
-            # ordered [superseded, kept] — old-first, the same convention
-            # as label_conflict — with the roles named in `reason`. The
-            # audit content (old value, new value, both accessions) is
-            # fully preserved (policy-C parity with scope-A).
-            kept_with_dqc["dqc"] = assert_dqc_schema({
-                "type": "restatement",
-                "old": superseded.get("value"),
-                "new": kept.get("value"),
-                "accessions": [
-                    superseded.get("accession"), kept.get("accession"),
-                ],
-                "reason": (
-                    f"cross-filing restatement (overlap policy C) for "
-                    f"period_end {period_end!r} ({_duration_class}): value "
-                    f"{superseded.get('value')!r} from filing "
-                    f"{superseded.get('accession')!r} superseded by "
-                    f"{kept.get('value')!r} from the later-filed "
-                    f"{kept.get('accession')!r} — newest-filed wins, the "
-                    f"superseded value preserved for audit"
-                ),
-            })
-            deduped_facts_by_source_idx[idx].append(kept_with_dqc)
 
     points = []
     for idx, source in enumerate(sources):
@@ -821,6 +861,103 @@ def _q4_basis_mismatch_reason(
     return None
 
 
+def _q4_group_gap(
+    gap_type: str, accessions: list, reason: str, period, cell_ref,
+) -> dict:
+    """One surfaced Q4-derivation skip/refusal in the ONE DQC schema, plus
+    the locating `period`/`source_cell_ref` fields (extracted from
+    `derive_q4_points`, Task 9 opportunistic refactor — behavior
+    unchanged)."""
+    return assert_dqc_schema({
+        "type": gap_type,
+        "old": None,
+        "new": None,
+        "accessions": accessions,
+        "reason": reason,
+        "period": period,
+        "source_cell_ref": cell_ref,
+    })
+
+
+def _q4_candidate_gap(
+    fy_candidates: list[dict], ytd9_candidates: list[dict], period, cell_ref,
+) -> dict:
+    """Classify a group that cannot supply exactly ONE FY total + ONE
+    9mo-YTD (extracted from `derive_q4_points`, Task 9 opportunistic
+    refactor — behavior unchanged): a MISSING side is `q4_source_missing`
+    (skipped and surfaced, never fabricated); multiple survivors on a side
+    are ambiguous inputs — `q4_basis_mismatch` (refused, never an
+    arbitrary pick)."""
+    absent = []
+    if not fy_candidates:
+        absent.append("12mo-FY total")
+    if not ytd9_candidates:
+        absent.append("9mo-YTD")
+    present_accessions = sorted(
+        p.get("source_accession") for p in fy_candidates + ytd9_candidates
+    )
+    if absent:
+        gap_type = "q4_source_missing"
+        reason = (
+            f"missing {' and '.join(absent)} source for the Q4 "
+            f"derivation — skipped and surfaced, never fabricated"
+        )
+    else:
+        gap_type = "q4_basis_mismatch"
+        reason = (
+            f"ambiguous inputs: {len(fy_candidates)} FY totals and "
+            f"{len(ytd9_candidates)} 9mo-YTD points survive dedup "
+            f"for one signature/fiscal year — refused, never an "
+            f"arbitrary pick"
+        )
+    return _q4_group_gap(gap_type, present_accessions, reason, period, cell_ref)
+
+
+def _mint_derived_q4_point(fy: dict, ytd9: dict, period, cell_ref) -> dict:
+    """Mint the derived Q4 point (FY total − 9mo-YTD) for one clean,
+    basis-checked input pair (extracted from `derive_q4_points`, Task 9
+    opportunistic refactor — behavior unchanged): the segregated-lane
+    markers (`derived: True`, PLURAL `source_accessions`/`source_forms`),
+    the three label groups minted from the derived 3-month window against
+    the 10-K's calendar, and the `derived_q4` DQC recording both
+    contributing accessions."""
+    fy_end = _q4_input_window_end(fy, "FY-total")
+    ytd9_end = _q4_input_window_end(ytd9, "9mo-YTD")
+    value = fy["value"] - ytd9["value"]
+    accessions = [fy.get("source_accession"), ytd9.get("source_accession")]
+    return {
+        "company": fy.get("company"),
+        "kpi_id": fy.get("kpi_id"),
+        "period_type": "Q4",
+        "cumulative": False,
+        "duration_class": "3mo",
+        "period": period,
+        "calendar_year": fy_end.year,
+        "calendar_quarter": f"Q{(fy_end.month - 1) // 3 + 1}",
+        "period_start": (ytd9_end + timedelta(days=1)).isoformat(),
+        "period_end": fy["period_end"],
+        "as_of": max(fy.get("as_of") or "", ytd9.get("as_of") or ""),
+        "value": value,
+        "source_accessions": accessions,
+        "source_forms": [fy.get("source_form"), ytd9.get("source_form")],
+        "source_table_id": fy.get("source_table_id"),
+        "source_cell_ref": cell_ref,
+        "source_kind": fy.get("source_kind"),
+        "derived": True,
+        "dqc": assert_dqc_schema({
+            "type": "derived_q4",
+            "old": {"fy_total": fy["value"], "ytd9": ytd9["value"]},
+            "new": value,
+            "accessions": accessions,
+            "reason": (
+                f"untagged Q4 derived as FY total minus 9mo-YTD for "
+                f"fiscal year {period} — computed, never reported; "
+                f"segregated from directly-reported points"
+            ),
+        }),
+    }
+
+
 def derive_q4_points(points: list[dict], *, fiscal_calendars: dict | None) -> dict:
     """Derive the untagged Q4 single-quarter as (FY total − 9mo-YTD) per
     (signature, fiscal year) over `points` — resolve_binding's OUTPUT, so
@@ -882,92 +1019,26 @@ def derive_q4_points(points: list[dict], *, fiscal_calendars: dict | None) -> di
         if not fy_candidates and not ytd9_candidates:
             continue  # no derivation basis at all — not a gap
         if len(fy_candidates) != 1 or len(ytd9_candidates) != 1:
-            absent = []
-            if not fy_candidates:
-                absent.append("12mo-FY total")
-            if not ytd9_candidates:
-                absent.append("9mo-YTD")
-            present_accessions = sorted(
-                p.get("source_accession")
-                for p in fy_candidates + ytd9_candidates
-            )
-            if absent:
-                gap_type = "q4_source_missing"
-                reason = (
-                    f"missing {' and '.join(absent)} source for the Q4 "
-                    f"derivation — skipped and surfaced, never fabricated"
-                )
-            else:
-                gap_type = "q4_basis_mismatch"
-                reason = (
-                    f"ambiguous inputs: {len(fy_candidates)} FY totals and "
-                    f"{len(ytd9_candidates)} 9mo-YTD points survive dedup "
-                    f"for one signature/fiscal year — refused, never an "
-                    f"arbitrary pick"
-                )
-            gaps.append(assert_dqc_schema({
-                "type": gap_type,
-                "old": None,
-                "new": None,
-                "accessions": present_accessions,
-                "reason": reason,
-                "period": period,
-                "source_cell_ref": cell_ref,
-            }))
+            gaps.append(_q4_candidate_gap(
+                fy_candidates, ytd9_candidates, period, cell_ref,
+            ))
             continue
 
         fy, ytd9 = fy_candidates[0], ytd9_candidates[0]
         mismatch = _q4_basis_mismatch_reason(fy, ytd9, fiscal_calendars)
         if mismatch is not None:
-            gaps.append(assert_dqc_schema({
-                "type": "q4_basis_mismatch",
-                "old": None,
-                "new": None,
-                "accessions": sorted([
+            gaps.append(_q4_group_gap(
+                "q4_basis_mismatch",
+                sorted([
                     fy.get("source_accession"), ytd9.get("source_accession"),
                 ]),
-                "reason": f"{mismatch} — refused, never a silent "
-                          f"subtraction across incompatible bases",
-                "period": period,
-                "source_cell_ref": cell_ref,
-            }))
+                f"{mismatch} — refused, never a silent subtraction across "
+                f"incompatible bases",
+                period, cell_ref,
+            ))
             continue
 
-        fy_end = _q4_input_window_end(fy, "FY-total")
-        ytd9_end = _q4_input_window_end(ytd9, "9mo-YTD")
-        value = fy["value"] - ytd9["value"]
-        accessions = [fy.get("source_accession"), ytd9.get("source_accession")]
-        derived.append({
-            "company": fy.get("company"),
-            "kpi_id": fy.get("kpi_id"),
-            "period_type": "Q4",
-            "cumulative": False,
-            "duration_class": "3mo",
-            "period": period,
-            "calendar_year": fy_end.year,
-            "calendar_quarter": f"Q{(fy_end.month - 1) // 3 + 1}",
-            "period_start": (ytd9_end + timedelta(days=1)).isoformat(),
-            "period_end": fy["period_end"],
-            "as_of": max(fy.get("as_of") or "", ytd9.get("as_of") or ""),
-            "value": value,
-            "source_accessions": accessions,
-            "source_forms": [fy.get("source_form"), ytd9.get("source_form")],
-            "source_table_id": fy.get("source_table_id"),
-            "source_cell_ref": cell_ref,
-            "source_kind": fy.get("source_kind"),
-            "derived": True,
-            "dqc": assert_dqc_schema({
-                "type": "derived_q4",
-                "old": {"fy_total": fy["value"], "ytd9": ytd9["value"]},
-                "new": value,
-                "accessions": accessions,
-                "reason": (
-                    f"untagged Q4 derived as FY total minus 9mo-YTD for "
-                    f"fiscal year {period} — computed, never reported; "
-                    f"segregated from directly-reported points"
-                ),
-            }),
-        })
+        derived.append(_mint_derived_q4_point(fy, ytd9, period, cell_ref))
     return {"points": derived, "gaps": gaps}
 
 
