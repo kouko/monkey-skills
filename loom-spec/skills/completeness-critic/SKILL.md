@@ -433,8 +433,9 @@ revise/proceed signal instead of inferring one from prose:
   fails on the extended output after write-back. Resolution: back to the
   `spec-expansion` writer before any handoff. The outer writer↔critic revision
   cycle is capped at 2: on the 2nd consecutive `NEEDS_REVISION` after a
-  revision, stop re-running and hand back to the user with a plain-language
-  list of unresolved findings — never silent proceed.
+  revision, stop re-running and, after minting the `NEEDS_REVISION` verdict,
+  hand back to the user with a plain-language list of unresolved findings —
+  never silent proceed.
 - **`PASS_WITH_NOTES`** — the loop terminated dry, the ranked findings are
   re-seeded (`critic-found`), and `## Blind spots` is non-empty as required.
   Resolution: hand to human review → loom-code VERIFY.
