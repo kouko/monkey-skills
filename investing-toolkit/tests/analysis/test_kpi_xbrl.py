@@ -913,6 +913,143 @@ def test_fact_pack_na_slot_is_not_read_as_empty_series(kpi_xbrl_module):
         )
 
 
+# ---------------------------------------------------------------------------
+# Task 6 (docs/loom/plans/2026-07-16-operational-kpi-quarterly.md) — the
+# resolve_binding identity key gains duration_class: single-quarter vs YTD
+# de-conflated; cross-filing dedupe + policy C on the duration-qualified
+# key; divergent cross-filing fiscal labels flagged with a deterministic
+# survivor. Fixture xbrl_quarterly_dualdur.json is PRODUCER-GENERATED (the
+# real _build_dimensional_revenue_fact/_derive_fiscal_label ran over raw
+# rows — see its _provenance), per
+# docs/loom/memory/fixtures-mirror-producer-shape.md.
+# No `@req` tags: this dispatch traces work by named plan Tasks, not
+# registered loom-spec REQ-ids (same convention as the module header note).
+# ---------------------------------------------------------------------------
+
+DUALDUR_IPHONE_BINDING = {
+    "kpi_id": "iphone_revenue",
+    "sources": [
+        {
+            "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+            "dimensions": {"ProductOrService": "IPhoneMember"},
+            "source_kind": "xbrl-dimensional",
+        },
+    ],
+}
+
+FYECHG_SEGMENT_BINDING = {
+    "kpi_id": "alpha_segment_revenue",
+    "sources": [
+        {
+            "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+            "dimensions": {"StatementBusinessSegments": "AlphaSegmentMember"},
+            "source_kind": "xbrl-dimensional",
+        },
+    ],
+}
+
+
+@pytest.fixture
+def dualdur_fixture():
+    return json.loads(
+        (FIXTURES / "xbrl_quarterly_dualdur.json").read_text(encoding="utf-8")
+    )
+
+
+def test_identity_key_deconflates_quarter_from_ytd(kpi_xbrl_module, dualdur_fixture):
+    """Task 6 RED: the identity/dedup key gains duration_class (spec: 'The
+    identity key de-conflates single-quarter from year-to-date').
+    (a) De-conflation: the real Q3-10-Q dual-duration collision (3mo AND
+    9mo-YTD for one signature at period_end 2025-06-28, same accession,
+    different values) resolves to TWO distinct points — never deduped and
+    never RAISEd against each other (pre-Task-6 the two collide on the
+    (period_type, fiscal_year) key and abort as an intra-filing ambiguity —
+    the T5 LOOM-SIMPLIFY ceiling).
+    (b) Cross-filing identical single-quarter (FY2025-Q2 3mo, identical
+    value, reported in the FY2025 Q2 10-Q and again as a comparative in the
+    FY2026 Q2 10-Q) dedupes to ONE point on the duration-qualified key.
+    (c) A restated quarter (FY2025-Q1 3mo, different values across the two
+    filings) applies policy C on the duration-qualified key: the
+    newest-FILED filing's value wins + a restatement DQC flag (scope-A
+    parity)."""
+    pack = dualdur_fixture["aapl_dualdur"]
+    points = kpi_xbrl_module.resolve_binding(pack, DUALDUR_IPHONE_BINDING, "AAPL")
+
+    # 6 facts -> 4 points: Q3 3mo + Q3 9mo-YTD + deduped Q2 + resolved Q1.
+    assert len(points) == 4
+
+    # (a) single-quarter and YTD at the same period_end stay DISTINCT.
+    q3_points = [p for p in points if p["period_type"] == "Q3"]
+    assert len(q3_points) == 2
+    by_duration = {p["duration_class"]: p for p in q3_points}
+    assert set(by_duration) == {"3mo", "9mo-YTD"}
+    assert by_duration["3mo"]["value"] == 4100.0
+    assert by_duration["3mo"]["cumulative"] is False
+    assert by_duration["9mo-YTD"]["value"] == 11100.0
+    assert by_duration["9mo-YTD"]["cumulative"] is True
+    assert all(p["period"] == "2025" for p in q3_points)
+    # neither carries any conflict flag — they were never raised against
+    # each other.
+    assert all("dqc" not in p for p in q3_points)
+
+    # (b) identical cross-filing single-quarter dedupes to exactly one.
+    q2_points = [p for p in points if p["period_type"] == "Q2"]
+    assert len(q2_points) == 1
+    assert q2_points[0]["value"] == 2000.0
+    assert q2_points[0]["duration_class"] == "3mo"
+    assert "dqc" not in q2_points[0]
+
+    # (c) restated quarter -> policy C: newest-filed wins + DQC flag.
+    q1_points = [p for p in points if p["period_type"] == "Q1"]
+    assert len(q1_points) == 1
+    q1 = q1_points[0]
+    assert q1["value"] == 1050.0
+    assert q1["source_accession"] == "0000320193-26-000006"
+    assert q1["dqc"]["type"] == "restatement"
+    assert q1["dqc"]["old"] == 1000.0
+    assert q1["dqc"]["new"] == 1050.0
+    assert q1["dqc"]["superseded_accession"] == "0000320193-25-000008"
+    assert q1["dqc"]["kept_accession"] == "0000320193-26-000006"
+
+
+def test_dedup_label_conflict_deterministic(kpi_xbrl_module, dualdur_fixture):
+    """Task 6 RED (critic round 2 — spec: 'a cross-filing fiscal-label
+    divergence at dedup is flagged, with a deterministic survivor'):
+    identical values for one signature/period_end/duration from two filings
+    whose dei calendars yield DIFFERENT fiscal labels (the fixture's
+    FYE-change filer: --06-30 labels the 2024-06-28 3mo window Q4/FY2024,
+    --09-30 labels it Q3/FY2024) collapse to ONE point; the label conflict
+    is flagged (ONE DQC schema, BOTH source calendars recorded) and the
+    surviving label is the LATER-FILED filing's — deterministic, never an
+    arbitrary pick and never two duplicate points."""
+    pack = dualdur_fixture["fye_change_label_conflict"]
+    points = kpi_xbrl_module.resolve_binding(pack, FYECHG_SEGMENT_BINDING, "FYECHG")
+
+    assert len(points) == 1
+    point = points[0]
+    assert point["value"] == 500.0
+    # the LATER-FILED filing's label survives, deterministically.
+    assert point["source_accession"] == "0000000000-25-000002"
+    assert point["period_type"] == "Q3"
+    assert point["period"] == "2024"
+    assert point["duration_class"] == "3mo"
+
+    dqc = point["dqc"]
+    assert dqc["type"] == "label_conflict"
+    # the ONE DQC schema (type, old, new, accessions, reason) — old/new
+    # carry the diverging labels WITH both source filings' dei calendars.
+    assert dqc["old"]["fiscal_year"] == 2024
+    assert dqc["old"]["fiscal_quarter"] == "Q4"
+    assert dqc["old"]["accession"] == "0000000000-24-000001"
+    assert dqc["old"]["fiscal_calendar"]["fiscal_year_end"] == "--06-30"
+    assert dqc["new"]["fiscal_year"] == 2024
+    assert dqc["new"]["fiscal_quarter"] == "Q3"
+    assert dqc["new"]["accession"] == "0000000000-25-000002"
+    assert dqc["new"]["fiscal_calendar"]["fiscal_year_end"] == "--09-30"
+    assert dqc["accessions"] == ["0000000000-24-000001", "0000000000-25-000002"]
+    assert dqc["reason"]
+
+
 def test_cli_build_resolves_binding_and_prints_points(tmp_path):
     """Task 6 GREEN: the `build` subcommand reads a fact-pack JSON from
     stdin and a binding JSON from --binding, resolves it via
