@@ -619,6 +619,45 @@ def test_build_quarterly_memo_feed_carries_week_lane_fields(tmp_path, monkeypatc
     assert feed["series"][0]["derived_points"][0]["value"] == original_value
 
 
+def test_build_quarterly_memo_feed_carries_period_recast_flag(tmp_path, monkeypatch):
+    """Task 2 (docs/loom/plans/2026-07-19-jnj-restatement-axis-signature.md):
+    the `period_recast` coverage_flag kpi_xbrl.build_quarterly_series emits
+    for a vintage-axis exclusion survives `build_quarterly_memo_feed`'s
+    verbatim passthrough — and the validator (`assert_dqc_schema`, already
+    exercised on every coverage flag) accepts its shape without a type
+    allowlist edit."""
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+    kpi_memo_feed, _ = _load_kpi_memo_feed_module()
+
+    recast_flag = {
+        "type": "period_recast",
+        "old": None,
+        "new": None,
+        "accessions": ["0000200406-25-000209"],
+        "reason": (
+            "1 vintage-axis (srt:RestatementAxis) fact(s) excluded from "
+            "the pack — period recast: prior-published figures differ"
+        ),
+        "exclusions": [{
+            "category": "vintage",
+            "axis": "srt:RestatementAxis",
+            "member": "RevisionOfPriorPeriodReclassificationAdjustmentMember",
+            "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+            "accession": "0000200406-25-000209",
+            "period_end": "2025-06-30",
+        }],
+    }
+    payload = _quarterly_series_payload(
+        coverage_flags=[*_quarterly_series_payload()["coverage_flags"], recast_flag],
+    )
+
+    feed = kpi_memo_feed.build_quarterly_memo_feed(
+        "QTRCO", payload, generated_at="2026-07-18T00:00:00Z",
+    )
+    assert feed["coverage_flags"] == payload["coverage_flags"]
+    assert recast_flag in feed["coverage_flags"]
+
+
 def test_cli_build_quarterly_roundtrip(tmp_path):
     """Plan Task 3: the `build-quarterly` subcommand wraps
     build_quarterly_memo_feed with the same fail-loud exit-code contract as

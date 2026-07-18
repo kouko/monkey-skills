@@ -2292,6 +2292,77 @@ def test_quarterly_series_no_week_normalized_yoy_without_comparator(
 
 
 # ---------------------------------------------------------------------------
+# Task 2 (docs/loom/plans/2026-07-19-jnj-restatement-axis-signature.md) —
+# recast annotation: a pack whose `coverage.axis_exclusions` carries a
+# vintage-category entry (srt:RestatementAxis, T1's producer-side accounting)
+# surfaces as a memo-visible `period_recast` coverage_flag, aggregated
+# pack-wide, carrying the affected accession/period_end/concept context.
+# Unknown-category exclusions are pack-level accounting only — no flag.
+# ---------------------------------------------------------------------------
+
+
+def _vintage_exclusion(**overrides) -> dict:
+    exclusion = {
+        "category": "vintage",
+        "axis": "srt:RestatementAxis",
+        "member": "RevisionOfPriorPeriodReclassificationAdjustmentMember",
+        "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "accession": "0000200406-25-000209",
+        "period_end": "2025-06-30",
+    }
+    exclusion.update(overrides)
+    return exclusion
+
+
+def test_quarterly_series_emits_period_recast_flag_for_vintage_exclusion(
+    kpi_xbrl_module,
+):
+    """Task 2 RED: a pack carrying one `category: "vintage"` axis exclusion
+    (T1's `coverage.axis_exclusions` channel) emits ONE `period_recast`
+    coverage_flag alongside any existing flags, carrying the exclusion's
+    accession/period_end/concept context and passing `assert_dqc_schema`.
+    A pack with zero exclusions, and a pack with ONLY unknown-category
+    exclusions, emit no such flag — unknown-axis exclusions are pack-level
+    accounting only, never a recast statement."""
+    vintage_pack = {
+        "company": "JNJ",
+        "facts": [],
+        "coverage": {"axis_exclusions": [_vintage_exclusion()]},
+    }
+    result = kpi_xbrl_module.build_quarterly_series(vintage_pack)
+    recast_flags = [f for f in result["coverage_flags"] if f["type"] == "period_recast"]
+    assert len(recast_flags) == 1
+    flag = recast_flags[0]
+    kpi_xbrl_module.assert_dqc_schema(flag)
+    assert flag["old"] is None
+    assert flag["new"] is None
+    assert flag["accessions"] == ["0000200406-25-000209"]
+    assert "recast" in flag["reason"] and "prior-published" in flag["reason"]
+    assert flag["exclusions"] == [_vintage_exclusion()]
+
+    zero_pack = {"company": "JNJ", "facts": [], "coverage": {"axis_exclusions": []}}
+    result = kpi_xbrl_module.build_quarterly_series(zero_pack)
+    assert not any(f["type"] == "period_recast" for f in result["coverage_flags"])
+
+    no_coverage_pack = {"company": "JNJ", "facts": []}
+    result = kpi_xbrl_module.build_quarterly_series(no_coverage_pack)
+    assert not any(f["type"] == "period_recast" for f in result["coverage_flags"])
+
+    unknown_only_pack = {
+        "company": "JNJ",
+        "facts": [],
+        "coverage": {"axis_exclusions": [
+            _vintage_exclusion(
+                category="unknown", axis="us-gaap:SomeFutureAxis",
+                member="SomeMember",
+            ),
+        ]},
+    }
+    result = kpi_xbrl_module.build_quarterly_series(unknown_only_pack)
+    assert not any(f["type"] == "period_recast" for f in result["coverage_flags"])
+
+
+# ---------------------------------------------------------------------------
 # Task 9 (docs/loom/plans/2026-07-16-operational-kpi-quarterly.md) — structured
 # point + DQC-flag schema provenance: every emitted point carries source
 # accession(s) + source form (10-K|10-Q) + duration_class; every analysis-layer

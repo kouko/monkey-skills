@@ -1372,6 +1372,47 @@ def _dimension_quarterly_absence_flags(facts: list[dict]) -> list[dict]:
     return flags
 
 
+def _period_recast_coverage_flags(fact_pack: dict) -> list[dict]:
+    """Task 2 (docs/loom/plans/2026-07-19-jnj-restatement-axis-signature.md):
+    surface the pack's vintage-category axis exclusions (T1's producer-side
+    `coverage.axis_exclusions` channel — `srt:RestatementAxis`, any member)
+    as ONE aggregated `period_recast` coverage_flag, pack-wide (not per
+    signature group: the exclusions live at pack level, outside any one
+    group's own facts). `type` is self-describing and morphology-consistent
+    with `no_quarterly_coverage` (snake_case descriptive noun phrase).
+
+    Unknown-category exclusions (any other disallowed `dim_` axis) are NOT
+    a vintage/recast statement — they stay pack-level accounting only and
+    contribute no flag here. Zero vintage exclusions -> empty list (no
+    flag), matching every other coverage-flag channel's 'ran, none found'
+    convention.
+
+    The flag carries the affected accession(s) (`assert_dqc_schema`'s
+    required non-empty `accessions` list) plus the raw exclusion entries
+    (`concept`/`accession`/`period_end`/`axis`/`member` context) verbatim
+    under the extra locating field `exclusions` — never re-derived, never
+    summarized away."""
+    axis_exclusions = (fact_pack.get("coverage") or {}).get("axis_exclusions") or []
+    vintage = [e for e in axis_exclusions if e.get("category") == "vintage"]
+    if not vintage:
+        return []
+    accessions = sorted({
+        e["accession"] for e in vintage if e.get("accession")
+    })
+    return [assert_dqc_schema({
+        "type": "period_recast",
+        "old": None,
+        "new": None,
+        "accessions": accessions,
+        "reason": (
+            f"{len(vintage)} vintage-axis (srt:RestatementAxis) fact(s) "
+            f"excluded from the pack — period recast: prior-published "
+            f"figures differ"
+        ),
+        "exclusions": vintage,
+    })]
+
+
 def build_series_with_break(
     points: list[dict],
     break_at_period: str,
@@ -1573,9 +1614,13 @@ def build_quarterly_series(fact_pack: dict) -> dict:
     `derived_points` = the emitted derived-lane points (`derived: True` +
     PLURAL `source_accessions`/`source_forms`), `gaps` = the derivation's
     surfaced skip/refusal flags, `coverage_flags` = the aggregated
-    per-group coverage flags. Groups are emitted in stable signature
-    order. Fail-loud: a pack missing `company` raises ValueError (points
-    are stamped with it); error/N-A slot packs raise via `_require_facts`.
+    per-group coverage flags PLUS (Task 2, docs/loom/plans/2026-07-19-jnj-
+    restatement-axis-signature.md) at most one pack-wide `period_recast`
+    flag when `fact_pack["coverage"]["axis_exclusions"]` carries any
+    `category: "vintage"` entries (see `_period_recast_coverage_flags`).
+    Groups are emitted in stable signature order. Fail-loud: a pack missing
+    `company` raises ValueError (points are stamped with it); error/N-A
+    slot packs raise via `_require_facts`.
     """
     company = fact_pack.get("company")
     if not isinstance(company, str) or not company:
@@ -1641,6 +1686,12 @@ def build_quarterly_series(fact_pack: dict) -> dict:
             "gaps": derived["gaps"],
         })
         coverage_flags.extend(series["coverage_flags"])
+
+    # Task 2: the pack-level vintage-exclusion recast flag rides ALONGSIDE
+    # the per-group flags above — it is not tied to any one signature
+    # group's own facts (the exclusions live in the pack's `coverage`
+    # accounting, outside `groups`).
+    coverage_flags.extend(_period_recast_coverage_flags(fact_pack))
 
     return {"series": series_entries, "coverage_flags": coverage_flags}
 
