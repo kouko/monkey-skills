@@ -1899,6 +1899,137 @@ def test_q4_derive_week_lane_not_triggered_by_fy_duration_weeks_alone(
     assert "duration_weeks" not in q4
 
 
+def test_q4_derive_mixed_lane_ambiguous_refuses(kpi_xbrl_module):
+    """Fix round 2 RED (quality-reviewer finding on 1465a8bd): a group
+    carrying BOTH a genuine 9mo-YTD candidate AND a genuine 36wk-YTD
+    candidate alongside its FY total must REFUSE — never silently prefer
+    the week lane and drop the month-lane candidate with no trace. Distinct
+    `q4_basis_ambiguous` gap type, never a mint."""
+    fy_fact = {
+        "concept": COST_MEMBERSHIP_MATCH["concept"],
+        "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+        "consolidation": None,
+        "period_end": "2026-08-30",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "FY",
+        "duration_months": 12,
+        "duration_weeks": 53,
+        "week_lane_band": "FY",
+        "accession": "acc-fy-mixed",
+        "filed": "2026-10-15",
+        "value": 100000.0,
+    }
+    ytd9_fact = {
+        "concept": COST_MEMBERSHIP_MATCH["concept"],
+        "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+        "consolidation": None,
+        "period_end": "2026-05-30",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "Q3",
+        "duration_months": 9,
+        "accession": "acc-ytd9-mixed",
+        "filed": "2026-06-15",
+        "value": 75000.0,
+    }
+    ytd36wk_fact = {
+        "concept": COST_MEMBERSHIP_MATCH["concept"],
+        "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+        "consolidation": None,
+        "period_end": "2026-05-10",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "Q3",
+        "duration_months": 8,
+        "duration_weeks": 36,
+        "week_lane_band": "YTD-through-Q3",
+        "accession": "acc-ytd36-mixed",
+        "filed": "2026-06-05",
+        "value": 78000.0,
+    }
+    pack = {
+        "company": "COST",
+        "facts": [fy_fact, ytd9_fact, ytd36wk_fact],
+        "fiscal_calendars": {
+            "acc-fy-mixed": {"fiscal_period_focus": "FY",
+                              "fiscal_year_end": "--08-30"},
+            "acc-ytd9-mixed": {"fiscal_period_focus": "Q3",
+                                "fiscal_year_end": "--08-30"},
+            "acc-ytd36-mixed": {"fiscal_period_focus": "Q3",
+                                 "fiscal_year_end": "--08-30"},
+        },
+    }
+    points = kpi_xbrl_module.facts_to_points(
+        pack, "membership_fees", COST_MEMBERSHIP_MATCH, "COST", "xbrl-dimensional",
+    )
+    result = kpi_xbrl_module.derive_q4_points(
+        points, fiscal_calendars=pack["fiscal_calendars"]
+    )
+    assert result["points"] == []  # never a silent week-lane (or month-lane) pick
+    assert len(result["gaps"]) == 1
+    gap = result["gaps"][0]
+    assert gap["type"] == "q4_basis_ambiguous"
+    assert gap["period"] == "2026"
+    assert sorted(gap["accessions"]) == [
+        "acc-fy-mixed", "acc-ytd36-mixed", "acc-ytd9-mixed",
+    ]
+
+
+def test_q4_derive_week_lane_mint_16wk(kpi_xbrl_module):
+    """Mirror of test_q4_derive_week_lane_mint for the 16wk (52-week fiscal
+    year) member of T3's week-Q4 format: FY carrying duration_weeks=52
+    minus its 36wk-YTD sibling mints duration_weeks == 16, duration_class
+    "16wk"."""
+    fy_fact = {
+        "concept": COST_MEMBERSHIP_MATCH["concept"],
+        "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+        "consolidation": None,
+        "period_end": "2026-08-29",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "FY",
+        "duration_months": 12,
+        "duration_weeks": 52,
+        "week_lane_band": "FY",
+        "accession": "0000909832-26-000456",
+        "filed": "2026-10-15",
+        "value": 90000.0,
+    }
+    ytd_fact = {
+        "concept": COST_MEMBERSHIP_MATCH["concept"],
+        "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+        "consolidation": None,
+        "period_end": "2026-05-09",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "Q3",
+        "duration_months": 8,
+        "duration_weeks": 36,
+        "week_lane_band": "YTD-through-Q3",
+        "accession": "0000909832-26-000321",
+        "filed": "2026-06-05",
+        "value": 68000.0,
+    }
+    pack = {
+        "company": "COST",
+        "facts": [fy_fact, ytd_fact],
+        "fiscal_calendars": {
+            "0000909832-26-000456": {"fiscal_period_focus": "FY",
+                                      "fiscal_year_end": "--08-29"},
+            "0000909832-26-000321": {"fiscal_period_focus": "Q3",
+                                      "fiscal_year_end": "--08-29"},
+        },
+    }
+    points = kpi_xbrl_module.facts_to_points(
+        pack, "membership_fees", COST_MEMBERSHIP_MATCH, "COST", "xbrl-dimensional",
+    )
+    result = kpi_xbrl_module.derive_q4_points(
+        points, fiscal_calendars=pack["fiscal_calendars"]
+    )
+    assert result["gaps"] == []
+    assert len(result["points"]) == 1
+    q4 = result["points"][0]
+    assert q4["value"] == 22000.0  # 90000.0 FY - 68000.0 36wk-YTD
+    assert q4["duration_class"] == "16wk"
+    assert q4["duration_weeks"] == 16
+
+
 # ---------------------------------------------------------------------------
 # Task 9 (docs/loom/plans/2026-07-16-operational-kpi-quarterly.md) — structured
 # point + DQC-flag schema provenance: every emitted point carries source

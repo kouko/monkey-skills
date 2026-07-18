@@ -996,7 +996,7 @@ def _q4_group_gap(
 
 def _q4_candidate_gap(
     fy_candidates: list[dict], ytd_candidates: list[dict], period, cell_ref,
-    *, ytd_role: str = "9mo-YTD",
+    *, ytd_role: str = "9mo-YTD", mixed_lane_candidates: list[dict] | None = None,
 ) -> dict:
     """Classify a group that cannot supply exactly ONE FY total + ONE
     YTD anchor (extracted from `derive_q4_points`, Task 9 opportunistic
@@ -1005,7 +1005,31 @@ def _q4_candidate_gap(
     are ambiguous inputs — `q4_basis_mismatch` (refused, never an
     arbitrary pick). `ytd_role` names which YTD lane is being reported —
     "9mo-YTD" (the default, month lane, byte-identical to pre-Task-4
-    behavior) or "36wk-YTD" (Task 4's week lane)."""
+    behavior) or "36wk-YTD" (Task 4's week lane).
+
+    `mixed_lane_candidates`, when non-empty, names a DIFFERENT YTD lane's
+    candidates that ALSO survived alongside `ytd_candidates` in the same
+    group (fix round 2, quality-reviewer finding on 1465a8bd): the
+    derivation basis itself is ambiguous — month lane vs week lane is
+    undecidable — and refuses as `q4_basis_ambiguous`, distinct from
+    `q4_basis_mismatch` (multiple survivors within ONE lane). Takes
+    precedence over the absent/multiple checks below: a mixed-lane group
+    is refused as ambiguous even when each individual lane carries exactly
+    one candidate."""
+    if mixed_lane_candidates:
+        present_accessions = sorted(
+            p.get("source_accession")
+            for p in fy_candidates + ytd_candidates + mixed_lane_candidates
+        )
+        reason = (
+            f"ambiguous Q4 derivation basis: this group carries BOTH a "
+            f"9mo-YTD candidate and a 36wk-YTD candidate — month-lane vs "
+            f"week-lane is undecidable, refused rather than silently "
+            f"preferring either lane"
+        )
+        return _q4_group_gap(
+            "q4_basis_ambiguous", present_accessions, reason, period, cell_ref
+        )
     absent = []
     if not fy_candidates:
         absent.append("12mo-FY total")
@@ -1032,7 +1056,7 @@ def _q4_candidate_gap(
 
 
 def _mint_derived_q4_point(
-    fy: dict, ytd9: dict, period, cell_ref, *, week_lane: bool = False,
+    fy: dict, ytd_point: dict, period, cell_ref, *, week_lane: bool = False,
 ) -> dict:
     """Mint the derived Q4 point (FY total minus the matching YTD point)
     for one clean, basis-checked input pair (extracted from
@@ -1052,9 +1076,9 @@ def _mint_derived_q4_point(
     byte-identical to the pre-Task-4 behavior."""
     fy_end = _q4_input_window_end(fy, "FY-total")
     ytd_role = "36wk-YTD" if week_lane else "9mo-YTD"
-    ytd9_end = _q4_input_window_end(ytd9, ytd_role)
-    value = fy["value"] - ytd9["value"]
-    accessions = [fy.get("source_accession"), ytd9.get("source_accession")]
+    ytd_point_end = _q4_input_window_end(ytd_point, ytd_role)
+    value = fy["value"] - ytd_point["value"]
+    accessions = [fy.get("source_accession"), ytd_point.get("source_accession")]
     point = {
         "company": fy.get("company"),
         "kpi_id": fy.get("kpi_id"),
@@ -1064,12 +1088,12 @@ def _mint_derived_q4_point(
         "period": period,
         "calendar_year": fy_end.year,
         "calendar_quarter": f"Q{(fy_end.month - 1) // 3 + 1}",
-        "period_start": (ytd9_end + timedelta(days=1)).isoformat(),
+        "period_start": (ytd_point_end + timedelta(days=1)).isoformat(),
         "period_end": fy["period_end"],
-        "as_of": max(fy.get("as_of") or "", ytd9.get("as_of") or ""),
+        "as_of": max(fy.get("as_of") or "", ytd_point.get("as_of") or ""),
         "value": value,
         "source_accessions": accessions,
-        "source_forms": [fy.get("source_form"), ytd9.get("source_form")],
+        "source_forms": [fy.get("source_form"), ytd_point.get("source_form")],
         "source_table_id": fy.get("source_table_id"),
         "source_cell_ref": cell_ref,
         "source_kind": fy.get("source_kind"),
@@ -1077,9 +1101,9 @@ def _mint_derived_q4_point(
         "dqc": assert_dqc_schema({
             "type": "derived_q4",
             "old": (
-                {"fy_total": fy["value"], "ytd36": ytd9["value"]}
+                {"fy_total": fy["value"], "ytd36": ytd_point["value"]}
                 if week_lane
-                else {"fy_total": fy["value"], "ytd9": ytd9["value"]}
+                else {"fy_total": fy["value"], "ytd9": ytd_point["value"]}
             ),
             "new": value,
             "accessions": accessions,
@@ -1092,7 +1116,7 @@ def _mint_derived_q4_point(
     }
     if week_lane:
         fy_weeks = _require_duration_weeks(fy, "FY-total")
-        ytd_weeks = _require_duration_weeks(ytd9, "36wk-YTD")
+        ytd_weeks = _require_duration_weeks(ytd_point, "36wk-YTD")
         derived_weeks = fy_weeks - ytd_weeks
         point["duration_weeks"] = derived_weeks
         point["duration_class"] = _WEEK_LANE_DURATION_CLASS_FORMAT[
@@ -1145,7 +1169,10 @@ def derive_q4_points(points: list[dict], *, fiscal_calendars: dict | None) -> di
     the SIBLING'S PRESENCE, never on the FY point's own `duration_weeks`
     (a month-lane calendar-year FY also carries one). A missing week-lane
     sibling falls through to the same `q4_source_missing` refusal as the
-    month lane, unchanged.
+    month lane, unchanged. A group carrying BOTH a genuine `9mo-YTD` AND a
+    genuine `36wk-YTD` candidate (fix round 2, quality-reviewer finding on
+    1465a8bd) REFUSES as `q4_basis_ambiguous` — never an arbitrary pick of
+    either lane.
     """
     groups: dict[tuple, list[dict]] = {}
     for point in points:
@@ -1181,6 +1208,16 @@ def derive_q4_points(points: list[dict], *, fiscal_calendars: dict | None) -> di
         ]
         if not fy_candidates and not ytd9_candidates and not ytd36wk_candidates:
             continue  # no derivation basis at all — not a gap
+        if ytd9_candidates and ytd36wk_candidates:
+            # Fix round 2 (quality-reviewer finding on 1465a8bd): BOTH lanes
+            # carry a genuine candidate — the basis itself is ambiguous,
+            # refused rather than silently preferring the week lane and
+            # dropping the month-lane candidate with no trace.
+            gaps.append(_q4_candidate_gap(
+                fy_candidates, ytd9_candidates, period, cell_ref,
+                mixed_lane_candidates=ytd36wk_candidates,
+            ))
+            continue
         week_lane = bool(ytd36wk_candidates)
         ytd_candidates = ytd36wk_candidates if week_lane else ytd9_candidates
         ytd_role = "36wk-YTD" if week_lane else "9mo-YTD"
