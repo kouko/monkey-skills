@@ -710,6 +710,168 @@ def test_build_fact_includes_subsegments_axis():
 
 
 # ---------------------------------------------------------------------------
+# Task 1 (docs/loom/plans/2026-07-19-jnj-restatement-axis-signature.md) —
+# vintage/unknown-axis exclusion with count: the silent fall-through in
+# `_dimension_signature` used to DROP a `dim_srt_RestatementAxis` (or any
+# other unrecognized `dim_` axis) column instead of excluding the whole
+# fact, which let a JNJ restatement/reclassification pair COLLIDE onto the
+# real quarter fact's signature (both landed on the same
+# {ProductOrService/StatementBusinessSegments: ...} dict once the
+# unrecognized axis silently vanished) — a FALSE intra-filing ambiguity.
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    "extra_axis_key,extra_axis_value",
+    [
+        pytest.param(
+            "dim_srt_RestatementAxis",
+            "srt:RevisionOfPriorPeriodReclassificationAdjustmentMember",
+            id="restatement_axis_vintage",
+        ),
+        pytest.param(
+            "dim_us-gaap_SomeFutureAxis",
+            "jnj:SomeFutureMember",
+            id="unrecognized_axis_unknown",
+        ),
+    ],
+)
+def test_is_dimensional_revenue_fact_excludes_vintage_and_unknown_axes(
+    extra_axis_key, extra_axis_value,
+):
+    """A fact carrying ANY `dim_` axis that is neither a whitelisted
+    breakdown axis nor the ConsolidationItems qualifier must be EXCLUDED
+    from the pack's primary facts entirely — not just have that one axis
+    silently dropped from `dimensions` (the pre-fix bug: the real MSFT
+    3-month-quarter row below, with the extra axis added, used to still
+    pass `_is_dimensional_revenue_fact` because its OTHER real breakdown
+    axis kept `dimensions` non-empty). Fails today (RED) because both
+    the RestatementAxis and the synthetic unrecognized axis silently
+    vanish from the axis loop with no exclusion."""
+    mod = _load_helpers()
+    fixture = json.loads((FIXTURES / "xbrl_quarterly_msft.json").read_text())
+    # Raw-row dict override on the real machine-captured MSFT fixture row —
+    # same convention as test_extract_emits_duration_months's instant_row /
+    # missing_start_row overrides. Add currency/unit_ref so the row clears
+    # `_is_dimensional_revenue_fact`'s $-unit gate.
+    row = dict(fixture["raw_facts"]["three_month"])
+    row["currency"] = "USD"
+    row["unit_ref"] = "usd"
+    row[extra_axis_key] = extra_axis_value
+    assert mod._is_dimensional_revenue_fact(row) is False, (
+        f"a fact carrying {extra_axis_key}={extra_axis_value!r} alongside "
+        "a real breakdown axis must be excluded whole, never emitted with "
+        "the disallowed axis merely dropped"
+    )
+
+
+def test_is_dimensional_revenue_fact_whitelist_only_fact_unchanged():
+    """Control case: a fact carrying ONLY a whitelisted breakdown axis (no
+    vintage/unknown axis at all) must still pass the predicate unchanged —
+    proves the exclusion logic above is additive, not a regression on the
+    existing whitelist path."""
+    mod = _load_helpers()
+    fixture = json.loads((FIXTURES / "xbrl_quarterly_msft.json").read_text())
+    row = dict(fixture["raw_facts"]["three_month"])
+    row["currency"] = "USD"
+    row["unit_ref"] = "usd"
+    assert mod._is_dimensional_revenue_fact(row) is True
+
+
+def _make_axis_exclusion_filing(*, accession, form, filing_date, period_of_report):
+    """Fake edgartools Filing whose `.xbrl()` yields THREE dimensional
+    us-gaap rows sharing the SAME real breakdown axis/period (mirrors the
+    live JNJ Shockwave shape: a real quarter fact plus a same-period
+    restatement/reclassification adjustment pair) PLUS the filing's own
+    dei cover-page rows — same multi-row-single-list shape as
+    `_make_dei_filing` above."""
+    xb = mock.MagicMock(name=f"xbrl-{accession}")
+    period_start = (
+        datetime.date.fromisoformat(period_of_report) - datetime.timedelta(days=89)
+    ).isoformat()
+    base_row = {
+        "is_dimensioned": True,
+        "dim_us-gaap_StatementBusinessSegmentsAxis": "jnj:MedTechSegmentMember",
+        "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "unit_ref": "usd",
+        "currency": "USD",
+        "period_type": "duration",
+        "period_start": period_start,
+        "period_end": period_of_report,
+        "period_instant": None,
+    }
+    real_row = {**base_row, "numeric_value": 500000000.0}
+    vintage_row = {
+        **base_row,
+        "numeric_value": 20000000.0,
+        "dim_srt_RestatementAxis":
+            "srt:RevisionOfPriorPeriodReclassificationAdjustmentMember",
+    }
+    unknown_row = {
+        **base_row,
+        "numeric_value": -20000000.0,
+        "dim_us-gaap_SomeFutureAxis": "jnj:SomeFutureMember",
+    }
+    xb.facts.to_dataframe.return_value.to_dict.return_value = [
+        real_row, vintage_row, unknown_row,
+        {"concept": "dei:DocumentFiscalPeriodFocus", "value": "Q1"},
+        {"concept": "dei:CurrentFiscalYearEndDate", "value": "--12-31"},
+        {"concept": "dei:DocumentFiscalYearFocus", "value": "2025"},
+    ]
+    filing = SimpleNamespace(
+        accession_no=accession, filing_date=filing_date, form=form,
+        period_of_report=period_of_report,
+    )
+    filing.xbrl = lambda bound=xb: bound
+    return filing
+
+
+def test_extract_dimensional_revenue_pack_accounting_counts_axis_exclusions(sec_client):
+    """`extract_dimensional_revenue`'s pack accounting must count the
+    vintage (RestatementAxis) and unknown-axis exclusions BY CATEGORY, with
+    enough context (axis local name + accession) for a downstream coverage
+    flag (Task 2), while the real fact still emits unchanged and the two
+    excluded facts never enter `facts`. Fails today (RED): both excluded
+    facts currently emit with the disallowed axis silently dropped, and no
+    accounting channel exists at all."""
+    filing = _make_axis_exclusion_filing(
+        accession="0000200406-25-000209", form="10-Q",
+        filing_date=datetime.date(2025, 5, 1), period_of_report="2025-03-30",
+    )
+    company = mock.MagicMock(name="Company")
+    company.not_found = False
+    company.cik = 200406
+    company.get_filings.return_value = [filing]
+    sec_client.edgar_stub.Company.return_value = company
+
+    pack = sec_client.extract_dimensional_revenue("JNJ", form="10-Q")
+
+    assert "error" not in pack, pack
+    assert len(pack["facts"]) == 1, (
+        "only the real (non-excluded) fact may reach the primary facts list"
+    )
+    assert pack["facts"][0]["value"] == 500000000.0
+    assert pack["facts"][0]["dimensions"] == {
+        "StatementBusinessSegments": "MedTechSegmentMember",
+    }
+
+    exclusions = pack["coverage"]["axis_exclusions"]
+    assert len(exclusions) == 2, exclusions
+    by_category = {e["category"]: e for e in exclusions}
+    assert set(by_category) == {"vintage", "unknown"}
+
+    vintage = by_category["vintage"]
+    assert vintage["axis"] == "srt:RestatementAxis"
+    assert vintage["member"] == "RevisionOfPriorPeriodReclassificationAdjustmentMember"
+    assert vintage["accession"] == "0000200406-25-000209"
+    assert vintage["period_end"] == "2025-03-30"
+
+    unknown = by_category["unknown"]
+    assert unknown["axis"] == "us-gaap:SomeFutureAxis"
+    assert unknown["member"] == "SomeFutureMember"
+    assert unknown["accession"] == "0000200406-25-000209"
+
+
+# ---------------------------------------------------------------------------
 # extract_dimensional_revenue — Task 6 exact-form-match filing selection
 # (offline guard; code-quality-reviewer 🟡 on Task 6: the amendment-skip
 # filter — exact `f.form == form` + max-by-filing_date, rejecting a 10-K/A —
