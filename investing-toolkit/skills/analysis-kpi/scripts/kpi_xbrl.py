@@ -1646,7 +1646,9 @@ def build_quarterly_series(fact_pack: dict) -> dict:
     surfaced skip/refusal flags, `coverage_flags` = the aggregated
     per-group coverage flags PLUS (Task 2, docs/loom/plans/2026-07-19-jnj-
     restatement-axis-signature.md) at most one pack-wide `period_recast`
-    flag when `fact_pack["coverage"]["axis_exclusions"]` carries any
+    flag when either arm of the nested envelope —
+    `fact_pack["coverage"]["quarterly"]["axis_exclusions"]` or
+    `["annual"]["axis_exclusions"]` — carries any
     `category: "vintage"` entries (see `_period_recast_coverage_flags`)
     PLUS (Task 3, same plan) one `signature_refused` flag per signature
     group whose `resolve_binding` call raised a genuine intra-filing
