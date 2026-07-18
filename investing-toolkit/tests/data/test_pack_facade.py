@@ -29,6 +29,8 @@ import importlib
 import json
 import subprocess
 import sys
+import types
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -36,6 +38,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 PACK_PY = ROOT / "skills" / "data-markets" / "scripts" / "pack.py"
 MARKETS_SCRIPTS = ROOT / "skills" / "data-markets" / "scripts"
+ANALYSIS_FIXTURES = ROOT / "tests" / "analysis" / "fixtures"
 
 if str(MARKETS_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(MARKETS_SCRIPTS))
@@ -603,6 +606,183 @@ def test_classify_no_status_key_inference_unchanged():
 
     # empty dict -> not classified (contributes no signal either way)
     assert pack._classify_result({"info": {}}) == ("ok", [])
+
+
+# ---------------------------------------------------------------------------
+# Task 1 (2026-07-18 memo-quarterly-kpi-wiring): `kpi-quarterly` pack — the
+# US-only SEC EDGAR dimensional-revenue fact-pack (facts[] + per-accession
+# fiscal_calendars + `_status` envelope). The extractor is stubbed in
+# sys.modules (fixture-fed, offline — repo convention); the fixtures are the
+# PRODUCER-GENERATED packs already committed for the quarterly chain (never
+# hand-typed XBRL values — docs/loom/memory/
+# hand-authored-fixture-is-a-fabrication-risk.md):
+#   - xbrl_quarterly_nvda_factpack.json — the real extractor's verbatim
+#     10-Q output (facts + coverage + fiscal_calendars).
+#   - xbrl_q4_derive.json `aapl_q4_derive` — supplies the 10-K FY fact
+#     (duration_months == 12) the annual arm returns.
+# No `@req` tags: this dispatch's plan traces work by named plan Tasks, not
+# registered loom-spec REQ-ids (same convention as the quarterly e2e module).
+# ---------------------------------------------------------------------------
+
+
+def _quarterly_factpack_fixture() -> dict:
+    d = json.loads(
+        (ANALYSIS_FIXTURES / "xbrl_quarterly_nvda_factpack.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    d.pop("_provenance", None)
+    return d
+
+
+def _annual_factpack_stub(coverage_marker: dict) -> dict:
+    """Extractor-shaped 10-K return: the committed q4-derive fixture's
+    FY fact (12-month duration) + its own accession's fiscal calendar.
+    `coverage` is an opaque caller-supplied marker — the pack must pass
+    it through verbatim, so the test proves that with a sentinel."""
+    q4 = json.loads(
+        (ANALYSIS_FIXTURES / "xbrl_q4_derive.json").read_text(encoding="utf-8")
+    )["aapl_q4_derive"]
+    annual_facts = [f for f in q4["facts"] if f["duration_months"] == 12]
+    accessions = {f["accession"] for f in annual_facts}
+    return {
+        "company": q4["company"],
+        "facts": annual_facts,
+        "coverage": coverage_marker,
+        "fiscal_calendars": {
+            a: c for a, c in q4["fiscal_calendars"].items() if a in accessions
+        },
+    }
+
+
+ANNUAL_COVERAGE_MARKER = {"marker": "annual-coverage-passthrough"}
+
+
+def _stub_extractor(monkeypatch, fake_extract) -> None:
+    """pack_us.pack_kpi_quarterly lazy-imports `extract_dimensional_revenue`
+    from sec_edgar_client at call time; a sys.modules stub intercepts that
+    import so the offline suite never touches requests/edgar."""
+    fake_mod = types.ModuleType("sec_edgar_client")
+    fake_mod.extract_dimensional_revenue = fake_extract
+    monkeypatch.setitem(sys.modules, "sec_edgar_client", fake_mod)
+
+
+def test_kpi_quarterly_us_ticker_emits_factpack_status_ok(monkeypatch, capsys):
+    """A US ticker's kpi-quarterly pack fetches BOTH arms (10-Q quarterly
+    facts + 10-K FY totals — the derived-Q4 basis) over one shared policy
+    window, merges facts + fiscal_calendars, passes coverage through
+    verbatim per arm, and exits 0 with _status.status == "ok"."""
+    calls: list[dict] = []
+
+    def fake_extract(ticker, form="10-K", since_year=None, until_year=None, as_of=None):
+        calls.append({"ticker": ticker, "form": form, "since_year": since_year})
+        if form == "10-Q":
+            return _quarterly_factpack_fixture()
+        assert form == "10-K", f"unexpected form {form!r}"
+        return _annual_factpack_stub(ANNUAL_COVERAGE_MARKER)
+
+    _stub_extractor(monkeypatch, fake_extract)
+    pack = importlib.import_module("pack")
+    rc = pack.main(["--ticker", "NVDA", "--pack", "kpi-quarterly"])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert rc == 0, f"payload={payload}"
+    status = payload["_status"]
+    assert status["status"] == "ok"
+    assert status["market"] == "us"
+    assert status["pack"] == "kpi-quarterly"
+
+    # Fact-pack keys (plan Task 1 acceptance).
+    for key in ("pack", "ticker", "fetched_at", "company",
+                "facts", "fiscal_calendars", "coverage"):
+        assert key in payload, f"missing fact-pack key {key!r}"
+    assert payload["pack"] == "kpi-quarterly"
+    assert payload["ticker"] == "NVDA"
+
+    quarterly = _quarterly_factpack_fixture()
+    annual = _annual_factpack_stub(ANNUAL_COVERAGE_MARKER)
+    # Merged facts + per-accession fiscal calendars (both arms, no loss).
+    assert len(payload["facts"]) == len(quarterly["facts"]) + len(annual["facts"])
+    assert set(payload["fiscal_calendars"]) == (
+        set(quarterly["fiscal_calendars"]) | set(annual["fiscal_calendars"])
+    )
+    # Coverage rides through verbatim, per arm.
+    assert payload["coverage"]["quarterly"] == quarterly["coverage"]
+    assert payload["coverage"]["annual"] == ANNUAL_COVERAGE_MARKER
+
+    # Both arms fetched for the requested ticker over ONE shared
+    # policy-derived fiscal-year window (date window policy, no CLI knob —
+    # same convention as memo-fetch's narrative_filings_window_days).
+    pack_us = importlib.import_module("pack_us")
+    assert [c["form"] for c in calls] == ["10-Q", "10-K"]
+    assert all(c["ticker"] == "NVDA" for c in calls)
+    expected_since = (
+        datetime.now(timezone.utc).year - pack_us.KPI_QUARTERLY_LOOKBACK_YEARS
+    )
+    assert all(c["since_year"] == expected_since for c in calls)
+
+
+def test_kpi_quarterly_non_us_ticker_exits_64_usage_error():
+    """kpi-quarterly is US-only (SEC EDGAR dimensional XBRL): a .TW ticker
+    is REFUSED with an explicit US-only usage_error — never a silent skip
+    and never the misleading generic 'unknown pack' rejection."""
+    proc = _run_pack_py("--ticker", "2330.TW", "--pack", "kpi-quarterly")
+    assert proc.returncode == 64, f"stdout={proc.stdout}\nstderr={proc.stderr}"
+    payload = json.loads(proc.stdout)
+    status = payload["_status"]
+    assert status["status"] == "usage_error"
+    assert "US-only" in status["message"]
+    assert "tw" in status["message"]
+
+
+def test_kpi_quarterly_annual_arm_error_partial_exit_2(monkeypatch, capsys):
+    """The 10-K arm failing only breaks Q4 derivation — the quarterly facts
+    are still emitted, the failure is surfaced in coverage.annual, and the
+    pack honestly reports partial (exit 2), never a silent ok."""
+
+    def fake_extract(ticker, form="10-K", since_year=None, until_year=None, as_of=None):
+        if form == "10-Q":
+            return _quarterly_factpack_fixture()
+        return {
+            "error": f"SEC EDGAR dimensional-revenue extraction failed for {ticker!r} ({form}): boom",
+            "error_class": "dimensional_revenue_extraction_failed",
+            "identifier": ticker,
+        }
+
+    _stub_extractor(monkeypatch, fake_extract)
+    pack = importlib.import_module("pack")
+    rc = pack.main(["--ticker", "NVDA", "--pack", "kpi-quarterly"])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert rc == 2, f"payload={payload}"
+    assert payload["_status"]["status"] == "partial"
+    assert payload["_status"]["failed_sections"] == ["coverage"]
+    quarterly = _quarterly_factpack_fixture()
+    assert len(payload["facts"]) == len(quarterly["facts"])
+    assert "error" in payload["coverage"]["annual"]
+
+
+def test_kpi_quarterly_quarterly_arm_error_exit_1_failed(monkeypatch, capsys):
+    """The 10-Q arm failing kills the pack: the extractor's loud error slot
+    is passed through (never a fabricated/empty fact-pack) and the facade
+    exits 1 with _status.status == "failed"."""
+
+    def fake_extract(ticker, form="10-K", since_year=None, until_year=None, as_of=None):
+        return {
+            "error": f"SEC EDGAR dimensional-revenue extraction failed for {ticker!r} ({form}): boom",
+            "error_class": "dimensional_revenue_extraction_failed",
+            "identifier": ticker,
+        }
+
+    _stub_extractor(monkeypatch, fake_extract)
+    pack = importlib.import_module("pack")
+    rc = pack.main(["--ticker", "NVDA", "--pack", "kpi-quarterly"])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert rc == 1, f"payload={payload}"
+    assert payload["_status"]["status"] == "failed"
+    assert "error" in payload
+    assert "facts" not in payload  # never a fabricated empty facts list
 
 
 def test_tw_screener_batch_partial_mops_only_real_shape(monkeypatch, capsys):
