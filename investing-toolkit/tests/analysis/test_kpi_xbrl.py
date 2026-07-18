@@ -2154,6 +2154,143 @@ def test_quarterly_series_no_week_normalized_yoy_on_equal_week_pair(
     assert "week_normalized_yoy" not in q4_2025
 
 
+def _cost_two_year_week_lane_fact_pack_zero_prior_value() -> dict:
+    """Same shape as `_cost_two_year_week_lane_fact_pack` (52wk FY2025 vs
+    53wk FY2026 -> DIFFERENT-week derived Q4 pair) but FY2025's FY and
+    YTD-through-Q3 values are equal, so derived Q4 2025 (the YoY
+    comparator for Q4 2026) works out to a zero VALUE — this used to hit
+    an uncaught ZeroDivisionError in `_attach_week_normalized_yoy`
+    (normalized_prior = 0.0 / 16 = 0.0, then divided into)."""
+    facts = [
+        {
+            "concept": COST_MEMBERSHIP_MATCH["concept"],
+            "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+            "consolidation": None,
+            "period_end": "2026-08-30",
+            "fiscal_year": 2026, "fiscal_quarter": "FY",
+            "duration_months": 12, "duration_weeks": 53,
+            "week_lane_band": "FY",
+            "accession": "acc-fy26", "filed": "2026-10-15",
+            "value": 100000.0,
+        },
+        {
+            "concept": COST_MEMBERSHIP_MATCH["concept"],
+            "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+            "consolidation": None,
+            "period_end": "2026-05-10",
+            "fiscal_year": 2026, "fiscal_quarter": "Q3",
+            "duration_months": 8, "duration_weeks": 36,
+            "week_lane_band": "YTD-through-Q3",
+            "accession": "acc-ytd26", "filed": "2026-06-05",
+            "value": 78000.0,
+        },
+        {
+            "concept": COST_MEMBERSHIP_MATCH["concept"],
+            "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+            "consolidation": None,
+            "period_end": "2025-08-31",
+            "fiscal_year": 2025, "fiscal_quarter": "FY",
+            "duration_months": 12, "duration_weeks": 52,
+            "week_lane_band": "FY",
+            "accession": "acc-fy25", "filed": "2025-10-15",
+            "value": 68000.0,
+        },
+        {
+            "concept": COST_MEMBERSHIP_MATCH["concept"],
+            "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+            "consolidation": None,
+            "period_end": "2025-05-11",
+            "fiscal_year": 2025, "fiscal_quarter": "Q3",
+            "duration_months": 8, "duration_weeks": 36,
+            "week_lane_band": "YTD-through-Q3",
+            "accession": "acc-ytd25", "filed": "2025-06-05",
+            "value": 68000.0,
+        },
+    ]
+    fiscal_calendars = {
+        "acc-fy26": {"fiscal_period_focus": "FY", "fiscal_year_end": "--08-30"},
+        "acc-ytd26": {"fiscal_period_focus": "Q3", "fiscal_year_end": "--08-30"},
+        "acc-fy25": {"fiscal_period_focus": "FY", "fiscal_year_end": "--08-31"},
+        "acc-ytd25": {"fiscal_period_focus": "Q3", "fiscal_year_end": "--08-31"},
+    }
+    return {"company": "COST", "facts": facts, "fiscal_calendars": fiscal_calendars}
+
+
+def test_quarterly_series_no_week_normalized_yoy_on_zero_value_comparator(
+    kpi_xbrl_module,
+):
+    """Task 5 fix-round-2 RED (reviewer finding #1, e64b6595): a
+    DIFFERENT-week YoY comparator whose own VALUE is 0.0 used to hit an
+    uncaught, contextless ZeroDivisionError inside
+    `_attach_week_normalized_yoy` and kill `build_quarterly_series` over
+    this OPTIONAL supplementary field. ORCHESTRATOR RULING: a
+    zero-denominator comparator is SKIP — no `week_normalized_yoy` field,
+    same silent treatment as no-comparator/equal-weeks (mirrors the
+    sibling zero-denominator skip in comps_compute.py's
+    `_i_rule_of_40`); never raise."""
+    pack = _cost_two_year_week_lane_fact_pack_zero_prior_value()
+    result = kpi_xbrl_module.build_quarterly_series(pack)
+    derived = result["series"][0]["derived_points"]
+    by_period = {p["period"]: p for p in derived}
+    q4_2026, q4_2025 = by_period["2026"], by_period["2025"]
+    assert q4_2025["value"] == 0.0
+    assert q4_2026["duration_weeks"] == 17
+    assert q4_2025["duration_weeks"] == 16
+    assert "week_normalized_yoy" not in q4_2026
+    assert "week_normalized_yoy" not in q4_2025
+
+
+def _cost_single_year_week_lane_fact_pack() -> dict:
+    """One fiscal year (FY2026 only) of COST-shaped week-lane facts — no
+    prior-fiscal-year comparator present in the signature group at all,
+    pinning the `prior is None` branch directly."""
+    facts = [
+        {
+            "concept": COST_MEMBERSHIP_MATCH["concept"],
+            "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+            "consolidation": None,
+            "period_end": "2026-08-30",
+            "fiscal_year": 2026, "fiscal_quarter": "FY",
+            "duration_months": 12, "duration_weeks": 53,
+            "week_lane_band": "FY",
+            "accession": "acc-fy26", "filed": "2026-10-15",
+            "value": 100000.0,
+        },
+        {
+            "concept": COST_MEMBERSHIP_MATCH["concept"],
+            "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+            "consolidation": None,
+            "period_end": "2026-05-10",
+            "fiscal_year": 2026, "fiscal_quarter": "Q3",
+            "duration_months": 8, "duration_weeks": 36,
+            "week_lane_band": "YTD-through-Q3",
+            "accession": "acc-ytd26", "filed": "2026-06-05",
+            "value": 78000.0,
+        },
+    ]
+    fiscal_calendars = {
+        "acc-fy26": {"fiscal_period_focus": "FY", "fiscal_year_end": "--08-30"},
+        "acc-ytd26": {"fiscal_period_focus": "Q3", "fiscal_year_end": "--08-30"},
+    }
+    return {"company": "COST", "facts": facts, "fiscal_calendars": fiscal_calendars}
+
+
+def test_quarterly_series_no_week_normalized_yoy_without_comparator(
+    kpi_xbrl_module,
+):
+    """Task 5 fix-round-2 RED (reviewer finding #2b, pin not new bug): a
+    point with NO YoY comparator present in its signature group (single
+    fiscal year of week-lane facts) gets no supplementary field — the
+    `prior is None` branch, pinned directly."""
+    pack = _cost_single_year_week_lane_fact_pack()
+    result = kpi_xbrl_module.build_quarterly_series(pack)
+    derived = result["series"][0]["derived_points"]
+    assert len(derived) == 1
+    q4_2026 = derived[0]
+    assert q4_2026["period"] == "2026"
+    assert "week_normalized_yoy" not in q4_2026
+
+
 # ---------------------------------------------------------------------------
 # Task 9 (docs/loom/plans/2026-07-16-operational-kpi-quarterly.md) — structured
 # point + DQC-flag schema provenance: every emitted point carries source

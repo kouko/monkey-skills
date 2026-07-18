@@ -1517,10 +1517,13 @@ def _attach_week_normalized_yoy(points: list[dict]) -> list[dict]:
     prior_duration_weeks) - 1`, computed here (this is the layer that
     already owns cross-point context for one signature group — see
     `build_quarterly_series`) — never re-derived downstream. A point with
-    no comparator, an EQUAL-week comparator, or either side missing
-    `duration_weeks` gets NO supplementary field (never guessed);
-    as-reported `value` is never touched — the field is additive-only, on
-    a shallow copy of the point."""
+    no comparator, an EQUAL-week comparator, either side missing
+    `duration_weeks`, or a ZERO denominator anywhere in the ratio (either
+    side's `duration_weeks` is 0, or the prior side's normalized value is
+    0 — e.g. a zero-value comparator) gets NO supplementary field (never
+    guessed, never raised — same silent skip as `comps_compute.py`'s
+    `_i_rule_of_40`); as-reported `value` is never touched — the field is
+    additive-only, on a shallow copy of the point."""
     by_key: dict[tuple, dict] = {}
     for point in points:
         by_key.setdefault((point.get("period_type"), point.get("period")), point)
@@ -1536,11 +1539,13 @@ def _attach_week_normalized_yoy(points: list[dict]) -> list[dict]:
             isinstance(weeks, int) and not isinstance(weeks, bool)
             and isinstance(prior_weeks, int) and not isinstance(prior_weeks, bool)
         )
-        if prior is not None and has_week_counts and weeks != prior_weeks:
+        has_nonzero_weeks = has_week_counts and weeks != 0 and prior_weeks != 0
+        if prior is not None and has_nonzero_weeks and weeks != prior_weeks:
             normalized_current = point["value"] / weeks
             normalized_prior = prior["value"] / prior_weeks
-            point = dict(point)
-            point["week_normalized_yoy"] = normalized_current / normalized_prior - 1
+            if normalized_prior != 0:
+                point = dict(point)
+                point["week_normalized_yoy"] = normalized_current / normalized_prior - 1
         annotated.append(point)
     return annotated
 
