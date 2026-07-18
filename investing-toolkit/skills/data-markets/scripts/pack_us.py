@@ -21,6 +21,9 @@ Pack types:
   - comps-multiples  single OR batch, yfinance multiples-only fields
   - screener-batch   batch, yfinance lightweight fields (REQUIRES >=2 tickers)
   - regime-pack      no ticker dimension, FRED macro series only
+  - kpi-quarterly    single ticker, SEC EDGAR dimensional-revenue fact-pack
+                     (10-Q quarterly facts + 10-K FY totals; US-only —
+                     the facade refuses it for any other market)
 
 Environment:
   INVESTING_TOOLKIT_CACHE   passed through to underlying clients (yfinance / sec / fred)
@@ -940,6 +943,99 @@ def pack_memo_fetch(ticker: str) -> dict:
     }
 
 
+# kpi-quarterly fiscal-year lookback. The memo's Operating-KPI trend table
+# needs the last 8 reported quarters (plan 2026-07-18-memo-quarterly-kpi-
+# wiring, Task 5); a 3-calendar-year lower bound spans >=3 full fiscal years
+# even for filers whose fiscal year runs AHEAD of the calendar year (NVDA's
+# FY2026 10-Qs are filed in calendar 2025), i.e. >=9 reported quarters plus
+# the FY totals the derived-Q4 lane (FY − ΣQ1-3) needs. Policy-derived date
+# window, not a CLI knob — same convention as memo-fetch's
+# narrative_filings_window_days.
+KPI_QUARTERLY_LOOKBACK_YEARS = 3
+
+
+def pack_kpi_quarterly(ticker: str) -> dict:
+    """US-only dimensional-revenue fact-pack for the quarterly KPI chain
+    (plan 2026-07-18-memo-quarterly-kpi-wiring, Task 1).
+
+    Two `extract_dimensional_revenue` arms over ONE shared fiscal-year
+    window (`KPI_QUARTERLY_LOOKBACK_YEARS`):
+
+      - 10-Q — the quarterly facts the series build consumes;
+      - 10-K — the FY totals that are the derived-Q4 basis (FY − ΣQ1-3;
+        `kpi_xbrl.derive_q4_points` needs both in one facts list, the same
+        merge shape tests/analysis/test_kpi_xbrl_quarterly_e2e.py wires).
+
+    Output: `{pack, ticker, fetched_at, company, facts, fiscal_calendars,
+    coverage}` — facts + per-accession fiscal calendars merged across the
+    two arms (accessions never collide across forms), `coverage` carrying
+    each arm's report verbatim plus a self-declared `_status`
+    (pack.py's Task-4 section convention).
+
+    Failure honesty (never a silent skip, never a fabricated pack):
+      - 10-Q arm error slot -> returned verbatim under the pack envelope
+        with NO facts key (facade classifies "failed", exit 1);
+      - 10-K arm error slot -> quarterly facts still emitted; the slot is
+        surfaced as `coverage.annual` and `coverage._status = "partial"`
+        (facade exit 2 — Q4 stays underivable and says so).
+    """
+    _log("kpi-quarterly start", ticker)
+    t0 = time.monotonic()
+    if str(SCRIPT_DIR) not in sys.path:
+        sys.path.insert(0, str(SCRIPT_DIR))
+    # Lazy import: same pattern as pack_memo_fetch above (sec_edgar_client's
+    # top-level `import requests` must not become a module-import-time cost
+    # for other pack types).
+    from sec_edgar_client import extract_dimensional_revenue
+
+    since_year = datetime.now(timezone.utc).year - KPI_QUARTERLY_LOOKBACK_YEARS
+    envelope = {
+        "pack": "kpi-quarterly",
+        "ticker": ticker.upper(),
+        "fetched_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    _log("pack [10-Q dimensional facts]", f"{ticker} since_year={since_year}")
+    quarterly = extract_dimensional_revenue(
+        ticker, form="10-Q", since_year=since_year
+    )
+    if "error" in quarterly:
+        _log("kpi-quarterly done", f"{ticker} FAILED in {time.monotonic() - t0:.1f}s")
+        return {**envelope, **quarterly}
+
+    _log("pack [10-K dimensional facts]", f"{ticker} since_year={since_year}")
+    annual = extract_dimensional_revenue(
+        ticker, form="10-K", since_year=since_year
+    )
+    annual_failed = "error" in annual
+
+    facts = quarterly["facts"] + ([] if annual_failed else annual["facts"])
+    fiscal_calendars = {
+        **quarterly["fiscal_calendars"],
+        **({} if annual_failed else annual["fiscal_calendars"]),
+    }
+    coverage = {
+        # Self-declared section status (pack.py Task-4 convention): the
+        # annual arm's failure lives INSIDE this section, invisible to the
+        # facade's structural walk — so the producer says so directly.
+        "_status": "partial" if annual_failed else "ok",
+        "quarterly": quarterly["coverage"],
+        "annual": annual if annual_failed else annual["coverage"],
+    }
+    _log(
+        "kpi-quarterly done",
+        f"{ticker} {len(facts)} facts in {time.monotonic() - t0:.1f}s"
+        + (" (annual arm FAILED)" if annual_failed else ""),
+    )
+    return {
+        **envelope,
+        "company": quarterly["company"],
+        "facts": facts,
+        "fiscal_calendars": fiscal_calendars,
+        "coverage": coverage,
+    }
+
+
 def pack_comps_multiples(tickers: list[str]) -> dict:
     """Multiples-only fields. Single or batch."""
     _log("comps-multiples start", f"{len(tickers)} ticker(s)")
@@ -1097,6 +1193,7 @@ SUPPORTED_PACKS: tuple[str, ...] = (
     "comps-multiples",
     "screener-batch",
     "regime-pack",
+    "kpi-quarterly",
 )
 
 
@@ -1131,5 +1228,11 @@ def build_pack(pack_name: str, tickers: list[str]) -> dict:
         if len(ticker_list) < 2:
             raise ValueError("pack screener-batch requires at least two tickers")
         return pack_screener_batch(ticker_list)
+    if pack_name == "kpi-quarterly":
+        if len(ticker_list) != 1:
+            raise ValueError(
+                "pack kpi-quarterly requires exactly one ticker (single, heavy)"
+            )
+        return pack_kpi_quarterly(ticker_list[0])
     # regime-pack: no ticker dimension
     return pack_regime()

@@ -1,0 +1,254 @@
+{
+ "pack": "kpi-quarterly",
+ "ticker": "NVDA",
+ "fetched_at": "2026-07-18T07:37:24.163962+00:00",
+ "company": "NVDA",
+ "facts": [
+  {
+   "concept": "us-gaap:Revenues",
+   "dimensions": {
+    "ProductOrService": "ComputeMember"
+   },
+   "consolidation": null,
+   "value": 34155000000.0,
+   "period_end": "2025-04-27",
+   "accession": "0001045810-25-000116",
+   "filed": "2025-05-28",
+   "duration_months": 3,
+   "calendar_year": 2025,
+   "calendar_quarter": "Q2",
+   "fiscal_year": 2026,
+   "fiscal_quarter": "Q1",
+   "derivation_basis": "dei-declared"
+  },
+  {
+   "concept": "us-gaap:Revenues",
+   "dimensions": {
+    "ProductOrService": "ComputeMember"
+   },
+   "consolidation": null,
+   "value": 33844000000.0,
+   "period_end": "2025-07-27",
+   "accession": "0001045810-25-000209",
+   "filed": "2025-08-27",
+   "duration_months": 3,
+   "calendar_year": 2025,
+   "calendar_quarter": "Q3",
+   "fiscal_year": 2026,
+   "fiscal_quarter": "Q2",
+   "derivation_basis": "dei-declared"
+  },
+  {
+   "concept": "us-gaap:Revenues",
+   "dimensions": {
+    "ProductOrService": "ComputeMember"
+   },
+   "consolidation": null,
+   "value": 43028000000.0,
+   "period_end": "2025-10-26",
+   "accession": "0001045810-25-000230",
+   "filed": "2025-11-19",
+   "duration_months": 3,
+   "calendar_year": 2025,
+   "calendar_quarter": "Q4",
+   "fiscal_year": 2026,
+   "fiscal_quarter": "Q3",
+   "derivation_basis": "dei-declared"
+  },
+  {
+   "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+   "dimensions": {
+    "ProductOrService": "IPhoneMember"
+   },
+   "consolidation": null,
+   "value": 14100.0,
+   "period_end": "2025-09-27",
+   "accession": "0000320193-25-000079",
+   "filed": "2025-10-31",
+   "duration_months": 12,
+   "calendar_year": 2025,
+   "calendar_quarter": "Q3",
+   "fiscal_year": 2025,
+   "fiscal_quarter": "FY",
+   "derivation_basis": "dei-declared"
+  }
+ ],
+ "fiscal_calendars": {
+  "0001045810-25-000116": {
+   "fiscal_period_focus": "Q1",
+   "fiscal_year_end": "--01-25",
+   "fiscal_year_focus": "2026"
+  },
+  "0001045810-25-000209": {
+   "fiscal_period_focus": "Q2",
+   "fiscal_year_end": "--01-25",
+   "fiscal_year_focus": "2026"
+  },
+  "0001045810-25-000230": {
+   "fiscal_period_focus": "Q3",
+   "fiscal_year_end": "--01-25",
+   "fiscal_year_focus": "2026"
+  },
+  "0000320193-25-000079": {
+   "fiscal_period_focus": "FY",
+   "fiscal_year_end": "--09-27",
+   "fiscal_year_focus": "2025"
+  }
+ },
+ "coverage": {
+  "_status": "ok",
+  "quarterly": {
+   "requested": {
+    "since": 2026,
+    "until": 2026
+   },
+   "actual": {
+    "min_year": 2026,
+    "max_year": 2026
+   },
+   "clamp_reason": null,
+   "quarterly_coverage": [
+    {
+     "fiscal_year": 2024,
+     "status": "partial",
+     "present_count": 1,
+     "expected_count": 4,
+     "present": [
+      {
+       "filing": "10-K"
+      }
+     ],
+     "missing": [
+      {
+       "filing": "Q1",
+       "reason": "out_of_requested_range",
+       "detail": "fiscal year 2024 precedes requested since_year=2026"
+      },
+      {
+       "filing": "Q2",
+       "reason": "out_of_requested_range",
+       "detail": "fiscal year 2024 precedes requested since_year=2026"
+      },
+      {
+       "filing": "Q3",
+       "reason": "out_of_requested_range",
+       "detail": "fiscal year 2024 precedes requested since_year=2026"
+      }
+     ],
+     "derivation_basis": "dei-declared"
+    },
+    {
+     "fiscal_year": 2025,
+     "status": "partial",
+     "present_count": 1,
+     "expected_count": 4,
+     "present": [
+      {
+       "filing": "10-K"
+      }
+     ],
+     "missing": [
+      {
+       "filing": "Q1",
+       "reason": "out_of_requested_range",
+       "detail": "fiscal year 2025 precedes requested since_year=2026"
+      },
+      {
+       "filing": "Q2",
+       "reason": "out_of_requested_range",
+       "detail": "fiscal year 2025 precedes requested since_year=2026"
+      },
+      {
+       "filing": "Q3",
+       "reason": "out_of_requested_range",
+       "detail": "fiscal year 2025 precedes requested since_year=2026"
+      }
+     ],
+     "derivation_basis": "dei-declared"
+    },
+    {
+     "fiscal_year": 2026,
+     "status": "full",
+     "present_count": 4,
+     "expected_count": 4,
+     "present": [
+      {
+       "filing": "10-K"
+      },
+      {
+       "filing": "Q1",
+       "accession": "0001045810-25-000116",
+       "period_of_report": "2025-04-27"
+      },
+      {
+       "filing": "Q2",
+       "accession": "0001045810-25-000209",
+       "period_of_report": "2025-07-27"
+      },
+      {
+       "filing": "Q3",
+       "accession": "0001045810-25-000230",
+       "period_of_report": "2025-10-26"
+      }
+     ],
+     "missing": [],
+     "derivation_basis": "dei-declared"
+    },
+    {
+     "fiscal_year": 2027,
+     "status": "partial",
+     "present_count": 1,
+     "expected_count": 4,
+     "present": [
+      {
+       "filing": "Q1",
+       "accession": "0001045810-26-000052",
+       "period_of_report": "2026-04-26"
+      }
+     ],
+     "missing": [
+      {
+       "filing": "10-K",
+       "reason": "out_of_requested_range",
+       "detail": "fiscal year 2027 exceeds requested until_year=2026"
+      },
+      {
+       "filing": "Q2",
+       "reason": "out_of_requested_range",
+       "detail": "fiscal year 2027 exceeds requested until_year=2026"
+      },
+      {
+       "filing": "Q3",
+       "reason": "out_of_requested_range",
+       "detail": "fiscal year 2027 exceeds requested until_year=2026"
+      }
+     ],
+     "derivation_basis": "projected"
+    }
+   ],
+   "selection_gaps": [],
+   "fiscal_year_reconciliation": [],
+   "unclassifiable_periods": [],
+   "fetch_failures": [],
+   "unlabelable_filings": []
+  },
+  "annual": {
+   "requested": {
+    "since": 2026,
+    "until": null
+   },
+   "actual": {
+    "min_year": 2025,
+    "max_year": 2025
+   },
+   "clamp_reason": null,
+   "quarterly_coverage": null,
+   "selection_gaps": null,
+   "fiscal_year_reconciliation": [],
+   "unclassifiable_periods": [],
+   "fetch_failures": [],
+   "unlabelable_filings": []
+  }
+ },
+ "_provenance": "PRODUCER-GENERATED 2026-07-18 (memo-quarterly-kpi-wiring Task 1): the REAL pack_us.pack_kpi_quarterly ran offline with extract_dimensional_revenue stubbed to return the committed producer-generated fixtures \u2014 tests/analysis/fixtures/xbrl_quarterly_nvda_factpack.json (10-Q arm, real extractor output incl. coverage) and the FY facts of tests/analysis/fixtures/xbrl_q4_derive.json aapl_q4_derive (10-K arm; its coverage built by the real sec_edgar_client._dimensional_revenue_coverage over those facts). No XBRL value in this file was hand-typed. Regenerate with the session scratch script gen_kpi_quarterly_sample.py's recipe. NOTE: the two arms come from different real companies (NVDA 10-Qs / AAPL 10-K) \u2014 fine for schema-shape validation, not a coherent single-company series."
+}

@@ -1,0 +1,147 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/kouko/monkey-skills/blob/main/investing-toolkit/skills/data-markets/schemas/us-schema-kpi-quarterly.json",
+  "title": "data-us pack=kpi-quarterly output",
+  "description": "Pack output for `data-markets/scripts/pack.py --ticker {T} --pack kpi-quarterly`. US-only (SEC EDGAR dimensional XBRL; the facade refuses any other market with a usage_error). Two extract_dimensional_revenue arms over one shared fiscal-year window: 10-Q quarterly dimensional-revenue facts + 10-K FY totals (the derived-Q4 basis, FY − ΣQ1-3), merged into one facts[] list with per-accession dei fiscal calendars. Single ticker only by design (SEC EDGAR is rate-limited 10 req/s).",
+  "type": "object",
+  "required": [
+    "pack",
+    "ticker",
+    "fetched_at",
+    "company",
+    "facts",
+    "fiscal_calendars",
+    "coverage"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "pack": {
+      "const": "kpi-quarterly"
+    },
+    "ticker": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9.\\-]{0,9}$"
+    },
+    "fetched_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "company": {
+      "type": "string",
+      "description": "Ticker echo from the extractor (Tier A — official primary source)."
+    },
+    "facts": {
+      "type": "array",
+      "description": "Merged 10-Q + 10-K dimensional-revenue facts, each carrying the parallel fiscal + calendar labels and per-fact filing provenance (accession + filed). Shape: sec_edgar_client.extract_dimensional_revenue.",
+      "items": {
+        "type": "object",
+        "required": [
+          "concept",
+          "dimensions",
+          "consolidation",
+          "value",
+          "period_end",
+          "accession",
+          "filed",
+          "duration_months",
+          "calendar_year",
+          "calendar_quarter",
+          "fiscal_year",
+          "fiscal_quarter"
+        ],
+        "additionalProperties": true,
+        "properties": {
+          "concept": {
+            "type": "string"
+          },
+          "dimensions": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "consolidation": {
+            "type": ["string", "null"]
+          },
+          "value": {
+            "type": "number"
+          },
+          "period_end": {
+            "type": "string",
+            "format": "date"
+          },
+          "accession": {
+            "type": "string"
+          },
+          "filed": {
+            "type": "string",
+            "format": "date"
+          },
+          "duration_months": {
+            "type": "number",
+            "description": "Reported window length: 3 (single quarter), 6/9 (YTD cumulative), 12 (FY total)."
+          },
+          "calendar_year": {
+            "type": "integer"
+          },
+          "calendar_quarter": {
+            "type": "string"
+          },
+          "fiscal_year": {
+            "type": "integer",
+            "description": "Derived per fact against the filing's own dei calendar — never period_end[:4]."
+          },
+          "fiscal_quarter": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "fiscal_calendars": {
+      "type": "object",
+      "description": "Per-accession dei cover-tag calendar, read from each filing's own facts (52/53-week FYE drift is captured per filing, never cached per ticker).",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "fiscal_period_focus",
+          "fiscal_year_end",
+          "fiscal_year_focus"
+        ],
+        "additionalProperties": true,
+        "properties": {
+          "fiscal_period_focus": {
+            "type": ["string", "null"]
+          },
+          "fiscal_year_end": {
+            "type": ["string", "null"]
+          },
+          "fiscal_year_focus": {
+            "type": ["string", "null"]
+          }
+        }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "description": "Per-arm coverage reports, verbatim from the extractor; `_status` is the pack's self-declared section status (ok when both arms succeeded, partial when the 10-K arm failed — its error slot then sits in `annual`).",
+      "required": [
+        "quarterly",
+        "annual"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "_status": {
+          "enum": ["ok", "partial", "failed"]
+        },
+        "quarterly": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "annual": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}

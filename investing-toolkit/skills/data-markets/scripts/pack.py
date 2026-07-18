@@ -102,6 +102,12 @@ EXIT_PARTIAL = 2
 EXIT_FAILED = 1
 EXIT_USAGE_ERROR = 64
 
+# Packs that exist for exactly one market. Refused loudly (exit 64) when the
+# resolved market differs — never routed to a market module whose generic
+# "unknown pack" ValueError would misname a market-availability problem as a
+# pack-name typo. `--market us` still overrides ticker detection entirely.
+US_ONLY_PACKS: frozenset[str] = frozenset({"kpi-quarterly"})
+
 # Suffix -> market. Order matters only in that each pattern is disjoint.
 _SUFFIX_RULES: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"\.(TW|TWO)$", re.IGNORECASE), "tw"),
@@ -382,6 +388,12 @@ def main(argv: list[str] | None = None) -> int:
         args = parser.parse_args(argv)
         tickers = _parse_tickers(args)
         market, warnings = _resolve_market(args.pack, tickers, args.market)
+        if args.pack in US_ONLY_PACKS and market != "us":
+            raise _UsageError(
+                f"--pack {args.pack} is US-only (SEC EDGAR dimensional "
+                f"XBRL); ticker(s) resolved to market '{market}', which has "
+                f"no source for this pack"
+            )
     except _UsageError as exc:
         pack_name = args.pack if args is not None else None
         _emit(
