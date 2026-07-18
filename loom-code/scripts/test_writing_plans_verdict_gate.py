@@ -213,6 +213,26 @@ def test_files_example_is_concrete_not_ellipsis():
         "specs/<capability>/spec.md), matching Task 18's convention"
 
 
+def test_command_example_names_explicit_owning_plugin_path():
+    """Round-4 haiku cold-reader dogfood: a cold reader reproduced the
+    mint_critic_verdict.py command with the wrong plugin path
+    (loom-code/scripts/ instead of loom-spec/scripts/) because the
+    copyable command block itself only named the bare script filename --
+    the owning plugin was only in surrounding prose. The command example
+    must carry the explicit `loom-spec/scripts/mint_critic_verdict.py`
+    path, mirroring how this same section's structural-validator
+    precedent (`check_scenario_coverage.py`, line ~212) is invoked with
+    its explicit `loom-code/scripts/` path so the owning plugin is
+    unambiguous in the copyable command itself, not only in prose."""
+    section = _who_runs_the_validator_section(_text())
+
+    assert "loom-spec/scripts/mint_critic_verdict.py" in section, \
+        "the command example must carry the explicit loom-spec/scripts/ " \
+        "path -- a bare 'mint_critic_verdict.py' filename let a cold " \
+        "reader guess the wrong owning plugin (loom-code instead of " \
+        "loom-spec)"
+
+
 def test_files_list_must_match_what_critic_minted():
     """The --files list passed to validate must match what
     completeness-critic minted -- mint_critic_verdict.py's own validate

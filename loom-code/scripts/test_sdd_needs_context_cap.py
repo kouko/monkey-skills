@@ -49,3 +49,22 @@ def test_3_round_cap_section_cross_references_continuous_mode():
     text = _read(SDD_SKILL)
     assert "continuous-mode.md" in text
     assert "one round earlier" in text
+
+
+def test_needs_context_cap_states_independence_from_needs_revision_cap():
+    """
+    Round-4 haiku cold-reader dogfood: "mirrors the 3-round NEEDS_REVISION
+    escalation below" was read as implying a SHARED round budget between
+    the NEEDS_CONTEXT cap and the NEEDS_REVISION cap, causing a
+    conservative reader to escalate a round early. The two caps are
+    INDEPENDENT counters -- NEEDS_CONTEXT re-dispatches and NEEDS_REVISION
+    revision rounds never share rounds. The clarifier must sit next to
+    the "mirroring" phrase so a reader cannot miss it.
+    """
+    text = _read(SDD_SKILL)
+    idx = text.index("mirroring the 3-round NEEDS_REVISION escalation below")
+    tail = text[idx:idx + 200]
+    assert "independent counter" in tail, \
+        "must state the caps are an independent counter, not a shared budget"
+    assert "never share rounds" in tail, \
+        "must state the two budgets never share rounds"
