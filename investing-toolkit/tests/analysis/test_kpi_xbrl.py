@@ -1248,6 +1248,121 @@ def test_series_range_filtered_by_own_fiscal_label(
     assert q1["dqc"]["type"] == "restatement"
 
 
+# ---------------------------------------------------------------------------
+# Task 7 review follow-up (code-quality-reviewer 🟡): five input-validation
+# arms in build_series_with_break/_validate_fiscal_range/_point_fiscal_year
+# shipped with zero test coverage. Exercised via the PUBLIC
+# build_series_with_break entry point (matching this file's own convention
+# of never testing the underscore-prefixed helpers directly) with minimal
+# synthetic points/facts — none of these arms need a real fact pack.
+# ---------------------------------------------------------------------------
+
+def test_validate_fiscal_range_rejects_malformed_shape_and_bounds(kpi_xbrl_module):
+    """`_validate_fiscal_range` fail-loud arm: a `fiscal_range` that is not
+    unpackable into exactly (since, until), or whose bounds are not plain
+    ints (bool included — bool is a python int subclass but explicitly
+    rejected), or that is inverted (since > until), never silently emits
+    everything — each shape raises naming the specific defect."""
+    # not a (since, until) pair — too few elements to unpack.
+    with pytest.raises(ValueError, match="pair"):
+        kpi_xbrl_module.build_series_with_break([], "2018", fiscal_range=(2020,))
+    # not a (since, until) pair — not iterable at all.
+    with pytest.raises(ValueError, match="pair"):
+        kpi_xbrl_module.build_series_with_break([], "2018", fiscal_range=2020)
+    # a non-int bound.
+    with pytest.raises(ValueError, match="integers"):
+        kpi_xbrl_module.build_series_with_break(
+            [], "2018", fiscal_range=(2020, "2025")
+        )
+    # a bool bound — excluded even though isinstance(True, int) is True.
+    with pytest.raises(ValueError, match="integers"):
+        kpi_xbrl_module.build_series_with_break([], "2018", fiscal_range=(True, 2025))
+    # inverted range.
+    with pytest.raises(ValueError, match="inverted"):
+        kpi_xbrl_module.build_series_with_break([], "2018", fiscal_range=(2025, 2020))
+
+
+def test_build_series_rejects_unknown_granularity(kpi_xbrl_module):
+    """The `granularity not in _SERIES_GRANULARITIES` guard: a value other
+    than "annual"/"quarterly"/None raises naming the unknown value — never
+    silently treated as "no granularity requested"."""
+    with pytest.raises(ValueError, match="unknown granularity"):
+        kpi_xbrl_module.build_series_with_break([], "2018", granularity="monthly")
+
+
+def test_build_series_rejects_facts_without_quarterly_granularity(kpi_xbrl_module):
+    """The `facts is not None and granularity != "quarterly"` guard: the
+    no-quarterly-coverage flagging input is defined for the quarterly
+    series build only — passing `facts` with no granularity (or with
+    granularity="annual") raises rather than silently ignoring `facts` or
+    computing flags that don't apply to the requested series."""
+    with pytest.raises(ValueError, match="requires granularity"):
+        kpi_xbrl_module.build_series_with_break([], "2018", facts=[{"concept": "x"}])
+    with pytest.raises(ValueError, match="requires granularity"):
+        kpi_xbrl_module.build_series_with_break(
+            [], "2018", granularity="annual", facts=[{"concept": "x"}]
+        )
+
+
+def test_point_fiscal_year_rejects_non_int_period(kpi_xbrl_module):
+    """`_point_fiscal_year`'s fail-loud arm (only reached once `fiscal_range`
+    is set, since that's the only caller): a point whose `period` is not
+    int-parseable — a non-numeric string, or the key missing outright — is
+    surfaced rather than guessed in or out of the requested range."""
+    with pytest.raises(ValueError, match="cannot range-filter"):
+        kpi_xbrl_module.build_series_with_break(
+            [{"period": "not-a-year", "kpi_id": "x"}],
+            "2018", fiscal_range=(2020, 2025),
+        )
+    with pytest.raises(ValueError, match="cannot range-filter"):
+        kpi_xbrl_module.build_series_with_break(
+            [{"kpi_id": "x"}],  # no "period" key at all
+            "2018", fiscal_range=(2020, 2025),
+        )
+
+
+def test_coverage_flag_kept_when_fiscal_year_not_plain_int(
+    kpi_xbrl_module, stub_data_layer_deps
+):
+    """The coverage-flag range-filter's keep branch (spec comment: 'a flag
+    whose fiscal_year is not an int cannot be placed and stays SURFACED,
+    never silently dropped'): a `no_quarterly_coverage` flag whose
+    `fiscal_year` is a non-int (string) or a bool survives a fiscal_range
+    filter that would otherwise exclude it by value — because it can't be
+    placed in the range at all, not because it happens to fall inside it.
+    `fiscal_range=(2030, 2040)` deliberately excludes both facts' would-be
+    numeric year (2025) to prove the keep is unconditional, not coincidental.
+    """
+    non_int_fy_fact = {
+        "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "dimensions": {"ProductOrService": "NonIntFYMember"},
+        "consolidation": None,
+        "value": 1.0,
+        "period_end": "2025-09-27",
+        "duration_months": 12,
+        "fiscal_year": "2025",  # non-int — always kept, range-independent
+        "fiscal_quarter": "FY",
+        "accession": "acc-non-int-fy",
+        "filed": "2025-10-31",
+    }
+    bool_fy_fact = {
+        **non_int_fy_fact,
+        "dimensions": {"ProductOrService": "BoolFYMember"},
+        "fiscal_year": True,  # bool — excluded from the "valid year" arm
+        "accession": "acc-bool-fy",
+    }
+
+    result = kpi_xbrl_module.build_series_with_break(
+        [], "2018", granularity="quarterly",
+        fiscal_range=(2030, 2040),
+        facts=[non_int_fy_fact, bool_fy_fact],
+    )
+
+    flagged_dims = {tuple(sorted(f["dimensions"].items())) for f in result["coverage_flags"]}
+    assert (("ProductOrService", "NonIntFYMember"),) in flagged_dims
+    assert (("ProductOrService", "BoolFYMember"),) in flagged_dims
+
+
 def test_cli_build_resolves_binding_and_prints_points(tmp_path):
     """Task 6 GREEN: the `build` subcommand reads a fact-pack JSON from
     stdin and a binding JSON from --binding, resolves it via
