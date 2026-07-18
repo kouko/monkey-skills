@@ -45,7 +45,9 @@ belongs to the already-shipped US SEC arc (housekeeping note surfaced to user).
   investing-toolkit/skills/data-markets/scripts/pack_us.py,
   investing-toolkit/skills/data-markets/schemas/us-schema-kpi-quarterly.json,
   investing-toolkit/tests/data/test_pack_facade.py,
-  investing-toolkit/tests/data/test_pack_schemas.py
+  investing-toolkit/tests/data/test_pack_schemas.py,
+  investing-toolkit/tests/data/test_data_markets_us.py,  # entailed: SUPPORTED_PACKS migration-contract pin
+  investing-toolkit/tests/data/fixtures/data-us-kpi-quarterly-sample.json
 - Context paths:
   - investing-toolkit/skills/data-markets/scripts/sec_edgar_client.py (extractor + its test fixtures' shape)
   - investing-toolkit/skills/data-markets/schemas/us-schema-memo-fetch.json (schema convention)
@@ -243,7 +245,11 @@ belongs to the already-shipped US SEC arc (housekeeping note surfaced to user).
   analysis-kpi/SKILL.md to Task 3's Files touched (reviewer note: write-set
   completeness); (2) marked Tasks 4 and 7 `Independent: true` per reviewer
   Check-15 advisory — file sets disjoint, no shared symbol, DAG unchanged;
-  no field removed, no dependency edge changed.
+  no field removed, no dependency edge changed; (3) during execution, added
+  test_data_markets_us.py + the sample fixture to Task 1's Files touched —
+  T1 spec-reviewer ruled the migration-contract edit entailed (write-set gap
+  in the plan, not scope creep); Task 1's dual 10-Q+10-K fetch ruled entailed
+  by the task graph (derive_q4_points needs FY basis) — plan text under-specified.
 
 - Real-ticker quarterly dogfood rides verification-before-completion / finishing,
   not a plan task (brief §Out of Scope).
