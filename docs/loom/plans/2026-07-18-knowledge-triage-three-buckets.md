@@ -320,3 +320,65 @@ resolved test command, references/ placement for near-cap SKILL.md files.
       ("derivable from baseline UX convention"), no tag, flag-only
       variant behavior preserved. No over-firing.
 13. Version bumps, whole-branch review, PR. No auto-merge.
+
+## Tasks (v2.1 — branch feat-knowledge-triage-v2-1, base ce3ad301)
+
+Spec SSOT: `docs/loom/BACKLOG.md` §knowledge-triage v2.1 (four cuts a-d,
+diagnosis, evidence note) + the dogfood report's three weak-model legs
+(`docs/loom/dogfood/2026-07-18-knowledge-triage-live-spec-leg.md`).
+Doctrine: mechanize enforcement semantics — weak executors keep what a
+validator checks and lose what only prose demands. All v1/v2 conventions
+carry over, PLUS: **every version-bump task names its CHANGELOG.md entry
+as an explicit deliverable**
+(docs/loom/memory/version-bump-packets-must-name-changelog-entry.md).
+
+14. loom-spec (0.5.0 → 0.6.0): cut (a) — `scripts/validate_spec_output.py`
+    gains three deterministic checks over the emitted spec dir:
+    (1) `evidence_needed:` value whitelist {craft, domain-convention,
+    project-local} — any other value = FAIL naming file:line;
+    (2) every `evidence_needed: domain-convention` occurrence must have
+    SHAPING or DEFERRABLE within its neighborhood (same list item /
+    comment block / heading section — implementer defines the measured
+    window per grep-tests memory);
+    (3) any SHAPING-classed domain-convention item without
+    `deferred: <reason>` ⇒ nonzero exit (the VERIFY gate rule encoded).
+    Cut (c) — completeness-critic SKILL.md gains a consistency lens (one
+    lens block, references/ if body is tight): proposal-level FLAG/open
+    questions vs spec.md requirement text that silently resolves the
+    same question → OMISSION finding. TDD RED fixtures: embed literal
+    snippets from the leg-1 haiku artifacts (invented values
+    `technical-constraint`/`audit-log-format`; REQ-002-style silent
+    resolution) as test strings. CHANGELOG entry `## [0.6.0]` named
+    deliverable.
+15. loom-interface-design (0.6.0 → 0.7.0): cut (b) — design-critic
+    SKILL.md gains a mechanical pre-check row (before panel dispatch:
+    grep the artifact for out-of-enum `evidence_needed:` values and for
+    SHAPING items marked non-blocking/deferred WITHOUT `deferred:
+    <reason>` → immediate NEEDS_REVISION finding, no panel needed for
+    that finding); one-line supplement AFTER the pin in BOTH drafting
+    references (interaction-flows + design-system
+    references/knowledge-triage.md): "SHAPING never ships as
+    non-blocking: it either resolves before this station's gate or
+    carries `deferred: <reason>`." (identical sentence both files —
+    transcribe, don't re-derive). TDD RED-proven grep tests in
+    scripts/test_knowledge_triage.py extensions. CHANGELOG `## [0.7.0]`
+    named deliverable.
+16. loom-product-principles (0.10.0 → 0.11.0): cut (d) —
+    `scripts/validate_principles_output.py` gains: (1) marker whitelist —
+    any `evidence_needed:` value outside the three, or malformed
+    `— assumption:` (present but empty reason) = FAIL; (2) provenance
+    check behind a new optional `--seed <path>` arg: Anchors-table rows
+    whose provenance cell claims seed origin (contains "seed") must
+    include at least one literal substring (≥12 chars, implementer
+    calibrates against real data) present in the seed file — leg-3's
+    fabricated "¥1500-2000 ... seed constraint" rows must FAIL against
+    leg-3's seed (RED fixture from the real artifact). No --seed arg →
+    provenance check skipped (backward compatible). CHANGELOG
+    `## [0.11.0]` named deliverable.
+17. Acceptance: (i) leg-1 and leg-3 real artifacts FAIL the new
+    validators (true RED on real data); (ii) post-fix haiku re-runs of
+    the spec and principles legs — outputs either comply or die loudly
+    at validation, never a third "quietly wrong" state; (iii) cold-read
+    of the design-critic pre-check row; (iv) whole-branch review, PR,
+    no auto-merge. Residual (unmarked target-invention evasion) stays
+    documented in the dogfood report — no grep pretends to catch it.
