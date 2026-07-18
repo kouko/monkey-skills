@@ -81,11 +81,17 @@ Role boundaries enforced by behavior, not reading restrictions:
   `loom-pipeline/skills/using-loom-pipeline/assets/loom-pipeline.js`;
   `--out <path>` builds to an alternate path instead.
 - **Drive loom-pipeline batch mode's queue bookkeeping**:
-  `python3 loom-pipeline/scripts/batch_queue.py {next|mark|status}` —
+  `python3 loom-pipeline/scripts/batch_queue.py {next|mark|mark-running|reconcile|reset|force-fail|status}` —
   deterministic dispatcher-loop CLI over `docs/loom/QUEUE.toml` (human
   intent) and `docs/loom/queue-state.json` (machine state); `next` emits
   ready-to-use `Workflow` args, `mark` records done/failed, `status`
-  prints a one-screen queue overview.
+  prints a one-screen queue overview; `mark-running` records runId +
+  session-dir right after `Workflow()` returns; `reconcile` (also run at
+  the top of `next`, never in `status`) checks RUNNING entries against
+  wf-record evidence, auto-FAILing on definitive failed/killed evidence
+  and flagging `SUSPECT`/`SUSPECT-COMPLETE` for a human operator; `reset`
+  and `force-fail` are the human-operator recovery verbs for stuck or
+  confirmed-dead entries.
 <!-- END command-surface (managed) -->
 
 ## Plugin: domain-teams
