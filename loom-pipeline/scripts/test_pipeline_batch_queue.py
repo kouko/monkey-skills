@@ -5,7 +5,7 @@ import json
 import os
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -1576,3 +1576,320 @@ def test_read_wf_terminal_status_rejects_path_traversal_run_id(tmp_path, bad_run
     (session_dir / "workflows").mkdir(parents=True)
 
     assert _read_wf_terminal_status(bad_run_id, session_dir) is None
+
+
+@pytest.mark.parametrize("bad_session_dir", [None, 42, ["a", "b"]])
+def test_read_wf_terminal_status_returns_none_on_invalid_session_dir_type(bad_session_dir):
+    # Prerequisite fix (Task 12, from Task 11's round-2 review): an entry
+    # with a runId but no sessionDir recorded yet (mark-running has not run)
+    # must degrade to "no evidence" rather than raising TypeError from
+    # Path(None). Task 12's reconcile relies on this to route such entries
+    # into its staleness-only path instead of crashing.
+    assert _read_wf_terminal_status("run1", bad_session_dir) is None
+
+
+# --- reconcile (Task 12): auto-FAIL on definitive wf evidence, SUSPECT-COMPLETE
+# / SUSPECT flags on ambiguous evidence, never on ``status``. ---
+
+
+def _write_wf_record(session_dir: Path, run_id: str, status: str) -> None:
+    workflows_dir = session_dir / "workflows"
+    workflows_dir.mkdir(parents=True, exist_ok=True)
+    (workflows_dir / f"wf_{run_id}.json").write_text(
+        json.dumps({"runId": run_id, "status": status}), encoding="utf-8"
+    )
+
+
+def _iso(dt: datetime) -> str:
+    return dt.isoformat()
+
+
+@pytest.mark.parametrize("wf_status", ["failed", "killed"])
+def test_reconcile_auto_fails_running_entries_with_terminal_wf_evidence_and_trips_breaker(
+    tmp_path, capsys, wf_status
+):
+    # (a) definitive wf-record evidence (failed/killed) force-transitions
+    # RUNNING -> FAILED with an audit line naming the wf status; two such
+    # transitions are then visible to _check_circuit_breaker "naturally"
+    # (same shape as force-fail's own breaker test).
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+    session_dir_a = tmp_path / "session-a"
+    session_dir_b = tmp_path / "session-b"
+    _write_wf_record(session_dir_a, "wf_a", wf_status)
+    _write_wf_record(session_dir_b, "wf_b", "failed")
+    now = datetime.now(timezone.utc)
+    save_state(
+        loom_dir / "queue-state.json",
+        {
+            "add-export-csv": {
+                "status": "RUNNING",
+                "runId": "wf_a",
+                "sessionDir": str(session_dir_a),
+                "dispatched_at": _iso(now),
+            },
+            "fix-login-redirect": {
+                "status": "RUNNING",
+                "runId": "wf_b",
+                "sessionDir": str(session_dir_b),
+                "dispatched_at": _iso(now),
+            },
+        },
+    )
+
+    exit_code = main(["reconcile", "--project", str(project_path)])
+
+    assert exit_code == 0
+    out = capsys.readouterr().out
+    assert "add-export-csv" in out and "AUTO-FAILED" in out
+    assert "fix-login-redirect" in out and "AUTO-FAILED" in out
+
+    state = load_state(loom_dir / "queue-state.json")
+    record_a = state["add-export-csv"]
+    assert record_a["status"] == "FAILED"
+    assert len(record_a["audit"]) == 1
+    assert record_a["audit"][0]["verb"] == "reconcile"
+    assert wf_status in record_a["audit"][0]["reason"]
+    assert state["fix-login-redirect"]["status"] == "FAILED"
+
+    entries = load_queue(loom_dir / "QUEUE.toml")
+    merged = effective_entries(entries, state)
+    assert _check_circuit_breaker(merged) == ("add-export-csv", "fix-login-redirect")
+
+
+def test_reconcile_flags_suspect_complete_without_transitioning(tmp_path, capsys):
+    # (b) wf-record says "completed" but the entry was never marked done via
+    # `mark` — flag SUSPECT-COMPLETE, NO status transition (human confirms).
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+    session_dir = tmp_path / "session"
+    _write_wf_record(session_dir, "wf_c", "completed")
+    save_state(
+        loom_dir / "queue-state.json",
+        {
+            "add-export-csv": {
+                "status": "RUNNING",
+                "runId": "wf_c",
+                "sessionDir": str(session_dir),
+                "dispatched_at": _iso(datetime.now(timezone.utc)),
+            }
+        },
+    )
+
+    exit_code = main(["reconcile", "--project", str(project_path)])
+
+    assert exit_code == 0
+    out = capsys.readouterr().out
+    assert "add-export-csv" in out and "SUSPECT-COMPLETE" in out
+
+    state = load_state(loom_dir / "queue-state.json")
+    assert state["add-export-csv"]["status"] == "RUNNING"
+    assert "audit" not in state["add-export-csv"]
+
+
+def test_reconcile_flags_suspect_on_stale_missing_run_id(tmp_path, capsys):
+    # (c) no runId recorded yet (mark-running never ran) and dispatched_at
+    # beyond the short 10-minute grace window -> loud SUSPECT, no transition.
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+    stale_dispatch = datetime.now(timezone.utc) - timedelta(minutes=11)
+    save_state(
+        loom_dir / "queue-state.json",
+        {
+            "add-export-csv": {
+                "status": "RUNNING",
+                "dispatched_at": _iso(stale_dispatch),
+            }
+        },
+    )
+
+    exit_code = main(["reconcile", "--project", str(project_path)])
+
+    assert exit_code == 0
+    out = capsys.readouterr().out
+    assert "add-export-csv" in out and "SUSPECT" in out
+    assert "AUTO-FAILED" not in out and "SUSPECT-COMPLETE" not in out
+
+    state = load_state(loom_dir / "queue-state.json")
+    assert state["add-export-csv"]["status"] == "RUNNING"
+    assert "audit" not in state["add-export-csv"]
+
+
+def test_reconcile_flags_suspect_on_stale_no_wf_evidence_with_run_id(tmp_path, capsys):
+    # (c) runId + sessionDir recorded, but no wf-record file exists (session
+    # died before any record was written) and dispatched_at is beyond the
+    # longer 2-hour grace window -> loud SUSPECT, no transition.
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+    session_dir = tmp_path / "session-dead"
+    stale_dispatch = datetime.now(timezone.utc) - timedelta(hours=3)
+    save_state(
+        loom_dir / "queue-state.json",
+        {
+            "add-export-csv": {
+                "status": "RUNNING",
+                "runId": "wf_dead",
+                "sessionDir": str(session_dir),
+                "dispatched_at": _iso(stale_dispatch),
+            }
+        },
+    )
+
+    exit_code = main(["reconcile", "--project", str(project_path)])
+
+    assert exit_code == 0
+    out = capsys.readouterr().out
+    assert "add-export-csv" in out and "SUSPECT" in out
+
+    state = load_state(loom_dir / "queue-state.json")
+    assert state["add-export-csv"]["status"] == "RUNNING"
+
+
+def test_reconcile_does_not_flag_fresh_running_entry_with_no_evidence(tmp_path, capsys):
+    # A RUNNING entry with no runId yet but freshly dispatched (well inside
+    # the 10-minute grace window) is normal in-flight state — no flag, no
+    # transition, nothing printed.
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+    save_state(
+        loom_dir / "queue-state.json",
+        {
+            "add-export-csv": {
+                "status": "RUNNING",
+                "dispatched_at": _iso(datetime.now(timezone.utc)),
+            }
+        },
+    )
+
+    exit_code = main(["reconcile", "--project", str(project_path)])
+
+    assert exit_code == 0
+    assert capsys.readouterr().out == ""
+    state = load_state(loom_dir / "queue-state.json")
+    assert state["add-export-csv"]["status"] == "RUNNING"
+
+
+def test_reconcile_is_idempotent_across_two_runs(tmp_path, capsys):
+    # Reconcile twice with no new evidence in between must reproduce
+    # identical on-disk state: the first run's AUTO-FAILED transition gates
+    # future runs off (no longer RUNNING), and SUSPECT/SUSPECT-COMPLETE never
+    # mutate to begin with.
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+    session_dir_failed = tmp_path / "session-failed"
+    session_dir_completed = tmp_path / "session-completed"
+    _write_wf_record(session_dir_failed, "wf_x", "failed")
+    _write_wf_record(session_dir_completed, "wf_y", "completed")
+    now = datetime.now(timezone.utc)
+    stale = now - timedelta(hours=3)
+    save_state(
+        loom_dir / "queue-state.json",
+        {
+            "add-export-csv": {
+                "status": "RUNNING",
+                "runId": "wf_x",
+                "sessionDir": str(session_dir_failed),
+                "dispatched_at": _iso(now),
+            },
+            "fix-login-redirect": {
+                "status": "RUNNING",
+                "runId": "wf_y",
+                "sessionDir": str(session_dir_completed),
+                "dispatched_at": _iso(now),
+            },
+            "add-dark-mode": {
+                "status": "RUNNING",
+                "dispatched_at": _iso(stale),
+            },
+        },
+    )
+
+    main(["reconcile", "--project", str(project_path)])
+    capsys.readouterr()
+    state_after_round1 = load_state(loom_dir / "queue-state.json")
+
+    main(["reconcile", "--project", str(project_path)])
+    state_after_round2 = load_state(loom_dir / "queue-state.json")
+
+    assert state_after_round1 == state_after_round2
+
+
+def test_status_performs_no_reconciliation(tmp_path, capsys):
+    # `status` must stay a pure query: a RUNNING entry with definitive
+    # failed wf-record evidence (which `reconcile` WOULD force-FAIL) must be
+    # left completely untouched by `status`.
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+    session_dir = tmp_path / "session"
+    _write_wf_record(session_dir, "wf_z", "failed")
+    state_before = {
+        "add-export-csv": {
+            "status": "RUNNING",
+            "runId": "wf_z",
+            "sessionDir": str(session_dir),
+            "dispatched_at": _iso(datetime.now(timezone.utc)),
+        }
+    }
+    save_state(loom_dir / "queue-state.json", state_before)
+
+    exit_code = main(["status", "--project", str(project_path)])
+
+    assert exit_code == 0
+    state_after = load_state(loom_dir / "queue-state.json")
+    assert state_after == state_before
+
+
+def test_next_reconciles_running_entries_before_normal_scan(tmp_path, capsys):
+    # Task 12: `next` runs reconcile's logic first, then proceeds with its
+    # normal scan — a stranded RUNNING entry with failed wf-record evidence
+    # gets force-FAILED (with a reconcile audit line) in the SAME `next`
+    # invocation that goes on to dispatch the next QUEUED entry.
+    project_path = _make_tmp_git_repo(tmp_path)
+
+    plan_rel = "docs/loom/plans/2026-07-03-add-dark-mode.md"
+    plan_path = project_path / plan_rel
+    plan_path.parent.mkdir(parents=True)
+    plan_path.write_text(_PLAN_WITH_PASS, encoding="utf-8")
+    _run_git(["add", plan_rel], project_path)
+    _run_git(["commit", "-m", "add plan"], project_path)
+
+    loom_dir = project_path / "docs" / "loom"
+    (loom_dir / "QUEUE.toml").write_text(QUEUE_TOML, encoding="utf-8")
+
+    session_dir = tmp_path / "dead-session"
+    _write_wf_record(session_dir, "wf_stranded", "killed")
+    save_state(
+        loom_dir / "queue-state.json",
+        {
+            "add-export-csv": {
+                "status": "RUNNING",
+                "runId": "wf_stranded",
+                "sessionDir": str(session_dir),
+                "dispatched_at": _iso(datetime.now(timezone.utc)),
+            }
+        },
+    )
+
+    skills_root = tmp_path / "skills"
+    _write_stub_validator(skills_root, exit_code=0)
+
+    exit_code = main(
+        ["next", "--project", str(project_path), "--skills-root", str(skills_root)]
+    )
+
+    assert exit_code == 0
+    out = capsys.readouterr()
+    assert "add-export-csv" in out.err and "AUTO-FAILED" in out.err
+
+    # "fix-login-redirect" has no plan file at all in this fixture (only
+    # add-dark-mode's plan was committed), so the normal scan skips it and
+    # dispatches add-dark-mode — proving reconcile ran BEFORE, not INSTEAD
+    # of, the normal scan.
+    payload = json.loads(out.out.strip())
+    assert payload["changeId"] == "add-dark-mode"
+
+    state = load_state(loom_dir / "queue-state.json")
+    assert state["add-export-csv"]["status"] == "FAILED"
+    assert state["add-export-csv"]["audit"][0]["verb"] == "reconcile"
+    assert state["fix-login-redirect"]["status"] == "SKIPPED"
+    assert state["add-dark-mode"]["status"] == "RUNNING"

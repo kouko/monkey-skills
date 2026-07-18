@@ -526,7 +526,7 @@ def _append_audit_line(record: dict, verb: str, reason: str | None) -> None:
 _WF_TERMINAL_STATUSES = frozenset({"completed", "failed", "killed"})
 
 
-def _read_wf_terminal_status(run_id: str, session_dir: Path | str) -> str | None:
+def _read_wf_terminal_status(run_id: str, session_dir: Path | str | None) -> str | None:
     """Opportunistically read a terminal ``status`` from a Workflow wf-record.
 
     Looks for ``<session_dir>/workflows/wf_<run_id>.json`` and returns its
@@ -543,8 +543,17 @@ def _read_wf_terminal_status(run_id: str, session_dir: Path | str) -> str | None
     reasoning, same as ``_assert_valid_change_id``): it lands directly in
     a filename, so any ``run_id`` containing ``/``, ``\\``, or ``..``
     returns ``None`` instead of being interpolated into a path.
+
+    ``session_dir`` may legitimately be ``None`` (or any other non-path
+    type) — a RUNNING entry with a ``runId`` but no ``sessionDir`` recorded
+    yet (``mark-running`` has not run) is exactly Task 12 reconcile's
+    "no evidence yet" case, not a crash: ``Path(None)`` raises ``TypeError``,
+    so this is guarded the same fail-safe way as the other undocumented-
+    format cases above.
     """
     if not run_id or "/" in run_id or "\\" in run_id or ".." in run_id:
+        return None
+    if not isinstance(session_dir, (str, Path)):
         return None
 
     wf_path = Path(session_dir) / "workflows" / f"wf_{run_id}.json"
@@ -558,6 +567,159 @@ def _read_wf_terminal_status(run_id: str, session_dir: Path | str) -> str | None
 
     status = data.get("status")
     return status if status in _WF_TERMINAL_STATUSES else None
+
+
+_STALE_NO_RUNID_GRACE_SECONDS = 10 * 60
+_STALE_NO_EVIDENCE_GRACE_SECONDS = 2 * 60 * 60
+
+
+def _parse_iso_timestamp(value: object) -> datetime | None:
+    """Parse an ISO-8601 timestamp string; ``None`` on missing/unparseable input.
+
+    Fail-safe, mirroring ``_read_wf_terminal_status``: a record with no
+    ``dispatched_at`` (or a value that isn't a parseable ISO string) is
+    treated by ``_classify_running_entry`` as having no freshness evidence
+    at all, not as an exception. Naive timestamps (no ``tzinfo``) are
+    assumed UTC, matching how ``_dispatch_entry``/``_append_audit_line``
+    emit them.
+    """
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed
+
+
+def _classify_running_entry(record: dict) -> tuple[str, str]:
+    """Classify one RUNNING entry's record for ``reconcile`` (design SSOT
+    §4c Fix 1 revised design point 3).
+
+    Returns ``(category, evidence)``. ``category`` is one of:
+    ``"AUTO-FAILED"`` (definitive ``failed``/``killed`` wf-record —
+    caller force-transitions to FAILED), ``"SUSPECT-COMPLETE"`` (wf-record
+    says ``completed`` but the entry was never marked done — no
+    transition, human confirms via ``mark``), ``"SUSPECT"`` (no definitive
+    evidence and ``dispatched_at`` is beyond its grace window — no
+    transition), or ``""`` (no evidence yet, but not stale — normal
+    in-flight state, nothing to report).
+
+    Grace window is 10 minutes when no ``runId`` is recorded yet
+    (``mark-running`` hasn't run — the dispatch-to-mark-running gap is
+    normally seconds), else 2 hours (legitimate station runtime is
+    unbounded, so a longer window is required once a run is confirmed
+    started). A missing/unparseable ``dispatched_at`` is treated as
+    unknown age — fail-safe to SUSPECT rather than silently skipped,
+    mirroring ``_read_wf_terminal_status``'s "unreadable = no evidence,
+    never a hard dependency" stance applied to the loud-not-silent side.
+    """
+    run_id = record.get("runId")
+    session_dir = record.get("sessionDir")
+    wf_status = (
+        _read_wf_terminal_status(run_id, session_dir) if run_id else None
+    )
+
+    if wf_status in ("failed", "killed"):
+        return "AUTO-FAILED", f"wf-record status={wf_status!r}"
+    if wf_status == "completed":
+        return (
+            "SUSPECT-COMPLETE",
+            "wf-record status='completed' but entry was never marked done "
+            "via `mark` — confirm before treating as finished",
+        )
+
+    dispatched_at = _parse_iso_timestamp(record.get("dispatched_at"))
+    if run_id:
+        grace_seconds = _STALE_NO_EVIDENCE_GRACE_SECONDS
+        grace_label = "no wf-record evidence"
+    else:
+        grace_seconds = _STALE_NO_RUNID_GRACE_SECONDS
+        grace_label = "no runId recorded yet"
+
+    if dispatched_at is None:
+        return (
+            "SUSPECT",
+            f"{grace_label}, dispatched_at missing/unparseable (fail-safe)",
+        )
+
+    age_seconds = (datetime.now(timezone.utc) - dispatched_at).total_seconds()
+    if age_seconds > grace_seconds:
+        return (
+            "SUSPECT",
+            f"{grace_label}, dispatched_at age={age_seconds:.0f}s "
+            f"(grace={grace_seconds}s)",
+        )
+
+    return "", ""
+
+
+def _reconcile_running_entries(entries: list[dict], state: dict) -> list[str]:
+    """Core reconcile logic (Task 12) shared by the ``reconcile`` subcommand
+    and the top of ``next`` — never called from ``status`` (stays a pure
+    query, per its own contract).
+
+    Mutates ``state`` IN PLACE for ``AUTO-FAILED`` transitions (status ->
+    FAILED + a ``{verb: "reconcile", timestamp, reason}`` audit line naming
+    the wf status — counted by ``_check_circuit_breaker`` naturally, same
+    as ``force-fail``). ``SUSPECT-COMPLETE``/``SUSPECT`` never mutate.
+    Every transition gates on the entry's CURRENT effective status being
+    ``RUNNING``, so re-running this against unchanged on-disk state is
+    idempotent (a just-force-failed entry is no longer RUNNING on the next
+    pass). Returns one human-readable line per FLAGGED entry (id, category,
+    evidence) in queue order; non-flagged RUNNING entries (fresh, no
+    evidence, not yet stale) produce no line.
+
+    Caller owns ``load_state``/``save_state``/the ``_state_lock`` span —
+    this function does neither, so it can be invoked from inside a lock
+    already held by ``_cmd_next`` without a same-process flock deadlock.
+    """
+    merged = effective_entries(entries, state)
+    lines: list[str] = []
+    for entry in merged:
+        if entry["status"] != "RUNNING":
+            continue
+        record = dict(state.get(entry["id"], {}))
+        category, evidence = _classify_running_entry(record)
+        if category == "AUTO-FAILED":
+            record["status"] = "FAILED"
+            _append_audit_line(record, "reconcile", evidence)
+            state[entry["id"]] = record
+        if category:
+            lines.append(f'{entry["id"]}  {category}  {evidence}')
+    return lines
+
+
+def _cmd_reconcile(args: argparse.Namespace) -> int:
+    """Implements the ``reconcile`` subcommand — see ``main``'s subparser
+    setup. Also invoked at the top of ``next`` (never in ``status``).
+
+    Loads the queue + state, runs ``_reconcile_running_entries`` under the
+    same ``_state_lock`` span as every other state-mutating subcommand, and
+    prints the resulting listing lines to stdout (one per flagged entry).
+    Returns a process exit code (0 on success, 1 when the queue file is
+    missing/malformed — printed to stderr, mirroring ``_cmd_status``).
+    """
+    project_path = Path(args.project)
+    queue_path = project_path / "docs" / "loom" / "QUEUE.toml"
+    state_path = project_path / "docs" / "loom" / "queue-state.json"
+
+    try:
+        entries = load_queue(queue_path)
+    except QueueError as e:
+        print(str(e), file=sys.stderr)
+        return 1
+
+    with _state_lock(state_path):
+        state = load_state(state_path)
+        lines = _reconcile_running_entries(entries, state)
+        save_state(state_path, state)
+
+    for line in lines:
+        print(line)
+    return 0
 
 
 def _cmd_reset(args: argparse.Namespace) -> int:
@@ -849,6 +1011,12 @@ def _halt_notice_if_tripped(entries: list[dict], override_halt: bool) -> bool:
 def _cmd_next(args: argparse.Namespace) -> int:
     """Implements the ``next`` subcommand — see ``main``'s subparser setup.
 
+    Runs ``_reconcile_running_entries`` first (Task 12 — reconcile's logic,
+    never ``_cmd_status``'s), so a stranded RUNNING entry with definitive
+    wf-record evidence is force-FAILED (freeing up the circuit breaker /
+    done check) before this scan below ever runs. Reconcile notices go to
+    stderr, same channel as the skip/HALT notices below.
+
     Scans effective entries in queue order for the first one that is both
     ``QUEUED`` and eligible. An entry that fails ``check_frozen``
     (validator non-zero, or plan missing in the main checkout) is recorded
@@ -908,6 +1076,18 @@ def _cmd_next(args: argparse.Namespace) -> int:
 
     with _state_lock(state_path):
         state = load_state(state_path)
+
+        # Task 12: reconcile RUNNING entries against wf-record evidence
+        # BEFORE the normal scan (never inside _cmd_status — that stays a
+        # pure query). Mutates `state` in place for any AUTO-FAILED
+        # transitions; must be saved here since a `{"done": true}` or
+        # skip-only run below may otherwise never call save_state again.
+        reconcile_lines = _reconcile_running_entries(entries, state)
+        if reconcile_lines:
+            save_state(state_path, state)
+            for line in reconcile_lines:
+                print(line, file=sys.stderr)
+
         merged = effective_entries(entries, state)
 
         if _halt_notice_if_tripped(merged, args.override_halt):
@@ -964,7 +1144,7 @@ def _assert_valid_change_id(id_value: str, *, fn: str) -> None:
 
 def _build_parser() -> argparse.ArgumentParser:
     """Top-level argparse setup: ``mark``, ``mark-running``, ``reset``,
-    ``force-fail``, ``status``, ``next`` subcommands."""
+    ``force-fail``, ``status``, ``reconcile``, ``next`` subcommands."""
     parser = argparse.ArgumentParser(
         prog="batch_queue.py", description="loom-pipeline batch mode bookkeeping"
     )
@@ -1029,6 +1209,17 @@ def _build_parser() -> argparse.ArgumentParser:
         "--project", required=True, help="target project root"
     )
     status_parser.set_defaults(func=_cmd_status)
+
+    reconcile_parser = subparsers.add_parser(
+        "reconcile",
+        help="scan RUNNING entries against wf-record evidence: auto-FAIL on "
+        "failed/killed, flag SUSPECT-COMPLETE/SUSPECT otherwise (also run "
+        "at the top of `next`; never in `status`)",
+    )
+    reconcile_parser.add_argument(
+        "--project", required=True, help="target project root"
+    )
+    reconcile_parser.set_defaults(func=_cmd_reconcile)
 
     _add_next_subparser(subparsers)
 
