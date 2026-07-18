@@ -710,6 +710,97 @@ def test_build_fact_includes_subsegments_axis():
 
 
 # ---------------------------------------------------------------------------
+# Live-sweep regression fix (12-ticker sweep, real INTC pack) —
+# srt:ConsolidatedEntitiesAxis is a SIBLING spelling of the SAME
+# consolidation-qualifier semantics as srt:ConsolidationItemsAxis (INTC's
+# 2021-2023 filings tag segment revenue facts with
+# `srt:ConsolidatedEntitiesAxis = OperatingSegmentsMember` — the same
+# default member ConsolidationItemsAxis uses, per kpi_xbrl.py's
+# `_normalize_consolidation`). Before this fix, ConsolidatedEntitiesAxis
+# fell into `_dimension_signature`'s "unknown" else-branch and excluded
+# the WHOLE fact — INTC lost all FY2021-2023 comparators (week_normalized_yoy
+# attachments 9->0).
+# ---------------------------------------------------------------------------
+
+def test_build_fact_consolidated_entities_axis_promoted_to_consolidation():
+    """A fact carrying `srt:ConsolidatedEntitiesAxis = OperatingSegmentsMember`
+    (INTC's real 2021-2023 tagging) is promoted into the SAME `consolidation`
+    slot as ConsolidationItemsAxis — never `dimensions`, never excluded."""
+    mod = _load_helpers()
+    intc_row = {
+        "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "dim_us-gaap_StatementBusinessSegmentsAxis": "intc:DataCenterGroupMember",
+        "dim_srt_ConsolidatedEntitiesAxis": "us-gaap:OperatingSegmentsMember",
+        "numeric_value": 6500000000.0,
+        "period_type": "duration",
+        "period_start": "2022-01-01",
+        "period_end": "2022-12-31",
+    }
+    fact = mod._build_dimensional_revenue_fact(
+        intc_row, "INTC", "0000050863-23-000006", "2023-01-26",
+        {"fiscal_period_focus": "FY", "fiscal_year_end": "--12-31",
+         "fiscal_year_focus": "2022"},
+    )
+    assert fact["dimensions"] == {"StatementBusinessSegments": "DataCenterGroupMember"}
+    assert fact["consolidation"] == "OperatingSegmentsMember"
+
+    # And the predicate/exclusions-accounting path agrees: emitted as a
+    # primary fact, NOT counted in axis_exclusions.
+    intc_row["is_dimensioned"] = True
+    intc_row["currency"] = "USD"
+    intc_row["unit_ref"] = "usd"
+    assert mod._is_dimensional_revenue_fact(intc_row) is True
+    assert mod._dimensional_axis_exclusions(intc_row) == []
+
+
+def test_dimension_signature_conflicting_consolidation_axes_excluded():
+    """Both consolidation-qualifier axes present with CONFLICTING members is
+    genuinely ambiguous — the whole fact is excluded, never silently
+    resolved to either axis's value."""
+    mod = _load_helpers()
+    row = {
+        "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "dim_us-gaap_StatementBusinessSegmentsAxis": "intc:DataCenterGroupMember",
+        "dim_srt_ConsolidationItemsAxis": "us-gaap:OperatingSegmentsMember",
+        "dim_srt_ConsolidatedEntitiesAxis": "us-gaap:ConsolidatingAdjustmentsMember",
+        "numeric_value": 1000000.0,
+        "period_type": "duration",
+        "period_start": "2022-01-01",
+        "period_end": "2022-12-31",
+        "is_dimensioned": True,
+        "currency": "USD",
+        "unit_ref": "usd",
+    }
+    dimensions, consolidation, exclusions = mod._dimension_signature(row)
+    assert consolidation is None
+    assert dimensions == {"StatementBusinessSegments": "DataCenterGroupMember"}
+    assert len(exclusions) == 1
+    assert exclusions[0]["category"] == "consolidation_conflict"
+    assert exclusions[0]["axis"] == "srt:ConsolidatedEntitiesAxis,srt:ConsolidationItemsAxis"
+    assert exclusions[0]["member"] == "ConsolidatingAdjustmentsMember,OperatingSegmentsMember"
+
+    assert mod._is_dimensional_revenue_fact(row) is False
+
+
+def test_dimension_signature_same_member_both_consolidation_axes_single_value():
+    """Both consolidation-qualifier axes present with the SAME member is
+    fine — a single value, no exclusion (the ordinary case: both axes name
+    the same qualifier)."""
+    mod = _load_helpers()
+    row = {
+        "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "dim_us-gaap_StatementBusinessSegmentsAxis": "intc:DataCenterGroupMember",
+        "dim_srt_ConsolidationItemsAxis": "us-gaap:OperatingSegmentsMember",
+        "dim_srt_ConsolidatedEntitiesAxis": "us-gaap:OperatingSegmentsMember",
+        "numeric_value": 1000000.0,
+        "period_type": "duration",
+    }
+    dimensions, consolidation, exclusions = mod._dimension_signature(row)
+    assert consolidation == "OperatingSegmentsMember"
+    assert exclusions == []
+
+
+# ---------------------------------------------------------------------------
 # Task 1 (docs/loom/plans/2026-07-19-jnj-restatement-axis-signature.md) —
 # vintage/unknown-axis exclusion with count: the silent fall-through in
 # `_dimension_signature` used to DROP a `dim_srt_RestatementAxis` (or any

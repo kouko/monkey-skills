@@ -1837,7 +1837,21 @@ _DIMENSIONAL_REVENUE_AXIS_LOCAL_NAMES = {
 # "OperatingSegmentsMember" disambiguating a segment total from a
 # consolidating-adjustments view), never a breakdown axis — captured
 # separately as `consolidation`, never folded into `dimensions`.
-_CONSOLIDATION_AXIS_LOCAL_NAME = "ConsolidationItemsAxis"
+#
+# srt:ConsolidatedEntitiesAxis is a SIBLING spelling of the SAME
+# consolidation-qualifier semantics (live-sweep regression, real INTC pack:
+# 2021-2023-era filings tag segment revenue facts with
+# `srt:ConsolidatedEntitiesAxis = OperatingSegmentsMember` — the identical
+# default member ConsolidationItemsAxis uses, per kpi_xbrl.py's
+# `_normalize_consolidation`). Both local names fold into the SAME
+# `consolidation` slot — never `dimensions`, never excluded as unknown.
+# When a fact carries BOTH with the SAME member, that is one value; with
+# DIFFERING members, that is genuinely ambiguous and the whole fact is
+# excluded (`_dimension_signature`'s "consolidation_conflict" category).
+_CONSOLIDATION_AXIS_LOCAL_NAMES = (
+    "ConsolidationItemsAxis",
+    "ConsolidatedEntitiesAxis",
+)
 
 # srt:RestatementAxis (any member, matched namespace-agnostically like
 # `_DIMENSIONAL_REVENUE_AXIS_LOCAL_NAMES` — the same Apple false-negative
@@ -2080,36 +2094,46 @@ def _dimension_signature(
     namespaces via `_is_dimensional_revenue_axis` — the Apple false-negative
     lesson applies here too), keyed by the axis local name with the trailing
     "Axis" dropped (e.g. "ProductOrService"), valued by the member's local
-    name (namespace prefix stripped). `srt:ConsolidationItemsAxis` is a
-    reconciliation QUALIFIER, not a breakdown axis — captured separately as
-    `consolidation`, never folded into `dimensions` as a second axis.
+    name (namespace prefix stripped). `srt:ConsolidationItemsAxis` and its
+    sibling `srt:ConsolidatedEntitiesAxis` (`_CONSOLIDATION_AXIS_LOCAL_NAMES`
+    — live-sweep INTC regression) are reconciliation QUALIFIERS, not a
+    breakdown axis — captured separately as `consolidation`, never folded
+    into `dimensions` as a second axis. When BOTH are present on the same
+    row with the SAME member, that is one value; with DIFFERING members,
+    that is genuinely ambiguous and reported via `exclusions` (category
+    "consolidation_conflict") instead of guessing which one wins.
 
     `exclusions` (Task 1, docs/loom/plans/2026-07-19-jnj-restatement-axis-
     signature.md — kills the prior silent fall-through) lists, IN ORDER,
     every OTHER `dim_` axis on this row that is neither a whitelisted
-    breakdown axis nor the ConsolidationItems qualifier — each entry
+    breakdown axis nor a consolidation qualifier — each entry
     `{"category": "vintage"|"unknown", "axis": "<namespace>:<AxisLocalName>",
     "member": <member local name>}`. `"vintage"` is `_VINTAGE_AXIS_LOCAL_NAME`
     (`srt:RestatementAxis`, any member, namespace-agnostic); everything else
     is `"unknown"` — fail-closed toward exclusion, never toward silent
     collision (docs/loom/memory/shared-classifier-over-open-dialects-needs-
     allowlist.md: the JNJ sweep proves only RestatementAxis collided, not
-    that no sibling dialect exists). A NON-EMPTY `exclusions` means the
-    caller must exclude the WHOLE fact from primary output — a disallowed
-    axis is never just dropped while `dimensions` stays populated from the
-    fact's OTHER (allowed) axes, which is exactly how a restatement/
-    reclassification pair used to collide onto the real quarter fact's
-    signature (see `_is_dimensional_revenue_fact`)."""
+    that no sibling dialect exists). A conflicting pair of consolidation
+    axes gets its own `{"category": "consolidation_conflict", "axis":
+    "<ns:AxisLocalName>,<ns:AxisLocalName>" (sorted), "member":
+    "<member>,<member>" (same order)}` entry — self-describing rather than
+    folded into "unknown", since it IS a recognized qualifier axis, just an
+    ambiguous one. A NON-EMPTY `exclusions` means the caller must exclude
+    the WHOLE fact from primary output — a disallowed axis is never just
+    dropped while `dimensions` stays populated from the fact's OTHER
+    (allowed) axes, which is exactly how a restatement/reclassification
+    pair used to collide onto the real quarter fact's signature (see
+    `_is_dimensional_revenue_fact`)."""
     dimensions: dict[str, str] = {}
-    consolidation: str | None = None
+    consolidation_matches: list[tuple[str, str, str]] = []
     exclusions: list[dict] = []
     for key, value in fact.items():
         if not key.startswith("dim_") or value is None or _is_nan(value):
             continue
         _prefix, namespace, axis_local = key.split("_", 2)
         member_local = str(value).rsplit(":", 1)[-1]
-        if axis_local == _CONSOLIDATION_AXIS_LOCAL_NAME:
-            consolidation = member_local
+        if axis_local in _CONSOLIDATION_AXIS_LOCAL_NAMES:
+            consolidation_matches.append((namespace, axis_local, member_local))
         elif _is_dimensional_revenue_axis(f"{namespace}:{axis_local}"):
             dimensions[axis_local[: -len("Axis")]] = member_local
         elif axis_local == _VINTAGE_AXIS_LOCAL_NAME:
@@ -2123,6 +2147,19 @@ def _dimension_signature(
                 "category": "unknown",
                 "axis": f"{namespace}:{axis_local}",
                 "member": member_local,
+            })
+
+    consolidation: str | None = None
+    if consolidation_matches:
+        members = {member for _ns, _al, member in consolidation_matches}
+        if len(members) == 1:
+            consolidation = next(iter(members))
+        else:
+            ordered = sorted(consolidation_matches, key=lambda m: (m[0], m[1]))
+            exclusions.append({
+                "category": "consolidation_conflict",
+                "axis": ",".join(f"{ns}:{al}" for ns, al, _m in ordered),
+                "member": ",".join(m for _ns, _al, m in ordered),
             })
     return dimensions, consolidation, exclusions
 
