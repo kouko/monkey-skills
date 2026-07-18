@@ -62,3 +62,18 @@ test patch. **Takeaway: a fixture is only as trustworthy as its
 distance from the real producer; when a spec ASSERTS an external
 library's field, capture the library's real output before encoding
 the assumption into a fixture.**
+
+**Fourth instance — the fixture copied the IMPLEMENTATION's envelope
+assumption, not the producer's (JNJ RestatementAxis arc, T2 fix round,
+2026-07-19):** `_period_recast_coverage_flags` read a flat
+`coverage.axis_exclusions`; its RED/GREEN fixtures were built with the
+SAME flat shape, so the suite stayed green while the real producer
+(`pack_kpi_quarterly`) nests the channel under
+`coverage.{quarterly,annual}.axis_exclusions` — the flag was dead on
+arrival on every real pack. Both reviewers caught it only by opening
+pack_us.py's actual emission. Same root as instance one, new wrinkle:
+the producer contract had TWO layers (per-arm emission + envelope
+nesting), and the fixture faithfully copied the inner layer while
+inventing the outer one. Transcribe the FULL envelope from the
+outermost real producer (the one the live pipeline actually feeds in),
+not from the deepest function you happen to be testing.

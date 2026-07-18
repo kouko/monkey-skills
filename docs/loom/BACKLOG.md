@@ -92,9 +92,17 @@
   per-point `currency` ISO-code passthrough (gate already reads it, drops
   it before emission — CSV/feed currently carries implicit-USD only).
 
-## investing-toolkit quarterly — JNJ RestatementAxis signature blind spot (PRE-EXISTING, found by 12-ticker sweep 2026-07-19)
-- Status: OPEN (P2 — blocks JNJ, and any filer tagging
-  srt:RestatementAxis reclassification pairs, from the quarterly lane)
+## investing-toolkit quarterly — JNJ RestatementAxis signature blind spot (SHIPPED 2026-07-19, 2.25.0)
+- Status: SHIPPED (feat-jnj-restatement-axis-signature; both fix shapes
+  landed — ①vintage/unknown/conflict axis exclusion-with-count +
+  `period_recast` memo flag ②`signature_refused` per-signature refusal —
+  plus the live-sweep-discovered ConsolidatedEntitiesAxis promotion
+  [INTC sibling-axis synonym, member-semantics-verified]. 12/12 tickers
+  TRUSTED, 25/25 anchors exact; JNJ revived 373 series/511 derived Q4
+  with recast annotation; INTC healed 9 wny restored. Post-ship debt:
+  🟢 double `_dimension_signature` recompute per rejected fact
+  (memoize on next producer touch); 🟢 `currency` ISO passthrough rides
+  the non-monetary double-arc below.)
 - What: `_dimension_signature` (sec_edgar_client.py ~:2073, shipped
   2.22.0/#583, untouched by the 52/53-week arc) whitelists only the 4
   breakdown axes + ConsolidationItems and silently DROPS
