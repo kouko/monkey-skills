@@ -265,6 +265,10 @@ There is **deliberately no unqualified `PASS`** in this enum: a bare PASS
 would claim no omissions remain — the banned "complete" reflex — and Blind
 spots is non-empty by construction, so every clean outcome carries notes.
 
+Then mint it — both values mint: `../../scripts/mint_critic_verdict.py mint
+--change-folder <path> --critic design-critic --verdict-file <path>
+--files DESIGN.md,ui-flows.md`.
+
 ## Each lens is designed deletable (Bitter Lesson)
 
 The **panel as a verification mechanism** (writer≠judge) is **Bitter-Lesson-proof

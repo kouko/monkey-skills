@@ -246,6 +246,20 @@ def test_outer_revision_cap_and_handback():
         "must forbid silently proceeding past the cap"
 
 
+def test_verdict_step_mints_critic_verdict():
+    """§4c Fix-4 (Task 17): the verdict step must also mint a content-hash-bound
+    verdict file via mint_critic_verdict.py — for BOTH verdict values, so a
+    downstream consumer can distinguish "ran and blocked" from "never ran"."""
+    text = _text()
+    low = text.lower()
+    assert "mint_critic_verdict.py" in text, \
+        "verdict section must cite the mint_critic_verdict.py script"
+    assert "--critic design-critic" in text, \
+        "mint invocation must pass --critic design-critic"
+    assert "both" in low and "mint" in low, \
+        "must state both verdict values mint (NEEDS_REVISION still mints)"
+
+
 def test_inputs_are_per_change_folder():
     """The critique inputs must reflect the per-change layout: product-level
     DESIGN.md + per-change docs/loom/<change-id>/ui-flows.md."""
