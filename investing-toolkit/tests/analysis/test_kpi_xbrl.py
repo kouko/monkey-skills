@@ -2031,6 +2031,130 @@ def test_q4_derive_week_lane_mint_16wk(kpi_xbrl_module):
 
 
 # ---------------------------------------------------------------------------
+# Task 5 (docs/loom/plans/2026-07-18-52-53-week-filer-support.md) —
+# supplementary week-normalized YoY: when a point's YoY comparator (same
+# signature group, same period_type, prior fiscal year) carries a
+# DIFFERENT duration_weeks, build_quarterly_series attaches
+# `week_normalized_yoy` = (value/weeks) / (prior_value/prior_weeks) - 1 —
+# as-reported `value` never touched; a missing comparator, an EQUAL-week
+# comparator, or either side missing duration_weeks gets NO supplementary
+# field. Fixture built from two fiscal years of the same COST-shaped
+# week-lane signature (mirrors _cost_week_lane_fact_pack above) so the
+# derived Q4 points land a real, week-mismatched comparator pair. No
+# `@req` tags: this dispatch traces work by named plan Tasks, not
+# registered loom-spec REQ-ids (same convention as the module header note).
+# ---------------------------------------------------------------------------
+
+
+def _cost_two_year_week_lane_fact_pack(*, fy2025_weeks: int = 52) -> dict:
+    """Two fiscal years of COST-shaped week-lane facts in ONE signature
+    group: FY2026 (53wk FY, 36wk-YTD -> derived Q4 = 17wk) and FY2025
+    (`fy2025_weeks`wk FY, 36wk-YTD -> derived Q4 = fy2025_weeks - 36 wk) —
+    a real YoY comparator pair for the supplementary week-normalized YoY.
+    `fy2025_weeks=52` (default) gives a DIFFERENT-week Q4 pair (16wk prior
+    vs 17wk current); `fy2025_weeks=53` gives an EQUAL-week pair (17wk vs
+    17wk) to pin the negative case."""
+    facts = [
+        {
+            "concept": COST_MEMBERSHIP_MATCH["concept"],
+            "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+            "consolidation": None,
+            "period_end": "2026-08-30",
+            "fiscal_year": 2026, "fiscal_quarter": "FY",
+            "duration_months": 12, "duration_weeks": 53,
+            "week_lane_band": "FY",
+            "accession": "acc-fy26", "filed": "2026-10-15",
+            "value": 100000.0,
+        },
+        {
+            "concept": COST_MEMBERSHIP_MATCH["concept"],
+            "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+            "consolidation": None,
+            "period_end": "2026-05-10",
+            "fiscal_year": 2026, "fiscal_quarter": "Q3",
+            "duration_months": 8, "duration_weeks": 36,
+            "week_lane_band": "YTD-through-Q3",
+            "accession": "acc-ytd26", "filed": "2026-06-05",
+            "value": 78000.0,
+        },
+        {
+            "concept": COST_MEMBERSHIP_MATCH["concept"],
+            "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+            "consolidation": None,
+            "period_end": "2025-08-31",
+            "fiscal_year": 2025, "fiscal_quarter": "FY",
+            "duration_months": 12, "duration_weeks": fy2025_weeks,
+            "week_lane_band": "FY",
+            "accession": "acc-fy25", "filed": "2025-10-15",
+            "value": 88000.0,
+        },
+        {
+            "concept": COST_MEMBERSHIP_MATCH["concept"],
+            "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+            "consolidation": None,
+            "period_end": "2025-05-11",
+            "fiscal_year": 2025, "fiscal_quarter": "Q3",
+            "duration_months": 8, "duration_weeks": 36,
+            "week_lane_band": "YTD-through-Q3",
+            "accession": "acc-ytd25", "filed": "2025-06-05",
+            "value": 68000.0,
+        },
+    ]
+    fiscal_calendars = {
+        "acc-fy26": {"fiscal_period_focus": "FY", "fiscal_year_end": "--08-30"},
+        "acc-ytd26": {"fiscal_period_focus": "Q3", "fiscal_year_end": "--08-30"},
+        "acc-fy25": {"fiscal_period_focus": "FY", "fiscal_year_end": "--08-31"},
+        "acc-ytd25": {"fiscal_period_focus": "Q3", "fiscal_year_end": "--08-31"},
+    }
+    return {"company": "COST", "facts": facts, "fiscal_calendars": fiscal_calendars}
+
+
+def test_quarterly_series_attaches_week_normalized_yoy_on_different_week_pair(
+    kpi_xbrl_module,
+):
+    """Task 5 RED: two derived Q4 points a fiscal year apart with DIFFERENT
+    duration_weeks (17wk 2026 vs 16wk 2025) get the supplementary
+    `week_normalized_yoy` on the CURRENT point, computed as (value/weeks) /
+    (prior_value/prior_weeks) - 1; as-reported `value` is untouched, and
+    `duration_weeks` rides through onto both points (propagation half of
+    Task 5)."""
+    pack = _cost_two_year_week_lane_fact_pack(fy2025_weeks=52)
+    result = kpi_xbrl_module.build_quarterly_series(pack)
+    assert len(result["series"]) == 1
+    derived = result["series"][0]["derived_points"]
+    by_period = {p["period"]: p for p in derived}
+    assert set(by_period) == {"2026", "2025"}
+
+    q4_2026, q4_2025 = by_period["2026"], by_period["2025"]
+    assert q4_2026["value"] == 22000.0  # 100000.0 - 78000.0, as-reported untouched
+    assert q4_2026["duration_weeks"] == 17
+    assert q4_2025["value"] == 20000.0  # 88000.0 - 68000.0, as-reported untouched
+    assert q4_2025["duration_weeks"] == 16
+
+    expected = (22000.0 / 17) / (20000.0 / 16) - 1
+    assert q4_2026["week_normalized_yoy"] == pytest.approx(expected, rel=1e-9)
+    # the comparator's OWN point carries no field looking further back (no
+    # FY2024 in this fixture) — never guessed.
+    assert "week_normalized_yoy" not in q4_2025
+
+
+def test_quarterly_series_no_week_normalized_yoy_on_equal_week_pair(
+    kpi_xbrl_module,
+):
+    """Task 5 RED: an EQUAL-week comparator pair (both 17wk, from two
+    53-week fiscal years) carries NO supplementary field — never guessed
+    when normalization would be a no-op."""
+    pack = _cost_two_year_week_lane_fact_pack(fy2025_weeks=53)
+    result = kpi_xbrl_module.build_quarterly_series(pack)
+    derived = result["series"][0]["derived_points"]
+    by_period = {p["period"]: p for p in derived}
+    q4_2026, q4_2025 = by_period["2026"], by_period["2025"]
+    assert q4_2026["duration_weeks"] == q4_2025["duration_weeks"] == 17
+    assert "week_normalized_yoy" not in q4_2026
+    assert "week_normalized_yoy" not in q4_2025
+
+
+# ---------------------------------------------------------------------------
 # Task 9 (docs/loom/plans/2026-07-16-operational-kpi-quarterly.md) — structured
 # point + DQC-flag schema provenance: every emitted point carries source
 # accession(s) + source form (10-K|10-Q) + duration_class; every analysis-layer

@@ -1492,6 +1492,59 @@ def _fact_signature_key(fact: dict) -> tuple:
     )
 
 
+def _prior_fiscal_year_key(period) -> str | None:
+    """The prior fiscal year's `period` key (Task 5, docs/loom/plans/
+    2026-07-18-52-53-week-filer-support.md) — `period` is always the
+    emitted `str(fiscal_year)` label (`_require_period`); a point with a
+    non-integer-parseable `period` has no derivable prior-year key (never
+    guessed)."""
+    try:
+        return str(int(period) - 1)
+    except (TypeError, ValueError):
+        return None
+
+
+def _attach_week_normalized_yoy(points: list[dict]) -> list[dict]:
+    """Attach a supplementary `week_normalized_yoy` field (Task 5, plan
+    Smallest End State 7 — user-ratified 2026-07-18 second research round)
+    onto any point in `points` (one signature group's emitted quarterly
+    points, reported + derived, AFTER granularity filtering) whose YoY
+    comparator — same `period_type`, `period` one fiscal year earlier,
+    present in this SAME group — carries a `duration_weeks` DIFFERENT from
+    the point's own.
+
+    `week_normalized_yoy = (value / duration_weeks) / (prior_value /
+    prior_duration_weeks) - 1`, computed here (this is the layer that
+    already owns cross-point context for one signature group — see
+    `build_quarterly_series`) — never re-derived downstream. A point with
+    no comparator, an EQUAL-week comparator, or either side missing
+    `duration_weeks` gets NO supplementary field (never guessed);
+    as-reported `value` is never touched — the field is additive-only, on
+    a shallow copy of the point."""
+    by_key: dict[tuple, dict] = {}
+    for point in points:
+        by_key.setdefault((point.get("period_type"), point.get("period")), point)
+
+    annotated = []
+    for point in points:
+        prior = by_key.get(
+            (point.get("period_type"), _prior_fiscal_year_key(point.get("period")))
+        )
+        weeks = point.get("duration_weeks")
+        prior_weeks = prior.get("duration_weeks") if prior is not None else None
+        has_week_counts = (
+            isinstance(weeks, int) and not isinstance(weeks, bool)
+            and isinstance(prior_weeks, int) and not isinstance(prior_weeks, bool)
+        )
+        if prior is not None and has_week_counts and weeks != prior_weeks:
+            normalized_current = point["value"] / weeks
+            normalized_prior = prior["value"] / prior_weeks
+            point = dict(point)
+            point["week_normalized_yoy"] = normalized_current / normalized_prior - 1
+        annotated.append(point)
+    return annotated
+
+
 def build_quarterly_series(fact_pack: dict) -> dict:
     """Build the quarterly KPI series for EVERY full-dimensional-signature
     group present in `fact_pack["facts"]` (Task 2, docs/loom/plans/
@@ -1565,6 +1618,11 @@ def build_quarterly_series(fact_pack: dict) -> dict:
             facts=groups[key],
         )
         emitted = series["as_reported"] + series["recast"]
+        # Task 5 (52/53-week filer support): the supplementary
+        # week-normalized YoY needs cross-point context WITHIN this one
+        # signature group — attach it here, after granularity filtering,
+        # before the reported/derived split below.
+        emitted = _attach_week_normalized_yoy(emitted)
         series_entries.append({
             "signature": {
                 "concept": concept,
