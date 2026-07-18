@@ -10,6 +10,33 @@
 > greppable). Completed items are deleted, not archived — git history is
 > the archive.
 
+## investing-toolkit quarterly 2.22.0 — post-ship follow-ups (OPEN)
+- Status: OPEN
+- Start: next touch of `investing-toolkit/skills/data-markets/scripts/sec_edgar_client.py`
+  or `analysis-kpi/scripts/kpi_xbrl.py`.
+- Origin: scope-B quarterly rebuild (branch feat-operational-kpi-quarterly,
+  2026-07-18); whole-branch review PASS_WITH_NOTES ship-as-debt rulings +
+  T9 spec-reviewer follow-up.
+- What: (a) split `extract_dimensional_revenue` (~355 lines, the one 🟡);
+  (b) thread the REAL `filing.form` string into the fact pack so the analysis
+  layer stops inferring `source_form` from dei focus; (c) public alias for
+  `_dimension_quarterly_absence` (cross-layer underscore bind); (d) call
+  `assert_dqc_schema` at kpi_xbrl's data-layer-flag ingestion point (~:464);
+  (e) 🟢 nits: selection-gap slot overwrite, literal 'None' in gap reason,
+  accession-less 10-K coverage entry.
+
+## investing-toolkit quarterly — parked capability arcs (PARKED)
+- Status: PARKED
+- Start: (calc-linkbase) a real filer whose dimensional concepts genuinely
+  lack "Revenue" and misclassify — insurance was the hypothesized case and
+  its concepts already carry Revenue; (Form-NT) a user asks for
+  not-yet-due vs overdue vs late distinction in coverage reports.
+- Origin: rebuild-findings.md §REJECTED/parked (2026-07-17); archived
+  change-folder docs/loom/archive/2026-07-18-2026-07-16-operational-kpi-quarterly/.
+- What: (a) calc-linkbase "read the filer's own rollup" defense-in-depth
+  layer; (b) Form-NT late-filing detection on SEC deadline regulation
+  (10-Q +40/45d, 10-K +60/75/90d via dei:EntityFilerCategory).
+
 ## loom-code ask-triage 0.30.0 — live telemetry A/B (OPEN)
 - Status: OPEN
 - Start: ~2-4 weeks after 2026-07-14 (needs organic session volume on the

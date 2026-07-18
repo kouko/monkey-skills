@@ -1,3 +1,7 @@
+---
+status: archived
+---
+
 # Proposal — operational-kpi quarterly (scope B)
 
 **Change-id:** 2026-07-16-operational-kpi-quarterly
