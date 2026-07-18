@@ -391,8 +391,10 @@ itself and exits **2**.
 
 ## CLI (kpi_memo_feed)
 
-`scripts/kpi_memo_feed.py` — the memo-feed contract assembly (slice 8,
-final offline slice). PURE-ASSEMBLY: stdlib only, no `_store_fs`/durable
+`scripts/kpi_memo_feed.py` — the memo-feed contract assembly (slice 8;
+consumed by report-equity-memo's quarterly-KPI wiring — its `build-quarterly`
+subcommand emits the envelope-1.1 quarterly/XBRL-arm feed, store gate
+tier-①-only). PURE-ASSEMBLY: stdlib only, no `_store_fs`/durable
 dir/locking — it reuses `kpi_gate.is_trusted` (same-skill import) for the
 trust verdict and takes the series data as a caller-supplied argument
 rather than querying `kpi_store` directly.

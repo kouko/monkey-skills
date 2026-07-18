@@ -5,6 +5,25 @@ All notable changes to the `domain-teams` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v5.9.0] — 2026-07-18
+
+### Added
+
+- **Operating KPI Trends (Quarterly, US) block** (investing-team
+  `protocols/deep-equity-research-memo.md`): the deep-equity-research
+  memo protocol gains a new memo block consuming investing-toolkit's
+  memo-feed 1.1 quarterly output. Rules: each derived-Q4 cell (mint
+  gap-filled from FY minus 9-month YTD) is tagged per-cell and must
+  carry its `dqc.reason` footnote verbatim — never paraphrased or
+  dropped; genuine per-series `gaps` entries truncate the trend table
+  at the gap with a verbatim footnote (never spliced or interpolated
+  across), while top-level `coverage_flags` (DQC restatement/label
+  conflicts) are disclosed inline on the affected cells, never by
+  truncation; a full
+  quarterly table lands as an appendix exhibit; non-US tickers (no
+  quarterly feed available) render a single explicit N/A line instead
+  of a missing section.
+
 ## [v5.8.1] — 2026-07-17
 
 ### Changed

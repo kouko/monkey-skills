@@ -107,6 +107,23 @@ CLI shape and fail-loud exit-code convention: reads a fact-pack JSON from
 and prints the resulting points. 0 on success; 1 on a `resolve_binding`
 ValueError (e.g. ambiguous binding); 2 on malformed or non-object
 fact-pack JSON (nothing computed, no raw traceback).
+
+Task 2 (docs/loom/plans/2026-07-18-memo-quarterly-kpi-wiring.md) adds
+`build_quarterly_series` + the `quarterly-series` subcommand: PER
+full-dimensional-signature group present in the fact-pack (concept +
+whole `dimensions` map + the normalized consolidation QUALIFIER — never
+one axis member, per docs/loom/memory/match-kpi-on-full-dimensional-
+signature-not-one-axis.md; no binding config needed), it ORCHESTRATES
+the existing chain `resolve_binding` -> `derive_q4_points` ->
+`build_series_with_break(granularity="quarterly", facts=<group>)` and
+prints `{series: [{signature, points, derived_points, gaps}],
+coverage_flags}` — parallel calendar/fiscal labels intact on every
+point, derived points still carrying `derived: True` + the PLURAL
+`source_accessions`/`source_forms`. Same exit-code convention as
+`build`. NOTE: the coverage-flag path lazily imports the data layer
+(sec_edgar_client -> `import requests`), so running THIS subcommand
+under a bare `uv run --script` isolated env (dependencies=[]) requires
+an interpreter env where `requests` is importable.
 """
 from __future__ import annotations
 
@@ -1264,6 +1281,156 @@ def build_series_with_break(
     return result
 
 
+# The quarterly-series CLI's series JSON shape carries no as-reported/
+# recast lineage split (no break input this slice), so the declared
+# boundary passed to build_series_with_break is an INERT sentinel that
+# every fiscal-period label sorts before — the whole series lands in
+# `as_reported` and the emitted view is the flat concatenation.
+_QUARTERLY_SERIES_INERT_BREAK = "9999"
+
+
+def _fact_signature_key(fact: dict) -> tuple:
+    """A fact's FULL dimensional signature as a grouping key: concept +
+    the whole `dimensions` map (stable-sorted items) + the NORMALIZED
+    consolidation qualifier (absent -> the default operating-segments
+    view). Never one axis member — a single-member key conflates a total
+    with its cross-dimensioned slices (docs/loom/memory/
+    match-kpi-on-full-dimensional-signature-not-one-axis.md)."""
+    return (
+        str(fact.get("concept")),
+        tuple(sorted((fact.get("dimensions") or {}).items())),
+        _normalize_consolidation(fact.get("consolidation")),
+    )
+
+
+def build_quarterly_series(fact_pack: dict) -> dict:
+    """Build the quarterly KPI series for EVERY full-dimensional-signature
+    group present in `fact_pack["facts"]` (Task 2, docs/loom/plans/
+    2026-07-18-memo-quarterly-kpi-wiring.md — no per-ticker binding config
+    this slice: the groups ARE the pack's signatures).
+
+    Pure ORCHESTRATION of the existing chain, per signature group:
+    `resolve_binding` (a single-source binding minted from the group's own
+    signature — classification, dedup, restatement policy C all run as
+    production wires them) -> `derive_q4_points` (segregated derived-Q4
+    lane) -> `build_series_with_break(granularity="quarterly",
+    facts=<group facts>)` (single-granularity view + no_quarterly_coverage
+    flags). No stage's logic is reimplemented here.
+
+    Returns `{"series": [{"signature", "points", "derived_points",
+    "gaps"}], "coverage_flags"}` — `signature` = `{concept, dimensions,
+    consolidation}` (consolidation normalized), `points` = the emitted
+    reported quarterly points (parallel calendar/fiscal labels intact),
+    `derived_points` = the emitted derived-lane points (`derived: True` +
+    PLURAL `source_accessions`/`source_forms`), `gaps` = the derivation's
+    surfaced skip/refusal flags, `coverage_flags` = the aggregated
+    per-group coverage flags. Groups are emitted in stable signature
+    order. Fail-loud: a pack missing `company` raises ValueError (points
+    are stamped with it); error/N-A slot packs raise via `_require_facts`.
+    """
+    company = fact_pack.get("company")
+    if not isinstance(company, str) or not company:
+        raise ValueError(
+            "kpi_xbrl.build_quarterly_series: fact pack missing required "
+            f"'company' (got {company!r}) — every emitted point is stamped "
+            "with it, never fabricated"
+        )
+
+    groups: dict[tuple, list[dict]] = {}
+    for fact in _require_facts(fact_pack):
+        groups.setdefault(_fact_signature_key(fact), []).append(fact)
+
+    fiscal_calendars = fact_pack.get("fiscal_calendars")
+    series_entries = []
+    coverage_flags: list[dict] = []
+    for key in sorted(groups):
+        concept, dims_items, consolidation = key
+        dimensions = dict(dims_items)
+        if dimensions:
+            dims_joined = ",".join(f"{k}={v}" for k, v in sorted(dimensions.items()))
+            kpi_id = f"{concept}|{dims_joined}"
+        else:
+            kpi_id = concept
+        if consolidation != _DEFAULT_CONSOLIDATION_MEMBER:
+            kpi_id = f"{kpi_id}|consolidation={consolidation}"
+
+        binding = {
+            "kpi_id": kpi_id,
+            "sources": [{
+                "concept": concept,
+                "dimensions": dimensions,
+                "consolidation": consolidation,
+                # Mirrors facts_to_points' source_table_id taxonomy: real
+                # breakdown axes -> dimensional, flat -> companyfacts.
+                "source_kind": (
+                    "xbrl-dimensional" if dimensions else "xbrl-companyfacts"
+                ),
+            }],
+        }
+        points = resolve_binding(fact_pack, binding, company)
+        derived = derive_q4_points(points, fiscal_calendars=fiscal_calendars)
+        series = build_series_with_break(
+            points + derived["points"],
+            _QUARTERLY_SERIES_INERT_BREAK,
+            granularity="quarterly",
+            facts=groups[key],
+        )
+        emitted = series["as_reported"] + series["recast"]
+        series_entries.append({
+            "signature": {
+                "concept": concept,
+                "dimensions": dimensions,
+                "consolidation": consolidation,
+            },
+            "points": [p for p in emitted if not p.get("derived")],
+            "derived_points": [p for p in emitted if p.get("derived")],
+            "gaps": derived["gaps"],
+        })
+        coverage_flags.extend(series["coverage_flags"])
+
+    return {"series": series_entries, "coverage_flags": coverage_flags}
+
+
+def _cli_quarterly_series(args: argparse.Namespace) -> int:
+    """`quarterly-series` subcommand: read a fact-pack JSON from `--file`
+    (or stdin when omitted) and print `build_quarterly_series`'s series
+    JSON. Mirrors `_cli_build`'s exit-code contract: malformed JSON or a
+    non-object fact_pack -> 2 (nothing computed); a chain rejection
+    (ValueError, e.g. missing company / N-A slot pack / intra-filing
+    ambiguity) -> 1; success -> 0."""
+    if args.file is not None:
+        raw = Path(args.file).read_text(encoding="utf-8")
+    else:
+        raw = sys.stdin.read()
+
+    try:
+        fact_pack = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        print(
+            f"kpi_xbrl quarterly-series: invalid fact-pack JSON input: {exc}",
+            file=sys.stderr,
+        )
+        return 2
+
+    if not isinstance(fact_pack, dict):
+        print(
+            "kpi_xbrl quarterly-series: expected a JSON object (fact_pack), "
+            f"got {type(fact_pack).__name__} — nothing computed",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        result = build_quarterly_series(fact_pack)
+    except ValueError as exc:
+        print(f"kpi_xbrl quarterly-series: {exc}", file=sys.stderr)
+        return 1
+
+    json.dump(result, sys.stdout, ensure_ascii=False)
+    sys.stdout.write("\n")
+    return 0
+
+
 def _cli_build(args: argparse.Namespace) -> int:
     """`build` subcommand: read a fact-pack JSON from `--file` (or stdin
     when omitted) and a binding JSON from `--binding`, call
@@ -1320,7 +1487,10 @@ def _cli_build(args: argparse.Namespace) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="XBRL fact -> kpi_store point adapter CLI (build)."
+        description=(
+            "XBRL fact -> kpi_store point adapter CLI "
+            "(build, quarterly-series)."
+        )
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -1338,6 +1508,19 @@ def main() -> int:
         help="Path to a JSON file holding the fact_pack (default: read stdin).",
     )
     build_parser.set_defaults(func=_cli_build)
+
+    quarterly_parser = subparsers.add_parser(
+        "quarterly-series",
+        help=(
+            "Build the per-full-dimensional-signature quarterly series "
+            "(reported + derived-Q4 lanes + coverage flags) from a fact-pack."
+        ),
+    )
+    quarterly_parser.add_argument(
+        "--file", type=Path, default=None,
+        help="Path to a JSON file holding the fact_pack (default: read stdin).",
+    )
+    quarterly_parser.set_defaults(func=_cli_quarterly_series)
 
     args = parser.parse_args()
     return args.func(args)

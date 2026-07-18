@@ -5,6 +5,44 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.23.0] — 2026-07-18
+
+Memo quarterly-KPI wiring — the honest fiscal-calendar quarterly chain shipped
+in v2.22.0 now reaches the rendered memo. A new `kpi-quarterly` data pack, a
+`quarterly-series` CLI, and a quarterly/XBRL memo-feed arm (schema 1.1) join
+the fact-pack → series → memo-feed chain end-to-end, and `report-equity-memo`
+gains a Phase 3.5 step that runs the chain for US tickers and hands the feed
+to `investing-team`'s Operating-KPI block. Plan:
+`docs/loom/plans/2026-07-18-memo-quarterly-kpi-wiring.md`.
+
+### Added
+
+- **`data-markets` `kpi-quarterly` pack** (US-only): calls
+  `extract_dimensional_revenue` and emits the dimensional-revenue fact-pack
+  JSON (facts[] + per-accession fiscal_calendars + `_status` envelope); a
+  non-US ticker returns `_status.status == "usage_error"` (no silent skip).
+- **`analysis-kpi` `quarterly-series` CLI** on `kpi_xbrl.py`: takes a
+  fact-pack JSON path, classifies + builds a break-aware series per
+  full-dimensional-signature group (`granularity="quarterly"`), derives Q4
+  points, and emits one series JSON with parallel calendar/fiscal labels
+  intact on every point.
+- **`analysis-kpi` memo-feed quarterly/XBRL arm** (`kpi_memo_feed.py`,
+  envelope `_memo_feed_schema_version` 1.0 → 1.1): `build_quarterly_memo_feed`
+  + CLI subcommand `build-quarterly`. Fail-closed on per-point XBRL
+  provenance completeness (reported points: `source_accession` + `concept`;
+  derived points: `derived: True` + non-empty plural `source_accessions`/
+  `source_forms`) and `assert_dqc_schema` on every coverage flag; this lane
+  does not call the tier-① store gate (`kpi_gate.is_trusted`) — its trust is
+  machine-verified provenance, not a store confirmation.
+- **`report-equity-memo` Phase 3.5**: for a US ticker, runs
+  kpi-quarterly pack → `quarterly-series` → `build-quarterly` and adds the
+  resulting memo-feed JSON as an OPTIONAL `### Resource Paths` entry;
+  non-US tickers get an explicit skip note in the seed (never silent).
+- **Offline end-to-end chain test**: fact-pack fixture → `quarterly-series` →
+  `build-quarterly`, asserting derived points keep plural accessions and the
+  calendar/fiscal pair, `coverage_flags` survive verbatim, and a poisoned
+  payload (derived point stripped of `source_accessions`) exits 1.
+
 ## [v2.22.0] — 2026-07-18
 
 Quarterly (10-Q) operational-KPI support, rebuilt on an honest fiscal-calendar

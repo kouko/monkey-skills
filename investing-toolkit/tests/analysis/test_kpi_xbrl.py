@@ -1890,3 +1890,102 @@ def test_cli_build_resolves_binding_and_prints_points(tmp_path):
     )
     assert help_result.returncode == 0
     assert "build" in help_result.stdout
+
+
+def test_cli_quarterly_series_full_signature_groups(
+    kpi_xbrl_module, stub_data_layer_deps, tmp_path, monkeypatch, capsys
+):
+    """Task 2 RED (docs/loom/plans/2026-07-18-memo-quarterly-kpi-wiring.md):
+    the `quarterly-series` subcommand reads a fact-pack JSON from --file and
+    builds, PER full-dimensional-signature group present in the pack (the
+    kickoff-bound keying: concept + full `dimensions` map + the
+    consolidation QUALIFIER — never one axis member, per docs/loom/memory/
+    match-kpi-on-full-dimensional-signature-not-one-axis.md), the quarterly
+    series via the EXISTING chain (resolve_binding -> derive_q4_points ->
+    build_series_with_break(granularity="quarterly", facts=...)), printing
+    `{series: [{signature, points, derived_points, gaps}], coverage_flags}`.
+
+    Runs the CLI IN-PROCESS (main() with patched argv) rather than via
+    subprocess like test_cli_build_resolves_binding_and_prints_points: the
+    coverage-flag path lazily imports sec_edgar_client (module-level
+    `import requests`, absent from the offline env), and the sys.modules
+    stubs (`stub_data_layer_deps`) can only reach an in-process call.
+
+    Fails now: the subcommand does not exist (argparse exits 2)."""
+    pack = json.loads(
+        (FIXTURES / "xbrl_q4_derive.json").read_text(encoding="utf-8")
+    )["aapl_q4_derive"]
+    pack_path = tmp_path / "factpack.json"
+    pack_path.write_text(json.dumps(pack), encoding="utf-8")
+
+    monkeypatch.setattr(
+        sys, "argv",
+        ["kpi_xbrl.py", "quarterly-series", "--file", str(pack_path)],
+    )
+    rc = kpi_xbrl_module.main()
+    assert rc == 0
+    out = json.loads(capsys.readouterr().out)
+    assert set(out) == {"series", "coverage_flags"}
+
+    # ONE signature group in the pack (AAPL iPhone), keyed by the FULL
+    # signature — concept + whole dimensions map + normalized consolidation
+    # qualifier (absent -> the default operating-segments view).
+    assert len(out["series"]) == 1
+    entry = out["series"][0]
+    assert set(entry) == {"signature", "points", "derived_points", "gaps"}
+    assert entry["signature"] == {
+        "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "dimensions": {"ProductOrService": "IPhoneMember"},
+        "consolidation": "OperatingSegmentsMember",
+    }
+
+    # Reported lane: the three 3mo quarters only — the 9mo-YTD cumulative
+    # and the FY total are off-granularity for a quarterly series.
+    assert sorted(p["value"] for p in entry["points"]) == [1000.0, 2000.0, 4100.0]
+    assert not any(p.get("derived") for p in entry["points"])
+    for p in entry["points"]:
+        # Parallel calendar/fiscal labels intact on every point.
+        assert isinstance(p["calendar_year"], int)
+        assert p["calendar_quarter"] in {"Q1", "Q2", "Q3", "Q4"}
+        assert p["period"] == "2025"
+        assert p["period_type"] in {"Q1", "Q2", "Q3"}
+        assert p["source_form"] == "10-Q"
+    # The honest divergent pair: fiscal FY2025-Q1 ends in CALENDAR 2024-Q4.
+    q1 = next(p for p in entry["points"] if p["period_type"] == "Q1")
+    assert q1["calendar_year"] == 2024
+    assert q1["calendar_quarter"] == "Q4"
+
+    # Derived lane: Q4 = FY − 9mo-YTD, segregated + tagged with PLURAL
+    # provenance (never the singular reported-point keys).
+    assert len(entry["derived_points"]) == 1
+    q4 = entry["derived_points"][0]
+    assert q4["value"] == 3000.0
+    assert q4["derived"] is True
+    assert q4["source_accessions"] == [
+        "0000320193-25-000079", "0000320193-25-000073",
+    ]
+    assert q4["source_forms"] == ["10-K", "10-Q"]
+    assert "source_accession" not in q4
+    assert "source_form" not in q4
+    assert q4["period"] == "2025"
+    assert q4["period_type"] == "Q4"
+    assert q4["calendar_year"] == 2025
+    assert q4["calendar_quarter"] == "Q3"
+    assert q4["dqc"]["type"] == "derived_q4"
+
+    # Clean derivation -> no gaps; the iPhone signature IS quarterly-tagged
+    # -> no coverage flags (the negative case; the positive flag case is
+    # test_series_flags_dimension_absent_from_quarterlies).
+    assert entry["gaps"] == []
+    assert out["coverage_flags"] == []
+
+    # Malformed fact-pack JSON -> exit 2 (nothing computed), mirroring the
+    # `build` subcommand's exit-code convention.
+    bad_path = tmp_path / "bad.json"
+    bad_path.write_text("{not valid json", encoding="utf-8")
+    monkeypatch.setattr(
+        sys, "argv",
+        ["kpi_xbrl.py", "quarterly-series", "--file", str(bad_path)],
+    )
+    assert kpi_xbrl_module.main() == 2
+    assert "quarterly-series" in capsys.readouterr().err
