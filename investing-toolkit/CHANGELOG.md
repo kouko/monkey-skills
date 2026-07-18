@@ -5,6 +5,48 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.24.0] — 2026-07-18
+
+Week-based duration lane — 52/53-week fiscal calendars (COST-class filers)
+join the month lane across the quarterly-KPI chain, producer primitive
+through the memo feed. Plan:
+`docs/loom/plans/2026-07-18-52-53-week-filer-support.md`.
+
+### Added
+
+- **Shared week-band primitive** (`data-markets` / `sec_edgar_client.py`):
+  a positive-allowlist day-span → week-count/week-lane-band mapping
+  (`_WEEK_BANDS`), colocated with the existing month-lane primitive; every
+  dimensional-revenue fact now emits `duration_weeks` alongside
+  `duration_months`, plus a producer-decided `week_lane_band` — the
+  producer classifies once, the consumer transcribes (no second band
+  table).
+- **Week-aware Gate P boundaries**: `_derive_fiscal_label`'s sub-annual
+  path gains week-offset quarter boundaries computed per filer from
+  `_WEEK_QUARTER_STRUCTURES`, matched within a tight
+  `_WEEK_BOUNDARY_TOLERANCE_DAYS = 2` — the month lane's own ±10d
+  tolerance is unchanged.
+- **Week-lane Gate C classes** (`analysis-kpi` / `kpi_xbrl.py`):
+  `classify_fact_period` transcribes each fact's `week_lane_band` into a
+  `duration_class` string (e.g. `16wk`/`17wk`, `36wk-YTD`, `52wk-FY`/
+  `53wk-FY`); facts with neither a month- nor week-lane match still
+  raise (fail-closed unchanged).
+- **Week-lane Q4 derivation**: `derive_q4_points` mints a derived Q4 from
+  a week-lane FY point minus its `36wk-YTD` sibling, with
+  `duration_weeks = FY_weeks − YTD_weeks` (16 or 17); a group carrying
+  BOTH a month-lane 9mo-YTD candidate AND a week-lane `36wk-YTD`
+  candidate refuses as `q4_basis_ambiguous` rather than guessing a
+  basis; a missing YTD anchor still yields the existing
+  `q4_source_missing` refusal.
+- **Feed carries week counts + supplementary normalized YoY**: the 1.1
+  quarterly feed passes through each point's `duration_weeks`, and a
+  point whose same-signature prior-year comparator carries a DIFFERENT
+  week count gets a supplementary `week_normalized_yoy` field
+  ((value/weeks) vs. (prior value/prior weeks) − 1), skipped on any
+  zero-denominator side; the as-reported value/YoY stay primary and
+  `MEMO_FEED_QUARTERLY_SCHEMA_VERSION` stays "1.1" (additive fields,
+  passthrough — no envelope bump).
+
 ## [v2.23.0] — 2026-07-18
 
 Memo quarterly-KPI wiring — the honest fiscal-calendar quarterly chain shipped

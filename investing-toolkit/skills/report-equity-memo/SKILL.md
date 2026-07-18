@@ -363,6 +363,15 @@ explicit skip note in the Phase 4 seed context (e.g. "kpi-quarterly-feed
 skipped: non-US ticker, dimensional-XBRL lane is US-only") so the memo's
 Limitations section can disclose it.
 
+**52/53-week fiscal calendars are covered.** A week-based filer (e.g.
+Costco) is no longer expected to fail this phase: the chain's week-based
+duration lane classifies its fiscal boundaries and quarter-length spans
+alongside the month lane, and the feed carries per-point `duration_weeks`
+plus a supplementary `week_normalized_yoy` field where quarter lengths
+differ year over year. The refusal path below remains the fail-loud
+fallback for a genuinely unclassifiable period — not the routine outcome
+for a week-based filer.
+
 Three-step chain, one memo-feed JSON out:
 
 ```bash
