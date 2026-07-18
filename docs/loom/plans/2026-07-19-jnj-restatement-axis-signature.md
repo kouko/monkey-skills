@@ -46,6 +46,16 @@ Plan-document-reviewer verdict: PASS (2026-07-19, 14/14)
 - Kickoff decision: one-way-door sweep → no NEW one-way doors; the
   signature-shape ruling (no 4th field) was user-ratified at the brief
   checkpoint with two research rounds behind it.
+- Execution decision (post-T5, 12-ticker live sweep, fd6650e9): T1's
+  exclusion regressed INTC — its 2021-2023 filings tag segment facts with
+  `srt:ConsolidatedEntitiesAxis = OperatingSegmentsMember`, a sibling-axis
+  spelling of the recognized consolidation qualifier (member value equals
+  ConsolidationItemsAxis's default, proving semantics). Fix: promoted
+  ConsolidatedEntitiesAxis to a second consolidation-qualifier axis (same
+  `consolidation` slot); both-axes-differing-members → excluded under new
+  self-describing `consolidation_conflict` category. Two-way door
+  (whitelist addition), agent-decided, live-verified INTC re-sweep. This is
+  the exclude→count→verify-semantics→promote flow working as designed.
 
 ## Task 1 — Producer: vintage/unknown-axis exclusion with count (kill the silent drop)
 
