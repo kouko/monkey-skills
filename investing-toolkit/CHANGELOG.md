@@ -25,6 +25,13 @@ and the quarterly-KPI consumer chain. Plan:
   (`{category, axis, member, concept, accession, period_end}`) via
   `_dimensional_axis_exclusions`; the 3-key signature shape
   (`concept`/`dimensions`/`consolidation`) is unchanged.
+  `srt:ConsolidatedEntitiesAxis` — a sibling-axis spelling of the
+  consolidation qualifier live-observed on INTC's 2021-2023 filings
+  (member `OperatingSegmentsMember`) — is recognized as a second
+  consolidation-qualifier axis (`_CONSOLIDATION_AXIS_LOCAL_NAMES`), folded
+  into the same `consolidation` slot; a fact carrying both qualifier axes
+  with DIFFERING members is excluded under the self-describing
+  `"consolidation_conflict"` category.
 - **`period_recast` coverage flag** (`analysis-kpi` / `kpi_xbrl.py`):
   `build_quarterly_series` aggregates the pack's `"vintage"`-category
   `axis_exclusions` — read from BOTH the quarterly and annual coverage
