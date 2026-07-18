@@ -2428,6 +2428,177 @@ def test_coverage_per_quarter_completeness(sec_client):
 
 
 # ---------------------------------------------------------------------------
+# Task 19 (2026-07-16-operational-kpi-quarterly REBUILD) — the two OBSERVED
+# failure states + quarantine blast radius. Both are grounded by in-hand
+# evidence (never inferred from index absence — that is T18's lane):
+# `attempted_fetch_failed` (a download/XBRL-parse RAISED at the fetch site;
+# the caught exception is the ground, retryable) and `filed_but_unlabelable`
+# (fetched fine, the fail-loud fiscal derivation rejected the filing —
+# quarantined at FILING granularity, the run continues). Fixtures: the
+# machine-captured AAPL completeness set; both failure premises are
+# counterfactual staged rows per the T14/T16/T18 convention (a parsed copy
+# mutated in-test — a raising `.xbrl()` / a stripped dei calendar row; the
+# fixture file untouched).
+# ---------------------------------------------------------------------------
+
+def test_coverage_observed_failure_states(sec_client):
+    """(a) An index-present 10-Q whose download/XBRL parse raises reports
+    attempted-fetch-failed — retryable, grounded by the in-hand exception
+    (class + message recorded in the ONE DQC schema) — never 'unclassified'
+    and never silently covered, and the run continues. (b) A multi-year
+    build with exactly ONE dei-unreadable filing completes: the other
+    filings' series emit normally, the bad filing's facts are excluded from
+    fiscal-labeled output, and coverage reports that quarter
+    filed-but-unlabelable (DQC schema) — one bad filing never aborts the
+    whole run (spec: 'Coverage honesty extends to per-filing
+    completeness')."""
+    fixture = _load_aapl_quarterly_fixture()
+
+    # ------------------------------------------------------------------
+    # (a) attempted-fetch-failed: FY2025's Q3 is IN the index but its
+    # fetch raises (staged: the filing's `.xbrl()` raises ConnectionError).
+    # ------------------------------------------------------------------
+    filings = [
+        _filing_from_quarterly_fixture_record(fixture[key])
+        for key in ("fy2025_10k", "fy2025_q1", "fy2025_q2", "fy2025_q3")
+    ]
+    q3_accession = fixture["fy2025_q3"]["accession"]
+
+    def _raise_fetch(*args, **kwargs):
+        raise ConnectionError("simulated: connection reset during SEC download")
+
+    filings[3].xbrl = _raise_fetch
+    _aapl_company_stub(sec_client, filings)
+
+    pack = sec_client.extract_dimensional_revenue(
+        "AAPL", form="10-Q", since_year=2025, until_year=2025,
+        as_of=datetime.date(2026, 1, 1),
+    )
+    assert "error" not in pack, (
+        f"one fetch failure must never abort the whole run -- {pack}"
+    )
+    got = {f["accession"] for f in pack["facts"]}
+    assert fixture["fy2025_q1"]["accession"] in got, (
+        f"the other filings' facts must still emit -- {got}"
+    )
+    assert fixture["fy2025_q2"]["accession"] in got, got
+    assert q3_accession not in got, (
+        f"the failed filing has no fetched facts to emit -- {got}"
+    )
+
+    # Coverage-level flag: ONE DQC schema, grounded by the caught exception.
+    failures = pack["coverage"]["fetch_failures"]
+    assert isinstance(failures, list) and len(failures) == 1, pack["coverage"]
+    flag = failures[0]
+    assert set(flag) == {"type", "old", "new", "accessions", "reason"}, (
+        f"fetch-failure flags follow the ONE DQC schema -- {flag}"
+    )
+    assert flag["type"] == "attempted_fetch_failed", flag
+    assert flag["accessions"] == [q3_accession], flag
+    assert "ConnectionError" in flag["reason"], (
+        f"the flag must record the in-hand exception CLASS -- {flag}"
+    )
+    assert "connection reset during SEC download" in flag["reason"], (
+        f"the flag must record the in-hand exception MESSAGE -- {flag}"
+    )
+    assert "retryable" in flag["reason"], (
+        f"attempted-fetch-failed is the one RETRYABLE state -- {flag}"
+    )
+
+    # The quarter itself reports attempted_fetch_failed — never
+    # 'unclassified' (T18's no-positive-evidence state) and never silently
+    # counted covered on index presence alone.
+    fy2025 = next(
+        r for r in pack["coverage"]["quarterly_coverage"]
+        if r["fiscal_year"] == 2025
+    )
+    assert all(p.get("accession") != q3_accession for p in fy2025["present"]), (
+        f"a fetch-failed filing must never be silently covered -- {fy2025}"
+    )
+    q3_entry = next(m for m in fy2025["missing"] if m["filing"] == "Q3")
+    assert q3_entry["reason"] == "attempted_fetch_failed", (
+        "an in-hand fetch failure is POSITIVE evidence and must classify "
+        f"attempted_fetch_failed, never 'unclassified' -- {q3_entry}"
+    )
+    assert q3_entry["accession"] == q3_accession, q3_entry
+    assert "ConnectionError" in q3_entry["detail"], q3_entry
+    assert fy2025["status"] == "partial", fy2025
+    assert fy2025["present_count"] == 3, fy2025
+    # Always-list convention (mirrors unclassifiable_periods): ran, none found.
+    assert pack["coverage"]["unlabelable_filings"] == [], pack["coverage"]
+
+    # ------------------------------------------------------------------
+    # (b) filed-but-unlabelable: a multi-year build where exactly ONE
+    # filing's dei fiscal calendar is unreadable (staged: the FY2026-Q1
+    # copy's dei row stripped). FAILS TODAY: UnreadableFiscalCalendarError
+    # propagates out of extract and aborts the whole run.
+    # ------------------------------------------------------------------
+    filings_b = [
+        _filing_from_quarterly_fixture_record(fixture[key])
+        for key in (
+            "fy2025_10k", "fy2025_q1", "fy2025_q2", "fy2025_q3",
+            "fy2026_q1", "fy2026_q2",
+        )
+    ]
+    bad_accession = fixture["fy2026_q1"]["accession"]
+    bad_xb = filings_b[4].xbrl()
+    staged_rows = [
+        r for r in bad_xb.facts.to_dataframe.return_value.to_dict.return_value
+        if r.get("concept") != "dei:CurrentFiscalYearEndDate"
+    ]
+    bad_xb.facts.to_dataframe.return_value.to_dict.return_value = staged_rows
+    _aapl_company_stub(sec_client, filings_b)
+
+    pack_b = sec_client.extract_dimensional_revenue(
+        "AAPL", form="10-Q", since_year=2025, until_year=2026,
+        as_of=datetime.date(2026, 6, 1),
+    )
+    assert "error" not in pack_b, (
+        f"ONE unlabelable filing must never abort the multi-year run -- {pack_b}"
+    )
+    got_b = {f["accession"] for f in pack_b["facts"]}
+    for key in ("fy2025_q1", "fy2025_q2", "fy2025_q3", "fy2026_q2"):
+        assert fixture[key]["accession"] in got_b, (
+            f"the OTHER filings' series must emit normally ({key}) -- {got_b}"
+        )
+    assert bad_accession not in got_b, (
+        "the quarantined filing's facts are EXCLUDED from fiscal-labeled "
+        f"output (never calendar-fallback-labeled) -- {got_b}"
+    )
+
+    # The quarantine surfaces loudly at coverage level — the fail-loud
+    # property moves here, it never vanishes into silence.
+    quarantined = pack_b["coverage"]["unlabelable_filings"]
+    assert isinstance(quarantined, list) and len(quarantined) == 1, (
+        pack_b["coverage"]
+    )
+    qflag = quarantined[0]
+    assert set(qflag) == {"type", "old", "new", "accessions", "reason"}, (
+        f"quarantine flags follow the ONE DQC schema -- {qflag}"
+    )
+    assert qflag["type"] == "unreadable_fiscal_calendar", qflag
+    assert qflag["accessions"] == [bad_accession], qflag
+    assert qflag["reason"], qflag
+
+    # The quarter reports filed-but-unlabelable — filed (index+fetch fine),
+    # but its data is honestly absent from labeled output.
+    fy2026 = next(
+        r for r in pack_b["coverage"]["quarterly_coverage"]
+        if r["fiscal_year"] == 2026
+    )
+    assert all(p.get("accession") != bad_accession for p in fy2026["present"]), (
+        f"a quarantined filing must never count as covered -- {fy2026}"
+    )
+    q1_entry = next(m for m in fy2026["missing"] if m["filing"] == "Q1")
+    assert q1_entry["reason"] == "filed_but_unlabelable", (
+        "the quarter's state is filed_but_unlabelable — positive in-hand "
+        f"evidence, never an inferred index-absence state -- {q1_entry}"
+    )
+    assert q1_entry["accession"] == bad_accession, q1_entry
+    assert pack_b["coverage"]["fetch_failures"] == [], pack_b["coverage"]
+
+
+# ---------------------------------------------------------------------------
 # Task 17 (RE-SCOPED 2026-07-18) — no-cache-aliasing regression
 # ---------------------------------------------------------------------------
 
