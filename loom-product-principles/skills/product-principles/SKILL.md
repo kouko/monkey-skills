@@ -217,6 +217,9 @@ completes in ≤3 steps — check: count steps in the happy-path flow"). Fewer
 than 3 is not a constitution; more than 7 dilutes the non-negotiable
 weight. See the ✅/❌ examples in `references/principles-rules.md`.
 
+**Before writing a `— check:` clause that requires guessing an unverified
+fact, classify it via `references/knowledge-triage.md` FIRST.**
+
 **Draft-time count self-check**: count the entries in each jurisdiction
 section **before presenting** a draft (3-7 Product; 1-7 optional sections);
 if over, merge entries before showing the user — do not wait for the
