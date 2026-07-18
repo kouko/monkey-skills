@@ -56,12 +56,27 @@ from pathlib import Path
 
 ALLOWED_VERDICTS = {"PASS_WITH_NOTES", "NEEDS_REVISION"}
 
+# Allow-list for --critic: lowercase alnum + hyphen only, must start
+# with an alnum char. Blocks path traversal ("../../evil") and
+# separators ("/", "\") from reaching verdict_filename()'s f-string —
+# the character set IS the security property, not a hardcoded name
+# list (future critics need no code change; see CHK-SEC-004).
+_CRITIC_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+
+
+def validate_critic_name(critic: str) -> bool:
+    """True iff `critic` is a safe verdict-filename component."""
+    return bool(_CRITIC_NAME_RE.match(critic))
+
 
 def verdict_filename(critic: str) -> str:
     """Per-critic verdict filename: `<critic>-verdict.json` (§4c point 1
     — one file per critic per change-folder so co-resident critics
     (e.g. design-critic, completeness-critic) never overwrite each
-    other's verdict)."""
+    other's verdict).
+
+    Caller must validate `critic` with `validate_critic_name` first —
+    this function does not sanitize."""
     return f"{critic}-verdict.json"
 
 
@@ -135,6 +150,15 @@ def _write_verdict_json(change_folder: Path, critic: str, payload: dict) -> Path
 
 
 def _cmd_mint(args: argparse.Namespace) -> int:
+    if not validate_critic_name(args.critic):
+        print(
+            f"mint-critic-verdict: invalid --critic value {args.critic!r} "
+            "(must match ^[a-z0-9][a-z0-9-]*$ — no path separators or "
+            "'..')",
+            file=sys.stderr,
+        )
+        return 4
+
     change_folder = Path(args.change_folder)
     if not change_folder.is_dir():
         print(
@@ -182,6 +206,15 @@ def _cmd_mint(args: argparse.Namespace) -> int:
 
 
 def _cmd_validate(args: argparse.Namespace) -> int:
+    if not validate_critic_name(args.critic):
+        print(
+            f"mint-critic-verdict: invalid --critic value {args.critic!r} "
+            "(must match ^[a-z0-9][a-z0-9-]*$ — no path separators or "
+            "'..')",
+            file=sys.stderr,
+        )
+        return 4
+
     change_folder = Path(args.change_folder)
     verdict_path = change_folder / verdict_filename(args.critic)
     if not verdict_path.is_file():

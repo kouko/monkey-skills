@@ -307,6 +307,56 @@ def test_mint_two_critics_same_change_folder_coexist(tmp_path):
     assert rc_validate_completeness == 3
 
 
+# ------------------------------------------------------------ critic-name
+
+
+def test_mint_rejects_path_traversal_critic_name_exits_4(tmp_path, capsys):
+    # Round-3 fix: --critic flows into verdict_filename() = an
+    # f-string filename; an unsanitized "../../evil" escapes the
+    # change-folder entirely (CHK-SEC-004).
+    folder = _change_folder_with_design(tmp_path)
+    verdict_file = _write(tmp_path / "verdict.md", VALID_PASS)
+    traversal_target = tmp_path.parent.parent / "evil-verdict.json"
+
+    rc = main(
+        [
+            "mint",
+            "--change-folder",
+            str(folder),
+            "--critic",
+            "../../evil",
+            "--verdict-file",
+            str(verdict_file),
+            "--files",
+            "DESIGN.md",
+        ]
+    )
+
+    assert rc == 4
+    assert "../../evil" in capsys.readouterr().err
+    assert not traversal_target.exists()
+    assert list(folder.glob("*.json")) == []
+
+
+def test_validate_rejects_path_traversal_critic_name_exits_4(tmp_path, capsys):
+    folder = _change_folder_with_design(tmp_path)
+
+    rc = main(
+        [
+            "validate",
+            "--change-folder",
+            str(folder),
+            "--critic",
+            "../../evil",
+            "--files",
+            "DESIGN.md",
+        ]
+    )
+
+    assert rc == 4
+    assert "../../evil" in capsys.readouterr().err
+
+
 # ----------------------------------------------------------------- validate
 
 
