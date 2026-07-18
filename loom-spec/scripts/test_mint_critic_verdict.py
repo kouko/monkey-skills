@@ -12,7 +12,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from mint_critic_verdict import VERDICT_FILENAME, main
+from mint_critic_verdict import verdict_filename, main
 
 
 def _write(path: Path, text: str) -> Path:
@@ -43,6 +43,8 @@ def test_mint_writes_verdict_json_with_pass_with_notes(tmp_path, capsys):
             "mint",
             "--change-folder",
             str(folder),
+            "--critic",
+            "design-critic",
             "--verdict-file",
             str(verdict_file),
             "--files",
@@ -51,7 +53,7 @@ def test_mint_writes_verdict_json_with_pass_with_notes(tmp_path, capsys):
     )
 
     assert rc == 0
-    marker = folder / VERDICT_FILENAME
+    marker = folder / verdict_filename("design-critic")
     assert marker.is_file()
     data = json.loads(marker.read_text(encoding="utf-8"))
     assert set(data) == {"schema", "verdict", "files", "sha256", "written_at"}
@@ -72,6 +74,8 @@ def test_mint_needs_revision_still_mints(tmp_path):
             "mint",
             "--change-folder",
             str(folder),
+            "--critic",
+            "design-critic",
             "--verdict-file",
             str(verdict_file),
             "--files",
@@ -80,7 +84,9 @@ def test_mint_needs_revision_still_mints(tmp_path):
     )
 
     assert rc == 0
-    data = json.loads((folder / VERDICT_FILENAME).read_text(encoding="utf-8"))
+    data = json.loads(
+        (folder / verdict_filename("design-critic")).read_text(encoding="utf-8")
+    )
     assert data["verdict"] == "NEEDS_REVISION"
 
 
@@ -93,6 +99,8 @@ def test_mint_change_folder_not_found_exits_2(tmp_path):
             "mint",
             "--change-folder",
             str(missing_folder),
+            "--critic",
+            "design-critic",
             "--verdict-file",
             str(verdict_file),
             "--files",
@@ -117,6 +125,8 @@ def test_mint_invalid_verdict_text_exits_4(tmp_path):
             "mint",
             "--change-folder",
             str(folder),
+            "--critic",
+            "design-critic",
             "--verdict-file",
             str(verdict_file),
             "--files",
@@ -125,7 +135,7 @@ def test_mint_invalid_verdict_text_exits_4(tmp_path):
     )
 
     assert rc == 4
-    assert not (folder / VERDICT_FILENAME).exists()
+    assert not (folder / verdict_filename("design-critic")).exists()
 
 
 def test_mint_missing_verdict_line_exits_4(tmp_path):
@@ -137,6 +147,8 @@ def test_mint_missing_verdict_line_exits_4(tmp_path):
             "mint",
             "--change-folder",
             str(folder),
+            "--critic",
+            "design-critic",
             "--verdict-file",
             str(verdict_file),
             "--files",
@@ -145,7 +157,7 @@ def test_mint_missing_verdict_line_exits_4(tmp_path):
     )
 
     assert rc == 4
-    assert not (folder / VERDICT_FILENAME).exists()
+    assert not (folder / verdict_filename("design-critic")).exists()
 
 
 def test_mint_overwrites_in_place_latest_wins(tmp_path):
@@ -158,6 +170,8 @@ def test_mint_overwrites_in_place_latest_wins(tmp_path):
             "mint",
             "--change-folder",
             str(folder),
+            "--critic",
+            "design-critic",
             "--verdict-file",
             str(verdict_file),
             "--files",
@@ -172,6 +186,8 @@ def test_mint_overwrites_in_place_latest_wins(tmp_path):
             "mint",
             "--change-folder",
             str(folder),
+            "--critic",
+            "design-critic",
             "--verdict-file",
             str(verdict_file),
             "--files",
@@ -181,9 +197,114 @@ def test_mint_overwrites_in_place_latest_wins(tmp_path):
     assert rc2 == 0
 
     # Exactly one verdict file remains, reflecting the latest mint.
-    assert [p.name for p in folder.glob("*.json")] == [VERDICT_FILENAME]
-    data = json.loads((folder / VERDICT_FILENAME).read_text(encoding="utf-8"))
+    assert [p.name for p in folder.glob("*.json")] == [
+        verdict_filename("design-critic")
+    ]
+    data = json.loads(
+        (folder / verdict_filename("design-critic")).read_text(encoding="utf-8")
+    )
     assert data["verdict"] == "NEEDS_REVISION"
+
+
+def test_mint_invalid_utf8_verdict_file_exits_4(tmp_path):
+    # Finding 2: invalid UTF-8 bytes must be reported as the documented
+    # exit 4 (schema-invalid), not crash with a raw UnicodeDecodeError
+    # traceback.
+    folder = _change_folder_with_design(tmp_path)
+    verdict_file = tmp_path / "verdict.md"
+    verdict_file.write_bytes(b"verdict: PASS_WITH_NOTES\n\xff\xfe garbage")
+
+    rc = main(
+        [
+            "mint",
+            "--change-folder",
+            str(folder),
+            "--critic",
+            "design-critic",
+            "--verdict-file",
+            str(verdict_file),
+            "--files",
+            "DESIGN.md",
+        ]
+    )
+
+    assert rc == 4
+    assert not (folder / verdict_filename("design-critic")).exists()
+
+
+def test_mint_two_critics_same_change_folder_coexist(tmp_path):
+    # Finding 1: per-critic filenames — design-critic and
+    # completeness-critic verdicts in the same change-folder must not
+    # clobber each other.
+    folder = _change_folder_with_design(tmp_path)
+    pass_file = _write(tmp_path / "pass.md", VALID_PASS)
+    needs_revision_file = _write(tmp_path / "needs-revision.md", VALID_NEEDS_REVISION)
+
+    rc_design = main(
+        [
+            "mint",
+            "--change-folder",
+            str(folder),
+            "--critic",
+            "design-critic",
+            "--verdict-file",
+            str(pass_file),
+            "--files",
+            "DESIGN.md",
+        ]
+    )
+    rc_completeness = main(
+        [
+            "mint",
+            "--change-folder",
+            str(folder),
+            "--critic",
+            "completeness-critic",
+            "--verdict-file",
+            str(needs_revision_file),
+            "--files",
+            "DESIGN.md",
+        ]
+    )
+
+    assert rc_design == 0
+    assert rc_completeness == 0
+    design_marker = folder / verdict_filename("design-critic")
+    completeness_marker = folder / verdict_filename("completeness-critic")
+    assert design_marker.is_file()
+    assert completeness_marker.is_file()
+    assert design_marker != completeness_marker
+
+    design_data = json.loads(design_marker.read_text(encoding="utf-8"))
+    completeness_data = json.loads(completeness_marker.read_text(encoding="utf-8"))
+    assert design_data["verdict"] == "PASS_WITH_NOTES"
+    assert completeness_data["verdict"] == "NEEDS_REVISION"
+
+    # Both validate independently against the SAME change-folder/files.
+    rc_validate_design = main(
+        [
+            "validate",
+            "--change-folder",
+            str(folder),
+            "--critic",
+            "design-critic",
+            "--files",
+            "DESIGN.md",
+        ]
+    )
+    rc_validate_completeness = main(
+        [
+            "validate",
+            "--change-folder",
+            str(folder),
+            "--critic",
+            "completeness-critic",
+            "--files",
+            "DESIGN.md",
+        ]
+    )
+    assert rc_validate_design == 0
+    assert rc_validate_completeness == 3
 
 
 # ----------------------------------------------------------------- validate
@@ -198,6 +319,8 @@ def test_validate_fresh_pass_with_notes_exits_0(tmp_path):
                 "mint",
                 "--change-folder",
                 str(folder),
+                "--critic",
+                "design-critic",
                 "--verdict-file",
                 str(verdict_file),
                 "--files",
@@ -207,7 +330,17 @@ def test_validate_fresh_pass_with_notes_exits_0(tmp_path):
         == 0
     )
 
-    rc = main(["validate", "--change-folder", str(folder), "--files", "DESIGN.md"])
+    rc = main(
+        [
+            "validate",
+            "--change-folder",
+            str(folder),
+            "--critic",
+            "design-critic",
+            "--files",
+            "DESIGN.md",
+        ]
+    )
 
     assert rc == 0
 
@@ -215,7 +348,17 @@ def test_validate_fresh_pass_with_notes_exits_0(tmp_path):
 def test_validate_no_verdict_file_exits_2(tmp_path):
     folder = _change_folder_with_design(tmp_path)
 
-    rc = main(["validate", "--change-folder", str(folder), "--files", "DESIGN.md"])
+    rc = main(
+        [
+            "validate",
+            "--change-folder",
+            str(folder),
+            "--critic",
+            "design-critic",
+            "--files",
+            "DESIGN.md",
+        ]
+    )
 
     assert rc == 2
 
@@ -229,6 +372,8 @@ def test_validate_fresh_needs_revision_exits_3(tmp_path):
                 "mint",
                 "--change-folder",
                 str(folder),
+                "--critic",
+                "design-critic",
                 "--verdict-file",
                 str(verdict_file),
                 "--files",
@@ -238,7 +383,17 @@ def test_validate_fresh_needs_revision_exits_3(tmp_path):
         == 0
     )
 
-    rc = main(["validate", "--change-folder", str(folder), "--files", "DESIGN.md"])
+    rc = main(
+        [
+            "validate",
+            "--change-folder",
+            str(folder),
+            "--critic",
+            "design-critic",
+            "--files",
+            "DESIGN.md",
+        ]
+    )
 
     assert rc == 3
 
@@ -252,6 +407,8 @@ def test_validate_stale_hash_after_editing_covered_file_exits_4(tmp_path):
                 "mint",
                 "--change-folder",
                 str(folder),
+                "--critic",
+                "design-critic",
                 "--verdict-file",
                 str(verdict_file),
                 "--files",
@@ -265,6 +422,83 @@ def test_validate_stale_hash_after_editing_covered_file_exits_4(tmp_path):
     # longer matches the current bytes.
     _write(folder / "DESIGN.md", "# Design\n\nEdited after mint.\n")
 
-    rc = main(["validate", "--change-folder", str(folder), "--files", "DESIGN.md"])
+    rc = main(
+        [
+            "validate",
+            "--change-folder",
+            str(folder),
+            "--critic",
+            "design-critic",
+            "--files",
+            "DESIGN.md",
+        ]
+    )
 
     assert rc == 4
+
+
+def test_validate_invalid_utf8_verdict_json_exits_4(tmp_path):
+    # Finding 2, validate side: a corrupted verdict JSON with invalid
+    # UTF-8 bytes must exit 4, not crash with a raw traceback.
+    folder = _change_folder_with_design(tmp_path)
+    marker = folder / verdict_filename("design-critic")
+    marker.write_bytes(b'{"schema": 1, \xff\xfe garbage')
+
+    rc = main(
+        [
+            "validate",
+            "--change-folder",
+            str(folder),
+            "--critic",
+            "design-critic",
+            "--files",
+            "DESIGN.md",
+        ]
+    )
+
+    assert rc == 4
+
+
+def test_validate_files_list_mismatch_exits_4_with_distinct_message(tmp_path, capsys):
+    # Finding 3: caller-supplied --files must be compared against the
+    # files list recorded at mint time; a divergence is a distinct
+    # exit-4 diagnostic, not the generic stale-hash message.
+    folder = _change_folder_with_design(tmp_path)
+    _write(folder / "OTHER.md", "# Other\n")
+    verdict_file = _write(tmp_path / "verdict.md", VALID_PASS)
+    assert (
+        main(
+            [
+                "mint",
+                "--change-folder",
+                str(folder),
+                "--critic",
+                "design-critic",
+                "--verdict-file",
+                str(verdict_file),
+                "--files",
+                "DESIGN.md",
+            ]
+        )
+        == 0
+    )
+
+    rc = main(
+        [
+            "validate",
+            "--change-folder",
+            str(folder),
+            "--critic",
+            "design-critic",
+            "--files",
+            "DESIGN.md,OTHER.md",
+        ]
+    )
+
+    assert rc == 4
+    stderr = capsys.readouterr().err
+    assert "files list" in stderr.lower()
+    assert "DESIGN.md" in stderr
+    assert "OTHER.md" in stderr
+    # Must be distinguishable from the generic stale-hash message.
+    assert "STALE" not in stderr

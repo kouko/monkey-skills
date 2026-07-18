@@ -13,26 +13,32 @@ PASS_WITH_NOTES or NEEDS_REVISION — bare PASS is not an allowed token
 for a critic verdict (a critic panel always leaves notes or blocks;
 see monkey-skills/CLAUDE.md Agent Behavioral Rules).
 
-Verdict JSON (output of `mint`, `<change-folder>/critic-verdict.json`):
+Verdict JSON (output of `mint`, `<change-folder>/<critic>-verdict.json`
+— `--critic` is a required argument on both `mint` and `validate`,
+naming the file so multiple critics reviewing the same change-folder
+never clobber each other's verdict):
     {"schema": 1, "verdict": "PASS_WITH_NOTES"|"NEEDS_REVISION",
      "files": [...], "sha256": "<hex>", "written_at": "<iso8601>"}
 `sha256` is over the concatenated bytes of `--files`, resolved
 relative to `--change-folder` (or used as-is if absolute), in the
-order given. Overwrite-in-place: a second `mint` replaces the file
-(atomic tmp+os.replace), latest wins — round history stays in the
-critic's prose Round summary, not here.
+order given. Overwrite-in-place: a second `mint` for the same critic
+replaces its file (atomic tmp+os.replace), latest wins — round
+history stays in the critic's prose Round summary, not here.
 
 `mint` exit codes: 0 written (either verdict value — NEEDS_REVISION
 still mints, unlike loom-code's gate-markers where NEEDS_REVISION
 mints nothing; a consumer must be able to distinguish "ran and
 blocked" from "never ran"); 2 change-folder not found; 4 schema-invalid
-verdict text (missing/disallowed token) or an unreadable covered file.
+verdict text (missing/disallowed token) or an unreadable/undecodable
+covered file.
 
 `validate` exit codes: 0 fresh PASS_WITH_NOTES; 2 no verdict file
 (critic never ran); 3 fresh NEEDS_REVISION; 4 stale hash (covered
-files changed since mint, or an unreadable/unparseable verdict file).
-Freshness is checked before verdict value: a stale PASS_WITH_NOTES is
-untrustworthy, so hash mismatch always wins over verdict value.
+files changed since mint), a `--files` list that diverges from the
+list recorded at mint time, or an unreadable/unparseable verdict
+file. Freshness is checked before verdict value: a stale
+PASS_WITH_NOTES is untrustworthy, so hash mismatch always wins over
+verdict value.
 
 Stdlib only.
 """
@@ -49,7 +55,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ALLOWED_VERDICTS = {"PASS_WITH_NOTES", "NEEDS_REVISION"}
-VERDICT_FILENAME = "critic-verdict.json"
+
+
+def verdict_filename(critic: str) -> str:
+    """Per-critic verdict filename: `<critic>-verdict.json` (§4c point 1
+    — one file per critic per change-folder so co-resident critics
+    (e.g. design-critic, completeness-critic) never overwrite each
+    other's verdict)."""
+    return f"{critic}-verdict.json"
+
 
 # Same horizontal-whitespace-after-colon caution as loom_gate_markers.py:
 # \s* under re.M spans the newline and would wrongly capture the next
@@ -103,12 +117,12 @@ def _parse_files(files_arg: str) -> list[str]:
     return [f.strip() for f in files_arg.split(",") if f.strip()]
 
 
-def _write_verdict_json(change_folder: Path, payload: dict) -> Path:
-    """Atomically write `payload` as JSON to `<change-folder>/critic-verdict.json`."""
-    path = change_folder / VERDICT_FILENAME
-    fd, tmp = tempfile.mkstemp(
-        dir=str(change_folder), prefix=VERDICT_FILENAME, suffix=".tmp"
-    )
+def _write_verdict_json(change_folder: Path, critic: str, payload: dict) -> Path:
+    """Atomically write `payload` as JSON to
+    `<change-folder>/<critic>-verdict.json`."""
+    filename = verdict_filename(critic)
+    path = change_folder / filename
+    fd, tmp = tempfile.mkstemp(dir=str(change_folder), prefix=filename, suffix=".tmp")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             json.dump(payload, f, indent=2)
@@ -131,7 +145,7 @@ def _cmd_mint(args: argparse.Namespace) -> int:
 
     try:
         text = Path(args.verdict_file).read_text(encoding="utf-8")
-    except OSError as exc:
+    except (OSError, UnicodeDecodeError) as exc:
         print(f"mint-critic-verdict: cannot read verdict file: {exc}", file=sys.stderr)
         return 4
 
@@ -162,14 +176,14 @@ def _cmd_mint(args: argparse.Namespace) -> int:
         "sha256": hashlib.sha256(covered).hexdigest(),
         "written_at": _now_iso(),
     }
-    path = _write_verdict_json(change_folder, payload)
+    path = _write_verdict_json(change_folder, args.critic, payload)
     print(path)
     return 0
 
 
 def _cmd_validate(args: argparse.Namespace) -> int:
     change_folder = Path(args.change_folder)
-    verdict_path = change_folder / VERDICT_FILENAME
+    verdict_path = change_folder / verdict_filename(args.critic)
     if not verdict_path.is_file():
         print(
             f"mint-critic-verdict: no verdict file at {verdict_path} — "
@@ -180,7 +194,7 @@ def _cmd_validate(args: argparse.Namespace) -> int:
 
     try:
         data = json.loads(verdict_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         print(
             f"mint-critic-verdict: cannot read/parse verdict file: {exc}",
             file=sys.stderr,
@@ -188,6 +202,17 @@ def _cmd_validate(args: argparse.Namespace) -> int:
         return 4
 
     files = _parse_files(args.files)
+    recorded_files = data.get("files")
+    if files != recorded_files:
+        print(
+            "mint-critic-verdict: --files list diverges from the files "
+            "list recorded at mint — refusing to validate.\n"
+            f"  caller --files: {files}\n"
+            f"  recorded files: {recorded_files}",
+            file=sys.stderr,
+        )
+        return 4
+
     covered = _covered_bytes(change_folder, files)
     if covered is None:
         print(
@@ -226,9 +251,9 @@ def _cmd_validate(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """CLI entry: `mint --change-folder <path> --verdict-file <path>
-    --files <comma-list>` / `validate --change-folder <path>
-    --files <comma-list>`."""
+    """CLI entry: `mint --change-folder <path> --critic <name>
+    --verdict-file <path> --files <comma-list>` / `validate
+    --change-folder <path> --critic <name> --files <comma-list>`."""
     parser = argparse.ArgumentParser(
         description="Mint/validate a content-hash-bound critic verdict file"
     )
@@ -236,12 +261,14 @@ def main(argv: list[str] | None = None) -> int:
 
     mint = subparsers.add_parser("mint")
     mint.add_argument("--change-folder", required=True)
+    mint.add_argument("--critic", required=True)
     mint.add_argument("--verdict-file", required=True)
     mint.add_argument("--files", required=True)
     mint.set_defaults(func=_cmd_mint)
 
     validate = subparsers.add_parser("validate")
     validate.add_argument("--change-folder", required=True)
+    validate.add_argument("--critic", required=True)
     validate.add_argument("--files", required=True)
     validate.set_defaults(func=_cmd_validate)
 
