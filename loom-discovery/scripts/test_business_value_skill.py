@@ -254,6 +254,30 @@ def test_skipped_means_implicit_go_no_empty_file():
     assert found_no_empty, "skipped case must NOT write an empty file"
 
 
+# --- validate step: wired to the discovery validator, bounded retry ---------
+
+def test_validate_step_wires_discovery_validator():
+    # Why: mirrors loom-product-principles/skills/product-principles/SKILL.md
+    # Step 8 — before declaring done, the artifact must be mechanically
+    # validated, not just eyeballed by the agent.
+    text = _skill()
+    assert "validate_discovery_artifacts.py" in text, \
+        "must invoke scripts/validate_discovery_artifacts.py before declaring done"
+    low = text.lower()
+    assert "fix" in low, \
+        "must instruct to fix flagged issues before declaring done"
+
+
+def test_validate_step_bounded_at_two_attempts():
+    # Why: an unbounded fix-and-re-run loop can spin forever; the brief pins
+    # the bound at 2 attempts, then surface to the user (never silent loop).
+    low = _skill().lower()
+    assert "2 attempts" in low or "two attempts" in low or "bounded at 2" in low, \
+        "validate step must be bounded at 2 attempts"
+    assert "surface" in low or "user" in low, \
+        "exhausting the bound must surface to the user, not loop silently"
+
+
 # --- flat folder structure (Anthropic skill convention, hook-enforced) ------
 
 def test_no_nested_subfolders():
