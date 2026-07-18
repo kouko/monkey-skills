@@ -2483,6 +2483,34 @@ def test_annual_out_of_tolerance_unclassifiable(sec_client):
     )
 
 
+def test_derive_fiscal_label_week_lane_boundary():
+    """Task 2 (docs/loom/plans/2026-07-18-52-53-week-filer-support.md,
+    Gate P) — a week-based filer's period_end classifies to a fiscal
+    quarter via the week-offset positive allowlist when it misses every
+    month boundary (COST-shaped: FYE 2026-08-30, period_end 2026-05-10 is
+    EXACTLY 16 weeks before FYE, but 20 days from the nearest month
+    boundary 2026-05-30 -- beyond FISCAL_BOUNDARY_TOLERANCE_DAYS=10, so
+    only the week lane can classify it; plan Notes' recon fact). A
+    period_end that misses every month AND week boundary still raises
+    UnclassifiablePeriodError -- the week lane adds classifications, it
+    never widens the fail-closed net, and the month lane's own ±10d
+    tolerance stays untouched (regression pinned above)."""
+    mod = _load_helpers()
+    dei_calendar = {"fiscal_year_end": "--08-30"}
+
+    fiscal_year, fiscal_quarter = mod._derive_fiscal_label(
+        datetime.date(2026, 5, 10), 4, dei_calendar, "COST", "acc-1",
+    )
+    assert (fiscal_year, fiscal_quarter) == (2026, "Q3"), (
+        fiscal_year, fiscal_quarter,
+    )
+
+    with pytest.raises(mod.UnclassifiablePeriodError):
+        mod._derive_fiscal_label(
+            datetime.date(2026, 6, 20), 4, dei_calendar, "COST", "acc-2",
+        )
+
+
 # ---------------------------------------------------------------------------
 # Task 18 (2026-07-16-operational-kpi-quarterly REBUILD, supersedes old T10)
 # — coverage rebuilt on the corrected fiscal primitive: the report's

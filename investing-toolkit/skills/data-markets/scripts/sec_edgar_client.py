@@ -2234,6 +2234,33 @@ def _duration_weeks(fact: dict, ticker: str, period_end: str) -> int:
 FISCAL_BOUNDARY_TOLERANCE_DAYS = 10
 
 
+# Week-offset fiscal-quarter boundaries (Task 2, docs/loom/plans/2026-07-18-
+# 52-53-week-filer-support.md — Gate P), measured BACKWARD in whole weeks
+# from the per-filing fiscal-year-end. Colocated with `_WEEK_BANDS` above
+# (the single week-arithmetic home this module keeps — no second table):
+# two week-based quarter structures observed among 52/53-week filers (plan
+# Notes, live recon) — COST-style (Q1-Q3 each 12wk, Q4 16 or 17wk in a
+# 53-week year) and 13-week-quarter filers (Q1-Q3 each 13wk, Q4 13 or 14wk).
+# Q4's own boundary is the fiscal-year-end itself (offset 0), already
+# covered by the month lane's existing `boundaries["Q4"]` below — no
+# separate week entry needed. A positive allowlist: a period_end classifies
+# to a quarter only when it lands within `_WEEK_BOUNDARY_TOLERANCE_DAYS` of
+# one of ITS quarter's listed week offsets, never a nearest guess
+# (fail-closed unchanged).
+_WEEK_QUARTER_OFFSETS: dict[str, tuple[int, ...]] = {
+    "Q1": (39, 40, 41),
+    "Q2": (26, 28),
+    "Q3": (13, 14, 16, 17),
+}
+
+# Week-lane boundary tolerance (Task 2 kickoff decision, plan Notes: "tight
+# (≈±2d) ... widen only on an observed counterexample, never toward the
+# month lane's ±10d"). Deliberately its OWN constant, never reusing
+# `FISCAL_BOUNDARY_TOLERANCE_DAYS` — the month lane's tolerance must stay
+# byte-identical (T2 requirement: WITHOUT touching the month lane's ±10d).
+_WEEK_BOUNDARY_TOLERANCE_DAYS = 2
+
+
 class UnreadableFiscalCalendarError(ValueError):
     """A filing's dei fiscal calendar is absent or malformed, so its facts
     CANNOT be fiscally labeled — a DISTINCT DQC-schema error naming the
@@ -2410,6 +2437,19 @@ def _derive_fiscal_label(
     for label, boundary in boundaries.items():
         if abs((period_end - boundary).days) <= FISCAL_BOUNDARY_TOLERANCE_DAYS:
             return fiscal_year, label
+
+    # Week lane (Task 2, docs/loom/plans/2026-07-18-52-53-week-filer-
+    # support.md — Gate P): the month lane above misses a week-based
+    # filer's period ends by design (its quarters do not sit on whole-
+    # month boundaries), so try the week-offset positive allowlist,
+    # measured from the SAME `fiscal_year_end`, with its own tight
+    # tolerance — never widening `FISCAL_BOUNDARY_TOLERANCE_DAYS` above.
+    for label, week_offsets in _WEEK_QUARTER_OFFSETS.items():
+        for weeks in week_offsets:
+            week_boundary = fiscal_year_end - timedelta(weeks=weeks)
+            if abs((period_end - week_boundary).days) <= _WEEK_BOUNDARY_TOLERANCE_DAYS:
+                return fiscal_year, label
+
     raise UnclassifiablePeriodError(
         ticker, accession, period_end, fiscal_year, fiscal_year_end
     )
