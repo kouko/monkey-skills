@@ -1,8 +1,8 @@
 ---
 name: parallel-wave-commit-discipline
-description: Parallel subagent waves share one git index — commit orchestrator-serially with explicit pathspecs (never git add -A, never plain git commit), verify with git show --stat HEAD
+description: Parallel subagent waves share one git index — commit orchestrator-serially with explicit pathspecs (never git add -A, never plain git commit), verify with git show --stat HEAD; and NEVER recover a swept commit with reset --soft while siblings are still committing — if a sibling committed after you, the reset orphans THEIR commit too (verify HEAD is still yours first)
 type: process
-origin: PR #488 (25-commit wave, zero incidents) + loom-pipeline v1.1 batch mode PRs #483–#487 (race observed live), 2026-07-04
+origin: PR #488 (25-commit wave, zero incidents) + loom-pipeline v1.1 batch mode PRs #483–#487 (race observed live), 2026-07-04; reset-orphaning variant + pathspec-insufficiency observed live on loop-convergence-fixes (2026-07-18, incident log in docs/loom/plans/2026-07-18-loop-convergence-fixes.md)
 ---
 
 When several implementer subagents work in parallel in one checkout
@@ -27,3 +27,23 @@ commits; always scope the commit with pathspecs; after each commit,
 verify content with `git show --stat HEAD`. Recovery if a commit
 swept extra files: `git reset --soft` then `git restore --staged`
 the foreign paths, and recommit scoped.
+
+**2026-07-18 hardening (loop-convergence-fixes incident, two new facts):**
+
+- **The reset recovery recipe above is UNSAFE while siblings are still
+  committing.** An implementer recovered its own swept commit with
+  `git reset --soft HEAD~1` — but by then HEAD had advanced past two
+  sibling commits, so the reset orphaned a sibling task's reviewed
+  commit and another task's content silently rode into a later
+  unrelated commit. Before ANY reset-based recovery in a shared tree:
+  `git log --oneline -3` and confirm HEAD is still YOUR commit; if it
+  is not, do NOT reset — surface to the orchestrator, which re-commits
+  the affected files verbatim instead (content survives on disk; only
+  attribution needs repair, and the repo squash-merges anyway).
+- **Pathspec scoping was observed insufficient under live concurrency**
+  (`git commit -- <paths>` and `--only` both reportedly swept
+  concurrently-staged foreign files in one session). Treat pathspec as
+  necessary, not sufficient: the post-commit `git show --stat HEAD`
+  verify is the load-bearing check, and implementer-committed waves
+  should be kept small or downgraded to orchestrator-serial commits
+  when many agents share one index.
