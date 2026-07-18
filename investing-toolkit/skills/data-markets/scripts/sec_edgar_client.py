@@ -2618,14 +2618,19 @@ def extract_dimensional_revenue(
     when the ticker does not resolve to a registered SEC filer, or no `form`
     filing matches the requested window/range.
 
-    When `form="10-Q"`, `coverage` also carries `quarterly_coverage` (Task
-    10, docs/loom/plans/2026-07-16-operational-kpi-quarterly.md — 'per-
-    filing/per-quarter completeness within a covered year'): one record per
-    covered fiscal year reporting which of the 4 expected filings (10-K +
-    Q1/Q2/Q3) are present vs. missing-with-reason (`_quarterly_completeness_
-    report`). `quarterly_coverage` is `None` for any other `form` (not
+    When `form="10-Q"`, `coverage` also carries `quarterly_coverage` +
+    `selection_gaps` (Task 18, docs/loom/plans/2026-07-16-operational-kpi-
+    quarterly.md — supersedes T10): one record per fiscal year the FULL
+    filings index evidences (never just the requested range or the
+    selected set) reporting which of the 4 expected filings (10-K +
+    Q1/Q2/Q3) are present vs. missing-with-reason — the index-absence
+    states not_yet_filed / out_of_requested_range (on the FISCAL year) /
+    unclassified, plus index_visible_not_selected for an index filing the
+    pre-fetch derivation could not place (`_quarterly_completeness_
+    report`); `selection_gaps` lists those never-selected filings as
+    DQC-schema flags. Both are `None` for any other `form` (not
     applicable — never a silently-empty list). `as_of` anchors the
-    not-yet-filed/fetch-error classification (defaults to `date.today()`,
+    not-yet-filed classification (defaults to `date.today()`,
     injectable for deterministic tests — same convention as
     `select_narrative_filings`'s `as_of`).
 
@@ -2808,11 +2813,15 @@ def extract_dimensional_revenue(
                 unclassifiable_periods.append(exc.dqc)
 
     quarterly_coverage = None
+    selection_gaps = None
     if annual_form is not None:
-        # Task 10: per-quarter completeness over the ALREADY-FETCHED
-        # filings-list metadata (annual index reused from the selection
-        # block above — never a second fetch).
-        quarterly_coverage = _quarterly_completeness_report(
+        # Task 18 (supersedes T10): per-quarter completeness over the
+        # ALREADY-FETCHED filings-list metadata (annual index reused from
+        # the selection block above — never a second fetch). The
+        # comparison universe is the FULL 10-Q index (`exact_filings`),
+        # never the `selected` subset — a filing the derivation missed
+        # must surface as a selection gap, not vanish with the selection.
+        quarterly_coverage, selection_gaps = _quarterly_completeness_report(
             annual_exact_filings, exact_filings,
             since_year, until_year, as_of or date.today(),
         )
@@ -2829,6 +2838,7 @@ def extract_dimensional_revenue(
                 since_year, until_year, available_fiscal_years, facts, form,
             ),
             "quarterly_coverage": quarterly_coverage,
+            "selection_gaps": selection_gaps,
             "fiscal_year_reconciliation": fiscal_year_reconciliation,
             "unclassifiable_periods": unclassifiable_periods,
         },
@@ -2995,29 +3005,40 @@ def _match_quarter_filing(expected_end: date, quarterly_filings: list):
 
 def _missing_quarter_reason(
     expected_end: date,
+    fiscal_year: int,
     since_year: int | None,
     until_year: int | None,
     as_of: date,
 ) -> tuple[str, str]:
     """Classify WHY an expected filing (a quarter's 10-Q, or the 10-K
-    itself) is absent — one of FOUR MODELED states, THREE of which this
-    function actually returns (`fetch_error` is RESERVED, see below — Task
-    10 revision round 2, finding 4: the spec, not this code, owns closing
-    that gap) — never inferred by falling through a comparison to a
-    specific-sounding claim the code has no grounds for, docs/loom/
+    itself) is absent from the filings INDEX — one of FOUR MODELED states,
+    THREE of which this function actually returns (`fetch_error` is
+    RESERVED, see below — Task 10 revision round 2, finding 4: the spec,
+    not this code, owns closing that gap) — never inferred by falling
+    through a comparison to a specific-sounding claim the code has no
+    grounds for, docs/loom/
     memory/fail-closed-default-must-be-enforced-not-emergent.md):
 
+    - "out_of_requested_range": the quarter's FISCAL year falls outside
+      the caller's requested `[since_year, until_year]` window — the
+      caller never asked for this period. The comparison rides
+      `fiscal_year`, NEVER `expected_end.year` (Task 18: that is the
+      CALENDAR year — trap 1 of docs/loom/memory/fiscal-year-derive-per-
+      fact-against-filing-calendar.md; AAPL FY2025-Q1's expected end
+      2024-12-27 must never classify out-of-range for [2025, 2025]).
+      Checked FIRST: the caller's window verdict is independent of the
+      clock, so an out-of-range future quarter is out-of-range, not
+      not_yet_filed.
     - "not_yet_filed": `expected_end` is still in the future relative to
       `as_of` — the period hasn't happened yet (current in-progress FY).
-    - "out_of_requested_range": `expected_end`'s year falls outside the
-      caller's requested `[since_year, until_year]` window — the caller
-      never asked for this period.
     - "fetch_error": RESERVED for a filing the code has POSITIVE grounds
       to believe failed to fetch (e.g. a caught network/parse exception on
       a filing known to exist). This function never has such grounds — a
       filings-list absence is equally consistent with "never filed" (e.g.
       a company IPO'd mid-year and an early quarter never existed) as with
-      a genuine fetch gap — so it never returns this value.
+      a genuine fetch gap — so it never returns this value. (Task 19 owns
+      the OBSERVED `attempted-fetch-failed` state, grounded by an in-hand
+      exception at the fetch site.)
     - "unclassified": `expected_end` is in the past AND within the
       requested range, so the filing SHOULD exist by now, but its absence
       has no more specific explanation available. This branch used to
@@ -3025,25 +3046,29 @@ def _missing_quarter_reason(
       retry FOREVER for a filing that will never exist (the mid-FY-IPO
       case above). "unclassified" makes no retryability claim either way.
 
-    Exactly one branch fires per call (checked in this order — a future
-    date can't simultaneously be out-of-range or unclassified)."""
+    Exactly one branch fires per call (checked in this order). These are
+    INDEX-ABSENCE states only: a filing that IS in the index but was not
+    selected is positive evidence, and the caller
+    (`_quarterly_completeness_report`, Task 18) overrides any state this
+    function inferred with `index_visible_not_selected` — inference never
+    outranks evidence in hand."""
+    if since_year is not None and fiscal_year < since_year:
+        return (
+            "out_of_requested_range",
+            f"fiscal year {fiscal_year} precedes requested "
+            f"since_year={since_year}",
+        )
+    if until_year is not None and fiscal_year > until_year:
+        return (
+            "out_of_requested_range",
+            f"fiscal year {fiscal_year} exceeds requested "
+            f"until_year={until_year}",
+        )
     if expected_end > as_of:
         return (
             "not_yet_filed",
             f"expected period end {expected_end.isoformat()} is in the "
             f"future (as of {as_of.isoformat()})",
-        )
-    if since_year is not None and expected_end.year < since_year:
-        return (
-            "out_of_requested_range",
-            f"expected period end {expected_end.isoformat()} precedes "
-            f"requested since_year={since_year}",
-        )
-    if until_year is not None and expected_end.year > until_year:
-        return (
-            "out_of_requested_range",
-            f"expected period end {expected_end.isoformat()} exceeds "
-            f"requested until_year={until_year}",
         )
     return (
         "unclassified",
@@ -3079,7 +3104,9 @@ def _quarterly_year_completeness(
     hand), "projected" (the +12mo forward projection of the prior declared
     FYE, an in-progress year whose declaration does not yet exist —
     sanctioned FALLBACK only), or None (no fiscal calendar derivable at
-    all; the caller's no-calendar escape, Task 18 rebuilds these states).
+    all — since Task 18 only the unparseable-10-K-period edge, as every
+    window-matched year carries a known/projected FYE and unmatched
+    filings route to selection gaps instead of phantom years).
     Never omitted — a projection must stay distinguishable from a
     declared read."""
     expected_total = 4
@@ -3090,7 +3117,7 @@ def _quarterly_year_completeness(
         present.append({"filing": "10-K"})
     elif fiscal_year_end is not None:
         reason, detail = _missing_quarter_reason(
-            fiscal_year_end, since_year, until_year, as_of
+            fiscal_year_end, fiscal_year, since_year, until_year, as_of
         )
         missing.append({"filing": "10-K", "reason": reason, "detail": detail})
     else:
@@ -3103,15 +3130,15 @@ def _quarterly_year_completeness(
         # Task 10 revision round 2 fatal fix: this branch used to DISCARD
         # `quarterly_filings` outright — reporting Q1/Q2/Q3 all missing even
         # when a filing was already in hand, because no fiscal calendar was
-        # available to derive expected period ends from. Reaching here means
-        # NO 10-K exists ANYWHERE for this ticker to project a calendar from
-        # (an in-progress year with a KNOWN prior 10-K instead gets a
-        # PROJECTED `fiscal_year_end` from `_assign_quarterly_filings_to_
-        # fiscal_years` — see below — so it never lands here). Genuinely
-        # unprojectable: a specific Q1/Q2/Q3 label can't be derived without
-        # a fiscal calendar, but the filing itself is NOT reported missing —
-        # it is present, under the generic "quarter" label (no fabricated
-        # per-quarter identity claim).
+        # available to derive expected period ends from. A specific
+        # Q1/Q2/Q3 label can't be derived without a fiscal calendar, but a
+        # filing in hand is NOT reported missing — it is present, under the
+        # generic "quarter" label (no fabricated per-quarter identity
+        # claim). Since Task 18 removed the coverage caller's calendar
+        # fallback, a window-matched year always carries a known/projected
+        # `fiscal_year_end`, so this branch only fires on the
+        # unparseable-10-K-period edge (where `quarterly_filings` is
+        # empty) — kept as the honest degraded path, never a guess.
         for filing in quarterly_filings:
             present.append({
                 "filing": "quarter",
@@ -3133,7 +3160,7 @@ def _quarterly_year_completeness(
                 })
             else:
                 reason, detail = _missing_quarter_reason(
-                    expected_end, since_year, until_year, as_of
+                    expected_end, fiscal_year, since_year, until_year, as_of
                 )
                 missing.append({"filing": label, "reason": reason, "detail": detail})
 
@@ -3198,13 +3225,12 @@ def _assign_quarterly_filings_to_fiscal_years(
     that year's 10-K/Q3 absence is classified `not_yet_filed` (not
     `unclassified`) when its projected due date hasn't arrived.
     `unmatched` holds filings that fall inside NO known OR projected
-    window — i.e. no 10-K exists ANYWHERE to derive/project a fiscal
-    calendar from at all. The COVERAGE caller falls back to the filing's
-    own calendar year for those (`_filing_period_end_calendar_year` —
-    honestly named as calendar; Task 18 rebuilds these coverage states),
-    preserving prior reporting behavior for the one case this function has
-    no fiscal reference to resolve; fiscal-range SELECTION never does
-    (`_quarterly_fiscal_year_guesses` leaves them guess-less instead)."""
+    window. NEITHER caller buckets them by calendar year (Task 18 removed
+    the old reporting-layer fallback): fiscal-range SELECTION leaves them
+    guess-less (`_quarterly_fiscal_year_guesses`), and the COVERAGE caller
+    surfaces each as an `index_visible_not_selected` selection gap
+    (`_surface_selection_gaps`) — never a phantom calendar-year "present"
+    claim for a filing that was never fetched."""
     known_fiscal_year_ends: dict[int, date] = {}
     windows: list[tuple[int, date]] = []
     for annual in annual_filings:
@@ -3282,17 +3308,27 @@ def _assign_quarterly_filings_to_fiscal_years(
     return by_year, projected_fiscal_year_ends, remaining
 
 
+_SELECTION_GAP_QUARTER_ASSOCIATION_DAYS = 46
+
+
 def _quarterly_completeness_report(
     annual_filings: list,
     quarterly_filings: list,
     since_year: int | None,
     until_year: int | None,
     as_of: date,
-) -> list[dict]:
-    """Build one `_quarterly_year_completeness` record per covered fiscal
-    year (Task 10, docs/loom/plans/2026-07-16-operational-kpi-quarterly.md
-    — 'per-filing/per-quarter completeness within a covered year'), from
-    ALREADY-FETCHED filing-list metadata (never a fresh fetch per year).
+) -> tuple[list[dict], list[dict]]:
+    """Build one `_quarterly_year_completeness` record per fiscal year the
+    filings INDEX evidences (Task 18, docs/loom/plans/2026-07-16-
+    operational-kpi-quarterly.md, supersedes old T10), from ALREADY-FETCHED
+    filing-list metadata (never a fresh fetch per year). Returns
+    `(report, selection_gaps)`.
+
+    The comparison universe is the FULL filings index, NOT the requested
+    range and NOT the selected set: an out-of-range year with index
+    filings still gets a record, its absent quarters classified
+    `out_of_requested_range` on their FISCAL year — so a caller can always
+    tell "you never asked for it" from "it should be there and isn't".
 
     Fiscal years are keyed off each 10-K's OWN `period_of_report` calendar
     year (`_filing_period_end_calendar_year` — the fiscal-year LABEL for a
@@ -3302,10 +3338,26 @@ def _quarterly_completeness_report(
     the 10-K's fiscal calendar, never the quarter's own calendar year —
     Task 10 revision round 1 fatal finding), with a PROJECTED-forward
     fiscal calendar for a year with no 10-K yet (Task 10 revision round 2
-    fatal fix — every filer's in-progress current year, always), and a
-    calendar-year fallback ONLY for a filing that matches no known OR
-    projected window (a reporting-layer escape only — fiscal-range
-    selection never calendar-buckets; Task 18 rebuilds these states)."""
+    fatal fix — every filer's in-progress current year, always).
+
+    A filing matching no known OR projected window is EXACTLY the filing
+    the pre-fetch selection derivation left guess-less and never selected
+    (`_quarterly_fiscal_year_guesses` runs on the same windows). Task 18
+    killed the old reporting-layer calendar-year fallback for it (trap 1
+    of docs/loom/memory/fiscal-year-derive-per-fact-against-filing-
+    calendar.md — it could claim a phantom year "present" for a filing
+    that was never even fetched): each such filing now surfaces as a
+    SELECTION GAP — `index_visible_not_selected` — in `selection_gaps`
+    (the ONE DQC schema), and, when its period sits within
+    `_SELECTION_GAP_QUARTER_ASSOCIATION_DAYS` of a reported year's missing
+    quarter slot, on that quarter's `missing` entry too (positive index
+    evidence overriding any date-inferred state — never not_yet_filed).
+    The association bound is half the ~91-day inter-quarter spacing:
+    nearer than that, "nearest missing quarter" is unambiguous; farther,
+    the filing stays an unattached gap entry rather than a fabricated
+    quarter identity. This is a REPORTING association only — the filing's
+    facts are never emitted and no fiscal label is minted from it (the
+    never-nearest-guess red line binds labels, not gap reporting)."""
     by_year_10k: dict[int, object] = {}
     for f in annual_filings:
         y = _filing_period_end_calendar_year(f)
@@ -3315,18 +3367,11 @@ def _quarterly_completeness_report(
     by_year_10q, projected_fiscal_year_ends, unmatched = (
         _assign_quarterly_filings_to_fiscal_years(annual_filings, quarterly_filings)
     )
-    for f in unmatched:
-        y = _filing_period_end_calendar_year(f)
-        if y is not None:
-            by_year_10q.setdefault(y, []).append(f)
 
-    fiscal_years = sorted(
-        y for y in set(by_year_10k) | set(by_year_10q)
-        if (since_year is None or y >= since_year)
-        and (until_year is None or y <= until_year)
-    )
+    fiscal_years = sorted(set(by_year_10k) | set(by_year_10q))
 
     report = []
+    year_ends: dict[int, date] = {}
     for year in fiscal_years:
         tenk = by_year_10k.get(year)
         fiscal_year_end = None
@@ -3349,6 +3394,8 @@ def _quarterly_completeness_report(
             # projection-grounded verdict is never mistaken for a declared
             # read (Task 16).
             derivation_basis = "projected"
+        if fiscal_year_end is not None:
+            year_ends[year] = fiscal_year_end
         report.append(
             _quarterly_year_completeness(
                 fiscal_year=year,
@@ -3361,7 +3408,84 @@ def _quarterly_completeness_report(
                 derivation_basis=derivation_basis,
             )
         )
-    return report
+
+    selection_gaps = _surface_selection_gaps(unmatched, report, year_ends)
+    return report, selection_gaps
+
+
+def _surface_selection_gaps(
+    unmatched: list, report: list[dict], year_ends: dict[int, date],
+) -> list[dict]:
+    """Task 18: turn each window-unmatched (therefore never-selected) index
+    filing into an `index_visible_not_selected` DQC flag, and stamp the
+    state onto the nearest missing quarter entry of a reported year when
+    the filing sits within `_SELECTION_GAP_QUARTER_ASSOCIATION_DAYS` of
+    that quarter's expected end (see `_quarterly_completeness_report` for
+    the bound's rationale). Mutates the matched `missing` entries in
+    `report`; returns the flag list (empty = ran, none found)."""
+    # (year, label, expected_end, missing_entry) per missing Q1/Q2/Q3 slot.
+    missing_slots: list[tuple[int, str, date, dict]] = []
+    for record in report:
+        fye = year_ends.get(record["fiscal_year"])
+        if fye is None:
+            continue
+        expected = _expected_quarterly_period_ends(fye)
+        for entry in record["missing"]:
+            if entry["filing"] in expected:
+                missing_slots.append(
+                    (record["fiscal_year"], entry["filing"],
+                     expected[entry["filing"]], entry)
+                )
+
+    gaps: list[dict] = []
+    for filing in sorted(
+        unmatched,
+        key=lambda f: (str(getattr(f, "period_of_report", "")),
+                       str(getattr(f, "accession_no", ""))),
+    ):
+        accession = getattr(filing, "accession_no", None)
+        period = str(getattr(filing, "period_of_report", None))
+        try:
+            actual = date.fromisoformat(period)
+        except ValueError:
+            actual = None
+        nearest = None
+        if actual is not None and missing_slots:
+            nearest = min(
+                missing_slots, key=lambda s: abs((actual - s[2]).days)
+            )
+            if abs((actual - nearest[2]).days) > (
+                _SELECTION_GAP_QUARTER_ASSOCIATION_DAYS
+            ):
+                nearest = None
+        attached = ""
+        if nearest is not None:
+            year, label, _expected_end, entry = nearest
+            entry["reason"] = "index_visible_not_selected"
+            entry["detail"] = (
+                f"a 10-Q ({accession}, period {period}) is present in the "
+                "filings index near this quarter but matched no "
+                "known/projected fiscal-quarter window, so the pre-fetch "
+                "selection derivation could not place it and it was never "
+                "selected/fetched — positive index evidence, never "
+                "not_yet_filed, never calendar-bucketed"
+            )
+            entry["accession"] = accession
+            attached = f"; nearest missing quarter slot FY{year}-{label}"
+        gaps.append({
+            "type": "index_visible_not_selected",
+            "old": None,
+            "new": None,
+            "accessions": [accession],
+            "reason": (
+                f"10-Q {accession} (period {period}) is present in the "
+                "filings index but matched no known/projected "
+                "fiscal-quarter window: the pre-fetch selection derivation "
+                "left it guess-less, so it was never selected/fetched — a "
+                "SELECTION gap, not an index absence" + attached
+            ),
+        })
+    return gaps
 
 
 def _fact_dimensional_signature(fact: dict) -> tuple:

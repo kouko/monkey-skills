@@ -1511,27 +1511,34 @@ def test_coverage_per_quarter_completeness_unfiled_q1_never_matches_q3s_filing(s
 
 
 def test_missing_quarter_reason_pairwise_distinct_states(sec_client):
-    """The FOUR explicit `_missing_quarter_reason` states are distinguished
-    — pure classifier, each proven independently, never collapsed into one
+    """The explicit `_missing_quarter_reason` states are distinguished —
+    pure classifier, each proven independently, never collapsed into one
     silent 'gap'. Covers finding 4 (Task 10 revision round 1): the
     `until_year`-EXCEEDS branch is a distinct code path from the
     `since_year`-PRECEDES branch and must be pinned separately — reviewer's
-    mutation collapsing 'exceeds' into the catch-all left the suite green."""
+    mutation collapsing 'exceeds' into the catch-all left the suite green.
+
+    Task 18 UPDATE (was written against the calendar-basis signature): the
+    range verdict now rides the quarter's FISCAL year, never
+    `expected_end.year` (trap 1 of docs/loom/memory/fiscal-year-derive-
+    per-fact-against-filing-calendar.md), and it is checked FIRST — an
+    out-of-range future quarter is out_of_requested_range, never
+    not_yet_filed."""
     reason_not_yet, _ = sec_client._missing_quarter_reason(
-        datetime.date(2026, 6, 30), since_year=2026, until_year=2026,
-        as_of=datetime.date(2026, 1, 1),
+        datetime.date(2026, 6, 30), fiscal_year=2026,
+        since_year=2026, until_year=2026, as_of=datetime.date(2026, 1, 1),
     )
     reason_unclassified, _ = sec_client._missing_quarter_reason(
-        datetime.date(2025, 9, 30), since_year=2025, until_year=2025,
-        as_of=datetime.date(2026, 1, 1),
+        datetime.date(2025, 9, 30), fiscal_year=2025,
+        since_year=2025, until_year=2025, as_of=datetime.date(2026, 1, 1),
     )
     reason_precedes_since, _ = sec_client._missing_quarter_reason(
-        datetime.date(2019, 9, 30), since_year=2025, until_year=2025,
-        as_of=datetime.date(2026, 1, 1),
+        datetime.date(2019, 9, 30), fiscal_year=2019,
+        since_year=2025, until_year=2025, as_of=datetime.date(2026, 1, 1),
     )
     reason_exceeds_until, detail_exceeds_until = sec_client._missing_quarter_reason(
-        datetime.date(2030, 3, 31), since_year=2025, until_year=2028,
-        as_of=datetime.date(2032, 1, 1),
+        datetime.date(2030, 3, 31), fiscal_year=2030,
+        since_year=2025, until_year=2028, as_of=datetime.date(2032, 1, 1),
     )
     assert reason_not_yet == "not_yet_filed", reason_not_yet
     assert reason_unclassified == "unclassified", reason_unclassified
@@ -1544,6 +1551,31 @@ def test_missing_quarter_reason_pairwise_distinct_states(sec_client):
         "them (precedes/exceeds share the 'out_of_requested_range' value "
         "by design — same meaning to the caller — but must fire from "
         "genuinely separate code paths, asserted above via the detail text)"
+    )
+
+    # Fiscal-vs-calendar trap pin (Task 18): AAPL FY2025-Q1's expected end
+    # 2024-12-27 has CALENDAR year 2024 — under the old expected_end.year
+    # basis a [2025, 2025] request misclassified it out_of_requested_range;
+    # its FISCAL year 2025 is squarely in range.
+    reason_fiscal_in_range, _ = sec_client._missing_quarter_reason(
+        datetime.date(2024, 12, 27), fiscal_year=2025,
+        since_year=2025, until_year=2025, as_of=datetime.date(2026, 1, 1),
+    )
+    assert reason_fiscal_in_range == "unclassified", (
+        "the range verdict must ride the FISCAL year (2025, in range) — "
+        f"never the calendar year of the expected end (2024) -- got "
+        f"{reason_fiscal_in_range!r}"
+    )
+
+    # Precedence pin (Task 18): a future quarter of a year the caller
+    # never asked for is out_of_requested_range, never not_yet_filed —
+    # the window verdict is independent of the clock.
+    reason_future_out_of_range, _ = sec_client._missing_quarter_reason(
+        datetime.date(2026, 6, 27), fiscal_year=2026,
+        since_year=2025, until_year=2025, as_of=datetime.date(2026, 1, 1),
+    )
+    assert reason_future_out_of_range == "out_of_requested_range", (
+        reason_future_out_of_range
     )
 
 
