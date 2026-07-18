@@ -2223,3 +2223,102 @@ def test_annual_out_of_tolerance_unclassifiable(sec_client):
     assert (annual[0]["fiscal_year"], annual[0]["fiscal_quarter"]) == (2025, "FY"), (
         annual[0]
     )
+
+
+# ---------------------------------------------------------------------------
+# Task 17 (RE-SCOPED 2026-07-18) — no-cache-aliasing regression
+# ---------------------------------------------------------------------------
+
+_T17_POISON_MARKER = "T17-SENTINEL-POISON-A-CACHE-VALUE-THAT-MUST-NEVER-SURFACE"
+
+
+def _t17_poisoned_payload(key_label: str) -> dict:
+    """A pre-rebuild-era payload for cache key `key_label`: an old-shape
+    labeled-fact dict (calendar-valued `fiscal_year`, no parallel
+    calendar_year/calendar_quarter/fiscal_quarter/derivation_basis fields —
+    the exact pre-revision shape spec constraint (d) describes) plus a
+    unique sentinel accession/value that could never come from the real
+    NVDA range fixture, so any accidental read is unmistakable."""
+    return {
+        "cached_under": key_label,
+        "facts": [
+            {
+                "concept": "us-gaap:Revenues",
+                "value": -999999999.0,
+                "period_end": "1999-12-31",
+                "accession": f"{_T17_POISON_MARKER}-{key_label}",
+                "fiscal_year": 1999,  # OLD SHAPE: calendar-valued, no pair
+            }
+        ],
+    }
+
+
+def test_cache_schema_version_no_alias(sec_client, monkeypatch, tmp_path):
+    """T17 re-scope (spec constraint (d) / docs/loom/memory/cache-key-
+    collision-across-migration.md): implementation recon found the
+    labeled-fact layer is UNCACHED — `extract_dimensional_revenue` calls
+    `filing.xbrl()` directly and never consults `cache_util`. The
+    obligation is therefore negative: poison EVERY existing raw-source
+    cache key family (tickers / facts_{cik} / concept_{cik}_{concept} /
+    submissions_{cik} / narrative_sections_{accession}) with a
+    pre-rebuild-era old-shape payload and prove none of it reaches the
+    parallel-label output. This also pins the future-cache constraint
+    documented on the function's docstring."""
+    monkeypatch.setenv("INVESTING_TOOLKIT_CACHE", str(tmp_path))
+    cache_util = sec_client.cache_util
+
+    nvda_cik = 1045810
+    poisoned_keys = {
+        "tickers": cache_util.cache_path("sec_edgar", "tickers"),
+        "facts_cik": cache_util.cache_path("sec_edgar", f"facts_{nvda_cik:010d}"),
+        "concept_cik": cache_util.cache_path(
+            "sec_edgar", f"concept_{nvda_cik:010d}_us-gaap:Revenues"
+        ),
+        "submissions_cik": cache_util.cache_path(
+            "sec_edgar", f"submissions_{nvda_cik:010d}"
+        ),
+        "narrative_sections": cache_util.cache_path(
+            "sec_edgar", "narrative_sections_0001045810-25-000101"
+        ),
+    }
+    for label, path in poisoned_keys.items():
+        cache_util.save_cache(path, _t17_poisoned_payload(label))
+        assert path.exists(), f"poison for {label!r} must actually land on disk"
+
+    fixture = _nvda_range_company(sec_client)
+    pack = sec_client.extract_dimensional_revenue(
+        "NVDA", form="10-Q", since_year=2026, until_year=2026,
+        as_of=datetime.date(2026, 7, 18),
+    )
+    assert "error" not in pack, pack
+    assert pack["facts"], "the real fixture facts must still be emitted"
+
+    required = {"calendar_year", "calendar_quarter", "fiscal_year", "fiscal_quarter"}
+    for fact in pack["facts"]:
+        assert required <= fact.keys(), (
+            f"every emitted fact must carry the parallel labels, freshly "
+            f"derived — a poisoned cache must never short-circuit this -- {fact}"
+        )
+        assert _T17_POISON_MARKER not in str(fact.get("accession", "")), fact
+        assert fact.get("fiscal_year") != 1999, fact
+        assert fact.get("value") != -999999999.0, fact
+
+    real_accessions = {r["accession"] for r in fixture["filings"]}
+    got_accessions = {f["accession"] for f in pack["facts"]}
+    assert got_accessions == real_accessions, (
+        f"only the real fixture-backed accessions may appear -- got "
+        f"{got_accessions}"
+    )
+
+    serialized = json.dumps(pack, default=str)
+    assert _T17_POISON_MARKER not in serialized, (
+        "no planted sentinel value may appear anywhere in the emitted pack "
+        "-- the labeled-fact layer must stay uncached (spec constraint (d))"
+    )
+
+    doc = sec_client.extract_dimensional_revenue.__doc__ or ""
+    assert "schema-versioned distinct key" in doc, (
+        "the function's docstring must document the future-cache "
+        "constraint: any cache of this labeled payload MUST use a "
+        "schema-versioned distinct key (spec constraint (d))"
+    )

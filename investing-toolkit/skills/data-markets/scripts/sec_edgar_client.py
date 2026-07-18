@@ -2628,6 +2628,16 @@ def extract_dimensional_revenue(
     not-yet-filed/fetch-error classification (defaults to `date.today()`,
     injectable for deterministic tests — same convention as
     `select_narrative_filings`'s `as_of`).
+
+    This function's labeled-fact output is UNCACHED (Task 17,
+    docs/loom/plans/2026-07-16-operational-kpi-quarterly.md — implementation
+    recon found no cache write/read path here; the only caches in this
+    module are schema-independent raw-source keys: tickers/facts_{cik}/
+    concept_{cik}_{concept}/submissions_{cik}/narrative_sections_{accession}).
+    Any FUTURE cache of this labeled-fact payload MUST use a
+    schema-versioned distinct key, never a legacy key — see spec
+    constraint (d), docs/loom/2026-07-16-operational-kpi-quarterly/specs/
+    operational-kpi-quarterly/spec.md.
     """
     ticker = ticker.upper()
     if since_year is None and until_year is not None:
