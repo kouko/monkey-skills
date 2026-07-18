@@ -132,6 +132,64 @@ given the asset type.
   Typical drivers: terminal growth rate, WACC, near-term revenue CAGR,
   margin normalization timeline.
 
+### Operating KPI Trends (Quarterly, US)
+
+Thesis-support evidence for the valuation drivers above (revenue growth,
+margin trajectory): the company's quarterly operational-KPI trends
+(segment / product revenue from 10-Q/10-K XBRL), consumed from the kpi
+memo-feed JSON listed in the Phase-4 seed's `### Resource Paths`
+(`_memo_feed_schema_version` "1.1", status `TRUSTED`, produced by
+`investing-toolkit` analysis-kpi `kpi_memo_feed.py build-quarterly`).
+Distinct from the Taiwan 月營收 check below (monthly MOPS cadence,
+different market — do not merge the two treatments).
+
+**Input discipline — the feed is the only source:**
+
+1. Consume ONLY the memo-feed JSON. Never recompute series values, never
+   read raw fact-packs or filings to fill gaps, never extend a series
+   from recall. Every rendered number comes from a `points[]` or
+   `derived_points[]` entry in the feed's `series[]`.
+2. Feed absent from the Resource Paths, or feed `status` is not
+   `TRUSTED` (e.g. a WITHHELD feed): the section states that fact and
+   the feed's own recorded reason verbatim (the `withheld_reason`
+   string as received) — never a fabricated or approximated series,
+   never silence.
+3. Non-US ticker — the Phase-4 seed carries the orchestrator's explicit
+   skip note: render the section as a single line — "Operating KPI
+   trends: not applicable (US-only capability this version)." — never
+   omit the section silently.
+
+**Trend table shape (body):**
+
+- Last **8 quarters** per series, most recent last. The FULL series
+  always renders in the appendix exhibit (see Output Template) — the
+  body table is the honest recent window, not the whole history.
+- Every cell's period shows the fiscal label WITH its calendar pair —
+  e.g. `FY2026 Q1 (CY2025 Q2)` from the point's `period`/`period_type`
+  plus `calendar_year`/`calendar_quarter`. Never render a fiscal label
+  bare: the fiscal-calendar offset is exactly what mislabeled trend
+  tables get wrong.
+- **Derived-Q4 tagging (per-cell)**: cells from the `derived_points[]`
+  lane (`derived: true`) are tagged inline (e.g. superscript `ᵈ`) with
+  a footnote naming the derivation formula — Q4 = FY − ΣQ1-3 — and that
+  point's plural `source_accessions`. A derived-Q4 value must never
+  render indistinguishable from a reported one.
+- **Coverage gaps**: where the feed's `gaps[]` / `coverage_flags[]`
+  mark missing coverage, truncate the table at the gap and footnote it
+  with the flag's `reason` string verbatim — never splice or
+  interpolate across a gap.
+- **<4 reported quarters**: a series with fewer than 4 reported
+  (non-derived) quarters moves to the appendix exhibit only — never a
+  body trend table.
+
+**Gate contract unchanged**: these numbers ride the existing
+CHK-CIT-004 (no LLM-recall numeric assertions) and CHK-CIT-007
+(upstream warnings transcribed verbatim) checks plus the Provenance
+Footer machinery in `checklists/primary-source-citation-compliance.md`
+— no new gate rows. Derived-Q4 footnotes and coverage-gap reasons are
+upstream disclosures in the CHK-CIT-007 sense: dropping, softening, or
+relabeling them is a FAIL.
+
 ### Taiwan Check
 
 If the ticker is a .TW / .TWO listed security, also apply
@@ -318,6 +376,16 @@ sector favored/neutral/disfavored in current regime]
 | WACC | | | | |
 | Revenue CAGR | | | | |
 
+#### Operating KPI Trends (Quarterly)
+[Last-8-quarter trend table per series from the kpi memo-feed JSON:
+ each period cell = fiscal label + calendar pair (e.g. FY2026 Q1
+ (CY2025 Q2)); derived-Q4 cells tagged per-cell with a footnote naming
+ Q4 = FY − ΣQ1-3 + that point's plural source_accessions; coverage
+ gaps truncated + footnoted with the coverage_flags reason verbatim.
+ Series with <4 reported quarters: appendix exhibit only.
+ Feed absent/WITHHELD: state the recorded reason verbatim.
+ Non-US ticker: "not applicable (US-only capability this version)".]
+
 ### Investment Thesis
 
 #### Operative Claim
@@ -364,6 +432,12 @@ sector favored/neutral/disfavored in current regime]
 [Sell-on-invalidation triggers]
 [Hold-review triggers]
 [Price-target exit]
+
+### Appendix: Operating KPI Exhibit
+[FULL quarterly series per signature from the memo feed — all quarters,
+ same labeling rules as the body table (fiscal + calendar pair,
+ derived-Q4 tags, verbatim gap footnotes); series with <4 reported
+ quarters appear here ONLY]
 
 ### Provenance
 [Primary sources cited with as-of dates]
