@@ -8,6 +8,19 @@ Versioning: [Semantic Versioning](https://semver.org/).
 > This file was reconstructed on 2026-07-02 from the git history — the plugin
 > shipped its first two versions without a CHANGELOG.
 
+## [0.10.0] — 2026-07-18 — standing knowledge-triage at check-drafting
+
+### Added
+
+- **`product-principles/references/knowledge-triage.md`**: pinned
+  three-bucket vocabulary (craft / domain-convention / project-local);
+  when a principle's `— check:` cannot be written without guessing a fact,
+  classify FIRST — domain-convention facts route through the existing
+  Tripwire punt to `using-loom-discovery` with `evidence_needed:` tag and
+  the principle stays DRAFT until evidence returns or the user accepts an
+  explicit `— assumption: <reason>` marker. Standing posture (constitution
+  = one-way door), not stall-triggered. No live research in-station.
+
 ## [0.9.1] — 2026-07-14
 
 ### Changed

@@ -6,6 +6,15 @@ file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.2.0] — 2026-07-18 — evidence source-type column
+
+### Added
+
+- **`user-insights` evidence template**: the evidence table gains a
+  `Source type` column (`craft` / `domain-convention` / `project-local`) +
+  a compact legend — evidence is typed at intake so downstream stations
+  know which authority owns each claim.
+
 ## [0.1.2] — 2026-07-14
 
 ### Fixed
