@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "investing-toolkit/skills/report-equity-memo/references/schema-phase4-input-bundle.json",
   "title": "report-equity-memo Phase 4 input bundle",
-  "description": "Documents the 4 JSON files report-equity-memo Phase 4 hands to domain-teams:investing-team. Each JSON is produced by an upstream Layer 1 or Layer 2 step. Schema enforced by tests/integration/test_cross_layer_chains.py::test_phase4_bundle_validates_against_schema.",
+  "description": "Documents the 4 required JSON files report-equity-memo Phase 4 hands to domain-teams:investing-team, plus the OPTIONAL kpi_quarterly_feed (Phase 3.5, US tickers only). Each JSON is produced by an upstream Layer 1 or Layer 2 step. Schema enforced by tests/integration/test_cross_layer_chains.py::test_phase4_bundle_validates_against_schema.",
   "type": "object",
   "required": ["fetch", "regime_card", "comps", "dcf"],
   "properties": {
@@ -207,6 +207,50 @@
             "anchor_data_source": {"type": "string"},
             "anchor_base_source": {"type": "string", "description": "Only present in --mode compute."}
           }
+        }
+      }
+    },
+    "kpi_quarterly_feed": {
+      "description": "Phase 3.5 (OPTIONAL, US tickers only) — analysis-kpi/scripts/kpi_memo_feed.py build-quarterly output: quarterly/XBRL-arm operational-KPI memo feed, envelope 1.1, fail-closed (status is always TRUSTED — a provenance violation exits 1 instead of emitting a degraded feed; no WITHHELD state on this arm). Absent for non-US tickers or a loud Phase 3.5 failure; the Phase 4 seed then carries an explicit skip note per references/phase4-seed-contract.md. File: ${TICKER_SAFE}-kpi-quarterly-feed.json",
+      "type": "object",
+      "required": ["_memo_feed_schema_version", "company", "status", "series", "coverage_flags", "generated_at"],
+      "properties": {
+        "_memo_feed_schema_version": {"const": "1.1"},
+        "company": {"type": "string"},
+        "status": {"const": "TRUSTED"},
+        "series": {
+          "type": "array",
+          "description": "One entry per full-dimensional-signature group, passed through verbatim from the quarterly-series payload.",
+          "items": {
+            "type": "object",
+            "required": ["signature", "points", "derived_points", "gaps"],
+            "properties": {
+              "signature": {
+                "type": "object",
+                "description": "Full dimensional signature: concept + whole dimensions map + normalized consolidation qualifier."
+              },
+              "points": {
+                "type": "array",
+                "description": "Reported quarterly points, parallel calendar/fiscal labels intact; every point carries non-blank source_accession + concept (admission-checked)."
+              },
+              "derived_points": {
+                "type": "array",
+                "description": "Derived-Q4 lane: every point carries derived: true + non-empty PLURAL source_accessions/source_forms (admission-checked)."
+              },
+              "gaps": {
+                "type": "array",
+                "description": "Derivation skip/refusal flags (e.g. <4 reported quarters -> appendix-only)."
+              }
+            }
+          }
+        },
+        "coverage_flags": {
+          "type": "array",
+          "description": "DQC-schema coverage flags, assert_dqc_schema-checked then passed through verbatim."
+        },
+        "generated_at": {
+          "type": ["string", "null"],
+          "description": "Caller-supplied stamp — execution date in the issuer's market timezone per phase4-seed-contract.md §3."
         }
       }
     },

@@ -1,0 +1,142 @@
+{
+  "_provenance": "MACHINE-CAPTURED 2026-07-18 (Task 6, docs/loom/plans/2026-07-18-52-53-week-filer-support.md). Recipe: `uv run --with 'requests==2.33.1' --with 'edgartools==5.42.0' investing-toolkit/skills/data-markets/scripts/pack.py --ticker COST --pack kpi-quarterly` against the LIVE SEC EDGAR data.sec.gov API (user-agent per sec_edgar_client.py's own header convention), yielding 393 real dimensional-revenue facts across COST's captured filing history; this fixture is a hand-selected SUBSET (never hand-typed values — every field below is a verbatim copy from the captured pack.py output) of the `us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax|ProductOrService=MembershipMember` signature's FY2024 facts: Q1 (0000909832-23-000065), Q2 3mo + H1 (0000909832-24-000017), Q3 3mo + 36wk-YTD (0000909832-24-000029), FY (0000909832-24-000049) — all four accessions' dei fiscal_year_end agree (--09-01), so Q4 derives cleanly (FY total minus 36wk-YTD = 16-week Q4, the 52-week-FY member of the week-Q4 band). The Q3 period_end (2024-05-12) sits EXACTLY 16 weeks before the filing's own FYE (2024-09-01) — the real-data instance of Gate P's COST-shaped acceptance case (Task 2). The H1 fact (duration_months=5, real, not synthesized) exercises the week-lane's H1/24wk-YTD class on genuine XBRL data. Scoped to ONE fiscal year deliberately: the only OTHER captured fiscal year with a matching-calendar Q4 basis (FY2025, also 52 weeks) would give an EQUAL-week comparator (no week_normalized_yoy to assert), and the one available DIFFERENT-week real pair (FY2023 vs FY2024) hits a genuine `q4_basis_mismatch` refusal — FY2023's Q3-YTD comparative was only captured embedded inside the FY2024 Q3 10-Q (accession 0000909832-24-000029), whose OWN declared fiscal_year_end (--09-01, FY2024's) differs from the FY2023 10-K's own (--09-03) — a real per-filing-calendar divergence the fail-closed guard correctly refuses, not a fixture defect. The different-week week_normalized_yoy positive case is covered instead by the sibling fixture xbrl_quarterly_cost_week_lane_yoy_synth.json. Regenerate via the same pack.py recipe against a fresh fetch — never hand-edit values.",
+  "company": "COST",
+  "facts": [
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "ProductOrService": "MembershipMember"
+      },
+      "consolidation": null,
+      "value": 1082000000.0,
+      "period_end": "2023-11-26",
+      "accession": "0000909832-23-000065",
+      "filed": "2023-12-20",
+      "duration_months": 3,
+      "duration_weeks": 12,
+      "week_lane_band": "quarter",
+      "calendar_year": 2023,
+      "calendar_quarter": "Q4",
+      "fiscal_year": 2024,
+      "fiscal_quarter": "Q1",
+      "derivation_basis": "dei-declared"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "ProductOrService": "MembershipMember"
+      },
+      "consolidation": null,
+      "value": 1111000000.0,
+      "period_end": "2024-02-18",
+      "accession": "0000909832-24-000017",
+      "filed": "2024-03-13",
+      "duration_months": 3,
+      "duration_weeks": 12,
+      "week_lane_band": "quarter",
+      "calendar_year": 2024,
+      "calendar_quarter": "Q1",
+      "fiscal_year": 2024,
+      "fiscal_quarter": "Q2",
+      "derivation_basis": "dei-declared"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "ProductOrService": "MembershipMember"
+      },
+      "consolidation": null,
+      "value": 2193000000.0,
+      "period_end": "2024-02-18",
+      "accession": "0000909832-24-000017",
+      "filed": "2024-03-13",
+      "duration_months": 5,
+      "duration_weeks": 24,
+      "week_lane_band": "H1",
+      "calendar_year": 2024,
+      "calendar_quarter": "Q1",
+      "fiscal_year": 2024,
+      "fiscal_quarter": "Q2",
+      "derivation_basis": "dei-declared"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "ProductOrService": "MembershipMember"
+      },
+      "consolidation": null,
+      "value": 1123000000.0,
+      "period_end": "2024-05-12",
+      "accession": "0000909832-24-000029",
+      "filed": "2024-06-06",
+      "duration_months": 3,
+      "duration_weeks": 12,
+      "week_lane_band": "quarter",
+      "calendar_year": 2024,
+      "calendar_quarter": "Q2",
+      "fiscal_year": 2024,
+      "fiscal_quarter": "Q3",
+      "derivation_basis": "dei-declared"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "ProductOrService": "MembershipMember"
+      },
+      "consolidation": null,
+      "value": 3316000000.0,
+      "period_end": "2024-05-12",
+      "accession": "0000909832-24-000029",
+      "filed": "2024-06-06",
+      "duration_months": 8,
+      "duration_weeks": 36,
+      "week_lane_band": "YTD-through-Q3",
+      "calendar_year": 2024,
+      "calendar_quarter": "Q2",
+      "fiscal_year": 2024,
+      "fiscal_quarter": "Q3",
+      "derivation_basis": "dei-declared"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "ProductOrService": "MembershipMember"
+      },
+      "consolidation": null,
+      "value": 4828000000.0,
+      "period_end": "2024-09-01",
+      "accession": "0000909832-24-000049",
+      "filed": "2024-10-09",
+      "duration_months": 12,
+      "duration_weeks": 52,
+      "week_lane_band": "FY",
+      "calendar_year": 2024,
+      "calendar_quarter": "Q3",
+      "fiscal_year": 2024,
+      "fiscal_quarter": "FY",
+      "derivation_basis": "dei-declared"
+    }
+  ],
+  "fiscal_calendars": {
+    "0000909832-23-000065": {
+      "fiscal_period_focus": "Q1",
+      "fiscal_year_end": "--09-01",
+      "fiscal_year_focus": "2024"
+    },
+    "0000909832-24-000017": {
+      "fiscal_period_focus": "Q2",
+      "fiscal_year_end": "--09-01",
+      "fiscal_year_focus": "2024"
+    },
+    "0000909832-24-000029": {
+      "fiscal_period_focus": "Q3",
+      "fiscal_year_end": "--09-01",
+      "fiscal_year_focus": "2024"
+    },
+    "0000909832-24-000049": {
+      "fiscal_period_focus": "FY",
+      "fiscal_year_end": "--09-01",
+      "fiscal_year_focus": "2024"
+    }
+  }
+}

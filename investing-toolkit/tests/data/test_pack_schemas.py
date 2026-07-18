@@ -134,6 +134,45 @@ def test_pack_sample_validates_against_schema(country, pack):
 
 
 # ---------------------------------------------------------------------------
+# US-only packs (market-gated: pack.py refuses them for any non-US market,
+# so only a `us-schema-*` file exists — no skipping 4 permanently-absent
+# country cells). Unlike the historical S1-S5 rollout above, these files
+# land atomically with the pack, so a missing schema/sample is a FAILURE,
+# never a graceful skip.
+# ---------------------------------------------------------------------------
+
+US_ONLY_PACKS = ["kpi-quarterly"]
+
+
+@pytest.mark.parametrize("pack", US_ONLY_PACKS, ids=US_ONLY_PACKS)
+def test_us_only_pack_sample_validates_against_schema(pack):
+    schema_path = SCHEMAS / f"us-schema-{pack}.json"
+    sample_path = FIXTURES / f"data-us-{pack}-sample.json"
+
+    assert schema_path.exists(), (
+        f"missing schema for US-only pack {pack!r}: {schema_path.relative_to(ROOT)}"
+    )
+    assert sample_path.exists(), (
+        f"missing sample fixture for US-only pack {pack!r}: "
+        f"{sample_path.relative_to(ROOT)}"
+    )
+
+    try:
+        import jsonschema  # noqa: F401
+    except ImportError:
+        pytest.skip("jsonschema not installed; run with `uv run --with jsonschema pytest ...`")
+
+    sample = json.loads(sample_path.read_text())
+    validator = _build_validator(schema_path)
+    errors = list(validator.iter_errors(sample))
+    if errors:
+        msg_lines = [f"us/{pack}: {len(errors)} schema violation(s):"]
+        for e in errors[:5]:
+            msg_lines.append(f"  [{e.json_path}] {e.message}")
+        pytest.fail("\n".join(msg_lines))
+
+
+# ---------------------------------------------------------------------------
 # Live pack output validation — opt-in via `-m network`
 # ---------------------------------------------------------------------------
 

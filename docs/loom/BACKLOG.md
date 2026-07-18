@@ -25,6 +25,76 @@
   (e) 🟢 nits: selection-gap slot overwrite, literal 'None' in gap reason,
   accession-less 10-K coverage entry.
 
+## investing-toolkit memo-wiring 2.23.0 — post-ship follow-ups (OPEN)
+- Status: OPEN
+- Start: next touch of `report-equity-memo/references/schema-phase4-input-bundle.json`,
+  `analysis-kpi/scripts/kpi_memo_feed.py`, or `data-markets/scripts/pack.py`.
+- Origin: memo quarterly-KPI wiring slice (branch feat-memo-quarterly-kpi-wiring,
+  2026-07-18); per-task + whole-branch review ship-as-debt rulings.
+- What: (a) the one 🟡 — schema↔envelope coupling unguarded: nothing asserts
+  `schema-phase4-input-bundle.json`'s kpi_quarterly_feed required-set equals
+  the envelope `build_quarterly_memo_feed` actually emits (both sides pinned
+  separately, can drift green-green) — add a coupling assertion or route a
+  real feed through the B2 validator; (b) pack.py PEP 723 header declares no
+  deps while pack_us direct-imports sec_edgar_client — bare `uv run pack.py`
+  crashes on ModuleNotFoundError for EVERY networked pack incl. Phase 1
+  memo-fetch (pre-existing, live-confirmed 2026-07-18); cheap hardening =
+  add requests/edgartools pins to pack.py's header (touches all packs, needs
+  its own review); (c) 🟢 nits: build-quarterly CLI exit-1 arm untested;
+  non-dict series entries raise AttributeError not ValueError; `_is_blank`
+  dup vs tier-① idiom; mixed-company sample fixture caveat; jsonschema-absent
+  silent skip in test_pack_schemas; no socket guard in chain test; module-scoped
+  sys.modules fixture no teardown; `${MEMO_DATE}` defined only in Phase 3.5;
+  doc wording "concept" vs real field `kpi_id` in schema prose + CHANGELOG.
+
+## investing-toolkit 52/53-week filer support 2.24.0 — post-ship debt (SHIPPED 2026-07-19)
+- Status: SHIPPED (feat-52-53-week-filer-support; recon verdict (b) — facts
+  existed, two gates dropped them; live validation: COST 11 derived Q4
+  points recomputed exact vs press releases; AAPL/NVDA anchors byte-stable;
+  bonus find: AAPL's genuine 14-week FY2023-Q1 got week_normalized_yoy
+  correctly). Plan: docs/loom/plans/2026-07-18-52-53-week-filer-support.md.
+- Debt (all 🟢, fire on next touch of the named file):
+  - kpi lane: `_duration_months`/`_duration_weeks`/`week_lane_band` each
+    re-parse period dates via `_duration_span_days` (2-3 parses per fact) —
+    single computed span pass-through if the path ever gets hot
+    (sec_edgar_client.py, T1/branch review nit).
+  - e2e: real-COST Q4 assertion recomputes from the fixture's own operands
+    instead of an independently-pinned literal
+    (test_kpi_xbrl_quarterly_e2e.py, T6 nit).
+  - protocol: "Walmart-style" term overload vs the spec Out-of-Scope's
+    "Walmart-style week-53→week-1 lookback" (deep-equity-research-memo.md,
+    T7 nit); month-lane derived Q4 mints deliberately omit duration_weeks
+    (byte-identical month lane) — revisit only if a consumer needs it.
+  - report-equity-memo SKILL.md ~:385 pre-existing "Live-verified …
+    AAPL/NVDA/COST" comment describes the 2.23.0-era COST refusal — reads
+    stale now that COST classifies; one-line reframe on next touch.
+
+## investing-toolkit quarterly — JNJ RestatementAxis signature blind spot (PRE-EXISTING, found by 12-ticker sweep 2026-07-19)
+- Status: OPEN (P2 — blocks JNJ, and any filer tagging
+  srt:RestatementAxis reclassification pairs, from the quarterly lane)
+- What: `_dimension_signature` (sec_edgar_client.py ~:2073, shipped
+  2.22.0/#583, untouched by the 52/53-week arc) whitelists only the 4
+  breakdown axes + ConsolidationItems and silently DROPS
+  `srt:RestatementAxis` — a prior-period reclassification adjustment fact
+  (JNJ Q3-2024 Shockwave ±20M, acc 0000200406-25-000209) collapses onto
+  the real fact's signature → resolve_binding's intra-filing-ambiguity
+  fail-loud fires (correctly, facing FALSE ambiguity) → and the abort is
+  whole-series: one poisoned signature refuses the entire ticker (feed
+  exits on empty input).
+- Fix shape (two independent pieces): (1) treat RestatementAxis like
+  ConsolidationItemsAxis — a separate reconciliation qualifier, never a
+  breakdown collapse (per
+  docs/loom/memory/match-kpi-on-full-dimensional-signature-not-one-axis.md);
+  (2) consider narrowing the abort granularity from whole-series to
+  per-signature refusal-with-gap so one poisoned signature doesn't zero a
+  ticker. Evidence artifacts: scratchpad sweep_JNJ_series.err +
+  jnj_probe.py (session 2026-07-19, volatile).
+- Otherwise the sweep validated the design everywhere: JNJ's pack layer
+  classified 6,462/6,462 facts dual-lane with zero unclassifiable
+  (drifting 13-week quarter-ends absorbed); INTC (also a 52/53-week
+  filer) produced 9 correct week_normalized_yoy points (13-vs-14wk,
+  hand-verified −23.38%).
+
 ## investing-toolkit quarterly — parked capability arcs (PARKED)
 - Status: PARKED
 - Start: (calc-linkbase) a real filer whose dimensional concepts genuinely

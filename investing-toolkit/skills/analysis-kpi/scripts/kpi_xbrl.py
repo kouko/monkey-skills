@@ -107,6 +107,23 @@ CLI shape and fail-loud exit-code convention: reads a fact-pack JSON from
 and prints the resulting points. 0 on success; 1 on a `resolve_binding`
 ValueError (e.g. ambiguous binding); 2 on malformed or non-object
 fact-pack JSON (nothing computed, no raw traceback).
+
+Task 2 (docs/loom/plans/2026-07-18-memo-quarterly-kpi-wiring.md) adds
+`build_quarterly_series` + the `quarterly-series` subcommand: PER
+full-dimensional-signature group present in the fact-pack (concept +
+whole `dimensions` map + the normalized consolidation QUALIFIER — never
+one axis member, per docs/loom/memory/match-kpi-on-full-dimensional-
+signature-not-one-axis.md; no binding config needed), it ORCHESTRATES
+the existing chain `resolve_binding` -> `derive_q4_points` ->
+`build_series_with_break(granularity="quarterly", facts=<group>)` and
+prints `{series: [{signature, points, derived_points, gaps}],
+coverage_flags}` — parallel calendar/fiscal labels intact on every
+point, derived points still carrying `derived: True` + the PLURAL
+`source_accessions`/`source_forms`. Same exit-code convention as
+`build`. NOTE: the coverage-flag path lazily imports the data layer
+(sec_edgar_client -> `import requests`), so running THIS subcommand
+under a bare `uv run --script` isolated env (dependencies=[]) requires
+an interpreter env where `requests` is importable.
 """
 from __future__ import annotations
 
@@ -138,6 +155,74 @@ _DEFAULT_CONSOLIDATION_MEMBER = "OperatingSegmentsMember"
 _DURATION_CLASS_BY_MONTHS = {3: "3mo", 6: "6mo-YTD", 9: "9mo-YTD", 12: "12mo-FY"}
 _CUMULATIVE_DURATION_CLASSES = frozenset({"6mo-YTD", "9mo-YTD"})
 _FISCAL_QUARTERS = frozenset({"Q1", "Q2", "Q3", "Q4", "FY"})
+
+# Task 3 (docs/loom/plans/2026-07-18-52-53-week-filer-support.md): week-lane
+# `duration_class` string morphology, keyed by the SHARED `_WEEK_BANDS`
+# label (sec_edgar_client.py) — follows the shipped month-lane pattern
+# ("9mo-YTD"/"12mo-FY"): a single-quarter-length band gets no suffix
+# ("16wk"), a YTD cumulative gets "-YTD" ("36wk-YTD"), the FY band gets
+# "-FY" ("52wk-FY"). Reached in practice: "week-Q4" (16/17wk),
+# "YTD-through-Q3" (36wk), and "H1" at its live-observed 167-day span
+# (24wk YTD: 167d rounds to 5 months — a month-map miss — while 168d
+# rounds to 6 and lands month-lane "6mo-YTD"). "quarter"/"FY" band
+# members always round into the month lane, which has precedence (plan
+# Notes: class-lane precedence) — but the map covers every shipped band
+# label so a genuine miss is never silently unmapped.
+_WEEK_LANE_DURATION_CLASS_FORMAT = {
+    "quarter": "{weeks}wk",
+    "week-Q4": "{weeks}wk",
+    "H1": "{weeks}wk-YTD",
+    "YTD-through-Q3": "{weeks}wk-YTD",
+    "FY": "{weeks}wk-FY",
+}
+
+
+def _week_lane_duration_class(week_lane_band, duration_weeks) -> str | None:
+    """Fallback week-lane `duration_class` lookup (Task 3) — consulted by
+    `classify_fact_period` ONLY when `duration_months` misses the month
+    lane (class-lane precedence, plan Notes: the month map is tried
+    first).
+
+    Fix round 2 (spec-reviewer NEEDS_REVISION on 111e4530): this is now a
+    PURE TRANSCRIPTION of the producer's OWN classification decision —
+    `week_lane_band` is `sec_edgar_client._build_dimensional_revenue_fact`'s
+    emitted `_week_lane_class(span_days)` result (the SAME tight
+    [weeks*7-1, weeks*7] window Gate P's day-span classification uses).
+    The ORIGINAL implementation instead re-decided membership from
+    `duration_weeks` (the producer's ALREADY-ROUNDED int, `_week_count`)
+    via exact membership in a band's week-count tuple — but
+    `duration_weeks = round(span_days / 7)` has up to +-3d slop, WIDER
+    than `_week_lane_class`'s tight window: a 253-day span rounds to 36
+    weeks (matching the old int check) even though `_week_lane_class(253)`
+    returns None (253 is outside the genuine 251/252-day window),
+    reproducing the exact edgartools #816 two-path desync the shared
+    `_week_lane_class` primitive exists to prevent (docs/loom/plans/
+    2026-07-18-52-53-week-filer-support.md, plan Notes: ONE shared
+    classification decision, never a second copy re-derived here).
+
+    Returns None (fail-closed, never guessed) when `week_lane_band` is
+    missing/unrecognized (the producer made no week-lane claim — or the
+    fact predates this field) or `duration_weeks` is missing/non-int."""
+    if week_lane_band not in _WEEK_LANE_DURATION_CLASS_FORMAT:
+        return None
+    if not isinstance(duration_weeks, int) or isinstance(duration_weeks, bool):
+        return None
+    return _WEEK_LANE_DURATION_CLASS_FORMAT[week_lane_band].format(weeks=duration_weeks)
+
+
+def _is_cumulative_duration_class(duration_class: str) -> bool:
+    """True for a YTD cumulative `duration_class` on EITHER lane — the
+    month lane's fixed set, or any week-lane class ending "wk-YTD" (Task
+    3; the format table above is the only producer of that suffix)."""
+    return duration_class in _CUMULATIVE_DURATION_CLASSES or duration_class.endswith(
+        "wk-YTD"
+    )
+
+
+def _is_fy_duration_class(duration_class: str) -> bool:
+    """True for an FY `duration_class` on EITHER lane — the month lane's
+    "12mo-FY", or a week-lane class ending "wk-FY" (Task 3)."""
+    return duration_class == "12mo-FY" or duration_class.endswith("wk-FY")
 
 # Task 9: a filing's SEC form derives from its own dei cover tag
 # `DocumentFiscalPeriodFocus` (threaded through the pack's per-accession
@@ -268,12 +353,21 @@ def classify_fact_period(fact: dict) -> dict:
         )
     duration_class = _DURATION_CLASS_BY_MONTHS.get(duration_months)
     if duration_class is None:
+        # Class-lane precedence (plan Notes): the month map is tried
+        # FIRST; only on a miss does the week lane get a chance, via the
+        # fact's own emitted `duration_weeks` (Task 3).
+        duration_class = _week_lane_duration_class(
+            fact.get("week_lane_band"), fact.get("duration_weeks"),
+        )
+    if duration_class is None:
         raise _unclassifiable(
             fact,
             f"missing/non-standard duration_months ({duration_months!r}, "
-            f"expected one of {sorted(_DURATION_CLASS_BY_MONTHS)})",
+            f"expected one of {sorted(_DURATION_CLASS_BY_MONTHS)}) and no "
+            f"week-lane match for duration_weeks "
+            f"({fact.get('duration_weeks')!r})",
         )
-    if (fiscal_quarter == "FY") != (duration_class == "12mo-FY"):
+    if (fiscal_quarter == "FY") != _is_fy_duration_class(duration_class):
         raise _unclassifiable(
             fact,
             f"inconsistent labels: fiscal_quarter={fiscal_quarter!r} with "
@@ -282,7 +376,7 @@ def classify_fact_period(fact: dict) -> dict:
         )
     return {
         "period_type": fiscal_quarter,
-        "cumulative": duration_class in _CUMULATIVE_DURATION_CLASSES,
+        "cumulative": _is_cumulative_duration_class(duration_class),
         "duration_class": duration_class,
     }
 
@@ -458,6 +552,13 @@ def facts_to_points(
         # upstream — so the passthrough is the forward-defensive channel).
         if fact.get("unit") is not None:
             point["unit"] = fact["unit"]
+        # A fact's own `duration_weeks` (Task 1, sec_edgar_client.py: emitted
+        # on EVERY duration fact regardless of lane) passes through onto the
+        # point — Task 4's week-lane Q4 derivation needs each input's own
+        # week count to compute the derived Q4's duration_weeks (FY_weeks -
+        # YTD_weeks).
+        if fact.get("duration_weeks") is not None:
+            point["duration_weeks"] = fact["duration_weeks"]
         # A cross-filing restatement (overlap policy C, resolved upstream in
         # resolve_binding) tags the kept fact with a machine-readable `dqc`
         # flag; carry it through onto the emitted point unchanged.
@@ -784,6 +885,22 @@ def _q4_input_window_end(point: dict, role: str) -> date:
         ) from None
 
 
+def _require_duration_weeks(point: dict, role: str) -> int:
+    """A week-lane Q4-derivation input's own `duration_weeks` (Task 4,
+    docs/loom/plans/2026-07-18-52-53-week-filer-support.md) — fail loud on
+    a point missing/malforming it: the derived Q4's own week count
+    (FY_weeks - YTD_weeks) is never guessed from a duration_class string."""
+    weeks = point.get("duration_weeks")
+    if not isinstance(weeks, int) or isinstance(weeks, bool):
+        raise ValueError(
+            f"kpi_xbrl.derive_q4_points: {role} input point carries no "
+            f"well-formed 'duration_weeks' ({weeks!r}, kpi_id="
+            f"{point.get('kpi_id')!r}, period={point.get('period')!r}) — "
+            f"cannot mint the derived week-lane Q4, never guessed"
+        )
+    return weeks
+
+
 def _q4_basis_mismatch_reason(
     fy: dict, ytd9: dict, fiscal_calendars: dict | None,
 ) -> str | None:
@@ -880,21 +997,48 @@ def _q4_group_gap(
 
 
 def _q4_candidate_gap(
-    fy_candidates: list[dict], ytd9_candidates: list[dict], period, cell_ref,
+    fy_candidates: list[dict], ytd_candidates: list[dict], period, cell_ref,
+    *, ytd_role: str = "9mo-YTD", mixed_lane_candidates: list[dict] | None = None,
 ) -> dict:
     """Classify a group that cannot supply exactly ONE FY total + ONE
-    9mo-YTD (extracted from `derive_q4_points`, Task 9 opportunistic
+    YTD anchor (extracted from `derive_q4_points`, Task 9 opportunistic
     refactor — behavior unchanged): a MISSING side is `q4_source_missing`
     (skipped and surfaced, never fabricated); multiple survivors on a side
     are ambiguous inputs — `q4_basis_mismatch` (refused, never an
-    arbitrary pick)."""
+    arbitrary pick). `ytd_role` names which YTD lane is being reported —
+    "9mo-YTD" (the default, month lane, byte-identical to pre-Task-4
+    behavior) or "36wk-YTD" (Task 4's week lane).
+
+    `mixed_lane_candidates`, when non-empty, names a DIFFERENT YTD lane's
+    candidates that ALSO survived alongside `ytd_candidates` in the same
+    group (fix round 2, quality-reviewer finding on 1465a8bd): the
+    derivation basis itself is ambiguous — month lane vs week lane is
+    undecidable — and refuses as `q4_basis_ambiguous`, distinct from
+    `q4_basis_mismatch` (multiple survivors within ONE lane). Takes
+    precedence over the absent/multiple checks below: a mixed-lane group
+    is refused as ambiguous even when each individual lane carries exactly
+    one candidate."""
+    if mixed_lane_candidates:
+        present_accessions = sorted(
+            p.get("source_accession")
+            for p in fy_candidates + ytd_candidates + mixed_lane_candidates
+        )
+        reason = (
+            f"ambiguous Q4 derivation basis: this group carries BOTH a "
+            f"9mo-YTD candidate and a 36wk-YTD candidate — month-lane vs "
+            f"week-lane is undecidable, refused rather than silently "
+            f"preferring either lane"
+        )
+        return _q4_group_gap(
+            "q4_basis_ambiguous", present_accessions, reason, period, cell_ref
+        )
     absent = []
     if not fy_candidates:
         absent.append("12mo-FY total")
-    if not ytd9_candidates:
-        absent.append("9mo-YTD")
+    if not ytd_candidates:
+        absent.append(ytd_role)
     present_accessions = sorted(
-        p.get("source_accession") for p in fy_candidates + ytd9_candidates
+        p.get("source_accession") for p in fy_candidates + ytd_candidates
     )
     if absent:
         gap_type = "q4_source_missing"
@@ -906,26 +1050,38 @@ def _q4_candidate_gap(
         gap_type = "q4_basis_mismatch"
         reason = (
             f"ambiguous inputs: {len(fy_candidates)} FY totals and "
-            f"{len(ytd9_candidates)} 9mo-YTD points survive dedup "
+            f"{len(ytd_candidates)} {ytd_role} points survive dedup "
             f"for one signature/fiscal year — refused, never an "
             f"arbitrary pick"
         )
     return _q4_group_gap(gap_type, present_accessions, reason, period, cell_ref)
 
 
-def _mint_derived_q4_point(fy: dict, ytd9: dict, period, cell_ref) -> dict:
-    """Mint the derived Q4 point (FY total − 9mo-YTD) for one clean,
-    basis-checked input pair (extracted from `derive_q4_points`, Task 9
-    opportunistic refactor — behavior unchanged): the segregated-lane
-    markers (`derived: True`, PLURAL `source_accessions`/`source_forms`),
-    the three label groups minted from the derived 3-month window against
-    the 10-K's calendar, and the `derived_q4` DQC recording both
-    contributing accessions."""
+def _mint_derived_q4_point(
+    fy: dict, ytd_point: dict, period, cell_ref, *, week_lane: bool = False,
+) -> dict:
+    """Mint the derived Q4 point (FY total minus the matching YTD point)
+    for one clean, basis-checked input pair (extracted from
+    `derive_q4_points`, Task 9 opportunistic refactor — behavior
+    unchanged): the segregated-lane markers (`derived: True`, PLURAL
+    `source_accessions`/`source_forms`), the three label groups minted
+    from the derived window against the 10-K's calendar, and the
+    `derived_q4` DQC recording both contributing accessions.
+
+    `week_lane=True` (Task 4, docs/loom/plans/2026-07-18-52-53-week-filer-
+    support.md) mints the week-lane Q4 instead — FY total minus the
+    matching `36wk-YTD` point — with `duration_weeks` = FY_weeks −
+    YTD_weeks (16 or 17) and `duration_class` TRANSCRIBED from T3's shipped
+    `_WEEK_LANE_DURATION_CLASS_FORMAT["week-Q4"]` (never invented here);
+    every other field (tagging, label groups, DQC schema) is identical to
+    the month-lane mint, and `week_lane=False` (the default) is
+    byte-identical to the pre-Task-4 behavior."""
     fy_end = _q4_input_window_end(fy, "FY-total")
-    ytd9_end = _q4_input_window_end(ytd9, "9mo-YTD")
-    value = fy["value"] - ytd9["value"]
-    accessions = [fy.get("source_accession"), ytd9.get("source_accession")]
-    return {
+    ytd_role = "36wk-YTD" if week_lane else "9mo-YTD"
+    ytd_point_end = _q4_input_window_end(ytd_point, ytd_role)
+    value = fy["value"] - ytd_point["value"]
+    accessions = [fy.get("source_accession"), ytd_point.get("source_accession")]
+    point = {
         "company": fy.get("company"),
         "kpi_id": fy.get("kpi_id"),
         "period_type": "Q4",
@@ -934,28 +1090,41 @@ def _mint_derived_q4_point(fy: dict, ytd9: dict, period, cell_ref) -> dict:
         "period": period,
         "calendar_year": fy_end.year,
         "calendar_quarter": f"Q{(fy_end.month - 1) // 3 + 1}",
-        "period_start": (ytd9_end + timedelta(days=1)).isoformat(),
+        "period_start": (ytd_point_end + timedelta(days=1)).isoformat(),
         "period_end": fy["period_end"],
-        "as_of": max(fy.get("as_of") or "", ytd9.get("as_of") or ""),
+        "as_of": max(fy.get("as_of") or "", ytd_point.get("as_of") or ""),
         "value": value,
         "source_accessions": accessions,
-        "source_forms": [fy.get("source_form"), ytd9.get("source_form")],
+        "source_forms": [fy.get("source_form"), ytd_point.get("source_form")],
         "source_table_id": fy.get("source_table_id"),
         "source_cell_ref": cell_ref,
         "source_kind": fy.get("source_kind"),
         "derived": True,
         "dqc": assert_dqc_schema({
             "type": "derived_q4",
-            "old": {"fy_total": fy["value"], "ytd9": ytd9["value"]},
+            "old": (
+                {"fy_total": fy["value"], "ytd36": ytd_point["value"]}
+                if week_lane
+                else {"fy_total": fy["value"], "ytd9": ytd_point["value"]}
+            ),
             "new": value,
             "accessions": accessions,
             "reason": (
-                f"untagged Q4 derived as FY total minus 9mo-YTD for "
+                f"untagged Q4 derived as FY total minus {ytd_role} for "
                 f"fiscal year {period} — computed, never reported; "
                 f"segregated from directly-reported points"
             ),
         }),
     }
+    if week_lane:
+        fy_weeks = _require_duration_weeks(fy, "FY-total")
+        ytd_weeks = _require_duration_weeks(ytd_point, "36wk-YTD")
+        derived_weeks = fy_weeks - ytd_weeks
+        point["duration_weeks"] = derived_weeks
+        point["duration_class"] = _WEEK_LANE_DURATION_CLASS_FORMAT[
+            "week-Q4"
+        ].format(weeks=derived_weeks)
+    return point
 
 
 def derive_q4_points(points: list[dict], *, fiscal_calendars: dict | None) -> dict:
@@ -994,6 +1163,18 @@ def derive_q4_points(points: list[dict], *, fiscal_calendars: dict | None) -> di
       from the clean `derived_q4` flag, never a silent subtraction.
     Gaps follow the ONE DQC schema (type, old, new, accessions, reason)
     plus the locating `period`/`source_cell_ref` fields.
+
+    Week lane (Task 4, docs/loom/plans/2026-07-18-52-53-week-filer-support.
+    md): a group carrying a genuine `36wk-YTD` sibling derives FY total
+    minus that point instead, with `duration_weeks` = FY_weeks − YTD_weeks
+    and `duration_class` transcribed from T3's week-Q4 format — gated on
+    the SIBLING'S PRESENCE, never on the FY point's own `duration_weeks`
+    (a month-lane calendar-year FY also carries one). A missing week-lane
+    sibling falls through to the same `q4_source_missing` refusal as the
+    month lane, unchanged. A group carrying BOTH a genuine `9mo-YTD` AND a
+    genuine `36wk-YTD` candidate (fix round 2, quality-reviewer finding on
+    1465a8bd) REFUSES as `q4_basis_ambiguous` — never an arbitrary pick of
+    either lane.
     """
     groups: dict[tuple, list[dict]] = {}
     for point in points:
@@ -1011,20 +1192,45 @@ def derive_q4_points(points: list[dict], *, fiscal_calendars: dict | None) -> di
         ):
             continue  # directly-tagged Q4: reported used as-is, no flag
         fy_candidates = [
-            p for p in group if p.get("duration_class") == "12mo-FY"
+            p for p in group
+            if _is_fy_duration_class(p.get("duration_class") or "")
         ]
         ytd9_candidates = [
             p for p in group if p.get("duration_class") == "9mo-YTD"
         ]
-        if not fy_candidates and not ytd9_candidates:
+        # Task 4 (52/53-week filer support): a genuine week-lane YTD
+        # sibling (duration_class "36wk-YTD") in this group routes
+        # derivation onto the week lane — gated on the SIBLING'S PRESENCE,
+        # never on the FY point's own duration_weeks alone (a month-lane
+        # 365d calendar-year FY also carries duration_weeks 52; plan
+        # Notes: correctness guard). Absent that sibling, behavior is
+        # byte-identical to pre-Task-4 (month-lane 9mo-YTD).
+        ytd36wk_candidates = [
+            p for p in group if p.get("duration_class") == "36wk-YTD"
+        ]
+        if not fy_candidates and not ytd9_candidates and not ytd36wk_candidates:
             continue  # no derivation basis at all — not a gap
-        if len(fy_candidates) != 1 or len(ytd9_candidates) != 1:
+        if ytd9_candidates and ytd36wk_candidates:
+            # Fix round 2 (quality-reviewer finding on 1465a8bd): BOTH lanes
+            # carry a genuine candidate — the basis itself is ambiguous,
+            # refused rather than silently preferring the week lane and
+            # dropping the month-lane candidate with no trace.
             gaps.append(_q4_candidate_gap(
                 fy_candidates, ytd9_candidates, period, cell_ref,
+                mixed_lane_candidates=ytd36wk_candidates,
+            ))
+            continue
+        week_lane = bool(ytd36wk_candidates)
+        ytd_candidates = ytd36wk_candidates if week_lane else ytd9_candidates
+        ytd_role = "36wk-YTD" if week_lane else "9mo-YTD"
+        if len(fy_candidates) != 1 or len(ytd_candidates) != 1:
+            gaps.append(_q4_candidate_gap(
+                fy_candidates, ytd_candidates, period, cell_ref,
+                ytd_role=ytd_role,
             ))
             continue
 
-        fy, ytd9 = fy_candidates[0], ytd9_candidates[0]
+        fy, ytd9 = fy_candidates[0], ytd_candidates[0]
         mismatch = _q4_basis_mismatch_reason(fy, ytd9, fiscal_calendars)
         if mismatch is not None:
             gaps.append(_q4_group_gap(
@@ -1038,7 +1244,9 @@ def derive_q4_points(points: list[dict], *, fiscal_calendars: dict | None) -> di
             ))
             continue
 
-        derived.append(_mint_derived_q4_point(fy, ytd9, period, cell_ref))
+        derived.append(
+            _mint_derived_q4_point(fy, ytd9, period, cell_ref, week_lane=week_lane)
+        )
     return {"points": derived, "gaps": gaps}
 
 
@@ -1264,6 +1472,219 @@ def build_series_with_break(
     return result
 
 
+# The quarterly-series CLI's series JSON shape carries no as-reported/
+# recast lineage split (no break input this slice), so the declared
+# boundary passed to build_series_with_break is an INERT sentinel that
+# every fiscal-period label sorts before — the whole series lands in
+# `as_reported` and the emitted view is the flat concatenation.
+_QUARTERLY_SERIES_INERT_BREAK = "9999"
+
+
+def _fact_signature_key(fact: dict) -> tuple:
+    """A fact's FULL dimensional signature as a grouping key: concept +
+    the whole `dimensions` map (stable-sorted items) + the NORMALIZED
+    consolidation qualifier (absent -> the default operating-segments
+    view). Never one axis member — a single-member key conflates a total
+    with its cross-dimensioned slices (docs/loom/memory/
+    match-kpi-on-full-dimensional-signature-not-one-axis.md)."""
+    return (
+        str(fact.get("concept")),
+        tuple(sorted((fact.get("dimensions") or {}).items())),
+        _normalize_consolidation(fact.get("consolidation")),
+    )
+
+
+def _prior_fiscal_year_key(period) -> str | None:
+    """The prior fiscal year's `period` key (Task 5, docs/loom/plans/
+    2026-07-18-52-53-week-filer-support.md) — `period` is always the
+    emitted `str(fiscal_year)` label (`_require_period`); a point with a
+    non-integer-parseable `period` has no derivable prior-year key (never
+    guessed)."""
+    try:
+        return str(int(period) - 1)
+    except (TypeError, ValueError):
+        return None
+
+
+def _attach_week_normalized_yoy(points: list[dict]) -> list[dict]:
+    """Attach a supplementary `week_normalized_yoy` field (Task 5, plan
+    Smallest End State 7 — user-ratified 2026-07-18 second research round)
+    onto any point in `points` (one signature group's emitted quarterly
+    points, reported + derived, AFTER granularity filtering) whose YoY
+    comparator — same `period_type`, `period` one fiscal year earlier,
+    present in this SAME group — carries a `duration_weeks` DIFFERENT from
+    the point's own.
+
+    `week_normalized_yoy = (value / duration_weeks) / (prior_value /
+    prior_duration_weeks) - 1`, computed here (this is the layer that
+    already owns cross-point context for one signature group — see
+    `build_quarterly_series`) — never re-derived downstream. A point with
+    no comparator, an EQUAL-week comparator, either side missing
+    `duration_weeks`, or a ZERO denominator anywhere in the ratio (either
+    side's `duration_weeks` is 0, or the prior side's normalized value is
+    0 — e.g. a zero-value comparator) gets NO supplementary field (never
+    guessed, never raised — same silent skip as `comps_compute.py`'s
+    `_i_rule_of_40`); as-reported `value` is never touched — the field is
+    additive-only, on a shallow copy of the point."""
+    by_key: dict[tuple, dict] = {}
+    for point in points:
+        by_key.setdefault((point.get("period_type"), point.get("period")), point)
+
+    annotated = []
+    for point in points:
+        prior = by_key.get(
+            (point.get("period_type"), _prior_fiscal_year_key(point.get("period")))
+        )
+        weeks = point.get("duration_weeks")
+        prior_weeks = prior.get("duration_weeks") if prior is not None else None
+        has_week_counts = (
+            isinstance(weeks, int) and not isinstance(weeks, bool)
+            and isinstance(prior_weeks, int) and not isinstance(prior_weeks, bool)
+        )
+        has_nonzero_weeks = has_week_counts and weeks != 0 and prior_weeks != 0
+        if prior is not None and has_nonzero_weeks and weeks != prior_weeks:
+            normalized_current = point["value"] / weeks
+            normalized_prior = prior["value"] / prior_weeks
+            if normalized_prior != 0:
+                point = dict(point)
+                point["week_normalized_yoy"] = normalized_current / normalized_prior - 1
+        annotated.append(point)
+    return annotated
+
+
+def build_quarterly_series(fact_pack: dict) -> dict:
+    """Build the quarterly KPI series for EVERY full-dimensional-signature
+    group present in `fact_pack["facts"]` (Task 2, docs/loom/plans/
+    2026-07-18-memo-quarterly-kpi-wiring.md — no per-ticker binding config
+    this slice: the groups ARE the pack's signatures).
+
+    Pure ORCHESTRATION of the existing chain, per signature group:
+    `resolve_binding` (a single-source binding minted from the group's own
+    signature — classification, dedup, restatement policy C all run as
+    production wires them) -> `derive_q4_points` (segregated derived-Q4
+    lane) -> `build_series_with_break(granularity="quarterly",
+    facts=<group facts>)` (single-granularity view + no_quarterly_coverage
+    flags). No stage's logic is reimplemented here.
+
+    Returns `{"series": [{"signature", "points", "derived_points",
+    "gaps"}], "coverage_flags"}` — `signature` = `{concept, dimensions,
+    consolidation}` (consolidation normalized), `points` = the emitted
+    reported quarterly points (parallel calendar/fiscal labels intact),
+    `derived_points` = the emitted derived-lane points (`derived: True` +
+    PLURAL `source_accessions`/`source_forms`), `gaps` = the derivation's
+    surfaced skip/refusal flags, `coverage_flags` = the aggregated
+    per-group coverage flags. Groups are emitted in stable signature
+    order. Fail-loud: a pack missing `company` raises ValueError (points
+    are stamped with it); error/N-A slot packs raise via `_require_facts`.
+    """
+    company = fact_pack.get("company")
+    if not isinstance(company, str) or not company:
+        raise ValueError(
+            "kpi_xbrl.build_quarterly_series: fact pack missing required "
+            f"'company' (got {company!r}) — every emitted point is stamped "
+            "with it, never fabricated"
+        )
+
+    groups: dict[tuple, list[dict]] = {}
+    for fact in _require_facts(fact_pack):
+        groups.setdefault(_fact_signature_key(fact), []).append(fact)
+
+    fiscal_calendars = fact_pack.get("fiscal_calendars")
+    series_entries = []
+    coverage_flags: list[dict] = []
+    for key in sorted(groups):
+        concept, dims_items, consolidation = key
+        dimensions = dict(dims_items)
+        if dimensions:
+            dims_joined = ",".join(f"{k}={v}" for k, v in sorted(dimensions.items()))
+            kpi_id = f"{concept}|{dims_joined}"
+        else:
+            kpi_id = concept
+        if consolidation != _DEFAULT_CONSOLIDATION_MEMBER:
+            kpi_id = f"{kpi_id}|consolidation={consolidation}"
+
+        binding = {
+            "kpi_id": kpi_id,
+            "sources": [{
+                "concept": concept,
+                "dimensions": dimensions,
+                "consolidation": consolidation,
+                # Mirrors facts_to_points' source_table_id taxonomy: real
+                # breakdown axes -> dimensional, flat -> companyfacts.
+                "source_kind": (
+                    "xbrl-dimensional" if dimensions else "xbrl-companyfacts"
+                ),
+            }],
+        }
+        points = resolve_binding(fact_pack, binding, company)
+        derived = derive_q4_points(points, fiscal_calendars=fiscal_calendars)
+        series = build_series_with_break(
+            points + derived["points"],
+            _QUARTERLY_SERIES_INERT_BREAK,
+            granularity="quarterly",
+            facts=groups[key],
+        )
+        emitted = series["as_reported"] + series["recast"]
+        # Task 5 (52/53-week filer support): the supplementary
+        # week-normalized YoY needs cross-point context WITHIN this one
+        # signature group — attach it here, after granularity filtering,
+        # before the reported/derived split below.
+        emitted = _attach_week_normalized_yoy(emitted)
+        series_entries.append({
+            "signature": {
+                "concept": concept,
+                "dimensions": dimensions,
+                "consolidation": consolidation,
+            },
+            "points": [p for p in emitted if not p.get("derived")],
+            "derived_points": [p for p in emitted if p.get("derived")],
+            "gaps": derived["gaps"],
+        })
+        coverage_flags.extend(series["coverage_flags"])
+
+    return {"series": series_entries, "coverage_flags": coverage_flags}
+
+
+def _cli_quarterly_series(args: argparse.Namespace) -> int:
+    """`quarterly-series` subcommand: read a fact-pack JSON from `--file`
+    (or stdin when omitted) and print `build_quarterly_series`'s series
+    JSON. Mirrors `_cli_build`'s exit-code contract: malformed JSON or a
+    non-object fact_pack -> 2 (nothing computed); a chain rejection
+    (ValueError, e.g. missing company / N-A slot pack / intra-filing
+    ambiguity) -> 1; success -> 0."""
+    if args.file is not None:
+        raw = Path(args.file).read_text(encoding="utf-8")
+    else:
+        raw = sys.stdin.read()
+
+    try:
+        fact_pack = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        print(
+            f"kpi_xbrl quarterly-series: invalid fact-pack JSON input: {exc}",
+            file=sys.stderr,
+        )
+        return 2
+
+    if not isinstance(fact_pack, dict):
+        print(
+            "kpi_xbrl quarterly-series: expected a JSON object (fact_pack), "
+            f"got {type(fact_pack).__name__} — nothing computed",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        result = build_quarterly_series(fact_pack)
+    except ValueError as exc:
+        print(f"kpi_xbrl quarterly-series: {exc}", file=sys.stderr)
+        return 1
+
+    json.dump(result, sys.stdout, ensure_ascii=False)
+    sys.stdout.write("\n")
+    return 0
+
+
 def _cli_build(args: argparse.Namespace) -> int:
     """`build` subcommand: read a fact-pack JSON from `--file` (or stdin
     when omitted) and a binding JSON from `--binding`, call
@@ -1320,7 +1741,10 @@ def _cli_build(args: argparse.Namespace) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="XBRL fact -> kpi_store point adapter CLI (build)."
+        description=(
+            "XBRL fact -> kpi_store point adapter CLI "
+            "(build, quarterly-series)."
+        )
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -1338,6 +1762,19 @@ def main() -> int:
         help="Path to a JSON file holding the fact_pack (default: read stdin).",
     )
     build_parser.set_defaults(func=_cli_build)
+
+    quarterly_parser = subparsers.add_parser(
+        "quarterly-series",
+        help=(
+            "Build the per-full-dimensional-signature quarterly series "
+            "(reported + derived-Q4 lanes + coverage flags) from a fact-pack."
+        ),
+    )
+    quarterly_parser.add_argument(
+        "--file", type=Path, default=None,
+        help="Path to a JSON file holding the fact_pack (default: read stdin).",
+    )
+    quarterly_parser.set_defaults(func=_cli_quarterly_series)
 
     args = parser.parse_args()
     return args.func(args)

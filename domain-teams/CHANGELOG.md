@@ -5,6 +5,50 @@ All notable changes to the `domain-teams` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v5.10.0] — 2026-07-18
+
+### Added
+
+- **Unequal-quarter-length disclosure (week-count signal, any lane)**
+  (investing-team `protocols/deep-equity-research-memo.md`, Operating
+  KPI Trends block + template + appendix): the memo protocol gains a
+  disclosure rule for 52/53-week filers' quarterly points, gated on the
+  feed's actual `duration_weeks` signal rather than solely on a
+  week-encoded `duration_class` string. A point qualifies when its
+  `duration_class` carries a week-encoded string (`16wk` / `17wk` /
+  `36wk-YTD` / `24wk-YTD`-at-167-days — quarter/FY-length spans round
+  into the month lane first, so `52wk-FY`/`53wk-FY` never surface),
+  OR its `duration_weeks` differs from its YoY comparator's (how a
+  52/53-week filer's FY point actually surfaces — it classifies
+  month-lane `12mo-FY` yet still carries a real `duration_weeks` of 52
+  or 53), OR it carries a `week_normalized_yoy` field. Any qualifying
+  point's cell is labeled with the feed's `duration_weeks` count, a
+  Walmart-style disclosure states that unequal-length periods are not
+  directly comparable and names the affected figures, and any
+  `week_normalized_yoy` supplementary field the feed carries — on ANY
+  point, including a month-classed `12mo-FY` point — is rendered
+  alongside — never in place of — the as-reported YoY, transcribed
+  verbatim (the memo writer never computes it).
+
+## [v5.9.0] — 2026-07-18
+
+### Added
+
+- **Operating KPI Trends (Quarterly, US) block** (investing-team
+  `protocols/deep-equity-research-memo.md`): the deep-equity-research
+  memo protocol gains a new memo block consuming investing-toolkit's
+  memo-feed 1.1 quarterly output. Rules: each derived-Q4 cell (mint
+  gap-filled from FY minus 9-month YTD) is tagged per-cell and must
+  carry its `dqc.reason` footnote verbatim — never paraphrased or
+  dropped; genuine per-series `gaps` entries truncate the trend table
+  at the gap with a verbatim footnote (never spliced or interpolated
+  across), while top-level `coverage_flags` (DQC restatement/label
+  conflicts) are disclosed inline on the affected cells, never by
+  truncation; a full
+  quarterly table lands as an appendix exhibit; non-US tickers (no
+  quarterly feed available) render a single explicit N/A line instead
+  of a missing section.
+
 ## [v5.8.1] — 2026-07-17
 
 ### Changed

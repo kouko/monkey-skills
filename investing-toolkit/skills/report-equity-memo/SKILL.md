@@ -353,6 +353,76 @@ Each analysis skill called from Phase 3 is pure compute (Layer 2 contract).
 They emit a JSON-only payload — no Markdown, no verdict prose. That is
 investing-team's job.
 
+### Phase 3.5 — Quarterly Operational-KPI Feed (US tickers only)
+
+**US tickers only.** `--pack kpi-quarterly` is US-only by design —
+`pack.py` refuses non-US tickers with `_status.status = "usage_error"`
+(the dimensional-revenue XBRL lane has no non-US producer). For a non-US
+ticker, skip this phase — but the skip is **never silent**: record an
+explicit skip note in the Phase 4 seed context (e.g. "kpi-quarterly-feed
+skipped: non-US ticker, dimensional-XBRL lane is US-only") so the memo's
+Limitations section can disclose it.
+
+**52/53-week fiscal calendars are covered.** A week-based filer (e.g.
+Costco) is no longer expected to fail this phase: the chain's week-based
+duration lane classifies its fiscal boundaries and quarter-length spans
+alongside the month lane, and the feed carries per-point `duration_weeks`
+plus a supplementary `week_normalized_yoy` field where quarter lengths
+differ year over year. The refusal path below remains the fail-loud
+fallback for a genuinely unclassifiable period — not the routine outcome
+for a week-based filer.
+
+Three-step chain, one memo-feed JSON out:
+
+```bash
+# 1. Fetch the dimensional-revenue fact-pack (Layer 1)
+#    NOTE the two `--with` pins are load-bearing here too: pack.py's PEP 723
+#    block declares no dependencies, but pack_kpi_quarterly imports
+#    sec_edgar_client (module-level `import requests`; edgartools at fetch
+#    time) — a bare `uv run` crashes exactly as step 2 warns. Pins mirror
+#    sec_edgar_client.py's own PEP 723 header. (Live-verified 2026-07-18
+#    on AAPL/NVDA/COST.)
+uv run --with 'requests==2.33.1' --with 'edgartools==5.42.0' \
+    ${CLAUDE_PLUGIN_ROOT}/skills/data-markets/scripts/pack.py \
+    --ticker ${TICKER} --pack kpi-quarterly \
+    > /tmp/${TICKER_SAFE}-kpi-factpack.json
+
+# 2. Build the per-signature quarterly series (Layer 2).
+#    NOTE `--with requests` is load-bearing: kpi_xbrl.py declares PEP 723
+#    `dependencies = []`, but quarterly-series' coverage path lazily
+#    imports sec_edgar_client, whose module level does `import requests` —
+#    a bare `uv run` crashes with ModuleNotFoundError.
+uv run --with requests ${CLAUDE_PLUGIN_ROOT}/skills/analysis-kpi/scripts/kpi_xbrl.py \
+    quarterly-series --file /tmp/${TICKER_SAFE}-kpi-factpack.json \
+    > /tmp/${TICKER_SAFE}-kpi-series.json
+
+# 3. Assemble the fail-closed memo feed (envelope 1.1; TRUSTED or exit 1)
+#    ${MEMO_DATE} = execution date in the issuer's market timezone, per
+#    references/phase4-seed-contract.md §3 — never a fetched_at UTC stamp.
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/analysis-kpi/scripts/kpi_memo_feed.py \
+    build-quarterly --company ${TICKER_SAFE} \
+    --generated-at ${MEMO_DATE} \
+    --file /tmp/${TICKER_SAFE}-kpi-series.json \
+    > /tmp/${TICKER_SAFE}-kpi-quarterly-feed.json
+```
+
+**Fail-loud, no fabrication**: if any step exits non-zero (pack
+`usage_error`, series chain rejection, or `build-quarterly`'s fail-closed
+provenance refusal — exit 1 names the violating field+signature), do NOT
+hand a partial or hand-built feed to Phase 4. Treat it like the non-US
+case: record the failure verbatim as the skip note in the Phase 4 seed
+and move on.
+
+**Artifact gate**: when this phase runs (non-US tickers and loud-skip
+cases are exempt), Phase 3.5 is not complete until
+`/tmp/${TICKER_SAFE}-kpi-quarterly-feed.json` exists — verify with
+`ls /tmp/${TICKER_SAFE}-kpi-quarterly-feed.json` before proceeding.
+
+Pass `/tmp/${TICKER_SAFE}-kpi-quarterly-feed.json` to investing-team in
+Phase 4 alongside `dcf.json` / `comps.json` / `regime.json` (omit it from
+the Resource Paths list when this phase was skipped, and put the skip
+note in the seed context instead).
+
 ### Phase 4 — Delegate to `domain-teams:investing-team`
 
 Launch `domain-teams:investing-team` with the **Deep Equity Research Memo** protocol
@@ -360,7 +430,7 @@ Launch `domain-teams:investing-team` with the **Deep Equity Research Memo** prot
 
 **Per Cross-Plugin Delegation Contract (CLAUDE.md §Cross-Plugin Delegation Contract):**
 
-1. Pass **paths** to the Phase 1 / 2 / 2.5 / 2.6 / 3 JSONs as `### Resource Paths` — never file content. Specifically: `fetch.json` (Phase 1), `regime-card.json` (Phase 2), `comps.json` (Phase 2.5), `xval.json` (Phase 2.6 — US tickers only; omit + state the skip reason when Phase 2.6 was skipped), `dcf.json` (Phase 3).
+1. Pass **paths** to the Phase 1 / 2 / 2.5 / 2.6 / 3 / 3.5 JSONs as `### Resource Paths` — never file content. Specifically: `fetch.json` (Phase 1), `regime-card.json` (Phase 2), `comps.json` (Phase 2.5), `xval.json` (Phase 2.6 — US tickers only; omit + state the skip reason when Phase 2.6 was skipped), `dcf.json` (Phase 3), `kpi-quarterly-feed.json` (Phase 3.5 — OPTIONAL, US tickers only; omit + put the skip note in the seed when Phase 3.5 was skipped or failed loud).
 2. Pass the ticker, scope, output_language, country code as `### Input` seed
    context — plus Phase 0's recall outcome (prior verdict/date/price/delta,
    or the no-hits/skipped fact) so investing-team can disclose it in the

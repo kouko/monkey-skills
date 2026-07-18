@@ -373,3 +373,332 @@ def test_cli_build_memo_feed_roundtrip(tmp_path):
     )
     assert help_result.returncode == 0
     assert "build" in help_result.stdout
+
+
+# ---------------------------------------------------------------------------
+# Quarterly/XBRL arm (memo quarterly-KPI wiring slice — plan Task 3,
+# docs/loom/plans/2026-07-18-memo-quarterly-kpi-wiring.md).
+#
+# The payloads below mirror the REAL `quarterly-series` CLI output shape
+# (kpi_xbrl.build_quarterly_series run over the committed fixtures
+# xbrl_quarterly_nvda_factpack.json / xbrl_q4_derive.json): exact field
+# names captured from a live run; VALUES are synthetic (obviously fake
+# round numbers) — never hand-typed XBRL figures presented as real.
+# ---------------------------------------------------------------------------
+
+
+def _quarterly_reported_point(**overrides) -> dict:
+    """One reported point with the exact key set the T2 series emits."""
+    point = {
+        "company": "QTRCO",
+        "kpi_id": "us-gaap:Revenues|ProductOrService=WidgetMember",
+        "period_type": "Q1",
+        "cumulative": False,
+        "duration_class": "3mo",
+        "period": "2026",
+        "calendar_year": 2025,
+        "calendar_quarter": "Q2",
+        "period_end": "2025-04-30",
+        "as_of": "2025-05-30",
+        "value": 1000.0,
+        "source_accession": "0000000000-25-000001",
+        "source_form": "10-Q",
+        "source_table_id": "xbrl:dimensional",
+        "source_cell_ref": "us-gaap:Revenues|ProductOrService=WidgetMember",
+        "source_kind": "xbrl-dimensional",
+    }
+    point.update(overrides)
+    return point
+
+
+def _quarterly_derived_point(**overrides) -> dict:
+    """One derived-Q4 point with the exact key set the T2 series emits
+    (plural source_accessions/source_forms + derived marker + dqc note)."""
+    point = {
+        "company": "QTRCO",
+        "kpi_id": "us-gaap:Revenues|ProductOrService=WidgetMember",
+        "period_type": "Q4",
+        "cumulative": False,
+        "duration_class": "3mo",
+        "period": "2025",
+        "calendar_year": 2025,
+        "calendar_quarter": "Q3",
+        "period_start": "2025-07-01",
+        "period_end": "2025-09-30",
+        "as_of": "2025-10-31",
+        "value": 4000.0,
+        "source_accessions": ["0000000000-25-000002", "0000000000-25-000001"],
+        "source_forms": ["10-K", "10-Q"],
+        "source_table_id": "xbrl:dimensional",
+        "source_cell_ref": "us-gaap:Revenues|ProductOrService=WidgetMember",
+        "source_kind": "xbrl-dimensional",
+        "derived": True,
+        "dqc": {
+            "type": "derived_q4",
+            "old": {"fy_total": 10000.0, "ytd9": 6000.0},
+            "new": 4000.0,
+            "accessions": ["0000000000-25-000002", "0000000000-25-000001"],
+            "reason": "untagged Q4 derived as FY total minus 9mo-YTD",
+        },
+    }
+    point.update(overrides)
+    return point
+
+
+def _quarterly_signature() -> dict:
+    return {
+        "concept": "us-gaap:Revenues",
+        "dimensions": {"ProductOrService": "WidgetMember"},
+        "consolidation": "OperatingSegmentsMember",
+    }
+
+
+def _quarterly_series_payload(**overrides) -> dict:
+    """A minimal well-formed `quarterly-series` output payload."""
+    payload = {
+        "series": [
+            {
+                "signature": _quarterly_signature(),
+                "points": [_quarterly_reported_point()],
+                "derived_points": [_quarterly_derived_point()],
+                "gaps": [],
+            },
+        ],
+        "coverage_flags": [
+            {
+                "type": "dimension_quarterly_absence",
+                "old": None,
+                "new": None,
+                "accessions": ["0000000000-25-000002"],
+                "reason": "dimension absent from quarterly filings",
+            },
+        ],
+    }
+    payload.update(overrides)
+    return payload
+
+
+def test_build_quarterly_memo_feed_trusted_envelope(tmp_path, monkeypatch):
+    """Plan Task 3 RED (a): a well-formed quarterly series payload yields a
+    schema-1.1 TRUSTED envelope with series + coverage_flags passed through
+    VERBATIM — and WITHOUT consulting the store gate: KPI_STORE_DIR points
+    at an EMPTY store (no company was ever evaluated), so the tier-① gate
+    would say WITHHELD; the quarterly/XBRL arm must return TRUSTED anyway,
+    because its admission is machine-verified provenance completeness +
+    DQC-schema'd coverage flags, NOT `kpi_gate.is_trusted` (user-ratified
+    XBRL-lane trust ruling, plan §Decision Log 2026-07-18).
+
+    Why this matters: if the quarterly arm silently consulted the store
+    gate, every XBRL-sourced series would be blanket-WITHHELD (no store
+    record exists for them) and the memo would never see machine-anchored
+    quarterly KPIs at all.
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))  # empty store — never evaluated
+    kpi_memo_feed, _ = _load_kpi_memo_feed_module()
+
+    payload = _quarterly_series_payload()
+    feed = kpi_memo_feed.build_quarterly_memo_feed(
+        "QTRCO", payload, generated_at="2026-07-18T00:00:00Z",
+    )
+    assert feed["_memo_feed_schema_version"] == "1.1"
+    assert feed["company"] == "QTRCO"
+    assert feed["status"] == "TRUSTED"
+    assert feed["series"] == payload["series"]
+    assert feed["coverage_flags"] == payload["coverage_flags"]
+    assert feed["generated_at"] == "2026-07-18T00:00:00Z"
+    assert "withheld_reason" not in feed
+
+
+def test_build_quarterly_memo_feed_refuses_incomplete_provenance(
+    tmp_path, monkeypatch
+):
+    """Plan Task 3 RED (b): fail-closed provenance rule on the quarterly
+    arm — any violation raises ValueError naming the field + signature
+    (mirrors the v1.0 whitespace-rejecting refusal; an unattributed value
+    never reaches the memo artifact):
+
+      - reported point: `source_accession` and `kpi_id` (the point-level
+        concept identifier in the T2 shape) must be non-blank — absent /
+        None / empty / whitespace-only all refuse;
+      - derived point: `derived: True` plus non-empty PLURAL
+        `source_accessions`/`source_forms` (each element non-blank);
+      - a payload without a `series` list refuses (nothing to trust).
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+    kpi_memo_feed, _ = _load_kpi_memo_feed_module()
+
+    def expect_refusal(payload, *needles):
+        with pytest.raises(ValueError) as excinfo:
+            kpi_memo_feed.build_quarterly_memo_feed(
+                "QTRCO", payload, generated_at="2026-07-18T00:00:00Z",
+            )
+        for needle in needles:
+            assert needle in str(excinfo.value), (
+                f"refusal must name {needle!r}: {excinfo.value}"
+            )
+
+    # Reported point: whitespace-only accession is effectively unattributed.
+    payload = _quarterly_series_payload()
+    payload["series"][0]["points"][0]["source_accession"] = "   "
+    expect_refusal(payload, "source_accession", "us-gaap:Revenues")
+
+    # Reported point: missing the concept identifier (kpi_id).
+    payload = _quarterly_series_payload()
+    del payload["series"][0]["points"][0]["kpi_id"]
+    expect_refusal(payload, "kpi_id", "us-gaap:Revenues")
+
+    # Derived point: missing the PLURAL source_accessions.
+    payload = _quarterly_series_payload()
+    del payload["series"][0]["derived_points"][0]["source_accessions"]
+    expect_refusal(payload, "source_accessions", "us-gaap:Revenues")
+
+    # Derived point: empty source_forms list is as unattributed as absent.
+    payload = _quarterly_series_payload()
+    payload["series"][0]["derived_points"][0]["source_forms"] = []
+    expect_refusal(payload, "source_forms", "us-gaap:Revenues")
+
+    # Derived point: derived marker must be literally True — a derived-lane
+    # point without its marker could masquerade as reported in the memo.
+    payload = _quarterly_series_payload()
+    payload["series"][0]["derived_points"][0]["derived"] = False
+    expect_refusal(payload, "derived", "us-gaap:Revenues")
+
+    # Structurally broken payload: no `series` list at all.
+    expect_refusal({"coverage_flags": []}, "series")
+
+
+def test_build_quarterly_memo_feed_dqc_gates_coverage_flags(
+    tmp_path, monkeypatch
+):
+    """Plan Task 3: every coverage flag passes `assert_dqc_schema`
+    (imported from kpi_xbrl — the ONE DQC schema) BEFORE the verbatim
+    passthrough; a flag missing a required key (here `reason`) refuses the
+    whole feed. A schema-less flag passed through silently would let a
+    malformed coverage story reach the memo unverified.
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+    kpi_memo_feed, _ = _load_kpi_memo_feed_module()
+
+    payload = _quarterly_series_payload()
+    del payload["coverage_flags"][0]["reason"]
+    with pytest.raises(ValueError) as excinfo:
+        kpi_memo_feed.build_quarterly_memo_feed(
+            "QTRCO", payload, generated_at="2026-07-18T00:00:00Z",
+        )
+    assert "reason" in str(excinfo.value)
+
+
+def test_build_quarterly_memo_feed_carries_week_lane_fields(tmp_path, monkeypatch):
+    """Task 5 (docs/loom/plans/2026-07-18-52-53-week-filer-support.md):
+    per-point `duration_weeks` and the supplementary `week_normalized_yoy`
+    field (both computed upstream by kpi_xbrl.build_quarterly_series) ride
+    through the 1.1 feed's VERBATIM passthrough unchanged — never stripped
+    by the provenance check, which only inspects its own required fields.
+    The additive-field ruling stays visible: the envelope version is NOT
+    bumped for these optional per-point additions (see
+    MEMO_FEED_QUARTERLY_SCHEMA_VERSION's own comment for the ruling)."""
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+    kpi_memo_feed, _ = _load_kpi_memo_feed_module()
+
+    payload = _quarterly_series_payload()
+    payload["series"][0]["points"][0]["duration_weeks"] = 16
+    payload["series"][0]["derived_points"][0]["duration_weeks"] = 17
+    payload["series"][0]["derived_points"][0]["week_normalized_yoy"] = 0.125
+    original_value = payload["series"][0]["derived_points"][0]["value"]
+
+    feed = kpi_memo_feed.build_quarterly_memo_feed(
+        "QTRCO", payload, generated_at="2026-07-18T00:00:00Z",
+    )
+
+    assert feed["_memo_feed_schema_version"] == "1.1"
+    assert kpi_memo_feed.MEMO_FEED_QUARTERLY_SCHEMA_VERSION == "1.1"
+    assert feed["series"][0]["points"][0]["duration_weeks"] == 16
+    assert feed["series"][0]["derived_points"][0]["duration_weeks"] == 17
+    assert feed["series"][0]["derived_points"][0]["week_normalized_yoy"] == 0.125
+    # as-reported value untouched by the supplementary annotation.
+    assert feed["series"][0]["derived_points"][0]["value"] == original_value
+
+
+def test_cli_build_quarterly_roundtrip(tmp_path):
+    """Plan Task 3: the `build-quarterly` subcommand wraps
+    build_quarterly_memo_feed with the same fail-loud exit-code contract as
+    `build` (real `uv run --script` subprocess invocations):
+
+      (a) well-formed payload -> schema-1.1 TRUSTED feed on stdout, exit 0
+          — with an EMPTY store (no gate record), proving the arm never
+          consults kpi_gate;
+      (b) poisoned payload (derived point stripped of source_accessions)
+          -> exit 1, stderr names the field, no raw traceback;
+      (c) malformed JSON -> exit 2;
+      (d) a JSON array (not the series-payload object) -> exit 2;
+      (e) --help lists `build-quarterly`.
+    """
+    env = {**os.environ, "KPI_STORE_DIR": str(tmp_path)}
+    payload = _quarterly_series_payload()
+
+    # (a) well-formed payload -> TRUSTED 1.1 feed, exit 0.
+    ok_result = subprocess.run(
+        [
+            "uv", "run", "--script", str(KPI_MEMO_FEED_SCRIPT),
+            "build-quarterly", "--company", "QTRCO",
+            "--generated-at", "2026-07-18T00:00:00Z",
+        ],
+        input=json.dumps(payload),
+        capture_output=True, text=True, timeout=60, env=env,
+    )
+    assert ok_result.returncode == 0, (
+        f"build-quarterly (TRUSTED) failed: stdout={ok_result.stdout!r} "
+        f"stderr={ok_result.stderr!r}"
+    )
+    feed = json.loads(ok_result.stdout)
+    assert feed["_memo_feed_schema_version"] == "1.1"
+    assert feed["status"] == "TRUSTED"
+    assert feed["series"] == payload["series"]
+    assert feed["coverage_flags"] == payload["coverage_flags"]
+    assert feed["generated_at"] == "2026-07-18T00:00:00Z"
+
+    # (b) poisoned derived point -> exit 1, field named, clean stderr.
+    poisoned = _quarterly_series_payload()
+    del poisoned["series"][0]["derived_points"][0]["source_accessions"]
+    poisoned_result = subprocess.run(
+        [
+            "uv", "run", "--script", str(KPI_MEMO_FEED_SCRIPT),
+            "build-quarterly", "--company", "QTRCO",
+        ],
+        input=json.dumps(poisoned),
+        capture_output=True, text=True, timeout=60, env=env,
+    )
+    assert poisoned_result.returncode == 1, poisoned_result.stderr
+    assert "source_accessions" in poisoned_result.stderr
+    assert "Traceback" not in poisoned_result.stderr
+
+    # (c) malformed JSON -> exit 2, no raw traceback.
+    malformed_result = subprocess.run(
+        [
+            "uv", "run", "--script", str(KPI_MEMO_FEED_SCRIPT),
+            "build-quarterly", "--company", "QTRCO",
+        ],
+        input="{not valid json",
+        capture_output=True, text=True, timeout=60, env=env,
+    )
+    assert malformed_result.returncode == 2, malformed_result.stderr
+    assert "Traceback" not in malformed_result.stderr
+
+    # (d) a JSON array is not a series payload -> exit 2 (nothing computed).
+    array_result = subprocess.run(
+        [
+            "uv", "run", "--script", str(KPI_MEMO_FEED_SCRIPT),
+            "build-quarterly", "--company", "QTRCO",
+        ],
+        input=json.dumps([]),
+        capture_output=True, text=True, timeout=60, env=env,
+    )
+    assert array_result.returncode == 2, array_result.stderr
+
+    # (e) --help lists the new subcommand.
+    help_result = subprocess.run(
+        ["uv", "run", "--script", str(KPI_MEMO_FEED_SCRIPT), "--help"],
+        capture_output=True, text=True, timeout=60, env=env,
+    )
+    assert help_result.returncode == 0
+    assert "build-quarterly" in help_result.stdout

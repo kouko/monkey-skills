@@ -132,9 +132,16 @@ def test_us_migration_contract():
         sys.path.insert(0, str(MARKETS_SCRIPTS))
     import pack_us  # noqa: E402  (path-dependent import, must follow sys.path insert)
 
-    # --- (c) SUPPORTED_PACKS matches data-us/scripts/pack.py's --pack choices ---
+    # --- (c) SUPPORTED_PACKS matches data-us/scripts/pack.py's current --pack choices ---
+    # Exact-equality, not a prefix check: the migration contract is that no
+    # historical data-us pack was dropped, renamed, or reordered, AND that
+    # any pack added after the consolidation (kpi-quarterly, 2026-07-18
+    # memo-quarterly-kpi-wiring Task 1) is deliberately registered here in
+    # its exact position. A future unregistered addition or reorder must
+    # fail this assertion.
     assert pack_us.SUPPORTED_PACKS == (
         "snapshot", "memo-fetch", "comps-multiples", "screener-batch", "regime-pack",
+        "kpi-quarterly",
     ), f"SUPPORTED_PACKS diverges from data-us pack.py --pack choices: {pack_us.SUPPORTED_PACKS}"
 
     # --- (b) build_pack("snapshot", ...) section keys match fixture (fixture-fed, mocked subprocess) ---

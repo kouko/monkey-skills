@@ -5,6 +5,86 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.24.0] — 2026-07-18
+
+Week-based duration lane — 52/53-week fiscal calendars (COST-class filers)
+join the month lane across the quarterly-KPI chain, producer primitive
+through the memo feed. Plan:
+`docs/loom/plans/2026-07-18-52-53-week-filer-support.md`.
+
+### Added
+
+- **Shared week-band primitive** (`data-markets` / `sec_edgar_client.py`):
+  a positive-allowlist day-span → week-count/week-lane-band mapping
+  (`_WEEK_BANDS`), colocated with the existing month-lane primitive; every
+  dimensional-revenue fact now emits `duration_weeks` alongside
+  `duration_months`, plus a producer-decided `week_lane_band` — the
+  producer classifies once, the consumer transcribes (no second band
+  table).
+- **Week-aware Gate P boundaries**: `_derive_fiscal_label`'s sub-annual
+  path gains week-offset quarter boundaries computed per filer from
+  `_WEEK_QUARTER_STRUCTURES`, matched within a tight
+  `_WEEK_BOUNDARY_TOLERANCE_DAYS = 2` — the month lane's own ±10d
+  tolerance is unchanged.
+- **Week-lane Gate C classes** (`analysis-kpi` / `kpi_xbrl.py`):
+  `classify_fact_period` transcribes each fact's `week_lane_band` into a
+  `duration_class` string (e.g. `16wk`/`17wk`, `36wk-YTD`, `52wk-FY`/
+  `53wk-FY`); facts with neither a month- nor week-lane match still
+  raise (fail-closed unchanged).
+- **Week-lane Q4 derivation**: `derive_q4_points` mints a derived Q4 from
+  a week-lane FY point minus its `36wk-YTD` sibling, with
+  `duration_weeks = FY_weeks − YTD_weeks` (16 or 17); a group carrying
+  BOTH a month-lane 9mo-YTD candidate AND a week-lane `36wk-YTD`
+  candidate refuses as `q4_basis_ambiguous` rather than guessing a
+  basis; a missing YTD anchor still yields the existing
+  `q4_source_missing` refusal.
+- **Feed carries week counts + supplementary normalized YoY**: the 1.1
+  quarterly feed passes through each point's `duration_weeks`, and a
+  point whose same-signature prior-year comparator carries a DIFFERENT
+  week count gets a supplementary `week_normalized_yoy` field
+  ((value/weeks) vs. (prior value/prior weeks) − 1), skipped on any
+  zero-denominator side; the as-reported value/YoY stay primary and
+  `MEMO_FEED_QUARTERLY_SCHEMA_VERSION` stays "1.1" (additive fields,
+  passthrough — no envelope bump).
+
+## [v2.23.0] — 2026-07-18
+
+Memo quarterly-KPI wiring — the honest fiscal-calendar quarterly chain shipped
+in v2.22.0 now reaches the rendered memo. A new `kpi-quarterly` data pack, a
+`quarterly-series` CLI, and a quarterly/XBRL memo-feed arm (schema 1.1) join
+the fact-pack → series → memo-feed chain end-to-end, and `report-equity-memo`
+gains a Phase 3.5 step that runs the chain for US tickers and hands the feed
+to `investing-team`'s Operating-KPI block. Plan:
+`docs/loom/plans/2026-07-18-memo-quarterly-kpi-wiring.md`.
+
+### Added
+
+- **`data-markets` `kpi-quarterly` pack** (US-only): calls
+  `extract_dimensional_revenue` and emits the dimensional-revenue fact-pack
+  JSON (facts[] + per-accession fiscal_calendars + `_status` envelope); a
+  non-US ticker returns `_status.status == "usage_error"` (no silent skip).
+- **`analysis-kpi` `quarterly-series` CLI** on `kpi_xbrl.py`: takes a
+  fact-pack JSON path, classifies + builds a break-aware series per
+  full-dimensional-signature group (`granularity="quarterly"`), derives Q4
+  points, and emits one series JSON with parallel calendar/fiscal labels
+  intact on every point.
+- **`analysis-kpi` memo-feed quarterly/XBRL arm** (`kpi_memo_feed.py`,
+  envelope `_memo_feed_schema_version` 1.0 → 1.1): `build_quarterly_memo_feed`
+  + CLI subcommand `build-quarterly`. Fail-closed on per-point XBRL
+  provenance completeness (reported points: `source_accession` + `concept`;
+  derived points: `derived: True` + non-empty plural `source_accessions`/
+  `source_forms`) and `assert_dqc_schema` on every coverage flag; this lane
+  does not call the tier-① store gate (`kpi_gate.is_trusted`) — its trust is
+  machine-verified provenance, not a store confirmation.
+- **`report-equity-memo` Phase 3.5**: for a US ticker, runs
+  kpi-quarterly pack → `quarterly-series` → `build-quarterly` and adds the
+  resulting memo-feed JSON as an OPTIONAL `### Resource Paths` entry;
+  non-US tickers get an explicit skip note in the seed (never silent).
+- **Offline end-to-end chain test**: fact-pack fixture → `quarterly-series` →
+  `build-quarterly`, asserting derived points keep plural accessions and the
+  calendar/fiscal pair, `coverage_flags` survive verbatim, and a poisoned
+  payload (derived point stripped of `source_accessions`) exits 1.
+
 ## [v2.22.0] — 2026-07-18
 
 Quarterly (10-Q) operational-KPI support, rebuilt on an honest fiscal-calendar

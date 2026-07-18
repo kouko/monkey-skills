@@ -132,6 +132,99 @@ given the asset type.
   Typical drivers: terminal growth rate, WACC, near-term revenue CAGR,
   margin normalization timeline.
 
+### Operating KPI Trends (Quarterly, US)
+
+Thesis-support evidence for the valuation drivers above (revenue growth,
+margin trajectory): the company's quarterly operational-KPI trends
+(segment / product revenue from 10-Q/10-K XBRL), consumed from the kpi
+memo-feed JSON listed in the seed context's `### Resource Paths`
+(`_memo_feed_schema_version` "1.1", status `TRUSTED`, produced by
+`investing-toolkit` analysis-kpi `kpi_memo_feed.py build-quarterly`).
+Distinct from the Taiwan 月營收 check below (monthly MOPS cadence,
+different market — do not merge the two treatments).
+
+**Input discipline — the feed is the only source:**
+
+1. Consume ONLY the memo-feed JSON. Never recompute series values, never
+   read raw fact-packs or filings to fill gaps, never extend a series
+   from recall. Every rendered number comes from a `points[]` or
+   `derived_points[]` entry in the feed's `series[]`.
+2. Feed absent from the seed context's `### Resource Paths`, or feed
+   `status` is not `TRUSTED`: the section states that fact and any
+   recorded reason verbatim — never a fabricated or approximated
+   series, never silence. (The 1.1 quarterly arm is TRUSTED-or-refused:
+   a refusal produces no feed at all, so absence IS the refusal signal.)
+3. Non-US ticker — the seed context carries the orchestrator's explicit
+   skip note: render the section as a single line — "Operating KPI
+   trends: not applicable (US-only capability this version)." — never
+   omit the section silently.
+
+**Trend table shape (body):**
+
+- Last **8 quarters** per series, most recent last. The FULL series
+  always renders in the appendix exhibit (see Output Template) — the
+  body table is the honest recent window, not the whole history.
+- Every cell's period shows the fiscal label WITH its calendar pair —
+  e.g. `FY2026 Q1 (CY2025 Q2)` from the point's `period`/`period_type`
+  plus `calendar_year`/`calendar_quarter`. Never render a fiscal label
+  bare: the fiscal-calendar offset is exactly what mislabeled trend
+  tables get wrong.
+- **Derived-Q4 tagging (per-cell)**: cells from the `derived_points[]`
+  lane (`derived: true`) are tagged inline (e.g. superscript `ᵈ`) with
+  a footnote naming the real derivation basis — Q4 = FY total −
+  reported 9mo-YTD cumulative (NOT a sum of the three reported
+  quarters; the two differ under restatement) — by TRANSCRIBING that
+  point's `dqc.reason` string verbatim as the footnote body (it carries
+  the feed's own derivation wording) plus its plural
+  `source_accessions`. A derived-Q4 value must never render
+  indistinguishable from a reported one.
+- **Genuine gaps (per-series `gaps[]`)**: quarters the feed marks as
+  missing or underivable — truncate the table at the gap and footnote
+  it with the gap's `reason` string verbatim — never splice or
+  interpolate across a gap.
+- **Unequal-quarter-length disclosure (week-count signal, any lane)**:
+  `duration_weeks` rides EVERY `points[]`/`derived_points[]` entry
+  regardless of which lane classified it (month or week) — the
+  disclosure trigger is that raw signal, never the `duration_class`
+  string alone. A point qualifies when ANY of: (i) its `duration_class`
+  carries a week-encoded string (reached in practice: `16wk`, `17wk`,
+  `36wk-YTD`, and `24wk-YTD` at its live-observed 167-day span — a
+  quarter/FY-length span, and a 24-week span of exactly 168 days, rounds
+  into the month lane FIRST under class-lane precedence, so the
+  `52wk-FY`/`53wk-FY` band-completeness strings are
+  never actually emitted); (ii) its `duration_weeks` differs from its
+  YoY comparator's `duration_weeks` — this is how a 52/53-week filer's
+  FY point actually surfaces: it classifies month-lane `12mo-FY` yet
+  still carries a real `duration_weeks` of 52 or 53, so a 52-vs-53-week
+  FY-over-FY comparison is unequal-length even though both sides read
+  `12mo-FY`; or (iii) it carries a `week_normalized_yoy` field (the
+  feed's own signal that it ran the cross-point comparison — attached
+  to every emitted point, independent of duration_class). Any
+  qualifying point: (a) label that period's cell with its
+  `duration_weeks` count; (b) state once, near the table, a
+  Walmart-style disclosure that unequal-length periods (e.g. 12wk vs.
+  16/17wk quarters, or a 52wk vs. 53wk FY) are not directly comparable,
+  naming which figures are affected; (c) when the point carries a
+  `week_normalized_yoy` field — on ANY point, including a month-classed
+  `12mo-FY` point — render it alongside — never in place of — the
+  as-reported YoY, TRANSCRIBED verbatim from the feed (the writer never
+  computes it).
+- **Data-quality flags (top-level `coverage_flags[]`)**: DQC flags
+  (restatements, label conflicts, with `old`→`new` values and
+  accessions) — disclose inline on the affected cell(s), NEVER by
+  truncation: a restated quarter is present, not missing.
+- **<4 reported quarters**: a series with fewer than 4 reported
+  (non-derived) quarters moves to the appendix exhibit only — never a
+  body trend table.
+
+**Gate contract unchanged**: these numbers ride the existing
+CHK-CIT-004 (no LLM-recall numeric assertions) and CHK-CIT-007
+(upstream warnings transcribed verbatim) checks plus the Provenance
+Footer machinery in `checklists/primary-source-citation-compliance.md`
+— no new gate rows. Derived-Q4 footnotes and coverage-gap reasons are
+upstream disclosures in the CHK-CIT-007 sense: dropping, softening, or
+relabeling them is a FAIL.
+
 ### Taiwan Check
 
 If the ticker is a .TW / .TWO listed security, also apply
@@ -318,6 +411,28 @@ sector favored/neutral/disfavored in current regime]
 | WACC | | | | |
 | Revenue CAGR | | | | |
 
+#### Operating KPI Trends (Quarterly)
+[Last-8-quarter trend table per series from the kpi memo-feed JSON:
+ each period cell = fiscal label + calendar pair (e.g. FY2026 Q1
+ (CY2025 Q2)); derived-Q4 cells tagged per-cell with a footnote
+ transcribing that point's dqc.reason verbatim (basis: FY total −
+ reported 9mo-YTD cumulative) + its plural source_accessions;
+ per-series gaps[] truncated + footnoted with the gap reason verbatim;
+ top-level coverage_flags[] disclosed inline on the affected cell(s),
+ never truncated. Unequal-length points — duration_class carrying a
+ week-encoded string (16wk/17wk/36wk-YTD/24wk-YTD), OR duration_weeks differing
+ from its YoY comparator's (a 52/53-week filer's FY point: classifies
+ 12mo-FY yet carries duration_weeks 52/53), OR carrying a
+ week_normalized_yoy field: cell labeled with duration_weeks, a
+ one-time unequal-quarter-length disclosure naming the affected
+ figures, and (on any point carrying the field, including a
+ month-classed 12mo-FY point) week_normalized_yoy rendered alongside —
+ never in place of — the as-reported YoY, transcribed verbatim. Series
+ with <4 reported quarters: appendix exhibit
+ only. Feed absent from the seed context / status ≠ TRUSTED: state the
+ fact + any recorded reason verbatim.
+ Non-US ticker: "not applicable (US-only capability this version)".]
+
 ### Investment Thesis
 
 #### Operative Claim
@@ -364,6 +479,17 @@ sector favored/neutral/disfavored in current regime]
 [Sell-on-invalidation triggers]
 [Hold-review triggers]
 [Price-target exit]
+
+### Appendix: Operating KPI Exhibit
+[FULL quarterly series per signature from the memo feed — all quarters,
+ same labeling rules as the body table (fiscal + calendar pair,
+ derived-Q4 tags, verbatim gap footnotes, inline coverage_flags
+ disclosures, duration_weeks labels + unequal-quarter-length
+ disclosure on any qualifying point (week-encoded duration_class,
+ differing duration_weeks vs. YoY comparator, or a week_normalized_yoy
+ field — including month-classed 12mo-FY points) + verbatim
+ week_normalized_yoy supplementary figures);
+ series with <4 reported quarters appear here ONLY]
 
 ### Provenance
 [Primary sources cited with as-of dates]
