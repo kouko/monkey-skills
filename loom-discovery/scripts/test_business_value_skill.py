@@ -274,8 +274,28 @@ def test_validate_step_bounded_at_two_attempts():
     low = _skill().lower()
     assert "2 attempts" in low or "two attempts" in low or "bounded at 2" in low, \
         "validate step must be bounded at 2 attempts"
-    assert "surface" in low or "user" in low, \
-        "exhausting the bound must surface to the user, not loop silently"
+    # Pin "surface" near "user" in the same sentence, not a bare OR: "user"
+    # alone occurs 13x in the pre-Step-6 file (git show 5db058c5^) so an OR
+    # is tautological — "surface" is the genuinely new term (0 occurrences
+    # pre-Step-6), so require it in proximity to "user".
+    assert re.search(r"surface[^.]{0,60}\buser\b", low), (
+        "exhausting the bound must surface the remaining problems to the "
+        "user, not loop silently"
+    )
+
+
+def test_validate_step_tolerates_greenfield_first_run():
+    # Why: mirrors user-insights/SKILL.md's sibling clause (and its test
+    # test_validate_step_tolerates_greenfield_first_run) — the assess-first
+    # greenfield state (business-value.md alone, before user-insights.md
+    # exists) must not be treated as a validator failure. This clause
+    # (SKILL.md ~162-164) had no pinning test before this round; deleting it
+    # must turn this test red. Grounding: validate_discovery_artifacts.py's
+    # CLI takes a single positional `folder` arg (validate_discovery_artifacts.py:~179-184).
+    body = _skill().lower()
+    assert "greenfield" in body or "first-run" in body or "first run" in body, (
+        "must document tolerance for greenfield/first-run artifact creation"
+    )
 
 
 # --- flat folder structure (Anthropic skill convention, hook-enforced) ------

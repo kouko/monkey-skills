@@ -154,7 +154,7 @@ NEEDS-MORE-RESEARCH, not a hopeful GO.
 
    ```
    cd <consumer-project-root>
-   python <resolved-absolute-path-to>/loom-discovery/scripts/validate_discovery_artifacts.py docs/loom/discovery/<date>-<slug>
+   python3 <resolved-absolute-path-to>/loom-discovery/scripts/validate_discovery_artifacts.py docs/loom/discovery/<date>-<slug>/
    ```
 
    Fix any flagged issue and re-run, **bounded at 2 attempts**; on the 2nd
