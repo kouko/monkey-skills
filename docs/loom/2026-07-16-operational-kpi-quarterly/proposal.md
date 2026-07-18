@@ -304,6 +304,10 @@ clauses in spec.md:
    sanctioned as fallback only [audit+NFR, sev 3].
 6. Cache schema/key versioning — pre-revision payloads never merged (repo precedent:
    `docs/loom/memory/cache-key-collision-across-migration.md`) [NFR, sev 3].
+   **CORRECTED 2026-07-18 at implementation**: the lens assumed a labeled-fact cache exists;
+   code recon proved the layer is uncached (raw-source caches only). Constraint (d) + the
+   scenario were amended to the true negative obligation — a critic finding is hypothesis
+   until the code confirms it.
 7. Cross-filing fiscal-label divergence at dedup: flagged + deterministic later-filed
    survivor [audit+seam+BVA, sev 2 ×3-lens convergence].
 8. Derived Q4 carries the three label groups, minted against the 10-K's calendar [audit+BVA,

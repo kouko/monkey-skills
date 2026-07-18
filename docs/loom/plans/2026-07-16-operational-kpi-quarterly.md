@@ -135,16 +135,16 @@ Plan constants: FISCAL_BOUNDARY_TOLERANCE_DAYS = 10 (covers the live-verified �
 - Brief item covered: 2026-07-16-operational-kpi-quarterly / Requirement: Every fact carries parallel calendar and fiscal period labels, honestly named / Scenario: an out-of-tolerance period_end is unclassifiable, never nearest-guessed (critic-found)
 - Brief item covered: 2026-07-16-operational-kpi-quarterly / Requirement: Every fact carries parallel calendar and fiscal period labels, honestly named / Scenario: a projection-grounded label or verdict is marked as such (critic-found)
 
-## Task 17 — Cache schema versioning for the parallel-label payload
-- Description: The parallel-label schema changes the meaning of `fiscal_year` and adds four fields; pre-revision cached payloads must never alias into the new pipeline. Version the cache key/schema (distinct key per docs/loom/memory/cache-key-collision-across-migration.md) and add the cross-shape regression: a pre-seeded legacy entry is a MISS for the new reader.
+## Task 17 — No-cache-aliasing regression for the parallel-label payload (RE-SCOPED 2026-07-18)
+- Description: Implementation recon found the labeled-fact layer is UNCACHED (extract_dimensional_revenue calls filing.xbrl() directly; the only caches are schema-independent raw-source keys: tickers / facts_{cik} / concept_{cik}_{concept} / submissions_{cik} / narrative_sections_{accession}) — the original "version an existing key" premise was counterfactual. Re-scoped per the amended spec constraint (d): pin the negative obligation — pre-seed EVERY existing cache key with poisoned pre-rebuild-era payloads (incl. an old-shape labeled-fact dict) and prove none reaches the parallel-label output; document in the extraction docstring that a future labeled-fact cache MUST use a schema-versioned distinct key.
 - Module: investing-toolkit/skills/data-markets/scripts/sec_edgar_client.py
 - Files touched: investing-toolkit/skills/data-markets/scripts/sec_edgar_client.py, investing-toolkit/tests/data/test_sec_edgar_dimensional.py
 - Context paths:
-  - investing-toolkit/skills/data-markets/scripts/sec_edgar_client.py (the dimensional-revenue cache write/read path)
+  - investing-toolkit/skills/data-markets/scripts/sec_edgar_client.py (extract_dimensional_revenue; the four raw-source cache sites ~:184/:240/:352/:1561)
   - docs/loom/memory/cache-key-collision-across-migration.md
 - Acceptance:
-  - RED: `test_cache_schema_version_no_alias` — pre-seed the LEGACY key with an old-shape payload (calendar-valued fiscal_year, no parallel fields); the new reader does not alias it (miss → fresh fetch), and new writes land under the versioned key.
-  - GREEN: no old-shape payload ever reaches parallel-label output.
+  - RED: `test_cache_schema_version_no_alias` — with every existing cache key pre-seeded with poisoned old-shape payloads, extract_dimensional_revenue's emitted facts are all freshly derived (parallel labels present) and contain no planted value; the docstring constraint line exists.
+  - GREEN: no existing cache feeds labeled output; future-cache constraint documented.
 - External surfaces: shared data-markets cache layer (filesystem) — no network.
 - Dependencies: Task 13 completes first
 - Independent: false
@@ -373,6 +373,24 @@ Plan constants: FISCAL_BOUNDARY_TOLERANCE_DAYS = 10 (covers the live-verified �
   call sites patched one-at-a-time three times; the durable fix is the primitive AND its contract as one
   atomic unit (memory: fiscal-year-derive-per-fact-against-filing-calendar §Process lesson), and the merge
   keeps critical-path depth at 5. Agent-decided within the user-ratified restart shape.
+- 2026-07-18 — **T17 re-scoped after implementer NEEDS_CONTEXT: the labeled-fact layer has NO cache**
+  — the critic round-2 finding (lens 1, NFR) assumed one from the docs without code recon; the
+  implementer's grep + git-log proved extraction was never cached. Spec constraint (d) + its scenario
+  amended to the true obligation (no existing cache feeds labeled output; future labeled-fact cache
+  must carry a schema-versioned key); T17 slimmed to the poison-seed regression. Agent-decided
+  (two-way door, doc+test only). Rejected: building a new cache layer to satisfy the original wording
+  (undeclared scope, YAGNI). Amendment is descriptive-narrowing + spec-synced; re-review skipped per
+  §Amending a PASS plan (join key unchanged, coverage re-verified exit-0).
+- 2026-07-18 — **T16 🟡 fixed immediately in a round-2 dispatch, not filed as debt**: the 12-month
+  early-return in `_derive_fiscal_label` skipped the boundary-tolerance check, silently mislabeling an
+  annual comparative on an OLD FYE inside an FYE-change filing. WHY fix-now: silent mislabeling is the
+  root-defect class this rebuild exists to kill, and T18's fiscal grouping consumes annual-fact labels —
+  the hole must close before T18 builds on it. Agent-decided (two-way door; reviewer explicitly offered
+  fix-now vs T19 discretion). Rejected: carrying it as PASS_WITH_NOTES debt to T19.
+- 2026-07-18 — **Old T10 commits (46f8ca72/36d9d45f/f7e45497) superseded IN PLACE, no history rewrite**:
+  T13-T19 overwrite the broken code/tests; squash-merge at finishing drops intermediate commits from main
+  anyway. Agent-decided (two-way door; reflog-recoverable). Rejected: interactive-rebase-style dropping
+  (unsupported + risk without benefit).
 - 2026-07-18 — **Sub-questions ruled (rebuild-findings §RESOLVED tail): data layer derives both label
   groups; kpi_xbrl migrates period keying to the emitted fiscal label** (calendar keying ruled a latent
   bug made load-bearing by quarterly; zero production callers → no live-consumer impact; calendar basis

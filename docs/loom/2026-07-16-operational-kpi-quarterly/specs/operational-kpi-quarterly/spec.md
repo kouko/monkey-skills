@@ -285,10 +285,12 @@ tolerance of a fiscal-quarter boundary maps to it; beyond tolerance the fact is 
 unclassifiable — never nearest-guessed. (c) Each fiscal label MUST record its derivation
 basis — `dei-declared` (the tag in hand, the authority) or `projected` (a +12-month
 projection of the prior declared fiscal-year-end, sanctioned as FALLBACK only) — so an
-auditor can separate authority-confirmed labels from projections. (d) The label-schema
-change MUST NOT alias pre-revision cached payloads: entries cached before this schema carry
-the old calendar-valued `fiscal_year` and lack the parallel fields, so the cache key/schema
-version MUST change such that old entries are never merged into parallel-label output.
+auditor can separate authority-confirmed labels from projections. (d) The label-schema change MUST NOT alias pre-revision
+cached payloads. Implementation recon (2026-07-18) found the labeled-fact layer is UNCACHED —
+only schema-independent raw-source caches exist (tickers / facts_{cik} / concept_{cik}_{concept} /
+submissions_{cik} / narrative_sections_{accession}) — so the obligation is: no existing cache
+may feed the labeled output, and any FUTURE cache of the labeled-fact payload MUST use a
+schema-versioned DISTINCT key, never a legacy key.
 
 #### Scenario: a non-December-FYE quarter carries diverging calendar and fiscal labels
 - GIVEN NVDA's FY2026-Q3 fact whose period_end is 2025-10-26
@@ -321,9 +323,9 @@ version MUST change such that old entries are never merged into parallel-label o
 - THEN it records derivation basis `projected` — never indistinguishable from a `dei-declared` read
 
 #### Scenario: pre-revision cached payloads are never merged into parallel-label output (critic-found)
-- GIVEN a cache entry written before the parallel-label schema (old calendar-valued `fiscal_year`, no calendar/fiscal pair)
-- WHEN the pipeline reads the cache after this revision
-- THEN the old entry is a MISS for the new schema (distinct key/version) and is refetched — never merged into a series alongside parallel-label facts
+- GIVEN every existing raw-source cache key pre-seeded with a pre-rebuild-era payload, including an old-shape labeled-fact dict (calendar-valued `fiscal_year`, no calendar/fiscal pair) planted under each key
+- WHEN extract_dimensional_revenue runs after this revision
+- THEN every emitted fact is freshly derived (parallel labels present) and no planted old-shape payload reaches the output — the labeled-fact layer stays uncached (verified 2026-07-18); introducing a labeled-fact cache without a schema-versioned distinct key is a spec violation
 
 ### Requirement: A fiscal-year range request selects filings by their declared fiscal year
 A request for fiscal years `[since_year, until_year]` MUST select filings whose DECLARED
