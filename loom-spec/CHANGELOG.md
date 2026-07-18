@@ -5,6 +5,33 @@ All notable changes to the `loom-spec` plugin (formerly `spec-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.7.0] — 2026-07-18 — outer revision cap + minted critic verdicts
+
+### Added
+
+- **`completeness-critic`**: the writer↔critic outer revision cycle is now
+  capped at 2 — on the 2nd consecutive `NEEDS_REVISION` after a revision, the
+  loop stops and hands back to the user with a plain-language list of
+  unresolved findings instead of silently re-running.
+- **`scripts/mint_critic_verdict.py`**: new content-hash-bound critic-verdict
+  CLI (`mint --change-folder --verdict-file --files` /
+  `validate --change-folder --files`) — sha256-binds a verdict to the exact
+  files it covered; `validate` exits 0 fresh-`PASS_WITH_NOTES`, 2 no-verdict,
+  3 fresh-`NEEDS_REVISION`, 4 stale-hash. `NEEDS_REVISION` still mints (a
+  rejected draft's verdict is itself evidence); overwrite-in-place, path- and
+  UTF-8-guarded.
+- **`completeness-critic`**: the verdict step now additionally runs
+  `mint_critic_verdict.py mint` for the change-folder on both verdict values.
+- **`spec-expansion`**: gains a validate-before-fan-out step consuming
+  `loom-interface-design`'s design-critic verdict — runs
+  `mint_critic_verdict.py validate --files DESIGN.md,ui-flows.md` and
+  proceeds only on exit 0; on 2/3/4 it stops and reports which condition
+  blocked (never-ran / critic-blocked / stale) instead of fanning out over an
+  unreviewed or stale design.
+
+Design SSOT: `docs/loom/audits/2026-07-18-agent-loop-convergence-audit.md` §4
+recs 2/7 + §4c Fix-4.
+
 ## [0.6.0] — 2026-07-18 — mechanize knowledge-triage enforcement semantics
 
 ### Added

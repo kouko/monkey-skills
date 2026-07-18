@@ -244,7 +244,11 @@ resumes. A session that starts a batch from empty state has nothing to
 reconcile and may skip straight to `next`.
 
 The main agent then repeats exactly this loop, one iteration per change,
-until `next` prints `{"done": true}` or exits 3 (circuit-breaker HALT):
+until `next` prints `{"done": true}` or exits 3 (circuit-breaker HALT). While
+non-terminal entries (QUEUED/RUNNING) remain, `next` instead prints
+`{"done": false, "non_terminal": [...]}`, enumerating each blocking entry by
+`id`/`status`/`reason` — `done` never goes silent on a stuck batch (see the
+exit-code table below):
 
 1. `python3 <skillsRoot>/loom-pipeline/scripts/batch_queue.py next --project <projectPath> --skills-root <skillsRoot>`
    — this also runs `reconcile` internally at its top, so per-iteration
@@ -306,7 +310,7 @@ either:
 
 | Code | Meaning |
 |---|---|
-| 0 | dispatched an entry (Workflow args JSON on stdout), or the queue is done (`{"done": true}`) |
+| 0 | dispatched an entry (Workflow args JSON on stdout), or the queue is done (`{"done": true}`), or the queue is stuck with non-terminal entries remaining (`{"done": false, "non_terminal": [{"id", "status", "reason"}, ...]}`) |
 | 1 | fail-loud error (malformed `QUEUE.toml`, etc.) |
 | 2 | argparse usage error |
 | 3 | circuit-breaker HALT — 2 consecutive `FAILED` entries; `--override-halt` bypasses after human review |

@@ -6,6 +6,20 @@ file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] — 2026-07-18 — mandatory bounded validator step
+
+### Added
+
+- **`user-insights`** and **`business-value`**: both SKILL.md files gain a
+  mandatory validate step before declaring done — run
+  `scripts/validate_discovery_artifacts.py` on the produced artifact dir;
+  non-zero result → fix and re-run, bounded at 2 attempts, then surface to
+  the user. Mirrors `loom-product-principles`'s Step 8 wiring pattern;
+  tolerates greenfield/first-run artifact creation.
+
+Design SSOT: `docs/loom/audits/2026-07-18-agent-loop-convergence-audit.md` §4
+rec 5.
+
 ## [0.2.0] — 2026-07-18 — evidence source-type column
 
 ### Added

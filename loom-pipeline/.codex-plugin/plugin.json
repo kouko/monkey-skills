@@ -1,6 +1,6 @@
 {
   "name": "loom-pipeline",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "description": "Deterministic workflow driver conducting the loom principles→design→spec→code pipeline across station plugins; loom-discovery (problem-space, upstream of principles) is v0.1 interactive-only and not conductor-driven.",
   "author": {
     "name": "kouko",
