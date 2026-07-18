@@ -75,6 +75,16 @@ via a deliberate FUNCTION-LEVEL import (module-level imports here stay
 stdlib + kpi_series so the module remains offline-importable; see
 `_dimension_quarterly_absence_flags`).
 
+Task 8 adds `derive_q4_points`: an untagged Q4 single-quarter is DERIVED
+as (FY total − 9mo-YTD) over resolve_binding's output points — flagged
+computed (DQC `derived_q4`, BOTH contributing accessions recorded),
+carried in a SEGREGATED lane (`derived: True`; `build_series_with_break
+(..., reported_only=True)` excludes it), skipped-and-surfaced when a
+source is missing, and REFUSED (`q4_basis_mismatch`, a flag DISTINCT
+from the clean derived flag) when the inputs differ in restatement
+vintage, XBRL unit/scale, or their source filings' declared fiscal
+calendars — never a silent subtraction across incompatible bases.
+
 Task 6 adds a thin argparse CLI (`build`), mirroring `kpi_memo_feed.py`'s
 CLI shape and fail-loud exit-code convention: reads a fact-pack JSON from
 `--file`/stdin and a binding JSON from `--binding`, calls `resolve_binding`
@@ -87,7 +97,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 # Resolve same-dir modules without a package (mirrors kpi_series.py's own
@@ -328,6 +338,9 @@ def facts_to_points(
             # honestly named, never conflated with the fiscal period key.
             "calendar_year": fact.get("calendar_year"),
             "calendar_quarter": fact.get("calendar_quarter"),
+            # The RAW WINDOW end stays on the point (Task 8: Q4 derivation
+            # needs each input's own window; validated by _require_period).
+            "period_end": fact["period_end"],
             "as_of": filed,
             "value": value,
             "source_accession": accession,
@@ -335,6 +348,12 @@ def facts_to_points(
             "source_cell_ref": source_cell_ref,
             "source_kind": source_kind,
         }
+        # A fact carrying an XBRL `unit` passes it through (Task 8: the Q4
+        # derivation's unit/scale-mismatch guard compares the two inputs'
+        # units; the producer emits no unit today — the $-unit gate filters
+        # upstream — so the passthrough is the forward-defensive channel).
+        if fact.get("unit") is not None:
+            point["unit"] = fact["unit"]
         # A cross-filing restatement (overlap policy C, resolved upstream in
         # resolve_binding) tags the kept fact with a machine-readable `dqc`
         # flag; carry it through onto the emitted point unchanged.
@@ -580,6 +599,231 @@ def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
     return points
 
 
+def _q4_input_window_end(point: dict, role: str) -> date:
+    """A Q4-derivation input point's raw-window end as a date — fail loud
+    on a point missing/malforming `period_end` (an input that cannot be
+    windowed can never ground a derived window)."""
+    period_end = point.get("period_end")
+    try:
+        return date.fromisoformat(period_end)
+    except (TypeError, ValueError):
+        raise ValueError(
+            f"kpi_xbrl.derive_q4_points: {role} input point carries no "
+            f"well-formed 'period_end' ({period_end!r}, kpi_id="
+            f"{point.get('kpi_id')!r}, period={point.get('period')!r}) — "
+            f"cannot mint the derived Q4 window, never guessed"
+        ) from None
+
+
+def _q4_basis_mismatch_reason(
+    fy: dict, ytd9: dict, fiscal_calendars: dict | None,
+) -> str | None:
+    """The refusal reason when the FY total and the 9mo-YTD are NOT on one
+    basis (spec, critic-found: 'Q4 derivation refuses across mismatched
+    restatement vintages or units'), or None when the bases agree.
+
+    Three checks, first hit wins:
+    (1) XBRL unit/scale — the points' passed-through `unit` values differ
+        (absent on both sides = agree: the producer's $-unit gate already
+        guarantees currency amounts today).
+    (2) Restatement vintage — exactly ONE input carries an upstream
+        policy-C restatement DQC: its value was recast by a later filing
+        while the other input was never re-reported on that newer basis,
+        so the subtraction would mix vintages. (Both restated = both
+        already resolved to the policy-C newest basis — no mismatch;
+        this conservative single-sided rule is the deliberate
+        operationalization of 'different restatement vintages'.)
+    (3) Declared fiscal calendars — the two source filings' dei calendars
+        (from the pack's `fiscal_calendars`, keyed by accession) disagree
+        on `fiscal_year_end`, or either filing's calendar is absent/None
+        (an unverifiable basis is refused, never assumed — docs/loom/
+        memory/fiscal-year-derive-per-fact-against-filing-calendar.md:
+        fail loud on an unreadable calendar, never a fallback).
+    """
+    if fy.get("unit") != ytd9.get("unit"):
+        return (
+            f"XBRL unit/scale differs between the FY total "
+            f"({fy.get('unit')!r}) and the 9mo-YTD ({ytd9.get('unit')!r})"
+        )
+    fy_restated = (fy.get("dqc") or {}).get("type") == "restatement"
+    ytd9_restated = (ytd9.get("dqc") or {}).get("type") == "restatement"
+    if fy_restated != ytd9_restated:
+        restated_role = "FY total" if fy_restated else "9mo-YTD"
+        return (
+            f"restatement vintages differ: the {restated_role} was recast "
+            f"by a later filing (policy C) while the other input was never "
+            f"re-reported on that basis"
+        )
+    calendars = fiscal_calendars or {}
+    fy_cal = calendars.get(fy.get("source_accession"))
+    ytd9_cal = calendars.get(ytd9.get("source_accession"))
+    if fy_cal is None or ytd9_cal is None:
+        return (
+            f"a source filing's dei fiscal calendar is unavailable "
+            f"(FY accession {fy.get('source_accession')!r}: {fy_cal!r}, "
+            f"9mo-YTD accession {ytd9.get('source_accession')!r}: "
+            f"{ytd9_cal!r}) — the shared-basis check cannot run, refused "
+            f"rather than assumed"
+        )
+    if fy_cal.get("fiscal_year_end") != ytd9_cal.get("fiscal_year_end"):
+        return (
+            f"the two source filings declare DIFFERENT fiscal calendars "
+            f"(FY 10-K {fy.get('source_accession')!r}: "
+            f"{fy_cal.get('fiscal_year_end')!r}; 9mo-YTD 10-Q "
+            f"{ytd9.get('source_accession')!r}: "
+            f"{ytd9_cal.get('fiscal_year_end')!r})"
+        )
+    return None
+
+
+def derive_q4_points(points: list[dict], *, fiscal_calendars: dict | None) -> dict:
+    """Derive the untagged Q4 single-quarter as (FY total − 9mo-YTD) per
+    (signature, fiscal year) over `points` — resolve_binding's OUTPUT, so
+    dedup/policy C have already run on every input. Returns
+    `{"points": [derived Q4 points], "gaps": [surfaced skips/refusals]}`
+    (spec: 'Q4 single-quarter is derived by subtraction, guarded, and
+    segregated' — user governance decision A, 2026-07-16).
+
+    - A directly-tagged Q4 3-month point SHORT-CIRCUITS its group: the
+      reported point is used as-is (it is already in `points`), no
+      derivation runs, no computed flag is minted.
+    - A clean derivation emits a point flagged computed — DQC
+      `derived_q4` recording BOTH contributing accessions — and
+      segregated (`derived: True`, plural `source_accessions` instead of
+      a singular `source_accession`): a derived value never masquerades
+      as directly reported, and `build_series_with_break(...,
+      reported_only=True)` excludes the lane wholesale.
+    - The derived point carries the THREE label groups (critic round 2),
+      minted from the derived 3-month window: RAW WINDOW (`period_start`
+      = day after the 9mo-YTD end, `period_end` = the FY end,
+      duration_class "3mo"), CALENDAR label (the calendar quarter
+      containing that period_end — the producer's DATACQTR rule), and
+      FISCAL label (`period` = the 10-K FY point's emitted fiscal_year —
+      itself dei-grounded fail-loud upstream — with period_type "Q4" by
+      construction of a 3-month window ending on the fiscal year end).
+    - A missing source is SKIPPED and SURFACED as a `q4_source_missing`
+      gap naming the absent input — never fabricated. A year with
+      neither input (e.g. an in-progress year of pure single quarters)
+      has no derivation basis at all and is not a gap.
+    - A basis mismatch (`_q4_basis_mismatch_reason`: unit/scale,
+      restatement vintage, or the two filings' declared dei calendars
+      disagreeing) REFUSES with a `q4_basis_mismatch` gap — DISTINCT
+      from the clean `derived_q4` flag, never a silent subtraction.
+    Gaps follow the ONE DQC schema (type, old, new, accessions, reason)
+    plus the locating `period`/`source_cell_ref` fields.
+    """
+    groups: dict[tuple, list[dict]] = {}
+    for point in points:
+        key = (point.get("source_cell_ref"), point.get("period"))
+        groups.setdefault(key, []).append(point)
+
+    derived: list[dict] = []
+    gaps: list[dict] = []
+    for (cell_ref, period), group in sorted(
+        groups.items(), key=lambda item: (str(item[0][0]), str(item[0][1]))
+    ):
+        if any(
+            p.get("period_type") == "Q4" and not p.get("derived")
+            for p in group
+        ):
+            continue  # directly-tagged Q4: reported used as-is, no flag
+        fy_candidates = [
+            p for p in group if p.get("duration_class") == "12mo-FY"
+        ]
+        ytd9_candidates = [
+            p for p in group if p.get("duration_class") == "9mo-YTD"
+        ]
+        if not fy_candidates and not ytd9_candidates:
+            continue  # no derivation basis at all — not a gap
+        if len(fy_candidates) != 1 or len(ytd9_candidates) != 1:
+            absent = []
+            if not fy_candidates:
+                absent.append("12mo-FY total")
+            if not ytd9_candidates:
+                absent.append("9mo-YTD")
+            present_accessions = sorted(
+                p.get("source_accession")
+                for p in fy_candidates + ytd9_candidates
+            )
+            if absent:
+                gap_type = "q4_source_missing"
+                reason = (
+                    f"missing {' and '.join(absent)} source for the Q4 "
+                    f"derivation — skipped and surfaced, never fabricated"
+                )
+            else:
+                gap_type = "q4_basis_mismatch"
+                reason = (
+                    f"ambiguous inputs: {len(fy_candidates)} FY totals and "
+                    f"{len(ytd9_candidates)} 9mo-YTD points survive dedup "
+                    f"for one signature/fiscal year — refused, never an "
+                    f"arbitrary pick"
+                )
+            gaps.append({
+                "type": gap_type,
+                "old": None,
+                "new": None,
+                "accessions": present_accessions,
+                "reason": reason,
+                "period": period,
+                "source_cell_ref": cell_ref,
+            })
+            continue
+
+        fy, ytd9 = fy_candidates[0], ytd9_candidates[0]
+        mismatch = _q4_basis_mismatch_reason(fy, ytd9, fiscal_calendars)
+        if mismatch is not None:
+            gaps.append({
+                "type": "q4_basis_mismatch",
+                "old": None,
+                "new": None,
+                "accessions": sorted([
+                    fy.get("source_accession"), ytd9.get("source_accession"),
+                ]),
+                "reason": f"{mismatch} — refused, never a silent "
+                          f"subtraction across incompatible bases",
+                "period": period,
+                "source_cell_ref": cell_ref,
+            })
+            continue
+
+        fy_end = _q4_input_window_end(fy, "FY-total")
+        ytd9_end = _q4_input_window_end(ytd9, "9mo-YTD")
+        value = fy["value"] - ytd9["value"]
+        accessions = [fy.get("source_accession"), ytd9.get("source_accession")]
+        derived.append({
+            "company": fy.get("company"),
+            "kpi_id": fy.get("kpi_id"),
+            "period_type": "Q4",
+            "cumulative": False,
+            "duration_class": "3mo",
+            "period": period,
+            "calendar_year": fy_end.year,
+            "calendar_quarter": f"Q{(fy_end.month - 1) // 3 + 1}",
+            "period_start": (ytd9_end + timedelta(days=1)).isoformat(),
+            "period_end": fy["period_end"],
+            "as_of": max(fy.get("as_of") or "", ytd9.get("as_of") or ""),
+            "value": value,
+            "source_accessions": accessions,
+            "source_table_id": fy.get("source_table_id"),
+            "source_cell_ref": cell_ref,
+            "source_kind": fy.get("source_kind"),
+            "derived": True,
+            "dqc": {
+                "type": "derived_q4",
+                "old": {"fy_total": fy["value"], "ytd9": ytd9["value"]},
+                "new": value,
+                "accessions": accessions,
+                "reason": (
+                    f"untagged Q4 derived as FY total minus 9mo-YTD for "
+                    f"fiscal year {period} — computed, never reported; "
+                    f"segregated from directly-reported points"
+                ),
+            },
+        })
+    return {"points": derived, "gaps": gaps}
+
+
 _SERIES_GRANULARITIES = frozenset({"annual", "quarterly"})
 _SINGLE_QUARTER_TYPES = frozenset({"Q1", "Q2", "Q3", "Q4"})
 
@@ -675,6 +919,7 @@ def build_series_with_break(
     granularity: str | None = None,
     fiscal_range: tuple[int, int] | None = None,
     facts: list[dict] | None = None,
+    reported_only: bool = False,
 ) -> dict:
     """Split `points` at a declared structural boundary `break_at_period`,
     delegating to `kpi_series.split_series` (plain-args pure compute, NO
@@ -702,6 +947,12 @@ def build_series_with_break(
       label'). The filter applies to EMITTED points — upstream
       resolve_binding already used out-of-range-filing comparatives for
       dedup/restatement, and that internal work is never undone here.
+    - `reported_only` (Task 8 — spec: 'a reported-only request excludes
+      derived Q4'): True excludes every derived-lane point (`derived:
+      True`, e.g. a derive_q4_points Q4) from the built series; the
+      directly-reported points remain. Default False keeps the derived
+      lane in (it stays distinguishable point-by-point via its
+      `derived` marker + `derived_q4` DQC flag).
     - `facts` (requires granularity="quarterly"): the fact set the series
       was built from; 10-K-only dimensional signatures with no 10-Q fact
       for the same fiscal year surface as `coverage_flags` entries
@@ -722,6 +973,8 @@ def build_series_with_break(
             "the dimension-absent-from-quarterlies flag is defined for the "
             "quarterly series build only"
         )
+    if reported_only:
+        points = [p for p in points if not p.get("derived")]
     if fiscal_range is not None:
         since, until = _validate_fiscal_range(fiscal_range)
         points = [p for p in points if since <= _point_fiscal_year(p) <= until]
