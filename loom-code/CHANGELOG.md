@@ -25,7 +25,7 @@ Versioning: [Semantic Versioning](https://semver.org/).
   / stale) follows the existing `validate_spec_output.py` precedent.
 
 Design SSOT: `docs/loom/audits/2026-07-18-agent-loop-convergence-audit.md` §4
-recs 9/10 + §4c Fix-4 (consumer side).
+recs 7/10 + §4c Fix-4 (consumer side).
 
 ## [0.33.0] — 2026-07-18 — reviewer evidence_needed tag = immediate triage trigger
 

@@ -34,10 +34,6 @@ Versioning: [Semantic Versioning](https://semver.org/).
   on completed-but-unmarked evidence (human confirms via `mark`); flags
   stale no-evidence RUNNING entries as `SUSPECT` (informational only). All
   transitions gate on `status == RUNNING`.
-- **`next`'s `done` derivation**: now `terminal_count == total` instead of
-  assumed — while QUEUED/RUNNING entries remain, `next` prints
-  `{"done": false, "non_terminal": [...]}` (id/status/reason per entry)
-  instead of ever silently claiming the batch finished.
 - **`using-loom-pipeline` dispatcher wiring**: the batch loop steps now
   document calling `mark-running` immediately after `Workflow()` returns, a
   session taking over a batch running `reconcile` before its first `next`,
@@ -45,6 +41,14 @@ Versioning: [Semantic Versioning](https://semver.org/).
   `SUSPECT-COMPLETE` human-operator handling — plus the `{"done": false,
   "non_terminal": [...]}` shape `next` can now print. `AGENTS.md`'s managed
   command-surface entry for `batch_queue.py` extended to the full verb set.
+
+### Changed
+
+- **`next`'s `done` derivation**: now `terminal_count == total` instead of
+  assumed — while QUEUED/RUNNING entries remain, `next` prints
+  `{"done": false, "non_terminal": [...]}` (id/status/reason per entry)
+  instead of ever silently claiming the batch finished (previously a stuck
+  batch could print `{"done": true}` — a fix to existing behavior).
 
 Design SSOT: `docs/loom/audits/2026-07-18-agent-loop-convergence-audit.md` §4c
 (all points).
