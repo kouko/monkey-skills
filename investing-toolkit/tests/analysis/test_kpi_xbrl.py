@@ -1363,6 +1363,201 @@ def test_coverage_flag_kept_when_fiscal_year_not_plain_int(
     assert (("ProductOrService", "BoolFYMember"),) in flagged_dims
 
 
+# ---------------------------------------------------------------------------
+# Task 8 (docs/loom/plans/2026-07-16-operational-kpi-quarterly.md) — derive an
+# untagged Q4 single-quarter as (FY total − 9mo-YTD), guarded (skip on a
+# missing source, refuse on a basis/vintage/unit/calendar mismatch),
+# SEGREGATED (computed DQC flag + derived lane a reported-only request
+# excludes), dual-accession provenance, and the three label groups minted
+# from the derived 3-month window against the 10-K's dei calendar. Fixture
+# xbrl_q4_derive.json is producer-shaped per the T5/T6 pattern — real AAPL
+# FY2025 windows/accessions/calendars copied from the producer-generated
+# dualdur fixture; counterfactual rows (reported Q4, restating FY2026 10-K,
+# unit fields, --06-30 calendar) documented in its _provenance
+# (docs/loom/memory/fixtures-mirror-producer-shape.md).
+# No `@req` tags: this dispatch traces work by named plan Tasks, not
+# registered loom-spec REQ-ids (same convention as the module header note).
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def q4_fixture():
+    return json.loads(
+        (FIXTURES / "xbrl_q4_derive.json").read_text(encoding="utf-8")
+    )
+
+
+def test_q4_derive_guarded_segregated(kpi_xbrl_module, q4_fixture):
+    """Task 8 RED (spec: 'Q4 single-quarter is derived by subtraction,
+    guarded, and segregated'): (a) with an FY total and a 9mo-YTD in hand
+    and NO directly-tagged Q4, derivation emits a Q4 point equal to
+    FY − 9mo-YTD, flagged computed (DQC `derived_q4`) with BOTH
+    contributing accessions, in a segregated lane; (b) the default
+    quarterly series includes it while a reported-only request excludes it
+    (reported Q1-Q3 remain); (c) a missing source is skipped AND surfaced —
+    never fabricated; (d)/(e) a restatement-vintage or unit/scale mismatch
+    between the two inputs REFUSES with `q4_basis_mismatch` — a flag
+    DISTINCT from the clean derived flag, never a silent subtraction;
+    (f) a directly-tagged Q4 short-circuits derivation — the reported
+    fact is used unchanged, no computed flag."""
+    # (a) derive when both inputs exist, segregated + dual-accession.
+    pack = q4_fixture["aapl_q4_derive"]
+    points = kpi_xbrl_module.resolve_binding(pack, DUALDUR_IPHONE_BINDING, "AAPL")
+    assert not any(p["period_type"] == "Q4" for p in points)  # Q4 untagged
+    result = kpi_xbrl_module.derive_q4_points(
+        points, fiscal_calendars=pack["fiscal_calendars"]
+    )
+    assert len(result["points"]) == 1
+    q4 = result["points"][0]
+    assert q4["value"] == 3000.0  # 14100.0 FY − 11100.0 9mo-YTD
+    assert q4["period_type"] == "Q4"
+    assert q4["cumulative"] is False
+    assert q4["duration_class"] == "3mo"
+    assert q4["period"] == "2025"
+    assert q4["derived"] is True  # the segregated lane marker
+    assert q4["dqc"]["type"] == "derived_q4"  # computed, never reported
+    assert sorted(q4["dqc"]["accessions"]) == [
+        "0000320193-25-000073", "0000320193-25-000079",
+    ]
+    assert q4["source_accessions"] == [
+        "0000320193-25-000079", "0000320193-25-000073",
+    ]
+    assert result["gaps"] == []
+
+    # (b) segregation end-to-end: the quarterly series includes the derived
+    # Q4 by default; a reported-only request excludes it, Q1-Q3 remain.
+    all_points = points + result["points"]
+    quarterly = kpi_xbrl_module.build_series_with_break(
+        all_points, "2018", granularity="quarterly"
+    )
+    emitted = quarterly["as_reported"] + quarterly["recast"]
+    assert sorted(p["value"] for p in emitted) == [1000.0, 2000.0, 3000.0, 4100.0]
+    reported = kpi_xbrl_module.build_series_with_break(
+        all_points, "2018", granularity="quarterly", reported_only=True
+    )
+    reported_emitted = reported["as_reported"] + reported["recast"]
+    assert sorted(p["value"] for p in reported_emitted) == [1000.0, 2000.0, 4100.0]
+    assert all(
+        p["period_type"] in {"Q1", "Q2", "Q3"} for p in reported_emitted
+    )
+
+    # (c) missing 9mo-YTD source -> skip + surface, never fabricate.
+    missing = json.loads(json.dumps(pack))
+    missing["facts"] = [
+        f for f in missing["facts"] if f.get("duration_months") != 9
+    ]
+    m_points = kpi_xbrl_module.resolve_binding(
+        missing, DUALDUR_IPHONE_BINDING, "AAPL"
+    )
+    m_result = kpi_xbrl_module.derive_q4_points(
+        m_points, fiscal_calendars=missing["fiscal_calendars"]
+    )
+    assert m_result["points"] == []
+    assert len(m_result["gaps"]) == 1
+    gap = m_result["gaps"][0]
+    assert gap["type"] == "q4_source_missing"
+    assert gap["period"] == "2025"
+    assert gap["accessions"] == ["0000320193-25-000079"]
+    assert "9mo-YTD" in gap["reason"]
+
+    # (d) restatement-vintage mismatch -> refusal with a DISTINCT flag.
+    v_pack = q4_fixture["q4_vintage_mismatch"]
+    v_points = kpi_xbrl_module.resolve_binding(
+        v_pack, DUALDUR_IPHONE_BINDING, "AAPL"
+    )
+    v_fy = next(p for p in v_points if p["period_type"] == "FY")
+    assert v_fy["dqc"]["type"] == "restatement"  # policy C ran upstream
+    v_result = kpi_xbrl_module.derive_q4_points(
+        v_points, fiscal_calendars=v_pack["fiscal_calendars"]
+    )
+    assert v_result["points"] == []  # never a silent subtraction
+    assert len(v_result["gaps"]) == 1
+    v_gap = v_result["gaps"][0]
+    assert v_gap["type"] == "q4_basis_mismatch"
+    assert v_gap["type"] != "derived_q4"  # distinct from the clean flag
+    assert "vintage" in v_gap["reason"]
+    assert sorted(v_gap["accessions"]) == [
+        "0000320193-25-000073", "0000320193-26-000079",
+    ]
+
+    # (e) XBRL unit/scale mismatch -> the same refusal lane.
+    u_pack = q4_fixture["q4_unit_mismatch"]
+    u_points = kpi_xbrl_module.resolve_binding(
+        u_pack, DUALDUR_IPHONE_BINDING, "AAPL"
+    )
+    u_result = kpi_xbrl_module.derive_q4_points(
+        u_points, fiscal_calendars=u_pack["fiscal_calendars"]
+    )
+    assert u_result["points"] == []
+    assert len(u_result["gaps"]) == 1
+    assert u_result["gaps"][0]["type"] == "q4_basis_mismatch"
+    assert "unit" in u_result["gaps"][0]["reason"]
+
+    # (f) a directly-tagged Q4 short-circuits: used as-is, no derivation,
+    # no computed flag, no gap.
+    r_pack = q4_fixture["q4_reported_shortcircuit"]
+    r_points = kpi_xbrl_module.resolve_binding(
+        r_pack, DUALDUR_IPHONE_BINDING, "AAPL"
+    )
+    r_result = kpi_xbrl_module.derive_q4_points(
+        r_points, fiscal_calendars=r_pack["fiscal_calendars"]
+    )
+    assert r_result["points"] == []
+    assert r_result["gaps"] == []
+    reported_q4 = next(p for p in r_points if p["period_type"] == "Q4")
+    assert reported_q4["value"] == 3333.0  # NOT 3000.0 — used unchanged
+    assert "dqc" not in reported_q4
+    assert not reported_q4.get("derived")
+
+
+def test_q4_derived_carries_parallel_labels(kpi_xbrl_module, q4_fixture):
+    """Task 8 RED (critic round 2 — spec: 'a derived Q4 carries the three
+    label groups, grounded in the 10-K's calendar'): the derived point
+    carries (1) the RAW WINDOW of the derived 3-month span (day after the
+    9mo-YTD end through the FY end), (2) the CALENDAR label mechanically
+    minted from that window's period_end, and (3) the FISCAL label
+    grounded in the 10-K's dei calendar (fiscal 2025, Q4 by construction
+    of the window ending on the fiscal year end). When the two source
+    filings declare DIFFERENT fiscal calendars, the basis-mismatch
+    refusal applies — labels are never minted across two calendars."""
+    pack = q4_fixture["aapl_q4_derive"]
+    points = kpi_xbrl_module.resolve_binding(pack, DUALDUR_IPHONE_BINDING, "AAPL")
+    result = kpi_xbrl_module.derive_q4_points(
+        points, fiscal_calendars=pack["fiscal_calendars"]
+    )
+    q4 = result["points"][0]
+    # (1) raw window — the derived 3-month span.
+    assert q4["period_start"] == "2025-06-29"
+    assert q4["period_end"] == "2025-09-27"
+    assert q4["duration_class"] == "3mo"
+    # (2) calendar label — the calendar quarter containing period_end.
+    assert q4["calendar_year"] == 2025
+    assert q4["calendar_quarter"] == "Q3"
+    # (3) fiscal label — grounded in the 10-K's dei calendar (--09-27),
+    # never a bare fabrication: period key is the 10-K's fiscal year.
+    assert (
+        pack["fiscal_calendars"]["0000320193-25-000079"]["fiscal_year_end"]
+        == "--09-27"
+    )
+    assert q4["period"] == "2025"
+    assert q4["period_type"] == "Q4"
+
+    # Source filings declaring DIFFERENT fiscal calendars -> the
+    # basis-mismatch refusal (spec: 'if X and Y declare different fiscal
+    # calendars, the basis-mismatch refusal below applies').
+    c_pack = q4_fixture["q4_calendar_mismatch"]
+    c_points = kpi_xbrl_module.resolve_binding(
+        c_pack, DUALDUR_IPHONE_BINDING, "AAPL"
+    )
+    c_result = kpi_xbrl_module.derive_q4_points(
+        c_points, fiscal_calendars=c_pack["fiscal_calendars"]
+    )
+    assert c_result["points"] == []
+    assert len(c_result["gaps"]) == 1
+    assert c_result["gaps"][0]["type"] == "q4_basis_mismatch"
+    assert "calendar" in c_result["gaps"][0]["reason"]
+
+
 def test_cli_build_resolves_binding_and_prints_points(tmp_path):
     """Task 6 GREEN: the `build` subcommand reads a fact-pack JSON from
     stdin and a binding JSON from --binding, resolves it via
