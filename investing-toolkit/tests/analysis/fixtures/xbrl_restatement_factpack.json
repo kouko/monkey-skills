@@ -1,5 +1,5 @@
 {
-  "_comment": "REAL captured cross-filing restatement (never hand-typed), machine-captured exact-integer via edgartools extract_dimensional_revenue. INTC ClientComputingGroup segment revenue for FY2020 (period_end 2020-12-26) was RECAST between the FY2021 10-K (accession 0000050863-22-000007, filed 2022-01-27, value 40057000000.0) and the FY2022 10-K (accession 0000050863-23-000006, filed 2023-01-27, value 40535000000.0): SAME (concept, dimensions, consolidation, period_end), DIFFERENT value, DIFFERENT accession. Verified live 2026-07-15. Overlap policy C keeps the most-recently-filed value and emits a restatement DQC flag.",
+  "_comment": "REAL captured cross-filing restatement (never hand-typed), machine-captured exact-integer via edgartools extract_dimensional_revenue. INTC ClientComputingGroup segment revenue for FY2020 (period_end 2020-12-26) was RECAST between the FY2021 10-K (accession 0000050863-22-000007, filed 2022-01-27, value 40057000000.0) and the FY2022 10-K (accession 0000050863-23-000006, filed 2023-01-27, value 40535000000.0): SAME (concept, dimensions, consolidation, period_end), DIFFERENT value, DIFFERENT accession. Verified live 2026-07-15. Overlap policy C keeps the most-recently-filed value and emits a restatement DQC flag. | AUGMENTED 2026-07-18 (T5, docs/loom/plans/2026-07-16-operational-kpi-quarterly.md): every fact now carries the producer's parallel period-label group (duration_months=12 — all facts here are annual 10-K facts — calendar_year/calendar_quarter, fiscal_year/fiscal_quarter, derivation_basis) derived by the REAL sec_edgar_client._derive_fiscal_label against each filer's nominal dei calendar (AAPL --09-27, NFLX --12-31, INTC --12-26), mirroring the current producer emission (docs/loom/memory/fixtures-mirror-producer-shape.md). The raw edgartools fiscal_year column value is REPLACED by the honest derived label. | AUGMENTED 2026-07-18 (T9, docs/loom/plans/2026-07-16-operational-kpi-quarterly.md): added the pack-level per-accession `fiscal_calendars` map the producer has emitted since T3 (fiscal_period_focus=FY for these 10-K accessions, nominal fiscal_year_end per the filer convention above, fiscal_year_focus = the fiscal year each 10-K reports) — the channel facts_to_points now requires to ground every point's source_form (10-K|10-Q); no fact values touched.",
   "company": "INTC",
   "facts": [
     {
@@ -12,7 +12,12 @@
       "period_end": "2020-12-26",
       "fiscal_year": 2020,
       "accession": "0000050863-22-000007",
-      "filed": "2022-01-27"
+      "filed": "2022-01-27",
+      "duration_months": 12,
+      "calendar_year": 2020,
+      "calendar_quarter": "Q4",
+      "fiscal_quarter": "FY",
+      "derivation_basis": "dei-declared"
     },
     {
       "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
@@ -24,7 +29,24 @@
       "period_end": "2020-12-26",
       "fiscal_year": 2020,
       "accession": "0000050863-23-000006",
-      "filed": "2023-01-27"
+      "filed": "2023-01-27",
+      "duration_months": 12,
+      "calendar_year": 2020,
+      "calendar_quarter": "Q4",
+      "fiscal_quarter": "FY",
+      "derivation_basis": "dei-declared"
     }
-  ]
+  ],
+  "fiscal_calendars": {
+    "0000050863-22-000007": {
+      "fiscal_period_focus": "FY",
+      "fiscal_year_end": "--12-26",
+      "fiscal_year_focus": "2021"
+    },
+    "0000050863-23-000006": {
+      "fiscal_period_focus": "FY",
+      "fiscal_year_end": "--12-26",
+      "fiscal_year_focus": "2022"
+    }
+  }
 }

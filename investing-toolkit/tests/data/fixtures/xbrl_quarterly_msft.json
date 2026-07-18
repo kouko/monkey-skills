@@ -1,0 +1,44 @@
+{
+  "_provenance": "MACHINE-CAPTURED 2026-07-16 via edgartools==5.42.0, edgar.Company('MSFT').get_filings(...); exact integers dumped from xb.facts.to_dataframe().to_dict('records'), never hand-typed. Concept us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax, dim_us-gaap_StatementBusinessSegmentsAxis=msft:ProductivityAndBusinessProcessesMember throughout — chosen because it live-confirmed the dual-duration collision (Task 1, docs/loom/plans/2026-07-16-operational-kpi-quarterly.md: a 10-Q tags BOTH the 3-month quarter AND the YTD cumulative under the SAME period_end).",
+  "quarterly_filing": {
+    "accession": "0001193125-26-191507",
+    "form": "10-Q",
+    "filing_date": "2026-04-29",
+    "period_of_report": "2026-03-31"
+  },
+  "annual_filing": {
+    "accession": "0000950170-25-100235",
+    "form": "10-K",
+    "filing_date": "2025-07-30",
+    "period_of_report": "2025-06-30"
+  },
+  "raw_facts": {
+    "three_month": {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dim_us-gaap_StatementBusinessSegmentsAxis": "msft:ProductivityAndBusinessProcessesMember",
+      "numeric_value": 35013000000.0,
+      "period_type": "duration",
+      "period_start": "2026-01-01",
+      "period_end": "2026-03-31",
+      "is_dimensioned": true
+    },
+    "nine_month_ytd": {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dim_us-gaap_StatementBusinessSegmentsAxis": "msft:ProductivityAndBusinessProcessesMember",
+      "numeric_value": 102149000000.0,
+      "period_type": "duration",
+      "period_start": "2025-07-01",
+      "period_end": "2026-03-31",
+      "is_dimensioned": true
+    },
+    "annual": {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dim_us-gaap_StatementBusinessSegmentsAxis": "msft:ProductivityAndBusinessProcessesMember",
+      "numeric_value": 120810000000.0,
+      "period_type": "duration",
+      "period_start": "2024-07-01",
+      "period_end": "2025-06-30",
+      "is_dimensioned": true
+    }
+  }
+}

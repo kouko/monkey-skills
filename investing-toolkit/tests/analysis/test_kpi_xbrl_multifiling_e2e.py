@@ -114,31 +114,46 @@ def restatement_fact_pack() -> dict:
     return json.loads((FIXTURES / "xbrl_restatement_factpack.json").read_text(encoding="utf-8"))
 
 
-def _aapl_product_facts(sec_edgar_helpers, aapl_multifiling_raw: dict) -> list[dict]:
+def _aapl_product_facts(
+    sec_edgar_helpers, aapl_multifiling_raw: dict,
+) -> tuple[list[dict], dict]:
     """Drive every raw fact row across the 3 real AAPL filings through the
     extractor's own fact-builder pair, keeping only the
     ProductOrService=ProductMember signature (the top-line product-revenue
     breakdown) — mirrors exactly what `extract_dimensional_revenue` does
-    internally per filing (sec_edgar_client.py:2112-2122)."""
+    internally per filing (sec_edgar_client.py:2112-2122). Also returns
+    the per-accession `fiscal_calendars` map the extractor emits on the
+    pack (T9: facts_to_points grounds each point's source_form on it)."""
     built = []
+    fiscal_calendars: dict = {}
     for filing in aapl_multifiling_raw["filings"]:
         accession = filing["accession"]
         filed = filing["filing_date"]
+        # Task 13: the fact-builder derives each fact's parallel fiscal
+        # label against THIS filing's own dei calendar (live-captured dei
+        # cover rows ride in the same raw_facts records) — mirroring
+        # extract_dimensional_revenue's per-filing read exactly.
+        dei_calendar = sec_edgar_helpers._extract_dei_calendar(filing["raw_facts"])
+        fiscal_calendars[accession] = dei_calendar
         for raw in filing["raw_facts"]:
             if not sec_edgar_helpers._is_dimensional_revenue_fact(raw):
                 continue
-            fact = sec_edgar_helpers._build_dimensional_revenue_fact(raw, "AAPL", accession, filed)
+            fact = sec_edgar_helpers._build_dimensional_revenue_fact(
+                raw, "AAPL", accession, filed, dei_calendar,
+            )
             built.append(fact)
     return [
         f for f in built
         if f["dimensions"] == {"ProductOrService": "ProductMember"} and f["consolidation"] is None
-    ]
+    ], fiscal_calendars
 
 
 def test_multifiling_chain_produces_multiyear_series_with_dqc(
     kpi_xbrl_module, sec_edgar_helpers, aapl_multifiling_raw, restatement_fact_pack,
 ):
-    aapl_facts = _aapl_product_facts(sec_edgar_helpers, aapl_multifiling_raw)
+    aapl_facts, aapl_calendars = _aapl_product_facts(
+        sec_edgar_helpers, aapl_multifiling_raw
+    )
     # Sanity on the composed input: real multi-filing overlap across 2019 and
     # 2021 comparatives (2 filings each report those years) — proves this is
     # genuinely multi-filing input, not a single filing's facts.
@@ -152,6 +167,14 @@ def test_multifiling_chain_produces_multiyear_series_with_dqc(
     fact_pack = {
         "company": "MULTI",
         "facts": aapl_facts + restatement_facts,
+        # T9: the composed pack carries the same per-accession calendar
+        # channel the extractor emits — the AAPL side from the live-captured
+        # dei cover rows, the INTC side from the restatement fixture's own
+        # map — so every point's source_form grounds on its filing's focus.
+        "fiscal_calendars": {
+            **aapl_calendars,
+            **restatement_fact_pack["fiscal_calendars"],
+        },
     }
     binding = {
         "kpi_id": "revenue_multifiling_probe",
@@ -185,13 +208,17 @@ def test_multifiling_chain_produces_multiyear_series_with_dqc(
     assert len(dqc_points) == 1
     dqc_point = dqc_points[0]
     assert dqc_point["period"] == "2020"
+    # T9 schema migration: the ONE DQC schema (type, old, new, accessions,
+    # reason) replaces the pilot's superseded_accession/kept_accession
+    # names — audit content preserved as accessions=[superseded, kept].
     assert dqc_point["dqc"] == {
         "type": "restatement",
         "old": 40057000000.0,
         "new": 40535000000.0,
-        "superseded_accession": "0000050863-22-000007",
-        "kept_accession": "0000050863-23-000006",
+        "accessions": ["0000050863-22-000007", "0000050863-23-000006"],
+        "reason": dqc_point["dqc"]["reason"],
     }
+    assert "superseded" in dqc_point["dqc"]["reason"]
 
     # Chain to build_series_with_break (Task 3/4's identity-key + policy C
     # logic is otherwise UNCHANGED downstream, per the plan's Notes) — a

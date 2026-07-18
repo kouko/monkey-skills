@@ -188,3 +188,95 @@ def test_extract_dimensional_revenue_multifiling_live_aapl():
         f"expected facts spanning more than 3 distinct fiscal years: "
         f"{sorted(fiscal_years)}"
     )
+
+
+@pytest.mark.network
+def test_quarterly_dual_duration_live():
+    """Live shape-anchor for the T13 parallel-label rebuild (Task 12,
+    docs/loom/plans/2026-07-16-operational-kpi-quarterly.md), grounding the
+    fixtures-mirror-producer-shape practice (docs/loom/memory/fixtures-
+    mirror-producer-shape.md — a live anchor caught wrong edgartools/dei
+    grounding 3x historically on a prior branch).
+
+    Fetches MSFT's latest 10-Q (form="10-Q", no range — the default
+    latest-only path) via the REAL `extract_dimensional_revenue` path and
+    asserts the REAL producer shape T13-T19 assume:
+    (a) at least one dimensional-revenue signature+period_end carries BOTH
+        a duration_months=3 (single-quarter) and a duration_months=9
+        (YTD) fact — a Q3 10-Q tags both the quarter and the
+        year-to-date for the same line item;
+    (b) the pack's `fiscal_calendars` entry for that filing's accession
+        carries all three dei cover tags (fiscal_period_focus,
+        fiscal_year_end, fiscal_year_focus), each non-null;
+    (c) every emitted fact carries the parallel label group —
+        calendar_year, calendar_quarter, fiscal_year, fiscal_quarter.
+    """
+    if str(SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(SCRIPTS))
+    import sec_edgar_client
+
+    pack = sec_edgar_client.extract_dimensional_revenue("MSFT", form="10-Q")
+
+    assert "error" not in pack, f"extract_dimensional_revenue failed: {pack}"
+    assert pack["company"] == "MSFT"
+    facts = pack["facts"]
+    assert isinstance(facts, list) and facts, "expected a non-empty facts list"
+
+    # (c) every emitted fact carries the parallel label group.
+    _label_keys = {"calendar_year", "calendar_quarter", "fiscal_year", "fiscal_quarter"}
+    for fact in facts:
+        assert _label_keys <= set(fact), (
+            f"fact missing a parallel label key: {sorted(fact)}"
+        )
+
+    # (a) at least one signature+period_end carries both a 3-month and a
+    # 9-month duration fact (a Q3 10-Q tags the quarter AND the YTD).
+    by_signature_period: dict[tuple, set[int]] = {}
+    for fact in facts:
+        duration = fact.get("duration_months")
+        if duration is None:
+            continue
+        signature = (
+            fact["concept"],
+            tuple(sorted(fact["dimensions"].items())),
+            fact["consolidation"],
+            fact["period_end"],
+        )
+        by_signature_period.setdefault(signature, set()).add(duration)
+
+    dual_duration_signatures = [
+        sig for sig, durations in by_signature_period.items()
+        if {3, 9} <= durations
+    ]
+    assert dual_duration_signatures, (
+        "expected at least one signature+period_end carrying both a "
+        "duration_months=3 and a duration_months=9 fact; got durations="
+        f"{ {sig: sorted(d) for sig, d in by_signature_period.items()} }"
+    )
+
+    # (b) all three dei cover tags present (non-null) for the accession(s)
+    # backing the dual-duration signature.
+    example_signature = dual_duration_signatures[0]
+    example_accessions = {
+        f["accession"] for f in facts
+        if (
+            f["concept"], tuple(sorted(f["dimensions"].items())),
+            f["consolidation"], f["period_end"],
+        ) == example_signature
+    }
+    assert example_accessions, "could not resolve an accession for the dual-duration fact"
+    fiscal_calendars = pack["fiscal_calendars"]
+    _dei_keys = {"fiscal_period_focus", "fiscal_year_end", "fiscal_year_focus"}
+    for accession in example_accessions:
+        calendar = fiscal_calendars.get(accession)
+        assert calendar is not None, (
+            f"expected a fiscal_calendars entry for accession {accession!r}: "
+            f"{sorted(fiscal_calendars)}"
+        )
+        assert _dei_keys <= set(calendar), (
+            f"fiscal_calendars entry missing a dei cover tag key: {sorted(calendar)}"
+        )
+        for key in _dei_keys:
+            assert calendar[key] is not None, (
+                f"dei cover tag {key!r} is null for accession {accession!r}: {calendar}"
+            )

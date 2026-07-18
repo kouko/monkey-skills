@@ -1,0 +1,108 @@
+{
+  "_provenance": "PRODUCER-GENERATED 2026-07-18 (T5): each fact built by the REAL sec_edgar_client._extract_dei_calendar + _build_dimensional_revenue_fact over raw rows carrying AAPL's REAL FY2025 10-Q filing metadata (accessions/filing dates/period_of_report machine-captured in tests/data/fixtures/xbrl_quarterly_completeness_aapl.json; dei cover values are AAPL's real FY2025 --09-27 late-September calendar) and the real 13-week fiscal window dates. Revenue VALUES are synthetic placeholders (1000/2000/3000/1500/4000) — classification/keying never depends on value — but every LABEL (fiscal_year/fiscal_quarter/duration_months/calendar pair/derivation_basis) is the producer's own derivation, never hand-typed (docs/loom/memory/fixtures-mirror-producer-shape.md, docs/loom/memory/fiscal-year-derive-per-fact-against-filing-calendar.md). Regenerate via the producer — never hand-edit.",
+  "company": "AAPL",
+  "facts": [
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "ProductOrService": "IPhoneMember"
+      },
+      "consolidation": null,
+      "value": 1000.0,
+      "period_end": "2024-12-28",
+      "accession": "0000320193-25-000008",
+      "filed": "2025-01-31",
+      "duration_months": 3,
+      "calendar_year": 2024,
+      "calendar_quarter": "Q4",
+      "fiscal_year": 2025,
+      "fiscal_quarter": "Q1",
+      "derivation_basis": "dei-declared"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "ProductOrService": "IPhoneMember"
+      },
+      "consolidation": null,
+      "value": 2000.0,
+      "period_end": "2025-03-29",
+      "accession": "0000320193-25-000057",
+      "filed": "2025-05-02",
+      "duration_months": 3,
+      "calendar_year": 2025,
+      "calendar_quarter": "Q1",
+      "fiscal_year": 2025,
+      "fiscal_quarter": "Q2",
+      "derivation_basis": "dei-declared"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "ProductOrService": "IPhoneMember"
+      },
+      "consolidation": null,
+      "value": 3000.0,
+      "period_end": "2025-03-29",
+      "accession": "0000320193-25-000057",
+      "filed": "2025-05-02",
+      "duration_months": 6,
+      "calendar_year": 2025,
+      "calendar_quarter": "Q1",
+      "fiscal_year": 2025,
+      "fiscal_quarter": "Q2",
+      "derivation_basis": "dei-declared"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "ProductOrService": "IPhoneMember"
+      },
+      "consolidation": null,
+      "value": 1500.0,
+      "period_end": "2024-03-30",
+      "accession": "0000320193-25-000057",
+      "filed": "2025-05-02",
+      "duration_months": 3,
+      "calendar_year": 2024,
+      "calendar_quarter": "Q1",
+      "fiscal_year": 2024,
+      "fiscal_quarter": "Q2",
+      "derivation_basis": "dei-declared"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {
+        "ProductOrService": "IPhoneMember"
+      },
+      "consolidation": null,
+      "value": 4000.0,
+      "period_end": "2025-06-28",
+      "accession": "0000320193-25-000073",
+      "filed": "2025-08-01",
+      "duration_months": 9,
+      "calendar_year": 2025,
+      "calendar_quarter": "Q2",
+      "fiscal_year": 2025,
+      "fiscal_quarter": "Q3",
+      "derivation_basis": "dei-declared"
+    }
+  ],
+  "fiscal_calendars": {
+    "0000320193-25-000008": {
+      "fiscal_period_focus": "Q1",
+      "fiscal_year_end": "--09-27",
+      "fiscal_year_focus": "2025"
+    },
+    "0000320193-25-000057": {
+      "fiscal_period_focus": "Q2",
+      "fiscal_year_end": "--09-27",
+      "fiscal_year_focus": "2025"
+    },
+    "0000320193-25-000073": {
+      "fiscal_period_focus": "Q3",
+      "fiscal_year_end": "--09-27",
+      "fiscal_year_focus": "2025"
+    }
+  }
+}

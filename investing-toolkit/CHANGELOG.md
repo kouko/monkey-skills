@@ -5,6 +5,55 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.22.0] — 2026-07-18
+
+Quarterly (10-Q) operational-KPI support, rebuilt on an honest fiscal-calendar
+foundation. The root defect — a primitive returning the CALENDAR year under a
+"fiscal year" docstring, which mislabeled every non-December-FYE filer's
+quarters — is replaced end-to-end: every dimensional fact now carries BOTH a
+calendar label and a fiscal label in parallel (mirroring Compustat
+DATADATE/DATACQTR/DATAFQTR), never one collapsed into the other. Spec:
+`docs/loom/2026-07-16-operational-kpi-quarterly/specs/operational-kpi-quarterly/spec.md`;
+plan: `docs/loom/plans/2026-07-16-operational-kpi-quarterly.md`; decision record:
+`docs/loom/2026-07-16-operational-kpi-quarterly/rebuild-findings.md`.
+
+### Added
+
+- **Parallel period labels per fact** (`data-markets` / `sec_edgar_client.py`):
+  `calendar_year`/`calendar_quarter` (calendar quarter containing period_end) +
+  `fiscal_year`/`fiscal_quarter` (per-fact, own period_end vs that filing's dei
+  calendar; comparatives from their OWN period, never the filing focus stamped;
+  fail-loud on an unreadable calendar — never a calendar fallback) +
+  `derivation_basis` (dei-declared | projected).
+- **Declared-fiscal-year selection**: a 10-Q range request selects filings by
+  their DECLARED fiscal year (index-window guess pre-fetch, reconciled against
+  `dei:DocumentFiscalYearFocus` post-fetch — out-of-range declarations excluded
+  and surfaced, unreadable declarations flagged, never calendar-bucketed).
+- **Coverage honesty rebuilt**: comparison universe = the full filings index;
+  absence states not_yet_filed / out_of_requested_range / unclassified +
+  observed states attempted-fetch-failed / filed-but-unlabelable (one bad
+  filing quarantines, never aborts the run) + index-visible-but-not-selected
+  selection gaps. All flags on ONE DQC schema (type/old/new/accessions/reason).
+- **Quarterly analysis chain** (`analysis-kpi` / `kpi_xbrl.py`): period
+  classification consumes the emitted labels (analysis never re-derives fiscal
+  years); series key on the FISCAL basis; duration-qualified identity key
+  de-conflates 3mo single-quarter from YTD cumulatives; derived Q4 =
+  FY − 9mo-YTD (guarded, segregated `derived: True` lane, dual-accession
+  provenance, three label groups); single-granularity series with fiscal-range
+  output filtering; structured point provenance (accession + source form +
+  duration_class).
+- **Live shape-anchor** (network-marked) pinning dual-duration facts + all
+  three dei cover tags against real SEC EDGAR.
+
+### Changed
+
+- `_filing_period_year` (calendar-as-fiscal lie) removed; call sites route
+  through honest primitives (`_filing_period_end_calendar_year`,
+  `_quarterly_fiscal_year_guesses`, `_derive_fiscal_label`).
+- Revenue-concept gate: deny list names the real
+  `RevenueFromCollaborativeArrangement*` family + REIT pro-forma/ladder class;
+  synthetic $-unit backstop regression added.
+
 ## [v2.6.0] — 2026-07-12
 
 US SEC primary-source narrative layer — the memo pipeline can now read what
