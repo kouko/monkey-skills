@@ -17,9 +17,11 @@ Versioning: [Semantic Versioning](https://semver.org/).
   stops and hands back to the user with a plain-language list of unresolved
   findings instead of silently re-running.
 - **`scripts/mint_critic_verdict.py`**: ported from `loom-spec` (byte-identical
-  logic; only the default file list differs — `DESIGN.md,ui-flows.md`) —
-  content-hash-bound `mint`/`validate` critic-verdict CLI, plus a lockstep
-  test pinning it to the `loom-spec` original so the two never drift.
+  logic — `--files` has no default in either plugin, only docstrings differ,
+  e.g. this plugin's docstrings noting the typical `DESIGN.md,ui-flows.md`
+  file list) — content-hash-bound `mint`/`validate` critic-verdict CLI, plus
+  a lockstep test pinning it to the `loom-spec` original so the two never
+  drift.
 - **`design-critic`**: the verdict step now additionally runs
   `mint_critic_verdict.py mint` for the change-folder on both verdict values.
 
