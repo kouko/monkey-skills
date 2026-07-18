@@ -126,6 +126,24 @@ happened).
   an empty `high_alerts` means no high-divergence pairs were found, not
   a truncated run.
 
+## Optional input: kpi quarterly memo feed (Phase 3.5, US tickers only)
+
+Not a seventh defense element — an OPTIONAL Resource Paths entry the six
+elements' disciplines already cover. When Phase 3.5 ran, the packet's
+`### Resource Paths` includes `/tmp/${TICKER_SAFE}-kpi-quarterly-feed.json`
+— the `kpi_memo_feed.py build-quarterly` output (memo-feed envelope 1.1,
+`status: "TRUSTED"`, fail-closed: the CLI exits 1 instead of emitting a
+degraded feed). The memo's Operating-KPI section consumes ONLY this feed
+— never recomputed raw facts (investing-team protocol owns the rendering
+rules).
+
+**Skip-note contract (non-US, or a loud Phase 3.5 failure)**: the feed
+path is omitted and the seed context carries an explicit skip note (e.g.
+"kpi-quarterly-feed skipped: non-US ticker, dimensional-XBRL lane is
+US-only") — absence is never silent, mirroring the Phase 2.6 xval skip
+discipline. §4's verbatim-transcription bar applies to the skip note's
+reason text.
+
 ## Orchestrator acceptance check (before Phase 4 artifact gate)
 
 On receiving the memo: (a) grep the Verdict section for `rule_verdict` —
@@ -134,5 +152,10 @@ absent, or deviating without a Deviation Block → send back, do not accept;
 (c) confirm the memo date matches the issuer-timezone execution date;
 (d) if the run carried an xval report, spot-check any statement-table
 number cited in the memo against `high_alerts` — a `high`-alert number
-cited without surfacing both values → send back, do not accept.
+cited without surfacing both values → send back, do not accept;
+(e) if the run carried a kpi quarterly feed, confirm the memo's
+Operating-KPI content cites the feed's values (derived-Q4 cells tagged,
+coverage gaps footnoted) rather than recomputing from raw facts; if
+Phase 3.5 was skipped, grep the memo's Limitations section for the skip
+note — a silent absence → send back, do not accept.
 These are orchestrator-side cheap greps, not a re-run of the gates.
