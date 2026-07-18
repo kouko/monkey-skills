@@ -4,19 +4,90 @@ verdict to the exact bytes of the artifact files it reviewed (§4c Fix-4
 of docs/loom/audits/2026-07-18-agent-loop-convergence-audit.md).
 
 Ported from loom-spec/scripts/test_mint_critic_verdict.py (Task 14's
-proven test matrix) — byte-identical logic; fixture default filename
-switched from DESIGN.md to this plugin's typical artifact, per Task 15.
+proven test matrix) — test matrix is byte-identical to the SSOT's;
+fixture filenames (DESIGN.md throughout, matching the SSOT) are
+arbitrary sample content and irrelevant to plugin identity — no
+switch to a plugin-specific filename was made or is needed.
 
 Fixtures are built INLINE under tmp_path (flat-folder rule: no fixtures/
 subdir). Each test constructs its own throwaway change-folder.
 """
 from __future__ import annotations
 
+import ast
 import json
 from datetime import datetime
 from pathlib import Path
 
 from mint_critic_verdict import verdict_filename, main
+
+# --------------------------------------------------------------- lockstep
+
+# This file's own module path and the SSOT sibling's, resolved
+# repo-root-relative from __file__ (not hardcoded absolute paths) so
+# the test works regardless of checkout location.
+_THIS_MODULE = Path(__file__).resolve().parent / "mint_critic_verdict.py"
+_SSOT_MODULE = (
+    Path(__file__).resolve().parents[2] / "loom-spec" / "scripts" / "mint_critic_verdict.py"
+)
+
+
+def _strip_docstrings(tree: ast.Module) -> ast.Module:
+    """Remove the leading docstring Expr from the module and every
+    function/class def, in place. Only docstrings may differ between
+    the SSOT and this functional copy — logic must be identical."""
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            if (
+                node.body
+                and isinstance(node.body[0], ast.Expr)
+                and isinstance(node.body[0].value, ast.Constant)
+                and isinstance(node.body[0].value.value, str)
+            ):
+                node.body.pop(0)
+    return tree
+
+
+def _code_dump(source: str) -> str:
+    """ast.dump of `source` with all docstrings stripped — the
+    comparable "logic only" representation for lockstep checking."""
+    tree = ast.parse(source)
+    _strip_docstrings(tree)
+    return ast.dump(tree)
+
+
+def test_lockstep_code_matches_ssot():
+    # Mechanical drift-guard added per code-quality review Round 2
+    # finding (architecture: no lockstep mechanism pinned the two
+    # copies).
+    this_code = _code_dump(_THIS_MODULE.read_text(encoding="utf-8"))
+    ssot_code = _code_dump(_SSOT_MODULE.read_text(encoding="utf-8"))
+    assert this_code == ssot_code, (
+        f"{_THIS_MODULE} has diverged in LOGIC from the SSOT "
+        f"{_SSOT_MODULE} — only docstrings may differ between a "
+        "functional copy and its SSOT. Sync the fix, don't just "
+        "silence this test."
+    )
+
+
+def test_lockstep_detects_divergence(tmp_path):
+    # Negative control: proves test_lockstep_code_matches_ssot is not
+    # vacuously true by perturbing a copy's LOGIC (not a docstring)
+    # and asserting the comparison then fails.
+    original_source = _THIS_MODULE.read_text(encoding="utf-8")
+    perturbed_source = original_source.replace(
+        'ALLOWED_VERDICTS = {"PASS_WITH_NOTES", "NEEDS_REVISION"}',
+        'ALLOWED_VERDICTS = {"PASS_WITH_NOTES"}',
+        1,
+    )
+    assert perturbed_source != original_source  # sanity: replace found its target
+
+    diverged_copy = tmp_path / "mint_critic_verdict_diverged.py"
+    diverged_copy.write_text(perturbed_source, encoding="utf-8")
+
+    assert _code_dump(diverged_copy.read_text(encoding="utf-8")) != _code_dump(
+        original_source
+    )
 
 
 def _write(path: Path, text: str) -> Path:

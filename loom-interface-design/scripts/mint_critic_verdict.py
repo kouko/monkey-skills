@@ -1,3 +1,9 @@
+# FUNCTIONAL COPY — DO NOT EDIT LOGIC OUT OF LOCKSTEP
+# SSOT: loom-spec/scripts/mint_critic_verdict.py
+# Rule: logic must stay byte-identical to the SSOT; only docstrings
+# may differ. Enforced mechanically by test_lockstep_code_matches_ssot
+# in test_mint_critic_verdict.py (ast.dump comparison, docstrings
+# stripped) — divergence fails this plugin's own test suite.
 """Content-hash-bound critic-verdict CLI (§4c Fix-4 of
 docs/loom/audits/2026-07-18-agent-loop-convergence-audit.md).
 
