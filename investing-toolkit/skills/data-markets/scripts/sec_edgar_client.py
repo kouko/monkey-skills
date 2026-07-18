@@ -2194,6 +2194,47 @@ class UnreadableFiscalCalendarError(ValueError):
         )
 
 
+class UnclassifiablePeriodError(ValueError):
+    """A fact's `period_end` lands beyond `FISCAL_BOUNDARY_TOLERANCE_DAYS`
+    of EVERY fiscal-quarter boundary (a transition/stub period), so the fact
+    CANNOT be fiscally labeled — and is never nearest-guessed onto the
+    closest boundary (spec: 'an out-of-tolerance period_end is
+    unclassifiable, never nearest-guessed'). Quarantine semantics (Task 16,
+    docs/loom/plans/2026-07-16-operational-kpi-quarterly.md): the extraction
+    loop catches this error, EXCLUDES the one fact from fiscal-labeled
+    output, surfaces `.dqc` under `coverage.unclassifiable_periods`, and
+    CONTINUES — one stub period never aborts the whole extraction. Contrast
+    `UnreadableFiscalCalendarError` (no calendar at all), which still
+    propagates: quarantining whole unlabelable FILINGS is Task 19's job.
+
+    `.dqc` carries the ONE DQC flag schema (type, old, new, accessions,
+    reason — the plan's kickoff decision: no per-class schema variants)."""
+
+    def __init__(
+        self,
+        ticker: str,
+        accession: str,
+        period_end: date,
+        fiscal_year: int,
+        fiscal_year_end: date,
+    ):
+        reason = (
+            f"period_end {period_end.isoformat()} for {ticker!r} filing "
+            f"{accession!r} matches no FY{fiscal_year} fiscal-quarter "
+            f"boundary within {FISCAL_BOUNDARY_TOLERANCE_DAYS} days "
+            f"(nominal fiscal year end {fiscal_year_end.isoformat()}) — a "
+            f"transition/stub period is never nearest-guessed"
+        )
+        self.dqc = {
+            "type": "unclassifiable_period",
+            "old": None,
+            "new": None,
+            "accessions": [accession],
+            "reason": reason,
+        }
+        super().__init__(reason)
+
+
 def _parse_fiscal_year_end_month_day(value) -> tuple[int, int] | None:
     """Parse a `dei:CurrentFiscalYearEndDate` value (`--MM-DD`, e.g.
     `--01-25`) into `(month, day)`. Returns None on an absent/malformed
@@ -2247,10 +2288,10 @@ def _derive_fiscal_label(
     distinguishes it from the single-quarter point).
 
     Fails loud: `UnreadableFiscalCalendarError` (distinct DQC-schema error)
-    on an absent/malformed calendar; a `ValueError` when `period_end`
-    matches no fiscal-quarter boundary within tolerance (a transition/stub
-    period — Task 16 refines this raise into the unclassifiable DQC flag +
-    derivation-basis disclosure)."""
+    on an absent/malformed calendar; `UnclassifiablePeriodError` when
+    `period_end` matches no fiscal-quarter boundary within tolerance (a
+    transition/stub period — the extraction loop quarantines the ONE fact
+    and surfaces the flag, Task 16; never a nearest-boundary guess)."""
     fye_raw = (dei_calendar or {}).get("fiscal_year_end")
     month_day = _parse_fiscal_year_end_month_day(fye_raw)
     if month_day is None:
@@ -2281,12 +2322,8 @@ def _derive_fiscal_label(
     for label, boundary in boundaries.items():
         if abs((period_end - boundary).days) <= FISCAL_BOUNDARY_TOLERANCE_DAYS:
             return fiscal_year, label
-    raise ValueError(
-        f"dimensional revenue fact for {ticker!r} filing {accession!r} has "
-        f"period_end {period_end.isoformat()} matching no FY{fiscal_year} "
-        f"fiscal-quarter boundary within {FISCAL_BOUNDARY_TOLERANCE_DAYS} "
-        f"days (nominal fiscal year end {fiscal_year_end.isoformat()}) — a "
-        f"transition/stub period is never nearest-guessed"
+    raise UnclassifiablePeriodError(
+        ticker, accession, period_end, fiscal_year, fiscal_year_end
     )
 
 
@@ -2414,6 +2451,15 @@ def _build_dimensional_revenue_fact(
     comparative derives from its own period). An unreadable calendar
     raises `UnreadableFiscalCalendarError` — never a calendar fallback.
 
+    The fiscal label also records `derivation_basis` (Task 16, spec: 'each
+    fiscal label MUST record its derivation basis'): here ALWAYS
+    "dei-declared" — a per-fact label rests on its OWN filing's in-hand
+    `dei:CurrentFiscalYearEndDate` (no tag → the raise above, never a
+    projection). The "projected" basis exists only at the COVERAGE layer
+    (`_quarterly_completeness_report`), where an in-progress fiscal year's
+    calendar rests on the +12mo forward projection of the prior declared
+    FYE because its own declaration does not yet exist.
+
     Also derives the raw fiscal_year column trap away: the label is NEVER
     taken from edgartools' raw `fiscal_year` column, which is unreliable
     for prior-year comparatives (live-verified on AAPL's 2025 10-K, the
@@ -2466,6 +2512,9 @@ def _build_dimensional_revenue_fact(
     built["calendar_quarter"] = f"Q{(period_end_date.month - 1) // 3 + 1}"
     built["fiscal_year"] = fiscal_year
     built["fiscal_quarter"] = fiscal_quarter
+    # Always tag-grounded at fact level — see the docstring's
+    # derivation-basis note (projection exists only at the coverage layer).
+    built["derivation_basis"] = "dei-declared"
     return built
 
 
@@ -2531,6 +2580,13 @@ def extract_dimensional_revenue(
       the filing, an unreadable declaration is flagged by name; either
       outcome is surfaced under `coverage.fiscal_year_reconciliation`
       (a DQC-schema flag list; `None` when no range was requested).
+
+    A fact whose period_end matches no fiscal-quarter boundary within
+    `FISCAL_BOUNDARY_TOLERANCE_DAYS` (a transition/stub period) is
+    QUARANTINED (Task 16): excluded from `facts`, surfaced under
+    `coverage.unclassifiable_periods` (a DQC-schema flag list, always
+    present — empty means "ran, none found"), never nearest-guessed and
+    never a whole-run abort.
 
     `until_year` WITHOUT `since_year` is UNSUPPORTED and raises loudly: the
     range is `[since_year, until_year]`, and with no lower bound the call would
@@ -2677,6 +2733,12 @@ def extract_dimensional_revenue(
     fiscal_year_reconciliation: list[dict] | None = (
         [] if since_year is not None else None
     )
+    # Task 16: out-of-tolerance (transition/stub) periods are quarantined —
+    # the ONE fact is excluded from fiscal-labeled output, the run
+    # continues, and the exclusion is surfaced here (the ONE DQC schema).
+    # Always a list: label derivation runs on every extraction, so an empty
+    # list means "ran, none found" — never "did not run".
+    unclassifiable_periods: list[dict] = []
     for filing in selected:
         xb = filing.xbrl()
         facts_records = xb.facts.to_dataframe().to_dict("records")
@@ -2707,13 +2769,22 @@ def extract_dimensional_revenue(
                 fiscal_year_reconciliation.append(reconciliation_flag)
             if not keep:
                 continue
-        facts.extend(
-            _build_dimensional_revenue_fact(
-                fact, ticker, accession, filed, dei_calendar,
-            )
-            for fact in facts_records
-            if _is_dimensional_revenue_fact(fact)
-        )
+        for fact in facts_records:
+            if not _is_dimensional_revenue_fact(fact):
+                continue
+            try:
+                facts.append(
+                    _build_dimensional_revenue_fact(
+                        fact, ticker, accession, filed, dei_calendar,
+                    )
+                )
+            except UnclassifiablePeriodError as exc:
+                # Task 16 quarantine: exclude the ONE fact, surface the
+                # flag, keep going — never nearest-guess a boundary, never
+                # abort the extraction for one transition/stub period. (An
+                # unreadable CALENDAR still propagates loud — quarantining
+                # whole unlabelable filings is Task 19's job.)
+                unclassifiable_periods.append(exc.dqc)
 
     quarterly_coverage = None
     if annual_form is not None:
@@ -2738,6 +2809,7 @@ def extract_dimensional_revenue(
             ),
             "quarterly_coverage": quarterly_coverage,
             "fiscal_year_reconciliation": fiscal_year_reconciliation,
+            "unclassifiable_periods": unclassifiable_periods,
         },
         "fiscal_calendars": fiscal_calendars,
     }
@@ -2970,12 +3042,25 @@ def _quarterly_year_completeness(
     since_year: int | None,
     until_year: int | None,
     as_of: date,
+    derivation_basis: str | None,
 ) -> dict:
     """Per-fiscal-year completeness record (Task 10): a 10-K + up to 3
     standalone 10-Qs = 4 expected filings. `present` lists what was found;
     `missing` lists each absent expected filing with an EXPLICIT reason
     (`_missing_quarter_reason`). Filing-level completeness only — never
-    zero-fills a dimension's value (see `_dimension_quarterly_absence`)."""
+    zero-fills a dimension's value (see `_dimension_quarterly_absence`).
+
+    `derivation_basis` (Task 16, spec: 'a projection-grounded label or
+    verdict is marked as such') discloses what grounds this record's fiscal
+    calendar — and thereby its fiscal_year label and every not_yet_filed/
+    due-date verdict computed against `fiscal_year_end`: "dei-declared"
+    (the year's own filed 10-K fixes the FYE — the filer's declaration in
+    hand), "projected" (the +12mo forward projection of the prior declared
+    FYE, an in-progress year whose declaration does not yet exist —
+    sanctioned FALLBACK only), or None (no fiscal calendar derivable at
+    all; the caller's no-calendar escape, Task 18 rebuilds these states).
+    Never omitted — a projection must stay distinguishable from a
+    declared read."""
     expected_total = 4
     present: list[dict] = []
     missing: list[dict] = []
@@ -3038,6 +3123,7 @@ def _quarterly_year_completeness(
         "expected_count": expected_total,
         "present": present,
         "missing": missing,
+        "derivation_basis": derivation_basis,
     }
 
 
@@ -3223,6 +3309,7 @@ def _quarterly_completeness_report(
     for year in fiscal_years:
         tenk = by_year_10k.get(year)
         fiscal_year_end = None
+        derivation_basis = None
         if tenk is not None:
             period = getattr(tenk, "period_of_report", None)
             if period:
@@ -3230,8 +3317,17 @@ def _quarterly_completeness_report(
                     fiscal_year_end = date.fromisoformat(str(period))
                 except ValueError:
                     fiscal_year_end = None
+            if fiscal_year_end is not None:
+                # The year's own filed 10-K fixes the FYE — the filer's
+                # declaration in hand (Task 16 basis disclosure).
+                derivation_basis = "dei-declared"
         elif year in projected_fiscal_year_ends:
             fiscal_year_end = projected_fiscal_year_ends[year]
+            # In-progress year: no 10-K/declaration exists yet, the
+            # calendar rests on the +12mo forward projection — marked so a
+            # projection-grounded verdict is never mistaken for a declared
+            # read (Task 16).
+            derivation_basis = "projected"
         report.append(
             _quarterly_year_completeness(
                 fiscal_year=year,
@@ -3241,6 +3337,7 @@ def _quarterly_completeness_report(
                 since_year=since_year,
                 until_year=until_year,
                 as_of=as_of,
+                derivation_basis=derivation_basis,
             )
         )
     return report
