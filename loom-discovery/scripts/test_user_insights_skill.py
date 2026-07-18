@@ -11,7 +11,12 @@ Load-bearing invariants encoded here (why each matters):
   the Intercom rule the whole station is built on;
 - needs must be expressed as job stories (the Torres opportunity-space
   semantics the brief adopted);
-- the skill folder must stay flat (Anthropic skill convention, hook-enforced).
+- the skill folder must stay flat (Anthropic skill convention, hook-enforced);
+- the validator must be wired in with a bounded (2-attempt) fix-and-rerun
+  loop, and must state the cwd (cd to consumer-project-root) it runs from —
+  a relative artifact path resolves against the wrong tree otherwise;
+- the validator step must tolerate greenfield/first-run artifact creation
+  (the assess-first intermediate state is a sanctioned pass, not a failure).
 """
 
 import re
@@ -99,6 +104,26 @@ def test_validate_step_wired_with_bounded_retry():
     )
     assert "surface" in body and "user" in body, (
         "must document surfacing remaining problems to the user after exhaustion"
+    )
+
+
+def test_validate_step_states_cwd_and_path_rationale():
+    # Why: the script lives in the PLUGIN repo but the artifact lives in the
+    # CONSUMER project — without a stated cwd, the validator's relative
+    # artifact-folder argument resolves against whatever directory the agent
+    # happens to be in, not the consumer project root. Deleting the cd line
+    # must turn this test red (mirrors product-principles Step 8's pattern).
+    body = SKILL.read_text(encoding="utf-8")
+    assert "cd <consumer-project-root>" in body, (
+        "validator command must cd to consumer-project-root before invoking "
+        "the (plugin-repo) script on the (consumer-project) artifact path"
+    )
+    # Prose wraps across lines, so collapse whitespace before matching the
+    # rationale phrase rather than requiring it stay on one physical line.
+    flattened = re.sub(r"\s+", " ", body)
+    assert "PLUGIN repo" in flattened and "CONSUMER project" in flattened, (
+        "must state the one-sentence plugin-repo-script vs "
+        "consumer-project-artifact rationale"
     )
 
 

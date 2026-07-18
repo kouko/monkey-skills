@@ -156,9 +156,12 @@ translate):
 5. **Close** with §Risks & open questions; unsupported claims live there, never
    in Opportunity space as if settled.
 6. **Validate, then fix.** Run the validator on the produced artifact folder
-   **before declaring the discovery done**:
+   **before declaring the discovery done**. The script lives in the PLUGIN
+   repo; the artifact lives in the CONSUMER project — resolve the script path
+   to an absolute path and run from the consumer project root:
 
    ```
+   cd <consumer-project-root>
    python3 <resolved-absolute-path-to>/loom-discovery/scripts/validate_discovery_artifacts.py docs/loom/discovery/<date>-<slug>/
    ```
 
