@@ -2226,6 +2226,161 @@ def test_annual_out_of_tolerance_unclassifiable(sec_client):
 
 
 # ---------------------------------------------------------------------------
+# Task 18 (2026-07-16-operational-kpi-quarterly REBUILD, supersedes old T10)
+# — coverage rebuilt on the corrected fiscal primitive: the report's
+# comparison universe is the FULL filings INDEX (never just the selected
+# set), index-level absences classify into three PAIRWISE-DISTINGUISHED
+# states (not_yet_filed / out_of_requested_range / unclassified — the range
+# check on the quarter's FISCAL year, never the calendar year of its
+# expected period end: AAPL FY2025-Q1 ends 2024-12-28), and a filing
+# present in the index that the pre-fetch selection derivation could not
+# place reports as index-visible-but-not-selected — POSITIVE index evidence
+# that beats every inferred state, never not_yet_filed, never
+# calendar-bucketed (the old reporting-layer calendar fallback is gone).
+# Fixtures: the machine-captured AAPL completeness set; the selection-missed
+# premise is a counterfactual staged period_of_report on the real FY2026-Q1
+# record (T14/T16 staged-row convention — one value changes in a parsed
+# copy, the fixture file untouched), wired METADATA-ONLY so any fetch of
+# the unselected filing fails the test.
+# ---------------------------------------------------------------------------
+
+def test_coverage_per_quarter_completeness(sec_client):
+    """(1) A covered year with 10-K+Q1+Q2 but no Q3 reports partial (3/4,
+    Q3 + reason). (2) The three index-absence states are pairwise
+    distinguished, with the range verdict on the quarter's FISCAL year
+    (the same quarter flips unclassified -> out_of_requested_range when the
+    request window moves, and an out-of-range year still appears in the
+    report — full-index comparison universe). (3) A fiscal-boundary 10-Q
+    present in the index that the pre-fetch derivation failed to select
+    reports as index_visible_not_selected — named in the year record AND in
+    `coverage.selection_gaps` (ONE DQC schema) — never not_yet_filed even
+    when its expected quarter end is still in the future."""
+    fixture = _load_aapl_quarterly_fixture()
+    filings = [
+        _filing_from_quarterly_fixture_record(fixture[key])
+        for key in ("fy2025_10k", "fy2025_q1", "fy2025_q2", "fy2026_q2")
+    ]  # FY2025's Q3 is absent from the index entirely (scenario 1).
+    # Counterfactual staged row (T14/T16 convention; only period_of_report
+    # changes): the real FY2026-Q1 10-Q shifted 30 days early — beyond
+    # _QUARTER_MATCH_TOLERANCE_DAYS of every known/projected quarter
+    # window, so the pre-fetch derivation cannot place it and selection
+    # misses it. Metadata-only: fetching the unselected filing = failure.
+    staged_q1 = dict(fixture["fy2026_q1"], period_of_report="2025-11-27")
+    filings.append(_metadata_only_filing(
+        staged_q1,
+        reason="the selection-missed boundary 10-Q was never selected and "
+               "must never be fetched",
+    ))
+    _aapl_company_stub(sec_client, filings)
+
+    pack = sec_client.extract_dimensional_revenue(
+        "AAPL", form="10-Q", since_year=2025, until_year=2026,
+        as_of=datetime.date(2026, 6, 1),
+    )
+    assert "error" not in pack, pack
+    by_year = {r["fiscal_year"]: r for r in pack["coverage"]["quarterly_coverage"]}
+    assert set(by_year) == {2025, 2026}, by_year
+
+    # (1) Partial year: 3/4, Q3 the one missing filing, reason attached.
+    fy2025 = by_year[2025]
+    assert fy2025["status"] == "partial", fy2025
+    assert (fy2025["present_count"], fy2025["expected_count"]) == (3, 4), fy2025
+    assert {p["filing"] for p in fy2025["present"]} == {"10-K", "Q1", "Q2"}
+    assert [m["filing"] for m in fy2025["missing"]] == ["Q3"], fy2025
+    fy2025_q3_reason = fy2025["missing"][0]["reason"]
+    assert fy2025_q3_reason == "unclassified", (
+        "FY2025-Q3 is due, in range, absent from the index, with no "
+        f"positive evidence of why -- got {fy2025_q3_reason!r}"
+    )
+    assert fy2025["missing"][0]["detail"], fy2025["missing"][0]
+
+    # (3) Selection gap: the staged boundary Q1 is index-visible but was
+    # never selected — its quarter says so by name, never an inferred state.
+    fy2026 = by_year[2026]
+    assert {p["filing"] for p in fy2026["present"]} == {"Q2"}, fy2026
+    missing_2026 = {m["filing"]: m for m in fy2026["missing"]}
+    assert set(missing_2026) == {"10-K", "Q1", "Q3"}, fy2026
+    gap_entry = missing_2026["Q1"]
+    assert gap_entry["reason"] == "index_visible_not_selected", (
+        "an index-visible filing the pre-fetch derivation missed must "
+        f"surface as a SELECTION gap, never an index absence -- {gap_entry}"
+    )
+    assert gap_entry["accession"] == staged_q1["accession"], (
+        f"the selection-gap entry must NAME the index filing -- {gap_entry}"
+    )
+    assert "2025-11-27" in gap_entry["detail"], gap_entry
+    # The in-progress year's genuinely-unfiled slots stay date-inferred.
+    assert missing_2026["10-K"]["reason"] == "not_yet_filed", fy2026
+    assert missing_2026["Q3"]["reason"] == "not_yet_filed", fy2026
+
+    # The gap also surfaces at coverage level under the ONE DQC schema.
+    gaps = pack["coverage"]["selection_gaps"]
+    assert isinstance(gaps, list) and len(gaps) == 1, pack["coverage"]
+    assert set(gaps[0]) == {"type", "old", "new", "accessions", "reason"}, (
+        f"selection-gap flags follow the ONE DQC schema (plan kickoff "
+        f"decision: no per-class variants) -- {gaps[0]}"
+    )
+    assert gaps[0]["type"] == "index_visible_not_selected", gaps[0]
+    assert gaps[0]["accessions"] == [staged_q1["accession"]], gaps[0]
+    assert gaps[0]["reason"], gaps[0]
+
+    # (3b) NEVER not_yet_filed: with as_of BEFORE the expected FY2026-Q1
+    # end (2025-12-27), date inference alone would say not_yet_filed — but
+    # the filing is VISIBLE in the index, and positive evidence beats
+    # inference (spec: 'never as not-yet-filed').
+    _aapl_company_stub(sec_client, filings)
+    pack_early = sec_client.extract_dimensional_revenue(
+        "AAPL", form="10-Q", since_year=2025, until_year=2026,
+        as_of=datetime.date(2025, 12, 10),
+    )
+    assert "error" not in pack_early, pack_early
+    early_2026 = next(
+        r for r in pack_early["coverage"]["quarterly_coverage"]
+        if r["fiscal_year"] == 2026
+    )
+    early_q1 = next(m for m in early_2026["missing"] if m["filing"] == "Q1")
+    assert early_q1["reason"] == "index_visible_not_selected", (
+        "an index-VISIBLE filing must never be reported not_yet_filed just "
+        f"because its expected quarter end postdates as_of -- {early_q1}"
+    )
+
+    # (2) Range states on the FISCAL basis + full-index universe: narrow
+    # the request to [2026, 2026] — FY2025 (out of range) STILL appears
+    # (comparison universe is the index, not the request), its index-present
+    # filings stay listed, and the SAME absent Q3 flips its reason to
+    # out_of_requested_range on its FISCAL year (2025) — even though its
+    # expected period end 2025-06-27 says nothing calendar-wise about 2026.
+    _aapl_company_stub(sec_client, filings)
+    pack_narrow = sec_client.extract_dimensional_revenue(
+        "AAPL", form="10-Q", since_year=2026, until_year=2026,
+        as_of=datetime.date(2026, 6, 1),
+    )
+    assert "error" not in pack_narrow, pack_narrow
+    narrow_by_year = {
+        r["fiscal_year"]: r for r in pack_narrow["coverage"]["quarterly_coverage"]
+    }
+    assert 2025 in narrow_by_year, (
+        f"the comparison universe is the FULL filings index — an "
+        f"out-of-range year with index filings must still be reported -- "
+        f"{set(narrow_by_year)}"
+    )
+    narrow_2025 = narrow_by_year[2025]
+    assert {p["filing"] for p in narrow_2025["present"]} == {"10-K", "Q1", "Q2"}
+    narrow_q3 = next(m for m in narrow_2025["missing"] if m["filing"] == "Q3")
+    assert narrow_q3["reason"] == "out_of_requested_range", (
+        "the range verdict rides the quarter's FISCAL year (2025 outside "
+        f"[2026, 2026]), never the calendar year of its expected end -- "
+        f"{narrow_q3}"
+    )
+
+    # Pairwise distinct: all four observed states are distinct values.
+    assert len({
+        fy2025_q3_reason, missing_2026["10-K"]["reason"],
+        gap_entry["reason"], narrow_q3["reason"],
+    }) == 4, "absence states must never collapse into one 'gap'"
+
+
+# ---------------------------------------------------------------------------
 # Task 17 (RE-SCOPED 2026-07-18) — no-cache-aliasing regression
 # ---------------------------------------------------------------------------
 
