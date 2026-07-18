@@ -14,9 +14,9 @@ Versioning: [Semantic Versioning](https://semver.org/).
   loop stops and hands back to the user with a plain-language list of
   unresolved findings instead of silently re-running.
 - **`scripts/mint_critic_verdict.py`**: new content-hash-bound critic-verdict
-  CLI (`mint --change-folder --verdict-file --files` /
-  `validate --change-folder --files`) — sha256-binds a verdict to the exact
-  files it covered; `validate` exits 0 fresh-`PASS_WITH_NOTES`, 2 no-verdict,
+  CLI (`mint --change-folder --critic --verdict-file --files` /
+  `validate --change-folder --critic --files`) — sha256-binds a verdict to the
+  exact files it covered; `validate` exits 0 fresh-`PASS_WITH_NOTES`, 2 no-verdict,
   3 fresh-`NEEDS_REVISION`, 4 stale-hash. `NEEDS_REVISION` still mints (a
   rejected draft's verdict is itself evidence); overwrite-in-place, path- and
   UTF-8-guarded.

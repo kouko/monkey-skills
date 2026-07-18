@@ -230,9 +230,10 @@ def test_outer_revision_cap_and_explicit_handback():
 def test_cap_clause_mints_before_handback():
     """Dogfood fix: a weak-model cold reader read the capped hand-back clause
     as terminal ("do not mint a verdict"), but T16 requires NEEDS_REVISION to
-    still mint even on the capped hand-back — otherwise validate_spec_output
-    reports exit 2 (critic never ran) instead of exit 3 (critic ran and
-    blocked). The cap clause itself must make minting-before-handback explicit."""
+    still mint even on the capped hand-back — otherwise mint_critic_verdict.py
+    validate reports exit 2 (critic never ran) instead of exit 3 (critic ran
+    and blocked). The cap clause itself must make minting-before-handback
+    explicit."""
     flat = " ".join(_text().lower().split())
     assert re.search(r"after minting[^.]*hand back", flat), \
         "cap clause must state the NEEDS_REVISION verdict is minted before the hand-back"

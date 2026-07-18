@@ -117,8 +117,9 @@ routing accordingly — the three exit codes are distinct failures, never interc
   `loom-interface-design:design-critic` before fanning out.
 - **exit 3** — fresh verdict is `NEEDS_REVISION`: the critic blocked this draft. Route back
   to the design writer (`loom-interface-design:interaction-flows`) to address the findings.
-- **exit 4** — hash mismatch: `DESIGN.md`/`ui-flows.md` were edited since the verdict was
-  minted, so it is stale. Re-run design-critic on the current content before proceeding.
+- **exit 4** — three distinct causes, same remediation: a `--files` list diverging from what
+  was recorded at mint, `DESIGN.md`/`ui-flows.md` edited since mint (stale hash), or a covered
+  file unreadable since mint. Re-run design-critic on the current content before proceeding.
 
 ## Consuming the persisted intent layer as prior-state
 
