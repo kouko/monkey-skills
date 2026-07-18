@@ -124,7 +124,10 @@ classification erred or never fired.
 3. discovery evidence.md source-type column (craft / domain-convention
    / project-local). Headroom exists (8.4 KB).
 
-**v2** (ride each skill's next revision):
+**v2** (REVISED 2026-07-18, user decision post-v1-merge: build now in one
+arc rather than riding later revisions — v2 completes the already-ratified
+architecture; the recurrence gate moves to the DOMAIN.md prevention layer
+only. Entry gate = the synthetic firing dogfood below, PASSED 3/3):
 4. product-principles classify-and-punt clause (21 KB, references/
    placement).
 5. interface-design two-tier triage + tagged open questions written
@@ -132,8 +135,24 @@ classification erred or never fired.
 6. `evidence_needed: domain-convention` finding tag in critic schemas
    (design-critic, loom-code reviewers).
 
-Between steps: dogfood recurrence decides continuation (one incident =
-memory entry, two = rule — house convention).
+Real-world acceptance for the whole mechanism: the financial-analytics
+rebuild (the incident's native workload) exercises the spec + code legs
+live; its interception/recurrence data also decides the DOMAIN.md layer.
+
+### v2 firing dogfood (2026-07-18, pre-v2 gate — all haiku, SKILL.md-only
+input, mounts must self-route)
+
+- S1 SDD leg: 2nd same-question round (settlement-date convention — a
+  NON-fiscal-year domain question, generalization check) → self-routed to
+  research-escalation.md, classified domain-convention, EN+JA route,
+  evidence rides round 3, cap intact. PASS.
+- S2 spec leg: trade-date vs settlement-date month attribution → self-
+  routed to domain-tag-triage.md, wrote tagged open question
+  (`evidence_needed: domain-convention`, SHAPING), gate + backstop cited.
+  PASS.
+- S3 negative control: round-1 off-by-one with in-spec answer → correctly
+  did NOT read the escalation reference, mechanical re-dispatch. PASS
+  (no over-firing).
 
 ## Non-goals
 
@@ -236,3 +255,51 @@ gate rules) still apply when it errs.
 5. CI: bucket-name spelling grep across the three touched plugins.
 6. Cold-reader + replay acceptance runs (items 1–3 above).
 7. Version bumps, whole-branch review, PR. No auto-merge.
+
+## Tasks (v2 — branch feat-knowledge-triage-v2, base 55cded40)
+
+All v1 conventions carry over: pin transcribed VERBATIM into each new
+references/ file, imperative action-moment mounts, neighborhood-scoped
+grep tests proven RED via `git show HEAD:`, owning-plugin suite as the
+resolved test command, references/ placement for near-cap SKILL.md files.
+
+8. loom-product-principles (0.9.1 → 0.10.0): new
+   `skills/product-principles/references/knowledge-triage.md` (pin +
+   station doctrine: when a principle's `— check:` cannot be written,
+   classify; domain-convention → punt to `using-loom-discovery` via the
+   skill's existing punt channel with the tag attached; craft → the
+   canon-*.md refs already cover it; project-local → repo docs/user).
+   One imperative mount in SKILL.md at the falsifiability/`— check:`
+   drafting moment. Standing posture (constitution = one-way door), not
+   stall-triggered.
+9. loom-interface-design (0.5.0 → 0.6.0): new
+   `skills/interaction-flows/references/knowledge-triage.md` (pin +
+   HIGH-bar two-tier: SHAPING = alters flow structure, state machine, or
+   semantic display conventions — color semantics, sign conventions,
+   period definitions; everything else deferrable). Mounts: one in
+   interaction-flows at the flow/state drafting moment, one in
+   design-system at the token/convention drafting moment (both point at
+   the interaction-flows references file's twin copy — NO: each skill
+   carries its own copy per no-shared-files; design-system gets its own
+   references/knowledge-triage.md with identical pin). Deferrable-class
+   items are written into ui-flows.md / DESIGN.md as tagged open
+   questions (`evidence_needed:` format) so spec-expansion's Phase ③
+   intake inherits them. design-critic: findings schema gains the
+   optional `evidence_needed:` tag (critic flags, never searches).
+10. loom-code (0.32.0 → 0.33.0): reviewer agents
+    (`agents/code-quality-reviewer.md`, `agents/code-reviewer.md`) gain
+    the optional `evidence_needed: craft|domain-convention|project-local`
+    finding tag (flag-don't-search, one schema line + one sentence each);
+    SDD SKILL.md one-line mount: a reviewer finding carrying the tag
+    triggers the research-escalation triage IMMEDIATELY (no waiting for
+    the 2nd round) — the tag is the Loop-Breaker SWITCH signal.
+11. CI: extend `scripts/test_bucket_vocabulary_consistency.py` carrier
+    lists with the new pin copies; add the new foreign carrier paths to
+    `loom-code-ci.yml` BOTH trigger blocks (per
+    `docs/loom/memory/cross-plugin-guard-tests-need-foreign-carrier-trigger-paths.md`).
+12. Firing dogfood for v2 legs (haiku, SKILL.md-only, mounts self-route):
+    principles leg, design leg (SHAPING display-semantics case), critic-tag
+    leg (reviewer tags → orchestrator immediate triage), plus one negative
+    control (craft-derivable design case must NOT tag). Record results
+    in-file.
+13. Version bumps, whole-branch review, PR. No auto-merge.
