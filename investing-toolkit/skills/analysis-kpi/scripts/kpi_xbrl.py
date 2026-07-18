@@ -356,13 +356,28 @@ def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
     mapping) under the single logical `kpi_id`. A fact matching no source is
     skipped, never fabricated. A fact matching more than one source RAISES —
     an ambiguous binding. INVARIANT: exactly ONE point per (signature,
-    period_type, period) — `period_type` is the CLASSIFIED fiscal quarter
-    (Q1..Q4|FY, consumed from the emitted labels via `classify_fact_period`)
-    and `period` is the emitted `fiscal_year` label (Task 5 — never the
-    calendar year). When a single source's signature matches TWO OR MORE facts for
-    the SAME period, they collapse to exactly one point — if every matched
-    fact agrees on `value`, the identical duplicate(s) are DEDUPED down to
-    one point (never double-counted downstream). If the matched facts
+    period_end, duration_class) — the identity key is the fact's RAW WINDOW
+    plus its duration class (Task 6, docs/loom/plans/2026-07-16-operational-
+    kpi-quarterly.md): a 3-month single quarter and a 9-month YTD sharing
+    one signature/period_end are DISTINCT series points, never deduped and
+    never raised against each other; the emitted point's `period_type`
+    (CLASSIFIED fiscal quarter, `classify_fact_period`) and `period` (the
+    emitted `fiscal_year` label, Task 5 — never the calendar year) are
+    ATTRIBUTES of the kept fact, not part of the grouping key — grouping on
+    the raw window is what lets a cross-filing fiscal-LABEL divergence
+    (52/53-week FYE drift or a mid-history FYE change: the same window
+    labeled differently by two filings' dei calendars) be CAUGHT at dedup
+    instead of silently emitting duplicate points. When a single source's
+    signature matches TWO OR MORE facts for the SAME window, they collapse
+    to exactly one point — if every matched fact agrees on `value`, the
+    identical duplicate(s) are DEDUPED down to one point (never
+    double-counted downstream); if their fiscal labels diverge, the
+    conflict is surfaced as a `dqc` `label_conflict` flag (ONE DQC schema:
+    type, old, new, accessions, reason — old/new carry both diverging
+    labels WITH both source filings' dei calendars from the pack's
+    `fiscal_calendars`) and the LATER-FILED filing's fact (tie-break higher
+    accession) survives with its label — a deterministic survivor, never an
+    arbitrary pick. If the matched facts
     DISAGREE on `value`, the disagreement is discriminated by ACCESSION
     (overlap policy C): a SINGLE accession reporting conflicting values for
     the same (signature, period) is a genuine INTRA-filing ambiguity and
@@ -402,28 +417,96 @@ def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
         if matched_indices:
             facts_by_source_idx[matched_indices[0]].append(fact)
 
-    # Reduce each source's matched facts to exactly ONE fact per period: a
-    # period with >1 matching fact that all AGREE on value is deduped down
+    # Reduce each source's matched facts to exactly ONE fact per identity
+    # key (Task 6: the RAW WINDOW — period_end + duration_class — so a
+    # single-quarter and a YTD at one period_end stay DISTINCT points): a
+    # window with >1 matching fact that all AGREE on value is deduped down
     # to a single representative fact (never double-counted downstream as
-    # two identical points); a period with matching facts that DISAGREE on
-    # value RAISES (a genuine conflict, never resolved arbitrarily).
+    # two identical points), with a cross-filing fiscal-LABEL divergence
+    # inside the group flagged and resolved to the later-filed label; a
+    # window with matching facts that DISAGREE on value RAISES intra-filing
+    # (a genuine conflict, never resolved arbitrarily) or resolves
+    # cross-filing per policy C below.
+    fiscal_calendars = fact_pack.get("fiscal_calendars") or {}
     deduped_facts_by_source_idx: list[list[dict]] = [[] for _ in sources]
     for idx, source in enumerate(sources):
         matched_facts = facts_by_source_idx[idx]
-        by_period: dict[tuple[str, str], list[dict]] = {}
+        by_window: dict[tuple[str, str], list[dict]] = {}
         for fact in matched_facts:
-            # Task 5: the identity key is (classified period_type, emitted
-            # fiscal_year) — never the calendar year of period_end.
-            # LOOM-SIMPLIFY: shortcut=identity key omits duration_class, so a single-quarter and a YTD fact sharing one fiscal quarter+year collide on the key (surfaced via the value-disagreement RAISE below, never silently merged) | ceiling=first binding resolved over a fact pack carrying dual-duration facts for one signature (every real Q2/Q3 10-Q) | upgrade=extend the key with duration_class per plan Task 6 | ref=docs/loom/plans/2026-07-16-operational-kpi-quarterly.md §Task 6
-            period_key = _require_period(fact)
-            identity_key = (classify_fact_period(fact)["period_type"], period_key)
-            by_period.setdefault(identity_key, []).append(fact)
-        for (_, period_key), group in by_period.items():
+            # _require_period validates the raw window AND the emitted label
+            # group (fiscal keying, Task 5 — never the calendar year); the
+            # identity key itself is the duration-qualified window (Task 6).
+            _require_period(fact)
+            identity_key = (
+                fact["period_end"],
+                classify_fact_period(fact)["duration_class"],
+            )
+            by_window.setdefault(identity_key, []).append(fact)
+        for (period_end, _duration_class), group in by_window.items():
+            period_key = _require_period(group[0])
             values = {fact.get("value") for fact in group}
             if len(values) == 1:
                 # exactly one distinct value across the group (1 or more
-                # identical facts) -> keep one representative for this period.
-                deduped_facts_by_source_idx[idx].append(group[0])
+                # identical facts) -> keep one representative for this
+                # window. If the duplicates' fiscal labels DIVERGE (two
+                # filings' dei calendars label the same window differently —
+                # FYE drift/change), the conflict is flagged and the
+                # LATER-FILED filing's label survives deterministically.
+                labels = {
+                    (fact.get("fiscal_year"), fact.get("fiscal_quarter"))
+                    for fact in group
+                }
+                if len(labels) == 1:
+                    deduped_facts_by_source_idx[idx].append(group[0])
+                    continue
+                ordered = sorted(
+                    group,
+                    key=lambda f: (
+                        (f.get("filed") or ""), (f.get("accession") or "")
+                    ),
+                )
+                kept = ordered[-1]
+                kept_label = (kept.get("fiscal_year"), kept.get("fiscal_quarter"))
+                superseded = next(
+                    fact
+                    for fact in reversed(ordered[:-1])
+                    if (fact.get("fiscal_year"), fact.get("fiscal_quarter"))
+                    != kept_label
+                )
+                kept_with_dqc = dict(kept)
+                kept_with_dqc["dqc"] = {
+                    "type": "label_conflict",
+                    "old": {
+                        "fiscal_year": superseded.get("fiscal_year"),
+                        "fiscal_quarter": superseded.get("fiscal_quarter"),
+                        "accession": superseded.get("accession"),
+                        "fiscal_calendar": fiscal_calendars.get(
+                            superseded.get("accession")
+                        ),
+                    },
+                    "new": {
+                        "fiscal_year": kept.get("fiscal_year"),
+                        "fiscal_quarter": kept.get("fiscal_quarter"),
+                        "accession": kept.get("accession"),
+                        "fiscal_calendar": fiscal_calendars.get(
+                            kept.get("accession")
+                        ),
+                    },
+                    "accessions": [
+                        superseded.get("accession"), kept.get("accession"),
+                    ],
+                    "reason": (
+                        f"identical value reported for period_end "
+                        f"{period_end!r} ({_duration_class}) by two filings "
+                        f"whose dei calendars yield different fiscal labels "
+                        f"(FY{superseded.get('fiscal_year')}-"
+                        f"{superseded.get('fiscal_quarter')} vs "
+                        f"FY{kept.get('fiscal_year')}-"
+                        f"{kept.get('fiscal_quarter')}) — later-filed label "
+                        f"kept deterministically, never an arbitrary pick"
+                    ),
+                }
+                deduped_facts_by_source_idx[idx].append(kept_with_dqc)
                 continue
 
             # The group DISAGREES on value. Discriminate an INTRA-filing
