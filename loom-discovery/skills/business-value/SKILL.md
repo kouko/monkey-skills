@@ -148,7 +148,21 @@ NEEDS-MORE-RESEARCH, not a hopeful GO.
    topic already has one), following the template, with a
    **GO / NO-GO / NEEDS-MORE-RESEARCH** recommendation + one-paragraph
    rationale.
-6. On `NEEDS-MORE-RESEARCH`, hand off to `user-insights`; revisit this checkpoint
+6. **Validate, then fix.** Before declaring done, run the discovery validator
+   against the change's discovery folder — resolve the script path to an
+   absolute path and run from the consumer project root:
+
+   ```
+   cd <consumer-project-root>
+   python3 <resolved-absolute-path-to>/loom-discovery/scripts/validate_discovery_artifacts.py docs/loom/discovery/<date>-<slug>/
+   ```
+
+   Fix any flagged issue and re-run, **bounded at 2 attempts**; on the 2nd
+   failure, stop and surface the remaining problems to the user rather than
+   looping silently. The validator tolerates the assess-first greenfield state
+   (`business-value.md` alone, before `user-insights.md` exists) — a fresh
+   first run in that state is not a failure.
+7. On `NEEDS-MORE-RESEARCH`, hand off to `user-insights`; revisit this checkpoint
    once evidence deepens.
 
 ## Boundary

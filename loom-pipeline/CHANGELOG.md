@@ -6,6 +6,53 @@ this file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.9.0] — 2026-07-18 — batch_queue recovery + reconciliation + dispatcher wiring
+
+### Added
+
+- **`batch_queue.py` state locking**: all state load→modify→save now holds
+  `fcntl.flock(LOCK_EX)` across the full read-modify-write, writing via
+  `tempfile` + `os.replace()` atomic swap — fixes the pre-existing
+  lost-update race under concurrent access. Lock target is a sidecar
+  `<state-file>.lock` file (avoids the macOS truncating-open-before-flock
+  trap).
+- **`_dispatch_entry`**: records `dispatched_at` (wall-clock ISO timestamp).
+  New `mark-running <id> --run-id <wf_...> --session-dir <path>` subcommand
+  records the Workflow run id + session workflows dir on a RUNNING entry,
+  called by the dispatcher immediately after `Workflow()` returns.
+- **Recovery verbs**: `reset <id>` (RUNNING|FAILED → QUEUED, `attempts += 1`,
+  audit line) and `force-fail <id> --reason <text>` (RUNNING → FAILED, audit
+  line, counts toward the circuit breaker) — human-operator-only, gated on
+  current status (wrong-state invocation errors without mutating). Every
+  entry gains an append-only `audit[]` list (`verb`/`timestamp`/`reason`).
+- **wf-record evidence reader**: given a runId + session-dir, reads
+  `workflows/wf_<runId>.json` for its terminal status; any parse error or
+  absence yields `None` (opportunistic evidence only, never raises).
+- **`reconcile` subcommand** (+ invoked at the top of `next`, never inside
+  `status`): force-FAILs a RUNNING entry with definitive failed/killed
+  wf-record evidence (counts toward the breaker); flags `SUSPECT-COMPLETE`
+  on completed-but-unmarked evidence (human confirms via `mark`); flags
+  stale no-evidence RUNNING entries as `SUSPECT` (informational only). All
+  transitions gate on `status == RUNNING`.
+- **`using-loom-pipeline` dispatcher wiring**: the batch loop steps now
+  document calling `mark-running` immediately after `Workflow()` returns, a
+  session taking over a batch running `reconcile` before its first `next`,
+  the `reset`/`force-fail` recovery verbs, and the `SUSPECT`/
+  `SUSPECT-COMPLETE` human-operator handling — plus the `{"done": false,
+  "non_terminal": [...]}` shape `next` can now print. `AGENTS.md`'s managed
+  command-surface entry for `batch_queue.py` extended to the full verb set.
+
+### Changed
+
+- **`next`'s `done` derivation**: now `terminal_count == total` instead of
+  assumed — while QUEUED/RUNNING entries remain, `next` prints
+  `{"done": false, "non_terminal": [...]}` (id/status/reason per entry)
+  instead of ever silently claiming the batch finished (previously a stuck
+  batch could print `{"done": true}` — a fix to existing behavior).
+
+Design SSOT: `docs/loom/audits/2026-07-18-agent-loop-convergence-audit.md` §4c
+(all points).
+
 ## [0.8.1] — 2026-07-17
 
 ### Added

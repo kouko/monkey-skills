@@ -207,6 +207,52 @@ def test_verdict_two_valued_enum():
         "must state that an unqualified/bare PASS is deliberately absent"
 
 
+# --- outer writer<->critic revision cap -------------------------------------
+
+def test_outer_revision_cap_and_explicit_handback():
+    """The writer<->critic revision cycle (spec-expansion revises, this critic
+    re-reviews) must itself be bounded, mirroring loom-pipeline's RALLY_CAP=2
+    (driver_20_runstation.js:40). Without a cap, a stuck NEEDS_REVISION could
+    loop the outer cycle forever; the resolution clause must name the cap and
+    require an explicit hand-back to the user (never a silent proceed) on the
+    2nd consecutive NEEDS_REVISION after a revision."""
+    low = _text().lower()
+    assert re.search(r"capp?ed?\s+at\s+2|2[\s-]cycle|two[\s-]cycle|"
+                      r"2\s+consecutive|second consecutive", low), \
+        "resolution clause must cap the outer writer<->critic cycle at 2"
+    assert "hand back" in low or "hand-back" in low or "hands back" in low, \
+        "must explicitly hand back to the user on cap exhaustion"
+    assert "never silent" in low or "never silently" in low \
+        or "not silent" in low, \
+        "hand-back must be explicit, never a silent proceed"
+
+
+def test_cap_clause_mints_before_handback():
+    """Dogfood fix: a weak-model cold reader read the capped hand-back clause
+    as terminal ("do not mint a verdict"), but T16 requires NEEDS_REVISION to
+    still mint even on the capped hand-back — otherwise mint_critic_verdict.py
+    validate reports exit 2 (critic never ran) instead of exit 3 (critic ran
+    and blocked). The cap clause itself must make minting-before-handback
+    explicit."""
+    flat = " ".join(_text().lower().split())
+    assert re.search(r"after minting[^.]*hand back", flat), \
+        "cap clause must state the NEEDS_REVISION verdict is minted before the hand-back"
+
+
+def test_verdict_step_mints_critic_verdict():
+    """§4c Fix-4 (Task 16): the verdict step must also mint a content-hash-bound
+    verdict file via mint_critic_verdict.py — for BOTH verdict values, so a
+    downstream consumer can distinguish "ran and blocked" from "never ran"."""
+    text = _text()
+    low = text.lower()
+    assert "mint_critic_verdict.py" in text, \
+        "verdict section must cite the mint_critic_verdict.py script"
+    assert "--critic completeness-critic" in text, \
+        "mint invocation must pass --critic completeness-critic"
+    assert "both" in low and "mint" in low, \
+        "must state both verdict values mint (NEEDS_REVISION still mints)"
+
+
 def test_severity_scale_defined():
     """Rank = severity x cross-lens convergence, but severity itself was never
     defined here (design-critic defines a 3-point scale). The two critics'

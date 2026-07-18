@@ -88,7 +88,7 @@ The run halts and escalates when any row fires:
 | 0a | **plan critical-path depth >5** (`writing-plans` route-back) | scope too deep → escalate: **re-cut** the spec. Existing forcing function |
 | 0b | **`plan-document-reviewer` = NEEDS_REVISION for 2 rounds** | plan can't be made schema-valid / atomic → escalate. Existing 2-round cap |
 | 1 | implementer returns **BLOCKED** | agent self-declares it needs a human; safe direction |
-| 2a | **review-revision loop**: 2 reviewer↔implementer round-trips still NEEDS_REVISION | spec/quality gap; no WebSearch — fix is human clarification, not research |
+| 2a | **review-revision loop**: 2 reviewer↔implementer round-trips still NEEDS_REVISION | spec/quality gap; no WebSearch — fix is human clarification, not research. This 2-round halt is deliberately one round earlier than `subagent-driven-development`'s 3-round cap on the same loop — no human is pumping the loop here, so the slack is handed back sooner; see the Verdict resolution section of `subagent-driven-development/SKILL.md`. |
 | 2b | **debug loop**: `systematic-debugging` exhausts (2 hypotheses → mandatory WebSearch → hypothesis #3 still falsified) | reuses the existing **anchored-thinking** guard; zero new logic |
 | 3 | a **scope / decision the plan did not specify** arises (not in the spec) | don't let the agent invent scope unattended |
 | 4 | the agent **self-declares an assumption** outside plan/spec coverage | honest self-declaration trigger, not a fuzzy confidence detector |

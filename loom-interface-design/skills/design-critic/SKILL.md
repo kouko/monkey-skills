@@ -253,7 +253,11 @@ loom-code's reviewer vocabulary):
   could not be concretely re-seeded and needs the writer to redo a surface,
   **or** `../../scripts/validate_design_output.py` fails after write-back.
   Resolution: route back to `design-system` / `interaction-flows` for the
-  flagged surfaces, then re-run this critic.
+  flagged surfaces, then re-run this critic. This outer writer↔critic
+  revision cycle is capped at 2: on the 2nd consecutive `NEEDS_REVISION`
+  after a revision, stop re-running and, after minting the `NEEDS_REVISION`
+  verdict, hand back to the user with a plain-language list of unresolved
+  findings — never silently proceed.
 - **`PASS_WITH_NOTES`** — dry, findings re-seeded (`critic-found`), Blind
   spots non-empty. Resolution: the change-folder proceeds — `ui-flows.md`
   hands to `loom-spec:spec-expansion`.
@@ -261,6 +265,10 @@ loom-code's reviewer vocabulary):
 There is **deliberately no unqualified `PASS`** in this enum: a bare PASS
 would claim no omissions remain — the banned "complete" reflex — and Blind
 spots is non-empty by construction, so every clean outcome carries notes.
+
+Then mint it — both values mint: `../../scripts/mint_critic_verdict.py mint
+--change-folder <path> --critic design-critic --verdict-file <path>
+--files DESIGN.md,ui-flows.md`.
 
 ## Each lens is designed deletable (Bitter Lesson)
 

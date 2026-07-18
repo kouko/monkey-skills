@@ -200,6 +200,22 @@ def test_stop_contract_review_revision_loop_bound():
         "the review-revision loop must be bounded by a round-trip count"
 
 
+def test_stop_contract_review_revision_deliberate_slack_note():
+    """Row 2a: the 2-round halt is deliberately one round earlier than SDD's
+    3-round cap (no human pumping the loop -> slack handed back sooner), and
+    continuous-mode.md cross-references SDD's cap section by name (mirrors
+    the wording SDD's SKILL.md already carries pointing back at this file)."""
+    low = _ref().lower()
+    assert "one round earlier" in low or "1 round earlier" in low, \
+        "must state the 2-round halt is deliberately one round earlier than SDD's cap"
+    assert "3-round cap" in low or "three-round cap" in low or "3 round cap" in low, \
+        "must name SDD's 3-round cap being referenced"
+    assert "no human" in low and ("pumping" in low or "pump" in low), \
+        "must carry the rationale: no human is pumping the loop"
+    assert "subagent-driven-development" in low, \
+        "must cross-reference subagent-driven-development by name (mirrors SDD's pointer back here)"
+
+
 def test_stop_contract_debug_websearch_anchored_guard():
     """Row 2b: debug loop (systematic-debugging exhausts) is a stop trigger
     that reuses the Anchored-thinking guard / mandatory WebSearch."""

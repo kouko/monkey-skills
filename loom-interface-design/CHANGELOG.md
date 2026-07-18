@@ -8,6 +8,26 @@ Versioning: [Semantic Versioning](https://semver.org/).
 > This file was reconstructed on 2026-07-02 from the git history — the plugin
 > shipped its first three versions without a CHANGELOG.
 
+## [0.8.0] — 2026-07-18 — outer revision cap + minted critic verdicts
+
+### Added
+
+- **`design-critic`**: the writer↔critic outer revision cycle is now capped
+  at 2 — on the 2nd consecutive `NEEDS_REVISION` after a revision, the loop
+  stops and hands back to the user with a plain-language list of unresolved
+  findings instead of silently re-running.
+- **`scripts/mint_critic_verdict.py`**: ported from `loom-spec` (byte-identical
+  logic — `--files` has no default in either plugin, only docstrings differ,
+  e.g. this plugin's docstrings noting the typical `DESIGN.md,ui-flows.md`
+  file list) — content-hash-bound `mint`/`validate` critic-verdict CLI, plus
+  a lockstep test pinning it to the `loom-spec` original so the two never
+  drift.
+- **`design-critic`**: the verdict step now additionally runs
+  `mint_critic_verdict.py mint` for the change-folder on both verdict values.
+
+Design SSOT: `docs/loom/audits/2026-07-18-agent-loop-convergence-audit.md` §4
+recs 2/7 + §4c Fix-4.
+
 ## [0.7.0] — 2026-07-18 — mechanical pre-check + literal SHAPING tier label
 
 ### Added

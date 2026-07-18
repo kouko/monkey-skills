@@ -5,6 +5,28 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.34.0] — 2026-07-18 — NEEDS_CONTEXT cap + writing-plans verdict gate
+
+### Added
+
+- **`subagent-driven-development`**: `NEEDS_CONTEXT` re-dispatches are now
+  capped at 2 per task — a 3rd means the spec/plan is missing information,
+  so the orchestrator stops and surfaces to the user instead of re-dispatching
+  indefinitely (mirrors the existing 3-round `NEEDS_REVISION` escalation
+  wording). The 3-round-cap section cross-references `continuous-mode.md`'s
+  deliberately-one-round-earlier halt.
+- **`references/continuous-mode.md`**: documents that its 2-round halt is
+  deliberately one round earlier than SDD's 3-round cap (no human pumping →
+  hand back slack early), cross-referencing SDD's cap section.
+- **`writing-plans`**: §Who runs the validator now additionally requires
+  `loom-spec`'s `mint_critic_verdict.py validate` to exit 0 for the
+  change-folder — structural-clean is no longer sufficient; it must also be
+  critic-fresh-and-passed. Per-exit-code reporting (never-ran / critic-blocked
+  / stale) follows the existing `validate_spec_output.py` precedent.
+
+Design SSOT: `docs/loom/audits/2026-07-18-agent-loop-convergence-audit.md` §4
+recs 7/10 + §4c Fix-4 (consumer side).
+
 ## [0.33.0] — 2026-07-18 — reviewer evidence_needed tag = immediate triage trigger
 
 ### Added

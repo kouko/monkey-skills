@@ -228,6 +228,50 @@ def test_overlap_rate_diagnostic_present():
         "high overlap must be framed as panel redundancy"
 
 
+def test_outer_revision_cap_and_handback():
+    """The outer writer<->critic revision cycle (design-system/interaction-flows
+    <-> design-critic) must be capped at 2, mirroring loom-pipeline's
+    RALLY_CAP=2. On the 2nd consecutive NEEDS_REVISION after a revision, the
+    critic must stop re-running and hand back to the user with a plain-
+    language list of unresolved findings -- never silently proceed."""
+    low = _text().lower()
+    assert "capped at 2" in low or "cap of 2" in low or "2-cycle" in low \
+        or "two-cycle" in low or "2 cycles" in low, \
+        "must state the outer revision cycle is capped at 2"
+    assert "outer" in low, \
+        "cap must be scoped to the outer writer<->critic revision cycle"
+    assert "hand back" in low or "hand-back" in low or "handback" in low, \
+        "must instruct handing back to the user on cap exhaustion"
+    assert "never" in low and ("silently proceed" in low or "silent" in low), \
+        "must forbid silently proceeding past the cap"
+
+
+def test_cap_clause_mints_before_handback():
+    """Dogfood fix: a weak-model cold reader read the capped hand-back clause
+    as terminal ("do not mint a verdict"), but T17 requires NEEDS_REVISION to
+    still mint even on the capped hand-back — otherwise mint_critic_verdict.py
+    validate reports exit 2 (critic never ran) instead of exit 3 (critic ran
+    and blocked). The cap clause itself must make minting-before-handback
+    explicit."""
+    flat = " ".join(_text().lower().split())
+    assert re.search(r"after minting[^.]*hand back", flat), \
+        "cap clause must state the NEEDS_REVISION verdict is minted before the hand-back"
+
+
+def test_verdict_step_mints_critic_verdict():
+    """§4c Fix-4 (Task 17): the verdict step must also mint a content-hash-bound
+    verdict file via mint_critic_verdict.py — for BOTH verdict values, so a
+    downstream consumer can distinguish "ran and blocked" from "never ran"."""
+    text = _text()
+    low = text.lower()
+    assert "mint_critic_verdict.py" in text, \
+        "verdict section must cite the mint_critic_verdict.py script"
+    assert "--critic design-critic" in text, \
+        "mint invocation must pass --critic design-critic"
+    assert "both" in low and "mint" in low, \
+        "must state both verdict values mint (NEEDS_REVISION still mints)"
+
+
 def test_inputs_are_per_change_folder():
     """The critique inputs must reflect the per-change layout: product-level
     DESIGN.md + per-change docs/loom/<change-id>/ui-flows.md."""

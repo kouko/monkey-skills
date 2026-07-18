@@ -235,23 +235,87 @@ happens interactively before queueing, never inside the unattended run.
 
 ### The dispatcher-only loop
 
-The main agent repeats exactly this loop, one iteration per change, until
-`next` prints `{"done": true}` or exits 3 (circuit-breaker HALT):
+A fresh session **taking over an in-progress batch** (resuming after a
+restart, a new session picking up someone else's queue) MUST run
+`python3 <skillsRoot>/loom-pipeline/scripts/batch_queue.py reconcile --project <projectPath>`
+once, BEFORE its first `next` call — this reconciles any entry left RUNNING
+by the prior session against wf-record evidence (see below) before the loop
+resumes. A session that starts a batch from empty state has nothing to
+reconcile and may skip straight to `next`.
+
+The main agent then repeats exactly this loop, one iteration per change,
+until `next` prints `{"done": true}` or exits 3 (circuit-breaker HALT). While
+non-terminal entries (QUEUED/RUNNING) remain, `next` instead prints
+`{"done": false, "non_terminal": [...]}`, enumerating each blocking entry by
+`id`/`status`/`reason` — `done` never goes silent on a stuck batch (see the
+exit-code table below):
 
 1. `python3 <skillsRoot>/loom-pipeline/scripts/batch_queue.py next --project <projectPath> --skills-root <skillsRoot>`
+   — this also runs `reconcile` internally at its top, so per-iteration
+   staleness is caught even without a takeover.
 2. `Workflow({scriptPath: "<resolved assets/loom-pipeline.js>", args: <the JSON stdout from step 1, verbatim>})`
-3. `python3 <skillsRoot>/loom-pipeline/scripts/batch_queue.py mark <id> done|failed --project <projectPath> --run-id <the Workflow run id>`
+3. Immediately after `Workflow()` returns, the dispatcher MUST call
+   `python3 <skillsRoot>/loom-pipeline/scripts/batch_queue.py mark-running <id> --run-id <the Workflow run id, wf_...> --session-dir <this session's directory — the one whose workflows/ subfolder holds wf_<runId>.json, NOT the workflows/ subfolder itself> --project <projectPath>`
+   — without this the runId is never recorded and `reconcile`'s
+   definitive-evidence path has nothing to check against.
+
+   **Deriving `--session-dir`**: typical shape is
+   `~/.claude/projects/<project-slug>/<session-id>/` — the directory that
+   CONTAINS `workflows/wf_<runId>.json`, one level above `workflows/`.
+   (Grounding: this wf-record layout is undocumented host-internal
+   surface — not in code.claude.com/docs/en/workflows.md or sessions.md —
+   confirmed against 16 observed `wf_*.json` files, all terminal status;
+   see `docs/loom/audits/2026-07-18-agent-loop-convergence-audit.md` §4c,
+   verified 2026-07-18. Same grounding-note convention as the `resumeRunId`
+   citation above.)
+
+   **Fallback**: if the dispatcher cannot determine its own session
+   directory, skip this `mark-running` call rather than guess a path —
+   the entry then has no `sessionDir` recorded, so `reconcile` can only
+   ever resolve it via the staleness path (`SUSPECT`, human decides),
+   never via definitive wf-record evidence.
+4. `python3 <skillsRoot>/loom-pipeline/scripts/batch_queue.py mark <id> done|failed --project <projectPath> --run-id <the Workflow run id>`
 
 The main agent is **dispatcher-only**: it never parses the queue file, it
 never composes git commands, and it never diagnoses failures mid-batch —
 all of that is script-owned (`batch_queue.py`) or deferred to the
 end-of-batch human report below.
 
+### Recovery verbs — human operator only
+
+Two subcommands exist for a human operator to correct a stuck entry; the
+dispatcher loop above never calls either on its own:
+
+- `python3 <skillsRoot>/loom-pipeline/scripts/batch_queue.py reset <id> --project <projectPath> [--reason <text>]`
+  — requeues a RUNNING or FAILED entry back to QUEUED (`attempts += 1`,
+  audit line appended). Use when a stuck or wrongly-failed entry should
+  simply run again.
+- `python3 <skillsRoot>/loom-pipeline/scripts/batch_queue.py force-fail <id> --reason <text> --project <projectPath>`
+  — transitions a RUNNING entry straight to FAILED (audit line appended;
+  counts toward the circuit breaker). Use when an entry is confirmed dead
+  and should not be retried automatically.
+
+`reconcile` (both the standalone verb and `next`'s internal call) surfaces
+two informational flags for the human operator — it never mutates state
+for either of these two flags:
+
+- **`SUSPECT`** — a RUNNING entry with no definitive wf-record evidence,
+  stale past its grace window. Informational only; the human decides via
+  `reset` or `force-fail` above.
+- **`SUSPECT-COMPLETE`** — wf-record evidence says the workflow finished,
+  but the entry was never marked done/failed. The human confirms the
+  actual outcome and records it via `mark`.
+
+On definitive `failed`/`killed` wf-record evidence, reconcile instead
+auto-transitions the RUNNING entry straight to `AUTO-FAILED` — a real,
+breaker-visible mutation (unlike the two informational flags above) that
+can trip HALT, with no human-confirmation step.
+
 ### `next` exit codes
 
 | Code | Meaning |
 |---|---|
-| 0 | dispatched an entry (Workflow args JSON on stdout), or the queue is done (`{"done": true}`) |
+| 0 | dispatched an entry (Workflow args JSON on stdout), or the queue is done (`{"done": true}`), or the queue is stuck with non-terminal entries remaining (`{"done": false, "non_terminal": [{"id", "status", "reason"}, ...]}`) |
 | 1 | fail-loud error (malformed `QUEUE.toml`, etc.) |
 | 2 | argparse usage error |
 | 3 | circuit-breaker HALT — 2 consecutive `FAILED` entries; `--override-halt` bypasses after human review |

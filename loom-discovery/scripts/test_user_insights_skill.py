@@ -11,7 +11,12 @@ Load-bearing invariants encoded here (why each matters):
   the Intercom rule the whole station is built on;
 - needs must be expressed as job stories (the Torres opportunity-space
   semantics the brief adopted);
-- the skill folder must stay flat (Anthropic skill convention, hook-enforced).
+- the skill folder must stay flat (Anthropic skill convention, hook-enforced);
+- the validator must be wired in with a bounded (2-attempt) fix-and-rerun
+  loop, and must state the cwd (cd to consumer-project-root) it runs from —
+  a relative artifact path resolves against the wrong tree otherwise;
+- the validator step must tolerate greenfield/first-run artifact creation
+  (the assess-first intermediate state is a sanctioned pass, not a failure).
 """
 
 import re
@@ -83,6 +88,51 @@ def test_template_has_job_story_phrasing():
     body = INSIGHTS_TEMPLATE.read_text(encoding="utf-8")
     assert "When" in body and "I want" in body and "so I can" in body, (
         "template must carry job-story phrasing: When …, I want …, so I can …"
+    )
+
+
+def test_validate_step_wired_with_bounded_retry():
+    # Why: Task 3 — the discovery validator must be mandatory before declaring
+    # done, with a bounded fix-and-rerun loop (not infinite retry, not a
+    # silent skip) — mirrors product-principles Step 8's validator wiring.
+    body = SKILL.read_text(encoding="utf-8")
+    assert "validate_discovery_artifacts.py" in body, (
+        "validator invocation missing from SKILL.md"
+    )
+    assert "bounded at 2 attempts" in body, (
+        "the 2-attempt fix-and-rerun bound must be stated explicitly"
+    )
+    assert "surface" in body and "user" in body, (
+        "must document surfacing remaining problems to the user after exhaustion"
+    )
+
+
+def test_validate_step_states_cwd_and_path_rationale():
+    # Why: the script lives in the PLUGIN repo but the artifact lives in the
+    # CONSUMER project — without a stated cwd, the validator's relative
+    # artifact-folder argument resolves against whatever directory the agent
+    # happens to be in, not the consumer project root. Deleting the cd line
+    # must turn this test red (mirrors product-principles Step 8's pattern).
+    body = SKILL.read_text(encoding="utf-8")
+    assert "cd <consumer-project-root>" in body, (
+        "validator command must cd to consumer-project-root before invoking "
+        "the (plugin-repo) script on the (consumer-project) artifact path"
+    )
+    # Prose wraps across lines, so collapse whitespace before matching the
+    # rationale phrase rather than requiring it stay on one physical line.
+    flattened = re.sub(r"\s+", " ", body)
+    assert "PLUGIN repo" in flattened and "CONSUMER project" in flattened, (
+        "must state the one-sentence plugin-repo-script vs "
+        "consumer-project-artifact rationale"
+    )
+
+
+def test_validate_step_tolerates_greenfield_first_run():
+    # Why: first-run artifact creation (assess-first intermediate state) must
+    # not be treated as a validator failure — plan Task 3 explicit constraint.
+    body = SKILL.read_text(encoding="utf-8")
+    assert "greenfield" in body.lower() or "first-run" in body.lower(), (
+        "must document tolerance for greenfield/first-run artifact creation"
     )
 
 
