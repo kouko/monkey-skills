@@ -46,6 +46,145 @@ _REQ_BLOCK_HDR = re.compile(
     r"^##\s+(?:ADDED|MODIFIED|REMOVED)\s+Requirements\s*$", re.MULTILINE)
 _REQUIREMENT_HDR = re.compile(r"^###\s+Requirement:", re.MULTILINE)
 
+# Knowledge-triage `evidence_needed:` tag (docs/loom/BACKLOG.md §knowledge-
+# triage v2.1 cut (a); doctrine in spec-expansion/references/domain-tag-
+# triage.md). Pinned bucket vocabulary — any other value is a weak-executor
+# invention (real failure: leg-1 haiku dogfood emitted `technical-constraint`
+# / `audit-log-format`, see docs/loom/dogfood/2026-07-18-knowledge-triage-
+# live-spec-leg.md).
+_EVIDENCE_NEEDED = re.compile(
+    r"evidence_needed:\s*([A-Za-z]+(?:-[A-Za-z]+)*)")
+_EVIDENCE_WHITELIST = {"craft", "domain-convention", "project-local"}
+_TIER_LABELS = ("SHAPING", "DEFERRABLE")
+_DEFERRED_REASON = re.compile(r"deferred:\s*(\S[^\n]*)")
+
+# Structural scoping for the tier-label / deferred-reason checks below
+# (round 2 — replaces a fixed ±200-char window that round-1 review proved
+# unsound on real acceptance data: it produced strong-leg false positives
+# when the governing SHAPING lead-in sat >200 chars from a far list item,
+# strong-leg false negatives when an adjacent DEFERRABLE paragraph's header
+# leaked backward into range, and cross-tag compliance borrowing — a
+# sibling item's tier label or `deferred:` reason satisfying THIS item's
+# check purely because it happened to sit within radius).
+#
+# A tag's OWN SCOPE is its list item (bounded by the next top-level
+# `\d+.`/`-`/`*` marker, a blank-line paragraph break, or a heading) or,
+# outside lists, its paragraph (the same blank-line/heading-bounded block).
+# A tag's GOVERNING HEADER is the immediately preceding block, but only
+# when that block is itself a heading line or its last non-blank line ends
+# with ':' (a lead-in) — i.e. the block that visibly introduces this one.
+# Check (2) accepts a tier label found in OWN SCOPE *or* GOVERNING HEADER;
+# check (3) requires `deferred:` in OWN SCOPE only — a governing header or a
+# sibling item's `deferred:` note never satisfies it.
+#
+# Known accepted limitation: explanatory prose that quotes
+# `evidence_needed: domain-convention` inside an OUTPUT artifact (e.g. a
+# worked example in a comment) is indistinguishable from a real tag and can
+# still trip check (2)/(3) — writers are expected to tag open questions,
+# not quote the doctrine verbatim inside proposal.md/spec.md. This is a
+# known false-positive surface, not a claim that the checks never
+# false-positive.
+
+_HEADING_LINE = re.compile(r"^#{1,6}\s")
+_ITEM_MARKER = re.compile(r"^(?:\d+\.|[-*])[ \t]", re.MULTILINE)
+
+
+def _blocks(text: str) -> list[tuple[int, int]]:
+    """Partition `text` into (start, end) char-offset blocks: a maximal run
+    of non-blank lines, with each heading line forming its own single-line
+    block. Blank lines and heading lines are the boundaries that end a tag's
+    OWN SCOPE and that GOVERNING HEADER lookup steps across."""
+    blocks: list[tuple[int, int]] = []
+    cur_start: int | None = None
+    pos = 0
+    for line in text.splitlines(keepends=True):
+        start = pos
+        pos += len(line)
+        if not line.strip():
+            if cur_start is not None:
+                blocks.append((cur_start, start))
+                cur_start = None
+            continue
+        if _HEADING_LINE.match(line):
+            if cur_start is not None:
+                blocks.append((cur_start, start))
+                cur_start = None
+            blocks.append((start, pos))
+            continue
+        if cur_start is None:
+            cur_start = start
+    if cur_start is not None:
+        blocks.append((cur_start, pos))
+    return blocks
+
+
+def _item_scope_bounds(text: str, block_start: int, block_end: int,
+                        pos: int) -> tuple[int, int]:
+    """OWN SCOPE bounds for `pos` within the block [block_start, block_end):
+    if the block contains top-level list-item markers, the item containing
+    `pos` (bounded by the next marker or block_end); otherwise the whole
+    block (a plain paragraph)."""
+    starts = sorted(m.start() for m in
+                     _ITEM_MARKER.finditer(text, block_start, block_end))
+    if not starts:
+        return block_start, block_end
+    idx = None
+    for i, s in enumerate(starts):
+        if s <= pos:
+            idx = i
+        else:
+            break
+    if idx is None:
+        return block_start, block_end
+    end = starts[idx + 1] if idx + 1 < len(starts) else block_end
+    return starts[idx], end
+
+
+def _governing_header_text(text: str, blocks: list[tuple[int, int]],
+                            index: int) -> str:
+    """GOVERNING HEADER text for the block at `blocks[index]`: the
+    immediately preceding block, if it is a heading line or its last
+    non-blank line ends with ':' (a lead-in); otherwise ''."""
+    if index == 0:
+        return ""
+    prev_start, prev_end = blocks[index - 1]
+    prev_text = text[prev_start:prev_end]
+    if _HEADING_LINE.match(prev_text):
+        return prev_text
+    lines = [ln for ln in prev_text.splitlines() if ln.strip()]
+    if lines and lines[-1].rstrip().endswith(":"):
+        return prev_text
+    return ""
+
+
+def _tag_context(text: str, pos: int) -> tuple[str, str]:
+    """(own_scope, governing_header) text for a tag match starting at
+    `pos`."""
+    blocks = _blocks(text)
+    for i, (bstart, bend) in enumerate(blocks):
+        if bstart <= pos < bend:
+            own_start, own_end = _item_scope_bounds(text, bstart, bend, pos)
+            # Glued lead-in FIRST — the nearest governor wins: a
+            # colon-terminated lead-in (or heading) written DIRECTLY above
+            # its list with no blank line lives inside the SAME block, so
+            # it never becomes a preceding block for
+            # _governing_header_text; and when it exists it sits closer to
+            # the item than any preceding block does.
+            header = ""
+            first_item = _ITEM_MARKER.search(text, bstart, bend)
+            if (first_item and first_item.start() > bstart
+                    and pos >= first_item.start()):
+                lead = text[bstart:first_item.start()]
+                lead_lines = [ln for ln in lead.splitlines() if ln.strip()]
+                if lead_lines and (
+                        lead_lines[-1].rstrip().endswith(":")
+                        or _HEADING_LINE.match(lead)):
+                    header = lead
+            if not header:
+                header = _governing_header_text(text, blocks, i)
+            return text[own_start:own_end], header
+    return "", ""
+
 
 def _delta_files(root: Path) -> list[Path]:
     specs = root / "specs"
@@ -235,6 +374,92 @@ def _check_journey_navigation_section(root: Path) -> list[str]:
     return []
 
 
+# --- evidence_needed tag checks (Task 14, cut (a)) --------------------------
+# Mechanize the knowledge-triage enforcement semantics that prose-only
+# instructions did not survive weak execution on (the 3-leg dogfood):
+# schema discipline (whitelist), tiering (SHAPING/DEFERRABLE presence), and
+# the VERIFY gate rule (SHAPING requires an explicit deferred: reason).
+# Runs on OUTPUT dirs only (proposal.md + specs/**/spec.md) — never on skill
+# sources, so the doctrine reference file's own prose (which uses
+# `evidence_needed: domain-convention` as a worked example without a nearby
+# tier label) is never fed through these checks and can never false-positive.
+
+def _target_files(root: Path) -> list[Path]:
+    """proposal.md + every specs/**/*.md delta — the two artifact layers the
+    knowledge-triage tag doctrine applies to."""
+    files: list[Path] = []
+    proposal = root / "proposal.md"
+    if proposal.is_file():
+        files.append(proposal)
+    files.extend(_delta_files(root))
+    return files
+
+
+def _line_no(text: str, pos: int) -> int:
+    return text.count("\n", 0, pos) + 1
+
+
+def _domain_convention_matches(text: str) -> list[re.Match]:
+    return [m for m in _EVIDENCE_NEEDED.finditer(text)
+            if m.group(1) == "domain-convention"]
+
+
+def _scan_domain_convention_tags(root: Path, predicate) -> list[str]:
+    """Shared scan shell for the structural-scope checks below.
+    `predicate(file, own_scope, governing_header, match, text) -> str | None`
+    returns a problem message or None."""
+    problems = []
+    for f in _target_files(root):
+        text = f.read_text(encoding="utf-8")
+        for m in _domain_convention_matches(text):
+            own_scope, header = _tag_context(text, m.start())
+            problem = predicate(f, own_scope, header, m, text)
+            if problem:
+                problems.append(problem)
+    return problems
+
+
+def _check_evidence_needed_whitelist(root: Path) -> list[str]:
+    problems = []
+    for f in _target_files(root):
+        text = f.read_text(encoding="utf-8")
+        for m in _EVIDENCE_NEEDED.finditer(text):
+            value = m.group(1)
+            if value not in _EVIDENCE_WHITELIST:
+                problems.append(
+                    f"{f}:{_line_no(text, m.start())}: evidence_needed: "
+                    f"{value} is not in the pinned bucket vocabulary "
+                    f"(craft | domain-convention | project-local) — see "
+                    f"spec-expansion/references/domain-tag-triage.md")
+    return problems
+
+
+def _check_domain_convention_tier_label(root: Path) -> list[str]:
+    def predicate(f, own_scope, header, m, text):
+        if any(label in own_scope or label in header for label in _TIER_LABELS):
+            return None
+        return (f"{f}:{_line_no(text, m.start())}: evidence_needed: "
+                f"domain-convention has no SHAPING or DEFERRABLE tier "
+                f"label nearby (two-tier triage required — see "
+                f"domain-tag-triage.md §Two-tier triage)")
+    return _scan_domain_convention_tags(root, predicate)
+
+
+def _check_shaping_without_deferred(root: Path) -> list[str]:
+    def predicate(f, own_scope, header, m, text):
+        if "SHAPING" not in own_scope and "SHAPING" not in header:
+            return None  # DEFERRABLE, or untiered (already reported above)
+        dm = _DEFERRED_REASON.search(own_scope)  # OWN SCOPE only — never
+        if dm and dm.group(1).strip():           # borrowed from a sibling
+            return None                          # item or the header
+        return (f"{f}:{_line_no(text, m.start())}: SHAPING-class "
+                f"evidence_needed: domain-convention has no 'deferred: "
+                f"<reason>' note — this blocks VERIFY per the "
+                f"domain-tag-triage.md gate rule (spec-expansion SKILL.md "
+                f"§Gate rule) unless explicitly deferred with a reason")
+    return _scan_domain_convention_tags(root, predicate)
+
+
 # --- text helpers -----------------------------------------------------------
 
 _ANY_HEADER = re.compile(r"^#{2,4}\s", re.MULTILINE)
@@ -278,6 +503,13 @@ _ADDITIVE_CHECKS = [
     _check_journey_navigation_section,
 ]
 
+# Knowledge-triage `evidence_needed:` tag checks (Task 14, cut (a)).
+_EVIDENCE_TAG_CHECKS = [
+    _check_evidence_needed_whitelist,
+    _check_domain_convention_tier_label,
+    _check_shaping_without_deferred,
+]
+
 
 def validate(root: Path) -> tuple[bool, list[str]]:
     """Run all checks against the output directory `root`.
@@ -288,7 +520,7 @@ def validate(root: Path) -> tuple[bool, list[str]]:
     problems: list[str] = []
     if not root.is_dir():
         return False, [f"output directory does not exist: {root}"]
-    for check in _SKELETON_CHECKS + _ADDITIVE_CHECKS:
+    for check in _SKELETON_CHECKS + _ADDITIVE_CHECKS + _EVIDENCE_TAG_CHECKS:
         problems.extend(check(root))
     return (not problems), problems
 

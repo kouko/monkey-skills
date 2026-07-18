@@ -21,6 +21,8 @@ fully; **TUI / CLI** emit a lightweight stub plus a phase-2 note.
 
 All output is **key-free**, **in-repo**, and **git-diffable**.
 
+**Ending gate — before you end ANY run of this skill → confirm the artifact exists on disk (`DESIGN.md` for GUI; the Step 4b stub for TUI/CLI) and, for GUI runs, that Step 6's validator ran, FIRST (TUI/CLI validator coverage is phase-2 — the on-disk check still applies). A narrated analysis with no file written is a FAILED run, never a partial success.**
+
 ## Executor model — who does what
 
 **You (the agent running this skill) are the executor.** You supply the LLM

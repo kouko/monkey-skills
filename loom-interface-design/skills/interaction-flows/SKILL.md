@@ -17,6 +17,8 @@ seed; it does **not** fan out the behavioral depth (state machines, edge cases,
 acceptance scenarios) — that is `loom-spec:spec-expansion`'s job (see Seam
 below). Design stops at the surface; spec owns the behavior.
 
+**Ending gate — before you end ANY run of this skill → confirm `ui-flows.md` exists on disk and §7's validator ran, FIRST. A narrated analysis with no file written is a FAILED run, never a partial success.**
+
 ## Executor model — who does what
 
 **You (the agent running this skill) are the executor.** You supply the LLM

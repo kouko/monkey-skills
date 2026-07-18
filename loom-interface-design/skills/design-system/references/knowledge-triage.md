@@ -28,6 +28,10 @@ Classification is itself fallible — structural backstops (round caps,
 gate rules) still apply when it errs.
 ```
 
+SHAPING never ships as non-blocking: it either resolves before this station's gate or carries `deferred: <reason>`.
+
+Every tagged open question written into ui-flows.md / DESIGN.md must carry a literal `SHAPING` or `DEFERRABLE` label alongside its `evidence_needed:` tag.
+
 ## Station mount doctrine — design-system
 
 **Mount moment:** you are about to derive a color, type, or component

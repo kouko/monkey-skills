@@ -8,6 +8,44 @@ Versioning: [Semantic Versioning](https://semver.org/).
 > This file was reconstructed on 2026-07-02 from the git history — the plugin
 > shipped its first three versions without a CHANGELOG.
 
+## [0.7.0] — 2026-07-18 — mechanical pre-check + literal SHAPING tier label
+
+### Added
+
+- **Ending gates** (`interaction-flows` + `design-system`): an imperative
+  action-moment card near each skill's head — before ending ANY run,
+  confirm the artifact file exists on disk and the validate step ran; a
+  narrated analysis with no file written is a FAILED run. Closes the
+  weak-executor early-stop path that never reaches the buried validate
+  step (live incident: 2026-07-18 dogfood, a haiku run ended without
+  writing ui-flows.md; imperative cards are the evidence-backed carrier —
+  docs/loom/memory/imperative-trigger-cards-beat-descriptive-preloads.md).
+
+- **`design-critic`**: a mechanical pre-check step runs BEFORE panel
+  dispatch — greps the artifact for (1) `evidence_needed:` values outside
+  `craft | domain-convention | project-local` and (2) tier-label
+  discipline on every `evidence_needed: domain-convention` tag, split into
+  two literal sub-greps: (2a) an untiered tag with no literal `SHAPING` or
+  `DEFERRABLE` label nearby, and (2b) a literal `SHAPING` label declared
+  non-blocking/deferred WITHOUT a `deferred: <reason>` marker. Either hit
+  emits a `NEEDS_REVISION` finding directly (no panel needed for that
+  finding; the panel still runs for everything else). Classifying
+  SHAPING-ness itself stays the panel's judgment — the pre-check only
+  checks for the literal label. Verdict vocabulary (`PASS_WITH_NOTES` /
+  `NEEDS_REVISION`) unchanged.
+- **`interaction-flows` + `design-system`**: both
+  `references/knowledge-triage.md` gain two identical one-sentence
+  supplements placed AFTER the pinned vocabulary block (never inside it):
+  "SHAPING never ships as non-blocking: it either resolves before this
+  station's gate or carries `deferred: <reason>`." — closes the
+  prose-only-consequence gap a weak drafter inverted in live dogfood (leg
+  2, `docs/loom/dogfood/2026-07-18-knowledge-triage-live-spec-leg.md`) —
+  and "Every tagged open question written into ui-flows.md / DESIGN.md
+  must carry a literal `SHAPING` or `DEFERRABLE` label alongside its
+  `evidence_needed:` tag." — makes the tier label a literal artifact
+  obligation the pre-check's mechanical grep can actually find, mirroring
+  loom-spec's domain-tag-triage.md two-tier doctrine.
+
 ## [0.6.0] — 2026-07-18 — HIGH-bar knowledge triage + critic evidence flag
 
 ### Added
