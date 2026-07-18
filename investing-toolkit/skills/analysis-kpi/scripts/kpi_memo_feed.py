@@ -102,6 +102,17 @@ MEMO_FEED_SCHEMA_VERSION = "1.0"
 # The quarterly/XBRL arm's envelope version. Tier-① `build_memo_feed`
 # stays at 1.0 byte-identically; only the new arm emits 1.1 — a consumer
 # can tell the two feed shapes apart without sniffing keys.
+#
+# Additive-field ruling (Task 5, docs/loom/plans/2026-07-18-52-53-week-
+# filer-support.md): per-point `duration_weeks` and the supplementary
+# `week_normalized_yoy` field do NOT bump this version. The envelope's
+# top-level shape (`series`/`coverage_flags`, passed through VERBATIM by
+# `build_quarterly_memo_feed`) is unchanged, and both fields are OPTIONAL
+# per-point additions a consumer that doesn't recognize them can safely
+# ignore — unlike the 1.0->1.1 jump, which was a wholesale different
+# envelope shape (kpi_feeds/status vs series/coverage_flags), this is not
+# a detectable migration. Stays "1.1" — pinned by
+# test_kpi_memo_feed.py::test_build_quarterly_memo_feed_carries_week_lane_fields.
 MEMO_FEED_QUARTERLY_SCHEMA_VERSION = "1.1"
 
 # Every series-point bundled into a TRUSTED feed must carry ALL THREE of

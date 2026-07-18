@@ -33,3 +33,13 @@ the plan/doc side. Where the feed carries its own self-describing string
 (e.g. a dqc.reason), prescribe verbatim transcription of that string instead
 of paraphrasing it. Grep-level acceptance for such prose should pin the
 code-true tokens (e.g. "9mo-YTD" present, "ΣQ1-3" absent).
+
+**Refinement (52/53-week arc, 2026-07-18):** the transcription source is
+the code's BEHAVIOR (and recorded live data), never a sibling code
+COMMENT — comments lie too. A T3 comment claimed only two week-lane
+classes were reachable; a T7 fix round transcribed that claim into the
+memo protocol, contradicting the live-recon value recorded one file over
+(24wk=167d → round(167/30.44)=5 → month-map miss → `24wk-YTD` IS
+emitted). Reachability/behavior claims in prose must be re-derived from
+the arithmetic or the recorded evidence, not copied from prose already
+sitting in the code.

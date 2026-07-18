@@ -588,6 +588,37 @@ def test_build_quarterly_memo_feed_dqc_gates_coverage_flags(
     assert "reason" in str(excinfo.value)
 
 
+def test_build_quarterly_memo_feed_carries_week_lane_fields(tmp_path, monkeypatch):
+    """Task 5 (docs/loom/plans/2026-07-18-52-53-week-filer-support.md):
+    per-point `duration_weeks` and the supplementary `week_normalized_yoy`
+    field (both computed upstream by kpi_xbrl.build_quarterly_series) ride
+    through the 1.1 feed's VERBATIM passthrough unchanged — never stripped
+    by the provenance check, which only inspects its own required fields.
+    The additive-field ruling stays visible: the envelope version is NOT
+    bumped for these optional per-point additions (see
+    MEMO_FEED_QUARTERLY_SCHEMA_VERSION's own comment for the ruling)."""
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+    kpi_memo_feed, _ = _load_kpi_memo_feed_module()
+
+    payload = _quarterly_series_payload()
+    payload["series"][0]["points"][0]["duration_weeks"] = 16
+    payload["series"][0]["derived_points"][0]["duration_weeks"] = 17
+    payload["series"][0]["derived_points"][0]["week_normalized_yoy"] = 0.125
+    original_value = payload["series"][0]["derived_points"][0]["value"]
+
+    feed = kpi_memo_feed.build_quarterly_memo_feed(
+        "QTRCO", payload, generated_at="2026-07-18T00:00:00Z",
+    )
+
+    assert feed["_memo_feed_schema_version"] == "1.1"
+    assert kpi_memo_feed.MEMO_FEED_QUARTERLY_SCHEMA_VERSION == "1.1"
+    assert feed["series"][0]["points"][0]["duration_weeks"] == 16
+    assert feed["series"][0]["derived_points"][0]["duration_weeks"] == 17
+    assert feed["series"][0]["derived_points"][0]["week_normalized_yoy"] == 0.125
+    # as-reported value untouched by the supplementary annotation.
+    assert feed["series"][0]["derived_points"][0]["value"] == original_value
+
+
 def test_cli_build_quarterly_roundtrip(tmp_path):
     """Plan Task 3: the `build-quarterly` subcommand wraps
     build_quarterly_memo_feed with the same fail-loud exit-code contract as

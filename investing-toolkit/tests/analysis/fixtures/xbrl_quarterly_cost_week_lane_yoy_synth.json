@@ -1,0 +1,56 @@
+{
+  "_provenance": "SYNTHETIC 2026-07-18 (Task 6, docs/loom/plans/2026-07-18-52-53-week-filer-support.md), sanctioned fallback per the task dispatch (`docs/loom/memory/fixtures-mirror-producer-shape.md`'s machine-capture preference does not reach this shape within the captured fetch window — see xbrl_quarterly_cost_week_lane_factpack.json's `_provenance` for why the live COST data available today gives only an EQUAL-week two-year Q4 pair, never a DIFFERENT-week one). Values and structure mirror the ALREADY-SHIPPED, ALREADY-TESTED `_cost_two_year_week_lane_fact_pack(fy2025_weeks=52)` factory in investing-toolkit/tests/analysis/test_kpi_xbrl.py (Task 5's own week_normalized_yoy test fixture) verbatim — COST-shaped (MembershipMember concept/dimension, realistic $ magnitudes, real week-band structure: FY2026 53wk + 36wk-YTD -> derived Q4 17wk; FY2025 52wk + 36wk-YTD -> derived Q4 16wk), never hand-invented values outside that already-reviewed shape. This is the ONLY synthetic fixture in this task; it exists solely to exercise the different-week week_normalized_yoy POSITIVE case end-to-end through the feed seam (kpi_memo_feed.build_quarterly_memo_feed), which the real-data fixture cannot reach. Regenerate by copying the factory's literals — never hand-edit values independently of that source.",
+  "company": "COST",
+  "facts": [
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {"ProductOrService": "MembershipMember"},
+      "consolidation": null,
+      "period_end": "2026-08-30",
+      "fiscal_year": 2026, "fiscal_quarter": "FY",
+      "duration_months": 12, "duration_weeks": 53,
+      "week_lane_band": "FY",
+      "accession": "acc-fy26", "filed": "2026-10-15",
+      "value": 100000.0
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {"ProductOrService": "MembershipMember"},
+      "consolidation": null,
+      "period_end": "2026-05-10",
+      "fiscal_year": 2026, "fiscal_quarter": "Q3",
+      "duration_months": 8, "duration_weeks": 36,
+      "week_lane_band": "YTD-through-Q3",
+      "accession": "acc-ytd26", "filed": "2026-06-05",
+      "value": 78000.0
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {"ProductOrService": "MembershipMember"},
+      "consolidation": null,
+      "period_end": "2025-08-31",
+      "fiscal_year": 2025, "fiscal_quarter": "FY",
+      "duration_months": 12, "duration_weeks": 52,
+      "week_lane_band": "FY",
+      "accession": "acc-fy25", "filed": "2025-10-15",
+      "value": 88000.0
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "dimensions": {"ProductOrService": "MembershipMember"},
+      "consolidation": null,
+      "period_end": "2025-05-11",
+      "fiscal_year": 2025, "fiscal_quarter": "Q3",
+      "duration_months": 8, "duration_weeks": 36,
+      "week_lane_band": "YTD-through-Q3",
+      "accession": "acc-ytd25", "filed": "2025-06-05",
+      "value": 68000.0
+    }
+  ],
+  "fiscal_calendars": {
+    "acc-fy26": {"fiscal_period_focus": "FY", "fiscal_year_end": "--08-30"},
+    "acc-ytd26": {"fiscal_period_focus": "Q3", "fiscal_year_end": "--08-30"},
+    "acc-fy25": {"fiscal_period_focus": "FY", "fiscal_year_end": "--08-31"},
+    "acc-ytd25": {"fiscal_period_focus": "Q3", "fiscal_year_end": "--08-31"}
+  }
+}

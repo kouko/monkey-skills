@@ -851,6 +851,121 @@ def test_classify_period_type(kpi_xbrl_module, nvda_quarterly_pack, aapl_quarter
         )
 
 
+def test_classify_period_week_lane(kpi_xbrl_module):
+    """Task 3 fix round 2 (spec-reviewer NEEDS_REVISION on 111e4530):
+    class-lane precedence — the month map is tried FIRST; only when
+    `duration_months` misses it (8 not in {3,6,9,12}) does the week lane
+    get a chance. The week lane is now a PURE TRANSCRIPTION of the
+    producer's OWN `week_lane_band` label (sec_edgar_client's
+    `_week_lane_class(span_days)` result) — never re-decided here from
+    `duration_weeks` alone. A fact whose producer-emitted `week_lane_band`
+    is "YTD-through-Q3" -> "36wk-YTD", cumulative, fiscal_quarter Q3
+    (mirrors the shipped "9mo-YTD"/Q3 month-lane pattern). A sibling fact
+    with the SAME month-lane miss but no week-lane signal at all (neither
+    lane can classify it) still raises unclassifiable — fail-closed
+    unchanged, never guessed."""
+    week_lane_fact = {
+        "concept": "us-gaap:Revenues",
+        "period_end": "2026-05-10",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "Q3",
+        "duration_months": 8,
+        "duration_weeks": 36,
+        "week_lane_band": "YTD-through-Q3",
+        "accession": "0000320193-26-000123",
+    }
+    classification = kpi_xbrl_module.classify_fact_period(week_lane_fact)
+    assert classification == {
+        "period_type": "Q3",
+        "cumulative": True,
+        "duration_class": "36wk-YTD",
+    }
+
+    no_week_lane_fact = {
+        "concept": "us-gaap:Revenues",
+        "period_end": "2026-05-10",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "Q3",
+        "duration_months": 8,
+        "accession": "0000320193-26-000123",
+    }
+    with pytest.raises(ValueError, match="unclassifiable"):
+        kpi_xbrl_module.classify_fact_period(no_week_lane_fact)
+
+
+def test_classify_period_week_lane_divergence_producer_out_of_band(kpi_xbrl_module):
+    """RED (spec-reviewer NEEDS_REVISION on 111e4530, verbatim counter-
+    example): a fact whose `duration_weeks` ROUNDS to 36 (e.g. a 253-day
+    span: round(253/7)=36) but whose PRODUCER-emitted `week_lane_band` is
+    None — the producer's own `_week_lane_class(253)` rejects it, since
+    253 falls outside the tight [251, 252] window for the 36-week
+    cluster — must raise unclassifiable, never guess "36wk-YTD" from the
+    rounded int alone. This reproduces the shipped-code bug: the old
+    int-membership match (`duration_weeks in week_counts`) accepted ANY
+    duration_weeks==36 regardless of the producer's tighter day-span
+    decision, silently reintroducing the edgartools #816 two-path
+    desync the shared `_week_lane_class` primitive exists to prevent."""
+    divergent_fact = {
+        "concept": "us-gaap:Revenues",
+        "period_end": "2026-05-12",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "Q3",
+        "duration_months": 8,
+        "duration_weeks": 36,
+        "week_lane_band": None,
+        "accession": "0000320193-26-000123",
+    }
+    with pytest.raises(ValueError, match="unclassifiable"):
+        kpi_xbrl_module.classify_fact_period(divergent_fact)
+
+
+def test_classify_period_week_lane_format_branches(kpi_xbrl_module):
+    """Quality 🟡 (fix round 2): pin every REACHABLE week-lane format
+    branch (plan Notes/docstring: only "week-Q4" and "YTD-through-Q3" are
+    ever actually reached in practice, since "quarter"/"H1"/"FY" band
+    members already round into the month lane, which has precedence) —
+    a 16wk week-Q4 fact -> "16wk" (no suffix), a 17wk week-Q4 fact ->
+    "17wk" (same band, other week-count member), and an H1 fact ->
+    "24wk-YTD" (the "-YTD" suffix branch), all via `classify_fact_period`
+    with month-miss `duration_months` values (4, 4, 5) matching the real
+    `_duration_months` rounding for 111d/119d/167d spans."""
+    week_q4_16 = {
+        "concept": "us-gaap:Revenues",
+        "period_end": "2026-06-30",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "Q4",
+        "duration_months": 4,
+        "duration_weeks": 16,
+        "week_lane_band": "week-Q4",
+        "accession": "0000320193-26-000123",
+    }
+    assert kpi_xbrl_module.classify_fact_period(week_q4_16)["duration_class"] == "16wk"
+
+    week_q4_17 = {
+        "concept": "us-gaap:Revenues",
+        "period_end": "2026-06-30",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "Q4",
+        "duration_months": 4,
+        "duration_weeks": 17,
+        "week_lane_band": "week-Q4",
+        "accession": "0000320193-26-000123",
+    }
+    assert kpi_xbrl_module.classify_fact_period(week_q4_17)["duration_class"] == "17wk"
+
+    h1_24 = {
+        "concept": "us-gaap:Revenues",
+        "period_end": "2026-05-10",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "Q2",
+        "duration_months": 5,
+        "duration_weeks": 24,
+        "week_lane_band": "H1",
+        "accession": "0000320193-26-000123",
+    }
+    assert kpi_xbrl_module.classify_fact_period(h1_24)["duration_class"] == "24wk-YTD"
+
+
 def test_classify_uses_filing_dei_focus_not_calendar(kpi_xbrl_module, aapl_quarterly_pack):
     """Task 5 RED — the spec's Q2 scenario asserted LITERALLY (spec.md
     'non-December fiscal-year-end classifies by the filing's dei calendar'):
@@ -1600,6 +1715,580 @@ def test_q4_derived_carries_parallel_labels(kpi_xbrl_module, q4_fixture):
     assert len(c_result["gaps"]) == 1
     assert c_result["gaps"][0]["type"] == "q4_basis_mismatch"
     assert "calendar" in c_result["gaps"][0]["reason"]
+
+
+# ---------------------------------------------------------------------------
+# Task 4 (docs/loom/plans/2026-07-18-52-53-week-filer-support.md) — Q4
+# derivation on the week lane: a week-lane-eligible FY point (month-classed
+# "12mo-FY" carrying duration_weeks 52/53) minus its matching 36wk-YTD point
+# mints a derived Q4 with duration_weeks = FY_weeks - YTD_weeks (16 or 17),
+# gated on the WEEK-LANE YTD SIBLING'S PRESENCE — never on the FY point's
+# duration_weeks alone (a month-lane 365d calendar-year FY also carries
+# duration_weeks 52). Synthetic packs, machine-shaped like the module's
+# other week-lane fixtures (test_classify_period_week_lane) and the
+# existing derive_q4_points synthetic packs (both_restated_pack above) —
+# no hand-typed real XBRL values. No `@req` tags: this dispatch traces work
+# by named plan Tasks, not registered loom-spec REQ-ids (same convention as
+# the module header note).
+# ---------------------------------------------------------------------------
+
+COST_MEMBERSHIP_MATCH = {
+    "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+    "dimensions": {"ProductOrService": "MembershipFeesMember"},
+}
+
+
+def _cost_week_lane_fact_pack(*, include_ytd: bool = True) -> dict:
+    """A COST-shaped (53-week fiscal year) synthetic fact pack: a 12mo-FY
+    fact carrying `duration_weeks=53` and, unless `include_ytd=False`, its
+    matching 36wk-YTD sibling (`duration_weeks=36`, producer `week_lane_band`
+    "YTD-through-Q3") — full fact shape (concept, dimensions, accession,
+    filed, dei fiscal calendar) matching the producer's own emitted shape."""
+    fy_fact = {
+        "concept": COST_MEMBERSHIP_MATCH["concept"],
+        "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+        "consolidation": None,
+        "period_end": "2026-08-30",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "FY",
+        "duration_months": 12,
+        "duration_weeks": 53,
+        "week_lane_band": "FY",
+        "accession": "0000909832-26-000123",
+        "filed": "2026-10-15",
+        "value": 100000.0,
+    }
+    facts = [fy_fact]
+    fiscal_calendars = {
+        "0000909832-26-000123": {
+            "fiscal_period_focus": "FY", "fiscal_year_end": "--08-30",
+        },
+    }
+    if include_ytd:
+        ytd_fact = {
+            "concept": COST_MEMBERSHIP_MATCH["concept"],
+            "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+            "consolidation": None,
+            "period_end": "2026-05-10",
+            "fiscal_year": 2026,
+            "fiscal_quarter": "Q3",
+            "duration_months": 8,
+            "duration_weeks": 36,
+            "week_lane_band": "YTD-through-Q3",
+            "accession": "0000909832-26-000099",
+            "filed": "2026-06-05",
+            "value": 78000.0,
+        }
+        facts.append(ytd_fact)
+        fiscal_calendars["0000909832-26-000099"] = {
+            "fiscal_period_focus": "Q3", "fiscal_year_end": "--08-30",
+        }
+    return {"company": "COST", "facts": facts, "fiscal_calendars": fiscal_calendars}
+
+
+def test_q4_derive_week_lane_mint(kpi_xbrl_module):
+    """Task 4 RED: a week-lane-eligible FY point (month-classed "12mo-FY"
+    carrying duration_weeks=53) minus its matching 36wk-YTD point mints a
+    derived Q4 with duration_weeks == 17 (53 - 36), duration_class "17wk"
+    (T3's week-Q4 format, transcribed, never invented here), and the 2.23.0
+    derived-tagging rules unchanged (derived: True, plural
+    source_accessions/source_forms, verbatim dqc transcription)."""
+    pack = _cost_week_lane_fact_pack()
+    points = kpi_xbrl_module.facts_to_points(
+        pack, "membership_fees", COST_MEMBERSHIP_MATCH, "COST", "xbrl-dimensional",
+    )
+    assert not any(p["period_type"] == "Q4" for p in points)  # Q4 untagged
+    result = kpi_xbrl_module.derive_q4_points(
+        points, fiscal_calendars=pack["fiscal_calendars"]
+    )
+    assert result["gaps"] == []
+    assert len(result["points"]) == 1
+    q4 = result["points"][0]
+    assert q4["value"] == 22000.0  # 100000.0 FY - 78000.0 36wk-YTD
+    assert q4["period_type"] == "Q4"
+    assert q4["cumulative"] is False
+    assert q4["duration_class"] == "17wk"
+    assert q4["duration_weeks"] == 17
+    assert q4["period"] == "2026"
+    assert q4["derived"] is True  # the segregated lane marker
+    assert q4["dqc"]["type"] == "derived_q4"  # computed, never reported
+    assert sorted(q4["dqc"]["accessions"]) == [
+        "0000909832-26-000099", "0000909832-26-000123",
+    ]
+    assert q4["source_accessions"] == [
+        "0000909832-26-000123", "0000909832-26-000099",
+    ]
+    assert q4["source_forms"] == ["10-K", "10-Q"]
+
+
+def test_q4_derive_week_lane_missing_sibling_refuses(kpi_xbrl_module):
+    """Task 4 RED: when the week-lane YTD anchor (36wk-YTD) is absent, the
+    EXISTING q4_source_missing refusal fires exactly as today (fail-closed
+    unchanged) — the same code path as the month lane's missing-9mo-YTD
+    case, never a fabricated week-lane subtraction."""
+    pack = _cost_week_lane_fact_pack(include_ytd=False)
+    points = kpi_xbrl_module.facts_to_points(
+        pack, "membership_fees", COST_MEMBERSHIP_MATCH, "COST", "xbrl-dimensional",
+    )
+    result = kpi_xbrl_module.derive_q4_points(
+        points, fiscal_calendars=pack["fiscal_calendars"]
+    )
+    assert result["points"] == []
+    assert len(result["gaps"]) == 1
+    gap = result["gaps"][0]
+    assert gap["type"] == "q4_source_missing"
+    assert gap["period"] == "2026"
+
+
+def test_q4_derive_week_lane_not_triggered_by_fy_duration_weeks_alone(
+    kpi_xbrl_module,
+):
+    """Correctness guard (plan Task 4): a month-lane 365-day calendar-year
+    FY fact ALSO carries duration_weeks=52 (365/7 rounds to 52) — the
+    week-lane derivation must NOT fire off that alone; it is gated on the
+    presence of a GENUINE week-lane YTD sibling (36wk-YTD class), never on
+    the FY point's duration_weeks. A month-lane FY + 9mo-YTD pair (FY
+    carrying duration_weeks=52, no 36wk-YTD sibling in the group) still
+    derives the ordinary month-lane "3mo" Q4 — byte-identical to the
+    pre-Task-4 behavior."""
+    fy_fact = {
+        "concept": COST_MEMBERSHIP_MATCH["concept"],
+        "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+        "consolidation": None,
+        "period_end": "2026-09-27",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "FY",
+        "duration_months": 12,
+        "duration_weeks": 52,  # calendar-year FY also carries a week count
+        "accession": "acc-fy-cal",
+        "filed": "2026-10-30",
+        "value": 14100.0,
+    }
+    ytd9_fact = {
+        "concept": COST_MEMBERSHIP_MATCH["concept"],
+        "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+        "consolidation": None,
+        "period_end": "2026-06-28",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "Q3",
+        "duration_months": 9,
+        "accession": "acc-ytd9-cal",
+        "filed": "2026-07-30",
+        "value": 11100.0,
+    }
+    pack = {
+        "company": "COST", "facts": [fy_fact, ytd9_fact],
+        "fiscal_calendars": {
+            "acc-fy-cal": {"fiscal_period_focus": "FY",
+                           "fiscal_year_end": "--09-27"},
+            "acc-ytd9-cal": {"fiscal_period_focus": "Q3",
+                              "fiscal_year_end": "--09-27"},
+        },
+    }
+    points = kpi_xbrl_module.facts_to_points(
+        pack, "membership_fees", COST_MEMBERSHIP_MATCH, "COST", "xbrl-dimensional",
+    )
+    result = kpi_xbrl_module.derive_q4_points(
+        points, fiscal_calendars=pack["fiscal_calendars"]
+    )
+    assert result["gaps"] == []
+    assert len(result["points"]) == 1
+    q4 = result["points"][0]
+    assert q4["value"] == 3000.0  # 14100.0 FY - 11100.0 9mo-YTD
+    assert q4["duration_class"] == "3mo"  # month lane, NOT a week-lane class
+    assert "duration_weeks" not in q4
+
+
+def test_q4_derive_mixed_lane_ambiguous_refuses(kpi_xbrl_module):
+    """Fix round 2 RED (quality-reviewer finding on 1465a8bd): a group
+    carrying BOTH a genuine 9mo-YTD candidate AND a genuine 36wk-YTD
+    candidate alongside its FY total must REFUSE — never silently prefer
+    the week lane and drop the month-lane candidate with no trace. Distinct
+    `q4_basis_ambiguous` gap type, never a mint."""
+    fy_fact = {
+        "concept": COST_MEMBERSHIP_MATCH["concept"],
+        "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+        "consolidation": None,
+        "period_end": "2026-08-30",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "FY",
+        "duration_months": 12,
+        "duration_weeks": 53,
+        "week_lane_band": "FY",
+        "accession": "acc-fy-mixed",
+        "filed": "2026-10-15",
+        "value": 100000.0,
+    }
+    ytd9_fact = {
+        "concept": COST_MEMBERSHIP_MATCH["concept"],
+        "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+        "consolidation": None,
+        "period_end": "2026-05-30",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "Q3",
+        "duration_months": 9,
+        "accession": "acc-ytd9-mixed",
+        "filed": "2026-06-15",
+        "value": 75000.0,
+    }
+    ytd36wk_fact = {
+        "concept": COST_MEMBERSHIP_MATCH["concept"],
+        "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+        "consolidation": None,
+        "period_end": "2026-05-10",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "Q3",
+        "duration_months": 8,
+        "duration_weeks": 36,
+        "week_lane_band": "YTD-through-Q3",
+        "accession": "acc-ytd36-mixed",
+        "filed": "2026-06-05",
+        "value": 78000.0,
+    }
+    pack = {
+        "company": "COST",
+        "facts": [fy_fact, ytd9_fact, ytd36wk_fact],
+        "fiscal_calendars": {
+            "acc-fy-mixed": {"fiscal_period_focus": "FY",
+                              "fiscal_year_end": "--08-30"},
+            "acc-ytd9-mixed": {"fiscal_period_focus": "Q3",
+                                "fiscal_year_end": "--08-30"},
+            "acc-ytd36-mixed": {"fiscal_period_focus": "Q3",
+                                 "fiscal_year_end": "--08-30"},
+        },
+    }
+    points = kpi_xbrl_module.facts_to_points(
+        pack, "membership_fees", COST_MEMBERSHIP_MATCH, "COST", "xbrl-dimensional",
+    )
+    result = kpi_xbrl_module.derive_q4_points(
+        points, fiscal_calendars=pack["fiscal_calendars"]
+    )
+    assert result["points"] == []  # never a silent week-lane (or month-lane) pick
+    assert len(result["gaps"]) == 1
+    gap = result["gaps"][0]
+    assert gap["type"] == "q4_basis_ambiguous"
+    assert gap["period"] == "2026"
+    assert sorted(gap["accessions"]) == [
+        "acc-fy-mixed", "acc-ytd36-mixed", "acc-ytd9-mixed",
+    ]
+
+
+def test_q4_derive_week_lane_mint_16wk(kpi_xbrl_module):
+    """Mirror of test_q4_derive_week_lane_mint for the 16wk (52-week fiscal
+    year) member of T3's week-Q4 format: FY carrying duration_weeks=52
+    minus its 36wk-YTD sibling mints duration_weeks == 16, duration_class
+    "16wk"."""
+    fy_fact = {
+        "concept": COST_MEMBERSHIP_MATCH["concept"],
+        "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+        "consolidation": None,
+        "period_end": "2026-08-29",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "FY",
+        "duration_months": 12,
+        "duration_weeks": 52,
+        "week_lane_band": "FY",
+        "accession": "0000909832-26-000456",
+        "filed": "2026-10-15",
+        "value": 90000.0,
+    }
+    ytd_fact = {
+        "concept": COST_MEMBERSHIP_MATCH["concept"],
+        "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+        "consolidation": None,
+        "period_end": "2026-05-09",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "Q3",
+        "duration_months": 8,
+        "duration_weeks": 36,
+        "week_lane_band": "YTD-through-Q3",
+        "accession": "0000909832-26-000321",
+        "filed": "2026-06-05",
+        "value": 68000.0,
+    }
+    pack = {
+        "company": "COST",
+        "facts": [fy_fact, ytd_fact],
+        "fiscal_calendars": {
+            "0000909832-26-000456": {"fiscal_period_focus": "FY",
+                                      "fiscal_year_end": "--08-29"},
+            "0000909832-26-000321": {"fiscal_period_focus": "Q3",
+                                      "fiscal_year_end": "--08-29"},
+        },
+    }
+    points = kpi_xbrl_module.facts_to_points(
+        pack, "membership_fees", COST_MEMBERSHIP_MATCH, "COST", "xbrl-dimensional",
+    )
+    result = kpi_xbrl_module.derive_q4_points(
+        points, fiscal_calendars=pack["fiscal_calendars"]
+    )
+    assert result["gaps"] == []
+    assert len(result["points"]) == 1
+    q4 = result["points"][0]
+    assert q4["value"] == 22000.0  # 90000.0 FY - 68000.0 36wk-YTD
+    assert q4["duration_class"] == "16wk"
+    assert q4["duration_weeks"] == 16
+
+
+# ---------------------------------------------------------------------------
+# Task 5 (docs/loom/plans/2026-07-18-52-53-week-filer-support.md) —
+# supplementary week-normalized YoY: when a point's YoY comparator (same
+# signature group, same period_type, prior fiscal year) carries a
+# DIFFERENT duration_weeks, build_quarterly_series attaches
+# `week_normalized_yoy` = (value/weeks) / (prior_value/prior_weeks) - 1 —
+# as-reported `value` never touched; a missing comparator, an EQUAL-week
+# comparator, or either side missing duration_weeks gets NO supplementary
+# field. Fixture built from two fiscal years of the same COST-shaped
+# week-lane signature (mirrors _cost_week_lane_fact_pack above) so the
+# derived Q4 points land a real, week-mismatched comparator pair. No
+# `@req` tags: this dispatch traces work by named plan Tasks, not
+# registered loom-spec REQ-ids (same convention as the module header note).
+# ---------------------------------------------------------------------------
+
+
+def _cost_two_year_week_lane_fact_pack(*, fy2025_weeks: int = 52) -> dict:
+    """Two fiscal years of COST-shaped week-lane facts in ONE signature
+    group: FY2026 (53wk FY, 36wk-YTD -> derived Q4 = 17wk) and FY2025
+    (`fy2025_weeks`wk FY, 36wk-YTD -> derived Q4 = fy2025_weeks - 36 wk) —
+    a real YoY comparator pair for the supplementary week-normalized YoY.
+    `fy2025_weeks=52` (default) gives a DIFFERENT-week Q4 pair (16wk prior
+    vs 17wk current); `fy2025_weeks=53` gives an EQUAL-week pair (17wk vs
+    17wk) to pin the negative case."""
+    facts = [
+        {
+            "concept": COST_MEMBERSHIP_MATCH["concept"],
+            "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+            "consolidation": None,
+            "period_end": "2026-08-30",
+            "fiscal_year": 2026, "fiscal_quarter": "FY",
+            "duration_months": 12, "duration_weeks": 53,
+            "week_lane_band": "FY",
+            "accession": "acc-fy26", "filed": "2026-10-15",
+            "value": 100000.0,
+        },
+        {
+            "concept": COST_MEMBERSHIP_MATCH["concept"],
+            "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+            "consolidation": None,
+            "period_end": "2026-05-10",
+            "fiscal_year": 2026, "fiscal_quarter": "Q3",
+            "duration_months": 8, "duration_weeks": 36,
+            "week_lane_band": "YTD-through-Q3",
+            "accession": "acc-ytd26", "filed": "2026-06-05",
+            "value": 78000.0,
+        },
+        {
+            "concept": COST_MEMBERSHIP_MATCH["concept"],
+            "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+            "consolidation": None,
+            "period_end": "2025-08-31",
+            "fiscal_year": 2025, "fiscal_quarter": "FY",
+            "duration_months": 12, "duration_weeks": fy2025_weeks,
+            "week_lane_band": "FY",
+            "accession": "acc-fy25", "filed": "2025-10-15",
+            "value": 88000.0,
+        },
+        {
+            "concept": COST_MEMBERSHIP_MATCH["concept"],
+            "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+            "consolidation": None,
+            "period_end": "2025-05-11",
+            "fiscal_year": 2025, "fiscal_quarter": "Q3",
+            "duration_months": 8, "duration_weeks": 36,
+            "week_lane_band": "YTD-through-Q3",
+            "accession": "acc-ytd25", "filed": "2025-06-05",
+            "value": 68000.0,
+        },
+    ]
+    fiscal_calendars = {
+        "acc-fy26": {"fiscal_period_focus": "FY", "fiscal_year_end": "--08-30"},
+        "acc-ytd26": {"fiscal_period_focus": "Q3", "fiscal_year_end": "--08-30"},
+        "acc-fy25": {"fiscal_period_focus": "FY", "fiscal_year_end": "--08-31"},
+        "acc-ytd25": {"fiscal_period_focus": "Q3", "fiscal_year_end": "--08-31"},
+    }
+    return {"company": "COST", "facts": facts, "fiscal_calendars": fiscal_calendars}
+
+
+def test_quarterly_series_attaches_week_normalized_yoy_on_different_week_pair(
+    kpi_xbrl_module,
+):
+    """Task 5 RED: two derived Q4 points a fiscal year apart with DIFFERENT
+    duration_weeks (17wk 2026 vs 16wk 2025) get the supplementary
+    `week_normalized_yoy` on the CURRENT point, computed as (value/weeks) /
+    (prior_value/prior_weeks) - 1; as-reported `value` is untouched, and
+    `duration_weeks` rides through onto both points (propagation half of
+    Task 5)."""
+    pack = _cost_two_year_week_lane_fact_pack(fy2025_weeks=52)
+    result = kpi_xbrl_module.build_quarterly_series(pack)
+    assert len(result["series"]) == 1
+    derived = result["series"][0]["derived_points"]
+    by_period = {p["period"]: p for p in derived}
+    assert set(by_period) == {"2026", "2025"}
+
+    q4_2026, q4_2025 = by_period["2026"], by_period["2025"]
+    assert q4_2026["value"] == 22000.0  # 100000.0 - 78000.0, as-reported untouched
+    assert q4_2026["duration_weeks"] == 17
+    assert q4_2025["value"] == 20000.0  # 88000.0 - 68000.0, as-reported untouched
+    assert q4_2025["duration_weeks"] == 16
+
+    expected = (22000.0 / 17) / (20000.0 / 16) - 1
+    assert q4_2026["week_normalized_yoy"] == pytest.approx(expected, rel=1e-9)
+    # the comparator's OWN point carries no field looking further back (no
+    # FY2024 in this fixture) — never guessed.
+    assert "week_normalized_yoy" not in q4_2025
+
+
+def test_quarterly_series_no_week_normalized_yoy_on_equal_week_pair(
+    kpi_xbrl_module,
+):
+    """Task 5 RED: an EQUAL-week comparator pair (both 17wk, from two
+    53-week fiscal years) carries NO supplementary field — never guessed
+    when normalization would be a no-op."""
+    pack = _cost_two_year_week_lane_fact_pack(fy2025_weeks=53)
+    result = kpi_xbrl_module.build_quarterly_series(pack)
+    derived = result["series"][0]["derived_points"]
+    by_period = {p["period"]: p for p in derived}
+    q4_2026, q4_2025 = by_period["2026"], by_period["2025"]
+    assert q4_2026["duration_weeks"] == q4_2025["duration_weeks"] == 17
+    assert "week_normalized_yoy" not in q4_2026
+    assert "week_normalized_yoy" not in q4_2025
+
+
+def _cost_two_year_week_lane_fact_pack_zero_prior_value() -> dict:
+    """Same shape as `_cost_two_year_week_lane_fact_pack` (52wk FY2025 vs
+    53wk FY2026 -> DIFFERENT-week derived Q4 pair) but FY2025's FY and
+    YTD-through-Q3 values are equal, so derived Q4 2025 (the YoY
+    comparator for Q4 2026) works out to a zero VALUE — this used to hit
+    an uncaught ZeroDivisionError in `_attach_week_normalized_yoy`
+    (normalized_prior = 0.0 / 16 = 0.0, then divided into)."""
+    facts = [
+        {
+            "concept": COST_MEMBERSHIP_MATCH["concept"],
+            "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+            "consolidation": None,
+            "period_end": "2026-08-30",
+            "fiscal_year": 2026, "fiscal_quarter": "FY",
+            "duration_months": 12, "duration_weeks": 53,
+            "week_lane_band": "FY",
+            "accession": "acc-fy26", "filed": "2026-10-15",
+            "value": 100000.0,
+        },
+        {
+            "concept": COST_MEMBERSHIP_MATCH["concept"],
+            "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+            "consolidation": None,
+            "period_end": "2026-05-10",
+            "fiscal_year": 2026, "fiscal_quarter": "Q3",
+            "duration_months": 8, "duration_weeks": 36,
+            "week_lane_band": "YTD-through-Q3",
+            "accession": "acc-ytd26", "filed": "2026-06-05",
+            "value": 78000.0,
+        },
+        {
+            "concept": COST_MEMBERSHIP_MATCH["concept"],
+            "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+            "consolidation": None,
+            "period_end": "2025-08-31",
+            "fiscal_year": 2025, "fiscal_quarter": "FY",
+            "duration_months": 12, "duration_weeks": 52,
+            "week_lane_band": "FY",
+            "accession": "acc-fy25", "filed": "2025-10-15",
+            "value": 68000.0,
+        },
+        {
+            "concept": COST_MEMBERSHIP_MATCH["concept"],
+            "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+            "consolidation": None,
+            "period_end": "2025-05-11",
+            "fiscal_year": 2025, "fiscal_quarter": "Q3",
+            "duration_months": 8, "duration_weeks": 36,
+            "week_lane_band": "YTD-through-Q3",
+            "accession": "acc-ytd25", "filed": "2025-06-05",
+            "value": 68000.0,
+        },
+    ]
+    fiscal_calendars = {
+        "acc-fy26": {"fiscal_period_focus": "FY", "fiscal_year_end": "--08-30"},
+        "acc-ytd26": {"fiscal_period_focus": "Q3", "fiscal_year_end": "--08-30"},
+        "acc-fy25": {"fiscal_period_focus": "FY", "fiscal_year_end": "--08-31"},
+        "acc-ytd25": {"fiscal_period_focus": "Q3", "fiscal_year_end": "--08-31"},
+    }
+    return {"company": "COST", "facts": facts, "fiscal_calendars": fiscal_calendars}
+
+
+def test_quarterly_series_no_week_normalized_yoy_on_zero_value_comparator(
+    kpi_xbrl_module,
+):
+    """Task 5 fix-round-2 RED (reviewer finding #1, e64b6595): a
+    DIFFERENT-week YoY comparator whose own VALUE is 0.0 used to hit an
+    uncaught, contextless ZeroDivisionError inside
+    `_attach_week_normalized_yoy` and kill `build_quarterly_series` over
+    this OPTIONAL supplementary field. ORCHESTRATOR RULING: a
+    zero-denominator comparator is SKIP — no `week_normalized_yoy` field,
+    same silent treatment as no-comparator/equal-weeks (mirrors the
+    sibling zero-denominator skip in comps_compute.py's
+    `_i_rule_of_40`); never raise."""
+    pack = _cost_two_year_week_lane_fact_pack_zero_prior_value()
+    result = kpi_xbrl_module.build_quarterly_series(pack)
+    derived = result["series"][0]["derived_points"]
+    by_period = {p["period"]: p for p in derived}
+    q4_2026, q4_2025 = by_period["2026"], by_period["2025"]
+    assert q4_2025["value"] == 0.0
+    assert q4_2026["duration_weeks"] == 17
+    assert q4_2025["duration_weeks"] == 16
+    assert "week_normalized_yoy" not in q4_2026
+    assert "week_normalized_yoy" not in q4_2025
+
+
+def _cost_single_year_week_lane_fact_pack() -> dict:
+    """One fiscal year (FY2026 only) of COST-shaped week-lane facts — no
+    prior-fiscal-year comparator present in the signature group at all,
+    pinning the `prior is None` branch directly."""
+    facts = [
+        {
+            "concept": COST_MEMBERSHIP_MATCH["concept"],
+            "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+            "consolidation": None,
+            "period_end": "2026-08-30",
+            "fiscal_year": 2026, "fiscal_quarter": "FY",
+            "duration_months": 12, "duration_weeks": 53,
+            "week_lane_band": "FY",
+            "accession": "acc-fy26", "filed": "2026-10-15",
+            "value": 100000.0,
+        },
+        {
+            "concept": COST_MEMBERSHIP_MATCH["concept"],
+            "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+            "consolidation": None,
+            "period_end": "2026-05-10",
+            "fiscal_year": 2026, "fiscal_quarter": "Q3",
+            "duration_months": 8, "duration_weeks": 36,
+            "week_lane_band": "YTD-through-Q3",
+            "accession": "acc-ytd26", "filed": "2026-06-05",
+            "value": 78000.0,
+        },
+    ]
+    fiscal_calendars = {
+        "acc-fy26": {"fiscal_period_focus": "FY", "fiscal_year_end": "--08-30"},
+        "acc-ytd26": {"fiscal_period_focus": "Q3", "fiscal_year_end": "--08-30"},
+    }
+    return {"company": "COST", "facts": facts, "fiscal_calendars": fiscal_calendars}
+
+
+def test_quarterly_series_no_week_normalized_yoy_without_comparator(
+    kpi_xbrl_module,
+):
+    """Task 5 fix-round-2 RED (reviewer finding #2b, pin not new bug): a
+    point with NO YoY comparator present in its signature group (single
+    fiscal year of week-lane facts) gets no supplementary field — the
+    `prior is None` branch, pinned directly."""
+    pack = _cost_single_year_week_lane_fact_pack()
+    result = kpi_xbrl_module.build_quarterly_series(pack)
+    derived = result["series"][0]["derived_points"]
+    assert len(derived) == 1
+    q4_2026 = derived[0]
+    assert q4_2026["period"] == "2026"
+    assert "week_normalized_yoy" not in q4_2026
 
 
 # ---------------------------------------------------------------------------

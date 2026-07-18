@@ -1070,6 +1070,118 @@ def test_extract_emits_duration_months():
         )
 
 
+def test_extract_emits_duration_weeks():
+    """Task 1 (docs/loom/plans/2026-07-18-52-53-week-filer-support.md) —
+    `_build_dimensional_revenue_fact` emits `duration_weeks` alongside
+    `duration_months` for EVERY duration-context fact (week-count honesty
+    rides the per-point field on every fact, independent of which lane
+    classifies it — plan Notes, class-lane precedence; Q4-derivation
+    arithmetic needs FY_weeks - YTD_weeks regardless of classification).
+
+    The pure `_week_lane_class` span->band mapper is the single shared
+    primitive (docs/loom/memory/shared-classifier-over-open-dialects-
+    needs-allowlist.md) both Gate P and Gate C will decide through: a
+    251-day span (36wk-ish) classifies to the YTD-through-Q3 band, a
+    111-day span (16wk-ish) classifies to the week-Q4 band, and an
+    ordinary ~365-day calendar-year span (month-lane territory) makes NO
+    week-lane claim — the allowlist is narrow observed-week clusters with
+    gaps, never one wide contiguous range that would swallow month-lane
+    spans (fail-closed unchanged)."""
+    mod = _load_helpers()
+    fixture = json.loads((FIXTURES / "xbrl_quarterly_msft.json").read_text())
+    raw = fixture["raw_facts"]
+    q_accession = fixture["quarterly_filing"]["accession"]
+    q_filed = fixture["quarterly_filing"]["filing_date"]
+    q_dei = {
+        "fiscal_period_focus": "Q3", "fiscal_year_end": "--06-30",
+        "fiscal_year_focus": "2026",
+    }
+
+    # 251-day synthetic span (36wk-ish YTD-through-Q3 week band), period_end
+    # on a real fiscal quarter boundary (Mar 31) so Gate P's label
+    # derivation does not raise — only the dates are overridden on the
+    # real fixture row (existing test-file convention, e.g. the
+    # missing/malformed period_start rows above).
+    ytd3q_row = dict(raw["three_month"])
+    ytd3q_row["period_start"] = "2025-07-23"
+    ytd3q_row["period_end"] = "2026-03-31"
+    ytd3q_fact = mod._build_dimensional_revenue_fact(
+        ytd3q_row, "TEST", q_accession, q_filed, q_dei,
+    )
+    assert ytd3q_fact["duration_weeks"] == 36
+    # Fix round 2 (spec-reviewer NEEDS_REVISION on 111e4530): the
+    # PRODUCER now makes the ONE week-lane classification decision and
+    # emits it as `week_lane_band` — the SAME `_week_lane_class` call
+    # Gate P uses, never re-derived downstream from `duration_weeks`.
+    assert ytd3q_fact["week_lane_band"] == "YTD-through-Q3"
+
+    # 111-day synthetic span (16wk-ish week-Q4 band), period_end on the
+    # fiscal year end (Jun 30).
+    weekq4_row = dict(raw["three_month"])
+    weekq4_row["period_start"] = "2026-03-11"
+    weekq4_row["period_end"] = "2026-06-30"
+    weekq4_fact = mod._build_dimensional_revenue_fact(
+        weekq4_row, "TEST", q_accession, q_filed, q_dei,
+    )
+    assert weekq4_fact["duration_weeks"] == 16
+    assert weekq4_fact["week_lane_band"] == "week-Q4"
+
+    # Ordinary ~365-day calendar-year span (month-lane territory, NOT a
+    # 52/53-week filer) still gets a duration_weeks count — week-count
+    # honesty on EVERY fact — but the pure mapper below must make no
+    # week-lane claim for it.
+    fy_row = dict(raw["three_month"])
+    fy_row["period_start"] = "2025-06-30"
+    fy_row["period_end"] = "2026-06-30"
+    fy_fact = mod._build_dimensional_revenue_fact(
+        fy_row, "TEST", q_accession, q_filed, q_dei,
+    )
+    assert fy_fact["duration_weeks"] == 52
+    assert fy_fact["duration_months"] == 12
+    # A month-lane-territory span makes NO week-lane claim from the
+    # producer either — fail-closed unchanged, no guessed band.
+    assert fy_fact["week_lane_band"] is None
+
+    # The pure span -> week-lane-class mapper, exercised directly.
+    assert mod._week_lane_class(251) == "YTD-through-Q3"
+    assert mod._week_lane_class(111) == "week-Q4"
+    assert mod._week_lane_class(365) is None, (
+        "an ordinary ~365d calendar-year span must make NO week-lane "
+        "claim — the allowlist is narrow week-multiple clusters with "
+        "gaps, never a wide range that swallows month-lane spans"
+    )
+
+
+@pytest.mark.parametrize(
+    ("span_days", "expected"),
+    [
+        # Every _WEEK_BANDS cluster at both edges ([weeks*7 - 1, weeks*7]).
+        (83, "quarter"), (84, "quarter"),                   # 12wk
+        (90, "quarter"), (91, "quarter"),                   # 13wk
+        (111, "week-Q4"), (112, "week-Q4"),                 # 16wk
+        (118, "week-Q4"), (119, "week-Q4"),                 # 17wk
+        (167, "H1"), (168, "H1"),                           # 24wk
+        (181, "H1"), (182, "H1"),                           # 26wk
+        (251, "YTD-through-Q3"), (252, "YTD-through-Q3"),   # 36wk
+        (272, "YTD-through-Q3"), (273, "YTD-through-Q3"),   # 39wk
+        (363, "FY"), (364, "FY"),                           # 52wk
+        (370, "FY"), (371, "FY"),                           # 53wk
+        # Gap / out-of-band spans make NO claim (fail-closed).
+        (82, None), (85, None), (110, None), (120, None),
+        (166, None), (169, None), (250, None), (274, None),
+        (362, None), (365, None), (369, None), (372, None),
+    ],
+)
+def test_week_lane_class_pins_every_band_boundary(span_days, expected):
+    """code-quality-reviewer 🟡 (52/53-week Task 1) — pin the shared
+    `_WEEK_BANDS` table at EVERY band's cluster edges plus the gaps
+    between clusters, so a mistyped week count in the allowlist fails a
+    test instead of silently reclassifying (the FY band — the arc's
+    namesake — was previously unpinned at 364/371)."""
+    mod = _load_helpers()
+    assert mod._week_lane_class(span_days) == expected
+
+
 # ---------------------------------------------------------------------------
 # code-quality-reviewer 🟡 (Task 1 follow-up) — `_duration_months`'s day-span
 # -> month-integer mapping pinned across the realistic bands the review
@@ -2378,6 +2490,86 @@ def test_annual_out_of_tolerance_unclassifiable(sec_client):
     assert (annual[0]["fiscal_year"], annual[0]["fiscal_quarter"]) == (2025, "FY"), (
         annual[0]
     )
+
+
+def test_derive_fiscal_label_week_lane_boundary():
+    """Task 2 (docs/loom/plans/2026-07-18-52-53-week-filer-support.md,
+    Gate P) — a week-based filer's period_end classifies to a fiscal
+    quarter via the week-offset positive allowlist when it misses every
+    month boundary (COST-shaped: FYE 2026-08-30, period_end 2026-05-10 is
+    EXACTLY 16 weeks before FYE, but 20 days from the nearest month
+    boundary 2026-05-30 -- beyond FISCAL_BOUNDARY_TOLERANCE_DAYS=10, so
+    only the week lane can classify it; plan Notes' recon fact). A
+    period_end that misses every month AND week boundary still raises
+    UnclassifiablePeriodError -- the week lane adds classifications, it
+    never widens the fail-closed net, and the month lane's own ±10d
+    tolerance stays untouched (regression pinned above).
+
+    Round-2 fix regression (both reviewers on commit c7face80): the
+    COST-family Q2 boundary in a 53-week fiscal year sits 29 weeks before
+    FYE (Q4=17wk in a 53wk year, so Q3-boundary=17wk,
+    Q2-boundary=17+12=29wk before FYE), which the original hand-typed
+    `_WEEK_QUARTER_OFFSETS["Q2"] = (26, 28)` omitted entirely -- FYE
+    2026-08-30, period_end 2026-02-08 is EXACTLY 29 weeks before FYE
+    before FYE and previously raised UnclassifiablePeriodError although it
+    is a legitimate Q2 period_end. Also pins a Q1 case and the week-lane
+    tolerance edge (±2d classifies, ±3d raises) around the Q3=16wk
+    boundary already covered above."""
+    mod = _load_helpers()
+    dei_calendar = {"fiscal_year_end": "--08-30"}
+
+    fiscal_year, fiscal_quarter = mod._derive_fiscal_label(
+        datetime.date(2026, 5, 10), 4, dei_calendar, "COST", "acc-1",
+    )
+    assert (fiscal_year, fiscal_quarter) == (2026, "Q3"), (
+        fiscal_year, fiscal_quarter,
+    )
+
+    with pytest.raises(mod.UnclassifiablePeriodError):
+        mod._derive_fiscal_label(
+            datetime.date(2026, 6, 20), 4, dei_calendar, "COST", "acc-2",
+        )
+
+    # Q2, COST-family 53-week-year offset (29wk before FYE) -- the gap the
+    # round-2 correctness finding named.
+    fiscal_year, fiscal_quarter = mod._derive_fiscal_label(
+        datetime.date(2026, 2, 8), 4, dei_calendar, "COST", "acc-3",
+    )
+    assert (fiscal_year, fiscal_quarter) == (2026, "Q2"), (
+        fiscal_year, fiscal_quarter,
+    )
+
+    # Q1, COST-family 53-week-year offset (41wk before FYE) -- already
+    # covered by the pre-fix table; pinned here alongside the Q2 fix.
+    fiscal_year, fiscal_quarter = mod._derive_fiscal_label(
+        datetime.date(2025, 11, 16), 4, dei_calendar, "COST", "acc-4",
+    )
+    assert (fiscal_year, fiscal_quarter) == (2026, "Q1"), (
+        fiscal_year, fiscal_quarter,
+    )
+
+    # Week-lane tolerance edge around the Q3=16wk boundary (2026-05-10):
+    # ±2 days still classifies (_WEEK_BOUNDARY_TOLERANCE_DAYS=2, inclusive
+    # both sides); ±3 days is beyond tolerance and raises.
+    for offset_days in (-2, 2):
+        pinned_date = datetime.date(2026, 5, 10) + datetime.timedelta(
+            days=offset_days
+        )
+        fiscal_year, fiscal_quarter = mod._derive_fiscal_label(
+            pinned_date, 4, dei_calendar, "COST", "acc-5",
+        )
+        assert (fiscal_year, fiscal_quarter) == (2026, "Q3"), (
+            offset_days, fiscal_year, fiscal_quarter,
+        )
+
+    for offset_days in (-3, 3):
+        pinned_date = datetime.date(2026, 5, 10) + datetime.timedelta(
+            days=offset_days
+        )
+        with pytest.raises(mod.UnclassifiablePeriodError):
+            mod._derive_fiscal_label(
+                pinned_date, 4, dei_calendar, "COST", "acc-6",
+            )
 
 
 # ---------------------------------------------------------------------------
