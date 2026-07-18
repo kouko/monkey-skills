@@ -1558,6 +1558,223 @@ def test_q4_derived_carries_parallel_labels(kpi_xbrl_module, q4_fixture):
     assert "calendar" in c_result["gaps"][0]["reason"]
 
 
+# ---------------------------------------------------------------------------
+# Task 9 (docs/loom/plans/2026-07-16-operational-kpi-quarterly.md) — structured
+# point + DQC-flag schema provenance: every emitted point carries source
+# accession(s) + source form (10-K|10-Q) + duration_class; every analysis-layer
+# DQC flag follows the ONE schema (type, old, new, accessions, reason),
+# asserted via the module's own conformance helper. The source form threads
+# from the pack's per-accession `fiscal_calendars` dei read
+# (fiscal_period_focus FY -> 10-K, Q1..Q4 -> 10-Q) — the only per-accession
+# channel the pack carries; it is never guessed from a fact's own duration.
+# No `@req` tags: this dispatch traces work by named plan Tasks, not
+# registered loom-spec REQ-ids (same convention as the module header note).
+# ---------------------------------------------------------------------------
+
+
+def test_point_and_dqc_provenance_schema(
+    kpi_xbrl_module, aapl_quarterly_pack, dualdur_fixture, q4_fixture,
+    stub_data_layer_deps,
+):
+    """Task 9 RED (spec: 'Every emitted point and DQC flag carries
+    structured provenance'):
+    (a) an emitted reported point carries source_accession + source_form
+        (10-K|10-Q, threaded from the pack's fiscal_calendars dei focus) +
+        duration_class — not only a period label and value;
+    (b) a derived Q4 point keeps the T8 anti-masquerade PLURAL shape
+        (source_accessions, ratified) and gains the aligned plural
+        source_forms — the singular keys never appear on the derived lane;
+    (c) the restatement flag records old value, new value, and BOTH
+        accessions in the ONE DQC schema (policy-C parity; the old
+        superseded_accession/kept_accession field names are retired, their
+        audit content preserved as accessions=[superseded, kept] + reason);
+    (d) EVERY analysis-layer flag class (restatement, label_conflict,
+        derived_q4, q4_source_missing, q4_basis_mismatch,
+        no_quarterly_coverage) validates against the one schema via the
+        module's own assert_dqc_schema helper, which rejects the retired
+        old-shape flag;
+    (e) T8 spec-reviewer residual: when BOTH Q4-derivation inputs carry
+        restatement DQCs from DIFFERENT restating filings, the basis check
+        refuses (two distinct restating filings are two vintages, the same
+        declared calendar notwithstanding);
+    (f) a pack whose fiscal_calendars cannot ground a fact's source form
+        fails loud naming the accession — never emitted formless, never
+        guessed."""
+    # (a) reported 10-Q points: accession + form + duration_class on every one.
+    q_points = kpi_xbrl_module.facts_to_points(
+        aapl_quarterly_pack, "iphone_revenue", AAPL_IPHONE_QUARTERLY_MATCH,
+        "AAPL", "xbrl-dimensional",
+    )
+    assert len(q_points) == 5
+    for p in q_points:
+        assert p["source_accession"]
+        assert p["source_form"] == "10-Q"  # every carrying filing is a 10-Q
+        assert p["duration_class"] in {"3mo", "6mo-YTD", "9mo-YTD"}
+    # a 10-K-carried FY fact maps its dei FY focus to form 10-K.
+    q4_pack = q4_fixture["aapl_q4_derive"]
+    q4_input_points = kpi_xbrl_module.resolve_binding(
+        q4_pack, DUALDUR_IPHONE_BINDING, "AAPL"
+    )
+    fy_point = next(p for p in q4_input_points if p["period_type"] == "FY")
+    assert fy_point["source_accession"] == "0000320193-25-000079"
+    assert fy_point["source_form"] == "10-K"
+    assert fy_point["duration_class"] == "12mo-FY"
+
+    # (b) derived Q4: plural provenance shape, aligned accessions/forms;
+    # the singular reported-lane keys never masquerade on the derived lane.
+    derived = kpi_xbrl_module.derive_q4_points(
+        q4_input_points, fiscal_calendars=q4_pack["fiscal_calendars"]
+    )["points"][0]
+    assert derived["source_accessions"] == [
+        "0000320193-25-000079", "0000320193-25-000073",
+    ]
+    assert derived["source_forms"] == ["10-K", "10-Q"]  # aligned pairwise
+    assert derived["duration_class"] == "3mo"
+    assert "source_accession" not in derived
+    assert "source_form" not in derived
+
+    # (c) restatement flag: full audit content in the ONE schema.
+    dd_points = kpi_xbrl_module.resolve_binding(
+        dualdur_fixture["aapl_dualdur"], DUALDUR_IPHONE_BINDING, "AAPL"
+    )
+    restatement = next(p for p in dd_points if p["period_type"] == "Q1")["dqc"]
+    assert restatement["type"] == "restatement"
+    assert restatement["old"] == 1000.0
+    assert restatement["new"] == 1050.0
+    # accessions order is [superseded, kept] — same old-first convention as
+    # label_conflict; the retired field names are gone, content preserved.
+    assert restatement["accessions"] == [
+        "0000320193-25-000008", "0000320193-26-000006",
+    ]
+    assert restatement["reason"]
+    assert "superseded_accession" not in restatement
+    assert "kept_accession" not in restatement
+
+    # (d) every analysis-layer flag class conforms to the ONE schema.
+    label_conflict = kpi_xbrl_module.resolve_binding(
+        dualdur_fixture["fye_change_label_conflict"], FYECHG_SEGMENT_BINDING,
+        "FYECHG",
+    )[0]["dqc"]
+    missing_pack = json.loads(json.dumps(q4_pack))
+    missing_pack["facts"] = [
+        f for f in missing_pack["facts"] if f.get("duration_months") != 9
+    ]
+    q4_source_missing = kpi_xbrl_module.derive_q4_points(
+        kpi_xbrl_module.resolve_binding(
+            missing_pack, DUALDUR_IPHONE_BINDING, "AAPL"
+        ),
+        fiscal_calendars=missing_pack["fiscal_calendars"],
+    )["gaps"][0]
+    u_pack = q4_fixture["q4_unit_mismatch"]
+    q4_basis_mismatch = kpi_xbrl_module.derive_q4_points(
+        kpi_xbrl_module.resolve_binding(u_pack, DUALDUR_IPHONE_BINDING, "AAPL"),
+        fiscal_calendars=u_pack["fiscal_calendars"],
+    )["gaps"][0]
+    no_quarterly_coverage = kpi_xbrl_module.build_series_with_break(
+        q_points, "2018", granularity="quarterly",
+        facts=aapl_quarterly_pack["facts"] + [ANNUAL_IPHONE_FACT, ANNUAL_MAC_FACT],
+    )["coverage_flags"][0]
+    assert no_quarterly_coverage["type"] == "no_quarterly_coverage"
+    assert no_quarterly_coverage["accessions"] == ["0000320193-25-000079"]
+    assert no_quarterly_coverage["dimensions"] == {"ProductOrService": "MacMember"}
+    for flag in (
+        restatement, label_conflict, derived["dqc"], q4_source_missing,
+        q4_basis_mismatch, no_quarterly_coverage,
+    ):
+        assert kpi_xbrl_module.assert_dqc_schema(flag) is flag
+    # the retired old-shape restatement flag no longer conforms.
+    with pytest.raises(ValueError, match="accessions"):
+        kpi_xbrl_module.assert_dqc_schema({
+            "type": "restatement", "old": 1.0, "new": 2.0,
+            "superseded_accession": "a", "kept_accession": "b",
+        })
+    with pytest.raises(ValueError, match="reason"):
+        kpi_xbrl_module.assert_dqc_schema({
+            "type": "restatement", "old": 1.0, "new": 2.0,
+            "accessions": ["a", "b"], "reason": "",
+        })
+
+    # (e) BOTH inputs restated, by DIFFERENT restating filings -> refusal,
+    # even though the two kept facts' filings declare the SAME calendar.
+    # Producer-shaped synthetic pack: the FY total is restated by the
+    # FY2026 10-K, the 9mo-YTD by the FY2026 Q3 10-Q — two vintages.
+    base = {
+        "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "dimensions": {"ProductOrService": "IPhoneMember"},
+        "consolidation": None,
+        "derivation_basis": "dei-declared",
+    }
+    both_restated_pack = {
+        "company": "AAPL",
+        "facts": [
+            {**base, "value": 14100.0, "period_end": "2025-09-27",
+             "duration_months": 12, "calendar_year": 2025,
+             "calendar_quarter": "Q3", "fiscal_year": 2025,
+             "fiscal_quarter": "FY",
+             "accession": "0000320193-25-000079", "filed": "2025-10-31"},
+            {**base, "value": 14200.0, "period_end": "2025-09-27",
+             "duration_months": 12, "calendar_year": 2025,
+             "calendar_quarter": "Q3", "fiscal_year": 2025,
+             "fiscal_quarter": "FY",
+             "accession": "0000320193-26-000079", "filed": "2026-10-30"},
+            {**base, "value": 11100.0, "period_end": "2025-06-28",
+             "duration_months": 9, "calendar_year": 2025,
+             "calendar_quarter": "Q2", "fiscal_year": 2025,
+             "fiscal_quarter": "Q3",
+             "accession": "0000320193-25-000073", "filed": "2025-08-01"},
+            {**base, "value": 11200.0, "period_end": "2025-06-28",
+             "duration_months": 9, "calendar_year": 2025,
+             "calendar_quarter": "Q2", "fiscal_year": 2025,
+             "fiscal_quarter": "Q3",
+             "accession": "0000320193-26-000073", "filed": "2026-08-01"},
+        ],
+        "fiscal_calendars": {
+            "0000320193-25-000079": {"fiscal_period_focus": "FY",
+                                     "fiscal_year_end": "--09-27",
+                                     "fiscal_year_focus": "2025"},
+            "0000320193-25-000073": {"fiscal_period_focus": "Q3",
+                                     "fiscal_year_end": "--09-27",
+                                     "fiscal_year_focus": "2025"},
+            # the two RESTATING filings declare the SAME calendar — the
+            # refusal must come from the vintage check, not check (3).
+            "0000320193-26-000079": {"fiscal_period_focus": "FY",
+                                     "fiscal_year_end": "--09-26",
+                                     "fiscal_year_focus": "2026"},
+            "0000320193-26-000073": {"fiscal_period_focus": "Q3",
+                                     "fiscal_year_end": "--09-26",
+                                     "fiscal_year_focus": "2026"},
+        },
+    }
+    br_points = kpi_xbrl_module.resolve_binding(
+        both_restated_pack, DUALDUR_IPHONE_BINDING, "AAPL"
+    )
+    assert all(p["dqc"]["type"] == "restatement" for p in br_points)
+    br_result = kpi_xbrl_module.derive_q4_points(
+        br_points, fiscal_calendars=both_restated_pack["fiscal_calendars"]
+    )
+    assert br_result["points"] == []  # never a cross-vintage subtraction
+    assert len(br_result["gaps"]) == 1
+    br_gap = br_result["gaps"][0]
+    assert br_gap["type"] == "q4_basis_mismatch"
+    assert "restat" in br_gap["reason"]
+
+    # (f) a fact whose source form cannot be grounded (no fiscal_calendars
+    # entry for its accession) fails loud naming the accession.
+    formless_pack = {
+        "company": "AAPL",
+        "facts": [{**base, "value": 1000.0, "period_end": "2024-12-28",
+                   "duration_months": 3, "calendar_year": 2024,
+                   "calendar_quarter": "Q4", "fiscal_year": 2025,
+                   "fiscal_quarter": "Q1",
+                   "accession": "0000320193-25-000008", "filed": "2025-01-31"}],
+    }
+    with pytest.raises(ValueError, match="0000320193-25-000008"):
+        kpi_xbrl_module.facts_to_points(
+            formless_pack, "iphone_revenue", AAPL_IPHONE_QUARTERLY_MATCH,
+            "AAPL", "xbrl-dimensional",
+        )
+
+
 def test_cli_build_resolves_binding_and_prints_points(tmp_path):
     """Task 6 GREEN: the `build` subcommand reads a fact-pack JSON from
     stdin and a binding JSON from --binding, resolves it via
