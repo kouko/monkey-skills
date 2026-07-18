@@ -15,15 +15,18 @@ caller; this module does not depend on cwd.
 from __future__ import annotations
 
 import argparse
+import contextlib
+import fcntl
 import json
 import os
 import re
 import subprocess
 import sys
 import tempfile
+import time
 import tomllib
 from pathlib import Path
-from typing import NoReturn, Sequence
+from typing import Iterator, NoReturn, Sequence
 
 # Status a queue entry has when no state record exists for its id yet.
 QUEUED = "QUEUED"
@@ -48,6 +51,20 @@ FAIL_LOUD_NOTICE = (
     "fail-loud: refusing to improvise a missing or invalid queue entry — "
     "no defaults, no silent skip; load_queue FAILS rather than guessing."
 )
+
+
+def _test_rmw_sleep() -> None:
+    """Widen a read-modify-write window for concurrency tests. No-op in prod.
+
+    Sleeps ``LOOM_BATCH_QUEUE_TEST_RMW_SLEEP`` seconds (float) when that env
+    var is set; otherwise does nothing. Lets
+    test_pipeline_batch_queue.py force two subprocesses' read-modify-write
+    spans to overlap deterministically instead of racing on process-start
+    timing — proving the lock (not luck) prevents the lost update.
+    """
+    delay = os.environ.get("LOOM_BATCH_QUEUE_TEST_RMW_SLEEP")
+    if delay:
+        time.sleep(float(delay))
 
 
 class QueueError(Exception):
@@ -170,6 +187,34 @@ def save_state(state_path: Path, state: dict) -> None:
     except BaseException:
         Path(tmp_name).unlink(missing_ok=True)
         raise
+
+
+@contextlib.contextmanager
+def _state_lock(state_path: Path) -> Iterator[None]:
+    """Hold an exclusive ``flock`` across a subcommand's full state R-M-W span.
+
+    Locks the sidecar ``<state_path>.lock`` file — never ``state_path``
+    itself: an exclusive open of the state file in a truncating mode would
+    clear its contents before the lock is even held (macOS
+    truncating-open-before-flock trap; plan Kickoff decision). The lock
+    file is opened ``"a"`` (create-if-absent, never truncates existing
+    content) and locked with ``LOCK_EX`` requested directly — never
+    acquired as ``LOCK_SH`` and upgraded, which is not atomic.
+
+    Callers must enter this **before** their own ``load_state`` call and
+    keep the whole read-modify-``save_state`` span inside the ``with``
+    block, so a concurrent process's read is forced to happen after this
+    process's write completes (closes the pre-existing lost-update race
+    where two processes each read stale state, then each overwrite the
+    whole file with only their own change applied).
+    """
+    lock_path = state_path.with_name(state_path.name + ".lock")
+    with open(lock_path, "a") as lock_file:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
 
 
 def effective_entries(entries: list[dict], state: dict) -> list[dict]:
@@ -380,16 +425,18 @@ def _cmd_mark(args: argparse.Namespace) -> int:
         )
         return 1
 
-    state = load_state(state_path)
-    record = dict(state.get(args.change_id, {}))
-    record["status"] = args.status.upper()
-    if args.run_id:
-        record["runId"] = args.run_id
-    if args.reason:
-        record["reason"] = args.reason
-    state[args.change_id] = record
+    with _state_lock(state_path):
+        state = load_state(state_path)
+        record = dict(state.get(args.change_id, {}))
+        record["status"] = args.status.upper()
+        if args.run_id:
+            record["runId"] = args.run_id
+        if args.reason:
+            record["reason"] = args.reason
+        state[args.change_id] = record
 
-    save_state(state_path, state)
+        _test_rmw_sleep()
+        save_state(state_path, state)
     return 0
 
 
@@ -419,25 +466,26 @@ def _cmd_status(args: argparse.Namespace) -> int:
         print(str(e), file=sys.stderr)
         return 1
 
-    state = load_state(state_path)
-    merged = effective_entries(entries, state)
+    with _state_lock(state_path):
+        state = load_state(state_path)
+        merged = effective_entries(entries, state)
 
-    totals: dict[str, int] = {}
-    for entry in merged:
-        status = entry["status"]
-        totals[status] = totals.get(status, 0) + 1
+        totals: dict[str, int] = {}
+        for entry in merged:
+            status = entry["status"]
+            totals[status] = totals.get(status, 0) + 1
 
-        fields = [entry["id"], status]
-        if "runId" in entry:
-            fields.append(f'runId={entry["runId"]}')
-        if status in ("SKIPPED", "FAILED") and "reason" in entry:
-            fields.append(f'reason={entry["reason"]}')
-        print("  ".join(fields))
+            fields = [entry["id"], status]
+            if "runId" in entry:
+                fields.append(f'runId={entry["runId"]}')
+            if status in ("SKIPPED", "FAILED") and "reason" in entry:
+                fields.append(f'reason={entry["reason"]}')
+            print("  ".join(fields))
 
-    totals_fields = " ".join(
-        f"{status}={count}" for status, count in sorted(totals.items())
-    )
-    print(f"total={len(merged)} {totals_fields}".rstrip())
+        totals_fields = " ".join(
+            f"{status}={count}" for status, count in sorted(totals.items())
+        )
+        print(f"total={len(merged)} {totals_fields}".rstrip())
     return 0
 
 
@@ -647,41 +695,42 @@ def _cmd_next(args: argparse.Namespace) -> int:
         print(str(e), file=sys.stderr)
         return 1
 
-    state = load_state(state_path)
-    merged = effective_entries(entries, state)
+    with _state_lock(state_path):
+        state = load_state(state_path)
+        merged = effective_entries(entries, state)
 
-    if _halt_notice_if_tripped(merged, args.override_halt):
-        return 3
+        if _halt_notice_if_tripped(merged, args.override_halt):
+            return 3
 
-    for entry in merged:
-        if entry["status"] != QUEUED:
-            continue
+        for entry in merged:
+            if entry["status"] != QUEUED:
+                continue
 
-        eligible, reason = check_frozen(entry, project_path, skills_root)
-        if not eligible:
-            _skip_entry(state, state_path, entry["id"], reason)
-            continue
+            eligible, reason = check_frozen(entry, project_path, skills_root)
+            if not eligible:
+                _skip_entry(state, state_path, entry["id"], reason)
+                continue
 
-        worktree_path, branch = ensure_worktree(project_path, entry["id"])
-        plan_path = (worktree_path / entry["plan"]).resolve()
+            worktree_path, branch = ensure_worktree(project_path, entry["id"])
+            plan_path = (worktree_path / entry["plan"]).resolve()
 
-        if not plan_path.is_file():
-            _teardown_worktree(project_path, worktree_path, branch)
-            _skip_entry(
-                state,
-                state_path,
-                entry["id"],
-                _uncommitted_plan_reason(entry["id"], plan_path),
+            if not plan_path.is_file():
+                _teardown_worktree(project_path, worktree_path, branch)
+                _skip_entry(
+                    state,
+                    state_path,
+                    entry["id"],
+                    _uncommitted_plan_reason(entry["id"], plan_path),
+                )
+                continue
+
+            _dispatch_entry(
+                state, state_path, entry, worktree_path, plan_path, skills_root, branch
             )
-            continue
+            return 0
 
-        _dispatch_entry(
-            state, state_path, entry, worktree_path, plan_path, skills_root, branch
-        )
+        print(json.dumps({"done": True}))
         return 0
-
-    print(json.dumps({"done": True}))
-    return 0
 
 
 def _assert_valid_change_id(id_value: str, *, fn: str) -> None:

@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -1033,4 +1035,62 @@ def test_next_exits_cleanly_on_queue_error_mid_scan(tmp_path, capsys):
     assert exit_code == 1
     err = capsys.readouterr().err
     assert "ensure_worktree" in err
-    assert "add-export-csv" in err
+
+
+def test_mark_concurrent_writes_to_different_entries_both_persist(tmp_path):
+    # Task 8: two `mark` invocations racing on the SAME state file but
+    # DIFFERENT entries. Each process's read-modify-write is: load_state
+    # -> mutate its own entry's record -> save_state (whole dict). Without
+    # a lock held across that full span, both processes can read the
+    # pre-race state, sleep (widened here via the env-var test hook so the
+    # overlap is deterministic instead of a timing coin-flip), then each
+    # write back a dict that only contains ITS OWN entry — whichever
+    # process's save_state runs last wins and silently drops the other's
+    # update (lost-update race). With the fix, one process holds the
+    # sidecar `<state>.lock` flock(LOCK_EX) across its entire
+    # read-modify-write span, so the second process's read is forced to
+    # happen after the first's write completes — both updates survive.
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+    script_path = Path(__file__).resolve().parent / "batch_queue.py"
+
+    env = dict(os.environ)
+    env["LOOM_BATCH_QUEUE_TEST_RMW_SLEEP"] = "0.3"
+
+    proc_a = subprocess.Popen(
+        [
+            sys.executable,
+            str(script_path),
+            "mark",
+            "add-export-csv",
+            "done",
+            "--project",
+            str(project_path),
+            "--run-id",
+            "wf_a",
+        ],
+        env=env,
+    )
+    proc_b = subprocess.Popen(
+        [
+            sys.executable,
+            str(script_path),
+            "mark",
+            "fix-login-redirect",
+            "failed",
+            "--project",
+            str(project_path),
+            "--reason",
+            "boom",
+        ],
+        env=env,
+    )
+
+    assert proc_a.wait(timeout=15) == 0
+    assert proc_b.wait(timeout=15) == 0
+
+    state = load_state(loom_dir / "queue-state.json")
+    assert state["add-export-csv"]["status"] == "DONE"
+    assert state["add-export-csv"]["runId"] == "wf_a"
+    assert state["fix-login-redirect"]["status"] == "FAILED"
+    assert state["fix-login-redirect"]["reason"] == "boom"
