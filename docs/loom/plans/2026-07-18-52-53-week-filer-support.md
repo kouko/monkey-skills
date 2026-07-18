@@ -67,6 +67,14 @@ Plan-document-reviewer verdict: PASS (2026-07-18, 14/14)
   the shipped month-lane morphology ("9mo-YTD"/"12mo-FY") → directionally
   "16wk"/"17wk"/"24wk-YTD"/"36wk-YTD"; exact set is T3's code decision,
   pinned by its tests then transcribed downstream.
+- Execution decision (T3 fix round, 834bf4ee): spec-reviewer proved the
+  consumer's int-membership week matching diverges from the shared
+  primitive for reachable spans (253d / 109-115d slop zones) — the
+  classification decision moved to the PRODUCER: `_build_dimensional_
+  revenue_fact` emits per-fact `week_lane_band` (= `_week_lane_class(span)`,
+  label or None) and `kpi_xbrl` purely transcribes it (int matching + lazy
+  import deleted). Fix round touched sec_edgar_client.py + its test file
+  beyond Task 3's declared list — orchestrator-sanctioned, recorded here.
 - Kickoff decision: week-lane boundary tolerance (Gate P) → tight (≈±2d):
   week filers' period ends sit at exact weekly offsets from the per-filing
   dei FYE; widen only on an observed counterexample, never toward the month
