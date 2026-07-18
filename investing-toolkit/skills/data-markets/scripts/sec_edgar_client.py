@@ -2234,24 +2234,54 @@ def _duration_weeks(fact: dict, ticker: str, period_end: str) -> int:
 FISCAL_BOUNDARY_TOLERANCE_DAYS = 10
 
 
-# Week-offset fiscal-quarter boundaries (Task 2, docs/loom/plans/2026-07-18-
-# 52-53-week-filer-support.md — Gate P), measured BACKWARD in whole weeks
-# from the per-filing fiscal-year-end. Colocated with `_WEEK_BANDS` above
-# (the single week-arithmetic home this module keeps — no second table):
-# two week-based quarter structures observed among 52/53-week filers (plan
-# Notes, live recon) — COST-style (Q1-Q3 each 12wk, Q4 16 or 17wk in a
-# 53-week year) and 13-week-quarter filers (Q1-Q3 each 13wk, Q4 13 or 14wk).
-# Q4's own boundary is the fiscal-year-end itself (offset 0), already
-# covered by the month lane's existing `boundaries["Q4"]` below — no
-# separate week entry needed. A positive allowlist: a period_end classifies
-# to a quarter only when it lands within `_WEEK_BOUNDARY_TOLERANCE_DAYS` of
-# one of ITS quarter's listed week offsets, never a nearest guess
-# (fail-closed unchanged).
-_WEEK_QUARTER_OFFSETS: dict[str, tuple[int, ...]] = {
-    "Q1": (39, 40, 41),
-    "Q2": (26, 28),
-    "Q3": (13, 14, 16, 17),
-}
+# Week-based filer quarter structures (Task 2, docs/loom/plans/2026-07-18-
+# 52-53-week-filer-support.md — Gate P). Colocated with `_WEEK_BANDS` above
+# (the single week-arithmetic home this module keeps): two week-based
+# quarter shapes observed among 52/53-week filers (plan Notes, live recon)
+# — COST-style (Q1-Q3 each 12wk, Q4 16 or 17wk in a 53-week year) and
+# 13-week-quarter filers (Q1-Q3 each 13wk, Q4 13 or 14wk) — expressed ONCE
+# as (Q1, Q2, Q3, Q4) week-tuples per FY length. This is the SINGLE SOURCE
+# for the week-offset allowlist below; it is declared as data rather than a
+# hand-typed offset table because a hand-typed table silently drifted
+# (Task 2 round-2 correctness finding: `_WEEK_QUARTER_OFFSETS["Q2"] =
+# (26, 28)` omitted the 53-week-year offsets 27 and 29, raising
+# UnclassifiablePeriodError on every legitimate Q2 period_end of a
+# 53-week-year 13-week-quarter or COST-style filer).
+_WEEK_QUARTER_STRUCTURES: tuple[tuple[int, int, int, int], ...] = (
+    (13, 13, 13, 13),  # 13-week-quarter family, 52-week fiscal year
+    (13, 13, 13, 14),  # 13-week-quarter family, 53-week fiscal year
+    (12, 12, 12, 16),  # COST-style family, 52-week fiscal year
+    (12, 12, 12, 17),  # COST-style family, 53-week fiscal year
+)
+
+
+def _compute_week_quarter_offsets(
+    structures: tuple[tuple[int, int, int, int], ...],
+) -> dict[str, tuple[int, ...]]:
+    """Derive the Q1-Q3 week-offset positive allowlist from
+    `_WEEK_QUARTER_STRUCTURES`: for each (Q1, Q2, Q3, Q4) week-tuple, a
+    quarter boundary's offset is the whole-week distance BACKWARD from the
+    fiscal-year-end to that boundary — Q3's boundary is Q4 weeks before
+    FYE, Q2's is (Q4 + Q3) weeks before FYE, Q1's is (Q4 + Q3 + Q2) weeks
+    before FYE. Q4's own boundary is the fiscal-year-end itself (offset 0),
+    already covered by the month lane's `boundaries["Q4"]` in
+    `_derive_fiscal_label` — no separate week entry needed. Computed, not
+    hand-typed, so the offsets can never drift out of sync with the
+    structures they are derived from (the bug this function replaces)."""
+    offsets: dict[str, set[int]] = {"Q1": set(), "Q2": set(), "Q3": set()}
+    for q1, q2, q3, q4 in structures:
+        offsets["Q3"].add(q4)
+        offsets["Q2"].add(q4 + q3)
+        offsets["Q1"].add(q4 + q3 + q2)
+    return {label: tuple(sorted(values)) for label, values in offsets.items()}
+
+
+# A positive allowlist: a period_end classifies to a quarter only when it
+# lands within `_WEEK_BOUNDARY_TOLERANCE_DAYS` of one of ITS quarter's
+# computed week offsets, never a nearest guess (fail-closed unchanged).
+_WEEK_QUARTER_OFFSETS: dict[str, tuple[int, ...]] = _compute_week_quarter_offsets(
+    _WEEK_QUARTER_STRUCTURES
+)
 
 # Week-lane boundary tolerance (Task 2 kickoff decision, plan Notes: "tight
 # (≈±2d) ... widen only on an observed counterexample, never toward the

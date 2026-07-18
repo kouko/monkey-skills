@@ -2494,7 +2494,18 @@ def test_derive_fiscal_label_week_lane_boundary():
     period_end that misses every month AND week boundary still raises
     UnclassifiablePeriodError -- the week lane adds classifications, it
     never widens the fail-closed net, and the month lane's own ±10d
-    tolerance stays untouched (regression pinned above)."""
+    tolerance stays untouched (regression pinned above).
+
+    Round-2 fix regression (both reviewers on commit c7face80): the
+    COST-family Q2 boundary in a 53-week fiscal year sits 29 weeks before
+    FYE (Q4=17wk in a 53wk year, so Q3-boundary=17wk,
+    Q2-boundary=17+12=29wk before FYE), which the original hand-typed
+    `_WEEK_QUARTER_OFFSETS["Q2"] = (26, 28)` omitted entirely -- FYE
+    2026-08-30, period_end 2026-02-08 is EXACTLY 29 weeks before FYE
+    before FYE and previously raised UnclassifiablePeriodError although it
+    is a legitimate Q2 period_end. Also pins a Q1 case and the week-lane
+    tolerance edge (±2d classifies, ±3d raises) around the Q3=16wk
+    boundary already covered above."""
     mod = _load_helpers()
     dei_calendar = {"fiscal_year_end": "--08-30"}
 
@@ -2509,6 +2520,47 @@ def test_derive_fiscal_label_week_lane_boundary():
         mod._derive_fiscal_label(
             datetime.date(2026, 6, 20), 4, dei_calendar, "COST", "acc-2",
         )
+
+    # Q2, COST-family 53-week-year offset (29wk before FYE) -- the gap the
+    # round-2 correctness finding named.
+    fiscal_year, fiscal_quarter = mod._derive_fiscal_label(
+        datetime.date(2026, 2, 8), 4, dei_calendar, "COST", "acc-3",
+    )
+    assert (fiscal_year, fiscal_quarter) == (2026, "Q2"), (
+        fiscal_year, fiscal_quarter,
+    )
+
+    # Q1, COST-family 53-week-year offset (41wk before FYE) -- already
+    # covered by the pre-fix table; pinned here alongside the Q2 fix.
+    fiscal_year, fiscal_quarter = mod._derive_fiscal_label(
+        datetime.date(2025, 11, 16), 4, dei_calendar, "COST", "acc-4",
+    )
+    assert (fiscal_year, fiscal_quarter) == (2026, "Q1"), (
+        fiscal_year, fiscal_quarter,
+    )
+
+    # Week-lane tolerance edge around the Q3=16wk boundary (2026-05-10):
+    # ±2 days still classifies (_WEEK_BOUNDARY_TOLERANCE_DAYS=2, inclusive
+    # both sides); ±3 days is beyond tolerance and raises.
+    for offset_days in (-2, 2):
+        pinned_date = datetime.date(2026, 5, 10) + datetime.timedelta(
+            days=offset_days
+        )
+        fiscal_year, fiscal_quarter = mod._derive_fiscal_label(
+            pinned_date, 4, dei_calendar, "COST", "acc-5",
+        )
+        assert (fiscal_year, fiscal_quarter) == (2026, "Q3"), (
+            offset_days, fiscal_year, fiscal_quarter,
+        )
+
+    for offset_days in (-3, 3):
+        pinned_date = datetime.date(2026, 5, 10) + datetime.timedelta(
+            days=offset_days
+        )
+        with pytest.raises(mod.UnclassifiablePeriodError):
+            mod._derive_fiscal_label(
+                pinned_date, 4, dei_calendar, "COST", "acc-6",
+            )
 
 
 # ---------------------------------------------------------------------------
