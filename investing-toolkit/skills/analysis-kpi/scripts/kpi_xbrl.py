@@ -161,11 +161,13 @@ _FISCAL_QUARTERS = frozenset({"Q1", "Q2", "Q3", "Q4", "FY"})
 # label (sec_edgar_client.py) — follows the shipped month-lane pattern
 # ("9mo-YTD"/"12mo-FY"): a single-quarter-length band gets no suffix
 # ("16wk"), a YTD cumulative gets "-YTD" ("36wk-YTD"), the FY band gets
-# "-FY" ("52wk-FY"). Only "week-Q4" (16/17wk) and "YTD-through-Q3" (36wk)
-# are ever actually reached in practice — "quarter"/"H1"/"FY" band members
-# already round into the month lane, which has precedence (plan Notes:
-# class-lane precedence) — but the map covers every shipped band label so
-# a genuine miss is never silently unmapped.
+# "-FY" ("52wk-FY"). Reached in practice: "week-Q4" (16/17wk),
+# "YTD-through-Q3" (36wk), and "H1" at its live-observed 167-day span
+# (24wk YTD: 167d rounds to 5 months — a month-map miss — while 168d
+# rounds to 6 and lands month-lane "6mo-YTD"). "quarter"/"FY" band
+# members always round into the month lane, which has precedence (plan
+# Notes: class-lane precedence) — but the map covers every shipped band
+# label so a genuine miss is never silently unmapped.
 _WEEK_LANE_DURATION_CLASS_FORMAT = {
     "quarter": "{weeks}wk",
     "week-Q4": "{weeks}wk",

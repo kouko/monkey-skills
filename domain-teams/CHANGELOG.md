@@ -16,8 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   feed's actual `duration_weeks` signal rather than solely on a
   week-encoded `duration_class` string. A point qualifies when its
   `duration_class` carries a week-encoded string (`16wk` / `17wk` /
-  `36wk-YTD` — the only week-lane bands actually reached in practice,
-  since a quarter/H1/FY-length span rounds into the month lane first),
+  `36wk-YTD` / `24wk-YTD`-at-167-days — quarter/FY-length spans round
+  into the month lane first, so `52wk-FY`/`53wk-FY` never surface),
   OR its `duration_weeks` differs from its YoY comparator's (how a
   52/53-week filer's FY point actually surfaces — it classifies
   month-lane `12mo-FY` yet still carries a real `duration_weeks` of 52

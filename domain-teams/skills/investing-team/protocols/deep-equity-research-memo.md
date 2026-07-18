@@ -187,10 +187,11 @@ different market — do not merge the two treatments).
   regardless of which lane classified it (month or week) — the
   disclosure trigger is that raw signal, never the `duration_class`
   string alone. A point qualifies when ANY of: (i) its `duration_class`
-  carries a week-encoded string (e.g. `16wk`, `17wk`, `36wk-YTD` — the
-  only week-lane bands actually reached in practice: a quarter/H1/FY-
-  length span rounds into the month lane FIRST under class-lane
-  precedence, so the `52wk-FY`/`53wk-FY` band-completeness strings are
+  carries a week-encoded string (reached in practice: `16wk`, `17wk`,
+  `36wk-YTD`, and `24wk-YTD` at its live-observed 167-day span — a
+  quarter/FY-length span, and a 24-week span of exactly 168 days, rounds
+  into the month lane FIRST under class-lane precedence, so the
+  `52wk-FY`/`53wk-FY` band-completeness strings are
   never actually emitted); (ii) its `duration_weeks` differs from its
   YoY comparator's `duration_weeks` — this is how a 52/53-week filer's
   FY point actually surfaces: it classifies month-lane `12mo-FY` yet
@@ -419,7 +420,7 @@ sector favored/neutral/disfavored in current regime]
  per-series gaps[] truncated + footnoted with the gap reason verbatim;
  top-level coverage_flags[] disclosed inline on the affected cell(s),
  never truncated. Unequal-length points — duration_class carrying a
- week-encoded string (16wk/17wk/36wk-YTD), OR duration_weeks differing
+ week-encoded string (16wk/17wk/36wk-YTD/24wk-YTD), OR duration_weeks differing
  from its YoY comparator's (a 52/53-week filer's FY point: classifies
  12mo-FY yet carries duration_weeks 52/53), OR carrying a
  week_normalized_yoy field: cell labeled with duration_weeks, a
