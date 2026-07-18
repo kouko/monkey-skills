@@ -42,6 +42,55 @@ def test_mark_running_invoked_immediately_after_workflow_returns():
         "mark-running invocation must document both --run-id and --session-dir"
     )
 
+    # --session-dir semantics: it must name the PARENT of workflows/, not the
+    # workflows/ subfolder itself (batch_queue.py:529-559 joins
+    # <session_dir>/workflows/wf_<run_id>.json). A literal "this session's
+    # workflows dir" reading records a path one level too deep.
+    session_dir_idx = section.find("--session-dir")
+    nearby = section[session_dir_idx:session_dir_idx + 600]
+    assert "workflows/" in nearby and (
+        "holds" in nearby or "subfolder" in nearby or "contains" in nearby
+    ), (
+        "--session-dir description must name the parent-of-workflows/ semantics"
+    )
+    assert "session's workflows dir" not in section.lower(), (
+        "--session-dir must not be described as 'this session's workflows dir' "
+        "(that is the inverted, one-level-too-deep reading)"
+    )
+
+
+def test_session_dir_derivation_grounded_with_fallback():
+    """--session-dir is required=True but points at undocumented host
+    internals (audit §4c). The doc must (a) show the typical path shape with
+    a grounding note mirroring the resumeRunId precedent at SKILL.md:84, and
+    (b) give an honest fallback when the dispatcher can't determine it."""
+    assert SKILL_MD.exists(), f"missing {SKILL_MD}"
+    text = SKILL_MD.read_text()
+    section = _batch_mode_section(_body(text))
+    section_lower = section.lower()
+
+    assert "~/.claude/projects/" in section, (
+        "missing typical --session-dir path shape "
+        "(~/.claude/projects/<project-slug>/<session-id>/)"
+    )
+    assert "grounding" in section_lower, (
+        "missing a grounding note for the undocumented --session-dir surface"
+    )
+    assert "2026-07-18-agent-loop-convergence-audit" in section, (
+        "grounding note must cite the audit doc backing the wf-record layout"
+    )
+    assert "undocumented" in section_lower, (
+        "must disclose --session-dir derivation relies on undocumented host internals"
+    )
+
+    assert "skip" in section_lower and "mark-running" in section_lower, (
+        "missing fallback: skip mark-running when the session dir can't be determined"
+    )
+    assert "suspect" in section_lower, (
+        "fallback must note the entry then only resolves via the SUSPECT staleness path, "
+        "never via definitive wf-record evidence"
+    )
+
 
 def test_reconcile_runs_before_next_on_session_takeover():
     assert SKILL_MD.exists(), f"missing {SKILL_MD}"

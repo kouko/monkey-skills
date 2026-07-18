@@ -251,9 +251,25 @@ until `next` prints `{"done": true}` or exits 3 (circuit-breaker HALT):
    staleness is caught even without a takeover.
 2. `Workflow({scriptPath: "<resolved assets/loom-pipeline.js>", args: <the JSON stdout from step 1, verbatim>})`
 3. Immediately after `Workflow()` returns, the dispatcher MUST call
-   `python3 <skillsRoot>/loom-pipeline/scripts/batch_queue.py mark-running <id> --run-id <the Workflow run id, wf_...> --session-dir <this session's workflows dir> --project <projectPath>`
+   `python3 <skillsRoot>/loom-pipeline/scripts/batch_queue.py mark-running <id> --run-id <the Workflow run id, wf_...> --session-dir <this session's directory — the one whose workflows/ subfolder holds wf_<runId>.json, NOT the workflows/ subfolder itself> --project <projectPath>`
    — without this the runId is never recorded and `reconcile`'s
    definitive-evidence path has nothing to check against.
+
+   **Deriving `--session-dir`**: typical shape is
+   `~/.claude/projects/<project-slug>/<session-id>/` — the directory that
+   CONTAINS `workflows/wf_<runId>.json`, one level above `workflows/`.
+   (Grounding: this wf-record layout is undocumented host-internal
+   surface — not in code.claude.com/docs/en/workflows.md or sessions.md —
+   confirmed against 16 observed `wf_*.json` files, all terminal status;
+   see `docs/loom/audits/2026-07-18-agent-loop-convergence-audit.md` §4c,
+   verified 2026-07-18. Same grounding-note convention as the `resumeRunId`
+   citation above.)
+
+   **Fallback**: if the dispatcher cannot determine its own session
+   directory, skip this `mark-running` call rather than guess a path —
+   the entry then has no `sessionDir` recorded, so `reconcile` can only
+   ever resolve it via the staleness path (`SUSPECT`, human decides),
+   never via definitive wf-record evidence.
 4. `python3 <skillsRoot>/loom-pipeline/scripts/batch_queue.py mark <id> done|failed --project <projectPath> --run-id <the Workflow run id>`
 
 The main agent is **dispatcher-only**: it never parses the queue file, it
