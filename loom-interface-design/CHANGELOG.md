@@ -12,6 +12,15 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Ending gates** (`interaction-flows` + `design-system`): an imperative
+  action-moment card near each skill's head — before ending ANY run,
+  confirm the artifact file exists on disk and the validate step ran; a
+  narrated analysis with no file written is a FAILED run. Closes the
+  weak-executor early-stop path that never reaches the buried validate
+  step (live incident: 2026-07-18 dogfood, a haiku run ended without
+  writing ui-flows.md; imperative cards are the evidence-backed carrier —
+  docs/loom/memory/imperative-trigger-cards-beat-descriptive-preloads.md).
+
 - **`design-critic`**: a mechanical pre-check step runs BEFORE panel
   dispatch — greps the artifact for (1) `evidence_needed:` values outside
   `craft | domain-convention | project-local` and (2) tier-label
