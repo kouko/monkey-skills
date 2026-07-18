@@ -336,6 +336,13 @@ experiment measured is **per-critic** (each lens stays in lane); the
 or 40+ raw items dump noise into the draft. Do this **qualitatively** — a
 judgment call like the overlap diagnostic, **no script, no computed metric**:
 
+**Also run the cross-layer consistency check here** — mandatory, not one of
+the five/six persona lenses (see
+[`references/consistency-lens.md`](references/consistency-lens.md)):
+`proposal.md`'s FLAG/open-question items vs `spec.md`'s requirement text — a
+requirement that silently resolves a question the proposal flagged as open
+is an **OMISSION finding**, fed into the same consolidated set below.
+
 1. **Dedup semantically across lenses** — a gap found by several critics in
    different words collapses to **ONE** consolidated finding (carry the set of
    lenses that hit it).

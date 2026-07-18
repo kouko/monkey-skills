@@ -5,6 +5,28 @@ All notable changes to the `loom-spec` plugin (formerly `spec-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] — 2026-07-18 — mechanize knowledge-triage enforcement semantics
+
+### Added
+
+- **`scripts/validate_spec_output.py`**: three deterministic checks over the
+  emitted spec directory (`proposal.md` + `specs/**/spec.md`) —
+  (1) `evidence_needed:` value whitelist (craft / domain-convention /
+  project-local; any other value fails naming file:line + the offending
+  value); (2) every `evidence_needed: domain-convention` occurrence must
+  carry a SHAPING or DEFERRABLE tier label in its own list item/paragraph
+  or that block's governing heading/lead-in line (structural scoping, not
+  a character-distance window); (3) a SHAPING-classed domain-convention
+  item without a `deferred: <reason>` note in its own scope fails naming
+  the VERIFY gate rule. Mechanizes the enforcement semantics that a 3-leg
+  weak-model dogfood proved prose-only instructions do not survive (see
+  `docs/loom/dogfood/2026-07-18-knowledge-triage-live-spec-leg.md`).
+- **`completeness-critic/references/consistency-lens.md`**: a cross-layer
+  consistency lens — checks `proposal.md`'s FLAG/open-question items against
+  `spec.md`'s requirement text; a requirement that silently resolves a
+  question the proposal flagged as open is an OMISSION finding (severity 3
+  by default), fed into the critic's existing consolidated/ranked pipeline.
+
 ## [0.5.0] — 2026-07-18 — domain-tag triage at edge-case expansion
 
 ### Added
