@@ -1387,12 +1387,31 @@ def _period_recast_coverage_flags(fact_pack: dict) -> list[dict]:
     flag), matching every other coverage-flag channel's 'ran, none found'
     convention.
 
+    Fix-round-2 (both reviewers, converged): the REAL production pack
+    (`pack_kpi_quarterly`, pack_us.py:1017-1024) nests `axis_exclusions`
+    under BOTH arms — `coverage["quarterly"]["axis_exclusions"]` and
+    `coverage["annual"]["axis_exclusions"]` — never the flat
+    `coverage["axis_exclusions"]` this getter originally assumed. BOTH
+    arms are read and aggregated: `build_quarterly_series` derives Q4
+    from the annual arm's FY facts, so a vintage exclusion in either arm
+    is equally memo-relevant. Each arm degrades to `{}` when absent
+    (partial/failed pack) or when the arm is itself a raw error-slot dict
+    (`{"error": ...}`, pack_us.py:1023 on annual-arm failure) — `.get()`
+    on that dict simply finds no `axis_exclusions` key and yields `[]`,
+    never a crash.
+
     The flag carries the affected accession(s) (`assert_dqc_schema`'s
     required non-empty `accessions` list) plus the raw exclusion entries
     (`concept`/`accession`/`period_end`/`axis`/`member` context) verbatim
     under the extra locating field `exclusions` — never re-derived, never
     summarized away."""
-    axis_exclusions = (fact_pack.get("coverage") or {}).get("axis_exclusions") or []
+    coverage = fact_pack.get("coverage") or {}
+    quarterly_arm = coverage.get("quarterly") or {}
+    annual_arm = coverage.get("annual") or {}
+    axis_exclusions = [
+        *(quarterly_arm.get("axis_exclusions") or []),
+        *(annual_arm.get("axis_exclusions") or []),
+    ]
     vintage = [e for e in axis_exclusions if e.get("category") == "vintage"]
     if not vintage:
         return []
