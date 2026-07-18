@@ -9,10 +9,16 @@
 > question**, not a fact — move it to `user-insights.md` §Risks & open
 > questions, do not assert it.
 
-| Claim id | Claim | Evidence (link / quote) | Source | Date | Confidence |
-|---|---|---|---|---|---|
-| C1 | <one falsifiable statement> | <URL, quote, or `research/<file>` §> | <who / where; EN or JA labelled> | <YYYY-MM-DD> | high / med / low |
-| C2 |  |  |  |  |  |
+| Claim id | Claim | Evidence (link / quote) | Source | Source type | Date | Confidence |
+|---|---|---|---|---|---|---|
+| C1 | <one falsifiable statement> | <URL, quote, or `research/<file>` §> | <who / where; EN or JA labelled> | craft / domain-convention / project-local | <YYYY-MM-DD> | high / med / low |
+| C2 |  |  |  |  |  |  |
+
+## Source type legend
+
+- **craft** — engineering practice; same answer in any industry.
+- **domain-convention** — owned by an authority outside the code (industry standard / regulator / data vendor).
+- **project-local** — a fact of this repo/product only; not on the web.
 
 ## Confidence rubric
 
