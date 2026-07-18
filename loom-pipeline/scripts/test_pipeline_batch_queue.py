@@ -13,6 +13,7 @@ import pytest
 from batch_queue import (
     QueueError,
     _check_circuit_breaker,
+    _read_wf_terminal_status,
     check_frozen,
     effective_entries,
     ensure_worktree,
@@ -1256,10 +1257,49 @@ def test_reset_from_running_requeues_increments_attempts_and_appends_audit(tmp_p
     assert len(record["audit"]) == 1
     audit_line = record["audit"][0]
     assert audit_line["verb"] == "reset"
+    # schema is {verb, timestamp, reason} uniformly on every line — "reason"
+    # must be present even when no --reason was given (empty string, not
+    # a dropped key).
+    assert audit_line["reason"] == ""
     parsed = datetime.fromisoformat(audit_line["timestamp"])
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=timezone.utc)
     assert before <= parsed <= after
+
+
+def test_reset_from_running_clears_stale_run_fields(tmp_path):
+    # cq finding (round 2): a RUNNING entry carries runId/sessionDir/
+    # dispatched_at from the crashed attempt. Task 12's upcoming reconcile
+    # runs before the next dispatch, and a stale runId paired with a
+    # terminal wf-record would force-FAIL a just-restarted entry — reset
+    # must clear these live-run-only fields since a QUEUED entry has no
+    # live run.
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+    save_state(
+        loom_dir / "queue-state.json",
+        {
+            "add-export-csv": {
+                "status": "RUNNING",
+                "branch": "loom/add-export-csv",
+                "worktree": str(project_path / ".worktrees" / "loom-add-export-csv"),
+                "runId": "wf_stale123",
+                "sessionDir": "/tmp/stale-session",
+                "dispatched_at": "2026-01-01T00:00:00+00:00",
+            }
+        },
+    )
+
+    exit_code = main(
+        ["reset", "add-export-csv", "--project", str(project_path)]
+    )
+
+    assert exit_code == 0
+    state = load_state(loom_dir / "queue-state.json")
+    record = state["add-export-csv"]
+    assert "runId" not in record
+    assert "sessionDir" not in record
+    assert "dispatched_at" not in record
 
 
 def test_reset_from_failed_requeues_and_initializes_attempts_from_absent(tmp_path):
@@ -1453,3 +1493,86 @@ def test_force_fail_requires_reason_argument(tmp_path, capsys):
         main(["force-fail", "add-export-csv", "--project", str(project_path)])
 
     assert exc_info.value.code != 0
+
+
+# --- _read_wf_terminal_status (Task 11): opportunistic wf-record evidence ---
+# reader. The wf_<runId>.json format is UNDOCUMENTED host internals (design
+# SSOT §4c) — every non-definitive case (absent/corrupt/invalid-utf8/
+# missing-status/unrecognized-status/traversal) must return None, never raise.
+
+
+@pytest.mark.parametrize("status", ["completed", "failed", "killed"])
+def test_read_wf_terminal_status_returns_recognized_terminal_status(tmp_path, status):
+    session_dir = tmp_path / "session"
+    workflows_dir = session_dir / "workflows"
+    workflows_dir.mkdir(parents=True)
+    (workflows_dir / "wf_run1.json").write_text(
+        json.dumps({"runId": "run1", "status": status}), encoding="utf-8"
+    )
+
+    assert _read_wf_terminal_status("run1", session_dir) == status
+
+
+def test_read_wf_terminal_status_returns_none_when_file_absent(tmp_path):
+    session_dir = tmp_path / "session"
+    session_dir.mkdir()
+
+    assert _read_wf_terminal_status("missing-run", session_dir) is None
+
+
+def test_read_wf_terminal_status_returns_none_when_session_dir_absent(tmp_path):
+    assert _read_wf_terminal_status("run1", tmp_path / "no-such-session") is None
+
+
+def test_read_wf_terminal_status_returns_none_on_corrupt_json(tmp_path):
+    workflows_dir = tmp_path / "session" / "workflows"
+    workflows_dir.mkdir(parents=True)
+    (workflows_dir / "wf_run2.json").write_text("{not valid json", encoding="utf-8")
+
+    assert _read_wf_terminal_status("run2", tmp_path / "session") is None
+
+
+def test_read_wf_terminal_status_returns_none_on_non_object_json(tmp_path):
+    workflows_dir = tmp_path / "session" / "workflows"
+    workflows_dir.mkdir(parents=True)
+    (workflows_dir / "wf_run6.json").write_text(
+        json.dumps(["completed"]), encoding="utf-8"
+    )
+
+    assert _read_wf_terminal_status("run6", tmp_path / "session") is None
+
+
+def test_read_wf_terminal_status_returns_none_on_invalid_utf8(tmp_path):
+    workflows_dir = tmp_path / "session" / "workflows"
+    workflows_dir.mkdir(parents=True)
+    (workflows_dir / "wf_run3.json").write_bytes(b"\xff\xfe\xfd")
+
+    assert _read_wf_terminal_status("run3", tmp_path / "session") is None
+
+
+def test_read_wf_terminal_status_returns_none_when_status_missing(tmp_path):
+    workflows_dir = tmp_path / "session" / "workflows"
+    workflows_dir.mkdir(parents=True)
+    (workflows_dir / "wf_run4.json").write_text(
+        json.dumps({"runId": "run4"}), encoding="utf-8"
+    )
+
+    assert _read_wf_terminal_status("run4", tmp_path / "session") is None
+
+
+def test_read_wf_terminal_status_returns_none_on_unrecognized_status(tmp_path):
+    workflows_dir = tmp_path / "session" / "workflows"
+    workflows_dir.mkdir(parents=True)
+    (workflows_dir / "wf_run5.json").write_text(
+        json.dumps({"status": "running"}), encoding="utf-8"
+    )
+
+    assert _read_wf_terminal_status("run5", tmp_path / "session") is None
+
+
+@pytest.mark.parametrize("bad_run_id", ["../escape", "a/b", "a\\b", ".."])
+def test_read_wf_terminal_status_rejects_path_traversal_run_id(tmp_path, bad_run_id):
+    session_dir = tmp_path / "session"
+    (session_dir / "workflows").mkdir(parents=True)
+
+    assert _read_wf_terminal_status(bad_run_id, session_dir) is None

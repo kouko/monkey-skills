@@ -398,14 +398,20 @@ def ensure_worktree(project_path: Path, change_id: str) -> tuple[Path, str]:
     return worktree_path, branch
 
 
-def _cmd_mark(args: argparse.Namespace) -> int:
-    """Implements the ``mark`` subcommand — see ``main``'s subparser setup.
+def _resolve_paths_and_validate_id(
+    args: argparse.Namespace, verb: str
+) -> tuple[Path, Path] | int:
+    """Shared queue-load + unknown-id preamble for the four state-mutating
+    subcommands (``mark``, ``mark-running``, ``reset``, ``force-fail``).
 
-    Writes/updates the state record for ``args.change_id`` and returns a
-    process exit code (0 on success, 1 on a caller-facing error such as an
-    unknown change id — printed to stderr, never raised as an exception,
-    since this is the CLI boundary). Status is stored uppercase (DONE /
-    FAILED) to match ``effective_entries``'s vocabulary.
+    Resolves ``queue_path``/``state_path`` from ``args.project`` and loads
+    the queue to validate ``args.change_id`` against it. On success returns
+    ``(queue_path, state_path)``. On failure — a ``load_queue`` error, or
+    ``args.change_id`` not present in the queue — prints the caller-facing
+    error to stderr (prefixed with ``verb``, matching each subcommand's
+    prior wording) and returns the process exit code ``1`` instead, so
+    callers can do ``result = _resolve_paths_and_validate_id(args, "mark");
+    if isinstance(result, int): return result``.
     """
     project_path = Path(args.project)
     queue_path = project_path / "docs" / "loom" / "QUEUE.toml"
@@ -420,11 +426,28 @@ def _cmd_mark(args: argparse.Namespace) -> int:
     known_ids = {entry["id"] for entry in entries}
     if args.change_id not in known_ids:
         print(
-            f'mark: unknown change id "{args.change_id}" — not present in '
+            f'{verb}: unknown change id "{args.change_id}" — not present in '
             f'"{queue_path}".',
             file=sys.stderr,
         )
         return 1
+
+    return queue_path, state_path
+
+
+def _cmd_mark(args: argparse.Namespace) -> int:
+    """Implements the ``mark`` subcommand — see ``main``'s subparser setup.
+
+    Writes/updates the state record for ``args.change_id`` and returns a
+    process exit code (0 on success, 1 on a caller-facing error such as an
+    unknown change id — printed to stderr, never raised as an exception,
+    since this is the CLI boundary). Status is stored uppercase (DONE /
+    FAILED) to match ``effective_entries``'s vocabulary.
+    """
+    resolved = _resolve_paths_and_validate_id(args, "mark")
+    if isinstance(resolved, int):
+        return resolved
+    _, state_path = resolved
 
     with _state_lock(state_path):
         state = load_state(state_path)
@@ -455,24 +478,10 @@ def _cmd_mark_running(args: argparse.Namespace) -> int:
     caller-facing error — printed to stderr, exit 1, no state mutation —
     mirroring ``_cmd_mark``'s error-reporting shape.
     """
-    project_path = Path(args.project)
-    queue_path = project_path / "docs" / "loom" / "QUEUE.toml"
-    state_path = project_path / "docs" / "loom" / "queue-state.json"
-
-    try:
-        entries = load_queue(queue_path)
-    except QueueError as e:
-        print(str(e), file=sys.stderr)
-        return 1
-
-    known_ids = {entry["id"] for entry in entries}
-    if args.change_id not in known_ids:
-        print(
-            f'mark-running: unknown change id "{args.change_id}" — not '
-            f'present in "{queue_path}".',
-            file=sys.stderr,
-        )
-        return 1
+    resolved = _resolve_paths_and_validate_id(args, "mark-running")
+    if isinstance(resolved, int):
+        return resolved
+    _, state_path = resolved
 
     with _state_lock(state_path):
         state = load_state(state_path)
@@ -499,16 +508,56 @@ def _append_audit_line(record: dict, verb: str, reason: str | None) -> None:
 
     Append-only: a shallow copy of any existing ``audit`` list is extended,
     never truncated or rewritten (design SSOT §4c — "never silently lose
-    the audit trail of why a human intervened"). ``reason`` is included
-    only when given (``reset``'s ``--reason`` is optional; ``force-fail``'s
-    is required by its argparse setup, so it is always present there).
+    the audit trail of why a human intervened"). The schema is uniform —
+    every line carries all three keys; ``reason`` is ``""`` when not given
+    (``reset``'s ``--reason`` is optional) rather than a dropped key, so a
+    consumer can always read ``line["reason"]`` without a membership check.
     """
     audit = list(record.get("audit", []))
-    line = {"verb": verb, "timestamp": datetime.now(timezone.utc).isoformat()}
-    if reason:
-        line["reason"] = reason
+    line = {
+        "verb": verb,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "reason": reason or "",
+    }
     audit.append(line)
     record["audit"] = audit
+
+
+_WF_TERMINAL_STATUSES = frozenset({"completed", "failed", "killed"})
+
+
+def _read_wf_terminal_status(run_id: str, session_dir: Path | str) -> str | None:
+    """Opportunistically read a terminal ``status`` from a Workflow wf-record.
+
+    Looks for ``<session_dir>/workflows/wf_<run_id>.json`` and returns its
+    ``status`` field ONLY when it is one of ``completed``/``failed``/
+    ``killed`` (design SSOT §4c — the only statuses observed; presence of
+    the file is treated as definitively terminal). This file format is
+    **undocumented host internals** (§4c), so every other outcome —
+    absent file, unreadable (permission/IO error), invalid UTF-8,
+    unparseable JSON, non-object JSON, missing ``status``, or an
+    unrecognized ``status`` value — returns ``None`` rather than raising:
+    fail-safe, opportunistic evidence only, never a hard dependency.
+
+    ``run_id`` also gets a path-traversal guard (Rule 8/allow-list
+    reasoning, same as ``_assert_valid_change_id``): it lands directly in
+    a filename, so any ``run_id`` containing ``/``, ``\\``, or ``..``
+    returns ``None`` instead of being interpolated into a path.
+    """
+    if not run_id or "/" in run_id or "\\" in run_id or ".." in run_id:
+        return None
+
+    wf_path = Path(session_dir) / "workflows" / f"wf_{run_id}.json"
+    try:
+        data = json.loads(wf_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return None
+
+    if not isinstance(data, dict):
+        return None
+
+    status = data.get("status")
+    return status if status in _WF_TERMINAL_STATUSES else None
 
 
 def _cmd_reset(args: argparse.Namespace) -> int:
@@ -520,25 +569,18 @@ def _cmd_reset(args: argparse.Namespace) -> int:
     0 when absent) and an audit line is appended. Any other current
     status (including unknown-id) is a caller-facing error — printed to
     stderr, exit 1, zero mutation — mirroring ``_cmd_mark_running``.
+
+    Also pops ``runId``/``sessionDir``/``dispatched_at`` from the record:
+    those name the crashed attempt's now-dead run, and a QUEUED entry has
+    no live run — carrying them forward would leave a stale ``runId``
+    sitting next to a terminal wf-record once Task 12's reconcile ships,
+    which would misread the freshly re-dispatched attempt as the
+    already-finished one and force-FAIL it.
     """
-    project_path = Path(args.project)
-    queue_path = project_path / "docs" / "loom" / "QUEUE.toml"
-    state_path = project_path / "docs" / "loom" / "queue-state.json"
-
-    try:
-        entries = load_queue(queue_path)
-    except QueueError as e:
-        print(str(e), file=sys.stderr)
-        return 1
-
-    known_ids = {entry["id"] for entry in entries}
-    if args.change_id not in known_ids:
-        print(
-            f'reset: unknown change id "{args.change_id}" — not present in '
-            f'"{queue_path}".',
-            file=sys.stderr,
-        )
-        return 1
+    resolved = _resolve_paths_and_validate_id(args, "reset")
+    if isinstance(resolved, int):
+        return resolved
+    _, state_path = resolved
 
     with _state_lock(state_path):
         state = load_state(state_path)
@@ -556,6 +598,8 @@ def _cmd_reset(args: argparse.Namespace) -> int:
         record = dict(existing)
         record["status"] = QUEUED
         record["attempts"] = record.get("attempts", 0) + 1
+        for stale_field in ("runId", "sessionDir", "dispatched_at"):
+            record.pop(stale_field, None)
         _append_audit_line(record, "reset", args.reason)
         state[args.change_id] = record
         save_state(state_path, state)
@@ -574,24 +618,10 @@ def _cmd_force_fail(args: argparse.Namespace) -> int:
     entry). Any status other than RUNNING (including unknown-id) is a
     caller-facing error — printed to stderr, exit 1, zero mutation.
     """
-    project_path = Path(args.project)
-    queue_path = project_path / "docs" / "loom" / "QUEUE.toml"
-    state_path = project_path / "docs" / "loom" / "queue-state.json"
-
-    try:
-        entries = load_queue(queue_path)
-    except QueueError as e:
-        print(str(e), file=sys.stderr)
-        return 1
-
-    known_ids = {entry["id"] for entry in entries}
-    if args.change_id not in known_ids:
-        print(
-            f'force-fail: unknown change id "{args.change_id}" — not '
-            f'present in "{queue_path}".',
-            file=sys.stderr,
-        )
-        return 1
+    resolved = _resolve_paths_and_validate_id(args, "force-fail")
+    if isinstance(resolved, int):
+        return resolved
+    _, state_path = resolved
 
     with _state_lock(state_path):
         state = load_state(state_path)
