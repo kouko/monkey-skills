@@ -1008,6 +1008,30 @@ def _halt_notice_if_tripped(entries: list[dict], override_halt: bool) -> bool:
     return True
 
 
+_TERMINAL_STATUSES = frozenset({"DONE", "FAILED", "SKIPPED"})
+
+
+def _describe_non_terminal_entry(entry: dict, state: dict) -> dict:
+    """Build one loud enumeration record for an entry blocking ``next``'s
+    ``done`` verdict (Task 13, design SSOT §4c Fix 1 revised design point 5).
+
+    RUNNING entries reuse ``_classify_running_entry`` so the same
+    SUSPECT/SUSPECT-COMPLETE evidence ``reconcile`` already prints to stderr
+    also lands here, in the machine-readable stdout payload. A QUEUED entry
+    should never reach this point in practice — the scan above dispatches or
+    SKIPs every QUEUED entry it sees in the same invocation — but gets a
+    generic description rather than being assumed impossible, since this
+    function's whole job is to never let ``done`` go silent.
+    """
+    record = state.get(entry["id"], {})
+    if entry["status"] == "RUNNING":
+        _category, evidence = _classify_running_entry(record)
+        reason = evidence or "in flight, no staleness evidence yet"
+    else:
+        reason = f'status={entry["status"]!r}, not selected by this scan'
+    return {"id": entry["id"], "status": entry["status"], "reason": reason}
+
+
 def _cmd_next(args: argparse.Namespace) -> int:
     """Implements the ``next`` subcommand — see ``main``'s subparser setup.
 
@@ -1042,9 +1066,16 @@ def _cmd_next(args: argparse.Namespace) -> int:
     On the first entry that clears both checks: ``_dispatch_entry`` records
     ``RUNNING`` (+ ``branch``, ``worktree``) in state and prints ONE JSON
     object to stdout carrying the driver's ready-to-use Workflow args (see
-    its docstring for the field contract). No eligible entry left (empty
-    queue, or every remaining ``QUEUED`` entry got skipped) prints
-    ``{"done": true}`` and exits 0.
+    its docstring for the field contract). When no entry gets dispatched
+    (empty queue, or every remaining ``QUEUED`` entry got skipped), ``done``
+    is derived from ``terminal_count == total`` (Task 13, design SSOT §4c
+    Fix 1 revised design point 5) rather than assumed: DONE/FAILED/SKIPPED
+    are the terminal set (SKIPPED has no automatic path back to QUEUED, so
+    it counts as final here the same way it already does for dispatch
+    purposes). If any entry is still QUEUED or RUNNING, ``{"done": false}``
+    is printed alongside a ``non_terminal`` list (id + status + reason per
+    entry, via ``_describe_non_terminal_entry``) instead of silently
+    claiming the batch is finished. Exits 0 either way.
 
     **Circuit breaker** (Task 10, plan §Settled open questions 3): before
     selecting, ``_halt_notice_if_tripped`` scans for two consecutive FAILED
@@ -1120,7 +1151,20 @@ def _cmd_next(args: argparse.Namespace) -> int:
             )
             return 0
 
-        print(json.dumps({"done": True}))
+        final_merged = effective_entries(entries, state)
+        non_terminal = [
+            e for e in final_merged if e["status"] not in _TERMINAL_STATUSES
+        ]
+        if non_terminal:
+            payload = {
+                "done": False,
+                "non_terminal": [
+                    _describe_non_terminal_entry(e, state) for e in non_terminal
+                ],
+            }
+        else:
+            payload = {"done": True}
+        print(json.dumps(payload))
         return 0
 
 

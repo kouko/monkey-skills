@@ -13,6 +13,7 @@ import pytest
 from batch_queue import (
     QueueError,
     _check_circuit_breaker,
+    _classify_running_entry,
     _read_wf_terminal_status,
     check_frozen,
     effective_entries,
@@ -1893,3 +1894,93 @@ def test_next_reconciles_running_entries_before_normal_scan(tmp_path, capsys):
     assert state["add-export-csv"]["audit"][0]["verb"] == "reconcile"
     assert state["fix-login-redirect"]["status"] == "SKIPPED"
     assert state["add-dark-mode"]["status"] == "RUNNING"
+
+
+# --- Task 13: `next`'s done derivation is `terminal_count == total`; a
+# non-terminal remainder (QUEUED/RUNNING) blocks `done: true` and is
+# enumerated loudly (id + status + why) in the same stdout payload. ---
+
+
+def test_next_reports_not_done_when_running_entry_remains(tmp_path, capsys):
+    # A stranded RUNNING entry (no runId yet — mark-running hasn't run —
+    # dispatched well past the 10-minute no-runId grace window) is neither
+    # QUEUED nor terminal: `next` must not claim `done: true` while it is
+    # still outstanding, and must enumerate it instead of silently treating
+    # the batch as finished.
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+    stale_dispatch = datetime.now(timezone.utc) - timedelta(minutes=11)
+    save_state(
+        loom_dir / "queue-state.json",
+        {
+            "add-export-csv": {"status": "DONE"},
+            "fix-login-redirect": {
+                "status": "RUNNING",
+                "dispatched_at": _iso(stale_dispatch),
+            },
+            "add-dark-mode": {"status": "DONE"},
+        },
+    )
+    skills_root = tmp_path / "skills"
+
+    exit_code = main(
+        ["next", "--project", str(project_path), "--skills-root", str(skills_root)]
+    )
+
+    assert exit_code == 0
+    payload = json.loads(capsys.readouterr().out.strip())
+    assert payload["done"] is False
+    assert len(payload["non_terminal"]) == 1
+    blocking = payload["non_terminal"][0]
+    assert blocking["id"] == "fix-login-redirect"
+    assert blocking["status"] == "RUNNING"
+    assert "no runId recorded yet" in blocking["reason"]
+
+
+def test_next_reports_done_when_all_entries_terminal_including_skipped(tmp_path, capsys):
+    # Documents the chosen terminal set for the done check: DONE, FAILED,
+    # AND SKIPPED all count as terminal — a SKIPPED entry has no automatic
+    # path back to QUEUED (only a human running `reset`, which only accepts
+    # RUNNING/FAILED, ever revives one), so it must not keep `done` stuck at
+    # false forever. Only QUEUED/RUNNING keep a batch open.
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+    save_state(
+        loom_dir / "queue-state.json",
+        {
+            "add-export-csv": {"status": "DONE"},
+            "fix-login-redirect": {"status": "FAILED"},
+            "add-dark-mode": {"status": "SKIPPED", "reason": "unfrozen"},
+        },
+    )
+    skills_root = tmp_path / "skills"
+
+    exit_code = main(
+        ["next", "--project", str(project_path), "--skills-root", str(skills_root)]
+    )
+
+    assert exit_code == 0
+    assert json.loads(capsys.readouterr().out.strip()) == {"done": True}
+
+
+# --- Sanctioned rider (Task 12 review, same files): _parse_iso_timestamp's
+# fail-safe branches (missing / malformed dispatched_at) had no direct test
+# — both must classify as SUSPECT without raising or transitioning. ---
+
+
+def test_classify_running_entry_suspect_when_dispatched_at_missing():
+    record = {"status": "RUNNING"}  # dispatched_at absent entirely
+
+    category, evidence = _classify_running_entry(record)
+
+    assert category == "SUSPECT"
+    assert "dispatched_at missing/unparseable" in evidence
+
+
+def test_classify_running_entry_suspect_when_dispatched_at_malformed():
+    record = {"status": "RUNNING", "dispatched_at": "not-a-date"}
+
+    category, evidence = _classify_running_entry(record)
+
+    assert category == "SUSPECT"
+    assert "dispatched_at missing/unparseable" in evidence
