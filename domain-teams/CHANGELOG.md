@@ -5,6 +5,23 @@ All notable changes to the `domain-teams` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v5.10.0] — 2026-07-18
+
+### Added
+
+- **Unequal-quarter-length disclosure (week-lane points)** (investing-team
+  `protocols/deep-equity-research-memo.md`, Operating KPI Trends block +
+  template + appendix): the memo protocol gains a disclosure rule for
+  52/53-week filers' quarterly points. Any point whose `duration_class`
+  carries a week-encoded string (`16wk` / `17wk` / `36wk-YTD` /
+  `52wk-FY` / `53wk-FY`) is not a calendar-standard 12/13-week quarter:
+  its cell is labeled with the feed's `duration_weeks` count, a
+  Walmart-style disclosure states that unequal-length periods are not
+  directly comparable and names the affected figures, and any
+  `week_normalized_yoy` supplementary field the feed carries is
+  rendered alongside — never in place of — the as-reported YoY,
+  transcribed verbatim (the memo writer never computes it).
+
 ## [v5.9.0] — 2026-07-18
 
 ### Added

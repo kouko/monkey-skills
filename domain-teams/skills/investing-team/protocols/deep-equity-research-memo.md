@@ -182,6 +182,18 @@ different market — do not merge the two treatments).
   missing or underivable — truncate the table at the gap and footnote
   it with the gap's `reason` string verbatim — never splice or
   interpolate across a gap.
+- **Unequal-quarter-length disclosure (week-lane points)**: a
+  `points[]`/`derived_points[]` entry whose `duration_class` carries a
+  week-encoded string (e.g. `16wk`, `17wk`, `36wk-YTD`, `52wk-FY` /
+  `53wk-FY` — a 52/53-week filer's quarter) is NOT a calendar-standard
+  12/13-week quarter. Any series containing such a point: (a) label
+  that period's cell with its `duration_weeks` count; (b) state once,
+  near the table, a Walmart-style disclosure that unequal-length
+  periods (12wk vs. 16/17wk quarters) are not directly comparable,
+  naming which figures are affected; (c) when the point carries a
+  `week_normalized_yoy` field, render it alongside — never in place
+  of — the as-reported YoY, TRANSCRIBED verbatim from the feed (the
+  writer never computes it).
 - **Data-quality flags (top-level `coverage_flags[]`)**: DQC flags
   (restatements, label conflicts, with `old`→`new` values and
   accessions) — disclose inline on the affected cell(s), NEVER by
@@ -392,7 +404,12 @@ sector favored/neutral/disfavored in current regime]
  reported 9mo-YTD cumulative) + its plural source_accessions;
  per-series gaps[] truncated + footnoted with the gap reason verbatim;
  top-level coverage_flags[] disclosed inline on the affected cell(s),
- never truncated. Series with <4 reported quarters: appendix exhibit
+ never truncated. Week-lane points (duration_class carrying a
+ week-encoded string, e.g. 16wk/36wk-YTD/52wk-FY): cell labeled with
+ duration_weeks, a one-time unequal-quarter-length disclosure naming
+ the affected figures, and any week_normalized_yoy field rendered
+ alongside — never in place of — the as-reported YoY, transcribed
+ verbatim. Series with <4 reported quarters: appendix exhibit
  only. Feed absent from the seed context / status ≠ TRUSTED: state the
  fact + any recorded reason verbatim.
  Non-US ticker: "not applicable (US-only capability this version)".]
@@ -448,7 +465,9 @@ sector favored/neutral/disfavored in current regime]
 [FULL quarterly series per signature from the memo feed — all quarters,
  same labeling rules as the body table (fiscal + calendar pair,
  derived-Q4 tags, verbatim gap footnotes, inline coverage_flags
- disclosures); series with <4 reported quarters appear here ONLY]
+ disclosures, week-lane duration_weeks labels + unequal-quarter-length
+ disclosure + verbatim week_normalized_yoy supplementary figures);
+ series with <4 reported quarters appear here ONLY]
 
 ### Provenance
 [Primary sources cited with as-of dates]
