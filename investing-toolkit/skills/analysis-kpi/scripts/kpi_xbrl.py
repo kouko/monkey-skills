@@ -568,6 +568,17 @@ def facts_to_points(
     return points
 
 
+class _IntraFilingAmbiguityError(ValueError):
+    """Raised by `_reduce_window_group` for a genuine intra-filing (SINGLE
+    accession, two-or-more distinct values for the same window) ambiguity —
+    a dedicated subclass (Task 3, docs/loom/plans/2026-07-19-jnj-
+    restatement-axis-signature.md) so `build_quarterly_series`'s per-group
+    loop can catch THIS narrow condition alone, never the broader
+    ambiguous-binding ValueError (`resolve_binding`'s >1-source match) or
+    any other ValueError. Subclasses ValueError so every existing direct
+    caller (`pytest.raises(ValueError, ...)`) needs no change."""
+
+
 def _reduce_window_group(
     kpi_id: str,
     source: dict,
@@ -618,7 +629,7 @@ def _reduce_window_group(
             fact.get("accession"), set()
         ).add(fact.get("value"))
     if any(len(vals) > 1 for vals in values_by_accession.values()):
-        raise ValueError(
+        raise _IntraFilingAmbiguityError(
             f"kpi_xbrl.resolve_binding: signature for kpi_id {kpi_id!r} "
             f"matches {len(group)} facts with different values for "
             f"period {period_key!r} within a SINGLE filing "
@@ -1636,7 +1647,15 @@ def build_quarterly_series(fact_pack: dict) -> dict:
     per-group coverage flags PLUS (Task 2, docs/loom/plans/2026-07-19-jnj-
     restatement-axis-signature.md) at most one pack-wide `period_recast`
     flag when `fact_pack["coverage"]["axis_exclusions"]` carries any
-    `category: "vintage"` entries (see `_period_recast_coverage_flags`).
+    `category: "vintage"` entries (see `_period_recast_coverage_flags`)
+    PLUS (Task 3, same plan) one `signature_refused` flag per signature
+    group whose `resolve_binding` call raised a genuine intra-filing
+    ambiguity (`_IntraFilingAmbiguityError`, a dedicated ValueError
+    subclass) — that group is SKIPPED (no `series` entry), the refusal
+    flag carries the poisoned group's own accession(s), the verbatim
+    exception `reason`, and the offending `signature` as a locating field,
+    and every OTHER signature group's loop iteration is unaffected: no
+    whole-ticker abort. Any other exception type still propagates.
     Groups are emitted in stable signature order. Fail-loud: a pack missing
     `company` raises ValueError (points are stamped with it); error/N-A
     slot packs raise via `_require_facts`.
@@ -1680,7 +1699,33 @@ def build_quarterly_series(fact_pack: dict) -> dict:
                 ),
             }],
         }
-        points = resolve_binding(fact_pack, binding, company)
+        try:
+            points = resolve_binding(fact_pack, binding, company)
+        except _IntraFilingAmbiguityError as exc:
+            # Task 3: a genuine intra-filing ambiguity in THIS signature
+            # group is non-fatal to the whole build — record a refusal
+            # coverage_flag (verbatim reason, dqc-schema-compliant) and
+            # CONTINUE to the next signature. Any OTHER exception (e.g.
+            # resolve_binding's own >1-source ambiguous-binding ValueError)
+            # is not this narrow subclass and still propagates.
+            accessions = sorted({
+                fact.get("accession")
+                for fact in groups[key]
+                if fact.get("accession")
+            })
+            coverage_flags.append(assert_dqc_schema({
+                "type": "signature_refused",
+                "old": None,
+                "new": None,
+                "accessions": accessions,
+                "reason": str(exc),
+                "signature": {
+                    "concept": concept,
+                    "dimensions": dimensions,
+                    "consolidation": consolidation,
+                },
+            }))
+            continue
         derived = derive_q4_points(points, fiscal_calendars=fiscal_calendars)
         series = build_series_with_break(
             points + derived["points"],

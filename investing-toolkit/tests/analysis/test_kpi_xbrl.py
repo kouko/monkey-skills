@@ -2426,6 +2426,94 @@ def test_quarterly_series_period_recast_survives_annual_arm_error_slot(
 
 
 # ---------------------------------------------------------------------------
+# Task 3 (docs/loom/plans/2026-07-19-jnj-restatement-axis-signature.md) —
+# per-signature refusal granularity: a genuine intra-filing (single
+# accession, two distinct values for the SAME window) ambiguity in ONE
+# signature group must not abort the whole quarterly-series build. Before
+# the fix, `build_quarterly_series` raises wholesale and nothing emits
+# (pinned as the RED baseline below); after the fix, the loop catches the
+# ambiguity PER SIGNATURE GROUP, records a non-fatal `signature_refused`
+# coverage_flag carrying the verbatim exception reason, and CONTINUES —
+# the clean sibling signature still emits its series untouched.
+# ---------------------------------------------------------------------------
+
+
+def _intra_filing_ambiguous_pack() -> dict:
+    """Two signature groups sharing one fiscal window: 'Poisoned' carries
+    TWO facts from the SAME accession with DIFFERENT values for the SAME
+    (period_end, duration_class) — a genuine intra-filing ambiguity, never
+    resolved arbitrarily. 'Clean' is an ordinary single-fact sibling
+    signature that must still emit."""
+    facts = [
+        {
+            "concept": "us-gaap:PoisonedConcept",
+            "dimensions": {},
+            "consolidation": None,
+            "period_end": "2026-03-31",
+            "fiscal_year": 2026, "fiscal_quarter": "Q1",
+            "duration_months": 3,
+            "accession": "acc-poison", "filed": "2026-05-01",
+            "value": 100.0,
+        },
+        {
+            "concept": "us-gaap:PoisonedConcept",
+            "dimensions": {},
+            "consolidation": None,
+            "period_end": "2026-03-31",
+            "fiscal_year": 2026, "fiscal_quarter": "Q1",
+            "duration_months": 3,
+            "accession": "acc-poison", "filed": "2026-05-01",
+            "value": 999.0,
+        },
+        {
+            "concept": "us-gaap:CleanConcept",
+            "dimensions": {},
+            "consolidation": None,
+            "period_end": "2026-03-31",
+            "fiscal_year": 2026, "fiscal_quarter": "Q1",
+            "duration_months": 3,
+            "accession": "acc-clean", "filed": "2026-05-01",
+            "value": 500.0,
+        },
+    ]
+    fiscal_calendars = {
+        "acc-poison": {"fiscal_period_focus": "Q1"},
+        "acc-clean": {"fiscal_period_focus": "Q1"},
+    }
+    return {"company": "JNJ", "facts": facts, "fiscal_calendars": fiscal_calendars}
+
+
+def test_quarterly_series_refuses_poisoned_signature_sibling_still_emits(
+    kpi_xbrl_module,
+):
+    """Task 3: the per-group `resolve_binding` call is wrapped so a genuine
+    intra-filing ambiguity is caught PER SIGNATURE GROUP — the poisoned
+    signature yields exactly ONE non-fatal `signature_refused` coverage_flag
+    carrying the verbatim exception reason, and the CLEAN sibling signature
+    still emits its series untouched. No whole-ticker abort."""
+    pack = _intra_filing_ambiguous_pack()
+    result = kpi_xbrl_module.build_quarterly_series(pack)
+
+    # sibling emits — exactly one series entry, the clean signature's.
+    assert len(result["series"]) == 1
+    clean_entry = result["series"][0]
+    assert clean_entry["signature"]["concept"] == "us-gaap:CleanConcept"
+    assert [p["value"] for p in clean_entry["points"]] == [500.0]
+
+    # exactly one refusal entry, dqc-schema-compliant, verbatim reason.
+    refusals = [
+        f for f in result["coverage_flags"] if f["type"] == "signature_refused"
+    ]
+    assert len(refusals) == 1
+    flag = refusals[0]
+    kpi_xbrl_module.assert_dqc_schema(flag)
+    assert flag["accessions"] == ["acc-poison"]
+    assert "intra-filing" in flag["reason"]
+    assert "PoisonedConcept" in flag["reason"]
+    assert flag["signature"]["concept"] == "us-gaap:PoisonedConcept"
+
+
+# ---------------------------------------------------------------------------
 # Task 9 (docs/loom/plans/2026-07-16-operational-kpi-quarterly.md) — structured
 # point + DQC-flag schema provenance: every emitted point carries source
 # accession(s) + source form (10-K|10-Q) + duration_class; every analysis-layer
