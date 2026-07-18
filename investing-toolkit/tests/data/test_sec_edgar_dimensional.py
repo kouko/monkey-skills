@@ -1143,6 +1143,36 @@ def test_extract_emits_duration_weeks():
     )
 
 
+@pytest.mark.parametrize(
+    ("span_days", "expected"),
+    [
+        # Every _WEEK_BANDS cluster at both edges ([weeks*7 - 1, weeks*7]).
+        (83, "quarter"), (84, "quarter"),                   # 12wk
+        (90, "quarter"), (91, "quarter"),                   # 13wk
+        (111, "week-Q4"), (112, "week-Q4"),                 # 16wk
+        (118, "week-Q4"), (119, "week-Q4"),                 # 17wk
+        (167, "H1"), (168, "H1"),                           # 24wk
+        (181, "H1"), (182, "H1"),                           # 26wk
+        (251, "YTD-through-Q3"), (252, "YTD-through-Q3"),   # 36wk
+        (272, "YTD-through-Q3"), (273, "YTD-through-Q3"),   # 39wk
+        (363, "FY"), (364, "FY"),                           # 52wk
+        (370, "FY"), (371, "FY"),                           # 53wk
+        # Gap / out-of-band spans make NO claim (fail-closed).
+        (82, None), (85, None), (110, None), (120, None),
+        (166, None), (169, None), (250, None), (274, None),
+        (362, None), (365, None), (369, None), (372, None),
+    ],
+)
+def test_week_lane_class_pins_every_band_boundary(span_days, expected):
+    """code-quality-reviewer 🟡 (52/53-week Task 1) — pin the shared
+    `_WEEK_BANDS` table at EVERY band's cluster edges plus the gaps
+    between clusters, so a mistyped week count in the allowlist fails a
+    test instead of silently reclassifying (the FY band — the arc's
+    namesake — was previously unpinned at 364/371)."""
+    mod = _load_helpers()
+    assert mod._week_lane_class(span_days) == expected
+
+
 # ---------------------------------------------------------------------------
 # code-quality-reviewer 🟡 (Task 1 follow-up) — `_duration_months`'s day-span
 # -> month-integer mapping pinned across the realistic bands the review
