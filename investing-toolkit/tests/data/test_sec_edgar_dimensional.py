@@ -864,6 +864,9 @@ def test_extract_dimensional_revenue_pack_accounting_counts_axis_exclusions(sec_
     assert vintage["member"] == "RevisionOfPriorPeriodReclassificationAdjustmentMember"
     assert vintage["accession"] == "0000200406-25-000209"
     assert vintage["period_end"] == "2025-03-30"
+    # T1 review 🟡: pin the full entry payload Task 2 consumes — `concept`
+    # was emitted but unasserted, free to drift silently.
+    assert vintage["concept"] == "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax"
 
     unknown = by_category["unknown"]
     assert unknown["axis"] == "us-gaap:SomeFutureAxis"
