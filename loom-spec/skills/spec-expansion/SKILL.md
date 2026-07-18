@@ -98,6 +98,28 @@ The seed-adequacy pre-flight (Phase ①) still applies — a `ui-flows.md` is a 
 but if it leaves a core object's lifecycle unstated, surface that gap rather than inventing
 it. If no `ui-flows.md` exists, ignore this section and treat the input as a generic seed.
 
+**Validate before fan-out.** Before consuming a `ui-flows.md` seed from a change-folder,
+run loom-spec's own `mint_critic_verdict.py` to confirm `design-critic` actually reviewed
+this exact content — the script lives in the **PLUGIN repo**, the artifact lives in the
+**CONSUMER project**: resolve the script to an absolute path and run from the consumer
+project root (mirrors loom-discovery's user-insights SKILL.md Step 6):
+
+```
+cd <consumer-project-root>
+python3 <resolved-absolute-path-to>/loom-spec/scripts/mint_critic_verdict.py validate \
+  --change-folder docs/loom/<change-id>/ --critic design-critic --files DESIGN.md,ui-flows.md
+```
+
+Proceed only on exit 0. On any non-zero exit, **STOP** and report which condition blocked,
+routing accordingly — the three exit codes are distinct failures, never interchangeable:
+
+- **exit 2** — no verdict file: `design-critic` never ran on this change-folder. Route to
+  `loom-interface-design:design-critic` before fanning out.
+- **exit 3** — fresh verdict is `NEEDS_REVISION`: the critic blocked this draft. Route back
+  to the design writer (`loom-interface-design:interaction-flows`) to address the findings.
+- **exit 4** — hash mismatch: `DESIGN.md`/`ui-flows.md` were edited since the verdict was
+  minted, so it is stale. Re-run design-critic on the current content before proceeding.
+
 ## Consuming the persisted intent layer as prior-state
 
 When the capability you are spec-ing **already has a persisted intent layer**
