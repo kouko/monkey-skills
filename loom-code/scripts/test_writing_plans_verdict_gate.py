@@ -94,7 +94,9 @@ def test_exit_2_routes_to_completeness_critic():
     section = _who_runs_the_validator_section(_text())
     low = section.lower()
 
-    assert "2" in section, "must name exit code 2"
+    assert "exit 2" in low, \
+        "must name exit code 2 anchored to 'exit 2' (a bare '2' can " \
+        "match incidentally and survives deletion of the exit-2 bullet)"
     assert "never ran" in low or "never-ran" in low, \
         "exit 2 must be described as critic-never-ran"
     assert "completeness-critic" in low, \
@@ -108,7 +110,9 @@ def test_exit_3_routes_back_to_spec_expansion_writer():
     section = _who_runs_the_validator_section(_text())
     low = section.lower()
 
-    assert "3" in section, "must name exit code 3"
+    assert "exit 3" in low, \
+        "must name exit code 3 anchored to 'exit 3' (a bare '3' can " \
+        "match incidentally and survives deletion of the exit-3 bullet)"
     assert "blocked" in low or "needs_revision" in low, \
         "exit 3 must be described as critic-blocked / NEEDS_REVISION"
     assert "spec-expansion" in low, \
@@ -116,15 +120,35 @@ def test_exit_3_routes_back_to_spec_expansion_writer():
 
 
 def test_exit_4_reruns_completeness_critic():
-    """Exit 4 (stale hash / --files divergence) re-runs completeness-critic
-    against the current bytes."""
+    """Exit 4 re-runs completeness-critic against the current bytes."""
     section = _who_runs_the_validator_section(_text())
     low = section.lower()
 
-    assert "4" in section, "must name exit code 4"
+    assert "exit 4" in low, \
+        "must name exit code 4 anchored to 'exit 4' (a bare '4' can " \
+        "match incidentally and survives deletion of the exit-4 bullet)"
     assert "stale" in low, "exit 4 must be described as stale"
     assert "re-run" in low or "rerun" in low, \
         "exit 4 routing must state re-running completeness-critic"
+
+
+def test_exit_4_names_three_distinct_causes():
+    """Exit 4 folds THREE real causes from mint_critic_verdict.py's
+    validate path (loom-spec/scripts/mint_critic_verdict.py:237-265):
+    a --files divergence from what was recorded at mint (:239-247), a
+    covered file edited since mint / stale sha256 (:258-265), and a
+    covered file that is unreadable since mint (:249-256, _covered_bytes
+    resolves files only per :114-128). Collapsing these into two named
+    causes ("stale" + "--files divergence") silently drops the
+    unreadable-file case from the prose."""
+    section = _who_runs_the_validator_section(_text())
+    low = section.lower()
+
+    assert "exit 4" in low
+    assert "stale" in low, "must name the stale-hash cause"
+    assert "diverg" in low, "must name the --files divergence cause"
+    assert "unreadable" in low or "cannot read" in low or "cannot be read" in low, \
+        "must name the unreadable-covered-file cause distinctly from stale"
 
 
 def test_three_exit_codes_have_distinct_routings():
@@ -133,9 +157,33 @@ def test_three_exit_codes_have_distinct_routings():
     instruction would lose the routing information mint_critic_verdict.py
     encodes in its exit codes."""
     section = _who_runs_the_validator_section(_text())
+    low = section.lower()
 
     for code in ("2", "3", "4"):
-        assert code in section, f"must name exit code {code} distinctly"
+        assert f"exit {code}" in low, f"must name exit code {code} distinctly"
+
+
+def test_files_example_is_concrete_not_ellipsis():
+    """The --files example must be a concrete, readable file path, not a
+    directory or a literal ellipsis. Grounding:
+    loom-spec/scripts/mint_critic_verdict.py:114-128 (_covered_bytes)
+    resolves each --files entry with Path.read_bytes() -- files only.
+    A directory, or a placeholder like 'specs/...', raises OSError at
+    that call and mint_critic_verdict.py's own exit-4 branches (:189-194
+    at mint, :249-256 at validate) surface that as an unreadable-file
+    failure -- indistinguishable from staleness in the exit code alone.
+    The example must instead follow Task 18's convention (a concrete
+    spec.md path) so a planner copying it does not trip this at
+    runtime."""
+    section = _who_runs_the_validator_section(_text())
+
+    assert "specs/..." not in section, \
+        "the --files example must not use the ambiguous 'specs/...' " \
+        "ellipsis -- mint_critic_verdict.py reads each entry as a file " \
+        "via Path.read_bytes(), and '...' is not a real path"
+    assert "spec.md" in section, \
+        "the --files example must name a concrete spec file (e.g. " \
+        "specs/<capability>/spec.md), matching Task 18's convention"
 
 
 def test_files_list_must_match_what_critic_minted():

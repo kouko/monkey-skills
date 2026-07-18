@@ -186,14 +186,16 @@ Alongside the brainstorming brief, writing-plans can consume a **validated loom-
 **Structural-clean is not enough — the critic verdict gate.** `validate_spec_output.py` exit 0 only proves the change-folder is **structurally clean** (schema-valid `### Requirement:` / `#### Scenario:` shape). It says nothing about whether `loom-spec:completeness-critic` actually reviewed and approved this content — **structural-clean ≠ critic-fresh-and-passed**, two different gates, neither subsumes the other. So consuming a change-folder additionally requires (same cross-plugin invocation pattern as `validate_spec_output.py` above, now against loom-spec's `mint_critic_verdict.py`):
 
 ```
-mint_critic_verdict.py validate --change-folder <path> --critic completeness-critic --files proposal.md,specs/...
+mint_critic_verdict.py validate --change-folder <path> --critic completeness-critic --files proposal.md,specs/<capability>/spec.md
 ```
 
-Proceed only on **exit 0** (fresh `PASS_WITH_NOTES`). The `--files` list passed here must **match** the list `completeness-critic` minted — `mint_critic_verdict.py` records that list at mint time and compares it at validate time; a divergence gets its own exit-4 diagnostic rather than being silently absorbed into the stale case. Route on the non-zero exits, same reporting discipline as the structural validator above:
+The `--files` list must be **concrete file paths**, not a directory or a placeholder — `mint_critic_verdict.py` resolves each entry with `Path.read_bytes()` (files only; a directory or a literal `...` raises `OSError`, which surfaces as an unreadable-file exit 4, easily misread as staleness). Point-don't-copy applies here too: don't copy the example verbatim — enumerate the change-folder's **actual** covered spec files (e.g. `proposal.md,specs/<capability>/spec.md`), and this list must **match** the list `completeness-critic` minted — `mint_critic_verdict.py` records that list at mint time and compares it at validate time.
+
+Proceed only on **exit 0** (fresh `PASS_WITH_NOTES`). Route on the non-zero exits, same reporting discipline as the structural validator above:
 
 - **Exit 2 (no verdict file, completeness-critic never ran)** — route TO `completeness-critic`: dispatch it against the change-folder before proceeding.
 - **Exit 3 (fresh verdict is NEEDS_REVISION, critic blocked)** — route BACK to the spec-expansion writer: the critic already found problems writing-plans cannot resolve itself.
-- **Exit 4 (stale — covered files edited since mint, or a `--files` divergence)** — re-run `completeness-critic` so it reviews the current bytes before writing-plans trusts the verdict again.
+- **Exit 4 (three distinct causes, same remediation)** — a `--files` list that diverges from what was recorded at mint, a covered file edited since mint (stale), or a covered file that's unreadable since mint — re-run `completeness-critic` so it reviews the current bytes before writing-plans trusts the verdict again.
 
 **Scenario → task mapping.** Map each `#### Scenario:` (its GIVEN / WHEN / THEN) → **one task's `Acceptance: RED/GREEN`**. The THEN is the GREEN observable; the GIVEN/WHEN set up the RED. One `### Requirement:` may **fan to N tasks** — split per §The splitting framework (a multi-Scenario Requirement is N candidate tasks, grouped by assertion boundary).
 
