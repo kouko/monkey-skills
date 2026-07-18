@@ -25,6 +25,7 @@ import sys
 import tempfile
 import time
 import tomllib
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterator, NoReturn, Sequence
 
@@ -440,6 +441,59 @@ def _cmd_mark(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_mark_running(args: argparse.Namespace) -> int:
+    """Implements the ``mark-running`` subcommand — see ``main``'s subparser
+    setup.
+
+    Records ``runId`` + ``sessionDir`` on the state record for
+    ``args.change_id``, called by the dispatcher immediately after
+    ``Workflow()`` returns (design SSOT §4c Fix 1 revised design point 1 —
+    closes the no-runId-at-RUNNING-write blocker; ``_dispatch_entry``
+    itself has no runId yet at RUNNING-write time). Requires the entry's
+    CURRENT recorded status to be ``RUNNING``: an unknown change id or an
+    entry not in ``RUNNING`` (already terminal, or never dispatched) is a
+    caller-facing error — printed to stderr, exit 1, no state mutation —
+    mirroring ``_cmd_mark``'s error-reporting shape.
+    """
+    project_path = Path(args.project)
+    queue_path = project_path / "docs" / "loom" / "QUEUE.toml"
+    state_path = project_path / "docs" / "loom" / "queue-state.json"
+
+    try:
+        entries = load_queue(queue_path)
+    except QueueError as e:
+        print(str(e), file=sys.stderr)
+        return 1
+
+    known_ids = {entry["id"] for entry in entries}
+    if args.change_id not in known_ids:
+        print(
+            f'mark-running: unknown change id "{args.change_id}" — not '
+            f'present in "{queue_path}".',
+            file=sys.stderr,
+        )
+        return 1
+
+    with _state_lock(state_path):
+        state = load_state(state_path)
+        existing = state.get(args.change_id, {})
+        if existing.get("status") != "RUNNING":
+            print(
+                f'mark-running: entry "{args.change_id}" is not RUNNING '
+                f'(status={existing.get("status", "QUEUED")!r}) — refusing '
+                "to record runId/sessionDir without mutation.",
+                file=sys.stderr,
+            )
+            return 1
+
+        record = dict(existing)
+        record["runId"] = args.run_id
+        record["sessionDir"] = args.session_dir
+        state[args.change_id] = record
+        save_state(state_path, state)
+    return 0
+
+
 def _cmd_status(args: argparse.Namespace) -> int:
     """Implements the ``status`` subcommand — see ``main``'s subparser setup.
 
@@ -566,11 +620,19 @@ def _dispatch_entry(
     ``runSegment3``'s optional ``args.branch`` (whole-branch review
     station). ``projectPath`` is the worktree path (not the main checkout)
     and ``planPath`` is resolved *inside* that worktree.
+
+    Also records ``dispatched_at`` — a wall-clock ISO-8601 UTC timestamp
+    (design SSOT §4c Fix 1 revised design point 1). This CLI is a
+    fresh process per invocation, so it is exempt from Workflow
+    determinism rules; the timestamp seeds ``reconcile``'s staleness
+    grace-window checks (Task 12) and is not itself part of the
+    dispatch payload.
     """
     record = dict(state.get(entry["id"], {}))
     record["status"] = "RUNNING"
     record["branch"] = branch
     record["worktree"] = str(worktree_path)
+    record["dispatched_at"] = datetime.now(timezone.utc).isoformat()
     state[entry["id"]] = record
     save_state(state_path, state)
 
@@ -752,7 +814,8 @@ def _assert_valid_change_id(id_value: str, *, fn: str) -> None:
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    """Top-level argparse setup: ``mark``, ``status``, ``next`` subcommands."""
+    """Top-level argparse setup: ``mark``, ``mark-running``, ``status``,
+    ``next`` subcommands."""
     parser = argparse.ArgumentParser(
         prog="batch_queue.py", description="loom-pipeline batch mode bookkeeping"
     )
@@ -769,6 +832,22 @@ def _build_parser() -> argparse.ArgumentParser:
     mark_parser.add_argument("--run-id", dest="run_id")
     mark_parser.add_argument("--reason")
     mark_parser.set_defaults(func=_cmd_mark)
+
+    mark_running_parser = subparsers.add_parser(
+        "mark-running",
+        help="record runId + session-dir on an entry currently RUNNING",
+    )
+    mark_running_parser.add_argument("change_id")
+    mark_running_parser.add_argument(
+        "--project", required=True, help="target project root"
+    )
+    mark_running_parser.add_argument(
+        "--run-id", dest="run_id", required=True
+    )
+    mark_running_parser.add_argument(
+        "--session-dir", dest="session_dir", required=True
+    )
+    mark_running_parser.set_defaults(func=_cmd_mark_running)
 
     status_parser = subparsers.add_parser(
         "status", help="print a one-screen overview of the queue"

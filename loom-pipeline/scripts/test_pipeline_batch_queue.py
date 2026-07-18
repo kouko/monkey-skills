@@ -5,6 +5,7 @@ import json
 import os
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -1095,3 +1096,129 @@ def test_mark_concurrent_writes_to_different_entries_both_persist(tmp_path):
     assert state["add-export-csv"]["runId"] == "wf_a"
     assert state["fix-login-redirect"]["status"] == "FAILED"
     assert state["fix-login-redirect"]["reason"] == "boom"
+
+
+def test_next_records_dispatched_at_iso_timestamp(tmp_path, capsys):
+    # Task 9 (design SSOT §4c Fix 1 revised design point 1): _dispatch_entry
+    # additionally records a wall-clock ISO-8601 dispatched_at — this CLI is
+    # a fresh process each invocation, so it is exempt from Workflow
+    # determinism rules.
+    project_path = _make_tmp_git_repo(tmp_path)
+
+    plan_rel = "docs/loom/plans/2026-07-03-add-export-csv.md"
+    plan_path = project_path / plan_rel
+    plan_path.parent.mkdir(parents=True)
+    plan_path.write_text(_PLAN_WITH_PASS, encoding="utf-8")
+    _run_git(["add", plan_rel], project_path)
+    _run_git(["commit", "-m", "add plan"], project_path)
+
+    loom_dir = project_path / "docs" / "loom"
+    (loom_dir / "QUEUE.toml").write_text(
+        '[[change]]\n'
+        'id = "add-export-csv"\n'
+        f'plan = "{plan_rel}"\n'
+        "[change.budgets]\n"
+        "run = 200000\n",
+        encoding="utf-8",
+    )
+
+    skills_root = tmp_path / "skills"
+    _write_stub_validator(skills_root, exit_code=0)
+
+    before = datetime.now(timezone.utc)
+    exit_code = main(
+        ["next", "--project", str(project_path), "--skills-root", str(skills_root)]
+    )
+    after = datetime.now(timezone.utc)
+
+    assert exit_code == 0
+    state = load_state(loom_dir / "queue-state.json")
+    dispatched_at = state["add-export-csv"]["dispatched_at"]
+    parsed = datetime.fromisoformat(dispatched_at)
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    assert before <= parsed <= after
+
+
+def test_mark_running_records_run_id_and_session_dir(tmp_path):
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+    save_state(
+        loom_dir / "queue-state.json",
+        {
+            "add-export-csv": {
+                "status": "RUNNING",
+                "branch": "loom/add-export-csv",
+                "worktree": str(project_path / ".worktrees" / "loom-add-export-csv"),
+                "dispatched_at": "2026-07-18T00:00:00+00:00",
+            }
+        },
+    )
+
+    exit_code = main(
+        [
+            "mark-running",
+            "add-export-csv",
+            "--project",
+            str(project_path),
+            "--run-id",
+            "wf_123",
+            "--session-dir",
+            "/tmp/session-abc/workflows",
+        ]
+    )
+
+    assert exit_code == 0
+    state = load_state(loom_dir / "queue-state.json")
+    record = state["add-export-csv"]
+    assert record["status"] == "RUNNING"
+    assert record["runId"] == "wf_123"
+    assert record["sessionDir"] == "/tmp/session-abc/workflows"
+
+
+def test_mark_running_wrong_state_errors_without_mutation(tmp_path, capsys):
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+    save_state(
+        loom_dir / "queue-state.json",
+        {"add-export-csv": {"status": "DONE", "runId": "wf_old"}},
+    )
+
+    exit_code = main(
+        [
+            "mark-running",
+            "add-export-csv",
+            "--project",
+            str(project_path),
+            "--run-id",
+            "wf_new",
+            "--session-dir",
+            "/tmp/session-abc/workflows",
+        ]
+    )
+
+    assert exit_code != 0
+    assert "add-export-csv" in capsys.readouterr().err
+    state = load_state(loom_dir / "queue-state.json")
+    assert state["add-export-csv"] == {"status": "DONE", "runId": "wf_old"}
+
+
+def test_mark_running_fails_loud_on_unknown_change_id(tmp_path, capsys):
+    project_path = tmp_path / "project"
+    _write_queue(project_path)
+
+    exit_code = main(
+        [
+            "mark-running",
+            "does-not-exist",
+            "--project",
+            str(project_path),
+            "--run-id",
+            "wf_1",
+            "--session-dir",
+            "/tmp/session-abc/workflows",
+        ]
+    )
+
+    assert exit_code != 0
+    assert "does-not-exist" in capsys.readouterr().err
