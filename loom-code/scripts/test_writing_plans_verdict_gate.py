@@ -119,10 +119,29 @@ def test_exit_3_routes_back_to_spec_expansion_writer():
         "exit 3 routing must name spec-expansion as the target to route back to"
 
 
+def _exit_4_bullet(section: str) -> str:
+    """Isolate the ACTUAL Exit-4 routing bullet within the section,
+    anchored on its distinctive marker phrase ("exit 4 (three distinct
+    causes"), unique to the routing-list bullet itself. This is
+    deliberately narrower than the whole section: the --files-
+    concreteness paragraph elsewhere in the section (mint_critic_verdict.py
+    unreadable-file aside) also contains an incidental "exit 4" mention,
+    and a bare `"exit 4" in low` check on the full section is satisfiable
+    by that aside alone -- surviving deletion of the real routing bullet.
+    Anchoring on the marker phrase means these assertions can ONLY be
+    satisfied by the actual bullet; deleting it raises ValueError (a
+    failure), not a silent pass."""
+    low = section.lower()
+    marker = "exit 4 (three distinct causes"
+    start = low.index(marker)
+    return section[start:]
+
+
 def test_exit_4_reruns_completeness_critic():
     """Exit 4 re-runs completeness-critic against the current bytes."""
     section = _who_runs_the_validator_section(_text())
-    low = section.lower()
+    bullet = _exit_4_bullet(section)
+    low = bullet.lower()
 
     assert "exit 4" in low, \
         "must name exit code 4 anchored to 'exit 4' (a bare '4' can " \
@@ -142,7 +161,8 @@ def test_exit_4_names_three_distinct_causes():
     causes ("stale" + "--files divergence") silently drops the
     unreadable-file case from the prose."""
     section = _who_runs_the_validator_section(_text())
-    low = section.lower()
+    bullet = _exit_4_bullet(section)
+    low = bullet.lower()
 
     assert "exit 4" in low
     assert "stale" in low, "must name the stale-hash cause"
@@ -159,8 +179,15 @@ def test_three_exit_codes_have_distinct_routings():
     section = _who_runs_the_validator_section(_text())
     low = section.lower()
 
-    for code in ("2", "3", "4"):
+    for code in ("2", "3"):
         assert f"exit {code}" in low, f"must name exit code {code} distinctly"
+
+    # Exit 4 anchored on the routing bullet itself (see _exit_4_bullet) --
+    # a bare "exit 4" in the full section is also satisfied by the
+    # --files-concreteness paragraph's incidental "unreadable-file exit 4"
+    # aside, which survives deletion of the real routing bullet.
+    bullet = _exit_4_bullet(section)
+    assert "exit 4" in bullet.lower(), "must name exit code 4 distinctly"
 
 
 def test_files_example_is_concrete_not_ellipsis():
