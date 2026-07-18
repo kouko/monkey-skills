@@ -526,7 +526,14 @@ def test_build_fact_full_signature():
         "period_start": "2025-01-01",
         "period_end": "2025-12-31",
     }
-    fact = mod._build_dimensional_revenue_fact(nflx_row, "NFLX", "0001065280-26-000034", "2026-01-23")
+    # Task 13: the builder derives parallel period labels against the
+    # filing's dei calendar, so every direct call supplies one (real-shaped
+    # `--MM-DD` / focus values for each filer's known fiscal year end).
+    fact = mod._build_dimensional_revenue_fact(
+        nflx_row, "NFLX", "0001065280-26-000034", "2026-01-23",
+        {"fiscal_period_focus": "FY", "fiscal_year_end": "--12-31",
+         "fiscal_year_focus": "2025"},
+    )
     assert fact["dimensions"] == {
         "ProductOrService": "StreamingMember",
         "StatementGeographical": "UnitedStatesAndCanadaMember",
@@ -546,7 +553,11 @@ def test_build_fact_full_signature():
         "period_start": "2024-09-29",
         "period_end": "2025-09-27",
     }
-    fact2 = mod._build_dimensional_revenue_fact(aapl_row, "AAPL", "0000320193-25-000079", "2025-10-31")
+    fact2 = mod._build_dimensional_revenue_fact(
+        aapl_row, "AAPL", "0000320193-25-000079", "2025-10-31",
+        {"fiscal_period_focus": "FY", "fiscal_year_end": "--09-27",
+         "fiscal_year_focus": "2025"},
+    )
     assert fact2["dimensions"] == {"StatementBusinessSegments": "AmericasSegmentMember"}
     assert fact2["consolidation"] == "OperatingSegmentsMember"
 
@@ -561,7 +572,11 @@ def test_build_fact_full_signature():
         "period_start": "2016-09-25",
         "period_end": "2017-09-30",
     }
-    fact3 = mod._build_dimensional_revenue_fact(pre2018_row, "AAPL", "acc", "filed")
+    fact3 = mod._build_dimensional_revenue_fact(
+        pre2018_row, "AAPL", "acc", "filed",
+        {"fiscal_period_focus": "FY", "fiscal_year_end": "--09-30",
+         "fiscal_year_focus": "2017"},
+    )
     assert fact3["dimensions"] == {"ProductOrService": "IPhoneMember"}
 
 
@@ -585,7 +600,11 @@ def test_build_fact_includes_subsegments_axis():
         "period_start": "2025-01-01",
         "period_end": "2025-12-31",
     }
-    fact = mod._build_dimensional_revenue_fact(row, "JNJ", "0000200406-26-000012", "2026-02-01")
+    fact = mod._build_dimensional_revenue_fact(
+        row, "JNJ", "0000200406-26-000012", "2026-02-01",
+        {"fiscal_period_focus": "FY", "fiscal_year_end": "--12-31",
+         "fiscal_year_focus": "2025"},
+    )
     assert fact["dimensions"] == {
         "StatementBusinessSegments": "ConsumerHealthSegmentMember",
         "Subsegments": "SomeSubsegmentMember",
@@ -602,12 +621,16 @@ def test_build_fact_includes_subsegments_axis():
 # leave the offline suite green)
 # ---------------------------------------------------------------------------
 
-def _make_dimensional_filing(*, accession, form, filing_date, revenue_value):
+def _make_dimensional_filing(*, accession, form, filing_date, revenue_value,
+                              include_dei=True):
     """Build a fake edgartools Filing whose `.xbrl()` yields exactly one
     dimensional-revenue fact row, so a wrong filing pick is visible in the
-    returned fact-pack's accession/value."""
+    returned fact-pack's accession/value. Task 13: a selected filing's
+    facts are fiscally labeled against its own dei calendar, so the stub
+    carries real-shaped AAPL dei cover rows by default; `include_dei=False`
+    builds the dei-less filing the fail-loud path is tested with."""
     xb = mock.MagicMock(name=f"xbrl-{accession}")
-    xb.facts.to_dataframe.return_value.to_dict.return_value = [
+    rows = [
         {
             "is_dimensioned": True,
             "dim_srt_ProductOrServiceAxis": "aapl:IPhoneMember",
@@ -621,6 +644,13 @@ def _make_dimensional_filing(*, accession, form, filing_date, revenue_value):
             "period_instant": None,
         },
     ]
+    if include_dei:
+        rows += [
+            {"concept": "dei:DocumentFiscalPeriodFocus", "value": "FY"},
+            {"concept": "dei:CurrentFiscalYearEndDate", "value": "--09-28"},
+            {"concept": "dei:DocumentFiscalYearFocus", "value": "2024"},
+        ]
+    xb.facts.to_dataframe.return_value.to_dict.return_value = rows
     filing = SimpleNamespace(accession_no=accession, filing_date=filing_date, form=form)
     filing.xbrl = lambda: xb
     return filing
@@ -868,10 +898,20 @@ def test_extract_emits_duration_months():
     raw = fixture["raw_facts"]
     q_accession = fixture["quarterly_filing"]["accession"]
     q_filed = fixture["quarterly_filing"]["filing_date"]
+    # Task 13: direct builder calls supply the filing's dei calendar
+    # (MSFT's real June-30 fiscal year end, per-filing focus values).
+    q_dei = {
+        "fiscal_period_focus": "Q3", "fiscal_year_end": "--06-30",
+        "fiscal_year_focus": "2026",
+    }
+    annual_dei = {
+        "fiscal_period_focus": "FY", "fiscal_year_end": "--06-30",
+        "fiscal_year_focus": "2025",
+    }
 
     # 3-month quarter fact.
     q3_fact = mod._build_dimensional_revenue_fact(
-        raw["three_month"], "MSFT", q_accession, q_filed,
+        raw["three_month"], "MSFT", q_accession, q_filed, q_dei,
     )
     assert q3_fact["duration_months"] == 3
     assert q3_fact["value"] == 35013000000.0  # exemplar value, pinned exact
@@ -879,7 +919,7 @@ def test_extract_emits_duration_months():
     # 9-month YTD fact — SAME period_end as the 3-month fact above (the
     # dual-duration collision duration_months exists to de-conflate).
     ytd9_fact = mod._build_dimensional_revenue_fact(
-        raw["nine_month_ytd"], "MSFT", q_accession, q_filed,
+        raw["nine_month_ytd"], "MSFT", q_accession, q_filed, q_dei,
     )
     assert ytd9_fact["duration_months"] == 9
     assert ytd9_fact["period_end"] == q3_fact["period_end"] == "2026-03-31", (
@@ -892,6 +932,7 @@ def test_extract_emits_duration_months():
     annual_fact = mod._build_dimensional_revenue_fact(
         raw["annual"], "MSFT",
         fixture["annual_filing"]["accession"], fixture["annual_filing"]["filing_date"],
+        annual_dei,
     )
     assert annual_fact["duration_months"] == 12
     assert annual_fact["value"] == 120810000000.0
@@ -914,13 +955,17 @@ def test_extract_emits_duration_months():
     missing_start_row = dict(raw["three_month"])
     missing_start_row["period_start"] = None
     with pytest.raises(ValueError, match="period_start"):
-        mod._build_dimensional_revenue_fact(missing_start_row, "MSFT", "acc", "filed")
+        mod._build_dimensional_revenue_fact(
+            missing_start_row, "MSFT", "acc", "filed", q_dei,
+        )
 
     # A malformed (non-ISO) period_start also raises loud.
     malformed_start_row = dict(raw["three_month"])
     malformed_start_row["period_start"] = "not-a-date"
     with pytest.raises(ValueError, match="period_start"):
-        mod._build_dimensional_revenue_fact(malformed_start_row, "MSFT", "acc", "filed")
+        mod._build_dimensional_revenue_fact(
+            malformed_start_row, "MSFT", "acc", "filed", q_dei,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -977,6 +1022,9 @@ def test_duration_months_pins_realistic_span_bands(period_start, period_end, exp
 #     -> dei:DocumentFiscalPeriodFocus="FY", dei:CurrentFiscalYearEndDate="--01-31"
 #   accession 0001045810-26-000021 (period_of_report 2026-01-25)
 #     -> dei:DocumentFiscalPeriodFocus="FY", dei:CurrentFiscalYearEndDate="--01-25"
+# Task 13 extends the read with the THIRD cover tag, dei:DocumentFiscalYearFocus
+# ("2021" / "2026" respectively — re-captured live from the same two real
+# accessions 2026-07-18, never hand-typed).
 # This drift (NVDA is a 52/53-week filer, docs/loom/references/
 # xbrl-verification-universe.md:49) is the load-bearing evidence the whole
 # task exists to protect: a per-ticker cache would apply ONE filing's
@@ -984,7 +1032,7 @@ def test_duration_months_pins_realistic_span_bands(period_start, period_end, exp
 # ---------------------------------------------------------------------------
 
 def _make_dei_filing(*, accession, form, filing_date, period_of_report,
-                      fiscal_period_focus, fiscal_year_end):
+                      fiscal_period_focus, fiscal_year_end, fiscal_year_focus):
     """Fake edgartools Filing whose `.xbrl()` yields one dimensional-revenue
     row PLUS the filing's own dei cover-page rows -- same shape as a real
     filing's facts dataframe (dei rows and us-gaap rows share ONE records
@@ -1006,6 +1054,7 @@ def _make_dei_filing(*, accession, form, filing_date, period_of_report,
         },
         {"concept": "dei:DocumentFiscalPeriodFocus", "value": fiscal_period_focus},
         {"concept": "dei:CurrentFiscalYearEndDate", "value": fiscal_year_end},
+        {"concept": "dei:DocumentFiscalYearFocus", "value": fiscal_year_focus},
     ]
     filing = SimpleNamespace(
         accession_no=accession, filing_date=filing_date, form=form,
@@ -1026,11 +1075,13 @@ def test_extract_emits_dei_fiscal_calendar(sec_client):
         accession="0001045810-21-000010", form="10-K",
         filing_date=datetime.date(2021, 2, 26), period_of_report="2021-01-31",
         fiscal_period_focus="FY", fiscal_year_end="--01-31",
+        fiscal_year_focus="2021",
     )
     filing_2026 = _make_dei_filing(
         accession="0001045810-26-000021", form="10-K",
         filing_date=datetime.date(2026, 2, 25), period_of_report="2026-01-25",
         fiscal_period_focus="FY", fiscal_year_end="--01-25",
+        fiscal_year_focus="2026",
     )
 
     company = mock.MagicMock(name="Company")
@@ -1045,9 +1096,11 @@ def test_extract_emits_dei_fiscal_calendar(sec_client):
     calendars = pack["fiscal_calendars"]
     assert calendars["0001045810-21-000010"] == {
         "fiscal_period_focus": "FY", "fiscal_year_end": "--01-31",
+        "fiscal_year_focus": "2021",
     }, calendars
     assert calendars["0001045810-26-000021"] == {
         "fiscal_period_focus": "FY", "fiscal_year_end": "--01-25",
+        "fiscal_year_focus": "2026",
     }, calendars
     assert (
         calendars["0001045810-21-000010"]["fiscal_year_end"]
@@ -1059,15 +1112,26 @@ def test_extract_emits_dei_fiscal_calendar(sec_client):
 
 
 def test_extract_dei_fiscal_calendar_absent_tag_is_none_not_fabricated(sec_client):
-    """A filing whose facts_records carry no dei rows at all (a test-double
-    gap -- every real 10-K/10-Q carries both per SEC dei taxonomy
-    requirements) must record `None`, never a guessed/fabricated value. Uses
-    the existing amendment-skip fixture builder (`_make_dimensional_filing`),
-    which carries no dei rows, to prove the absence path doesn't raise or
-    invent a value."""
+    """Absent dei tags are `None` at the pure per-filing read — never a
+    guessed/fabricated value (Task 3's invariant, unchanged). Task 13
+    UPDATE at the extract path: a filing WITH dimensional facts but an
+    unreadable dei calendar can no longer return a labeled pack — the
+    mandatory per-fact fiscal labeling fails loud with the DISTINCT
+    DQC-schema `UnreadableFiscalCalendarError` (never `period_end[:4]`
+    emitted as fiscal_year, never a fabricated calendar value)."""
+    # Pure read: no dei rows -> all three tags None, never fabricated.
+    assert sec_client._extract_dei_calendar(
+        [{"concept": "us-gaap:Revenues", "value": 1.0}]
+    ) == {
+        "fiscal_period_focus": None, "fiscal_year_end": None,
+        "fiscal_year_focus": None,
+    }
+
+    # Extract path: dei-less filing with facts in hand -> fail loud.
     filing = _make_dimensional_filing(
         accession="0000320193-24-000123", form="10-K",
         filing_date=datetime.date(2024, 11, 1), revenue_value=100.0,
+        include_dei=False,
     )
     company = mock.MagicMock(name="Company")
     company.not_found = False
@@ -1075,12 +1139,9 @@ def test_extract_dei_fiscal_calendar_absent_tag_is_none_not_fabricated(sec_clien
     company.get_filings.return_value = [filing]
     sec_client.edgar_stub.Company.return_value = company
 
-    pack = sec_client.extract_dimensional_revenue("AAPL")
-
-    assert "error" not in pack, pack
-    assert pack["fiscal_calendars"]["0000320193-24-000123"] == {
-        "fiscal_period_focus": None, "fiscal_year_end": None,
-    }
+    with pytest.raises(sec_client.UnreadableFiscalCalendarError) as exc_info:
+        sec_client.extract_dimensional_revenue("AAPL")
+    assert "0000320193-24-000123" in exc_info.value.dqc["accessions"]
 
 
 # ---------------------------------------------------------------------------
@@ -1185,7 +1246,13 @@ def _make_quarterly_filing(*, accession, form, filing_date, period_of_report,
     """Fake edgartools Filing carrying one dimensional-revenue row, with
     `period_of_report` set (unlike `_make_dimensional_filing`, which omits
     it) — Task 10's per-quarter matching reads `period_of_report`, not
-    `filing_date`, to place a filing on the fiscal calendar."""
+    `filing_date`, to place a filing on the fiscal calendar. Task 13: a
+    selected filing's facts are fiscally labeled per-fact, so the stub
+    carries AAPL's real September fiscal-year-end dei tag (--09-27, the
+    FY2025 value; the 27-vs-28 per-year drift sits well inside
+    FISCAL_BOUNDARY_TOLERANCE_DAYS). A real filing carries all three dei
+    cover tags; the completeness tests read none, and the labeling
+    derivation requires only this one."""
     xb = mock.MagicMock(name=f"xbrl-{accession}")
     xb.facts.to_dataframe.return_value.to_dict.return_value = [
         {
@@ -1200,6 +1267,7 @@ def _make_quarterly_filing(*, accession, form, filing_date, period_of_report,
             "period_end": period_of_report,
             "period_instant": None,
         },
+        {"concept": "dei:CurrentFiscalYearEndDate", "value": "--09-27"},
     ]
     filing = SimpleNamespace(
         accession_no=accession, filing_date=filing_date, form=form,
@@ -1320,25 +1388,19 @@ def test_coverage_per_quarter_completeness_partial_missing_quarter(sec_client):
     assert missing_q3["detail"], "the missing entry must carry a human-readable reason string"
 
 
-def test_coverage_per_quarter_completeness_no_10k_reports_unclassified(sec_client):
-    """A fiscal year with NO 10-K ANYWHERE in the company's filing history
-    has no fiscal year end to derive expected quarter windows from, and
-    (unlike an in-progress current year) no other known 10-K anywhere to
-    PROJECT one forward from either — Task 10 revision round 1 finding 3:
-    this genuinely-unprojectable 'cannot classify' case must NOT be
-    reported as `fetch_error` (a specific, actionable, retryable claim the
-    code has no grounds for); the 10-K's absence is `unclassified`. Uses
-    the real AAPL Q1 filing (calendar year 2024) with no 10-K supplied, so
-    it falls back to its own calendar year (the one case
-    `_assign_quarterly_filings_to_fiscal_years` cannot resolve, by design).
-
-    Task 10 revision round 2 fix: the Q1 filing itself is ALREADY IN HAND
-    and must never be discarded/reported missing just because its specific
-    Q-label can't be derived without a fiscal calendar — that was the
-    `_quarterly_year_completeness` fiscal_year_end=None branch silently
-    ignoring its own `quarterly_filings` parameter (round 2 finding 1's
-    residual). It is reported PRESENT under the generic `"quarter"` label
-    (no fabricated Q1/Q2/Q3 identity claim), never `missing`."""
+def test_coverage_per_quarter_completeness_no_10k_returns_honest_error(sec_client):
+    """Task 13 UPDATE (was `..._no_10k_reports_unclassified`, written
+    against the OLD calendar-year selection — the root defect): a filer
+    with NO 10-K ANYWHERE has no fiscal calendar to derive OR project a
+    quarterly filing's declared-fiscal-year candidate from, so a
+    fiscal-year range request now returns a LOUD error slot naming that
+    reason — never the old behaviour of calendar-bucketing the 10-Q into
+    the range (`period_of_report[:4]`, trap 1 of docs/loom/memory/
+    fiscal-year-derive-per-fact-against-filing-calendar.md; the old test
+    asserted a pack keyed on fiscal_year=2024 for a FISCAL-2025 filing).
+    The in-hand-filing coverage honesty this test used to carry moves to
+    Task 18's rebuilt index-universe coverage (index-visible-but-not-
+    selected), per the plan."""
     fixture = _load_aapl_quarterly_fixture()
     q1 = _filing_from_quarterly_fixture_record(fixture["fy2025_q1"])
     _aapl_company_stub(sec_client, [q1])  # no 10-K at all, ever
@@ -1347,24 +1409,13 @@ def test_coverage_per_quarter_completeness_no_10k_reports_unclassified(sec_clien
         "AAPL", form="10-Q", since_year=2024, until_year=2024,
         as_of=datetime.date(2026, 1, 1),
     )
-    assert "error" not in pack, pack
-    quarterly = pack["coverage"]["quarterly_coverage"]
-    year_record = next(r for r in quarterly if r["fiscal_year"] == 2024)
-
-    assert len(year_record["present"]) == 1, (
-        f"the in-hand Q1 filing must be reported PRESENT, never discarded "
-        f"-- {year_record}"
+    assert "error" in pack, (
+        f"a filer with no annual filing has no derivable fiscal-year "
+        f"candidate — the request must fail loud, never calendar-bucket "
+        f"-- {pack.get('coverage')}"
     )
-    present_entry = year_record["present"][0]
-    assert present_entry["filing"] == "quarter", present_entry
-    assert present_entry["accession"] == fixture["fy2025_q1"]["accession"]
-    assert present_entry["period_of_report"] == "2024-12-28"
-
-    missing_by_label = {m["filing"]: m["reason"] for m in year_record["missing"]}
-    assert missing_by_label == {"10-K": "unclassified"}, (
-        f"only the 10-K (genuinely absent, no fiscal reference to classify "
-        f"it against) is missing -- {missing_by_label}"
-    )
+    assert "no derivable fiscal calendar" in pack["error"], pack["error"]
+    assert "never calendar-bucketed" in pack["error"], pack["error"]
 
 
 def test_coverage_per_quarter_completeness_in_progress_fy_projects_forward(sec_client):

@@ -2158,7 +2158,141 @@ def _duration_months(fact: dict, ticker: str, period_end: str) -> int:
     return round(span_days / _AVG_DAYS_PER_MONTH)
 
 
-def _build_dimensional_revenue_fact(fact: dict, ticker: str, accession: str, filed) -> dict:
+# Fiscal-boundary matching tolerance (Task 13; the plan's ruling on the
+# spec's deferred constant — docs/loom/plans/2026-07-16-operational-kpi-
+# quarterly.md "Plan constants"): covers the live-verified <=6-day
+# 52/53-week drift with margin, far below a quarter's width. Task 16 builds
+# the beyond-tolerance unclassifiable DQC flag on this same constant.
+FISCAL_BOUNDARY_TOLERANCE_DAYS = 10
+
+
+class UnreadableFiscalCalendarError(ValueError):
+    """A filing's dei fiscal calendar is absent or malformed, so its facts
+    CANNOT be fiscally labeled — a DISTINCT DQC-schema error naming the
+    filing (spec: 'an unreadable fiscal calendar fails loud, never a
+    calendar fallback'). `period_end[:4]` (the calendar year) is NEVER
+    emitted as a fiscal_year in its place — that fallback is trap 1 of the
+    root-cause defect (docs/loom/memory/fiscal-year-derive-per-fact-against-
+    filing-calendar.md).
+
+    `.dqc` carries the ONE DQC flag schema (type, old, new, accessions,
+    reason — the plan's kickoff decision: no per-class schema variants)."""
+
+    def __init__(self, ticker: str, accession: str, reason: str):
+        self.dqc = {
+            "type": "unreadable_fiscal_calendar",
+            "old": None,
+            "new": None,
+            "accessions": [accession],
+            "reason": reason,
+        }
+        super().__init__(
+            f"unreadable dei fiscal calendar for {ticker!r} filing "
+            f"{accession!r}: {reason} — facts from this filing cannot be "
+            f"fiscally labeled (the calendar year is NEVER emitted as a "
+            f"fiscal_year fallback)"
+        )
+
+
+def _parse_fiscal_year_end_month_day(value) -> tuple[int, int] | None:
+    """Parse a `dei:CurrentFiscalYearEndDate` value (`--MM-DD`, e.g.
+    `--01-25`) into `(month, day)`. Returns None on an absent/malformed
+    value (callers fail loud — never guess a calendar)."""
+    if not isinstance(value, str):
+        return None
+    match = re.fullmatch(r"--(\d{2})-(\d{2})", value.strip())
+    if match is None:
+        return None
+    month, day = int(match.group(1)), int(match.group(2))
+    if not (1 <= month <= 12 and 1 <= day <= 31):
+        return None
+    return month, day
+
+
+def _nominal_fiscal_year_end(year: int, month: int, day: int) -> date:
+    """The NOMINAL fiscal-year-end date of fiscal year `year` for a filer
+    whose `dei:CurrentFiscalYearEndDate` is `--MM-DD` (day clamped to the
+    month's real length, e.g. --02-29 in a non-leap year). Nominal only: a
+    52/53-week filer's ACTUAL year end drifts a few days around it, which
+    is why every comparison against it carries
+    `FISCAL_BOUNDARY_TOLERANCE_DAYS`."""
+    return date(year, month, min(day, calendar.monthrange(year, month)[1]))
+
+
+def _derive_fiscal_label(
+    period_end: date,
+    duration_months: int | None,
+    dei_calendar: dict | None,
+    ticker: str,
+    accession: str,
+) -> tuple[int, str]:
+    """(fiscal_year, fiscal_quarter) for ONE fact, derived from the fact's
+    OWN `period_end` measured against ITS filing's dei fiscal calendar —
+    the only correct derivation (docs/loom/memory/fiscal-year-derive-per-
+    fact-against-filing-calendar.md). NEVER `period_end[:4]` (trap 1: the
+    calendar year) and NEVER the filing's `dei:DocumentFiscalYearFocus`
+    stamped on every fact (trap 2: a 10-K/10-Q carries ~3 comparative
+    years — AAPL's FY2019 10-K would collapse FY2017/18/19 to 2019). The
+    focus tag is the filing's own answer for the CURRENT-period fact only
+    (live-verified 90/90); this per-period_end derivation reproduces it for
+    that fact and, unlike a stamp, stays correct for comparatives. Task 14
+    reconciles the declared focus against range membership post-fetch.
+
+    fiscal_year: the fiscal year whose nominal year-end
+    (`dei:CurrentFiscalYearEndDate`, per-filing — it DRIFTS for 52/53-week
+    filers, never cache it) is the first at-or-after `period_end` within
+    tolerance. fiscal_quarter ∈ {Q1, Q2, Q3, Q4, FY}, derived JOINTLY with
+    the duration: a 12-month fact is FY, never a bare Q4 (a YTD fact
+    carries the quarter its period_end sits on; `duration_months`
+    distinguishes it from the single-quarter point).
+
+    Fails loud: `UnreadableFiscalCalendarError` (distinct DQC-schema error)
+    on an absent/malformed calendar; a `ValueError` when `period_end`
+    matches no fiscal-quarter boundary within tolerance (a transition/stub
+    period — Task 16 refines this raise into the unclassifiable DQC flag +
+    derivation-basis disclosure)."""
+    fye_raw = (dei_calendar or {}).get("fiscal_year_end")
+    month_day = _parse_fiscal_year_end_month_day(fye_raw)
+    if month_day is None:
+        raise UnreadableFiscalCalendarError(
+            ticker, accession,
+            f"dei:CurrentFiscalYearEndDate is absent or malformed "
+            f"(got {fye_raw!r}, expected '--MM-DD')",
+        )
+    month, day = month_day
+
+    year = period_end.year - 1
+    while (
+        period_end - _nominal_fiscal_year_end(year, month, day)
+    ).days > FISCAL_BOUNDARY_TOLERANCE_DAYS:
+        year += 1
+    fiscal_year = year
+
+    if duration_months == 12:
+        return fiscal_year, "FY"
+
+    fiscal_year_end = _nominal_fiscal_year_end(fiscal_year, month, day)
+    boundaries = {
+        "Q1": _subtract_months(fiscal_year_end, 9),
+        "Q2": _subtract_months(fiscal_year_end, 6),
+        "Q3": _subtract_months(fiscal_year_end, 3),
+        "Q4": fiscal_year_end,
+    }
+    for label, boundary in boundaries.items():
+        if abs((period_end - boundary).days) <= FISCAL_BOUNDARY_TOLERANCE_DAYS:
+            return fiscal_year, label
+    raise ValueError(
+        f"dimensional revenue fact for {ticker!r} filing {accession!r} has "
+        f"period_end {period_end.isoformat()} matching no FY{fiscal_year} "
+        f"fiscal-quarter boundary within {FISCAL_BOUNDARY_TOLERANCE_DAYS} "
+        f"days (nominal fiscal year end {fiscal_year_end.isoformat()}) — a "
+        f"transition/stub period is never nearest-guessed"
+    )
+
+
+def _build_dimensional_revenue_fact(
+    fact: dict, ticker: str, accession: str, filed, dei_calendar: dict | None,
+) -> dict:
     """Build one normalized fact-pack row from an edgartools fact record
     already known to pass `_is_dimensional_revenue_fact`.
 
@@ -2175,12 +2309,28 @@ def _build_dimensional_revenue_fact(fact: dict, ticker: str, accession: str, fil
     posture never emits a fact it cannot date — plan amendment (a),
     spec-reviewer NEEDS_REVISION.
 
-    fiscal_year is DERIVED from period_end (the year the fiscal period
-    ENDS) — NEVER taken from edgartools' raw `fiscal_year` column, which is
-    unreliable for prior-year comparatives: live-verified on AAPL's 2025
-    10-K, the iPhone fact with period_end 2024-09-28 is column-labeled
-    fiscal_year=2025 but is really FY2024. Shipping the raw column mislabels
-    every prior-year comparative point.
+    Emits the PARALLEL period-label groups (Task 13, docs/loom/plans/
+    2026-07-16-operational-kpi-quarterly.md — mirrors Compustat DATADATE/
+    DATACQTR/DATAFQTR; never one collapsed into another):
+    (1) the raw window — `period_end` (+ `period_start` via
+    `duration_months`); (2) a CALENDAR label — `calendar_year` +
+    `calendar_quarter`, mechanically the calendar quarter containing
+    `period_end` (Compustat's DATACQTR rule); (3) a FISCAL label —
+    `fiscal_year` + `fiscal_quarter`, derived by `_derive_fiscal_label`
+    from this fact's OWN period_end measured against `dei_calendar` (THIS
+    filing's per-filing dei read, `_extract_dei_calendar`). Neither of the
+    two root-cause traps is ever emitted (docs/loom/memory/fiscal-year-
+    derive-per-fact-against-filing-calendar.md): `fiscal_year` is never
+    `period_end[:4]` (that is `calendar_year`'s honest job now), and never
+    the filing's `dei:DocumentFiscalYearFocus` stamped uniformly (a
+    comparative derives from its own period). An unreadable calendar
+    raises `UnreadableFiscalCalendarError` — never a calendar fallback.
+
+    Also derives the raw fiscal_year column trap away: the label is NEVER
+    taken from edgartools' raw `fiscal_year` column, which is unreliable
+    for prior-year comparatives (live-verified on AAPL's 2025 10-K, the
+    iPhone fact with period_end 2024-09-28 is column-labeled
+    fiscal_year=2025 but is really FY2024).
 
     A duration-context fact also carries `duration_months` (Task 1,
     docs/loom/plans/2026-07-16-operational-kpi-quarterly.md — `_duration_months`,
@@ -2200,28 +2350,55 @@ def _build_dimensional_revenue_fact(fact: dict, ticker: str, accession: str, fil
             f"(cannot be dated): concept={fact.get('concept')!r} "
             f"dimensions={dimensions!r} consolidation={consolidation!r}"
         )
+    try:
+        period_end_date = date.fromisoformat(str(period_end))
+    except ValueError as exc:
+        raise ValueError(
+            f"dimensional revenue fact for {ticker!r} has a malformed "
+            f"period_end (cannot be dated or period-labeled): "
+            f"concept={fact.get('concept')!r} period_end={period_end!r} "
+            f"({exc})"
+        ) from exc
     built = {
         "concept": fact.get("concept"),
         "dimensions": dimensions,
         "consolidation": consolidation,
         "value": float(fact.get("numeric_value")),
         "period_end": period_end,
-        "fiscal_year": int(period_end[:4]),
         "accession": accession,
         "filed": filed,
     }
     if fact.get("period_type") == "duration":
         built["duration_months"] = _duration_months(fact, ticker, period_end)
+    fiscal_year, fiscal_quarter = _derive_fiscal_label(
+        period_end_date, built.get("duration_months"), dei_calendar,
+        ticker, accession,
+    )
+    built["calendar_year"] = period_end_date.year
+    built["calendar_quarter"] = f"Q{(period_end_date.month - 1) // 3 + 1}"
+    built["fiscal_year"] = fiscal_year
+    built["fiscal_quarter"] = fiscal_quarter
     return built
 
 
-def _filing_period_year(filing) -> int | None:
-    """The fiscal year a filing REPORTS, from its filings-list metadata
-    (`period_of_report`, the fiscal-period-end date string) — NOT by fetching
-    its `.xbrl()`. edgartools exposes `period_of_report` on every real 10-K
-    Filing (live-verified 2026-07-15, `_filing_ref`:851 relies on it; see the
-    real-Filing-shape header at :808), so range selection reads it directly.
-    Returns None when it is absent/unparseable (never guessed)."""
+def _filing_period_end_calendar_year(filing) -> int | None:
+    """The CALENDAR year of `filing`'s `period_of_report` — an honest name
+    for what the retired `_filing_period_year` computed while its docstring
+    claimed "the fiscal year a filing REPORTS" (the scope-B root-cause
+    defect: docs/loom/memory/fiscal-year-derive-per-fact-against-filing-
+    calendar.md, trap 1).
+
+    What this value IS: for an ANNUAL filing (10-K), the fiscal-year LABEL
+    by SEC convention (a fiscal year is named for the calendar year its
+    period ends in) — the sanctioned filings-index GUESS for annual forms,
+    reconciled post-fetch against the declared `dei:DocumentFiscalYearFocus`
+    (Task 14). What it is NOT: the fiscal year of a 10-Q at any
+    non-December-FYE filer (NVDA's FY2026 quarters all end in calendar
+    2025) — quarterly fiscal-year candidates come from
+    `_quarterly_fiscal_year_guesses`, never from this value.
+
+    Reads filings-list metadata only — never fetches `.xbrl()`. Returns
+    None when `period_of_report` is absent/unparseable (never guessed)."""
     period = getattr(filing, "period_of_report", None)
     if not period:
         return None
@@ -2336,25 +2513,64 @@ def extract_dimensional_revenue(
             ticker, form, f"form {form!r} not available within the lookup window",
         )
 
+    annual_form = _QUARTERLY_COMPANION_ANNUAL_FORM.get(form)
+    annual_exact_filings: list = []
+    if annual_form is not None:
+        # Fetched BEFORE selection (Task 13): a quarterly form's fiscal-year
+        # candidates derive from the companion annual index's fiscal windows
+        # (`_quarterly_fiscal_year_guesses`) — a cheap filings-list lookup
+        # only (never a `.xbrl()` fetch, the usage-cost lever the plan
+        # flags), reusing the SAME `company` object already resolved above.
+        # The Task 10 completeness report below reuses this same list.
+        annual_company_filings = company.get_filings(form=annual_form)
+        annual_exact_filings = (
+            [f for f in annual_company_filings if getattr(f, "form", None) == annual_form]
+            if annual_company_filings is not None else []
+        )
+        quarterly_guesses = _quarterly_fiscal_year_guesses(
+            annual_exact_filings, exact_filings
+        )
+
+        def _fiscal_year_guess(filing):
+            return quarterly_guesses.get(getattr(filing, "accession_no", None))
+    else:
+        # An ANNUAL filing's fiscal-year label IS the calendar year of its
+        # period end by SEC convention — the sanctioned index-metadata
+        # guess for annual forms (see `_filing_period_end_calendar_year`;
+        # the declared dei:DocumentFiscalYearFocus stays the truth, T14).
+        _fiscal_year_guess = _filing_period_end_calendar_year
+
     if since_year is None:
         # Default (latest-only) path — pick the single most-recent exact-form
         # filing. Behaviorally identical to the pre-range collapse.
         selected = [max(exact_filings, key=lambda f: f.filing_date)]
     else:
-        # Range path — select from filings-list metadata (period_of_report),
-        # NOT by fetching every `.xbrl()` first (the plan's kickoff decision).
+        # Range path — select from filings-list metadata by each filing's
+        # GUESSED DECLARED FISCAL YEAR (Task 13; the root-cause fix: never
+        # the calendar year of period_of_report), without fetching every
+        # `.xbrl()` first (the plan's kickoff decision).
         selected = sorted(
             (
                 f for f in exact_filings
-                if _filing_in_year_range(f, since_year, until_year)
+                if _fiscal_year_guess_in_range(
+                    _fiscal_year_guess(f), since_year, until_year
+                )
             ),
             key=lambda f: f.filing_date,
         )
         if not selected:
             return _dimensional_revenue_error_slot(
                 ticker, form,
-                f"no {form!r} filing reports a fiscal period within "
-                f"[{since_year}, {until_year if until_year is not None else 'latest'}]",
+                f"no {form!r} filing's guessed declared fiscal year falls "
+                f"within [{since_year}, "
+                f"{until_year if until_year is not None else 'latest'}]"
+                + (
+                    " (quarterly candidates derive from the companion "
+                    f"{annual_form!r} index's fiscal windows; a filer with "
+                    "no annual filing on file has no derivable fiscal "
+                    "calendar and is never calendar-bucketed into the range)"
+                    if annual_form is not None else ""
+                ),
             )
 
     facts = []
@@ -2369,37 +2585,38 @@ def extract_dimensional_revenue(
         # per ticker'): read straight from THIS filing's own facts_records,
         # keyed by ITS OWN accession, inside this per-filing loop iteration —
         # never a module-level/ticker-level cache. See `_extract_dei_calendar`.
-        fiscal_calendars[accession] = _extract_dei_calendar(facts_records)
+        # Task 13: the SAME per-filing calendar grounds each fact's fiscal
+        # label (per-fact, own period_end — `_build_dimensional_revenue_fact`).
+        dei_calendar = _extract_dei_calendar(facts_records)
+        fiscal_calendars[accession] = dei_calendar
         facts.extend(
-            _build_dimensional_revenue_fact(fact, ticker, accession, filed)
+            _build_dimensional_revenue_fact(
+                fact, ticker, accession, filed, dei_calendar,
+            )
             for fact in facts_records
             if _is_dimensional_revenue_fact(fact)
         )
 
     quarterly_coverage = None
-    annual_form = _QUARTERLY_COMPANION_ANNUAL_FORM.get(form)
     if annual_form is not None:
-        # Task 10: a per-quarter completeness report needs to know whether
-        # the COMPANION 10-K exists for each year — a cheap filings-list
-        # lookup only (never its full `.xbrl()`, the usage-cost lever the
-        # plan flags), reusing the SAME `company` object already resolved
-        # above.
-        annual_company_filings = company.get_filings(form=annual_form)
-        annual_exact_filings = (
-            [f for f in annual_company_filings if getattr(f, "form", None) == annual_form]
-            if annual_company_filings is not None else []
-        )
+        # Task 10: per-quarter completeness over the ALREADY-FETCHED
+        # filings-list metadata (annual index reused from the selection
+        # block above — never a second fetch).
         quarterly_coverage = _quarterly_completeness_report(
             annual_exact_filings, exact_filings,
             since_year, until_year, as_of or date.today(),
         )
 
+    available_fiscal_years = [
+        y for y in (_fiscal_year_guess(f) for f in exact_filings)
+        if y is not None
+    ]
     return {
         "company": ticker,
         "facts": facts,
         "coverage": {
             **_dimensional_revenue_coverage(
-                since_year, until_year, exact_filings, facts, form,
+                since_year, until_year, available_fiscal_years, facts, form,
             ),
             "quarterly_coverage": quarterly_coverage,
         },
@@ -2425,11 +2642,18 @@ def _extract_dei_calendar(facts_records: list[dict]) -> dict:
     0001045810-26-000021) is captured correctly per filing instead of one
     filing's calendar silently overwriting or shadowing another's.
 
+    Task 13 extends the read with the THIRD cover tag,
+    `dei:DocumentFiscalYearFocus` — the filing's own declared fiscal year,
+    authoritative for its CURRENT-period fact only (never stamped on
+    comparatives — trap 2 of docs/loom/memory/fiscal-year-derive-per-fact-
+    against-filing-calendar.md) and the declaration Task 14 reconciles the
+    pre-fetch selection guess against.
+
     Returns `{"fiscal_period_focus": <value>|None, "fiscal_year_end":
-    <value>|None}` — `None` when a tag is absent from this filing's records,
-    never fabricated/guessed (a real 10-K/10-Q always carries both per SEC
-    dei taxonomy requirements; an absence here is a test-double gap, not a
-    real-filing shape)."""
+    <value>|None, "fiscal_year_focus": <value>|None}` — `None` when a tag
+    is absent from this filing's records, never fabricated/guessed (a real
+    10-K/10-Q always carries all three per SEC dei taxonomy requirements;
+    an absence here is a test-double gap, not a real-filing shape)."""
     def _first_value(concept: str):
         for row in facts_records:
             if row.get("concept") == concept:
@@ -2439,13 +2663,14 @@ def _extract_dei_calendar(facts_records: list[dict]) -> dict:
     return {
         "fiscal_period_focus": _first_value("dei:DocumentFiscalPeriodFocus"),
         "fiscal_year_end": _first_value("dei:CurrentFiscalYearEndDate"),
+        "fiscal_year_focus": _first_value("dei:DocumentFiscalYearFocus"),
     }
 
 
 def _dimensional_revenue_coverage(
     since_year: int | None,
     until_year: int | None,
-    exact_filings,
+    available_fiscal_years: list[int],
     facts: list[dict],
     form: str,
 ) -> dict:
@@ -2454,25 +2679,29 @@ def _dimensional_revenue_coverage(
     honesty): `{requested:{since,until}, actual:{min_year,max_year},
     clamp_reason: str|None}`.
 
-    `actual` is the real span of the facts actually returned (their
-    `fiscal_year`s) — never a fabricated echo of the request. `clamp_reason`
-    fires when the request reaches outside the company's real filing
-    availability (the earliest/latest EXACT-form filing's own fiscal
-    period, from ALL `exact_filings` — not just the ones selected for this
-    call), i.e. no filing exists to satisfy the requested bound; it is
-    `None` when the request is fully within availability, even though the
-    returned facts' span may legitimately fall short of the request for
-    other reasons (e.g. a filing's comparative years don't reach that far)."""
+    `actual` is the real span of the facts actually returned (their honest
+    per-fact `fiscal_year` labels, Task 13) — never a fabricated echo of
+    the request. `clamp_reason` fires when the request reaches outside the
+    company's real filing availability — `available_fiscal_years` is the
+    caller's guessed declared fiscal year per EXACT-form filing (ALL of
+    them, not just the ones selected for this call; annual convention or
+    quarterly window-match, same basis the selection used — never the
+    calendar year of `period_of_report`), i.e. no filing exists to satisfy
+    the requested bound. It is `None` when the request is fully within
+    availability, even though the returned facts' span may legitimately
+    fall short of the request for other reasons (e.g. a filing's
+    comparative years don't reach that far)."""
     fact_years = [f["fiscal_year"] for f in facts]
     actual = {
         "min_year": min(fact_years) if fact_years else None,
         "max_year": max(fact_years) if fact_years else None,
     }
-    available_years = [
-        y for y in (_filing_period_year(f) for f in exact_filings) if y is not None
-    ]
-    available_min_year = min(available_years) if available_years else None
-    available_max_year = max(available_years) if available_years else None
+    available_min_year = (
+        min(available_fiscal_years) if available_fiscal_years else None
+    )
+    available_max_year = (
+        max(available_fiscal_years) if available_fiscal_years else None
+    )
 
     reasons = []
     if (
@@ -2744,14 +2973,19 @@ def _assign_quarterly_filings_to_fiscal_years(
     `unclassified`) when its projected due date hasn't arrived.
     `unmatched` holds filings that fall inside NO known OR projected
     window — i.e. no 10-K exists ANYWHERE to derive/project a fiscal
-    calendar from at all. The caller falls back to the filing's own
-    calendar year for those (`_filing_period_year`), preserving prior
-    behavior for the one case this function has no fiscal reference to
-    resolve."""
+    calendar from at all. The COVERAGE caller falls back to the filing's
+    own calendar year for those (`_filing_period_end_calendar_year` —
+    honestly named as calendar; Task 18 rebuilds these coverage states),
+    preserving prior reporting behavior for the one case this function has
+    no fiscal reference to resolve; fiscal-range SELECTION never does
+    (`_quarterly_fiscal_year_guesses` leaves them guess-less instead)."""
     known_fiscal_year_ends: dict[int, date] = {}
     windows: list[tuple[int, date]] = []
     for annual in annual_filings:
-        year = _filing_period_year(annual)
+        # a 10-K's fiscal-year label == the calendar year of its period end
+        # (SEC convention — the annual-form index guess, see
+        # `_filing_period_end_calendar_year`)
+        year = _filing_period_end_calendar_year(annual)
         period = getattr(annual, "period_of_report", None)
         if year is None or not period:
             continue
@@ -2835,18 +3069,20 @@ def _quarterly_completeness_report(
     ALREADY-FETCHED filing-list metadata (never a fresh fetch per year).
 
     Fiscal years are keyed off each 10-K's OWN `period_of_report` calendar
-    year (`_filing_period_year` — correct for a 10-K, whose period end IS
-    the fiscal year end). Quarterly filings are grouped into fiscal years
-    by `_assign_quarterly_filings_to_fiscal_years` (window-matched against
+    year (`_filing_period_end_calendar_year` — the fiscal-year LABEL for a
+    10-K by SEC convention, whose period end IS the fiscal year end).
+    Quarterly filings are grouped into fiscal years by
+    `_assign_quarterly_filings_to_fiscal_years` (window-matched against
     the 10-K's fiscal calendar, never the quarter's own calendar year —
     Task 10 revision round 1 fatal finding), with a PROJECTED-forward
     fiscal calendar for a year with no 10-K yet (Task 10 revision round 2
     fatal fix — every filer's in-progress current year, always), and a
     calendar-year fallback ONLY for a filing that matches no known OR
-    projected window."""
+    projected window (a reporting-layer escape only — fiscal-range
+    selection never calendar-buckets; Task 18 rebuilds these states)."""
     by_year_10k: dict[int, object] = {}
     for f in annual_filings:
-        y = _filing_period_year(f)
+        y = _filing_period_end_calendar_year(f)
         if y is not None:
             by_year_10k[y] = f
 
@@ -2854,7 +3090,7 @@ def _quarterly_completeness_report(
         _assign_quarterly_filings_to_fiscal_years(annual_filings, quarterly_filings)
     )
     for f in unmatched:
-        y = _filing_period_year(f)
+        y = _filing_period_end_calendar_year(f)
         if y is not None:
             by_year_10q.setdefault(y, []).append(f)
 
@@ -2909,15 +3145,16 @@ def _fact_effective_fiscal_year(
     """The FISCAL year `fact` belongs to, window-matched against
     `annual_windows` (each known 10-K's `_expected_quarterly_period_ends`,
     built by the caller) — mirrors `_assign_quarterly_filings_to_fiscal_
-    years` at fact granularity, NEVER `fact['fiscal_year']` alone (Task 10
-    revision round 2, finding 2: that field is the CALENDAR year of
-    `period_end`, which diverges from the fiscal year for any non-December
-    FYE — e.g. a January-FYE filer's quarters ALL fall in the PRIOR
-    calendar year, a 100% false-flag rate live-verified on NVDA). Falls
-    back to `fact['fiscal_year']` when `period_end` is absent/unparseable
-    or matches no known window — the same escape `_assign_quarterly_
-    filings_to_fiscal_years` uses for a filing it has no fiscal reference
-    to place (never a crash, never a guess beyond what's derivable)."""
+    years` at fact granularity, never trusting a tagged year alone (Task
+    10 revision round 2, finding 2: the pre-Task-13 `fiscal_year` field
+    was the CALENDAR year of `period_end`, a 100% false-flag rate
+    live-verified on a January-FYE filer, NVDA; since Task 13 the emitted
+    field is the honestly-derived per-fact fiscal label, so the window
+    match is defense-in-depth for legacy-shaped inputs). Falls back to
+    `fact['fiscal_year']` when `period_end` is absent/unparseable or
+    matches no known window — the same escape `_assign_quarterly_filings_
+    to_fiscal_years` uses for a filing it has no fiscal reference to place
+    (never a crash, never a guess beyond what's derivable)."""
     period = fact.get("period_end")
     try:
         actual = date.fromisoformat(str(period)) if period else None
@@ -2991,12 +3228,50 @@ def _dimension_quarterly_absence(
     return flags
 
 
-def _filing_in_year_range(filing, since_year: int, until_year: int | None) -> bool:
-    """Whether `filing`'s reported fiscal year (`_filing_period_year`) falls in
-    the INCLUSIVE range `[since_year, until_year]`; `until_year=None` leaves the
-    upper bound open ([since_year, latest]). A filing whose period year is
-    unknown is not range-selectable (never guessed into the range)."""
-    year = _filing_period_year(filing)
+def _quarterly_fiscal_year_guesses(
+    annual_filings: list, quarterly_filings: list,
+) -> dict[str, int]:
+    """accession -> GUESSED declared fiscal year for each quarterly filing —
+    the sanctioned PRE-FETCH index-metadata derivation (Task 13; spec:
+    selection runs before any filing is downloaded, has no dei tags in
+    hand, and MAY derive candidate fiscal years from form /
+    `period_of_report` / filing date, for selection purposes only).
+
+    Windows come from the companion annual index via
+    `_assign_quarterly_filings_to_fiscal_years`: each 10-K's own period end
+    fixes that fiscal year's expected quarter windows, and the in-progress
+    year (no 10-K yet, by definition) is projected forward — NEVER
+    `period_of_report[:4]`, which is the calendar year (trap 1 of the
+    root-cause defect, docs/loom/memory/fiscal-year-derive-per-fact-
+    against-filing-calendar.md: NVDA's FY2026 quarters all end in calendar
+    2025). For a fixed-December-FYE filer the window match reproduces the
+    calendar year exactly, so selection there is byte-identical to the
+    old behaviour.
+
+    The value is explicitly a CANDIDATE GUESS: the fetched filing's own
+    `dei:DocumentFiscalYearFocus` is the truth, and range membership is
+    reconciled against it post-fetch (Task 14). A filing matching no known
+    or projected window has NO derivable candidate and is absent from the
+    map — it is never calendar-bucketed into a fiscal range (its selection
+    gap surfaces at the coverage layer, Task 18)."""
+    by_year, _projected, _unmatched = _assign_quarterly_filings_to_fiscal_years(
+        annual_filings, quarterly_filings
+    )
+    return {
+        accession: year
+        for year, filings in by_year.items()
+        for accession in (getattr(f, "accession_no", None) for f in filings)
+        if accession is not None
+    }
+
+
+def _fiscal_year_guess_in_range(
+    year: int | None, since_year: int, until_year: int | None,
+) -> bool:
+    """Whether a guessed declared fiscal year falls in the INCLUSIVE range
+    `[since_year, until_year]`; `until_year=None` leaves the upper bound
+    open ([since_year, latest]). A filing with no derivable guess
+    (`year=None`) is not range-selectable (never guessed into the range)."""
     if year is None or year < since_year:
         return False
     return until_year is None or year <= until_year

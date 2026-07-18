@@ -124,10 +124,17 @@ def _aapl_product_facts(sec_edgar_helpers, aapl_multifiling_raw: dict) -> list[d
     for filing in aapl_multifiling_raw["filings"]:
         accession = filing["accession"]
         filed = filing["filing_date"]
+        # Task 13: the fact-builder derives each fact's parallel fiscal
+        # label against THIS filing's own dei calendar (live-captured dei
+        # cover rows ride in the same raw_facts records) — mirroring
+        # extract_dimensional_revenue's per-filing read exactly.
+        dei_calendar = sec_edgar_helpers._extract_dei_calendar(filing["raw_facts"])
         for raw in filing["raw_facts"]:
             if not sec_edgar_helpers._is_dimensional_revenue_fact(raw):
                 continue
-            fact = sec_edgar_helpers._build_dimensional_revenue_fact(raw, "AAPL", accession, filed)
+            fact = sec_edgar_helpers._build_dimensional_revenue_fact(
+                raw, "AAPL", accession, filed, dei_calendar,
+            )
             built.append(fact)
     return [
         f for f in built
