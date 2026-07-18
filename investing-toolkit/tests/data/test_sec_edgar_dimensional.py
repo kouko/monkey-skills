@@ -1574,3 +1574,231 @@ def test_dimension_quarterly_absence_january_fye_no_false_flag(sec_client):
         f"false-flagged just because the quarters' own tagged fiscal_year "
         f"(calendar year of period_end) diverges from the fiscal year -- {flags}"
     )
+
+
+# ---------------------------------------------------------------------------
+# Task 13 (2026-07-16-operational-kpi-quarterly REBUILD) — P0: fix the fiscal
+# primitive + emit parallel calendar/fiscal labels. RED LINES
+# (docs/loom/memory/fiscal-year-derive-per-fact-against-filing-calendar.md):
+# a fact's fiscal year derives from its OWN period_end measured against the
+# filing's dei calendar — NEVER `period_end[:4]` (trap 1: the calendar year)
+# and NEVER the filing's DocumentFiscalYearFocus stamped on every fact
+# (trap 2: mislabels prior-year comparatives). Driven by MACHINE-CAPTURED
+# fixtures: xbrl_quarterly_nvda_range.json (real NVDA FY2026 10-Qs whose
+# period_of_report all fall in CALENDAR 2025 + the FY2027-Q1 10-Q a FY2026
+# request must NOT touch + the 10-K index anchors),
+# xbrl_multifiling_aapl.json (real AAPL FY2019 10-K carrying FY2017/FY2018
+# comparatives + live-captured dei cover rows), and
+# xbrl_filings_index_cat.json (fixed December-FYE filer — the regime where
+# calendar selection was accidentally right and must stay byte-identical).
+# ---------------------------------------------------------------------------
+
+def _metadata_only_filing(record, *, reason):
+    """Filing stub carrying ONLY filings-index metadata: any `.xbrl()` call
+    fails the test with `reason`. Encodes the pre-fetch selection contract —
+    selection may read index metadata (form / period_of_report / filing
+    date), never a filing body it did not select."""
+    filing = SimpleNamespace(
+        accession_no=record["accession"],
+        filing_date=datetime.date.fromisoformat(record["filing_date"]),
+        form=record["form"],
+        period_of_report=record["period_of_report"],
+    )
+
+    def _never_fetch(_reason=reason):
+        raise AssertionError(_reason)
+
+    filing.xbrl = _never_fetch
+    return filing
+
+
+def _nvda_range_company(sec_client):
+    """Wire the NVDA range fixture behind a mocked edgartools Company:
+    `get_filings(form='10-Q')` returns the three real FY2026 10-Qs (with
+    captured raw facts) PLUS the FY2027-Q1 10-Q as metadata-only (fetching
+    it fails the test); `get_filings(form='10-K')` returns the metadata-only
+    annual index anchors."""
+    fixture = json.loads((FIXTURES / "xbrl_quarterly_nvda_range.json").read_text())
+    tenqs = [_filing_from_fixture(r) for r in fixture["filings"]]
+    tenqs.append(_metadata_only_filing(
+        fixture["out_of_range_filing"],
+        reason="the FY2027 10-Q (period 2026-04-26) is outside the requested "
+               "fiscal range [2026, 2026] and must never be fetched",
+    ))
+    tenks = [
+        _metadata_only_filing(
+            r, reason="10-K index anchors serve pre-fetch selection from "
+                      "metadata only; their xbrl must never be fetched here",
+        )
+        for r in fixture["annual_filings_index"]
+    ]
+    company = mock.MagicMock(name="Company")
+    company.not_found = False
+    company.cik = 1045810
+    company.get_filings.side_effect = (
+        lambda form=None, **_kw: {"10-Q": tenqs, "10-K": tenks}.get(form, [])
+    )
+    sec_client.edgar_stub.Company.return_value = company
+    return fixture
+
+
+def test_fiscal_range_selects_declared_years(sec_client):
+    """A fiscal-year range request selects filings by their DECLARED fiscal
+    year (pre-fetch: the sanctioned filings-index derivation, window-matched
+    against the 10-K index), never by the calendar year of
+    `period_of_report` — the root-cause defect of the scope-B rebuild.
+
+    NVDA (late-January FYE): every FY2026 10-Q period_of_report falls in
+    CALENDAR 2025, and the FY2027-Q1 10-Q falls in calendar 2026 — the old
+    `int(period_of_report[:4])` selection returned 0 of 3 real FY2026
+    quarters plus the one FY2027 filing (live-verified,
+    docs/loom/memory/fiscal-year-derive-per-fact-against-filing-calendar.md).
+    A fixed-December-FYE filer (CAT) is the one regime where calendar
+    selection was accidentally correct — there the fiscal guess must be
+    byte-identical to the calendar behaviour."""
+    fixture = _nvda_range_company(sec_client)
+
+    pack = sec_client.extract_dimensional_revenue(
+        "NVDA", form="10-Q", since_year=2026, until_year=2026,
+        as_of=datetime.date(2026, 7, 18),
+    )
+    assert "error" not in pack, pack
+    fy2026_accessions = {r["accession"] for r in fixture["filings"]}
+    got = {f["accession"] for f in pack["facts"]}
+    assert got == fy2026_accessions, (
+        f"all three real FY2026 10-Qs (period ends in calendar 2025) must be "
+        f"selected for the fiscal range [2026, 2026] -- expected "
+        f"{fy2026_accessions}, got {got}"
+    )
+    assert fixture["out_of_range_filing"]["accession"] not in got, (
+        "the FY2027 10-Q (period 2026-04-26, CALENDAR 2026) must not be "
+        "selected for fiscal [2026, 2026]"
+    )
+
+    # Fixed December-FYE filer: the declared-fiscal-year guess equals the
+    # old calendar year for EVERY captured 10-Q, so any range selection is
+    # byte-identical to the previous calendar behaviour (including the
+    # in-progress FY2026 quarter, matched via the projected fiscal window).
+    cat = json.loads((FIXTURES / "xbrl_filings_index_cat.json").read_text())
+    cat_annual = [
+        _metadata_only_filing(r, reason="index metadata only")
+        for r in cat["annual_filings"]
+    ]
+    cat_quarterly = [
+        _metadata_only_filing(r, reason="index metadata only")
+        for r in cat["quarterly_filings"]
+    ]
+    guesses = sec_client._quarterly_fiscal_year_guesses(cat_annual, cat_quarterly)
+    for record in cat["quarterly_filings"]:
+        calendar_year = int(record["period_of_report"][:4])
+        assert guesses.get(record["accession"]) == calendar_year, (
+            f"December-FYE selection must be byte-identical to the previous "
+            f"calendar behaviour: {record['accession']} "
+            f"(period {record['period_of_report']}) must guess "
+            f"{calendar_year}, got {guesses.get(record['accession'])}"
+        )
+
+
+def test_parallel_period_labels(sec_client):
+    """Every emitted fact carries PARALLEL calendar and fiscal period
+    labels, honestly named (spec requirement, user-ratified 2026-07-17 —
+    mirrors Compustat DATADATE/DATACQTR/DATAFQTR): `calendar_year` +
+    `calendar_quarter` mechanically from period_end, AND `fiscal_year` +
+    `fiscal_quarter` derived per-fact from the fact's OWN period_end
+    measured against that filing's dei fiscal calendar. Both red-line traps
+    asserted (docs/loom/memory/fiscal-year-derive-per-fact-against-filing-
+    calendar.md): never `period_end[:4]` as fiscal, never the filing's
+    DocumentFiscalYearFocus stamped on comparatives."""
+    # (2) Comparatives derive from their OWN period, never the filing focus
+    # stamped: real AAPL FY2019 10-K (dei:DocumentFiscalYearFocus=2019, dei
+    # rows live-captured 2026-07-18) carries FY2017/FY2018 comparatives.
+    fixture = _multifiling_company(sec_client)
+    del fixture  # selection asserted elsewhere; this test reads labels
+    pack19 = sec_client.extract_dimensional_revenue(
+        "AAPL", since_year=2019, until_year=2019
+    )
+    assert "error" not in pack19, pack19
+    facts19 = [
+        f for f in pack19["facts"] if f["accession"] == "0000320193-19-000119"
+    ]
+    assert facts19, "the FY2019 10-K must be selected for [2019, 2019]"
+    by_end = {}
+    for f in facts19:
+        by_end.setdefault(f["period_end"], f)
+    comparative_2018 = by_end["2018-09-29"]
+    assert comparative_2018["fiscal_year"] == 2018, (
+        f"a FY2018 comparative in the FY2019 10-K derives its fiscal label "
+        f"from its OWN period_end (2018-09-29), never the filing's "
+        f"DocumentFiscalYearFocus=2019 stamped -- got {comparative_2018}"
+    )
+    comparative_2017 = by_end["2017-09-30"]
+    assert comparative_2017["fiscal_year"] == 2017, comparative_2017
+    current_2019 = by_end["2019-09-28"]
+    assert current_2019["fiscal_year"] == 2019, current_2019
+    # (3) A 12-month fact carries fiscal_quarter=FY, never a bare Q4 —
+    # distinguishable by construction from any reported/derived Q4 point.
+    for fact in (comparative_2018, comparative_2017, current_2019):
+        assert fact["duration_months"] == 12
+        assert fact["fiscal_quarter"] == "FY", (
+            f"a 12-month fact must be labeled FY, never a bare Q4 -- {fact}"
+        )
+    # Calendar labels ride in PARALLEL (mechanical, from period_end).
+    assert current_2019["calendar_year"] == 2019
+    assert current_2019["calendar_quarter"] == "Q3"
+
+    # (1) Diverging calendar/fiscal labels at a non-December-FYE filer:
+    # the real NVDA FY2026-Q3 fact ends 2025-10-26 (calendar 2025-Q4).
+    _nvda_range_company(sec_client)
+    pack = sec_client.extract_dimensional_revenue(
+        "NVDA", form="10-Q", since_year=2026, until_year=2026,
+        as_of=datetime.date(2026, 7, 18),
+    )
+    assert "error" not in pack, pack
+    q3 = next(f for f in pack["facts"] if f["period_end"] == "2025-10-26")
+    assert q3["calendar_year"] == 2025 and q3["calendar_quarter"] == "Q4", q3
+    assert q3["fiscal_year"] == 2026 and q3["fiscal_quarter"] == "Q3", (
+        f"NVDA FY2026-Q3 (period_end 2025-10-26) must carry fiscal 2026-Q3 "
+        f"in PARALLEL with calendar 2025-Q4 -- got {q3}"
+    )
+    q1 = next(f for f in pack["facts"] if f["period_end"] == "2025-04-27")
+    assert q1["calendar_year"] == 2025 and q1["calendar_quarter"] == "Q2", q1
+    assert q1["fiscal_year"] == 2026 and q1["fiscal_quarter"] == "Q1", q1
+
+    # (4) An unreadable dei fiscal calendar fails loud with a DISTINCT
+    # DQC-schema error naming the filing — NEVER period_end[:4] emitted as
+    # fiscal_year (trap 1, the root-cause fallback).
+    revenue_row = {
+        "is_dimensioned": True,
+        "dim_srt_ProductOrServiceAxis": "nvda:ComputeMember",
+        "concept": "us-gaap:Revenues",
+        "numeric_value": 43028000000.0,
+        "unit_ref": "usd",
+        "currency": "USD",
+        "period_type": "duration",
+        "period_start": "2025-07-28",
+        "period_end": "2025-10-26",
+        "period_instant": None,
+    }
+    absent_calendar = {
+        "fiscal_period_focus": None, "fiscal_year_end": None,
+        "fiscal_year_focus": None,
+    }
+    with pytest.raises(sec_client.UnreadableFiscalCalendarError) as exc_info:
+        sec_client._build_dimensional_revenue_fact(
+            revenue_row, "NVDA", "0001045810-25-000230", "2025-11-19",
+            absent_calendar,
+        )
+    dqc = exc_info.value.dqc
+    assert dqc["type"] == "unreadable_fiscal_calendar", dqc
+    assert "0001045810-25-000230" in dqc["accessions"], dqc
+    assert dqc["reason"], dqc
+
+    malformed_calendar = {
+        "fiscal_period_focus": "Q3", "fiscal_year_end": "--13-45",
+        "fiscal_year_focus": "2026",
+    }
+    with pytest.raises(sec_client.UnreadableFiscalCalendarError):
+        sec_client._build_dimensional_revenue_fact(
+            revenue_row, "NVDA", "0001045810-25-000230", "2025-11-19",
+            malformed_calendar,
+        )

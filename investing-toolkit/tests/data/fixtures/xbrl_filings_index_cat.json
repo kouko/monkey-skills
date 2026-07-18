@@ -1,0 +1,79 @@
+{
+ "_provenance": "MACHINE-CAPTURED 2026-07-18 (Task 13) via edgartools==5.42.0, edgar.Company('CAT').get_filings(form='10-K'/'10-Q'); accession/form/filing_date/period_of_report dumped exactly as returned, never hand-typed. CAT is a FIXED December-31 FYE filer (every 10-K period_of_report is 12-31; quarters end 03-31/06-30/09-30): the one regime where the old calendar-year selection was accidentally correct, so the declared-fiscal-year selection must be byte-identical to it here. Verified live 2026-07-18.",
+ "annual_filings": [
+  {
+   "accession": "0000018230-26-000008",
+   "form": "10-K",
+   "filing_date": "2026-02-13",
+   "period_of_report": "2025-12-31"
+  },
+  {
+   "accession": "0000018230-25-000008",
+   "form": "10-K",
+   "filing_date": "2025-02-14",
+   "period_of_report": "2024-12-31"
+  },
+  {
+   "accession": "0000018230-24-000009",
+   "form": "10-K",
+   "filing_date": "2024-02-16",
+   "period_of_report": "2023-12-31"
+  },
+  {
+   "accession": "0000018230-23-000011",
+   "form": "10-K",
+   "filing_date": "2023-02-15",
+   "period_of_report": "2022-12-31"
+  }
+ ],
+ "quarterly_filings": [
+  {
+   "accession": "0000018230-26-000021",
+   "form": "10-Q",
+   "filing_date": "2026-05-06",
+   "period_of_report": "2026-03-31"
+  },
+  {
+   "accession": "0000018230-25-000048",
+   "form": "10-Q",
+   "filing_date": "2025-11-03",
+   "period_of_report": "2025-09-30"
+  },
+  {
+   "accession": "0000018230-25-000040",
+   "form": "10-Q",
+   "filing_date": "2025-08-06",
+   "period_of_report": "2025-06-30"
+  },
+  {
+   "accession": "0000018230-25-000016",
+   "form": "10-Q",
+   "filing_date": "2025-05-07",
+   "period_of_report": "2025-03-31"
+  },
+  {
+   "accession": "0000018230-24-000053",
+   "form": "10-Q",
+   "filing_date": "2024-11-06",
+   "period_of_report": "2024-09-30"
+  },
+  {
+   "accession": "0000018230-24-000045",
+   "form": "10-Q",
+   "filing_date": "2024-08-07",
+   "period_of_report": "2024-06-30"
+  },
+  {
+   "accession": "0000018230-24-000020",
+   "form": "10-Q",
+   "filing_date": "2024-05-01",
+   "period_of_report": "2024-03-31"
+  },
+  {
+   "accession": "0000018230-23-000056",
+   "form": "10-Q",
+   "filing_date": "2023-11-01",
+   "period_of_report": "2023-09-30"
+  }
+ ]
+}
