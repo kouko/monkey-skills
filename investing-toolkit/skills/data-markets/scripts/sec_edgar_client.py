@@ -2290,6 +2290,94 @@ def _derive_fiscal_label(
     )
 
 
+def _parse_declared_fiscal_year(value) -> int | None:
+    """Parse a filing's declared `dei:DocumentFiscalYearFocus` (a 4-digit
+    year string, live-verified 90/90 across 6 filers × 5 FYs) into an int
+    fiscal year. Returns None on an absent/malformed value — the caller
+    surfaces a distinct DQC flag naming the filing (Task 14); range
+    membership is NEVER re-bucketed by `period_of_report[:4]` in its place
+    (trap 1 of docs/loom/memory/fiscal-year-derive-per-fact-against-filing-
+    calendar.md)."""
+    if value is None:
+        return None
+    text = str(value).strip()
+    if re.fullmatch(r"\d{4}", text) is None:
+        return None
+    return int(text)
+
+
+def _reconcile_selection_guess(
+    guess: int | None,
+    declared_raw,
+    accession: str,
+    since_year: int,
+    until_year: int | None,
+) -> tuple[bool, dict | None]:
+    """Post-fetch reconciliation of ONE guess-selected filing against its
+    DECLARED `dei:DocumentFiscalYearFocus` (Task 14; spec: 'the pre-fetch
+    index derivation is a GUESS and the dei declaration is the TRUTH ...
+    on disagreement the declaration wins and the correction is surfaced —
+    never silent in either direction').
+
+    Returns `(keep, flag)` — `keep` is the filing's final range membership;
+    `flag` (or None) follows the ONE DQC schema (type, old, new,
+    accessions, reason — the plan's kickoff decision, no per-class
+    variants):
+
+    - declaration readable + equal to the guess → confirmed: `(True, None)`
+      (a clean reconciliation is not noise);
+    - declaration readable + different → `fiscal_year_guess_mismatch`
+      (old=guess, new=declared); the DECLARATION decides membership, so the
+      filing is excluded when the declared year is out of range and kept
+      (still flagged) when it is in range — never silently kept, never
+      silently dropped;
+    - declaration absent/malformed → `unreadable_fiscal_year_declaration`
+      naming the filing; membership stands on the sanctioned pre-fetch
+      guess — the filing is never silently dropped and NEVER re-bucketed by
+      `period_of_report[:4]` (the calendar year, trap 1 of the root-cause
+      defect)."""
+    declared = _parse_declared_fiscal_year(declared_raw)
+    if declared is None:
+        return True, {
+            "type": "unreadable_fiscal_year_declaration",
+            "old": guess,
+            "new": None,
+            "accessions": [accession],
+            "reason": (
+                f"dei:DocumentFiscalYearFocus is absent or malformed "
+                f"(got {declared_raw!r}, expected a 4-digit year) — the "
+                f"selection guess FY{guess} cannot be reconciled; range "
+                f"membership stands on the pre-fetch guess and is never "
+                f"re-bucketed by the calendar year of period_of_report"
+            ),
+        }
+    if declared == guess:
+        return True, None
+    keep = _fiscal_year_guess_in_range(declared, since_year, until_year)
+    return keep, {
+        "type": "fiscal_year_guess_mismatch",
+        "old": guess,
+        "new": declared,
+        "accessions": [accession],
+        "reason": (
+            f"pre-fetch selection guessed FY{guess} but the fetched filing "
+            f"declares dei:DocumentFiscalYearFocus={declared} — the "
+            f"declaration wins: "
+            + (
+                f"FY{declared} falls inside the requested range "
+                f"[{since_year}, "
+                f"{until_year if until_year is not None else 'latest'}], "
+                f"filing kept under its declared year"
+                if keep else
+                f"FY{declared} falls outside the requested range "
+                f"[{since_year}, "
+                f"{until_year if until_year is not None else 'latest'}], "
+                f"filing excluded from the result"
+            )
+        ),
+    }
+
+
 def _build_dimensional_revenue_fact(
     fact: dict, ticker: str, accession: str, filed, dei_calendar: dict | None,
 ) -> dict:
@@ -2436,6 +2524,13 @@ def extract_dimensional_revenue(
       CONSECUTIVE — every in-range filing, never strided (striding risks silent
       year-gaps and breaks the overlap policy). Filing selection reads the
       filings-list metadata; only the selected filings' `.xbrl()` is fetched.
+      Selection is a pre-fetch GUESS reconciled post-fetch against each
+      fetched filing's declared `dei:DocumentFiscalYearFocus` (Task 14,
+      docs/loom/plans/2026-07-16-operational-kpi-quarterly.md —
+      `_reconcile_selection_guess`): an out-of-range declaration excludes
+      the filing, an unreadable declaration is flagged by name; either
+      outcome is surfaced under `coverage.fiscal_year_reconciliation`
+      (a DQC-schema flag list; `None` when no range was requested).
 
     `until_year` WITHOUT `since_year` is UNSUPPORTED and raises loudly: the
     range is `[since_year, until_year]`, and with no lower bound the call would
@@ -2575,6 +2670,13 @@ def extract_dimensional_revenue(
 
     facts = []
     fiscal_calendars: dict[str, dict] = {}
+    # Task 14: post-fetch reconciliation of the selection guess — a
+    # DQC-schema flag list when a fiscal range was requested, None otherwise
+    # (not applicable — same convention as `quarterly_coverage`, never a
+    # silently-empty list standing in for "did not run").
+    fiscal_year_reconciliation: list[dict] | None = (
+        [] if since_year is not None else None
+    )
     for filing in selected:
         xb = filing.xbrl()
         facts_records = xb.facts.to_dataframe().to_dict("records")
@@ -2589,6 +2691,22 @@ def extract_dimensional_revenue(
         # label (per-fact, own period_end — `_build_dimensional_revenue_fact`).
         dei_calendar = _extract_dei_calendar(facts_records)
         fiscal_calendars[accession] = dei_calendar
+        if fiscal_year_reconciliation is not None:
+            # Task 14: the pre-fetch guess was only a CANDIDATE; the fetched
+            # filing's own declared dei:DocumentFiscalYearFocus is the truth.
+            # Re-check range membership BEFORE emitting this filing's facts;
+            # an out-of-range declaration excludes the filing (surfaced,
+            # never silent), an unreadable declaration is flagged by name
+            # (kept on the guess — never re-bucketed by period_of_report[:4]).
+            keep, reconciliation_flag = _reconcile_selection_guess(
+                _fiscal_year_guess(filing),
+                dei_calendar.get("fiscal_year_focus"),
+                accession, since_year, until_year,
+            )
+            if reconciliation_flag is not None:
+                fiscal_year_reconciliation.append(reconciliation_flag)
+            if not keep:
+                continue
         facts.extend(
             _build_dimensional_revenue_fact(
                 fact, ticker, accession, filed, dei_calendar,
@@ -2619,6 +2737,7 @@ def extract_dimensional_revenue(
                 since_year, until_year, available_fiscal_years, facts, form,
             ),
             "quarterly_coverage": quarterly_coverage,
+            "fiscal_year_reconciliation": fiscal_year_reconciliation,
         },
         "fiscal_calendars": fiscal_calendars,
     }
