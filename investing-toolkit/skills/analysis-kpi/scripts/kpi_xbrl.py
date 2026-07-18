@@ -19,6 +19,22 @@ empty `dimensions`, i.e. the top-level total) and maps each matched fact
 into a kpi_store-shaped point:
 
   - `source_accession` = fact `accession`
+  - `source_form`      = "10-K" | "10-Q" (Task 9), threaded from the
+                          pack's per-accession `fiscal_calendars` dei read:
+                          `fiscal_period_focus` FY -> 10-K, Q1..Q4 -> 10-Q —
+                          the form is a property of the carrying FILING
+                          (keyed by accession), never guessed from a fact's
+                          own duration (a 10-K carries 3mo comparatives). A
+                          fact whose form cannot be grounded (no calendar
+                          entry / unreadable focus) is REJECTED loud naming
+                          the accession — never emitted formless.
+                          PROVENANCE SHAPES (Task 9 ratifies T8's
+                          anti-masquerade choice): a REPORTED point carries
+                          the SINGULAR `source_accession`/`source_form`; a
+                          DERIVED point (derive_q4_points) carries ONLY the
+                          PLURAL `source_accessions`/`source_forms` (aligned
+                          pairwise) — a consumer reading the singular keys
+                          can never silently receive a computed value.
   - `source_table_id`  = `"xbrl:dimensional"` (fact has real breakdown
                           axes) or `"xbrl:companyfacts"` (fact `dimensions`
                           is empty, flat)
@@ -122,6 +138,90 @@ _DEFAULT_CONSOLIDATION_MEMBER = "OperatingSegmentsMember"
 _DURATION_CLASS_BY_MONTHS = {3: "3mo", 6: "6mo-YTD", 9: "9mo-YTD", 12: "12mo-FY"}
 _CUMULATIVE_DURATION_CLASSES = frozenset({"6mo-YTD", "9mo-YTD"})
 _FISCAL_QUARTERS = frozenset({"Q1", "Q2", "Q3", "Q4", "FY"})
+
+# Task 9: a filing's SEC form derives from its own dei cover tag
+# `DocumentFiscalPeriodFocus` (threaded through the pack's per-accession
+# `fiscal_calendars`): an annual report declares FY, a quarterly report
+# declares its quarter. Anything else is unreadable — rejected, never guessed.
+_SOURCE_FORM_BY_FOCUS = {
+    "FY": "10-K", "Q1": "10-Q", "Q2": "10-Q", "Q3": "10-Q", "Q4": "10-Q",
+}
+
+# The ONE DQC-flag schema (plan kickoff decision, docs/loom/plans/
+# 2026-07-16-operational-kpi-quarterly.md: 'all instances of the ONE
+# existing DQC schema (type, old, new, accessions, reason) — no per-class
+# schema variants'). Flags MAY carry additional locating fields (period,
+# source_cell_ref, the identifying signature) on top of the required five.
+_DQC_REQUIRED_KEYS = ("type", "old", "new", "accessions", "reason")
+
+
+def assert_dqc_schema(flag: dict) -> dict:
+    """Validate one DQC flag against the ONE schema — `{type, old, new,
+    accessions, reason}` (Task 9): `type` a non-empty str, `accessions` a
+    non-empty list of non-empty accession strs, `reason` a non-empty str;
+    `old`/`new` present (None is a legal value for flag classes with no
+    old/new pair). Extra LOCATING fields are allowed; missing required
+    fields — including the retired restatement shape's
+    superseded_accession/kept_accession in place of `accessions` — RAISE.
+    Called at every analysis-layer emission site (self-enforcing schema)
+    and exported for tests/consumers."""
+    if not isinstance(flag, dict):
+        raise ValueError(
+            f"kpi_xbrl.assert_dqc_schema: DQC flag must be a dict, got "
+            f"{type(flag).__name__}"
+        )
+    missing = [key for key in _DQC_REQUIRED_KEYS if key not in flag]
+    if missing:
+        raise ValueError(
+            f"kpi_xbrl.assert_dqc_schema: DQC flag (type="
+            f"{flag.get('type')!r}) is missing required field(s) {missing} "
+            f"— every flag follows the ONE schema {list(_DQC_REQUIRED_KEYS)}"
+        )
+    if not isinstance(flag["type"], str) or not flag["type"]:
+        raise ValueError(
+            f"kpi_xbrl.assert_dqc_schema: DQC flag 'type' must be a "
+            f"non-empty str, got {flag['type']!r}"
+        )
+    accessions = flag["accessions"]
+    if (
+        not isinstance(accessions, list)
+        or not accessions
+        or not all(isinstance(a, str) and a for a in accessions)
+    ):
+        raise ValueError(
+            f"kpi_xbrl.assert_dqc_schema: DQC flag (type={flag['type']!r}) "
+            f"'accessions' must be a non-empty list of accession strings, "
+            f"got {accessions!r}"
+        )
+    if not isinstance(flag["reason"], str) or not flag["reason"]:
+        raise ValueError(
+            f"kpi_xbrl.assert_dqc_schema: DQC flag (type={flag['type']!r}) "
+            f"'reason' must be a non-empty str, got {flag['reason']!r}"
+        )
+    return flag
+
+
+def _require_source_form(fact: dict, fiscal_calendars: dict | None) -> str:
+    """The carrying filing's SEC form ("10-K" | "10-Q"), threaded from the
+    pack's `fiscal_calendars[accession]["fiscal_period_focus"]` (Task 9).
+    The form is a FILING property: a 10-K's prior-year 3mo comparative is
+    still 10-K-sourced, so the fact's own duration/quarter labels can never
+    stand in. Fails loud naming the accession when the pack carries no
+    readable focus for it — a point is never emitted formless."""
+    accession = fact.get("accession")
+    calendar = (fiscal_calendars or {}).get(accession) or {}
+    focus = calendar.get("fiscal_period_focus")
+    form = _SOURCE_FORM_BY_FOCUS.get(focus)
+    if form is None:
+        raise ValueError(
+            f"kpi_xbrl.facts_to_points: fact's source form is underivable — "
+            f"the pack's fiscal_calendars carries no readable dei "
+            f"fiscal_period_focus for accession {accession!r} "
+            f"(focus={focus!r}, concept={fact.get('concept')!r}) — rejected, "
+            f"never emitted formless and never guessed from the fact's own "
+            f"duration"
+        )
+    return form
 
 
 def _unclassifiable(fact: dict, reason: str) -> ValueError:
@@ -314,6 +414,9 @@ def facts_to_points(
         filed = _require_field(fact, "filed")
         classification = classify_fact_period(fact)
         period = _require_period(fact)
+        source_form = _require_source_form(
+            fact, fact_pack.get("fiscal_calendars")
+        )
 
         concept = fact.get("concept")
         dimensions = fact.get("dimensions") or {}
@@ -344,6 +447,7 @@ def facts_to_points(
             "as_of": filed,
             "value": value,
             "source_accession": accession,
+            "source_form": source_form,
             "source_table_id": source_table_id,
             "source_cell_ref": source_cell_ref,
             "source_kind": source_kind,
@@ -413,10 +517,13 @@ def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
     adjacent 10-Ks recast a value over the multi-filing span) is a
     RESTATEMENT — resolve_binding keeps the value from the most-recently-
     FILED 10-K (tie-break higher accession) and surfaces a machine-readable
-    `dqc` restatement flag `{type, old, new, superseded_accession,
-    kept_accession}` on the emitted point, rather than aborting the whole
-    series. A period with exactly one matching fact resolves cleanly,
-    unchanged.
+    `dqc` restatement flag on the emitted point — the ONE DQC schema
+    `{type, old, new, accessions, reason}` with `accessions` ordered
+    `[superseded, kept]` (old-first, same convention as `label_conflict`;
+    Task 9 migrated the former superseded_accession/kept_accession field
+    names into `accessions` + `reason`, audit content preserved) — rather
+    than aborting the whole series. A period with exactly one matching fact
+    resolves cleanly, unchanged.
     """
     kpi_id = binding["kpi_id"]
     sources = binding["sources"]
@@ -501,7 +608,7 @@ def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
                     != kept_label
                 )
                 kept_with_dqc = dict(kept)
-                kept_with_dqc["dqc"] = {
+                kept_with_dqc["dqc"] = assert_dqc_schema({
                     "type": "label_conflict",
                     "old": {
                         "fiscal_year": superseded.get("fiscal_year"),
@@ -532,7 +639,7 @@ def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
                         f"{kept.get('fiscal_quarter')}) — later-filed label "
                         f"kept deterministically, never an arbitrary pick"
                     ),
-                }
+                })
                 deduped_facts_by_source_idx[idx].append(kept_with_dqc)
                 continue
 
@@ -573,13 +680,29 @@ def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
                 if fact.get("value") != kept.get("value")
             )
             kept_with_dqc = dict(kept)
-            kept_with_dqc["dqc"] = {
+            # The ONE DQC schema (Task 9 migrated the former
+            # superseded_accession/kept_accession field names): accessions
+            # ordered [superseded, kept] — old-first, the same convention
+            # as label_conflict — with the roles named in `reason`. The
+            # audit content (old value, new value, both accessions) is
+            # fully preserved (policy-C parity with scope-A).
+            kept_with_dqc["dqc"] = assert_dqc_schema({
                 "type": "restatement",
                 "old": superseded.get("value"),
                 "new": kept.get("value"),
-                "superseded_accession": superseded.get("accession"),
-                "kept_accession": kept.get("accession"),
-            }
+                "accessions": [
+                    superseded.get("accession"), kept.get("accession"),
+                ],
+                "reason": (
+                    f"cross-filing restatement (overlap policy C) for "
+                    f"period_end {period_end!r} ({_duration_class}): value "
+                    f"{superseded.get('value')!r} from filing "
+                    f"{superseded.get('accession')!r} superseded by "
+                    f"{kept.get('value')!r} from the later-filed "
+                    f"{kept.get('accession')!r} — newest-filed wins, the "
+                    f"superseded value preserved for audit"
+                ),
+            })
             deduped_facts_by_source_idx[idx].append(kept_with_dqc)
 
     points = []
@@ -587,7 +710,13 @@ def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
         matched_facts = deduped_facts_by_source_idx[idx]
         if not matched_facts:
             continue
-        sub_pack = {"company": fact_pack.get("company"), "facts": matched_facts}
+        sub_pack = {
+            "company": fact_pack.get("company"),
+            "facts": matched_facts,
+            # Task 9: the per-accession calendar channel rides along so
+            # facts_to_points can ground each point's source_form.
+            "fiscal_calendars": fact_pack.get("fiscal_calendars"),
+        }
         selector = {
             "concept": source["concept"],
             "dimensions": source.get("dimensions", {}),
@@ -629,10 +758,13 @@ def _q4_basis_mismatch_reason(
     (2) Restatement vintage — exactly ONE input carries an upstream
         policy-C restatement DQC: its value was recast by a later filing
         while the other input was never re-reported on that newer basis,
-        so the subtraction would mix vintages. (Both restated = both
-        already resolved to the policy-C newest basis — no mismatch;
-        this conservative single-sided rule is the deliberate
-        operationalization of 'different restatement vintages'.)
+        so the subtraction would mix vintages. When BOTH inputs are
+        restated (Task 9, T8 spec-reviewer residual), the two RESTATING
+        accessions (`dqc["accessions"][-1]`, the kept/newest filing) must
+        be the SAME filing — two different restating filings are two
+        vintages and refuse, the same declared calendar notwithstanding;
+        both restated by ONE filing = one shared newest basis, no
+        mismatch.
     (3) Declared fiscal calendars — the two source filings' dei calendars
         (from the pack's `fiscal_calendars`, keyed by accession) disagree
         on `fiscal_year_end`, or either filing's calendar is absent/None
@@ -654,6 +786,19 @@ def _q4_basis_mismatch_reason(
             f"by a later filing (policy C) while the other input was never "
             f"re-reported on that basis"
         )
+    if fy_restated and ytd9_restated:
+        # accessions is [superseded, kept] — the kept (last) entry is the
+        # RESTATING filing whose basis the policy-C value now rests on.
+        fy_restating = (fy["dqc"].get("accessions") or [None])[-1]
+        ytd9_restating = (ytd9["dqc"].get("accessions") or [None])[-1]
+        if fy_restating != ytd9_restating:
+            return (
+                f"restatement vintages differ: the FY total was recast by "
+                f"filing {fy_restating!r} but the 9mo-YTD by a DIFFERENT "
+                f"filing {ytd9_restating!r} — two distinct restating "
+                f"filings are two vintages, the same declared calendar "
+                f"notwithstanding"
+            )
     calendars = fiscal_calendars or {}
     fy_cal = calendars.get(fy.get("source_accession"))
     ytd9_cal = calendars.get(ytd9.get("source_accession"))
@@ -689,9 +834,10 @@ def derive_q4_points(points: list[dict], *, fiscal_calendars: dict | None) -> di
       derivation runs, no computed flag is minted.
     - A clean derivation emits a point flagged computed — DQC
       `derived_q4` recording BOTH contributing accessions — and
-      segregated (`derived: True`, plural `source_accessions` instead of
-      a singular `source_accession`): a derived value never masquerades
-      as directly reported, and `build_series_with_break(...,
+      segregated (`derived: True`, plural `source_accessions` +
+      `source_forms` (aligned pairwise, Task 9) instead of the singular
+      `source_accession`/`source_form`): a derived value never
+      masquerades as directly reported, and `build_series_with_break(...,
       reported_only=True)` excludes the lane wholesale.
     - The derived point carries the THREE label groups (critic round 2),
       minted from the derived 3-month window: RAW WINDOW (`period_start`
@@ -759,7 +905,7 @@ def derive_q4_points(points: list[dict], *, fiscal_calendars: dict | None) -> di
                     f"for one signature/fiscal year — refused, never an "
                     f"arbitrary pick"
                 )
-            gaps.append({
+            gaps.append(assert_dqc_schema({
                 "type": gap_type,
                 "old": None,
                 "new": None,
@@ -767,13 +913,13 @@ def derive_q4_points(points: list[dict], *, fiscal_calendars: dict | None) -> di
                 "reason": reason,
                 "period": period,
                 "source_cell_ref": cell_ref,
-            })
+            }))
             continue
 
         fy, ytd9 = fy_candidates[0], ytd9_candidates[0]
         mismatch = _q4_basis_mismatch_reason(fy, ytd9, fiscal_calendars)
         if mismatch is not None:
-            gaps.append({
+            gaps.append(assert_dqc_schema({
                 "type": "q4_basis_mismatch",
                 "old": None,
                 "new": None,
@@ -784,7 +930,7 @@ def derive_q4_points(points: list[dict], *, fiscal_calendars: dict | None) -> di
                           f"subtraction across incompatible bases",
                 "period": period,
                 "source_cell_ref": cell_ref,
-            })
+            }))
             continue
 
         fy_end = _q4_input_window_end(fy, "FY-total")
@@ -805,11 +951,12 @@ def derive_q4_points(points: list[dict], *, fiscal_calendars: dict | None) -> di
             "as_of": max(fy.get("as_of") or "", ytd9.get("as_of") or ""),
             "value": value,
             "source_accessions": accessions,
+            "source_forms": [fy.get("source_form"), ytd9.get("source_form")],
             "source_table_id": fy.get("source_table_id"),
             "source_cell_ref": cell_ref,
             "source_kind": fy.get("source_kind"),
             "derived": True,
-            "dqc": {
+            "dqc": assert_dqc_schema({
                 "type": "derived_q4",
                 "old": {"fy_total": fy["value"], "ytd9": ytd9["value"]},
                 "new": value,
@@ -819,7 +966,7 @@ def derive_q4_points(points: list[dict], *, fiscal_calendars: dict | None) -> di
                     f"fiscal year {period} — computed, never reported; "
                     f"segregated from directly-reported points"
                 ),
-            },
+            }),
         })
     return {"points": derived, "gaps": gaps}
 
@@ -909,7 +1056,41 @@ def _dimension_quarterly_absence_flags(facts: list[dict]) -> list[dict]:
 
     annual = [f for f in facts if f.get("fiscal_quarter") == "FY"]
     quarterly = [f for f in facts if f.get("fiscal_quarter") != "FY"]
-    return sec_edgar_client._dimension_quarterly_absence(annual, quarterly)
+    raw_flags = sec_edgar_client._dimension_quarterly_absence(annual, quarterly)
+    # Task 9: re-shape the data layer's identity-only entries into the ONE
+    # DQC schema (type, old, new, accessions, reason) — `accessions` names
+    # the annual filing(s) that DID tag the signature (the provenance of
+    # the absence claim), the identifying signature fields ride along as
+    # locating extras, and NO `value` key is ever added (absence is never
+    # zero-filled).
+    flags = []
+    for raw in raw_flags:
+        accessions = sorted({
+            f["accession"] for f in annual
+            if f.get("concept") == raw.get("concept")
+            and (f.get("dimensions") or {}) == (raw.get("dimensions") or {})
+            and f.get("consolidation") == raw.get("consolidation")
+            and f.get("fiscal_year") == raw.get("fiscal_year")
+            and f.get("accession")
+        })
+        flags.append(assert_dqc_schema({
+            "type": "no_quarterly_coverage",
+            "old": None,
+            "new": None,
+            "accessions": accessions,
+            "reason": (
+                f"dimensional signature tagged in the 10-K(s) "
+                f"{accessions} but in NO 10-Q for fiscal year "
+                f"{raw.get('fiscal_year')!r} — missing quarterly tagging "
+                f"only: never zero-filled, never a discontinued-segment "
+                f"verdict (that judgment stays the caller's)"
+            ),
+            "concept": raw.get("concept"),
+            "dimensions": raw.get("dimensions"),
+            "consolidation": raw.get("consolidation"),
+            "fiscal_year": raw.get("fiscal_year"),
+        }))
+    return flags
 
 
 def build_series_with_break(
@@ -956,9 +1137,10 @@ def build_series_with_break(
     - `facts` (requires granularity="quarterly"): the fact set the series
       was built from; 10-K-only dimensional signatures with no 10-Q fact
       for the same fiscal year surface as `coverage_flags` entries
-      (`no_quarterly_coverage` — identity-only, no `value` key: distinct
-      from a real zero, and never a discontinued-segment verdict) via the
-      data layer's `_dimension_quarterly_absence`.
+      (`no_quarterly_coverage` in the ONE DQC schema plus the identifying
+      signature as locating fields — no `value` key: distinct from a real
+      zero, and never a discontinued-segment verdict) via the data
+      layer's `_dimension_quarterly_absence`.
     """
     if granularity is not None and granularity not in _SERIES_GRANULARITIES:
         raise ValueError(

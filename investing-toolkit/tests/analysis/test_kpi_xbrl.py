@@ -479,8 +479,14 @@ def test_resolve_binding_restatement_newest_wins_with_dqc_flag(
     assert dqc["type"] == "restatement"
     assert dqc["old"] == 40057000000.0
     assert dqc["new"] == 40535000000.0
-    assert dqc["superseded_accession"] == "0000050863-22-000007"
-    assert dqc["kept_accession"] == "0000050863-23-000006"
+    # T9 schema migration: the ONE DQC schema replaces the pilot's
+    # superseded_accession/kept_accession field names — the audit content
+    # (both accessions, roles) is preserved as accessions=[superseded,
+    # kept] + reason (policy-C parity intact).
+    assert dqc["accessions"] == [
+        "0000050863-22-000007", "0000050863-23-000006",
+    ]
+    assert dqc["reason"]
 
 
 def test_resolve_binding_same_accession_value_conflict_still_raises(
@@ -563,7 +569,19 @@ def test_resolve_binding_consolidation_qualifier_operating_segments(
         "consolidation": "IntersegmentEliminationMember",
         "value": -5000000000,
     }
-    synthetic_pack = {"company": "AAPL", "facts": [op_seg_fact, elimination_fact]}
+    synthetic_pack = {
+        "company": "AAPL",
+        "facts": [op_seg_fact, elimination_fact],
+        # T9: the per-accession calendar channel grounding source_form
+        # (producer packs always carry it; mirrored here).
+        "fiscal_calendars": {
+            "0000320193-25-000079": {
+                "fiscal_period_focus": "FY",
+                "fiscal_year_end": "--09-27",
+                "fiscal_year_focus": "2025",
+            },
+        },
+    }
 
     synthetic_points = kpi_xbrl_module.resolve_binding(
         synthetic_pack, AMERICAS_SEGMENT_BINDING, "AAPL"
@@ -622,7 +640,19 @@ def test_resolve_binding_explicit_nondefault_consolidation(kpi_xbrl_module):
         "consolidation": "IntersegmentEliminationMember",
         "value": -5000000000,
     }
-    synthetic_pack = {"company": "AAPL", "facts": [op_seg_fact, elimination_fact]}
+    synthetic_pack = {
+        "company": "AAPL",
+        "facts": [op_seg_fact, elimination_fact],
+        # T9: the per-accession calendar channel grounding source_form
+        # (producer packs always carry it; mirrored here).
+        "fiscal_calendars": {
+            "0000320193-25-000079": {
+                "fiscal_period_focus": "FY",
+                "fiscal_year_end": "--09-27",
+                "fiscal_year_focus": "2025",
+            },
+        },
+    }
 
     points = kpi_xbrl_module.resolve_binding(
         synthetic_pack, ELIMINATIONS_SEGMENT_BINDING, "AAPL"
@@ -1009,8 +1039,13 @@ def test_identity_key_deconflates_quarter_from_ytd(kpi_xbrl_module, dualdur_fixt
     assert q1["dqc"]["type"] == "restatement"
     assert q1["dqc"]["old"] == 1000.0
     assert q1["dqc"]["new"] == 1050.0
-    assert q1["dqc"]["superseded_accession"] == "0000320193-25-000008"
-    assert q1["dqc"]["kept_accession"] == "0000320193-26-000006"
+    # T9 schema migration: accessions=[superseded, kept] + reason replace
+    # the retired superseded_accession/kept_accession names — full audit
+    # content (old, new, both accessions) preserved, policy-C parity.
+    assert q1["dqc"]["accessions"] == [
+        "0000320193-25-000008", "0000320193-26-000006",
+    ]
+    assert q1["dqc"]["reason"]
 
 
 def test_dedup_label_conflict_deterministic(kpi_xbrl_module, dualdur_fixture):
@@ -1194,16 +1229,25 @@ def test_series_flags_dimension_absent_from_quarterlies(
     emitted = result["as_reported"] + result["recast"]
     assert sorted(p["value"] for p in emitted) == [1000.0, 1500.0, 2000.0]
 
-    # Exactly ONE coverage flag: the Mac signature, identity-only — no
-    # `value` key (never zero-filled), flag == "no_quarterly_coverage"
-    # (never a discontinued-segment verdict), covered iPhone not flagged.
+    # Exactly ONE coverage flag: the Mac signature — no `value` key (never
+    # zero-filled), never a discontinued-segment verdict, covered iPhone
+    # not flagged. T9 schema migration: the entry follows the ONE DQC
+    # schema (type/old/new/accessions/reason) with the identifying
+    # signature riding along as locating fields; `accessions` names the
+    # 10-K that DID tag the signature.
     assert result["coverage_flags"] == [{
+        "type": "no_quarterly_coverage",
+        "old": None,
+        "new": None,
+        "accessions": ["0000320193-25-000079"],
+        "reason": result["coverage_flags"][0]["reason"],
         "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
         "dimensions": {"ProductOrService": "MacMember"},
         "consolidation": None,
         "fiscal_year": 2025,
-        "flag": "no_quarterly_coverage",
     }]
+    assert "value" not in result["coverage_flags"][0]
+    assert "never zero-filled" in result["coverage_flags"][0]["reason"]
 
 
 def test_series_range_filtered_by_own_fiscal_label(
