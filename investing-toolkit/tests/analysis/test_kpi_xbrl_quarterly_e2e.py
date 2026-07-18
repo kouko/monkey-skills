@@ -64,6 +64,15 @@ two more probes extend this same seam charter onto the week-lane —
     additions (T1-T5, same production files) left month-lane classification
     byte-identical.
 
+Task 4 addition (docs/loom/plans/2026-07-19-jnj-restatement-axis-signature.md):
+
+  - fixtures/xbrl_quarterly_jnj_restatement_axis_synth.json — SYNTHETIC
+    (models JNJ acc 0000200406-25-000209's Shockwave RestatementAxis
+    reclassification pair, post-extraction shape with the nested
+    coverage.quarterly/annual `axis_exclusions` envelope): drives the
+    period_recast-flag-to-feed chain and the dual-poisoned-group
+    `signature_refused` refusal-granularity chain.
+
 No `@req` tags: this dispatch's plan traces work by named plan Tasks, NOT
 by registered loom-spec REQ-ids — so `@req` is omitted per the implementer
 contract (same convention as the sibling e2e module).
