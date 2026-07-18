@@ -1035,6 +1035,7 @@ def test_next_exits_cleanly_on_queue_error_mid_scan(tmp_path, capsys):
     assert exit_code == 1
     err = capsys.readouterr().err
     assert "ensure_worktree" in err
+    assert "add-export-csv" in err
 
 
 def test_mark_concurrent_writes_to_different_entries_both_persist(tmp_path):
