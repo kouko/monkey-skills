@@ -296,8 +296,8 @@ dispatcher loop above never calls either on its own:
   and should not be retried automatically.
 
 `reconcile` (both the standalone verb and `next`'s internal call) surfaces
-two informational flags for the human operator — it never mutates on
-either:
+two informational flags for the human operator — it never mutates state
+for either of these two flags:
 
 - **`SUSPECT`** — a RUNNING entry with no definitive wf-record evidence,
   stale past its grace window. Informational only; the human decides via
@@ -305,6 +305,11 @@ either:
 - **`SUSPECT-COMPLETE`** — wf-record evidence says the workflow finished,
   but the entry was never marked done/failed. The human confirms the
   actual outcome and records it via `mark`.
+
+On definitive `failed`/`killed` wf-record evidence, reconcile instead
+auto-transitions the RUNNING entry straight to `AUTO-FAILED` — a real,
+breaker-visible mutation (unlike the two informational flags above) that
+can trip HALT, with no human-confirmation step.
 
 ### `next` exit codes
 

@@ -127,3 +127,37 @@ def test_recovery_verbs_and_suspect_handling_documented():
     assert "human" in section_lower, (
         "missing human-decides framing for SUSPECT/SUSPECT-COMPLETE operator handling"
     )
+
+
+def test_reconcile_auto_fail_mutation_documented_and_never_mutates_scoped():
+    """reconcile is NOT purely informational: on definitive failed/killed
+    wf-record evidence it auto-transitions a RUNNING entry to AUTO-FAILED
+    (batch_queue.py:659-692) — a real, breaker-visible mutation that can
+    trip HALT. The doc's 'never mutates' phrasing must be scoped to the two
+    SUSPECT flags only, so it can't be misread as covering this case."""
+    assert SKILL_MD.exists(), f"missing {SKILL_MD}"
+    text = SKILL_MD.read_text()
+    section = _batch_mode_section(_body(text))
+
+    never_mutates_idx = section.lower().find("never mutates")
+    assert never_mutates_idx != -1, "missing the 'never mutates' informational-flags sentence"
+    nearby = section[never_mutates_idx:never_mutates_idx + 120].lower()
+    assert "these two flags" in nearby or "either of these two" in nearby, (
+        "'never mutates' must be explicitly scoped to the two SUSPECT flags, "
+        "not phrased as an unqualified claim about reconcile"
+    )
+
+    auto_failed_idx = section.find("AUTO-FAILED")
+    assert auto_failed_idx != -1, "missing the AUTO-FAILED transition sentence"
+    assert auto_failed_idx > never_mutates_idx, (
+        "AUTO-FAILED sentence must follow (and thus not be covered by) the "
+        "scoped 'never mutates' sentence"
+    )
+
+    auto_failed_context = section[auto_failed_idx - 200:auto_failed_idx + 300].lower()
+    assert "definitive" in auto_failed_context and (
+        "failed" in auto_failed_context and "killed" in auto_failed_context
+    ), "AUTO-FAILED sentence must name definitive failed/killed wf-record evidence"
+    assert "mutat" in auto_failed_context or "halt" in auto_failed_context, (
+        "AUTO-FAILED sentence must flag it as a real, breaker-visible mutation"
+    )
