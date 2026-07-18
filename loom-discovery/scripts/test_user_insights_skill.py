@@ -86,6 +86,31 @@ def test_template_has_job_story_phrasing():
     )
 
 
+def test_validate_step_wired_with_bounded_retry():
+    # Why: Task 3 — the discovery validator must be mandatory before declaring
+    # done, with a bounded fix-and-rerun loop (not infinite retry, not a
+    # silent skip) — mirrors product-principles Step 8's validator wiring.
+    body = SKILL.read_text(encoding="utf-8")
+    assert "validate_discovery_artifacts.py" in body, (
+        "validator invocation missing from SKILL.md"
+    )
+    assert "bounded at 2 attempts" in body, (
+        "the 2-attempt fix-and-rerun bound must be stated explicitly"
+    )
+    assert "surface" in body and "user" in body, (
+        "must document surfacing remaining problems to the user after exhaustion"
+    )
+
+
+def test_validate_step_tolerates_greenfield_first_run():
+    # Why: first-run artifact creation (assess-first intermediate state) must
+    # not be treated as a validator failure — plan Task 3 explicit constraint.
+    body = SKILL.read_text(encoding="utf-8")
+    assert "greenfield" in body.lower() or "first-run" in body.lower(), (
+        "must document tolerance for greenfield/first-run artifact creation"
+    )
+
+
 def test_no_nested_subfolders():
     # Why: Anthropic skill convention — subfolders stay single-level (hook-enforced).
     for sub in SKILL_DIR.iterdir():

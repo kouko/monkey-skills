@@ -155,6 +155,21 @@ translate):
    ratifies; mark the ratification date.
 5. **Close** with §Risks & open questions; unsupported claims live there, never
    in Opportunity space as if settled.
+6. **Validate, then fix.** Run the validator on the produced artifact folder
+   **before declaring the discovery done**:
+
+   ```
+   python3 <resolved-absolute-path-to>/loom-discovery/scripts/validate_discovery_artifacts.py docs/loom/discovery/<date>-<slug>/
+   ```
+
+   Non-zero exit → fix the reported problems and re-run, **bounded at 2 attempts**;
+   if still non-zero after 2 fix-and-rerun cycles, stop and
+   surface the remaining problems to the user in plain language — never
+   silently proceed. The validator tolerates greenfield/first-run artifact
+   creation (the assess-first intermediate state — `business-value.md` alone,
+   before `user-insights.md` exists — is a sanctioned pass, not a failure); a
+   genuine schema violation must never be waved through under that same
+   "it's new" excuse.
 
 ## References
 
