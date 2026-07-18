@@ -76,6 +76,35 @@ dispatches (one per lens). Do not blanket re-sweep every round.
 4. **Honesty rail**: "dry" means *no new gap under the current lenses* — it does
    **NOT** mean the design is complete (see the blind-spots rule).
 
+## Mechanical pre-check — before panel dispatch
+
+**Before dispatching the panel, grep the artifact(s) under critique for two
+schema violations.** Either hit emits a **`NEEDS_REVISION`** finding
+directly — no panel needed for that finding; the panel still runs for
+everything else:
+
+1. **Out-of-enum tag value** — any `evidence_needed:` value other than
+   `craft`, `domain-convention`, or `project-local` (the knowledge-triage
+   pinned vocabulary; see `interaction-flows`/`design-system`'s
+   `references/knowledge-triage.md`).
+2. **Tier-label discipline** — two literal sub-greps against an
+   `evidence_needed: domain-convention` tag's neighborhood. Whether an item
+   genuinely IS SHAPING stays the **panel's judgment** — this pre-check
+   never classifies SHAPING-ness itself; it only checks for the literal
+   label `references/knowledge-triage.md`'s tier-label supplement now
+   requires every tagged open question to carry:
+   - **(2a) untiered tag** — an `evidence_needed: domain-convention` tag
+     with NO literal `SHAPING` or `DEFERRABLE` label in its neighborhood.
+   - **(2b) unlabeled deferred SHAPING** — a literal `SHAPING` label whose
+     item is also declared non-blocking / deferred WITHOUT a
+     `deferred: <reason>` marker. SHAPING never ships as non-blocking: it
+     either resolves before this station's gate or carries
+     `deferred: <reason>`.
+
+This check runs FIRST, every time, and never substitutes for the panel —
+run the loop below regardless of whether it fires. Verdict vocabulary is
+unchanged (`PASS_WITH_NOTES` / `NEEDS_REVISION`).
+
 ## The multi-lens critic panel
 
 The lenses run as a **dispatched panel**, not one agent doing sequential passes.
