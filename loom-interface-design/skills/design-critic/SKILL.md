@@ -253,7 +253,10 @@ loom-code's reviewer vocabulary):
   could not be concretely re-seeded and needs the writer to redo a surface,
   **or** `../../scripts/validate_design_output.py` fails after write-back.
   Resolution: route back to `design-system` / `interaction-flows` for the
-  flagged surfaces, then re-run this critic.
+  flagged surfaces, then re-run this critic. This outer writer↔critic
+  revision cycle is capped at 2: on the 2nd consecutive `NEEDS_REVISION`
+  after a revision, stop re-running and hand back to the user with a
+  plain-language list of unresolved findings — never silently proceed.
 - **`PASS_WITH_NOTES`** — dry, findings re-seeded (`critic-found`), Blind
   spots non-empty. Resolution: the change-folder proceeds — `ui-flows.md`
   hands to `loom-spec:spec-expansion`.
