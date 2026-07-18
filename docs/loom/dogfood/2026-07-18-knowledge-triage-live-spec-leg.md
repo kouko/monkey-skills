@@ -186,10 +186,21 @@ T14 reviewers and re-run at commit time.
   precise file:line problems. Pre-v2.1 this artifact sailed through.
   **The quietly-wrong state no longer exists at this station.**
 
-(iii) Design-station pre-check is critic-side prose (not headless-testable
-pre-merge per the deploy-surface memory); its conditions are the same
-literal-grep shape as the spec validator's and were cold-read verified in
-review. Post-merge live exercise rides the next real design run.
+(iii) Design-station pre-check — CLOSED pre-merge via repo-text execution
+(2026-07-18, third domain: Taiwan clinic queue/triage seed): a fresh haiku
+drafting run on the installed (pre-v2.1) skill produced a 268-line
+ui-flows.md with one untiered `evidence_needed: domain-convention` tag
+(line 254 — the drafter doesn't know the new literal-tier obligation yet,
+as expected) and two correctly-untiered project-local tags. A haiku
+executor given ONLY the repo design-critic pre-check section + the
+artifact produced the exact mechanical answer: (2a) fires on line 254
+alone, (1)/(2b) no-fire with mechanical reasons, two independent scans
+byte-identical, NEEDS_REVISION emitted, and it quoted the
+never-classifies-SHAPING clause unprompted. The pre-check is genuinely
+mechanical under weak execution. (Side datum: the first drafting attempt
+narrated its analysis and ended WITHOUT writing the file — the known
+haiku no-deliverable stall — caught because the oracle is the file on
+disk, not the session's self-report.)
 
 Full artifacts: session scratchpad `dogfood-live-spec/spec-out/` (strong
 leg), `dogfood-live-spec-haiku/spec-out/` (weak spec leg),
