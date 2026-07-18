@@ -67,6 +67,14 @@ stub, or a filing whose per-filing dei calendar was unreadable/None) is
 surfaced as UNCLASSIFIABLE — never guessed from period_end/calendar
 position, never keyed by the calendar year.
 
+Task 7 extends `build_series_with_break` with the single-granularity view
+(annual vs quarterly, never mixed), the fiscal-range output filter on each
+fact's OWN emitted fiscal label, and the `no_quarterly_coverage` coverage
+flag — delegated to the data layer's pure `_dimension_quarterly_absence`
+via a deliberate FUNCTION-LEVEL import (module-level imports here stay
+stdlib + kpi_series so the module remains offline-importable; see
+`_dimension_quarterly_absence_flags`).
+
 Task 6 adds a thin argparse CLI (`build`), mirroring `kpi_memo_feed.py`'s
 CLI shape and fail-loud exit-code convention: reads a fact-pack JSON from
 `--file`/stdin and a binding JSON from `--binding`, calls `resolve_binding`
@@ -572,7 +580,102 @@ def resolve_binding(fact_pack: dict, binding: dict, company: str) -> list[dict]:
     return points
 
 
-def build_series_with_break(points: list[dict], break_at_period: str) -> dict:
+_SERIES_GRANULARITIES = frozenset({"annual", "quarterly"})
+_SINGLE_QUARTER_TYPES = frozenset({"Q1", "Q2", "Q3", "Q4"})
+
+
+def _point_fiscal_year(point: dict) -> int:
+    """A point's fiscal-year key as an int — `period` is the EMITTED
+    fiscal_year label (`str(fiscal_year)` by construction, `_require_period`).
+    A point with no integer-parseable period is surfaced loud — never
+    silently kept in (or dropped from) a range-filtered series."""
+    try:
+        return int(point["period"])
+    except (KeyError, TypeError, ValueError):
+        raise ValueError(
+            f"kpi_xbrl.build_series_with_break: point carries no integer "
+            f"fiscal period key (period={point.get('period')!r}, "
+            f"kpi_id={point.get('kpi_id')!r}) — cannot range-filter, "
+            f"surfaced rather than guessed in or out of range"
+        ) from None
+
+
+def _validate_fiscal_range(fiscal_range) -> tuple[int, int]:
+    """`(since_year, until_year)` as validated ints, fail-loud on any other
+    shape — a malformed range must never silently emit everything."""
+    try:
+        since, until = fiscal_range
+    except (TypeError, ValueError):
+        raise ValueError(
+            f"kpi_xbrl.build_series_with_break: fiscal_range must be a "
+            f"(since_year, until_year) pair, got {fiscal_range!r}"
+        ) from None
+    for bound in (since, until):
+        if isinstance(bound, bool) or not isinstance(bound, int):
+            raise ValueError(
+                f"kpi_xbrl.build_series_with_break: fiscal_range bounds must "
+                f"be integers, got {fiscal_range!r}"
+            )
+    if since > until:
+        raise ValueError(
+            f"kpi_xbrl.build_series_with_break: fiscal_range is inverted "
+            f"({since} > {until}) — an empty-by-construction range is "
+            f"surfaced, never silently an empty series"
+        )
+    return since, until
+
+
+def _filter_single_granularity(points: list[dict], granularity: str) -> list[dict]:
+    """The single-granularity view of `points` (spec: 'A series carries a
+    single granularity'): `"annual"` keeps only FY totals; `"quarterly"`
+    keeps only single-quarter points (Q1-Q4, non-cumulative — the spec's
+    quarterly-series scenario admits 'only single-quarter (and, if enabled,
+    derived-Q4) points', so FY totals AND 6mo/9mo YTD cumulatives are both
+    off-granularity, excluded — never averaged or concatenated in)."""
+    if granularity == "annual":
+        return [p for p in points if p.get("period_type") == "FY"]
+    return [
+        p for p in points
+        if p.get("period_type") in _SINGLE_QUARTER_TYPES and not p.get("cumulative")
+    ]
+
+
+def _dimension_quarterly_absence_flags(facts: list[dict]) -> list[dict]:
+    """Partition `facts` by the emitted label group (fiscal_quarter FY =
+    annual/10-K, anything else = quarterly/10-Q) and delegate to the data
+    layer's PURE `_dimension_quarterly_absence` (sec_edgar_client.py) —
+    its production caller, re-homed to the series build per the plan's
+    2026-07-17 Decision Log (the spec's WHEN — 'when the quarterly series
+    is built' — lives here, and calling the existing helper avoids a
+    reimplementation drifting from the data layer's signature/window
+    semantics).
+
+    The import is FUNCTION-LEVEL on purpose: sec_edgar_client does a
+    module-level `import requests`, so importing it at kpi_xbrl module
+    scope would break this module's offline importability (docs/loom/
+    memory/importing-a-module-runs-its-module-level-imports.md) — kpi_xbrl's
+    module-level imports stay stdlib + kpi_series, and the data layer is
+    paid for only when absence flagging is actually requested. The helper
+    itself is pure dict->list compute (no network call); offline tests stub
+    requests/edgar in sys.modules before exercising this path."""
+    data_scripts = _SCRIPT_DIR.parent.parent / "data-markets" / "scripts"
+    if str(data_scripts) not in sys.path:
+        sys.path.insert(0, str(data_scripts))
+    import sec_edgar_client  # noqa: PLC0415 — deliberate lazy cross-layer import
+
+    annual = [f for f in facts if f.get("fiscal_quarter") == "FY"]
+    quarterly = [f for f in facts if f.get("fiscal_quarter") != "FY"]
+    return sec_edgar_client._dimension_quarterly_absence(annual, quarterly)
+
+
+def build_series_with_break(
+    points: list[dict],
+    break_at_period: str,
+    *,
+    granularity: str | None = None,
+    fiscal_range: tuple[int, int] | None = None,
+    facts: list[dict] | None = None,
+) -> dict:
     """Split `points` at a declared structural boundary `break_at_period`,
     delegating to `kpi_series.split_series` (plain-args pure compute, NO
     persisted break lifecycle) — never a naive concatenation across a
@@ -580,12 +683,79 @@ def build_series_with_break(points: list[dict], break_at_period: str) -> dict:
 
     Builds a local `applied_breaks = [{"break_period": break_at_period}]`
     from the declared boundary and returns `split_series`'s dict
-    (`{as_reported, recast, break_markers}`) unchanged. This is NOT a
+    (`{as_reported, recast, break_markers}`). This is NOT a
     reimplementation of the partitioning logic — kpi_series.split_series
     owns it.
+
+    Task 7 (docs/loom/plans/2026-07-16-operational-kpi-quarterly.md):
+
+    - `granularity` ("annual" | "quarterly") requests a SINGLE-granularity,
+      granularity-LABELED series (the result carries `granularity`):
+      off-granularity points are excluded per `_filter_single_granularity`.
+      With NO granularity requested, a mixed FY + sub-annual point set is
+      REJECTED loud — a series carries a single granularity, and the mix is
+      never silently averaged or concatenated (spec: 'mixing granularities
+      is rejected').
+    - `fiscal_range` = (since_year, until_year): only points whose OWN
+      emitted fiscal label falls in-range are emitted (spec, critic round
+      2: 'emitted points are range-filtered by each fact's OWN fiscal
+      label'). The filter applies to EMITTED points — upstream
+      resolve_binding already used out-of-range-filing comparatives for
+      dedup/restatement, and that internal work is never undone here.
+    - `facts` (requires granularity="quarterly"): the fact set the series
+      was built from; 10-K-only dimensional signatures with no 10-Q fact
+      for the same fiscal year surface as `coverage_flags` entries
+      (`no_quarterly_coverage` — identity-only, no `value` key: distinct
+      from a real zero, and never a discontinued-segment verdict) via the
+      data layer's `_dimension_quarterly_absence`.
     """
+    if granularity is not None and granularity not in _SERIES_GRANULARITIES:
+        raise ValueError(
+            f"kpi_xbrl.build_series_with_break: unknown granularity "
+            f"{granularity!r} — expected one of "
+            f"{sorted(_SERIES_GRANULARITIES)} or None"
+        )
+    if facts is not None and granularity != "quarterly":
+        raise ValueError(
+            "kpi_xbrl.build_series_with_break: `facts` (the no-quarterly-"
+            "coverage flagging input) requires granularity='quarterly' — "
+            "the dimension-absent-from-quarterlies flag is defined for the "
+            "quarterly series build only"
+        )
+    if fiscal_range is not None:
+        since, until = _validate_fiscal_range(fiscal_range)
+        points = [p for p in points if since <= _point_fiscal_year(p) <= until]
+    if granularity is not None:
+        points = _filter_single_granularity(points, granularity)
+    elif any(p.get("period_type") == "FY" for p in points) and any(
+        p.get("period_type") != "FY" for p in points
+    ):
+        raise ValueError(
+            "kpi_xbrl.build_series_with_break: points mix annual (FY) and "
+            "sub-annual period types — a series carries a single "
+            "granularity; request granularity='annual' or 'quarterly' to "
+            "select one (off-granularity points are then excluded). The "
+            "mix is rejected, never silently averaged or concatenated."
+        )
+
     applied_breaks = [{"break_period": break_at_period}]
-    return kpi_series.split_series(points, applied_breaks)
+    result = kpi_series.split_series(points, applied_breaks)
+    if granularity is not None:
+        result["granularity"] = granularity
+    if facts is not None:
+        flags = _dimension_quarterly_absence_flags(facts)
+        if fiscal_range is not None:
+            # A flag for a fiscal year outside the requested range is
+            # out-of-range noise; a flag whose fiscal_year is not an int
+            # cannot be placed and stays SURFACED, never silently dropped.
+            flags = [
+                f for f in flags
+                if not isinstance(f.get("fiscal_year"), int)
+                or isinstance(f.get("fiscal_year"), bool)
+                or since <= f["fiscal_year"] <= until
+            ]
+        result["coverage_flags"] = flags
+    return result
 
 
 def _cli_build(args: argparse.Namespace) -> int:
