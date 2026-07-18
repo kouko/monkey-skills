@@ -701,6 +701,177 @@ def test_anchors_and_deviation_ledger_combined_valid(tmp_path):
     )
 
 
+# --- evidence_needed: / — assumption: marker whitelist (Task 16, cut (d)) --
+# BACKLOG.md §knowledge-triage v2.1 cut (d): mechanize the two duties that
+# died in prose on the real leg-3 haiku dogfood run (docs/loom/dogfood/
+# 2026-07-18-knowledge-triage-live-spec-leg.md) — an invented
+# `evidence_needed:` bucket (leg-1's real failure, same enum) and a bare
+# `— assumption:` marker with no recorded reason.
+
+def test_evidence_needed_whitelisted_value_passes(tmp_path):
+    doc = (
+        _valid_doc(3) + "\n## Open Questions\n\n"
+        f"1. Whether pricing needs a regional benchmark {EM} re-trigger: "
+        f"revisit after Q3 cohort data; evidence_needed: domain-convention\n"
+    )
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert ok, f"whitelisted evidence_needed value should pass, got: {problems}"
+
+
+def test_evidence_needed_invented_value_flagged(tmp_path):
+    # Real leg-1 failure mode (loom-spec sibling cut (a)): a weak executor
+    # invents an out-of-enum bucket instead of using the pinned three.
+    doc = (
+        _valid_doc(3) + "\n## Open Questions\n\n"
+        f"1. Whether pricing needs a regional benchmark {EM} re-trigger: "
+        f"revisit after Q3 cohort data; evidence_needed: technical-constraint\n"
+    )
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert not ok
+    assert any(
+        "evidence_needed" in m and "technical-constraint" in m for m in problems
+    ), problems
+
+
+def test_assumption_marker_with_reason_passes(tmp_path):
+    doc = (
+        "# PRINCIPLES\n\n" + _north_star() + "\n## Product Principles\n\n"
+        f"1. First principle{EM} check: testable condition{EM} assumption: "
+        f"industry churn benchmark unavailable, used an analogous vertical.\n"
+        f"2. Second principle{EM} check: testable condition two.\n"
+        f"3. Third principle{EM} check: testable condition three.\n"
+    )
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert ok, f"assumption marker with a stated reason should pass, got: {problems}"
+
+
+def test_assumption_marker_empty_reason_flagged(tmp_path):
+    # A bare '— assumption:' with nothing after the colon records nothing a
+    # later reader could re-verify -- the exact evasion knowledge-triage.md
+    # §Standing posture warns against.
+    doc = (
+        "# PRINCIPLES\n\n" + _north_star() + "\n## Product Principles\n\n"
+        f"1. First principle{EM} check: testable condition{EM} assumption:\n"
+        f"2. Second principle{EM} check: testable condition two.\n"
+        f"3. Third principle{EM} check: testable condition three.\n"
+    )
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert not ok
+    assert any("assumption" in m for m in problems), problems
+
+
+# --- Anchors provenance check (optional --seed arg; Task 16, cut (d)) ------
+# Fixtures below are copied VERBATIM from the real leg-3 dogfood artifact:
+# docs/loom/dogfood/.../dogfood-live-principles-haiku/docs/loom/PRINCIPLES.md
+# (fabricated Anchors rows) and .../dogfood-live-principles-haiku/seed.md
+# (the real seed those rows falsely claim to be anchored on). Do not
+# reword these strings -- the calibration comment in
+# validate_principles_output.py cites their exact character lengths.
+
+_LEG3_SEED = (
+    "# Seed: Meal-kit subscription for Tokyo dual-income households\n"
+    "\n"
+    "Weekly menu subscription with home delivery. Target: dual-income\n"
+    "households in Tokyo who cook 2-3 nights a week. Main business worry is\n"
+    "monthly churn; we believe convenience and menu variety drive retention.\n"
+    "Delivery must fit workday evenings. Pricing sits between supermarket\n"
+    "ingredients and takeout.\n"
+)
+
+_LEG3_ANCHORS_HONEST_ROW = (
+    "| Tokyo market focus | Seed commitment; seed version 2026-07-18; "
+    "dual-income households target; 2-3 nights per week usage pattern |\n"
+)
+
+_LEG3_ANCHORS_FABRICATED_ROWS = (
+    "| Delivery timing constraint | 6pm delivery window anchored to seed; "
+    "workday evening pattern constraint |\n"
+    "| Pricing anchor | ¥1500-2000 per meal range; seed constraint "
+    "between supermarket and takeout |\n"
+    "| Menu operation | 12-week menu rotation cycle; no repeat guarantee "
+    "within window |\n"
+    "| Success metric | 8-month retention target; seed success criteria |\n"
+)
+
+
+def _anchors_leg3(rows: str) -> str:
+    return (
+        "## Anchors\n\n"
+        "| Market & user constraint | Pinned version/edition |\n"
+        "| --- | --- |\n"
+        + rows
+    )
+
+
+def test_anchors_provenance_skipped_when_no_seed_arg(tmp_path):
+    # Backward compatible: no --seed -> the fabricated rows validate OK
+    # (existing callers of validate(path) are unaffected).
+    doc = _valid_doc(3) + "\n" + _anchors_leg3(_LEG3_ANCHORS_FABRICATED_ROWS)
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    ok, problems = validate(p)
+    assert ok, f"no --seed -> provenance check must be skipped, got: {problems}"
+
+
+def test_anchors_provenance_honest_row_passes_with_seed(tmp_path):
+    # The row's phrases (e.g. "dual-income households") DO appear in the
+    # real seed -- must PASS.
+    doc = _valid_doc(3) + "\n" + _anchors_leg3(_LEG3_ANCHORS_HONEST_ROW)
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    seed = tmp_path / "seed.md"
+    seed.write_text(_LEG3_SEED, encoding="utf-8")
+    ok, problems = validate(p, seed)
+    assert ok, f"row anchored in the real seed should pass, got: {problems}"
+
+
+def test_anchors_provenance_fabricated_rows_fail_with_seed(tmp_path):
+    # Real leg-3 failure: Anchors rows labeled "anchored to seed" / "seed
+    # constraint" for numbers absent from the seed (6pm, ¥1500-2000,
+    # 8-month/7% retention) -- must FAIL against the real seed.
+    doc = _valid_doc(3) + "\n" + _anchors_leg3(_LEG3_ANCHORS_FABRICATED_ROWS)
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    seed = tmp_path / "seed.md"
+    seed.write_text(_LEG3_SEED, encoding="utf-8")
+    ok, problems = validate(p, seed)
+    assert not ok
+    assert any("Delivery timing constraint" in m for m in problems), problems
+    assert any("Pricing anchor" in m for m in problems), problems
+    assert any("Success metric" in m for m in problems), problems
+
+
+def test_anchors_provenance_non_seed_claiming_row_not_checked(tmp_path):
+    # "Menu operation" (the 12-week row) never uses the word "seed" in its
+    # provenance cell -- it claims no provenance to verify, so it is out of
+    # this check's scope even though its number is equally unsupported.
+    doc = _valid_doc(3) + "\n" + _anchors_leg3(_LEG3_ANCHORS_FABRICATED_ROWS)
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    seed = tmp_path / "seed.md"
+    seed.write_text(_LEG3_SEED, encoding="utf-8")
+    ok, problems = validate(p, seed)
+    assert not any("Menu operation" in m for m in problems), problems
+
+
+def test_anchors_provenance_missing_seed_file_reported(tmp_path):
+    doc = _valid_doc(3) + "\n" + _anchors_leg3(_LEG3_ANCHORS_HONEST_ROW)
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    missing_seed = tmp_path / "does-not-exist-seed.md"
+    ok, problems = validate(p, missing_seed)
+    assert not ok
+    assert any("seed" in m.lower() for m in problems), problems
+
+
 # --- CLI contract (thin __main__) ------------------------------------------
 
 def _run_cli(target: Path):
@@ -725,3 +896,27 @@ def test_cli_nonzero_with_actionable_message_on_invalid(tmp_path):
     assert proc.returncode != 0
     combined = proc.stdout + proc.stderr
     assert "Principles" in combined, combined
+
+
+def test_cli_seed_flag_absent_keeps_provenance_skipped(tmp_path):
+    doc = _valid_doc(3) + "\n" + _anchors_leg3(_LEG3_ANCHORS_FABRICATED_ROWS)
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    proc = _run_cli(p)
+    assert proc.returncode == 0, proc.stderr + proc.stdout
+
+
+def test_cli_seed_flag_gates_provenance_and_fails(tmp_path):
+    doc = _valid_doc(3) + "\n" + _anchors_leg3(_LEG3_ANCHORS_FABRICATED_ROWS)
+    p = tmp_path / "PRINCIPLES.md"
+    p.write_text(doc, encoding="utf-8")
+    seed = tmp_path / "seed.md"
+    seed.write_text(_LEG3_SEED, encoding="utf-8")
+    proc = subprocess.run(
+        [sys.executable, str(SCRIPT), str(p), "--seed", str(seed)],
+        capture_output=True, text=True,
+        env={"PYTHONDONTWRITEBYTECODE": "1", "PATH": ""},
+    )
+    assert proc.returncode != 0
+    combined = proc.stdout + proc.stderr
+    assert "Anchors" in combined, combined

@@ -78,6 +78,16 @@
   run, every validator-enforced dimension survived and every prose-only
   duty died. The mechanize-the-consequences thesis is confirmed, not
   just inferred.
+- Next-touch (from cut-d review, 2026-07-18): the `--seed` provenance
+  check has no in-skill caller — product-principles has no persisted
+  raw-seed-file convention, so Step 8 cannot pass the flag (T16
+  spec-reviewer endorsed omission; live callers today = dogfood/CI
+  harnesses holding the seed independently). Re-trigger: when
+  loom-pipeline (or any headless driver) starts persisting its
+  run-input seed to a fixed path, add a conditional pass-through
+  sentence to product-principles SKILL.md Step 8. Also re-measure
+  `_PROVENANCE_MIN_MATCH` (n=1, 3-char corridor) against the next real
+  dogfood artifact.
 
 ## loom-code ask-triage 0.30.0 — live telemetry A/B (OPEN)
 - Status: OPEN

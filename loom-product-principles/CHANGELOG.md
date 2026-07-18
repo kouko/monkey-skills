@@ -8,6 +8,23 @@ Versioning: [Semantic Versioning](https://semver.org/).
 > This file was reconstructed on 2026-07-02 from the git history — the plugin
 > shipped its first two versions without a CHANGELOG.
 
+## [0.11.0] — 2026-07-18 — mechanize marker whitelist + Anchors provenance
+
+### Added
+
+- **`scripts/validate_principles_output.py`**: two new mechanical checks
+  (BACKLOG.md §knowledge-triage v2.1 cut (d), leg-3 dogfood failure —
+  `docs/loom/dogfood/2026-07-18-knowledge-triage-live-spec-leg.md`). (1)
+  `evidence_needed:` value whitelist {craft, domain-convention,
+  project-local} and a non-empty-reason check on `— assumption:` markers,
+  wherever either appears in the file. (2) A new OPTIONAL `--seed <path>`
+  CLI argument: when given, `## Anchors` rows whose provenance cell claims
+  seed origin (contains "seed") must share a literal substring
+  (calibrated threshold, see `_PROVENANCE_MIN_MATCH`) with the seed file
+  — catches the real leg-3 failure mode (Anchors rows labeled "anchored to
+  seed" for numbers the seed never stated). No `--seed` -> the provenance
+  check is skipped entirely (backward compatible).
+
 ## [0.10.0] — 2026-07-18 — standing knowledge-triage at check-drafting
 
 ### Added
