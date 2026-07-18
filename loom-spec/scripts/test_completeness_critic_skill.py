@@ -227,6 +227,20 @@ def test_outer_revision_cap_and_explicit_handback():
         "hand-back must be explicit, never a silent proceed"
 
 
+def test_verdict_step_mints_critic_verdict():
+    """§4c Fix-4 (Task 16): the verdict step must also mint a content-hash-bound
+    verdict file via mint_critic_verdict.py — for BOTH verdict values, so a
+    downstream consumer can distinguish "ran and blocked" from "never ran"."""
+    text = _text()
+    low = text.lower()
+    assert "mint_critic_verdict.py" in text, \
+        "verdict section must cite the mint_critic_verdict.py script"
+    assert "--critic completeness-critic" in text, \
+        "mint invocation must pass --critic completeness-critic"
+    assert "both" in low and "mint" in low, \
+        "must state both verdict values mint (NEEDS_REVISION still mints)"
+
+
 def test_severity_scale_defined():
     """Rank = severity x cross-lens convergence, but severity itself was never
     defined here (design-critic defines a 3-point scale). The two critics'

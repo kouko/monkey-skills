@@ -439,6 +439,10 @@ revise/proceed signal instead of inferring one from prose:
   re-seeded (`critic-found`), and `## Blind spots` is non-empty as required.
   Resolution: hand to human review → loom-code VERIFY.
 
+Then mint it — both values mint: `../../scripts/mint_critic_verdict.py mint
+--change-folder <path> --critic completeness-critic --verdict-file <path>
+--files <comma-list>`.
+
 There is deliberately **no unqualified PASS** in this enum: a critic verdict
 claiming nothing remains would itself be a completeness claim (§Ban claiming
 "complete"), and the mandatory non-empty Blind spots means every clean outcome
