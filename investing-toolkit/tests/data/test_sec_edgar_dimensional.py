@@ -1987,3 +1987,151 @@ def test_selection_guess_reconciled_post_fetch(sec_client):
     flagged_accessions = {a for f in flags for a in f["accessions"]}
     assert confirmed_rec["accession"] not in flagged_accessions, flags
     assert len(flags) == 2, flags
+
+
+# ---------------------------------------------------------------------------
+# Task 16 (2026-07-16-operational-kpi-quarterly REBUILD) — boundary tolerance
+# + projection derivation basis. (a) A period_end beyond
+# FISCAL_BOUNDARY_TOLERANCE_DAYS of EVERY fiscal-quarter boundary is
+# UNCLASSIFIABLE: flagged via the ONE DQC schema and QUARANTINED (the fact is
+# excluded from fiscal-labeled output, the run continues) — never
+# nearest-guessed onto the closest boundary, never a whole-run abort for one
+# transition/stub period. (b) Every fiscal label records its derivation
+# basis: "dei-declared" (the year-end tag/declaration in hand — per-fact
+# labels always rest on their OWN filing's in-hand dei calendar) or
+# "projected" (the coverage layer's +12mo forward projection of the prior
+# declared FYE for an in-progress fiscal year whose declaration does not yet
+# exist — sanctioned FALLBACK only), so an auditor can separate
+# authority-confirmed labels/verdicts from projection-grounded ones.
+# Fixture: a freshly-parsed COPY of the machine-captured NVDA range records
+# (T14 precedent — the file is never touched) with ONLY the one revenue
+# row's period_start/period_end mutated to stage the transition-stub
+# premise; the AAPL completeness fixture drives the projected-basis leg
+# through the same wiring as the in-progress-FY test above.
+# ---------------------------------------------------------------------------
+
+def test_label_tolerance_and_projection_basis(sec_client):
+    """(a) An out-of-tolerance (transition/stub) period_end is flagged
+    unclassifiable (DQC schema) and quarantined — no nearest-boundary guess,
+    no extraction abort; sibling filings' facts still emit. (b) Per-fact
+    fiscal labels carry derivation_basis="dei-declared"; a coverage record
+    for an in-progress fiscal year grounded on the +12mo projected FYE
+    carries derivation_basis="projected" (its not_yet_filed verdicts are
+    thereby marked projection-grounded), while a 10-K-anchored year carries
+    "dei-declared" — never indistinguishable."""
+    # --- (a) tolerance: staged stub period on the Q2 filing ----------------
+    fixture = json.loads((FIXTURES / "xbrl_quarterly_nvda_range.json").read_text())
+    records = fixture["filings"]  # freshly parsed copies; file never touched
+    stub_rec = records[1]
+    mutated = [
+        row for row in stub_rec["raw_facts"] if row["concept"] == "us-gaap:Revenues"
+    ]
+    assert len(mutated) == 1, "fixture sanity: exactly one revenue row to stage"
+    # Counterfactual stub window (documented, T14 precedent — only these two
+    # values change): period_end 2025-06-15 sits 51/40/132/224 days from the
+    # FY2026 Q1/Q2/Q3/Q4 nominal boundaries (2025-04-25 / 2025-07-25 /
+    # 2025-10-25 / 2026-01-25 per the captured --01-25 declaration) — beyond
+    # FISCAL_BOUNDARY_TOLERANCE_DAYS=10 from every one; the ~3.5-month span
+    # keeps it a sub-annual duration fact.
+    mutated[0]["period_start"] = "2025-03-01"
+    mutated[0]["period_end"] = "2025-06-15"
+
+    tenqs = [_filing_from_fixture(r) for r in records]
+    tenks = [
+        _metadata_only_filing(
+            r, reason="10-K index anchors serve pre-fetch selection from "
+                      "metadata only; their xbrl must never be fetched here",
+        )
+        for r in fixture["annual_filings_index"]
+    ]
+    company = mock.MagicMock(name="Company")
+    company.not_found = False
+    company.cik = 1045810
+    company.get_filings.side_effect = (
+        lambda form=None, **_kw: {"10-Q": tenqs, "10-K": tenks}.get(form, [])
+    )
+    sec_client.edgar_stub.Company.return_value = company
+
+    pack = sec_client.extract_dimensional_revenue(
+        "NVDA", form="10-Q", since_year=2026, until_year=2026,
+        as_of=datetime.date(2026, 7, 18),
+    )
+    assert "error" not in pack, (
+        f"one stub period must QUARANTINE the fact, never abort the whole "
+        f"extraction -- {pack}"
+    )
+    got = {f["accession"] for f in pack["facts"]}
+    assert records[0]["accession"] in got and records[2]["accession"] in got, (
+        f"sibling filings' facts still emit (quarantine, not abort) -- {got}"
+    )
+    assert not any(f["period_end"] == "2025-06-15" for f in pack["facts"]), (
+        "the stub fact must be excluded from fiscal-labeled output, never "
+        "nearest-guessed onto the 40-days-away Q2 boundary"
+    )
+    for fact in pack["facts"]:
+        assert fact["derivation_basis"] == "dei-declared", (
+            f"a per-fact fiscal label rests on its own filing's IN-HAND dei "
+            f"calendar -- {fact}"
+        )
+
+    flags = pack["coverage"]["unclassifiable_periods"]
+    assert isinstance(flags, list), pack["coverage"]
+    assert len(flags) == 1, flags
+    flag = flags[0]
+    assert set(flag) == {"type", "old", "new", "accessions", "reason"}, (
+        f"the unclassifiable flag follows the ONE DQC schema (plan kickoff "
+        f"decision: no per-class variants) -- {flag}"
+    )
+    assert flag["type"] == "unclassifiable_period", flag
+    assert flag["accessions"] == [stub_rec["accession"]], (
+        f"the flag must NAME the filing -- {flag}"
+    )
+    assert "2025-06-15" in flag["reason"], flag
+    assert "never nearest-guessed" in flag["reason"], flag
+
+    # --- (b) derivation basis: projected vs dei-declared coverage ----------
+    fixture_aapl = _load_aapl_quarterly_fixture()
+    filings = [
+        _filing_from_quarterly_fixture_record(fixture_aapl[key])
+        for key in (
+            "fy2025_10k", "fy2025_q1", "fy2025_q2", "fy2025_q3",
+            "fy2026_q1", "fy2026_q2",
+        )
+    ]
+    _aapl_company_stub(sec_client, filings)
+
+    pack2 = sec_client.extract_dimensional_revenue(
+        "AAPL", form="10-Q", since_year=2025, until_year=2026,
+        as_of=datetime.date(2026, 6, 1),
+    )
+    assert "error" not in pack2, pack2
+    assert pack2["coverage"]["unclassifiable_periods"] == [], (
+        "no stub period staged here — an empty list means 'ran, none "
+        "found', never a missing key"
+    )
+    by_year = {r["fiscal_year"]: r for r in pack2["coverage"]["quarterly_coverage"]}
+    assert set(by_year) == {2025, 2026}, by_year
+
+    fy2025 = by_year[2025]
+    assert fy2025["derivation_basis"] == "dei-declared", (
+        f"FY2025's fiscal calendar is anchored by its own filed 10-K (the "
+        f"declaration in hand) -- {fy2025}"
+    )
+    fy2026 = by_year[2026]
+    assert fy2026["derivation_basis"] == "projected", (
+        f"FY2026 is in progress (no 10-K/declaration yet): its fiscal "
+        f"calendar rests on the +12mo projection of FY2025's declared FYE "
+        f"and MUST say so — never indistinguishable from a dei-declared "
+        f"read -- {fy2026}"
+    )
+    # The projection-grounded not_yet_filed verdicts live under (and are
+    # thereby marked by) the projected-basis record.
+    missing_by_label = {m["filing"]: m["reason"] for m in fy2026["missing"]}
+    assert missing_by_label == {"10-K": "not_yet_filed", "Q3": "not_yet_filed"}, (
+        fy2026
+    )
+    # Per-fact labels in the same pack stay tag-grounded ("dei-declared"):
+    # every FETCHED filing carries its own in-hand dei calendar, including
+    # the in-progress year's 10-Qs.
+    for fact in pack2["facts"]:
+        assert fact["derivation_basis"] == "dei-declared", fact
