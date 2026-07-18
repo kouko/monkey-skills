@@ -156,6 +156,74 @@ _DURATION_CLASS_BY_MONTHS = {3: "3mo", 6: "6mo-YTD", 9: "9mo-YTD", 12: "12mo-FY"
 _CUMULATIVE_DURATION_CLASSES = frozenset({"6mo-YTD", "9mo-YTD"})
 _FISCAL_QUARTERS = frozenset({"Q1", "Q2", "Q3", "Q4", "FY"})
 
+# Task 3 (docs/loom/plans/2026-07-18-52-53-week-filer-support.md): week-lane
+# `duration_class` string morphology, keyed by the SHARED `_WEEK_BANDS`
+# label (sec_edgar_client.py) — follows the shipped month-lane pattern
+# ("9mo-YTD"/"12mo-FY"): a single-quarter-length band gets no suffix
+# ("16wk"), a YTD cumulative gets "-YTD" ("36wk-YTD"), the FY band gets
+# "-FY" ("52wk-FY"). Only "week-Q4" (16/17wk) and "YTD-through-Q3" (36wk)
+# are ever actually reached in practice — "quarter"/"H1"/"FY" band members
+# already round into the month lane, which has precedence (plan Notes:
+# class-lane precedence) — but the map covers every shipped band label so
+# a genuine miss is never silently unmapped.
+_WEEK_LANE_DURATION_CLASS_FORMAT = {
+    "quarter": "{weeks}wk",
+    "week-Q4": "{weeks}wk",
+    "H1": "{weeks}wk-YTD",
+    "YTD-through-Q3": "{weeks}wk-YTD",
+    "FY": "{weeks}wk-FY",
+}
+
+
+def _week_lane_duration_class(duration_weeks) -> str | None:
+    """Fallback week-lane `duration_class` lookup (Task 3) — consulted by
+    `classify_fact_period` ONLY when `duration_months` misses the month
+    lane (class-lane precedence, plan Notes: the month map is tried
+    first). Lazy-imports the SHARED `_WEEK_BANDS` allowlist from
+    sec_edgar_client.py, mirroring the `_dimension_quarterly_absence_flags`
+    lazy-import precedent above (:1140) — ONE band table, never a second
+    copy re-derived here.
+
+    Matches `duration_weeks` (the producer's ALREADY-ROUNDED int,
+    `_week_count`) by EXACT membership in a band's week-count tuple —
+    deliberately never reconstructs a day-span from it and re-checks
+    `sec_edgar_client._week_lane_class` (that would silently reintroduce
+    the ambiguity `_week_lane_class`'s tight day-band exists to guard
+    against: several raw spans round to the same week int, e.g. 361-367
+    days all round to 52 weeks, yet only 363-364 are genuine FY-band
+    members). That ambiguity is harmless here ONLY because every span
+    that rounds to 12 months (~350-380 days, covering weeks 51-53)
+    already matches `_DURATION_CLASS_BY_MONTHS` and never reaches this
+    fallback — month-lane precedence is the guard, not a check in this
+    function. Returns None (fail-closed, never guessed) when
+    `duration_weeks` is missing/non-int or matches no band."""
+    if not isinstance(duration_weeks, int) or isinstance(duration_weeks, bool):
+        return None
+    data_scripts = _SCRIPT_DIR.parent.parent / "data-markets" / "scripts"
+    if str(data_scripts) not in sys.path:
+        sys.path.insert(0, str(data_scripts))
+    import sec_edgar_client  # noqa: PLC0415 — deliberate lazy cross-layer import
+
+    for label, week_counts in sec_edgar_client._WEEK_BANDS:
+        if duration_weeks in week_counts:
+            return _WEEK_LANE_DURATION_CLASS_FORMAT[label].format(weeks=duration_weeks)
+    return None
+
+
+def _is_cumulative_duration_class(duration_class: str) -> bool:
+    """True for a YTD cumulative `duration_class` on EITHER lane — the
+    month lane's fixed set, or any week-lane class ending "wk-YTD" (Task
+    3; the format table above is the only producer of that suffix)."""
+    return duration_class in _CUMULATIVE_DURATION_CLASSES or duration_class.endswith(
+        "wk-YTD"
+    )
+
+
+def _is_fy_duration_class(duration_class: str) -> bool:
+    """True for an FY `duration_class` on EITHER lane — the month lane's
+    "12mo-FY", or a week-lane class ending "wk-FY" (Task 3)."""
+    return duration_class == "12mo-FY" or duration_class.endswith("wk-FY")
+
 # Task 9: a filing's SEC form derives from its own dei cover tag
 # `DocumentFiscalPeriodFocus` (threaded through the pack's per-accession
 # `fiscal_calendars`): an annual report declares FY, a quarterly report
@@ -285,12 +353,19 @@ def classify_fact_period(fact: dict) -> dict:
         )
     duration_class = _DURATION_CLASS_BY_MONTHS.get(duration_months)
     if duration_class is None:
+        # Class-lane precedence (plan Notes): the month map is tried
+        # FIRST; only on a miss does the week lane get a chance, via the
+        # fact's own emitted `duration_weeks` (Task 3).
+        duration_class = _week_lane_duration_class(fact.get("duration_weeks"))
+    if duration_class is None:
         raise _unclassifiable(
             fact,
             f"missing/non-standard duration_months ({duration_months!r}, "
-            f"expected one of {sorted(_DURATION_CLASS_BY_MONTHS)})",
+            f"expected one of {sorted(_DURATION_CLASS_BY_MONTHS)}) and no "
+            f"week-lane match for duration_weeks "
+            f"({fact.get('duration_weeks')!r})",
         )
-    if (fiscal_quarter == "FY") != (duration_class == "12mo-FY"):
+    if (fiscal_quarter == "FY") != _is_fy_duration_class(duration_class):
         raise _unclassifiable(
             fact,
             f"inconsistent labels: fiscal_quarter={fiscal_quarter!r} with "
@@ -299,7 +374,7 @@ def classify_fact_period(fact: dict) -> dict:
         )
     return {
         "period_type": fiscal_quarter,
-        "cumulative": duration_class in _CUMULATIVE_DURATION_CLASSES,
+        "cumulative": _is_cumulative_duration_class(duration_class),
         "duration_class": duration_class,
     }
 

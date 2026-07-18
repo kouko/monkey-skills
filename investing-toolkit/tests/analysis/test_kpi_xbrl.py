@@ -851,6 +851,45 @@ def test_classify_period_type(kpi_xbrl_module, nvda_quarterly_pack, aapl_quarter
         )
 
 
+def test_classify_period_week_lane(kpi_xbrl_module, stub_data_layer_deps):
+    """Task 3 RED (docs/loom/plans/2026-07-18-52-53-week-filer-support.md):
+    class-lane precedence — the month map is tried FIRST; only when
+    `duration_months` misses it (8 not in {3,6,9,12}) does `duration_weeks`
+    fall back to the week lane, lazy-importing the SHARED `_WEEK_BANDS`
+    table Task 1 shipped in sec_edgar_client.py (no second band table). A
+    36-week span matches the "YTD-through-Q3" band -> "36wk-YTD",
+    cumulative, fiscal_quarter Q3 (mirrors the shipped "9mo-YTD"/Q3
+    month-lane pattern). A sibling fact with the SAME month-lane miss but
+    no `duration_weeks` at all (neither lane can classify it) still raises
+    unclassifiable — fail-closed unchanged, never guessed."""
+    week_lane_fact = {
+        "concept": "us-gaap:Revenues",
+        "period_end": "2026-05-10",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "Q3",
+        "duration_months": 8,
+        "duration_weeks": 36,
+        "accession": "0000320193-26-000123",
+    }
+    classification = kpi_xbrl_module.classify_fact_period(week_lane_fact)
+    assert classification == {
+        "period_type": "Q3",
+        "cumulative": True,
+        "duration_class": "36wk-YTD",
+    }
+
+    no_week_lane_fact = {
+        "concept": "us-gaap:Revenues",
+        "period_end": "2026-05-10",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "Q3",
+        "duration_months": 8,
+        "accession": "0000320193-26-000123",
+    }
+    with pytest.raises(ValueError, match="unclassifiable"):
+        kpi_xbrl_module.classify_fact_period(no_week_lane_fact)
+
+
 def test_classify_uses_filing_dei_focus_not_calendar(kpi_xbrl_module, aapl_quarterly_pack):
     """Task 5 RED — the spec's Q2 scenario asserted LITERALLY (spec.md
     'non-December fiscal-year-end classifies by the filing's dei calendar'):
