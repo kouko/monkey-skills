@@ -43,6 +43,27 @@ BEFORE that call per
 docs/loom/memory/importing-a-module-runs-its-module-level-imports.md
 (mirrors test_kpi_xbrl.py's `stub_data_layer_deps`).
 
+Task 6 addition (docs/loom/plans/2026-07-18-52-53-week-filer-support.md):
+two more probes extend this same seam charter onto the week-lane —
+
+  - fixtures/xbrl_quarterly_cost_week_lane_factpack.json — MACHINE-CAPTURED
+    (real `pack.py --pack kpi-quarterly` fetch against live SEC EDGAR):
+    COST's real FY2024 MembershipMember facts (Q1-Q3 + derived Q4 + an H1
+    fact), driving `build_quarterly_series` -> `build_quarterly_memo_feed`
+    end-to-end on genuine week-based-filer XBRL.
+  - fixtures/xbrl_quarterly_cost_week_lane_yoy_synth.json — the one
+    SYNTHETIC fixture in this task (mirrors test_kpi_xbrl.py's already-
+    shipped `_cost_two_year_week_lane_fact_pack` factory verbatim): the
+    real captured pack's only reachable two-fiscal-year Q4 pair is
+    EQUAL-week, so the different-week `week_normalized_yoy` positive case
+    is exercised here instead (each fixture's own `_provenance` explains
+    why).
+  - `test_month_lane_chain_output_pinned_regression` pins a canonical
+    fingerprint of the EXISTING month-lane `combined_pack` chain's output
+    (Task 6's explicit regression requirement) — proving the week-lane
+    additions (T1-T5, same production files) left month-lane classification
+    byte-identical.
+
 No `@req` tags: this dispatch's plan traces work by named plan Tasks, NOT
 by registered loom-spec REQ-ids — so `@req` is omitted per the implementer
 contract (same convention as the sibling e2e module).
@@ -52,11 +73,12 @@ from __future__ import annotations
 import importlib.util
 import json
 import sys
+from datetime import date
 from unittest import mock
 
 import pytest
 
-from conftest import FIXTURES, KPI_XBRL_SCRIPT
+from conftest import FIXTURES, KPI_GATE_SCRIPT, KPI_MEMO_FEED_SCRIPT, KPI_XBRL_SCRIPT
 
 
 @pytest.fixture(scope="module")
@@ -67,6 +89,31 @@ def kpi_xbrl_module():
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     sys.modules["kpi_xbrl_quarterly_e2e"] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.fixture(scope="module")
+def kpi_memo_feed_module():
+    """Load kpi_memo_feed.py (Task 6: the feed half of the pack->series->feed
+    seam). Its same-dir import shim does a plain `import kpi_gate`, which
+    must resolve to a real "kpi_gate" module under its own name FIRST
+    (mirrors test_kpi_memo_feed.py's `_load_kpi_memo_feed_module` loader) —
+    the quarterly arm never touches the store gate itself (module docstring:
+    "Fail-closed WITHOUT the store gate"), but the import still runs at
+    module-exec time."""
+    scripts_dir = str(KPI_GATE_SCRIPT.parent)
+    if scripts_dir not in sys.path:
+        sys.path.insert(0, scripts_dir)
+    sys.modules.pop("kpi_gate", None)
+    import kpi_gate  # noqa: F401,E402
+
+    spec = importlib.util.spec_from_file_location(
+        "kpi_memo_feed_quarterly_e2e", KPI_MEMO_FEED_SCRIPT
+    )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["kpi_memo_feed_quarterly_e2e"] = module
     spec.loader.exec_module(module)
     return module
 
@@ -307,3 +354,284 @@ def test_quarterly_chain_deconflates_and_segregates_q4(
     for flag in fy2025["coverage_flags"]:
         assert kpi_xbrl_module.assert_dqc_schema(flag) is flag
     assert flag_types == {"restatement", "derived_q4"}
+
+
+# ---------------------------------------------------------------------------
+# Task 6 (docs/loom/plans/2026-07-18-52-53-week-filer-support.md): week-lane
+# chain seam probes + the month-lane regression pin.
+# ---------------------------------------------------------------------------
+
+
+def _fingerprint(pts):
+    """A stable, sortable snapshot of the facts that matter for the
+    month-lane regression pin — period_type/period/duration_class/value/
+    derived-flag/dqc-type — deliberately NOT the full point dict (source
+    accessions/as_of timestamps are already asserted individually above;
+    a fingerprint over EVERY field would be too brittle to be a useful
+    pin, catching formatting noise rather than classification/derivation
+    regressions)."""
+    return sorted(
+        (
+            p.get("period_type"),
+            p.get("period"),
+            p.get("duration_class"),
+            p.get("value"),
+            bool(p.get("derived")),
+            p.get("dqc", {}).get("type") if p.get("dqc") else None,
+        )
+        for p in pts
+    )
+
+
+def test_month_lane_chain_output_pinned_regression(
+    kpi_xbrl_module, combined_pack, stub_data_layer_deps
+):
+    """Task 6 RED->GREEN regression pin: re-runs the SAME month-lane chain
+    as `test_quarterly_chain_deconflates_and_segregates_q4` above (same
+    `combined_pack` fixture — NVDA + AAPL dualdur + AAPL Q4-derive, all
+    month-lane facts, no `duration_weeks`/`week_lane_band` fields at all)
+    and asserts a canonical fingerprint of every stage's output.
+
+    WHY this is a DISTINCT assertion from the test above (not a duplicate):
+    that test asserts individual fields path-by-path (thorough, but no
+    single assertion would catch e.g. a duration_class silently swapped
+    between two points, or a stray point appearing/disappearing, since
+    each assertion only inspects the fields it names). This test instead
+    pins the WHOLE set of (period_type, period, duration_class, value,
+    derived, dqc-type) tuples at every stage as ONE canonical snapshot —
+    the explicit regression guard Task 6 asks for: proof that landing the
+    week-lane classes in `classify_fact_period` (Task 3), the week-lane Q4
+    derivation branch (Task 4), and the week-normalized-YoY attachment
+    (Task 5) — all landed in the SAME production files
+    (sec_edgar_client.py, kpi_xbrl.py) this month-lane chain runs through —
+    left month-lane behavior byte-identical. A month-lane fact never
+    carries `duration_weeks`/`week_lane_band` (docs/loom/plans/2026-07-18-
+    52-53-week-filer-support.md Notes: class-lane precedence tries the
+    month map FIRST), so this also proves the week lane is a pure ADDITION,
+    never a re-decision of month-lane facts.
+    """
+    points = kpi_xbrl_module.resolve_binding(
+        combined_pack, QUARTERLY_CHAIN_BINDING, "MULTI"
+    )
+    # None of these real month-lane facts carry the week-lane fields at
+    # all — confirms this pin is genuinely exercising the OLD lane, not
+    # accidentally routing through the new week-lane branch.
+    for fact in combined_pack["facts"]:
+        assert "duration_weeks" not in fact
+        assert "week_lane_band" not in fact
+
+    derived = kpi_xbrl_module.derive_q4_points(
+        points, fiscal_calendars=combined_pack["fiscal_calendars"]
+    )
+    all_points = points + derived["points"]
+
+    fy2025 = kpi_xbrl_module.build_series_with_break(
+        all_points, "2018",
+        granularity="quarterly",
+        fiscal_range=(2025, 2025),
+        facts=combined_pack["facts"],
+    )
+    emitted = fy2025["as_reported"] + fy2025["recast"]
+    fy2026 = kpi_xbrl_module.build_series_with_break(
+        all_points, "2018", granularity="quarterly", fiscal_range=(2026, 2026),
+    )
+    emitted_2026 = fy2026["as_reported"] + fy2026["recast"]
+    reported = kpi_xbrl_module.build_series_with_break(
+        all_points, "2018",
+        granularity="quarterly",
+        fiscal_range=(2025, 2025),
+        reported_only=True,
+    )
+    reported_emitted = reported["as_reported"] + reported["recast"]
+
+    assert _fingerprint(all_points) == [
+        ("FY", "2025", "12mo-FY", 14100.0, False, None),
+        ("Q1", "2025", "3mo", 1050.0, False, "restatement"),
+        ("Q1", "2026", "3mo", 34155000000.0, False, None),
+        ("Q2", "2025", "3mo", 2000.0, False, None),
+        ("Q2", "2026", "3mo", 33844000000.0, False, None),
+        ("Q3", "2025", "3mo", 4100.0, False, None),
+        ("Q3", "2025", "9mo-YTD", 11100.0, False, None),
+        ("Q3", "2026", "3mo", 43028000000.0, False, None),
+        ("Q4", "2025", "3mo", 3000.0, True, "derived_q4"),
+    ]
+    assert _fingerprint(emitted) == [
+        ("Q1", "2025", "3mo", 1050.0, False, "restatement"),
+        ("Q2", "2025", "3mo", 2000.0, False, None),
+        ("Q3", "2025", "3mo", 4100.0, False, None),
+        ("Q4", "2025", "3mo", 3000.0, True, "derived_q4"),
+    ]
+    assert _fingerprint(emitted_2026) == [
+        ("Q1", "2026", "3mo", 34155000000.0, False, None),
+        ("Q2", "2026", "3mo", 33844000000.0, False, None),
+        ("Q3", "2026", "3mo", 43028000000.0, False, None),
+    ]
+    assert _fingerprint(reported_emitted) == [
+        ("Q1", "2025", "3mo", 1050.0, False, "restatement"),
+        ("Q2", "2025", "3mo", 2000.0, False, None),
+        ("Q3", "2025", "3mo", 4100.0, False, None),
+    ]
+    assert derived["gaps"] == []
+    assert fy2025["coverage_flags"] == []
+
+
+COST_WEEK_LANE_MATCH = {
+    "kpi_id": "cost_membership_fees",
+    "sources": [{
+        "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "dimensions": {"ProductOrService": "MembershipMember"},
+        "source_kind": "xbrl-dimensional",
+    }],
+}
+
+
+def test_week_lane_chain_real_cost_pack_to_feed(
+    kpi_xbrl_module, kpi_memo_feed_module, stub_data_layer_deps
+):
+    """Task 6 RED (see module note above the fixture composition for why
+    this is a genuine RED against pre-Task-1..5 code): drives the REAL
+    machine-captured COST week-lane fact pack (fixtures/
+    xbrl_quarterly_cost_week_lane_factpack.json — see its own
+    `_provenance`) through `build_quarterly_series` (Gate P/C via
+    `classify_fact_period` + week-lane Q4 derivation, production wiring)
+    and then `build_quarterly_memo_feed` (the 1.1 feed seam) — asserting
+    Gate P's week-boundary label, Gate C's week-lane duration classes, the
+    derived Q4's `duration_weeks`, and that the feed carries `duration_weeks`
+    through VERBATIM (module docstring: "1.1 verbatim passthrough").
+
+    Why this fails on pre-Task-1..5 code (reasoned, not re-run — the
+    dispatch's RED framing): `_DURATION_CLASS_BY_MONTHS` only ever mapped
+    {3, 6, 9, 12} -> month classes: the fixture's Q3-YTD fact
+    (duration_months=8) and H1 fact (duration_months=5) would have MISSED
+    that map and, pre-Task-3, `classify_fact_period` had NO week-lane
+    fallback branch at all (`_week_lane_duration_class` did not exist) —
+    so `resolve_binding` would raise the `_unclassifiable` ValueError on
+    the very first week-lane fact, before `build_quarterly_series` could
+    even reach Q4 derivation or the feed. Independently, pre-Task-1 the
+    producer never emitted `duration_weeks`/`week_lane_band` on ANY fact at
+    all, so even a hypothetical looser consumer would have nothing to key
+    off. Both are load-bearing preconditions this test's fixture actually
+    carries (every fact below has `duration_weeks` + `week_lane_band` set),
+    so the RED is real, not hypothetical.
+    """
+    pack = json.loads(
+        (FIXTURES / "xbrl_quarterly_cost_week_lane_factpack.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    # ---- Gate C direct pin: week-lane duration classes on the RAW facts,
+    # decoded straight from the producer's own week_lane_band + duration_weeks.
+    h1_fact = next(f for f in pack["facts"] if f["duration_months"] == 5)
+    assert kpi_xbrl_module.classify_fact_period(h1_fact) == {
+        "period_type": "Q2", "cumulative": True, "duration_class": "24wk-YTD",
+    }
+    q3_ytd_fact = next(
+        f for f in pack["facts"]
+        if f["fiscal_quarter"] == "Q3" and f["duration_months"] == 8
+    )
+    assert kpi_xbrl_module.classify_fact_period(q3_ytd_fact) == {
+        "period_type": "Q3", "cumulative": True, "duration_class": "36wk-YTD",
+    }
+    fy_fact = next(f for f in pack["facts"] if f["fiscal_quarter"] == "FY")
+    # The month lane KEEPS precedence even though this fact also carries a
+    # week-lane-eligible duration_weeks=52 (plan Notes, class-lane
+    # precedence) — "12mo-FY", never "52wk-FY".
+    assert kpi_xbrl_module.classify_fact_period(fy_fact) == {
+        "period_type": "FY", "cumulative": False, "duration_class": "12mo-FY",
+    }
+
+    # ---- Gate P direct pin: the Q3 period_end sits EXACTLY 16 weeks
+    # before the FILING'S OWN declared fiscal-year-end — the COST-shaped
+    # acceptance case from Task 2, on real captured data.
+    filing_fye = date.fromisoformat(
+        "2024-" + pack["fiscal_calendars"][q3_ytd_fact["accession"]][
+            "fiscal_year_end"
+        ].lstrip("-")
+    )
+    q3_period_end = date.fromisoformat(q3_ytd_fact["period_end"])
+    assert (filing_fye - q3_period_end).days == 16 * 7
+
+    # ---- Whole chain: pack -> series (production orchestration function).
+    result = kpi_xbrl_module.build_quarterly_series(pack)
+    assert result["coverage_flags"] == []
+    assert len(result["series"]) == 1
+    series = result["series"][0]
+    assert series["gaps"] == []
+
+    points_by_type = {p["period_type"]: p for p in series["points"]}
+    assert set(points_by_type) == {"Q1", "Q2", "Q3"}
+    # Reported quarters classify via month-lane precedence ("3mo"), while
+    # still carrying the honest week count (duration_weeks propagation,
+    # Task 4) regardless of which lane classified them.
+    for point in points_by_type.values():
+        assert point["duration_class"] == "3mo"
+        assert point["duration_weeks"] == 12
+
+    assert len(series["derived_points"]) == 1
+    q4 = series["derived_points"][0]
+    assert q4["period_type"] == "Q4"
+    assert q4["derived"] is True
+    assert q4["duration_class"] == "16wk"
+    assert q4["duration_weeks"] == 16  # 52wk FY - 36wk YTD
+    assert q4["value"] == pytest.approx(4828000000.0 - 3316000000.0)
+    assert q4["dqc"]["type"] == "derived_q4"
+    assert kpi_xbrl_module.assert_dqc_schema(q4["dqc"]) is q4["dqc"]
+
+    # ---- series -> feed (1.1 verbatim passthrough).
+    feed = kpi_memo_feed_module.build_quarterly_memo_feed(
+        "COST", result, "2026-07-18T00:00:00"
+    )
+    assert feed["status"] == "TRUSTED"
+    assert feed["_memo_feed_schema_version"] == "1.1"
+    feed_series = feed["series"][0]
+    feed_q4 = feed_series["derived_points"][0]
+    assert feed_q4["duration_weeks"] == 16
+    assert feed_q4["duration_class"] == "16wk"
+    assert feed_q4["value"] == q4["value"]
+    for feed_point in feed_series["points"]:
+        assert feed_point["duration_weeks"] == 12
+
+
+def test_week_lane_yoy_synth_attaches_supplementary_field_through_feed(
+    kpi_xbrl_module, kpi_memo_feed_module, stub_data_layer_deps
+):
+    """Task 6: the different-week `week_normalized_yoy` positive case,
+    driven from the one SYNTHETIC fixture in this task (fixtures/
+    xbrl_quarterly_cost_week_lane_yoy_synth.json — see its own
+    `_provenance` for why real captured data cannot reach this shape
+    within the fetch window) — asserting the supplementary field survives
+    `build_quarterly_series` -> `build_quarterly_memo_feed` unchanged, the
+    as-reported `value` is untouched, and the prior-year comparator (no
+    earlier comparator of its own) carries NO supplementary field."""
+    pack = json.loads(
+        (FIXTURES / "xbrl_quarterly_cost_week_lane_yoy_synth.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    result = kpi_xbrl_module.build_quarterly_series(pack)
+    derived = result["series"][0]["derived_points"]
+    by_period = {p["period"]: p for p in derived}
+    assert set(by_period) == {"2026", "2025"}
+
+    q4_2026, q4_2025 = by_period["2026"], by_period["2025"]
+    assert q4_2026["duration_weeks"] == 17
+    assert q4_2025["duration_weeks"] == 16
+    assert q4_2026["value"] == 22000.0  # 100000.0 FY - 78000.0 36wk-YTD, as-reported
+    assert q4_2025["value"] == 20000.0  # 88000.0 FY - 68000.0 36wk-YTD, as-reported
+
+    expected_yoy = (22000.0 / 17) / (20000.0 / 16) - 1
+    assert q4_2026["week_normalized_yoy"] == pytest.approx(expected_yoy, rel=1e-9)
+    assert "week_normalized_yoy" not in q4_2025
+
+    feed = kpi_memo_feed_module.build_quarterly_memo_feed(
+        "COST", result, "2026-07-18T00:00:00"
+    )
+    assert feed["status"] == "TRUSTED"
+    feed_by_period = {p["period"]: p for p in feed["series"][0]["derived_points"]}
+    assert feed_by_period["2026"]["week_normalized_yoy"] == pytest.approx(
+        expected_yoy, rel=1e-9
+    )
+    assert feed_by_period["2026"]["value"] == 22000.0
+    assert "week_normalized_yoy" not in feed_by_period["2025"]
