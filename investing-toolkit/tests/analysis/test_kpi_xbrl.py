@@ -20,6 +20,7 @@ import importlib.util
 import json
 import subprocess
 import sys
+from unittest import mock
 
 from conftest import FIXTURES, KPI_XBRL_SCRIPT
 
@@ -1048,6 +1049,203 @@ def test_dedup_label_conflict_deterministic(kpi_xbrl_module, dualdur_fixture):
     assert dqc["new"]["fiscal_calendar"]["fiscal_year_end"] == "--09-30"
     assert dqc["accessions"] == ["0000000000-24-000001", "0000000000-25-000002"]
     assert dqc["reason"]
+
+
+# ---------------------------------------------------------------------------
+# Task 7 (docs/loom/plans/2026-07-16-operational-kpi-quarterly.md) — single-
+# granularity series (annual vs quarterly never mixed), the dimension-absent-
+# from-quarterlies flag surfaced at the series build (calling the data
+# layer's pure `_dimension_quarterly_absence`), and the fiscal-range output
+# filter on each fact's OWN fiscal label. Fixtures: the committed
+# producer-shaped T5/T6 packs (xbrl_quarterly_aapl_labeled_factpack.json /
+# xbrl_quarterly_dualdur.json / xbrl_signature_factpack.json) plus two
+# synthetic ANNUAL facts mirroring the producer's emitted label-group shape
+# (12mo -> FY), per docs/loom/memory/fixtures-mirror-producer-shape.md.
+# No `@req` tags: this dispatch traces work by named plan Tasks, not
+# registered loom-spec REQ-ids (same convention as the module header note).
+# ---------------------------------------------------------------------------
+
+# Producer-shaped synthetic 10-K facts (annual: 12mo -> fiscal_quarter FY),
+# same signature family as the AAPL labeled quarterly pack. The iPhone
+# signature IS tagged in that pack's 10-Qs; the Mac signature appears in NO
+# 10-Q — the spec's "dimension absent from the quarterlies" case.
+ANNUAL_IPHONE_FACT = {
+    "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+    "dimensions": {"ProductOrService": "IPhoneMember"},
+    "value": 10000.0,
+    "period_end": "2025-09-27",
+    "duration_months": 12,
+    "calendar_year": 2025,
+    "calendar_quarter": "Q3",
+    "fiscal_year": 2025,
+    "fiscal_quarter": "FY",
+    "derivation_basis": "dei-declared",
+    "accession": "0000320193-25-000079",
+    "filed": "2025-10-31",
+}
+
+ANNUAL_MAC_FACT = {
+    **ANNUAL_IPHONE_FACT,
+    "dimensions": {"ProductOrService": "MacMember"},
+    "value": 5000.0,
+}
+
+
+@pytest.fixture
+def stub_data_layer_deps():
+    """build_series_with_break's absence-flag path lazily imports
+    sec_edgar_client, which does a MODULE-LEVEL `import requests` (and
+    lazily imports `edgar`) — neither installed in the offline suite env —
+    so both are stubbed in sys.modules first and restored after (mirrors
+    test_kpi_xbrl_multifiling_e2e.sec_edgar_helpers; docs/loom/memory/
+    importing-a-module-runs-its-module-level-imports.md). Only the PURE
+    `_dimension_quarterly_absence` helper is exercised — the stubs are
+    never touched."""
+    saved = {name: sys.modules.get(name) for name in ("requests", "edgar")}
+    sys.modules["requests"] = mock.MagicMock(name="requests")
+    sys.modules["edgar"] = mock.MagicMock(name="edgar")
+    try:
+        yield
+    finally:
+        for name, mod in saved.items():
+            if mod is not None:
+                sys.modules[name] = mod
+            else:
+                sys.modules.pop(name, None)
+
+
+def test_series_single_granularity(
+    kpi_xbrl_module, signature_fact_pack, aapl_quarterly_pack
+):
+    """Task 7 RED (spec: 'A series carries a single granularity'): a
+    quarterly request returns ONLY single-quarter points — no FY totals
+    (and no YTD cumulatives: the spec's quarterly-series scenario admits
+    'only single-quarter (and, if enabled, derived-Q4) points'); an annual
+    request returns only FY points; and a set mixing FY + single-quarter
+    for one fiscal year with NO granularity requested is REJECTED loud —
+    never silently averaged or concatenated. The result is
+    granularity-labeled."""
+    # Real FY points (signature pack, NEW-era iPhone: FY2023-2025) + real
+    # quarterly points (labeled pack: FY2025 Q1/Q2/H1/9mo + FY2024-Q2
+    # comparative) — fiscal year 2025 carries BOTH an FY total and quarters.
+    fy_points = kpi_xbrl_module.facts_to_points(
+        signature_fact_pack, "iphone_revenue", AAPL_IPHONE_QUARTERLY_MATCH,
+        "AAPL", "xbrl-dimensional",
+    )
+    assert len(fy_points) == 3
+    assert all(p["period_type"] == "FY" for p in fy_points)
+    q_points = kpi_xbrl_module.facts_to_points(
+        aapl_quarterly_pack, "iphone_revenue", AAPL_IPHONE_QUARTERLY_MATCH,
+        "AAPL", "xbrl-dimensional",
+    )
+    assert len(q_points) == 5
+    mixed = fy_points + q_points
+
+    # Quarterly request -> only sub-annual single-quarter points: the three
+    # 3mo facts (Q1 1000, Q2 2000, FY2024-Q2 comparative 1500) — the FY
+    # totals AND the 6mo/9mo cumulatives are off-granularity, excluded.
+    quarterly = kpi_xbrl_module.build_series_with_break(
+        mixed, "2018", granularity="quarterly"
+    )
+    emitted = quarterly["as_reported"] + quarterly["recast"]
+    assert sorted(p["value"] for p in emitted) == [1000.0, 1500.0, 2000.0]
+    assert all(p["period_type"] in {"Q1", "Q2", "Q3", "Q4"} for p in emitted)
+    assert all(p["cumulative"] is False for p in emitted)
+    assert quarterly["granularity"] == "quarterly"
+
+    # Annual request -> only the FY totals.
+    annual = kpi_xbrl_module.build_series_with_break(
+        mixed, "2018", granularity="annual"
+    )
+    emitted_fy = annual["as_reported"] + annual["recast"]
+    assert sorted(p["period"] for p in emitted_fy) == ["2023", "2024", "2025"]
+    assert all(p["period_type"] == "FY" for p in emitted_fy)
+    assert annual["granularity"] == "annual"
+
+    # No granularity requested + mixed input -> the mix is REJECTED loud.
+    with pytest.raises(ValueError, match="granularit"):
+        kpi_xbrl_module.build_series_with_break(mixed, "2018")
+
+
+def test_series_flags_dimension_absent_from_quarterlies(
+    kpi_xbrl_module, aapl_quarterly_pack, stub_data_layer_deps
+):
+    """Task 7 RED (spec: 'a dimension absent from the quarterlies is
+    flagged, not zero-filled'; re-homed from old T10 per the plan's
+    2026-07-17 Decision Log): a dimensional signature present in the 10-K
+    (Mac) but tagged in NO 10-Q of that fiscal year surfaces on the built
+    quarterly series as a `no_quarterly_coverage` coverage flag — computed
+    by the data layer's pure `_dimension_quarterly_absence`, carrying NO
+    `value` key (distinct from a real zero) and a flag naming ONLY missing
+    quarterly tagging (distinct from a discontinued segment — that
+    judgment stays the caller's). A 10-K signature that IS quarterly-
+    tagged (iPhone) is not flagged."""
+    q_points = kpi_xbrl_module.facts_to_points(
+        aapl_quarterly_pack, "iphone_revenue", AAPL_IPHONE_QUARTERLY_MATCH,
+        "AAPL", "xbrl-dimensional",
+    )
+    facts = aapl_quarterly_pack["facts"] + [ANNUAL_IPHONE_FACT, ANNUAL_MAC_FACT]
+
+    result = kpi_xbrl_module.build_series_with_break(
+        q_points, "2018", granularity="quarterly", facts=facts
+    )
+
+    # The series points themselves are the quarterly series, unchanged.
+    emitted = result["as_reported"] + result["recast"]
+    assert sorted(p["value"] for p in emitted) == [1000.0, 1500.0, 2000.0]
+
+    # Exactly ONE coverage flag: the Mac signature, identity-only — no
+    # `value` key (never zero-filled), flag == "no_quarterly_coverage"
+    # (never a discontinued-segment verdict), covered iPhone not flagged.
+    assert result["coverage_flags"] == [{
+        "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "dimensions": {"ProductOrService": "MacMember"},
+        "consolidation": None,
+        "fiscal_year": 2025,
+        "flag": "no_quarterly_coverage",
+    }]
+
+
+def test_series_range_filtered_by_own_fiscal_label(
+    kpi_xbrl_module, aapl_quarterly_pack, dualdur_fixture
+):
+    """Task 7 RED (critic round 2 — spec: 'emitted points are
+    range-filtered by each fact's OWN fiscal label'): with a fiscal-range
+    request, only points whose OWN emitted fiscal label falls in-range are
+    emitted — a selected FY2025 10-Q's FY2024 comparative is never emitted
+    as a series point — while out-of-range-filing comparatives remain
+    usable INTERNALLY: the filter applies to emitted points AFTER
+    resolve_binding's dedup/restatement, so a restatement carried by a
+    later filing's comparative survives."""
+    points = kpi_xbrl_module.facts_to_points(
+        aapl_quarterly_pack, "iphone_revenue", AAPL_IPHONE_QUARTERLY_MATCH,
+        "AAPL", "xbrl-dimensional",
+    )
+    # the FY2024-Q2 comparative (own fiscal label 2024) is present pre-filter.
+    assert any(p["period"] == "2024" for p in points)
+
+    result = kpi_xbrl_module.build_series_with_break(
+        points, "2018", fiscal_range=(2025, 2025)
+    )
+    emitted = result["as_reported"] + result["recast"]
+    assert sorted(p["value"] for p in emitted) == [1000.0, 2000.0, 3000.0, 4000.0]
+    assert all(p["period"] == "2025" for p in emitted)  # comparative filtered
+
+    # Internal usability: the dualdur restated Q1 (policy C resolved from
+    # the FY2026 Q2 10-Q's comparative) keeps its restated value + DQC flag
+    # through a [2025, 2025] range build — the range filter never undoes
+    # dedup/restatement work done with a later filing's comparatives.
+    pack = dualdur_fixture["aapl_dualdur"]
+    dd_points = kpi_xbrl_module.resolve_binding(pack, DUALDUR_IPHONE_BINDING, "AAPL")
+    dd_result = kpi_xbrl_module.build_series_with_break(
+        dd_points, "2018", fiscal_range=(2025, 2025)
+    )
+    dd_emitted = dd_result["as_reported"] + dd_result["recast"]
+    assert len(dd_emitted) == 4
+    q1 = next(p for p in dd_emitted if p["period_type"] == "Q1")
+    assert q1["value"] == 1050.0
+    assert q1["source_accession"] == "0000320193-26-000006"
+    assert q1["dqc"]["type"] == "restatement"
 
 
 def test_cli_build_resolves_binding_and_prints_points(tmp_path):
