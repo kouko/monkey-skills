@@ -165,8 +165,35 @@ instruction), and downstream stations re-derive the domain questions
 with their own triage. Label the residual honestly; do not pretend a
 grep can catch it.
 
+## v2.1 acceptance (2026-07-18, post-fix — branch feat-knowledge-triage-v2-1)
+
+(i) Real-artifact RED: leg-1 dir fails the new loom-spec validator (whitelist
+×4 + untiered ×8, exit 1); leg-3 PRINCIPLES.md + real seed fails the new
+loom-product-principles `--seed` provenance check (exactly the three
+fabricated rows, honest rows clean); strong-leg dir: zero whitelist/tier
+false positives, check-3 fires on all 11 unresolved SHAPING items (incl. the
+two that escaped the round-1 radius design). Verified independently by both
+T14 reviewers and re-run at commit time.
+
+(ii) Fresh post-fix haiku re-runs (same seeds):
+- principles leg: fresh output was honest this time (single agent-decided
+  Anchors row, zero seed-provenance claims, zero invented numbers,
+  undecidables in Open Questions with re-triggers) → validator passes both
+  modes. Comply-honestly path confirmed.
+- spec leg: fresh output dropped ALL tier labels AGAIN (third reproduction
+  of the systematic weak-model failure; enum values clean this time —
+  intermittency confirmed) → new validator kills it loudly: exit 1, 8
+  precise file:line problems. Pre-v2.1 this artifact sailed through.
+  **The quietly-wrong state no longer exists at this station.**
+
+(iii) Design-station pre-check is critic-side prose (not headless-testable
+pre-merge per the deploy-surface memory); its conditions are the same
+literal-grep shape as the spec validator's and were cold-read verified in
+review. Post-merge live exercise rides the next real design run.
+
 Full artifacts: session scratchpad `dogfood-live-spec/spec-out/` (strong
 leg), `dogfood-live-spec-haiku/spec-out/` (weak spec leg),
 `dogfood-live-design-haiku/ui-flows.md` (weak design leg),
 `dogfood-live-principles-haiku/docs/loom/PRINCIPLES.md` (weak principles
-leg); not preserved beyond the session — this report is the record.
+leg), `dogfood-rerun-{spec,principles}-haiku/` (v2.1 acceptance re-runs);
+not preserved beyond the session — this report is the record.
