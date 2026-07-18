@@ -9,18 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Unequal-quarter-length disclosure (week-lane points)** (investing-team
-  `protocols/deep-equity-research-memo.md`, Operating KPI Trends block +
-  template + appendix): the memo protocol gains a disclosure rule for
-  52/53-week filers' quarterly points. Any point whose `duration_class`
-  carries a week-encoded string (`16wk` / `17wk` / `36wk-YTD` /
-  `52wk-FY` / `53wk-FY`) is not a calendar-standard 12/13-week quarter:
-  its cell is labeled with the feed's `duration_weeks` count, a
+- **Unequal-quarter-length disclosure (week-count signal, any lane)**
+  (investing-team `protocols/deep-equity-research-memo.md`, Operating
+  KPI Trends block + template + appendix): the memo protocol gains a
+  disclosure rule for 52/53-week filers' quarterly points, gated on the
+  feed's actual `duration_weeks` signal rather than solely on a
+  week-encoded `duration_class` string. A point qualifies when its
+  `duration_class` carries a week-encoded string (`16wk` / `17wk` /
+  `36wk-YTD` — the only week-lane bands actually reached in practice,
+  since a quarter/H1/FY-length span rounds into the month lane first),
+  OR its `duration_weeks` differs from its YoY comparator's (how a
+  52/53-week filer's FY point actually surfaces — it classifies
+  month-lane `12mo-FY` yet still carries a real `duration_weeks` of 52
+  or 53), OR it carries a `week_normalized_yoy` field. Any qualifying
+  point's cell is labeled with the feed's `duration_weeks` count, a
   Walmart-style disclosure states that unequal-length periods are not
   directly comparable and names the affected figures, and any
-  `week_normalized_yoy` supplementary field the feed carries is
-  rendered alongside — never in place of — the as-reported YoY,
-  transcribed verbatim (the memo writer never computes it).
+  `week_normalized_yoy` supplementary field the feed carries — on ANY
+  point, including a month-classed `12mo-FY` point — is rendered
+  alongside — never in place of — the as-reported YoY, transcribed
+  verbatim (the memo writer never computes it).
 
 ## [v5.9.0] — 2026-07-18
 

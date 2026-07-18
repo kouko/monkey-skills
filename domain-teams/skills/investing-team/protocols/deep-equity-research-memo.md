@@ -182,18 +182,32 @@ different market — do not merge the two treatments).
   missing or underivable — truncate the table at the gap and footnote
   it with the gap's `reason` string verbatim — never splice or
   interpolate across a gap.
-- **Unequal-quarter-length disclosure (week-lane points)**: a
-  `points[]`/`derived_points[]` entry whose `duration_class` carries a
-  week-encoded string (e.g. `16wk`, `17wk`, `36wk-YTD`, `52wk-FY` /
-  `53wk-FY` — a 52/53-week filer's quarter) is NOT a calendar-standard
-  12/13-week quarter. Any series containing such a point: (a) label
-  that period's cell with its `duration_weeks` count; (b) state once,
-  near the table, a Walmart-style disclosure that unequal-length
-  periods (12wk vs. 16/17wk quarters) are not directly comparable,
+- **Unequal-quarter-length disclosure (week-count signal, any lane)**:
+  `duration_weeks` rides EVERY `points[]`/`derived_points[]` entry
+  regardless of which lane classified it (month or week) — the
+  disclosure trigger is that raw signal, never the `duration_class`
+  string alone. A point qualifies when ANY of: (i) its `duration_class`
+  carries a week-encoded string (e.g. `16wk`, `17wk`, `36wk-YTD` — the
+  only week-lane bands actually reached in practice: a quarter/H1/FY-
+  length span rounds into the month lane FIRST under class-lane
+  precedence, so the `52wk-FY`/`53wk-FY` band-completeness strings are
+  never actually emitted); (ii) its `duration_weeks` differs from its
+  YoY comparator's `duration_weeks` — this is how a 52/53-week filer's
+  FY point actually surfaces: it classifies month-lane `12mo-FY` yet
+  still carries a real `duration_weeks` of 52 or 53, so a 52-vs-53-week
+  FY-over-FY comparison is unequal-length even though both sides read
+  `12mo-FY`; or (iii) it carries a `week_normalized_yoy` field (the
+  feed's own signal that it ran the cross-point comparison — attached
+  to every emitted point, independent of duration_class). Any
+  qualifying point: (a) label that period's cell with its
+  `duration_weeks` count; (b) state once, near the table, a
+  Walmart-style disclosure that unequal-length periods (e.g. 12wk vs.
+  16/17wk quarters, or a 52wk vs. 53wk FY) are not directly comparable,
   naming which figures are affected; (c) when the point carries a
-  `week_normalized_yoy` field, render it alongside — never in place
-  of — the as-reported YoY, TRANSCRIBED verbatim from the feed (the
-  writer never computes it).
+  `week_normalized_yoy` field — on ANY point, including a month-classed
+  `12mo-FY` point — render it alongside — never in place of — the
+  as-reported YoY, TRANSCRIBED verbatim from the feed (the writer never
+  computes it).
 - **Data-quality flags (top-level `coverage_flags[]`)**: DQC flags
   (restatements, label conflicts, with `old`→`new` values and
   accessions) — disclose inline on the affected cell(s), NEVER by
@@ -404,12 +418,16 @@ sector favored/neutral/disfavored in current regime]
  reported 9mo-YTD cumulative) + its plural source_accessions;
  per-series gaps[] truncated + footnoted with the gap reason verbatim;
  top-level coverage_flags[] disclosed inline on the affected cell(s),
- never truncated. Week-lane points (duration_class carrying a
- week-encoded string, e.g. 16wk/36wk-YTD/52wk-FY): cell labeled with
- duration_weeks, a one-time unequal-quarter-length disclosure naming
- the affected figures, and any week_normalized_yoy field rendered
- alongside — never in place of — the as-reported YoY, transcribed
- verbatim. Series with <4 reported quarters: appendix exhibit
+ never truncated. Unequal-length points — duration_class carrying a
+ week-encoded string (16wk/17wk/36wk-YTD), OR duration_weeks differing
+ from its YoY comparator's (a 52/53-week filer's FY point: classifies
+ 12mo-FY yet carries duration_weeks 52/53), OR carrying a
+ week_normalized_yoy field: cell labeled with duration_weeks, a
+ one-time unequal-quarter-length disclosure naming the affected
+ figures, and (on any point carrying the field, including a
+ month-classed 12mo-FY point) week_normalized_yoy rendered alongside —
+ never in place of — the as-reported YoY, transcribed verbatim. Series
+ with <4 reported quarters: appendix exhibit
  only. Feed absent from the seed context / status ≠ TRUSTED: state the
  fact + any recorded reason verbatim.
  Non-US ticker: "not applicable (US-only capability this version)".]
@@ -465,8 +483,11 @@ sector favored/neutral/disfavored in current regime]
 [FULL quarterly series per signature from the memo feed — all quarters,
  same labeling rules as the body table (fiscal + calendar pair,
  derived-Q4 tags, verbatim gap footnotes, inline coverage_flags
- disclosures, week-lane duration_weeks labels + unequal-quarter-length
- disclosure + verbatim week_normalized_yoy supplementary figures);
+ disclosures, duration_weeks labels + unequal-quarter-length
+ disclosure on any qualifying point (week-encoded duration_class,
+ differing duration_weeks vs. YoY comparator, or a week_normalized_yoy
+ field — including month-classed 12mo-FY points) + verbatim
+ week_normalized_yoy supplementary figures);
  series with <4 reported quarters appear here ONLY]
 
 ### Provenance
