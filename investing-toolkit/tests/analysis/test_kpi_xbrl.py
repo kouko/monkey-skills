@@ -1718,6 +1718,188 @@ def test_q4_derived_carries_parallel_labels(kpi_xbrl_module, q4_fixture):
 
 
 # ---------------------------------------------------------------------------
+# Task 4 (docs/loom/plans/2026-07-18-52-53-week-filer-support.md) — Q4
+# derivation on the week lane: a week-lane-eligible FY point (month-classed
+# "12mo-FY" carrying duration_weeks 52/53) minus its matching 36wk-YTD point
+# mints a derived Q4 with duration_weeks = FY_weeks - YTD_weeks (16 or 17),
+# gated on the WEEK-LANE YTD SIBLING'S PRESENCE — never on the FY point's
+# duration_weeks alone (a month-lane 365d calendar-year FY also carries
+# duration_weeks 52). Synthetic packs, machine-shaped like the module's
+# other week-lane fixtures (test_classify_period_week_lane) and the
+# existing derive_q4_points synthetic packs (both_restated_pack above) —
+# no hand-typed real XBRL values. No `@req` tags: this dispatch traces work
+# by named plan Tasks, not registered loom-spec REQ-ids (same convention as
+# the module header note).
+# ---------------------------------------------------------------------------
+
+COST_MEMBERSHIP_MATCH = {
+    "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+    "dimensions": {"ProductOrService": "MembershipFeesMember"},
+}
+
+
+def _cost_week_lane_fact_pack(*, include_ytd: bool = True) -> dict:
+    """A COST-shaped (53-week fiscal year) synthetic fact pack: a 12mo-FY
+    fact carrying `duration_weeks=53` and, unless `include_ytd=False`, its
+    matching 36wk-YTD sibling (`duration_weeks=36`, producer `week_lane_band`
+    "YTD-through-Q3") — full fact shape (concept, dimensions, accession,
+    filed, dei fiscal calendar) matching the producer's own emitted shape."""
+    fy_fact = {
+        "concept": COST_MEMBERSHIP_MATCH["concept"],
+        "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+        "consolidation": None,
+        "period_end": "2026-08-30",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "FY",
+        "duration_months": 12,
+        "duration_weeks": 53,
+        "week_lane_band": "FY",
+        "accession": "0000909832-26-000123",
+        "filed": "2026-10-15",
+        "value": 100000.0,
+    }
+    facts = [fy_fact]
+    fiscal_calendars = {
+        "0000909832-26-000123": {
+            "fiscal_period_focus": "FY", "fiscal_year_end": "--08-30",
+        },
+    }
+    if include_ytd:
+        ytd_fact = {
+            "concept": COST_MEMBERSHIP_MATCH["concept"],
+            "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+            "consolidation": None,
+            "period_end": "2026-05-10",
+            "fiscal_year": 2026,
+            "fiscal_quarter": "Q3",
+            "duration_months": 8,
+            "duration_weeks": 36,
+            "week_lane_band": "YTD-through-Q3",
+            "accession": "0000909832-26-000099",
+            "filed": "2026-06-05",
+            "value": 78000.0,
+        }
+        facts.append(ytd_fact)
+        fiscal_calendars["0000909832-26-000099"] = {
+            "fiscal_period_focus": "Q3", "fiscal_year_end": "--08-30",
+        }
+    return {"company": "COST", "facts": facts, "fiscal_calendars": fiscal_calendars}
+
+
+def test_q4_derive_week_lane_mint(kpi_xbrl_module):
+    """Task 4 RED: a week-lane-eligible FY point (month-classed "12mo-FY"
+    carrying duration_weeks=53) minus its matching 36wk-YTD point mints a
+    derived Q4 with duration_weeks == 17 (53 - 36), duration_class "17wk"
+    (T3's week-Q4 format, transcribed, never invented here), and the 2.23.0
+    derived-tagging rules unchanged (derived: True, plural
+    source_accessions/source_forms, verbatim dqc transcription)."""
+    pack = _cost_week_lane_fact_pack()
+    points = kpi_xbrl_module.facts_to_points(
+        pack, "membership_fees", COST_MEMBERSHIP_MATCH, "COST", "xbrl-dimensional",
+    )
+    assert not any(p["period_type"] == "Q4" for p in points)  # Q4 untagged
+    result = kpi_xbrl_module.derive_q4_points(
+        points, fiscal_calendars=pack["fiscal_calendars"]
+    )
+    assert result["gaps"] == []
+    assert len(result["points"]) == 1
+    q4 = result["points"][0]
+    assert q4["value"] == 22000.0  # 100000.0 FY - 78000.0 36wk-YTD
+    assert q4["period_type"] == "Q4"
+    assert q4["cumulative"] is False
+    assert q4["duration_class"] == "17wk"
+    assert q4["duration_weeks"] == 17
+    assert q4["period"] == "2026"
+    assert q4["derived"] is True  # the segregated lane marker
+    assert q4["dqc"]["type"] == "derived_q4"  # computed, never reported
+    assert sorted(q4["dqc"]["accessions"]) == [
+        "0000909832-26-000099", "0000909832-26-000123",
+    ]
+    assert q4["source_accessions"] == [
+        "0000909832-26-000123", "0000909832-26-000099",
+    ]
+    assert q4["source_forms"] == ["10-K", "10-Q"]
+
+
+def test_q4_derive_week_lane_missing_sibling_refuses(kpi_xbrl_module):
+    """Task 4 RED: when the week-lane YTD anchor (36wk-YTD) is absent, the
+    EXISTING q4_source_missing refusal fires exactly as today (fail-closed
+    unchanged) — the same code path as the month lane's missing-9mo-YTD
+    case, never a fabricated week-lane subtraction."""
+    pack = _cost_week_lane_fact_pack(include_ytd=False)
+    points = kpi_xbrl_module.facts_to_points(
+        pack, "membership_fees", COST_MEMBERSHIP_MATCH, "COST", "xbrl-dimensional",
+    )
+    result = kpi_xbrl_module.derive_q4_points(
+        points, fiscal_calendars=pack["fiscal_calendars"]
+    )
+    assert result["points"] == []
+    assert len(result["gaps"]) == 1
+    gap = result["gaps"][0]
+    assert gap["type"] == "q4_source_missing"
+    assert gap["period"] == "2026"
+
+
+def test_q4_derive_week_lane_not_triggered_by_fy_duration_weeks_alone(
+    kpi_xbrl_module,
+):
+    """Correctness guard (plan Task 4): a month-lane 365-day calendar-year
+    FY fact ALSO carries duration_weeks=52 (365/7 rounds to 52) — the
+    week-lane derivation must NOT fire off that alone; it is gated on the
+    presence of a GENUINE week-lane YTD sibling (36wk-YTD class), never on
+    the FY point's duration_weeks. A month-lane FY + 9mo-YTD pair (FY
+    carrying duration_weeks=52, no 36wk-YTD sibling in the group) still
+    derives the ordinary month-lane "3mo" Q4 — byte-identical to the
+    pre-Task-4 behavior."""
+    fy_fact = {
+        "concept": COST_MEMBERSHIP_MATCH["concept"],
+        "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+        "consolidation": None,
+        "period_end": "2026-09-27",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "FY",
+        "duration_months": 12,
+        "duration_weeks": 52,  # calendar-year FY also carries a week count
+        "accession": "acc-fy-cal",
+        "filed": "2026-10-30",
+        "value": 14100.0,
+    }
+    ytd9_fact = {
+        "concept": COST_MEMBERSHIP_MATCH["concept"],
+        "dimensions": COST_MEMBERSHIP_MATCH["dimensions"],
+        "consolidation": None,
+        "period_end": "2026-06-28",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "Q3",
+        "duration_months": 9,
+        "accession": "acc-ytd9-cal",
+        "filed": "2026-07-30",
+        "value": 11100.0,
+    }
+    pack = {
+        "company": "COST", "facts": [fy_fact, ytd9_fact],
+        "fiscal_calendars": {
+            "acc-fy-cal": {"fiscal_period_focus": "FY",
+                           "fiscal_year_end": "--09-27"},
+            "acc-ytd9-cal": {"fiscal_period_focus": "Q3",
+                              "fiscal_year_end": "--09-27"},
+        },
+    }
+    points = kpi_xbrl_module.facts_to_points(
+        pack, "membership_fees", COST_MEMBERSHIP_MATCH, "COST", "xbrl-dimensional",
+    )
+    result = kpi_xbrl_module.derive_q4_points(
+        points, fiscal_calendars=pack["fiscal_calendars"]
+    )
+    assert result["gaps"] == []
+    assert len(result["points"]) == 1
+    q4 = result["points"][0]
+    assert q4["value"] == 3000.0  # 14100.0 FY - 11100.0 9mo-YTD
+    assert q4["duration_class"] == "3mo"  # month lane, NOT a week-lane class
+    assert "duration_weeks" not in q4
+
+
+# ---------------------------------------------------------------------------
 # Task 9 (docs/loom/plans/2026-07-16-operational-kpi-quarterly.md) — structured
 # point + DQC-flag schema provenance: every emitted point carries source
 # accession(s) + source form (10-K|10-Q) + duration_class; every analysis-layer

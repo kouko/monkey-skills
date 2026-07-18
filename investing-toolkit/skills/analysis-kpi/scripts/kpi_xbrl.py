@@ -550,6 +550,13 @@ def facts_to_points(
         # upstream — so the passthrough is the forward-defensive channel).
         if fact.get("unit") is not None:
             point["unit"] = fact["unit"]
+        # A fact's own `duration_weeks` (Task 1, sec_edgar_client.py: emitted
+        # on EVERY duration fact regardless of lane) passes through onto the
+        # point — Task 4's week-lane Q4 derivation needs each input's own
+        # week count to compute the derived Q4's duration_weeks (FY_weeks -
+        # YTD_weeks).
+        if fact.get("duration_weeks") is not None:
+            point["duration_weeks"] = fact["duration_weeks"]
         # A cross-filing restatement (overlap policy C, resolved upstream in
         # resolve_binding) tags the kept fact with a machine-readable `dqc`
         # flag; carry it through onto the emitted point unchanged.
@@ -876,6 +883,22 @@ def _q4_input_window_end(point: dict, role: str) -> date:
         ) from None
 
 
+def _require_duration_weeks(point: dict, role: str) -> int:
+    """A week-lane Q4-derivation input's own `duration_weeks` (Task 4,
+    docs/loom/plans/2026-07-18-52-53-week-filer-support.md) — fail loud on
+    a point missing/malforming it: the derived Q4's own week count
+    (FY_weeks - YTD_weeks) is never guessed from a duration_class string."""
+    weeks = point.get("duration_weeks")
+    if not isinstance(weeks, int) or isinstance(weeks, bool):
+        raise ValueError(
+            f"kpi_xbrl.derive_q4_points: {role} input point carries no "
+            f"well-formed 'duration_weeks' ({weeks!r}, kpi_id="
+            f"{point.get('kpi_id')!r}, period={point.get('period')!r}) — "
+            f"cannot mint the derived week-lane Q4, never guessed"
+        )
+    return weeks
+
+
 def _q4_basis_mismatch_reason(
     fy: dict, ytd9: dict, fiscal_calendars: dict | None,
 ) -> str | None:
@@ -972,21 +995,24 @@ def _q4_group_gap(
 
 
 def _q4_candidate_gap(
-    fy_candidates: list[dict], ytd9_candidates: list[dict], period, cell_ref,
+    fy_candidates: list[dict], ytd_candidates: list[dict], period, cell_ref,
+    *, ytd_role: str = "9mo-YTD",
 ) -> dict:
     """Classify a group that cannot supply exactly ONE FY total + ONE
-    9mo-YTD (extracted from `derive_q4_points`, Task 9 opportunistic
+    YTD anchor (extracted from `derive_q4_points`, Task 9 opportunistic
     refactor — behavior unchanged): a MISSING side is `q4_source_missing`
     (skipped and surfaced, never fabricated); multiple survivors on a side
     are ambiguous inputs — `q4_basis_mismatch` (refused, never an
-    arbitrary pick)."""
+    arbitrary pick). `ytd_role` names which YTD lane is being reported —
+    "9mo-YTD" (the default, month lane, byte-identical to pre-Task-4
+    behavior) or "36wk-YTD" (Task 4's week lane)."""
     absent = []
     if not fy_candidates:
         absent.append("12mo-FY total")
-    if not ytd9_candidates:
-        absent.append("9mo-YTD")
+    if not ytd_candidates:
+        absent.append(ytd_role)
     present_accessions = sorted(
-        p.get("source_accession") for p in fy_candidates + ytd9_candidates
+        p.get("source_accession") for p in fy_candidates + ytd_candidates
     )
     if absent:
         gap_type = "q4_source_missing"
@@ -998,26 +1024,38 @@ def _q4_candidate_gap(
         gap_type = "q4_basis_mismatch"
         reason = (
             f"ambiguous inputs: {len(fy_candidates)} FY totals and "
-            f"{len(ytd9_candidates)} 9mo-YTD points survive dedup "
+            f"{len(ytd_candidates)} {ytd_role} points survive dedup "
             f"for one signature/fiscal year — refused, never an "
             f"arbitrary pick"
         )
     return _q4_group_gap(gap_type, present_accessions, reason, period, cell_ref)
 
 
-def _mint_derived_q4_point(fy: dict, ytd9: dict, period, cell_ref) -> dict:
-    """Mint the derived Q4 point (FY total − 9mo-YTD) for one clean,
-    basis-checked input pair (extracted from `derive_q4_points`, Task 9
-    opportunistic refactor — behavior unchanged): the segregated-lane
-    markers (`derived: True`, PLURAL `source_accessions`/`source_forms`),
-    the three label groups minted from the derived 3-month window against
-    the 10-K's calendar, and the `derived_q4` DQC recording both
-    contributing accessions."""
+def _mint_derived_q4_point(
+    fy: dict, ytd9: dict, period, cell_ref, *, week_lane: bool = False,
+) -> dict:
+    """Mint the derived Q4 point (FY total minus the matching YTD point)
+    for one clean, basis-checked input pair (extracted from
+    `derive_q4_points`, Task 9 opportunistic refactor — behavior
+    unchanged): the segregated-lane markers (`derived: True`, PLURAL
+    `source_accessions`/`source_forms`), the three label groups minted
+    from the derived window against the 10-K's calendar, and the
+    `derived_q4` DQC recording both contributing accessions.
+
+    `week_lane=True` (Task 4, docs/loom/plans/2026-07-18-52-53-week-filer-
+    support.md) mints the week-lane Q4 instead — FY total minus the
+    matching `36wk-YTD` point — with `duration_weeks` = FY_weeks −
+    YTD_weeks (16 or 17) and `duration_class` TRANSCRIBED from T3's shipped
+    `_WEEK_LANE_DURATION_CLASS_FORMAT["week-Q4"]` (never invented here);
+    every other field (tagging, label groups, DQC schema) is identical to
+    the month-lane mint, and `week_lane=False` (the default) is
+    byte-identical to the pre-Task-4 behavior."""
     fy_end = _q4_input_window_end(fy, "FY-total")
-    ytd9_end = _q4_input_window_end(ytd9, "9mo-YTD")
+    ytd_role = "36wk-YTD" if week_lane else "9mo-YTD"
+    ytd9_end = _q4_input_window_end(ytd9, ytd_role)
     value = fy["value"] - ytd9["value"]
     accessions = [fy.get("source_accession"), ytd9.get("source_accession")]
-    return {
+    point = {
         "company": fy.get("company"),
         "kpi_id": fy.get("kpi_id"),
         "period_type": "Q4",
@@ -1038,16 +1076,29 @@ def _mint_derived_q4_point(fy: dict, ytd9: dict, period, cell_ref) -> dict:
         "derived": True,
         "dqc": assert_dqc_schema({
             "type": "derived_q4",
-            "old": {"fy_total": fy["value"], "ytd9": ytd9["value"]},
+            "old": (
+                {"fy_total": fy["value"], "ytd36": ytd9["value"]}
+                if week_lane
+                else {"fy_total": fy["value"], "ytd9": ytd9["value"]}
+            ),
             "new": value,
             "accessions": accessions,
             "reason": (
-                f"untagged Q4 derived as FY total minus 9mo-YTD for "
+                f"untagged Q4 derived as FY total minus {ytd_role} for "
                 f"fiscal year {period} — computed, never reported; "
                 f"segregated from directly-reported points"
             ),
         }),
     }
+    if week_lane:
+        fy_weeks = _require_duration_weeks(fy, "FY-total")
+        ytd_weeks = _require_duration_weeks(ytd9, "36wk-YTD")
+        derived_weeks = fy_weeks - ytd_weeks
+        point["duration_weeks"] = derived_weeks
+        point["duration_class"] = _WEEK_LANE_DURATION_CLASS_FORMAT[
+            "week-Q4"
+        ].format(weeks=derived_weeks)
+    return point
 
 
 def derive_q4_points(points: list[dict], *, fiscal_calendars: dict | None) -> dict:
@@ -1086,6 +1137,15 @@ def derive_q4_points(points: list[dict], *, fiscal_calendars: dict | None) -> di
       from the clean `derived_q4` flag, never a silent subtraction.
     Gaps follow the ONE DQC schema (type, old, new, accessions, reason)
     plus the locating `period`/`source_cell_ref` fields.
+
+    Week lane (Task 4, docs/loom/plans/2026-07-18-52-53-week-filer-support.
+    md): a group carrying a genuine `36wk-YTD` sibling derives FY total
+    minus that point instead, with `duration_weeks` = FY_weeks − YTD_weeks
+    and `duration_class` transcribed from T3's week-Q4 format — gated on
+    the SIBLING'S PRESENCE, never on the FY point's own `duration_weeks`
+    (a month-lane calendar-year FY also carries one). A missing week-lane
+    sibling falls through to the same `q4_source_missing` refusal as the
+    month lane, unchanged.
     """
     groups: dict[tuple, list[dict]] = {}
     for point in points:
@@ -1103,20 +1163,35 @@ def derive_q4_points(points: list[dict], *, fiscal_calendars: dict | None) -> di
         ):
             continue  # directly-tagged Q4: reported used as-is, no flag
         fy_candidates = [
-            p for p in group if p.get("duration_class") == "12mo-FY"
+            p for p in group
+            if _is_fy_duration_class(p.get("duration_class") or "")
         ]
         ytd9_candidates = [
             p for p in group if p.get("duration_class") == "9mo-YTD"
         ]
-        if not fy_candidates and not ytd9_candidates:
+        # Task 4 (52/53-week filer support): a genuine week-lane YTD
+        # sibling (duration_class "36wk-YTD") in this group routes
+        # derivation onto the week lane — gated on the SIBLING'S PRESENCE,
+        # never on the FY point's own duration_weeks alone (a month-lane
+        # 365d calendar-year FY also carries duration_weeks 52; plan
+        # Notes: correctness guard). Absent that sibling, behavior is
+        # byte-identical to pre-Task-4 (month-lane 9mo-YTD).
+        ytd36wk_candidates = [
+            p for p in group if p.get("duration_class") == "36wk-YTD"
+        ]
+        if not fy_candidates and not ytd9_candidates and not ytd36wk_candidates:
             continue  # no derivation basis at all — not a gap
-        if len(fy_candidates) != 1 or len(ytd9_candidates) != 1:
+        week_lane = bool(ytd36wk_candidates)
+        ytd_candidates = ytd36wk_candidates if week_lane else ytd9_candidates
+        ytd_role = "36wk-YTD" if week_lane else "9mo-YTD"
+        if len(fy_candidates) != 1 or len(ytd_candidates) != 1:
             gaps.append(_q4_candidate_gap(
-                fy_candidates, ytd9_candidates, period, cell_ref,
+                fy_candidates, ytd_candidates, period, cell_ref,
+                ytd_role=ytd_role,
             ))
             continue
 
-        fy, ytd9 = fy_candidates[0], ytd9_candidates[0]
+        fy, ytd9 = fy_candidates[0], ytd_candidates[0]
         mismatch = _q4_basis_mismatch_reason(fy, ytd9, fiscal_calendars)
         if mismatch is not None:
             gaps.append(_q4_group_gap(
@@ -1130,7 +1205,9 @@ def derive_q4_points(points: list[dict], *, fiscal_calendars: dict | None) -> di
             ))
             continue
 
-        derived.append(_mint_derived_q4_point(fy, ytd9, period, cell_ref))
+        derived.append(
+            _mint_derived_q4_point(fy, ytd9, period, cell_ref, week_lane=week_lane)
+        )
     return {"points": derived, "gaps": gaps}
 
 
