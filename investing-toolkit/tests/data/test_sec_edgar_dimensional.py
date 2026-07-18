@@ -1853,3 +1853,137 @@ def test_parallel_period_labels(sec_client):
             revenue_row, "NVDA", "0001045810-25-000230", "2025-11-19",
             malformed_calendar,
         )
+
+
+# ---------------------------------------------------------------------------
+# Task 14 (2026-07-16-operational-kpi-quarterly REBUILD) — post-fetch
+# reconciliation of the selection guess. The pre-fetch index derivation is a
+# GUESS; the fetched filing's own dei:DocumentFiscalYearFocus is the TRUTH
+# (spec: 'range membership MUST be re-checked post-fetch against the declared
+# fiscal year; on disagreement the declaration wins and the correction is
+# surfaced — never silent in either direction'). Fixture: COPIES of the
+# machine-captured NVDA range records (xbrl_quarterly_nvda_range.json,
+# freshly parsed per test — the file is never touched), with ONLY the
+# dei:DocumentFiscalYearFocus row mutated in-test to stage the two
+# reconciliation premises (a counterfactual declaration / an absent
+# declaration); every other value stays exactly as captured.
+# ---------------------------------------------------------------------------
+
+def test_selection_guess_reconciled_post_fetch(sec_client):
+    """After fetch, each guess-selected filing's range membership is
+    re-checked against its DECLARED `dei:DocumentFiscalYearFocus`:
+
+    - a filing guess-selected for FY2026 whose fetched declaration says
+      FY2027 is EXCLUDED from the FY2026 result AND the guess/declaration
+      mismatch is surfaced (the ONE DQC schema: type/old/new/accessions/
+      reason) — never silently kept, never silently dropped;
+    - a fetched filing with an unreadable (absent/malformed) declaration
+      gets a DISTINCT flag naming the filing and is never calendar-bucketed:
+      its period_of_report[:4] is 2025 (outside [2026, 2026]), so surviving
+      in the result on its pre-fetch fiscal guess is direct proof the
+      membership decision never fell back to `period_of_report[:4]`."""
+    fixture = json.loads((FIXTURES / "xbrl_quarterly_nvda_range.json").read_text())
+    records = fixture["filings"]  # freshly parsed copies; file never touched
+
+    # Case 1 — Q1 filing (0001045810-25-000116, guessed FY2026 from the
+    # 10-K index windows): its fetched declaration is staged as FY2027.
+    mismatch_rec = records[0]
+    for row in mismatch_rec["raw_facts"]:
+        if row["concept"] == "dei:DocumentFiscalYearFocus":
+            row["value"] = "2027"  # staged counterfactual declaration
+
+    # Case 2 — Q2 filing (0001045810-25-000209): its declaration row is
+    # removed entirely (unreadable DocumentFiscalYearFocus); the
+    # CurrentFiscalYearEndDate row stays so fiscal LABELS remain derivable.
+    unreadable_rec = records[1]
+    unreadable_rec["raw_facts"] = [
+        row for row in unreadable_rec["raw_facts"]
+        if row["concept"] != "dei:DocumentFiscalYearFocus"
+    ]
+
+    # Case 3 — Q3 filing (0001045810-25-000230) untouched: declaration
+    # '2026' confirms the guess (no flag).
+    confirmed_rec = records[2]
+
+    tenqs = [_filing_from_fixture(r) for r in records]
+    tenks = [
+        _metadata_only_filing(
+            r, reason="10-K index anchors serve pre-fetch selection from "
+                      "metadata only; their xbrl must never be fetched here",
+        )
+        for r in fixture["annual_filings_index"]
+    ]
+    company = mock.MagicMock(name="Company")
+    company.not_found = False
+    company.cik = 1045810
+    company.get_filings.side_effect = (
+        lambda form=None, **_kw: {"10-Q": tenqs, "10-K": tenks}.get(form, [])
+    )
+    sec_client.edgar_stub.Company.return_value = company
+
+    pack = sec_client.extract_dimensional_revenue(
+        "NVDA", form="10-Q", since_year=2026, until_year=2026,
+        as_of=datetime.date(2026, 7, 18),
+    )
+    assert "error" not in pack, pack
+    got = {f["accession"] for f in pack["facts"]}
+
+    # Out-of-range declaration: excluded from the FY2026 result...
+    assert mismatch_rec["accession"] not in got, (
+        f"a filing whose fetched declaration says FY2027 must be excluded "
+        f"from the fiscal [2026, 2026] result (the declaration is the "
+        f"truth; the guess was only a candidate) -- got accessions {got}"
+    )
+    # ...while the confirmed filing stays.
+    assert confirmed_rec["accession"] in got, got
+
+    # Unreadable declaration: NEVER silently dropped, NEVER calendar-
+    # bucketed — period_of_report[:4] == 2025 would have thrown it out of
+    # [2026, 2026], so its presence proves membership stands on the fiscal
+    # guess, not on a calendar fallback.
+    assert unreadable_rec["period_of_report"][:4] == "2025"  # fixture sanity
+    assert unreadable_rec["accession"] in got, (
+        f"a filing with an unreadable DocumentFiscalYearFocus must not be "
+        f"silently dropped, and must not be re-bucketed by "
+        f"period_of_report[:4] (=2025, outside the range) -- got {got}"
+    )
+
+    flags = pack["coverage"]["fiscal_year_reconciliation"]
+    assert isinstance(flags, list), pack["coverage"]
+    for flag in flags:
+        assert set(flag) == {"type", "old", "new", "accessions", "reason"}, (
+            f"every reconciliation flag follows the ONE DQC schema "
+            f"(plan kickoff decision: no per-class variants) -- {flag}"
+        )
+
+    mismatch_flags = [
+        f for f in flags if f["type"] == "fiscal_year_guess_mismatch"
+    ]
+    assert len(mismatch_flags) == 1, flags
+    mismatch_flag = mismatch_flags[0]
+    assert mismatch_flag["accessions"] == [mismatch_rec["accession"]], mismatch_flag
+    assert mismatch_flag["old"] == 2026, (  # the pre-fetch guess
+        f"the mismatch flag records the guess as `old` -- {mismatch_flag}"
+    )
+    assert mismatch_flag["new"] == 2027, (  # the fetched declaration
+        f"the mismatch flag records the declaration as `new` -- {mismatch_flag}"
+    )
+    assert mismatch_flag["reason"], mismatch_flag
+
+    unreadable_flags = [
+        f for f in flags if f["type"] == "unreadable_fiscal_year_declaration"
+    ]
+    assert len(unreadable_flags) == 1, flags
+    unreadable_flag = unreadable_flags[0]
+    assert unreadable_flag["accessions"] == [unreadable_rec["accession"]], (
+        f"the unreadable-declaration flag must NAME the filing -- "
+        f"{unreadable_flag}"
+    )
+    assert unreadable_flag["new"] is None, unreadable_flag
+    assert unreadable_flag["reason"], unreadable_flag
+
+    # The confirmed filing produced NO flag (a clean reconciliation is not
+    # noise), and no flag class beyond the two staged premises appeared.
+    flagged_accessions = {a for f in flags for a in f["accessions"]}
+    assert confirmed_rec["accession"] not in flagged_accessions, flags
+    assert len(flags) == 2, flags
