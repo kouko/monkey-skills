@@ -635,3 +635,152 @@ def test_week_lane_yoy_synth_attaches_supplementary_field_through_feed(
     )
     assert feed_by_period["2026"]["value"] == 22000.0
     assert "week_normalized_yoy" not in feed_by_period["2025"]
+
+
+# ---------------------------------------------------------------------------
+# Task 4 (docs/loom/plans/2026-07-19-jnj-restatement-axis-signature.md): JNJ-
+# shaped e2e seam coverage for T1-T3's shipped contract — a vintage-axis
+# exclusion's `period_recast` coverage_flag reaching the feed (T2), and a
+# genuine intra-filing ambiguity's per-signature `signature_refused`
+# granularity (T3), both driven pack -> build_quarterly_series -> feed.
+# Fixture: fixtures/xbrl_quarterly_jnj_restatement_axis_synth.json (see its
+# own `_provenance` — extraction is NOT re-run here, so both packs model the
+# extractor's OUTPUT shape directly, per this module's docstring).
+#
+# Reasoned pre-arc RED (not re-run — mirrors the COST week-lane test's own
+# framing above): variant (a)'s `period_recast` assertion fails on pre-Task-2
+# code because `build_quarterly_series` never read `fact_pack["coverage"]`
+# at all — the assembled `coverage_flags` list would simply lack a
+# `period_recast` entry, `recast_flags` would be empty, the flag-count
+# assertion fails. Variant (b) fails harder: pre-Task-3 code raised the bare
+# ambiguous-binding `ValueError` (no `_IntraFilingAmbiguityError` narrow
+# subclass, no per-group try/except in `build_quarterly_series`'s loop) on
+# the FIRST poisoned group in stable signature order — the whole
+# `build_quarterly_series` call aborts, nothing emits, and `resolve_binding`
+# is never reached for the clean sibling or the second poisoned group;
+# `build_quarterly_memo_feed` is never even called.
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def jnj_restatement_axis_packs() -> dict:
+    return json.loads(
+        (FIXTURES / "xbrl_quarterly_jnj_restatement_axis_synth.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+
+def test_jnj_restatement_pair_excluded_pack_layer_recast_flag_reaches_feed(
+    kpi_xbrl_module, kpi_memo_feed_module, jnj_restatement_axis_packs,
+    stub_data_layer_deps,
+):
+    """Task 4 chain variant (a): the JNJ Shockwave RestatementAxis pair is
+    already excluded at the pack layer (`coverage.quarterly.axis_exclusions`
+    carries both vintage-tagged members — T1's producer-side accounting,
+    counted by category); the axis-absent REAL Q1+Q2 facts bind cleanly
+    through `resolve_binding` with no false ambiguity (a single fact per
+    window — nothing collides); and T2's `period_recast` coverage_flag,
+    built from that exclusion accounting, reaches the memo feed with the
+    verbatim exclusion payload."""
+    pack = jnj_restatement_axis_packs["jnj_clean_bind"]
+
+    result = kpi_xbrl_module.build_quarterly_series(pack)
+
+    # ---- The real fact binds cleanly: exactly one signature group, both
+    # real quarters emitted, no ambiguity raised anywhere in the chain.
+    assert len(result["series"]) == 1
+    entry = result["series"][0]
+    assert entry["signature"]["dimensions"] == {
+        "ProductOrService": "ShockwaveMedTechMember"
+    }
+    assert sorted(p["value"] for p in entry["points"]) == [700.0, 720.0]
+    assert entry["gaps"] == []
+
+    # ---- The pack-layer exclusion surfaces as ONE period_recast flag,
+    # carrying the verbatim two-member exclusion payload from the fixture.
+    recast_flags = [
+        f for f in result["coverage_flags"] if f["type"] == "period_recast"
+    ]
+    assert len(recast_flags) == 1
+    flag = recast_flags[0]
+    kpi_xbrl_module.assert_dqc_schema(flag)
+    assert flag["accessions"] == ["0000200406-25-000209"]
+    assert flag["exclusions"] == (
+        pack["coverage"]["quarterly"]["axis_exclusions"]
+    )
+    assert {e["member"] for e in flag["exclusions"]} == {
+        "PreviouslyReportedMember",
+        "RevisionOfPriorPeriodReclassificationAdjustmentMember",
+    }
+
+    # ---- series -> feed: the recast flag rides through VERBATIM alongside
+    # the real series.
+    feed = kpi_memo_feed_module.build_quarterly_memo_feed(
+        "JNJ", result, "2026-07-19T00:00:00"
+    )
+    assert feed["status"] == "TRUSTED"
+    feed_recast = [
+        f for f in feed["coverage_flags"] if f["type"] == "period_recast"
+    ]
+    assert feed_recast == recast_flags
+    assert sorted(
+        p["value"] for p in feed["series"][0]["points"]
+    ) == [700.0, 720.0]
+
+
+def test_jnj_genuine_intra_filing_ambiguity_refuses_per_signature_sibling_emits(
+    kpi_xbrl_module, kpi_memo_feed_module, jnj_restatement_axis_packs,
+    stub_data_layer_deps,
+):
+    """Task 4 chain variant (b): a genuine intra-filing ambiguity — TWO
+    signature groups each carrying two DIFFERENT-valued facts from the SAME
+    accession/window (a real tagging defect, distinct from the vintage-
+    restatement scenario above) — refuses per signature (T3) while the
+    clean sibling signature still emits, and the feed carries the sibling's
+    series plus TWO `signature_refused` flags (multiple-poisoned-groups
+    behavior, cheap to assert alongside the single-group case already
+    pinned in test_kpi_xbrl.py)."""
+    pack = jnj_restatement_axis_packs["jnj_ambiguous_refusal"]
+
+    result = kpi_xbrl_module.build_quarterly_series(pack)
+
+    # ---- Only the clean sibling signature emits — both poisoned groups are
+    # skipped, no whole-ticker abort.
+    assert len(result["series"]) == 1
+    clean_entry = result["series"][0]
+    assert clean_entry["signature"]["dimensions"] == {
+        "ProductOrService": "ConsumerHealthMember"
+    }
+    assert [p["value"] for p in clean_entry["points"]] == [500.0]
+
+    # ---- Two poisoned groups -> two refusal entries, each dqc-schema-
+    # compliant, each naming its own offending signature.
+    refusals = [
+        f for f in result["coverage_flags"] if f["type"] == "signature_refused"
+    ]
+    assert len(refusals) == 2
+    refused_dimensions = {
+        tuple(sorted(f["signature"]["dimensions"].items())) for f in refusals
+    }
+    assert refused_dimensions == {
+        (("ProductOrService", "ShockwaveMedTechMember"),),
+        (("ProductOrService", "DePuySynthesMember"),),
+    }
+    for flag in refusals:
+        kpi_xbrl_module.assert_dqc_schema(flag)
+        assert flag["accessions"] == ["0000200406-25-000301"]
+        assert "intra-filing" in flag["reason"]
+
+    # ---- series -> feed: the sibling's series plus both refusal flags,
+    # verbatim.
+    feed = kpi_memo_feed_module.build_quarterly_memo_feed(
+        "JNJ", result, "2026-07-19T00:00:00"
+    )
+    assert feed["status"] == "TRUSTED"
+    assert len(feed["series"]) == 1
+    assert feed["series"][0]["points"][0]["value"] == 500.0
+    feed_refusals = [
+        f for f in feed["coverage_flags"] if f["type"] == "signature_refused"
+    ]
+    assert feed_refusals == refusals

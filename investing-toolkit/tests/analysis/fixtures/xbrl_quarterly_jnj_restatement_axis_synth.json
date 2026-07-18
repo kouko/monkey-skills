@@ -1,0 +1,128 @@
+{
+  "_provenance": "SYNTHETIC 2026-07-19 (Task 4, docs/loom/plans/2026-07-19-jnj-restatement-axis-signature.md), factory-constructed per docs/loom/memory/fixtures-mirror-producer-shape.md's sanctioned fallback (extraction is NOT re-run in this e2e file — module docstring — so both packs model the OUTPUT SHAPE `extract_dimensional_revenue`/`pack_kpi_quarterly` would already have produced, never a machine-captured raw pull). Both packs model JNJ 10-Q accession 0000200406-25-000209's real Shockwave Medical RestatementAxis reclassification pair (a ~$20M PreviouslyReportedMember/RevisionOfPriorPeriodReclassificationAdjustmentMember pair tagged alongside the axis-absent current-quarter value) — revenue VALUES and all OTHER accessions are synthetic placeholders; dedup/keying/exclusion behavior never depends on magnitude. jnj_clean_bind: coverage.quarterly.axis_exclusions carries the two vintage-tagged members of the restatement pair (T1's producer-side accounting) while `facts` carries ONLY the axis-absent real Q1+Q2 FY2025 Shockwave values — i.e. the pair is already excluded at the pack layer, exactly as T1's fixed `_dimension_signature` would emit it; the real fact must bind cleanly (no ambiguity) and T2's `period_recast` coverage_flag must reach the feed with the exclusion payload verbatim. jnj_ambiguous_refusal: a SEPARATE, unrelated genuine intra-filing ambiguity scenario (two signature groups, each carrying two DIFFERENT-valued facts from the SAME accession/window — a real tagging defect, never a restatement) plus one clean sibling signature, exercising T3's per-signature refusal granularity; this pack carries no `coverage` key (mirrors test_kpi_xbrl.py's `_intra_filing_ambiguous_pack` convention — the scenario is orthogonal to the vintage-exclusion accounting jnj_clean_bind exercises). Regenerate by hand-editing this file directly (no producer function backs a JNJ-labeled synthetic pack) — keep both scenarios narrowly synthetic and never conflate them into one pack.",
+  "jnj_clean_bind": {
+    "company": "JNJ",
+    "facts": [
+      {
+        "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "dimensions": {"ProductOrService": "ShockwaveMedTechMember"},
+        "consolidation": null,
+        "period_end": "2025-03-30",
+        "fiscal_year": 2025,
+        "fiscal_quarter": "Q1",
+        "duration_months": 3,
+        "accession": "0000200406-25-000123",
+        "filed": "2025-04-15",
+        "value": 700.0
+      },
+      {
+        "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "dimensions": {"ProductOrService": "ShockwaveMedTechMember"},
+        "consolidation": null,
+        "period_end": "2025-06-29",
+        "fiscal_year": 2025,
+        "fiscal_quarter": "Q2",
+        "duration_months": 3,
+        "accession": "0000200406-25-000209",
+        "filed": "2025-07-16",
+        "value": 720.0
+      }
+    ],
+    "fiscal_calendars": {
+      "0000200406-25-000123": {"fiscal_period_focus": "Q1"},
+      "0000200406-25-000209": {"fiscal_period_focus": "Q2"}
+    },
+    "coverage": {
+      "_status": "ok",
+      "quarterly": {
+        "axis_exclusions": [
+          {
+            "category": "vintage",
+            "axis": "srt:RestatementAxis",
+            "member": "PreviouslyReportedMember",
+            "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+            "accession": "0000200406-25-000209",
+            "period_end": "2025-06-29"
+          },
+          {
+            "category": "vintage",
+            "axis": "srt:RestatementAxis",
+            "member": "RevisionOfPriorPeriodReclassificationAdjustmentMember",
+            "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+            "accession": "0000200406-25-000209",
+            "period_end": "2025-06-29"
+          }
+        ]
+      },
+      "annual": {"axis_exclusions": []}
+    }
+  },
+  "jnj_ambiguous_refusal": {
+    "company": "JNJ",
+    "facts": [
+      {
+        "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "dimensions": {"ProductOrService": "ShockwaveMedTechMember"},
+        "consolidation": null,
+        "period_end": "2025-09-28",
+        "fiscal_year": 2025,
+        "fiscal_quarter": "Q3",
+        "duration_months": 3,
+        "accession": "0000200406-25-000301",
+        "filed": "2025-10-15",
+        "value": 720.0
+      },
+      {
+        "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "dimensions": {"ProductOrService": "ShockwaveMedTechMember"},
+        "consolidation": null,
+        "period_end": "2025-09-28",
+        "fiscal_year": 2025,
+        "fiscal_quarter": "Q3",
+        "duration_months": 3,
+        "accession": "0000200406-25-000301",
+        "filed": "2025-10-15",
+        "value": 740.0
+      },
+      {
+        "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "dimensions": {"ProductOrService": "DePuySynthesMember"},
+        "consolidation": null,
+        "period_end": "2025-09-28",
+        "fiscal_year": 2025,
+        "fiscal_quarter": "Q3",
+        "duration_months": 3,
+        "accession": "0000200406-25-000301",
+        "filed": "2025-10-15",
+        "value": 1800.0
+      },
+      {
+        "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "dimensions": {"ProductOrService": "DePuySynthesMember"},
+        "consolidation": null,
+        "period_end": "2025-09-28",
+        "fiscal_year": 2025,
+        "fiscal_quarter": "Q3",
+        "duration_months": 3,
+        "accession": "0000200406-25-000301",
+        "filed": "2025-10-15",
+        "value": 1850.0
+      },
+      {
+        "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "dimensions": {"ProductOrService": "ConsumerHealthMember"},
+        "consolidation": null,
+        "period_end": "2025-09-28",
+        "fiscal_year": 2025,
+        "fiscal_quarter": "Q3",
+        "duration_months": 3,
+        "accession": "0000200406-25-000301",
+        "filed": "2025-10-15",
+        "value": 500.0
+      }
+    ],
+    "fiscal_calendars": {
+      "0000200406-25-000301": {"fiscal_period_focus": "Q3"}
+    }
+  }
+}
