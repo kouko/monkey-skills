@@ -5,6 +5,18 @@ All notable changes to the `loom-spec` plugin (formerly `spec-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] — 2026-07-18 — domain-tag triage at edge-case expansion
+
+### Added
+
+- **`spec-expansion/references/domain-tag-triage.md`**: pinned three-bucket
+  vocabulary (craft / domain-convention / project-local); non-derivable edge
+  cases classify FIRST — domain-convention facts become tagged open questions
+  (`evidence_needed:`), never invented answers. SHAPING-class tags (answer
+  alters acceptance criteria, data semantics, or a state machine) block
+  VERIFY unless explicitly `deferred: <reason>`; resolution routes OUTSIDE
+  the skill between draft and gate — drafting stays closed-world.
+
 ## [0.4.3] — 2026-07-15
 
 ### Changed

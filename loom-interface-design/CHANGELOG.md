@@ -8,6 +8,23 @@ Versioning: [Semantic Versioning](https://semver.org/).
 > This file was reconstructed on 2026-07-02 from the git history — the plugin
 > shipped its first three versions without a CHANGELOG.
 
+## [0.6.0] — 2026-07-18 — HIGH-bar knowledge triage + critic evidence flag
+
+### Added
+
+- **`interaction-flows` + `design-system`**: each gains
+  `references/knowledge-triage.md` (pinned three-bucket vocabulary:
+  craft / domain-convention / project-local) with an imperative mount at
+  its drafting moment. SHAPING bar (HIGH, narrower than loom-spec's):
+  the answer alters flow structure, a state machine, or a semantic
+  display convention. SHAPING domain-convention facts get routed
+  research BEFORE the critic verdict; deferrable ones become tagged open
+  questions (`evidence_needed:`) in ui-flows.md / DESIGN.md for the spec
+  station to inherit. Drafting skills never run WebSearch.
+- **`design-critic`**: findings may carry the optional
+  `evidence_needed: craft | domain-convention | project-local` tag —
+  flag-never-search; verdict enum unchanged.
+
 ## [0.5.0] — 2026-07-13
 
 ### Added

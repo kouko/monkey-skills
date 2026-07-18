@@ -98,6 +98,12 @@ dimension, reading each through the detected modality:
    and the small/constrained-form-factor flow (GUI mobile reflow / TUI
    narrow-terminal / CLI non-TTY-piped output).
 
+**Before drafting any flow, state transition, or display convention (color /
+sign / period) whose correct form is not derivable from `PRINCIPLES.md` or
+the feature seed, read `references/knowledge-triage.md` and run its
+classification question FIRST** — do not guess a domain convention into the
+flow; classify, then tag or route per that reference.
+
 ### 5. Apply the render-variant **flag-only** rule
 
 When you inventory a surface (dimension 1), **flag** which render variants it can
@@ -175,6 +181,8 @@ expand the feature into a spec.
 - `references/ux-flow-checklist.md` — the 7 generation dimensions + flag rule.
 - `references/ascii-ui-patterns.md` — ASCII layout skeletons + the
   ASCII-vs-Mermaid split.
+- `references/knowledge-triage.md` — classify a stuck domain-convention
+  question (craft / domain-convention / project-local) before drafting.
 - `obsidian:obsidian-mermaid-visualizer` — canonical Mermaid syntax for the flow
   diagrams.
 - `loom-spec:spec-expansion` — the downstream consumer of `ui-flows.md`; owns

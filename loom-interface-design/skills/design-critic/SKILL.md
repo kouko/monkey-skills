@@ -166,6 +166,8 @@ copy of the artifacts under critique — `DESIGN.md` + `ui-flows.md` plus the ga
 found so far) for the next round; the long tail goes to blind spots, never
 padded into the design.
 
+**Optional `evidence_needed` tag.** A finding MAY carry `evidence_needed: craft | domain-convention | project-local` when the omission's correct answer is owned outside this artifact (the interface-design station's knowledge-triage vocabulary — see `interaction-flows`/`design-system`'s `references/knowledge-triage.md`). The critic **flags** the tag on the finding; it never runs WebSearch or otherwise resolves it itself. This is additive only — the verdict enum below (`PASS_WITH_NOTES` / `NEEDS_REVISION`) is unchanged.
+
 ## How you write back
 
 You **extend the design view in place** with the consolidated, ranked set —

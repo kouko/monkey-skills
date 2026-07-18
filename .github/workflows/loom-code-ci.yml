@@ -42,13 +42,17 @@ on:
       - 'scripts/**'
       # scripts/test_bucket_vocabulary_consistency.py pins the three-bucket
       # research-routing vocabulary (craft / domain-convention / project-local)
-      # byte-identical across loom-code, loom-spec, and loom-discovery — but
-      # only loom-code/** is otherwise in this trigger, so an edit to just the
-      # loom-spec or loom-discovery carrier file would merge ungated without
-      # these two explicit lines (docs/loom/plans/2026-07-18-knowledge-triage-
-      # three-buckets.md task 5).
+      # byte-identical across loom-code, loom-spec, loom-discovery,
+      # loom-product-principles, and loom-interface-design — but only
+      # loom-code/** is otherwise in this trigger, so an edit to just one of
+      # these foreign carrier files would merge ungated without these
+      # explicit lines (docs/loom/plans/2026-07-18-knowledge-triage-
+      # three-buckets.md task 5, extended by task 11).
       - 'loom-spec/skills/spec-expansion/references/domain-tag-triage.md'
       - 'loom-discovery/skills/user-insights/assets/evidence-template.md'
+      - 'loom-product-principles/skills/product-principles/references/knowledge-triage.md'
+      - 'loom-interface-design/skills/interaction-flows/references/knowledge-triage.md'
+      - 'loom-interface-design/skills/design-system/references/knowledge-triage.md'
       - '.github/workflows/loom-code-ci.yml'
   push:
     branches: [main]
@@ -60,6 +64,9 @@ on:
       - 'scripts/**'
       - 'loom-spec/skills/spec-expansion/references/domain-tag-triage.md'
       - 'loom-discovery/skills/user-insights/assets/evidence-template.md'
+      - 'loom-product-principles/skills/product-principles/references/knowledge-triage.md'
+      - 'loom-interface-design/skills/interaction-flows/references/knowledge-triage.md'
+      - 'loom-interface-design/skills/design-system/references/knowledge-triage.md'
 
 permissions:
   contents: read

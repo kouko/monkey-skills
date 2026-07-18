@@ -347,10 +347,13 @@ findings:
     where: <file:line OR commit SHA range>
     source: <rubric / checklist / standard file:section that triggered this>
     note: <1-2 sentence finding>
+    evidence_needed: craft | domain-convention | project-local  # OPTIONAL
 
 summary:
   - <≤5 bullet observations about the branch as a whole — patterns, themes, what the branch achieves well, what concerns dominate>
 ```
+
+`evidence_needed` (OPTIONAL): set it when the finding's correct resolution is owned by an authority outside this codebase (engineering literature / domain authority / this repo's own docs) rather than by the diff itself — the reviewer never runs the research; it flags.
 
 ### Aggregation rule
 

@@ -5,6 +5,32 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.33.0] — 2026-07-18 — reviewer evidence_needed tag = immediate triage trigger
+
+### Added
+
+- **`agents/code-quality-reviewer.md` + `agents/code-reviewer.md`**: findings
+  may carry the optional
+  `evidence_needed: craft | domain-convention | project-local` tag — set when
+  the finding's correct resolution is owned by an authority outside the
+  codebase; the reviewer flags, never searches. Verdict vocabulary unchanged.
+- **`subagent-driven-development`**: a tagged finding fires the
+  research-escalation triage IMMEDIATELY (before any re-dispatch — no waiting
+  for the 2nd round); idempotency clause — triage never re-runs for the same
+  question.
+
+## [0.32.0] — 2026-07-18 — reactive research-escalation (three-bucket knowledge triage v1)
+
+### Added
+
+- **`subagent-driven-development/references/research-escalation.md`**: pinned
+  three-bucket vocabulary (craft / domain-convention / project-local) +
+  stall-triggered research routes; mounts at the 2nd same-question
+  NEEDS_REVISION round and the BLOCKED-on-semantics path. Generalizes
+  systematic-debugging's pre-Hypothesis-3 WebSearch gate; 3-round cap and
+  4th-retry escalation unchanged. (Plan:
+  `docs/loom/plans/2026-07-18-knowledge-triage-three-buckets.md`.)
+
 ## [0.31.4] — 2026-07-17 — finishing offers both merge paths at PR-open
 
 ### Changed

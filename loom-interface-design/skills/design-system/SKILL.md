@@ -96,6 +96,12 @@ Detect or **ask** the product's modality (**GUI / TUI / CLI**); default to
 - **GUI** → go to Step 4a (full 8-section `DESIGN.md`).
 - **TUI / CLI** → go to Step 4b (lightweight conventions stub + phase-2 note).
 
+**Before deriving any color, type, or component token/convention whose
+correct form is not derivable from `PRINCIPLES.md` or the seed, read
+`references/knowledge-triage.md` and run its classification question
+FIRST** — do not guess a domain convention into a token; classify, then tag
+or route per that reference. Applies in both Step 4a and Step 4b.
+
 ### Step 4a — GUI: emit the 8-section `DESIGN.md`
 
 Emit a **`DESIGN.md`** following the schema contract from Step 1:

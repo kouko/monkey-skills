@@ -147,7 +147,7 @@ Commit the ledger update **per task** (lean: keep it maximally current so a cras
 | `PASS` | `NEEDS_REVISION` | Re-dispatch implementer with `findings`. Up to **3 rounds** then escalate to user. |
 | `NEEDS_REVISION` | (any) | Re-dispatch implementer with `gaps` + (if any) `findings`. Same 3-round cap. |
 
-When the 2nd round's `NEEDS_REVISION` repeats the SAME unresolved question, read [`references/research-escalation.md`](references/research-escalation.md) and run its triage FIRST — before the 3rd re-dispatch — so research evidence rides that round.
+When the 2nd round's `NEEDS_REVISION` repeats the SAME unresolved question, read [`references/research-escalation.md`](references/research-escalation.md) and run its triage FIRST — before the 3rd re-dispatch — so research evidence rides that round. A reviewer finding carrying `evidence_needed:` → run this same triage IMMEDIATELY, before any re-dispatch — do not wait for the 2nd round.
 
 A 3-round cap prevents infinite loops on ambiguous specs. On the 4th retry, surface to the user — likely the spec is wrong, not the implementer. Phrase that escalation per [§Asking the user](#asking-the-user): lead with a state anchor and say what's actually stuck in plain words, not `NEEDS_REVISION ×3`.
 

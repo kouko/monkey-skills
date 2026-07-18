@@ -83,3 +83,19 @@ unchanged, unextended, unshortened. This protocol runs BEFORE that
 4th-retry surface (at the 2nd same-question round, or at a
 semantics/convention BLOCKED), never instead of it, and never adds a
 round of its own.
+
+## Reviewer-tag trigger — v2 addition
+
+A third trigger joins the two above: a reviewer finding (per-task or
+whole-branch) carrying an `evidence_needed:` tag. The tag pre-classifies
+the bucket — the reviewer already named it — so this trigger's only job
+is to VERIFY, not re-derive: if the tag's bucket is obviously wrong,
+reclassify with the classification question above, then walk that
+route; otherwise walk the tagged bucket's route as written above,
+IMMEDIATELY — do not wait for a 2nd same-question round. Idempotency:
+if this triage already ran for the SAME question (via any trigger),
+do not re-run it — reuse the citations it produced.
+
+Caps unchanged: this trigger runs BEFORE the 3-round cap / 4th-retry
+escalation, exactly like the two triggers above — it does not add,
+remove, or extend a round.
