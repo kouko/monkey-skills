@@ -678,6 +678,207 @@ def test_declared_break_splits_series_not_concat(kpi_xbrl_module, fact_pack):
     assert result["break_markers"] == [{"break_period": "2018"}]
 
 
+# ---------------------------------------------------------------------------
+# Task 5 (docs/loom/plans/2026-07-16-operational-kpi-quarterly.md) — classify
+# period_type from the data layer's EMITTED labels; migrate period keying to
+# the fiscal basis. Fixtures are PRODUCER-GENERATED (the real
+# sec_edgar_client extraction/fact-builder ran over machine-captured raw
+# rows — see each fixture's _provenance), per
+# docs/loom/memory/fixtures-mirror-producer-shape.md.
+# No `@req` tags: this dispatch traces work by named plan Tasks, not
+# registered loom-spec REQ-ids (same convention as the module header note).
+# ---------------------------------------------------------------------------
+
+NVDA_COMPUTE_MATCH = {
+    "concept": "us-gaap:Revenues",
+    "dimensions": {"ProductOrService": "ComputeMember"},
+}
+
+AAPL_IPHONE_QUARTERLY_MATCH = {
+    "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+    "dimensions": {"ProductOrService": "IPhoneMember"},
+}
+
+
+@pytest.fixture
+def nvda_quarterly_pack():
+    return json.loads(
+        (FIXTURES / "xbrl_quarterly_nvda_factpack.json").read_text(encoding="utf-8")
+    )
+
+
+@pytest.fixture
+def aapl_quarterly_pack():
+    return json.loads(
+        (FIXTURES / "xbrl_quarterly_aapl_labeled_factpack.json").read_text(encoding="utf-8")
+    )
+
+
+def test_classify_period_type(kpi_xbrl_module, nvda_quarterly_pack, aapl_quarterly_pack):
+    """Task 5 RED: the analysis layer classifies each fact's period_type
+    (Q1/Q2/Q3/Q4/FY) + cumulative flag + duration_class CONSUMING the data
+    layer's emitted labels (fiscal_quarter + duration_months) — it never
+    re-derives fiscal geometry (rebuild-findings §RESOLVED: data layer
+    derives, analysis consumes). Cases per the plan's acceptance:
+    3mo at fiscal Q1 end → Q1/single; a Sep-FYE filer's 3mo ending
+    late-Dec → Q1; 9mo → 9mo-YTD cumulative; 6mo → 6mo-YTD cumulative;
+    a comparative classified from its OWN labels; a stub/unclassifiable
+    (pre-schema shape, no label group) surfaced — never guessed."""
+    # NVDA (late-January FYE): 3-month fact at the fiscal Q1 end → Q1 single.
+    nvda_points = kpi_xbrl_module.facts_to_points(
+        nvda_quarterly_pack, "compute_revenue", NVDA_COMPUTE_MATCH,
+        "NVDA", "xbrl-dimensional",
+    )
+    assert len(nvda_points) == 3
+    nvda_q1 = next(p for p in nvda_points if p["value"] == 34155000000.0)
+    assert nvda_q1["period_type"] == "Q1"
+    assert nvda_q1["cumulative"] is False
+    assert nvda_q1["duration_class"] == "3mo"
+
+    # AAPL (late-September FYE) quarterly facts, producer-labeled.
+    aapl_points = kpi_xbrl_module.facts_to_points(
+        aapl_quarterly_pack, "iphone_revenue", AAPL_IPHONE_QUARTERLY_MATCH,
+        "AAPL", "xbrl-dimensional",
+    )
+    assert len(aapl_points) == 5
+    by_value = {p["value"]: p for p in aapl_points}
+
+    # Sep-FYE 3mo ending late December → fiscal Q1 (of the NEXT-named FY).
+    q1 = by_value[1000.0]
+    assert (q1["period_type"], q1["cumulative"], q1["duration_class"]) == (
+        "Q1", False, "3mo",
+    )
+    assert q1["period"] == "2025"  # FY2025 despite calendar_year 2024
+    # 6-month H1 → 6mo-YTD cumulative, distinct from the 3mo Q2 single.
+    h1 = by_value[3000.0]
+    assert (h1["period_type"], h1["cumulative"], h1["duration_class"]) == (
+        "Q2", True, "6mo-YTD",
+    )
+    # 9-month YTD → 9mo-YTD cumulative, never a single quarter.
+    ytd9 = by_value[4000.0]
+    assert (ytd9["period_type"], ytd9["cumulative"], ytd9["duration_class"]) == (
+        "Q3", True, "9mo-YTD",
+    )
+    # Prior-year comparative classified from its OWN labels (FY2024-Q2),
+    # never the carrying filing's Q2/FY2025 focus stamped.
+    comparative = by_value[1500.0]
+    assert comparative["period"] == "2024"
+    assert (comparative["period_type"], comparative["duration_class"]) == (
+        "Q2", "3mo",
+    )
+
+    # Stub/unclassifiable: a pre-schema fact (bare edgartools-column
+    # fiscal_year, NO emitted label group) is SURFACED via a distinct
+    # raise — period_type is never guessed from period_end/calendar.
+    stub_fact = {
+        "concept": "us-gaap:Revenues",
+        "dimensions": {"ProductOrService": "ComputeMember"},
+        "value": 999.0,
+        "period_end": "2025-10-26",
+        "fiscal_year": 2025,  # the raw dataframe column, NOT our label group
+        "accession": "0001045810-25-000230",
+        "filed": "2025-11-19",
+    }
+    with pytest.raises(ValueError, match="unclassifiable"):
+        kpi_xbrl_module.facts_to_points(
+            {"company": "NVDA", "facts": [stub_fact]},
+            "compute_revenue", NVDA_COMPUTE_MATCH, "NVDA", "xbrl-dimensional",
+        )
+
+
+def test_classify_uses_filing_dei_focus_not_calendar(kpi_xbrl_module, aapl_quarterly_pack):
+    """Task 5 RED — the spec's Q2 scenario asserted LITERALLY (spec.md
+    'non-December fiscal-year-end classifies by the filing's dei calendar'):
+    GIVEN a company whose dei:CurrentFiscalYearEndDate is late September and
+    a 10-Q with dei:DocumentFiscalPeriodFocus=Q2 for a fact ending in late
+    March, WHEN the fact is classified THEN it is fiscal-Q2 (per the
+    filing's dei calendar), not calendar-Q1."""
+    # Ground the GIVEN in the pack's own per-filing dei calendar.
+    q2_calendar = aapl_quarterly_pack["fiscal_calendars"]["0000320193-25-000057"]
+    assert q2_calendar["fiscal_year_end"] == "--09-27"  # late September
+    assert q2_calendar["fiscal_period_focus"] == "Q2"
+
+    points = kpi_xbrl_module.facts_to_points(
+        aapl_quarterly_pack, "iphone_revenue", AAPL_IPHONE_QUARTERLY_MATCH,
+        "AAPL", "xbrl-dimensional",
+    )
+    # The 3-month fact ending 2025-03-29 (late March).
+    q2_single = next(p for p in points if p["value"] == 2000.0)
+    assert q2_single["period_type"] == "Q2"        # fiscal-Q2 per dei calendar
+    assert q2_single["calendar_quarter"] == "Q1"   # NOT its calendar position
+    assert q2_single["cumulative"] is False
+
+
+def test_period_key_is_fiscal_not_calendar(kpi_xbrl_module, nvda_quarterly_pack):
+    """Task 5 RED: series keying migrates off `period_end[:4]` (the ruled
+    latent bug — calendar year) onto the EMITTED fiscal_year: the real NVDA
+    FY2026-Q3 fact (period_end 2025-10-26, fiscal_year 2026) keys under
+    "2026", never "2025" — while the calendar pair stays available on the
+    point (the calendarization basis, rebuild-findings §RESOLVED (b))."""
+    points = kpi_xbrl_module.facts_to_points(
+        nvda_quarterly_pack, "compute_revenue", NVDA_COMPUTE_MATCH,
+        "NVDA", "xbrl-dimensional",
+    )
+    q3 = next(p for p in points if p["value"] == 43028000000.0)
+    assert q3["period"] == "2026"
+    # The calendar basis remains available on the point, honestly named.
+    assert q3["calendar_year"] == 2025
+    assert q3["calendar_quarter"] == "Q4"
+
+
+def test_fact_pack_na_slot_is_not_read_as_empty_series(kpi_xbrl_module):
+    """Task 5 RED (Wave-1 review findings, plan Decision Log 2026-07-17):
+    (a) a foreign-private-issuer N/A slot (T4's error_class, which
+    deliberately omits `facts`) is branched on BEFORE
+    `fact_pack.get("facts", [])` at BOTH read sites — it must RAISE loudly,
+    never be consumed as a real empty series; (b) a `None` per-filing
+    calendar routes to the surfaced-unclassifiable path, never a calendar
+    default."""
+    # Producer-shaped N/A slot (mirrors _foreign_private_issuer_na_slot).
+    na_slot = {
+        "error": (
+            "SEC EDGAR dimensional-revenue extraction failed for 'TSM' "
+            "(10-Q): submissions form history has 20-F + 6-K but no 10-Q"
+        ),
+        "error_class": "foreign_private_issuer_no_quarterly_xbrl",
+        "identifier": "TSM",
+        "reason": "submissions form history has 20-F + 6-K but no 10-Q",
+    }
+    with pytest.raises(ValueError, match="foreign_private_issuer_no_quarterly_xbrl"):
+        kpi_xbrl_module.facts_to_points(
+            na_slot, "compute_revenue", NVDA_COMPUTE_MATCH, "TSM", "xbrl-dimensional",
+        )
+    with pytest.raises(ValueError, match="foreign_private_issuer_no_quarterly_xbrl"):
+        kpi_xbrl_module.resolve_binding(
+            na_slot,
+            {"kpi_id": "compute_revenue", "sources": [
+                {**NVDA_COMPUTE_MATCH, "source_kind": "xbrl-dimensional"},
+            ]},
+            "TSM",
+        )
+
+    # A None per-filing calendar (T3's unreadable-calendar shape): the
+    # filing's facts carry no derivable label group — surfaced
+    # unclassifiable, NEVER silently keyed by the calendar year.
+    none_calendar_pack = {
+        "company": "NVDA",
+        "facts": [{
+            "concept": "us-gaap:Revenues",
+            "dimensions": {"ProductOrService": "ComputeMember"},
+            "value": 123.0,
+            "period_end": "2025-10-26",
+            "accession": "0001045810-25-000230",
+            "filed": "2025-11-19",
+        }],
+        "fiscal_calendars": {"0001045810-25-000230": None},
+    }
+    with pytest.raises(ValueError, match="unclassifiable"):
+        kpi_xbrl_module.facts_to_points(
+            none_calendar_pack, "compute_revenue", NVDA_COMPUTE_MATCH,
+            "NVDA", "xbrl-dimensional",
+        )
+
+
 def test_cli_build_resolves_binding_and_prints_points(tmp_path):
     """Task 6 GREEN: the `build` subcommand reads a fact-pack JSON from
     stdin and a binding JSON from --binding, resolves it via

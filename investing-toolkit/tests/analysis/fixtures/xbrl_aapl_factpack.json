@@ -1,11 +1,81 @@
 {
-  "_comment": "REAL Apple SEC XBRL facts, each value+period_end verified live via edgartools (exact-integer re-probe 2026-07-14). iphone_revenue spans the 2018 tagging-regime break (OLD: SalesRevenueNet + us-gaap:ProductOrServiceAxis + aapl:AppleIphoneMember; NEW: RevenueFromContractWithCustomerExcludingAssessedTax + srt:ProductOrServiceAxis + aapl:IPhoneMember). gross_profit is a flat single-concept series (no dimension). Values in USD. NOTE: `fiscal_year` here is DERIVED FROM period_end (the year the fiscal period ends) — the edgartools raw `fiscal_year` column is unreliable for prior-year comparatives, so period MUST be derived from period_end, never that column.",
+  "_comment": "REAL Apple SEC XBRL facts, each value+period_end verified live via edgartools (exact-integer re-probe 2026-07-14). iphone_revenue spans the 2018 tagging-regime break (OLD: SalesRevenueNet + us-gaap:ProductOrServiceAxis + aapl:AppleIphoneMember; NEW: RevenueFromContractWithCustomerExcludingAssessedTax + srt:ProductOrServiceAxis + aapl:IPhoneMember). gross_profit is a flat single-concept series (no dimension). Values in USD. NOTE: `fiscal_year` here is DERIVED FROM period_end (the year the fiscal period ends) — the edgartools raw `fiscal_year` column is unreliable for prior-year comparatives, so period MUST be derived from period_end, never that column. | AUGMENTED 2026-07-18 (T5, docs/loom/plans/2026-07-16-operational-kpi-quarterly.md): every fact now carries the producer's parallel period-label group (duration_months=12 — all facts here are annual 10-K facts — calendar_year/calendar_quarter, fiscal_year/fiscal_quarter, derivation_basis) derived by the REAL sec_edgar_client._derive_fiscal_label against each filer's nominal dei calendar (AAPL --09-27, NFLX --12-31, INTC --12-26), mirroring the current producer emission (docs/loom/memory/fixtures-mirror-producer-shape.md). The raw edgartools fiscal_year column value is REPLACED by the honest derived label.",
   "company": "AAPL",
   "facts": [
-    {"concept": "us-gaap:SalesRevenueNet", "axis": "us-gaap:ProductOrServiceAxis", "member": "aapl:AppleIphoneMember", "value": 136700000000, "period_end": "2016-09-24", "fiscal_year": 2016, "accession": "0001628280-16-020309", "filed": "2016-10-26"},
-    {"concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax", "axis": "srt:ProductOrServiceAxis", "member": "aapl:IPhoneMember", "value": 201183000000, "period_end": "2024-09-28", "fiscal_year": 2024, "accession": "0000320193-25-000079", "filed": "2025-10-31"},
-    {"concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax", "axis": "srt:ProductOrServiceAxis", "member": "aapl:IPhoneMember", "value": 209586000000, "period_end": "2025-09-27", "fiscal_year": 2025, "accession": "0000320193-25-000079", "filed": "2025-10-31"},
-    {"concept": "us-gaap:GrossProfit", "axis": null, "member": null, "value": 180683000000, "period_end": "2024-09-28", "fiscal_year": 2024, "accession": "0000320193-25-000079", "filed": "2025-10-31"},
-    {"concept": "us-gaap:GrossProfit", "axis": null, "member": null, "value": 195201000000, "period_end": "2025-09-27", "fiscal_year": 2025, "accession": "0000320193-25-000079", "filed": "2025-10-31"}
+    {
+      "concept": "us-gaap:SalesRevenueNet",
+      "axis": "us-gaap:ProductOrServiceAxis",
+      "member": "aapl:AppleIphoneMember",
+      "value": 136700000000,
+      "period_end": "2016-09-24",
+      "fiscal_year": 2016,
+      "accession": "0001628280-16-020309",
+      "filed": "2016-10-26",
+      "duration_months": 12,
+      "calendar_year": 2016,
+      "calendar_quarter": "Q3",
+      "fiscal_quarter": "FY",
+      "derivation_basis": "dei-declared"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "axis": "srt:ProductOrServiceAxis",
+      "member": "aapl:IPhoneMember",
+      "value": 201183000000,
+      "period_end": "2024-09-28",
+      "fiscal_year": 2024,
+      "accession": "0000320193-25-000079",
+      "filed": "2025-10-31",
+      "duration_months": 12,
+      "calendar_year": 2024,
+      "calendar_quarter": "Q3",
+      "fiscal_quarter": "FY",
+      "derivation_basis": "dei-declared"
+    },
+    {
+      "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "axis": "srt:ProductOrServiceAxis",
+      "member": "aapl:IPhoneMember",
+      "value": 209586000000,
+      "period_end": "2025-09-27",
+      "fiscal_year": 2025,
+      "accession": "0000320193-25-000079",
+      "filed": "2025-10-31",
+      "duration_months": 12,
+      "calendar_year": 2025,
+      "calendar_quarter": "Q3",
+      "fiscal_quarter": "FY",
+      "derivation_basis": "dei-declared"
+    },
+    {
+      "concept": "us-gaap:GrossProfit",
+      "axis": null,
+      "member": null,
+      "value": 180683000000,
+      "period_end": "2024-09-28",
+      "fiscal_year": 2024,
+      "accession": "0000320193-25-000079",
+      "filed": "2025-10-31",
+      "duration_months": 12,
+      "calendar_year": 2024,
+      "calendar_quarter": "Q3",
+      "fiscal_quarter": "FY",
+      "derivation_basis": "dei-declared"
+    },
+    {
+      "concept": "us-gaap:GrossProfit",
+      "axis": null,
+      "member": null,
+      "value": 195201000000,
+      "period_end": "2025-09-27",
+      "fiscal_year": 2025,
+      "accession": "0000320193-25-000079",
+      "filed": "2025-10-31",
+      "duration_months": 12,
+      "calendar_year": 2025,
+      "calendar_quarter": "Q3",
+      "fiscal_quarter": "FY",
+      "derivation_basis": "dei-declared"
+    }
   ]
 }
