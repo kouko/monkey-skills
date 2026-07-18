@@ -1,24 +1,73 @@
 {
   "etf": "XLE",
   "schema_id": "energy",
-  "as_of": "2026-05-05",
+  "as_of": "2026-07-18",
   "_meta": {
     "holdings_count": 10,
-    "weight_coverage_pct": 75.68,
+    "weight_coverage_pct": 0.0,
     "outliers_dropped": {},
-    "skipped_holdings": [],
-    "schema_dispatch": {
-      "energy": 10
-    },
-    "source": "yfinance funds_data + data-us memo-fetch"
+    "skipped_holdings": [
+      {
+        "ticker": "XOM",
+        "weight": 0.2025335,
+        "reason": "data-markets memo-fetch failed for XOM: [pack-us] memo-fetch start: XOM\n[pack-us] pack [info]: XOM\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "CVX",
+        "weight": 0.1437405,
+        "reason": "data-markets memo-fetch failed for CVX: [pack-us] memo-fetch start: CVX\n[pack-us] pack [info]: CVX\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "COP",
+        "weight": 0.0586663,
+        "reason": "data-markets memo-fetch failed for COP: [pack-us] memo-fetch start: COP\n[pack-us] pack [info]: COP\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "SLB",
+        "weight": 0.045293197,
+        "reason": "data-markets memo-fetch failed for SLB: [pack-us] memo-fetch start: SLB\n[pack-us] pack [info]: SLB\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "WMB",
+        "weight": 0.0449115,
+        "reason": "data-markets memo-fetch failed for WMB: [pack-us] memo-fetch start: WMB\n[pack-us] pack [info]: WMB\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "MPC",
+        "weight": 0.0445644,
+        "reason": "data-markets memo-fetch failed for MPC: [pack-us] memo-fetch start: MPC\n[pack-us] pack [info]: MPC\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "EOG",
+        "weight": 0.0444317,
+        "reason": "data-markets memo-fetch failed for EOG: [pack-us] memo-fetch start: EOG\n[pack-us] pack [info]: EOG\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "VLO",
+        "weight": 0.0441841,
+        "reason": "data-markets memo-fetch failed for VLO: [pack-us] memo-fetch start: VLO\n[pack-us] pack [info]: VLO\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "PSX",
+        "weight": 0.0438871,
+        "reason": "data-markets memo-fetch failed for PSX: [pack-us] memo-fetch start: PSX\n[pack-us] pack [info]: PSX\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "KMI",
+        "weight": 0.043441802,
+        "reason": "data-markets memo-fetch failed for KMI: [pack-us] memo-fetch start: KMI\n[pack-us] pack [info]: KMI\n[pack-us] pack [histo"
+      }
+    ],
+    "schema_dispatch": {},
+    "source": "yfinance funds_data + data-markets memo-fetch"
   },
   "multiples": {
-    "evEbitda": 12.80878209889907,
-    "priceToBook": 2.7728560737156336,
-    "priceToCFO": 11.50886908648765
+    "evEbitda": null,
+    "priceToBook": null,
+    "priceToCFO": null
   },
   "indicators": {
-    "FCF_yield": 4.367803668019246,
-    "debt_to_equity": 23.63625809538052
+    "FCF_yield": null,
+    "debt_to_equity": null
   }
 }

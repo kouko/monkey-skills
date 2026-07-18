@@ -1,23 +1,71 @@
 {
   "etf": "XLRE",
   "schema_id": "reit",
-  "as_of": "2026-05-05",
+  "as_of": "2026-07-18",
   "_meta": {
     "holdings_count": 10,
-    "weight_coverage_pct": 58.87,
+    "weight_coverage_pct": 0.0,
     "outliers_dropped": {},
-    "skipped_holdings": [],
-    "schema_dispatch": {
-      "reit": 9,
-      "default": 1
-    },
-    "source": "yfinance funds_data + data-us memo-fetch"
+    "skipped_holdings": [
+      {
+        "ticker": "WELL",
+        "weight": 0.109932296,
+        "reason": "data-markets memo-fetch failed for WELL: [pack-us] memo-fetch start: WELL\n[pack-us] pack [info]: WELL\n[pack-us] pack [hi"
+      },
+      {
+        "ticker": "PLD",
+        "weight": 0.0866608,
+        "reason": "data-markets memo-fetch failed for PLD: [pack-us] memo-fetch start: PLD\n[pack-us] pack [info]: PLD\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "EQIX",
+        "weight": 0.0705398,
+        "reason": "data-markets memo-fetch failed for EQIX: [pack-us] memo-fetch start: EQIX\n[pack-us] pack [info]: EQIX\n[pack-us] pack [hi"
+      },
+      {
+        "ticker": "AMT",
+        "weight": 0.0522868,
+        "reason": "data-markets memo-fetch failed for AMT: [pack-us] memo-fetch start: AMT\n[pack-us] pack [info]: AMT\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "SPG",
+        "weight": 0.0497612,
+        "reason": "data-markets memo-fetch failed for SPG: [pack-us] memo-fetch start: SPG\n[pack-us] pack [info]: SPG\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "O",
+        "weight": 0.0454382,
+        "reason": "data-markets memo-fetch failed for O: [pack-us] memo-fetch start: O\n[pack-us] pack [info]: O\n[pack-us] pack [history 2y]"
+      },
+      {
+        "ticker": "DLR",
+        "weight": 0.045244798,
+        "reason": "data-markets memo-fetch failed for DLR: [pack-us] memo-fetch start: DLR\n[pack-us] pack [info]: DLR\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "PSA",
+        "weight": 0.0447665,
+        "reason": "data-markets memo-fetch failed for PSA: [pack-us] memo-fetch start: PSA\n[pack-us] pack [info]: PSA\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "VTR",
+        "weight": 0.044660904,
+        "reason": "data-markets memo-fetch failed for VTR: [pack-us] memo-fetch start: VTR\n[pack-us] pack [info]: VTR\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "CBRE",
+        "weight": 0.0408003,
+        "reason": "data-markets memo-fetch failed for CBRE: [pack-us] memo-fetch start: CBRE\n[pack-us] pack [info]: CBRE\n[pack-us] pack [hi"
+      }
+    ],
+    "schema_dispatch": {},
+    "source": "yfinance funds_data + data-markets memo-fetch"
   },
   "multiples": {
-    "priceToFFO": 27.203094339893383,
-    "evEbitdare": 24.961029003844732,
-    "priceToBook": 6.743613590317338,
-    "priceToTangibleBook": 6.543234090313843
+    "priceToFFO": null,
+    "evEbitdare": null,
+    "priceToBook": null,
+    "priceToTangibleBook": null
   },
   "indicators": {}
 }

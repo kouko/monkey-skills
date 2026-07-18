@@ -1,26 +1,73 @@
 {
   "etf": "XLF",
   "schema_id": "bank",
-  "as_of": "2026-05-05",
+  "as_of": "2026-07-18",
   "_meta": {
     "holdings_count": 10,
-    "weight_coverage_pct": 56.21,
+    "weight_coverage_pct": 0.0,
     "outliers_dropped": {},
-    "skipped_holdings": [],
-    "schema_dispatch": {
-      "default": 4,
-      "bank": 4,
-      "asset-manager": 2
-    },
-    "source": "yfinance funds_data + data-us memo-fetch"
+    "skipped_holdings": [
+      {
+        "ticker": "BRK-B",
+        "weight": 0.120706104,
+        "reason": "data-markets memo-fetch failed for BRK-B: [pack-us] memo-fetch start: BRK-B\n[pack-us] pack [info]: BRK-B\n[pack-us] pack "
+      },
+      {
+        "ticker": "JPM",
+        "weight": 0.1154039,
+        "reason": "data-markets memo-fetch failed for JPM: [pack-us] memo-fetch start: JPM\n[pack-us] pack [info]: JPM\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "V",
+        "weight": 0.0749232,
+        "reason": "data-markets memo-fetch failed for V: [pack-us] memo-fetch start: V\n[pack-us] pack [info]: V\n[pack-us] pack [history 2y]"
+      },
+      {
+        "ticker": "MA",
+        "weight": 0.0545263,
+        "reason": "data-markets memo-fetch failed for MA: [pack-us] memo-fetch start: MA\n[pack-us] pack [info]: MA\n[pack-us] pack [history "
+      },
+      {
+        "ticker": "BAC",
+        "weight": 0.048948202,
+        "reason": "data-markets memo-fetch failed for BAC: [pack-us] memo-fetch start: BAC\n[pack-us] pack [info]: BAC\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "GS",
+        "weight": 0.0392524,
+        "reason": "data-markets memo-fetch failed for GS: [pack-us] memo-fetch start: GS\n[pack-us] pack [info]: GS\n[pack-us] pack [history "
+      },
+      {
+        "ticker": "WFC",
+        "weight": 0.0332747,
+        "reason": "data-markets memo-fetch failed for WFC: [pack-us] memo-fetch start: WFC\n[pack-us] pack [info]: WFC\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "MS",
+        "weight": 0.0329716,
+        "reason": "data-markets memo-fetch failed for MS: [pack-us] memo-fetch start: MS\n[pack-us] pack [info]: MS\n[pack-us] pack [history "
+      },
+      {
+        "ticker": "C",
+        "weight": 0.031409,
+        "reason": "data-markets memo-fetch failed for C: [pack-us] memo-fetch start: C\n[pack-us] pack [info]: C\n[pack-us] pack [history 2y]"
+      },
+      {
+        "ticker": "AXP",
+        "weight": 0.0236856,
+        "reason": "data-markets memo-fetch failed for AXP: [pack-us] memo-fetch start: AXP\n[pack-us] pack [info]: AXP\n[pack-us] pack [histo"
+      }
+    ],
+    "schema_dispatch": {},
+    "source": "yfinance funds_data + data-markets memo-fetch"
   },
   "multiples": {
-    "trailingPE": 16.6831813881375,
+    "trailingPE": null,
     "forwardPE": null,
-    "priceToBook": 9.546265571974558,
-    "priceToTangibleBook": 2.082843504589032
+    "priceToBook": null,
+    "priceToTangibleBook": null
   },
   "indicators": {
-    "ROE": 13.14253311261201
+    "ROE": null
   }
 }

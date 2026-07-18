@@ -1,28 +1,76 @@
 {
   "etf": "XLI",
   "schema_id": "default",
-  "as_of": "2026-05-05",
+  "as_of": "2026-07-18",
   "_meta": {
     "holdings_count": 10,
-    "weight_coverage_pct": 39.43,
+    "weight_coverage_pct": 0.0,
     "outliers_dropped": {},
-    "skipped_holdings": [],
-    "schema_dispatch": {
-      "default": 9,
-      "tech-saas": 1
-    },
-    "source": "yfinance funds_data + data-us memo-fetch"
+    "skipped_holdings": [
+      {
+        "ticker": "CAT",
+        "weight": 0.08508819,
+        "reason": "data-markets memo-fetch failed for CAT: [pack-us] memo-fetch start: CAT\n[pack-us] pack [info]: CAT\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "GE",
+        "weight": 0.067642696,
+        "reason": "data-markets memo-fetch failed for GE: [pack-us] memo-fetch start: GE\n[pack-us] pack [info]: GE\n[pack-us] pack [history "
+      },
+      {
+        "ticker": "GEV",
+        "weight": 0.0547685,
+        "reason": "data-markets memo-fetch failed for GEV: [pack-us] memo-fetch start: GEV\n[pack-us] pack [info]: GEV\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "RTX",
+        "weight": 0.044323802,
+        "reason": "data-markets memo-fetch failed for RTX: [pack-us] memo-fetch start: RTX\n[pack-us] pack [info]: RTX\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "BA",
+        "weight": 0.029602202,
+        "reason": "data-markets memo-fetch failed for BA: [pack-us] memo-fetch start: BA\n[pack-us] pack [info]: BA\n[pack-us] pack [history "
+      },
+      {
+        "ticker": "ETN",
+        "weight": 0.0287034,
+        "reason": "data-markets memo-fetch failed for ETN: [pack-us] memo-fetch start: ETN\n[pack-us] pack [info]: ETN\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "UNP",
+        "weight": 0.0280144,
+        "reason": "data-markets memo-fetch failed for UNP: [pack-us] memo-fetch start: UNP\n[pack-us] pack [info]: UNP\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "DE",
+        "weight": 0.0276425,
+        "reason": "data-markets memo-fetch failed for DE: [pack-us] memo-fetch start: DE\n[pack-us] pack [info]: DE\n[pack-us] pack [history "
+      },
+      {
+        "ticker": "UBER",
+        "weight": 0.0254815,
+        "reason": "data-markets memo-fetch failed for UBER: [pack-us] memo-fetch start: UBER\n[pack-us] pack [info]: UBER\n[pack-us] pack [hi"
+      },
+      {
+        "ticker": "VRT",
+        "weight": 0.0223104,
+        "reason": "data-markets memo-fetch failed for VRT: [pack-us] memo-fetch start: VRT\n[pack-us] pack [info]: VRT\n[pack-us] pack [histo"
+      }
+    ],
+    "schema_dispatch": {},
+    "source": "yfinance funds_data + data-markets memo-fetch"
   },
   "multiples": {
-    "trailingPE": 41.809920883289834,
+    "trailingPE": null,
     "forwardPE": null,
-    "evEbitda": 22.5455586320437,
-    "priceToSales": 4.9202685990674935,
-    "priceToBook": 14.904251248618555
+    "evEbitda": null,
+    "priceToSales": null,
+    "priceToBook": null
   },
   "indicators": {
-    "gross_margin": 17.60141119212014,
-    "operating_margin": 20.683310719288322,
-    "FCF_yield": 2.4006891342415653
+    "gross_margin": null,
+    "operating_margin": null,
+    "FCF_yield": null
   }
 }

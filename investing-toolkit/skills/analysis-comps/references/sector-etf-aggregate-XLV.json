@@ -1,29 +1,76 @@
 {
   "etf": "XLV",
   "schema_id": "default",
-  "as_of": "2026-05-05",
+  "as_of": "2026-07-18",
   "_meta": {
     "holdings_count": 10,
-    "weight_coverage_pct": 59.01,
-    "outliers_dropped": {
-      "priceToBook": 1
-    },
-    "skipped_holdings": [],
-    "schema_dispatch": {
-      "default": 10
-    },
-    "source": "yfinance funds_data + data-us memo-fetch"
+    "weight_coverage_pct": 0.0,
+    "outliers_dropped": {},
+    "skipped_holdings": [
+      {
+        "ticker": "LLY",
+        "weight": 0.1648407,
+        "reason": "data-markets memo-fetch failed for LLY: [pack-us] memo-fetch start: LLY\n[pack-us] pack [info]: LLY\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "JNJ",
+        "weight": 0.106212996,
+        "reason": "data-markets memo-fetch failed for JNJ: [pack-us] memo-fetch start: JNJ\n[pack-us] pack [info]: JNJ\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "ABBV",
+        "weight": 0.0772406,
+        "reason": "data-markets memo-fetch failed for ABBV: [pack-us] memo-fetch start: ABBV\n[pack-us] pack [info]: ABBV\n[pack-us] pack [hi"
+      },
+      {
+        "ticker": "UNH",
+        "weight": 0.0655752,
+        "reason": "data-markets memo-fetch failed for UNH: [pack-us] memo-fetch start: UNH\n[pack-us] pack [info]: UNH\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "MRK",
+        "weight": 0.0551376,
+        "reason": "data-markets memo-fetch failed for MRK: [pack-us] memo-fetch start: MRK\n[pack-us] pack [info]: MRK\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "AMGN",
+        "weight": 0.0339539,
+        "reason": "data-markets memo-fetch failed for AMGN: [pack-us] memo-fetch start: AMGN\n[pack-us] pack [info]: AMGN\n[pack-us] pack [hi"
+      },
+      {
+        "ticker": "TMO",
+        "weight": 0.0323688,
+        "reason": "data-markets memo-fetch failed for TMO: [pack-us] memo-fetch start: TMO\n[pack-us] pack [info]: TMO\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "ABT",
+        "weight": 0.0274585,
+        "reason": "data-markets memo-fetch failed for ABT: [pack-us] memo-fetch start: ABT\n[pack-us] pack [info]: ABT\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "GILD",
+        "weight": 0.027251698,
+        "reason": "data-markets memo-fetch failed for GILD: [pack-us] memo-fetch start: GILD\n[pack-us] pack [info]: GILD\n[pack-us] pack [hi"
+      },
+      {
+        "ticker": "ISRG",
+        "weight": 0.0244691,
+        "reason": "data-markets memo-fetch failed for ISRG: [pack-us] memo-fetch start: ISRG\n[pack-us] pack [info]: ISRG\n[pack-us] pack [hi"
+      }
+    ],
+    "schema_dispatch": {},
+    "source": "yfinance funds_data + data-markets memo-fetch"
   },
   "multiples": {
-    "trailingPE": 36.0351291777928,
+    "trailingPE": null,
     "forwardPE": null,
-    "evEbitda": 20.253279372743695,
-    "priceToSales": 7.21142751487681,
-    "priceToBook": 13.699765203880723
+    "evEbitda": null,
+    "priceToSales": null,
+    "priceToBook": null
   },
   "indicators": {
-    "gross_margin": 67.46927633824544,
-    "operating_margin": 21.74099727509984,
-    "FCF_yield": 4.225273796157957
+    "gross_margin": null,
+    "operating_margin": null,
+    "FCF_yield": null
   }
 }

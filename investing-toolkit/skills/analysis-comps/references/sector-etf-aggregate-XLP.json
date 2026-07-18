@@ -1,29 +1,76 @@
 {
   "etf": "XLP",
   "schema_id": "default",
-  "as_of": "2026-05-05",
+  "as_of": "2026-07-18",
   "_meta": {
     "holdings_count": 10,
-    "weight_coverage_pct": 62.83,
-    "outliers_dropped": {
-      "priceToBook": 3
-    },
-    "skipped_holdings": [],
-    "schema_dispatch": {
-      "default": 10
-    },
-    "source": "yfinance funds_data + data-us memo-fetch"
+    "weight_coverage_pct": 0.0,
+    "outliers_dropped": {},
+    "skipped_holdings": [
+      {
+        "ticker": "WMT",
+        "weight": 0.1078668,
+        "reason": "data-markets memo-fetch failed for WMT: [pack-us] memo-fetch start: WMT\n[pack-us] pack [info]: WMT\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "COST",
+        "weight": 0.0901589,
+        "reason": "data-markets memo-fetch failed for COST: [pack-us] memo-fetch start: COST\n[pack-us] pack [info]: COST\n[pack-us] pack [hi"
+      },
+      {
+        "ticker": "PG",
+        "weight": 0.0741792,
+        "reason": "data-markets memo-fetch failed for PG: [pack-us] memo-fetch start: PG\n[pack-us] pack [info]: PG\n[pack-us] pack [history "
+      },
+      {
+        "ticker": "KO",
+        "weight": 0.068364,
+        "reason": "data-markets memo-fetch failed for KO: [pack-us] memo-fetch start: KO\n[pack-us] pack [info]: KO\n[pack-us] pack [history "
+      },
+      {
+        "ticker": "PM",
+        "weight": 0.0612522,
+        "reason": "data-markets memo-fetch failed for PM: [pack-us] memo-fetch start: PM\n[pack-us] pack [info]: PM\n[pack-us] pack [history "
+      },
+      {
+        "ticker": "CL",
+        "weight": 0.046898097,
+        "reason": "data-markets memo-fetch failed for CL: [pack-us] memo-fetch start: CL\n[pack-us] pack [info]: CL\n[pack-us] pack [history "
+      },
+      {
+        "ticker": "MO",
+        "weight": 0.0452707,
+        "reason": "data-markets memo-fetch failed for MO: [pack-us] memo-fetch start: MO\n[pack-us] pack [info]: MO\n[pack-us] pack [history "
+      },
+      {
+        "ticker": "MNST",
+        "weight": 0.0444723,
+        "reason": "data-markets memo-fetch failed for MNST: [pack-us] memo-fetch start: MNST\n[pack-us] pack [info]: MNST\n[pack-us] pack [hi"
+      },
+      {
+        "ticker": "PEP",
+        "weight": 0.043169096,
+        "reason": "data-markets memo-fetch failed for PEP: [pack-us] memo-fetch start: PEP\n[pack-us] pack [info]: PEP\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "MDLZ",
+        "weight": 0.0414677,
+        "reason": "data-markets memo-fetch failed for MDLZ: [pack-us] memo-fetch start: MDLZ\n[pack-us] pack [info]: MDLZ\n[pack-us] pack [hi"
+      }
+    ],
+    "schema_dispatch": {},
+    "source": "yfinance funds_data + data-markets memo-fetch"
   },
   "multiples": {
-    "trailingPE": 33.32987177166229,
+    "trailingPE": null,
     "forwardPE": null,
-    "evEbitda": 21.630992967085877,
-    "priceToSales": 3.2488704070414935,
-    "priceToBook": 9.548669211448807
+    "evEbitda": null,
+    "priceToSales": null,
+    "priceToBook": null
   },
   "indicators": {
-    "gross_margin": 52.20735792039922,
-    "operating_margin": 16.491806409492778,
-    "FCF_yield": 3.325106579182556
+    "gross_margin": null,
+    "operating_margin": null,
+    "FCF_yield": null
   }
 }

@@ -1,29 +1,76 @@
 {
   "etf": "XLB",
   "schema_id": "default",
-  "as_of": "2026-05-05",
+  "as_of": "2026-07-18",
   "_meta": {
     "holdings_count": 10,
-    "weight_coverage_pct": 58.8,
-    "outliers_dropped": {
-      "trailingPE": 1
-    },
-    "skipped_holdings": [],
-    "schema_dispatch": {
-      "default": 10
-    },
-    "source": "yfinance funds_data + data-us memo-fetch"
+    "weight_coverage_pct": 0.0,
+    "outliers_dropped": {},
+    "skipped_holdings": [
+      {
+        "ticker": "LIN",
+        "weight": 0.1404455,
+        "reason": "data-markets memo-fetch failed for LIN: [pack-us] memo-fetch start: LIN\n[pack-us] pack [info]: LIN\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "NEM",
+        "weight": 0.0583657,
+        "reason": "data-markets memo-fetch failed for NEM: [pack-us] memo-fetch start: NEM\n[pack-us] pack [info]: NEM\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "FCX",
+        "weight": 0.0529213,
+        "reason": "data-markets memo-fetch failed for FCX: [pack-us] memo-fetch start: FCX\n[pack-us] pack [info]: FCX\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "CTVA",
+        "weight": 0.049528196,
+        "reason": "data-markets memo-fetch failed for CTVA: [pack-us] memo-fetch start: CTVA\n[pack-us] pack [info]: CTVA\n[pack-us] pack [hi"
+      },
+      {
+        "ticker": "SHW",
+        "weight": 0.0493363,
+        "reason": "data-markets memo-fetch failed for SHW: [pack-us] memo-fetch start: SHW\n[pack-us] pack [info]: SHW\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "ECL",
+        "weight": 0.0472095,
+        "reason": "data-markets memo-fetch failed for ECL: [pack-us] memo-fetch start: ECL\n[pack-us] pack [info]: ECL\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "VMC",
+        "weight": 0.0471143,
+        "reason": "data-markets memo-fetch failed for VMC: [pack-us] memo-fetch start: VMC\n[pack-us] pack [info]: VMC\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "CRH",
+        "weight": 0.0466028,
+        "reason": "data-markets memo-fetch failed for CRH: [pack-us] memo-fetch start: CRH\n[pack-us] pack [info]: CRH\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "APD",
+        "weight": 0.046171598,
+        "reason": "data-markets memo-fetch failed for APD: [pack-us] memo-fetch start: APD\n[pack-us] pack [info]: APD\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "MLM",
+        "weight": 0.0454218,
+        "reason": "data-markets memo-fetch failed for MLM: [pack-us] memo-fetch start: MLM\n[pack-us] pack [info]: MLM\n[pack-us] pack [histo"
+      }
+    ],
+    "schema_dispatch": {},
+    "source": "yfinance funds_data + data-markets memo-fetch"
   },
   "multiples": {
-    "trailingPE": 29.307999939284286,
+    "trailingPE": null,
     "forwardPE": null,
-    "evEbitda": 26.43909897228026,
-    "priceToSales": 4.572760054873989,
-    "priceToBook": 5.126040225264237
+    "evEbitda": null,
+    "priceToSales": null,
+    "priceToBook": null
   },
   "indicators": {
-    "gross_margin": 33.612090569857926,
-    "operating_margin": 19.31487457953041,
-    "FCF_yield": 2.224847817365134
+    "gross_margin": null,
+    "operating_margin": null,
+    "FCF_yield": null
   }
 }

@@ -1,30 +1,76 @@
 {
   "etf": "XLY",
   "schema_id": "default",
-  "as_of": "2026-05-05",
+  "as_of": "2026-07-18",
   "_meta": {
     "holdings_count": 10,
-    "weight_coverage_pct": 70.24,
-    "outliers_dropped": {
-      "trailingPE": 1,
-      "priceToBook": 6
-    },
-    "skipped_holdings": [],
-    "schema_dispatch": {
-      "default": 10
-    },
-    "source": "yfinance funds_data + data-us memo-fetch"
+    "weight_coverage_pct": 0.0,
+    "outliers_dropped": {},
+    "skipped_holdings": [
+      {
+        "ticker": "AMZN",
+        "weight": 0.2220244,
+        "reason": "data-markets memo-fetch failed for AMZN: [pack-us] memo-fetch start: AMZN\n[pack-us] pack [info]: AMZN\n[pack-us] pack [hi"
+      },
+      {
+        "ticker": "TSLA",
+        "weight": 0.19623369,
+        "reason": "data-markets memo-fetch failed for TSLA: [pack-us] memo-fetch start: TSLA\n[pack-us] pack [info]: TSLA\n[pack-us] pack [hi"
+      },
+      {
+        "ticker": "HD",
+        "weight": 0.0582148,
+        "reason": "data-markets memo-fetch failed for HD: [pack-us] memo-fetch start: HD\n[pack-us] pack [info]: HD\n[pack-us] pack [history "
+      },
+      {
+        "ticker": "MCD",
+        "weight": 0.041503202,
+        "reason": "data-markets memo-fetch failed for MCD: [pack-us] memo-fetch start: MCD\n[pack-us] pack [info]: MCD\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "TJX",
+        "weight": 0.039196897,
+        "reason": "data-markets memo-fetch failed for TJX: [pack-us] memo-fetch start: TJX\n[pack-us] pack [info]: TJX\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "BKNG",
+        "weight": 0.0343353,
+        "reason": "data-markets memo-fetch failed for BKNG: [pack-us] memo-fetch start: BKNG\n[pack-us] pack [info]: BKNG\n[pack-us] pack [hi"
+      },
+      {
+        "ticker": "LOW",
+        "weight": 0.0306992,
+        "reason": "data-markets memo-fetch failed for LOW: [pack-us] memo-fetch start: LOW\n[pack-us] pack [info]: LOW\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "SBUX",
+        "weight": 0.0289536,
+        "reason": "data-markets memo-fetch failed for SBUX: [pack-us] memo-fetch start: SBUX\n[pack-us] pack [info]: SBUX\n[pack-us] pack [hi"
+      },
+      {
+        "ticker": "MAR",
+        "weight": 0.020163901,
+        "reason": "data-markets memo-fetch failed for MAR: [pack-us] memo-fetch start: MAR\n[pack-us] pack [info]: MAR\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "RCL",
+        "weight": 0.0196888,
+        "reason": "data-markets memo-fetch failed for RCL: [pack-us] memo-fetch start: RCL\n[pack-us] pack [info]: RCL\n[pack-us] pack [histo"
+      }
+    ],
+    "schema_dispatch": {},
+    "source": "yfinance funds_data + data-markets memo-fetch"
   },
   "multiples": {
-    "trailingPE": 34.66813368054655,
+    "trailingPE": null,
     "forwardPE": null,
-    "evEbitda": 56.42250172000275,
-    "priceToSales": 7.125315139822356,
-    "priceToBook": 13.741948036057968
+    "evEbitda": null,
+    "priceToSales": null,
+    "priceToBook": null
   },
   "indicators": {
-    "gross_margin": 16.201888418311537,
-    "operating_margin": 13.177614960009011,
-    "FCF_yield": 1.7822993068676385
+    "gross_margin": null,
+    "operating_margin": null,
+    "FCF_yield": null
   }
 }

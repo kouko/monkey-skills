@@ -1,25 +1,72 @@
 {
   "etf": "XLU",
   "schema_id": "utilities",
-  "as_of": "2026-05-05",
+  "as_of": "2026-07-18",
   "_meta": {
     "holdings_count": 10,
-    "weight_coverage_pct": 57.84,
-    "outliers_dropped": {
-      "debt_to_equity": 1
-    },
-    "skipped_holdings": [],
-    "schema_dispatch": {
-      "utilities": 10
-    },
-    "source": "yfinance funds_data + data-us memo-fetch"
+    "weight_coverage_pct": 0.0,
+    "outliers_dropped": {},
+    "skipped_holdings": [
+      {
+        "ticker": "NEE",
+        "weight": 0.12862429,
+        "reason": "data-markets memo-fetch failed for NEE: [pack-us] memo-fetch start: NEE\n[pack-us] pack [info]: NEE\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "SO",
+        "weight": 0.075822204,
+        "reason": "data-markets memo-fetch failed for SO: [pack-us] memo-fetch start: SO\n[pack-us] pack [info]: SO\n[pack-us] pack [history "
+      },
+      {
+        "ticker": "DUK",
+        "weight": 0.0693479,
+        "reason": "data-markets memo-fetch failed for DUK: [pack-us] memo-fetch start: DUK\n[pack-us] pack [info]: DUK\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "CEG",
+        "weight": 0.0557973,
+        "reason": "data-markets memo-fetch failed for CEG: [pack-us] memo-fetch start: CEG\n[pack-us] pack [info]: CEG\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "AEP",
+        "weight": 0.052311704,
+        "reason": "data-markets memo-fetch failed for AEP: [pack-us] memo-fetch start: AEP\n[pack-us] pack [info]: AEP\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "SRE",
+        "weight": 0.0425889,
+        "reason": "data-markets memo-fetch failed for SRE: [pack-us] memo-fetch start: SRE\n[pack-us] pack [info]: SRE\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "D",
+        "weight": 0.0422058,
+        "reason": "data-markets memo-fetch failed for D: [pack-us] memo-fetch start: D\n[pack-us] pack [info]: D\n[pack-us] pack [history 2y]"
+      },
+      {
+        "ticker": "ETR",
+        "weight": 0.0369595,
+        "reason": "data-markets memo-fetch failed for ETR: [pack-us] memo-fetch start: ETR\n[pack-us] pack [info]: ETR\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "VST",
+        "weight": 0.0353326,
+        "reason": "data-markets memo-fetch failed for VST: [pack-us] memo-fetch start: VST\n[pack-us] pack [info]: VST\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "XEL",
+        "weight": 0.035227798,
+        "reason": "data-markets memo-fetch failed for XEL: [pack-us] memo-fetch start: XEL\n[pack-us] pack [info]: XEL\n[pack-us] pack [histo"
+      }
+    ],
+    "schema_dispatch": {},
+    "source": "yfinance funds_data + data-markets memo-fetch"
   },
   "multiples": {
-    "trailingPE": 29.525873003957734,
-    "evEbitda": 17.760286417093155,
-    "priceToBook": 3.714214953564632
+    "trailingPE": null,
+    "evEbitda": null,
+    "priceToBook": null
   },
   "indicators": {
-    "debt_to_equity": 123.10360758174225
+    "debt_to_equity": null
   }
 }

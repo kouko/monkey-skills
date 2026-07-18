@@ -1,27 +1,74 @@
 {
   "etf": "XLK",
   "schema_id": "tech-saas",
-  "as_of": "2026-05-05",
+  "as_of": "2026-07-18",
   "_meta": {
     "holdings_count": 10,
-    "weight_coverage_pct": 61.33,
+    "weight_coverage_pct": 0.0,
     "outliers_dropped": {},
-    "skipped_holdings": [],
-    "schema_dispatch": {
-      "tech-semis": 6,
-      "default": 2,
-      "tech-saas": 2
-    },
-    "source": "yfinance funds_data + data-us memo-fetch"
+    "skipped_holdings": [
+      {
+        "ticker": "NVDA",
+        "weight": 0.1264092,
+        "reason": "data-markets memo-fetch failed for NVDA: [pack-us] memo-fetch start: NVDA\n[pack-us] pack [info]: NVDA\n[pack-us] pack [hi"
+      },
+      {
+        "ticker": "AAPL",
+        "weight": 0.110854104,
+        "reason": "data-markets memo-fetch failed for AAPL: [pack-us] memo-fetch start: AAPL\n[pack-us] pack [info]: AAPL\n[pack-us] pack [hi"
+      },
+      {
+        "ticker": "MSFT",
+        "weight": 0.072276905,
+        "reason": "data-markets memo-fetch failed for MSFT: [pack-us] memo-fetch start: MSFT\n[pack-us] pack [info]: MSFT\n[pack-us] pack [hi"
+      },
+      {
+        "ticker": "AMD",
+        "weight": 0.0470794,
+        "reason": "data-markets memo-fetch failed for AMD: [pack-us] memo-fetch start: AMD\n[pack-us] pack [info]: AMD\n[pack-us] pack [histo"
+      },
+      {
+        "ticker": "MU",
+        "weight": 0.0467562,
+        "reason": "data-markets memo-fetch failed for MU: [pack-us] memo-fetch start: MU\n[pack-us] pack [info]: MU\n[pack-us] pack [history "
+      },
+      {
+        "ticker": "AVGO",
+        "weight": 0.0466514,
+        "reason": "data-markets memo-fetch failed for AVGO: [pack-us] memo-fetch start: AVGO\n[pack-us] pack [info]: AVGO\n[pack-us] pack [hi"
+      },
+      {
+        "ticker": "INTC",
+        "weight": 0.042032,
+        "reason": "data-markets memo-fetch failed for INTC: [pack-us] memo-fetch start: INTC\n[pack-us] pack [info]: INTC\n[pack-us] pack [hi"
+      },
+      {
+        "ticker": "AMAT",
+        "weight": 0.0365592,
+        "reason": "data-markets memo-fetch failed for AMAT: [pack-us] memo-fetch start: AMAT\n[pack-us] pack [info]: AMAT\n[pack-us] pack [hi"
+      },
+      {
+        "ticker": "LRCX",
+        "weight": 0.034528602,
+        "reason": "data-markets memo-fetch failed for LRCX: [pack-us] memo-fetch start: LRCX\n[pack-us] pack [info]: LRCX\n[pack-us] pack [hi"
+      },
+      {
+        "ticker": "CSCO",
+        "weight": 0.029561501,
+        "reason": "data-markets memo-fetch failed for CSCO: [pack-us] memo-fetch start: CSCO\n[pack-us] pack [info]: CSCO\n[pack-us] pack [hi"
+      }
+    ],
+    "schema_dispatch": {},
+    "source": "yfinance funds_data + data-markets memo-fetch"
   },
   "multiples": {
     "forwardPE": null,
-    "priceToSales": 19.21694192745285,
-    "evRevenue": 26.245869878680278
+    "priceToSales": null,
+    "evRevenue": null
   },
   "indicators": {
-    "rule_of_40": 66.77339316249034,
-    "gross_margin": 60.81313553348422,
-    "FCF_margin": 33.44710184816005
+    "rule_of_40": null,
+    "gross_margin": null,
+    "FCF_margin": null
   }
 }
