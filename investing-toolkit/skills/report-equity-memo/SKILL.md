@@ -367,7 +367,14 @@ Three-step chain, one memo-feed JSON out:
 
 ```bash
 # 1. Fetch the dimensional-revenue fact-pack (Layer 1)
-uv run ${CLAUDE_PLUGIN_ROOT}/skills/data-markets/scripts/pack.py \
+#    NOTE the two `--with` pins are load-bearing here too: pack.py's PEP 723
+#    block declares no dependencies, but pack_kpi_quarterly imports
+#    sec_edgar_client (module-level `import requests`; edgartools at fetch
+#    time) — a bare `uv run` crashes exactly as step 2 warns. Pins mirror
+#    sec_edgar_client.py's own PEP 723 header. (Live-verified 2026-07-18
+#    on AAPL/NVDA/COST.)
+uv run --with 'requests==2.33.1' --with 'edgartools==5.42.0' \
+    ${CLAUDE_PLUGIN_ROOT}/skills/data-markets/scripts/pack.py \
     --ticker ${TICKER} --pack kpi-quarterly \
     > /tmp/${TICKER_SAFE}-kpi-factpack.json
 

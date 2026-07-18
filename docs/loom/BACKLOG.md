@@ -25,6 +25,43 @@
   (e) 🟢 nits: selection-gap slot overwrite, literal 'None' in gap reason,
   accession-less 10-K coverage entry.
 
+## investing-toolkit memo-wiring 2.23.0 — post-ship follow-ups (OPEN)
+- Status: OPEN
+- Start: next touch of `report-equity-memo/references/schema-phase4-input-bundle.json`,
+  `analysis-kpi/scripts/kpi_memo_feed.py`, or `data-markets/scripts/pack.py`.
+- Origin: memo quarterly-KPI wiring slice (branch feat-memo-quarterly-kpi-wiring,
+  2026-07-18); per-task + whole-branch review ship-as-debt rulings.
+- What: (a) the one 🟡 — schema↔envelope coupling unguarded: nothing asserts
+  `schema-phase4-input-bundle.json`'s kpi_quarterly_feed required-set equals
+  the envelope `build_quarterly_memo_feed` actually emits (both sides pinned
+  separately, can drift green-green) — add a coupling assertion or route a
+  real feed through the B2 validator; (b) pack.py PEP 723 header declares no
+  deps while pack_us direct-imports sec_edgar_client — bare `uv run pack.py`
+  crashes on ModuleNotFoundError for EVERY networked pack incl. Phase 1
+  memo-fetch (pre-existing, live-confirmed 2026-07-18); cheap hardening =
+  add requests/edgartools pins to pack.py's header (touches all packs, needs
+  its own review); (c) 🟢 nits: build-quarterly CLI exit-1 arm untested;
+  non-dict series entries raise AttributeError not ValueError; `_is_blank`
+  dup vs tier-① idiom; mixed-company sample fixture caveat; jsonschema-absent
+  silent skip in test_pack_schemas; no socket guard in chain test; module-scoped
+  sys.modules fixture no teardown; `${MEMO_DATE}` defined only in Phase 3.5;
+  doc wording "concept" vs real field `kpi_id` in schema prose + CHANGELOG.
+
+## investing-toolkit 52/53-week filer support — week-based duration lane (PARKED → next arc candidate)
+- Status: PARKED (user signalled intent to brainstorm next, 2026-07-18)
+- Start: brainstorm opens with the (a)/(b) recon — does a 52/53-week filer
+  (COST) tag 36-week YTD dimensional revenue in XBRL at all (a: not tagged →
+  arc can't help COST), or do the facts exist and the month-window classifier
+  drops them (b: fixable)? Live evidence 2026-07-18: COST pack has ONLY
+  12mo/3mo duration facts; derive-Q4 refused honestly (q4_source_missing ×54).
+- Origin: memo-wiring live validation (AAPL/NVDA derived+recomputed OK;
+  COST 0 derived); neighbor of the parked calc-linkbase arc.
+- What: week-based duration classification (12/24/36/52-53wk → fiscal
+  quarter ordinals), Q4 = FY − 36wk-YTD with tight week windows + 53-week
+  handling, per-point week-count labeling, and a memo-protocol
+  unequal-quarter-length disclosure rule (16-17wk Q4 vs 12wk quarters is
+  not comparable without disclosure).
+
 ## investing-toolkit quarterly — parked capability arcs (PARKED)
 - Status: PARKED
 - Start: (calc-linkbase) a real filer whose dimensional concepts genuinely
