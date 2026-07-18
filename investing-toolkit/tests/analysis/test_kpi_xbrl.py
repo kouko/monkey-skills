@@ -851,17 +851,19 @@ def test_classify_period_type(kpi_xbrl_module, nvda_quarterly_pack, aapl_quarter
         )
 
 
-def test_classify_period_week_lane(kpi_xbrl_module, stub_data_layer_deps):
-    """Task 3 RED (docs/loom/plans/2026-07-18-52-53-week-filer-support.md):
+def test_classify_period_week_lane(kpi_xbrl_module):
+    """Task 3 fix round 2 (spec-reviewer NEEDS_REVISION on 111e4530):
     class-lane precedence — the month map is tried FIRST; only when
-    `duration_months` misses it (8 not in {3,6,9,12}) does `duration_weeks`
-    fall back to the week lane, lazy-importing the SHARED `_WEEK_BANDS`
-    table Task 1 shipped in sec_edgar_client.py (no second band table). A
-    36-week span matches the "YTD-through-Q3" band -> "36wk-YTD",
-    cumulative, fiscal_quarter Q3 (mirrors the shipped "9mo-YTD"/Q3
-    month-lane pattern). A sibling fact with the SAME month-lane miss but
-    no `duration_weeks` at all (neither lane can classify it) still raises
-    unclassifiable — fail-closed unchanged, never guessed."""
+    `duration_months` misses it (8 not in {3,6,9,12}) does the week lane
+    get a chance. The week lane is now a PURE TRANSCRIPTION of the
+    producer's OWN `week_lane_band` label (sec_edgar_client's
+    `_week_lane_class(span_days)` result) — never re-decided here from
+    `duration_weeks` alone. A fact whose producer-emitted `week_lane_band`
+    is "YTD-through-Q3" -> "36wk-YTD", cumulative, fiscal_quarter Q3
+    (mirrors the shipped "9mo-YTD"/Q3 month-lane pattern). A sibling fact
+    with the SAME month-lane miss but no week-lane signal at all (neither
+    lane can classify it) still raises unclassifiable — fail-closed
+    unchanged, never guessed."""
     week_lane_fact = {
         "concept": "us-gaap:Revenues",
         "period_end": "2026-05-10",
@@ -869,6 +871,7 @@ def test_classify_period_week_lane(kpi_xbrl_module, stub_data_layer_deps):
         "fiscal_quarter": "Q3",
         "duration_months": 8,
         "duration_weeks": 36,
+        "week_lane_band": "YTD-through-Q3",
         "accession": "0000320193-26-000123",
     }
     classification = kpi_xbrl_module.classify_fact_period(week_lane_fact)
@@ -888,6 +891,79 @@ def test_classify_period_week_lane(kpi_xbrl_module, stub_data_layer_deps):
     }
     with pytest.raises(ValueError, match="unclassifiable"):
         kpi_xbrl_module.classify_fact_period(no_week_lane_fact)
+
+
+def test_classify_period_week_lane_divergence_producer_out_of_band(kpi_xbrl_module):
+    """RED (spec-reviewer NEEDS_REVISION on 111e4530, verbatim counter-
+    example): a fact whose `duration_weeks` ROUNDS to 36 (e.g. a 253-day
+    span: round(253/7)=36) but whose PRODUCER-emitted `week_lane_band` is
+    None — the producer's own `_week_lane_class(253)` rejects it, since
+    253 falls outside the tight [251, 252] window for the 36-week
+    cluster — must raise unclassifiable, never guess "36wk-YTD" from the
+    rounded int alone. This reproduces the shipped-code bug: the old
+    int-membership match (`duration_weeks in week_counts`) accepted ANY
+    duration_weeks==36 regardless of the producer's tighter day-span
+    decision, silently reintroducing the edgartools #816 two-path
+    desync the shared `_week_lane_class` primitive exists to prevent."""
+    divergent_fact = {
+        "concept": "us-gaap:Revenues",
+        "period_end": "2026-05-12",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "Q3",
+        "duration_months": 8,
+        "duration_weeks": 36,
+        "week_lane_band": None,
+        "accession": "0000320193-26-000123",
+    }
+    with pytest.raises(ValueError, match="unclassifiable"):
+        kpi_xbrl_module.classify_fact_period(divergent_fact)
+
+
+def test_classify_period_week_lane_format_branches(kpi_xbrl_module):
+    """Quality 🟡 (fix round 2): pin every REACHABLE week-lane format
+    branch (plan Notes/docstring: only "week-Q4" and "YTD-through-Q3" are
+    ever actually reached in practice, since "quarter"/"H1"/"FY" band
+    members already round into the month lane, which has precedence) —
+    a 16wk week-Q4 fact -> "16wk" (no suffix), a 17wk week-Q4 fact ->
+    "17wk" (same band, other week-count member), and an H1 fact ->
+    "24wk-YTD" (the "-YTD" suffix branch), all via `classify_fact_period`
+    with month-miss `duration_months` values (4, 4, 5) matching the real
+    `_duration_months` rounding for 111d/119d/167d spans."""
+    week_q4_16 = {
+        "concept": "us-gaap:Revenues",
+        "period_end": "2026-06-30",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "Q4",
+        "duration_months": 4,
+        "duration_weeks": 16,
+        "week_lane_band": "week-Q4",
+        "accession": "0000320193-26-000123",
+    }
+    assert kpi_xbrl_module.classify_fact_period(week_q4_16)["duration_class"] == "16wk"
+
+    week_q4_17 = {
+        "concept": "us-gaap:Revenues",
+        "period_end": "2026-06-30",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "Q4",
+        "duration_months": 4,
+        "duration_weeks": 17,
+        "week_lane_band": "week-Q4",
+        "accession": "0000320193-26-000123",
+    }
+    assert kpi_xbrl_module.classify_fact_period(week_q4_17)["duration_class"] == "17wk"
+
+    h1_24 = {
+        "concept": "us-gaap:Revenues",
+        "period_end": "2026-05-10",
+        "fiscal_year": 2026,
+        "fiscal_quarter": "Q2",
+        "duration_months": 5,
+        "duration_weeks": 24,
+        "week_lane_band": "H1",
+        "accession": "0000320193-26-000123",
+    }
+    assert kpi_xbrl_module.classify_fact_period(h1_24)["duration_class"] == "24wk-YTD"
 
 
 def test_classify_uses_filing_dei_focus_not_calendar(kpi_xbrl_module, aapl_quarterly_pack):

@@ -175,39 +175,37 @@ _WEEK_LANE_DURATION_CLASS_FORMAT = {
 }
 
 
-def _week_lane_duration_class(duration_weeks) -> str | None:
+def _week_lane_duration_class(week_lane_band, duration_weeks) -> str | None:
     """Fallback week-lane `duration_class` lookup (Task 3) — consulted by
     `classify_fact_period` ONLY when `duration_months` misses the month
     lane (class-lane precedence, plan Notes: the month map is tried
-    first). Lazy-imports the SHARED `_WEEK_BANDS` allowlist from
-    sec_edgar_client.py, mirroring the `_dimension_quarterly_absence_flags`
-    lazy-import precedent above (:1140) — ONE band table, never a second
-    copy re-derived here.
+    first).
 
-    Matches `duration_weeks` (the producer's ALREADY-ROUNDED int,
-    `_week_count`) by EXACT membership in a band's week-count tuple —
-    deliberately never reconstructs a day-span from it and re-checks
-    `sec_edgar_client._week_lane_class` (that would silently reintroduce
-    the ambiguity `_week_lane_class`'s tight day-band exists to guard
-    against: several raw spans round to the same week int, e.g. 361-367
-    days all round to 52 weeks, yet only 363-364 are genuine FY-band
-    members). That ambiguity is harmless here ONLY because every span
-    that rounds to 12 months (~350-380 days, covering weeks 51-53)
-    already matches `_DURATION_CLASS_BY_MONTHS` and never reaches this
-    fallback — month-lane precedence is the guard, not a check in this
-    function. Returns None (fail-closed, never guessed) when
-    `duration_weeks` is missing/non-int or matches no band."""
+    Fix round 2 (spec-reviewer NEEDS_REVISION on 111e4530): this is now a
+    PURE TRANSCRIPTION of the producer's OWN classification decision —
+    `week_lane_band` is `sec_edgar_client._build_dimensional_revenue_fact`'s
+    emitted `_week_lane_class(span_days)` result (the SAME tight
+    [weeks*7-1, weeks*7] window Gate P's day-span classification uses).
+    The ORIGINAL implementation instead re-decided membership from
+    `duration_weeks` (the producer's ALREADY-ROUNDED int, `_week_count`)
+    via exact membership in a band's week-count tuple — but
+    `duration_weeks = round(span_days / 7)` has up to +-3d slop, WIDER
+    than `_week_lane_class`'s tight window: a 253-day span rounds to 36
+    weeks (matching the old int check) even though `_week_lane_class(253)`
+    returns None (253 is outside the genuine 251/252-day window),
+    reproducing the exact edgartools #816 two-path desync the shared
+    `_week_lane_class` primitive exists to prevent (docs/loom/plans/
+    2026-07-18-52-53-week-filer-support.md, plan Notes: ONE shared
+    classification decision, never a second copy re-derived here).
+
+    Returns None (fail-closed, never guessed) when `week_lane_band` is
+    missing/unrecognized (the producer made no week-lane claim — or the
+    fact predates this field) or `duration_weeks` is missing/non-int."""
+    if week_lane_band not in _WEEK_LANE_DURATION_CLASS_FORMAT:
+        return None
     if not isinstance(duration_weeks, int) or isinstance(duration_weeks, bool):
         return None
-    data_scripts = _SCRIPT_DIR.parent.parent / "data-markets" / "scripts"
-    if str(data_scripts) not in sys.path:
-        sys.path.insert(0, str(data_scripts))
-    import sec_edgar_client  # noqa: PLC0415 — deliberate lazy cross-layer import
-
-    for label, week_counts in sec_edgar_client._WEEK_BANDS:
-        if duration_weeks in week_counts:
-            return _WEEK_LANE_DURATION_CLASS_FORMAT[label].format(weeks=duration_weeks)
-    return None
+    return _WEEK_LANE_DURATION_CLASS_FORMAT[week_lane_band].format(weeks=duration_weeks)
 
 
 def _is_cumulative_duration_class(duration_class: str) -> bool:
@@ -356,7 +354,9 @@ def classify_fact_period(fact: dict) -> dict:
         # Class-lane precedence (plan Notes): the month map is tried
         # FIRST; only on a miss does the week lane get a chance, via the
         # fact's own emitted `duration_weeks` (Task 3).
-        duration_class = _week_lane_duration_class(fact.get("duration_weeks"))
+        duration_class = _week_lane_duration_class(
+            fact.get("week_lane_band"), fact.get("duration_weeks"),
+        )
     if duration_class is None:
         raise _unclassifiable(
             fact,

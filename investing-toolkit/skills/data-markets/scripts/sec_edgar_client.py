@@ -2634,7 +2634,19 @@ def _build_dimensional_revenue_fact(
     `extract_dimensional_revenue`'s `_is_dimensional_revenue_fact`
     predicate excludes instant contexts before this function is ever
     called) carries neither key: it is not a duration flow and never gets
-    a fabricated/guessed duration."""
+    a fabricated/guessed duration.
+
+    Also carries `week_lane_band` (Task 3 fix round 2, spec-reviewer
+    NEEDS_REVISION on 111e4530) — the ONE week-lane classification
+    decision, made HERE from the same raw day-span `duration_weeks` is
+    derived from, via the shared `_week_lane_class` primitive: the band
+    label str, or None when the span is out-of-band. `kpi_xbrl.py`'s
+    `_week_lane_duration_class` is now a PURE TRANSCRIPTION of this
+    field — it never re-decides membership from the already-rounded
+    `duration_weeks` int (that re-derivation had up to +-3d slop wider
+    than `_week_lane_class`'s tight [weeks*7-1, weeks*7] window and
+    could silently reintroduce the edgartools #816 two-path desync this
+    module's ONE-shared-primitive constraint exists to prevent)."""
     dimensions, consolidation = _dimension_signature(fact)
     period_end = (
         fact.get("period_end") if fact.get("period_type") == "duration"
@@ -2667,6 +2679,10 @@ def _build_dimensional_revenue_fact(
     if fact.get("period_type") == "duration":
         built["duration_months"] = _duration_months(fact, ticker, period_end)
         built["duration_weeks"] = _duration_weeks(fact, ticker, period_end)
+        week_span_days = _duration_span_days(
+            fact, ticker, period_end, field="duration_weeks",
+        )
+        built["week_lane_band"] = _week_lane_class(week_span_days)
     fiscal_year, fiscal_quarter = _derive_fiscal_label(
         period_end_date, built.get("duration_months"), dei_calendar,
         ticker, accession,

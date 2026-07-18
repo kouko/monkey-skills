@@ -1109,6 +1109,11 @@ def test_extract_emits_duration_weeks():
         ytd3q_row, "TEST", q_accession, q_filed, q_dei,
     )
     assert ytd3q_fact["duration_weeks"] == 36
+    # Fix round 2 (spec-reviewer NEEDS_REVISION on 111e4530): the
+    # PRODUCER now makes the ONE week-lane classification decision and
+    # emits it as `week_lane_band` — the SAME `_week_lane_class` call
+    # Gate P uses, never re-derived downstream from `duration_weeks`.
+    assert ytd3q_fact["week_lane_band"] == "YTD-through-Q3"
 
     # 111-day synthetic span (16wk-ish week-Q4 band), period_end on the
     # fiscal year end (Jun 30).
@@ -1119,6 +1124,7 @@ def test_extract_emits_duration_weeks():
         weekq4_row, "TEST", q_accession, q_filed, q_dei,
     )
     assert weekq4_fact["duration_weeks"] == 16
+    assert weekq4_fact["week_lane_band"] == "week-Q4"
 
     # Ordinary ~365-day calendar-year span (month-lane territory, NOT a
     # 52/53-week filer) still gets a duration_weeks count — week-count
@@ -1132,6 +1138,9 @@ def test_extract_emits_duration_weeks():
     )
     assert fy_fact["duration_weeks"] == 52
     assert fy_fact["duration_months"] == 12
+    # A month-lane-territory span makes NO week-lane claim from the
+    # producer either — fail-closed unchanged, no guessed band.
+    assert fy_fact["week_lane_band"] is None
 
     # The pure span -> week-lane-class mapper, exercised directly.
     assert mod._week_lane_class(251) == "YTD-through-Q3"
