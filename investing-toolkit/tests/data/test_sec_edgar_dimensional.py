@@ -1053,8 +1053,16 @@ def _make_dei_filing(*, accession, form, filing_date, period_of_report,
             "unit_ref": "usd",
             "currency": "USD",
             "period_type": "duration",
-            "period_start": (filing_date - datetime.timedelta(days=365)).isoformat(),
-            "period_end": filing_date.isoformat(),
+            # 12-month window aligned to the filing's OWN period_of_report
+            # (its declared fiscal year end) — never filing_date, which
+            # sits weeks past the year end and lands outside
+            # FISCAL_BOUNDARY_TOLERANCE_DAYS (T16 round-2 hygiene,
+            # mirrors _make_dimensional_filing's d2e421e8 fix).
+            "period_start": (
+                datetime.date.fromisoformat(period_of_report)
+                - datetime.timedelta(days=364)
+            ).isoformat(),
+            "period_end": period_of_report,
             "period_instant": None,
         },
         {"concept": "dei:DocumentFiscalPeriodFocus", "value": fiscal_period_focus},
@@ -1098,6 +1106,13 @@ def test_extract_emits_dei_fiscal_calendar(sec_client):
     pack = sec_client.extract_dimensional_revenue("NVDA", since_year=2021, until_year=2026)
 
     assert "error" not in pack, pack
+    assert pack["coverage"]["unclassifiable_periods"] == [], (
+        "the staged annual facts must be FYE-aligned (T16 round-2 hygiene, "
+        "mirrors d2e421e8): a helper window ending at filing_date instead "
+        "of the declared year-end silently quarantines the very facts the "
+        "stub stages -- got "
+        f"{pack['coverage']['unclassifiable_periods']}"
+    )
     calendars = pack["fiscal_calendars"]
     assert calendars["0001045810-21-000010"] == {
         "fiscal_period_focus": "FY", "fiscal_year_end": "--01-31",
