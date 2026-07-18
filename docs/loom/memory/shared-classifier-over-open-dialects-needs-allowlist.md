@@ -52,3 +52,19 @@ reopen the hole. Fail-safe direction for an anti-fabrication check is
 many sites is exactly what per-task review cannot see) and
 [[fixtures-mirror-producer-shape]] (derive shapes from real producers, not
 a sample or an assumption).
+
+**Promotion lifecycle (JNJ/INTC arc, 2026-07-19):** an allowlist needs
+an explicit PROMOTION path, and exclusion-with-count is what feeds it.
+The unknown-axis exclusion surfaced 131 INTC facts carrying
+`srt:ConsolidatedEntitiesAxis = OperatingSegmentsMember` — a
+sibling-axis spelling of the already-recognized consolidation
+qualifier, proven synonymous by its MEMBER value equaling the
+recognized axis's default. Promote only after that member-semantics
+verification (blanket-promoting an axis by name similarity would
+readmit entity-scoped slices into default bindings); a fact carrying
+both qualifier axes with differing members is genuinely ambiguous →
+excluded under its own self-describing category
+(`consolidation_conflict`), never resolved arbitrarily. The flow is:
+exclude fail-closed → count visibly → verify semantics from the
+observed members → promote deliberately — never silent inclusion,
+never permanent blindness.

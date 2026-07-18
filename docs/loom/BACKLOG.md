@@ -69,9 +69,40 @@
     AAPL/NVDA/COST" comment describes the 2.23.0-era COST refusal — reads
     stale now that COST classifies; one-line reframe on next touch.
 
-## investing-toolkit quarterly — JNJ RestatementAxis signature blind spot (PRE-EXISTING, found by 12-ticker sweep 2026-07-19)
-- Status: OPEN (P2 — blocks JNJ, and any filer tagging
-  srt:RestatementAxis reclassification pairs, from the quarterly lane)
+## investing-toolkit 非金錢營運 KPI 自動化 — 雙路線 (USER-COMMITTED 2026-07-19, next arcs after JNJ fix ships)
+- Status: PARKED-COMMITTED (user: 「我想要兩個都做 我不想要漏掉任何資訊」—
+  completeness-driven; two SEPARATE arcs, each its own brainstorm→plan→SDD)
+- Route A — XBRL non-monetary facts extraction: operational quantities
+  actually tagged in XBRL (shares/units/stores/production; mostly
+  filer-specific extension concepts). Start: RECON FIRST — census the raw
+  edgartools fact space (not the packs — the currency gate already dropped
+  non-monetary facts there) across the 12 test tickers: what non-monetary
+  duration/instant facts exist, which are extension vs standard concepts,
+  is any allowlist-able family real. Evidence decides whether A is viable
+  or honestly thin.
+- Route B — 8-K earnings-release semi-auto extraction → tier-① store:
+  machine-parse exhibit tables → candidate numbers with source coordinates
+  → human confirmation gate (tier-①'s existing trust design unchanged;
+  only the intake is automated). Builds on the shipped US SEC narrative/8-K
+  extraction base (note the LOOM-SIMPLIFY ceiling: ≥2-exhibit 8-K currently
+  emits loud gaps — that shortcut's reversal trigger likely fires in this
+  arc). Start: inventory the 8-K extraction base + one real earnings
+  release table-parse spike (e.g. NFLX subscriber counts / AAPL-era units).
+- Related cheap hardening rider (either arc's first producer touch):
+  per-point `currency` ISO-code passthrough (gate already reads it, drops
+  it before emission — CSV/feed currently carries implicit-USD only).
+
+## investing-toolkit quarterly — JNJ RestatementAxis signature blind spot (SHIPPED 2026-07-19, 2.25.0)
+- Status: SHIPPED (feat-jnj-restatement-axis-signature; both fix shapes
+  landed — ①vintage/unknown/conflict axis exclusion-with-count +
+  `period_recast` memo flag ②`signature_refused` per-signature refusal —
+  plus the live-sweep-discovered ConsolidatedEntitiesAxis promotion
+  [INTC sibling-axis synonym, member-semantics-verified]. 12/12 tickers
+  TRUSTED, 25/25 anchors exact; JNJ revived 373 series/511 derived Q4
+  with recast annotation; INTC healed 9 wny restored. Post-ship debt:
+  🟢 double `_dimension_signature` recompute per rejected fact
+  (memoize on next producer touch); 🟢 `currency` ISO passthrough rides
+  the non-monetary double-arc below.)
 - What: `_dimension_signature` (sec_edgar_client.py ~:2073, shipped
   2.22.0/#583, untouched by the 52/53-week arc) whitelists only the 4
   breakdown axes + ConsolidationItems and silently DROPS

@@ -5,6 +5,49 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.25.0] — 2026-07-19
+
+JNJ restatement-axis fix — vintage-axis exclusion accounting and
+per-signature refusal granularity join the dimensional-revenue producer
+and the quarterly-KPI consumer chain. Plan:
+`docs/loom/plans/2026-07-19-jnj-restatement-axis-signature.md`.
+
+### Added
+
+- **Vintage/unknown-axis exclusion accounting** (`data-markets` /
+  `sec_edgar_client.py`): `_dimension_signature` now excludes, rather than
+  silently collapsing, any fact carrying a `dim_` axis that is neither a
+  whitelisted breakdown axis nor the ConsolidationItems qualifier —
+  `srt:RestatementAxis` (any member, namespace-agnostic, via
+  `_VINTAGE_AXIS_LOCAL_NAME`) is the named `"vintage"` exclusion category,
+  every other disallowed axis is `"unknown"` (fail-closed). Each exclusion
+  is counted in the pack's `coverage.axis_exclusions` channel
+  (`{category, axis, member, concept, accession, period_end}`) via
+  `_dimensional_axis_exclusions`; the 3-key signature shape
+  (`concept`/`dimensions`/`consolidation`) is unchanged.
+  `srt:ConsolidatedEntitiesAxis` — a sibling-axis spelling of the
+  consolidation qualifier live-observed on INTC's 2021-2023 filings
+  (member `OperatingSegmentsMember`) — is recognized as a second
+  consolidation-qualifier axis (`_CONSOLIDATION_AXIS_LOCAL_NAMES`), folded
+  into the same `consolidation` slot; a fact carrying both qualifier axes
+  with DIFFERING members is excluded under the self-describing
+  `"consolidation_conflict"` category.
+- **`period_recast` coverage flag** (`analysis-kpi` / `kpi_xbrl.py`):
+  `build_quarterly_series` aggregates the pack's `"vintage"`-category
+  `axis_exclusions` — read from BOTH the quarterly and annual coverage
+  arms — into at most one pack-wide `period_recast` coverage_flag,
+  carrying the affected accession(s) and the raw exclusion entries
+  verbatim under `exclusions`. Unknown-category exclusions stay
+  pack-level accounting only; zero vintage exclusions emit no flag.
+- **`signature_refused` per-signature refusal** (`analysis-kpi` /
+  `kpi_xbrl.py`): a genuine intra-filing ambiguity
+  (`_IntraFilingAmbiguityError`, raised by `resolve_binding`'s per-group
+  call) is now caught per signature group instead of aborting the whole
+  build — the poisoned group is skipped, a `signature_refused`
+  coverage_flag records its accession(s), verbatim exception reason, and
+  offending signature, and every other signature group's series still
+  emits. Any other exception type still propagates.
+
 ## [v2.24.0] — 2026-07-18
 
 Week-based duration lane — 52/53-week fiscal calendars (COST-class filers)

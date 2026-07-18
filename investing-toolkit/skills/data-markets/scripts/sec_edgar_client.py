@@ -1837,12 +1837,38 @@ _DIMENSIONAL_REVENUE_AXIS_LOCAL_NAMES = {
 # "OperatingSegmentsMember" disambiguating a segment total from a
 # consolidating-adjustments view), never a breakdown axis — captured
 # separately as `consolidation`, never folded into `dimensions`.
-_CONSOLIDATION_AXIS_LOCAL_NAME = "ConsolidationItemsAxis"
+#
+# srt:ConsolidatedEntitiesAxis is a SIBLING spelling of the SAME
+# consolidation-qualifier semantics (live-sweep regression, real INTC pack:
+# 2021-2023-era filings tag segment revenue facts with
+# `srt:ConsolidatedEntitiesAxis = OperatingSegmentsMember` — the identical
+# default member ConsolidationItemsAxis uses, per kpi_xbrl.py's
+# `_normalize_consolidation`). Both local names fold into the SAME
+# `consolidation` slot — never `dimensions`, never excluded as unknown.
+# When a fact carries BOTH with the SAME member, that is one value; with
+# DIFFERING members, that is genuinely ambiguous and the whole fact is
+# excluded (`_dimension_signature`'s "consolidation_conflict" category).
+_CONSOLIDATION_AXIS_LOCAL_NAMES = (
+    "ConsolidationItemsAxis",
+    "ConsolidatedEntitiesAxis",
+)
+
+# srt:RestatementAxis (any member, matched namespace-agnostically like
+# `_DIMENSIONAL_REVENUE_AXIS_LOCAL_NAMES` — the same Apple false-negative
+# lesson applies) tags a prior-period reclassification/restatement
+# adjustment vintage, never a real breakdown axis and never the current
+# period's bindable value (Task 1, docs/loom/plans/2026-07-19-jnj-
+# restatement-axis-signature.md — XBRL US guidance: the default,
+# axis-absent member IS the restated current value). A fact carrying this
+# axis is EXCLUDED from `dimensions`/the pack's primary facts entirely and
+# counted as the named "vintage" category in `_dimension_signature`'s
+# `exclusions` — never silently collapsed onto the default signature.
+_VINTAGE_AXIS_LOCAL_NAME = "RestatementAxis"
 
 
 def _is_dimensional_revenue_axis(axis: str | None) -> bool:
     """True when `axis` (colon form, e.g. "srt:ProductOrServiceAxis") is one
-    of the three axis local names, REGARDLESS of its `us-gaap:`/`srt:`
+    of the four axis local names, REGARDLESS of its `us-gaap:`/`srt:`
     namespace prefix — see the module note above: never filter a single
     namespace."""
     if not axis:
@@ -2050,8 +2076,10 @@ def _foreign_private_issuer_na_slot(ticker: str, form: str, reason: str) -> dict
     }
 
 
-def _dimension_signature(fact: dict) -> tuple[dict[str, str], str | None]:
-    """Build (dimensions, consolidation) from `fact`'s per-row
+def _dimension_signature(
+    fact: dict,
+) -> tuple[dict[str, str], str | None, list[dict]]:
+    """Build (dimensions, consolidation, exclusions) from `fact`'s per-row
     `dim_<namespace>_<AxisLocalName>` columns — e.g. `dim_srt_ProductOrServiceAxis`,
     `dim_us-gaap_StatementBusinessSegmentsAxis` — NEVER from the singular
     `dimension`/`member` convenience columns (the wrong-layer trap: those
@@ -2066,37 +2094,84 @@ def _dimension_signature(fact: dict) -> tuple[dict[str, str], str | None]:
     namespaces via `_is_dimensional_revenue_axis` — the Apple false-negative
     lesson applies here too), keyed by the axis local name with the trailing
     "Axis" dropped (e.g. "ProductOrService"), valued by the member's local
-    name (namespace prefix stripped). `srt:ConsolidationItemsAxis` is a
-    reconciliation QUALIFIER, not a breakdown axis — captured separately as
-    `consolidation`, never folded into `dimensions` as a second axis."""
+    name (namespace prefix stripped). `srt:ConsolidationItemsAxis` and its
+    sibling `srt:ConsolidatedEntitiesAxis` (`_CONSOLIDATION_AXIS_LOCAL_NAMES`
+    — live-sweep INTC regression) are reconciliation QUALIFIERS, not a
+    breakdown axis — captured separately as `consolidation`, never folded
+    into `dimensions` as a second axis. When BOTH are present on the same
+    row with the SAME member, that is one value; with DIFFERING members,
+    that is genuinely ambiguous and reported via `exclusions` (category
+    "consolidation_conflict") instead of guessing which one wins.
+
+    `exclusions` (Task 1, docs/loom/plans/2026-07-19-jnj-restatement-axis-
+    signature.md — kills the prior silent fall-through) lists, IN ORDER,
+    every OTHER `dim_` axis on this row that is neither a whitelisted
+    breakdown axis nor a consolidation qualifier — each entry
+    `{"category": "vintage"|"unknown", "axis": "<namespace>:<AxisLocalName>",
+    "member": <member local name>}`. `"vintage"` is `_VINTAGE_AXIS_LOCAL_NAME`
+    (`srt:RestatementAxis`, any member, namespace-agnostic); everything else
+    is `"unknown"` — fail-closed toward exclusion, never toward silent
+    collision (docs/loom/memory/shared-classifier-over-open-dialects-needs-
+    allowlist.md: the JNJ sweep proves only RestatementAxis collided, not
+    that no sibling dialect exists). A conflicting pair of consolidation
+    axes gets its own `{"category": "consolidation_conflict", "axis":
+    "<ns:AxisLocalName>,<ns:AxisLocalName>" (sorted), "member":
+    "<member>,<member>" (same order)}` entry — self-describing rather than
+    folded into "unknown", since it IS a recognized qualifier axis, just an
+    ambiguous one. A NON-EMPTY `exclusions` means the caller must exclude
+    the WHOLE fact from primary output — a disallowed axis is never just
+    dropped while `dimensions` stays populated from the fact's OTHER
+    (allowed) axes, which is exactly how a restatement/reclassification
+    pair used to collide onto the real quarter fact's signature (see
+    `_is_dimensional_revenue_fact`)."""
     dimensions: dict[str, str] = {}
-    consolidation: str | None = None
+    consolidation_matches: list[tuple[str, str, str]] = []
+    exclusions: list[dict] = []
     for key, value in fact.items():
         if not key.startswith("dim_") or value is None or _is_nan(value):
             continue
         _prefix, namespace, axis_local = key.split("_", 2)
         member_local = str(value).rsplit(":", 1)[-1]
-        if axis_local == _CONSOLIDATION_AXIS_LOCAL_NAME:
-            consolidation = member_local
+        if axis_local in _CONSOLIDATION_AXIS_LOCAL_NAMES:
+            consolidation_matches.append((namespace, axis_local, member_local))
         elif _is_dimensional_revenue_axis(f"{namespace}:{axis_local}"):
             dimensions[axis_local[: -len("Axis")]] = member_local
-    return dimensions, consolidation
+        elif axis_local == _VINTAGE_AXIS_LOCAL_NAME:
+            exclusions.append({
+                "category": "vintage",
+                "axis": f"{namespace}:{axis_local}",
+                "member": member_local,
+            })
+        else:
+            exclusions.append({
+                "category": "unknown",
+                "axis": f"{namespace}:{axis_local}",
+                "member": member_local,
+            })
+
+    consolidation: str | None = None
+    if consolidation_matches:
+        members = {member for _ns, _al, member in consolidation_matches}
+        if len(members) == 1:
+            consolidation = next(iter(members))
+        else:
+            ordered = sorted(consolidation_matches, key=lambda m: (m[0], m[1]))
+            exclusions.append({
+                "category": "consolidation_conflict",
+                "axis": ",".join(f"{ns}:{al}" for ns, al, _m in ordered),
+                "member": ",".join(m for _ns, _al, m in ordered),
+            })
+    return dimensions, consolidation, exclusions
 
 
-def _is_dimensional_revenue_fact(fact: dict) -> bool:
-    """The combined filter predicate for `extract_dimensional_revenue`:
-    dimensioned + at least one REAL breakdown axis present on the row
-    (`_dimension_signature`, both namespaces via `_is_dimensional_revenue_axis`)
-    + concept is revenue-shaped (`_is_revenue_concept`) + the fact's XBRL
-    unit is a currency amount (`_is_currency_amount_fact`, Task 2 — never a
-    percentage/ratio masquerading as a dollar value) + a reported numeric
-    value (never NaN — mirrors `_build_statement_cells`'s `_is_nan` skip; a
-    placeholder concept with no reported number is never fabricated as 0)
-    + a DURATION context (Task 1, docs/loom/plans/2026-07-16-operational-kpi-
-    quarterly.md — 'Period duration is emitted per fact'). Revenue is a
-    duration-flow concept; an instant (point-in-time, balance-sheet-shaped)
-    context is excluded here, never emitted with a fabricated/guessed
-    duration_months."""
+def _dimensional_revenue_candidate_gates(fact: dict) -> bool:
+    """The non-axis gates shared between `_is_dimensional_revenue_fact` and
+    `_dimensional_axis_exclusions` (Task 1, docs/loom/plans/2026-07-19-jnj-
+    restatement-axis-signature.md): dimensioned + a DURATION context +
+    concept is revenue-shaped (`_is_revenue_concept`) + the fact's XBRL unit
+    is a currency amount (`_is_currency_amount_fact`) + a reported numeric
+    value (never NaN). Does NOT check the axis signature itself — callers
+    combine this with `_dimension_signature`'s `dimensions`/`exclusions`."""
     if not fact.get("is_dimensioned"):
         return False
     if fact.get("period_type") != "duration":
@@ -2107,8 +2182,48 @@ def _is_dimensional_revenue_fact(fact: dict) -> bool:
         return False
     if _is_nan(fact.get("numeric_value")):
         return False
-    dimensions, _consolidation = _dimension_signature(fact)
+    return True
+
+
+def _is_dimensional_revenue_fact(fact: dict) -> bool:
+    """The combined filter predicate for `extract_dimensional_revenue`:
+    `_dimensional_revenue_candidate_gates` (dimensioned + at least one REAL
+    breakdown axis present on the row, both namespaces via
+    `_is_dimensional_revenue_axis` + concept/currency/value/duration gates)
+    + NO disallowed `dim_` axis (Task 1, docs/loom/plans/2026-07-19-jnj-
+    restatement-axis-signature.md): a fact carrying `srt:RestatementAxis`
+    (any member) or any other unrecognized `dim_` axis is EXCLUDED here
+    WHOLE — never emitted with the disallowed axis merely dropped while its
+    OTHER (allowed) axes keep `dimensions` populated, which used to let a
+    restatement/reclassification pair collide onto the real quarter fact's
+    signature. `extract_dimensional_revenue`'s per-fact loop counts these
+    exclusions via `_dimensional_axis_exclusions` for the ones this
+    predicate rejects."""
+    if not _dimensional_revenue_candidate_gates(fact):
+        return False
+    dimensions, _consolidation, exclusions = _dimension_signature(fact)
+    if exclusions:
+        return False
     return bool(dimensions)
+
+
+def _dimensional_axis_exclusions(fact: dict) -> list[dict]:
+    """The pack-accounting companion to `_is_dimensional_revenue_fact`
+    (Task 1, docs/loom/plans/2026-07-19-jnj-restatement-axis-signature.md):
+    returns `fact`'s `_dimension_signature` `exclusions` list WHEN `fact`
+    is otherwise a qualifying dimensional-revenue candidate
+    (`_dimensional_revenue_candidate_gates`) — i.e. it would have emitted
+    but for the disallowed axis. A fact that fails an UNRELATED gate (wrong
+    concept, non-currency unit, instant context, ...) contributes no
+    exclusion accounting — it was never in the running, so counting it
+    would flood the pack's `coverage.axis_exclusions` channel with noise
+    unrelated to the vintage/unknown-axis blind spot this exists to close.
+    Returns an empty list for a fact with no disallowed axis (either it
+    emits normally, or it fails an unrelated gate)."""
+    if not _dimensional_revenue_candidate_gates(fact):
+        return []
+    _dimensions, _consolidation, exclusions = _dimension_signature(fact)
+    return exclusions
 
 
 _AVG_DAYS_PER_MONTH = 30.44
@@ -2647,7 +2762,7 @@ def _build_dimensional_revenue_fact(
     than `_week_lane_class`'s tight [weeks*7-1, weeks*7] window and
     could silently reintroduce the edgartools #816 two-path desync this
     module's ONE-shared-primitive constraint exists to prevent)."""
-    dimensions, consolidation = _dimension_signature(fact)
+    dimensions, consolidation, _exclusions = _dimension_signature(fact)
     period_end = (
         fact.get("period_end") if fact.get("period_type") == "duration"
         else fact.get("period_instant")
@@ -2950,6 +3065,14 @@ def extract_dimensional_revenue(
     # runs): empty means "ran, none found" — never "did not run".
     fetch_failures: list[dict] = []
     unlabelable_filings: list[dict] = []
+    # Task 1, docs/loom/plans/2026-07-19-jnj-restatement-axis-signature.md:
+    # every `dim_` axis excluded by `_dimension_signature` (vintage —
+    # srt:RestatementAxis, any member — or unknown-axis) is counted here,
+    # by category, with enough context (axis/member/concept/accession/
+    # period_end) for a downstream coverage flag (Task 2). Always a list —
+    # this loop always runs — empty means "ran, none found", matching the
+    # other DQC-style channels above.
+    axis_exclusions: list[dict] = []
     for filing in selected:
         accession = filing.accession_no
         try:
@@ -3004,6 +3127,21 @@ def extract_dimensional_revenue(
         quarantine_flag: dict | None = None
         for fact in facts_records:
             if not _is_dimensional_revenue_fact(fact):
+                # Task 1: count every disallowed dim_ axis this WOULD-BE
+                # revenue fact carries (never a fact that fails an
+                # unrelated gate — `_dimensional_axis_exclusions` scopes
+                # to candidates only, no unrelated-fact noise).
+                for exclusion in _dimensional_axis_exclusions(fact):
+                    axis_exclusions.append({
+                        **exclusion,
+                        "concept": fact.get("concept"),
+                        "accession": accession,
+                        "period_end": (
+                            fact.get("period_end")
+                            if fact.get("period_type") == "duration"
+                            else fact.get("period_instant")
+                        ),
+                    })
                 continue
             try:
                 filing_facts.append(
@@ -3074,6 +3212,7 @@ def extract_dimensional_revenue(
             "unclassifiable_periods": unclassifiable_periods,
             "fetch_failures": fetch_failures,
             "unlabelable_filings": unlabelable_filings,
+            "axis_exclusions": axis_exclusions,
         },
         "fiscal_calendars": fiscal_calendars,
     }
