@@ -494,6 +494,125 @@ def _cmd_mark_running(args: argparse.Namespace) -> int:
     return 0
 
 
+def _append_audit_line(record: dict, verb: str, reason: str | None) -> None:
+    """Append one ``{verb, timestamp, reason}`` line to ``record["audit"]``.
+
+    Append-only: a shallow copy of any existing ``audit`` list is extended,
+    never truncated or rewritten (design SSOT §4c — "never silently lose
+    the audit trail of why a human intervened"). ``reason`` is included
+    only when given (``reset``'s ``--reason`` is optional; ``force-fail``'s
+    is required by its argparse setup, so it is always present there).
+    """
+    audit = list(record.get("audit", []))
+    line = {"verb": verb, "timestamp": datetime.now(timezone.utc).isoformat()}
+    if reason:
+        line["reason"] = reason
+    audit.append(line)
+    record["audit"] = audit
+
+
+def _cmd_reset(args: argparse.Namespace) -> int:
+    """Implements the ``reset`` subcommand — see ``main``'s subparser setup.
+
+    Requeues an entry currently ``RUNNING`` or ``FAILED`` back to
+    ``QUEUED`` (design SSOT §4c Fix-1 point 4 — the Airflow
+    clear/Temporal reset analog): ``attempts`` increments (initialized to
+    0 when absent) and an audit line is appended. Any other current
+    status (including unknown-id) is a caller-facing error — printed to
+    stderr, exit 1, zero mutation — mirroring ``_cmd_mark_running``.
+    """
+    project_path = Path(args.project)
+    queue_path = project_path / "docs" / "loom" / "QUEUE.toml"
+    state_path = project_path / "docs" / "loom" / "queue-state.json"
+
+    try:
+        entries = load_queue(queue_path)
+    except QueueError as e:
+        print(str(e), file=sys.stderr)
+        return 1
+
+    known_ids = {entry["id"] for entry in entries}
+    if args.change_id not in known_ids:
+        print(
+            f'reset: unknown change id "{args.change_id}" — not present in '
+            f'"{queue_path}".',
+            file=sys.stderr,
+        )
+        return 1
+
+    with _state_lock(state_path):
+        state = load_state(state_path)
+        existing = state.get(args.change_id, {})
+        current_status = existing.get("status", QUEUED)
+        if current_status not in ("RUNNING", "FAILED"):
+            print(
+                f'reset: entry "{args.change_id}" is not RUNNING or FAILED '
+                f"(status={current_status!r}) — refusing to requeue "
+                "without mutation.",
+                file=sys.stderr,
+            )
+            return 1
+
+        record = dict(existing)
+        record["status"] = QUEUED
+        record["attempts"] = record.get("attempts", 0) + 1
+        _append_audit_line(record, "reset", args.reason)
+        state[args.change_id] = record
+        save_state(state_path, state)
+    return 0
+
+
+def _cmd_force_fail(args: argparse.Namespace) -> int:
+    """Implements the ``force-fail`` subcommand — see ``main``'s subparser
+    setup.
+
+    Transitions an entry currently ``RUNNING`` to ``FAILED`` (design SSOT
+    §4c Fix-1 point 4 — the mark-failed/terminate analog): an audit line
+    is appended; the resulting FAILED status counts toward
+    ``_check_circuit_breaker`` naturally (no separate breaker logic — it
+    reads ``effective_entries`` status the same as any other FAILED
+    entry). Any status other than RUNNING (including unknown-id) is a
+    caller-facing error — printed to stderr, exit 1, zero mutation.
+    """
+    project_path = Path(args.project)
+    queue_path = project_path / "docs" / "loom" / "QUEUE.toml"
+    state_path = project_path / "docs" / "loom" / "queue-state.json"
+
+    try:
+        entries = load_queue(queue_path)
+    except QueueError as e:
+        print(str(e), file=sys.stderr)
+        return 1
+
+    known_ids = {entry["id"] for entry in entries}
+    if args.change_id not in known_ids:
+        print(
+            f'force-fail: unknown change id "{args.change_id}" — not '
+            f'present in "{queue_path}".',
+            file=sys.stderr,
+        )
+        return 1
+
+    with _state_lock(state_path):
+        state = load_state(state_path)
+        existing = state.get(args.change_id, {})
+        if existing.get("status") != "RUNNING":
+            print(
+                f'force-fail: entry "{args.change_id}" is not RUNNING '
+                f'(status={existing.get("status", QUEUED)!r}) — refusing '
+                "to transition without mutation.",
+                file=sys.stderr,
+            )
+            return 1
+
+        record = dict(existing)
+        record["status"] = "FAILED"
+        _append_audit_line(record, "force-fail", args.reason)
+        state[args.change_id] = record
+        save_state(state_path, state)
+    return 0
+
+
 def _cmd_status(args: argparse.Namespace) -> int:
     """Implements the ``status`` subcommand — see ``main``'s subparser setup.
 
@@ -814,8 +933,8 @@ def _assert_valid_change_id(id_value: str, *, fn: str) -> None:
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    """Top-level argparse setup: ``mark``, ``mark-running``, ``status``,
-    ``next`` subcommands."""
+    """Top-level argparse setup: ``mark``, ``mark-running``, ``reset``,
+    ``force-fail``, ``status``, ``next`` subcommands."""
     parser = argparse.ArgumentParser(
         prog="batch_queue.py", description="loom-pipeline batch mode bookkeeping"
     )
@@ -848,6 +967,30 @@ def _build_parser() -> argparse.ArgumentParser:
         "--session-dir", dest="session_dir", required=True
     )
     mark_running_parser.set_defaults(func=_cmd_mark_running)
+
+    reset_parser = subparsers.add_parser(
+        "reset",
+        help="requeue a RUNNING or FAILED entry back to QUEUED (attempts+=1, audit line)",
+    )
+    reset_parser.add_argument("change_id")
+    reset_parser.add_argument(
+        "--project", required=True, help="target project root"
+    )
+    reset_parser.add_argument("--reason", help="optional operator note for the audit line")
+    reset_parser.set_defaults(func=_cmd_reset)
+
+    force_fail_parser = subparsers.add_parser(
+        "force-fail",
+        help="transition a RUNNING entry to FAILED (audit line; counts toward the circuit breaker)",
+    )
+    force_fail_parser.add_argument("change_id")
+    force_fail_parser.add_argument(
+        "--reason", required=True, help="operator note for the audit line"
+    )
+    force_fail_parser.add_argument(
+        "--project", required=True, help="target project root"
+    )
+    force_fail_parser.set_defaults(func=_cmd_force_fail)
 
     status_parser = subparsers.add_parser(
         "status", help="print a one-screen overview of the queue"

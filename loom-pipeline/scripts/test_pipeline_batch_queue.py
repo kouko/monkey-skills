@@ -12,6 +12,7 @@ import pytest
 
 from batch_queue import (
     QueueError,
+    _check_circuit_breaker,
     check_frozen,
     effective_entries,
     ensure_worktree,
@@ -1222,3 +1223,233 @@ def test_mark_running_fails_loud_on_unknown_change_id(tmp_path, capsys):
 
     assert exit_code != 0
     assert "does-not-exist" in capsys.readouterr().err
+
+
+def test_reset_from_running_requeues_increments_attempts_and_appends_audit(tmp_path):
+    # Task 10 / design SSOT §4c: reset is allowed from RUNNING -> QUEUED,
+    # attempts increments (initialized to 0 when absent), and an
+    # append-only audit[] line records {verb, timestamp, reason}.
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+    save_state(
+        loom_dir / "queue-state.json",
+        {
+            "add-export-csv": {
+                "status": "RUNNING",
+                "branch": "loom/add-export-csv",
+                "worktree": str(project_path / ".worktrees" / "loom-add-export-csv"),
+            }
+        },
+    )
+
+    before = datetime.now(timezone.utc)
+    exit_code = main(
+        ["reset", "add-export-csv", "--project", str(project_path)]
+    )
+    after = datetime.now(timezone.utc)
+
+    assert exit_code == 0
+    state = load_state(loom_dir / "queue-state.json")
+    record = state["add-export-csv"]
+    assert record["status"] == "QUEUED"
+    assert record["attempts"] == 1
+    assert len(record["audit"]) == 1
+    audit_line = record["audit"][0]
+    assert audit_line["verb"] == "reset"
+    parsed = datetime.fromisoformat(audit_line["timestamp"])
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    assert before <= parsed <= after
+
+
+def test_reset_from_failed_requeues_and_initializes_attempts_from_absent(tmp_path):
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+    save_state(
+        loom_dir / "queue-state.json",
+        {"add-export-csv": {"status": "FAILED", "reason": "boom"}},
+    )
+
+    exit_code = main(
+        [
+            "reset",
+            "add-export-csv",
+            "--project",
+            str(project_path),
+            "--reason",
+            "operator retry after flaky infra",
+        ]
+    )
+
+    assert exit_code == 0
+    state = load_state(loom_dir / "queue-state.json")
+    record = state["add-export-csv"]
+    assert record["status"] == "QUEUED"
+    assert record["attempts"] == 1
+    assert len(record["audit"]) == 1
+    assert record["audit"][0]["verb"] == "reset"
+    assert record["audit"][0]["reason"] == "operator retry after flaky infra"
+
+
+def test_reset_wrong_state_errors_without_mutation(tmp_path, capsys):
+    # reset is only allowed from RUNNING or FAILED; a DONE entry must be
+    # rejected with zero mutation (no state change, no audit line).
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+    save_state(
+        loom_dir / "queue-state.json",
+        {"add-export-csv": {"status": "DONE", "runId": "wf_1"}},
+    )
+
+    exit_code = main(
+        ["reset", "add-export-csv", "--project", str(project_path)]
+    )
+
+    assert exit_code != 0
+    assert "add-export-csv" in capsys.readouterr().err
+    state = load_state(loom_dir / "queue-state.json")
+    assert state["add-export-csv"] == {"status": "DONE", "runId": "wf_1"}
+
+
+def test_reset_fails_loud_on_unknown_change_id(tmp_path, capsys):
+    project_path = tmp_path / "project"
+    _write_queue(project_path)
+
+    exit_code = main(
+        ["reset", "does-not-exist", "--project", str(project_path)]
+    )
+
+    assert exit_code != 0
+    assert "does-not-exist" in capsys.readouterr().err
+
+
+def test_force_fail_from_running_transitions_and_appends_audit(tmp_path):
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+    save_state(
+        loom_dir / "queue-state.json",
+        {"add-export-csv": {"status": "RUNNING", "branch": "loom/add-export-csv"}},
+    )
+
+    before = datetime.now(timezone.utc)
+    exit_code = main(
+        [
+            "force-fail",
+            "add-export-csv",
+            "--reason",
+            "operator confirmed stuck session",
+            "--project",
+            str(project_path),
+        ]
+    )
+    after = datetime.now(timezone.utc)
+
+    assert exit_code == 0
+    state = load_state(loom_dir / "queue-state.json")
+    record = state["add-export-csv"]
+    assert record["status"] == "FAILED"
+    assert len(record["audit"]) == 1
+    audit_line = record["audit"][0]
+    assert audit_line["verb"] == "force-fail"
+    assert audit_line["reason"] == "operator confirmed stuck session"
+    parsed = datetime.fromisoformat(audit_line["timestamp"])
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    assert before <= parsed <= after
+
+
+def test_force_fail_counts_toward_circuit_breaker(tmp_path):
+    # design SSOT §4c: "resulting FAILED counts toward the existing circuit
+    # breaker naturally" — verified via the breaker's own predicate against
+    # two consecutive force-failed entries (no separate breaker logic).
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+    save_state(
+        loom_dir / "queue-state.json",
+        {
+            "add-export-csv": {"status": "RUNNING"},
+            "fix-login-redirect": {"status": "RUNNING"},
+        },
+    )
+
+    assert main(
+        [
+            "force-fail",
+            "add-export-csv",
+            "--reason",
+            "stuck",
+            "--project",
+            str(project_path),
+        ]
+    ) == 0
+    assert main(
+        [
+            "force-fail",
+            "fix-login-redirect",
+            "--reason",
+            "stuck-too",
+            "--project",
+            str(project_path),
+        ]
+    ) == 0
+
+    entries = load_queue(loom_dir / "QUEUE.toml")
+    state = load_state(loom_dir / "queue-state.json")
+    merged = effective_entries(entries, state)
+    assert _check_circuit_breaker(merged) == ("add-export-csv", "fix-login-redirect")
+
+
+def test_force_fail_wrong_state_errors_without_mutation(tmp_path, capsys):
+    # force-fail is only allowed from RUNNING; an already-FAILED entry must
+    # be rejected with zero mutation (no double audit line).
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+    save_state(
+        loom_dir / "queue-state.json",
+        {"add-export-csv": {"status": "FAILED", "reason": "boom"}},
+    )
+
+    exit_code = main(
+        [
+            "force-fail",
+            "add-export-csv",
+            "--reason",
+            "trying again",
+            "--project",
+            str(project_path),
+        ]
+    )
+
+    assert exit_code != 0
+    assert "add-export-csv" in capsys.readouterr().err
+    state = load_state(loom_dir / "queue-state.json")
+    assert state["add-export-csv"] == {"status": "FAILED", "reason": "boom"}
+
+
+def test_force_fail_fails_loud_on_unknown_change_id(tmp_path, capsys):
+    project_path = tmp_path / "project"
+    _write_queue(project_path)
+
+    exit_code = main(
+        [
+            "force-fail",
+            "does-not-exist",
+            "--reason",
+            "gone",
+            "--project",
+            str(project_path),
+        ]
+    )
+
+    assert exit_code != 0
+    assert "does-not-exist" in capsys.readouterr().err
+
+
+def test_force_fail_requires_reason_argument(tmp_path, capsys):
+    project_path = tmp_path / "project"
+    _write_queue(project_path)
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["force-fail", "add-export-csv", "--project", str(project_path)])
+
+    assert exc_info.value.code != 0
