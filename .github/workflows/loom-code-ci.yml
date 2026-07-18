@@ -40,6 +40,15 @@ on:
       # 9 tests and never listed, so a PR editing only that gate ran none of
       # them (fail-open on the gate's own maintenance).
       - 'scripts/**'
+      # scripts/test_bucket_vocabulary_consistency.py pins the three-bucket
+      # research-routing vocabulary (craft / domain-convention / project-local)
+      # byte-identical across loom-code, loom-spec, and loom-discovery — but
+      # only loom-code/** is otherwise in this trigger, so an edit to just the
+      # loom-spec or loom-discovery carrier file would merge ungated without
+      # these two explicit lines (docs/loom/plans/2026-07-18-knowledge-triage-
+      # three-buckets.md task 5).
+      - 'loom-spec/skills/spec-expansion/references/domain-tag-triage.md'
+      - 'loom-discovery/skills/user-insights/assets/evidence-template.md'
       - '.github/workflows/loom-code-ci.yml'
   push:
     branches: [main]
@@ -49,6 +58,8 @@ on:
       - '**/.claude-plugin/plugin.json'
       - '**/.codex-plugin/plugin.json'
       - 'scripts/**'
+      - 'loom-spec/skills/spec-expansion/references/domain-tag-triage.md'
+      - 'loom-discovery/skills/user-insights/assets/evidence-template.md'
 
 permissions:
   contents: read
