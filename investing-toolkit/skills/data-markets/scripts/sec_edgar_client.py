@@ -2175,6 +2175,15 @@ class UnreadableFiscalCalendarError(ValueError):
     root-cause defect (docs/loom/memory/fiscal-year-derive-per-fact-against-
     filing-calendar.md).
 
+    Quarantine semantics (Task 19, docs/loom/plans/2026-07-16-operational-
+    kpi-quarterly.md): the calendar is a per-filing property, so the
+    extraction loop catches this error, EXCLUDES the whole filing's facts
+    from fiscal-labeled output, surfaces `.dqc` under
+    `coverage.unlabelable_filings` (the quarter reports
+    `filed_but_unlabelable`), and CONTINUES — one unlabelable filing never
+    aborts the multi-year run. The fail-loud property lives in that flag,
+    never in silence.
+
     `.dqc` carries the ONE DQC flag schema (type, old, new, accessions,
     reason — the plan's kickoff decision: no per-class schema variants)."""
 
@@ -2204,8 +2213,8 @@ class UnclassifiablePeriodError(ValueError):
     loop catches this error, EXCLUDES the one fact from fiscal-labeled
     output, surfaces `.dqc` under `coverage.unclassifiable_periods`, and
     CONTINUES — one stub period never aborts the whole extraction. Contrast
-    `UnreadableFiscalCalendarError` (no calendar at all), which still
-    propagates: quarantining whole unlabelable FILINGS is Task 19's job.
+    `UnreadableFiscalCalendarError` (no calendar at all), quarantined at
+    FILING granularity (Task 19): the whole filing's facts are excluded.
 
     `.dqc` carries the ONE DQC flag schema (type, old, new, accessions,
     reason — the plan's kickoff decision: no per-class schema variants)."""
@@ -2634,6 +2643,17 @@ def extract_dimensional_revenue(
     injectable for deterministic tests — same convention as
     `select_narrative_filings`'s `as_of`).
 
+    `coverage` also carries the two OBSERVED per-filing failure states
+    (Task 19), both always-list (the extraction loop always runs; empty =
+    ran, none found): `fetch_failures` — a selected filing whose
+    download/XBRL parse RAISED, recorded `attempted_fetch_failed` with the
+    in-hand exception class + message (retryable) — and
+    `unlabelable_filings` — a filing that fetched fine but whose dei
+    calendar failed the fail-loud derivation, quarantined whole
+    (`filed_but_unlabelable` on its quarter; see
+    `UnreadableFiscalCalendarError`). In both cases the run CONTINUES —
+    one bad filing's blast radius is exactly that filing.
+
     This function's labeled-fact output is UNCACHED (Task 17,
     docs/loom/plans/2026-07-16-operational-kpi-quarterly.md — implementation
     recon found no cache write/read path here; the only caches in this
@@ -2765,10 +2785,36 @@ def extract_dimensional_revenue(
     # Always a list: label derivation runs on every extraction, so an empty
     # list means "ran, none found" — never "did not run".
     unclassifiable_periods: list[dict] = []
+    # Task 19: the two OBSERVED per-filing failure states, each grounded by
+    # in-hand evidence (never inferred from index absence — that lane is
+    # `_missing_quarter_reason`'s). Both always-list (this loop always
+    # runs): empty means "ran, none found" — never "did not run".
+    fetch_failures: list[dict] = []
+    unlabelable_filings: list[dict] = []
     for filing in selected:
-        xb = filing.xbrl()
-        facts_records = xb.facts.to_dataframe().to_dict("records")
         accession = filing.accession_no
+        try:
+            xb = filing.xbrl()
+            facts_records = xb.facts.to_dataframe().to_dict("records")
+        except Exception as exc:  # noqa: BLE001 — Task 19: ANY download/parse
+            # failure for ONE filing is caught, recorded with its in-hand
+            # exception (class + message — the positive ground the
+            # `fetch_error` reservation in `_missing_quarter_reason` was
+            # waiting for), and the run CONTINUES — one failed filing's
+            # blast radius is that filing, never the whole extraction.
+            fetch_failures.append({
+                "type": "attempted_fetch_failed",
+                "old": None,
+                "new": None,
+                "accessions": [accession],
+                "reason": (
+                    f"download/XBRL parse raised for filing {accession!r}: "
+                    f"{type(exc).__name__}: {exc} — attempted and failed "
+                    "with the exception in hand (retryable; distinct from "
+                    "an index absence, which grounds no retry claim)"
+                ),
+            })
+            continue
         filed = _filing_date_iso(filing.filing_date)
         # Task 3 (docs/loom/plans/2026-07-16-operational-kpi-quarterly.md —
         # 'the fiscal calendar is read per-filing from dei tags, never cached
@@ -2795,11 +2841,13 @@ def extract_dimensional_revenue(
                 fiscal_year_reconciliation.append(reconciliation_flag)
             if not keep:
                 continue
+        filing_facts: list[dict] = []
+        quarantine_flag: dict | None = None
         for fact in facts_records:
             if not _is_dimensional_revenue_fact(fact):
                 continue
             try:
-                facts.append(
+                filing_facts.append(
                     _build_dimensional_revenue_fact(
                         fact, ticker, accession, filed, dei_calendar,
                     )
@@ -2807,10 +2855,26 @@ def extract_dimensional_revenue(
             except UnclassifiablePeriodError as exc:
                 # Task 16 quarantine: exclude the ONE fact, surface the
                 # flag, keep going — never nearest-guess a boundary, never
-                # abort the extraction for one transition/stub period. (An
-                # unreadable CALENDAR still propagates loud — quarantining
-                # whole unlabelable filings is Task 19's job.)
+                # abort the extraction for one transition/stub period.
                 unclassifiable_periods.append(exc.dqc)
+            except UnreadableFiscalCalendarError as exc:
+                # Task 19 quarantine, FILING granularity: the calendar is a
+                # per-filing property, so NONE of this filing's facts can
+                # be fiscally labeled — exclude them ALL from labeled
+                # output (`filing_facts` is discarded below; the calendar
+                # year is NEVER emitted in their place — trap 1 of
+                # docs/loom/memory/fiscal-year-derive-per-fact-against-
+                # filing-calendar.md), surface the DQC flag, and CONTINUE:
+                # one unlabelable filing never aborts the multi-year run.
+                # The fail-loud property MOVES to this flag (+ the
+                # quarter's filed_but_unlabelable coverage state) — loud in
+                # coverage, never silent.
+                quarantine_flag = exc.dqc
+                break
+        if quarantine_flag is not None:
+            unlabelable_filings.append(quarantine_flag)
+        else:
+            facts.extend(filing_facts)
 
     quarterly_coverage = None
     selection_gaps = None
@@ -2824,6 +2888,14 @@ def extract_dimensional_revenue(
         quarterly_coverage, selection_gaps = _quarterly_completeness_report(
             annual_exact_filings, exact_filings,
             since_year, until_year, as_of or date.today(),
+        )
+        # Task 19: an index-matched filing whose fetch raised, or whose
+        # calendar was unreadable, is NOT covered — override its quarter's
+        # index-presence claim with the OBSERVED state (in-hand evidence
+        # beats index inference, same precedence rule as
+        # `_surface_selection_gaps`).
+        _apply_observed_failure_states(
+            quarterly_coverage, fetch_failures, unlabelable_filings,
         )
 
     available_fiscal_years = [
@@ -2841,6 +2913,8 @@ def extract_dimensional_revenue(
             "selection_gaps": selection_gaps,
             "fiscal_year_reconciliation": fiscal_year_reconciliation,
             "unclassifiable_periods": unclassifiable_periods,
+            "fetch_failures": fetch_failures,
+            "unlabelable_filings": unlabelable_filings,
         },
         "fiscal_calendars": fiscal_calendars,
     }
@@ -3036,9 +3110,11 @@ def _missing_quarter_reason(
       a filing known to exist). This function never has such grounds — a
       filings-list absence is equally consistent with "never filed" (e.g.
       a company IPO'd mid-year and an early quarter never existed) as with
-      a genuine fetch gap — so it never returns this value. (Task 19 owns
-      the OBSERVED `attempted-fetch-failed` state, grounded by an in-hand
-      exception at the fetch site.)
+      a genuine fetch gap — so it never returns this value. (The OBSERVED
+      `attempted_fetch_failed` state, grounded by an in-hand exception at
+      the fetch site, is implemented by Task 19: the extraction loop
+      records the caught exception in `coverage.fetch_failures` and
+      `_apply_observed_failure_states` overrides the quarter's record.)
     - "unclassified": `expected_end` is in the past AND within the
       requested range, so the filing SHOULD exist by now, but its absence
       has no more specific explanation available. This branch used to
@@ -3486,6 +3562,63 @@ def _surface_selection_gaps(
             ),
         })
     return gaps
+
+
+def _apply_observed_failure_states(
+    report: list[dict],
+    fetch_failures: list[dict],
+    unlabelable_filings: list[dict],
+) -> None:
+    """Task 19: override a quarter's index-presence claim with an OBSERVED
+    per-filing failure state — the same precedence rule as
+    `_surface_selection_gaps` (evidence in hand beats index inference,
+    docs/loom/memory/fail-closed-default-must-be-enforced-not-emergent.md):
+
+    - `attempted_fetch_failed`: the filing's download/XBRL parse RAISED at
+      the fetch site (retryable — the one absence-adjacent state allowed to
+      claim retryability, because the caught exception is the ground; this
+      is the observed counterpart of the `fetch_error` reservation in
+      `_missing_quarter_reason`).
+    - `filed_but_unlabelable`: the filing fetched fine but its dei fiscal
+      calendar failed the fail-loud derivation, so the whole filing is
+      quarantined from fiscal-labeled output.
+
+    `_quarterly_completeness_report` marks such a filing "present" from
+    index metadata alone — silently claiming it covered would be exactly
+    the dishonesty the spec forbids ('never silently covered'). Each
+    matching `present` entry MOVES to `missing` carrying the observed
+    reason + the grounding detail from its DQC flag, and the record's
+    `present_count`/`status` are recomputed. Mutates `report` in place
+    (same convention as `_surface_selection_gaps`); the flags themselves
+    ride `coverage.fetch_failures` / `coverage.unlabelable_filings`."""
+    observed: dict[str, tuple[str, str]] = {}
+    for flag in fetch_failures:
+        for accession in flag["accessions"]:
+            observed[accession] = ("attempted_fetch_failed", flag["reason"])
+    for flag in unlabelable_filings:
+        for accession in flag["accessions"]:
+            observed[accession] = ("filed_but_unlabelable", flag["reason"])
+    if not observed:
+        return
+    for record in report:
+        kept: list[dict] = []
+        for entry in record["present"]:
+            state = observed.get(entry.get("accession"))
+            if state is None:
+                kept.append(entry)
+                continue
+            reason, detail = state
+            record["missing"].append({
+                "filing": entry["filing"],
+                "reason": reason,
+                "detail": detail,
+                "accession": entry.get("accession"),
+            })
+        record["present"] = kept
+        record["present_count"] = len(kept)
+        record["status"] = (
+            "full" if len(kept) == record["expected_count"] else "partial"
+        )
 
 
 def _fact_dimensional_signature(fact: dict) -> tuple:

@@ -1133,12 +1133,13 @@ def test_extract_emits_dei_fiscal_calendar(sec_client):
 
 def test_extract_dei_fiscal_calendar_absent_tag_is_none_not_fabricated(sec_client):
     """Absent dei tags are `None` at the pure per-filing read — never a
-    guessed/fabricated value (Task 3's invariant, unchanged). Task 13
-    UPDATE at the extract path: a filing WITH dimensional facts but an
-    unreadable dei calendar can no longer return a labeled pack — the
-    mandatory per-fact fiscal labeling fails loud with the DISTINCT
-    DQC-schema `UnreadableFiscalCalendarError` (never `period_end[:4]`
-    emitted as fiscal_year, never a fabricated calendar value)."""
+    guessed/fabricated value (Task 3's invariant, unchanged). Task 19
+    UPDATE at the extract path (was Task 13's "propagates out of extract"):
+    the fail-loud property MOVES to the quarantine flag — the unlabelable
+    filing's facts are excluded and the DQC flag surfaces loudly under
+    `coverage.unlabelable_filings`, never a silent labeled pack (still
+    never `period_end[:4]` emitted as fiscal_year, never a fabricated
+    calendar value; the run continues instead of aborting)."""
     # Pure read: no dei rows -> all three tags None, never fabricated.
     assert sec_client._extract_dei_calendar(
         [{"concept": "us-gaap:Revenues", "value": 1.0}]
@@ -1147,7 +1148,10 @@ def test_extract_dei_fiscal_calendar_absent_tag_is_none_not_fabricated(sec_clien
         "fiscal_year_focus": None,
     }
 
-    # Extract path: dei-less filing with facts in hand -> fail loud.
+    # Extract path: dei-less filing with facts in hand -> quarantined loud
+    # (Task 19 justification: the fail-loud property moves from a whole-run
+    # UnreadableFiscalCalendarError abort to the quarantine flag — the
+    # error stays loud in coverage, never silent, and never a labeled pack).
     filing = _make_dimensional_filing(
         accession="0000320193-24-000123", form="10-K",
         filing_date=datetime.date(2024, 11, 1), revenue_value=100.0,
@@ -1159,9 +1163,16 @@ def test_extract_dei_fiscal_calendar_absent_tag_is_none_not_fabricated(sec_clien
     company.get_filings.return_value = [filing]
     sec_client.edgar_stub.Company.return_value = company
 
-    with pytest.raises(sec_client.UnreadableFiscalCalendarError) as exc_info:
-        sec_client.extract_dimensional_revenue("AAPL")
-    assert "0000320193-24-000123" in exc_info.value.dqc["accessions"]
+    pack = sec_client.extract_dimensional_revenue("AAPL")
+    assert "error" not in pack, pack
+    assert pack["facts"] == [], (
+        "an unlabelable filing's facts are EXCLUDED from labeled output -- "
+        f"{pack['facts']}"
+    )
+    quarantined = pack["coverage"]["unlabelable_filings"]
+    assert len(quarantined) == 1, pack["coverage"]
+    assert quarantined[0]["type"] == "unreadable_fiscal_calendar", quarantined
+    assert "0000320193-24-000123" in quarantined[0]["accessions"], quarantined
 
 
 # ---------------------------------------------------------------------------
