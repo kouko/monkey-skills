@@ -265,3 +265,88 @@ def test_cached_get_dict_payload_hit_matches_miss_shape(monkeypatch):
         )
     finally:
         sys.path.remove(str(SCRIPTS_DIR))
+
+
+def test_memo_fetch_wires_ixbrl_canonical(monkeypatch):
+    """Task 6 — pack_memo_fetch wires the TW iXBRL client (twse_ixbrl.py,
+    invoked via run_client) as the TW canonical source, replacing the
+    deferred yfinance-based stub (_build_canonical_from_yf_financials_tw)
+    for the memo-fetch canonical path. Exercised offline via a
+    monkeypatched run_client (no subprocess / no network), mirroring
+    test_tw_migration_contract's stubbing pattern.
+    """
+    pack_tw_path = SCRIPTS_DIR / "pack_tw.py"
+    pack_tw = _load_module(pack_tw_path, "data_markets_pack_tw_ixbrl")
+
+    fake_ixbrl_payload = {
+        "canonical": {
+            "income_statement": {
+                "revenue": [594_000_000],
+                "_meta": {
+                    "revenue": {
+                        "source_label": "ifrs-full:Revenue",
+                        "concept": "ifrs-full:Revenue",
+                        "accounting_standard": "tifrs",
+                        "unit": "TWD",
+                    },
+                },
+            },
+            "balance_sheet": {"total_assets": [1_000_000]},
+            "cash_flow": {"operating_cash_flow": [500_000]},
+        },
+        "notes": {
+            "financial_assets_fvoci": {
+                "value": 189_650_000_000, "concept": "ifrs-full:x", "period": "2024Q3",
+            },
+        },
+        "_meta": {"co_id": "2330", "year": 2024, "season": 3, "report_id": "C", "fact_count": 2002},
+    }
+
+    calls: list[tuple[str, list[str]]] = []
+
+    def _fake_run_client(script, args, timeout=60):
+        calls.append((script, args))
+        if script == "twse_ixbrl.py":
+            return fake_ixbrl_payload
+        return {"ok": True, "_echo": {"script": script, "args": args}}
+
+    monkeypatch.setattr(pack_tw, "run_client", _fake_run_client)
+
+    stub_calls: list[tuple] = []
+    original_stub = pack_tw._build_canonical_from_yf_financials_tw
+
+    def _spy_stub(*args, **kwargs):
+        stub_calls.append((args, kwargs))
+        return original_stub(*args, **kwargs)
+
+    monkeypatch.setattr(pack_tw, "_build_canonical_from_yf_financials_tw", _spy_stub)
+
+    out = pack_tw.build_pack("memo-fetch", ["2330.TW"])
+
+    assert not stub_calls, (
+        "deferred yfinance-based canonical stub must not run for the TW "
+        "memo-fetch canonical path — it must be sourced from twse_ixbrl"
+    )
+
+    assert "twse_ixbrl" in out, "memo-fetch output missing twse_ixbrl group"
+    ixbrl_group = out["twse_ixbrl"]
+    assert isinstance(ixbrl_group, dict) and ixbrl_group, "twse_ixbrl group must be non-empty"
+    ixbrl_entry = next(iter(ixbrl_group.values()))
+    assert ixbrl_entry["_tier"] == "A"
+    assert ixbrl_entry["_source"] == "twse_ixbrl"
+    assert "_error" not in ixbrl_entry
+    assert ixbrl_entry["data"]["canonical"]["income_statement"]["revenue"] == [594_000_000]
+
+    # Top-level canonical (consumed by report-equity-memo / analysis-dcf
+    # etc) is now sourced from iXBRL, not the yfinance stub.
+    assert out["income_statement"]["revenue"] == [594_000_000]
+    assert out["balance_sheet"]["total_assets"] == [1_000_000]
+    assert out["cash_flow"]["operating_cash_flow"] == [500_000]
+
+    ixbrl_calls = [args for script, args in calls if script == "twse_ixbrl.py"]
+    assert len(ixbrl_calls) == 1, (
+        "iXBRL client should be called exactly once when the first "
+        f"attempt succeeds; got {len(ixbrl_calls)} calls: {ixbrl_calls}"
+    )
+    assert "--co-id" in ixbrl_calls[0] and "2330" in ixbrl_calls[0]
+    assert "--report-id" in ixbrl_calls[0] and "C" in ixbrl_calls[0]
