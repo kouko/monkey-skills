@@ -282,6 +282,93 @@ def test_build_candidates_preserves_decimal_matched_token():
     assert candidate["needs_semantic"] is True
 
 
+def test_zero_value_survives_gate_and_commit(tmp_path, monkeypatch):
+    # Task 5 (falsy-zero pin): a prose KPI whose value is exactly 0 ("net
+    # additions were 0 in the quarter") must be LOCATED, PASS the substring gate,
+    # and remain eligible to COMMIT + STORE — 0 must NOT be read as "no value" and
+    # silently dropped. This is the repo's known falsy-zero trap
+    # (docs/loom/memory/falsy-guard-rejects-legitimate-zero-provenance.md): a
+    # `if not value` / `if not candidate["value"]` guard ANYWHERE on the numeric
+    # value path would drop a legitimate 0. By inspection no such guard exists
+    # today, so this is a GREEN-on-arrival REGRESSION GUARD, not RED-then-GREEN:
+    # it fails the moment a falsy-value guard is introduced on any of the seams
+    # below (produce / gate / commit / store).
+    #
+    # NOTE the guard-DISCRIMINATION: the string grounding fields (matched_token /
+    # verbatim_quote) DO legitimately fail-CLOSED on falsy (empty ""); this test
+    # pins only that the NUMERIC value is exempt from that treatment — a 0 value
+    # with a grounded token "0" flows end-to-end.
+    module = _load_module()
+
+    # "0" is a genuine substring of this canonical prose surface (offset 19).
+    canonical_text = "Net additions were 0 in the quarter, flat versus prior year."
+    assert canonical_text[19:20] == "0"
+
+    # --- PRODUCE seam: _normalize_value("0") -> int 0, build_candidates keeps it.
+    # A `if not value` guard added here (skipping the candidate) would empty the
+    # list and fail len == 1.
+    produced = module.build_candidates([{"token": "0", "start": 19, "end": 20}])
+    assert len(produced) == 1, "the 0-token located number -> exactly one candidate"
+    zero_candidate = produced[0]
+    assert zero_candidate["value"] == 0
+    assert zero_candidate["value"] is not None, "0 is a value, not absence"
+    assert zero_candidate["matched_token"] == "0"
+
+    # --- GATE seam: token "0" is a substring -> gate admits it. The gate must NOT
+    # read the falsy numeric value; a `if not candidate["value"]: return False`
+    # added to passes_substring_gate would wrongly reject and fail this assert.
+    assert module.passes_substring_gate(zero_candidate, canonical_text) is True
+
+    # A CONFIRMED value-0 candidate (human filled the semantic slots + filing
+    # attribution) to exercise the commit + store seams end-to-end.
+    confirmed = {
+        "matched_token": "0",
+        "verbatim_quote": "Net additions were 0 in the quarter",
+        "value": 0,
+        "char_offset_span": [19, 20],
+        "source_kind": "prose",
+        "kpi_id": "net_additions",  # LLM-labeled + human-confirmed
+        "unit": "count",
+        "period": "2024-Q4",
+        "needs_semantic": False,
+        "source_accession": "0000320193-24-000999",
+        "source_document": "8-K/EX-99.1",
+        "filing_date": "2024-10-31",
+        "as_of": "2024-10-31",  # accession-derived (NOT wall-clock)
+    }
+
+    # --- COMMIT-GATE seam: a confirmed value-0 candidate is ACCEPTED, not filtered.
+    # A `if not c["value"]: continue` added to commit would drop it -> accepted []
+    # and this assert fails.
+    accepted = module.commit([confirmed], confirmed=True)
+    assert accepted == [confirmed], "the value-0 candidate is accepted for commit"
+
+    # --- STORE-APPEND seam: the value-0 point LANDS in the durable store, not
+    # skipped. Hermetic: KPI_STORE_DIR -> tmp_path (mirrors T7) so the real store
+    # is never touched.
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+    scripts_dir = str(_SCRIPT.parent)
+    if scripts_dir not in sys.path:
+        sys.path.insert(0, scripts_dir)
+    sys.modules.pop("kpi_store", None)
+    import kpi_store  # noqa: E402
+
+    summary = module.commit_to_store(
+        [confirmed], company="AAPL",
+        confirmer="kouko", confirmed_at="2026-07-20T10:00:00Z", confirmed=True,
+    )
+    assert summary["committed"] == 1, "the value-0 confirmed candidate is appended"
+
+    point = kpi_store.query_latest("AAPL", "net_additions", "2024-Q4")
+    assert point is not None, "the value-0 prose point must be in the store, not dropped"
+    # The load-bearing assert: the stored value is exactly 0 (not None, not absent).
+    # A falsy-value guard on _prose_candidate_to_point / commit_to_store would drop
+    # the point (query None) or lose the value here.
+    assert point["value"] == 0
+    assert point["value"] is not None
+    assert point["source_cell_ref"] == "prose:19-20"
+
+
 def test_committed_prose_point_carries_anchor_and_attribution(tmp_path, monkeypatch):
     # Task 7 (Part 1 walking skeleton): the durable store-append path. This closes
     # the three-layer skeleton — mechanical produce (T3) -> LLM propose -> HUMAN
