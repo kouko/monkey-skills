@@ -5,7 +5,7 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v2.27.0] — 2026-07-20
+## [v2.28.0] — 2026-07-20
 
 Narrative-evidence arc, Slice A **Part 1** (walking skeleton): a "Route B for
 prose" mechanical producer that isolates a single operational-KPI datum from an
@@ -45,6 +45,46 @@ Change-folder: `docs/loom/2026-07-19-8k-prose-kpi-intake/`; plan:
   Route B's `table:0`). The existing quarterly memo feed reads
   `build_quarterly_series`, not the store, so prose points do not surface in the
   memo under Slice A (pinned by a regression test).
+
+## [v2.27.0] — 2026-07-19
+
+Taiwan iXBRL financial-statement ingestion — TW equity memos now source
+their canonical three statements + DCF fields + curated notes from the real
+inline-XBRL filing (MOPS `t164sb01`, a gate-free Big5 GET), replacing the
+deferred yfinance-only canonical stub, and degrade back to the yfinance stub
+when a filing isn't available. Plan:
+`docs/loom/plans/2026-07-19-tw-ixbrl-ingestion.md`.
+
+### Added
+
+- **TW iXBRL fetch/parse pipeline** (`data-markets`): `twse_ixbrl_fetch.py`
+  (t164sb01 fetch — Big5 decode, season fallback for 興櫃 semiannual cadence,
+  502 retry; one URL covers 上市/上櫃/興櫃/KY), `twse_ixbrl_parser.py` (generic
+  fact extraction via regex/iterparse over `ix:` tags — NOT DOM, which silently
+  drops ~85% of nested facts; `scale`-attribute-driven scaling),
+  `twse_ixbrl_canonical.py` (canonical three-statement mapping for industrial
+  `-ci` filers, incl. the DCF-required `total_debt`/`cash`/`ebit`/`capex`/`fcf`
+  fields verified against 2330 + 1301 fixtures; financial `-fh` → unsupported
+  marker), `twse_ixbrl_notes.py` (4 curated note categories: financial-instruments
+  by measurement category, Mainland-China investment + MOEA ceiling, related-party
+  balances + flows, employee-benefit expense), and `twse_ixbrl.py` (the
+  `run_client`-invokable CLI assembling the pipeline into JSON).
+
+### Changed
+
+- **`pack_tw.py` memo-fetch** now sources the TW canonical from the iXBRL client
+  (provenance-wrapped Tier-A `twse_ixbrl` group), filling the previously-deferred
+  `_build_canonical_from_yf_financials_tw` stub; on iXBRL fetch failure it degrades
+  to the retained yfinance stub rather than an empty canonical (no regression).
+
+### Notes
+
+- Scope is statements + generic fact layer + curated note fields, NOT a full
+  note-table reconstruction engine — annual-filing verification showed TW iXBRL's
+  forensic notes (inventory write-downs, tax bridge, aging buckets, PP&E
+  rollforward) are absent at any period; value concentrates in the ~4 curated
+  concept families. Endorsement/guarantee, parent-only (個體) statements, and
+  `-fh` canonical are deferred (see plan Decision Log).
 
 ## [v2.26.0] — 2026-07-19
 

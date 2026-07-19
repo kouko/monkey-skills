@@ -98,6 +98,33 @@ Supersedes: PR #135
   cannot resolve `PR #135`, so resolve the PR to its merge/squash commit
   SHA first (e.g. `gh pr view 135 --json mergeCommit`) and verify that.
 
+## Step 3.5 — Privacy gate (fail-closed)
+
+**Privacy gate (fail-closed).** After composing the commit message text,
+run the two-layer privacy check before it is used:
+
+1. **Layer 1 — deterministic scan.** Run
+   `scripts/privacy-scan.py --text-file <composed>` (exit 0 = clean;
+   exit 3 = secrets/deny-list findings printed as JSON).
+2. **Layer 2 — fresh-context judge.** Dispatch a fresh-context agent over
+   the same composed text per `protocols/privacy-judge-spec.md` (the
+   judge SSOT: the categories it inspects, its `PASS | BLOCK` output
+   schema, and its fail-closed contract). Do NOT inline the judge's full
+   rubric here — point at the spec.
+3. **Verdict.** Any layer-1 finding OR a layer-2 BLOCK → the commit
+   message is BLOCKED: surface findings, do not proceed, escalate to
+   the human.
+4. **Fail-closed (explicit).** A layer-1 script error, a layer-2
+   dispatch failure, or a non-conforming judge output → treat as BLOCK
+   (never as PASS). This is an explicit branch, not an emergent default.
+
+**Quality advisory (non-blocking).** In the commit carrier, the layer-2
+judge also returns the optional `quality_note` defined in
+`protocols/privacy-judge-spec.md` (compose-commit anti-patterns:
+restates the diff / lists files / restates subject / body is
+what-not-why). ADVISORY ONLY — it never blocks and never escalates;
+carry it into the close-out report as a note.
+
 ## Step 4 — Diagram, if change is architectural
 
 If the change alters architecture, data flow, or state transitions,
