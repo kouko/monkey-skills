@@ -92,3 +92,23 @@ def test_self_closing_block_break_separates_flanking_prose():
     tokens = prose.split()
     assert "first" in tokens
     assert "second" in tokens
+
+
+def test_locate_returns_token_span_quote():
+    # No living-spec REQ-id: this plan traces tasks by Task item, not REQ-ids.
+    # The number locator returns each candidate with a verbatim token and a
+    # char_offset_span [start, end] into the canonical text. The load-bearing
+    # invariant is the anchor the anti-fabrication gate verifies against:
+    # text[start:end] must equal the token EXACTLY (byte-for-byte substring).
+    import exhibit_prose
+
+    text = "...the company had 1,576,000 employees at year end..."
+    candidates = exhibit_prose.locate_numbers(text)
+
+    match = [c for c in candidates if c["token"] == "1,576,000"]
+    assert match, f"expected a 1,576,000 candidate, got {candidates!r}"
+    cand = match[0]
+    start, end = cand["start"], cand["end"]
+    # Exact-substring invariant, asserted explicitly.
+    assert text[start:end] == "1,576,000"
+    assert text[start:end] == cand["token"]

@@ -115,6 +115,35 @@ def prose_surface(html: str) -> str:
     return _normalize_whitespace(walker.text())
 
 
+# A PLAIN numeric token (Part 1 scope): an integer optionally with thousands
+# separators (commas) and an optional decimal fraction — e.g. "1,576,000",
+# "480,126", "3.56", "0". Word-scale multipliers ("billion"/"million"),
+# percentages, qualifiers, and ranges are LATER parts and are NOT matched here.
+# ``\d+`` cannot cross a comma, so each ``(?:,\d{3})`` only attaches a
+# well-formed 3-digit group; malformed groupings degrade to their plain-digit
+# runs rather than mis-spanning.
+_NUMBER_RE = re.compile(r"\d+(?:,\d{3})*(?:\.\d+)?")
+
+
+def locate_numbers(text: str) -> list[dict]:
+    """Locate PLAIN numeric tokens in the canonical prose surface, each with a
+    verbatim token and a ``char_offset_span`` into ``text``.
+
+    Returns one dict per candidate: ``{"token", "start", "end"}`` where
+    ``token`` is the matched substring and ``[start, end]`` is its half-open
+    offset span. The load-bearing invariant — the anchor the downstream
+    anti-fabrication gate verifies against — is ``text[start:end] == token``
+    exactly, which holds by construction because both derive from the same
+    regex match. Deterministic and left-to-right ordered.
+
+    Part 1 locates plain numeric spans only (see ``_NUMBER_RE``); scale words,
+    percentages, and ranges are deferred to later parts."""
+    return [
+        {"token": m.group(), "start": m.start(), "end": m.end()}
+        for m in _NUMBER_RE.finditer(text)
+    ]
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Flatten raw 8-K exhibit HTML into the canonical prose-text "
