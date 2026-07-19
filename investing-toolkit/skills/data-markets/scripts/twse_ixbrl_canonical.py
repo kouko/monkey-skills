@@ -51,6 +51,10 @@ _CONCEPT_MAP: dict[str, dict[str, str]] = {
         "revenue": "ifrs-full:Revenue",
         "gross_profit": "ifrs-full:GrossProfit",
         "operating_income": "ifrs-full:ProfitLossFromOperatingActivities",
+        # ebit is an alias of operating_income (same concept) — analysis-dcf's
+        # dcf_compute.py (:171, :193-198) prefers "ebit" over operating_income
+        # explicitly; without this key it silently falls back to net_income.
+        "ebit": "ifrs-full:ProfitLossFromOperatingActivities",
         "pretax_income": "ifrs-full:ProfitLossBeforeTax",
         "net_income": "ifrs-full:ProfitLossAttributableToOwnersOfParent",
         "eps_basic": "ifrs-full:BasicEarningsLossPerShare",
@@ -59,11 +63,15 @@ _CONCEPT_MAP: dict[str, dict[str, str]] = {
         "total_assets": "ifrs-full:Assets",
         "total_liabilities": "ifrs-full:Liabilities",
         "total_equity": "ifrs-full:Equity",
+        # dcf_compute.py (:220-222) requires this to compute net_debt; absent
+        # → silently 0.0 → net_debt=0 for every TW ticker (round-2 fix 🔴).
+        "cash": "ifrs-full:CashAndCashEquivalents",
     },
     "cash_flow": {
         "operating_cash_flow": "ifrs-full:CashFlowsFromUsedInOperatingActivities",
         "investing_cash_flow": "tifrs-SCF:NetCashFlowsFromUsedInInvestingActivities",
         "financing_cash_flow": "tifrs-SCF:CashFlowsFromUsedInFinancingActivities",
+        "capex": "ifrs-full:PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities",
     },
 }
 
@@ -71,16 +79,40 @@ _LABELS: dict[str, str] = {
     "revenue": "Revenue",
     "gross_profit": "Gross Profit",
     "operating_income": "Profit (Loss) from Operating Activities",
+    "ebit": "Profit (Loss) from Operating Activities",
     "pretax_income": "Profit (Loss) before Tax",
     "net_income": "Profit (Loss) Attributable to Owners of Parent",
     "eps_basic": "Basic Earnings (Loss) per Share",
     "total_assets": "Assets",
     "total_liabilities": "Liabilities",
     "total_equity": "Equity",
+    "cash": "Cash and Cash Equivalents",
     "operating_cash_flow": "Cash Flows from (used in) Operating Activities",
     "investing_cash_flow": "Net Cash Flows from (used in) Investing Activities",
     "financing_cash_flow": "Cash Flows from (used in) Financing Activities",
+    "capex": "Purchase of Property, Plant and Equipment (Investing Activities)",
 }
+
+# Debt-bearing concepts observed in the -ci (industrial) taxonomy for
+# balance_sheet.total_debt (dcf_compute.py :220-222 requires this). Summed
+# per matching AsOf date across whichever of these are present in the fact
+# set — a filer need not carry all three.
+#
+# LOOM-SIMPLIFY: excludes tifrs-bsci-ci:LongtermLiabilitiesCurrentPortion
+#   (the "current portion of long-term liabilities" line) — that concept is
+#   an unsplit grab-bag (could bundle non-debt long-term items, not proven
+#   debt-only from the fixture alone).
+# ceiling: before extending TW iXBRL canonical mapping to a second -ci
+#   fixture/filer (next real fixture added to tests/data/fixtures/).
+# upgrade: split/verify LongtermLiabilitiesCurrentPortion's composition
+#   against that filer's notes and fold the debt-only portion into
+#   _DEBT_CONCEPTS if confirmed.
+# ref: docs/loom/plans/2026-07-19-tw-ixbrl-ingestion.md Task 6 round-2 review.
+_DEBT_CONCEPTS: tuple[str, ...] = (
+    "ifrs-full:LongtermBorrowings",
+    "ifrs-full:NoncurrentPortionOfNoncurrentBondsIssued",
+    "ifrs-full:NoncurrentFinanceLeaseLiabilities",
+)
 
 
 def _is_fh_taxonomy(facts: list[dict[str, Any]]) -> bool:
@@ -117,6 +149,73 @@ def _period_sort_key(period: dict[str, Any] | None) -> tuple[str, int]:
         except ValueError:
             _log("bad period bounds", f"start={start!r} end={end!r}")
     return (end, span)
+
+
+def _derive_total_debt(
+    by_concept: dict[str, dict[str, dict[str, Any]]],
+) -> tuple[list[float], dict[str, Any]] | None:
+    """Sum whichever _DEBT_CONCEPTS are present in the fact set, per matching
+    AsOf date. Returns None (field stays absent) if none of the debt
+    concepts are present at all — an absent field is preferable to a wrong
+    total_debt=0.0 fabricated from nothing.
+    """
+    sums: dict[str, float] = {}
+    periods_by_ctx: dict[str, Any] = {}
+    concepts_used: list[str] = []
+    for concept in _DEBT_CONCEPTS:
+        ctx_facts = by_concept.get(concept)
+        if not ctx_facts:
+            continue
+        concepts_used.append(concept)
+        for context_ref, fact in ctx_facts.items():
+            value = fact.get("raw_value")
+            if value is None:
+                continue
+            sums[context_ref] = sums.get(context_ref, 0.0) + value
+            periods_by_ctx[context_ref] = fact.get("period")
+
+    if not concepts_used:
+        return None
+
+    ordered_ctx = sorted(
+        sums.keys(), key=lambda c: _period_sort_key(periods_by_ctx.get(c)), reverse=True
+    )
+    values = [sums[c] for c in ordered_ctx]
+    meta = {
+        "source_label": "Total Debt (sum of components present)",
+        "concept": None,
+        "accounting_standard": "tifrs",
+        "unit": "TWD",
+        "periods": [periods_by_ctx.get(c) for c in ordered_ctx],
+        "derivation": "sum of " + " + ".join(concepts_used),
+        "components": concepts_used,
+    }
+    return values, meta
+
+
+def _derive_fcf(cash_flow: dict[str, Any]) -> tuple[list[float], dict[str, Any]] | None:
+    """fcf = operating_cash_flow - capex, paired positionally (both series
+    are independently sorted most-recent-first by the same period key, so
+    index i is the same reporting period on both sides for a normal filing
+    that reports both lines for the same period set)."""
+    ocf = cash_flow.get("operating_cash_flow")
+    capex = cash_flow.get("capex")
+    if not ocf or not capex:
+        return None
+
+    n = min(len(ocf), len(capex))
+    values = [ocf[i] - capex[i] for i in range(n)]
+    ocf_periods = cash_flow["_meta"]["operating_cash_flow"]["periods"]
+    meta = {
+        "source_label": "Free Cash Flow (derived)",
+        "concept": None,
+        "accounting_standard": "tifrs",
+        "unit": "TWD",
+        "periods": ocf_periods[:n],
+        "derivation": "operating_cash_flow - capex",
+        "components": ["operating_cash_flow", "capex"],
+    }
+    return values, meta
 
 
 def build_canonical(facts: list[dict[str, Any]]) -> dict[str, Any]:
@@ -172,5 +271,30 @@ def build_canonical(facts: list[dict[str, Any]]) -> dict[str, Any]:
             }
         lines["_meta"] = meta
         canonical[statement] = lines
+
+    # capex's raw fact is signed negative (cash outflow, sign="-" in the
+    # fixture); canonical convention across every market's pack.py
+    # (pack_us/jp/kr/cn) stores capex as an absolute value.
+    cash_flow = canonical.get("cash_flow", {})
+    if cash_flow.get("capex"):
+        cash_flow["capex"] = [abs(v) for v in cash_flow["capex"]]
+        cash_flow["_meta"]["capex"]["note"] = "absolute value (fixture raw sign is negative cash outflow)"
+
+    income_statement = canonical.get("income_statement", {})
+    if income_statement.get("ebit"):
+        income_statement["_meta"]["ebit"]["note"] = "alias of operating_income"
+
+    fcf_result = _derive_fcf(cash_flow)
+    if fcf_result:
+        values, meta = fcf_result
+        cash_flow["fcf"] = values
+        cash_flow["_meta"]["fcf"] = meta
+
+    balance_sheet = canonical.get("balance_sheet", {})
+    debt_result = _derive_total_debt(by_concept)
+    if debt_result:
+        values, meta = debt_result
+        balance_sheet["total_debt"] = values
+        balance_sheet["_meta"]["total_debt"] = meta
 
     return canonical

@@ -77,6 +77,67 @@ def test_canonical_ci_from_facts():
     assert canonical["income_statement"]["_meta"]["revenue"]["concept"] == "ifrs-full:Revenue"
 
 
+def test_canonical_ci_emits_dcf_required_fields():
+    """Round 2 fix (code-quality review 🔴): analysis-dcf/scripts/dcf_compute.py
+    (:29-34, :192-221) requires balance_sheet.total_debt/cash and uses
+    income_statement.ebit + cash_flow.capex/fcf with silent-zero fallbacks —
+    the pre-fix _CONCEPT_MAP omitted all five, so net_debt silently computed
+    as 0 for every TW ticker. Traced against the real fixture (grepped
+    twse_ixbrl_2330_2024Q3_C.html directly, big5 raw bytes — iconv translit
+    truncates the file on invalid byte sequences, so grep -a on the original
+    is the reliable path).
+    """
+    parser, canonical_mod = _load_modules()
+    facts = _fixture_facts(parser)
+
+    canonical = canonical_mod.build_canonical(facts)
+
+    bs = canonical["balance_sheet"]
+    inc = canonical["income_statement"]
+    cf = canonical["cash_flow"]
+
+    # cash <- ifrs-full:CashAndCashEquivalents, AsOf20240930: "1,886,780,555" x1000
+    assert bs["cash"][0] == 1_886_780_555_000.0
+    assert bs["_meta"]["cash"]["concept"] == "ifrs-full:CashAndCashEquivalents"
+
+    # total_debt <- sum of the 3 debt-bearing concepts present in this filer's
+    # -ci fact set (LongtermBorrowings + NoncurrentPortionOfNoncurrentBondsIssued
+    # + NoncurrentFinanceLeaseLiabilities), AsOf20240930:
+    # 26,459,677 + 909,703,588 + 28,208,721 = 964,371,986 (x1000)
+    assert bs["total_debt"][0] == 964_371_986_000.0
+    assert bs["_meta"]["total_debt"]["derivation"]
+
+    # ebit <- alias of operating_income (same concept,
+    # ifrs-full:ProfitLossFromOperatingActivities), YTD From20240101To20240930:
+    # "896,340,137" x1000
+    assert inc["ebit"][0] == 896_340_137_000.0
+    assert inc["ebit"][0] == inc["operating_income"][0]
+    assert inc["_meta"]["ebit"]["concept"] == "ifrs-full:ProfitLossFromOperatingActivities"
+
+    # capex <- ifrs-full:PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities,
+    # YTD From20240101To20240930: raw fact is sign="-" "594,058,374" (x1000);
+    # canonical convention (pack_us/jp/kr/cn) stores capex as absolute value.
+    assert cf["capex"][0] == 594_058_374_000.0
+
+    # fcf <- DERIVED = operating_cash_flow - capex, most-recent period.
+    # operating_cash_flow[0] (YTD) = 1,205,971,785 x1000.
+    assert cf["operating_cash_flow"][0] == 1_205_971_785_000.0
+    assert cf["fcf"][0] == cf["operating_cash_flow"][0] - cf["capex"][0]
+    assert cf["fcf"][0] == 611_913_411_000.0
+    assert cf["_meta"]["fcf"]["derivation"]
+
+    # All new lines must carry the same accounting_standard/unit shape as the
+    # pre-existing lines (test_canonical_ci_from_facts already scans every
+    # _meta entry for this; this test pins the specific new lines too).
+    for statement, lines in (("balance_sheet", ["cash", "total_debt"]),
+                              ("income_statement", ["ebit"]),
+                              ("cash_flow", ["capex", "fcf"])):
+        meta = canonical[statement]["_meta"]
+        for line in lines:
+            assert meta[line]["accounting_standard"] == "tifrs", (statement, line)
+            assert meta[line]["unit"] == "TWD", (statement, line)
+
+
 def test_canonical_fh_fact_set_returns_unsupported_marker():
     _, canonical_mod = _load_modules()
 
