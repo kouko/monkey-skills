@@ -100,10 +100,17 @@ def test_canonical_ci_emits_dcf_required_fields():
     assert bs["cash"][0] == 1_886_780_555_000.0
     assert bs["_meta"]["cash"]["concept"] == "ifrs-full:CashAndCashEquivalents"
 
-    # total_debt <- sum of the 3 debt-bearing concepts present in this filer's
-    # -ci fact set (LongtermBorrowings + NoncurrentPortionOfNoncurrentBondsIssued
-    # + NoncurrentFinanceLeaseLiabilities), AsOf20240930:
-    # 26,459,677 + 909,703,588 + 28,208,721 = 964,371,986 (x1000)
+    # total_debt <- sum of the 3 long-term debt-bearing concepts present in
+    # this filer's -ci fact set (LongtermBorrowings +
+    # NoncurrentPortionOfNoncurrentBondsIssued + NoncurrentFinanceLeaseLiabilities),
+    # AsOf20240930: 26,459,677 + 909,703,588 + 28,208,721 = 964,371,986 (x1000).
+    # Whole-branch-review remediation: _DEBT_CONCEPTS now also includes
+    # short-term/current interest-bearing debt concepts (ShorttermBorrowings /
+    # CurrentPortionOfNoncurrentBondsIssued / CurrentFinanceLeaseLiabilities);
+    # this fixture (TSMC, cash-rich) confirmed-absent all three via
+    # grep -a over the raw fixture bytes, so the value here is unchanged —
+    # see test_canonical_ci_total_debt_sums_short_term_debt_when_present for
+    # the synthetic-fact proof that they ARE summed in when present.
     assert bs["total_debt"][0] == 964_371_986_000.0
     assert bs["_meta"]["total_debt"]["derivation"]
 
@@ -136,6 +143,57 @@ def test_canonical_ci_emits_dcf_required_fields():
         for line in lines:
             assert meta[line]["accounting_standard"] == "tifrs", (statement, line)
             assert meta[line]["unit"] == "TWD", (statement, line)
+
+
+def test_canonical_ci_total_debt_sums_short_term_debt_when_present():
+    """Whole-branch review remediation: TW canonical total_debt was
+    long-term-debt-only, omitting short-term/current interest-bearing
+    borrowings — understating net_debt (analysis-dcf) and overstating
+    DCF equity value. _DEBT_CONCEPTS must sum short-term/current
+    interest-bearing debt concepts too, when present.
+
+    The committed 2330 fixture carries NO such concepts (grep -a over
+    the raw fixture bytes for Shortterm*/Current*Borrowing*/Bond*/Lease*
+    turned up only the excluded grab-bag
+    tifrs-bsci-ci:LongtermLiabilitiesCurrentPortion — TSMC is cash-rich
+    and genuinely has no short-term borrowings this quarter), so this
+    uses a synthetic fact set (same pattern as the -fh test below) to
+    prove the short-term component is summed in when present, without
+    depending on a fixture that may never carry one.
+    """
+    _, canonical_mod = _load_modules()
+
+    period = {"type": "instant", "instant": "2024-09-30"}
+
+    def _fact(concept: str, value: float) -> dict:
+        return {
+            "concept": concept,
+            "context_ref": "AsOf20240930",
+            "raw_value": value,
+            "decimals": "-3",
+            "unit": "TWD",
+            "period": period,
+            "entity": "2330",
+            "fact_type": "nonFraction",
+        }
+
+    facts = [
+        _fact("ifrs-full:LongtermBorrowings", 26_459_677_000.0),
+        _fact("ifrs-full:NoncurrentPortionOfNoncurrentBondsIssued", 909_703_588_000.0),
+        _fact("ifrs-full:NoncurrentFinanceLeaseLiabilities", 28_208_721_000.0),
+        _fact("ifrs-full:ShorttermBorrowings", 5_000_000_000.0),
+    ]
+
+    canonical = canonical_mod.build_canonical(facts)
+    bs = canonical["balance_sheet"]
+
+    # 26,459,677 + 909,703,588 + 28,208,721 + 5,000,000 = 969,371,986 (x1000)
+    assert bs["total_debt"][0] == 969_371_986_000.0, (
+        "total_debt must include ifrs-full:ShorttermBorrowings alongside "
+        "the long-term components — pre-fix _DEBT_CONCEPTS silently "
+        "dropped short-term debt, understating net_debt"
+    )
+    assert "ifrs-full:ShorttermBorrowings" in bs["_meta"]["total_debt"]["components"]
 
 
 def test_canonical_fh_fact_set_returns_unsupported_marker():
