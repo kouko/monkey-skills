@@ -10,6 +10,23 @@
 > greppable). Completed items are deleted, not archived — git history is
 > the archive.
 
+## investing-toolkit TW iXBRL ingestion 2.27.0 — post-ship follow-ups (OPEN)
+- Status: OPEN
+- Start: next touch of `investing-toolkit/skills/data-markets/scripts/twse_ixbrl_*.py`
+  or `pack_tw.py` memo-fetch.
+- Origin: TW iXBRL ingestion (branch xbrl-tw, PR #592, 2026-07-19); brief/plan
+  Decision Log + whole-branch review ship-as-debt rulings.
+- What: (a) **financial `-fh` canonical + notes sub-arc** — FHC filers (e.g. Cathay
+  2882) use `tifrs-bsci-fh` (insurance/banking concepts, no gross-margin,
+  per-subsidiary NPL/coverage); captured at the fact layer but `build_canonical`
+  returns an unsupported marker. Also resolve the untested non-`ci`/`fh` `bsci`
+  variants (securities dealer, insurer). (b) **endorsement/guarantee curated field** —
+  deferred (ix:tuple per-counterparty rows, no clean aggregate leaf); needs the
+  note-table reconstruction path. (c) **興櫃 multi-period series** — semiannual
+  (Q2/Q4) cadence; season-fallback already handles per-period absence, a series
+  builder is future. (d) 🟢 debt: T3 canonical tie-break order untested (membership
+  only), T2 3×502-exhaustion branch untested.
+
 ## investing-toolkit quarterly 2.22.0 — post-ship follow-ups (OPEN)
 - Status: OPEN
 - Start: next touch of `investing-toolkit/skills/data-markets/scripts/sec_edgar_client.py`
