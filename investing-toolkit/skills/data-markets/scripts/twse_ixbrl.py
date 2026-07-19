@@ -50,6 +50,23 @@ def _log(stage: str, msg: str = "") -> None:
     sys.stderr.flush()
 
 
+def _propagate_quiet() -> None:
+    """Propagate --quiet to the 4 composed sibling modules' stderr
+    logging. `twse_ixbrl_fetch` gates its own `_log` on a `_QUIET`
+    global, so setting that is enough for it; `twse_ixbrl_parser`,
+    `twse_ixbrl_canonical` and `twse_ixbrl_notes` have no such gate
+    (their `_log` always writes) -- for those, neutralize `_log`
+    itself at the module-attribute level. Runtime attribute-setting
+    on the imported module objects only -- the sibling source files
+    are never edited.
+    """
+    for mod in (twse_ixbrl_fetch, twse_ixbrl_parser, twse_ixbrl_canonical, twse_ixbrl_notes):
+        if hasattr(mod, "_QUIET"):
+            setattr(mod, "_QUIET", True)
+        if hasattr(mod, "_log"):
+            setattr(mod, "_log", lambda *_args, **_kwargs: None)
+
+
 def run_pipeline(co_id: str, year: int, season: int, report_id: str = "C") -> dict[str, Any]:
     """Fetch -> parse -> canonical + curated notes for one
     (co_id, year, season, report_id). Never raises -- any failure is
@@ -106,6 +123,8 @@ def main() -> None:
     args = parser.parse_args()
     global _QUIET
     _QUIET = args.quiet
+    if _QUIET:
+        _propagate_quiet()
 
     result = run_pipeline(args.co_id, args.year, args.season, args.report_id)
     print(json.dumps(result, default=str, ensure_ascii=False, indent=2))
