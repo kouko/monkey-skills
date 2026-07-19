@@ -137,6 +137,82 @@ def propose(canonical_text: str) -> list[dict]:
     return build_candidates(run_exhibit_prose(canonical_text))
 
 
+def _scanned_result(candidates: list[dict]) -> dict:
+    """Wrap a SCANNED candidate list into an explicit empty-aware result envelope.
+
+    `gap=None` marks a SUCCESSFUL scan: zero candidates is empty-SUCCESS ("0 prose
+    candidates"), NOT an error and NOT a gap — the anti-fabrication rail must never
+    invent a KPI, and it must distinguish "scanned, found nothing" from a real gap
+    (a `gap` marker). The `note` carries the count as the explicit human signal so
+    a 0-found scan says so out loud rather than returning a bare empty list a caller
+    could mistake for an upstream failure. Mirrors Route B's loud-gap idiom
+    (sec_edgar_client `_exhibit_gap`), where an unresolved case is a NAMED slot, not
+    a silent skip.
+    """
+    return {
+        "candidates": candidates,
+        "gap": None,
+        "note": f"{len(candidates)} prose candidates",
+    }
+
+
+def _multi_exhibit_gap(exhibit_count: int) -> dict:
+    """A LOUD >=2-exhibit GAP marker: extract NOTHING, never silently pick one
+    exhibit. Mirrors Route B's `_exhibit_gap` vocabulary (a named gap slot for an
+    8-K whose EX-99.x cannot be unambiguously sourced); here the envelope-level
+    `gap="multi_exhibit"` discriminator distinguishes it from an empty-success scan.
+
+    LOOM-SIMPLIFY: shortcut: a filing carrying >=2 EX-99 prose exhibits emits a loud
+      multi_exhibit gap and extracts NOTHING, rather than scanning and arbitrating
+      KPIs across the several exhibits | ceiling: a real 8-K carrying >=2 EX-99
+      press-release exhibits each with recoverable prose KPIs we want extracted (not
+      gapped) | upgrade: per-exhibit prose scan + table-vs-prose / prose-vs-prose
+      arbitration (Part 3 dedup) once multi-exhibit RESOLUTION lands in Route B's
+      sec_edgar_client `_segment_8k` | ref:
+      docs/loom/plans/2026-07-19-8k-prose-kpi-intake-part-1.md T8. This inherits the
+      SAME ceiling as `_segment_8k`'s >=2-exhibit LOOM-SIMPLIFY: the gap is loud +
+      tested; only the multi-exhibit RESOLUTION is deferred, never the fail-loud.
+    """
+    return {
+        "candidates": [],
+        "gap": "multi_exhibit",
+        "note": (
+            f"{exhibit_count} EX-99 exhibits in the filing; a safe prose scan "
+            f"requires exactly one (>=2-exhibit ceiling — never silently pick one)"
+        ),
+    }
+
+
+def intake(exhibits: list[str]) -> dict:
+    """Honest-gap intake entry over the mechanical prose producer.
+
+    Takes the filing's EX-99 exhibit set (each element a canonical prose surface).
+    Two negative paths are handled LOUDLY, never by fabrication or a silent pick:
+
+      - `len(exhibits) >= 2` -> a loud `multi_exhibit` GAP and ZERO extraction
+        (inherits Route B's LOOM-SIMPLIFY >=2-exhibit ceiling — see
+        `_multi_exhibit_gap`). The producer does NOT scan any exhibit, so no KPI is
+        attributed to an ambiguous source.
+      - otherwise (the unambiguous single exhibit) -> SCAN its prose via `propose`
+        and wrap the result in an empty-aware envelope (`_scanned_result`): a scan
+        that finds no number token is empty-SUCCESS ("0 prose candidates"), distinct
+        from the gap above. An empty set has nothing to scan and yields the same
+        empty-success envelope (no exhibit -> no prose candidates).
+
+    Returns the result envelope `{candidates, gap, note}`; the pipeline SUCCEEDS in
+    both the empty-scan and the gap cases (a gap is a reported outcome, not a raised
+    error) — the caller reads `gap` to branch.
+    """
+    if len(exhibits) >= 2:
+        return _multi_exhibit_gap(len(exhibits))
+    if not exhibits:
+        # No exhibit to scan -> empty-SUCCESS directly, without spawning the
+        # exhibit_prose subprocess on "" (keeps the empty-list case explicit,
+        # hermetic, and honest — it can never surface as a subprocess error).
+        return _scanned_result([])
+    return _scanned_result(propose(exhibits[0]))
+
+
 def passes_substring_gate(candidate: dict, canonical_text: str) -> bool:
     """Return True iff the candidate's verbatim matched token AND its
     verbatim_quote are both literal substrings of `canonical_text`.

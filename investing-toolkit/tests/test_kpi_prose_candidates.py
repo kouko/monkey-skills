@@ -369,6 +369,62 @@ def test_zero_value_survives_gate_and_commit(tmp_path, monkeypatch):
     assert point["source_cell_ref"] == "prose:19-20"
 
 
+def test_empty_and_multi_exhibit_gaps():
+    # Task 8 (Part 1 walking skeleton): the anti-fabrication HONESTY rail on the
+    # negative paths. Loud gaps, never silent wrong answers.
+    #
+    # (a) EMPTY-SUCCESS: exactly one exhibit whose prose carries no number token ->
+    #     the producer SCANS it, finds nothing, and returns an EXPLICIT empty result
+    #     ("0 prose candidates"). gap is None (a successful scan is NOT an error and
+    #     NOT a gap), so empty-success is distinguishable from a real gap.
+    # (b) MULTI-EXHIBIT GAP: a filing carrying >=2 EX-99 exhibits -> a LOUD
+    #     multi_exhibit gap marker and ZERO extraction (inherits Route B's
+    #     LOOM-SIMPLIFY >=2-exhibit ceiling — never silently pick one exhibit). The
+    #     gap path does NOT scan (no fabrication, no arbitrary pick).
+    #
+    # No `@req` tag: same as the sibling tests above — this dispatch's plan binds
+    # by "Brief item covered", not a registered loom-spec REQ-id.
+    module = _load_module()
+
+    # (a) One exhibit, no digits in its prose -> scanned clean -> empty-success.
+    no_kpi = "The company reported strong results."
+    empty = module.intake([no_kpi])
+    assert empty["candidates"] == [], "no number token -> zero candidates"
+    assert empty["gap"] is None, "an empty scan is success, not a gap"
+    assert empty["note"] == "0 prose candidates", "the explicit 0-found signal"
+
+    # (b) Two EX-99 exhibits (both DO contain numbers) -> ambiguous which to source,
+    # so a loud gap and NOTHING extracted. The presence of extractable numbers in
+    # the exhibits makes the extract-nothing behaviour load-bearing: the gap must
+    # win over any silent pick.
+    two_exhibits = [
+        "The company had 1,576,000 full-time employees.",
+        "The subsidiary shipped 42 units in the quarter.",
+    ]
+    gap = module.intake(two_exhibits)
+    assert gap["candidates"] == [], "a >=2-exhibit filing extracts NOTHING"
+    assert gap["gap"] == "multi_exhibit", "the loud >=2-exhibit gap marker"
+    assert gap["gap"] is not None
+    # Loud/explicit: the note names the exhibit count so the gap is not silent.
+    assert "2" in gap["note"]
+    # The gap is DISTINGUISHABLE from the empty-but-scanned case.
+    assert gap["gap"] != empty["gap"]
+
+
+def test_intake_empty_list_is_hermetic_empty_success():
+    # Task 8 boundary: an EMPTY exhibit list has nothing to scan and must return
+    # the empty-success envelope directly — WITHOUT spawning the exhibit_prose
+    # subprocess on "" (so it can never surface as a subprocess RuntimeError,
+    # which would contradict the honest empty-success promise). This pins the
+    # `if not exhibits: return _scanned_result([])` short-circuit; it is hermetic
+    # (no subprocess) by construction.
+    module = _load_module()
+    result = module.intake([])
+    assert result["candidates"] == [], "no exhibit -> zero candidates"
+    assert result["gap"] is None, "empty list is success, not a gap"
+    assert result["note"] == "0 prose candidates", "the explicit 0-found signal"
+
+
 def test_committed_prose_point_carries_anchor_and_attribution(tmp_path, monkeypatch):
     # Task 7 (Part 1 walking skeleton): the durable store-append path. This closes
     # the three-layer skeleton — mechanical produce (T3) -> LLM propose -> HUMAN
