@@ -163,7 +163,7 @@ def _nflx_two_exhibit_filing(accession: str) -> _FakeFiling:
 
 
 def test_new_cache_key_never_aliases_legacy_narrative_key(sec_client, monkeypatch):
-    # @req omitted — see module docstring.
+    # No living-spec REQ-id: this plan traces tasks by Brief item, not REQ-ids.
     # Regression for cache-key-collision-across-migration: a pre-warmed machine
     # with a LEGACY narrative_sections_{accession} entry (a DICT-shaped payload)
     # must NOT be served by fetch_exhibit_documents — it reads its OWN
@@ -220,7 +220,7 @@ def test_new_cache_key_never_aliases_legacy_narrative_key(sec_client, monkeypatc
 
 
 def test_multi_exhibit_8k_returns_all_ex99_documents(sec_client):
-    # @req omitted — see module docstring.
+    # No living-spec REQ-id: this plan traces tasks by Brief item, not REQ-ids.
     # A 2-exhibit earnings 8-K (EX-99.1 + EX-99.2) must return BOTH documents —
     # NOT a >=2-exhibit loud-gap drop. Route B goes via filing.attachments, so
     # _segment_8k's LOOM-SIMPLIFY >=2-exhibit-item gap ceiling is not on the
@@ -252,7 +252,7 @@ def test_multi_exhibit_8k_returns_all_ex99_documents(sec_client):
 
 
 def test_accession_none_resolves_latest_earnings_8k(sec_client, monkeypatch):
-    # @req omitted — see module docstring.
+    # No living-spec REQ-id: this plan traces tasks by Brief item, not REQ-ids.
     # accession=None → resolve the latest earnings 8-K (Item 2.02) for the
     # ticker, then fetch its EX-99.* exhibits. The resolution reuses the shipped
     # resolve_cik → list_filings → select_narrative_filings policy (item-2.02

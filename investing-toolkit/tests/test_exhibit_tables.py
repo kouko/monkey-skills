@@ -56,7 +56,7 @@ def _find_cells(tables, text):
 
 
 def test_nflx_q4_2024_membership_cell_located():
-    # @req omitted — see module docstring (plan traces by Brief item, not REQ-id).
+    # No living-spec REQ-id: this plan traces tasks by Brief item, not REQ-ids.
     import exhibit_tables
 
     html = _load_fixture_html()
@@ -105,7 +105,7 @@ def test_nflx_q4_2024_membership_cell_located():
 
 
 def test_value_cell_has_no_semantic_fields():
-    # @req omitted — see module docstring.
+    # No living-spec REQ-id: this plan traces tasks by Brief item, not REQ-ids.
     # Guard the layer boundary: the mechanical walker emits coordinates + text
     # ONLY. It must NOT invent kpi_id / unit / period (that is the T3/T8 semantic
     # layer). A cell dict carries exactly the four mechanical keys.
