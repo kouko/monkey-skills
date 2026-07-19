@@ -17,6 +17,7 @@ test_exhibit_tables.py.
 """
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -112,3 +113,35 @@ def test_locate_returns_token_span_quote():
     # Exact-substring invariant, asserted explicitly.
     assert text[start:end] == "1,576,000"
     assert text[start:end] == cand["token"]
+
+
+def test_locate_cli_emits_located_numbers_json(tmp_path):
+    # No living-spec REQ-id: this plan traces tasks by Task item, not REQ-ids.
+    # The --locate CLI mode is the SUBPROCESS surface analysis-kpi crosses to
+    # reach this data-markets locator (the analysis->data-markets boundary is
+    # crossed by process, never in-process import). It reads the already-
+    # canonical prose text from --text and emits a JSON list of located numbers
+    # ({token,start,end}) to --out, mirroring exhibit_tables.py's --out JSON.
+    # Because it runs locate_numbers on the given text WITHOUT re-flattening,
+    # the char offsets stay relative to the input — the anchor the downstream
+    # anti-fabrication gate verifies against.
+    import exhibit_prose
+
+    text = "The company had 1,576,000 employees and 3.56 diluted EPS."
+    text_file = tmp_path / "canonical.txt"
+    out_file = tmp_path / "located.json"
+    text_file.write_text(text, encoding="utf-8")
+
+    rc = exhibit_prose.main(
+        ["--locate", "--text", str(text_file), "--out", str(out_file)]
+    )
+    assert rc == 0
+
+    located = json.loads(out_file.read_text(encoding="utf-8"))
+    tokens = [item["token"] for item in located]
+    assert "1,576,000" in tokens
+    assert "3.56" in tokens
+    # Offset invariant preserved end-to-end through the CLI: text[start:end]
+    # equals the token byte-for-byte for every located number.
+    for item in located:
+        assert text[item["start"]:item["end"]] == item["token"]

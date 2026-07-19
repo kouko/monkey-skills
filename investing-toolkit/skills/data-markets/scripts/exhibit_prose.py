@@ -24,11 +24,15 @@ non-table text verbatim (whitespace-normalized), preserving the filed precision
 of any prose figures for the downstream anti-fabrication confirm gate.
 
 Usage:
+  # Flatten mode: raw exhibit HTML -> canonical prose text
   uv run exhibit_prose.py --html path/to/ex991.htm --out prose.txt
+  # Locate mode: canonical prose text -> JSON list of located numbers
+  uv run exhibit_prose.py --locate --text prose.txt --out located.json
 """
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 from html.parser import HTMLParser
@@ -146,13 +150,42 @@ def locate_numbers(text: str) -> list[dict]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Flatten raw 8-K exhibit HTML into the canonical prose-text "
-        "surface (non-table text) — text layer, no number parsing."
+        description="Canonical prose-text surface producer for 8-K exhibits. "
+        "Flatten mode (--html): raw exhibit HTML -> non-table prose text. "
+        "Locate mode (--locate --text): canonical prose text -> JSON located "
+        "numbers. Text/number layer only — no semantic interpretation."
     )
-    parser.add_argument("--html", required=True, help="Path to raw exhibit HTML")
-    parser.add_argument("--out", required=True, help="Path to write prose text")
+    parser.add_argument("--html", help="Path to raw exhibit HTML (flatten mode)")
+    parser.add_argument(
+        "--text", help="Path to canonical prose text (locate mode input)"
+    )
+    parser.add_argument("--out", required=True, help="Path to write output")
+    parser.add_argument(
+        "--locate",
+        action="store_true",
+        help="Locate mode: emit a JSON list of located numbers "
+        "({token, start, end}) from --text instead of flattening prose.",
+    )
     args = parser.parse_args(argv)
 
+    if args.locate:
+        if not args.text:
+            parser.error("--locate requires --text (path to canonical prose text)")
+        # Locate mode runs locate_numbers on the given text VERBATIM (no
+        # re-flatten via prose_surface): the input is already the canonical
+        # surface, so re-flattening would shift offsets. Running the locator
+        # directly keeps each char_offset_span relative to the input bytes —
+        # the anchor the downstream anti-fabrication gate verifies against.
+        text = Path(args.text).read_text(encoding="utf-8")
+        located = locate_numbers(text)
+        Path(args.out).write_text(
+            json.dumps(located, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        print(f"located {len(located)} number(s) -> {args.out}")
+        return 0
+
+    if not args.html:
+        parser.error("flatten mode requires --html (path to raw exhibit HTML)")
     html = Path(args.html).read_text(encoding="utf-8")
     prose = prose_surface(html)
     Path(args.out).write_text(prose, encoding="utf-8")

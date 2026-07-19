@@ -124,3 +124,91 @@ def test_gate_requires_both_token_and_quote_present():
 
     assert module.passes_substring_gate(token_only, _CANON) is False
     assert module.passes_substring_gate(quote_only, _CANON) is False
+
+
+def test_propose_emits_raw_candidate_needs_semantic():
+    # Task 3 (Part 1 walking skeleton): the MECHANICAL producer. propose() turns
+    # located number tokens (exhibit_prose.locate_numbers) into RAW candidate
+    # points carrying ONLY mechanical fields — value DERIVED from the token,
+    # verbatim_quote, char_offset_span — with every semantic slot NULL and
+    # needs_semantic=True. The anti-fabrication contract: value + coordinates are
+    # set mechanically here and NEVER pass through an LLM.
+    module = _load_module()
+
+    canonical_text = "The company had 1,576,000 employees as of year end."
+
+    candidates = module.propose(canonical_text)
+
+    # Single number token in the fixture -> exactly one candidate. Asserting the
+    # total count (not just the matching subset) means a spurious extra candidate
+    # cannot pass silently.
+    assert len(candidates) == 1, "one number token -> one candidate"
+
+    matches = [c for c in candidates if c["value"] == 1576000]
+    assert len(matches) == 1, "exactly one candidate for the 1,576,000 token"
+    candidate = matches[0]
+
+    # Mechanical fields — all SET by propose, DERIVED from the located token.
+    assert candidate["matched_token"] == "1,576,000"
+    # value is the comma-stripped int, DERIVED from the token (not independently
+    # supplied) — structural proof that value is never LLM-produced.
+    assert candidate["value"] == 1576000
+    assert candidate["value"] == int(candidate["matched_token"].replace(",", ""))
+    # char_offset_span anchors back to the source: text[start:end] == token.
+    start, end = candidate["char_offset_span"]
+    assert canonical_text[start:end] == candidate["matched_token"]
+    # In Part 1 the verbatim_quote IS the matched token.
+    assert candidate["verbatim_quote"] == candidate["matched_token"]
+    assert candidate["source_kind"] == "prose"
+
+    # Semantic slots NULL, awaiting the LLM layer -> needs_semantic flagged.
+    assert candidate["kpi_id"] is None
+    assert candidate["unit"] is None
+    assert candidate["period"] is None
+    assert candidate["needs_semantic"] is True
+
+    # The mechanically-produced candidate satisfies the EXISTING Task 4 gate:
+    # its verbatim token + quote are literal substrings of the source. This ties
+    # propose's output to the anti-fabrication rail.
+    assert module.passes_substring_gate(candidate, canonical_text) is True
+
+
+def test_normalize_value_decimal_token_becomes_float():
+    # Coverage for the DECIMAL branch of _normalize_value (the integer branch is
+    # exercised by the propose/gate tests; the float branch was untested). A
+    # decimal token like "3.56" normalizes to the float 3.56 — the comma-stripped
+    # value is DERIVED from the token, and a decimal has no thousands separators
+    # to strip, so value and token share the same digits but different types.
+    module = _load_module()
+
+    assert module._normalize_value("3.56") == 3.56
+    assert isinstance(module._normalize_value("3.56"), float)
+    # A thousands-separated decimal: commas stripped, then parsed as float.
+    assert module._normalize_value("1,234.5") == 1234.5
+    assert isinstance(module._normalize_value("1,234.5"), float)
+    # The integer branch stays int (not float) — no spurious "." introduced.
+    assert module._normalize_value("1,576,000") == 1576000
+    assert isinstance(module._normalize_value("1,576,000"), int)
+
+
+def test_build_candidates_preserves_decimal_matched_token():
+    # The pure transform seam (build_candidates) wraps already-crossed located
+    # numbers into candidates. A decimal token flows through as a float `value`
+    # while `matched_token` stays the VERBATIM printed token "3.56" (the value is
+    # NOT required to appear as a substring of the token — 3.56 the float and
+    # "3.56" the token happen to share digits, but the contract is verbatim
+    # token in / derived value out).
+    module = _load_module()
+
+    located = [{"token": "3.56", "start": 4, "end": 8}]
+    candidates = module.build_candidates(located)
+
+    assert len(candidates) == 1
+    candidate = candidates[0]
+    assert candidate["matched_token"] == "3.56"
+    assert candidate["verbatim_quote"] == "3.56"
+    assert candidate["value"] == 3.56
+    assert isinstance(candidate["value"], float)
+    assert candidate["char_offset_span"] == [4, 8]
+    assert candidate["source_kind"] == "prose"
+    assert candidate["needs_semantic"] is True
