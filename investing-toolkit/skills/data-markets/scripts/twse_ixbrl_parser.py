@@ -16,9 +16,11 @@ Each fact record:
     {
         "concept": str,       # "ns:localname", e.g. "ifrs-full:Cash..."
         "context_ref": str,
-        "raw_value": float | str,   # numeric facts: fully scaled value
-                                     # (see Scaling below); text facts:
-                                     # the raw text, stripped.
+        "raw_value": float | str | None,  # numeric facts: fully scaled
+                                     # value (see Scaling below); text
+                                     # facts: the raw text, stripped;
+                                     # None for a self-closing/nil fact
+                                     # (no text value present at all).
         "decimals": str | None,     # raw `decimals` attribute (precision
                                      # metadata; NOT the scaling driver —
                                      # see Scaling below).
@@ -71,7 +73,12 @@ _INSTANT_RE = re.compile(r"<xbrli:instant>([^<]*)</xbrli:instant>")
 _START_RE = re.compile(r"<xbrli:startDate>([^<]*)</xbrli:startDate>")
 _END_RE = re.compile(r"<xbrli:endDate>([^<]*)</xbrli:endDate>")
 
-_FACT_RE = re.compile(r"<ix:(nonFraction|nonNumeric)\b([^>]*)>(.*?)</ix:\1>", re.S)
+_FACT_RE = re.compile(
+    r"<ix:(?P<self_tag>nonFraction|nonNumeric)\b(?P<self_attrs>[^>]*)/>"
+    r"|<ix:(?P<pair_tag>nonFraction|nonNumeric)\b(?P<pair_attrs>[^>]*)>"
+    r"(?P<text>.*?)</ix:(?P=pair_tag)>",
+    re.S,
+)
 _ATTR_RE = re.compile(r'([\w:-]+)="([^"]*)"')
 
 
@@ -142,7 +149,16 @@ def parse_ixbrl_facts(document: str) -> list[dict[str, Any]]:
     contexts = _parse_contexts(document)
     facts: list[dict[str, Any]] = []
 
-    for tag, attr_str, raw_text in _FACT_RE.findall(document):
+    for m in _FACT_RE.finditer(document):
+        if m.group("self_tag") is not None:
+            tag = m.group("self_tag")
+            attr_str = m.group("self_attrs")
+            raw_text = None  # self-closing/nil fact: no text value
+        else:
+            tag = m.group("pair_tag")
+            attr_str = m.group("pair_attrs")
+            raw_text = m.group("text")
+
         attrs = _parse_attrs(attr_str)
         context_ref = attrs.get("contextRef")
         ctx = contexts.get(context_ref, {})
@@ -159,7 +175,9 @@ def parse_ixbrl_facts(document: str) -> list[dict[str, Any]]:
             "fact_type": tag,
         }
 
-        if tag == "nonFraction":
+        if raw_text is None:
+            fact["raw_value"] = None
+        elif tag == "nonFraction":
             fact["raw_value"] = _scaled_value(raw_text, attrs)
         else:
             fact["raw_value"] = raw_text.strip()

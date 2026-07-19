@@ -108,3 +108,71 @@ def test_parse_sign_attribute_negates_value():
     ]
     assert len(negated) == 1, negated
     assert negated[0]["raw_value"] < 0
+
+
+def test_parse_self_closing_nil_fact_is_kept():
+    mod = _load_parser()
+    # A spec-valid self-closing ix:nonFraction (no paired closing tag) —
+    # must be extracted, not silently dropped by the paired-only regex.
+    document = """
+    <xbrli:context id="AsOf20240101">
+      <xbrli:entity><xbrli:identifier>2330</xbrli:identifier></xbrli:entity>
+      <xbrli:period><xbrli:instant>2024-01-01</xbrli:instant></xbrli:period>
+    </xbrli:context>
+    <ix:nonFraction name="ifrs-full:SomeNilFact" contextRef="AsOf20240101"
+      unitRef="TWD" decimals="0" xsi:nil="true"/>
+    """
+    facts = mod.parse_ixbrl_facts(document)
+
+    nil_facts = [f for f in facts if f["concept"] == "ifrs-full:SomeNilFact"]
+    assert len(nil_facts) == 1, "self-closing nil fact must not be dropped"
+    fact = nil_facts[0]
+    assert fact["raw_value"] is None
+    assert fact["fact_type"] == "nonFraction"
+    assert fact["context_ref"] == "AsOf20240101"
+    assert fact["unit"] == "TWD"
+
+
+def test_parse_fixture_fact_count_unaffected_by_self_closing_support():
+    # The real fixture has zero self-closing ix: tags; adding self-closing
+    # support must not change (double-count or otherwise) its fact count.
+    mod = _load_parser()
+    facts = mod.parse_ixbrl_facts(_fixture_document())
+    assert len(facts) == 2002
+
+
+def test_parse_scale_driven_not_decimals_driven_when_they_diverge():
+    # tifrs-notes:PercentageOfOwnership4 carries decimals=4/scale=-2 with
+    # raw text "100.00" (60+ occurrences in the real fixture, at varying
+    # raw values across subsidiaries — this snippet fixes the exact attrs
+    # from one such occurrence). scale and decimals diverge here: the
+    # spec-correct value is scale-driven: 100.00 * 10**-2 = 1.0. A
+    # decimals-driven multiplier would wrongly yield 0.01. This locks the
+    # scale-driven behavior against a future regression.
+    mod = _load_parser()
+    document = (
+        '<ix:nonFraction name="tifrs-notes:PercentageOfOwnership4" '
+        'contextRef="AsOf20240930" format="ixt:numdotdecimal" scale="-2" '
+        'decimals="4" unitRef="Pure">100.00</ix:nonFraction>'
+    )
+    facts = mod.parse_ixbrl_facts(document)
+
+    assert len(facts) == 1
+    fact = facts[0]
+    assert fact["decimals"] == "4"
+    assert fact["raw_value"] == pytest.approx(1.0), (
+        "scale=-2 on raw text 100.00 must scale to 1.0, not 0.01"
+    )
+
+
+def test_parse_nonnumeric_exact_text_value():
+    # End-to-end coverage of text-fact extraction beyond the sign case:
+    # tifrs-notes:CompanyID is a single, stable nonNumeric fact in the
+    # fixture with an exact known stripped value.
+    mod = _load_parser()
+    facts = mod.parse_ixbrl_facts(_fixture_document())
+
+    company_id = [f for f in facts if f["concept"] == "tifrs-notes:CompanyID"]
+    assert len(company_id) == 1, company_id
+    assert company_id[0]["raw_value"] == "2330"
+    assert company_id[0]["fact_type"] == "nonNumeric"
