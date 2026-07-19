@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -186,3 +187,86 @@ def commit(candidates: list[dict], confirmed: bool = False) -> list[dict]:
     if not confirmed:
         return []
     return list(candidates)
+
+
+def _prose_candidate_to_point(candidate: dict, company: str,
+                              confirmer: str, confirmed_at: str) -> dict:
+    """Map a confirmed prose candidate to a kpi_store-shaped point.
+
+    Mirrors Route B's kpi_8k_candidates._candidate_to_point: values + source
+    coordinates pass through VERBATIM (never re-parsed); `company` is supplied
+    by the caller (one filing = one company). The prose adaptations:
+
+    - The offset anchor is the `source_cell_ref`-analog `prose:{start}-{end}`,
+      built from the candidate's `char_offset_span`. It is a TRUTHY string, so
+      the store's falsy-provenance guard (`if not point.get(field)`) admits it
+      cleanly — the same reason Route B renders `table:{i}` rather than a bare
+      index 0. No store guard is weakened here.
+    - `source_table_id` has no prose analog (prose is not tabular); it carries
+      the self-describing source-kind token `"prose"` — truthy, so the store's
+      provenance guard is satisfied without a table locator (the offset lives
+      in `source_cell_ref`). Same source-kind-prefixed shape as Route B's
+      `table:<i>` and kpi_xbrl's `xbrl:companyfacts`.
+    - `as_of` is the ACCESSION-derived filing date carried on the candidate,
+      DISTINCT from the wall-clock `confirmed_at`. Both are passed IN (never
+      read from the clock here) so the append is deterministic; the store
+      rejects a wall-clock as_of, and this one is disclosure-anchored.
+    - `verbatim_quote` + filing attribution (`source_document`, `filing_date`)
+      + confirmer identity (`confirmer`, `confirmed_at`) ride along so a number
+      surfaced later stays citable to its source bytes and its ratifier.
+    """
+    start, end = candidate["char_offset_span"]
+    return {
+        "company": company,
+        "kpi_id": candidate["kpi_id"],
+        "period": candidate["period"],
+        "unit": candidate["unit"],
+        "value": candidate["value"],
+        "as_of": candidate["as_of"],
+        "source_kind": "prose",
+        "source_accession": candidate["source_accession"],
+        "source_table_id": "prose",
+        "source_cell_ref": f"prose:{start}-{end}",
+        "verbatim_quote": candidate["verbatim_quote"],
+        "source_document": candidate.get("source_document"),
+        "filing_date": candidate.get("filing_date"),
+        "confirmer": confirmer,
+        "confirmed_at": confirmed_at,
+    }
+
+
+def commit_to_store(candidates: list[dict], company: str, confirmer: str,
+                    confirmed_at: str, confirmed: bool = False) -> dict:
+    """Append human-confirmed prose candidates into the EXISTING tier-① store.
+
+    Closes the walking skeleton: mechanical produce (`propose`) -> LLM propose
+    -> HUMAN confirm (`commit`) -> DURABLE store append (here). Composes the
+    confirm-all GATE with the store append — ONLY the `commit`-accepted set
+    reaches `kpi_store.append`. Fail-CLOSED: `confirmed` defaults False, so
+    without an explicit human confirm-all NOTHING is appended (no bypass path
+    that skips the confirm step and writes straight to the store).
+
+    Each accepted candidate is mapped by `_prose_candidate_to_point` and handed
+    to the UNMODIFIED `kpi_store.append`: the store's own provenance /
+    accession-derived-as_of guards run un-weakened (a point that fails them
+    raises, nothing is written). kpi_store / kpi_validate are neither imported-
+    for-mutation nor reimplemented — the append reuses the existing store.
+    Returns `{"committed": <n>}` (points appended this call).
+    """
+    accepted = commit(candidates, confirmed=confirmed)
+
+    # Lazy sibling import (mirrors kpi_8k_candidates.commit): keep the mechanical
+    # `propose`/`build_candidates` path free of the store dependency, and share
+    # the same kpi_store module a caller/test resolves by name off this dir.
+    if str(_SCRIPT_DIR) not in sys.path:
+        sys.path.insert(0, str(_SCRIPT_DIR))
+    import kpi_store
+
+    committed = 0
+    for candidate in accepted:
+        kpi_store.append(
+            _prose_candidate_to_point(candidate, company, confirmer, confirmed_at)
+        )
+        committed += 1
+
+    return {"committed": committed}

@@ -14,6 +14,7 @@ there is no id in the living-spec namespace to bind to.
 from __future__ import annotations
 
 import importlib.util
+import sys
 from pathlib import Path
 
 _TESTS_DIR = Path(__file__).resolve().parent
@@ -279,3 +280,104 @@ def test_build_candidates_preserves_decimal_matched_token():
     assert candidate["char_offset_span"] == [4, 8]
     assert candidate["source_kind"] == "prose"
     assert candidate["needs_semantic"] is True
+
+
+def test_committed_prose_point_carries_anchor_and_attribution(tmp_path, monkeypatch):
+    # Task 7 (Part 1 walking skeleton): the durable store-append path. This closes
+    # the three-layer skeleton — mechanical produce (T3) -> LLM propose -> HUMAN
+    # confirm (T6) -> DURABLE store append (here). A confirmed prose candidate,
+    # committed with an explicit confirmer + confirm timestamp, becomes a
+    # schema-valid point in the EXISTING tier-① kpi_store, appended through the
+    # UNMODIFIED kpi_store.append (its provenance / accession-derived-as_of guards
+    # are honored, never weakened). Queried back, the point must carry:
+    #   - source_kind="prose"
+    #   - a "prose:{start}-{end}" offset anchor (source_cell_ref-analog) built from
+    #     the candidate's char_offset_span — a truthy string, so the store's
+    #     falsy-provenance guard admits it (unlike a bare 0)
+    #   - the verbatim_quote (so the surfaced number stays citable to source bytes)
+    #   - filing attribution (accession / document / filing_date) + confirmer
+    #     identity + confirm timestamp
+    #   - an as_of that is the ACCESSION-derived filing date, DISTINCT from the
+    #     wall-clock confirm timestamp (determinism: both passed IN, never read
+    #     from the clock inside the function).
+    #
+    # Hermetic: KPI_STORE_DIR is redirected to tmp_path (mirrors
+    # test_prose_memo_boundary.py) so nothing touches the real durable store.
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+
+    # Share the SAME kpi_store module the producer's lazy sibling-import resolves:
+    # put the scripts dir on sys.path and import kpi_store under its real name
+    # (mirrors test_prose_memo_boundary._load_modules), so the query-back below
+    # reads the very file the append wrote.
+    scripts_dir = str(_SCRIPT.parent)
+    if scripts_dir not in sys.path:
+        sys.path.insert(0, scripts_dir)
+    sys.modules.pop("kpi_store", None)
+    import kpi_store  # noqa: E402
+
+    module = _load_module()
+
+    # A CONFIRMED prose candidate: the human filled the semantic slots
+    # (kpi_id/unit/period) at confirm, atop the mechanical fields (verbatim token +
+    # quote + char_offset_span + value) and the filing attribution + accession-
+    # derived as_of carried from the filing fetch.
+    candidate = {
+        "matched_token": "1,576,000",
+        "verbatim_quote": "had 1,576,000 full-time employees",
+        "value": 1576000,
+        "char_offset_span": [16, 25],
+        "source_kind": "prose",
+        "kpi_id": "employees_full_time",  # LLM-labeled + human-confirmed
+        "unit": "count",
+        "period": "2024-12-31",
+        "needs_semantic": False,
+        "source_accession": "0000320193-24-000999",
+        "source_document": "8-K/EX-99.1",
+        "filing_date": "2024-10-31",
+        "as_of": "2024-01-01",  # accession-derived (NOT wall-clock)
+    }
+
+    confirmer = "kouko"
+    confirmed_at = "2026-07-20T10:00:00Z"  # wall-clock confirm ts, passed IN
+
+    summary = module.commit_to_store(
+        [candidate], company="AAPL",
+        confirmer=confirmer, confirmed_at=confirmed_at, confirmed=True,
+    )
+    assert summary["committed"] == 1, "the one confirmed candidate is appended"
+
+    point = kpi_store.query_latest("AAPL", "employees_full_time", "2024-12-31")
+    assert point is not None, "the confirmed prose candidate must be in the store"
+
+    # Prose source marker + the offset anchor (source_cell_ref-analog).
+    assert point["source_kind"] == "prose"
+    assert point["source_cell_ref"] == "prose:16-25", (
+        "the anchor is prose:{start}-{end} from char_offset_span [16, 25]"
+    )
+
+    # The verbatim quote is carried so a surfaced number stays citable.
+    assert point["verbatim_quote"] == "had 1,576,000 full-time employees"
+    assert point["value"] == 1576000
+
+    # Filing attribution.
+    assert point["source_accession"] == "0000320193-24-000999"
+    assert point["source_document"] == "8-K/EX-99.1"
+    assert point["filing_date"] == "2024-10-31"
+
+    # Confirmer identity + confirm timestamp.
+    assert point["confirmer"] == confirmer
+    assert point["confirmed_at"] == confirmed_at
+
+    # as_of is the ACCESSION-derived filing date, DISTINCT from the confirm ts —
+    # the store's non-wall-clock as_of guard is honored.
+    assert point["as_of"] == "2024-01-01"
+    assert point["as_of"] != confirmed_at
+
+    # Fail-CLOSED: without the explicit confirm, nothing is appended (no bypass).
+    other = dict(candidate, kpi_id="employees_part_time")
+    unconfirmed = module.commit_to_store(
+        [other], company="AAPL",
+        confirmer=confirmer, confirmed_at=confirmed_at,  # confirmed omitted
+    )
+    assert unconfirmed["committed"] == 0
+    assert kpi_store.query_latest("AAPL", "employees_part_time", "2024-12-31") is None
