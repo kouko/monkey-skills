@@ -5,6 +5,47 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.27.0] — 2026-07-20
+
+Narrative-evidence arc, Slice A **Part 1** (walking skeleton): a "Route B for
+prose" mechanical producer that isolates a single operational-KPI datum from an
+8-K EX-99 earnings-release PROSE sentence (the class Route B's table walker and
+the bulk-narrative layer both drop — e.g. AMZN headcount, TSLA deliveries), with
+a verbatim quote + character-offset anchor, through the SAME three-layer trust
+(mechanical value+coords / LLM semantic / human confirm-all) into the EXISTING
+tier-① store. Foundational machinery + tests; not yet wired into a user-facing
+SKILL workflow (that + number robustness + lifecycle/hardening are Parts 2–3).
+Change-folder: `docs/loom/2026-07-19-8k-prose-kpi-intake/`; plan:
+`docs/loom/plans/2026-07-19-8k-prose-kpi-intake-part-1.md`.
+
+### Added
+
+- **Prose text surface** (`data-markets` / `exhibit_prose.py`, NEW):
+  `prose_surface(html)` flattens raw EX-99 HTML into the single canonical
+  non-table prose text (stdlib `html.parser`, nesting-depth table exclusion with
+  a block-break at the table boundary so flanking prose can't merge);
+  `locate_numbers(text)` returns plain numeric tokens `{token,start,end}` with
+  the exact-substring anchor invariant `text[start:end]==token` by construction;
+  a `--locate` CLI emits the located numbers as JSON.
+- **Prose KPI candidate producer** (`analysis-kpi` / `kpi_prose_candidates.py`,
+  NEW): `propose` → RAW candidates (mechanical value/quote/offset, null semantic
+  slots, `needs_semantic`) crossing to `exhibit_prose` by SUBPROCESS (mirrors
+  `kpi_8k_candidates` ↔ `exhibit_tables`); `passes_substring_gate` (anti-
+  fabrication — verifies the verbatim token/quote, never the normalized value,
+  fail-closed on empty/None); `commit` (human confirm-all gate, fail-closed);
+  `commit_to_store` (appends a `source_kind="prose"` point with a
+  `prose:{start}-{end}` anchor + verbatim_quote + filing attribution via the
+  UNMODIFIED `kpi_store.append`); `intake` (honest gaps — explicit empty-success
+  vs a loud ≥2-exhibit `multi_exhibit` gap).
+
+### Unchanged (red line)
+
+- `kpi_store.py` / `kpi_validate.py` are BYTE-UNCHANGED; prose points ride the
+  existing provenance/as_of guards un-weakened (truthy-token discipline, mirroring
+  Route B's `table:0`). The existing quarterly memo feed reads
+  `build_quarterly_series`, not the store, so prose points do not surface in the
+  memo under Slice A (pinned by a regression test).
+
 ## [v2.26.0] — 2026-07-19
 
 Route B 8-K earnings-release semi-auto KPI intake lane — a mechanical
