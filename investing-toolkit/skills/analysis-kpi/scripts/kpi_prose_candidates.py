@@ -158,3 +158,31 @@ def passes_substring_gate(candidate: dict, canonical_text: str) -> bool:
     if not matched_token or not verbatim_quote:
         return False
     return matched_token in canonical_text and verbatim_quote in canonical_text
+
+
+def commit(candidates: list[dict], confirmed: bool = False) -> list[dict]:
+    """Tier-① confirm-all trust GATE: return the candidates ACCEPTED for commit.
+
+    A prose candidate is accepted for commit ONLY after an explicit human
+    confirm-all (`confirmed=True`). There is NO auto-commit: `confirmed` defaults
+    False, so an omitted/False confirm accepts NOTHING (the fail-CLOSED
+    direction). Moving a candidate located->committed WITHOUT the human confirm
+    step is ILLEGAL and refused here — this is the three-layer trust boundary
+    (mechanical produce -> LLM propose -> HUMAN confirm) that keeps unratified
+    candidates out of the store. Mirrors Route B's confirm idiom
+    (kpi_8k_candidates.commit gates on a falsy `confirmed`); here the confirm-all
+    is a single explicit parameter covering the set.
+
+    Interim no-taxonomy filter: a confirmed candidate is accepted REGARDLESS of
+    its (LLM-labeled or merely plausible) kpi_id — there is NO fixed-taxonomy
+    check gating commit. A fixed KPI taxonomy is a deferred hardening, not a
+    commit precondition.
+
+    Scope: THIS is the GATE only — it produces the accepted-for-commit set. The
+    ACTUAL append into kpi_store (with the prose anchor + attribution provenance
+    shape) is Task 7, which will consume this accepted set; kpi_store is NOT
+    imported or appended here.
+    """
+    if not confirmed:
+        return []
+    return list(candidates)

@@ -191,6 +191,73 @@ def test_normalize_value_decimal_token_becomes_float():
     assert isinstance(module._normalize_value("1,576,000"), int)
 
 
+def test_commit_requires_confirm():
+    # Task 6 (Part 1 walking skeleton): the tier-① trust GATE. A prose candidate
+    # is accepted for commit ONLY after an explicit human confirm-all. There is NO
+    # auto-commit: confirmed defaults False (fail-CLOSED). Moving a candidate
+    # located->committed WITHOUT the human confirm step is ILLEGAL and refused —
+    # that is the three-layer boundary (mechanical produce -> LLM propose -> HUMAN
+    # confirm) keeping unratified candidates out of the store.
+    #
+    # Scope: THIS pins the GATE (which candidates MAY commit), not the kpi_store
+    # append (Task 7). commit() returns the accepted-for-commit set.
+    module = _load_module()
+
+    candidates = [
+        {
+            "matched_token": "1,576,000",
+            "verbatim_quote": "had 1,576,000 full-time employees",
+            "value": 1576000,
+            "char_offset_span": [16, 25],
+            "source_kind": "prose",
+            "kpi_id": "employees_full_time",  # LLM-labeled + human-confirmed
+            "unit": "count",
+            "period": "2024-12-31",
+            "needs_semantic": False,
+        }
+    ]
+
+    # confirmed=False -> NO committed points (nothing accepted for append). The
+    # fail-CLOSED, no-auto-commit direction.
+    assert module.commit(candidates, confirmed=False) == []
+
+    # confirmed OMITTED -> same refusal. The default must be fail-CLOSED, so a
+    # bypass that just calls the accept path without the confirm arg commits
+    # nothing (bypass illegal).
+    assert module.commit(candidates) == []
+
+    # confirmed=True -> the candidates are accepted for commit. This is the ONLY
+    # path a candidate reaches "committed" — through the explicit human confirm.
+    accepted = module.commit(candidates, confirmed=True)
+    assert accepted == candidates
+
+
+def test_commit_no_taxonomy_filter_admits_confirmed_candidate():
+    # Interim no-taxonomy filter: a human-confirmed candidate is accepted for
+    # commit REGARDLESS of its kpi_id — there is NO fixed-taxonomy check gating
+    # commit (taxonomy is a deferred hardening). An arbitrary/plausible LLM-labeled
+    # kpi_id, absent from any fixed taxonomy, still commits once the human
+    # confirmed. The confirm step is the only gate; taxonomy membership is not.
+    module = _load_module()
+
+    plausible = [
+        {
+            "matched_token": "42",
+            "verbatim_quote": "shipped 42 gigawatts",
+            "value": 42,
+            "char_offset_span": [8, 10],
+            "source_kind": "prose",
+            "kpi_id": "energy_shipped_gw_not_in_any_taxonomy",  # arbitrary id
+            "unit": "GW",
+            "period": "2024-Q4",
+            "needs_semantic": False,
+        }
+    ]
+
+    accepted = module.commit(plausible, confirmed=True)
+    assert accepted == plausible, "no taxonomy check gates a confirmed candidate"
+
+
 def test_build_candidates_preserves_decimal_matched_token():
     # The pure transform seam (build_candidates) wraps already-crossed located
     # numbers into candidates. A decimal token flows through as a float `value`
