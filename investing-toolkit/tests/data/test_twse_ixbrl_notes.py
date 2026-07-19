@@ -94,3 +94,17 @@ def test_curated_notes_field_shape_and_absence():
 def test_curated_notes_empty_facts_omits_everything():
     _, notes_mod = _load_modules()
     assert notes_mod.extract_curated_notes([]) == {}
+
+
+def test_curated_notes_excludes_endorsement_guarantee():
+    """Endorsement/guarantee is ix:tuple-structured (per-counterparty rows
+    sharing one contextRef) with no clean aggregate leaf fact — deferred
+    to the note-table-reconstruction sub-arc (brief §Annual verification /
+    Task 4 Decision Log). The curated set must not surface it."""
+    parser, notes_mod = _load_modules()
+    facts = _fixture_facts(parser)
+
+    notes = notes_mod.extract_curated_notes(facts)
+
+    assert "endorsement_guarantee_limit" not in notes
+    assert "endorsement_guarantee_secured_with_collateral" not in notes
