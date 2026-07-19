@@ -142,9 +142,17 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
      defer this question to Step 8's later checklist pass — a non-empty trailer set writing rich
      "why" content is itself the trigger, and treating "trailers written" as "memory handled" is
      the exact lapse this inline check exists to prevent (documented recurrence: PR #519, PR #520).
-7. Show user the proposed commit message + trailers; ASK for approval
-   - If approved: proceed
-   - If rejected / edited: use user's version
+7. Run the privacy gate on the composed commit message + trailers —
+   git-memory's compose-commit protocol Step 3.5, the fail-closed
+   two-layer check: layer-1 deterministic `scripts/privacy-scan.py`
+   scan, then layer-2 fresh-context judge per `privacy-judge-spec.md`.
+   - PASS (layer-1 clean AND layer-2 PASS): proceed silently — no user ask.
+   - BLOCK (any layer-1 finding, a layer-2 BLOCK, or a fail-closed
+     condition — script error, judge dispatch failure, or
+     non-conforming judge output): surface the findings; ASK the user
+     to resolve before proceeding. This is now the ONLY user stop Step
+     7 has, and it fires only on failure — the user may still edit the
+     message to clear the finding.
 8. git hygiene before the close-out commit:
    - Living-spec index regen (orchestrator-only, ONCE per branch): if the repo has a
      `docs/loom/` tree, run
@@ -196,7 +204,8 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
      [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §S2/§D1.
    - If any review-driven fixes were applied in Steps 3–4, re-run verification-before-completion
      here (Step 5 result is stale) before committing.
-9. git commit (only after user approval at Step 7)
+9. git commit (only after Step 7's privacy gate PASSes, or after the
+   user resolves a Step-7 BLOCK)
 9b. Commit-carrier verify gate — MANDATORY, runs AFTER the commit, BEFORE push:
     - Run `dev-workflow/skills/git-memory/scripts/memory-grep.sh --verify HEAD`
       (exit 0 = a Decision/Learning/Gotcha trailer is retrievable from HEAD's body;
@@ -262,7 +271,7 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
     and worktree status.
 ```
 
-**ASK = stop and wait for user.** This is deliberately NOT autonomous — close-out is a high-blast-radius operation (shipping code → teammates / production). Each user-visible action has a confirmation.
+**ASK = stop and wait for user.** That guarantee is now exception-based, not blanket: close-out is autonomous on the happy path — Steps 1–10 proceed silently once each step's own gate PASSes, including Step 7's privacy gate. What remains are the two OUTWARD-FACING actions (Step 11 — open a PR; Step 12 — remove the worktree), which always ask because they are visible to teammates or touch shared state, plus a Step 7 privacy-gate BLOCK, where the human returns only because the gate failed.
 
 ## Red Flags — refuse these rationalizations
 
