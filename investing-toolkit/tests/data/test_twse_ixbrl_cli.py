@@ -16,12 +16,21 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 MARKETS_SCRIPTS = ROOT / "skills" / "data-markets" / "scripts"
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
+
+# The CLI imports twse_ixbrl_fetch, which does `import requests`. CI's offline
+# environment has no `requests` installed (the clients ship PEP 723 deps and run
+# via `uv run`), so the bare import chain would ModuleNotFoundError at collection.
+# Stub it here BEFORE any loader imports the CLI — setdefault keeps a real
+# `requests` when present (local) and installs a stub when absent (CI). The fetch
+# seam is monkeypatched per-test, so `requests` is never actually exercised.
+sys.modules.setdefault("requests", mock.MagicMock(name="requests"))
 
 
 def _load_modules():
