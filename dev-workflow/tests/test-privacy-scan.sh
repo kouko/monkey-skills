@@ -105,7 +105,7 @@ fi
 
 SLACK_FILE="$TMPDIR_LOCAL/slack.txt"
 cat >"$SLACK_FILE" <<'EOF'
-token: xoxb-1234567890-1234567890123-abcdefghijklmnopqrstuvwx
+token: xoxb-EXAMPLE-PLACEHOLDER-notarealslacktokenEXAMPLE
 EOF
 
 SLACK_OUT="$(python3 "$SCANNER" --text-file "$SLACK_FILE")"

@@ -40,8 +40,8 @@ GITHUB_FINE_GRAINED_PAT = (
     "github_pat_" + "A" * 22 + "_" + "B" * 59
 )
 PEM_HEADER = "-----BEGIN RSA PRIVATE KEY-----"
-SLACK_BOT_TOKEN = "xoxb-1234567890-1234567890123-abcdefghijklmnopqrstuvwx"
-SLACK_WEBHOOK = "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX"
+SLACK_BOT_TOKEN = "xoxb-EXAMPLE-PLACEHOLDER-notarealslacktokenEXAMPLE"
+SLACK_WEBHOOK = "https://hooks.slack.com/services/EXAMPLE/PLACEHOLDER/notarealwebhookEXAMPLE00"
 CLEAN_PARAGRAPH = (
     "This commit refactors the retry logic in the sync loop and adds "
     "regression tests for the timeout path. No behavior change for callers."
