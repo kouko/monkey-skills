@@ -164,6 +164,78 @@ else
 fi
 
 # -------------------------------------------------------------------------
+# Check 6 — optional deny-list layer: a term in a --denylist fixture file
+# is caught as a "denylist" finding, exit 3.
+
+DENYLIST_FILE="$TMPDIR_LOCAL/denylist.txt"
+cat >"$DENYLIST_FILE" <<'EOF'
+# comment line, must be ignored
+AcmeCorp
+EOF
+
+DENYLIST_TEXT_FILE="$TMPDIR_LOCAL/denylist-text.txt"
+cat >"$DENYLIST_TEXT_FILE" <<'EOF'
+Please don't mention AcmeCorp in the changelog.
+EOF
+
+DENYLIST_OUT="$(python3 "$SCANNER" --text-file "$DENYLIST_TEXT_FILE" --denylist "$DENYLIST_FILE")"
+DENYLIST_EXIT=$?
+
+if [ "$DENYLIST_EXIT" -ne 3 ]; then
+  fail "denylist term: expected exit 3, got $DENYLIST_EXIT"
+elif ! echo "$DENYLIST_OUT" | grep -qF "denylist"; then
+  fail "denylist term: JSON output missing 'denylist' pattern name: $DENYLIST_OUT"
+else
+  pass "planted deny-list term (via --denylist) → exit 3, finding names denylist"
+fi
+
+# -------------------------------------------------------------------------
+# Check 7 — deny-list matching is case-insensitive: term "AcmeCorp" in the
+# deny-list must catch a differently-cased occurrence ("acmecorp") in text.
+
+CASE_TEXT_FILE="$TMPDIR_LOCAL/case-text.txt"
+cat >"$CASE_TEXT_FILE" <<'EOF'
+we should not talk about acmecorp in public.
+EOF
+
+CASE_OUT="$(python3 "$SCANNER" --text-file "$CASE_TEXT_FILE" --denylist "$DENYLIST_FILE")"
+CASE_EXIT=$?
+
+if [ "$CASE_EXIT" -ne 3 ]; then
+  fail "denylist case-insensitive match: expected exit 3, got $CASE_EXIT"
+elif ! echo "$CASE_OUT" | grep -qF "denylist"; then
+  fail "denylist case-insensitive match: JSON output missing 'denylist' pattern name: $CASE_OUT"
+else
+  pass "deny-list term matches differently-cased text (case-insensitive) → exit 3"
+fi
+
+# -------------------------------------------------------------------------
+# Check 8 — deny-list redaction never reveals a short term in full (e.g. a
+# 4-char company acronym like "Visa"); must use the non-revealing marker,
+# not a prefix-based redaction.
+
+SHORT_DENYLIST_FILE="$TMPDIR_LOCAL/short-denylist.txt"
+cat >"$SHORT_DENYLIST_FILE" <<'EOF'
+Visa
+EOF
+
+SHORT_TEXT_FILE="$TMPDIR_LOCAL/short-text.txt"
+cat >"$SHORT_TEXT_FILE" <<'EOF'
+We should not mention Visa as a payment partner.
+EOF
+
+SHORT_OUT="$(python3 "$SCANNER" --text-file "$SHORT_TEXT_FILE" --denylist "$SHORT_DENYLIST_FILE")"
+SHORT_EXIT=$?
+
+if [ "$SHORT_EXIT" -ne 3 ]; then
+  fail "short deny-list term redaction: expected exit 3, got $SHORT_EXIT"
+elif echo "$SHORT_OUT" | grep -qF "Visa"; then
+  fail "short deny-list term redaction: full term 'Visa' leaked into stdout: $SHORT_OUT"
+else
+  pass "short deny-list term ('Visa') never revealed in full in stdout"
+fi
+
+# -------------------------------------------------------------------------
 # Summary
 
 echo ""
