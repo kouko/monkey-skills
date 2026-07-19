@@ -5,6 +5,20 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.35.0] — 2026-07-19 — finishing close-out drops two human-confirmation stops
+
+### Changed
+
+- **`finishing-a-development-branch`**: Step 3 (whole-branch review verdict)
+  no longer stops on `PASS_WITH_NOTES` to ask the human — it auto-proceeds,
+  carrying the finding forward into the close-out record instead of pausing
+  for confirmation.
+- **`finishing-a-development-branch`**: Step 7's commit-message approval ask
+  is replaced by the automated two-layer privacy gate — `PASS` proceeds
+  silently, `BLOCK` stops and asks. The remaining ASK path is now
+  exception-based (triggered by the gate's own escalation, not a default
+  human checkpoint).
+
 ## [0.34.0] — 2026-07-18 — NEEDS_CONTEXT cap + writing-plans verdict gate
 
 ### Added
