@@ -68,6 +68,7 @@ TTL_TICKERS = 7 * 86400       # 7 days
 TTL_FACTS = 86400             # 24 hours
 TTL_SUBMISSIONS = 86400       # 24 hours
 TTL_NARRATIVE = cache_util.compute_ttl("immutable", None)  # permanent; filings don't change
+TTL_EXHIBIT_RAW = cache_util.compute_ttl("immutable", None)  # permanent; a filed exhibit's bytes never change
 
 MAX_RETRIES = 3
 RETRY_BASE_DELAY = 2.0
@@ -1627,6 +1628,151 @@ def action_narrative(accession: str) -> dict:
     cache_label = "cache hit" if res.get("_cache") == "hit" else f"{res.get('section_count', 0)} sections in {time.monotonic() - t0:.1f}s"
     _log("narrative done", f"{accession} {cache_label}")
     return res
+
+
+# ---------------------------------------------------------------------------
+# Route B: 8-K earnings-exhibit RAW acquisition (edgartools `filing.attachments`)
+# ---------------------------------------------------------------------------
+# A DISTINCT acquisition path from `_segment_8k`/`fetch_narrative_sections`: it
+# grabs the WHOLE EX-99.x exhibit document's RAW HTML (`attachment.content`), not
+# the per-item flattened `.text()` the narrative path produces — a downstream
+# table walker (exhibit_tables.py) needs the raw <table> DOM, which the flattened
+# text destroys. Going via `filing.attachments` also sidesteps `_segment_8k`'s
+# LOOM-SIMPLIFY >=2-exhibit-item gap ceiling: enumerating every EX-99.x
+# attachment has no per-item->exhibit pairing to be ambiguous about (the spike
+# 2026-07-19 confirmed the ceiling trips on real NFLX acc 0001065280-25-000033
+# under the old path; this path returns both exhibits cleanly).
+#
+# Live-grounded shape (edgartools 5.42.0, probed 2026-07-19): `filing.attachments`
+# is iterable, yielding `Attachment` objects carrying `document` (filename) /
+# `document_type` (e.g. "EX-99.1") / `size` etc., with `content` a PROPERTY that
+# downloads + returns the raw document. The Route B spike read
+# `filing.attachments -> the EX-99.1 attachment -> .content` (429,234 chars of
+# raw HTML) — see scratchpad/route-b-inventory-spike.md.
+
+
+def _is_ex99_attachment(document_type) -> bool:
+    """True iff an attachment's ``document_type`` marks it an EX-99.x exhibit
+    (the press-release / earnings-letter family Route B extracts). Normalizes
+    case + interior spaces so "EX-99.1" / "ex-99.2" / "EX-99" all match, while a
+    non-exhibit attachment (the primary "8-K" body doc, a "GRAPHIC") is filtered
+    out."""
+    if not document_type:
+        return False
+    return str(document_type).upper().replace(" ", "").startswith("EX-99")
+
+
+def _resolve_latest_earnings_8k_accession(ticker: str) -> str | dict:
+    """Resolve the ticker's LATEST earnings 8-K (Item 2.02) accession, reusing
+    the shipped primitives: ``resolve_cik`` -> ``list_filings`` (over a
+    policy-sufficient DATE window, never a magic row count) -> the established
+    ``_has_item_code(..., "2.02")`` earnings-8-K membership check, then the most
+    recent by ``filingDate``.
+
+    "Latest earnings 8-K" is a recency pick over item-2.02 8-Ks, NOT the
+    quarter-anchored per-quarter selection ``select_narrative_filings`` does (that
+    would reject a valid recent earnings 8-K merely because it is not in the
+    current calendar quarter). Returns the accession string on success, or a loud
+    ``{"error": ...}`` slot (never a silent None) when the ticker does not resolve
+    or no earnings 8-K exists inside the lookup window — mirroring
+    ``acquire_filing``'s resolution / form_unavailable error classes."""
+    cik_result = resolve_cik(ticker)
+    if "error" in cik_result:
+        return _acquire_error(
+            "resolution",
+            f"ticker {ticker!r} did not resolve to a registered SEC filer "
+            f"({cik_result['error']})",
+            identifier=ticker,
+        )
+    cik = cik_result["cik"]
+    window_days = narrative_filings_window_days(n_quarters=1)
+    min_filing_date = (date.today() - timedelta(days=window_days)).isoformat()
+    # `min_filing_date` (a DATE cutoff) is the real stop condition; the 100 is a
+    # generous count ceiling only (list_filings scans to the array end when a
+    # min_filing_date is given — see its docstring).
+    rows = list_filings(cik, ["8-K"], 100, min_filing_date=min_filing_date)
+    earnings = [r for r in rows if _has_item_code(r.get("items"), "2.02")]
+    if not earnings:
+        return _acquire_error(
+            "form_unavailable",
+            f"no earnings 8-K (item 2.02) found for ticker {ticker!r} within the "
+            f"lookup window ({min_filing_date}..)",
+            identifier=ticker,
+            form="8-K",
+        )
+    latest = max(earnings, key=lambda r: r.get("filingDate") or "")
+    return latest["accessionNumber"]
+
+
+def fetch_exhibit_documents(ticker: str, accession: str | None = None) -> dict:
+    """Acquire the RAW EX-99.x exhibit documents of an earnings 8-K.
+
+    Resolution: when ``accession`` is given, that filing is fetched directly (via
+    the shared ``_acquire_raw_filing`` producer boundary); when it is ``None``,
+    the ticker's LATEST earnings 8-K (Item 2.02) is resolved first
+    (``_resolve_latest_earnings_8k_accession``). Either way, ALL EX-99.*
+    attachments are enumerated off ``filing.attachments`` and each document's RAW
+    HTML (``attachment.content``) + metadata (accession / document / exhibit_type
+    / filingDate) is returned.
+
+    Cache: each document is cached under the NEW key family
+    ``exhibit_raw_{accession}_{document}`` — NEVER the legacy
+    ``narrative_sections_{accession}`` slot. The two payload shapes are
+    incompatible (this path stores raw exhibit HTML per document; the narrative
+    path stores a section list) and both share the immutable TTL, so a shared key
+    would let a pre-warmed machine get a schema-passing HIT of the WRONG shape
+    that never self-heals (cache-key-collision-across-migration). The distinct
+    ``exhibit_raw_`` prefix makes the two caches un-aliasable. A cache HIT on a
+    document's key skips re-downloading that exhibit's bytes (SEC fair-access);
+    the filing itself is still resolved once to enumerate which exhibits exist.
+
+    A failed resolution/acquisition is a loud ``{"error": ...}`` slot that is
+    SURFACED, never cached — a transient 429/403 is not poisoned into the cache."""
+    if accession is None:
+        accession = _resolve_latest_earnings_8k_accession(ticker)
+        if isinstance(accession, dict):  # a loud error slot (never an accession)
+            return accession
+
+    filing = _acquire_raw_filing(accession)
+    if isinstance(filing, dict):  # a loud error slot (never a raw Filing)
+        return filing
+
+    resolved_accession = filing.accession_no
+    filing_date = _filing_date_iso(filing.filing_date)
+
+    documents: list[dict] = []
+    for attachment in filing.attachments:
+        if not _is_ex99_attachment(getattr(attachment, "document_type", None)):
+            continue
+        document = attachment.document
+        path = cache_util.cache_path(
+            "sec_edgar", f"exhibit_raw_{resolved_accession}_{document}"
+        )
+        cached = cache_util.load_cache(path, TTL_EXHIBIT_RAW)
+        if cached is not None:
+            cached["_cache"] = "hit"
+            documents.append(cached)
+            continue
+        doc = {
+            "accession": resolved_accession,
+            "document": document,
+            "exhibit_type": attachment.document_type,
+            "filingDate": filing_date,
+            "raw_html": attachment.content,
+        }
+        cache_util.save_cache(path, doc)
+        documents.append({**doc, "_cache": "miss"})
+
+    return {
+        "accession": resolved_accession,
+        "ticker": ticker,
+        "cik": filing.cik,
+        "form": filing.form,
+        "filingDate": filing_date,
+        "documents": documents,
+        "document_count": len(documents),
+    }
+
 
 # ---------------------------------------------------------------------------
 # Source A: statement-cell extraction (edgartools XBRL statement API)
