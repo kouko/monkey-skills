@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "verdict": "PASS_WITH_NOTES",
+  "files": [
+    "proposal.md",
+    "specs/prose-kpi-intake/spec.md"
+  ],
+  "sha256": "2be93ba1ed41dc1a47ffca98c7f0a1462b1f3b63285b885d974a4031aa69b247",
+  "written_at": "2026-07-19T15:34:49.078389+00:00"
+}

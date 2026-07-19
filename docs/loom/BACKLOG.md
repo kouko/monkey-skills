@@ -86,25 +86,47 @@
     AAPL/NVDA/COST" comment describes the 2.23.0-era COST refusal — reads
     stale now that COST classifies; one-line reframe on next touch.
 
-## investing-toolkit 非金錢營運 KPI 自動化 — 雙路線 (USER-COMMITTED 2026-07-19; Route B in-flight, Route A re-scoped post-census)
-- Status: Route B IN-FLIGHT (this arc); Route A PARKED-COMMITTED (user:
-  「我想要兩個都做 我不想要漏掉任何資訊」— completeness-driven; two
-  SEPARATE arcs, each its own brainstorm→plan→SDD).
-- Route B — 8-K earnings-release semi-auto extraction → tier-① store
-  (IN-FLIGHT, this arc): machine-parse exhibit tables → candidate numbers
-  with source coordinates → human confirmation gate (tier-①'s existing
-  trust design unchanged; only the intake is automated). Builds on the
-  shipped US SEC narrative/8-K extraction base (note the LOOM-SIMPLIFY
-  ceiling: ≥2-exhibit 8-K currently emits loud gaps — that shortcut's
-  reversal trigger likely fires in this arc). Origin/scope now pinned:
-  brief docs/loom/specs/2026-07-19-8k-earnings-kpi-intake.md + plan
-  docs/loom/plans/2026-07-19-8k-earnings-kpi-intake.md. Route B does NOT
-  touch XBRL feed emission (so it does not carry the currency rider below).
-- Route A — XBRL non-monetary facts extraction, RE-SCOPED per the
-  full-universe census (71 filers surveyed, NOT the earlier 12-ticker
-  sample). Start: next explicit pickup of Route A. Census outcome — the
-  only viable territory is a physical-footprint / capacity allowlist keyed
-  on standard (not extension) concepts:
+## investing-toolkit 非金錢營運 KPI 自動化 (2026-07-19..20; Route B SHIPPED; ARC PIVOTED to a narrative-evidence layer; XBRL Route A demoted)
+- Status: **Route B SHIPPED** (#590, 2.26.0). The committed next arc PIVOTED
+  after a live big-tech probe (2026-07-20) — see the pivot note below — from
+  "XBRL Route A" to a **source-anchored narrative+KPI evidence layer**, whose
+  **Slice A Part 1 SHIPPED** (this PR, 2.27.0). XBRL Route A (footprint/capacity
+  allowlist) is DEMOTED to a parked option for retail/REIT/utility filers only.
+- **Pivot evidence (2026-07-20):** a live probe of the 7 mega-caps showed the
+  XBRL footprint allowlist yields ~0 real operational KPIs for big tech (only
+  traps: AMZN mwh hedge-notional, TSLA 20M pay-package milestone); the real
+  operational KPIs live in 8-K earnings-release PROSE — which Route B's TABLE
+  walker AND the bulk-narrative layer both drop (META Family DAP, GOOGL MAU,
+  TSLA deliveries). An agent-project prior-art survey confirmed no popular OSS
+  project does verbatim-anchored + longitudinal + human-confirm grounding — that
+  triad is our differentiator. Research: `docs/loom/research/2026-07-19-*.md`.
+- **Narrative-evidence arc — Slice A = "Route B for prose" (3-part split, user-approved):**
+  - **Part 1 SHIPPED (this PR, 2.27.0):** mechanical prose KPI producer —
+    `exhibit_prose.py` (surface + `--locate`) + `kpi_prose_candidates.py`
+    (propose/gate/confirm/commit_to_store/intake) → prose datum with verbatim
+    quote + `prose:{start}-{end}` anchor into the byte-unchanged tier-① store.
+    Change-folder `docs/loom/2026-07-19-8k-prose-kpi-intake/`, plan
+    `docs/loom/plans/2026-07-19-8k-prose-kpi-intake-part-1.md`. NOT yet
+    SKILL-wired (foundational machinery).
+  - **Part 2 (next brief) — number robustness:** word-scale ("3.56 billion" →
+    META DAP), normalization (nbsp/entities/full-width digits), date/period +
+    qualifier false-positive rejection, PII minimal-span. 4 deferred scenarios
+    in the change-folder §Notes.
+  - **Part 3 (next brief) — lifecycle/hardening:** table-vs-prose + prose-vs-prose
+    + order-independent dedup, 8-K/A supersession, anchor drift (hash+version
+    re-verify), concurrency scope + batch atomicity, resource bounds/ReDoS,
+    prompt-injection, propose-failure state, human-edit-re-gate. 12 deferred
+    scenarios in the change-folder §Notes.
+  - **SKILL wiring** (analysis-kpi SKILL.md CLI-reference + a user-facing prose
+    intake workflow) — pending; do when the capability is user-ready.
+  - **Slice B (later) — curated narrative PASSAGES → memo** (relevance/taste
+    layer over the existing bulk narrative text). **Slice C (later) — longitudinal
+    coverage file + retention (≥10yr, industry norm) + tearsheet/tracker.**
+- **Route A — XBRL non-monetary footprint/capacity allowlist — DEMOTED/PARKED**
+  (serves retail/REIT/utility filers, NOT big tech; only pick up if the user's
+  portfolio needs those names). Census outcome — the only viable territory is a
+  physical-footprint / capacity allowlist keyed on standard (not extension)
+  concepts:
   - `us-gaap:NumberOfStores` — COST, CVS
   - `us-gaap:NumberOfRestaurants` — MCD
   - `us-gaap:NumberOfRealEstateProperties` — O (clean total), PLD
