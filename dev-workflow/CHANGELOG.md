@@ -4,6 +4,25 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.24.0] — 2026-07-19
+
+### Added — `git-memory`: close-out privacy gate (fail-closed, two-layer)
+
+`compose-commit.md` and `compose-pr.md` now run a fail-closed two-layer
+privacy check over the composed text before it is used: layer 1 is a
+deterministic `scripts/privacy-scan.py` (secrets/credential-pattern
+scanner plus an optional user-supplied deny-list); layer 2 is a
+fresh-context judge over the same composed text per the new
+`protocols/privacy-judge-spec.md` (the layer-2 judge SSOT — verdict
+shape, escalation, and what counts as a privacy leak beyond
+pattern-matchable secrets). `git-memory`'s SKILL.md now points its
+privacy bullet at this operational gate instead of prose guidance.
+
+Verification: `dev-workflow/tests/test-privacy-scan.sh`,
+`test-privacy-judge-spec.sh`, `test-privacy-gate-compose-commit.sh`,
+`test-privacy-gate-compose-pr.sh`, and
+`test-git-memory-privacy-gate-ref.sh` all green.
+
 ## [2.23.0] — 2026-07-17
 
 ### Added — `git-memory`: `--verify-merged` catches the suspicious-empty-body case (#578 live)

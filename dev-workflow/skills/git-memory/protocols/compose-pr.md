@@ -247,7 +247,28 @@ of its criteria). For these, `## Memory` is correctly absent:
 For these, the diff and `## Summary` are sufficient signal. For any
 memory-worthy PR, skipping is **not** an option — see Step 2.
 
-## Step 6 — Confirm with user before opening
+## Step 6 — Privacy gate (fail-closed)
+
+**Privacy gate (fail-closed).** After composing the PR body text, run
+the two-layer privacy check before it is used:
+
+1. **Layer 1 — deterministic scan.** Run
+   `scripts/privacy-scan.py --text-file <composed>` (exit 0 = clean;
+   exit 3 = secrets/deny-list findings printed as JSON).
+2. **Layer 2 — fresh-context judge.** Dispatch a fresh-context agent
+   over the same composed text per `protocols/privacy-judge-spec.md`
+   (the judge SSOT: the categories it inspects, its `PASS | BLOCK`
+   output schema, and its fail-closed contract). Do NOT inline the
+   judge's full rubric here — point at the spec.
+3. **Verdict.** Any layer-1 finding OR a layer-2 BLOCK → the PR body
+   is BLOCKED: surface findings, do not proceed, escalate to the
+   human.
+4. **Fail-closed (explicit).** A layer-1 script error, a layer-2
+   dispatch failure, or a non-conforming judge output → treat as
+   BLOCK (never as PASS). This is an explicit branch, not an emergent
+   default.
+
+## Step 7 — Confirm with user before opening
 
 Before firing `gh pr create`, summarize the `## Memory` draft for the
 user:
@@ -258,7 +279,7 @@ user:
 Adjust based on user feedback. Err on the side of less — deleting a
 sub-heading is cheaper than over-drafting.
 
-## Step 7 — Verify substrate survival before the branch closes
+## Step 8 — Verify substrate survival before the branch closes
 
 The confirmed root cause of lost memory is **authoring-time
 under-recording**: a memory-worthy PR closing with an empty
