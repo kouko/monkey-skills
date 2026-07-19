@@ -102,6 +102,60 @@ these to decide whether to force a re-fetch. These keys are injected
 per fetched section (e.g. `.yfinance.info.data._cache`), never at
 document top level; miss-marking varies by client.
 
+## Route B — 8-K earnings-exhibit acquisition (US SEC)
+
+Two mechanical verbs acquire and structure an earnings 8-K press-release
+exhibit for the analysis-kpi Route B intake lane (US SEC only). Both are
+PURE MECHANICAL — they carry raw bytes + grid coordinates, and perform
+zero semantic interpretation (no `kpi_id`, no unit, no normalized period).
+
+**`fetch_exhibit_documents(ticker, accession=None)`** (`sec_edgar_client.py`
+library call): resolves the latest earnings 8-K (Item 2.02) when
+`accession` is `None`, or fetches the given accession directly; then
+enumerates ALL EX-99.* attachments off `filing.attachments` and returns
+each document's RAW HTML (`attachment.content`) plus metadata. Return
+shape:
+
+```
+{accession, ticker, cik, form, filingDate,
+ document_count,
+ documents: [{accession, document, exhibit_type, filingDate,
+              raw_html, _cache: "hit"|"miss"}, ...]}
+```
+
+Acquisition goes via `filing.attachments` (NOT `_segment_8k` /
+`fetch_narrative_sections`) so every EX-99.x is recovered even on a ≥2
+exhibit-item 8-K. A failed resolution/acquisition is a loud
+`{"error": ...}` slot — surfaced, never cached.
+
+**New cache key family** `exhibit_raw_{accession}_{document}` under the
+`sec_edgar` cache namespace — NEVER the legacy
+`narrative_sections_{accession}` slot. The two payload shapes are
+incompatible (raw exhibit HTML per document vs a section list) and share
+the immutable TTL, so a shared key would let a pre-warmed machine get a
+schema-passing HIT of the WRONG shape that never self-heals. The distinct
+`exhibit_raw_` prefix makes the two caches un-aliasable. A per-document
+cache HIT skips re-downloading that exhibit's bytes; the filing itself is
+still resolved once to enumerate which exhibits exist.
+
+**`exhibit_tables.py --html <path> --out <json>`** (CLI): a stdlib
+`html.parser` table walker — raw exhibit HTML → a JSON list of tables,
+each cell `{table_index, row, col, text}` after rowspan/colspan
+resolution + empty-separator-cell cleanup, plus a per-row leading-label
+path (`row_label_paths`). No pandas/lxml (coordinate fidelity across the
+Workiva colspan/duplicate-cell artifact needs a custom walker). Values
+are the exact printed strings (nbsp/whitespace normalized, never parsed to
+float). Output shape:
+
+```
+[{table_index, n_rows,
+  cells: [{table_index, row, col, text}, ...],
+  row_label_paths: [["Global Streaming Paid Memberships"], ...]}, ...]
+```
+
+analysis-kpi's `kpi_8k_candidates.py` invokes this walker by SUBPROCESS
+(not import) to cross the analysis↔data-markets layer boundary.
+
 ## API keys
 
 | Env var | Market | Effect |

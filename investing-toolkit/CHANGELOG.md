@@ -5,6 +5,53 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.26.0] — 2026-07-19
+
+Route B 8-K earnings-release semi-auto KPI intake lane — a mechanical
+producer + LLM-semantic + human-confirm three-layer path that turns an
+earnings 8-K press-release exhibit into confirmed operational-KPI points
+in the EXISTING tier-① store, without the value or its coordinates ever
+passing through an LLM. Plan:
+`docs/loom/plans/2026-07-19-8k-earnings-kpi-intake.md`.
+
+### Added
+
+- **Exhibit acquisition via attachments** (`data-markets` /
+  `sec_edgar_client.py`): `fetch_exhibit_documents(ticker, accession=None)`
+  resolves the latest earnings 8-K (Item 2.02) — or the given accession —
+  and enumerates ALL EX-99.* attachments off `filing.attachments`,
+  returning each document's RAW HTML (`attachment.content`) plus metadata
+  (accession / document / exhibit_type / filingDate). This sidesteps
+  `_segment_8k`'s ≥2-exhibit-item LOOM-SIMPLIFY ceiling (attachments
+  enumerate every EX-99.x directly). Each document is cached under the NEW
+  key family `exhibit_raw_{accession}_{document}` — never the legacy
+  `narrative_sections_{accession}` slot (incompatible payload shapes share
+  the immutable TTL; the distinct prefix makes the two caches un-aliasable
+  so a pre-warmed machine can't get a schema-passing HIT of the wrong
+  shape). A failed resolution/acquisition is a loud `{"error": ...}` slot,
+  surfaced not cached.
+- **Generic HTML table walker** (`data-markets` / `exhibit_tables.py`):
+  stdlib `html.parser` extractor — raw exhibit HTML → JSON list of tables,
+  each cell `{table_index, row, col, text}` after rowspan/colspan
+  resolution + empty-separator-cell cleanup, plus a per-row leading-label
+  path. No pandas/lxml (coordinate fidelity across the Workiva
+  colspan/duplicate-cell artifact needs a custom walker). MECHANICAL only:
+  values are the exact printed strings (nbsp/whitespace normalized, never
+  parsed to float). CLI: `exhibit_tables.py --html <path> --out <json>`.
+- **8-K candidate three-layer intake** (`analysis-kpi` /
+  `kpi_8k_candidates.py`): `propose` subprocesses the table walker and
+  emits RAW candidate points (verbatim label path + exact-printed value +
+  `period_hint` + source coordinates + `confirmed: false`), leaving
+  `kpi_id`/`unit`/`period` explicit `null` with a `needs_semantic` list —
+  the mechanical layer NEVER invents a slug, a unit, or a normalized
+  period. The LLM layer (analysis-kpi SKILL.md prose workflow) proposes
+  those semantic slots by reading the verbatim labels; the human
+  confirm-all gate ratifies and flips `confirmed: true`. `commit
+  --company <T>` then appends ONLY confirmed-and-complete candidates into
+  the tier-① store via the EXISTING `kpi_store.append` — unconfirmed
+  entries are skipped, and a null semantic slot or missing provenance is
+  refused loud (the store's own confirm-all trust gate is un-weakened).
+
 ## [v2.25.0] — 2026-07-19
 
 JNJ restatement-axis fix — vintage-axis exclusion accounting and

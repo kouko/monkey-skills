@@ -69,28 +69,50 @@
     AAPL/NVDA/COST" comment describes the 2.23.0-era COST refusal — reads
     stale now that COST classifies; one-line reframe on next touch.
 
-## investing-toolkit 非金錢營運 KPI 自動化 — 雙路線 (USER-COMMITTED 2026-07-19, next arcs after JNJ fix ships)
-- Status: PARKED-COMMITTED (user: 「我想要兩個都做 我不想要漏掉任何資訊」—
-  completeness-driven; two SEPARATE arcs, each its own brainstorm→plan→SDD)
-- Route A — XBRL non-monetary facts extraction: operational quantities
-  actually tagged in XBRL (shares/units/stores/production; mostly
-  filer-specific extension concepts). Start: RECON FIRST — census the raw
-  edgartools fact space (not the packs — the currency gate already dropped
-  non-monetary facts there) across the 12 test tickers: what non-monetary
-  duration/instant facts exist, which are extension vs standard concepts,
-  is any allowlist-able family real. Evidence decides whether A is viable
-  or honestly thin.
-- Route B — 8-K earnings-release semi-auto extraction → tier-① store:
-  machine-parse exhibit tables → candidate numbers with source coordinates
-  → human confirmation gate (tier-①'s existing trust design unchanged;
-  only the intake is automated). Builds on the shipped US SEC narrative/8-K
-  extraction base (note the LOOM-SIMPLIFY ceiling: ≥2-exhibit 8-K currently
-  emits loud gaps — that shortcut's reversal trigger likely fires in this
-  arc). Start: inventory the 8-K extraction base + one real earnings
-  release table-parse spike (e.g. NFLX subscriber counts / AAPL-era units).
-- Related cheap hardening rider (either arc's first producer touch):
-  per-point `currency` ISO-code passthrough (gate already reads it, drops
-  it before emission — CSV/feed currently carries implicit-USD only).
+## investing-toolkit 非金錢營運 KPI 自動化 — 雙路線 (USER-COMMITTED 2026-07-19; Route B in-flight, Route A re-scoped post-census)
+- Status: Route B IN-FLIGHT (this arc); Route A PARKED-COMMITTED (user:
+  「我想要兩個都做 我不想要漏掉任何資訊」— completeness-driven; two
+  SEPARATE arcs, each its own brainstorm→plan→SDD).
+- Route B — 8-K earnings-release semi-auto extraction → tier-① store
+  (IN-FLIGHT, this arc): machine-parse exhibit tables → candidate numbers
+  with source coordinates → human confirmation gate (tier-①'s existing
+  trust design unchanged; only the intake is automated). Builds on the
+  shipped US SEC narrative/8-K extraction base (note the LOOM-SIMPLIFY
+  ceiling: ≥2-exhibit 8-K currently emits loud gaps — that shortcut's
+  reversal trigger likely fires in this arc). Origin/scope now pinned:
+  brief docs/loom/specs/2026-07-19-8k-earnings-kpi-intake.md + plan
+  docs/loom/plans/2026-07-19-8k-earnings-kpi-intake.md. Route B does NOT
+  touch XBRL feed emission (so it does not carry the currency rider below).
+- Route A — XBRL non-monetary facts extraction, RE-SCOPED per the
+  full-universe census (71 filers surveyed, NOT the earlier 12-ticker
+  sample). Start: next explicit pickup of Route A. Census outcome — the
+  only viable territory is a physical-footprint / capacity allowlist keyed
+  on standard (not extension) concepts:
+  - `us-gaap:NumberOfStores` — COST, CVS
+  - `us-gaap:NumberOfRestaurants` — MCD
+  - `us-gaap:NumberOfRealEstateProperties` — O (clean total), PLD
+    (dimensioned); AMT is extension-only (excluded from the standard-concept
+    allowlist)
+  - utility generating capacity in MW — NEE, DUK, SO
+  - program-unit counts — BA
+  THREE mandatory defenses, each required before ANY allowlist promotion:
+  (a) per-filer semantic verification — a standard concept can still be the
+  wrong quantity (SBUX `NumberOfStores`=113 is a sub-brand trap, not the
+  system total); (b) value-sanity gate — reject corrupted magnitudes (MET
+  claims-count tagged 3,360 in one filing, 308B in another — a ~10⁸ jump
+  that must fail loud, not pass through); (c) QName-keyed classification,
+  never unit-string — 7/15 energy/utility filers tag hedge-notional
+  bbl/mcf/MWh with units identical to real production volumes, so the unit
+  string cannot disambiguate; classify on the concept QName. Route A DOES
+  carry the per-point `currency` ISO-code passthrough rider (gate already
+  reads it, drops it before emission — CSV/feed currently carries
+  implicit-USD only) since Route A touches XBRL feed emission.
+- FAR-PARKED, out of scope for BOTH routes: pre-2003 KPI extraction from
+  10-K prose. Before the 2003-03 earnings-8-K furnishing mandate (then
+  Item 12; renumbered Item 2.02 in 2004-08) there is no
+  structured earnings-release exhibit to parse (Route B) and no XBRL fact to
+  allowlist (Route A) — recovering those KPIs is a separate 10-K-text
+  problem, not a variant of either arc here.
 
 ## investing-toolkit quarterly — JNJ RestatementAxis signature blind spot (SHIPPED 2026-07-19, 2.25.0)
 - Status: SHIPPED (feat-jnj-restatement-axis-signature; both fix shapes
