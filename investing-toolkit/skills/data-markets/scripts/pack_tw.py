@@ -504,28 +504,33 @@ def pack_memo_fetch(ticker: str, period: str = "2y") -> dict[str, Any]:
             if out["_partial"]:
                 break
 
-    # Canonical statements — Task 6: sourced from the TW iXBRL client
-    # (twse_ixbrl.py) fetched above, replacing the deferred yfinance-based
-    # stub (_build_canonical_from_yf_financials_tw) for the memo-fetch
-    # canonical path. yfinance financials_annual is still fetched below as
-    # Tier 2 raw reference data (unchanged provenance contract), just no
-    # longer feeds the top-level canonical.
-    ixbrl_canonical = ixbrl_result.get("canonical") if isinstance(ixbrl_result, dict) else None
-    if isinstance(ixbrl_canonical, dict):
-        out["income_statement"] = ixbrl_canonical.get("income_statement", {})
-        out["cash_flow"] = ixbrl_canonical.get("cash_flow", {})
-        out["balance_sheet"] = ixbrl_canonical.get("balance_sheet", {})
-    else:
-        out["income_statement"] = {}
-        out["cash_flow"] = {}
-        out["balance_sheet"] = {}
-
+    # yfinance financials_annual — fetched here (before the canonical
+    # decision below) since round-2 review: on both-attempts iXBRL `_error`,
+    # the canonical degrades to this data rather than staying empty.
     yf_ticker = norm["ticker_yf"]
     yf_fin = run_client(
         "yfinance_client.py",
         ["--ticker", yf_ticker, "--action", "financials", "--period", "annual"],
     )
     out["yfinance"]["financials_annual"] = wrap("2", "yfinance", "financials-annual", yf_fin)
+
+    # Canonical statements — Task 6: sourced from the TW iXBRL client
+    # (twse_ixbrl.py) fetched above when it succeeds. On both-attempts
+    # `_error` (round-2 fix 🟡), degrade to the retained yfinance-based stub
+    # (_build_canonical_from_yf_financials_tw) rather than an empty {} —
+    # an empty canonical silently zeroes every downstream DCF field
+    # (net_debt, ebit, fcf all read as absent/0), a worse failure mode than
+    # a Tier-2 scraper-sourced canonical.
+    ixbrl_canonical = ixbrl_result.get("canonical") if isinstance(ixbrl_result, dict) else None
+    if isinstance(ixbrl_canonical, dict):
+        out["income_statement"] = ixbrl_canonical.get("income_statement", {})
+        out["cash_flow"] = ixbrl_canonical.get("cash_flow", {})
+        out["balance_sheet"] = ixbrl_canonical.get("balance_sheet", {})
+    else:
+        fallback_canonical = _build_canonical_from_yf_financials_tw(yf_fin)
+        out["income_statement"] = fallback_canonical["income_statement"]
+        out["cash_flow"] = fallback_canonical["cash_flow"]
+        out["balance_sheet"] = fallback_canonical["balance_sheet"]
 
     # shares_outstanding / current_price from yfinance.info (already fetched in snapshot)
     yf_info_wrapped = out.get("yfinance", {}).get("info") or {}

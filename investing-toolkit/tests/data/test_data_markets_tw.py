@@ -350,3 +350,143 @@ def test_memo_fetch_wires_ixbrl_canonical(monkeypatch):
     )
     assert "--co-id" in ixbrl_calls[0] and "2330" in ixbrl_calls[0]
     assert "--report-id" in ixbrl_calls[0] and "C" in ixbrl_calls[0]
+
+
+# Sibling contract cited per round-2 review grounding requirement: the
+# twse_ixbrl.py CLI (--co-id/--year/--season/--report-id) is the Task 5
+# contract this suite's fake_run_client mirrors (docs/loom/plans/
+# 2026-07-19-tw-ixbrl-ingestion.md Task 5).
+_FAKE_YF_FINANCIALS_TW = {
+    "income_statement": {
+        "2024-06-30": {
+            "Total Revenue": 600_000_000,
+            "Operating Income": 120_000_000,
+            "Net Income": 90_000_000,
+        },
+    },
+    "balance_sheet": {
+        "2024-06-30": {
+            "Long Term Debt": 50_000_000,
+            "Current Debt": 10_000_000,
+            "Cash And Cash Equivalents": 200_000_000,
+        },
+    },
+    "cash_flow": {
+        "2024-06-30": {
+            "Operating Cash Flow": 150_000_000,
+            "Capital Expenditure": -40_000_000,
+            "Free Cash Flow": 110_000_000,
+        },
+    },
+}
+
+
+def test_memo_fetch_degrades_to_yf_stub_when_ixbrl_both_attempts_error(monkeypatch):
+    """Round 2 fix (code-quality review 🟡) — when BOTH the latest-likely-
+    filed quarter and the one-quarter-back retry come back `_error`, the
+    top-level canonical must degrade to the retained yfinance stub
+    (_build_canonical_from_yf_financials_tw), not silently `{}`. An empty
+    canonical zeroes every DCF field (net_debt, ebit, fcf all read 0),
+    which is a worse failure mode than a Tier-2 scraper-sourced canonical.
+    """
+    pack_tw_path = SCRIPTS_DIR / "pack_tw.py"
+    pack_tw = _load_module(pack_tw_path, "data_markets_pack_tw_ixbrl_degrade")
+
+    calls: list[tuple[str, list[str]]] = []
+
+    def _fake_run_client(script, args, timeout=60):
+        calls.append((script, args))
+        if script == "twse_ixbrl.py":
+            return {"_error": "not_found"}
+        if script == "yfinance_client.py" and "financials" in args:
+            return dict(_FAKE_YF_FINANCIALS_TW)
+        return {"ok": True, "_echo": {"script": script, "args": args}}
+
+    monkeypatch.setattr(pack_tw, "run_client", _fake_run_client)
+
+    stub_calls: list[tuple] = []
+    original_stub = pack_tw._build_canonical_from_yf_financials_tw
+
+    def _spy_stub(*args, **kwargs):
+        stub_calls.append((args, kwargs))
+        return original_stub(*args, **kwargs)
+
+    monkeypatch.setattr(pack_tw, "_build_canonical_from_yf_financials_tw", _spy_stub)
+
+    out = pack_tw.build_pack("memo-fetch", ["2330.TW"])
+
+    assert stub_calls, (
+        "yfinance-based canonical stub must run when both iXBRL attempts "
+        "error — degrade-to-stub, not silent {}"
+    )
+
+    ixbrl_calls = [args for script, args in calls if script == "twse_ixbrl.py"]
+    assert len(ixbrl_calls) == 2, (
+        "both the initial and the one-quarter-back retry must be attempted "
+        f"before degrading; got {len(ixbrl_calls)} calls: {ixbrl_calls}"
+    )
+
+    expected = original_stub(_FAKE_YF_FINANCIALS_TW)
+    assert out["income_statement"] == expected["income_statement"]
+    assert out["balance_sheet"] == expected["balance_sheet"]
+    assert out["cash_flow"] == expected["cash_flow"]
+
+    # Spot-check the actual DCF-required fields trace through the stub
+    # rather than reading as empty/zero.
+    assert out["balance_sheet"]["total_debt"][0] == 60_000_000.0
+    assert out["balance_sheet"]["cash"][0] == 200_000_000.0
+    assert out["income_statement"]["ebit"][0] == 120_000_000.0
+    assert out["cash_flow"]["capex"][0] == 40_000_000.0
+    assert out["cash_flow"]["fcf"][0] == 110_000_000.0
+
+
+def test_memo_fetch_ixbrl_retries_prior_quarter_then_succeeds(monkeypatch):
+    """Round 2 fix — the 2-attempt prior-quarter fallback loop (pack_tw.py
+    :480-490) must actually fire: first attempt `_error` (not yet filed),
+    second attempt (one quarter back) succeeds -> canonical sourced from
+    iXBRL, stub NOT called.
+    """
+    pack_tw_path = SCRIPTS_DIR / "pack_tw.py"
+    pack_tw = _load_module(pack_tw_path, "data_markets_pack_tw_ixbrl_retry")
+
+    fake_ixbrl_payload = {
+        "canonical": {
+            "income_statement": {"revenue": [111_000_000]},
+            "balance_sheet": {"total_assets": [222_000_000]},
+            "cash_flow": {"operating_cash_flow": [333_000_000]},
+        },
+    }
+
+    calls: list[tuple[str, list[str]]] = []
+
+    def _fake_run_client(script, args, timeout=60):
+        calls.append((script, args))
+        if script == "twse_ixbrl.py":
+            ixbrl_calls_so_far = sum(1 for s, _ in calls if s == "twse_ixbrl.py")
+            if ixbrl_calls_so_far == 1:
+                return {"_error": "not_found"}
+            return fake_ixbrl_payload
+        return {"ok": True, "_echo": {"script": script, "args": args}}
+
+    monkeypatch.setattr(pack_tw, "run_client", _fake_run_client)
+
+    stub_calls: list[tuple] = []
+    monkeypatch.setattr(
+        pack_tw,
+        "_build_canonical_from_yf_financials_tw",
+        lambda *a, **k: stub_calls.append((a, k)) or {},
+    )
+
+    out = pack_tw.build_pack("memo-fetch", ["2330.TW"])
+
+    assert not stub_calls, "iXBRL succeeded on retry — stub must not run"
+
+    ixbrl_calls = [args for script, args in calls if script == "twse_ixbrl.py"]
+    assert len(ixbrl_calls) == 2, (
+        f"expected exactly 2 attempts (initial + one-quarter-back retry); "
+        f"got {len(ixbrl_calls)}: {ixbrl_calls}"
+    )
+    assert ixbrl_calls[0] != ixbrl_calls[1], (
+        "the retry must use the stepped-back quarter, not repeat the same args"
+    )
+    assert out["income_statement"]["revenue"] == [111_000_000]
