@@ -180,6 +180,151 @@ def propose(html_path: str, accession: str) -> list[dict]:
     return build_candidates(tables, accession)
 
 
+def _as_of_from_accession(accession: str) -> str:
+    """Derive a disclosure-anchored `as_of` from a filing accession's embedded
+    2-digit year (`NNNNNNNNNN-YY-NNNNNN` -> `20YY-01-01`).
+
+    Accession-derived, NOT wall-clock: the tier-① store rejects a wall-clock
+    `as_of` (kpi_store._require_accession_derived_as_of), and re-deriving from
+    the same accession is stable, so a re-run dedups on the same 5-tuple instead
+    of double-writing. Fails loud on a malformed accession rather than emit a
+    garbage date.
+
+    LOOM-SIMPLIFY: as_of granularity is the accession YEAR (`20YY-01-01`), not
+      the exact filing date | ceiling: two filings by the same company for the
+      same (kpi_id, period) in different MONTHS of one year need day-level
+      point-in-time ordering | upgrade: thread the `filingDate` string that T1's
+      fetch_exhibit_documents already returns (the way kpi_xbrl.py threads the
+      XBRL `filed` date) through the candidate into the store point | ref:
+      docs/loom/plans/2026-07-19-8k-earnings-kpi-intake.md T4.
+    """
+    parts = str(accession).split("-")
+    if len(parts) != 3 or len(parts[1]) != 2 or not parts[1].isdigit():
+        raise ValueError(
+            f"kpi_8k_candidates.commit: cannot derive as_of from malformed "
+            f"accession {accession!r} (expected NNNNNNNNNN-YY-NNNNNN)"
+        )
+    return f"20{parts[1]}-01-01"
+
+
+def _missing_semantic(candidate: dict) -> list[str]:
+    """Names of the SEMANTIC slots a confirmed candidate still leaves unfilled
+    (null/empty). The human confirm-all gate must have filled ALL of them before
+    the point may reach the store.
+
+    Why the check lives HERE and not in the store: kpi_store.append validates
+    only provenance + `as_of` (verified against kpi_store.py) — it keys on
+    kpi_id/period but never inspects `unit`. So unit-completeness (and the other
+    semantic slots) is enforced by THIS confirm gate; the store is left
+    un-weakened, catching only its own concern (provenance/as_of).
+    """
+    return [field for field in _SEMANTIC_FIELDS if not candidate.get(field)]
+
+
+def _candidate_to_point(candidate: dict, company: str) -> dict:
+    """Assemble a kpi_store-shaped point from a confirmed+complete candidate.
+    Values + source coordinates pass through verbatim (never re-parsed);
+    `as_of` is accession-derived; `company` is supplied by the caller (one
+    filing = one company), mirroring kpi_xbrl.facts_to_points' explicit
+    `company` parameter.
+    """
+    table_id = candidate.get("source_table_id")
+    # The mechanical producer emits `source_table_id` as an integer table INDEX
+    # (0-based), and index 0 is legitimate — but kpi_store's provenance guard
+    # rejects any FALSY value (`if not point.get(field)`), so a bare 0 would be
+    # mis-read as "missing provenance". Render a real integer index as a truthy,
+    # self-describing token (`table:<i>`, the same source-kind-prefixed shape as
+    # kpi_xbrl's "xbrl:companyfacts"); a genuinely-absent id (None) is left
+    # falsy so that SAME store guard still refuses it (never weakened here).
+    if isinstance(table_id, int):
+        table_id = f"table:{table_id}"
+
+    return {
+        "company": company,
+        "kpi_id": candidate["kpi_id"],
+        "period": candidate["period"],
+        "unit": candidate["unit"],
+        "value": candidate["value"],
+        "as_of": _as_of_from_accession(candidate.get("source_accession")),
+        "source_accession": candidate.get("source_accession"),
+        "source_table_id": table_id,
+        "source_cell_ref": candidate.get("source_cell_ref"),
+    }
+
+
+def commit(candidates_path: str, company: str) -> dict:
+    """Append ONLY human-confirmed, semantically-complete candidates from
+    `candidates_path` into the tier-① store via the EXISTING
+    `kpi_store.append(point)`. Returns a summary
+    `{committed, skipped_unconfirmed, refused_incomplete}`.
+
+    Gate order per candidate:
+      1. `confirmed` falsy             -> skipped_unconfirmed (never written);
+      2. a null semantic slot          -> refused_incomplete (this confirm gate;
+                                          the store never validates `unit`);
+      3. store guard raises ValueError
+         (missing provenance / as_of)  -> refused_incomplete (kpi_store's OWN
+                                          guard, un-weakened).
+
+    Refusals are loud on stderr and write nothing. kpi_store/kpi_validate are
+    left untouched — the refusal of incomplete points IS the trust guarantee.
+    """
+    if str(_SCRIPT_DIR) not in sys.path:
+        sys.path.insert(0, str(_SCRIPT_DIR))
+    import kpi_store  # sibling import, lazy so `propose` never pays for it
+
+    candidates = json.loads(Path(candidates_path).read_text(encoding="utf-8"))
+
+    committed = skipped = refused = 0
+    for candidate in candidates:
+        if not candidate.get("confirmed"):
+            skipped += 1
+            continue
+
+        missing = _missing_semantic(candidate)
+        if missing:
+            refused += 1
+            print(
+                f"commit: REFUSED confirmed candidate value="
+                f"{candidate.get('value')!r} — incomplete, missing semantic "
+                f"field(s): {', '.join(missing)}",
+                file=sys.stderr,
+            )
+            continue
+
+        try:
+            kpi_store.append(_candidate_to_point(candidate, company))
+        except ValueError as exc:
+            refused += 1
+            print(
+                f"commit: REFUSED confirmed candidate value="
+                f"{candidate.get('value')!r} — store rejected: {exc}",
+                file=sys.stderr,
+            )
+            continue
+        committed += 1
+
+    return {
+        "committed": committed,
+        "skipped_unconfirmed": skipped,
+        "refused_incomplete": refused,
+    }
+
+
+def _cli_commit(args: argparse.Namespace) -> int:
+    """`commit` subcommand: run the confirm-gate append and print the one-line
+    summary. Exit non-zero when ANY confirmed candidate was refused-incomplete —
+    a silent partial commit would defeat the fail-loud contract.
+    """
+    summary = commit(args.candidates, args.company)
+    print(
+        f"committed {summary['committed']} / "
+        f"skipped-unconfirmed {summary['skipped_unconfirmed']} / "
+        f"refused-incomplete {summary['refused_incomplete']}"
+    )
+    return 1 if summary["refused_incomplete"] else 0
+
+
 def _cli_propose(args: argparse.Namespace) -> int:
     """`propose` subcommand: run the mechanical producer and write the candidate
     list as JSON to `--out`. Exit 0 on success, prints a one-line summary.
@@ -208,6 +353,20 @@ def main(argv: list[str] | None = None) -> int:
     )
     propose_parser.add_argument("--out", required=True, help="Path to write candidates JSON")
     propose_parser.set_defaults(func=_cli_propose)
+
+    commit_parser = subparsers.add_parser(
+        "commit",
+        help="Append human-confirmed, complete candidates into the tier-① KPI "
+        "store (unconfirmed skipped; incomplete/unattributed refused loud).",
+    )
+    commit_parser.add_argument(
+        "--candidates", required=True, help="Path to candidates JSON (propose output)"
+    )
+    commit_parser.add_argument(
+        "--company", required=True,
+        help="Company/ticker key for the store series (one filing = one company)",
+    )
+    commit_parser.set_defaults(func=_cli_commit)
 
     args = parser.parse_args(argv)
     return args.func(args)
