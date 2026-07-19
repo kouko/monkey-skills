@@ -18,7 +18,8 @@ finishing-a-development-branch (this skill)
   │
   ├─→ Phase 1: requesting-code-review
   │     dispatches code-reviewer subagent → verdict: PASS / PASS_WITH_NOTES / NEEDS_REVISION
-  │     blocks on NEEDS_REVISION (any 🔴, or 2+ 🟡); PASS_WITH_NOTES (1 🟡) surfaces + asks
+  │     blocks on NEEDS_REVISION (any 🔴, or 2+ 🟡); PASS_WITH_NOTES (1 🟡) auto-proceeds,
+  │     carrying the 🟡 forward into the PR body + close-out report
   │
   ├─→ Phase 2: verification-before-completion
   │     runs package-level test command → exit 0 + N>0 tests → PASS
@@ -99,7 +100,8 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
 3. Dispatch requesting-code-review — route on the returned verdict, not raw severity:
    - If NEEDS_REVISION (any 🔴 fatal, or 2+ 🟡 should-fix): surface findings; STOP. Wait
      for user remediation. (Consistent with requesting-code-review: NEEDS_REVISION → do NOT push.)
-   - If PASS_WITH_NOTES (exactly 1 🟡, no 🔴): surface findings; ASK user to proceed or remediate.
+   - If PASS_WITH_NOTES (exactly 1 🟡, no 🔴): auto-proceed — carry the 🟡 finding forward
+     into the PR body and the final close-out report as noted debt.
    - If PASS (all 🟢): proceed silently.
    - Budget/quota failure fallback: if the code-reviewer subagent fails to launch due to
      budget or quota exhaustion, perform an inline B2 self-review — Read the diff, surface
@@ -110,8 +112,9 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
      without first verifying it exists via `claude --help`.
    - Explicit contract: NEEDS_REVISION review loops — fix → re-review, whether inside
      SDD's per-task triad during development or this step's own fix-up cycle — digest
-     silently; the user sees only the terminal verdict, never each iteration. The
-     PASS_WITH_NOTES user-ask gate above is UNCHANGED by this — it still asks.
+     silently; the user sees only the terminal verdict, never each iteration.
+     PASS_WITH_NOTES above auto-proceeds without asking — consistent with this
+     digest-silently posture, not an exception to it.
 4. Before applying any review findings from Step 3: Read each file you intend to Edit
    (Bash inspection does NOT satisfy the Edit/Write precondition) — details in
    [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §S1.
