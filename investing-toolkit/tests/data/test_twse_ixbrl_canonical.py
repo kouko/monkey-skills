@@ -32,8 +32,8 @@ def _load_modules():
     return twse_ixbrl_parser, twse_ixbrl_canonical
 
 
-def _fixture_facts(parser) -> list[dict]:
-    document = (FIXTURES / "twse_ixbrl_2330_2024Q3_C.html").read_text(encoding="big5")
+def _fixture_facts(parser, filename: str = "twse_ixbrl_2330_2024Q3_C.html") -> list[dict]:
+    document = (FIXTURES / filename).read_text(encoding="big5")
     return parser.parse_ixbrl_facts(document)
 
 
@@ -104,13 +104,11 @@ def test_canonical_ci_emits_dcf_required_fields():
     # this filer's -ci fact set (LongtermBorrowings +
     # NoncurrentPortionOfNoncurrentBondsIssued + NoncurrentFinanceLeaseLiabilities),
     # AsOf20240930: 26,459,677 + 909,703,588 + 28,208,721 = 964,371,986 (x1000).
-    # Whole-branch-review remediation: _DEBT_CONCEPTS now also includes
-    # short-term/current interest-bearing debt concepts (ShorttermBorrowings /
-    # CurrentPortionOfNoncurrentBondsIssued / CurrentFinanceLeaseLiabilities);
-    # this fixture (TSMC, cash-rich) confirmed-absent all three via
-    # grep -a over the raw fixture bytes, so the value here is unchanged —
-    # see test_canonical_ci_total_debt_sums_short_term_debt_when_present for
-    # the synthetic-fact proof that they ARE summed in when present.
+    # _DEBT_CONCEPTS also includes 4 short-term/current interest-bearing debt
+    # concepts (verified against the debt-heavy Formosa 1301 filer — see
+    # test_canonical_ci_total_debt_formosa_includes_short_term); this
+    # fixture (TSMC, cash-rich) confirmed-absent all four via grep -a over
+    # the raw fixture bytes, so the value here is unchanged.
     assert bs["total_debt"][0] == 964_371_986_000.0
     assert bs["_meta"]["total_debt"]["derivation"]
 
@@ -194,6 +192,58 @@ def test_canonical_ci_total_debt_sums_short_term_debt_when_present():
         "dropped short-term debt, understating net_debt"
     )
     assert "ifrs-full:ShorttermBorrowings" in bs["_meta"]["total_debt"]["components"]
+
+
+def test_canonical_ci_total_debt_formosa_includes_short_term():
+    """Real end-to-end proof that _DEBT_CONCEPTS' 4 short-term/current
+    concepts are genuine (not the prior commit's symmetry-guessed
+    CurrentPortionOfNoncurrentBondsIssued / CurrentFinanceLeaseLiabilities,
+    both confirmed WRONG/absent from real -ci taxonomy usage) — Formosa
+    Plastics (1301) is a debt-heavy filer that carries all 7 _DEBT_CONCEPTS
+    at once, unlike the cash-rich TSMC (2330) fixture which carries only
+    the 3 long-term ones.
+
+    Every component value below is grepped directly from the raw fixture
+    bytes (grep -a, Big5 — iconv transliteration truncates on invalid byte
+    sequences so grep -a on the original is the reliable path), AsOf20240930:
+      ifrs-full:LongtermBorrowings                                              10,068,269
+      ifrs-full:NoncurrentPortionOfNoncurrentBondsIssued                        33,459,485
+      ifrs-full:NoncurrentFinanceLeaseLiabilities                                1,832,563
+      ifrs-full:ShorttermBorrowings                                             27,254,461
+      ifrs-full:CurrentPortionOfLongtermBorrowings                             20,951,680
+      ifrs-full:CurrentBondsIssuedAndCurrentPortionOfNoncurrentBondsIssued       7,799,061
+      ifrs-full:CurrentCommercialPapersIssuedAndCurrentPortionOfNoncurrentCommercialPapersIssued
+                                                                                 35,205,850
+    Sum = 136,571,369 (x1000, scale=3/decimals=-3) = 136,571,369,000.0
+    """
+    parser, canonical_mod = _load_modules()
+    facts = _fixture_facts(parser, "twse_ixbrl_1301_2024Q3_C.html")
+
+    expected_components = {
+        "ifrs-full:LongtermBorrowings": 10_068_269_000.0,
+        "ifrs-full:NoncurrentPortionOfNoncurrentBondsIssued": 33_459_485_000.0,
+        "ifrs-full:NoncurrentFinanceLeaseLiabilities": 1_832_563_000.0,
+        "ifrs-full:ShorttermBorrowings": 27_254_461_000.0,
+        "ifrs-full:CurrentPortionOfLongtermBorrowings": 20_951_680_000.0,
+        "ifrs-full:CurrentBondsIssuedAndCurrentPortionOfNoncurrentBondsIssued": 7_799_061_000.0,
+        "ifrs-full:CurrentCommercialPapersIssuedAndCurrentPortionOfNoncurrentCommercialPapersIssued": 35_205_850_000.0,
+    }
+    for concept, expected_value in expected_components.items():
+        matches = [
+            f for f in facts if f["concept"] == concept and f["context_ref"] == "AsOf20240930"
+        ]
+        assert len(matches) == 1, (concept, matches)
+        assert matches[0]["raw_value"] == expected_value, (concept, matches[0]["raw_value"])
+
+    canonical = canonical_mod.build_canonical(facts)
+    bs = canonical["balance_sheet"]
+
+    assert bs["total_debt"][0] == 136_571_369_000.0, (
+        "canonical total_debt must equal the real fixture's summed ST+LT "
+        "debt components, not a symmetry-guessed value"
+    )
+    for concept in expected_components:
+        assert concept in bs["_meta"]["total_debt"]["components"]
 
 
 def test_canonical_fh_fact_set_returns_unsupported_marker():

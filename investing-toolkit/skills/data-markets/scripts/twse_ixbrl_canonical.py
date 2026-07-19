@@ -93,44 +93,33 @@ _LABELS: dict[str, str] = {
     "capex": "Purchase of Property, Plant and Equipment (Investing Activities)",
 }
 
-# Debt-bearing concepts observed (or defensively anticipated, see below) in
-# the -ci (industrial) taxonomy for balance_sheet.total_debt (dcf_compute.py
-# :220-222 requires this). Summed per matching AsOf date across whichever
-# of these are present in the fact set — a filer need not carry all of them.
+# Debt-bearing concepts for the -ci (industrial) taxonomy's
+# balance_sheet.total_debt (dcf_compute.py :220-222 requires this). Summed
+# per matching AsOf date across whichever of these are present in the fact
+# set — a filer need not carry all of them.
 #
-# Short-term/current interest-bearing components (ShorttermBorrowings /
-# CurrentPortionOfNoncurrentBondsIssued / CurrentFinanceLeaseLiabilities)
-# were added by whole-branch-review remediation (long-term-only total_debt
-# understated net_debt -> overstated DCF equity value). The committed 2330
-# fixture (TSMC, cash-rich) carries none of these — confirmed absent by
-# grep -a over the raw fixture bytes for Shortterm*/Current*Borrowing*/
-# Bond*/Lease* — so their concrete concept names are chosen symmetrically
-# with the confirmed long-term siblings above (Longterm -> Shortterm,
-# NoncurrentPortionOf... -> CurrentPortionOf..., Noncurrent... ->
-# Current...) rather than traced against a real fact; a filer that does
-# carry one will still be summed in correctly since the concept is present
-# in _DEBT_CONCEPTS. See test_canonical_ci_total_debt_sums_short_term_debt_when_present
-# for the synthetic-fact proof.
+# All 7 concepts below (3 long-term + 4 short-term/current) are verified
+# present via grep -a against two real -ci filers' raw fixture bytes:
+#   - 2330 (TSMC, 2024Q3 C): carries the 3 long-term concepts only
+#     (cash-rich filer, genuinely zero short-term borrowings that quarter).
+#   - 1301 (Formosa Plastics, 2024Q3 C): carries all 7 — the debt-heavy
+#     filer that proves the short-term components are real concept names,
+#     not guesses. See test_canonical_ci_total_debt_formosa_includes_short_term.
 #
-# LOOM-SIMPLIFY: excludes tifrs-bsci-ci:LongtermLiabilitiesCurrentPortion
-#   (the "current portion of long-term liabilities" line) — that concept is
-#   an unsplit grab-bag (could bundle non-debt long-term items, not proven
-#   debt-only from the fixture alone). It remains the ONLY exclusion from
-#   total_debt among clearly debt-shaped concepts observed so far.
-# ceiling: before extending TW iXBRL canonical mapping to a second -ci
-#   fixture/filer (next real fixture added to tests/data/fixtures/).
-# upgrade: split/verify LongtermLiabilitiesCurrentPortion's composition
-#   against that filer's notes and fold the debt-only portion into
-#   _DEBT_CONCEPTS if confirmed; also confirm/correct the short-term concept
-#   names above against that filer's actual facts.
+# The set = every clearly interest-bearing ST + LT debt line observed across
+# both filers. The one deliberate, permanent exclusion is the unsplit
+# grab-bag tifrs-bsci-ci:LongtermLiabilitiesCurrentPortion — it can bundle
+# non-debt long-term items and is not proven debt-only by either fixture,
+# so it stays out of total_debt rather than risk overstating it.
 # ref: docs/loom/plans/2026-07-19-tw-ixbrl-ingestion.md Task 6 round-2 review.
 _DEBT_CONCEPTS: tuple[str, ...] = (
     "ifrs-full:LongtermBorrowings",
     "ifrs-full:NoncurrentPortionOfNoncurrentBondsIssued",
     "ifrs-full:NoncurrentFinanceLeaseLiabilities",
     "ifrs-full:ShorttermBorrowings",
-    "ifrs-full:CurrentPortionOfNoncurrentBondsIssued",
-    "ifrs-full:CurrentFinanceLeaseLiabilities",
+    "ifrs-full:CurrentPortionOfLongtermBorrowings",
+    "ifrs-full:CurrentBondsIssuedAndCurrentPortionOfNoncurrentBondsIssued",
+    "ifrs-full:CurrentCommercialPapersIssuedAndCurrentPortionOfNoncurrentCommercialPapersIssued",
 )
 
 
