@@ -162,6 +162,23 @@ def test_guard_step11_pr_open_ask_intact():
         "Step 11's PR-open ask must remain intact"
 
 
+def test_step11_invokes_pr_body_privacy_gate():
+    """Step 11 must EXPLICITLY invoke the PR-body privacy gate before
+    `gh pr create`, mirroring Step 7's commit gate — not leave the
+    PR-body coverage merely transitive. (Whole-branch review 🟡: the
+    PR body is an outward-facing carrier and gets the same mechanized
+    gate as the commit, per the arc's mechanize-don't-rely-on-prose
+    premise.)"""
+    step11 = _step11_slice(_text())
+    lowered = step11.lower()
+    assert "privacy gate" in lowered, \
+        "Step 11 must invoke the PR-body privacy gate"
+    assert "compose-pr.md" in step11 and "Step 6" in step11, \
+        "Step 11 must point at compose-pr.md's Step 6 gate explicitly"
+    assert "BLOCK" in step11, \
+        "Step 11 must define the gate BLOCK path (do not create the PR)"
+
+
 def test_guard_step12_worktree_ask_intact():
     """Guard against over-deletion: Step 12's worktree-removal ask must
     survive untouched — it is outward-facing and stays."""

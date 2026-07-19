@@ -237,7 +237,15 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
       logged by the gate on the next push. Never self-mint a waiver.
 10. git push (branch-qualified form per Step 8)
 11. ASK user: "Open a PR? (y/N)" — only if gh CLI configured
-    - If yes: gh pr create with title/body from git-memory + branch name
+    - If yes: compose the PR body per `dev-workflow/skills/git-memory/protocols/compose-pr.md`,
+      then run its Step 6 privacy gate over that composed body BEFORE `gh pr create` — the
+      same two-layer gate (privacy-scan.py + the privacy-judge-spec.md judge, fail-closed)
+      that Step 7 runs on the commit carrier. Gate PASS → proceed to create; gate BLOCK
+      (any layer-1 finding, layer-2 BLOCK, or a fail-closed condition) → surface findings
+      and do NOT create the PR until the user resolves it. This is explicit, not transitive:
+      the PR body is an outward-facing carrier and gets the identical mechanized gate as the
+      commit, per the arc's mechanize-don't-rely-on-prose premise.
+    - Then: gh pr create with title/body from git-memory + branch name
     - PR-carrier check (memory-worthy branch only): before declaring the PR ready,
       grep the PR body you just composed for a `## Memory` section. If Phase 3
       returned a non-empty trailer set and body has no `## Memory` section, flag
