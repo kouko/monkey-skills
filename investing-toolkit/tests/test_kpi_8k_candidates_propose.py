@@ -71,3 +71,45 @@ def test_nflx_membership_raw_candidate_emitted():
     assert candidate["unit"] is None
     assert candidate["period"] is None
     assert candidate["needs_semantic"] == ["kpi_id", "unit", "period"]
+
+
+def test_membership_candidate_carries_unit_hint():
+    module = _load_module()
+
+    candidates = module.propose(str(_FIXTURE), _ACCESSION)
+
+    membership = [c for c in candidates if c["value"] == "301.63"]
+    assert len(membership) == 1
+    candidate = membership[0]
+
+    # ADVISORY unit_hint: the table-level caption copied VERBATIM (parallel to
+    # period_hint). It is a source SIGNAL for the LLM's `unit` proposal, NOT a
+    # mechanically-stamped unit — the caption does not apply per-row (Revenue =
+    # $millions, this membership row = millions-of-count).
+    assert candidate["unit_hint"] == "(in millions except per share data)"
+
+    # unit_hint does NOT change the trust model: `unit` stays the LLM-filled
+    # semantic slot (null here), and unit_hint is NOT one of needs_semantic.
+    assert candidate["unit"] is None
+    assert candidate["needs_semantic"] == ["kpi_id", "unit", "period"]
+    assert "unit_hint" not in candidate["needs_semantic"]
+
+
+def test_unit_caption_matches_common_sec_prefixes_but_not_footnotes():
+    """The caption matcher covers the common SEC prefixed shapes, not just the
+    bare `(in millions)` — while still rejecting footnote markers and prose."""
+    module = _load_module()
+    find = module._find_unit_caption
+
+    def cap(text):  # one-cell table
+        return find([{"row": 0, "col": 0, "text": text}])
+
+    # Common SEC caption prefixes — all SHOULD surface as the verbatim hint.
+    assert cap("(in millions except per share data)") == "(in millions except per share data)"
+    assert cap("(Dollars in millions)") == "(Dollars in millions)"
+    assert cap("(Amounts in thousands)") == "(Amounts in thousands)"
+    assert cap("(U.S. dollars in millions)") == "(U.S. dollars in millions)"
+    assert cap("$ in millions") == "$ in millions"
+    # Must NOT match: a footnote marker, or "in millions" mid-prose with no anchor.
+    assert cap("(1) revenues later restated") is None
+    assert cap("results are presented in millions of dollars") is None

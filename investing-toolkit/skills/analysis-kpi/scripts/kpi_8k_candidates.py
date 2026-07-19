@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -55,6 +56,23 @@ _EXHIBIT_TABLES = (
 # Explicit list so a downstream reader knows exactly which slots the LLM layer
 # must fill before the human confirm-all gate will let the point commit.
 _SEMANTIC_FIELDS = ["kpi_id", "unit", "period"]
+
+# A table-level unit CAPTION: a parenthesized `(in <magnitude> ...)` or a
+# `$ in <magnitude>`-style annotation (e.g. `(in millions except per share
+# data)`). Used ONLY to surface the caption as the ADVISORY `unit_hint` — it is
+# NOT stamped as the unit (the caption does not apply per-row: on the same table
+# Revenue = $millions, EPS = $/share, Memberships = millions-of-count), so the
+# actual `unit` stays an LLM-proposed + human-ratified semantic slot.
+# An optional lead-in of words/dots before `in` covers the common SEC caption
+# prefixes — `(Dollars in millions)`, `(Amounts in thousands)`, `(U.S. dollars
+# in millions)` — as well as the bare `(in millions ...)`. The lead-in must
+# START with a letter or dot, so a footnote marker `(1) ... in millions` still
+# does NOT match (after `(` comes a digit, not a letter/`in`).
+_UNIT_CAPTION_RE = re.compile(
+    r"\(\s*(?:\$\s*)?(?:[A-Za-z.][\w.\s]*\s)?in\s+(?:thousands|millions|billions)"
+    r"|\$\s*in\s+(?:thousands|millions|billions)",          # $ in millions
+    re.IGNORECASE,
+)
 
 
 def run_exhibit_tables(html_path: str) -> list[dict]:
@@ -105,16 +123,35 @@ def _find_header_row(cells_by_row: dict[int, list[dict]],
     return None
 
 
+def _find_unit_caption(cells: list[dict]) -> str | None:
+    """The table's own unit CAPTION, copied VERBATIM — the first cell (in
+    row/col order) whose text matches `_UNIT_CAPTION_RE`, else None. This is the
+    ADVISORY `unit_hint`: a source signal for the LLM's `unit` proposal, NOT a
+    mechanically-determined unit (the caption does not apply uniformly per-row).
+    Text is copied unchanged (no normalization) so the LLM sees the filed bytes.
+    """
+    for cell in sorted(cells, key=lambda c: (c["row"], c["col"])):
+        if _UNIT_CAPTION_RE.search(cell["text"]):
+            return cell["text"]
+    return None
+
+
 def _make_candidate(label_path: list[str], value: str, period_hint: str,
-                    accession: str, table_index: int, row: int, col: int) -> dict:
+                    unit_hint: str | None, accession: str, table_index: int,
+                    row: int, col: int) -> dict:
     """Assemble one RAW candidate: mechanical descriptors + provenance filled,
     every semantic slot null. `needs_semantic` names the null slots explicitly so
     Task 4's commit gate can refuse a point whose LLM slot was never filled.
+
+    `unit_hint` is ADVISORY (parallel to `period_hint`): the LLM reads it when
+    proposing `unit`, but it is NOT a semantic slot — `unit` stays LLM-filled +
+    human-ratified, so unit_hint is deliberately absent from `needs_semantic`.
     """
     return {
         "label": list(label_path),
         "value": value,
         "period_hint": period_hint,
+        "unit_hint": unit_hint,
         "source_accession": accession,
         "source_table_id": table_index,
         "source_cell_ref": {"row": row, "col": col},
@@ -146,6 +183,10 @@ def build_candidates(tables: list[dict], accession: str) -> list[dict]:
         table_index = table["table_index"]
         row_label_paths = table["row_label_paths"]
 
+        # Table-level advisory caption, computed ONCE per table and copied onto
+        # every candidate from that table (it is a table property, not per-cell).
+        unit_hint = _find_unit_caption(table["cells"])
+
         cells_by_row: dict[int, list[dict]] = {}
         for cell in table["cells"]:
             cells_by_row.setdefault(cell["row"], []).append(cell)
@@ -166,7 +207,7 @@ def build_candidates(tables: list[dict], accession: str) -> list[dict]:
                     continue
                 candidates.append(_make_candidate(
                     label_path, cell["text"], header_by_col.get(col, ""),
-                    accession, table_index, row, col,
+                    unit_hint, accession, table_index, row, col,
                 ))
     return candidates
 

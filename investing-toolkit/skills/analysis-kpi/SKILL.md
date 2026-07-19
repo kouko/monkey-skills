@@ -475,8 +475,10 @@ Layer 3; Layer 2 fills `kpi_id`/`unit`/`period` only).
 data-markets `exhibit_tables.py` on the exhibit HTML, then emits RAW
 candidate points — each carrying the verbatim row-label path, the exact
 printed `value` string (never re-parsed), a verbatim `period_hint`
-(column header), the source coordinates (`source_accession`,
-`source_table_id`, `source_cell_ref`), and `confirmed: false`. The
+(column header) and a verbatim `unit_hint` (the table's own `(in …)`
+caption, or `null`) — both ADVISORY, the source coordinates
+(`source_accession`, `source_table_id`, `source_cell_ref`), and
+`confirmed: false`. The
 semantic slots `kpi_id`/`unit`/`period` are emitted as explicit `null`
 with a `needs_semantic: ["kpi_id","unit","period"]` list. **This layer
 never invents a slug, a unit, or a normalized period** — the value and
@@ -488,8 +490,9 @@ uv run scripts/kpi_8k_candidates.py propose --html ex991.htm \
 ```
 
 **Layer 2 — LLM PROPOSAL (the agent running this skill; prose, not
-pytest):** for each candidate, read its verbatim `label` path and
-`period_hint` and FILL the three `needs_semantic` slots as PROPOSALS —
+pytest):** for each candidate, read its verbatim `label` path,
+`period_hint`, and `unit_hint` and FILL the three `needs_semantic` slots
+as PROPOSALS —
 `kpi_id` (a stable slug, e.g. `global_streaming_paid_memberships`),
 `unit` (e.g. `millions`), and a normalized `period` (e.g. `2024-Q4`).
 Fill ONLY from what the verbatim label/header text says; do NOT alter
