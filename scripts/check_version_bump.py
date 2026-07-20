@@ -7,8 +7,12 @@ marketplace never republishes it: `plugin update` becomes a silent no-op and
 users keep running the stale skill. This repo missed that obligation three times
 (PR#539→#540, PR#545→#546, PR#552) — this gate makes the miss mechanical.
 
-Skill content = `<plugin>/{skills,hooks,agents,references}/**`. A plugin's own
-CHANGELOG, tests, or docs are NOT skill content and require no bump.
+Skill content = `<plugin>/{skills,hooks,agents,references,scripts}/**`. A plugin's
+own CHANGELOG, tests, or docs are NOT skill content and require no bump. Most
+loom plugins colocate tests directly under scripts/ (e.g. `scripts/test_foo.py`
+next to `scripts/foo.py`) — a `test_*.py` file under scripts/ is exempted from
+counting as skill content so that a test-only edit there does not falsely
+demand a bump; a production file under scripts/ still counts.
 
 The check compares the `version` FIELD across the two revisions (not merely
 whether plugin.json was touched — a description-only edit is not a bump).
@@ -39,7 +43,7 @@ from pathlib import Path
 from sync_codex_manifests import CODEX_ELIGIBLE
 
 # Subdirectories whose contents ship to the marketplace as plugin content.
-SKILL_CONTENT_DIRS = ("skills", "hooks", "agents", "references")
+SKILL_CONTENT_DIRS = ("skills", "hooks", "agents", "references", "scripts")
 
 MANIFEST = ".claude-plugin/plugin.json"
 
@@ -69,8 +73,17 @@ def plugins_with_skill_content(paths: list[str]) -> set[str]:
         if len(parts) < 3:
             continue
         plugin, subdir = parts[0], parts[1]
-        if plugin in CODEX_ELIGIBLE and subdir in SKILL_CONTENT_DIRS:
-            hits.add(plugin)
+        if plugin not in CODEX_ELIGIBLE or subdir not in SKILL_CONTENT_DIRS:
+            continue
+        # scripts/ colocates gate code with its own test_*.py files (loom
+        # convention: loom-pipeline 25, loom-spec 12, loom-discovery 7,
+        # loom-interface-design 11 inline test files). Tests are not skill
+        # content (see module docstring) — only a non-test file under
+        # scripts/ demands a bump.
+        basename = parts[-1]
+        if subdir == "scripts" and basename.startswith("test_") and basename.endswith(".py"):
+            continue
+        hits.add(plugin)
     return hits
 
 
