@@ -435,6 +435,34 @@ def _resolve_paths_and_validate_id(
     return queue_path, state_path
 
 
+def _require_running(
+    existing: dict, change_id: str, verb: str, refusal_clause: str
+) -> int | None:
+    """Shared RUNNING-precursor guard for the three state-mutating
+    subcommands that only accept a currently-``RUNNING`` entry —
+    ``_cmd_mark``, ``_cmd_mark_running``, ``_cmd_force_fail`` (Rule of
+    Three: the reject/print/return-1/zero-mutation block appeared
+    identically in all three).
+
+    Takes the already-loaded ``existing`` state record — the caller owns
+    ``load_state``/the ``_state_lock`` span; this does NOT re-load state,
+    so it stays safe to call from inside a lock already held. Returns
+    ``1`` after printing a caller-facing refusal (verb-prefixed, with
+    ``refusal_clause`` as the trailing per-command wording) to stderr when
+    ``existing``'s recorded status is not ``RUNNING``; else returns
+    ``None`` so the caller proceeds with its own mutation.
+    """
+    status = existing.get("status", QUEUED)
+    if status != "RUNNING":
+        print(
+            f'{verb}: entry "{change_id}" is not RUNNING '
+            f"(status={status!r}) — refusing {refusal_clause}.",
+            file=sys.stderr,
+        )
+        return 1
+    return None
+
+
 def _cmd_mark(args: argparse.Namespace) -> int:
     """Implements the ``mark`` subcommand — see ``main``'s subparser setup.
 
@@ -443,6 +471,14 @@ def _cmd_mark(args: argparse.Namespace) -> int:
     unknown change id — printed to stderr, never raised as an exception,
     since this is the CLI boundary). Status is stored uppercase (DONE /
     FAILED) to match ``effective_entries``'s vocabulary.
+
+    Requires the entry's CURRENT recorded status to be ``RUNNING`` before
+    accepting a terminal mark — mirroring ``_cmd_mark_running``'s own
+    precursor-state guard (a terminal status is only reachable from
+    RUNNING). A QUEUED entry (no state record — never dispatched) or an
+    already-terminal one is a caller-facing error — printed to stderr,
+    exit 1, no state mutation — instead of silently jumping straight to
+    DONE/FAILED and dropping the work while the batch reports success.
     """
     resolved = _resolve_paths_and_validate_id(args, "mark")
     if isinstance(resolved, int):
@@ -451,7 +487,17 @@ def _cmd_mark(args: argparse.Namespace) -> int:
 
     with _state_lock(state_path):
         state = load_state(state_path)
-        record = dict(state.get(args.change_id, {}))
+        existing = state.get(args.change_id, {})
+        rejection = _require_running(
+            existing,
+            args.change_id,
+            "mark",
+            "to mark a terminal status without a prior dispatch",
+        )
+        if rejection is not None:
+            return rejection
+
+        record = dict(existing)
         record["status"] = args.status.upper()
         if args.run_id:
             record["runId"] = args.run_id
@@ -486,14 +532,14 @@ def _cmd_mark_running(args: argparse.Namespace) -> int:
     with _state_lock(state_path):
         state = load_state(state_path)
         existing = state.get(args.change_id, {})
-        if existing.get("status") != "RUNNING":
-            print(
-                f'mark-running: entry "{args.change_id}" is not RUNNING '
-                f'(status={existing.get("status", "QUEUED")!r}) — refusing '
-                "to record runId/sessionDir without mutation.",
-                file=sys.stderr,
-            )
-            return 1
+        rejection = _require_running(
+            existing,
+            args.change_id,
+            "mark-running",
+            "to record runId/sessionDir without mutation",
+        )
+        if rejection is not None:
+            return rejection
 
         record = dict(existing)
         record["runId"] = args.run_id
@@ -788,14 +834,14 @@ def _cmd_force_fail(args: argparse.Namespace) -> int:
     with _state_lock(state_path):
         state = load_state(state_path)
         existing = state.get(args.change_id, {})
-        if existing.get("status") != "RUNNING":
-            print(
-                f'force-fail: entry "{args.change_id}" is not RUNNING '
-                f'(status={existing.get("status", QUEUED)!r}) — refusing '
-                "to transition without mutation.",
-                file=sys.stderr,
-            )
-            return 1
+        rejection = _require_running(
+            existing,
+            args.change_id,
+            "force-fail",
+            "to transition without mutation",
+        )
+        if rejection is not None:
+            return rejection
 
         record = dict(existing)
         record["status"] = "FAILED"
