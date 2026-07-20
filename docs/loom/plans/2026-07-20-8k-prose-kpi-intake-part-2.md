@@ -123,3 +123,13 @@ Extends the shipped Part-1 files (no new modules):
   monetary, should be skipped like Part-1's $-prefix rule, but that skip is not
   yet a scenario); repeated magnitude words. These are exercised opportunistically
   if cheap during T1–T4, otherwise flagged for a Part-2.5 / Part-3 hardening pass.
+- **nbsp-as-word-separator after a comma-grouped number (declared deferral, T5
+  review round):** T5's grouping detector uses nbsp/thin-space adjacency as the
+  structural signal for a thousands separator, guarded on both sides by a digit
+  boundary. That guard cannot cover an nbsp used as a plain non-breaking WORD
+  separator when the preceding char is a COMMA rather than a digit — e.g.
+  "1,428&nbsp;500-mile trucks", where "1,428" and "500" are independently
+  meaningful. Inherent to using nbsp-adjacency as a signal at all; deferred to
+  the Part-2.5 / Part-3 hardening pass rather than blocked on here. Recorded via
+  this designated channel (not a code comment) per the T5 spec-reviewer's finding
+  that a code-comment-only deferral does not count as declared.

@@ -23,6 +23,25 @@ parsing — that is the number-extraction layer (Task 2). It emits the flattened
 non-table text verbatim (whitespace-normalized), preserving the filed precision
 of any prose figures for the downstream anti-fabrication confirm gate.
 
+THE CANONICAL SURFACE IS A *NORMALIZED* SURFACE — not the raw filed bytes. This
+is the contract every downstream quote and offset depends on, so it is stated
+explicitly: the anchor invariant ``canonical_text[start:end] == matched_token``
+is defined against THIS surface, never against the original document. One
+normalization policy is applied consistently to parsing, the quote, the offset,
+and the substring gate:
+
+  * HTML entity decoding (``convert_charrefs``, on by default);
+  * alternate digit families folded to ASCII — full-width U+FF10-FF19 and
+    Arabic-Indic U+0660-0669 — plus full-width comma / full stop;
+  * smart quotes (U+2018/2019/201C/201D) folded to ASCII ``'`` and ``"``;
+  * nbsp / thin-space THOUSANDS separators rewritten to commas;
+  * whitespace runs collapsed, lines trimmed, blank lines dropped.
+
+Every one of those folds is LENGTH-PRESERVING or applied before offsets are
+taken, which is what keeps a downstream verbatim quote both faithful and
+correctly indexed. A consumer that re-reads the raw filing and compares against
+a stored quote must normalize it the same way first.
+
 Usage:
   # Flatten mode: raw exhibit HTML -> canonical prose text
   uv run exhibit_prose.py --html path/to/ex991.htm --out prose.txt
@@ -50,11 +69,88 @@ _BLOCK_TAGS = frozenset(
 )
 
 
+# Character folds applied to the raw text BEFORE grouping / tokenization,
+# completing the spec's ONE normalization policy: full-width and Arabic-Indic
+# digits and smart quotes here, separator handling below, HTML entity decoding
+# via HTMLParser's ``convert_charrefs``.
+#
+# EVERY fold here is LENGTH-PRESERVING (one char -> one char). That property is
+# load-bearing, not incidental: it is precisely why folding cannot shift a
+# single char offset, so the downstream ``text[start:end] == token`` anchor
+# stays valid over the folded surface — the same property that made the
+# nbsp->comma rewrite safe. A fold that changed length (e.g. a ligature
+# expansion) MUST NOT be added here; it would silently corrupt every offset.
+#
+# Full-width comma / full stop fold alongside the full-width digits so a
+# full-width-formatted number normalizes COHERENTLY ("１２３，４５６" ->
+# "123,456") instead of becoming an untokenizable half-converted hybrid.
+_CHAR_FOLD = str.maketrans(
+    {
+        **{chr(0xFF10 + i): str(i) for i in range(10)},  # full-width digits
+        "，": ",",  # full-width comma
+        "．": ".",  # full-width full stop
+        **{chr(0x0660 + i): str(i) for i in range(10)},  # Arabic-Indic digits
+        "‘": "'", "’": "'",  # curly single quotes
+        "“": '"', "”": '"',  # curly double quotes
+    }
+)
+
+
+# A non-breaking (U+00A0) or thin (U+2009) space used as a THOUSANDS separator:
+# a leading 1-3 digit group followed by one-or-more (separator + exactly-3-digit)
+# groups, e.g. "3<nbsp>560<nbsp>000". Filers emit these unbreakable spaces
+# specifically to keep a grouped number together, so — unlike an ASCII word
+# space — they reliably mark a separator, letting us convert only genuine
+# groupings and never a "in 2024 500 firms" word gap.
+#
+# BOTH ends are guarded, and the guards are mirror images of each other:
+#   ``(?!\d)``  rejects a malformed TRAILING group (>3 digits);
+#   ``(?<!\d)`` stops a match from STARTING INSIDE a longer (>=4-digit) run that
+#               sits directly against the separator.
+# Without the leading guard, "as of 2026<nbsp>560 holders" matched from the "026"
+# and fused two independent numbers into the fabricated "2026,560" — and because
+# the anchor ``text[start:end] == token`` holds BY CONSTRUCTION, such a token
+# wears a VALID-looking source anchor while carrying a wrong value. A
+# legitimately grouped number's lead group is always 1-3 digits, so the guard
+# costs no true positives. Either guard failing degrades the run to plain digits
+# (locating as separate numbers), which is the safe direction.
+#
+# KNOWN DEFERRED EDGE: an nbsp used as a plain non-breaking WORD separator whose
+# preceding char is a COMMA, not a digit (e.g. "1,428<nbsp>500-mile trucks"), is
+# not covered — the ``(?<!\d)`` lookbehind sees the comma. Declared deferral,
+# tracked in the plan; not a silent gap.
+_THOUSANDS_SEP = "\u00a0\u2009"
+_SPACE_GROUPED_NUMBER_RE = re.compile(
+    r"(?<!\d)\d{1,3}(?:[" + _THOUSANDS_SEP + r"]\d{3})+(?!\d)"
+)
+
+
+def _commaify_space_grouped(match: re.Match) -> str:
+    """Rewrite the nbsp/thin-space separators inside one grouped-number run to
+    commas, yielding the same canonical "3,560,000" form as a comma filing."""
+    return re.sub("[" + _THOUSANDS_SEP + "]", ",", match.group())
+
+
 def _normalize_whitespace(text: str) -> str:
-    """Strip nbsp (``\\xa0``, from ``&#160;``) and collapse each run of
-    whitespace to a single space, then trim each line and drop blank lines.
-    ``convert_charrefs`` (default True on HTMLParser) has already decoded char
-    refs into unicode before this runs."""
+    """Apply the canonical normalization policy: fold alternate digit families
+    and smart quotes (``_CHAR_FOLD``), normalize nbsp/thin-space THOUSANDS
+    separators to commas, strip nbsp (``\\xa0``, from ``&#160;``), collapse each
+    run of whitespace to a single space, then trim each line and drop blank
+    lines. ``convert_charrefs`` (default True on HTMLParser) has already decoded
+    char refs into unicode before this runs.
+
+    ORDER IS LOAD-BEARING, in two places:
+
+    1. ``_CHAR_FOLD`` runs FIRST so a full-width-digit number can participate in
+       grouping detection — "３<nbsp>５６０" must fold to ASCII digits before
+       the grouping regex looks for digit runs, or it would never match.
+    2. The grouping conversion runs BEFORE the nbsp->space collapse erases the
+       separator signal — so "3<nbsp>560<nbsp>000" becomes "3,560,000" on the
+       canonical surface and the downstream locator reads it as ONE number whose
+       ``text[start:end] == token`` anchor holds (rather than splitting
+       3/560/000)."""
+    text = text.translate(_CHAR_FOLD)
+    text = _SPACE_GROUPED_NUMBER_RE.sub(_commaify_space_grouped, text)
     text = text.replace("\xa0", " ")
     lines = [re.sub(r"[^\S\n]+", " ", line).strip() for line in text.split("\n")]
     return "\n".join(line for line in lines if line)

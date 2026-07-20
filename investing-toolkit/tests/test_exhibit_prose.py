@@ -172,6 +172,153 @@ def test_magnitude_word_boundary_and_case_guards():
     assert text_b[cb["start"]:cb["end"]] == "3.56 BILLION"
 
 
+def test_nbsp_separated_number_located():
+    # No living-spec REQ-id: this plan traces tasks by Task item, not REQ-ids.
+    # Real SEC EX-99 HTML uses a non-breaking space (U+00A0) as a THOUSANDS
+    # separator ("3<nbsp>560<nbsp>000") specifically to keep the grouped number
+    # unbreakable. Before this, whitespace normalization turned the nbsp into a
+    # plain space, so the number split into THREE tokens (3 / 560 / 000) and its
+    # value was wrong. The surface producer must normalize the nbsp grouping so
+    # the number locates as ONE candidate with a valid anchor span.
+    import exhibit_prose
+
+    html = "<p>reached 3\u00a0560\u00a0000 subscribers</p>"
+    prose = exhibit_prose.prose_surface(html)
+    candidates = exhibit_prose.locate_numbers(prose)
+    tokens = [c["token"] for c in candidates]
+    # ONE number, comma-normalized to the canonical form — NOT split 3/560/000.
+    assert tokens == ["3,560,000"], tokens
+    cand = candidates[0]
+    # Anchor invariant asserted explicitly against the CANONICAL surface.
+    assert prose[cand["start"]:cand["end"]] == cand["token"]
+
+
+def test_thin_space_grouping_and_comma_and_magnitude_coexist():
+    # No living-spec REQ-id: this plan traces tasks by Task item, not REQ-ids.
+    # A thin space (U+2009) is the other in-the-wild thousands separator; it
+    # must normalize the same way as nbsp. Regression: a plain comma number and
+    # a magnitude phrase (Task 1) still tokenize exactly as before.
+    import exhibit_prose
+
+    # Thin-space grouping normalizes to ONE comma-grouped token, anchor holds.
+    prose = exhibit_prose.prose_surface("<p>3\u2009560\u2009000 subs</p>")
+    thin = exhibit_prose.locate_numbers(prose)
+    assert [c["token"] for c in thin] == ["3,560,000"], thin
+    assert prose[thin[0]["start"]:thin[0]["end"]] == thin[0]["token"]
+
+    # Regression: a plain comma number is still ONE token, unchanged.
+    tks2 = [c["token"] for c in exhibit_prose.locate_numbers("had 1,576,000 employees")]
+    assert tks2.count("1,576,000") == 1, tks2
+
+    # Regression: magnitude-word absorption (Task 1) is untouched.
+    tks3 = [c["token"] for c in exhibit_prose.locate_numbers("DAP was 3.56 billion")]
+    assert "3.56 billion" in tks3, tks3
+
+
+def test_long_digit_run_adjacent_to_nbsp_group_does_not_fuse():
+    # No living-spec REQ-id: this plan traces tasks by Task item, not REQ-ids.
+    # MIRROR IMAGE of the trailing-group guard: without a LEADING guard the
+    # grouping regex can begin matching INSIDE a >=4-digit run that sits
+    # directly against the nbsp, fusing two independent numbers into one
+    # fabricated value ("2026" + "560" -> "2026,560"; "2026" + "250,000" ->
+    # "2026,250,000", ~3 orders of magnitude wrong). The exact-substring anchor
+    # text[start:end]==token still HOLDS for such a token — it is guaranteed by
+    # construction — so the anchor gives ZERO protection here. That is what
+    # makes this class fabrication wearing a valid-looking source anchor, the
+    # precise failure this whole feature exists to prevent. A legitimately
+    # grouped number's LEAD group is always 1-3 digits, so guarding the lead
+    # has no false-negative cost.
+    import exhibit_prose
+
+    # Probe 1: a 4-digit year immediately against an nbsp + 3-digit run.
+    prose = exhibit_prose.prose_surface("<p>as of 2026 560 registered holders</p>")
+    tokens = [c["token"] for c in exhibit_prose.locate_numbers(prose)]
+    assert "2026,560" not in tokens, f"fused fabricated value: {tokens!r}"
+    assert tokens == ["2026", "560"], tokens
+
+    # Probe 2: the same lead against an already-comma-grouped number — the
+    # fusion is ~1000x wrong ("2026,250,000" instead of 2026 and 250,000).
+    prose2 = exhibit_prose.prose_surface(
+        "<p>Fiscal 2026 250,000 units were sold in Q4.</p>"
+    )
+    tokens2 = [c["token"] for c in exhibit_prose.locate_numbers(prose2)]
+    assert "2026,250,000" not in tokens2, f"fused fabricated value: {tokens2!r}"
+    assert "2026" in tokens2 and "250,000" in tokens2, tokens2
+    # Anchors still hold for the (now correct) tokens.
+    for cand in exhibit_prose.locate_numbers(prose2):
+        assert prose2[cand["start"]:cand["end"]] == cand["token"]
+
+    # Regression: a legitimate lead group (1-3 digits) still groups.
+    prose3 = exhibit_prose.prose_surface("<p>reached 3 560 000 subs</p>")
+    assert [c["token"] for c in exhibit_prose.locate_numbers(prose3)] == ["3,560,000"]
+
+
+def test_full_width_digits_normalize_and_locate():
+    # No living-spec REQ-id: this plan traces tasks by Task item, not REQ-ids.
+    # Spec Requirement "Consistent text normalization" names full-width digits
+    # as part of the ONE normalization policy. Full-width U+FF10-FF19 fold to
+    # ASCII 0-9, and the full-width comma / full stop fold too, so a
+    # full-width-formatted grouped number normalizes COHERENTLY rather than
+    # half-converted. Every fold is LENGTH-PRESERVING (one char -> one char),
+    # so char offsets and the anchor invariant survive untouched.
+    import exhibit_prose
+
+    prose = exhibit_prose.prose_surface(
+        "<p>employees １２３，４５６ total</p>"
+    )
+    candidates = exhibit_prose.locate_numbers(prose)
+    tokens = [c["token"] for c in candidates]
+    assert tokens == ["123,456"], tokens
+    assert prose[candidates[0]["start"]:candidates[0]["end"]] == candidates[0]["token"]
+
+    # Full-width full stop folds so a decimal reads as one number.
+    prose2 = exhibit_prose.prose_surface("<p>EPS of ３．５６ diluted</p>")
+    assert [c["token"] for c in exhibit_prose.locate_numbers(prose2)] == ["3.56"]
+
+    # ORDER: folding runs BEFORE grouping detection, so full-width digits
+    # separated by an nbsp participate in grouping like ASCII ones.
+    prose3 = exhibit_prose.prose_surface(
+        "<p>reached ３ ５６０ ０００ subs</p>"
+    )
+    assert [c["token"] for c in exhibit_prose.locate_numbers(prose3)] == ["3,560,000"]
+
+
+def test_arabic_indic_digits_normalize_and_locate():
+    # No living-spec REQ-id: this plan traces tasks by Task item, not REQ-ids.
+    # The other digit family the spec's normalization policy names. U+0660-0669
+    # fold to ASCII 0-9, length-preserving, so the anchor invariant holds.
+    import exhibit_prose
+
+    prose = exhibit_prose.prose_surface("<p>total ١٢٣٤ units</p>")
+    candidates = exhibit_prose.locate_numbers(prose)
+    assert [c["token"] for c in candidates] == ["1234"], candidates
+    assert prose[candidates[0]["start"]:candidates[0]["end"]] == "1234"
+
+
+def test_smart_quotes_normalize_without_shifting_offsets():
+    # No living-spec REQ-id: this plan traces tasks by Task item, not REQ-ids.
+    # Smart quotes are the last member of the spec's ONE normalization policy.
+    # Curly single/double quotes (U+2018/2019/201C/201D) fold to ASCII ' and ",
+    # so a downstream verbatim quote compares against one stable surface form.
+    # The fold is one char -> one char, so a number appearing AFTER the quote
+    # keeps its offset and its anchor.
+    import exhibit_prose
+
+    prose = exhibit_prose.prose_surface(
+        "<p>the company’s “best” year: 1,576,000 employees</p>"
+    )
+    assert "’" not in prose and "“" not in prose and "”" not in prose
+    assert "company's" in prose
+    assert '"best"' in prose
+
+    candidates = exhibit_prose.locate_numbers(prose)
+    match = [c for c in candidates if c["token"] == "1,576,000"]
+    assert match, f"expected 1,576,000 after the quotes, got {candidates!r}"
+    cand = match[0]
+    # Anchor holds across the folded quotes — no offset drift.
+    assert prose[cand["start"]:cand["end"]] == "1,576,000"
+
+
 def test_locate_cli_emits_located_numbers_json(tmp_path):
     # No living-spec REQ-id: this plan traces tasks by Task item, not REQ-ids.
     # The --locate CLI mode is the SUBPROCESS surface analysis-kpi crosses to
