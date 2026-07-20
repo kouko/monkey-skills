@@ -17,6 +17,8 @@ import importlib.util
 import sys
 from pathlib import Path
 
+import pytest
+
 _TESTS_DIR = Path(__file__).resolve().parent
 _SCRIPT = (
     _TESTS_DIR.parent
@@ -158,8 +160,15 @@ def test_propose_emits_raw_candidate_needs_semantic():
     # char_offset_span anchors back to the source: text[start:end] == token.
     start, end = candidate["char_offset_span"]
     assert canonical_text[start:end] == candidate["matched_token"]
-    # In Part 1 the verbatim_quote IS the matched token.
-    assert candidate["verbatim_quote"] == candidate["matched_token"]
+    # CHANGED in Part 2 (T6). Part 1 pinned `verbatim_quote == matched_token` — a
+    # walking-skeleton PLACEHOLDER, not an invariant: the spec requires the token
+    # span PLUS a bounded context window. The permanent contract is asserted here
+    # instead — the quote CONTAINS the token, is a literal substring of the
+    # canonical text (contiguous, no elided middle), and fits the budget.
+    quote = candidate["verbatim_quote"]
+    assert candidate["matched_token"] in quote
+    assert quote in canonical_text
+    assert len(quote) <= module._MAX_VERBATIM_QUOTE_CHARS
     assert candidate["source_kind"] == "prose"
 
     # Semantic slots NULL, awaiting the LLM layer -> needs_semantic flagged.
@@ -769,3 +778,242 @@ def test_committed_prose_point_carries_anchor_and_attribution(tmp_path, monkeypa
     )
     assert unconfirmed["committed"] == 0
     assert kpi_store.query_latest("AAPL", "employees_part_time", "2024-12-31") is None
+
+
+def test_bounded_context_window(tmp_path, monkeypatch):
+    # Task 6 (Part 2): PII containment. SEC prose sits next to executive names and
+    # compensation figures, so the COMMITTED provenance must store the verbatim
+    # token span plus a BOUNDED context window — enough for a human to see the
+    # number in its clause — and NOT the whole surrounding paragraph. An
+    # over-broad quote handed down from an upstream layer is trimmed at the store
+    # boundary; the trimmed window stays a LITERAL substring of the canonical text
+    # (no elided middle), so the anti-fabrication substring gate still holds, and
+    # char_offset_span keeps pointing at the token's TRUE canonical position (it
+    # is never re-based onto the window).
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+
+    scripts_dir = str(_SCRIPT.parent)
+    if scripts_dir not in sys.path:
+        sys.path.insert(0, scripts_dir)
+    sys.modules.pop("kpi_store", None)
+    import kpi_store  # noqa: E402
+
+    module = _load_module()
+
+    # A KPI sentence embedded in a paragraph that ALSO names executives and their
+    # compensation — exactly the incidental personal data a durable operating-KPI
+    # store must not accumulate.
+    paragraph = (
+        "On October 31, 2024, the Board of Directors approved a special retention "
+        "award of $4,250,000 to Jane Q. Ramirez, our Executive Vice President and "
+        "Chief Operating Officer, in recognition of her service during the fiscal "
+        "year. Separately, the Company reported that it had 1,576,000 full-time "
+        "employees as of the end of the fiscal fourth quarter, an increase over "
+        "the prior year. The Board also noted that Marcus T. Delgado received a "
+        "cash bonus of $1,875,000 under the annual incentive plan."
+    )
+    token = "1,576,000"
+    start = paragraph.index(token)
+
+    candidate = {
+        "matched_token": token,
+        "verbatim_quote": paragraph,  # over-broad: the WHOLE paragraph
+        "value": 1576000,
+        "char_offset_span": [start, start + len(token)],
+        "source_kind": "prose",
+        "kpi_id": "employees_full_time",
+        "unit": "count",
+        "period": "2024-12-31",
+        "needs_semantic": False,
+        "source_accession": "0000320193-24-000999",
+        "source_document": "8-K/EX-99.1",
+        "filing_date": "2024-10-31",
+        "as_of": "2024-01-01",
+    }
+
+    summary = module.commit_to_store(
+        [candidate], company="AAPL",
+        confirmer="kouko", confirmed_at="2026-07-20T10:00:00Z", confirmed=True,
+    )
+    assert summary["committed"] == 1
+
+    point = kpi_store.query_latest("AAPL", "employees_full_time", "2024-12-31")
+    assert point is not None
+    stored = point["verbatim_quote"]
+
+    # BOUNDED: within the fixed char budget, and materially shorter than the
+    # paragraph it was cut from.
+    assert len(stored) <= 160, "the stored quote must fit the fixed char budget"
+    assert len(stored) < len(paragraph)
+
+    # The personal data that merely NEIGHBORED the KPI never reaches the store.
+    for personal in ("Jane Q. Ramirez", "$4,250,000",
+                     "Marcus T. Delgado", "$1,875,000"):
+        assert personal not in stored, f"{personal!r} must not be committed"
+
+    # Still verifiable: the window carries the number, and remains a LITERAL
+    # substring of the canonical text, so the anti-fabrication gate still passes.
+    assert token in stored
+    assert stored in paragraph, "the window must not be built by eliding a middle"
+    assert module.passes_substring_gate(
+        {"matched_token": token, "verbatim_quote": stored}, paragraph
+    )
+
+    # The offset anchor still points at the token's TRUE position in the canonical
+    # text — bounding the quote must not re-base the offsets onto the window.
+    assert point["source_cell_ref"] == f"prose:{start}-{start + len(token)}"
+    assert paragraph[start:start + len(token)] == token
+
+
+def test_propose_emits_windowed_context_quote():
+    # Task 6 (Part 2), the PRODUCING half. The spec requires the committed
+    # provenance to store the minimal verbatim token span PLUS a bounded
+    # surrounding context window. A bare-token quote satisfies "not the whole
+    # paragraph" trivially while failing the other half — it carries NO context,
+    # so a human confirmer cannot read the number against its subject and unit.
+    # So the producer itself must emit a WINDOW: the token plus surrounding text
+    # sliced CONTIGUOUSLY out of the canonical text, within the same one budget
+    # the commit-boundary clamp enforces.
+    module = _load_module()
+
+    canonical_text = (
+        "On October 31, 2024, the Board approved a special retention award of "
+        "$4,250,000 to Jane Q. Ramirez, our Executive Vice President and Chief "
+        "Operating Officer, in recognition of her service. Separately, the "
+        "Company reported that it had 1,576,000 full-time employees as of the "
+        "end of the fourth quarter, an increase over the prior year. The Board "
+        "also noted that Marcus T. Delgado received a cash bonus of $1,875,000 "
+        "under the annual incentive plan."
+    )
+    token = "1,576,000"
+    start = canonical_text.index(token)
+
+    matches = [c for c in module.propose(canonical_text)
+               if c["matched_token"] == token]
+    assert len(matches) == 1
+    candidate = matches[0]
+    quote = candidate["verbatim_quote"]
+
+    # A WINDOW, not the bare token: it carries real surrounding context.
+    assert quote != token, "the quote must be a context window, not the bare token"
+    assert token in quote
+    assert len(quote) > len(token)
+
+    # Bounded by the SAME budget as the commit-boundary clamp — one constant.
+    assert len(quote) <= module._MAX_VERBATIM_QUOTE_CHARS
+    assert len(quote) < len(canonical_text)
+
+    # CONTIGUOUS slice of the canonical text, so it stays a literal substring and
+    # the anti-fabrication gate keeps holding end-to-end.
+    assert quote in canonical_text, "never concatenate across an elision"
+    assert module.passes_substring_gate(candidate, canonical_text) is True
+
+    # Distant personal data stays out — that is what BOUNDING buys.
+    for personal in ("Jane Q. Ramirez", "$4,250,000",
+                     "Marcus T. Delgado", "$1,875,000"):
+        assert personal not in quote, f"{personal!r} must not be captured"
+
+    # The offset anchor still points at the TOKEN's true canonical position —
+    # never at the window's start.
+    assert candidate["char_offset_span"] == [start, start + len(token)]
+    assert canonical_text[start:start + len(token)] == token
+
+
+def test_build_candidates_without_canonical_text_keeps_bare_token_quote():
+    # The pure-seam contract is unchanged: `canonical_text` stays OPTIONAL, and
+    # without it there is no text to slice a window out of. The producer must
+    # degrade to the bare token rather than crash — the seam tests that exercise
+    # build_candidates in isolation call it exactly this way.
+    module = _load_module()
+
+    candidates = module.build_candidates([{"token": "931", "start": 4, "end": 7}])
+
+    assert len(candidates) == 1
+    assert candidates[0]["verbatim_quote"] == "931"
+    assert candidates[0]["matched_token"] == "931"
+
+
+def test_context_window_uses_its_full_budget_near_the_right_edge():
+    # Budget under-use. The window start is computed by centring the token, but a
+    # token sitting near the RIGHT edge of the text makes the symmetric window run
+    # past the end, and the overshoot is simply truncated — spending well under
+    # budget and discarding usable LEFT-side context for no reason. The window
+    # must re-slide LEFT to reclaim that space whenever the text allows, so a
+    # confirmer reading a trailing figure still gets a full clause of context.
+    module = _load_module()
+    budget = module._MAX_VERBATIM_QUOTE_CHARS
+
+    token = "1,576,000"
+    # Plenty of text to the LEFT, almost none to the RIGHT.
+    canonical_text = "context " * 40 + f"had {token} employees."
+    start = canonical_text.index(token)
+
+    quote = module._context_window(start, start + len(token), canonical_text)
+
+    assert len(quote) == budget, "the window must spend its full budget"
+    assert token in quote
+    assert quote in canonical_text
+
+
+def test_bounded_quote_refuses_an_over_long_quote_missing_its_token(
+    tmp_path, monkeypatch
+):
+    # Fail-loud on the DURABLE-store path. An over-budget quote that does not
+    # contain its own matched_token is malformed: trimming it would have to guess
+    # which end to cut, and guessing wrong silently drops the very number being
+    # committed. It raises instead — and because the raise happens before the
+    # store append, nothing is written.
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+
+    scripts_dir = str(_SCRIPT.parent)
+    if scripts_dir not in sys.path:
+        sys.path.insert(0, scripts_dir)
+    sys.modules.pop("kpi_store", None)
+    import kpi_store  # noqa: E402
+
+    module = _load_module()
+
+    token = "1,576,000"
+    malformed = "filler text that never states the number. " * 6  # > budget, no token
+    assert len(malformed) > module._MAX_VERBATIM_QUOTE_CHARS
+    assert token not in malformed
+
+    with pytest.raises(ValueError, match="does not contain its matched_token"):
+        module._bounded_quote(malformed, token)
+
+    candidate = {
+        "matched_token": token,
+        "verbatim_quote": malformed,
+        "value": 1576000,
+        "char_offset_span": [10, 19],
+        "source_kind": "prose",
+        "kpi_id": "employees_full_time",
+        "unit": "count",
+        "period": "2024-12-31",
+        "needs_semantic": False,
+        "source_accession": "0000320193-24-000999",
+        "as_of": "2024-01-01",
+    }
+    with pytest.raises(ValueError, match="does not contain its matched_token"):
+        module.commit_to_store(
+            [candidate], company="AAPL",
+            confirmer="kouko", confirmed_at="2026-07-20T10:00:00Z", confirmed=True,
+        )
+    # Fail-CLOSED: the malformed point never reached the durable store.
+    assert kpi_store.query_latest("AAPL", "employees_full_time", "2024-12-31") is None
+
+
+def test_bounded_quote_degrades_to_the_bare_token_when_token_exceeds_budget():
+    # The other unexercised commit-path branch. A single located token longer than
+    # the WHOLE budget leaves no room for context, so the quote degrades to just
+    # the token: still fully grounded (a literal substring of the source), simply
+    # with no context to spare. It must NOT be cut mid-token — a truncated number
+    # would be a DIFFERENT number, the exact fabrication this rail prevents.
+    module = _load_module()
+    budget = module._MAX_VERBATIM_QUOTE_CHARS
+
+    token = "1" + ",000" * ((budget // 4) + 2)  # comma-grouped, longer than budget
+    assert len(token) > budget
+    quote = f"reported {token} units in the period, a record."
+
+    assert module._bounded_quote(quote, token) == token

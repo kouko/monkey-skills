@@ -12,10 +12,18 @@ points anchored to verbatim source bytes. As with the table route, the exact
 printed token + source offsets never pass through an LLM; the SEMANTIC slots
 (kpi_id / unit / period) are LLM-proposed and human-ratified downstream.
 
-This file grows across Part-1 tasks (propose / gate / confirm / commit / store).
-Landed so far: the mechanical `propose` producer (crossing to data-markets
-`exhibit_prose` by SUBPROCESS, mirroring the sibling ↔ exhibit_tables) and the
-anti-fabrication substring `passes_substring_gate` predicate below.
+Landed here: the mechanical `propose` producer (crossing to data-markets
+`exhibit_prose` by SUBPROCESS, mirroring the sibling ↔ exhibit_tables), the
+anti-fabrication substring `passes_substring_gate` predicate, the human
+confirm-all gate and the durable store append — plus the Part-2 candidate
+refinements: word-scale value derivation ("3.56 billion" -> 3560000000),
+date / fiscal-period label rejection ("fiscal 2026" is not a KPI value),
+bounding-qualifier metadata ("up to 45,000" stays a bound), and the bounded
+committed-provenance quote — the token span plus a fixed-budget context window,
+which keeps PARAGRAPH-scale text (and the personal data further out in it) out of
+the store. It is a width bound, not entity recognition: personal data sharing the
+figure's own clause is inside any useful window, a limit declared in the Part-2
+plan's deferral channel.
 
 Anti-fabrication substring gate (the load-bearing trust rail):
   A prose candidate carries a VERBATIM matched token (the number exactly as
@@ -242,6 +250,53 @@ def _detect_qualifier(start: int, canonical_text: str) -> str | None:
     return phrase
 
 
+# Privacy bound on the COMMITTED provenance quote (Part 2). SEC prose states a
+# KPI next to executive names, compensation figures, and other personal data, so a
+# quote that runs to the full sentence/paragraph incidentally accumulates that
+# personal data into a durable store whose purpose is operating metrics. 160 chars
+# is roughly one clause's worth of context around the figure — enough for a human
+# to read the number with its subject and unit — while a filing paragraph typically
+# runs several hundred, so the neighboring SENTENCES are cut.
+#
+# What this bound does and does NOT guarantee. It guarantees no PARAGRAPH-scale
+# capture: personal data more than ~one clause away from the figure cannot reach
+# the store. It does NOT guarantee the window is free of personal data — a name in
+# the SAME clause as the figure ("...Jane Q. Ramirez ... and 1,576,000 full-time
+# employees...") sits inside any window wide enough to be useful. Excluding
+# same-clause personal data needs entity recognition, which this deliberately-
+# mechanical layer does not do; the residual limit is declared in the plan's
+# deferral channel rather than overstated here. This is ONE budget, shared by the
+# producing window and the commit-boundary clamp — never a second, parallel one.
+_MAX_VERBATIM_QUOTE_CHARS = 160
+
+
+def _context_window(start: int, end: int, text: str) -> str:
+    """Return the bounded context window around `text[start:end]`: the token span
+    plus surrounding text, at most `_MAX_VERBATIM_QUOTE_CHARS` characters.
+
+    The result is a single CONTIGUOUS slice of `text`, never a concatenation of
+    pieces around an elided middle. That is load-bearing, not cosmetic: `text` is
+    the canonical source, so a contiguous slice of it is still a literal substring
+    and `passes_substring_gate` keeps holding. Any truncation MARKER would break
+    that same property, so none is added.
+
+    The window is centered on the token, then RE-SLID left when centering would
+    run past the end of `text`: without the re-slide a token near the right edge
+    spends well under budget and discards usable left-side context for nothing.
+    A token longer than the whole budget yields just the token span — still fully
+    grounded, with no room for context. Offsets are never rebased: callers keep
+    reporting the token's own position, not the window's.
+    """
+    token_length = end - start
+    if token_length >= _MAX_VERBATIM_QUOTE_CHARS:
+        return text[start:end]
+    left = (_MAX_VERBATIM_QUOTE_CHARS - token_length) // 2
+    window_start = max(0, start - left)
+    window_end = min(len(text), window_start + _MAX_VERBATIM_QUOTE_CHARS)
+    window_start = max(0, window_end - _MAX_VERBATIM_QUOTE_CHARS)
+    return text[window_start:window_end]
+
+
 def build_candidates(located_numbers: list[dict],
                      canonical_text: str | None = None) -> list[dict]:
     """Pure transform: the located-number list (already crossed the data-markets
@@ -253,9 +308,18 @@ def build_candidates(located_numbers: list[dict],
     through an LLM: that is the "values + coordinates never pass through the LLM"
     anti-fabrication contract (mirroring Route B's kpi_8k_candidates).
 
-    Part 1 walking skeleton: `verbatim_quote` IS the matched token, and the
-    advisory `unit_hint`/`period_hint` are present-but-null — sophisticated hint
-    extraction is a later part and is deliberately NOT built here.
+    Part 2 provenance window: `verbatim_quote` is the token span PLUS a bounded
+    surrounding context window (`_context_window`), sliced CONTIGUOUSLY out of
+    `canonical_text` so it stays a literal substring and the gate keeps holding.
+    The spec asks for both halves — the minimal token span AND bounded context —
+    so emitting the bare token here would satisfy "not the whole paragraph"
+    trivially while leaving a human confirmer no context to judge the number by.
+    `char_offset_span` keeps pointing at the TOKEN, never at the window. Without
+    `canonical_text` (the pure-seam callers) there is no text to slice, so the
+    quote degrades to the bare token rather than failing.
+
+    The advisory `unit_hint`/`period_hint` remain present-but-null — sophisticated
+    hint extraction is a later part and is deliberately NOT built here.
 
     Part 2 date/period filter: when `canonical_text` is supplied, a located number
     that is a 4-digit-year date / fiscal-period LABEL (e.g. "fiscal 2026") is
@@ -282,7 +346,10 @@ def build_candidates(located_numbers: list[dict],
             continue
         candidates.append({
             "matched_token": token,
-            "verbatim_quote": token,
+            "verbatim_quote": (
+                _context_window(located["start"], located["end"], canonical_text)
+                if canonical_text is not None else token
+            ),
             "value": _normalize_value(token),
             "char_offset_span": [located["start"], located["end"]],
             "value_qualifier": (
@@ -439,6 +506,39 @@ def commit(candidates: list[dict], confirmed: bool = False) -> list[dict]:
     return list(candidates)
 
 
+def _bounded_quote(quote: str, matched_token: str) -> str:
+    """Clamp an over-broad `quote` back down to the `_context_window` budget,
+    keeping the `matched_token` inside.
+
+    BELT-AND-BRACES, not the primary control. `build_candidates` already emits a
+    bounded window, so a quote arriving here is normally within budget and is
+    returned unchanged. This guard exists for the path where a DOWNSTREAM layer
+    (an LLM proposal, a human editing a candidate before confirming) widens the
+    quote before it reaches the store: the bound is re-enforced at the durable-
+    store boundary rather than trusted from the producer alone.
+
+    Shares `_context_window`, so the clamped result is the same CONTIGUOUS-slice
+    shape with the same one budget — a slice of `quote`, which is itself a literal
+    substring of the canonical text, so the anti-fabrication gate keeps holding.
+    Offsets are untouched: `char_offset_span` keeps pointing at the token's true
+    canonical position, never at a position within this window.
+
+    A token longer than the whole budget yields just the token (still grounded, no
+    context to spare). An over-budget quote that does not CONTAIN its own token is
+    malformed — trimming it could silently drop the very number being committed,
+    so it raises rather than guessing which end to cut.
+    """
+    if len(quote) <= _MAX_VERBATIM_QUOTE_CHARS:
+        return quote
+    token_at = quote.find(matched_token)
+    if token_at < 0:
+        raise ValueError(
+            "over-long verbatim_quote does not contain its matched_token "
+            f"{matched_token!r}; refusing to trim a malformed quote"
+        )
+    return _context_window(token_at, token_at + len(matched_token), quote)
+
+
 def _prose_candidate_to_point(candidate: dict, company: str,
                               confirmer: str, confirmed_at: str) -> dict:
     """Map a confirmed prose candidate to a kpi_store-shaped point.
@@ -486,7 +586,9 @@ def _prose_candidate_to_point(candidate: dict, company: str,
         "source_accession": candidate["source_accession"],
         "source_table_id": "prose",
         "source_cell_ref": f"prose:{start}-{end}",
-        "verbatim_quote": candidate["verbatim_quote"],
+        "verbatim_quote": _bounded_quote(
+            candidate["verbatim_quote"], candidate["matched_token"]
+        ),
         "value_qualifier": candidate.get("value_qualifier"),
         "source_document": candidate.get("source_document"),
         "filing_date": candidate.get("filing_date"),

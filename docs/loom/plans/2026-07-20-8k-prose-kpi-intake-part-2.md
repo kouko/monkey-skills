@@ -146,3 +146,24 @@ Extends the shipped Part-1 files (no new modules):
   the Part-2.5 / Part-3 hardening pass rather than blocked on here. Recorded via
   this designated channel (not a code comment) per the T5 spec-reviewer's finding
   that a code-comment-only deferral does not count as declared.
+- **Same-clause personal data survives the provenance window (declared deferral,
+  T6 review round):** T6's `_context_window` is a fixed-WIDTH bound (160 chars,
+  one shared budget). What it GUARANTEES: no paragraph-scale capture — the
+  committed quote is a bounded contiguous slice, so personal data more than about
+  one clause away from the figure cannot reach the durable store, which is the
+  privacy failure the requirement names. What it does NOT guarantee: that the
+  window is free of personal data. A name in the SAME clause as the figure sits
+  inside it — verified during the T6 review round, "Jane Q. Ramirez earned a bonus
+  and 1,576,000 full-time employees...", where the name starts 35 chars before the
+  token and survives any window wide enough to be useful. The control is therefore
+  PROXIMITY-DEPENDENT, and the docstrings say so rather than claiming containment
+  they do not deliver. Widening or narrowing the window is NOT the fix: narrowing
+  far enough to exclude a same-clause name also strips the subject and unit the
+  human confirmer reads the number against, destroying the window's purpose while
+  still failing on a name one word nearer. Excluding same-clause personal data
+  needs entity recognition (NER), which this deliberately-mechanical, LLM-free
+  layer does not do and should not grow — the values-and-coordinates-never-pass-
+  through-an-LLM rail is the reason this layer stays mechanical. Deferred to the
+  Part-2.5 / Part-3 hardening pass, where the right fix is an NER-based or
+  clause-aware redaction pass over the committed quote, not a width tweak.
+  Recorded via this designated channel per the T5 precedent.
