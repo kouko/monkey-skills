@@ -571,8 +571,82 @@ def test_source_line_wrap_inside_a_block_still_absorbs_the_magnitude_word():
         "up to 45,000 units"
     )
 
-    # A "\n" surviving onto the surface therefore has exactly ONE origin. Both
+    # A "\n" surviving onto the surface therefore marks a RENDERED break. Both
     # block-boundary shapes from the guard test still produce it and still block.
     assert exhibit_prose.prose_surface("<p>x 45,000</p>\n<p>Million Air</p>") == (
         "x 45,000\nMillion Air"
     )
+
+
+def test_newline_inside_pre_is_a_rendered_break_and_does_not_fuse():
+    # No living-spec REQ-id: this plan traces tasks by Task item, not REQ-ids.
+    # FOURTH round, sixth instance of the fabrication-wearing-a-valid-anchor class.
+    # The previous round's newline fold made "a surface \n is a rendered break"
+    # TRUE, but the design also assumed the CONVERSE — that every RENDERED break
+    # becomes a surface "\n". That fails inside the render-significant-whitespace
+    # family (`pre`/`xmp`/`listing`/`plaintext`/`textarea`), where the newline IS
+    # the rendered break and there is no tag to mark it. Folding it to a space
+    # made "<pre>45,000\nMillion Air deliveries</pre>" tokenize as
+    # "45,000 Million" -> 4.5e10, with the substring anchor holding by
+    # construction over a phrase the document never rendered as adjacent prose.
+    import exhibit_prose
+
+    # END-TO-END through the real pipeline (prose_surface -> locate_numbers), not
+    # at the walker: `_normalize_whitespace` runs AFTER the walk and re-splits on
+    # "\n", so a walker-level assertion alone would not prove the fix survives.
+    prose = exhibit_prose.prose_surface(
+        "<pre>45,000\nMillion Air deliveries</pre>"
+    )
+    assert prose == "45,000\nMillion Air deliveries", repr(prose)
+    tokens = [c["token"] for c in exhibit_prose.locate_numbers(prose)]
+    assert "45,000\nMillion" not in tokens, f"fused inside <pre>: {tokens!r}"
+    assert tokens == ["45,000"], tokens
+
+    # Anchors still hold over the preserved-newline surface.
+    for cand in exhibit_prose.locate_numbers(prose):
+        assert prose[cand["start"]:cand["end"]] == cand["token"]
+
+    # A SECOND family member, to pin the family rather than the one tag. `listing`
+    # is also not in `_BLOCK_TAGS` at origin, so this covers the boundary half too.
+    prose2 = exhibit_prose.prose_surface(
+        "<listing>1,576\nmillion reasons follow</listing>"
+    )
+    assert prose2 == "1,576\nmillion reasons follow", repr(prose2)
+    assert [c["token"] for c in exhibit_prose.locate_numbers(prose2)] == ["1,576"]
+
+    # `textarea` likewise — HTMLParser delivers its content through handle_data
+    # (only script/style are CDATA elements), so it reaches the same fold.
+    prose3 = exhibit_prose.prose_surface("<textarea>2\nbillion</textarea>")
+    assert prose3 == "2\nbillion", repr(prose3)
+    assert [c["token"] for c in exhibit_prose.locate_numbers(prose3)] == ["2"]
+
+    # NESTING is depth-tracked, not boolean: text after an INNER close is still
+    # inside the outer element, so its newlines are still rendered breaks.
+    prose4 = exhibit_prose.prose_surface(
+        "<pre>a<pre>b</pre>45,000\nMillion Air</pre>"
+    )
+    assert "45,000\nMillion Air" in prose4, repr(prose4)
+
+    # And the element's OWN boundary is a break as well, so prose flanking a
+    # family member cannot fuse across it either.
+    prose5 = exhibit_prose.prose_surface("<p>x 45,000</p><listing>Million Air</listing>")
+    assert prose5 == "x 45,000\nMillion Air", repr(prose5)
+    assert [c["token"] for c in exhibit_prose.locate_numbers(prose5)] == ["45,000"]
+
+
+def test_ordinary_block_newline_fold_survives_the_pre_family_exemption():
+    # No living-spec REQ-id: this plan traces tasks by Task item, not REQ-ids.
+    # The trade the pre-family fix must NOT undo: OUTSIDE the family, a hard
+    # source-line wrap is still ordinary whitespace and still absorbs its
+    # magnitude word (the META Family DAP case bought back last round).
+    import exhibit_prose
+
+    wrapped = exhibit_prose.prose_surface("<p>Family DAP was 3.56\nbillion.</p>")
+    assert wrapped == "Family DAP was 3.56 billion."
+    assert [c["token"] for c in exhibit_prose.locate_numbers(wrapped)] == [
+        "3.56 billion"
+    ]
+
+    # A wrap AFTER a closed `<pre>` is outside it again — depth returned to zero.
+    after = exhibit_prose.prose_surface("<pre>x</pre><p>grew to 3.56\nbillion</p>")
+    assert after == "x\ngrew to 3.56 billion", repr(after)

@@ -35,10 +35,13 @@ and the substring gate:
     Arabic-Indic U+0660-0669 — plus full-width comma / full stop;
   * smart quotes (U+2018/2019/201C/201D) folded to ASCII ``'`` and ``"``;
   * nbsp / thin-space THOUSANDS separators rewritten to commas;
-  * newlines INSIDE a source text run folded to spaces, so the only ``\n`` left
-    on the surface is a block boundary this module inserted (see
-    ``_ProseWalker.handle_data``) — the property that lets a downstream guard
-    distinguish "two blocks" from "one hard-wrapped sentence" exactly;
+  * newlines INSIDE a source text run folded to spaces, EXCEPT inside the
+    render-significant-whitespace family (``pre``/``xmp``/``listing``/
+    ``plaintext``/``textarea``, see ``_PRE_TAGS``) where the newline IS the
+    rendered break. A ``\n`` on the finished surface therefore means A RENDERED
+    BREAK, in both directions: every one is a real break, and every real break
+    reaches the surface as one. That biconditional is what lets a downstream
+    guard distinguish "two blocks" from "one hard-wrapped sentence" exactly;
   * whitespace runs collapsed, lines trimmed, blank lines dropped.
 
 Every one of those folds is LENGTH-PRESERVING or applied before offsets are
@@ -69,8 +72,30 @@ _BLOCK_TAGS = frozenset(
         "p", "div", "br", "li", "ul", "ol", "tr", "hr", "section", "article",
         "header", "footer", "h1", "h2", "h3", "h4", "h5", "h6",
         "blockquote", "pre", "table",
+        # The render-significant-whitespace family below: their boundaries are
+        # rendered breaks too, so prose flanking one cannot be adjacent prose.
+        "xmp", "listing", "plaintext", "textarea",
     }
 )
+
+
+# Elements whose content renders with WHITESPACE PRESERVED, so a newline inside
+# them IS the rendered line break rather than incidental source formatting.
+#
+# `handle_data` folds source-run newlines to spaces everywhere else, which makes
+# a surface "\n" mean "a rendered break" — but that design also relies on the
+# CONVERSE, that every rendered break REACHES the surface as a "\n". Inside this
+# family there is no tag marking the break, so the fold erased it and let a block
+# boundary's two sides fuse: "<pre>45,000\nMillion Air deliveries</pre>"
+# tokenized as "45,000 Million" (4.5e10) while ``text[start:end] == token`` kept
+# holding BY CONSTRUCTION — the same fabrication-wearing-a-valid-anchor class as
+# the grouping and compound-joiner guards above.
+#
+# Exempting these from the fold preserves the break, so the `[^\S\n]` absorption
+# guard sees it and declines to fuse. `textarea` belongs here despite being a
+# form control: `html.parser` treats only `script`/`style` as CDATA elements, so
+# textarea content arrives through `handle_data` like any other text.
+_PRE_TAGS = frozenset({"pre", "xmp", "listing", "plaintext", "textarea"})
 
 
 # Character folds applied to the raw text BEFORE grouping / tokenization,
@@ -176,6 +201,7 @@ class _ProseWalker(HTMLParser):
         super().__init__(convert_charrefs=True)
         self._parts: list[str] = []
         self._table_depth = 0
+        self._pre_depth = 0
 
     def handle_starttag(self, tag, attrs):
         if tag == "table":
@@ -185,7 +211,13 @@ class _ProseWalker(HTMLParser):
             if self._table_depth == 0:
                 self._parts.append("\n")
             self._table_depth += 1
-        elif tag in _BLOCK_TAGS and self._table_depth == 0:
+            return
+        if tag in _PRE_TAGS:
+            # DEPTH, not a boolean — mirroring `_table_depth`: text following an
+            # INNER close is still inside the outer element, so its newlines are
+            # still rendered breaks.
+            self._pre_depth += 1
+        if tag in _BLOCK_TAGS and self._table_depth == 0:
             self._parts.append("\n")
 
     def handle_startendtag(self, tag, attrs):
@@ -201,22 +233,33 @@ class _ProseWalker(HTMLParser):
                 # following an excised table cannot merge with the last prose.
                 if self._table_depth == 0:
                     self._parts.append("\n")
-        elif tag in _BLOCK_TAGS and self._table_depth == 0:
+            return
+        if tag in _PRE_TAGS and self._pre_depth > 0:
+            self._pre_depth -= 1
+        if tag in _BLOCK_TAGS and self._table_depth == 0:
             self._parts.append("\n")
 
     def handle_data(self, data):
         if self._table_depth == 0:
-            # Collapse newlines INSIDE a source text run to spaces, at the point
-            # the text enters. This is what makes the block separator
+            if self._pre_depth:
+                # Inside the render-significant-whitespace family the newline IS
+                # the rendered break (there is no tag marking it), so it is kept
+                # verbatim — the very break the fold would otherwise erase. See
+                # `_PRE_TAGS`.
+                self._parts.append(data)
+                return
+            # Elsewhere, collapse newlines INSIDE a source text run to spaces at
+            # the point the text enters. This is what makes the separator
             # UNAMBIGUOUS: without it a "\n" on the finished surface had two
-            # possible origins — a boundary this walker inserted, or a newline
-            # that merely sat inside one run of source text — and downstream
-            # guards had to treat every "\n" as possibly-a-boundary. EDGAR HTML
-            # is hard-wrapped, so "3.56\nbillion" inside one paragraph is a
-            # realistic shape, and that conservatism dropped the magnitude word
-            # off a figure whose scale the source states plainly. After this
-            # collapse, a "\n" on the canonical surface means BLOCK BOUNDARY and
-            # nothing else, so the `[^\S\n]` guards are EXACT, not conservative.
+            # possible origins — a rendered break, or a newline that merely sat
+            # inside one run of source text — and downstream guards had to treat
+            # every "\n" as possibly-a-boundary. EDGAR HTML is hard-wrapped, so
+            # "3.56\nbillion" inside one paragraph is a realistic shape, and that
+            # conservatism dropped the magnitude word off a figure whose scale
+            # the source states plainly. With the fold here and the `_PRE_TAGS`
+            # exemption above, a "\n" on the canonical surface means A RENDERED
+            # BREAK and nothing else — in BOTH directions, which is what makes
+            # the `[^\S\n]` guards EXACT rather than conservative.
             #
             # ONLY "\n" is folded, deliberately: `_normalize_whitespace` splits
             # lines on "\n" alone, so no other whitespace character can create
@@ -305,13 +348,16 @@ _COMPOUND_JOINERS = "-‐‑"
 # made adjacent. Requiring SAME-LINE whitespace (`[^\S\n]`) closes it.
 #
 # The guard is EXACT, not conservative, because the separator it reads is
-# unambiguous: `_ProseWalker.handle_data` folds newlines INSIDE a source text run
-# to spaces as they enter, so a "\n" reaching this regex can only be a block
-# boundary this walker inserted. A hard SOURCE LINE WRAP — the ordinary shape of
-# EDGAR HTML, and the one that would otherwise have cost "3.56\nbillion" its
-# scale — arrives here as same-line whitespace and absorbs normally. So this
-# guard blocks exactly the cross-block fusion and nothing else; it costs no true
-# positive.
+# unambiguous IN BOTH DIRECTIONS. Every "\n" reaching this regex is a rendered
+# break: `_ProseWalker.handle_data` folds newlines INSIDE a source text run to
+# spaces as they enter, so a hard SOURCE LINE WRAP — the ordinary shape of EDGAR
+# HTML, and the one that would otherwise have cost "3.56\nbillion" its scale —
+# arrives as same-line whitespace and absorbs normally. And every rendered break
+# reaches here AS a "\n": the walker emits one at each block boundary, and
+# exempts `_PRE_TAGS` from the fold so a break carried by the newline ITSELF is
+# not erased. Losing that second direction is what let "<pre>45,000\nMillion Air
+# deliveries</pre>" fuse. So this guard blocks exactly cross-break fusion and
+# nothing else; it costs no true positive.
 _NUMBER_RE = re.compile(
     r"\d+(?:,\d{3})*(?:\.\d+)?"
     r"(?:[^\S\n]+(?:" + "|".join(_MAGNITUDE_WORDS) + r")\b"
