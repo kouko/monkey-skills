@@ -6,6 +6,17 @@ this file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.10.0] — 2026-07-21 — batch terminal-mark precursor guard
+
+### Fixed
+
+- **`batch_queue.py` terminal mark requires a RUNNING precursor**: `_cmd_mark`
+  wrote done/failed with no precondition, so a QUEUED (never-dispatched) entry
+  could jump straight to DONE — silently dropping work while the batch reported
+  success. It now enforces the same precursor-state guard `_cmd_mark_running`
+  already has, extracted to a shared `_require_running` helper (routed by
+  `mark` / `mark-running` / `force-fail`).
+
 ## [0.9.0] — 2026-07-18 — batch_queue recovery + reconciliation + dispatcher wiring
 
 ### Added
