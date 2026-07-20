@@ -90,8 +90,9 @@
 - Status: **Route B SHIPPED** (#590, 2.26.0). The committed next arc PIVOTED
   after a live big-tech probe (2026-07-20) — see the pivot note below — from
   "XBRL Route A" to a **source-anchored narrative+KPI evidence layer**, whose
-  **Slice A Part 1 SHIPPED** (this PR, 2.27.0). XBRL Route A (footprint/capacity
-  allowlist) is DEMOTED to a parked option for retail/REIT/utility filers only.
+  **Slice A Part 1 SHIPPED** (#593, 2.28.0) and **Part 2 SHIPPED** (this PR,
+  2.29.0). XBRL Route A (footprint/capacity allowlist) is DEMOTED to a parked
+  option for retail/REIT/utility filers only.
 - **Pivot evidence (2026-07-20):** a live probe of the 7 mega-caps showed the
   XBRL footprint allowlist yields ~0 real operational KPIs for big tech (only
   traps: AMZN mwh hedge-notional, TSLA 20M pay-package milestone); the real
@@ -101,17 +102,59 @@
   project does verbatim-anchored + longitudinal + human-confirm grounding — that
   triad is our differentiator. Research: `docs/loom/research/2026-07-19-*.md`.
 - **Narrative-evidence arc — Slice A = "Route B for prose" (3-part split, user-approved):**
-  - **Part 1 SHIPPED (this PR, 2.27.0):** mechanical prose KPI producer —
+  - **Part 1 SHIPPED (#593, 2.28.0):** mechanical prose KPI producer —
     `exhibit_prose.py` (surface + `--locate`) + `kpi_prose_candidates.py`
     (propose/gate/confirm/commit_to_store/intake) → prose datum with verbatim
     quote + `prose:{start}-{end}` anchor into the byte-unchanged tier-① store.
     Change-folder `docs/loom/2026-07-19-8k-prose-kpi-intake/`, plan
     `docs/loom/plans/2026-07-19-8k-prose-kpi-intake-part-1.md`. NOT yet
     SKILL-wired (foundational machinery).
-  - **Part 2 (next brief) — number robustness:** word-scale ("3.56 billion" →
-    META DAP), normalization (nbsp/entities/full-width digits), date/period +
-    qualifier false-positive rejection, PII minimal-span. 4 deferred scenarios
-    in the change-folder §Notes.
+  - **Part 2 SHIPPED (this PR, 2.29.0) — number robustness:** word-scale
+    (locator absorbs the magnitude word; value multiplier via `Decimal`, so META
+    DAP "3.56 billion" is 3,560,000,000 not 3.56), one consistent normalization
+    (nbsp/thin-space grouping, full-width + Arabic-Indic digits, full-width
+    comma/period, curly quotes — every fold length-preserving so offsets and the
+    anchor survive), date/fiscal-period label rejection, bounding-qualifier
+    metadata, bounded provenance context window. Plan
+    `docs/loom/plans/2026-07-20-8k-prose-kpi-intake-part-2.md`.
+    **Three fabrication bugs of one class were caught in review** — a token whose
+    anchor holds LITERALLY while being semantically meaningless (nbsp fusing two
+    unrelated numbers; magnitude absorption reopening the period-label filter;
+    nbsp after a comma-grouped number). The lesson for Part 3: `text[start:end]
+    == token` is guaranteed by construction and therefore proves nothing about
+    whether the match is semantically right. Two declared limits remain in the
+    plan's §Notes (non-adjacent qualifier; same-clause PII proximity).
+  - **Part 2 next-touch (2🟢 from whole-branch review, logged not fixed):**
+    `_bounded_quote` re-anchors on the FIRST occurrence of a repeated token, so
+    the re-clamped window can center on an occurrence other than the one
+    `char_offset_span` names (still grounded, no fabrication); and
+    `commit_to_store` never invokes `passes_substring_gate` — the gate is a
+    predicate callers must remember to call rather than a barrier on the commit
+    path (pre-existing from Part 1). Make it structural in Part 3.
+  - **Part 3 must carry a SURFACE-VERSION marker.** Part 2 changed how the
+    canonical prose surface is produced (newline fold + char folds), i.e. a
+    silent surface-version bump. An audit confirmed this is SAFE today — no
+    consumer re-derives the surface to re-check a stored offset, no committed
+    fixture carries a `prose:` anchor, and the route is not SKILL-wired, so
+    nothing is stored in anger. But the spec's own MUST (change-folder
+    `spec.md:149-165`: store a content hash + flattener version, re-verify
+    `quote == canonical_text[start:end]` on read) is exactly the mechanism that
+    would have made this unsafe — and it is the one deferred to Part 3. When
+    Part 3 builds the re-verifier it needs a policy/surface version marker, or a
+    live store written under an older surface will drift undetectably.
+  - **Part 2 next-touch, two more of the recurring class (🟢, logged not fixed):**
+    the `--locate` CLI fuses a U+2028-separated file (a public entry point whose
+    documented contract is canonical input, so input-conditional); and
+    `<style>`/`<script>` text is not suppressed by the walker, so CSS/JS numerals
+    enter the candidate stream (`10.5pt`, `720px`) — PRE-EXISTING at origin/main,
+    0 of 4 real filings checked carry either tag.
+- **investing-toolkit test-suite hygiene (found 2026-07-20, unrelated to the
+  prose arc):** `test_pack_schemas.py::test_pack_live_output_matches_schema[kr-
+  snapshot]` fails on `ModuleNotFoundError: No module named 'edgar'`
+  (`sec_edgar_client.py:801`) — a MISSING OPTIONAL DEPENDENCY, not a network
+  failure, but it is hidden by the `-m "not network"` deselect everyone runs. If
+  the deselect list and the optional-dep set drift, this fails for a reason
+  nobody is watching. Fits the repo's existing pytest-config-drift gotcha.
   - **Part 3 (next brief) — lifecycle/hardening:** table-vs-prose + prose-vs-prose
     + order-independent dedup, 8-K/A supersession, anchor drift (hash+version
     re-verify), concurrency scope + batch atomicity, resource bounds/ReDoS,
