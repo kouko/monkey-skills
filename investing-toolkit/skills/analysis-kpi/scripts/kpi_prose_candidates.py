@@ -77,8 +77,16 @@ _MAGNITUDE_MULTIPLIERS = {
     "billion": 10 ** 9,
     "trillion": 10 ** 12,
 }
+# The separator is SAME-LINE whitespace, mirroring the locator's own absorption
+# guard: a plain `\s+` also matches the block separator "\n", which is the half
+# that turned a cross-block fusion ("45,000\nMillion") into a 1e9-scaled value.
+# The locator can no longer emit such a token, so this is DEFENSE IN DEPTH — the
+# same stance `_is_period_label` takes, and for the same reason: a future change
+# to token shape must not be able to reopen either layer alone. A malformed
+# newline-bearing token now falls through to the plain-number branch and RAISES
+# there, rather than silently returning a plausible-looking scaled value.
 _MAGNITUDE_TOKEN_RE = re.compile(
-    r"^(?P<number>.+?)\s+(?P<word>"
+    r"^(?P<number>.+?)[^\S\n]+(?P<word>"
     + "|".join(_MAGNITUDE_MULTIPLIERS)
     + r")$",
     re.IGNORECASE,
@@ -161,14 +169,37 @@ def run_exhibit_prose(canonical_text: str) -> list[dict]:
 _YEAR_RE = re.compile(r"(?:19|20)\d{2}")
 _PERIOD_WORDS = frozenset({"fiscal", "quarter", "year"})
 _QUARTER_RE = re.compile(r"[Qq][1-4]")
+# This lookback's `\s*` DOES match the block separator "\n", deliberately —
+# unlike the locator's absorption and `_QUALIFIER_RE`, which were narrowed to
+# same-line whitespace. The direction of the error is what differs: both callers
+# use this to REJECT (drop a period label / drop a phrasal-verb "over"), so
+# reaching across a boundary can only drop a candidate or withhold a qualifier,
+# never fabricate a value or stamp a bound. Narrowing it would flip a safe
+# over-reach into "fiscal</p><p>2026" committing 2026 as a KPI value.
 _PRECEDING_WORD_RE = re.compile(r"(\S+)\s*$")
+
+# The BARE QUARTER-TAG digit. The locator tokenizes the "3" of "Q3" as an ordinary
+# number, so "Q3 deliveries were strong" committed a KPI value of 3 — a period
+# label again, and squarely inside this filter's declared scope (the docstring
+# below already names "Q1 2026" as a target; only the YEAR half was implemented).
+# Deliberately as narrow as the rule can be stated: a SINGLE digit 1-4 with a
+# "Q"/"q" IMMEDIATELY before it and no intervening space. An ordinary single digit
+# ("we opened 3 stores"), a digit merely following a "Q" across a space, and any
+# multi-digit number ("Q7 sales were 45") are all left alone.
+_QUARTER_TAG_DIGITS = frozenset("1234")
 
 
 def _is_period_label(token: str, start: int, canonical_text: str) -> bool:
-    """True iff the located `token` is a 4-digit year (19xx/20xx) functioning as a
-    date / fiscal-period LABEL — i.e. immediately preceded (in `canonical_text`)
-    by a period word ("fiscal" / "quarter" / "year" / "Q<n>"). Such a token is a
-    period label, not a KPI value, so it must not be emitted as a candidate.
+    """True iff the located `token` is a date / fiscal-period LABEL rather than a
+    KPI value, in either of the two shapes this filter recognizes:
+
+      * a 4-digit year (19xx/20xx) immediately preceded (in `canonical_text`) by a
+        period word ("fiscal" / "quarter" / "year" / "Q<n>"); or
+      * the BARE QUARTER-TAG digit — a single 1-4 directly after a "Q"/"q" with no
+        space, i.e. the "3" the locator emits from "Q3" (see
+        `_QUARTER_TAG_DIGITS`).
+
+    Such a token must not be emitted as a candidate.
 
     An ABSORBED magnitude word is stripped before the year test. This is DEFENSE
     IN DEPTH against a cross-layer hole the whole-branch review found: the locator
@@ -189,6 +220,12 @@ def _is_period_label(token: str, start: int, canonical_text: str) -> bool:
     """
     magnitude = _MAGNITUDE_TOKEN_RE.match(token.strip())
     number = magnitude.group("number") if magnitude else token
+    if (
+        number in _QUARTER_TAG_DIGITS
+        and start > 0
+        and canonical_text[start - 1] in "Qq"
+    ):
+        return True
     if not _YEAR_RE.fullmatch(number):
         return False
     match = _PRECEDING_WORD_RE.search(canonical_text[:start])
@@ -208,12 +245,33 @@ def _is_period_label(token: str, start: int, canonical_text: str) -> bool:
 # immediately preceding the token (never a mutation of the verbatim token or its
 # offsets, which stay the anti-fabrication anchor). Multi-word phrases are listed
 # LONGEST-FIRST so "more than" wins over a bare "than"-less prefix match, and the
-# alternation is anchored to the end of the lookback window with `\s*` so both a
-# spaced phrase ("up to 45,000") and an abutting tilde ("~931") match.
+# alternation is anchored to the end of the lookback window with `[^\S\n]*` so both
+# a spaced phrase ("up to 45,000") and an abutting tilde ("~931") match.
+#
+# The gap between qualifier and figure is SAME-LINE whitespace only — the same
+# block-separator guard, and the same root cause, as the locator's absorption
+# separator (`exhibit_prose._NUMBER_RE`). A plain `\s*` matched the "\n" the prose
+# walker inserts at every block boundary, so a qualifier ending one block stamped
+# the first figure of the NEXT block ("We expect approximately</p><p>931
+# warehouses"), and stamped across an EXCISED TABLE too — asserting imprecision
+# the filing never stated about that figure, the inversion named below.
+# `\Z` not `$`: `$` also matches just BEFORE a trailing newline, which would
+# re-admit the very boundary this guard excludes.
+#
+# This costs no true positive, because the surface's "\n" is UNAMBIGUOUS: the
+# prose walker folds newlines inside a source text run to spaces on entry
+# (`exhibit_prose._ProseWalker.handle_data`), so a hard-wrapped "approximately\n931"
+# in the raw HTML reaches this regex as same-line whitespace and still detects.
+# Only a real block boundary — which the filing never wrote as one phrase —
+# blocks.
+#
+# The LEADING `(?<=\s)` deliberately keeps plain `\s`: a newline THERE only marks
+# where the qualifier's own word starts (a qualifier opening its line is still
+# adjacent to its figure), and never bridges qualifier and figure.
 _QUALIFIER_LOOKBACK_CHARS = 24
 _QUALIFIER_PHRASES = ("approximately", "more than", "at least", "up to", "over", "~")
 _QUALIFIER_RE = re.compile(
-    r"(?:(?<=\s)|^)(" + "|".join(_QUALIFIER_PHRASES) + r")\s*$",
+    r"(?:(?<=\s)|^)(" + "|".join(_QUALIFIER_PHRASES) + r")[^\S\n]*\Z",
     re.IGNORECASE,
 )
 

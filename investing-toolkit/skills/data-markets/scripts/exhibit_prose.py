@@ -35,6 +35,10 @@ and the substring gate:
     Arabic-Indic U+0660-0669 — plus full-width comma / full stop;
   * smart quotes (U+2018/2019/201C/201D) folded to ASCII ``'`` and ``"``;
   * nbsp / thin-space THOUSANDS separators rewritten to commas;
+  * newlines INSIDE a source text run folded to spaces, so the only ``\n`` left
+    on the surface is a block boundary this module inserted (see
+    ``_ProseWalker.handle_data``) — the property that lets a downstream guard
+    distinguish "two blocks" from "one hard-wrapped sentence" exactly;
   * whitespace runs collapsed, lines trimmed, blank lines dropped.
 
 Every one of those folds is LENGTH-PRESERVING or applied before offsets are
@@ -202,7 +206,28 @@ class _ProseWalker(HTMLParser):
 
     def handle_data(self, data):
         if self._table_depth == 0:
-            self._parts.append(data)
+            # Collapse newlines INSIDE a source text run to spaces, at the point
+            # the text enters. This is what makes the block separator
+            # UNAMBIGUOUS: without it a "\n" on the finished surface had two
+            # possible origins — a boundary this walker inserted, or a newline
+            # that merely sat inside one run of source text — and downstream
+            # guards had to treat every "\n" as possibly-a-boundary. EDGAR HTML
+            # is hard-wrapped, so "3.56\nbillion" inside one paragraph is a
+            # realistic shape, and that conservatism dropped the magnitude word
+            # off a figure whose scale the source states plainly. After this
+            # collapse, a "\n" on the canonical surface means BLOCK BOUNDARY and
+            # nothing else, so the `[^\S\n]` guards are EXACT, not conservative.
+            #
+            # ONLY "\n" is folded, deliberately: `_normalize_whitespace` splits
+            # lines on "\n" alone, so no other whitespace character can create
+            # the ambiguity. A blanket `\s` fold would ALSO eat the nbsp / thin
+            # space that `_SPACE_GROUPED_NUMBER_RE` reads as a THOUSANDS
+            # separator, destroying the signal that keeps "3<nbsp>560<nbsp>000"
+            # one number. This fold is not length-preserving, but it runs on the
+            # raw text BEFORE any offset is taken, which is the same reason
+            # `_normalize_whitespace`'s own collapse is safe: every offset is
+            # computed against the finished surface these parts produce.
+            self._parts.append(data.replace("\n", " "))
 
     def text(self) -> str:
         return "".join(self._parts)
@@ -229,7 +254,8 @@ def prose_surface(html: str) -> str:
 # degrade to their plain-digit runs rather than mis-spanning.
 #
 # Word-scale magnitude parsing: a trailing thousand/million/billion/trillion
-# (case-insensitive, whitespace-separated) is pulled into the SAME match so the
+# (case-insensitive, separated by SAME-LINE whitespace only — see the block-
+# separator guard below) is pulled into the SAME match so the
 # anchor spans the whole phrase — "3.56 billion" tokenizes as "3.56 billion",
 # not "3.56" (which dropped META's 1e9 multiplier). ``\b`` after the alternation
 # keeps "billionaire" from being read as "billion"; a NON-magnitude following
@@ -247,19 +273,49 @@ def prose_surface(html: str) -> str:
 # ``text[start:end] == token`` keeps holding BY CONSTRUCTION — the same
 # fabrication-wearing-a-valid-anchor class as the grouping guards above.
 #
-# The guard rejects ONLY true compound joiners — ASCII hyphen-minus, U+2010
-# HYPHEN, U+2011 NON-BREAKING HYPHEN. It deliberately does NOT reject the DASHES
+# The guard applies to the three hyphen joiners — ASCII hyphen-minus, U+2010
+# HYPHEN, U+2011 NON-BREAKING HYPHEN. It deliberately does NOT touch the DASHES
 # (U+2012 figure dash .. U+2015 horizontal bar): a dash after a magnitude word is
 # a RANGE or parenthetical mark ("3 billion–5 billion"), where the word IS the
 # figure's scale and must still be absorbed. Nor does it reject punctuation
 # generally: a sentence-final "3.56 billion." and a mid-clause "500 million,"
-# are ordinary true positives. Failing the guard degrades the token to plain
-# digits, which is the safe direction.
+# are ordinary true positives.
+#
+# But ASCII hyphen-minus is ALSO the commonest RANGE mark in an ASCII-encoded
+# filing, so rejecting on the joiner ALONE broke "2 billion-3 billion users":
+# the first bound lost its scale and read as a bare 2 — the compound defect
+# INVERTED (an under-scaled value wearing the same valid-looking anchor). The
+# guard therefore discriminates on the character AFTER the joiner: a RANGE
+# continues with a DIGIT ("billion-3"), a COMPOUND with a LETTER
+# ("billion-dollar"). Only the letter case blocks absorption.
+#
+# RESIDUAL, stated because a guard's comment must claim only what it does: the
+# discriminator reads exactly ONE character past the joiner. A range whose upper
+# bound is not written digit-first ("2 billion-$3 billion") still reads as a
+# compound, and a joiner at end-of-text likewise blocks. Both degrade the token
+# to plain digits — the same lossy direction as a failed guard, not a fabrication.
 _MAGNITUDE_WORDS = ("thousand", "million", "billion", "trillion")
 _COMPOUND_JOINERS = "-‐‑"
+# BLOCK-SEPARATOR guard on the absorption whitespace: `_ProseWalker` inserts a
+# "\n" at every block boundary precisely so adjacent blocks cannot fuse (see
+# `_BLOCK_TAGS`), but `\s` matches that "\n", so a block merely BEGINNING with a
+# magnitude word fused into the previous block's trailing number —
+# "45,000</li><li>Million Air..." tokenized as "45,000\nMillion" (4.5e10), and
+# the fusion could even span an EXCISED TABLE, joining prose the source never
+# made adjacent. Requiring SAME-LINE whitespace (`[^\S\n]`) closes it.
+#
+# The guard is EXACT, not conservative, because the separator it reads is
+# unambiguous: `_ProseWalker.handle_data` folds newlines INSIDE a source text run
+# to spaces as they enter, so a "\n" reaching this regex can only be a block
+# boundary this walker inserted. A hard SOURCE LINE WRAP — the ordinary shape of
+# EDGAR HTML, and the one that would otherwise have cost "3.56\nbillion" its
+# scale — arrives here as same-line whitespace and absorbs normally. So this
+# guard blocks exactly the cross-block fusion and nothing else; it costs no true
+# positive.
 _NUMBER_RE = re.compile(
     r"\d+(?:,\d{3})*(?:\.\d+)?"
-    r"(?:\s+(?:" + "|".join(_MAGNITUDE_WORDS) + r")\b(?![" + _COMPOUND_JOINERS + r"]))?",
+    r"(?:[^\S\n]+(?:" + "|".join(_MAGNITUDE_WORDS) + r")\b"
+    r"(?![" + _COMPOUND_JOINERS + r"](?!\d)))?",
     re.IGNORECASE,
 )
 

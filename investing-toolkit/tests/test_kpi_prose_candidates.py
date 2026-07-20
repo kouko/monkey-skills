@@ -1064,3 +1064,123 @@ def test_magnitude_absorption_does_not_reopen_the_period_label_filter():
         [{"token": "450 million", "start": 11, "end": 22}], kpi_text
     )
     assert [c["value"] for c in survivors] == [450000000], survivors
+
+
+def test_qualifier_is_not_detected_across_a_block_boundary():
+    # SECOND whole-branch review, finding 3 — the METADATA side of the SAME root
+    # cause as the locator's absorption separator: `_QUALIFIER_RE`'s trailing `\s*`
+    # matches the `\n` that the prose walker inserts at every block boundary, so a
+    # qualifier ending one block stamped the FIRST figure of the next block ("We
+    # expect approximately</p><p>931 warehouses"), and it stamped across an EXCISED
+    # TABLE too. That asserts imprecision the filing never stated about that figure
+    # — the inversion this module's own `_PHRASAL_HEADS_BEFORE_OVER` comment names.
+    #
+    # No `@req` tag: this dispatch's plan binds tasks by "Brief item covered", not
+    # a registered loom-spec REQ-id (same convention as the sibling tests above).
+    module = _load_module()
+
+    # The canonical surface renders `</p><p>` (and an excised <table>) as a bare
+    # "\n" — written literally here so the test stays hermetic to this module.
+    for canonical_text in (
+        "We expect approximately\n931 warehouses",
+        "We expect approximately\n931 warehouses to open",
+    ):
+        candidates = module.propose(canonical_text)
+        assert [c["value"] for c in candidates] == [931], candidates
+        assert candidates[0]["value_qualifier"] is None, (
+            f"qualifier stamped across a block boundary: {candidates[0]!r}"
+        )
+
+    # TRUE POSITIVE preserved: same-line whitespace still detects the bound, and
+    # so does an abutting tilde.
+    same_line = module.propose("We expect approximately 931 warehouses")
+    assert [c["value_qualifier"] for c in same_line] == ["approximately"], same_line
+    assert module._detect_qualifier(len("We opened ~"), "We opened ~931 warehouses") == "~"
+
+    # A qualifier at the START of its own line is still adjacent to ITS figure —
+    # only the gap BETWEEN qualifier and figure may not cross the boundary.
+    text = "Openings\nup to 45,000 deliveries"
+    assert module._detect_qualifier(text.index("45,000"), text) == "up to"
+
+
+def test_bare_quarter_tag_digit_is_not_a_kpi_value():
+    # SECOND whole-branch review, finding 4. The locator emits the "3" of a "Q3"
+    # quarter tag as a number token, and `_is_period_label` — whose own docstring
+    # names "Q1 2026" as its target — only rejected 4-digit YEARS, so the bare
+    # quarter digit committed as a KPI value of 3. Narrow by construction: only a
+    # single digit 1-4 IMMEDIATELY preceded by "Q"/"q" (no intervening space) is a
+    # quarter tag; ordinary single digits are untouched.
+    #
+    # No `@req` tag: this dispatch's plan binds tasks by "Brief item covered", not
+    # a registered loom-spec REQ-id (same convention as the sibling tests above).
+    module = _load_module()
+
+    assert module.propose("Q3 deliveries were strong.") == [], (
+        "the quarter tag digit is a period label, not a KPI value"
+    )
+    assert [c["value"] for c in module.propose("In Q1 2026 we opened 12 stores.")] == [12]
+
+    # NARROWNESS: an ordinary single digit is NOT rejected, including one that
+    # merely FOLLOWS a "Q" across a space, and a multi-digit number after a "Q".
+    assert [c["value"] for c in module.propose("We opened 3 stores.")] == [3]
+    assert [c["value"] for c in module.propose("Each Q 3 stores opened.")] == [3]
+    assert [c["value"] for c in module.propose("Model Q7 sales were 45 units.")] == [7, 45]
+
+
+def test_magnitude_decoder_refuses_a_newline_separated_token():
+    # SECOND whole-branch review, ROOT-CAUSE audit (not one of the four findings).
+    # `_MAGNITUDE_TOKEN_RE` is the DECODER of the locator's token shape, and it
+    # separated number from magnitude word with `\s+` — which matches the block
+    # separator "\n" just like the locator's own absorption did. It is the layer
+    # that turned the fused "45,000\nMillion" into 4.5e10, so with only the locator
+    # fixed this half still falls open the moment a future token-shape change
+    # re-admits a newline. Same defense-in-depth stance `_is_period_label` already
+    # takes for the same reason: BOTH layers are load-bearing.
+    #
+    # A malformed newline-bearing token now FAILS LOUD (the int() parse raises)
+    # rather than silently returning a plausible-looking 1e9-scaled value.
+    #
+    # No `@req` tag: this dispatch's plan binds tasks by "Brief item covered", not
+    # a registered loom-spec REQ-id (same convention as the sibling tests above).
+    module = _load_module()
+
+    with pytest.raises(ValueError):
+        module._normalize_value("45,000\nMillion")
+
+    # TRUE POSITIVE preserved: the same-line token still decodes and scales.
+    assert module._normalize_value("45,000 million") == 45000000000
+    assert module._normalize_value("3.56 billion") == 3560000000
+
+
+def test_hard_wrapped_source_still_commits_the_scaled_value():
+    # THIRD round, the VALUE half of the exhibit_prose fix (see
+    # test_source_line_wrap_inside_a_block_still_absorbs_the_magnitude_word). The
+    # block-separator guard was safe but cost real recall: EDGAR HTML is hard-
+    # wrapped, so "3.56\nbillion" inside one paragraph is a realistic shape, and it
+    # silently committed 3.56 — the META Family DAP defect this part exists to fix,
+    # on the flagship case. Pinned end-to-end here, across the subprocess boundary,
+    # because the surface producer and the multiplier live in different skills and
+    # only the composed pipeline shows the committed value.
+    #
+    # No `@req` tag: this dispatch's plan binds tasks by "Brief item covered", not
+    # a registered loom-spec REQ-id (same convention as the sibling tests above).
+    module = _load_module()
+
+    markets_scripts = _TESTS_DIR.parent / "skills" / "data-markets" / "scripts"
+    spec = importlib.util.spec_from_file_location(
+        "exhibit_prose", markets_scripts / "exhibit_prose.py"
+    )
+    exhibit_prose = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(exhibit_prose)
+
+    canonical_text = exhibit_prose.prose_surface(
+        "<p>Family daily active people grew to 3.56\nbillion in the quarter.</p>"
+    )
+    candidates = module.propose(canonical_text)
+    assert [c["matched_token"] for c in candidates] == ["3.56 billion"], candidates
+    assert [c["value"] for c in candidates] == [3560000000], candidates
+
+    # The anti-fabrication rail still holds over the newly-produced surface: the
+    # token spans real adjacent prose, so it is a literal substring of it.
+    for candidate in candidates:
+        assert module.passes_substring_gate(candidate, canonical_text)

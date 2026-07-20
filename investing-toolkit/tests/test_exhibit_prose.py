@@ -426,3 +426,153 @@ def test_nbsp_word_separator_after_comma_grouped_number_does_not_fuse():
     assert [c["token"] for c in exhibit_prose.locate_numbers(prose3)] == ["3,560,000"]
     for cand in exhibit_prose.locate_numbers(prose3):
         assert prose3[cand["start"]:cand["end"]] == cand["token"]
+
+
+def test_magnitude_word_not_absorbed_across_a_block_boundary():
+    # No living-spec REQ-id: this plan traces tasks by Task item, not REQ-ids.
+    # SECOND whole-branch review, finding 1. Task 1's absorption separator was
+    # `\s+`, and `\s` matches the `\n` that `_ProseWalker` inserts at EVERY block
+    # boundary — the separator that exists specifically to stop cross-block fusion
+    # (see exhibit_prose module docstring / _BLOCK_TAGS). So a block whose text
+    # merely BEGINS with a magnitude word fused into the previous block's trailing
+    # number: "45,000</li><li>Million Air..." tokenized as "45,000\nMillion"
+    # (4.5e10), and the fusion could even cross an EXCISED TABLE. The token is a
+    # literal substring by construction, so the anchor holds while the phrase it
+    # spans does not exist as prose in the document — the fabrication-wearing-a-
+    # valid-anchor class again, now spanning text the source never made adjacent.
+    import exhibit_prose
+
+    # Two sibling list items: "Million Air" is a COMPANY NAME opening the next
+    # block, not the scale of the previous block's 45,000.
+    prose = exhibit_prose.prose_surface(
+        "<li>Vehicles delivered: 45,000</li>"
+        "<li>Million Air partnerships signed: 12</li>"
+    )
+    assert prose == "Vehicles delivered: 45,000\nMillion Air partnerships signed: 12"
+    tokens = [c["token"] for c in exhibit_prose.locate_numbers(prose)]
+    assert "45,000\nMillion" not in tokens, f"fused across block boundary: {tokens!r}"
+    assert tokens == ["45,000", "12"], tokens
+
+    # The worst case: the fusion crossing an EXCISED TABLE, joining two runs of
+    # prose that are not adjacent in the source document at all.
+    prose2 = exhibit_prose.prose_surface(
+        "<p>Total headcount was 1,576</p>"
+        "<table><tr><td>irrelevant</td></tr></table>"
+        "<p>million reasons follow</p>"
+    )
+    assert prose2 == "Total headcount was 1,576\nmillion reasons follow"
+    tokens2 = [c["token"] for c in exhibit_prose.locate_numbers(prose2)]
+    assert "1,576\nmillion" not in tokens2, f"fused across excised table: {tokens2!r}"
+    assert tokens2 == ["1,576"], tokens2
+
+    # Anchors still hold for what IS emitted.
+    for cand in exhibit_prose.locate_numbers(prose2):
+        assert prose2[cand["start"]:cand["end"]] == cand["token"]
+
+    # NO LOSS: this assertion previously pinned the opposite result, and the
+    # behavior it pinned is the thing the next test removes. The guard used to be
+    # CONSERVATIVE because a surface "\n" was ambiguous (walker boundary vs. a
+    # newline inside one source run), so it declined a legitimate hard wrap too and
+    # "3.56\nbillion" degraded to "3.56". The walker now folds source-run newlines
+    # on entry, so the separator is unambiguous and this guard rejects exactly the
+    # cross-block fusion — see
+    # test_source_line_wrap_inside_a_block_still_absorbs_the_magnitude_word.
+    wrapped = exhibit_prose.prose_surface("<p>Family DAP was 3.56\nbillion.</p>")
+    assert wrapped == "Family DAP was 3.56 billion."
+    assert [c["token"] for c in exhibit_prose.locate_numbers(wrapped)] == [
+        "3.56 billion"
+    ]
+
+    # TRUE POSITIVE preserved: same-line whitespace still absorbs, including a
+    # run of it (a tab or multiple spaces is not a block boundary).
+    assert [c["token"] for c in exhibit_prose.locate_numbers("was 3.56 billion")] == [
+        "3.56 billion"
+    ]
+    assert [c["token"] for c in exhibit_prose.locate_numbers("was 3.56 \t billion")] == [
+        "3.56 \t billion"
+    ]
+
+
+def test_magnitude_word_absorbed_in_an_ascii_hyphen_range():
+    # No living-spec REQ-id: this plan traces tasks by Task item, not REQ-ids.
+    # SECOND whole-branch review, finding 2. The compound-joiner guard rejected
+    # absorption after ANY of the three hyphen joiners — but ASCII hyphen-minus is
+    # the commonest RANGE mark in an ASCII-encoded filing, so "2 billion-3 billion"
+    # lost the first bound's scale and committed 2 for a source that says 2 billion:
+    # the compound defect INVERTED (an under-scaled value, same valid-looking
+    # anchor). Discriminator: after a joiner, a RANGE continues with a DIGIT, a
+    # COMPOUND with a LETTER.
+    import exhibit_prose
+
+    text = "guidance of 2 billion-3 billion users"
+    cands = exhibit_prose.locate_numbers(text)
+    assert [c["token"] for c in cands] == ["2 billion", "3 billion"], cands
+    for cand in cands:
+        assert text[cand["start"]:cand["end"]] == cand["token"]
+
+    text2 = "revenue of 3.5 billion-4.0 billion"
+    assert [c["token"] for c in exhibit_prose.locate_numbers(text2)] == [
+        "3.5 billion",
+        "4.0 billion",
+    ]
+
+    # The COMPOUND case stays rejected — the discriminator must not undo finding 1(a).
+    assert [c["token"] for c in exhibit_prose.locate_numbers("a 3.56 billion-dollar program")] == [
+        "3.56"
+    ]
+    assert [c["token"] for c in exhibit_prose.locate_numbers("450 million-unit shipments")] == [
+        "450"
+    ]
+
+    # DISCLOSED RESIDUAL, pinned so the guard's comment cannot overstate it: the
+    # discriminator reads the ONE character after the joiner, so a range whose
+    # upper bound is not written digit-first ("2 billion-$3 billion") still reads
+    # as a compound and degrades to plain digits.
+    assert [c["token"] for c in exhibit_prose.locate_numbers("2 billion-$3 billion")] == [
+        "2",
+        "3 billion",
+    ]
+
+
+def test_source_line_wrap_inside_a_block_still_absorbs_the_magnitude_word():
+    # No living-spec REQ-id: this plan traces tasks by Task item, not REQ-ids.
+    # THIRD round. The block-separator guard (test above) was correct but had to be
+    # paid for with a real loss, because a "\n" on the canonical surface had TWO
+    # possible origins: a walker-inserted block boundary, or a newline that was
+    # simply INSIDE one source text run. EDGAR HTML is hard-wrapped, so a wrap
+    # between a number and its magnitude word is a realistic shape — and in that
+    # shape the value silently reverted to 3.56, re-introducing the very META
+    # Family DAP defect this part exists to fix, on the flagship case.
+    #
+    # The fix removes the ambiguity instead of paying for it: `_ProseWalker`
+    # collapses source-text newlines AS THEY ENTER, so after the walk a "\n" on the
+    # canonical surface means block boundary and NOTHING else. The `[^\S\n]` guards
+    # then become EXACT rather than conservative.
+    import exhibit_prose
+
+    # A hard wrap INSIDE one <p> — one block, no boundary. The number and its
+    # magnitude word are adjacent prose, so the token must span the whole phrase.
+    prose = exhibit_prose.prose_surface(
+        "<p>Revenue grew to 3.56\nbillion in the quarter</p>"
+    )
+    assert prose == "Revenue grew to 3.56 billion in the quarter", repr(prose)
+    cands = exhibit_prose.locate_numbers(prose)
+    assert [c["token"] for c in cands] == ["3.56 billion"], cands
+
+    # The anchor invariant holds over the newly-produced surface, as for any other.
+    for cand in cands:
+        assert prose[cand["start"]:cand["end"]] == cand["token"]
+
+    # A wrap ANYWHERE inside a block is now ordinary same-line whitespace: it
+    # collapses like any other run, and a wrap on the far side of the number is
+    # equally harmless.
+    assert exhibit_prose.prose_surface("<p>a\nb</p>") == "a b"
+    assert exhibit_prose.prose_surface("<p>up to\n45,000 units</p>") == (
+        "up to 45,000 units"
+    )
+
+    # A "\n" surviving onto the surface therefore has exactly ONE origin. Both
+    # block-boundary shapes from the guard test still produce it and still block.
+    assert exhibit_prose.prose_surface("<p>x 45,000</p>\n<p>Million Air</p>") == (
+        "x 45,000\nMillion Air"
+    )
