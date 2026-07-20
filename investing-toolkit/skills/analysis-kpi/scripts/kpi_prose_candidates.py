@@ -35,6 +35,7 @@ import re
 import subprocess
 import sys
 import tempfile
+from decimal import Decimal
 from pathlib import Path
 
 # The number LOCATOR is the data-markets prose surface producer
@@ -57,14 +58,60 @@ _EXHIBIT_PROSE = (
 _SEMANTIC_FIELDS = ("kpi_id", "unit", "period")
 
 
+# Word-scale multipliers, keyed by the magnitude word the LOCATOR absorbs into a
+# token ("3.56 billion" arrives as ONE token, see exhibit_prose._MAGNITUDE_WORDS
+# / _NUMBER_RE). The keys mirror that tuple exactly — a word the locator can
+# attach but this table lacks would silently drop its multiplier, so the two
+# lists must stay in lockstep.
+_MAGNITUDE_MULTIPLIERS = {
+    "thousand": 10 ** 3,
+    "million": 10 ** 6,
+    "billion": 10 ** 9,
+    "trillion": 10 ** 12,
+}
+_MAGNITUDE_TOKEN_RE = re.compile(
+    r"^(?P<number>.+?)\s+(?P<word>"
+    + "|".join(_MAGNITUDE_MULTIPLIERS)
+    + r")$",
+    re.IGNORECASE,
+)
+
+
 def _normalize_value(token: str):
-    """Normalize a PLAIN located token into its numeric `value`: strip thousands
-    separators, then int for an integer token or float for a decimal one (e.g.
-    "1,576,000" -> 1576000, "3.56" -> 3.56, "0" -> 0). PLAIN only — word-scale
-    multipliers ("billion"/"million") are a later part and are NOT parsed here.
+    """Normalize a located token into its numeric `value`: strip thousands
+    separators, apply the word-scale multiplier when the token carries a
+    magnitude word, and return an exact int for a whole result or a float
+    otherwise ("1,576,000" -> 1576000, "3.56" -> 3.56, "3.56 billion" ->
+    3560000000, "0" -> 0).
+
+    The scaling goes through `Decimal`, NOT binary float. A decimal fraction
+    like 0.1 has no exact IEEE-754 representation (`0.1 + 0.2` is famously
+    0.30000000000000004), so float arithmetic is only accidentally exact — it
+    happens to land on the right value for the magnitudes tested here, but the
+    guarantee is absent, and an off-by-a-fraction KPI is exactly the kind of
+    plausible-looking wrong number this whole feature exists to prevent. Decimal
+    multiplies the printed decimal digits exactly, so a whole result comes back
+    as an exact `int`; only a genuinely fractional result (e.g. "0.0015
+    thousand") degrades to float. (This paragraph previously cited
+    `3.56 * 1e9 == 3559999999.9999995` as proof — that claim is FALSE, it
+    evaluates exactly; the reasoning is the absent guarantee, not that case.)
+
+    A token with NO magnitude word is unchanged — the multiplier is applied only
+    when a word is present, and case-insensitively, matching the locator's
+    `re.IGNORECASE` token shape.
+
+    The result is DERIVED, never required to be a source substring: the
+    anti-fabrication gate verifies the VERBATIM token (which now spans the
+    magnitude word), not this value.
     """
-    stripped = token.replace(",", "")
-    return float(stripped) if "." in stripped else int(stripped)
+    match = _MAGNITUDE_TOKEN_RE.match(token.strip())
+    if match is None:
+        stripped = token.replace(",", "")
+        return float(stripped) if "." in stripped else int(stripped)
+    scaled = Decimal(match.group("number").replace(",", "")) * _MAGNITUDE_MULTIPLIERS[
+        match.group("word").lower()
+    ]
+    return int(scaled) if scaled == scaled.to_integral_value() else float(scaled)
 
 
 def run_exhibit_prose(canonical_text: str) -> list[dict]:

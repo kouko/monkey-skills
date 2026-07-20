@@ -241,6 +241,67 @@ def test_normalize_value_decimal_token_becomes_float():
     assert isinstance(module._normalize_value("1,576,000"), int)
 
 
+def test_normalize_value_word_scale():
+    # Task 2 (Part 2): a token carrying a MAGNITUDE word gets the multiplier
+    # applied. Task 1 made the locator absorb the word into the token/span
+    # ("3.56 billion" is ONE token), so this is where the numeric value is
+    # DERIVED from it. Without the multiplier META's "Family DAP 3.56 billion"
+    # commits as 3.56 — off by 1e9. Traced by "Brief item covered" in the plan,
+    # not a registered loom-spec REQ-id (same convention as the tests above).
+    module = _load_module()
+
+    # Exact integers, not lossy floats. (These particular magnitudes DO compute
+    # exactly in binary float — the reason for Decimal is the absent guarantee,
+    # not this case; see _normalize_value's docstring.)
+    assert module._normalize_value("3.56 billion") == 3560000000
+    assert isinstance(module._normalize_value("3.56 billion"), int)
+    assert module._normalize_value("500 million") == 500000000
+    assert module._normalize_value("1.2 trillion") == 1200000000000
+    assert module._normalize_value("40 thousand") == 40000
+    # Case-insensitive, matching the locator's re.IGNORECASE token shape.
+    assert module._normalize_value("3.56 BILLION") == 3560000000
+    # Thousands separators still stripped when a magnitude word follows.
+    assert module._normalize_value("1,250 million") == 1250000000
+    # A sub-integer scaled result stays a float rather than being truncated.
+    assert module._normalize_value("1.5 thousand") == 1500
+    assert module._normalize_value("0.0015 thousand") == 1.5
+
+    # PLAIN tokens are UNCHANGED — the multiplier applies only when a magnitude
+    # word is present (mutating the parser to always scale breaks these).
+    assert module._normalize_value("931") == 931
+    assert isinstance(module._normalize_value("931"), int)
+    assert module._normalize_value("1,576,000") == 1576000
+    assert module._normalize_value("3.56") == 3.56
+
+
+def test_magnitude_word_tables_stay_in_lockstep():
+    # Cross-file DRIFT guard. The locator (data-markets/exhibit_prose.py) decides
+    # which magnitude words get absorbed into a token; this module (analysis-kpi)
+    # decides what each one multiplies by. Production crosses that boundary by
+    # SUBPROCESS, so neither file can import the other and no runtime check is
+    # possible — but a test can load both directly and pin them together.
+    #
+    # The drift direction that matters is silent: drop a word from the locator
+    # while it survives in the multiplier table, and "3.56 billion" tokenizes as
+    # plain "3.56", finds no magnitude suffix, and commits UNSCALED — a byte-for-
+    # byte resurrection of the META bug this task exists to kill, with no crash
+    # and a still-valid-looking verbatim anchor.
+    module = _load_module()
+
+    markets_scripts = _TESTS_DIR.parent / "skills" / "data-markets" / "scripts"
+    spec = importlib.util.spec_from_file_location(
+        "exhibit_prose", markets_scripts / "exhibit_prose.py"
+    )
+    exhibit_prose = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(exhibit_prose)
+
+    assert set(module._MAGNITUDE_MULTIPLIERS) == set(exhibit_prose._MAGNITUDE_WORDS), (
+        "locator magnitude words and multiplier table drifted apart — a word the "
+        "locator absorbs but this table lacks (or vice versa) silently drops the "
+        "multiplier and commits an unscaled KPI value"
+    )
+
+
 def test_commit_requires_confirm():
     # Task 6 (Part 1 walking skeleton): the tier-① trust GATE. A prose candidate
     # is accepted for commit ONLY after an explicit human confirm-all. There is NO
