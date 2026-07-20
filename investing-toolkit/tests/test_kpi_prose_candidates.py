@@ -174,6 +174,55 @@ def test_propose_emits_raw_candidate_needs_semantic():
     assert module.passes_substring_gate(candidate, canonical_text) is True
 
 
+def test_period_label_not_a_candidate():
+    # Task 3 (Part 2): a number functioning as a DATE / fiscal-period LABEL is not
+    # a KPI value and must be filtered before the LLM/human layer. For the prose
+    # "In the first quarter of fiscal 2026, deliveries rose 12%", the fiscal-year
+    # token "2026" (a 4-digit year immediately preceded by the period word
+    # "fiscal") is DROPPED, while the real KPI number "12" (from "12%") survives —
+    # the filter is a targeted false-positive reducer, not general NLP: it does
+    # NOT swallow ordinary prose numbers.
+    #
+    # No `@req` tag: this dispatch's plan binds tasks by "Brief item covered", not
+    # a registered loom-spec REQ-id (same convention as the sibling tests above).
+    module = _load_module()
+
+    canonical_text = "In the first quarter of fiscal 2026, deliveries rose 12%"
+
+    candidates = module.propose(canonical_text)
+    values = [c["value"] for c in candidates]
+    tokens = [c["matched_token"] for c in candidates]
+
+    # The fiscal-year label is NOT emitted as a KPI value candidate.
+    assert 2026 not in values, "the fiscal-year label 2026 must be filtered"
+    assert "2026" not in tokens, "the fiscal-year token is not emitted"
+
+    # The real KPI number (12 from "12%") is unaffected by the period filter, and
+    # its surviving candidate keeps the mechanical value/token/offset fields.
+    assert 12 in values, "an ordinary prose number is not filtered"
+    kept = [c for c in candidates if c["matched_token"] == "12"]
+    assert len(kept) == 1
+    start, end = kept[0]["char_offset_span"]
+    assert canonical_text[start:end] == "12", "surviving anchor is unchanged"
+
+
+def test_bare_year_without_period_cue_survives():
+    # Teeth for the "narrow, no over-reach" guarantee: a bare 4-digit year with NO
+    # preceding period word is NOT a label and MUST survive as a candidate. The
+    # preceding-word lookback is load-bearing — mutating _is_period_label to reject
+    # EVERY 19xx/20xx year (dropping the lookback) breaks this test. Uses the pure
+    # build_candidates seam (hermetic, no subprocess) with a candidate at offset 0
+    # so its preceding text is empty (no period cue).
+    module = _load_module()
+    canonical_text = "2020 new stores opened across the region"
+    candidates = module.build_candidates(
+        [{"token": "2020", "start": 0, "end": 4}], canonical_text
+    )
+    assert [c["value"] for c in candidates] == [2020], (
+        "a bare year with no period cue survives (preceding-word guard is load-bearing)"
+    )
+
+
 def test_normalize_value_decimal_token_becomes_float():
     # Coverage for the DECIMAL branch of _normalize_value (the integer branch is
     # exercised by the propose/gate tests; the float branch was untested). A

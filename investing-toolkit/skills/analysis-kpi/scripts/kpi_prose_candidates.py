@@ -31,6 +31,7 @@ Anti-fabrication substring gate (the load-bearing trust rail):
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -93,7 +94,44 @@ def run_exhibit_prose(canonical_text: str) -> list[dict]:
         return json.loads(out_path.read_text(encoding="utf-8"))
 
 
-def build_candidates(located_numbers: list[dict]) -> list[dict]:
+# Date / fiscal-period LABEL rejection (Part 2). A bare 4-digit year in the
+# 19xx/20xx range is NOT a KPI value when it functions as a date or fiscal-period
+# label — "fiscal 2026", "Q1 2026", "in the year 2025". Deliberately NARROW: we
+# reject such a token ONLY when it is a 4-digit year IMMEDIATELY preceded by a
+# period word ("fiscal" / "quarter" / "year" / a "Q<n>" quarter tag). An ordinary
+# prose figure that merely happens to be four digits ("1500 stores") is not
+# preceded by a period word, so it is left untouched. This is a false-positive
+# reducer BELOW the LLM/human layer, not general NLP: a bare 4-digit year with no
+# temporal cue is left alone rather than guessed at.
+_YEAR_RE = re.compile(r"(?:19|20)\d{2}")
+_PERIOD_WORDS = frozenset({"fiscal", "quarter", "year"})
+_QUARTER_RE = re.compile(r"[Qq][1-4]")
+_PRECEDING_WORD_RE = re.compile(r"(\S+)\s*$")
+
+
+def _is_period_label(token: str, start: int, canonical_text: str) -> bool:
+    """True iff the located `token` is a 4-digit year (19xx/20xx) functioning as a
+    date / fiscal-period LABEL — i.e. immediately preceded (in `canonical_text`)
+    by a period word ("fiscal" / "quarter" / "year" / "Q<n>"). Such a token is a
+    period label, not a KPI value, so it must not be emitted as a candidate.
+
+    Narrow by design: a token that is not a plain 4-digit year is never a label
+    here (a magnitude-bearing or separator-bearing token fails `_YEAR_RE`), and a
+    4-digit year NOT preceded by a period word is left alone. `start` is the
+    token's offset in `canonical_text`, so the immediately-preceding word is read
+    from the source bytes — the same anchor the substring gate verifies against.
+    """
+    if not _YEAR_RE.fullmatch(token):
+        return False
+    match = _PRECEDING_WORD_RE.search(canonical_text[:start])
+    if not match:
+        return False
+    word = match.group(1).strip(",.;:()").lower()
+    return word in _PERIOD_WORDS or bool(_QUARTER_RE.fullmatch(word))
+
+
+def build_candidates(located_numbers: list[dict],
+                     canonical_text: str | None = None) -> list[dict]:
     """Pure transform: the located-number list (already crossed the data-markets
     boundary) -> RAW candidate points. Each candidate carries ONLY mechanical
     fields — a `value` DERIVED from the verbatim token, the verbatim
@@ -106,10 +144,22 @@ def build_candidates(located_numbers: list[dict]) -> list[dict]:
     Part 1 walking skeleton: `verbatim_quote` IS the matched token, and the
     advisory `unit_hint`/`period_hint` are present-but-null — sophisticated hint
     extraction is a later part and is deliberately NOT built here.
+
+    Part 2 date/period filter: when `canonical_text` is supplied, a located number
+    that is a 4-digit-year date / fiscal-period LABEL (e.g. "fiscal 2026") is
+    DROPPED — a period label is not a KPI value. Reading the token's local context
+    needs the surrounding text, so `canonical_text` is threaded in from `propose`;
+    called WITHOUT it (the pure-seam unit tests) no context-based filtering runs
+    and every located number is wrapped. The filter only DROPS labels — a
+    surviving candidate keeps its mechanical value/token/offset fields unchanged.
     """
     candidates: list[dict] = []
     for located in located_numbers:
         token = located["token"]
+        if canonical_text is not None and _is_period_label(
+            token, located["start"], canonical_text
+        ):
+            continue
         candidates.append({
             "matched_token": token,
             "verbatim_quote": token,
@@ -134,7 +184,7 @@ def propose(canonical_text: str) -> list[dict]:
     testable without a subprocess (mirroring Route B's propose ->
     run_exhibit_tables + build_candidates).
     """
-    return build_candidates(run_exhibit_prose(canonical_text))
+    return build_candidates(run_exhibit_prose(canonical_text), canonical_text)
 
 
 def _scanned_result(candidates: list[dict]) -> dict:
