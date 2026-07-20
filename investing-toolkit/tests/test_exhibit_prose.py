@@ -349,3 +349,80 @@ def test_locate_cli_emits_located_numbers_json(tmp_path):
     # equals the token byte-for-byte for every located number.
     for item in located:
         assert text[item["start"]:item["end"]] == item["token"]
+
+
+def test_magnitude_word_not_absorbed_in_hyphenated_compound():
+    # No living-spec REQ-id: this plan traces tasks by Task item, not REQ-ids.
+    # WHOLE-BRANCH review finding 1(a). Task 1's absorption alternation ends in
+    # `\b`, which is satisfied by a HYPHEN — so "billion-dollar" / "million-unit"
+    # were read as the magnitude word "billion" / "million". In a hyphenated
+    # compound the word is ADJECTIVAL: it modifies the following noun ("dollar",
+    # "unit"), it does not scale the figure. Absorbing it both mis-spans the
+    # anchor and (via the downstream multiplier) invents a value ~1e9 too large,
+    # while the exact-substring anchor keeps holding BY CONSTRUCTION — fabrication
+    # wearing a valid-looking source anchor, the class this feature exists to kill.
+    import exhibit_prose
+
+    # A hyphen after the magnitude word blocks absorption; the number still
+    # tokenizes PLAIN (degrading to digits is the safe direction).
+    tokens = [
+        c["token"]
+        for c in exhibit_prose.locate_numbers("a 3.56 billion-dollar program")
+    ]
+    assert "3.56 billion" not in tokens, f"adjectival compound absorbed: {tokens!r}"
+    assert tokens == ["3.56"], tokens
+
+    tokens2 = [
+        c["token"]
+        for c in exhibit_prose.locate_numbers("450 million-unit shipments")
+    ]
+    assert tokens2 == ["450"], tokens2
+
+    # TRUE POSITIVE preserved: a magnitude word followed by PUNCTUATION (the
+    # sentence-final case) still absorbs — the guard rejects only the hyphen,
+    # not every non-word char, so "3.56 billion." keeps its multiplier.
+    cands = exhibit_prose.locate_numbers("Family DAP was 3.56 billion.")
+    assert [c["token"] for c in cands] == ["3.56 billion"], cands
+    text = "Family DAP was 3.56 billion."
+    assert text[cands[0]["start"]:cands[0]["end"]] == "3.56 billion"
+
+    # TRUE POSITIVE preserved: magnitude word followed by a comma, and mid-clause.
+    tokens3 = [
+        c["token"]
+        for c in exhibit_prose.locate_numbers("was 500 million, up from 400 million")
+    ]
+    assert tokens3 == ["500 million", "400 million"], tokens3
+
+
+def test_nbsp_word_separator_after_comma_grouped_number_does_not_fuse():
+    # No living-spec REQ-id: this plan traces tasks by Task item, not REQ-ids.
+    # WHOLE-BRANCH review finding 2. The T5 grouping guard `(?<!\d)` stops a match
+    # from STARTING inside a longer digit run, but an nbsp used as a plain
+    # non-breaking WORD separator after a COMMA-grouped number slips past it: in
+    # "1,428<nbsp>500-mile trucks" the char before the "428" run is a comma, so
+    # the lookbehind passes and "428<nbsp>500" canonicalizes to "428,500",
+    # yielding the fabricated 1,428,500 with a valid-looking anchor. Widening the
+    # lookbehind to `(?<![\d,])` closes it: a legitimately grouped number's LEAD
+    # group is never preceded by a comma, so the widening costs no true positive.
+    import exhibit_prose
+
+    prose = exhibit_prose.prose_surface(
+        "<p>We deployed 1,428 500-mile trucks.</p>"
+    )
+    tokens = [c["token"] for c in exhibit_prose.locate_numbers(prose)]
+    assert "428,500" not in tokens, f"fused fabricated grouping: {tokens!r}"
+    assert "1,428,500" not in tokens, f"fused fabricated value: {tokens!r}"
+    assert tokens == ["1,428", "500"], tokens
+
+    # TRUE POSITIVE: a SENTENCE comma before the group is not the failure case —
+    # the char immediately adjacent to the digit run is a SPACE, so a genuine
+    # nbsp grouping after a comma+space still normalizes.
+    prose2 = exhibit_prose.prose_surface("<p>In 2024, 428 500 units shipped.</p>")
+    tokens2 = [c["token"] for c in exhibit_prose.locate_numbers(prose2)]
+    assert "428,500" in tokens2, tokens2
+
+    # Regression: ordinary groupings (no preceding comma) are untouched.
+    prose3 = exhibit_prose.prose_surface("<p>reached 3 560 000 subs</p>")
+    assert [c["token"] for c in exhibit_prose.locate_numbers(prose3)] == ["3,560,000"]
+    for cand in exhibit_prose.locate_numbers(prose3):
+        assert prose3[cand["start"]:cand["end"]] == cand["token"]

@@ -170,13 +170,26 @@ def _is_period_label(token: str, start: int, canonical_text: str) -> bool:
     by a period word ("fiscal" / "quarter" / "year" / "Q<n>"). Such a token is a
     period label, not a KPI value, so it must not be emitted as a candidate.
 
-    Narrow by design: a token that is not a plain 4-digit year is never a label
-    here (a magnitude-bearing or separator-bearing token fails `_YEAR_RE`), and a
-    4-digit year NOT preceded by a period word is left alone. `start` is the
-    token's offset in `canonical_text`, so the immediately-preceding word is read
-    from the source bytes — the same anchor the substring gate verifies against.
+    An ABSORBED magnitude word is stripped before the year test. This is DEFENSE
+    IN DEPTH against a cross-layer hole the whole-branch review found: the locator
+    absorbs a trailing magnitude word into the token, so "fiscal 2026 billion-
+    dollar program" arrived here as the token "2026 billion", which no longer
+    `fullmatch`ed `_YEAR_RE` — the filter silently never fired and the period
+    LABEL committed as a KPI value scaled by 1e9. The locator now refuses to
+    absorb across a hyphen (`exhibit_prose._COMPOUND_JOINERS`), which closes that
+    specific prose; stripping here means a FUTURE change to token shape cannot
+    reopen the filter the same way. Both layers are load-bearing.
+
+    Narrow by design: a token whose numeric part is not a plain 4-digit year is
+    never a label here (a separator-bearing "1,576,000" or a real magnitude KPI
+    "450 million" fails `_YEAR_RE`), and a 4-digit year NOT preceded by a period
+    word is left alone. `start` is the token's offset in `canonical_text`, so the
+    immediately-preceding word is read from the source bytes — the same anchor the
+    substring gate verifies against.
     """
-    if not _YEAR_RE.fullmatch(token):
+    magnitude = _MAGNITUDE_TOKEN_RE.match(token.strip())
+    number = magnitude.group("number") if magnitude else token
+    if not _YEAR_RE.fullmatch(number):
         return False
     match = _PRECEDING_WORD_RE.search(canonical_text[:start])
     if not match:

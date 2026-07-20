@@ -104,9 +104,10 @@ _CHAR_FOLD = str.maketrans(
 # groupings and never a "in 2024 500 firms" word gap.
 #
 # BOTH ends are guarded, and the guards are mirror images of each other:
-#   ``(?!\d)``  rejects a malformed TRAILING group (>3 digits);
-#   ``(?<!\d)`` stops a match from STARTING INSIDE a longer (>=4-digit) run that
-#               sits directly against the separator.
+#   ``(?!\d)``     rejects a malformed TRAILING group (>3 digits);
+#   ``(?<![\d,])`` stops a match from STARTING INSIDE a longer (>=4-digit) run
+#                  that sits directly against the separator, OR directly after a
+#                  COMMA that already grouped a preceding number.
 # Without the leading guard, "as of 2026<nbsp>560 holders" matched from the "026"
 # and fused two independent numbers into the fabricated "2026,560" — and because
 # the anchor ``text[start:end] == token`` holds BY CONSTRUCTION, such a token
@@ -115,13 +116,18 @@ _CHAR_FOLD = str.maketrans(
 # costs no true positives. Either guard failing degrades the run to plain digits
 # (locating as separate numbers), which is the safe direction.
 #
-# KNOWN DEFERRED EDGE: an nbsp used as a plain non-breaking WORD separator whose
-# preceding char is a COMMA, not a digit (e.g. "1,428<nbsp>500-mile trucks"), is
-# not covered — the ``(?<!\d)`` lookbehind sees the comma. Declared deferral,
-# tracked in the plan; not a silent gap.
+# The COMMA in that lookbehind closes the nbsp-as-plain-WORD-separator case: in
+# "1,428<nbsp>500-mile trucks" the nbsp joins two independently meaningful
+# numbers, and a digit-only lookbehind saw the comma, matched from "428", and
+# canonicalized "1,428,500" — a fabricated value wearing a valid anchor. It costs
+# no true positive: a legitimately grouped number's LEAD group is never preceded
+# by a comma (that comma would be the SAME number's separator, and ``\d{1,3}``
+# cannot start mid-group). A SENTENCE comma is not this case — in "In 2024,
+# 428<nbsp>500 units" the char adjacent to the digit run is the SPACE, so the
+# genuine grouping still normalizes.
 _THOUSANDS_SEP = "\u00a0\u2009"
 _SPACE_GROUPED_NUMBER_RE = re.compile(
-    r"(?<!\d)\d{1,3}(?:[" + _THOUSANDS_SEP + r"]\d{3})+(?!\d)"
+    r"(?<![\d,])\d{1,3}(?:[" + _THOUSANDS_SEP + r"]\d{3})+(?!\d)"
 )
 
 
@@ -232,10 +238,28 @@ def prose_surface(html: str) -> str:
 # value multiplier is the sibling task. Percentages, qualifiers, and ranges are
 # still deferred to later parts. IGNORECASE affects only the word alternation;
 # digits and commas are case-neutral.
+#
+# HYPHEN GUARD (``_COMPOUND_JOINERS``): ``\b`` alone is satisfied by a HYPHEN, so
+# "3.56 billion-dollar program" absorbed "billion" — but in a hyphenated compound
+# the magnitude word is ADJECTIVAL ("billion-dollar", "million-unit"): it modifies
+# the following noun, it does not scale the figure. Absorbing it mis-spans the
+# anchor AND makes the downstream multiplier invent a value ~1e9 too large, while
+# ``text[start:end] == token`` keeps holding BY CONSTRUCTION — the same
+# fabrication-wearing-a-valid-anchor class as the grouping guards above.
+#
+# The guard rejects ONLY true compound joiners — ASCII hyphen-minus, U+2010
+# HYPHEN, U+2011 NON-BREAKING HYPHEN. It deliberately does NOT reject the DASHES
+# (U+2012 figure dash .. U+2015 horizontal bar): a dash after a magnitude word is
+# a RANGE or parenthetical mark ("3 billion–5 billion"), where the word IS the
+# figure's scale and must still be absorbed. Nor does it reject punctuation
+# generally: a sentence-final "3.56 billion." and a mid-clause "500 million,"
+# are ordinary true positives. Failing the guard degrades the token to plain
+# digits, which is the safe direction.
 _MAGNITUDE_WORDS = ("thousand", "million", "billion", "trillion")
+_COMPOUND_JOINERS = "-‐‑"
 _NUMBER_RE = re.compile(
     r"\d+(?:,\d{3})*(?:\.\d+)?"
-    r"(?:\s+(?:" + "|".join(_MAGNITUDE_WORDS) + r")\b)?",
+    r"(?:\s+(?:" + "|".join(_MAGNITUDE_WORDS) + r")\b(?![" + _COMPOUND_JOINERS + r"]))?",
     re.IGNORECASE,
 )
 

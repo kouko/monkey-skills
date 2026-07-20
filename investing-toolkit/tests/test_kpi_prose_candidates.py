@@ -1017,3 +1017,50 @@ def test_bounded_quote_degrades_to_the_bare_token_when_token_exceeds_budget():
     quote = f"reported {token} units in the period, a record."
 
     assert module._bounded_quote(quote, token) == token
+
+
+def test_magnitude_absorption_does_not_reopen_the_period_label_filter():
+    # WHOLE-BRANCH review finding 1 — the CROSS-LAYER interaction the per-task
+    # tests structurally could not see. Task 1 (locator) changed what a token IS
+    # by absorbing a trailing magnitude word; Task 3's `_is_period_label` gates on
+    # `_YEAR_RE.fullmatch(token)`. Composed, a year followed by a magnitude word
+    # ("fiscal 2026 billion-dollar...") no longer fullmatches, the period filter
+    # never fires, and the LABEL commits as a KPI value scaled by 1e9 — a number
+    # whose source anchor holds LITERALLY while being semantically meaningless.
+    # Each layer's own tests pass; only their composition fails, so this test
+    # exercises BOTH through `propose`.
+    #
+    # No `@req` tag: this dispatch's plan binds tasks by "Brief item covered", not
+    # a registered loom-spec REQ-id (same convention as the sibling tests above).
+    module = _load_module()
+
+    for prose, fabricated in (
+        ("Our fiscal 2026 billion-dollar cost program expanded.", 2026000000000),
+        ("In Q1 2026 million-unit shipments accelerated.", 2026000000),
+    ):
+        candidates = module.propose(prose)
+        values = [c["value"] for c in candidates]
+        tokens = [c["matched_token"] for c in candidates]
+        assert fabricated not in values, f"period label committed as value: {candidates!r}"
+        assert 2026 not in values, f"period label committed as value: {tokens!r}"
+        assert not any("2026" in t for t in tokens), tokens
+
+    # Control (already correct before the fix): the same prose WITHOUT a magnitude
+    # word is dropped by the period filter, proving the filter itself is intact.
+    assert [c["matched_token"] for c in module.propose("Our fiscal 2026 cost program")] == []
+
+    # DEFENSE IN DEPTH, layer (b) alone: even if a FUTURE locator change re-admits
+    # a magnitude word onto a year token, `_is_period_label` must strip it before
+    # the year test rather than fall open. Driven through the pure seam with a
+    # synthetic located token, so it pins the filter independently of the locator.
+    text = "Our fiscal 2026 billion-dollar cost program expanded."
+    assert text[11:23] == "2026 billion"
+    assert module.build_candidates([{"token": "2026 billion", "start": 11, "end": 23}], text) == []
+
+    # ...and the narrowness guarantee still holds: a magnitude-bearing token whose
+    # numeric part is NOT a bare year is a real KPI and must survive.
+    kpi_text = "We shipped 450 million units in the period."
+    survivors = module.build_candidates(
+        [{"token": "450 million", "start": 11, "end": 22}], kpi_text
+    )
+    assert [c["value"] for c in survivors] == [450000000], survivors
