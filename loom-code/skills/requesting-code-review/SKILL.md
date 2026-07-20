@@ -210,7 +210,7 @@ rubrics, and checklists ship together under one plugin version.
 - [`../subagent-driven-development/rubrics/arch-gate.md`](../subagent-driven-development/rubrics/arch-gate.md) — functional copy of code-team's architecture rubric.
 - [`../subagent-driven-development/checklists/security-checklist.md`](../subagent-driven-development/checklists/security-checklist.md) — functional copy of code-team's security checklist.
 - [`../subagent-driven-development/standards/deliberate-simplification.md`](../subagent-driven-development/standards/deliberate-simplification.md) — the `LOOM-SIMPLIFY:` marker convention + grep-on-demand harvest rule this skill surfaces at the merge gate (§Process Step 4).
-- [`references/gate-markers-spec.md`](references/gate-markers-spec.md) — verdict-text schema, suite-line grammar, waiver semantics, the patch-id relaxation (`base_sha`/`patch_id`), the `validate` dry-run subcommand, and the write-markers-then-push-separately ordering rule.
+- [`references/gate-markers-spec.md`](references/gate-markers-spec.md) — verdict-text schema, the `verified --run` real-execution binding, waiver semantics, the patch-id relaxation (`base_sha`/`patch_id`), the `validate` dry-run subcommand, and the write-markers-then-push-separately ordering rule.
 - [`../verification-before-completion/SKILL.md`](../verification-before-completion/SKILL.md) — sibling skill that fires alongside this one in finishing-a-branch flow.
 - [`../finishing-a-development-branch/SKILL.md`](../finishing-a-development-branch/SKILL.md) — orchestrator that invokes this skill.
 - [`../using-loom-code/SKILL.md`](../using-loom-code/SKILL.md) — router; this skill is Stage 6 (Review).

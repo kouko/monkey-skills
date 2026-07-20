@@ -210,8 +210,9 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
     - If `--verify HEAD` exits 0: the carrier landed → proceed to push.
 9c. Gate markers at the FINAL HEAD — the `hooks/git-guard.py` PreToolUse gate blocks
     `git push` / `gh pr create` without both markers matching current HEAD:
-    - Re-run the package suite at the final HEAD, then mint
-      `python3 <plugin-root>/scripts/loom_gate_markers.py verified --suite-line "<tail line>"`
+    - Mint by running the package suite THROUGH the marker at the final HEAD:
+      `python3 <plugin-root>/scripts/loom_gate_markers.py verified --run "<test command>"`
+      (it executes the command and mints only on a real exit 0)
       — verification evidence must POSTDATE the close-out commit; a green run from before
       it is exactly the stale-green-light failure this gate exists to kill.
     - Mint the review marker at the final HEAD (save the Step-3 verdict text to a file,
