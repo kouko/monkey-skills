@@ -88,6 +88,20 @@ def test_claude_shaped_push_blocked_without_markers(repo):
     )
 
 
+def test_claude_shaped_wrapper_push_blocked_without_markers(repo):
+    # A push behind a known wrapper (env) must still be recognized once
+    # the shim forwards the payload to git-guard.py unchanged — proves
+    # the wrapper-aware matcher flows through the shim, not just bare
+    # `git push`.
+    payload = {
+        "tool_name": "Bash",
+        "tool_input": {"command": "env git push"},
+        "cwd": str(repo),
+    }
+    res = run_shim(payload, cwd=repo)
+    assert res.returncode == 2, res.stderr
+
+
 def test_malformed_payload_fails_open_with_warning(repo):
     res = run_shim("this is not json {", cwd=repo)
     assert res.returncode == 0

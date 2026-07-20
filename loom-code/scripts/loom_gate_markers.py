@@ -14,9 +14,15 @@ Dir: `<git-dir>/loom/` resolved via `git rev-parse --git-dir` from
   schema gate: a marker can only exist if a schema-valid verdict text
   exists). NEEDS_REVISION never mints a marker (exit 3); a malformed
   verdict never mints one either (exit 4, missing keys listed).
-- `verified.json`     {"schema": 1, "head_sha", "suite_line",
-  "written_at", optional "base_sha"/"patch_id"} — the suite line must
-  look like a real green run ("N passed", N > 0, no "failed"/"error").
+- `verified.json`     {"schema": 1, "head_sha", "run_cmd", "exit_code",
+  "output_tail", "written_at", optional "base_sha"/"patch_id"} — minted
+  ONLY after `--run "<cmd>"` actually executes in `--repo` and exits 0;
+  records the command run + a bounded tail of its captured output. This
+  is auditability, NOT unforgeability: an agent can still pass
+  `--run "true"` and mint a marker with no real suite behind it. The
+  bar is raised from "type any string" to "a real command must run and
+  exit 0, and is recorded" — local execution cannot cryptographically
+  prove a genuine suite ran.
 - `base_sha`/`patch_id` (both markers, both optional): merge-base with
   the default branch and `git diff base..HEAD | git patch-id --stable`
   at write time, recorded ONLY when every step resolves (default
@@ -288,8 +294,9 @@ def _cmd_review_pass(repo: Path, marker_dir: Path, args: argparse.Namespace) -> 
 
 def validate_suite_line(line: str) -> list[str]:
     """All problems with `line` as a green pytest-style summary; []
-    when clean. Shared by `_cmd_verified` (write path) and
-    `_cmd_validate` (dry-run path) so both apply the exact same rule."""
+    when clean. Used only by `_cmd_validate` (the dry-run text check).
+    The `verified` WRITE path no longer accepts a self-typed suite line —
+    it executes a real command via `run_verification` instead."""
     problems: list[str] = []
     m = _PASSED_RE.search(line)
     if not m or int(m.group(1)) == 0:
@@ -303,12 +310,46 @@ def validate_suite_line(line: str) -> list[str]:
     return problems
 
 
+# Bounded tail of the verification run's combined stdout+stderr, recorded
+# in the marker for a human/auditor to inspect. 4 KB is enough to carry a
+# pytest summary line plus context without bloating the marker file.
+VERIFY_OUTPUT_TAIL_CHARS = 4000
+
+
+def run_verification(repo: Path, command: str) -> tuple[int, str]:
+    """Execute `command` in `repo` via the shell; return (exit_code,
+    output_tail) where output_tail is the last VERIFY_OUTPUT_TAIL_CHARS
+    chars of combined stdout+stderr. A launch failure (OSError) is
+    reported as a non-zero exit so the caller mints no marker.
+
+    HONEST RESIDUAL (do not over-claim): this binds the `verified` marker
+    to a command that really ran and really exited 0, and records that
+    command — but it is NOT cryptographic proof a genuine test suite ran.
+    An agent can still pass `--run "true"`. This raises the bar from
+    "type a suite-line string" (zero execution) to "a real command must
+    run and exit 0, and is recorded for auditability"; local execution
+    cannot guarantee more."""
+    try:
+        result = subprocess.run(
+            command,
+            shell=True,
+            cwd=str(repo),
+            capture_output=True,
+            text=True,
+        )
+    except OSError as exc:
+        return 1, f"loom-gate-markers: could not launch --run command: {exc}"
+    combined = (result.stdout or "") + (result.stderr or "")
+    return result.returncode, combined[-VERIFY_OUTPUT_TAIL_CHARS:]
+
+
 def _cmd_verified(repo: Path, marker_dir: Path, args: argparse.Namespace) -> int:
-    line = args.suite_line
-    if validate_suite_line(line):
+    command = args.run
+    exit_code, output_tail = run_verification(repo, command)
+    if exit_code != 0:
         print(
-            f"loom-gate-markers: suite line {line!r} is not a green "
-            '"N passed" run (N > 0, no failed/error); no marker written.',
+            f"loom-gate-markers: verification command exited {exit_code} "
+            f"(not a green run); no marker written. Command: {command!r}",
             file=sys.stderr,
         )
         return 4
@@ -320,7 +361,9 @@ def _cmd_verified(repo: Path, marker_dir: Path, args: argparse.Namespace) -> int
     payload = {
         "schema": 1,
         "head_sha": head_sha,
-        "suite_line": line,
+        "run_cmd": command,
+        "exit_code": exit_code,
+        "output_tail": output_tail,
         "written_at": _now_iso(),
     }
     patch_id_fields = compute_patch_id(repo)
@@ -387,7 +430,7 @@ def _cmd_validate(args: argparse.Namespace) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     """CLI entry: `review-pass --verdict-file <path>` /
-    `verified --suite-line "<text>"` / `waiver --reason "<text>"` /
+    `verified --run "<cmd>"` / `waiver --reason "<text>"` /
     `validate --verdict-file <path> [--suite-line "<text>"]`,
     each of the first three with optional `--repo <path>` (default
     cwd). `validate` is a dry-run text check — no repo, no marker
@@ -409,7 +452,12 @@ def main(argv: list[str] | None = None) -> int:
 
     vf = subparsers.add_parser("verified")
     vf.add_argument("--repo", default=".", help="repo path (default: cwd)")
-    vf.add_argument("--suite-line", required=True)
+    vf.add_argument(
+        "--run",
+        required=True,
+        help="verification command to execute in --repo; the marker is "
+        "minted ONLY if it exits 0 (records the command + output tail)",
+    )
     vf.set_defaults(func=_cmd_verified)
 
     wv = subparsers.add_parser("waiver")

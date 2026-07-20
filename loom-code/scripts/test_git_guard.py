@@ -126,7 +126,9 @@ def write_verified(repo_path, sha=None, schema=1):
     (loom_dir(repo_path) / "verified.json").write_text(json.dumps({
         "schema": schema,
         "head_sha": sha or head_sha(repo_path),
-        "suite_line": "42 passed in 1.00s",
+        "run_cmd": "true",
+        "exit_code": 0,
+        "output_tail": "",
         "written_at": "2026-07-04T00:00:00+08:00",
     }))
 
@@ -191,7 +193,7 @@ def _mint_markers(repo, tmp_path):
     assert mint_review.returncode == 0, mint_review.stderr
     mint_verified = subprocess.run(
         [sys.executable, str(MARKERS_CLI), "verified",
-         "--repo", str(repo), "--suite-line", "5 passed"],
+         "--repo", str(repo), "--run", "true"],
         capture_output=True, text=True, env=_iso_env(),
     )
     assert mint_verified.returncode == 0, mint_verified.stderr
@@ -482,7 +484,7 @@ def test_e2e_markers_cli_to_hook_allows_push(repo, tmp_path):
     assert mint_review.returncode == 0, mint_review.stderr
     mint_verified = subprocess.run(
         [sys.executable, str(MARKERS_CLI), "verified",
-         "--repo", str(repo), "--suite-line", "12 passed in 0.30s"],
+         "--repo", str(repo), "--run", "true"],
         capture_output=True, text=True, env=_iso_env(),
     )
     assert mint_verified.returncode == 0, mint_verified.stderr
@@ -588,6 +590,83 @@ def test_heredoc_git_push_line_fail_closed(repo):
     cmd = "cat <<'EOF' > notes.txt\ngit push\nEOF"
     res = run_hook(bash_event(cmd, cwd=repo))
     assert res.returncode == 2
+
+
+# --- wrapper bypass forms: push/merge behind known wrappers -----------------
+
+
+def test_absolute_path_git_push_blocked(repo):
+    # /usr/bin/git is git — an absolute-path invocation must not slip
+    # past a matcher that only recognized a bare leading `git`.
+    res = run_hook(bash_event("/usr/bin/git push", cwd=repo))
+    assert res.returncode == 2
+
+
+def test_env_wrapper_git_push_blocked(repo):
+    res = run_hook(bash_event("env git push", cwd=repo))
+    assert res.returncode == 2
+
+
+def test_command_builtin_git_push_blocked(repo):
+    res = run_hook(bash_event("command git push", cwd=repo))
+    assert res.returncode == 2
+
+
+def test_sh_c_git_push_blocked(repo):
+    res = run_hook(bash_event('sh -c "git push"', cwd=repo))
+    assert res.returncode == 2
+
+
+def test_gh_api_pulls_merge_put_blocked(repo):
+    # The REST equivalent of `gh pr merge`: PUT on a pulls .../merge
+    # endpoint must be gated the same as the porcelain form.
+    res = run_hook(bash_event(
+        "gh api repos/o/r/pulls/5/merge -X PUT", cwd=repo))
+    assert res.returncode == 2
+
+
+def test_gh_api_merge_glued_short_method_blocked(repo):
+    # gh (cobra/pflag) accepts the glued short-flag form `-XPUT` same as
+    # spaced `-X PUT` — a real merge that must be gated identically.
+    res = run_hook(bash_event(
+        "gh api repos/o/r/pulls/5/merge -XPUT", cwd=repo))
+    assert res.returncode == 2
+
+
+# false-positive pins: legit non-push commands (behind the same wrappers)
+# must stay allowed — see-through-known-wrappers, never block-on-suspicion.
+
+
+def test_git_status_allowed(repo):
+    res = run_hook(bash_event("git status", cwd=repo))
+    assert res.returncode == 0
+
+
+def test_git_log_allowed(repo):
+    res = run_hook(bash_event("git log", cwd=repo))
+    assert res.returncode == 0
+
+
+def test_absolute_path_git_diff_allowed(repo):
+    res = run_hook(bash_event("/usr/bin/git diff", cwd=repo))
+    assert res.returncode == 0
+
+
+def test_env_assignment_git_status_allowed(repo):
+    res = run_hook(bash_event("env FOO=bar git status", cwd=repo))
+    assert res.returncode == 0
+
+
+def test_sh_c_ls_allowed(repo):
+    res = run_hook(bash_event('sh -c "ls"', cwd=repo))
+    assert res.returncode == 0
+
+
+def test_gh_api_merge_get_allowed(repo):
+    # A GET on the merge endpoint (merge-status check) is a read, not a
+    # merge — no mutating method present, so it must NOT be blocked.
+    res = run_hook(bash_event("gh api repos/o/r/pulls/5/merge", cwd=repo))
+    assert res.returncode == 0
 
 
 def test_cwd_absent_falls_back_to_process_cwd(repo):
