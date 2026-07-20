@@ -115,6 +115,63 @@ def test_locate_returns_token_span_quote():
     assert text[start:end] == cand["token"]
 
 
+def test_locate_absorbs_magnitude_word():
+    # No living-spec REQ-id: this plan traces tasks by Task item, not REQ-ids.
+    # Word-scale magnitude parsing (Part 2): a trailing magnitude word
+    # (thousand/million/billion/trillion, case-insensitive, whitespace-
+    # separated) is ABSORBED into the matched token so the anchor spans the
+    # whole phrase. META's "3.56 billion" was captured as "3.56" (off by 1e9)
+    # before this — the magnitude word was dropped. A NON-magnitude word
+    # ("warehouses") is NOT absorbed; a plain number is unchanged. The
+    # exact-substring invariant text[start:end]==token must hold over the
+    # (possibly extended) span — the load-bearing anti-fabrication anchor.
+    import exhibit_prose
+
+    # Magnitude word absorbed into the token, span covers the whole phrase.
+    text = "Family DAP was 3.56 billion on average"
+    candidates = exhibit_prose.locate_numbers(text)
+    match = [c for c in candidates if c["token"] == "3.56 billion"]
+    assert match, f"expected a '3.56 billion' candidate, got {candidates!r}"
+    cand = match[0]
+    start, end = cand["start"], cand["end"]
+    assert text[start:end] == "3.56 billion"
+    assert text[start:end] == cand["token"]
+
+    # A following NON-magnitude word is NOT absorbed — only the digits.
+    text2 = "operates 931 warehouses"
+    tokens2 = [c["token"] for c in exhibit_prose.locate_numbers(text2)]
+    assert "931" in tokens2, tokens2
+    assert "931 warehouses" not in tokens2
+
+    # Plain number with a non-magnitude trailing word is unchanged.
+    text3 = "1,576,000 employees"
+    tokens3 = [c["token"] for c in exhibit_prose.locate_numbers(text3)]
+    assert "1,576,000" in tokens3, tokens3
+
+
+def test_magnitude_word_boundary_and_case_guards():
+    # Pins the two load-bearing guards the docstring sells but the absorb test
+    # doesn't exercise (a mutation would otherwise pass the suite silently):
+    #  (a) the `\b` after the magnitude alternation blocks a LONGER word that
+    #      merely starts with a magnitude prefix ("3.5 billionaire" must NOT
+    #      absorb "billion");
+    #  (b) IGNORECASE makes an UPPERCASE magnitude word absorb ("3.56 BILLION").
+    import exhibit_prose
+
+    # (a) `\b` guard: "billionaire" is not the word "billion" -> no absorb.
+    tokens_a = [c["token"] for c in exhibit_prose.locate_numbers("worth 3.5 billionaire vibes")]
+    assert "3.5 billionaire" not in tokens_a
+    assert "3.5 billion" not in tokens_a  # not even the bare "billion" prefix
+    assert "3.5" in tokens_a, tokens_a
+
+    # (b) IGNORECASE: an uppercase magnitude word is absorbed, anchor holds.
+    text_b = "DAP was 3.56 BILLION on average"
+    match_b = [c for c in exhibit_prose.locate_numbers(text_b) if c["token"] == "3.56 BILLION"]
+    assert match_b, "uppercase BILLION should be absorbed under IGNORECASE"
+    cb = match_b[0]
+    assert text_b[cb["start"]:cb["end"]] == "3.56 BILLION"
+
+
 def test_locate_cli_emits_located_numbers_json(tmp_path):
     # No living-spec REQ-id: this plan traces tasks by Task item, not REQ-ids.
     # The --locate CLI mode is the SUBPROCESS surface analysis-kpi crosses to

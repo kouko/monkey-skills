@@ -119,18 +119,33 @@ def prose_surface(html: str) -> str:
     return _normalize_whitespace(walker.text())
 
 
-# A PLAIN numeric token (Part 1 scope): an integer optionally with thousands
-# separators (commas) and an optional decimal fraction — e.g. "1,576,000",
-# "480,126", "3.56", "0". Word-scale multipliers ("billion"/"million"),
-# percentages, qualifiers, and ranges are LATER parts and are NOT matched here.
-# ``\d+`` cannot cross a comma, so each ``(?:,\d{3})`` only attaches a
-# well-formed 3-digit group; malformed groupings degrade to their plain-digit
-# runs rather than mis-spanning.
-_NUMBER_RE = re.compile(r"\d+(?:,\d{3})*(?:\.\d+)?")
+# A numeric token: an integer optionally with thousands separators (commas)
+# and an optional decimal fraction — e.g. "1,576,000", "480,126", "3.56", "0" —
+# with an OPTIONAL trailing word-scale magnitude word ABSORBED into the token
+# when present (Part 2 scope). ``\d+`` cannot cross a comma, so each
+# ``(?:,\d{3})`` only attaches a well-formed 3-digit group; malformed groupings
+# degrade to their plain-digit runs rather than mis-spanning.
+#
+# Word-scale magnitude parsing: a trailing thousand/million/billion/trillion
+# (case-insensitive, whitespace-separated) is pulled into the SAME match so the
+# anchor spans the whole phrase — "3.56 billion" tokenizes as "3.56 billion",
+# not "3.56" (which dropped META's 1e9 multiplier). ``\b`` after the alternation
+# keeps "billionaire" from being read as "billion"; a NON-magnitude following
+# word (e.g. "warehouses") is not in the alternation, so it is never absorbed —
+# the number then tokenizes plain. This part changes only the TOKEN/span; the
+# value multiplier is the sibling task. Percentages, qualifiers, and ranges are
+# still deferred to later parts. IGNORECASE affects only the word alternation;
+# digits and commas are case-neutral.
+_MAGNITUDE_WORDS = ("thousand", "million", "billion", "trillion")
+_NUMBER_RE = re.compile(
+    r"\d+(?:,\d{3})*(?:\.\d+)?"
+    r"(?:\s+(?:" + "|".join(_MAGNITUDE_WORDS) + r")\b)?",
+    re.IGNORECASE,
+)
 
 
 def locate_numbers(text: str) -> list[dict]:
-    """Locate PLAIN numeric tokens in the canonical prose surface, each with a
+    """Locate numeric tokens in the canonical prose surface, each with a
     verbatim token and a ``char_offset_span`` into ``text``.
 
     Returns one dict per candidate: ``{"token", "start", "end"}`` where
@@ -140,8 +155,11 @@ def locate_numbers(text: str) -> list[dict]:
     exactly, which holds by construction because both derive from the same
     regex match. Deterministic and left-to-right ordered.
 
-    Part 1 locates plain numeric spans only (see ``_NUMBER_RE``); scale words,
-    percentages, and ranges are deferred to later parts."""
+    A trailing word-scale magnitude word (thousand/million/billion/trillion,
+    case-insensitive) is ABSORBED into the token when present, so the anchor
+    spans the whole "3.56 billion" phrase (see ``_NUMBER_RE``); the value
+    multiplier is applied downstream. Percentages and ranges are deferred to
+    later parts."""
     return [
         {"token": m.group(), "start": m.start(), "end": m.end()}
         for m in _NUMBER_RE.finditer(text)
