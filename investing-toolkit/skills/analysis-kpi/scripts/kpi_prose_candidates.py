@@ -177,6 +177,71 @@ def _is_period_label(token: str, start: int, canonical_text: str) -> bool:
     return word in _PERIOD_WORDS or bool(_QUARTER_RE.fullmatch(word))
 
 
+# Bounding / approximation QUALIFIERS (Part 2). SEC prose routinely states a KPI
+# as a BOUND rather than an equality ("up to 45,000 deliveries", "approximately
+# 931 warehouses", "more than 3 billion users"). Committing such a number as a
+# bare point value silently converts a bound into a fact — a precision the source
+# never claimed — so the qualifier rides along as METADATA about the candidate.
+#
+# Same shape as `_is_period_label`: a BOUNDED lookback at the canonical text
+# immediately preceding the token (never a mutation of the verbatim token or its
+# offsets, which stay the anti-fabrication anchor). Multi-word phrases are listed
+# LONGEST-FIRST so "more than" wins over a bare "than"-less prefix match, and the
+# alternation is anchored to the end of the lookback window with `\s*` so both a
+# spaced phrase ("up to 45,000") and an abutting tilde ("~931") match.
+_QUALIFIER_LOOKBACK_CHARS = 24
+_QUALIFIER_PHRASES = ("approximately", "more than", "at least", "up to", "over", "~")
+_QUALIFIER_RE = re.compile(
+    r"(?:(?<=\s)|^)(" + "|".join(_QUALIFIER_PHRASES) + r")\s*$",
+    re.IGNORECASE,
+)
+
+# "over" is the one qualifier that also ends a common business PHRASAL VERB:
+# "turned over 931 units", "handed over", "took over", "carried over". None of
+# those state a bound, so matching them stamps a fabricated bound onto a plain
+# equality figure — the same fabrication this task closes, merely INVERTED
+# (asserting imprecision the filing never stated, rather than precision). The
+# word-boundary guard in _QUALIFIER_RE already rejects "leftover"/"turnover"
+# (no space), but "turned over" has the space, so it needs this second guard.
+_PHRASAL_HEADS_BEFORE_OVER = frozenset({
+    "turned", "turn", "handed", "hand", "took", "take", "taken",
+    "carried", "carry", "passed", "pass", "rolled", "roll", "spread",
+})
+
+
+def _detect_qualifier(start: int, canonical_text: str) -> str | None:
+    """Return the lower-cased bounding/approximation qualifier immediately
+    preceding the token at `start` in `canonical_text` ("up to", "approximately",
+    "~", "over", "at least", "more than"), or None when the figure is stated as a
+    plain equality.
+
+    Bounded by design: only the last `_QUALIFIER_LOOKBACK_CHARS` characters before
+    the token are inspected, so this reads a local cue and never scans back over a
+    sentence. Case-insensitive (matching the locator's own `re.IGNORECASE` token
+    shape); the returned form is normalized to lower case so a downstream reader
+    compares one spelling. `None` (not `""`) marks "no bound stated" — the same
+    present-but-null convention as `unit_hint`/`period_hint`.
+
+    A bare "over" that is the tail of a phrasal verb ("turned over 931 units")
+    states no bound and is rejected — see `_PHRASAL_HEADS_BEFORE_OVER`.
+
+    The lookback is ADJACENT-only: a qualifier separated from its figure by any
+    intervening word ("up to a total of 45,000") is NOT detected and the figure
+    commits as a bare equality. That residual gap is declared in the plan's
+    deferral channel rather than silently absorbed here.
+    """
+    window = canonical_text[max(0, start - _QUALIFIER_LOOKBACK_CHARS):start]
+    match = _QUALIFIER_RE.search(window)
+    if match is None:
+        return None
+    phrase = match.group(1).lower()
+    if phrase == "over":
+        head = _PRECEDING_WORD_RE.search(window[:match.start(1)])
+        if head is not None and head.group(1).lower() in _PHRASAL_HEADS_BEFORE_OVER:
+            return None
+    return phrase
+
+
 def build_candidates(located_numbers: list[dict],
                      canonical_text: str | None = None) -> list[dict]:
     """Pure transform: the located-number list (already crossed the data-markets
@@ -199,6 +264,14 @@ def build_candidates(located_numbers: list[dict],
     called WITHOUT it (the pure-seam unit tests) no context-based filtering runs
     and every located number is wrapped. The filter only DROPS labels — a
     surviving candidate keeps its mechanical value/token/offset fields unchanged.
+
+    Part 2 bounding qualifier: also from `canonical_text`, a candidate carries
+    `value_qualifier` — the bounding/approximation phrase immediately preceding
+    the token ("up to" / "approximately" / "~" / "over" / "at least" / "more
+    than"), or None for a plain equality (present-but-null, like the hints). It
+    is METADATA derived from the surrounding text: the verbatim token, its
+    offsets, and the derived `value` are untouched, so the substring gate is
+    unaffected.
     """
     candidates: list[dict] = []
     for located in located_numbers:
@@ -212,6 +285,10 @@ def build_candidates(located_numbers: list[dict],
             "verbatim_quote": token,
             "value": _normalize_value(token),
             "char_offset_span": [located["start"], located["end"]],
+            "value_qualifier": (
+                _detect_qualifier(located["start"], canonical_text)
+                if canonical_text is not None else None
+            ),
             "unit_hint": None,
             "period_hint": None,
             "source_kind": "prose",
@@ -387,6 +464,15 @@ def _prose_candidate_to_point(candidate: dict, company: str,
     - `verbatim_quote` + filing attribution (`source_document`, `filing_date`)
       + confirmer identity (`confirmer`, `confirmed_at`) ride along so a number
       surfaced later stays citable to its source bytes and its ratifier.
+    - `value_qualifier` (Part 2) rides along too, so a BOUND stated in the prose
+      ("up to 45,000 deliveries") stays visible on the DURABLE point instead of
+      being flattened into a bare equality at store time. It is NOT one of the
+      store's required provenance fields, so a None on a plain figure cannot
+      trip the falsy-provenance guard — it passes through like the optional
+      `source_document`/`filing_date` above. (The truthy-token discipline is
+      required only for `source_table_id`/`source_cell_ref`, which the store
+      guards; inventing a truthy placeholder here would assert a bound the
+      filing never stated.)
     """
     start, end = candidate["char_offset_span"]
     return {
@@ -401,6 +487,7 @@ def _prose_candidate_to_point(candidate: dict, company: str,
         "source_table_id": "prose",
         "source_cell_ref": f"prose:{start}-{end}",
         "verbatim_quote": candidate["verbatim_quote"],
+        "value_qualifier": candidate.get("value_qualifier"),
         "source_document": candidate.get("source_document"),
         "filing_date": candidate.get("filing_date"),
         "confirmer": confirmer,

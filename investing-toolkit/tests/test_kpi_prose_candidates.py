@@ -223,6 +223,113 @@ def test_bare_year_without_period_cue_survives():
     )
 
 
+def test_bounding_qualifier_flagged():
+    # Task 4 (Part 2): SEC prose routinely states a KPI as a BOUND, not an
+    # equality — "up to 45,000 deliveries", "approximately 931 warehouses",
+    # "more than 3 billion users". Committing those as bare point values would
+    # silently convert an upper bound into a fact (a precision the source never
+    # claimed), so the candidate must CARRY the qualifier for the human
+    # confirming it and for any downstream memo.
+    #
+    # The qualifier is METADATA ABOUT the candidate, derived from the text
+    # immediately preceding the token — it never mutates the verbatim token or
+    # its offsets (the anti-fabrication anchor is untouched).
+    #
+    # No `@req` tag: this dispatch's plan binds tasks by "Brief item covered",
+    # not a registered loom-spec REQ-id (same convention as the tests above).
+    module = _load_module()
+
+    canonical_text = "We expect deliveries of up to 45,000 vehicles this year"
+    candidates = module.propose(canonical_text)
+    bounded = [c for c in candidates if c["matched_token"] == "45,000"]
+    assert len(bounded) == 1
+    assert bounded[0]["value_qualifier"] == "up to", (
+        "a bounded figure must carry its qualifier, not read as a bare equality"
+    )
+    # The anchor is untouched — the qualifier is metadata, not a token mutation.
+    start, end = bounded[0]["char_offset_span"]
+    assert canonical_text[start:end] == "45,000"
+    assert module.passes_substring_gate(bounded[0], canonical_text) is True
+
+    # A PLAIN figure carries no qualifier: the field is present-but-null (the
+    # same present-but-null convention as unit_hint/period_hint), so a reader
+    # cannot confuse "no bound stated" with "field missing".
+    plain = module.build_candidates(
+        [{"token": "45,000", "start": 0, "end": 6}], "45,000 vehicles delivered"
+    )
+    assert plain[0]["value_qualifier"] is None, "a plain figure states an equality"
+
+    # The qualifier vocabulary, case-insensitively, via the pure seam.
+    for prefix, expected in (
+        ("up to ", "up to"),
+        ("Approximately ", "approximately"),
+        ("~", "~"),
+        ("over ", "over"),
+        ("At least ", "at least"),
+        ("more than ", "more than"),
+    ):
+        text = f"{prefix}931 warehouses"
+        located = [{"token": "931", "start": len(prefix), "end": len(prefix) + 3}]
+        got = module.build_candidates(located, text)
+        assert got[0]["value_qualifier"] == expected, f"{prefix!r} is a bound"
+
+
+def test_bounding_qualifier_survives_to_committed_point(tmp_path, monkeypatch):
+    # The bound must survive onto the COMMITTED provenance, not merely live on
+    # the in-memory candidate: a bound visible at confirm time but LOST at store
+    # time is exactly the failure this task exists to close (the store would then
+    # hold "45,000 deliveries" as a fact the filing never asserted).
+    #
+    # `value_qualifier` is NOT one of kpi_store's required provenance fields, so
+    # a null on a plain figure cannot trip the store's falsy-provenance guard —
+    # it rides along like source_document/filing_date do.
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+    scripts_dir = str(_SCRIPT.parent)
+    if scripts_dir not in sys.path:
+        sys.path.insert(0, scripts_dir)
+    sys.modules.pop("kpi_store", None)
+    import kpi_store  # noqa: E402
+
+    module = _load_module()
+    candidate = {
+        "matched_token": "45,000",
+        "verbatim_quote": "up to 45,000 vehicles",
+        "value": 45000,
+        "value_qualifier": "up to",
+        "char_offset_span": [24, 30],
+        "source_kind": "prose",
+        "kpi_id": "vehicle_deliveries",
+        "unit": "count",
+        "period": "2024-12-31",
+        "needs_semantic": False,
+        "source_accession": "0001318605-24-000123",
+        "source_document": "8-K/EX-99.1",
+        "filing_date": "2024-10-31",
+        "as_of": "2024-01-01",
+    }
+    summary = module.commit_to_store(
+        [candidate], company="TSLA",
+        confirmer="kouko", confirmed_at="2026-07-20T10:00:00Z", confirmed=True,
+    )
+    assert summary["committed"] == 1
+
+    point = kpi_store.query_latest("TSLA", "vehicle_deliveries", "2024-12-31")
+    assert point["value_qualifier"] == "up to", (
+        "the bound must be visible on the stored point, not lost at commit"
+    )
+    assert point["value"] == 45000, "the derived value itself is unchanged"
+
+    # A plain (unbounded) figure commits with a null qualifier and is NOT
+    # rejected by the store's provenance guard.
+    plain = dict(candidate, kpi_id="vehicles_produced", value_qualifier=None)
+    assert module.commit_to_store(
+        [plain], company="TSLA",
+        confirmer="kouko", confirmed_at="2026-07-20T10:00:00Z", confirmed=True,
+    )["committed"] == 1
+    stored = kpi_store.query_latest("TSLA", "vehicles_produced", "2024-12-31")
+    assert stored["value_qualifier"] is None
+
+
 def test_normalize_value_decimal_token_becomes_float():
     # Coverage for the DECIMAL branch of _normalize_value (the integer branch is
     # exercised by the propose/gate tests; the float branch was untested). A
@@ -272,6 +379,34 @@ def test_normalize_value_word_scale():
     assert isinstance(module._normalize_value("931"), int)
     assert module._normalize_value("1,576,000") == 1576000
     assert module._normalize_value("3.56") == 3.56
+
+
+def test_phrasal_verb_over_is_not_a_bound():
+    # "over" doubles as the tail of a common business phrasal verb. "turned over
+    # 931 units" states NO bound — tagging it as one fabricates imprecision the
+    # filing never claimed, which is the same fabrication this feature exists to
+    # refuse, merely inverted. A genuine bounding "over" must still be detected,
+    # so this pins both directions; deleting the phrasal-head guard breaks the
+    # first half, deleting "over" from the vocabulary breaks the second.
+    module = _load_module()
+
+    for phrase in (
+        "the warehouse turned over 931 units",
+        "the fleet handed over 931 vehicles",
+        "management took over 931 stores",
+        "inventory was carried over 931 times",
+    ):
+        start = phrase.index("931")
+        assert module._detect_qualifier(start, phrase) is None, phrase
+
+    # A genuine bound is still detected — the guard is narrow, not a blanket
+    # removal of "over".
+    bounded = "the company operated over 931 warehouses"
+    assert module._detect_qualifier(bounded.index("931"), bounded) == "over"
+
+    # Word-boundary guard still holds for the no-space cases.
+    turnover = "annual turnover 931 units"
+    assert module._detect_qualifier(turnover.index("931"), turnover) is None
 
 
 def test_magnitude_word_tables_stay_in_lockstep():

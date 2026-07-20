@@ -123,6 +123,19 @@ Extends the shipped Part-1 files (no new modules):
   monetary, should be skipped like Part-1's $-prefix rule, but that skip is not
   yet a scenario); repeated magnitude words. These are exercised opportunistically
   if cheap during T1–T4, otherwise flagged for a Part-2.5 / Part-3 hardening pass.
+- **Non-adjacent bounding qualifier (declared deferral, T4 review round):** T4's
+  `_detect_qualifier` is an ADJACENT-only lookback — the qualifier phrase must
+  end immediately before the number. A qualifier separated from its figure by any
+  intervening word ("up to a total of 45,000 vehicles", "approximately, or
+  thereabouts, 931 warehouses") is NOT detected, and the figure commits as a bare
+  equality — a real SEC-prose pattern, and the exact failure T4 exists to close,
+  merely narrower. Widening the match to tolerate filler words trades this false
+  negative for false positives (a qualifier belonging to a DIFFERENT clause
+  landing inside the window), which is the worse error here: a fabricated bound
+  is asserted, whereas a missed bound merely leaves the human confirmer reading
+  the unannotated quote they already see. Deferred to the Part-2.5 / Part-3
+  hardening pass, where the right fix is likely clause-aware rather than
+  window-widening. Recorded via this designated channel per the T5 precedent.
 - **nbsp-as-word-separator after a comma-grouped number (declared deferral, T5
   review round):** T5's grouping detector uses nbsp/thin-space adjacency as the
   structural signal for a thousands separator, guarded on both sides by a digit
