@@ -175,6 +175,32 @@ formatted number is neither false-rejected nor mis-indexed.
 - WHEN scan and substring gate run under the normalization policy
 - THEN the candidate is not rejected as non-substring and its offset still maps to the canonical text
 
+### Requirement: Word-scale magnitude parsing
+The system MUST parse a trailing magnitude word (thousand / million / billion /
+trillion) that follows a number into the candidate: the matched_token AND
+verbatim_quote MUST include the magnitude word (so the offset anchor and the
+substring gate cover the whole "3.56 billion" phrase verbatim), and the derived
+numeric `value` MUST apply the multiplier (3.56 billion → 3,560,000,000). A number
+with NO magnitude word is unchanged. This closes the live-observed gap where a
+big-tech prose KPI (META Family DAP "3.56 billion") was captured with value 3.56
+instead of 3,560,000,000 — the anti-fabrication anchor must still hold
+(canonical_text[start:end] == matched_token, now spanning the magnitude word).
+
+#### Scenario: billion magnitude scales the value, token stays verbatim
+- GIVEN prose "Family DAP was 3.56 billion on average"
+- WHEN the scanner locates the number and its magnitude word
+- THEN the matched_token is "3.56 billion", canonical_text[start:end] == "3.56 billion", and the derived value is 3560000000
+
+#### Scenario: million magnitude
+- GIVEN prose "added 500 million monthly active users"
+- WHEN the scanner runs
+- THEN the matched_token is "500 million" and the derived value is 500000000
+
+#### Scenario: a plain number without a magnitude word is unchanged
+- GIVEN prose "operates 931 warehouses"
+- WHEN the scanner runs
+- THEN the matched_token is "931" (no magnitude word absorbed) and the derived value is 931
+
 ### Requirement: Resource bounds on scan and proposal
 The system MUST enforce a maximum input size and a per-scan time bound (degrading
 to a loud gap, never a hang), cap candidates emitted per exhibit, and cap or batch

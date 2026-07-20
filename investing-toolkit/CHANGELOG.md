@@ -5,6 +5,56 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.29.0] — 2026-07-20
+
+Narrative-evidence arc, Slice A **Part 2** (number robustness): makes the prose
+KPI numbers CORRECT and rejects the ones that were never KPIs. Part 1 shipped
+the walking skeleton; a live 5-company test then showed META's Family DAP
+"3.56 billion" committing as `3.56` — off by 1e9 — which is what this part fixes.
+
+- **Word-scale magnitude parsing.** The locator absorbs a trailing
+  thousand/million/billion/trillion into the matched token, so the source anchor
+  spans the whole phrase, and the value derivation applies the multiplier through
+  `Decimal` rather than binary float.
+- **Date / fiscal-period rejection.** A 4-digit year preceded by a period cue
+  ("fiscal 2026", "Q1 2026") is a label, not a value. Deliberately narrow — a
+  bare year with no cue survives.
+- **Bounding qualifiers.** "up to 45,000 deliveries" commits carrying its
+  qualifier instead of as a bare 45000 fact, so neither the human confirmer nor a
+  downstream memo reads a precision the filing never claimed. `"over"` is guarded
+  against common phrasal verbs ("turned over 931 units" states no bound).
+- **One consistent normalization.** nbsp/thin-space thousands separators,
+  full-width and Arabic-Indic digits, full-width comma/period, and curly quotes
+  fold into one canonical surface. Every fold is one char → one char, so all
+  char offsets and the `text[start:end] == token` anchor survive untouched.
+- **Bounded provenance context.** The committed quote is now the number plus a
+  bounded slice of its surrounding text — enough to verify the datum, not enough
+  to drag a filing paragraph's executive names and compensation figures into the
+  durable store.
+
+Review caught a value-FABRICATION bug mid-branch: the grouping regex had a
+trailing digit guard but no leading one, so re-scanning could start inside a
+longer digit run and fuse two unrelated numbers — `"Fiscal 2026<nbsp>250,000
+units"` produced the token `"2026,250,000"`. The source anchor still HELD on that
+token, since it is guaranteed by construction; it offers no protection against
+this class. Fixed with the mirror-image guard.
+
+The whole-branch review then found two more of the same class, both living in the
+seam BETWEEN tasks where no per-task review could see them: magnitude absorption
+had reopened the period-label filter (`"fiscal 2026 billion-dollar cost program"`
+committing 2,026,000,000,000), and an nbsp acting as a word separator after a
+comma-grouped number fabricated a fused value (`"1,428<nbsp>500-mile trucks"` →
+1,428,500). Both closed, each with a regression test written against the
+interaction rather than against either layer alone.
+
+Two known limits are declared in the plan's Notes rather than papered over: a
+bounding qualifier separated from its figure by an intervening word; and personal
+data in the SAME clause as the number, which no fixed-width window can exclude
+without entity recognition. Plan:
+`docs/loom/plans/2026-07-20-8k-prose-kpi-intake-part-2.md`; change-folder:
+`docs/loom/2026-07-19-8k-prose-kpi-intake/`. Part 3 (lifecycle/hardening) and the
+SKILL wiring remain deferred.
+
 ## [v2.28.0] — 2026-07-20
 
 Narrative-evidence arc, Slice A **Part 1** (walking skeleton): a "Route B for
