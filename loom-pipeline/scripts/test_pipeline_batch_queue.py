@@ -622,6 +622,9 @@ def _write_queue(project_path: Path) -> Path:
 def test_mark_writes_status_and_run_id(tmp_path):
     project_path = tmp_path / "project"
     loom_dir = _write_queue(project_path)
+    save_state(
+        loom_dir / "queue-state.json", {"add-export-csv": {"status": "RUNNING"}}
+    )
 
     exit_code = main(
         [
@@ -644,6 +647,9 @@ def test_mark_writes_status_and_run_id(tmp_path):
 def test_mark_records_reason_for_failed(tmp_path):
     project_path = tmp_path / "project"
     loom_dir = _write_queue(project_path)
+    save_state(
+        loom_dir / "queue-state.json", {"fix-login-redirect": {"status": "RUNNING"}}
+    )
 
     exit_code = main(
         [
@@ -692,6 +698,48 @@ def test_mark_rejects_invalid_status_choice(tmp_path, capsys):
 
     assert exc_info.value.code != 0
     assert "bogus-status" in capsys.readouterr().err
+
+
+def test_mark_rejects_queued_entry_never_dispatched(tmp_path, capsys):
+    # Task 4: a QUEUED entry (no state record — never dispatched) must not
+    # be markable straight to a terminal status. Mirrors mark-running's own
+    # precursor-state guard: a terminal mark requires the entry to be
+    # RUNNING first. Without the guard this silently recorded DONE and
+    # exited 0, dropping the work while the batch reports success.
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+    state_path = loom_dir / "queue-state.json"
+
+    exit_code = main(
+        ["mark", "add-export-csv", "done", "--project", str(project_path)]
+    )
+
+    assert exit_code == 1
+    assert not state_path.is_file()
+    assert "mark" in capsys.readouterr().err
+
+
+def test_mark_rejects_already_terminal_entry_without_mutation(tmp_path, capsys):
+    # cq finding (round 2): the RUNNING-precursor guard must also reject an
+    # already-terminal entry (not just a never-dispatched QUEUED one) —
+    # mirrors test_mark_running_wrong_state_errors_without_mutation /
+    # test_force_fail_wrong_state_errors_without_mutation's exact-equality
+    # zero-mutation assertion.
+    project_path = tmp_path / "project"
+    loom_dir = _write_queue(project_path)
+    save_state(
+        loom_dir / "queue-state.json",
+        {"add-export-csv": {"status": "DONE", "runId": "wf_old"}},
+    )
+
+    exit_code = main(
+        ["mark", "add-export-csv", "failed", "--project", str(project_path)]
+    )
+
+    assert exit_code != 0
+    assert "add-export-csv" in capsys.readouterr().err
+    state = load_state(loom_dir / "queue-state.json")
+    assert state["add-export-csv"] == {"status": "DONE", "runId": "wf_old"}
 
 
 def test_status_lists_every_entry_with_effective_status(tmp_path, capsys):
@@ -1057,6 +1105,13 @@ def test_mark_concurrent_writes_to_different_entries_both_persist(tmp_path):
     # happen after the first's write completes — both updates survive.
     project_path = tmp_path / "project"
     loom_dir = _write_queue(project_path)
+    save_state(
+        loom_dir / "queue-state.json",
+        {
+            "add-export-csv": {"status": "RUNNING"},
+            "fix-login-redirect": {"status": "RUNNING"},
+        },
+    )
     script_path = Path(__file__).resolve().parent / "batch_queue.py"
 
     env = dict(os.environ)

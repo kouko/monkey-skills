@@ -27,12 +27,21 @@ The reviewer's verdict text (not the marker JSON) must contain:
 produce a pass marker. A schema-invalid verdict text never mints one
 either (exit 4, every violation listed — see `validate` below).
 
-## Suite-line grammar (`verified --suite-line`)
+## Run-command binding (`verified --run`)
 
-Must contain `N passed` with `N > 0`, and must NOT contain a
-`failed`/`error` token (word-boundary matched, so `2 xfailed` — a
-green outcome — does not trip the filter). `"0 passed"`, `"3 failed, 2
-passed"`, `"no tests ran"` all reject (exit 4).
+`verified --run "<cmd>"` executes `<cmd>` in the repo, captures its real
+exit code + a bounded output tail (4000 chars), and mints
+`verified.json` ONLY on exit 0 — recording `run_cmd`, `exit_code`,
+`output_tail`. A non-zero exit writes no marker (exit 4). This binds the
+marker to a real run instead of a self-typed summary; the honest
+residual is that `--run "true"` still mints — a bar-raise (a command
+must actually run and exit 0, and is recorded for audit), not local
+cryptographic unforgeability.
+
+The legacy suite-line grammar (`N passed` with `N > 0`, no
+`failed`/`error` token, word-boundary matched so `2 xfailed` passes) is
+retained ONLY for the `validate --suite-line` dry-run linter below,
+never for the `verified` write path.
 
 ## Waiver semantics (`waiver --reason`)
 

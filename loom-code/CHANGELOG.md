@@ -5,6 +5,30 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.36.0] — 2026-07-21 — gate hardening: verified real-execution binding + push-guard wrappers
+
+### Changed
+
+- **`verified` gate marker binds to a real run**: `loom_gate_markers.py verified`
+  now takes `--run "<cmd>"` (was `--suite-line "<self-typed string>"`) — it
+  executes the command, captures the real exit code + a bounded output tail, and
+  mints `verified.json` only on exit 0, recording the command. The self-typed
+  suite-line write path is removed; git-guard's consumed keys
+  (`schema`/`head_sha`/`base_sha`/`patch_id`) are preserved. Honest residual:
+  `--run "true"` still mints — a bar-raise (a real command must run and exit 0,
+  recorded for audit), not local cryptographic unforgeability.
+- **`git-guard.py` push gate sees through wrappers**: recognizes a push/merge
+  action behind path-form git, `env`, `command`, `<shell> -c`, and `gh api
+  .../merge` (including the glued `-XPUT` short form), not just a bare leading
+  `git` token — without blocking legitimate non-push git commands.
+- **version-bump gate watches `scripts/`**: `check_version_bump.py` now counts a
+  plugin's `scripts/` as shipped content (`test_*.py` exempt), so editing gate
+  code can no longer ship with no version bump.
+- Docs (`finishing-a-development-branch`, `verification-before-completion`,
+  `requesting-code-review` + `gate-markers-spec`) updated to the `verified --run`
+  contract; the legacy suite-line grammar is retained only for the `validate`
+  dry-run linter.
+
 ## [0.35.0] — 2026-07-19 — finishing close-out drops two human-confirmation stops
 
 ### Changed

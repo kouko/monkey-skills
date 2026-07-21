@@ -62,13 +62,24 @@ the guard must never take the session down with it.
 Detection splits the command on ``&&`` / ``||`` / ``;`` / ``|`` /
 single ``&`` (background) / newlines — multiline commands are routine
 in Claude Code — then tokenizes each segment with shlex (naive
-whitespace split on shlex errors) and matches on the first
-non-env-assignment token — word-boundary, not substring, so
-``echo "git push"`` does not trigger. Quoted separators inside strings
-are an accepted limitation, and so are heredocs: a heredoc BODY line
-beginning ``git push`` is newline-split into a segment and gated — a
-false positive we accept because it fails CLOSED (an over-block the
-model can rephrase around, never an under-block).
+whitespace split on shlex errors), drops a leading env assignment, and
+sees THROUGH a small fixed set of command wrappers before matching on
+the exposed real invocation — word-boundary, not substring, so
+``echo "git push"`` does not trigger. The wrapper set (``_unwrap_segments``,
+bounded recursion depth ``MAX_UNWRAP_DEPTH``): a path form of git
+(``/usr/bin/git``), the ``env`` and ``command`` builtins, ``<shell>
+-c "<script>"`` for sh/bash/dash/zsh/ksh (script re-split into
+segments and each re-unwrapped), and ``gh api <...>/merge`` with a
+mutating HTTP method as the REST equivalent of ``gh pr merge``
+(``_is_gh_api_merge``). Anything outside this set is left unmatched —
+an accepted under-block, never a mis-block. Quoted separators inside
+strings are an accepted limitation, and so are heredocs: a heredoc
+BODY line beginning ``git push`` is newline-split into a segment and
+gated — a false positive we accept because it fails CLOSED (an
+over-block the model can rephrase around, never an under-block). The
+wrapper-set comment above the constants documents the finer out-of-
+scope boundaries (env flags taking a separate-arg value, compound/
+`cd`-carrying ``sh -c`` scripts) in full.
 
 A ``cd <path>`` segment updates an "effective cwd" tracked across the
 REST of the same command string (absolute, relative, and ``~`` forms;
@@ -127,6 +138,123 @@ def _tokens(segment):
     while toks and ENV_ASSIGN.match(toks[0]):
         toks.pop(0)
     return toks
+
+
+# --- wrapper see-through --------------------------------------------------
+#
+# The push/merge matcher recognizes the ACTION even behind a small,
+# fixed set of command wrappers, so a bypass like ``/usr/bin/git push``
+# or ``sh -c "git push"`` is gated the same as a bare ``git push`` —
+# WITHOUT ever blocking a legitimate non-push git command (false
+# positives are a hard no: we see through KNOWN wrappers rather than
+# blocking on suspicion). Handled wrapper set:
+#
+#   - absolute/relative path to git (``/usr/bin/git``, ``./git``) —
+#     matched by _is_git_token (basename == "git"), not peeled here.
+#   - ``env [NAME=VALUE]... [-i|--ignore-environment|--] CMD`` — the
+#     leading assignments/no-arg flags are dropped, then CMD is
+#     re-examined.
+#   - ``command [-p|-v|-V] CMD`` (the shell builtin).
+#   - ``<shell> -c "<script>"`` for sh/bash/dash/zsh/ksh — the inner
+#     script is re-split into segments and each is unwrapped (bounded
+#     recursion depth).
+#   - ``gh api <...>/merge`` with a mutating HTTP method (the REST
+#     equivalent of ``gh pr merge``) — see _is_gh_api_merge.
+#
+# Anything OUTSIDE this set is left untouched → simply not matched
+# (an accepted under-block for exotic wrappers, never a mis-block of a
+# real non-push command). env flags that take a separate-arg value
+# (``-u NAME``, ``-C DIR``) and compound/`cd`-carrying ``sh -c``
+# scripts are deliberately out of scope here.
+SHELL_BASENAMES = {"sh", "bash", "dash", "zsh", "ksh"}
+MUTATING_METHODS = {"PUT", "POST", "PATCH", "DELETE"}
+MAX_UNWRAP_DEPTH = 3
+
+
+def _is_git_token(tok):
+    """True when `tok` invokes git directly, incl. a path form
+    (``/usr/bin/git``, ``./git``). Basename ``git`` IS git."""
+    return os.path.basename(tok) == "git"
+
+
+def _shell_c_script(tokens):
+    """Return the ``<script>`` of a ``<shell> -c <script>`` invocation
+    (``-c`` may sit inside a short cluster like ``-lc``), or None when
+    there is no ``-c`` before ``--`` or the end."""
+    i = 1
+    while i < len(tokens):
+        tok = tokens[i]
+        if re.fullmatch(r"-[a-zA-Z]*c", tok) and i + 1 < len(tokens):
+            return tokens[i + 1]
+        if tok == "--":
+            return None
+        i += 1
+    return None
+
+
+def _unwrap_segments(tokens, depth=0):
+    """Peel known command wrappers to expose the real invocation.
+
+    Returns a list of token-lists to classify — usually one, but a
+    ``sh -c "<script>"`` whose script has several segments yields one
+    per segment. See the module-level wrapper-set comment above."""
+    if not tokens or depth > MAX_UNWRAP_DEPTH:
+        return [tokens] if tokens else []
+    base = os.path.basename(tokens[0])
+    if base == "env":
+        i = 1
+        while i < len(tokens) and (
+            ENV_ASSIGN.match(tokens[i])
+            or tokens[i] in ("-i", "--ignore-environment", "--")
+        ):
+            i += 1
+        return _unwrap_segments(tokens[i:], depth + 1)
+    if base == "command":
+        i = 1
+        while i < len(tokens) and tokens[i] in ("-p", "-v", "-V"):
+            i += 1
+        return _unwrap_segments(tokens[i:], depth + 1)
+    if base in SHELL_BASENAMES:
+        script = _shell_c_script(tokens)
+        if script is not None:
+            out = []
+            for seg in SEGMENT_SPLIT.split(script):
+                inner = _tokens(seg)
+                if inner:
+                    out.extend(_unwrap_segments(inner, depth + 1))
+            return out
+    return [tokens]
+
+
+def _is_gh_api_merge(tokens):
+    """True for ``gh api <...>/merge -X PUT`` (or another mutating
+    method / ``--method``, incl. the glued short-flag form ``-XPUT``
+    that gh's cobra/pflag parser accepts same as spaced ``-X PUT``) —
+    the REST equivalent of ``gh pr merge``. A GET on the same
+    ``.../merge`` endpoint (a merge-status *read*) carries no mutating
+    method and is deliberately NOT matched, so a legitimate status
+    check is never blocked."""
+    if len(tokens) < 3 or tokens[0] != "gh" or tokens[1] != "api":
+        return False
+    rest = tokens[2:]
+    hits_merge = any(
+        not t.startswith("-")
+        and t.split("?", 1)[0].rstrip("/").endswith("/merge")
+        for t in rest
+    )
+    if not hits_merge:
+        return False
+    i = 0
+    while i < len(rest):
+        tok = rest[i]
+        if tok in ("-X", "--method") and i + 1 < len(rest):
+            return rest[i + 1].upper() in MUTATING_METHODS
+        if tok.startswith("--method="):
+            return tok.split("=", 1)[1].upper() in MUTATING_METHODS
+        if tok.startswith("-X") and len(tok) > 2:
+            return tok[2:].upper() in MUTATING_METHODS
+        i += 1
+    return False
 
 
 def _parse_git(tokens):
@@ -376,43 +504,51 @@ def main():
             if target is not None:
                 effective_cwd = target
             continue
-        gate_cwd = None
-        gate_globals = ()
-        if toks[0] == "git":
-            sub, args, c_path, git_dir = _parse_git(toks)
-            if sub == "commit" and _has_no_verify(args):
-                print(MSG_NO_VERIFY, file=sys.stderr)
-                return 2
-            # push's -n means --dry-run (unlike commit's -n = --no-verify)
-            if sub == "push" and "--dry-run" not in args and "-n" not in args:
+        # See through known wrappers (path-to-git, env, command, sh -c)
+        # to the real invocation before classifying it — a sh -c script
+        # can expand to several inner segments.
+        for gtoks in _unwrap_segments(toks):
+            if not gtoks:
+                continue
+            gate_cwd = None
+            gate_globals = ()
+            if _is_git_token(gtoks[0]):
+                sub, args, c_path, git_dir = _parse_git(gtoks)
+                if sub == "commit" and _has_no_verify(args):
+                    print(MSG_NO_VERIFY, file=sys.stderr)
+                    return 2
+                # push's -n means --dry-run (unlike commit's -n = --no-verify)
+                if sub == "push" and "--dry-run" not in args and "-n" not in args:
+                    gate_cwd = effective_cwd
+                    if c_path:
+                        gate_cwd = (
+                            c_path
+                            if os.path.isabs(c_path)
+                            else os.path.join(effective_cwd, c_path)
+                        )
+                    if git_dir:
+                        # Forward --git-dir so the gate resolves the same
+                        # repo the push itself would hit (relative paths
+                        # resolve against the effective cwd, like git's own
+                        # -C-then---git-dir ordering).
+                        if not os.path.isabs(git_dir):
+                            git_dir = os.path.join(gate_cwd, git_dir)
+                        gate_globals = ("--git-dir", git_dir)
+            elif (
+                gtoks[0] == "gh"
+                and len(gtoks) >= 3
+                and gtoks[1] == "pr"
+                and gtoks[2] in {"create", "merge"}
+            ):
                 gate_cwd = effective_cwd
-                if c_path:
-                    gate_cwd = (
-                        c_path
-                        if os.path.isabs(c_path)
-                        else os.path.join(effective_cwd, c_path)
-                    )
-                if git_dir:
-                    # Forward --git-dir so the gate resolves the same
-                    # repo the push itself would hit (relative paths
-                    # resolve against the effective cwd, like git's own
-                    # -C-then---git-dir ordering).
-                    if not os.path.isabs(git_dir):
-                        git_dir = os.path.join(gate_cwd, git_dir)
-                    gate_globals = ("--git-dir", git_dir)
-        elif (
-            toks[0] == "gh"
-            and len(toks) >= 3
-            and toks[1] == "pr"
-            and toks[2] in {"create", "merge"}
-        ):
-            gate_cwd = effective_cwd
-        if gate_cwd is not None:
-            code, notes = _gate_push(gate_cwd, gate_globals)
-            for note in notes:
-                print(note, file=sys.stderr)
-            if code != 0:
-                return code
+            elif _is_gh_api_merge(gtoks):
+                gate_cwd = effective_cwd
+            if gate_cwd is not None:
+                code, notes = _gate_push(gate_cwd, gate_globals)
+                for note in notes:
+                    print(note, file=sys.stderr)
+                if code != 0:
+                    return code
     return 0
 
 

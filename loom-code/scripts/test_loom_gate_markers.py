@@ -248,55 +248,55 @@ def test_review_finding_where_without_pathlike_token_exits_4(tmp_path):
 
 # ------------------------------------------------------------------- verified
 
+# A real command that exits 0 and prints a sentinel we assert is captured
+# (proves output_tail records the ACTUAL run, not a typed string), and a
+# real command that exits non-zero.
+RUN_OK = "python3 -c \"print('loom-real-run-sentinel')\""
+RUN_FAIL = "python3 -c \"import sys; sys.exit(1)\""
 
-def test_verified_writes_marker_matching_contract(tmp_path):
+
+def test_verified_runs_command_and_writes_marker_recording_it(tmp_path):
+    # The marker binds to a REAL run: --run executes, we mint only on
+    # exit 0, and the payload records the command + its captured output
+    # (was: a self-typed --suite-line string that proved no run happened).
     repo = _init_repo(tmp_path)
-    suite_line = "12 passed in 0.34s"
 
-    rc = main(["verified", "--repo", str(repo), "--suite-line", suite_line])
+    rc = main(["verified", "--repo", str(repo), "--run", RUN_OK])
 
     assert rc == 0
     marker = _marker_dir(repo) / "verified.json"
     data = json.loads(marker.read_text(encoding="utf-8"))
-    assert set(data) == {"schema", "head_sha", "suite_line", "written_at"}
+    # git-guard-critical fields preserved; suite_line gone.
     assert data["schema"] == 1
     assert data["head_sha"] == _head(repo)
-    assert data["suite_line"] == suite_line
+    assert "suite_line" not in data
+    # Real run recorded: the command, its exit code, a tail of its output.
+    assert data["run_cmd"] == RUN_OK
+    assert data["exit_code"] == 0
+    assert "loom-real-run-sentinel" in data["output_tail"]
     datetime.fromisoformat(data["written_at"])
 
 
-@pytest.mark.parametrize(
-    "bad_line",
-    [
-        "0 passed in 0.01s",
-        "3 failed, 2 passed in 1.2s",
-        "3 passed, 1 error in 1.2s",
-        "no tests ran",
-    ],
-)
-def test_verified_rejects_nonconforming_suite_line(tmp_path, bad_line):
+def test_verified_failing_command_writes_no_marker_and_exits_nonzero(tmp_path):
     repo = _init_repo(tmp_path)
 
-    rc = main(["verified", "--repo", str(repo), "--suite-line", bad_line])
+    rc = main(["verified", "--repo", str(repo), "--run", RUN_FAIL])
 
-    assert rc == 4
+    assert rc != 0
     assert not (_marker_dir(repo) / "verified.json").exists()
 
 
-def test_verified_accepts_green_summary_with_xfails(tmp_path):
-    # "xfailed" is a green outcome — the "failed" substring inside it
-    # must not trip the reject filter ("3 failed" still rejects, see
-    # the nonconforming parametrize above).
+def test_verified_no_longer_accepts_suite_line(tmp_path):
+    # The self-typed --suite-line mint path is REMOVED: `verified` binds
+    # to a real --run. Passing --suite-line must be rejected by argparse
+    # (unrecognized argument), never silently accepted into a marker.
     repo = _init_repo(tmp_path)
-    suite_line = "10 passed, 2 xfailed in 1.2s"
 
-    rc = main(["verified", "--repo", str(repo), "--suite-line", suite_line])
+    with pytest.raises(SystemExit) as excinfo:
+        main(["verified", "--repo", str(repo), "--suite-line", "999 passed"])
 
-    assert rc == 0
-    data = json.loads(
-        (_marker_dir(repo) / "verified.json").read_text(encoding="utf-8")
-    )
-    assert data["suite_line"] == suite_line
+    assert excinfo.value.code != 0
+    assert not (_marker_dir(repo) / "verified.json").exists()
 
 
 # -------------------------------------------------------- patch-id relaxation
@@ -332,7 +332,7 @@ def test_verified_records_base_sha_and_patch_id_when_resolvable(tmp_path):
     _git(repo, "add", "f.txt")
     _git(repo, "commit", "-m", "add f.txt")
 
-    rc = main(["verified", "--repo", str(repo), "--suite-line", "1 passed"])
+    rc = main(["verified", "--repo", str(repo), "--run", RUN_OK])
 
     assert rc == 0
     data = json.loads(
@@ -367,19 +367,19 @@ def test_review_pass_omits_patch_id_fields_when_diff_is_empty(tmp_path):
 def test_verified_head_sha_tracks_second_commit(tmp_path):
     repo = _init_repo(tmp_path)
     first_sha = _head(repo)
-    assert main(["verified", "--repo", str(repo), "--suite-line", "1 passed"]) == 0
+    assert main(["verified", "--repo", str(repo), "--run", RUN_OK]) == 0
 
     _git(repo, "commit", "--allow-empty", "-m", "second")
     second_sha = _head(repo)
     assert second_sha != first_sha
     # Re-run: silent overwrite, latest wins.
-    assert main(["verified", "--repo", str(repo), "--suite-line", "2 passed"]) == 0
+    assert main(["verified", "--repo", str(repo), "--run", RUN_OK]) == 0
 
     data = json.loads(
         (_marker_dir(repo) / "verified.json").read_text(encoding="utf-8")
     )
     assert data["head_sha"] == second_sha
-    assert data["suite_line"] == "2 passed"
+    assert data["run_cmd"] == RUN_OK
 
 
 # --------------------------------------------------------------------- waiver
@@ -495,7 +495,7 @@ def test_repo_flag_post_subcommand_honored_from_different_cwd(
     elsewhere.mkdir()
     monkeypatch.chdir(elsewhere)
 
-    rc = main(["verified", "--repo", str(repo), "--suite-line", "1 passed"])
+    rc = main(["verified", "--repo", str(repo), "--run", RUN_OK])
 
     assert rc == 0
     data = json.loads(
@@ -513,7 +513,7 @@ def test_repo_flag_pre_subcommand_is_rejected_loudly(tmp_path):
     repo = _init_repo(tmp_path)
 
     with pytest.raises(SystemExit) as excinfo:
-        main(["--repo", str(repo), "verified", "--suite-line", "1 passed"])
+        main(["--repo", str(repo), "verified", "--run", RUN_OK])
 
     assert excinfo.value.code != 0
     assert not (_marker_dir(repo) / "verified.json").exists()
@@ -529,7 +529,7 @@ def test_not_a_git_repo_exits_2_for_every_subcommand(tmp_path, capsys):
 
     argvs = [
         ["review-pass", "--repo", str(plain), "--verdict-file", str(verdict_file)],
-        ["verified", "--repo", str(plain), "--suite-line", "1 passed"],
+        ["verified", "--repo", str(plain), "--run", RUN_OK],
         ["waiver", "--repo", str(plain), "--reason", "a perfectly long reason"],
     ]
     for argv in argvs:

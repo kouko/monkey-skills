@@ -22,6 +22,9 @@ import pytest
 
 SCRIPT = Path(__file__).resolve().parent / "check_version_bump.py"
 
+sys.path.insert(0, str(SCRIPT.parent))
+from check_version_bump import plugins_with_skill_content  # noqa: E402
+
 
 def _git(repo: Path, *args: str) -> str:
     return subprocess.run(
@@ -207,6 +210,30 @@ def test_skill_content_moved_out_of_a_plugin_is_a_violation(tmp_path):
 
     assert result.returncode != 0, result.stdout + result.stderr
     assert "loom-code" in result.stdout
+
+
+def test_scripts_dir_counts_as_skill_content():
+    """A plugin's own gate code lives under scripts/ (e.g. loom_gate_markers.py).
+
+    Editing it currently ships with no version bump because scripts/ is not in
+    SKILL_CONTENT_DIRS — a silent stale `plugin update` for gate-code changes.
+    """
+    assert plugins_with_skill_content(
+        ["loom-code/scripts/loom_gate_markers.py"]
+    ) == {"loom-code"}
+
+
+def test_scripts_dir_test_file_is_not_skill_content():
+    """test_*.py files colocated in scripts/ are tests, not skill content.
+
+    Most loom plugins keep tests inline in scripts/ (loom-pipeline 25 test
+    files, loom-spec 12, loom-discovery 7, loom-interface-design 11). Per the
+    module docstring, tests require no bump — a test-only edit under
+    scripts/ must not demand one, even though scripts/ is a skill-content dir.
+    """
+    assert plugins_with_skill_content(
+        ["loom-pipeline/scripts/test_pipeline_batch_queue.py"]
+    ) == set()
 
 
 def test_changes_outside_any_plugin_are_a_no_op(tmp_path):
