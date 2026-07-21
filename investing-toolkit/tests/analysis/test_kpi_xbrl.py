@@ -2292,6 +2292,228 @@ def test_quarterly_series_no_week_normalized_yoy_without_comparator(
 
 
 # ---------------------------------------------------------------------------
+# Task 2 (docs/loom/plans/2026-07-19-jnj-restatement-axis-signature.md) —
+# recast annotation: a pack whose `coverage.axis_exclusions` carries a
+# vintage-category entry (srt:RestatementAxis, T1's producer-side accounting)
+# surfaces as a memo-visible `period_recast` coverage_flag, aggregated
+# pack-wide, carrying the affected accession/period_end/concept context.
+# Unknown-category exclusions are pack-level accounting only — no flag.
+# ---------------------------------------------------------------------------
+
+
+def _vintage_exclusion(**overrides) -> dict:
+    exclusion = {
+        "category": "vintage",
+        "axis": "srt:RestatementAxis",
+        "member": "RevisionOfPriorPeriodReclassificationAdjustmentMember",
+        "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "accession": "0000200406-25-000209",
+        "period_end": "2025-06-30",
+    }
+    exclusion.update(overrides)
+    return exclusion
+
+
+def _nested_coverage(*, quarterly_exclusions=None, annual_exclusions=None, annual_arm=None):
+    """Mirror pack_us.py's REAL `pack_kpi_quarterly` envelope
+    (pack_us.py:1017-1024): `coverage` is NEVER flat — it nests
+    `quarterly`/`annual`, each holding its own `extract_dimensional_revenue`
+    `coverage` dict (sec_edgar_client.py:3168-3179, `axis_exclusions` key
+    included). `annual_arm` overrides the whole annual sub-dict, for the
+    error-slot degenerate case (pack_us.py:1023: on annual-arm failure,
+    `coverage["annual"]` is the raw `{"error": ...}` slot, not a
+    coverage-shaped dict)."""
+    return {
+        "_status": "ok",
+        "quarterly": {"axis_exclusions": quarterly_exclusions or []},
+        "annual": (
+            annual_arm if annual_arm is not None
+            else {"axis_exclusions": annual_exclusions or []}
+        ),
+    }
+
+
+def test_quarterly_series_emits_period_recast_flag_for_vintage_exclusion(
+    kpi_xbrl_module,
+):
+    """Task 2 fix-round-2 RED (both reviewers, converged): the REAL
+    production pack (pack_us.py's `pack_kpi_quarterly`) nests
+    `coverage.quarterly.axis_exclusions` / `coverage.annual.axis_exclusions`
+    — never the flat `coverage.axis_exclusions` the original fixtures used.
+    A pack carrying one `category: "vintage"` axis exclusion in EITHER arm
+    emits ONE `period_recast` coverage_flag, carrying the exclusion's
+    accession/period_end/concept context and passing `assert_dqc_schema`.
+    A pack with zero exclusions, and a pack with ONLY unknown-category
+    exclusions, emit no such flag — unknown-axis exclusions are pack-level
+    accounting only, never a recast statement."""
+    vintage_pack = {
+        "company": "JNJ",
+        "facts": [],
+        "coverage": _nested_coverage(quarterly_exclusions=[_vintage_exclusion()]),
+    }
+    result = kpi_xbrl_module.build_quarterly_series(vintage_pack)
+    recast_flags = [f for f in result["coverage_flags"] if f["type"] == "period_recast"]
+    assert len(recast_flags) == 1
+    flag = recast_flags[0]
+    kpi_xbrl_module.assert_dqc_schema(flag)
+    assert flag["old"] is None
+    assert flag["new"] is None
+    assert flag["accessions"] == ["0000200406-25-000209"]
+    assert "recast" in flag["reason"] and "prior-published" in flag["reason"]
+    assert flag["exclusions"] == [_vintage_exclusion()]
+
+    zero_pack = {"company": "JNJ", "facts": [], "coverage": _nested_coverage()}
+    result = kpi_xbrl_module.build_quarterly_series(zero_pack)
+    assert not any(f["type"] == "period_recast" for f in result["coverage_flags"])
+
+    no_coverage_pack = {"company": "JNJ", "facts": []}
+    result = kpi_xbrl_module.build_quarterly_series(no_coverage_pack)
+    assert not any(f["type"] == "period_recast" for f in result["coverage_flags"])
+
+    unknown_only_pack = {
+        "company": "JNJ",
+        "facts": [],
+        "coverage": _nested_coverage(quarterly_exclusions=[
+            _vintage_exclusion(
+                category="unknown", axis="us-gaap:SomeFutureAxis",
+                member="SomeMember",
+            ),
+        ]),
+    }
+    result = kpi_xbrl_module.build_quarterly_series(unknown_only_pack)
+    assert not any(f["type"] == "period_recast" for f in result["coverage_flags"])
+
+
+def test_quarterly_series_emits_period_recast_flag_for_annual_arm_only_exclusion(
+    kpi_xbrl_module,
+):
+    """Task 2 fix-round-2: a vintage exclusion living ONLY in the ANNUAL arm
+    (`coverage.annual.axis_exclusions`) still fires the flag —
+    `build_quarterly_series` derives Q4 from the annual arm's FY facts
+    (pack_us.py:964-967), so a vintage exclusion there is equally
+    memo-relevant even though the quarterly arm is clean."""
+    pack = {
+        "company": "JNJ",
+        "facts": [],
+        "coverage": _nested_coverage(annual_exclusions=[_vintage_exclusion()]),
+    }
+    result = kpi_xbrl_module.build_quarterly_series(pack)
+    recast_flags = [f for f in result["coverage_flags"] if f["type"] == "period_recast"]
+    assert len(recast_flags) == 1
+    assert recast_flags[0]["exclusions"] == [_vintage_exclusion()]
+
+
+def test_quarterly_series_period_recast_survives_annual_arm_error_slot(
+    kpi_xbrl_module,
+):
+    """Task 2 fix-round-2: on annual-arm failure, `coverage["annual"]` is
+    the RAW `{"error": ...}` slot (pack_us.py:1023), not a coverage-shaped
+    dict — no `axis_exclusions` key at all. The getter must tolerate this
+    degenerate shape (never crash) and still surface a vintage exclusion
+    reported by the quarterly arm."""
+    pack = {
+        "company": "JNJ",
+        "facts": [],
+        "coverage": _nested_coverage(
+            quarterly_exclusions=[_vintage_exclusion()],
+            annual_arm={"error": "SEC EDGAR 404: some filing"},
+        ),
+    }
+    result = kpi_xbrl_module.build_quarterly_series(pack)
+    recast_flags = [f for f in result["coverage_flags"] if f["type"] == "period_recast"]
+    assert len(recast_flags) == 1
+    assert recast_flags[0]["exclusions"] == [_vintage_exclusion()]
+
+
+# ---------------------------------------------------------------------------
+# Task 3 (docs/loom/plans/2026-07-19-jnj-restatement-axis-signature.md) —
+# per-signature refusal granularity: a genuine intra-filing (single
+# accession, two distinct values for the SAME window) ambiguity in ONE
+# signature group must not abort the whole quarterly-series build. Before
+# the fix, `build_quarterly_series` raises wholesale and nothing emits
+# (pinned as the RED baseline below); after the fix, the loop catches the
+# ambiguity PER SIGNATURE GROUP, records a non-fatal `signature_refused`
+# coverage_flag carrying the verbatim exception reason, and CONTINUES —
+# the clean sibling signature still emits its series untouched.
+# ---------------------------------------------------------------------------
+
+
+def _intra_filing_ambiguous_pack() -> dict:
+    """Two signature groups sharing one fiscal window: 'Poisoned' carries
+    TWO facts from the SAME accession with DIFFERENT values for the SAME
+    (period_end, duration_class) — a genuine intra-filing ambiguity, never
+    resolved arbitrarily. 'Clean' is an ordinary single-fact sibling
+    signature that must still emit."""
+    facts = [
+        {
+            "concept": "us-gaap:PoisonedConcept",
+            "dimensions": {},
+            "consolidation": None,
+            "period_end": "2026-03-31",
+            "fiscal_year": 2026, "fiscal_quarter": "Q1",
+            "duration_months": 3,
+            "accession": "acc-poison", "filed": "2026-05-01",
+            "value": 100.0,
+        },
+        {
+            "concept": "us-gaap:PoisonedConcept",
+            "dimensions": {},
+            "consolidation": None,
+            "period_end": "2026-03-31",
+            "fiscal_year": 2026, "fiscal_quarter": "Q1",
+            "duration_months": 3,
+            "accession": "acc-poison", "filed": "2026-05-01",
+            "value": 999.0,
+        },
+        {
+            "concept": "us-gaap:CleanConcept",
+            "dimensions": {},
+            "consolidation": None,
+            "period_end": "2026-03-31",
+            "fiscal_year": 2026, "fiscal_quarter": "Q1",
+            "duration_months": 3,
+            "accession": "acc-clean", "filed": "2026-05-01",
+            "value": 500.0,
+        },
+    ]
+    fiscal_calendars = {
+        "acc-poison": {"fiscal_period_focus": "Q1"},
+        "acc-clean": {"fiscal_period_focus": "Q1"},
+    }
+    return {"company": "JNJ", "facts": facts, "fiscal_calendars": fiscal_calendars}
+
+
+def test_quarterly_series_refuses_poisoned_signature_sibling_still_emits(
+    kpi_xbrl_module,
+):
+    """Task 3: the per-group `resolve_binding` call is wrapped so a genuine
+    intra-filing ambiguity is caught PER SIGNATURE GROUP — the poisoned
+    signature yields exactly ONE non-fatal `signature_refused` coverage_flag
+    carrying the verbatim exception reason, and the CLEAN sibling signature
+    still emits its series untouched. No whole-ticker abort."""
+    pack = _intra_filing_ambiguous_pack()
+    result = kpi_xbrl_module.build_quarterly_series(pack)
+
+    # sibling emits — exactly one series entry, the clean signature's.
+    assert len(result["series"]) == 1
+    clean_entry = result["series"][0]
+    assert clean_entry["signature"]["concept"] == "us-gaap:CleanConcept"
+    assert [p["value"] for p in clean_entry["points"]] == [500.0]
+
+    # exactly one refusal entry, dqc-schema-compliant, verbatim reason.
+    refusals = [
+        f for f in result["coverage_flags"] if f["type"] == "signature_refused"
+    ]
+    assert len(refusals) == 1
+    flag = refusals[0]
+    kpi_xbrl_module.assert_dqc_schema(flag)
+    assert flag["accessions"] == ["acc-poison"]
+    assert "intra-filing" in flag["reason"]
+    assert "PoisonedConcept" in flag["reason"]
+    assert flag["signature"]["concept"] == "us-gaap:PoisonedConcept"
+
+
+# ---------------------------------------------------------------------------
 # Task 9 (docs/loom/plans/2026-07-16-operational-kpi-quarterly.md) — structured
 # point + DQC-flag schema provenance: every emitted point carries source
 # accession(s) + source form (10-K|10-Q) + duration_class; every analysis-layer

@@ -568,6 +568,17 @@ def facts_to_points(
     return points
 
 
+class _IntraFilingAmbiguityError(ValueError):
+    """Raised by `_reduce_window_group` for a genuine intra-filing (SINGLE
+    accession, two-or-more distinct values for the same window) ambiguity —
+    a dedicated subclass (Task 3, docs/loom/plans/2026-07-19-jnj-
+    restatement-axis-signature.md) so `build_quarterly_series`'s per-group
+    loop can catch THIS narrow condition alone, never the broader
+    ambiguous-binding ValueError (`resolve_binding`'s >1-source match) or
+    any other ValueError. Subclasses ValueError so every existing direct
+    caller (`pytest.raises(ValueError, ...)`) needs no change."""
+
+
 def _reduce_window_group(
     kpi_id: str,
     source: dict,
@@ -618,7 +629,7 @@ def _reduce_window_group(
             fact.get("accession"), set()
         ).add(fact.get("value"))
     if any(len(vals) > 1 for vals in values_by_accession.values()):
-        raise ValueError(
+        raise _IntraFilingAmbiguityError(
             f"kpi_xbrl.resolve_binding: signature for kpi_id {kpi_id!r} "
             f"matches {len(group)} facts with different values for "
             f"period {period_key!r} within a SINGLE filing "
@@ -1372,6 +1383,66 @@ def _dimension_quarterly_absence_flags(facts: list[dict]) -> list[dict]:
     return flags
 
 
+def _period_recast_coverage_flags(fact_pack: dict) -> list[dict]:
+    """Task 2 (docs/loom/plans/2026-07-19-jnj-restatement-axis-signature.md):
+    surface the pack's vintage-category axis exclusions (T1's producer-side
+    `coverage.axis_exclusions` channel — `srt:RestatementAxis`, any member)
+    as ONE aggregated `period_recast` coverage_flag, pack-wide (not per
+    signature group: the exclusions live at pack level, outside any one
+    group's own facts). `type` is self-describing and morphology-consistent
+    with `no_quarterly_coverage` (snake_case descriptive noun phrase).
+
+    Unknown-category exclusions (any other disallowed `dim_` axis) are NOT
+    a vintage/recast statement — they stay pack-level accounting only and
+    contribute no flag here. Zero vintage exclusions -> empty list (no
+    flag), matching every other coverage-flag channel's 'ran, none found'
+    convention.
+
+    Fix-round-2 (both reviewers, converged): the REAL production pack
+    (`pack_kpi_quarterly`, pack_us.py:1017-1024) nests `axis_exclusions`
+    under BOTH arms — `coverage["quarterly"]["axis_exclusions"]` and
+    `coverage["annual"]["axis_exclusions"]` — never the flat
+    `coverage["axis_exclusions"]` this getter originally assumed. BOTH
+    arms are read and aggregated: `build_quarterly_series` derives Q4
+    from the annual arm's FY facts, so a vintage exclusion in either arm
+    is equally memo-relevant. Each arm degrades to `{}` when absent
+    (partial/failed pack) or when the arm is itself a raw error-slot dict
+    (`{"error": ...}`, pack_us.py:1023 on annual-arm failure) — `.get()`
+    on that dict simply finds no `axis_exclusions` key and yields `[]`,
+    never a crash.
+
+    The flag carries the affected accession(s) (`assert_dqc_schema`'s
+    required non-empty `accessions` list) plus the raw exclusion entries
+    (`concept`/`accession`/`period_end`/`axis`/`member` context) verbatim
+    under the extra locating field `exclusions` — never re-derived, never
+    summarized away."""
+    coverage = fact_pack.get("coverage") or {}
+    quarterly_arm = coverage.get("quarterly") or {}
+    annual_arm = coverage.get("annual") or {}
+    axis_exclusions = [
+        *(quarterly_arm.get("axis_exclusions") or []),
+        *(annual_arm.get("axis_exclusions") or []),
+    ]
+    vintage = [e for e in axis_exclusions if e.get("category") == "vintage"]
+    if not vintage:
+        return []
+    accessions = sorted({
+        e["accession"] for e in vintage if e.get("accession")
+    })
+    return [assert_dqc_schema({
+        "type": "period_recast",
+        "old": None,
+        "new": None,
+        "accessions": accessions,
+        "reason": (
+            f"{len(vintage)} vintage-axis (srt:RestatementAxis) fact(s) "
+            f"excluded from the pack — period recast: prior-published "
+            f"figures differ"
+        ),
+        "exclusions": vintage,
+    })]
+
+
 def build_series_with_break(
     points: list[dict],
     break_at_period: str,
@@ -1573,9 +1644,23 @@ def build_quarterly_series(fact_pack: dict) -> dict:
     `derived_points` = the emitted derived-lane points (`derived: True` +
     PLURAL `source_accessions`/`source_forms`), `gaps` = the derivation's
     surfaced skip/refusal flags, `coverage_flags` = the aggregated
-    per-group coverage flags. Groups are emitted in stable signature
-    order. Fail-loud: a pack missing `company` raises ValueError (points
-    are stamped with it); error/N-A slot packs raise via `_require_facts`.
+    per-group coverage flags PLUS (Task 2, docs/loom/plans/2026-07-19-jnj-
+    restatement-axis-signature.md) at most one pack-wide `period_recast`
+    flag when either arm of the nested envelope —
+    `fact_pack["coverage"]["quarterly"]["axis_exclusions"]` or
+    `["annual"]["axis_exclusions"]` — carries any
+    `category: "vintage"` entries (see `_period_recast_coverage_flags`)
+    PLUS (Task 3, same plan) one `signature_refused` flag per signature
+    group whose `resolve_binding` call raised a genuine intra-filing
+    ambiguity (`_IntraFilingAmbiguityError`, a dedicated ValueError
+    subclass) — that group is SKIPPED (no `series` entry), the refusal
+    flag carries the poisoned group's own accession(s), the verbatim
+    exception `reason`, and the offending `signature` as a locating field,
+    and every OTHER signature group's loop iteration is unaffected: no
+    whole-ticker abort. Any other exception type still propagates.
+    Groups are emitted in stable signature order. Fail-loud: a pack missing
+    `company` raises ValueError (points are stamped with it); error/N-A
+    slot packs raise via `_require_facts`.
     """
     company = fact_pack.get("company")
     if not isinstance(company, str) or not company:
@@ -1616,7 +1701,33 @@ def build_quarterly_series(fact_pack: dict) -> dict:
                 ),
             }],
         }
-        points = resolve_binding(fact_pack, binding, company)
+        try:
+            points = resolve_binding(fact_pack, binding, company)
+        except _IntraFilingAmbiguityError as exc:
+            # Task 3: a genuine intra-filing ambiguity in THIS signature
+            # group is non-fatal to the whole build — record a refusal
+            # coverage_flag (verbatim reason, dqc-schema-compliant) and
+            # CONTINUE to the next signature. Any OTHER exception (e.g.
+            # resolve_binding's own >1-source ambiguous-binding ValueError)
+            # is not this narrow subclass and still propagates.
+            accessions = sorted({
+                fact.get("accession")
+                for fact in groups[key]
+                if fact.get("accession")
+            })
+            coverage_flags.append(assert_dqc_schema({
+                "type": "signature_refused",
+                "old": None,
+                "new": None,
+                "accessions": accessions,
+                "reason": str(exc),
+                "signature": {
+                    "concept": concept,
+                    "dimensions": dimensions,
+                    "consolidation": consolidation,
+                },
+            }))
+            continue
         derived = derive_q4_points(points, fiscal_calendars=fiscal_calendars)
         series = build_series_with_break(
             points + derived["points"],
@@ -1641,6 +1752,12 @@ def build_quarterly_series(fact_pack: dict) -> dict:
             "gaps": derived["gaps"],
         })
         coverage_flags.extend(series["coverage_flags"])
+
+    # Task 2: the pack-level vintage-exclusion recast flag rides ALONGSIDE
+    # the per-group flags above — it is not tied to any one signature
+    # group's own facts (the exclusions live in the pack's `coverage`
+    # accounting, outside `groups`).
+    coverage_flags.extend(_period_recast_coverage_flags(fact_pack))
 
     return {"series": series_entries, "coverage_flags": coverage_flags}
 

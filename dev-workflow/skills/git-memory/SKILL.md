@@ -206,8 +206,12 @@ The git diff already shows **what** changed. Memory records the **why**.
   concise responses") — those belong in Claude Code's native memory,
   not in git. The skill does not write these as git-memory trailers.
 - **Secrets or sensitive context** — git is public-by-default; use
-  `.gitignore`d notes or secret managers instead. The skill refuses
-  to embed secrets in commit trailers.
+  `.gitignore`d notes or secret managers instead. This is enforced,
+  not just asserted: `protocols/compose-commit.md` (and
+  `protocols/compose-pr.md`) run a fail-closed two-layer privacy gate
+  over the composed text — a deterministic `privacy-scan.py` scan plus
+  a fresh-context judge per `protocols/privacy-judge-spec.md` — before
+  any trailer text is used.
 - **Replacing Claude Code's memory wholesale** — git-memory complements
   it, does not substitute for it. Both layers coexist; see the
   *Relationship to Claude Code native memory* table below.

@@ -1,0 +1,6 @@
+# Taiwan iXBRL test fixtures are Big5-encoded (non-UTF-8). Mark them binary so
+# git does not EOL-normalize or textualize them — otherwise `git diff`/`git show`
+# emit raw Big5 bytes that break tooling which decodes git output as UTF-8
+# (e.g. loom_gate_markers.py). Python test code still reads the real bytes via
+# read_text(encoding="big5"); .gitattributes only affects git's own handling.
+investing-toolkit/tests/data/fixtures/twse_ixbrl_*.html binary

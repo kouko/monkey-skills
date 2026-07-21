@@ -5,6 +5,227 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.29.0] — 2026-07-20
+
+Narrative-evidence arc, Slice A **Part 2** (number robustness): makes the prose
+KPI numbers CORRECT and rejects the ones that were never KPIs. Part 1 shipped
+the walking skeleton; a live 5-company test then showed META's Family DAP
+"3.56 billion" committing as `3.56` — off by 1e9 — which is what this part fixes.
+
+- **Word-scale magnitude parsing.** The locator absorbs a trailing
+  thousand/million/billion/trillion into the matched token, so the source anchor
+  spans the whole phrase, and the value derivation applies the multiplier through
+  `Decimal` rather than binary float.
+- **Date / fiscal-period rejection.** A 4-digit year preceded by a period cue
+  ("fiscal 2026", "Q1 2026") is a label, not a value. Deliberately narrow — a
+  bare year with no cue survives.
+- **Bounding qualifiers.** "up to 45,000 deliveries" commits carrying its
+  qualifier instead of as a bare 45000 fact, so neither the human confirmer nor a
+  downstream memo reads a precision the filing never claimed. `"over"` is guarded
+  against common phrasal verbs ("turned over 931 units" states no bound).
+- **One consistent normalization.** nbsp/thin-space thousands separators,
+  full-width and Arabic-Indic digits, full-width comma/period, and curly quotes
+  fold into one canonical surface. Every fold is one char → one char, so all
+  char offsets and the `text[start:end] == token` anchor survive untouched.
+- **Bounded provenance context.** The committed quote is now the number plus a
+  bounded slice of its surrounding text — enough to verify the datum, not enough
+  to drag a filing paragraph's executive names and compensation figures into the
+  durable store.
+
+Review caught a value-FABRICATION bug mid-branch: the grouping regex had a
+trailing digit guard but no leading one, so re-scanning could start inside a
+longer digit run and fuse two unrelated numbers — `"Fiscal 2026<nbsp>250,000
+units"` produced the token `"2026,250,000"`. The source anchor still HELD on that
+token, since it is guaranteed by construction; it offers no protection against
+this class. Fixed with the mirror-image guard.
+
+The whole-branch review then found two more of the same class, both living in the
+seam BETWEEN tasks where no per-task review could see them: magnitude absorption
+had reopened the period-label filter (`"fiscal 2026 billion-dollar cost program"`
+committing 2,026,000,000,000), and an nbsp acting as a word separator after a
+comma-grouped number fabricated a fused value (`"1,428<nbsp>500-mile trucks"` →
+1,428,500). Both closed, each with a regression test written against the
+interaction rather than against either layer alone.
+
+Two known limits are declared in the plan's Notes rather than papered over: a
+bounding qualifier separated from its figure by an intervening word; and personal
+data in the SAME clause as the number, which no fixed-width window can exclude
+without entity recognition. Plan:
+`docs/loom/plans/2026-07-20-8k-prose-kpi-intake-part-2.md`; change-folder:
+`docs/loom/2026-07-19-8k-prose-kpi-intake/`. Part 3 (lifecycle/hardening) and the
+SKILL wiring remain deferred.
+
+## [v2.28.0] — 2026-07-20
+
+Narrative-evidence arc, Slice A **Part 1** (walking skeleton): a "Route B for
+prose" mechanical producer that isolates a single operational-KPI datum from an
+8-K EX-99 earnings-release PROSE sentence (the class Route B's table walker and
+the bulk-narrative layer both drop — e.g. AMZN headcount, TSLA deliveries), with
+a verbatim quote + character-offset anchor, through the SAME three-layer trust
+(mechanical value+coords / LLM semantic / human confirm-all) into the EXISTING
+tier-① store. Foundational machinery + tests; not yet wired into a user-facing
+SKILL workflow (that + number robustness + lifecycle/hardening are Parts 2–3).
+Change-folder: `docs/loom/2026-07-19-8k-prose-kpi-intake/`; plan:
+`docs/loom/plans/2026-07-19-8k-prose-kpi-intake-part-1.md`.
+
+### Added
+
+- **Prose text surface** (`data-markets` / `exhibit_prose.py`, NEW):
+  `prose_surface(html)` flattens raw EX-99 HTML into the single canonical
+  non-table prose text (stdlib `html.parser`, nesting-depth table exclusion with
+  a block-break at the table boundary so flanking prose can't merge);
+  `locate_numbers(text)` returns plain numeric tokens `{token,start,end}` with
+  the exact-substring anchor invariant `text[start:end]==token` by construction;
+  a `--locate` CLI emits the located numbers as JSON.
+- **Prose KPI candidate producer** (`analysis-kpi` / `kpi_prose_candidates.py`,
+  NEW): `propose` → RAW candidates (mechanical value/quote/offset, null semantic
+  slots, `needs_semantic`) crossing to `exhibit_prose` by SUBPROCESS (mirrors
+  `kpi_8k_candidates` ↔ `exhibit_tables`); `passes_substring_gate` (anti-
+  fabrication — verifies the verbatim token/quote, never the normalized value,
+  fail-closed on empty/None); `commit` (human confirm-all gate, fail-closed);
+  `commit_to_store` (appends a `source_kind="prose"` point with a
+  `prose:{start}-{end}` anchor + verbatim_quote + filing attribution via the
+  UNMODIFIED `kpi_store.append`); `intake` (honest gaps — explicit empty-success
+  vs a loud ≥2-exhibit `multi_exhibit` gap).
+
+### Unchanged (red line)
+
+- `kpi_store.py` / `kpi_validate.py` are BYTE-UNCHANGED; prose points ride the
+  existing provenance/as_of guards un-weakened (truthy-token discipline, mirroring
+  Route B's `table:0`). The existing quarterly memo feed reads
+  `build_quarterly_series`, not the store, so prose points do not surface in the
+  memo under Slice A (pinned by a regression test).
+
+## [v2.27.0] — 2026-07-19
+
+Taiwan iXBRL financial-statement ingestion — TW equity memos now source
+their canonical three statements + DCF fields + curated notes from the real
+inline-XBRL filing (MOPS `t164sb01`, a gate-free Big5 GET), replacing the
+deferred yfinance-only canonical stub, and degrade back to the yfinance stub
+when a filing isn't available. Plan:
+`docs/loom/plans/2026-07-19-tw-ixbrl-ingestion.md`.
+
+### Added
+
+- **TW iXBRL fetch/parse pipeline** (`data-markets`): `twse_ixbrl_fetch.py`
+  (t164sb01 fetch — Big5 decode, season fallback for 興櫃 semiannual cadence,
+  502 retry; one URL covers 上市/上櫃/興櫃/KY), `twse_ixbrl_parser.py` (generic
+  fact extraction via regex/iterparse over `ix:` tags — NOT DOM, which silently
+  drops ~85% of nested facts; `scale`-attribute-driven scaling),
+  `twse_ixbrl_canonical.py` (canonical three-statement mapping for industrial
+  `-ci` filers, incl. the DCF-required `total_debt`/`cash`/`ebit`/`capex`/`fcf`
+  fields verified against 2330 + 1301 fixtures; financial `-fh` → unsupported
+  marker), `twse_ixbrl_notes.py` (4 curated note categories: financial-instruments
+  by measurement category, Mainland-China investment + MOEA ceiling, related-party
+  balances + flows, employee-benefit expense), and `twse_ixbrl.py` (the
+  `run_client`-invokable CLI assembling the pipeline into JSON).
+
+### Changed
+
+- **`pack_tw.py` memo-fetch** now sources the TW canonical from the iXBRL client
+  (provenance-wrapped Tier-A `twse_ixbrl` group), filling the previously-deferred
+  `_build_canonical_from_yf_financials_tw` stub; on iXBRL fetch failure it degrades
+  to the retained yfinance stub rather than an empty canonical (no regression).
+
+### Notes
+
+- Scope is statements + generic fact layer + curated note fields, NOT a full
+  note-table reconstruction engine — annual-filing verification showed TW iXBRL's
+  forensic notes (inventory write-downs, tax bridge, aging buckets, PP&E
+  rollforward) are absent at any period; value concentrates in the ~4 curated
+  concept families. Endorsement/guarantee, parent-only (個體) statements, and
+  `-fh` canonical are deferred (see plan Decision Log).
+
+## [v2.26.0] — 2026-07-19
+
+Route B 8-K earnings-release semi-auto KPI intake lane — a mechanical
+producer + LLM-semantic + human-confirm three-layer path that turns an
+earnings 8-K press-release exhibit into confirmed operational-KPI points
+in the EXISTING tier-① store, without the value or its coordinates ever
+passing through an LLM. Plan:
+`docs/loom/plans/2026-07-19-8k-earnings-kpi-intake.md`.
+
+### Added
+
+- **Exhibit acquisition via attachments** (`data-markets` /
+  `sec_edgar_client.py`): `fetch_exhibit_documents(ticker, accession=None)`
+  resolves the latest earnings 8-K (Item 2.02) — or the given accession —
+  and enumerates ALL EX-99.* attachments off `filing.attachments`,
+  returning each document's RAW HTML (`attachment.content`) plus metadata
+  (accession / document / exhibit_type / filingDate). This sidesteps
+  `_segment_8k`'s ≥2-exhibit-item LOOM-SIMPLIFY ceiling (attachments
+  enumerate every EX-99.x directly). Each document is cached under the NEW
+  key family `exhibit_raw_{accession}_{document}` — never the legacy
+  `narrative_sections_{accession}` slot (incompatible payload shapes share
+  the immutable TTL; the distinct prefix makes the two caches un-aliasable
+  so a pre-warmed machine can't get a schema-passing HIT of the wrong
+  shape). A failed resolution/acquisition is a loud `{"error": ...}` slot,
+  surfaced not cached.
+- **Generic HTML table walker** (`data-markets` / `exhibit_tables.py`):
+  stdlib `html.parser` extractor — raw exhibit HTML → JSON list of tables,
+  each cell `{table_index, row, col, text}` after rowspan/colspan
+  resolution + empty-separator-cell cleanup, plus a per-row leading-label
+  path. No pandas/lxml (coordinate fidelity across the Workiva
+  colspan/duplicate-cell artifact needs a custom walker). MECHANICAL only:
+  values are the exact printed strings (nbsp/whitespace normalized, never
+  parsed to float). CLI: `exhibit_tables.py --html <path> --out <json>`.
+- **8-K candidate three-layer intake** (`analysis-kpi` /
+  `kpi_8k_candidates.py`): `propose` subprocesses the table walker and
+  emits RAW candidate points (verbatim label path + exact-printed value +
+  `period_hint` + source coordinates + `confirmed: false`), leaving
+  `kpi_id`/`unit`/`period` explicit `null` with a `needs_semantic` list —
+  the mechanical layer NEVER invents a slug, a unit, or a normalized
+  period. The LLM layer (analysis-kpi SKILL.md prose workflow) proposes
+  those semantic slots by reading the verbatim labels; the human
+  confirm-all gate ratifies and flips `confirmed: true`. `commit
+  --company <T>` then appends ONLY confirmed-and-complete candidates into
+  the tier-① store via the EXISTING `kpi_store.append` — unconfirmed
+  entries are skipped, and a null semantic slot or missing provenance is
+  refused loud (the store's own confirm-all trust gate is un-weakened).
+
+## [v2.25.0] — 2026-07-19
+
+JNJ restatement-axis fix — vintage-axis exclusion accounting and
+per-signature refusal granularity join the dimensional-revenue producer
+and the quarterly-KPI consumer chain. Plan:
+`docs/loom/plans/2026-07-19-jnj-restatement-axis-signature.md`.
+
+### Added
+
+- **Vintage/unknown-axis exclusion accounting** (`data-markets` /
+  `sec_edgar_client.py`): `_dimension_signature` now excludes, rather than
+  silently collapsing, any fact carrying a `dim_` axis that is neither a
+  whitelisted breakdown axis nor the ConsolidationItems qualifier —
+  `srt:RestatementAxis` (any member, namespace-agnostic, via
+  `_VINTAGE_AXIS_LOCAL_NAME`) is the named `"vintage"` exclusion category,
+  every other disallowed axis is `"unknown"` (fail-closed). Each exclusion
+  is counted in the pack's `coverage.axis_exclusions` channel
+  (`{category, axis, member, concept, accession, period_end}`) via
+  `_dimensional_axis_exclusions`; the 3-key signature shape
+  (`concept`/`dimensions`/`consolidation`) is unchanged.
+  `srt:ConsolidatedEntitiesAxis` — a sibling-axis spelling of the
+  consolidation qualifier live-observed on INTC's 2021-2023 filings
+  (member `OperatingSegmentsMember`) — is recognized as a second
+  consolidation-qualifier axis (`_CONSOLIDATION_AXIS_LOCAL_NAMES`), folded
+  into the same `consolidation` slot; a fact carrying both qualifier axes
+  with DIFFERING members is excluded under the self-describing
+  `"consolidation_conflict"` category.
+- **`period_recast` coverage flag** (`analysis-kpi` / `kpi_xbrl.py`):
+  `build_quarterly_series` aggregates the pack's `"vintage"`-category
+  `axis_exclusions` — read from BOTH the quarterly and annual coverage
+  arms — into at most one pack-wide `period_recast` coverage_flag,
+  carrying the affected accession(s) and the raw exclusion entries
+  verbatim under `exclusions`. Unknown-category exclusions stay
+  pack-level accounting only; zero vintage exclusions emit no flag.
+- **`signature_refused` per-signature refusal** (`analysis-kpi` /
+  `kpi_xbrl.py`): a genuine intra-filing ambiguity
+  (`_IntraFilingAmbiguityError`, raised by `resolve_binding`'s per-group
+  call) is now caught per signature group instead of aborting the whole
+  build — the poisoned group is skipped, a `signature_refused`
+  coverage_flag records its accession(s), verbatim exception reason, and
+  offending signature, and every other signature group's series still
+  emits. Any other exception type still propagates.
+
 ## [v2.24.0] — 2026-07-18
 
 Week-based duration lane — 52/53-week fiscal calendars (COST-class filers)

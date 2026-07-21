@@ -18,7 +18,8 @@ finishing-a-development-branch (this skill)
   │
   ├─→ Phase 1: requesting-code-review
   │     dispatches code-reviewer subagent → verdict: PASS / PASS_WITH_NOTES / NEEDS_REVISION
-  │     blocks on NEEDS_REVISION (any 🔴, or 2+ 🟡); PASS_WITH_NOTES (1 🟡) surfaces + asks
+  │     blocks on NEEDS_REVISION (any 🔴, or 2+ 🟡); PASS_WITH_NOTES (1 🟡) auto-proceeds,
+  │     carrying the 🟡 forward into the PR body + close-out report
   │
   ├─→ Phase 2: verification-before-completion
   │     runs package-level test command → exit 0 + N>0 tests → PASS
@@ -99,7 +100,8 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
 3. Dispatch requesting-code-review — route on the returned verdict, not raw severity:
    - If NEEDS_REVISION (any 🔴 fatal, or 2+ 🟡 should-fix): surface findings; STOP. Wait
      for user remediation. (Consistent with requesting-code-review: NEEDS_REVISION → do NOT push.)
-   - If PASS_WITH_NOTES (exactly 1 🟡, no 🔴): surface findings; ASK user to proceed or remediate.
+   - If PASS_WITH_NOTES (exactly 1 🟡, no 🔴): auto-proceed — carry the 🟡 finding forward
+     into the PR body and the final close-out report as noted debt.
    - If PASS (all 🟢): proceed silently.
    - Budget/quota failure fallback: if the code-reviewer subagent fails to launch due to
      budget or quota exhaustion, perform an inline B2 self-review — Read the diff, surface
@@ -110,8 +112,9 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
      without first verifying it exists via `claude --help`.
    - Explicit contract: NEEDS_REVISION review loops — fix → re-review, whether inside
      SDD's per-task triad during development or this step's own fix-up cycle — digest
-     silently; the user sees only the terminal verdict, never each iteration. The
-     PASS_WITH_NOTES user-ask gate above is UNCHANGED by this — it still asks.
+     silently; the user sees only the terminal verdict, never each iteration.
+     PASS_WITH_NOTES above auto-proceeds without asking — consistent with this
+     digest-silently posture, not an exception to it.
 4. Before applying any review findings from Step 3: Read each file you intend to Edit
    (Bash inspection does NOT satisfy the Edit/Write precondition) — details in
    [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §S1.
@@ -139,9 +142,17 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
      defer this question to Step 8's later checklist pass — a non-empty trailer set writing rich
      "why" content is itself the trigger, and treating "trailers written" as "memory handled" is
      the exact lapse this inline check exists to prevent (documented recurrence: PR #519, PR #520).
-7. Show user the proposed commit message + trailers; ASK for approval
-   - If approved: proceed
-   - If rejected / edited: use user's version
+7. Run the privacy gate on the composed commit message + trailers —
+   git-memory's compose-commit protocol Step 3.5, the fail-closed
+   two-layer check: layer-1 deterministic `scripts/privacy-scan.py`
+   scan, then layer-2 fresh-context judge per `privacy-judge-spec.md`.
+   - PASS (layer-1 clean AND layer-2 PASS): proceed silently — no user ask.
+   - BLOCK (any layer-1 finding, a layer-2 BLOCK, or a fail-closed
+     condition — script error, judge dispatch failure, or
+     non-conforming judge output): surface the findings; ASK the user
+     to resolve before proceeding. This is now the ONLY user stop Step
+     7 has, and it fires only on failure — the user may still edit the
+     message to clear the finding.
 8. git hygiene before the close-out commit:
    - Living-spec index regen (orchestrator-only, ONCE per branch): if the repo has a
      `docs/loom/` tree, run
@@ -193,7 +204,8 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
      [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §S2/§D1.
    - If any review-driven fixes were applied in Steps 3–4, re-run verification-before-completion
      here (Step 5 result is stale) before committing.
-9. git commit (only after user approval at Step 7)
+9. git commit (only after Step 7's privacy gate PASSes, or after the
+   user resolves a Step-7 BLOCK)
 9b. Commit-carrier verify gate — MANDATORY, runs AFTER the commit, BEFORE push:
     - Run `dev-workflow/skills/git-memory/scripts/memory-grep.sh --verify HEAD`
       (exit 0 = a Decision/Learning/Gotcha trailer is retrievable from HEAD's body;
@@ -226,7 +238,15 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
       logged by the gate on the next push. Never self-mint a waiver.
 10. git push (branch-qualified form per Step 8)
 11. ASK user: "Open a PR? (y/N)" — only if gh CLI configured
-    - If yes: gh pr create with title/body from git-memory + branch name
+    - If yes: compose the PR body per `dev-workflow/skills/git-memory/protocols/compose-pr.md`,
+      then run its Step 6 privacy gate over that composed body BEFORE `gh pr create` — the
+      same two-layer gate (privacy-scan.py + the privacy-judge-spec.md judge, fail-closed)
+      that Step 7 runs on the commit carrier. Gate PASS → proceed to create; gate BLOCK
+      (any layer-1 finding, layer-2 BLOCK, or a fail-closed condition) → surface findings
+      and do NOT create the PR until the user resolves it. This is explicit, not transitive:
+      the PR body is an outward-facing carrier and gets the identical mechanized gate as the
+      commit, per the arc's mechanize-don't-rely-on-prose premise.
+    - Then: gh pr create with title/body from git-memory + branch name
     - PR-carrier check (memory-worthy branch only): before declaring the PR ready,
       grep the PR body you just composed for a `## Memory` section. If Phase 3
       returned a non-empty trailer set and body has no `## Memory` section, flag
@@ -260,7 +280,7 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
     and worktree status.
 ```
 
-**ASK = stop and wait for user.** This is deliberately NOT autonomous — close-out is a high-blast-radius operation (shipping code → teammates / production). Each user-visible action has a confirmation.
+**ASK = stop and wait for user.** That guarantee is now exception-based, not blanket: close-out is autonomous on the happy path — Steps 1–10 proceed silently once each step's own gate PASSes, including Step 7's privacy gate. What remains are the two OUTWARD-FACING actions (Step 11 — open a PR; Step 12 — remove the worktree), which always ask because they are visible to teammates or touch shared state, plus a Step 7 privacy-gate BLOCK, where the human returns only because the gate failed.
 
 ## Red Flags — refuse these rationalizations
 

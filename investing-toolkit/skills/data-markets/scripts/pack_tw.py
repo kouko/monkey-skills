@@ -311,6 +311,15 @@ def _build_canonical_from_yf_financials_tw(financials: dict) -> dict:
     }
 
 
+def _ixbrl_prior_quarter(year: int, season: int) -> tuple[int, int]:
+    """Step back one reporting quarter (western `year`, `season`) — used
+    to fall back one period when the latest-likely-filed quarter hasn't
+    been filed yet (twse_ixbrl.py's `not_found` error)."""
+    if season == 1:
+        return year - 1, 4
+    return year, season - 1
+
+
 def _extract_ohlcv_rows_from_tw_yf(yf_history_wrapped: dict) -> list[dict]:
     """Unwrap data-tw's nested yfinance history envelope to the OHLCV
     rows list. Handles the {_tier, _source, _action, data: {data: [...]}}
@@ -459,11 +468,35 @@ def pack_memo_fetch(ticker: str, period: str = "2y") -> dict[str, Any]:
                    ["--ticker", code, "--dataset", "TaiwanStockMarginPurchaseShortSale",
                     "--date-start", date_3mo]))
 
+    # twse_ixbrl — Tier A canonical + curated notes (industrial `-ci`
+    # filers; Task 6). Bounded 2-attempt fallback: try the latest-likely-
+    # filed quarter, then step back one quarter if that period comes back
+    # `_error` (covers both "not yet filed" and any other client failure —
+    # the fetch/parse layers already fold both into `_error`).
+    out["twse_ixbrl"] = {}
+    ix_year = roc_year + 1911  # t164sb01 SYEAR is the western calendar year
+    ix_season = season
+    ixbrl_result: dict[str, Any] = {}
+    for attempt in range(2):
+        _log("pack [twse_ixbrl canonical]", f"{code} {ix_year}Q{ix_season}")
+        ixbrl_result = run_client(
+            "twse_ixbrl.py",
+            ["--co-id", code, "--year", str(ix_year), "--season", str(ix_season),
+             "--report-id", "C"],
+        )
+        if "_error" not in ixbrl_result:
+            break
+        if attempt == 0:
+            ix_year, ix_season = _ixbrl_prior_quarter(ix_year, ix_season)
+    out["twse_ixbrl"]["canonical_and_notes"] = wrap("A", "twse_ixbrl", "ixbrl-canonical", ixbrl_result)
+
     # Re-walk every Tier A entry (snapshot only checked its own subset; memo-fetch
-    # added 8 more A-tier fetches). Flip _partial=True if any Tier A entry errored.
+    # added 8 more A-tier fetches, plus twse_ixbrl). Flip _partial=True if any
+    # Tier A entry errored.
     if not out.get("_partial"):
         for group in (out.get("yfinance", {}), out.get("mops", {}),
-                       out.get("twse", {}), out.get("finmind", {})):
+                       out.get("twse", {}), out.get("finmind", {}),
+                       out.get("twse_ixbrl", {})):
             for entry in group.values():
                 if isinstance(entry, dict) and entry.get("_tier") == "A" and "_error" in entry:
                     out["_partial"] = True
@@ -471,18 +504,33 @@ def pack_memo_fetch(ticker: str, period: str = "2y") -> dict[str, Any]:
             if out["_partial"]:
                 break
 
-    # T3 canonical staging — yfinance Tier 2 fallback per ADR-0003.
-    # MOPS Tier A canonical extraction (中文 t164sb04/05/03 → flat) is deferred.
+    # yfinance financials_annual — fetched here (before the canonical
+    # decision below) since round-2 review: on both-attempts iXBRL `_error`,
+    # the canonical degrades to this data rather than staying empty.
     yf_ticker = norm["ticker_yf"]
     yf_fin = run_client(
         "yfinance_client.py",
         ["--ticker", yf_ticker, "--action", "financials", "--period", "annual"],
     )
-    canonical = _build_canonical_from_yf_financials_tw(yf_fin)
     out["yfinance"]["financials_annual"] = wrap("2", "yfinance", "financials-annual", yf_fin)
-    out["income_statement"] = canonical["income_statement"]
-    out["cash_flow"] = canonical["cash_flow"]
-    out["balance_sheet"] = canonical["balance_sheet"]
+
+    # Canonical statements — Task 6: sourced from the TW iXBRL client
+    # (twse_ixbrl.py) fetched above when it succeeds. On both-attempts
+    # `_error` (round-2 fix 🟡), degrade to the retained yfinance-based stub
+    # (_build_canonical_from_yf_financials_tw) rather than an empty {} —
+    # an empty canonical silently zeroes every downstream DCF field
+    # (net_debt, ebit, fcf all read as absent/0), a worse failure mode than
+    # a Tier-2 scraper-sourced canonical.
+    ixbrl_canonical = ixbrl_result.get("canonical") if isinstance(ixbrl_result, dict) else None
+    if isinstance(ixbrl_canonical, dict):
+        out["income_statement"] = ixbrl_canonical.get("income_statement", {})
+        out["cash_flow"] = ixbrl_canonical.get("cash_flow", {})
+        out["balance_sheet"] = ixbrl_canonical.get("balance_sheet", {})
+    else:
+        fallback_canonical = _build_canonical_from_yf_financials_tw(yf_fin)
+        out["income_statement"] = fallback_canonical["income_statement"]
+        out["cash_flow"] = fallback_canonical["cash_flow"]
+        out["balance_sheet"] = fallback_canonical["balance_sheet"]
 
     # shares_outstanding / current_price from yfinance.info (already fetched in snapshot)
     yf_info_wrapped = out.get("yfinance", {}).get("info") or {}
