@@ -650,3 +650,24 @@ def test_ordinary_block_newline_fold_survives_the_pre_family_exemption():
     # A wrap AFTER a closed `<pre>` is outside it again — depth returned to zero.
     after = exhibit_prose.prose_surface("<pre>x</pre><p>grew to 3.56\nbillion</p>")
     assert after == "x\ngrew to 3.56 billion", repr(after)
+
+
+def test_surface_version_declared():
+    # No living-spec REQ-id: this plan traces tasks by Task item, not REQ-ids.
+    # A char offset stored as provenance is defined against a PARTICULAR
+    # normalization contract of `prose_surface` — the Part-2 folds (newline
+    # fold, digit/quote/separator folds) changed that contract for the same
+    # input bytes. `SURFACE_VERSION` names the current contract so a consumer
+    # can stamp WHICH surface produced a stored span; recording it cannot be
+    # added retroactively, so the flattener declares it. This task mints the
+    # primitive only — a sibling task threads it onto stored points.
+    import exhibit_prose
+
+    # Exists, is a string, and is non-empty.
+    assert hasattr(exhibit_prose, "SURFACE_VERSION")
+    assert isinstance(exhibit_prose.SURFACE_VERSION, str)
+    assert exhibit_prose.SURFACE_VERSION != ""
+
+    # Stable across two accesses — the same surface always reports the same
+    # version (a moving version would defeat the provenance stamp).
+    assert exhibit_prose.SURFACE_VERSION == exhibit_prose.SURFACE_VERSION

@@ -255,6 +255,69 @@ def query_latest(company: str, kpi_id: str, period: str):
     return max(candidates, key=lambda p: p.get("as_of", ""))
 
 
+def list_series() -> list:
+    """Enumerate the `(company, kpi_id)` pairs held in the store, recovered
+    from each series file's stored point CONTENT.
+
+    The filename stem embeds a one-way SHA-1 digest of the raw
+    (company, kpi_id) pair (`_series_key`), so the raw identity CANNOT be
+    reversed out of the path — it is read back from each point's own
+    `company`/`kpi_id` fields (stored verbatim by `append`). One series file
+    is one pair, but its points are still iterated (rather than trusting the
+    first) so a mixed/legacy file surfaces every identity it holds; the result
+    is de-duplicated and sorted for a deterministic, filesystem-order-
+    independent return.
+
+    Read-only, and never-raise on an absent store: if `resolve_store_dir()`
+    does not exist there are no series, so it returns `[]` — matching
+    `_matching_points`/`query_latest`. No lock is taken: enumeration only
+    reads, and a concurrent `append`'s atomic tmp+rename means each file is
+    seen either fully pre- or post-write, never half-written.
+
+    Degrades PER-FILE, not per-store: this is a long-lived multi-year local
+    store, so a single unreadable / malformed / non-dict series file (an
+    interrupted external edit, a future co-writer bug) must not take down
+    enumeration for every OTHER series. Such a file is skipped and the scan
+    continues — a partial-but-truthful listing beats an all-or-nothing raise.
+    """
+    store_dir = resolve_store_dir()
+    if not store_dir.exists():
+        return []
+    pairs = set()
+    for path in store_dir.glob("*.json"):
+        try:
+            envelope = _load_series(path)
+            points = envelope.get("points")
+        except (json.JSONDecodeError, OSError):
+            continue  # skip a corrupt/unreadable file; keep the rest visible
+        if not isinstance(points, list):
+            continue
+        for point in points:
+            if not isinstance(point, dict):
+                continue
+            company = point.get("company")
+            kpi_id = point.get("kpi_id")
+            if company is not None and kpi_id is not None:
+                pairs.add((company, kpi_id))
+    return sorted(pairs)
+
+
+def list_companies() -> list:
+    """The distinct companies held in the store, sorted — a thin projection of
+    `list_series`.
+    """
+    return sorted({company for company, _kpi_id in list_series()})
+
+
+def list_kpis(company: str) -> list:
+    """The distinct kpi_ids held for one company, sorted — a thin projection of
+    `list_series`.
+    """
+    return sorted(
+        kpi_id for company_key, kpi_id in list_series() if company_key == company
+    )
+
+
 def _cli_append(args: argparse.Namespace) -> int:
     """`append` subcommand: read ONE point as JSON from `--file` (or stdin
     when omitted), call `append(point)`. A rejection (ValueError from the

@@ -214,8 +214,42 @@
   - **SKILL wiring** (analysis-kpi SKILL.md CLI-reference + a user-facing prose
     intake workflow) — pending; do when the capability is user-ready.
   - **Slice B (later) — curated narrative PASSAGES → memo** (relevance/taste
-    layer over the existing bulk narrative text). **Slice C (later) — longitudinal
-    coverage file + retention (≥10yr, industry norm) + tearsheet/tracker.**
+    layer over the existing bulk narrative text).
+  - **Slice C — KPI observation history (US lane)** (plan
+    `docs/loom/plans/2026-07-22-kpi-observation-history.md`, brief
+    `docs/loom/specs/2026-07-20-kpi-observation-history.md`) — shipped shape:
+    store enumeration; period identity = raw `(start,end)` pair with fiscal
+    labels as analysis coordinates; write-time integrity stamp (hash of the
+    anchored span + surface version); `history`/coverage read across filings,
+    disagreement flagged. **Retention DROPPED** — the earlier ten-year-lookback
+    "industry norm" framing was unevidenced (CFA sets no lookback window;
+    practitioner guidance clusters 3–5yr; 会社四季報 prints 5 periods by default;
+    vendors sell depth as product tiers — no consensus to conform to).
+    **Tearsheet
+    DEFERRED** — no shipped public format exists for "one company, many
+    operating KPIs, many years", and the prose lane is not yet user-invocable.
+  - **Slice C deferred / future items:**
+    - Conflict-resolution policy (B) — different source types, same period:
+      audited-wins auto-resolution, **data-gated** (needs a per-point
+      source-TYPE field + a second populated lane before it can resolve on
+      anything; today T6 surfaces a (B)-shaped conflict as `disagreement=True`).
+    - Dedup-key migration — moving store identity to the `(start,end)` date
+      pair at the write-side dedup layer (the 5-tuple still carries the string
+      `period`); user-gated, backfill-blocked by first-record-wins.
+  - **Pre-existing defects found during the Slice C recon (2026-07-22) — log,
+    not fixed here (not ours, out of scope):**
+    - `comps_compute._concept_fy_end` (`comps_compute.py:206-207`) hardcodes
+      `fiscal_year_ends`, so a TW pack (which emits `periods`) returns `None`
+      every time — provenance column silently blank, no error.
+    - Values/periods can pair WRONGLY on a mid-series gap: `_extract` skips
+      missing labels instead of appending `None`, then `_meta` slices
+      `periods[: len(revenue)]`, truncating periods from the END
+      (`pack_jp.py:232-236`/`:274`, `pack_tw.py:275`, `pack_kr.py:325`).
+    - JP EDINET Tier-A canonical is an empty stub (`pack_jp.py:463-478`) — the
+      better source produces the emptier canonical.
+    - TW canonical blocks are absent from `tw-schema-memo-fetch.json` entirely.
+    - The four `_YF_LABEL_MAP*` copies differ in content, so ADR-0001's CI MD5
+      drift check covers none of them.
 - **Route A — XBRL non-monetary footprint/capacity allowlist — DEMOTED/PARKED**
   (serves retail/REIT/utility filers, NOT big tech; only pick up if the user's
   portfolio needs those names). Census outcome — the only viable territory is a
