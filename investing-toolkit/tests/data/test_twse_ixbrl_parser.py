@@ -216,3 +216,29 @@ def test_parse_nonnumeric_exact_text_value():
     assert len(company_id) == 1, company_id
     assert company_id[0]["raw_value"] == "2330"
     assert company_id[0]["fact_type"] == "nonNumeric"
+
+
+def test_decode_ixbrl_document_prefers_utf8_for_financial_family():
+    # MOPS serves the whole financial family (-fh/-basi/-bd/-ins) as UTF-8
+    # despite declaring charset=big5. The old hardcoded
+    # `.decode("big5hkscs", errors="replace")` silently corrupts every
+    # Chinese-text fact for these filers (byte-verified: 2882's
+    # NameOfTheCompany bytes are UTF-8 國泰世華銀行; big5hkscs decode
+    # garbles it). decode_ixbrl_document must try UTF-8 strict first.
+    mod = _load_parser()
+    raw = (FIXTURES / "twse_ixbrl_2882_2026Q1_C.html").read_bytes()
+
+    text = mod.decode_ixbrl_document(raw)
+
+    assert "國泰世華銀行" in text
+
+
+def test_decode_ixbrl_document_falls_back_to_big5_for_ci_filers():
+    # Genuine Big5 -ci filings (e.g. TSMC 2330) must still decode cleanly
+    # via the big5hkscs fallback when UTF-8-strict raises.
+    mod = _load_parser()
+    raw = (FIXTURES / "twse_ixbrl_2330_2024Q3_C.html").read_bytes()
+
+    text = mod.decode_ixbrl_document(raw)
+
+    assert "台灣積體電路製造股份有限公司" in text
