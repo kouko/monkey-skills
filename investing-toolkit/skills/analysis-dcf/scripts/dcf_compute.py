@@ -416,6 +416,33 @@ def main() -> int:
         print(json.dumps({"error": f"input not valid JSON: {e}"}), file=sys.stderr)
         return 2
 
+    if data.get("sector_class") == "financial":
+        # Financial-sector canonicals (fh/basi/bd/ins taxonomies) deliberately
+        # omit income_statement.revenue / balance_sheet.total_debt — a
+        # single-stage FCFE-to-equity DCF is not a valid model for banks/
+        # insurers (Damodaran 2012 Ch.12: use FCFE/dividend-discount instead).
+        # Refuse cleanly rather than crashing on the missing-revenue
+        # ValueError, so the memo pipeline's Phase-3 dcf.json artifact gate
+        # is satisfied with an explicit N/A marker.
+        out = {
+            "ticker": data.get("ticker"),
+            "not_applicable": "financial-sector",
+            "reason": (
+                "sector_class=financial: standard 3-stage FCFF DCF does not "
+                "apply to banks/insurers/financial holdings (revenue/"
+                "total_debt are not meaningful inputs for this business "
+                "model). Use a sector-specific model (e.g. FCFE / dividend "
+                "discount) instead."
+            ),
+            "_provenance": {
+                "input_path": str(input_path),
+                "computed_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "layer": "analysis (pure compute, no I/O)",
+            },
+        }
+        print(json.dumps(out, indent=2, ensure_ascii=False))
+        return 0
+
     input_warnings = _validate_input_shape(data)
 
     try:

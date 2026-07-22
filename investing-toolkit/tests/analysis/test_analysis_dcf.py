@@ -212,6 +212,23 @@ def test_rule_verdict_buy_when_price_at_or_below_buy_threshold_grade_a(runner, f
     assert vt["rule_verdict"] == "BUY (grade per analyst conviction)"
 
 
+# ---------------------------------------------------------------------------
+# Financial-sector refusal guard — sector_class="financial" canonical (fh/basi/
+# bd/ins) omits revenue/total_debt on purpose; DCF must refuse cleanly instead
+# of raising ValueError, so the memo's Phase-3 dcf.json artifact gate is met.
+# ---------------------------------------------------------------------------
+
+
+def test_financial_sector_emits_not_applicable_clean_exit(runner, fixtures_dir):
+    """sector_class=financial + no income_statement.revenue -> structured
+    not_applicable result, exit 0 (NOT a ValueError crash)."""
+    res = runner(DCF_SCRIPT, "--input", str(fixtures_dir / "dcf_financial_sector.json"))
+    assert res.returncode == 0, res.stderr
+    payload = json.loads(res.stdout)
+    assert payload.get("not_applicable") == "financial-sector"
+    assert isinstance(payload.get("reason"), str) and payload["reason"]
+
+
 def test_rule_verdict_null_when_current_price_absent(runner, fixtures_dir):
     """No current_price in input -> rule_verdict must be null, never guessed."""
     res = runner(DCF_SCRIPT, "--input", str(fixtures_dir / "dcf_rule_verdict_no_price.json"))
