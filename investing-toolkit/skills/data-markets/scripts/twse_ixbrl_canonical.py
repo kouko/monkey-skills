@@ -1,7 +1,8 @@
 """twse_ixbrl_canonical.py — canonical three-statement mapper for TW
 MOPS iXBRL facts (industrial `-ci` filers, Task 3; financial-holding
 `-fh` filers, Task 5; standalone-bank / bills-finance `-basi` filers,
-Task 6; broker-dealer `-bd` filers, Task 7).
+Task 6; broker-dealer `-bd` filers, Task 7; insurer `-ins` filers —
+life / P&C / reinsurance sub-shapes — Task 8).
 
 Maps a flat fact-record list (twse_ixbrl_parser.parse_ixbrl_facts
 output, Task 1) into the toolkit's canonical shape — the same shape
@@ -12,12 +13,14 @@ produces: three top-level keys `income_statement` / `balance_sheet` /
 `unit="TWD"`).
 
 Scope: industrial (一般行業, "-ci"), financial-holding (金融控股,
-"-fh"), standalone-bank/bills-finance (銀行/票券金融, "-basi"), and
-broker-dealer/securities (證券, "-bd") filers. The remaining financial
-family (insurance, "-ins") uses a statement taxonomy entirely of its
-own (a deferred sub-arc per docs/loom/plans/2026-07-19-tw-ixbrl-
-ingestion.md Decision Log) — a fact set from that family returns an
-explicit unsupported marker instead of a wrong/crashing mapping.
+"-fh"), standalone-bank/bills-finance (銀行/票券金融, "-basi"),
+broker-dealer/securities (證券, "-bd"), and insurer (保險, "-ins" —
+life/P&C/reinsurance) filers. All 5 recognized financial-sector
+taxonomy families now have a registered canonical builder; a fact set
+whose classified tag has no registered builder (only possible if a
+future 6th family is added to `_BSCI_TAG_PREFIXES` before its own
+builder lands) returns an explicit unsupported marker instead of a
+wrong/crashing mapping.
 
 Line concepts live mostly in the `ifrs-full` namespace for -ci filers
 (the standard IFRS taxonomy); `tifrs-bsci-ci` covers only TW-specific
@@ -673,6 +676,44 @@ _BD_LABELS: dict[str, str] = {
 }
 
 
+def _first_present(
+    by_concept: dict[str, dict[str, dict[str, Any]]],
+    candidates: tuple[str, ...],
+    source_label: str,
+) -> tuple[list[float], dict[str, Any]] | None:
+    """Try each of `candidates` IN ORDER, returning the first concept that
+    has any base-context facts — unlike _sum_concepts/_derive_total_debt,
+    this never merges multiple candidates together. Needed when the SAME
+    economic fact is booked under a DIFFERENT concept string depending on
+    sub-shape (e.g. -ins's insurance-contract liability: life/P&C insurers
+    use `tifrs-bsci-ins:InsuranceContractLiabilities_CB`, but reinsurers
+    book the same item under the generic `ifrs-full:
+    LiabilitiesArisingFromInsuranceContracts` instead — measured, round3
+    §Q2 union table). Summing the two would double-count/nonsense; picking
+    whichever is present avoids silently dropping the field for the
+    sub-shape that doesn't use the first candidate name.
+    """
+    for concept in candidates:
+        ctx_facts = by_concept.get(concept)
+        if not ctx_facts:
+            continue
+        ordered = sorted(
+            ctx_facts.values(),
+            key=lambda f: _period_sort_key(f.get("period")),
+            reverse=True,
+        )
+        values = [f["raw_value"] for f in ordered]
+        meta = {
+            "source_label": source_label,
+            "concept": concept,
+            "accounting_standard": "tifrs",
+            "unit": "TWD",
+            "periods": [f.get("period") for f in ordered],
+        }
+        return values, meta
+    return None
+
+
 def _build_bd_canonical(facts: list[dict[str, Any]]) -> dict[str, Any]:
     """Map a broker-dealer/securities (-bd) fact set into the canonical
     shape (Task 7) via the shared _build_financial_canonical helper.
@@ -696,16 +737,107 @@ def _build_bd_canonical(facts: list[dict[str, Any]]) -> dict[str, Any]:
     )
 
 
-# Builder registry: taxonomy tag -> canonical builder callable. "ci", "fh",
-# "basi" and now "bd" (Task 7) have builders; the remaining financial
-# family ("ins") lands in a later task and registers its builder here. A
-# tag with no registered builder falls through to the unsupported marker
-# (_unsupported_financial).
+# -ins (insurer: life / P&C / reinsurance) concept map (Task 8, the last
+# financial family). Balance-sheet spine (Assets/Equity/Cash) is the same
+# concept names as every other financial family — measured stable across
+# all 5 taxonomy families (round3). net_income maps to ifrs-full:ProfitLoss
+# (NOT ifrs-full:ProfitLossAttributableToOwnersOfParent, which every
+# standalone -ins filer measured lacks entirely — grep count 0 on both
+# 2867 and 2851 — because a parent-only filing has no subsidiary
+# attribution split to make). This is a deliberate per-family concept
+# choice (same pattern as -bd's brokerage_fee_income addition), not a
+# fallback from a missing primary concept.
+_INS_CONCEPT_MAP: dict[str, dict[str, str]] = {
+    "balance_sheet": {
+        "total_assets": "ifrs-full:Assets",
+        "total_equity": "ifrs-full:Equity",
+        "cash": "ifrs-full:CashAndCashEquivalents",
+    },
+    "income_statement": {
+        "net_income": "ifrs-full:ProfitLoss",
+        "eps_basic": "ifrs-full:BasicEarningsLossPerShare",
+    },
+}
+
+_INS_LABELS: dict[str, str] = {
+    "total_assets": "Assets",
+    "total_equity": "Equity",
+    "cash": "Cash and Cash Equivalents",
+    "net_income": "Profit (Loss)",
+    "eps_basic": "Basic Earnings (Loss) per Share",
+}
+
+# The insurance-contract-liability field's two-candidate first-present
+# resolution (see _first_present docstring): life (2867/2823) and P&C
+# (2832/2850) book it under the tifrs-bsci-ins: extension; reinsurance
+# (2851) books the same economic item under the generic ifrs-full:
+# concept instead (measured: 2851 carries zero
+# tifrs-bsci-ins:InsuranceContractLiabilities_CB facts). tifrs-bsci-ins:
+# MUST be tried first — trying ifrs-full: first would silently prefer a
+# coarser/absent concept over the more specific one where both existed.
+_INS_LIABILITY_CANDIDATES: tuple[str, ...] = (
+    "tifrs-bsci-ins:InsuranceContractLiabilities_CB",
+    "ifrs-full:LiabilitiesArisingFromInsuranceContracts",
+)
+
+
+def _build_ins_canonical(facts: list[dict[str, Any]]) -> dict[str, Any]:
+    """Map an insurer (-ins: life / P&C / reinsurance, Task 8) fact set
+    into the canonical shape via the shared _build_financial_canonical
+    helper for the spine + net_income/eps_basic, plus a dedicated
+    first-present resolution for the insurance-contract-liability field
+    (the one piece the shared helper's flat concept_map can't express,
+    since it needs the SAME canonical key to try two different concept
+    strings depending on sub-shape rather than sum them).
+
+    No -ins-specific deposit/borrowing concepts are registered yet (out of
+    scope for this task — insurers take no customer/interbank deposits and
+    the scope here is the spine + the insurance-liability fallback);
+    an empty borrowing_concepts tuple means "borrowings" simply never
+    appears, same graceful-absence behavior _build_bd_canonical already
+    relies on. Deliberately OMITS the -ci DCF-trigger fields (revenue/
+    ebit/fcf/capex/total_debt), same rationale as every other financial
+    family: an insurer's balance sheet has no such lines, and DCF must
+    fail loud on their absence rather than silently compute against a
+    fabricated zero.
+    """
+    canonical = _build_financial_canonical(
+        facts,
+        concept_map=_INS_CONCEPT_MAP,
+        labels=_INS_LABELS,
+        borrowing_concepts=(),
+        taxonomy="ins",
+    )
+
+    by_concept = _index_by_concept(facts)
+    liability_result = _first_present(
+        by_concept,
+        _INS_LIABILITY_CANDIDATES,
+        "Insurance Contract Liabilities (tifrs-bsci-ins primary, "
+        "ifrs-full reinsurer fallback)",
+    )
+    if liability_result:
+        values, meta = liability_result
+        balance_sheet = canonical["balance_sheet"]
+        balance_sheet["insurance_contract_liabilities"] = values
+        balance_sheet["_meta"]["insurance_contract_liabilities"] = meta
+
+    return canonical
+
+
+# Builder registry: taxonomy tag -> canonical builder callable. All 5
+# recognized financial families now have a registered builder ("ci", "fh",
+# "basi", "bd", and "ins" as of Task 8). A tag with no registered builder
+# still falls through to the unsupported marker (_unsupported_financial) —
+# dead code for the 5 known tags today, but the correct fallback the day a
+# 6th financial family is discovered and added to _BSCI_TAG_PREFIXES before
+# its own builder lands.
 _CANONICAL_BUILDERS: dict[str, Any] = {
     "ci": _build_ci_canonical,
     "fh": _build_fh_canonical,
     "basi": _build_basi_canonical,
     "bd": _build_bd_canonical,
+    "ins": _build_ins_canonical,
 }
 
 
@@ -716,11 +848,12 @@ def build_canonical(facts: list[dict[str, Any]]) -> dict[str, Any]:
     Industrial (-ci) filers map through _build_ci_canonical; financial-
     holding (-fh) filers map through _build_fh_canonical; standalone-bank/
     bills-finance (-basi) filers map through _build_basi_canonical;
-    broker-dealer (-bd) filers map through _build_bd_canonical. The
-    remaining financial family (-ins) has no builder registered yet, so it
-    returns an explicit unsupported marker instead of a wrong/empty
-    mapping — its builder is a deferred sub-arc (see docs/loom/plans/
-    2026-07-19-tw-ixbrl-ingestion.md Decision Log).
+    broker-dealer (-bd) filers map through _build_bd_canonical; insurer
+    (-ins: life/P&C/reinsurance) filers map through _build_ins_canonical.
+    All 5 recognized financial-sector families now have a registered
+    builder; a tag with no registered builder (only possible for a future
+    family not yet in _BSCI_TAG_PREFIXES) returns an explicit unsupported
+    marker instead of a wrong/empty mapping.
     """
     tag = classify_taxonomy(facts)
     builder = _CANONICAL_BUILDERS.get(tag)
