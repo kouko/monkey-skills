@@ -281,3 +281,91 @@ def extract_fh_npl_coverage_notes(facts: list[dict[str, Any]]) -> dict[str, dict
             result[company] = fields
 
     return result
+
+
+# -basi (standalone commercial bank / bills-finance) NPL/coverage note
+# (Task 10). Unlike -fh (Task 9), which disambiguates 7 sibling
+# loan-category rows via the ix:tuple `tuple_ref` attribute, -basi
+# filers encode the loan category in the CONTEXT_REF SUFFIX (e.g.
+# "AsOf20260331_TotalLoansMember") together with a "Member"-suffixed
+# concept name (e.g. "CoverageRatioMember") — the existing generic
+# parser already resolves concept + context_ref, so no tuple metadata
+# is needed. Lives in its own map/function (mirrors _FH_TOTAL_LOANS_CONCEPTS)
+# rather than overloading extract_curated_notes or
+# extract_fh_npl_coverage_notes, since the disambiguation mechanism differs.
+_BASI_TOTAL_LOANS_CONCEPTS: dict[str, str] = {
+    "npl_amount": "tifrs-notes:AmountOfNon-PerformingLoansMember",
+    "gross_loans": "tifrs-notes:GrossLoansMember",
+    "npl_ratio": "tifrs-notes:NonPerformingLoansRatioMember",
+    "coverage_ratio": "tifrs-notes:CoverageRatioMember",
+}
+
+# npl_ratio/coverage_ratio carry unitRef="Pure" with scale=-2, same
+# single x100 presentation convention as _FH_PERCENT_FIELDS.
+_BASI_PERCENT_FIELDS = {"npl_ratio", "coverage_ratio"}
+
+# A fact's context_ref ending in this suffix scopes it to the TotalLoans
+# row of the 逾期放款 (non-performing loans) note (e.g.
+# "AsOf20260331_TotalLoansMember").
+_BASI_TOTAL_LOANS_CONTEXT_SUFFIX = "_TotalLoansMember"
+
+_BASI_COMPANY_NAME_CONCEPT = "tifrs-notes:NameOfTheCompany"
+
+
+def extract_basi_npl_coverage_notes(facts: list[dict[str, Any]]) -> dict[str, Any]:
+    """Extract the -basi TotalLoans NPL/coverage row.
+
+    Standalone banks and bills-finance filers (-basi taxonomy) encode
+    the loan category via a context_ref SUFFIX (e.g.
+    "AsOf20260331_TotalLoansMember") plus a "Member"-suffixed concept
+    name, not ix:tuple attributes (contrast
+    extract_fh_npl_coverage_notes) — the existing generic parser
+    already captures concept + context_ref on every fact, so no tuple
+    parsing is required here.
+
+    Returns `{"npl_amount", "gross_loans", "npl_ratio",
+    "coverage_ratio", "company_name": {"value", "concept", "period"}}`.
+    A field whose concept is absent for the TotalLoans row is omitted
+    (mirrors extract_curated_notes / extract_fh_npl_coverage_notes). A
+    filing with no -basi NPL note at all (e.g. bills-finance -basi
+    filers, which carry no NPL/coverage concepts whatsoever) yields
+    `{}` gracefully — never raises.
+    """
+    total_loans_facts = [
+        f
+        for f in facts
+        if (f.get("context_ref") or "").endswith(_BASI_TOTAL_LOANS_CONTEXT_SUFFIX)
+    ]
+    by_concept: dict[str, list[dict[str, Any]]] = {}
+    for fact in total_loans_facts:
+        concept = fact.get("concept")
+        if concept:
+            by_concept.setdefault(concept, []).append(fact)
+
+    fields: dict[str, Any] = {}
+    for field, concept in _BASI_TOTAL_LOANS_CONCEPTS.items():
+        chosen = _select_current_fact(by_concept.get(concept, []), label=f"basi/{field}")
+        if chosen is None:
+            continue
+        value = chosen["raw_value"]
+        if field in _BASI_PERCENT_FIELDS and value is not None:
+            value = value * 100
+        fields[field] = {
+            "value": value,
+            "concept": concept,
+            "period": chosen["period"],
+        }
+
+    if fields:
+        company = _select_current_fact(
+            [f for f in facts if f.get("concept") == _BASI_COMPANY_NAME_CONCEPT],
+            label="basi/company_name",
+        )
+        if company is not None:
+            fields["company_name"] = {
+                "value": company["raw_value"],
+                "concept": _BASI_COMPANY_NAME_CONCEPT,
+                "period": company["period"],
+            }
+
+    return fields
