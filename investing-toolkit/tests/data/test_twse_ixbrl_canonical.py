@@ -19,6 +19,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[2]
 MARKETS_SCRIPTS = ROOT / "skills" / "data-markets" / "scripts"
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
@@ -35,6 +37,55 @@ def _load_modules():
 def _fixture_facts(parser, filename: str = "twse_ixbrl_2330_2024Q3_C.html") -> list[dict]:
     document = (FIXTURES / filename).read_text(encoding="big5")
     return parser.parse_ixbrl_facts(document)
+
+
+def _fixture_facts_tolerant(parser, filename: str) -> list[dict]:
+    # Producer path (twse_ixbrl_fetch.py): resp.content.decode("big5hkscs",
+    # errors="replace"). The real financial (-fh/-basi/-bd/-ins) fixtures
+    # embed stray UTF-8 bytes that a strict big5 decode would raise on, so
+    # the classifier test must load them the same tolerant way the fetcher
+    # does (see test_twse_ixbrl_fixtures.py).
+    document = (FIXTURES / filename).read_bytes().decode("big5hkscs", errors="replace")
+    return parser.parse_ixbrl_facts(document)
+
+
+# One fixture per taxonomy family — each real filing carries exactly one
+# tifrs-bsci-* namespace family (measured: grep -ao "tifrs-bsci-[a-z]*").
+_TAXONOMY_FIXTURES = [
+    ("twse_ixbrl_2330_2024Q3_C.html", "ci"),
+    ("twse_ixbrl_2882_2026Q1_C.html", "fh"),
+    ("twse_ixbrl_2801_2026Q1_C.html", "basi"),
+    ("twse_ixbrl_6005_2026Q1_C.html", "bd"),
+    ("twse_ixbrl_2867_2026Q1_A.html", "ins"),
+]
+
+
+@pytest.mark.parametrize("filename,expected_tag", _TAXONOMY_FIXTURES)
+def test_classify_taxonomy_five_way(filename, expected_tag):
+    """classify_taxonomy inspects the tifrs-bsci-* namespace prefix present
+    in the fact set and returns the family tag (ci/fh/basi/bd/ins). Replaces
+    the old boolean _is_fh_taxonomy with a 5-way classifier."""
+    parser, canonical_mod = _load_modules()
+    facts = _fixture_facts_tolerant(parser, filename)
+    assert canonical_mod.classify_taxonomy(facts) == expected_tag
+
+
+def test_build_canonical_routes_ci_via_registry_unchanged():
+    """Regression: -ci output is byte-unchanged after routing through the
+    builder registry (the -ci builder is registered under "ci"), and a
+    financial (fh) fact set still returns the unsupported marker because no
+    fh builder is registered yet (lands in T5-T8)."""
+    parser, canonical_mod = _load_modules()
+
+    ci_canonical = canonical_mod.build_canonical(_fixture_facts(parser))
+    assert 2_025_846_521_000.0 in ci_canonical["income_statement"]["revenue"]
+    assert ci_canonical["balance_sheet"]["total_assets"]
+    assert ci_canonical["cash_flow"]["operating_cash_flow"]
+
+    fh_result = canonical_mod.build_canonical(
+        _fixture_facts_tolerant(parser, "twse_ixbrl_2882_2026Q1_C.html")
+    )
+    assert fh_result.get("unsupported"), fh_result
 
 
 def test_canonical_ci_from_facts():
