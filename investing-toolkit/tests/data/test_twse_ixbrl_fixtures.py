@@ -2,7 +2,10 @@
 for the real financial-sector (fh) MOPS iXBRL fixtures.
 
 These 7 fixtures are REAL producer bytes captured live from TWSE MOPS
-(t164sb01 endpoint), Big5-encoded, verified live 2026-07. They mirror
+(t164sb01 endpoint), verified live 2026-07. All declare charset=big5, but
+the financial-family bodies (fh/basi/bd/ins) are actually UTF-8 — decode
+via `decode_ixbrl_document` (UTF-8-first, big5hkscs fallback); only -ci
+filings are genuine Big5. They mirror
 the real financial-holding / bank / insurance / securities producer so
 downstream taxonomy work is tested against producer-shaped data, never
 hand-authored input. Provenance (co_id · period · source):

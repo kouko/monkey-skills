@@ -67,16 +67,35 @@
   or `pack_tw.py` memo-fetch.
 - Origin: TW iXBRL ingestion (branch xbrl-tw, PR #592, 2026-07-19); brief/plan
   Decision Log + whole-branch review ship-as-debt rulings.
-- What: (a) **financial `-fh` canonical + notes sub-arc** — FHC filers (e.g. Cathay
-  2882) use `tifrs-bsci-fh` (insurance/banking concepts, no gross-margin,
-  per-subsidiary NPL/coverage); captured at the fact layer but `build_canonical`
-  returns an unsupported marker. Also resolve the untested non-`ci`/`fh` `bsci`
-  variants (securities dealer, insurer). (b) **endorsement/guarantee curated field** —
+- What: ~~(a) **financial `-fh` canonical + notes sub-arc**~~ ✅ SHIPPED 2026-07-23
+  (2.31.0, branch feat-tw-ixbrl-fh) — `-fh`/`-basi`/`-bd`/`-ins` canonical builders +
+  5-way classifier + bank asset-quality notes + smart-decode + DCF fail-loud;
+  securities-dealer (`-bd`) and insurer (`-ins`, incl. life/P&C/reinsurance sub-shapes)
+  resolved too. (b) **endorsement/guarantee curated field** —
   deferred (ix:tuple per-counterparty rows, no clean aggregate leaf); needs the
   note-table reconstruction path. (c) **興櫃 multi-period series** — semiannual
   (Q2/Q4) cadence; season-fallback already handles per-period absence, a series
   builder is future. (d) 🟢 debt: T3 canonical tie-break order untested (membership
   only), T2 3×502-exhaustion branch untested.
+
+## investing-toolkit TW financial iXBRL 2.31.0 — post-ship follow-ups (OPEN)
+- Status: OPEN
+- Origin: TW financial-sector iXBRL (branch feat-tw-ixbrl-fh, 2026-07-23, 2.31.0);
+  whole-branch review PASS with carried 🟢 debt.
+- What: (a) **memo Phase-4 consumption of `not_applicable` DCF** (ANALYSIS/domain-teams
+  layer, out of this data-layer arc) — `dcf_compute` now emits a structured
+  `{"not_applicable":"financial-sector"}` dcf.json for financial tickers; confirm
+  `report-equity-memo` Phase-4 seed + `domain-teams:investing-team` render "DCF N/A"
+  gracefully rather than choking on the marker. (b) 🟢 Rule-of-Three duplication: the
+  `sorted→values→meta` block in `twse_ixbrl_canonical.py` (`_sum_concepts`/`_first_present`/
+  builder loop) and the by-concept-grouping block across the 3 note extractors in
+  `twse_ixbrl_notes.py` — extract shared helpers on next touch. (c) 🟢 over-soft-cap
+  functions: `dcf_compute.main`, `pack_memo_fetch`. (d) 🟢 fact-count guard decodes via
+  big5hkscs, not the production `decode_ixbrl_document` — assert count-equality under the
+  real decode too (coverage, not correctness). (e) 🟢 stale scratchpad citations in
+  `twse_ixbrl_canonical.py`/`twse_ixbrl_notes.py` comments — migrate key measurement
+  tables into a committed reference or trim. (f) US financial filers (`pack_us`) get no
+  `sector_class` guard — pre-existing; a future US financial-comps path needs its own.
 
 ## investing-toolkit quarterly 2.22.0 — post-ship follow-ups (OPEN)
 - Status: OPEN
