@@ -56,6 +56,16 @@ def _fixture_body() -> str:
     return (FIXTURES / "twse_ixbrl_2330_2024Q3_C.html").read_text(encoding="big5")
 
 
+def _smart_fixture_body(fetch_mod, filename: str) -> str:
+    # Financial-family (-fh/-basi/-bd/-ins) fixtures are genuinely UTF-8
+    # despite the declared big5 charset (Task 14 finding) -- decode the
+    # same way the real fetch layer does (decode_ixbrl_document), since
+    # these tests stub `fetch_ixbrl_body` entirely (its own decode step
+    # is bypassed) and must hand run_pipeline an equivalently-decoded body.
+    raw = (FIXTURES / filename).read_bytes()
+    return fetch_mod.decode_ixbrl_document(raw)
+
+
 def test_cli_success_emits_canonical_and_notes(monkeypatch, capsys):
     twse_ixbrl, fetch_mod = _load_modules()
     monkeypatch.setattr(fetch_mod, "fetch_ixbrl_body", lambda **_kw: _fixture_body())
@@ -165,3 +175,74 @@ def test_cli_quiet_propagates_to_sibling_modules(monkeypatch, capsys):
         parser_mod._log = orig_parser_log
         canonical_mod._log = orig_canonical_log
         notes_mod._log = orig_notes_log
+
+
+def test_cli_fh_filer_composes_financial_canonical_and_fh_npl_notes(monkeypatch, capsys):
+    """Task 11: an -fh (financial-holding, e.g. 2882 國泰金控) filer is
+    served at report_id=C. run_pipeline must route build_canonical's
+    "fh" taxonomy output to extract_fh_npl_coverage_notes -- not the
+    -ci extract_curated_notes -- keyed by bank subsidiary (國泰世華銀行)."""
+    twse_ixbrl, fetch_mod = _load_modules()
+    body = _smart_fixture_body(fetch_mod, "twse_ixbrl_2882_2026Q1_C.html")
+
+    # C is present for this -fh filer -- report_id fallback should not
+    # even need to try A, but the stub tolerates either report_id so a
+    # correct implementation isn't accidentally rewarded for guessing.
+    monkeypatch.setattr(
+        fetch_mod, "fetch_ixbrl_body",
+        lambda co_id, year, season, report_id: body,
+    )
+    monkeypatch.setattr(
+        sys, "argv",
+        ["twse_ixbrl.py", "--co-id", "2882", "--year", "2026", "--season", "1"],
+    )
+
+    with pytest.raises(SystemExit) as excinfo:
+        twse_ixbrl.main()
+    assert excinfo.value.code == 0
+
+    result = json.loads(capsys.readouterr().out)
+    assert "_error" not in result
+
+    canonical = result["canonical"]
+    assert canonical["sector_class"] == "financial"
+    assert canonical["taxonomy"] == "fh"
+
+    notes = result["notes"]
+    assert "國泰世華銀行" in notes
+    assert "coverage_ratio" in notes["國泰世華銀行"]
+
+
+def test_cli_insurer_fetches_via_report_a_fallback_no_npl_notes(monkeypatch, capsys):
+    """Task 11: an insurer (e.g. 2867 三商美邦人壽) is served ONLY at
+    report_id=A -- C resolves to the absence sentinel (None). run_pipeline
+    must use fetch_with_report_fallback (C then A) to land the body, route
+    build_canonical's "ins" taxonomy output, and NOT call any NPL/coverage
+    extractor (brokers/insurers carry no such note)."""
+    twse_ixbrl, fetch_mod = _load_modules()
+    body = _smart_fixture_body(fetch_mod, "twse_ixbrl_2867_2026Q1_A.html")
+
+    def _fetch(co_id, year, season, report_id):
+        if report_id == "C":
+            return None  # 檔案不存在 sentinel -- not filed at C
+        assert report_id == "A"
+        return body
+
+    monkeypatch.setattr(fetch_mod, "fetch_ixbrl_body", _fetch)
+    monkeypatch.setattr(
+        sys, "argv",
+        ["twse_ixbrl.py", "--co-id", "2867", "--year", "2026", "--season", "1"],
+    )
+
+    with pytest.raises(SystemExit) as excinfo:
+        twse_ixbrl.main()
+    assert excinfo.value.code == 0
+
+    result = json.loads(capsys.readouterr().out)
+    assert "_error" not in result
+
+    canonical = result["canonical"]
+    assert canonical["sector_class"] == "financial"
+    assert canonical["taxonomy"] == "ins"
+
+    assert result["notes"] == {}
