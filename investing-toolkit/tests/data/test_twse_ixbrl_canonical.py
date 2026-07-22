@@ -72,9 +72,11 @@ def test_classify_taxonomy_five_way(filename, expected_tag):
 
 def test_build_canonical_routes_ci_via_registry_unchanged():
     """Regression: -ci output is byte-unchanged after routing through the
-    builder registry (the -ci builder is registered under "ci"), and a
-    financial (fh) fact set still returns the unsupported marker because no
-    fh builder is registered yet (lands in T5-T8)."""
+    builder registry (the -ci builder is registered under "ci"). "fh" now
+    has its own registered builder (Task 5) so it no longer returns the
+    unsupported marker (see test_canonical_fh_from_2882_fixture); "bd" has
+    no builder yet (lands in a later task) and must still return the
+    unsupported marker."""
     parser, canonical_mod = _load_modules()
 
     ci_canonical = canonical_mod.build_canonical(_fixture_facts(parser))
@@ -82,10 +84,10 @@ def test_build_canonical_routes_ci_via_registry_unchanged():
     assert ci_canonical["balance_sheet"]["total_assets"]
     assert ci_canonical["cash_flow"]["operating_cash_flow"]
 
-    fh_result = canonical_mod.build_canonical(
-        _fixture_facts_tolerant(parser, "twse_ixbrl_2882_2026Q1_C.html")
+    bd_result = canonical_mod.build_canonical(
+        _fixture_facts_tolerant(parser, "twse_ixbrl_6005_2026Q1_C.html")
     )
-    assert fh_result.get("unsupported"), fh_result
+    assert bd_result.get("unsupported") == "financial-bd", bd_result
 
 
 def test_canonical_ci_from_facts():
@@ -297,16 +299,19 @@ def test_canonical_ci_total_debt_formosa_includes_short_term():
         assert concept in bs["_meta"]["total_debt"]["components"]
 
 
-def test_canonical_fh_fact_set_returns_unsupported_marker():
+def test_canonical_basi_fact_set_returns_unsupported_marker():
+    """"basi" (banks / bills-finance) has no registered builder yet
+    (deferred sub-arc); build_canonical must return the parameterized
+    unsupported marker "financial-basi", not the old hard-coded
+    "financial-fh" (fh now has its own builder, see
+    test_canonical_fh_from_2882_fixture)."""
     _, canonical_mod = _load_modules()
 
-    # Synthetic -fh (financial holding) fact set — no real -fh fixture is
-    # committed (deferred sub-arc per plan Decision Log). The financial
-    # holding taxonomy uses a "-fh" namespace token in place of "-ci"/
-    # "-SCF"; this is a minimal synthetic stand-in for that shape.
-    fh_facts = [
+    # Synthetic -basi fact set — a minimal stand-in exercising the
+    # registry-fallback path for a still-unbuilt financial family.
+    basi_facts = [
         {
-            "concept": "tifrs-bsci-fh:InterestIncome",
+            "concept": "tifrs-bsci-basi:InterestIncome",
             "context_ref": "From20240101To20240930",
             "raw_value": 123.0,
             "decimals": "-3",
@@ -317,6 +322,70 @@ def test_canonical_fh_fact_set_returns_unsupported_marker():
         },
     ]
 
-    result = canonical_mod.build_canonical(fh_facts)
+    result = canonical_mod.build_canonical(basi_facts)
 
-    assert result.get("unsupported") == "financial-fh", result
+    assert result.get("unsupported") == "financial-basi", result
+
+
+def test_canonical_fh_from_2882_fixture():
+    """-fh (financial holding) canonical builder (Task 5), traced against
+    the real 2882 (國泰金控 Cathay FHC) 2026 Q1 fixture. Measured values
+    verbatim from scratchpad/fh-measurement.md §2882.
+
+    profit maps to ifrs-full:ProfitLossAttributableToOwnersOfParent (the
+    consolidated attributable-to-owners bottom line, 31,593,811,000) — NOT
+    tifrs-bsci-fh:NetIncomeLoss (72,538,053,000, a different
+    pre-elimination subtotal per the measurement doc's Q1 2026 note); this
+    test pins the deliberate choice.
+
+    DCF-trigger fields (revenue/ebit/fcf/capex/total_debt) must be absent
+    everywhere so downstream DCF fails loud instead of silently zeroing
+    against a financial-holding balance sheet DCF was never designed for.
+    """
+    parser, canonical_mod = _load_modules()
+    facts = _fixture_facts_tolerant(parser, "twse_ixbrl_2882_2026Q1_C.html")
+
+    canonical = canonical_mod.build_canonical(facts)
+
+    assert canonical.get("sector_class") == "financial", canonical
+    assert canonical.get("taxonomy") == "fh", canonical
+
+    bs = canonical["balance_sheet"]
+    inc = canonical["income_statement"]
+
+    assert bs["total_equity"][0] == 817_026_831_000.0
+    assert bs["_meta"]["total_equity"]["concept"] == "ifrs-full:Equity"
+
+    # deposits = DepositsFromCustomers + DepositsFromBanks, kept distinct
+    # from interest-bearing borrowings (both populated, both non-empty).
+    assert bs["deposits"][0] == 4_668_307_129_000.0, (
+        "deposits must sum DepositsFromCustomers (4,463,453,341,000) + "
+        "DepositsFromBanks (204,853,788,000)"
+    )
+    assert bs["borrowings"][0] == 490_504_772_000.0, (
+        "borrowings must sum BondsIssued (289,577,614,000) + "
+        "OtherBorrowings (48,341,814,000) + CommercialPapersIssuedNet "
+        "(104,741,415,000) + SecuritiesSoldUnderRepurchaseAgreements "
+        "(47,843,929,000) — distinct from deposits"
+    )
+    assert "ifrs-full:DepositsFromCustomers" in bs["_meta"]["deposits"]["components"]
+    assert "ifrs-full:DepositsFromBanks" in bs["_meta"]["deposits"]["components"]
+    assert "ifrs-full:BondsIssued" in bs["_meta"]["borrowings"]["components"]
+    assert (
+        "tifrs-bsci-fh:SecuritiesSoldUnderRepurchaseAgreements"
+        in bs["_meta"]["borrowings"]["components"]
+    )
+
+    assert inc["profit"][0] == 31_593_811_000.0
+    assert (
+        inc["_meta"]["profit"]["concept"]
+        == "ifrs-full:ProfitLossAttributableToOwnersOfParent"
+    )
+    assert inc["net_interest_income"][0] == 76_415_488_000.0
+    assert inc["eps"][0] == 2.15
+
+    # DCF-trigger fields must be absent everywhere (fail loud, not silent-0).
+    dcf_trigger_keys = {"revenue", "ebit", "fcf", "capex", "total_debt"}
+    for statement in ("balance_sheet", "income_statement", "cash_flow"):
+        keys = set(canonical.get(statement, {}))
+        assert not (keys & dcf_trigger_keys), (statement, keys & dcf_trigger_keys)
