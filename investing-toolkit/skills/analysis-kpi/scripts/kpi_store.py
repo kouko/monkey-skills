@@ -30,9 +30,11 @@ store; `_series_key`'s digest logic stays here (kpi_store-specific).
 from __future__ import annotations
 
 import argparse
+import calendar
 import hashlib
 import json
 import sys
+from datetime import date
 from pathlib import Path
 
 # Resolve same-dir modules without a package, so `import _store_fs` works
@@ -153,6 +155,129 @@ _DEDUP_KEY_FIELDS = ("company", "kpi_id", "period", "as_of", "source_accession")
 
 def _dedup_key(point: dict) -> tuple:
     return tuple(point.get(field) for field in _DEDUP_KEY_FIELDS)
+
+
+# --- Period identity (read-side) -------------------------------------------
+# Two observations of "the same period" from different filings must be
+# recognized as the same period so `history`/coverage can group them (brief
+# §Period model, backed by a 14-filer / 64,044-group measurement: raw
+# (start,end) byte-identical 98.99%). This is PURE READ-SIDE logic over the
+# raw `period_start`/`period_end`/`period_kind` fields T2 added to the point;
+# it does NOT touch `_DEDUP_KEY_FIELDS` — changing the write-side dedup key
+# would silently drop/mis-merge already-stored points (brief §Error), and
+# backfill is blocked.
+#
+# Mean Gregorian quarter = 365.25 / 4 = 91.3125 days; dividing the duration by
+# it and rounding buckets a filing's declared span into 1..4 quarters robustly
+# against a few days of boundary drift (brief cites SEC FSDS `qtrs`: 0=instant,
+# 1..4 duration).
+_DAYS_PER_QUARTER = 91.3125
+
+
+def _parse_iso_date(value):
+    """Parse an ISO `YYYY-MM-DD` string to a `date`, or None if absent/
+    unparseable — defensive, so an older point without identity dates (or a
+    malformed one) can never crash the read-side predicates.
+    """
+    if not value:
+        return None
+    try:
+        return date.fromisoformat(str(value))
+    except ValueError:
+        return None
+
+
+def _snap_month_end(value):
+    """Snap an ISO date to the LAST day of its calendar month, or None if it
+    does not parse. Two ends in the same calendar month snap equal — this is
+    the fallback that absorbs ~1% end-date boundary drift.
+    """
+    d = _parse_iso_date(value)
+    if d is None:
+        return None
+    last_day = calendar.monthrange(d.year, d.month)[1]
+    return date(d.year, d.month, last_day)
+
+
+def _qtrs(point: dict):
+    """Duration length in quarters: 0 for an instant (`period_kind="instant"`),
+    else `round(days / 91.3125)` when that rounds INTO 1..4. Returns None for a
+    span that cannot be sized to a genuine 1..4-quarter bucket:
+      - a DEGENERATE duration (missing/unparseable start or end) — no start
+        means no span to measure;
+      - an OUT-OF-RANGE span whose rounded quarters fall outside 1..4 — e.g. a
+        15-month transition FY (~5 quarters) or a sub-quarter stub. Coercing
+        these into [1,4] would let them false-merge with a real annual/quarter,
+        so they are refused rather than clamped. A reversed (start>end) pair
+        yields a negative day-count, which rounds below 1 and is refused here
+        too — no separate guard needed.
+    The snap fallback in `same_period` treats a None qtrs as unmatchable, so a
+    span that cannot be bucketed never produces a false merge.
+    """
+    if point.get("period_kind") == "instant":
+        return 0
+    start = _parse_iso_date(point.get("period_start"))
+    end = _parse_iso_date(point.get("period_end"))
+    if start is None or end is None:
+        return None
+    quarters = round((end - start).days / _DAYS_PER_QUARTER)
+    if quarters < 1 or quarters > 4:
+        return None
+    return quarters
+
+
+def same_period(point_a: dict, point_b: dict) -> bool:
+    """True when two points describe the SAME real period.
+
+    EXACT match is tried first: both sides carry a non-None `period_start` AND
+    the raw `(period_start, period_end)` pair is byte-identical. A None
+    `period_start` (an instant, or an unfinished duration extraction T2 allows)
+    is NOT sufficient identity evidence for an exact match — two points sharing
+    only `(None, end)` may be different spans (an instant balance vs a dateless
+    duration), so exact is skipped and they must earn a match through the SNAP
+    fallback below (where an instant's qtrs 0 vs a dateless duration's None qtrs
+    still refuses to merge).
+
+    Only when exact fails does the SNAP fallback fire — `period_end` snapped to
+    its calendar month-end is equal AND the duration in quarters (`qtrs`;
+    0=instant, else 1..4) is equal. Never merges two periods whose snapped-end
+    or qtrs differ (e.g. an instant balance vs a full-year duration sharing an
+    end-date), and an out-of-[1,4] or degenerate span has None qtrs so it never
+    merges. A point lacking a `period_end` cannot match by date -> False.
+    """
+    end_a = point_a.get("period_end")
+    end_b = point_b.get("period_end")
+    if not end_a or not end_b:
+        return False
+
+    # EXACT: identical raw (start, end) pair, but only when BOTH starts are
+    # present — a None start carries no evidence the spans coincide, so it
+    # must go through the SNAP fallback instead of matching on (None, end).
+    start_a = point_a.get("period_start")
+    start_b = point_b.get("period_start")
+    if start_a is not None and start_b is not None and (start_a, end_a) == (start_b, end_b):
+        return True
+
+    # SNAP fallback: same month-end AND same qtrs.
+    snap_a = _snap_month_end(end_a)
+    snap_b = _snap_month_end(end_b)
+    if snap_a is None or snap_b is None or snap_a != snap_b:
+        return False
+    qtrs_a = _qtrs(point_a)
+    qtrs_b = _qtrs(point_b)
+    if qtrs_a is None or qtrs_b is None:
+        return False  # degenerate duration — refuse to merge rather than guess
+    return qtrs_a == qtrs_b
+
+
+def _period_sort_key(point: dict) -> tuple:
+    """Order key for observations: primary `period_end` (ISO strings sort
+    chronologically), then a `qtrs` tiebreak so that on a shared end-date an
+    instant (qtrs 0) orders before a longer duration. Missing end -> "" so a
+    dateless point sorts first without raising.
+    """
+    quarters = _qtrs(point)
+    return (point.get("period_end") or "", quarters if quarters is not None else 0)
 
 
 def append(point: dict) -> None:
