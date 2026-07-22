@@ -439,6 +439,8 @@ Launch `domain-teams:investing-team` with the **Deep Equity Research Memo** prot
 > nevertheless executed degraded, the memo's Limitations section and the
 > report to the user MUST say so explicitly.
 
+**Per Cross-Plugin Delegation Contract (CLAUDE.md §Cross-Plugin Delegation Contract):**
+
 1. Pass **paths** to the Phase 1 / 2 / 2.5 / 2.6 / 3 / 3.5 JSONs as `### Resource Paths` — never file content. Specifically: `fetch.json` (Phase 1), `regime-card.json` (Phase 2), `comps.json` (Phase 2.5), `xval.json` (Phase 2.6 — US tickers only; omit + state the skip reason when Phase 2.6 was skipped), `dcf.json` (Phase 3), `kpi-quarterly-feed.json` (Phase 3.5 — OPTIONAL, US tickers only; omit + put the skip note in the seed when Phase 3.5 was skipped or failed loud).
 2. Pass the ticker, scope, output_language, country code as `### Input` seed
    context — plus Phase 0's recall outcome (prior verdict/date/price/delta,
