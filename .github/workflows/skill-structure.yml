@@ -303,3 +303,10 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           python3 scripts/check_version_bump.py --base "$BASE_SHA" --head "$HEAD_SHA"
+
+      - name: Check loom-memory store integrity
+        # The store-integrity checker (scripts/check_loom_memory_integrity.py)
+        # exists and has its own unit tests, but nothing ran it against the
+        # real store — a drifted docs/loom/memory/ could merge unnoticed.
+        run: |
+          python3 scripts/check_loom_memory_integrity.py

@@ -84,7 +84,10 @@ Given a topic or task description:
 3. **Surface the operative rules** — the "how to apply" content — with
    a file citation per rule (`docs/loom/memory/<file>.md`) —
    conversational surfacing in the user's conversation language,
-   quoted file text verbatim.
+   quoted file text verbatim. Before acting on a recalled entry, verify
+   any file/flag/skill it names still exists — a memory reflects what
+   was true when written, and a named path may have been renamed or
+   removed since.
 4. **No hits → say "no hits" honestly.** Never fabricate a memory and
    never stretch a loosely related one to look relevant; a clean miss
    is useful information.

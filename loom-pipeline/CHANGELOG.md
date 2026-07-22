@@ -6,6 +6,16 @@ this file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.11.0] — 2026-07-22 — loom-memory recall staleness caveat
+
+### Changed
+
+- **loom-memory recall now carries a staleness caveat**: recalled
+  practice-memory entries can outlive the files/flags/skills they name.
+  Before acting on a recalled entry, verify its named file, flag, or
+  skill still exists — a stale recall silently reintroduces the exact
+  gotcha the entry was recorded to prevent.
+
 ## [0.10.0] — 2026-07-21 — batch terminal-mark precursor guard
 
 ### Fixed
