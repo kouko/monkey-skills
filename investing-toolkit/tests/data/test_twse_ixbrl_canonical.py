@@ -72,11 +72,12 @@ def test_classify_taxonomy_five_way(filename, expected_tag):
 
 def test_build_canonical_routes_ci_via_registry_unchanged():
     """Regression: -ci output is byte-unchanged after routing through the
-    builder registry (the -ci builder is registered under "ci"). "fh" now
-    has its own registered builder (Task 5) so it no longer returns the
-    unsupported marker (see test_canonical_fh_from_2882_fixture); "bd" has
-    no builder yet (lands in a later task) and must still return the
-    unsupported marker."""
+    builder registry (the -ci builder is registered under "ci"). "fh"/
+    "basi" (Tasks 5-6) and now "bd" (Task 7) each have their own registered
+    builder so none of them return the unsupported marker anymore (see
+    test_canonical_fh_from_2882_fixture, test_canonical_basi_from_2801_fixture,
+    test_canonical_bd_from_6005_fixture); "ins" has no builder yet (lands in
+    a later task) and must still return the unsupported marker."""
     parser, canonical_mod = _load_modules()
 
     ci_canonical = canonical_mod.build_canonical(_fixture_facts(parser))
@@ -84,10 +85,10 @@ def test_build_canonical_routes_ci_via_registry_unchanged():
     assert ci_canonical["balance_sheet"]["total_assets"]
     assert ci_canonical["cash_flow"]["operating_cash_flow"]
 
-    bd_result = canonical_mod.build_canonical(
-        _fixture_facts_tolerant(parser, "twse_ixbrl_6005_2026Q1_C.html")
+    ins_result = canonical_mod.build_canonical(
+        _fixture_facts_tolerant(parser, "twse_ixbrl_2867_2026Q1_A.html")
     )
-    assert bd_result.get("unsupported") == "financial-bd", bd_result
+    assert ins_result.get("unsupported") == "financial-ins", ins_result
 
 
 def test_canonical_ci_from_facts():
@@ -299,32 +300,89 @@ def test_canonical_ci_total_debt_formosa_includes_short_term():
         assert concept in bs["_meta"]["total_debt"]["components"]
 
 
-def test_canonical_bd_fact_set_returns_unsupported_marker():
-    """"bd" (broker-dealer) has no registered builder yet (deferred
-    sub-arc); build_canonical must return the parameterized unsupported
-    marker "financial-bd", not the old hard-coded "financial-fh" ("fh" and
-    "basi" now have their own builders, see test_canonical_fh_from_2882_fixture
-    and test_canonical_basi_from_2801_fixture)."""
+def test_canonical_ins_fact_set_returns_unsupported_marker():
+    """"ins" (insurance) has no registered builder yet (deferred sub-arc,
+    the last remaining financial family after Task 7 registers "bd");
+    build_canonical must return the parameterized unsupported marker
+    "financial-ins". Supersedes the old bd-unsupported test now that "bd"
+    has its own builder (see test_canonical_bd_from_6005_fixture)."""
     _, canonical_mod = _load_modules()
 
-    # Synthetic -bd fact set — a minimal stand-in exercising the
+    # Synthetic -ins fact set — a minimal stand-in exercising the
     # registry-fallback path for a still-unbuilt financial family.
-    bd_facts = [
+    ins_facts = [
         {
-            "concept": "tifrs-bsci-bd:InterestIncome",
+            "concept": "tifrs-bsci-ins:FeeIncome",
             "context_ref": "From20240101To20240930",
             "raw_value": 123.0,
             "decimals": "-3",
             "unit": "TWD",
             "period": {"type": "duration", "start": "2024-01-01", "end": "2024-09-30"},
-            "entity": "6005",
+            "entity": "2867",
             "fact_type": "nonFraction",
         },
     ]
 
-    result = canonical_mod.build_canonical(bd_facts)
+    result = canonical_mod.build_canonical(ins_facts)
 
-    assert result.get("unsupported") == "financial-bd", result
+    assert result.get("unsupported") == "financial-ins", result
+
+
+def test_canonical_bd_from_6005_fixture():
+    """-bd (broker-dealer) canonical builder (Task 7), traced against the
+    real 6005 (群益證券 Capital Securities) 2026 Q1 fixture. Values grepped
+    directly from the raw fixture bytes (grep -o on the committed
+    twse_ixbrl_6005_2026Q1_C.html — numeric values are ASCII-safe, so a
+    plain byte-level grep is reliable regardless of the file's Big5/UTF-8
+    mixed encoding).
+
+    Brokers take no customer/interbank deposits (confirmed absent: the
+    fixture carries neither ifrs-full:DepositsFromCustomers nor
+    ifrs-full:DepositsFromBanks at all) and have no NPL concepts — so
+    deposits must degrade gracefully to absent, same _sum_concepts
+    tolerance already proven for -fh/-basi. DCF-trigger fields
+    (revenue/ebit/fcf/capex/total_debt) are deliberately omitted, same
+    rationale as -fh/-basi: a broker's balance sheet has no such lines.
+    """
+    parser, canonical_mod = _load_modules()
+    facts = _fixture_facts_tolerant(parser, "twse_ixbrl_6005_2026Q1_C.html")
+
+    canonical = canonical_mod.build_canonical(facts)
+
+    assert canonical.get("sector_class") == "financial", canonical
+    assert canonical.get("taxonomy") == "bd", canonical
+
+    bs = canonical["balance_sheet"]
+    inc = canonical["income_statement"]
+
+    # total_equity <- ifrs-full:Equity, AsOf20260331: "52,892,275" x1000
+    assert bs["total_equity"][0] == 52_892_275_000.0
+    assert bs["_meta"]["total_equity"]["concept"] == "ifrs-full:Equity"
+    # total_assets <- ifrs-full:Assets, AsOf20260331: "393,239,775" x1000
+    assert bs["total_assets"][0] == 393_239_775_000.0
+    # cash <- ifrs-full:CashAndCashEquivalents, AsOf20260331: "16,399,922" x1000
+    assert bs["cash"][0] == 16_399_922_000.0
+
+    # net_income <- ifrs-full:ProfitLossAttributableToOwnersOfParent,
+    # From20260101To20260331: "2,908,675" x1000
+    assert inc["net_income"][0] == 2_908_675_000.0
+    assert (
+        inc["_meta"]["net_income"]["concept"]
+        == "ifrs-full:ProfitLossAttributableToOwnersOfParent"
+    )
+    # eps_basic <- ifrs-full:BasicEarningsLossPerShare, From20260101To20260331: 1.34
+    assert inc["eps_basic"][0] == 1.34
+    # brokerage_fee_income <- ifrs-full:BrokerageFeeIncome, From20260101To20260331: "2,557,374" x1000
+    assert inc["brokerage_fee_income"][0] == 2_557_374_000.0
+
+    # Brokers take no deposits — must degrade gracefully to absent, not
+    # crash or fabricate a value.
+    assert "deposits" not in bs, bs
+
+    dcf_trigger_keys = {"revenue", "ebit", "fcf", "capex", "total_debt"}
+    for statement in ("balance_sheet", "income_statement", "cash_flow"):
+        keys = set(canonical.get(statement, {}))
+        assert not (keys & dcf_trigger_keys), (statement, keys & dcf_trigger_keys)
 
 
 def test_canonical_fh_from_2882_fixture():

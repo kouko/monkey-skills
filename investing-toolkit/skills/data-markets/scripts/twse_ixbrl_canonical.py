@@ -1,7 +1,7 @@
 """twse_ixbrl_canonical.py — canonical three-statement mapper for TW
 MOPS iXBRL facts (industrial `-ci` filers, Task 3; financial-holding
 `-fh` filers, Task 5; standalone-bank / bills-finance `-basi` filers,
-Task 6).
+Task 6; broker-dealer `-bd` filers, Task 7).
 
 Maps a flat fact-record list (twse_ixbrl_parser.parse_ixbrl_facts
 output, Task 1) into the toolkit's canonical shape — the same shape
@@ -12,12 +12,12 @@ produces: three top-level keys `income_statement` / `balance_sheet` /
 `unit="TWD"`).
 
 Scope: industrial (一般行業, "-ci"), financial-holding (金融控股,
-"-fh"), and standalone-bank/bills-finance (銀行/票券金融, "-basi")
-filers. The remaining financial families (bd/ins) use statement
-taxonomies entirely of their own (deferred sub-arcs per docs/loom/
-plans/2026-07-19-tw-ixbrl-ingestion.md Decision Log) — a fact set from
-one of those families returns an explicit unsupported marker instead
-of a wrong/crashing mapping.
+"-fh"), standalone-bank/bills-finance (銀行/票券金融, "-basi"), and
+broker-dealer/securities (證券, "-bd") filers. The remaining financial
+family (insurance, "-ins") uses a statement taxonomy entirely of its
+own (a deferred sub-arc per docs/loom/plans/2026-07-19-tw-ixbrl-
+ingestion.md Decision Log) — a fact set from that family returns an
+explicit unsupported marker instead of a wrong/crashing mapping.
 
 Line concepts live mostly in the `ifrs-full` namespace for -ci filers
 (the standard IFRS taxonomy); `tifrs-bsci-ci` covers only TW-specific
@@ -459,25 +459,38 @@ def _sum_concepts(
     return values, meta
 
 
-def _build_fh_canonical(facts: list[dict[str, Any]]) -> dict[str, Any]:
-    """Map a financial-holding (-fh) fact set into the canonical shape.
+def _build_financial_canonical(
+    facts: list[dict[str, Any]],
+    *,
+    concept_map: dict[str, dict[str, str]],
+    labels: dict[str, str],
+    borrowing_concepts: tuple[str, ...],
+    taxonomy: str,
+) -> dict[str, Any]:
+    """Shared canonical-builder shape for every financial-family taxonomy
+    (-fh, -basi, -bd, ...): same by_concept indexing, same _meta
+    construction, same cash_flow.setdefault + deposits/borrowings
+    _sum_concepts calls — the three per-family builders below differ only
+    in their concept map, labels, and borrowing-concept tuple (Rule-of-
+    Three extraction, T6 code-quality review). Deposits always sum the
+    fixed _DEPOSIT_CONCEPTS pair; a family with no deposit-taking concepts
+    at all (e.g. -bd, brokers take no deposits) degrades gracefully to an
+    absent "deposits" key via _sum_concepts' existing missing-concept
+    tolerance — no per-family deposits toggle needed.
 
-    Mirrors the -ci canonical envelope (income_statement / balance_sheet /
-    cash_flow, each a value-list + per-line _meta) where concepts align,
-    plus financial-specific fields (deposits/borrowings kept distinct;
-    net_interest_income). Emits sector_class="financial" and taxonomy="fh"
-    at the top level. cash_flow has no measured -fh concepts yet, so it is
-    emitted empty (consistent envelope shape, no fabricated lines).
-
-    Deliberately OMITS the -ci DCF-trigger fields (revenue/ebit/fcf/capex/
-    total_debt) — an FHC's balance sheet has no such lines, and DCF
-    (analysis-dcf/scripts/dcf_compute.py) must fail loud on their absence
-    rather than silently compute against a fabricated zero.
+    Emits sector_class="financial" and taxonomy=<taxonomy> at the top
+    level. cash_flow has no measured concepts for any financial family yet,
+    so it is emitted empty (consistent envelope shape, no fabricated
+    lines). Callers deliberately OMIT the -ci DCF-trigger fields (revenue/
+    ebit/fcf/capex/total_debt) from concept_map — a financial filer's
+    balance sheet has no such lines, and DCF (analysis-dcf/scripts/
+    dcf_compute.py) must fail loud on their absence rather than silently
+    compute against a fabricated zero.
     """
     by_concept = _index_by_concept(facts)
 
-    canonical: dict[str, Any] = {"sector_class": "financial", "taxonomy": "fh"}
-    for statement, mapping in _FH_CONCEPT_MAP.items():
+    canonical: dict[str, Any] = {"sector_class": "financial", "taxonomy": taxonomy}
+    for statement, mapping in concept_map.items():
         lines: dict[str, Any] = {}
         meta: dict[str, Any] = {}
         for canonical_name, concept in mapping.items():
@@ -491,7 +504,7 @@ def _build_fh_canonical(facts: list[dict[str, Any]]) -> dict[str, Any]:
             )
             lines[canonical_name] = [f["raw_value"] for f in ordered]
             meta[canonical_name] = {
-                "source_label": _FH_LABELS.get(canonical_name, canonical_name),
+                "source_label": labels.get(canonical_name, canonical_name),
                 "concept": concept,
                 "accounting_standard": "tifrs",
                 "unit": "TWD",
@@ -512,7 +525,7 @@ def _build_fh_canonical(facts: list[dict[str, Any]]) -> dict[str, Any]:
         balance_sheet["_meta"]["deposits"] = meta
 
     borrowings_result = _sum_concepts(
-        by_concept, _BORROWING_CONCEPTS, "Borrowings (sum of components present)"
+        by_concept, borrowing_concepts, "Borrowings (sum of components present)"
     )
     if borrowings_result:
         values, meta = borrowings_result
@@ -520,6 +533,31 @@ def _build_fh_canonical(facts: list[dict[str, Any]]) -> dict[str, Any]:
         balance_sheet["_meta"]["borrowings"] = meta
 
     return canonical
+
+
+def _build_fh_canonical(facts: list[dict[str, Any]]) -> dict[str, Any]:
+    """Map a financial-holding (-fh) fact set into the canonical shape via
+    the shared _build_financial_canonical helper.
+
+    Mirrors the -ci canonical envelope (income_statement / balance_sheet /
+    cash_flow, each a value-list + per-line _meta) where concepts align,
+    plus financial-specific fields (deposits/borrowings kept distinct;
+    net_interest_income). Emits sector_class="financial" and taxonomy="fh"
+    at the top level. cash_flow has no measured -fh concepts yet, so it is
+    emitted empty (consistent envelope shape, no fabricated lines).
+
+    Deliberately OMITS the -ci DCF-trigger fields (revenue/ebit/fcf/capex/
+    total_debt) — an FHC's balance sheet has no such lines, and DCF
+    (analysis-dcf/scripts/dcf_compute.py) must fail loud on their absence
+    rather than silently compute against a fabricated zero.
+    """
+    return _build_financial_canonical(
+        facts,
+        concept_map=_FH_CONCEPT_MAP,
+        labels=_FH_LABELS,
+        borrowing_concepts=_BORROWING_CONCEPTS,
+        taxonomy="fh",
+    )
 
 
 # -basi (standalone commercial bank / bills-finance) concept map. The
@@ -567,7 +605,8 @@ _BASI_BORROWING_CONCEPTS: tuple[str, ...] = (
 
 def _build_basi_canonical(facts: list[dict[str, Any]]) -> dict[str, Any]:
     """Map a standalone-commercial-bank OR bills-finance (-basi) fact set
-    into the canonical shape (Task 6).
+    into the canonical shape (Task 6) via the shared
+    _build_financial_canonical helper.
 
     Mirrors _build_fh_canonical's envelope exactly: income_statement /
     balance_sheet / cash_flow (each a value-list + per-line _meta), plus
@@ -590,63 +629,83 @@ def _build_basi_canonical(facts: list[dict[str, Any]]) -> dict[str, Any]:
     has no such lines, and DCF must fail loud on their absence rather than
     silently compute against a fabricated zero.
     """
-    by_concept = _index_by_concept(facts)
-
-    canonical: dict[str, Any] = {"sector_class": "financial", "taxonomy": "basi"}
-    for statement, mapping in _BASI_CONCEPT_MAP.items():
-        lines: dict[str, Any] = {}
-        meta: dict[str, Any] = {}
-        for canonical_name, concept in mapping.items():
-            ctx_facts = by_concept.get(concept)
-            if not ctx_facts:
-                continue
-            ordered = sorted(
-                ctx_facts.values(),
-                key=lambda f: _period_sort_key(f.get("period")),
-                reverse=True,
-            )
-            lines[canonical_name] = [f["raw_value"] for f in ordered]
-            meta[canonical_name] = {
-                "source_label": _BASI_LABELS.get(canonical_name, canonical_name),
-                "concept": concept,
-                "accounting_standard": "tifrs",
-                "unit": "TWD",
-                "periods": [f.get("period") for f in ordered],
-            }
-        lines["_meta"] = meta
-        canonical[statement] = lines
-
-    canonical.setdefault("cash_flow", {"_meta": {}})
-
-    balance_sheet = canonical["balance_sheet"]
-    deposits_result = _sum_concepts(
-        by_concept, _DEPOSIT_CONCEPTS, "Deposits (sum of components present)"
+    return _build_financial_canonical(
+        facts,
+        concept_map=_BASI_CONCEPT_MAP,
+        labels=_BASI_LABELS,
+        borrowing_concepts=_BASI_BORROWING_CONCEPTS,
+        taxonomy="basi",
     )
-    if deposits_result:
-        values, meta = deposits_result
-        balance_sheet["deposits"] = values
-        balance_sheet["_meta"]["deposits"] = meta
 
-    borrowings_result = _sum_concepts(
-        by_concept, _BASI_BORROWING_CONCEPTS, "Borrowings (sum of components present)"
+
+# -bd (broker-dealer / securities) concept map (Task 7). Balance-sheet
+# spine (Assets/Equity/Cash) is the SAME concept names as -fh/-basi
+# (measured stable across 19 financial-sector filers spanning 5 taxonomy
+# families — scratchpad/fh-measurement-round3.md). Brokers take no
+# customer/interbank deposits (confirmed absent for 6005: neither
+# ifrs-full:DepositsFromCustomers nor ifrs-full:DepositsFromBanks appear in
+# the fixture at all) and carry no NPL/coverage concepts (not a lending
+# institution) — deposits degrades to absent via _sum_concepts' existing
+# missing-concept tolerance, no special-casing needed. income_statement
+# adds brokerage_fee_income (ifrs-full:BrokerageFeeIncome, the dominant
+# -bd-specific revenue line — scratchpad/fh-measurement.md §6005) alongside
+# the same net_income/eps_basic concepts -fh/-basi use.
+_BD_CONCEPT_MAP: dict[str, dict[str, str]] = {
+    "balance_sheet": {
+        "total_assets": "ifrs-full:Assets",
+        "total_equity": "ifrs-full:Equity",
+        "cash": "ifrs-full:CashAndCashEquivalents",
+    },
+    "income_statement": {
+        "brokerage_fee_income": "ifrs-full:BrokerageFeeIncome",
+        "net_income": "ifrs-full:ProfitLossAttributableToOwnersOfParent",
+        "eps_basic": "ifrs-full:BasicEarningsLossPerShare",
+    },
+}
+
+_BD_LABELS: dict[str, str] = {
+    "total_assets": "Assets",
+    "total_equity": "Equity",
+    "cash": "Cash and Cash Equivalents",
+    "brokerage_fee_income": "Brokerage Fee Income",
+    "net_income": "Profit (Loss) Attributable to Owners of Parent",
+    "eps_basic": "Basic Earnings (Loss) per Share",
+}
+
+
+def _build_bd_canonical(facts: list[dict[str, Any]]) -> dict[str, Any]:
+    """Map a broker-dealer/securities (-bd) fact set into the canonical
+    shape (Task 7) via the shared _build_financial_canonical helper.
+
+    No -bd-specific borrowing concept set is measured/registered yet (the
+    scope for this task is the balance-sheet spine + brokerage income +
+    net_income/eps_basic only) — an empty borrowing_concepts tuple means
+    "borrowings" simply never appears (no concepts to sum), same
+    graceful-absence behavior as a missing component within a non-empty
+    tuple. Deliberately OMITS the -ci DCF-trigger fields (revenue/ebit/
+    fcf/capex/total_debt), same rationale as -fh/-basi: a broker's balance
+    sheet has no such lines, and DCF must fail loud on their absence rather
+    than silently compute against a fabricated zero.
+    """
+    return _build_financial_canonical(
+        facts,
+        concept_map=_BD_CONCEPT_MAP,
+        labels=_BD_LABELS,
+        borrowing_concepts=(),
+        taxonomy="bd",
     )
-    if borrowings_result:
-        values, meta = borrowings_result
-        balance_sheet["borrowings"] = values
-        balance_sheet["_meta"]["borrowings"] = meta
-
-    return canonical
 
 
-# Builder registry: taxonomy tag -> canonical builder callable. "ci", "fh"
-# and "basi" have builders today; the remaining financial families (bd/ins)
-# land in later tasks and register their builders here. A tag with no
-# registered builder falls through to the unsupported marker
+# Builder registry: taxonomy tag -> canonical builder callable. "ci", "fh",
+# "basi" and now "bd" (Task 7) have builders; the remaining financial
+# family ("ins") lands in a later task and registers its builder here. A
+# tag with no registered builder falls through to the unsupported marker
 # (_unsupported_financial).
 _CANONICAL_BUILDERS: dict[str, Any] = {
     "ci": _build_ci_canonical,
     "fh": _build_fh_canonical,
     "basi": _build_basi_canonical,
+    "bd": _build_bd_canonical,
 }
 
 
@@ -656,10 +715,11 @@ def build_canonical(facts: list[dict[str, Any]]) -> dict[str, Any]:
 
     Industrial (-ci) filers map through _build_ci_canonical; financial-
     holding (-fh) filers map through _build_fh_canonical; standalone-bank/
-    bills-finance (-basi) filers map through _build_basi_canonical. The
-    remaining financial families (bd/ins) have no builder registered yet,
-    so they return an explicit unsupported marker instead of a wrong/empty
-    mapping — their builders are a deferred sub-arc (see docs/loom/plans/
+    bills-finance (-basi) filers map through _build_basi_canonical;
+    broker-dealer (-bd) filers map through _build_bd_canonical. The
+    remaining financial family (-ins) has no builder registered yet, so it
+    returns an explicit unsupported marker instead of a wrong/empty
+    mapping — its builder is a deferred sub-arc (see docs/loom/plans/
     2026-07-19-tw-ixbrl-ingestion.md Decision Log).
     """
     tag = classify_taxonomy(facts)
