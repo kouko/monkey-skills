@@ -43,6 +43,10 @@ context files reduced agent task success by ~3% and raised inference
 cost by ~20% (`dev-workflow/skills/git-memory/standards/memory-conventions.md`
 §Pull retrieval).
 
+Before acting on a recalled entry, verify any file/flag/skill it names
+still exists — a memory reflects what was true when written, and a
+named path may have been renamed or removed since.
+
 Before recording, grep the store for entries the new fact contradicts —
 on a hit, update or replace that entry (git history is the archive);
 never add a contradicting sibling.
