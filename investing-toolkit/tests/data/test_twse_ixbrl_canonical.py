@@ -73,22 +73,18 @@ def test_classify_taxonomy_five_way(filename, expected_tag):
 def test_build_canonical_routes_ci_via_registry_unchanged():
     """Regression: -ci output is byte-unchanged after routing through the
     builder registry (the -ci builder is registered under "ci"). "fh"/
-    "basi" (Tasks 5-6) and now "bd" (Task 7) each have their own registered
-    builder so none of them return the unsupported marker anymore (see
-    test_canonical_fh_from_2882_fixture, test_canonical_basi_from_2801_fixture,
-    test_canonical_bd_from_6005_fixture); "ins" has no builder yet (lands in
-    a later task) and must still return the unsupported marker."""
+    "basi" (Tasks 5-6), "bd" (Task 7), and now "ins" (Task 8) each have
+    their own registered builder, so none of them return the unsupported
+    marker anymore (see test_canonical_fh_from_2882_fixture,
+    test_canonical_basi_from_2801_fixture, test_canonical_bd_from_6005_fixture,
+    test_canonical_ins_from_2867_life_fixture) — all 5 financial-sector
+    taxonomy families now have registered builders."""
     parser, canonical_mod = _load_modules()
 
     ci_canonical = canonical_mod.build_canonical(_fixture_facts(parser))
     assert 2_025_846_521_000.0 in ci_canonical["income_statement"]["revenue"]
     assert ci_canonical["balance_sheet"]["total_assets"]
     assert ci_canonical["cash_flow"]["operating_cash_flow"]
-
-    ins_result = canonical_mod.build_canonical(
-        _fixture_facts_tolerant(parser, "twse_ixbrl_2867_2026Q1_A.html")
-    )
-    assert ins_result.get("unsupported") == "financial-ins", ins_result
 
 
 def test_canonical_ci_from_facts():
@@ -300,32 +296,22 @@ def test_canonical_ci_total_debt_formosa_includes_short_term():
         assert concept in bs["_meta"]["total_debt"]["components"]
 
 
-def test_canonical_ins_fact_set_returns_unsupported_marker():
-    """"ins" (insurance) has no registered builder yet (deferred sub-arc,
-    the last remaining financial family after Task 7 registers "bd");
-    build_canonical must return the parameterized unsupported marker
-    "financial-ins". Supersedes the old bd-unsupported test now that "bd"
-    has its own builder (see test_canonical_bd_from_6005_fixture)."""
+def test_unsupported_financial_marker_shape_for_a_hypothetical_unbuilt_family():
+    """All 5 recognized financial families (ci/fh/basi/bd/ins) now have a
+    registered builder (Task 8 registers "ins", the last one) — so
+    build_canonical can no longer reach _unsupported_financial through any
+    live classify_taxonomy tag. Supersedes the old
+    test_canonical_ins_fact_set_returns_unsupported_marker (which asserted
+    "ins" itself was unsupported; false as of this task). This test instead
+    pins _unsupported_financial's marker shape directly, since it remains
+    the correct fallback the day a 6th financial family is discovered and
+    added to _BSCI_TAG_PREFIXES before its own builder lands."""
     _, canonical_mod = _load_modules()
 
-    # Synthetic -ins fact set — a minimal stand-in exercising the
-    # registry-fallback path for a still-unbuilt financial family.
-    ins_facts = [
-        {
-            "concept": "tifrs-bsci-ins:FeeIncome",
-            "context_ref": "From20240101To20240930",
-            "raw_value": 123.0,
-            "decimals": "-3",
-            "unit": "TWD",
-            "period": {"type": "duration", "start": "2024-01-01", "end": "2024-09-30"},
-            "entity": "2867",
-            "fact_type": "nonFraction",
-        },
-    ]
+    result = canonical_mod._unsupported_financial("hypothetical")
 
-    result = canonical_mod.build_canonical(ins_facts)
-
-    assert result.get("unsupported") == "financial-ins", result
+    assert result.get("unsupported") == "financial-hypothetical", result
+    assert "reason" in result, result
 
 
 def test_canonical_bd_from_6005_fixture():
@@ -630,6 +616,121 @@ def test_canonical_basi_bills_finance_2820_degrades_gracefully():
     # borrowings: the -basi-renamed repo concept is present and, for a
     # bills-finance filer, is the dominant funding line.
     assert bs["borrowings"][0] == 203_085_773_000.0
+
+    dcf_trigger_keys = {"revenue", "ebit", "fcf", "capex", "total_debt"}
+    for statement in ("balance_sheet", "income_statement", "cash_flow"):
+        keys = set(canonical.get(statement, {}))
+        assert not (keys & dcf_trigger_keys), (statement, keys & dcf_trigger_keys)
+
+
+def test_canonical_ins_from_2867_life_fixture():
+    """-ins (insurer, Task 8 — the last financial family) canonical builder,
+    traced against the real 2867 (三商美邦人壽 Mercuries Life) 2026 Q1
+    fixture (a standalone life insurer, report_id=A).
+
+    net_income maps to ifrs-full:ProfitLoss (NOT
+    ifrs-full:ProfitLossAttributableToOwnersOfParent, which is measured
+    ABSENT from this fixture — grep count 0 — because standalone parent-
+    only insurer filings carry no subsidiary-attribution split to make).
+    This is a deliberate per-family concept choice, same pattern as -bd's
+    brokerage_fee_income addition, not a fallback from a missing primary
+    concept.
+
+    insurance_contract_liabilities <- tifrs-bsci-ins:InsuranceContractLiabilities_CB
+    (the life/P&C-shape concept) — the PRIMARY of the two-candidate
+    first-present resolution (see test_canonical_ins_from_2851_reinsurer_
+    fixture_liability_fallback for the reinsurer's fallback leg).
+    """
+    parser, canonical_mod = _load_modules()
+    facts = _fixture_facts_tolerant(parser, "twse_ixbrl_2867_2026Q1_A.html")
+
+    canonical = canonical_mod.build_canonical(facts)
+
+    assert canonical.get("sector_class") == "financial", canonical
+    assert canonical.get("taxonomy") == "ins", canonical
+
+    bs = canonical["balance_sheet"]
+    inc = canonical["income_statement"]
+
+    # total_assets/total_equity/cash <- the same ifrs-full spine concepts
+    # as every other financial family, AsOf20260331.
+    assert bs["total_assets"][0] == 1_583_200_325_000.0
+    assert bs["total_equity"][0] == 78_115_792_000.0
+    assert bs["cash"][0] == 70_736_282_000.0
+
+    # net_income <- ifrs-full:ProfitLoss, From20260101To20260331: -160,504 x1000
+    # (sign="-" in the fixture — a real quarterly loss, not a sign bug).
+    assert inc["net_income"][0] == -160_504_000.0
+    assert inc["_meta"]["net_income"]["concept"] == "ifrs-full:ProfitLoss"
+    # eps_basic <- ifrs-full:BasicEarningsLossPerShare, From20260101To20260331: -0.03
+    assert inc["eps_basic"][0] == -0.03
+
+    # THE critical-correctness assertion: the insurance-contract-liability
+    # field must be populated via the tifrs-bsci-ins: PRIMARY concept for
+    # the life sub-shape.
+    assert bs["insurance_contract_liabilities"][0] == 1_212_007_565_000.0
+    assert (
+        bs["_meta"]["insurance_contract_liabilities"]["concept"]
+        == "tifrs-bsci-ins:InsuranceContractLiabilities_CB"
+    )
+
+    dcf_trigger_keys = {"revenue", "ebit", "fcf", "capex", "total_debt"}
+    for statement in ("balance_sheet", "income_statement", "cash_flow"):
+        keys = set(canonical.get(statement, {}))
+        assert not (keys & dcf_trigger_keys), (statement, keys & dcf_trigger_keys)
+
+
+def test_canonical_ins_from_2851_reinsurer_fixture_liability_fallback():
+    """-ins builder against the real 2851 (中再保 Central Reinsurance) 2025
+    Q1 fixture (the reinsurer sub-shape, report_id=A).
+
+    THE critical-correctness assertion (measured, round3 §Q2 union table):
+    2851 carries ZERO tifrs-bsci-ins:InsuranceContractLiabilities_CB facts
+    (grep count 0) — it books the SAME economic liability under the
+    GENERIC ifrs-full:LiabilitiesArisingFromInsuranceContracts concept
+    instead. Without a first-present-of-candidates fallback, a mapper keyed
+    only on the tifrs-bsci-ins: concept string silently DROPS this field
+    for every reinsurer — the same wrong-answer class as the -fh
+    net_income key mismatch and the -ci total_debt-zeroing bug (same
+    economic fact, different concept string, consumer silently misses it).
+    This test is the one that FAILS without the ifrs-full: fallback leg.
+
+    net_income <- ifrs-full:ProfitLoss here too (also ABSENT
+    ProfitLossAttributableToOwnersOfParent, grep count 0 — same
+    parent-only-filing reasoning as the life sub-shape).
+    """
+    parser, canonical_mod = _load_modules()
+    facts = _fixture_facts_tolerant(parser, "twse_ixbrl_2851_2025Q1_A.html")
+
+    canonical = canonical_mod.build_canonical(facts)
+
+    assert canonical.get("sector_class") == "financial", canonical
+    assert canonical.get("taxonomy") == "ins", canonical
+
+    bs = canonical["balance_sheet"]
+    inc = canonical["income_statement"]
+
+    assert bs["total_assets"][0] == 58_698_786_000.0
+    assert bs["total_equity"][0] == 20_894_663_000.0
+    assert bs["cash"][0] == 8_780_223_000.0
+
+    # net_income <- ifrs-full:ProfitLoss, From20250101To20250331: 626,524 x1000
+    assert inc["net_income"][0] == 626_524_000.0
+    assert inc["_meta"]["net_income"]["concept"] == "ifrs-full:ProfitLoss"
+    # eps_basic <- ifrs-full:BasicEarningsLossPerShare, From20250101To20250331: 0.78
+    assert inc["eps_basic"][0] == 0.78
+
+    # THE critical-correctness assertion: same canonical field as the life
+    # fixture, populated here via the ifrs-full: FALLBACK concept (the
+    # tifrs-bsci-ins: primary is genuinely absent for this sub-shape).
+    assert bs["insurance_contract_liabilities"][0] == 35_889_528_000.0, (
+        "reinsurer's insurance-contract-liability field must be populated "
+        "via the ifrs-full: fallback, not silently dropped"
+    )
+    assert (
+        bs["_meta"]["insurance_contract_liabilities"]["concept"]
+        == "ifrs-full:LiabilitiesArisingFromInsuranceContracts"
+    )
 
     dcf_trigger_keys = {"revenue", "ebit", "fcf", "capex", "total_debt"}
     for statement in ("balance_sheet", "income_statement", "cash_flow"):
