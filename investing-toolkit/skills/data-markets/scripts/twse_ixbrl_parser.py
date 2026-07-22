@@ -72,6 +72,23 @@ def _log(stage: str, msg: str = "") -> None:
     sys.stderr.flush()
 
 
+def decode_ixbrl_document(raw: bytes) -> str:
+    """Smart-decode a raw t164sb01 response body.
+
+    MOPS declares `charset=big5` for every market tier, but in practice
+    serves the whole financial family (-fh/-basi/-bd/-ins) as UTF-8 while
+    -ci filings are genuine Big5. Decoding everything as big5hkscs (the
+    old fetch-layer behavior) silently corrupts Chinese text for the
+    financial family instead of raising — so try UTF-8 strict first (it
+    fails cleanly on genuine Big5 bytes) and fall back to big5hkscs with
+    `errors="replace"` only when UTF-8-strict raises.
+    """
+    try:
+        return raw.decode("utf-8")
+    except UnicodeDecodeError:
+        return raw.decode("big5hkscs", errors="replace")
+
+
 _CONTEXT_RE = re.compile(
     r'<xbrli:context\s+id="([^"]+)"[^>]*>(.*?)</xbrli:context>', re.S
 )

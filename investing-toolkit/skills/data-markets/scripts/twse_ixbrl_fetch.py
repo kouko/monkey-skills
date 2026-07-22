@@ -36,6 +36,7 @@ import time
 import requests
 
 import cache_util
+from twse_ixbrl_parser import decode_ixbrl_document
 
 BASE_URL = "https://mopsov.twse.com.tw/server-java/t164sb01"
 NOT_FOUND_MARKER = "檔案不存在"
@@ -100,9 +101,14 @@ def _get_with_retry(url: str) -> requests.Response:
 
 def fetch_ixbrl_body(co_id: str, year: int, season: int, report_id: str,
                       *, use_cache: bool = True) -> str | None:
-    """Fetch + Big5-decode the t164sb01 body for one (co_id, year, season,
+    """Fetch + smart-decode the t164sb01 body for one (co_id, year, season,
     report_id). Returns None when TWSE serves the "檔案不存在" absence
     sentinel (period not filed) — never an error/exception.
+
+    Decoding tries UTF-8 strict first, falling back to big5hkscs — MOPS
+    declares charset=big5 for every market tier but in practice serves the
+    financial family (-fh/-basi/-bd/-ins) as UTF-8; only genuine -ci
+    filings are actually Big5. See `twse_ixbrl_parser.decode_ixbrl_document`.
 
     Cached via cache_util under source "twse_ixbrl"; the absence sentinel
     is NOT cached (so a later fetch, once the filing lands, retries live).
@@ -117,7 +123,7 @@ def fetch_ixbrl_body(co_id: str, year: int, season: int, report_id: str,
 
     url = build_t164sb01_url(co_id, year, season, report_id)
     resp = _get_with_retry(url)
-    body = resp.content.decode("big5hkscs", errors="replace")
+    body = decode_ixbrl_document(resp.content)
 
     if is_not_found_body(body):
         return None
