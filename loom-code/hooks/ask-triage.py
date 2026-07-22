@@ -9,7 +9,8 @@ carrying the three-way triage (fact-in-repo → look it up / user-fact
 or irreversible-confirmation → ask directly / researchable design
 fork → research first, then ask with a recommendation). SSOT for the
 triage wording: loom-code/skills/subagent-driven-development/SKILL.md
-§Asking the user, gate ①/②.
+§Asking the user, gate ①/②; the mechanical-floor sentence (anchor +
+stakes first line) traces to §Asking the user ③ items 4/7.
 
 Scope-leak note: this hook fires on EVERY AskUserQuestion call in any
 session with loom-code enabled, including non-coding work — hence the
@@ -39,7 +40,12 @@ CARD = (
     "research first (loom-code: SDD §Asking the user, gate ②), "
     "then ask WITH a cited recommendation. Questions arriving with options "
     "+ a recommendation respect the user's time; unresearched forks "
-    "outsource your work to them."
+    "outsource your work to them. Mechanical floor, whichever shape "
+    "applies: re-read your drafted `question` field — its FIRST line must "
+    "be a one-line state anchor + stakes (what just happened / what "
+    "changes by this choice). If it is not, add that line before firing. "
+    "A bare \"X or Y?\" with zero context is the exact failure this card "
+    "exists to stop."
 )
 
 
