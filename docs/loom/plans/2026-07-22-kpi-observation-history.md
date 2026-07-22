@@ -1,8 +1,8 @@
 # Plan: KPI observation history — US lane (Slice C)
 
 Source brief: docs/loom/specs/2026-07-20-kpi-observation-history.md
-Total tasks: 8   (T8 added mid-SDD 2026-07-22 — a write-side guard for a double-scale hole found during T6 review; see Task 8 + Notes "T8 amendment")
-Critical-path depth: 3 (≤5)   ← longest chain: T2 → T3 → T6 (period-fields → identity-key → history read); T8 is an independent leaf
+Total tasks: 9   (T8 added mid-SDD then RETIRED by T9 — the double-scale hole it guarded is closed structurally by T9's explicit-scale design, so the guard was removed; see Task 8 SUPERSEDED note + Task 9)
+Critical-path depth: 3 (≤5)   ← longest chain: T2 → T3 → T6 (period-fields → identity-key → history read); T9 supersedes T6's scale half + retires T8
 Execution order: parallel-where-possible
 Plan-document-reviewer verdict: PASS (2026-07-22, 14/14 after the round-1 Check-8 fix — see Notes "amendment"). Round-1 NEEDS_REVISION was the missing decision-(B) coverage, now recorded as an explicit Notes exclusion; the two advisory notes (dispatcher-mechanism wording, per-predicate test bundling) are folded in. Amendment is additive (a Notes exclusion + reworded Notes + a test-splitting note), no task/DAG/field change → re-review skipped per writing-plans §"Amending a PASS plan" (b).
 

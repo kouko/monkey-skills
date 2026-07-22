@@ -5,6 +5,45 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.30.0] — 2026-07-22
+
+KPI observation history (US lane) — the durable store can now answer "what have I
+recorded for this company, and has it changed?" A figure you confirmed months ago
+can quietly stop being what the company says: J&J's FY2021 revenue was
+93,775,000,000 in the FY2021/FY2022 10-Ks and re-presented as 78,740,000,000 in
+FY2023. `history` surfaces every vintage of one period across filings so that
+change becomes visible instead of a stale number carried forward.
+
+- **Enumerable store.** `list_series` / `list_companies` / `list_kpis` recover
+  what's held by reading each series file's content (the filename digest is
+  one-way); a corrupt file is skipped per-file, never fatal to the listing.
+- **Period identity = the raw `(start, end)` pair.** A stored point carries
+  `period_start`/`period_end`/`period_kind`; `same_period` groups two observations
+  of one fiscal period across filings by exact date pair with a month-end-snap
+  fallback, refusing to merge genuinely different spans. Fiscal labels stay
+  analysis coordinates, derived from the filing's own fiscal-year-end — never
+  `end[:4]` or the companyfacts `fy` tag (validated across 14 filers / 64k groups:
+  the pair is byte-stable 98.99%, the `fy` tag disagrees 98.3%, `end[:4]` mis-keys
+  up to 64% for non-December fiscal years).
+- **Explicit per-point `scale`; every lane stores a base-comparable value.** The
+  prose lane hardcodes scale 1 (its value is already base — Part-2 folds the
+  magnitude in); the 8-K table lane sets scale = magnitude(confirmed unit) at
+  commit while its value stays the verbatim printed cell; XBRL is base → 1.
+  `history` compares `value × scale` through `Decimal` (not binary float — a float
+  multiply fabricated a false restatement on 1.4–5.1% of realistic two-decimal
+  cells). A same-figure-at-two-scales pair reads as no change; a real revision
+  reads as a change. Detection is a value diff, never an event lookup; a
+  superseded value is retained, never marked wrong.
+- **Write-time integrity stamp.** Each new prose point carries a sha256 of the
+  anchored token plus the surface version — recording that can't be added
+  retroactively (the read-time re-verifier is deferred).
+
+Scoped to the US lane (the other markets' four copy-pasted producers + a JP stub
+are a separate cleanup). Retention was dropped (the "≥10yr norm" was unevidenced);
+a rendered tearsheet is deferred (no shipped public format exists, and the prose
+lane isn't user-invocable yet). Change-folder: none (brainstorming-brief input);
+plan `docs/loom/plans/2026-07-22-kpi-observation-history.md`.
+
 ## [v2.29.0] — 2026-07-20
 
 Narrative-evidence arc, Slice A **Part 2** (number robustness): makes the prose
