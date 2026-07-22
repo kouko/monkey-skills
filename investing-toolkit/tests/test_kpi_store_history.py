@@ -15,16 +15,17 @@ Contract exercised here:
     vintages carry DIFFERENT `period` labels but the SAME date pair and must
     still group (this is the whole point of the slice).
   - observations ordered by `as_of` (ISO string, consistent with query_latest).
-  - `disagreement=True` iff >=2 returned observations differ in `value` after
-    unit normalization; same value -> False; a single observation -> False.
+  - `disagreement=True` iff >=2 returned observations differ in their CANONICAL
+    value; same canonical -> False; a single observation -> False.
   - a superseded value is RETAINED and returned, never marked "wrong".
-  - a stored `value` is NOT always base-scale: the 8-K TABLE lane stores a RAW,
-    unscaled cell value paired with a scale-word `unit` (kpi_8k_candidates
-    commits value="301.63", unit="millions"), so `history` scales each value by
-    its unit's scale-word multiplier before comparing.
-  - units that differ across observations are surfaced as `unit_mismatch=True`
-    (an INDEPENDENT informational flag) but NEVER suppress a genuine value
-    disagreement — a differing unit LABEL neither invents nor hides a conflict.
+  - every stored point carries an EXPLICIT per-point `scale` set once at its
+    producer (Slice C, Task 9), so the canonical compared here is
+    `_normalized_value(value) * scale` — a trivial value diff with NO read-time
+    parsing of a magnitude word out of the free-text `unit`. The 8-K TABLE lane
+    stores the verbatim cell (value="301.63") with `scale=1e6`; the prose lane
+    stores an already-base value with `scale` HARDCODED 1; so a cross-lane pair
+    of the same figure canonicalizes equal without the `unit` driving anything.
+    A point missing `scale` defaults to 1.
 
 No `@req` tag: this dispatch's plan (docs/loom/plans/2026-07-22-kpi-observation-
 history.md) binds tasks by "Brief item covered", not registered loom-spec
@@ -76,14 +77,19 @@ def _point(
     period_end="2021-12-31",
     period_kind="duration",
     unit=None,
+    scale=None,
 ):
     """A minimal store-valid point: full provenance + a non-wall-clock as_of so
     `append` accepts it, plus the raw period-identity fields T2/T3 read. Two
     observations of one period MUST differ in `as_of` AND `source_accession` so
     the dedup key does not silently drop the second (that is exactly why the
     J&J restatement is visible at all).
+
+    `scale` is the EXPLICIT per-point multiplier from `value` to the base-scale
+    figure (Task 9). It is added ONLY when supplied, so a point without it keeps
+    exercising history's `scale`-missing default of 1.
     """
-    return {
+    point = {
         "company": company,
         "kpi_id": kpi_id,
         "period": period_label,
@@ -97,6 +103,9 @@ def _point(
         "source_table_id": "table:0",
         "source_cell_ref": {"row": 1, "col": 1},
     }
+    if scale is not None:
+        point["scale"] = scale
+    return point
 
 
 def test_history_flags_disagreement_across_filings(tmp_path, monkeypatch):
@@ -142,7 +151,6 @@ def test_history_flags_disagreement_across_filings(tmp_path, monkeypatch):
         "0000200406-24-000010",
     ]
     assert result["disagreement"] is True
-    assert result["unit_mismatch"] is False
 
     # (b) SAME value across two filings -> not a disagreement.
     module.append(
@@ -176,26 +184,119 @@ def test_history_flags_disagreement_across_filings(tmp_path, monkeypatch):
     assert single["disagreement"] is False
 
 
-def test_history_scale_equal_across_units_is_not_a_disagreement(
+def test_history_compares_base_via_explicit_scale(tmp_path, monkeypatch):
+    """Slice C, Task 9 — every lane stores an EXPLICIT per-point `scale`, so the
+    canonical history compares is `_normalized_value(value) * scale`, with NO
+    read-time parsing of a magnitude word out of the free-text `unit`.
+
+      (a) an 8-K-shaped point (value="301.63", scale=1e6) and a prose-shaped
+          point (value=301630000, scale=1) for the SAME period read
+          disagreement=False — both canonicalize to base 301,630,000. The 8-K
+          point's `unit` is the DIMENSIONAL "USD" (not "millions"): the explicit
+          `scale` field drives the magnitude, proving the read no longer parses
+          the unit label.
+      (b) a genuine restatement (both scale=1, 93,775,000,000 vs
+          78,740,000,000 — the J&J payoff) reads disagreement=True.
+      (c) a prose point tagged unit="billion" (scale HARDCODED 1 by the producer,
+          value already the base 3,560,000,000) is NOT double-scaled: its
+          canonical stays 3,560,000,000, so it AGREES with a plain 3,560,000,000
+          point rather than exploding to 3.56e18. This is the trap the retired
+          read-time inference (and its T8 write-guard) existed to prevent;
+          hardcoding prose scale=1 makes it structurally impossible.
+
+    No `@req` tag: same convention as the sibling tests (plan binds by "Brief
+    item covered", not a registered loom-spec REQ-id).
+    """
+    store_dir = tmp_path / "store"
+    monkeypatch.setenv("KPI_STORE_DIR", str(store_dir))
+    module = _load_module()
+
+    # (a) 8-K raw cell (301.63 x 1e6) vs prose base (301,630,000 x 1) -> same base.
+    # The 8-K `unit` is dimensional "USD"; the explicit scale, NOT the label,
+    # carries the 1e6 — so an old read-time unit parser would have compared 301.63
+    # (unit "USD" -> x1) against 301,630,000 and manufactured a false conflict.
+    module.append(
+        _point(
+            "SAME", "revenue",
+            value="301.63", as_of="2025-01-30",
+            accession="0001065280-25-000033", period_label="Q4-2024",
+            unit="USD", scale=1e6,
+        )
+    )
+    module.append(
+        _point(
+            "SAME", "revenue",
+            value=301630000, as_of="2025-04-30",
+            accession="0001065280-25-000099", period_label="Q4-2024",
+            unit="USD", scale=1,
+        )
+    )
+    same = module.history("SAME", "revenue", _PROBE)
+    assert len(same["observations"]) == 2
+    assert same["disagreement"] is False, "301.63x1e6 == 301,630,000x1 — same base"
+
+    # (b) genuine restatement, both already base -> a real disagreement.
+    module.append(
+        _point(
+            "JNJ", "revenue",
+            value=93775000000, as_of="2022-02-16",
+            accession="0000200406-22-000006", period_label="FY2021", scale=1,
+        )
+    )
+    module.append(
+        _point(
+            "JNJ", "revenue",
+            value=78740000000, as_of="2024-02-15",
+            accession="0000200406-24-000010",
+            period_label="2021 (comparative)", scale=1,
+        )
+    )
+    restated = module.history("JNJ", "revenue", _PROBE)
+    assert restated["disagreement"] is True
+
+    # (c) prose unit="billion" is NOT double-scaled: the producer hardcodes
+    # scale=1 and the value is already folded to base 3,560,000,000 by the prose
+    # _normalize_value. An old read-time parser seeing unit="billion" would have
+    # multiplied it AGAIN to 3.56e18, forging a disagreement with the plain point.
+    module.append(
+        _point(
+            "META", "dap",
+            value=3560000000, as_of="2025-01-29",
+            accession="0001326801-25-000004", period_label="Q4-2024",
+            unit="billion", scale=1,
+        )
+    )
+    module.append(
+        _point(
+            "META", "dap",
+            value=3560000000, as_of="2025-04-30",
+            accession="0001326801-25-000050", period_label="Q4-2024",
+            unit="people", scale=1,
+        )
+    )
+    not_double = module.history("META", "dap", _PROBE)
+    assert len(not_double["observations"]) == 2
+    assert not_double["disagreement"] is False, (
+        "unit='billion' must not drive scale — the value is already base 3.56e9"
+    )
+
+
+def test_history_scale_equal_across_lanes_is_not_a_disagreement(
     tmp_path, monkeypatch
 ):
-    """Scale-equal-so-not-a-disagreement: value=12345 (unit="millions") vs
-    value=12345000 (unit="thousands") are THE SAME figure at two scales —
-    12345e6 == 12345000e3 == 1.2345e10 — so `disagreement=False`.
+    """Scale-equal-so-not-a-disagreement, via the EXPLICIT per-point `scale`
+    (Task 9): value=12345 (scale=1e6) vs value=12345000 (scale=1e3) are THE SAME
+    figure at two stored scales — 12345e6 == 12345000e3 == 1.2345e10 — so
+    `disagreement=False`.
 
     This is real because the 8-K TABLE lane stores a RAW, unscaled cell value
-    paired with a scale-word `unit`: kpi_8k_candidates commits value="301.63"
-    with unit="millions" (test_kpi_8k_candidates_commit line 53-65,
-    `_confirmed_complete_candidate`), the SKILL contract forbids altering
-    `value`, and the `(in millions)` caption is surfaced only as an advisory
-    `unit_hint`. So a stored value is NOT always base-scale, and `history` must
-    apply the unit's scale-word multiplier before comparing. Comparing the raw
-    values without scaling would manufacture a false conflict on exactly this
-    two-scales-of-one-figure case.
-
-    The differing raw unit LABELS still surface as `unit_mismatch=True` (an
-    independent caveat) — a label difference neither invents a disagreement (this
-    test) nor suppresses one (`..._does_not_mask_real_disagreement`).
+    with the scale folded into an EXPLICIT `scale` field at commit
+    (kpi_8k_candidates commits value="301.63" with scale=1e6, derived once from
+    the confirmed unit); the SKILL contract forbids altering `value`. So a stored
+    value is NOT always base-scale, and `history` compares `value * scale`.
+    Comparing the raw values without the stored scale would manufacture a false
+    conflict on exactly this two-scales-of-one-figure case. The `unit` LABEL does
+    NOT drive scale here — scale is the explicit stored field.
     """
     store_dir = tmp_path / "store"
     monkeypatch.setenv("KPI_STORE_DIR", str(store_dir))
@@ -206,7 +307,7 @@ def test_history_scale_equal_across_units_is_not_a_disagreement(
             "ACME", "revenue",
             value=12345, as_of="2022-02-16",
             accession="0000000000-22-000001", period_label="FY2021",
-            unit="millions",
+            unit="USD", scale=1e6,
         )
     )
     module.append(
@@ -214,84 +315,86 @@ def test_history_scale_equal_across_units_is_not_a_disagreement(
             "ACME", "revenue",
             value=12345000, as_of="2023-02-15",
             accession="0000000000-23-000002", period_label="FY2021",
-            unit="thousands",
+            unit="USD", scale=1e3,
         )
     )
 
     result = module.history("ACME", "revenue", _PROBE)
-    assert len(result["observations"]) == 2, "both retained even under mismatch"
-    assert result["unit_mismatch"] is True
+    assert len(result["observations"]) == 2, "both retained"
     # 12345e6 == 12345000e3 — the same figure, so NOT a disagreement.
     assert result["disagreement"] is False
 
 
-def test_scale_multiplier_matches_scale_word_as_whole_word(tmp_path, monkeypatch):
-    """`_scale_multiplier` derives the multiplier from the unit's scale WORD,
-    matched with word boundaries so a magnitude word that is only a SUBSTRING of a
-    larger word never scales.
+def test_history_two_decimal_8k_cell_is_not_a_false_restatement(
+    tmp_path, monkeypatch
+):
+    """Reviewer FATAL (Finding 1): `_canonical_value` must multiply `value*scale`
+    in Decimal, NOT binary float. A 2-decimal 8-K cell stored verbatim
+    (value="1.005", scale=1e9 from a "billions" unit) and the SAME real figure
+    stored base by the prose lane (value=1005000000, scale=1) are ONE number —
+    1,005,000,000 — so `disagreement=False`. In binary float,
+    `float("1.005") * 1e9 == 1004999999.9999999 != 1005000000`, fabricating a
+    restatement flag on data that never changed. This hits 1.4-5.1% of realistic
+    2-decimal 8-K cells; the earlier scale tests (301.63, 12345) missed it only
+    because those decimals happen to be exactly float-representable. Mirrors
+    kpi_prose_candidates._normalize_value, which already routes its magnitude
+    scaling through Decimal for exactly this reason.
 
-    The word-boundary guard is a documented Part-2 lesson (docs/loom/memory):
-    "billionaire" must NOT match "billion", "millionaire households" must NOT be
-    scaled. A dimensional prefix around the scale word ("USD millions",
-    "$ in millions") still scales off the scale word. A plain dimensional label
-    (USD) or None carries no scale word -> multiplier 1.
+    No `@req` tag: same convention as the sibling tests (plan binds by "Brief
+    item covered", not a registered loom-spec REQ-id).
     """
     store_dir = tmp_path / "store"
     monkeypatch.setenv("KPI_STORE_DIR", str(store_dir))
     module = _load_module()
 
-    assert module._scale_multiplier("thousands") == 1e3
-    assert module._scale_multiplier("million") == 1e6
-    assert module._scale_multiplier("millions") == 1e6
-    assert module._scale_multiplier("billion") == 1e9
-    assert module._scale_multiplier("trillion") == 1e12
-    # Dimensional part around the scale word: multiplier comes from the word.
-    assert module._scale_multiplier("USD millions") == 1e6
-    assert module._scale_multiplier("$ in millions") == 1e6
-    # Whole-word guard: substring occurrences must NOT scale.
-    assert module._scale_multiplier("billionaire") == 1
-    assert module._scale_multiplier("millionaire households") == 1
-    # No scale word / absent unit -> multiplier 1.
-    assert module._scale_multiplier("USD") == 1
-    assert module._scale_multiplier(None) == 1
-
-
-def test_history_word_boundary_unit_is_not_scaled(tmp_path, monkeypatch):
-    """A KPI `unit` that merely CONTAINS a magnitude word as a substring
-    ("millionaire households") must NOT be scaled — so a substring-match
-    regression is caught here, not only in the helper's unit test.
-
-    value=5 (unit="millionaire households") vs value=5000000 (unit=None): with
-    the correct whole-word guard these scale to 5 and 5000000 (multiplier 1 each)
-    -> genuinely DIFFERENT -> disagreement=True. A buggy substring match would
-    scale the first by 1e6 to 5,000,000, falsely equating them to
-    disagreement=False — which this asserts against.
-    """
-    store_dir = tmp_path / "store"
-    monkeypatch.setenv("KPI_STORE_DIR", str(store_dir))
-    module = _load_module()
-
+    # (a) the reviewer's exact probe: a 1.005bn 8-K cell vs the 1,005,000,000
+    # prose base. float("1.005") * 1e9 == 1004999999.9999999 (a fabricated diff).
     module.append(
         _point(
-            "WEALTH", "millionaire_households",
-            value=5, as_of="2022-02-16",
-            accession="0000000000-22-000001", period_label="FY2021",
-            unit="millionaire households",
+            "BN", "revenue",
+            value="1.005", as_of="2025-01-30",
+            accession="0001065280-25-000033", period_label="Q4-2024",
+            unit="USD", scale=1e9,
         )
     )
     module.append(
         _point(
-            "WEALTH", "millionaire_households",
-            value=5000000, as_of="2023-02-15",
-            accession="0000000000-23-000002", period_label="FY2021",
-            unit=None,
+            "BN", "revenue",
+            value=1005000000, as_of="2025-04-30",
+            accession="0001065280-25-000099", period_label="Q4-2024",
+            unit="USD", scale=1,
         )
     )
+    same = module.history("BN", "revenue", _PROBE)
+    assert len(same["observations"]) == 2
+    assert same["disagreement"] is False, (
+        "1.005 x 1e9 == 1,005,000,000 x 1 — one figure; binary float fabricates "
+        "a 1004999999.9999999 vs 1005000000 disagreement"
+    )
 
-    result = module.history("WEALTH", "millionaire_households", _PROBE)
-    assert len(result["observations"]) == 2
-    # "millionaire households" is NOT scaled -> 5 vs 5,000,000 -> a real diff.
-    assert result["disagreement"] is True
+    # (b) a second float-hostile decimal pins the fix against a float regression:
+    # float("2.01") * 1e6 == 2009999.9999999998 != 2,010,000.
+    module.append(
+        _point(
+            "MM", "opex",
+            value="2.01", as_of="2025-01-30",
+            accession="0000000000-25-000001", period_label="Q4-2024",
+            unit="USD", scale=1e6,
+        )
+    )
+    module.append(
+        _point(
+            "MM", "opex",
+            value=2010000, as_of="2025-04-30",
+            accession="0000000000-25-000002", period_label="Q4-2024",
+            unit="USD", scale=1,
+        )
+    )
+    milli = module.history("MM", "opex", _PROBE)
+    assert len(milli["observations"]) == 2
+    assert milli["disagreement"] is False, (
+        "2.01 x 1e6 == 2,010,000 — binary float makes it 2009999.9999999998"
+    )
 
 
 def test_history_precision_normalization_same_value_same_unit(tmp_path, monkeypatch):
@@ -323,7 +426,6 @@ def test_history_precision_normalization_same_value_same_unit(tmp_path, monkeypa
 
     result = module.history("FMT", "revenue", _PROBE)
     assert len(result["observations"]) == 2
-    assert result["unit_mismatch"] is False
     assert result["disagreement"] is False
 
 
@@ -357,7 +459,6 @@ def test_history_precision_normalization_different_value_same_unit(
 
     result = module.history("FMT2", "revenue", _PROBE)
     assert len(result["observations"]) == 2
-    assert result["unit_mismatch"] is False
     assert result["disagreement"] is True
 
 
@@ -387,24 +488,18 @@ def test_history_corrupt_series_file_degrades_to_no_observations(
     result = module.history("CORRUPT", "revenue", _PROBE)
     assert result["observations"] == []
     assert result["disagreement"] is False
-    assert result["unit_mismatch"] is False
 
 
-def test_history_unit_mismatch_does_not_mask_real_disagreement(tmp_path, monkeypatch):
-    """THE regression: a genuine value conflict must NOT be silenced just because
-    the observations' `unit` labels differ. Two observations of one period,
-    93,775 (unit="millions") and 11,111 (unit=None) — an 8.4x gap, a real
-    restatement — with a `unit` mismatch. The old code forced `disagreement=False`
-    on ANY unit mismatch, so a caller reading only `disagreement` (its literal
-    name/purpose) saw "no problem" for an obvious conflict. The fix: `disagreement`
-    is the pure value diff (True here), and `unit_mismatch=True` is surfaced as an
-    independent caveat, never a mask.
-
-    Even AFTER scale-normalization the conflict stands: 93775 (unit="millions")
-    scales to 9.3775e10 and 11111 (unit=None) to 11111 — an 8.4e6x gap. The
-    scale multiplier removes false conflicts (two scales of one figure), it does
-    NOT remove this real one. So `disagreement=True` and `unit_mismatch=True`
-    (the labels "millions" vs None differ) coexist honestly.
+def test_history_differing_unit_labels_do_not_mask_real_disagreement(
+    tmp_path, monkeypatch
+):
+    """A genuine value conflict must NOT be silenced by a differing `unit` LABEL.
+    Two observations of one period, 93,775 and 11,111 — an 8.4x gap, a real
+    restatement — carry different unit labels ("millions" vs None) but the SAME
+    explicit base scale (both default 1). Under the explicit-scale model the
+    `unit` label feeds no computation at all: the canonical is `value * scale`,
+    so 93,775 vs 11,111 stays a real disagreement (True). The label difference is
+    inert — it can neither invent a conflict nor mask one.
     """
     store_dir = tmp_path / "store"
     monkeypatch.setenv("KPI_STORE_DIR", str(store_dir))
@@ -429,9 +524,7 @@ def test_history_unit_mismatch_does_not_mask_real_disagreement(tmp_path, monkeyp
 
     result = module.history("RESTATE", "revenue", _PROBE)
     assert len(result["observations"]) == 2
-    assert result["unit_mismatch"] is True
     # The load-bearing assertion: a real conflict is NOT reported as "no problem".
-    assert result["disagreement"] is not False
     assert result["disagreement"] is True
 
 
@@ -447,4 +540,3 @@ def test_history_absent_series_returns_no_observations(tmp_path, monkeypatch):
     result = module.history("NOBODY", "nothing", _PROBE)
     assert result["observations"] == []
     assert result["disagreement"] is False
-    assert result["unit_mismatch"] is False

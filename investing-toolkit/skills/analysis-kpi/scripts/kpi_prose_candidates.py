@@ -550,28 +550,6 @@ def passes_substring_gate(candidate: dict, canonical_text: str) -> bool:
     return matched_token in canonical_text and verbatim_quote in canonical_text
 
 
-# Magnitude-word UNIT guard (double-scale hole). The prose lane stores BASE-SCALE
-# values: `_normalize_value` folds a magnitude word INTO the value at produce time
-# ("3.56 billion" -> 3560000000). So a committed prose point's `unit` must be a
-# DIMENSIONAL label ("USD", "people", "count", "GW"), NEVER a magnitude word — a
-# confirmed unit="billion" on an already-scaled value would make the downstream
-# kpi_store scale-normalizer multiply it AGAIN (3,560,000,000 -> 3.56e18). This
-# guard's word set is derived from `_MAGNITUDE_MULTIPLIERS` (this module's keys),
-# but the store's read-side scaler owns its OWN independent literal
-# (`kpi_store._SCALE_WORD_MULTIPLIERS`) across the subprocess boundary — the two
-# CANNOT import each other, so they are a genuine parallel list kept in lockstep
-# by a drift test (test_magnitude_unit_guard_lockstep_with_store_scaler), not by
-# construction. `s?` also rejects the plural "millions"; the `\b`
-# guards mirror exhibit_prose `_NUMBER_RE`'s billionaire-not-billion discipline, so
-# a larger token that merely CONTAINS a magnitude substring ("millionaire-
-# households") never trips. `search` (not fullmatch) rejects a whole-word magnitude
-# anywhere in the unit — "USD millions" double-scales too and is refused.
-_MAGNITUDE_UNIT_RE = re.compile(
-    r"\b(?:" + "|".join(_MAGNITUDE_MULTIPLIERS) + r")s?\b",
-    re.IGNORECASE,
-)
-
-
 def commit(candidates: list[dict], confirmed: bool = False) -> list[dict]:
     """Tier-① confirm-all trust GATE: return the candidates ACCEPTED for commit.
 
@@ -590,36 +568,19 @@ def commit(candidates: list[dict], confirmed: bool = False) -> list[dict]:
     check gating commit. A fixed KPI taxonomy is a deferred hardening, not a
     commit precondition.
 
+    No magnitude-word `unit` guard: a prose point commits with `scale` HARDCODED 1
+    at `_prose_candidate_to_point` (its `value` is already base-scale — Slice C,
+    Task 9), so a confirmed unit="billion" is inert and cannot double-scale at the
+    store. The former write-side magnitude-word guard is RETIRED because the
+    double-scale trap is now structurally impossible, not merely rejected.
+
     Scope: THIS is the GATE only — it produces the accepted-for-commit set. The
     ACTUAL append into kpi_store (with the prose anchor + attribution provenance
     shape) is Task 7, which will consume this accepted set; kpi_store is NOT
     imported or appended here.
-
-    Raises:
-        ValueError: if any confirmed candidate carries a magnitude-word `unit`
-            (thousand/million/billion/trillion). The prose value is already
-            base-scale, so such a unit would double-scale at the store; the whole
-            confirmed batch is refused (not silently trimmed) so the human fixes
-            the unit. The sole production caller `commit_to_store` does NOT catch
-            this — a poison unit aborts the store append for the whole batch, by
-            design (fail-loud on a human-confirm data error).
     """
     if not confirmed:
         return []
-    for candidate in candidates:
-        unit = candidate.get("unit")
-        if isinstance(unit, str) and _MAGNITUDE_UNIT_RE.search(unit):
-            # A magnitude-word unit on an already-base-scale value would
-            # double-scale at the store. Fail-LOUD (like `_bounded_quote`'s
-            # malformed-quote raise) so the human fixes the unit; refusing the
-            # WHOLE confirmed batch, never silently dropping the one point —
-            # the confirmed set is untrustworthy as a whole once one unit is bad.
-            raise ValueError(
-                f"prose candidate unit {unit!r} is a magnitude word; the prose "
-                "value is already base-scale, so this would double-scale at the "
-                "store — the human must fix the unit to a dimensional label "
-                "(e.g. USD / people / count / GW) before commit"
-            )
     return list(candidates)
 
 
@@ -682,6 +643,14 @@ def _prose_candidate_to_point(candidate: dict, company: str,
     - `verbatim_quote` + filing attribution (`source_document`, `filing_date`)
       + confirmer identity (`confirmer`, `confirmed_at`) ride along so a number
       surfaced later stays citable to its source bytes and its ratifier.
+    - `scale` (Slice C, Task 9) is HARDCODED 1, unconditionally. The prose
+      `value` is ALREADY base-scale — `_normalize_value` folds any magnitude word
+      INTO `value` at produce time ("3.56 billion" -> 3560000000) — and the prose
+      `unit` is a dimensional label that must NEVER drive scale. History compares
+      `_normalized_value(value) * scale`, so a hardcoded 1 makes a prose
+      unit="billion" inert: it can no longer double-scale an already-base value.
+      This is the structural guarantee that RETIRED the former read-time scale
+      inference and its write-side magnitude-word `unit` guard.
     - `value_qualifier` (Part 2) rides along too, so a BOUND stated in the prose
       ("up to 45,000 deliveries") stays visible on the DURABLE point instead of
       being flattened into a bare equality at store time. It is NOT one of the
@@ -723,6 +692,7 @@ def _prose_candidate_to_point(candidate: dict, company: str,
         "period": candidate["period"],
         "unit": candidate["unit"],
         "value": candidate["value"],
+        "scale": 1,
         "as_of": candidate["as_of"],
         "source_kind": "prose",
         "source_accession": candidate["source_accession"],

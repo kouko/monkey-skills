@@ -99,7 +99,22 @@ Key seam facts from recon (2026-07-22):
 - Independent: false
 - Brief item covered: Smallest End State (4) — "history answers 'what has been said about period P, and when' … flagging when they disagree"
 
-## Task 8 — prose commit rejects a magnitude-word unit (added mid-SDD, 2026-07-22)
+## Task 9 — explicit per-point `scale`; every lane stores a base-comparable value (user re-scope, 2026-07-22)
+- Description: Replace history's read-time scale INFERENCE (parse a magnitude word out of the free-text `unit`) with an EXPLICIT per-point `scale` field, set once at the producer. canonical value = `_normalized_value(value) × scale`; history compares canonicals. Lane-specific scale source: the PROSE producer hardcodes `scale=1` (its value is already base — Part-2 folds the magnitude into `value`; its unit is dimensional and irrelevant to scale), which makes the double-scale trap structurally impossible and RETIRES T8. The 8-K TABLE producer sets `scale = magnitude(confirmed unit)` (whole-word thousand/million/billion/trillion, else 1) computed ONCE at commit and stored explicit — its `value` stays the verbatim printed cell (anti-fabrication anchor unchanged). XBRL (if ever stored) is base → scale 1. Rationale: the user asked "if prose can fold, 8-K should too" — every lane now stores a base-comparable canonical, so history is a trivial value diff with no read-time string parsing.
+- Module: kpi_store.py (+ kpi_prose_candidates.py, kpi_8k_candidates.py producers)
+- Files touched: investing-toolkit/skills/analysis-kpi/scripts/kpi_store.py, investing-toolkit/skills/analysis-kpi/scripts/kpi_prose_candidates.py, investing-toolkit/skills/analysis-kpi/scripts/kpi_8k_candidates.py, investing-toolkit/tests/test_kpi_store_history.py, investing-toolkit/tests/test_kpi_prose_candidates.py, investing-toolkit/tests/test_kpi_8k_candidates_commit.py
+- Context paths:
+  - investing-toolkit/skills/analysis-kpi/scripts/kpi_store.py (history + the read-time _scale_multiplier/_scaled_value to REMOVE)
+  - investing-toolkit/skills/analysis-kpi/scripts/kpi_8k_candidates.py (_candidate_to_point ~:265; _UNIT_CAPTION_RE magnitude vocabulary ~:71)
+  - investing-toolkit/skills/analysis-kpi/scripts/kpi_prose_candidates.py (_prose_candidate_to_point; the T8 guard to REMOVE)
+- Acceptance:
+  - RED: test_history_compares_base_via_explicit_scale — an 8-K point (value="301.63", scale=1e6) and a prose point (value=301630000, scale=1) for the same period read values_differ=False (same base); a genuine change (base 93,775,000,000 vs 78,740,000,000) reads True; a prose point with unit="billion" is NOT double-scaled (prose scale hardcoded 1).
+  - GREEN: history compares value×scale; producers set scale; T8 + read-time inference removed; suite green.
+- Dependencies: none (supersedes T6's read-time scaling and T8)
+- Independent: false   # touches history + both producers, tightly coupled — one atomic change
+- Brief item covered: §Constraints 4 (normalize unit before comparing) — done at the producer as an explicit stored scale, not a read-time inference; §Problem (a real change surfaces, a scale-equal pair does not manufacture a conflict)
+
+## Task 8 — prose commit rejects a magnitude-word unit (added mid-SDD, 2026-07-22; SUPERSEDED by T9 — the guard is retired because prose scale is hardcoded 1, so a magnitude-word prose unit can no longer double-scale)
 - Description: The prose lane stores BASE-SCALE values (`_normalize_value` folds the
   magnitude word into `value` at write time), so a prose point's `unit` must be a
   dimensional label, never a magnitude word. `commit` currently accepts any unit on a

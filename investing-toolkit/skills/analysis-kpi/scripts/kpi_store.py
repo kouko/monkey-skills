@@ -33,9 +33,9 @@ import argparse
 import calendar
 import hashlib
 import json
-import re
 import sys
 from datetime import date
+from decimal import Decimal
 from pathlib import Path
 
 # Resolve same-dir modules without a package, so `import _store_fs` works
@@ -383,11 +383,12 @@ def query_latest(company: str, kpi_id: str, period: str):
 
 def _normalized_value(point: dict):
     """PRECISION-normalize a point's `value` against harmless representation
-    differences, WITHOUT applying any unit scale: a numeric string is stripped of
-    thousands commas/whitespace and parsed to a number, so "93,775,000,000" and
-    93775000000 compare equal; a non-numeric value is compared as its stripped
-    string. Scale is applied separately by `_scaled_value` — this function is the
-    format-only step, kept apart so the two normalizations stay legible.
+    differences, WITHOUT applying the per-point scale: a numeric string is
+    stripped of thousands commas/whitespace and parsed to a number, so
+    "93,775,000,000" and 93775000000 compare equal; a non-numeric value is
+    compared as its stripped string. The scale is applied separately by
+    `_canonical_value` — this function is the format-only step, kept apart so the
+    two normalizations stay legible.
     """
     value = point.get("value")
     if isinstance(value, str):
@@ -399,58 +400,40 @@ def _normalized_value(point: dict):
     return value
 
 
-# Scale-word multipliers, matched as WHOLE WORDS against a point's `unit`. A
-# stored value is NOT always base-scale: the 8-K TABLE lane commits the RAW,
-# unscaled cell value paired with a scale-word `unit` (see
-# kpi_8k_candidates commit — value="301.63", unit="millions"; the `(in millions)`
-# caption is surfaced only as an advisory unit_hint and the SKILL contract
-# forbids altering `value`). So the same figure can be stored as
-# (12345, "millions") in one filing and (12345000, "thousands") in another;
-# comparing the raw values would manufacture a false disagreement. Scaling the
-# value by the unit's magnitude word before comparing reconciles the two.
-#
-# The magnitude word is matched with word boundaries on BOTH sides plus an
-# optional plural `s` (`\bmillions?\b`), so "millions"/"million" both scale while
-# a magnitude word that is only a SUBSTRING of a larger word does NOT —
-# "billionaire" must not scale as "billion", "millionaire households" must not
-# scale as "million" (the Part-2 word-boundary precedent lives in the prose
-# locator: exhibit_prose.py's `\b`-guarded magnitude regex + its
-# test_exhibit_prose.py boundary tests). A dimensional part around the scale word ("USD millions",
-# "$ in millions") is ignored — the multiplier comes from the scale word alone.
-_SCALE_WORD_MULTIPLIERS = (
-    (re.compile(r"\bthousands?\b", re.IGNORECASE), 10 ** 3),
-    (re.compile(r"\bmillions?\b", re.IGNORECASE), 10 ** 6),
-    (re.compile(r"\bbillions?\b", re.IGNORECASE), 10 ** 9),
-    (re.compile(r"\btrillions?\b", re.IGNORECASE), 10 ** 12),
-)
+def _canonical_value(point: dict):
+    """The base-scale value used for disagreement comparison: the precision/
+    format-normalized `value` (`_normalized_value`) multiplied by the point's
+    EXPLICIT per-point `scale` when the value is numeric. The multiply goes
+    through `Decimal`, NOT binary float, and reduces to an int when the result is
+    integral (else float), so two representations of ONE real figure compare and
+    hash EQUAL in `history`'s distinct-value set (see the body comment).
 
+    `scale` is the multiplier from the stored/verbatim `value` to the base-scale
+    figure, set ONCE at the producer (Slice C, Task 9): the 8-K TABLE lane stores
+    the verbatim cell (value="301.63") with `scale=1e6`; the prose lane stores an
+    already-base value with `scale` HARDCODED 1; XBRL, if ever stored, is base
+    (scale 1). So every lane stores a base-comparable canonical and the read is a
+    trivial value diff — no magnitude word is parsed out of the free-text `unit`.
 
-def _scale_multiplier(unit) -> int:
-    """The scale multiplier implied by a `unit`'s magnitude word, or 1 when the
-    unit carries no scale word (a plain dimensional label like "USD", or None).
-    thousand->1e3, million->1e6, billion->1e9, trillion->1e12. See
-    `_SCALE_WORD_MULTIPLIERS` for the whole-word matching rationale.
-    """
-    if not unit:
-        return 1
-    text = str(unit)
-    for pattern, factor in _SCALE_WORD_MULTIPLIERS:
-        if pattern.search(text):
-            return factor
-    return 1
-
-
-def _scaled_value(point: dict):
-    """The value used for disagreement comparison: `_normalized_value` (precision/
-    format-normalized), multiplied by the unit's scale-word multiplier when the
-    value is numeric. A non-numeric value (an unparseable string) carries no scale
-    and is returned as its normalized string. So (12345, "millions") and
-    (12345000, "thousands") both scale to 1.2345e10 and compare equal, while a
-    genuine restatement (93775 "millions" vs 11111 None) stays distinct.
+    A point MISSING `scale` defaults to 1 (prose/XBRL are base; an old 8-K point
+    predating the explicit field is a known backfill limitation — the append
+    dedup key blocks backfill, recorded in the plan). A non-numeric value (an
+    unparseable string) carries no scale and is returned as its normalized string.
     """
     normalized = _normalized_value(point)
     if isinstance(normalized, (int, float)):
-        return normalized * _scale_multiplier(point.get("unit"))
+        # Multiply through Decimal, NOT binary float: `float("1.005") * 1e9` is
+        # 1004999999.9999999, so a 2-decimal 8-K cell (value="1.005", scale=1e9)
+        # would fabricate a disagreement against the SAME figure stored base
+        # (1005000000, scale=1). Decimal multiplies the printed decimal digits
+        # exactly. Mirrors kpi_prose_candidates._normalize_value, which routes its
+        # own magnitude scaling through Decimal for exactly this hazard. Reduce to
+        # an int when the result is integral (else float) — its own int/float
+        # convention — so two representations of one real figure compare and hash
+        # EQUAL in history's distinct-value set (12345e6 == 12345000e3; an int and
+        # a float of the same integral value are `==` and hash alike in Python).
+        scaled = Decimal(str(normalized)) * Decimal(str(point.get("scale", 1)))
+        return int(scaled) if scaled == scaled.to_integral_value() else float(scaled)
     return normalized
 
 
@@ -482,41 +465,26 @@ def history(company: str, kpi_id: str, period_match: dict) -> dict:
     event/announcement lookup (brief §Constraints 3: TW 施行細則 §6 permits
     sub-threshold corrections with no restatement event, so an event
     subscription misses them by construction): True iff >=2 observations share
-    the period AND differ in `value` after precision + scale normalization.
-
-    UNIT handling: `disagreement` is the scaled value diff above; `unit_mismatch`
-    is an INDEPENDENT informational flag (True iff the observations do not all
-    share one `unit`, None counting as its own unit). A differing `unit` LABEL
-    never invents or suppresses a disagreement on its own: the unit feeds the
-    scale multiplier (so two scales of ONE figure compare equal), but the
-    remaining raw-label difference is reported only via `unit_mismatch`.
-    Suppression-by-mismatch was the masking bug both reviewers found (a real
-    restatement, e.g. 93,775 vs 11,111, forced to `disagreement=False` merely
-    because the observations' unit labels differed, so a caller reading only
-    `disagreement` saw "no problem"). `disagreement=False` means "verified equal
-    after precision + scale normalization", and it may only ever say that for
+    the period AND differ in their CANONICAL value. `disagreement=False` means
+    "verified equal after canonicalization", and it may only ever say that for
     observations we actually compared.
 
-    SCALE normalization: a stored `value` is NOT always base-scale. The 8-K TABLE
-    lane commits the RAW, unscaled cell value paired with a scale-word `unit`
-    (kpi_8k_candidates commit — value="301.63", unit="millions"; the SKILL
-    contract forbids altering `value`, and the `(in millions)` caption is surfaced
-    only as an advisory unit_hint). So the SAME figure can arrive as
-    (12345, "millions") and (12345000, "thousands"); comparing raw values would
-    manufacture a false disagreement. `history` therefore compares each value
-    SCALED by its unit's magnitude word (`_scaled_value` -> `_scale_multiplier`,
-    thousand/million/billion/trillion matched as WHOLE WORDS). The prose lane's
-    values are ALREADY base-scale (`kpi_prose_candidates._normalize_value` folds
-    the magnitude word INTO `value` before commit), so a prose point's `unit` MUST
-    NOT itself carry a magnitude word — otherwise this would double-scale an
-    already-scaled value (e.g. 3,560,000,000 tagged unit="billion" -> 3.56e18).
-    That invariant is a WRITE-side contract enforced at prose commit (the prose
-    lane rejects a magnitude-word unit); `history` here trusts it rather than
-    re-checking per read. A genuine restatement across a scale/unit difference
-    (93,775 "millions" vs 11,111 None) stays distinct after scaling. This is a
-    minimal scale-word table, NOT a general unit-conversion engine (no dimensional
-    conversion, e.g. USD<->count); `unit_mismatch=True` remains the honest caveat
-    that the observations' raw unit labels differed.
+    EXPLICIT-SCALE canonicalization: a stored `value` is NOT always base-scale,
+    so each value is compared as its CANONICAL `_normalized_value(value) * scale`
+    (`_canonical_value`), where `scale` is an EXPLICIT per-point field set once at
+    the producer (Slice C, Task 9) — NOT inferred here by parsing a magnitude word
+    out of the free-text `unit`. The 8-K TABLE lane commits the verbatim cell
+    (value="301.63") with `scale=1e6` computed once from the confirmed unit; the
+    prose lane commits an already-base value (`kpi_prose_candidates._normalize_value`
+    folds the magnitude INTO `value`) with `scale` HARDCODED 1; XBRL, if ever
+    stored, is base (scale 1). So the SAME figure stored as (12345, scale=1e6) and
+    (12345000, scale=1e3) canonicalizes equal, while a genuine restatement
+    (93,775,000,000 vs 78,740,000,000, both base) stays distinct. Because prose
+    scale is hardcoded 1, a prose `unit` of "billion" is inert and can no longer
+    double-scale an already-base value — the structural guarantee that RETIRED the
+    former read-time scale inference and its write-side magnitude-word guard. The
+    `unit` label drives no computation here; it is retained on each observation
+    for display only.
 
     Read-only, never-raise on an absent OR corrupt series (matching
     `list_series`): an absent series file, or one that fails to load
@@ -535,16 +503,14 @@ def history(company: str, kpi_id: str, period_match: dict) -> dict:
         key=lambda p: p.get("as_of", ""),
     )
 
-    distinct_values = {_scaled_value(p) for p in observations}
+    distinct_values = {_canonical_value(p) for p in observations}
     disagreement = len(observations) >= 2 and len(distinct_values) >= 2
-    unit_mismatch = len({p.get("unit") for p in observations}) > 1
 
     return {
         "company": company,
         "kpi_id": kpi_id,
         "observations": observations,
         "disagreement": disagreement,
-        "unit_mismatch": unit_mismatch,
     }
 
 
