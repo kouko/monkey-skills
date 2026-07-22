@@ -5,6 +5,16 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.30.1] — 2026-07-23
+
+- **report-equity-memo Phase 4 guard (docs-only).** Phase 4's delegation to
+  `domain-teams:investing-team` MUST be driven from the main conversation —
+  never wrapped inside a single subagent. Live-probed 2026-07-23: a subagent
+  exposes no `Agent`/`Task`/`Workflow` tool, so a skill executed inside one
+  silently loses its internal multi-agent orchestration (the writer≠evaluator
+  gate panel degrades to self-audit). The SKILL.md now states the correct
+  dispatch shape and requires explicit disclosure when a run executed degraded.
+
 ## [v2.30.0] — 2026-07-22
 
 KPI observation history (US lane) — the durable store can now answer "what have I
