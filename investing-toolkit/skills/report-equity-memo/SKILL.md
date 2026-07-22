@@ -428,6 +428,17 @@ note in the seed context instead).
 Launch `domain-teams:investing-team` with the **Deep Equity Research Memo** protocol
 (`protocols/deep-equity-research-memo.md`) and the canonical gate stack.
 
+> **MUST — drive this delegation from the MAIN conversation, never wrapped
+> inside a single subagent.** A subagent has no `Agent`/`Task`/`Workflow`
+> tool (live-probed 2026-07-23), so a skill handed to one subagent loses
+> its internal multi-agent orchestration SILENTLY: investing-team's
+> writer≠evaluator panel degrades to one agent auditing its own draft —
+> gate verdicts become self-certification without any error surfacing.
+> Correct shape: the main agent loads investing-team and dispatches its
+> worker/evaluator subagents itself (they run as siblings). If a run was
+> nevertheless executed degraded, the memo's Limitations section and the
+> report to the user MUST say so explicitly.
+
 **Per Cross-Plugin Delegation Contract (CLAUDE.md §Cross-Plugin Delegation Contract):**
 
 1. Pass **paths** to the Phase 1 / 2 / 2.5 / 2.6 / 3 / 3.5 JSONs as `### Resource Paths` — never file content. Specifically: `fetch.json` (Phase 1), `regime-card.json` (Phase 2), `comps.json` (Phase 2.5), `xval.json` (Phase 2.6 — US tickers only; omit + state the skip reason when Phase 2.6 was skipped), `dcf.json` (Phase 3), `kpi-quarterly-feed.json` (Phase 3.5 — OPTIONAL, US tickers only; omit + put the skip note in the seed when Phase 3.5 was skipped or failed loud).
