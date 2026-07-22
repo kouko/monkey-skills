@@ -30,9 +30,12 @@ store; `_series_key`'s digest logic stays here (kpi_store-specific).
 from __future__ import annotations
 
 import argparse
+import calendar
 import hashlib
 import json
 import sys
+from datetime import date
+from decimal import Decimal
 from pathlib import Path
 
 # Resolve same-dir modules without a package, so `import _store_fs` works
@@ -155,6 +158,129 @@ def _dedup_key(point: dict) -> tuple:
     return tuple(point.get(field) for field in _DEDUP_KEY_FIELDS)
 
 
+# --- Period identity (read-side) -------------------------------------------
+# Two observations of "the same period" from different filings must be
+# recognized as the same period so `history`/coverage can group them (brief
+# §Period model, backed by a 14-filer / 64,044-group measurement: raw
+# (start,end) byte-identical 98.99%). This is PURE READ-SIDE logic over the
+# raw `period_start`/`period_end`/`period_kind` fields T2 added to the point;
+# it does NOT touch `_DEDUP_KEY_FIELDS` — changing the write-side dedup key
+# would silently drop/mis-merge already-stored points (brief §Error), and
+# backfill is blocked.
+#
+# Mean Gregorian quarter = 365.25 / 4 = 91.3125 days; dividing the duration by
+# it and rounding buckets a filing's declared span into 1..4 quarters robustly
+# against a few days of boundary drift (brief cites SEC FSDS `qtrs`: 0=instant,
+# 1..4 duration).
+_DAYS_PER_QUARTER = 91.3125
+
+
+def _parse_iso_date(value):
+    """Parse an ISO `YYYY-MM-DD` string to a `date`, or None if absent/
+    unparseable — defensive, so an older point without identity dates (or a
+    malformed one) can never crash the read-side predicates.
+    """
+    if not value:
+        return None
+    try:
+        return date.fromisoformat(str(value))
+    except ValueError:
+        return None
+
+
+def _snap_month_end(value):
+    """Snap an ISO date to the LAST day of its calendar month, or None if it
+    does not parse. Two ends in the same calendar month snap equal — this is
+    the fallback that absorbs ~1% end-date boundary drift.
+    """
+    d = _parse_iso_date(value)
+    if d is None:
+        return None
+    last_day = calendar.monthrange(d.year, d.month)[1]
+    return date(d.year, d.month, last_day)
+
+
+def _qtrs(point: dict):
+    """Duration length in quarters: 0 for an instant (`period_kind="instant"`),
+    else `round(days / 91.3125)` when that rounds INTO 1..4. Returns None for a
+    span that cannot be sized to a genuine 1..4-quarter bucket:
+      - a DEGENERATE duration (missing/unparseable start or end) — no start
+        means no span to measure;
+      - an OUT-OF-RANGE span whose rounded quarters fall outside 1..4 — e.g. a
+        15-month transition FY (~5 quarters) or a sub-quarter stub. Coercing
+        these into [1,4] would let them false-merge with a real annual/quarter,
+        so they are refused rather than clamped. A reversed (start>end) pair
+        yields a negative day-count, which rounds below 1 and is refused here
+        too — no separate guard needed.
+    The snap fallback in `same_period` treats a None qtrs as unmatchable, so a
+    span that cannot be bucketed never produces a false merge.
+    """
+    if point.get("period_kind") == "instant":
+        return 0
+    start = _parse_iso_date(point.get("period_start"))
+    end = _parse_iso_date(point.get("period_end"))
+    if start is None or end is None:
+        return None
+    quarters = round((end - start).days / _DAYS_PER_QUARTER)
+    if quarters < 1 or quarters > 4:
+        return None
+    return quarters
+
+
+def same_period(point_a: dict, point_b: dict) -> bool:
+    """True when two points describe the SAME real period.
+
+    EXACT match is tried first: both sides carry a non-None `period_start` AND
+    the raw `(period_start, period_end)` pair is byte-identical. A None
+    `period_start` (an instant, or an unfinished duration extraction T2 allows)
+    is NOT sufficient identity evidence for an exact match — two points sharing
+    only `(None, end)` may be different spans (an instant balance vs a dateless
+    duration), so exact is skipped and they must earn a match through the SNAP
+    fallback below (where an instant's qtrs 0 vs a dateless duration's None qtrs
+    still refuses to merge).
+
+    Only when exact fails does the SNAP fallback fire — `period_end` snapped to
+    its calendar month-end is equal AND the duration in quarters (`qtrs`;
+    0=instant, else 1..4) is equal. Never merges two periods whose snapped-end
+    or qtrs differ (e.g. an instant balance vs a full-year duration sharing an
+    end-date), and an out-of-[1,4] or degenerate span has None qtrs so it never
+    merges. A point lacking a `period_end` cannot match by date -> False.
+    """
+    end_a = point_a.get("period_end")
+    end_b = point_b.get("period_end")
+    if not end_a or not end_b:
+        return False
+
+    # EXACT: identical raw (start, end) pair, but only when BOTH starts are
+    # present — a None start carries no evidence the spans coincide, so it
+    # must go through the SNAP fallback instead of matching on (None, end).
+    start_a = point_a.get("period_start")
+    start_b = point_b.get("period_start")
+    if start_a is not None and start_b is not None and (start_a, end_a) == (start_b, end_b):
+        return True
+
+    # SNAP fallback: same month-end AND same qtrs.
+    snap_a = _snap_month_end(end_a)
+    snap_b = _snap_month_end(end_b)
+    if snap_a is None or snap_b is None or snap_a != snap_b:
+        return False
+    qtrs_a = _qtrs(point_a)
+    qtrs_b = _qtrs(point_b)
+    if qtrs_a is None or qtrs_b is None:
+        return False  # degenerate duration — refuse to merge rather than guess
+    return qtrs_a == qtrs_b
+
+
+def _period_sort_key(point: dict) -> tuple:
+    """Order key for observations: primary `period_end` (ISO strings sort
+    chronologically), then a `qtrs` tiebreak so that on a shared end-date an
+    instant (qtrs 0) orders before a longer duration. Missing end -> "" so a
+    dateless point sorts first without raising.
+    """
+    quarters = _qtrs(point)
+    return (point.get("period_end") or "", quarters if quarters is not None else 0)
+
+
 def append(point: dict) -> None:
     """Append one series-point to its file-per-series JSON, verbatim.
 
@@ -253,6 +379,202 @@ def query_latest(company: str, kpi_id: str, period: str):
     if not candidates:
         return None
     return max(candidates, key=lambda p: p.get("as_of", ""))
+
+
+def _normalized_value(point: dict):
+    """PRECISION-normalize a point's `value` against harmless representation
+    differences, WITHOUT applying the per-point scale: a numeric string is
+    stripped of thousands commas/whitespace and parsed to a number, so
+    "93,775,000,000" and 93775000000 compare equal; a non-numeric value is
+    compared as its stripped string. The scale is applied separately by
+    `_canonical_value` — this function is the format-only step, kept apart so the
+    two normalizations stay legible.
+    """
+    value = point.get("value")
+    if isinstance(value, str):
+        stripped = value.replace(",", "").strip()
+        try:
+            return float(stripped)
+        except ValueError:
+            return stripped
+    return value
+
+
+def _canonical_value(point: dict):
+    """The base-scale value used for disagreement comparison: the precision/
+    format-normalized `value` (`_normalized_value`) multiplied by the point's
+    EXPLICIT per-point `scale` when the value is numeric. The multiply goes
+    through `Decimal`, NOT binary float, and reduces to an int when the result is
+    integral (else float), so two representations of ONE real figure compare and
+    hash EQUAL in `history`'s distinct-value set (see the body comment).
+
+    `scale` is the multiplier from the stored/verbatim `value` to the base-scale
+    figure, set ONCE at the producer (Slice C, Task 9): the 8-K TABLE lane stores
+    the verbatim cell (value="301.63") with `scale=1e6`; the prose lane stores an
+    already-base value with `scale` HARDCODED 1; XBRL, if ever stored, is base
+    (scale 1). So every lane stores a base-comparable canonical and the read is a
+    trivial value diff — no magnitude word is parsed out of the free-text `unit`.
+
+    A point MISSING `scale` defaults to 1 (prose/XBRL are base; an old 8-K point
+    predating the explicit field is a known backfill limitation — the append
+    dedup key blocks backfill, recorded in the plan). A non-numeric value (an
+    unparseable string) carries no scale and is returned as its normalized string.
+    """
+    normalized = _normalized_value(point)
+    if isinstance(normalized, (int, float)):
+        # Multiply through Decimal, NOT binary float: `float("1.005") * 1e9` is
+        # 1004999999.9999999, so a 2-decimal 8-K cell (value="1.005", scale=1e9)
+        # would fabricate a disagreement against the SAME figure stored base
+        # (1005000000, scale=1). Decimal multiplies the printed decimal digits
+        # exactly. Mirrors kpi_prose_candidates._normalize_value, which routes its
+        # own magnitude scaling through Decimal for exactly this hazard. Reduce to
+        # an int when the result is integral (else float) — its own int/float
+        # convention — so two representations of one real figure compare and hash
+        # EQUAL in history's distinct-value set (12345e6 == 12345000e3; an int and
+        # a float of the same integral value are `==` and hash alike in Python).
+        scaled = Decimal(str(normalized)) * Decimal(str(point.get("scale", 1)))
+        return int(scaled) if scaled == scaled.to_integral_value() else float(scaled)
+    return normalized
+
+
+def history(company: str, kpi_id: str, period_match: dict) -> dict:
+    """Every stored observation of ONE fiscal period across filings, ordered by
+    `as_of`, with a computed `disagreement` flag — the payoff read of this slice
+    (brief §Problem, the J&J shape: FY2021 revenue 93,775,000,000 as first
+    reported, re-presented as 78,740,000,000 two years later; a recorded figure
+    silently stops being what the company says).
+
+    `period_match` is a REPRESENTATIVE POINT carrying the raw
+    `period_start`/`period_end`/`period_kind` identity fields — chosen over
+    passing the three values loose because `same_period` is already defined over
+    two point dicts, so the probe plugs straight in with zero adaptation (the
+    caller typically already holds such a point from `list_series`/`query_latest`
+    to use as the probe). Matching is by `same_period` over the raw date pair,
+    NEVER exact string equality on the old `period` label — two vintages of one
+    period can carry different labels ("FY2021" vs "2021 comparative"); grouping
+    them is the whole point.
+
+    Observations are ordered by `as_of` (ISO strings compare chronologically,
+    consistent with `query_latest`'s max-on-as_of). EVERY matching observation
+    is retained and returned — a superseded value is a valid vintage, never
+    marked "wrong" (brief §Constraints 5: J&J spinoff, IFRS 17, 東芝 are three
+    causes with one shape; calling the old value an error is a category
+    mistake). The flag says "these disagree", not "this one is wrong".
+
+    `disagreement` is a VALUE DIFF across the returned observations, never an
+    event/announcement lookup (brief §Constraints 3: TW 施行細則 §6 permits
+    sub-threshold corrections with no restatement event, so an event
+    subscription misses them by construction): True iff >=2 observations share
+    the period AND differ in their CANONICAL value. `disagreement=False` means
+    "verified equal after canonicalization", and it may only ever say that for
+    observations we actually compared.
+
+    EXPLICIT-SCALE canonicalization: a stored `value` is NOT always base-scale,
+    so each value is compared as its CANONICAL `_normalized_value(value) * scale`
+    (`_canonical_value`), where `scale` is an EXPLICIT per-point field set once at
+    the producer (Slice C, Task 9) — NOT inferred here by parsing a magnitude word
+    out of the free-text `unit`. The 8-K TABLE lane commits the verbatim cell
+    (value="301.63") with `scale=1e6` computed once from the confirmed unit; the
+    prose lane commits an already-base value (`kpi_prose_candidates._normalize_value`
+    folds the magnitude INTO `value`) with `scale` HARDCODED 1; XBRL, if ever
+    stored, is base (scale 1). So the SAME figure stored as (12345, scale=1e6) and
+    (12345000, scale=1e3) canonicalizes equal, while a genuine restatement
+    (93,775,000,000 vs 78,740,000,000, both base) stays distinct. Because prose
+    scale is hardcoded 1, a prose `unit` of "billion" is inert and can no longer
+    double-scale an already-base value — the structural guarantee that RETIRED the
+    former read-time scale inference and its write-side magnitude-word guard. The
+    `unit` label drives no computation here; it is retained on each observation
+    for display only.
+
+    Read-only, never-raise on an absent OR corrupt series (matching
+    `list_series`): an absent series file, or one that fails to load
+    (`json.JSONDecodeError`/`OSError` — an interrupted external edit, a future
+    co-writer bug), yields an empty observation list rather than taking down the
+    read.
+    """
+    path = _series_path(company, kpi_id)
+    try:
+        points = _load_series(path)["points"] if path.exists() else []
+    except (json.JSONDecodeError, OSError):
+        points = []  # corrupt/unreadable series file — degrade like list_series
+
+    observations = sorted(
+        (p for p in points if same_period(p, period_match)),
+        key=lambda p: p.get("as_of", ""),
+    )
+
+    distinct_values = {_canonical_value(p) for p in observations}
+    disagreement = len(observations) >= 2 and len(distinct_values) >= 2
+
+    return {
+        "company": company,
+        "kpi_id": kpi_id,
+        "observations": observations,
+        "disagreement": disagreement,
+    }
+
+
+def list_series() -> list:
+    """Enumerate the `(company, kpi_id)` pairs held in the store, recovered
+    from each series file's stored point CONTENT.
+
+    The filename stem embeds a one-way SHA-1 digest of the raw
+    (company, kpi_id) pair (`_series_key`), so the raw identity CANNOT be
+    reversed out of the path — it is read back from each point's own
+    `company`/`kpi_id` fields (stored verbatim by `append`). One series file
+    is one pair, but its points are still iterated (rather than trusting the
+    first) so a mixed/legacy file surfaces every identity it holds; the result
+    is de-duplicated and sorted for a deterministic, filesystem-order-
+    independent return.
+
+    Read-only, and never-raise on an absent store: if `resolve_store_dir()`
+    does not exist there are no series, so it returns `[]` — matching
+    `_matching_points`/`query_latest`. No lock is taken: enumeration only
+    reads, and a concurrent `append`'s atomic tmp+rename means each file is
+    seen either fully pre- or post-write, never half-written.
+
+    Degrades PER-FILE, not per-store: this is a long-lived multi-year local
+    store, so a single unreadable / malformed / non-dict series file (an
+    interrupted external edit, a future co-writer bug) must not take down
+    enumeration for every OTHER series. Such a file is skipped and the scan
+    continues — a partial-but-truthful listing beats an all-or-nothing raise.
+    """
+    store_dir = resolve_store_dir()
+    if not store_dir.exists():
+        return []
+    pairs = set()
+    for path in store_dir.glob("*.json"):
+        try:
+            envelope = _load_series(path)
+            points = envelope.get("points")
+        except (json.JSONDecodeError, OSError):
+            continue  # skip a corrupt/unreadable file; keep the rest visible
+        if not isinstance(points, list):
+            continue
+        for point in points:
+            if not isinstance(point, dict):
+                continue
+            company = point.get("company")
+            kpi_id = point.get("kpi_id")
+            if company is not None and kpi_id is not None:
+                pairs.add((company, kpi_id))
+    return sorted(pairs)
+
+
+def list_companies() -> list:
+    """The distinct companies held in the store, sorted — a thin projection of
+    `list_series`.
+    """
+    return sorted({company for company, _kpi_id in list_series()})
+
+
+def list_kpis(company: str) -> list:
+    """The distinct kpi_ids held for one company, sorted — a thin projection of
+    `list_series`.
+    """
+    return sorted(
+        kpi_id for company_key, kpi_id in list_series() if company_key == company
+    )
 
 
 def _cli_append(args: argparse.Namespace) -> int:

@@ -74,6 +74,43 @@ _UNIT_CAPTION_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Whole-word magnitude multipliers for the EXPLICIT per-point `scale` (Slice C,
+# Task 9). The TABLE lane stores the verbatim printed cell as `value` (the
+# anti-fabrication anchor — NEVER re-parsed), so the magnitude the filing declares
+# via the confirmed `unit` ("millions") is folded ONCE at commit into a SEPARATE
+# explicit `scale`: value="301.63" + unit="millions" -> scale=1e6, so history
+# compares a base-comparable 301,630,000 with no read-time parsing of the unit
+# string. Matched as WHOLE WORDS (`\b` on both sides, optional plural `s`),
+# mirroring exhibit_prose `_NUMBER_RE`'s billionaire-not-billion discipline: a unit
+# that merely CONTAINS a magnitude substring ("billionaire") must not scale. A
+# dimensional unit ("$/share", "USD", "people") carries no magnitude word -> 1.
+_UNIT_SCALE_MULTIPLIERS = (
+    (re.compile(r"\bthousands?\b", re.IGNORECASE), 10 ** 3),
+    (re.compile(r"\bmillions?\b", re.IGNORECASE), 10 ** 6),
+    (re.compile(r"\bbillions?\b", re.IGNORECASE), 10 ** 9),
+    (re.compile(r"\btrillions?\b", re.IGNORECASE), 10 ** 12),
+)
+
+
+def _scale_from_unit(unit) -> int:
+    """The explicit `scale` implied by a confirmed `unit`'s whole-word magnitude
+    word (thousand->1e3, million->1e6, billion->1e9, trillion->1e12), or 1 when
+    the unit carries none (a dimensional label like "$/share"/"USD", or None).
+
+    Computed ONCE at commit and stored explicit so history compares a
+    base-comparable `value * scale`; the verbatim `value` is NEVER re-parsed
+    (anti-fabrication anchor). Word boundaries mirror exhibit_prose `_NUMBER_RE`'s
+    billionaire-not-billion discipline, so a unit that only CONTAINS a magnitude
+    substring does not scale.
+    """
+    if not unit:
+        return 1
+    text = str(unit)
+    for pattern, factor in _UNIT_SCALE_MULTIPLIERS:
+        if pattern.search(text):
+            return factor
+    return 1
+
 
 def run_exhibit_tables(html_path: str) -> list[dict]:
     """Subprocess data-markets `exhibit_tables.py` on `html_path`, returning its
@@ -268,6 +305,12 @@ def _candidate_to_point(candidate: dict, company: str) -> dict:
     `as_of` is accession-derived; `company` is supplied by the caller (one
     filing = one company), mirroring kpi_xbrl.facts_to_points' explicit
     `company` parameter.
+
+    Slice C, Task 9: the confirmed `unit`'s magnitude word is folded ONCE here
+    into an EXPLICIT per-point `scale` (`_scale_from_unit`: "millions" -> 1e6),
+    so history compares a base-comparable `value * scale`. The verbatim `value`
+    still passes through UNCHANGED — the scale rides ALONGSIDE it and is never
+    re-parsed at read time.
     """
     table_id = candidate.get("source_table_id")
     # The mechanical producer emits `source_table_id` as an integer table INDEX
@@ -286,6 +329,7 @@ def _candidate_to_point(candidate: dict, company: str) -> dict:
         "period": candidate["period"],
         "unit": candidate["unit"],
         "value": candidate["value"],
+        "scale": _scale_from_unit(candidate.get("unit")),
         "as_of": _as_of_from_accession(candidate.get("source_accession")),
         "source_accession": candidate.get("source_accession"),
         "source_table_id": table_id,

@@ -38,6 +38,7 @@ Anti-fabrication substring gate (the load-bearing trust rail):
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import subprocess
@@ -567,6 +568,12 @@ def commit(candidates: list[dict], confirmed: bool = False) -> list[dict]:
     check gating commit. A fixed KPI taxonomy is a deferred hardening, not a
     commit precondition.
 
+    No magnitude-word `unit` guard: a prose point commits with `scale` HARDCODED 1
+    at `_prose_candidate_to_point` (its `value` is already base-scale — Slice C,
+    Task 9), so a confirmed unit="billion" is inert and cannot double-scale at the
+    store. The former write-side magnitude-word guard is RETIRED because the
+    double-scale trap is now structurally impossible, not merely rejected.
+
     Scope: THIS is the GATE only — it produces the accepted-for-commit set. The
     ACTUAL append into kpi_store (with the prose anchor + attribution provenance
     shape) is Task 7, which will consume this accepted set; kpi_store is NOT
@@ -611,7 +618,8 @@ def _bounded_quote(quote: str, matched_token: str) -> str:
 
 
 def _prose_candidate_to_point(candidate: dict, company: str,
-                              confirmer: str, confirmed_at: str) -> dict:
+                              confirmer: str, confirmed_at: str,
+                              surface_version: str | None = None) -> dict:
     """Map a confirmed prose candidate to a kpi_store-shaped point.
 
     Mirrors Route B's kpi_8k_candidates._candidate_to_point: values + source
@@ -635,6 +643,14 @@ def _prose_candidate_to_point(candidate: dict, company: str,
     - `verbatim_quote` + filing attribution (`source_document`, `filing_date`)
       + confirmer identity (`confirmer`, `confirmed_at`) ride along so a number
       surfaced later stays citable to its source bytes and its ratifier.
+    - `scale` (Slice C, Task 9) is HARDCODED 1, unconditionally. The prose
+      `value` is ALREADY base-scale — `_normalize_value` folds any magnitude word
+      INTO `value` at produce time ("3.56 billion" -> 3560000000) — and the prose
+      `unit` is a dimensional label that must NEVER drive scale. History compares
+      `_normalized_value(value) * scale`, so a hardcoded 1 makes a prose
+      unit="billion" inert: it can no longer double-scale an already-base value.
+      This is the structural guarantee that RETIRED the former read-time scale
+      inference and its write-side magnitude-word `unit` guard.
     - `value_qualifier` (Part 2) rides along too, so a BOUND stated in the prose
       ("up to 45,000 deliveries") stays visible on the DURABLE point instead of
       being flattened into a bare equality at store time. It is NOT one of the
@@ -644,14 +660,39 @@ def _prose_candidate_to_point(candidate: dict, company: str,
       required only for `source_table_id`/`source_cell_ref`, which the store
       guards; inventing a truthy placeholder here would assert a bound the
       filing never stated.)
+    - `period_start`/`period_end`/`period_kind` (Slice C) carry the raw period
+      IDENTITY — the (start, end) context pair that recognizes "the same period"
+      across filings — alongside the display `period` LABEL, which stays a
+      first-class field. They are pure pass-throughs (`.get`, defaulting to None
+      like the optional attributions above): this assembler neither derives nor
+      validates the calendar (`period_kind` is "duration" when both dates are
+      present, "instant" when only the end is — computed UPSTREAM and carried in,
+      per the brief's REUSE of `_derive_fiscal_label`). A prose candidate with no
+      dates yet commits cleanly with all three None; none is a store-required
+      provenance field, so a None cannot trip the falsy-provenance guard.
+    - `integrity` (Slice C, Task 5) is a WRITE-TIME anti-drift stamp:
+      `{"span_sha256": sha256(matched_token bytes), "surface_version": <value>}`.
+      The hash is over the ANCHORED TOKEN — the load-bearing datum — NOT the
+      bounded `verbatim_quote` (which a downstream layer may widen/trim, per
+      `_bounded_quote`), so the stamp pins exactly the bytes the offsets point at.
+      `surface_version` is the flattener/surface version that PRODUCED the offsets,
+      threaded IN as a parameter (defaulting to None) rather than in-process
+      imported from data-markets — the analysis→data-markets boundary is
+      subprocess-only (see the module docstring). It records the two facts a
+      read-time re-verifier (Part 3, out of scope here) needs: which token was
+      committed and which surface version its offsets are relative to. `integrity`
+      is NOT a store-required provenance field, so a None `surface_version` cannot
+      trip the falsy-provenance guard — like the optional pass-throughs above.
     """
     start, end = candidate["char_offset_span"]
+    token = candidate["matched_token"]
     return {
         "company": company,
         "kpi_id": candidate["kpi_id"],
         "period": candidate["period"],
         "unit": candidate["unit"],
         "value": candidate["value"],
+        "scale": 1,
         "as_of": candidate["as_of"],
         "source_kind": "prose",
         "source_accession": candidate["source_accession"],
@@ -661,6 +702,13 @@ def _prose_candidate_to_point(candidate: dict, company: str,
             candidate["verbatim_quote"], candidate["matched_token"]
         ),
         "value_qualifier": candidate.get("value_qualifier"),
+        "period_start": candidate.get("period_start"),
+        "period_end": candidate.get("period_end"),
+        "period_kind": candidate.get("period_kind"),
+        "integrity": {
+            "span_sha256": hashlib.sha256(token.encode("utf-8")).hexdigest(),
+            "surface_version": surface_version,
+        },
         "source_document": candidate.get("source_document"),
         "filing_date": candidate.get("filing_date"),
         "confirmer": confirmer,
@@ -669,7 +717,8 @@ def _prose_candidate_to_point(candidate: dict, company: str,
 
 
 def commit_to_store(candidates: list[dict], company: str, confirmer: str,
-                    confirmed_at: str, confirmed: bool = False) -> dict:
+                    confirmed_at: str, confirmed: bool = False,
+                    surface_version: str | None = None) -> dict:
     """Append human-confirmed prose candidates into the EXISTING tier-① store.
 
     Closes the walking skeleton: mechanical produce (`propose`) -> LLM propose
@@ -698,7 +747,10 @@ def commit_to_store(candidates: list[dict], company: str, confirmer: str,
     committed = 0
     for candidate in accepted:
         kpi_store.append(
-            _prose_candidate_to_point(candidate, company, confirmer, confirmed_at)
+            _prose_candidate_to_point(
+                candidate, company, confirmer, confirmed_at,
+                surface_version=surface_version,
+            )
         )
         committed += 1
 

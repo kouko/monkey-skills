@@ -13,6 +13,7 @@ there is no id in the living-spec namespace to bind to.
 """
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import sys
 from pathlib import Path
@@ -1184,3 +1185,198 @@ def test_hard_wrapped_source_still_commits_the_scaled_value():
     # token spans real adjacent prose, so it is a literal substring of it.
     for candidate in candidates:
         assert module.passes_substring_gate(candidate, canonical_text)
+
+
+def test_prose_point_carries_period_identity_fields():
+    # Slice C, Task 2: period IDENTITY is the raw (period_start, period_end,
+    # period_kind) context pair — the thing that recognizes "the same period"
+    # across filings — while the human-readable `period` stays a first-class
+    # display LABEL. This task adds the identity FIELDS + pass-through onto the
+    # committed point; it does NOT derive or validate them (derivation is
+    # upstream, reused from _derive_fiscal_label per the brief), and it does NOT
+    # change the dedup key (that is Task 3). So the point must carry whatever the
+    # candidate carries, verbatim, and default each to None when absent — exactly
+    # like the optional source_document/filing_date/value_qualifier pass-throughs
+    # already do — without crashing on a prose candidate that has no dates yet.
+    #
+    # No `@req` tag: this dispatch's plan (docs/loom/plans/2026-07-22-kpi-
+    # observation-history.md) binds tasks by "Brief item covered", not a
+    # registered loom-spec REQ-id (same convention as the sibling tests above).
+    module = _load_module()
+
+    base = {
+        "matched_token": "13,000",
+        "verbatim_quote": "we hired 13,000 people",
+        "value": 13000,
+        "char_offset_span": [9, 15],
+        "kpi_id": "headcount",
+        "unit": "count",
+        "period": "FY2024",
+        "source_accession": "0001318605-24-000123",
+        "as_of": "2024-10-31",
+    }
+
+    with_dates = dict(
+        base,
+        period_start="2024-01-01",
+        period_end="2024-12-31",
+        period_kind="duration",
+    )
+    point = module._prose_candidate_to_point(
+        with_dates, company="ACME",
+        confirmer="kouko", confirmed_at="2026-07-20T10:00:00Z",
+    )
+    assert point["period_start"] == "2024-01-01"
+    assert point["period_end"] == "2024-12-31"
+    assert point["period_kind"] == "duration"
+    # The identity fields are ADDITIVE — the display label is untouched.
+    assert point["period"] == "FY2024", "the display label rides through unchanged"
+
+    # A candidate with no period dates yet (the current prose-lane shape) commits
+    # cleanly with all three identity fields defaulting to None — no crash, no
+    # fabricated dates — and the label is still whatever the candidate carried.
+    without_dates = module._prose_candidate_to_point(
+        base, company="ACME",
+        confirmer="kouko", confirmed_at="2026-07-20T10:00:00Z",
+    )
+    assert without_dates["period_start"] is None
+    assert without_dates["period_end"] is None
+    assert without_dates["period_kind"] is None
+    assert without_dates["period"] == "FY2024", "label unchanged when identity absent"
+
+
+def test_prose_point_carries_integrity_stamp(tmp_path, monkeypatch):
+    # Slice C, Task 5: a stored char offset is only meaningful relative to the
+    # surface version that produced it, and the ANCHORED TOKEN is the load-bearing
+    # datum. This task writes a write-time integrity stamp onto the committed
+    # point: integrity = {span_sha256: sha256(matched_token bytes),
+    # surface_version: <threaded value>}. The hash is over the TOKEN, not the
+    # bounded verbatim_quote — pinned here so a future refactor can't silently
+    # switch to hashing the (wider, mutable) quote. surface_version is threaded as
+    # a PARAMETER through commit_to_store -> _prose_candidate_to_point, defaulting
+    # to None so non-prose / unaware callers are unaffected. Write-time only; no
+    # read-time re-verification (that is Part 3).
+    #
+    # No `@req` tag: this dispatch's plan (docs/loom/plans/2026-07-22-kpi-
+    # observation-history.md) binds tasks by "Brief item covered", not a
+    # registered loom-spec REQ-id (same convention as the sibling tests above).
+    module = _load_module()
+
+    # A candidate whose bounded quote DIFFERS from the matched token, so the two
+    # hashes are distinguishable and we can assert the stamp is the token's.
+    token = "13,000"
+    quote = "we hired 13,000 people"
+    assert quote != token, "the quote must differ from the token for this test"
+    candidate = {
+        "matched_token": token,
+        "verbatim_quote": quote,
+        "value": 13000,
+        "char_offset_span": [9, 15],
+        "kpi_id": "headcount",
+        "unit": "count",
+        "period": "FY2024",
+        "source_accession": "0001318605-24-000123",
+        "as_of": "2024-10-31",
+    }
+
+    surface_version = "prose-surface-2026.07"
+    point = module._prose_candidate_to_point(
+        candidate, company="ACME",
+        confirmer="kouko", confirmed_at="2026-07-20T10:00:00Z",
+        surface_version=surface_version,
+    )
+
+    token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    quote_hash = hashlib.sha256(quote.encode("utf-8")).hexdigest()
+
+    assert point["integrity"]["span_sha256"] == token_hash, (
+        "span_sha256 is the sha256 of the ANCHORED TOKEN's bytes"
+    )
+    # The hash is the TOKEN's, NOT the bounded quote's — a future refactor that
+    # hashed the quote instead would flip this assertion.
+    assert point["integrity"]["span_sha256"] != quote_hash, (
+        "the stamp must hash the token, not the wider verbatim_quote"
+    )
+    assert point["integrity"]["surface_version"] == surface_version, (
+        "surface_version rides through from the threaded parameter"
+    )
+
+    # Non-prose / unaware callers are unaffected: surface_version defaults to None
+    # (integrity still stamps the token hash; a None version cannot trip the
+    # store's falsy-provenance guard — integrity is not a required provenance
+    # field).
+    default_point = module._prose_candidate_to_point(
+        candidate, company="ACME",
+        confirmer="kouko", confirmed_at="2026-07-20T10:00:00Z",
+    )
+    assert default_point["integrity"]["span_sha256"] == token_hash
+    assert default_point["integrity"]["surface_version"] is None
+
+    # The parameter threads end-to-end through commit_to_store into the durable
+    # store — the "committed point carries the stamp" half of the acceptance.
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+    scripts_dir = str(_SCRIPT.parent)
+    if scripts_dir not in sys.path:
+        sys.path.insert(0, scripts_dir)
+    sys.modules.pop("kpi_store", None)
+    import kpi_store  # noqa: E402
+
+    stored = dict(
+        candidate,
+        kpi_id="employees_full_time",
+        period="2024-12-31",
+        source_kind="prose",
+    )
+    summary = module.commit_to_store(
+        [stored], company="ACME",
+        confirmer="kouko", confirmed_at="2026-07-20T10:00:00Z",
+        confirmed=True, surface_version=surface_version,
+    )
+    assert summary["committed"] == 1
+    from_store = kpi_store.query_latest("ACME", "employees_full_time", "2024-12-31")
+    assert from_store is not None
+    assert from_store["integrity"]["span_sha256"] == token_hash
+    assert from_store["integrity"]["surface_version"] == surface_version
+
+
+def test_prose_point_scale_is_hardcoded_one_regardless_of_unit():
+    """The prose lane commits `scale` HARDCODED 1, unconditionally — even when the
+    `unit` is a magnitude WORD like "billion" (Slice C, Task 9). The prose `value`
+    is ALREADY base-scale (`_normalize_value` folds "3.56 billion" -> 3560000000
+    at produce time), so a magnitude-word `unit` must NOT drive scale; hardcoding
+    1 makes it inert and structurally forecloses the double-scale that retired the
+    T8 write-side `unit` guard. This asserts against the REAL producer
+    `_prose_candidate_to_point` (not a hand-built dict), the only proof the
+    hardcode lives in production code rather than in a test's fixture.
+
+    No `@req` tag: same convention as the sibling tests (plan binds by "Brief
+    item covered", not a registered loom-spec REQ-id).
+    """
+    module = _load_module()
+
+    candidate = {
+        "matched_token": "3.56 billion",
+        "verbatim_quote": "reached 3.56 billion daily actives",
+        "value": 3560000000,          # already base-scale, folded by _normalize_value
+        "value_qualifier": None,
+        "char_offset_span": [8, 20],
+        "source_kind": "prose",
+        "kpi_id": "daily_active_people",
+        "unit": "billion",            # a magnitude WORD that must NOT drive scale
+        "period": "2024-12-31",
+        "needs_semantic": False,
+        "source_accession": "0001326801-25-000004",
+        "source_document": "8-K/EX-99.1",
+        "filing_date": "2025-01-29",
+        "as_of": "2025-01-29",
+    }
+    point = module._prose_candidate_to_point(
+        candidate, company="META",
+        confirmer="kouko", confirmed_at="2026-07-20T10:00:00Z",
+    )
+    assert point["scale"] == 1, (
+        "prose scale is hardcoded 1 — a unit='billion' must not scale an "
+        "already-base value; the producer, not a fixture, must guarantee it"
+    )
+    assert point["value"] == 3560000000, "the derived base value is unchanged"
+    assert point["unit"] == "billion", "the magnitude-word label rides along inert"

@@ -54,5 +54,25 @@ being believed.
    there the assertion is unrelated to the claim, here the assertion is
    *true but empty*.
 
+**The class recurs beyond string anchors — binary float is the same shape.**
+The follow-on slice (branch feat-kpi-obs-history, 2026-07-22) compared KPI
+values across filings by `value × scale`. Written in binary float,
+`1.005 × 1e9 == 1004999999.9999999`, so two records of the *same* figure
+(one lane storing `1005000000`, another `1.005` at scale `1e9`) compared
+UNEQUAL — a fabricated "restatement" flag on data that never changed,
+hitting 1.4–5.1% of realistic two-decimal cells. The multiply "cannot be
+wrong" arithmetically, yet it manufactured the exact false signal the
+feature existed to avoid. The same module family had **already** closed
+this once (`_normalize_value` uses `Decimal` with a docstring naming the
+hazard) — the defect reopened at *compare* time after being fixed at
+*fold* time. And only an adversarial decimal exposes it: `301.63 × 1e6` is
+float-exact and passes while the code is wrong; `1.005 × 1e9` is not. So:
+**any cross-layer arithmetic on money/count values goes through `Decimal`,
+never binary float** — and a test value must be chosen to be
+float-*hostile* (a non-terminating binary fraction), or a green suite
+proves nothing.
+
 Related: [[changing-what-a-token-is-defeats-downstream-guards]] (the
-mechanism by which most of these six were introduced).
+mechanism by which most of the six string-anchor instances were
+introduced); [[retiring-a-mechanism-must-move-its-tests]] (removing the
+read-time scaler dropped its adversarial word-boundary test).

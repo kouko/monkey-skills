@@ -64,6 +64,28 @@ import sys
 from html.parser import HTMLParser
 from pathlib import Path
 
+# Declared version of the NORMALIZATION CONTRACT that `prose_surface` applies —
+# NOT the code version of this file. A char offset stored downstream as
+# provenance (``text[start:end] == token``) is only meaningful RELATIVE to the
+# exact surface `prose_surface` produced, and that surface is defined by the
+# normalization policy in the module docstring (table exclusion, block-boundary
+# breaks, newline fold, digit/quote folds, nbsp/thin-space grouping). Stamping
+# this version onto a stored span records WHICH contract produced it, so a later
+# consumer can tell whether a re-flatten of the same bytes would still agree.
+#
+# BUMP RULE (load-bearing — this is why the constant exists): increment
+# SURFACE_VERSION whenever a change could make `prose_surface` emit a DIFFERENT
+# surface for the SAME input bytes — i.e. any change to the normalization folds,
+# the block/pre tag sets, or the whitespace handling. The Part-2 folds (the
+# newline fold, the digit/quote/separator folds) were exactly such a change.
+# A change that cannot alter the output for any input (e.g. a comment edit, a
+# pure refactor with identical output) does NOT bump. The dotted `"N.0"` shape
+# mirrors the plugin's other version constants (kpi_store.STORE_SCHEMA_VERSION,
+# cache_util.CACHE_SCHEMA_VERSION, review_queue.QUEUE_SCHEMA_VERSION, …) so a
+# reader meets one shape for "declared version" across the toolkit; the minor
+# slot is reserved for a future backward-compatible surface note.
+SURFACE_VERSION = "1.0"
+
 # Tags whose boundaries introduce a semantic break in the rendered prose. Without
 # a separator here, adjacent block text would concatenate into a single token
 # (e.g. "</p><p>" merging two sentences), corrupting the substring surface.

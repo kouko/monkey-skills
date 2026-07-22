@@ -110,6 +110,13 @@ def test_unconfirmed_candidates_never_land(tmp_path, monkeypatch):
     assert point["kpi_id"] == "paid_memberships"
     assert point["unit"] == "millions"
     assert point["period"] == "Q4-2024"
+    # Slice C, Task 9: the 8-K TABLE producer folds the magnitude into an
+    # EXPLICIT per-point `scale` (unit="millions" -> 1e6), computed ONCE at
+    # commit, so history compares a base-comparable value=301.63 x scale=1e6 =
+    # 301,630,000. The verbatim cell `value` stays "301.63" (anti-fabrication
+    # anchor, asserted above) — the scale rides alongside, never re-parsed at
+    # read time.
+    assert point["scale"] == 10 ** 6
     # Full provenance flows to the store per its required-field contract: the
     # accession + cell ref pass through verbatim; the integer table INDEX 0 is
     # rendered as a truthy `table:0` token (a bare 0 is falsy and the store's
@@ -187,3 +194,36 @@ def test_missing_unit_refused(tmp_path):
     assert store_files == [], (
         f"a refused commit must write nothing to the store, found {store_files}"
     )
+
+
+def test_scale_from_unit_whole_word_magnitude_discipline():
+    """Task 9 moved the read-side magnitude scaling to THIS producer's
+    `_scale_from_unit`, but the old tests that pinned the whole-word
+    "millionaire != million" discipline were deleted with the retired read-side
+    scaler and NOT replaced (spec-reviewer Finding 3). Re-pin the `\\b` boundary
+    at its new home: a magnitude WORD scales; a dimensional or magnitude-free
+    label is 1; a unit that merely CONTAINS a magnitude substring ("billionaire")
+    must NOT scale — the double-scale hazard those word boundaries exist to stop.
+
+    No `@req` tag: same convention as the sibling tests (plan binds by "Brief
+    item covered", not a registered loom-spec REQ-id).
+    """
+    module = _load_module()
+
+    # Whole magnitude words scale to their power of ten.
+    assert module._scale_from_unit("thousands") == 10 ** 3
+    assert module._scale_from_unit("millions") == 10 ** 6
+    assert module._scale_from_unit("billions") == 10 ** 9
+    assert module._scale_from_unit("trillions") == 10 ** 12
+    # A magnitude word embedded in a compound dimensional label still scales.
+    assert module._scale_from_unit("USD millions") == 10 ** 6
+
+    # Dimensional / magnitude-free labels carry no magnitude word -> 1.
+    assert module._scale_from_unit("$/share") == 1
+    assert module._scale_from_unit("USD") == 1
+    assert module._scale_from_unit(None) == 1
+
+    # Adversarial substrings: a unit CONTAINING a magnitude word but not AS a
+    # whole word must not scale (the \\b discipline; else "billionaire" -> 1e9).
+    assert module._scale_from_unit("millionaire") == 1
+    assert module._scale_from_unit("billionaire households") == 1
