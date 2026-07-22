@@ -165,6 +165,46 @@ def test_parse_scale_driven_not_decimals_driven_when_they_diverge():
     )
 
 
+def test_parse_captures_tuple_attributes_for_npl_facts():
+    # -fh NPL/coverage note disambiguation depends on the tupleRef/tupleID
+    # XML attributes: the 2882 fixture carries 7-9 same-context CoverageRatio
+    # facts that differ ONLY by tupleRef (SCF/UCF/RMCF/... = loan category).
+    # A concept-keyed extraction that drops these attrs cannot tell which
+    # loan category a fact belongs to. This locks the attrs onto the record.
+    mod = _load_parser()
+    # Decode via the producer path (twse_ixbrl_fetch.py big5hkscs/replace),
+    # matching test_twse_ixbrl_fixtures.py — a strict big5 decode raises on
+    # the embedded UTF-8 CSS bytes in these real fh bodies.
+    document = (FIXTURES / "twse_ixbrl_2882_2026Q1_C.html").read_bytes().decode(
+        "big5hkscs", errors="replace"
+    )
+    facts = mod.parse_ixbrl_facts(document)
+
+    # Fact-dict keys follow the module's snake_case convention (contextRef
+    # -> context_ref); so tupleRef -> tuple_ref, tupleID -> tuple_id.
+    npl_tuple_facts = [
+        f
+        for f in facts
+        if ("CoverageRatio" in (f["concept"] or "") or "NonPerforming" in (f["concept"] or ""))
+        and (f["tuple_ref"] or f["tuple_id"])
+    ]
+    assert npl_tuple_facts, (
+        "at least one NPL-related fact must carry a non-empty tuple_ref/"
+        "tuple_id — these disambiguate 7-9 same-context loan-category "
+        "candidates downstream"
+    )
+
+    # A non-tuple fact must expose the keys as present-but-None (absent
+    # convention: key always present, value None) — never missing.
+    non_tuple = [
+        f for f in facts if not f["tuple_ref"] and not f["tuple_id"]
+    ]
+    assert non_tuple, "fixture must contain non-tuple facts too"
+    sample = non_tuple[0]
+    assert sample["tuple_ref"] is None
+    assert sample["tuple_id"] is None
+
+
 def test_parse_nonnumeric_exact_text_value():
     # End-to-end coverage of text-fact extraction beyond the sign case:
     # tifrs-notes:CompanyID is a single, stable nonNumeric fact in the

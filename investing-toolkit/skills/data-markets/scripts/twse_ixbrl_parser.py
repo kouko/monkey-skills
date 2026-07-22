@@ -16,6 +16,13 @@ Each fact record:
     {
         "concept": str,       # "ns:localname", e.g. "ifrs-full:Cash..."
         "context_ref": str,
+        "tuple_ref": str | None,    # raw `tupleRef` attribute — links a
+                                     # fact to its XBRL tuple instance;
+                                     # None when absent. Disambiguates
+                                     # same-context note facts (e.g. -fh
+                                     # NPL/coverage loan categories).
+        "tuple_id": str | None,     # raw `tupleID` attribute (the tuple
+                                     # instance's own id); None when absent.
         "raw_value": float | str | None,  # numeric facts: fully scaled
                                      # value (see Scaling below); text
                                      # facts: the raw text, stripped;
@@ -168,6 +175,8 @@ def parse_ixbrl_facts(document: str) -> list[dict[str, Any]]:
         fact: dict[str, Any] = {
             "concept": attrs.get("name"),
             "context_ref": context_ref,
+            "tuple_ref": attrs.get("tupleRef"),
+            "tuple_id": attrs.get("tupleID"),
             "decimals": attrs.get("decimals"),
             "unit": attrs.get("unitRef"),
             "period": ctx.get("period"),
