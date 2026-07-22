@@ -33,6 +33,7 @@ import argparse
 import calendar
 import hashlib
 import json
+import re
 import sys
 from datetime import date
 from pathlib import Path
@@ -378,6 +379,173 @@ def query_latest(company: str, kpi_id: str, period: str):
     if not candidates:
         return None
     return max(candidates, key=lambda p: p.get("as_of", ""))
+
+
+def _normalized_value(point: dict):
+    """PRECISION-normalize a point's `value` against harmless representation
+    differences, WITHOUT applying any unit scale: a numeric string is stripped of
+    thousands commas/whitespace and parsed to a number, so "93,775,000,000" and
+    93775000000 compare equal; a non-numeric value is compared as its stripped
+    string. Scale is applied separately by `_scaled_value` — this function is the
+    format-only step, kept apart so the two normalizations stay legible.
+    """
+    value = point.get("value")
+    if isinstance(value, str):
+        stripped = value.replace(",", "").strip()
+        try:
+            return float(stripped)
+        except ValueError:
+            return stripped
+    return value
+
+
+# Scale-word multipliers, matched as WHOLE WORDS against a point's `unit`. A
+# stored value is NOT always base-scale: the 8-K TABLE lane commits the RAW,
+# unscaled cell value paired with a scale-word `unit` (see
+# kpi_8k_candidates commit — value="301.63", unit="millions"; the `(in millions)`
+# caption is surfaced only as an advisory unit_hint and the SKILL contract
+# forbids altering `value`). So the same figure can be stored as
+# (12345, "millions") in one filing and (12345000, "thousands") in another;
+# comparing the raw values would manufacture a false disagreement. Scaling the
+# value by the unit's magnitude word before comparing reconciles the two.
+#
+# The magnitude word is matched with word boundaries on BOTH sides plus an
+# optional plural `s` (`\bmillions?\b`), so "millions"/"million" both scale while
+# a magnitude word that is only a SUBSTRING of a larger word does NOT —
+# "billionaire" must not scale as "billion", "millionaire households" must not
+# scale as "million" (the Part-2 word-boundary precedent lives in the prose
+# locator: exhibit_prose.py's `\b`-guarded magnitude regex + its
+# test_exhibit_prose.py boundary tests). A dimensional part around the scale word ("USD millions",
+# "$ in millions") is ignored — the multiplier comes from the scale word alone.
+_SCALE_WORD_MULTIPLIERS = (
+    (re.compile(r"\bthousands?\b", re.IGNORECASE), 10 ** 3),
+    (re.compile(r"\bmillions?\b", re.IGNORECASE), 10 ** 6),
+    (re.compile(r"\bbillions?\b", re.IGNORECASE), 10 ** 9),
+    (re.compile(r"\btrillions?\b", re.IGNORECASE), 10 ** 12),
+)
+
+
+def _scale_multiplier(unit) -> int:
+    """The scale multiplier implied by a `unit`'s magnitude word, or 1 when the
+    unit carries no scale word (a plain dimensional label like "USD", or None).
+    thousand->1e3, million->1e6, billion->1e9, trillion->1e12. See
+    `_SCALE_WORD_MULTIPLIERS` for the whole-word matching rationale.
+    """
+    if not unit:
+        return 1
+    text = str(unit)
+    for pattern, factor in _SCALE_WORD_MULTIPLIERS:
+        if pattern.search(text):
+            return factor
+    return 1
+
+
+def _scaled_value(point: dict):
+    """The value used for disagreement comparison: `_normalized_value` (precision/
+    format-normalized), multiplied by the unit's scale-word multiplier when the
+    value is numeric. A non-numeric value (an unparseable string) carries no scale
+    and is returned as its normalized string. So (12345, "millions") and
+    (12345000, "thousands") both scale to 1.2345e10 and compare equal, while a
+    genuine restatement (93775 "millions" vs 11111 None) stays distinct.
+    """
+    normalized = _normalized_value(point)
+    if isinstance(normalized, (int, float)):
+        return normalized * _scale_multiplier(point.get("unit"))
+    return normalized
+
+
+def history(company: str, kpi_id: str, period_match: dict) -> dict:
+    """Every stored observation of ONE fiscal period across filings, ordered by
+    `as_of`, with a computed `disagreement` flag — the payoff read of this slice
+    (brief §Problem, the J&J shape: FY2021 revenue 93,775,000,000 as first
+    reported, re-presented as 78,740,000,000 two years later; a recorded figure
+    silently stops being what the company says).
+
+    `period_match` is a REPRESENTATIVE POINT carrying the raw
+    `period_start`/`period_end`/`period_kind` identity fields — chosen over
+    passing the three values loose because `same_period` is already defined over
+    two point dicts, so the probe plugs straight in with zero adaptation (the
+    caller typically already holds such a point from `list_series`/`query_latest`
+    to use as the probe). Matching is by `same_period` over the raw date pair,
+    NEVER exact string equality on the old `period` label — two vintages of one
+    period can carry different labels ("FY2021" vs "2021 comparative"); grouping
+    them is the whole point.
+
+    Observations are ordered by `as_of` (ISO strings compare chronologically,
+    consistent with `query_latest`'s max-on-as_of). EVERY matching observation
+    is retained and returned — a superseded value is a valid vintage, never
+    marked "wrong" (brief §Constraints 5: J&J spinoff, IFRS 17, 東芝 are three
+    causes with one shape; calling the old value an error is a category
+    mistake). The flag says "these disagree", not "this one is wrong".
+
+    `disagreement` is a VALUE DIFF across the returned observations, never an
+    event/announcement lookup (brief §Constraints 3: TW 施行細則 §6 permits
+    sub-threshold corrections with no restatement event, so an event
+    subscription misses them by construction): True iff >=2 observations share
+    the period AND differ in `value` after precision + scale normalization.
+
+    UNIT handling: `disagreement` is the scaled value diff above; `unit_mismatch`
+    is an INDEPENDENT informational flag (True iff the observations do not all
+    share one `unit`, None counting as its own unit). A differing `unit` LABEL
+    never invents or suppresses a disagreement on its own: the unit feeds the
+    scale multiplier (so two scales of ONE figure compare equal), but the
+    remaining raw-label difference is reported only via `unit_mismatch`.
+    Suppression-by-mismatch was the masking bug both reviewers found (a real
+    restatement, e.g. 93,775 vs 11,111, forced to `disagreement=False` merely
+    because the observations' unit labels differed, so a caller reading only
+    `disagreement` saw "no problem"). `disagreement=False` means "verified equal
+    after precision + scale normalization", and it may only ever say that for
+    observations we actually compared.
+
+    SCALE normalization: a stored `value` is NOT always base-scale. The 8-K TABLE
+    lane commits the RAW, unscaled cell value paired with a scale-word `unit`
+    (kpi_8k_candidates commit — value="301.63", unit="millions"; the SKILL
+    contract forbids altering `value`, and the `(in millions)` caption is surfaced
+    only as an advisory unit_hint). So the SAME figure can arrive as
+    (12345, "millions") and (12345000, "thousands"); comparing raw values would
+    manufacture a false disagreement. `history` therefore compares each value
+    SCALED by its unit's magnitude word (`_scaled_value` -> `_scale_multiplier`,
+    thousand/million/billion/trillion matched as WHOLE WORDS). The prose lane's
+    values are ALREADY base-scale (`kpi_prose_candidates._normalize_value` folds
+    the magnitude word INTO `value` before commit), so a prose point's `unit` MUST
+    NOT itself carry a magnitude word — otherwise this would double-scale an
+    already-scaled value (e.g. 3,560,000,000 tagged unit="billion" -> 3.56e18).
+    That invariant is a WRITE-side contract enforced at prose commit (the prose
+    lane rejects a magnitude-word unit); `history` here trusts it rather than
+    re-checking per read. A genuine restatement across a scale/unit difference
+    (93,775 "millions" vs 11,111 None) stays distinct after scaling. This is a
+    minimal scale-word table, NOT a general unit-conversion engine (no dimensional
+    conversion, e.g. USD<->count); `unit_mismatch=True` remains the honest caveat
+    that the observations' raw unit labels differed.
+
+    Read-only, never-raise on an absent OR corrupt series (matching
+    `list_series`): an absent series file, or one that fails to load
+    (`json.JSONDecodeError`/`OSError` — an interrupted external edit, a future
+    co-writer bug), yields an empty observation list rather than taking down the
+    read.
+    """
+    path = _series_path(company, kpi_id)
+    try:
+        points = _load_series(path)["points"] if path.exists() else []
+    except (json.JSONDecodeError, OSError):
+        points = []  # corrupt/unreadable series file — degrade like list_series
+
+    observations = sorted(
+        (p for p in points if same_period(p, period_match)),
+        key=lambda p: p.get("as_of", ""),
+    )
+
+    distinct_values = {_scaled_value(p) for p in observations}
+    disagreement = len(observations) >= 2 and len(distinct_values) >= 2
+    unit_mismatch = len({p.get("unit") for p in observations}) > 1
+
+    return {
+        "company": company,
+        "kpi_id": kpi_id,
+        "observations": observations,
+        "disagreement": disagreement,
+        "unit_mismatch": unit_mismatch,
+    }
 
 
 def list_series() -> list:
