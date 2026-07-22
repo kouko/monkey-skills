@@ -13,6 +13,7 @@ there is no id in the living-spec namespace to bind to.
 """
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import sys
 from pathlib import Path
@@ -1242,3 +1243,97 @@ def test_prose_point_carries_period_identity_fields():
     assert without_dates["period_end"] is None
     assert without_dates["period_kind"] is None
     assert without_dates["period"] == "FY2024", "label unchanged when identity absent"
+
+
+def test_prose_point_carries_integrity_stamp(tmp_path, monkeypatch):
+    # Slice C, Task 5: a stored char offset is only meaningful relative to the
+    # surface version that produced it, and the ANCHORED TOKEN is the load-bearing
+    # datum. This task writes a write-time integrity stamp onto the committed
+    # point: integrity = {span_sha256: sha256(matched_token bytes),
+    # surface_version: <threaded value>}. The hash is over the TOKEN, not the
+    # bounded verbatim_quote — pinned here so a future refactor can't silently
+    # switch to hashing the (wider, mutable) quote. surface_version is threaded as
+    # a PARAMETER through commit_to_store -> _prose_candidate_to_point, defaulting
+    # to None so non-prose / unaware callers are unaffected. Write-time only; no
+    # read-time re-verification (that is Part 3).
+    #
+    # No `@req` tag: this dispatch's plan (docs/loom/plans/2026-07-22-kpi-
+    # observation-history.md) binds tasks by "Brief item covered", not a
+    # registered loom-spec REQ-id (same convention as the sibling tests above).
+    module = _load_module()
+
+    # A candidate whose bounded quote DIFFERS from the matched token, so the two
+    # hashes are distinguishable and we can assert the stamp is the token's.
+    token = "13,000"
+    quote = "we hired 13,000 people"
+    assert quote != token, "the quote must differ from the token for this test"
+    candidate = {
+        "matched_token": token,
+        "verbatim_quote": quote,
+        "value": 13000,
+        "char_offset_span": [9, 15],
+        "kpi_id": "headcount",
+        "unit": "count",
+        "period": "FY2024",
+        "source_accession": "0001318605-24-000123",
+        "as_of": "2024-10-31",
+    }
+
+    surface_version = "prose-surface-2026.07"
+    point = module._prose_candidate_to_point(
+        candidate, company="ACME",
+        confirmer="kouko", confirmed_at="2026-07-20T10:00:00Z",
+        surface_version=surface_version,
+    )
+
+    token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    quote_hash = hashlib.sha256(quote.encode("utf-8")).hexdigest()
+
+    assert point["integrity"]["span_sha256"] == token_hash, (
+        "span_sha256 is the sha256 of the ANCHORED TOKEN's bytes"
+    )
+    # The hash is the TOKEN's, NOT the bounded quote's — a future refactor that
+    # hashed the quote instead would flip this assertion.
+    assert point["integrity"]["span_sha256"] != quote_hash, (
+        "the stamp must hash the token, not the wider verbatim_quote"
+    )
+    assert point["integrity"]["surface_version"] == surface_version, (
+        "surface_version rides through from the threaded parameter"
+    )
+
+    # Non-prose / unaware callers are unaffected: surface_version defaults to None
+    # (integrity still stamps the token hash; a None version cannot trip the
+    # store's falsy-provenance guard — integrity is not a required provenance
+    # field).
+    default_point = module._prose_candidate_to_point(
+        candidate, company="ACME",
+        confirmer="kouko", confirmed_at="2026-07-20T10:00:00Z",
+    )
+    assert default_point["integrity"]["span_sha256"] == token_hash
+    assert default_point["integrity"]["surface_version"] is None
+
+    # The parameter threads end-to-end through commit_to_store into the durable
+    # store — the "committed point carries the stamp" half of the acceptance.
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+    scripts_dir = str(_SCRIPT.parent)
+    if scripts_dir not in sys.path:
+        sys.path.insert(0, scripts_dir)
+    sys.modules.pop("kpi_store", None)
+    import kpi_store  # noqa: E402
+
+    stored = dict(
+        candidate,
+        kpi_id="employees_full_time",
+        period="2024-12-31",
+        source_kind="prose",
+    )
+    summary = module.commit_to_store(
+        [stored], company="ACME",
+        confirmer="kouko", confirmed_at="2026-07-20T10:00:00Z",
+        confirmed=True, surface_version=surface_version,
+    )
+    assert summary["committed"] == 1
+    from_store = kpi_store.query_latest("ACME", "employees_full_time", "2024-12-31")
+    assert from_store is not None
+    assert from_store["integrity"]["span_sha256"] == token_hash
+    assert from_store["integrity"]["surface_version"] == surface_version

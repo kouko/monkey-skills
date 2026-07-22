@@ -38,6 +38,7 @@ Anti-fabrication substring gate (the load-bearing trust rail):
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import subprocess
@@ -611,7 +612,8 @@ def _bounded_quote(quote: str, matched_token: str) -> str:
 
 
 def _prose_candidate_to_point(candidate: dict, company: str,
-                              confirmer: str, confirmed_at: str) -> dict:
+                              confirmer: str, confirmed_at: str,
+                              surface_version: str | None = None) -> dict:
     """Map a confirmed prose candidate to a kpi_store-shaped point.
 
     Mirrors Route B's kpi_8k_candidates._candidate_to_point: values + source
@@ -654,8 +656,22 @@ def _prose_candidate_to_point(candidate: dict, company: str,
       per the brief's REUSE of `_derive_fiscal_label`). A prose candidate with no
       dates yet commits cleanly with all three None; none is a store-required
       provenance field, so a None cannot trip the falsy-provenance guard.
+    - `integrity` (Slice C, Task 5) is a WRITE-TIME anti-drift stamp:
+      `{"span_sha256": sha256(matched_token bytes), "surface_version": <value>}`.
+      The hash is over the ANCHORED TOKEN — the load-bearing datum — NOT the
+      bounded `verbatim_quote` (which a downstream layer may widen/trim, per
+      `_bounded_quote`), so the stamp pins exactly the bytes the offsets point at.
+      `surface_version` is the flattener/surface version that PRODUCED the offsets,
+      threaded IN as a parameter (defaulting to None) rather than in-process
+      imported from data-markets — the analysis→data-markets boundary is
+      subprocess-only (see the module docstring). It records the two facts a
+      read-time re-verifier (Part 3, out of scope here) needs: which token was
+      committed and which surface version its offsets are relative to. `integrity`
+      is NOT a store-required provenance field, so a None `surface_version` cannot
+      trip the falsy-provenance guard — like the optional pass-throughs above.
     """
     start, end = candidate["char_offset_span"]
+    token = candidate["matched_token"]
     return {
         "company": company,
         "kpi_id": candidate["kpi_id"],
@@ -674,6 +690,10 @@ def _prose_candidate_to_point(candidate: dict, company: str,
         "period_start": candidate.get("period_start"),
         "period_end": candidate.get("period_end"),
         "period_kind": candidate.get("period_kind"),
+        "integrity": {
+            "span_sha256": hashlib.sha256(token.encode("utf-8")).hexdigest(),
+            "surface_version": surface_version,
+        },
         "source_document": candidate.get("source_document"),
         "filing_date": candidate.get("filing_date"),
         "confirmer": confirmer,
@@ -682,7 +702,8 @@ def _prose_candidate_to_point(candidate: dict, company: str,
 
 
 def commit_to_store(candidates: list[dict], company: str, confirmer: str,
-                    confirmed_at: str, confirmed: bool = False) -> dict:
+                    confirmed_at: str, confirmed: bool = False,
+                    surface_version: str | None = None) -> dict:
     """Append human-confirmed prose candidates into the EXISTING tier-① store.
 
     Closes the walking skeleton: mechanical produce (`propose`) -> LLM propose
@@ -711,7 +732,10 @@ def commit_to_store(candidates: list[dict], company: str, confirmer: str,
     committed = 0
     for candidate in accepted:
         kpi_store.append(
-            _prose_candidate_to_point(candidate, company, confirmer, confirmed_at)
+            _prose_candidate_to_point(
+                candidate, company, confirmer, confirmed_at,
+                surface_version=surface_version,
+            )
         )
         committed += 1
 
