@@ -68,7 +68,10 @@ def build_t164sb01_url(co_id: str, year: int, season: int, report_id: str) -> st
     SCOPE, not filer type: consolidated (-ci) filers are served only at C
     (A 檔案不存在), but individual-only filers — standalone insurers and
     bills-finance filers (e.g. 華票 2820) — are served ONLY at A (C 404s).
-    See `fetch_with_report_fallback` for the C→A fallback."""
+    Grounding: -fh arc live probe 2026-07-22 (2820 2026Q1 A=406KB body /
+    C=98-byte 檔案不存在; insurers 2851/2867 same); reconciles spec §7's
+    -ci-specific "A never served" negative — see docs/loom/specs/
+    2026-07-19-tw-ixbrl-ingestion.md:115. See `fetch_with_report_fallback`."""
     return (
         f"{BASE_URL}?step=1&CO_ID={co_id}&SYEAR={year}"
         f"&SSEASON={season}&REPORT_ID={report_id}"
@@ -150,11 +153,12 @@ def fetch_with_report_fallback(
     co_id: str, year: int, season: int,
     *, report_order: tuple[str, ...] = DEFAULT_REPORT_ORDER,
     fetch_fn=fetch_ixbrl_body,
-) -> tuple[str, str] | None:
+) -> tuple[str | None, str | None]:
     """Try each report_id in `report_order` in turn ("C" consolidated,
     then "A" individual); the first whose body is not the absence sentinel
-    wins. Returns (body, report_id_used), or None if every report_id in
-    `report_order` is absent.
+    wins. Returns (body, report_id_used), or (None, None) if every
+    report_id in `report_order` is absent — same (value, tag) shape as
+    `fetch_with_season_fallback`, so callers can unpack unconditionally.
 
     Handles the CONSOLIDATION-SCOPE split: consolidated (-ci) filers are
     served only at C, but individual-only filers — standalone insurers and
@@ -164,4 +168,4 @@ def fetch_with_report_fallback(
         body = fetch_fn(co_id, year, season, report_id)
         if body is not None:
             return body, report_id
-    return None
+    return None, None

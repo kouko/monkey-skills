@@ -114,6 +114,13 @@ Union of the 7 quarterly filers = **264 distinct `tifrs-notes` elements** (+66% 
    filer complexity dominates the seasonal effect.
 7. **`REPORT_ID=A` (parent-only) is NOT served by t164sb01** — returns 98-byte "檔案不存在!" for
    every filer/period tested (measured negative). Parent-only lives on a different endpoint.
+   - **Reconciliation (-fh arc, 2026-07):** the "A never served" measured negative was
+     **-ci-specific** — consolidated (-ci) filers publish only a consolidated report, so their A
+     404s. **Individual-only filers** (standalone insurers, bills-finance filers) have NO
+     consolidated report and ARE served at `REPORT_ID=A`; for them it is **C** that 404s. The
+     A/C split tracks **consolidation scope**, not "parent-only lives elsewhere". Live-probe
+     evidence (2026-07-22): 華票 2820 2026Q1 → A = 406,295-byte body, C = 98-byte 檔案不存在;
+     insurers 2851/2867 same pattern. See `fetch_with_report_fallback` in twse_ixbrl_fetch.py.
 8. **TPEx (上櫃) needs no special-casing** — identical `t164sb01` URL, HTTP 200 (GlobalWafers).
 9. **No TextBlock dumps on any filer** — TW iXBRL is uniformly granular; no escaped-HTML blob path.
 

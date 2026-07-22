@@ -122,6 +122,12 @@ def test_emerging_board_season_order_prioritizes_q2_q4(fetch_mod):
     assert fetch_mod.EMERGING_BOARD_SEASON_ORDER[:2] == (2, 4)
 
 
+def test_report_order_default_is_c_then_a(fetch_mod):
+    # Pin the constant so a silent reorder is caught (mirrors the
+    # season-fallback suite's EMERGING_BOARD_SEASON_ORDER pin).
+    assert fetch_mod.DEFAULT_REPORT_ORDER == ("C", "A")
+
+
 def test_report_fallback_c_absent_a_present_returns_a(fetch_mod):
     # C (consolidated) not served for an individual-only filer (e.g. 華票 2820,
     # standalone insurers) -> the sentinel path; A (individual) is served.
@@ -133,10 +139,10 @@ def test_report_fallback_c_absent_a_present_returns_a(fetch_mod):
             return None  # 檔案不存在 sentinel: C not served for this filer
         return "individual-body"
 
-    result = fetch_mod.fetch_with_report_fallback(
+    body, report_id = fetch_mod.fetch_with_report_fallback(
         "2820", 2024, 4, fetch_fn=fake_fetch,
     )
-    assert result == ("individual-body", "A")
+    assert (body, report_id) == ("individual-body", "A")
     assert calls == ["C", "A"]
 
 
@@ -147,15 +153,17 @@ def test_report_fallback_c_present_skips_a(fetch_mod):
         calls.append(report_id)
         return "consolidated-body"
 
-    result = fetch_mod.fetch_with_report_fallback(
+    body, report_id = fetch_mod.fetch_with_report_fallback(
         "2330", 2024, 3, fetch_fn=fake_fetch,
     )
-    assert result == ("consolidated-body", "C")
+    assert (body, report_id) == ("consolidated-body", "C")
     assert calls == ["C"]  # first hit wins, A never tried
 
 
-def test_report_fallback_both_absent_returns_none(fetch_mod):
-    result = fetch_mod.fetch_with_report_fallback(
+def test_report_fallback_both_absent_returns_none_pair(fetch_mod):
+    # (None, None) — same shape as fetch_with_season_fallback, so a caller
+    # unpacking `body, r = ...` never crashes on a bare None.
+    body, report_id = fetch_mod.fetch_with_report_fallback(
         "2330", 2024, 3, fetch_fn=lambda *a, **k: None,
     )
-    assert result is None
+    assert (body, report_id) == (None, None)
