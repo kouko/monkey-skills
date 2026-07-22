@@ -174,6 +174,56 @@ def test_fh_npl_coverage_resolves_both_bank_subsidiaries_distinctly():
     assert npl["京城商業銀行"]["coverage_ratio"]["value"] == 2407.94
 
 
+def test_basi_npl_coverage_totalloans_changhwa():
+    """-basi NPL/coverage note (Task 10): standalone commercial banks
+    (e.g. 2801 彰化銀行) encode the loan category via a CONTEXT_REF
+    SUFFIX ("..._TotalLoansMember") plus a "Member"-suffixed concept
+    name ("CoverageRatioMember"), NOT ix:tuple attributes (contrast
+    Task 9's tuple_ref disambiguation) — the existing generic parser
+    already resolves concept + context_ref, so no tuple parsing is
+    needed. MEASURED against the real 2801 2026Q1 fixture,
+    scratchpad/fh-measurement-round2.md §2801."""
+    parser, notes_mod = _load_modules()
+    facts = _fixture_facts_smart(parser, "twse_ixbrl_2801_2026Q1_C.html")
+
+    basi = notes_mod.extract_basi_npl_coverage_notes(facts)
+
+    # Raw text scale=-2 -> parser raw_value 8.6467 (the true fraction);
+    # the extractor presents it as the percentage 864.67 (single *100
+    # conversion, not a second application of the XBRL `scale` attribute).
+    assert basi["coverage_ratio"]["value"] == 864.67
+    assert basi["coverage_ratio"]["concept"] == "tifrs-notes:CoverageRatioMember"
+    assert basi["coverage_ratio"]["period"] == {"type": "instant", "instant": "2026-03-31"}
+
+    # npl_ratio: the OTHER percent branch. Raw value 0.0016 -> 0.16.
+    assert basi["npl_ratio"]["value"] == 0.16
+    assert basi["npl_ratio"]["concept"] == "tifrs-notes:NonPerformingLoansRatioMember"
+
+    # npl_amount / gross_loans: passthrough branches (not percent fields) —
+    # the parser's own scale-driven scaled value is asserted as-is.
+    assert basi["npl_amount"]["value"] == 3291281000.0
+    assert basi["npl_amount"]["concept"] == "tifrs-notes:AmountOfNon-PerformingLoansMember"
+    assert basi["gross_loans"]["value"] == 2116370367000.0
+    assert basi["gross_loans"]["concept"] == "tifrs-notes:GrossLoansMember"
+
+    # Company/bank name surfaced (legible via smart-decode).
+    assert basi["company_name"]["value"] == "彰化銀行"
+
+
+def test_basi_npl_coverage_absent_for_bills_finance():
+    """Bills-finance -basi filers (e.g. 2820 華票) carry NO NPL/coverage
+    note at all (MEASURED: 0 hits for NonPerforming/CoverageRatio
+    concepts, scratchpad/fh-measurement-round4.md §2820 Q2 answer) —
+    the extractor must degrade to an empty dict gracefully, never
+    raise."""
+    parser, notes_mod = _load_modules()
+    facts = _fixture_facts_smart(parser, "twse_ixbrl_2820_2026Q1_A.html")
+
+    basi = notes_mod.extract_basi_npl_coverage_notes(facts)
+
+    assert basi == {}
+
+
 def test_select_current_fact_ambiguous_period_tie_first_wins_and_is_logged(capsys):
     """Pins the tie-break rule `_select_current_fact` relies on when 2+
     candidates share an IDENTICAL period — as the 2890 fixture's NPL
