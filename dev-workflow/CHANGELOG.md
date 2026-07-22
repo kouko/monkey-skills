@@ -4,6 +4,30 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.25.0] — 2026-07-22
+
+### Added — `brief-before-asking`: pre-send two-line check + check-question signals + experienced-difference requirement
+
+Three evidence-driven additions from the 2026-07 live trigger history
+(baseline: `docs/harness-audit/2026-07-22-bba-trigger-baseline.md`, PR #598):
+
+- **Pre-send check** (new section): before sending any briefing, verify
+  the first line carries the stakes and the last line ends at the
+  decision point; two-line test — first + last line alone must answer
+  "what am I deciding" + "what happens next". Adapted from the
+  i-have-adhd output-style skill; every delivery-side failure in the
+  trigger history had no decision anchor in those two lines.
+- **Check-questions count as confusion signals** (guard extension +
+  2 Mode Detection rows): a user restating their understanding as a
+  verification question is comprehension repair, not a factual query;
+  the 2nd consecutive check-question trips the repeated-confusion
+  guard — explicitly including after a completion *report*, not only
+  after an ask. Live miss documented as `references/EXAMPLES.md` Real
+  Case 4.
+- **Mental Model must state the experienced difference** (Block 1
+  requirement 3): what the reader will see/do differently, not only the
+  system analogy — the one recurring content-side follow-up cause.
+
 ## [2.24.0] — 2026-07-19
 
 ### Added — `git-memory`: close-out privacy gate (fail-closed, two-layer)
