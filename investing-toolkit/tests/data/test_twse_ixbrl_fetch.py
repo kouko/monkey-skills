@@ -120,3 +120,42 @@ def test_season_fallback_all_absent_returns_none(fetch_mod):
 
 def test_emerging_board_season_order_prioritizes_q2_q4(fetch_mod):
     assert fetch_mod.EMERGING_BOARD_SEASON_ORDER[:2] == (2, 4)
+
+
+def test_report_fallback_c_absent_a_present_returns_a(fetch_mod):
+    # C (consolidated) not served for an individual-only filer (e.g. 華票 2820,
+    # standalone insurers) -> the sentinel path; A (individual) is served.
+    calls = []
+
+    def fake_fetch(co_id, year, season, report_id, **kwargs):
+        calls.append(report_id)
+        if report_id == "C":
+            return None  # 檔案不存在 sentinel: C not served for this filer
+        return "individual-body"
+
+    result = fetch_mod.fetch_with_report_fallback(
+        "2820", 2024, 4, fetch_fn=fake_fetch,
+    )
+    assert result == ("individual-body", "A")
+    assert calls == ["C", "A"]
+
+
+def test_report_fallback_c_present_skips_a(fetch_mod):
+    calls = []
+
+    def fake_fetch(co_id, year, season, report_id, **kwargs):
+        calls.append(report_id)
+        return "consolidated-body"
+
+    result = fetch_mod.fetch_with_report_fallback(
+        "2330", 2024, 3, fetch_fn=fake_fetch,
+    )
+    assert result == ("consolidated-body", "C")
+    assert calls == ["C"]  # first hit wins, A never tried
+
+
+def test_report_fallback_both_absent_returns_none(fetch_mod):
+    result = fetch_mod.fetch_with_report_fallback(
+        "2330", 2024, 3, fetch_fn=lambda *a, **k: None,
+    )
+    assert result is None
