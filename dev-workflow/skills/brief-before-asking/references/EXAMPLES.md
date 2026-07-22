@@ -131,7 +131,7 @@ This is the structurally different shape of Mode C.
 
 ## Real-World Cases (mined from actual sessions)
 
-These three are real before/after pairs pulled from session logs — unedited except for trimming. They cover Modes B, C, and D across three domains (UX, research pipeline, data/SQL). Real cases beat synthetic ones: the recovery turns show what *landing the briefing* actually looks like in messy, domain-specific reality.
+These four are real cases pulled from session logs — unedited except for trimming. Cases 1-3 are before/after recovery pairs covering Modes B, C, and D across three domains (UX, research pipeline, data/SQL); Case 4 has a different shape — a guard *miss* narrative whose fix shipped with the version that added it. Real cases beat synthetic ones: the recovery turns show what *landing the briefing* actually looks like in messy, domain-specific reality.
 
 ### Real Case 1 — Eval design (Mode C: lost in jargon)
 
@@ -184,6 +184,43 @@ These three are real before/after pairs pulled from session logs — unedited ex
 > Q3 不懂的原因是：A 沒有獨立 state… 所以「persistence」這個問題其實**不適用**於 A — `currentIndex` 已經是唯一狀態。**問錯了、忘掉這條。**
 
 **Why it works:** The fix wasn't to re-phrase the jargon — it was to notice the question was *invalid* (asking persistence of a stateless option). Sometimes "I don't get the question" means the question shouldn't have been asked. Mode B done right can end in retraction, not a glossary.
+
+### Real Case 4 — check-questions after a completion report (guard miss, 2026-07-22)
+
+**Context:** agent shipped a docs PR (a measurement baseline plus a
+ride-along test fix), then reported completion with a mechanism-dense
+card. The user sent two consecutive verification questions:
+
+> 所以這只是修測試？
+
+> 但是你沒動 skill 本身對吧
+
+Each was answered **correctly and locally** — proportions clarified,
+scope confirmed — but the agent never asked itself why the user needed
+two rounds to rebuild the picture. On the next work turn the agent led
+with branch-surgery jargon (cherry-pick, gate markers, a pre-existing
+red test). Turn 3:
+
+> 我覺得剛剛的溝通就有點讓我搞不清楚狀況了 這時候本來應該要由這個
+> skill 來幫我用白話說明才是
+
+**Four stacked misses:**
+1. Check-questions were classified as pure factual queries ("When NOT
+   to Use → just answer"), so the repeated-confusion guard's counter
+   never incremented.
+2. The confusion followed a *report*, not an ask — the reactive modes
+   were framed around questions/explanations, and report-confusion fell
+   into a jurisdiction seam.
+3. Per-message-local correctness masked the failed framing: every
+   individual answer was right, so nothing felt wrong.
+4. The mechanical layer (ask-triage hook) only sees `AskUserQuestion`
+   tool calls — prose-only turns are invisible to it.
+
+**The fix shipped with this case:** check-questions now count toward
+the repeated-confusion guard (SKILL.md §Mode Detection Heuristics +
+the guard block), the guard's scope is explicitly "after ANY agent
+output the user is parsing — including a completion report", and the
+Pre-send check's two-line test runs before any briefing goes out.
 
 ---
 

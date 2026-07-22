@@ -78,6 +78,19 @@ The agent defaults to implementation-level detail with embedded jargon. The user
 
 > **Repeated-confusion guard (meta-trigger, overrides mode choice)**: the **2nd consecutive** confusion signal — even differently phrased (「X 是啥」then「不能一起做嗎」), even if each alone seems minor — is a hard STOP. Do not add more detail, options, or another diagram. Drop to the Mental Model and reframe from scratch. Escalating detail after the user is already lost is the exact failure this guard breaks.
 
+> **Check-questions count as confusion signals.** A user restating their
+> understanding as a verification question —「所以這只是 X？」「你是說 Y
+> 對吧」/ "so this is just X?" / "wait, so you didn't do Y, right?" — is
+> comprehension repair, not a pure factual query: they are rebuilding the
+> picture themselves and asking you to grade the rebuild. First
+> check-question: answer it plainly AND re-examine what your previous
+> message failed to land. **Second consecutive check-question: that IS
+> the guard's 2nd signal** — STOP and reframe at the Mental Model, even
+> though no explicit "I don't understand" was ever said. This applies
+> after ANY agent output the user is parsing — a question, an
+> explanation, or a completion report (real miss on a report:
+> `references/EXAMPLES.md` Real Case 4).
+
 > **Mode D example — optional load**: `references/EXAMPLES.md` §Real-World Cases → Real Case 2 (text-to-SQL) is a worked Mode D (consequence-first + a two-example outcome contrast); Real Case 1 shows the plain-language restate of a jargon-buried fork.
 
 ## The 6-Block Briefing Structure
@@ -100,6 +113,11 @@ The block everyone wants to skip. The block that makes everything else land.
 - Must answer:
   1. "Where in the system are we?" (locate on user's mental map, in business semantics)
   2. "Why does this matter from the user's perspective?" (business consequence, not implementation framing)
+  3. "What will the reader actually **experience** differently?" — the
+     user-visible difference this decision makes (what they will see, do,
+     or stop doing), not only how the system changes internally. A system
+     analogy alone still draws a clarification round — the one recurring
+     content-side follow-up cause in live trigger history.
 - If any **potentially unfamiliar term** is used: either define inline in 1 sentence, OR end the block with a flag list: "If any of these are unfamiliar, ask: [saga, outbox, offset commit]"
 
 **Forbidden in Mental Model**:
@@ -190,7 +208,10 @@ Per-block forbidden items live in each block's section above. The patterns below
 ## When NOT to Use
 
 - **Trivial decisions** (private-code naming, formatting, log level, ≤5 lines, reversible, no public-API surface change) → just do it, note the choice
-- **Pure factual queries** ("what is X") → just answer
+- **Pure factual queries** ("what is X") → just answer. Caveat: a
+  verification question restating YOUR work（「所以只是…？」）is NOT a
+  factual query — it counts toward the check-question guard (see
+  §Mode Detection Heuristics)
 - Already in cross-team architecture review mode → escalate to a heavier consulting-style framework (Minto SCQA / formal RFC; see `references/DESIGN.md` for escalation criteria)
 
 ## Escape Hatches
@@ -208,6 +229,8 @@ When deciding between Modes B / C / D:
 |--------|------|
 | User got the words but asks **why it matters / what changes** by their choice | D |
 | Any **2nd consecutive** confusion signal (B/C/D mixed) | STOP → reframe at Mental Model |
+| User restates your work/answer as a **verification question**（「所以只是…？」"so this just…?"）— 1st time | Answer plainly + re-check your own framing (counts as signal 1) |
+| **2nd consecutive check-question** — even after a completion report, not an ask | STOP → reframe at Mental Model (guard) |
 | User asks what the **question** means | B |
 | User asks what the **explanation** means | C |
 | User says "什麼意思" right after agent's short question | B |
@@ -218,7 +241,31 @@ When deciding between Modes B / C / D:
 | Agent's previous turn was a short ambiguous question + user signals confusion | B |
 | Still ambiguous after checking prior turn → default to **C** (safer; Mode C pauses) | C |
 
+> **Check-question tiebreak — shape beats phrasing.** A message that is
+> BOTH a verification restatement AND stakes-flavored（「所以選 A 就會比較
+> 快對吧？」）counts by its verification **shape**: signal 1 → answer
+> plainly; if it is the 2nd consecutive, the guard fires either way, so
+> no routing is lost.
+
 > **Tiebreak — phrase content beats turn position.** When a signal could be C-by-position but D-by-phrasing (e.g. 「為什麼要選」/ "why does this matter" right after a long jargon explanation), classify by **what the user named**: a signal naming the *stakes* (why / impact / 差別 / what-changes) is **D** even after a dense explanation; one naming *can't-follow* (lost / 跟不上 / too much jargon) is **C**. Use turn-position as the tiebreak only when the phrase itself is neutral ("more context" / 「補充」).
+
+## Pre-send check
+
+Run on every briefing (any mode) before sending:
+
+1. **First line** — does it state, in plain language, what is being
+   decided and why it matters now? Stakes, not mechanism.
+2. **Last line** — does it end at the single thing you need from the
+   reader (the decision point, or the one question)?
+3. Delete any opener that announces process ("let me walk through…")
+   and any closer that recaps or trails off ("hope that's clear").
+
+Then the **two-line test**: if the reader reads ONLY the first and
+last lines, do they know (a) what they are deciding and (b) what
+happens next? If not, fix those two lines — do NOT add more middle.
+(Adapted from the i-have-adhd output-style skill's pre-send check;
+in live trigger history every delivery-side failure was a briefing
+whose first/last lines carried no decision anchor.)
 
 ## See Also
 
