@@ -550,6 +550,28 @@ def passes_substring_gate(candidate: dict, canonical_text: str) -> bool:
     return matched_token in canonical_text and verbatim_quote in canonical_text
 
 
+# Magnitude-word UNIT guard (double-scale hole). The prose lane stores BASE-SCALE
+# values: `_normalize_value` folds a magnitude word INTO the value at produce time
+# ("3.56 billion" -> 3560000000). So a committed prose point's `unit` must be a
+# DIMENSIONAL label ("USD", "people", "count", "GW"), NEVER a magnitude word — a
+# confirmed unit="billion" on an already-scaled value would make the downstream
+# kpi_store scale-normalizer multiply it AGAIN (3,560,000,000 -> 3.56e18). This
+# guard's word set is derived from `_MAGNITUDE_MULTIPLIERS` (this module's keys),
+# but the store's read-side scaler owns its OWN independent literal
+# (`kpi_store._SCALE_WORD_MULTIPLIERS`) across the subprocess boundary — the two
+# CANNOT import each other, so they are a genuine parallel list kept in lockstep
+# by a drift test (test_magnitude_unit_guard_lockstep_with_store_scaler), not by
+# construction. `s?` also rejects the plural "millions"; the `\b`
+# guards mirror exhibit_prose `_NUMBER_RE`'s billionaire-not-billion discipline, so
+# a larger token that merely CONTAINS a magnitude substring ("millionaire-
+# households") never trips. `search` (not fullmatch) rejects a whole-word magnitude
+# anywhere in the unit — "USD millions" double-scales too and is refused.
+_MAGNITUDE_UNIT_RE = re.compile(
+    r"\b(?:" + "|".join(_MAGNITUDE_MULTIPLIERS) + r")s?\b",
+    re.IGNORECASE,
+)
+
+
 def commit(candidates: list[dict], confirmed: bool = False) -> list[dict]:
     """Tier-① confirm-all trust GATE: return the candidates ACCEPTED for commit.
 
@@ -572,9 +594,32 @@ def commit(candidates: list[dict], confirmed: bool = False) -> list[dict]:
     ACTUAL append into kpi_store (with the prose anchor + attribution provenance
     shape) is Task 7, which will consume this accepted set; kpi_store is NOT
     imported or appended here.
+
+    Raises:
+        ValueError: if any confirmed candidate carries a magnitude-word `unit`
+            (thousand/million/billion/trillion). The prose value is already
+            base-scale, so such a unit would double-scale at the store; the whole
+            confirmed batch is refused (not silently trimmed) so the human fixes
+            the unit. The sole production caller `commit_to_store` does NOT catch
+            this — a poison unit aborts the store append for the whole batch, by
+            design (fail-loud on a human-confirm data error).
     """
     if not confirmed:
         return []
+    for candidate in candidates:
+        unit = candidate.get("unit")
+        if isinstance(unit, str) and _MAGNITUDE_UNIT_RE.search(unit):
+            # A magnitude-word unit on an already-base-scale value would
+            # double-scale at the store. Fail-LOUD (like `_bounded_quote`'s
+            # malformed-quote raise) so the human fixes the unit; refusing the
+            # WHOLE confirmed batch, never silently dropping the one point —
+            # the confirmed set is untrustworthy as a whole once one unit is bad.
+            raise ValueError(
+                f"prose candidate unit {unit!r} is a magnitude word; the prose "
+                "value is already base-scale, so this would double-scale at the "
+                "store — the human must fix the unit to a dimensional label "
+                "(e.g. USD / people / count / GW) before commit"
+            )
     return list(candidates)
 
 

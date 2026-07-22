@@ -514,6 +514,128 @@ def test_commit_no_taxonomy_filter_admits_confirmed_candidate():
     assert accepted == plausible, "no taxonomy check gates a confirmed candidate"
 
 
+def _prose_candidate(unit):
+    # A confirmed prose candidate, parameterized only on its `unit`. The prose
+    # lane stores BASE-SCALE values: `_normalize_value` folds a magnitude word
+    # INTO the value at produce time ("3.56 billion" -> 3560000000), so `value`
+    # here is ALREADY the base-scale integer and `unit` must be a DIMENSIONAL
+    # label, never a magnitude word.
+    return {
+        "matched_token": "3.56 billion",
+        "verbatim_quote": "reached 3.56 billion daily active people",
+        "value": 3560000000,
+        "char_offset_span": [8, 20],
+        "source_kind": "prose",
+        "kpi_id": "daily_active_people",
+        "unit": unit,
+        "period": "2024-12-31",
+        "needs_semantic": False,
+    }
+
+
+def test_commit_rejects_magnitude_word_unit():
+    # Task 8 (double-scale hole): the prose lane stores BASE-SCALE values —
+    # `_normalize_value` already folded the magnitude word INTO `value` at
+    # produce time ("3.56 billion" -> 3560000000). So a committed prose point's
+    # `unit` MUST be a DIMENSIONAL label ("USD", "people", "count", "GW"), NEVER
+    # a magnitude word. If a human/LLM confirms unit="billion" on an
+    # already-scaled value, the downstream kpi_store scale-normalizer multiplies
+    # it AGAIN (3,560,000,000 -> 3.56e18) — a catastrophic fabricated value.
+    #
+    # Reject SHAPE: commit() RAISES (fail-LOUD, whole-batch abort), mirroring the
+    # module's own malformed-committed-data idiom (`_bounded_quote` raises rather
+    # than trim a malformed quote; `_multi_exhibit_gap` refuses rather than pick).
+    # A magnitude-word unit is a human-confirm DATA error the human MUST fix — a
+    # silent per-candidate drop would hide it. A single poison candidate aborts
+    # the whole confirmed batch: nothing reaches the store until the human fixes
+    # the unit.
+    module = _load_module()
+
+    # A magnitude-word unit on an already-scaled value -> refused (would
+    # double-scale). Even confirmed=True cannot let it through.
+    with pytest.raises(ValueError):
+        module.commit([_prose_candidate("billion")], confirmed=True)
+
+    # Case-insensitive AND plural: "Millions" is the same poison.
+    with pytest.raises(ValueError):
+        module.commit([_prose_candidate("Millions")], confirmed=True)
+
+    # "USD millions" is NOT a legitimate prose unit: the value is already
+    # base-scale, so this too would double-scale. A magnitude word appearing as
+    # a WHOLE WORD anywhere in the unit is rejected.
+    with pytest.raises(ValueError):
+        module.commit([_prose_candidate("USD millions")], confirmed=True)
+
+    # Whole-batch abort: one poison candidate in an otherwise-good confirmed set
+    # refuses the ENTIRE commit — the confirmed set is untrustworthy as a whole.
+    with pytest.raises(ValueError):
+        module.commit(
+            [_prose_candidate("people"), _prose_candidate("billion")],
+            confirmed=True,
+        )
+
+    # Legitimate DIMENSIONAL units pass through UNCHANGED — no false rejection.
+    for good_unit in ("USD", "people", "GW", "count"):
+        candidates = [_prose_candidate(good_unit)]
+        assert module.commit(candidates, confirmed=True) == candidates
+
+    # Word-boundary guard: a unit that merely CONTAINS a magnitude word as a
+    # substring of a LARGER token ("millionaire-households") is NOT falsely
+    # rejected — `\b` requires a whole-word match, mirroring exhibit_prose's
+    # billionaire-not-billion discipline (`_NUMBER_RE`'s `\b`).
+    boundary = [_prose_candidate("millionaire-households")]
+    assert module.commit(boundary, confirmed=True) == boundary
+
+
+def test_magnitude_unit_guard_lockstep_with_store_scaler():
+    # Task 8 drift guard. The prose commit guard rejects a unit iff the store's
+    # READ-side scaler (`kpi_store._scale_multiplier`) would scale it — but the
+    # two live on opposite sides of the subprocess boundary and CANNOT import
+    # each other, so they are a genuine parallel list. If the store dropped a
+    # magnitude word or changed a factor, the prose guard would let a poison unit
+    # through (or over-reject) with no other alarm. This pins both the word SET
+    # and the factor VALUES across the boundary — the lockstep the comment claims.
+    module = _load_module()
+
+    store_script = (
+        _TESTS_DIR.parent / "skills" / "analysis-kpi" / "scripts" / "kpi_store.py"
+    )
+    spec = importlib.util.spec_from_file_location("kpi_store_lockstep", store_script)
+    kpi_store = importlib.util.module_from_spec(spec)
+    sys.modules["kpi_store_lockstep"] = kpi_store
+    spec.loader.exec_module(kpi_store)
+
+    # Every word the prose guard rejects is scaled by the store, by the SAME
+    # factor (this module's _MAGNITUDE_MULTIPLIERS is the guard's word source).
+    for word, factor in module._MAGNITUDE_MULTIPLIERS.items():
+        assert module._MAGNITUDE_UNIT_RE.search(word), word
+        assert kpi_store._scale_multiplier(word) == factor, (word, factor)
+
+    # And a dimensional label is scaled/rejected by NEITHER — the sets agree at
+    # the negative case too, so a store that started scaling an extra word would
+    # not silently diverge from what the guard rejects.
+    assert kpi_store._scale_multiplier("USD") == 1
+    assert not module._MAGNITUDE_UNIT_RE.search("USD")
+
+
+def test_commit_to_store_propagates_magnitude_unit_rejection(tmp_path, monkeypatch):
+    # The sole production caller `commit_to_store` does NOT catch the guard's
+    # ValueError — a poison magnitude-word unit aborts the whole store append,
+    # by design (fail-loud on a human-confirm data error). Pin that the raise
+    # propagates through commit_to_store and nothing reaches the store.
+    store_dir = tmp_path / "store"
+    monkeypatch.setenv("KPI_STORE_DIR", str(store_dir))
+    module = _load_module()
+
+    with pytest.raises(ValueError):
+        module.commit_to_store(
+            [_prose_candidate("billion")], company="META",
+            confirmer="kouko", confirmed_at="2026-07-22T10:00:00Z", confirmed=True,
+        )
+    # Nothing written: the store dir was never created (or holds no series).
+    assert not store_dir.exists() or not list(store_dir.glob("*.json"))
+
+
 def test_build_candidates_preserves_decimal_matched_token():
     # The pure transform seam (build_candidates) wraps already-crossed located
     # numbers into candidates. A decimal token flows through as a float `value`

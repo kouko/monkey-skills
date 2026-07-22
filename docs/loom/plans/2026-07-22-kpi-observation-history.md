@@ -1,8 +1,8 @@
 # Plan: KPI observation history — US lane (Slice C)
 
 Source brief: docs/loom/specs/2026-07-20-kpi-observation-history.md
-Total tasks: 7
-Critical-path depth: 3 (≤5)   ← longest chain: T2 → T3 → T6 (period-fields → identity-key → history read)
+Total tasks: 8   (T8 added mid-SDD 2026-07-22 — a write-side guard for a double-scale hole found during T6 review; see Task 8 + Notes "T8 amendment")
+Critical-path depth: 3 (≤5)   ← longest chain: T2 → T3 → T6 (period-fields → identity-key → history read); T8 is an independent leaf
 Execution order: parallel-where-possible
 Plan-document-reviewer verdict: PASS (2026-07-22, 14/14 after the round-1 Check-8 fix — see Notes "amendment"). Round-1 NEEDS_REVISION was the missing decision-(B) coverage, now recorded as an explicit Notes exclusion; the two advisory notes (dispatcher-mechanism wording, per-predicate test bundling) are folded in. Amendment is additive (a Notes exclusion + reworded Notes + a test-splitting note), no task/DAG/field change → re-review skipped per writing-plans §"Amending a PASS plan" (b).
 
@@ -98,6 +98,27 @@ Key seam facts from recon (2026-07-22):
 - Dependencies: Task 3 completes first (consumes `same_period`/sort)
 - Independent: false
 - Brief item covered: Smallest End State (4) — "history answers 'what has been said about period P, and when' … flagging when they disagree"
+
+## Task 8 — prose commit rejects a magnitude-word unit (added mid-SDD, 2026-07-22)
+- Description: The prose lane stores BASE-SCALE values (`_normalize_value` folds the
+  magnitude word into `value` at write time), so a prose point's `unit` must be a
+  dimensional label, never a magnitude word. `commit` currently accepts any unit on a
+  confirmed candidate, so a human/LLM confirming `unit="billion"` on an already-scaled
+  3,560,000,000 would make T6's `history` scaler multiply it AGAIN (→ 3.56e18). This guard
+  rejects a magnitude-word unit (whole-word matched, `\b`, per the Part-2 lesson) at prose
+  commit, fail-closed. Added after both T6 re-reviews passed but the orchestrator verified
+  the write-side hole is live (`commit` returns `list(candidates)` with zero unit check).
+- Module: kpi_prose_candidates.py
+- Files touched: investing-toolkit/skills/analysis-kpi/scripts/kpi_prose_candidates.py, investing-toolkit/tests/test_kpi_prose_candidates.py
+- Context paths:
+  - investing-toolkit/skills/analysis-kpi/scripts/kpi_prose_candidates.py (`commit` ~:552-578)
+  - investing-toolkit/skills/data-markets/scripts/exhibit_prose.py (the `\b`-guarded magnitude regex to mirror)
+- Acceptance:
+  - RED: test_commit_rejects_magnitude_word_unit — a confirmed candidate with unit="billion"/"millions" (case-insensitive) does not reach the committed set; a dimensional unit ("USD"/"people"/"GW") commits unchanged; a unit containing a magnitude word only as a substring of a larger token is NOT falsely rejected.
+  - GREEN: magnitude-word units never reach the store via commit.
+- Dependencies: none   # different file from T6; closes the write-side of T6's read-side scaling
+- Independent: true   # kpi_prose_candidates.py — disjoint from T6's kpi_store.py
+- Brief item covered: §Constraints 4 (normalize unit before comparing) + §Problem (no fabricated value) — the write-side guarantee T6's history docstring trusts
 
 ## Task 7 — BACKLOG correction + brief-obsolescence cleanup
 - Description: Delete the unevidenced "≥10yr, industry norm" claim from `docs/loom/BACKLOG.md:167`, replace the "Slice C = coverage file + retention + tearsheet" framing with this slice's shipped shape, and log the five pre-existing defects the recon found (from brief §Pre-existing defects) as next-touch items. Docs-only.
