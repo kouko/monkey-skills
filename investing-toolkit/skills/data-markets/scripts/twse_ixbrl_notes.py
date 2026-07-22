@@ -102,11 +102,38 @@ def _period_sort_key(period: dict[str, Any] | None) -> tuple[str, int]:
     return (end, _duration_days(period.get("start"), end))
 
 
-def _select_current_fact(facts_for_concept: list[dict[str, Any]]) -> dict[str, Any] | None:
+def _select_current_fact(
+    facts_for_concept: list[dict[str, Any]], label: str | None = None
+) -> dict[str, Any] | None:
+    """Pick the most-current fact by `_period_sort_key`.
+
+    Tie-break when 2+ candidates share an identical period (e.g. a
+    filing that mistakenly tags its 本期/去年同期 columns with the same
+    contextRef — observed in the 2890 fixture's NPL table): `max()`
+    returns the FIRST candidate in input/document order. That is a
+    real rule this function relies on (first-in-document-order ==
+    current, per the 本期-before-去年同期 column emission order), not
+    an accident — when `label` is given, an ambiguous tie is logged so
+    it's observable instead of silently depending on emission order.
+    """
     candidates = [f for f in facts_for_concept if f.get("raw_value") is not None]
     if not candidates:
         return None
-    return max(candidates, key=lambda f: _period_sort_key(f.get("period")))
+    chosen = max(candidates, key=lambda f: _period_sort_key(f.get("period")))
+    if label is not None:
+        chosen_key = _period_sort_key(chosen.get("period"))
+        ties = [
+            f
+            for f in candidates
+            if f is not chosen and _period_sort_key(f.get("period")) == chosen_key
+        ]
+        if ties:
+            _log(
+                "ambiguous period tie",
+                f"{label}: {len(ties) + 1} candidates share period "
+                f"{chosen.get('period')!r} — first-in-document-order wins",
+            )
+    return chosen
 
 
 def extract_curated_notes(facts: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -233,7 +260,12 @@ def extract_fh_npl_coverage_notes(facts: list[dict[str, Any]]) -> dict[str, dict
 
         fields: dict[str, Any] = {}
         for field, concept in _FH_TOTAL_LOANS_CONCEPTS.items():
-            chosen = _select_current_fact(by_concept.get(concept, []))
+            # label makes an identical-period tie (e.g. the 2890 fixture's
+            # 本期/去年同期 columns sharing one contextRef) observable via
+            # _log instead of silently depending on document order.
+            chosen = _select_current_fact(
+                by_concept.get(concept, []), label=f"{company}/{field}"
+            )
             if chosen is None:
                 continue
             value = chosen["raw_value"]

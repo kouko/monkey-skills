@@ -145,6 +145,17 @@ def test_fh_npl_coverage_totalloans_cathay():
         "instant": "2026-03-31",
     }
 
+    # npl_ratio: the OTHER percent branch (Non-PerformingLoansRatio).
+    # Raw text scale=-2 -> parser raw_value 0.0016; extractor presents
+    # 0.16 (x100, same single-conversion rule as coverage_ratio).
+    assert cathay_bank["npl_ratio"]["value"] == 0.16
+    assert cathay_bank["npl_ratio"]["concept"] == "tifrs-notes:Non-PerformingLoansRatio"
+
+    # gross_loans: the PASSTHROUGH branch (not a percent field) — the
+    # parser's own scale-driven scaled value is asserted as-is, no *100.
+    assert cathay_bank["gross_loans"]["value"] == 2_946_761_073_000.0
+    assert cathay_bank["gross_loans"]["concept"] == "tifrs-notes:GrossLoans"
+
 
 def test_fh_npl_coverage_resolves_both_bank_subsidiaries_distinctly():
     """DUP-TREE case (Task 9): 2890 永豐金控 is a post-merger FHC carrying
@@ -161,3 +172,28 @@ def test_fh_npl_coverage_resolves_both_bank_subsidiaries_distinctly():
     assert set(npl) == {"永豐商業銀行", "京城商業銀行"}
     assert npl["永豐商業銀行"]["coverage_ratio"]["value"] == 1260.54
     assert npl["京城商業銀行"]["coverage_ratio"]["value"] == 2407.94
+
+
+def test_select_current_fact_ambiguous_period_tie_first_wins_and_is_logged(capsys):
+    """Pins the tie-break rule `_select_current_fact` relies on when 2+
+    candidates share an IDENTICAL period — as the 2890 fixture's NPL
+    table does: it mis-tags its 去年同期 (prior-year) column with the
+    same contextRef as 本期 (current), so both a "本期" and a "去年同期"
+    fact resolve to the same period. The rule (first-in-document-order
+    wins, per the observed 本期-before-去年同期 column emission order) was
+    previously silent — with `label` given, an ambiguous tie must also
+    be logged (not just resolved) so it's observable rather than an
+    incidental dependency on HTML column order that could regress on a
+    fixture refresh or a different filer's layout."""
+    _, notes_mod = _load_modules()
+    same_period = {"type": "instant", "instant": "2026-03-31"}
+    current = {"raw_value": 111.0, "period": dict(same_period)}
+    prior = {"raw_value": 222.0, "period": dict(same_period)}
+
+    chosen = notes_mod._select_current_fact([current, prior], label="acme/coverage_ratio")
+
+    assert chosen is current
+    assert chosen["raw_value"] == 111.0
+    err = capsys.readouterr().err
+    assert "ambiguous period tie" in err
+    assert "acme/coverage_ratio" in err
