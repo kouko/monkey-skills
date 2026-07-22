@@ -64,7 +64,11 @@ def _log(stage: str, msg: str = "") -> None:
 def build_t164sb01_url(co_id: str, year: int, season: int, report_id: str) -> str:
     """Build the t164sb01 request URL. Same URL for every market tier
     (上市/上櫃/興櫃/KY) — `report_id` "C"=consolidated (合併),
-    "A"=parent-only (not served by this endpoint; always 檔案不存在)."""
+    "A"=individual/parent-only (個別). The A/C split tracks CONSOLIDATION
+    SCOPE, not filer type: consolidated (-ci) filers are served only at C
+    (A 檔案不存在), but individual-only filers — standalone insurers and
+    bills-finance filers (e.g. 華票 2820) — are served ONLY at A (C 404s).
+    See `fetch_with_report_fallback` for the C→A fallback."""
     return (
         f"{BASE_URL}?step=1&CO_ID={co_id}&SYEAR={year}"
         f"&SSEASON={season}&REPORT_ID={report_id}"
@@ -134,3 +138,30 @@ def fetch_with_season_fallback(
         if body is not None:
             return body, season
     return None, None
+
+
+# report_id try-order for consolidation-scope fallback. "C" (consolidated)
+# is served for -ci filers; individual-only filers (standalone insurers,
+# bills-finance filers e.g. 華票 2820) are served ONLY at "A" (individual).
+DEFAULT_REPORT_ORDER: tuple[str, ...] = ("C", "A")
+
+
+def fetch_with_report_fallback(
+    co_id: str, year: int, season: int,
+    *, report_order: tuple[str, ...] = DEFAULT_REPORT_ORDER,
+    fetch_fn=fetch_ixbrl_body,
+) -> tuple[str, str] | None:
+    """Try each report_id in `report_order` in turn ("C" consolidated,
+    then "A" individual); the first whose body is not the absence sentinel
+    wins. Returns (body, report_id_used), or None if every report_id in
+    `report_order` is absent.
+
+    Handles the CONSOLIDATION-SCOPE split: consolidated (-ci) filers are
+    served only at C, but individual-only filers — standalone insurers and
+    bills-finance filers (e.g. 華票 2820) — are served ONLY at A (C 404s).
+    """
+    for report_id in report_order:
+        body = fetch_fn(co_id, year, season, report_id)
+        if body is not None:
+            return body, report_id
+    return None
