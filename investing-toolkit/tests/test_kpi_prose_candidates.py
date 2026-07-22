@@ -1184,3 +1184,61 @@ def test_hard_wrapped_source_still_commits_the_scaled_value():
     # token spans real adjacent prose, so it is a literal substring of it.
     for candidate in candidates:
         assert module.passes_substring_gate(candidate, canonical_text)
+
+
+def test_prose_point_carries_period_identity_fields():
+    # Slice C, Task 2: period IDENTITY is the raw (period_start, period_end,
+    # period_kind) context pair — the thing that recognizes "the same period"
+    # across filings — while the human-readable `period` stays a first-class
+    # display LABEL. This task adds the identity FIELDS + pass-through onto the
+    # committed point; it does NOT derive or validate them (derivation is
+    # upstream, reused from _derive_fiscal_label per the brief), and it does NOT
+    # change the dedup key (that is Task 3). So the point must carry whatever the
+    # candidate carries, verbatim, and default each to None when absent — exactly
+    # like the optional source_document/filing_date/value_qualifier pass-throughs
+    # already do — without crashing on a prose candidate that has no dates yet.
+    #
+    # No `@req` tag: this dispatch's plan (docs/loom/plans/2026-07-22-kpi-
+    # observation-history.md) binds tasks by "Brief item covered", not a
+    # registered loom-spec REQ-id (same convention as the sibling tests above).
+    module = _load_module()
+
+    base = {
+        "matched_token": "13,000",
+        "verbatim_quote": "we hired 13,000 people",
+        "value": 13000,
+        "char_offset_span": [9, 15],
+        "kpi_id": "headcount",
+        "unit": "count",
+        "period": "FY2024",
+        "source_accession": "0001318605-24-000123",
+        "as_of": "2024-10-31",
+    }
+
+    with_dates = dict(
+        base,
+        period_start="2024-01-01",
+        period_end="2024-12-31",
+        period_kind="duration",
+    )
+    point = module._prose_candidate_to_point(
+        with_dates, company="ACME",
+        confirmer="kouko", confirmed_at="2026-07-20T10:00:00Z",
+    )
+    assert point["period_start"] == "2024-01-01"
+    assert point["period_end"] == "2024-12-31"
+    assert point["period_kind"] == "duration"
+    # The identity fields are ADDITIVE — the display label is untouched.
+    assert point["period"] == "FY2024", "the display label rides through unchanged"
+
+    # A candidate with no period dates yet (the current prose-lane shape) commits
+    # cleanly with all three identity fields defaulting to None — no crash, no
+    # fabricated dates — and the label is still whatever the candidate carried.
+    without_dates = module._prose_candidate_to_point(
+        base, company="ACME",
+        confirmer="kouko", confirmed_at="2026-07-20T10:00:00Z",
+    )
+    assert without_dates["period_start"] is None
+    assert without_dates["period_end"] is None
+    assert without_dates["period_kind"] is None
+    assert without_dates["period"] == "FY2024", "label unchanged when identity absent"

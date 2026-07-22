@@ -644,6 +644,16 @@ def _prose_candidate_to_point(candidate: dict, company: str,
       required only for `source_table_id`/`source_cell_ref`, which the store
       guards; inventing a truthy placeholder here would assert a bound the
       filing never stated.)
+    - `period_start`/`period_end`/`period_kind` (Slice C) carry the raw period
+      IDENTITY — the (start, end) context pair that recognizes "the same period"
+      across filings — alongside the display `period` LABEL, which stays a
+      first-class field. They are pure pass-throughs (`.get`, defaulting to None
+      like the optional attributions above): this assembler neither derives nor
+      validates the calendar (`period_kind` is "duration" when both dates are
+      present, "instant" when only the end is — computed UPSTREAM and carried in,
+      per the brief's REUSE of `_derive_fiscal_label`). A prose candidate with no
+      dates yet commits cleanly with all three None; none is a store-required
+      provenance field, so a None cannot trip the falsy-provenance guard.
     """
     start, end = candidate["char_offset_span"]
     return {
@@ -661,6 +671,9 @@ def _prose_candidate_to_point(candidate: dict, company: str,
             candidate["verbatim_quote"], candidate["matched_token"]
         ),
         "value_qualifier": candidate.get("value_qualifier"),
+        "period_start": candidate.get("period_start"),
+        "period_end": candidate.get("period_end"),
+        "period_kind": candidate.get("period_kind"),
         "source_document": candidate.get("source_document"),
         "filing_date": candidate.get("filing_date"),
         "confirmer": confirmer,
