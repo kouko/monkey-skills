@@ -67,7 +67,10 @@ fi
 # ## Notes pinned wording — same pin loom-memory SKILL.md record step 2
 # carries).
 
-WIN2="$(window_after "## When to record" 20 "$README")"
+# Window re-measured 2026-07-22: PR #596 inserted the recall-staleness
+# caveat paragraph into this section, pushing the pinned sentence to
+# anchor+24; 25 keeps the measured-neighborhood scoping intact.
+WIN2="$(window_after "## When to record" 25 "$README")"
 if [ -z "$WIN2" ]; then
   fail "anchor '## When to record' not found in README.md"
 elif echo "$WIN2" | grep -qF "grep the store for entries the new fact contradicts" \
