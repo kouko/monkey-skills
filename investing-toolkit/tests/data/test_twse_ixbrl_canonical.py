@@ -332,11 +332,13 @@ def test_canonical_fh_from_2882_fixture():
     the real 2882 (國泰金控 Cathay FHC) 2026 Q1 fixture. Measured values
     verbatim from scratchpad/fh-measurement.md §2882.
 
-    profit maps to ifrs-full:ProfitLossAttributableToOwnersOfParent (the
+    net_income maps to ifrs-full:ProfitLossAttributableToOwnersOfParent (the
     consolidated attributable-to-owners bottom line, 31,593,811,000) — NOT
     tifrs-bsci-fh:NetIncomeLoss (72,538,053,000, a different
     pre-elimination subtotal per the measurement doc's Q1 2026 note); this
-    test pins the deliberate choice.
+    test pins the deliberate choice. The key is named net_income (not
+    profit) to match the -ci _CONCEPT_MAP convention that pack_tw.py's
+    consumer code actually reads (code-quality review round 2 🟡 fix).
 
     DCF-trigger fields (revenue/ebit/fcf/capex/total_debt) must be absent
     everywhere so downstream DCF fails loud instead of silently zeroing
@@ -376,16 +378,76 @@ def test_canonical_fh_from_2882_fixture():
         in bs["_meta"]["borrowings"]["components"]
     )
 
-    assert inc["profit"][0] == 31_593_811_000.0
+    assert inc["net_income"][0] == 31_593_811_000.0
     assert (
-        inc["_meta"]["profit"]["concept"]
+        inc["_meta"]["net_income"]["concept"]
         == "ifrs-full:ProfitLossAttributableToOwnersOfParent"
     )
     assert inc["net_interest_income"][0] == 76_415_488_000.0
-    assert inc["eps"][0] == 2.15
+    assert inc["eps_basic"][0] == 2.15
 
     # DCF-trigger fields must be absent everywhere (fail loud, not silent-0).
     dcf_trigger_keys = {"revenue", "ebit", "fcf", "capex", "total_debt"}
     for statement in ("balance_sheet", "income_statement", "cash_flow"):
         keys = set(canonical.get(statement, {}))
         assert not (keys & dcf_trigger_keys), (statement, keys & dcf_trigger_keys)
+
+
+def test_canonical_fh_deposits_borrowings_degrade_gracefully_when_concept_missing():
+    """Code-quality review round 2 🟡 fix: real -fh filers do not all carry
+    every borrowing/deposit concept (measured: CTBC 2891 has no
+    ifrs-full:OtherBorrowings at all — see scratchpad/fh-measurement.md
+    §2891). _sum_concepts (shared by deposits/borrowings) must sum only
+    whichever components are present rather than crashing on a missing one
+    — this pins that graceful-degradation behavior, previously verified
+    by hand but untested (mirrors the -ci pattern at
+    test_canonical_ci_total_debt_sums_short_term_debt_when_present).
+    """
+    _, canonical_mod = _load_modules()
+
+    period = {"type": "instant", "instant": "2026-03-31"}
+
+    def _fact(concept: str, value: float) -> dict:
+        return {
+            "concept": concept,
+            "context_ref": "AsOf20260331",
+            "raw_value": value,
+            "decimals": "-3",
+            "unit": "TWD",
+            "period": period,
+            "entity": "2891",
+            "fact_type": "nonFraction",
+        }
+
+    facts = [
+        # Deposits: only DepositsFromCustomers present (DepositsFromBanks
+        # missing).
+        _fact("ifrs-full:DepositsFromCustomers", 5_817_260_379_000.0),
+        # Borrowings: BondsIssued + repo present, OtherBorrowings ABSENT
+        # (the real CTBC gap) and CommercialPapersIssuedNet absent too.
+        _fact("ifrs-full:BondsIssued", 212_161_628_000.0),
+        _fact(
+            "tifrs-bsci-fh:SecuritiesSoldUnderRepurchaseAgreements",
+            291_754_911_000.0,
+        ),
+        # tifrs-bsci-fh concept required so classify_taxonomy routes "fh".
+        _fact("tifrs-bsci-fh:NetInterestIncomeExpense", 41_556_941_000.0),
+    ]
+
+    canonical = canonical_mod.build_canonical(facts)
+    bs = canonical["balance_sheet"]
+
+    assert bs["deposits"][0] == 5_817_260_379_000.0, (
+        "deposits must sum only the present component "
+        "(DepositsFromCustomers), not crash on missing DepositsFromBanks"
+    )
+    assert bs["_meta"]["deposits"]["components"] == ["ifrs-full:DepositsFromCustomers"]
+
+    assert bs["borrowings"][0] == 503_916_539_000.0, (
+        "borrowings must sum only the present components (BondsIssued + "
+        "repo), not crash on missing OtherBorrowings/CommercialPapersIssuedNet"
+    )
+    assert bs["_meta"]["borrowings"]["components"] == [
+        "ifrs-full:BondsIssued",
+        "tifrs-bsci-fh:SecuritiesSoldUnderRepurchaseAgreements",
+    ]

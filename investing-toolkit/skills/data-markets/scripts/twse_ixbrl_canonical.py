@@ -370,14 +370,22 @@ _FH_CONCEPT_MAP: dict[str, dict[str, str]] = {
     },
     "income_statement": {
         "net_interest_income": "tifrs-bsci-fh:NetInterestIncomeExpense",
-        # Deliberately ifrs-full:ProfitLossAttributableToOwnersOfParent (the
+        # Keys net_income/eps_basic (not profit/eps) to match the -ci
+        # _CONCEPT_MAP convention (:59,:60) — pack_tw.py reads exactly
+        # these key names (grepped: net_income/eps_basic, ~:194,242,273,278);
+        # a different key name would make pack_tw silently drop the FHC's
+        # net income, the same wrong-answer class as the total_debt-
+        # defaults-to-0 bug the -ci arc hit.
+        #
+        # Concept choice is still deliberately
+        # ifrs-full:ProfitLossAttributableToOwnersOfParent (the
         # consolidated attributable-to-owners bottom line) — NOT
         # tifrs-bsci-fh:NetIncomeLoss, which is a different, larger
         # pre-elimination subtotal that does not match this figure (measured
         # on 2882 2026Q1: 31,593,811,000 vs 72,538,053,000; see
         # scratchpad/fh-measurement.md §2882).
-        "profit": "ifrs-full:ProfitLossAttributableToOwnersOfParent",
-        "eps": "ifrs-full:BasicEarningsLossPerShare",
+        "net_income": "ifrs-full:ProfitLossAttributableToOwnersOfParent",
+        "eps_basic": "ifrs-full:BasicEarningsLossPerShare",
     },
 }
 
@@ -386,8 +394,8 @@ _FH_LABELS: dict[str, str] = {
     "total_equity": "Equity",
     "cash": "Cash and Cash Equivalents",
     "net_interest_income": "Net Interest Income (Expense)",
-    "profit": "Profit (Loss) Attributable to Owners of Parent",
-    "eps": "Basic Earnings (Loss) per Share",
+    "net_income": "Profit (Loss) Attributable to Owners of Parent",
+    "eps_basic": "Basic Earnings (Loss) per Share",
 }
 
 # Deposits are kept DISTINCT from interest-bearing borrowings — the two
