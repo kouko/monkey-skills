@@ -30,7 +30,7 @@ from __future__ import annotations
 import re
 import sys
 from datetime import date
-from typing import Any
+from typing import Any, Literal
 
 _LOG_TAG = "twse-ixbrl-canonical"
 
@@ -123,18 +123,54 @@ _DEBT_CONCEPTS: tuple[str, ...] = (
 )
 
 
-def _is_fh_taxonomy(facts: list[dict[str, Any]]) -> bool:
-    """Financial-holding filers use a "-fh" namespace token in place of
-    the industrial "-ci"/"-SCF" tokens (e.g. "tifrs-bsci-fh"). Detect by
-    namespace-prefix token, not full-string match, so it survives the
-    company/statement-suffix variations across the -fh taxonomy family.
+# TW MOPS iXBRL statement taxonomies split by industry family: each filing
+# carries exactly one tifrs-bsci-<family> namespace (measured across the
+# committed fixtures). "basi" covers standalone banks AND bills-finance.
+_BSCI_TAG_PREFIXES: dict[str, str] = {
+    "tifrs-bsci-ci": "ci",      # 一般行業 (industrial)
+    "tifrs-bsci-fh": "fh",      # 金融控股 (financial holding)
+    "tifrs-bsci-basi": "basi",  # 銀行 / 票券金融 (banks & bills-finance)
+    "tifrs-bsci-bd": "bd",      # 證券 (securities/broker-dealer)
+    "tifrs-bsci-ins": "ins",    # 保險 (insurance)
+}
+
+TaxonomyTag = Literal["ci", "fh", "basi", "bd", "ins"]
+
+
+def classify_taxonomy(facts: list[dict[str, Any]]) -> TaxonomyTag:
+    """Classify a fact set by the tifrs-bsci-<family> namespace prefix its
+    concepts carry, returning the family tag ("ci"/"fh"/"basi"/"bd"/"ins").
+
+    -ci (industrial) filers put their primary statement totals in the
+    ifrs-full namespace and use tifrs-bsci-ci only for TW-specific
+    supplementary lines; a fact set with NO recognized tifrs-bsci-* family
+    at all is therefore treated as "ci" (the industrial default, and the
+    shape synthetic ifrs-full-only fact sets take).
+
+    Tie-break (not observed in measurement — each real filing carries exactly
+    one family): if more than one recognized family appears, the more
+    specific financial family wins over the industrial "ci" supplementary
+    tag; among multiple financial families the sorted-first tag is chosen,
+    deterministically, with the anomaly logged.
     """
+    found: set[str] = set()
     for fact in facts:
         concept = fact.get("concept") or ""
-        namespace = concept.split(":", 1)[0]
-        if "fh" in namespace.split("-"):
-            return True
-    return False
+        prefix = concept.split(":", 1)[0]
+        tag = _BSCI_TAG_PREFIXES.get(prefix)
+        if tag:
+            found.add(tag)
+
+    if not found:
+        return "ci"
+    if len(found) == 1:
+        return next(iter(found))  # type: ignore[return-value]
+
+    _log("multiple bsci families", f"found={sorted(found)}")
+    found.discard("ci")
+    if not found:
+        return "ci"
+    return sorted(found)[0]  # type: ignore[return-value]
 
 
 def _period_sort_key(period: dict[str, Any] | None) -> tuple[str, int]:
@@ -226,26 +262,28 @@ def _derive_fcf(cash_flow: dict[str, Any]) -> tuple[list[float], dict[str, Any]]
     return values, meta
 
 
-def build_canonical(facts: list[dict[str, Any]]) -> dict[str, Any]:
-    """Map parsed iXBRL facts into the canonical three-statement shape.
-
-    Industrial (-ci) filers only. A -fh (financial holding) fact set
-    returns {"unsupported": "financial-fh", ...} instead of a mapping —
-    the -fh statement taxonomy is a deferred sub-arc, and mapping
-    -fh concepts through the -ci concept map would silently emit an
-    empty/wrong canonical shape rather than failing loud.
+def _unsupported_financial() -> dict[str, Any]:
+    """The marker returned for any financial taxonomy (fh/basi/bd/ins) that
+    has no canonical builder registered yet — those builders land in later
+    tasks (T5-T8). Mapping financial concepts through the -ci concept map
+    would silently emit an empty/wrong canonical shape rather than failing
+    loud, so an explicit unsupported marker is returned instead. A fresh
+    dict per call avoids callers mutating a shared constant.
     """
-    if _is_fh_taxonomy(facts):
-        return {
-            "unsupported": "financial-fh",
-            "reason": (
-                "financial-holding (-fh) filers use a different statement "
-                "taxonomy than industrial (-ci) filers; -fh canonical "
-                "mapping is a deferred sub-arc (see docs/loom/plans/"
-                "2026-07-19-tw-ixbrl-ingestion.md Decision Log)"
-            ),
-        }
+    return {
+        "unsupported": "financial-fh",
+        "reason": (
+            "financial-holding (-fh) filers use a different statement "
+            "taxonomy than industrial (-ci) filers; -fh canonical "
+            "mapping is a deferred sub-arc (see docs/loom/plans/"
+            "2026-07-19-tw-ixbrl-ingestion.md Decision Log)"
+        ),
+    }
 
+
+def _build_ci_canonical(facts: list[dict[str, Any]]) -> dict[str, Any]:
+    """Map an industrial (-ci) fact set into the canonical three-statement
+    shape (income_statement / balance_sheet / cash_flow + per-line _meta)."""
     by_concept: dict[str, dict[str, dict[str, Any]]] = {}
     for fact in facts:
         concept = fact.get("concept")
@@ -306,3 +344,29 @@ def build_canonical(facts: list[dict[str, Any]]) -> dict[str, Any]:
         balance_sheet["_meta"]["total_debt"] = meta
 
     return canonical
+
+
+# Builder registry: taxonomy tag -> canonical builder callable. Only "ci"
+# has a builder today; the financial families (fh/basi/bd/ins) land in later
+# tasks (T5-T8) and register their builders here. A tag with no registered
+# builder falls through to the unsupported marker (_unsupported_financial).
+_CANONICAL_BUILDERS: dict[str, Any] = {
+    "ci": _build_ci_canonical,
+}
+
+
+def build_canonical(facts: list[dict[str, Any]]) -> dict[str, Any]:
+    """Map parsed iXBRL facts into the canonical three-statement shape by
+    routing on the fact set's taxonomy family (classify_taxonomy).
+
+    Industrial (-ci) filers map through _build_ci_canonical. Financial
+    families (fh/basi/bd/ins) have no builder registered yet, so they return
+    an explicit unsupported marker instead of a wrong/empty mapping — their
+    builders are a deferred sub-arc (T5-T8, see docs/loom/plans/
+    2026-07-19-tw-ixbrl-ingestion.md Decision Log).
+    """
+    tag = classify_taxonomy(facts)
+    builder = _CANONICAL_BUILDERS.get(tag)
+    if builder is None:
+        return _unsupported_financial()
+    return builder(facts)
