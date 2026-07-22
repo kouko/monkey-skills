@@ -92,6 +92,12 @@ Role boundaries enforced by behavior, not reading restrictions:
   and flagging `SUSPECT`/`SUSPECT-COMPLETE` for a human operator; `reset`
   and `force-fail` are the human-operator recovery verbs for stuck or
   confirmed-dead entries.
+- **Check the loom-memory store's §Index invariants**:
+  `python3 scripts/check_loom_memory_integrity.py [--store docs/loom/memory]`
+  — validate-only, stdlib-only; fails rc=1 and names every offender when a
+  body file has no index line, an index line points to a missing file, a
+  filename diverges from its frontmatter `name`, or an index description
+  isn't byte-identical to its frontmatter `description`; rc=0 when clean.
 <!-- END command-surface (managed) -->
 
 ## Plugin: domain-teams
