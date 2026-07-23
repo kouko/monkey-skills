@@ -625,6 +625,16 @@ def _cli_query(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cli_list_series(args: argparse.Namespace) -> int:
+    """`list-series` subcommand: print `list_series()`'s `(company, kpi_id)`
+    pairs as a JSON array of 2-element arrays to stdout. Never raises on an
+    absent/empty store — `list_series()` already degrades to `[]`.
+    """
+    json.dump(list_series(), sys.stdout, ensure_ascii=False)
+    sys.stdout.write("\n")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Append-only bitemporal KPI store CLI (append / query)."
@@ -657,6 +667,12 @@ def main() -> int:
              "(point-in-time).",
     )
     query_parser.set_defaults(func=_cli_query)
+
+    list_series_parser = subparsers.add_parser(
+        "list-series",
+        help="List the store's (company, kpi_id) pairs as a JSON array.",
+    )
+    list_series_parser.set_defaults(func=_cli_list_series)
 
     args = parser.parse_args()
     return args.func(args)
