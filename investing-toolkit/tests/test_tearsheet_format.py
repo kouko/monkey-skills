@@ -29,10 +29,33 @@ sys.path.insert(0, str(_SCRIPTS_DIR))
 
 from tearsheet_format import render_tearsheet  # noqa: E402
 
+# Test-only: reuse the STORE's own axis-key primitives (`_snap_month_end`/
+# `_qtrs`) to compute fixture `period_axis_key` values -- so fixtures built
+# with `_period()` carry the SAME key a real `kpi_store.py dump` would emit
+# for identical period identity, keeping the column-alignment fixtures
+# correct now that the formatter unifies columns by `period_axis_key`
+# instead of the raw (period_start, period_end) tuple. This is a TEST-ONLY
+# import for fixture construction -- tearsheet_format.py itself never
+# imports kpi_store (pure formatter, no cross-skill runtime dependency).
+_KPI_STORE_SCRIPTS_DIR = _ROOT / "skills" / "analysis-kpi" / "scripts"
+sys.path.insert(0, str(_KPI_STORE_SCRIPTS_DIR))
+from kpi_store import _snap_month_end, _qtrs  # noqa: E402
 
-def _period(start, end, kind, labels, canonical_value, unit=None):
+
+def _axis_key(start, end, kind):
+    snapped_end = _snap_month_end(end)
+    quarters = _qtrs({"period_start": start, "period_end": end, "period_kind": kind})
+    if snapped_end is None or quarters is None:
+        return None
+    return f"{snapped_end.isoformat()}|q{quarters}"
+
+
+def _period(start, end, kind, labels, canonical_value, unit=None, axis_key="__auto__"):
     """One PINNED-schema period entry (## Notes): point fields verbatim on
-    `latest`/`observations`, plus `canonical_value`."""
+    `latest`/`observations`, plus `canonical_value`. `period_axis_key`
+    defaults to the real store computation (`_axis_key`) so pre-existing
+    fixtures keep their intended column alignment; pass an explicit value
+    to simulate a real store's cross-KPI drift-tolerant key directly."""
     latest = {
         "period": labels[0],
         "value": str(canonical_value),
@@ -42,10 +65,12 @@ def _period(start, end, kind, labels, canonical_value, unit=None):
     }
     if unit is not None:
         latest["unit"] = unit
+    resolved_axis_key = _axis_key(start, end, kind) if axis_key == "__auto__" else axis_key
     return {
         "period_start": start,
         "period_end": end,
         "period_kind": kind,
+        "period_axis_key": resolved_axis_key,
         "period_labels": labels,
         "disagreement": False,
         "latest": latest,
@@ -303,6 +328,121 @@ def test_disagreement_marker_composes_after_unit_suffix():
     assert cells[1] == "93,775,000,000 USD†"
 
 
+def test_period_axis_key_unifies_drifted_period_across_kpis():
+    """Whole-branch review Fix 1(a): cross-KPI column unification is keyed
+    by the store's `period_axis_key`, not the raw (period_start,
+    period_end) pair. Two KPIs report the SAME real period with a
+    period_end drifted within the store's snap tolerance -- kpi_a ends
+    2021-12-31, kpi_b ends 2021-12-15, distinct start dates too -- both
+    snap to the same December 2021 month-end and both round to q4, so the
+    store emits the SAME `period_axis_key` for both even though the raw
+    tuples differ. Fails on the pre-fix raw-tuple axis, which keyed
+    columns by the literal (period_start, period_end) pair and would split
+    these into two columns instead of one.
+
+    (The plan's illustrative dates for this drift, 2021-12-31 vs
+    2022-01-02, do NOT actually snap-match under `_snap_month_end` --
+    verified directly: they fall in different calendar months, so the
+    store would emit two DIFFERENT axis keys. Substituted same-month dates
+    that genuinely exercise the snap-tolerance merge this fix is about.)
+    """
+    dump = {
+        "company": "TESTCO",
+        "as_of": "2026-07-24",
+        "series": [
+            {
+                "kpi_id": "kpi_a",
+                "periods": [
+                    _period("2021-01-01", "2021-12-31", "duration", ["FY2021"], 100),
+                ],
+            },
+            {
+                "kpi_id": "kpi_b",
+                "periods": [
+                    _period(
+                        "2021-01-05", "2021-12-15", "duration",
+                        ["FY2021 (early close)"], 200,
+                    ),
+                ],
+            },
+        ],
+        "warnings": [],
+    }
+    out = render_tearsheet(dump)
+    header_line = next(line for line in out.splitlines() if line.startswith("| kpi_id"))
+    header_cells = [c.strip() for c in header_line.strip("|").split("|")]
+    assert len(header_cells) == 2  # kpi_id + ONE shared column, not two
+
+    row_a = next(line for line in out.splitlines() if line.startswith("| kpi_a"))
+    row_b = next(line for line in out.splitlines() if line.startswith("| kpi_b"))
+    assert [c.strip() for c in row_a.strip("|").split("|")][1] == "100"
+    assert [c.strip() for c in row_b.strip("|").split("|")][1] == "200"
+
+
+def test_degenerate_null_axis_key_periods_never_merge_across_kpis():
+    """Whole-branch review Fix 1(b): two KPIs each carry a DEGENERATE
+    period (missing `period_start`, so the store's `period_axis_key` is
+    null) that happens to share the same raw (period_start, period_end)
+    pair -- (None, "2021-12-31") for both. A null key is NOT proof they
+    are the same real period, so they must render as TWO SEPARATE columns
+    with BOTH values visible -- never merge/overwrite into one shared
+    column keyed by the raw tuple (the pre-fix behavior)."""
+    dump = {
+        "company": "TESTCO",
+        "as_of": "2026-07-24",
+        "series": [
+            {
+                "kpi_id": "kpi_a",
+                "periods": [
+                    _period(None, "2021-12-31", "duration", ["Stub A"], 111),
+                ],
+            },
+            {
+                "kpi_id": "kpi_b",
+                "periods": [
+                    _period(None, "2021-12-31", "duration", ["Stub B"], 222),
+                ],
+            },
+        ],
+        "warnings": [],
+    }
+    out = render_tearsheet(dump)
+    header_line = next(line for line in out.splitlines() if line.startswith("| kpi_id"))
+    header_cells = [c.strip() for c in header_line.strip("|").split("|")]
+    assert len(header_cells) == 3  # kpi_id + TWO distinct columns
+    assert "Stub A" in header_cells and "Stub B" in header_cells
+
+    row_a = next(line for line in out.splitlines() if line.startswith("| kpi_a"))
+    row_b = next(line for line in out.splitlines() if line.startswith("| kpi_b"))
+    cells_a = [c.strip() for c in row_a.strip("|").split("|")]
+    cells_b = [c.strip() for c in row_b.strip("|").split("|")]
+    assert "111" in cells_a and "222" not in cells_a
+    assert "222" in cells_b and "111" not in cells_b
+
+
+def test_null_period_label_renders_unlabeled_header_no_crash():
+    """Whole-branch review Fix 2: a point appended without `period` flows
+    to `period_labels: [None]` -- the renderer must not TypeError
+    (`_shortest_label` -> None -> `len()`/`join()` crash); a column whose
+    labels are ALL null renders header `(unlabeled)`."""
+    dump = {
+        "company": "TESTCO",
+        "as_of": "2026-07-24",
+        "series": [
+            {
+                "kpi_id": "kpi_a",
+                "periods": [
+                    _period("2021-01-01", "2021-12-31", "duration", [None], 100),
+                ],
+            },
+        ],
+        "warnings": [],
+    }
+    out = render_tearsheet(dump)  # must not raise
+    header_line = next(line for line in out.splitlines() if line.startswith("| kpi_id"))
+    assert "(unlabeled)" in header_line
+
+
 def test_empty_series_card_and_warnings_footer():
     """Task 5: empty `series` renders a graceful no-records card instead of
     an empty table; the footer ALWAYS renders a provenance line (`Rendered
@@ -412,6 +552,25 @@ def test_out_flag_nonexistent_dir_reports_clean_error(tmp_path):
             "--as-of", "2026-07-24",
             "--out", str(bad_out_path),
         ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    stderr = result.stderr.decode("utf-8", errors="replace")
+    assert result.returncode == 1
+    assert "error:" in stderr
+    assert "Traceback" not in stderr
+
+
+def test_in_path_is_a_directory_reports_clean_error(tmp_path):
+    """Whole-branch review Fix 4: the --in read path only caught
+    FileNotFoundError + JSONDecodeError -- a directory passed to --in
+    raises IsADirectoryError, an OSError subtype that escaped as a raw
+    traceback. Must match the --out branch's convention: clean `error:`
+    message on stderr, exit 1, no traceback."""
+    script = _SCRIPTS_DIR / "tearsheet_format.py"
+
+    result = subprocess.run(
+        [sys.executable, str(script), "--in", str(tmp_path), "--as-of", "2026-07-24"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )

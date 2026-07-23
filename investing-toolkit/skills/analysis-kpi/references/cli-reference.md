@@ -53,11 +53,11 @@ never raises. `dump` always exits **0**, printing one company's series as a
 JSON object (`{"company", "series", "warnings"}`; unknown/empty company →
 empty `series`) — never raises; a corrupt series file is skipped and noted
 in `warnings` rather than failing the dump. The payload's field shapes
-(`periods`, `latest`, `observations`, `disagreement`, `canonical_value`) are
-the pinned schema documented in
-`investing-toolkit/skills/report-kpi-tearsheet/SKILL.md`, the consumer that
-renders this JSON into a tearsheet — see that skill for the full shape
-rather than duplicating it here.
+(`periods`, `latest`, `observations`, `disagreement`, `canonical_value`,
+`period_axis_key`) are the pinned schema — see `dump_company`'s docstring
+in this same file (`kpi_store.py`) for the full payload shape rather than
+duplicating it here; `investing-toolkit/skills/report-kpi-tearsheet/
+SKILL.md` documents how that payload renders into a tearsheet.
 
 ## CLI (review_queue)
 

@@ -224,6 +224,55 @@ def test_dump_groups_vintages_and_flags_disagreement(tmp_path):
     }
 
 
+def test_dump_period_entries_include_period_axis_key(tmp_path):
+    """Whole-branch review Fix 1 (store side): each dumped period entry
+    carries a store-owned `period_axis_key` -- "<snapped-month-end-ISO>|
+    q<qtrs>" computed via the existing `_snap_month_end`/`_qtrs` helpers on
+    the entry's representative point -- for a normal duration; `null` for a
+    degenerate entry (missing `period_start`, so `_qtrs` cannot size it).
+    This is the cross-KPI column-alignment identity the formatter now
+    consumes instead of a raw (period_start, period_end) tuple.
+    """
+    env = {**os.environ, "KPI_STORE_DIR": str(tmp_path)}
+    normal_point = {
+        "company": "ACME",
+        "kpi_id": "revenue",
+        "period": "FY2021",
+        "as_of": "2022-02-15",
+        "value": 100,
+        "source_accession": _ACCESSION,
+        "source_table_id": "table:0",
+        "source_cell_ref": {"row": 1, "col": 1},
+        "period_start": "2021-01-01",
+        "period_end": "2021-12-31",
+        "period_kind": "duration",
+    }
+    degenerate_point = {
+        "company": "ACME",
+        "kpi_id": "backlog",
+        "period": "as reported",
+        "as_of": "2022-02-15",
+        "value": 200,
+        "source_accession": _ACCESSION,
+        "source_table_id": "table:0",
+        "source_cell_ref": {"row": 1, "col": 1},
+        "period_start": None,
+        "period_end": "2021-12-31",
+        "period_kind": "duration",
+    }
+    for point in (normal_point, degenerate_point):
+        _append_via_cli(point, env)
+
+    result = _run_cli("dump", "--company", "ACME", env=env)
+    assert result.returncode == 0, (
+        f"dump failed: stdout={result.stdout!r} stderr={result.stderr!r}"
+    )
+    payload = json.loads(result.stdout)
+    by_kpi = {s["kpi_id"]: s["periods"] for s in payload["series"]}
+    assert by_kpi["revenue"][0]["period_axis_key"] == "2021-12-31|q4"
+    assert by_kpi["backlog"][0]["period_axis_key"] is None
+
+
 def test_dump_groups_by_equivalence_closure_not_insertion_order(tmp_path):
     """Reviewer counterexample (round-2 finding 1): `same_period` is NOT
     transitive. A=instant (2021-01-01, 2021-12-31); B=duration with the SAME

@@ -20,14 +20,22 @@ is a rendering-only addition (no wall-clock default -- the CLI's `--as-of`
 is required, per the plan's rendering commitments).
 
 Column layout: periods become table columns, unified across the company's
-KPIs by period identity `(period_start, period_end)` -- the store's own
-`same_period` raw date-pair identity (labels are display-only per the pin).
-Columns sort newest-left; each column's header is the SHORTEST label seen
-for that identity (tie-break: first-seen order across the walk). Rows are
-one per `kpi_id` (series order -- already sorted by kpi_id per the pin). A
-cell renders the period's `latest.canonical_value` with thousands
-separators (+ `unit` when present, no B/M compaction -- kickoff decision,
-plan ## Notes); a KPI with no period at that identity renders `N/A`.
+KPIs by the store-owned `period_axis_key` field on each period entry --
+NOT the raw `(period_start, period_end)` pair. `period_axis_key` is the
+store's cross-KPI column-alignment identity (kpi_store.py's
+`_group_period_entries`): two period entries sharing the same key describe
+the same real period even when their raw dates drift within the store's
+snap tolerance. A `null` key (a degenerate span the store could not size)
+gets its OWN unique column and is NEVER merged with another `null`-key
+entry, even from a different KPI -- a null key means "not proven the same
+period", not "no period". Columns sort newest-left by the max `period_end`
+seen for the key; each column's header is the SHORTEST label seen for that
+key (tie-break: first-seen order across the walk; an all-null label set
+renders `(unlabeled)`). Rows are one per `kpi_id` (series order -- already
+sorted by kpi_id per the pin). A cell renders the period's
+`latest.canonical_value` with thousands separators (+ `unit` when present,
+no B/M compaction -- kickoff decision, plan ## Notes); a KPI with no period
+at that column's identity renders `N/A`.
 
 A period whose `disagreement` flag is true renders its cell as the latest
 canonical value suffixed `†`. Composition order is fixed: value, then
@@ -54,51 +62,75 @@ import sys
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
-PeriodKey = tuple[Any, Any]
-
-
-def _period_key(period: dict[str, Any]) -> PeriodKey:
-    return (period.get("period_start"), period.get("period_end"))
-
-
-def _period_sort_key(key: PeriodKey) -> tuple[str, str]:
-    """Newest-left sort key: descending by period_end, then period_start.
-
-    A missing (None) bound sorts as "" -- an undated period identity falls
-    to the oldest (rightmost) side of the newest-left axis.
+def _column_group_key(period: dict[str, Any]) -> Any:
+    """Column identity for cross-KPI axis unification: the store's
+    `period_axis_key` when present -- the canonical "<snapped-month-end>|
+    q<qtrs>" identity, so a real period reported with slightly drifted raw
+    dates by two different KPIs still lands in ONE column. A `null` axis
+    key (a degenerate span the store could not size to 1..4 quarters)
+    falls back to this period entry's own object identity, so two
+    degenerate entries NEVER silently merge into a shared column, even
+    within the same render call.
     """
-    start, end = key
-    return (end or "", start or "")
+    axis_key = period.get("period_axis_key")
+    return axis_key if axis_key is not None else id(period)
 
 
-def _shortest_label(labels: list[str]) -> str:
-    """Shortest label wins; ties broken by first-seen order in `labels`."""
-    best = labels[0]
-    for label in labels[1:]:
+def _column_order_key(column: dict[str, Any]) -> str:
+    """Newest-left sort key: descending by the max `period_end` seen for
+    this column across every KPI that contributed to it. A missing end
+    sorts as "", falling to the oldest (rightmost) side of the axis.
+    """
+    return column["max_end"]
+
+
+def _shortest_label(labels: list[Any]) -> str:
+    """Shortest non-null label wins; ties broken by first-seen order among
+    the non-null candidates. A point appended without `period` carries a
+    None label; a column whose labels are ALL None renders `(unlabeled)`
+    instead of crashing on `len(None)`/`join`.
+    """
+    candidates = [label for label in labels if label is not None]
+    if not candidates:
+        return "(unlabeled)"
+    best = candidates[0]
+    for label in candidates[1:]:
         if len(label) < len(best):
             best = label
     return best
 
 
-def _build_period_axis(series: list[dict[str, Any]]) -> list[tuple[PeriodKey, str]]:
-    """Union of period identities across all KPIs, newest-left, each paired
+def _build_period_axis(series: list[dict[str, Any]]) -> list[tuple[Any, str]]:
+    """Union of column identities across all KPIs, newest-left, each paired
     with its column header.
 
+    Columns are keyed by `_column_group_key` (the store's `period_axis_key`,
+    or this period's own object identity for a null key) -- never the raw
+    `(period_start, period_end)` pair, which drifts apart for two vintages
+    of the same real period and would split them into two columns, or
+    falsely coincide for two unrelated degenerate spans and silently merge
+    them.
+
     Labels are collected in series order (already kpi_id-sorted per the
-    pin), then within-period label order -- so "first-seen" for the tie-
-    break is well-defined across the whole axis-building walk, not just
-    within one KPI's period entry.
+    pin), then within-period label order -- so "first-seen" for the
+    shortest-label tie-break is well-defined across the whole axis-building
+    walk, not just within one KPI's period entry.
     """
-    labels_by_key: dict[PeriodKey, list[str]] = {}
+    columns: dict[Any, dict[str, Any]] = {}
     for entry in series:
         for period in entry.get("periods", []):
-            key = _period_key(period)
-            seen = labels_by_key.setdefault(key, [])
+            key = _column_group_key(period)
+            column = columns.setdefault(key, {"labels": [], "max_end": ""})
+            end = period.get("period_end") or ""
+            if end > column["max_end"]:
+                column["max_end"] = end
             for label in period.get("period_labels", []):
-                if label not in seen:
-                    seen.append(label)
-    ordered_keys = sorted(labels_by_key, key=_period_sort_key, reverse=True)
-    return [(key, _shortest_label(labels_by_key[key])) for key in ordered_keys]
+                if label not in column["labels"]:
+                    column["labels"].append(label)
+    ordered_keys = sorted(
+        columns, key=lambda k: _column_order_key(columns[k]), reverse=True
+    )
+    return [(key, _shortest_label(columns[key]["labels"])) for key in ordered_keys]
 
 
 def _fmt_cell_value(latest: dict[str, Any]) -> str:
@@ -130,7 +162,7 @@ def _fmt_amount(value: Any) -> str:
     return f"{amount:,}"
 
 
-def _revisions_block(series: list[dict[str, Any]], axis_labels: dict[PeriodKey, str]) -> list[str]:
+def _revisions_block(series: list[dict[str, Any]], axis_labels: dict[Any, str]) -> list[str]:
     """Per flagged (kpi, period): a heading plus every observation line, in
     the as_of order the pin guarantees `observations` already carries."""
     lines: list[str] = []
@@ -139,7 +171,7 @@ def _revisions_block(series: list[dict[str, Any]], axis_labels: dict[PeriodKey, 
         for period in entry.get("periods", []):
             if not period.get("disagreement"):
                 continue
-            label = axis_labels.get(_period_key(period), "")
+            label = axis_labels.get(_column_group_key(period), "")
             lines.append(f"### {kpi_id} — {label}")
             lines.append("")
             for obs in period.get("observations", []):
@@ -170,10 +202,12 @@ def render_tearsheet(dump: dict[str, Any]) -> str:
 
         for entry in series:
             kpi_id = entry.get("kpi_id", "")
-            periods_by_key = {_period_key(p): p for p in entry.get("periods", [])}
+            periods_by_group = {
+                _column_group_key(p): p for p in entry.get("periods", [])
+            }
             row_cells = [kpi_id]
             for key, _label in axis:
-                period = periods_by_key.get(key)
+                period = periods_by_group.get(key)
                 if period is None:
                     row_cells.append("N/A")
                 else:
@@ -242,8 +276,8 @@ def main() -> int:
         try:
             with open(args.in_path, "r", encoding="utf-8") as f:
                 dump = json.load(f)
-        except FileNotFoundError:
-            print(f"error: input file not found: {args.in_path}", file=sys.stderr)
+        except OSError as e:
+            print(f"error: cannot read {args.in_path}: {e}", file=sys.stderr)
             return 1
         except json.JSONDecodeError as e:
             print(f"error: invalid JSON in {args.in_path}: {e}", file=sys.stderr)
@@ -270,7 +304,7 @@ def main() -> int:
         try:
             with open(args.out_path, "w", encoding="utf-8") as f:
                 f.write(rendered)
-        except (FileNotFoundError, PermissionError, OSError) as e:
+        except OSError as e:
             print(f"error: cannot write to {args.out_path}: {e}", file=sys.stderr)
             return 1
     else:

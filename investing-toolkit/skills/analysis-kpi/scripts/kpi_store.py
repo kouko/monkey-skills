@@ -633,6 +633,17 @@ def _group_period_entries(points: list) -> list:
     necessarily every member, so its `period_end`/`period_kind` is
     representative display data only, not proof the whole group pairwise
     agrees).
+
+    `period_axis_key` (tearsheet plan, whole-branch review Fix 1) is the
+    STORE-OWNED cross-KPI column-alignment identity a consumer joins on
+    instead of the raw `(period_start, period_end)` pair: `"<snapped-
+    month-end-ISO>|q<qtrs>"`, computed from the representative via the
+    same `_snap_month_end`/`_qtrs` helpers `same_period` itself uses, or
+    `null` when either is uncomputable (a degenerate span). Two entries
+    sharing this key describe the same real period even when their raw
+    dates drift within snap tolerance; a `null` key must never be treated
+    as equal to another `null` key by a consumer — it means "not proven
+    the same", not "no period".
     """
     groups: list = []
     for point in points:
@@ -669,10 +680,18 @@ def _group_period_entries(points: list) -> list:
                 labels.append(label)
 
         representative = group[0]
+        snapped_end = _snap_month_end(representative.get("period_end"))
+        quarters = _qtrs(representative)
+        period_axis_key = (
+            f"{snapped_end.isoformat()}|q{quarters}"
+            if snapped_end is not None and quarters is not None
+            else None
+        )
         entry = {
             "period_start": representative.get("period_start"),
             "period_end": representative.get("period_end"),
             "period_kind": representative.get("period_kind"),
+            "period_axis_key": period_axis_key,
             "period_labels": labels,
             "disagreement": disagreement,
             "latest": latest,

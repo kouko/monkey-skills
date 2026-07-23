@@ -29,6 +29,7 @@ Plan-document-reviewer verdict: PASS (2026-07-23, round 2, 14/14 checks; round-1
             "period_start": "YYYY-MM-DD or null",
             "period_end": "YYYY-MM-DD or null",
             "period_kind": "duration | instant | null",
+            "period_axis_key": "<snapped-month-end-ISO>|q<qtrs> or null",
             "period_labels": ["<every distinct point['period'] label observed>"],
             "disagreement": false,
             "latest": { "...point fields verbatim...": "", "canonical_value": 0 },
@@ -62,6 +63,15 @@ Plan-document-reviewer verdict: PASS (2026-07-23, round 2, 14/14 checks; round-1
 - Test command (all tasks): `PYTHONDONTWRITEBYTECODE=1 uv run --quiet --with
   pytest --with 'pyyaml>=6.0' pytest investing-toolkit/tests/ -m "not network"
   -q`. Never write __pycache__ into skill dirs (hook blocks edits).
+- Post-PASS amendment note 2 (2026-07-24, whole-branch review fix): the pinned
+  schema gains `period_axis_key` — the store-owned canonical cross-KPI
+  column-alignment identity (`"<snapped-month-end>|q<qtrs>"`, null when
+  uncomputable; null keys never merge). Added because the whole-branch review
+  found the formatter's raw-tuple axis diverged from `same_period` in both
+  directions (drift-split + silent degenerate-entry overwrite). Schema-only
+  pin amendment; task fields/DAG unchanged — re-review of the plan document
+  skipped per §Amending a PASS plan; the CODE change is under whole-branch
+  review round 2.
 - Post-PASS amendment note: kickoff-decision lines below added to ## Notes
   after the round-2 PASS — additive prose only, no task/field/DAG change —
   re-review skipped per writing-plans §Amending a PASS plan.
