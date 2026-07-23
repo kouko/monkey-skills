@@ -36,6 +36,16 @@ jobs:
       - name: Verify SSOT drift (language-policy.md sync)
         run: python3 obsidian/scripts/verify-drift.py
 
+      - name: Run obsidian skills scripts/ pytest suite
+        # Explicit command-surface declaration for per-skill test scripts
+        # (runnable-capability rule): each skill's scripts/test_*.py must be
+        # named here, not merely swept up incidentally by the whole-suite run
+        # below, so a future skill's tests are provably wired in rather than
+        # accidentally collected.
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m pytest obsidian/skills/*/scripts/ -q
+
       - name: Run obsidian pytest suite
         env:
           PYTHONDONTWRITEBYTECODE: "1"
