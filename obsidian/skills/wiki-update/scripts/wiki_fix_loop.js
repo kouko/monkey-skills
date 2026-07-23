@@ -311,16 +311,18 @@ const GRADER_SCHEMA = {
   },
 }
 
-// Grader courier: re-hashes the check config (the validator script's own
-// content — semantic drift in lint-checks.md lands in that script in
-// lockstep, so its content hash IS the frozen-criteria fingerprint), then
-// runs the validator into this round's snapshot file.
+// Grader courier: re-hashes the check config — the validator script AND
+// the verdict CLI concatenated in fixed order (check semantics and BRAKE
+// semantics are both frozen surface; semantic drift in lint-checks.md
+// lands in the validator in lockstep, so the combined content hash IS the
+// frozen-criteria fingerprint) — then runs the validator into this
+// round's snapshot file.
 async function runGraderCourier(round, roundFile) {
   try {
     return await agent(
       `You are the GRADER COURIER, round ${round}, of the wiki-update mechanical fix loop. Run these steps IN ORDER via Bash from the repo root, nothing else:
 
-STEP 1 — check-config hash: run \`shasum -a 256 ${runArgs.validatorScript}\` and take the first whitespace-separated field (the 64-char hex digest).
+STEP 1 — check-config hash: run \`cat ${runArgs.validatorScript} ${runArgs.verdictScript} | shasum -a 256\` and take the first whitespace-separated field (the 64-char hex digest).
 
 STEP 2 — grade: run \`python3 ${runArgs.validatorScript} ${wikiRoot} > ${roundFile}\` and capture the command's exit code (0 clean / 1 violations / 2 internal error).
 
@@ -349,7 +351,7 @@ async function runHashCourier(round) {
   try {
     return await agent(
       `You are the FREEZE-CHECK COURIER, round ${round}. Run EXACTLY this command via Bash from the repo root, nothing else:
-shasum -a 256 ${runArgs.validatorScript}
+cat ${runArgs.validatorScript} ${runArgs.verdictScript} | shasum -a 256
 
 Return: hash (the first whitespace-separated field of the output — the 64-char hex digest).`,
       { phase: 'Fix', label: `freeze-check:round${round}`, schema: HASH_SCHEMA }
@@ -719,13 +721,49 @@ let classesFixed = 0
 let cumulativeDiff = { diffLines: 0, diffFiles: 0 }
 let blockersContext = null
 
+// Shared accept helper: BOTH winning-round paths (plain accept and the
+// budget-stop win) route through here so their failure semantics cannot
+// drift apart. On success: commit -> diff stat -> advance the accepted
+// baseline. On commit failure: the run flips to MALFORMED with an HONEST
+// blockers context — the winning edits are left staged/uncommitted (this
+// path performs NO revert), and the baseline/classesFixed never advance.
+async function commitWinningRound(round, checkId, roundFile, roundSummary, ledgerBase, actionOnSuccess, reasonSuffix) {
+  const commit = await runCommitCourier(round, checkId)
+  if (!commit || commit.committed !== true) {
+    terminal = 'MALFORMED'
+    stopReason = 'accept commit failed — the winning edits are left staged/uncommitted in the vault (no revert on this path)'
+    blockersContext = {
+      round: round, checkId: checkId, stage: 'commit',
+      detail: 'commit courier failed; win left staged/uncommitted',
+    }
+    recordRoundLedgerEntry(Object.assign({}, ledgerBase, {
+      action: 'commit-failed',
+      diffLines: cumulativeDiff.diffLines, diffFiles: cumulativeDiff.diffFiles,
+      reason: stopReason,
+    }))
+    return false
+  }
+  const diff = await runDiffStatCourier(round, baseSha)
+  if (diff) cumulativeDiff = diff
+  lastAcceptedFile = roundFile
+  lastAcceptedSummary = roundSummary
+  classesFixed += 1
+  recordRoundLedgerEntry(Object.assign({}, ledgerBase, {
+    action: actionOnSuccess,
+    diffLines: cumulativeDiff.diffLines, diffFiles: cumulativeDiff.diffFiles,
+    reason: 'win committed (' + (commit.sha || 'ok') + ')' + reasonSuffix,
+  }))
+  return true
+}
+
 for (let round = 1; terminal === null && round <= maxRounds; round++) {
   // Freeze re-check: the check-config hash must be unchanged before every
   // executor dispatch — a mid-loop change is a hard stop.
   const freezeCheck = await runHashCourier(round)
   if (!freezeCheck || freezeCheck.hash !== frozenCheckConfigHash) {
     throw new Error(
-      'wiki-fix-loop: CONFIG DRIFT — the validator script hash changed mid-loop ' +
+      'wiki-fix-loop: CONFIG DRIFT — the check-config hash (validator + verdict ' +
+      'scripts) changed mid-loop ' +
       '(frozen ' + frozenCheckConfigHash.slice(0, 12) + '…, now ' +
       JSON.stringify(freezeCheck && freezeCheck.hash) + '). Hard stop: the loop ' +
       'never chases moving criteria.'
@@ -847,18 +885,11 @@ for (let round = 1; terminal === null && round <= maxRounds; round++) {
     blockersContext = { round: round, checkId: checkId, stage: stopStage, detail: stopStderr }
     if (terminal === 'BUDGET' && !noWin) {
       // A winning final round must not be discarded by the budget stop:
-      // commit it, then stop.
-      const commit = await runCommitCourier(round, checkId)
-      const diff = await runDiffStatCourier(round, baseSha)
-      if (diff) cumulativeDiff = diff
-      lastAcceptedFile = roundFile
-      lastAcceptedSummary = roundSummary
-      classesFixed += 1
-      recordRoundLedgerEntry(Object.assign({}, ledgerBase, {
-        action: 'accept-then-budget-stop',
-        diffLines: cumulativeDiff.diffLines, diffFiles: cumulativeDiff.diffFiles,
-        reason: 'win committed (' + (commit && commit.committed ? (commit.sha || 'ok') : 'COMMIT FAILED') + '), then budget stop',
-      }))
+      // commit it, then stop. A commit failure flips the run to MALFORMED
+      // inside commitWinningRound (win left staged/uncommitted, never
+      // counted as accepted) and its blockers context wins over the
+      // budget one set above.
+      await commitWinningRound(round, checkId, roundFile, roundSummary, ledgerBase, 'accept-then-budget-stop', ', then budget stop')
     } else if (terminal === 'STUCK_EXECUTOR_OVERREACH') {
       // Ratchet breach = the executor deleted content despite the
       // structural exclusion — executor overreach, a STUCK-level stop
@@ -892,28 +923,8 @@ for (let round = 1; terminal === null && round <= maxRounds; round++) {
   }
 
   // Accept: local commit on the proposal branch, then the size breaker.
-  const commit = await runCommitCourier(round, checkId)
-  if (!commit || commit.committed !== true) {
-    terminal = 'MALFORMED'
-    stopReason = 'accept commit failed'
-    blockersContext = { round: round, checkId: checkId, stage: 'commit', detail: 'commit courier failed' }
-    recordRoundLedgerEntry(Object.assign({}, ledgerBase, {
-      action: 'commit-failed',
-      diffLines: cumulativeDiff.diffLines, diffFiles: cumulativeDiff.diffFiles,
-      reason: stopReason,
-    }))
-    break
-  }
-  const diff = await runDiffStatCourier(round, baseSha)
-  if (diff) cumulativeDiff = diff
-  lastAcceptedFile = roundFile
-  lastAcceptedSummary = roundSummary
-  classesFixed += 1
-  recordRoundLedgerEntry(Object.assign({}, ledgerBase, {
-    action: 'accept',
-    diffLines: cumulativeDiff.diffLines, diffFiles: cumulativeDiff.diffFiles,
-    reason: 'win committed (' + (commit.sha || 'ok') + ')',
-  }))
+  const accepted = await commitWinningRound(round, checkId, roundFile, roundSummary, ledgerBase, 'accept', '')
+  if (!accepted) break
 
   if (grade.exitCode === 0) {
     terminal = 'CONVERGED'
@@ -964,7 +975,19 @@ if (ROUND_LEDGER.length > 0) {
 await runFileWriteCourier('scorecard', `${runDir}/scorecard.json`, JSON.stringify(scorecard, null, 2))
 
 // STUCK-level stops (incl. executor overreach) and malformed stops write a
-// blockers report for the operator — the escape hatch's artifact.
+// blockers report for the operator — the escape hatch's artifact. The tail
+// line branches on WHERE the run stopped, so it never claims a revert on a
+// path that performs none (R2 honesty fix).
+function renderBlockersTail() {
+  if (terminal === 'STUCK_EXECUTOR_OVERREACH') {
+    return 'The conservation ratchet detected a net decrease of words/links/headings: the executor deleted content despite the structural exclusion (executor overreach). The vault working tree was left UNREVERTED and UNCOMMITTED for inspection — review it, then stash or commit manually.'
+  }
+  if (blockersContext && blockersContext.stage === 'commit') {
+    return 'The accept commit FAILED after a winning round: the edits are left staged/uncommitted in the vault working tree — nothing was reverted on this path. Inspect the vault with git status, then commit or stash manually. Earlier accepted rounds (if any) are local commits on ' + proposalBranch + '.'
+  }
+  return 'The loop stopped without converging. Accepted rounds (if any) are local commits on ' + proposalBranch + '; the stopped round was reverted.'
+}
+
 if (terminal === 'STUCK' || terminal === 'STUCK_EXECUTOR_OVERREACH' || terminal === 'MALFORMED') {
   const blockersLines = [
     '# wiki-fix-loop blockers — ' + runArgs.runLabel,
@@ -976,9 +999,7 @@ if (terminal === 'STUCK' || terminal === 'STUCK_EXECUTOR_OVERREACH' || terminal 
     '- stage: ' + String(blockersContext && blockersContext.stage),
     '- detail: ' + String(blockersContext && blockersContext.detail),
     '',
-    terminal === 'STUCK_EXECUTOR_OVERREACH'
-      ? 'The conservation ratchet detected a net decrease of words/links/headings: the executor deleted content despite the structural exclusion (executor overreach). The vault working tree was left UNREVERTED and UNCOMMITTED for inspection — review it, then stash or commit manually.'
-      : 'The loop stopped without converging. Accepted rounds (if any) are local commits on ' + proposalBranch + '; the stopped round was reverted.',
+    renderBlockersTail(),
   ]
   await runFileWriteCourier('blockers', `${runDir}/blockers-report.md`, blockersLines.join('\n') + '\n')
 }

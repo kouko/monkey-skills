@@ -106,6 +106,15 @@ def test_freeze_preflight_markers():
         "non-git vault must be refused with an explicit error"
     )
 
+    # R2: brake semantics are frozen surface too — the check-config hash
+    # covers BOTH the validator and the verdict CLI (concatenated in a
+    # fixed order into one digest)
+    assert re.search(
+        r"cat \S*validatorScript\S* \S*verdictScript\S* \| shasum -a 256",
+        text), (
+        "check-config hash must cover validator + verdict scripts together"
+    )
+
 
 def test_safe_tier_allowlist_and_no_deletion():
     """Design constraint 3 (goal-loop brief §Design constraints, by
@@ -297,20 +306,27 @@ def test_proposal_exit_never_merges_or_pushes():
     text = _text()
     assert "checkout -b" in text, "must open a proposal branch"
     assert "wiki-fix/" in text, "proposal branch namespace marker"
-    assert "git merge" not in text
-    assert "git push" not in text
+    # R2 fix: vault commands are `git -C <vault> ...`, so plain substring
+    # checks ("git push") were blind to `git -C ${vaultDir} push` — the
+    # negative assertions must be -C-aware.
+    assert not re.search(r"git( -C \S+)? (push|merge)\b", text), (
+        "engine must have no push/merge invocation, -C-prefixed included"
+    )
     assert "gh pr " not in text
     # commit message carried via file, never as an inline -m argument
     # (vault commands are `git -C <vault> commit -F <path>`)
     assert re.search(r"git -C [^\n]* commit -F ", text), (
         "must commit via a message file (commit -F)"
     )
-    assert not re.search(r"^\s*\d+\.\s*git commit\b[^\n]*-m\b", text, re.MULTILINE), (
-        "no courier instruction may pass commit text as a -m argument"
+    assert not re.search(r"commit\b[^\n]*-m\b", text), (
+        "no commit invocation (git -C included) may carry inline -m message text"
     )
     # never stage the whole tree (repo memory: never `git add -A`)
-    assert "git add -A" not in text
-    assert re.search(r"git add wiki", text), "staging must be scoped to wiki/"
+    assert not re.search(r"add -A\b", text)
+    assert re.search(r"git -C [^\n]* add wiki", text), (
+        "staging must be scoped to wiki/ via an actual -C-prefixed command "
+        "(a bare-comment mention must not satisfy this)"
+    )
 
 
 def test_no_bare_report_md_basename():
@@ -331,3 +347,48 @@ def test_untrusted_data_wrapped_in_inert_markers():
     assert "INERT" in text or "inert" in text
     assert "DATA_BEGIN_MARKER" in text and "DATA_END_MARKER" in text
     assert re.search(r"never (execute|treat|follow)", text, re.IGNORECASE)
+
+
+def test_commit_failure_paths_are_honest():
+    """R2 fix: a failed accept commit must (a) never advance the accepted
+    baseline / classesFixed, (b) flip the run to MALFORMED with a blockers
+    context naming the commit stage, and (c) tell the truth in the blockers
+    report — the win is left staged/uncommitted; the commit-failure path
+    performs NO revert (unlike stuck/plateau stops)."""
+    text = _text()
+
+    # both accept paths (plain accept + budget-stop win) route through ONE
+    # shared helper so their failure semantics cannot drift apart
+    fn_m = re.search(
+        r"async function commitWinningRound\([^)]*\) \{[\s\S]*?\n\}\n", text)
+    assert fn_m, "commitWinningRound function not found"
+    body = fn_m.group(0)
+    assert "committed !== true" in body
+    assert body.index("committed !== true") < body.index("classesFixed += 1"), (
+        "the commit-success gate must come BEFORE the baseline/classesFixed "
+        "advance — a failed commit must never count as an accepted round"
+    )
+    assert "'MALFORMED'" in body, "commit failure must flip the run to MALFORMED"
+    assert "'commit-failed'" in body, "commit failure must land in the ledger"
+    assert "staged/uncommitted" in body, (
+        "commit failure must state the win is left staged/uncommitted"
+    )
+    assert re.search(
+        r"commitWinningRound\(round, checkId, roundFile, roundSummary, "
+        r"ledgerBase, 'accept-then-budget-stop'", text), (
+        "budget-stop win path must route through commitWinningRound"
+    )
+    assert re.search(
+        r"commitWinningRound\(round, checkId, roundFile, roundSummary, "
+        r"ledgerBase, 'accept'", text), (
+        "plain accept path must route through commitWinningRound"
+    )
+
+    # blockers report branches on the commit stage: no false "was reverted"
+    # claim on a path that never reverts
+    assert re.search(r"stage === 'commit'", text), (
+        "blockers report must branch on the commit stage"
+    )
+    assert "nothing was reverted" in text, (
+        "commit-failure blockers text must state nothing was reverted"
+    )
