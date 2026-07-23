@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import re
 import sys
+from collections.abc import Callable, Iterator
 from datetime import date
 from typing import Any
 
@@ -136,12 +137,19 @@ def _select_current_fact(
     return chosen
 
 
-def extract_curated_notes(facts: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
-    """Extract the curated named-concept fields from parsed fact records.
+def _group_and_select_current(
+    facts: list[dict[str, Any]],
+    concept_map: dict[str, str],
+    label_for: Callable[[str], str] | None = None,
+) -> Iterator[tuple[str, str, dict[str, Any]]]:
+    """Group `facts` by concept, then pick each mapped concept's current fact.
 
-    Returns `{field: {"value": ..., "concept": ..., "period": ...}}`.
-    A curated field whose concept is absent from `facts` is omitted
-    entirely — never emitted with a zero-filled value.
+    Yields `(field, concept, chosen)` for every `concept_map` entry
+    whose concept has a selectable fact in `facts`; an absent concept
+    yields nothing (the never-zero-fill rule shared by all three
+    extractors). `label_for` maps a field name to the tie-log label
+    passed to `_select_current_fact` — `None` disables tie logging
+    (the extract_curated_notes behavior).
     """
     by_concept: dict[str, list[dict[str, Any]]] = {}
     for fact in facts:
@@ -149,11 +157,25 @@ def extract_curated_notes(facts: list[dict[str, Any]]) -> dict[str, dict[str, An
         if concept:
             by_concept.setdefault(concept, []).append(fact)
 
-    notes: dict[str, dict[str, Any]] = {}
-    for field, concept in _CURATED_CONCEPTS.items():
-        chosen = _select_current_fact(by_concept.get(concept, []))
+    for field, concept in concept_map.items():
+        chosen = _select_current_fact(
+            by_concept.get(concept, []),
+            label=label_for(field) if label_for is not None else None,
+        )
         if chosen is None:
             continue
+        yield field, concept, chosen
+
+
+def extract_curated_notes(facts: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Extract the curated named-concept fields from parsed fact records.
+
+    Returns `{field: {"value": ..., "concept": ..., "period": ...}}`.
+    A curated field whose concept is absent from `facts` is omitted
+    entirely — never emitted with a zero-filled value.
+    """
+    notes: dict[str, dict[str, Any]] = {}
+    for field, concept, chosen in _group_and_select_current(facts, _CURATED_CONCEPTS):
         notes[field] = {
             "value": chosen["raw_value"],
             "concept": concept,
@@ -214,7 +236,10 @@ def _fh_npl_tree_segments(
     twse_ixbrl_parser.parse_ixbrl_facts to also capture <ix:tuple>
     elements' own tupleID/tupleRef so category rows can be matched to
     a subsidiary by explicit tuple-parent chain instead of order |
-    ref: scratchpad/fh-measurement-round2.md §2890 dup-tree.
+    ref: 2890 fixture measurement — a post-merger FHC carries
+    duplicated parallel NPL tuple trees (one per bank subsidiary),
+    each tree's rows contiguous in document order immediately after
+    its own NPL<n>-rooted NameOfTheCompany marker.
     """
     boundaries = [
         (i, f["raw_value"])
@@ -250,24 +275,18 @@ def extract_fh_npl_coverage_notes(facts: list[dict[str, Any]]) -> dict[str, dict
     """
     result: dict[str, dict[str, Any]] = {}
     for start, end, company in _fh_npl_tree_segments(facts):
-        by_concept: dict[str, list[dict[str, Any]]] = {}
-        for fact in facts[start:end]:
-            if fact.get("tuple_ref") != "TL":
-                continue
-            concept = fact.get("concept")
-            if concept:
-                by_concept.setdefault(concept, []).append(fact)
-
+        total_loans_facts = [
+            f for f in facts[start:end] if f.get("tuple_ref") == "TL"
+        ]
         fields: dict[str, Any] = {}
-        for field, concept in _FH_TOTAL_LOANS_CONCEPTS.items():
-            # label makes an identical-period tie (e.g. the 2890 fixture's
-            # 本期/去年同期 columns sharing one contextRef) observable via
-            # _log instead of silently depending on document order.
-            chosen = _select_current_fact(
-                by_concept.get(concept, []), label=f"{company}/{field}"
-            )
-            if chosen is None:
-                continue
+        # label_for makes an identical-period tie (e.g. the 2890 fixture's
+        # 本期/去年同期 columns sharing one contextRef) observable via
+        # _log instead of silently depending on document order.
+        for field, concept, chosen in _group_and_select_current(
+            total_loans_facts,
+            _FH_TOTAL_LOANS_CONCEPTS,
+            label_for=lambda field: f"{company}/{field}",
+        ):
             value = chosen["raw_value"]
             if field in _FH_PERCENT_FIELDS and value is not None:
                 value = value * 100
@@ -336,17 +355,12 @@ def extract_basi_npl_coverage_notes(facts: list[dict[str, Any]]) -> dict[str, An
         for f in facts
         if (f.get("context_ref") or "").endswith(_BASI_TOTAL_LOANS_CONTEXT_SUFFIX)
     ]
-    by_concept: dict[str, list[dict[str, Any]]] = {}
-    for fact in total_loans_facts:
-        concept = fact.get("concept")
-        if concept:
-            by_concept.setdefault(concept, []).append(fact)
-
     fields: dict[str, Any] = {}
-    for field, concept in _BASI_TOTAL_LOANS_CONCEPTS.items():
-        chosen = _select_current_fact(by_concept.get(concept, []), label=f"basi/{field}")
-        if chosen is None:
-            continue
+    for field, concept, chosen in _group_and_select_current(
+        total_loans_facts,
+        _BASI_TOTAL_LOANS_CONCEPTS,
+        label_for=lambda field: f"basi/{field}",
+    ):
         value = chosen["raw_value"]
         if field in _BASI_PERCENT_FIELDS and value is not None:
             value = value * 100
