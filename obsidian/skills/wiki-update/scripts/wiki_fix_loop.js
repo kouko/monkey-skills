@@ -256,6 +256,30 @@ const VERDICT_SCHEMA = {
 
 // --- couriers ----------------------------------------------------------------
 
+// agent() returns null when a dispatched subagent dies on a terminal error
+// (after all retries) or the user skips it mid-run — a failure mode DISTINCT
+// from malformed DATA (loop_verdict.py's MALFORMED). The brake couriers
+// consume the courier return by DIRECT deref (result.exitCode), so a null
+// there was the live crash this guards: smoke round-3's compare courier died
+// on a session limit and "null is not an object" took down the whole loop
+// instead of stopping honestly. This pure guard converts a dead return into
+// an explicit INFRA_ABORT sentinel the round loop routes to an honest stop +
+// blockers report; a live result passes through untouched (a normal courier
+// result has no `infraAbort` key, so the consumers' check is a clean no-op).
+function assertAgentAlive(result, ctx) {
+  if (result === null || result === undefined) {
+    return {
+      infraAbort: true,
+      stage: ctx && ctx.stage,
+      round: ctx && ctx.round,
+      detail:
+        'dispatched agent died (agent() returned null) — infrastructure ' +
+        'interruption (session limit / overload / user skip)',
+    }
+  }
+  return result
+}
+
 // Generic Bash-command courier: the SCRIPT computes every verdict from exit
 // codes alone — the courier only runs the exact command and reports back
 // (no-LLM-opinion discipline). Brake couriers fail CLOSED: a courier
@@ -263,14 +287,20 @@ const VERDICT_SCHEMA = {
 // unreliable brake must never let an autonomous loop run unchecked.
 async function runVerdictCourier(stage, round, command) {
   try {
-    return await agent(
+    // agent-null guard: brake couriers direct-deref .exitCode, so a dead
+    // agent (null) is wrapped into an INFRA_ABORT sentinel the round loop
+    // stops on — never a null deref (the live smoke crash).
+    return assertAgentAlive(
+      await agent(
       `You are the ${stage.toUpperCase()} BRAKE VERDICT COURIER, round ${round}, of the wiki-update mechanical fix loop.
 
 Run EXACTLY this command via Bash from the repo root, nothing else:
 ${command}
 
 Return: exitCode (the command's numeric exit code), stderrTail (the last non-empty stderr line the command printed, or an empty string if none).`,
-      { phase: 'Fix', label: `${stage}:round${round}`, schema: VERDICT_SCHEMA }
+        { phase: 'Fix', label: `${stage}:round${round}`, schema: VERDICT_SCHEMA }
+      ),
+      { stage: stage, round: round }
     )
   } catch (e) {
     const message = e && e.message ? e.message : String(e)
@@ -319,6 +349,8 @@ const GRADER_SCHEMA = {
 // round's snapshot file.
 async function runGraderCourier(round, roundFile) {
   try {
+    // agent-null guard: a dead agent returns null → callers null-check
+    // (`if (!baselineGrade)` / `if (!grade)`) → MALFORMED stop or Freeze throw.
     return await agent(
       `You are the GRADER COURIER, round ${round}, of the wiki-update mechanical fix loop. Run these steps IN ORDER via Bash from the repo root, nothing else:
 
@@ -349,6 +381,8 @@ const HASH_SCHEMA = {
 // dispatch (a resumed run can sit paused for days between rounds).
 async function runHashCourier(round) {
   try {
+    // agent-null guard: a dead agent returns null → `if (!freezeCheck ...)`
+    // hard-stops the loop (CONFIG DRIFT path).
     return await agent(
       `You are the FREEZE-CHECK COURIER, round ${round}. Run EXACTLY this command via Bash from the repo root, nothing else:
 cat ${runArgs.validatorScript} ${runArgs.verdictScript} | shasum -a 256
@@ -375,6 +409,8 @@ const GIT_PREFLIGHT_SCHEMA = {
 
 async function runGitPreflightCourier() {
   try {
+    // agent-null guard: a dead agent returns null → `if (!preflight ...)`
+    // refuses to run (no baseline established).
     return await agent(
       `You are the GIT PREFLIGHT COURIER of the wiki-update mechanical fix loop. Run these steps IN ORDER via Bash, nothing else:
 
@@ -402,6 +438,8 @@ const BRANCH_SCHEMA = {
 
 async function runBranchCourier() {
   try {
+    // agent-null guard: a dead agent returns null → `if (!branchResult ...)`
+    // throws (refuses to commit onto an unknown branch).
     return await agent(
       `You are the PROPOSAL BRANCH COURIER. Run EXACTLY this command via Bash, nothing else:
 git -C ${runArgs.vaultDir} checkout -b ${proposalBranch}
@@ -434,6 +472,8 @@ const EXECUTOR_SCHEMA = {
 // conservation counters as executor overreach (handover contract 2).
 async function runExecutor(round, checkId) {
   try {
+    // agent-null guard: a dead agent returns null → `if (!executorResult)`
+    // MALFORMED stop with a blockers context.
     return await agent(
       `You are the EXECUTOR, round ${round}, of the wiki-update mechanical fix loop.
 
@@ -487,6 +527,8 @@ const REVERT_SCHEMA = {
 // vault's stash list without bound; a drop failure is logged, never fatal.
 async function runRevertCourier(round) {
   try {
+    // agent-null guard: a dead agent returns null → callers read it as
+    // `revert && revert.dropped` (null-safe; a missed drop is never fatal).
     return await agent(
       `You are the REVERT COURIER, round ${round}, of the wiki-update mechanical fix loop. Run these steps IN ORDER via Bash, nothing else:
 
@@ -524,6 +566,8 @@ async function runCommitCourier(round, checkId) {
   const subject = `fix(wiki): wiki-fix-loop round ${round} — ${checkId} safe-tier repairs`
   const body = `run ${runArgs.runLabel}; class ${checkId}; safe-tier actions only (no deletions); graded by wiki_lint_check.py under frozen criteria`
   try {
+    // agent-null guard: a dead agent returns null → `if (!commit ...)` in
+    // commitWinningRound → MALFORMED (win left staged/uncommitted, honest).
     return await agent(
       `You are the ACCEPT COMMIT COURIER, round ${round}, of the wiki-update mechanical fix loop.
 
@@ -562,6 +606,8 @@ const DIFF_STAT_SCHEMA = {
 // awk pipeline does the arithmetic so no LLM ever sums numbers.
 async function runDiffStatCourier(round, baseSha) {
   try {
+    // agent-null guard: a dead agent returns null → `if (diff)` keeps the
+    // prior cumulativeDiff (the size breaker just reads a stale-but-valid stat).
     return await agent(
       `You are the DIFF STAT COURIER, round ${round}. Run EXACTLY this command via Bash, nothing else:
 git -C ${runArgs.vaultDir} diff --numstat ${baseSha}..HEAD -- wiki | awk '{lines += $1 + $2; files += 1} END {printf "%d %d", lines + 0, files + 0}'
@@ -587,6 +633,8 @@ const WRITE_SCHEMA = {
 // content verbatim; the markers are delimiters only, not file content.
 async function runFileWriteCourier(label, filePath, content) {
   try {
+    // agent-null guard: a dead agent returns null → advisory write; the
+    // return is not consumed (reports are best-effort, never deref'd).
     return await agent(
       `You are the FILE WRITER COURIER (${label}). Use the Write tool to write the content below, verbatim and unmodified, to this exact path: ${filePath}
 
@@ -813,6 +861,13 @@ for (let round = 1; terminal === null && round <= maxRounds; round++) {
     })
     // The round is still consumed: consult the budget brake alone.
     const budgetResult = await runVerdictCourier('budget', round, brakeCommand('budget', round, null, { maxRounds: maxRounds }))
+    if (budgetResult.infraAbort) {
+      terminal = 'INFRA_ABORT'
+      stopReason = 'dispatched agent died at the ' + budgetResult.stage + ' brake (round ' +
+        budgetResult.round + ') — infrastructure interruption; loop stopped honestly (no deref)'
+      blockersContext = { round: round, checkId: checkId, stage: budgetResult.stage, detail: budgetResult.detail }
+      break
+    }
     const budgetDirective = classifyBrakeExit('budget', budgetResult.exitCode)
     if (budgetDirective.kind === 'stop') {
       terminal = budgetDirective.terminal
@@ -860,6 +915,13 @@ for (let round = 1; terminal === null && round <= maxRounds; round++) {
         maxRounds: maxRounds,
       })
     )
+    if (result.infraAbort) {
+      terminal = 'INFRA_ABORT'
+      stopReason = 'dispatched agent died at the ' + result.stage + ' brake (round ' +
+        result.round + ') — infrastructure interruption; loop stopped honestly (no deref)'
+      blockersContext = { round: round, checkId: checkId, stage: result.stage, detail: result.detail }
+      break
+    }
     exits[stage] = result.exitCode
     const directive = classifyBrakeExit(stage, result.exitCode)
     if (directive.kind === 'stop') {
@@ -877,6 +939,19 @@ for (let round = 1; terminal === null && round <= maxRounds; round++) {
     violationsAfter: roundSummary.violations,
     ratchetExit: exits.ratchet, compareExit: exits.compare,
     stuckExit: exits.stuck, plateauExit: exits.plateau, budgetExit: exits.budget,
+  }
+
+  if (terminal === 'INFRA_ABORT') {
+    // A brake courier's dispatched agent died mid-sequence: stop honestly.
+    // No accept, no revert — the round's edits are left staged/uncommitted
+    // (like the commit-fail path); the blockers report says so and asks for
+    // a re-run (the interruption is usually transient).
+    recordRoundLedgerEntry(Object.assign({}, ledgerBase, {
+      action: 'infra-abort',
+      diffLines: cumulativeDiff.diffLines, diffFiles: cumulativeDiff.diffFiles,
+      reason: stopReason,
+    }))
+    break
   }
 
   if (stopDirective !== null) {
@@ -979,6 +1054,9 @@ await runFileWriteCourier('scorecard', `${runDir}/scorecard.json`, JSON.stringif
 // line branches on WHERE the run stopped, so it never claims a revert on a
 // path that performs none (R2 honesty fix).
 function renderBlockersTail() {
+  if (terminal === 'INFRA_ABORT') {
+    return 'A dispatched agent died mid-run (agent() returned null — a session limit, overload, or user skip): the loop stopped HONESTLY instead of crashing on a null deref. Nothing was committed for the interrupted round. Re-run with a fresh runLabel — the interruption is usually transient. Accepted rounds (if any) are local commits on ' + proposalBranch + '.'
+  }
   if (terminal === 'STUCK_EXECUTOR_OVERREACH') {
     return 'The conservation ratchet detected a net decrease of words/links/headings: the executor deleted content despite the structural exclusion (executor overreach). The vault working tree was left UNREVERTED and UNCOMMITTED for inspection — review it, then stash or commit manually.'
   }
@@ -988,7 +1066,7 @@ function renderBlockersTail() {
   return 'The loop stopped without converging. Accepted rounds (if any) are local commits on ' + proposalBranch + '; the stopped round was reverted.'
 }
 
-if (terminal === 'STUCK' || terminal === 'STUCK_EXECUTOR_OVERREACH' || terminal === 'MALFORMED') {
+if (terminal === 'STUCK' || terminal === 'STUCK_EXECUTOR_OVERREACH' || terminal === 'MALFORMED' || terminal === 'INFRA_ABORT') {
   const blockersLines = [
     '# wiki-fix-loop blockers — ' + runArgs.runLabel,
     '',

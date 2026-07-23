@@ -22,6 +22,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   class would have stalled on its first round. `links` / `headings`
   counters and the JSONL contract shape are unchanged.
 
+### Fixed — `wiki-update` fix-loop stops gracefully on dispatched-agent death
+
+- `wiki_fix_loop.js` now routes a dead dispatched agent (`agent()` returns
+  null when a subagent hits a terminal error after retries, or the user
+  skips it mid-run) through a new pure `assertAgentAlive` guard to a
+  distinct `INFRA_ABORT` terminal + blockers report, instead of crashing.
+  The brake couriers consume their return by direct deref
+  (`result.exitCode` / `budgetResult.exitCode`), so a null there took down
+  the whole loop with "null is not an object". Motivation: the smoke re-run
+  round-3 compare scoring agent died on a session limit and crashed the
+  engine rather than stopping honestly. Every `agent()` dispatch site now
+  documents its null handling (`// agent-null guard:`); the blockers report
+  tells the operator to re-run with a fresh `runLabel` (the interruption is
+  usually transient). No change to the JSONL/exit contract, brake
+  semantics, ratchet repair, or `loop_verdict.py`.
+
 ## [3.20.0] — 2026-07-24 `wiki-update` loop + mechanical validator
 
 Adds a self-driving update loop for the wiki layer, backed by a new

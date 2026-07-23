@@ -90,7 +90,12 @@ reverted; the stop asks you to split the REMAINING work into smaller
 runs) / `STUCK_EXECUTOR_OVERREACH` (conservation ratchet breach — the
 offending round is deliberately left unstaged and uncommitted in the
 working tree for inspection; review it, then stash or commit by hand before
-the next run's preflight will pass) / `WORK_ORDERS_ONLY` / `MALFORMED`.
+the next run's preflight will pass) / `WORK_ORDERS_ONLY` / `MALFORMED` /
+`INFRA_ABORT` (a dispatched agent died mid-run — session limit, overload,
+or user skip, so `agent()` returned null — and the loop stopped honestly
+instead of crashing on a null deref; nothing was committed for the
+interrupted round, so just **re-run with a fresh `runLabel`** — the
+interruption is usually transient).
 Steps 4-5 run after EVERY terminal state — a stopped run still gets
 its triage and scorecard; only the wording of step 5's point 3
 changes with the stop reason.

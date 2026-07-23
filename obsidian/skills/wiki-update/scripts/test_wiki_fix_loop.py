@@ -393,3 +393,93 @@ def test_commit_failure_paths_are_honest():
     assert "nothing was reverted" in text, (
         "commit-failure blockers text must state nothing was reverted"
     )
+
+
+def test_agent_death_returns_infra_abort_never_derefs_null():
+    """Live-exposed robustness gap (smoke round-3 compare courier died on a
+    session limit): agent() returns null when a dispatched subagent dies on a
+    terminal error after retries (or the user skips it), and the brake
+    couriers consume the return by DIRECT deref (result.exitCode / budgetResult
+    .exitCode), so a null there crashed the whole loop with "null is not an
+    object" instead of stopping honestly.
+
+    Every agent() dispatch site must document its null handling; the brake
+    family routes a dead agent through the pure assertAgentAlive guard to a
+    distinct INFRA_ABORT terminal + blockers report, never a deref."""
+    text = _text()
+
+    # --- every agent() dispatch site carries an explicit null-handling marker
+    dispatch_sites = len(re.findall(r"await agent\(", text))
+    guarded_sites = len(re.findall(r"// agent-null guard:", text))
+    assert dispatch_sites >= 10, "expected the full courier roster of agent() dispatches"
+    assert guarded_sites == dispatch_sites, (
+        "every agent() dispatch site must document how it handles a null "
+        f"(dead-agent) return: {dispatch_sites} dispatches vs {guarded_sites} "
+        "guard markers — do not only fix the crash site"
+    )
+
+    # --- the brake courier (the sole DIRECT-deref consumer) routes its
+    # agent() return through assertAgentAlive so it can never return null ---
+    vc_m = re.search(
+        r"async function runVerdictCourier\([^)]*\) \{[\s\S]*?\n\}\n", text)
+    assert vc_m, "runVerdictCourier not found"
+    assert re.search(r"assertAgentAlive\(\s*await agent\(", vc_m.group(0)), (
+        "runVerdictCourier must wrap its agent() return in assertAgentAlive "
+        "(brake couriers direct-deref .exitCode — null there was the live crash)"
+    )
+
+    # --- both brake-courier consumers check the infra sentinel before deref
+    assert len(re.findall(r"\.infraAbort", text)) >= 2, (
+        "both brake-courier consumers (work-order budget brake + brake-order "
+        "loop) must check .infraAbort before touching .exitCode"
+    )
+
+    # --- distinct terminal that writes a blockers report ---
+    assert "INFRA_ABORT" in text, "agent death must have a distinct terminal state"
+    cond_m = re.search(
+        r"if \((terminal === 'STUCK'[^\n]*?)\) \{[\s\S]{0,80}blockersLines", text)
+    assert cond_m, "blockers-writing condition not found"
+    assert "INFRA_ABORT" in cond_m.group(1), (
+        "INFRA_ABORT must be in the blockers-report-writing condition"
+    )
+
+
+def test_assert_agent_alive_guard_executable():
+    """Pure guard: a live result passes through untouched; a null/undefined
+    (dead agent) yields an INFRA_ABORT sentinel naming the stage+round —
+    catchable structure, never a TypeError deref."""
+    text = _text()
+    fn_m = re.search(
+        r"function assertAgentAlive\(result, ctx\) \{[\s\S]*?\n\}\n", text)
+    assert fn_m, "assertAgentAlive function not found"
+    if shutil.which("node") is None:
+        pytest.skip("node not available")
+    script = (
+        fn_m.group(0) + "\n"
+        "const ok = assertAgentAlive({exitCode: 0, stderrTail: ''}, "
+        "{stage: 'compare', round: 3});\n"
+        "const deadNull = assertAgentAlive(null, {stage: 'compare', round: 3});\n"
+        "const deadUndef = assertAgentAlive(undefined, {stage: 'budget', round: 5});\n"
+        "console.log(JSON.stringify({\n"
+        "  okExit: ok.exitCode,\n"
+        "  okPassthrough: ok.infraAbort === undefined,\n"
+        "  nullInfra: deadNull.infraAbort,\n"
+        "  nullStage: deadNull.stage,\n"
+        "  nullRound: deadNull.round,\n"
+        "  nullHasDetail: typeof deadNull.detail === 'string',\n"
+        "  undefInfra: deadUndef.infraAbort,\n"
+        "  undefStage: deadUndef.stage,\n"
+        "}));\n"
+    )
+    result = _run_node(script)
+    assert result.returncode == 0, f"node -e failed: {result.stderr}"
+    import json
+    out = json.loads(result.stdout)
+    assert out["okExit"] == 0
+    assert out["okPassthrough"] is True, "a live result must pass through untouched"
+    assert out["nullInfra"] is True, "null (agent death) must yield an infraAbort sentinel"
+    assert out["nullStage"] == "compare"
+    assert out["nullRound"] == 3
+    assert out["nullHasDetail"] is True, "sentinel must carry an operator-facing detail"
+    assert out["undefInfra"] is True, "undefined must also yield an infraAbort sentinel"
+    assert out["undefStage"] == "budget"
