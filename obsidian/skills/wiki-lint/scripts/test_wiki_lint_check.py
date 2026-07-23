@@ -519,9 +519,76 @@ none
     tiny = ctrs["entities/tiny.md"]
     # body tokens: ##,Summary,One,two,three,[[x]].,##,Key,Facts,-,fact,
     #              ##,Connections,none = 14
+    # (since 3.20.1 each [[...]] is 1 token regardless of target length;
+    #  [[x]] is single-word, so this expectation is unchanged)
     assert tiny["words"] == 14
     assert tiny["links"] == 1
     assert tiny["headings"] == 3
+
+
+def _counters_for_body(tmp_path, subdir, body):
+    """Run the linter on a one-page wiki whose Summary body is `body`;
+    return that page's counters record."""
+    w = tmp_path / subdir / "wiki"
+    write_page(w, "entities/probe.md", f"""---
+title: Probe
+type: wiki-entity
+domain: d
+status: developing
+updated: 2026-07-01
+tags: [t]
+sources_count: 0
+summary: Probe page.
+---
+
+## Summary
+
+{body}
+
+## Key Facts
+
+- fact
+
+## Connections
+
+none
+""")
+    r = run_lint(w)
+    ctrs = {c["file"]: c for c in counters_of(parse_jsonl(r.stdout))}
+    return ctrs["entities/probe.md"]
+
+
+def test_words_counter_wikilink_target_insensitive(tmp_path):
+    # Counter semantics v3.20.1: every [[...]] counts as exactly ONE
+    # word-token regardless of target length, so a benign retarget
+    # ([[Two Word Target]] -> [[Oneword]]) must NOT change the words
+    # count — smoke Finding #1: 308->307 false ratchet breach on the
+    # L07 repair class (loop-report 2026-07-23).
+    long_t = _counters_for_body(tmp_path, "a", "Held by [[Two Word Target]] today.")
+    short_t = _counters_for_body(tmp_path, "b", "Held by [[Oneword]] today.")
+    assert long_t["words"] == short_t["words"]
+    # links/headings stay target-sensitive-free too (both count 1 link)
+    assert long_t["links"] == short_t["links"] == 1
+    assert long_t["headings"] == short_t["headings"]
+
+
+def test_words_counter_display_and_anchor_variants_count_one(tmp_path):
+    # [[t|display text]] and [[t#anchor]] each collapse to 1 token,
+    # same as a bare [[t]] (counter semantics v3.20.1).
+    bare = _counters_for_body(tmp_path, "a", "See [[t]] here.")
+    display = _counters_for_body(tmp_path, "b", "See [[t|display text words]] here.")
+    anchor = _counters_for_body(tmp_path, "c", "See [[t#some anchor]] here.")
+    assert display["words"] == bare["words"]
+    assert anchor["words"] == bare["words"]
+
+
+def test_words_counter_still_detects_deletion(tmp_path):
+    # Deletion detection must NOT weaken: removing the whole link line
+    # lowers the words count.
+    kept = _counters_for_body(
+        tmp_path, "a", "Intro line.\n\nDominated by [[Acme Corp]] since 1999.")
+    deleted = _counters_for_body(tmp_path, "b", "Intro line.")
+    assert deleted["words"] < kept["words"]
 
 
 def test_help_lists_llm_lane_out_of_scope():

@@ -4,6 +4,24 @@ All notable changes to the `obsidian` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.20.1] — 2026-07-24 wikilink-target-insensitive word counter
+
+### Changed — `wiki-lint` conservation-counter semantics (words)
+
+- `wiki_lint_check.py` words counter now normalizes every `[[...]]`
+  wikilink (including `[[target|display]]` / `[[target#anchor]]`
+  variants) to a single token before whitespace-splitting. A benign
+  retarget — `[[Two Word Target]]` → `[[Oneword]]`, the bread and
+  butter of L07 broken-link repair — no longer shifts the word count,
+  while deleting a link or surrounding prose still lowers it.
+  Motivation: wiki-update smoke run Finding #1
+  (`docs/loom/dogfood/2026-07-23-wiki-update-loop-smoke/loop-report.md`)
+  — the `[[Acme Corp]]` → `[[Acme-Corp]]` retarget shrank the count
+  308→307 and tripped the ratchet fail-closed (exit 8) with zero
+  content loss; on the real vault's ~873-broken-link backlog the L07
+  class would have stalled on its first round. `links` / `headings`
+  counters and the JSONL contract shape are unchanged.
+
 ## [3.20.0] — 2026-07-24 `wiki-update` loop + mechanical validator
 
 Adds a self-driving update loop for the wiki layer, backed by a new
