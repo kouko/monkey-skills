@@ -15,7 +15,10 @@ Output: JSONL on stdout —
   {"type": "violation", "check_id", "severity", "file", "line", "detail"}
   {"type": "counters", "file", "words", "links", "headings"}
   {"type": "summary", "files", "violations", "errors", "warnings", "by_check"}
-Exit code: 0 = clean, 1 = violations found.
+``check_id`` is one of the covered checks or ``PARSE`` (unreadable /
+non-UTF-8 file, frontmatter beyond the minimal-parser subset).
+Exit code: 0 = clean, 1 = violations found, 2 = internal error (crash
+path — distinct from "has violations" so loop callers never conflate).
 
 Stdlib-only by contract (plugin self-containment). The stdlib has no YAML
 parser, so frontmatter is read by a minimal YAML-subset parser (scalars,
@@ -27,6 +30,7 @@ import argparse
 import json
 import re
 import sys
+import unicodedata
 from pathlib import Path
 
 WIKI_FOLDERS = ("entities", "concepts", "synthesis", "skills",
@@ -60,6 +64,9 @@ BACKTICK_WIKILINK_RE = re.compile(r"`[^`]*\[\[[^\]]+\]\][^`]*`")
 L14_MALFORMED_RE = re.compile(r"\[\[[^\]]*/[^\]]+\]\]|\[\[[^\]]+\.md[\]#]")
 HEADING_RE = re.compile(r"^#{1,6}\s")
 H2_RE = re.compile(r"^##\s+(.+?)\s*$")
+# YAML block-scalar indicator (| / > with optional chomping/indent) —
+# beyond the minimal parser's subset; must be reported, never swallowed
+BLOCK_SCALAR_RE = re.compile(r"^[|>][0-9+-]{0,2}$")
 
 OUT_OF_SCOPE = """\
 Out-of-scope here (LLM-lane checks, run via the obsidian:wiki-lint skill):
@@ -81,18 +88,26 @@ def unquote(value):
 def parse_frontmatter(lines):
     """Minimal YAML-subset frontmatter parser (stdlib-only contract).
 
-    Returns (fields, body_start_index, key_lines) where body_start_index
-    is the 0-based index of the first body line and key_lines maps
-    top-level keys to their 1-based line numbers.
+    Returns (fields, body_start_index, key_lines, issues):
+    body_start_index is the 0-based index of the first body line;
+    key_lines maps top-level keys to their 1-based line numbers;
+    issues is a list of (lineno, key, message) parse-level findings
+    (values the subset parser cannot represent — never swallowed).
+
+    An empty value parses to ``None`` (converted to a list only when
+    block-list ``- item`` lines follow); block-scalar values (``|``/``>``)
+    parse to ``None`` plus an issue.
     """
-    fields, key_lines = {}, {}
+    fields, key_lines, issues = {}, {}, []
     if not lines or lines[0].strip() != "---":
-        return fields, 0, key_lines
+        return fields, 0, key_lines, issues
     current_list_key = None
+    end = len(lines)  # unterminated: treat all as frontmatter
     for i in range(1, len(lines)):
         line = lines[i]
         if line.strip() == "---":
-            return fields, i + 1, key_lines
+            end = i + 1
+            break
         stripped = line.strip()
         if not stripped:
             continue
@@ -102,22 +117,33 @@ def parse_frontmatter(lines):
             key_lines[key] = i + 1
             current_list_key = None
             if val == "":
-                fields[key] = []
+                fields[key] = None
                 current_list_key = key
+            elif BLOCK_SCALAR_RE.match(val):
+                fields[key] = None
+                issues.append(
+                    (i + 1, key,
+                     f"frontmatter key '{key}' uses a YAML block scalar "
+                     f"('{val}') the minimal parser cannot read"))
             elif val.startswith("[") and val.endswith("]"):
                 fields[key] = [unquote(x) for x in val[1:-1].split(",")
                                if x.strip()]
             else:
                 fields[key] = unquote(val)
         elif stripped.startswith("- ") and current_list_key is not None:
+            if fields[current_list_key] is None:
+                fields[current_list_key] = []
             fields[current_list_key].append(unquote(stripped[2:]))
-    return fields, len(lines), key_lines  # unterminated: treat all as fm
+    return fields, end, key_lines, issues
 
 
 def link_target(inner):
-    """Resolve a wikilink's inner text to its link target:
-    strip display alias (``|``) and anchor (``#``)."""
-    return inner.split("|", 1)[0].split("#", 1)[0].strip()
+    """Resolve a wikilink's inner text to its link target: strip display
+    alias (``|``) and anchor (``#``), NFC-normalize (macOS filesystems
+    hand back NFD names while links are typed NFC — both sides must
+    land on one form or every accented/CJK link is a false L07)."""
+    return unicodedata.normalize(
+        "NFC", inner.split("|", 1)[0].split("#", 1)[0].strip())
 
 
 def levenshtein_leq(a, b, cap=2):
@@ -142,8 +168,9 @@ class Page:
         self.rel = rel  # posix path relative to wiki root
         text = path.read_text(encoding="utf-8")
         self.lines = text.split("\n")
-        self.fields, self.body_start, self.key_lines = \
-            parse_frontmatter(self.lines)
+        (self.fields, self.body_start,
+         self.key_lines, self.fm_issues) = parse_frontmatter(self.lines)
+        self.unparsed_keys = {key for _, key, _ in self.fm_issues}
         self.body_lines = self.lines[self.body_start:]
         self.body = "\n".join(self.body_lines)
         self.is_reference = rel.startswith("references/")
@@ -172,14 +199,20 @@ class Page:
 
 
 def scan_wiki(wiki_root):
-    pages = []
+    """Returns (pages, failures); failures = [(rel, message)] for files
+    that cannot be read/decoded — one bad file must not abort the scan."""
+    pages, failures = [], []
     for folder in WIKI_FOLDERS:
         d = wiki_root / folder
         if not d.is_dir():
             continue
         for p in sorted(d.glob("*.md")):
-            pages.append(Page(p, f"{folder}/{p.name}"))
-    return pages
+            rel = f"{folder}/{p.name}"
+            try:
+                pages.append(Page(p, rel))
+            except (UnicodeDecodeError, OSError) as exc:
+                failures.append((rel, f"cannot read file: {exc}"))
+    return pages, failures
 
 
 def build_inventory(pages):
@@ -189,12 +222,13 @@ def build_inventory(pages):
     inv = {}
     for page in pages:
         keys = {page.path.stem}
-        aliases = page.fields.get("aliases", [])
+        aliases = page.fields.get("aliases") or []
         if isinstance(aliases, str):
             aliases = [aliases]
         keys.update(a for a in aliases if a)
         for k in keys:
-            inv.setdefault(k, []).append(page.rel)
+            inv.setdefault(unicodedata.normalize("NFC", k), []) \
+                .append(page.rel)
     return inv
 
 
@@ -211,10 +245,16 @@ def check_l01(page, out):
 
 
 def check_l02(page, out):
-    summary = page.fields.get("summary")
-    if not isinstance(summary, str) or not summary:
+    if "summary" not in page.fields:
         return  # absence is L01's finding
+    if "summary" in page.unparsed_keys:
+        return  # PARSE owns the block-scalar defect; don't double-report
+    summary = page.fields["summary"]
     line = page.key_lines.get("summary")
+    if not isinstance(summary, str) or not summary.strip():
+        out("L02", "error", page.rel, line,
+            "summary is empty or not a string")
+        return
     problems = []
     if len(summary) > 200:
         problems.append(f"too long ({len(summary)} chars > 200)")
@@ -326,7 +366,7 @@ def check_l14(page, out):
     source_path = page.fields.get("source_path")
     if not isinstance(source_path, str) or not source_path:
         return  # missing source_path is L01's finding
-    expected = Path(source_path).stem
+    expected = unicodedata.normalize("NFC", Path(source_path).stem)
     for target in links:
         if target != expected:
             out("L14", "warning", page.rel, start,
@@ -346,9 +386,10 @@ def conservation_counters(page):
 
 
 def run(wiki_root, stream):
-    pages = scan_wiki(wiki_root)
+    pages, failures = scan_wiki(wiki_root)
     inventory = build_inventory(pages)
-    stems = sorted({p.path.stem for p in pages})
+    stems = sorted({unicodedata.normalize("NFC", p.path.stem)
+                    for p in pages})
     violations = []
 
     def out(check_id, severity, file, line, detail):
@@ -361,7 +402,11 @@ def run(wiki_root, stream):
             "detail": detail,
         })
 
+    for rel, message in failures:
+        out("PARSE", "error", rel, None, message)
     for page in pages:
+        for lineno, _key, message in page.fm_issues:
+            out("PARSE", "error", page.rel, lineno, message)
         check_l01(page, out)
         check_l02(page, out)
         check_l03(page, out)
@@ -379,7 +424,7 @@ def run(wiki_root, stream):
         by_check[v["check_id"]] = by_check.get(v["check_id"], 0) + 1
     summary = {
         "type": "summary",
-        "files": len(pages),
+        "files": len(pages) + len(failures),
         "violations": len(violations),
         "errors": sum(1 for v in violations if v["severity"] == "error"),
         "warnings": sum(1 for v in violations if v["severity"] == "warning"),
@@ -407,7 +452,12 @@ def main(argv=None):
     wiki_root = Path(args.wiki_root)
     if not wiki_root.is_dir():
         parser.error(f"wiki root not found or not a directory: {wiki_root}")
-    return run(wiki_root, sys.stdout)
+    try:
+        return run(wiki_root, sys.stdout)
+    except Exception as exc:  # crash path: exit 2, distinct from
+        # "violations found" (1) so loop callers never misread a crash
+        print(f"wiki_lint_check: internal error: {exc!r}", file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":

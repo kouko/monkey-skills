@@ -538,6 +538,151 @@ def test_help_lists_llm_lane_out_of_scope():
         assert check.lower() in text, f"--help must list {check}"
 
 
+def test_empty_and_block_scalar_summary(tmp_path):
+    """R2 fix 1: `summary:` with empty value must fire L02 (not silently
+    become a list and dodge both L01 and L02); a block-scalar value must
+    surface a PARSE violation, never be swallowed as a literal string."""
+    w = tmp_path / "wiki"
+    write_page(w, "entities/empty-summary.md", """---
+title: Empty Summary
+type: wiki-entity
+domain: d
+status: developing
+updated: 2026-07-01
+tags: [t]
+sources_count: 0
+summary:
+---
+
+## Summary
+
+Body.
+
+## Key Facts
+
+- f
+
+## Connections
+
+none
+""")
+    write_page(w, "entities/block-scalar.md", """---
+title: Block Scalar
+type: wiki-entity
+domain: d
+status: developing
+updated: 2026-07-01
+tags: [t]
+sources_count: 0
+summary: >-
+  a folded block scalar the minimal parser cannot read
+---
+
+## Summary
+
+Body.
+
+## Key Facts
+
+- f
+
+## Connections
+
+none
+""")
+    r = run_lint(w)
+    assert r.returncode == 1
+    viols = violations_of(parse_jsonl(r.stdout))
+    got = {(v["check_id"], v["file"]) for v in viols}
+    assert ("L02", "entities/empty-summary.md") in got
+    parse_v = [v for v in viols if v["check_id"] == "PARSE"
+               and v["file"] == "entities/block-scalar.md"]
+    assert len(parse_v) == 1
+    assert parse_v[0]["severity"] == "error"
+    # PARSE owns the block-scalar defect; L02 must not double-report it
+    assert ("L02", "entities/block-scalar.md") not in got
+
+
+def test_non_utf8_file_isolated(tmp_path):
+    """R2 fix 2: a single non-UTF-8 file must yield a PARSE violation for
+    that file and the scan must continue — no traceback, no aborted run."""
+    w = build_clean_wiki(tmp_path)
+    (w / "entities" / "latin1.md").write_bytes(
+        b"---\ntitle: caf\xe9\n---\nbody\n")
+    r = run_lint(w)
+    assert r.returncode == 1, r.stderr
+    assert "Traceback" not in r.stderr
+    records = parse_jsonl(r.stdout)
+    parse_v = [v for v in violations_of(records)
+               if v["check_id"] == "PARSE" and v["file"] == "entities/latin1.md"]
+    assert len(parse_v) == 1
+    assert parse_v[0]["severity"] == "error"
+    # the rest of the wiki was still scanned
+    scanned = {c["file"] for c in counters_of(records)}
+    assert "entities/acme-corp.md" in scanned
+    assert records[-1]["type"] == "summary"
+
+
+def test_nfd_filename_nfc_link(tmp_path):
+    """R2 fix 3: macOS stores filenames in NFD; links are typed in NFC.
+    Both sides must be NFC-normalized or every CJK/accented link would
+    be a false L07 broken-link (and would feed the T3 auto-fixer junk)."""
+    import unicodedata
+    nfd_slug = unicodedata.normalize("NFD", "café")
+    assert nfd_slug != "café"  # sanity: really NFD
+    w = tmp_path / "wiki"
+    write_page(w, f"entities/{nfd_slug}.md", """---
+title: Café
+type: wiki-entity
+domain: d
+status: developing
+updated: 2026-07-01
+tags: [t]
+sources_count: 0
+summary: Accented page.
+---
+
+## Summary
+
+Body [[linker-page]].
+
+## Key Facts
+
+- f
+
+## Connections
+
+- [[linker-page]]
+""")
+    write_page(w, "concepts/linker-page.md", """---
+title: Linker
+type: wiki-concept
+domain: d
+status: developing
+updated: 2026-07-01
+tags: [t]
+sources_count: 0
+summary: Links with NFC.
+---
+
+## Summary
+
+NFC link: [[café]].
+
+## Key Facts
+
+- f
+
+## Connections
+
+- [[café]]
+""")
+    r = run_lint(w)
+    viols = violations_of(parse_jsonl(r.stdout))
+    assert [v for v in viols if v["check_id"] == "L07"] == []
+    assert r.returncode == 0, r.stdout
+
+
 def test_stdlib_only_imports():
     """Plugin self-containment: no third-party and no repo-level imports."""
     tree = ast.parse(SCRIPT.read_text(encoding="utf-8"))
