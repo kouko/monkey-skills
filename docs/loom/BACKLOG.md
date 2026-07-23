@@ -82,22 +82,23 @@
 - Status: OPEN
 - Origin: TW financial-sector iXBRL (branch feat-tw-ixbrl-fh, 2026-07-23, 2.31.0);
   whole-branch review PASS with carried 🟢 debt.
-- What: ~~(a) **memo Phase-4 consumption of `not_applicable` DCF**~~ ✅ SHIPPED 2.31.1
+- What: ~~(a) **memo Phase-4 consumption of `not_applicable` DCF**~~ ✅ SHIPPED 2.32.1
   (three render surfaces branch on the marker → "DCF: N/A — financial sector"; live
-  2882.TW dogfood CLEAN). ~~(b) 🟢 Rule-of-Three duplication~~ ✅ SHIPPED 2.31.1
+  2882.TW dogfood CLEAN). ~~(b) 🟢 Rule-of-Three duplication~~ ✅ SHIPPED 2.32.1
   (`_ordered_values_meta` in canonical, `_group_and_select_current` in notes). (c) 🟢
   over-soft-cap functions: `dcf_compute.main`, `pack_memo_fetch` — STILL OPEN (and
   `report-equity-memo/SKILL.md` body now within ~115 words of the hard cap; next addition
-  needs a trim). ~~(d) 🟢 fact-count guard under production decode~~ ✅ SHIPPED 2.31.1
+  needs a trim). ~~(d) 🟢 fact-count guard under production decode~~ ✅ SHIPPED 2.32.1
   (`test_fixture_fact_counts_match_under_production_decode`, 8 fixtures, zero deltas).
-  ~~(e) 🟢 stale scratchpad citations~~ ✅ SHIPPED 2.31.1 (all 5 replaced with the
+  ~~(e) 🟢 stale scratchpad citations~~ ✅ SHIPPED 2.32.1 (all 5 replaced with the
   operative measured fact inline). (f) US financial filers (`pack_us`) get no
   `sector_class` guard — pre-existing; a future US financial-comps path needs its own.
 
-## investing-toolkit TW financial iXBRL 2.31.1 — post-ship follow-ups (OPEN)
+## investing-toolkit TW financial iXBRL 2.32.1 — post-ship follow-ups (OPEN)
 - Status: OPEN
 - Origin: TW financial iXBRL Phase-4 consumption arc (branch tw-fin-ixbrl-followups,
-  2026-07-24, 2.31.1); 2882.TW live render dogfood.
+  2026-07-24, 2.32.1 — renumbered from 2.31.1 after main advanced to 2.32.0);
+  2882.TW live render dogfood.
 - What: (a) 🟢 **stale/over-broad `_status.failed_sections`** — the 2882.TW memo-fetch
   emits `_status.failed_sections: ["mops"]` while `mops.*` (company_basic + balance/income/
   cash) is fully populated with legible data; the flag looks stale/over-broad. Pre-existing
