@@ -44,7 +44,9 @@ Semantics for the packet and the returned memo: `dcf.json` carries
 are intentionally absent — state the `reason` string verbatim, do not
 fabricate a verdict, and treat CHK-THX-007 as vacuously satisfied (no
 `verdict_thresholds` to recompute). Frontmatter `intrinsic_mid` is
-`null` with this reason, never a silent default.
+`null` (the frontmatter keeps its fixed field schema — do NOT add a
+reason field there); the `reason` string is stated in the §DCF section
+body of the memo, never dropped to a silent default.
 
 The **binding-or-gated** clause above applies only when
 `verdict_thresholds` exists; the N/A marker is neither an adoption nor

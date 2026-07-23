@@ -504,8 +504,9 @@ the schema SSOT), values sourced from this run (verdict/confidence from
 the memo's §一 執行摘要, `price_at_analysis` from Phase 1 `fetch.json`
 `current_price`, `intrinsic_mid` from Phase 3 `dcf.json` `mid` — except
 when `dcf.json` carries `not_applicable: "financial-sector"`: then set
-`intrinsic_mid: null` and state the marker's `reason` next to it in the
-report to the user; never leave the null as a silent default) — so the
+`intrinsic_mid: null` (the frontmatter stays this fixed 8-field schema —
+do NOT add a reason field to it) and state the marker's `reason` in the
+§DCF section body of the memo; never leave the null as a silent default) — so the
 file is `---\n<8 fields>\n---\n` followed by the memo body. This emission
 is unconditional, regardless of destination (Phase 5a/5b optional or
 skipped). Persist the result to `/tmp/${TICKER_SAFE}-memo.md` before
