@@ -71,6 +71,15 @@ Plan-document-reviewer verdict: PASS (2026-07-23, round 2, 14/14 checks; round-1
 - Kickoff sweep result: zero one-way-door decisions (read-only arc, no store
   format change, internal co-shipped payload contract, presentation-layer
   layout already user-signed in the brief).
+- Decision Log: [2026-07-24, T2 round-2 review] The reviewer live-reproduced a
+  PRE-EXISTING corrupt-file escape in the untouched `list_series`/`history`
+  readers (non-dict JSON → AttributeError through `_load_series`, violating
+  their own never-raise contracts — same class as the T2 finding fixed in
+  `dump_company`). Two-way door, no briefing: agent decided FIX-NOW on this
+  branch as micro-task T2b (root-cause guard inside `_load_series` +
+  RED tests for both readers + the dict-with-non-list-points sub-path test
+  T2 round-2 flagged), per the repo's cheap-hardening-over-threshold rule,
+  rather than BACKLOG deferral.
 - Implementer trap-guards: Read a file before Edit; on modified-since-read,
   re-Read then re-Edit — never retry the same diff. If a guard/hook blocks the
   same command twice, stop and report verbatim. The Write tool refuses the

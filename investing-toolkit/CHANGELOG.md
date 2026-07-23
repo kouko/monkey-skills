@@ -5,6 +5,37 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.32.0] — 2026-07-24
+
+KPI tearsheet — the store's per-company history now renders. A new
+`report-kpi-tearsheet` skill turns `kpi_store.py`'s durable observation
+history into a one-company Markdown tearsheet, closing the gap the
+v2.30.0 entry called out ("a rendered tearsheet is deferred" — **superseded
+by this entry**: a format now ships).
+
+- **kpi_store read CLI.** `list-series` prints every `[company, kpi_id]` pair
+  as JSON; `dump --company <C>` emits the closure-grouped pinned payload —
+  points grouped into periods via `same_period`, `canonical_value` computed
+  through `Decimal`, `disagreement` flagged per the `history` doctrine,
+  corrupt series files skipped per-file into `warnings` rather than raising.
+- **report-kpi-tearsheet skill.** `tearsheet_format.py` renders the dump to
+  Markdown: periods as columns, newest-left, one row per `kpi_id`; a
+  disagreement cell carries a `†` marker and every vintage (value, as_of,
+  source accession) is listed in a `## Revisions` block; empty series render
+  a graceful no-records card; a footer states provenance and echoes
+  `warnings` verbatim; an optional `--out <path>` writes the file instead of
+  stdout. Layout follows US-terminal convention (periods as columns); the JP
+  lane's periods-as-rows convention is documented as a conditional reversal,
+  not yet built.
+- **Hardening (T2b).** `list_series` / `history` no longer crash on a
+  shape-corrupt series JSON file (non-dict content, or a dict with
+  non-list `points`) — the same never-raise contract `dump` already held,
+  root-caused into the shared `_load_series` loader.
+- **Docs.** `analysis-kpi/references/cli-reference.md` documents both new
+  subcommands (flags, exit codes, one worked example each).
+
+Offline suite: 982 passed, 2 skipped (`-m "not network"`).
+
 ## [v2.31.0] — 2026-07-23
 
 ### Added — Taiwan financial-sector iXBRL ingestion (-fh / -basi / -bd / -ins)
