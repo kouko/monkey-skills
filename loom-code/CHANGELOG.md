@@ -5,6 +5,28 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.37.0] — 2026-07-23 — ask-channel floor: anchored asks + tool-channel default
+
+### Changed
+
+- **ask-triage card gains a mechanical floor** (`hooks/ask-triage.py`):
+  whichever triage shape applies, the drafted `question` field's FIRST
+  line must be a one-line state anchor + stakes; the card instructs a
+  concrete re-read-and-fix action (verifiable-action phrasing — haiku
+  cold-read produced a compliant anchored question from a bare
+  "X or Y?" draft).
+- **Channel rule** (SDD `§Asking the user` ③ item 7 + router-card rule
+  5): non-trivial decision asks default to the `AskUserQuestion` tool
+  (the hookable channel); a prose ask is legitimate only when it leads
+  with the same anchor + stakes line — bare prose fork questions are
+  the dark-number channel the 2026-07 baseline measured
+  (`docs/harness-audit/2026-07-22-bba-trigger-baseline.md`, ~25%
+  sampled miss-rate) and are named a violation.
+
+This is the pre-registered B-leg hardening from the baseline's metric
+guards (BACKLOG: ask-triage live telemetry A/B), shipped post-merge as
+required; the A/B measures its effect on bare-ask rate.
+
 ## [0.36.0] — 2026-07-21 — gate hardening: verified real-execution binding + push-guard wrappers
 
 ### Changed
