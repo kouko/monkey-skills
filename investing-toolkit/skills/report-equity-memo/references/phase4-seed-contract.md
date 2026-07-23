@@ -30,6 +30,27 @@ context, marked **binding-or-gated**:
 - If `rule_verdict` is null (no current price), say so in the packet —
   the memo then derives its verdict per the protocol as before.
 
+### N/A branch — financial-sector marker (`DCF: N/A — financial sector`)
+
+`analysis-dcf` structurally refuses financial-sector inputs
+(`dcf_compute.py`, `sector_class == "financial"`). In that case the
+financial-sector dcf.json is a flat object with exactly these keys:
+`ticker`, `not_applicable: "financial-sector"`, `reason` (prose string),
+`_provenance`. It omits `intrinsic_value`, `verdict_thresholds`,
+`sensitivity_table`, `current_price`, `margin_of_safety_base`.
+
+Semantics for the packet and the returned memo: `dcf.json` carries
+`not_applicable: "financial-sector"`; intrinsic-value and verdict fields
+are intentionally absent — state the `reason` string verbatim, do not
+fabricate a verdict, and treat CHK-THX-007 as vacuously satisfied (no
+`verdict_thresholds` to recompute). Frontmatter `intrinsic_mid` is
+`null` with this reason, never a silent default.
+
+The **binding-or-gated** clause above applies only when
+`verdict_thresholds` exists; the N/A marker is neither an adoption nor
+a deviation — no Deviation Block is required or permitted in this
+branch.
+
 ## 2. Pack-section inventory — unavailability claims are checkable
 
 Before dispatch, generate the inventory and include its JSON in the packet:
