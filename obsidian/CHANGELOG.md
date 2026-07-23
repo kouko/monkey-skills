@@ -34,9 +34,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   round-3 compare scoring agent died on a session limit and crashed the
   engine rather than stopping honestly. Every `agent()` dispatch site now
   documents its null handling (`// agent-null guard:`); the blockers report
-  tells the operator to re-run with a fresh `runLabel` (the interruption is
-  usually transient). No change to the JSONL/exit contract, brake
-  semantics, ratchet repair, or `loop_verdict.py`.
+  tells the operator to re-run with a fresh `runLabel` — and, on the
+  brake-loop path that leaves the interrupted round's edits in the working
+  tree, to stash/discard them first so the dirty-tree preflight does not
+  refuse the re-run. A mid-loop freeze-check agent death is attributed as an
+  infrastructure interruption rather than mislabelled `CONFIG DRIFT`. No
+  change to the JSONL/exit contract, brake semantics, ratchet repair, or
+  `loop_verdict.py`. Next-touch: the loop is tested by static
+  marker/`node -e` extraction (Workflow runtime globals cannot be executed
+  in CI), so the end-to-end INFRA_ABORT stop is covered by markers, not a
+  live run.
 
 ## [3.20.0] — 2026-07-24 `wiki-update` loop + mechanical validator
 

@@ -483,3 +483,68 @@ def test_assert_agent_alive_guard_executable():
     assert out["nullHasDetail"] is True, "sentinel must carry an operator-facing detail"
     assert out["undefInfra"] is True, "undefined must also yield an infraAbort sentinel"
     assert out["undefStage"] == "budget"
+
+
+def test_infra_abort_tail_warns_uncommitted_working_tree():
+    """Reviewer 🟡: the brake-loop INFRA_ABORT path performs NO revert, so the
+    interrupted round's executor edits are left in the vault working tree. The
+    blockers tail must warn that they are UNREVERTED and tell the operator to
+    stash/discard before re-running — a blind re-run hits the dirty-tree
+    preflight refusal, so the 'fresh runLabel' advice alone would fail."""
+    text = _text()
+    tail_m = re.search(
+        r"function renderBlockersTail\(\) \{([\s\S]*?)\n\}\n", text)
+    assert tail_m, "renderBlockersTail not found"
+    body = tail_m.group(1)
+    infra_m = re.search(
+        r"terminal === 'INFRA_ABORT'\) \{\s*return '([\s\S]*?)' \+ proposalBranch",
+        body)
+    assert infra_m, "INFRA_ABORT tail branch not found"
+    msg = infra_m.group(1)
+    assert re.search(r"unreverted", msg, re.IGNORECASE), (
+        "INFRA_ABORT tail must state the interrupted round's edits are left "
+        "unreverted in the working tree"
+    )
+    assert re.search(r"stash|discard", msg, re.IGNORECASE), (
+        "INFRA_ABORT tail must tell the operator to stash/discard those edits"
+    )
+    assert re.search(r"preflight|dirty", msg, re.IGNORECASE), (
+        "INFRA_ABORT tail must explain a dirty tree makes the next run refuse"
+    )
+    assert "runLabel" in msg, "still points at a re-run once the tree is clean"
+
+
+def test_freeze_check_death_attributed_not_mislabeled_drift():
+    """Reviewer 🟢: a mid-loop freeze-check courier death (runHashCourier →
+    null) must NOT be reported as CONFIG DRIFT ('now undefined') — that
+    mislabels infrastructure death as criteria drift. Split the guard: null
+    (agent death) → infra-death hard-stop with a re-runnable message; only a
+    real hash mismatch → CONFIG DRIFT. Freeze-family hard-throw is preserved
+    (both branches still throw)."""
+    text = _text()
+
+    # null (agent death) is its own branch, separate from hash-mismatch
+    assert re.search(r"if \(!freezeCheck\) \{", text), (
+        "freeze-check null (agent death) must be its own branch, not folded "
+        "into the hash-mismatch drift check via `!freezeCheck ||`"
+    )
+    null_branch = re.search(r"if \(!freezeCheck\) \{([\s\S]*?)\n  \}", text)
+    assert null_branch, "freeze-check null branch not found"
+    nb = null_branch.group(1)
+    assert re.search(r"agent died", nb, re.IGNORECASE), (
+        "null branch must attribute the stop to a dead agent"
+    )
+    assert "config drift" in nb.lower() and re.search(r"not config drift", nb, re.IGNORECASE), (
+        "null branch must say this is NOT config drift"
+    )
+    assert "runLabel" in nb, "infra-death message must point at a re-run"
+    assert "throw new Error" in nb, "freeze-family death still hard-stops (throw)"
+
+    # real hash mismatch keeps the CONFIG DRIFT label, on a known-non-null
+    # freezeCheck (no `&&` null dance)
+    drift_branch = re.search(
+        r"if \(freezeCheck\.hash !== frozenCheckConfigHash\) \{([\s\S]*?)\n  \}", text)
+    assert drift_branch, "hash-mismatch branch not found on a non-null freezeCheck"
+    assert "CONFIG DRIFT" in drift_branch.group(1), (
+        "real hash mismatch must still be labelled CONFIG DRIFT"
+    )

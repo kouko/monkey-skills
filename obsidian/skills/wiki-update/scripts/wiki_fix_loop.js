@@ -381,8 +381,9 @@ const HASH_SCHEMA = {
 // dispatch (a resumed run can sit paused for days between rounds).
 async function runHashCourier(round) {
   try {
-    // agent-null guard: a dead agent returns null → `if (!freezeCheck ...)`
-    // hard-stops the loop (CONFIG DRIFT path).
+    // agent-null guard: a dead agent returns null → the caller splits it:
+    // `if (!freezeCheck)` hard-stops as an infra-death (re-runnable), and only
+    // a real hash mismatch is reported as CONFIG DRIFT.
     return await agent(
       `You are the FREEZE-CHECK COURIER, round ${round}. Run EXACTLY this command via Bash from the repo root, nothing else:
 cat ${runArgs.validatorScript} ${runArgs.verdictScript} | shasum -a 256
@@ -808,12 +809,24 @@ for (let round = 1; terminal === null && round <= maxRounds; round++) {
   // Freeze re-check: the check-config hash must be unchanged before every
   // executor dispatch — a mid-loop change is a hard stop.
   const freezeCheck = await runHashCourier(round)
-  if (!freezeCheck || freezeCheck.hash !== frozenCheckConfigHash) {
+  if (!freezeCheck) {
+    // Freeze-check courier's dispatched agent died (null) — infrastructure
+    // interruption, NOT criteria drift. Freeze-family failures hard-stop
+    // (fail loud), but attribute the cause honestly so the operator does not
+    // hunt a non-existent config change; a re-run usually clears it.
+    throw new Error(
+      'wiki-fix-loop: freeze-check agent died (agent() returned null) at round ' +
+      round + ' — infrastructure interruption (session limit / overload / user ' +
+      'skip), NOT config drift. Hard stop; re-run with a fresh runLabel ' +
+      '(the interruption is usually transient).'
+    )
+  }
+  if (freezeCheck.hash !== frozenCheckConfigHash) {
     throw new Error(
       'wiki-fix-loop: CONFIG DRIFT — the check-config hash (validator + verdict ' +
       'scripts) changed mid-loop ' +
       '(frozen ' + frozenCheckConfigHash.slice(0, 12) + '…, now ' +
-      JSON.stringify(freezeCheck && freezeCheck.hash) + '). Hard stop: the loop ' +
+      JSON.stringify(freezeCheck.hash) + '). Hard stop: the loop ' +
       'never chases moving criteria.'
     )
   }
@@ -1055,7 +1068,7 @@ await runFileWriteCourier('scorecard', `${runDir}/scorecard.json`, JSON.stringif
 // path that performs none (R2 honesty fix).
 function renderBlockersTail() {
   if (terminal === 'INFRA_ABORT') {
-    return 'A dispatched agent died mid-run (agent() returned null — a session limit, overload, or user skip): the loop stopped HONESTLY instead of crashing on a null deref. Nothing was committed for the interrupted round. Re-run with a fresh runLabel — the interruption is usually transient. Accepted rounds (if any) are local commits on ' + proposalBranch + '.'
+    return 'A dispatched agent died mid-run (agent() returned null — a session limit, overload, or user skip): the loop stopped HONESTLY instead of crashing on a null deref. The interrupted round was NOT committed, and its executor edits (if that round had already edited before the brake courier died) are left in the vault working tree UNREVERTED and UNCOMMITTED — the brake-loop stop performs no revert. Before re-running, inspect the tree with git status and stash or discard those edits: a dirty wiki/ tree makes the next preflight refuse, so a blind re-run would fail. Once the tree is clean, re-run with a fresh runLabel — the interruption is usually transient. Accepted rounds (if any) are local commits on ' + proposalBranch + '.'
   }
   if (terminal === 'STUCK_EXECUTOR_OVERREACH') {
     return 'The conservation ratchet detected a net decrease of words/links/headings: the executor deleted content despite the structural exclusion (executor overreach). The vault working tree was left UNREVERTED and UNCOMMITTED for inspection — review it, then stash or commit manually.'
