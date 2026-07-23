@@ -88,7 +88,9 @@ corpus with fresh real-world failures so wording cannot overfit the suite.
 
 28 dogfood/audit records classified (READY = input + checkable expectations
 both recoverable; PARTIAL = reconstruction needed; NARRATIVE-ONLY = prose
-lesson, not replayable): **9 READY / 10 PARTIAL / 10 NARRATIVE-ONLY**
+lesson, not replayable): **9 READY / 10 PARTIAL / 10 NARRATIVE-ONLY** (class
+tallies sum to 29 over 28 records — one cross-plugin record is
+double-classified)
 (loom-code proper: 2 READY + 3 PARTIAL; cross-plugin READY records cover it
 further).
 
@@ -98,7 +100,8 @@ Top seed sources for a loom-code matrix, in order:
    ready-made (skill, probe prompt, pass-criterion) rows** covering every
    loom-code skill; alone seeds most of a first matrix.
 2. `docs/loom/dogfood/2026-07-06-g4-sonnet-vs-fable-ab.md` — pinned commit
-   diff + 5 ground-truth findings with file:line; the only git-checkable
+   diff + 5 disk-verifiable ground-truth findings at pinned commits (line
+   anchors on a subset); the only git-checkable
    REVIEW-QUALITY oracle on record.
 3. `docs/loom/firing-corpus/*.jsonl` — routing/triggering seeds already in
    seed+oracle shape; reuse, don't rebuild.
