@@ -83,3 +83,42 @@ def test_fh_fixture_parses_to_measured_fact_count(fixture_name, expected_count):
         f"(measured fact_count from its *.profile.json) — any drift is the "
         f"DOM-drop regression tripwire"
     )
+
+
+# Every fixture with a stored expected fact count, across BOTH families:
+# the 7 financial (fh/basi/bd/ins) fixtures above (UTF-8 bodies despite the
+# big5 charset declaration) plus the genuine-Big5 -ci fixture whose measured
+# count (2002) is pinned in test_twse_ixbrl_parser.py /
+# test_data_markets_tw.py. twse_ixbrl_1301_2024Q3_C.html has no stored
+# expected count anywhere in the suite, so it is not covered here.
+PRODUCTION_DECODE_EXPECTED_FACT_COUNTS = {
+    **EXPECTED_FACT_COUNTS,
+    "twse_ixbrl_2330_2024Q3_C.html": 2002,
+}
+
+
+@pytest.mark.parametrize(
+    ("fixture_name", "expected_count"),
+    sorted(PRODUCTION_DECODE_EXPECTED_FACT_COUNTS.items()),
+)
+def test_fixture_fact_counts_match_under_production_decode(
+    fixture_name, expected_count
+):
+    # The legacy test above decodes via the OLD fetch-layer path
+    # (big5hkscs, errors="replace"). Production moved to
+    # decode_ixbrl_document (UTF-8-strict first, big5hkscs/replace
+    # fallback — see docs/loom/memory/
+    # tw-financial-ixbrl-served-utf8-despite-big5-declaration.md) in
+    # 2.31.0; this asserts the measured whole-file fact counts hold
+    # under the decode path real fetches actually use.
+    mod = _load_parser()
+    raw = (FIXTURES / fixture_name).read_bytes()
+    document = mod.decode_ixbrl_document(raw)
+    facts = mod.parse_ixbrl_facts(document)
+
+    assert len(facts) == expected_count, (
+        f"{fixture_name} must parse to exactly {expected_count} facts under "
+        f"the production decode_ixbrl_document path — a count delta vs the "
+        f"measured *.profile.json baseline is a surfaced finding, never a "
+        f"re-baseline"
+    )
