@@ -30,10 +30,12 @@ KPI_STORE_SCRIPT = (
 
 
 def _load_module():
-    """Direct (non-subprocess) import of kpi_store.py — used ONLY to call
+    """Direct (non-subprocess) import of kpi_store.py — used to call
     `_canonical_value` for an independent sanity check on the Decimal math
-    (Task 2's GREEN condition); the dump subcommand itself is always
-    exercised as a real subprocess above, matching this file's convention.
+    (Task 2's GREEN condition), and to call `history()`/`_series_path()`
+    directly (T2b: `history` has no CLI subcommand to exercise via
+    subprocess). The CLI subcommands themselves are always exercised as real
+    subprocesses above, matching this file's convention.
     """
     spec = importlib.util.spec_from_file_location("kpi_store_read_cli", KPI_STORE_SCRIPT)
     module = importlib.util.module_from_spec(spec)
@@ -324,3 +326,76 @@ def test_dump_skips_corrupt_series_file_that_parses_to_non_dict(tmp_path):
     payload = json.loads(result.stdout)
     assert payload["warnings"] == ["skipped corrupt series file: zzz_corrupt.json"]
     assert [s["kpi_id"] for s in payload["series"]] == ["revenue"]
+
+
+def test_dump_skips_series_with_non_list_points_field(tmp_path):
+    """A dict envelope whose `points` field is NOT a list (`{"points":
+    "oops"}`) — a different corruption shape than a bare non-dict envelope —
+    must also hit the `warnings` skip path, exit 0 (T2 round-2's flagged
+    missing sub-path; asserts EXISTING `dump_company` behavior, which already
+    parses envelopes directly and isinstance-checks `points` — no code change
+    expected for this one).
+    """
+    env = {**os.environ, "KPI_STORE_DIR": str(tmp_path)}
+    _append_via_cli(_point("ACME", "revenue", "100"), env)
+
+    corrupt_path = tmp_path / "zzz_wrongshape.json"
+    corrupt_path.write_text('{"points": "oops"}', encoding="utf-8")
+
+    result = _run_cli("dump", "--company", "ACME", env=env)
+    assert result.returncode == 0, (
+        f"dump failed on wrong-shape points: stdout={result.stdout!r} "
+        f"stderr={result.stderr!r}"
+    )
+    payload = json.loads(result.stdout)
+    assert payload["warnings"] == ["skipped corrupt series file: zzz_wrongshape.json"]
+    assert [s["kpi_id"] for s in payload["series"]] == ["revenue"]
+
+
+def test_list_series_skips_series_file_that_parses_to_non_dict(tmp_path):
+    """`list_series` (CLI `list-series`) must degrade PER-FILE on a bare-list
+    JSON series file the same way `dump_company` does — not raise
+    AttributeError out of `_load_series`'s `envelope.setdefault(...)` on a
+    non-dict `json.load` result (reviewer-reproduced round-2 gap: same class
+    of bug as the dump_company finding T2 fixed, but in the untouched
+    `list_series` reader). The one good series still surfaces.
+    """
+    env = {**os.environ, "KPI_STORE_DIR": str(tmp_path)}
+    _append_via_cli(_point("AMZN", "employees", "1556000"), env)
+
+    (tmp_path / "zzz_corrupt.json").write_text("[]", encoding="utf-8")
+
+    result = _run_cli("list-series", env=env)
+    assert result.returncode == 0, (
+        f"list-series failed on non-dict envelope: stdout={result.stdout!r} "
+        f"stderr={result.stderr!r}"
+    )
+    assert json.loads(result.stdout) == [["AMZN", "employees"]]
+
+
+def test_history_skips_series_file_that_parses_to_non_dict(tmp_path, monkeypatch):
+    """`history()` must degrade to an empty observation list (never raise) on
+    a bare-list JSON series file — same corruption shape as the two tests
+    above, exercised on the reader with no CLI subcommand, so `history()` is
+    called directly. The corrupt content is written to the EXACT path
+    `history` resolves for (company, kpi_id) via `_series_path`, so the read
+    actually goes through the broken file (a same-directory sibling file
+    would never be touched by `history`, unlike the glob-based `list_series`/
+    `dump_company` scans).
+    """
+    monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
+    module = _load_module()
+
+    series_path = module._series_path("ACME", "revenue")
+    series_path.parent.mkdir(parents=True, exist_ok=True)
+    series_path.write_text("[]", encoding="utf-8")
+
+    probe = {
+        "period_start": "2021-01-01",
+        "period_end": "2021-12-31",
+        "period_kind": "duration",
+    }
+    result = module.history("ACME", "revenue", probe)
+
+    assert result["observations"] == []
+    assert result["disagreement"] is False

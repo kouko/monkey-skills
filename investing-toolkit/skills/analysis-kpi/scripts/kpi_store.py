@@ -102,9 +102,28 @@ def _load_series(path: Path) -> dict:
     Append-only: an existing file's `points` list is preserved and never
     overwritten. A fresh series starts with a versioned `_kpi_store_meta`
     envelope and an empty `points` list.
+
+    Raises `ValueError` (never `AttributeError`) when the file parses to
+    valid JSON that is NOT an envelope object — e.g. a truncated write left
+    a bare list or scalar. The two never-raise READERS (`history`,
+    `list_series`) catch `(json.JSONDecodeError, OSError, ValueError)` around
+    it to degrade per-file; the other callers do not catch here — `append`'s
+    CLI surfaces the `ValueError` as a clean exit-1 message via
+    `_cli_append`, and `_matching_points` (query paths) propagates it, as it
+    always propagated the old crash. `ValueError` was chosen over reusing
+    `json.JSONDecodeError` (this is a SHAPE error, the JSON parsed fine) —
+    the minimal-diff fix that keeps every never-raise-on-read reader honest
+    without inventing a new exception surface (kpi-tearsheet plan, T2b:
+    round-2 reviewer-reproduced AttributeError from the old bare
+    `envelope.setdefault(...)` on a non-dict `json.load` result).
     """
     if path.exists():
         envelope = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(envelope, dict):
+            raise ValueError(
+                f"kpi_store: {path.name} parsed to {type(envelope).__name__}, "
+                "not a JSON object — corrupt series envelope"
+            )
         envelope.setdefault("points", [])
         return envelope
     return {
@@ -488,14 +507,14 @@ def history(company: str, kpi_id: str, period_match: dict) -> dict:
 
     Read-only, never-raise on an absent OR corrupt series (matching
     `list_series`): an absent series file, or one that fails to load
-    (`json.JSONDecodeError`/`OSError` — an interrupted external edit, a future
-    co-writer bug), yields an empty observation list rather than taking down the
-    read.
+    (`json.JSONDecodeError`/`OSError`/`ValueError` — an interrupted external
+    edit, a non-dict envelope, a future co-writer bug), yields an empty
+    observation list rather than taking down the read.
     """
     path = _series_path(company, kpi_id)
     try:
         points = _load_series(path)["points"] if path.exists() else []
-    except (json.JSONDecodeError, OSError):
+    except (json.JSONDecodeError, OSError, ValueError):
         points = []  # corrupt/unreadable series file — degrade like list_series
 
     observations = sorted(
@@ -547,7 +566,7 @@ def list_series() -> list:
         try:
             envelope = _load_series(path)
             points = envelope.get("points")
-        except (json.JSONDecodeError, OSError):
+        except (json.JSONDecodeError, OSError, ValueError):
             continue  # skip a corrupt/unreadable file; keep the rest visible
         if not isinstance(points, list):
             continue
