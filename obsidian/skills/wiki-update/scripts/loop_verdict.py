@@ -38,7 +38,9 @@ Exit codes are GLOBALLY DISTINCT across verbs so the loop engine
   3  ``plateau``: stop — K consecutive rounds without improvement
   4  ``budget``: stop — round cap (or token cap) exhausted
   5  ``stuck``: same failure fingerprint — sha256 over the sorted
-     (check_id, file) pair set — for --strikes consecutive rounds
+     (check_id, file) pair set — for --strikes consecutive rounds,
+     UNLESS the violation total strictly declined across that window
+     (converging on one violation class is progress, not stuckness)
   6  ``stuck``: no-new-info round — the latest round's violation
      records are exactly the previous round's (nothing changed)
   7  ``stuck``: regression — latest violation count ROSE vs previous
@@ -115,6 +117,11 @@ def load_round(path: str) -> dict:
                 f"non-object JSONL record on {path}:{lineno}")
         rtype = record.get("type")
         if rtype == "violation":
+            if not isinstance(record.get("check_id"), str) \
+                    or not isinstance(record.get("file"), str):
+                raise MalformedInputError(
+                    f"violation record missing str 'check_id'/'file' on "
+                    f"{path}:{lineno}: {record!r}")
             violations.append(record)
         elif rtype == "counters":
             counters.append(record)
@@ -161,7 +168,7 @@ def counter_totals(round_data: dict) -> dict:
     for record in round_data["counters"]:
         for key in COUNTER_KEYS:
             value = record.get(key)
-            if not isinstance(value, int):
+            if type(value) is not int:  # bool is an int subclass — reject it
                 raise MalformedInputError(
                     f"counters record missing int {key!r}: {record!r}")
             totals[key] += value
@@ -181,6 +188,8 @@ def plateau_verdict(rounds: list, k: int) -> int:
     """Stop iff the last k round transitions ALL failed to improve
     (violation count never decreased). Fewer than k transitions in the
     history always continues."""
+    if k < 1:
+        raise MalformedInputError("--k must be >= 1")
     counts = [violation_count(r) for r in rounds]
     if len(counts) < k + 1:
         return EXIT_OK
@@ -210,14 +219,21 @@ def budget_verdict(rounds_completed: int, max_rounds: int,
 def stuck_verdict(rounds: list, strikes: int) -> int:
     """Three stuck kinds, checked in precedence order:
     regression (7) > fingerprint strikes (5) > no-new-info (6).
-    Fewer than 2 rounds of history is never stuck."""
+    Fewer than 2 rounds of history is never stuck. A shared fingerprint
+    is NOT a strike while the violation total is strictly declining
+    across the strike window — converging on one violation class
+    (e.g. 5 -> 3 -> 1 broken links) is progress, not stuckness."""
+    if strikes < 1:
+        raise MalformedInputError("--strikes must be >= 1")
     if len(rounds) < 2:
         return EXIT_OK
     if violation_count(rounds[-1]) > violation_count(rounds[-2]):
         return EXIT_STUCK_REGRESSION
     if len(rounds) >= strikes:
-        prints = [fingerprint(r) for r in rounds[-strikes:]]
-        if len(set(prints)) == 1:
+        window = rounds[-strikes:]
+        prints = [fingerprint(r) for r in window]
+        converging = violation_count(window[0]) > violation_count(window[-1])
+        if len(set(prints)) == 1 and not converging:
             return EXIT_STUCK_FINGERPRINT
     if _violation_multiset(rounds[-1]) == _violation_multiset(rounds[-2]):
         return EXIT_STUCK_NO_NEW_INFO
@@ -261,10 +277,10 @@ def _cmd_compare(args) -> int:
 def _cmd_plateau(args) -> int:
     try:
         rounds = [load_round(p) for p in args.rounds]
+        code = plateau_verdict(rounds, args.k)
     except MalformedInputError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return EXIT_MALFORMED
-    code = plateau_verdict(rounds, args.k)
     if code:
         print(f"plateau: last {args.k} rounds never improved — stop",
               file=sys.stderr)
@@ -289,10 +305,10 @@ def _cmd_budget(args) -> int:
 def _cmd_stuck(args) -> int:
     try:
         rounds = [load_round(p) for p in args.rounds]
+        code = stuck_verdict(rounds, args.strikes)
     except MalformedInputError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return EXIT_MALFORMED
-    code = stuck_verdict(rounds, args.strikes)
     if code == EXIT_STUCK_REGRESSION:
         print(f"stuck: regression — violations rose "
               f"{violation_count(rounds[-2])} -> "

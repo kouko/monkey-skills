@@ -198,6 +198,19 @@ def test_stuck_fingerprint_precedes_no_new_info(tmp_path):
     assert r.returncode == 5, (r.returncode, r.stderr)
 
 
+def test_stuck_converging_same_fingerprint_not_stuck(tmp_path):
+    """Convergence is not stuckness: three rounds sharing one failure
+    fingerprint (same (check_id, file) class) but with the violation
+    total strictly declining across the strike window must NOT trip
+    the fingerprint strike (R2 fix)."""
+    paths = []
+    for i, n in enumerate([5, 3, 1]):
+        vs = [viol(detail=f"r{i}-v{j}", line=j + 1) for j in range(n)]
+        paths.append(write_round(tmp_path / f"c{i}.jsonl", vs, [ctr()]))
+    r = run_verdict("stuck", "--rounds", *paths)
+    assert r.returncode == 0, (r.returncode, r.stderr)
+
+
 def test_stuck_healthy_history_not_stuck(tmp_path):
     a = write_round(tmp_path / "a.jsonl",
                     [viol(), viol(check_id="L07", file="entities/B.md")],
@@ -290,6 +303,56 @@ def test_summary_count_mismatch_is_malformed(tmp_path):
                       summary_override={"violations": 7})
     ok = write_round(tmp_path / "ok.jsonl", [viol()], [ctr()])
     r = run_verdict("compare", "--baseline", bad, "--candidate", ok)
+    assert r.returncode == 2, (r.returncode, r.stderr)
+    assert "error:" in r.stderr
+
+
+def test_violation_record_missing_fields_is_malformed(tmp_path):
+    """A violation record lacking a str check_id/file must be rejected
+    at load time (exit 2), never leak into fingerprinting (R2 fix)."""
+    ok = write_round(tmp_path / "ok.jsonl", [viol()], [ctr()])
+    no_check_id = write_round(
+        tmp_path / "bad1.jsonl",
+        raw_lines=[
+            json.dumps({"type": "violation", "file": "entities/A.md",
+                        "severity": "error", "line": 1, "detail": "d"}),
+            json.dumps({"type": "summary", "files": 0, "violations": 1,
+                        "errors": 1, "warnings": 0, "by_check": {}}),
+        ])
+    r = run_verdict("compare", "--baseline", no_check_id, "--candidate", ok)
+    assert r.returncode == 2, (r.returncode, r.stderr)
+    assert "error:" in r.stderr
+
+    nonstr_file = write_round(
+        tmp_path / "bad2.jsonl",
+        raw_lines=[
+            json.dumps({"type": "violation", "check_id": "L01", "file": 7,
+                        "severity": "error", "line": 1, "detail": "d"}),
+            json.dumps({"type": "summary", "files": 0, "violations": 1,
+                        "errors": 1, "warnings": 0, "by_check": {}}),
+        ])
+    r = run_verdict("compare", "--baseline", nonstr_file, "--candidate", ok)
+    assert r.returncode == 2, (r.returncode, r.stderr)
+    assert "error:" in r.stderr
+
+
+def test_k_and_strikes_below_one_are_malformed(tmp_path):
+    a = write_round(tmp_path / "a.jsonl", [viol()], [ctr()])
+    b = write_round(tmp_path / "b.jsonl", [viol()], [ctr()])
+    r = run_verdict("plateau", "--rounds", a, b, "--k", 0)
+    assert r.returncode == 2, (r.returncode, r.stderr)
+    assert "error:" in r.stderr
+    r = run_verdict("stuck", "--rounds", a, b, "--strikes", 0)
+    assert r.returncode == 2, (r.returncode, r.stderr)
+    assert "error:" in r.stderr
+
+
+def test_counters_bool_value_is_malformed(tmp_path):
+    """JSON true/false must not pass as an int counter value."""
+    bad = write_round(tmp_path / "bad.jsonl", [],
+                      [ctr(words=True)])
+    ok = write_round(tmp_path / "ok.jsonl", [], [ctr()])
+    r = run_verdict("ratchet", "--baseline", bad, "--candidate", ok)
     assert r.returncode == 2, (r.returncode, r.stderr)
     assert "error:" in r.stderr
 
