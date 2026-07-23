@@ -4,6 +4,44 @@ All notable changes to the `obsidian` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.20.0] — 2026-07-24 `wiki-update` loop + mechanical validator
+
+Adds a self-driving update loop for the wiki layer, backed by a new
+mechanical lint validator so the loop's "clean" state is machine-checked
+rather than self-reported.
+
+### Added — `wiki-lint` mechanical validator (`wiki_lint_check.py`)
+
+- New deterministic-lane script (`scripts/wiki_lint_check.py`) covers six
+  error-level checks — L01 frontmatter completeness, L02 summary length,
+  L03 required body sections, L04 wikilink format, L07 broken intra-wiki
+  wikilinks, L14 reference-page `## Source` wikilink — plus a `PARSE`
+  error lane for unreadable/malformed pages and per-file conservation
+  counters (word/link/heading) so downstream fixers can prove they didn't
+  silently drop content.
+
+### Added — `wiki-update` skill
+
+- New thin-dispatcher skill orchestrates the existing wiki maintenance
+  chain end-to-end: `wiki-ingest` → `wiki-cross-linker` → a repair loop →
+  ticket triage → a final report card. It does not duplicate any member
+  skill's logic — it sequences them and carries the loop state between
+  stages.
+
+### Added — repair-loop engine
+
+- The repair loop adds: a freeze/safe-tier classification (only
+  safe-tier fixes auto-apply), a five-brake ordering so cheaper/safer
+  fixes run before riskier ones, a proposal exit for anything outside the
+  safe tier (surfaced to the human instead of auto-applied), and a size
+  circuit-breaker that stops the loop if a single pass would touch too
+  much of the wiki at once.
+- Real-execution smoke test (not a dry run) confirmed two check classes
+  converge to clean within the loop, and surfaced one ratchet false-positive
+  that the loop correctly re-targets as a known next-touch item rather than
+  looping on it — see
+  `docs/loom/dogfood/2026-07-23-wiki-update-loop-smoke/`.
+
 ## [3.19.1] — 2026-07-05 `daily-news-digest` Codex dispatch-portability fix
 
 Following the same class of gap found and fixed in loom-code (#496) and
