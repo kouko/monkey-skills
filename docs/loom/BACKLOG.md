@@ -917,6 +917,52 @@
   now reserves "deep-research" for the host BUILT-IN skill, the bare
   term is newly ambiguous to readers (2026-07-06 review-panel nit).
 
+## wiki-update ratchet tuning — words counter vs retarget fixes (OPEN)
+- Status: OPEN
+- Start: before (or during) the first real-vault wiki-update run — the
+  measured backlog is L07-heavy (≈873 broken links), and the current
+  ratchet STUCKs the L07 class on its first benign retarget.
+- Origin: T9 smoke run Finding #1
+  (`docs/loom/dogfood/2026-07-23-wiki-update-loop-smoke/loop-report.md`) —
+  `[[Acme Corp]]`→`[[Acme-Corp]]` retarget shrank `body.split()` word
+  count 308→307 → ratchet exit 8 → STUCK_EXECUTOR_OVERREACH despite
+  zero content deletion (links/headings unchanged). v1 behavior is
+  fail-closed by design; the tuning is pre-registered, not a bug fix
+  under pressure.
+- What: make the words counter wikilink-target-insensitive (normalize
+  each `[[…]]` to one token before counting — kills this false-positive
+  class without weakening deletion detection), OR words-tolerance with
+  links/headings strict, OR per-round justification minting. First
+  option preferred (mechanical, ungameable); needs validator + tests +
+  one smoke re-run (resumeFromRunId replay makes this cheap).
+
+## General goal-loop harness extraction (PARKED)
+- Status: PARKED
+- Start (re-trigger): a third real convergence-loop target appears
+  (Rule of Three) — extract the shared skeleton from
+  `obsidian/skills/wiki-update/scripts/wiki_fix_loop.js` +
+  `.claude/workflows/principles-improve-loop.js` then. Candidates:
+  loom-spec batch quality loop.
+- Origin: superseded brief
+  `docs/loom/specs/2026-07-23-goal-loop-harness.md` (6 research sweeps
+  + §Design constraints 1-5 + §loom-* integration map) — left as the
+  extraction's regspec substrate; superseded 2026-07-23 same-day by the
+  user's scope re-cut from "general harness + 2 adapters" to "obsidian
+  wiki-update thin orchestrator + loop engine" (plan
+  `docs/loom/plans/2026-07-23-wiki-update-loop.md`).
+- What: parked is the EXTRACTION — a target-agnostic loop skeleton +
+  adapter contract (criteria-freeze preflight, one-violation-class-per-
+  round dispatch, brakes/ratchet verdicts, proposal-branch-never-push
+  exit) generalized out of the two now-independent implementations
+  (`principles-improve-loop.js` and wiki-update's `wiki_fix_loop.js`),
+  plus the judge-family fork (mechanical-verdict-only vs LLM-judged
+  targets) the superseded brief's research already surfaced. NOT
+  parked: the research conclusions themselves — brakes/ratchet/verdict
+  design + the "weak-tier executors need mechanical verdict paths"
+  lesson are already consumed by wiki-update's shipped `loop_verdict.py`
+  / `wiki_fix_loop.js` (bounded-duplication disclosure per the plan's
+  Notes), so no further action is owed there.
+
 ## operational-kpi full-dimensional-signature slice — follow-ups (2026-07-15)
 
 Context: docs/loom/{specs,plans}/2026-07-15-operational-kpi-full-dimensional-signature.md
