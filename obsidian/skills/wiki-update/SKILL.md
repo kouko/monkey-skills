@@ -88,8 +88,8 @@ Terminal states: `CONVERGED` / `PLATEAU` / `STUCK` (writes
 tripped AFTER the last winning round was committed — nothing is
 reverted; the stop asks you to split the REMAINING work into smaller
 runs) / `STUCK_EXECUTOR_OVERREACH` (conservation ratchet breach — the
-offending round is deliberately left staged/uncommitted in the working
-tree for inspection; review it, then stash or commit by hand before
+offending round is deliberately left unstaged and uncommitted in the
+working tree for inspection; review it, then stash or commit by hand before
 the next run's preflight will pass) / `WORK_ORDERS_ONLY` / `MALFORMED`.
 Steps 4-5 run after EVERY terminal state — a stopped run still gets
 its triage and scorecard; only the wording of step 5's point 3
