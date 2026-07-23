@@ -23,22 +23,41 @@ uv run scripts/kpi_store.py query --latest \
 # query --as-of: point-in-time (greatest as_of <= the given date)
 uv run scripts/kpi_store.py query --as-of 2024-12-31 \
     --company AAPL --kpi-id iphone_units --period FY2024
+
+# list-series: enumerate the store's (company, kpi_id) pairs
+uv run scripts/kpi_store.py list-series
+
+# dump --company: one company's series as the tearsheet-plan payload
+uv run scripts/kpi_store.py dump --company AAPL
 ```
 
-| Subcommand | Flag         | Required | Notes                                                        |
-|------------|--------------|----------|---------------------------------------------------------------|
-| `append`   | `--file`     | no       | Path to a JSON file holding the point (default: read stdin)    |
-| `query`    | `--company`  | yes      | Company identifier                                             |
-| `query`    | `--kpi-id`   | yes      | KPI identifier                                                  |
-| `query`    | `--period`   | yes      | Reporting period                                                |
-| `query`    | `--latest`   | one-of   | Return the greatest-as_of record overall                       |
-| `query`    | `--as-of`    | one-of   | Return the greatest-as_of record with `as_of <= DATE` (point-in-time) |
+| Subcommand    | Flag         | Required | Notes                                                        |
+|---------------|--------------|----------|---------------------------------------------------------------|
+| `append`      | `--file`     | no       | Path to a JSON file holding the point (default: read stdin)    |
+| `query`       | `--company`  | yes      | Company identifier                                             |
+| `query`       | `--kpi-id`   | yes      | KPI identifier                                                  |
+| `query`       | `--period`   | yes      | Reporting period                                                |
+| `query`       | `--latest`   | one-of   | Return the greatest-as_of record overall                       |
+| `query`       | `--as-of`    | one-of   | Return the greatest-as_of record with `as_of <= DATE` (point-in-time) |
+| `list-series` | (none)       | —        | No flags — enumerates the whole store                          |
+| `dump`        | `--company`  | yes      | Company identifier                                              |
 
 `append` exits **0** on success; a rejected point (missing provenance, or
 `as_of` absent/wall-clock-flagged) prints the `ValueError` message to stderr
 and exits **1** — fail loud, nothing written. `query` prints the matched
 record as JSON to stdout (or `null` if none matched) and exits **0**.
 `--latest` and `--as-of` are mutually exclusive and one is required.
+`list-series` always exits **0**, printing the store's `(company, kpi_id)`
+pairs as a JSON array of 2-element arrays (`[]` for an absent/empty store) —
+never raises. `dump` always exits **0**, printing one company's series as a
+JSON object (`{"company", "series", "warnings"}`; unknown/empty company →
+empty `series`) — never raises; a corrupt series file is skipped and noted
+in `warnings` rather than failing the dump. The payload's field shapes
+(`periods`, `latest`, `observations`, `disagreement`, `canonical_value`,
+`period_axis_key`) are the pinned schema — see `dump_company`'s docstring
+in this same file (`kpi_store.py`) for the full payload shape rather than
+duplicating it here; `investing-toolkit/skills/report-kpi-tearsheet/
+SKILL.md` documents how that payload renders into a tearsheet.
 
 ## CLI (review_queue)
 

@@ -47,3 +47,13 @@ the foreign paths, and recommit scoped.
   verify is the load-bearing check, and implementer-committed waves
   should be kept small or downgraded to orchestrator-serial commits
   when many agents share one index.
+
+**2026-07-24 addition (kpi-tearsheet T3/T4 interleave):** commit a
+finished task BEFORE dispatching its same-file successor. The
+orchestrator dispatched T4 (same files as T3) while T3's verdict-
+approved state was still uncommitted; by the time T3's commit point
+arrived, T4's edits had interleaved into the same files and the two
+tasks had to ship as ONE combined commit (disclosed, but
+bisectability lost). The wave rule above covers parallel SIBLINGS;
+this covers sequential same-file SUCCESSORS: the successor's dispatch
+gate is the predecessor's commit, not its verdict.

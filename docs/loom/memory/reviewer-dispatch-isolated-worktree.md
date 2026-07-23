@@ -22,3 +22,18 @@ the dispatch prompt: work in a scratch directory using
 `git show <sha>:<path>` redirects, or in a detached `git worktree` —
 never mutate the main checkout. Do not assume the agent will choose
 a non-destructive method on its own.
+
+**2026-07-24 variant (kpi-tearsheet branch, concurrent-review false
+🔴s):** MUTATION TESTING is the same hazard even when the reviewer
+restores perfectly. A spec-reviewer mutation-tested the shared
+checkout (mutate → run → stash-restore, net-zero when done), but two
+OTHER reviewers running CONCURRENTLY `git diff`-ed the tree during
+the mutation window and each filed a fatal "uncommitted regression"
+finding (`pass  # mutated: marker suppressed`) — two contaminated
+verdicts, resolved only by the orchestrator re-verifying reality
+(diff vs HEAD empty + full re-run green). Rule: reviewer dispatch
+prompts must order mutations to run ONLY in an isolated copy (e.g.
+`/private/tmp` scratch clone), never mutate-and-restore in the shared
+tree; and an orchestrator receiving a "working-tree regression"
+finding while sibling reviewers are in flight must re-verify the tree
+itself before dispatching a fix.

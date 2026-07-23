@@ -102,9 +102,28 @@ def _load_series(path: Path) -> dict:
     Append-only: an existing file's `points` list is preserved and never
     overwritten. A fresh series starts with a versioned `_kpi_store_meta`
     envelope and an empty `points` list.
+
+    Raises `ValueError` (never `AttributeError`) when the file parses to
+    valid JSON that is NOT an envelope object — e.g. a truncated write left
+    a bare list or scalar. The two never-raise READERS (`history`,
+    `list_series`) catch `(json.JSONDecodeError, OSError, ValueError)` around
+    it to degrade per-file; the other callers do not catch here — `append`'s
+    CLI surfaces the `ValueError` as a clean exit-1 message via
+    `_cli_append`, and `_matching_points` (query paths) propagates it, as it
+    always propagated the old crash. `ValueError` was chosen over reusing
+    `json.JSONDecodeError` (this is a SHAPE error, the JSON parsed fine) —
+    the minimal-diff fix that keeps every never-raise-on-read reader honest
+    without inventing a new exception surface (kpi-tearsheet plan, T2b:
+    round-2 reviewer-reproduced AttributeError from the old bare
+    `envelope.setdefault(...)` on a non-dict `json.load` result).
     """
     if path.exists():
         envelope = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(envelope, dict):
+            raise ValueError(
+                f"kpi_store: {path.name} parsed to {type(envelope).__name__}, "
+                "not a JSON object — corrupt series envelope"
+            )
         envelope.setdefault("points", [])
         return envelope
     return {
@@ -488,14 +507,14 @@ def history(company: str, kpi_id: str, period_match: dict) -> dict:
 
     Read-only, never-raise on an absent OR corrupt series (matching
     `list_series`): an absent series file, or one that fails to load
-    (`json.JSONDecodeError`/`OSError` — an interrupted external edit, a future
-    co-writer bug), yields an empty observation list rather than taking down the
-    read.
+    (`json.JSONDecodeError`/`OSError`/`ValueError` — an interrupted external
+    edit, a non-dict envelope, a future co-writer bug), yields an empty
+    observation list rather than taking down the read.
     """
     path = _series_path(company, kpi_id)
     try:
         points = _load_series(path)["points"] if path.exists() else []
-    except (json.JSONDecodeError, OSError):
+    except (json.JSONDecodeError, OSError, ValueError):
         points = []  # corrupt/unreadable series file — degrade like list_series
 
     observations = sorted(
@@ -547,7 +566,7 @@ def list_series() -> list:
         try:
             envelope = _load_series(path)
             points = envelope.get("points")
-        except (json.JSONDecodeError, OSError):
+        except (json.JSONDecodeError, OSError, ValueError):
             continue  # skip a corrupt/unreadable file; keep the rest visible
         if not isinstance(points, list):
             continue
@@ -575,6 +594,170 @@ def list_kpis(company: str) -> list:
     return sorted(
         kpi_id for company_key, kpi_id in list_series() if company_key == company
     )
+
+
+def _group_period_entries(points: list) -> list:
+    """Group ONE kpi_id's points into pinned-payload period entries (tearsheet
+    plan `docs/loom/plans/2026-07-23-kpi-tearsheet.md`, Task 2 pin).
+
+    Grouping is via `same_period` (raw date-pair identity) — NEVER by the
+    display-only `point['period']` label, so two vintages carrying different
+    labels for the same real period ("FY2021" vs "2021 comparative") still
+    merge into one entry (mirrors `history`'s doctrine, generalized from one
+    probe period to every period a kpi_id holds).
+
+    `same_period` is NOT transitive (its EXACT branch ignores `period_kind`,
+    its SNAP branch requires end+qtrs agreement — a chain A~B~C need not
+    imply A~C). Matching every point only against a group's first member
+    ("anchor") would make grouping depend on insertion order — same data,
+    different result, on the SAME underlying series depending on file-glob
+    order. So this groups by EQUIVALENCE CLOSURE instead: a point joins the
+    first group where it matches ANY existing member; if it matches members
+    of MULTIPLE existing groups, those groups are merged into one. Groups
+    can therefore end up holding points that don't ALL pairwise-match each
+    other directly (only transitively, through a chain) — including a
+    period_kind mix (e.g. an instant chained to a duration via a third
+    point) — this is intentional: `same_period` says those points describe
+    the same real period, and closure just makes that transitive.
+
+    Each entry's `observations` are sorted ascending by `as_of`, each
+    verbatim-plus-`canonical_value` (`_canonical_value` — Decimal, never
+    float); `latest` is the max-`as_of` observation (ties broken like
+    `query_latest`/`history`: `max()` keeps the first-encountered on an
+    equal key); `disagreement` is `history`'s doctrine (>=2 observations AND
+    >=2 distinct canonical values); `period_labels` lists every distinct
+    label observed, in as_of order. Entries are returned sorted ascending by
+    `_period_sort_key` of a representative point (the group's first member
+    by input order — under closure grouping this member is GUARANTEED to
+    directly `same_period`-match at least one other member, but NOT
+    necessarily every member, so its `period_end`/`period_kind` is
+    representative display data only, not proof the whole group pairwise
+    agrees).
+
+    `period_axis_key` (tearsheet plan, whole-branch review Fix 1) is the
+    STORE-OWNED cross-KPI column-alignment identity a consumer joins on
+    instead of the raw `(period_start, period_end)` pair: `"<snapped-
+    month-end-ISO>|q<qtrs>"`, computed from the representative via the
+    same `_snap_month_end`/`_qtrs` helpers `same_period` itself uses, or
+    `null` when either is uncomputable (a degenerate span). Two entries
+    sharing this key describe the same real period even when their raw
+    dates drift within snap tolerance; a `null` key must never be treated
+    as equal to another `null` key by a consumer — it means "not proven
+    the same", not "no period".
+    """
+    groups: list = []
+    for point in points:
+        matched_indices = [
+            i for i, group in enumerate(groups)
+            if any(same_period(member, point) for member in group)
+        ]
+        if not matched_indices:
+            groups.append([point])
+            continue
+
+        first_index = matched_indices[0]
+        target = groups[first_index]
+        target.append(point)
+        # Merge any OTHER groups this point also matched into `target` — the
+        # point is the bridge proving they belong to one equivalence class.
+        for extra_index in reversed(matched_indices[1:]):
+            target.extend(groups.pop(extra_index))
+
+    keyed_entries = []
+    for group in groups:
+        observations = sorted(group, key=lambda p: p.get("as_of", ""))
+        canon_observations = [
+            {**p, "canonical_value": _canonical_value(p)} for p in observations
+        ]
+        distinct_values = {o["canonical_value"] for o in canon_observations}
+        disagreement = len(canon_observations) >= 2 and len(distinct_values) >= 2
+        latest = max(canon_observations, key=lambda p: p.get("as_of", ""))
+
+        labels = []
+        for p in observations:
+            label = p.get("period")
+            if label not in labels:
+                labels.append(label)
+
+        representative = group[0]
+        snapped_end = _snap_month_end(representative.get("period_end"))
+        quarters = _qtrs(representative)
+        period_axis_key = (
+            f"{snapped_end.isoformat()}|q{quarters}"
+            if snapped_end is not None and quarters is not None
+            else None
+        )
+        entry = {
+            "period_start": representative.get("period_start"),
+            "period_end": representative.get("period_end"),
+            "period_kind": representative.get("period_kind"),
+            "period_axis_key": period_axis_key,
+            "period_labels": labels,
+            "disagreement": disagreement,
+            "latest": latest,
+            "observations": canon_observations,
+        }
+        keyed_entries.append((_period_sort_key(representative), entry))
+
+    keyed_entries.sort(key=lambda pair: pair[0])
+    return [entry for _key, entry in keyed_entries]
+
+
+def dump_company(company: str) -> dict:
+    """Assemble the tearsheet plan's PINNED dump payload for one company
+    (`docs/loom/plans/2026-07-23-kpi-tearsheet.md` ## Notes — SSOT for the
+    field names/nesting): `{"company", "series", "warnings"}`, `series`
+    sorted by `kpi_id`, each holding period entries from
+    `_group_period_entries`.
+
+    Scans every series file (like `list_series`), keeping only points whose
+    stored `company` field matches — a series file's raw identity lives in
+    its POINTS, not its filename (`_series_key` embeds a one-way digest), so
+    filtering by filename alone would miss/mismatch. A corrupt/malformed
+    file (unreadable JSON, JSON that doesn't parse to an envelope dict — e.g.
+    a truncated write left a bare list/scalar — or a `points` field that
+    isn't a list) is skipped and noted in `warnings` as `"skipped corrupt
+    series file: <name>"` — unlike `list_series`'s SILENT per-file skip,
+    this payload is rendered straight to a report, so the reader must be
+    told a series was dropped. Unknown company or an absent/empty store
+    returns an empty-`series` payload — never raises (matches the store's
+    never-raise-on-read posture).
+
+    Parses each file directly (NOT via `_load_series`) so a non-dict
+    envelope can be caught by an explicit `isinstance` check instead of
+    surfacing as an `AttributeError` out of `_load_series`'s
+    `envelope.setdefault(...)` — every file here is glob-matched to
+    already exist, so `_load_series`'s "create a fresh envelope for a
+    missing file" branch is not needed on this read path.
+    """
+    store_dir = resolve_store_dir()
+    warnings: list = []
+    points_by_kpi: dict = {}
+
+    if store_dir.exists():
+        for path in sorted(store_dir.glob("*.json")):
+            try:
+                envelope = json.loads(path.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                warnings.append(f"skipped corrupt series file: {path.name}")
+                continue
+            points = envelope.get("points") if isinstance(envelope, dict) else None
+            if not isinstance(points, list):
+                warnings.append(f"skipped corrupt series file: {path.name}")
+                continue
+            for point in points:
+                if not isinstance(point, dict) or point.get("company") != company:
+                    continue
+                kpi_id = point.get("kpi_id")
+                if kpi_id is None:
+                    continue
+                points_by_kpi.setdefault(kpi_id, []).append(point)
+
+    series = [
+        {"kpi_id": kpi_id, "periods": _group_period_entries(points_by_kpi[kpi_id])}
+        for kpi_id in sorted(points_by_kpi)
+    ]
+    return {"company": company, "series": series, "warnings": warnings}
 
 
 def _cli_append(args: argparse.Namespace) -> int:
@@ -625,6 +808,29 @@ def _cli_query(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cli_list_series(args: argparse.Namespace) -> int:
+    """`list-series` subcommand: print `list_series()`'s `(company, kpi_id)`
+    pairs as a JSON array of 2-element arrays to stdout. Never raises on an
+    absent/empty store — `list_series()` already degrades to `[]`.
+    """
+    json.dump(list_series(), sys.stdout, ensure_ascii=False)
+    sys.stdout.write("\n")
+    return 0
+
+
+def _cli_dump(args: argparse.Namespace) -> int:
+    """`dump` subcommand: print `dump_company(--company)`'s pinned payload
+    (`docs/loom/plans/2026-07-23-kpi-tearsheet.md` ## Notes) as JSON to
+    stdout. Never raises — an unknown company or empty store yields an
+    empty-`series` payload, exit 0 (matches the read-side never-raise
+    posture).
+    """
+    payload = dump_company(args.company)
+    json.dump(payload, sys.stdout, ensure_ascii=False)
+    sys.stdout.write("\n")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Append-only bitemporal KPI store CLI (append / query)."
@@ -657,6 +863,19 @@ def main() -> int:
              "(point-in-time).",
     )
     query_parser.set_defaults(func=_cli_query)
+
+    list_series_parser = subparsers.add_parser(
+        "list-series",
+        help="List the store's (company, kpi_id) pairs as a JSON array.",
+    )
+    list_series_parser.set_defaults(func=_cli_list_series)
+
+    dump_parser = subparsers.add_parser(
+        "dump",
+        help="Dump one company's KPI series as the tearsheet-plan pinned JSON payload.",
+    )
+    dump_parser.add_argument("--company", required=True)
+    dump_parser.set_defaults(func=_cli_dump)
 
     args = parser.parse_args()
     return args.func(args)
