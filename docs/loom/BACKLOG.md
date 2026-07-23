@@ -82,20 +82,38 @@
 - Status: OPEN
 - Origin: TW financial-sector iXBRL (branch feat-tw-ixbrl-fh, 2026-07-23, 2.31.0);
   whole-branch review PASS with carried 🟢 debt.
-- What: (a) **memo Phase-4 consumption of `not_applicable` DCF** (ANALYSIS/domain-teams
-  layer, out of this data-layer arc) — `dcf_compute` now emits a structured
-  `{"not_applicable":"financial-sector"}` dcf.json for financial tickers; confirm
-  `report-equity-memo` Phase-4 seed + `domain-teams:investing-team` render "DCF N/A"
-  gracefully rather than choking on the marker. (b) 🟢 Rule-of-Three duplication: the
-  `sorted→values→meta` block in `twse_ixbrl_canonical.py` (`_sum_concepts`/`_first_present`/
-  builder loop) and the by-concept-grouping block across the 3 note extractors in
-  `twse_ixbrl_notes.py` — extract shared helpers on next touch. (c) 🟢 over-soft-cap
-  functions: `dcf_compute.main`, `pack_memo_fetch`. (d) 🟢 fact-count guard decodes via
-  big5hkscs, not the production `decode_ixbrl_document` — assert count-equality under the
-  real decode too (coverage, not correctness). (e) 🟢 stale scratchpad citations in
-  `twse_ixbrl_canonical.py`/`twse_ixbrl_notes.py` comments — migrate key measurement
-  tables into a committed reference or trim. (f) US financial filers (`pack_us`) get no
+- What: ~~(a) **memo Phase-4 consumption of `not_applicable` DCF**~~ ✅ SHIPPED 2.31.1
+  (three render surfaces branch on the marker → "DCF: N/A — financial sector"; live
+  2882.TW dogfood CLEAN). ~~(b) 🟢 Rule-of-Three duplication~~ ✅ SHIPPED 2.31.1
+  (`_ordered_values_meta` in canonical, `_group_and_select_current` in notes). (c) 🟢
+  over-soft-cap functions: `dcf_compute.main`, `pack_memo_fetch` — STILL OPEN (and
+  `report-equity-memo/SKILL.md` body now within ~115 words of the hard cap; next addition
+  needs a trim). ~~(d) 🟢 fact-count guard under production decode~~ ✅ SHIPPED 2.31.1
+  (`test_fixture_fact_counts_match_under_production_decode`, 8 fixtures, zero deltas).
+  ~~(e) 🟢 stale scratchpad citations~~ ✅ SHIPPED 2.31.1 (all 5 replaced with the
+  operative measured fact inline). (f) US financial filers (`pack_us`) get no
   `sector_class` guard — pre-existing; a future US financial-comps path needs its own.
+
+## investing-toolkit TW financial iXBRL 2.31.1 — post-ship follow-ups (OPEN)
+- Status: OPEN
+- Origin: TW financial iXBRL Phase-4 consumption arc (branch tw-fin-ixbrl-followups,
+  2026-07-24, 2.31.1); 2882.TW live render dogfood.
+- What: (a) 🟢 **stale/over-broad `_status.failed_sections`** — the 2882.TW memo-fetch
+  emits `_status.failed_sections: ["mops"]` while `mops.*` (company_basic + balance/income/
+  cash) is fully populated with legible data; the flag looks stale/over-broad. Pre-existing
+  in `pack_tw`'s `_status` computation, out of the DCF-render arc; a memo would surface it in
+  Limitations. Reconcile the flag with actual section presence on next `pack_tw` touch.
+  (b) 🟢 **em-dash grep fragility** — the pin phrase `DCF: N/A — financial sector` uses an
+  em-dash (`—`); the orchestrator acceptance grep and every render surface share the one
+  pinned string (internally consistent, cannot drift without a deliberate edit), but a future
+  hand-edit typing a hyphen would silently break the grep. Consider a hyphen-tolerant match
+  or a stable marker token if the phrase is ever re-typed. (c) 🟢 Rule-of-Three tail (below
+  threshold, next-touch): `_derive_total_debt` now == `_sum_concepts(...)` verbatim (2 sites),
+  and two `twse_ixbrl_canonical.py` builder loops (~:350/:528) + `_derive_fcf` still inline the
+  `sorted→values→meta` shape `_ordered_values_meta` abstracts — route through the helper when
+  next touched. (d) 🟢 `test_twse_ixbrl_fixtures.py` module docstring still says "these 7
+  fixtures" though it now also exercises the -ci 2330 fixture; the 2330 fact-count literal
+  `2002` is a 3rd pin copy — touch-up on next edit.
 
 ## investing-toolkit quarterly 2.22.0 — post-ship follow-ups (OPEN)
 - Status: OPEN
