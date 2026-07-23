@@ -343,6 +343,15 @@ uv run ${CLAUDE_PLUGIN_ROOT}/skills/analysis-dcf/scripts/dcf_compute.py \
 
 **Artifact gate**: Phase 3 is not complete until `/tmp/${TICKER_SAFE}-dcf.json` exists — verify with `ls /tmp/${TICKER_SAFE}-dcf.json` before proceeding.
 
+> **Financial-sector N/A marker**: for a financial-sector ticker,
+> `dcf_compute` emits a structured refusal, not a valuation — a flat
+> object with exactly `ticker`, `not_applicable: "financial-sector"`,
+> `reason` (prose string), `_provenance`; it omits `intrinsic_value`,
+> `verdict_thresholds`, `sensitivity_table`, `current_price`,
+> `margin_of_safety_base`. This is a valid Phase-3 outcome (the artifact
+> gate above still applies) — carry the marker into Phase 4, which
+> renders the `DCF: N/A — financial sector` branch instead of a verdict.
+
 > **Comps note**: relative valuation is computed in **Phase 2.5** (peer
 > discovery + `analysis-comps`). The resulting `/tmp/${TICKER_SAFE}-comps.json`
 > is passed to investing-team in Phase 4 alongside the DCF and regime JSONs,
@@ -456,6 +465,14 @@ Launch `domain-teams:investing-team` with the **Deep Equity Research Memo** prot
    per
    `references/phase4-seed-contract.md`, which also defines the
    orchestrator's acceptance greps on the returned memo
+2c. When Phase 3's `dcf.json` carries the financial-sector marker, the
+   seed context MUST state DCF is N/A so investing-team renders the
+   `DCF: N/A — financial sector` section. Semantics: `dcf.json` carries
+   `not_applicable: "financial-sector"`; intrinsic-value and verdict
+   fields are intentionally absent — state the `reason` string verbatim,
+   do not fabricate a verdict, and treat CHK-THX-007 as vacuously
+   satisfied (no `verdict_thresholds` to recompute). Frontmatter
+   `intrinsic_mid` is `null` with this reason, never a silent default.
 3. The investing-team worker self-loads its standards / protocols / rubrics and runs the full gate stack — relative-valuation gates consume the structured `comps.json`, not prose
 4. Gate verdicts (PASS / NEEDS_REVISION) flow back from investing-team's evaluators — this skill does not produce verdicts
 5. Visibility Convention: include the skill-team TaskUpdate cadence clause (phase transitions / milestones / heartbeat ≤60s) so the user sees progress during the multi-minute investing-team run
@@ -485,7 +502,10 @@ prepend the toolkit frontmatter block (schema SSOT:
 `intrinsic_mid`; `confidence` is omitted when the memo reports none — see
 the schema SSOT), values sourced from this run (verdict/confidence from
 the memo's §一 執行摘要, `price_at_analysis` from Phase 1 `fetch.json`
-`current_price`, `intrinsic_mid` from Phase 3 `dcf.json` `mid`) — so the
+`current_price`, `intrinsic_mid` from Phase 3 `dcf.json` `mid` — except
+when `dcf.json` carries `not_applicable: "financial-sector"`: then set
+`intrinsic_mid: null` and state the marker's `reason` next to it in the
+report to the user; never leave the null as a silent default) — so the
 file is `---\n<8 fields>\n---\n` followed by the memo body. This emission
 is unconditional, regardless of destination (Phase 5a/5b optional or
 skipped). Persist the result to `/tmp/${TICKER_SAFE}-memo.md` before
