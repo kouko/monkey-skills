@@ -86,6 +86,9 @@ preflight refuse, and each run needs a fresh `runLabel` anyway.
 Terminal states: `CONVERGED` / `PLATEAU` / `STUCK` (writes
 `blockers-report.md`) / `BUDGET` / `SIZE_SPLIT` (diff cap tripped;
 the oversized round is reverted) / `WORK_ORDERS_ONLY` / `MALFORMED`.
+Steps 4-5 run after EVERY terminal state — a stopped run still gets
+its triage and scorecard; only the wording of step 5's point 3
+changes with the stop reason.
 
 **Tuning guide.** The first big cleanup (~1,900 violations measured
 2026-07-23) is expected to take MULTIPLE runs — each run is one
@@ -99,6 +102,11 @@ via args within the bounds above.
 
 Read `<sandboxDir>/<runLabel>/work-orders.jsonl` and
 `fix-loop-report.md`, and route each finding:
+
+Check-id semantics live in wiki-lint's `references/lint-checks.md`
+(SSOT) — the lanes below are keyed by finding TYPE; typical mappings:
+L07-unresolvable → page creation, L01/L02/L03-underivable →
+re-distillation, L14 → source-link repair.
 
 | Finding | Lane |
 |---|---|
