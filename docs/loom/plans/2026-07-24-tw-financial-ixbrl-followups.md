@@ -41,7 +41,14 @@ Plan-document-reviewer verdict: PASS (2026-07-24, round 2 — 14/14 checks)
 
 ## Decision Log
 
-(SDD orchestrator appends two-way-door decisions here during execution.)
+- **T8 dogfood-triggered fix (2026-07-24, two-way door, agent-decided):**
+  the 2882.TW render dogfood surfaced a cold-writer divergence — the seed
+  contract / SKILL.md wording "state the reason next to `intrinsic_mid`"
+  was readable as a frontmatter neighbor, and the blind writer invented an
+  `intrinsic_mid_reason` frontmatter field against the fixed 8-field schema.
+  Resolved by clarifying both surfaces (commit 384d8b3c) to route the reason
+  into the §DCF section body and keep the frontmatter schema fixed. Reversible
+  prose edit inside this arc's own N/A-render scope; logged not briefed.
 
 ## Task 1 — phase4-seed-contract N/A branch
 
