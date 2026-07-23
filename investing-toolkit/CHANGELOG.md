@@ -5,6 +5,37 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.31.0] — 2026-07-23
+
+### Added — Taiwan financial-sector iXBRL ingestion (-fh / -basi / -bd / -ins)
+
+Taiwan financial-institution filings now ingest into memo-fetch. Before this, a TW
+financial-holding / bank / broker / insurer ticker fell through to a yfinance stub;
+now the real MOPS iXBRL canonical + bank asset-quality notes flow into the memo.
+
+- **Five taxonomy families behind a classifier.** `classify_taxonomy` routes each
+  filing to one of `ci` (industrial, existing) / `fh` (financial holding) / `basi`
+  (standalone commercial bank + bills-finance) / `bd` (broker) / `ins` (insurer), via
+  a builder registry; four new financial canonical builders share one
+  `_build_financial_canonical` helper (deposits kept distinct from interest-bearing
+  borrowings; `-ins` resolves the insurance-contract-liability field with a
+  first-present `tifrs-bsci-ins:` → `ifrs-full:` fallback for reinsurers).
+- **Bank asset-quality notes.** NPL ratio / coverage ratio / NPL amount / gross loans
+  for the Total-Loans row, tagged with the banking-subsidiary name — `-fh` via the
+  `ix:tuple` hierarchy (per-subsidiary, incl. two-bank post-merger FHCs), `-basi` via
+  the `context_ref` suffix pattern.
+- **Fetch: report_id C→A fallback.** Individual-only filers (insurers, bills-finance)
+  are served only at `report_id=A`; the pipeline now tries C then A.
+- **Smart decode.** The financial family is served UTF-8 despite a `charset=big5`
+  declaration (industrial `-ci` is genuine Big5); `decode_ixbrl_document` decodes
+  UTF-8-first with a Big5 fallback so Chinese names/labels are legible.
+- **DCF fail-loud for financials.** Canonicals emit `sector_class="financial"` and omit
+  DCF-trigger fields; `pack_tw` forwards `sector_class` into the memo payload and
+  `dcf_compute` returns a structured `not_applicable` (rather than a silently-wrong
+  bank valuation or a hard crash at the memo's Phase-3 artifact gate).
+
+Offline suite: 963 passed (`-m "not network"`). 24-file arc, whole-branch review PASS.
+
 ## [v2.30.1] — 2026-07-23
 
 - **report-equity-memo Phase 4 guard (docs-only).** Phase 4's delegation to

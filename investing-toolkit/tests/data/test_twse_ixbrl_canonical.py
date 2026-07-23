@@ -19,6 +19,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[2]
 MARKETS_SCRIPTS = ROOT / "skills" / "data-markets" / "scripts"
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
@@ -35,6 +37,54 @@ def _load_modules():
 def _fixture_facts(parser, filename: str = "twse_ixbrl_2330_2024Q3_C.html") -> list[dict]:
     document = (FIXTURES / filename).read_text(encoding="big5")
     return parser.parse_ixbrl_facts(document)
+
+
+def _fixture_facts_tolerant(parser, filename: str) -> list[dict]:
+    # Producer path (twse_ixbrl_fetch.py): resp.content.decode("big5hkscs",
+    # errors="replace"). The real financial (-fh/-basi/-bd/-ins) fixtures
+    # embed stray UTF-8 bytes that a strict big5 decode would raise on, so
+    # the classifier test must load them the same tolerant way the fetcher
+    # does (see test_twse_ixbrl_fixtures.py).
+    document = (FIXTURES / filename).read_bytes().decode("big5hkscs", errors="replace")
+    return parser.parse_ixbrl_facts(document)
+
+
+# One fixture per taxonomy family — each real filing carries exactly one
+# tifrs-bsci-* namespace family (measured: grep -ao "tifrs-bsci-[a-z]*").
+_TAXONOMY_FIXTURES = [
+    ("twse_ixbrl_2330_2024Q3_C.html", "ci"),
+    ("twse_ixbrl_2882_2026Q1_C.html", "fh"),
+    ("twse_ixbrl_2801_2026Q1_C.html", "basi"),
+    ("twse_ixbrl_6005_2026Q1_C.html", "bd"),
+    ("twse_ixbrl_2867_2026Q1_A.html", "ins"),
+]
+
+
+@pytest.mark.parametrize("filename,expected_tag", _TAXONOMY_FIXTURES)
+def test_classify_taxonomy_five_way(filename, expected_tag):
+    """classify_taxonomy inspects the tifrs-bsci-* namespace prefix present
+    in the fact set and returns the family tag (ci/fh/basi/bd/ins). Replaces
+    the old boolean _is_fh_taxonomy with a 5-way classifier."""
+    parser, canonical_mod = _load_modules()
+    facts = _fixture_facts_tolerant(parser, filename)
+    assert canonical_mod.classify_taxonomy(facts) == expected_tag
+
+
+def test_build_canonical_routes_ci_via_registry_unchanged():
+    """Regression: -ci output is byte-unchanged after routing through the
+    builder registry (the -ci builder is registered under "ci"). "fh"/
+    "basi" (Tasks 5-6), "bd" (Task 7), and now "ins" (Task 8) each have
+    their own registered builder, so none of them return the unsupported
+    marker anymore (see test_canonical_fh_from_2882_fixture,
+    test_canonical_basi_from_2801_fixture, test_canonical_bd_from_6005_fixture,
+    test_canonical_ins_from_2867_life_fixture) — all 5 financial-sector
+    taxonomy families now have registered builders."""
+    parser, canonical_mod = _load_modules()
+
+    ci_canonical = canonical_mod.build_canonical(_fixture_facts(parser))
+    assert 2_025_846_521_000.0 in ci_canonical["income_statement"]["revenue"]
+    assert ci_canonical["balance_sheet"]["total_assets"]
+    assert ci_canonical["cash_flow"]["operating_cash_flow"]
 
 
 def test_canonical_ci_from_facts():
@@ -246,26 +296,443 @@ def test_canonical_ci_total_debt_formosa_includes_short_term():
         assert concept in bs["_meta"]["total_debt"]["components"]
 
 
-def test_canonical_fh_fact_set_returns_unsupported_marker():
+def test_unsupported_financial_marker_shape_for_a_hypothetical_unbuilt_family():
+    """All 5 recognized financial families (ci/fh/basi/bd/ins) now have a
+    registered builder (Task 8 registers "ins", the last one) — so
+    build_canonical can no longer reach _unsupported_financial through any
+    live classify_taxonomy tag. Supersedes the old
+    test_canonical_ins_fact_set_returns_unsupported_marker (which asserted
+    "ins" itself was unsupported; false as of this task). This test instead
+    pins _unsupported_financial's marker shape directly, since it remains
+    the correct fallback the day a 6th financial family is discovered and
+    added to _BSCI_TAG_PREFIXES before its own builder lands."""
     _, canonical_mod = _load_modules()
 
-    # Synthetic -fh (financial holding) fact set — no real -fh fixture is
-    # committed (deferred sub-arc per plan Decision Log). The financial
-    # holding taxonomy uses a "-fh" namespace token in place of "-ci"/
-    # "-SCF"; this is a minimal synthetic stand-in for that shape.
-    fh_facts = [
-        {
-            "concept": "tifrs-bsci-fh:InterestIncome",
-            "context_ref": "From20240101To20240930",
-            "raw_value": 123.0,
+    result = canonical_mod._unsupported_financial("hypothetical")
+
+    assert result.get("unsupported") == "financial-hypothetical", result
+    assert "reason" in result, result
+
+
+def test_canonical_bd_from_6005_fixture():
+    """-bd (broker-dealer) canonical builder (Task 7), traced against the
+    real 6005 (群益證券 Capital Securities) 2026 Q1 fixture. Values grepped
+    directly from the raw fixture bytes (grep -o on the committed
+    twse_ixbrl_6005_2026Q1_C.html — numeric values are ASCII-safe, so a
+    plain byte-level grep is reliable regardless of the file's Big5/UTF-8
+    mixed encoding).
+
+    Brokers take no customer/interbank deposits (confirmed absent: the
+    fixture carries neither ifrs-full:DepositsFromCustomers nor
+    ifrs-full:DepositsFromBanks at all) and have no NPL concepts — so
+    deposits must degrade gracefully to absent, same _sum_concepts
+    tolerance already proven for -fh/-basi. DCF-trigger fields
+    (revenue/ebit/fcf/capex/total_debt) are deliberately omitted, same
+    rationale as -fh/-basi: a broker's balance sheet has no such lines.
+    """
+    parser, canonical_mod = _load_modules()
+    facts = _fixture_facts_tolerant(parser, "twse_ixbrl_6005_2026Q1_C.html")
+
+    canonical = canonical_mod.build_canonical(facts)
+
+    assert canonical.get("sector_class") == "financial", canonical
+    assert canonical.get("taxonomy") == "bd", canonical
+
+    bs = canonical["balance_sheet"]
+    inc = canonical["income_statement"]
+
+    # total_equity <- ifrs-full:Equity, AsOf20260331: "52,892,275" x1000
+    assert bs["total_equity"][0] == 52_892_275_000.0
+    assert bs["_meta"]["total_equity"]["concept"] == "ifrs-full:Equity"
+    # total_assets <- ifrs-full:Assets, AsOf20260331: "393,239,775" x1000
+    assert bs["total_assets"][0] == 393_239_775_000.0
+    # cash <- ifrs-full:CashAndCashEquivalents, AsOf20260331: "16,399,922" x1000
+    assert bs["cash"][0] == 16_399_922_000.0
+
+    # net_income <- ifrs-full:ProfitLossAttributableToOwnersOfParent,
+    # From20260101To20260331: "2,908,675" x1000
+    assert inc["net_income"][0] == 2_908_675_000.0
+    assert (
+        inc["_meta"]["net_income"]["concept"]
+        == "ifrs-full:ProfitLossAttributableToOwnersOfParent"
+    )
+    # eps_basic <- ifrs-full:BasicEarningsLossPerShare, From20260101To20260331: 1.34
+    assert inc["eps_basic"][0] == 1.34
+    # brokerage_fee_income <- ifrs-full:BrokerageFeeIncome, From20260101To20260331: "2,557,374" x1000
+    assert inc["brokerage_fee_income"][0] == 2_557_374_000.0
+
+    # Brokers take no deposits — must degrade gracefully to absent, not
+    # crash or fabricate a value.
+    assert "deposits" not in bs, bs
+
+    dcf_trigger_keys = {"revenue", "ebit", "fcf", "capex", "total_debt"}
+    for statement in ("balance_sheet", "income_statement", "cash_flow"):
+        keys = set(canonical.get(statement, {}))
+        assert not (keys & dcf_trigger_keys), (statement, keys & dcf_trigger_keys)
+
+
+def test_canonical_fh_from_2882_fixture():
+    """-fh (financial holding) canonical builder (Task 5), traced against
+    the real 2882 (國泰金控 Cathay FHC) 2026 Q1 fixture. Measured values
+    verbatim from scratchpad/fh-measurement.md §2882.
+
+    net_income maps to ifrs-full:ProfitLossAttributableToOwnersOfParent (the
+    consolidated attributable-to-owners bottom line, 31,593,811,000) — NOT
+    tifrs-bsci-fh:NetIncomeLoss (72,538,053,000, a different
+    pre-elimination subtotal per the measurement doc's Q1 2026 note); this
+    test pins the deliberate choice. The key is named net_income (not
+    profit) to match the -ci _CONCEPT_MAP convention that pack_tw.py's
+    consumer code actually reads (code-quality review round 2 🟡 fix).
+
+    DCF-trigger fields (revenue/ebit/fcf/capex/total_debt) must be absent
+    everywhere so downstream DCF fails loud instead of silently zeroing
+    against a financial-holding balance sheet DCF was never designed for.
+    """
+    parser, canonical_mod = _load_modules()
+    facts = _fixture_facts_tolerant(parser, "twse_ixbrl_2882_2026Q1_C.html")
+
+    canonical = canonical_mod.build_canonical(facts)
+
+    assert canonical.get("sector_class") == "financial", canonical
+    assert canonical.get("taxonomy") == "fh", canonical
+
+    bs = canonical["balance_sheet"]
+    inc = canonical["income_statement"]
+
+    assert bs["total_equity"][0] == 817_026_831_000.0
+    assert bs["_meta"]["total_equity"]["concept"] == "ifrs-full:Equity"
+
+    # deposits = DepositsFromCustomers + DepositsFromBanks, kept distinct
+    # from interest-bearing borrowings (both populated, both non-empty).
+    assert bs["deposits"][0] == 4_668_307_129_000.0, (
+        "deposits must sum DepositsFromCustomers (4,463,453,341,000) + "
+        "DepositsFromBanks (204,853,788,000)"
+    )
+    assert bs["borrowings"][0] == 490_504_772_000.0, (
+        "borrowings must sum BondsIssued (289,577,614,000) + "
+        "OtherBorrowings (48,341,814,000) + CommercialPapersIssuedNet "
+        "(104,741,415,000) + SecuritiesSoldUnderRepurchaseAgreements "
+        "(47,843,929,000) — distinct from deposits"
+    )
+    assert "ifrs-full:DepositsFromCustomers" in bs["_meta"]["deposits"]["components"]
+    assert "ifrs-full:DepositsFromBanks" in bs["_meta"]["deposits"]["components"]
+    assert "ifrs-full:BondsIssued" in bs["_meta"]["borrowings"]["components"]
+    assert (
+        "tifrs-bsci-fh:SecuritiesSoldUnderRepurchaseAgreements"
+        in bs["_meta"]["borrowings"]["components"]
+    )
+
+    assert inc["net_income"][0] == 31_593_811_000.0
+    assert (
+        inc["_meta"]["net_income"]["concept"]
+        == "ifrs-full:ProfitLossAttributableToOwnersOfParent"
+    )
+    assert inc["net_interest_income"][0] == 76_415_488_000.0
+    assert inc["eps_basic"][0] == 2.15
+
+    # DCF-trigger fields must be absent everywhere (fail loud, not silent-0).
+    dcf_trigger_keys = {"revenue", "ebit", "fcf", "capex", "total_debt"}
+    for statement in ("balance_sheet", "income_statement", "cash_flow"):
+        keys = set(canonical.get(statement, {}))
+        assert not (keys & dcf_trigger_keys), (statement, keys & dcf_trigger_keys)
+
+
+def test_canonical_fh_deposits_borrowings_degrade_gracefully_when_concept_missing():
+    """Code-quality review round 2 🟡 fix: real -fh filers do not all carry
+    every borrowing/deposit concept (measured: CTBC 2891 has no
+    ifrs-full:OtherBorrowings at all — see scratchpad/fh-measurement.md
+    §2891). _sum_concepts (shared by deposits/borrowings) must sum only
+    whichever components are present rather than crashing on a missing one
+    — this pins that graceful-degradation behavior, previously verified
+    by hand but untested (mirrors the -ci pattern at
+    test_canonical_ci_total_debt_sums_short_term_debt_when_present).
+    """
+    _, canonical_mod = _load_modules()
+
+    period = {"type": "instant", "instant": "2026-03-31"}
+
+    def _fact(concept: str, value: float) -> dict:
+        return {
+            "concept": concept,
+            "context_ref": "AsOf20260331",
+            "raw_value": value,
             "decimals": "-3",
             "unit": "TWD",
-            "period": {"type": "duration", "start": "2024-01-01", "end": "2024-09-30"},
-            "entity": "2801",
+            "period": period,
+            "entity": "2891",
             "fact_type": "nonFraction",
-        },
+        }
+
+    facts = [
+        # Deposits: only DepositsFromCustomers present (DepositsFromBanks
+        # missing).
+        _fact("ifrs-full:DepositsFromCustomers", 5_817_260_379_000.0),
+        # Borrowings: BondsIssued + repo present, OtherBorrowings ABSENT
+        # (the real CTBC gap) and CommercialPapersIssuedNet absent too.
+        _fact("ifrs-full:BondsIssued", 212_161_628_000.0),
+        _fact(
+            "tifrs-bsci-fh:SecuritiesSoldUnderRepurchaseAgreements",
+            291_754_911_000.0,
+        ),
+        # tifrs-bsci-fh concept required so classify_taxonomy routes "fh".
+        _fact("tifrs-bsci-fh:NetInterestIncomeExpense", 41_556_941_000.0),
     ]
 
-    result = canonical_mod.build_canonical(fh_facts)
+    canonical = canonical_mod.build_canonical(facts)
+    bs = canonical["balance_sheet"]
 
-    assert result.get("unsupported") == "financial-fh", result
+    assert bs["deposits"][0] == 5_817_260_379_000.0, (
+        "deposits must sum only the present component "
+        "(DepositsFromCustomers), not crash on missing DepositsFromBanks"
+    )
+    assert bs["_meta"]["deposits"]["components"] == ["ifrs-full:DepositsFromCustomers"]
+
+    assert bs["borrowings"][0] == 503_916_539_000.0, (
+        "borrowings must sum only the present components (BondsIssued + "
+        "repo), not crash on missing OtherBorrowings/CommercialPapersIssuedNet"
+    )
+    assert bs["_meta"]["borrowings"]["components"] == [
+        "ifrs-full:BondsIssued",
+        "tifrs-bsci-fh:SecuritiesSoldUnderRepurchaseAgreements",
+    ]
+
+
+def test_canonical_basi_from_2801_fixture():
+    """-basi (standalone commercial bank / bills-finance) canonical builder
+    (Task 6), traced against the real 2801 (彰化商業銀行 Chang Hwa Bank)
+    2026 Q1 fixture. Measured values verbatim from
+    scratchpad/fh-measurement-round2.md §2801 and cross-checked directly
+    against the parsed fixture bytes.
+
+    net_income maps to ifrs-full:ProfitLossAttributableToOwnersOfParent —
+    the SAME concept -fh uses (present verbatim for standalone banks too,
+    5,221,136,000) — and eps_basic to ifrs-full:BasicEarningsLossPerShare
+    (0.44), matching the -ci/-fh net_income/eps_basic key convention (NOT
+    profit/eps).
+
+    Deposits reuse the exact same concept pair -fh sums
+    (DepositsFromCustomers + DepositsFromBanks — both PRESENT verbatim for
+    2801, round2 measurement). Borrowings use the -basi-renamed repo
+    concept tifrs-bsci-basi:NotesAndBondsIssuedUnderRepurchaseAgreement —
+    2801's analog of -fh's tifrs-bsci-fh:SecuritiesSoldUnderRepurchaseAgreements
+    (round2: "renamed, different namespace"); 2801 carries no analog of
+    ifrs-full:BondsIssued/OtherBorrowings/tifrs-bsci-fh:CommercialPapersIssuedNet
+    at all this quarter (round2: "MISSING all 3", confirmed absent in the
+    fixture), so borrowings ends up populated from the repo concept alone.
+
+    DCF-trigger fields (revenue/ebit/fcf/capex/total_debt) must be absent
+    everywhere, same as -fh — a standalone bank's balance sheet has no such
+    lines and DCF must fail loud rather than silently zero.
+    """
+    parser, canonical_mod = _load_modules()
+    facts = _fixture_facts_tolerant(parser, "twse_ixbrl_2801_2026Q1_C.html")
+
+    canonical = canonical_mod.build_canonical(facts)
+
+    assert canonical.get("sector_class") == "financial", canonical
+    assert canonical.get("taxonomy") == "basi", canonical
+
+    bs = canonical["balance_sheet"]
+    inc = canonical["income_statement"]
+
+    assert bs["total_equity"][0] == 225_976_725_000.0
+    assert bs["_meta"]["total_equity"]["concept"] == "ifrs-full:Equity"
+    assert bs["total_assets"][0] == 3_481_563_454_000.0
+    assert bs["cash"][0] == 40_993_679_000.0
+
+    # deposits = DepositsFromCustomers (2,774,469,785,000) +
+    # DepositsFromBanks (348,285,729,000), kept distinct from borrowings.
+    assert bs["deposits"][0] == 3_122_755_514_000.0
+    assert "ifrs-full:DepositsFromCustomers" in bs["_meta"]["deposits"]["components"]
+    assert "ifrs-full:DepositsFromBanks" in bs["_meta"]["deposits"]["components"]
+
+    # borrowings = the -basi-renamed repo concept alone (32,571,432,000);
+    # BondsIssued/OtherBorrowings/CommercialPapersIssuedNet are genuinely
+    # absent this quarter (round2 measurement), so they never enter the sum.
+    assert bs["borrowings"][0] == 32_571_432_000.0
+    assert bs["_meta"]["borrowings"]["components"] == [
+        "tifrs-bsci-basi:NotesAndBondsIssuedUnderRepurchaseAgreement"
+    ]
+
+    assert inc["net_income"][0] == 5_221_136_000.0
+    assert (
+        inc["_meta"]["net_income"]["concept"]
+        == "ifrs-full:ProfitLossAttributableToOwnersOfParent"
+    )
+    assert inc["eps_basic"][0] == 0.44
+
+    dcf_trigger_keys = {"revenue", "ebit", "fcf", "capex", "total_debt"}
+    for statement in ("balance_sheet", "income_statement", "cash_flow"):
+        keys = set(canonical.get(statement, {}))
+        assert not (keys & dcf_trigger_keys), (statement, keys & dcf_trigger_keys)
+
+
+def test_canonical_basi_bills_finance_2820_degrades_gracefully():
+    """-basi's bills-finance sub-shape (round4 measurement: 華票 China
+    Bills Finance reuses the same tifrs-bsci-basi taxonomy as standalone
+    banks) must produce a valid canonical without crashing, even though
+    it carries a materially thinner fact set than a bank: no
+    ifrs-full:ProfitLossAttributableToOwnersOfParent at all this quarter
+    (confirmed absent in the fixture — 2820 only carries the unattributed
+    ifrs-full:ProfitLoss, 639,894,000, which is NOT the concept the -basi/
+    -fh net_income key maps to) and no ifrs-full:DepositsFromCustomers
+    (confirmed absent — round4: "no customer-deposit-taking concepts at
+    all"). This pins _sum_concepts' missing-concept tolerance (already
+    proven for -fh) extending cleanly to -basi's bills-finance sub-shape.
+
+    Note (measured, narrower than round4's summary framing): 2820 is NOT
+    fully deposit-less — ifrs-full:DepositsFromBanks (interbank funding,
+    29,462,554,000) IS present, so the "deposits" field ends up populated
+    from that component alone; the component list is asserted below to
+    confirm DepositsFromCustomers specifically (the true customer-deposit-
+    taking signal) is what's absent, not the whole field.
+    """
+    parser, canonical_mod = _load_modules()
+    facts = _fixture_facts_tolerant(parser, "twse_ixbrl_2820_2026Q1_A.html")
+
+    canonical = canonical_mod.build_canonical(facts)
+
+    assert canonical.get("sector_class") == "financial", canonical
+    assert canonical.get("taxonomy") == "basi", canonical
+
+    bs = canonical["balance_sheet"]
+    inc = canonical["income_statement"]
+
+    assert bs["total_assets"][0] == 264_308_740_000.0
+    assert bs["total_equity"][0] == 27_875_094_000.0
+    assert bs["cash"][0] == 326_912_000.0
+
+    # net_income degrades gracefully to absent: ProfitLossAttributableTo
+    # OwnersOfParent is not in this filer's fact set this quarter, and the
+    # builder must not crash or fabricate it from ifrs-full:ProfitLoss.
+    assert "net_income" not in inc, inc
+    assert inc["eps_basic"][0] == 0.48
+
+    # deposits: only DepositsFromBanks contributes (customer deposits
+    # genuinely absent).
+    assert bs["_meta"]["deposits"]["components"] == ["ifrs-full:DepositsFromBanks"]
+    assert bs["deposits"][0] == 29_462_554_000.0
+
+    # borrowings: the -basi-renamed repo concept is present and, for a
+    # bills-finance filer, is the dominant funding line.
+    assert bs["borrowings"][0] == 203_085_773_000.0
+
+    dcf_trigger_keys = {"revenue", "ebit", "fcf", "capex", "total_debt"}
+    for statement in ("balance_sheet", "income_statement", "cash_flow"):
+        keys = set(canonical.get(statement, {}))
+        assert not (keys & dcf_trigger_keys), (statement, keys & dcf_trigger_keys)
+
+
+def test_canonical_ins_from_2867_life_fixture():
+    """-ins (insurer, Task 8 — the last financial family) canonical builder,
+    traced against the real 2867 (三商美邦人壽 Mercuries Life) 2026 Q1
+    fixture (a standalone life insurer, report_id=A).
+
+    net_income maps to ifrs-full:ProfitLoss (NOT
+    ifrs-full:ProfitLossAttributableToOwnersOfParent, which is measured
+    ABSENT from this fixture — grep count 0 — because standalone parent-
+    only insurer filings carry no subsidiary-attribution split to make).
+    This is a deliberate per-family concept choice, same pattern as -bd's
+    brokerage_fee_income addition, not a fallback from a missing primary
+    concept.
+
+    insurance_contract_liabilities <- tifrs-bsci-ins:InsuranceContractLiabilities_CB
+    (the life/P&C-shape concept) — the PRIMARY of the two-candidate
+    first-present resolution (see test_canonical_ins_from_2851_reinsurer_
+    fixture_liability_fallback for the reinsurer's fallback leg).
+    """
+    parser, canonical_mod = _load_modules()
+    facts = _fixture_facts_tolerant(parser, "twse_ixbrl_2867_2026Q1_A.html")
+
+    canonical = canonical_mod.build_canonical(facts)
+
+    assert canonical.get("sector_class") == "financial", canonical
+    assert canonical.get("taxonomy") == "ins", canonical
+
+    bs = canonical["balance_sheet"]
+    inc = canonical["income_statement"]
+
+    # total_assets/total_equity/cash <- the same ifrs-full spine concepts
+    # as every other financial family, AsOf20260331.
+    assert bs["total_assets"][0] == 1_583_200_325_000.0
+    assert bs["total_equity"][0] == 78_115_792_000.0
+    assert bs["cash"][0] == 70_736_282_000.0
+
+    # net_income <- ifrs-full:ProfitLoss, From20260101To20260331: -160,504 x1000
+    # (sign="-" in the fixture — a real quarterly loss, not a sign bug).
+    assert inc["net_income"][0] == -160_504_000.0
+    assert inc["_meta"]["net_income"]["concept"] == "ifrs-full:ProfitLoss"
+    # eps_basic <- ifrs-full:BasicEarningsLossPerShare, From20260101To20260331: -0.03
+    assert inc["eps_basic"][0] == -0.03
+
+    # THE critical-correctness assertion: the insurance-contract-liability
+    # field must be populated via the tifrs-bsci-ins: PRIMARY concept for
+    # the life sub-shape.
+    assert bs["insurance_contract_liabilities"][0] == 1_212_007_565_000.0
+    assert (
+        bs["_meta"]["insurance_contract_liabilities"]["concept"]
+        == "tifrs-bsci-ins:InsuranceContractLiabilities_CB"
+    )
+
+    dcf_trigger_keys = {"revenue", "ebit", "fcf", "capex", "total_debt"}
+    for statement in ("balance_sheet", "income_statement", "cash_flow"):
+        keys = set(canonical.get(statement, {}))
+        assert not (keys & dcf_trigger_keys), (statement, keys & dcf_trigger_keys)
+
+
+def test_canonical_ins_from_2851_reinsurer_fixture_liability_fallback():
+    """-ins builder against the real 2851 (中再保 Central Reinsurance) 2025
+    Q1 fixture (the reinsurer sub-shape, report_id=A).
+
+    THE critical-correctness assertion (measured, round3 §Q2 union table):
+    2851 carries ZERO tifrs-bsci-ins:InsuranceContractLiabilities_CB facts
+    (grep count 0) — it books the SAME economic liability under the
+    GENERIC ifrs-full:LiabilitiesArisingFromInsuranceContracts concept
+    instead. Without a first-present-of-candidates fallback, a mapper keyed
+    only on the tifrs-bsci-ins: concept string silently DROPS this field
+    for every reinsurer — the same wrong-answer class as the -fh
+    net_income key mismatch and the -ci total_debt-zeroing bug (same
+    economic fact, different concept string, consumer silently misses it).
+    This test is the one that FAILS without the ifrs-full: fallback leg.
+
+    net_income <- ifrs-full:ProfitLoss here too (also ABSENT
+    ProfitLossAttributableToOwnersOfParent, grep count 0 — same
+    parent-only-filing reasoning as the life sub-shape).
+    """
+    parser, canonical_mod = _load_modules()
+    facts = _fixture_facts_tolerant(parser, "twse_ixbrl_2851_2025Q1_A.html")
+
+    canonical = canonical_mod.build_canonical(facts)
+
+    assert canonical.get("sector_class") == "financial", canonical
+    assert canonical.get("taxonomy") == "ins", canonical
+
+    bs = canonical["balance_sheet"]
+    inc = canonical["income_statement"]
+
+    assert bs["total_assets"][0] == 58_698_786_000.0
+    assert bs["total_equity"][0] == 20_894_663_000.0
+    assert bs["cash"][0] == 8_780_223_000.0
+
+    # net_income <- ifrs-full:ProfitLoss, From20250101To20250331: 626,524 x1000
+    assert inc["net_income"][0] == 626_524_000.0
+    assert inc["_meta"]["net_income"]["concept"] == "ifrs-full:ProfitLoss"
+    # eps_basic <- ifrs-full:BasicEarningsLossPerShare, From20250101To20250331: 0.78
+    assert inc["eps_basic"][0] == 0.78
+
+    # THE critical-correctness assertion: same canonical field as the life
+    # fixture, populated here via the ifrs-full: FALLBACK concept (the
+    # tifrs-bsci-ins: primary is genuinely absent for this sub-shape).
+    assert bs["insurance_contract_liabilities"][0] == 35_889_528_000.0, (
+        "reinsurer's insurance-contract-liability field must be populated "
+        "via the ifrs-full: fallback, not silently dropped"
+    )
+    assert (
+        bs["_meta"]["insurance_contract_liabilities"]["concept"]
+        == "ifrs-full:LiabilitiesArisingFromInsuranceContracts"
+    )
+
+    dcf_trigger_keys = {"revenue", "ebit", "fcf", "capex", "total_debt"}
+    for statement in ("balance_sheet", "income_statement", "cash_flow"):
+        keys = set(canonical.get(statement, {}))
+        assert not (keys & dcf_trigger_keys), (statement, keys & dcf_trigger_keys)

@@ -39,6 +39,16 @@ def _fixture_facts(parser) -> list[dict]:
     return parser.parse_ixbrl_facts(document)
 
 
+def _fixture_facts_smart(parser, filename: str) -> list[dict]:
+    # Financial-family (-fh/-basi/-bd/-ins) fixtures declare charset=big5
+    # but are genuinely UTF-8 (Task 14 finding) — decode via the parser's
+    # smart-decode helper so Chinese text (bank subsidiary names) survives
+    # instead of being garbled by a forced big5hkscs decode.
+    raw = (FIXTURES / filename).read_bytes()
+    document = parser.decode_ixbrl_document(raw)
+    return parser.parse_ixbrl_facts(document)
+
+
 def test_curated_notes_tsmc():
     parser, notes_mod = _load_modules()
     facts = _fixture_facts(parser)
@@ -108,3 +118,132 @@ def test_curated_notes_excludes_endorsement_guarantee():
 
     assert "endorsement_guarantee_limit" not in notes
     assert "endorsement_guarantee_secured_with_collateral" not in notes
+
+
+def test_fh_npl_coverage_totalloans_cathay():
+    """-fh NPL/coverage note (Task 9): the TotalLoans row is disambiguated
+    from 7 sibling loan-category rows sharing the same contextRef purely
+    via the `tuple_ref` attribute ("TL"), and tagged with the banking
+    SUBSIDIARY's name (never the FHC group) — MEASURED against the real
+    2882 (國泰金控 Cathay FHC) 2026Q1 fixture, scratchpad/fh-measurement.md
+    §2882. A tuple-blind concept-keyed pick would silently grab one of
+    7 wrong loan-category rows instead."""
+    parser, notes_mod = _load_modules()
+    facts = _fixture_facts_smart(parser, "twse_ixbrl_2882_2026Q1_C.html")
+
+    npl = notes_mod.extract_fh_npl_coverage_notes(facts)
+
+    cathay_bank = npl["國泰世華銀行"]
+    # Raw text "1,031.17" scale=-2 -> parser's raw_value 10.3117 (the
+    # true fraction); the extractor presents it as the percentage
+    # 1031.17 (do not double-scale — this is the single *100 conversion,
+    # not a second application of the XBRL `scale` attribute).
+    assert cathay_bank["coverage_ratio"]["value"] == 1031.17
+    assert cathay_bank["coverage_ratio"]["concept"] == "tifrs-notes:CoverageRatio"
+    assert cathay_bank["coverage_ratio"]["period"] == {
+        "type": "instant",
+        "instant": "2026-03-31",
+    }
+
+    # npl_ratio: the OTHER percent branch (Non-PerformingLoansRatio).
+    # Raw text scale=-2 -> parser raw_value 0.0016; extractor presents
+    # 0.16 (x100, same single-conversion rule as coverage_ratio).
+    assert cathay_bank["npl_ratio"]["value"] == 0.16
+    assert cathay_bank["npl_ratio"]["concept"] == "tifrs-notes:Non-PerformingLoansRatio"
+
+    # gross_loans: the PASSTHROUGH branch (not a percent field) — the
+    # parser's own scale-driven scaled value is asserted as-is, no *100.
+    assert cathay_bank["gross_loans"]["value"] == 2_946_761_073_000.0
+    assert cathay_bank["gross_loans"]["concept"] == "tifrs-notes:GrossLoans"
+
+
+def test_fh_npl_coverage_resolves_both_bank_subsidiaries_distinctly():
+    """DUP-TREE case (Task 9): 2890 永豐金控 is a post-merger FHC carrying
+    TWO duplicated parallel NPL tuple trees (one per bank subsidiary,
+    both reusing the same category tuple_ref codes e.g. "TL"/"SCF").
+    The extractor must key by subsidiary and resolve BOTH distinctly —
+    not collapse them or arbitrarily pick one — MEASURED against
+    scratchpad/fh-measurement-round2.md §2890."""
+    parser, notes_mod = _load_modules()
+    facts = _fixture_facts_smart(parser, "twse_ixbrl_2890_2026Q1_C.html")
+
+    npl = notes_mod.extract_fh_npl_coverage_notes(facts)
+
+    assert set(npl) == {"永豐商業銀行", "京城商業銀行"}
+    assert npl["永豐商業銀行"]["coverage_ratio"]["value"] == 1260.54
+    assert npl["京城商業銀行"]["coverage_ratio"]["value"] == 2407.94
+
+
+def test_basi_npl_coverage_totalloans_changhwa():
+    """-basi NPL/coverage note (Task 10): standalone commercial banks
+    (e.g. 2801 彰化銀行) encode the loan category via a CONTEXT_REF
+    SUFFIX ("..._TotalLoansMember") plus a "Member"-suffixed concept
+    name ("CoverageRatioMember"), NOT ix:tuple attributes (contrast
+    Task 9's tuple_ref disambiguation) — the existing generic parser
+    already resolves concept + context_ref, so no tuple parsing is
+    needed. MEASURED against the real 2801 2026Q1 fixture,
+    scratchpad/fh-measurement-round2.md §2801."""
+    parser, notes_mod = _load_modules()
+    facts = _fixture_facts_smart(parser, "twse_ixbrl_2801_2026Q1_C.html")
+
+    basi = notes_mod.extract_basi_npl_coverage_notes(facts)
+
+    # Raw text scale=-2 -> parser raw_value 8.6467 (the true fraction);
+    # the extractor presents it as the percentage 864.67 (single *100
+    # conversion, not a second application of the XBRL `scale` attribute).
+    assert basi["coverage_ratio"]["value"] == 864.67
+    assert basi["coverage_ratio"]["concept"] == "tifrs-notes:CoverageRatioMember"
+    assert basi["coverage_ratio"]["period"] == {"type": "instant", "instant": "2026-03-31"}
+
+    # npl_ratio: the OTHER percent branch. Raw value 0.0016 -> 0.16.
+    assert basi["npl_ratio"]["value"] == 0.16
+    assert basi["npl_ratio"]["concept"] == "tifrs-notes:NonPerformingLoansRatioMember"
+
+    # npl_amount / gross_loans: passthrough branches (not percent fields) —
+    # the parser's own scale-driven scaled value is asserted as-is.
+    assert basi["npl_amount"]["value"] == 3291281000.0
+    assert basi["npl_amount"]["concept"] == "tifrs-notes:AmountOfNon-PerformingLoansMember"
+    assert basi["gross_loans"]["value"] == 2116370367000.0
+    assert basi["gross_loans"]["concept"] == "tifrs-notes:GrossLoansMember"
+
+    # Company/bank name surfaced (legible via smart-decode).
+    assert basi["company_name"]["value"] == "彰化銀行"
+
+
+def test_basi_npl_coverage_absent_for_bills_finance():
+    """Bills-finance -basi filers (e.g. 2820 華票) carry NO NPL/coverage
+    note at all (MEASURED: 0 hits for NonPerforming/CoverageRatio
+    concepts, scratchpad/fh-measurement-round4.md §2820 Q2 answer) —
+    the extractor must degrade to an empty dict gracefully, never
+    raise."""
+    parser, notes_mod = _load_modules()
+    facts = _fixture_facts_smart(parser, "twse_ixbrl_2820_2026Q1_A.html")
+
+    basi = notes_mod.extract_basi_npl_coverage_notes(facts)
+
+    assert basi == {}
+
+
+def test_select_current_fact_ambiguous_period_tie_first_wins_and_is_logged(capsys):
+    """Pins the tie-break rule `_select_current_fact` relies on when 2+
+    candidates share an IDENTICAL period — as the 2890 fixture's NPL
+    table does: it mis-tags its 去年同期 (prior-year) column with the
+    same contextRef as 本期 (current), so both a "本期" and a "去年同期"
+    fact resolve to the same period. The rule (first-in-document-order
+    wins, per the observed 本期-before-去年同期 column emission order) was
+    previously silent — with `label` given, an ambiguous tie must also
+    be logged (not just resolved) so it's observable rather than an
+    incidental dependency on HTML column order that could regress on a
+    fixture refresh or a different filer's layout."""
+    _, notes_mod = _load_modules()
+    same_period = {"type": "instant", "instant": "2026-03-31"}
+    current = {"raw_value": 111.0, "period": dict(same_period)}
+    prior = {"raw_value": 222.0, "period": dict(same_period)}
+
+    chosen = notes_mod._select_current_fact([current, prior], label="acme/coverage_ratio")
+
+    assert chosen is current
+    assert chosen["raw_value"] == 111.0
+    err = capsys.readouterr().err
+    assert "ambiguous period tie" in err
+    assert "acme/coverage_ratio" in err

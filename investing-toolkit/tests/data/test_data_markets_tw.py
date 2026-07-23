@@ -349,7 +349,101 @@ def test_memo_fetch_wires_ixbrl_canonical(monkeypatch):
         f"attempt succeeds; got {len(ixbrl_calls)} calls: {ixbrl_calls}"
     )
     assert "--co-id" in ixbrl_calls[0] and "2330" in ixbrl_calls[0]
-    assert "--report-id" in ixbrl_calls[0] and "C" in ixbrl_calls[0]
+    assert "--report-id" not in ixbrl_calls[0], (
+        "Task 12 coherence fix: --report-id must no longer be hardcoded to "
+        "'C' so twse_ixbrl.py's own C->A fallback (fires when report_id is "
+        "the default None) can reach individual-only filers (standalone "
+        "insurers, bills-finance) served only at A"
+    )
+
+
+def test_memo_fetch_surfaces_financial_canonical_and_sector_class(monkeypatch):
+    """Task 12 — a TW FINANCIAL ticker's iXBRL canonical (fh/basi/bd/ins
+    taxonomy family, sector_class="financial") must flow through
+    pack_memo_fetch the same way the -ci (industrial) canonical already
+    does, AND `sector_class` (+ `taxonomy`) must be forwarded to the TOP
+    level of the memo-fetch payload -- this is the exact level
+    dcf_compute.py reads (`data.get("sector_class")`, since
+    report-equity-memo passes the whole fetch.json straight to
+    `dcf_compute.py --input`) in order for its financial-sector DCF guard
+    to actually fire instead of DCF silently trying (and failing) on a
+    bank/insurer's missing revenue field.
+    """
+    pack_tw_path = SCRIPTS_DIR / "pack_tw.py"
+    pack_tw = _load_module(pack_tw_path, "data_markets_pack_tw_ixbrl_financial")
+
+    fake_ixbrl_payload = {
+        "canonical": {
+            "sector_class": "financial",
+            "taxonomy": "fh",
+            "income_statement": {"net_interest_income": [12_000_000]},
+            "balance_sheet": {"total_assets": [900_000_000]},
+            "cash_flow": {},
+        },
+        "notes": {
+            "npl_ratio": {
+                "value": 0.012, "concept": "tifrs-fh:NplRatio", "period": "2024Q3",
+            },
+        },
+        "_meta": {"co_id": "2887", "year": 2024, "season": 3, "report_id": "C", "fact_count": 900},
+    }
+
+    calls: list[tuple[str, list[str]]] = []
+
+    def _fake_run_client(script, args, timeout=60):
+        calls.append((script, args))
+        if script == "twse_ixbrl.py":
+            return fake_ixbrl_payload
+        return {"ok": True, "_echo": {"script": script, "args": args}}
+
+    monkeypatch.setattr(pack_tw, "run_client", _fake_run_client)
+
+    out = pack_tw.build_pack("memo-fetch", ["2887.TW"])
+
+    # canonical + notes surfaced same as the -ci path.
+    assert out["income_statement"]["net_interest_income"] == [12_000_000]
+    assert out["balance_sheet"]["total_assets"] == [900_000_000]
+    ixbrl_entry = out["twse_ixbrl"]["canonical_and_notes"]
+    assert ixbrl_entry["data"]["notes"]["npl_ratio"]["value"] == 0.012
+
+    # sector_class (+taxonomy) forwarded to the TOP level of the payload --
+    # the exact level dcf_compute.py's `data.get("sector_class")` guard reads.
+    assert out["sector_class"] == "financial", (
+        "sector_class must be forwarded to the top-level memo-fetch payload "
+        "so dcf_compute.py's financial-sector DCF guard actually fires"
+    )
+    assert out["taxonomy"] == "fh"
+
+
+def test_memo_fetch_degrade_path_does_not_set_sector_class(monkeypatch):
+    """Coherence check for Task 12's sector_class forwarding: when iXBRL
+    fails both attempts and the canonical degrades to the yfinance stub
+    (_build_canonical_from_yf_financials_tw), the top-level payload must
+    NOT carry a stale/fabricated `sector_class` -- the yfinance stub has no
+    taxonomy classification, so the DCF guard must stay unfired (fall
+    through to the normal industrial DCF path) rather than silently
+    inheriting "financial" from an unrelated source.
+    """
+    pack_tw_path = SCRIPTS_DIR / "pack_tw.py"
+    pack_tw = _load_module(pack_tw_path, "data_markets_pack_tw_ixbrl_degrade_sc")
+
+    def _fake_run_client(script, args, timeout=60):
+        if script == "twse_ixbrl.py":
+            return {"_error": "not_found"}
+        if script == "yfinance_client.py" and "financials" in args:
+            return dict(_FAKE_YF_FINANCIALS_TW)
+        return {"ok": True, "_echo": {"script": script, "args": args}}
+
+    monkeypatch.setattr(pack_tw, "run_client", _fake_run_client)
+
+    out = pack_tw.build_pack("memo-fetch", ["2330.TW"])
+
+    assert "sector_class" not in out, (
+        "yfinance-stub degrade path must not set a top-level sector_class "
+        "-- doing so would incorrectly fire (or leave ambiguous) the "
+        "dcf_compute.py financial-sector guard for a filer whose taxonomy "
+        "was never actually classified"
+    )
 
 
 # Sibling contract cited per round-2 review grounding requirement: the

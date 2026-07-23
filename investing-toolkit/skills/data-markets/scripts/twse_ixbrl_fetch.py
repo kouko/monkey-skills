@@ -36,6 +36,7 @@ import time
 import requests
 
 import cache_util
+from twse_ixbrl_parser import decode_ixbrl_document
 
 BASE_URL = "https://mopsov.twse.com.tw/server-java/t164sb01"
 NOT_FOUND_MARKER = "檔案不存在"
@@ -64,7 +65,14 @@ def _log(stage: str, msg: str = "") -> None:
 def build_t164sb01_url(co_id: str, year: int, season: int, report_id: str) -> str:
     """Build the t164sb01 request URL. Same URL for every market tier
     (上市/上櫃/興櫃/KY) — `report_id` "C"=consolidated (合併),
-    "A"=parent-only (not served by this endpoint; always 檔案不存在)."""
+    "A"=individual/parent-only (個別). The A/C split tracks CONSOLIDATION
+    SCOPE, not filer type: consolidated (-ci) filers are served only at C
+    (A 檔案不存在), but individual-only filers — standalone insurers and
+    bills-finance filers (e.g. 華票 2820) — are served ONLY at A (C 404s).
+    Grounding: -fh arc live probe 2026-07-22 (2820 2026Q1 A=406KB body /
+    C=98-byte 檔案不存在; insurers 2851/2867 same); reconciles spec §7's
+    -ci-specific "A never served" negative — see docs/loom/specs/
+    2026-07-19-tw-ixbrl-ingestion.md:115. See `fetch_with_report_fallback`."""
     return (
         f"{BASE_URL}?step=1&CO_ID={co_id}&SYEAR={year}"
         f"&SSEASON={season}&REPORT_ID={report_id}"
@@ -93,9 +101,14 @@ def _get_with_retry(url: str) -> requests.Response:
 
 def fetch_ixbrl_body(co_id: str, year: int, season: int, report_id: str,
                       *, use_cache: bool = True) -> str | None:
-    """Fetch + Big5-decode the t164sb01 body for one (co_id, year, season,
+    """Fetch + smart-decode the t164sb01 body for one (co_id, year, season,
     report_id). Returns None when TWSE serves the "檔案不存在" absence
     sentinel (period not filed) — never an error/exception.
+
+    Decoding tries UTF-8 strict first, falling back to big5hkscs — MOPS
+    declares charset=big5 for every market tier but in practice serves the
+    financial family (-fh/-basi/-bd/-ins) as UTF-8; only genuine -ci
+    filings are actually Big5. See `twse_ixbrl_parser.decode_ixbrl_document`.
 
     Cached via cache_util under source "twse_ixbrl"; the absence sentinel
     is NOT cached (so a later fetch, once the filing lands, retries live).
@@ -110,7 +123,7 @@ def fetch_ixbrl_body(co_id: str, year: int, season: int, report_id: str,
 
     url = build_t164sb01_url(co_id, year, season, report_id)
     resp = _get_with_retry(url)
-    body = resp.content.decode("big5hkscs", errors="replace")
+    body = decode_ixbrl_document(resp.content)
 
     if is_not_found_body(body):
         return None
@@ -133,4 +146,32 @@ def fetch_with_season_fallback(
         body = fetch_fn(co_id, year, season, report_id)
         if body is not None:
             return body, season
+    return None, None
+
+
+# report_id try-order for consolidation-scope fallback. "C" (consolidated)
+# is served for -ci filers; individual-only filers (standalone insurers,
+# bills-finance filers e.g. 華票 2820) are served ONLY at "A" (individual).
+DEFAULT_REPORT_ORDER: tuple[str, ...] = ("C", "A")
+
+
+def fetch_with_report_fallback(
+    co_id: str, year: int, season: int,
+    *, report_order: tuple[str, ...] = DEFAULT_REPORT_ORDER,
+    fetch_fn=fetch_ixbrl_body,
+) -> tuple[str | None, str | None]:
+    """Try each report_id in `report_order` in turn ("C" consolidated,
+    then "A" individual); the first whose body is not the absence sentinel
+    wins. Returns (body, report_id_used), or (None, None) if every
+    report_id in `report_order` is absent — same (value, tag) shape as
+    `fetch_with_season_fallback`, so callers can unpack unconditionally.
+
+    Handles the CONSOLIDATION-SCOPE split: consolidated (-ci) filers are
+    served only at C, but individual-only filers — standalone insurers and
+    bills-finance filers (e.g. 華票 2820) — are served ONLY at A (C 404s).
+    """
+    for report_id in report_order:
+        body = fetch_fn(co_id, year, season, report_id)
+        if body is not None:
+            return body, report_id
     return None, None

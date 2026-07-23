@@ -16,6 +16,13 @@ Each fact record:
     {
         "concept": str,       # "ns:localname", e.g. "ifrs-full:Cash..."
         "context_ref": str,
+        "tuple_ref": str | None,    # raw `tupleRef` attribute — links a
+                                     # fact to its XBRL tuple instance;
+                                     # None when absent. Disambiguates
+                                     # same-context note facts (e.g. -fh
+                                     # NPL/coverage loan categories).
+        "tuple_id": str | None,     # raw `tupleID` attribute (the tuple
+                                     # instance's own id); None when absent.
         "raw_value": float | str | None,  # numeric facts: fully scaled
                                      # value (see Scaling below); text
                                      # facts: the raw text, stripped;
@@ -63,6 +70,23 @@ def _log(stage: str, msg: str = "") -> None:
     suffix = f": {msg}" if msg else ""
     sys.stderr.write(f"[{_LOG_TAG}] {stage}{suffix}\n")
     sys.stderr.flush()
+
+
+def decode_ixbrl_document(raw: bytes) -> str:
+    """Smart-decode a raw t164sb01 response body.
+
+    MOPS declares `charset=big5` for every market tier, but in practice
+    serves the whole financial family (-fh/-basi/-bd/-ins) as UTF-8 while
+    -ci filings are genuine Big5. Decoding everything as big5hkscs (the
+    old fetch-layer behavior) silently corrupts Chinese text for the
+    financial family instead of raising — so try UTF-8 strict first (it
+    fails cleanly on genuine Big5 bytes) and fall back to big5hkscs with
+    `errors="replace"` only when UTF-8-strict raises.
+    """
+    try:
+        return raw.decode("utf-8")
+    except UnicodeDecodeError:
+        return raw.decode("big5hkscs", errors="replace")
 
 
 _CONTEXT_RE = re.compile(
@@ -168,6 +192,8 @@ def parse_ixbrl_facts(document: str) -> list[dict[str, Any]]:
         fact: dict[str, Any] = {
             "concept": attrs.get("name"),
             "context_ref": context_ref,
+            "tuple_ref": attrs.get("tupleRef"),
+            "tuple_id": attrs.get("tupleID"),
             "decimals": attrs.get("decimals"),
             "unit": attrs.get("unitRef"),
             "period": ctx.get("period"),

@@ -468,11 +468,20 @@ def pack_memo_fetch(ticker: str, period: str = "2y") -> dict[str, Any]:
                    ["--ticker", code, "--dataset", "TaiwanStockMarginPurchaseShortSale",
                     "--date-start", date_3mo]))
 
-    # twse_ixbrl — Tier A canonical + curated notes (industrial `-ci`
-    # filers; Task 6). Bounded 2-attempt fallback: try the latest-likely-
-    # filed quarter, then step back one quarter if that period comes back
+    # twse_ixbrl — Tier A canonical + curated/asset-quality notes, covering
+    # both industrial (`-ci`) and financial (`-fh`/`-basi`/`-bd`/`-ins`)
+    # taxonomy families (Task 12; twse_ixbrl.py routes notes by taxonomy
+    # internally). Bounded 2-attempt fallback: try the latest-likely-filed
+    # quarter, then step back one quarter if that period comes back
     # `_error` (covers both "not yet filed" and any other client failure —
     # the fetch/parse layers already fold both into `_error`).
+    #
+    # `--report-id` is deliberately NOT passed: leaving it at twse_ixbrl.py's
+    # own default (None) lets its internal C→A fallback fire (consolidated
+    # `-ci`/`-fh`/`-basi`/`-bd` filers are served at C, so the fallback tries
+    # C first and behavior for them is unchanged; individual-only filers —
+    # standalone insurers, bills-finance — are served ONLY at A and would
+    # fail-fetch forever under a hardcoded "C").
     out["twse_ixbrl"] = {}
     ix_year = roc_year + 1911  # t164sb01 SYEAR is the western calendar year
     ix_season = season
@@ -481,8 +490,7 @@ def pack_memo_fetch(ticker: str, period: str = "2y") -> dict[str, Any]:
         _log("pack [twse_ixbrl canonical]", f"{code} {ix_year}Q{ix_season}")
         ixbrl_result = run_client(
             "twse_ixbrl.py",
-            ["--co-id", code, "--year", str(ix_year), "--season", str(ix_season),
-             "--report-id", "C"],
+            ["--co-id", code, "--year", str(ix_year), "--season", str(ix_season)],
         )
         if "_error" not in ixbrl_result:
             break
@@ -526,6 +534,19 @@ def pack_memo_fetch(ticker: str, period: str = "2y") -> dict[str, Any]:
         out["income_statement"] = ixbrl_canonical.get("income_statement", {})
         out["cash_flow"] = ixbrl_canonical.get("cash_flow", {})
         out["balance_sheet"] = ixbrl_canonical.get("balance_sheet", {})
+        # Coherence fix (Task 12): forward sector_class/taxonomy to the TOP
+        # level of the memo-fetch payload — this is the exact level
+        # dcf_compute.py reads (`data.get("sector_class")`), since
+        # report-equity-memo passes the whole fetch.json straight to
+        # `dcf_compute.py --input`. Without this the financial-sector DCF
+        # guard (dcf_compute.py:419) never fires and DCF would still try
+        # (and fail) on a bank/insurer's missing revenue field. Absent for
+        # -ci (industrial) canonicals — no key is added, so `data.get(...)`
+        # correctly reads None/absent for them.
+        if "sector_class" in ixbrl_canonical:
+            out["sector_class"] = ixbrl_canonical["sector_class"]
+        if "taxonomy" in ixbrl_canonical:
+            out["taxonomy"] = ixbrl_canonical["taxonomy"]
     else:
         fallback_canonical = _build_canonical_from_yf_financials_tw(yf_fin)
         out["income_statement"] = fallback_canonical["income_statement"]
