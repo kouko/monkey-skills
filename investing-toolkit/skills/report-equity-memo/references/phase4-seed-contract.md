@@ -168,7 +168,9 @@ reason text.
 ## Orchestrator acceptance check (before Phase 4 artifact gate)
 
 On receiving the memo: (a) grep the Verdict section for `rule_verdict` —
-absent, or deviating without a Deviation Block → send back, do not accept;
+absent, or deviating without a Deviation Block → send back, do not accept
+— unless dcf.json carries the `not_applicable` marker, in which case grep
+for the pin phrase `DCF: N/A — financial sector` instead (§1 N/A branch);
 (b) spot-check any "data unavailable" sentence against the inventory;
 (c) confirm the memo date matches the issuer-timezone execution date;
 (d) if the run carried an xval report, spot-check any statement-table
