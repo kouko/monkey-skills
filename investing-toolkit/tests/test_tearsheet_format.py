@@ -303,6 +303,150 @@ def test_disagreement_marker_composes_after_unit_suffix():
     assert cells[1] == "93,775,000,000 USD†"
 
 
+def test_empty_series_card_and_warnings_footer():
+    """Task 5: empty `series` renders a graceful no-records card instead of
+    an empty table; the footer ALWAYS renders a provenance line (`Rendered
+    <as-of> from <n> series`) regardless of whether records exist, plus a
+    `--store-dir` label when that optional value is present on the payload
+    (and NO such label when it is absent); non-empty `warnings` renders a
+    `## Warnings` block echoing each warning verbatim. Pure-function level
+    only -- CLI-level empty-series + --store-dir + --out behavior are
+    covered by their own subprocess tests below."""
+    empty_dump = {
+        "company": "EMPTYCO",
+        "as_of": "2026-07-24",
+        "series": [],
+        "warnings": [],
+    }
+    out = render_tearsheet(empty_dump)
+    assert "No KPI records for EMPTYCO." in out
+    assert "|" not in out  # no table markup when series is empty
+    assert "Rendered 2026-07-24 from 0 series" in out
+    assert "## Warnings" not in out
+
+    warn_dump = {
+        "company": "TESTCO",
+        "as_of": "2026-07-24",
+        "series": [
+            {
+                "kpi_id": "kpi_a",
+                "periods": [
+                    _period("2021-01-01", "2021-12-31", "duration", ["FY2021"], 100),
+                ],
+            },
+        ],
+        "warnings": ["skipped corrupt series file: kpi_b.jsonl"],
+    }
+    out2 = render_tearsheet(warn_dump)
+    assert "Rendered 2026-07-24 from 1 series" in out2
+    assert "## Warnings" in out2
+    assert "- skipped corrupt series file: kpi_b.jsonl" in out2
+    # Negative case: store_dir absent from the payload -> no "(store: ...)"
+    # label at all, not just a blank one.
+    assert "(store:" not in out2
+
+    store_dir_dump = dict(warn_dump, store_dir="/tmp/kpi-store")
+    out3 = render_tearsheet(store_dir_dump)
+    assert "/tmp/kpi-store" in out3
+
+
+def test_out_flag_writes_stdout_parity(tmp_path):
+    """`--out <path>` writes byte-identical Markdown to stdout mode --
+    subprocess-level CLI check, split out from the pure-function footer
+    assertions above (Round-2 finding: mega-test mixed levels)."""
+    warn_dump = {
+        "company": "TESTCO",
+        "as_of": "2026-07-24",
+        "series": [
+            {
+                "kpi_id": "kpi_a",
+                "periods": [
+                    _period("2021-01-01", "2021-12-31", "duration", ["FY2021"], 100),
+                ],
+            },
+        ],
+        "warnings": ["skipped corrupt series file: kpi_b.jsonl"],
+    }
+    script = _SCRIPTS_DIR / "tearsheet_format.py"
+    dump_path = tmp_path / "dump.json"
+    dump_path.write_text(json.dumps(warn_dump), encoding="utf-8")
+    out_path = tmp_path / "tearsheet.md"
+
+    stdout_result = subprocess.run(
+        [sys.executable, str(script), "--in", str(dump_path), "--as-of", "2026-07-24"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    assert stdout_result.returncode == 0, stdout_result.stderr.decode("utf-8", errors="replace")
+
+    file_result = subprocess.run(
+        [
+            sys.executable, str(script),
+            "--in", str(dump_path),
+            "--as-of", "2026-07-24",
+            "--out", str(out_path),
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    assert file_result.returncode == 0, file_result.stderr.decode("utf-8", errors="replace")
+    assert out_path.exists()
+    assert out_path.read_text(encoding="utf-8") == stdout_result.stdout.decode("utf-8")
+
+
+def test_out_flag_nonexistent_dir_reports_clean_error(tmp_path):
+    """Round-2 finding 1: the --out write path had NO exception handling --
+    a nonexistent output directory dumped a raw traceback. Must match the
+    --in branch's convention: clean `error:` message on stderr, exit 1, no
+    traceback."""
+    script = _SCRIPTS_DIR / "tearsheet_format.py"
+    dump = {"company": "TESTCO", "as_of": "2026-07-24", "series": [], "warnings": []}
+    dump_path = tmp_path / "dump.json"
+    dump_path.write_text(json.dumps(dump), encoding="utf-8")
+    bad_out_path = tmp_path / "nonexistent-dir" / "out.md"
+
+    result = subprocess.run(
+        [
+            sys.executable, str(script),
+            "--in", str(dump_path),
+            "--as-of", "2026-07-24",
+            "--out", str(bad_out_path),
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    stderr = result.stderr.decode("utf-8", errors="replace")
+    assert result.returncode == 1
+    assert "error:" in stderr
+    assert "Traceback" not in stderr
+
+
+def test_cli_empty_series_via_store_dir_flag_exit_zero(tmp_path):
+    """Round-2 finding 2: the empty-series Acceptance clause ('exit 0') was
+    asserted nowhere at CLI level -- only via the pure `render_tearsheet`
+    call. Also exercises `--store-dir` through the ACTUAL CLI flag (it was
+    only ever set by hand-constructing the dump dict in other tests)."""
+    script = _SCRIPTS_DIR / "tearsheet_format.py"
+    empty_dump = {"company": "EMPTYCO", "as_of": "2026-07-24", "series": [], "warnings": []}
+    dump_path = tmp_path / "dump.json"
+    dump_path.write_text(json.dumps(empty_dump), encoding="utf-8")
+
+    result = subprocess.run(
+        [
+            sys.executable, str(script),
+            "--in", str(dump_path),
+            "--as-of", "2026-07-24",
+            "--store-dir", "/tmp/kpi-store",
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    stdout = result.stdout.decode("utf-8")
+    assert result.returncode == 0, result.stderr.decode("utf-8", errors="replace")
+    assert "No KPI records for EMPTYCO." in stdout
+    assert "(store: /tmp/kpi-store)" in stdout
+
+
 def test_main_stdin_decodes_utf8_regardless_of_locale():
     """The --in file branch opens with encoding='utf-8' explicitly; the
     stdin branch read raw sys.stdin, which decodes per the process locale --

@@ -38,9 +38,13 @@ recorded <as_of> -- <source_accession>` in as_of order (pin guarantees
 `observations` is already as_of-ascending). No flagged periods -> no
 `## Revisions` heading at all.
 
-Scope note (Tasks 3-4): no empty-state card / provenance-warnings footer /
-`--out` (Task 5) yet -- `render_tearsheet` is structured so that extends by
-adding another trailing section.
+Empty `series` renders a "No KPI records for <company>." card instead of an
+empty table. The footer ALWAYS renders a provenance line ("Rendered <as_of>
+from <n> series", plus a `(store: <dir>)` label when the CLI's optional
+`--store-dir` flag is passed); a non-empty `warnings` list renders a
+trailing `## Warnings` block echoing each warning verbatim. The CLI's
+optional `--out <path>` flag writes the identical Markdown to that path
+instead of stdout.
 """
 from __future__ import annotations
 
@@ -151,35 +155,52 @@ def render_tearsheet(dump: dict[str, Any]) -> str:
     company = dump.get("company", "")
     as_of = dump.get("as_of", "")
     series = dump.get("series", [])
+    warnings = dump.get("warnings", [])
+    store_dir = dump.get("store_dir")
 
     out: list[str] = [f"# KPI Tearsheet — {company}", "", f"As of: {as_of}", ""]
 
-    axis = _build_period_axis(series)
-    header_cells = ["kpi_id"] + [label for _, label in axis]
-    out.append("| " + " | ".join(header_cells) + " |")
-    out.append("|" + "|".join(["---"] * len(header_cells)) + "|")
+    if not series:
+        out.append(f"No KPI records for {company}.")
+    else:
+        axis = _build_period_axis(series)
+        header_cells = ["kpi_id"] + [label for _, label in axis]
+        out.append("| " + " | ".join(header_cells) + " |")
+        out.append("|" + "|".join(["---"] * len(header_cells)) + "|")
 
-    for entry in series:
-        kpi_id = entry.get("kpi_id", "")
-        periods_by_key = {_period_key(p): p for p in entry.get("periods", [])}
-        row_cells = [kpi_id]
-        for key, _label in axis:
-            period = periods_by_key.get(key)
-            if period is None:
-                row_cells.append("N/A")
-            else:
-                cell = _fmt_cell_value(period.get("latest", {}))
-                if period.get("disagreement"):
-                    cell += "†"
-                row_cells.append(cell)
-        out.append("| " + " | ".join(row_cells) + " |")
+        for entry in series:
+            kpi_id = entry.get("kpi_id", "")
+            periods_by_key = {_period_key(p): p for p in entry.get("periods", [])}
+            row_cells = [kpi_id]
+            for key, _label in axis:
+                period = periods_by_key.get(key)
+                if period is None:
+                    row_cells.append("N/A")
+                else:
+                    cell = _fmt_cell_value(period.get("latest", {}))
+                    if period.get("disagreement"):
+                        cell += "†"
+                    row_cells.append(cell)
+            out.append("| " + " | ".join(row_cells) + " |")
 
-    revisions_lines = _revisions_block(series, dict(axis))
-    if revisions_lines:
+        revisions_lines = _revisions_block(series, dict(axis))
+        if revisions_lines:
+            out.append("")
+            out.append("## Revisions")
+            out.append("")
+            out.extend(revisions_lines)
+
+    out.append("")
+    provenance = f"Rendered {as_of} from {len(series)} series"
+    if store_dir:
+        provenance += f" (store: {store_dir})"
+    out.append(provenance + ".")
+
+    if warnings:
         out.append("")
-        out.append("## Revisions")
+        out.append("## Warnings")
         out.append("")
-        out.extend(revisions_lines)
+        out.extend(f"- {warning}" for warning in warnings)
 
     return "\n".join(out) + "\n"
 
@@ -202,6 +223,18 @@ def main() -> int:
         dest="as_of",
         required=True,
         help="Render date to stamp the tearsheet header with (required -- no wall-clock default).",
+    )
+    parser.add_argument(
+        "--store-dir",
+        dest="store_dir",
+        default=None,
+        help="Optional store directory label surfaced in the footer's provenance line.",
+    )
+    parser.add_argument(
+        "--out",
+        dest="out_path",
+        default=None,
+        help="Optional path to write the rendered Markdown to. Omit to print to stdout.",
     )
     args = parser.parse_args()
 
@@ -228,7 +261,21 @@ def main() -> int:
         return 1
 
     dump["as_of"] = args.as_of
-    print(render_tearsheet(dump), end="")
+    if args.store_dir:
+        dump["store_dir"] = args.store_dir
+
+    rendered = render_tearsheet(dump)
+
+    if args.out_path:
+        try:
+            with open(args.out_path, "w", encoding="utf-8") as f:
+                f.write(rendered)
+        except (FileNotFoundError, PermissionError, OSError) as e:
+            print(f"error: cannot write to {args.out_path}: {e}", file=sys.stderr)
+            return 1
+    else:
+        sys.stdout.reconfigure(encoding="utf-8")
+        print(rendered, end="")
     return 0
 
 
