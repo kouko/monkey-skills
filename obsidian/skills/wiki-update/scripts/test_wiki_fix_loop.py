@@ -87,10 +87,11 @@ def test_workflow_file_dry_parses():
 def test_freeze_preflight_markers():
     """Brief Decision 3: criteria freeze — violations snapshot + check-config
     hash recorded before round 1; mid-loop hash change → hard stop; the
-    check-config hash is over the VALIDATOR SCRIPT's own content."""
+    check-config hash covers BOTH frozen scripts (validator + verdict CLI,
+    concatenated)."""
     text = _text()
 
-    assert "shasum -a 256" in text, "check-config hash must be sha256 of the validator script"
+    assert "shasum -a 256" in text, "check-config hash must be sha256 of validator+verdict scripts"
     assert "frozenCheckConfigHash" in text
     assert "round0" in text, "baseline violations snapshot must be a round0 file"
     assert "freeze.json" in text, "frozen criteria must be persisted"

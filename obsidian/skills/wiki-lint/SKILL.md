@@ -50,7 +50,7 @@ Execute all 15 checks defined in [lint-checks.md](references/lint-checks.md):
 
 Severity: L01–L04, L07 → **error** (L14 path/extension violations also → **error**). L05, L06, L08, L09, L10, L12, L13, L14 (missing/empty/basename-mismatch), L15 → **warning**. L11 → **info**.
 
-The mechanical error-severity subset (L01–L04, L07) can be run in seconds via `scripts/wiki_lint_check.py` instead of manually — read-only, same as this skill's charter.
+The mechanical subset (L01–L04, L07, L14 — both its error and warning forms — plus a `PARSE` error lane for unreadable pages) can be run in seconds via `scripts/wiki_lint_check.py` instead of manually — read-only, same as this skill's charter.
 
 ## STEP 3 — Report
 

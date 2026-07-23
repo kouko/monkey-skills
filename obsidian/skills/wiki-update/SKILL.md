@@ -84,8 +84,13 @@ before the next run — a dirty tree or leftover state makes the next
 preflight refuse, and each run needs a fresh `runLabel` anyway.
 
 Terminal states: `CONVERGED` / `PLATEAU` / `STUCK` (writes
-`blockers-report.md`) / `BUDGET` / `SIZE_SPLIT` (diff cap tripped;
-the oversized round is reverted) / `WORK_ORDERS_ONLY` / `MALFORMED`.
+`blockers-report.md`) / `BUDGET` / `SIZE_SPLIT` (cumulative diff cap
+tripped AFTER the last winning round was committed — nothing is
+reverted; the stop asks you to split the REMAINING work into smaller
+runs) / `STUCK_EXECUTOR_OVERREACH` (conservation ratchet breach — the
+offending round is deliberately left staged/uncommitted in the working
+tree for inspection; review it, then stash or commit by hand before
+the next run's preflight will pass) / `WORK_ORDERS_ONLY` / `MALFORMED`.
 Steps 4-5 run after EVERY terminal state — a stopped run still gets
 its triage and scorecard; only the wording of step 5's point 3
 changes with the stop reason.
@@ -117,8 +122,11 @@ re-distillation, L14 → source-link repair.
 
 `PARSE` is the validator's error-lane check_id — a page the
 mechanical validator cannot read (non-UTF-8, or frontmatter beyond
-its minimal-parser subset), outside lint-checks.md's L-numbered SSOT;
-never auto-fixed, always triaged to the human lane.
+its minimal-parser subset), outside lint-checks.md's L-numbered SSOT.
+The loop may select the PARSE class like any other; its executor
+contract has no safe action for it, so the expected outcome is an
+unsafe-only work order (with compare/ratchet brakes as backstop) —
+final destination is always this human lane, never an auto-fix.
 
 ### Step 5 — Close-out scorecard
 

@@ -30,12 +30,15 @@ rather than self-reported.
 
 ### Added — repair-loop engine
 
-- The repair loop adds: a freeze/safe-tier classification (only
-  safe-tier fixes auto-apply), a five-brake ordering so cheaper/safer
-  fixes run before riskier ones, a proposal exit for anything outside the
-  safe tier (surfaced to the human instead of auto-applied), and a size
-  circuit-breaker that stops the loop if a single pass would touch too
-  much of the wiki at once.
+- The repair loop adds: criteria freeze + safe-tier classification
+  (only safe-tier fixes auto-apply; unsafe-only classes become
+  work-order entries for the human lane), a fixed brake-CONSULTATION
+  order (ratchet → compare → stuck → plateau → budget — safety checks
+  consulted first each round; repair order itself is largest-class-
+  first), a proposal-branch exit (accepted safe-tier rounds land as
+  LOCAL commits on `wiki-fix/<runLabel>`, never merged or pushed), and
+  a cumulative-size circuit-breaker that stops the loop once committed
+  diff exceeds the cap and asks for the remaining work to be split.
 - Real-execution smoke test (not a dry run) confirmed two check classes
   converge to clean within the loop, and surfaced one ratchet false-positive
   that the loop correctly re-targets as a known next-touch item rather than
