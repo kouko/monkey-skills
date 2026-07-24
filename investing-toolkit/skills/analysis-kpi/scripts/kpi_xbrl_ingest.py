@@ -165,8 +165,24 @@ def ingest_pack(fact_pack: dict, source_kind: str = _SOURCE_KIND) -> dict:
 
     appended = 0
     kpi_ids: set = set()
-    for match in selectors.values():
+    # kpi_id -> the DISTINCT signature key that first claimed it. `selectors`
+    # is already deduped by signature (same signature -> same dict entry), so
+    # a second signature landing on an already-claimed kpi_id here is BY
+    # CONSTRUCTION a distinct-signature collision, never a same-signature
+    # vintage regroup — fail loud rather than silently merging two different
+    # dimensional breakdowns into one durable store series.
+    claimed_by: dict = {}
+    for sig_key, match in selectors.items():
         kpi_id = derive_kpi_id(match["concept"], match["dimensions"])
+        prior_sig = claimed_by.get(kpi_id)
+        if prior_sig is not None and prior_sig != sig_key:
+            raise ValueError(
+                f"kpi_xbrl_ingest: kpi_id collision — distinct dimensional "
+                f"signatures {prior_sig!r} and {sig_key!r} both derive "
+                f"kpi_id {kpi_id!r}; refusing to silently merge two "
+                f"different breakdowns into one store series"
+            )
+        claimed_by[kpi_id] = sig_key
         kpi_ids.add(kpi_id)
         points = kpi_xbrl.facts_to_points(
             fact_pack, kpi_id, match, company, source_kind
