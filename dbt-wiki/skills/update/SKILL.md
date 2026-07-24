@@ -1,29 +1,42 @@
 ---
 name: update
 description: |
-  One-shot update: rescan evidence then, if knowledge pages went stale, gate a redistill — bring the whole .dbt-wiki/ (evidence + semantics) current in one command. Use for 'sync dbt-wiki', 'update the wiki', 'bring wiki up to date', 'model 改了 update everything', '同步 wiki'. Cheap evidence-only→rescan; just re-distill stale→redistill; setup→init.
+  THE maintenance verb for dbt-wiki — one full pass: (optional) ingest new tribal knowledge → rescan evidence → gated redistill of stale knowledge → phantom-column lint gate → review handoff → scorecard. Runs every mechanical step, then hands the human-judgment part to review. Use for 'update dbt-wiki', 'update the wiki', 'bring wiki up to date', 'maintain the wiki', 'sync dbt-wiki', 'model 改了 update everything', '同步 wiki', '更新 wiki', 'wiki 維護'. Cheap evidence-only→rescan; just re-distill stale→redistill; certify pages→review; setup→init.
 ---
 
-# dbt-wiki — Update Workflow (orchestrator)
+# dbt-wiki — Update Workflow (the maintenance pass)
 
-Update is the **"just bring my wiki up to date"** path. It runs the cheap
-deterministic `rescan` (evidence layer), and **if** that flags any knowledge
-pages stale, it stops and asks whether to spend on a `redistill` (semantic
-layer). One command, the whole two-layer update, with the expensive half gated
-behind an explicit yes.
+Update is the **"just bring my wiki up to date"** path — the single maintenance
+verb. It runs **every mechanical step to completion**, then stops exactly where
+human judgment starts (certifying business meaning) and hands off. One command,
+the whole maintenance pass:
+
+```
+(0) ingest-front → (1) rescan → (2–4) gated redistill →
+(5) phantom-column gate → (6) review handoff → (7) scorecard
+```
 
 **Update owns orchestration, not distillation.** It **delegates** to its sibling
 skills and never reimplements their logic:
 
-- evidence + stale-flagging → follow `../rescan/SKILL.md`
-- LLM re-distillation → follow `../redistill/SKILL.md`
+- new tribal knowledge → follow `../ingest/SKILL.md` (Step 0, optional)
+- evidence + stale-flagging → follow `../rescan/SKILL.md` (Step 1)
+- LLM re-distillation → follow `../redistill/SKILL.md` (Step 4)
+- human certification → **hand off** to `/dbt-wiki:review`, never run it (Step 6)
 
-This keeps a single source of truth: rescan owns the cheap half, redistill owns
-the LLM half, update just sequences them and owns the gate between.
+This keeps a single source of truth: each sibling owns its half, update just
+sequences them and owns the gates between. `rescan` / `redistill` stay callable
+on their own — reach for them directly when you want only the cheap evidence
+refresh, or only the LLM half, to save cost.
+
+**One-way discipline**: dbt → wiki, always. Update reads `target/manifest.json`
+and the compiled SQL; it never writes to `dbt/`, `target/`, or anywhere outside
+`.dbt-wiki/` (+ `CLAUDE.md`), and never runs `dbt parse` / `dbt compile` or
+touches a warehouse on your behalf.
 
 > **Materiality triage ships** (Step 2.5): cosmetic-only stale pages
 > (comment/description/whitespace changes) auto-skip the LLM gate — only
-> pages whose evidence changed in *meaning* enter Step 3. Triage consumes the
+> pages whose evidence changed in *meaning* enter Step 4. Triage consumes the
 > `last_rescan_materiality.json` map that rescan Step 2.6 emits; if that map is
 > **absent** (a rescan from before this feature, or a first upgrade) update falls
 > back to treating **all** stale pages as material (the original Phase-1
@@ -33,10 +46,24 @@ the LLM half, update just sequences them and owns the gate between.
 
 - `--yes` — auto-confirm both halves (rescan diff-confirm **and** the redistill
   gate). Use for non-interactive / scripted runs.
-- `--no-redistill` — run rescan only; never enter the gate (identical to running
-  `/dbt-wiki:rescan` directly).
+- `--no-redistill` — run rescan only; never enter the gate. Steps 5–7 still run
+  (they are 0-LLM).
 - `--redistill` — pre-answer the gate **yes** (still cheap if nothing is stale).
-- `--force-mature`, `--dry-run` — passed through to redistill (Step 3).
+- `--force-mature`, `--dry-run` — passed through to redistill (Step 4).
+
+## Step 0: Ingest-front (optional — only when the user brought a note)
+
+If the invocation carries new tribal knowledge that is not in the manifest
+(a sort_key rationale, a dialect gotcha, an incident link — e.g. *"update the
+wiki, and remember fct_orders is sorted by order_date because of the Tableau
+extract"*), attach it **first**, before rescan rewrites evidence pages: run the
+ingest workflow by following `../ingest/SKILL.md` end to end.
+
+Ingest writes only the user-owned `## User Notes` section, which rescan
+preserves verbatim — so ingesting first is safe and keeps the note in the same
+pass.
+
+No note in the invocation → **skip this step silently**. Do not prompt for one.
 
 ## Step 1: Rescan (delegate — always runs, cheap)
 
@@ -45,8 +72,10 @@ Run the **full** rescan workflow by following `../rescan/SKILL.md` end to end
 regenerate index + lineage, and flag stale syntheses + knowledge pages. Honour
 its own diff-confirm prompt (or pass its `--yes` when update got `--yes`).
 
-If rescan exits early (no manifest drift), there is nothing to redistill — update
-is done. Report and **exit 0**.
+If rescan reports **no manifest drift**, there is nothing to redistill: skip
+Steps 2–4 and go straight to **Step 5**. Do not exit here — the phantom gate and
+the review handoff are 0-LLM and still part of the maintenance pass (pages can
+sit un-certified, or cite a phantom column, with no drift at all).
 
 ## Step 2: Did rescan leave stale knowledge pages?
 
@@ -66,9 +95,10 @@ else echo "Need uv (recommended) or pip-installed pyyaml."; exit 1; fi
 $PY_RUNNER <SKILL_DIR>/../redistill/assets/collect_redistill_worklist.py .dbt-wiki > /tmp/update_worklist.json
 ```
 
-If `total_selected == 0` and no `--force-mature` target exists: print "Evidence
-updated; no stale developing knowledge pages to re-distill." and **exit 0** —
-the cheap path was enough.
+If `total_selected == 0` and no `--force-mature` target exists: note "Evidence
+updated; no stale developing knowledge pages to re-distill." and **jump to
+Step 5** — the cheap path was enough for the knowledge layer, but the pass is
+not over.
 
 ## Step 2.5: Materiality triage (split material vs cosmetic-only — 0 LLM)
 
@@ -127,10 +157,9 @@ material_domain_count = len(material_groups)
 ```
 
 If `material_page_count == 0` (every stale page was cosmetic-only) and no
-`--force-mature` target exists: print **"Evidence updated; <N> page(s) stale but
-all cosmetic — skipped (left flagged stale, not re-distilled)."** and **exit 0**.
-The cheap path was enough — do NOT enter the gate, do NOT prompt, do NOT spend on
-the LLM.
+`--force-mature` target exists: note **"Evidence updated; <N> page(s) stale but
+all cosmetic — skipped (left flagged stale, not re-distilled)."** and **jump to
+Step 5**. Do NOT enter the gate, do NOT prompt, do NOT spend on the LLM.
 
 ## Step 3: The gate (interactive, unless pre-answered)
 
@@ -143,19 +172,19 @@ Print the redistill scope table for the material pages (domains, pages,
 
 Then decide:
 
-- `--no-redistill` → skip; print how to redistill later (`/dbt-wiki:redistill`)
-  and **exit 0**.
+- `--no-redistill` → skip Step 4; note the follow-up (`/dbt-wiki:redistill`) and
+  **jump to Step 5**.
 - `--yes` or `--redistill` → proceed without asking.
 - otherwise **ask**: *"Rescan flagged <material_page_count> knowledge page(s)
   across <material_domain_count> domain(s) with material evidence changes.
   Re-distill them now? This calls the LLM. (yes/no)"*
-  - **no** → leave stale flags in place; print `/dbt-wiki:redistill` as the
-    follow-up and **exit 0**.
+  - **no** → leave stale flags in place; note `/dbt-wiki:redistill` as the
+    follow-up and **jump to Step 5**.
   - **yes** → continue.
 
 **Non-interactive context** (no TTY / scripted, no `--yes`/`--redistill`): treat
-the gate as **no** — keep the stale flags, print the follow-up, exit 0. Never
-silently spend on the LLM without an explicit yes.
+the gate as **no** — keep the stale flags, note the follow-up, jump to Step 5.
+Never silently spend on the LLM without an explicit yes.
 
 ## Step 4: Redistill (delegate — only on yes)
 
@@ -166,26 +195,130 @@ invoke it with `--yes`, plus any `--force-mature` update received). Redistill do
 the LLM rewrite, clears stale flags on rewritten pages, and runs reconcile +
 lint_identifier_fidelity + build_index_knowledge.
 
-## Step 5: Unified summary
+## Step 5: Phantom-column gate (mechanical, always runs, 0 LLM)
+
+**Every path above converges here** — including each cheap exit in Steps 1–3.
+This is the last *machine-checkable* defect class before a human is asked to
+certify anything, so update always runs it, even when nothing was re-distilled.
+
+**What it catches**: a knowledge page citing `model.column` where that model's
+manifest-extracted column list has no such column (a paraphrased identifier — a
+dropped `__daily` suffix, an invented prefix). Nothing looks wrong on the page;
+the SQL a consumer generates from it fails **at execution**. Pages whose model
+was extracted `schema_yml_only` / `failed` are reported unverifiable, never as
+violations.
+
+```bash
+# $PY_RUNNER: reuse the one from Step 2, or resolve it with that same snippet
+# if you jumped here from Step 1. The script is in the rebuildable cache
+# (rescan Step 0 self-heals it); fall back to <SKILL_DIR>/../init/assets/ if
+# .dbt-wiki/_internal/ somehow lacks it.
+$PY_RUNNER .dbt-wiki/_internal/lint_identifier_fidelity.py .dbt-wiki --json \
+  > /tmp/update_phantom.json
+```
+
+Exit codes: **0** = clean · **1** = phantom citations found · **2** = no
+`.dbt-wiki/` at that path (cannot happen after Step 1's pre-condition — if it
+does, stop and report it; do not carry on with a silent zero).
+
+The JSON carries `refs_checked`, `evidence_models`, `refs_ok`,
+`refs_unverifiable`, and `violations: [{page, ref}]`. On exit 1:
+
+- **Do not stop the pass, and do not auto-edit pages.** Update orchestrates; the
+  fix is an identifier correction that belongs to redistill or a human edit.
+- Group the violations by page and surface them **above** the review handoff —
+  they are a mechanical pre-requisite to certification: certifying a page that
+  cites a column the model lacks certifies a query that will not run.
+- Carry the per-page violation set into Step 6 so each queued page shows whether
+  it is blocked, and into the Step 7 scorecard.
+
+Fix path to state, verbatim: correct each cited identifier against the model's
+evidence page `columns:` frontmatter (or re-run `/dbt-wiki:redistill` for that
+page), then re-run `/dbt-wiki:update`.
+
+## Step 6: Review handoff (present the queue — never run review)
+
+Everything a machine can do is now done. What remains is **certifying business
+meaning**, which is a human act: `/dbt-wiki:review` is deliberately a pure
+human-in-the-loop skill. Update **presents the queue and stops**.
+
+Build the queue by reading **frontmatter only** across
+`.dbt-wiki/{entities,metrics,concepts}/*.md` (same criteria as review Step 1):
+
+| Condition | Meaning |
+|---|---|
+| `status: developing` | Never certified — LLM-distilled, no human sign-off yet. |
+| `status: mature` AND `stale: true` | Re-certification needed — its evidence changed. |
+
+Skip `status: seed` and `status: archived`. Present a compact handoff:
+
+```
+Awaiting human certification: <Q> page(s)
+  developing (first cert): <d>       stale-mature (re-cert): <s>
+  blocked by phantom-column citations: <b>   ← fix these first (Step 5)
+
+  Newly stale this run: <list of page paths, max 10, then "+N more">
+
+  → /dbt-wiki:review   (certifies pages one at a time, with you in the loop)
+```
+
+NEVER, in this step:
+
+- run review's Steps 2–6, rank the queue by risk, or open page bodies — that is
+  review's job, and loading bodies here burns tokens twice;
+- set `status: mature`, stamp `reviewed_by` / `reviewed_at`, or clear a `stale`
+  flag — certification without a human is a false certification record;
+- demote a page (`mature → developing`).
+
+If the queue is empty, say so plainly: every knowledge page is certified and
+not stale (or still `seed`, not yet distilled).
+
+## Step 7: Scorecard
+
+Close with one structured scorecard — **write it in the conversation language**
+(translate the labels; keep paths, flags, identifiers and slash-commands
+verbatim):
 
 ```
 ✓ dbt-wiki update complete.
-  Rescan:    +<a> ~<m> -<r> evidence pages; <S> knowledge pages flagged stale
-  Redistill: <ran: N pages across D domains | skipped (gate=no) | not needed>
-  Still stale: <mature count> (use --force-mature) · <no-provenance count>
-  Next: /dbt-wiki:query "<question>"  ·  /dbt-wiki:review to certify pages mature
+  Ingest:      <N note(s) attached to M page(s) | none>
+  Rescan:      +<a> ~<m> -<r> evidence pages · <S> knowledge pages flagged stale
+  Redistill:   <N pages across D domains | skipped (gate=no) | skipped (all cosmetic: C) | not needed>
+  Phantom gate: <✓ clean, R refs checked | ✗ V citation(s) across P page(s)>
+  Awaiting review: <Q> page(s) (developing <d> · stale-mature <s>)
+  Still stale:  <mature count> (use --force-mature) · <no-provenance count>
+
+  Machine work is done — what's left needs a human:
+    1. Fix <V> phantom-column citation(s) listed above   [omit when clean]
+    2. /dbt-wiki:review — certify <Q> page(s)            [omit when queue empty]
+    3. /dbt-wiki:query "<question>"
 ```
+
+Every number must come from the step that produced it (rescan's diff, the
+triage counts, the lint JSON, the Step 6 queue) — never estimate one, and never
+print a count for a step that was skipped: write `skipped` / `not needed`.
 
 ## Rules
 
 NEVER:
-- Reimplement rescan or redistill logic here — always delegate by following the
-  sibling SKILL.md (single source of truth).
+- Reimplement rescan, redistill, ingest, or review logic here — always delegate
+  by following the sibling SKILL.md (single source of truth).
 - Enter the LLM redistill without an explicit yes (gate, `--yes`, or
   `--redistill`). Non-interactive default is **no**.
-- Run `dbt parse` / `dbt compile`, or connect to a warehouse.
+- Auto-run `/dbt-wiki:review` or certify / demote any page — certification is a
+  human action; update only presents the queue.
+- Auto-edit a knowledge page to silence a phantom-column violation.
+- Exit the pass after the cheap half — Steps 5–7 are 0-LLM and always run.
+- Write to `dbt/` or `target/`, run `dbt parse` / `dbt compile`, or connect to a
+  warehouse. dbt → wiki is one-way.
 
 ALWAYS:
 - Run rescan first (cheap, deterministic); it is never skipped.
-- Gate the redistill on stale knowledge pages; exit cheap when there are none.
-- Surface mature / no-provenance pages left still-stale in the summary.
+- Gate the redistill on **material** stale knowledge pages; skip the LLM when
+  there are none.
+- Run the phantom-column gate before the review handoff, and surface every
+  violation as a pre-certification blocker.
+- End with the scorecard in the conversation language, and surface mature /
+  no-provenance pages left still-stale in it.
+- Point at `/dbt-wiki:rescan` or `/dbt-wiki:redistill` when the user wants only
+  one half (cheaper than a full pass).
