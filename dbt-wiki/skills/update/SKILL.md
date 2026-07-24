@@ -160,6 +160,9 @@ If `material_page_count == 0` (every stale page was cosmetic-only) and no
 `--force-mature` target exists: note **"Evidence updated; <N> page(s) stale but
 all cosmetic — skipped (left flagged stale, not re-distilled)."** and **jump to
 Step 5**. Do NOT enter the gate, do NOT prompt, do NOT spend on the LLM.
+This skip is **not overridable by flags** — `--yes` / `--redistill` pre-answer
+the gate, they do not force cosmetic-only pages INTO it. To re-distill a
+cosmetic-stale page anyway, call `/dbt-wiki:redistill` on it directly.
 
 ## Step 3: The gate (interactive, unless pre-answered)
 
@@ -182,9 +185,14 @@ Then decide:
     follow-up and **jump to Step 5**.
   - **yes** → continue.
 
-**Non-interactive context** (no TTY / scripted, no `--yes`/`--redistill`): treat
-the gate as **no** — keep the stale flags, note the follow-up, jump to Step 5.
-Never silently spend on the LLM without an explicit yes.
+**Which context am I in?** A normal chat / agent session **is interactive** —
+the user is reachable, so take the "otherwise ask" branch above and actually
+ask. **Non-interactive** means specifically that nobody can answer this turn:
+a headless run (`claude -p`), a CI job, or a workflow/driver step. There,
+with no `--yes`/`--redistill`, treat the gate as **no** — keep the stale
+flags, note the follow-up, jump to Step 5. Absence of a terminal is not the
+test; absence of a reachable human is. Never silently spend on the LLM
+without an explicit yes.
 
 ## Step 4: Redistill (delegate — only on yes)
 
