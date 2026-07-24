@@ -51,8 +51,8 @@ immutable append-only, no expiry). Stdlib only.
 
 ## CLI reference
 
-Per-subcommand CLI detail (flags, exit codes, worked examples) for the ten
-persistence/compute scripts lives in
+Per-subcommand CLI detail (flags, exit codes, worked examples) for the
+eleven persistence/compute scripts lives in
 [`references/cli-reference.md`](references/cli-reference.md). Index:
 
 - **`kpi_store`** — append-only bitemporal store: `append` a point / `query`
@@ -73,9 +73,27 @@ persistence/compute scripts lives in
   `apply` / `view`.
 - **`kpi_memo_feed`** — memo-feed contract assembly (trust-gated): `build`.
 - **`kpi_xbrl`** — XBRL fact -> kpi_store point adapter: `build`.
+- **`kpi_xbrl_ingest`** — XBRL fact-pack -> kpi_store driver (no collapse):
+  `ingest`.
 
 The Route-B `kpi_8k_candidates` intake CLI is documented in full below (it
 stays here because its 3-layer contract is load-bearing).
+
+## Workflow: US XBRL -> tearsheet
+
+The end-to-end path from a bare US ticker to a rendered KPI tearsheet is
+three steps, in order:
+
+1. **Fetch** the dimensional fact-pack from `data-markets`:
+   `pack.py --pack kpi-quarterly --ticker <T> --market us` (US-only pack;
+   SEC EDGAR dimensional XBRL, single ticker only — rate-limited 10 req/s).
+2. **Ingest** the fact-pack into this skill's store:
+   `kpi_xbrl_ingest.py ingest --pack <pack.json>` — derives a `kpi_id` per
+   dimensional signature and appends every vintage to `kpi_store` (honors
+   `KPI_STORE_DIR`; see [`references/cli-reference.md`](references/cli-reference.md)
+   for flags/exit codes).
+3. **Render** the tearsheet via `report-kpi-tearsheet`, which reads the
+   now-populated store directly.
 
 ## CLI (kpi_8k_candidates) — 8-K semi-auto KPI intake (Route B)
 

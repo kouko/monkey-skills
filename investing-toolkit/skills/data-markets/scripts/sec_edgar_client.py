@@ -2934,6 +2934,9 @@ def _build_dimensional_revenue_fact(
         "consolidation": consolidation,
         "value": float(fact.get("numeric_value")),
         "period_end": period_end,
+        "period_start": (
+            fact.get("period_start") if fact.get("period_type") == "duration" else None
+        ),
         "accession": accession,
         "filed": filed,
     }

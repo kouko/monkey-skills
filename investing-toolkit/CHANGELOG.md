@@ -5,6 +5,33 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.34.0] — 2026-07-24
+
+### Added — US XBRL → kpi_store producer (dimensional revenue)
+
+The tearsheet's store-backed history now has a second data-market feed. A new
+`kpi_xbrl_ingest ingest` verb maps each US filing's dimensional signature to a
+mechanically-derived `kpi_id` and appends every cross-filing vintage to
+`kpi_store.py` — no collapse, mirroring the existing TW iXBRL producer's
+append-only doctrine. A US ticker's fact-pack now renders a KPI tearsheet
+(with restatement † markers) without hand glue between the fetch layer and
+the store.
+
+- **`kpi_xbrl_ingest ingest` verb.** Dimensional revenue facts from a US
+  XBRL fact-pack are grouped by dimensional signature, each signature mapped
+  to a stable `kpi_id`, and every cross-filing vintage appended to the
+  company's store series — restatements surface via the store's existing
+  `history`/`disagreement` doctrine rather than being silently overwritten.
+- **`period_start` carried onto points.** Dimensional facts now emit
+  `period_start` alongside `period_end`; the field is carried through onto
+  store points so period-boundary reconstruction no longer needs a separate
+  lookup.
+- **e2e seam probe.** pack → ingest → tearsheet render exercised end-to-end;
+  a restatement renders its dagger (†) through the full pipeline, not just at
+  the store layer.
+
+Full suite: **1004 passed, 2 skipped, 61 deselected.**
+
 ## [v2.33.0] — 2026-07-24
 
 ### Added — TW iXBRL endorsement/guarantee (背書保證) ingestion
