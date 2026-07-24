@@ -161,6 +161,49 @@
   fixtures" though it now also exercises the -ci 2330 fixture; the 2330 fact-count literal
   `2002` is a 3rd pin copy — touch-up on next edit.
 
+## investing-toolkit US XBRL→kpi_store producer 2.34.0 — post-ship follow-ups (OPEN)
+- Status: OPEN
+- Start: next substantive touch of `analysis-kpi/scripts/kpi_xbrl_ingest.py` or the
+  next US-XBRL-lane arc.
+- Origin: arc (d) US XBRL→kpi_store producer (branch feat-kpi-xbrl-store-producer,
+  2.34.0, 2026-07-25); whole-branch review PASS_WITH_NOTES + per-task 🟢 findings,
+  logged not fixed. Brief/plan `docs/loom/{specs,plans}/2026-07-24-kpi-xbrl-store-producer.md`.
+- What:
+  (a) 🟡 **kpi_id collision guard keys on a FINER identity than the store.**
+  `ingest_pack`'s guard uses `_signature_key`'s raw `consolidation or None`, but the
+  store folds `consolidation None == default OperatingSegmentsMember`
+  (`_normalize_consolidation`) and `derive_kpi_id` is consolidation-blind. A pack
+  carrying one concept+dims under BOTH raw-None and explicit-default consolidation
+  (or two genuine consolidation views, which `kpi_xbrl.py:771/1704` contemplate)
+  would trip the guard as a FALSE collision though the store treats them as one
+  series. Reconcile: normalize consolidation in `_signature_key`, or compare
+  NORMALIZED signatures in the guard, so it fires only on TRUE identity collisions.
+  Theoretical today (`pack_us` emits one consolidation per signature). Guard added
+  this arc surfaces this LOUD (was a silent double-process before). See memory
+  [[derived-durable-id-slug-is-a-lossy-one-way-door]].
+  (b) 🟢 `kpi_xbrl_ingest.py` has NO try/except wrapper — a bad `--pack` / malformed
+  JSON / a fact-pack missing both ticker+company surfaces as a raw traceback (exit 1),
+  unlike sibling scripts' clean-message convention. Add clean error handling on next touch.
+  (c) 🟢 `_real_shaped_pack`/`_FY2020_PERIOD_START` duplicated across
+  `test_kpi_xbrl_ingest.py` + `test_kpi_xbrl_to_tearsheet_e2e.py` (2nd occurrence —
+  Rule of Three). Lift to a shared `conftest.py` fixture at the 3rd caller.
+
+## investing-toolkit KPI tearsheet — company total (top-line) revenue lane (COMMITTED-NEXT)
+- Status: COMMITTED-NEXT
+- Start: immediately after arc (d) (2.34.0) — user-stated 2026-07-24「接下來就要做 公司總營收」.
+- Origin: arc (d) scope decision (brief `docs/loom/specs/2026-07-24-kpi-xbrl-store-producer.md`
+  §Out of Scope) — v1 shipped dimensional-SEGMENT revenue only; company top-line total
+  (GAP-3 from the 5-filer dogfood) deferred as a distinct, differently-shaped feed.
+- What: `extract_dimensional_revenue` emits ZERO flat totals, so top-line company
+  revenue is unfetchable via arc (d)'s dimensional path. The only shipped source is
+  `action_facts(ticker,'Revenues')` → the companyconcept series
+  (`sec_edgar_client.py:666-711,271-294`): API-endpoint shape (carries start+end), NO
+  dei fiscal calendar, mixes annual+quarterly under `fp:FY`. Needs: a top-line
+  extractor (or reshape the companyconcept series to the store point shape), its own
+  annual/quarterly disambiguation (OVERLAPS the multi-granularity arc below), and
+  ingest into the SAME store so the tearsheet shows total revenue alongside segments.
+  Reuse arc (d)'s `kpi_xbrl_ingest` append path + the period-identity fields (T1/T2).
+
 ## investing-toolkit quarterly 2.22.0 — post-ship follow-ups (OPEN)
 - Status: OPEN
 - Start: next touch of `investing-toolkit/skills/data-markets/scripts/sec_edgar_client.py`
