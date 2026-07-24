@@ -1,0 +1,52 @@
+name: dbt-wiki tests
+
+# Runs the dbt-wiki plugin's script test suite on every PR that touches
+# the plugin (or the workflow itself), and on every push to main that
+# changes the plugin.
+#
+# dbt-wiki test files are self-executing smoke scripts, run directly not
+# via pytest: each `*_test.py` under skills/*/assets/ has its own
+# `if __name__ == "__main__": sys.exit(main())` (or, for reconcile_test.py,
+# module-level checks) that prints [OK]/[FAIL] lines and exits non-zero on
+# any failed check — they are not pytest test modules (no test_* functions/
+# classes), so `python3 -m pytest` on them either collects nothing or
+# INTERNALERRORs. The glob below intentionally sweeps every skill's
+# assets/ dir so a newly-added script test is picked up automatically.
+
+on:
+  pull_request:
+    paths:
+      - 'dbt-wiki/**'
+      - '.github/workflows/test-dbt-wiki.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'dbt-wiki/**'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: script tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run dbt-wiki script tests
+        # Pure stdlib (+ pyyaml for reconcile_test.py's inline PEP 723
+        # deps, already satisfied by the standard runner image) — each
+        # script test is run directly and must exit 0.
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: |
+          for t in dbt-wiki/skills/*/assets/*_test.py; do
+            echo "== $t"
+            python3 "$t" || exit 1
+          done
