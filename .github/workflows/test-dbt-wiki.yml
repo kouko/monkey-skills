@@ -1,0 +1,72 @@
+name: dbt-wiki tests
+
+# Runs the dbt-wiki plugin's script test suite on every PR that touches
+# the plugin (or the workflow itself), and on every push to main that
+# changes the plugin.
+#
+# dbt-wiki test files are self-executing smoke scripts, run directly not
+# via pytest: every `*_test.py` under skills/*/assets/ prints [OK]/[FAIL]
+# lines and exits non-zero on any failed check. Roughly half wrap that in
+# an `if __name__ == "__main__": sys.exit(main())` guard and the rest run
+# their checks at module level (9 guarded / 8 module-level as of this
+# commit) — either way, plain execution of the file is what runs them.
+# They are not pytest test modules (no test_* functions/classes), so
+# `python3 -m pytest` on them either collects nothing or INTERNALERRORs.
+# The glob below sweeps every skill's assets/ dir — every `*_test.py` it
+# finds, 17 files as of this commit — so a newly-added script test is
+# picked up automatically without editing this workflow.
+
+on:
+  pull_request:
+    paths:
+      - 'dbt-wiki/**'
+      - '.github/workflows/test-dbt-wiki.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'dbt-wiki/**'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: script tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        # Match repo convention from skill-structure.yml investing-toolkit-pytest-offline:
+        # astral-sh/setup-uv@v4 with cache disabled (no uv.lock; PEP 723 inline metadata).
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: false
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Run dbt-wiki script tests
+        # Each test runs under `uv run --script`, which resolves that file's
+        # own PEP 723 inline metadata (its `# /// script` block) into an
+        # ephemeral env. 6 of the 17 test files declare third-party deps:
+        #   pyyaml        - init/assets/build_index_knowledge_test.py
+        #                   init/assets/reconcile_test.py
+        #                   pack/assets/build_bundle_index_test.py
+        #                   redistill/assets/collect_redistill_worklist_test.py
+        #   sqlglot>=25.0 - rescan/assets/classify_materiality_test.py
+        #                   rescan/assets/logic_sha_test.py
+        # This workflow installs no package list of its own: uv reads each
+        # declaration, so adding a dependency to a test file needs no change
+        # here. Tests that shell out to a sibling asset script invoke it as
+        # `uv run <script>`, which likewise resolves that script's own
+        # metadata (e.g. extract_column_lineage.py's sqlglot).
+        # Each script test must exit 0.
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: |
+          for t in dbt-wiki/skills/*/assets/*_test.py; do
+            echo "== $t"
+            uv run --quiet --script --python 3.11 "$t" || exit 1
+          done
