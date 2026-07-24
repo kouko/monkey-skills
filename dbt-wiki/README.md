@@ -4,7 +4,7 @@ Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh
 
 > Local-only LLM-queryable knowledge base for dbt projects. A **two-layer** system: a **knowledge layer** (`entities/`, `metrics/`, `concepts/`) of LLM-distilled business meaning, supported by an **evidence layer** (`_evidence/`) of mechanical extractions from `target/manifest.json` + [sqlglot](https://github.com/tobymao/sqlglot) column-level lineage. Query answers semantic questions ("what does churn mean?", "which entities relate to revenue?") alongside structural lineage questions — without dbt Cloud, without leaving your machine.
 
-**Version**: 2.4.0 · **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) · **License**: MIT
+**Version**: 3.3.0 · **Part of**: [monkey-skills](https://github.com/kouko/monkey-skills) · **License**: MIT
 
 ## Background
 
@@ -29,6 +29,7 @@ dbt has excellent first-party docs (`dbt docs generate` → static HTML site) an
 | [`/dbt-wiki:redistill`](skills/redistill/) | After rescan flags knowledge pages stale — realign their semantics (LLM, user-triggered) | The stale entities/metrics/concepts pages + their `derived_from` evidence; grouped by domain, skips human-certified `mature` pages |
 | [`/dbt-wiki:update`](skills/update/) | **The maintenance verb** — "just bring my wiki up to date", one command. Prefer it over calling `rescan` / `redistill` by hand | One full pass, every mechanical step: (optional) `ingest` of a note you brought → `rescan` → LLM `redistill` gated on an explicit yes and on *material* (not cosmetic) evidence changes → **phantom-column lint gate** (catches pages citing a column the model lacks) → **`review` handoff** — it queues the pages a human must certify and stops there, never certifying them itself → a structured scorecard |
 | [`/dbt-wiki:ingest`](skills/ingest/) | Whenever you want to capture context that's NOT in manifest.json or schema.yml (gotchas, design rationale, ticket links) | Free-form text arg; auto-attaches to mentioned model / source / macro |
+| [`/dbt-wiki:review`](skills/review/) | Certify LLM-written pages as human-verified (`developing` → `mature`). `update` queues them for you; this is where a human reads and confirms | The review queue — `developing` pages plus `mature` pages gone stale, ranked by risk (inferred values, landmines, incoming references) |
 | [`/dbt-wiki:query`](skills/query/) | Whenever asking semantic questions ("what does churn mean?", "which entities relate to revenue?") or structural lineage questions ("what does fct_orders depend on?", "which columns does stg_customers.email feed?") | `.dbt-wiki/index.md` + relevant knowledge and evidence pages; with optional drift verification |
 | [`/dbt-wiki:pack`](skills/pack/) | When you want to **package the distilled knowledge base into a portable Agent Skill bundle** (`<project>-analytics/`) that another agent uses with its own warehouse-connect tool to ground + generate + execute SQL. Run by the project owner; the emitted bundle drops into any Skills-compatible agent. | The frozen `.dbt-wiki/` knowledge layer (entities / metrics / concepts + column cards + relationships + value domains); emits a flat skill folder (SKILL.md + knowledge/ + references/ + examples/) with a snapshot annotation |
 
