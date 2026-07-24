@@ -92,9 +92,13 @@
   (2.31.0, branch feat-tw-ixbrl-fh) — `-fh`/`-basi`/`-bd`/`-ins` canonical builders +
   5-way classifier + bank asset-quality notes + smart-decode + DCF fail-loud;
   securities-dealer (`-bd`) and insurer (`-ins`, incl. life/P&C/reinsurance sub-shapes)
-  resolved too. (b) **endorsement/guarantee curated field** —
-  deferred (ix:tuple per-counterparty rows, no clean aggregate leaf); needs the
-  note-table reconstruction path. (c) **興櫃 multi-period series** — semiannual
+  resolved too. ~~(b) **endorsement/guarantee curated field**~~ ✅ SHIPPED 2.33.0
+  (branch tw-ixbrl-endorsement) — `extract_endorsement_guarantee_notes`
+  reconstructs per-counterparty rows by document-order segmentation on the
+  `CompanyNameOfTheEndorserGuarantor` anchor + a span-scoped curated aggregate
+  (avoids the 資金貸與 doc-wide-sum overcount), routed by population through
+  `_extract_notes`; the deferral test flipped to an inclusion assertion.
+  (c) **興櫃 multi-period series** — semiannual
   (Q2/Q4) cadence; season-fallback already handles per-period absence, a series
   builder is future. (d) 🟢 debt: T3 canonical tie-break order untested (membership
   only), T2 3×502-exhaustion branch untested.
