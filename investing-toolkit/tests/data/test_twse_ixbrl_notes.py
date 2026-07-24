@@ -18,12 +18,20 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 MARKETS_SCRIPTS = ROOT / "skills" / "data-markets" / "scripts"
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
+
+# twse_ixbrl (the pipeline) imports twse_ixbrl_fetch, which does `import
+# requests`. CI's offline env has no `requests` (clients ship PEP 723 deps,
+# run via `uv run`), so the bare import chain would ModuleNotFoundError at
+# collection. setdefault keeps a real `requests` when present, stubs it when
+# absent — the routing test never exercises the network seam anyway.
+sys.modules.setdefault("requests", mock.MagicMock(name="requests"))
 
 
 def _load_modules():
@@ -32,6 +40,13 @@ def _load_modules():
     import twse_ixbrl_notes
     import twse_ixbrl_parser
     return twse_ixbrl_parser, twse_ixbrl_notes
+
+
+def _load_pipeline():
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import twse_ixbrl
+    return twse_ixbrl
 
 
 def _fixture_facts(parser) -> list[dict]:
@@ -108,18 +123,33 @@ def test_curated_notes_empty_facts_omits_everything():
     assert notes_mod.extract_curated_notes([]) == {}
 
 
-def test_curated_notes_excludes_endorsement_guarantee():
-    """Endorsement/guarantee is ix:tuple-structured (per-counterparty rows
-    sharing one contextRef) with no clean aggregate leaf fact — deferred
-    to the note-table-reconstruction sub-arc (brief §Annual verification /
-    Task 4 Decision Log). The curated set must not surface it."""
-    parser, notes_mod = _load_modules()
+def test_pipeline_now_surfaces_endorsement_guarantee():
+    """FLIPPED from the former deferral test (Task 3). Endorsement/guarantee
+    was originally deferred out of scope — ix:tuple-structured per-counterparty
+    rows with no clean aggregate leaf. Task 2 shipped
+    `extract_endorsement_guarantee_notes` (document-order row reconstruction),
+    and Task 3 wired it through `twse_ixbrl._extract_notes` by POPULATION. So
+    the pipeline now DOES surface it: the 2330 fixture carries 4 populated
+    endorser rows, which appear under the `endorsement_guarantee` key
+    (structured {"summary", "rows"}, not the flat curated-field shape). The
+    curated set itself is unchanged — endorsement is a separate routed field,
+    not a `_CURATED_CONCEPTS` entry."""
+    parser, _notes_mod = _load_modules()
+    twse_ixbrl = _load_pipeline()
     facts = _fixture_facts(parser)
 
-    notes = notes_mod.extract_curated_notes(facts)
+    # -ci industrial (taxonomy absent) → curated path + endorsement merge.
+    notes = twse_ixbrl._extract_notes(facts, {"taxonomy": None})
 
-    assert "endorsement_guarantee_limit" not in notes
-    assert "endorsement_guarantee_secured_with_collateral" not in notes
+    assert "endorsement_guarantee" in notes
+    endo = notes["endorsement_guarantee"]
+    assert endo["summary"]["row_count"] == 4
+    assert endo["rows"][0]["endorser"] == "台積公司"
+    assert endo["rows"][0]["counterparty"] == "TSMC North America"
+
+    # It is a routed field, NOT folded into the flat curated-concept set.
+    curated = _notes_mod.extract_curated_notes(facts)
+    assert "endorsement_guarantee" not in curated
 
 
 def test_fh_npl_coverage_totalloans_cathay():
@@ -314,6 +344,38 @@ def test_endorsement_guarantee_populated_and_empty():
     assert none_result["summary"]["subsidiary_related_count"] == 0
     assert none_result["summary"]["external_count"] == 0
     assert none_result["summary"]["mainland_china_count"] == 0
+
+
+def test_extract_notes_routes_endorsement():
+    """Task 3: the endorsement/guarantee curated field is routed through
+    `twse_ixbrl._extract_notes` for ANY taxonomy where the section is
+    POPULATED — not gated to one taxonomy (contrast the fh/basi NPL split,
+    which keys off `canonical["taxonomy"]`). Endorsement lives in the SHARED
+    t164sb01 iXBRL, so a populated -ci industrial (台泥 1101, 39 rows) MUST
+    surface it, while a 0-anchor filer (2882, fh) MUST NOT — its endorsement
+    is the empty 'none' result, which is not attached, preserving the
+    empty-notes contract that note-less taxonomies (e.g. insurers → {}) rely
+    on. The taxonomy-specific NPL routing must remain untouched by the merge."""
+    parser, _notes_mod = _load_modules()
+    twse_ixbrl = _load_pipeline()
+
+    # 1101 is -ci (taxonomy absent from canonical) → curated-notes path; the
+    # populated endorsement section (39 endorser rows) is merged in.
+    facts = _fixture_facts_smart(parser, "twse_ixbrl_1101_2026Q1_C.html")
+    notes = twse_ixbrl._extract_notes(facts, {"taxonomy": None})
+    assert "endorsement_guarantee" in notes
+    endo = notes["endorsement_guarantee"]
+    assert endo["summary"]["row_count"] == 39
+    assert endo["rows"][0]["endorser"] == "台灣水泥公司"
+    assert endo["rows"][0]["counterparty"] == "聯誠貿易公司"
+
+    # 0-anchor fh filer (2882): the endorsement 'none' result is NOT attached
+    # (nothing to surface), so notes stays free of the endorsement key — and
+    # the fh NPL routing is untouched by the endorsement merge.
+    empty_facts = _fixture_facts_smart(parser, "twse_ixbrl_2882_2026Q1_C.html")
+    empty_notes = twse_ixbrl._extract_notes(empty_facts, {"taxonomy": "fh"})
+    assert "endorsement_guarantee" not in empty_notes
+    assert "國泰世華銀行" in empty_notes  # fh routing intact
 
 
 def test_select_current_fact_ambiguous_period_tie_first_wins_and_is_logged(capsys):
