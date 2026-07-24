@@ -5,6 +5,32 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.33.0] — 2026-07-24
+
+### Added — TW iXBRL endorsement/guarantee (背書保證) ingestion
+
+A new curated data field surfaces per-counterparty endorsement/guarantee rows
+from TW MOPS iXBRL filings. The section carries no leaf `tuple_ref` and only
+shared `context_ref`s, so document order is the sole handle for reconstruction.
+
+- **`extract_endorsement_guarantee_notes`.** New extractor in
+  `twse_ixbrl_notes.py` reconstructs per-counterparty endorsement rows by
+  document-order segmentation on the `CompanyNameOfTheEndorserGuarantor` anchor
+  (endorser / counterparty / individual limit / ending balance / actual provided
+  / collateral-secured / relationship Y-N flags), plus a curated aggregate: a
+  **span-scoped** total actual/ending balance, counterparty count, and a
+  subsidiary-vs-external split derived from the Y/N flags. The aggregate is
+  span-scoped to the endorsement rows to avoid the 資金貸與 (financing-to-others)
+  table-conflation — a doc-wide sum would overcount (e.g. 台泥 1101: 62.8bn
+  span-scoped vs 105.9bn doc-wide, where 74 of 113 `ActualAmountProvided` facts
+  belong to the separate 資金貸與 note). The 0-anchor case yields a first-class
+  "none" result (explicit empty summary + empty rows, never a silent zero).
+- **Routed by population through `_extract_notes`.** The curated endorsement
+  field surfaces in the pipeline output for every taxonomy where the section is
+  present (industrials most commonly); the prior deferral test flipped from a
+  must-NOT-surface assertion to an inclusion assertion. No parser change, no
+  fetch change — the data is reachable with the current pipeline.
+
 ## [v2.32.1] — 2026-07-24
 
 ### Fixed — memo consumes the financial-sector DCF `not_applicable` marker
