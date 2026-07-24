@@ -32,7 +32,7 @@ business meaning, human-certifiable). Most skills below touch one layer;
 
 | Skill | Use when |
 |-------|----------|
-| **`update`** | **The default maintenance verb.** "Bring my wiki up to date" after dbt models changed. Rescans evidence, and if knowledge pages went stale, asks before spending on a re-distill. |
+| **`update`** | **The default maintenance verb.** "Bring my wiki up to date" after dbt models changed. One pass, every mechanical step: (optional) ingest a note you brought → rescan evidence → asks before spending on a re-distill (and only for pages whose evidence changed in *meaning*) → **phantom-column lint gate** (pages citing a column their model lacks) → hands you the **`review` queue** → scorecard. It stops where human judgment starts: it never certifies a page itself. |
 | `rescan` | *Advanced* — `update` runs this for you. Reach for it alone only to refresh evidence with **zero LLM cost** and defer the semantic half. |
 | `redistill` | *Advanced* — `update` runs this for you. Reach for it alone only when evidence is already current and you just want the stale knowledge pages rewritten. |
 

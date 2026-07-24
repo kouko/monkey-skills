@@ -1,7 +1,7 @@
 ---
 name: rescan
 description: |
-  Cheap mechanical half: re-scan .dbt-wiki/ evidence after dbt parse/compile — diff manifest md5, reprocess only changed resources, re-run sqlglot lineage, preserve User Notes, flag stale knowledge pages (0 LLM). Use for 'I just ran dbt parse', 'model 改了', 'rescan dbt-wiki', 'update evidence'. Re-distill stale knowledge→redistill; evidence+knowledge in one shot→update; setup→init; add notes→ingest.
+  Evidence-layer-only refresh (advanced, 0 LLM): re-scan .dbt-wiki/ evidence — diff manifest md5, reprocess only changed resources, re-run sqlglot lineage, preserve User Notes, flag stale knowledge pages. Use ONLY when the ask is explicitly the cheap evidence half: 'rescan dbt-wiki', 'evidence only, 0 LLM', '只更新證據層', 'エビデンス層だけ更新'. A plain maintenance ask ('model 改了', 'update the wiki', 'bring the wiki up to date', '更新 wiki') is NOT this skill — it is update, which runs this plus the phantom-column gate and the review handoff. Only the LLM half→redistill; setup→init; add notes→ingest.
 ---
 
 # dbt-wiki — Rescan Workflow (v2.0)

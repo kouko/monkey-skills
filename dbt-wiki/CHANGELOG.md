@@ -43,11 +43,14 @@ review`) and zh/ja trigger keywords.
 ### Added — CI wire-up
 
 `dbt-wiki` gets its first CI job (`.github/workflows/test-dbt-wiki.yml`):
-runs the plugin's three self-executing smoke-test scripts
-(`lint_identifier_fidelity_test.py`, `lint_schema_divergence_test.py`,
-`reconcile_test.py`) directly (they are `if __name__ == "__main__"`
-scripts, not pytest modules) and fails the job on any non-zero exit.
-Previously these tests existed but never ran anywhere.
+it globs **every `dbt-wiki/skills/*/assets/*_test.py`** — 17 scripts as of
+this release — and runs each one directly, failing the job on the first
+non-zero exit. Direct execution, not `pytest`: these are self-executing
+smoke scripts (`if __name__ == "__main__"`, or module-level checks in
+`reconcile_test.py`) with no `test_*` functions, so pytest collects
+nothing from them. The glob is deliberate — a newly added script test is
+picked up automatically, with no workflow edit. Previously these tests
+existed but never ran anywhere.
 
 ## [3.2.1] — 2026-07-08
 
