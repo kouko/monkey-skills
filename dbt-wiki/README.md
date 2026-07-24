@@ -25,7 +25,7 @@ dbt has excellent first-party docs (`dbt docs generate` → static HTML site) an
 |---|---|---|
 | [`/dbt-wiki:using-dbt-wiki`](skills/using-dbt-wiki/) | Start here when you are not sure which skill applies (setting up / updating / reading / certifying / handing off) | Your intent; routes to the right skill below — reads nothing from the wiki itself |
 | [`/dbt-wiki:init`](skills/init/) | Once per project (idempotent re-run safe) | `target/manifest.json` + `target/compiled/**/*.sql` (sqlglot column lineage) + `dbt/models/**/*.sql` (raw — for inline SQL/jinja comments) |
-| [`/dbt-wiki:rescan`](skills/rescan/) | After `dbt parse` / `dbt compile` / `dbt run` when models changed (cheap, 0 LLM) | Diff against last `manifest_sha`; updates only changed evidence pages; flags affected knowledge pages stale; preserves user-owned `## User Notes` sections |
+| [`/dbt-wiki:rescan`](skills/rescan/) | *Advanced* — evidence layer only, 0 LLM. `update` runs this for you; reach for it alone only when you explicitly want to defer the semantic half | Diff against last `manifest_sha`; updates only changed evidence pages; flags affected knowledge pages stale; preserves user-owned `## User Notes` sections |
 | [`/dbt-wiki:redistill`](skills/redistill/) | After rescan flags knowledge pages stale — realign their semantics (LLM, user-triggered) | The stale entities/metrics/concepts pages + their `derived_from` evidence; grouped by domain, skips human-certified `mature` pages |
 | [`/dbt-wiki:update`](skills/update/) | **The maintenance verb** — "just bring my wiki up to date", one command. Prefer it over calling `rescan` / `redistill` by hand | One full pass, every mechanical step: (optional) `ingest` of a note you brought → `rescan` → LLM `redistill` gated on an explicit yes and on *material* (not cosmetic) evidence changes → **phantom-column lint gate** (catches pages citing a column the model lacks) → **`review` handoff** — it queues the pages a human must certify and stops there, never certifying them itself → a structured scorecard |
 | [`/dbt-wiki:ingest`](skills/ingest/) | Whenever you want to capture context that's NOT in manifest.json or schema.yml (gotchas, design rationale, ticket links) | Free-form text arg; auto-attaches to mentioned model / source / macro |
@@ -54,8 +54,10 @@ dbt has excellent first-party docs (`dbt docs generate` → static HTML site) an
    ```
    then
    ```
-   /dbt-wiki:rescan
+   /dbt-wiki:update
    ```
+   (`/dbt-wiki:rescan` is the cheap evidence-only alternative when you want
+   to skip the LLM half — but `update` is the one to reach for by default.)
 6. (Optional) Capture tribal knowledge that's not in manifest.json or schema.yml:
    ```
    /dbt-wiki:ingest "fct_orders sort_key is (order_date, customer_id) because Tableau extract joins on these — see incident #4521"
