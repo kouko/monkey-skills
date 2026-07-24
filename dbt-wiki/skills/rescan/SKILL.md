@@ -1,7 +1,7 @@
 ---
 name: rescan
 description: |
-  Cheap mechanical half: re-scan .dbt-wiki/ evidence after dbt parse/compile — diff manifest md5, reprocess only changed resources, re-run sqlglot lineage, preserve User Notes, flag stale knowledge pages (0 LLM). Use for 'I just ran dbt parse', 'model 改了', 'rescan dbt-wiki', 'update evidence'. Re-distill stale knowledge→redistill; evidence+knowledge in one shot→sync; setup→init; add notes→ingest.
+  Cheap mechanical half: re-scan .dbt-wiki/ evidence after dbt parse/compile — diff manifest md5, reprocess only changed resources, re-run sqlglot lineage, preserve User Notes, flag stale knowledge pages (0 LLM). Use for 'I just ran dbt parse', 'model 改了', 'rescan dbt-wiki', 'update evidence'. Re-distill stale knowledge→redistill; evidence+knowledge in one shot→update; setup→init; add notes→ingest.
 ---
 
 # dbt-wiki — Rescan Workflow (v2.0)
@@ -225,10 +225,10 @@ If `yes`, proceed. Otherwise abort.
 
 ## Step 2.6: Per-model materiality classification (0 LLM)
 
-Sync needs to know which changed models changed their **logic/structure**
+Update needs to know which changed models changed their **logic/structure**
 (material — the knowledge page must be re-distilled) versus which only had
 a comment/whitespace edit (cosmetic — leave the page alone). Compute that
-here, deterministically in Python, and emit a map sync consumes. This is
+here, deterministically in Python, and emit a map update consumes. This is
 **0-LLM** — pure sqlglot fingerprinting + set comparison, same cheap-path
 discipline as the rest of rescan.
 
@@ -292,13 +292,13 @@ cache = json.loads(cache_path.read_text()) if cache_path.exists() else {}
 from classify_materiality import classify_changed_models
 materiality_map, updated_cache = classify_changed_models(changed, cache, dialect=DIALECT)
 
-# Persist the refreshed cache back, and emit the map for sync to consume.
+# Persist the refreshed cache back, and emit the map for update to consume.
 cache_path.write_text(json.dumps(updated_cache, indent=2, sort_keys=True))
 (internal / "last_rescan_materiality.json").write_text(
     json.dumps(materiality_map, indent=2, sort_keys=True))
 ```
 
-`last_rescan_materiality.json` is the hand-off artifact: `/dbt-wiki:sync`
+`last_rescan_materiality.json` is the hand-off artifact: `/dbt-wiki:update`
 reads it to decide which stale knowledge pages actually warrant a
 (LLM-costed) re-distill vs which can keep their existing content. rescan
 itself still makes **0 LLM calls** — it only writes these two JSON files.
@@ -476,7 +476,7 @@ some stale flags may be over-eager.
 itself never re-distills (that would re-introduce LLM cost + non-determinism
 into the cheap daily path). Re-distillation lives in its sibling skills:
 run `/dbt-wiki:redistill` to re-distill the stale knowledge pages, or
-`/dbt-wiki:sync` to do this rescan + a gated re-distill in one shot.
+`/dbt-wiki:update` to do this rescan + a gated re-distill in one shot.
 This keeps rescan cheap: no LLM calls, purely deterministic.
 
 Syntheses (saved query answers from `/dbt-wiki:query`) and knowledge
@@ -513,7 +513,7 @@ def mark_stale(path, fm, content, reason):
             f'Re-distill this page after reviewing the changed evidence:\n'
             f'>\n'
             f'> ```\n'
-            f'> /dbt-wiki:redistill  # re-distill stale knowledge pages (or /dbt-wiki:sync)\n'
+            f'> /dbt-wiki:redistill  # re-distill stale knowledge pages (or /dbt-wiki:update)\n'
             f'> ```'
         )
     else:
@@ -651,10 +651,10 @@ Knowledge pages stale: M marked (entities: X, metrics: Y, concepts: Z)."
     user-triggered (not automatic). This keeps rescan free of LLM calls.
     To re-distill the stale knowledge pages, run:
       /dbt-wiki:redistill   # re-distill stale (developing) pages, skips mature
-      /dbt-wiki:sync        # or: rescan + gated re-distill in one shot
+      /dbt-wiki:update      # or: rescan + gated re-distill in one shot
 
   Next steps:
-    - Re-distill stale knowledge: /dbt-wiki:redistill (or /dbt-wiki:sync next time)
+    - Re-distill stale knowledge: /dbt-wiki:redistill (or /dbt-wiki:update next time)
     - Query: /dbt-wiki:query "<question>"
     - For major refactor (e.g., 50+ model change), consider /dbt-wiki:init for clean rebuild
 ```

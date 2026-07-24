@@ -1,7 +1,7 @@
 ---
 name: redistill
 description: |
-  Re-distill the stale knowledge pages rescan flagged — LLM rewrites entities/metrics/concepts whose derived_from evidence changed, grouped by domain, skipping mature (human-certified) pages. Use for 'redistill', 're-distill stale knowledge', 'knowledge pages are stale', '重蒸餾知識頁'. This is the LLM half; cheap evidence-only update→rescan; evidence+knowledge in one shot→sync; setup→init.
+  Re-distill the stale knowledge pages rescan flagged — LLM rewrites entities/metrics/concepts whose derived_from evidence changed, grouped by domain, skipping mature (human-certified) pages. Use for 'redistill', 're-distill stale knowledge', 'knowledge pages are stale', '重蒸餾知識頁'. This is the LLM half; cheap evidence-only refresh→rescan; evidence+knowledge in one shot→update; setup→init.
 ---
 
 # dbt-wiki — Redistill Workflow
@@ -16,7 +16,7 @@ evidence.
 It costs LLM calls and is non-deterministic — so it is **user-triggered**, never
 automatic. Run it when you've reviewed the stale flags and want the knowledge
 layer realigned. To do rescan + a gated redistill in one command, use
-`/dbt-wiki:sync`.
+`/dbt-wiki:update`.
 
 **Scope guarantee**: redistill only **overwrites pages it re-distills**. It skips
 `mature` (human-certified) pages by default and never touches evidence pages,

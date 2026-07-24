@@ -1,31 +1,31 @@
 ---
-name: sync
+name: update
 description: |
   One-shot update: rescan evidence then, if knowledge pages went stale, gate a redistill — bring the whole .dbt-wiki/ (evidence + semantics) current in one command. Use for 'sync dbt-wiki', 'update the wiki', 'bring wiki up to date', 'model 改了 update everything', '同步 wiki'. Cheap evidence-only→rescan; just re-distill stale→redistill; setup→init.
 ---
 
-# dbt-wiki — Sync Workflow (orchestrator)
+# dbt-wiki — Update Workflow (orchestrator)
 
-Sync is the **"just bring my wiki up to date"** path. It runs the cheap
+Update is the **"just bring my wiki up to date"** path. It runs the cheap
 deterministic `rescan` (evidence layer), and **if** that flags any knowledge
 pages stale, it stops and asks whether to spend on a `redistill` (semantic
 layer). One command, the whole two-layer update, with the expensive half gated
 behind an explicit yes.
 
-**Sync owns orchestration, not distillation.** It **delegates** to its sibling
+**Update owns orchestration, not distillation.** It **delegates** to its sibling
 skills and never reimplements their logic:
 
 - evidence + stale-flagging → follow `../rescan/SKILL.md`
 - LLM re-distillation → follow `../redistill/SKILL.md`
 
 This keeps a single source of truth: rescan owns the cheap half, redistill owns
-the LLM half, sync just sequences them and owns the gate between.
+the LLM half, update just sequences them and owns the gate between.
 
 > **Materiality triage ships** (Step 2.5): cosmetic-only stale pages
 > (comment/description/whitespace changes) auto-skip the LLM gate — only
 > pages whose evidence changed in *meaning* enter Step 3. Triage consumes the
 > `last_rescan_materiality.json` map that rescan Step 2.6 emits; if that map is
-> **absent** (a rescan from before this feature, or a first upgrade) sync falls
+> **absent** (a rescan from before this feature, or a first upgrade) update falls
 > back to treating **all** stale pages as material (the original Phase-1
 > behaviour) — it never blocks on a missing map.
 
@@ -43,9 +43,9 @@ the LLM half, sync just sequences them and owns the gate between.
 Run the **full** rescan workflow by following `../rescan/SKILL.md` end to end
 (its Steps 0–8): drift check, evidence diff/rewrite, archive removals,
 regenerate index + lineage, and flag stale syntheses + knowledge pages. Honour
-its own diff-confirm prompt (or pass its `--yes` when sync got `--yes`).
+its own diff-confirm prompt (or pass its `--yes` when update got `--yes`).
 
-If rescan exits early (no manifest drift), there is nothing to redistill — sync
+If rescan exits early (no manifest drift), there is nothing to redistill — update
 is done. Report and **exit 0**.
 
 ## Step 2: Did rescan leave stale knowledge pages?
@@ -63,7 +63,7 @@ if command -v uv >/dev/null 2>&1; then PY_RUNNER="uv run";
 elif python3 -c "import yaml" 2>/dev/null; then PY_RUNNER="python3";
 else echo "Need uv (recommended) or pip-installed pyyaml."; exit 1; fi
 
-$PY_RUNNER <SKILL_DIR>/../redistill/assets/collect_redistill_worklist.py .dbt-wiki > /tmp/sync_worklist.json
+$PY_RUNNER <SKILL_DIR>/../redistill/assets/collect_redistill_worklist.py .dbt-wiki > /tmp/update_worklist.json
 ```
 
 If `total_selected == 0` and no `--force-mature` target exists: print "Evidence
@@ -96,7 +96,7 @@ import json, sys
 from pathlib import Path
 sys.path.insert(0, "<SKILL_DIR>/assets")   # so triage_worklist imports cleanly
 
-worklist = json.loads(Path("/tmp/sync_worklist.json").read_text())
+worklist = json.loads(Path("/tmp/update_worklist.json").read_text())
 groups = worklist["groups"]   # {domain: [page, ...]} from Step 2
 
 mat_path = Path(".dbt-wiki/_internal/last_rescan_materiality.json")
@@ -160,16 +160,16 @@ silently spend on the LLM without an explicit yes.
 ## Step 4: Redistill (delegate — only on yes)
 
 Run the redistill workflow by following `../redistill/SKILL.md` **Steps 3–7**
-(skip its Step 0 pre-check and Step 1 collection — sync already did them — and
-skip its Step 2 confirm, since sync's gate already confirmed; equivalently,
-invoke it with `--yes`, plus any `--force-mature` sync received). Redistill does
+(skip its Step 0 pre-check and Step 1 collection — update already did them — and
+skip its Step 2 confirm, since update's gate already confirmed; equivalently,
+invoke it with `--yes`, plus any `--force-mature` update received). Redistill does
 the LLM rewrite, clears stale flags on rewritten pages, and runs reconcile +
 lint_identifier_fidelity + build_index_knowledge.
 
 ## Step 5: Unified summary
 
 ```
-✓ dbt-wiki sync complete.
+✓ dbt-wiki update complete.
   Rescan:    +<a> ~<m> -<r> evidence pages; <S> knowledge pages flagged stale
   Redistill: <ran: N pages across D domains | skipped (gate=no) | not needed>
   Still stale: <mature count> (use --force-mature) · <no-provenance count>
