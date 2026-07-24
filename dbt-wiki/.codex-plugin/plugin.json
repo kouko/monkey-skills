@@ -1,6 +1,6 @@
 {
   "name": "dbt-wiki",
-  "version": "3.2.1",
+  "version": "3.3.0",
   "description": "Local-only two-layer knowledge base for dbt projects — semantic Q&A over manifest + column lineage.",
   "author": {
     "name": "kouko",
@@ -26,7 +26,7 @@
   "interface": {
     "displayName": "dbt-wiki",
     "shortDescription": "Local two-layer knowledge base for dbt — semantic Q&A over manifest + column lineage",
-    "longDescription": "Use dbt-wiki to build a local-only knowledge base for a dbt project: init scaffolds pages, a lineage DAG, and CLAUDE.md from manifest.json + compiled SQL (sqlglot column lineage) + inline comments; ingest records tribal knowledge (sort_key rationale, dialect gotchas, incident links) into per-model User Notes that survive a rescan; and query answers semantic questions over the result. rescan / redistill / sync / review / pack keep it current.",
+    "longDescription": "Use dbt-wiki to build a local-only knowledge base for a dbt project: init scaffolds pages, a lineage DAG, and CLAUDE.md from manifest.json + compiled SQL (sqlglot column lineage) + inline comments; ingest records tribal knowledge (sort_key rationale, dialect gotchas, incident links) into per-model User Notes that survive a rescan; and query answers semantic questions over the result. update / rescan / redistill / review / pack keep it current.",
     "developerName": "kouko",
     "category": "Data",
     "capabilities": [

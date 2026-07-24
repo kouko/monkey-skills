@@ -4,6 +4,51 @@ All notable changes to the `dbt-wiki` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.0] — 2026-07-24
+
+### ⚠️ BREAKING — `/dbt-wiki:sync` renamed to `/dbt-wiki:update` (no alias)
+
+The `sync` skill was a one-way dbt→wiki refresh, but "sync" connotes a
+bidirectional operation and misled users into expecting it to push wiki
+edits back into dbt. It never did — one-way discipline (never touch
+`dbt/target`) is unchanged, only the name was wrong. The skill's folder,
+`name:` frontmatter, and every cross-skill reference (`rescan`,
+`redistill`, `init`, `query`, `review`, `ingest`, `pack`, `README.md`,
+the Codex manifest's `longDescription`) were renamed via `git mv` (history
+preserved, `git log --follow` traces it) — **no `sync` alias survives**.
+Natural-language triggers `sync dbt-wiki` / `同步 wiki` still route to
+`update`, so saying "sync" still works; the slash command
+`/dbt-wiki:sync` itself no longer exists — use `/dbt-wiki:update`.
+
+### Changed — `update` is now the full maintenance verb (was: `sync`'s one-shot orchestration)
+
+`update`'s pipeline grew to eight steps: (optional) ingest-front →
+rescan → gated redistill (with materiality triage) → **phantom-column
+lint gate** (runs the existing `lint_identifier_fidelity.py`,
+JSON + exit-code, no new script) → **review hand-off** (surfaces the
+review queue instead of auto-certifying pages) → a structured
+scorecard (regenerated pages / phantom count / pages awaiting review).
+The four early-exit shortcuts that used to stop short of this pipeline
+now fall through to Step 5, so "run update" mechanically completes the
+whole maintenance pass instead of silently doing a partial refresh.
+
+### Added — `using-dbt-wiki` family-entry router
+
+New `dbt-wiki/skills/using-dbt-wiki/SKILL.md`: an obsidian-style routing
+table (Setup / Input / **Maintain** — `update` is the primary verb,
+`rescan` and `redistill` demoted to "advanced" — / Read / Certify /
+Export) plus a Quick Start sequence (`init → (ingest) → update → query →
+review`) and zh/ja trigger keywords.
+
+### Added — CI wire-up
+
+`dbt-wiki` gets its first CI job (`.github/workflows/test-dbt-wiki.yml`):
+runs the plugin's three self-executing smoke-test scripts
+(`lint_identifier_fidelity_test.py`, `lint_schema_divergence_test.py`,
+`reconcile_test.py`) directly (they are `if __name__ == "__main__"`
+scripts, not pytest modules) and fails the job on any non-zero exit.
+Previously these tests existed but never ran anywhere.
+
 ## [3.2.1] — 2026-07-08
 
 ### Changed — pack: `_index.md` consumption is grep-first; summaries capped
