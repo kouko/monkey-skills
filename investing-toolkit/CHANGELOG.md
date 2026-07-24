@@ -5,6 +5,39 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.32.1] — 2026-07-24
+
+### Fixed — memo consumes the financial-sector DCF `not_applicable` marker
+
+Post-ship follow-ups to the 2.31.0 financial-sector arc. Previously a financial
+ticker's memo silently degraded: `dcf_compute` emitted a structured
+`{"not_applicable": "financial-sector"}` result that no downstream consumer
+recognized, so the memo's `intrinsic_mid` resolved to a silent `null` with no
+explanation. The Phase-4 pipeline now renders it explicitly.
+
+- **DCF N/A rendered end-to-end.** Three surfaces gained an explicit marker
+  branch: the Phase-4 seed contract (`report-equity-memo/references/phase4-seed-contract.md`,
+  incl. an acceptance-check (a) carve-out so a compliant N/A memo is no longer
+  self-rejected), the memo orchestrator (`report-equity-memo/SKILL.md` Phase 3/4:
+  `intrinsic_mid: null` stated with reason, never a silent default), and the
+  investing-team memo protocol (`domain-teams` 5.10.1) — all render
+  `DCF: N/A — financial sector` quoting the `reason` string, with the
+  rule_verdict/Deviation-Block flow bypassed (no fabricated verdict). Producer
+  `dcf_compute.py` output shape unchanged.
+
+### Changed — internal refactors + test coverage (no behavior change)
+
+- **Rule-of-Three extractions.** `twse_ixbrl_canonical.py` gained
+  `_ordered_values_meta` (3 call sites) and `twse_ixbrl_notes.py` gained
+  `_group_and_select_current` (3 note extractors) — duplicated sorted→values→meta
+  and by-concept-grouping blocks collapsed; canonical output byte-identical.
+- **Decode-coverage test.** New fact-count-equality test under the production
+  `decode_ixbrl_document` (UTF-8-first) path — the legacy big5hkscs test was the
+  only fact-count guard before; all 8 stored-count fixtures pass with zero deltas.
+- **Dead citation cleanup.** Five stale `scratchpad/fh-measurement*` comment
+  references in the canonical/notes modules replaced with the operative measured
+  fact inline.
+
 ## [v2.32.0] — 2026-07-24
 
 KPI tearsheet — the store's per-company history now renders. A new

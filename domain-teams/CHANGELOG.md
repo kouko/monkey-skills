@@ -5,6 +5,19 @@ All notable changes to the `domain-teams` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v5.10.1] — 2026-07-24
+
+### Added
+
+- **DCF N/A render branch for financial-sector tickers** (investing-team
+  `protocols/deep-equity-research-memo.md`, §DCF + rule_verdict flow +
+  memo template): when the seeded `dcf.json` carries the
+  `not_applicable: financial-sector` marker, the memo renders a
+  `DCF: N/A — financial sector` section quoting the `reason` string, and
+  the rule_verdict adopt/Deviation-Block flow is explicitly bypassed (no
+  fabricated verdict; CHK-THX-007 vacuously satisfied). Pairs with
+  investing-toolkit 2.31.1, which emits and forwards the marker.
+
 ## [v5.10.0] — 2026-07-18
 
 ### Added

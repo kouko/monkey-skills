@@ -105,6 +105,18 @@ given the asset type.
   single most common DCF modeling error.
 - Output: base-case intrinsic value per share.
 
+**N/A branch — financial sector.** When the seeded dcf.json carries
+`not_applicable: "financial-sector"` (a flat object with exactly the keys
+`ticker`, `not_applicable`, `reason`, `_provenance`; it omits
+`intrinsic_value`, `verdict_thresholds`, `sensitivity_table`,
+`current_price`, `margin_of_safety_base`), the memo renders a
+`DCF: N/A — financial sector` section in place of the DCF above:
+intrinsic-value and verdict fields are intentionally absent — state the
+`reason` string verbatim, do not fabricate a verdict, and treat
+CHK-THX-007 as vacuously satisfied (no `verdict_thresholds` to
+recompute). The §Verdict rule_verdict adopt/Deviation-Block flow is
+bypassed in this branch.
+
 ### Relative Valuation (Comps)
 
 - Use P/E or EV/EBITDA vs. sector median as primary multiples; add P/B or P/S
@@ -340,6 +352,12 @@ A deviation without a Deviation Block, or with an untraceable adjustment
 figure, is a NEEDS_REVISION defect at the thesis-soundness gate
 (CHK-THX-007).
 
+**N/A bypass (financial sector).** When dcf.json carries
+`not_applicable: "financial-sector"` (§DCF N/A branch), no `rule_verdict`
+exists: the adopt / Deviation-Block flow above is bypassed — do not
+fabricate a `rule_verdict`, and CHK-THX-007 is vacuously satisfied (no
+`verdict_thresholds` to recompute).
+
 ### Conviction Grade
 
 **A / B / C** with justification on three dimensions:
@@ -392,6 +410,10 @@ sector favored/neutral/disfavored in current regime]
 #### DCF
 [Assumptions table: growth, margin, WACC, terminal g]
 [Intrinsic value output]
+[Financial-sector N/A branch: when dcf.json carries
+ `not_applicable: "financial-sector"`, render `DCF: N/A — financial
+ sector` instead, quoting the dcf.json `reason` string verbatim — no
+ fabricated verdict; rule_verdict adopt/Deviation-Block flow bypassed]
 
 #### Relative Valuation
 [Comps table: ticker vs. sector median multiples]

@@ -30,6 +30,29 @@ context, marked **binding-or-gated**:
 - If `rule_verdict` is null (no current price), say so in the packet —
   the memo then derives its verdict per the protocol as before.
 
+### N/A branch — financial-sector marker (`DCF: N/A — financial sector`)
+
+`analysis-dcf` structurally refuses financial-sector inputs
+(`dcf_compute.py`, `sector_class == "financial"`). In that case the
+financial-sector dcf.json is a flat object with exactly these keys:
+`ticker`, `not_applicable: "financial-sector"`, `reason` (prose string),
+`_provenance`. It omits `intrinsic_value`, `verdict_thresholds`,
+`sensitivity_table`, `current_price`, `margin_of_safety_base`.
+
+Semantics for the packet and the returned memo: `dcf.json` carries
+`not_applicable: "financial-sector"`; intrinsic-value and verdict fields
+are intentionally absent — state the `reason` string verbatim, do not
+fabricate a verdict, and treat CHK-THX-007 as vacuously satisfied (no
+`verdict_thresholds` to recompute). Frontmatter `intrinsic_mid` is
+`null` (the frontmatter keeps its fixed field schema — do NOT add a
+reason field there); the `reason` string is stated in the §DCF section
+body of the memo, never dropped to a silent default.
+
+The **binding-or-gated** clause above applies only when
+`verdict_thresholds` exists; the N/A marker is neither an adoption nor
+a deviation — no Deviation Block is required or permitted in this
+branch.
+
 ## 2. Pack-section inventory — unavailability claims are checkable
 
 Before dispatch, generate the inventory and include its JSON in the packet:
@@ -147,7 +170,9 @@ reason text.
 ## Orchestrator acceptance check (before Phase 4 artifact gate)
 
 On receiving the memo: (a) grep the Verdict section for `rule_verdict` —
-absent, or deviating without a Deviation Block → send back, do not accept;
+absent, or deviating without a Deviation Block → send back, do not accept
+— unless dcf.json carries the `not_applicable` marker, in which case grep
+for the pin phrase `DCF: N/A — financial sector` instead (§1 N/A branch);
 (b) spot-check any "data unavailable" sentence against the inventory;
 (c) confirm the memo date matches the issuer-timezone execution date;
 (d) if the run carried an xval report, spot-check any statement-table

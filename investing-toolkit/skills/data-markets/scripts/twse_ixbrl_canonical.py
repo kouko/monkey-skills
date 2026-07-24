@@ -37,7 +37,7 @@ from __future__ import annotations
 import re
 import sys
 from datetime import date
-from typing import Any, Literal
+from typing import Any, Callable, Iterable, Literal
 
 _LOG_TAG = "twse-ixbrl-canonical"
 
@@ -202,6 +202,37 @@ def _period_sort_key(period: dict[str, Any] | None) -> tuple[str, int]:
     return (end, span)
 
 
+def _ordered_values_meta(
+    items: Iterable[Any],
+    *,
+    period_of: Callable[[Any], Any],
+    value_of: Callable[[Any], float],
+    source_label: str,
+    concept: str | None,
+    extra_meta: dict[str, Any] | None = None,
+) -> tuple[list[float], dict[str, Any]]:
+    """Sort `items` most-recent-first by their period (_period_sort_key),
+    then build the (values, per-line _meta) pair every derived canonical
+    field shares — source_label / concept / accounting_standard / unit /
+    periods, plus any `extra_meta` keys (the sum variants' derivation/
+    components) appended after `periods`. `items` may be context_refs
+    (with lookup callables — _derive_total_debt / _sum_concepts) or fact
+    dicts (_first_present); `period_of` / `value_of` adapt either shape.
+    """
+    ordered = sorted(items, key=lambda it: _period_sort_key(period_of(it)), reverse=True)
+    values = [value_of(it) for it in ordered]
+    meta: dict[str, Any] = {
+        "source_label": source_label,
+        "concept": concept,
+        "accounting_standard": "tifrs",
+        "unit": "TWD",
+        "periods": [period_of(it) for it in ordered],
+    }
+    if extra_meta:
+        meta.update(extra_meta)
+    return values, meta
+
+
 def _derive_total_debt(
     by_concept: dict[str, dict[str, dict[str, Any]]],
 ) -> tuple[list[float], dict[str, Any]] | None:
@@ -228,20 +259,17 @@ def _derive_total_debt(
     if not concepts_used:
         return None
 
-    ordered_ctx = sorted(
-        sums.keys(), key=lambda c: _period_sort_key(periods_by_ctx.get(c)), reverse=True
+    return _ordered_values_meta(
+        sums.keys(),
+        period_of=periods_by_ctx.get,
+        value_of=lambda c: sums[c],
+        source_label="Total Debt (sum of components present)",
+        concept=None,
+        extra_meta={
+            "derivation": "sum of " + " + ".join(concepts_used),
+            "components": concepts_used,
+        },
     )
-    values = [sums[c] for c in ordered_ctx]
-    meta = {
-        "source_label": "Total Debt (sum of components present)",
-        "concept": None,
-        "accounting_standard": "tifrs",
-        "unit": "TWD",
-        "periods": [periods_by_ctx.get(c) for c in ordered_ctx],
-        "derivation": "sum of " + " + ".join(concepts_used),
-        "components": concepts_used,
-    }
-    return values, meta
 
 
 def _derive_fcf(cash_flow: dict[str, Any]) -> tuple[list[float], dict[str, Any]] | None:
@@ -387,8 +415,8 @@ _FH_CONCEPT_MAP: dict[str, dict[str, str]] = {
         # consolidated attributable-to-owners bottom line) — NOT
         # tifrs-bsci-fh:NetIncomeLoss, which is a different, larger
         # pre-elimination subtotal that does not match this figure (measured
-        # on 2882 2026Q1: 31,593,811,000 vs 72,538,053,000; see
-        # scratchpad/fh-measurement.md §2882).
+        # on 2882 2026Q1: 31,593,811,000 attributable-to-owners vs
+        # 72,538,053,000 pre-elimination NetIncomeLoss).
         "net_income": "ifrs-full:ProfitLossAttributableToOwnersOfParent",
         "eps_basic": "ifrs-full:BasicEarningsLossPerShare",
     },
@@ -446,20 +474,17 @@ def _sum_concepts(
     if not concepts_used:
         return None
 
-    ordered_ctx = sorted(
-        sums.keys(), key=lambda c: _period_sort_key(periods_by_ctx.get(c)), reverse=True
+    return _ordered_values_meta(
+        sums.keys(),
+        period_of=periods_by_ctx.get,
+        value_of=lambda c: sums[c],
+        source_label=source_label,
+        concept=None,
+        extra_meta={
+            "derivation": "sum of " + " + ".join(concepts_used),
+            "components": concepts_used,
+        },
     )
-    values = [sums[c] for c in ordered_ctx]
-    meta = {
-        "source_label": source_label,
-        "concept": None,
-        "accounting_standard": "tifrs",
-        "unit": "TWD",
-        "periods": [periods_by_ctx.get(c) for c in ordered_ctx],
-        "derivation": "sum of " + " + ".join(concepts_used),
-        "components": concepts_used,
-    }
-    return values, meta
 
 
 def _build_financial_canonical(
@@ -565,8 +590,8 @@ def _build_fh_canonical(facts: list[dict[str, Any]]) -> dict[str, Any]:
 
 # -basi (standalone commercial bank / bills-finance) concept map. The
 # balance-sheet spine (Assets/Equity/Cash) and net_income/eps_basic concepts
-# are IDENTICAL to -fh (measured: same concept names, same values, verbatim
-# across both taxonomies — scratchpad/fh-measurement-round2.md §2801). No
+# are IDENTICAL to -fh (measured on 2801: same concept names, same values,
+# verbatim across both taxonomies). No
 # -basi analog of tifrs-bsci-fh:NetInterestIncomeExpense is carried by any
 # measured -basi filer, so income_statement stays limited to net_income/
 # eps_basic (unlike -fh, which also has net_interest_income).
@@ -643,15 +668,15 @@ def _build_basi_canonical(facts: list[dict[str, Any]]) -> dict[str, Any]:
 
 # -bd (broker-dealer / securities) concept map (Task 7). Balance-sheet
 # spine (Assets/Equity/Cash) is the SAME concept names as -fh/-basi
-# (measured stable across 19 financial-sector filers spanning 5 taxonomy
-# families — scratchpad/fh-measurement-round3.md). Brokers take no
+# (measured stable across 19 financial-sector filers spanning all 5
+# taxonomy families). Brokers take no
 # customer/interbank deposits (confirmed absent for 6005: neither
 # ifrs-full:DepositsFromCustomers nor ifrs-full:DepositsFromBanks appear in
 # the fixture at all) and carry no NPL/coverage concepts (not a lending
 # institution) — deposits degrades to absent via _sum_concepts' existing
 # missing-concept tolerance, no special-casing needed. income_statement
-# adds brokerage_fee_income (ifrs-full:BrokerageFeeIncome, the dominant
-# -bd-specific revenue line — scratchpad/fh-measurement.md §6005) alongside
+# adds brokerage_fee_income (ifrs-full:BrokerageFeeIncome, measured on
+# 6005 as the dominant -bd-specific revenue line) alongside
 # the same net_income/eps_basic concepts -fh/-basi use.
 _BD_CONCEPT_MAP: dict[str, dict[str, str]] = {
     "balance_sheet": {
@@ -697,20 +722,13 @@ def _first_present(
         ctx_facts = by_concept.get(concept)
         if not ctx_facts:
             continue
-        ordered = sorted(
+        return _ordered_values_meta(
             ctx_facts.values(),
-            key=lambda f: _period_sort_key(f.get("period")),
-            reverse=True,
+            period_of=lambda f: f.get("period"),
+            value_of=lambda f: f["raw_value"],
+            source_label=source_label,
+            concept=concept,
         )
-        values = [f["raw_value"] for f in ordered]
-        meta = {
-            "source_label": source_label,
-            "concept": concept,
-            "accounting_standard": "tifrs",
-            "unit": "TWD",
-            "periods": [f.get("period") for f in ordered],
-        }
-        return values, meta
     return None
 
 
