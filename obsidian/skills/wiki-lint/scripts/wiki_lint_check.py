@@ -375,10 +375,21 @@ def check_l14(page, out):
 
 
 def conservation_counters(page):
+    # Words semantics (since 3.20.1): each [[...]] wikilink — including
+    # [[target|display]] / [[target#anchor]] — is normalized to a single
+    # placeholder token before whitespace-splitting, so the count is
+    # insensitive to the link TARGET's word count. Benign retargets
+    # ([[Two Word Target]] -> [[Oneword]]) no longer shift the counter,
+    # while deleting the link (or surrounding prose) still lowers it.
+    # Motivation: wiki-update smoke Finding #1 — ratchet false breach
+    # 308->307 on an L07-class retarget.
     return {
         "type": "counters",
         "file": page.rel,
-        "words": len(page.body.split()),
+        # U+FFFC OBJECT REPLACEMENT CHARACTER: non-whitespace, so a link
+        # glued to punctuation ("[[x]].") still merges into one token,
+        # exactly as the pre-3.20.1 counter treated single-word targets.
+        "words": len(WIKILINK_RE.sub("￼", page.body).split()),
         "links": len(WIKILINK_RE.findall(page.body)),
         "headings": sum(1 for line in page.body_lines
                         if HEADING_RE.match(line)),

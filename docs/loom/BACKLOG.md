@@ -917,25 +917,6 @@
   now reserves "deep-research" for the host BUILT-IN skill, the bare
   term is newly ambiguous to readers (2026-07-06 review-panel nit).
 
-## wiki-update ratchet tuning — words counter vs retarget fixes (OPEN)
-- Status: OPEN
-- Start: before (or during) the first real-vault wiki-update run — the
-  measured backlog is L07-heavy (≈873 broken links), and the current
-  ratchet STUCKs the L07 class on its first benign retarget.
-- Origin: T9 smoke run Finding #1
-  (`docs/loom/dogfood/2026-07-23-wiki-update-loop-smoke/loop-report.md`) —
-  `[[Acme Corp]]`→`[[Acme-Corp]]` retarget shrank `body.split()` word
-  count 308→307 → ratchet exit 8 → STUCK_EXECUTOR_OVERREACH despite
-  zero content deletion (links/headings unchanged). v1 behavior is
-  fail-closed by design; the tuning is pre-registered, not a bug fix
-  under pressure.
-- What: make the words counter wikilink-target-insensitive (normalize
-  each `[[…]]` to one token before counting — kills this false-positive
-  class without weakening deletion detection), OR words-tolerance with
-  links/headings strict, OR per-round justification minting. First
-  option preferred (mechanical, ungameable); needs validator + tests +
-  one smoke re-run (resumeFromRunId replay makes this cheap).
-
 ## General goal-loop harness extraction (PARKED)
 - Status: PARKED
 - Start (re-trigger): a third real convergence-loop target appears

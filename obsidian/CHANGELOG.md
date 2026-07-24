@@ -4,6 +4,47 @@ All notable changes to the `obsidian` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.20.1] — 2026-07-24 wikilink-target-insensitive word counter
+
+### Changed — `wiki-lint` conservation-counter semantics (words)
+
+- `wiki_lint_check.py` words counter now normalizes every `[[...]]`
+  wikilink (including `[[target|display]]` / `[[target#anchor]]`
+  variants) to a single token before whitespace-splitting. A benign
+  retarget — `[[Two Word Target]]` → `[[Oneword]]`, the bread and
+  butter of L07 broken-link repair — no longer shifts the word count,
+  while deleting a link or surrounding prose still lowers it.
+  Motivation: wiki-update smoke run Finding #1
+  (`docs/loom/dogfood/2026-07-23-wiki-update-loop-smoke/loop-report.md`)
+  — the `[[Acme Corp]]` → `[[Acme-Corp]]` retarget shrank the count
+  308→307 and tripped the ratchet fail-closed (exit 8) with zero
+  content loss; on the real vault's ~873-broken-link backlog the L07
+  class would have stalled on its first round. `links` / `headings`
+  counters and the JSONL contract shape are unchanged.
+
+### Fixed — `wiki-update` fix-loop stops gracefully on dispatched-agent death
+
+- `wiki_fix_loop.js` now routes a dead dispatched agent (`agent()` returns
+  null when a subagent hits a terminal error after retries, or the user
+  skips it mid-run) through a new pure `assertAgentAlive` guard to a
+  distinct `INFRA_ABORT` terminal + blockers report, instead of crashing.
+  The brake couriers consume their return by direct deref
+  (`result.exitCode` / `budgetResult.exitCode`), so a null there took down
+  the whole loop with "null is not an object". Motivation: the smoke re-run
+  round-3 compare scoring agent died on a session limit and crashed the
+  engine rather than stopping honestly. Every `agent()` dispatch site now
+  documents its null handling (`// agent-null guard:`); the blockers report
+  tells the operator to re-run with a fresh `runLabel` — and, on the
+  brake-loop path that leaves the interrupted round's edits in the working
+  tree, to stash/discard them first so the dirty-tree preflight does not
+  refuse the re-run. A mid-loop freeze-check agent death is attributed as an
+  infrastructure interruption rather than mislabelled `CONFIG DRIFT`. No
+  change to the JSONL/exit contract, brake semantics, ratchet repair, or
+  `loop_verdict.py`. Next-touch: the loop is tested by static
+  marker/`node -e` extraction (Workflow runtime globals cannot be executed
+  in CI), so the end-to-end INFRA_ABORT stop is covered by markers, not a
+  live run.
+
 ## [3.20.0] — 2026-07-24 `wiki-update` loop + mechanical validator
 
 Adds a self-driving update loop for the wiki layer, backed by a new
