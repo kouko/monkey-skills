@@ -11,11 +11,14 @@ ixbrl-ingestion.md §Annual verification), so scope was cut down to this
 curated set. A concept absent from a given filing's facts is OMITTED from
 the result dict, never zero-filled.
 
-Endorsement/guarantee and other per-counterparty ix:tuple-structured
-disclosures are deferred to the note-table-reconstruction sub-arc (brief
-§Annual verification / §Out of Scope) — they have no clean aggregate leaf
-fact (e.g. LimitOfTotalGuaranteeEndorsementAmount repeats 4x under one
-contextRef, one row per counterparty, with no single "total" fact to pick).
+Endorsement/guarantee (背書保證) is NOT a flat curated concept: it is a
+per-counterparty table with no clean aggregate leaf fact
+(LimitOfTotalGuaranteeEndorsementAmount repeats once per row under one
+contextRef, with no single "total" fact to pick). It is reconstructed
+instead by `extract_endorsement_guarantee_notes` below — document-order
+row segmentation on the CompanyNameOfTheEndorserGuarantor anchor, with a
+span-scoped aggregate summary — and routed into the pipeline output by
+population (twse_ixbrl._extract_notes), NOT via extract_curated_notes.
 
 Usage (library import only — no CLI; composed by twse_ixbrl.py, Task 5):
     import twse_ixbrl_notes
