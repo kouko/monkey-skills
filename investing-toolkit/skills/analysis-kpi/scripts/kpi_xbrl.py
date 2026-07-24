@@ -538,6 +538,22 @@ def facts_to_points(
             # The RAW WINDOW end stays on the point (Task 8: Q4 derivation
             # needs each input's own window; validated by _require_period).
             "period_end": fact["period_end"],
+            # STORE-SHAPED period identity (Task 2, docs/loom/plans/2026-07-
+            # 24-market-period-granularity): `period_start` passes through
+            # from the fact (T1's new sec_edgar_client.py field, None when
+            # absent); `period_kind` is synthesized from this point's own
+            # `period_type` (never "instant" through today's producer, which
+            # excludes instant contexts — forward-defensive for one that
+            # someday emits them); `scale` is hardcoded 1 (XBRL values are
+            # base — mirrors kpi_prose_candidates.py's shipped shape). These
+            # three are what kpi_store's same_period/_qtrs need to GROUP
+            # cross-filing vintages of one annual period into a restatement.
+            "period_start": fact.get("period_start"),
+            "period_kind": (
+                "instant" if classification["period_type"] == "instant"
+                else "duration"
+            ),
+            "scale": 1,
             "as_of": filed,
             "value": value,
             "source_accession": accession,
