@@ -19,6 +19,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[2]
 MARKETS_SCRIPTS = ROOT / "skills" / "data-markets" / "scripts"
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
@@ -222,6 +224,96 @@ def test_basi_npl_coverage_absent_for_bills_finance():
     basi = notes_mod.extract_basi_npl_coverage_notes(facts)
 
     assert basi == {}
+
+
+def test_endorsement_guarantee_populated_and_empty():
+    """Endorsement/guarantee note (Task 2): reconstruct per-endorser ROWS by
+    DOCUMENT-ORDER segmentation on the `tifrs-notes:CompanyNameOfTheEndorser
+    Guarantor` anchor — the rows have no leaf `tuple_ref` and share only two
+    context_refs, so document order is the sole handle (the
+    `_fh_npl_tree_segments` trick). Each row's counterparty is the inner
+    `tifrs-notes:NameOfTheCompany` (the Counterparty2 tuple) that appears in
+    the span. MEASURED against the real 台泥 1101 2026Q1 fixture.
+
+    NOTE — two plan-PIN corrections proven by measurement on the committed
+    fixtures (see the implementer report):
+    * SUM(ActualAmountProvided) is ENDORSEMENT-SCOPED = 62,786,222,000, NOT
+      the plan-PIN 105.9bn. 105.9bn is the doc-wide sum of all 113
+      `ActualAmountProvided` facts, but 74 of those precede the first
+      endorser anchor and belong to a SEPARATE note (資金貸與/financing-to-
+      others: `LimitOfLoanAmountForIndividualCounterparty` /
+      `AmountOfSalesToPurchasesFromCounterparty`, both 74x). Summing doc-wide
+      would conflate two disclosure tables — an extraction bug. The span-
+      scoped sum is the honest endorsement total.
+    * The empty/"none" case uses a 0-anchor fixture (2882 財金控, section
+      absent). The plan named 台塑 1301 as EMPTY, but 1301 actually carries
+      ONE populated endorsement row (endorser 本公司 → 台塑集團(開曼)), so it
+      cannot exercise the none-path. 0 anchors → explicit none result covers
+      both "section absent" and "section-present-but-empty" identically.
+    """
+    parser, notes_mod = _load_modules()
+    facts = _fixture_facts_smart(parser, "twse_ixbrl_1101_2026Q1_C.html")
+
+    result = notes_mod.extract_endorsement_guarantee_notes(facts)
+    rows = result["rows"]
+    summary = result["summary"]
+
+    # 39 per-endorser rows reconstructed by document-order segmentation.
+    assert len(rows) == 39
+
+    # row0: endorser 台灣水泥公司 → counterparty 聯誠貿易公司 (inner
+    # NameOfTheCompany); EndingBalance2 raw 1,420,000 thousand-TWD scaled to
+    # 1,420,000,000; ActualAmountProvided 0. Chinese names legible via the
+    # production UTF-8-first decode (facts arrive pre-decoded).
+    r0 = rows[0]
+    assert r0["endorser"] == "台灣水泥公司"
+    assert r0["counterparty"] == "聯誠貿易公司"
+    assert r0["ending_balance"] == 1_420_000_000.0
+    assert r0["actual_provided"] == 0.0
+    assert r0["collateral_secured"] == 0.0
+    assert r0["individual_limit"] == 120_725_747_000.0
+    assert r0["endorser_total_ceiling"] == 241_451_494_000.0
+    assert r0["ratio_to_net_asset"] == 0.0059
+    assert r0["to_subsidiary_by_parent"] == "Y"
+    assert r0["to_parent_by_subsidiary"] == "N"
+    assert r0["to_mainland_china"] == "N"
+
+    # row1: same endorser, counterparty 信昌投資公司, ending 2,370,000
+    # thousand → 2,370,000,000, actual 1,140,000 thousand → 1,140,000,000.
+    r1 = rows[1]
+    assert r1["counterparty"] == "信昌投資公司"
+    assert r1["ending_balance"] == 2_370_000_000.0
+    assert r1["actual_provided"] == 1_140_000_000.0
+
+    # Aggregate summary: span-scoped SUM(ActualAmountProvided) /
+    # SUM(EndingBalance2), row + distinct-counterparty counts, peak per-row
+    # RatioOfAccumulatedEndorsementGuaranteeAmountToNetAsset..., and a
+    # subsidiary-vs-external split from the Y/N relationship flags
+    # (33 internal where ToSubsidiaryByParent OR ToParentBySubsidiaries == Y;
+    # 6 external; 13 to Mainland-China, orthogonal).
+    assert summary["row_count"] == 39
+    assert summary["counterparty_count"] == 31
+    assert summary["total_actual_provided"] == 62_786_222_000.0
+    assert summary["total_ending_balance"] == 107_613_931_000.0
+    assert summary["max_ratio_to_net_asset"] == pytest.approx(4.8386)
+    assert summary["subsidiary_related_count"] == 33
+    assert summary["external_count"] == 6
+    assert summary["mainland_china_count"] == 13
+
+    # Empty/"none" case: a 0-anchor filing yields an EXPLICIT empty summary
+    # (row_count 0, None peak ratio — never a fake zero) + empty rows list,
+    # never a crash or silent zero.
+    empty_facts = _fixture_facts_smart(parser, "twse_ixbrl_2882_2026Q1_C.html")
+    none_result = notes_mod.extract_endorsement_guarantee_notes(empty_facts)
+    assert none_result["rows"] == []
+    assert none_result["summary"]["row_count"] == 0
+    assert none_result["summary"]["counterparty_count"] == 0
+    assert none_result["summary"]["total_actual_provided"] == 0.0
+    assert none_result["summary"]["total_ending_balance"] == 0.0
+    assert none_result["summary"]["max_ratio_to_net_asset"] is None
+    assert none_result["summary"]["subsidiary_related_count"] == 0
+    assert none_result["summary"]["external_count"] == 0
+    assert none_result["summary"]["mainland_china_count"] == 0
 
 
 def test_select_current_fact_ambiguous_period_tie_first_wins_and_is_logged(capsys):
