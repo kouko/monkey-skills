@@ -57,9 +57,15 @@ business meaning, human-certifiable). Most skills below touch one layer;
 ## Quick Start
 
 ```
-init → (ingest) → update → query → review
+dbt parse && dbt compile     ← dbt's own step, not ours; init needs its output
+        ↓
+init → update → query → review
+        ↑
+   (ingest — any time after init, whenever you have a note)
 ```
 
+- **No `.dbt-wiki/` yet?** Every skill except `init` needs it to exist.
+  They check on entry and send you back to `init` rather than guessing.
 - **New project**: `init` (after `dbt parse && dbt compile`).
 - **Models changed**: `update`. That is the whole answer — don't pick
   between `rescan` and `redistill` unless you are optimizing LLM cost.
