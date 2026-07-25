@@ -3604,6 +3604,40 @@ def _statement_chain_facts(
     return facts, skipped_rows
 
 
+def _statement_history_span(facts: list[dict]) -> dict:
+    """The first and last statement period the pack ACTUALLY observed, as
+    two `coverage` keys — the caller's only view of a TRUNCATED history
+    (Task 6).
+
+    WHY IT IS REPORTED RATHER THAN REPAIRED. A ticker's current SEC
+    ticker->CIK mapping follows the SUCCESSOR of a reorg, and
+    `companyfacts` aggregates per CIK, so a filer's pre-reorg years are
+    simply not in the payload — measured, GOOGL's facts under Alphabet's
+    2015-reorg CIK 1652044 start 2012-12-31 and DIS's under the 2019
+    holdco CIK 1744489 start 2016-10-01 (probe fixture
+    `tests/data/fixtures/us_statement_shapes_probe_2026-07-26.json`,
+    `history.earliest_fact_end`). The predecessor's history is NOT
+    stitched in: predecessor and successor are legally distinct filers and
+    a stitched series conflates two entities (repo memory
+    `ticker-to-cik-can-resolve-to-a-decoy-entity`). A short span is
+    therefore reported, never an error — the years that ARE here are real.
+
+    The key NAMES mirror that probe's own `history.earliest_fact_end` /
+    `latest_fact_end` so a filer's span is directly comparable against the
+    committed 47-filer record rather than needing a translation.
+
+    Dates are compared as ISO-8601 strings, which sort chronologically;
+    `period_end` is non-null on every emitted fact (a row with no `end` is
+    skipped by `_statement_period_kind` before it can become one). An
+    empty `facts` reports None for both: the span describes emitted facts,
+    and there is no honest span when none survived."""
+    ends = sorted(fact["period_end"] for fact in facts)
+    return {
+        "earliest_fact_end": ends[0] if ends else None,
+        "latest_fact_end": ends[-1] if ends else None,
+    }
+
+
 def build_statement_backfill(ticker: str) -> dict:
     """As-reported ANNUAL statement pack for `ticker` (Task 5,
     docs/loom/plans/2026-07-26-us-as-reported-statement-lane.md), in that
@@ -3651,7 +3685,25 @@ def build_statement_backfill(ticker: str) -> dict:
     in this module's one DQC flag shape. A ticker whose payload holds NO row
     for any concept this lane fetches returns a loud
     `_statement_backfill_error_slot` with no `facts` key — never an
-    empty-but-successful pack."""
+    empty-but-successful pack.
+
+    TWO DISCONTINUITIES OF THE RESOLVED CIK, ANSWERED DIFFERENTLY (Task 6).
+    A ticker resolves to the CURRENT legal entity, which a reorg can make a
+    holding shell that carries none of the operating history:
+
+      - EMPTY — the resolved CIK's `companyfacts` holds ZERO us-gaap
+        concepts (measured: XOM -> CIK 2115436). There is no pack to build,
+        so this is a loud error slot naming the ticker, the resolved CIK and
+        the resolved entity name, checked BEFORE any row work so it is never
+        reported as the chain-shaped failure above — that message would
+        invite a chain fix for a CIK-identity problem.
+      - TRUNCATED — the CIK holds real facts, just not the earlier years
+        (measured: GOOGL from 2012, DIS from 2016). The pack IS built, and
+        the observed span lands in `coverage` via `_statement_history_span`.
+
+    Neither is repaired by reaching for a predecessor CIK: it is a legally
+    distinct filer (repo memory
+    `ticker-to-cik-can-resolve-to-a-decoy-entity`)."""
     cik_info = resolve_cik(ticker)
     if "error" in cik_info:
         return cik_info
@@ -3661,6 +3713,17 @@ def build_statement_backfill(ticker: str) -> dict:
 
     data = fetched.get("data") or {}
     us_gaap = (data.get("facts") or {}).get("us-gaap") or {}
+    if not us_gaap:
+        return _statement_backfill_error_slot(
+            ticker,
+            f"the resolved CIK {cik_info['cik']} "
+            f"({data.get('entityName')!r}) carries 0 us-gaap concepts, so it "
+            "holds no statement history at all — the ticker resolves to a "
+            "successor/decoy entity rather than the operating filer "
+            "(measured: XOM). The operating history's own CIK is NOT "
+            "stitched in here: it is a legally distinct filer, and a "
+            "stitched series would conflate two entities",
+        )
 
     facts: list[dict] = []
     skipped_rows: list[dict] = []
@@ -3693,7 +3756,10 @@ def build_statement_backfill(ticker: str) -> dict:
         "source_kind": "xbrl-companyfacts",
         "company": data.get("entityName"),
         "facts": facts,
-        "coverage": {"skipped_rows": skipped_rows},
+        "coverage": {
+            "skipped_rows": skipped_rows,
+            **_statement_history_span(facts),
+        },
     }
 
 

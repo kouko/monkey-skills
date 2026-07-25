@@ -148,6 +148,19 @@ _WMT_FY26_END = "2026-01-31"
 _WMT_REVENUES_VALUE = 713163000000.0
 _WMT_RFCC_VALUE = 706413000000.0
 
+# --- XOM's measured DECOY CIK, the Task 6 case
+# (`fixtures/us_statement_shapes_probe_2026-07-26.json`, XOM entry: `cik`
+# 2115436, `entity_name` "EXXON MOBIL CORP", `us_gaap_tags` 0 — the ONE
+# filer of the 47-ticker corpus with zero us-gaap concepts, and the reason
+# `_summary.n_filers_zero_us_gaap_concepts` is 1). The real 1994-2025
+# operating history sits under a DIFFERENT CIK (34088, repo memory
+# `ticker-to-cik-can-resolve-to-a-decoy-entity`) — which this lane must
+# never stitch in: predecessor and successor are legally distinct filers,
+# so a stitched series conflates two entities. Surfacing the
+# discontinuity, not repairing it, is the whole behaviour under test.
+_XOM_DECOY_CIK = 2115436
+_XOM_DECOY_ENTITY = "EXXON MOBIL CORP"
+
 
 def _row(
     *,
@@ -588,6 +601,108 @@ def test_a_per_share_concept_keeps_its_own_unit(sec_client):
     assert "error" not in pack, pack
     assert len(pack["facts"]) == 1, pack["facts"]
     assert pack["facts"][0]["unit"] == "USD/shares", pack["facts"][0]
+
+
+def test_coverage_records_the_observed_statement_history_span(sec_client):
+    """A TRUNCATED history must be VISIBLE to the caller (Task 6). The pack
+    reports the first and last statement period it actually observed, so a
+    filer whose CIK simply does not hold its earlier years shows up as a
+    SHORT span rather than as a full history — measured, GOOGL's facts under
+    Alphabet's post-2015-reorg CIK 1652044 start 2012-12-31 and DIS's under
+    the 2019 holdco CIK 1744489 start 2016-10-01 (probe fixture, `history.
+    earliest_fact_end`). The lane reports that; it never repairs it by
+    stitching a predecessor CIK.
+
+    Truncation is NOT an error — the years that ARE here are real, so the
+    pack is built and the span is merely reported. That is the whole
+    difference from the zero-concept case below.
+
+    The two windows are AAPL's own captured tag-switch eras (see FIXTURE
+    GROUNDING), reused here so the span is measured across a filer whose
+    earliest and latest facts come from two DIFFERENT concepts — the span
+    is the pack's, not one chain's."""
+    pack = _build(sec_client, {
+        "Revenues": _concept_obj([_row(
+            start=_AAPL_FY18_START, end=_AAPL_FY18_END,
+            val=_PLACEHOLDER_EARLY_REVENUE_VALUE,
+        )]),
+        _AAPL_RFCC: _concept_obj([_row(
+            start=_AAPL_FY25_START, end=_AAPL_FY25_END, val=_AAPL_RFCC_VALUE,
+        )]),
+    })
+
+    assert "error" not in pack, pack
+    coverage = pack["coverage"]
+    assert coverage["earliest_fact_end"] == _AAPL_FY18_END, coverage
+    assert coverage["latest_fact_end"] == _AAPL_FY25_END, coverage
+    assert coverage["skipped_rows"] == [], coverage
+
+
+def test_an_observed_span_is_never_claimed_when_no_fact_survived(sec_client):
+    """The span describes the facts the pack ACTUALLY emits, so a pack whose
+    every row was skipped reports NO span rather than a fabricated one — the
+    same posture as every other rejection in this lane (name what happened,
+    never fill in a plausible value). The row below is skipped by its
+    carrier form, so the pack is still a success with an empty `facts`."""
+    pack = _build(sec_client, {
+        _AAPL_RFCC: _concept_obj([_row(
+            start=_AAPL_FY25_START, end=_AAPL_FY25_END, val=_AAPL_RFCC_VALUE,
+            form="20-F", accn=_SYNTHETIC_OTHER_ACCN,
+        )]),
+    })
+
+    assert "error" not in pack, pack
+    assert pack["facts"] == [], pack["facts"]
+    coverage = pack["coverage"]
+    assert coverage["earliest_fact_end"] is None, coverage
+    assert coverage["latest_fact_end"] is None, coverage
+
+
+def test_cik_without_statement_history_is_a_loud_error(sec_client):
+    """THE DECOY CIK (Task 6, repo memory
+    `ticker-to-cik-can-resolve-to-a-decoy-entity`). A ticker's CURRENT
+    ticker->CIK mapping can point at a holding shell minted by a reorg,
+    whose `companyfacts` carries ZERO us-gaap concepts while the operating
+    history sits under a different CIK — measured, XOM resolves to CIK
+    2115436 with 0 tags. That must be a LOUD, typed error slot naming the
+    ticker, the RESOLVED CIK and the RESOLVED entity name (the three facts a
+    human needs to recognise the decoy and go look up the real filer), never
+    an empty-but-successful pack.
+
+    It is a DIFFERENT condition from `test_a_filer_with_no_spine_rows_...`
+    below and must not be reported as that one: "this filer tags none of the
+    concepts this lane wants" invites a chain fix, whereas "this CIK holds
+    no us-gaap facts at all" is a CIK-identity problem no chain edit can
+    reach. Hence the check runs BEFORE any row work and says so by name.
+
+    The predecessor CIK is deliberately NOT stitched in — predecessor and
+    successor are legally distinct filers."""
+    resolve_patch = mock.patch.object(
+        sec_client, "resolve_cik",
+        return_value={"cik": _XOM_DECOY_CIK, "ticker": "XOM"},
+    )
+    fetch_patch = mock.patch.object(
+        sec_client, "fetch_facts",
+        return_value={
+            "cik": _XOM_DECOY_CIK,
+            "fetched_at": "2026-07-26T00:00:00Z",
+            "data": {
+                "entityName": _XOM_DECOY_ENTITY,
+                "facts": {"us-gaap": {}},
+            },
+        },
+    )
+    with resolve_patch, fetch_patch:
+        pack = sec_client.build_statement_backfill("XOM")
+
+    assert "facts" not in pack, pack
+    assert pack["error_class"] == "statement_backfill_failed", pack
+    assert "XOM" in pack["error"], pack
+    assert str(_XOM_DECOY_CIK) in pack["error"], pack
+    assert _XOM_DECOY_ENTITY in pack["error"], pack
+    # The CONDITION itself, not just the identifiers: a reader must be able
+    # to tell this apart from "no row for the concepts this lane fetches".
+    assert "0 us-gaap concepts" in pack["error"], pack
 
 
 def test_a_filer_with_no_spine_rows_is_a_loud_error_slot(sec_client):
