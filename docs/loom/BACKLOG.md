@@ -230,15 +230,81 @@
 - Origin: arc (d) scope decision (brief `docs/loom/specs/2026-07-24-kpi-xbrl-store-producer.md`
   §Out of Scope) — v1 shipped dimensional-SEGMENT revenue only; company top-line total
   (GAP-3 from the 5-filer dogfood) deferred as a distinct, differently-shaped feed.
-- What: `extract_dimensional_revenue` emits ZERO flat totals, so top-line company
-  revenue is unfetchable via arc (d)'s dimensional path. The only shipped source is
-  `action_facts(ticker,'Revenues')` → the companyconcept series
-  (`sec_edgar_client.py:666-711,271-294`): API-endpoint shape (carries start+end), NO
-  dei fiscal calendar, mixes annual+quarterly under `fp:FY`. Needs: a top-line
-  extractor (or reshape the companyconcept series to the store point shape), its own
-  annual/quarterly disambiguation (OVERLAPS the multi-granularity arc below), and
-  ingest into the SAME store so the tearsheet shows total revenue alongside segments.
-  Reuse arc (d)'s `kpi_xbrl_ingest` append path + the period-identity fields (T1/T2).
+  SUPERSEDED 2026-07-25 by a live 8-filer probe (branch feat-total-revenue-lane;
+  brief `docs/loom/specs/2026-07-25-company-total-revenue.md`, plan
+  `docs/loom/plans/2026-07-25-company-total-revenue.md`) that DISPROVED this
+  entry's original premise below — kept for record, replaced by the two-lane
+  decision.
+- What: SUPERSEDED — original premise (now FALSE, disproved 2026-07-25): "the
+  `extract_dimensional_revenue` per-filing parse emits ZERO flat totals, so
+  top-line company revenue is unfetchable via arc (d)'s dimensional path; the
+  only shipped source is `action_facts(ticker,'Revenues')` → the
+  companyconcept series". A live probe (8/8 filers, real SEC fetch,
+  2026-07-25, evidence in the brief's §Probe findings) found every filer's
+  per-filing XBRL parse ALSO carries a flat (non-dimensioned) top-line
+  revenue fact. But "flat" alone is not sufficient: JPM emits 7 flat
+  revenue-shaped concepts of which only 2 (`Revenues` /
+  `RevenuesNetOfInterestExpense`) are the true total (the other 5 are
+  income-statement components), and a consolidation-qualifier-only flat fact
+  is NOT the consolidated total (XOM's `Revenues` under
+  `ConsolidationItemsAxis=OperatingSegmentsMember` reads 452,209M against a
+  true total of 332,238M).
+
+  Two-lane decision (see brief §Decision for full grounding):
+  - **Lane B (primary, per-filing)** — the existing per-filing XBRL parse
+    also emits the filing's ONE winning flat top-line fact, picked by a
+    closed ordered allowlist grounded in XBRL US DQC Revenue Guidance
+    (`Revenues` > `RevenuesNetOfInterestExpense` >
+    `RevenueFromContractWithCustomer...ExcludingAssessedTax` >
+    `...IncludingAssessedTax`), gated to `is_dimensioned == False` only.
+    Ingested under the fixed canonical `kpi_id == "total_revenue"` (NOT a
+    concept-derived slug — a filer's tagging changing across years must not
+    fragment the durable series), `source_kind == "xbrl-topline"`.
+  - **Lane A (annual-only backfill, companyconcept)** — reshapes the
+    `companyconcept` REST series (`action_facts(ticker,'Revenues')`-style
+    fetch, `sec_edgar_client.py:666-711,271-294`) into the same point shape
+    to backfill fiscal years older than the filings Lane B fetched — ANNUAL
+    ROWS ONLY, never reading the row's `fy`/`fp` (those are the FILING's
+    focus, not the fact's own period — memory
+    `fiscal-year-derive-per-fact-against-filing-calendar` trap #2).
+    `source_kind == "xbrl-companyfacts"` (already trusted).
+  - Overlap discipline: a fiscal year covered by both lanes must agree
+    (pinned by a real-data e2e test); a same-dedup-key value disagreement
+    fails loud rather than silently storing a fabricated `†`.
+
+## investing-toolkit `source_kind` naming debt — endpoint-name axis vs shape axis (OPEN)
+- Status: OPEN
+- Start: the next rename/migration touch of a `source_kind` stored value —
+  NOT a plain next-touch of the two named files, since either rename is a
+  durable-store migration (existing points already carry the value), not a
+  code edit.
+- Origin: company total (top-line) revenue lane arc (branch
+  feat-total-revenue-lane, 2026-07-25); plan
+  `docs/loom/plans/2026-07-25-company-total-revenue.md` §Notes "Known naming
+  debt, deliberately NOT fixed in this arc" + Task 11's RFC 6648 / BCP 178
+  evaluation (uniform "ours" prefixes carry zero discriminating information
+  and must be renamed once a value becomes de facto standard — exactly the
+  situation a durable-store rename creates).
+- What: this arc pinned the `source_kind` vocabulary shape mechanically
+  (`kpi_gate.TRUSTED_SOURCE_KINDS` now asserts every trusted member starts
+  with the trust-class segment `xbrl-`), but two pre-existing values already
+  violate the `<trust-class>-<lane>` shape and were deliberately left unfixed:
+  (a) 🟢 `xbrl-companyfacts` names a specific SEC REST endpoint
+  (`data.sec.gov/api/xbrl/companyconcept/...`), yet
+  `kpi_tw_ingest.py:54` reuses the identical literal for TW MOPS iXBRL
+  ingestion, where no such endpoint exists at all — its second segment mixes
+  an endpoint-name axis with the shape axis the other trusted values
+  (`xbrl-dimensional`, `xbrl-topline`) use.
+  (b) 🟢 `kpi_prose_candidates.py:433,697` mints a bare `"prose"` value with
+  no trust-class segment at all. It sits OUTSIDE `TRUSTED_SOURCE_KINDS` (an
+  untrusted lane), so this arc's convention-pin test does not touch it, but
+  it is the same naming inconsistency one axis over.
+  Both are cheap to rename in code but expensive to rename live — either
+  change requires a durable-store migration (backfill already-stored points
+  under the old literal) rather than an edit, which is why this arc shipped
+  them as documented debt instead of silent drift. Revisit when a
+  TW-specific or prose-specific trust class is introduced (the natural
+  rename point) or when a store migration is separately budgeted.
 
 ## investing-toolkit quarterly 2.22.0 — post-ship follow-ups (OPEN)
 - Status: OPEN

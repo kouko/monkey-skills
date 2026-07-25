@@ -120,6 +120,8 @@ differing vintages, and this is what the store was designed for.
   `sec_edgar_client.py:666-711,271-294`) and its own annual/quarterly
   disambiguation, which overlaps the multi-granularity arc. Separate arc, right
   after this one.
+  **SUPERSEDED 2026-07-25** — see `docs/loom/specs/2026-07-25-company-total-revenue.md`
+  (the two-lane build; a live probe disproved the "no flat totals" premise).
 - **Changing `resolve_binding` / `_restatement_survivor` (policy C) collapse**
   (`kpi_xbrl.py:639,702-740`). That path serves a different consumer (a single
   survivor value). The store-feed bypasses it, not replaces it.
