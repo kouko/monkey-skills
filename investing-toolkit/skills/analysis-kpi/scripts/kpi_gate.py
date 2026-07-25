@@ -92,7 +92,20 @@ VERDICT_WITHHELD = "WITHHELD"
 # label set / evaluate() run to earn TRUSTED (operational-kpi XBRL pilot,
 # Smallest End State #5). Any other source_kind (e.g. "llm-located") is NOT
 # in this set and must never ride along with it into a TRUSTED attestation.
-TRUSTED_SOURCE_KINDS = frozenset({"xbrl-companyfacts", "xbrl-dimensional"})
+#
+# Vocabulary shape: `<trust-class>-<lane>`. The FIRST segment is the trust
+# class this gate keys on — `xbrl-` means machine-structured filing
+# provenance, needing no sampled ground-truth labels — and the second names
+# the lane within that class (e.g. `companyfacts`, `dimensional`, `topline`).
+# A future trusted kind must be added on this same `xbrl-` axis; the
+# accompanying test in `test_kpi_gate_source_kinds.py` pins that mechanically
+# so the convention cannot silently drift by prose discipline alone. This
+# shape is scoped to THIS trusted set only — other `source_kind` values
+# elsewhere in the codebase do not follow it (e.g. `kpi_prose_candidates.py`
+# mints a bare `"prose"` with no trust-class segment at all; see BACKLOG).
+TRUSTED_SOURCE_KINDS = frozenset(
+    {"xbrl-companyfacts", "xbrl-dimensional", "xbrl-topline"}
+)
 
 # Distinguishes an attest_source record from an evaluate() record in the
 # same gate-records file — both share the "verdict" field is_trusted/
@@ -307,8 +320,8 @@ def evaluate(
 def attest_source(company: str, schema_version, source_kinds, attested_at=None) -> dict:
     """Record a trusted-by-source gate attestation for `(company,
     schema_version)` WITHOUT running `evaluate` — when every kind in
-    `source_kinds` is in `TRUSTED_SOURCE_KINDS` (currently
-    `xbrl-companyfacts` / `xbrl-dimensional`), the structured XBRL
+    `source_kinds` is in `TRUSTED_SOURCE_KINDS` (see the constant's
+    definition for its current members), the structured XBRL
     provenance itself is the trust signal, so no sampled ground-truth
     label set is required.
 
