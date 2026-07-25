@@ -2740,12 +2740,16 @@ def _is_near_new_year_boundary(period_end_date: date) -> bool:
     — no dei calendar, whose absence is this guard's entire reason to
     exist — and `fy`/`fp` are the CARRYING FILING's focus rather than the
     fact's own — the trap named in `build_top_line_backfill`. Measured
-    2026-07-25 over the local EDGAR cache, under a predicate stated here so
-    the next reader can re-run it rather than take the number on trust:
-    us-gaap `companyconcept` payloads, rows as `summarize_concept` reshapes
-    them (USD unit preferred), `start`/`end`/`accn`/`filed` all present and
-    `fy` an int, and `end - start` within 340-380 days — of 9290 such
-    annual rows, 6187 (66.6%) carry an `fy` differing from `end`'s own
+    2026-07-25 over all 777 `concept_*.json` files in the local EDGAR
+    cache — which splits across two cache-envelope payload shapes (480
+    files with the body at `data`, 297 with it nested one level deeper at
+    `data.data`; a re-run must cover both, or it silently drops whichever
+    shape it doesn't parse) — under a predicate stated here so the next
+    reader can re-run it rather than take the number on trust: us-gaap
+    `companyconcept` payloads, rows as `summarize_concept` reshapes them
+    (USD unit preferred), `start`/`end`/`accn`/`filed` all present and
+    `fy` an int, and `end - start` within 340-380 days — of 15276 such
+    annual rows, 10175 (66.6%) carry an `fy` differing from `end`'s own
     calendar year.
 
     On a comparative row — which is what a BACKFILL lane is made of — a
