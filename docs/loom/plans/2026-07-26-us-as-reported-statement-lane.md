@@ -153,8 +153,14 @@ caller handed a brief path, so layers (i)/(ii) do not run. Stated, not skipped.
   XOM resolves to an entity with 0) returns a loud, typed error slot naming the
   ticker, the resolved CIK, and the resolved entity name. Additionally record the
   observed first/last statement period in `coverage` so a TRUNCATED history
-  (measured: GOOGL from 2014, DIS from 2018) is visible to the caller. Never stitch
-  a predecessor CIK.
+  is visible to the caller. Never stitch a predecessor CIK.
+  **CORRECTED 2026-07-26 after the Task 6 review**: an earlier draft of this line
+  cited "GOOGL from 2014, DIS from 2018". Those are each filer's BALANCE-SHEET
+  start — a different measurement from the one the committed probe records. The
+  fixture's `earliest_fact_end`, taken as the minimum across all 14 spine fields'
+  10-K rows, is GOOGL **2012-12-31** and DIS **2016-10-01**, and those are the
+  numbers the implementation cites. The implementer grounded in the fixture over
+  the plan text, which was the right call.
 - **Module**: `investing-toolkit/skills/data-markets/scripts/sec_edgar_client.py`
 - **Files touched**: `investing-toolkit/skills/data-markets/scripts/sec_edgar_client.py`, `investing-toolkit/tests/data/test_sec_edgar_statements.py`
 - **Context paths**:
@@ -166,6 +172,7 @@ caller handed a brief path, so layers (i)/(ii) do not run. Stated, not skipped.
 - **Dependencies**: Task 5 completes first
 - **Independent**: false
 - **Brief item covered**: §Decision — "CIK continuity: refuse loudly when the resolved CIK carries no statement history; surface (not silently stitch) a truncated one"
+- **Status**: done(8074a177)
 
 ## Task 7 — Flag a balance-sheet identity residual in the view
 
@@ -226,6 +233,7 @@ caller handed a brief path, so layers (i)/(ii) do not run. Stated, not skipped.
 - **Dependencies**: Task 5 completes first
 - **Independent**: true
 - **Brief item covered**: §Smallest End State #1 — "A new producer stores, per period, the filer's own us-gaap concepts"
+- **Status**: done(e54073a2)
 
 ## Task 9 — Drive the pack into the store
 
@@ -263,11 +271,22 @@ caller handed a brief path, so layers (i)/(ii) do not run. Stated, not skipped.
   - `/Users/kouko/.supacode/repos/monkey-skills/finacial-analytics-r2/investing-toolkit/skills/analysis-kpi/references/cli-reference.md`
   - `/Users/kouko/.supacode/repos/monkey-skills/finacial-analytics-r2/investing-toolkit/CHANGELOG.md`
 - **Acceptance**:
-  - **RED**: `.claude/hooks/test_check_codex_manifest_drift.py::test_real_batch_a_plugin_in_sync` fails after only `.claude-plugin/plugin.json` is bumped
+  - **RED**: `python3 scripts/sync_codex_manifests.py --check investing-toolkit`
+    exits 1 after only `.claude-plugin/plugin.json` is bumped (and the
+    `check-codex-manifest-drift.sh` PostToolUse hook blocks with
+    `❌ Codex manifest drift detected`).
+    **CORRECTED 2026-07-26 during Task 10** — this line originally pinned
+    `.claude/hooks/test_check_codex_manifest_drift.py::test_real_batch_a_plugin_in_sync`,
+    which was the orchestrator's error: that test hardcodes `research-toolkit`, so it
+    stays green no matter what happens to investing-toolkit's manifests. The
+    implementer verified this by bumping one manifest and watching it pass, then
+    found the two mechanisms that DO detect the drift. A pinned RED node that cannot
+    go red is worse than none — it certifies the check ran.
   - **GREEN**: both manifests carry the same new version, the drift test passes, and SKILL.md documents the two new scripts plus the stated history floor
 - **Dependencies**: Tasks 7, 8, 9 complete first
 - **Independent**: false
 - **Brief item covered**: §Current State Evidence Boundary — "XBRL history begins with the SEC's 2009-2011 phase-in: 0/46 filers have ≥20 usable years; median 18"
+- **Status**: done(051be100)
 
 ## Notes
 
