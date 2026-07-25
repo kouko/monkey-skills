@@ -2603,8 +2603,8 @@ def _top_line_backfill_error_slot(ticker: str, detail: str) -> dict:
 
 
 # The `form` values on a companyconcept row whose annual dei fiscal-period
-# focus Lane A can state HONESTLY, and the focus each states (Task 7,
-# docs/loom/plans/2026-07-25-company-total-revenue.md).
+# focus Lane A can state HONESTLY, and the focus each states (Task 3 +
+# seam fix 18fc47fd, docs/loom/plans/2026-07-25-company-total-revenue.md).
 #
 # WHY "ANNUAL ROW => FY => 10-K" IS NOT A SAFE INFERENCE. `companyconcept`
 # carries no dei tags at all, so Lane A cannot READ a filing's
@@ -2702,24 +2702,37 @@ def _top_line_backfill_calendar(fiscal_period_focus: str) -> dict:
 
 
 def _is_near_new_year_boundary(period_end_date: date) -> bool:
-    """True when `period_end_date` lands within
-    `FISCAL_BOUNDARY_TOLERANCE_DAYS` of a Jan-1 boundary (checking both the
-    period_end's own calendar year and the next one, so a date just before
-    OR just after New Year's both qualify). This is the New-Year-boundary
-    hazard Task 3 (docs/loom/plans/2026-07-25-company-total-revenue.md)
-    must fail loud on: Lane A's annual fiscal-year label is the period-end
-    CALENDAR year (SEC annual-labeling convention), which is unsound for a
-    52/53-week filer whose year-end crosses New Year (a FY2024 ending
-    2025-01-03) — and Lane A has no dei fiscal calendar to disambiguate
-    (unlike Lane B). Reuses the SAME `FISCAL_BOUNDARY_TOLERANCE_DAYS` the
-    month-lane fiscal-boundary matching uses (`_derive_fiscal_label`) —
-    never a new, uncoordinated tolerance."""
-    for jan1_year in (period_end_date.year, period_end_date.year + 1):
-        if abs((period_end_date - date(jan1_year, 1, 1)).days) <= (
-            FISCAL_BOUNDARY_TOLERANCE_DAYS
-        ):
-            return True
-    return False
+    """True when `period_end_date` has CROSSED INTO January — it lands
+    within `FISCAL_BOUNDARY_TOLERANCE_DAYS` AFTER the Jan-1 boundary of its
+    OWN calendar year. This is the New-Year-boundary hazard Task 3
+    (docs/loom/plans/2026-07-25-company-total-revenue.md) must fail loud
+    on: Lane A's annual fiscal-year label is the period-end CALENDAR year
+    (SEC annual-labeling convention), which is unsound for a 52/53-week
+    filer whose year-end rolls past New Year (a FY2024 ending 2025-01-03) —
+    and Lane A has no dei fiscal calendar to disambiguate (unlike Lane B).
+
+    THE GUARD IS ONE-SIDED BECAUSE THE HAZARD IS. The BEFORE-New-Year side
+    is deliberately NOT checked, and that is not a narrowed tolerance — it
+    is the shape of the divergence. Lane B's `_derive_fiscal_label` walks
+    to the first nominal fiscal-year end at-or-after `period_end`, so for a
+    December year-end it lands on the period end's OWN calendar year — the
+    very label Lane A's rule derives. The two rules AGREE there, so there
+    is nothing to disambiguate; only a year-end that has crossed into
+    January makes Lane B answer the preceding year while Lane A answers the
+    current one. Skipping the before-side too (as an earlier revision did)
+    costs the ENTIRE Lane A backfill of every December-fiscal-year-end
+    filer — most of the US market — to guard a divergence that cannot occur
+    there. Pinned in both directions by
+    `test_sec_edgar_top_line_backfill.py::test_backfill_excludes_new_year_
+    boundary_row_with_named_reason` (skips) and
+    `::test_backfill_keeps_december_year_end_row_both_lanes_label_alike`
+    (keeps).
+
+    Reuses the SAME `FISCAL_BOUNDARY_TOLERANCE_DAYS` the month-lane
+    fiscal-boundary matching uses (`_derive_fiscal_label`) — never a new,
+    uncoordinated tolerance."""
+    days_into_the_year = (period_end_date - date(period_end_date.year, 1, 1)).days
+    return days_into_the_year <= FISCAL_BOUNDARY_TOLERANCE_DAYS
 
 
 def build_top_line_backfill(ticker: str) -> dict:
@@ -2755,17 +2768,24 @@ def build_top_line_backfill(ticker: str) -> dict:
     from NVDA's FY2026 filing is stamped `fy=2026`, including its FY2024
     and FY2025 comparatives). `fiscal_year` is instead derived from the
     row's OWN `end` — the SEC annual-labeling convention (a fiscal year is
-    named for the calendar year its period ends in) — EXCEPT within
-    `FISCAL_BOUNDARY_TOLERANCE_DAYS` of a Jan-1 boundary
+    named for the calendar year its period ends in) — EXCEPT for a row
+    whose `end` has CROSSED INTO January, within
+    `FISCAL_BOUNDARY_TOLERANCE_DAYS` AFTER Jan 1
     (`_is_near_new_year_boundary`), where that convention is unsound for a
-    52/53-week filer whose year-end crosses New Year and Lane A has no dei
-    calendar to check against: such a row is skipped with a named
+    52/53-week filer whose year-end rolls past New Year and Lane A has no
+    dei calendar to check against: such a row is skipped with a named
     `coverage` reason instead of guessed — Lane B, which HAS the dei
-    calendar, remains the authority for those years.
+    calendar, remains the authority for those years. A DECEMBER year-end is
+    NOT that hazard however close to Jan 1 it sits: Lane B's walk lands on
+    the period end's own calendar year there, the same label this rule
+    derives, so those rows are backfilled normally (see
+    `_is_near_new_year_boundary` for why a symmetric guard would cost the
+    lane most of the US market).
 
     Returns the per-accession `fiscal_calendars` map alongside `facts`
-    (Task 7) — the SAME envelope key Lane B emits, and the one
-    `kpi_xbrl.facts_to_points` reads to derive each point's `source_form`
+    (Task 3 + seam fix 18fc47fd) — the SAME envelope key Lane B emits, and
+    the one `kpi_xbrl.facts_to_points` reads to derive each point's
+    `source_form`
     (`_require_source_form`, which RAISES rather than guess a form). Without
     it EVERY Lane A fact is rejected at ingest and the lane cannot reach the
     store at all. Only rows whose own `form` is an allowlisted annual
@@ -2810,7 +2830,8 @@ def build_top_line_backfill(ticker: str) -> dict:
         period_start = row.get("start")
         period_end = row.get("end")
         accession = row.get("accn")
-        # Task 7: the carrying filing gates the row BEFORE any period
+        # Task 3 + seam fix 18fc47fd: the carrying filing gates the row
+        # BEFORE any period
         # arithmetic — identity is a property of the FILING, the cheapest
         # and most fundamental disqualifier, so a filer Lane A cannot serve
         # at all (a 20-F-only foreign private issuer) reports ONE actionable
@@ -2893,13 +2914,15 @@ def build_top_line_backfill(ticker: str) -> dict:
                 "new": None,
                 "accessions": [accession],
                 "reason": (
-                    f"annual row ending {period_end!r} for {ticker!r} falls "
-                    "within FISCAL_BOUNDARY_TOLERANCE_DAYS="
-                    f"{FISCAL_BOUNDARY_TOLERANCE_DAYS} of a Jan-1 boundary — "
-                    "the period-end-year labeling convention is unsound "
-                    "here for a 52/53-week filer whose year-end crosses New "
-                    "Year, and Lane A has no dei calendar to disambiguate; "
-                    "Lane B remains the authority for this fiscal year"
+                    f"annual row ending {period_end!r} for {ticker!r} has "
+                    "crossed into January — within "
+                    "FISCAL_BOUNDARY_TOLERANCE_DAYS="
+                    f"{FISCAL_BOUNDARY_TOLERANCE_DAYS} AFTER Jan 1 — where "
+                    "the period-end-year labeling convention is unsound for "
+                    "a 52/53-week filer whose year-end rolls past New Year, "
+                    "and Lane A has no dei calendar to disambiguate; Lane B "
+                    "remains the authority for this fiscal year (a DECEMBER "
+                    "year-end is not this hazard and is backfilled normally)"
                 ),
             })
             continue
@@ -2929,7 +2952,8 @@ def build_top_line_backfill(ticker: str) -> dict:
             "calendar_year": period_end_date.year,
             "calendar_quarter": f"Q{(period_end_date.month - 1) // 3 + 1}",
         })
-        # Task 7: keyed by accession and populated ONLY from rows that were
+        # Task 3 + seam fix 18fc47fd: keyed by accession and populated ONLY
+        # from rows that were
         # actually KEPT, so the map never carries an FY declaration for a
         # filing this pack emits no fact from. One accession is one filing
         # with one form, so repeated accessions write an identical entry.

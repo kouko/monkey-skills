@@ -255,32 +255,26 @@ def test_backfill_skips_quarterly_row_with_named_coverage_reason(sec_client):
     assert "2026-01-25" in flag["reason"]
 
 
-@pytest.mark.parametrize(
-    "near_new_year_start, near_new_year_end",
-    [
-        pytest.param(
-            "2024-01-05", "2025-01-03", id="after-new-year",
-        ),  # jan1_year == period_end_date.year branch
-        pytest.param(
-            "2024-01-02", "2024-12-28", id="before-new-year",
-        ),  # jan1_year == period_end_date.year + 1 branch -- the OTHER
-            # side of `_is_near_new_year_boundary`'s loop, previously
-            # untested (code-quality-reviewer round-1 finding: a flipped
-            # `+1`, a dropped loop iteration, or a reversed sign comparison
-            # would have passed the whole suite undetected).
-    ],
-)
-def test_backfill_excludes_new_year_boundary_row_with_named_reason(
-    sec_client, near_new_year_start, near_new_year_end,
-):
-    """An annual (12-month) row whose `end` falls within
-    `FISCAL_BOUNDARY_TOLERANCE_DAYS` of a Jan-1 boundary -- on EITHER side
-    (the plan's own worked example, 2025-01-03, is the after-New-Year case;
-    2024-12-28 mirrors it on the before-New-Year side) -- is EXCLUDED,
-    never labelled by the period-end-year rule, because Lane A has no dei
-    calendar to disambiguate a 52/53-week filer whose year-end crosses New
-    Year; the exclusion is recorded under `coverage` by name."""
-    near_new_year = _row(near_new_year_start, near_new_year_end)
+def test_backfill_excludes_new_year_boundary_row_with_named_reason(sec_client):
+    """An annual (12-month) row whose `end` has CROSSED INTO January --
+    within `FISCAL_BOUNDARY_TOLERANCE_DAYS` AFTER Jan 1 (the plan's own
+    worked example, 2025-01-03) -- is EXCLUDED, never labelled by the
+    period-end-year rule, because Lane A has no dei calendar to
+    disambiguate a 52/53-week filer whose year-end crosses New Year; the
+    exclusion is recorded under `coverage` by name.
+
+    THE HAZARD IS ONE-SIDED, and that asymmetry is a FACT about the two
+    lanes' rules, not a tolerance to be applied symmetrically. Lane B's
+    `_derive_fiscal_label` walks to the first nominal fiscal-year end
+    at-or-after `period_end`, so a January period end resolves to the
+    PRECEDING calendar year (2025-01-03 -> FY2024) while Lane A's
+    period-end-year rule answers 2025 -- they diverge, and only Lane B
+    can settle it. On the before-New-Year side both rules answer the
+    period end's own calendar year (see
+    `test_backfill_keeps_december_year_end_row_both_lanes_label_alike`),
+    so there is nothing to disambiguate and a skip there would cost the
+    whole lane for every December-FYE filer."""
+    near_new_year = _row("2024-01-05", "2025-01-03")
     normal_annual = _row("2025-01-27", "2026-01-25")
     resolve_patch, fetch_patch = _stub_fetch(
         sec_client, winning_concept=_NVDA_CONCEPT,
@@ -298,7 +292,43 @@ def test_backfill_excludes_new_year_boundary_row_with_named_reason(
     assert len(boundary_flags) == 1, skipped
     flag = boundary_flags[0]
     assert set(flag) == {"type", "old", "new", "accessions", "reason"}, flag
-    assert near_new_year_end in flag["reason"]
+    assert "2025-01-03" in flag["reason"]
+
+
+def test_backfill_keeps_december_year_end_row_both_lanes_label_alike(sec_client):
+    """The OTHER side of Jan 1, which the guard must NOT fire on: a
+    December year-end (here 2024-12-28, 4 days BEFORE Jan 1 and so inside
+    `FISCAL_BOUNDARY_TOLERANCE_DAYS` of it) is KEPT and labelled by the
+    period-end-year rule.
+
+    WHY THIS IS THE CORRECT BEHAVIOUR, not a loosened guard. Lane B's
+    `_derive_fiscal_label` walks to the first nominal fiscal-year end
+    at-or-after `period_end`; for a December FYE that is the SAME calendar
+    year the period ends in, so Lane B answers 2024 and Lane A answers
+    2024 -- the divergence the skip exists to prevent cannot arise here.
+    Skipping it anyway silently drops the ENTIRE Lane A backfill of every
+    December-fiscal-year-end filer (JPM, XOM, INTC, most of the US
+    market), which is the regression this test pins."""
+    december_year_end = _row("2024-01-02", "2024-12-28")
+    normal_annual = _row("2025-01-27", "2026-01-25")
+    resolve_patch, fetch_patch = _stub_fetch(
+        sec_client, winning_concept=_NVDA_CONCEPT,
+        rows=[normal_annual, december_year_end],
+    )
+    with resolve_patch, fetch_patch:
+        pack = sec_client.build_top_line_backfill("NVDA")
+
+    assert "error" not in pack, pack
+    kept = {f["period_end"]: f for f in pack["facts"]}
+    assert set(kept) == {"2026-01-25", "2024-12-28"}, pack["facts"]
+    assert kept["2024-12-28"]["fiscal_year"] == 2024, kept["2024-12-28"]
+    assert kept["2024-12-28"]["fiscal_quarter"] == "FY", kept["2024-12-28"]
+
+    skipped = pack["coverage"]["skipped_rows"]
+    assert [f for f in skipped if f["type"] == "new_year_boundary_ambiguous"] == [], (
+        "a December year-end is not the New-Year-crossing hazard: both "
+        f"lanes label it by the period end's own year; got {skipped}"
+    )
 
 
 def test_backfill_picks_first_allowlist_concept_with_data(sec_client):

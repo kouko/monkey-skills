@@ -21,10 +21,13 @@ canonical series.
 - **Lane A — `kpi-topline-backfill` pack.** A new `build_top_line_backfill`
   reshapes the `companyconcept` REST series into annual-only history predating
   the filings Lane B fetched, reachable through the data layer's one pack
-  facade (`--pack kpi-topline-backfill`). Quarterly rows and rows whose period
-  end sits near a New Year boundary are skipped with a named coverage reason
+  facade (`--pack kpi-topline-backfill`). Quarterly rows, and rows whose period
+  end has *crossed into January*, are skipped with a named coverage reason
   rather than guessed — Lane A has no dei fiscal calendar to disambiguate a
   52/53-week filer's year-end crossing, so Lane B stays the authority there.
+  That check is one-sided by design: a December year-end gets the same label
+  from both lanes and is backfilled normally, so the ordinary
+  December-fiscal-year-end filer keeps its full history.
 - **Canonical `total_revenue` series, per-lane provenance.** `kpi_xbrl_ingest`
   stops skipping flat facts and routes them to the fixed canonical `kpi_id`
   `total_revenue` (not a concept-derived slug), grouped on one key so a filer

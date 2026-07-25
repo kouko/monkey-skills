@@ -51,9 +51,12 @@ immutable append-only, no expiry). Stdlib only.
 
 ## CLI reference
 
-Per-subcommand CLI detail (flags, exit codes, worked examples) for the
-twelve persistence/compute scripts lives in
-[`references/cli-reference.md`](references/cli-reference.md). Index:
+Per-subcommand CLI detail (flags, exit codes, worked examples) lives in
+[`references/cli-reference.md`](references/cli-reference.md) for eleven of
+the twelve persistence/compute scripts indexed below — `kpi_tw_ingest`
+(shipped 2.35.0) has no section there yet, so for that one the index entry
+and the TW workflow step are currently the whole documented surface.
+Index:
 
 - **`kpi_store`** — append-only bitemporal store: `append` a point / `query`
   `--latest` or `--as-of` (point-in-time).

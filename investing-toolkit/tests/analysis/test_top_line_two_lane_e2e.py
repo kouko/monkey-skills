@@ -64,35 +64,66 @@ run against this tree and the production file restored byte-identical:
     tests and the sole-authority test fail;
   - `_TOP_LINE_KPI_ID` renamed -> every test that names the canonical series
     fails (3 failed + 4 errored);
-  - `FISCAL_BOUNDARY_TOLERANCE_DAYS` -> 0 -> both near-New-Year skip cases and
-    the sole-authority test fail;
+  - `FISCAL_BOUNDARY_TOLERANCE_DAYS` -> 0 -> the New-Year-CROSSING skip case
+    here, its sibling in `test_sec_edgar_top_line_backfill.py`, and the
+    sole-authority test fail (3). The December-year-end tests correctly stay
+    green: they assert the guard does NOT fire, which no narrowing can break;
+  - `_is_near_new_year_boundary` restored to its ORIGINAL SYMMETRIC form (the
+    `for jan1_year in (year, year + 1)` loop) -> the two December-year-end
+    tests fail (`test_december_year_end_filer_is_backfilled_and_agrees_with_
+    lane_b` here, reporting `appended: 0`, and
+    `test_backfill_keeps_december_year_end_row_both_lanes_label_alike` in the
+    data suite). That mutation is the SHIPPED BUG this pair was written
+    against, not a hypothetical: the symmetric guard skipped the entire Lane A
+    backfill of every December-fiscal-year-end filer;
   - Lane A reads the row's `fy` trap instead of its own period end -> the
     identical-label, Lane-A-only-year and Lane-A-provenance tests fail.
     NOTE it does NOT fail the shared-year VALUE test: that test's property is
     value agreement, whose fires-loudly direction is owned by
     `test_kpi_xbrl_ingest.py::test_cross_lane_value_disagreement_raises`;
-  - `_companyconcept_row`'s `"form"` -> `"10-Q"` -> both skip cases fail and
-    the AAPL tests error (see that helper: the carrier-form gate is why).
+  - `_companyconcept_row`'s `"form"` -> `"10-Q"` -> the crossing-skip and
+    December-year-end tests fail and the four AAPL tests error (see that
+    helper: the carrier-form gate is why).
 
-TWO FILERS, EACH DOING WHAT ONLY IT CAN — and this is also where the plan's
-Amendment 5(c) is resolved rather than followed literally. 5(c) asks that
-"both lanes emit an IDENTICAL `period` label for a shared fiscal year, using
-a near-New-Year-FYE filer", but 5(b) makes Lane A SKIP exactly those rows
-(`_is_near_new_year_boundary`, tolerance 10 days), so such a filer has NO
-shared fiscal year and the acceptance as worded is unsatisfiable. The
-property that actually matters is the complementary one — THE SKIP IS WHAT
-GUARANTEES LABEL AGREEMENT — so the two halves are pinned on the two filers
-that can each carry one:
+TWO FILERS, AND THE ASYMMETRY THAT DECIDES WHICH ONE CARRIES WHICH HALF.
+The plan's Amendment 5(c) asks that "both lanes emit an IDENTICAL `period`
+label for a shared fiscal year, using a near-New-Year-FYE filer", and it IS
+satisfiable — INTC (FYE 2025-12-27) is exactly that filer and does have a
+shared, identically-labelled fiscal year. An earlier revision of this file
+recorded 5(c) as unsatisfiable, on the belief that 5(b)'s skip removed every
+near-New-Year row from Lane A. That belief was wrong, and the false premise
+outlived eleven task reviews because this docstring asserted it and no probe
+checked it.
 
-  - INTC (FYE 2025-12-27, a real 52/53-week filer, 5 days from Jan 1):
-    Lane A skips with a NAMED coverage reason, Lane B stays sole authority,
-    and no second, divergently-labelled point lands in the series (so one
-    filing can never mint a fabricated restatement dagger). INTC is also the
-    repo's only REAL captured cross-filing recast, so it carries the
-    tearsheet/dagger assertion too.
-  - AAPL (FYE 2025-09-27, ~3 months from Jan 1, outside the tolerance):
-    both lanes genuinely cover FY2025, so the identical-value AND
-    identical-`period`-label property is pinned there.
+THE HAZARD 5(b) GUARDS IS ONE-SIDED (probed against both label functions,
+2026-07-25). Lane B's `_derive_fiscal_label` walks to the first nominal
+fiscal-year end at-or-after `period_end`, so:
+
+  period_end     Lane A (period-end year)  Lane B (dei walk)  agree?
+  2025-12-27     2025                      2025               yes
+  2024-12-31     2024                      2024               yes
+  2026-01-03     2026                      2025               NO  <- the hazard
+
+Only a year-end that has CROSSED INTO January diverges. A December year-end,
+however close to Jan 1, gets the same label from both rules — so the skip
+buys nothing there and costs the entire Lane A backfill of most of the US
+market. `_is_near_new_year_boundary` therefore fires on the after-Jan-1 side
+only, and the three properties are pinned on the two filers that can carry
+them:
+
+  - INTC's REAL year-end (2025-12-27, a real 52/53-week filer, 5 days from
+    Jan 1) — the DECEMBER half: Lane A backfills it and derives the SAME
+    label Lane B does, so the shared year holds exactly one point under one
+    label (`test_december_year_end_filer_is_backfilled_and_agrees_with_lane_b`
+    — this is 5(c), literally). INTC is also the repo's only REAL captured
+    cross-filing recast, so it carries the tearsheet/dagger assertion too.
+  - INTC under the COUNTERFACTUAL crossing window (2026-01-03) — the
+    CROSSING half: Lane A skips with a NAMED coverage reason, Lane B stays
+    sole authority, and no second, divergently-labelled point lands in the
+    series (so one filing can never mint a fabricated restatement dagger).
+  - AAPL (FYE 2025-09-27, ~3 months from Jan 1, nowhere near the boundary):
+    the ordinary-filer control, where the identical-value AND
+    identical-`period`-label property is pinned free of any boundary logic.
 
 FIXTURE PROVENANCE (no financial value below is hand-authored):
   - `tests/data/fixtures/topline_probe_2026-07-25.json` — the committed
@@ -428,8 +459,10 @@ def _aapl_lane_a_pack(markets_modules) -> dict:
 
 def _intc_lane_a_pack(markets_modules, window: tuple[str, str] | None = None) -> dict:
     """INTC's Lane A pack over ONE annual window. The default is its REAL
-    captured FY2025 window, ending 2025-12-27 -- 5 days BEFORE Jan 1, inside
-    `FISCAL_BOUNDARY_TOLERANCE_DAYS`.
+    captured FY2025 window, ending 2025-12-27 -- 5 days BEFORE Jan 1, and
+    therefore KEPT: the New-Year guard is one-sided (see the module
+    docstring's probe table), and both lanes label this year 2025. Pass
+    `_INTC_NEW_YEAR_CROSSING_WINDOW` for the after-Jan-1 case Lane A skips.
     """
     sample = _probe_flat_sample("INTC")
     start, end = window or (sample["period_start"], sample["period_end"])
@@ -670,33 +703,74 @@ def test_lane_b_pack_assigns_provenance_per_lane_in_one_ingest(tmp_path):
 
 
 # --------------------------------------------------------------------------
-# The near-New-Year filer: the SKIP is what guarantees label agreement
+# The near-New-Year filer, both sides of Jan 1: the CROSSING row is skipped
+# (that skip is what guarantees label agreement), the DECEMBER row is not
 # --------------------------------------------------------------------------
 
-@pytest.mark.parametrize(
-    "window",
-    [
-        pytest.param(None, id="real-year-end-before-new-year"),
-        pytest.param(_INTC_NEW_YEAR_CROSSING_WINDOW, id="counterfactual-crossing-new-year"),
-    ],
-)
-def test_near_new_year_filer_lane_a_skips_with_a_named_reason(markets_modules, window):
-    """INTC's real fiscal year ends 2025-12-27, and the counterfactual 52/53-week
-    roll ends 2026-01-03 -- both inside `FISCAL_BOUNDARY_TOLERANCE_DAYS` of Jan 1,
-    on either side of it, where Lane A's period-end-year rule is unsound and Lane
-    A has no dei calendar to check against. Both must emit a NAMED coverage skip
-    and NO fact, never a guessed (and possibly divergently-labelled) point.
+def test_new_year_crossing_filer_lane_a_skips_with_a_named_reason(markets_modules):
+    """The counterfactual 52/53-week roll ends 2026-01-03 -- inside
+    `FISCAL_BOUNDARY_TOLERANCE_DAYS` AFTER Jan 1, the ONE side where Lane A's
+    period-end-year rule diverges from Lane B's dei walk (2026 against 2025)
+    and Lane A has no dei calendar to check against. It must emit a NAMED
+    coverage skip and NO fact, never a guessed (and divergently-labelled) point.
+
+    THE HAZARD IS ONE-SIDED. INTC's REAL year-end, 2025-12-27, is equally close
+    to Jan 1 and is NOT skipped: Lane B's walk to the first nominal fiscal-year
+    end at-or-after `period_end` answers 2025 there, exactly as Lane A's
+    period-end-year rule does. That case is pinned in the opposite direction by
+    `test_december_year_end_filer_is_backfilled_and_agrees_with_lane_b`.
     """
-    pack = _intc_lane_a_pack(markets_modules, window)
+    pack = _intc_lane_a_pack(markets_modules, _INTC_NEW_YEAR_CROSSING_WINDOW)
 
     assert pack["facts"] == [], (
-        f"Lane A must not label a near-New-Year annual row; got {pack['facts']}"
+        f"Lane A must not label a New-Year-crossing annual row; got {pack['facts']}"
     )
     skipped = pack["coverage"]["skipped_rows"]
     reasons = [row["type"] for row in skipped]
     assert reasons == ["new_year_boundary_ambiguous"], skipped
-    expected_end = (window or (None, _probe_flat_sample("INTC")["period_end"]))[1]
-    assert expected_end in skipped[0]["reason"], skipped
+    assert _INTC_NEW_YEAR_CROSSING_WINDOW[1] in skipped[0]["reason"], skipped
+
+
+def test_december_year_end_filer_is_backfilled_and_agrees_with_lane_b(
+    tmp_path, markets_modules,
+):
+    """INTC's REAL captured fiscal year ends 2025-12-27 -- 5 days before Jan 1,
+    and the shape most of the US market files. Lane A must BACKFILL it, and the
+    label it derives must coincide with Lane B's, so the year lands as exactly
+    ONE point under ONE label.
+
+    This is the December-FYE half of the asymmetry, end-to-end. A guard that
+    fired on this side too would leave the whole assertion vacuous the quiet
+    way: Lane A would contribute nothing, the single point would be Lane B's
+    alone, and the arc's headline capability (a general history backfill) would
+    be silently unavailable to every December-fiscal-year-end filer.
+    """
+    store_dir = tmp_path / "store"
+    env = _isolated_env(store_dir)
+    _ingest_ok(_intc_lane_b_pack(), tmp_path / "intc-lane-b.json", env)
+    lane_a = _ingest_ok(
+        _intc_lane_a_pack(markets_modules), tmp_path / "intc-lane-a.json", env,
+    )
+    # Asserted on the LANE A summary, not only on the merged store: it is the
+    # one place a silent zero-fact backfill cannot hide behind Lane B's point.
+    assert lane_a == {
+        "company": "INTC", "kpi_ids": ["total_revenue"], "appended": 1,
+    }, lane_a
+
+    entry = _period_entry(_series(_dump("INTC", env), "total_revenue"), "2025")
+    assert entry["period_labels"] == ["2025"], (
+        f"a December year-end must get the SAME label from both lanes; got {entry}"
+    )
+    top_line = [
+        point for point in _stored_points(store_dir)
+        if point["kpi_id"] == "total_revenue"
+    ]
+    assert len(top_line) == 1, (
+        f"agreeing labels mean coinciding dedup keys, so ONE point; got {top_line}"
+    )
+    assert entry["disagreement"] is False, (
+        f"two agreeing lanes must not flag a restatement dagger; got {entry}"
+    )
 
 
 def test_near_new_year_skip_leaves_lane_b_the_sole_authority(tmp_path, markets_modules):

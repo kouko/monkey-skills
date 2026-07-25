@@ -201,11 +201,17 @@ disqualifier, never a fabricated one:
   costs value freshness: it is the canonical carrier of a *restated*
   annual figure, so an amended year keeps its original number here.)
 - `non_annual_row_skipped` — duration ≠ 12 months (quarterly/YTD row);
-- `new_year_boundary_ambiguous` — the period end sits within
-  `FISCAL_BOUNDARY_TOLERANCE_DAYS` of a Jan-1 boundary, where the
-  period-end-year labeling convention is unsound for a 52/53-week filer
-  whose fiscal year crosses New Year, and this lane (unlike
-  `kpi-quarterly`) has no dei fiscal calendar to disambiguate.
+- `new_year_boundary_ambiguous` — the period end has **crossed into
+  January**, landing within `FISCAL_BOUNDARY_TOLERANCE_DAYS` *after*
+  Jan 1, where the period-end-year labeling convention is unsound for a
+  52/53-week filer whose fiscal year rolls past New Year, and this lane
+  (unlike `kpi-quarterly`) has no dei fiscal calendar to disambiguate.
+  The check is deliberately **one-sided**: a December year-end, however
+  close to Jan 1, gets the SAME label from both lanes (`kpi-quarterly`
+  walks to the first fiscal-year end at-or-after the period end, which
+  for a December filer is the period end's own calendar year), so it is
+  backfilled normally — a symmetric check would silently drop the entire
+  history of every December-fiscal-year-end filer.
 
 The filing-identity checks run first — a filer this lane cannot serve
 at all (a 20-F-only foreign private issuer) reports one actionable

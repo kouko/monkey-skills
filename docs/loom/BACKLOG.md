@@ -183,7 +183,10 @@
       posture. Unreachable today (Lane A emits no 9-month YTD rows and
       `derive_q4_points` takes one pack's map) but `pack_us.py:1017-1019` already
       merges two lanes' calendars into one envelope, which is the shape that
-      reaches it. Fix is a field-level guard, consumer-side.
+      reaches it. Fix is a field-level guard, consumer-side. TRIPWIRE (whole-branch
+      review 2026-07-25): the unreachability expires the moment the multi-granularity
+      arc makes Lane A quarterly — which the brief's §Out of Scope explicitly plans —
+      so prefer a guard in the entry over relying on the reachability note.
   (b) 🟡 **`_SOURCE_FORM_BY_FOCUS` cannot express an amendment** (`kpi_xbrl.py:231-233`).
       Because focus→form maps `FY` to the literal `"10-K"`, the top-line backfill
       must skip `10-K/A` carriers rather than mislabel them — and a 10-K/A is the
@@ -213,12 +216,16 @@
       own definitions, but the encapsulation is owed. A zero-behaviour alias beside
       each private definition plus four call-site flips; deliberately deferred
       because `kpi_store.py` was outside the arc's declared file scope.
-  (f) 🟢 **In-batch disagreement is unguarded.** Two conflicting flat facts sharing
+  (f) 🟡 **In-batch disagreement is unguarded.** Two conflicting flat facts sharing
       a dedup key WITHIN one pack still reach `kpi_store.append`'s silent
       first-record-wins (`kpi_store.py:321-325`). The shipped guard is store-aware
       (cross-call) only. Unreachable through either producer today — one winner per
       filing upstream — so it would require a producer bug; ~5 lines to close by
-      accumulating validated keys in-batch.
+      accumulating validated keys in-batch. RAISED 🟢→🟡 by the whole-branch
+      review 2026-07-25: the reachability reason is sound, but cheap hardening
+      inside a file this arc already owns should not hide behind 'unreachable
+      today' when it guards the exact invariant the arc exists to protect on a
+      one-way door.
   (g) 🟢 **`coverage.skipped_rows` merges gap types under one key** in the backfill
       lane, discriminated by `type`, where this module's convention elsewhere is one
       coverage key per gap type (`unclassifiable_periods`, `fetch_failures`,
@@ -227,6 +234,17 @@
       flag names a row with no accession (`assert_dqc_schema`, `kpi_xbrl.py:270-280`,
       requires non-empty strings). Pre-existing across sibling flags in
       `sec_edgar_client.py`, not introduced here.
+  (i) 🟢 **`kpi_tw_ingest` has no `## CLI (...)` section in
+      `analysis-kpi/references/cli-reference.md`** — it is the only one of the
+      twelve indexed persistence/compute scripts missing one (the file documents
+      eleven). Pre-existing since 2.35.0 (the TW iXBRL arc), surfaced while
+      reconciling the index count during this branch's close-out. Deliberately NOT
+      closed here: writing it means reading the shipped `kpi_tw_ingest.py` CLI and
+      documenting its real flags/exit codes, which belongs to the TW arc's file
+      scope, not the top-line lane's. `analysis-kpi/SKILL.md` now DISCLOSES the gap
+      in the CLI-reference sentence rather than stating a count that is wrong about
+      one referent or the other — so closing this item also means deleting that
+      disclosure clause.
 
 ## investing-toolkit US XBRL→kpi_store producer 2.34.0 — post-ship follow-ups (OPEN)
 - Status: OPEN
