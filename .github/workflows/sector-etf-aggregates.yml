@@ -13,9 +13,34 @@ name: sector-etf-aggregates
 # `ci-failure` so the staleness alarm in analysis-comps tests has a sibling
 # signal at the CI layer.
 
+# SCHEDULE PAUSED 2026-07-25 — do NOT re-enable the cron until BOTH are fixed:
+#
+#   (1) DATA LAYER (the blocking one): every holding fails memo-fetch. Run
+#       30150860263 (2026-07-25) attempted 110 holdings and succeeded on 0, so
+#       the commit it produced would have rewritten all 11 aggregate files with
+#       `weight_coverage_pct: 0.0` and every holding in `skipped_holdings` —
+#       replacing real 56-70% coverage with nothing. Diagnose why memo-fetch
+#       fails for every ticker from a GitHub runner (the logged reason is
+#       truncated; yfinance rate-limiting / IP blocking is the leading
+#       hypothesis) and add a coverage floor that fails the run instead of
+#       committing an empty refresh.
+#   (2) PR PERMISSION: `gh pr create` fails with "GitHub Actions is not
+#       permitted to create or approve pull requests" — the repo's
+#       Settings → Actions → Workflow permissions toggle is off
+#       (`can_approve_pull_request_reviews: false`). This has failed on EVERY
+#       scheduled run since the bot-PR pattern landed (PR #252); the only
+#       refresh ever merged (2026-05-05, PR #254) was pushed by hand.
+#
+# Fixing (2) alone is actively harmful: the permission failure is the only
+# thing that has been stopping (1) from auto-merging an empty refresh. Order
+# matters — data layer first, coverage guard second, toggle last.
+#
+# `workflow_dispatch` stays on so the pipeline can still be run and debugged
+# by hand.
+
 on:
-  schedule:
-    - cron: '0 6 * * 6'   # Saturday 06:00 UTC = Asia/Taipei Sat 14:00
+  # schedule:
+  #   - cron: '0 6 * * 6'   # Saturday 06:00 UTC = Asia/Taipei Sat 14:00
   workflow_dispatch:
 
 permissions:
