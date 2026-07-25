@@ -1,0 +1,21 @@
+{
+  "name": "hermes-tweet",
+  "version": "0.1.0",
+  "description": "Hermes Agent X/Twitter workflow skill for sourced social-signal briefs from profiles, timelines, searches, and post URLs, with write actions explicitly gated.",
+  "author": {
+    "name": "Xquik-dev",
+    "url": "https://github.com/Xquik-dev"
+  },
+  "homepage": "https://github.com/Xquik-dev/hermes-tweet",
+  "repository": "https://github.com/Xquik-dev/hermes-tweet",
+  "license": "MIT",
+  "keywords": [
+    "hermes-agent",
+    "twitter",
+    "x",
+    "social-media",
+    "automation",
+    "social-listening",
+    "tweet"
+  ]
+}
