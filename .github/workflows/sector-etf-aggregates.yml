@@ -28,8 +28,11 @@ name: sector-etf-aggregates
 #       permitted to create or approve pull requests" — the repo's
 #       Settings → Actions → Workflow permissions toggle is off
 #       (`can_approve_pull_request_reviews: false`). This has failed on EVERY
-#       scheduled run since the bot-PR pattern landed (PR #252); the only
-#       refresh ever merged (2026-05-05, PR #254) was pushed by hand.
+#       scheduled run since the bot-PR pattern landed (PR #252) — 12 orphan
+#       branches and 14 open `ci-failure` issues so far. The job's own
+#       `git push` succeeds; only `gh pr create` is refused, so the only
+#       refresh ever merged (2026-05-05, PR #254) is one whose branch the bot
+#       pushed and whose PR a human then opened and merged.
 #
 # Fixing (2) alone is actively harmful: the permission failure is the only
 # thing that has been stopping (1) from auto-merging an empty refresh. Order
