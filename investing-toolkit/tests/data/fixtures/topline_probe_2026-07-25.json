@@ -1,0 +1,352 @@
+[
+  {
+    "ticker": "AAPL",
+    "accession": "0000320193-25-000079",
+    "period_of_report": "2025-09-27",
+    "A_flat": {
+      "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": {
+        "n": 3,
+        "distinct_periods": 3,
+        "sample": {
+          "period_start": "2024-09-29",
+          "period_end": "2025-09-27",
+          "value": 416161000000.0,
+          "consolidation": null,
+          "exclusions": null
+        }
+      }
+    },
+    "B_qualifier_only": {},
+    "C_dimensional_concepts": {
+      "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": 42
+    }
+  },
+  {
+    "ticker": "INTC",
+    "accession": "0000050863-26-000011",
+    "period_of_report": "2025-12-27",
+    "A_flat": {
+      "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": {
+        "n": 3,
+        "distinct_periods": 3,
+        "sample": {
+          "period_start": "2024-12-29",
+          "period_end": "2025-12-27",
+          "value": 52853000000.0,
+          "consolidation": null,
+          "exclusions": null
+        }
+      }
+    },
+    "B_qualifier_only": {
+      "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": {
+        "n": 3,
+        "distinct_periods": 3,
+        "sample": {
+          "period_start": "2024-12-29",
+          "period_end": "2025-12-27",
+          "value": -17683000000.0,
+          "consolidation": "IntersegmentEliminationMember",
+          "exclusions": null
+        }
+      }
+    },
+    "C_dimensional_concepts": {
+      "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": 33
+    }
+  },
+  {
+    "ticker": "JPM",
+    "accession": "0001628280-26-008131",
+    "period_of_report": "2025-12-31",
+    "A_flat": {
+      "jpm:InvestmentBankingAdvisoryFeeRevenue": {
+        "n": 3,
+        "distinct_periods": 3,
+        "sample": {
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "value": 3503000000.0,
+          "consolidation": null,
+          "exclusions": null
+        }
+      },
+      "us-gaap:InvestmentBankingRevenue": {
+        "n": 3,
+        "distinct_periods": 3,
+        "sample": {
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "value": 9615000000.0,
+          "consolidation": null,
+          "exclusions": null
+        }
+      },
+      "us-gaap:PrincipalTransactionsRevenue": {
+        "n": 3,
+        "distinct_periods": 3,
+        "sample": {
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "value": 27212000000.0,
+          "consolidation": null,
+          "exclusions": null
+        }
+      },
+      "us-gaap:BrokerageCommissionsRevenue": {
+        "n": 3,
+        "distinct_periods": 3,
+        "sample": {
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "value": 3726000000.0,
+          "consolidation": null,
+          "exclusions": null
+        }
+      },
+      "jpm:AdministrativeServicesRevenue1": {
+        "n": 3,
+        "distinct_periods": 3,
+        "sample": {
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "value": 2764000000.0,
+          "consolidation": null,
+          "exclusions": null
+        }
+      },
+      "us-gaap:Revenues": {
+        "n": 3,
+        "distinct_periods": 3,
+        "sample": {
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "value": 182447000000.0,
+          "consolidation": null,
+          "exclusions": null
+        }
+      },
+      "us-gaap:RevenuesNetOfInterestExpense": {
+        "n": 3,
+        "distinct_periods": 3,
+        "sample": {
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "value": 182447000000.0,
+          "consolidation": null,
+          "exclusions": null
+        }
+      }
+    },
+    "B_qualifier_only": {
+      "us-gaap:RevenuesNetOfInterestExpense": {
+        "n": 6,
+        "distinct_periods": 3,
+        "sample": {
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "value": 7025000000.0,
+          "consolidation": "CorporateNonSegmentMember",
+          "exclusions": null
+        }
+      },
+      "us-gaap:Revenues": {
+        "n": 3,
+        "distinct_periods": 3,
+        "sample": {
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "value": 53036000000.0,
+          "consolidation": "ParentCompanyMember",
+          "exclusions": null
+        }
+      }
+    },
+    "C_dimensional_concepts": {
+      "jpm:MortgageProductionRevenue": 3,
+      "jpm:OperatingRevenueServicingFeesNetRealEstateMortgages": 3,
+      "jpm:OperatingRevenueRealEstateMortgagesChangesInFairValueOfMortgageServicingRightsChangesDueToCollectionRealizationOfExpectedCashFlows": 3,
+      "jpm:OperatingRevenueNetRealEstateMortgages": 3,
+      "jpm:RiskManagementRevenueChangesInFairValueOfMortgageServicingRightsChangesInMarketInterestRatesAndOther": 3,
+      "jpm:RiskManagementRevenueChangesInFairValueOfMortgageServicingRightsResultingFromChangesInOtherValuationInputsOrChangesInAssumptions": 3,
+      "jpm:RiskManagementRevenueNetRealEstateMortgages": 3,
+      "jpm:ServicingRevenueNetRealEstateMortgages": 3,
+      "us-gaap:Revenues": 15,
+      "us-gaap:RevenuesNetOfInterestExpense": 9
+    }
+  },
+  {
+    "ticker": "SNOW",
+    "accession": "0001640147-26-000008",
+    "period_of_report": "2026-01-31",
+    "A_flat": {
+      "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": {
+        "n": 3,
+        "distinct_periods": 3,
+        "sample": {
+          "period_start": "2025-02-01",
+          "period_end": "2026-01-31",
+          "value": 4683946000.0,
+          "consolidation": null,
+          "exclusions": null
+        }
+      }
+    },
+    "B_qualifier_only": {
+      "us-gaap:Revenues": {
+        "n": 3,
+        "distinct_periods": 3,
+        "sample": {
+          "period_start": "2025-02-01",
+          "period_end": "2026-01-31",
+          "value": 24600000.0,
+          "consolidation": null,
+          "exclusions": [
+            "us-gaap:RelatedPartyTransactionsByRelatedPartyAxis"
+          ]
+        }
+      }
+    },
+    "C_dimensional_concepts": {
+      "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": 21
+    }
+  },
+  {
+    "ticker": "WMT",
+    "accession": "0000104169-26-000055",
+    "period_of_report": "2026-01-31",
+    "A_flat": {
+      "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": {
+        "n": 3,
+        "distinct_periods": 3,
+        "sample": {
+          "period_start": "2025-02-01",
+          "period_end": "2026-01-31",
+          "value": 706413000000.0,
+          "consolidation": null,
+          "exclusions": null
+        }
+      },
+      "us-gaap:Revenues": {
+        "n": 3,
+        "distinct_periods": 3,
+        "sample": {
+          "period_start": "2025-02-01",
+          "period_end": "2026-01-31",
+          "value": 713163000000.0,
+          "consolidation": null,
+          "exclusions": null
+        }
+      }
+    },
+    "B_qualifier_only": {},
+    "C_dimensional_concepts": {
+      "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": 63,
+      "us-gaap:Revenues": 15
+    }
+  },
+  {
+    "ticker": "NVDA",
+    "accession": "0001045810-26-000021",
+    "period_of_report": "2026-01-25",
+    "A_flat": {
+      "us-gaap:Revenues": {
+        "n": 3,
+        "distinct_periods": 3,
+        "sample": {
+          "period_start": "2025-01-27",
+          "period_end": "2026-01-25",
+          "value": 215938000000.0,
+          "consolidation": null,
+          "exclusions": null
+        }
+      }
+    },
+    "B_qualifier_only": {
+      "us-gaap:Revenues": {
+        "n": 3,
+        "distinct_periods": 3,
+        "sample": {
+          "period_start": "2025-01-27",
+          "period_end": "2026-01-25",
+          "value": 215938000000.0,
+          "consolidation": "OperatingSegmentsMember",
+          "exclusions": null
+        }
+      }
+    },
+    "C_dimensional_concepts": {
+      "us-gaap:Revenues": 39
+    }
+  },
+  {
+    "ticker": "XOM",
+    "accession": "0000034088-26-000045",
+    "period_of_report": "2025-12-31",
+    "A_flat": {
+      "us-gaap:Revenues": {
+        "n": 3,
+        "distinct_periods": 3,
+        "sample": {
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "value": 332238000000.0,
+          "consolidation": null,
+          "exclusions": null
+        }
+      }
+    },
+    "B_qualifier_only": {
+      "us-gaap:Revenues": {
+        "n": 15,
+        "distinct_periods": 3,
+        "sample": {
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "value": 452209000000.0,
+          "consolidation": "OperatingSegmentsMember",
+          "exclusions": null
+        }
+      }
+    },
+    "C_dimensional_concepts": {
+      "us-gaap:Revenues": 150,
+      "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": 3,
+      "us-gaap:RevenueNotFromContractWithCustomerExcludingInterestIncome": 3
+    }
+  },
+  {
+    "ticker": "COST",
+    "accession": "0000909832-25-000101",
+    "period_of_report": "2025-08-31",
+    "A_flat": {
+      "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": {
+        "n": 3,
+        "distinct_periods": 3,
+        "sample": {
+          "period_start": "2024-09-02",
+          "period_end": "2025-08-31",
+          "value": 275235000000.0,
+          "consolidation": null,
+          "exclusions": null
+        }
+      },
+      "us-gaap:Revenues": {
+        "n": 3,
+        "distinct_periods": 3,
+        "sample": {
+          "period_start": "2024-09-02",
+          "period_end": "2025-08-31",
+          "value": 275235000000.0,
+          "consolidation": null,
+          "exclusions": null
+        }
+      }
+    },
+    "B_qualifier_only": {},
+    "C_dimensional_concepts": {
+      "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": 18,
+      "us-gaap:Revenues": 9
+    }
+  }
+]

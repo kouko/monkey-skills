@@ -2317,7 +2317,15 @@ def _dimensional_revenue_candidate_gates(fact: dict) -> bool:
     concept is revenue-shaped (`_is_revenue_concept`) + the fact's XBRL unit
     is a currency amount (`_is_currency_amount_fact`) + a reported numeric
     value (never NaN). Does NOT check the axis signature itself — callers
-    combine this with `_dimension_signature`'s `dimensions`/`exclusions`."""
+    combine this with `_dimension_signature`'s `dimensions`/`exclusions`.
+
+    Sibling duplicate: `_is_top_line_revenue_fact` (below) repeats this
+    function's `period_type != "duration"` line for the opposite
+    (`is_dimensioned` FALSE) polarity — this is only the 2nd occurrence, so
+    per this repo's Rule-of-Three standard it is NOT YET extracted into a
+    shared `_duration_currency_nonnan_gates(fact)` helper. If a THIRD such
+    admission-gate predicate appears, that is the trigger to extract it —
+    whoever edits one of these two should check the other stays correct."""
     if not fact.get("is_dimensioned"):
         return False
     if fact.get("period_type") != "duration":
@@ -2370,6 +2378,93 @@ def _dimensional_axis_exclusions(fact: dict) -> list[dict]:
         return []
     _dimensions, _consolidation, exclusions = _dimension_signature(fact)
     return exclusions
+
+
+# CLOSED, ORDERED allowlist for the company TOP-LINE (total) revenue concept
+# (Task 1, docs/loom/plans/2026-07-25-company-total-revenue.md; brief
+# docs/loom/specs/2026-07-25-company-total-revenue.md §Decision). Grounded in
+# XBRL US DQC Revenue Guidance (https://xbrl.us/data-rule/guid-revenue/):
+# "use the more specific revenue-from-contracts-with-customers element when
+# all income is ASC 606; for mixed revenue types, `Revenues` is the total."
+# DELIBERATELY NARROWER than `_REVENUE_ALLOW_CONCEPT_LOCAL_NAMES` above (which
+# also allows non-top-line-but-legitimate concepts like
+# `RevenueNotFromContractWithCustomer`) and NOT a reuse/extension of it — a
+# concept can be legitimate operating revenue for the dimensional lane without
+# being the company's flat top-line total. Live-probe-verified 2026-07-25 (8
+# filers): JPM emits 7 FLAT revenue-shaped concepts, only `Revenues` /
+# `RevenuesNetOfInterestExpense` are the total (the other 5 are income-
+# statement components — InvestmentBankingRevenue, PrincipalTransactionsRevenue,
+# BrokerageCommissionsRevenue, etc.); WMT's `Revenues` (713,163M, its own
+# "Total revenues" line) is the total, not RFCC (706,413M, excludes
+# membership/other); AAPL reports only the RFCC-Excluding concept (all-ASC-606,
+# no `Revenues` tag at all). ORDER matters — `select_top_line_concept` below
+# picks the FIRST-PRESENT entry, mirroring the guidance's stated preference.
+_TOP_LINE_REVENUE_CONCEPTS = (
+    "Revenues",
+    "RevenuesNetOfInterestExpense",
+    "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "RevenueFromContractWithCustomerIncludingAssessedTax",
+)
+
+
+def _is_top_line_revenue_fact(fact: dict) -> bool:
+    """True ONLY when `fact` is the company's flat top-line revenue total
+    (Task 1, docs/loom/plans/2026-07-25-company-total-revenue.md): NOT
+    dimensioned (`is_dimensioned` explicitly False — a qualifier-only fact
+    such as XOM's `Revenues` under `ConsolidationItemsAxis=
+    OperatingSegmentsMember`, 452,209M against a true total of 332,238M, must
+    never qualify), a DURATION context, a currency-denominated amount
+    (`_is_currency_amount_fact`), a reported numeric value (never NaN), and
+    the concept's local name is in the closed `_TOP_LINE_REVENUE_CONCEPTS`
+    allowlist — this is what rejects JPM's 5 flat-but-component revenue
+    concepts (InvestmentBankingRevenue, PrincipalTransactionsRevenue, ...)
+    that would otherwise pass every other gate here.
+
+    Repeats — as a single duplicated line, not a reimplementation — only
+    `_dimensional_revenue_candidate_gates`'s `period_type != "duration"`
+    check (that function requires `is_dimensioned` TRUE, the opposite
+    polarity, and a DIFFERENT concept test — `_is_revenue_concept`'s
+    allow/deny gate rather than this closed allowlist — so sharing that
+    whole function here would either invert its meaning or require
+    reshaping it, both of which change dimensional-extraction behavior,
+    which this task must not do). `_is_currency_amount_fact` and `_is_nan`
+    ARE genuinely reused below — called, not reimplemented — since neither
+    has a polarity or concept-set dependency that differs between the two
+    predicates."""
+    if fact.get("is_dimensioned") is not False:
+        return False
+    if fact.get("period_type") != "duration":
+        return False
+    if not _is_currency_amount_fact(fact):
+        return False
+    if _is_nan(fact.get("numeric_value")):
+        return False
+    concept = fact.get("concept")
+    if not concept:
+        return False
+    local_name = concept.rsplit(":", 1)[-1]
+    return local_name in _TOP_LINE_REVENUE_CONCEPTS
+
+
+def select_top_line_concept(facts: list[dict]) -> str | None:
+    """Resolve the ONE winning top-line concept for a filing's candidate
+    facts (Task 1, docs/loom/plans/2026-07-25-company-total-revenue.md):
+    first-present in `_TOP_LINE_REVENUE_CONCEPTS` ORDER among the facts that
+    pass `_is_top_line_revenue_fact` — never the first fact by list position.
+    Live-probe-verified: WMT reports both `Revenues` (713,163M) and RFCC
+    (706,413M); this returns `Revenues` because it ranks first in the
+    allowlist, matching WMT's own "Total revenues" line. Returns None when no
+    candidate qualifies (`facts` empty, or every fact is a non-allowlist
+    component / dimensioned qualifier) — never a fabricated guess."""
+    winning_local_names = {
+        fact["concept"].rsplit(":", 1)[-1]
+        for fact in facts
+        if _is_top_line_revenue_fact(fact)
+    }
+    for local_name in _TOP_LINE_REVENUE_CONCEPTS:
+        if local_name in winning_local_names:
+            return local_name
+    return None
 
 
 _AVG_DAYS_PER_MONTH = 30.44
