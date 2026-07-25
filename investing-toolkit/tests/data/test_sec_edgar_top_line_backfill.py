@@ -754,6 +754,48 @@ def test_backfill_skips_row_that_identifies_no_filing(
     assert missing in flag["reason"], flag
 
 
+def test_backfill_skips_row_with_no_value_is_a_named_skip_not_a_crash(
+    sec_client,
+):
+    """A NULL `val` IS A ROW REJECTION, NOT A PACK KILLER -- the SAME
+    defect Task 5's `_statement_row_to_fact` GATE 4 fixed in the sibling
+    statement lane (`test_sec_edgar_statements.py::test_a_row_with_no_
+    value_is_a_named_skip_not_a_crash`), mirrored here because this lane
+    builds its fact dict inline rather than through that gate helper.
+    `summarize_concept` reads `val` with a bare `.get`, so a row whose
+    value is absent surfaces as `value: None` -- and `float(None)` raises
+    `TypeError` out of `build_top_line_backfill`, destroying the ticker's
+    WHOLE top-line revenue history over one bad row.
+
+    The good row rides along to pin the BLAST RADIUS: the rejection must
+    cost its own row and nothing else."""
+    good = _row("2025-01-27", "2026-01-25")
+    bad = _row("2024-01-29", "2025-01-26", accn=_SYNTHETIC_OTHER_ACCN)
+    bad["val"] = None
+    resolve_patch, fetch_patch = _stub_fetch(
+        sec_client, winning_concept=_NVDA_CONCEPT, rows=[good, bad],
+    )
+    with resolve_patch, fetch_patch:
+        pack = sec_client.build_top_line_backfill("NVDA")
+
+    assert "error" not in pack, pack
+    assert {f["period_end"] for f in pack["facts"]} == {"2026-01-25"}, (
+        pack["facts"]
+    )
+    # The skipped filing must not leak a calendar entry either -- a map
+    # entry for an accession with no fact is an unfounded FY declaration.
+    assert set(pack["fiscal_calendars"]) == {_NVDA_ACCN}, (
+        pack["fiscal_calendars"]
+    )
+
+    skipped = pack["coverage"]["skipped_rows"]
+    flags = [f for f in skipped if f["type"] == "row_value_missing"]
+    assert len(flags) == 1, skipped
+    flag = flags[0]
+    assert set(flag) == {"type", "old", "new", "accessions", "reason"}, flag
+    assert flag["accessions"] == [_SYNTHETIC_OTHER_ACCN], flag
+
+
 def test_backfill_facts_are_classifiable_by_kpi_xbrl(sec_client, kpi_xbrl):
     """Round-trip proof: every kept fact carries the exact label group
     `kpi_xbrl.classify_fact_period` hard-requires (fiscal_year,

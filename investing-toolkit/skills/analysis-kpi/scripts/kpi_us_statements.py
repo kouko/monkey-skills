@@ -199,7 +199,11 @@ def _require_no_intra_pack_disagreement(points: list[dict[str, Any]]) -> None:
 
 def us_statement_pack_to_points(pack: dict[str, Any]) -> list[dict[str, Any]]:
     """Map a ## Notes PIN'd statement-pack envelope into kpi_store points —
-    one point per (concept, period) fact in `pack["facts"]`.
+    one point per (concept, period, ACCESSION) fact in `pack["facts"]`: the
+    intra-pack dedup key above (`_require_no_intra_pack_disagreement`)
+    already keys on `source_accession` alongside concept and period, so
+    multiple accessions reporting the SAME window are restatement vintages
+    the store keeps side by side, never collapsed at write time.
 
     `pack` is passed IN as a dict (this module never imports data-markets —
     the analysis<->data-markets boundary). Field derivations (## Notes PIN):
