@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """kpi_tw.py — TW iXBRL fact -> kpi_store point adapter (pure-compute).
 
 Layer-2 producer helpers for the TW-market kpi_store. This module takes
@@ -23,10 +24,14 @@ _AUTH_CONCEPT = (
     "tifrs-notes:DateAndProceduresOfAuthorisationForIssueOfFinancialStatements"
 )
 
-# ROC-era (民國) date: NNN年M月D日. ROC year + 1911 = Gregorian year.
-_ROC_DATE_RE = re.compile(r"(\d{2,3})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日")
-# Gregorian ISO-ish date: YYYY-MM-DD (also accepts / or . separators).
-_ISO_DATE_RE = re.compile(r"(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})")
+# 年月日 date (民國 or Gregorian): the year group's digit-count is the
+# era discriminator — 4 digits is Gregorian, 2-3 digits is ROC (民國).
+# The left `(?<!\d)` anchors the year to its start so a 4-digit "2026年"
+# is captured whole, never as ROC "026年" (026+1911 = 1937, a silent
+# wrong-century as_of).
+_CJK_DATE_RE = re.compile(r"(?<!\d)(\d{2,4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日")
+# Gregorian separator date: YYYY-MM-DD (also accepts / or . separators).
+_ISO_DATE_RE = re.compile(r"(?<!\d)(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})")
 
 _ROC_YEAR_OFFSET = 1911
 
@@ -38,10 +43,11 @@ def _parse_auth_date(value: str) -> str | None:
     Returns None when no parseable date is present (a FINDING for the
     caller — never fabricated).
     """
-    roc = _ROC_DATE_RE.search(value)
-    if roc is not None:
-        year = int(roc.group(1)) + _ROC_YEAR_OFFSET
-        month, day = int(roc.group(2)), int(roc.group(3))
+    cjk = _CJK_DATE_RE.search(value)
+    if cjk is not None:
+        raw_year = int(cjk.group(1))
+        year = raw_year if len(cjk.group(1)) == 4 else raw_year + _ROC_YEAR_OFFSET
+        month, day = int(cjk.group(2)), int(cjk.group(3))
     else:
         iso = _ISO_DATE_RE.search(value)
         if iso is None:

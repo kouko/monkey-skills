@@ -78,6 +78,20 @@ def test_extract_tw_authorisation_date_gregorian(kpi_tw_module):
     assert kpi_tw_module.extract_tw_authorisation_date(facts) == "2026-05-13"
 
 
+def test_extract_tw_authorisation_date_gregorian_nian_form(kpi_tw_module):
+    # A Gregorian date in 年-form ("2026年5月13日") must NOT be mis-read as
+    # ROC "026年" (026 + 1911 = 1937). The 4-digit year is Gregorian → 2026,
+    # never a silent wrong-century as_of.
+    facts = [
+        {
+            "concept": AUTH_CONCEPT,
+            "raw_value": "本財務報告於2026年5月13日經董事會通過。",
+            "fact_type": "nonNumeric",
+        }
+    ]
+    assert kpi_tw_module.extract_tw_authorisation_date(facts) == "2026-05-13"
+
+
 def test_extract_tw_authorisation_date_absent_returns_none(kpi_tw_module):
     facts = [
         {"concept": "ifrs-full:CashAndCashEquivalents", "raw_value": 1000.0},
