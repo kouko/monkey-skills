@@ -2590,6 +2590,181 @@ def _duration_weeks(fact: dict, ticker: str, period_end: str) -> int:
 FISCAL_BOUNDARY_TOLERANCE_DAYS = 10
 
 
+def _top_line_backfill_error_slot(ticker: str, detail: str) -> dict:
+    """Loud, sentinel-compatible error slot for `build_top_line_backfill`
+    (Task 3, docs/loom/plans/2026-07-25-company-total-revenue.md) — mirrors
+    this file's `_acquire_error`/`_dimensional_revenue_error_slot`
+    convention — never a fabricated/empty Lane A pack."""
+    return {
+        "error": f"SEC EDGAR top-line backfill failed for {ticker!r}: {detail}",
+        "error_class": "top_line_backfill_failed",
+        "identifier": ticker,
+    }
+
+
+def _is_near_new_year_boundary(period_end_date: date) -> bool:
+    """True when `period_end_date` lands within
+    `FISCAL_BOUNDARY_TOLERANCE_DAYS` of a Jan-1 boundary (checking both the
+    period_end's own calendar year and the next one, so a date just before
+    OR just after New Year's both qualify). This is the New-Year-boundary
+    hazard Task 3 (docs/loom/plans/2026-07-25-company-total-revenue.md)
+    must fail loud on: Lane A's annual fiscal-year label is the period-end
+    CALENDAR year (SEC annual-labeling convention), which is unsound for a
+    52/53-week filer whose year-end crosses New Year (a FY2024 ending
+    2025-01-03) — and Lane A has no dei fiscal calendar to disambiguate
+    (unlike Lane B). Reuses the SAME `FISCAL_BOUNDARY_TOLERANCE_DAYS` the
+    month-lane fiscal-boundary matching uses (`_derive_fiscal_label`) —
+    never a new, uncoordinated tolerance."""
+    for jan1_year in (period_end_date.year, period_end_date.year + 1):
+        if abs((period_end_date - date(jan1_year, 1, 1)).days) <= (
+            FISCAL_BOUNDARY_TOLERANCE_DAYS
+        ):
+            return True
+    return False
+
+
+def build_top_line_backfill(ticker: str) -> dict:
+    """Annual-only `companyconcept` REST backfill for `ticker`'s top-line
+    (total) revenue (Task 3, docs/loom/plans/2026-07-25-company-total-
+    revenue.md, Smallest End State #2) — fills fiscal years older than the
+    filings Lane B (`extract_dimensional_revenue`) fetched, reshaped into
+    the SAME fact shape Lane B emits (`dimensions == {}`, `period_start`,
+    `period_end`, `accession`, `filed`, `fiscal_year`, `fiscal_quarter`,
+    `duration_months`, `duration_weeks`, `week_lane_band`) so both lanes
+    append to the one `total_revenue` series.
+
+    Fetches (`fetch_facts`/`SEC_COMPANYCONCEPT_URL`) each
+    `_TOP_LINE_REVENUE_CONCEPTS` allowlist concept IN ORDER and picks the
+    FIRST concept that actually returns rows — the same first-present
+    ordering `select_top_line_concept` applies to a filing's candidate
+    facts, applied here to which concept the filer has ANY reported
+    history under. A ticker where NO allowlist concept returns rows is a
+    loud error slot (`_top_line_backfill_error_slot`), never an
+    empty-but-successful pack.
+
+    Keeps ANNUAL rows only — `_duration_months` (this module's existing
+    day-span helper, never a hardcoded 365) on the row's own `start`->`end`
+    span must equal 12. A non-annual (quarterly/YTD) row is skipped with a
+    named `coverage` reason, never guessed: `companyconcept` tags BOTH
+    annual and quarterly rows `fp: FY` inside a single 10-K's
+    disaggregated quarterly-info block (`summarize_concept`'s own
+    docstring), so `fp` cannot discriminate annual from quarterly.
+
+    MUST NOT read the row's `fy`/`fp` fields at all: they are the FILING's
+    focus, not the fact's own period (memory `fiscal-year-derive-per-fact-
+    against-filing-calendar` trap #2, live-confirmed 2026-07-25 — every row
+    from NVDA's FY2026 filing is stamped `fy=2026`, including its FY2024
+    and FY2025 comparatives). `fiscal_year` is instead derived from the
+    row's OWN `end` — the SEC annual-labeling convention (a fiscal year is
+    named for the calendar year its period ends in) — EXCEPT within
+    `FISCAL_BOUNDARY_TOLERANCE_DAYS` of a Jan-1 boundary
+    (`_is_near_new_year_boundary`), where that convention is unsound for a
+    52/53-week filer whose year-end crosses New Year and Lane A has no dei
+    calendar to check against: such a row is skipped with a named
+    `coverage` reason instead of guessed — Lane B, which HAS the dei
+    calendar, remains the authority for those years."""
+    cik_info = resolve_cik(ticker)
+    if "error" in cik_info:
+        return cik_info
+    cik = cik_info["cik"]
+
+    winning_concept = None
+    rows: list[dict] = []
+    attempted: list[str] = []
+    for concept in _TOP_LINE_REVENUE_CONCEPTS:
+        attempted.append(concept)
+        fetched = fetch_facts(cik, concept)
+        if "error" in fetched:
+            continue
+        candidate_rows = summarize_concept(fetched.get("data", {}))
+        if candidate_rows:
+            winning_concept = concept
+            rows = candidate_rows
+            break
+
+    if winning_concept is None:
+        return _top_line_backfill_error_slot(
+            ticker,
+            "no concept in the top-line allowlist "
+            f"{_TOP_LINE_REVENUE_CONCEPTS!r} returned any companyconcept "
+            f"rows (attempted {attempted!r})",
+        )
+
+    full_concept = f"us-gaap:{winning_concept}"
+    facts: list[dict] = []
+    skipped_rows: list[dict] = []
+    for row in rows:
+        period_start = row.get("start")
+        period_end = row.get("end")
+        accession = row.get("accn")
+        synth_fact = {"period_start": period_start}
+        duration_months = _duration_months(synth_fact, ticker, period_end)
+        if duration_months != 12:
+            skipped_rows.append({
+                "type": "non_annual_row_skipped",
+                "old": None,
+                "new": None,
+                "accessions": [accession],
+                "reason": (
+                    f"row {period_start!r}->{period_end!r} for {ticker!r} "
+                    f"classifies to duration_months={duration_months} (not "
+                    "12) — Lane A backfill is annual-only; the row's own "
+                    "fy/fp are never consulted to override this"
+                ),
+            })
+            continue
+        period_end_date = date.fromisoformat(period_end)
+        if _is_near_new_year_boundary(period_end_date):
+            skipped_rows.append({
+                "type": "new_year_boundary_ambiguous",
+                "old": None,
+                "new": None,
+                "accessions": [accession],
+                "reason": (
+                    f"annual row ending {period_end!r} for {ticker!r} falls "
+                    "within FISCAL_BOUNDARY_TOLERANCE_DAYS="
+                    f"{FISCAL_BOUNDARY_TOLERANCE_DAYS} of a Jan-1 boundary — "
+                    "the period-end-year labeling convention is unsound "
+                    "here for a 52/53-week filer whose year-end crosses New "
+                    "Year, and Lane A has no dei calendar to disambiguate; "
+                    "Lane B remains the authority for this fiscal year"
+                ),
+            })
+            continue
+        duration_weeks = _duration_weeks(synth_fact, ticker, period_end)
+        week_span_days = _duration_span_days(
+            synth_fact, ticker, period_end, field="duration_weeks",
+        )
+        facts.append({
+            "concept": full_concept,
+            "dimensions": {},
+            "value": float(row.get("value")),
+            "period_start": period_start,
+            "period_end": period_end,
+            "accession": accession,
+            "filed": row.get("filed"),
+            "duration_months": duration_months,
+            "duration_weeks": duration_weeks,
+            "week_lane_band": _week_lane_class(week_span_days),
+            "fiscal_year": period_end_date.year,
+            "fiscal_quarter": "FY",
+            # Same CALENDAR-basis expression `_build_dimensional_revenue_fact`
+            # uses (:3216-3217) — never re-derived, so both lanes of the ONE
+            # `total_revenue` series compute it identically (kickoff
+            # correction: inconsistent field presence across one durable
+            # series is a worse defect than two unrelated producers
+            # differing).
+            "calendar_year": period_end_date.year,
+            "calendar_quarter": f"Q{(period_end_date.month - 1) // 3 + 1}",
+        })
+
+    return {
+        "company": ticker,
+        "facts": facts,
+        "coverage": {"skipped_rows": skipped_rows},
+    }
+
+
 # Week-based filer quarter structures (Task 2, docs/loom/plans/2026-07-18-
 # 52-53-week-filer-support.md — Gate P). Colocated with `_WEEK_BANDS` above
 # (the single week-arithmetic home this module keeps): two week-based
