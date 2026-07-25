@@ -3,8 +3,9 @@ name: data-markets
 description: |
   Layer-1 unified data fetch across US/JP/TW/KR/CN equities + macro — one
   pack.py facade, auto market detection from ticker suffix (.TW/.KS/.SS/.T/
-  bare-4-digit), 5 pack types (snapshot / memo-fetch / comps-multiples /
-  screener-batch / regime-pack). Emits a raw data pack（原始資料包，非渲染卡片）—
+  bare-4-digit), 7 pack types (snapshot / memo-fetch / comps-multiples /
+  screener-batch / regime-pack / kpi-quarterly / kpi-topline-backfill).
+  Emits a raw data pack（原始資料包，非渲染卡片）—
   structured JSON straight from source clients including SEC EDGAR,
   EDINET, TWSE, and FRED (+14 more) through a shared cache layer; use
   this for a 資料層 health check, verifying cache writes/hits (快取),
@@ -58,9 +59,13 @@ is unwritable.
 | `comps-multiples` | single or batch | `pack.py --tickers 005930.KS,000660.KS --pack comps-multiples` |
 | `screener-batch` | batch (≥2) | `pack.py --tickers 600519.SS,000858.SZ,300750.SZ --pack screener-batch` |
 | `regime-pack` | none — **requires `--market`** | `pack.py --pack regime-pack --market tw` |
+| `kpi-quarterly` | single, **US-only** | `pack.py --ticker AAPL --pack kpi-quarterly` |
+| `kpi-topline-backfill` | single, **US-only** | `pack.py --ticker AAPL --pack kpi-topline-backfill` |
 
 `regime-pack` has no ticker dimension; omitting `--market` is a usage
-error (exit 64).
+error (exit 64). `kpi-quarterly` and `kpi-topline-backfill` are refused
+(exit 64) for any market but `us` — the facade's `US_ONLY_PACKS` guard
+names this as a market-availability problem, not a pack-name typo.
 
 ## Ticker-suffix routing
 
@@ -155,6 +160,34 @@ float). Output shape:
 
 analysis-kpi's `kpi_8k_candidates.py` invokes this walker by SUBPROCESS
 (not import) to cross the analysis↔data-markets layer boundary.
+
+## Top-line revenue lane (US SEC)
+
+`kpi-quarterly`'s per-filing parse (`extract_dimensional_revenue`) now
+ALSO resolves and emits the company's flat top-line (total) revenue fact
+for every filing it walks, at zero extra fetch cost — the candidate facts
+were already inside the parse, only dropped by the dimensional gate
+before. Per filing, exactly ONE concept is emitted: the first-present
+entry, in this fixed order, from a closed allowlist — `Revenues` →
+`RevenuesNetOfInterestExpense` →
+`RevenueFromContractWithCustomerExcludingAssessedTax` →
+`RevenueFromContractWithCustomerIncludingAssessedTax`. A filing with no
+allowlist candidate emits nothing for that filing and is recorded under
+`coverage.top_line_gaps` with a named reason — never guessed.
+
+`--pack kpi-topline-backfill` (**US-only**, single ticker) reaches
+further back via the SEC `companyconcept` REST endpoint over the same
+allowlist, picking the first concept with any reported history. It is
+**annual-only by design**: a `companyconcept` row carries no fiscal
+calendar, so a quarterly/YTD row (duration ≠ 12 months) and an annual row
+whose period end sits within `FISCAL_BOUNDARY_TOLERANCE_DAYS` of a Jan-1
+boundary are both skipped rather than guessed at — the latter because
+the period-end-year labeling convention is unsound for a 52/53-week
+filer whose fiscal year crosses New Year, and this lane (unlike
+`kpi-quarterly`) has no dei fiscal calendar to disambiguate. Both skip
+classes land in `coverage.skipped_rows` with a named reason. The
+envelope carries `"source_kind": "xbrl-companyfacts"` so the KPI ingest
+layer assigns these points the correct provenance.
 
 ## API keys
 
