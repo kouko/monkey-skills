@@ -169,6 +169,200 @@ def _stub_fetch(sec_client, *, winning_concept: str, rows: list[dict]):
     return resolve_patch, fetch_patch
 
 
+# --- Real captured Task-1 probe values for the TWO-CONCEPT filers
+# (`fixtures/topline_probe_2026-07-25.json`), the only place in this repo
+# where one period is covered by two allowlist concepts at once -- which is
+# precisely the per-period tie the Task-2 merge has to resolve.
+#
+# COST reports `Revenues` and `RevenueFromContractWithCustomerExcluding
+# AssessedTax` at the SAME value for the same period (the AGREEMENT case).
+# WMT reports them at DIFFERENT values -- 713,163M is its own "Total
+# revenues" line, 706,413M excludes membership/other (the CONFLICT case,
+# already named in `_TOP_LINE_REVENUE_CONCEPTS`'s own comment).
+#
+# CIKs are the accession prefixes (Costco 909832, Walmart 104169). Windows
+# other than each filer's real captured one are COUNTERFACTUAL-WINDOW
+# mutations, per this module's stated convention.
+_COST_CIK = 909832
+_COST_ACCN = "0000909832-25-000101"
+_COST_VALUE = 275235000000.0
+
+_WMT_CIK = 104169
+_WMT_ACCN = "0000104169-26-000055"
+_WMT_REVENUES_VALUE = 713163000000.0
+_WMT_RFCC_VALUE = 706413000000.0
+
+# `filed` is NOT recorded in the probe fixture, and no assertion below reads
+# it. These rows therefore carry the probe's own CAPTURE date as an openly
+# declared PLACEHOLDER -- never passed off as the filing's real acceptance
+# date. (The fabrication risk repo memory `hand-authored-fixture-is-a-
+# fabrication-risk` guards is presenting an INVENTED value as a captured
+# one; every dollar figure above is captured, and this field is declared.)
+_PROBE_CAPTURE_DATE = "2026-07-25"
+
+
+def _two_concept_row(start: str, end: str, *, accn: str, value: float) -> dict:
+    """One raw companyconcept row for the two-concept filers above -- same
+    `summarize_concept` input shape as `_row`, with the value and carrying
+    accession supplied per filer instead of NVDA's."""
+    return {
+        "start": start, "end": end, "val": value, "accn": accn,
+        "form": _NVDA_FORM, "fy": 2026, "fp": "FY",
+        "filed": _PROBE_CAPTURE_DATE,
+    }
+
+
+def _cost_row(start: str, end: str) -> dict:
+    return _two_concept_row(start, end, accn=_COST_ACCN, value=_COST_VALUE)
+
+
+def _wmt_row(start: str, end: str, *, value: float) -> dict:
+    return _two_concept_row(start, end, accn=_WMT_ACCN, value=value)
+
+
+def _stub_fetch_by_concept(
+    sec_client, rows_by_concept: dict[str, list[dict]], *, cik: int, ticker: str,
+):
+    """The multi-concept sibling of `_stub_fetch` (Task 2,
+    docs/loom/plans/2026-07-26-us-as-reported-statement-lane.md): each
+    allowlist concept returns its OWN row list, so a filer that carries two
+    concepts at once -- or one concept per era -- is representable. A
+    concept absent from the mapping returns the same `{"error": ...}` slot
+    `_stub_fetch` gives a concept with no history."""
+
+    def _fetch(fetch_cik, concept):
+        assert fetch_cik == cik
+        rows = rows_by_concept.get(concept)
+        if rows is None:
+            return {"error": f"no data for {concept}"}
+        return {"data": _raw_companyconcept_payload(rows)}
+
+    resolve_patch = mock.patch.object(
+        sec_client, "resolve_cik", return_value={"cik": cik, "ticker": ticker},
+    )
+    fetch_patch = mock.patch.object(
+        sec_client, "fetch_facts", side_effect=_fetch,
+    )
+    return resolve_patch, fetch_patch
+
+
+def test_backfill_spans_a_mid_history_concept_switch(sec_client):
+    """THE TRUNCATION FIX (Task 2). A filer whose EARLY years are tagged
+    `Revenues` and whose LATER years are tagged
+    `RevenueFromContractWithCustomerExcludingAssessedTax` -- the ASC-606
+    tag switch -- must yield ONE CONTINUOUS annual series spanning both
+    eras, each fact stamped with the concept its OWN period was reported
+    under.
+
+    The shipped 2.36.0 behaviour returns only the FIRST allowlist concept
+    that has any rows and `break`s, so such a filer keeps only its
+    pre-switch years: measured live 2026-07-26, MSFT returned 3 annual
+    facts spanning 2008-06-30..2010-06-30 and AAPL 3 spanning
+    2016-09-24..2018-09-29, while NVDA (never switched) returned 42
+    spanning 2008..2026. 10 of the 47-filer corpus are silently short.
+
+    Concept resolution is therefore PER PERIOD, not per company."""
+    early_era = [
+        _cost_row("2022-08-29", "2023-09-03"),
+        _cost_row("2023-09-04", "2024-09-01"),
+    ]
+    late_era = [
+        _cost_row("2024-09-02", "2025-08-31"),  # the real captured window
+        _cost_row("2025-09-01", "2026-08-30"),
+    ]
+    resolve_patch, fetch_patch = _stub_fetch_by_concept(sec_client, {
+        "Revenues": early_era,
+        "RevenueFromContractWithCustomerExcludingAssessedTax": late_era,
+    }, cik=_COST_CIK, ticker="COST")
+    with resolve_patch, fetch_patch:
+        pack = sec_client.build_top_line_backfill("COST")
+
+    assert "error" not in pack, pack
+    by_end = {f["period_end"]: f for f in pack["facts"]}
+    assert set(by_end) == {
+        "2023-09-03", "2024-09-01", "2025-08-31", "2026-08-30",
+    }, (
+        "a mid-history tag switch must not truncate the series at the "
+        f"switch: got {sorted(by_end)}"
+    )
+    assert by_end["2023-09-03"]["concept"] == "us-gaap:Revenues"
+    assert by_end["2024-09-01"]["concept"] == "us-gaap:Revenues"
+    for period_end in ("2025-08-31", "2026-08-30"):
+        assert by_end[period_end]["concept"] == (
+            "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax"
+        ), by_end[period_end]
+
+
+def test_backfill_breaks_a_same_period_tie_by_allowlist_order_when_values_agree(
+    sec_client,
+):
+    """COST's REAL captured double-tagging (probe fixture
+    `topline_probe_2026-07-25.json`): for the SAME period it reports both
+    `Revenues` and `RevenueFromContractWithCustomerExcludingAssessedTax` at
+    the SAME value (275,235,000,000). The values agree, so the period is
+    supplied by the ALLOWLIST-ORDER winner (`Revenues`, index 0) -- exactly
+    one fact, no duplicate, and nothing skipped."""
+    window = ("2024-09-02", "2025-08-31")
+    resolve_patch, fetch_patch = _stub_fetch_by_concept(sec_client, {
+        "Revenues": [_cost_row(*window)],
+        "RevenueFromContractWithCustomerExcludingAssessedTax": [
+            _cost_row(*window),
+        ],
+    }, cik=_COST_CIK, ticker="COST")
+    with resolve_patch, fetch_patch:
+        pack = sec_client.build_top_line_backfill("COST")
+
+    assert "error" not in pack, pack
+    assert len(pack["facts"]) == 1, pack["facts"]
+    assert pack["facts"][0]["concept"] == "us-gaap:Revenues", pack["facts"]
+    assert pack["facts"][0]["value"] == _COST_VALUE
+    assert pack["coverage"]["skipped_rows"] == [], pack["coverage"]
+
+
+def test_backfill_skips_a_period_whose_two_concepts_disagree_on_value(sec_client):
+    """WMT's REAL captured conflict (same probe fixture): for the SAME
+    period it reports `Revenues` = 713,163,000,000 (its own "Total
+    revenues" line) and `RevenueFromContractWithCustomerExcludingAssessedTax`
+    = 706,413,000,000 (which excludes membership/other). Two allowlist tags,
+    one period, DIFFERENT totals.
+
+    Lane A never guesses which tag is right: that period is SKIPPED with the
+    named `top_line_concept_value_conflict` reason, and the filer's other
+    periods are unaffected. (`select_top_line_concept`'s allowlist order is
+    a tie-break for AGREEING values, never a licence to pick a number.)"""
+    conflicted = ("2025-02-01", "2026-01-31")
+    clean = ("2024-02-01", "2025-01-31")
+    resolve_patch, fetch_patch = _stub_fetch_by_concept(sec_client, {
+        "Revenues": [
+            _wmt_row(*conflicted, value=_WMT_REVENUES_VALUE),
+            _wmt_row(*clean, value=_WMT_REVENUES_VALUE),
+        ],
+        "RevenueFromContractWithCustomerExcludingAssessedTax": [
+            _wmt_row(*conflicted, value=_WMT_RFCC_VALUE),
+        ],
+    }, cik=_WMT_CIK, ticker="WMT")
+    with resolve_patch, fetch_patch:
+        pack = sec_client.build_top_line_backfill("WMT")
+
+    assert "error" not in pack, pack
+    assert {f["period_end"] for f in pack["facts"]} == {"2025-01-31"}, (
+        "a period where two allowlist concepts disagree must never be "
+        f"emitted under either tag: {pack['facts']}"
+    )
+
+    skipped = pack["coverage"]["skipped_rows"]
+    flags = [
+        f for f in skipped if f["type"] == "top_line_concept_value_conflict"
+    ]
+    assert len(flags) == 1, skipped
+    flag = flags[0]
+    assert set(flag) == {"type", "old", "new", "accessions", "reason"}, flag
+    assert flag["accessions"] == [_WMT_ACCN], flag
+    assert "2026-01-31" in flag["reason"], flag
+    for value in (_WMT_REVENUES_VALUE, _WMT_RFCC_VALUE):
+        assert str(value) in flag["reason"], flag
+
+
 def test_backfill_keeps_annual_rows_with_period_derived_fiscal_year(sec_client):
     """Annual rows (12-month start->end span) survive; each carries
     `fiscal_year` from its OWN `end` year (never the row's `fy`, which is
@@ -335,8 +529,18 @@ def test_backfill_picks_first_allowlist_concept_with_data(sec_client):
     """`Revenues` (index 0) has no data for this (synthetic) filer but
     `RevenueFromContractWithCustomerExcludingAssessedTax` (index 2) does --
     the backfill must pick the first-present concept BY DATA AVAILABILITY,
-    mirroring `select_top_line_concept`'s ordering, and never fetch
-    concepts past the first hit."""
+    mirroring `select_top_line_concept`'s ordering.
+
+    AMENDED BY TASK 2 (docs/loom/plans/2026-07-26-us-as-reported-statement-
+    lane.md): this test used to also pin "never fetch concepts past the
+    first hit". That short-circuit IS the shipped truncation defect -- a
+    filer's post-switch years live under a concept the scan stopped before
+    reaching, which cost 10 of the 47-filer corpus their later history. The
+    `calls` assertion is therefore inverted rather than dropped: ALL FOUR
+    allowlist concepts must be fetched, in order, so per-period resolution
+    has every era's rows to resolve from. What this test still pins
+    unchanged is the WINNER: index 2 supplies the period because it is the
+    only concept with data for it."""
     rows = [_row("2025-01-27", "2026-01-25")]
     resolve_patch = mock.patch.object(
         sec_client, "resolve_cik",
@@ -358,10 +562,7 @@ def test_backfill_picks_first_allowlist_concept_with_data(sec_client):
     assert pack["facts"][0]["concept"] == (
         "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax"
     ), pack["facts"]
-    assert calls == [
-        "Revenues", "RevenuesNetOfInterestExpense",
-        "RevenueFromContractWithCustomerExcludingAssessedTax",
-    ], calls
+    assert calls == list(sec_client._TOP_LINE_REVENUE_CONCEPTS), calls
 
 
 def test_backfill_returns_loud_error_when_no_allowlist_concept_has_data(sec_client):

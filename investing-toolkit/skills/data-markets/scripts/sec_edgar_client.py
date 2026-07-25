@@ -2785,6 +2785,133 @@ def _is_near_new_year_boundary(period_end_date: date) -> bool:
     return days_into_the_year <= FISCAL_BOUNDARY_TOLERANCE_DAYS
 
 
+def _resolve_concept_per_period(
+    ordered_concepts: tuple[str, ...],
+    rows_by_concept: dict[str, list[dict]],
+    *,
+    identifier: str,
+    conflict_type: str,
+) -> tuple[list[tuple[str, dict]], list[dict]]:
+    """Resolve WHICH concept of an ordered first-present chain supplies each
+    PERIOD (Task 2, docs/loom/plans/2026-07-26-us-as-reported-statement-
+    lane.md), given every chain member's `summarize_concept` rows.
+
+    Deliberately general — an ordered concept list plus per-concept rows in,
+    resolved `(concept, row)` pairs plus skip flags out — because Task 5's
+    multi-concept statement fetch resolves the SAME tie for each of its 14
+    spine-field chains and must not re-implement this. Nothing here knows
+    the chain is about revenue; the caller names the skip `conflict_type`.
+    (`ordered_concepts` is annotated as the tuple its in-repo callers hold
+    — `_TOP_LINE_REVENUE_CONCEPTS` and the plan's pinned spine chains are
+    declared as data — but the body only iterates it and tests membership,
+    so any ordered sequence of local names works.)
+
+    WHY PER PERIOD RATHER THAN PER COMPANY. A first-present pick made once
+    for the whole filer truncates every filer that SWITCHED tags mid-history
+    (the ASC-606 `Revenues` -> `RevenueFromContractWithCustomerExcluding
+    AssessedTax` migration): measured live 2026-07-26 over the 47-filer
+    corpus, 10 filers lost their post-switch years that way — MSFT kept only
+    2008-06-30..2010-06-30, AAPL only 2016-09-24..2018-09-29 — while NVDA,
+    which never switched, kept all 42 of its rows. The chain order is a
+    SAME-PERIOD tiebreak, never a per-company winner.
+
+    The period key is the row's own `(start, end)` window — `start` is None
+    for an instant, so the same key serves Task 5's balance-sheet rows. The
+    row's `fy`/`fp` are never read (they are the CARRYING FILING's focus —
+    see `build_top_line_backfill`).
+
+    WITHIN one concept, every row for a period is passed through UNTOUCHED,
+    including several rows carrying different values for the same window:
+    that is a restatement across adjacent filings, and resolving it is
+    `kpi_xbrl._reduce_window_group`'s job (overlap policy C, newest-filed
+    wins) downstream, not this function's. Two concepts are compared by
+    their per-concept SET of distinct values, so a period whose competing
+    concepts tell the same story — same value, or the same restatement
+    history — resolves cleanly to the chain-order winner.
+
+    When the competing concepts DISAGREE, the period is skipped whole (both
+    concepts, all rows) with a `conflict_type` flag in the ONE DQC shape
+    this module uses (type, old, new, accessions, reason) — never guessed at
+    by chain order. That posture is ADJACENT to `_reduce_window_group`'s,
+    not identical to it, and the difference is worth stating: that function
+    raises only WITHIN a single accession and for a single signature, and
+    treats cross-accession disagreement as a legitimate restatement to keep.
+    The rule here skips regardless of accession and across two different
+    concepts — a case the cited precedent deliberately does not treat as
+    fatal. What the two share is the refusal to pick a winner when the
+    source is genuinely ambiguous, not the scope of the ambiguity. This is
+    a real, captured condition rather than a hypothetical: WMT tags the same
+    period `Revenues` = 713,163M (its own "Total revenues" line) AND
+    `RevenueFromContractWithCustomerExcludingAssessedTax` = 706,413M (which
+    excludes membership/other) — fixture `topline_probe_2026-07-25.json`.
+
+    Returns `(resolved, skipped)` where `resolved` is a list of
+    `(winning_concept, row)` pairs — the concept travels WITH the row
+    because it now varies per period — ordered by each period's first
+    appearance in a chain-order scan (deterministic, so a caller's output
+    order never depends on dict iteration luck)."""
+    rows_by_period: dict[tuple, dict[str, list[dict]]] = {}
+    for concept in ordered_concepts:
+        for row in rows_by_concept.get(concept) or ():
+            period = (row.get("start"), row.get("end"))
+            rows_by_period.setdefault(period, {}).setdefault(
+                concept, []
+            ).append(row)
+
+    resolved: list[tuple[str, dict]] = []
+    skipped: list[dict] = []
+    for (period_start, period_end), by_concept in rows_by_period.items():
+        distinct_values = {
+            concept: frozenset(row.get("value") for row in rows)
+            for concept, rows in by_concept.items()
+        }
+        if len(set(distinct_values.values())) > 1:
+            skipped.append({
+                "type": conflict_type,
+                "old": None,
+                "new": None,
+                "accessions": sorted({
+                    row.get("accn")
+                    for rows in by_concept.values() for row in rows
+                }, key=lambda accn: (accn is None, accn)),
+                "reason": (
+                    f"period {period_start!r}->{period_end!r} for "
+                    f"{identifier!r} is reported under "
+                    f"{len(by_concept)} concepts of the chain "
+                    f"{list(ordered_concepts)!r} with DISAGREEING values ("
+                    + ", ".join(
+                        # None-last on both sorts: `summarize_concept`
+                        # reads `val`/`accn` with a bare `.get`, so a
+                        # missing one must not turn a DIAGNOSTIC message
+                        # into a TypeError.
+                        f"{concept}="
+                        f"{sorted(values, key=lambda v: (v is None, v))!r}"
+                        for concept, values in distinct_values.items()
+                    )
+                    + ") — the chain order is a tiebreak for concepts that "
+                    "AGREE, never a licence to pick which reported total is "
+                    "right, so this period is skipped under BOTH concepts "
+                    "rather than emitted under one of them"
+                ),
+            })
+            continue
+        winning_concept = next(
+            concept for concept in ordered_concepts if concept in by_concept
+        )
+        # Only the winner's rows survive: the losing concept's rows — and
+        # with them their accessions and `filed` dates — are dropped. Equal
+        # distinct-value SETS do not imply equal per-row chronology, so if
+        # the two concepts' restatement vintages were ordered differently,
+        # `_reduce_window_group`'s newest-filed-wins could land on a
+        # different member of the same value set. Vanishingly rare (both
+        # tags come from the same filings), stated because it is invisible
+        # from the value-set comparison above.
+        resolved.extend(
+            (winning_concept, row) for row in by_concept[winning_concept]
+        )
+    return resolved, skipped
+
+
 def build_top_line_backfill(ticker: str) -> dict:
     """Annual-only `companyconcept` REST backfill for `ticker`'s top-line
     (total) revenue (Task 3, docs/loom/plans/2026-07-25-company-total-
@@ -2795,13 +2922,37 @@ def build_top_line_backfill(ticker: str) -> dict:
     `duration_months`, `duration_weeks`, `week_lane_band`) so both lanes
     append to the one `total_revenue` series.
 
-    Fetches (`fetch_facts`/`SEC_COMPANYCONCEPT_URL`) each
-    `_TOP_LINE_REVENUE_CONCEPTS` allowlist concept IN ORDER and picks the
-    FIRST concept that actually returns rows — the same first-present
-    ordering `select_top_line_concept` applies to a filing's candidate
-    facts, applied here to which concept the filer has ANY reported
-    history under. A ticker where NO allowlist concept returns rows is a
-    loud error slot (`_top_line_backfill_error_slot`), never an
+    Fetches (`fetch_facts`/`SEC_COMPANYCONCEPT_URL`) EVERY
+    `_TOP_LINE_REVENUE_CONCEPTS` allowlist concept, then resolves which
+    concept supplies each PERIOD (`_resolve_concept_per_period` — shared
+    with Task 5's statement lane). The allowlist order is a SAME-PERIOD
+    tiebreak, applied only where the competing concepts agree on the value;
+    a period whose concepts disagree is skipped with a named
+    `top_line_concept_value_conflict` reason rather than resolved by order.
+
+    LANE A AND LANE B RESOLVE A DOUBLE-TAGGED PERIOD DIFFERENTLY, AND THAT
+    IS DELIBERATE. For WMT's identical double-tag, Lane B's
+    `select_top_line_concept` resolves by allowlist order and emits
+    713,163M; this lane emits nothing for that period. The asymmetry tracks
+    the evidence each lane holds: Lane B is reading ONE filing and can see
+    the two tags in their reported presentation context, so picking the
+    company's own "Total revenues" line is a grounded call. This lane sees
+    only decontextualised `companyconcept` rows, where the same pick would
+    be a guess. Net effect on the shared `total_revenue` series: Lane B
+    still supplies the period, so this is a coverage gap in ONE lane, not a
+    hole in the series — and never a fabricated value. If the two lanes are
+    ever made to state one policy, change them together.
+
+    Resolving per company instead — pick the first concept with ANY rows
+    and stop, which is what this function did through 2.36.0 — TRUNCATES
+    every filer that switched revenue tags mid-history (the ASC-606
+    migration), because the pre-switch concept wins the whole filer and its
+    post-switch years are never looked at. Measured live 2026-07-26 across
+    the 47-filer corpus, 10 filers were silently short: MSFT returned 3
+    annual facts spanning 2008-06-30..2010-06-30 and AAPL 3 spanning
+    2016-09-24..2018-09-29, against NVDA's (never switched) full 42
+    spanning 2008..2026. A ticker where NO allowlist concept returns rows
+    is still a loud error slot (`_top_line_backfill_error_slot`), never an
     empty-but-successful pack.
 
     Keeps ANNUAL rows only — `_duration_months` (this module's existing
@@ -2857,8 +3008,9 @@ def build_top_line_backfill(ticker: str) -> dict:
         return cik_info
     cik = cik_info["cik"]
 
-    winning_concept = None
-    rows: list[dict] = []
+    # EVERY allowlist concept is fetched — a filer's post-switch years live
+    # under a concept a first-hit-and-break scan never reaches.
+    rows_by_concept: dict[str, list[dict]] = {}
     attempted: list[str] = []
     for concept in _TOP_LINE_REVENUE_CONCEPTS:
         attempted.append(concept)
@@ -2867,11 +3019,9 @@ def build_top_line_backfill(ticker: str) -> dict:
             continue
         candidate_rows = summarize_concept(fetched.get("data", {}))
         if candidate_rows:
-            winning_concept = concept
-            rows = candidate_rows
-            break
+            rows_by_concept[concept] = candidate_rows
 
-    if winning_concept is None:
+    if not rows_by_concept:
         return _top_line_backfill_error_slot(
             ticker,
             "no concept in the top-line allowlist "
@@ -2879,11 +3029,19 @@ def build_top_line_backfill(ticker: str) -> dict:
             f"rows (attempted {attempted!r})",
         )
 
-    full_concept = f"us-gaap:{winning_concept}"
+    resolved_rows, skipped_rows = _resolve_concept_per_period(
+        _TOP_LINE_REVENUE_CONCEPTS,
+        rows_by_concept,
+        identifier=ticker,
+        conflict_type="top_line_concept_value_conflict",
+    )
+
     facts: list[dict] = []
-    skipped_rows: list[dict] = []
     fiscal_calendars: dict[str, dict] = {}
-    for row in rows:
+    for winning_concept, row in resolved_rows:
+        # The concept now varies PER PERIOD, so it is stamped per fact
+        # rather than once for the whole pack.
+        full_concept = f"us-gaap:{winning_concept}"
         period_start = row.get("start")
         period_end = row.get("end")
         accession = row.get("accn")
