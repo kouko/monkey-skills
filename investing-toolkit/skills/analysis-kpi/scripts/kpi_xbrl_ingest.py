@@ -141,10 +141,12 @@ def derive_kpi_id(concept: str, dimensions: dict) -> str:
     return concept_token + "__" + "__".join(parts)
 
 
-def _normalized_consolidation(consolidation):
+def _consumer_consolidation(consolidation):
     """The consolidation qualifier as the CONSUMER sees it — delegated to
     `kpi_xbrl._normalize_consolidation`, the same function `_fact_matches`
-    applies to both sides of its comparison.
+    applies to both sides of its comparison. Named for the DIRECTION of that
+    delegation (this driver asking its consumer) rather than for the operation,
+    so it does not read as a near-homograph of the delegate it calls.
 
     Deliberate reach into a private name, mirroring `_require_no_stored_
     disagreement`'s use of `kpi_store._dedup_key`: the identity rule must be
@@ -173,19 +175,30 @@ def _signature_key(concept: str, dimensions: dict, consolidation) -> tuple:
     OVER-FIRES on a pair the consumer would have merged correctly (aborting the
     whole ingest — the live INTC Lane B failure of 2026-07-25, where FY2026
     10-Qs dropped the ConsolidationItemsAxis tag their FY2023-25 predecessors
-    carried), and were the guard absent, the two selectors would append every
-    matched fact TWICE. The guard's notion of "distinct" must equal the
-    consumer's notion of "same" (`docs/loom/memory/derived-durable-id-slug-is-a-
-    lossy-one-way-door.md`).
+    carried), and were the guard absent, the two selectors would each hand
+    `kpi_store.append` every matched fact TWICE. That second effect stops at the
+    store: `append` is idempotent on the dedup key (`kpi_store.py:352-355`), so
+    the durable record count is unchanged and the visible damage is a doubled
+    `appended` count in this driver's CLI summary — a reporting lie plus wasted
+    work, not durable corruption. The decision to collapse rests on the
+    consumer's identity rule, not on that consequence. The guard's notion of
+    "distinct" must equal the consumer's notion of "same"
+    (`docs/loom/memory/derived-durable-id-slug-is-a-lossy-one-way-door.md`).
 
-    Only the reconciliation-qualifier axis collapses. `concept` and the
-    breakdown `dimensions` stay exact, so two genuinely distinct breakdowns
-    deriving one kpi_id still trip `_claim_kpi_id`.
+    Only the reconciliation-qualifier axis collapses, and only where the
+    consumer collapses it. `concept` and the breakdown `dimensions` stay exact,
+    so two genuinely distinct breakdowns deriving one kpi_id still trip
+    `_claim_kpi_id` — and so do two NON-DEFAULT qualifier members (e.g.
+    `OperatingSegmentsMember` vs `IntersegmentEliminationMember`), which
+    `_normalize_consolidation` does NOT fold together. Dropping the qualifier
+    from this key entirely would silently discard one of that pair; it is
+    normalized here, never deleted (pinned by
+    `test_ingest_raises_on_two_non_default_consolidation_members`).
     """
     return (
         concept,
         tuple(sorted(dimensions.items())),
-        _normalized_consolidation(consolidation),
+        _consumer_consolidation(consolidation),
     )
 
 
@@ -354,7 +367,7 @@ def ingest_pack(fact_pack: dict, source_kind: str = _SOURCE_KIND) -> dict:
                 # so either raw value selects the identical fact set) but a
                 # gratuitous order-dependence in a value that is stored and
                 # passed onward.
-                "consolidation": _normalized_consolidation(consolidation),
+                "consolidation": _consumer_consolidation(consolidation),
             },
         )
 

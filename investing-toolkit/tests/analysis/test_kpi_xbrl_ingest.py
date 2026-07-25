@@ -320,6 +320,57 @@ def test_ingest_collision_guard_fires_across_consolidation_variants(tmp_path):
     )
 
 
+def test_ingest_raises_on_two_non_default_consolidation_members(tmp_path):
+    """Two facts sharing one concept+breakdown but carrying two NON-DEFAULT
+    `ConsolidationItemsAxis` members must be REJECTED loudly.
+
+    This is the axis the sibling collapse test cannot see, and it is what
+    separates NORMALIZING the qualifier from DELETING it. `_normalize_
+    consolidation` folds only `None` into `OperatingSegmentsMember`; it does not
+    make `IntersegmentEliminationMember` the same series. Since `derive_kpi_id`
+    drops the axis entirely, that pair derives ONE kpi_id from two series the
+    consumer keeps apart — so the store's dedup key would silently discard one
+    of them, and failing loud is the only honest answer.
+
+    Without this test the suite cannot distinguish the shipped
+    `_signature_key` from one that drops `consolidation` from the key
+    altogether: that mutant collapses the pair into a single selector whose
+    qualifier matches only ONE of the two facts, and the other is dropped with
+    no error and no trace — `appended: 1` for a 2-fact pack. The collapse test
+    passes under that mutant; only this one fails.
+
+    SYNTHETIC probe (mirrors `_collision_pack`): no real INTC filing tags this
+    concept with an intersegment-elimination member, so the pack is the live
+    fixture's own facts RE-TAGGED on the qualifier axis only. Values /
+    dimensions / accessions / windows are the captured ones, never hand-typed.
+    """
+    store_dir = tmp_path / "store"
+    env = {**os.environ, "KPI_STORE_DIR": str(store_dir)}
+
+    pack = _consolidation_variant_pack()
+    operating, elimination = (dict(pack["facts"][0]), dict(pack["facts"][3]))
+    operating["consolidation"] = "OperatingSegmentsMember"
+    elimination["consolidation"] = "IntersegmentEliminationMember"
+    pack["facts"] = [operating, elimination]
+
+    pack_path = tmp_path / "non_default_members_pack.json"
+    pack_path.write_text(json.dumps(pack), encoding="utf-8")
+
+    result = _run_ingest(pack_path, env)
+    assert result.returncode != 0, (
+        "two NON-DEFAULT consolidation members on one concept+breakdown derive "
+        "ONE kpi_id from two series the consumer keeps apart — that must fail "
+        f"loud, never silently drop one: stdout={result.stdout!r}"
+    )
+    assert "collision" in result.stderr.lower(), (
+        f"rejection must name the collision: stderr={result.stderr!r}"
+    )
+    # Nothing may reach the store: the guard fires before the first append.
+    assert not list(store_dir.glob("*.json")) if store_dir.exists() else True, (
+        "a rejected pack must leave no partial write"
+    )
+
+
 def test_ingest_kpi_id_derivation(ingest_module):
     """kpi_id is derived deterministically and INJECTIVELY from the FULL
     dimensional signature (concept + sorted breakdown axis:member local-names,

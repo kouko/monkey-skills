@@ -245,6 +245,23 @@
       in the CLI-reference sentence rather than stating a count that is wrong about
       one referent or the other — so closing this item also means deleting that
       disclosure clause.
+  (j) 🟢 **A kpi_id collision aborts BOTH lanes for the WHOLE pack** — FILED AS
+      DELIBERATE, not a defect. `ingest_pack` builds every point before appending
+      any (`kpi_xbrl_ingest.py`, `_claim_kpi_id` raises during selector mapping),
+      so one colliding dimensional signature refuses the pack's top-line lane too:
+      the live INTC Lane B run of 2026-07-25 landed ZERO of 473 facts on a single
+      Intel-Foundry signature collision. That all-or-nothing blast radius is arc
+      (d)'s shipped design and the alternative is worse — partial ingest would
+      leave an append-only store holding one lane of a pack, and the store's dedup
+      key would silently keep the FIRST of two colliding series, which is exactly
+      the one-way-door data loss the guard exists to prevent
+      (`docs/loom/memory/derived-durable-id-slug-is-a-lossy-one-way-door.md`).
+      Fail-loud beats a silent discard on a durable store. Revisit ONLY if a real
+      pack is found where a genuinely-distinct collision coexists with an
+      otherwise-healthy top-line lane AND the operator cannot re-run after fixing
+      the producer; the fix would then be per-lane isolation of the claim map, not
+      a weaker guard. Raised by the whole-branch review 2026-07-25 while closing
+      the over-fire that made the blast radius visible.
   (j) 🟡 **The New-Year guard misses a two-sided divergence along the dei NOMINAL
       fiscal-year end** (`sec_edgar_client.py::_is_near_new_year_boundary`). The
       shipped guard is one-sided along `period_end` — correct, and it recovered the
