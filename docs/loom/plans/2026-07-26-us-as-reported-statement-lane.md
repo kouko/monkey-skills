@@ -128,12 +128,23 @@ caller handed a brief path, so layers (i)/(ii) do not run. Stated, not skipped.
   - `/Users/kouko/.supacode/repos/monkey-skills/finacial-analytics-r2/docs/loom/plans/2026-07-26-us-as-reported-statement-lane.md`
 - **Acceptance**:
   - **RED**: `test_sec_edgar_statements.py::test_emits_one_fact_per_concept_per_annual_period` fails
-  - **GREEN**: the pack carries the pinned envelope + one fact per (concept, annual period) with `accn`/`filed`/`form`/`unit`; a non-10-K carrier and a non-annual span are each skipped with their own named reason
+  - **GREEN**: the pack carries the pinned envelope + one fact per (concept,
+    annual period, **accession**) with `accn`/`filed`/`form`/`unit`; a non-10-K
+    carrier and a non-annual span are each skipped with their own named reason.
+    **CORRECTED 2026-07-26 after the Task 5 review** — this line originally said
+    one fact per (concept, annual period), which was too narrow and was the
+    orchestrator's error, not the implementation's. Two rows for one window from
+    DIFFERENT accessions are a restatement, and the brief's own job story asks for
+    "every vintage preserved"; the shared resolver passes them through by design and
+    collapse is `kpi_xbrl._reduce_window_group`'s job downstream. The multiplicity
+    is the load-bearing property of this lane, so it must be pinned by a test in
+    both directions, not left implied.
 - **External surfaces**:
   - HTTP API: `data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json` — grounding: in-repo pinned use at `sec_edgar_client.py:56` + Task 1's committed fixture
 - **Dependencies**: Task 2 completes first
 - **Independent**: false
 - **Brief item covered**: §Decision — "Scope of stored concepts: the spine's source concepts only"; "Granularity: annual (10-K-carried) only"
+- **Status**: done(1840695e)
 
 ## Task 6 — Refuse a CIK that carries no statement history
 
@@ -159,8 +170,25 @@ caller handed a brief path, so layers (i)/(ii) do not run. Stated, not skipped.
 ## Task 7 — Flag a balance-sheet identity residual in the view
 
 - **Description**: For each period the derived spine covers, compute
-  `total_assets − (total_liabilities + mezzanine + total_equity)` and attach a flag
-  when `|residual| / total_assets` exceeds **1e-5**. The mezzanine term
+  `total_assets − (total_liabilities + mezzanine + total_equity [+ minority_interest])`
+  and attach a flag when `|residual| / total_assets` exceeds **1e-5**.
+  **CORRECTED 2026-07-26 after the Task 7 review** — this line originally read as a
+  flat three-term identity, which was WRONG, and the error originated here rather
+  than in the implementation. The equity term must be whole equity. Whether it
+  already is depends on which concept that period's `total_equity` chain resolved
+  to: `StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest`
+  already contains the non-controlling interest, so nothing is added; plain
+  `StockholdersEquity` is parent-only, so `MinorityInterest` MUST be added for that
+  period or the residual is exactly the NCI and the period is falsely flagged.
+  The chain in the PIN below puts parent-only FIRST, so this is the majority case,
+  not an edge case: cross-tabbed against the committed probe fixture, 17 of 32
+  checkable filers resolve parent-only (CVX, PSX, WFC, C, MS, IBM, QCOM, COST, PEP,
+  JNJ, PFE, UNH, BA, GE, F, GM, TSLA), and the effect is material for GE, F, GM,
+  UNH, C and MS. The "30 of 32 balance exactly" measurement was produced by the
+  probe's own four-term, incl-NCI-preferring formula
+  (`capture_us_statement_shapes_probe.py`, `_balance_identity`) — it is evidence for
+  the CONDITIONAL form above, and must not be cited as evidence for a flat
+  three-term one. The mezzanine term
   (`TemporaryEquityCarryingAmountIncludingPortionAttributableToNoncontrollingInterests`,
   falling back to `RedeemableNoncontrollingInterestEquityCarryingAmount`) is
   REQUIRED, not optional — measured, TSLA's entire residual was exactly its
@@ -178,6 +206,7 @@ caller handed a brief path, so layers (i)/(ii) do not run. Stated, not skipped.
 - **Dependencies**: Task 4 completes first
 - **Independent**: false
 - **Brief item covered**: §Decision — "the view computes `A − (L + mezzanine + E)` per period and emits a flag when it exceeds a relative tolerance; it does not refuse data"; §Resolved at kickoff #2 (1e-5)
+- **Status**: done(dada7641)
 
 ## Task 8 — Wrap the statement pack in the pack_us envelope
 
@@ -218,6 +247,7 @@ caller handed a brief path, so layers (i)/(ii) do not run. Stated, not skipped.
 - **Dependencies**: Task 3 completes first
 - **Independent**: true
 - **Brief item covered**: §Smallest End State #1 — "A new producer stores, per period, the filer's own us-gaap concepts for the spine's source concepts"
+- **Status**: done(a68df126)
 
 ## Task 10 — Document the lane and bump the plugin version
 

@@ -230,6 +230,36 @@
     non-zero times. Fixing it needs evidence from OUTSIDE `companyfacts` (the filing's
     own equity statement or presentation linkbase); do not "fix" it by making absence
     uncheckable without re-measuring (2).
+- (b) 🟡 **`build_top_line_backfill` is 208 code lines and carries a FIFTH verbatim copy
+  of the 5-key DQC skip-flag dict.** Raised by the Task 5 code-quality re-review
+  (2026-07-26). The statement lane extracted exactly this shape into
+  `sec_edgar_client._statement_skip_flag`, and that helper's own docstring names
+  `build_top_line_backfill` as a user of the shape it centralizes — but that function
+  does not call it. Fix: rename the helper lane-neutral (`_dqc_skip_flag`) and route
+  both lanes' appends through it.
+  - **Deliberately deferred, with the reason stated.** This is a PRE-EXISTING shape;
+    the arc touched that function twice (per-period concept resolution, then the
+    null-value crash) and both times had a correctness reason to. This one does not:
+    it is structural tidying with no behaviour at stake, and the reviewer itself said
+    the orchestrator may legitimately defer it. Deferring keeps the branch's diff
+    answerable.
+  - Re-trigger: the next touch of `build_top_line_backfill` for any reason, or a SIXTH
+    copy of the flag dict appearing. Do it as its own commit — a refactor mixed into a
+    behaviour change is what makes the 208 lines hard to review in the first place.
+- (c) 🟢 **`_statement_period_kind`'s instant branch returns before any date parsing**,
+  so a truthy-but-unparseable `end` becomes a durable `period_end` and, downstream, the
+  store's `period` key. The duration branch fails loud on the same corruption via
+  `_duration_span_days`. Not observed and not plausible in `companyfacts`, so this is an
+  asymmetry in the module's own fail-loud posture rather than a live defect — but the
+  surrounding docstring states its other limits explicitly, so this one should be stated
+  too (or closed with one `date.fromisoformat`).
+- (d) 🟢 **The kept-raise docstring reads as exhaustive when it is illustrative.**
+  `_statement_row_to_fact`'s "THE ONE WAY OUT THAT IS NEITHER" names only a non-empty
+  unparseable `start`, but `_duration_span_days` also raises on an unparseable `end` and
+  on a non-increasing window, and `float(value)` raises on a present-but-non-numeric
+  value. The stated PRINCIPLE (absent field → skip, present-but-corrupt → raise loud)
+  covers all four honestly; widen the subject from `start` to "a present-but-corrupt
+  date or value".
 
 ## investing-toolkit kpi_id identity 2.37.0 — post-ship follow-ups (OPEN)
 
