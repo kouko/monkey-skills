@@ -1,0 +1,5960 @@
+{
+ "_capture": {
+  "what": "Live capture over the 47-ticker corpus grounding docs/loom/specs/2026-07-26-us-as-reported-statement-lane.md \u00a7Probe evidence: decoy-CIK detection, per-field concept coverage + naive-vs-chain-best staleness, the PRE-Task-2 shipped build_top_line_backfill selector's truncation (frozen, see m4_baseline_commit below), the balance identity with the mezzanine term, and usable-history depth.",
+  "endpoints": [
+   "data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
+  ],
+  "captured_at": "2026-07-26",
+  "m4_baseline_commit": "3ee2fcd3 \u2014 M4 (_shipped_lane_truncation) is scored against _legacy_top_line_winner, a frozen reproduction of build_top_line_backfill's concept selector as it stood at this commit, NOT the live function. This arc's Task 2 deliberately rewrites the live selector (per-company first-hit -> per-period resolution); see this script's module docstring M4 BASELINE section.",
+  "filer_sample_rationale": "Same 47-filer corpus as the kpi_id arc's probe, imported verbatim from capture_kpi_id_identity_probe.TICKERS; see that module's FILER SAMPLE docstring section.",
+  "regenerate": "investing-toolkit/tests/data/fixtures/capture_us_statement_shapes_probe.py",
+  "note": "Shapes/counts only. No per-fact financial values are captured beyond the specific identity/staleness aggregates each measurement needs."
+ },
+ "_summary": {
+  "n_filers_probed": 47,
+  "n_filers_errored": 0,
+  "n_filers_zero_us_gaap_concepts": 1,
+  "n_filers_clean": 46,
+  "n_filers_never_tagging_total_liabilities": 13,
+  "filers_never_tagging_total_liabilities": [
+   "AMD",
+   "AMZN",
+   "DIS",
+   "HON",
+   "INTC",
+   "KO",
+   "MCD",
+   "MRK",
+   "NKE",
+   "ORCL",
+   "TGT",
+   "VZ",
+   "WMT"
+  ],
+  "n_filers_shipped_lane_truncated_1y_or_more": 10,
+  "filers_shipped_lane_truncated_1y_or_more": [
+   "AAPL",
+   "CRM",
+   "F",
+   "HD",
+   "HON",
+   "META",
+   "MS",
+   "MSFT",
+   "TGT",
+   "WFC"
+  ],
+  "n_filers_usable_history_ge_20y": 0,
+  "median_usable_years": 18,
+  "n_identity_checkable": 32,
+  "n_identity_balancing_within_1e-5_relative": 32
+ },
+ "per_filer": [
+  {
+   "ticker": "XOM",
+   "cik": 2115436,
+   "entity_name": "EXXON MOBIL CORP",
+   "us_gaap_tags": 0,
+   "fields": {
+    "revenue": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "gross_profit": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "operating_income": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "pretax_income": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "net_income": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "eps_basic": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "total_assets": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "total_liabilities": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "total_equity": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "cash": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "operating_cash_flow": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "investing_cash_flow": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "financing_cash_flow": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "capex": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    }
+   },
+   "identity": {
+    "checkable": false,
+    "reason": "0 us-gaap concepts"
+   },
+   "history": {
+    "usable_years": 0,
+    "earliest_fact_end": null,
+    "latest_fact_end": null,
+    "first_usable_year": null,
+    "last_usable_year": null
+   },
+   "shipped_lane": {
+    "error": "no concept in sec._TOP_LINE_REVENUE_CONCEPTS returned any companyconcept rows"
+   }
+  },
+  {
+   "ticker": "CVX",
+   "cik": 93410,
+   "entity_name": "Chevron Corp",
+   "us_gaap_tags": 622,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "operating_income": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2023-12-31",
+     "best_tag": "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 2
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquireProductiveAssets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "PaymentsToAcquireProductiveAssets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-12-31",
+    "equity_kind": "incl_NCI",
+    "mezzanine_used": false,
+    "assets": 324012000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2006-12-31",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 19,
+    "first_usable_year": "2007",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2025-12-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "COP",
+   "cik": 1163165,
+   "entity_name": "CONOCOPHILLIPS",
+   "us_gaap_tags": 743,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "operating_income": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquireProductiveAssets",
+     "winner_newest_10k_end": "2022-12-31",
+     "best_tag": "PaymentsToAcquireProductiveAssets",
+     "best_newest_10k_end": "2022-12-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-12-31",
+    "equity_kind": "parent_only",
+    "mezzanine_used": false,
+    "assets": 121939000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2006-12-31",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 18,
+    "first_usable_year": "2008",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2025-12-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "PSX",
+   "cik": 1534701,
+   "entity_name": "Phillips 66",
+   "us_gaap_tags": 554,
+   "fields": {
+    "revenue": {
+     "winner": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "operating_income": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2020-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 5
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-12-31",
+    "equity_kind": "incl_NCI",
+    "mezzanine_used": false,
+    "assets": 73680000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2009-12-31",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 16,
+    "first_usable_year": "2010",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "last_period_end": "2025-12-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "JPM",
+   "cik": 19617,
+   "entity_name": "JPMORGAN CHASE & CO",
+   "us_gaap_tags": 917,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "operating_income": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2018-12-31",
+     "best_tag": "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 7
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-12-31",
+    "equity_kind": "parent_only",
+    "mezzanine_used": false,
+    "assets": 4424900000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2007-12-31",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 18,
+    "first_usable_year": "2008",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2025-12-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "BAC",
+   "cik": 70858,
+   "entity_name": "BofA Finance LLC",
+   "us_gaap_tags": 891,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "operating_income": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2019-12-31",
+     "best_tag": "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 6
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-12-31",
+    "equity_kind": "parent_only",
+    "mezzanine_used": false,
+    "assets": 3411738000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2006-12-31",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 18,
+    "first_usable_year": "2008",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2025-12-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "WFC",
+   "cik": 72971,
+   "entity_name": "WELLS        FARGO & COMPANY/MN",
+   "us_gaap_tags": 937,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2019-12-31",
+     "best_tag": "RevenuesNetOfInterestExpense",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 6
+    },
+    "gross_profit": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "operating_income": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-12-31",
+    "equity_kind": "incl_NCI",
+    "mezzanine_used": false,
+    "assets": 2148631000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2006-12-31",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 11,
+    "first_usable_year": "2015",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2019-12-31",
+    "years_lost_vs_chain_best": 6
+   }
+  },
+  {
+   "ticker": "C",
+   "cik": 831001,
+   "entity_name": "Citigroup Inc",
+   "us_gaap_tags": 796,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "operating_income": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2018-12-31",
+     "best_tag": "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 7
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-12-31",
+    "equity_kind": "incl_NCI",
+    "mezzanine_used": false,
+    "assets": 2657202000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2006-12-31",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 18,
+    "first_usable_year": "2008",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2025-12-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "GS",
+   "cik": 886982,
+   "entity_name": "The Goldman Sachs Group, Inc.",
+   "us_gaap_tags": 638,
+   "fields": {
+    "revenue": {
+     "winner": "RevenuesNetOfInterestExpense",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "RevenuesNetOfInterestExpense",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "operating_income": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-12-31",
+    "equity_kind": "parent_only",
+    "mezzanine_used": false,
+    "assets": 1809320000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2007-11-30",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 16,
+    "first_usable_year": "2010",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "RevenuesNetOfInterestExpense",
+    "last_period_end": "2025-12-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "MS",
+   "cik": 895421,
+   "entity_name": "MORGAN STANLEY",
+   "us_gaap_tags": 914,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2014-12-31",
+     "best_tag": "RevenuesNetOfInterestExpense",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 11
+    },
+    "gross_profit": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "operating_income": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-12-31",
+    "equity_kind": "incl_NCI",
+    "mezzanine_used": false,
+    "assets": 1420270000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2006-11-30",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 18,
+    "first_usable_year": "2008",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2014-12-31",
+    "years_lost_vs_chain_best": 11
+   }
+  },
+  {
+   "ticker": "AAPL",
+   "cik": 320193,
+   "entity_name": "Apple Inc.",
+   "us_gaap_tags": 503,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2018-09-29",
+     "best_tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 7
+    },
+    "gross_profit": {
+     "winner": "GrossProfit",
+     "winner_newest_10k_end": "2025-09-27",
+     "best_tag": "GrossProfit",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 0
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2025-09-27",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-09-27",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-09-27",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-09-27",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-09-27",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-09-27",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-09-27",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-09-27",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-09-27",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-09-27",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-09-27",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2025-09-27",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-09-27",
+    "equity_kind": "parent_only",
+    "mezzanine_used": false,
+    "assets": 359241000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2006-09-30",
+    "latest_fact_end": "2025-09-27",
+    "usable_years": 19,
+    "first_usable_year": "2007",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2018-09-29",
+    "years_lost_vs_chain_best": 7
+   }
+  },
+  {
+   "ticker": "MSFT",
+   "cik": 789019,
+   "entity_name": "MICROSOFT CORPORATION",
+   "us_gaap_tags": 544,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2010-06-30",
+     "best_tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 15
+    },
+    "gross_profit": {
+     "winner": "GrossProfit",
+     "winner_newest_10k_end": "2025-06-30",
+     "best_tag": "GrossProfit",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 0
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2025-06-30",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-06-30",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-06-30",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-06-30",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-06-30",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-06-30",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-06-30",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-06-30",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-06-30",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-06-30",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-06-30",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2025-06-30",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-06-30",
+    "equity_kind": "parent_only",
+    "mezzanine_used": false,
+    "assets": 619003000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2007-06-30",
+    "latest_fact_end": "2025-06-30",
+    "usable_years": 18,
+    "first_usable_year": "2008",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2010-06-30",
+    "years_lost_vs_chain_best": 15
+   }
+  },
+  {
+   "ticker": "GOOGL",
+   "cik": 1652044,
+   "entity_name": "Alphabet Inc.",
+   "us_gaap_tags": 543,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-12-31",
+    "equity_kind": "parent_only",
+    "mezzanine_used": false,
+    "assets": 595281000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2012-12-31",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 13,
+    "first_usable_year": "2013",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2025-12-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "AMZN",
+   "cik": 1018724,
+   "entity_name": "AMAZON COM INC",
+   "us_gaap_tags": 542,
+   "fields": {
+    "revenue": {
+     "winner": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": "GrossProfit",
+     "winner_newest_10k_end": "2009-12-31",
+     "best_tag": "GrossProfit",
+     "best_newest_10k_end": "2009-12-31",
+     "stale_years": 0
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2016-12-31",
+     "best_tag": "PaymentsToAcquireProductiveAssets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 9
+    }
+   },
+   "identity": {
+    "checkable": false,
+    "period_end": "2025-12-31",
+    "reason": "filer never tags total 'Liabilities'"
+   },
+   "history": {
+    "earliest_fact_end": "2006-12-31",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 19,
+    "first_usable_year": "2007",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "last_period_end": "2025-12-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "META",
+   "cik": 1326801,
+   "entity_name": "Meta Platforms, Inc.",
+   "us_gaap_tags": 456,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2017-12-31",
+     "best_tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 8
+    },
+    "gross_profit": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-12-31",
+    "equity_kind": "parent_only",
+    "mezzanine_used": false,
+    "assets": 366021000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2009-12-31",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 16,
+    "first_usable_year": "2010",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2017-12-31",
+    "years_lost_vs_chain_best": 8
+   }
+  },
+  {
+   "ticker": "NVDA",
+   "cik": 1045810,
+   "entity_name": "NVIDIA CORP",
+   "us_gaap_tags": 626,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2026-01-25",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2026-01-25",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": "GrossProfit",
+     "winner_newest_10k_end": "2026-01-25",
+     "best_tag": "GrossProfit",
+     "best_newest_10k_end": "2026-01-25",
+     "stale_years": 0
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2026-01-25",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2026-01-25",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2026-01-25",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2026-01-25",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2026-01-25",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2026-01-25",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2026-01-25",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2026-01-25",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2026-01-25",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2026-01-25",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2026-01-25",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2026-01-25",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2026-01-25",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2026-01-25",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2026-01-25",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2026-01-25",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2026-01-25",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2026-01-25",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2026-01-25",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2026-01-25",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2026-01-25",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2026-01-25",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2012-01-29",
+     "best_tag": "PaymentsToAcquireProductiveAssets",
+     "best_newest_10k_end": "2026-01-25",
+     "stale_years": 14
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2026-01-25",
+    "equity_kind": "parent_only",
+    "mezzanine_used": false,
+    "assets": 206803000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2007-01-28",
+    "latest_fact_end": "2026-01-25",
+    "usable_years": 19,
+    "first_usable_year": "2008",
+    "last_usable_year": "2026"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2026-01-25",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "INTC",
+   "cik": 50863,
+   "entity_name": "INTEL CORP",
+   "us_gaap_tags": 684,
+   "fields": {
+    "revenue": {
+     "winner": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": "GrossProfit",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "GrossProfit",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": false,
+    "period_end": "2025-12-27",
+    "reason": "filer never tags total 'Liabilities'"
+   },
+   "history": {
+    "earliest_fact_end": "2006-12-30",
+    "latest_fact_end": "2025-12-27",
+    "usable_years": 19,
+    "first_usable_year": "2007",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "last_period_end": "2025-12-27",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "AMD",
+   "cik": 2488,
+   "entity_name": "ADVANCED MICRO DEVICES INC",
+   "us_gaap_tags": 776,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": null,
+     "best_tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": null
+    },
+    "gross_profit": {
+     "winner": "GrossProfit",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "GrossProfit",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": false,
+    "period_end": "2025-12-27",
+    "reason": "filer never tags total 'Liabilities'"
+   },
+   "history": {
+    "earliest_fact_end": "2007-12-29",
+    "latest_fact_end": "2025-12-27",
+    "usable_years": 18,
+    "first_usable_year": "2008",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": null,
+    "years_lost_vs_chain_best": null
+   }
+  },
+  {
+   "ticker": "IBM",
+   "cik": 51143,
+   "entity_name": "INTERNATIONAL BUSINESS MACHINES CORPORATION",
+   "us_gaap_tags": 780,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": "GrossProfit",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "GrossProfit",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_income": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-12-31",
+    "equity_kind": "incl_NCI",
+    "mezzanine_used": false,
+    "assets": 151880000000,
+    "residual": 1000000.0,
+    "residual_rel": 6.584145377929945e-06
+   },
+   "history": {
+    "earliest_fact_end": "2006-12-31",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 19,
+    "first_usable_year": "2007",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2025-12-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "ORCL",
+   "cik": 1341439,
+   "entity_name": "Oracle Corporation",
+   "us_gaap_tags": 535,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2026-05-31",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2026-05-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": "GrossProfit",
+     "winner_newest_10k_end": "2018-05-31",
+     "best_tag": "GrossProfit",
+     "best_newest_10k_end": "2018-05-31",
+     "stale_years": 0
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2026-05-31",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2026-05-31",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2018-05-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic",
+     "best_newest_10k_end": "2026-05-31",
+     "stale_years": 8
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2026-05-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2026-05-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2026-05-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2026-05-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2026-05-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2026-05-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2026-05-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2026-05-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2026-05-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2026-05-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2026-05-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2026-05-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2026-05-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2026-05-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2026-05-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2026-05-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2026-05-31",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2026-05-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": false,
+    "period_end": "2026-05-31",
+    "reason": "filer never tags total 'Liabilities'"
+   },
+   "history": {
+    "earliest_fact_end": "2007-05-31",
+    "latest_fact_end": "2026-05-31",
+    "usable_years": 18,
+    "first_usable_year": "2009",
+    "last_usable_year": "2026"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2026-05-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "CRM",
+   "cik": 1108524,
+   "entity_name": "Salesforce, Inc.",
+   "us_gaap_tags": 690,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2017-01-31",
+     "best_tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 9
+    },
+    "gross_profit": {
+     "winner": "GrossProfit",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "GrossProfit",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2026-01-31",
+    "equity_kind": "parent_only",
+    "mezzanine_used": false,
+    "assets": 112305000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2007-01-31",
+    "latest_fact_end": "2026-01-31",
+    "usable_years": 19,
+    "first_usable_year": "2008",
+    "last_usable_year": "2026"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2017-01-31",
+    "years_lost_vs_chain_best": 9
+   }
+  },
+  {
+   "ticker": "QCOM",
+   "cik": 804328,
+   "entity_name": "QUALCOMM INC/DE",
+   "us_gaap_tags": 685,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2025-09-28",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2025-09-28",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2025-09-28",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2025-09-28",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-09-28",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-09-28",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-09-28",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-09-28",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-09-28",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-09-28",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-09-28",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-09-28",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-09-28",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-09-28",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2019-09-29",
+     "best_tag": "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+     "best_newest_10k_end": "2025-09-28",
+     "stale_years": 6
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-09-28",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-09-28",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-09-28",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-09-28",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-09-28",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-09-28",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-09-28",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-09-28",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquireProductiveAssets",
+     "winner_newest_10k_end": "2025-09-28",
+     "best_tag": "PaymentsToAcquireProductiveAssets",
+     "best_newest_10k_end": "2025-09-28",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-09-28",
+    "equity_kind": "incl_NCI",
+    "mezzanine_used": false,
+    "assets": 50143000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2006-09-24",
+    "latest_fact_end": "2025-09-28",
+    "usable_years": 19,
+    "first_usable_year": "2007",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2025-09-28",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "TXN",
+   "cik": 97476,
+   "entity_name": "TEXAS INSTRUMENTS INCORPORATED",
+   "us_gaap_tags": 482,
+   "fields": {
+    "revenue": {
+     "winner": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": "GrossProfit",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "GrossProfit",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-12-31",
+    "equity_kind": "parent_only",
+    "mezzanine_used": false,
+    "assets": 34585000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2006-12-31",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 19,
+    "first_usable_year": "2007",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "last_period_end": "2025-12-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "WMT",
+   "cik": 104169,
+   "entity_name": "WALMART INC.",
+   "us_gaap_tags": 478,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": false,
+    "period_end": "2026-01-31",
+    "reason": "filer never tags total 'Liabilities'"
+   },
+   "history": {
+    "earliest_fact_end": "2007-01-31",
+    "latest_fact_end": "2026-01-31",
+    "usable_years": 19,
+    "first_usable_year": "2008",
+    "last_usable_year": "2026"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2026-01-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "COST",
+   "cik": 909832,
+   "entity_name": "COSTCO WHOLESALE CORP /NEW",
+   "us_gaap_tags": 460,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2025-08-31",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2025-08-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": "GrossProfit",
+     "winner_newest_10k_end": "2019-09-01",
+     "best_tag": "GrossProfit",
+     "best_newest_10k_end": "2019-09-01",
+     "stale_years": 0
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2025-08-31",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2025-08-31",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-08-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-08-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-08-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-08-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-08-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-08-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-08-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-08-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-08-31",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-08-31",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-08-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-08-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-08-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-08-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-08-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-08-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-08-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-08-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-08-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-08-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2025-08-31",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2025-08-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-08-31",
+    "equity_kind": "incl_NCI",
+    "mezzanine_used": false,
+    "assets": 77099000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2007-09-02",
+    "latest_fact_end": "2025-08-31",
+    "usable_years": 18,
+    "first_usable_year": "2008",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2025-08-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "TGT",
+   "cik": 27419,
+   "entity_name": "TARGET CORPORATION",
+   "us_gaap_tags": 528,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2015-01-31",
+     "best_tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 11
+    },
+    "gross_profit": {
+     "winner": "GrossProfit",
+     "winner_newest_10k_end": "2018-02-03",
+     "best_tag": "GrossProfit",
+     "best_newest_10k_end": "2018-02-03",
+     "stale_years": 0
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": null,
+     "best_tag": "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": null
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2026-01-31",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2026-01-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": false,
+    "period_end": "2026-01-31",
+    "reason": "filer never tags total 'Liabilities'"
+   },
+   "history": {
+    "earliest_fact_end": "2007-02-03",
+    "latest_fact_end": "2026-01-31",
+    "usable_years": 18,
+    "first_usable_year": "2009",
+    "last_usable_year": "2026"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2015-01-31",
+    "years_lost_vs_chain_best": 11
+   }
+  },
+  {
+   "ticker": "HD",
+   "cik": 354950,
+   "entity_name": "HOME DEPOT,\u00a0INC.",
+   "us_gaap_tags": 461,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2010-01-31",
+     "best_tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "best_newest_10k_end": "2026-02-01",
+     "stale_years": 16
+    },
+    "gross_profit": {
+     "winner": "GrossProfit",
+     "winner_newest_10k_end": "2026-02-01",
+     "best_tag": "GrossProfit",
+     "best_newest_10k_end": "2026-02-01",
+     "stale_years": 0
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2026-02-01",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2026-02-01",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2026-02-01",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2026-02-01",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2026-02-01",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2026-02-01",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2026-02-01",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2026-02-01",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2026-02-01",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2026-02-01",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2026-02-01",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2026-02-01",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2026-02-01",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2026-02-01",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2026-02-01",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2026-02-01",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2026-02-01",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2026-02-01",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2026-02-01",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2026-02-01",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2026-02-01",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2026-02-01",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquireProductiveAssets",
+     "winner_newest_10k_end": "2026-02-01",
+     "best_tag": "PaymentsToAcquireProductiveAssets",
+     "best_newest_10k_end": "2026-02-01",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2026-02-01",
+    "equity_kind": "parent_only",
+    "mezzanine_used": false,
+    "assets": 105095000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2007-01-28",
+    "latest_fact_end": "2026-02-01",
+    "usable_years": 19,
+    "first_usable_year": "2008",
+    "last_usable_year": "2026"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2010-01-31",
+    "years_lost_vs_chain_best": 16
+   }
+  },
+  {
+   "ticker": "LOW",
+   "cik": 60667,
+   "entity_name": "LOWE\u2019S COMPANIES,\u00a0INC.",
+   "us_gaap_tags": 477,
+   "fields": {
+    "revenue": {
+     "winner": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "winner_newest_10k_end": "2026-01-30",
+     "best_tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "best_newest_10k_end": "2026-01-30",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": "GrossProfit",
+     "winner_newest_10k_end": "2026-01-30",
+     "best_tag": "GrossProfit",
+     "best_newest_10k_end": "2026-01-30",
+     "stale_years": 0
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2026-01-30",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2026-01-30",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2026-01-30",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2026-01-30",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2026-01-30",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2026-01-30",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2026-01-30",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2026-01-30",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2026-01-30",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2026-01-30",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2026-01-30",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2026-01-30",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2026-01-30",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2026-01-30",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2026-01-30",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2026-01-30",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2026-01-30",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2026-01-30",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2026-01-30",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2026-01-30",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2026-01-30",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2026-01-30",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2026-01-30",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2026-01-30",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2026-01-30",
+    "equity_kind": "parent_only",
+    "mezzanine_used": false,
+    "assets": 54144000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2008-02-01",
+    "latest_fact_end": "2026-01-30",
+    "usable_years": 18,
+    "first_usable_year": "2009",
+    "last_usable_year": "2026"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "last_period_end": "2026-01-30",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "MCD",
+   "cik": 63908,
+   "entity_name": "McDONALD\u2019S CORPORATION",
+   "us_gaap_tags": 433,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": false,
+    "period_end": "2025-12-31",
+    "reason": "filer never tags total 'Liabilities'"
+   },
+   "history": {
+    "earliest_fact_end": "2006-12-31",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 19,
+    "first_usable_year": "2007",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2025-12-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "NKE",
+   "cik": 320187,
+   "entity_name": "NIKE, Inc.",
+   "us_gaap_tags": 443,
+   "fields": {
+    "revenue": {
+     "winner": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "winner_newest_10k_end": "2026-05-31",
+     "best_tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "best_newest_10k_end": "2026-05-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": "GrossProfit",
+     "winner_newest_10k_end": "2026-05-31",
+     "best_tag": "GrossProfit",
+     "best_newest_10k_end": "2026-05-31",
+     "stale_years": 0
+    },
+    "operating_income": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2026-05-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2026-05-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2026-05-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2026-05-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2026-05-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2026-05-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2026-05-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2026-05-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2026-05-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2026-05-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2026-05-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2026-05-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2026-05-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2026-05-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2026-05-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2026-05-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2026-05-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2026-05-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2026-05-31",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2026-05-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": false,
+    "period_end": "2026-05-31",
+    "reason": "filer never tags total 'Liabilities'"
+   },
+   "history": {
+    "earliest_fact_end": "2007-05-31",
+    "latest_fact_end": "2026-05-31",
+    "usable_years": 19,
+    "first_usable_year": "2008",
+    "last_usable_year": "2026"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "last_period_end": "2026-05-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "KO",
+   "cik": 21344,
+   "entity_name": "COCA COLA CO",
+   "us_gaap_tags": 724,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": "GrossProfit",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "GrossProfit",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": false,
+    "period_end": "2025-12-31",
+    "reason": "filer never tags total 'Liabilities'"
+   },
+   "history": {
+    "earliest_fact_end": "2006-12-31",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 19,
+    "first_usable_year": "2007",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2025-12-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "PEP",
+   "cik": 77476,
+   "entity_name": "PepsiCo, Inc.",
+   "us_gaap_tags": 612,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": "GrossProfit",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "GrossProfit",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquireProductiveAssets",
+     "winner_newest_10k_end": "2025-12-27",
+     "best_tag": "PaymentsToAcquireProductiveAssets",
+     "best_newest_10k_end": "2025-12-27",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-12-27",
+    "equity_kind": "incl_NCI",
+    "mezzanine_used": false,
+    "assets": 107399000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2006-12-30",
+    "latest_fact_end": "2025-12-27",
+    "usable_years": 19,
+    "first_usable_year": "2007",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2025-12-27",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "PG",
+   "cik": 80424,
+   "entity_name": "PROCTER & GAMBLE CO",
+   "us_gaap_tags": 448,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2025-06-30",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2025-06-30",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-06-30",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-06-30",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-06-30",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-06-30",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-06-30",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-06-30",
+     "best_tag": "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2019-06-30",
+     "best_tag": "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 6
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-06-30",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-06-30",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-06-30",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2025-06-30",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2025-06-30",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-06-30",
+    "equity_kind": "incl_NCI",
+    "mezzanine_used": false,
+    "assets": 125231000000,
+    "residual": 1000000.0,
+    "residual_rel": 7.985243270436235e-06
+   },
+   "history": {
+    "earliest_fact_end": "2007-06-30",
+    "latest_fact_end": "2025-06-30",
+    "usable_years": 18,
+    "first_usable_year": "2008",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2025-06-30",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "JNJ",
+   "cik": 200406,
+   "entity_name": "Johnson & Johnson",
+   "us_gaap_tags": 609,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": null,
+     "best_tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "best_newest_10k_end": "2025-12-28",
+     "stale_years": null
+    },
+    "gross_profit": {
+     "winner": "GrossProfit",
+     "winner_newest_10k_end": "2025-12-28",
+     "best_tag": "GrossProfit",
+     "best_newest_10k_end": "2025-12-28",
+     "stale_years": 0
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2014-12-28",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2014-12-28",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-28",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-28",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-28",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-28",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-28",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-28",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-28",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-28",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-12-28",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-12-28",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": null,
+     "best_tag": "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-28",
+     "stale_years": null
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-28",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-28",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-28",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-28",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-28",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-28",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-28",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-28",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2025-12-28",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2025-12-28",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-12-28",
+    "equity_kind": "incl_NCI",
+    "mezzanine_used": false,
+    "assets": 199210000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2006-12-31",
+    "latest_fact_end": "2025-12-28",
+    "usable_years": 16,
+    "first_usable_year": "2007",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": null,
+    "years_lost_vs_chain_best": null
+   }
+  },
+  {
+   "ticker": "PFE",
+   "cik": 78003,
+   "entity_name": "Pfizer Inc.",
+   "us_gaap_tags": 666,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "operating_income": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-12-31",
+    "equity_kind": "incl_NCI",
+    "mezzanine_used": false,
+    "assets": 208160000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2006-12-31",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 19,
+    "first_usable_year": "2007",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2025-12-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "MRK",
+   "cik": 310158,
+   "entity_name": "Merck & Co., Inc.",
+   "us_gaap_tags": 774,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "operating_income": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": false,
+    "period_end": "2025-12-31",
+    "reason": "filer never tags total 'Liabilities'"
+   },
+   "history": {
+    "earliest_fact_end": "2006-12-31",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 18,
+    "first_usable_year": "2008",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2025-12-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "UNH",
+   "cik": 731766,
+   "entity_name": "UnitedHealth Group Incorporated",
+   "us_gaap_tags": 573,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2014-12-31",
+     "best_tag": "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 11
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-12-31",
+    "equity_kind": "incl_NCI",
+    "mezzanine_used": true,
+    "assets": 309581000000,
+    "residual": 0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2006-12-31",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 19,
+    "first_usable_year": "2007",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2025-12-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "CAT",
+   "cik": 18230,
+   "entity_name": "CATERPILLAR INC",
+   "us_gaap_tags": 702,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": "GrossProfit",
+     "winner_newest_10k_end": "2020-12-31",
+     "best_tag": "GrossProfit",
+     "best_newest_10k_end": "2020-12-31",
+     "stale_years": 0
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2010-12-31",
+     "best_tag": "ProfitLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 15
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-12-31",
+    "equity_kind": "incl_NCI",
+    "mezzanine_used": false,
+    "assets": 98585000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2006-12-31",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 19,
+    "first_usable_year": "2007",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2025-12-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "BA",
+   "cik": 12927,
+   "entity_name": "THE BOEING COMPANY",
+   "us_gaap_tags": 742,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": "GrossProfit",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "GrossProfit",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-12-31",
+    "equity_kind": "incl_NCI",
+    "mezzanine_used": false,
+    "assets": 168235000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2006-12-31",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 19,
+    "first_usable_year": "2007",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2025-12-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "GE",
+   "cik": 40545,
+   "entity_name": "GENERAL ELECTRIC CO",
+   "us_gaap_tags": 945,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": "GrossProfit",
+     "winner_newest_10k_end": "2016-12-31",
+     "best_tag": "GrossProfit",
+     "best_newest_10k_end": "2016-12-31",
+     "stale_years": 0
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2012-12-31",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2012-12-31",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2017-12-31",
+     "best_tag": "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 8
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2022-12-31",
+     "best_tag": "PaymentsToAcquireProductiveAssets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 3
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-12-31",
+    "equity_kind": "incl_NCI",
+    "mezzanine_used": false,
+    "assets": 130169000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2006-12-31",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 19,
+    "first_usable_year": "2007",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2025-12-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "HON",
+   "cik": 773840,
+   "entity_name": "Honeywell International Inc",
+   "us_gaap_tags": 632,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2011-12-31",
+     "best_tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 14
+    },
+    "gross_profit": {
+     "winner": "GrossProfit",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "GrossProfit",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": false,
+    "period_end": "2025-12-31",
+    "reason": "filer never tags total 'Liabilities'"
+   },
+   "history": {
+    "earliest_fact_end": "2006-12-31",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 18,
+    "first_usable_year": "2008",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2011-12-31",
+    "years_lost_vs_chain_best": 14
+   }
+  },
+  {
+   "ticker": "F",
+   "cik": 37996,
+   "entity_name": "Ford Motor Co",
+   "us_gaap_tags": 586,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2024-12-31",
+     "best_tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 1
+    },
+    "gross_profit": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2024-12-31",
+     "best_tag": "ProfitLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 1
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquireProductiveAssets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "PaymentsToAcquireProductiveAssets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-12-31",
+    "equity_kind": "incl_NCI",
+    "mezzanine_used": false,
+    "assets": 289160000000,
+    "residual": 0.0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2006-12-31",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 18,
+    "first_usable_year": "2008",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2024-12-31",
+    "years_lost_vs_chain_best": 1
+   }
+  },
+  {
+   "ticker": "GM",
+   "cik": 1467858,
+   "entity_name": "GENERAL MOTORS COMPANY",
+   "us_gaap_tags": 618,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": "GrossProfit",
+     "winner_newest_10k_end": "2012-12-31",
+     "best_tag": "GrossProfit",
+     "best_newest_10k_end": "2012-12-31",
+     "stale_years": 0
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-12-31",
+    "equity_kind": "incl_NCI",
+    "mezzanine_used": true,
+    "assets": 281284000000,
+    "residual": 0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2009-07-09",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 16,
+    "first_usable_year": "2010",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2025-12-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "TSLA",
+   "cik": 1318605,
+   "entity_name": "Tesla, Inc.",
+   "us_gaap_tags": 643,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": "GrossProfit",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "GrossProfit",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": true,
+    "period_end": "2025-12-31",
+    "equity_kind": "incl_NCI",
+    "mezzanine_used": true,
+    "assets": 137806000000,
+    "residual": 0,
+    "residual_rel": 0.0
+   },
+   "history": {
+    "earliest_fact_end": "2008-12-31",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 17,
+    "first_usable_year": "2009",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2025-12-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "T",
+   "cik": 732717,
+   "entity_name": "AT&T INC.",
+   "us_gaap_tags": 713,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": "Liabilities",
+     "winner_newest_10k_end": "2015-12-31",
+     "best_tag": "Liabilities",
+     "best_newest_10k_end": "2015-12-31",
+     "stale_years": 0
+    },
+    "total_equity": {
+     "winner": "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2017-12-31",
+     "best_tag": "PaymentsToAcquireProductiveAssets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 8
+    }
+   },
+   "identity": {
+    "checkable": false,
+    "period_end": "2025-12-31",
+    "reason": "filer never tags total 'Liabilities'"
+   },
+   "history": {
+    "earliest_fact_end": "2006-12-31",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 19,
+    "first_usable_year": "2007",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2025-12-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "VZ",
+   "cik": 732712,
+   "entity_name": "VERIZON COMMUNICATIONS INC",
+   "us_gaap_tags": 677,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "total_equity": {
+     "winner": "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-12-31",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-12-31",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquireProductiveAssets",
+     "winner_newest_10k_end": "2018-12-31",
+     "best_tag": "PaymentsToAcquireProductiveAssets",
+     "best_newest_10k_end": "2018-12-31",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": false,
+    "period_end": "2025-12-31",
+    "reason": "filer never tags total 'Liabilities'"
+   },
+   "history": {
+    "earliest_fact_end": "2006-12-31",
+    "latest_fact_end": "2025-12-31",
+    "usable_years": 19,
+    "first_usable_year": "2007",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2025-12-31",
+    "years_lost_vs_chain_best": 0
+   }
+  },
+  {
+   "ticker": "DIS",
+   "cik": 1744489,
+   "entity_name": "WALT DISNEY CO/",
+   "us_gaap_tags": 494,
+   "fields": {
+    "revenue": {
+     "winner": "Revenues",
+     "winner_newest_10k_end": "2025-09-27",
+     "best_tag": "Revenues",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 0
+    },
+    "gross_profit": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "operating_income": {
+     "winner": "OperatingIncomeLoss",
+     "winner_newest_10k_end": "2025-09-27",
+     "best_tag": "OperatingIncomeLoss",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 0
+    },
+    "pretax_income": {
+     "winner": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "winner_newest_10k_end": "2025-09-27",
+     "best_tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 0
+    },
+    "net_income": {
+     "winner": "NetIncomeLoss",
+     "winner_newest_10k_end": "2025-09-27",
+     "best_tag": "NetIncomeLoss",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 0
+    },
+    "eps_basic": {
+     "winner": "EarningsPerShareBasic",
+     "winner_newest_10k_end": "2025-09-27",
+     "best_tag": "EarningsPerShareBasic",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 0
+    },
+    "total_assets": {
+     "winner": "Assets",
+     "winner_newest_10k_end": "2025-09-27",
+     "best_tag": "Assets",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 0
+    },
+    "total_liabilities": {
+     "winner": null,
+     "winner_newest_10k_end": null,
+     "best_tag": null,
+     "best_newest_10k_end": null,
+     "stale_years": null
+    },
+    "total_equity": {
+     "winner": "StockholdersEquity",
+     "winner_newest_10k_end": "2025-09-27",
+     "best_tag": "StockholdersEquity",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 0
+    },
+    "cash": {
+     "winner": "CashAndCashEquivalentsAtCarryingValue",
+     "winner_newest_10k_end": "2025-09-27",
+     "best_tag": "CashAndCashEquivalentsAtCarryingValue",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 0
+    },
+    "operating_cash_flow": {
+     "winner": "NetCashProvidedByUsedInOperatingActivities",
+     "winner_newest_10k_end": "2025-09-27",
+     "best_tag": "NetCashProvidedByUsedInOperatingActivities",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 0
+    },
+    "investing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInInvestingActivities",
+     "winner_newest_10k_end": "2025-09-27",
+     "best_tag": "NetCashProvidedByUsedInInvestingActivities",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 0
+    },
+    "financing_cash_flow": {
+     "winner": "NetCashProvidedByUsedInFinancingActivities",
+     "winner_newest_10k_end": "2025-09-27",
+     "best_tag": "NetCashProvidedByUsedInFinancingActivities",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 0
+    },
+    "capex": {
+     "winner": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "winner_newest_10k_end": "2025-09-27",
+     "best_tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+     "best_newest_10k_end": "2025-09-27",
+     "stale_years": 0
+    }
+   },
+   "identity": {
+    "checkable": false,
+    "period_end": "2025-09-27",
+    "reason": "filer never tags total 'Liabilities'"
+   },
+   "history": {
+    "earliest_fact_end": "2016-10-01",
+    "latest_fact_end": "2025-09-27",
+    "usable_years": 9,
+    "first_usable_year": "2017",
+    "last_usable_year": "2025"
+   },
+   "shipped_lane": {
+    "legacy_winning_concept": "Revenues",
+    "last_period_end": "2025-09-27",
+    "years_lost_vs_chain_best": 0
+   }
+  }
+ ]
+}
