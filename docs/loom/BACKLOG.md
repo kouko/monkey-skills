@@ -120,7 +120,11 @@
   `_extract_notes`; the deferral test flipped to an inclusion assertion.
   (c) **興櫃 multi-period series** — semiannual
   (Q2/Q4) cadence; season-fallback already handles per-period absence, a series
-  builder is future. (d) 🟢 debt: T3 canonical tie-break order untested (membership
+  builder is future. **Update (2.35.0):** the TW KPI store producer (`kpi_tw` +
+  `kpi_tw_ingest`) now handles the 興櫃 semiannual cadence — a 6-month duration
+  maps through the store's existing `_qtrs` machinery (→ 2 quarters) with no new
+  `period_kind`. So 興櫃 multi-period now only needs 興櫃 FETCH; the series-build
+  side is done. (d) 🟢 debt: T3 canonical tie-break order untested (membership
   only), T2 3×502-exhaustion branch untested.
 
 ## investing-toolkit TW financial iXBRL 2.31.0 — post-ship follow-ups (OPEN)
@@ -187,6 +191,33 @@
   (c) 🟢 `_real_shaped_pack`/`_FY2020_PERIOD_START` duplicated across
   `test_kpi_xbrl_ingest.py` + `test_kpi_xbrl_to_tearsheet_e2e.py` (2nd occurrence —
   Rule of Three). Lift to a shared `conftest.py` fixture at the 3rd caller.
+
+## investing-toolkit TW KPI producer 2.35.0 — post-ship follow-ups (OPEN)
+- Status: OPEN
+- Start: next substantive touch of `analysis-kpi/scripts/kpi_tw.py` /
+  `kpi_tw_ingest.py`, or the next TW-KPI-lane arc.
+- Origin: TW-market kpi_store producer (branch tw-kpi-store, 2.35.0, 2026-07-25);
+  brief/plan `docs/loom/{specs,plans}/2026-07-25-tw-kpi-store-producer.md`.
+- What:
+  (a) 🟢 **glue-free TW envelope production** — a `pack_tw` verb emitting
+  `{canonical, facts, coords}` (mirroring `pack_us.pack_kpi_quarterly`), so TW is
+  "ticker→tearsheet without glue" like US. Today `run_pipeline` emits `canonical`
+  but NOT `facts` (the `as_of` authorisation date lives in a fact), so the ingest
+  consumes an envelope the caller assembles; the dogfood assembles it by hand. A
+  data-markets envelope task closes this.
+  (b) 🟢 **`tw_canonical_to_points` `zip(values, periods)` truncation** — a
+  `zip` silently truncates if the two lists diverge in length; a len-assert would
+  fail loud instead. Unreachable today (the canonical layer builds values and
+  periods in parallel), but a future canonical change could desync them silently.
+  (c) 🟢 **mirrored injective guard keys on bare field-name** — the collision
+  guard keys `claimed_by` on the bare field-name, not `(statement, field)`. A
+  field-name recurring across two statements would RE-CLAIM (merge) rather than
+  raise. Unreachable today (the emitted field names are disjoint across
+  statements); key on `(statement, field)` when a real cross-statement name
+  appears.
+  (d) 🟢 **wire the TW KPI store into report-equity-memo Phase 3.5** — like the
+  US chain feeds the memo's quarterly-KPI section, the TW store should surface in
+  the TW memo path. Deferred (out of this producer-only arc).
 
 ## investing-toolkit KPI tearsheet — company total (top-line) revenue lane (COMMITTED-NEXT)
 - Status: COMMITTED-NEXT

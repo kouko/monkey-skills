@@ -5,6 +5,40 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.35.0] — 2026-07-25
+
+### Added — TW-market XBRL → kpi_store producer
+
+The store-backed tearsheet gains a TW-market feed. A new `kpi_tw` producer maps
+a TW iXBRL filing's canonical layer into the market-agnostic `kpi_store`, and a
+`kpi_tw_ingest` driver appends those points to the UNCHANGED store — so the
+existing `report-kpi-tearsheet` renders a TW multi-period series with no store
+or tearsheet code change.
+
+- **`kpi_tw` producer.** `as_of` is the authorisation-for-issue date parsed from
+  the filing's ROC-era 民國 date fact
+  (`tifrs-notes:DateAndProceduresOfAuthorisationForIssueOfFinancialStatements`) —
+  a deterministic, non-wall-clock, already-fetched date the store's `as_of` guard
+  accepts. `tw_canonical_to_points` maps the `twse_ixbrl` canonical layer into
+  market-agnostic `kpi_store` points, deriving `kpi_id` =
+  `<canonical-field-slug>[__basis-<C|A>]` (C=合併/A=個體) — since TW carries no
+  us-gaap dimensional axes, the consolidation basis is the only discriminator,
+  substituting for the US `axis=member` signature. The canonical field-slug (not
+  the raw concept) is the durable identity, so a company's revenue stays one
+  series across concept/taxonomy variation. Flat totals are kept (inverting the
+  US empty-dims skip).
+- **`kpi_tw_ingest` driver.** Reads a filing's canonical, calls the producer, and
+  appends each point to the UNCHANGED market-agnostic `kpi_store` (reusing
+  `kpi_store.append`; no cross into the data-markets cache layer). Idempotent
+  append-only — running it over N filings builds the cross-period series.
+- **興櫃-ready.** The 興櫃 semiannual cadence fits the store's existing `_qtrs`
+  machinery (6-month duration → 2 quarters) with no new `period_kind`.
+
+Note: the ingest consumes a filing envelope (canonical + facts) the caller
+assembles — `run_pipeline` emits canonical but not `facts` today. A glue-free
+`pack_tw` envelope verb (mirroring `pack_us.pack_kpi_quarterly`, so TW is
+"ticker→tearsheet without glue" like US) is a post-ship follow-up.
+
 ## [v2.34.0] — 2026-07-24
 
 ### Added — US XBRL → kpi_store producer (dimensional revenue)
