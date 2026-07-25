@@ -277,6 +277,7 @@ Amendment note 5 (post-PASS, schema-safe → re-review skipped per writing-plans
 - Dependencies: Task 1 completes first
 - Independent: false
 - Brief item covered: Smallest End State #1 — "the existing per-filing XBRL parse also emits the company's flat top-line revenue fact".
+- Status: done(7320a494)  # spec-reviewer PASS; code-quality-reviewer PASS_WITH_NOTES — its 🟡 (the single-candidate fixture could not kill two mutants: dropping the winner match, and dropping the flat-only gate) was routed back and closed with two mutation-VERIFIED cases. Durable finding recorded in the commit: a consolidation-qualifier-only fact also has `dimensions == {}`, so `dimensions == {}` cannot distinguish XOM's segment view (452,209M) from its true total (332,238M) — only the native `is_dimensioned` flag can.
 
 ## Task 3 — data-markets: Lane A companyconcept annual-only backfill reshape
 
