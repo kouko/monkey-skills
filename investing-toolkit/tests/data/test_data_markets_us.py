@@ -141,7 +141,7 @@ def test_us_migration_contract():
     # fail this assertion.
     assert pack_us.SUPPORTED_PACKS == (
         "snapshot", "memo-fetch", "comps-multiples", "screener-batch", "regime-pack",
-        "kpi-quarterly",
+        "kpi-quarterly", "kpi-topline-backfill",
     ), f"SUPPORTED_PACKS diverges from data-us pack.py --pack choices: {pack_us.SUPPORTED_PACKS}"
 
     # --- (b) build_pack("snapshot", ...) section keys match fixture (fixture-fed, mocked subprocess) ---

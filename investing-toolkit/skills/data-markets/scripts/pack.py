@@ -106,7 +106,7 @@ EXIT_USAGE_ERROR = 64
 # resolved market differs — never routed to a market module whose generic
 # "unknown pack" ValueError would misname a market-availability problem as a
 # pack-name typo. `--market us` still overrides ticker detection entirely.
-US_ONLY_PACKS: frozenset[str] = frozenset({"kpi-quarterly"})
+US_ONLY_PACKS: frozenset[str] = frozenset({"kpi-quarterly", "kpi-topline-backfill"})
 
 # Suffix -> market. Order matters only in that each pattern is disjoint.
 _SUFFIX_RULES: tuple[tuple[re.Pattern[str], str], ...] = (

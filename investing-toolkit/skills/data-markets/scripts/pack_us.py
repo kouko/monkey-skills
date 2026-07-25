@@ -24,6 +24,10 @@ Pack types:
   - kpi-quarterly    single ticker, SEC EDGAR dimensional-revenue fact-pack
                      (10-Q quarterly facts + 10-K FY totals; US-only —
                      the facade refuses it for any other market)
+  - kpi-topline-backfill  single ticker, SEC EDGAR companyconcept
+                     annual-only top-line (total) revenue backfill —
+                     Lane A of the two-lane top-line revenue arc
+                     (docs/loom/plans/2026-07-25-company-total-revenue.md)
 
 Environment:
   INVESTING_TOOLKIT_CACHE   passed through to underlying clients (yfinance / sec / fred)
@@ -1036,6 +1040,64 @@ def pack_kpi_quarterly(ticker: str) -> dict:
     }
 
 
+def pack_kpi_topline_backfill(ticker: str) -> dict:
+    """US-only annual-only `companyconcept` top-line (total) revenue
+    backfill pack — Lane A of the two-lane top-line revenue arc (plan
+    docs/loom/plans/2026-07-25-company-total-revenue.md, Task 4). Pure
+    I/O orchestration: calls `build_top_line_backfill` for `ticker` and
+    shapes its return into the standard pack envelope
+    `pack_kpi_quarterly` emits; no analysis/filtering/relabeling here.
+
+    The envelope carries the mandatory top-level `"source_kind"` key set
+    to the exact literal `"xbrl-companyfacts"` (plan §Notes envelope
+    provenance contract) — `kpi_xbrl_ingest.ingest_pack` reads this
+    literal to assign the correct durable provenance label to Lane A's
+    points; without it every point would inherit the ingest default
+    `"xbrl-dimensional"`, a factually wrong label for a companyconcept
+    backfill.
+
+    Failure honesty (mirrors `pack_kpi_quarterly`): a loud error slot
+    from the producer rides through the envelope verbatim, with NO
+    `facts` key — never a fabricated/empty-but-successful pack.
+    """
+    _log("kpi-topline-backfill start", ticker)
+    t0 = time.monotonic()
+    if str(SCRIPT_DIR) not in sys.path:
+        sys.path.insert(0, str(SCRIPT_DIR))
+    # Lazy import: same pattern as pack_kpi_quarterly above (sec_edgar_
+    # client's top-level `import requests` must not become a module-
+    # import-time cost for other pack types).
+    from sec_edgar_client import build_top_line_backfill
+
+    envelope = {
+        "pack": "kpi-topline-backfill",
+        "ticker": ticker.upper(),
+        "fetched_at": datetime.now(timezone.utc).isoformat(),
+        "source_kind": "xbrl-companyfacts",
+    }
+
+    _log("pack [companyconcept annual backfill]", ticker)
+    result = build_top_line_backfill(ticker)
+    if "error" in result:
+        _log(
+            "kpi-topline-backfill done",
+            f"{ticker} FAILED in {time.monotonic() - t0:.1f}s",
+        )
+        return {**envelope, **result}
+
+    _log(
+        "kpi-topline-backfill done",
+        f"{ticker} {len(result['facts'])} facts in "
+        f"{time.monotonic() - t0:.1f}s",
+    )
+    return {
+        **envelope,
+        "company": result["company"],
+        "facts": result["facts"],
+        "coverage": result["coverage"],
+    }
+
+
 def pack_comps_multiples(tickers: list[str]) -> dict:
     """Multiples-only fields. Single or batch."""
     _log("comps-multiples start", f"{len(tickers)} ticker(s)")
@@ -1194,6 +1256,7 @@ SUPPORTED_PACKS: tuple[str, ...] = (
     "screener-batch",
     "regime-pack",
     "kpi-quarterly",
+    "kpi-topline-backfill",
 )
 
 
@@ -1234,5 +1297,11 @@ def build_pack(pack_name: str, tickers: list[str]) -> dict:
                 "pack kpi-quarterly requires exactly one ticker (single, heavy)"
             )
         return pack_kpi_quarterly(ticker_list[0])
+    if pack_name == "kpi-topline-backfill":
+        if len(ticker_list) != 1:
+            raise ValueError(
+                "pack kpi-topline-backfill requires exactly one ticker (single, heavy)"
+            )
+        return pack_kpi_topline_backfill(ticker_list[0])
     # regime-pack: no ticker dimension
     return pack_regime()
