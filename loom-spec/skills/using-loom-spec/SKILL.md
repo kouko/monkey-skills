@@ -15,6 +15,8 @@ If you are a subagent already dispatched with an explicit role prompt, **do not*
 **You have loom-spec.** This skill does not draft or critique a spec itself —
 it is the thin entry that decides which of loom-spec's two member skills the
 work needs, after checking whether spec work is even the right station yet.
+
+**Brief before you ask a complex spec fork.** Before you ask the user a spec fork this complex — **≥3 trade-offs, ≥2 implementation paths, or architectural blast radius** — run `dev-workflow:brief-before-asking` first instead of improvising the question.
 </EXTREMELY-IMPORTANT>
 
 ## §Intake
@@ -57,11 +59,6 @@ spec ask getting sent to `spec-expansion` (which would silently re-draft
 instead of auditing) instead of `completeness-critic`. When in doubt, ask
 "does a draft already exist to critique, or am I starting from a seed?" — the
 answer picks the member.
-
-A spec fork this router surfaces (which member skill applies, an on-ramp
-choice) can itself be non-trivial: before you ask the user a fork this
-complex (≥3 trade-offs, ≥2 implementation paths, or architectural blast radius)
-→ run `dev-workflow:brief-before-asking` first.
 
 ## Family
 

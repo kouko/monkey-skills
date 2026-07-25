@@ -40,10 +40,7 @@ instead of proceeding here:
 - The problem/users are unarticulated (no evidence for who needs what) →
   `using-loom-discovery` first; resume here with its output as seed
 
-If intake or handoff surfaces a genuine product/design/engineering
-trade-off fork (≥3 trade-offs, ≥2 implementation paths, or architectural blast radius)
-— before you ask the user a fork this complex, run
-`dev-workflow:brief-before-asking` first.
+**Brief before you ask a complex product/principle fork.** Before you ask the user a product/principle fork this complex — **≥3 trade-offs, ≥2 implementation paths, or architectural blast radius** — run `dev-workflow:brief-before-asking` first instead of improvising the question.
 
 ### Step 3 — Hand off
 
