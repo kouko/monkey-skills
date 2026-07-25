@@ -451,11 +451,39 @@ store retains >=2 vintages to disagree on. Reuses `kpi_store`'s
 `resolve_store_dir` for the durable dir (`KPI_STORE_DIR` env override
 applies here too).
 
+`ingest` also routes any FLAT fact (`dimensions == {}`) into a SEPARATE
+top-line lane: every flat fact — whichever XBRL concept a filer happened
+to tag it under — lands in the ONE fixed canonical `kpi_id` LITERAL
+`total_revenue` (never a concept-derived slug), so a filer that switches
+tagging across years still merges into a single series. Provenance is
+assigned PER LANE, not per pack, since one `ingest` call can produce
+points carrying TWO different `source_kind` values: dimensional facts
+keep `"xbrl-dimensional"`; flat facts take the pack envelope's own
+`"source_kind"` when it declares one (the `kpi-topline-backfill` pack
+declares `"xbrl-companyfacts"`), and otherwise default to
+`"xbrl-topline"` (the `kpi-quarterly` pack's own flat fact). Either
+label outside `kpi_gate.TRUSTED_SOURCE_KINDS` refuses the whole pack
+before anything is written.
+
+**Two-lane workflow** to fully populate `total_revenue`:
+`pack.py --pack kpi-quarterly --ticker <T>` (per-filing, Lane B) ->
+`ingest`; then `pack.py --pack kpi-topline-backfill --ticker <T>`
+(annual `companyconcept` history, Lane A) -> `ingest`. Both calls append
+to the SAME series. Before writing a top-line point, `ingest` checks the
+already-stored series (read-only) for a point sharing this point's FULL
+dedup key (`company`, `kpi_id`, `period`, `as_of`, `source_accession`):
+if that stored point carries a DIFFERENT value, `ingest` REFUSES the
+whole write loud — the two lanes read the same filing, so a disagreement
+on the same accession means one of them is wrong, not a restatement. The
+SAME period under a DIFFERENT `source_accession` is a legitimate
+restatement and still appends normally (surfaced by the store's `†`),
+never raising.
+
 ```
 # ingest: reads the fact-pack JSON from --pack (a file path — no stdin
 # fallback, unlike the other scripts in this file); appends every
-# dimensional fact's vintage to the kpi_store and prints
-# {"company", "kpi_ids", "appended"} to stdout
+# dimensional AND flat top-line fact's vintage to the kpi_store and
+# prints {"company", "kpi_ids", "appended"} to stdout
 uv run scripts/kpi_xbrl_ingest.py ingest --pack /path/to/aapl_fact_pack.json
 ```
 
@@ -464,10 +492,18 @@ uv run scripts/kpi_xbrl_ingest.py ingest --pack /path/to/aapl_fact_pack.json
 | `ingest`   | `--pack` | yes      | Path to a JSON file holding the fetched dimensional fact-pack (no stdin fallback) |
 
 `ingest` exits **0** on success, printing `{"company", "kpi_ids":
-[...sorted...], "appended": <n>}` to stdout. Unlike the other scripts in
-this file, this driver has NO wrapping try/except: a missing `--pack`
-file, malformed JSON, a fact-pack missing both `ticker` and `company`, or
-any `kpi_store.append` provenance/`as_of` rejection all propagate as an
-uncaught Python exception (raw traceback to stderr) and exit **1**. A
-missing required flag (`--pack`) is handled by argparse itself and exits
-**2**.
+[...sorted...], "appended": <n>}` to stdout — `kpi_ids` includes
+`total_revenue` whenever the pack carried a flat fact. Unlike the other
+scripts in this file, this driver has NO wrapping try/except: a missing
+`--pack` file, malformed JSON, a fact-pack missing both `ticker` and
+`company`, a `source_kind` outside `kpi_gate.TRUSTED_SOURCE_KINDS`, a
+top-line value disagreeing with an already-stored point on the same
+dedup key, a `kpi_id` collision, or a `kpi_store.append`
+provenance/`as_of` rejection all propagate as an uncaught Python
+exception (raw traceback to stderr) and exit **1**. The driver's own
+guards (`source_kind` / disagreement / collision / missing key) never
+write a partial pack, by construction — they all run before anything is
+appended. A `kpi_store.append` precondition rejection is currently
+unreachable from this driver's data flow (per the module docstring) but
+is not a structurally enforced guarantee. A missing required flag
+(`--pack`) is handled by argparse itself and exits **2**.

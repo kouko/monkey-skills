@@ -52,7 +52,7 @@ immutable append-only, no expiry). Stdlib only.
 ## CLI reference
 
 Per-subcommand CLI detail (flags, exit codes, worked examples) for the
-eleven persistence/compute scripts lives in
+twelve persistence/compute scripts lives in
 [`references/cli-reference.md`](references/cli-reference.md). Index:
 
 - **`kpi_store`** — append-only bitemporal store: `append` a point / `query`
@@ -89,13 +89,34 @@ three steps, in order:
 1. **Fetch** the dimensional fact-pack from `data-markets`:
    `pack.py --pack kpi-quarterly --ticker <T> --market us` (US-only pack;
    SEC EDGAR dimensional XBRL, single ticker only — rate-limited 10 req/s).
+   This pack now also carries the filing's flat top-line revenue fact
+   (Lane B) alongside the dimensional facts.
 2. **Ingest** the fact-pack into this skill's store:
    `kpi_xbrl_ingest.py ingest --pack <pack.json>` — derives a `kpi_id` per
-   dimensional signature and appends every vintage to `kpi_store` (honors
-   `KPI_STORE_DIR`; see [`references/cli-reference.md`](references/cli-reference.md)
-   for flags/exit codes).
+   dimensional signature and appends every vintage to `kpi_store`, and
+   routes any flat fact into the ONE fixed canonical `total_revenue`
+   series (honors `KPI_STORE_DIR`; see
+   [`references/cli-reference.md`](references/cli-reference.md) for
+   flags/exit codes and the two-lane provenance/dedup-guard detail).
 3. **Render** the tearsheet via `report-kpi-tearsheet`, which reads the
    now-populated store directly.
+
+### Two-lane `total_revenue` coverage
+
+`total_revenue` is filled by TWO independently-fetched packs, both
+ingested through the SAME `ingest` command above (no separate
+subcommand):
+
+- **Lane B — per-filing** (`--pack kpi-quarterly`, step 1 above): the
+  filing's own flat top-line fact; provenance `xbrl-topline` unless the
+  pack declares its own `source_kind`.
+- **Lane A — annual backfill** (`--pack kpi-topline-backfill`): fills
+  fiscal years older than the filings Lane B fetched, from the SEC
+  `companyconcept` REST series; provenance `xbrl-companyfacts`.
+
+Both lanes append to the SAME series, and a fiscal year both lanes cover
+must agree — see [`references/cli-reference.md`](references/cli-reference.md)
+for the exact dedup-key guard.
 
 ## Workflow: TW iXBRL -> tearsheet
 
