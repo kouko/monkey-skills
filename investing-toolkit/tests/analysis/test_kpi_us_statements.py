@@ -250,6 +250,104 @@ def test_same_concept_period_accession_same_value_both_pass_through(
     assert points[0] == points[1]
 
 
+def test_fact_missing_accession_is_rejected_at_build_time(
+    kpi_us_statements_module,
+):
+    # `source_accession` derives from the fact's `accession`. A bare
+    # `.get("accession")` would emit a point carrying None there — which
+    # kpi_store.append rejects INSIDE its per-point loop, after the pack's
+    # EARLIER points already committed (a partial write into an append-only
+    # store). The invariant must hold at BUILD time instead: mirrors
+    # kpi_xbrl.facts_to_points' `_require_field(fact, "accession")`
+    # (kpi_xbrl.py:507).
+    fact = _duration_fact("us-gaap:Assets", "2023-01-01", "2023-12-31", 1000.0)
+    del fact["accession"]
+    with pytest.raises(ValueError, match="accession") as excinfo:
+        kpi_us_statements_module.us_statement_pack_to_points(_pack([fact]))
+    # The offending fact must be identifiable from the message alone.
+    assert "us-gaap:Assets" in str(excinfo.value)
+
+
+def test_fact_missing_concept_is_rejected_at_build_time(
+    kpi_us_statements_module,
+):
+    # `concept` feeds BOTH `kpi_id` and `source_cell_ref`, so an absent one
+    # is the same partial-write hole as a missing accession — and it would
+    # additionally key the series file on a None kpi_id.
+    fact = _duration_fact("us-gaap:Revenues", "2023-01-01", "2023-12-31", 1000.0)
+    fact["concept"] = None
+    with pytest.raises(ValueError, match="concept"):
+        kpi_us_statements_module.us_statement_pack_to_points(_pack([fact]))
+
+
+def test_fact_missing_value_is_rejected_at_build_time(
+    kpi_us_statements_module,
+):
+    # `value` reaches the store today via a bare `fact.get("value")` —
+    # absent/None/non-numeric values ride through unchecked and land
+    # DURABLY in the append-only store, contradicting this module's own
+    # "never fabricated" framing. Mirrors kpi_xbrl._require_value
+    # (kpi_xbrl.py:435-449), same shape, same polarity.
+    fact = _duration_fact("us-gaap:Revenues", "2023-01-01", "2023-12-31", 1000.0)
+    del fact["value"]
+    with pytest.raises(ValueError, match="value"):
+        kpi_us_statements_module.us_statement_pack_to_points(_pack([fact]))
+
+
+def test_fact_with_none_value_is_rejected_at_build_time(
+    kpi_us_statements_module,
+):
+    fact = _duration_fact("us-gaap:Revenues", "2023-01-01", "2023-12-31", 1000.0)
+    fact["value"] = None
+    with pytest.raises(ValueError, match="value"):
+        kpi_us_statements_module.us_statement_pack_to_points(_pack([fact]))
+
+
+def test_fact_with_non_numeric_value_is_rejected_at_build_time(
+    kpi_us_statements_module,
+):
+    fact = _duration_fact("us-gaap:Revenues", "2023-01-01", "2023-12-31", 1000.0)
+    fact["value"] = "1000"
+    with pytest.raises(ValueError, match="non-numeric"):
+        kpi_us_statements_module.us_statement_pack_to_points(_pack([fact]))
+
+
+def test_fact_with_bool_value_is_rejected_at_build_time(
+    kpi_us_statements_module,
+):
+    # In Python `True`/`False` are instances of `int` — a naive
+    # `isinstance(value, (int, float))` check would silently admit a bool
+    # as a legitimate numeric figure. Must be excluded explicitly (recorded
+    # incident precedent: a one-sided numeric check that let a bool pass).
+    fact = _duration_fact("us-gaap:Revenues", "2023-01-01", "2023-12-31", 1000.0)
+    fact["value"] = True
+    with pytest.raises(ValueError, match="non-numeric"):
+        kpi_us_statements_module.us_statement_pack_to_points(_pack([fact]))
+
+
+def test_fact_with_zero_value_passes_through(
+    kpi_us_statements_module,
+):
+    # Zero is a legitimate reported figure (e.g. zero preferred dividends),
+    # not an absence — a falsy check (`if not value`) would wrongly reject
+    # it. Recorded incident precedent: kpi_store once rejected a legitimate
+    # integer 0 via exactly that falsy check.
+    fact = _duration_fact("us-gaap:Revenues", "2023-01-01", "2023-12-31", 0.0)
+    points = kpi_us_statements_module.us_statement_pack_to_points(_pack([fact]))
+    assert points[0]["value"] == 0.0
+
+
+def test_a_later_malformed_fact_rejects_the_whole_pack(kpi_us_statements_module):
+    # The ordering claim, at the mapper seam: an EARLIER valid fact must not
+    # survive a LATER malformed one. Nothing is returned at all, so the
+    # driver's append loop never runs on a half-built pack.
+    good = _duration_fact("us-gaap:Revenues", "2023-01-01", "2023-12-31", 1000.0)
+    bad = _duration_fact("us-gaap:Assets", "2024-01-01", "2024-12-31", 2000.0)
+    del bad["accession"]
+    with pytest.raises(ValueError, match="accession"):
+        kpi_us_statements_module.us_statement_pack_to_points(_pack([good, bad]))
+
+
 def test_points_satisfy_kpi_store_append_guards(
     kpi_us_statements_module, kpi_store_module
 ):

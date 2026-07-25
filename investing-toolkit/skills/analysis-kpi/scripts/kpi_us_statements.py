@@ -77,6 +77,63 @@ def _period_fields(fact: dict[str, Any]) -> tuple:
     return start, end, "duration", f"{start}/{end}"
 
 
+def _require_field(fact: dict[str, Any], field: str) -> Any:
+    """Refuse a fact whose `field` is absent, None, or empty — mirrors
+    `kpi_xbrl._require_field` (kpi_xbrl.py:479), same shape, same polarity.
+
+    This is what makes the "every emitted point carries complete provenance"
+    invariant REAL rather than incidental. `kpi_store.append` enforces the
+    same completeness via `_require_provenance` (kpi_store.py:178), but it
+    fires INSIDE the caller's per-point loop and each `append` commits
+    independently — so a pack shaped `[valid, valid, incomplete]` would
+    durably write the first two points and only then raise, a partial write
+    into an append-only store that cannot be un-written. Checking here, at
+    BUILD time, means such a pack never reaches an append loop at all: the
+    whole pack is refused before a single point exists.
+
+    The message names the offending fact (`concept` + `period_end`) so the
+    rejection is actionable from stderr alone.
+    """
+    value = fact.get(field)
+    if not value:
+        raise ValueError(
+            f"kpi_us_statements.us_statement_pack_to_points: fact missing "
+            f"required {field!r} (concept={fact.get('concept')!r}, "
+            f"period_end={fact.get('period_end')!r}) — rejected, never "
+            f"fabricated, nothing written"
+        )
+    return value
+
+
+def _require_value(fact: dict[str, Any]) -> Any:
+    """Refuse a fact whose `value` is absent, None, or non-numeric — mirrors
+    `kpi_xbrl._require_value` (kpi_xbrl.py:435-449), same shape, same
+    polarity. `bool` is excluded even though Python's `bool` is an `int`
+    subclass: a naive `isinstance(value, (int, float))` check would admit
+    `True`/`False` as a legitimate reported figure.
+
+    This checks ABSENCE and TYPE only, never truthiness — zero IS a
+    legitimate value (a real reported figure, e.g. zero preferred
+    dividends), so `if not value` would wrongly reject it.
+    """
+    if "value" not in fact or fact["value"] is None:
+        raise ValueError(
+            f"kpi_us_statements.us_statement_pack_to_points: fact missing "
+            f"required 'value' (concept={fact.get('concept')!r}, "
+            f"period_end={fact.get('period_end')!r}) — rejected, never "
+            f"fabricated, nothing written"
+        )
+    value = fact["value"]
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(
+            f"kpi_us_statements.us_statement_pack_to_points: fact 'value' "
+            f"is non-numeric ({value!r}, concept={fact.get('concept')!r}, "
+            f"period_end={fact.get('period_end')!r}) — rejected, never "
+            f"fabricated"
+        )
+    return value
+
+
 def _require_no_intra_pack_disagreement(points: list[dict[str, Any]]) -> None:
     """Refuse two points in the SAME pack that coincide on the store's full
     dedup key (`kpi_store._DEDUP_KEY_FIELDS`: `company, kpi_id, period,
@@ -156,6 +213,21 @@ def us_statement_pack_to_points(pack: dict[str, Any]) -> list[dict[str, Any]]:
     values are already base-scale, no magnitude folding needed); `unit` is
     copied from the fact verbatim.
 
+    PROVENANCE COMPLETENESS IS ENFORCED, NOT ASSUMED. Every fact's `concept`
+    and `accession` go through `_require_field` BEFORE its point is built,
+    so this function either returns points that ALL carry a complete
+    provenance triple (`source_accession`/`source_table_id`/
+    `source_cell_ref`) or raises and returns none. Callers may rely on that:
+    it is what lets a driver drain the returned list into
+    `kpi_store.append` without the store's per-point `_require_provenance`
+    (kpi_store.py:178) firing mid-loop and leaving a partial write. `as_of`
+    is deliberately NOT validated here — see `_require_field`'s docstring
+    and `kpi_us_statements_ingest`'s module docstring for where that check
+    lives and why it lives there. `value` is separately validated by
+    `_require_value` (absent/None/non-numeric all rejected, zero admitted)
+    — not part of the provenance triple, but the same never-fabricated
+    guarantee applied to the figure itself.
+
     Before returning, every point is checked against every other for a
     same-dedup-key value disagreement — `_require_no_intra_pack_disagreement`
     (see its docstring for the restatement-vs-fabrication polarity).
@@ -164,7 +236,17 @@ def us_statement_pack_to_points(pack: dict[str, Any]) -> list[dict[str, Any]]:
 
     points: list[dict[str, Any]] = []
     for fact in pack.get("facts", []):
-        concept = fact.get("concept")
+        # Provenance completeness is checked HERE, before the point exists —
+        # see `_require_field` for why the store's own identical check is
+        # too late. `concept` feeds BOTH `kpi_id` and `source_cell_ref`;
+        # `accession` feeds `source_accession`. `source_table_id` is a
+        # module constant and needs no check. `value` is checked via
+        # `_require_value` for the same never-fabricated reason — a bare
+        # `.get("value")` would let an absent/None/non-numeric value ride
+        # through as a durably-written point.
+        concept = _require_field(fact, "concept")
+        accession = _require_field(fact, "accession")
+        value = _require_value(fact)
         period_start, period_end, period_kind, period_label = _period_fields(fact)
         points.append(
             {
@@ -175,9 +257,9 @@ def us_statement_pack_to_points(pack: dict[str, Any]) -> list[dict[str, Any]]:
                 "period_end": period_end,
                 "period_kind": period_kind,
                 "scale": _SCALE,
-                "value": fact.get("value"),
+                "value": value,
                 "as_of": fact.get("filed"),
-                "source_accession": fact.get("accession"),
+                "source_accession": accession,
                 "source_form": fact.get("form"),
                 "source_table_id": _SOURCE_TABLE_ID,
                 "source_cell_ref": concept,
