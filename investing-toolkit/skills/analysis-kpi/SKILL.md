@@ -96,7 +96,9 @@ three steps, in order:
    (Lane B) alongside the dimensional facts.
 2. **Ingest** the fact-pack into this skill's store:
    `kpi_xbrl_ingest.py ingest --pack <pack.json>` — derives a `kpi_id` per
-   dimensional signature and appends every vintage to `kpi_store`, and
+   dimensional signature (a non-default `ConsolidationItemsAxis` member,
+   e.g. intersegment eliminations, splits off its own series; spelling
+   case never does) and appends every vintage to `kpi_store`, and
    routes any flat fact into the ONE fixed canonical `total_revenue`
    series (honors `KPI_STORE_DIR`; see
    [`references/cli-reference.md`](references/cli-reference.md) for
