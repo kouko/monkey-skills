@@ -209,6 +209,32 @@
   changes a producer or the store's write path — per
   `docs/loom/memory/a-data-probe-is-not-a-pipeline-dogfood.md`, do NOT let a probe
   stand in for it again.
+- (a2) 🟡 **`_signature_key` and `derive_kpi_id` disagree about the
+  ConsolidationItemsAxis — the guard can raise a FALSE collision.**
+  `derive_kpi_id` EXCLUDES `srt:ConsolidationItemsAxis` from the breakdown pairs
+  (`kpi_xbrl_ingest.py:255`); `_signature_key` leaves it in (`:348`). So a fact
+  carrying that axis INSIDE `dimensions` — rather than in its own `consolidation`
+  field — yields ONE kpi_id but TWO claim keys, and `_claim_kpi_id` refuses a pair
+  the id derivation is explicitly tested to fold
+  (`test_kpi_xbrl_ingest.py:662-669`). Executed probe, close-out review round 3:
+  `{SegmentAxis: DataCenterMember, srt:ConsolidationItemsAxis: OperatingSegmentsMember}`
+  + `consolidation=None` versus `{SegmentAxis: DataCenterMember}` +
+  `consolidation="OperatingSegmentsMember"` → identical id, non-equal claim keys,
+  raise. **Not reachable through the shipped producer**:
+  `sec_edgar_client._dimension_signature` allowlists four breakdown axes and routes
+  the consolidation axis to its own field (`:2265-2281`), so only a hand-built or
+  third-party `--pack` can express it; and it fails LOUD (whole-pack abort), never a
+  silent merge. Deliberately NOT fixed at close-out: aligning the two would change
+  `_signature_key`'s selector grouping, a wider blast radius than the defect, and the
+  brief scoped that function as untouched. Both affected docstrings now state the
+  divergence instead of claiming unification. Re-trigger: any arc that admits
+  third-party fact-packs, or the next touch of either key builder.
+- (a3) 🟢 **Two modules disagree on what "the consolidation axes" means.**
+  `kpi_xbrl_ingest._CONSOLIDATION_AXIS_LOCAL` (`:101`) names ONE axis; the producer's
+  `sec_edgar_client._CONSOLIDATION_AXIS_LOCAL_NAMES` (`:1997-2000`) names TWO
+  (`ConsolidationItemsAxis`, `ConsolidatedEntitiesAxis`) and folds both into the one
+  `consolidation` field. Unreachable today for the same allowlist reason as (a2);
+  fold into (a2)'s fix when it happens.
 - (b) 🟢 **Predictable temp path in the probe capture script**
   (`tests/data/fixtures/capture_kpi_id_identity_probe.py:93`): the pack cache is a
   fixed name under the world-writable system temp dir (CWE-377), and its cached

@@ -175,11 +175,22 @@ def _canonical_dimension_fold(pairs) -> tuple:
 
     `derive_kpi_id`'s digest and `_casefold_claim_key`'s collision-guard
     comparison both call this ONE function rather than each re-deriving the
-    fold, so "same identity under the fold" is decided in exactly one place
-    and the two can never drift apart from each other again — the guard's
-    notion of "distinct" must equal the consumer's (here, the digest's)
-    notion of "same"
+    fold, so "same identity under the CASE fold" is decided in exactly one
+    place — the guard's notion of "distinct" must equal the consumer's (here,
+    the digest's) notion of "same"
     (`docs/loom/memory/derived-durable-id-slug-is-a-lossy-one-way-door.md`).
+
+    SCOPE, precisely: this unifies the CASE regime, not every axis decision.
+    One divergence remains and is deliberate-for-now — `derive_kpi_id` drops
+    `srt:ConsolidationItemsAxis` out of the breakdown pairs while
+    `_signature_key` leaves it in, so a fact carrying that axis INSIDE
+    `dimensions` (rather than in its own `consolidation` field) still yields
+    one id but two claim keys, and the guard raises a FALSE collision. The
+    shipped SEC producer cannot emit that shape — `_dimension_signature`
+    allowlists four breakdown axes and routes the consolidation axis to its
+    own field — so this is reachable only via a hand-built pack, and it fails
+    LOUD rather than merging. Filed as a BACKLOG next-touch; do not assume the
+    two key builders agree on anything but case.
     """
     return tuple(
         (axis.casefold(), member.casefold())

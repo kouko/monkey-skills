@@ -324,9 +324,21 @@ def test_claim_kpi_id_still_raises_on_a_forced_collision(ingest_module):
     only way left to exercise the guard's raise branch at all.
 
     This is NOT proof that today's production inputs can reach the raise
-    path — they cannot. It is defense-in-depth: proof the raise still fires
-    if some future change to `derive_kpi_id` (a shorter digest, a weaker
-    fold, a hash-truncation bug) reintroduces a real collision.
+    path. It is defense-in-depth: proof the raise still fires if some future
+    change to `derive_kpi_id` (a shorter digest, a weaker fold, a
+    hash-truncation bug) reintroduces a real collision.
+
+    One caveat, found by the close-out review and deliberately not fixed here:
+    the raise IS reachable by a hand-built pack that puts
+    `srt:ConsolidationItemsAxis` inside `dimensions` instead of in its own
+    `consolidation` field — `derive_kpi_id` drops that axis from the breakdown
+    pairs while `_signature_key` keeps it, so one id gets two claim keys and
+    the guard raises a FALSE collision. The shipped SEC producer cannot emit
+    that shape (`_dimension_signature` allowlists four breakdown axes and
+    routes the consolidation axis elsewhere), and the failure is loud rather
+    than a silent merge, so it is filed as a BACKLOG next-touch. Stated here
+    because "unreachable" was the claim this test rested on, and it is
+    unreachable only through the producer — not in principle.
     """
     claim_kpi_id = ingest_module._claim_kpi_id
     claimed_by: dict = {}
