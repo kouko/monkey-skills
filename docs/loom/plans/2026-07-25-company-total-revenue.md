@@ -251,6 +251,7 @@ Amendment note 5 (post-PASS, schema-safe → re-review skipped per writing-plans
 - Dependencies: none
 - Independent: true
 - Brief item covered: Decision — "Concept selection is a closed, ordered, first-present allowlist, grounded in XBRL US DQC Revenue Guidance" + "Only `is_dimensioned == False` qualifies".
+- Status: done(c301c7be)  # spec-reviewer PASS; code-quality-reviewer PASS_WITH_NOTES — its 🟡 (one 106-line test bundling five behaviors, violating F.I.R.S.T Independent) was routed back and fixed: 1 test → 14 parametrized items. The plan's RED id `test_top_line_identification` was deliberately RENAMED away in that split; the acceptance property is that the behaviours are pinned, not the function name. Two 🟢 docstring corrections also applied. Reviewer independently re-ran the suite and mutation-checked the XOM assertion rather than trusting self-report.
 
 ## Task 2 — data-markets: Lane B emits the winning flat top-line facts
 
