@@ -508,6 +508,7 @@ Amendment note 5 (post-PASS, schema-safe → re-review skipped per writing-plans
 - Dependencies: Tasks 6, 8, 9 complete first
 - Independent: false
 - Brief item covered: Open Questions #3 — "Version + base freshness: PR #612 is OPEN at 2.35.0, so this arc is **2.36.0**; if #612 merges mid-arc, rebase onto `origin/main` before review" (repo convention: a skill-content change must bump the plugin version — memory `skill_content_pr_requires_plugin_version_bump`).
+- Status: done(d7673ce3)  # quality NEEDS_REVISION→closed. Two 🟡: the entry omitted the arc's one real defect (a release note listing only additions hides what a reader most needs — that a lane was unusable until an e2e caught it), and the closing count reported COLLECTED where every prior entry reports PASSED, which is both off-convention and less informative. Version gate verified green post-commit (exit 0), not assumed.
 
 ## Task 11 — kpi_gate: admit `xbrl-topline` and pin the source-kind naming convention
 

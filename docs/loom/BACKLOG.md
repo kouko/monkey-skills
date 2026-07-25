@@ -165,6 +165,69 @@
   fixtures" though it now also exercises the -ci 2330 fixture; the 2330 fact-count literal
   `2002` is a 3rd pin copy — touch-up on next edit.
 
+## investing-toolkit top-line revenue lane 2.36.0 — post-ship follow-ups (OPEN)
+- Status: OPEN
+- Start: next touch of `analysis-kpi/scripts/kpi_xbrl_ingest.py`,
+  `analysis-kpi/scripts/kpi_store.py`, `analysis-kpi/scripts/kpi_xbrl.py`, or
+  `data-markets/scripts/sec_edgar_client.py`.
+- Origin: company total (top-line) revenue arc (branch feat-total-revenue-lane,
+  2026-07-25, 2.36.0). Brief `docs/loom/specs/2026-07-25-company-total-revenue.md`,
+  plan `docs/loom/plans/2026-07-25-company-total-revenue.md`. Every item below is
+  a per-task review ruling that was deliberately NOT closed in-branch, with the
+  reason recorded — none is an oversight.
+- What:
+  (a) 🟡 **`_q4_basis_mismatch_reason` guards the map ENTRY, not the field**
+      (`kpi_xbrl.py:989,997`). A present calendar entry whose `fiscal_year_end`
+      is `None` compares EQUAL to another such entry, so two unstated calendars
+      silently affirm "shared basis" — the opposite of this repo's fail-loud
+      posture. Unreachable today (Lane A emits no 9-month YTD rows and
+      `derive_q4_points` takes one pack's map) but `pack_us.py:1017-1019` already
+      merges two lanes' calendars into one envelope, which is the shape that
+      reaches it. Fix is a field-level guard, consumer-side.
+  (b) 🟡 **`_SOURCE_FORM_BY_FOCUS` cannot express an amendment** (`kpi_xbrl.py:231-233`).
+      Because focus→form maps `FY` to the literal `"10-K"`, the top-line backfill
+      must skip `10-K/A` carriers rather than mislabel them — and a 10-K/A is the
+      canonical carrier of a RESTATED annual figure. So an amended fiscal year
+      keeps its ORIGINAL number in the backfill lane and never learns the
+      correction. This is a value-staleness gap, not a coverage gap. Fix is
+      consumer-side vocabulary, then widen the producer allowlist; pinned today by
+      a red test so a producer-only widening cannot slip through.
+  (c) 🟡 **Lane B's envelope contract is unverified at the seam.** The two-lane e2e
+      (`tests/analysis/test_top_line_two_lane_e2e.py`) runs Lane A through its real
+      producer but hand-builds Lane B's envelope, because `pack_kpi_quarterly`
+      reaches its facts through edgartools `Filing` objects an offline suite cannot
+      stub. The envelope-contract defect class this arc caught on Lane A is
+      therefore NOT covered on Lane B — the same blind spot, one lane over. The
+      file states the asymmetry; closing it needs a fixture strategy for the
+      per-filing lane.
+  (d) 🟡 **`summarize_concept` is currency-blind** (`sec_edgar_client.py:281`):
+      `units.get("USD") or next(iter(units.values()), [])` returns whatever unit
+      exists when USD is absent, and `float(row["value"])` then pushes it into a
+      USD-assumed store with no error — a number carries no unit. Found while
+      probing carrier forms: TM and HMC report in JPY. Blocked today only
+      incidentally, because those filers' rows are all 20-F and the carrier-form
+      allowlist drops them. Pre-existing, not introduced by this arc.
+  (e) 🟢 **Promote `kpi_store._dedup_key` / `_canonical_value` to public aliases.**
+      `kpi_xbrl_ingest`'s disagreement guard reaches across into both private
+      symbols — correct, because a local copy would silently drift from the store's
+      own definitions, but the encapsulation is owed. A zero-behaviour alias beside
+      each private definition plus four call-site flips; deliberately deferred
+      because `kpi_store.py` was outside the arc's declared file scope.
+  (f) 🟢 **In-batch disagreement is unguarded.** Two conflicting flat facts sharing
+      a dedup key WITHIN one pack still reach `kpi_store.append`'s silent
+      first-record-wins (`kpi_store.py:321-325`). The shipped guard is store-aware
+      (cross-call) only. Unreachable through either producer today — one winner per
+      filing upstream — so it would require a producer bug; ~5 lines to close by
+      accumulating validated keys in-batch.
+  (g) 🟢 **`coverage.skipped_rows` merges gap types under one key** in the backfill
+      lane, discriminated by `type`, where this module's convention elsewhere is one
+      coverage key per gap type (`unclassifiable_periods`, `fetch_failures`,
+      `axis_exclusions`, `top_line_gaps`).
+  (h) 🟢 **`"accessions": [None]` violates the ONE DQC flag schema** when a skip
+      flag names a row with no accession (`assert_dqc_schema`, `kpi_xbrl.py:270-280`,
+      requires non-empty strings). Pre-existing across sibling flags in
+      `sec_edgar_client.py`, not introduced here.
+
 ## investing-toolkit US XBRL→kpi_store producer 2.34.0 — post-ship follow-ups (OPEN)
 - Status: OPEN
 - Start: next substantive touch of `analysis-kpi/scripts/kpi_xbrl_ingest.py` or the
