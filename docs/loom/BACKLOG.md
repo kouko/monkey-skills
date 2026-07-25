@@ -165,6 +165,54 @@
   fixtures" though it now also exercises the -ci 2330 fixture; the 2330 fact-count literal
   `2002` is a 3rd pin copy — touch-up on next edit.
 
+## investing-toolkit kpi_id identity vs the consolidation axis and concept-case drift (COMMITTED-NEXT)
+- Status: COMMITTED-NEXT
+- Start: next investing-toolkit arc. User-decided 2026-07-25 to ship 2.36.0 first
+  and take this separately, because `derive_kpi_id` is a DURABLE identity
+  function — changing it fragments every series already stored under the old
+  slug, so it needs its own brief, its own review, and an explicit decision
+  about existing data rather than a close-out patch.
+- Origin: 7-filer live end-to-end run, 2026-07-25, branch feat-total-revenue-lane.
+  Full pipeline per filer (real SEC fetch -> pack -> ingest -> isolated store).
+  Result: the arc's own capability (total revenue in the store) works for 6 of 7;
+  the inherited DIMENSIONAL lane aborts entirely for 2 of 7.
+- Live evidence, verbatim:
+  - **XOM** — `('us-gaap:Revenues', (StatementBusinessSegments=Upstream,
+    StatementGeographical=US), 'IntersegmentEliminationMember')` and the same
+    concept+dims under `'OperatingSegmentsMember'` both derive
+    `revenues__statementbusinesssegments-upstream__statementgeographical-us`.
+    The guard refuses, correctly — but they are GENUINELY DIFFERENT SERIES (a
+    segment's operating view versus its intersegment eliminations), not one
+    series with a qualifier. `derive_kpi_id` drops the axis, so the ids collide.
+    XOM's Lane A is also unavailable, for an unrelated and correctly-loud reason:
+    no allowlist concept returns companyconcept rows for it at all.
+  - **JPM** — `jpm:OperatingRevenueRealEstateMortgagesChangesinFairValueof...`
+    and `...ChangesInFairValueOf...` — the SAME concept tagged with different
+    capitalization across filings — both derive one lowercased slug. JPM's
+    Lane A works (51 points, total_revenue 182,447,000,000 correct); only the
+    dimensional lane aborts.
+- What: the axis is a QUALIFIER for matching (`_fact_matches` folds an absent tag
+  to the default member) but is DISCRIMINATING for identity when the member is
+  non-default. The likely shape of the fix is to include a non-default
+  consolidation member in the slug, so `(dims, None)` and
+  `(dims, OperatingSegmentsMember)` keep one id while
+  `(dims, IntersegmentEliminationMember)` gets its own. That is a durable-id
+  change: decide what happens to series already written under the current slug
+  before touching it. The JPM case is separate and harder — the source data
+  carries a typo, and case-normalizing the signature key would make the
+  consumer's exact-concept match miss one of the two facts, so it is NOT the
+  same fix.
+- Also revisit together: BACKLOG item (l) of the 2.36.0 follow-ups (a collision
+  aborts BOTH lanes for the WHOLE pack). Filed there as deliberate, and the
+  reasoning still holds in isolation — but two of seven real filers now hit it,
+  which turns "fail loud on an ambiguous series" into "this filer is entirely
+  unavailable". Per-lane isolation of the claim map is the candidate, never a
+  weaker guard.
+- Verified working in the same run, for scope: AAPL 416,161,000,000;
+  WMT 713,163,000,000 (correctly `Revenues`, not RFCC's 706,413,000,000 — the
+  allowlist ordering discriminating live); NVDA 215,938,000,000;
+  COST 275,235,000,000; JPM 182,447,000,000; INTC 473 of 473 facts appended.
+
 ## investing-toolkit top-line revenue lane 2.36.0 — post-ship follow-ups (OPEN)
 - Status: OPEN
 - Start: next touch of `analysis-kpi/scripts/kpi_xbrl_ingest.py`,
