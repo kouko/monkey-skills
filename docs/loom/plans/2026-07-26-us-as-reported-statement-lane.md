@@ -21,7 +21,7 @@ caller handed a brief path, so layers (i)/(ii) do not run. Stated, not skipped.
   shipped-lane truncation, the balance identity with the mezzanine term, and
   usable-history depth. The fixture is the committed record of the 2026-07-26 run.
 - **Module**: `investing-toolkit/tests/data/fixtures/capture_us_statement_shapes_probe.py`
-- **Files touched**: `investing-toolkit/tests/data/fixtures/capture_us_statement_shapes_probe.py`, `investing-toolkit/tests/data/fixtures/us_statement_shapes_probe_2026-07-26.json`, `investing-toolkit/tests/data/test_us_statement_probe_fixture.py`
+- **Files touched**: `investing-toolkit/tests/data/fixtures/capture_us_statement_shapes_probe.py`, `investing-toolkit/tests/data/fixtures/us_statement_shapes_probe_2026-07-26.json`, `investing-toolkit/tests/data/test_us_statement_probe_fixture.py`, `investing-toolkit/tests/data/test_capture_us_statement_shapes_legacy_selector.py` (added in the review round that froze the pre-fix selector — see §Post-PASS amendment note)
 - **Context paths**:
   - `/Users/kouko/.supacode/repos/monkey-skills/finacial-analytics-r2/investing-toolkit/tests/data/fixtures/capture_kpi_id_identity_probe.py`
   - `/Users/kouko/.supacode/repos/monkey-skills/finacial-analytics-r2/investing-toolkit/tests/data/fixtures/capture_companyconcept_form_domain.py`
@@ -34,6 +34,7 @@ caller handed a brief path, so layers (i)/(ii) do not run. Stated, not skipped.
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: §Current State Evidence — "Probe scripts and raw JSON currently live in the session scratchpad; ... they MUST be committed as a capture script plus a dated fixture in the plan's first task, or the numbers below have no auditable source"
+- **Status**: done(accd4126)
 
 ## Task 2 — Resolve the top-line concept PER PERIOD, fixing the shipped truncation
 
@@ -47,19 +48,20 @@ caller handed a brief path, so layers (i)/(ii) do not run. Stated, not skipped.
   which tag is right. Extract the per-period merge as a module-local helper so
   Task 5 reuses it rather than re-implementing it.
 - **Module**: `investing-toolkit/skills/data-markets/scripts/sec_edgar_client.py`
-- **Files touched**: `investing-toolkit/skills/data-markets/scripts/sec_edgar_client.py`, `investing-toolkit/tests/data/test_sec_edgar_top_line.py`
+- **Files touched**: `investing-toolkit/skills/data-markets/scripts/sec_edgar_client.py`, `investing-toolkit/tests/data/test_sec_edgar_top_line_backfill.py`
 - **Context paths**:
   - `/Users/kouko/.supacode/repos/monkey-skills/finacial-analytics-r2/investing-toolkit/skills/data-markets/scripts/sec_edgar_client.py`
-  - `/Users/kouko/.supacode/repos/monkey-skills/finacial-analytics-r2/investing-toolkit/tests/data/test_sec_edgar_top_line.py`
+  - `/Users/kouko/.supacode/repos/monkey-skills/finacial-analytics-r2/investing-toolkit/tests/data/test_sec_edgar_top_line_backfill.py`
   - `/Users/kouko/.supacode/repos/monkey-skills/finacial-analytics-r2/investing-toolkit/skills/data-markets/scripts/pack_us.py`
 - **Acceptance**:
-  - **RED**: `test_sec_edgar_top_line.py::test_backfill_spans_a_mid_history_concept_switch` fails — a filer whose early years are tagged `Revenues` and later years `RevenueFromContractWithCustomerExcludingAssessedTax` currently yields only the early years
+  - **RED**: `test_sec_edgar_top_line_backfill.py::test_backfill_spans_a_mid_history_concept_switch` fails — a filer whose early years are tagged `Revenues` and later years `RevenueFromContractWithCustomerExcludingAssessedTax` currently yields only the early years
   - **GREEN**: the backfill emits BOTH eras as one continuous annual series; a same-period value conflict is skipped with the named reason and never emitted
 - **External surfaces**:
   - HTTP API: `data.sec.gov/api/xbrl/companyconcept/CIK{cik}/us-gaap/{concept}.json` — grounding: in-repo pinned use at `sec_edgar_client.py:57` + committed fixture `companyconcept_form_domain_2026-07-25.json`
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: §Resolved at kickoff #1 — "Fix `build_top_line_backfill`'s truncation IN THIS BRANCH ... the correct rule is the same per-period resolution this arc introduces"
+- **Status**: done(a4ea4f64)
 
 ## Task 3 — Map an as-reported statement pack to store points (pure)
 
@@ -83,6 +85,7 @@ caller handed a brief path, so layers (i)/(ii) do not run. Stated, not skipped.
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: §Smallest End State #1 — "`us-gaap:Revenues` and `us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax` are **two series**, not one resolved series"
+- **Status**: done(ac4a2556)
 
 ## Task 4 — Derive the spine from stored as-reported series, resolving per period (pure)
 
@@ -105,6 +108,7 @@ caller handed a brief path, so layers (i)/(ii) do not run. Stated, not skipped.
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: §Smallest End State #2 — "A new pure view module maps the store's `dump --company` payload into a spine-shaped payload, resolving **which concept represents a field in that period** at read time"; and §Decision "Absence is data: a field the filer never tagged renders absent. Never 0, never derived-by-guess"
+- **Status**: done(b372f793)
 
 ## Task 5 — Fetch the as-reported annual statement pack
 
@@ -341,6 +345,11 @@ a set that turned out to be empty of NEW hits — not suppressed.
   declared-independent task) also edits.
 - Wave 4: Task 10.
 - Critical path: 2 → 5 → 8 → 10 = depth 4.
+
+## Decision Log
+
+1. chose to have the orchestrator commit each task in a parallel wave, rather than each worker committing its own — cost-of-change: the day a wave runs in isolated worktrees instead of one shared checkout, this choice costs rewriting the wave's commit step, but it is what stops four concurrent workers racing on one git index and sweeping each other's half-written files into a commit
+2. chose to let the two revenue lanes resolve a double-tagged period differently — the per-filing lane picks the company's own total, the backfill lane skips — because only the per-filing lane can see the two tags in their reported context, so only it has grounds to pick — cost-of-change: the day someone wants one stated policy across both lanes, this choice costs a coordinated edit to both plus a re-run of the backfill, and until then the asymmetry is written into both docstrings so it reads as designed rather than accidental
 
 ### Post-PASS amendment note (re-review skipped, per SKILL.md §Self-review)
 
