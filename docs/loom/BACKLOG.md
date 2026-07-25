@@ -475,18 +475,15 @@
   2.34.0, 2026-07-25); whole-branch review PASS_WITH_NOTES + per-task 🟢 findings,
   logged not fixed. Brief/plan `docs/loom/{specs,plans}/2026-07-24-kpi-xbrl-store-producer.md`.
 - What:
-  (a) 🟡 **kpi_id collision guard keys on a FINER identity than the store.**
-  `ingest_pack`'s guard uses `_signature_key`'s raw `consolidation or None`, but the
-  store folds `consolidation None == default OperatingSegmentsMember`
-  (`_normalize_consolidation`) and `derive_kpi_id` is consolidation-blind. A pack
-  carrying one concept+dims under BOTH raw-None and explicit-default consolidation
-  (or two genuine consolidation views, which `kpi_xbrl.py:771/1704` contemplate)
-  would trip the guard as a FALSE collision though the store treats them as one
-  series. Reconcile: normalize consolidation in `_signature_key`, or compare
-  NORMALIZED signatures in the guard, so it fires only on TRUE identity collisions.
-  Theoretical today (`pack_us` emits one consolidation per signature). Guard added
-  this arc surfaces this LOUD (was a silent double-process before). See memory
-  [[derived-durable-id-slug-is-a-lossy-one-way-door]].
+  (a) ✅ **RESOLVED by the 2.37.0 identity arc — struck 2026-07-26.** This item said
+  the collision guard keyed on a finer identity than the store, and that
+  `derive_kpi_id` was consolidation-blind. Both were fixed on branch
+  `feat-kpi-id-consolidation-axis`: `_signature_key` normalizes the consolidation
+  qualifier through the consumer's own rule (2.36.0), and `derive_kpi_id` now takes
+  the qualifier and gives a NON-default member its own token (`e60a0745`). Its
+  prescribed remedy ("normalize consolidation in `_signature_key`, or compare
+  NORMALIZED signatures in the guard") is what shipped. Kept as a struck line rather
+  than deleted because (b) and (c) below are still open under this same heading.
   (b) 🟢 `kpi_xbrl_ingest.py` has NO try/except wrapper — a bad `--pack` / malformed
   JSON / a fact-pack missing both ticker+company surfaces as a raw traceback (exit 1),
   unlike sibling scripts' clean-message convention. Add clean error handling on next touch.

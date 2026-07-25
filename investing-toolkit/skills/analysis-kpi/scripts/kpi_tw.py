@@ -130,8 +130,16 @@ def _tw_kpi_id(field: str, basis: str | None) -> str:
     The field-slug is the lowercased field name — a LOSSY normalization, so
     two DISTINCT source fields CAN collapse to one id. The caller's injective
     guard fails loud on that collision rather than silently merging two series
-    (mirrors kpi_xbrl_ingest.derive_kpi_id + its collision guard;
-    [[derived-durable-id-slug-is-a-lossy-one-way-door]]).
+    ([[derived-durable-id-slug-is-a-lossy-one-way-door]]).
+
+    NO LONGER a mirror of the US derivation, as of investing-toolkit 2.37.0:
+    `kpi_xbrl_ingest.derive_kpi_id` now appends a digest of the case-folded
+    identity tuple (this one has no digest), and the US guard now ACCEPTS a
+    case-insensitively equal claimant (this one still raises). The divergence is
+    deliberate for now — TW ids come from a repo-canonical field allowlist, not
+    filer-authored qnames, so they carry no namespace or case-drift source. See
+    the "TW producer" line under BACKLOG §"full three-statement + management-KPI
+    history in kpi_store" before assuming the two should be re-aligned.
     """
     slug = field.lower()
     return f"{slug}__basis-{basis}" if basis else slug
