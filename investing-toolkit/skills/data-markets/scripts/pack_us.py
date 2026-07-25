@@ -28,6 +28,9 @@ Pack types:
                      annual-only top-line (total) revenue backfill —
                      Lane A of the two-lane top-line revenue arc
                      (docs/loom/plans/2026-07-25-company-total-revenue.md)
+  - statement-backfill    single ticker, SEC EDGAR companyfacts as-reported
+                     annual statement backfill (US-only; docs/loom/plans/
+                     2026-07-26-us-as-reported-statement-lane.md)
 
 Environment:
   INVESTING_TOOLKIT_CACHE   passed through to underlying clients (yfinance / sec / fred)
@@ -1106,6 +1109,81 @@ def pack_kpi_topline_backfill(ticker: str) -> dict:
     }
 
 
+def pack_statement_backfill(ticker: str) -> dict:
+    """US-only as-reported ANNUAL statement pack (Task 8, plan
+    docs/loom/plans/2026-07-26-us-as-reported-statement-lane.md). Pure I/O
+    orchestration mirroring `pack_kpi_topline_backfill`: calls the producer
+    (`build_statement_backfill`) and shapes its return into the standard
+    pack envelope; no analysis/filtering/relabeling here.
+
+    The envelope carries the mandatory top-level `"source_kind"` key set to
+    the exact literal `"xbrl-companyfacts"` (plan §PIN — statement pack
+    envelope) — `kpi_xbrl_ingest.ingest_pack` reads this literal to assign
+    the correct durable provenance label to this lane's points; without it
+    every point would inherit the ingest default `"xbrl-dimensional"`, a
+    factually wrong label for a companyfacts statement backfill.
+
+    Failure honesty (mirrors `pack_kpi_topline_backfill`): ANY producer
+    error slot rides through the envelope verbatim, with NO `facts` key —
+    never a fabricated/empty-but-successful pack. This passes error slots
+    through STRUCTURALLY (dict merge), not by enumerating known error
+    classes, so a new error shape (e.g. the concurrently-landing CIK-
+    history guard) is handled unchanged rather than silently dropped.
+    """
+    _log("statement-backfill start", ticker)
+    t0 = time.monotonic()
+    if str(SCRIPT_DIR) not in sys.path:
+        sys.path.insert(0, str(SCRIPT_DIR))
+    # Lazy import: same pattern as pack_kpi_topline_backfill above (sec_
+    # edgar_client's top-level `import requests` must not become a module-
+    # import-time cost for other pack types).
+    from sec_edgar_client import build_statement_backfill
+
+    envelope = {
+        "pack": "statement-backfill",
+        "ticker": ticker.upper(),
+        "fetched_at": datetime.now(timezone.utc).isoformat(),
+        "source_kind": "xbrl-companyfacts",
+    }
+
+    _log("pack [companyfacts statement backfill]", ticker)
+    result = build_statement_backfill(ticker)
+    if "error" in result:
+        _log(
+            "statement-backfill done",
+            f"{ticker} FAILED in {time.monotonic() - t0:.1f}s",
+        )
+        return {**envelope, **result}
+
+    _log(
+        "statement-backfill done",
+        f"{ticker} {len(result['facts'])} facts in "
+        f"{time.monotonic() - t0:.1f}s",
+    )
+    # Whitelist the success-branch fields, like `pack_kpi_topline_backfill`
+    # and `pack_kpi_quarterly` both do -- a wholesale `{**envelope, **result}`
+    # would let the producer's dict win on EVERY key, including `pack` /
+    # `ticker` / `source_kind`. `source_kind` in particular is the key
+    # `kpi_xbrl_ingest.ingest_pack` reads to stamp durable provenance on
+    # every point; the WRAPPER, not the producer, is this lane's single
+    # source of truth for that literal (this producer has exactly one
+    # companyfacts code path and no legitimate reason to disagree, so a
+    # divergent value can only be a producer bug -- silently normalizing
+    # it here is the same convention `pack_kpi_topline_backfill` already
+    # uses, where the producer doesn't even set `source_kind`).
+    # `fetched_at` is the one deliberate exception: `result` carries the
+    # producer's own cache-aware fetch time (the actual fetch time on a
+    # cache hit, not this wrapper's `now()`), which is genuinely better
+    # information than the envelope's timestamp.
+    return {
+        **envelope,
+        "company": result["company"],
+        "facts": result["facts"],
+        "coverage": result["coverage"],
+        "fetched_at": result["fetched_at"],
+    }
+
+
 def pack_comps_multiples(tickers: list[str]) -> dict:
     """Multiples-only fields. Single or batch."""
     _log("comps-multiples start", f"{len(tickers)} ticker(s)")
@@ -1265,6 +1343,7 @@ SUPPORTED_PACKS: tuple[str, ...] = (
     "regime-pack",
     "kpi-quarterly",
     "kpi-topline-backfill",
+    "statement-backfill",
 )
 
 
@@ -1311,5 +1390,11 @@ def build_pack(pack_name: str, tickers: list[str]) -> dict:
                 "pack kpi-topline-backfill requires exactly one ticker (single, heavy)"
             )
         return pack_kpi_topline_backfill(ticker_list[0])
+    if pack_name == "statement-backfill":
+        if len(ticker_list) != 1:
+            raise ValueError(
+                "pack statement-backfill requires exactly one ticker (single, heavy)"
+            )
+        return pack_statement_backfill(ticker_list[0])
     # regime-pack: no ticker dimension
     return pack_regime()

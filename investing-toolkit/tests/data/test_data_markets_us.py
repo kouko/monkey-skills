@@ -141,7 +141,7 @@ def test_us_migration_contract():
     # fail this assertion.
     assert pack_us.SUPPORTED_PACKS == (
         "snapshot", "memo-fetch", "comps-multiples", "screener-batch", "regime-pack",
-        "kpi-quarterly", "kpi-topline-backfill",
+        "kpi-quarterly", "kpi-topline-backfill", "statement-backfill",
     ), f"SUPPORTED_PACKS diverges from data-us pack.py --pack choices: {pack_us.SUPPORTED_PACKS}"
 
     # --- (b) build_pack("snapshot", ...) section keys match fixture (fixture-fed, mocked subprocess) ---
@@ -800,3 +800,213 @@ def test_pack_memo_fetch_emits_xval_packs_with_status():
     assert "error" in xval_source_b_failed, (
         "depth-1 failed status must carry the error, not swallow it"
     )
+
+
+def test_statement_backfill_envelope_declares_companyfacts_source_kind(monkeypatch):
+    """Task 8, docs/loom/plans/2026-07-26-us-as-reported-statement-lane.md:
+    `pack_statement_backfill` is pure I/O orchestration mirroring
+    `pack_kpi_topline_backfill` (pack_us.py:1043) -- it calls the producer
+    (`sec_edgar_client.build_statement_backfill`) and shapes the return into
+    the standard envelope, carrying the mandatory top-level `source_kind`
+    literal `"xbrl-companyfacts"` (plan's §PIN — statement pack envelope).
+    `kpi_xbrl_ingest.ingest_pack` reads this exact literal to assign the
+    correct durable provenance label; without it every point would inherit
+    a wrong default. Stubs at the producer's own module boundary
+    (`sec_edgar_client.build_statement_backfill`), not an intermediate
+    projection -- this repo has a recorded incident where mocking one layer
+    up let a green suite certify a crash."""
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack_us  # noqa: E402
+    import sec_edgar_client  # noqa: E402
+
+    fake_facts = [
+        {
+            "concept": "us-gaap:Revenues",
+            "period_start": "2024-01-01",
+            "period_end": "2024-12-31",
+            "period_kind": "duration",
+            "value": 1234000000.0,
+            "unit": "USD",
+            "accession": "0000320193-25-000079",
+            "filed": "2025-10-31",
+            "form": "10-K",
+        }
+    ]
+    fake_coverage = {"skipped_rows": []}
+    calls: list[str] = []
+
+    def fake_backfill(ticker):
+        calls.append(ticker)
+        return {
+            "pack": "statement-backfill",
+            "ticker": ticker.upper(),
+            "fetched_at": "2026-07-25T00:00:00+00:00",
+            "source_kind": "xbrl-companyfacts",
+            "company": "APPLE INC",
+            "facts": fake_facts,
+            "coverage": fake_coverage,
+        }
+
+    monkeypatch.setattr(sec_edgar_client, "build_statement_backfill", fake_backfill)
+
+    payload = pack_us.pack_statement_backfill("aapl")
+
+    assert payload["pack"] == "statement-backfill"
+    assert payload["ticker"] == "AAPL"
+    assert payload["source_kind"] == "xbrl-companyfacts"
+    assert payload["company"] == "APPLE INC"
+    assert payload["facts"] == fake_facts
+    assert payload["coverage"] == fake_coverage
+    assert "fetched_at" in payload
+    assert calls == ["aapl"]
+
+
+def test_statement_backfill_source_kind_overrides_producer_disagreement(monkeypatch):
+    """The wrapper's docstring guarantees the envelope carries the
+    top-level `source_kind` literal `"xbrl-companyfacts"` -- a promise the
+    old wholesale `{**envelope, **result}` merge does NOT keep: the
+    producer's own `source_kind` key, if present, wins over the envelope's
+    (dict-merge semantics -- the right-hand operand's keys always
+    override the left-hand's). Stubs a producer success payload with a
+    DIFFERENT `source_kind` (a producer bug/regression -- `build_statement_
+    backfill` has exactly one companyfacts code path and no legitimate
+    reason to ever emit anything else) and asserts the WRAPPER's own
+    literal wins. The wrapper, not the producer, is this lane's single
+    source of truth for the provenance label -- matching
+    `pack_kpi_topline_backfill`, whose producer (`build_top_line_backfill`)
+    never even sets `source_kind`; the wrapper alone owns it there too."""
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack_us  # noqa: E402
+    import sec_edgar_client  # noqa: E402
+
+    fake_facts = [{"concept": "us-gaap:Revenues", "value": 1.0}]
+    fake_coverage = {"skipped_rows": []}
+
+    def fake_backfill_wrong_source_kind(ticker):
+        return {
+            "pack": "statement-backfill",
+            "ticker": ticker.upper(),
+            "fetched_at": "2026-07-25T00:00:00+00:00",
+            "source_kind": "xbrl-dimensional",  # disagrees with the wrapper
+            "company": "APPLE INC",
+            "facts": fake_facts,
+            "coverage": fake_coverage,
+        }
+
+    monkeypatch.setattr(
+        sec_edgar_client, "build_statement_backfill", fake_backfill_wrong_source_kind
+    )
+
+    payload = pack_us.pack_statement_backfill("AAPL")
+
+    assert payload["source_kind"] == "xbrl-companyfacts"
+
+
+def test_statement_backfill_source_kind_survives_producer_omission(monkeypatch):
+    """Companion to the disagreement test above: even a producer payload
+    that OMITS `source_kind` entirely must still resolve to the wrapper's
+    own `"xbrl-companyfacts"` literal, proving the docstring's guarantee
+    is exercised independently of whatever the producer happens to emit
+    (or not emit) -- not trusted as a coincidence between this module and
+    `sec_edgar_client.build_statement_backfill`."""
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack_us  # noqa: E402
+    import sec_edgar_client  # noqa: E402
+
+    fake_facts = [{"concept": "us-gaap:Revenues", "value": 1.0}]
+    fake_coverage = {"skipped_rows": []}
+
+    def fake_backfill_no_source_kind(ticker):
+        return {
+            "pack": "statement-backfill",
+            "ticker": ticker.upper(),
+            "fetched_at": "2026-07-25T00:00:00+00:00",
+            # deliberately no `source_kind` key
+            "company": "APPLE INC",
+            "facts": fake_facts,
+            "coverage": fake_coverage,
+        }
+
+    monkeypatch.setattr(
+        sec_edgar_client, "build_statement_backfill", fake_backfill_no_source_kind
+    )
+
+    payload = pack_us.pack_statement_backfill("AAPL")
+
+    assert payload["source_kind"] == "xbrl-companyfacts"
+
+
+def test_statement_backfill_pack_passes_through_any_producer_error_slot(monkeypatch):
+    """A producer error slot rides through the envelope verbatim with no
+    `facts` key -- structurally, not by enumerating known error classes.
+    `build_statement_backfill` is being extended concurrently (a CIK-history
+    guard adding one more error shape), so this stubs a NOVEL error shape
+    (keys no current error class carries) to prove the wrapper doesn't
+    special-case any particular error class."""
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack_us  # noqa: E402
+    import sec_edgar_client  # noqa: E402
+
+    def fake_backfill(ticker):
+        return {
+            "error": f"CIK history conflict for {ticker}",
+            "error_class": "cik_history_conflict",
+            "identifier": ticker,
+            "prior_cik": "0000320193",
+            "current_cik": "0000320194",
+        }
+
+    monkeypatch.setattr(sec_edgar_client, "build_statement_backfill", fake_backfill)
+
+    payload = pack_us.pack_statement_backfill("AAPL")
+
+    assert payload["error"] == "CIK history conflict for AAPL"
+    assert payload["error_class"] == "cik_history_conflict"
+    assert payload["prior_cik"] == "0000320193"
+    assert payload["current_cik"] == "0000320194"
+    assert "facts" not in payload
+
+
+def test_build_pack_dispatches_statement_backfill(monkeypatch):
+    """Registration gap: `pack_statement_backfill` (Task 8) was never wired
+    into `build_pack`'s dispatch, mirroring `kpi-topline-backfill`'s branch
+    (pack_us.py:1367). Without it `build_pack("statement-backfill", ...)`
+    falls through to the generic `unknown pack` ValueError and the lane is
+    unreachable from the CLI facade."""
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack_us  # noqa: E402
+
+    calls: list[str] = []
+
+    def fake_pack_statement_backfill(ticker):
+        calls.append(ticker)
+        return {"pack": "statement-backfill", "ticker": ticker}
+
+    monkeypatch.setattr(
+        pack_us, "pack_statement_backfill", fake_pack_statement_backfill
+    )
+
+    result = pack_us.build_pack("statement-backfill", ["AAPL"])
+
+    assert calls == ["AAPL"]
+    assert result == {"pack": "statement-backfill", "ticker": "AAPL"}
+
+
+def test_build_pack_statement_backfill_requires_exactly_one_ticker():
+    """Pins the ticker-count validation, mirroring `kpi-topline-backfill`'s
+    branch (pack_us.py:1367-1372) and its exact error-message shape — a
+    pack that dispatches but accepts two tickers is only half-wired."""
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack_us  # noqa: E402
+
+    with pytest.raises(ValueError, match=r"requires exactly one ticker \(single, heavy\)"):
+        pack_us.build_pack("statement-backfill", ["AAPL", "MSFT"])
+
+    with pytest.raises(ValueError, match=r"requires exactly one ticker \(single, heavy\)"):
+        pack_us.build_pack("statement-backfill", [])

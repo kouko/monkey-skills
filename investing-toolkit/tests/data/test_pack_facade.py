@@ -752,6 +752,23 @@ def test_kpi_topline_backfill_non_us_ticker_exits_64_usage_error():
     assert "tw" in status["message"]
 
 
+def test_statement_backfill_non_us_ticker_exits_64_usage_error():
+    """statement-backfill is US-only (SEC EDGAR companyfacts as-reported
+    statement backfill, Task 8, docs/loom/plans/2026-07-26-us-as-reported-
+    statement-lane.md): a .TW ticker is REFUSED with an explicit US-only
+    usage_error — mirrors the sibling kpi-topline-backfill precedent above.
+    Without registering this pack in `US_ONLY_PACKS`, the ticker would fall
+    through to `pack_tw.build_pack` and raise a bare, unhandled `ValueError`
+    instead of a correctly-classified usage error."""
+    proc = _run_pack_py("--ticker", "2330.TW", "--pack", "statement-backfill")
+    assert proc.returncode == 64, f"stdout={proc.stdout}\nstderr={proc.stderr}"
+    payload = json.loads(proc.stdout)
+    status = payload["_status"]
+    assert status["status"] == "usage_error"
+    assert "US-only" in status["message"]
+    assert "tw" in status["message"]
+
+
 def test_kpi_quarterly_annual_arm_error_partial_exit_2(monkeypatch, capsys):
     """The 10-K arm failing only breaks Q4 derivation — the quarterly facts
     are still emitted, the failure is surfaced in coverage.annual, and the
