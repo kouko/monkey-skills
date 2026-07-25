@@ -2602,6 +2602,105 @@ def _top_line_backfill_error_slot(ticker: str, detail: str) -> dict:
     }
 
 
+# The `form` values on a companyconcept row whose annual dei fiscal-period
+# focus Lane A can state HONESTLY, and the focus each states (Task 7,
+# docs/loom/plans/2026-07-25-company-total-revenue.md).
+#
+# WHY "ANNUAL ROW => FY => 10-K" IS NOT A SAFE INFERENCE. `companyconcept`
+# carries no dei tags at all, so Lane A cannot READ a filing's
+# `DocumentFiscalPeriodFocus` the way Lane B does (`_extract_dei_calendar`);
+# the only filing-level evidence it holds is the row's own `form`, passed
+# through verbatim by `summarize_concept`. The consumer's mapping is one-way:
+# `kpi_xbrl._SOURCE_FORM_BY_FOCUS` has exactly ONE annual key, "FY", and it
+# maps to the literal "10-K". So declaring focus "FY" is a declaration that
+# the carrying filing WAS a 10-K, and this allowlist is the set of forms for
+# which that declaration round-trips back to the truth.
+#
+# GROUNDING (live capture, committed:
+# `investing-toolkit/tests/data/fixtures/companyconcept_form_domain_
+# 2026-07-25.json`; regenerate with the sibling
+# `capture_companyconcept_form_domain.py`). Endpoint
+# `data.sec.gov/api/xbrl/companyconcept/CIK{cik}/us-gaap/{concept}.json`,
+# captured 2026-07-25 over all four `_TOP_LINE_REVENUE_CONCEPTS` for 8
+# filers. Forms OBSERVED on annual-span (330-400d) rows, verbatim:
+#
+#     {"10-K": 48, "20-F": 47, "20-F/A": 8}
+#
+#   - 10-K       — AAPL, INTC (domestic filers). The allowlisted case.
+#   - 20-F, 20-F/A — TM, HMC: us-gaap-tagging FOREIGN PRIVATE ISSUERS whose
+#     ENTIRE top-line history is annual-span and carried on these two. This
+#     is the hazard, observed: without the allowlist, 55 rows across two
+#     filers would land in the durable store stamped `source_form: "10-K"`
+#     for filings that were never 10-Ks.
+#
+# NOT observed anywhere in that sample: `10-K/A`, `40-F`, `8-K`, `S-1`,
+# `424B`. They are plausible carriers, not established ones — an earlier
+# revision of this comment asserted them as fact and was wrong to.
+# They stay excluded because the allowlist is a positive list, not because
+# they were seen.
+#
+# BOUNDING THE RISK: "foreign private issuer" is NOT a uniform class here.
+# IFRS-tagging FPIs (TSM, SAP, SHEL, BP in the capture) 404 out of the
+# us-gaap endpoint entirely, on all four concepts — they cannot reach Lane A
+# by any path, so the exposure is limited to us-gaap-tagging FPIs like
+# TM/HMC.
+#
+# TWO DIFFERENT REFUSALS, deliberately not distinguished in the code because
+# both land on the same answer, but they are not the same judgement:
+#   - WRONG REGIME (20-F, 20-F/A, 40-F): a different annual report under a
+#     different disclosure regime. Refused outright; its dei focus is not
+#     this lane's to translate.
+#   - SAME REGIME, AMENDMENT (10-K/A): its dei `DocumentFiscalPeriodFocus`
+#     genuinely IS "FY", so ONLY the literal form distinguishes it from an
+#     allowlisted 10-K. This one is a DEFERRAL, and it has a cost worth
+#     naming: a 10-K/A is the canonical carrier of a RESTATED annual figure,
+#     so excluding it means Lane A keeps the ORIGINAL number for an amended
+#     year and never learns the correction. That is value staleness, not
+#     just missing coverage. Pinned by a red test
+#     (`test_backfill_skips_row_whose_carrier_form_is_not_allowlisted`) so
+#     widening the allowlist is a deliberate act; tracked as a follow-up.
+#
+# Reading the row's own `fp` would rescue none of them: `fp` is the FILING's
+# focus, the very field this lane is forbidden to consult, and it is "FY" on
+# a 20-F too.
+_TOP_LINE_ANNUAL_CARRIER_FORMS: dict[str, str] = {"10-K": "FY"}
+
+
+def _top_line_backfill_calendar(fiscal_period_focus: str) -> dict:
+    """One `fiscal_calendars` entry for a Lane A row, in the EXACT shape
+    `_extract_dei_calendar` emits for Lane B (`{fiscal_period_focus,
+    fiscal_year_end, fiscal_year_focus}`) — the shape
+    `kpi_xbrl._require_source_form` and `_q4_basis_mismatch_reason` read.
+
+    Only the focus is stated. `fiscal_year_end` and `fiscal_year_focus` are
+    dei cover tags that a `companyconcept` row simply does not carry, so
+    they are `None` — the same `None` `_extract_dei_calendar` returns for a
+    tag absent from a filing's records, never a fabricated value.
+
+    KNOWN CONSUMER-SIDE LIMIT of that `None` (an earlier revision of this
+    docstring claimed the opposite, and was wrong). Two unstated
+    `fiscal_year_end`s do NOT fail loud downstream — they compare EQUAL.
+    `kpi_xbrl._q4_basis_mismatch_reason` guards the map ENTRY, not the
+    field (`if fy_cal is None or ytd9_cal is None`, kpi_xbrl.py:989); a
+    Lane A entry is a present dict, so it passes that guard, and the
+    field comparison at :997 then evaluates `None != None` as False and
+    reports "shared basis confirmed" for two calendars neither of which
+    was ever stated.
+
+    NOT REACHABLE TODAY: that check runs only for a Q4 derivation, which
+    needs a 9-month-YTD row, and Lane A is annual-only — `derive_q4_points`
+    also reads ONE pack's map. But `pack_us.py:1017-1019` already merges
+    two lanes' calendars into a single envelope, which is the shape that
+    would reach it. Fixing it belongs to the consumer (tighten the guard to
+    the FIELD), not to this producer, which has nothing truthful to put
+    there; tracked as a consumer-side follow-up."""
+    return {
+        "fiscal_period_focus": fiscal_period_focus,
+        "fiscal_year_end": None,
+        "fiscal_year_focus": None,
+    }
+
+
 def _is_near_new_year_boundary(period_end_date: date) -> bool:
     """True when `period_end_date` lands within
     `FISCAL_BOUNDARY_TOLERANCE_DAYS` of a Jan-1 boundary (checking both the
@@ -2662,7 +2761,20 @@ def build_top_line_backfill(ticker: str) -> dict:
     52/53-week filer whose year-end crosses New Year and Lane A has no dei
     calendar to check against: such a row is skipped with a named
     `coverage` reason instead of guessed — Lane B, which HAS the dei
-    calendar, remains the authority for those years."""
+    calendar, remains the authority for those years.
+
+    Returns the per-accession `fiscal_calendars` map alongside `facts`
+    (Task 7) — the SAME envelope key Lane B emits, and the one
+    `kpi_xbrl.facts_to_points` reads to derive each point's `source_form`
+    (`_require_source_form`, which RAISES rather than guess a form). Without
+    it EVERY Lane A fact is rejected at ingest and the lane cannot reach the
+    store at all. Only rows whose own `form` is an allowlisted annual
+    carrier (`_TOP_LINE_ANNUAL_CARRIER_FORMS` — see there for the live
+    capture grounding it, and for why "annual row, therefore FY, therefore
+    10-K" is unsound: 20-F/20-F/A carry whole annual histories too) can
+    contribute, and only if the row also identifies its filing by
+    `accn`. A row failing either check is skipped with a named `coverage`
+    reason, never emitted under a fabricated focus."""
     cik_info = resolve_cik(ticker)
     if "error" in cik_info:
         return cik_info
@@ -2693,10 +2805,70 @@ def build_top_line_backfill(ticker: str) -> dict:
     full_concept = f"us-gaap:{winning_concept}"
     facts: list[dict] = []
     skipped_rows: list[dict] = []
+    fiscal_calendars: dict[str, dict] = {}
     for row in rows:
         period_start = row.get("start")
         period_end = row.get("end")
         accession = row.get("accn")
+        # Task 7: the carrying filing gates the row BEFORE any period
+        # arithmetic — identity is a property of the FILING, the cheapest
+        # and most fundamental disqualifier, so a filer Lane A cannot serve
+        # at all (a 20-F-only foreign private issuer) reports ONE actionable
+        # reason per row instead of a mix of period-shaped ones.
+        #
+        # ORDERING IS A BEHAVIOUR CHANGE, not message polish: a
+        # non-allowlisted row with malformed dates used to reach
+        # `_duration_span_days` and RAISE, killing the whole backfill.
+        # Gating first turns that into a skip. This is the better
+        # behaviour — one 20-F's bad dates must not destroy a 10-K
+        # backfill — but it does narrow where this lane fails loud, so it
+        # is stated rather than left to be discovered. Allowlisted rows are
+        # unaffected: their date handling is exactly as before.
+        source_form = row.get("form")
+        if not source_form or not accession:
+            missing = " and ".join(
+                label for label, present in (
+                    ("form", source_form), ("accession", accession),
+                ) if not present
+            )
+            skipped_rows.append({
+                "type": "source_filing_unidentifiable",
+                "old": None,
+                "new": None,
+                "accessions": [accession],
+                "reason": (
+                    f"row {period_start!r}->{period_end!r} for {ticker!r} "
+                    f"carries no companyconcept {missing}, so its carrying "
+                    "filing is unidentifiable — skipped rather than "
+                    "defaulted. A missing 'form' leaves the dei "
+                    "fiscal-period focus underivable; a missing 'accn' is "
+                    "the fiscal_calendars KEY, and a None key would be "
+                    "matched by any equally accession-less fact "
+                    "(kpi_xbrl._require_source_form looks up a bare "
+                    "fact.get('accession')), stamping 'source_form: 10-K' "
+                    "on a point traceable to no filing at all"
+                ),
+            })
+            continue
+        fiscal_period_focus = _TOP_LINE_ANNUAL_CARRIER_FORMS.get(source_form)
+        if fiscal_period_focus is None:
+            skipped_rows.append({
+                "type": "carrier_form_not_allowlisted",
+                "old": None,
+                "new": None,
+                "accessions": [accession],
+                "reason": (
+                    f"row {period_start!r}->{period_end!r} for {ticker!r} is "
+                    f"carried by form {source_form!r}, which is not in the "
+                    "allowlist of forms whose annual dei focus Lane A can "
+                    f"state honestly ({sorted(_TOP_LINE_ANNUAL_CARRIER_FORMS)}"
+                    ") — the consumer's only annual focus ('FY') maps to the "
+                    "literal '10-K', so emitting this row would stamp a "
+                    "point with a form its filing never had; Lane A states "
+                    "no focus it cannot stand behind"
+                ),
+            })
+            continue
         synth_fact = {"period_start": period_start}
         duration_months = _duration_months(synth_fact, ticker, period_end)
         if duration_months != 12:
@@ -2757,11 +2929,19 @@ def build_top_line_backfill(ticker: str) -> dict:
             "calendar_year": period_end_date.year,
             "calendar_quarter": f"Q{(period_end_date.month - 1) // 3 + 1}",
         })
+        # Task 7: keyed by accession and populated ONLY from rows that were
+        # actually KEPT, so the map never carries an FY declaration for a
+        # filing this pack emits no fact from. One accession is one filing
+        # with one form, so repeated accessions write an identical entry.
+        fiscal_calendars[accession] = _top_line_backfill_calendar(
+            fiscal_period_focus
+        )
 
     return {
         "company": ticker,
         "facts": facts,
         "coverage": {"skipped_rows": skipped_rows},
+        "fiscal_calendars": fiscal_calendars,
     }
 
 

@@ -1,0 +1,314 @@
+{
+ "_capture": {
+  "what": "Observed value domain of the `form` field on SEC companyconcept rows, for the four us-gaap concepts in sec_edgar_client._TOP_LINE_REVENUE_CONCEPTS. Grounds the _TOP_LINE_ANNUAL_CARRIER_FORMS allowlist in build_top_line_backfill (Lane A).",
+  "endpoint": "https://data.sec.gov/api/xbrl/companyconcept/CIK{cik:010d}/us-gaap/{concept}.json",
+  "captured_at": "2026-07-25",
+  "cik_source": "https://www.sec.gov/files/company_tickers.json (resolved live, same date)",
+  "annual_span_definition": "end - start between 330 and 400 days inclusive",
+  "regenerate": "investing-toolkit/tests/data/fixtures/capture_companyconcept_form_domain.py",
+  "note": "Counts only. No financial values are captured here - this fixture records the FORM value domain, nothing else."
+ },
+ "_summary": {
+  "forms_observed_on_annual_span_rows": {
+   "10-K": 48,
+   "20-F": 47,
+   "20-F/A": 8
+  },
+  "forms_NOT_observed_in_this_sample": [
+   "10-K/A",
+   "40-F",
+   "8-K",
+   "S-1",
+   "424B"
+  ],
+  "ifrs_fpis_absent_from_us_gaap_endpoint": [
+   "TSM",
+   "SAP",
+   "SHEL",
+   "BP"
+  ]
+ },
+ "observations": [
+  {
+   "ticker": "AAPL",
+   "cik": 320193,
+   "concept": "us-gaap:Revenues",
+   "http_status": 200,
+   "units": [
+    "USD"
+   ],
+   "n_rows": 11,
+   "forms_all": {
+    "10-K": 11
+   },
+   "forms_on_annual_span_rows": {
+    "10-K": 3
+   },
+   "n_rows_missing_accn": 0,
+   "n_rows_missing_form": 0
+  },
+  {
+   "ticker": "AAPL",
+   "cik": 320193,
+   "concept": "us-gaap:RevenuesNetOfInterestExpense",
+   "http_status": 404
+  },
+  {
+   "ticker": "AAPL",
+   "cik": 320193,
+   "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+   "http_status": 200,
+   "units": [
+    "USD"
+   ],
+   "n_rows": 113,
+   "forms_all": {
+    "10-K": 37,
+    "10-Q": 76
+   },
+   "forms_on_annual_span_rows": {
+    "10-K": 21
+   },
+   "n_rows_missing_accn": 0,
+   "n_rows_missing_form": 0
+  },
+  {
+   "ticker": "AAPL",
+   "cik": 320193,
+   "concept": "us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax",
+   "http_status": 404
+  },
+  {
+   "ticker": "INTC",
+   "cik": 50863,
+   "concept": "us-gaap:Revenues",
+   "http_status": 404
+  },
+  {
+   "ticker": "INTC",
+   "cik": 50863,
+   "concept": "us-gaap:RevenuesNetOfInterestExpense",
+   "http_status": 404
+  },
+  {
+   "ticker": "INTC",
+   "cik": 50863,
+   "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+   "http_status": 200,
+   "units": [
+    "USD"
+   ],
+   "n_rows": 105,
+   "forms_all": {
+    "10-K": 24,
+    "10-Q": 81
+   },
+   "forms_on_annual_span_rows": {
+    "10-K": 24
+   },
+   "n_rows_missing_accn": 0,
+   "n_rows_missing_form": 0
+  },
+  {
+   "ticker": "INTC",
+   "cik": 50863,
+   "concept": "us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax",
+   "http_status": 404
+  },
+  {
+   "ticker": "TM",
+   "cik": 1094517,
+   "concept": "us-gaap:Revenues",
+   "http_status": 200,
+   "units": [
+    "JPY",
+    "USD"
+   ],
+   "n_rows": 31,
+   "forms_all": {
+    "20-F": 23,
+    "20-F/A": 8
+   },
+   "forms_on_annual_span_rows": {
+    "20-F": 23,
+    "20-F/A": 8
+   },
+   "n_rows_missing_accn": 0,
+   "n_rows_missing_form": 0
+  },
+  {
+   "ticker": "TM",
+   "cik": 1094517,
+   "concept": "us-gaap:RevenuesNetOfInterestExpense",
+   "http_status": 404
+  },
+  {
+   "ticker": "TM",
+   "cik": 1094517,
+   "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+   "http_status": 200,
+   "units": [
+    "JPY"
+   ],
+   "n_rows": 3,
+   "forms_all": {
+    "20-F": 3
+   },
+   "forms_on_annual_span_rows": {
+    "20-F": 3
+   },
+   "n_rows_missing_accn": 0,
+   "n_rows_missing_form": 0
+  },
+  {
+   "ticker": "TM",
+   "cik": 1094517,
+   "concept": "us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax",
+   "http_status": 200,
+   "units": [
+    "JPY"
+   ],
+   "n_rows": 6,
+   "forms_all": {
+    "20-F": 6
+   },
+   "forms_on_annual_span_rows": {
+    "20-F": 6
+   },
+   "n_rows_missing_accn": 0,
+   "n_rows_missing_form": 0
+  },
+  {
+   "ticker": "HMC",
+   "cik": 715153,
+   "concept": "us-gaap:Revenues",
+   "http_status": 200,
+   "units": [
+    "JPY"
+   ],
+   "n_rows": 63,
+   "forms_all": {
+    "20-F": 63
+   },
+   "forms_on_annual_span_rows": {
+    "20-F": 15
+   },
+   "n_rows_missing_accn": 0,
+   "n_rows_missing_form": 0
+  },
+  {
+   "ticker": "HMC",
+   "cik": 715153,
+   "concept": "us-gaap:RevenuesNetOfInterestExpense",
+   "http_status": 404
+  },
+  {
+   "ticker": "HMC",
+   "cik": 715153,
+   "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+   "http_status": 404
+  },
+  {
+   "ticker": "HMC",
+   "cik": 715153,
+   "concept": "us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax",
+   "http_status": 404
+  },
+  {
+   "ticker": "TSM",
+   "cik": 1046179,
+   "concept": "us-gaap:Revenues",
+   "http_status": 404
+  },
+  {
+   "ticker": "TSM",
+   "cik": 1046179,
+   "concept": "us-gaap:RevenuesNetOfInterestExpense",
+   "http_status": 404
+  },
+  {
+   "ticker": "TSM",
+   "cik": 1046179,
+   "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+   "http_status": 404
+  },
+  {
+   "ticker": "TSM",
+   "cik": 1046179,
+   "concept": "us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax",
+   "http_status": 404
+  },
+  {
+   "ticker": "SAP",
+   "cik": 1000184,
+   "concept": "us-gaap:Revenues",
+   "http_status": 404
+  },
+  {
+   "ticker": "SAP",
+   "cik": 1000184,
+   "concept": "us-gaap:RevenuesNetOfInterestExpense",
+   "http_status": 404
+  },
+  {
+   "ticker": "SAP",
+   "cik": 1000184,
+   "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+   "http_status": 404
+  },
+  {
+   "ticker": "SAP",
+   "cik": 1000184,
+   "concept": "us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax",
+   "http_status": 404
+  },
+  {
+   "ticker": "SHEL",
+   "cik": 1306965,
+   "concept": "us-gaap:Revenues",
+   "http_status": 404
+  },
+  {
+   "ticker": "SHEL",
+   "cik": 1306965,
+   "concept": "us-gaap:RevenuesNetOfInterestExpense",
+   "http_status": 404
+  },
+  {
+   "ticker": "SHEL",
+   "cik": 1306965,
+   "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+   "http_status": 404
+  },
+  {
+   "ticker": "SHEL",
+   "cik": 1306965,
+   "concept": "us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax",
+   "http_status": 404
+  },
+  {
+   "ticker": "BP",
+   "cik": 313807,
+   "concept": "us-gaap:Revenues",
+   "http_status": 404
+  },
+  {
+   "ticker": "BP",
+   "cik": 313807,
+   "concept": "us-gaap:RevenuesNetOfInterestExpense",
+   "http_status": 404
+  },
+  {
+   "ticker": "BP",
+   "cik": 313807,
+   "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+   "http_status": 404
+  },
+  {
+   "ticker": "BP",
+   "cik": 313807,
+   "concept": "us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax",
+   "http_status": 404
+  }
+ ]
+}

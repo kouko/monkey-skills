@@ -179,15 +179,48 @@ allowlist candidate emits nothing for that filing and is recorded under
 further back via the SEC `companyconcept` REST endpoint over the same
 allowlist, picking the first concept with any reported history. It is
 **annual-only by design**: a `companyconcept` row carries no fiscal
-calendar, so a quarterly/YTD row (duration ≠ 12 months) and an annual row
-whose period end sits within `FISCAL_BOUNDARY_TOLERANCE_DAYS` of a Jan-1
-boundary are both skipped rather than guessed at — the latter because
-the period-end-year labeling convention is unsound for a 52/53-week
-filer whose fiscal year crosses New Year, and this lane (unlike
-`kpi-quarterly`) has no dei fiscal calendar to disambiguate. Both skip
-classes land in `coverage.skipped_rows` with a named reason. The
-envelope carries `"source_kind": "xbrl-companyfacts"` so the KPI ingest
-layer assigns these points the correct provenance.
+calendar, so four skip classes land in `coverage.skipped_rows` with a
+named reason rather than a guess — never fewer than a row's actual
+disqualifier, never a fabricated one:
+
+- `source_filing_unidentifiable` — the row carries no `form` (leaving
+  the carrying filing's dei fiscal-period focus undecidable) and/or no
+  `accn` (which is the `fiscal_calendars` key — a `None` key would be
+  matched by any equally accession-less fact downstream);
+- `carrier_form_not_allowlisted` — the row's carrying form is not one
+  whose annual focus this lane can state honestly. A 12-month top-line
+  row is **not** necessarily carried by a 10-K: a live capture of the
+  endpoint's `form` domain (`tests/data/fixtures/companyconcept_form_
+  domain_2026-07-25.json`, 8 filers, 2026-07-25) observed
+  `{"10-K": 48, "20-F": 47, "20-F/A": 8}` on annual-span rows — TM and
+  HMC, us-gaap-tagging foreign private issuers, carry their entire
+  top-line history on 20-F/20-F/A. Labelling those `FY` would stamp
+  `source_form: "10-K"` on filings that never were. (IFRS-tagging FPIs
+  — TSM, SAP, SHEL, BP — 404 out of the us-gaap endpoint entirely, so
+  they cannot reach this lane at all. `10-K/A` is excluded too, which
+  costs value freshness: it is the canonical carrier of a *restated*
+  annual figure, so an amended year keeps its original number here.)
+- `non_annual_row_skipped` — duration ≠ 12 months (quarterly/YTD row);
+- `new_year_boundary_ambiguous` — the period end sits within
+  `FISCAL_BOUNDARY_TOLERANCE_DAYS` of a Jan-1 boundary, where the
+  period-end-year labeling convention is unsound for a 52/53-week filer
+  whose fiscal year crosses New Year, and this lane (unlike
+  `kpi-quarterly`) has no dei fiscal calendar to disambiguate.
+
+The filing-identity checks run first — a filer this lane cannot serve
+at all (a 20-F-only foreign private issuer) reports one actionable
+reason per row instead of a period-shaped one, and one unusable row's
+malformed dates can no longer abort an otherwise good backfill. A row
+that survives all four checks also seeds this pack's own
+`fiscal_calendars` map (keyed by accession, focus always `"FY"` — the
+only value this lane can state honestly, since the allowlisted annual
+carrier form is the literal `10-K`), which the envelope carries
+alongside `facts` and `coverage`.
+Downstream, `kpi_xbrl.facts_to_points` reads that map to derive each
+point's `source_form` and refuses to emit a point when it is absent —
+so a backfill pack missing `fiscal_calendars` loses 100% of its facts at
+ingest. The envelope also carries `"source_kind": "xbrl-companyfacts"`
+so the KPI ingest layer assigns these points the correct provenance.
 
 ## API keys
 

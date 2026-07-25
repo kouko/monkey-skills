@@ -99,18 +99,45 @@ _NVDA_FILED = "2026-02-25"
 _NVDA_VALUE = 215938000000.0
 _NVDA_FORM = "10-K"
 
+# A SYNTHETIC accession, deliberately not a real one: the second-filing
+# tests below need a row whose carrying filing is DISTINCT from
+# `_NVDA_ACCN` (one accession is one filing with one form, so a non-10-K
+# row cannot honestly reuse NVDA's real 10-K accession). It is an
+# IDENTIFIER, never financial data -- the fabrication risk repo memory
+# `hand-authored-fixture-is-a-fabrication-risk` guards is inventing
+# VALUES, and no value here is invented: every row still carries the real
+# captured `_NVDA_VALUE`. The `-25-000999` serial is outside NVDA's real
+# filing series so it can never be mistaken for a citable accession.
+_SYNTHETIC_OTHER_ACCN = "0001045810-25-000999"
 
-def _row(start: str, end: str, *, fy: int = 2026, fp: str = "FY") -> dict:
+
+def _row(
+    start: str,
+    end: str,
+    *,
+    fy: int = 2026,
+    fp: str = "FY",
+    form: str | None = _NVDA_FORM,
+    accn: str = _NVDA_ACCN,
+) -> dict:
     """One raw companyconcept `units.USD[]` row (`summarize_concept`'s
     input shape) -- a counterfactual-window copy of NVDA's real captured
     fact: only `start`/`end` vary per call; `val`/`accn`/`form`/`filed` are
     the SAME real captured values every time. `fy`/`fp` are stamped 2026/FY
     on every row by default -- the live-confirmed trap (every row from
     NVDA's FY2026 filing carries the FILING's own fy/fp, not the fact's
-    own) -- `build_top_line_backfill` must never read either."""
+    own) -- `build_top_line_backfill` must never read either.
+
+    `form` is overridable (and `accn` with it, since one accession is one
+    filing with one form) for the source-form honesty tests below: a
+    non-10-K carrier is a real companyconcept shape, not a hypothetical --
+    `summarize_concept` passes `form` through verbatim from SEC's own row,
+    which carries 20-F / 40-F / 8-K / 10-K/A alongside 10-K. `form=None`
+    models the absent-field case the same way `_extract_dei_calendar`
+    models an absent dei tag."""
     return {
-        "start": start, "end": end, "val": _NVDA_VALUE, "accn": _NVDA_ACCN,
-        "form": _NVDA_FORM, "fy": fy, "fp": fp, "filed": _NVDA_FILED,
+        "start": start, "end": end, "val": _NVDA_VALUE, "accn": accn,
+        "form": form, "fy": fy, "fp": fp, "filed": _NVDA_FILED,
     }
 
 
@@ -324,6 +351,176 @@ def test_backfill_returns_loud_error_when_no_allowlist_concept_has_data(sec_clie
     assert "error" in pack, pack
     assert pack.get("error_class") == "top_line_backfill_failed", pack
     assert "facts" not in pack, "an error slot must never carry a facts list"
+
+
+def test_backfill_carries_fiscal_calendars_so_facts_reach_the_store(
+    sec_client, kpi_xbrl,
+):
+    """THE SEAM. `kpi_xbrl.facts_to_points` derives every point's
+    `source_form` from the PACK's `fiscal_calendars[accession]
+    ["fiscal_period_focus"]` (`_require_source_form`, kpi_xbrl.py:289-309)
+    and RAISES when the pack carries none -- so a Lane A pack without that
+    map reaches the store with ZERO points, however well-shaped its facts
+    are. This drives the REAL consumer over the REAL producer's return
+    value (no hand-built envelope, which is exactly what every prior test
+    on both sides of this seam did) and pins the round-trip:
+    10-K row -> `fiscal_period_focus: "FY"` -> `source_form: "10-K"`."""
+    rows = [
+        _row("2025-01-27", "2026-01-25"),
+        _row("2024-01-29", "2025-01-26"),
+    ]
+    resolve_patch, fetch_patch = _stub_fetch(
+        sec_client, winning_concept=_NVDA_CONCEPT, rows=rows,
+    )
+    with resolve_patch, fetch_patch:
+        pack = sec_client.build_top_line_backfill("NVDA")
+
+    assert "error" not in pack, pack
+    assert pack["fiscal_calendars"] == {
+        _NVDA_ACCN: {
+            "fiscal_period_focus": "FY",
+            # Neither dei tag is READABLE from a companyconcept row, so
+            # neither is fabricated -- the same `None` `_extract_dei_calendar`
+            # emits for a tag absent from a filing's records.
+            "fiscal_year_end": None,
+            "fiscal_year_focus": None,
+        },
+    }, pack["fiscal_calendars"]
+
+    points = kpi_xbrl.facts_to_points(
+        pack,
+        "total_revenue",
+        {"concept": f"us-gaap:{_NVDA_CONCEPT}", "dimensions": {},
+         "consolidation": None},
+        "NVDA",
+        "xbrl-companyfacts",
+    )
+    assert len(points) == 2, points
+    for point in points:
+        assert point["source_form"] == "10-K", point
+
+
+@pytest.mark.parametrize(
+    "carrier_form",
+    [
+        # OBSERVED live on annual-span rows (fixtures/companyconcept_form_
+        # domain_2026-07-25.json): TM and HMC, us-gaap-tagging foreign
+        # private issuers, carry their whole top line on these two.
+        pytest.param("20-F", id="observed-20-F"),
+        pytest.param("20-F/A", id="observed-20-F-A"),
+        # NOT observed in that sample -- pinned as plausible-but-unverified
+        # carriers so a future widening of the allowlist has to argue with
+        # a red test rather than with a comment.
+        pytest.param("10-K/A", id="unobserved-10-K-A"),
+        pytest.param("40-F", id="unobserved-40-F"),
+        pytest.param("8-K", id="unobserved-8-K"),
+    ],
+)
+def test_backfill_skips_row_whose_carrier_form_is_not_allowlisted(
+    sec_client, carrier_form,
+):
+    """A 12-month row is EXCLUDED unless its carrier `form` is in
+    `_TOP_LINE_ANNUAL_CARRIER_FORMS`, whatever the period arithmetic says.
+
+    Why it cannot simply ride along: the store's form vocabulary reaches
+    Lane A only through `_SOURCE_FORM_BY_FOCUS` (kpi_xbrl.py:231-233),
+    whose ONLY annual key `"FY"` maps to the literal `"10-K"`. Declaring
+    `fiscal_period_focus: "FY"` for any of these would stamp
+    `source_form: "10-K"` on a point whose filing was not one.
+
+    THE TWO CASES ARE NOT THE SAME, and `10-K/A` is the pointed one.
+    A 20-F / 20-F/A / 40-F is a WRONG-REGIME carrier: a different annual
+    report on a different disclosure regime, refused outright. A `10-K/A`
+    is SAME-REGIME -- its dei `DocumentFiscalPeriodFocus` genuinely IS
+    "FY", so only the literal form distinguishes it, and widening the
+    allowlist to `{"10-K": "FY", "10-K/A": "FY"}` is exactly the change a
+    maintainer would reach for. This test is what that change has to
+    answer to.
+
+    Excluding `10-K/A` is a deferral with a real cost, and the cost is
+    VALUE STALENESS, not merely coverage: a 10-K/A is the canonical
+    carrier of a RESTATED annual figure, so Lane A keeps the ORIGINAL
+    number for an amended year and never learns the correction. Recorded
+    here rather than silently accepted (tracked as a follow-up)."""
+    ten_k = _row("2025-01-27", "2026-01-25")
+    other = _row(
+        "2024-01-29", "2025-01-26",
+        form=carrier_form, accn=_SYNTHETIC_OTHER_ACCN,
+    )
+    resolve_patch, fetch_patch = _stub_fetch(
+        sec_client, winning_concept=_NVDA_CONCEPT, rows=[ten_k, other],
+    )
+    with resolve_patch, fetch_patch:
+        pack = sec_client.build_top_line_backfill("NVDA")
+
+    assert "error" not in pack, pack
+    assert {f["period_end"] for f in pack["facts"]} == {"2026-01-25"}, (
+        pack["facts"]
+    )
+    # The skipped filing must not leak a calendar entry either -- a map
+    # entry for an accession with no fact is an unfounded FY declaration.
+    assert set(pack["fiscal_calendars"]) == {_NVDA_ACCN}, (
+        pack["fiscal_calendars"]
+    )
+
+    skipped = pack["coverage"]["skipped_rows"]
+    flags = [f for f in skipped if f["type"] == "carrier_form_not_allowlisted"]
+    assert len(flags) == 1, skipped
+    flag = flags[0]
+    assert set(flag) == {"type", "old", "new", "accessions", "reason"}, flag
+    assert flag["accessions"] == [_SYNTHETIC_OTHER_ACCN], flag
+    assert carrier_form in flag["reason"], flag
+
+
+@pytest.mark.parametrize(
+    "form, accn, missing",
+    [
+        pytest.param(None, _SYNTHETIC_OTHER_ACCN, "form", id="no-form"),
+        pytest.param(_NVDA_FORM, None, "accession", id="no-accession"),
+        pytest.param(None, None, "form", id="neither"),
+    ],
+)
+def test_backfill_skips_row_that_identifies_no_filing(
+    sec_client, form, accn, missing,
+):
+    """A row must identify its carrying filing by BOTH `form` and `accn`
+    before it can contribute a calendar entry.
+
+    `form` is what the focus is derived from. `accn` is the map KEY, and
+    an unguarded `None` key is the nastier of the two: `_require_source_
+    form` looks the fact's accession up with a bare `fact.get("accession")`
+    (kpi_xbrl.py:296), so a `None`-keyed entry MATCHES a `None`-accession
+    fact and stamps it `source_form: "10-K"` -- a point traceable to no
+    filing at all, which is the fabrication this lane exists to refuse.
+
+    Both fields were present on all 447 rows of the live capture
+    (`companyconcept_form_domain_2026-07-25.json`, `n_rows_missing_accn`/
+    `n_rows_missing_form` are 0 everywhere), so this guard is DEFENSIVE
+    against a shape not observed -- `summarize_concept` reads both with a
+    bare `.get`, so `None` is representable regardless."""
+    ten_k = _row("2025-01-27", "2026-01-25")
+    broken = _row("2024-01-29", "2025-01-26", form=form, accn=accn)
+    resolve_patch, fetch_patch = _stub_fetch(
+        sec_client, winning_concept=_NVDA_CONCEPT, rows=[ten_k, broken],
+    )
+    with resolve_patch, fetch_patch:
+        pack = sec_client.build_top_line_backfill("NVDA")
+
+    assert "error" not in pack, pack
+    assert {f["period_end"] for f in pack["facts"]} == {"2026-01-25"}, (
+        pack["facts"]
+    )
+    # The key assertion: no `None` key, and no extra key of any kind.
+    assert set(pack["fiscal_calendars"]) == {_NVDA_ACCN}, (
+        pack["fiscal_calendars"]
+    )
+
+    skipped = pack["coverage"]["skipped_rows"]
+    flags = [f for f in skipped if f["type"] == "source_filing_unidentifiable"]
+    assert len(flags) == 1, skipped
+    flag = flags[0]
+    assert set(flag) == {"type", "old", "new", "accessions", "reason"}, flag
+    assert missing in flag["reason"], flag
 
 
 def test_backfill_facts_are_classifiable_by_kpi_xbrl(sec_client, kpi_xbrl):

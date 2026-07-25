@@ -1095,6 +1095,13 @@ def pack_kpi_topline_backfill(ticker: str) -> dict:
         "company": result["company"],
         "facts": result["facts"],
         "coverage": result["coverage"],
+        # Task 7: `kpi_xbrl.facts_to_points` derives every point's
+        # `source_form` from `fiscal_calendars[accession]` on the ENVELOPE
+        # (`_require_source_form`, which raises rather than guess). Dropping
+        # the producer's map here rejects 100% of Lane A's facts at ingest —
+        # the defect the two-lane e2e caught, invisible to any test that
+        # hand-builds its own envelope.
+        "fiscal_calendars": result["fiscal_calendars"],
     }
 
 

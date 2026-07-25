@@ -76,6 +76,22 @@ ANNUAL_ROWS = [
 ]
 
 
+# The per-accession dei-shaped calendar map `build_top_line_backfill` emits
+# alongside those facts, for the SAME real accession. `kpi_xbrl.
+# _require_source_form` (kpi_xbrl.py:289-309) reads
+# `fiscal_calendars[accession]["fiscal_period_focus"]` off the ENVELOPE, so a
+# pack layer that drops this key rejects 100% of Lane A's facts at ingest —
+# which is precisely what the two-lane e2e caught. Same provenance as
+# ANNUAL_ROWS above (regenerate the same way).
+FISCAL_CALENDARS = {
+    "0001045810-26-000021": {
+        "fiscal_period_focus": "FY",
+        "fiscal_year_end": None,
+        "fiscal_year_focus": None,
+    },
+}
+
+
 def _stub_backfill(monkeypatch, fake_backfill) -> None:
     """`pack_kpi_topline_backfill` lazy-imports `build_top_line_backfill`
     from `sec_edgar_client` at call time; a sys.modules stub intercepts
@@ -97,6 +113,7 @@ def test_topline_backfill_pack_envelope(monkeypatch):
             "company": ticker,
             "facts": ANNUAL_ROWS,
             "coverage": {"skipped_rows": []},
+            "fiscal_calendars": FISCAL_CALENDARS,
         }
 
     _stub_backfill(monkeypatch, fake_backfill)
@@ -108,6 +125,7 @@ def test_topline_backfill_pack_envelope(monkeypatch):
     assert payload["ticker"] == "NVDA"
     assert payload["facts"] == ANNUAL_ROWS
     assert payload["coverage"] == {"skipped_rows": []}
+    assert payload["fiscal_calendars"] == FISCAL_CALENDARS
     assert calls == ["NVDA"]
 
 
@@ -121,6 +139,7 @@ def test_topline_backfill_pack_name_resolves_through_registry(monkeypatch):
             "company": ticker,
             "facts": ANNUAL_ROWS,
             "coverage": {"skipped_rows": []},
+            "fiscal_calendars": FISCAL_CALENDARS,
         },
     )
 
@@ -131,6 +150,7 @@ def test_topline_backfill_pack_name_resolves_through_registry(monkeypatch):
     assert via_registry["pack"] == "kpi-topline-backfill"
     assert via_registry["source_kind"] == "xbrl-companyfacts"
     assert via_registry["facts"] == ANNUAL_ROWS
+    assert via_registry["fiscal_calendars"] == FISCAL_CALENDARS
 
 
 def test_topline_backfill_pack_passes_through_producer_error_slot(monkeypatch):
