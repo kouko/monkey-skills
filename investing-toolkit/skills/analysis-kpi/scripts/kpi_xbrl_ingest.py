@@ -141,16 +141,51 @@ def derive_kpi_id(concept: str, dimensions: dict) -> str:
     return concept_token + "__" + "__".join(parts)
 
 
+def _normalized_consolidation(consolidation):
+    """The consolidation qualifier as the CONSUMER sees it — delegated to
+    `kpi_xbrl._normalize_consolidation`, the same function `_fact_matches`
+    applies to both sides of its comparison.
+
+    Deliberate reach into a private name, mirroring `_require_no_stored_
+    disagreement`'s use of `kpi_store._dedup_key`: the identity rule must be
+    read from its owner, never restated here. A local copy of the default
+    member would be a second definition free to drift from the one that
+    actually decides which facts match.
+    """
+    import kpi_xbrl
+
+    return kpi_xbrl._normalize_consolidation(consolidation)
+
+
 def _signature_key(concept: str, dimensions: dict, consolidation) -> tuple:
     """Grouping key for one facts_to_points call: the exact selector a
     `_fact_matches` comparison keys on — concept, the breakdown dimensions, and
-    the (falsy-normalized) consolidation qualifier — so each call filters to
-    exactly one signature+qualifier and every matched vintage is appended.
+    the consolidation qualifier NORMALIZED THROUGH THE CONSUMER's own rule — so
+    each call filters to exactly one signature+qualifier and every matched
+    vintage is appended.
+
+    The qualifier is normalized, not carried raw, because `_fact_matches`
+    (`kpi_xbrl.py:428-432`) normalizes it on BOTH sides: an absent tag means the
+    default `OperatingSegmentsMember` view, so to the consumer `None` and
+    `"OperatingSegmentsMember"` ARE the same series. A raw key would split them
+    into two selectors — and because each selector then matches BOTH variants'
+    facts, that split is wrong in both directions at once: the collision guard
+    OVER-FIRES on a pair the consumer would have merged correctly (aborting the
+    whole ingest — the live INTC Lane B failure of 2026-07-25, where FY2026
+    10-Qs dropped the ConsolidationItemsAxis tag their FY2023-25 predecessors
+    carried), and were the guard absent, the two selectors would append every
+    matched fact TWICE. The guard's notion of "distinct" must equal the
+    consumer's notion of "same" (`docs/loom/memory/derived-durable-id-slug-is-a-
+    lossy-one-way-door.md`).
+
+    Only the reconciliation-qualifier axis collapses. `concept` and the
+    breakdown `dimensions` stay exact, so two genuinely distinct breakdowns
+    deriving one kpi_id still trip `_claim_kpi_id`.
     """
     return (
         concept,
         tuple(sorted(dimensions.items())),
-        consolidation or None,
+        _normalized_consolidation(consolidation),
     )
 
 
@@ -313,7 +348,13 @@ def ingest_pack(fact_pack: dict, source_kind: str = _SOURCE_KIND) -> dict:
             {
                 "concept": concept,
                 "dimensions": dimensions,
-                "consolidation": consolidation,
+                # The NORMALIZED qualifier, matching the key. Carrying the
+                # first-seen RAW value would make the selector depend on fact
+                # ORDER — harmless today (`_fact_matches` normalizes both sides,
+                # so either raw value selects the identical fact set) but a
+                # gratuitous order-dependence in a value that is stored and
+                # passed onward.
+                "consolidation": _normalized_consolidation(consolidation),
             },
         )
 

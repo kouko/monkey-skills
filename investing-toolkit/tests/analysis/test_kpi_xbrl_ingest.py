@@ -45,6 +45,9 @@ import pytest
 
 INGEST_SCRIPT = SKILLS / "analysis-kpi" / "scripts" / "kpi_xbrl_ingest.py"
 RESTATEMENT_FIXTURE = FIXTURES / "xbrl_restatement_factpack.json"
+# The live INTC Lane B capture (2026-07-25) sliced to the ONE signature that
+# arrives under BOTH ConsolidationItemsAxis variants — see its `_comment`.
+CONSOLIDATION_VARIANT_FIXTURE = FIXTURES / "xbrl_consolidation_variant_factpack.json"
 
 # INTC FY2020 was a 52-week fiscal year ending 2020-12-26 → it began
 # 2019-12-29. Both 10-K vintages report the SAME window, so both facts carry
@@ -201,6 +204,119 @@ def test_ingest_raises_on_kpi_id_collision(tmp_path):
     assert vintage_result.returncode == 0, (
         "SAME-signature vintages must still ingest without raising: "
         f"stdout={vintage_result.stdout!r} stderr={vintage_result.stderr!r}"
+    )
+
+
+def _consolidation_variant_pack() -> dict:
+    """The REAL live-captured pack whose ONE dimensional signature arrives under
+    BOTH ConsolidationItemsAxis variants (see the fixture's own `_comment`).
+    Loaded verbatim — no augmentation, the 2026-07-25 producer already emits
+    every field `facts_to_points` requires.
+    """
+    return json.loads(CONSOLIDATION_VARIANT_FIXTURE.read_text(encoding="utf-8"))
+
+
+def test_ingest_collapses_consolidation_variants_of_one_signature(tmp_path):
+    """A signature whose facts arrive under BOTH `consolidation=
+    'OperatingSegmentsMember'` and `consolidation=None` is ONE series, and must
+    ingest as one.
+
+    WHY this is not the guard's job: `_fact_matches` normalizes the qualifier on
+    BOTH sides (`kpi_xbrl.py:428-432`), so the consumer already treats the two
+    raw values as the same series. A `_signature_key` that carried the RAW value
+    would split them into two selectors deriving one `kpi_id` and the collision
+    guard would OVER-FIRE — aborting the whole ingest, dimensional and top-line
+    alike (the live INTC Lane B failure, 2026-07-25). The guard's notion of
+    "distinct" must equal the consumer's notion of "same"
+    (`docs/loom/memory/derived-durable-id-slug-is-a-lossy-one-way-door.md`).
+
+    The point count is the load-bearing assertion, not the exit code: one
+    normalized selector must emit each fact EXACTLY once. Two selectors would
+    each match ALL four facts (both normalize identically), double-emitting; a
+    selector keyed on the raw value in a way that failed to normalize would drop
+    the other variant's facts. `appended == len(facts)` rules out both.
+    """
+    store_dir = tmp_path / "store"
+    env = {**os.environ, "KPI_STORE_DIR": str(store_dir)}
+
+    pack = _consolidation_variant_pack()
+    pack_path = tmp_path / "consolidation_variant_pack.json"
+    pack_path.write_text(json.dumps(pack), encoding="utf-8")
+
+    result = _run_ingest(pack_path, env)
+    assert result.returncode == 0, (
+        "the two ConsolidationItemsAxis variants of ONE signature are one "
+        "series to the consumer — the collision guard must not over-fire: "
+        f"stdout={result.stdout!r} stderr={result.stderr!r}"
+    )
+
+    summary = json.loads(result.stdout)
+    assert summary["kpi_ids"] == [
+        "revenuefromcontractwithcustomerexcludingassessedtax"
+        "__productorservice-assemblyandtest"
+        "__statementbusinesssegments-intelfoundry"
+    ], f"both variants must land in ONE series; got {summary['kpi_ids']}"
+    assert summary["appended"] == len(pack["facts"]), (
+        "every fact must be appended EXACTLY once — fewer means a variant was "
+        f"dropped, more means it was double-emitted: {summary['appended']} "
+        f"appended for {len(pack['facts'])} facts"
+    )
+
+    # Read the store back: every captured value survives, so the collapse is a
+    # merge of two tagging variants and not a silent loss of one of them.
+    dump = _run_dump(pack["ticker"], env)
+    assert dump.returncode == 0, (
+        f"dump failed: stdout={dump.stdout!r} stderr={dump.stderr!r}"
+    )
+    payload = json.loads(dump.stdout)
+    assert len(payload["series"]) == 1, (
+        f"expected ONE series, got {[s['kpi_id'] for s in payload['series']]}"
+    )
+    stored_values = sorted(
+        obs["value"]
+        for period in payload["series"][0]["periods"]
+        for obs in period["observations"]
+    )
+    assert stored_values == sorted(fact["value"] for fact in pack["facts"]), (
+        f"every captured fact's value must reach the store; got {stored_values}"
+    )
+
+
+def test_ingest_collision_guard_fires_across_consolidation_variants(tmp_path):
+    """The qualifier collapse must not become a REMOVAL of the guard: two
+    GENUINELY DISTINCT breakdown signatures deriving one `kpi_id` still raise
+    even when they also differ on the consolidation qualifier.
+
+    Without this, normalizing the qualifier out of `_signature_key` could be
+    "fixed" by dropping the key's discriminating power altogether — the two
+    facts below differ on a real BREAKDOWN member (`ns1:` vs `ns2:`), which is
+    exactly the merge the guard exists to refuse. The sibling
+    `test_ingest_raises_on_kpi_id_collision` pins the same-qualifier case; this
+    one pins the axis the fix touches.
+    """
+    store_dir = tmp_path / "store"
+    env = {**os.environ, "KPI_STORE_DIR": str(store_dir)}
+
+    pack = _consolidation_variant_pack()
+    fact_a, fact_b = (dict(pack["facts"][0]), dict(pack["facts"][1]))
+    # Distinct breakdown members that slug-collapse to the same kpi_id, carried
+    # under DIFFERENT consolidation qualifiers.
+    fact_a["dimensions"] = {"StatementBusinessSegments": "ns1:ProductMember"}
+    fact_a["consolidation"] = "OperatingSegmentsMember"
+    fact_b["dimensions"] = {"StatementBusinessSegments": "ns2:ProductMember"}
+    fact_b["consolidation"] = None
+    pack["facts"] = [fact_a, fact_b]
+
+    pack_path = tmp_path / "cross_variant_collision_pack.json"
+    pack_path.write_text(json.dumps(pack), encoding="utf-8")
+
+    result = _run_ingest(pack_path, env)
+    assert result.returncode != 0, (
+        "distinct BREAKDOWN signatures must still collide even when their "
+        f"consolidation qualifiers differ: stdout={result.stdout!r}"
+    )
+    assert "collision" in result.stderr.lower(), (
+        f"rejection must name the collision: stderr={result.stderr!r}"
     )
 
 

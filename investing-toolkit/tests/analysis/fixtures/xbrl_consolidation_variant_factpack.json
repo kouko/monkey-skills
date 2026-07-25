@@ -1,0 +1,110 @@
+{
+ "_comment": "REAL live capture (never hand-typed): INTC `kpi-quarterly` pack fetched 2026-07-25 via investing-toolkit data-markets (pack_us), machine-sliced to the ONE dimensional signature that carries BOTH ConsolidationItemsAxis variants — us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax over (ProductOrService=AssemblyAndTestMember, StatementBusinessSegments=IntelFoundryMember). Intel's FY2023-FY2025 filings tag that segment fact with srt:ConsolidationItemsAxis=OperatingSegmentsMember; the FY2026 10-Qs (0000050863-26-000079 / -157) omit the axis entirely, so the SAME series arrives with consolidation=null. `_normalize_consolidation` maps both to OperatingSegmentsMember, so to the consumer these are ONE series — the kpi_id collision guard must agree. Note the FY2025-Q1 window (period_end 2025-03-29) appears under BOTH variants at the same 31000000.0 value across two accessions: direct evidence that the qualifier axis is a tagging artefact, not a distinct series. Values / accessions / dimensions / fiscal_calendars are byte-copied from the live pack; only the fact SELECTION is narrowed. Live dogfood capture, 2026-07-25 (arc (d) BACKLOG item (a)).",
+ "pack": "kpi-quarterly",
+ "ticker": "INTC",
+ "company": "INTC",
+ "fetched_at": "2026-07-25T10:09:21.584626+00:00",
+ "fiscal_calendars": {
+  "0000050863-25-000009": {
+   "fiscal_period_focus": "FY",
+   "fiscal_year_end": "--12-28",
+   "fiscal_year_focus": "2024"
+  },
+  "0000050863-25-000074": {
+   "fiscal_period_focus": "Q1",
+   "fiscal_year_end": "--12-28",
+   "fiscal_year_focus": "2025"
+  },
+  "0000050863-26-000079": {
+   "fiscal_period_focus": "Q1",
+   "fiscal_year_end": "--12-26",
+   "fiscal_year_focus": "2026"
+  }
+ },
+ "facts": [
+  {
+   "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+   "dimensions": {
+    "ProductOrService": "AssemblyAndTestMember",
+    "StatementBusinessSegments": "IntelFoundryMember"
+   },
+   "consolidation": "OperatingSegmentsMember",
+   "value": 31000000.0,
+   "period_end": "2025-03-29",
+   "period_start": "2024-12-29",
+   "accession": "0000050863-25-000074",
+   "filed": "2025-04-25",
+   "duration_months": 3,
+   "duration_weeks": 13,
+   "week_lane_band": "quarter",
+   "calendar_year": 2025,
+   "calendar_quarter": "Q1",
+   "fiscal_year": 2025,
+   "fiscal_quarter": "Q1",
+   "derivation_basis": "dei-declared"
+  },
+  {
+   "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+   "dimensions": {
+    "ProductOrService": "AssemblyAndTestMember",
+    "StatementBusinessSegments": "IntelFoundryMember"
+   },
+   "consolidation": null,
+   "value": 174000000.0,
+   "period_end": "2026-03-28",
+   "period_start": "2025-12-28",
+   "accession": "0000050863-26-000079",
+   "filed": "2026-04-24",
+   "duration_months": 3,
+   "duration_weeks": 13,
+   "week_lane_band": "quarter",
+   "calendar_year": 2026,
+   "calendar_quarter": "Q1",
+   "fiscal_year": 2026,
+   "fiscal_quarter": "Q1",
+   "derivation_basis": "dei-declared"
+  },
+  {
+   "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+   "dimensions": {
+    "ProductOrService": "AssemblyAndTestMember",
+    "StatementBusinessSegments": "IntelFoundryMember"
+   },
+   "consolidation": null,
+   "value": 31000000.0,
+   "period_end": "2025-03-29",
+   "period_start": "2024-12-29",
+   "accession": "0000050863-26-000079",
+   "filed": "2026-04-24",
+   "duration_months": 3,
+   "duration_weeks": 13,
+   "week_lane_band": "quarter",
+   "calendar_year": 2025,
+   "calendar_quarter": "Q1",
+   "fiscal_year": 2025,
+   "fiscal_quarter": "Q1",
+   "derivation_basis": "dei-declared"
+  },
+  {
+   "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+   "dimensions": {
+    "ProductOrService": "AssemblyAndTestMember",
+    "StatementBusinessSegments": "IntelFoundryMember"
+   },
+   "consolidation": "OperatingSegmentsMember",
+   "value": 385000000.0,
+   "period_end": "2024-12-28",
+   "period_start": "2023-12-31",
+   "accession": "0000050863-25-000009",
+   "filed": "2025-01-31",
+   "duration_months": 12,
+   "duration_weeks": 52,
+   "week_lane_band": "FY",
+   "calendar_year": 2024,
+   "calendar_quarter": "Q4",
+   "fiscal_year": 2024,
+   "fiscal_quarter": "FY",
+   "derivation_basis": "dei-declared"
+  }
+ ]
+}
