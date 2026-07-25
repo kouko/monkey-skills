@@ -770,6 +770,85 @@ def test_derive_kpi_id_discriminates_non_default_consolidation(ingest_module):
     )
 
 
+def test_derive_kpi_id_prefix_orders_axes_by_folded_key_not_raw_case(ingest_module):
+    """Whole-branch close-out finding (feat-kpi-id-consolidation-axis): the
+    readable PREFIX must order its axis=member tokens by the SAME folded key
+    `_canonical_dimension_fold` (and therefore the digest) uses, not by raw
+    (case-sensitive) `sorted(dimensions)`. Two multi-axis signatures whose
+    axis NAMES differ only in case can flip `sorted()`'s raw-text order
+    between them even though every axis is the SAME axis once folded — before
+    the fix this mints two DIFFERENT ids (and therefore two different store
+    series) for what is the identical dimensional identity.
+    """
+    derive = ingest_module.derive_kpi_id
+    concept = "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax"
+
+    sig_a = derive(
+        concept,
+        {"ProductOrService": "AssemblyMember", "productOrServiceB": "TestMember"},
+    )
+    sig_b = derive(
+        concept,
+        {"productOrService": "AssemblyMember", "ProductOrServiceB": "TestMember"},
+    )
+    assert sig_a == sig_b, (
+        f"axis-name case flipping raw sort order must not change the id: "
+        f"{sig_a!r} != {sig_b!r}"
+    )
+
+
+def test_derive_kpi_id_consolidation_default_compared_case_insensitively(
+    ingest_module,
+):
+    """Whole-branch close-out finding: the prefix's own default-vs-non-default
+    consolidation comparison used a raw `!=` against
+    `kpi_xbrl._DEFAULT_CONSOLIDATION_MEMBER`, so a differently-cased spelling
+    of the SAME default member (`OperatingsegmentsMember` vs
+    `OperatingSegmentsMember`) was wrongly treated as non-default and appended
+    a spurious `__operatingsegments` token — minting a second id for what the
+    digest (and `_fact_matches`' own normalized comparison) already treats as
+    the default view.
+    """
+    derive = ingest_module.derive_kpi_id
+    concept = "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax"
+    dimensions = {"StatementBusinessSegments": "ClientComputingGroupMember"}
+
+    canonical_case = derive(concept, dimensions, "OperatingSegmentsMember")
+    other_case = derive(concept, dimensions, "OperatingsegmentsMember")
+    assert canonical_case == other_case, (
+        f"a differently-cased spelling of the DEFAULT consolidation member "
+        f"must add NO token, same as the canonically-cased default: "
+        f"{canonical_case!r} != {other_case!r}"
+    )
+
+
+def test_derive_kpi_id_prefix_folds_non_ascii_case_via_casefold(ingest_module):
+    """Whole-branch close-out finding: the prefix folded each token with
+    `.lower()`, not `.casefold()`. The two agree on every ASCII XBRL name in
+    the observed corpus (the digest's own docstring says so), but diverge on
+    German sharp-s: `"Straße".lower() == "straße"` while
+    `"STRASSE".lower() == "strasse"` — genuinely different strings — whereas
+    `.casefold()` maps both to `"strasse"`, matching the digest's own fold
+    (Task 2 already uses `.casefold()` there). `_strip_axis_member_suffix`
+    still runs on the ORIGINAL (un-folded) string first — the `Member` suffix
+    match is case-sensitive, so folding before stripping would silently break
+    it for every existing id.
+    """
+    derive = ingest_module.derive_kpi_id
+    concept = "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax"
+
+    sharp_s = derive(
+        concept, {"StatementBusinessSegments": "StraßeMember"}
+    )
+    double_s = derive(
+        concept, {"StatementBusinessSegments": "STRASSEMember"}
+    )
+    assert sharp_s == double_s, (
+        f".lower() vs .casefold() disagreement on non-ASCII case must not "
+        f"split one identity into two ids: {sharp_s!r} != {double_s!r}"
+    )
+
+
 # --------------------------------------------------------------------------
 # Top-line (FLAT) lane — plan docs/loom/plans/2026-07-25-company-total-revenue.md
 # Task 5. Flat facts (`dimensions == {}`) are no longer skipped: they land in

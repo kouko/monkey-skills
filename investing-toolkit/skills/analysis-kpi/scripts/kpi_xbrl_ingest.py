@@ -120,20 +120,38 @@ def _strip_axis_member_suffix(name: str) -> str:
 
 
 def _slug_token(qname: str) -> str:
-    """One signature token: local-name, Axis/Member suffix stripped, lowercased."""
-    return _strip_axis_member_suffix(_local_name(qname)).lower()
+    """One signature token: local-name, Axis/Member suffix stripped, then
+    CASEFOLDED (not merely lowercased) — `.casefold()` is the stricter fold
+    for the identity-bearing half, agreeing with the digest on non-ASCII
+    case (e.g. German sharp-s: `"Straße".casefold() == "STRASSE".casefold()
+    == "strasse"`, whereas `.lower()` alone leaves them different strings).
+    The suffix strip runs FIRST, on the un-folded local name: `Axis`/`Member`
+    matching is case-sensitive, so folding before stripping would silently
+    stop the strip from firing on every existing id.
+    """
+    return _strip_axis_member_suffix(_local_name(qname)).casefold()
+
+
+def _ordered_breakdown_pairs(pairs) -> list:
+    """Order `(axis, member)` breakdown pairs by their CASEFOLDED identity —
+    never by raw (case-sensitive) text. This is the ONE sort both
+    `_canonical_dimension_fold` (folded output, for the digest) and
+    `derive_kpi_id`'s readable prefix (raw slug output) delegate to, so the
+    prefix's token order agrees with the digest's identity BY CONSTRUCTION:
+    two pair-sets that are byte-identical once folded but arrived in a
+    DIFFERENT raw order — e.g. one selector's axis spelled `Alpha`, another's
+    spelled `alpha`, which flips a raw `sorted()`'s ordering when a second
+    axis is also present — must still land in the identical sequence here.
+    """
+    return sorted(pairs, key=lambda pair: (pair[0].casefold(), pair[1].casefold()))
 
 
 def _canonical_dimension_fold(pairs) -> tuple:
     """The ONE canonical case-folded identity of a set of `(axis, member)`
-    breakdown-dimension pairs: casefold each pair FIRST, then sort the
-    RESULT by its casefolded value — never the reverse. Sorting after
-    folding (not folding an already-sorted-by-raw-text order in place) is
-    the whole point: two pair-sets that are byte-identical once folded but
-    arrived in a DIFFERENT raw (case-sensitive) order — e.g. one selector's
-    axis spelled `Alpha`, another's spelled `alpha`, which flips
-    `sorted()`'s raw-text ordering when a second axis is also present —
-    must still land on the identical tuple here.
+    breakdown-dimension pairs: order by the casefolded key via
+    `_ordered_breakdown_pairs` FIRST, then casefold each pair — never the
+    reverse. Sorting after folding (not folding an already-sorted-by-raw-text
+    order in place) is the whole point (see `_ordered_breakdown_pairs`).
 
     `derive_kpi_id`'s digest and `_casefold_claim_key`'s collision-guard
     comparison both call this ONE function rather than each re-deriving the
@@ -143,24 +161,32 @@ def _canonical_dimension_fold(pairs) -> tuple:
     notion of "same"
     (`docs/loom/memory/derived-durable-id-slug-is-a-lossy-one-way-door.md`).
     """
-    return tuple(sorted((axis.casefold(), member.casefold()) for axis, member in pairs))
+    return tuple(
+        (axis.casefold(), member.casefold())
+        for axis, member in _ordered_breakdown_pairs(pairs)
+    )
 
 
 def derive_kpi_id(concept: str, dimensions: dict, consolidation=None) -> str:
     """Deterministic, injective (up to case) kpi_id from the FULL dimensional
     signature.
 
-    READABLE PREFIX: `concept` + every breakdown `axis=member` pair (axes
-    sorted for determinism), each token reduced to its local-name with the
-    Axis/Member suffix stripped and lowercased. The `ConsolidationItemsAxis`
+    READABLE PREFIX: `concept` + every breakdown `axis=member` pair, ordered
+    by `_ordered_breakdown_pairs`'s CASEFOLDED key (the same ordering the
+    digest below uses) — never raw `sorted()` text, which two axis names
+    differing only in case can flip relative to each other while folding to
+    the identical identity — each token reduced to its local-name with the
+    Axis/Member suffix stripped and CASEFOLDED. The `ConsolidationItemsAxis`
     reconciliation qualifier is EXCLUDED from that breakdown loop (a segment
     filer is not cross-dimensioned by it) but is not simply dropped:
     `consolidation` — the CONSUMER-normalized qualifier
     (`kpi_xbrl._normalize_consolidation`'s output, e.g. via `_signature_key`),
     never a raw fact value — appends its own `__<member-slug>` token when it
-    is anything OTHER than the default `OperatingSegmentsMember` view. A
-    default or absent (`None`) qualifier adds no token, so two facts
-    differing only on that default-vs-absent distinction still fold to one id
+    is anything OTHER than the default `OperatingSegmentsMember` view,
+    compared CASE-INSENSITIVELY so a differently-cased spelling of that same
+    default (e.g. `OperatingsegmentsMember`) still adds no token. A default
+    or absent (`None`) qualifier adds no token, so two facts differing only
+    on that default-vs-absent distinction still fold to one id
     (`test_ingest_collapses_consolidation_variants_of_one_signature`); a
     genuinely NON-default member (e.g. `IntersegmentEliminationMember`)
     discriminates the id instead of silently merging into the default series
@@ -182,11 +208,11 @@ def derive_kpi_id(concept: str, dimensions: dict, consolidation=None) -> str:
     (e.g. `DataCenterMember` vs `DatacenterMember`) — preserving case would
     permanently file each such series' quarterly history apart from its
     annual history in this append-only store, so the digest folds case the
-    same way the readable prefix already does. `casefold()`, not `.lower()`,
-    is used for the digest specifically because it is the stricter fold for
-    the identity-bearing half (the two agree on every ASCII XBRL name in the
-    observed corpus, so this only matters for a hypothetical non-ASCII
-    element name). `consolidation` is normalized
+    same way the readable prefix already does. `casefold()` — the stricter
+    fold for the identity-bearing half — is used for BOTH the digest and the
+    readable prefix's own tokens, so they agree on non-ASCII case too (e.g.
+    German sharp-s: `Straße` vs `STRASSE`), not only on the ASCII XBRL names
+    the observed corpus happens to carry. `consolidation` is normalized
     (`kpi_xbrl._normalize_consolidation`) before folding, so an absent
     qualifier and the explicit default member digest identically — matching
     the readable prefix's own fold.
@@ -203,23 +229,27 @@ def derive_kpi_id(concept: str, dimensions: dict, consolidation=None) -> str:
     """
     import kpi_xbrl
 
-    breakdown_axes = [
-        axis
-        for axis in sorted(dimensions)
+    breakdown_pairs = [
+        (axis, dimensions[axis])
+        for axis in dimensions
         if _slug_token(axis) != _CONSOLIDATION_AXIS_LOCAL
     ]
+    # Ordered by the FOLDED key (same helper the digest uses below) so the
+    # prefix's token order agrees with the digest's identity by construction
+    # — never by raw `sorted()` text, which an axis name's case alone can
+    # flip relative to another axis present in the same signature.
     parts = [
-        f"{_slug_token(axis)}-{_slug_token(dimensions[axis])}"
-        for axis in breakdown_axes
+        f"{_slug_token(axis)}-{_slug_token(member)}"
+        for axis, member in _ordered_breakdown_pairs(breakdown_pairs)
     ]
     concept_token = _slug_token(concept)
     prefix = concept_token if not parts else concept_token + "__" + "__".join(parts)
-    if consolidation and consolidation != kpi_xbrl._DEFAULT_CONSOLIDATION_MEMBER:
+    if consolidation and consolidation.casefold() != (
+        kpi_xbrl._DEFAULT_CONSOLIDATION_MEMBER.casefold()
+    ):
         prefix += "__" + _slug_token(consolidation)
 
-    folded_pairs = _canonical_dimension_fold(
-        (axis, dimensions[axis]) for axis in breakdown_axes
-    )
+    folded_pairs = _canonical_dimension_fold(breakdown_pairs)
     normalized_consolidation = kpi_xbrl._normalize_consolidation(consolidation)
     digest_fields = [concept.casefold()]
     for axis_fold, member_fold in folded_pairs:

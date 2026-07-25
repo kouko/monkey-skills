@@ -68,6 +68,25 @@ fcntl = _store_fs.fcntl
 _warned_no_fcntl = False
 
 
+# A single POSIX path COMPONENT (APFS/HFS+/ext4) caps at 255 bytes. The
+# stem `_series_key` returns is not the whole on-disk name: `_atomic_write`
+# (_store_fs.py) writes via `tempfile.NamedTemporaryFile(prefix=f".{path.name}.",
+# suffix=".tmp")`, which layers a leading `.`, the `.json` suffix, a `.`
+# before tempfile's random tag, that 8-char random tag itself
+# (`tempfile._RandomNameSequence` — stable across CPython, verified live),
+# and a trailing `.tmp` on top of the stem — 19 fixed bytes
+# (".", ".json", ".", 8, ".tmp" = 1+5+1+8+4). A 4-axis consolidated kpi_id
+# can push the readable stem past the remaining budget: the live JNJ
+# dogfood crash measured a 238-byte stem -> 257-byte temp name, 2 over.
+# `_MAX_STEM_BYTES` budgets the STEM so the derived temp name always fits,
+# with a 16-byte margin beyond the bare arithmetic for platform/tempfile
+# variance.
+_FS_COMPONENT_LIMIT_BYTES = 255
+_ATOMIC_WRITE_AFFIX_BYTES = 19  # '.' + '.json' + '.' + 8 random chars + '.tmp'
+_STEM_MARGIN_BYTES = 16
+_MAX_STEM_BYTES = _FS_COMPONENT_LIMIT_BYTES - _ATOMIC_WRITE_AFFIX_BYTES - _STEM_MARGIN_BYTES
+
+
 def _series_key(company: str, kpi_id: str) -> str:
     """Collision-proof `<company>__<kpi_id>__<digest>` filename stem — one
     file per series, for arbitrary input.
@@ -83,13 +102,34 @@ def _series_key(company: str, kpi_id: str) -> str:
     always map to distinct files — preserving the file-per-series invariant
     the later dedup/query/lock slices rely on, while keeping the sanitized
     prefix human-readable.
+
+    The digest is ALWAYS computed over the FULL raw (company, kpi_id) pair,
+    never over a truncated stem — truncating first would reintroduce
+    exactly the collision the digest exists to prevent. Only the
+    human-readable `<company_key>__<kpi_key>` portion is length-budgeted
+    (`_MAX_STEM_BYTES`, see comment above) to keep the derived filename
+    inside the filesystem's per-component byte limit; truncation is a
+    no-op below that budget, so every filename that fit before this
+    budget existed is BYTE-IDENTICAL to before — a previously-stored
+    series file never becomes an unreachable orphan. Measured in BYTES,
+    not characters, per the budget's own unit (`company_key`/`kpi_key`
+    are sanitized to `[A-Za-z0-9_-]`, pure ASCII, so a byte slice can
+    never split a multibyte char here).
     """
     company_key = _UNSAFE_KEY_CHARS.sub("_", str(company)) or "_"
     kpi_key = _UNSAFE_KEY_CHARS.sub("_", str(kpi_id)) or "_"
     digest = hashlib.sha1(
         f"{company}\x00{kpi_id}".encode("utf-8")
     ).hexdigest()[:12]
-    return f"{company_key}__{kpi_key}__{digest}"
+
+    readable = f"{company_key}__{kpi_key}"
+    suffix = f"__{digest}"
+    budget = _MAX_STEM_BYTES - len(suffix.encode("utf-8"))
+    readable_bytes = readable.encode("utf-8")
+    if len(readable_bytes) > budget:
+        readable = readable_bytes[:budget].decode("ascii")
+
+    return f"{readable}{suffix}"
 
 
 def _series_path(company: str, kpi_id: str) -> Path:
