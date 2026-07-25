@@ -849,6 +849,59 @@ def test_derive_kpi_id_prefix_folds_non_ascii_case_via_casefold(ingest_module):
     )
 
 
+def test_derive_kpi_id_folds_every_spelling_of_one_identity(ingest_module):
+    """PROPERTY, not one example: every prior case-fold test above (688-725,
+    773, 800, 825) happened to use the ONE worked pair that passes —
+    `DataCenterMember`/`DatacenterMember`, whose case drift lands mid-token,
+    never on the `Axis`/`Member` suffix itself. None of them exercise the
+    close-out finding: `_strip_axis_member_suffix` matched `Axis`/`Member`
+    CASE-SENSITIVELY and ran BEFORE `.casefold()`, so a spelling whose case
+    drift lands ON the suffix token (e.g. `DataCenterMEMBER`) keeps the
+    suffix attached in the READABLE PREFIX while every conventionally-cased
+    spelling strips it — while the DIGEST (built from the raw string,
+    casefolded whole, never suffix-stripped) is unaffected and stays
+    identical. Prefix and digest disagreeing mints a SECOND kpi_id for the
+    SAME signature, and because the collision guard (`_claim_kpi_id`) is
+    keyed on kpi_id, the two ids never meet it — a permanently split series
+    with no fail-loud.
+
+    Several spellings of ONE member identity, and an Axis-suffix analogue
+    (case drift landing on the AXIS token's own suffix), must ALL mint the
+    identical kpi_id.
+    """
+    derive = ingest_module.derive_kpi_id
+    concept = "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax"
+
+    member_spellings = [
+        "DataCenterMember",
+        "DatacenterMember",
+        "DataCenterMEMBER",
+        "datacentermember",
+    ]
+    member_ids = {
+        spelling: derive(concept, {"StatementBusinessSegments": spelling})
+        for spelling in member_spellings
+    }
+    assert len(set(member_ids.values())) == 1, (
+        "every spelling of ONE member identity must mint the identical "
+        f"kpi_id, got {member_ids}"
+    )
+
+    axis_spellings = [
+        "ProductOrServiceAxis",
+        "ProductOrServiceAXIS",
+        "productorserviceaxis",
+    ]
+    axis_ids = {
+        spelling: derive(concept, {spelling: "AssemblyMember"})
+        for spelling in axis_spellings
+    }
+    assert len(set(axis_ids.values())) == 1, (
+        "every spelling of ONE axis identity (case drift landing on the "
+        f"Axis suffix) must mint the identical kpi_id, got {axis_ids}"
+    )
+
+
 # --------------------------------------------------------------------------
 # Top-line (FLAT) lane — plan docs/loom/plans/2026-07-25-company-total-revenue.md
 # Task 5. Flat facts (`dimensions == {}`) are no longer skipped: they land in

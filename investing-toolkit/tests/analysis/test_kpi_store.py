@@ -23,6 +23,7 @@ import subprocess
 import sys
 import threading
 import time
+from pathlib import Path
 
 from conftest import KPI_STORE_SCRIPT
 
@@ -607,6 +608,49 @@ def test_long_shared_prefix_kpi_ids_still_land_in_different_files(
         for f in series_files
     )
     assert stored_values == [1, 2]
+
+
+def test_atomic_write_affix_bytes_derived_from_real_write(
+    kpi_store_module, tmp_path, monkeypatch
+):
+    """`_ATOMIC_WRITE_AFFIX_BYTES` (kpi_store.py:85) is a HAND-DERIVED count
+    of the fixed overhead `_atomic_write`'s tmp+rename layers onto a series
+    file's STEM — nothing ties the literal `19` to `_atomic_write`'s actual
+    behavior, so a change to its tempfile prefix/suffix pattern would leave
+    the budget constant silently wrong (change the affixes, nothing fails).
+
+    This derives the overhead from a REAL `_atomic_write` call instead of
+    hand arithmetic: `_atomic_write` renames its temp file away before
+    returning, so the temp name is captured via a `Path.rename` spy (the
+    only point it is ever observable), then compared in length against the
+    target's own STEM (`Path.stem` — the same "readable portion, no
+    extension" unit `_MAX_STEM_BYTES` budgets).
+    """
+    store_fs = kpi_store_module._store_fs
+
+    captured_temp_names = []
+    real_rename = Path.rename
+
+    def spy_rename(self, target):
+        captured_temp_names.append(self.name)
+        return real_rename(self, target)
+
+    monkeypatch.setattr(Path, "rename", spy_rename)
+
+    target = tmp_path / "probe-series-stem.json"
+    store_fs._atomic_write(target, {"probe": True})
+
+    assert len(captured_temp_names) == 1, (
+        "test setup invariant: _atomic_write must rename exactly one temp "
+        f"file; captured {captured_temp_names}"
+    )
+    real_overhead = len(captured_temp_names[0]) - len(target.stem)
+    assert real_overhead == kpi_store_module._ATOMIC_WRITE_AFFIX_BYTES, (
+        f"a real _atomic_write call adds {real_overhead} bytes of overhead "
+        "beyond the stem, but _ATOMIC_WRITE_AFFIX_BYTES claims "
+        f"{kpi_store_module._ATOMIC_WRITE_AFFIX_BYTES} — the tempfile "
+        "prefix/suffix pattern changed without updating the budget constant"
+    )
 
 
 def test_cli_append_then_query_roundtrip(tmp_path):

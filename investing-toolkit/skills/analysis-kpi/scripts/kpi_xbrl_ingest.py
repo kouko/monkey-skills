@@ -111,10 +111,22 @@ def _local_name(qname: str) -> str:
 def _strip_axis_member_suffix(name: str) -> str:
     """Strip a trailing `Axis` or `Member` suffix (canonical XBRL dimension
     naming) so the slug reads as the bare concept — never stripping the whole
-    token (a name that IS the suffix is kept as-is).
+    token (a name that IS the suffix, in any case, is kept as-is).
+
+    The suffix match is CASE-INSENSITIVE (`str.casefold()` on the trailing
+    slice, not a raw `.endswith()`). Close-out finding (whole-branch review,
+    feat-kpi-id-consolidation-axis): a case-sensitive match only stripped
+    conventionally-cased spellings (`...Member`); a spelling whose case
+    drift happened to land ON the suffix itself (e.g. `DataCenterMEMBER`,
+    `DataCenterMember`'s all-caps 10-Q variant) kept the suffix attached,
+    producing a readable PREFIX that disagreed with the DIGEST (which
+    casefolds the whole raw string and was never suffix-sensitive) —
+    minting a second kpi_id for the identical signature, invisible to the
+    `_claim_kpi_id` guard because it is keyed on kpi_id and the two ids
+    never meet (`test_derive_kpi_id_folds_every_spelling_of_one_identity`).
     """
     for suffix in ("Axis", "Member"):
-        if name.endswith(suffix) and len(name) > len(suffix):
+        if len(name) > len(suffix) and name[-len(suffix):].casefold() == suffix.casefold():
             return name[: -len(suffix)]
     return name
 
@@ -125,9 +137,17 @@ def _slug_token(qname: str) -> str:
     for the identity-bearing half, agreeing with the digest on non-ASCII
     case (e.g. German sharp-s: `"Straße".casefold() == "STRASSE".casefold()
     == "strasse"`, whereas `.lower()` alone leaves them different strings).
-    The suffix strip runs FIRST, on the un-folded local name: `Axis`/`Member`
-    matching is case-sensitive, so folding before stripping would silently
-    stop the strip from firing on every existing id.
+
+    ORDER, re-verified at the same close-out that made the suffix match
+    case-insensitive (see `_strip_axis_member_suffix`): strip-then-casefold
+    (this call shape) and casefold-then-strip now produce the IDENTICAL
+    output, because the suffix match itself is case-insensitive — it no
+    longer matters which side of `.casefold()` it runs on. Before that fix,
+    order WAS load-bearing (a case-SENSITIVE match had to see the un-folded
+    original to recognize `Axis`/`Member` at all, e.g. `MEMBER` would not
+    match if folding ran first without also folding the suffix literals).
+    This keeps strip-then-fold, unchanged, only because there is no reason
+    to reorder a working call with no behavioral difference either way.
     """
     return _strip_axis_member_suffix(_local_name(qname)).casefold()
 
