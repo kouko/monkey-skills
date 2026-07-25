@@ -319,6 +319,7 @@ Amendment note 5 (post-PASS, schema-safe → re-review skipped per writing-plans
 - Dependencies: Task 1 completes first
 - Independent: false
 - Brief item covered: Smallest End State #2 — "an annual-only backfill from the `companyconcept` REST series fills fiscal years older than the filings Lane B fetched".
+- Status: done(f14ef7cc)  # spec PASS; quality PASS_WITH_NOTES — 🟡 (New-Year test covered only the after-Jan-1 branch; a sign flip would have gone untested) routed back and closed by parametrizing both directions. Also emitted calendar_year/quarter on override: both lanes feed ONE series, so inconsistent field presence inside it degrades silently.
 
 ## Task 4 — data-markets: `kpi-topline-backfill` pack entry
 
@@ -345,6 +346,7 @@ Amendment note 5 (post-PASS, schema-safe → re-review skipped per writing-plans
 - Dependencies: Task 3 completes first
 - Independent: true
 - Brief item covered: Smallest End State #2 — the backfill must be runnable, i.e. reachable through the data layer's one pack facade — plus Decision "Lane A is annual-only … `source_kind = \"xbrl-companyfacts\"` (already trusted)" (the producing half).
+- Status: done(fc661e7e)  # spec PASS; quality NEEDS_REVISION→PASS on round 2. Two 🟡: a FOURTH pack-name pinning site (`pack.py` US_ONLY_PACKS) was missed — a US-only pack absent from it falls through to the TW module and misnames a market problem as a typo; and a fixture paired one year's real revenue with another year's period/accession under a docstring claiming captured provenance. Fixed by regenerating from the real producer.
 
 ## Task 5 — analysis-kpi: ingest flat top-line facts under a canonical `total_revenue` id
 
@@ -389,6 +391,7 @@ Amendment note 5 (post-PASS, schema-safe → re-review skipped per writing-plans
 - Dependencies: Tasks 2, 11 complete first
 - Independent: true
 - Brief item covered: Decision — "`kpi_id` is a fixed canonical constant (e.g. `total_revenue`), NOT `derive_kpi_id`'s empty-dimensions bare-concept slug" — plus Decision "Lane A is annual-only … `source_kind = \"xbrl-companyfacts\"` (already trusted)" (the consuming half) — plus Smallest End State #3's second clause, "disagreement is a fabricated `†` and must fail loud, never be silently stored" (the store-aware dedup-key guard is what discharges it; Task 6 owns the first clause, the same-value agreement).
+- Status: done(23cbdbf9)  # spec PASS (both adjudications upheld); quality NEEDS_REVISION→PASS_WITH_NOTES on round 2. Three 🟡, all of the same family — assertions that prove nothing: raw `!=` resting on an unpinned invariant another module owns (and already violated by the 8-K lane), a fabricated `filed` date compared against itself, and a build-then-write restructure whose justification no test exercised. All closed and mutation-verified.
 
 ## Task 6 — two-lane e2e: overlap agreement + tearsheet renders the total
 
@@ -413,6 +416,7 @@ Amendment note 5 (post-PASS, schema-safe → re-review skipped per writing-plans
 - Dependencies: Tasks 4, 5 complete first
 - Independent: true
 - Brief item covered: Smallest End State #3 — "An overlapping fiscal year covered by BOTH lanes yields the same value (pinned by a real-data test)" + #1's "the tearsheet renders it beside the segment series".
+- Status: done(dd87ca1c)  # spec PASS (Amendment 5(c) substitution upheld as fully discharging intent); quality NEEDS_REVISION→closed. FOUND THE ARC'S ONE REAL SHIPPED DEFECT (see the seam-fix commit 18fc47fd). Its own 🟡s were all documentation honesty — a stale RED banner over a green suite, an undisclosed Lane B hand-built envelope, and a miscounted counterfactual ledger.
 
 ## Task 7 — docs: rewrite the BACKLOG entry and supersede arc (d)'s out-of-scope note
 
@@ -461,6 +465,7 @@ Amendment note 5 (post-PASS, schema-safe → re-review skipped per writing-plans
 - Dependencies: Task 5 completes first
 - Independent: true
 - Brief item covered: Smallest End State #1/#2 — the shipped lanes must be discoverable from the skill surface that runs them.
+- Status: done(f3f69d07)  # spec PASS; quality PASS_WITH_NOTES — 🟡: the doc flattened a hedge the source docstring had just been rewritten IN REVIEW to keep. Turning code into documentation strips qualifiers, and the summary is what the next operator reads instead of the source.
 
 ## Task 9 — docs: data-markets SKILL wiring for top-line emission + the backfill pack
 
@@ -479,6 +484,7 @@ Amendment note 5 (post-PASS, schema-safe → re-review skipped per writing-plans
 - Dependencies: Tasks 2, 4 complete first
 - Independent: true
 - Brief item covered: Smallest End State #1/#2 — the data layer's documented pack surface must name the new capability.
+- Status: done(670b1041)  # spec PASS; quality PASS_WITH_NOTES — 🟡: frontmatter left stale as 'pre-existing' while the SAME change fixed the identical pre-existing gap in the body, from the same cause at the same cost. Reviewer caught the inconsistency; orchestrator reversed its own earlier agreement with the implementer.
 
 ## Task 10 — version bump + CHANGELOG + Codex manifest sync
 
