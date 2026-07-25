@@ -5,6 +5,85 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.38.0] — 2026-07-26
+
+### Added — US as-reported annual statement lane + derived spine view
+
+A US filer's three-statement history now ACCUMULATES in the KPI store instead
+of being recomputed and thrown away on every memo run. The lane stores what
+the filer actually tagged and derives the market-comparable spine at READ
+time, so concept selection stays correctable.
+
+- **`statement-backfill` pack** (`pack.py --pack statement-backfill --ticker
+  <T> --market us`) — walks SEC `companyfacts` for the source concepts of the
+  14 spine fields and keeps only annual, 10-K-carried rows, classified by each
+  row's own start→end span rather than its `fy`/`fp` labels. Every rejected
+  row lands in `coverage.skipped_rows` under a named reason. A ticker whose
+  resolved CIK carries no statement history is a loud typed error with no
+  `facts` key — never an empty-but-successful pack — and a truncated history
+  is surfaced in `coverage`, never stitched from a predecessor CIK.
+- **`kpi_us_statements`** (pure library) + **`kpi_us_statements_ingest
+  ingest --filing`** (store driver) — the `kpi_id` is the filer's OWN qname,
+  verbatim and namespace-preserved (`us-gaap:Revenues`). No slug derivation,
+  so the id is injective by construction and `us-gaap:Revenues` and
+  `us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax` are TWO
+  series, not one silently-resolved series. Every point is built before the
+  first append, so a rejected pack writes nothing; re-ingesting the same pack
+  appends no duplicate.
+- **`kpi_spine_view derive`** (pure read-side view) — maps a `kpi_store dump
+  --company` payload onto the 14 canonical spine fields, resolving PER PERIOD
+  which concept represents each field. The render pipeline is one plain pipe
+  (`kpi_store dump | kpi_spine_view derive | tearsheet_format`);
+  `tearsheet_format.py` is unchanged. A field absent from a period yields no
+  entry and a field absent everywhere yields no row — never 0, never a
+  derived guess.
+- **Balance-sheet identity flag.** Per period the view checks `total_assets −
+  (total_liabilities + mezzanine + whole equity)` and attaches a
+  `balance_identity` flag above a 1e-5 RELATIVE residual. It never suppresses
+  or alters a value. **The flag is attached to the store payload but is NOT
+  rendered by `tearsheet_format`** — a flagged period looks identical to a
+  clean one on the rendered tearsheet, so read the raw JSON from
+  `kpi_spine_view derive` (the flag rides on the `total_assets` series' period
+  entry) to see it. Documented in `analysis-kpi/SKILL.md` and its
+  `references/cli-reference.md`.
+
+**Capability limit — this lane cannot return 20 years of history.** US XBRL
+begins with the SEC's 2009-2011 phase-in, so `companyfacts` holds nothing
+earlier. Measured over the committed 47-ticker probe
+(`investing-toolkit/tests/data/fixtures/us_statement_shapes_probe_2026-07-26.json`):
+**0 of 46 usable filers have ≥20 usable years; the median is 18**, and the
+floor moves forward one year per calendar year rather than deepening
+backward. Anyone expecting two decades should read this line rather than an
+empty table. Pre-2009 history is reachable only via HTML/text extraction
+(which this repo forbids) or a vendor-standardized source — a separate
+product decision.
+
+The lane keys the store on the TICKER, the same as the existing
+dimensional/top-line lanes, so one filer has one store company and a single
+`dump --company AAPL` feeds the spine view every lane's series at once.
+
+### Fixed — `build_top_line_backfill` silently truncated 10 of 47 filers
+
+The top-line backfill picked the first allowlist concept that returned ANY
+rows and stopped there, so a filer that switched revenue tags mid-history
+kept only its pre-switch years. Selection is now resolved **per period**
+across every allowlist concept, so both eras emit as one continuous annual
+series. When two concepts cover the same period, allowlist order breaks the
+tie only if the values AGREE; when they disagree the period is skipped with a
+named `top_line_concept_value_conflict` reason rather than guessing which tag
+is right.
+
+**Your existing stored `total_revenue` series may be incomplete.** This was a
+defect in shipped code, not a new capability: measured on the 47-filer probe,
+10 filers were getting a silently short series (AAPL, CRM, F, HD, HON, META,
+MS, MSFT, TGT, WFC — HD and MSFT ended at 2010, losing ~15 years each). The
+store is append-only, so the missing years do not appear retroactively —
+**re-run the `kpi-topline-backfill` pack and re-ingest** to fill them in. The
+recovered years append as ordinary points; nothing already stored is
+rewritten.
+
+Offline suite: TEST-COUNT-PLACEHOLDER (stamped at close-out).
+
 ## [v2.37.0] — 2026-07-25
 
 ### Fixed — `derive_kpi_id` made injective, up to case

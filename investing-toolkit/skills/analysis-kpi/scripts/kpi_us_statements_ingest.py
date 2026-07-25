@@ -144,17 +144,23 @@ def ingest(pack: dict[str, Any]) -> dict[str, Any]:
     """Map one US statement-pack envelope to store points and append each.
 
     `pack` carries the ## Notes PIN'd shape: `pack`/`ticker`/`fetched_at`/
-    `source_kind`/`company`/`facts`/`coverage`.
+    `source_kind`/`company`/`facts`/`coverage`. Of those, `ticker` is the
+    store/dump KEY and `company` (the SEC `entityName`) is display metadata
+    — `kpi_us_statements.store_company` owns that rule for both this driver
+    and the mapper.
 
     Guard ordering (see module docstring): the envelope's `source_kind` is
     validated FIRST (before any point is built); then the envelope's
-    structural completeness (`company`, `facts`); then every point is built
-    via `kpi_us_statements.us_statement_pack_to_points` (which itself
-    refuses an incomplete-provenance fact and an intra-pack value
-    disagreement — raising before any point exists); then every built
+    structural completeness (a resolvable store key, `facts`); then every
+    point is built via `kpi_us_statements.us_statement_pack_to_points`
+    (which itself refuses an incomplete-provenance fact and an intra-pack
+    value disagreement — raising before any point exists); then every built
     point's `as_of` is checked present; only then does the append loop run.
 
-    Returns `{"company", "kpi_ids": [...sorted...], "appended": <n>}`.
+    Returns `{"company", "kpi_ids": [...sorted...], "appended": <n>}` —
+    `company` being the key the points were STORED under, so the operator
+    can `kpi_store dump --company <that value>` and get what they just
+    ingested.
     """
     import kpi_store
     import kpi_us_statements
@@ -166,11 +172,16 @@ def ingest(pack: dict[str, Any]) -> dict[str, Any]:
     source_kind = pack["source_kind"] if "source_kind" in pack else _SOURCE_KIND
     _require_trusted_source_kind(source_kind)
 
-    company = pack.get("company")
+    # The store KEY, resolved by the mapper's own `store_company` rather than
+    # re-expressed here: this driver's guard and summary must name the exact
+    # value the points are stamped with, and two copies of "which envelope
+    # field keys the store" is precisely how this lane once split away from
+    # the shipped one (see that function).
+    company = kpi_us_statements.store_company(pack)
     if not company:
         raise ValueError(
-            "kpi_us_statements_ingest: envelope missing 'company' — cannot "
-            "key the store, nothing written"
+            "kpi_us_statements_ingest: envelope missing both 'ticker' and "
+            "'company' — cannot key the store, nothing written"
         )
 
     facts = pack.get("facts")

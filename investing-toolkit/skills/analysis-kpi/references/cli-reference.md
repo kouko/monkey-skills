@@ -507,3 +507,156 @@ appended. A `kpi_store.append` precondition rejection is currently
 unreachable from this driver's data flow (per the module docstring) but
 is not a structurally enforced guarantee. A missing required flag
 (`--pack`) is handled by argparse itself and exits **2**.
+
+## CLI (kpi_us_statements_ingest)
+
+`scripts/kpi_us_statements_ingest.py` — the US AS-REPORTED statement-pack
+-> `kpi_store` DRIVER (the US-market analog of `kpi_tw_ingest`, whose CLI
+shape it mirrors verbatim). It reads an already-fetched statement-pack
+envelope (`pack.py --pack statement-backfill --ticker <T> --market us`),
+maps it through `kpi_us_statements.us_statement_pack_to_points`, and
+appends every point to the durable store. Reuses `kpi_store`'s
+`resolve_store_dir` (`KPI_STORE_DIR` env override applies here too).
+
+`scripts/kpi_us_statements.py` — the pure mapper this driver calls — has
+**no CLI of its own** and so gets no section here: it is a stdlib-only
+library (`us_statement_pack_to_points(pack) -> list[point]`) importing no
+data-markets module, and the driver is its only in-repo caller.
+
+The `kpi_id` is the filer's **own qname, verbatim, namespace preserved**
+(`us-gaap:Revenues`) — no slug derivation, no lowercasing, no digest, so
+it is injective by construction on the concept axis. This DIFFERS from
+`kpi_xbrl_ingest.derive_kpi_id` (digests a dimensional signature) and
+`kpi_tw._tw_kpi_id` (lowercases a repo-canonical field name); neither
+applies to a flat annual statement fact keyed on the filer's own tag.
+Two revenue tags therefore become TWO series — resolving them into one
+field is the READ-side job of `kpi_spine_view` below, never a write-time
+decision.
+
+**Store key:** the TICKER, resolved through
+`kpi_us_statements.store_company` — `ticker` first, falling back to
+`company` only for a bare pack carrying no ticker. That is the same
+precedence `kpi_xbrl_ingest` uses, so every US lane keys one filer under
+one company and a single `dump --company AAPL` feeds the spine view all of
+them. The envelope's `company` (the SEC `entityName`) is display metadata,
+kept because it is what makes the CIK-decoy rejection readable.
+
+Guard ordering: EVERY point is built and checked BEFORE the first append,
+so a rejected pack writes nothing and leaves no partial state in the
+append-only store. Idempotent — the dedup key is the store's 5-tuple
+`(company, kpi_id, period, as_of, source_accession)`, so re-ingesting the
+same pack re-derives identical keys and appends no duplicate.
+
+```
+# ingest: reads the statement-pack envelope JSON from --filing (a file
+# path — no stdin fallback, matching kpi_tw_ingest); appends every
+# (concept, period) point and prints a one-line JSON summary
+uv run scripts/kpi_us_statements_ingest.py ingest --filing /path/to/aapl_statements.json
+```
+
+| Subcommand | Flag        | Required | Notes                                                        |
+|------------|-------------|----------|-----------------------------------------------------------------|
+| `ingest`   | `--filing`  | yes      | Path to a JSON file holding the statement-pack envelope (no stdin fallback) |
+
+`ingest` exits **0** on success, printing `{"company", "kpi_ids":
+[...sorted...], "appended": <n>}` to stdout. A driver or store REJECTION
+— an envelope missing `company`/`facts`, a `source_kind` outside
+`kpi_gate.TRUSTED_SOURCE_KINDS` (an EMPTY or explicit `null` declared
+`source_kind` is malformed and rejected BY NAME, never silently defaulted),
+a fact missing `concept`/`accession`, or a point with no derivable `as_of`
+— prints a clean one-line message to stderr and exits **1**, nothing
+written. An unreadable `--filing` path or malformed JSON is read OUTSIDE
+that handler and surfaces as a raw traceback, also exit **1**. A missing
+`--filing` flag is handled by argparse itself and exits **2**.
+
+## CLI (kpi_spine_view)
+
+`scripts/kpi_spine_view.py` — the READ-side pure view that turns the
+as-reported concept series back into the 14 canonical spine fields.
+PURE FUNCTION: no HTTP, no subprocess, no store access, no env access
+beyond argparse/stdin (the `tearsheet_format.py` precedent) — its whole
+input is the `kpi_store.py dump --company` payload it is handed, and it
+emits the SAME pinned schema (`{company, series, warnings}`), so the
+shipped formatter consumes it unchanged and `tearsheet_format.py` is not
+touched. The render pipeline is therefore one plain pipe:
+
+```
+# derive: reads the dump payload from --dump (or stdin when omitted)
+uv run scripts/kpi_store.py dump --company AAPL \
+  | uv run scripts/kpi_spine_view.py derive \
+  | uv run ../report-kpi-tearsheet/scripts/tearsheet_format.py --as-of 2026-07-26
+```
+
+| Subcommand | Flag     | Required | Notes                                                    |
+|------------|----------|----------|-----------------------------------------------------------|
+| `derive`   | `--dump` | no       | Path to the `kpi_store.py dump --company` JSON payload (default: read stdin) |
+
+**THE RESOLUTION RULE.** For each spine field and each PERIOD, `derive`
+picks the first concept in that field's ordered chain that has an
+observation FOR THAT PERIOD. Resolution is per PERIOD, never per company —
+which is exactly what the store deliberately does NOT do at write time.
+A filer who switched tags mid-history (measured: 24 of 46) yields ONE
+continuous field series spanning both eras; a per-company winner would
+keep only the pre-switch years and silently truncate. Chain ORDER is the
+same-period tiebreak ONLY: it never elects a whole-company winner, and the
+losing concept still supplies every period the winner does not cover.
+Period identity across concepts is the store-owned `period_axis_key`,
+never the raw `(period_start, period_end)` pair; a `null` axis key means
+"not proven to be the same period", so such entries resolve against
+nothing and all survive into the output.
+
+**HONEST ABSENCE.** A field with no chain concept present in a period
+yields NO entry for that period; a field with no chain concept present
+anywhere yields no `series` row at all — never 0, never a derived guess,
+never a placeholder. Measured: 22 of 46 filers report no gross profit and
+13 never tag a total `Liabilities`. A hole is the truth about the filing.
+
+**BALANCE-SHEET IDENTITY FLAG — attached to the payload, NOT rendered.**
+Per period `derive` also computes `total_assets − (total_liabilities +
+mezzanine + WHOLE equity)` and attaches a `balance_identity` flag when the
+residual exceeds `BALANCE_IDENTITY_TOLERANCE` (**1e-5**, RELATIVE to total
+assets — `companyfacts` carries no `decimals` attribute, so a
+precision-derived tolerance is not constructible). The flag NEVER
+suppresses, refuses, or alters a value: an as-reported figure is not wrong
+because this view's field selection was.
+
+`tearsheet_format` does **not** read the flag, so a flagged period is
+indistinguishable from a clean one on the rendered tearsheet. Read
+`derive`'s raw JSON to see it. The flag rides on the **`total_assets`**
+series' period entry (the identity's subject and its denominator — hence
+always present when the period is checkable, and one flag per period
+rather than three copies):
+
+```
+uv run scripts/kpi_store.py dump --company AAPL \
+  | uv run scripts/kpi_spine_view.py derive \
+  | python3 -c 'import json,sys; [print(json.dumps(p["balance_identity"])) \
+      for s in json.load(sys.stdin)["series"] if s["kpi_id"] == "total_assets" \
+      for p in s["periods"] if "balance_identity" in p]'
+```
+
+Each flag is one record in the repo's single DQC flag schema
+(`kpi_xbrl.assert_dqc_schema`) with `type` `balance_identity_residual`,
+plus locating extras: `period_axis_key`, `period_end`, `residual`,
+`relative_residual`, `tolerance`, the `components` used, the `accessions`
+behind them, and `equity_kind` — `parent_only` or `incl_NCI`, which is
+what lets a reader tell a `minority_interest` of 0 that means "already
+inside the equity total" from one that means "this filer has none". The
+equity term must be WHOLE equity, and which concept supplied it is a
+per-period fact: `StockholdersEquity` is parent-only so `MinorityInterest`
+is added for that period, while
+`StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest`
+already contains it and nothing is added. A period missing ANY required
+component is **not** flagged — uncheckable is not wrong.
+
+`derive` exits **0** on success, printing the spine payload as JSON to
+stdout. Every malformed input leaves by ONE door — a clean `error: ...`
+line on stderr and exit **1**: an unreadable `--dump` path, invalid JSON
+on the path or on stdin, a top-level payload that is not an object, or a
+`derive_spine` ValueError (reachable only for a flagged period whose
+components carry no `source_accession`, which `assert_dqc_schema` rejects
+— unreachable from the real producer, since `kpi_store.append`'s
+provenance guard requires the field, and deliberately loud for the
+hand-fed case). The library caller still sees the exception; only the CLI
+reports instead of tracebacking. A missing subcommand is handled by
+argparse itself and exits **2**.

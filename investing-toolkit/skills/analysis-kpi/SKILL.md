@@ -52,10 +52,12 @@ immutable append-only, no expiry). Stdlib only.
 ## CLI reference
 
 Per-subcommand CLI detail (flags, exit codes, worked examples) lives in
-[`references/cli-reference.md`](references/cli-reference.md) for eleven of
-the twelve persistence/compute scripts indexed below — `kpi_tw_ingest`
-(shipped 2.35.0) has no section there yet, so for that one the index entry
-and the TW workflow step are currently the whole documented surface.
+[`references/cli-reference.md`](references/cli-reference.md) for thirteen
+of the fifteen persistence/compute scripts indexed below. The two
+exceptions: `kpi_tw_ingest` (shipped 2.35.0) has no section there yet, so
+for that one the index entry and the TW workflow step are currently the
+whole documented surface; and `kpi_us_statements` is a pure LIBRARY with
+no CLI at all — it is reached only through `kpi_us_statements_ingest`.
 Index:
 
 - **`kpi_store`** — append-only bitemporal store: `append` a point / `query`
@@ -80,6 +82,13 @@ Index:
   `ingest`.
 - **`kpi_tw_ingest`** — TW filing envelope (canonical + facts + coordinates)
   -> kpi_store driver (idempotent, append-only): `ingest`.
+- **`kpi_us_statements`** — US as-reported statement-pack -> store-point
+  mapper. PURE LIBRARY, no CLI (`us_statement_pack_to_points`); `kpi_id` is
+  the filer's own qname verbatim.
+- **`kpi_us_statements_ingest`** — US as-reported statement pack ->
+  kpi_store driver (idempotent, append-only): `ingest`.
+- **`kpi_spine_view`** — READ-side pure view: as-reported concept series ->
+  the 14 canonical spine fields, resolved per period: `derive`.
 
 The Route-B `kpi_8k_candidates` intake CLI is documented in full below (it
 stays here because its 3-layer contract is load-bearing).
@@ -122,6 +131,107 @@ subcommand):
 Both lanes append to the SAME series, and a fiscal year both lanes cover
 must agree — see [`references/cli-reference.md`](references/cli-reference.md)
 for the exact dedup-key guard.
+
+## Workflow: US as-reported statements -> spine view
+
+The third US lane, and the only one that stores the filer's OWN concept ids
+rather than a repo-canonical slug. Three steps:
+
+1. **Fetch** the as-reported annual statement pack from `data-markets`:
+   `pack.py --pack statement-backfill --ticker <T> --market us` (US-only,
+   exactly one ticker — heavy). It walks SEC `companyfacts` for the source
+   concepts of the 14 spine fields and keeps only **annual, 10-K-carried**
+   rows; every rejected row lands in `coverage.skipped_rows` under a named
+   reason. A ticker whose resolved CIK carries no statement history is a
+   loud typed error slot with NO `facts` key — never an empty-but-successful
+   pack — and a truncated history is surfaced in `coverage` rather than
+   stitched from a predecessor CIK.
+2. **Ingest** the pack: `kpi_us_statements_ingest.py ingest --filing
+   <pack.json>` — maps it through the pure `kpi_us_statements` library and
+   appends every point to `kpi_store` (honors `KPI_STORE_DIR`; idempotent).
+   The `kpi_id` is the filer's **own qname, verbatim, namespace preserved**
+   (`us-gaap:Revenues`) — no slug derivation, so it is injective by
+   construction, and `us-gaap:Revenues` and
+   `us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax` are **two
+   series**, not one resolved series.
+3. **Derive + render** — the view is a plain pipe stage, so
+   `tearsheet_format.py` stays untouched:
+
+```
+uv run scripts/kpi_store.py dump --company AAPL \
+  | uv run scripts/kpi_spine_view.py derive \
+  | uv run ../report-kpi-tearsheet/scripts/tearsheet_format.py --as-of 2026-07-26
+```
+
+`derive` resolves, **per period**, which stored concept represents each
+spine field (first-present over that field's ordered chain). A field no
+concept covers in a period yields no entry; a field no concept covers at
+all yields no row — never 0, never a derived guess.
+
+> **The store key is the TICKER, in every lane.** `kpi_us_statements_ingest`
+> resolves it through `kpi_us_statements.store_company` — `ticker` first,
+> falling back to `company` only for a bare pack that carries no ticker —
+> which is the same precedence `kpi_xbrl_ingest` uses for the dimensional and
+> top-line lanes. So one filer has ONE key, and a single `dump --company AAPL`
+> feeds the spine view every lane's series at once. The envelope's `company`
+> (the SEC `entityName`) is display metadata: it is what makes the CIK-decoy
+> rejection readable by naming the entity whose facts came back empty.
+
+**Why selection happens at read time.** Storing a canonical slug makes
+concept selection a write-time, ONE-WAY decision into an append-only store.
+Measured over the 47-filer probe, a per-company selection rule is stale for
+24 of 46 filers (worst: HD revenue −16y, MSFT revenue −15y). Storing
+as-reported keeps both candidates, so selection stays a pure function that
+can be corrected and re-run.
+
+### Capability limit: the history floor is ~2009, not 20 years
+
+**This lane cannot return two decades of history, and no change to this repo
+can make it.** US XBRL history begins with the SEC's 2009-2011 phase-in, so
+`companyfacts` simply holds nothing earlier. Measured over the committed
+47-ticker probe (captured 2026-07-26; committed evidence at
+`investing-toolkit/tests/data/fixtures/us_statement_shapes_probe_2026-07-26.json`,
+re-derivable via its sibling `capture_us_statement_shapes_probe.py`):
+
+- **0 of 46** usable filers have **≥20 usable years**; the **median is 18**.
+- The floor moves FORWARD one year per calendar year. It never deepens
+  backward, so waiting does not help a request for 20+ years.
+- 1 of 47 tickers resolves to an entity carrying **zero** us-gaap concepts
+  (refused loudly); 2 more are truncated at the source (GOOGL from 2014,
+  DIS from 2018) and surfaced, not stitched.
+
+Pre-2009 history is reachable only via HTML/text extraction (which this repo
+forbids) or a vendor-standardized source (an uninspectable model, and a
+separate product decision). Expect ~18 years — plan analysis accordingly
+rather than reading a short table as a bug.
+
+### The balance-identity flag is stored but NOT rendered
+
+Per period `derive` checks `total_assets − (total_liabilities + mezzanine +
+WHOLE equity)` and attaches a `balance_identity` flag when the residual
+exceeds **1e-5 relative** to total assets. It never suppresses, refuses, or
+alters a value: a residual points at THIS VIEW's per-period concept
+selection, not at the filer's numbers.
+
+**`tearsheet_format` does not read the flag**, so a flagged period and a
+clean one look identical on the rendered tearsheet. To see it, read
+`derive`'s RAW JSON instead of piping it onward — the flag rides on the
+`total_assets` series' period entry (the identity's subject and its
+denominator), one per flagged period:
+
+```
+uv run scripts/kpi_store.py dump --company AAPL \
+  | uv run scripts/kpi_spine_view.py derive \
+  | python3 -c 'import json,sys; [print(json.dumps(p["balance_identity"])) \
+      for s in json.load(sys.stdin)["series"] if s["kpi_id"] == "total_assets" \
+      for p in s["periods"] if "balance_identity" in p]'
+```
+
+Each flag carries `residual`, `relative_residual`, `tolerance`,
+`equity_kind` (`parent_only` vs `incl_NCI`, so a `minority_interest` of 0
+is readable), the `components` used, and the `accessions` behind them. A
+period missing any required component is **not** flagged — uncheckable is
+not wrong, and 13 of 46 filers never tag a total `Liabilities` at all.
 
 ## Workflow: TW iXBRL -> tearsheet
 

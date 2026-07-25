@@ -54,6 +54,47 @@ _SOURCE_KIND = "xbrl-companyfacts"
 _SCALE = 1
 
 
+def store_company(pack: dict[str, Any]) -> Any:
+    """The value every point of this pack is KEYED on in the store — the
+    envelope's `ticker`, falling back to its `company`.
+
+    PUBLIC (no leading underscore) because `kpi_us_statements_ingest` calls
+    it too, and that is the whole point: the driver's malformed-envelope
+    guard and its returned summary must name the SAME key the points are
+    stamped with. Two expressions of "which field keys the store", one in
+    the mapper and one in the driver, is how they drift apart.
+
+    TICKER FIRST, mirroring `kpi_xbrl_ingest.ingest_pack` (kpi_xbrl_ingest.py:
+    530, `fact_pack.get("ticker") or fact_pack.get("company")`, whose
+    docstring states "Company identity is the ticker ... the store/dump key").
+    That is not a local preference — it is the key a CONSUMER uses.
+    `kpi_spine_view.derive_spine` reads a `kpi_store dump --company <C>`
+    payload, and `<C>` must select ONE filer's whole history: the shipped
+    dimensional/top-line lane already writes under the ticker, and
+    `kpi_tw_ingest` (kpi_tw_ingest.py:143) keys TW points on `co_id`, that
+    market's ticker-equivalent. All three markets therefore agree.
+
+    THE TWO ENVELOPE FIELDS, and what each MEANS from here on:
+      - `ticker` — the store/dump KEY. Set by `pack_us.pack_statement_
+        backfill` (pack_us.py:1144), uppercased there, so the key is stable
+        against a lowercase `--ticker aapl` invocation.
+      - `company` — DISPLAY metadata: the SEC `entityName`
+        (`sec_edgar_client.py:3757`). It stays on the envelope deliberately
+        and is not to be deleted: `build_statement_backfill`'s CIK-decoy
+        rejection names it, which is what makes that error readable ("this
+        CIK belongs to X, not the ticker you asked for"). It is simply not
+        an identity the store may be keyed on — an entity name is a
+        display string that renames (a filer's legal name changes; the
+        ticker is the stable handle), and keying on it SPLIT this lane's
+        points away from every other lane's for the same filer.
+
+    The fallback exists for a bare hand-fed pack carrying only `company`
+    (the same allowance `kpi_xbrl_ingest` makes for a bare captured pack);
+    every pack the shipped producer emits carries `ticker`.
+    """
+    return pack.get("ticker") or pack.get("company")
+
+
 def _period_fields(fact: dict[str, Any]) -> tuple:
     """Map one PIN'd fact's period fields to the store's period identity
     fields: `(period_start, period_end, period_kind, period_label)`.
@@ -207,6 +248,8 @@ def us_statement_pack_to_points(pack: dict[str, Any]) -> list[dict[str, Any]]:
 
     `pack` is passed IN as a dict (this module never imports data-markets —
     the analysis<->data-markets boundary). Field derivations (## Notes PIN):
+    `company` = `store_company(pack)`, i.e. the envelope's TICKER (see that
+    function for why the entity name may not key the store);
     `kpi_id` = the fact's `concept` VERBATIM (namespace preserved, no
     transformation); `as_of` = the fact's `filed` date; `source_accession` =
     `accession`; `source_form` = `form`; `source_cell_ref` = `concept`
@@ -236,7 +279,7 @@ def us_statement_pack_to_points(pack: dict[str, Any]) -> list[dict[str, Any]]:
     same-dedup-key value disagreement — `_require_no_intra_pack_disagreement`
     (see its docstring for the restatement-vs-fabrication polarity).
     """
-    company = pack.get("company")
+    company = store_company(pack)
 
     points: list[dict[str, Any]] = []
     for fact in pack.get("facts", []):

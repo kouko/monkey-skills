@@ -125,7 +125,13 @@ def test_two_revenue_concepts_become_two_series(kpi_us_statements_module):
     rev = _points_by_kpi(points, "us-gaap:Revenues")
     assert len(rev) == 1
     assert rev[0] == {
-        "company": "Apple Inc.",
+        # The TICKER, not the SEC entityName the envelope also carries: this
+        # is the store/dump key, and it must be the same key every other
+        # lane writes under (kpi_xbrl_ingest.py:530) or one filer's history
+        # splits across two keys and no single `dump --company` sees both.
+        # This assertion previously read "Apple Inc." and so encoded the
+        # split; see `kpi_us_statements.store_company`.
+        "company": "AAPL",
         "kpi_id": "us-gaap:Revenues",
         "period": "2023-01-01/2023-12-31",
         "period_start": "2023-01-01",
