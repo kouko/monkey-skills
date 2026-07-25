@@ -134,7 +134,9 @@ Mirrors the brainstorming brief (`docs/loom/specs/2026-07-23-kpi-tearsheet.md`
   documents every subcommand. Alongside prose and 8-K intake, a US ticker's
   XBRL fact-pack lands in this same store via `kpi_xbrl_ingest.py ingest` —
   this skill renders whatever lane wrote to it, XBRL included (distinct from
-  the out-of-scope `kpi_memo_feed` quarterly pool).
+  the out-of-scope `kpi_memo_feed` quarterly pool). A **TW** (台股) filer's
+  MOPS iXBRL likewise lands via `kpi_tw_ingest.py ingest`, so this tearsheet
+  renders TW multi-period series (TWD amounts) with no code change.
 - `report-stock-snapshot` — pure-formatter precedent this skill's
   `tearsheet_format.py` follows.
 - `report-equity-memo` — full investment memo with verdicts; the destination
