@@ -245,6 +245,61 @@
       in the CLI-reference sentence rather than stating a count that is wrong about
       one referent or the other — so closing this item also means deleting that
       disclosure clause.
+  (j) 🟡 **The New-Year guard misses a two-sided divergence along the dei NOMINAL
+      fiscal-year end** (`sec_edgar_client.py::_is_near_new_year_boundary`). The
+      shipped guard is one-sided along `period_end` — correct, and it recovered the
+      whole December-filer backfill — but the two lanes' labels diverge along a
+      SECOND axis the guard cannot see: the filing's `dei:CurrentFiscalYearEndDate`,
+      which drifts per filing for 52/53-week filers. When that nominal sits in early
+      January and the row's actual end fell back into late December, Lane B
+      (`_derive_fiscal_label`) walks FORWARD to the January nominal and answers the
+      next year while Lane A answers the period-end year; the guard does not fire
+      and no coverage reason is emitted. Measured against both real label functions
+      (2026-07-25): `2024-12-28` / nominal `--01-03` → Lane A 2024, Lane B 2025 FY;
+      `2025-12-31` / `--01-02` → Lane A 2025, Lane B 2026 FY. Cost is a MISLABELLED
+      year, not an absent one — the two lanes then key one fiscal year two ways and
+      the store shows a spurious restatement dagger from a single filing, which is
+      exactly the failure the two-lane e2e's docstring names.
+      **Why Lane A cannot close it alone:** the guard's whole premise is that this
+      lane has no dei calendar, and its `companyconcept` rows carry only
+      `{start, end, value, accn, form, fy, fp, filed}` (`summarize_concept`). None of
+      those varies with the nominal — a 52/53-week year is 364/371 days whatever the
+      nominal — and `fy`/`fp` are the CARRYING filing's focus, not the fact's
+      (measured over the local EDGAR cache 2026-07-25: 6187 of 6275 comparative
+      annual rows carry an `fy` differing from their own period-end year, the
+      trap-2 population). So a late-December row from a January-nominal filer is
+      indistinguishable here from a plain December filer's row, and narrowing the
+      guard on this axis is not available to the producer.
+      **What would close it:** the same consumer-side work as item (a) — both reduce
+      to Lane A having no calendar, so the fix belongs where the two lanes' calendars
+      MEET (`pack_us.py:1017-1019` merges both into one envelope). Once Lane B's
+      per-accession `fiscal_calendars` are in hand beside Lane A's facts, a consumer
+      can re-label or quarantine a Lane A year whose Lane B calendar puts it in a
+      different fiscal year. A producer-side alternative exists but is partial and
+      was NOT taken: `fy` IS authoritative on a row that is its own filing's
+      current-period fact, so grouping rows by accession could recover the nominal
+      label for years whose own 10-K is still in the API's XBRL window (~2009+) —
+      it does nothing for the older comparative-only years that are this lane's
+      reason to exist, and it would mean reading `fy`, which this module forbids by
+      name. Filed as its OWN item rather than folded into (a): they share a root
+      cause but not a failure mode (that one silently affirms "shared basis" between
+      two unstated calendars; this one mislabels a year) and not a fix site, and
+      folding a live mislabeling hazard into an unreachable-today entry would bury
+      it. Sequence it WITH (a) when the consumer-side calendar work is picked up.
+      Documented at the four producer sites + `data-markets/SKILL.md` +
+      `investing-toolkit/CHANGELOG.md` (2026-07-25) rather than left implied.
+  (k) 🟢 **`_is_near_new_year_boundary` is misnamed** — it no longer means "near"
+      (symmetric proximity), it means "has crossed into January". The docstring
+      compensates; the name does not, and a symmetric-sounding name on an asymmetric
+      guard is precisely the shape
+      `docs/loom/memory/a-test-can-pin-behaviour-with-a-false-rationale.md` §2 tells
+      us to hunt. Deliberately NOT renamed in the doc-only round that found (j): a
+      coherent rename also drags the pinning test's NAME
+      (`test_near_new_year_skip_leaves_lane_b_the_sole_authority`), a local in
+      `test_sec_edgar_top_line_backfill.py:277`, and three narrative docstrings in
+      `test_top_line_two_lane_e2e.py` (:71, :110, :396) — leaving any behind
+      desynchronizes the vocabulary, which is its own drift surface. Behaviour-
+      preserving; wants one sweep + a suite run, not a prose commit.
 
 ## investing-toolkit US XBRL→kpi_store producer 2.34.0 — post-ship follow-ups (OPEN)
 - Status: OPEN

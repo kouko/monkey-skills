@@ -2711,26 +2711,65 @@ def _is_near_new_year_boundary(period_end_date: date) -> bool:
     filer whose year-end rolls past New Year (a FY2024 ending 2025-01-03) —
     and Lane A has no dei fiscal calendar to disambiguate (unlike Lane B).
 
-    THE GUARD IS ONE-SIDED BECAUSE THE HAZARD IS. The BEFORE-New-Year side
-    is deliberately NOT checked, and that is not a narrowed tolerance — it
-    is the shape of the divergence. Lane B's `_derive_fiscal_label` walks
-    to the first nominal fiscal-year end at-or-after `period_end`, so for a
-    December year-end it lands on the period end's OWN calendar year — the
-    very label Lane A's rule derives. The two rules AGREE there, so there
-    is nothing to disambiguate; only a year-end that has crossed into
-    January makes Lane B answer the preceding year while Lane A answers the
-    current one. Skipping the before-side too (as an earlier revision did)
-    costs the ENTIRE Lane A backfill of every December-fiscal-year-end
-    filer — most of the US market — to guard a divergence that cannot occur
-    there. Pinned in both directions by
+    THE GUARD IS ONE-SIDED BECAUSE THE HAZARD IS ASYMMETRIC ALONG
+    `period_end`. The BEFORE-New-Year side is deliberately NOT checked, and
+    that is not a narrowed tolerance — it is the shape of the divergence.
+    Lane B's `_derive_fiscal_label` walks to the first nominal fiscal-year
+    end at-or-after `period_end`, so for a filer whose dei nominal year-end
+    is ITSELF IN DECEMBER it lands on the period end's OWN calendar year —
+    the very label Lane A's rule derives. The two rules AGREE there, so
+    there is nothing to disambiguate. Skipping the before-side too (as an
+    earlier revision did) costs the ENTIRE Lane A backfill of every
+    December-fiscal-year-end filer — most of the US market — to guard a
+    divergence that cannot occur there.
+
+    THAT AGREEMENT IS CONDITIONAL ON A DECEMBER NOMINAL, AND THIS PREDICATE
+    NEVER SEES THE NOMINAL. The divergence is two-sided along the dei
+    nominal fiscal-year end — a per-filing value that DRIFTS for 52/53-week
+    filers (see `_derive_fiscal_label`). When that nominal sits in EARLY
+    JANUARY while the row's actual period end drifted BACK into late
+    December, Lane B's walk goes FORWARD to the January nominal and answers
+    the NEXT year while Lane A answers the period-end year, and this guard
+    does not fire. Measured against both real label functions:
+    `2024-12-28` with nominal `--01-03` gives Lane A 2024 / Lane B 2025 FY;
+    `2025-12-31` with `--01-02` gives Lane A 2025 / Lane B 2026 FY.
+
+    THAT RESIDUAL IS NOT CLOSABLE HERE, which is why it is documented
+    rather than guarded. Lane A's `companyconcept` rows carry only
+    `{start, end, value, accn, form, fy, fp, filed}` (`summarize_concept`)
+    — no dei calendar, whose absence is this guard's entire reason to
+    exist — and `fy`/`fp` are the CARRYING FILING's focus rather than the
+    fact's own (the trap named in `build_top_line_backfill`; measured
+    2026-07-25 over the local EDGAR cache, 6187 of 6275 comparative annual
+    rows carry an `fy` that differs from their own period-end year). On a
+    comparative row — which is what a BACKFILL lane is made of — a
+    late-December row from a January-nominal filer is therefore identical
+    in every readable field to a plain December filer's row. Stated
+    precisely, because the one exception must not be oversold: `fy` IS
+    authoritative on a row that is its OWN filing's current-period fact, so
+    a lane that grouped rows by accession could recover the nominal label
+    for years whose own 10-K is still in the API's XBRL window — but not
+    for the older comparative-only years this lane exists to reach, and
+    only by reading a field this module forbids by name. That partial route
+    is recorded, and not taken, in `docs/loom/BACKLOG.md`
+    ("investing-toolkit top-line revenue lane 2.36.0", item (j)); Lane B,
+    which HAS the calendar, stays the authority wherever both lanes cover
+    one year.
+
+    Pinned in both directions by
     `test_sec_edgar_top_line_backfill.py::test_backfill_excludes_new_year_
     boundary_row_with_named_reason` (skips) and
     `::test_backfill_keeps_december_year_end_row_both_lanes_label_alike`
-    (keeps).
+    (keeps) — the second pins the AGREEMENT case, whose filer is
+    December-nominal, never the residual above.
 
     Reuses the SAME `FISCAL_BOUNDARY_TOLERANCE_DAYS` the month-lane
     fiscal-boundary matching uses (`_derive_fiscal_label`) — never a new,
     uncoordinated tolerance."""
+    # One-sided by construction: measured only AFTER Jan 1 of the period
+    # end's own calendar year. `period_end_date` is the ONLY axis available
+    # here — see the docstring for the dei-nominal axis this therefore
+    # cannot see, and the divergence class it consequently misses.
     days_into_the_year = (period_end_date - date(period_end_date.year, 1, 1)).days
     return days_into_the_year <= FISCAL_BOUNDARY_TOLERANCE_DAYS
 
@@ -2776,11 +2815,18 @@ def build_top_line_backfill(ticker: str) -> dict:
     dei calendar to check against: such a row is skipped with a named
     `coverage` reason instead of guessed — Lane B, which HAS the dei
     calendar, remains the authority for those years. A DECEMBER year-end is
-    NOT that hazard however close to Jan 1 it sits: Lane B's walk lands on
+    NOT that hazard however close to Jan 1 it sits — PROVIDED the filer's
+    own dei nominal year-end is also in December: Lane B's walk lands on
     the period end's own calendar year there, the same label this rule
     derives, so those rows are backfilled normally (see
     `_is_near_new_year_boundary` for why a symmetric guard would cost the
-    lane most of the US market).
+    lane most of the US market). A filer whose NOMINAL year-end sits in
+    early January while the row's actual end drifted back into late
+    December is a KNOWN RESIDUAL that this guard does not fire on and this
+    lane cannot detect — such a year is labelled one lower than Lane B
+    labels it, which is a spurious restatement dagger rather than a gap.
+    See that helper's docstring for the measured cases and
+    `docs/loom/BACKLOG.md` item (j) for what would close it.
 
     Returns the per-accession `fiscal_calendars` map alongside `facts`
     (Task 3 + seam fix 18fc47fd) — the SAME envelope key Lane B emits, and
@@ -2922,7 +2968,11 @@ def build_top_line_backfill(ticker: str) -> dict:
                     "a 52/53-week filer whose year-end rolls past New Year, "
                     "and Lane A has no dei calendar to disambiguate; Lane B "
                     "remains the authority for this fiscal year (a DECEMBER "
-                    "year-end is not this hazard and is backfilled normally)"
+                    "year-end is not this hazard WHEN the filer's nominal "
+                    "year-end is also in December, and is backfilled "
+                    "normally; a late-December end from an EARLY-JANUARY "
+                    "nominal diverges too, but is undetectable here — see "
+                    "_is_near_new_year_boundary)"
                 ),
             })
             continue

@@ -26,8 +26,13 @@ canonical series.
   rather than guessed — Lane A has no dei fiscal calendar to disambiguate a
   52/53-week filer's year-end crossing, so Lane B stays the authority there.
   That check is one-sided by design: a December year-end gets the same label
-  from both lanes and is backfilled normally, so the ordinary
-  December-fiscal-year-end filer keeps its full history.
+  from both lanes — provided the filer's *nominal* year-end is also in
+  December — and is backfilled normally, so the ordinary
+  December-fiscal-year-end filer keeps its full history. Known residual: a
+  filer whose nominal year-end sits in early January while the year's actual
+  end drifted back into late December still diverges, undetectably from this
+  lane, and is labelled one year lower than `kpi-quarterly` labels it; treat
+  `kpi-quarterly` as the authority wherever both lanes cover a year.
 - **Canonical `total_revenue` series, per-lane provenance.** `kpi_xbrl_ingest`
   stops skipping flat facts and routes them to the fixed canonical `kpi_id`
   `total_revenue` (not a concept-derived slug), grouped on one key so a filer

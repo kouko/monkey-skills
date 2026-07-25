@@ -207,11 +207,29 @@ disqualifier, never a fabricated one:
   52/53-week filer whose fiscal year rolls past New Year, and this lane
   (unlike `kpi-quarterly`) has no dei fiscal calendar to disambiguate.
   The check is deliberately **one-sided**: a December year-end, however
-  close to Jan 1, gets the SAME label from both lanes (`kpi-quarterly`
+  close to Jan 1, gets the SAME label from both lanes *provided the
+  filer's nominal fiscal-year end is itself in December* (`kpi-quarterly`
   walks to the first fiscal-year end at-or-after the period end, which
-  for a December filer is the period end's own calendar year), so it is
-  backfilled normally — a symmetric check would silently drop the entire
-  history of every December-fiscal-year-end filer.
+  for a December-nominal filer is the period end's own calendar year), so
+  it is backfilled normally — a symmetric check would silently drop the
+  entire history of every December-fiscal-year-end filer.
+
+  **Known residual — this lane can mislabel a January-nominal filer's
+  late-December year.** The agreement above holds along the period end
+  only; the divergence is two-sided along the *nominal* fiscal-year end,
+  which this lane never sees. When a filer's `dei:CurrentFiscalYearEndDate`
+  sits in early January but the year's actual end drifted back into late
+  December (a 52/53-week filer — the nominal drifts per filing),
+  `kpi-quarterly` walks *forward* to the January nominal and answers the
+  NEXT fiscal year while this lane answers the period-end year. The guard
+  does not fire, no coverage reason is emitted, and the row is backfilled
+  under a fiscal year one lower than `kpi-quarterly` assigns it — which
+  surfaces as a spurious restatement dagger where the two lanes overlap,
+  not as a missing value. This lane cannot detect the case (its
+  `companyconcept` rows carry no dei calendar, and their `fy`/`fp` are the
+  carrying filing's focus, not the fact's), so **treat `kpi-quarterly` as
+  the authority for any fiscal year both lanes cover.** Tracked in
+  `docs/loom/BACKLOG.md` under the 2.36.0 follow-ups, item (j).
 
 The filing-identity checks run first — a filer this lane cannot serve
 at all (a 20-F-only foreign private issuer) reports one actionable
