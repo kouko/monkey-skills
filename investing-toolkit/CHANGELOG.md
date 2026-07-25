@@ -5,6 +5,61 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.36.0] — 2026-07-25
+
+### Added — company total (top-line) revenue, two-lane store ingestion
+
+A US company's top-line revenue now reaches the KPI store and renders on the
+tearsheet beside the segment breakdown, via two lanes that land under one
+canonical series.
+
+- **Lane B — per-filing parse emits the flat top-line fact.** The existing
+  per-filing XBRL parse (`extract_dimensional_revenue`) now also identifies and
+  emits the filer's winning top-line concept at zero extra fetch cost, via a
+  closed, ordered allowlist grounded in XBRL US DQC Revenue Guidance
+  (`select_top_line_concept`) — one winner per filing, `dimensions == {}`.
+- **Lane A — `kpi-topline-backfill` pack.** A new `build_top_line_backfill`
+  reshapes the `companyconcept` REST series into annual-only history predating
+  the filings Lane B fetched, reachable through the data layer's one pack
+  facade (`--pack kpi-topline-backfill`). Quarterly rows and rows whose period
+  end sits near a New Year boundary are skipped with a named coverage reason
+  rather than guessed — Lane A has no dei fiscal calendar to disambiguate a
+  52/53-week filer's year-end crossing, so Lane B stays the authority there.
+- **Canonical `total_revenue` series, per-lane provenance.** `kpi_xbrl_ingest`
+  stops skipping flat facts and routes them to the fixed canonical `kpi_id`
+  `total_revenue` (not a concept-derived slug), grouped on one key so a filer
+  that switches tagging across years merges into a single series without
+  tripping the collision guard. Provenance is assigned per lane within one
+  ingest call: Lane A's points carry `xbrl-companyfacts`, Lane B's carry the
+  new trusted kind `xbrl-topline` (admitted to `kpi_gate.TRUSTED_SOURCE_KINDS`,
+  pinned to the `<trust-class>-<lane>` naming convention), and dimensional
+  points keep `xbrl-dimensional`.
+- **Store-aware disagreement guard.** Before appending a flat top-line point,
+  the ingest driver reads the existing series and raises when a stored point
+  shares the same dedup key (company, kpi_id, period, as_of, accession) but
+  carries a different value — the two lanes read the same filing under the
+  same accession, so a disagreement there means one of them is wrong. A point
+  for the same period under a DIFFERENT accession still appends as a legitimate
+  restatement, unchanged.
+- **e2e seam test — and what it caught.** Both lanes ingested into an isolated
+  store, then rendered: a fiscal year both lanes cover resolves to the same
+  value and the same period label, backfill-only years join the same series,
+  and the tearsheet shows the total row beside the segment rows with the
+  restatement marker unchanged. Wiring the real producers together this way,
+  instead of each lane's own hand-built envelope, is what surfaced the arc's
+  one real shipped defect: the backfill producer emitted no `fiscal_calendars`
+  map, and `facts_to_points` refuses to guess a point's source filing form
+  without one, so 100% of the backfill lane's facts were silently rejected at
+  ingest until `18fc47fd` fixed it. That fix is deliberately narrow about which
+  form it will assign: only a literal `10-K` carrier earns a fiscal-period
+  focus, and every other carrier — including a `10-K/A` amendment, which is
+  exactly where a restated annual figure would land — is skipped with a named
+  coverage reason rather than guessed. An amended year therefore still keeps
+  its original, pre-restatement number in the backfill lane; closing that gap
+  is deferred, not silently accepted.
+
+Offline suite: 1072 passed, 2 skipped, 61 deselected (`-m "not network"`).
+
 ## [v2.35.0] — 2026-07-25
 
 ### Added — TW-market XBRL → kpi_store producer
