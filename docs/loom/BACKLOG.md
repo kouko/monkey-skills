@@ -245,7 +245,7 @@
       in the CLI-reference sentence rather than stating a count that is wrong about
       one referent or the other — so closing this item also means deleting that
       disclosure clause.
-  (j) 🟢 **A kpi_id collision aborts BOTH lanes for the WHOLE pack** — FILED AS
+  (l) 🟢 **A kpi_id collision aborts BOTH lanes for the WHOLE pack** — FILED AS
       DELIBERATE, not a defect. `ingest_pack` builds every point before appending
       any (`kpi_xbrl_ingest.py`, `_claim_kpi_id` raises during selector mapping),
       so one colliding dimensional signature refuses the pack's top-line lane too:
