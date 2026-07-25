@@ -265,11 +265,14 @@
       `{start, end, value, accn, form, fy, fp, filed}` (`summarize_concept`). None of
       those varies with the nominal — a 52/53-week year is 364/371 days whatever the
       nominal — and `fy`/`fp` are the CARRYING filing's focus, not the fact's
-      (measured over the local EDGAR cache 2026-07-25: 6187 of 6275 comparative
-      annual rows carry an `fy` differing from their own period-end year, the
-      trap-2 population). So a late-December row from a January-nominal filer is
-      indistinguishable here from a plain December filer's row, and narrowing the
-      guard on this axis is not available to the producer.
+      (measured over the local EDGAR cache 2026-07-25, predicate stated so it can be
+      re-run: us-gaap `companyconcept` payloads, rows as `summarize_concept` reshapes
+      them, `start`/`end`/`accn`/`filed` present and `fy` an int, `end - start` within
+      340-380 days — 6187 of 9290 such annual rows, 66.6%, carry an `fy` differing
+      from `end`'s own calendar year). So a late-December row from a
+      January-nominal filer is indistinguishable here from a plain December
+      filer's row, and narrowing the guard on this axis is not available to the
+      producer.
       **What would close it:** the same consumer-side work as item (a) — both reduce
       to Lane A having no calendar, so the fix belongs where the two lanes' calendars
       MEET (`pack_us.py:1017-1019` merges both into one envelope). Once Lane B's

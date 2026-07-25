@@ -2739,22 +2739,29 @@ def _is_near_new_year_boundary(period_end_date: date) -> bool:
     `{start, end, value, accn, form, fy, fp, filed}` (`summarize_concept`)
     — no dei calendar, whose absence is this guard's entire reason to
     exist — and `fy`/`fp` are the CARRYING FILING's focus rather than the
-    fact's own (the trap named in `build_top_line_backfill`; measured
-    2026-07-25 over the local EDGAR cache, 6187 of 6275 comparative annual
-    rows carry an `fy` that differs from their own period-end year). On a
-    comparative row — which is what a BACKFILL lane is made of — a
+    fact's own — the trap named in `build_top_line_backfill`. Measured
+    2026-07-25 over the local EDGAR cache, under a predicate stated here so
+    the next reader can re-run it rather than take the number on trust:
+    us-gaap `companyconcept` payloads, rows as `summarize_concept` reshapes
+    them (USD unit preferred), `start`/`end`/`accn`/`filed` all present and
+    `fy` an int, and `end - start` within 340-380 days — of 9290 such
+    annual rows, 6187 (66.6%) carry an `fy` differing from `end`'s own
+    calendar year.
+
+    On a comparative row — which is what a BACKFILL lane is made of — a
     late-December row from a January-nominal filer is therefore identical
     in every readable field to a plain December filer's row. Stated
     precisely, because the one exception must not be oversold: `fy` IS
-    authoritative on a row that is its OWN filing's current-period fact, so
-    a lane that grouped rows by accession could recover the nominal label
-    for years whose own 10-K is still in the API's XBRL window — but not
-    for the older comparative-only years this lane exists to reach, and
-    only by reading a field this module forbids by name. That partial route
-    is recorded, and not taken, in `docs/loom/BACKLOG.md`
-    ("investing-toolkit top-line revenue lane 2.36.0", item (j)); Lane B,
-    which HAS the calendar, stays the authority wherever both lanes cover
-    one year.
+    authoritative on a row that is its OWN filing's current-period fact
+    (this module's own live verification, 90/90 — see
+    `_derive_fiscal_label`), so a lane that grouped rows by accession could
+    recover the nominal label for years whose own 10-K is still in the
+    API's XBRL window — but not for the older comparative-only years this
+    lane exists to reach, and only by reading a field this module forbids
+    by name. That partial route is recorded, and not taken, in
+    `docs/loom/BACKLOG.md` ("investing-toolkit top-line revenue lane
+    2.36.0", item (j)); Lane B, which HAS the calendar, stays the authority
+    wherever both lanes cover one year.
 
     Pinned in both directions by
     `test_sec_edgar_top_line_backfill.py::test_backfill_excludes_new_year_
