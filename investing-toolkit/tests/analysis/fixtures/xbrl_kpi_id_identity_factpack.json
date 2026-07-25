@@ -1,0 +1,134 @@
+{
+ "_comment": "SYNTHETIC fixture (unlike its sibling xbrl_consolidation_variant_factpack.json, this is NOT a live capture) built for docs/loom/plans/2026-07-25-kpi-id-injective-identity.md Task 4. Every field's SHAPE mirrors the real producer output (pack_us.pack_kpi_quarterly), copied from the committed live captures xbrl_consolidation_variant_factpack.json (INTC) and kpi_id_identity_probe_2026-07-25.json's consolidation_member_domain (real member names OperatingSegmentsMember/IntersegmentEliminationMember) and the brief's AMD case-drift shape (DataCenterMember 10-Q / DatacenterMember 10-K). Values, accessions and the ticker are invented (SYNCO, a fictional company) so this fixture is never mistaken for a real filer capture. Carries THREE signature shapes in one pack: (a) one signature under two ConsolidationItemsAxis members in the SAME filing (the XOM shape); (b) one signature under two spellings split across a 10-Q (3mo) and a 10-K (12mo) duration (the AMD/DIS/JNJ shape); (c) one flat (non-dimensioned) top-line fact.",
+ "pack": "kpi-quarterly",
+ "ticker": "SYNCO",
+ "company": "SYNCO",
+ "fetched_at": "2026-07-25T00:00:00+00:00",
+ "fiscal_calendars": {
+  "0009999999-24-000001": {
+   "fiscal_period_focus": "Q3",
+   "fiscal_year_end": "--12-31",
+   "fiscal_year_focus": "2024"
+  },
+  "0009999999-24-000002": {
+   "fiscal_period_focus": "Q2",
+   "fiscal_year_end": "--12-31",
+   "fiscal_year_focus": "2024"
+  },
+  "0009999999-25-000001": {
+   "fiscal_period_focus": "FY",
+   "fiscal_year_end": "--12-31",
+   "fiscal_year_focus": "2024"
+  },
+  "0009999999-25-000002": {
+   "fiscal_period_focus": "FY",
+   "fiscal_year_end": "--12-31",
+   "fiscal_year_focus": "2024"
+  }
+ },
+ "facts": [
+  {
+   "_shape": "(a) consolidation split — default member, same filing as its pair below",
+   "concept": "us-gaap:Revenues",
+   "dimensions": {
+    "StatementBusinessSegments": "UpstreamMember"
+   },
+   "consolidation": "OperatingSegmentsMember",
+   "value": 1200000000.0,
+   "period_end": "2024-09-28",
+   "period_start": "2024-06-30",
+   "accession": "0009999999-24-000001",
+   "filed": "2024-11-01",
+   "duration_months": 3,
+   "duration_weeks": 13,
+   "week_lane_band": "quarter",
+   "calendar_year": 2024,
+   "calendar_quarter": "Q3",
+   "fiscal_year": 2024,
+   "fiscal_quarter": "Q3",
+   "derivation_basis": "dei-declared"
+  },
+  {
+   "_shape": "(a) consolidation split — non-default member, SAME accession/filing/period as above",
+   "concept": "us-gaap:Revenues",
+   "dimensions": {
+    "StatementBusinessSegments": "UpstreamMember"
+   },
+   "consolidation": "IntersegmentEliminationMember",
+   "value": -45000000.0,
+   "period_end": "2024-09-28",
+   "period_start": "2024-06-30",
+   "accession": "0009999999-24-000001",
+   "filed": "2024-11-01",
+   "duration_months": 3,
+   "duration_weeks": 13,
+   "week_lane_band": "quarter",
+   "calendar_year": 2024,
+   "calendar_quarter": "Q3",
+   "fiscal_year": 2024,
+   "fiscal_quarter": "Q3",
+   "derivation_basis": "dei-declared"
+  },
+  {
+   "_shape": "(b) case drift — 10-Q spelling DataCenterMember, quarterly (3mo) duration",
+   "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+   "dimensions": {
+    "StatementBusinessSegments": "DataCenterMember"
+   },
+   "consolidation": null,
+   "value": 300000000.0,
+   "period_end": "2024-06-29",
+   "period_start": "2024-03-31",
+   "accession": "0009999999-24-000002",
+   "filed": "2024-08-01",
+   "duration_months": 3,
+   "duration_weeks": 13,
+   "week_lane_band": "quarter",
+   "calendar_year": 2024,
+   "calendar_quarter": "Q2",
+   "fiscal_year": 2024,
+   "fiscal_quarter": "Q2",
+   "derivation_basis": "dei-declared"
+  },
+  {
+   "_shape": "(b) case drift — 10-K spelling DatacenterMember, annual (12mo) duration",
+   "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+   "dimensions": {
+    "StatementBusinessSegments": "DatacenterMember"
+   },
+   "consolidation": null,
+   "value": 1250000000.0,
+   "period_end": "2024-12-28",
+   "period_start": "2023-12-31",
+   "accession": "0009999999-25-000001",
+   "filed": "2025-02-10",
+   "duration_months": 12,
+   "duration_weeks": 52,
+   "week_lane_band": "FY",
+   "calendar_year": 2024,
+   "calendar_quarter": "Q4",
+   "fiscal_year": 2024,
+   "fiscal_quarter": "FY",
+   "derivation_basis": "dei-declared"
+  },
+  {
+   "_shape": "(c) flat top-line fact — no dimensions, routes to the fixed canonical total_revenue id",
+   "concept": "us-gaap:Revenues",
+   "dimensions": {},
+   "consolidation": null,
+   "value": 5000000000.0,
+   "period_end": "2024-12-28",
+   "period_start": "2023-12-31",
+   "accession": "0009999999-25-000002",
+   "filed": "2025-02-10",
+   "duration_months": 12,
+   "duration_weeks": 52,
+   "week_lane_band": "FY",
+   "calendar_year": 2024,
+   "calendar_quarter": "Q4",
+   "fiscal_year": 2024,
+   "fiscal_quarter": "FY",
+   "derivation_basis": "dei-declared"
+  }
+ ]
+}
