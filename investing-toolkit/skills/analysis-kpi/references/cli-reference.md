@@ -437,3 +437,37 @@ an ambiguous binding) exits **1**. Malformed JSON, or a non-object
 fact-pack or `--binding` body, exits **2** (nothing computed, no raw
 traceback). A missing required flag is handled by argparse itself and
 exits **2**.
+
+## CLI (kpi_xbrl_ingest)
+
+`scripts/kpi_xbrl_ingest.py` — the XBRL fact-pack -> `kpi_store` DRIVER:
+closes the wiring gap between `kpi_xbrl.facts_to_points` (pure-compute)
+and `kpi_store.append` (the durable bitemporal store). For each distinct
+dimensional SIGNATURE (concept + every breakdown axis:member,
+`srt:ConsolidationItemsAxis` excluded as a reconciliation qualifier) in
+the fetched fact-pack, it derives a `kpi_id` and appends EVERY matching
+vintage as its own store point — NO collapse across filings, so the
+store retains >=2 vintages to disagree on. Reuses `kpi_store`'s
+`resolve_store_dir` for the durable dir (`KPI_STORE_DIR` env override
+applies here too).
+
+```
+# ingest: reads the fact-pack JSON from --pack (a file path — no stdin
+# fallback, unlike the other scripts in this file); appends every
+# dimensional fact's vintage to the kpi_store and prints
+# {"company", "kpi_ids", "appended"} to stdout
+uv run scripts/kpi_xbrl_ingest.py ingest --pack /path/to/aapl_fact_pack.json
+```
+
+| Subcommand | Flag     | Required | Notes                                                        |
+|------------|----------|----------|-----------------------------------------------------------------|
+| `ingest`   | `--pack` | yes      | Path to a JSON file holding the fetched dimensional fact-pack (no stdin fallback) |
+
+`ingest` exits **0** on success, printing `{"company", "kpi_ids":
+[...sorted...], "appended": <n>}` to stdout. Unlike the other scripts in
+this file, this driver has NO wrapping try/except: a missing `--pack`
+file, malformed JSON, a fact-pack missing both `ticker` and `company`, or
+any `kpi_store.append` provenance/`as_of` rejection all propagate as an
+uncaught Python exception (raw traceback to stderr) and exit **1**. A
+missing required flag (`--pack`) is handled by argparse itself and exits
+**2**.

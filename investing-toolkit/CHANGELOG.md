@@ -5,6 +5,93 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.35.0] — 2026-07-25
+
+### Added — TW-market XBRL → kpi_store producer
+
+The store-backed tearsheet gains a TW-market feed. A new `kpi_tw` producer maps
+a TW iXBRL filing's canonical layer into the market-agnostic `kpi_store`, and a
+`kpi_tw_ingest` driver appends those points to the UNCHANGED store — so the
+existing `report-kpi-tearsheet` renders a TW multi-period series with no store
+or tearsheet code change.
+
+- **`kpi_tw` producer.** `as_of` is the authorisation-for-issue date parsed from
+  the filing's ROC-era 民國 date fact
+  (`tifrs-notes:DateAndProceduresOfAuthorisationForIssueOfFinancialStatements`) —
+  a deterministic, non-wall-clock, already-fetched date the store's `as_of` guard
+  accepts. `tw_canonical_to_points` maps the `twse_ixbrl` canonical layer into
+  market-agnostic `kpi_store` points, deriving `kpi_id` =
+  `<canonical-field-slug>[__basis-<C|A>]` (C=合併/A=個體) — since TW carries no
+  us-gaap dimensional axes, the consolidation basis is the only discriminator,
+  substituting for the US `axis=member` signature. The canonical field-slug (not
+  the raw concept) is the durable identity, so a company's revenue stays one
+  series across concept/taxonomy variation. Flat totals are kept (inverting the
+  US empty-dims skip).
+- **`kpi_tw_ingest` driver.** Reads a filing's canonical, calls the producer, and
+  appends each point to the UNCHANGED market-agnostic `kpi_store` (reusing
+  `kpi_store.append`; no cross into the data-markets cache layer). Idempotent
+  append-only — running it over N filings builds the cross-period series.
+- **興櫃-ready.** The 興櫃 semiannual cadence fits the store's existing `_qtrs`
+  machinery (6-month duration → 2 quarters) with no new `period_kind`.
+
+Note: the ingest consumes a filing envelope (canonical + facts) the caller
+assembles — `run_pipeline` emits canonical but not `facts` today. A glue-free
+`pack_tw` envelope verb (mirroring `pack_us.pack_kpi_quarterly`, so TW is
+"ticker→tearsheet without glue" like US) is a post-ship follow-up.
+
+## [v2.34.0] — 2026-07-24
+
+### Added — US XBRL → kpi_store producer (dimensional revenue)
+
+The tearsheet's store-backed history now has a second data-market feed. A new
+`kpi_xbrl_ingest ingest` verb maps each US filing's dimensional signature to a
+mechanically-derived `kpi_id` and appends every cross-filing vintage to
+`kpi_store.py` — no collapse, mirroring the existing TW iXBRL producer's
+append-only doctrine. A US ticker's fact-pack now renders a KPI tearsheet
+(with restatement † markers) without hand glue between the fetch layer and
+the store.
+
+- **`kpi_xbrl_ingest ingest` verb.** Dimensional revenue facts from a US
+  XBRL fact-pack are grouped by dimensional signature, each signature mapped
+  to a stable `kpi_id`, and every cross-filing vintage appended to the
+  company's store series — restatements surface via the store's existing
+  `history`/`disagreement` doctrine rather than being silently overwritten.
+- **`period_start` carried onto points.** Dimensional facts now emit
+  `period_start` alongside `period_end`; the field is carried through onto
+  store points so period-boundary reconstruction no longer needs a separate
+  lookup.
+- **e2e seam probe.** pack → ingest → tearsheet render exercised end-to-end;
+  a restatement renders its dagger (†) through the full pipeline, not just at
+  the store layer.
+
+Full suite: **1004 passed, 2 skipped, 61 deselected.**
+
+## [v2.33.0] — 2026-07-24
+
+### Added — TW iXBRL endorsement/guarantee (背書保證) ingestion
+
+A new curated data field surfaces per-counterparty endorsement/guarantee rows
+from TW MOPS iXBRL filings. The section carries no leaf `tuple_ref` and only
+shared `context_ref`s, so document order is the sole handle for reconstruction.
+
+- **`extract_endorsement_guarantee_notes`.** New extractor in
+  `twse_ixbrl_notes.py` reconstructs per-counterparty endorsement rows by
+  document-order segmentation on the `CompanyNameOfTheEndorserGuarantor` anchor
+  (endorser / counterparty / individual limit / ending balance / actual provided
+  / collateral-secured / relationship Y-N flags), plus a curated aggregate: a
+  **span-scoped** total actual/ending balance, counterparty count, and a
+  subsidiary-vs-external split derived from the Y/N flags. The aggregate is
+  span-scoped to the endorsement rows to avoid the 資金貸與 (financing-to-others)
+  table-conflation — a doc-wide sum would overcount (e.g. 台泥 1101: 62.8bn
+  span-scoped vs 105.9bn doc-wide, where 74 of 113 `ActualAmountProvided` facts
+  belong to the separate 資金貸與 note). The 0-anchor case yields a first-class
+  "none" result (explicit empty summary + empty rows, never a silent zero).
+- **Routed by population through `_extract_notes`.** The curated endorsement
+  field surfaces in the pipeline output for every taxonomy where the section is
+  present (industrials most commonly); the prior deferral test flipped from a
+  must-NOT-surface assertion to an inclusion assertion. No parser change, no
+  fetch change — the data is reachable with the current pipeline.
+
 ## [v2.32.1] — 2026-07-24
 
 ### Fixed — memo consumes the financial-sector DCF `not_applicable` marker

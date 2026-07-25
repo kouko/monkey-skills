@@ -51,8 +51,8 @@ immutable append-only, no expiry). Stdlib only.
 
 ## CLI reference
 
-Per-subcommand CLI detail (flags, exit codes, worked examples) for the ten
-persistence/compute scripts lives in
+Per-subcommand CLI detail (flags, exit codes, worked examples) for the
+eleven persistence/compute scripts lives in
 [`references/cli-reference.md`](references/cli-reference.md). Index:
 
 - **`kpi_store`** — append-only bitemporal store: `append` a point / `query`
@@ -73,9 +73,48 @@ persistence/compute scripts lives in
   `apply` / `view`.
 - **`kpi_memo_feed`** — memo-feed contract assembly (trust-gated): `build`.
 - **`kpi_xbrl`** — XBRL fact -> kpi_store point adapter: `build`.
+- **`kpi_xbrl_ingest`** — XBRL fact-pack -> kpi_store driver (no collapse):
+  `ingest`.
+- **`kpi_tw_ingest`** — TW filing envelope (canonical + facts + coordinates)
+  -> kpi_store driver (idempotent, append-only): `ingest`.
 
 The Route-B `kpi_8k_candidates` intake CLI is documented in full below (it
 stays here because its 3-layer contract is load-bearing).
+
+## Workflow: US XBRL -> tearsheet
+
+The end-to-end path from a bare US ticker to a rendered KPI tearsheet is
+three steps, in order:
+
+1. **Fetch** the dimensional fact-pack from `data-markets`:
+   `pack.py --pack kpi-quarterly --ticker <T> --market us` (US-only pack;
+   SEC EDGAR dimensional XBRL, single ticker only — rate-limited 10 req/s).
+2. **Ingest** the fact-pack into this skill's store:
+   `kpi_xbrl_ingest.py ingest --pack <pack.json>` — derives a `kpi_id` per
+   dimensional signature and appends every vintage to `kpi_store` (honors
+   `KPI_STORE_DIR`; see [`references/cli-reference.md`](references/cli-reference.md)
+   for flags/exit codes).
+3. **Render** the tearsheet via `report-kpi-tearsheet`, which reads the
+   now-populated store directly.
+
+## Workflow: TW iXBRL -> tearsheet
+
+The TW analog, producer-only (no store/tearsheet code change):
+
+1. **Fetch** the TW iXBRL canonical from `data-markets`
+   (`twse_ixbrl.py` / `pack_tw.py memo-fetch`) and assemble a filing
+   envelope pairing the `canonical` with the parsed `facts` and the filing
+   coordinates (`co_id`/`year`/`season`/`report_id`) — the facts carry the
+   board authorisation-for-issue date `as_of` source, which the canonical
+   alone does not.
+2. **Ingest** the envelope into this skill's store:
+   `kpi_tw_ingest.py ingest --filing <filing.json>` — derives `basis` (C/A),
+   `as_of` (the non-wall-clock authorisation-for-issue date), and TW
+   provenance from the coordinates, maps the canonical to points via
+   `kpi_tw`, and appends each to `kpi_store` (honors `KPI_STORE_DIR`;
+   idempotent — re-ingesting the same filing adds no duplicate).
+3. **Render** the tearsheet via `report-kpi-tearsheet`, which reads the
+   now-populated store directly (TW points share the market-agnostic schema).
 
 ## CLI (kpi_8k_candidates) — 8-K semi-auto KPI intake (Route B)
 

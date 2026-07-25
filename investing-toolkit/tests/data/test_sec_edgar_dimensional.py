@@ -1439,6 +1439,63 @@ def test_week_lane_class_pins_every_band_boundary(span_days, expected):
 
 
 # ---------------------------------------------------------------------------
+# Task 1 (docs/loom/plans/2026-07-24-market-period-granularity — `period_start`
+# re-surfaced on the emitted dimensional fact): `_build_dimensional_revenue_
+# fact` currently reads `fact.get("period_start")` internally (via
+# `_duration_span_days`, for `duration_months`/`duration_weeks`) but never
+# emits it on the built dict. Downstream (kpi_xbrl.facts_to_points ->
+# kpi_store) needs `period_start` to group cross-filing vintages of the same
+# annual period; without it the store's same_period/_qtrs degrade and
+# vintages never group (no restatement marker).
+# ---------------------------------------------------------------------------
+
+def test_dimensional_fact_carries_period_start():
+    """A duration-context fact emits `period_start` equal to its raw XBRL
+    context start date (ISO string) — re-sourced from the SAME field
+    `_duration_span_days` already reads, never re-derived. An instant-context
+    fact emits `period_start=None`: it has no start date to surface (reached
+    only via a direct caller — `extract_dimensional_revenue`'s
+    `_is_dimensional_revenue_fact` predicate excludes instant contexts before
+    this function is ever called, per this function's own docstring).
+    Additive only — every other field this builder already emits (asserted
+    elsewhere, e.g. test_extract_emits_duration_months) must stay unchanged."""
+    mod = _load_helpers()
+    fixture = json.loads((FIXTURES / "xbrl_quarterly_msft.json").read_text())
+    raw = fixture["raw_facts"]
+    q_accession = fixture["quarterly_filing"]["accession"]
+    q_filed = fixture["quarterly_filing"]["filing_date"]
+    q_dei = {
+        "fiscal_period_focus": "Q3", "fiscal_year_end": "--06-30",
+        "fiscal_year_focus": "2026",
+    }
+
+    # Duration fact (real MSFT 3-month-quarter row): period_start is the raw
+    # context start date, unchanged from what the fixture already carries.
+    q3_fact = mod._build_dimensional_revenue_fact(
+        raw["three_month"], "MSFT", q_accession, q_filed, q_dei,
+    )
+    assert q3_fact["period_start"] == "2026-01-01"
+    # Sanity: every pre-existing emitted field stays intact (additive-only).
+    assert q3_fact["duration_months"] == 3
+    assert q3_fact["period_end"] == "2026-03-31"
+
+    # Instant fact: same real-shaped-row-with-flipped-period_type convention
+    # as test_extract_emits_duration_months's instant_row (revenue is never
+    # actually tagged instant in real filings — this proves the field, not a
+    # captured shape). A real instant-context XBRL row carries no
+    # period_start (only period_instant) — dropped here to mirror that shape.
+    instant_row = dict(raw["three_month"])
+    instant_row["period_type"] = "instant"
+    instant_row.pop("period_start", None)
+    instant_row["period_instant"] = "2026-03-31"
+    instant_fact = mod._build_dimensional_revenue_fact(
+        instant_row, "MSFT", q_accession, q_filed, q_dei,
+    )
+    assert instant_fact["period_start"] is None
+    assert "duration_months" not in instant_fact
+
+
+# ---------------------------------------------------------------------------
 # code-quality-reviewer 🟡 (Task 1 follow-up) — `_duration_months`'s day-span
 # -> month-integer mapping pinned across the realistic bands the review
 # brief itself named as risk (52/53-week filers, 13-week vs 14-week

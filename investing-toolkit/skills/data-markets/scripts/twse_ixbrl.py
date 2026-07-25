@@ -74,23 +74,37 @@ def _propagate_quiet() -> None:
 
 
 def _extract_notes(facts: list[Any], canonical: dict[str, Any]) -> dict[str, Any]:
-    """Route note extraction by canonical's taxonomy family (Task 11).
+    """Route note extraction by canonical's taxonomy family (Task 11/Task 3).
 
-    -ci (taxonomy absent from canonical -- see
-    twse_ixbrl_canonical._build_ci_canonical) keeps the curated-notes set
-    unchanged. -fh and -basi each carry their own NPL/coverage note shape
-    routed to their own extractor. -bd/-ins have no NPL/coverage note at
-    all (brokers/insurers) -- deliberately no extractor call, not even
-    extract_curated_notes, which is -ci-shaped.
+    NPL/coverage routing is GATED BY TAXONOMY: -ci (taxonomy absent from
+    canonical -- see twse_ixbrl_canonical._build_ci_canonical) keeps the
+    curated-notes set unchanged; -fh and -basi each carry their own
+    NPL/coverage note shape routed to their own extractor; -bd/-ins have no
+    NPL/coverage note at all (brokers/insurers) -- deliberately no extractor
+    call, not even extract_curated_notes, which is -ci-shaped.
+
+    Endorsement/guarantee (背書保證) is DIFFERENT: it lives in the SHARED
+    t164sb01 iXBRL and can appear for ANY taxonomy where the disclosure is
+    populated (industrials most commonly, but a financial holding can carry
+    it too), so it is routed by POPULATION, not by taxonomy. It is merged in
+    only when at least one endorser row is present -- a 0-anchor filer
+    surfaces nothing, which keeps the empty-notes contract intact for
+    note-less taxonomies (an insurer with no endorsement stays `{}`).
     """
     taxonomy = canonical.get("taxonomy")
     if taxonomy == "fh":
-        return twse_ixbrl_notes.extract_fh_npl_coverage_notes(facts)
-    if taxonomy == "basi":
-        return twse_ixbrl_notes.extract_basi_npl_coverage_notes(facts)
-    if taxonomy in ("bd", "ins"):
-        return {}
-    return twse_ixbrl_notes.extract_curated_notes(facts)
+        notes = twse_ixbrl_notes.extract_fh_npl_coverage_notes(facts)
+    elif taxonomy == "basi":
+        notes = twse_ixbrl_notes.extract_basi_npl_coverage_notes(facts)
+    elif taxonomy in ("bd", "ins"):
+        notes = {}
+    else:
+        notes = twse_ixbrl_notes.extract_curated_notes(facts)
+
+    endorsement = twse_ixbrl_notes.extract_endorsement_guarantee_notes(facts)
+    if endorsement["rows"]:
+        notes["endorsement_guarantee"] = endorsement
+    return notes
 
 
 def run_pipeline(co_id: str, year: int, season: int, report_id: str | None = None) -> dict[str, Any]:

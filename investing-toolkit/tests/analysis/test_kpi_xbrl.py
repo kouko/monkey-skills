@@ -22,7 +22,7 @@ import subprocess
 import sys
 from unittest import mock
 
-from conftest import FIXTURES, KPI_XBRL_SCRIPT
+from conftest import FIXTURES, KPI_STORE_SCRIPT, KPI_XBRL_SCRIPT
 
 import pytest
 
@@ -33,6 +33,20 @@ def kpi_xbrl_module():
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     sys.modules["kpi_xbrl_test"] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.fixture(scope="module")
+def kpi_store_module():
+    """kpi_store.py loaded for its `same_period` predicate — the CONSUMER
+    Task 2's store-shaped fields (period_start/period_kind/scale) exist to
+    feed. Same importlib convention as `kpi_xbrl_module` above / test_kpi_
+    store.py's own `kpi_store_module` fixture."""
+    spec = importlib.util.spec_from_file_location("kpi_store_test_via_xbrl", KPI_STORE_SCRIPT)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["kpi_store_test_via_xbrl"] = module
     spec.loader.exec_module(module)
     return module
 
@@ -507,6 +521,74 @@ def test_resolve_binding_same_accession_value_conflict_still_raises(
 
     with pytest.raises(ValueError, match="2020"):
         kpi_xbrl_module.resolve_binding(mutated, CCG_SEGMENT_BINDING, "INTC")
+
+
+def test_facts_to_points_emits_store_period_identity(
+    kpi_xbrl_module, kpi_store_module, restatement_fact_pack, monkeypatch,
+):
+    """Task 2 (docs/loom/plans/2026-07-24-market-period-granularity, arc
+    (d)): every emitted point becomes STORE-SHAPED — `period_start` passes
+    through from the fact (T1's new sec_edgar_client.py field), `period_kind`
+    is synthesized "duration"/"instant" from the point's own `period_type`,
+    and `scale` is hardcoded 1 (mirrors kpi_prose_candidates.py's shipped
+    shape, ~:695). WHY: kpi_store's `same_period`/`_qtrs` need period_start
+    (+ period_kind) to GROUP cross-filing vintages of one annual period into
+    a restatement — without them each vintage's period-identity axis is null
+    and nothing ever groups.
+
+    Fixture: the REAL captured restatement pack (INTC ClientComputingGroup
+    FY2020, two 10-Ks, same period_end 2020-12-26, different accession/
+    value — already used by test_resolve_binding_restatement_newest_wins_
+    with_dqc_flag above) augmented ONLY with `period_start` (additive
+    mutation, same real-fact-mutation convention this file already uses
+    elsewhere, e.g. the accession override two tests up) — Intel's real
+    FY2020 started 2019-12-29, identical on both vintages since they
+    describe the SAME annual period.
+    """
+    mutated = json.loads(json.dumps(restatement_fact_pack))
+    for fact in mutated["facts"]:
+        fact["period_start"] = "2019-12-29"
+
+    points = kpi_xbrl_module.facts_to_points(
+        mutated, "ccg_segment_revenue", CCG_SEGMENT_BINDING["sources"][0],
+        "INTC", "xbrl-dimensional",
+    )
+    assert len(points) == 2
+    for p in points:
+        assert p["period_start"] == "2019-12-29"
+        assert p["period_kind"] == "duration"  # point's period_type "FY" != "instant"
+        assert p["scale"] == 1
+        # additive-only: pre-existing fields survive unchanged.
+        assert p["period_type"] == "FY"
+        assert p["cumulative"] is False
+        assert p["duration_class"] == "12mo-FY"
+        assert p["period_end"] == "2020-12-26"
+
+    # GREEN load-bearing assertion: the two vintages now GROUP as the same
+    # real annual period via kpi_store's own predicate — proving the fields
+    # actually unblock grouping, not just presence.
+    assert kpi_store_module.same_period(points[0], points[1]) is True
+
+    # The "instant" branch: no producer reaching this module emits an
+    # instant-context fact today — extract_dimensional_revenue excludes
+    # instant contexts upstream (sec_edgar_client.py's
+    # `_build_dimensional_revenue_fact` docstring), so classify_fact_period's
+    # real output domain is frozenset {Q1,Q2,Q3,Q4,FY}, never "instant".
+    # Force the branch via the module's own classification hook to prove the
+    # mapping is correct for a genuinely-instant point — forward-defensive
+    # for a future instant-context producer (e.g. balance-sheet KPIs).
+    monkeypatch.setattr(
+        kpi_xbrl_module, "classify_fact_period",
+        lambda fact: {
+            "period_type": "instant", "cumulative": False,
+            "duration_class": "instant",
+        },
+    )
+    instant_points = kpi_xbrl_module.facts_to_points(
+        mutated, "ccg_segment_revenue", CCG_SEGMENT_BINDING["sources"][0],
+        "INTC", "xbrl-dimensional",
+    )
+    assert instant_points[0]["period_kind"] == "instant"
 
 
 AMERICAS_SEGMENT_BINDING = {

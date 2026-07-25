@@ -111,6 +111,26 @@
   remind-only and hard to mechanize (CI can't see per-machine auto-memory);
   accept, or improve the reminder's specificity.
 
+## investing-toolkit TW iXBRL endorsement/guarantee 2.33.0 — post-ship follow-ups (OPEN)
+- Status: OPEN
+- Origin: TW iXBRL endorsement/guarantee ingestion (branch tw-ixbrl-endorsement,
+  2026-07-24, 2.33.0); whole-branch review PASS, all 🟢.
+- What: (a) 🟢 **memo-render the endorsement field** (domain-teams / report-equity-memo
+  layer, out of this data-layer arc) — `_extract_notes` now surfaces the
+  `endorsement_guarantee` curated field (aggregate + per-counterparty rows); wire the
+  memo protocol to render the credit-risk / self-dealing signal. The reserved
+  `endorsement_guarantee` key is taxonomy-INDEPENDENT but sits in a taxonomy-SHAPED
+  notes dict — the render consumer must special-case it regardless of taxonomy.
+  (b) 🟢 **terminal-span forward-scan edge**: `_endorsement_row_segments`' last row span
+  runs to end-of-facts; if a filing ever has a table trailing the endorsement section
+  reusing a shared concept (EndingBalance2/ActualAmountProvided) AND the last endorser
+  row omits it, `_first_in_span` could absorb the trailing value. Not observed on 1101
+  (資金貸與 sits BEFORE the anchors); confirm with a 2nd endorsement fixture. (c) 🟢
+  **no fh+endorsement fixture**: the cross-taxonomy "a financial holding can carry
+  endorsement too" claim rests on the -ci 1101 merge + shared code, not a fixture where
+  an fh notes dict actually gains `endorsement_guarantee` beside bank-name keys — add one
+  when a populated-fh filing is available.
+
 ## investing-toolkit TW iXBRL ingestion 2.27.0 — post-ship follow-ups (OPEN)
 - Status: OPEN
 - Start: next touch of `investing-toolkit/skills/data-markets/scripts/twse_ixbrl_*.py`
@@ -121,11 +141,19 @@
   (2.31.0, branch feat-tw-ixbrl-fh) — `-fh`/`-basi`/`-bd`/`-ins` canonical builders +
   5-way classifier + bank asset-quality notes + smart-decode + DCF fail-loud;
   securities-dealer (`-bd`) and insurer (`-ins`, incl. life/P&C/reinsurance sub-shapes)
-  resolved too. (b) **endorsement/guarantee curated field** —
-  deferred (ix:tuple per-counterparty rows, no clean aggregate leaf); needs the
-  note-table reconstruction path. (c) **興櫃 multi-period series** — semiannual
+  resolved too. ~~(b) **endorsement/guarantee curated field**~~ ✅ SHIPPED 2.33.0
+  (branch tw-ixbrl-endorsement) — `extract_endorsement_guarantee_notes`
+  reconstructs per-counterparty rows by document-order segmentation on the
+  `CompanyNameOfTheEndorserGuarantor` anchor + a span-scoped curated aggregate
+  (avoids the 資金貸與 doc-wide-sum overcount), routed by population through
+  `_extract_notes`; the deferral test flipped to an inclusion assertion.
+  (c) **興櫃 multi-period series** — semiannual
   (Q2/Q4) cadence; season-fallback already handles per-period absence, a series
-  builder is future. (d) 🟢 debt: T3 canonical tie-break order untested (membership
+  builder is future. **Update (2.35.0):** the TW KPI store producer (`kpi_tw` +
+  `kpi_tw_ingest`) now handles the 興櫃 semiannual cadence — a 6-month duration
+  maps through the store's existing `_qtrs` machinery (→ 2 quarters) with no new
+  `period_kind`. So 興櫃 multi-period now only needs 興櫃 FETCH; the series-build
+  side is done. (d) 🟢 debt: T3 canonical tie-break order untested (membership
   only), T2 3×502-exhaustion branch untested.
 
 ## investing-toolkit TW financial iXBRL 2.31.0 — post-ship follow-ups (OPEN)
@@ -165,6 +193,81 @@
   next touched. (d) 🟢 `test_twse_ixbrl_fixtures.py` module docstring still says "these 7
   fixtures" though it now also exercises the -ci 2330 fixture; the 2330 fact-count literal
   `2002` is a 3rd pin copy — touch-up on next edit.
+
+## investing-toolkit US XBRL→kpi_store producer 2.34.0 — post-ship follow-ups (OPEN)
+- Status: OPEN
+- Start: next substantive touch of `analysis-kpi/scripts/kpi_xbrl_ingest.py` or the
+  next US-XBRL-lane arc.
+- Origin: arc (d) US XBRL→kpi_store producer (branch feat-kpi-xbrl-store-producer,
+  2.34.0, 2026-07-25); whole-branch review PASS_WITH_NOTES + per-task 🟢 findings,
+  logged not fixed. Brief/plan `docs/loom/{specs,plans}/2026-07-24-kpi-xbrl-store-producer.md`.
+- What:
+  (a) 🟡 **kpi_id collision guard keys on a FINER identity than the store.**
+  `ingest_pack`'s guard uses `_signature_key`'s raw `consolidation or None`, but the
+  store folds `consolidation None == default OperatingSegmentsMember`
+  (`_normalize_consolidation`) and `derive_kpi_id` is consolidation-blind. A pack
+  carrying one concept+dims under BOTH raw-None and explicit-default consolidation
+  (or two genuine consolidation views, which `kpi_xbrl.py:771/1704` contemplate)
+  would trip the guard as a FALSE collision though the store treats them as one
+  series. Reconcile: normalize consolidation in `_signature_key`, or compare
+  NORMALIZED signatures in the guard, so it fires only on TRUE identity collisions.
+  Theoretical today (`pack_us` emits one consolidation per signature). Guard added
+  this arc surfaces this LOUD (was a silent double-process before). See memory
+  [[derived-durable-id-slug-is-a-lossy-one-way-door]].
+  (b) 🟢 `kpi_xbrl_ingest.py` has NO try/except wrapper — a bad `--pack` / malformed
+  JSON / a fact-pack missing both ticker+company surfaces as a raw traceback (exit 1),
+  unlike sibling scripts' clean-message convention. Add clean error handling on next touch.
+  (c) 🟢 `_real_shaped_pack`/`_FY2020_PERIOD_START` duplicated across
+  `test_kpi_xbrl_ingest.py` + `test_kpi_xbrl_to_tearsheet_e2e.py` (2nd occurrence —
+  Rule of Three). Lift to a shared `conftest.py` fixture at the 3rd caller.
+
+## investing-toolkit TW KPI producer 2.35.0 — post-ship follow-ups (OPEN)
+- Status: OPEN
+- Start: next substantive touch of `analysis-kpi/scripts/kpi_tw.py` /
+  `kpi_tw_ingest.py`, or the next TW-KPI-lane arc.
+- Origin: TW-market kpi_store producer (branch tw-kpi-store, 2.35.0, 2026-07-25);
+  brief/plan `docs/loom/{specs,plans}/2026-07-25-tw-kpi-store-producer.md`.
+- What:
+  (a) 🟢 **glue-free TW envelope production** — a `pack_tw` verb emitting
+  `{canonical, facts, coords}` (mirroring `pack_us.pack_kpi_quarterly`), so TW is
+  "ticker→tearsheet without glue" like US. Today `run_pipeline` emits `canonical`
+  but NOT `facts` (the `as_of` authorisation date lives in a fact), so the ingest
+  consumes an envelope the caller assembles; the dogfood assembles it by hand. A
+  data-markets envelope task closes this.
+  (b) 🟢 **`tw_canonical_to_points` `zip(values, periods)` truncation** — a
+  `zip` silently truncates if the two lists diverge in length; a len-assert would
+  fail loud instead. Unreachable today (the canonical layer builds values and
+  periods in parallel), but a future canonical change could desync them silently.
+  (c) 🟢 **mirrored injective guard keys on bare field-name** — the collision
+  guard keys `claimed_by` on the bare field-name, not `(statement, field)`. A
+  field-name recurring across two statements would RE-CLAIM (merge) rather than
+  raise. Unreachable today (the emitted field names are disjoint across
+  statements); key on `(statement, field)` when a real cross-statement name
+  appears.
+  (d) 🟢 **wire the TW KPI store into report-equity-memo Phase 3.5** — like the
+  US chain feeds the memo's quarterly-KPI section, the TW store should surface in
+  the TW memo path. Deferred (out of this producer-only arc).
+  (e) 🟢 **point `unit` is per-field best-effort** — `tw_canonical_to_points`
+  copies `unit` from `_meta[field].get("unit")`; a canonical field whose `_meta`
+  lacks `unit` silently yields `unit=None` (same class as the shipped TWD fix,
+  per-field). Non-fatal (the dogfood path carried TWD); consider a fail-loud or a
+  canonical-wide TWD default when a TW field's unit is absent.
+
+## investing-toolkit KPI tearsheet — company total (top-line) revenue lane (COMMITTED-NEXT)
+- Status: COMMITTED-NEXT
+- Start: immediately after arc (d) (2.34.0) — user-stated 2026-07-24「接下來就要做 公司總營收」.
+- Origin: arc (d) scope decision (brief `docs/loom/specs/2026-07-24-kpi-xbrl-store-producer.md`
+  §Out of Scope) — v1 shipped dimensional-SEGMENT revenue only; company top-line total
+  (GAP-3 from the 5-filer dogfood) deferred as a distinct, differently-shaped feed.
+- What: `extract_dimensional_revenue` emits ZERO flat totals, so top-line company
+  revenue is unfetchable via arc (d)'s dimensional path. The only shipped source is
+  `action_facts(ticker,'Revenues')` → the companyconcept series
+  (`sec_edgar_client.py:666-711,271-294`): API-endpoint shape (carries start+end), NO
+  dei fiscal calendar, mixes annual+quarterly under `fp:FY`. Needs: a top-line
+  extractor (or reshape the companyconcept series to the store point shape), its own
+  annual/quarterly disambiguation (OVERLAPS the multi-granularity arc below), and
+  ingest into the SAME store so the tearsheet shows total revenue alongside segments.
+  Reuse arc (d)'s `kpi_xbrl_ingest` append path + the period-identity fields (T1/T2).
 
 ## investing-toolkit quarterly 2.22.0 — post-ship follow-ups (OPEN)
 - Status: OPEN
@@ -368,6 +471,47 @@
   structured earnings-release exhibit to parse (Route B) and no XBRL fact to
   allowlist (Route A) — recovering those KPIs is a separate 10-K-text
   problem, not a variant of either arc here.
+
+## investing-toolkit KPI tearsheet — multi-granularity + per-market period menu (OPEN)
+- Status: OPEN
+- Start: a real need to tearsheet a TW/JP company (monthly / half-year data), or
+  the next substantive touch of `report-kpi-tearsheet` / `kpi_store`'s period
+  classifier. NOT triggered by US-only annual+quarterly use — that works today.
+- Origin: 2026-07-24 first real tearsheet dogfood (JNJ, US annual — CLEAN) then a
+  mixed annual+quarterly probe surfaced that a flat date-sorted table interleaves
+  granularities; user asked whether it should be per-market. Research:
+  `docs/loom/research/2026-07-24-market-period-granularity-regimes.md` (PR #609),
+  three regulator-primary-source agents (US/JP/TW/KR/CN) + a layout survey + a
+  local `_qtrs` probe.
+- What (the coupled design the research scoped — do NOT cut it into "annual vs
+  quarterly", that was the US-centric assumption the research disproved):
+  1. **Sub-quarter classifier, STORE-owned.** `_qtrs` refuses spans <1 quarter, so
+     a monthly period gets a null `period_axis_key` and renders as an orphan
+     column (12×N for N monthly KPIs — probe-verified). Extend the classifier to
+     give monthly (and any sub-quarter) span a real identity. Belongs in the store,
+     never the formatter (2.32.0 Decision: alignment identity is store-owned).
+  2. **Per-market granularity menu**, not a global binary: US = annual+quarterly;
+     TW = annual+quarterly+**monthly** (證交法§36, mandatory); JP = annual+
+     **half-year** (the sole legally-mandated interim filing since the 2024 FIEA
+     reform)+quarterly(cumulative, now exchange-rule); KR/CN = annual+half-year+
+     quarterly(cumulative). No market files a standalone Q4; JP/KR/CN file no
+     standalone Q2 — do NOT build Q4/Q2 collision handling for ingest.
+  3. **Discrete-vs-cumulative axis** must surface in the rendered output — US/TW
+     file both natively; JP, CN, and KR-through-Q3 file cumulative-only (discrete
+     = derived by subtraction). Two columns that look alike but sit on different
+     axes is the silent-lie class this repo keeps getting bitten by.
+  4. **Layout**: separate views per granularity (a `--granularity` flag or
+     distinct sections), never one date-sorted table — every shipped product
+     surveyed (US terminals, 四季報, 株探) keeps them apart; none groups quarters
+     under a year.
+  Already-solid foundation (do not re-solve): the store's raw `(period_start,
+  period_end)` identity already separates a cumulative Q3 from a discrete Q3
+  unmodified — the hard cross-market case falls out of the observation-history
+  date-pair decision.
+- Sequencing note: this is the tearsheet successor in the longitudinal trilogy
+  (tearsheet ✅ 2.32.0 → THIS / Part-3 hardening → replay-matrix). User-stated
+  intent (2026-07-24): decide priority against Part 3 after more real tearsheet
+  use; the monthly gap only bites on TW/JP data, so US-only use does not force it.
 
 ## investing-toolkit quarterly — JNJ RestatementAxis signature blind spot (SHIPPED 2026-07-19, 2.25.0)
 - Status: SHIPPED (feat-jnj-restatement-axis-signature; both fix shapes

@@ -11,11 +11,14 @@ ixbrl-ingestion.md §Annual verification), so scope was cut down to this
 curated set. A concept absent from a given filing's facts is OMITTED from
 the result dict, never zero-filled.
 
-Endorsement/guarantee and other per-counterparty ix:tuple-structured
-disclosures are deferred to the note-table-reconstruction sub-arc (brief
-§Annual verification / §Out of Scope) — they have no clean aggregate leaf
-fact (e.g. LimitOfTotalGuaranteeEndorsementAmount repeats 4x under one
-contextRef, one row per counterparty, with no single "total" fact to pick).
+Endorsement/guarantee (背書保證) is NOT a flat curated concept: it is a
+per-counterparty table with no clean aggregate leaf fact
+(LimitOfTotalGuaranteeEndorsementAmount repeats once per row under one
+contextRef, with no single "total" fact to pick). It is reconstructed
+instead by `extract_endorsement_guarantee_notes` below — document-order
+row segmentation on the CompanyNameOfTheEndorserGuarantor anchor, with a
+span-scoped aggregate summary — and routed into the pipeline output by
+population (twse_ixbrl._extract_notes), NOT via extract_curated_notes.
 
 Usage (library import only — no CLI; composed by twse_ixbrl.py, Task 5):
     import twse_ixbrl_notes
@@ -383,3 +386,151 @@ def extract_basi_npl_coverage_notes(facts: list[dict[str, Any]]) -> dict[str, An
             }
 
     return fields
+
+
+# Endorsement/guarantee provided to others (背書保證) note (Task 2). Unlike
+# the -fh/-basi NPL notes above — which reconstruct ONE row per bank
+# subsidiary — this is a per-COUNTERPARTY table (one row per endorsed
+# party). Its rows carry NO leaf `tuple_ref` and share only two
+# context_refs (From..To.. for durations, AsOf.. for the ending balance),
+# so, exactly like _fh_npl_tree_segments, DOCUMENT ORDER between successive
+# `tifrs-notes:CompanyNameOfTheEndorserGuarantor` anchors is the only handle
+# on a row. The counterparty is the inner `tifrs-notes:NameOfTheCompany`
+# (the Counterparty2 ix:tuple) that appears inside the span.
+_ENDORSER_ANCHOR_CONCEPT = "tifrs-notes:CompanyNameOfTheEndorserGuarantor"
+
+# field name -> "ns:localname" concept for each per-row endorsement leaf,
+# picked as the FIRST occurrence within a row's document-order span. Amount
+# concepts (ActualAmountProvided, EndingBalance2) also appear in a SEPARATE
+# 資金貸與/financing-to-others note before the first endorser anchor, so
+# span-scoping — not a doc-wide concept sweep — is required to avoid
+# conflating the two tables.
+_ENDORSEMENT_ROW_CONCEPTS: dict[str, str] = {
+    "counterparty": "tifrs-notes:NameOfTheCompany",
+    "individual_limit": (
+        "tifrs-notes:LimitOnEndorsementGuaranteeAmountProvidedToIndividualCounterparty"
+    ),
+    "ending_balance": "tifrs-notes:EndingBalance2",
+    "actual_provided": "tifrs-notes:ActualAmountProvided",
+    "collateral_secured": "tifrs-notes:AmountOfEndorsementsGuaranteesSecuredWithCollateral",
+    "ratio_to_net_asset": (
+        "tifrs-notes:RatioOfAccumulatedEndorsementGuaranteeAmount"
+        "ToNetAssetOfTheCompanyPerLatestFinancialStatements"
+    ),
+    "endorser_total_ceiling": "tifrs-notes:LimitOfTotalGuaranteeEndorsementAmount",
+    # Y/N relationship flags → subsidiary-vs-external split.
+    "to_subsidiary_by_parent": (
+        "tifrs-notes:EndorsementsGuaranteesProvidedToSubsidiaryByParentCompany"
+    ),
+    "to_parent_by_subsidiary": (
+        "tifrs-notes:EndorsementsGuaranteesProvidedToParentCompanyBySubsidiaries"
+    ),
+    "to_mainland_china": (
+        "tifrs-notes:EndorsementsGuaranteesProvidedToCompanyInMainlandChina"
+    ),
+}
+
+
+def _endorsement_row_segments(
+    facts: list[dict[str, Any]],
+) -> list[tuple[int, int, str]]:
+    """Split `facts` into per-endorser (start, end, endorser_name) spans.
+
+    LOOM-SIMPLIFY: endorsement rows are segmented by DOCUMENT ORDER (the
+    span between one `tifrs-notes:CompanyNameOfTheEndorserGuarantor` marker
+    and the next), not by a parsed ix:tuple hierarchy — the parser
+    (twse_ixbrl_parser.py) records only a leaf fact's own tupleRef, and
+    endorsement leaves carry none, so position is the sole in-band handle
+    (identical constraint to _fh_npl_tree_segments). | ceiling: if a fetched
+    filing is ever observed with a row's leaves NOT contiguous after its own
+    CompanyNameOfTheEndorserGuarantor marker (interleaved rows) | upgrade:
+    extend parse_ixbrl_facts to capture <ix:tuple> tupleID/tupleRef so rows
+    match a counterparty by explicit tuple-parent chain instead of order |
+    ref: 台泥 1101 2026Q1 fixture — 39 rows, each row's leaves contiguous in
+    document order immediately after its CompanyNameOfTheEndorserGuarantor
+    marker.
+    """
+    boundaries = [
+        (i, f["raw_value"])
+        for i, f in enumerate(facts)
+        if f.get("concept") == _ENDORSER_ANCHOR_CONCEPT and f.get("raw_value")
+    ]
+    return [
+        (start, boundaries[idx + 1][0] if idx + 1 < len(boundaries) else len(facts), name)
+        for idx, (start, name) in enumerate(boundaries)
+    ]
+
+
+def _first_in_span(
+    facts: list[dict[str, Any]], start: int, end: int, concept: str
+) -> Any:
+    """Return the raw_value of the FIRST `concept` leaf in facts[start:end].
+
+    First-in-span is the rule the row reconstruction relies on: each
+    endorsement row emits its leaves once, in a fixed order, immediately
+    after its endorser anchor (台泥 1101 fixture) — so the first match in
+    the span is that row's value. Returns None if the concept is absent
+    from the span.
+    """
+    for i in range(start, end):
+        if facts[i].get("concept") == concept:
+            return facts[i].get("raw_value")
+    return None
+
+
+def extract_endorsement_guarantee_notes(facts: list[dict[str, Any]]) -> dict[str, Any]:
+    """Reconstruct the 背書保證 (endorsement/guarantee provided to others) note.
+
+    Returns `{"summary": {...}, "rows": [...]}`. Each row is a flat record
+    (endorser, counterparty, individual_limit, ending_balance,
+    actual_provided, collateral_secured, ratio_to_net_asset,
+    endorser_total_ceiling, and the Y/N flags to_subsidiary_by_parent /
+    to_parent_by_subsidiary / to_mainland_china), reconstructed by
+    document-order segmentation on the
+    `tifrs-notes:CompanyNameOfTheEndorserGuarantor` anchor (see
+    _endorsement_row_segments) — amounts are the parser's already-scaled
+    raw_value, never re-scaled here.
+
+    The aggregate summary carries span-scoped SUM(ActualAmountProvided) and
+    SUM(EndingBalance2) — scoped to the endorsement rows, NOT a doc-wide
+    concept sweep, because both amounts recur in a separate 資金貸與
+    (financing-to-others) note — plus row_count, distinct counterparty_count,
+    the peak per-row ratio-to-net-asset, and a subsidiary-vs-external split
+    from the Y/N flags (internal = ToSubsidiaryByParent OR
+    ToParentBySubsidiaries == "Y").
+
+    A filing with no endorser anchor (section absent, or a present-but-empty
+    placeholder) yields an EXPLICIT "none" result: row_count 0, zeroed sums,
+    None peak ratio (never a fake zero), and an empty rows list — never a
+    crash and never a silent zero.
+    """
+    rows: list[dict[str, Any]] = []
+    for start, end, endorser in _endorsement_row_segments(facts):
+        row: dict[str, Any] = {"endorser": endorser}
+        for field, concept in _ENDORSEMENT_ROW_CONCEPTS.items():
+            row[field] = _first_in_span(facts, start, end, concept)
+        rows.append(row)
+
+    def _sum(field: str) -> float:
+        return float(sum(r[field] for r in rows if r[field] is not None))
+
+    ratios = [r["ratio_to_net_asset"] for r in rows if r["ratio_to_net_asset"] is not None]
+    internal = sum(
+        1
+        for r in rows
+        if r["to_subsidiary_by_parent"] == "Y" or r["to_parent_by_subsidiary"] == "Y"
+    )
+    summary = {
+        "row_count": len(rows),
+        "counterparty_count": len({r["counterparty"] for r in rows if r["counterparty"]}),
+        "total_actual_provided": _sum("actual_provided"),
+        "total_ending_balance": _sum("ending_balance"),
+        "max_ratio_to_net_asset": max(ratios) if ratios else None,
+        "subsidiary_related_count": internal,
+        "external_count": len(rows) - internal,
+        "mainland_china_count": sum(1 for r in rows if r["to_mainland_china"] == "Y"),
+    }
+    if not rows:
+        _log("endorsement note absent", "no CompanyNameOfTheEndorserGuarantor anchor")
+
+    return {"summary": summary, "rows": rows}
