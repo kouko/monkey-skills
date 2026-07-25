@@ -1,7 +1,8 @@
 """RED-first tests for analysis-kpi/scripts/kpi_spine_view.py — the pure
 read-time view that resolves the 14 canonical spine fields out of the
 store's AS-REPORTED concept series (plan
-docs/loom/plans/2026-07-26-us-as-reported-statement-lane.md, Task 4).
+docs/loom/plans/2026-07-26-us-as-reported-statement-lane.md, Task 4) and
+flags a balance-sheet identity residual per period (same plan, Task 7).
 
 Every fixture here is built by the REAL producer: points are appended
 through `kpi_store.append` into a tmp store (`KPI_STORE_DIR`) and the input
@@ -21,6 +22,7 @@ test_kpi_store_read_cli.py).
 """
 from __future__ import annotations
 
+import copy
 import importlib.util
 import json
 import os
@@ -34,6 +36,7 @@ _ROOT = Path(__file__).resolve().parents[2]
 _SKILLS = _ROOT / "skills"
 KPI_STORE_SCRIPT = _SKILLS / "analysis-kpi" / "scripts" / "kpi_store.py"
 KPI_SPINE_VIEW_SCRIPT = _SKILLS / "analysis-kpi" / "scripts" / "kpi_spine_view.py"
+KPI_XBRL_SCRIPT = _SKILLS / "analysis-kpi" / "scripts" / "kpi_xbrl.py"
 TEARSHEET_FORMAT_SCRIPT = (
     _SKILLS / "report-kpi-tearsheet" / "scripts" / "tearsheet_format.py"
 )
@@ -72,9 +75,15 @@ def _point(
     value,
     as_of: str,
     kind: str = "duration",
+    accession: str = _ACCESSION,
 ) -> dict:
     """One store-valid as-reported point: the filer's own qname verbatim as
     `kpi_id` (Task 3's pin), full provenance, accession-derived as_of.
+
+    `accession` is a parameter (not the module constant everywhere) so a test
+    can tell WHICH filing a flag's `accessions` list actually came from — a
+    single shared accession cannot distinguish "listed because it contributed"
+    from "listed because it was passed in".
     """
     return {
         "company": company,
@@ -87,7 +96,7 @@ def _point(
         "value": value,
         "unit": "USD",
         "scale": 1,
-        "source_accession": _ACCESSION,
+        "source_accession": accession,
         "source_table_id": "xbrl:companyfacts-statement",
         "source_cell_ref": concept,
     }
@@ -114,6 +123,505 @@ def _values_by_end(entry: dict) -> dict[str, object]:
         period["period_end"]: period["latest"]["canonical_value"]
         for period in entry["periods"]
     }
+
+
+# --- Task 7: balance-sheet identity ---------------------------------------
+#
+# Every identity component is an INSTANT (a balance-sheet date), so the
+# store sizes each one to `qtrs` 0 and mints a non-null `period_axis_key`
+# ("<month-end>|q0") — the identity is matched across concepts on that key,
+# exactly like the tearsheet's column alignment.
+
+_ASSETS = "us-gaap:Assets"
+_LIABILITIES = "us-gaap:Liabilities"
+_EQUITY = "us-gaap:StockholdersEquity"
+_EQUITY_INCL_NCI = (
+    "us-gaap:StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest"
+)
+_MINORITY_INTEREST = "us-gaap:MinorityInterest"
+_TEMPORARY_EQUITY = (
+    "us-gaap:TemporaryEquityCarryingAmountIncludingPortionAttributable"
+    "ToNoncontrollingInterests"
+)
+_REDEEMABLE_NCI = "us-gaap:RedeemableNoncontrollingInterestEquityCarryingAmount"
+
+# A SECOND real-shaped accession, so a test can prove a component's filing is
+# absent from `accessions` rather than merely indistinguishable from the rest.
+_OTHER_ACCESSION = "0000789019-25-000099"
+
+
+def _balance(
+    company: str,
+    concept: str,
+    label: str,
+    end: str,
+    value,
+    as_of: str,
+    accession: str = _ACCESSION,
+) -> dict:
+    """One balance-sheet point: an instant, no period_start."""
+    return _point(
+        company, concept, label, None, end, value, as_of,
+        kind="instant", accession=accession,
+    )
+
+
+def _identity_flag(payload: dict, period_end: str):
+    """The balance-identity flag attached to `total_assets` for one period,
+    or None when that period was not flagged. `total_assets` is the flag's
+    carrier because it is the identity's subject AND its denominator.
+    """
+    matches = [
+        period
+        for period in _series(payload, "total_assets")["periods"]
+        if period["period_end"] == period_end
+    ]
+    assert len(matches) == 1, f"expected one total_assets period ending {period_end}"
+    return matches[0].get("balance_identity")
+
+
+def test_mezzanine_is_required_for_the_identity(store, spine_view):
+    """The mezzanine term is REQUIRED, not optional: a filer whose assets
+    exceed liabilities+equity by EXACTLY its temporary equity balances, and
+    the same filer without that term reads as "does not balance".
+
+    Measured on the 47-filer probe (brief §Probe evidence): TSLA's entire
+    residual was exactly its redeemable non-controlling interest, to the
+    dollar; with the term, 30 of 32 checkable filers balance EXACTLY. Drop
+    the term and this filer is falsely accused.
+    """
+    with_mezzanine = "TSLA-SHAPED"
+    balanced = _dump_of(
+        store,
+        with_mezzanine,
+        [
+            _balance(with_mezzanine, _ASSETS, "FY2019", "2019-12-31", 34_309_000_000, "2020-02-01"),
+            _balance(with_mezzanine, _LIABILITIES, "FY2019", "2019-12-31", 26_199_000_000, "2020-02-01"),
+            _balance(with_mezzanine, _EQUITY_INCL_NCI, "FY2019", "2019-12-31", 8_052_000_000, "2020-02-01"),
+            _balance(with_mezzanine, _TEMPORARY_EQUITY, "FY2019", "2019-12-31", 58_000_000, "2020-02-01"),
+        ],
+    )
+    without_mezzanine = "TSLA-SHAPED-NO-MEZZANINE"
+    unbalanced = _dump_of(
+        store,
+        without_mezzanine,
+        [
+            _balance(without_mezzanine, _ASSETS, "FY2019", "2019-12-31", 34_309_000_000, "2020-02-01"),
+            _balance(without_mezzanine, _LIABILITIES, "FY2019", "2019-12-31", 26_199_000_000, "2020-02-01"),
+            _balance(without_mezzanine, _EQUITY_INCL_NCI, "FY2019", "2019-12-31", 8_052_000_000, "2020-02-01"),
+        ],
+    )
+
+    assert _identity_flag(spine_view.derive_spine(balanced), "2019-12-31") is None
+
+    flag = _identity_flag(spine_view.derive_spine(unbalanced), "2019-12-31")
+    assert flag is not None, "without the mezzanine term the same filer must not balance"
+    assert flag["type"] == spine_view.BALANCE_IDENTITY_FLAG_TYPE
+    assert flag["residual"] == 58_000_000
+    # The mezzanine term IS the whole residual — that is why it is required.
+    assert flag["components"]["mezzanine"] == 0
+
+
+def test_rounding_residual_passes_but_a_real_break_is_flagged(store, spine_view):
+    """The 1e-5 relative tolerance, bracketed on ONE filer's two periods.
+
+    `companyfacts` carries no `decimals` attribute, so a precision-derived
+    tolerance is not constructible; 1e-5 was pinned at kickoff against the
+    two measured non-exact filers (IBM and P&G each miss by exactly
+    1,000,000 against figures reported in millions — 7.99e-06 relative).
+    Here 1,000,000 (7.99e-06) passes and 2,000,000 (1.60e-05) is flagged,
+    so the constant cannot drift by an order of magnitude unnoticed.
+
+    Also pins mezzanine-absent = 0: this filer tags no temporary equity at
+    all (the common case), and its periods are still CHECKED. Absence of a
+    redeemable instrument is the balance sheet asserting zero, unlike an
+    untagged `Liabilities` subtotal (next test), which is a missing TOTAL.
+    """
+    company = "ROUNDING-VS-BREAK"
+    dump = _dump_of(
+        store,
+        company,
+        [
+            _balance(company, _ASSETS, "FY2022", "2022-12-31", 125_155_000_000, "2023-02-01"),
+            _balance(company, _LIABILITIES, "FY2022", "2022-12-31", 105_222_000_000, "2023-02-01"),
+            _balance(company, _EQUITY, "FY2022", "2022-12-31", 19_932_000_000, "2023-02-01"),
+            _balance(company, _ASSETS, "FY2023", "2023-12-31", 125_155_000_000, "2024-02-01"),
+            _balance(company, _LIABILITIES, "FY2023", "2023-12-31", 105_222_000_000, "2024-02-01"),
+            _balance(company, _EQUITY, "FY2023", "2023-12-31", 19_931_000_000, "2024-02-01"),
+        ],
+    )
+
+    derived = spine_view.derive_spine(dump)
+
+    assert spine_view.BALANCE_IDENTITY_TOLERANCE == 1e-5
+    assert _identity_flag(derived, "2022-12-31") is None  # residual 1e6 -> 7.99e-06
+
+    flag = _identity_flag(derived, "2023-12-31")  # residual 2e6 -> 1.60e-05
+    assert flag is not None
+    assert flag["residual"] == 2_000_000
+    assert flag["relative_residual"] > spine_view.BALANCE_IDENTITY_TOLERANCE
+    # Never a suppression: the flagged period keeps every as-reported value.
+    assert _values_by_end(_series(derived, "total_assets")) == {
+        "2022-12-31": 125_155_000_000,
+        "2023-12-31": 125_155_000_000,
+    }
+    assert _values_by_end(_series(derived, "total_equity")) == {
+        "2022-12-31": 19_932_000_000,
+        "2023-12-31": 19_931_000_000,
+    }
+
+
+def test_a_period_missing_a_component_is_neither_flagged_nor_dropped(store, spine_view):
+    """Uncheckable is NOT the same as wrong. 13 of 46 probed filers never
+    tag a total `Liabilities`; silence there is correct, and a flag would be
+    a false accusation about figures the filer reported honestly.
+    """
+    company = "NO-TOTAL-LIABILITIES"
+    dump = _dump_of(
+        store,
+        company,
+        [
+            _balance(company, _ASSETS, "FY2020", "2020-12-31", 44_000, "2021-02-01"),
+            _balance(company, _EQUITY, "FY2020", "2020-12-31", 30_000, "2021-02-01"),
+        ],
+    )
+
+    derived = spine_view.derive_spine(dump)
+
+    assert _series_ids(derived) == ["total_assets", "total_equity"]
+    assert _identity_flag(derived, "2020-12-31") is None
+    # Not dropped either — both as-reported values survive intact.
+    assert _values_by_end(_series(derived, "total_assets")) == {"2020-12-31": 44_000}
+    assert _values_by_end(_series(derived, "total_equity")) == {"2020-12-31": 30_000}
+
+
+def test_mezzanine_falls_back_to_the_redeemable_nci_concept(store, spine_view):
+    """A filer tagging only `RedeemableNoncontrollingInterestEquityCarrying
+    Amount` (the chain's fallback) balances just as one tagging the primary
+    `TemporaryEquityCarryingAmount...` concept does.
+    """
+    company = "REDEEMABLE-NCI-ONLY"
+    dump = _dump_of(
+        store,
+        company,
+        [
+            _balance(company, _ASSETS, "FY2019", "2019-12-31", 34_309_000_000, "2020-02-01"),
+            _balance(company, _LIABILITIES, "FY2019", "2019-12-31", 26_199_000_000, "2020-02-01"),
+            _balance(company, _EQUITY_INCL_NCI, "FY2019", "2019-12-31", 8_052_000_000, "2020-02-01"),
+            _balance(company, _REDEEMABLE_NCI, "FY2019", "2019-12-31", 58_000_000, "2020-02-01"),
+        ],
+    )
+
+    derived = spine_view.derive_spine(dump)
+
+    assert _identity_flag(derived, "2019-12-31") is None
+    # The mezzanine concept is identity-only: it never becomes a spine row.
+    assert _series_ids(derived) == ["total_assets", "total_liabilities", "total_equity"]
+
+
+def test_the_equity_chain_drift_guard_trips_on_reorder_and_on_extension(spine_view):
+    """The guard that stops the `total_equity` chain and the two concepts the
+    identity branches on from drifting apart silently.
+
+    Two properties are pinned SEPARATELY because they are what a later
+    "simplification" would take away: the comparison is ORDER-sensitive (a
+    reordered chain flips which concept the majority of periods resolve to,
+    which is exactly the defect this round fixed) and LENGTH-sensitive (a third
+    member is a concept `_equity_kind` cannot name, so every period carrying it
+    would fall through to "uncheckable" — a check that quietly stops checking).
+    Loosening tuple equality to a set or a subset test would keep the shipped
+    chain passing while silently admitting both; these two assertions are what
+    breaks if someone does.
+    """
+    reordered = (
+        spine_view.EQUITY_INCL_NCI_CONCEPT,
+        spine_view.EQUITY_PARENT_ONLY_CONCEPT,
+    )
+    extended = (
+        spine_view.EQUITY_PARENT_ONLY_CONCEPT,
+        spine_view.EQUITY_INCL_NCI_CONCEPT,
+        "StockholdersEquityOther",
+    )
+
+    with pytest.raises(RuntimeError, match="total_equity chain"):
+        spine_view._assert_equity_chain(reordered)
+    with pytest.raises(RuntimeError, match="total_equity chain"):
+        spine_view._assert_equity_chain(extended)
+
+    # ...and the chain this module actually ships passes it — the guard is
+    # asserted to be satisfied at import, not merely to be raisable.
+    shipped = dict(spine_view.SPINE_FIELD_CHAINS)["total_equity"]
+    assert spine_view._assert_equity_chain(shipped) is None
+
+
+def test_parent_only_equity_takes_the_minority_interest_term(store, spine_view):
+    """THE CHAIN-ORDER INTERACTION. The `total_equity` chain puts PARENT-ONLY
+    `StockholdersEquity` FIRST, so for a filer tagging BOTH equity totals at
+    one instant the view resolves the parent-only figure — and the identity's
+    equity term must then be completed with `MinorityInterest`, or the
+    residual IS the non-controlling interest and the period is falsely
+    flagged.
+
+    Not an edge case: cross-tabbing the committed 47-filer probe fixture
+    (`us_statement_shapes_probe_2026-07-26.json`), 17 of the 32 checkable
+    filers used the incl-NCI concept in the probe's own four-term identity
+    while this view's chain resolves parent-only — BA, C, COST, CVX, F, GE,
+    GM, IBM, JNJ, MS, PEP, PFE, PSX, QCOM, TSLA, UNH, WFC.
+
+    The FIX IS THE IDENTITY, NOT THE CHAIN: `total_equity` still reports the
+    parent-only figure the filer tagged (asserted below), because what the
+    spine's `total_equity` field should MEAN is a separate product question.
+    """
+    company = "PARENT-ONLY-WITH-NCI"
+    dump = _dump_of(
+        store,
+        company,
+        [
+            _balance(company, _ASSETS, "FY2023", "2023-12-31", 200_000_000_000, "2024-02-01"),
+            _balance(company, _LIABILITIES, "FY2023", "2023-12-31", 150_000_000_000, "2024-02-01"),
+            _balance(company, _EQUITY, "FY2023", "2023-12-31", 44_000_000_000, "2024-02-01"),
+            _balance(company, _EQUITY_INCL_NCI, "FY2023", "2023-12-31", 50_000_000_000, "2024-02-01"),
+            _balance(company, _MINORITY_INTEREST, "FY2023", "2023-12-31", 6_000_000_000, "2024-02-01"),
+        ],
+    )
+
+    derived = spine_view.derive_spine(dump)
+
+    assert _identity_flag(derived, "2023-12-31") is None, (
+        "assets equal liabilities + WHOLE equity, so this filer balances; "
+        "flagging it accuses the filer of our own chain-order choice"
+    )
+    # The chain is untouched: the reported field is still the parent-only
+    # figure, and `MinorityInterest` is identity-only — never a spine row.
+    assert _values_by_end(_series(derived, "total_equity")) == {
+        "2023-12-31": 44_000_000_000
+    }
+    assert _series_ids(derived) == ["total_assets", "total_liabilities", "total_equity"]
+
+
+def test_incl_nci_equity_never_double_counts_the_minority_interest(store, spine_view):
+    """The other branch. When the period's `total_equity` resolves to
+    `StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest`
+    the NCI is ALREADY inside it, so adding `MinorityInterest` on top would
+    double-count it and flag a filer that balances.
+
+    This branch is reached only when the filer tags no parent-only
+    `StockholdersEquity` for the period (chain order), which is exactly the
+    shape below.
+    """
+    company = "INCL-NCI-ONLY"
+    dump = _dump_of(
+        store,
+        company,
+        [
+            _balance(company, _ASSETS, "FY2023", "2023-12-31", 200_000_000_000, "2024-02-01"),
+            _balance(company, _LIABILITIES, "FY2023", "2023-12-31", 150_000_000_000, "2024-02-01"),
+            _balance(company, _EQUITY_INCL_NCI, "FY2023", "2023-12-31", 50_000_000_000, "2024-02-01"),
+            _balance(company, _MINORITY_INTEREST, "FY2023", "2023-12-31", 6_000_000_000, "2024-02-01"),
+        ],
+    )
+
+    derived = spine_view.derive_spine(dump)
+
+    assert _identity_flag(derived, "2023-12-31") is None
+    assert _values_by_end(_series(derived, "total_equity")) == {
+        "2023-12-31": 50_000_000_000
+    }
+
+
+def test_accessions_omit_a_filing_that_contributed_nothing_to_the_arithmetic(
+    store, spine_view
+):
+    """`accessions` is the provenance BEHIND THE COMPONENTS — the filings the
+    residual was actually computed from — so a component whose term is 0 by
+    construction must not put its filing there.
+
+    On the `incl_NCI` branch `MinorityInterest` is exactly that: the resolved
+    equity concept already contains the interest, so the term is 0 no matter
+    what the filer tagged. Listing its accession would send a reader to a
+    filing that moved no number in the residual, which is the opposite of what
+    the list is for.
+    """
+    company = "INCL-NCI-BROKEN-WITH-MI"
+    dump = _dump_of(
+        store,
+        company,
+        [
+            _balance(company, _ASSETS, "FY2023", "2023-12-31", 200_000_000_000, "2024-02-01"),
+            _balance(company, _LIABILITIES, "FY2023", "2023-12-31", 150_000_000_000, "2024-02-01"),
+            _balance(company, _EQUITY_INCL_NCI, "FY2023", "2023-12-31", 44_000_000_000, "2024-02-01"),
+            # Tagged, from its OWN filing, and irrelevant to the arithmetic.
+            _balance(
+                company, _MINORITY_INTEREST, "FY2023", "2023-12-31", 6_000_000_000,
+                "2024-02-01", accession=_OTHER_ACCESSION,
+            ),
+        ],
+    )
+
+    flag = _identity_flag(spine_view.derive_spine(dump), "2023-12-31")
+
+    assert flag is not None
+    assert flag["equity_kind"] == "incl_NCI"
+    assert flag["components"]["minority_interest"] == 0
+    assert flag["accessions"] == [_ACCESSION], (
+        "the minority-interest filing contributed a term of 0 by construction, "
+        "so it is not one of the accessions the residual came from"
+    )
+
+
+def test_an_untagged_minority_interest_reads_as_zero_when_nothing_asserts_one(
+    store, spine_view
+):
+    """MEASURED, not assumed. A filer that tags ONLY the parent-only equity
+    total and no `MinorityInterest` has no non-controlling interest, so the
+    absent term reads as 0 and the period stays CHECKED — the same rule, and
+    the same kind of evidence, as the mezzanine's.
+
+    Evidence: of the committed probe's 32 checkable filers, 13 resolved
+    parent-only with no `MinorityInterest` at that instant (the probe's
+    `parent_plus_MI` branch fired ZERO times in-sample), and all 13 balance
+    EXACTLY. Making absence uncheckable instead would silence the identity
+    for the single-entity majority — the common case, not an edge case.
+    """
+    balanced = "SINGLE-ENTITY-BALANCED"
+    balanced_dump = _dump_of(
+        store,
+        balanced,
+        [
+            _balance(balanced, _ASSETS, "FY2023", "2023-12-31", 200_000_000_000, "2024-02-01"),
+            _balance(balanced, _LIABILITIES, "FY2023", "2023-12-31", 150_000_000_000, "2024-02-01"),
+            _balance(balanced, _EQUITY, "FY2023", "2023-12-31", 50_000_000_000, "2024-02-01"),
+        ],
+    )
+    broken = "SINGLE-ENTITY-BROKEN"
+    broken_dump = _dump_of(
+        store,
+        broken,
+        [
+            _balance(broken, _ASSETS, "FY2023", "2023-12-31", 200_000_000_000, "2024-02-01"),
+            _balance(broken, _LIABILITIES, "FY2023", "2023-12-31", 150_000_000_000, "2024-02-01"),
+            _balance(broken, _EQUITY, "FY2023", "2023-12-31", 44_000_000_000, "2024-02-01"),
+        ],
+    )
+
+    assert _identity_flag(spine_view.derive_spine(balanced_dump), "2023-12-31") is None
+
+    flag = _identity_flag(spine_view.derive_spine(broken_dump), "2023-12-31")
+    assert flag is not None, "absence must read as 0, NOT make the period uncheckable"
+    assert flag["components"]["minority_interest"] == 0
+    assert flag["equity_kind"] == "parent_only"
+
+
+def test_a_parent_only_period_whose_asserted_nci_has_no_amount_is_uncheckable(
+    store, spine_view
+):
+    """The one place absence does NOT read as 0. A filer tagging BOTH equity
+    totals is asserting a non-controlling interest EXISTS (that is the line
+    between the two subtotals); if it never tags `MinorityInterest`, the term
+    we need has no amount and the period is UNCHECKABLE.
+
+    Reading 0 here would reproduce the exact defect this round fixes — the
+    residual would be the NCI and the filer falsely accused — while
+    substituting the incl-NCI figure would make the flag's own
+    `components.total_equity` disagree with the `total_equity` the view
+    EMITS for that period, which no reader could reconcile. Uncheckable is
+    the honest third answer.
+    """
+    company = "NCI-ASSERTED-BUT-UNTAGGED"
+    dump = _dump_of(
+        store,
+        company,
+        [
+            _balance(company, _ASSETS, "FY2023", "2023-12-31", 200_000_000_000, "2024-02-01"),
+            _balance(company, _LIABILITIES, "FY2023", "2023-12-31", 150_000_000_000, "2024-02-01"),
+            _balance(company, _EQUITY, "FY2023", "2023-12-31", 44_000_000_000, "2024-02-01"),
+            _balance(company, _EQUITY_INCL_NCI, "FY2023", "2023-12-31", 50_000_000_000, "2024-02-01"),
+        ],
+    )
+
+    derived = spine_view.derive_spine(dump)
+
+    assert _identity_flag(derived, "2023-12-31") is None
+    # Not dropped either — every as-reported figure survives.
+    assert _values_by_end(_series(derived, "total_assets")) == {
+        "2023-12-31": 200_000_000_000
+    }
+    assert _values_by_end(_series(derived, "total_equity")) == {
+        "2023-12-31": 44_000_000_000
+    }
+
+
+def test_the_flag_conforms_to_the_one_dqc_schema(store, spine_view):
+    """The repo pins ONE flag schema — `{type, old, new, accessions,
+    reason}` with locating extras allowed (`kpi_xbrl.assert_dqc_schema`,
+    plan kickoff decision "no per-class schema variants"). This flag is not
+    a variant of it.
+    """
+    company = "SCHEMA-CHECK"
+    dump = _dump_of(
+        store,
+        company,
+        [
+            _balance(company, _ASSETS, "FY2023", "2023-12-31", 125_155_000_000, "2024-02-01"),
+            _balance(company, _LIABILITIES, "FY2023", "2023-12-31", 105_222_000_000, "2024-02-01"),
+            _balance(company, _EQUITY, "FY2023", "2023-12-31", 19_931_000_000, "2024-02-01"),
+        ],
+    )
+    kpi_xbrl = _load("kpi_xbrl_for_spine_view", KPI_XBRL_SCRIPT)
+
+    flag = _identity_flag(spine_view.derive_spine(dump), "2023-12-31")
+
+    assert kpi_xbrl.assert_dqc_schema(flag) is flag
+    assert flag["accessions"] == [_ACCESSION]
+    assert flag["reason"]
+    assert flag["period_axis_key"] == "2023-12-31|q0"
+    assert flag["equity_kind"] == "parent_only"
+    assert flag["components"] == {
+        "total_assets": 125_155_000_000,
+        "total_liabilities": 105_222_000_000,
+        "mezzanine": 0,
+        "total_equity": 19_931_000_000,
+        "minority_interest": 0,
+    }
+
+
+def test_the_flag_annotates_only_the_top_level_of_the_view_copy(store, spine_view):
+    """Derived period entries are SHALLOW copies of the caller's dump
+    entries: annotating a top level key is safe, but the nested `latest` /
+    `observations` / `period_labels` objects are STILL the caller's, so
+    writing into one would silently rewrite the store's payload.
+
+    The load-bearing assertion is the whole-payload DEEP-EQUALITY snapshot:
+    object identity alone would still pass if a nested write landed inside
+    `observations` or `period_labels`, and comparing the entire input dump
+    before/after covers every nested container at once rather than the two
+    this module happens to name.
+    """
+    company = "NO-WRITE-BACK"
+    dump = _dump_of(
+        store,
+        company,
+        [
+            _balance(company, _ASSETS, "FY2023", "2023-12-31", 125_155_000_000, "2024-02-01"),
+            _balance(company, _LIABILITIES, "FY2023", "2023-12-31", 105_222_000_000, "2024-02-01"),
+            _balance(company, _EQUITY, "FY2023", "2023-12-31", 19_931_000_000, "2024-02-01"),
+        ],
+    )
+    stored_assets = _series(dump, _ASSETS)["periods"][0]
+    before = copy.deepcopy(dump)
+
+    derived = spine_view.derive_spine(dump)
+
+    assert _identity_flag(derived, "2023-12-31") is not None
+    # Nothing anywhere in the caller's payload moved — top level or nested.
+    assert dump == before
+    # ...and the nested objects are still SHARED, so the deep-equality check
+    # above really did have the chance to catch a nested write.
+    derived_assets = _series(derived, "total_assets")["periods"][0]
+    assert derived_assets is not stored_assets
+    assert derived_assets["latest"] is stored_assets["latest"]
+    assert derived_assets["observations"] is stored_assets["observations"]
+    assert derived_assets["period_labels"] is stored_assets["period_labels"]
 
 
 def test_resolves_a_different_concept_per_period(store, spine_view):
@@ -324,3 +832,55 @@ def test_cli_derive_reads_a_dump_from_stdin_or_path(store, spine_view, tmp_path)
     )
     assert from_path.returncode == 0, from_path.stderr
     assert json.loads(from_path.stdout) == expected
+
+
+def _hand_fed_balance_period(concept: str, value) -> dict:
+    """One pinned-schema period entry with NO `source_accession` — a shape
+    `kpi_store.append`'s provenance guard cannot produce, reachable only by
+    hand-feeding the CLI.
+    """
+    return {
+        "period_start": None,
+        "period_end": "2023-12-31",
+        "period_kind": "instant",
+        "period_axis_key": "2023-12-31|q0",
+        "period_labels": ["FY2023"],
+        "disagreement": False,
+        "latest": {"kpi_id": concept, "canonical_value": value},
+        "observations": [{"kpi_id": concept, "canonical_value": value}],
+    }
+
+
+def test_cli_derive_reports_a_malformed_dump_as_an_error_not_a_traceback():
+    """The CLI is the HAND-FED surface, so every malformed input leaves by
+    the same door: `error: ...` on stderr and exit 1.
+
+    A flagged period whose components carry no `source_accession` is the one
+    input that makes `derive_spine` raise (`assert_dqc_schema` rejects an
+    empty `accessions` list — deliberate, since the alternatives are
+    fabricating provenance or dropping a real residual). The raise is right;
+    letting it reach the terminal as a raw traceback is not.
+    """
+    dump = {
+        "company": "HAND-FED",
+        "series": [
+            {"kpi_id": "us-gaap:Assets",
+             "periods": [_hand_fed_balance_period("us-gaap:Assets", 200_000_000_000)]},
+            {"kpi_id": "us-gaap:Liabilities",
+             "periods": [_hand_fed_balance_period("us-gaap:Liabilities", 150_000_000_000)]},
+            {"kpi_id": "us-gaap:StockholdersEquity",
+             "periods": [_hand_fed_balance_period("us-gaap:StockholdersEquity", 44_000_000_000)]},
+        ],
+        "warnings": [],
+    }
+
+    result = subprocess.run(
+        ["uv", "run", "--script", str(KPI_SPINE_VIEW_SCRIPT), "derive"],
+        input=json.dumps(dump), capture_output=True, text=True, timeout=120,
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+    )
+
+    assert result.returncode == 1
+    assert result.stderr.startswith("error: ")
+    assert "Traceback" not in result.stderr
+    assert result.stdout == ""

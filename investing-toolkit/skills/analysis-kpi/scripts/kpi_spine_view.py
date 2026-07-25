@@ -15,9 +15,27 @@ ids. So the render pipeline composes as a plain pipe --
 tearsheet_format.py is not touched.
 
 PURE FUNCTION -- no HTTP, no subprocess, no store access, no env access
-beyond argparse/stdin (tearsheet_format.py precedent). It imports no
-data-markets module and no store module: its whole input is the dump payload
-it is handed.
+beyond argparse/stdin (tearsheet_format.py precedent): its whole input is the
+dump payload it is handed. It imports no data-markets module, and its ONE
+sibling import is `kpi_xbrl`, for `assert_dqc_schema`.
+
+That import is NOT store-free transitively, and the accurate statement is the
+one worth having here, because a "imports no store module" line tells the
+next reader not to look -- which is exactly how store I/O enters a pure view
+unnoticed. The real chain: `kpi_xbrl` imports `kpi_series` (`kpi_xbrl.py:145`)
+-> `kpi_break` (`kpi_series.py:54`) -> `_store_fs` AND `review_queue`
+(`kpi_break.py:64-65`). So this module's import graph does reach the store's
+filesystem module.
+
+Runtime purity nonetheless holds today, for a reason that is CHECKABLE rather
+than asserted, and both halves must be re-verified before a second sibling
+import is added:
+  1. NOTHING in those four modules does I/O at import time. Module level is
+     constants, `Path(__file__).resolve()` sys.path shims, one `re.compile`
+     and one `try: import fcntl` fallback -- verified by walking each
+     module's top-level statements, not by reading its docstring.
+  2. The only thing this module ever CALLS across that boundary is
+     `kpi_xbrl.assert_dqc_schema`, a pure dict check that touches no path.
 
 THE RESOLUTION RULE (the reason this module exists). For each spine field
 and each PERIOD, pick the first concept in that field's ordered chain that
@@ -51,13 +69,89 @@ column each).
 
 `company` and `warnings` ride through verbatim -- a corrupt-file note the
 store emitted must still reach the reader after the view.
+
+BALANCE-SHEET IDENTITY. Per period the view also checks
+`total_assets - (total_liabilities + mezzanine + WHOLE equity)` and attaches
+a flag when the residual exceeds `BALANCE_IDENTITY_TOLERANCE` RELATIVE to
+total assets. The check exists because per-period concept selection is the
+thing most likely to go wrong here, and the identity is the only oracle
+`companyfacts` alone can supply. It NEVER suppresses, refuses, or alters a
+value: an as-reported figure is not wrong because our field selection was.
+
+  - WHY THE MEZZANINE TERM IS REQUIRED, NOT OPTIONAL. Measured over the
+    47-filer probe: with it, 30 of 32 checkable filers balance EXACTLY
+    (residual 0), and TSLA's entire residual was exactly its redeemable
+    non-controlling interest, to the dollar. Drop the term and that filer
+    reads as "does not balance" -- a false accusation. Read that 30/32
+    carefully, though: it was produced by the PROBE's identity
+    (`tests/data/fixtures/capture_us_statement_shapes_probe.py`,
+    `_balance_identity`), which is FOUR-term and prefers the incl-NCI equity
+    concept. It is evidence for the mezzanine term and for the conditional
+    equity term below -- NOT for a flat three-term form.
+  - WHERE THE MEZZANINE COMES FROM. Its concepts are deliberately NOT
+    members of `SPINE_FIELD_CHAINS` (the plan's pin lists them separately,
+    at the end of the same block, because they are identity-only and never
+    become a `series` row), so `derive_spine`'s OUTPUT cannot supply them.
+    They are read from the RAW dump instead -- specifically from the
+    `periods_by_concept` index `derive_spine` already builds, which holds
+    every concept the dump carries, spine or not. That is why the check is
+    an internal step of `derive_spine` and not a second entry point or an
+    extra return channel: the raw periods are already in scope there, and
+    keeping it internal is what lets the pipeline stay one plain pipe
+    (`kpi_store dump | kpi_spine_view derive | tearsheet_format`).
+    `MinorityInterest`, the pin's third identity-only concept, reaches the
+    check by that same route.
+  - THE EQUITY TERM IS WHOLE EQUITY, AND WHICH CONCEPT SUPPLIES IT IS A
+    PER-PERIOD FACT. The identity needs equity INCLUDING the non-controlling
+    interest, but the `total_equity` chain puts parent-only
+    `StockholdersEquity` FIRST, so what a period resolved to decides the
+    term:
+      * resolved `StockholdersEquityIncludingPortionAttributableTo
+        NoncontrollingInterest` -> already whole; adding `MinorityInterest`
+        would DOUBLE-COUNT it.
+      * resolved plain `StockholdersEquity` -> parent-only;
+        `MinorityInterest` MUST be added for that period, or the residual IS
+        the non-controlling interest and the filer is falsely accused.
+    The parent-only branch is the MAJORITY case, not an edge case: cross-
+    tabbing the committed probe fixture, 17 of 32 checkable filers used the
+    incl-NCI concept in the probe while this chain resolves parent-only (BA,
+    C, COST, CVX, F, GE, GM, IBM, JNJ, MS, PEP, PFE, PSX, QCOM, TSLA, UNH,
+    WFC), and the interest is material for GE, F, GM, UNH, C and MS. The fix
+    is the IDENTITY, not the chain: what the spine's `total_equity` field
+    should MEAN is a separate product question, and reordering the chain
+    here would silently change the figure those 17 filers report.
+  - UNCHECKABLE IS NOT WRONG. A period missing ANY required component is not
+    flagged -- 13 of 46 filers never tag a total `Liabilities` at all, and
+    silence there is correct. The mezzanine and (on the parent-only branch)
+    `MinorityInterest` are the components that read as 0 when absent; see
+    `_annotate_balance_identity` for why that asymmetry is measured rather
+    than assumed, and for the ONE case where an absent `MinorityInterest`
+    makes the period uncheckable instead.
+  - THE FLAG'S CARRIER is the `total_assets` period entry: the identity's
+    subject and its denominator, hence always present whenever the period is
+    checkable, and one flag per period rather than three copies of it. The
+    flag rides in the ONE DQC schema the repo uses
+    (`kpi_xbrl.assert_dqc_schema`), which is self-enforcing at its emission
+    site. It is written at the TOP LEVEL of the view's own shallow copy --
+    see `_resolve_field` for why nothing nested may ever be touched.
 """
 from __future__ import annotations
 
 import argparse
 import json
 import sys
+from pathlib import Path
 from typing import Any
+
+# Resolve same-dir modules without a package (mirrors kpi_memo_feed.py's /
+# kpi_store.py's own import shim), so `import kpi_xbrl` works both under
+# `uv run --script` and under importlib test loading.
+_SCRIPT_DIR = Path(__file__).resolve().parent
+if str(_SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPT_DIR))
+# `assert_dqc_schema` is the ONE thing called across this boundary; the import
+# graph behind it does reach `_store_fs` (module docstring, "PURE FUNCTION").
+import kpi_xbrl  # noqa: E402
 
 # The store holds the filer's own qname verbatim, namespace preserved
 # (`us-gaap:Revenues`), so the chains below -- transcribed as bare local
@@ -138,6 +232,81 @@ SPINE_FIELD_CHAINS: tuple[tuple[str, tuple[str, ...]], ...] = (
     )),
 )
 
+# IDENTITY-ONLY chain -- same first-present-per-period semantics as a spine
+# field's, but deliberately NOT a member of SPINE_FIELD_CHAINS: it never
+# becomes a `series` row (module docstring, "WHERE THE MEZZANINE COMES
+# FROM"). Transcribed from the same pinned block in
+# docs/loom/plans/2026-07-26-us-as-reported-statement-lane.md ## Notes.
+MEZZANINE_CHAIN: tuple[str, ...] = (
+    "TemporaryEquityCarryingAmountIncludingPortionAttributableToNoncontrollingInterests",
+    "RedeemableNoncontrollingInterestEquityCarryingAmount",
+)
+
+# The pin's third identity-only concept: the non-controlling interest that
+# completes a PARENT-ONLY equity total into whole equity (module docstring,
+# "THE EQUITY TERM IS WHOLE EQUITY"). Also identity-only -- never a `series`
+# row -- and read from the same raw index as the mezzanine.
+MINORITY_INTEREST_CHAIN: tuple[str, ...] = (
+    "MinorityInterest",
+)
+
+# The two `total_equity` chain members BY NAME, because the identity branches
+# on WHICH of them a period resolved to. Naming them separately from the
+# chain keeps the chain's transcription diffable against the plan
+# character-for-character; the guard below is what stops the two copies from
+# drifting apart silently.
+EQUITY_PARENT_ONLY_CONCEPT = "StockholdersEquity"
+EQUITY_INCL_NCI_CONCEPT = (
+    "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest"
+)
+
+def _assert_equity_chain(chain: tuple[str, ...]) -> None:
+    """Fail LOUD when the `total_equity` chain no longer IS the exact pair of
+    concepts the balance-sheet identity branches on. Called at import below.
+
+    TUPLE EQUALITY, deliberately -- both order-sensitive and length-sensitive,
+    and both halves are load-bearing. Reordering flips which concept the
+    majority of periods resolve to (the very defect this guard exists to stop
+    recurring), and an EXTRA member is a concept `_equity_kind` cannot name,
+    so every period carrying it falls through to "uncheckable" -- a check that
+    quietly stops checking. A set or subset comparison would keep the shipped
+    chain passing while admitting both; `test_the_equity_chain_drift_guard_
+    trips_on_reorder_and_on_extension` pins the two properties separately so
+    that loosening breaks a test rather than a filer's flag.
+
+    A function, not a bare module-level `if`, so the raise branch itself is
+    reachable from a test: the import-time comparison alone can only be
+    exercised by mutating a copy of this file, which leaves no committed
+    evidence behind.
+    """
+    if chain != (EQUITY_PARENT_ONLY_CONCEPT, EQUITY_INCL_NCI_CONCEPT):
+        raise RuntimeError(
+            "kpi_spine_view: the total_equity chain "
+            f"{chain} no longer matches the two concepts the "
+            "balance-sheet identity branches on "
+            f"({EQUITY_PARENT_ONLY_CONCEPT!r}, {EQUITY_INCL_NCI_CONCEPT!r}) -- "
+            "decide what whole equity means for the new member before shipping"
+        )
+
+
+_assert_equity_chain(dict(SPINE_FIELD_CHAINS)["total_equity"])
+
+# Kickoff decision, brief §Resolved at kickoff #2: the reconciliation
+# tolerance is RELATIVE, 1e-5 -- a decision, not a guess. `companyfacts`
+# carries NO `decimals` attribute on any component (verified on three
+# filers), so an absolute or precision-derived tolerance is not
+# constructible. 1e-5 clears the two measured non-exact filers (IBM and
+# Procter & Gamble each miss by exactly 1,000,000 against figures reported
+# in millions -- 7.99e-06 relative) with about an order of magnitude of
+# headroom, and still catches a residual an order of magnitude smaller than
+# a real component swap.
+BALANCE_IDENTITY_TOLERANCE = 1e-5
+
+# This flag class's `type` within the ONE DQC flag schema
+# (`kpi_xbrl.assert_dqc_schema`; the plan's kickoff decision pins "no
+# per-class schema variants").
+BALANCE_IDENTITY_FLAG_TYPE = "balance_identity_residual"
+
 
 def _period_identity(period: dict[str, Any]) -> Any:
     """Cross-concept period identity: the store's `period_axis_key` when it
@@ -190,6 +359,303 @@ def _resolve_field(chain_periods: list[list[dict[str, Any]]]) -> list[dict[str, 
     return sorted(resolved.values(), key=lambda p: p.get("period_end") or "")
 
 
+def _chain_periods(
+    periods_by_concept: dict[Any, list[dict[str, Any]]],
+    chain: tuple[str, ...],
+) -> list[list[dict[str, Any]]]:
+    """One chain's period lists in CHAIN ORDER, with concepts absent from
+    the dump dropped -- exactly the input `_resolve_field` expects. Shared
+    by the spine fields and the identity-only mezzanine chain so the two
+    resolve by one rule, not two."""
+    return [
+        periods_by_concept[f"{_US_GAAP}{concept}"]
+        for concept in chain
+        if periods_by_concept.get(f"{_US_GAAP}{concept}")
+    ]
+
+
+def _by_axis_key(periods: list[dict[str, Any]]) -> dict[Any, dict[str, Any]]:
+    """Index resolved period entries by the store's `period_axis_key`,
+    DROPPING null-key entries.
+
+    The identity is a cross-CONCEPT claim, so it may only join on the
+    store-owned cross-KPI identity -- never on raw dates. A null key means
+    "not proven to be the same period as anything else", so a null-key
+    period can never be matched to the other components and is therefore
+    uncheckable, which is the honest outcome rather than a guess.
+    """
+    return {
+        period["period_axis_key"]: period
+        for period in periods
+        if period.get("period_axis_key") is not None
+    }
+
+
+def _identity_value(period: dict[str, Any] | None) -> int | float | None:
+    """A component's figure for the identity: its latest observation's
+    `canonical_value`, when that is a real number.
+
+    `canonical_value` is the store's BASE-scale figure (the point's `scale`
+    already applied), so the components are directly comparable and no
+    magnitude is re-derived here. Anything else -- an absent component, an
+    unparseable string value, a bool -- returns None, i.e. uncheckable.
+    """
+    if period is None:
+        return None
+    value = (period.get("latest") or {}).get("canonical_value")
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return value
+
+
+def _identity_accessions(periods: list[dict[str, Any] | None]) -> list[str]:
+    """Every distinct `source_accession` behind the components of one
+    flagged period, in identity reading order -- the DQC schema's required
+    provenance for the claim, and what lets a reader pull the filings the
+    residual was computed from."""
+    accessions: list[str] = []
+    for period in periods:
+        if period is None:
+            continue
+        accession = (period.get("latest") or {}).get("source_accession")
+        if isinstance(accession, str) and accession and accession not in accessions:
+            accessions.append(accession)
+    return accessions
+
+
+def _equity_kind(equity_period: dict[str, Any] | None) -> str | None:
+    """Which `total_equity` chain member this period actually resolved to --
+    `"parent_only"`, `"incl_NCI"`, or None when it is neither.
+
+    Read from the resolved entry's own `latest.kpi_id`, i.e. the concept the
+    view WILL report for that period, so the identity can never branch on a
+    different concept than the one it is checking. None (a `total_equity`
+    entry carrying some other concept, only reachable from a hand-fed
+    payload) makes the period uncheckable rather than guessed at.
+    """
+    if equity_period is None:
+        return None
+    concept = (equity_period.get("latest") or {}).get("kpi_id")
+    if concept == f"{_US_GAAP}{EQUITY_INCL_NCI_CONCEPT}":
+        return "incl_NCI"
+    if concept == f"{_US_GAAP}{EQUITY_PARENT_ONLY_CONCEPT}":
+        return "parent_only"
+    return None
+
+
+def _minority_interest_term(
+    equity_kind: str | None,
+    minority_interest_period: dict[str, Any] | None,
+    nci_is_asserted: bool,
+) -> int | float | None:
+    """The amount to ADD to this period's `total_equity` to make it whole
+    equity. None means uncheckable.
+
+    On the `incl_NCI` branch the term is 0 by construction -- the resolved
+    concept already contains the non-controlling interest, and adding it
+    again would double-count.
+
+    On the `parent_only` branch a tagged `MinorityInterest` is the term. An
+    UNTAGGED one reads as 0 -- measured, exactly like the mezzanine: of the
+    committed probe's 32 checkable filers, 13 resolved parent-only with no
+    `MinorityInterest` at that instant (its `parent_plus_MI` branch fired
+    ZERO times in-sample) and all 13 balance EXACTLY, which can only hold if
+    absence means "no non-controlling interest". Making absence uncheckable
+    instead would silence the identity for the single-entity majority.
+
+    THE ONE EXCEPTION, and the reason `nci_is_asserted` exists: a filer that
+    tags BOTH equity totals for the period is asserting an NCI EXISTS -- it
+    is the line between the two subtotals -- so an absent `MinorityInterest`
+    there is a MISSING AMOUNT, not a zero, and the period is uncheckable.
+    Reading 0 would reproduce the very defect this branch fixes (residual =
+    the NCI, filer falsely accused); substituting the incl-NCI figure would
+    instead make the flag's own `components.total_equity` disagree with the
+    `total_equity` the view EMITS for that period, which no reader could
+    reconcile. Uncheckable is the honest third answer.
+    """
+    if equity_kind == "incl_NCI":
+        return 0
+    if minority_interest_period is not None:
+        # A tagged but unreadable amount stays uncheckable (`_identity_value`
+        # returns None) -- never quietly zeroed, same as the mezzanine.
+        return _identity_value(minority_interest_period)
+    return None if nci_is_asserted else 0
+
+
+def _balance_identity_flag(
+    *,
+    axis_key: Any,
+    period_end: Any,
+    accessions: list[str],
+    equity_kind: str,
+    components: dict[str, int | float],
+    residual: int | float,
+    relative_residual: float,
+) -> dict[str, Any]:
+    """Shape ONE flagged period's residual into the repo's single DQC flag
+    schema, and validate it at the emission site.
+
+    Every argument is an already-computed value, KEYWORD-ONLY: this function
+    knows nothing about period entries, chains, or how a component was
+    resolved, so it cannot reintroduce a resolution decision, and seven
+    positional numbers are exactly the call site where two get swapped
+    silently.
+
+    THE ONE PLACE THIS MODULE CAN RAISE. A flagged period whose components
+    carry no `source_accession` produces an empty `accessions` list, which
+    `assert_dqc_schema` rejects. That is unreachable from the real producer
+    (`kpi_store.append`'s provenance guard requires the field on every stored
+    point, so every `dump_company` payload has it), and the loud failure is
+    deliberate for the hand-fed case: the alternatives are fabricating an
+    accession or dropping a real residual on the floor.
+    """
+    return kpi_xbrl.assert_dqc_schema({
+        "type": BALANCE_IDENTITY_FLAG_TYPE,
+        # No old/new pair: this class compares one period against an
+        # accounting identity, not one vintage against another. The ONE
+        # schema admits None for exactly such a class.
+        "old": None,
+        "new": None,
+        "accessions": accessions,
+        "reason": (
+            f"balance-sheet identity residual {residual} against total "
+            f"assets {components['total_assets']} ({relative_residual:.3e} "
+            f"relative) exceeds the {BALANCE_IDENTITY_TOLERANCE:.0e} relative "
+            f"tolerance for the period ending {period_end!r} -- every "
+            f"as-reported figure is unchanged; the residual points at this "
+            f"view's per-period concept SELECTION, not at the filer's numbers"
+        ),
+        # Locating extras, which the ONE schema allows on top of the
+        # required five.
+        "period_axis_key": axis_key,
+        "period_end": period_end,
+        # Which concept carried `total_equity` here, so a reader can tell
+        # a `minority_interest` of 0 that means "already inside the
+        # equity total" (`incl_NCI`) from one that means "this filer has
+        # none" (`parent_only`).
+        "equity_kind": equity_kind,
+        "components": components,
+        "residual": residual,
+        "relative_residual": relative_residual,
+        "tolerance": BALANCE_IDENTITY_TOLERANCE,
+    })
+
+
+def _annotate_balance_identity(
+    resolved_by_field: dict[str, list[dict[str, Any]]],
+    periods_by_concept: dict[Any, list[dict[str, Any]]],
+) -> None:
+    """Attach the balance-identity flag, in place, to every FLAGGED period
+    of the derived `total_assets` series (module docstring for the why of
+    each choice below).
+
+    Writes ONE top-level key on the view's own shallow copy of the period
+    entry. Nothing nested is read-modify-written: the `latest` /
+    `observations` / `period_labels` objects are still the caller's, and
+    mutating one would rewrite the store's payload silently
+    (`_resolve_field`).
+
+    A period is checked only when total assets, total liabilities, total
+    equity AND the term that completes equity are ALL present and numeric;
+    otherwise it is passed over in silence. Uncheckable is not the same as
+    wrong, and a flag on an uncheckable period would be a false accusation
+    about figures the filer reported honestly.
+
+    The mezzanine and the minority interest are the components that default
+    to 0 when absent, and that asymmetry is measured rather than assumed: 32
+    of 46 probed filers are checkable and 30 of those balance EXACTLY under
+    the probe's own four-term identity, which can only hold if an untagged
+    mezzanine reads as zero -- almost no filer has redeemable instruments to
+    tag (`_minority_interest_term` carries the same measurement for the
+    minority interest, plus the one case where its absence is uncheckable
+    instead). An absent mezzanine line is the balance sheet asserting there
+    are none; an absent `Liabilities` line is a SUBTOTAL the filer never
+    tagged while the liabilities themselves plainly exist. A mezzanine that
+    IS tagged but unreadable stays uncheckable -- it is never quietly
+    zeroed.
+
+    `_balance_identity_flag` shapes and validates each flag this attaches --
+    including the one input that makes this module raise.
+    """
+    def _identity_only_by_key(chain: tuple[str, ...]) -> dict[Any, dict[str, Any]]:
+        """One identity-only chain, resolved by the SAME per-period rule the
+        spine fields use and indexed on the store's axis key."""
+        return _by_axis_key(_resolve_field(_chain_periods(periods_by_concept, chain)))
+
+    assets_by_key = _by_axis_key(resolved_by_field.get("total_assets", []))
+    liabilities_by_key = _by_axis_key(resolved_by_field.get("total_liabilities", []))
+    equity_by_key = _by_axis_key(resolved_by_field.get("total_equity", []))
+    mezzanine_by_key = _identity_only_by_key(MEZZANINE_CHAIN)
+    minority_interest_by_key = _identity_only_by_key(MINORITY_INTEREST_CHAIN)
+    # Not a term -- only the evidence that a non-controlling interest EXISTS
+    # in a period whose `total_equity` resolved parent-only
+    # (`_minority_interest_term`, "THE ONE EXCEPTION").
+    equity_incl_nci_by_key = _identity_only_by_key((EQUITY_INCL_NCI_CONCEPT,))
+
+    for axis_key, assets_period in assets_by_key.items():
+        liabilities_period = liabilities_by_key.get(axis_key)
+        equity_period = equity_by_key.get(axis_key)
+        mezzanine_period = mezzanine_by_key.get(axis_key)
+        minority_interest_period = minority_interest_by_key.get(axis_key)
+
+        total_assets = _identity_value(assets_period)
+        total_liabilities = _identity_value(liabilities_period)
+        total_equity = _identity_value(equity_period)
+        mezzanine = 0 if mezzanine_period is None else _identity_value(mezzanine_period)
+        equity_kind = _equity_kind(equity_period)
+        minority_interest = _minority_interest_term(
+            equity_kind,
+            minority_interest_period,
+            nci_is_asserted=axis_key in equity_incl_nci_by_key,
+        )
+
+        components = (
+            total_assets, total_liabilities, mezzanine, total_equity, minority_interest,
+        )
+        if equity_kind is None or any(component is None for component in components):
+            continue
+        if not total_assets:
+            # A relative residual has no denominator at zero total assets,
+            # and the pinned tolerance is relative. Not checkable, so not
+            # flagged -- the same rule as any other missing component.
+            continue
+
+        residual = total_assets - (
+            total_liabilities + mezzanine + total_equity + minority_interest
+        )
+        # Plain arithmetic, not Decimal: every component is already the
+        # store's base-scale canonical, binary-float error is ~1e-16
+        # relative (eleven orders below the 1e-5 tolerance), and a Decimal
+        # would not survive the CLI's json.dump.
+        relative_residual = abs(residual) / abs(total_assets)
+        if relative_residual <= BALANCE_IDENTITY_TOLERANCE:
+            continue
+
+        assets_period["balance_identity"] = _balance_identity_flag(
+            axis_key=axis_key,
+            period_end=assets_period.get("period_end"),
+            accessions=_identity_accessions([
+                assets_period, liabilities_period, mezzanine_period,
+                equity_period,
+                # Only when it actually moved the arithmetic. On the incl-NCI
+                # branch the term is 0 BY CONSTRUCTION however the filer
+                # tagged it, so listing its filing would send a reader to a
+                # document behind none of the components.
+                minority_interest_period if minority_interest else None,
+            ]),
+            equity_kind=equity_kind,
+            components={
+                "total_assets": total_assets,
+                "total_liabilities": total_liabilities,
+                "mezzanine": mezzanine,
+                "total_equity": total_equity,
+                "minority_interest": minority_interest,
+            },
+            residual=residual,
+            relative_residual=relative_residual,
+        )
+
+
 def derive_spine(dump: dict[str, Any]) -> dict[str, Any]:
     """Map a `kpi_store dump --company` payload onto the spine fields,
     resolving each field's concept chain PER PERIOD (see module docstring).
@@ -200,6 +666,15 @@ def derive_spine(dump: dict[str, Any]) -> dict[str, Any]:
     `SPINE_FIELD_CHAINS` order; a field no concept covers is absent entirely.
     Stored series that are not a spine concept are simply not part of the
     spine view (they remain in the store, and in the raw dump).
+
+    Balance-sheet identity flags are attached here as a final annotation
+    pass, because the terms it needs beyond the spine fields -- the mezzanine
+    and the minority interest -- are identity-only concepts that no spine
+    field carries. They come from `periods_by_concept`, the RAW per-concept
+    index built just below, which this function already has in hand (module
+    docstring, "WHERE THE MEZZANINE COMES FROM"); the whole index is handed
+    over rather than each chain pre-resolved, so the annotator owns which
+    identity-only concepts it reads.
     """
     periods_by_concept = {
         entry.get("kpi_id"): entry.get("periods") or []
@@ -207,15 +682,15 @@ def derive_spine(dump: dict[str, Any]) -> dict[str, Any]:
     }
 
     series: list[dict[str, Any]] = []
+    resolved_by_field: dict[str, list[dict[str, Any]]] = {}
     for field, chain in SPINE_FIELD_CHAINS:
-        chain_periods = [
-            periods_by_concept[f"{_US_GAAP}{concept}"]
-            for concept in chain
-            if periods_by_concept.get(f"{_US_GAAP}{concept}")
-        ]
+        chain_periods = _chain_periods(periods_by_concept, chain)
         if not chain_periods:
             continue  # honest absence: no row at all, never an empty placeholder
-        series.append({"kpi_id": field, "periods": _resolve_field(chain_periods)})
+        resolved_by_field[field] = _resolve_field(chain_periods)
+        series.append({"kpi_id": field, "periods": resolved_by_field[field]})
+
+    _annotate_balance_identity(resolved_by_field, periods_by_concept)
 
     return {
         "company": dump.get("company", ""),
@@ -227,6 +702,14 @@ def derive_spine(dump: dict[str, Any]) -> dict[str, Any]:
 def _cli_derive(args: argparse.Namespace) -> int:
     """`derive` subcommand: read the dump payload from `--dump` (or stdin
     when omitted), print the spine payload as JSON to stdout.
+
+    Every malformed input leaves by ONE door -- `error: ...` on stderr, exit
+    1 -- including the one that reaches `derive_spine` itself: a flagged
+    period whose components carry no `source_accession` (see
+    `_balance_identity_flag`, "THE ONE PLACE THIS MODULE CAN RAISE").
+    The raise is the right library behaviour and is deliberately kept; the
+    CLI is the hand-fed surface, so it reports rather than tracebacks. The
+    library caller still sees the exception.
     """
     if args.dump_path:
         try:
@@ -254,8 +737,14 @@ def _cli_derive(args: argparse.Namespace) -> int:
         )
         return 1
 
+    try:
+        spine = derive_spine(dump)
+    except ValueError as exc:
+        print(f"error: cannot derive the spine: {exc}", file=sys.stderr)
+        return 1
+
     sys.stdout.reconfigure(encoding="utf-8")
-    json.dump(derive_spine(dump), sys.stdout, ensure_ascii=False)
+    json.dump(spine, sys.stdout, ensure_ascii=False)
     sys.stdout.write("\n")
     return 0
 

@@ -194,6 +194,43 @@
   fixtures" though it now also exercises the -ci 2330 fixture; the 2330 fact-count literal
   `2002` is a 3rd pin copy — touch-up on next edit.
 
+## investing-toolkit US as-reported statement lane — post-ship follow-ups (OPEN)
+
+- Status: OPEN. Filed 2026-07-26 from the Task 7 review rounds (branch
+  `feat-us-as-reported-statement-lane`; shipped version TBD at close-out — the
+  branch still carries 2.37.0 from the preceding arc).
+- (a) 🟢 **ACCEPTED RESIDUAL — a silent-NCI filer can still be falsely flagged by the
+  balance-sheet identity.** `kpi_spine_view._minority_interest_term` reads an absent
+  `MinorityInterest` as 0 on the `parent_only` branch. A filer that tags ONLY the
+  parent-only `StockholdersEquity`, genuinely HAS a non-controlling interest, and tags
+  that interest NOWHERE — no `MinorityInterest`, no incl-NCI equity total — therefore
+  has its NCI silently treated as zero, and the residual it produces is exactly that
+  interest: the filer is accused of our missing term. Recorded here rather than only in
+  the module docstring because it is an accepted defect, not a documented behaviour.
+  - **Why it is accepted, measured.** (1) It requires the filer to omit a
+    balance-sheet line ASC 810-10-45-16 requires — NCI must be presented in equity,
+    separately from parent equity. (2) It occurred **0 of 13 times in-sample**: of the
+    committed probe's 32 checkable filers
+    (`tests/data/fixtures/us_statement_shapes_probe_2026-07-26.json`), 13 resolved
+    parent-only with no `MinorityInterest` at that instant, and all 13 balance EXACTLY
+    — which can only hold if absence there really means "no non-controlling interest".
+    (3) The alternative (absent MI ⇒ period uncheckable) would silence the identity for
+    the single-entity majority, i.e. trade a zero-observed false accusation for
+    switching the check off on the common case.
+  - **The detectable half is already handled, and is not this item.** When the filer
+    tags BOTH equity totals it is asserting an NCI exists (the line between the two
+    subtotals), so an absent `MinorityInterest` there is a MISSING AMOUNT and the
+    period is uncheckable — `_minority_interest_term`'s `nci_is_asserted` branch,
+    pinned by `test_a_parent_only_period_whose_asserted_nci_has_no_amount_is_uncheckable`.
+    What remains open is only the case where NOTHING in the filing asserts the NCI, so
+    nothing inside `companyfacts` can distinguish it from a genuine single entity.
+  - Re-trigger: a real filer's flag turns out to trace to this (the flag's
+    `equity_kind: "parent_only"` + `components.minority_interest: 0` is the signature),
+    or the probe sample grows and the parent-only-with-untagged-NCI branch fires
+    non-zero times. Fixing it needs evidence from OUTSIDE `companyfacts` (the filing's
+    own equity statement or presentation linkbase); do not "fix" it by making absence
+    uncheckable without re-measuring (2).
+
 ## investing-toolkit kpi_id identity 2.37.0 — post-ship follow-ups (OPEN)
 
 - Status: OPEN. Filed at close-out 2026-07-26 (branch `feat-kpi-id-consolidation-axis`).
