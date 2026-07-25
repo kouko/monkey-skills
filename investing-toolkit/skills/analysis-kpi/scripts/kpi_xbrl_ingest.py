@@ -114,20 +114,34 @@ def _slug_token(qname: str) -> str:
     return _strip_axis_member_suffix(_local_name(qname)).lower()
 
 
-def derive_kpi_id(concept: str, dimensions: dict) -> str:
+def derive_kpi_id(concept: str, dimensions: dict, consolidation=None) -> str:
     """Deterministic, injective kpi_id from the FULL dimensional signature.
 
     `concept` + every breakdown `axis=member` pair (axes sorted for
     determinism), each token reduced to its local-name with the Axis/Member
     suffix stripped and lowercased. The `ConsolidationItemsAxis` reconciliation
-    qualifier is dropped from the signature (a segment filer is not cross-
-    dimensioned by it). Shape: `<concept>__<axis>-<member>[__<axis>-<member>...]`
+    qualifier is EXCLUDED from that breakdown loop (a segment filer is not
+    cross-dimensioned by it) but is not simply dropped: `consolidation` — the
+    CONSUMER-normalized qualifier (`kpi_xbrl._normalize_consolidation`'s
+    output, e.g. via `_signature_key`), never a raw fact value — appends its
+    own `__<member-slug>` token when it is anything OTHER than the default
+    `OperatingSegmentsMember` view. A default or absent (`None`) qualifier
+    adds no token, so two facts differing only on that default-vs-absent
+    distinction still fold to one id
+    (`test_ingest_collapses_consolidation_variants_of_one_signature`); a
+    genuinely NON-default member (e.g. `IntersegmentEliminationMember`)
+    discriminates the id instead of silently merging into the default series
+    (`test_ingest_splits_default_and_non_default_consolidation_into_distinct_series`
+    pins the resulting two-series split). Shape:
+    `<concept>__<axis>-<member>[__<axis>-<member>...][__<consolidation-member>]`
     — the `__`/`-` delimiters keep distinct signatures on distinct ids.
 
     An empty `dimensions` (the top-level total) yields the bare concept slug.
     The driver never uses that value — a flat fact is routed to the fixed
     canonical `_TOP_LINE_KPI_ID` instead — but the function stays total.
     """
+    import kpi_xbrl
+
     parts = []
     for axis in sorted(dimensions):
         axis_token = _slug_token(axis)
@@ -136,9 +150,10 @@ def derive_kpi_id(concept: str, dimensions: dict) -> str:
         member_token = _slug_token(dimensions[axis])
         parts.append(f"{axis_token}-{member_token}")
     concept_token = _slug_token(concept)
-    if not parts:
-        return concept_token
-    return concept_token + "__" + "__".join(parts)
+    kpi_id = concept_token if not parts else concept_token + "__" + "__".join(parts)
+    if consolidation and consolidation != kpi_xbrl._DEFAULT_CONSOLIDATION_MEMBER:
+        kpi_id += "__" + _slug_token(consolidation)
+    return kpi_id
 
 
 def _consumer_consolidation(consolidation):
@@ -186,14 +201,20 @@ def _signature_key(concept: str, dimensions: dict, consolidation) -> tuple:
     (`docs/loom/memory/derived-durable-id-slug-is-a-lossy-one-way-door.md`).
 
     Only the reconciliation-qualifier axis collapses, and only where the
-    consumer collapses it. `concept` and the breakdown `dimensions` stay exact,
-    so two genuinely distinct breakdowns deriving one kpi_id still trip
-    `_claim_kpi_id` — and so do two NON-DEFAULT qualifier members (e.g.
-    `OperatingSegmentsMember` vs `IntersegmentEliminationMember`), which
-    `_normalize_consolidation` does NOT fold together. Dropping the qualifier
-    from this key entirely would silently discard one of that pair; it is
-    normalized here, never deleted (pinned by
-    `test_ingest_raises_on_two_non_default_consolidation_members`).
+    consumer collapses it. `concept` and the breakdown `dimensions` stay
+    exact, so two genuinely distinct breakdowns deriving one kpi_id still
+    trip `_claim_kpi_id`. The qualifier itself is normalized here, never
+    dropped: two DIFFERENT NON-DEFAULT members (e.g.
+    `IntersegmentEliminationMember` vs `CorporateNonSegmentMember` — neither
+    is the default `OperatingSegmentsMember` view) are NOT folded together by
+    `_normalize_consolidation`, so each keeps its own claim key — matching
+    `derive_kpi_id`, which appends each non-default member's own token and so
+    mints each its own kpi_id rather than colliding (pinned by
+    `test_derive_kpi_id_discriminates_non_default_consolidation`'s
+    `elimination`-vs-`corporate` assertion). Dropping the qualifier from this
+    key entirely would instead make two such members share one claim key,
+    silently discarding the distinction the consumer still draws between
+    them.
     """
     return (
         concept,
@@ -376,7 +397,9 @@ def ingest_pack(fact_pack: dict, source_kind: str = _SOURCE_KIND) -> dict:
     pending: list = []
 
     for sig_key, match in selectors.items():
-        kpi_id = derive_kpi_id(match["concept"], match["dimensions"])
+        kpi_id = derive_kpi_id(
+            match["concept"], match["dimensions"], match["consolidation"]
+        )
         _claim_kpi_id(claimed_by, kpi_id, sig_key)
         kpi_ids.add(kpi_id)
         pending.extend(

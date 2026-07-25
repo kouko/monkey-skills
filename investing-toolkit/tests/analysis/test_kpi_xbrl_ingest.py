@@ -320,24 +320,38 @@ def test_ingest_collision_guard_fires_across_consolidation_variants(tmp_path):
     )
 
 
-def test_ingest_raises_on_two_non_default_consolidation_members(tmp_path):
-    """Two facts sharing one concept+breakdown but carrying two NON-DEFAULT
-    `ConsolidationItemsAxis` members must be REJECTED loudly.
+def test_ingest_splits_default_and_non_default_consolidation_into_distinct_series(
+    tmp_path,
+):
+    """Two facts sharing one concept+breakdown but carrying the DEFAULT
+    `OperatingSegmentsMember` view on one side and a NON-DEFAULT
+    `ConsolidationItemsAxis` member on the other must ingest as TWO series,
+    not collide.
 
-    This is the axis the sibling collapse test cannot see, and it is what
-    separates NORMALIZING the qualifier from DELETING it. `_normalize_
-    consolidation` folds only `None` into `OperatingSegmentsMember`; it does not
-    make `IntersegmentEliminationMember` the same series. Since `derive_kpi_id`
-    drops the axis entirely, that pair derives ONE kpi_id from two series the
-    consumer keeps apart — so the store's dedup key would silently discard one
-    of them, and failing loud is the only honest answer.
+    Re-pinned polarity (`docs/loom/memory/a-test-can-pin-behaviour-with-a-false-
+    rationale.md`): this test used to assert `returncode != 0` on the theory
+    that `derive_kpi_id` dropped the qualifier entirely, so both facts derived
+    ONE id the guard had to reject to avoid a silent drop. `derive_kpi_id` no
+    longer drops it — a non-default `consolidation` now appends its own
+    `__<member-slug>` token to the readable prefix (Task 1's change, this same
+    arc). A non-default member is DISCRIMINATING for identity: `Operating
+    SegmentsMember` and `IntersegmentEliminationMember` are genuinely different
+    amounts — a segment's operating view vs its intersegment eliminations,
+    adjacent columns of one reconciliation table, not two spellings of the
+    same number. So the two facts now mint DIFFERENT ids by construction, the
+    collision guard has nothing to fire on, and ingest succeeding with two
+    series is the correct outcome, not a gap the guard must patch over.
 
-    Without this test the suite cannot distinguish the shipped
-    `_signature_key` from one that drops `consolidation` from the key
-    altogether: that mutant collapses the pair into a single selector whose
-    qualifier matches only ONE of the two facts, and the other is dropped with
-    no error and no trace — `appended: 1` for a 2-fact pack. The collapse test
-    passes under that mutant; only this one fails.
+    Without this test the suite cannot distinguish the shipped `derive_kpi_id`
+    (which appends the non-default member's slug) from a mutant that keeps
+    dropping the qualifier: that mutant would derive ONE id for both facts and
+    either silently collapse them into one series or spuriously trip the
+    guard — either way the two REAL amounts stop being two series. Asserting
+    two distinct ids AND two distinct stored series rules out both. What this
+    test does NOT cover — two GENUINELY non-default members discriminating
+    against EACH OTHER, rather than against the default — is pinned instead by
+    `test_derive_kpi_id_discriminates_non_default_consolidation`'s
+    `elimination`-vs-`corporate` assertion.
 
     SYNTHETIC probe (mirrors `_collision_pack`): no real INTC filing tags this
     concept with an intersegment-elimination member, so the pack is the live
@@ -357,17 +371,38 @@ def test_ingest_raises_on_two_non_default_consolidation_members(tmp_path):
     pack_path.write_text(json.dumps(pack), encoding="utf-8")
 
     result = _run_ingest(pack_path, env)
-    assert result.returncode != 0, (
-        "two NON-DEFAULT consolidation members on one concept+breakdown derive "
-        "ONE kpi_id from two series the consumer keeps apart — that must fail "
-        f"loud, never silently drop one: stdout={result.stdout!r}"
+    assert result.returncode == 0, (
+        "a non-default consolidation member discriminates the id — two "
+        "genuinely different amounts must ingest as two series, not collide: "
+        f"stdout={result.stdout!r} stderr={result.stderr!r}"
     )
-    assert "collision" in result.stderr.lower(), (
-        f"rejection must name the collision: stderr={result.stderr!r}"
+
+    base_id = (
+        "revenuefromcontractwithcustomerexcludingassessedtax"
+        "__productorservice-assemblyandtest"
+        "__statementbusinesssegments-intelfoundry"
     )
-    # Nothing may reach the store: the guard fires before the first append.
-    assert not list(store_dir.glob("*.json")) if store_dir.exists() else True, (
-        "a rejected pack must leave no partial write"
+    summary = json.loads(result.stdout)
+    assert summary["kpi_ids"] == [base_id, base_id + "__intersegmentelimination"], (
+        "the default-member fact keeps the bare signature and the non-default "
+        f"member appends its own token; got {summary['kpi_ids']}"
+    )
+    assert summary["appended"] == len(pack["facts"]), (
+        "each fact belongs to its own series, so both must be appended: "
+        f"{summary['appended']} appended for {len(pack['facts'])} facts"
+    )
+
+    dump = _run_dump(pack["ticker"], env)
+    assert dump.returncode == 0, (
+        f"dump failed: stdout={dump.stdout!r} stderr={dump.stderr!r}"
+    )
+    payload = json.loads(dump.stdout)
+    assert sorted(s["kpi_id"] for s in payload["series"]) == [
+        base_id,
+        base_id + "__intersegmentelimination",
+    ], (
+        "the operating view and the intersegment-elimination view must be "
+        f"stored as TWO series; got {[s['kpi_id'] for s in payload['series']]}"
     )
 
 
@@ -415,6 +450,51 @@ def test_ingest_kpi_id_derivation(ingest_module):
     assert "clientcomputinggroup" in ccg
     assert "member" not in ccg
     assert "datacentergroup" in dcg
+
+
+def test_derive_kpi_id_discriminates_non_default_consolidation(ingest_module):
+    """A non-default `ConsolidationItemsAxis` qualifier (e.g.
+    `IntersegmentEliminationMember`) must mint a DIFFERENT kpi_id than the
+    default `OperatingSegmentsMember` view over the SAME (concept,
+    dimensions) pair — `kpi_xbrl._normalize_consolidation` does NOT fold
+    non-default members together, and `derive_kpi_id` dropping the axis
+    entirely is exactly what would force two series the consumer keeps apart
+    into one id. A default OR absent qualifier must mint the SAME id as no
+    qualifier at all, so the 2.36.0 consolidation-variant fold
+    (`test_ingest_collapses_consolidation_variants_of_one_signature`)
+    survives by construction.
+
+    Also covers the pair the default-vs-non-default split above cannot: TWO
+    GENUINELY non-default members (`IntersegmentEliminationMember` vs
+    `CorporateNonSegmentMember` — both observed on the live 47-filer probe,
+    `tests/data/fixtures/kpi_id_identity_probe_2026-07-25.json`
+    `_summary.consolidation_member_domain`) over the SAME breakdown must
+    ALSO mint distinct ids from each other, not just from the default —
+    `_normalize_consolidation` does not fold any two non-default members
+    together, so `derive_kpi_id` appending each member's own token must
+    discriminate every pair, not only the default/non-default one.
+    """
+    derive = ingest_module.derive_kpi_id
+    concept = "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax"
+    dimensions = {"StatementBusinessSegments": "ClientComputingGroupMember"}
+
+    operating = derive(concept, dimensions, "OperatingSegmentsMember")
+    elimination = derive(concept, dimensions, "IntersegmentEliminationMember")
+    absent = derive(concept, dimensions, None)
+    corporate = derive(concept, dimensions, "CorporateNonSegmentMember")
+
+    assert operating != elimination, (
+        f"a non-default consolidation member must discriminate the id: "
+        f"got {operating!r} for both"
+    )
+    assert absent == operating, (
+        f"an absent qualifier must mint the SAME id as the default member: "
+        f"{absent!r} != {operating!r}"
+    )
+    assert elimination != corporate, (
+        "two GENUINELY non-default consolidation members must discriminate "
+        f"each other, not just the default: got {elimination!r} for both"
+    )
 
 
 # --------------------------------------------------------------------------
