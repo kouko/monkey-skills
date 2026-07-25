@@ -237,6 +237,11 @@ def tw_canonical_to_points(
                         "source_table_id": _SOURCE_TABLE_ID,
                         "source_cell_ref": source_cell_ref,
                         "source_kind": source_kind,
+                        # The canonical _meta carries unit="TWD"; copy it onto
+                        # the point (mirrors kpi_xbrl.py:569-570) so the market-
+                        # agnostic tearsheet renders the currency label — else
+                        # correct amounts render with no unit (2330 dogfood).
+                        "unit": field_meta.get("unit"),
                     }
                 )
     return points

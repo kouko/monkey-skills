@@ -164,7 +164,14 @@ def test_tw_canonical_to_points(kpi_tw_module, fixture_1101_canonical):
         "source_table_id": "tw:ixbrl",
         "source_cell_ref": "ifrs-full:Revenue",
         "source_kind": "xbrl-companyfacts",
+        "unit": "TWD",
     }
+
+    # The canonical _meta[field] carries unit="TWD"; the mapper must copy it
+    # onto every point (US producer does the same, kpi_xbrl.py:569-570) so the
+    # market-agnostic tearsheet renders the TWD currency label. Dropping it
+    # rendered correct amounts with NO currency (live 2330 dogfood finding).
+    assert all(p["unit"] == "TWD" for p in points)
 
     # An instant KPI (balance-sheet total_assets): period_kind="instant",
     # period_start is None (an instant has no span), period_end is the date.
