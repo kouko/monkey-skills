@@ -218,6 +218,11 @@
   (d) 🟢 **wire the TW KPI store into report-equity-memo Phase 3.5** — like the
   US chain feeds the memo's quarterly-KPI section, the TW store should surface in
   the TW memo path. Deferred (out of this producer-only arc).
+  (e) 🟢 **point `unit` is per-field best-effort** — `tw_canonical_to_points`
+  copies `unit` from `_meta[field].get("unit")`; a canonical field whose `_meta`
+  lacks `unit` silently yields `unit=None` (same class as the shipped TWD fix,
+  per-field). Non-fatal (the dogfood path carried TWD); consider a fail-loud or a
+  canonical-wide TWD default when a TW field's unit is absent.
 
 ## investing-toolkit KPI tearsheet — company total (top-line) revenue lane (COMMITTED-NEXT)
 - Status: COMMITTED-NEXT
