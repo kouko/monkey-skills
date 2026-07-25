@@ -3317,6 +3317,14 @@ def extract_dimensional_revenue(
     # this loop always runs — empty means "ran, none found", matching the
     # other DQC-style channels above.
     axis_exclusions: list[dict] = []
+    # Task 2, docs/loom/plans/2026-07-25-company-total-revenue.md: Lane B's
+    # top-line lane shares this per-filing loop (zero marginal fetch cost —
+    # same filing, same parse). A filing whose flat facts contain no
+    # allowlist candidate (`select_top_line_concept` returns None) never
+    # fabricates a value — it is recorded here by accession instead. Always
+    # a list, matching the other DQC-style channels above (empty = ran,
+    # none found).
+    top_line_gaps: list[dict] = []
     for filing in selected:
         accession = filing.accession_no
         try:
@@ -3367,10 +3375,39 @@ def extract_dimensional_revenue(
                 fiscal_year_reconciliation.append(reconciliation_flag)
             if not keep:
                 continue
+        # Task 2: resolve this filing's ONE winning flat top-line concept
+        # BEFORE the per-fact loop below — `select_top_line_concept` needs
+        # to see every candidate fact on the filing to rank them, not one
+        # fact at a time. `winning_top_line_concept is None` means no
+        # candidate qualified (recorded under coverage below, never a
+        # fabricated fact).
+        top_line_candidates = [
+            fact for fact in facts_records if _is_top_line_revenue_fact(fact)
+        ]
+        winning_top_line_concept = select_top_line_concept(top_line_candidates)
+        if winning_top_line_concept is None:
+            top_line_gaps.append({
+                "type": "no_top_line_candidate",
+                "old": None,
+                "new": None,
+                "accessions": [accession],
+                "reason": (
+                    f"filing {accession!r} carries no flat fact in the "
+                    f"top-line allowlist {_TOP_LINE_REVENUE_CONCEPTS!r} — "
+                    "no top-line revenue fact emitted for this filing"
+                ),
+            })
         filing_facts: list[dict] = []
         quarantine_flag: dict | None = None
         for fact in facts_records:
-            if not _is_dimensional_revenue_fact(fact):
+            is_dimensional = _is_dimensional_revenue_fact(fact)
+            is_winning_top_line = (
+                winning_top_line_concept is not None
+                and _is_top_line_revenue_fact(fact)
+                and fact.get("concept", "").rsplit(":", 1)[-1]
+                == winning_top_line_concept
+            )
+            if not is_dimensional and not is_winning_top_line:
                 # Task 1: count every disallowed dim_ axis this WOULD-BE
                 # revenue fact carries (never a fact that fails an
                 # unrelated gate — `_dimensional_axis_exclusions` scopes
@@ -3457,6 +3494,7 @@ def extract_dimensional_revenue(
             "fetch_failures": fetch_failures,
             "unlabelable_filings": unlabelable_filings,
             "axis_exclusions": axis_exclusions,
+            "top_line_gaps": top_line_gaps,
         },
         "fiscal_calendars": fiscal_calendars,
     }
