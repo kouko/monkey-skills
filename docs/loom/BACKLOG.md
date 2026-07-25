@@ -242,6 +242,91 @@
   allowlist ordering discriminating live); NVDA 215,938,000,000;
   COST 275,235,000,000; JPM 182,447,000,000; INTC 473 of 473 facts appended.
 
+## investing-toolkit — full three-statement + management-KPI history in kpi_store (OPEN)
+
+- Status: OPEN — the destination arc the longitudinal work has been building
+  toward. Filed 2026-07-25 after the user stated the intent explicitly: *"這一
+  整段機械處理應該是要做出完整的三大表與管理/非財務指標的年度與季度的連續歷史
+  資料給後續分析用的"*. That intent is the store's charter; this entry records
+  how far the producers actually are from it, and in what order to close the gap.
+- Start: after the `kpi_id` identity arc ships (the COMMITTED-NEXT entry above).
+  That ordering is a real dependency, not politeness — see §Sequencing.
+- **The container is already right; only the feed is missing.** Grounding:
+  - `report-kpi-tearsheet` is metric-AGNOSTIC — one row per `kpi_id`, periods as
+    columns, whatever the store holds (`report-kpi-tearsheet/SKILL.md`). It never
+    needs to learn about statements or operational KPIs.
+  - `kpi_store` is bitemporal, so a restated line item keeps both vintages — the
+    property that makes it an analysis substrate rather than a snapshot. Downstream
+    analysis reads `kpi_store dump/query`, NOT the tearsheet (the tearsheet is a
+    human one-pager over the same data).
+  - **The TW producer already proves the shape**: `kpi_tw._KPI_FIELDS`
+    (`kpi_tw.py:33-50`) writes a 15-field three-statement spine (revenue,
+    gross_profit, operating_income, pretax_income, net_income, eps_basic,
+    total_assets, total_liabilities, total_equity, cash, operating/investing/
+    financing_cash_flow, capex, fcf) across `_STATEMENTS` (`:53`) into the same
+    store the US dimensional producer writes to.
+
+### Sub-arc (a) — US three-statement producer (mirror the TW lane)
+
+- **Gap**: the US side computes canonical statements but never STORES them.
+  `DCF_CONCEPT_MAPPING` (`pack_us.py:125-175`) is **14 fields chosen for DCF**,
+  assembled into `income_statement` / `cash_flow` / `balance_sheet` inside
+  `pack_memo_fetch` (`pack_us.py:939-941`) — and no caller of `kpi_store.append`
+  consumes a memo-fetch pack (verified 2026-07-25 across every producer in
+  `analysis-kpi/scripts/`). So every memo run re-fetches and accumulates nothing.
+- **Cheap part**: the raw source is already fetched and cached — `action_facts`
+  without `--concept` returns the filer's full concept inventory
+  (`sec_edgar_client.py:695-700`, names + counts, values only per-concept). No new
+  data layer.
+- **Hard part, and the real work**: concept → line-item normalization. Statement
+  hierarchy, sign conventions, and **subtotal reconciliation** (components must add
+  back to the reported subtotal). Without the add-back check this lane is a silent-
+  lie generator — a wrong mapping is invisible in a rendered table.
+- **Identity**: follow the TW precedent — `kpi_id` from a repo-CANONICAL field slug,
+  never the filer's raw concept string (a filer's tagging changes across years;
+  a concept-keyed id fragments the series — `docs/loom/memory/derived-durable-id-
+  slug-is-a-lossy-one-way-door.md`, and the 2.36.0 `total_revenue` decision).
+- Open scope question for the brief: 14 DCF fields (parity with today) vs the TW
+  15-field spine (cross-market comparability) vs a genuinely full statement. The
+  spine is the likely smallest end state; a full statement is a different arc.
+
+### Sub-arc (b) — management / non-financial KPI wiring
+
+- **Gap**: the machinery shipped, the user path did not. `kpi_prose_candidates`
+  (Part 1, 2.28.0) + number robustness (Part 2, 2.29.0) produce verbatim-anchored
+  prose KPI candidates and `commit_to_store` (`kpi_prose_candidates.py:719`) appends
+  them to the SAME store — but nothing is SKILL-wired, so the capability is
+  unreachable from a conversation.
+- **Fail-closed by design, keep it**: `commit_to_store(confirmed=False)` writes
+  NOTHING without an explicit human confirm-all. Wiring must expose that confirm
+  step, never route around it.
+- **Blocked on**: Part 3 (lifecycle / re-verification / table-vs-prose and
+  prose-vs-prose conflict, surface-version marker) — scoped in
+  §"非金錢營運 KPI 自動化" above. Do not re-scope it here (SSOT).
+
+### Sub-arc (c) — rendering the annual + quarterly continuum
+
+- Already filed in full as §"KPI tearsheet — multi-granularity + per-market period
+  menu (OPEN)" — sub-quarter classifier, per-market granularity menu, discrete-vs-
+  cumulative axis, separate views per granularity. **Pointer only, do not restate.**
+- Relevance here: US annual and quarterly each render correctly today; a MIXED
+  table interleaves granularities. Once (a) lands, a company's store holds far more
+  rows and the interleave stops being cosmetic.
+
+### Sequencing (the dependency, stated)
+
+1. `kpi_id` identity arc (COMMITTED-NEXT above) — **prerequisite for (a)**. (a)
+   multiplies stored series per company by roughly an order of magnitude (statement
+   fields × periods, later × segment dimensions). Collision probability in a lossy
+   id derivation rises with the number of distinct signatures, and a collision today
+   aborts an entire pack. Scaling the feed before fixing identity means scaling the
+   abort surface with it.
+2. Sub-arc (a) — the largest capability gain per arc, and it has a worked TW
+   precedent to mirror rather than design from scratch.
+3. Sub-arc (c) — becomes user-visible pressure only after (a) fills the store.
+4. Sub-arc (b) — independent of (a) and (c); ordering against them is a priority
+   call, not a dependency. Blocked only on its own Part 3.
+
 ## investing-toolkit top-line revenue lane 2.36.0 — post-ship follow-ups (OPEN)
 - Status: OPEN
 - Start: next touch of `analysis-kpi/scripts/kpi_xbrl_ingest.py`,
@@ -459,54 +544,6 @@
   lacks `unit` silently yields `unit=None` (same class as the shipped TWD fix,
   per-field). Non-fatal (the dogfood path carried TWD); consider a fail-loud or a
   canonical-wide TWD default when a TW field's unit is absent.
-
-## investing-toolkit KPI tearsheet — company total (top-line) revenue lane (COMMITTED-NEXT)
-- Status: COMMITTED-NEXT
-- Start: immediately after arc (d) (2.34.0) — user-stated 2026-07-24「接下來就要做 公司總營收」.
-- Origin: arc (d) scope decision (brief `docs/loom/specs/2026-07-24-kpi-xbrl-store-producer.md`
-  §Out of Scope) — v1 shipped dimensional-SEGMENT revenue only; company top-line total
-  (GAP-3 from the 5-filer dogfood) deferred as a distinct, differently-shaped feed.
-  SUPERSEDED 2026-07-25 by a live 8-filer probe (branch feat-total-revenue-lane;
-  brief `docs/loom/specs/2026-07-25-company-total-revenue.md`, plan
-  `docs/loom/plans/2026-07-25-company-total-revenue.md`) that DISPROVED this
-  entry's original premise below — kept for record, replaced by the two-lane
-  decision.
-- What: SUPERSEDED — original premise (now FALSE, disproved 2026-07-25): "the
-  `extract_dimensional_revenue` per-filing parse emits ZERO flat totals, so
-  top-line company revenue is unfetchable via arc (d)'s dimensional path; the
-  only shipped source is `action_facts(ticker,'Revenues')` → the
-  companyconcept series". A live probe (8/8 filers, real SEC fetch,
-  2026-07-25, evidence in the brief's §Probe findings) found every filer's
-  per-filing XBRL parse ALSO carries a flat (non-dimensioned) top-line
-  revenue fact. But "flat" alone is not sufficient: JPM emits 7 flat
-  revenue-shaped concepts of which only 2 (`Revenues` /
-  `RevenuesNetOfInterestExpense`) are the true total (the other 5 are
-  income-statement components), and a consolidation-qualifier-only flat fact
-  is NOT the consolidated total (XOM's `Revenues` under
-  `ConsolidationItemsAxis=OperatingSegmentsMember` reads 452,209M against a
-  true total of 332,238M).
-
-  Two-lane decision (see brief §Decision for full grounding):
-  - **Lane B (primary, per-filing)** — the existing per-filing XBRL parse
-    also emits the filing's ONE winning flat top-line fact, picked by a
-    closed ordered allowlist grounded in XBRL US DQC Revenue Guidance
-    (`Revenues` > `RevenuesNetOfInterestExpense` >
-    `RevenueFromContractWithCustomer...ExcludingAssessedTax` >
-    `...IncludingAssessedTax`), gated to `is_dimensioned == False` only.
-    Ingested under the fixed canonical `kpi_id == "total_revenue"` (NOT a
-    concept-derived slug — a filer's tagging changing across years must not
-    fragment the durable series), `source_kind == "xbrl-topline"`.
-  - **Lane A (annual-only backfill, companyconcept)** — reshapes the
-    `companyconcept` REST series (`action_facts(ticker,'Revenues')`-style
-    fetch, `sec_edgar_client.py:666-711,271-294`) into the same point shape
-    to backfill fiscal years older than the filings Lane B fetched — ANNUAL
-    ROWS ONLY, never reading the row's `fy`/`fp` (those are the FILING's
-    focus, not the fact's own period — memory
-    `fiscal-year-derive-per-fact-against-filing-calendar` trap #2).
-    `source_kind == "xbrl-companyfacts"` (already trusted).
-  - Overlap discipline: a fiscal year covered by both lanes must agree
-    (pinned by a real-data e2e test); a same-dedup-key value disagreement
-    fails loud rather than silently storing a fabricated `†`.
 
 ## investing-toolkit `source_kind` naming debt — endpoint-name axis vs shape axis (OPEN)
 - Status: OPEN
