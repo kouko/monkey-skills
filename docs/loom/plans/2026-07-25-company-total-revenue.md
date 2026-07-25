@@ -527,3 +527,4 @@ Amendment note 5 (post-PASS, schema-safe → re-review skipped per writing-plans
 - Dependencies: none
 - Independent: true
 - Brief item covered: Smallest End State #1 — "the existing per-filing XBRL parse also emits the company's flat top-line revenue fact… ingests it into `kpi_store`" — the ENABLING half: without `xbrl-topline` in the trust set, Task 5's fail-loud check rejects Lane B's own points and nothing can be stored at all. The brief is silent on Lane B's provenance label (it settles only Lane A at §Decision); the value was fixed by this plan's §Notes kickoff decision, user-confirmed 2026-07-25.
+- Status: done(9f8f084a)  # spec-reviewer PASS; code-quality-reviewer PASS_WITH_NOTES — its 🟡 (a stale enumeration in `attest_source`'s docstring that THIS change made wrong) was routed back to the implementer and fixed before commit, not carried as debt.
