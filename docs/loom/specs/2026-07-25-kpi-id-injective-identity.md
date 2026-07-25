@@ -177,6 +177,30 @@ capture (`investing-toolkit/tests/data/fixtures/kpi_id_identity_probe_2026-07-25
 computes the per-filer sum; recomputing it the other way and finding 1,887 is a
 different question, not a discrepancy.
 
+## Close-out dogfood (2026-07-26) — what the probe could not tell us
+
+The §Probe evidence above is a REPLAY of `ingest_pack`'s selector+claim loop with
+no store write. Per `docs/loom/memory/a-data-probe-is-not-a-pipeline-dogfood.md`
+that answers "does this shape exist", never "does the pipeline survive it" — so
+close-out ran the REAL path (`ingest_pack` → `facts_to_points` →
+`kpi_store.append`) over all 47 cached live packs, one isolated store per filer.
+
+**First run: 46 of 47 ingested. JNJ aborted** —
+`OSError: [Errno 63] File name too long`. Its 4-axis signatures produced a
+257-byte atomic-write temp filename against a 255-byte filesystem limit. This
+arc CAUSED it: without the 14-byte id digest the same name is 243 bytes. The
+suite was fully green and the probe reported JNJ healthy; only a real write to
+a real filesystem surfaced it. Fixed by budgeting the FILENAME stem in
+`kpi_store._series_key` (the id itself is unchanged; that file's digest already
+guarantees uniqueness, so the readable stem is safe to cap).
+
+**After the fix: 47 of 47 ingested, 0 aborted** — 51,147 facts → 2,100 series →
+35,415 stored points; JNJ alone 7,157 facts → 371 series → 4,870 points.
+
+The lesson generalizes past this arc: a derived identity getting LONGER is a
+change to every downstream name derived from it, and filesystem limits are the
+kind of constraint no unit test models.
+
 ## Current State Evidence
 
 - **Forward (who calls it)** — `ingest_pack` (`kpi_xbrl_ingest.py:298`) groups

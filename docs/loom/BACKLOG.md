@@ -194,53 +194,30 @@
   fixtures" though it now also exercises the -ci 2330 fixture; the 2330 fact-count literal
   `2002` is a 3rd pin copy — touch-up on next edit.
 
-## investing-toolkit kpi_id identity vs the consolidation axis and concept-case drift (COMMITTED-NEXT)
-- Status: COMMITTED-NEXT
-- Start: next investing-toolkit arc. User-decided 2026-07-25 to ship 2.36.0 first
-  and take this separately, because `derive_kpi_id` is a DURABLE identity
-  function — changing it fragments every series already stored under the old
-  slug, so it needs its own brief, its own review, and an explicit decision
-  about existing data rather than a close-out patch.
-- Origin: 7-filer live end-to-end run, 2026-07-25, branch feat-total-revenue-lane.
-  Full pipeline per filer (real SEC fetch -> pack -> ingest -> isolated store).
-  Result: the arc's own capability (total revenue in the store) works for 6 of 7;
-  the inherited DIMENSIONAL lane aborts entirely for 2 of 7.
-- Live evidence, verbatim:
-  - **XOM** — `('us-gaap:Revenues', (StatementBusinessSegments=Upstream,
-    StatementGeographical=US), 'IntersegmentEliminationMember')` and the same
-    concept+dims under `'OperatingSegmentsMember'` both derive
-    `revenues__statementbusinesssegments-upstream__statementgeographical-us`.
-    The guard refuses, correctly — but they are GENUINELY DIFFERENT SERIES (a
-    segment's operating view versus its intersegment eliminations), not one
-    series with a qualifier. `derive_kpi_id` drops the axis, so the ids collide.
-    XOM's Lane A is also unavailable, for an unrelated and correctly-loud reason:
-    no allowlist concept returns companyconcept rows for it at all.
-  - **JPM** — `jpm:OperatingRevenueRealEstateMortgagesChangesinFairValueof...`
-    and `...ChangesInFairValueOf...` — the SAME concept tagged with different
-    capitalization across filings — both derive one lowercased slug. JPM's
-    Lane A works (51 points, total_revenue 182,447,000,000 correct); only the
-    dimensional lane aborts.
-- What: the axis is a QUALIFIER for matching (`_fact_matches` folds an absent tag
-  to the default member) but is DISCRIMINATING for identity when the member is
-  non-default. The likely shape of the fix is to include a non-default
-  consolidation member in the slug, so `(dims, None)` and
-  `(dims, OperatingSegmentsMember)` keep one id while
-  `(dims, IntersegmentEliminationMember)` gets its own. That is a durable-id
-  change: decide what happens to series already written under the current slug
-  before touching it. The JPM case is separate and harder — the source data
-  carries a typo, and case-normalizing the signature key would make the
-  consumer's exact-concept match miss one of the two facts, so it is NOT the
-  same fix.
-- Also revisit together: BACKLOG item (l) of the 2.36.0 follow-ups (a collision
-  aborts BOTH lanes for the WHOLE pack). Filed there as deliberate, and the
-  reasoning still holds in isolation — but two of seven real filers now hit it,
-  which turns "fail loud on an ambiguous series" into "this filer is entirely
-  unavailable". Per-lane isolation of the claim map is the candidate, never a
-  weaker guard.
-- Verified working in the same run, for scope: AAPL 416,161,000,000;
-  WMT 713,163,000,000 (correctly `Revenues`, not RFCC's 706,413,000,000 — the
-  allowlist ordering discriminating live); NVDA 215,938,000,000;
-  COST 275,235,000,000; JPM 182,447,000,000; INTC 473 of 473 facts appended.
+## investing-toolkit kpi_id identity 2.37.0 — post-ship follow-ups (OPEN)
+
+- Status: OPEN. Filed at close-out 2026-07-26 (branch `feat-kpi-id-consolidation-axis`).
+- (a) 🟡 **No committed dogfood HARNESS.** The close-out dogfood (real
+  `ingest_pack` → `kpi_store.append` over 47 cached live packs) is what caught the
+  filename-length regression the 1084-test suite and the replay probe both missed —
+  but it ran from a session scratchpad and was NOT committed, so the next arc has to
+  rebuild it. The committed probe
+  (`tests/data/fixtures/capture_kpi_id_identity_probe.py`) replays the selector loop
+  only, by design. Making the dogfood repo-ready is real work (fetch/cache path,
+  isolated stores, counts-only output) and wants its own test + review, which is why
+  it was filed rather than patched in at close-out. Re-trigger: the next arc that
+  changes a producer or the store's write path — per
+  `docs/loom/memory/a-data-probe-is-not-a-pipeline-dogfood.md`, do NOT let a probe
+  stand in for it again.
+- (b) 🟢 **Predictable temp path in the probe capture script**
+  (`tests/data/fixtures/capture_kpi_id_identity_probe.py:93`): the pack cache is a
+  fixed name under the world-writable system temp dir (CWE-377), and its cached
+  packs become committed evidence. Hand-run dev script only; move to `mkdtemp` or a
+  repo-local ignored dir on next touch.
+- (c) 🟢 **Stale cross-reference in the same script** (~:54-57): it cites "the
+  sibling probe script's fetch loop", but the only committed sibling
+  (`capture_companyconcept_form_domain.py`) has no fetch loop or cache. The
+  reference does not resolve; fix wording on next touch.
 
 ## investing-toolkit — full three-statement + management-KPI history in kpi_store (OPEN)
 
@@ -249,8 +226,9 @@
   整段機械處理應該是要做出完整的三大表與管理/非財務指標的年度與季度的連續歷史
   資料給後續分析用的"*. That intent is the store's charter; this entry records
   how far the producers actually are from it, and in what order to close the gap.
-- Start: after the `kpi_id` identity arc ships (the COMMITTED-NEXT entry above).
-  That ordering is a real dependency, not politeness — see §Sequencing.
+- Start: READY. The `kpi_id` identity arc it depended on shipped as 2.37.0
+  (branch `feat-kpi-id-consolidation-axis`); that ordering was a real dependency,
+  not politeness — see §Sequencing.
 - **The container is already right; only the feed is missing.** Grounding:
   - `report-kpi-tearsheet` is metric-AGNOSTIC — one row per `kpi_id`, periods as
     columns, whatever the store holds (`report-kpi-tearsheet/SKILL.md`). It never
@@ -315,12 +293,15 @@
 
 ### Sequencing (the dependency, stated)
 
-1. `kpi_id` identity arc (COMMITTED-NEXT above) — **prerequisite for (a)**. (a)
+1. `kpi_id` identity arc — **prerequisite for (a), and it SHIPPED as 2.37.0.** (a)
    multiplies stored series per company by roughly an order of magnitude (statement
    fields × periods, later × segment dimensions). Collision probability in a lossy
-   id derivation rises with the number of distinct signatures, and a collision today
-   aborts an entire pack. Scaling the feed before fixing identity means scaling the
-   abort surface with it.
+   id derivation rises with the number of distinct signatures, and a collision
+   aborts an entire pack. Scaling the feed before fixing identity would have scaled
+   the abort surface with it. The 2.37.0 close-out dogfood also showed why this
+   ordering mattered concretely: JNJ's 4-axis signatures put the series FILENAME
+   within 12 bytes of the OS limit, and (a)'s statement fields add more signatures
+   per company, not fewer.
 2. Sub-arc (a) — the largest capability gain per arc, and it has a worked TW
    precedent to mirror rather than design from scratch.
 3. Sub-arc (c) — becomes user-visible pressure only after (a) fills the store.
