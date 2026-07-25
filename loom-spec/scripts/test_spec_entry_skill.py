@@ -159,3 +159,19 @@ def test_intake_step3_names_the_456_mis_route():
     low = _text().lower()
     assert "456" in low or "mis-route" in low or "misroute" in low, \
         "step 3 should name the #456-documented adjacent mis-route this disambiguation closes"
+
+
+def test_entry_router_names_bba():
+    """Non-trivial spec forks this router surfaces (which member skill
+    applies, an on-ramp choice) must remind the agent to brief before
+    asking (repo pattern: loom-pipeline/skills/using-loom-pipeline/
+    SKILL.md gate (b); mirrored in loom-discovery/scripts/
+    test_using_skill.py::test_using_router_names_bba) — the router must
+    name the skill id and carry the trigger triple verbatim."""
+    text = _text()
+    assert "dev-workflow:brief-before-asking" in text, \
+        "router must name the dev-workflow:brief-before-asking skill id"
+    assert (
+        "≥3 trade-offs, ≥2 implementation paths, or architectural blast radius"
+        in text
+    ), "router must carry the trigger triple verbatim"

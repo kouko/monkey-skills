@@ -139,3 +139,21 @@ def test_intake_step3_hands_off_to_existing_routing_without_duplicating():
     # once in the file (not duplicated inside §Intake).
     assert body.count("## Skill priority") == 1, \
         "the existing Skill-priority routing table must not be duplicated"
+
+
+def test_using_router_names_bba():
+    """Router body must carry a brief-before-asking imperative.
+
+    Mirrors using-loom-pipeline's #475 complex-fork escalation
+    (loom-pipeline/skills/using-loom-pipeline/SKILL.md:158): before the
+    router lets a non-trivial design fork reach the user as a raw
+    question, it must name `dev-workflow:brief-before-asking` and carry
+    the canonical trigger triple verbatim, so the reminder fires at the
+    actual pre-ask moment (not just cited in the abstract).
+    """
+    body = _body()
+
+    assert "dev-workflow:brief-before-asking" in body, \
+        "router body must name dev-workflow:brief-before-asking"
+    assert "≥3 trade-offs, ≥2 implementation paths, or architectural blast radius" in body, \
+        "router body must carry the canonical trigger triple verbatim"

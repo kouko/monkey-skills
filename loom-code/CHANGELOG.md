@@ -5,6 +5,19 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.38.0] — 2026-07-25 — proactive bba imperative in router-card rule 5
+
+### Changed
+
+- **`hooks/router-card.md` rule 5 names `dev-workflow:brief-before-asking`
+  directly**, carrying the shared threshold triple (≥3 trade-offs / ≥2
+  implementation paths / architectural blast radius) verbatim, instead of a
+  generic "anchor + stakes" paraphrase — the router card is the
+  SessionStart action-moment surface, and a named-skill imperative was the
+  proven trigger shape (repo memory: imperative action-moment cards flip
+  behavior 2/2, generic prose 0/2). Guarded by a 4th carrier assertion in
+  `scripts/test_asking_user_briefing_escalation.py`.
+
 ## [0.37.0] — 2026-07-23 — ask-channel floor: anchored asks + tool-channel default
 
 ### Changed

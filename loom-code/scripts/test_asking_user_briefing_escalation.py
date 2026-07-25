@@ -24,10 +24,12 @@ Stdlib only (pathlib + re). Resolve SKILL.md relative to this test file.
 from pathlib import Path
 
 _SKILLS = Path(__file__).parents[1] / "skills"
+_HOOKS = Path(__file__).parents[1] / "hooks"
 
 BRAINSTORMING = _SKILLS / "brainstorming" / "SKILL.md"
 SDD = _SKILLS / "subagent-driven-development" / "SKILL.md"
 RCR = _SKILLS / "requesting-code-review" / "SKILL.md"
+ROUTER_CARD = _HOOKS / "router-card.md"
 
 # The shared trigger contract — must appear verbatim-equivalent in every
 # skill that carries the escalation.
@@ -72,10 +74,21 @@ def test_rcr_gate2_carries_complex_fork_briefing():
         "dev-workflow:brief-before-asking with the shared threshold triple"
 
 
+def test_router_card_names_bba_with_triple():
+    """The SessionStart router card (rule 5) is the action-moment surface —
+    it must NAME dev-workflow:brief-before-asking (not just paraphrase
+    'research before asking') and carry the shared threshold triple
+    verbatim, so the imperative fires proactively before the ask, not just
+    inside the deeper skills a session may never load."""
+    assert _carries_escalation(_text(ROUTER_CARD)), \
+        "router-card.md rule 5 must name dev-workflow:brief-before-asking " \
+        "with the shared threshold triple"
+
+
 def test_threshold_triple_lockstep():
     """Every carrier states the SAME three thresholds — the trigger is a
     shared contract; per-skill drift silently changes when a fork briefs."""
-    for p in (BRAINSTORMING, SDD, RCR):
+    for p in (BRAINSTORMING, SDD, RCR, ROUTER_CARD):
         text = _text(p)
         missing = [m for m in _THRESHOLD_MARKS if m not in text]
         assert not missing, \

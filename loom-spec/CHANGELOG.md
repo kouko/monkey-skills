@@ -5,6 +5,18 @@ All notable changes to the `loom-spec` plugin (formerly `spec-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.8.0] — 2026-07-25 — bba imperative in entry router
+
+### Added
+
+- **`using-loom-spec`**: the router body now names
+  `dev-workflow:brief-before-asking` and the canonical trigger triple
+  (`≥3 trade-offs, ≥2 implementation paths, or architectural blast radius`)
+  so a non-trivial spec-decision fork surfaced by the router gets a
+  proactive briefing reminder before the agent asks the user. Mirrors
+  `loom-pipeline/skills/using-loom-pipeline/SKILL.md`'s gate (b) pattern.
+  Guarded by `scripts/test_spec_entry_skill.py::test_entry_router_names_bba`.
+
 ## [0.7.0] — 2026-07-18 — outer revision cap + minted critic verdicts
 
 ### Added

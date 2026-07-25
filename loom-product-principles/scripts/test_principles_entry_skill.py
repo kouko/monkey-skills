@@ -130,6 +130,19 @@ def test_using_entry_intake_contract():
         "step 2 must redirect coding asks to using-loom-code"
 
 
+def test_entry_router_names_bba():
+    """#475 complex-fork escalation: the router body must remind the
+    orchestrator to run dev-workflow:brief-before-asking before asking the
+    user a non-trivial trade-off fork — mirrors
+    loom-pipeline/skills/using-loom-pipeline/SKILL.md:158. Must name the
+    skill ID and carry the trigger triple verbatim."""
+    text = _text()
+    assert "dev-workflow:brief-before-asking" in text, \
+        "router body must name dev-workflow:brief-before-asking"
+    assert "≥3 trade-offs, ≥2 implementation paths, or architectural blast radius" in text, \
+        "router body must carry the trigger triple verbatim"
+
+
 def test_skill_folder_is_flat():
     """The skill dir may hold SKILL.md plus single-level subfolders; no
     subfolder may itself contain a subfolder (the repo hook blocks

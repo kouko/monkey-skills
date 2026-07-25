@@ -6,6 +6,17 @@ file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] — 2026-07-25 — bba imperative in entry router
+
+### Added
+
+- **`using-loom-discovery`**: §Intake's family-routing step gains a
+  one-line `dev-workflow:brief-before-asking` imperative for non-trivial
+  discovery forks (value commitment, on-ramp choice) — carries the
+  trigger triple (≥3 trade-offs, ≥2 implementation paths, or
+  architectural blast radius) verbatim, mirroring
+  `using-loom-pipeline`'s gate (b) pattern.
+
 ## [0.3.0] — 2026-07-18 — mandatory bounded validator step
 
 ### Added

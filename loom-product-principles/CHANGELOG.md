@@ -8,6 +8,18 @@ Versioning: [Semantic Versioning](https://semver.org/).
 > This file was reconstructed on 2026-07-02 from the git history — the plugin
 > shipped its first two versions without a CHANGELOG.
 
+## [0.12.0] — 2026-07-25 — bba imperative in entry router
+
+### Added
+
+- **`skills/using-loom-product-principles/SKILL.md`**: §Intake step 2 now
+  carries a one-line `dev-workflow:brief-before-asking` imperative
+  (#475 complex-fork escalation), mirroring
+  `loom-pipeline/skills/using-loom-pipeline/SKILL.md:158` — before the
+  router asks the user a non-trivial trade-off fork (≥3 trade-offs,
+  ≥2 implementation paths, or architectural blast radius), it must run
+  brief-before-asking first.
+
 ## [0.11.0] — 2026-07-18 — mechanize marker whitelist + Anchors provenance
 
 ### Added

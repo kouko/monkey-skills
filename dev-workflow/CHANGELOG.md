@@ -4,6 +4,18 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.25.1] — 2026-07-25 — bba description summarizes check-question + repeated-confusion signals
+
+### Fixed — `brief-before-asking`: description-summary gap
+
+The frontmatter `description:` named only 3 reactive signals (lost on
+question / explanation / stakes) while the body already carried two more
+that #598/#599 added — the check-question guard and the repeated-confusion
+meta-trigger (SKILL.md ~:79-92). Not a new mechanism: the description now
+also summarizes those two signals, without dropping the original
+"lost on the question, the explanation, or the stakes" wording, so both
+are discoverable from the one-line summary skill-routing reads.
+
 ## [2.25.0] — 2026-07-22
 
 ### Added — `brief-before-asking`: pre-send two-line check + check-question signals + experienced-difference requirement

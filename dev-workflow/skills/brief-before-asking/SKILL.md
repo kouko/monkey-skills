@@ -1,7 +1,7 @@
 ---
 name: brief-before-asking
 description: |
-  Deliver a Mental-Model-first briefing before asking the user to decide a non-trivial engineering fork — the default, not optional. Also fires reactively when they're lost on the question, the explanation, or the stakes.
+  Deliver a Mental-Model-first briefing before asking the user to decide a non-trivial engineering fork — the default, not optional. Also fires reactively when they're lost on the question, the explanation, or the stakes — including a 2nd consecutive check-question, which trips the repeated-confusion guard back to the Mental Model.
 ---
 
 # Brief Before Asking

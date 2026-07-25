@@ -135,6 +135,20 @@ def test_typical_sequence_and_reentrance_documented():
         "must document that business-value (assess) is skippable"
 
 
+def test_using_router_names_bba():
+    """Non-trivial discovery forks (value commitment, on-ramp choice) must
+    remind the agent to brief before asking (repo pattern:
+    loom-pipeline/skills/using-loom-pipeline/SKILL.md gate (b)) — the
+    router must name the skill id and carry the trigger triple verbatim."""
+    text = _text()
+    assert "dev-workflow:brief-before-asking" in text, \
+        "router must name the dev-workflow:brief-before-asking skill id"
+    assert (
+        "≥3 trade-offs, ≥2 implementation paths, or architectural blast radius"
+        in text
+    ), "router must carry the trigger triple verbatim"
+
+
 def test_professional_isolation_line_present():
     text = _text()
     low = text.lower()

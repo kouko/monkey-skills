@@ -58,6 +58,11 @@ instead of auditing) instead of `completeness-critic`. When in doubt, ask
 "does a draft already exist to critique, or am I starting from a seed?" — the
 answer picks the member.
 
+A spec fork this router surfaces (which member skill applies, an on-ramp
+choice) can itself be non-trivial: before you ask the user a fork this
+complex (≥3 trade-offs, ≥2 implementation paths, or architectural blast radius)
+→ run `dev-workflow:brief-before-asking` first.
+
 ## Family
 
 - `spec-expansion` — GENERATE-layer writer. Fans a sparse seed out into a

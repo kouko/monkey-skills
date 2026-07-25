@@ -8,6 +8,17 @@ Versioning: [Semantic Versioning](https://semver.org/).
 > This file was reconstructed on 2026-07-02 from the git history — the plugin
 > shipped its first three versions without a CHANGELOG.
 
+## [0.9.0] — 2026-07-25 — bba imperative in entry router
+
+### Added
+
+- **`using-loom-interface-design`**: the entry router now names
+  `dev-workflow:brief-before-asking` and carries its canonical trigger
+  triple (`≥3 trade-offs, ≥2 implementation paths, or architectural blast
+  radius`) verbatim, so a non-trivial design fork gets a proactive
+  briefing reminder before the user is asked — mirroring the #475
+  complex-fork escalation already wired into `using-loom-pipeline`.
+
 ## [0.8.0] — 2026-07-18 — outer revision cap + minted critic verdicts
 
 ### Added
