@@ -56,7 +56,8 @@ def shape():
     return _load("kpi_us_statement_shape_for_check_test", STATEMENT_SHAPE_SCRIPT)
 
 
-def _line(shape, concept, *, weight, parent, values, label=None, level=5):
+def _line(shape, concept, *, weight, parent, values, label=None, level=5,
+          decimals=None):
     return shape.Line(
         label=label if label is not None else concept.split("_", 1)[-1],
         concept=concept,
@@ -64,6 +65,10 @@ def _line(shape, concept, *, weight, parent, values, label=None, level=5):
         weight=weight,
         calculation_parent=parent,
         values=values,
+        # DEFAULTS TO EMPTY, which means "the filer declared no precision" and
+        # is read as "compare exactly" — so every fixture that says nothing
+        # about precision keeps the exact comparison Task 4 was written under.
+        decimals=decimals if decimals is not None else {},
     )
 
 
@@ -424,20 +429,120 @@ def test_a_child_declaring_a_parent_but_no_weight_fails_loudly(check, shape):
         check.verify(statements)
 
 
+def test_a_rounding_interval_is_read_from_the_filers_own_decimals(check, shape):
+    """CONSTRUCTED, and deliberately hand-checkable: the interval rule itself,
+    pinned in BOTH directions on figures a reader can verify without a runner.
+
+    OBSERVED, and what makes the rule necessary: 1,016 of the 1,065 declared
+    precisions in the committed capture are -6 — filers state these figures
+    rounded to the million and round each fact INDEPENDENTLY, so a sum of them
+    can miss the parent by a million without anyone being wrong.
+
+    Two children plus the parent at -6 gives an interval of (2+1)/2 x 1,000,000
+    = 1,500,000. A 1,000,000 miss is inside it and is NOT a filer error; a
+    2,000,000 miss is outside it and stays `disagrees`. The second half is the
+    load-bearing one: an interval that swallowed everything would make this
+    module's whole `disagrees` status unreachable, which is the failure mode a
+    precision-aware comparison invites.
+
+    `within_rounding` is its own status and NOT `agrees`: the figures do
+    differ, and a report that called this exact agreement would be overstating
+    the filer's arithmetic in the opposite direction.
+    """
+    period = "duration_2017-01-01_2017-12-31"
+    millions = {period: -6}
+
+    def group(reported):
+        return _statements(shape, "income", [
+            _line(shape, "us-gaap_CostOfGoodsSold", weight=1.0,
+                  parent="us-gaap_GrossProfit", values={period: 20_000_000},
+                  decimals=millions),
+            _line(shape, "us-gaap_SellingGeneralAndAdministrativeExpense",
+                  weight=1.0, parent="us-gaap_GrossProfit",
+                  values={period: 15_000_000}, decimals=millions),
+            _line(shape, "us-gaap_GrossProfit", weight=1.0, parent=None,
+                  values={period: reported}, decimals=millions),
+        ])
+
+    (inside,) = check.verify(group(34_000_000))
+    assert inside.status == check.WITHIN_ROUNDING
+    assert inside.status != check.AGREES, "the figures differ; do not call it exact"
+    assert inside.difference == 1_000_000
+    assert inside.tolerance == 1_500_000, (
+        "the interval must be the filer's own: (n+1)/2 units at the least "
+        "precise declared `decimals` among the parent and its children"
+    )
+
+    (outside,) = check.verify(group(33_000_000))
+    assert outside.status == check.DISAGREES, (
+        "a difference beyond the filer's own declared precision is a real "
+        "disagreement; an interval that absorbed it would make `disagrees` "
+        "unreachable"
+    )
+    assert outside.difference == 2_000_000
+
+    # Both statuses mean "the declared arithmetic held" only for the first one,
+    # and the module must say which is which in ONE place rather than leaving
+    # every consumer to re-derive it.
+    assert check.WITHIN_ROUNDING in check.RECONCILES
+    assert check.AGREES in check.RECONCILES
+    assert check.DISAGREES not in check.RECONCILES
+    assert check.INCOMPLETE not in check.RECONCILES
+
+
+def test_an_undeclared_precision_still_compares_exactly(check, shape):
+    """CONSTRUCTED — the same group with NO `decimals` anywhere must keep
+    Task 4's exact comparison.
+
+    This is the fail-CLOSED direction of the new field. An implementation that
+    guessed a precision when the filer declared none would invent a tolerance
+    out of nothing and start absorbing real disagreements silently — which is
+    strictly worse than the overstatement the field exists to fix, because an
+    overstatement is visible and an absorbed error is not.
+    """
+    period = "duration_2017-01-01_2017-12-31"
+    statements = _statements(shape, "income", [
+        _line(shape, "us-gaap_CostOfGoodsSold", weight=1.0,
+              parent="us-gaap_GrossProfit", values={period: 20_000_000}),
+        _line(shape, "us-gaap_GrossProfit", weight=1.0, parent=None,
+              values={period: 19_999_999}),
+    ])
+
+    (result,) = check.verify(statements)
+
+    assert result.status == check.DISAGREES
+    assert result.tolerance == 0
+
+
 def test_every_disagreement_in_the_capture_is_accounted_for(check, shape, capture):
     """The honest census, and the one test that states this module's LIMIT.
 
-    `verify` compares EXACTLY: the plan says compare Σ(child × weight) to the
-    parent's reported value, and `Line` carries no `decimals`, so this module
-    has no way to know the precision the filer claimed. Filers round each fact
-    independently, so an exactly-equal comparison reports rounding residue as
-    `disagrees`. This test measures how much of that there is, using the
-    `decimals` the CAPTURE stores (which `verify` never sees), and asserts that
-    every disagreement is either
-      (a) inside the group's own declared rounding interval — (n+1)/2 units at
-          the least precise `decimals` among the parent and its children, the
-          XBRL 2.1 §5.2.5.2 calculation-consistency reading — or
+    UPDATED FOR PLAN TASK 8. Task 4 wrote this test as a census computed
+    ENTIRELY in the test, because `Line` carried no `decimals` and `verify`
+    could only compare exactly. Task 8 put `decimals` on `Line` (plan Decision
+    Log, "Task 4 -> Task 8"), so the same split is now produced BY THE CODE
+    PATH, and this test's own arithmetic — still read from the CAPTURE, not
+    from `Line` — became the ORACLE that checks it. The pin `(24, 3)` is
+    unchanged and that is the point: the field reproduces the classification
+    the test used to compute for itself, group for group, rather than
+    approximately.
+
+    The rule, applied on both sides: a difference is rounding residue when it
+    is within (n+1)/2 units at the least precise `decimals` among the parent
+    and its children — the XBRL 2.1 §5.2.5.2 calculation-consistency reading.
+    Every difference must therefore be either
+      (a) inside that interval, in which case `verify` must say
+          `within_rounding` and NOT `disagrees`, or
       (b) the one named case below.
+
+    WHAT THIS DOES NOT PROVE, stated because a green run here is easy to
+    over-read: both sides apply the SAME interval rule, so a wrong rule would
+    be wrong in both places and this test would still pass. What it proves is
+    that the filer's declared precision reaches `verify` intact through
+    Task 3's `Line` and is applied per (group, period) — the plumbing and the
+    classification, not the rule. The rule's own grounding is the XBRL
+    specification, cited above, and `test_a_rounding_interval_is_read_from_the
+    _filers_own_decimals` pins it on a hand-checkable case.
 
     The named case, IBM FY2025 (COMMITTED): `WeightedAverageNumberOfDiluted
     SharesOutstanding` declares `...SharesOutstandingBasic` as a child, and the
@@ -449,6 +554,7 @@ def test_every_disagreement_in_the_capture_is_accounted_for(check, shape, captur
     `verify(statements)`' input — recorded here rather than hidden.
     """
     unexplained = []
+    misclassified = []
     rounding = 0
     named_case = 0
     for filing in _filings_with_rows(capture):
@@ -457,7 +563,7 @@ def test_every_disagreement_in_the_capture_is_accounted_for(check, shape, captur
             for row in entry.get("rows") or []:
                 declared.setdefault(row["concept"], row.get("decimals") or {})
         for result in check.verify(_assembled(shape, capture, filing["accession"])):
-            if result.status != check.DISAGREES:
+            if result.status not in (check.DISAGREES, check.WITHIN_ROUNDING):
                 continue
             precisions = [
                 declared.get(c, {}).get(result.period)
@@ -468,7 +574,16 @@ def test_every_disagreement_in_the_capture_is_accounted_for(check, shape, captur
             ) else None
             unit = Decimal(10) ** -least if least is not None else Decimal(0)
             tolerance = unit * (len(result.terms) + 1) / 2
-            if abs(result.difference) <= tolerance:
+            oracle = (
+                check.WITHIN_ROUNDING if abs(result.difference) <= tolerance
+                else check.DISAGREES
+            )
+            if result.status != oracle:
+                misclassified.append(
+                    (filing["ticker"], result.parent, result.period,
+                     result.status, oracle, str(result.difference), str(tolerance))
+                )
+            if oracle == check.WITHIN_ROUNDING:
                 rounding += 1
             elif (filing["ticker"], result.parent) == (
                 "IBM", "us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding"
@@ -480,11 +595,398 @@ def test_every_disagreement_in_the_capture_is_accounted_for(check, shape, captur
                      str(result.difference))
                 )
 
+    assert misclassified == [], (
+        "`verify`'s own status disagrees with the interval computed from the "
+        "capture — the filer's declared precision is not reaching the check "
+        f"intact: {misclassified}"
+    )
     assert unexplained == [], (
         "a disagreement this suite cannot account for as filer rounding or as "
         "the one named linkbase-only case — investigate before trusting the "
         f"status: {unexplained}"
     )
     # MEASURED, not designed: pinned so that a change in either number is
-    # visible rather than absorbed.
+    # visible rather than absorbed. Unchanged from Task 4's pin — the split is
+    # the same, it is now produced by the code path rather than by this test.
     assert (rounding, named_case) == (24, 3)
+
+
+# --- Task 8: the per-era resolution rate ------------------------------------
+#
+# The plan's Task 8: "Emit, per reconstruction run, how many statements
+# resolved and how many did not, BROKEN DOWN BY FILING ERA, plus the reason
+# each unresolved one failed." The era split is the whole point — the brief's
+# 63-of-65 was measured on filings filed 2016-2018 ONLY (brief §"A limit this
+# brief must not overclaim"), and a 10-year run spans years never sampled.
+
+
+def _statements_with_roles(shape, kind, lines, roles):
+    """A `Statements` whose `roles` entry is given explicitly — the multi-role
+    case `_statements` above cannot express."""
+    return shape.Statements(
+        by_kind={kind: list(lines)},
+        roles={kind: tuple(roles)},
+        unrecognised_dimension_keys=(),
+    )
+
+
+DUK_PURE_INCOME_ROLE = (
+    "http://www.duke-energy.com/role/ConsolidatedStatementsOfOperations"
+)
+DUK_COMBINED_INCOME_ROLE = (
+    "http://www.duke-energy.com/role/"
+    "ConsolidatedStatementsOfOperationsAndComprehensiveIncome"
+)
+
+
+def _duk_income(shape, roles, revenue_concepts=(
+    "us-gaap_RegulatedAndUnregulatedOperatingRevenue",
+)):
+    """DUK's income statement as a group whose declared sum RECONCILES
+    EXACTLY, so that nothing but the total-count can be what makes it
+    unresolved. `revenue_concepts` are the lines that roll into operating
+    income; one of them is the resolved case, two the ambiguous one."""
+    period = "duration_2014-01-01_2014-12-31"
+    share = 23_925_000_000 // len(revenue_concepts)
+    lines = [
+        _line(shape, concept, weight=1.0, parent="us-gaap_OperatingIncomeLoss",
+              values={period: share}, label="Total operating revenues")
+        for concept in revenue_concepts
+    ]
+    lines += [
+        _line(shape, "us-gaap_OperatingExpenses", weight=-1.0,
+              parent="us-gaap_OperatingIncomeLoss",
+              values={period: 19_000_000_000}, label="Total operating expenses"),
+        _line(shape, "us-gaap_OperatingIncomeLoss", weight=None, parent=None,
+              values={period: share * len(revenue_concepts) - 19_000_000_000},
+              label="Operating Income"),
+    ]
+    return _statements_with_roles(shape, "income", lines, roles)
+
+
+def test_unresolved_statements_are_counted_with_a_reason(check, shape):
+    """The plan's RED for Task 8: DUK's 2013-2017 filings yield 2-3 candidate
+    totals and must be counted as unresolved WITH that reason — never dropped
+    silently and never resolved by picking one.
+
+    THE RULE IS REVENUE-SCOPED, which is the arc's own structural rule applied
+    to the income calculation tree: among the tree's revenue concepts, the
+    candidates are those whose calculation parent is not itself a revenue
+    concept. One survivor is the filing's total; two or three is the ambiguity.
+
+    PROVENANCE, split because the halves are grounded differently:
+
+      OBSERVED — the RULE, and that it yields exactly ONE survivor on both
+        captured filings (pinned by `test_the_income_statements_in_the_capture
+        _resolve_to_one_revenue_total`, which runs it on real filed rows). Also
+        OBSERVED, from the brief §"A limit this brief must not overclaim":
+        DUK's tree yields 2-3 candidates for every filing 2013 through 2017 and
+        resolves cleanly only from 2018 — 5 of its 14 years.
+      CONSTRUCTED — these rows. DUK's 2013-2017 filings are genuinely not in
+        the committed capture (its one captured filing is from 2018, the era
+        that resolves, and was captured census-only), so the ambiguous case
+        itself must be written. What is NOT invented any more is the mechanism.
+
+    A ROOT-COUNT READING WAS MEASURED AND REFUTED before this was built, and is
+    recorded so nobody re-derives it: counting ALL calculation-tree roots makes
+    the phrase meaningless — KO income has 2 roots, KO balance sheet 2, IBM
+    income 4, IBM cash flow 1, because `Assets` / `LiabilitiesAndStockholders
+    Equity` and the EPS rows are legitimately separate roots, and such a rule
+    would report almost every real statement unresolved.
+
+    THE SUMS ALL AGREE, deliberately. Resolution and reconciliation are
+    different questions, and a report that conflated them would call this
+    statement fine: every declared sum in it reconciles exactly. It is still
+    unresolved, because which revenue line is the filer's total was never
+    decided.
+    """
+    statements = _duk_income(shape, [DUK_PURE_INCOME_ROLE], revenue_concepts=(
+        "us-gaap_RegulatedAndUnregulatedOperatingRevenue",
+        "us-gaap_Revenues",
+    ))
+    assert [c.status for c in check.verify(statements)] == [check.AGREES], (
+        "premise gone: this fixture only distinguishes resolution from "
+        "reconciliation while its own sums reconcile"
+    )
+
+    report = check.resolution_report([("2014-02-25", statements)])
+
+    (income,) = report.statements
+    assert income.resolved is False
+    assert income.kind == "income"
+    assert [reason.reason for reason in income.reasons] == [check.AMBIGUOUS_TOTAL]
+    # BOTH candidates named, and counted. A reason that says "ambiguous"
+    # without saying between WHAT cannot be acted on by a reader holding the
+    # filing.
+    detail = income.reasons[0].detail
+    assert "2 candidate totals" in detail
+    assert "us-gaap_RegulatedAndUnregulatedOperatingRevenue" in detail
+    assert "us-gaap_Revenues" in detail
+
+    # NOT DROPPED: it is counted, in its own era, and the era is the one the
+    # brief says was never sampled.
+    assert income.era == check.ERA_BEFORE_SAMPLE
+    (tally,) = report.by_era
+    assert (tally.era, tally.resolved, tally.unresolved) == (
+        check.ERA_BEFORE_SAMPLE, 0, 1
+    )
+    assert dict(tally.reasons) == {check.AMBIGUOUS_TOTAL: 1}
+
+
+def test_the_income_statements_in_the_capture_resolve_to_one_revenue_total(
+    check, shape, capture,
+):
+    """COMMITTED, and this is what makes the rule OBSERVED rather than
+    asserted: run it on real filed rows from both eras.
+
+    KO FY2017 declares `us-gaap_SalesRevenueGoodsNet` (into `GrossProfit`) and
+    IBM FY2025 declares `us-gaap_Revenues` (also into `GrossProfit`). Each
+    yields exactly ONE candidate, which is why neither is reported ambiguous.
+
+    IBM IS THE LOAD-BEARING HALF: it presents `us-gaap_CostOfRevenue` as a
+    SIBLING of `us-gaap_Revenues` under the same parent, and its local name
+    contains "revenue" too. What separates them is the filer's own declared
+    SIGN — `Revenues` carries weight +1.0 and `CostOfRevenue` -1.0 — so a
+    deduction is excluded structurally, by the filer's arithmetic, and not by a
+    denylist of cost-shaped names
+    ([[shared-classifier-over-open-dialects-needs-allowlist]]). A rule matching
+    the name alone reads IBM as TWO candidates and reports a clean filing as
+    unresolved.
+    """
+    for filing in _filings_with_rows(capture):
+        income = _assembled(shape, capture, filing["accession"]).by_kind["income"]
+        tops = check.revenue_totals(income)
+        assert len(tops) == 1, (
+            f"{filing['ticker']} resolves to {len(tops)} candidate totals: {tops}"
+        )
+
+    ibm = _assembled(shape, capture, IBM_FY2025).by_kind["income"]
+    assert check.revenue_totals(ibm) == ("us-gaap_Revenues",)
+    cost = next(line for line in ibm if line.concept == "us-gaap_CostOfRevenue")
+    assert cost.weight == -1.0, (
+        "premise gone: this test only proves the SIGN excludes a deduction "
+        "while the filer declares that deduction negative"
+    )
+
+
+def test_revenue_components_rolling_into_a_revenue_parent_are_not_candidates(
+    check, shape,
+):
+    """CONSTRUCTED — the post-ASC-606 disaggregation shape: a filer presenting
+    product and service revenue lines that roll up into its own total.
+
+    This is the half of the rule the two captured filings cannot exercise —
+    each declares a single revenue line, so the parent condition is invisible
+    there and would pass every other test in this suite if it were deleted.
+    Without it a filer that disaggregates its revenue reads as THREE candidate
+    totals and is reported unresolved for doing exactly what the taxonomy asks.
+
+    The parent here is a PRESENTED line; the rule tests the parent by NAME, so
+    it also holds when the total is declared in the calculation linkbase but
+    never put on the face of the statement.
+    """
+    period = "duration_2019-01-01_2019-12-31"
+    statements = _statements(shape, "income", [
+        _line(shape, "us-gaap_ProductRevenue", weight=1.0, parent="us-gaap_Revenues",
+              values={period: 60_000_000}),
+        _line(shape, "us-gaap_ServiceRevenue", weight=1.0, parent="us-gaap_Revenues",
+              values={period: 40_000_000}),
+        _line(shape, "us-gaap_Revenues", weight=1.0, parent="us-gaap_GrossProfit",
+              values={period: 100_000_000}),
+    ])
+
+    assert check.revenue_totals(statements.by_kind["income"]) == ("us-gaap_Revenues",)
+
+    (income,) = check.resolution_report([("2020-02-25", statements)]).statements
+    assert [reason.reason for reason in income.reasons] == [], (
+        "a filer that disaggregates its revenue must not be reported "
+        "unresolved for it"
+    )
+
+
+def test_an_income_statement_with_no_revenue_total_is_its_own_reason(check, shape):
+    """CONSTRUCTED-CONVENTIONAL — an income statement declaring no revenue
+    concept at all.
+
+    ZERO CANDIDATES IS NOT AMBIGUITY, and the two must not share a label: one
+    says the filer offers several totals and the structure cannot choose, the
+    other says it offers none this rule can see. Collapsing them is the same
+    error `within_rounding` avoids one layer down.
+
+    UNOBSERVED here and expected in the wild: the brief's own Open Question
+    records that a bank's income statement has no single revenue origin BY
+    CONSTRUCTION, and 9 of the 79 universe filers are financials. The honest
+    report for them is a named gap, not a silent success and not a guess.
+    """
+    period = "duration_2014-01-01_2014-12-31"
+    statements = _statements(shape, "income", [
+        _line(shape, "us-gaap_InterestAndDividendIncomeOperating", weight=1.0,
+              parent="us-gaap_NetIncomeLoss", values={period: 9_000_000}),
+        _line(shape, "us-gaap_NetIncomeLoss", weight=None, parent=None,
+              values={period: 9_000_000}),
+    ])
+
+    report = check.resolution_report([("2014-02-25", statements)])
+
+    (income,) = report.statements
+    assert income.resolved is False
+    assert [reason.reason for reason in income.reasons] == [check.NO_REVENUE_TOTAL]
+    assert "0 candidate totals" in income.reasons[0].detail
+
+
+def test_two_roles_for_one_kind_is_a_different_reason_than_two_totals(check, shape):
+    """A filing offering TWO roles for one statement is a REAL and DIFFERENT
+    ambiguity, and it gets its own code.
+
+    `_roles_in_preference_order` picks the first deterministically today
+    (preferring the purer role) and says nothing about having chosen. That pick
+    is not a resolution: which role is the filer's statement was decided by our
+    tie-break, not by the filing. But it is not the revenue-total ambiguity
+    either — this statement resolves to exactly one revenue total, and would
+    still be unresolved. Two distinct facts, two codes.
+
+    CONSTRUCTED, and UNOBSERVED: across the five captured filings every kind
+    had exactly one role (`test_a_filing_declares_one_role_per_kind_in_the
+    _captured_sample` re-derives that by classifying all 694 stored role URIs).
+    The condition is kept because the silent pick is real in the code today.
+    """
+    statements = _duk_income(
+        shape, [DUK_PURE_INCOME_ROLE, DUK_COMBINED_INCOME_ROLE]
+    )
+
+    report = check.resolution_report([("2014-02-25", statements)])
+
+    (income,) = report.statements
+    assert income.resolved is False
+    assert [reason.reason for reason in income.reasons] == [
+        check.AMBIGUOUS_STATEMENT_ROLE
+    ]
+    detail = income.reasons[0].detail
+    assert DUK_PURE_INCOME_ROLE in detail and DUK_COMBINED_INCOME_ROLE in detail
+    # The revenue total itself is NOT ambiguous here — that is the point.
+    assert len(check.revenue_totals(statements.by_kind["income"])) == 1
+
+
+def test_a_statement_declaring_no_sums_is_not_vacuously_resolved(check, shape):
+    """CONSTRUCTED-CONVENTIONAL — a statement whose lines declare no
+    calculation parent at all.
+
+    UNOBSERVED: all six statements in the committed capture declare sums. This
+    is a fail-CLOSED guard on the direction that would otherwise be silent — a
+    resolution rule phrased as "no group disagreed" is VACUOUSLY TRUE for a
+    statement with no groups, so a filing whose calculation linkbase this
+    reconstruction could not read at all would be reported as a clean success.
+    That is the "system disguises its own failure as data" mode the plan's
+    kickoff decision names, arriving through the report rather than through a
+    cache.
+
+    A CASH-FLOW statement, so the fact under test is isolated: the revenue-total
+    rule is income-only, and an income fixture here would trip it too.
+    """
+    period = "duration_2014-01-01_2014-12-31"
+    statements = _statements(shape, "cash_flow", [
+        _line(shape, "us-gaap_CashAndCashEquivalentsAtCarryingValue", weight=None,
+              parent=None, values={period: 1_000_000}),
+    ])
+
+    report = check.resolution_report([("2014-02-25", statements)])
+
+    (cash_flow,) = report.statements
+    assert cash_flow.resolved is False
+    assert [reason.reason for reason in cash_flow.reasons] == [check.NO_DECLARED_SUMS]
+    assert cash_flow.groups_checked == 0
+
+
+def test_a_run_in_which_every_statement_resolves_still_emits_the_counts(check, shape):
+    """The plan's GREEN, second half: a run in which every statement resolves
+    still emits the counts rather than staying silent.
+
+    A report that spoke up only on failure would leave a reader unable to tell
+    "everything resolved" from "the report never ran" — and the whole reason
+    this report exists is that the resolution rate must be MEASURED per era
+    rather than assumed from the sampled window.
+    """
+    statements = _duk_income(shape, [DUK_PURE_INCOME_ROLE])
+
+    report = check.resolution_report([("2018-02-23", statements)])
+
+    (income,) = report.statements
+    assert income.resolved is True
+    assert income.reasons == ()
+    (tally,) = report.by_era
+    assert (tally.era, tally.resolved, tally.unresolved) == (check.ERA_SAMPLED, 1, 0)
+    assert tally.reasons == ()
+
+
+def test_the_capture_resolves_worse_outside_the_sampled_window(check, shape, capture):
+    """COMMITTED, and the plan's GREEN, first half: the report SEPARATES ERAS.
+
+    The two filings that carry rows sit either side of the measured window —
+    KO filed 2018-02-23 (inside the 2016-2018 sample) and IBM filed 2026-02-24
+    (eight years outside it) — so this is the era split on real filed data
+    rather than on a fixture written to produce one.
+
+    MEASURED, and it is the brief's own expectation confirmed rather than
+    assumed: KO resolves 3 of 3, IBM 2 of 3. What the report must NOT claim is
+    that IBM's income statement is a filer error. It is this module's LIMIT 2:
+    IBM declares a calculation child that is not on the face of the statement,
+    so the check runs 10-16M shares short and reports `disagrees` for a group
+    that is not wrong. The reason code therefore says the sums do not
+    reconcile — a fact about this reconstruction — and never that the filer is
+    wrong. Two filings is far too small a sample to generalise the direction;
+    what the test pins is that the report SPLITS them, which is what makes the
+    question answerable at all.
+    """
+    runs = [
+        (filing["filing_date"], _assembled(shape, capture, filing["accession"]))
+        for filing in _filings_with_rows(capture)
+    ]
+
+    report = check.resolution_report(runs)
+
+    by_era = {tally.era: tally for tally in report.by_era}
+    assert (by_era[check.ERA_SAMPLED].resolved, by_era[check.ERA_SAMPLED].unresolved) \
+        == (3, 0)
+    assert (by_era[check.ERA_AFTER_SAMPLE].resolved,
+            by_era[check.ERA_AFTER_SAMPLE].unresolved) == (2, 1)
+    assert dict(by_era[check.ERA_AFTER_SAMPLE].reasons) == {
+        check.SUMS_DO_NOT_RECONCILE: 1
+    }
+
+    # The eras are ordered oldest-first, so a reader scans the report the way
+    # the years run.
+    assert [tally.era for tally in report.by_era] == [
+        check.ERA_SAMPLED, check.ERA_AFTER_SAMPLE
+    ]
+
+    unresolved = [s for s in report.statements if not s.resolved]
+    assert [(s.era, s.kind) for s in unresolved] == [
+        (check.ERA_AFTER_SAMPLE, "income")
+    ]
+    # The reason NAMES the group, so the reader can go to the filing and argue.
+    assert "us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding" in \
+        unresolved[0].reasons[0].detail
+    # Incomplete groups are COUNTED, not counted against: KO's balance sheet
+    # carries 9 of them and the brief calls that reconstruction faithful.
+    ko_balance = next(
+        s for s in report.statements
+        if s.era == check.ERA_SAMPLED and s.kind == "balance_sheet"
+    )
+    assert ko_balance.resolved is True
+    assert ko_balance.groups_incomplete == 9
+
+
+def test_a_filing_with_no_readable_date_fails_loudly(check, shape):
+    """CONSTRUCTED — a run item whose filing date cannot be read as a year.
+
+    The era is the entire point of this report, so a filing that cannot be
+    placed in one must not be quietly bucketed anywhere: an item silently
+    dropped would overstate the resolution rate of whichever era it belonged
+    to, and an item dumped into a default era would understate another's. The
+    module's own `_weight_of` already sets this precedent — refuse rather than
+    assume.
+    """
+    statements = _duk_income(shape, [DUK_PURE_INCOME_ROLE])
+
+    with pytest.raises(ValueError, match="not-a-date"):
+        check.resolution_report([("not-a-date", statements)])

@@ -20,16 +20,26 @@ three-decimal-place group: the binary-float version of this module reported
 exactly. `test_sum_check_uses_decimal_not_binary_float` pins it, and pins its
 own float-hostility premise so it cannot quietly stop testing anything.
 
-THREE STATUSES, AND THE THIRD IS THE POINT:
+FOUR STATUSES, AND THE LAST TWO ARE THE POINT:
 
-  `agrees`     — the children sum to the parent's own reported figure.
-  `disagrees`  — they do not. The filer's declaration and the filer's numbers
-                 contradict each other.
-  `incomplete` — the comparison could not be made: some child has no usable
-                 value for that period, or the parent has none. A MISSING CHILD
-                 IS NOT A WRONG SUM. Collapsing the two would make the report
-                 worthless exactly where a filer's tagging is thin, which is
-                 where a reader most needs to be told the difference.
+  `agrees`         — the children sum to the parent's own reported figure,
+                     exactly.
+  `within_rounding`— they differ, but by less than the precision the FILER
+                     declared permits. Not a filer error, and not exact
+                     agreement either; saying either would be a lie in one
+                     direction or the other.
+  `disagrees`      — they differ by more than that. The filer's declaration and
+                     the filer's numbers contradict each other — SUBJECT TO
+                     LIMIT 2 below, which this module cannot see past.
+  `incomplete`     — the comparison could not be made: some child has no usable
+                     value for that period, or the parent has none. A MISSING
+                     CHILD IS NOT A WRONG SUM. Collapsing the two would make the
+                     report worthless exactly where a filer's tagging is thin,
+                     which is where a reader most needs to be told the
+                     difference.
+
+`RECONCILES` names the two statuses that mean the declared arithmetic held, so
+a consumer never spells that judgement out for itself.
 
 Nothing is ever auto-corrected. `computed` is what the filer's own declaration
 produces, even when that is visibly wrong — whether the three known cash-flow
@@ -39,21 +49,19 @@ declaration quirks should ever be corrected is an OPEN QUESTION in the brief
 TWO LIMITS OF THIS CHECK, both measured, both stated here because a status read
 without them will be over-trusted:
 
-  1. THE COMPARISON IS EXACT, AND FILERS ROUND. A `decimals` attribute says how
-     precisely each fact was stated; filers round each fact independently, so
-     the sum of n independently-rounded children can miss the parent by up to
-     n/2 units in the last place without either being wrong. `Line` (Task 3)
-     does not carry `decimals`, so this module cannot see the claimed
-     precision and compares exactly. MEASURED on the committed capture (KO
-     FY2017 + IBM FY2025, 96 checkable group-periods): 27 come out
-     `disagrees`, of which 24 are inside the filers' own declared rounding
-     interval and would be `agrees` to a precision-aware comparison. Treating
-     the raw `disagrees` count as "the filer's arithmetic is wrong" therefore
-     overstates it by roughly 8x on this sample, and would not reproduce the
-     brief's measured 98.4% reconciliation rate. Closing this needs one field
-     (`decimals`) on `Line`, which is Task 3's module and outside this task.
-     `test_every_disagreement_in_the_capture_is_accounted_for` measures the
-     split on every run so the gap cannot be forgotten.
+  1. CLOSED 2026-07-26 (plan Task 8) — RECORDED, NOT DELETED, because the
+     number it explains is what makes the second limit legible. This module
+     used to compare EXACTLY, since `Line` carried no `decimals`. MEASURED on
+     the committed capture (KO FY2017 + IBM FY2025, 96 checkable
+     group-periods): 27 came out `disagrees`, of which 24 were inside the
+     filers' own declared rounding interval — a ~8x overstatement of broken
+     filer arithmetic, which would not have reproduced the brief's measured
+     98.4% reconciliation rate. `Line.decimals` (added by Task 8, whose
+     `Files touched` was widened for it) now carries the filer's own claimed
+     precision, `_rounding_tolerance` applies it, and those 24 report as
+     `within_rounding`. What SURVIVES of this limit: the interval is the
+     filer's claim, not a proof of correctness — a group inside it has not been
+     shown right, only not shown wrong.
   2. IT SEES PRESENTED LINES ONLY. The calculation linkbase may declare a child
      the filer never puts on the face of the statement; that child is invisible
      here, and its absence looks like a disagreement rather than a gap. OBSERVED
@@ -64,9 +72,13 @@ without them will be over-trusted:
      disagreement requires the calculation linkbase, which `verify(statements)`
      does not receive.
 
-WHAT IS DELIBERATELY NOT HERE: per-era resolution-rate reporting (plan Task 8,
-which lands in this module next) and the cell taxonomy (Task 5). This module
-answers one question per declared group and period, and stores nothing.
+TWO FUNCTIONS, TWO SCOPES. `verify` answers one question per declared group
+and period. `resolution_report` (plan Task 8) aggregates a whole run of
+filings into how many statements resolved and how many did not, BROKEN DOWN BY
+FILING ERA, with the reason each unresolved one failed — see its own docstring
+for what "resolved" means and, more importantly, what it does not mean.
+
+WHAT IS DELIBERATELY NOT HERE: the cell taxonomy (Task 5). Nothing is stored.
 
 PURE FUNCTION, NO I/O, STDLIB ONLY. `verify` is a pure function of its input,
 in keeping with the plan's kickoff decision that the reconstruction is
@@ -78,8 +90,16 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 
 AGREES = "agrees"
+WITHIN_ROUNDING = "within_rounding"
 DISAGREES = "disagrees"
 INCOMPLETE = "incomplete"
+
+# The statuses that mean "the filer's declared arithmetic held". ONE SITE, so a
+# consumer never re-derives it: `status == AGREES` was the whole answer before
+# `within_rounding` existed, and every such test silently became wrong the
+# moment it stopped being. `incomplete` is deliberately absent — a comparison
+# that could not be made is not a comparison that passed.
+RECONCILES = (AGREES, WITHIN_ROUNDING)
 
 
 @dataclass(frozen=True)
@@ -116,6 +136,14 @@ class SumCheck:
     `difference` is `computed - reported`, and is `None` unless both exist. It
     is the figure a reader argues with: for the NEE case the plan names, it is
     exactly the net income that got counted twice.
+
+    `tolerance` is how far `difference` was allowed to stray before the status
+    became `disagrees` — the filers' OWN declared precision, never a constant
+    of ours (see `_rounding_tolerance`). It is `Decimal(0)` when the filer
+    declared no precision, which is the exact comparison this module was born
+    with. Carried on the result rather than kept private because a reader
+    holding the filing must be able to argue with the interval, not just with
+    the verdict.
     """
 
     kind: str
@@ -125,6 +153,7 @@ class SumCheck:
     reported: Decimal | None
     computed: Decimal | None
     difference: Decimal | None
+    tolerance: Decimal
     terms: tuple[Term, ...]
     unsummable_children: tuple[str, ...]
 
@@ -134,8 +163,12 @@ def verify(statements) -> list[SumCheck]:
 
     `statements` need only expose `by_kind` — the mapping Task 3's `Statements`
     carries, from statement kind to its lines in presentation order — where
-    each line exposes `concept`, `label`, `weight`, `calculation_parent` and
-    `values`. That attribute surface is the whole input contract.
+    each line exposes `concept`, `label`, `weight`, `calculation_parent`,
+    `values` and `decimals`. That attribute surface is the whole input
+    contract. `decimals` joined it with plan Task 8 and is read directly rather
+    than through a `getattr` default: a line without it is an integration
+    break, and defaulting one in would silently restore the exact comparison
+    for every filer that did declare a precision.
 
     The result is one `SumCheck` per (declared parent, period), ordered by
     statement, then by where the group's first child appears on the statement,
@@ -199,12 +232,18 @@ def _check_one(kind, parent, parent_line, children, period) -> SumCheck:
     if not unsummable:
         computed = sum((term.value * term.weight for term in terms), Decimal(0))
     reported = _number(parent_line.values.get(period)) if parent_line else None
+    tolerance = _rounding_tolerance(parent_line, children.values(), period, len(terms))
 
     if computed is None or reported is None:
         status, difference = INCOMPLETE, None
     else:
         difference = computed - reported
-        status = AGREES if difference == 0 else DISAGREES
+        if difference == 0:
+            status = AGREES
+        elif abs(difference) <= tolerance:
+            status = WITHIN_ROUNDING
+        else:
+            status = DISAGREES
 
     return SumCheck(
         kind=kind,
@@ -214,9 +253,68 @@ def _check_one(kind, parent, parent_line, children, period) -> SumCheck:
         reported=reported,
         computed=computed,
         difference=difference,
+        tolerance=tolerance,
         terms=tuple(terms),
         unsummable_children=tuple(unsummable),
     )
+
+
+def _rounding_tolerance(parent_line, children, period, n_terms) -> Decimal:
+    """How far this group's sum may miss the parent WITHOUT either being wrong.
+
+    XBRL's `decimals` states how precisely each fact was reported, and filers
+    round each fact INDEPENDENTLY. Rounding n children and their parent to the
+    same place therefore admits an error of half a unit each — (n+1)/2 units at
+    the LEAST precise declaration in the group, which is the XBRL 2.1 §5.2.5.2
+    calculation-consistency reading. Least precise, not most: a group is only
+    as well stated as its coarsest member.
+
+    ZERO WHEN ANY DECLARATION IS MISSING, deliberately fail-closed. A filer who
+    declared nothing has claimed nothing, and inventing a precision for them
+    would start absorbing real disagreements into silence — strictly worse than
+    the overstatement this function removes, because an overstatement is
+    visible in the report and an absorbed error is not.
+
+    OBSERVED in the committed capture: 1,016 of 1,065 declarations are -6
+    (millions), 34 are 2 (per-share cents), 10 are 0 and 5 are -8. Applying
+    this turns 24 of the module's 27 exact-comparison disagreements into
+    `within_rounding`, which is the ~8x overstatement the plan's Decision Log
+    (Task 4 -> Task 8) requires closed before any resolution rate is reported.
+
+    STATED LIMIT: `decimals` may legally be `INF` (the fact is exact), which is
+    NOT observed anywhere in the capture and is treated here as a missing
+    declaration — so a group MIXING `INF` with a coarse declaration compares
+    exactly rather than at the coarse interval. That is the strict direction,
+    and strict here means "may report a rounding residue as a disagreement",
+    the very overstatement above. Left unhandled rather than guessed because
+    the case is unobserved; the fix is one branch in `_declared_decimals` the
+    day a filing shows it.
+    """
+    declared = [_declared_decimals(line, period) for line in children]
+    if parent_line is not None:
+        declared.append(_declared_decimals(parent_line, period))
+    if not declared or any(value is None for value in declared):
+        return Decimal(0)
+    return (Decimal(10) ** -min(declared)) * (n_terms + 1) / 2
+
+
+def _declared_decimals(line, period) -> int | None:
+    """The precision the filer declared for this line in this period, or `None`.
+
+    Accepts the integer the reconstruction capture carries and the numeric
+    STRING the repo's sibling `companyconcept` lane carries (`"-6"`), because
+    the same attribute reaches this repo in both spellings and a silent `None`
+    on one of them would quietly restore the exact comparison for a filer who
+    did declare a precision. Anything else — absent, empty, `INF`, non-numeric
+    — is `None`: no claim was made that this can read.
+    """
+    value = line.decimals.get(period)
+    if isinstance(value, bool) or not isinstance(value, (int, str)):
+        return None
+    try:
+        return int(value)
+    except ValueError:
+        return None
 
 
 def _weight_of(line) -> Decimal:
@@ -264,3 +362,339 @@ def _number(value) -> Decimal | None:
     except (InvalidOperation, ValueError):
         return None
     return number if number.is_finite() else None
+
+
+# =====================================================================
+# PER-ERA RESOLUTION RATE (plan Task 8)
+# =====================================================================
+#
+# THE ERAS ARE A MEASUREMENT WINDOW, NOT AN ACCOUNTING EPOCH. The brief's
+# structural rule resolved 63 of 65 filers, and that was measured on filings
+# FILED 2016-2018 ONLY (brief §"A limit this brief must not overclaim"). A
+# 10-year reconstruction spans years nobody sampled, and the brief's own
+# expectation is that early years resolve worse: DUK's calculation tree yields
+# 2-3 candidate totals for every filing from 2013 through 2017 and resolves
+# cleanly only from 2018 — 5 of its 14 years. So the boundaries below are the
+# edges of the evidence, and the report exists to stop the sampled window's
+# rate being read as the whole decade's.
+SAMPLE_FIRST_YEAR = 2016
+SAMPLE_LAST_YEAR = 2018
+
+ERA_BEFORE_SAMPLE = "pre_2016"
+ERA_SAMPLED = "sampled_2016_2018"
+ERA_AFTER_SAMPLE = "post_2018"
+
+# Oldest first, so a reader scans the report the way the years run.
+ERA_ORDER = (ERA_BEFORE_SAMPLE, ERA_SAMPLED, ERA_AFTER_SAMPLE)
+
+# WHY EACH UNRESOLVED STATEMENT FAILED. Each is a fact about THIS
+# RECONSTRUCTION, never a verdict on the filer — see `resolution_report`. Four
+# codes rather than two, because each names a DIFFERENT fact and a reader acts
+# on them differently; collapsing any pair would rebuild, one layer up, the
+# undifferentiated blank this arc exists to remove.
+AMBIGUOUS_TOTAL = "ambiguous_total"
+NO_REVENUE_TOTAL = "no_revenue_total"
+AMBIGUOUS_STATEMENT_ROLE = "ambiguous_statement_role"
+NO_DECLARED_SUMS = "no_declared_sums"
+SUMS_DO_NOT_RECONCILE = "sums_do_not_reconcile"
+
+# The wording a revenue concept is NAMED with, matched POSITIVELY against a
+# concept's local name — never a denylist of the cost-shaped names that happen
+# to contain it
+# (docs/loom/memory/shared-classifier-over-open-dialects-needs-allowlist.md).
+# It covers every revenue concept the brief measured across sectors:
+# `Revenues`, `SalesRevenueGoodsNet`, `SalesRevenueNet`,
+# `SalesRevenueServicesNet`, `RegulatedAndUnregulatedOperatingRevenue` (DUK,
+# NEE), `RealEstateRevenueNet` (O, PLD), `RevenueMineralSales` (NEM),
+# `RevenueFromContractWithCustomerExcludingAssessedTax` (post-ASC-606) and
+# `RevenuesAndOtherIncome` (PSX).
+_REVENUE_WORDING = "revenue"
+
+
+@dataclass(frozen=True)
+class Unresolved:
+    """One reason a statement did not resolve, with enough detail to act on.
+
+    `detail` names the specific roles, groups and periods involved. A reason
+    code alone tells a reader that something is wrong and gives them nowhere to
+    go; the point of this report is that a reader holding the filing can check
+    it.
+    """
+
+    reason: str
+    detail: str
+
+
+@dataclass(frozen=True)
+class StatementResolution:
+    """One filing's one statement, resolved or not.
+
+    `groups_incomplete` is REPORTED BUT NOT DISQUALIFYING, and that is a
+    measured judgement rather than a convenience: 9 of the 23 groups in KO's
+    FY2017 balance sheet are `incomplete` — a stub period with one child
+    tagged, a parent that belongs to another statement — and the brief holds up
+    that same filing as the faithful reconstruction (§Decision, "26 real lines
+    carrying the company's OWN labels"). A rule that failed a statement for any
+    incomplete group would report 0 of 6 statements resolved over the committed
+    capture, which tells a reader nothing they can use. The count is carried so
+    thin tagging stays VISIBLE instead.
+    """
+
+    filing_date: str
+    era: str
+    kind: str
+    resolved: bool
+    reasons: tuple[Unresolved, ...]
+    groups_checked: int
+    groups_incomplete: int
+
+
+@dataclass(frozen=True)
+class EraTally:
+    """The counts for one era. `reasons` is (code, count) pairs, ordered by
+    code, so two runs over one input never disagree."""
+
+    era: str
+    resolved: int
+    unresolved: int
+    reasons: tuple[tuple[str, int], ...]
+
+
+@dataclass(frozen=True)
+class ResolutionReport:
+    """A whole run: every statement, and the per-era counts.
+
+    Both halves are always present. The per-statement list is what a reader
+    investigates; the era tallies are the answer to the question the brief says
+    must be measured rather than assumed.
+    """
+
+    statements: tuple[StatementResolution, ...]
+    by_era: tuple[EraTally, ...]
+
+
+def resolution_report(reconstructions) -> ResolutionReport:
+    """How much of a reconstruction run actually came out usable, per era.
+
+    `reconstructions` is an iterable of `(filing_date, statements)` pairs —
+    one pair per filing, `filing_date` an ISO date string as
+    `sec_edgar_client.list_filings` and the `reconstruct` pack already carry
+    it (`filingDate`), `statements` the `Statements` Task 3 assembles. The
+    date is taken from the caller because `Statements` does not carry one, and
+    inventing a date here from anything else would be this report's opinion of
+    when a filing was filed.
+
+    A statement RESOLVES when all of these hold:
+
+      1. exactly ONE role classified as its kind, so which statement was read
+         was not a choice this code made silently;
+      2. it declares at least one calculation group, so "nothing disagreed" is
+         not vacuously true of a statement whose arithmetic was never read;
+      3. every group it declares came out in `RECONCILES` — `agrees` or
+         `within_rounding`;
+      4. for the INCOME statement only, exactly one revenue total survives
+         `revenue_totals` — the count the brief's era limit is written about.
+
+    `incomplete` groups do NOT disqualify it; see `StatementResolution`.
+
+    CONDITION 4 IS INCOME-ONLY, so "resolved" means something weaker for the
+    balance sheet and the cash-flow statement: for those two it says the
+    declared arithmetic held, and nothing about a total having been identified.
+    Stated rather than smoothed over, because a reader counting 5 of 6 resolved
+    would otherwise assume the same question was asked of all six.
+
+    WHAT "UNRESOLVED" DOES NOT MEAN — this is the sentence to read before
+    quoting any number out of this report. It is NOT a finding that the filer
+    is wrong. `SUMS_DO_NOT_RECONCILE` fires on this module's LIMIT 2 as
+    readily as on a real filer defect: `verify` sees PRESENTED lines only, so a
+    calculation child the filer never puts on the face of the statement leaves
+    the sum short, and IBM FY2025's diluted-share group is exactly that — a
+    false positive this module structurally cannot separate from a true one
+    (measured: 3 of the committed capture's 3 remaining disagreements). The
+    plan's Decision Log (Task 4 -> Task 8) makes this binding: `disagrees` may
+    not be read as filer defect. The reason code says what the RECONSTRUCTION
+    could not do, and the detail names the group so a reader can decide which
+    it is.
+
+    PURE, and no I/O: a function of the pairs handed in.
+    """
+    statements: list[StatementResolution] = []
+    for filing_date, assembled in reconstructions:
+        era = _era(filing_date)
+        checks_by_kind: dict[str, list[SumCheck]] = {}
+        for result in verify(assembled):
+            checks_by_kind.setdefault(result.kind, []).append(result)
+        for kind, lines in assembled.by_kind.items():
+            statements.append(_resolution_for(
+                filing_date, era, kind, lines,
+                assembled.roles.get(kind, ()),
+                checks_by_kind.get(kind, []),
+            ))
+    return ResolutionReport(
+        statements=tuple(statements),
+        by_era=_tallies(statements),
+    )
+
+
+def revenue_totals(lines) -> tuple[str, ...]:
+    """The income statement's candidate TOTAL revenue concepts, in
+    presentation order.
+
+    THE ARC'S STRUCTURAL RULE, applied to the income calculation tree: among
+    the tree's revenue concepts, a candidate is one whose calculation parent is
+    not itself a revenue concept — so a filer's revenue COMPONENTS, which roll
+    up into a revenue parent, drop out and the line they roll into survives.
+    Exactly one survivor is the filing's own total. Two or three is the
+    ambiguity DUK exhibits before 2018 and the brief's era limit is written
+    about; zero is a different fact (see `NO_REVENUE_TOTAL`).
+
+    A DEDUCTION IS EXCLUDED BY THE FILER'S OWN SIGN, not by a list of
+    cost-shaped names. IBM FY2025 presents `us-gaap_CostOfRevenue` as a SIBLING
+    of `us-gaap_Revenues` under `GrossProfit`, and its local name carries the
+    revenue wording too — what separates them is that the filer declares one
+    +1.0 and the other -1.0. Matching the name alone reads IBM as two
+    candidates and reports a clean filing as ambiguous; the sign is structural
+    and stays correct for a cost concept nobody thought to list
+    (docs/loom/memory/shared-classifier-over-open-dialects-needs-allowlist.md).
+
+    THE PARENT IS TESTED BY NAME ONLY, deliberately: a filer's revenue parent
+    need not be a PRESENTED line (its own weight is then unavailable), and a
+    component that rolls into an unpresented revenue total must still drop out.
+
+    ORDER IS PRESENTATION ORDER, so two runs over one filing never disagree.
+    """
+    return tuple(
+        line.concept for line in lines
+        if _is_revenue_line(line) and not _names_revenue(line.calculation_parent)
+    )
+
+
+def _is_revenue_line(line) -> bool:
+    """A line stating revenue: its concept carries the revenue wording AND the
+    filer does not declare it as a deduction."""
+    weight = _number(line.weight)
+    return _names_revenue(line.concept) and not (weight is not None and weight < 0)
+
+
+def _names_revenue(concept) -> bool:
+    """Does this concept's LOCAL name carry the revenue wording?
+
+    The namespace is dropped first: a filer's own prefix (`duk_`, `ko_`) says
+    nothing about what the concept states, and a filer whose ticker or domain
+    contained the wording would otherwise turn every one of its lines into a
+    revenue line.
+    """
+    if not concept:
+        return False
+    return _REVENUE_WORDING in str(concept).split("_", 1)[-1].casefold()
+
+
+def _resolution_for(
+    filing_date, era, kind, lines, roles, checks,
+) -> StatementResolution:
+    reasons: list[Unresolved] = []
+
+    if len(roles) > 1:
+        # ASSEMBLY PICKED ONE to read (deterministically, preferring the purer
+        # role) and that pick is not a resolution: which role is the filer's
+        # statement was decided by our tie-break, not by the filing. Reporting
+        # the read one as resolved would launder the choice into a fact. It is
+        # a DIFFERENT fact from an ambiguous revenue total — a statement can
+        # have either without the other — so it carries its own code.
+        reasons.append(Unresolved(
+            AMBIGUOUS_STATEMENT_ROLE,
+            f"{len(roles)} roles classify as {kind} and only the first was "
+            f"read: {', '.join(roles)}",
+        ))
+
+    if kind == "income":
+        tops = revenue_totals(lines)
+        if len(tops) != 1:
+            reasons.append(Unresolved(
+                AMBIGUOUS_TOTAL if tops else NO_REVENUE_TOTAL,
+                f"{len(tops)} candidate totals among the income statement's "
+                f"revenue concepts"
+                + (f": {', '.join(tops)}" if tops else
+                   " — no line states revenue, so this reconstruction cannot "
+                   "name the filer's top line"),
+            ))
+
+    if not checks:
+        reasons.append(Unresolved(
+            NO_DECLARED_SUMS,
+            f"the {kind} statement declares no calculation group, so no "
+            "declared arithmetic was checked",
+        ))
+
+    broken = [result for result in checks if result.status == DISAGREES]
+    if broken:
+        reasons.append(Unresolved(
+            SUMS_DO_NOT_RECONCILE,
+            "; ".join(
+                f"{result.parent} in {result.period}: the filer reports "
+                f"{result.reported} and its own declaration produces "
+                f"{result.computed} (difference {result.difference}, beyond "
+                f"the {result.tolerance} its declared precision permits)"
+                for result in broken
+            ),
+        ))
+
+    return StatementResolution(
+        filing_date=filing_date,
+        era=era,
+        kind=kind,
+        resolved=not reasons,
+        reasons=tuple(reasons),
+        groups_checked=len(checks),
+        groups_incomplete=sum(
+            1 for result in checks if result.status == INCOMPLETE
+        ),
+    )
+
+
+def _tallies(statements) -> tuple[EraTally, ...]:
+    """One tally per era PRESENT in the run, oldest first.
+
+    Eras with no filings are left out rather than emitted as zeroes: a run of
+    eight modern 10-Ks has nothing to say about 2013, and a row of zeroes reads
+    as a measurement that was made and came out empty.
+    """
+    tallies = []
+    for era in ERA_ORDER:
+        rows = [s for s in statements if s.era == era]
+        if not rows:
+            continue
+        reasons: dict[str, int] = {}
+        for row in rows:
+            for entry in row.reasons:
+                reasons[entry.reason] = reasons.get(entry.reason, 0) + 1
+        tallies.append(EraTally(
+            era=era,
+            resolved=sum(1 for row in rows if row.resolved),
+            unresolved=sum(1 for row in rows if not row.resolved),
+            reasons=tuple(sorted(reasons.items())),
+        ))
+    return tuple(tallies)
+
+
+def _era(filing_date) -> str:
+    """Which measurement era a filing date falls in, or a loud failure.
+
+    REFUSES rather than defaulting. The era split is this report's entire
+    purpose, so a filing that cannot be placed in one must not be silently
+    bucketed: dropping it overstates the rate of the era it belonged to, and a
+    catch-all era understates another's. Same posture as `_weight_of` above,
+    for the same reason.
+    """
+    year = str(filing_date)[:4]
+    if not year.isdigit():
+        raise ValueError(
+            f"filing date {filing_date!r} carries no readable four-digit year, "
+            "so this filing cannot be placed in an era; refusing to guess one"
+        )
+    year = int(year)
+    if year < SAMPLE_FIRST_YEAR:
+        return ERA_BEFORE_SAMPLE
+    if year <= SAMPLE_LAST_YEAR:
+        return ERA_SAMPLED
+    return ERA_AFTER_SAMPLE

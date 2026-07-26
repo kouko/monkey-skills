@@ -466,6 +466,72 @@ def test_ko_fy2017_income_statement_is_twenty_six_lines(shape, reconstruction_ca
     assert eps.weight is None and eps.calculation_parent is None
 
 
+def test_a_line_carries_the_precision_the_filer_declared(shape, reconstruction_capture):
+    """COMMITTED — the `decimals` a filer states per fact must ride on the
+    `Line`, because the consumer that needs it cannot get it anywhere else.
+
+    ADDED FOR PLAN TASK 8 (plan Decision Log, "Task 4 -> Task 8"), which is a
+    deliberate widening of Task 8's `Files touched` rather than drift. Task 4's
+    `verify` compares EXACTLY and therefore reads 24 of its 27 disagreements
+    over this same capture out of filers' own rounding residue — a ~8x
+    overstatement of broken filer arithmetic. A per-era resolution report built
+    on that count would accuse filers of errors they did not make, so the field
+    lands here, on Task 3's `Line`, where the row already carries it.
+
+    Two shapes are asserted because they are the two the capture holds:
+    KO's FY2017 top line states -6 (rounded to millions) and its EPS row states
+    2 (cents). A `Line` that dropped either would leave `verify` unable to tell
+    a 3M rounding residue on a millions-rounded group from a 3M error.
+
+    `decimals` is per PERIOD, not per line: the same line may be stated at
+    different precisions in different years, and a scalar would silently pick
+    one of them.
+    """
+    filing = _CapturedFiling(
+        _captured_filing(reconstruction_capture, "0000021344-18-000008")
+    )
+    income = shape.statements_for(filing).by_kind["income"]
+
+    top_line = income[0]
+    assert top_line.label == "NET OPERATING REVENUES"
+    assert top_line.decimals == {
+        "duration_2015-01-01_2015-12-31": -6,
+        "duration_2016-01-01_2016-12-31": -6,
+        "duration_2017-01-01_2017-12-31": -6,
+    }
+
+    eps = next(line for line in income if line.concept == "us-gaap_EarningsPerShareBasic")
+    assert eps.decimals["duration_2017-01-01_2017-12-31"] == 2, (
+        "per-share amounts are stated to the cent, not to the million; a line "
+        "that lost this would be checked against the wrong interval"
+    )
+
+    # COPIED, not aliased — the same discipline `values` already carries, and
+    # for the same reason: a caller mutating the row must not reach the `Line`.
+    rows = _captured_rows(shape, reconstruction_capture, "0000021344-18-000008", "income")
+    captured = next(
+        row for row in rows
+        if row["label"] == "NET OPERATING REVENUES" and not row.get("full_dimension_label")
+    )
+    assert top_line.decimals is not captured["decimals"]
+
+
+def test_a_line_whose_filer_declared_no_precision_carries_an_empty_mapping(shape):
+    """CONSTRUCTED-CONVENTIONAL — a row with no `decimals` key at all.
+
+    OBSERVED in the capture: rows DO carry `decimals`, and an abstract row
+    carries it empty (`{}`). Unobserved is the key being absent entirely, which
+    is what a `get_statement` shape from a different edgartools version could
+    hand over. The empty mapping is the honest answer for both — it means "this
+    filer declared no precision here", which the consumer must read as "compare
+    exactly", never as "any precision you like". `None` would push that
+    judgement onto every caller.
+    """
+    line = shape._line({"concept": "us-gaap_Revenues", "label": "Revenue"})
+
+    assert line.decimals == {}
+
+
 @pytest.mark.parametrize(
     "accession, ticker",
     [

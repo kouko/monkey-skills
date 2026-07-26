@@ -99,7 +99,7 @@ because the claim is still what governs everything above the assembly section.
 from __future__ import annotations
 
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -258,6 +258,21 @@ class Line:
     `None` for a line that participates in no declared sum: KO's EPS rows are
     the observed case, and that is a property of the filing, not an error —
     they are lines, and arithmetic must leave them alone.
+
+    `decimals` is the precision the FILER claimed for each period's fact, keyed
+    by period exactly as `values` is — KO states -6 (rounded to millions) on
+    its revenue line and 2 (cents) on its EPS line in the same statement, so a
+    single scalar would silently pick one of them. It is ADDED FOR PLAN TASK 8
+    (plan Decision Log, "Task 4 -> Task 8"): without it the sum check compares
+    exactly, and filers round each fact independently, so 24 of the 27
+    disagreements over the committed capture are rounding residue rather than
+    filer error. It is carried, never interpreted — what an interval built on
+    it permits is `kpi_us_statement_check`'s judgement, not this module's.
+
+    An EMPTY mapping means the filer declared no precision for that line, which
+    a consumer must read as "compare exactly", never as "any precision". That
+    is also the default, so a `Line` built by a caller that predates this field
+    keeps working and keeps the strict reading.
     """
 
     label: str
@@ -266,6 +281,7 @@ class Line:
     weight: float | None
     calculation_parent: str | None
     values: dict[str, Any]
+    decimals: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -432,10 +448,11 @@ def _unrecognised_dimension_keys(rows: list[dict[str, Any]]) -> set[str]:
 
 
 def _line(row: dict[str, Any]) -> Line:
-    """One row projected onto the six fields the brief asks a line to carry.
+    """One row projected onto the six fields the brief asks a line to carry,
+    plus the precision the filer declared (see `Line.decimals`).
 
-    `values` is copied rather than aliased: the caller's `Line` must not
-    change because someone downstream mutated the row it came from.
+    `values` and `decimals` are copied rather than aliased: the caller's `Line`
+    must not change because someone downstream mutated the row it came from.
     """
     return Line(
         label=row.get("label"),
@@ -444,4 +461,5 @@ def _line(row: dict[str, Any]) -> Line:
         weight=row.get("weight"),
         calculation_parent=row.get("calculation_parent"),
         values=dict(row.get("values") or {}),
+        decimals=dict(row.get("decimals") or {}),
     )
