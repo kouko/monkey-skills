@@ -217,11 +217,25 @@
     (3) The alternative (absent MI ⇒ period uncheckable) would silence the identity for
     the single-entity majority, i.e. trade a zero-observed false accusation for
     switching the check off on the common case.
-  - **The detectable half is already handled, and is not this item.** When the filer
-    tags BOTH equity totals it is asserting an NCI exists (the line between the two
-    subtotals), so an absent `MinorityInterest` there is a MISSING AMOUNT and the
-    period is uncheckable — `_minority_interest_term`'s `nci_is_asserted` branch,
-    pinned by `test_a_parent_only_period_whose_asserted_nci_has_no_amount_is_uncheckable`.
+  - **The detectable half is handled AS OF the 2026-07-26 statement-lane conflict fix
+    — it was not, when this item was written.** When the filer tags BOTH equity totals
+    it is asserting an NCI exists (the line between the two subtotals), so an absent
+    `MinorityInterest` there is a MISSING AMOUNT and the period is uncheckable —
+    `_minority_interest_term`'s `nci_is_asserted` branch, pinned by
+    `test_a_parent_only_period_whose_asserted_nci_has_no_amount_is_uncheckable`.
+    - That claim was ASPIRATIONAL as first written, and the correction is the point.
+      The branch was pinned only by tests feeding hand-built store dumps carrying both
+      equity concepts — an input the PRODUCER could not emit. `build_statement_backfill`
+      routed the `total_equity` chain through `_resolve_concept_per_period`, which read
+      the two totals' (correct, necessary) difference as a value conflict and dropped
+      the instant under BOTH concepts. So on the 17 probe filers that tag both (CVX,
+      PSX, WFC, C, MS, IBM, QCOM, COST, PEP, JNJ, PFE, UNH, BA, GE, F, GM, TSLA) there
+      was no equity at all, hence no identity, hence `nci_is_asserted` was UNREACHABLE
+      end-to-end. The statement lane no longer selects between chain members, so the
+      path is now genuinely reachable — verified live 2026-07-26 on TSLA, whose
+      `2025-12-31` instant emits both `us-gaap:StockholdersEquity` (82,137M) and
+      `us-gaap:StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest`
+      (82,807M); the 670M difference is its NCI.
     What remains open is only the case where NOTHING in the filing asserts the NCI, so
     nothing inside `companyfacts` can distinguish it from a genuine single entity.
   - Re-trigger: a real filer's flag turns out to trace to this (the flag's
@@ -260,6 +274,33 @@
   value. The stated PRINCIPLE (absent field → skip, present-but-corrupt → raise loud)
   covers all four honestly; widen the subject from `start` to "a present-but-corrupt
   date or value".
+
+- (e) 🟡 **Temporary equity can be SEVERAL lines, and the mezzanine chain picks
+  only one.** Surfaced by the live dogfood; it is the ONE balance-identity flag that
+  survives every fix this arc made, and it survives CORRECTLY.
+  - **Measured.** TSLA 2016-12-31, checked vintage `0001564590-18-002956`
+    (as_of 2018-02-23): assets 22,664,076,000 − (liabilities 16,750,167,000 +
+    mezzanine 367,039,000 + parent-only equity 4,752,911,000 + minority interest
+    785,175,000) = **8,784,000**. That residual is exactly TSLA's *Convertible
+    senior notes* temporary-equity line for 2016 — a SECOND temporary-equity line
+    sitting alongside the redeemable non-controlling interest the chain did pick.
+  - **The shape, stated correctly** (an earlier revision of this entry said the
+    chain "does not reach pre-2016", which was wrong — it was written from
+    pre-fix evidence): `MEZZANINE_CHAIN` is a FIRST-PRESENT chain, so when a filer
+    reports two distinct temporary-equity lines in one period it accounts for one
+    and silently omits the other. Widening the chain to earlier eras would NOT fix
+    this; the fix is to treat temporary equity as a SUM over the concepts present,
+    not a first-present pick — which is a different rule from every other chain in
+    the view and needs its own evidence before being written.
+  - **The flag is doing its job, not misfiring.** It points at THIS VIEW's concept
+    selection being too narrow, which is exactly what the check exists to surface.
+    Leaving it visible beats tuning it silent.
+  - Evidence bar for the fix: measure across the corpus which concepts carry
+    temporary equity and how often a filer reports more than one in a period. A
+    sum-rule adopted from one filer's balance sheet is how a wrong mapping enters —
+    and unlike a first-present pick, a wrong SUM double-counts rather than omits.
+  - Re-trigger: a second filer's surviving flag traces to a second temporary-equity
+    line, or the corpus is re-probed for temporary-equity concept coverage.
 
 ## investing-toolkit kpi_id identity 2.37.0 — post-ship follow-ups (OPEN)
 

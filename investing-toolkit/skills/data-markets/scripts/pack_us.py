@@ -1118,10 +1118,19 @@ def pack_statement_backfill(ticker: str) -> dict:
 
     The envelope carries the mandatory top-level `"source_kind"` key set to
     the exact literal `"xbrl-companyfacts"` (plan §PIN — statement pack
-    envelope) — `kpi_xbrl_ingest.ingest_pack` reads this literal to assign
-    the correct durable provenance label to this lane's points; without it
-    every point would inherit the ingest default `"xbrl-dimensional"`, a
-    factually wrong label for a companyfacts statement backfill.
+    envelope). This lane's driver is `kpi_us_statements_ingest`, NOT
+    `kpi_xbrl_ingest`, and there this key is a TRUST GATE: the driver
+    rejects an envelope whose declared kind is outside
+    `kpi_gate.TRUSTED_SOURCE_KINDS` before it builds a single point, so an
+    untrusted label can never ride into the durable store. The label
+    actually STAMPED on each point comes from the fixed
+    `kpi_us_statements._SOURCE_KIND` constant, not from this envelope —
+    which is why the success branch below keeps the wrapper's own literal
+    rather than letting a producer's value win.
+    (An earlier revision of this docstring credited
+    `kpi_xbrl_ingest.ingest_pack` here; that is the DIMENSIONAL lane's
+    driver and never sees this pack. A maintainer following it would have
+    edited the wrong module.)
 
     Failure honesty (mirrors `pack_kpi_topline_backfill`): ANY producer
     error slot rides through the envelope verbatim, with NO `facts` key —

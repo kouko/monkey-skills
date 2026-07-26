@@ -148,6 +148,9 @@ _REDEEMABLE_NCI = "us-gaap:RedeemableNoncontrollingInterestEquityCarryingAmount"
 # A SECOND real-shaped accession, so a test can prove a component's filing is
 # absent from `accessions` rather than merely indistinguishable from the rest.
 _OTHER_ACCESSION = "0000789019-25-000099"
+# A THIRD one, for the vintage-alignment fixtures below: a restated period can
+# carry three filings of one component, and a test must be able to name which.
+_THIRD_ACCESSION = "0000789019-25-000177"
 
 
 def _balance(
@@ -622,6 +625,307 @@ def test_the_flag_annotates_only_the_top_level_of_the_view_copy(store, spine_vie
     assert derived_assets["latest"] is stored_assets["latest"]
     assert derived_assets["observations"] is stored_assets["observations"]
     assert derived_assets["period_labels"] is stored_assets["period_labels"]
+
+
+# --- Task 7, vintage alignment --------------------------------------------
+#
+# The store is BITEMPORAL: a restatement APPENDS a new vintage of a period
+# rather than overwriting the old one, and different components of one period
+# can end up with different numbers of vintages. Reading each component's own
+# `latest` therefore compares figures from DIFFERENT filings, which is not an
+# accounting identity at all. Measured on the live six-filer dogfood: four
+# filers flagged (MSFT 5.73e-02, AAPL 1.29e-01, JPM 3.36e-04, TSLA 9.98e-03)
+# and every one was this shape — the store working exactly as designed,
+# reported as a defect.
+
+
+def test_a_restated_period_is_checked_within_one_filing_not_across_vintages(
+    store, spine_view
+):
+    """THE REAL MSFT SHAPE, at period end 2016-06-30 (live dogfood dump
+    `MSFT.dump.json`): assets and liabilities each carry two vintages, equity
+    carries a THIRD that the other two lack.
+
+    Taking each component's own `latest` mixes a 2017-filed assets figure with
+    a 2018-filed equity figure — 193,468 − (121,471 + 83,090) = −11,093 M,
+    5.73e-02 relative, flagged. But the 2017 filing balances to the dollar:
+    193,468 = 121,471 + 71,997. The residual was an artifact of the mixture,
+    and the filer was falsely accused of a restatement the store recorded
+    correctly.
+
+    The view still REPORTS each component's own latest (asserted below) — this
+    changes only which vintage feeds the CHECK, never a displayed figure.
+    """
+    company = "MSFT-SHAPED-RESTATED"
+    dump = _dump_of(
+        store,
+        company,
+        [
+            _balance(company, _ASSETS, "FY2016", "2016-06-30", 193_694_000_000, "2016-07-28"),
+            _balance(company, _LIABILITIES, "FY2016", "2016-06-30", 121_697_000_000, "2016-07-28"),
+            _balance(company, _EQUITY, "FY2016", "2016-06-30", 71_997_000_000, "2016-07-28"),
+            _balance(
+                company, _ASSETS, "FY2016", "2016-06-30", 193_468_000_000,
+                "2017-08-02", accession=_OTHER_ACCESSION,
+            ),
+            _balance(
+                company, _LIABILITIES, "FY2016", "2016-06-30", 121_471_000_000,
+                "2017-08-02", accession=_OTHER_ACCESSION,
+            ),
+            _balance(
+                company, _EQUITY, "FY2016", "2016-06-30", 71_997_000_000,
+                "2017-08-02", accession=_OTHER_ACCESSION,
+            ),
+            # The third vintage only equity has — the whole defect.
+            _balance(
+                company, _EQUITY, "FY2016", "2016-06-30", 83_090_000_000,
+                "2018-08-03", accession=_THIRD_ACCESSION,
+            ),
+        ],
+    )
+
+    derived = spine_view.derive_spine(dump)
+
+    assert _identity_flag(derived, "2016-06-30") is None, (
+        "the newest filing carrying all three totals balances EXACTLY; the "
+        "residual exists only in a mixture of two filings"
+    )
+    assert _values_by_end(_series(derived, "total_assets")) == {
+        "2016-06-30": 193_468_000_000
+    }
+    assert _values_by_end(_series(derived, "total_equity")) == {
+        "2016-06-30": 83_090_000_000
+    }
+
+
+def test_the_newest_complete_vintage_is_the_one_checked(store, spine_view):
+    """WHICH vintage, stated rather than left implicit: the newest filing
+    carrying every required total, because that is what a reader sees as this
+    period's current figures. A superseded filing's residual is not news.
+
+    Both directions are pinned, because either one alone is satisfiable by a
+    wrong rule: checking the OLDEST vintage would pass the first company and
+    fail the second, and checking ANY vintage that balances would pass both
+    while never flagging anything.
+    """
+    fixed = "RESTATEMENT-FIXED"
+    fixed_dump = _dump_of(
+        store,
+        fixed,
+        [
+            _balance(fixed, _ASSETS, "FY2023", "2023-12-31", 200_000_000_000, "2024-02-01"),
+            _balance(fixed, _LIABILITIES, "FY2023", "2023-12-31", 150_000_000_000, "2024-02-01"),
+            _balance(fixed, _EQUITY, "FY2023", "2023-12-31", 44_000_000_000, "2024-02-01"),
+            _balance(
+                fixed, _ASSETS, "FY2023", "2023-12-31", 200_000_000_000,
+                "2025-02-01", accession=_OTHER_ACCESSION,
+            ),
+            _balance(
+                fixed, _LIABILITIES, "FY2023", "2023-12-31", 150_000_000_000,
+                "2025-02-01", accession=_OTHER_ACCESSION,
+            ),
+            _balance(
+                fixed, _EQUITY, "FY2023", "2023-12-31", 50_000_000_000,
+                "2025-02-01", accession=_OTHER_ACCESSION,
+            ),
+        ],
+    )
+    broke = "RESTATEMENT-BROKE-IT"
+    broke_dump = _dump_of(
+        store,
+        broke,
+        [
+            _balance(broke, _ASSETS, "FY2023", "2023-12-31", 200_000_000_000, "2024-02-01"),
+            _balance(broke, _LIABILITIES, "FY2023", "2023-12-31", 150_000_000_000, "2024-02-01"),
+            _balance(broke, _EQUITY, "FY2023", "2023-12-31", 50_000_000_000, "2024-02-01"),
+            _balance(
+                broke, _ASSETS, "FY2023", "2023-12-31", 200_000_000_000,
+                "2025-02-01", accession=_OTHER_ACCESSION,
+            ),
+            _balance(
+                broke, _LIABILITIES, "FY2023", "2023-12-31", 150_000_000_000,
+                "2025-02-01", accession=_OTHER_ACCESSION,
+            ),
+            _balance(
+                broke, _EQUITY, "FY2023", "2023-12-31", 44_000_000_000,
+                "2025-02-01", accession=_OTHER_ACCESSION,
+            ),
+        ],
+    )
+
+    assert _identity_flag(spine_view.derive_spine(fixed_dump), "2023-12-31") is None, (
+        "the restatement balances; the superseded filing's break is not news"
+    )
+
+    flag = _identity_flag(spine_view.derive_spine(broke_dump), "2023-12-31")
+    assert flag is not None, "the CURRENT filing does not balance — that is news"
+    assert flag["residual"] == 6_000_000_000
+    # The flag names the ONE vintage it checked, so the residual is
+    # reproducible from the flag alone rather than from a list of filings
+    # the reader would have to re-combine.
+    assert flag["accessions"] == [_OTHER_ACCESSION]
+    assert flag["checked_vintage"] == {
+        "as_of": "2025-02-01",
+        "source_accession": _OTHER_ACCESSION,
+    }
+    assert flag["components"]["total_equity"] == 44_000_000_000
+
+
+def test_a_period_no_single_filing_covers_is_uncheckable_not_flagged(
+    store, spine_view
+):
+    """UNCHECKABLE ≠ WRONG, extended to the vintage axis. When no ONE filing
+    carries all three totals for a period, there is no identity to evaluate —
+    the same honest silence this check already keeps for the 13 of 46 probed
+    filers that never tag a total `Liabilities`.
+
+    The mixture here is off by 30,000 M (1.5e-01 relative), so a `latest`-per-
+    component reading would flag it loudly; no filing ever asserted those
+    three figures together.
+    """
+    company = "NO-COMPLETE-VINTAGE"
+    dump = _dump_of(
+        store,
+        company,
+        [
+            _balance(company, _ASSETS, "FY2023", "2023-12-31", 200_000_000_000, "2024-02-01"),
+            _balance(company, _EQUITY, "FY2023", "2023-12-31", 50_000_000_000, "2024-02-01"),
+            _balance(
+                company, _LIABILITIES, "FY2023", "2023-12-31", 120_000_000_000,
+                "2025-02-01", accession=_OTHER_ACCESSION,
+            ),
+            _balance(
+                company, _EQUITY, "FY2023", "2023-12-31", 50_000_000_000,
+                "2025-02-01", accession=_OTHER_ACCESSION,
+            ),
+        ],
+    )
+
+    derived = spine_view.derive_spine(dump)
+
+    assert _identity_flag(derived, "2023-12-31") is None
+    # Not dropped either — every as-reported figure still rides through.
+    assert _values_by_end(_series(derived, "total_assets")) == {
+        "2023-12-31": 200_000_000_000
+    }
+    assert _values_by_end(_series(derived, "total_liabilities")) == {
+        "2023-12-31": 120_000_000_000
+    }
+
+
+def test_the_equity_completing_terms_come_from_the_checked_filing_too(
+    store, spine_view
+):
+    """The mezzanine and `MinorityInterest` are read from the CHECKED vintage,
+    not from their own latest — otherwise the fix would leave two of the five
+    components still crossing filings.
+
+    Here a later filing tags only those two identity-only concepts for the
+    instant (it restates neither total), so their `latest` is one vintage newer
+    than the newest filing carrying the three totals. The checked filing
+    balances exactly; reading their latest instead yields a 6,000 M residual.
+    """
+    company = "TERMS-FROM-CHECKED-VINTAGE"
+    dump = _dump_of(
+        store,
+        company,
+        [
+            _balance(company, _ASSETS, "FY2023", "2023-12-31", 201_000_000_000, "2024-02-01"),
+            _balance(company, _LIABILITIES, "FY2023", "2023-12-31", 150_000_000_000, "2024-02-01"),
+            _balance(company, _EQUITY, "FY2023", "2023-12-31", 44_000_000_000, "2024-02-01"),
+            _balance(company, _TEMPORARY_EQUITY, "FY2023", "2023-12-31", 1_000_000_000, "2024-02-01"),
+            _balance(company, _MINORITY_INTEREST, "FY2023", "2023-12-31", 6_000_000_000, "2024-02-01"),
+            _balance(
+                company, _TEMPORARY_EQUITY, "FY2023", "2023-12-31", 4_000_000_000,
+                "2025-02-01", accession=_OTHER_ACCESSION,
+            ),
+            _balance(
+                company, _MINORITY_INTEREST, "FY2023", "2023-12-31", 9_000_000_000,
+                "2025-02-01", accession=_OTHER_ACCESSION,
+            ),
+        ],
+    )
+
+    derived = spine_view.derive_spine(dump)
+
+    assert _identity_flag(derived, "2023-12-31") is None, (
+        "201,000 = 150,000 + 1,000 + 44,000 + 6,000 in the checked filing"
+    )
+
+
+def test_a_term_the_checked_filing_omits_is_a_missing_amount_not_a_zero(
+    store, spine_view
+):
+    """The one rule that keeps "absent reads as 0" honest once values are
+    vintage-scoped.
+
+    Absence reads as 0 because an untagged mezzanine / `MinorityInterest` is
+    the balance sheet asserting there is none (measured — see the two tests
+    above). But when ANOTHER filing of the SAME instant tagged the concept,
+    that instant demonstrably HAD one, and the checked filing simply does not
+    give us its amount. Reading 0 there would manufacture a residual equal to
+    the omitted term and falsely accuse the filer — the exact failure mode
+    this whole check keeps being burned by. So the PERIOD (across all its
+    filings) says which terms exist; the CHECKED filing supplies every amount.
+
+    Each filer below shrank in the restatement, so the omitted term cannot be
+    mistaken for a rounding difference either way: read as 0 the residual is
+    the whole term (1,000 M and 6,000 M), and read from the older filing it is
+    the shrinkage on top of it.
+    """
+    mezzanine_dropped = "RESTATEMENT-OMITS-MEZZANINE"
+    mezzanine_dump = _dump_of(
+        store,
+        mezzanine_dropped,
+        [
+            _balance(mezzanine_dropped, _ASSETS, "FY2023", "2023-12-31", 300_000_000_000, "2024-02-01"),
+            _balance(mezzanine_dropped, _LIABILITIES, "FY2023", "2023-12-31", 150_000_000_000, "2024-02-01"),
+            _balance(mezzanine_dropped, _EQUITY, "FY2023", "2023-12-31", 50_000_000_000, "2024-02-01"),
+            _balance(mezzanine_dropped, _TEMPORARY_EQUITY, "FY2023", "2023-12-31", 100_000_000_000, "2024-02-01"),
+            _balance(
+                mezzanine_dropped, _ASSETS, "FY2023", "2023-12-31", 201_000_000_000,
+                "2025-02-01", accession=_OTHER_ACCESSION,
+            ),
+            _balance(
+                mezzanine_dropped, _LIABILITIES, "FY2023", "2023-12-31", 150_000_000_000,
+                "2025-02-01", accession=_OTHER_ACCESSION,
+            ),
+            _balance(
+                mezzanine_dropped, _EQUITY, "FY2023", "2023-12-31", 50_000_000_000,
+                "2025-02-01", accession=_OTHER_ACCESSION,
+            ),
+        ],
+    )
+    minority_dropped = "RESTATEMENT-OMITS-MINORITY-INTEREST"
+    minority_dump = _dump_of(
+        store,
+        minority_dropped,
+        [
+            _balance(minority_dropped, _ASSETS, "FY2023", "2023-12-31", 250_000_000_000, "2024-02-01"),
+            _balance(minority_dropped, _LIABILITIES, "FY2023", "2023-12-31", 150_000_000_000, "2024-02-01"),
+            _balance(minority_dropped, _EQUITY, "FY2023", "2023-12-31", 44_000_000_000, "2024-02-01"),
+            _balance(minority_dropped, _MINORITY_INTEREST, "FY2023", "2023-12-31", 56_000_000_000, "2024-02-01"),
+            _balance(
+                minority_dropped, _ASSETS, "FY2023", "2023-12-31", 200_000_000_000,
+                "2025-02-01", accession=_OTHER_ACCESSION,
+            ),
+            _balance(
+                minority_dropped, _LIABILITIES, "FY2023", "2023-12-31", 150_000_000_000,
+                "2025-02-01", accession=_OTHER_ACCESSION,
+            ),
+            _balance(
+                minority_dropped, _EQUITY, "FY2023", "2023-12-31", 44_000_000_000,
+                "2025-02-01", accession=_OTHER_ACCESSION,
+            ),
+        ],
+    )
+
+    assert _identity_flag(
+        spine_view.derive_spine(mezzanine_dump), "2023-12-31"
+    ) is None, "the omitted mezzanine is a missing amount, not a zero"
+    assert _identity_flag(
+        spine_view.derive_spine(minority_dump), "2023-12-31"
+    ) is None, "the omitted non-controlling interest is a missing amount, not a zero"
 
 
 def test_resolves_a_different_concept_per_period(store, spine_view):

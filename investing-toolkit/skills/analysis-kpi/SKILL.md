@@ -197,8 +197,8 @@ re-derivable via its sibling `capture_us_statement_shapes_probe.py`):
 - The floor moves FORWARD one year per calendar year. It never deepens
   backward, so waiting does not help a request for 20+ years.
 - 1 of 47 tickers resolves to an entity carrying **zero** us-gaap concepts
-  (refused loudly); 2 more are truncated at the source (GOOGL from 2014,
-  DIS from 2018) and surfaced, not stitched.
+  (refused loudly); 2 more are truncated at the source (GOOGL from 2012,
+  DIS from 2016) and surfaced, not stitched.
 
 Pre-2009 history is reachable only via HTML/text extraction (which this repo
 forbids) or a vendor-standardized source (an uninspectable model, and a
@@ -229,9 +229,18 @@ uv run scripts/kpi_store.py dump --company AAPL \
 
 Each flag carries `residual`, `relative_residual`, `tolerance`,
 `equity_kind` (`parent_only` vs `incl_NCI`, so a `minority_interest` of 0
-is readable), the `components` used, and the `accessions` behind them. A
-period missing any required component is **not** flagged — uncheckable is
-not wrong, and 13 of 46 filers never tag a total `Liabilities` at all.
+is readable), the `components` used, and `checked_vintage` — the ONE filing
+they were all read from (`accessions` is that same single accession).
+
+**The identity is computed WITHIN one filing, never across.** A restatement
+appends a new vintage rather than overwriting, so comparing each component's
+own latest observation mixes filings and flags filers that balance perfectly.
+The check uses the newest vintage carrying all three totals — what a reader
+sees as current — which is why the flag's `components` can differ from the
+values the tearsheet renders for that period, and why it names the vintage.
+A period missing any required component, or that no single filing covers,
+is **not** flagged — uncheckable is not wrong, and 13 of 46 filers never tag
+a total `Liabilities` at all.
 
 ## Workflow: TW iXBRL -> tearsheet
 

@@ -120,13 +120,40 @@ value: an as-reported figure is not wrong because our field selection was.
     is the IDENTITY, not the chain: what the spine's `total_equity` field
     should MEAN is a separate product question, and reordering the chain
     here would silently change the figure those 17 filers report.
+  - ONE VINTAGE, NEVER ACROSS. The store is BITEMPORAL: a restatement APPENDS
+    a new vintage of a period instead of overwriting the old one, and
+    different components of one period routinely end up with different numbers
+    of vintages. So every amount in the identity is read from ONE filing --
+    `_identity_vintage` picks the newest `(as_of, source_accession)` that ALL
+    THREE totals share, and `_vintage_observation` reads each component there.
+    Reading each component's own `latest` instead is not an accounting
+    identity at all, and the live six-filer dogfood measured what that costs:
+    four filers flagged (MSFT 2016-06-30 5.73e-02, AAPL 2008-09-27 1.29e-01,
+    JPM 2019-12-31 3.36e-04, TSLA 2014-12-31 9.98e-03) and every one was the
+    same shape -- MSFT's 2017 filing balances to the dollar
+    (193,468 = 121,471 + 71,997) and the residual came entirely from pairing
+    it with a 2018-filed equity figure. A check whose job is to catch a wrong
+    number was reporting the store working correctly.
+      * NEWEST, because that is what a reader sees as the period's current
+        figures; a superseded filing's residual is not news, and scanning
+        older vintages until one balances would be tuning toward silence.
+      * The FLAG names that vintage (`checked_vintage`, and `accessions` is
+        now exactly one). It has to: the flag's `components` are that filing's
+        figures, which for a restated component is NOT the `latest` the view
+        emits for the same period. The two are reconcilable only because the
+        flag says which filing it read.
+      * A revision BETWEEN vintages is a different claim, and this flag is not
+        it -- the store's own `disagreement` and the tearsheet's Revisions
+        section carry that. Conflating the two is what produced the defect.
   - UNCHECKABLE IS NOT WRONG. A period missing ANY required component is not
     flagged -- 13 of 46 filers never tag a total `Liabilities` at all, and
-    silence there is correct. The mezzanine and (on the parent-only branch)
-    `MinorityInterest` are the components that read as 0 when absent; see
-    `_annotate_balance_identity` for why that asymmetry is measured rather
-    than assumed, and for the ONE case where an absent `MinorityInterest`
-    makes the period uncheckable instead.
+    silence there is correct. Since the fix above, a period NO SINGLE FILING
+    covers is uncheckable for the same reason. The mezzanine and (on the
+    parent-only branch) `MinorityInterest` are the components that read as 0
+    when absent; see `_annotate_balance_identity` for why that asymmetry is
+    measured rather than assumed, for the ONE case where an absent
+    `MinorityInterest` makes the period uncheckable instead, and for why
+    "absent" has to mean absent from the PERIOD, not from the checked filing.
   - THE FLAG'S CARRIER is the `total_assets` period entry: the identity's
     subject and its denominator, hence always present whenever the period is
     checkable, and one flag per period rather than three copies of it. The
@@ -391,51 +418,123 @@ def _by_axis_key(periods: list[dict[str, Any]]) -> dict[Any, dict[str, Any]]:
     }
 
 
-def _identity_value(period: dict[str, Any] | None) -> int | float | None:
-    """A component's figure for the identity: its latest observation's
+def _identity_value(observation: dict[str, Any] | None) -> int | float | None:
+    """A component's figure for the identity: ONE observation's
     `canonical_value`, when that is a real number.
 
     `canonical_value` is the store's BASE-scale figure (the point's `scale`
     already applied), so the components are directly comparable and no
-    magnitude is re-derived here. Anything else -- an absent component, an
+    magnitude is re-derived here. Anything else -- an absent observation, an
     unparseable string value, a bool -- returns None, i.e. uncheckable.
+
+    An OBSERVATION, not a period entry, and that is the whole vintage fix
+    (module docstring, "ONE VINTAGE, NEVER ACROSS"): a period entry's `latest`
+    is per-COMPONENT, so reading it here compared figures from different
+    filings.
     """
-    if period is None:
+    if observation is None:
         return None
-    value = (period.get("latest") or {}).get("canonical_value")
+    value = observation.get("canonical_value")
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
     return value
 
 
-def _identity_accessions(periods: list[dict[str, Any] | None]) -> list[str]:
-    """Every distinct `source_accession` behind the components of one
-    flagged period, in identity reading order -- the DQC schema's required
-    provenance for the claim, and what lets a reader pull the filings the
-    residual was computed from."""
-    accessions: list[str] = []
+def _vintage_key(observation: dict[str, Any]) -> tuple[str, str]:
+    """ONE filing's identity on the store's vintage axis:
+    `(as_of, source_accession)`.
+
+    BOTH halves, not the accession alone. `as_of` is what ORDERS vintages --
+    it is the store's own axis (`observations` are as_of-ascending, `latest`
+    is max-`as_of`), and comparing accession strings would order by issuer
+    prefix, not by time. The accession is what keeps two filings made on one
+    day distinct. A filing supplies both to every point it produced, so the
+    pair never splits one filing in two.
+
+    A missing half reads as `""` rather than raising: a hand-fed payload with
+    no provenance still groups deterministically here, and an accession-less
+    FLAGGED period still leaves by the one documented door
+    (`_balance_identity_flag`, "THE ONE PLACE THIS MODULE CAN RAISE").
+    """
+    as_of = observation.get("as_of")
+    accession = observation.get("source_accession")
+    return (
+        as_of if isinstance(as_of, str) else "",
+        accession if isinstance(accession, str) else "",
+    )
+
+
+def _observations(period: dict[str, Any] | None) -> list[dict[str, Any]]:
+    """One period entry's vintages, as_of-ascending -- `[]` for an absent
+    component or a hand-fed entry carrying no `observations` list, so a
+    caller never has to distinguish "no component" from "no vintages"."""
+    observations = None if period is None else period.get("observations")
+    if not isinstance(observations, list):
+        return []
+    return [o for o in observations if isinstance(o, dict)]
+
+
+def _vintage_observation(
+    period: dict[str, Any] | None,
+    vintage: tuple[str, str],
+) -> dict[str, Any] | None:
+    """That component's observation FROM ONE filing, or None when the filing
+    carries none for this period.
+
+    First match wins, scanning as_of-ascending -- the store's own tie rule
+    (`_group_period_entries`'s `latest` is a `max()`, which keeps the
+    first-encountered on an equal key). Reachable only when one filing tagged
+    the same concept for the same real period under two different period
+    LABELS, which the store's grouping merges into one entry.
+    """
+    return next(
+        (o for o in _observations(period) if _vintage_key(o) == vintage),
+        None,
+    )
+
+
+def _identity_vintage(
+    *periods: dict[str, Any] | None,
+) -> tuple[str, str] | None:
+    """The NEWEST filing that carries EVERY one of these components for the
+    period -- the vintage the identity is evaluated in -- or None when no
+    single filing carries them all.
+
+    NEWEST because that is what a reader sees as the period's current
+    figures; a superseded filing's residual is not news, and checking every
+    vintage until one balances would be tuning the check toward silence.
+    Chosen from the INTERSECTION, so the components can only ever be compared
+    as one filing asserted them together.
+
+    `max()` over `(as_of, accession)` pairs orders by `as_of` first; the
+    accession breaks a same-day tie deterministically rather than by
+    dict order (which would make the same store yield different flags).
+
+    None is UNCHECKABLE, not wrong -- the same honest silence the check
+    already keeps for a period missing a component outright.
+    """
+    shared: set[tuple[str, str]] | None = None
     for period in periods:
-        if period is None:
-            continue
-        accession = (period.get("latest") or {}).get("source_accession")
-        if isinstance(accession, str) and accession and accession not in accessions:
-            accessions.append(accession)
-    return accessions
+        keys = {_vintage_key(o) for o in _observations(period)}
+        shared = keys if shared is None else shared & keys
+        if not shared:
+            return None
+    return max(shared) if shared else None
 
 
-def _equity_kind(equity_period: dict[str, Any] | None) -> str | None:
-    """Which `total_equity` chain member this period actually resolved to --
+def _equity_kind(equity_observation: dict[str, Any] | None) -> str | None:
+    """Which `total_equity` chain member the CHECKED filing reported --
     `"parent_only"`, `"incl_NCI"`, or None when it is neither.
 
-    Read from the resolved entry's own `latest.kpi_id`, i.e. the concept the
-    view WILL report for that period, so the identity can never branch on a
-    different concept than the one it is checking. None (a `total_equity`
-    entry carrying some other concept, only reachable from a hand-fed
-    payload) makes the period uncheckable rather than guessed at.
+    Read from the checked observation's own `kpi_id`, i.e. the concept whose
+    amount the identity is about to use, so the branch can never disagree
+    with the number it is branching for. None (a `total_equity` entry
+    carrying some other concept, only reachable from a hand-fed payload)
+    makes the period uncheckable rather than guessed at.
     """
-    if equity_period is None:
+    if equity_observation is None:
         return None
-    concept = (equity_period.get("latest") or {}).get("kpi_id")
+    concept = equity_observation.get("kpi_id")
     if concept == f"{_US_GAAP}{EQUITY_INCL_NCI_CONCEPT}":
         return "incl_NCI"
     if concept == f"{_US_GAAP}{EQUITY_PARENT_ONLY_CONCEPT}":
@@ -446,6 +545,7 @@ def _equity_kind(equity_period: dict[str, Any] | None) -> str | None:
 def _minority_interest_term(
     equity_kind: str | None,
     minority_interest_period: dict[str, Any] | None,
+    minority_interest_observation: dict[str, Any] | None,
     nci_is_asserted: bool,
 ) -> int | float | None:
     """The amount to ADD to this period's `total_equity` to make it whole
@@ -463,6 +563,14 @@ def _minority_interest_term(
     absence means "no non-controlling interest". Making absence uncheckable
     instead would silence the identity for the single-entity majority.
 
+    UNTAGGED means untagged for the PERIOD, by any filing -- which is why the
+    period entry AND the checked filing's observation are separate arguments.
+    A period some OTHER filing tagged is a period that demonstrably HAD a
+    non-controlling interest, so the checked filing simply not carrying the
+    amount is a MISSING AMOUNT (None here), never a zero: zeroing it would
+    manufacture a residual equal to the interest and falsely accuse the filer
+    (module docstring, "ONE VINTAGE, NEVER ACROSS").
+
     THE ONE EXCEPTION, and the reason `nci_is_asserted` exists: a filer that
     tags BOTH equity totals for the period is asserting an NCI EXISTS -- it
     is the line between the two subtotals -- so an absent `MinorityInterest`
@@ -470,15 +578,16 @@ def _minority_interest_term(
     Reading 0 would reproduce the very defect this branch fixes (residual =
     the NCI, filer falsely accused); substituting the incl-NCI figure would
     instead make the flag's own `components.total_equity` disagree with the
-    `total_equity` the view EMITS for that period, which no reader could
-    reconcile. Uncheckable is the honest third answer.
+    `total_equity` the flag's own `checked_vintage` reported, which no reader
+    could reconcile. Uncheckable is the honest third answer.
     """
     if equity_kind == "incl_NCI":
         return 0
     if minority_interest_period is not None:
-        # A tagged but unreadable amount stays uncheckable (`_identity_value`
+        # Tagged for this period: the CHECKED filing must supply the amount.
+        # A missing or unreadable one stays uncheckable (`_identity_value`
         # returns None) -- never quietly zeroed, same as the mezzanine.
-        return _identity_value(minority_interest_period)
+        return _identity_value(minority_interest_observation)
     return None if nci_is_asserted else 0
 
 
@@ -486,7 +595,7 @@ def _balance_identity_flag(
     *,
     axis_key: Any,
     period_end: Any,
-    accessions: list[str],
+    vintage: tuple[str, str],
     equity_kind: str,
     components: dict[str, int | float],
     residual: int | float,
@@ -501,14 +610,25 @@ def _balance_identity_flag(
     positional numbers are exactly the call site where two get swapped
     silently.
 
-    THE ONE PLACE THIS MODULE CAN RAISE. A flagged period whose components
-    carry no `source_accession` produces an empty `accessions` list, which
+    ONE VINTAGE IN, ONE ACCESSION OUT. `accessions` is derived HERE from the
+    checked vintage rather than accepted as a list, so the flag structurally
+    cannot list several filings again: every component of the residual came
+    from that one filing, and a reader who pulls it can reproduce the
+    arithmetic exactly. The vintage is also emitted whole as
+    `checked_vintage`, `as_of` included -- the accession says WHICH filing,
+    the `as_of` places it on the store's vintage axis, which is what a reader
+    needs to see that a NEWER vintage of some component exists and was
+    deliberately not mixed in.
+
+    THE ONE PLACE THIS MODULE CAN RAISE. A flagged period whose checked
+    vintage carries no `source_accession` produces `[""]`, which
     `assert_dqc_schema` rejects. That is unreachable from the real producer
     (`kpi_store.append`'s provenance guard requires the field on every stored
     point, so every `dump_company` payload has it), and the loud failure is
     deliberate for the hand-fed case: the alternatives are fabricating an
     accession or dropping a real residual on the floor.
     """
+    as_of, accession = vintage
     return kpi_xbrl.assert_dqc_schema({
         "type": BALANCE_IDENTITY_FLAG_TYPE,
         # No old/new pair: this class compares one period against an
@@ -516,19 +636,24 @@ def _balance_identity_flag(
         # schema admits None for exactly such a class.
         "old": None,
         "new": None,
-        "accessions": accessions,
+        "accessions": [accession],
         "reason": (
             f"balance-sheet identity residual {residual} against total "
             f"assets {components['total_assets']} ({relative_residual:.3e} "
             f"relative) exceeds the {BALANCE_IDENTITY_TOLERANCE:.0e} relative "
-            f"tolerance for the period ending {period_end!r} -- every "
-            f"as-reported figure is unchanged; the residual points at this "
-            f"view's per-period concept SELECTION, not at the filer's numbers"
+            f"tolerance for the period ending {period_end!r} as reported in "
+            f"{accession or '(no accession)'} (as_of {as_of or 'unknown'}) -- "
+            f"every as-reported figure is unchanged; the residual points at "
+            f"this view's per-period concept SELECTION, not at the filer's "
+            f"numbers"
         ),
         # Locating extras, which the ONE schema allows on top of the
         # required five.
         "period_axis_key": axis_key,
         "period_end": period_end,
+        # The ONE filing every component above was read from -- the identity
+        # is evaluated within a vintage, never across (module docstring).
+        "checked_vintage": {"as_of": as_of, "source_accession": accession},
         # Which concept carried `total_equity` here, so a reader can tell
         # a `minority_interest` of 0 that means "already inside the
         # equity total" (`incl_NCI`) from one that means "this filer has
@@ -555,11 +680,17 @@ def _annotate_balance_identity(
     mutating one would rewrite the store's payload silently
     (`_resolve_field`).
 
+    ONE FILING SUPPLIES EVERY AMOUNT. The loop picks the vintage FIRST
+    (`_identity_vintage`) and then reads all five components out of it, so a
+    restated period is checked against its own restatement instead of a
+    mixture (module docstring, "ONE VINTAGE, NEVER ACROSS"). A period no
+    single filing covers is passed over in silence.
+
     A period is checked only when total assets, total liabilities, total
-    equity AND the term that completes equity are ALL present and numeric;
-    otherwise it is passed over in silence. Uncheckable is not the same as
-    wrong, and a flag on an uncheckable period would be a false accusation
-    about figures the filer reported honestly.
+    equity AND the term that completes equity are ALL present and numeric IN
+    THAT FILING; otherwise it is passed over in silence. Uncheckable is not
+    the same as wrong, and a flag on an uncheckable period would be a false
+    accusation about figures the filer reported honestly.
 
     The mezzanine and the minority interest are the components that default
     to 0 when absent, and that asymmetry is measured rather than assumed: 32
@@ -573,6 +704,18 @@ def _annotate_balance_identity(
     tagged while the liabilities themselves plainly exist. A mezzanine that
     IS tagged but unreadable stays uncheckable -- it is never quietly
     zeroed.
+
+    WHICH MAKES "ABSENT" A PROPERTY OF THE PERIOD, NOT OF THE CHECKED FILING,
+    and that split is deliberate. The PERIOD (across every filing of it) says
+    which terms EXIST -- another filing tagging a mezzanine at that instant is
+    proof there was one; the CHECKED FILING supplies every AMOUNT. So a term
+    the period carries but the checked filing omits is a missing amount and
+    the period is uncheckable, never a zero: zeroing it would manufacture a
+    residual equal to the omitted term -- the exact false-accusation failure
+    this whole check keeps being burned by. Cross-vintage evidence may only
+    ever WIDEN uncheckability (`nci_is_asserted` is the same shape); no
+    number that enters the arithmetic ever comes from outside the checked
+    filing.
 
     `_balance_identity_flag` shapes and validates each flag this attaches --
     including the one input that makes this module raise.
@@ -598,14 +741,30 @@ def _annotate_balance_identity(
         mezzanine_period = mezzanine_by_key.get(axis_key)
         minority_interest_period = minority_interest_by_key.get(axis_key)
 
-        total_assets = _identity_value(assets_period)
-        total_liabilities = _identity_value(liabilities_period)
-        total_equity = _identity_value(equity_period)
-        mezzanine = 0 if mezzanine_period is None else _identity_value(mezzanine_period)
-        equity_kind = _equity_kind(equity_period)
+        # WHICH FILING first, every amount second. A period no single filing
+        # covers has no identity to evaluate -- uncheckable, not flagged.
+        vintage = _identity_vintage(assets_period, liabilities_period, equity_period)
+        if vintage is None:
+            continue
+
+        equity_observation = _vintage_observation(equity_period, vintage)
+        total_assets = _identity_value(_vintage_observation(assets_period, vintage))
+        total_liabilities = _identity_value(
+            _vintage_observation(liabilities_period, vintage)
+        )
+        total_equity = _identity_value(equity_observation)
+        # Absent from the PERIOD is the balance sheet asserting zero; absent
+        # from the CHECKED FILING while another filing tagged it is a missing
+        # amount (`_minority_interest_term` carries the same distinction).
+        mezzanine = (
+            0 if mezzanine_period is None
+            else _identity_value(_vintage_observation(mezzanine_period, vintage))
+        )
+        equity_kind = _equity_kind(equity_observation)
         minority_interest = _minority_interest_term(
             equity_kind,
             minority_interest_period,
+            _vintage_observation(minority_interest_period, vintage),
             nci_is_asserted=axis_key in equity_incl_nci_by_key,
         )
 
@@ -634,15 +793,10 @@ def _annotate_balance_identity(
         assets_period["balance_identity"] = _balance_identity_flag(
             axis_key=axis_key,
             period_end=assets_period.get("period_end"),
-            accessions=_identity_accessions([
-                assets_period, liabilities_period, mezzanine_period,
-                equity_period,
-                # Only when it actually moved the arithmetic. On the incl-NCI
-                # branch the term is 0 BY CONSTRUCTION however the filer
-                # tagged it, so listing its filing would send a reader to a
-                # document behind none of the components.
-                minority_interest_period if minority_interest else None,
-            ]),
+            # ONE filing behind every component, so there is no longer a list
+            # to curate: a component read from another vintage is exactly what
+            # this check must never do (`_balance_identity_flag`).
+            vintage=vintage,
             equity_kind=equity_kind,
             components={
                 "total_assets": total_assets,

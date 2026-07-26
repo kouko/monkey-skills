@@ -270,19 +270,52 @@ def fetch_facts(cik: int, concept: str | None) -> dict:
 
 def _companyfacts_unit_key(units: dict) -> str | None:
     """WHICH unit key of a companyfacts/companyconcept concept object this
-    module reads: USD when it has rows, else the first key present, else
-    None for an empty `units`.
+    module reads: USD when it has rows, else the key carrying the MOST
+    rows, else None for an empty `units`. Ties resolve to the first such
+    key, so one payload always reads the same way.
 
-    Extracted from `summarize_concept` (whose behaviour it preserves
+    MAJORITY, NOT FIRST-SEEN — because a concept's minor unit keys are
+    where mis-tagged strays land, and `dict` order gives them no less
+    weight than the real series. Measured live 2026-07-26,
+    `EarningsPerShareBasic` has no `USD` key at all, so the fallback alone
+    decides it: WMT (CIK 104169) carries 3 rows under `pure` and 303 under
+    `USD/shares` — and lists `pure` FIRST, so first-seen selection returned
+    a 3-row stray as the filer's entire EPS series. All three are 10-Q, so
+    `build_statement_backfill`'s annual gate then dropped every one and the
+    filer's EPS spine field came out EMPTY; COST (11 `pure` vs 295
+    `USD/shares`, all 11 annual) came out WRONG instead of empty. Row count
+    is not a proxy for correctness in general, but a series a filer has
+    tagged for two decades against one it tagged three times is not a close
+    call, and the alternative being replaced is not a weaker rule — it is
+    dictionary order.
+
+    USD keeps ABSOLUTE precedence ahead of the count so that every
+    USD-carrying concept — every concept the revenue lane and the Source-B
+    companyfacts pack read — selects exactly as it did before.
+
+    THE COST OF SELECTING ONE KEY, stated rather than hidden: a period that
+    the filer tagged ONLY under a minority key is not emitted at all. Every
+    caller wants one series, and a fact stamped with a unit it was not filed
+    under is a mislabelled amount — so merging keys is not the cheap win it
+    looks like. Measured on the case above, the trade is lopsided: COST
+    gains 45 correctly-united annual EPS facts and loses exactly one window
+    (FY2008, filed only as `pure`), while its FY2009/FY2010 values reappear
+    unchanged under `USD/shares` in the two later filings that re-tagged
+    them. WMT loses nothing at all. If a caller ever needs the union rather
+    than the majority, that is a DIFFERENT function — not a loosening of
+    this one.
+
+    Extracted from `summarize_concept` (whose USD behaviour it preserves
     exactly) so `build_statement_backfill` can NAME the unit it stamps on
     each emitted fact without a second copy of the selection rule — two
     copies could disagree about which series a fact's `unit` describes,
-    which is a mislabelled amount rather than a missing one. A per-share
-    spine field (`EarningsPerShareBasic`, carried under `USD/shares`) is
-    the case that makes the distinction visible."""
+    which is a mislabelled amount rather than a missing one."""
     if units.get("USD"):
         return "USD"
-    return next(iter(units), None)
+    if not units:
+        return None
+    # `max` keeps the FIRST maximal key, which is the documented tie-break.
+    return max(units, key=lambda key: len(units.get(key) or ()))
 
 
 def summarize_concept(raw_concept: dict) -> list[dict]:
@@ -294,7 +327,7 @@ def summarize_concept(raw_concept: dict) -> list[dict]:
     Revenues with disaggregated quarterly + annual values).
     """
     units = raw_concept.get("units", {})
-    # Prefer USD, fall back to first available unit
+    # Prefer USD, else the unit key carrying the most rows
     unit_key = _companyfacts_unit_key(units)
     series = units.get(unit_key, []) if unit_key is not None else []
     return [
@@ -341,7 +374,8 @@ def build_companyfacts_pack(cik: int) -> dict:
     `{label, description, units: {"USD": [rows]}}` object, not a bare row
     list — so this flattens `units.USD` into the per-tag row list by
     reusing `summarize_concept` (which already knows how to prefer USD and
-    fall back to the first available unit) rather than re-implementing that
+    otherwise take the unit key carrying the most rows — see
+    `_companyfacts_unit_key`) rather than re-implementing that
     unit-selection logic divergently.
 
     On a companyfacts fetch error, returns a loud `_companyfacts_pack_error_slot`
@@ -2814,13 +2848,19 @@ def _resolve_concept_per_period(
     PERIOD (Task 2, docs/loom/plans/2026-07-26-us-as-reported-statement-
     lane.md), given every chain member's `summarize_concept` rows.
 
-    Deliberately general — an ordered concept list plus per-concept rows in,
-    resolved `(concept, row)` pairs plus skip flags out — because Task 5's
-    multi-concept statement fetch resolves the SAME tie for each of its 14
-    spine-field chains and must not re-implement this. Nothing here knows
-    the chain is about revenue; the caller names the skip `conflict_type`.
-    (`ordered_concepts` is annotated as the tuple its in-repo callers hold
-    — `_TOP_LINE_REVENUE_CONCEPTS` and the plan's pinned spine chains are
+    ONLY `build_top_line_backfill` MAY USE THIS, and the restriction is
+    load-bearing rather than incidental. The rule below is right exactly
+    where the caller's contract is "produce ONE series", because there two
+    chain members disagreeing on a period IS a genuine ambiguity about
+    which number the single series should carry. It is WRONG wherever the
+    caller keeps concepts as separate series: there the same disagreement
+    is two different measures both correctly reported, and skipping the
+    period destroys real history. The statement lane
+    (`_statement_chain_facts`) called through here until 2.36.x and lost
+    entire spine fields for real filers as a result — see that function for
+    the measurement. Nothing here knows the chain is about revenue; the
+    caller names the skip `conflict_type`. (`ordered_concepts` is annotated
+    as the tuple its caller holds — `_TOP_LINE_REVENUE_CONCEPTS` is
     declared as data — but the body only iterates it and tests membership,
     so any ordered sequence of local names works.)
 
@@ -2833,8 +2873,8 @@ def _resolve_concept_per_period(
     which never switched, kept all 42 of its rows. The chain order is a
     SAME-PERIOD tiebreak, never a per-company winner.
 
-    The period key is the row's own `(start, end)` window — `start` is None
-    for an instant, so the same key serves Task 5's balance-sheet rows. The
+    The period key is the row's own `(start, end)` window (`start` is None
+    for an instant, which the key tolerates). The
     row's `fy`/`fp` are never read (they are the CARRYING FILING's focus —
     see `build_top_line_backfill`).
 
@@ -2942,8 +2982,8 @@ def build_top_line_backfill(ticker: str) -> dict:
 
     Fetches (`fetch_facts`/`SEC_COMPANYCONCEPT_URL`) EVERY
     `_TOP_LINE_REVENUE_CONCEPTS` allowlist concept, then resolves which
-    concept supplies each PERIOD (`_resolve_concept_per_period` — shared
-    with Task 5's statement lane). The allowlist order is a SAME-PERIOD
+    concept supplies each PERIOD (`_resolve_concept_per_period`, whose sole
+    caller this is). The allowlist order is a SAME-PERIOD
     tiebreak, applied only where the competing concepts agree on the value;
     a period whose concepts disagree is skipped with a named
     `top_line_concept_value_conflict` reason rather than resolved by order.
@@ -3306,13 +3346,19 @@ _STATEMENT_SPINE_CHAINS: dict[str, tuple[str, ...]] = {
 # fetches them: measured over the 47-filer probe, TSLA's entire residual was
 # exactly its redeemable NCI.
 #
-# Each is its OWN single-member chain rather than one first-present chain,
-# deliberately. The two temporary-equity tags are ALTERNATIVES the VIEW
-# chooses between (and `MinorityInterest` is a different quantity
-# altogether), so chaining them here would (a) drop the runner-up's value
-# the view may need and (b) turn a filer tagging two of them at different
-# amounts into a conflict skip — discarding a term whose absence silently
-# breaks the identity.
+# Each is its OWN single-member chain. Since `_statement_chain_facts` stopped
+# selecting between chain members, that is no longer load-bearing — grouping
+# these three into one chain would emit exactly the same facts. It is kept
+# because the grouping would state something FALSE about them: the two
+# temporary-equity tags are alternatives the VIEW chooses between, and
+# `MinorityInterest` is a different quantity altogether, so they are not one
+# field's candidates.
+#
+# Their separation used to carry real weight, and the reason it did is the
+# same defect `_statement_chain_facts` documents: under the old first-present
+# resolution a filer tagging two of them at different amounts lost BOTH,
+# discarding a term whose absence silently breaks the identity. Recorded so
+# the constraint is not re-derived from a hazard that no longer exists.
 _STATEMENT_IDENTITY_CONCEPTS: tuple[str, ...] = (
     "TemporaryEquityCarryingAmountIncludingPortionAttributableTo"
     "NoncontrollingInterests",
@@ -3579,28 +3625,52 @@ def _statement_chain_facts(
     member of each chain, and several never tag a total `Liabilities`;
     measured, 13 of the 47-filer probe corpus).
 
-    WHICH concept supplies each PERIOD is the shared
-    `_resolve_concept_per_period` (Task 2), not a per-company pick: chain
-    order is a same-period tiebreak applied only where the competing
-    concepts AGREE, and a period whose concepts disagree is skipped with a
-    named reason rather than resolved by order."""
+    NO SELECTION HAPPENS HERE. Every row of EVERY chain concept that passes
+    `_statement_row_to_fact`'s gates is emitted under its OWN concept — the
+    chain is a FETCH LIST (which tags to look for), never a ranking to
+    resolve. That is the brief's Smallest End State #1 verbatim:
+    `us-gaap:Revenues` and `us-gaap:RevenueFromContractWithCustomer
+    ExcludingAssessedTax` are "two series, not one resolved series".
+    Choosing which one represents a field in a given period is the READ
+    side's job (`kpi_spine_view._resolve_field`, first-present per period),
+    where it stays correctable; a write-time pick would be one-way.
+
+    WHY NOT `_resolve_concept_per_period` (which this function called
+    through 2.36.x, on the plan's Task 5 instruction). That helper belongs
+    to the TOP-LINE lane, whose contract is the OPPOSITE of this one: it
+    must yield ONE `total_revenue` series, so two chain members disagreeing
+    on a period IS a genuine ambiguity there and it rightly refuses to
+    guess. Here the same disagreement is not a contradiction at all —
+    `Revenues` is the filer's total INCLUDING membership/other income and
+    RFCC is contract revenue only, two different measures — and skipping
+    the period under BOTH concepts destroyed real reported history. Live
+    2026-07-26 six-filer dogfood: 366 rows skipped under
+    `statement_concept_value_conflict` for WMT alone, leaving its spine
+    with NO `revenue`, NO `net_income` and NO `eps_basic`. That skip type
+    no longer exists in this lane. `build_top_line_backfill` keeps the
+    helper unchanged.
+
+    Rows are emitted in chain order, then in the payload's own row order
+    within a concept — deterministic, so the pack's fact order never
+    depends on dict iteration luck. Several rows of ONE concept for ONE
+    window pass through UNTOUCHED: they are restatement vintages carried by
+    different accessions, collapsed downstream by
+    `kpi_xbrl._reduce_window_group` (newest-filed wins), which cannot run
+    on history discarded here."""
     rows_by_concept, unit_by_concept = _statement_chain_rows(us_gaap, chain)
     if not rows_by_concept:
         return None
-    resolved_rows, skipped_rows = _resolve_concept_per_period(
-        chain, rows_by_concept, identifier=ticker,
-        conflict_type="statement_concept_value_conflict",
-    )
     facts: list[dict] = []
-    for winning_concept, row in resolved_rows:
-        fact, flag = _statement_row_to_fact(
-            winning_concept, row, ticker=ticker,
-            unit=unit_by_concept[winning_concept],
-        )
-        if fact is not None:
-            facts.append(fact)
-        else:
-            skipped_rows.append(flag)
+    skipped_rows: list[dict] = []
+    for concept, rows in rows_by_concept.items():
+        for row in rows:
+            fact, flag = _statement_row_to_fact(
+                concept, row, ticker=ticker, unit=unit_by_concept[concept],
+            )
+            if fact is not None:
+                facts.append(fact)
+            else:
+                skipped_rows.append(flag)
     return facts, skipped_rows
 
 
@@ -3648,8 +3718,8 @@ def build_statement_backfill(ticker: str) -> dict:
     ACCESSION IS PART OF THE CARDINALITY — the pack is NOT one fact per
     (concept, period). When two filings report the SAME window with
     different figures, that is a RESTATEMENT, and both vintages are
-    emitted: `_resolve_concept_per_period` returns every row of the
-    winning concept for a period and this lane emits one fact per row.
+    emitted: this lane emits one fact per surviving ROW, and never
+    collapses rows that share a (concept, period).
     Deferring the collapse is deliberate, not an oversight — resolving a
     window to one number is `kpi_xbrl._reduce_window_group`'s job
     downstream (overlap policy C, newest-filed wins), and it cannot run on
@@ -3672,14 +3742,15 @@ def build_statement_backfill(ticker: str) -> dict:
     existing `fetch_facts(cik, None)`), so every concept this lane wants is
     already in hand.
 
-    Per chain, WHICH concept supplies each PERIOD is resolved by the shared
-    `_resolve_concept_per_period` (Task 2) — chain order is a same-period
-    tiebreak applied only where the competing concepts AGREE; a period whose
-    concepts disagree is skipped with a named
-    `statement_concept_value_conflict` reason rather than guessed at. Every
-    surviving row then passes `_statement_row_to_fact`'s gates (carrier
-    identity, then 10-K-only carrier form, then annual span from the row's
-    OWN dates — see there for how an instant qualifies).
+    NO CONCEPT IS SELECTED AGAINST ANOTHER. A chain is a FETCH LIST, not a
+    ranking: every row of every chain member is emitted under its own
+    concept, and two members reporting one period is TWO SERIES rather than
+    a conflict (`_statement_chain_facts` — see there for the measured cost
+    of the opposite rule, and for why the top-line lane's contrary posture
+    is right for the top-line lane). Each row passes
+    `_statement_row_to_fact`'s gates (carrier identity, then 10-K-only
+    carrier form, then annual span from the row's OWN dates — see there for
+    how an instant qualifies).
 
     Every rejected row lands in `coverage.skipped_rows` with a named reason
     in this module's one DQC flag shape. A ticker whose payload holds NO row

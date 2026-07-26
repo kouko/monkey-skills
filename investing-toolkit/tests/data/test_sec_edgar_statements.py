@@ -148,6 +148,62 @@ _WMT_FY26_END = "2026-01-31"
 _WMT_REVENUES_VALUE = 713163000000.0
 _WMT_RFCC_VALUE = 706413000000.0
 
+# --- WMT's captured STRAY-UNIT case, the one that made the unit-selection
+# rule's "first key" fallback a data-correctness defect. CAPTURED LIVE
+# 2026-07-26 from `companyconcept` CIK 104169 `us-gaap:
+# EarningsPerShareBasic`: the payload's unit keys arrive in the order
+# `['pure', 'USD/shares']`, and there is NO `USD` key at all, so the
+# USD-preference branch never fires and the fallback decides the series.
+#
+#   'pure'       ->   3 rows, ALL 10-Q
+#   'USD/shares' -> 303 rows, 131 of them 10-K
+#
+# Three stray rows mis-tagged `pure` therefore outrank 303 correct ones on
+# nothing but dict order — and because all three are 10-Q, the annual lane
+# then skips every one and emits ZERO EPS facts for WMT. COST (CIK 909832)
+# is the same shape with a different outcome: 11 `pure` 10-K rows vs 295
+# `USD/shares`, so it emits the WRONG series rather than none.
+_WMT_EPS_STRAY_UNIT = "pure"
+_WMT_EPS_REAL_UNIT = "USD/shares"
+# The first row of each captured series, verbatim.
+_WMT_EPS_STRAY_ACCN = "0001193125-10-202779"
+_WMT_EPS_STRAY_FILED = "2010-09-01"
+_WMT_EPS_STRAY_START = "2009-02-01"
+_WMT_EPS_STRAY_END = "2009-07-31"
+_WMT_EPS_STRAY_VALUE = 1.66
+_WMT_EPS_REAL_ACCN = "0001193125-10-071652"
+_WMT_EPS_REAL_FILED = "2010-03-30"
+_WMT_EPS_REAL_START = "2007-02-01"
+_WMT_EPS_REAL_END = "2008-01-31"
+_WMT_EPS_REAL_VALUE = 3.13
+# The next annual window of that same captured 10-K, so a fixture can carry
+# a real MAJORITY (two `USD/shares` rows against one `pure`) rather than a
+# 1-vs-1 tie, which the first-seen tie-break would resolve to the stray.
+_WMT_EPS_REAL_START_2 = "2008-02-01"
+_WMT_EPS_REAL_END_2 = "2009-01-31"
+_WMT_EPS_REAL_VALUE_2 = 3.4
+
+# --- TSLA's captured EQUITY PAIR, the `total_equity` chain's two members.
+# CAPTURED LIVE 2026-07-26 from `companyfacts` CIK 1318605 via this lane's
+# own pack (`pack.py --pack statement-backfill --ticker TSLA`), accession
+# `0001628280-26-003952` (FY2025 10-K), instant `2025-12-31`.
+#
+# These two are NOT competing answers to one question — they are
+# COMPLEMENTARY SUBTOTALS of the balance sheet, and their difference IS the
+# non-controlling interest (82,807 - 82,137 = 670M, TSLA's NCI). A rule that
+# reads their disagreement as a contradiction therefore fires on precisely
+# the filers that report BOTH correctly: cross-tabbed against
+# `fixtures/us_statement_shapes_probe_2026-07-26.json`, 17 filers of the
+# 47-filer corpus tag both at the same Assets instant (CVX, PSX, WFC, C, MS,
+# IBM, QCOM, COST, PEP, JNJ, PFE, UNH, BA, GE, F, GM, TSLA).
+_TSLA_ACCN = "0001628280-26-003952"
+_TSLA_FY25_INSTANT = "2025-12-31"
+_TSLA_EQUITY_PARENT_ONLY = 82137000000.0
+_TSLA_EQUITY_INCL_NCI = 82807000000.0
+_EQUITY_INCL_NCI_CONCEPT = (
+    "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest"
+)
+
 # --- XOM's measured DECOY CIK, the Task 6 case
 # (`fixtures/us_statement_shapes_probe_2026-07-26.json`, XOM entry: `cik`
 # 2115436, `entity_name` "EXXON MOBIL CORP", `us_gaap_tags` 0 — the ONE
@@ -503,22 +559,31 @@ def test_fetches_the_identity_only_concepts_as_ordinary_facts(sec_client):
     assert pack["coverage"]["skipped_rows"] == [], pack["coverage"]
 
 
-def test_a_conflicted_period_reaches_coverage_as_a_named_skip(sec_client):
-    """A CONFLICT SKIP IS A REJECTED ROW AND MUST REACH `coverage`. When two
-    concepts of one chain report the same period with DISAGREEING values,
-    `_resolve_concept_per_period` (Task 2) skips the period whole rather
-    than letting chain order pick a winner — and this lane must carry that
-    flag OUT, under its own `statement_concept_value_conflict` name.
+def test_two_concepts_disagreeing_on_one_period_both_survive(sec_client):
+    """TWO CHAIN CONCEPTS ON ONE PERIOD ARE TWO SERIES, NOT A CONTRADICTION
+    (brief §Smallest End State #1, verbatim: `us-gaap:Revenues` and
+    `us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax` are "two
+    series, not one resolved series").
 
-    Pins the seam, not the shared rule: the resolver returns its skips to
-    `_statement_chain_facts`, which must EXTEND them rather than start a
-    fresh list. Verified discriminating by mutation — dropping the
-    resolver's skips (`skipped_rows = []`) leaves every other test in this
-    module green, so nothing else in the suite guards this path.
+    Replays WMT's captured double-tag: the SAME window is tagged BOTH
+    `Revenues` = 713,163M (its own "Total revenues" line, which INCLUDES
+    membership and other income) AND RFCC = 706,413M (contract revenue
+    only). Those figures SHOULD differ — they measure different things —
+    so this lane has no tie to break and MUST emit both, each under its
+    OWN concept. Selection between them is the read-side view's job
+    (`kpi_spine_view._resolve_field`, first-present per period), which
+    cannot run on a period this lane already discarded.
 
-    Replays WMT's captured double-tag (see its constants above) through
-    this module's shared AAPL stub; the rule under test reads no identity,
-    only the two values."""
+    REPLACES `test_a_conflicted_period_reaches_coverage_as_a_named_skip`,
+    which asserted the opposite (both concepts skipped under a
+    `statement_concept_value_conflict` flag). That test encoded a DEFECT,
+    not a requirement: the live 2026-07-26 six-filer dogfood measured 366
+    rows skipped under that flag for WMT alone, taking `revenue`,
+    `net_income` AND `eps_basic` out of WMT's spine entirely. The rule it
+    pinned belongs to the TOP-LINE lane (`build_top_line_backfill`), which
+    must produce ONE `total_revenue` series and therefore has a genuine
+    ambiguity to fail loud on; that lane's own conflict tests are
+    untouched."""
     pack = _build(sec_client, {
         "Revenues": _concept_obj([_row(
             start=_WMT_FY26_START, end=_WMT_FY26_END,
@@ -531,19 +596,77 @@ def test_a_conflicted_period_reaches_coverage_as_a_named_skip(sec_client):
     })
 
     assert "error" not in pack, pack
-    assert pack["facts"] == [], (
-        "the period is skipped under BOTH concepts — chain order is a "
-        f"tiebreak for concepts that AGREE, never a winner-pick: {pack}"
+    assert pack["coverage"]["skipped_rows"] == [], (
+        "a period reported under two chain concepts is not a rejected row "
+        f"— nothing about it is skippable: {pack['coverage']}"
     )
-    skipped = pack["coverage"]["skipped_rows"]
-    assert [f["type"] for f in skipped] == [
-        "statement_concept_value_conflict",
-    ], skipped
-    flag = skipped[0]
-    assert set(flag) == {"type", "old", "new", "accessions", "reason"}, flag
-    assert flag["accessions"] == [_WMT_ACCN], flag
-    assert "713163000000" in flag["reason"], flag
-    assert "706413000000" in flag["reason"], flag
+    assert {
+        (f["concept"], f["period_start"], f["period_end"], f["value"])
+        for f in pack["facts"]
+    } == {
+        ("us-gaap:Revenues", _WMT_FY26_START, _WMT_FY26_END,
+         _WMT_REVENUES_VALUE),
+        (f"us-gaap:{_AAPL_RFCC}", _WMT_FY26_START, _WMT_FY26_END,
+         _WMT_RFCC_VALUE),
+    }, (
+        "both concepts must reach the pack as their own series — dropping "
+        "the period under BOTH is how an entire spine field vanished for "
+        f"WMT: {pack['facts']}"
+    )
+
+
+def test_both_equity_totals_at_one_instant_both_survive(sec_client):
+    """THE `total_equity` CHAIN IS THE WORSE VICTIM OF THE SAME ROOT CAUSE,
+    and it fails in the opposite direction from an edge case: its two
+    members are COMPLEMENTARY SUBTOTALS — `StockholdersEquity` is
+    parent-only and `...IncludingPortionAttributableToNoncontrollingInterest`
+    is whole equity — so they are SUPPOSED to differ whenever a
+    non-controlling interest exists. Their difference is the NCI itself
+    (see the TSLA constants: 82,807M - 82,137M = 670M).
+
+    A rule reading that as a contradiction therefore drops `total_equity`
+    on exactly the filers that report both CORRECTLY — 17 of the 47-filer
+    probe corpus. The knock-on reached the read side: with no equity there
+    is no balance-sheet identity, so `kpi_spine_view._minority_interest_
+    term`'s `parent_only` branch and its `nci_is_asserted` exception were
+    UNREACHABLE through the shipped producer, despite an earlier review
+    round calling that "the MAJORITY case, not an edge case".
+
+    Distinct from `test_two_concepts_disagreeing_on_one_period_both_survive`
+    on three axes worth separate signal: INSTANT rows rather than duration,
+    a chain whose disagreement is structural rather than definitional, and
+    the read-side path this unblocks. Task 7's own tests fed hand-built
+    store dumps carrying both concepts — an input the producer could not
+    actually emit — so this is the first test that pins the producer end."""
+    pack = _build(sec_client, {
+        "StockholdersEquity": _concept_obj([_row(
+            start=None, end=_TSLA_FY25_INSTANT,
+            val=_TSLA_EQUITY_PARENT_ONLY, accn=_TSLA_ACCN,
+        )]),
+        _EQUITY_INCL_NCI_CONCEPT: _concept_obj([_row(
+            start=None, end=_TSLA_FY25_INSTANT,
+            val=_TSLA_EQUITY_INCL_NCI, accn=_TSLA_ACCN,
+        )]),
+    })
+
+    assert "error" not in pack, pack
+    assert pack["coverage"]["skipped_rows"] == [], (
+        "two complementary equity subtotals are not a data-quality "
+        f"problem — neither row is rejectable: {pack['coverage']}"
+    )
+    assert {
+        (f["concept"], f["period_kind"], f["period_end"], f["value"])
+        for f in pack["facts"]
+    } == {
+        ("us-gaap:StockholdersEquity", "instant", _TSLA_FY25_INSTANT,
+         _TSLA_EQUITY_PARENT_ONLY),
+        (f"us-gaap:{_EQUITY_INCL_NCI_CONCEPT}", "instant",
+         _TSLA_FY25_INSTANT, _TSLA_EQUITY_INCL_NCI),
+    }, (
+        "the read-side view needs BOTH totals to know whether an equity "
+        "figure includes NCI; keeping only one — or neither — makes the "
+        f"balance identity uncheckable: {pack['facts']}"
+    )
 
 
 def test_a_row_with_no_value_is_a_named_skip_not_a_crash(sec_client):
@@ -601,6 +724,115 @@ def test_a_per_share_concept_keeps_its_own_unit(sec_client):
     assert "error" not in pack, pack
     assert len(pack["facts"]) == 1, pack["facts"]
     assert pack["facts"][0]["unit"] == "USD/shares", pack["facts"][0]
+
+
+def test_a_stray_minority_unit_never_beats_the_majority_series(sec_client):
+    """`_companyfacts_unit_key` picks the unit key carrying the MOST rows,
+    not whichever key `dict` iteration happens to yield first.
+
+    The units dict below is WMT's real captured key ORDER (`pure` first,
+    `USD/shares` second — see this module's WMT STRAY-UNIT block), which is
+    what makes the two rules disagree: first-key answers `pure`, majority
+    answers `USD/shares`. Only the majority answer names the series a
+    reader of `EarningsPerShareBasic` means, so this is a WRONG-VALUE guard,
+    not a formatting preference."""
+    units = {
+        _WMT_EPS_STRAY_UNIT: [_row(
+            start=_WMT_EPS_STRAY_START, end=_WMT_EPS_STRAY_END,
+            val=_WMT_EPS_STRAY_VALUE, form="10-Q",
+            accn=_WMT_EPS_STRAY_ACCN, filed=_WMT_EPS_STRAY_FILED,
+        )],
+        _WMT_EPS_REAL_UNIT: [_row(
+            start=_WMT_EPS_REAL_START, end=_WMT_EPS_REAL_END,
+            val=_WMT_EPS_REAL_VALUE,
+            accn=_WMT_EPS_REAL_ACCN, filed=_WMT_EPS_REAL_FILED,
+        )] * 2,
+    }
+    assert list(units) == [_WMT_EPS_STRAY_UNIT, _WMT_EPS_REAL_UNIT], (
+        "the fixture only exercises the defect while the stray key is "
+        "iterated FIRST — a reordered dict would silently pass"
+    )
+
+    assert sec_client._companyfacts_unit_key(units) == _WMT_EPS_REAL_UNIT
+
+
+def test_usd_is_still_preferred_over_a_larger_non_usd_unit(sec_client):
+    """The USD preference is UNCHANGED by the majority rule and outranks
+    it: a concept carrying USD rows reads USD even when another key carries
+    more rows. This is the pin that keeps the fix a strict addition — for
+    every USD-carrying concept (which is every concept the revenue lane and
+    the Source-B pack care about) behaviour is byte-identical to before."""
+    units = {
+        _WMT_EPS_STRAY_UNIT: [_row(
+            start=_WMT_EPS_STRAY_START, end=_WMT_EPS_STRAY_END,
+            val=_WMT_EPS_STRAY_VALUE,
+        )] * 5,
+        "USD": [_row(
+            start=_AAPL_FY25_START, end=_AAPL_FY25_END, val=_AAPL_RFCC_VALUE,
+        )],
+    }
+
+    assert sec_client._companyfacts_unit_key(units) == "USD"
+
+
+def test_a_row_count_tie_resolves_to_the_first_key_deterministically(sec_client):
+    """Two non-USD keys carrying EQUALLY many rows must resolve the same way
+    on every run — otherwise the same payload could label the same fact two
+    different ways across fetches, which is the mislabelling the shared
+    helper exists to prevent. First-seen is the tie-break."""
+    row = [_row(
+        start=_WMT_EPS_STRAY_START, end=_WMT_EPS_STRAY_END,
+        val=_WMT_EPS_STRAY_VALUE,
+    )]
+    assert sec_client._companyfacts_unit_key({"EUR": row, "CAD": row}) == "EUR"
+    assert sec_client._companyfacts_unit_key({"CAD": row, "EUR": row}) == "CAD"
+
+
+def test_a_stray_unit_does_not_erase_a_filers_whole_eps_history(sec_client):
+    """The defect END TO END, at the shape that produced it live: WMT's
+    three stray `pure` rows are all 10-Q, so once first-key selection hands
+    the lane the `pure` series, the annual gate skips every row and the pack
+    emits ZERO `eps_basic` facts — one spine field silently missing for the
+    filer. Reading the majority series instead recovers the 10-K history and
+    labels it `USD/shares`."""
+    pack = _build(sec_client, {
+        "EarningsPerShareBasic": {
+            "label": "probe row",
+            "units": {
+                _WMT_EPS_STRAY_UNIT: [_row(
+                    start=_WMT_EPS_STRAY_START, end=_WMT_EPS_STRAY_END,
+                    val=_WMT_EPS_STRAY_VALUE, form="10-Q",
+                    accn=_WMT_EPS_STRAY_ACCN, filed=_WMT_EPS_STRAY_FILED,
+                )],
+                _WMT_EPS_REAL_UNIT: [
+                    _row(
+                        start=_WMT_EPS_REAL_START, end=_WMT_EPS_REAL_END,
+                        val=_WMT_EPS_REAL_VALUE,
+                        accn=_WMT_EPS_REAL_ACCN, filed=_WMT_EPS_REAL_FILED,
+                    ),
+                    _row(
+                        start=_WMT_EPS_REAL_START_2, end=_WMT_EPS_REAL_END_2,
+                        val=_WMT_EPS_REAL_VALUE_2,
+                        accn=_WMT_EPS_REAL_ACCN, filed=_WMT_EPS_REAL_FILED,
+                    ),
+                ],
+            },
+        },
+    })
+
+    assert "error" not in pack, pack
+    assert len(pack["facts"]) == 2, (
+        "the filer's 10-K EPS history must survive the stray `pure` rows: "
+        f"{pack}"
+    )
+    assert {f["unit"] for f in pack["facts"]} == {_WMT_EPS_REAL_UNIT}, pack["facts"]
+    assert [f["value"] for f in pack["facts"]] == [
+        _WMT_EPS_REAL_VALUE, _WMT_EPS_REAL_VALUE_2,
+    ], pack["facts"]
+    assert pack["coverage"]["skipped_rows"] == [], (
+        "the stray `pure` series is not selected at all, so its 10-Q rows "
+        f"never reach the annual gate: {pack['coverage']}"
+    )
 
 
 def test_coverage_records_the_observed_statement_history_span(sec_client):

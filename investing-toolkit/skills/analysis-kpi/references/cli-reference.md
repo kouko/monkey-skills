@@ -638,8 +638,9 @@ uv run scripts/kpi_store.py dump --company AAPL \
 Each flag is one record in the repo's single DQC flag schema
 (`kpi_xbrl.assert_dqc_schema`) with `type` `balance_identity_residual`,
 plus locating extras: `period_axis_key`, `period_end`, `residual`,
-`relative_residual`, `tolerance`, the `components` used, the `accessions`
-behind them, and `equity_kind` — `parent_only` or `incl_NCI`, which is
+`relative_residual`, `tolerance`, the `components` used, `checked_vintage`
+(`{as_of, source_accession}` — see below; `accessions` holds that same one
+accession), and `equity_kind` — `parent_only` or `incl_NCI`, which is
 what lets a reader tell a `minority_interest` of 0 that means "already
 inside the equity total" from one that means "this filer has none". The
 equity term must be WHOLE equity, and which concept supplied it is a
@@ -648,6 +649,23 @@ is added for that period, while
 `StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest`
 already contains it and nothing is added. A period missing ANY required
 component is **not** flagged — uncheckable is not wrong.
+
+**WITHIN ONE VINTAGE, NEVER ACROSS.** The store is bitemporal: a
+restatement APPENDS a new vintage of a period rather than overwriting it,
+and a period's components routinely carry different numbers of vintages.
+Every amount in the identity is therefore read from ONE filing — the
+newest `(as_of, source_accession)` that all three totals share, since that
+is what a reader sees as the period's current figures — and the flag names
+it in `checked_vintage`. Two consequences worth knowing: for a restated
+component the flag's `components` value is that filing's figure, NOT the
+`latest` the tearsheet renders for the same period (the flag is
+reproducible only against the filing it names); and a period no single
+filing covers is uncheckable, not flagged. Measured on a live six-filer
+dogfood, comparing each component's own latest instead falsely flagged
+four of them (MSFT, AAPL, JPM, TSLA) — every one a filer whose newest
+complete filing balances exactly. Revisions BETWEEN vintages are a
+different claim, carried by the store's `disagreement` and the tearsheet's
+Revisions section, not by this flag.
 
 `derive` exits **0** on success, printing the spine payload as JSON to
 stdout. Every malformed input leaves by ONE door — a clean `error: ...`

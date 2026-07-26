@@ -202,6 +202,25 @@ caller handed a brief path, so layers (i)/(ii) do not run. Stated, not skipped.
   redeemable NCI. A period missing any component is NOT flagged (uncheckable ≠
   wrong; 13 filers never tag a total `Liabilities`). The flag never suppresses or
   refuses a value.
+  **AMENDED 2026-07-26 after the live dogfood — ONE VINTAGE, NEVER ACROSS.** The
+  first implementation read each component's own `latest`, which mixes filings: at
+  MSFT's 2016-06-30 the equity carried a 2018-filed vintage that assets and
+  liabilities did not, so the check compared 2017-filed assets against 2018-filed
+  equity and reported a 5.7% residual for a period whose 2017 vintage balances to
+  the dollar. Four of six dogfooded filers flagged, every one this shape. The check
+  now selects ONE vintage — the newest `(as_of, source_accession)` pair carried by
+  all of assets, liabilities and the resolved equity — and reads every component,
+  mezzanine and minority interest included, out of that filing alone. A period no
+  single filing covers is uncheckable, not flagged. The flag names the vintage it
+  checked, so the residual is reproducible from the flag; its `components` are that
+  filing's figures, which for a restated period differ from the `latest` the
+  tearsheet renders — reconcilable only because the vintage is named, so naming it
+  is load-bearing rather than cosmetic. Absent-reads-as-0 now means absent from the
+  PERIOD, not from the checked filing: if another filing tagged a mezzanine at that
+  instant, the instant demonstrably had one and this filing merely omitting the
+  amount is a MISSING amount, so the period goes uncheckable. Cross-vintage evidence
+  may only ever widen uncheckability — no number entering the arithmetic ever comes
+  from outside the checked filing.
 - **Module**: `investing-toolkit/skills/analysis-kpi/scripts/kpi_spine_view.py`
 - **Files touched**: `investing-toolkit/skills/analysis-kpi/scripts/kpi_spine_view.py`, `investing-toolkit/tests/analysis/test_kpi_spine_view.py`
 - **Context paths**:
