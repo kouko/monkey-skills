@@ -59,6 +59,9 @@ SEC_COMPANYCONCEPT_URL = (
     "https://data.sec.gov/api/xbrl/companyconcept/CIK{cik:010d}/us-gaap/{concept}.json"
 )
 SEC_SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik:010d}.json"
+# Older filings live in the archive documents named by the main submissions
+# document's `filings.files[]`; each entry's `name` is a bare filename.
+SEC_SUBMISSIONS_PAGE_URL = "https://data.sec.gov/submissions/{name}"
 SEC_ARCHIVES_URL = "https://www.sec.gov/Archives/edgar/data/{cik_int}/{accession_nodash}/{doc}"
 
 # SEC mandates identified User-Agent: "<name> <email>" format.
@@ -67,6 +70,12 @@ USER_AGENT = "kouko investing-toolkit <noreply@anthropic.com>"
 TTL_TICKERS = 7 * 86400       # 7 days
 TTL_FACTS = 86400             # 24 hours
 TTL_SUBMISSIONS = 86400       # 24 hours
+# Archive pages hold history — the page covering 1994-2003 does not change — so
+# they outlive the main document's TTL and are cached per page. NOT permanent:
+# when `recent` overflows, SEC re-partitions, and the NEWEST archive page can
+# gain rows under an unchanged name. A permanent TTL could never expire such an
+# entry (docs/loom/memory/cache-key-collision-across-migration.md).
+TTL_SUBMISSION_PAGES = 7 * 86400  # 7 days
 TTL_NARRATIVE = cache_util.compute_ttl("immutable", None)  # permanent; filings don't change
 TTL_EXHIBIT_RAW = cache_util.compute_ttl("immutable", None)  # permanent; a filed exhibit's bytes never change
 
@@ -401,8 +410,115 @@ def build_companyfacts_pack(cik: int) -> dict:
 # Filings index
 # ---------------------------------------------------------------------------
 
+def _submission_block_rows(block: dict) -> int:
+    """How many filings one parallel-array block holds.
+
+    The block is a dict of equal-length lists (`form`, `filingDate`, ...), so
+    the row count is any column's length — `max` rather than "pick a column"
+    because SEC omits a column entirely when no row in that block uses it.
+    """
+    return max(
+        (len(v) for v in block.values() if isinstance(v, list)),
+        default=0,
+    )
+
+
+def _append_submission_block(merged: dict, merged_rows: int, block: dict) -> int:
+    """Append one parallel-array block onto `merged`, in place.
+
+    `list_filings` indexes these arrays POSITIONALLY (`accn_list[i]` beside
+    `forms_list[i]`), so a column that falls short by even one entry does not
+    fail — it silently re-labels every filing after the gap. Every column is
+    therefore padded to the same length on both sides of the join: a column
+    present in `merged` but missing from `block` is padded forward, and a
+    column that appears for the first time in `block` is back-filled to
+    `merged_rows` before its own rows are appended.
+    """
+    rows = _submission_block_rows(block)
+    for key in set(merged) | {k for k, v in block.items() if isinstance(v, list)}:
+        column = merged.setdefault(key, [None] * merged_rows)
+        incoming = block.get(key)
+        incoming = list(incoming) if isinstance(incoming, list) else []
+        column.extend(incoming[:rows])
+        column.extend([None] * (rows - len(incoming[:rows])))
+    return merged_rows + rows
+
+
+def _fetch_submission_page(name: str) -> dict:
+    """One `filings.files[]` archive document, cached under its OWN key.
+
+    Per-page rather than folded into the merged payload's cache because the
+    page fan-out is wildly uneven: measured 2026-07-27, 28 of 33 flagged
+    filers have 0-3 pages but JPM has 68, C 39, BAC 20. Re-paying 68 requests
+    on every 24 h expiry of the MAIN document is what this separate, longer
+    TTL avoids.
+    """
+    path = cache_util.cache_path("sec_edgar", f"submissions_page_{name}")
+    cached = cache_util.load_cache(path, TTL_SUBMISSION_PAGES)
+    if cached:
+        return cached
+
+    raw = _sec_get(SEC_SUBMISSIONS_PAGE_URL.format(name=name))
+    if isinstance(raw, dict) and "error" in raw:
+        return raw  # never cached — one 503 must not poison the filer for a week
+
+    result = {"name": name, "fetched_at": _now_iso(), "data": raw}
+    cache_util.save_cache(path, result)
+    return result
+
+
+def _merge_submission_pages(raw: dict) -> dict:
+    """Fold every `filings.files[]` archive page into `filings.recent`.
+
+    SEC packs at most one year, or the 1,000 most recent filings (whichever is
+    more), into the main document's `recent` block; the rest is enumerated in
+    `filings.files[]`. Merging INTO `recent` — rather than exposing the pages
+    as a new field — is what keeps this a transport fix: every reader
+    (`list_filings`, `_foreign_private_issuer_no_quarterly_reason`) sees the
+    same shape it always saw, only complete. It is also the shape the shipped
+    `jadchaar/sec-edgar-api` wrapper produces for this endpoint.
+
+    Returns the client's `{"error": ...}` shape if ANY page fails. A partial
+    merge would be the very defect this function exists to remove, wearing a
+    different hat: the caller cannot tell "this filer has 3 10-Ks" from "page
+    2 of 5 failed".
+    """
+    filings = raw.get("filings")
+    if not isinstance(filings, dict):
+        return raw
+    pages = filings.get("files")
+    if not isinstance(pages, list) or not pages:
+        return raw
+
+    recent = filings.get("recent")
+    recent = recent if isinstance(recent, dict) else {}
+    merged = {k: list(v) for k, v in recent.items() if isinstance(v, list)}
+    merged_rows = _submission_block_rows(merged)
+
+    for entry in pages:
+        name = entry.get("name") if isinstance(entry, dict) else None
+        if not name:
+            continue
+        page = _fetch_submission_page(name)
+        if isinstance(page, dict) and "error" in page:
+            return page
+        block = page.get("data")
+        if not isinstance(block, dict):
+            return {"error": f"SEC EDGAR submissions page {name!r} has no filing rows"}
+        merged_rows = _append_submission_block(merged, merged_rows, block)
+
+    filings["recent"] = merged
+    return raw
+
+
 def fetch_submissions(cik: int) -> dict:
-    path = cache_util.cache_path("sec_edgar", f"submissions_{cik:010d}")
+    # A DISTINCT key from the legacy `submissions_{cik}`: the payload SHAPE is
+    # unchanged but its SEMANTICS are not. An entry written before this
+    # function followed `filings.files[]` is a TRUNCATED history that no
+    # reader can distinguish from a complete one, so aliasing the old key
+    # would let a warm cache serve truncation out of fixed code, per company
+    # and unpredictably (docs/loom/memory/cache-key-collision-across-migration.md).
+    path = cache_util.cache_path("sec_edgar", f"submissions_full_{cik:010d}")
     cached = cache_util.load_cache(path, TTL_SUBMISSIONS)
     if cached:
         cached["_cache"] = "hit"
@@ -412,11 +528,15 @@ def fetch_submissions(cik: int) -> dict:
     if isinstance(raw, dict) and "error" in raw:
         return raw
 
+    merged = _merge_submission_pages(raw)
+    if isinstance(merged, dict) and "error" in merged:
+        return merged
+
     result = {
         "cik": cik,
         "fetched_at": _now_iso(),
         "_cache": "miss",
-        "data": raw,
+        "data": merged,
     }
     cache_util.save_cache(path, result)
     return result
@@ -456,6 +576,17 @@ def list_filings(
 
     `limit` alone (`min_filing_date=None`) preserves the original count-based
     behavior unchanged for other callers (e.g. ad hoc CLI browsing).
+
+    THE ROWS THIS SCANS ARE NOW THE FILER'S WHOLE HISTORY. The paragraph above
+    describes the window this function applies; until 2026-07-27 it was applied
+    to a set that had ALREADY been truncated upstream, because
+    `fetch_submissions` read only the main submissions document's `recent`
+    block and never followed `filings.files[]`. That was the SAME
+    crowding-out, one layer down in the transport: JPM returned 1 of its 27
+    10-Ks, BAC 1 of 32, META 2 of 14. A `min_filing_date` reaching deeper than
+    the `recent` block could not be satisfied no matter how it was scanned.
+    `fetch_submissions` now merges every archive page before returning, so
+    both windows finally act on the complete set.
     """
     sub = fetch_submissions(cik)
     if "error" in sub:
