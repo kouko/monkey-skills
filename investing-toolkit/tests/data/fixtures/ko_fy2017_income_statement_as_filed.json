@@ -1,0 +1,111 @@
+{
+ "_transcription": {
+  "provenance": "OBSERVED — both arrays below are hand transcriptions of documents in the filed accession, made 2026-07-26.",
+  "what": "The CONSOLIDATED STATEMENTS OF INCOME of The Coca-Cola Company's FY2017 Form 10-K, transcribed TWICE, because the filer filed it twice and the two do not agree: `lines` is the statement as PRINTED in the 10-K a human reads, and `sec_rendered_lines` is the same statement as SEC'S OWN RENDERER prints the XBRL exhibit of the same filing.",
+  "why_it_exists": "Plan Task 10 (docs/loom/plans/2026-07-26-as-filed-statement-reconstruction.md). Sum reconciliation proves the DECLARED arithmetic holds; it cannot prove the reconstructed statement matches what a human reads. Lines outside every sum (the six per-share rows and the three share-count rows here carry weight=None and no calculation parent), presentation ORDER, and the filer's own LABELS are all unverified by it. This is the oracle for that gap.",
+  "accession": "0000021344-18-000008",
+  "filer": "The Coca-Cola Company (KO), CIK 0000021344",
+  "form": "10-K",
+  "filing_date": "2018-02-23",
+  "period_of_report": "2017-12-31",
+  "statement_title": "CONSOLIDATED STATEMENTS OF INCOME",
+  "line_count": 26,
+
+  "two_oracles_two_distinct_claims": {
+   "lines": "THE TASK 10 ORACLE. The statement as printed in the primary document — what the brief means by 'what a human reads in the 10-K'. Nothing else can settle whether the reconstruction reads as filed.",
+   "sec_rendered_lines": "A CROSS-CHECK, and a diagnosis — NOT a substitute. SEC's financial-report renderer is a SECOND, INDEPENDENT implementation reading the same XBRL exhibit this repo reads. Where it and this repo agree, a difference against the printed page is a property of the FILER'S OWN EXHIBIT; where they disagree, the fault is this repo's extraction. The printed page alone cannot tell those two apart, and that distinction is the whole value of Task 10's finding.",
+   "what_neither_proves": "Both are renderings of one filing by one filer. Nothing here generalises to a second filer, a second era or the other two statements — this is ONE company, ONE year, ONE statement, chosen because it is the plan's acceptance case."
+  },
+
+  "how_this_was_obtained": [
+   "1. `investing-toolkit/tests/data/fixtures/capture_ko_fy2017_income_as_filed.py` fetched both documents of the accession through the repo's shared SEC HTTP boundary and rendered each statement table to text: one line per table row, cell text only, footnote <sup> markers dropped.",
+   "2. Every row of each rendering was transcribed into the arrays below BY HAND. The script does not write this file, deliberately: a fixture it emitted would silently absorb any bug in its own table parsing, which is the one link in the chain a reader cannot check by looking at the filing.",
+   "WHY THIS IS NOT CIRCULAR: nothing in this file was produced by `is_statement_line`, `statement_kind`, `statements_for`, `cell_state`, or by the committed row capture `us_statement_reconstruction_2026-07-26.json`. The oracle and the code under test share only the filing. If the reconstruction agreed with itself, this file would not know about it — cf. docs/loom/memory/construction-guaranteed-invariant-proves-nothing.md."
+  ],
+  "how_a_reader_re_verifies_it_by_eye": "Open `printed_page_url` in a browser, search for `CONSOLIDATED STATEMENTS OF INCOME` (the bold statement heading, not the ~70 body-prose mentions of the phrase), and read the table beneath it; it fits on one page. Then open `sec_rendered_exhibit_url`, which IS one page. Compare `order`, `label` and `values` below to the digits printed there. No tool is needed and no arithmetic is required — with the two conventions below applied, these are the characters on the page. Re-running the capture script prints both tables side by side for the same comparison.",
+
+  "conventions_applied_to_the_printed_digits": {
+   "scale": "OBSERVED — `values` are the digits AS PRINTED, and `unit` says what each document's own scale header makes them (`(In millions except per share data)` on the printed page; `shares in Millions, $ in Millions` on the SEC rendering — the same scale, stated twice). `millions_usd` and `millions_shares` are 1e6 each; `usd_per_share` is printed unscaled.",
+   "negatives": "OBSERVED — both documents print negatives in parentheses; they are transcribed as negative numbers (`Other income (loss) - net` 2017 prints `(1,666)`, transcribed -1666).",
+   "dashes_and_zeros": "OBSERVED, and it is one of the findings — the printed page prints an em dash where the SEC rendering of the exhibit prints `0` (discontinued operations, 2016 and 2015, on three lines). The em dash is transcribed as `null` and the zero as `0`. Neither transcription decides what the blank MEANS; what the reconstruction says about it is the test's business, not this file's.",
+   "footnote_markers": "OBSERVED — superscript footnote references are typography, not label text. The printed page prints `Basic net income per share from continuing operations` with a superscript 1, and `BASIC NET INCOME PER SHARE`'s 2017 figure with a superscript 3; the markers are dropped from `label` and recorded in `footnote_markers`, so dropping them is visible rather than silent.",
+   "whitespace": "OBSERVED — labels are transcribed as the page RENDERS them, with HTML whitespace collapsed, because that is what a browser shows and therefore what a human reads; the underlying markup's line breaks and non-breaking spaces are typesetting, not label text. This is the only normalisation anywhere in the chain: the test compares labels VERBATIM after it, folding neither case nor dashes.",
+   "dash_character": "OBSERVED, and it is also a finding — the printed page uses U+2014 EM DASH inside labels (`Equity income (loss) — net`) where the exhibit uses an ASCII hyphen (`Equity income (loss) - net`). Each side is transcribed exactly as its own document prints it."
+  },
+
+  "period_keys": {
+   "provenance": "CONSTRUCTED-CONVENTIONAL — this mapping is NOT in either document. The printed page heads its columns `Year Ended December 31, 2017 / 2016 / 2015` and the SEC rendering heads them `12 Months Ended Dec. 31, 2017 / 2016 / 2015`; these are how edgartools spells those same three annual durations on a statement row, and they are here only so a test can line one up with the other. A change to that spelling breaks the join and must be fixed HERE, in the join, never by editing a transcribed value.",
+   "2017": "duration_2017-01-01_2017-12-31",
+   "2016": "duration_2016-01-01_2016-12-31",
+   "2015": "duration_2015-01-01_2015-12-31"
+  },
+
+  "not_transcribed": "Concepts, levels, weights and calculation parents. None of them is printed in either document, so no human reading them can supply them, and inventing them here would be exactly the fabricated oracle this file exists to avoid. This file's claim is bounded to what the pages show: which lines, in what order, under what labels, with what numbers.",
+
+  "printed_page_url": "https://www.sec.gov/Archives/edgar/data/21344/000002134418000008/a2017123110-k.htm",
+  "sec_rendered_exhibit_url": "https://www.sec.gov/Archives/edgar/data/21344/000002134418000008/R2.htm",
+  "printed_page_column_header": "Year Ended December 31, | 2017 | 2016 | 2015",
+  "printed_page_scale_header": "(In millions except per share data)",
+  "sec_rendered_column_header": "CONSOLIDATED STATEMENTS OF INCOME - USD ($) shares in Millions, $ in Millions | 12 Months Ended | Dec. 31, 2017 | Dec. 31, 2016 | Dec. 31, 2015",
+
+  "printed_order_field": "OBSERVED, WITH ONE JUDGEMENT NAMED — every entry of `sec_rendered_lines` carries `printed_order`, the `order` of the line in `lines` that it is the SAME LINE as. For 23 of the 26 it is its own position. For three it is not, and that is the ordering finding: the exhibit presents the subtotal CONSOLIDATED NET INCOME (printed order 15) BEFORE the two components the printed page puts above it (13 and 14). The correspondence is a human reading of two documents — same figures, same meaning, different position — and is the one field here that is a judgement rather than a character on a page; it is stated so a reviewer can disagree with it specifically."
+ },
+
+ "lines": [
+  {"order": 1, "label": "NET OPERATING REVENUES", "unit": "millions_usd", "values": {"2017": 35410, "2016": 41863, "2015": 44294}},
+  {"order": 2, "label": "Cost of goods sold", "unit": "millions_usd", "values": {"2017": 13256, "2016": 16465, "2015": 17482}},
+  {"order": 3, "label": "GROSS PROFIT", "unit": "millions_usd", "values": {"2017": 22154, "2016": 25398, "2015": 26812}},
+  {"order": 4, "label": "Selling, general and administrative expenses", "unit": "millions_usd", "values": {"2017": 12496, "2016": 15262, "2015": 16427}},
+  {"order": 5, "label": "Other operating charges", "unit": "millions_usd", "values": {"2017": 2157, "2016": 1510, "2015": 1657}},
+  {"order": 6, "label": "OPERATING INCOME", "unit": "millions_usd", "values": {"2017": 7501, "2016": 8626, "2015": 8728}},
+  {"order": 7, "label": "Interest income", "unit": "millions_usd", "values": {"2017": 677, "2016": 642, "2015": 613}},
+  {"order": 8, "label": "Interest expense", "unit": "millions_usd", "values": {"2017": 841, "2016": 733, "2015": 856}},
+  {"order": 9, "label": "Equity income (loss) — net", "unit": "millions_usd", "values": {"2017": 1071, "2016": 835, "2015": 489}},
+  {"order": 10, "label": "Other income (loss) — net", "unit": "millions_usd", "values": {"2017": -1666, "2016": -1234, "2015": 631}},
+  {"order": 11, "label": "INCOME FROM CONTINUING OPERATIONS BEFORE INCOME TAXES", "unit": "millions_usd", "values": {"2017": 6742, "2016": 8136, "2015": 9605}},
+  {"order": 12, "label": "Income taxes from continuing operations", "unit": "millions_usd", "values": {"2017": 5560, "2016": 1586, "2015": 2239}},
+  {"order": 13, "label": "NET INCOME FROM CONTINUING OPERATIONS", "unit": "millions_usd", "values": {"2017": 1182, "2016": 6550, "2015": 7366}},
+  {"order": 14, "label": "Income from discontinued operations (net of income taxes of $47, $0 and $0, respectively)", "unit": "millions_usd", "values": {"2017": 101, "2016": null, "2015": null}},
+  {"order": 15, "label": "CONSOLIDATED NET INCOME", "unit": "millions_usd", "values": {"2017": 1283, "2016": 6550, "2015": 7366}},
+  {"order": 16, "label": "Less: Net income attributable to noncontrolling interests", "unit": "millions_usd", "values": {"2017": 35, "2016": 23, "2015": 15}},
+  {"order": 17, "label": "NET INCOME ATTRIBUTABLE TO SHAREOWNERS OF THE COCA-COLA COMPANY", "unit": "millions_usd", "values": {"2017": 1248, "2016": 6527, "2015": 7351}},
+  {"order": 18, "label": "Basic net income per share from continuing operations", "unit": "usd_per_share", "footnote_markers": {"label": "1"}, "values": {"2017": 0.28, "2016": 1.51, "2015": 1.69}},
+  {"order": 19, "label": "Basic net income per share from discontinued operations", "unit": "usd_per_share", "footnote_markers": {"label": "2"}, "values": {"2017": 0.02, "2016": null, "2015": null}},
+  {"order": 20, "label": "BASIC NET INCOME PER SHARE", "unit": "usd_per_share", "footnote_markers": {"value_2017": "3"}, "values": {"2017": 0.29, "2016": 1.51, "2015": 1.69}},
+  {"order": 21, "label": "Diluted net income per share from continuing operations", "unit": "usd_per_share", "footnote_markers": {"label": "1"}, "values": {"2017": 0.27, "2016": 1.49, "2015": 1.67}},
+  {"order": 22, "label": "Diluted net income per share from discontinued operations", "unit": "usd_per_share", "footnote_markers": {"label": "2"}, "values": {"2017": 0.02, "2016": null, "2015": null}},
+  {"order": 23, "label": "DILUTED NET INCOME PER SHARE", "unit": "usd_per_share", "values": {"2017": 0.29, "2016": 1.49, "2015": 1.67}},
+  {"order": 24, "label": "AVERAGE SHARES OUTSTANDING — BASIC", "unit": "millions_shares", "values": {"2017": 4272, "2016": 4317, "2015": 4352}},
+  {"order": 25, "label": "Effect of dilutive securities", "unit": "millions_shares", "values": {"2017": 52, "2016": 50, "2015": 53}},
+  {"order": 26, "label": "AVERAGE SHARES OUTSTANDING — DILUTED", "unit": "millions_shares", "values": {"2017": 4324, "2016": 4367, "2015": 4405}}
+ ],
+
+ "sec_rendered_lines": [
+  {"order": 1, "printed_order": 1, "label": "NET OPERATING REVENUES", "unit": "millions_usd", "values": {"2017": 35410, "2016": 41863, "2015": 44294}},
+  {"order": 2, "printed_order": 2, "label": "Cost of goods sold", "unit": "millions_usd", "values": {"2017": 13256, "2016": 16465, "2015": 17482}},
+  {"order": 3, "printed_order": 3, "label": "GROSS PROFIT", "unit": "millions_usd", "values": {"2017": 22154, "2016": 25398, "2015": 26812}},
+  {"order": 4, "printed_order": 4, "label": "Selling, general and administrative expenses", "unit": "millions_usd", "values": {"2017": 12496, "2016": 15262, "2015": 16427}},
+  {"order": 5, "printed_order": 5, "label": "Other operating charges", "unit": "millions_usd", "values": {"2017": 2157, "2016": 1510, "2015": 1657}},
+  {"order": 6, "printed_order": 6, "label": "OPERATING INCOME", "unit": "millions_usd", "values": {"2017": 7501, "2016": 8626, "2015": 8728}},
+  {"order": 7, "printed_order": 7, "label": "Interest income", "unit": "millions_usd", "values": {"2017": 677, "2016": 642, "2015": 613}},
+  {"order": 8, "printed_order": 8, "label": "Interest expense", "unit": "millions_usd", "values": {"2017": 841, "2016": 733, "2015": 856}},
+  {"order": 9, "printed_order": 9, "label": "Equity income (loss) - net", "unit": "millions_usd", "values": {"2017": 1071, "2016": 835, "2015": 489}},
+  {"order": 10, "printed_order": 10, "label": "Other income (loss) - net", "unit": "millions_usd", "values": {"2017": -1666, "2016": -1234, "2015": 631}},
+  {"order": 11, "printed_order": 11, "label": "INCOME BEFORE INCOME TAXES", "unit": "millions_usd", "values": {"2017": 6742, "2016": 8136, "2015": 9605}},
+  {"order": 12, "printed_order": 12, "label": "Income taxes", "unit": "millions_usd", "values": {"2017": 5560, "2016": 1586, "2015": 2239}},
+  {"order": 13, "printed_order": 15, "label": "CONSOLIDATED NET INCOME", "unit": "millions_usd", "values": {"2017": 1283, "2016": 6550, "2015": 7366}},
+  {"order": 14, "printed_order": 13, "label": "NET INCOME FROM CONTINUING OPERATIONS", "unit": "millions_usd", "values": {"2017": 1182, "2016": 6550, "2015": 7366}},
+  {"order": 15, "printed_order": 14, "label": "Income (Loss) from Discontinued Operations, Net of Tax, Including Portion Attributable to Noncontrolling Interest", "unit": "millions_usd", "values": {"2017": 101, "2016": 0, "2015": 0}},
+  {"order": 16, "printed_order": 16, "label": "Net Income (Loss) Attributable to Noncontrolling Interest", "unit": "millions_usd", "values": {"2017": 35, "2016": 23, "2015": 15}},
+  {"order": 17, "printed_order": 17, "label": "NET INCOME ATTRIBUTABLE TO SHAREOWNERS OF THE COCA-COLA COMPANY", "unit": "millions_usd", "values": {"2017": 1248, "2016": 6527, "2015": 7351}},
+  {"order": 18, "printed_order": 18, "label": "Income (Loss) from Continuing Operations, Per Basic Share", "unit": "usd_per_share", "values": {"2017": 0.28, "2016": 1.51, "2015": 1.69}},
+  {"order": 19, "printed_order": 19, "label": "Discontinued Operation, Income (Loss) from Discontinued Operation, Net of Tax, Per Basic Share", "unit": "usd_per_share", "values": {"2017": 0.02, "2016": 0, "2015": 0}},
+  {"order": 20, "printed_order": 20, "label": "BASIC NET INCOME PER SHARE (in dollars per share)", "unit": "usd_per_share", "values": {"2017": 0.29, "2016": 1.51, "2015": 1.69}},
+  {"order": 21, "printed_order": 21, "label": "Income (Loss) from Continuing Operations, Per Diluted Share", "unit": "usd_per_share", "values": {"2017": 0.27, "2016": 1.49, "2015": 1.67}},
+  {"order": 22, "printed_order": 22, "label": "Discontinued Operation, Income (Loss) from Discontinued Operation, Net of Tax, Per Diluted Share", "unit": "usd_per_share", "values": {"2017": 0.02, "2016": 0, "2015": 0}},
+  {"order": 23, "printed_order": 23, "label": "DILUTED NET INCOME PER SHARE (in dollars per share)", "unit": "usd_per_share", "values": {"2017": 0.29, "2016": 1.49, "2015": 1.67}},
+  {"order": 24, "printed_order": 24, "label": "AVERAGE SHARES OUTSTANDING (in shares)", "unit": "millions_shares", "values": {"2017": 4272, "2016": 4317, "2015": 4352}},
+  {"order": 25, "printed_order": 25, "label": "Effect of dilutive securities (in shares)", "unit": "millions_shares", "values": {"2017": 52, "2016": 50, "2015": 53}},
+  {"order": 26, "printed_order": 26, "label": "AVERAGE SHARES OUTSTANDING ASSUMING DILUTION (in shares)", "unit": "millions_shares", "values": {"2017": 4324, "2016": 4367, "2015": 4405}}
+ ]
+}
