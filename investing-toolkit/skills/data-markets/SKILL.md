@@ -100,9 +100,19 @@ recent 8 annual filings, under a single `reconstruction` section:
  reconstruction: {
    filings: [{accession, form, filingDate,
               statements: {income|balance_sheet|cash_flow: [
-                 {label, concept, level, weight, calculation_parent, values}, ...]},
+                 {label, concept, level, weight, calculation_parent,
+                  values, decimals, balance}, ...]},
               roles: {kind: [role_uri, ...]},
               unrecognised_dimension_keys: [...]}, ...],
+   verification: {
+     by_era: [{era, resolved, unresolved, reasons: [{reason, count}]}],
+     statements: [{filing_date, era, kind, resolved,
+                   reasons: [{reason, detail}],
+                   groups_checked, groups_incomplete}],
+     sum_checks: {
+       by_status: {agrees, within_rounding, disagrees, incomplete},
+       disagreements: [{kind, period, parent, status,
+                        reported, computed, difference, tolerance}]}},
    failed_items: [...], requested, succeeded, failed, _status}}
 ```
 
@@ -111,7 +121,50 @@ custom ones no fixed concept list could contain — in the filing's own
 presentation order, with segment slices and placeholder rows excluded.
 Reads the presentation linkbase for which lines exist and their order, and
 the calculation linkbase for `weight` / `calculation_parent`; nothing infers
-a line's meaning from its position.
+a line's meaning from its position. `decimals` is the precision the filer
+declared per period (KO states −6 on its revenue line and 2 on its EPS line
+in the same statement, so it is per-period, never one scalar); `balance` is
+the **taxonomy's** own debit/credit classification, and `null` — the common
+case — means the taxonomy says nothing, never "not revenue".
+
+### Reading the verification
+
+`by_era` splits the resolved/unresolved counts by **filing** era, because the
+structural rule's 63-of-65 was measured on filings filed 2016-2018 only and a
+10-year run spans years nobody sampled. An era with no filings is absent
+rather than zeroed.
+
+`sum_checks.by_status` always carries all four keys, and the four are three
+different answers plus a non-answer — keep them apart:
+
+| status | what it means |
+|---|---|
+| `agrees` | Σ(child × weight) equals the filer's own reported figure exactly |
+| `within_rounding` | it differs, but by less than the filer's **own declared** precision permits — **not** a defect (24 of 27 such differences in the committed capture are this) |
+| `disagrees` | it differs beyond that interval |
+| `incomplete` | no comparison was made — a child carries no value for that period |
+
+`disagrees` does **not** mean the filer is wrong. The check sees *presented*
+lines only, so a calculation child the filer never puts on the face of the
+statement leaves the sum short and reads the same way; all 3 remaining
+disagreements in the capture are that shape. `disagreements` carries the
+`tolerance` alongside the figures so the interval can be argued with, not
+just the verdict. Money is emitted as **exact decimal text** (`"18000000000"`),
+never a float.
+
+Every figure is **recomputed per run** — a verification refusal (the check
+refuses to guess on a concept presented twice with disagreeing figures, or a
+filing date with no readable year) degrades `verification` to an `error`
+entry and the section to `partial`; the statements still ship.
+
+**No per-cell typing here, deliberately.** There is no `cell_state` in this
+envelope. Against the filer's own line set the four states collapse: every
+line present *is* presented; "the line exists but that period is untagged" is
+already visible as a period missing from that line's `values`; and a
+`derived` value would mean adding a line the filer never filed, which breaks
+the one fidelity promise this pack makes. The four-way taxonomy earns its
+keep against the fixed 14-field grid — `analysis-kpi`'s
+`kpi_spine_view.derive_spine_as_filed`, a read-side view over this payload.
 
 **Why 8 filings.** Consecutive 10-Ks overlap by their two comparative
 years, so N filings yield **N+2** distinct years, not 3N. Measured live

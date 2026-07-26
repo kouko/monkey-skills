@@ -808,6 +808,49 @@ def derive_spine(dump: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _read_json_object(path: str | None, noun: str) -> dict[str, Any] | None:
+    """This module's ONE CLI input door: a JSON object read from `path`, or
+    from stdin when `path` is None.
+
+    Returns `None` having ALREADY reported the reason as `error: ...` on
+    stderr, so the caller's only job is `return 1`. Both subcommands read the
+    same way from different payloads, and a second copy of this is how the two
+    would drift into reporting the same malformed input differently.
+
+    `noun` names the payload the subcommand expected ("dump",
+    "reconstruct payload"), which is the whole value of the type message: a
+    caller who piped a store dump into `derive-as-filed` is told WHICH shape
+    was wanted, not merely that this one was wrong.
+
+    The three message wordings are transcribed from `tearsheet_format.py`'s own
+    CLI door, this repo's house shape for exactly this check -- including the
+    `in <path>` / `on stdin` split, which reads as English in both branches.
+    """
+    try:
+        if path:
+            with open(path, "r", encoding="utf-8") as f:
+                payload = json.load(f)
+        else:
+            sys.stdin.reconfigure(encoding="utf-8")
+            payload = json.load(sys.stdin)
+    except OSError as exc:
+        print(f"error: cannot read {path}: {exc}", file=sys.stderr)
+        return None
+    except json.JSONDecodeError as exc:
+        where = f"in {path}" if path else "on stdin"
+        print(f"error: invalid JSON {where}: {exc}", file=sys.stderr)
+        return None
+
+    if not isinstance(payload, dict):
+        print(
+            f"error: top-level {noun} JSON must be an object, got "
+            f"{type(payload).__name__}",
+            file=sys.stderr,
+        )
+        return None
+    return payload
+
+
 def _cli_derive(args: argparse.Namespace) -> int:
     """`derive` subcommand: read the dump payload from `--dump` (or stdin
     when omitted), print the spine payload as JSON to stdout.
@@ -820,30 +863,8 @@ def _cli_derive(args: argparse.Namespace) -> int:
     CLI is the hand-fed surface, so it reports rather than tracebacks. The
     library caller still sees the exception.
     """
-    if args.dump_path:
-        try:
-            with open(args.dump_path, "r", encoding="utf-8") as f:
-                dump = json.load(f)
-        except OSError as exc:
-            print(f"error: cannot read {args.dump_path}: {exc}", file=sys.stderr)
-            return 1
-        except json.JSONDecodeError as exc:
-            print(f"error: invalid JSON in {args.dump_path}: {exc}", file=sys.stderr)
-            return 1
-    else:
-        try:
-            sys.stdin.reconfigure(encoding="utf-8")
-            dump = json.load(sys.stdin)
-        except json.JSONDecodeError as exc:
-            print(f"error: invalid JSON on stdin: {exc}", file=sys.stderr)
-            return 1
-
-    if not isinstance(dump, dict):
-        print(
-            "error: top-level dump JSON must be an object, got "
-            f"{type(dump).__name__}",
-            file=sys.stderr,
-        )
+    dump = _read_json_object(args.dump_path, "dump")
+    if dump is None:
         return 1
 
     try:
@@ -861,9 +882,13 @@ def _cli_derive(args: argparse.Namespace) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Derive the canonical spine fields from a kpi_store.py `dump "
-            "--company` payload, resolving each field's concept chain per "
-            "period. Pure view -- no I/O beyond input + stdout."
+            "Derive the 14 canonical spine fields. TWO entry points over TWO "
+            "inputs, because neither is computable from the other: `derive` "
+            "reads a kpi_store.py `dump --company` payload and resolves each "
+            "field's concept chain per period; `derive-as-filed` reads a "
+            "`pack.py --pack reconstruct` payload and reports each field as "
+            "the FILER declared it, typing every cell value/not_presented/"
+            "not_tagged/derived. Pure view -- no I/O beyond input + stdout."
         ),
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -879,6 +904,28 @@ def main() -> int:
         help="Path to the kpi_store.py `dump --company` JSON payload. Omit to read stdin.",
     )
     derive_parser.set_defaults(func=_cli_derive)
+
+    # The SECOND entry point, over a different input. Its handler and the
+    # reason it cannot be a flag on `derive` live in the as-filed section
+    # below -- as does everything else the as-filed view needs, which is why
+    # that whole apparatus sits under `main()` rather than above it.
+    as_filed_parser = subparsers.add_parser(
+        "derive-as-filed",
+        help=(
+            "Emit the 14 spine fields of each filing in a `pack.py reconstruct` "
+            "payload, every cell typed value/not_presented/not_tagged/derived."
+        ),
+    )
+    as_filed_parser.add_argument(
+        "--payload",
+        dest="payload_path",
+        default=None,
+        help=(
+            "Path to the `pack.py --market us --pack reconstruct` JSON payload. "
+            "Omit to read stdin."
+        ),
+    )
+    as_filed_parser.set_defaults(func=_cli_derive_as_filed)
 
     args = parser.parse_args()
     return args.func(args)
@@ -919,6 +966,10 @@ def main() -> int:
 # the single behavioural addition the brief asks of this view.
 
 import kpi_us_statement_cells as statement_cells  # noqa: E402
+# The revenue-total rule lives THERE, not here. Both modules needed it, both
+# grew their own copy, and by the time the branch was reviewed as a whole the
+# two had diverged in three ways at once — see `_revenue_total`.
+import kpi_us_statement_check as statement_check  # noqa: E402
 
 # Which statement carries each field. A LOOKUP, not an inference: every entry
 # is where the line sits on any US filer's statements, and none of them is a
@@ -941,16 +992,6 @@ _FIELD_STATEMENT: dict[str, str] = {
     "financing_cash_flow": "cash_flow",
     "capex": "cash_flow",
 }
-
-# What a revenue line is NAMED, as a POSITIVE allowlist of wording rather than
-# a denylist of observed concepts
-# (docs/loom/memory/shared-classifier-over-open-dialects-needs-allowlist.md:
-# the set of dialects is OPEN). Two stems cover every sector dialect the brief
-# measured — `RegulatedAndUnregulatedOperatingRevenue` (utilities),
-# `RealEstateRevenueNet` (REITs), `RevenueMineralSales` (mining),
-# `SalesRevenueServicesNet` (software), `SalesRevenueGoodsNet` (beverage /
-# pharma), `RevenuesAndOtherIncome` (refiners), plus plain `Revenues`.
-_REVENUE_WORDINGS = ("revenue", "sales")
 
 
 class _ReconstructedLine:
@@ -1001,123 +1042,67 @@ def _local_name(concept: str | None) -> str:
     return (concept or "").replace(":", "_").rpartition("_")[2]
 
 
-def _has_revenue_wording(line: _ReconstructedLine) -> bool:
-    """Is this line NAMED the way a revenue line is named? Wording only — the
-    sign is a separate question, asked separately, because the two answers are
-    needed at different points (`_revenue_total`)."""
-    return any(w in _local_name(line.concept).lower() for w in _REVENUE_WORDINGS)
-
-
-def _sign_admits(line: _ReconstructedLine) -> bool:
-    """Could this revenue-worded line be a revenue TOTAL, by the filer's own
-    declared sign?
-
-    WHAT THE SIGN DECIDES, AND WHAT IT DOES NOT — stated as a scope because
-    this filter shipped for two rounds carrying a claim wider than its reach.
-    It decides ONE thing: a revenue-worded line SUBTRACTED where it stands is
-    not the total. It decides NOTHING about a cost line that is added into its
-    own cost subtotal, because such a line carries +1 and the subtraction
-    happens a level up — the oil-major layout, and the shape PSX has. That
-    whole class is `_balance_admits`'s job, and the two are not
-    interchangeable: the observed IBM row carries BOTH signals, so it evidences
-    neither on its own.
-
-    A `None` weight is kept, not rejected: it means the line sits in no
-    declared sum, which is true of a calculation ROOT as well as of an EPS row,
-    and rejecting it would drop the total of a filer whose revenue heads its
-    own tree.
-
-    CONTRA-REVENUE IS NOT A COUNTER-EXAMPLE — settled, and still correct. A
-    returns/allowances or sales-discount line is revenue-worded and carries -1,
-    so this excludes it, and that is the correct answer twice over: a deduction
-    from revenue is not the revenue total, and the total it is deducted FROM is
-    itself revenue-worded and positive, so it survives here and the deduction is
-    eliminated as its component either way. For this filter to lose a real
-    total, a filer would have to declare its revenue total as a NEGATIVE child
-    of its own subtotal — which would also break that subtotal's declared sum,
-    and `kpi_us_statement_check.verify` reports exactly that. Unobserved:
-    neither captured filing presents a contra-revenue line, so no test here
-    exercises it.
-    """
-    return line.weight is None or line.weight >= 0
-
-
-def _balance_admits(line: _ReconstructedLine) -> bool:
-    """Could this revenue-worded line be a revenue TOTAL, by the TAXONOMY's own
-    debit/credit classification?
-
-    THE CASE THE SIGN CANNOT SEE. A refiner presents a revenue block and a cost
-    block, each summing POSITIVELY into its own subtotal, and only the two
-    subtotals meet — so `CostOfRevenue` carries weight +1.0 and the sign admits
-    it. It then survives component elimination (its parent is a cost concept,
-    not a revenue-worded one) and stands as a second candidate total, blanking
-    the revenue of every filer with that layout. The taxonomy already answers
-    it: `Revenues` is `credit`, `CostOfRevenue` is `debit`. Found by Task 8's
-    implementer while pinning an unrelated gap, on a filing neither of ours
-    could see.
-
-    FAIL OPEN ON `None`, which is the majority and not an edge case: 349 of the
-    455 captured rows carry no balance, against 55 credit and 51 debit.
-    Requiring `credit` would discard the filers' OWN custom revenue concepts —
-    the class this arc exists to keep, and the one no fixed chain could ever
-    contain. Only a positively-identified `debit` excludes.
-    """
-    return line.balance != "debit"
-
-
 def _revenue_total(lines: list[_ReconstructedLine]) -> tuple[str | None, tuple[str, ...]]:
     """The concept this filing declares as its TOTAL revenue, by its own
     calculation tree — with the candidates it could not choose between.
 
-    THE RULE, validated before this arc's brief was written: among the income
-    statement's revenue lines, one whose calculation parent is ALSO a revenue
-    line is a COMPONENT; the one that remains is the filing's total. Measured
-    across the committed 79-filer verification universe it answered 63 of 65
-    operating filings with ZERO violations against sum reconciliation, 12 of
-    them reconciling to 0.00%.
+    THE RULE ITSELF IS NOT HERE. It is `kpi_us_statement_check.revenue_totals`,
+    and this function only shapes that module's candidate list into the pair
+    this view emits. There used to be a second implementation at this site, and
+    the whole-branch review measured the two DIVERGED in three ways at once —
+    the wording matched, the test for "my parent is a revenue line", and whether
+    a repeated presentation row counted once or twice. Each divergence cost the
+    same thing, a filer's revenue blanked into a false `unresolved`:
 
-    It reads the CALCULATION linkbase — which children roll into which parent —
-    and never presentation position, which the brief measured unreliable for
-    meaning (asked which line was the total, position named a 193M
-    professional-services line as ServiceNow's 1,933M total).
+      * this copy also matched the wording `sales`, which admitted a custom
+        `...CostOfSales` line as a second candidate. It bought nothing: every
+        revenue dialect the brief measured (`SalesRevenueGoodsNet`,
+        `SalesRevenueServicesNet`, `RealEstateRevenueNet`, `RevenueMineralSales`,
+        `RegulatedAndUnregulatedOperatingRevenue`, `RevenuesAndOtherIncome`)
+        carries `revenue` as well, and the two `sales`-only concepts in the
+        committed capture are a divestiture gain and an investments line,
+        neither of them on an income statement;
+      * this copy asked whether a line's calculation parent was among the
+        PRESENTED revenue-worded concepts, so a component rolling into a revenue
+        total the filer does not present looked parentless and stood as a rival.
+        The check tests the parent BY NAME, which is documented deliberate at
+        its own site and covers the unpresented-parent case that this one
+        missed. It also dissolves the ordering hazard this copy carried a
+        comment about — building the parent set before the sign filter — because
+        a name is not drawn from a filtered set at all;
+      * this copy did not de-duplicate, so a filing whose presentation repeats
+        one revenue row was reported ambiguous between its total and itself.
 
-    "A REVENUE LINE" IS DECIDED BY THREE INDEPENDENT SIGNALS, none of which is
-    redundant and each of which covers a class the others miss: the concept's
-    WORDING (`_has_revenue_wording`), the filer's own declared SIGN
-    (`_sign_admits` — a line subtracted where it stands), and the taxonomy's
-    DEBIT/CREDIT balance (`_balance_admits` — a cost line that sums positively
-    into its own cost subtotal, which the sign cannot see). Wording alone
-    admits every cost-of-revenue line; sign alone blanks every oil major.
+    Two implementations agreeing would not have made either right, either
+    (docs/loom/memory/convergence-is-not-evidence-when-the-sample-is-shared.md);
+    what makes this one right is that `revenue_totals` is pinned against the
+    filed documents in its own suite. See that function for the structural rule
+    — a revenue line whose calculation parent is itself revenue-named is a
+    COMPONENT — and for the two signals that separate a revenue line from a cost
+    line whose local name also carries the revenue wording.
 
-    Returns `(None, candidates)` when it cannot choose, and that is the answer,
-    not a failure: kickoff decision 甲 requires a VISIBLE TYPED GAP where a
-    filing declares no single total, never a fallback to `SPINE_FIELD_CHAINS`,
-    because a silently-low year reads as a downturn on a ten-year trend. The
-    measured instance is DUK's 2013-2017 FILED range, which yields 2-3 candidate
-    totals; its 2018-filed 10-K resolves cleanly to
+    WHAT THIS FUNCTION DECIDES, which is only the shape: exactly one surviving
+    candidate is the filing's total; anything else is `(None, candidates)`, and
+    that is the answer rather than a failure. Kickoff decision 甲 requires a
+    VISIBLE TYPED GAP where a filing declares no single total, never a fallback
+    to `SPINE_FIELD_CHAINS`, because a silently-low year reads as a downturn on
+    a ten-year trend. The measured instance is DUK's 2013-2017 FILED range,
+    which yields 2-3 candidate totals; its 2018-filed 10-K resolves cleanly to
     `RegulatedAndUnregulatedOperatingRevenue`.
 
     `(None, ())` is the different case where the filing presents no revenue line
     at all — an honest `not_presented`, which a bank's income statement reaches
     legitimately (the brief's open question about financial-sector filers).
+
+    The candidates come back SORTED rather than in the presentation order
+    `revenue_totals` returns them in. That is this view's own published output
+    and is left as it was; both orders are deterministic, so neither can make
+    two runs over one filing disagree.
     """
-    worded = [line for line in lines if _has_revenue_wording(line)]
-    # THE PARENT SET IS BUILT BEFORE THE SIGN FILTER, and that ordering is the
-    # whole correctness of the elimination. The filter drops negative-weight
-    # lines (IBM's `CostOfRevenue`); if this set were built from the survivors,
-    # such a line would stop existing as a PARENT, and its own revenue-worded
-    # children would look parentless — joining the totals set, pushing the
-    # count past one, and collapsing the filer's revenue into a false
-    # `unresolved` gap. A component is a component regardless of which side of
-    # the sign its parent sits on.
-    concepts = {line.concept for line in worded}
-    candidates = [
-        line for line in worded if _sign_admits(line) and _balance_admits(line)
-    ]
-    totals = [line for line in candidates if line.calculation_parent not in concepts]
-    if len(totals) == 1:
-        return totals[0].concept, ()
-    return None, tuple(sorted(line.concept for line in totals))
+    candidates = statement_check.revenue_totals(lines)
+    if len(candidates) == 1:
+        return candidates[0], ()
+    return None, tuple(sorted(candidates))
 
 
 def _chain_concept(lines: list[_ReconstructedLine], chain: tuple[str, ...]) -> str | None:
@@ -1243,10 +1228,18 @@ def derive_spine_as_filed(payload: dict[str, Any]) -> dict[str, Any]:
     owns in one place.
 
     VALUES ARE `Decimal`, carried up from `cell_state` (brief: "arithmetic in
-    `Decimal`, never binary float"). A JSON consumer must therefore serialize
-    with `default=str`; nothing in this repo serializes this payload today, and
-    the shipped `derive` CLI — which does `json.dump` — is a different entry
-    point over a different input and is untouched.
+    `Decimal`, never binary float"), so a JSON consumer must project them
+    before serializing.
+
+    THIS DOCSTRING USED TO SAY "nothing in this repo serializes this payload
+    today" and to recommend `json.dump(..., default=str)`. Both were true only
+    while the view was reachable in-process alone. The `derive-as-filed`
+    subcommand below is now that consumer, and it does NOT use that fallback:
+    it projects explicitly via `_project_money_to_text` and dumps BARE, so a
+    value it ever failed to reach raises at the boundary rather than being
+    quietly stringified — see that function for why the fallback is the weaker
+    of the two. The shipped `derive` CLI is a different entry point over a
+    different input and is untouched.
     """
     reconstruction = payload.get("reconstruction") or {}
     return {
@@ -1265,6 +1258,80 @@ def derive_spine_as_filed(payload: dict[str, Any]) -> dict[str, Any]:
         "failed_items": list(reconstruction.get("failed_items") or []),
         "warnings": list(payload.get("warnings") or []),
     }
+
+
+def _project_money_to_text(view: dict[str, Any]) -> dict[str, Any]:
+    """Every cell `value` in `view` as EXACT TEXT, in place.
+
+    `str(Decimal)` is digit-for-digit lossless and keeps the scale the
+    arithmetic produced. The two alternatives both lose, and this is the same
+    projection `pack_us._decimal_text` makes at the same kind of boundary:
+
+      * `float(value)` routes an exact decimal back through the binary
+        representation this module family bans on money -- the mode that
+        already manufactured a false restatement signal here once
+        (docs/loom/memory/construction-guaranteed-invariant-proves-nothing.md);
+      * `json.dump(..., default=str)` would do the right thing TODAY and would
+        equally happily serialize a float, so the projection is EXPLICIT here
+        and the dump below is BARE. A `Decimal` this function ever failed to
+        reach then raises `TypeError` at the boundary instead of being quietly
+        stringified by a fallback -- fail loud on our own bug, since a silent
+        one is a wrong number wearing a correct-looking label.
+
+    IN PLACE, on the freshly-built dict `derive_spine_as_filed` just returned
+    and nothing else references. A copy would be honest too and is not worth
+    the walk; a caller reaching this function with a value it still needs as
+    `Decimal` would be reaching past the CLI layer this belongs to.
+    """
+    for filing in view["filings"]:
+        for field in filing["fields"]:
+            for cell in field["periods"].values():
+                if cell["value"] is not None:
+                    cell["value"] = str(cell["value"])
+    return view
+
+
+def _cli_derive_as_filed(args: argparse.Namespace) -> int:
+    """`derive-as-filed` subcommand: read a `reconstruct` pack payload from
+    `--payload` (or stdin when omitted), print the as-filed spine view as JSON
+    to stdout.
+
+    A SEPARATE SUBCOMMAND RATHER THAN A FLAG ON `derive`, because the two read
+    DIFFERENT INPUTS -- a `kpi_store dump --company` payload and a
+    `pack.py --market us --pack reconstruct` payload -- and neither is
+    computable from the other (a store dump carries no calculation linkbase;
+    see this section's header). A flag would advertise a choice of OUTPUT over
+    one input, which is not what is on offer, and `derive` keeps working
+    unchanged either way.
+
+    WHAT IT PUTS ON THE COMMAND SURFACE, which is the point of it existing: the
+    four cell states. Without this the taxonomy answers the user's actual
+    question -- "is this cell empty because the company has no such line, or
+    because my pipeline lost it?" -- only to an in-process caller.
+
+    Malformed input leaves by the same door `derive` uses (`_read_json_object`).
+    """
+    payload = _read_json_object(args.payload_path, "reconstruct payload")
+    if payload is None:
+        return 1
+
+    try:
+        view = derive_spine_as_filed(payload)
+    except (AttributeError, TypeError, ValueError) as exc:
+        # A hand-fed payload whose `reconstruction` or `filings` is the wrong
+        # SHAPE (a string where an object belongs) reaches the view as an
+        # attribute or type error, not a `ValueError` -- `derive`'s single
+        # `ValueError` catch is narrower because its own producer-shaped raise
+        # is the only one it can hit. Reported, not tracebacked, for the same
+        # reason: this is the hand-fed surface. The library caller still sees
+        # the exception.
+        print(f"error: cannot derive the as-filed spine: {exc}", file=sys.stderr)
+        return 1
+
+    sys.stdout.reconfigure(encoding="utf-8")
+    json.dump(_project_money_to_text(view), sys.stdout, ensure_ascii=False)
+    sys.stdout.write("\n")
+    return 0
 
 
 if __name__ == "__main__":

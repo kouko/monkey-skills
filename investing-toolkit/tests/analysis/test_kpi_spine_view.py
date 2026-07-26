@@ -38,6 +38,9 @@ _SKILLS = _ROOT / "skills"
 KPI_STORE_SCRIPT = _SKILLS / "analysis-kpi" / "scripts" / "kpi_store.py"
 KPI_SPINE_VIEW_SCRIPT = _SKILLS / "analysis-kpi" / "scripts" / "kpi_spine_view.py"
 KPI_XBRL_SCRIPT = _SKILLS / "analysis-kpi" / "scripts" / "kpi_xbrl.py"
+KPI_US_STATEMENT_CHECK_SCRIPT = (
+    _SKILLS / "analysis-kpi" / "scripts" / "kpi_us_statement_check.py"
+)
 TEARSHEET_FORMAT_SCRIPT = (
     _SKILLS / "report-kpi-tearsheet" / "scripts" / "tearsheet_format.py"
 )
@@ -60,6 +63,14 @@ def _load(name: str, path: Path):
 def store(tmp_path, monkeypatch):
     monkeypatch.setenv("KPI_STORE_DIR", str(tmp_path))
     return _load("kpi_store_for_spine_view", KPI_STORE_SCRIPT)
+
+
+@pytest.fixture
+def statement_check():
+    """`kpi_us_statement_check`, which owns the revenue-total rule this view
+    reads through. Loaded here so the binding test at the bottom of this module
+    can ask BOTH surfaces the same question."""
+    return _load("kpi_us_statement_check_for_spine_view", KPI_US_STATEMENT_CHECK_SCRIPT)
 
 
 @pytest.fixture
@@ -1879,3 +1890,280 @@ def test_a_revenue_concept_with_no_balance_is_still_admitted(spine_view):
     )
     assert revenue["concept"] == "psx_RefiningRevenue"
     assert revenue["periods"][period]["value"] == 104_622_000_000.0
+
+
+# =====================================================================
+# ONE REVENUE-TOTAL RULE, TWO CALLERS — the binding test
+# =====================================================================
+#
+# This view and `kpi_us_statement_check` both need "which concept is this
+# filing's revenue TOTAL", and for two rounds each carried its OWN answer. They
+# were never verified against each other, and the branch's whole-branch review
+# measured them diverged in three ways at once — wording, the parent test, and
+# de-duplication. The rule now lives in `kpi_us_statement_check.revenue_totals`
+# and this view reads it; the test below is what keeps that true, by asking the
+# SAME question of both surfaces on fixtures built to hit each divergence.
+#
+# WHY IT ASSERTS THE ANSWER TOO, not only the agreement: two copies agreeing is
+# not evidence that either is right
+# (docs/loom/memory/convergence-is-not-evidence-when-the-sample-is-shared.md).
+# Agreement alone would still pass the day both are wrong together, which is
+# exactly the regime a single shared implementation creates.
+
+# Every case CONSTRUCTED-CONVENTIONAL: each is a shape neither captured filing
+# (KO FY2017, IBM FY2025) presents, which is why the divergence survived two
+# rounds of tests grounded on those two. Each is labelled with the measured
+# behaviour of the pre-fix spine, so a reader can tell what it cost.
+_ONE_RULE_PERIOD = "duration_2017-01-01_2017-12-31"
+
+_REVENUE_RULE_DIVERGENCES = (
+    (
+        # PRE-FIX SPINE: three rival totals, revenue blanked. The filer's
+        # disaggregated lines roll into a revenue-named parent it does not
+        # PRESENT, so a parent test keyed on the presented lines cannot see the
+        # roll-up and reads two components as rival totals.
+        "a revenue parent the filer does not present",
+        [
+            {"label": "Net revenues", "concept": "us-gaap_Revenues", "level": 3,
+             "weight": 1.0, "balance": "credit", "calculation_parent": None,
+             "values": {_ONE_RULE_PERIOD: 100_000_000.0}},
+            {"label": "Products", "concept": "acme_ProductRevenue", "level": 4,
+             "weight": 1.0, "balance": "credit",
+             "calculation_parent": "acme_DisaggregatedRevenue",
+             "values": {_ONE_RULE_PERIOD: 60_000_000.0}},
+            {"label": "Services", "concept": "acme_ServiceRevenue", "level": 4,
+             "weight": 1.0, "balance": "credit",
+             "calculation_parent": "acme_DisaggregatedRevenue",
+             "values": {_ONE_RULE_PERIOD: 40_000_000.0}},
+        ],
+        ("us-gaap_Revenues",),
+    ),
+    (
+        # PRE-FIX SPINE: revenue blanked AND the one concept printed TWICE in
+        # the rival list. The presentation rendering one fact on two rows is
+        # observed (KO repeats `CashAndCashEquivalentsAtCarryingValue` on its
+        # cash-flow statement); a filing cannot be ambiguous between its total
+        # and itself.
+        "a revenue row the presentation repeats",
+        [
+            {"label": "Net revenues", "concept": "us-gaap_Revenues", "level": 3,
+             "weight": 1.0, "balance": "credit", "calculation_parent": None,
+             "values": {_ONE_RULE_PERIOD: 100_000_000.0}},
+            {"label": "Net revenues", "concept": "us-gaap_Revenues", "level": 4,
+             "weight": 1.0, "balance": "credit", "calculation_parent": None,
+             "values": {_ONE_RULE_PERIOD: 100_000_000.0}},
+        ],
+        ("us-gaap_Revenues",),
+    ),
+    (
+        # PRE-FIX SPINE: revenue blanked. THE LIVE MONEY PATH. The spine matched
+        # the wording "sales" as well as "revenue", so a custom cost-of-SALES
+        # line was revenue-worded. It carries +1.0 into its own costs subtotal,
+        # so the sign admits it, and it carries NO taxonomy balance — the
+        # majority case, 349 of the 455 captured rows — so the balance filter
+        # fails open and admits it too. It then stood as a second candidate.
+        # The `sales` wording is what opened that hole and it bought nothing:
+        # every revenue dialect the brief measured (`SalesRevenueGoodsNet`,
+        # `SalesRevenueServicesNet`, `RealEstateRevenueNet`, `RevenueMineralSales`,
+        # `RegulatedAndUnregulatedOperatingRevenue`, `RevenuesAndOtherIncome`)
+        # carries `revenue` too.
+        "a custom cost-of-sales line rolled into a costs subtotal",
+        [
+            {"label": "Net revenues", "concept": "us-gaap_Revenues", "level": 3,
+             "weight": 1.0, "balance": "credit", "calculation_parent": None,
+             "values": {_ONE_RULE_PERIOD: 100_000_000.0}},
+            {"label": "Cost of sales", "concept": "acme_CostOfSales", "level": 4,
+             "weight": 1.0, "balance": None,
+             "calculation_parent": "us-gaap_CostsAndExpenses",
+             "values": {_ONE_RULE_PERIOD: 70_000_000.0}},
+            {"label": "Total costs and expenses",
+             "concept": "us-gaap_CostsAndExpenses", "level": 3, "weight": -1.0,
+             "balance": "debit", "calculation_parent": None,
+             "values": {_ONE_RULE_PERIOD: 70_000_000.0}},
+        ],
+        ("us-gaap_Revenues",),
+    ),
+)
+
+
+@pytest.mark.parametrize(
+    "case_name,rows,expected_totals",
+    _REVENUE_RULE_DIVERGENCES,
+    ids=[case[0] for case in _REVENUE_RULE_DIVERGENCES],
+)
+def test_the_spine_reads_the_checks_revenue_total_rule(
+    spine_view, statement_check, case_name, rows, expected_totals,
+):
+    """One rule, one implementation: what `kpi_us_statement_check.revenue_totals`
+    answers is what this view's `revenue` field binds.
+
+    Each case is a shape on which the two implementations gave DIFFERENT answers
+    before the rule was unified, measured on this branch: the check resolved the
+    filer's total and the spine reported a false `unresolved`, blanking the
+    revenue of every filer with that layout.
+    """
+    filing = {
+        "accession": "0000000000-00-000009", "form": "10-K",
+        "filingDate": "2018-02-23",
+        "statements": {"income": rows},
+        "roles": {}, "unrecognised_dimension_keys": [],
+    }
+
+    # What the single implementation says, asked of it directly.
+    totals = statement_check.revenue_totals(
+        [spine_view._ReconstructedLine(row) for row in rows]
+    )
+    assert totals == expected_totals, (
+        f"{case_name}: the shared rule's own answer changed"
+    )
+
+    # And what this view binds, asked through its public surface.
+    revenue = _field(
+        spine_view.derive_spine_as_filed(_payload(filing)),
+        filing["accession"], "revenue",
+    )
+    assert "unresolved" not in revenue, (
+        f"{case_name}: the check resolves this filing to {totals}; the spine "
+        f"reports rivals {revenue.get('unresolved')} and blanks the revenue"
+    )
+    assert revenue["concept"] == expected_totals[0], case_name
+    assert revenue["periods"][_ONE_RULE_PERIOD] == {
+        "state": "value", "value": 100_000_000.0,
+    }, case_name
+
+
+# =====================================================================
+# THE AS-FILED VIEW ON THE COMMAND SURFACE
+# =====================================================================
+#
+# `derive_spine_as_filed` shipped wired to NO CLI, so the four-state cell
+# taxonomy — the part that answers the user's actual question, "is this cell
+# empty because the company has no such line, or because my pipeline lost
+# it?" — was reachable only in-process. `derive-as-filed` is that second
+# entry point on the module's existing CLI: it takes Task 9's `reconstruct`
+# pack payload, where `derive` takes a `kpi_store dump --company` payload.
+# Two entry points, two inputs, both shipped — `derive` is untouched.
+
+def test_cli_derive_as_filed_types_every_cell_for_a_reader(tmp_path):
+    """OBSERVED (KO FY2017 `0000021344-18-000008`, IBM FY2025
+    `0000051143-26-000010`). `kpi_spine_view.py derive-as-filed --payload
+    <path>` (stdin when omitted) — the same invocation shape as `derive`.
+
+    WHAT A READER MUST BE ABLE TO SEE WITHOUT READING ANY CODE, which is why
+    both filers ride in one payload rather than one test each: the two cells
+    below render DIFFERENTLY. A subcommand that emitted the same blank for
+    both would satisfy either assertion alone.
+
+      * KO's `total_liabilities` is `derived` 68,919,000,000 — KO tags
+        `LiabilitiesAndStockholdersEquity` and no `Liabilities` line, and the
+        formula rides along so the reader can audit it. The two subtracted
+        terms the brief says must never be folded into "liabilities" (the
+        mezzanine and the minority interest) are named IN the formula, so a
+        future short-circuit emitting a bare figure fails here.
+      * IBM's `operating_income` is `not_presented` — IBM's income statement
+        runs gross profit -> total expense -> income before taxes and
+        declares no operating-income line at all. That is the filer's own
+        presentation, not a hole in ours, and it must not read as blank.
+
+    MONEY CROSSES THE JSON BOUNDARY AS EXACT TEXT, and that is asserted as a
+    TYPE, not just a value: `"68919000000.0"`, a JSON string, is `str(Decimal)`
+    — digit-for-digit lossless, keeping the scale the arithmetic produced. A
+    JSON *number* here would mean the subcommand routed an exact decimal back
+    through the binary representation this module family bans on money
+    (docs/loom/memory/construction-guaranteed-invariant-proves-nothing.md,
+    which records that mode manufacturing a false restatement signal here
+    once). The same projection `pack_us._decimal_text` makes, at the same kind
+    of boundary, pinned the same way.
+    """
+    ko, ibm = _captured_filing("KO"), _captured_filing("IBM")
+    raw = json.dumps(_payload(ko, ibm))
+
+    piped = subprocess.run(
+        ["uv", "run", "--script", str(KPI_SPINE_VIEW_SCRIPT), "derive-as-filed"],
+        input=raw, capture_output=True, text=True, timeout=120,
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+    )
+    assert piped.returncode == 0, piped.stderr
+    view = json.loads(piped.stdout)
+
+    liabilities = _field(view, ko["accession"], "total_liabilities")
+    assert liabilities["periods"]["instant_2017-12-31"] == {
+        "state": "derived",
+        "value": "68919000000.0",
+        "derivation": (
+            "us-gaap:Liabilities = us-gaap:LiabilitiesAndStockholdersEquity"
+            " - us-gaap:StockholdersEquity"
+            " - us-gaap:TemporaryEquityCarryingAmountIncluding"
+            "PortionAttributableToNoncontrollingInterests"
+            " - us-gaap:MinorityInterest"
+        ),
+    }
+    assert isinstance(liabilities["periods"]["instant_2017-12-31"]["value"], str), (
+        "money must cross as exact text; a JSON number means it went through "
+        "the binary float representation this module family bans on money"
+    )
+
+    operating = _field(view, ibm["accession"], "operating_income")
+    assert operating["periods"]["duration_2025-01-01_2025-12-31"] == {
+        "state": "not_presented", "value": None,
+    }
+
+    payload_path = tmp_path / "reconstruct.json"
+    payload_path.write_text(raw, encoding="utf-8")
+    from_path = subprocess.run(
+        ["uv", "run", "--script", str(KPI_SPINE_VIEW_SCRIPT),
+         "derive-as-filed", "--payload", str(payload_path)],
+        capture_output=True, text=True, timeout=120,
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+    )
+    assert from_path.returncode == 0, from_path.stderr
+    assert from_path.stdout == piped.stdout
+
+
+# Two DIFFERENT malformed shapes, because they are caught by two different
+# guards and a single case leaves one of them unpinned. Measured: with only
+# the array case, deleting the whole not-an-object check still passed — the
+# array fell through to `.get` on a list, which the shape door then reported,
+# so the test could not tell the two doors apart. Each case therefore asserts
+# the MESSAGE its own guard produces.
+_MALFORMED_AS_FILED_PAYLOADS = (
+    # The not-an-object door. Piping the wrong thing is how a caller reaches
+    # it, so the message must name the shape that WAS expected — that is what
+    # `_read_json_object`'s `noun` argument is for, and it is the only part of
+    # this that tells a caller which subcommand they wanted.
+    ("a JSON array", [{"pack": "reconstruct"}], "reconstruct payload"),
+    # The wrong-shape-inside door: a genuine object whose `reconstruction` is
+    # a string. It reaches `derive_spine_as_filed` and raises `AttributeError`
+    # there, NOT the `ValueError` `derive`'s narrower catch handles.
+    (
+        "a payload whose reconstruction is not an object",
+        {"pack": "reconstruct", "ticker": "KO", "reconstruction": "nope"},
+        "cannot derive the as-filed spine",
+    ),
+)
+
+
+@pytest.mark.parametrize(
+    "case_name,payload,expected_in_stderr",
+    _MALFORMED_AS_FILED_PAYLOADS,
+    ids=[case[0] for case in _MALFORMED_AS_FILED_PAYLOADS],
+)
+def test_cli_derive_as_filed_reports_a_malformed_payload_as_an_error(
+    case_name, payload, expected_in_stderr,
+):
+    """The as-filed subcommand is a HAND-FED surface too, so it leaves by the
+    SAME door `derive` does: `error: ...` on stderr, exit 1, nothing on stdout.
+    A traceback in a terminal is the failure this pins.
+    """
+    result = subprocess.run(
+        ["uv", "run", "--script", str(KPI_SPINE_VIEW_SCRIPT), "derive-as-filed"],
+        input=json.dumps(payload),
+        capture_output=True, text=True, timeout=120,
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+    )
+
+    assert result.returncode == 1, case_name
+    assert result.stderr.startswith("error: "), case_name
+    assert expected_in_stderr in result.stderr, case_name
+    assert "Traceback" not in result.stderr, case_name
+    assert result.stdout == "", case_name

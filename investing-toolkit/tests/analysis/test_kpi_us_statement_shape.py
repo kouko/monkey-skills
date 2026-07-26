@@ -569,6 +569,52 @@ def test_a_line_carries_the_taxonomys_own_debit_credit_balance(
     assert eps.balance is None
 
 
+def test_a_lines_balance_arrives_case_folded_so_no_consumer_decides(shape):
+    """`Line.balance` is normalised WHERE THE LINE IS BUILT, so every consumer
+    can compare it against the taxonomy's own lower-case spelling and be right.
+
+    THE DEFECT CLASS THIS CLOSES, which this branch has now hit three times. A
+    value read from an upstream and compared for equality by each consumer
+    separately diverges the moment one of them folds case and the others do
+    not: this branch's parent commit `ca9c9e12` fixed exactly that for an
+    Axis/Member suffix, and the same shape reappeared here — one consumer
+    comparing `line.balance != "debit"` (a `"Debit"` fails OPEN, admitting a
+    cost line as a revenue total) against another comparing
+    `str(line.balance or "").casefold() == "debit"` (fails CLOSED). Neither
+    reading is wrong on its own; holding both is.
+
+    ONLY CASE IS FOLDED. `normalize_balance` does not trim whitespace, does not
+    map synonyms, and does not validate the value against `debit`/`credit` — a
+    spelling this repo has not seen is carried through unchanged so it stays
+    visible rather than being rounded to one of the two known answers. `None`
+    survives as `None`, which is 349 of the 455 captured rows and means "the
+    taxonomy says nothing".
+
+    CONSTRUCTED-CONVENTIONAL: no captured row spells the balance any way but
+    lower-case, which is why nothing caught the divergence. The pin is against
+    a FUTURE upstream — an edgartools version or a taxonomy source that
+    capitalises — and it is worth taking because the direction the un-normalised
+    consumer failed in was the money path.
+    """
+    def line(balance):
+        return shape.Line(
+            label="Net revenues", concept="us-gaap_Revenues", level=3,
+            weight=1.0, calculation_parent=None, values={}, balance=balance,
+        )
+
+    assert line("Debit").balance == "debit"
+    assert line("CREDIT").balance == "credit"
+    assert line("debit").balance == "debit"
+    assert line(None).balance is None
+    assert line("Foreign").balance == "foreign", (
+        "an unknown spelling is folded, never rounded to a known answer"
+    )
+    # And the rule has ONE site, callable by anyone who holds a raw value
+    # rather than a `Line`.
+    assert shape.normalize_balance("Debit") == "debit"
+    assert shape.normalize_balance(None) is None
+
+
 def test_a_line_whose_filer_declared_no_precision_carries_an_empty_mapping(shape):
     """CONSTRUCTED-CONVENTIONAL — a row with no `decimals` key at all.
 

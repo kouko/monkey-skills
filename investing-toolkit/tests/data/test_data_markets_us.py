@@ -1312,6 +1312,355 @@ def test_reconstruct_reads_enough_filings_for_the_briefs_ten_years():
     )
 
 
+# Money in the fixtures below is stated in DOLLARS, not millions, because the
+# rounding interval is computed from the filer's declared `decimals` (-6 =
+# reported to the nearest million) against the fact's own magnitude. A fixture
+# stating 35410 with decimals -6 would give every group a tolerance 40x its own
+# figures and collapse the four statuses into one.
+_M = 1_000_000
+
+
+def _sampled_era_rows():
+    """One income statement whose four declared groups come out as four
+    DIFFERENT sum-check statuses — the distinction this envelope must carry.
+
+    Group by group, and the arithmetic is stated so a reader can argue with it
+    rather than trust it:
+
+      GrossProfit          35,410 - 13,256 = 22,154 against a reported 22,155.
+                           1M off, inside the 1.5M its own declared precision
+                           permits ((n+1)/2 units at decimals -6, n=2) ->
+                           `within_rounding`. THIS IS THE ONE THAT MATTERS: an
+                           exact comparison calls it broken, and 24 of the
+                           committed capture's 27 disagreements are this shape
+                           (plan Decision Log, Task 4 -> Task 8, "the raw count
+                           overstates broken filer arithmetic ~8x").
+      OperatingExpenses    12,000 + 1,000 = 13,000 against a reported 18,000.
+                           5,000M off, nowhere near the interval -> `disagrees`.
+      NonoperatingIncome   its only child carries no value for the period, so
+                           no sum was computed at all -> `incomplete`. A
+                           comparison that could not be made is not one that
+                           failed.
+      NetIncomeLoss        6,890 - 5,560 = 1,330 exactly -> `agrees`.
+    """
+    return [
+        _reconstruct_row(
+            "us-gaap:Revenues", "NET OPERATING REVENUES",
+            values={"FY2017": 35410 * _M}, decimals={"FY2017": -6},
+            calculation_parent="us-gaap:GrossProfit", weight=1.0,
+            balance="credit",
+        ),
+        _reconstruct_row(
+            "us-gaap:CostOfGoodsSold", "COST OF GOODS SOLD",
+            values={"FY2017": 13256 * _M}, decimals={"FY2017": -6},
+            calculation_parent="us-gaap:GrossProfit", weight=-1.0,
+            balance="debit",
+        ),
+        _reconstruct_row(
+            "us-gaap:GrossProfit", "GROSS PROFIT",
+            values={"FY2017": 22155 * _M}, decimals={"FY2017": -6}, weight=None,
+        ),
+        _reconstruct_row(
+            "us-gaap:SellingGeneralAndAdministrativeExpense",
+            "SELLING, GENERAL AND ADMINISTRATIVE EXPENSES",
+            values={"FY2017": 12000 * _M}, decimals={"FY2017": -6},
+            calculation_parent="us-gaap:OperatingExpenses", weight=1.0,
+        ),
+        _reconstruct_row(
+            "ko:UnusualOrInfrequentItemOperating", "OTHER OPERATING CHARGES",
+            values={"FY2017": 1000 * _M}, decimals={"FY2017": -6},
+            calculation_parent="us-gaap:OperatingExpenses", weight=1.0,
+        ),
+        _reconstruct_row(
+            "us-gaap:OperatingExpenses", "TOTAL OPERATING EXPENSES",
+            values={"FY2017": 18000 * _M}, decimals={"FY2017": -6}, weight=None,
+        ),
+        _reconstruct_row(
+            "us-gaap:InterestExpense", "INTEREST EXPENSE",
+            values={"FY2017": None}, decimals={"FY2017": -6},
+            calculation_parent="us-gaap:NonoperatingIncomeExpense", weight=-1.0,
+        ),
+        _reconstruct_row(
+            "us-gaap:NonoperatingIncomeExpense", "OTHER INCOME (LOSS) - NET",
+            values={"FY2017": 500 * _M}, decimals={"FY2017": -6}, weight=None,
+        ),
+        _reconstruct_row(
+            "us-gaap:IncomeLossBeforeIncomeTaxes", "INCOME BEFORE INCOME TAXES",
+            values={"FY2017": 6890 * _M}, decimals={"FY2017": -6},
+            calculation_parent="us-gaap:NetIncomeLoss", weight=1.0,
+        ),
+        _reconstruct_row(
+            "us-gaap:IncomeTaxExpenseBenefit", "INCOME TAXES",
+            values={"FY2017": 5560 * _M}, decimals={"FY2017": -6},
+            calculation_parent="us-gaap:NetIncomeLoss", weight=-1.0,
+        ),
+        _reconstruct_row(
+            "us-gaap:NetIncomeLoss", "CONSOLIDATED NET INCOME",
+            values={"FY2017": 1330 * _M}, decimals={"FY2017": -6}, weight=None,
+        ),
+    ]
+
+
+def _post_sample_era_rows():
+    """A modern filing whose one declared group reconciles exactly, so the era
+    breakdown has something OTHER than the failing era to report. A report
+    showing one era says nothing about whether the rate varies by era, which is
+    the whole question the brief says must be measured rather than assumed."""
+    return [
+        _reconstruct_row(
+            "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+            "Net operating revenues",
+            values={"FY2025": 47000 * _M}, decimals={"FY2025": -6},
+            calculation_parent="us-gaap:GrossProfit", weight=1.0,
+            balance="credit",
+        ),
+        _reconstruct_row(
+            "us-gaap:CostOfGoodsAndServicesSold", "Cost of goods sold",
+            values={"FY2025": 18000 * _M}, decimals={"FY2025": -6},
+            calculation_parent="us-gaap:GrossProfit", weight=-1.0,
+            balance="debit",
+        ),
+        _reconstruct_row(
+            "us-gaap:GrossProfit", "Gross profit",
+            values={"FY2025": 29000 * _M}, decimals={"FY2025": -6}, weight=None,
+        ),
+    ]
+
+
+def _stub_reconstruct_filings(monkeypatch, dated_rows):
+    """Stub the three `sec_edgar_client` producers from an ordered
+    {accession: (filingDate, rows)} map, so a test can place each filing in a
+    KNOWN era. `_stub_reconstruct_producers` dates every filing 2026-02-20,
+    which puts a whole run in one era and cannot exercise the breakdown."""
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import sec_edgar_client  # noqa: E402
+
+    monkeypatch.setattr(
+        sec_edgar_client, "resolve_cik",
+        lambda t: {"cik": 21344, "title": "COCA COLA CO"},
+    )
+    monkeypatch.setattr(
+        sec_edgar_client, "list_filings",
+        lambda cik, forms, limit, min_filing_date=None: [
+            {"form": "10-K", "filingDate": date, "accessionNumber": accession}
+            for accession, (date, _rows) in dated_rows.items()
+        ],
+    )
+    monkeypatch.setattr(
+        sec_edgar_client, "_acquire_raw_filing",
+        lambda accession: _FakeFiling(dated_rows[accession][1]),
+    )
+
+
+def test_reconstruct_envelope_carries_the_resolution_report_and_sum_checks(monkeypatch):
+    """The arc's central promise must reach the only surface that ships it.
+
+    WHOLE-BRANCH REVIEW FINDING, 2026-07-26: "Inside the library the
+    distinction is clean: `Cell.state` separates `not_presented` from
+    `not_tagged`, `SumCheck.status` separates `within_rounding` from
+    `disagrees`, `Unresolved` carries five distinct codes. NONE OF IT SHIPS."
+    `pack_reconstruct` emitted raw `Line`s only, and `resolution_report` had
+    zero references outside its own module and tests — so a reader holding this
+    verb's output still could not tell a pipeline defect from an accounting
+    fact, which is the brief's reason for existing (§Problem, "It cannot say
+    WHY a cell is empty").
+
+    Four claims, each the difference between a typed answer and a blank:
+
+      1. THE PER-ERA COUNTS SHIP. The 63-of-65 resolution rate was measured on
+         filings FILED 2016-2018 only and a 10-year run spans years nobody
+         sampled (brief §"A limit this brief must not overclaim"), so a single
+         run-wide rate is the overclaim the report exists to prevent. Both eras
+         present here, with different outcomes.
+      2. EVERY UNRESOLVED STATEMENT NAMES ITS REASON, and the detail names the
+         group, so the reader can go argue with the filing rather than with a
+         count.
+      3. `within_rounding` IS DISTINCT FROM `disagrees` AND `incomplete`.
+         Asserted as an exact four-way census rather than as "disagrees == 1",
+         because collapsing the rounding residue into the disagreement is the
+         measured ~8x overstatement (plan Decision Log, Task 4 -> Task 8) and a
+         one-sided assertion passes right through it.
+      4. THE PAYLOAD SERIALIZES WITHOUT `default=str`. Every figure on a
+         `SumCheck` is a `Decimal` and `json.dumps` raises on one. The facade
+         does pass `default=str`, which would paper over this at the last line
+         of a ~85s run — and would also silently accept a float, the one
+         representation this arc's arithmetic rules out. Pinned here on a bare
+         `json.dumps`, so the projection has to be explicit.
+
+    Plus the deliberate omission: `cell_state` is NOT in this envelope, and
+    `pack_reconstruct` must SAY so. An undocumented absence leaves a reader
+    assuming the four-way taxonomy is present — the same undifferentiated
+    blank one layer up.
+    """
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack_us  # noqa: E402
+
+    _stub_reconstruct_filings(monkeypatch, {
+        "0000021344-18-000008": ("2018-02-23", _sampled_era_rows()),
+        "0000021344-26-000011": ("2026-02-20", _post_sample_era_rows()),
+    })
+
+    envelope = pack_us.pack_reconstruct("ko")
+    verification = envelope["reconstruction"]["verification"]
+
+    # 1. the per-era breakdown, both eras, different outcomes
+    by_era = {tally["era"]: tally for tally in verification["by_era"]}
+    assert sorted(by_era) == ["post_2018", "sampled_2016_2018"], (
+        f"both eras in the run must be reported: {verification['by_era']}"
+    )
+    assert (by_era["sampled_2016_2018"]["resolved"],
+            by_era["sampled_2016_2018"]["unresolved"]) == (0, 1)
+    assert (by_era["post_2018"]["resolved"],
+            by_era["post_2018"]["unresolved"]) == (1, 0)
+    assert by_era["sampled_2016_2018"]["reasons"] == [
+        {"reason": "sums_do_not_reconcile", "count": 1}
+    ], f"the era's failure reasons must ride with its counts: {by_era}"
+
+    # 2. the unresolved statement names its reason AND its group
+    unresolved = [s for s in verification["statements"] if not s["resolved"]]
+    assert len(unresolved) == 1, f"expected one unresolved statement: {unresolved}"
+    assert unresolved[0]["filing_date"] == "2018-02-23"
+    assert unresolved[0]["kind"] == "income"
+    assert unresolved[0]["groups_checked"] == 4
+    assert unresolved[0]["groups_incomplete"] == 1
+    assert [r["reason"] for r in unresolved[0]["reasons"]] == ["sums_do_not_reconcile"]
+    assert "us-gaap:OperatingExpenses" in unresolved[0]["reasons"][0]["detail"], (
+        "a reason code with no group named sends the reader nowhere: "
+        f"{unresolved[0]['reasons'][0]}"
+    )
+
+    # 3. the four-way census — within_rounding is its own answer
+    assert verification["sum_checks"]["by_status"] == {
+        "agrees": 2, "within_rounding": 1, "disagrees": 1, "incomplete": 1,
+    }, f"the four statuses must stay four: {verification['sum_checks']}"
+
+    disagreements = verification["sum_checks"]["disagreements"]
+    assert [d["parent"] for d in disagreements] == ["us-gaap:OperatingExpenses"], (
+        "only the genuine disagreement belongs here — a within_rounding group "
+        f"listed as one rebuilds the ~8x overstatement: {disagreements}"
+    )
+    # Exact decimal TEXT, digit for digit. The trailing ".0" on the computed
+    # figures is not noise and must not be normalised away: it is the scale
+    # `Decimal` carried through Sigma(child x weight) at the filer's own
+    # weight of 1.0, and `str` is the only projection that neither rounds it
+    # nor routes it back through a binary float.
+    assert disagreements[0]["reported"] == "18000000000"
+    assert disagreements[0]["computed"] == "13000000000.0"
+    assert disagreements[0]["difference"] == "-5000000000.0"
+    assert disagreements[0]["tolerance"] == "1500000", (
+        "the interval the filer's OWN declared precision permits must ride "
+        "with the verdict, so a reader can argue with the interval too: "
+        f"{disagreements[0]}"
+    )
+    for figure in ("reported", "computed", "difference", "tolerance"):
+        assert isinstance(disagreements[0][figure], str), (
+            f"{figure} must be exact decimal TEXT, never a float: "
+            f"{disagreements[0][figure]!r}"
+        )
+
+    # 4. serializes with no `default=str` fallback
+    json.dumps(envelope)
+
+    # the omission is stated, not left to assumption
+    doc = pack_us.pack_reconstruct.__doc__
+    assert "cell_state" in doc and "derive_spine_as_filed" in doc, (
+        "the envelope carries no per-cell typing; a reader must be TOLD that "
+        "and told where it does live, rather than assuming the four-way "
+        "taxonomy is present"
+    )
+
+
+def test_reconstruct_verification_failure_degrades_but_keeps_the_statements(monkeypatch):
+    """Adding verification must not turn a working verb into a crashing one.
+
+    `kpi_us_statement_check` REFUSES rather than guessing, deliberately and by
+    its own docstring: a row presented twice under one calculation parent with
+    disagreeing figures raises, and so does a filing date with no readable
+    year. Both abort the whole run — "a caller running 56 filers should expect
+    to lose the run and not one statement". That posture is right for an
+    ORACLE, and wrong for this pack to inherit unexamined: the reconstruction
+    of every other filing already succeeded, and letting the exception out
+    would trade ~85s of good statements for a traceback, making the arc's
+    benefit a REGRESSION in the verb that already worked.
+
+    So the failure is contained to the section it belongs to, and made loud
+    there:
+
+      1. the statements still ship — the fidelity layer did its job and is not
+         held hostage by the verification layer's refusal;
+      2. `verification` carries the refusal's own message, not a bare flag; a
+         reader must be able to see WHICH row the oracle refused;
+      3. the degradation reaches the facade. This is the part that is not
+         obvious: `_section_status` honours a section's self-declared
+         `_status` and then NEVER descends, so a `verification._status` nested
+         inside `reconstruction` is structurally invisible. The failure has to
+         be folded into the `reconstruction` section's own `_status` or it is
+         silent — asserted through `pack._classify_result`, the real reader,
+         rather than through this pack's opinion of itself.
+    """
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack  # noqa: E402
+    import pack_us  # noqa: E402
+
+    refused_rows = [
+        _reconstruct_row(
+            "us-gaap:Revenues", "NET OPERATING REVENUES",
+            values={"FY2017": 35410 * _M},
+            calculation_parent="us-gaap:GrossProfit", weight=1.0,
+        ),
+        # Same concept, same parent, a DIFFERENT figure. De-duplication keeps
+        # the first row, so one of these numbers would vanish from the check —
+        # the oracle refuses to pick.
+        _reconstruct_row(
+            "us-gaap:Revenues", "NET OPERATING REVENUES (RESTATED)",
+            values={"FY2017": 41863 * _M},
+            calculation_parent="us-gaap:GrossProfit", weight=1.0,
+        ),
+        _reconstruct_row(
+            "us-gaap:GrossProfit", "GROSS PROFIT",
+            values={"FY2017": 22155 * _M}, weight=None,
+        ),
+    ]
+
+    _stub_reconstruct_filings(monkeypatch, {
+        "0000021344-18-000008": ("2018-02-23", refused_rows),
+    })
+
+    envelope = pack_us.pack_reconstruct("ko")
+    section = envelope["reconstruction"]
+
+    # 1. the statements survived the verification failure
+    assert [line["label"] for line in section["filings"][0]["statements"]["income"]] == [
+        "NET OPERATING REVENUES", "NET OPERATING REVENUES (RESTATED)", "GROSS PROFIT"
+    ], "the reconstruction must not be discarded because the check refused"
+
+    # 2. the refusal is reported with its own message, under the `error` key
+    #    this repo's `_has_error_marker` already treats as the failure signal —
+    #    not a second private flag beside it
+    verification = section["verification"]
+    assert verification["error_class"] == "verification"
+    assert "us-gaap:Revenues" in verification["error"], (
+        f"the refused row must be nameable from the report: {verification}"
+    )
+
+    # 3. the degradation reaches the facade, which never descends past
+    #    `reconstruction`'s own self-declared status
+    assert section["_status"] == "partial", (
+        "a nested `verification._status` is invisible to `_section_status`; "
+        "the section's own status has to carry it"
+    )
+    status, failed_sections = pack._classify_result(envelope)
+    assert status == "partial", (
+        f"a run whose verification refused must not read as {status!r}"
+    )
+    assert "reconstruction" in failed_sections
+
+    json.dumps(envelope)
+
+
 def test_missing_client_dependency_names_what_to_pass(monkeypatch, capsys):
     """A dependency-free invocation must fail with a message naming what to
     pass -- never a bare `ModuleNotFoundError`.

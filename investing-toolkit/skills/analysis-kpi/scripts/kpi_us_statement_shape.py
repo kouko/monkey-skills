@@ -248,6 +248,31 @@ _SEEN_ROW_LEVEL_DIMENSION_KEYS = frozenset({
 })
 
 
+def normalize_balance(balance):
+    """The taxonomy's `debit` / `credit` classification in ONE spelling, so a
+    consumer comparing it for equality does not have to decide how.
+
+    THE SITE THAT DECIDES IS THIS ONE, and it is a `Line`-construction-time
+    normalisation rather than a rule each reader applies (`Line.__post_init__`
+    calls it). The defect it closes has now appeared three times on this branch:
+    a value compared for equality by several consumers diverges the moment one
+    of them folds case and the others do not — `line.balance != "debit"` admits
+    a `"Debit"` cost line as a revenue total (fails OPEN) while
+    `str(line.balance or "").casefold() == "debit"` excludes it (fails CLOSED).
+    The parent commit `ca9c9e12` fixed the same shape for an Axis/Member suffix.
+
+    WHAT IT DOES AND, EXACTLY, WHAT IT DOES NOT. It folds case and nothing else:
+    no whitespace trimming, no synonym mapping, and NO validation against
+    `debit`/`credit`. A spelling this repo has not seen is folded and carried
+    through unchanged, so it stays visible to whoever reads it instead of being
+    rounded to one of the two known answers — the same fail-visible doctrine
+    `unrecognised_dimension_keys` applies one level up. `None` survives as
+    `None`, which is the majority (349 of the 455 captured rows) and means "the
+    taxonomy says nothing", never "not revenue".
+    """
+    return None if balance is None else str(balance).casefold()
+
+
 @dataclass(frozen=True)
 class Line:
     """One rendered statement line, as the FILER declared it.
@@ -286,6 +311,9 @@ class Line:
     — and means "the taxonomy says nothing", never "not revenue". A consumer
     that read `None` as a rejection would discard exactly the filer's OWN
     custom concepts this design exists to keep.
+
+    It arrives CASE-FOLDED, whatever the upstream spelled — see
+    `normalize_balance` for why that is decided here and not by each reader.
     """
 
     label: str
@@ -296,6 +324,13 @@ class Line:
     values: dict[str, Any]
     decimals: dict[str, Any] = field(default_factory=dict)
     balance: str | None = None
+
+    def __post_init__(self) -> None:
+        # `object.__setattr__` because the dataclass is frozen; normalising in
+        # the constructor is what makes the field canonical for EVERY producer,
+        # including a caller that builds a `Line` by hand, and for the JSON this
+        # is serialised into (`kpi_spine_view` rehydrates from that payload).
+        object.__setattr__(self, "balance", normalize_balance(self.balance))
 
 
 @dataclass(frozen=True)

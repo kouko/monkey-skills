@@ -1255,6 +1255,19 @@ RECONSTRUCT_ANNUAL_FILINGS = 8
 _ANALYSIS_KPI_SCRIPTS = SCRIPT_DIR.parent.parent / "analysis-kpi" / "scripts"
 
 
+def _ensure_analysis_kpi_importable() -> None:
+    """Put analysis-kpi's scripts dir on `sys.path`, idempotently.
+
+    Every function here that reaches across the layer calls this itself rather
+    than relying on an earlier caller having done it: a helper whose imports
+    only resolve when someone else prepared the path is a coupling nothing
+    declares and nothing checks. See the layer note above for why the crossing
+    exists at all, and for the shadowing consequence of PREPENDING.
+    """
+    if str(_ANALYSIS_KPI_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(_ANALYSIS_KPI_SCRIPTS))
+
+
 def _reconstruction_payload(statements) -> dict:
     """One filing's `Statements` projected onto plain JSON.
 
@@ -1277,6 +1290,166 @@ def _reconstruction_payload(statements) -> dict:
         },
         "roles": {kind: list(roles) for kind, roles in statements.roles.items()},
         "unrecognised_dimension_keys": list(statements.unrecognised_dimension_keys),
+    }
+
+
+def _decimal_text(value) -> str | None:
+    """One `Decimal` money figure as EXACT TEXT, or `None`.
+
+    `str(Decimal)` is digit-for-digit lossless and keeps the scale the
+    arithmetic produced. The two alternatives both lose:
+
+      * `float(value)` routes an exact decimal back through the binary
+        representation this whole module family bans on money — the mode that
+        already manufactured a false restatement signal here once
+        (docs/loom/memory/construction-guaranteed-invariant-proves-nothing.md);
+      * leaving the `Decimal` in place makes the payload depend on the facade's
+        `json.dumps(..., default=str)` fallback (pack.py). That fallback would
+        do the right thing TODAY and would equally happily serialize a float,
+        so the projection is made explicit here and pinned by a bare
+        `json.dumps` in the test rather than inherited.
+    """
+    return None if value is None else str(value)
+
+
+def _sum_check_payload(check) -> dict:
+    """One `SumCheck` projected onto JSON, WITHOUT its `terms`.
+
+    The four figures ride together because they are one argument: the filer
+    reports `reported`, its own declaration produces `computed`, they differ by
+    `difference`, and `tolerance` is how far its own declared precision said
+    they may. A verdict without the interval cannot be argued with, only
+    believed.
+
+    `terms` is dropped deliberately — one entry per child per period per group,
+    over 8 filings, is the bulk of the reconstruction repeated inside its own
+    verification, and every figure in it is already on the statement lines this
+    envelope ships. `parent` + `period` is the join key back to them.
+    """
+    return {
+        "kind": check.kind,
+        "period": check.period,
+        "parent": check.parent,
+        "status": check.status,
+        "reported": _decimal_text(check.reported),
+        "computed": _decimal_text(check.computed),
+        "difference": _decimal_text(check.difference),
+        "tolerance": _decimal_text(check.tolerance),
+    }
+
+
+def _verification_payload(reconstructions) -> dict:
+    """What the run's own arithmetic says about itself, as JSON.
+
+    `reconstructions` is the list of `(filing_date, Statements)` pairs
+    `resolution_report` takes — one per successfully reconstructed filing.
+
+    WHY THIS EXISTS AT ALL. The typing layer this arc built was unreachable:
+    `resolution_report` had no reference outside its own module, so a reader
+    holding this verb's output could not tell a pipeline defect from an
+    accounting fact — the brief's whole reason for existing (§Problem, "It
+    cannot say WHY a cell is empty"). Shipping the machinery with no exit is
+    shipping the arc's cost without its benefit.
+
+    THREE PARTS, AND WHY EACH IS SEPARATE:
+
+      `by_era`      resolved/unresolved per FILING era. Never one run-wide
+                    rate: the 63-of-65 was measured on filings filed 2016-2018
+                    only and a 10-year run spans years nobody sampled (brief
+                    §"A limit this brief must not overclaim"). An era with no
+                    filings is ABSENT rather than zeroed — `_tallies`' own
+                    rule, preserved here — because a row of zeroes reads as a
+                    measurement that was made and came out empty.
+      `statements`  one entry per filing per statement, carrying the reason
+                    codes and the detail naming the group. This is what a
+                    reader investigates; `by_era` is only the summary.
+      `sum_checks`  the four-way status census, plus the disagreements in full.
+
+    THE CENSUS IS FIXED-KEY, and that is the OPPOSITE rule to `by_era`'s on
+    purpose: the four statuses are an exhaustive enumeration of what one check
+    can be, so a zero IS a measurement ("nothing disagreed") rather than an
+    absence, and a consumer reading `by_status["within_rounding"]` must never
+    have to tell "none" from "this pack forgot to count it". A status outside
+    the four still gets counted under its own name rather than dropped — the
+    vocabulary moving must be visible, not lossy.
+
+    ONLY `disagrees` IS LISTED IN FULL. `within_rounding` is deliberately NOT
+    folded in with it: 24 of the committed capture's 27 exact-comparison
+    disagreements are rounding residue inside the filers' own declared
+    interval, so collapsing the two overstates broken filer arithmetic ~8x
+    (plan Decision Log, Task 4 -> Task 8). `incomplete` is not listed either —
+    a comparison that could not be made is a third fact, counted here and
+    already carried per statement as `groups_incomplete`.
+
+    AND WHAT `disagrees` STILL DOES NOT MEAN: not "the filer is wrong".
+    `verify` sees PRESENTED lines only, so a calculation child the filer never
+    puts on the face of the statement leaves the sum short and reads as a
+    disagreement it structurally cannot separate from a real one (measured: 3
+    of the capture's 3 remaining disagreements, all IBM's diluted-share group).
+    `resolution_report`'s own docstring is the long form.
+
+    `verify` RUNS TWICE — once inside `resolution_report`, once here for the
+    census — because `resolution_report` returns only its aggregate and
+    `kpi_us_statement_check` is not this task's to widen. Both calls are pure
+    stdlib arithmetic over already-parsed lines, against a ~10s-per-filing
+    acquisition and parse; the cost is not where this verb's time goes.
+    """
+    _ensure_analysis_kpi_importable()
+    from kpi_us_statement_check import (
+        AGREES, DISAGREES, INCOMPLETE, WITHIN_ROUNDING, resolution_report,
+        verify,
+    )
+
+    report = resolution_report(reconstructions)
+    checks = [
+        check
+        for _filing_date, statements in reconstructions
+        for check in verify(statements)
+    ]
+
+    by_status = {status: 0 for status in (AGREES, WITHIN_ROUNDING, DISAGREES, INCOMPLETE)}
+    for check in checks:
+        by_status[check.status] = by_status.get(check.status, 0) + 1
+
+    return {
+        "by_era": [
+            {
+                "era": tally.era,
+                "resolved": tally.resolved,
+                "unresolved": tally.unresolved,
+                # Pairs become named fields: `["ambiguous_total", 3]` needs a
+                # reader to know which slot is which, and the era tallies are
+                # the numbers most likely to be quoted out of context.
+                "reasons": [
+                    {"reason": reason, "count": count}
+                    for reason, count in tally.reasons
+                ],
+            }
+            for tally in report.by_era
+        ],
+        "statements": [
+            {
+                "filing_date": statement.filing_date,
+                "era": statement.era,
+                "kind": statement.kind,
+                "resolved": statement.resolved,
+                "reasons": [
+                    {"reason": entry.reason, "detail": entry.detail}
+                    for entry in statement.reasons
+                ],
+                "groups_checked": statement.groups_checked,
+                "groups_incomplete": statement.groups_incomplete,
+            }
+            for statement in report.statements
+        ],
+        "sum_checks": {
+            "by_status": by_status,
+            "disagreements": [
+                _sum_check_payload(check)
+                for check in checks
+                if check.status == DISAGREES
+            ],
+        },
     }
 
 
@@ -1316,13 +1489,36 @@ def pack_reconstruct(ticker: str) -> dict:
     a reader sees it. On a section, the self-declared `_status` is what
     `_section_status` honours -- the same placement `sec_narrative` and
     `xval_source_a` already use.
+
+    THE SECTION CARRIES ITS OWN VERIFICATION (`verification`): the per-era
+    resolved/unresolved counts with a reason per unresolved statement, and the
+    sum-check census in which `within_rounding` stays distinct from `disagrees`
+    and `incomplete`. Without it the arc's typing layer shipped nowhere -- the
+    library separated the three kinds of empty and the only output surface
+    emitted raw `Line`s, so the reader was handed back the undifferentiated
+    blank the brief exists to remove. See `_verification_payload` for what each
+    part does and does NOT license a reader to conclude.
+
+    WHAT THIS ENVELOPE DELIBERATELY DOES NOT CARRY: per-cell typing. There is
+    no `cell_state` here, and its absence is a judgement rather than an
+    oversight. This envelope's contract is the filer's OWN line set, and
+    against that set the four states collapse: every line present IS presented,
+    so `not_presented` is unaskable; `not_tagged` is already visible as a
+    period missing from a line's `values` (that is the whole reading rule --
+    an absent period key means the line exists and that period carries no
+    undimensioned value); and `derived` would have to ADD a line the filer
+    never filed, corrupting the one fidelity promise this pack makes. The
+    states earn their keep against a FIXED grid, where a cell must exist
+    whether or not the filer filed it -- which is `kpi_spine_view
+    .derive_spine_as_filed`'s 14-field view, a read-side concern over this
+    payload, not this payload. A consumer wanting the four-way taxonomy calls
+    that; it is not silently missing here.
     """
     _log("reconstruct start", ticker)
     t0 = time.monotonic()
     if str(SCRIPT_DIR) not in sys.path:
         sys.path.insert(0, str(SCRIPT_DIR))
-    if str(_ANALYSIS_KPI_SCRIPTS) not in sys.path:
-        sys.path.insert(0, str(_ANALYSIS_KPI_SCRIPTS))
+    _ensure_analysis_kpi_importable()
     # Lazy imports: same pattern as every other SEC pack above -- neither
     # sec_edgar_client's top-level `import requests` nor the cross-layer
     # reconstruction module may become an import-time cost for other packs.
@@ -1347,6 +1543,9 @@ def pack_reconstruct(ticker: str) -> dict:
 
     filings: list[dict] = []
     failed_items: list[dict] = []
+    # The assembled `Statements` kept alongside their projection, because
+    # verification reads the dataclasses and `filings` holds only plain JSON.
+    reconstructions: list[tuple] = []
     for row in selected:
         accession = row["accessionNumber"]
         _log("pack [acquire + reconstruct]", accession)
@@ -1354,15 +1553,62 @@ def pack_reconstruct(ticker: str) -> dict:
         if isinstance(filing, dict) and "error" in filing:
             failed_items.append({"accession": accession, **filing})
             continue
+        assembled = statements_for(filing)
+        reconstructions.append((row.get("filingDate"), assembled))
         filings.append({
             "accession": accession,
             "form": row.get("form"),
             "filingDate": row.get("filingDate"),
-            **_reconstruction_payload(statements_for(filing)),
+            **_reconstruction_payload(assembled),
         })
+
+    # THE VERIFICATION LAYER MAY NOT TAKE THE STATEMENTS DOWN WITH IT.
+    # `kpi_us_statement_check` refuses rather than guessing -- a concept
+    # presented twice under one parent with disagreeing figures, a filing date
+    # with no readable year -- and its own docstring says such a row "aborts
+    # the whole batch rather than marking one filing unresolved". That is the
+    # right posture for an ORACLE and the wrong one for this pack to inherit:
+    # the reconstruction of every filing has already succeeded by this line, so
+    # letting the exception out would trade the whole ~85s run for a traceback
+    # and make verification a REGRESSION in a verb that worked without it.
+    # Contained to its own section instead, and made loud there.
+    #
+    # `Exception`, not the `ValueError` the two known refusals raise: what is
+    # being contained is a LAYER BOUNDARY, and narrowing it to today's classes
+    # would let tomorrow's refusal through to do exactly the damage this
+    # guards against. The message rides along verbatim -- a bare flag would
+    # tell a reader something refused and not which row.
+    try:
+        verification = _verification_payload(reconstructions)
+    except Exception as exc:  # noqa: BLE001 - deliberate; see above
+        verification = {
+            "error": f"as-filed verification refused this run: {exc}",
+            "error_class": "verification",
+        }
 
     requested = len(selected)
     failed = len(failed_items)
+
+    # Self-declared section status, per pack.py's `_section_status` convention.
+    # `requested == 0` is NOT vacuously "failed" -- nothing was asked for, so
+    # nothing failed (the exact trap
+    # `test_fetch_sec_narrative_empty_selection_is_not_vacuously_failed` pins
+    # for the narrative lane).
+    status = (
+        "failed" if requested and failed == requested
+        else "partial" if failed
+        else "ok"
+    )
+    # A REFUSED VERIFICATION IS A DEGRADED RUN, and it has to be said HERE.
+    # `_section_status` honours this section's own `_status` and then never
+    # descends, so the error marker inside `verification` is structurally
+    # invisible to the facade: without this fold, the reader gets exit 0 over a
+    # run whose arithmetic was never checked. It cannot promote a fully failed
+    # acquisition back down -- a run with no statements at all is worse news
+    # than one with unchecked statements.
+    if "error" in verification and status != "failed":
+        status = "partial"
+
     _log(
         "reconstruct done",
         f"{ticker} {len(filings)}/{requested} filings in "
@@ -1374,20 +1620,12 @@ def pack_reconstruct(ticker: str) -> dict:
         "company": resolved.get("title"),
         "reconstruction": {
             "filings": filings,
+            "verification": verification,
             "failed_items": failed_items,
             "requested": requested,
             "succeeded": len(filings),
             "failed": failed,
-            # Self-declared section status, per pack.py's `_section_status`
-            # convention. `requested == 0` is NOT vacuously "failed" -- nothing
-            # was asked for, so nothing failed (the exact trap
-            # `test_fetch_sec_narrative_empty_selection_is_not_vacuously_failed`
-            # pins for the narrative lane).
-            "_status": (
-                "failed" if requested and failed == requested
-                else "partial" if failed
-                else "ok"
-            ),
+            "_status": status,
         },
     }
 
