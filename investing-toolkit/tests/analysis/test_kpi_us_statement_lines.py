@@ -136,6 +136,65 @@ def test_the_dim_axis_column_spelling_is_also_a_dimension_signal(lines_module):
     assert lines_module.is_statement_line(unpopulated_axis_column) is True
 
 
+def test_a_consolidated_row_with_dimensioned_children_is_kept(lines_module):
+    """A key naming a dimension does not always mean "this row IS a slice", and
+    reading it that way DELETED the top line of every statement that discloses
+    segments. `get_statement` emits FOUR keys containing "dim" in two groups
+    that mean OPPOSITE things (live, KO accession 0000021344-18-000008):
+
+      is_dimension / full_dimension_label / dimension_metadata
+          the row IS a segment slice — 49 of KO's 80 income rows.
+      has_dimension_children
+          the row is an ordinary CONSOLIDATED line that HAS slices beneath it —
+          10 rows, among them `NET OPERATING REVENUES` (35,410M, the filing's
+          own top line), `OPERATING INCOME` and `INCOME BEFORE INCOME TAXES`.
+
+    Measured damage from conflating them: KO FY2017 income kept 17 of 26 lines,
+    DUK FY2017 income 18 of 52, and Realty Income FY2025 lost `Total assets`,
+    `Total liabilities` and `Total equity`. Silent deletion of a filer's
+    headline figures — the corruption direction opposite to a leak, and the one
+    a substring match on the key name cannot distinguish.
+
+    Both directions are pinned here because either alone is satisfiable by a
+    degenerate predicate: rejecting nothing passes the first assertion,
+    rejecting everything passes the rest.
+    """
+    consolidated_with_slices_below = _row(
+        "us-gaap:SalesRevenueGoodsNet",
+        "NET OPERATING REVENUES",
+        has_dimension_children=True,
+        is_dimension=None,
+        full_dimension_label=None,
+        dimension_metadata=None,
+    )
+    slice_by_is_dimension = _row(
+        "us-gaap:SalesRevenueGoodsNet",
+        "Bottling Investments",
+        is_dimension=True,
+        has_dimension_children=None,
+    )
+    slice_by_metadata = _row(
+        "us-gaap:SalesRevenueGoodsNet",
+        "Bottling Investments",
+        dimension_metadata=[
+            {"dimension": "us-gaap:StatementBusinessSegmentsAxis",
+             "member": "ko:BottlingInvestmentsMember"}
+        ],
+        has_dimension_children=None,
+    )
+    slice_that_also_has_children = _row(
+        "us-gaap:SalesRevenueGoodsNet",
+        "Bottling Investments",
+        is_dimension=True,
+        has_dimension_children=True,
+    )
+
+    assert lines_module.is_statement_line(consolidated_with_slices_below) is True
+    assert lines_module.is_statement_line(slice_by_is_dimension) is False
+    assert lines_module.is_statement_line(slice_by_metadata) is False
+    assert lines_module.is_statement_line(slice_that_also_has_children) is False
+
+
 def test_a_real_line_containing_member_is_kept(lines_module):
     """Substring matching would reject these. They are real statement lines:
     `Member`/`Domain` occur inside ordinary English element names, and only the

@@ -51,23 +51,45 @@ from typing import Any
 # convention, NOT from a sample of filings (see ALLOWLIST POLARITY above).
 _STRUCTURAL_SUFFIXES = ("Axis", "Domain", "LineItems", "Member", "Table")
 
-# Matched against the row's KEYS, not its values: any key naming a dimension is
-# read as "this row is a slice", whatever edgartools calls it. TWO key spellings
-# are recorded live, and they share only this three-letter prefix:
-# `full_dimension_label` (the singular convenience column, used by the pre-2018
-# segment rows below) and the per-axis columns `dim_<namespace>_<AxisLocalName>`
-# — e.g. `dim_srt_ProductOrServiceAxis` (data-markets/scripts/
-# sec_edgar_client.py:2277-2288). Matching the longer `dimension` would admit
-# every `dim_*`-keyed slice, whose concept is an ordinary reportable element
-# (KO's `SalesRevenueGoodsNet`) that no other signal here rejects.
+# Matched against the row's KEYS, not its values. A key naming a dimension does
+# NOT on its own mean "this row is a slice": the presentation surface spells
+# BOTH sides of the slice relationship with the same three letters, and reading
+# them alike deleted the top line of every statement that discloses segments
+# (MEASURED: KO FY2017 income kept 17 of its 26 lines, losing `NET OPERATING
+# REVENUES`; Realty Income FY2025 lost `Total assets` / `Total liabilities` /
+# `Total equity`). That is silent DELETION, the mirror of the leak this module
+# exists to prevent, so the distinction below is semantic and not a substring.
 #
-# So the marker is the PREFIX, matched by substring: it still catches
-# `dimension` / `is_dimensioned` / a future rename in the same family, and a key
-# this repo has not sampled fails CLOSED (the row is excluded) rather than
-# silently opening a hole. The cost of the wider match is a row dropped when an
-# unrelated key happens to contain "dim" and hold a truthy value — a gap, not a
-# leak, which is the direction this module chooses everywhere.
+# FOUR such keys are observed live on a `get_statement` row (KO accession
+# 0000021344-18-000008, captured 2026-07-26), in two groups meaning OPPOSITE
+# things:
+#
+#   THIS ROW IS A SLICE     `is_dimension`, `full_dimension_label`,
+#                           `dimension_metadata` — 49 of KO's 80 income rows.
+#   THIS ROW HAS SLICES     `has_dimension_children` — 10 rows, ordinary
+#   BENEATH IT              consolidated lines whose segment detail follows
+#                           them in document order.
+#
+# A fifth spelling is recorded on the neighbouring FACT-row surface: the
+# per-axis columns `dim_<namespace>_<AxisLocalName>`, e.g.
+# `dim_srt_ProductOrServiceAxis` (data-markets/scripts/sec_edgar_client.py
+# :2277-2288), whose truthy value names the member the row is sliced by. It is
+# named here because applying evidence measured on THAT surface to THIS one is
+# how the deletion above was introduced.
+#
+# SCOPE OF THIS RULE, stated because the claim "every dimension key is handled"
+# would be false (docs/loom/memory/unifying-a-normalization-has-a-scope.md):
+# only the four keys above are observed, and the rule is written by EXEMPTION
+# rather than enumeration. A truthy key whose name contains "dim" rejects the
+# row UNLESS it is one of the known child descriptors. So an UNOBSERVED sixth
+# spelling — a rename, a new convenience column, an axis column appearing on the
+# presentation surface — REJECTS the row: deliberately a gap, not a leak, the
+# direction this module chooses everywhere. The price of that polarity is that a
+# newly-introduced "has children"-style descriptor drops consolidated lines
+# until it is added below, which IS the defect this constant was written to fix
+# — so the exemption set is the first place a live re-capture must check.
 _DIMENSION_KEY_MARKER = "dim"
+_CHILD_DIMENSION_DESCRIPTOR_KEYS = frozenset({"has_dimension_children"})
 
 
 def local_name(concept: str) -> str:
@@ -126,19 +148,50 @@ def _has_structural_suffix(name: str) -> bool:
     )
 
 
+def is_row_level_dimension_signal(key: Any) -> bool:
+    """True if a TRUTHY value under `key` would prove the row IS a slice.
+
+    False only for the child descriptors — keys describing rows BENEATH this
+    one, which say nothing about this row and must never reject it. Both the
+    observed membership of each group and what an unobserved key does are stated
+    at `_CHILD_DIMENSION_DESCRIPTOR_KEYS` above; the exemption is scoped to the
+    four keys measured on the presentation surface, not to dimension keys in
+    general.
+
+    PUBLIC ON PURPOSE. `kpi_us_statement_shape.statements_for` reports the
+    dimension-ish keys this predicate did NOT recognise — the "count visibly"
+    half of the exclusion doctrine — and that report is only trustworthy if it
+    asks THIS function rather than re-deriving the test. It first re-implemented
+    the comparison and compared exact-case, so a key spelled
+    `Has_Dimension_Children` was exempted here and reported as unrecognised
+    there: a false "the row shape has moved" alarm on a channel whose entire
+    value is being silent when nothing is wrong. One shared predicate, not two
+    that agree today.
+    """
+    name = str(key).casefold()
+    return (
+        _DIMENSION_KEY_MARKER in name
+        and name not in _CHILD_DIMENSION_DESCRIPTOR_KEYS
+    )
+
+
 def is_statement_line(row: dict[str, Any]) -> bool:
     """True only for a row PROVEN to be an undimensioned, non-placeholder line.
 
     Every other row — dimensioned, placeholder-concept, concept missing or
     unusable — is False. That default is the point: an unrecognized row is
     excluded, never admitted (fail-closed).
+
+    "Undimensioned" means the ROW is not itself a slice. A consolidated line
+    that HAS dimensioned children is undimensioned and is kept; see
+    `is_row_level_dimension_signal`.
     """
     concept = row.get("concept")
     if not isinstance(concept, str) or not concept:
         return False
 
     if any(
-        _DIMENSION_KEY_MARKER in str(key).lower() and value
+        is_row_level_dimension_signal(key) and value
         for key, value in row.items()
     ):
         return False
