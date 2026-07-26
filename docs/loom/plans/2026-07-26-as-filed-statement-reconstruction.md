@@ -29,6 +29,7 @@
     real line legitimately contains the substring "Member" is not rejected by substring matching.
 - **Dependencies**: none
 - **Independent**: true
+- **Status**: done(9154945e)
 - **Brief item covered**: "Separating statement lines from dimensional noise is the single
   largest implementation risk, and it is NOT solved… it must be structural … and positive."
 
@@ -65,6 +66,11 @@
     `None`; a role that matches no kind returns `None` and is never coerced into one.
 - **Dependencies**: none
 - **Independent**: true
+- **Status**: done(f93f0e26)
+  <!-- Four revision rounds. Quality re-review PASS_WITH_NOTES; the spec re-review's single
+       remaining gap (a docstring invariant contradicted by the `tables` entry) was closed by the
+       ORCHESTRATOR, not by a further reviewer pass — recorded plainly rather than reported as a
+       clean PASS. -->
 - **Brief item covered**: "From one accession: the three statements as ordered lines."
 
 ## Task 3 — assemble one filing's three statements
@@ -108,6 +114,15 @@
     network call.
 - **Dependencies**: Tasks 1, 2 parallel
 - **Independent**: false
+- **Status**: done(12b821df)
+  <!-- Returned BLOCKED first, correctly: obligation 1.2 (re-confirm the LIVE row shape) found
+       that Task 1 was deleting every statement's own top line. Fixed in 6c3c5c91 before this
+       task resumed. Two revision rounds after that; the last two doc-claim corrections were
+       applied by the ORCHESTRATOR, not by a further reviewer pass. -->
+- **Review-weight note**: the BLOCKED round is the plan's most valuable single event so far — a
+  defect that all 1230 package tests passed over was caught by a written obligation, not by a
+  test. Keep such obligations explicit in the Decision Log for downstream tasks; they are the
+  only mechanism here that has caught a green-but-wrong artifact.
 - **Brief item covered**: "From one accession: the three statements as ordered lines — label,
   concept, level, weight, calculation parent, per-period values — segment slices excluded."
 
@@ -382,6 +397,27 @@ chain-served number and become honest gaps. Net on the measured year is 12 filin
      key name; a rename that drops it, or a shape where the key is simply absent on dimensioned
      rows, fails OPEN. Task 3 touches the live `get_statement` shape and MUST re-confirm the real
      row shape rather than inheriting the presumption untested.
+
+     **PREDICTION REFUTED 2026-07-26 — it failed CLOSED, not OPEN, and the obligation is what
+     caught it.** Task 3 returned BLOCKED after measuring the live shape, and the orchestrator
+     confirmed it directly. A `get_statement` row carries FOUR keys containing `dim`, in two
+     groups meaning OPPOSITE things: `is_dimension` / `full_dimension_label` /
+     `dimension_metadata` mark a row that IS a segment slice, while `has_dimension_children` marks
+     an ordinary CONSOLIDATED line that HAS slices beneath it. Matching the substring therefore
+     deleted the top line of every statement disclosing segments — KO FY2017 income kept 17 of 26
+     (losing `NET OPERATING REVENUES`, `OPERATING INCOME`, `INCOME BEFORE INCOME TAXES`), DUK
+     FY2017 income 18 of 52, and Realty Income FY2025 lost `Total assets` / `Total liabilities` /
+     `Total equity`. That is silent DELETION of a filer's headline figures — the corruption the
+     brief exists to prevent, arriving by the direction this entry ruled out.
+
+     Root cause, recorded because the chain matters more than the fix: a reviewer correctly
+     measured `dim_srt_ProductOrServiceAxis` on the FACT-row surface (`sec_edgar_client.py`
+     :2277-2288) and recommended widening `dimension` to `dim`; the orchestrator relayed it as
+     preferred; the implementer applied it to the PRESENTATION-row surface, which has a different
+     key vocabulary. Evidence measured on one external surface was applied to another. The
+     orchestrator's "verified live" row-key list in the Task 3 dispatch also omitted all three of
+     the newly-relevant keys — as Task 3's implementer put it, a capture that had listed them
+     would have caught this at plan time.
 - **2026-07-26, Task 2 → Task 3.** Role SELECTION ("prefer a pure income role over a combined
   income-and-comprehensive one") was deliberately left out of `statement_kind`, which is total and
   order-free by design: choosing BETWEEN roles needs a filing's whole role set, which only Task 3's
