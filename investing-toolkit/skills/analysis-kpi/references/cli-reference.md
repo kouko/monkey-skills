@@ -615,6 +615,24 @@ blank on a trend line is otherwise unreadable:
 | `not_tagged` | the line exists but that period carries no undimensioned value |
 | `derived` | computed from the filer's OWN arithmetic, carrying the formula that produced it |
 
+**THE PIPE MUST NOT SWALLOW A DEGRADED RUN.** `reconstruct` degrades
+loudly — a filing whose verification refused folds the section's
+`_status` to `partial` — and an early version of this view dropped that
+on the floor, so a refused run looked identical to a clean one on the far
+side of the pipe recommended just above. The view therefore carries two
+further top-level keys, ABSENT (never empty) when the payload has no
+marker:
+
+| key | meaning |
+|---|---|
+| `status` | the reconstruction section's own `_status` — `"partial"` when something degraded |
+| `verification` | carried verbatim, including `error` / `error_class` when the oracle refused |
+
+They are kept SEPARATE on purpose: a run can be `partial` from an
+acquisition failure while its arithmetic is clean, and collapsing the two
+would re-create exactly the undifferentiated blank this whole subcommand
+exists to remove.
+
 Observed on the committed capture: KO FY2017 `total_liabilities` is
 `derived` 68,919,000,000 with
 `us-gaap:Liabilities = us-gaap:LiabilitiesAndStockholdersEquity −

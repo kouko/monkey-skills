@@ -1242,7 +1242,7 @@ def derive_spine_as_filed(payload: dict[str, Any]) -> dict[str, Any]:
     different input and is untouched.
     """
     reconstruction = payload.get("reconstruction") or {}
-    return {
+    view = {
         "company": payload.get("company") or "",
         "filings": [
             {
@@ -1258,6 +1258,33 @@ def derive_spine_as_filed(payload: dict[str, Any]) -> dict[str, Any]:
         "failed_items": list(reconstruction.get("failed_items") or []),
         "warnings": list(payload.get("warnings") or []),
     }
+    # AND SO DOES THE RUN'S OWN VERDICT ON ITSELF, for the same reason and one
+    # level up. `pack_reconstruct` contains a refusing verification layer
+    # rather than letting it take the whole run down, and says so TWICE -- an
+    # `error` + `error_class` marker inside `verification`, and a fold of the
+    # section's `_status` to "partial". `references/cli-reference.md`
+    # recommends piping that pack straight into this view, so a view that
+    # carried the filings and dropped both markers would hand its reader a
+    # payload byte-identical to a clean run's: an unreadable blank, which is
+    # the exact defect the four cell states exist to remove.
+    #
+    # NEITHER IS INTERPRETED HERE. `verification` rides whole because its three
+    # parts (by_era / statements / sum_checks) are the pack's answer to
+    # "was the arithmetic checked, and what did it say", and a summary of it
+    # invented at this layer would be a second opinion nobody asked this
+    # module for.
+    #
+    # ABSENT, NEVER EMPTY, on the doctrine `_reconstruction_payload` states for
+    # `by_kind`: `{}` would claim a verification that ran and found nothing to
+    # say. A payload carrying no marker -- hand-fed, or from a pack older than
+    # the verification layer -- leaves the key out.
+    status = reconstruction.get("_status")
+    if status is not None:
+        view["status"] = status
+    verification = reconstruction.get("verification")
+    if verification is not None:
+        view["verification"] = verification
+    return view
 
 
 def _project_money_to_text(view: dict[str, Any]) -> dict[str, Any]:

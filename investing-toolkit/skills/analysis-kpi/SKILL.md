@@ -87,8 +87,12 @@ Index:
   the filer's own qname verbatim.
 - **`kpi_us_statements_ingest`** — US as-reported statement pack ->
   kpi_store driver (idempotent, append-only): `ingest`.
-- **`kpi_spine_view`** — READ-side pure view: as-reported concept series ->
-  the 14 canonical spine fields, resolved per period: `derive`.
+- **`kpi_spine_view`** — READ-side pure view onto the 14 canonical spine
+  fields, over TWO inputs neither of which is computable from the other:
+  `derive` (a `kpi_store dump --company` payload, resolved per period) /
+  `derive-as-filed` (a `pack.py --pack reconstruct` payload, every cell typed
+  value/not_presented/not_tagged/derived, carrying the run's own
+  `status` + `verification` markers).
 
 The Route-B `kpi_8k_candidates` intake CLI is documented in full below (it
 stays here because its 3-layer contract is load-bearing).

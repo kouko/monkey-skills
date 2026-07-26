@@ -1259,11 +1259,18 @@ def _captured_filing(ticker: str) -> dict:
     performs on a live `Statements`, run here on captured rows so no network
     call is made.
 
-    Assembly (`kpi_us_statement_shape.statements_for`) is deliberately NOT
-    called: Tasks 8 and 10 are editing that module in parallel and this suite
-    must not couple to a file in flight. The rows are filtered by the SAME
-    published predicate assembly uses (`is_statement_line` + not abstract), so
-    what reaches the view is what assembly would have produced.
+    Assembly (`kpi_us_statement_shape.statements_for`) is not called HERE:
+    Tasks 8 and 10 were editing that module in parallel when this helper was
+    written, and it must not couple to a file in flight. The rows are filtered
+    by the SAME published predicate assembly uses (`is_statement_line` + not
+    abstract), so what reaches the view is what assembly would have produced.
+
+    THAT LAST SENTENCE IS A CLAIM, AND IT IS NO LONGER UNCHECKED — which is
+    the one exception to the paragraph above. `_really_produced_filing` at the
+    bottom of this module DOES run assembly and the real
+    `pack_us._reconstruction_payload`, and
+    `test_the_real_reconstruct_producer_feeds_this_view` asserts the two
+    routes give the same view. Drift in this mirror fails there.
     """
     capture = json.loads(RECONSTRUCTION_CAPTURE.read_text(encoding="utf-8"))
     filing = next(
@@ -1320,14 +1327,34 @@ def _kind_of_role(role: str) -> str | None:
     return None
 
 
-def _payload(*filings: dict, company: str = "TEST CO") -> dict:
+def _payload(
+    *filings: dict,
+    company: str = "TEST CO",
+    verification: dict | None = None,
+    status: str | None = "ok",
+) -> dict:
+    """Task 9's `reconstruct` envelope around the given filings.
+
+    `verification` and `status` are OPTIONAL AND OMITTED WHEN `None`, which is
+    not laziness: the section the real pack emits always carries both, and a
+    payload that carries neither is what a hand-fed or older caller pipes in.
+    Both cases are exercised — see
+    `test_a_refused_verification_stays_visible_through_the_view` — and the
+    field-resolution tests above pass neither, because nothing they assert
+    reads them.
+    """
+    reconstruction: dict = {
+        "filings": list(filings), "failed_items": [],
+        "requested": len(filings), "succeeded": len(filings),
+        "failed": 0,
+    }
+    if status is not None:
+        reconstruction["_status"] = status
+    if verification is not None:
+        reconstruction["verification"] = verification
     return {
         "pack": "reconstruct", "ticker": "TEST", "company": company,
-        "reconstruction": {
-            "filings": list(filings), "failed_items": [],
-            "requested": len(filings), "succeeded": len(filings),
-            "failed": 0, "_status": "ok",
-        },
+        "reconstruction": reconstruction,
     }
 
 
@@ -2167,3 +2194,243 @@ def test_cli_derive_as_filed_reports_a_malformed_payload_as_an_error(
     assert expected_in_stderr in result.stderr, case_name
     assert "Traceback" not in result.stderr, case_name
     assert result.stdout == "", case_name
+
+
+# =====================================================================
+# WHAT SURVIVES THE PIPE — the run's own degradation markers
+# =====================================================================
+#
+# `references/cli-reference.md` recommends one composition:
+#
+#     pack.py --market us --pack reconstruct --ticker KO
+#       | kpi_spine_view.py derive-as-filed
+#
+# so whatever the PACK says about its own health has to be readable on the
+# far side of that pipe, or the recommended composition silently launders it.
+
+def test_a_refused_verification_stays_visible_through_the_view(spine_view):
+    """CONSTRUCTED-CONVENTIONAL, and the construction is a transcription: the
+    two keys asserted here are the marker `pack_us.pack_reconstruct` writes
+    when its verification layer refuses (`except Exception` ->
+    `{"error": "as-filed verification refused this run: ...",
+    "error_class": "verification"}`), together with the fold that then drops
+    the section's own `_status` to `"partial"`.
+
+    WHY THIS IS THIS ARC'S FAILURE MODE ONE LAYER UP. `kpi_us_statement_check`
+    refuses rather than guesses, and the pack contains that refusal instead of
+    letting it take an ~85s run down — loudly, in two places. A view that
+    carried the filings and dropped the markers would hand its reader a
+    payload BYTE-IDENTICAL to a clean run's: a blank that cannot be read,
+    which is the exact defect the four cell states exist to remove.
+
+    So the markers ride through for the reason already written above
+    `failed_items`, and the SAME absence doctrine governs them as governs
+    `Statements.by_kind`: a marker the payload does not carry is ABSENT here,
+    never a fabricated empty. `{}` would say "verification ran and found
+    nothing to say", which is a different and untrue claim.
+
+    NOT FOLDED INTO ONE FLAG. `status` is the run's, `verification` is the
+    arithmetic's, and a run can be `partial` for an acquisition failure with
+    its verification perfectly clean — collapsing them would make a reader
+    unable to tell which half degraded.
+    """
+    ko = _captured_filing("KO")
+    clean_verification = {
+        "by_era": [], "statements": [],
+        "sum_checks": {"by_status": {}, "disagreements": []},
+    }
+
+    refused = spine_view.derive_spine_as_filed(_payload(
+        ko,
+        verification={
+            "error": (
+                "as-filed verification refused this run: "
+                "no readable year in filing date 'n/a'"
+            ),
+            "error_class": "verification",
+        },
+        status="partial",
+    ))
+    clean = spine_view.derive_spine_as_filed(_payload(
+        ko, verification=clean_verification, status="ok",
+    ))
+
+    assert refused != clean, (
+        "a run whose verification refused must not be indistinguishable from "
+        "a clean one on the far side of the documented pipe"
+    )
+    assert refused["verification"]["error_class"] == "verification"
+    assert "refused this run" in refused["verification"]["error"]
+    assert refused["status"] == "partial"
+
+    assert "error" not in clean["verification"], clean["verification"]
+    assert clean["status"] == "ok"
+    # The degradation is carried BESIDE the fields, never instead of them:
+    # the filings themselves reconstructed fine in both runs.
+    assert refused["filings"] == clean["filings"]
+
+    hand_fed = spine_view.derive_spine_as_filed(
+        _payload(ko, verification=None, status=None)
+    )
+    assert "verification" not in hand_fed and "status" not in hand_fed, (
+        "a payload carrying no marker must leave the key ABSENT -- an empty "
+        "dict here would claim a verification that never ran"
+    )
+
+
+# =====================================================================
+# THE PRODUCER -> CONSUMER SEAM, run for real
+# =====================================================================
+#
+# `_captured_filing` above MIRRORS `pack_us._reconstruction_payload`'s
+# projection by hand (it says so at its own site), and a mirror binds nothing:
+# the day the producer renames a key, every test in this file keeps passing
+# against a projection production no longer emits. That is structurally the
+# same defect as two implementations of one rule with no test between them —
+# the defect this branch already paid to close once, at the layer below.
+#
+# So this seam runs the REAL producer chain offline, end to end:
+#
+#   captured rows -> kpi_us_statement_shape.statements_for
+#                 -> pack_us._reconstruction_payload
+#                 -> kpi_spine_view.derive_spine_as_filed
+#
+# Nothing is stubbed but edgartools itself, whose two-call surface
+# (`presentation_roles` + `get_statement`) is `statements_for`'s whole
+# documented input contract.
+
+
+class _CapturedXBRL:
+    """The two attributes assembly reads off `edgar.xbrl.XBRL`, served from
+    the committed capture. Anything else raises `AttributeError`, which is the
+    point: the double fails loudly rather than drifting from the live surface.
+    (`test_kpi_us_statement_shape.py` carries the same double for the same
+    reason; duplicated rather than imported because that suite is a test
+    module, not a published surface, and importing across suites couples two
+    files' fixtures for one class.)"""
+
+    def __init__(self, entry: dict):
+        self._rows_by_role = {
+            role["role"]: role["rows"]
+            for role in entry["roles_captured"]
+            if role.get("rows") is not None
+        }
+        self.presentation_roles = list(entry["presentation_roles"])
+
+    def get_statement(self, role: str) -> list[dict]:
+        return self._rows_by_role[role]
+
+
+class _CapturedFiling:
+    def __init__(self, entry: dict):
+        self.accession_no = entry["accession"]
+        self._xbrl = _CapturedXBRL(entry)
+
+    def xbrl(self):
+        return self._xbrl
+
+
+def _really_produced_filing(ticker: str) -> dict:
+    """One captured filing projected by the REAL producer, in the exact three
+    lines `pack_us.pack_reconstruct` writes around it (`accession` / `form` /
+    `filingDate` + the projection). `pack_reconstruct` itself cannot run here
+    — it acquires over the network — so those three keys are the only
+    hand-written part, and they are the part no test could have got wrong
+    silently: the view reads them by name in its own assertions above.
+    """
+    capture = json.loads(RECONSTRUCTION_CAPTURE.read_text(encoding="utf-8"))
+    entry = next(
+        f for f in capture["filings"]
+        if f["ticker"] == ticker and f["rows_captured"]
+    )
+    shape = _load(
+        "kpi_us_statement_shape_for_spine_seam",
+        _SKILLS / "analysis-kpi" / "scripts" / "kpi_us_statement_shape.py",
+    )
+    pack_us = _load(
+        "pack_us_for_spine_seam",
+        _SKILLS / "data-markets" / "scripts" / "pack_us.py",
+    )
+    assembled = shape.statements_for(_CapturedFiling(entry))
+    return {
+        "accession": entry["accession"],
+        "form": entry["form"],
+        "filingDate": entry["filing_date"],
+        **pack_us._reconstruction_payload(assembled),
+    }
+
+
+def test_the_real_reconstruct_producer_feeds_this_view(spine_view):
+    """OBSERVED (KO FY2017 `0000021344-18-000008`), through the real producer.
+
+    TWO CLAIMS, and the second is why this test exists at all:
+
+      1. The view reads what production actually emits — KO's
+         `total_liabilities` still derives to 68,919,000,000 carrying its
+         formula when the payload comes from `pack_us._reconstruction_payload`
+         rather than from this suite's hand-written mirror.
+      2. The mirror and the producer AGREE. `_captured_filing` writes out
+         seven line keys by hand; the producer emits `asdict(Line)`. Any key
+         the producer renames, drops or starts populating differently now
+         fails HERE, where before it would have failed nowhere.
+
+    WHAT THIS DOES NOT CLAIM: not that the two projections are IDENTICAL.
+    `asdict(Line)` also carries `decimals`, which the mirror omits and which
+    this view never reads — the equality asserted is of the VIEWS, so a
+    divergence in a field the consumer ignores rightly does not fail. A
+    divergence in one it reads does.
+    """
+    produced = _really_produced_filing("KO")
+    mirrored = _captured_filing("KO")
+
+    view = spine_view.derive_spine_as_filed(_payload(produced))
+
+    liabilities = _field(view, produced["accession"], "total_liabilities")
+    cell = liabilities["periods"]["instant_2017-12-31"]
+    assert cell["state"] == "derived"
+    assert str(cell["value"]) == "68919000000.0"
+    assert cell["derivation"].startswith("us-gaap:Liabilities = ")
+
+    assert view == spine_view.derive_spine_as_filed(_payload(mirrored)), (
+        "the hand-written mirror in `_captured_filing` has drifted from "
+        "`pack_us._reconstruction_payload`; the mirror is the copy, so the "
+        "producer is right and the mirror is what must move"
+    )
+
+
+def test_the_skill_index_names_every_subcommand_this_cli_exposes():
+    """The skill that OWNS this script is where a reader looks up what it can
+    be asked to do, so a subcommand missing from that index is a subcommand
+    that effectively does not exist (`derive-as-filed` shipped with a CLI, a
+    reference page and a data-markets cross-link, and was absent HERE).
+
+    THE EXPECTED LIST IS ASKED OF THE CLI, never transcribed: `--help` is the
+    live surface, so a third subcommand added later fails this test until it
+    is declared too. That is the whole point — the transcription is what went
+    stale the first time.
+    """
+    listed = subprocess.run(
+        ["uv", "run", "--script", str(KPI_SPINE_VIEW_SCRIPT), "--help"],
+        capture_output=True, text=True, timeout=120,
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+    )
+    assert listed.returncode == 0, listed.stderr
+    choices = re.search(r"\{([a-z0-9,\-]+)\}", listed.stdout)
+    assert choices is not None, listed.stdout
+    subcommands = choices.group(1).split(",")
+    assert "derive-as-filed" in subcommands, subcommands
+
+    skill_doc = (_SKILLS / "analysis-kpi" / "SKILL.md").read_text(encoding="utf-8")
+    entry = next(
+        # ITS OWN BULLET, cut at the blank line that ends it. Searching the
+        # whole file would pass on a mention anywhere else in it — the CLI
+        # index is what a reader scans, and that is what must carry the name.
+        block.split("\n\n")[0]
+        for block in skill_doc.split("\n- ")
+        if block.startswith("**`kpi_spine_view`**")
+    )
+    for subcommand in subcommands:
+        assert f"`{subcommand}`" in entry, (
+            f"{subcommand!r} is on this script's command surface but the "
+            f"analysis-kpi skill index does not name it: {entry!r}"
+        )
