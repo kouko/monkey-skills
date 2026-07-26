@@ -148,15 +148,33 @@
     `disagrees` with both figures visible, never silently summed.
 - **Dependencies**: Task 3 completes first
 - **Independent**: true
+- **Status**: done(20607453)
+  <!-- Spec review PASS — it verified the implementer's weight premise against the committed
+       capture rather than trusting it (188/188 weighted rows carry ±1.0, all 175 rows with a
+       calculation parent carry a weight). Quality review OWED: its first dispatch died on a
+       session capacity limit. -->
 - **Brief item covered**: "Verification pass: every declared sum checked in `Decimal`; failures
   surfaced as flagged lines, and groups whose children are not fully tagged reported separately."
+- **RED amended in place 2026-07-26**: the plan named `1.005 × 1e9` as the float-hostile value.
+  The implementer refuted it and the spec reviewer upheld the refutation: this module has no
+  value×scale multiply, and its only multiply is child×weight where every observed weight is ±1.0
+  — float-EXACT, so a RED built there passes under a float implementation and proves nothing.
+  Worse, `1.005 * 1e9` is already `1004999999.9999999` as a float, so baking the literal into a
+  fixture makes the group irreconcilable in `Decimal` too. The hostility belongs in the
+  ACCUMULATION, which is where this module's float exposure actually is.
 
 ## Task 5 — type every empty cell
 
-- **Description**: Write `cell_state(...) -> "value" | "not_presented" | "not_tagged" | "derived"`
-  so no empty cell is undifferentiated. `not_presented` = the filer's statement has no such line;
-  `not_tagged` = the line exists but that period carries no undimensioned value; `derived` =
-  computed from the filer's own arithmetic, carrying its provenance.
+- **Description**: Write `cell_state(...) -> Cell` whose `state` is exactly one of
+  `"value" | "not_presented" | "not_tagged" | "derived"`, so no empty cell is undifferentiated.
+  `not_presented` = the filer's statement has no such line; `not_tagged` = the line exists but that
+  period carries no undimensioned value; `derived` = computed from the filer's own arithmetic,
+  carrying its provenance.
+  AMENDED 2026-07-26: this arrow originally returned the bare string. A `str` structurally cannot
+  carry the provenance the same sentence demands, so the implementer raised it rather than
+  reinterpreting silently and the spec reviewer upheld it. Amended in place so Tasks 7 and 10 —
+  both of which take this module as a context path — read the shipped signature, not the drafted
+  one.
 - **Module**: investing-toolkit/skills/analysis-kpi/scripts/kpi_us_statement_cells.py
 - **Files touched**: investing-toolkit/skills/analysis-kpi/scripts/kpi_us_statement_cells.py,
   investing-toolkit/tests/analysis/test_kpi_us_statement_cells.py
@@ -168,11 +186,31 @@
     derivable), the derived value must subtract WHOLE equity; a fixture whose equity concept is
     parent-only `StockholdersEquity` with a non-zero minority interest must FAIL if the
     parent-only figure is used, since that pushes minority interest into "liabilities".
-  - **GREEN**: the four states are distinguishable by a consumer; an oil major with no
+    FORMULA AMENDED 2026-07-26: the derivation is
+    `LiabilitiesAndStockholdersEquity − whole equity − MEZZANINE`. This RED first omitted the
+    mezzanine term; temporary equity sits BETWEEN liabilities and equity, so leaving it in the
+    remainder relabels it as debt — the same defect as the minority interest, a different term.
+    Measured on the OBSERVED KO FY2017 fixture, the parent-only mistake alone is worth 1,905M.
+  - **GREEN**: the four states are distinguishable by a consumer; a filer presenting no
     operating-income line yields `not_presented`, not an empty value; every `derived` cell names
     the arithmetic that produced it.
+    AMENDED 2026-07-26: this said "an oil major". No oil major carries rows in the committed
+    capture; IBM FY2025 genuinely presents no operating-income line and pins the same STRUCTURAL
+    fact, and the test says so rather than dressing IBM up as the plan's example. The requirement
+    was always the structure, never the filer.
 - **Dependencies**: Task 3 completes first
 - **Independent**: true
+- **Status**: done(20607453)
+  <!-- Spec + quality reviews ran RETROSPECTIVELY: the first dispatch of both died on a session
+       capacity limit after the artifact was already committed. Quality PASS_WITH_NOTES; spec
+       NEEDS_REVISION on two DOCUMENTATION gaps only ("the code satisfies all three
+       requirements") — both were this plan's own bookkeeping and are closed by this edit. Two
+       code follow-ups are outstanding: a tagged value winning over a derivation is unpinned
+       (proved live — IBM FY2025 reports 109,783M where the derivation yields 109,782M), and
+       `_derive` gates on a namespace-stripped name against its own module's stated invariant. -->
+- **Review-weight note**: the unpinned tagged-vs-derived rule was found by a reviewer MUTATING the
+  module, not by reading it. All 11 tests passed with the derivation moved ahead of the
+  tagged-value check. Mutation is the only technique in this arc that has caught a money-path hole.
 - **Brief item covered**: "Every empty cell must say which kind of empty it is… three kinds,
   three distinct renderings — never one blank."
 
@@ -198,8 +236,22 @@
     as one recorded transition event, not as two unrelated series and not as a silent merge.
 - **Dependencies**: Task 3 completes first
 - **Independent**: true
+- **Status**: done(20607453)
+  <!-- Both reviews OWED — never dispatched; the wave's review capacity was exhausted. -->
 - **Brief item covered**: "Series identity keys on the FILER'S OWN concept …, never on its label;
   a transition is recorded as an explicit, reviewable event rather than silently resolved."
+- **Signature deviation, deliberate**: the plan says `series_for(accessions)`. It takes FILINGS —
+  an accession string only becomes statements through a network fetch, which would put an acquirer
+  inside a function this plan's own kickoff decision requires to be pure, and make the suite
+  unrunnable offline. The caller resolves accessions via `sec_edgar_client._acquire_raw_filing`.
+- **Stated ceiling**: period keys are matched VERBATIM across filings, so a 52/53-week filer whose
+  fiscal year-end moves by a day reads as two periods. Pinned by
+  `test_a_period_key_is_matched_verbatim_across_vintages`, so lifting the ceiling forces that test
+  to change. Upgrade path is the store's own `same_period` / `_snap_month_end` / `_qtrs`.
+- **Evidence limit, stated**: the committed capture holds rows for ONE filing per filer, so no
+  offline test reads 14 filings. KO's transition is proven on a fixture DERIVED from its real
+  FY2017 rows; IBM's label churn on constructed rows carrying the six OBSERVED labels. Untested:
+  how often a real filing pair moves more than one concept at once.
 
 ## Task 7 — re-express the 15-field spine as a view, field list unchanged
 
@@ -276,7 +328,18 @@
     (recorded as a Gotcha trailer on PR #619, 2026-07-26).
 - **Dependencies**: Task 3 completes first
 - **Independent**: true
+- **Status**: done(1033e619)
+  <!-- Both reviews OWED — never dispatched; the wave's review capacity was exhausted. Live-run
+       verified by the implementer: KO, exit 0, 8/8 filings, all three statements, the filer's own
+       labels and custom concepts, ~24s warm. -->
 - **Brief item covered**: "For ONE US company: the three statements as filed, for 10+ years."
+- **Files touched, corrected**: this task also edits
+  `investing-toolkit/skills/data-markets/SKILL.md`. The plan omitted it while the GREEN criterion
+  REQUIRED a command-surface declaration — an internal contradiction the implementer flagged
+  rather than resolving silently. No sibling touches that file.
+- **Constant grounded in the requirement, not the estimate**: `RECONSTRUCT_ANNUAL_FILINGS = 8`,
+  pinned by a test binding it to "reaches ten distinct years" rather than to this plan's refuted
+  "~4 filings" arithmetic.
 
 ## Task 10 — prove the reconstruction against a real filed document
 
@@ -382,6 +445,12 @@ reads as a downturn on a 10-year trend. Known cost, accepted: CAT and NOW lose a
 chain-served number and become honest gaps. Net on the measured year is 12 filings fixed against
 2 regressions to a gap.
 
+Kickoff decision: `PYTHONDONTWRITEBYTECODE=1` prefixes the resolved test command. Three
+implementers independently lost time to `.claude/hooks/validate-skill-folder-structure.sh` firing
+on a regenerated `__pycache__` under `skills/`, and two had their cleanup blocked by dcg
+(`rm -rf`, then `find -delete`). Not writing the bytecode removes the cause; parking the directories
+only defers it to the next test run.
+
 ## Decision Log
 
 - **2026-07-26, Task 1 → Task 3 (raised by Task 1's spec-reviewer, PASS-with-notes).** Two
@@ -426,3 +495,41 @@ chain-served number and become honest gaps. Net on the measured year is 12 filin
   docstring is one nobody is required to read. Cited by SECTION HEADING, not line number: this
   entry pointed at `:39`, then `:55`, and was stale both times after docstring edits — a line
   number is the wrong join key for a moving target.
+- **2026-07-26, Task 4 → Task 8. `disagrees` does NOT yet mean "the filer is wrong".** `Line`
+  carries no `decimals`, so `verify` compares EXACTLY, and 24 of its 27 disagreements over the
+  committed capture are inside the filers' own declared rounding interval. The raw count therefore
+  overstates broken filer arithmetic ~8x and does NOT reproduce the brief's 98.4%. Task 8 reports
+  the per-era resolution rate out of this same module and MUST NOT read `disagrees` as a filer
+  defect until a `decimals` field lands on Task 3's `Line`. Pinned meanwhile by
+  `test_every_disagreement_in_the_capture_is_accounted_for`, which asserts the split as a tuple
+  `(24, 3)` — any reshuffle between rounding and the named case fails it.
+  SECOND, structural limit, same consumer: `verify` sees PRESENTED lines only. IBM declares a
+  calculation child that is not on the statement face, so the check runs short and reports a false
+  `disagrees` it cannot distinguish. Those are the 3.
+- **2026-07-26, Task 5 → Task 7. THE DEPENDENCY IS ABOUT TO INVERT INTO A CYCLE.**
+  `kpi_us_statement_cells` binds by NAME to `kpi_spine_view`'s `_equity_kind`,
+  `_minority_interest_term`, `_identity_value`, `_US_GAAP`, `MEZZANINE_CHAIN`,
+  `MINORITY_INTEREST_CHAIN`, `EQUITY_INCL_NCI_CONCEPT` and `SPINE_FIELD_CHAINS["total_equity"]`,
+  and reads the last of those AT IMPORT TIME. All eight must survive Task 7 by name AND by
+  semantics. The coupling itself is safe — a rename raises loudly and Task 5's suite catches it.
+  The hazard is DIRECTION: Task 7 makes `kpi_spine_view` consume the reconstruction, which turns
+  this into an import cycle whose resolution depends on statement order. **Do this at Task 7's
+  START, not after**: lift the equity / mezzanine primitives into a module both sides import.
+  Raised by Task 5's quality reviewer, which verified the eight bindings resolve rather than
+  asserting they do.
+- **2026-07-26, Task 5 adjudications** (all three raised by the implementer rather than taken
+  silently, all three upheld by the spec reviewer). ① `cell_state` returns a `Cell`, not the bare
+  string this plan's arrow shows — Task 5's own text demands the `derived` state carry provenance,
+  which a `str` structurally cannot; `Cell.state` holds exactly the four named states, so no spec
+  item is lost. ② The GREEN names an oil major; none exists offline. IBM FY2025 genuinely presents
+  no operating-income line, so it pins the same structural fact, and the test SAYS it is not the
+  plan's example rather than dressing IBM up as one. ③ The mezzanine is a separate subtraction
+  term this plan's RED formula omitted — corrected in the brief, and its non-zero branch is
+  labelled CONSTRUCTED because the capture does not observe one.
+- **2026-07-26, Task 9 → whoever revisits the pack layering.** The `reconstruct` verb imports an
+  analysis-layer function from `pack_us.py`, a Layer-1 I/O module, inverting this repo's usual
+  direction; the inversion is named in a comment at the site. Accepted as a TWO-WAY door rather
+  than restructured mid-arc — the repo's convention crosses layers by SUBPROCESS, which is
+  unavailable here because `statements_for` takes a live edgartools `Filing` that does not survive
+  a JSON boundary. The honest resolution is probably that the verb belongs in analysis-kpi with
+  data-markets supplying only acquisition. That is a plan change, filed rather than improvised.
