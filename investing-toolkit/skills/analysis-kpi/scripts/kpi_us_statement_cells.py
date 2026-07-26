@@ -411,7 +411,20 @@ def _store_qname(concept: str) -> str:
     (`ko_UnusualOrInfrequentItemOperating` -> `ko:UnusualOrInfrequent...`) and
     distinct from a us-gaap one of the same local name — a custom
     `ko_Liabilities` is NOT `us-gaap:Liabilities` and must never match it.
+
+    ALREADY-FOLDED CONCEPTS ARE RETURNED UNTOUCHED, and that guard is not
+    cosmetic: this function is applied to BOTH sides of every comparison, so it
+    must be idempotent or the two sides fold differently. Without it a caller
+    asking for `ibm:Segment_Revenue_Adjustment` — store spelling, underscores
+    inside the LOCAL name — folded again to `ibm:Segment:Revenue_Adjustment`
+    and matched nothing, reporting a line the filer does present as
+    `not_presented`. That is the taxonomy's worst answer: it blames the filer
+    for our own name handling. A `:` can only be a namespace separator here
+    (XBRL local names are NCNames, which admit `_` but never `:`), so its
+    presence is proof the concept is already in store spelling.
     """
+    if ":" in concept:
+        return concept
     prefix, separator, local = concept.partition("_")
     return f"{prefix}:{local}" if separator else concept
 

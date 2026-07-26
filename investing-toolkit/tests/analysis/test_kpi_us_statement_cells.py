@@ -280,6 +280,46 @@ def test_a_derived_cell_names_the_arithmetic_that_produced_it(cells, ko_fy2017):
     assert "us-gaap:StockholdersEquity" in cell.derivation.formula
 
 
+def test_a_filer_reported_value_is_never_replaced_by_a_derivation(cells, ibm_fy2025):
+    """The precedence `cell_state` documents — a tagged value wins over a
+    derivation — pinned on the ONE observed filing where the two disagree.
+
+    IBM's FY2025 balance sheet tags `Liabilities` at 2024-12-31 as
+    109,783,000,000 while the same statement's footing arithmetic
+    (137,175 - 27,307 - 86, all in millions) yields 109,782,000,000. One
+    million apart: not enough to look wrong anywhere downstream, which is
+    exactly why it has to be pinned. The filer's own reported figure is the
+    artifact this arc exists to preserve, and a derived stand-in for it would
+    be a plausible wrong number wearing the filer's label.
+
+    UNPINNED UNTIL NOW, and found by a reviewer running the mutation rather
+    than arguing it: reordering `cell_state` so `_derive` ran BEFORE the
+    tagged-value check left all eleven of the suite's other tests green,
+    because every other derived cell in the suite is one no filer tagged. A
+    precedence rule no test exercises is a comment, not a rule.
+
+    `derivation is None` is asserted beside the state because that is the half
+    a consumer branches on: a `value` cell carrying provenance would mean the
+    number had been recomputed, which is the same defect one layer down.
+    """
+    liabilities = next(
+        line for line in ibm_fy2025.by_kind["balance_sheet"]
+        if line.concept == "us-gaap_Liabilities"
+    )
+    assert liabilities.values["instant_2024-12-31"] == 109783000000.0
+
+    cell = cells.cell_state(
+        ibm_fy2025, "balance_sheet", "us-gaap:Liabilities", "instant_2024-12-31",
+    )
+
+    assert cell.state == "value"
+    assert cell.value == Decimal("109783000000")
+    assert cell.derivation is None
+    assert cell.value != Decimal("109782000000"), (
+        "the derivation replaced the figure IBM itself reported"
+    )
+
+
 def test_an_unknown_statement_kind_fails_loud(cells, ko_fy2017):
     """A typo'd kind must RAISE, not answer `not_presented`. Answering would
     return the very undifferentiated blank this module exists to abolish, and
@@ -320,6 +360,37 @@ def _balance_sheet(shape, period: str, concept_values: dict):
         for concept, value in concept_values.items()
     ]
     return SimpleNamespace(by_kind={"balance_sheet": lines})
+
+
+def test_a_custom_concept_keeps_the_underscores_after_its_namespace(cells, shape):
+    """CONSTRUCTED-CONVENTIONAL: a filer's own concept carrying underscores in
+    its LOCAL name. Unobserved — every custom concept in the capture
+    (`ko_UnusualOrInfrequentItemOperating`, `ibm_OtherExpenseAndIncome`) is
+    single-underscore CamelCase.
+
+    `_store_qname` folds only the FIRST separator, and its docstring says so.
+    Rewriting it as `concept.replace("_", ":")` passes every other test in this
+    suite because nothing else distinguishes them — so this pins the claim
+    rather than leaving a docstring nobody can break. Under replace-all the
+    lookup below yields `ibm:Segment:Revenue:Adjustment` and the line is never
+    found, which would report a line the filer DOES present as
+    `not_presented`: the taxonomy's worst answer, since it blames the filer for
+    our own name handling.
+    """
+    line = shape.Line(
+        label="Segment revenue adjustment", concept="ibm_Segment_Revenue_Adjustment",
+        level=1, weight=None, calculation_parent=None,
+        values={"duration_2025-01-01_2025-12-31": 12.0},
+    )
+    statements = SimpleNamespace(by_kind={"income": [line]})
+
+    cell = cells.cell_state(
+        statements, "income", "ibm:Segment_Revenue_Adjustment",
+        "duration_2025-01-01_2025-12-31",
+    )
+
+    assert cell.state == "value"
+    assert cell.value == Decimal("12")
 
 
 def test_derived_arithmetic_is_decimal_not_binary_float(cells, shape):
