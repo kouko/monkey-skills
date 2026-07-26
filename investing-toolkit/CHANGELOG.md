@@ -71,11 +71,16 @@ that a decade of trend analysis needs.
   turn that into wrong data rather than an error, which would have reached
   `pack_reconstruct` as the wrong document filed under the wrong year.
 
-Grounding for the three above: a whole-branch review's mutation pass, which
+- **`--no-cache` reports what it removed**, including zero. A ticker the map
+  cannot resolve busts nothing, and a silent no-op there is indistinguishable
+  from a successful bust — the failure this flag exists to rule out.
+
+Grounding for the four above: a whole-branch review's mutation pass, which
 found 5 of 9 mutants of the merge surviving the full suite — including
 deleting the padding whose own docstring described behaviour the code did not
-have. The suite now kills 9 of 9 (10th mutant's anchor was refactored away).
-Live re-verification after the fixes: JPM cold 8/8 filings, 10 annual periods.
+have. The suite now kills **8 of 8 distinct mutants**, none surviving. Live
+re-verification after the fixes: JPM cold 8/8 filings, 10 annual periods, and
+70 cache entries removed by one `bust_cik_caches` call.
 
 ### Known limits
 

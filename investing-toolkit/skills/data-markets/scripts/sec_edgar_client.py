@@ -483,7 +483,7 @@ def bust_cik_caches(cik: int, concept: str | None = None) -> list:
     paths = [cache_util.cache_path("sec_edgar", key) for key in keys]
     paths.extend(
         sorted(
-            cache_util.cache_path("sec_edgar", "_probe").parent.glob(
+            (cache_util.resolve_cache_dir() / "sec_edgar").glob(
                 f"submissions_page_CIK{cik:010d}-*"
             )
         )
@@ -4613,7 +4613,8 @@ def extract_dimensional_revenue(
     docs/loom/plans/2026-07-16-operational-kpi-quarterly.md — implementation
     recon found no cache write/read path here; the only caches in this
     module are schema-independent raw-source keys: tickers/facts_{cik}/
-    concept_{cik}_{concept}/submissions_{cik}/narrative_sections_{accession}).
+    concept_{cik}_{concept}/submissions_full_{cik}/submissions_page_{name}/
+    narrative_sections_{accession}).
     Any FUTURE cache of this labeled-fact payload MUST use a
     schema-versioned distinct key, never a legacy key — see spec
     constraint (d), docs/loom/2026-07-16-operational-kpi-quarterly/specs/
@@ -5831,13 +5832,21 @@ def main():
 
     # Optional cache bust
     if args.no_cache:
-        # Only blow away the file that's about to be written
+        # Clears this filer's companyfacts entry, its merged submissions entry,
+        # the optional concept entry, AND every archive page cached for it --
+        # an unbounded, filer-scoped set, 70 files for JPM. The count is
+        # REPORTED rather than assumed: a ticker the map cannot resolve busts
+        # nothing, and a silent no-op here is indistinguishable from a
+        # successful bust, which is the failure this flag exists to rule out.
         if args.ticker:
             t = args.ticker.upper()
             tmap = load_ticker_map()
             entry = tmap.get("tickers", {}).get(t) if "error" not in tmap else None
             if entry:
-                bust_cik_caches(entry["cik"], args.concept)
+                removed = bust_cik_caches(entry["cik"], args.concept)
+                _log("cache bust", f"{t}: {len(removed)} entries removed")
+            else:
+                _log("cache bust", f"{t}: 0 entries removed (ticker not resolved)")
         if args.accession:
             # The edgartools narrative cache key (Task 12) is
             # narrative_sections_{accession} — DISTINCT from the retired regex
