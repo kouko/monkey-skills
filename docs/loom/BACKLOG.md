@@ -302,6 +302,34 @@
   - Re-trigger: a second filer's surviving flag traces to a second temporary-equity
     line, or the corpus is re-probed for temporary-equity concept coverage.
 
+- (f) 🟢 **Unit selection is now row-count dependent, so it is stable within a
+  fetch but not across fetches.** `_companyfacts_unit_key`'s fallback picks the
+  unit key with the most rows (replacing dictionary order, which was worse). SEC
+  appends rows over time, so a concept whose two non-USD keys sat near a tie could
+  select key A this quarter and key B next. `unit` is a NON-key field, the
+  intra-pack guard compares `value` only, and the ingest driver has no unit guard —
+  so the store would silently accumulate two unit series under one `kpi_id` with
+  nothing failing loud. No near-tie is observed (the measured cases are 3-vs-303 and
+  11-vs-295), and the rule this replaced was strictly weaker. Fix is either widening
+  the docstring's determinism claim to name cross-fetch instability, or adding a
+  per-kpi_id unit-change guard beside the existing value guard.
+  - Re-trigger: a filer's `unit` changes between two fetches of the same `kpi_id`,
+    or a concept is observed whose two non-USD key counts are within ~2x.
+- (g) 🟢 **A hand-fed-payload test can pin a production path that is unreachable.**
+  `test_a_parent_only_period_whose_asserted_nci_has_no_amount_is_uncheckable` was
+  green for this entire branch while the code path it pins could not be reached from
+  the producer at all — it fed a hand-built store dump carrying both equity
+  concepts, an input the producer could not emit until the conflict-rule fix landed.
+  The path is genuinely reachable now (TSLA 2025-12-31 carries both subtotals), so
+  this is not a live hole; what is missing is anything STRUCTURAL preventing a
+  repeat, since no view-layer test in this suite carries a reachability obligation.
+  - Possible fix, not yet decided: require a new view-layer branch pin to name a
+    filer in the committed 47-filer probe fixture that exercises it — the fixture is
+    the available anchor, and naming one is cheap at authoring time and impossible
+    to fake.
+  - Re-trigger: the next view-layer test that pins a branch of a producer-fed code
+    path, or a second incident of a green test over an unreachable path.
+
 ## investing-toolkit kpi_id identity 2.37.0 — post-ship follow-ups (OPEN)
 
 - Status: OPEN. Filed at close-out 2026-07-26 (branch `feat-kpi-id-consolidation-axis`).

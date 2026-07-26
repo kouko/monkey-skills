@@ -82,7 +82,11 @@ store is append-only, so the missing years do not appear retroactively —
 recovered years append as ordinary points; nothing already stored is
 rewritten.
 
-Offline suite: TEST-COUNT-PLACEHOLDER (stamped at close-out).
+Offline suite: 1175 passed, 2 skipped, 61 deselected (from 1089 at the
+branch base). Beyond the suite, the lane was run end to end against six real
+filers — MSFT, AAPL, WMT, JPM, TSLA and XOM — chosen for the shapes that
+break it rather than for coverage; that run found three defects the suite
+could not see, all fixed here.
 
 ## [v2.37.0] — 2026-07-25
 
