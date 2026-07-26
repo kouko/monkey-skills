@@ -5,6 +5,48 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.39.0] — 2026-07-26
+
+### Added — as-filed three-statement reconstruction, and a typed empty cell
+
+A US filer's three statements are now reconstructed from the filing's OWN
+presentation and calculation linkbases, instead of being forced through a fixed
+14-field concept chain. The 14-field spine becomes a derived VIEW over that
+reconstruction rather than the storage format.
+
+- `pack.py --pack reconstruct` (US only) returns one company's statements per
+  accession, carrying the filer's own labels, weights, calculation parents and
+  per-period values — plus a `verification` section with per-era resolved counts,
+  a reason per unresolved statement, and a sum-check census in which
+  `within_rounding` is its own answer rather than a rounded-away `agrees`.
+- `kpi_spine_view.py derive-as-filed` reads that payload and emits the 14 fields
+  with **every empty cell typed**: `not_presented` (the filer files no such
+  line), `not_tagged`, or `derived` with the arithmetic that produced it.
+
+Why: measured across 65 domestic operating filers, the fixed chain found NOTHING
+for whole sectors — utilities (`RegulatedAndUnregulatedOperatingRevenue`), REITs
+(`RealEstateRevenueNet`), mining (`RevenueMineralSales`), software
+(`SalesRevenueServicesNet`), pharma and beverage (`SalesRevenueGoodsNet`) — so
+those filers' revenue series began in 2018, when everyone converged on the
+ASC 606 concept. Two more (PSX, XOM) were silently understated by 2-3% because
+each names its total with a concept absent from the chain.
+
+Grounding: across 56 filers, 501 of 509 declared subtotals reconcile against the
+filers' own reported figures, and the income statement is 212 of 212. Acceptance
+is line-by-line against the filed document, which surfaced that a filer files
+its income statement twice and the two renderings disagree on 15 of 26 labels
+with zero figures differing.
+
+### Known limits
+
+- The structural rule's 63-of-65 was measured on filings FILED 2016-2018;
+  `resolution_report` therefore breaks its counts down by era rather than
+  assuming the sampled window generalises.
+- `verify` sees presented lines only, so a calculation child absent from the
+  statement face produces a false `disagrees` it cannot distinguish.
+- XBRL is mandatory only from ~2009-2011, so 10+ years is reachable and 20 is
+  not without HTML parsing, which stays out of scope.
+
 ## [v2.38.0] — 2026-07-26
 
 ### Added — US as-reported annual statement lane + derived spine view
