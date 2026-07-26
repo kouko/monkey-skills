@@ -1540,11 +1540,9 @@ def _fields_resolved_without_the_chain(spine_view) -> set[str]:
         consulted.add(field_of_chain[chain])
         return real(lines, chain)
 
-    spine_view._chain_concept = recording
-    try:
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(spine_view, "_chain_concept", recording)
         spine_view.derive_spine_as_filed(_payload(_captured_filing("KO")))
-    finally:
-        spine_view._chain_concept = real
     return set(_FOURTEEN_FIELDS) - consulted
 
 
@@ -1563,7 +1561,14 @@ def test_spine_field_chains_has_a_stated_disposition(spine_view):
          universal claim and its exception in the same place, never one
          without the other;
       3. the count it claims equals the measured count, so the prose cannot
-         drift away from the code silently.
+         drift away from the code silently — in EITHER direction, which the
+         count is matched WITH ITS DENOMINATOR to buy. A bare `\\b{n}\\b`
+         search passed on the case that matters most: the block already
+         contains "14" (inside "13 of those 14"), so if `revenue` ever
+         rejoined the chain, `still_served` would become 14 and a stale
+         paragraph would satisfy the search. Binding "N of the M" is what
+         makes the count a claim about the split rather than a number
+         appearing somewhere.
     """
     left_the_chain = _fields_resolved_without_the_chain(spine_view)
     still_served = len(_FOURTEEN_FIELDS) - len(left_the_chain)
@@ -1578,7 +1583,9 @@ def test_spine_field_chains_has_a_stated_disposition(spine_view):
             f"{field!r} no longer resolves through the chain and the chain's "
             "own prose does not say so"
         )
-    assert re.search(rf"\b{still_served}\b", prose), (
+    assert re.search(
+        rf"\b{still_served} of (the |those )?{len(_FOURTEEN_FIELDS)}\b", prose
+    ), (
         f"the chain still resolves {still_served} of the {len(_FOURTEEN_FIELDS)} "
         "fields and its prose does not state that count"
     )

@@ -2,7 +2,11 @@
 
 > SSOT for cross-plugin open items. Convention: one entry per item with
 > **start/re-trigger condition**, **origin** (PR / ledger / discussion),
-> and **status** (`COMMITTED-NEXT` | `OPEN` | `PARKED` | `UPSTREAM`).
+> and **status** (`COMMITTED-NEXT` | `OPEN` | `PARKED` | `UPSTREAM` |
+> `SHIPPED` | `CLOSED — SUPERSEDED`). The last two are the exceptions to the
+> deletion rule below, and both were already in use before they were listed
+> here (`SHIPPED` at two entries; `CLOSED — SUPERSEDED` where a brief requires
+> a discoverable pointer that a deleted entry could not carry).
 > Plugin-local parks stay in each plugin's README (§parked items with
 > re-triggers); this file holds items that cross plugin boundaries or
 > have no plugin home yet. Claude-side session memory keeps only a

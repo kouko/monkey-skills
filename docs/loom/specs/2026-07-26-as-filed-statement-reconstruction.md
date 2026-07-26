@@ -321,8 +321,16 @@ resolve worse than the sampled window.
 ## Smallest End State
 
 For ONE US company: the three statements as filed, for 10+ years, each line
-carrying the filer's own label, with every declared sum verified and every empty
-cell typed.
+carrying the filer's own **XBRL** label, with every declared sum verified and
+every empty cell typed.
+
+**"XBRL" is load-bearing in that sentence and this brief first omitted it.** A
+filer files its income statement twice and the two disagree — for KO FY2017, 15
+of 26 labels and 3 line positions differ between the printed page and the XBRL
+exhibit, with zero figures differing. The full measurement and what it does and
+does not bound are under §"THE FILER'S OWN LABEL MEANS ITS XBRL LABEL" below;
+this line names the qualifier so a reader who stops here does not leave with the
+unqualified promise.
 
 1. From one accession: the three statements as ordered lines — label, concept,
    level, weight, calculation parent, per-period values — segment slices

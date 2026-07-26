@@ -255,9 +255,21 @@
 
 ## Task 7 — re-express the 14-field spine as a view, field list unchanged
 
-- **Description**: Make `kpi_spine_view` derive its 14 fields from the reconstruction instead of
-  resolving `SPINE_FIELD_CHAINS` against the raw store, WITHOUT changing which fields exist, and
-  render `not_presented` distinctly from empty so the cell taxonomy survives to the reader.
+- **Description**: Add `derive_spine_as_filed`, a SECOND entry point over Task 9's `reconstruct`
+  payload beside the existing store-backed `derive_spine`, WITHOUT changing which fields exist, and
+  render `not_presented` distinctly from empty so the cell taxonomy survives to the reader. Bind
+  `revenue` — and only `revenue` — by the validated structural rule; the other 13 fields keep the
+  chain, with the reason stated at the site. Break the `kpi_us_statement_cells` ↔ `kpi_spine_view`
+  import cycle FIRST, by lifting the equity/mezzanine primitives into a leaf module both sides
+  import.
+  **DESCRIPTION SUPERSEDED AND REWRITTEN 2026-07-26.** It originally read "Make `kpi_spine_view`
+  derive its 14 fields from the reconstruction INSTEAD OF resolving `SPINE_FIELD_CHAINS` against
+  the raw store". That is not implementable and never was: a store dump carries no calculation
+  linkbase, so the reconstruction is not computable from `derive_spine`'s input at all. This was a
+  second function with a different input, not a substitution. Task 7's implementer returned
+  NEEDS_CONTEXT rather than forcing it, and was right. Binding all 14 fields structurally was also
+  dropped: only two filings carry offline rows, so 13 of the rules would have been pinned solely by
+  fixtures written to fit them — unpinned work on the money path.
 - **Module**: investing-toolkit/skills/analysis-kpi/scripts/kpi_spine_view.py
 - **Files touched**: investing-toolkit/skills/analysis-kpi/scripts/kpi_spine_view.py,
   investing-toolkit/tests/analysis/test_kpi_spine_view.py
@@ -266,12 +278,25 @@
   - /Users/kouko/.supacode/repos/monkey-skills/finacial-analytics-r2/investing-toolkit/skills/analysis-kpi/scripts/kpi_us_statement_series.py
   - /Users/kouko/.supacode/repos/monkey-skills/finacial-analytics-r2/investing-toolkit/tests/analysis/test_kpi_spine_view.py
 - **Acceptance**:
-  - **RED**: `test_sector_revenue_no_longer_blank` — DUK (`RegulatedAndUnregulatedOperatingRevenue`)
-    and PLD (`RealEstateRevenueNet`), whose revenue the chain cannot resolve at all, must yield a
-    revenue value; and PSX must yield its own declared total `RevenuesAndOtherIncome`
-    (104,622M) rather than the chain's 2.2%-low `SalesRevenueNet` (102,354M).
-  - **GREEN**: the 14 field names are byte-identical to today's; the existing tearsheet tests
-    still pass; an oil major's `operating_income` renders as `not_presented`, distinct from empty.
+  - **RED**: `test_sector_revenue_no_longer_blank`, RE-GROUNDED 2026-07-26 on KO FY2017 —
+    `SalesRevenueGoodsNet` at 35,410M, a concept the chain cannot resolve at all. The test asserts
+    that chain-resolves-nothing PREMISE first, so widening the chain later cannot make it pass for
+    the wrong reason.
+    Originally this named DUK (`RegulatedAndUnregulatedOperatingRevenue`), PLD
+    (`RealEstateRevenueNet`) and PSX (`RevenuesAndOtherIncome`, 104,622M vs the chain's 2.2%-low
+    102,354M). Those three carry NO offline rows — the committed capture holds rows for KO FY2017
+    and IBM FY2025 only — so any rule they discriminated would have been pinned solely by fixtures
+    written to fit it. KO is the same claim on observed evidence: "whole sectors use concepts the
+    chain never listed" is exactly what `SalesRevenueGoodsNet` demonstrates. DUK/PLD/PSX are
+    recorded at the test site as unobserved-offline with their measured concepts named, so the
+    coverage limit stays visible. Same re-grounding as Task 5's "an oil major" onto IBM.
+  - **GREEN**: the 14 field names are byte-identical to today's, asserted against an INDEPENDENT
+    transcription rather than read from `SPINE_FIELD_CHAINS` (which would agree with any edit to
+    itself); the existing tearsheet tests still pass; a filer presenting no operating-income line
+    renders `not_presented`, distinct from empty — pinned on IBM FY2025 with KO's presented 7,501M
+    asserted in the same test as the contrast, so "everything renders not_presented" cannot pass.
+    "An oil major" was the original wording; none carries offline rows, and the requirement was
+    always the structural fact, never the filer.
 - **Dependencies**: Tasks 5, 6 complete first
 - **Independent**: true
 - **Status**: done(5a898662)
