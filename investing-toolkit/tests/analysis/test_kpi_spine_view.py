@@ -1557,3 +1557,176 @@ def test_spine_field_chains_has_a_stated_disposition(spine_view):
         f"the chain still resolves {still_served} of the {len(_FOURTEEN_FIELDS)} "
         "fields and its prose does not state that count"
     )
+
+
+def test_a_filing_with_no_revenue_line_at_all_is_not_presented(spine_view):
+    """CONSTRUCTED-CONVENTIONAL — a bank-shaped income statement, whose lines
+    are interest and fee income and carry no revenue wording at all. Not
+    observable offline: all five captured filings are operating filers, and 9
+    of the brief's 79-filer universe are financials with no rows captured.
+
+    THE OTHER ZERO OF `_revenue_total`, and it must not be confused with the
+    ambiguous one. Two candidate totals is "the filing declares revenue and we
+    cannot tell which line is the total" — a typed `unresolved` gap naming
+    them. NO candidate is a different fact: this filer has no single revenue
+    origin by construction (brief §Open Questions, financial-sector filers), so
+    the honest answer is `not_presented`, with no candidate list, exactly as if
+    the line were absent — which it is.
+
+    `net_income` is asserted on the same filing on purpose: without it, a
+    statement that failed to parse at all would satisfy every assertion above
+    and this test would pass for the wrong reason.
+    """
+    filing = {
+        "accession": "0000000000-00-000001", "form": "10-K",
+        "filingDate": "2018-02-23",
+        "statements": {"income": [
+            {"label": "Interest and dividend income",
+             "concept": "us-gaap_InterestAndDividendIncomeOperating",
+             "level": 3, "weight": 1.0,
+             "calculation_parent": "us-gaap_InterestIncomeExpenseNet",
+             "values": {"duration_2017-01-01_2017-12-31": 40_000_000_000.0}},
+            {"label": "Interest expense", "concept": "us-gaap_InterestExpense",
+             "level": 3, "weight": -1.0,
+             "calculation_parent": "us-gaap_InterestIncomeExpenseNet",
+             "values": {"duration_2017-01-01_2017-12-31": 9_000_000_000.0}},
+            {"label": "Net interest income",
+             "concept": "us-gaap_InterestIncomeExpenseNet",
+             "level": 2, "weight": 1.0, "calculation_parent": None,
+             "values": {"duration_2017-01-01_2017-12-31": 31_000_000_000.0}},
+            {"label": "Net income", "concept": "us-gaap_NetIncomeLoss",
+             "level": 2, "weight": 1.0, "calculation_parent": None,
+             "values": {"duration_2017-01-01_2017-12-31": 24_000_000_000.0}},
+        ]},
+        "roles": {}, "unrecognised_dimension_keys": [],
+    }
+
+    view = spine_view.derive_spine_as_filed(_payload(filing))
+
+    revenue = _field(view, filing["accession"], "revenue")
+    assert revenue["concept"] is None
+    assert "unresolved" not in revenue, (
+        "no candidate is not an ambiguous total; naming candidates here would "
+        "invite a reader to adjudicate a choice that was never offered"
+    )
+    assert revenue["periods"]["duration_2017-01-01_2017-12-31"] == {
+        "state": "not_presented", "value": None,
+    }
+
+    net_income = _field(view, filing["accession"], "net_income")
+    assert net_income["periods"]["duration_2017-01-01_2017-12-31"] == {
+        "state": "value", "value": 24_000_000_000.0,
+    }
+
+
+def test_a_derivable_total_liabilities_is_derived_not_blanked(spine_view):
+    """OBSERVED (KO FY2017). The arc's headline derivation must survive the
+    trip through this view.
+
+    KO tags `LiabilitiesAndStockholdersEquity` and NO `Liabilities` line, which
+    is precisely when `cell_state`'s derivation applies — its own ranking puts
+    `derived` ABOVE `not_presented` because "computable from the filer's own
+    footing" is strictly more informative than "absent". A view that answers
+    `not_presented` as soon as the chain binds nothing prints a blank where the
+    filing's own arithmetic gives 68,919M, which is the failure this whole arc
+    exists to remove, reproduced in the arc's own output.
+
+    THE FORMULA IS ASSERTED, not just the number. A future short-circuit that
+    emitted a bare figure would satisfy a value-only assertion while dropping
+    the provenance that lets a reader audit it — and the mezzanine and minority
+    terms in that formula are exactly the two the brief says must not be folded
+    into "liabilities".
+
+    The 2014/2015 instants are asserted `not_presented` in the same test: this
+    is a claim that the view DISTINGUISHES the two, not that it derives
+    everywhere. KO's earlier instants carry no footing to derive from.
+    """
+    ko = _captured_filing("KO")
+    view = spine_view.derive_spine_as_filed(_payload(ko))
+    liabilities = _field(view, ko["accession"], "total_liabilities")
+
+    assert liabilities["periods"]["instant_2017-12-31"] == {
+        "state": "derived",
+        "value": 68_919_000_000.0,
+        "derivation": (
+            "us-gaap:Liabilities = us-gaap:LiabilitiesAndStockholdersEquity"
+            " - us-gaap:StockholdersEquity"
+            " - us-gaap:TemporaryEquityCarryingAmountIncluding"
+            "PortionAttributableToNoncontrollingInterests"
+            " - us-gaap:MinorityInterest"
+        ),
+    }
+    assert liabilities["periods"]["instant_2014-12-31"] == {
+        "state": "not_presented", "value": None,
+    }
+
+
+def test_a_negative_parent_does_not_orphan_its_children_into_totals(spine_view):
+    """CONSTRUCTED-CONVENTIONAL — an IBM-shaped cost block broken into
+    revenue-worded components. Not observable offline: IBM's captured statement
+    presents `CostOfRevenue` as a single line with no children, so nothing in
+    the capture reaches this branch.
+
+    THE BUG THIS PINS. The sign filter drops a negative-weight revenue-worded
+    line (`CostOfRevenue`). If the parent set is built from the SURVIVORS, that
+    line stops existing as a parent, and its own revenue-worded children look
+    parentless — so they join the totals set, the count exceeds one, and the
+    filer's revenue collapses to a false `unresolved` gap. Building the parent
+    set from ALL wording matches BEFORE the sign filter is what keeps a
+    component recognisable as a component regardless of which side of the sign
+    its parent sits on.
+    """
+    filing = {
+        "accession": "0000000000-00-000002", "form": "10-K",
+        "filingDate": "2026-02-24",
+        "statements": {"income": [
+            {"label": "Revenue", "concept": "us-gaap_Revenues", "level": 4,
+             "weight": 1.0, "calculation_parent": "us-gaap_GrossProfit",
+             "values": {"duration_2025-01-01_2025-12-31": 67_535_000_000.0}},
+            {"label": "Cost", "concept": "us-gaap_CostOfRevenue", "level": 4,
+             "weight": -1.0, "calculation_parent": "us-gaap_GrossProfit",
+             "values": {"duration_2025-01-01_2025-12-31": 30_000_000_000.0}},
+            {"label": "Cost of services revenue",
+             "concept": "ibm_CostOfServicesRevenue", "level": 5, "weight": 1.0,
+             "calculation_parent": "us-gaap_CostOfRevenue",
+             "values": {"duration_2025-01-01_2025-12-31": 20_000_000_000.0}},
+            {"label": "Cost of sales", "concept": "ibm_CostOfSalesRevenue",
+             "level": 5, "weight": 1.0,
+             "calculation_parent": "us-gaap_CostOfRevenue",
+             "values": {"duration_2025-01-01_2025-12-31": 10_000_000_000.0}},
+        ]},
+        "roles": {}, "unrecognised_dimension_keys": [],
+    }
+
+    revenue = _field(
+        spine_view.derive_spine_as_filed(_payload(filing)),
+        filing["accession"], "revenue",
+    )
+    assert "unresolved" not in revenue, (
+        "the cost block's components are components, not rival totals"
+    )
+    assert revenue["concept"] == "us-gaap_Revenues"
+    assert revenue["periods"]["duration_2025-01-01_2025-12-31"]["value"] == (
+        67_535_000_000.0
+    )
+
+
+def test_every_bound_concept_carries_the_filers_own_row_spelling(spine_view):
+    """OBSERVED (KO FY2017). One payload, one spelling.
+
+    A statement row spells the namespace separator `_`
+    (`us-gaap_SalesRevenueGoodsNet`); the store's `kpi_id` spells it `:`. This
+    view is over statement rows, and its own docstring defers the multi-year
+    join to `kpi_us_statement_series.series_for`, which keys series identity on
+    the filer's own concept — so two spellings under one key would split one
+    series in two. The structural revenue rule reports the row's own concept;
+    the chain path must not re-qualify its answer into the other spelling.
+    """
+    ko = _captured_filing("KO")
+    view = spine_view.derive_spine_as_filed(_payload(ko))
+
+    bound = {f["field"]: f["concept"] for f in view["filings"][0]["fields"]
+             if f["concept"] is not None}
+    assert bound["revenue"] == "us-gaap_SalesRevenueGoodsNet"
+    assert bound["gross_profit"] == "us-gaap_GrossProfit"
+    assert not [c for c in bound.values() if ":" in c], bound

@@ -396,15 +396,22 @@ _RESTATED_ROLE = "http://example.com/role/ConsolidatedStatementsOfIncome"
 def _restatement_filings(older_value, newer_value) -> list:
     """CONSTRUCTED-CONVENTIONAL: two filings of one filer reporting the SAME
     period under the SAME concept with different amounts — a restatement, the
-    case the store's vintage policy exists for."""
-    concept = "us-gaap_Revenues"
+    case the store's vintage policy exists for.
+
+    TWO concepts, not one: a one-concept payload cannot tell a sorted key
+    order from an arrival order, so the determinism assertion would pass on an
+    implementation that has none. `CostOfGoodsSold` sorts before `Revenues`,
+    the reverse of the order they are written in here.
+    """
+    def rows(revenue):
+        return [
+            _line_row("us-gaap_Revenues", "Revenue", {_duration(2018): revenue}),
+            _line_row("us-gaap_CostOfGoodsSold", "Cost of goods sold",
+                      {_duration(2018): 12_000_000_000.0}),
+        ]
     return [
-        _Filing("0000000000-19-000001", "2019-02-20", {_RESTATED_ROLE: [
-            _line_row(concept, "Revenue", {_duration(2018): older_value}),
-        ]}),
-        _Filing("0000000000-20-000001", "2020-02-20", {_RESTATED_ROLE: [
-            _line_row(concept, "Revenue", {_duration(2018): newer_value}),
-        ]}),
+        _Filing("0000000000-19-000001", "2019-02-20", {_RESTATED_ROLE: rows(older_value)}),
+        _Filing("0000000000-20-000001", "2020-02-20", {_RESTATED_ROLE: rows(newer_value)}),
     ]
 
 
@@ -423,19 +430,91 @@ def test_overlapping_vintages_resolve_newest_filed(series):
     assert point.vintage == ("2020-02-20", "0000000000-20-000001")
 
 
+def test_a_newer_filing_with_a_smaller_accession_still_wins(series):
+    """THE ACCESSION IS NOT A CLOCK, and this is the only test that proves the
+    ordering reads `as_of` at all: replace the vintage key with the accession
+    alone and every OTHER fixture in this module stays green, because in each
+    of them the accession happens to sort the same direction as the date. This
+    one fails.
+
+    An accession's first ten digits are the CIK of whoever TRANSMITTED the
+    filing — the issuer or its filing agent — so it changes when a filer
+    switches agent and orders by issuer prefix, not by time (the argument
+    `kpi_spine_view._vintage_key` makes in its own prose, kpi_spine_view.py
+    :456). That the prefix really does move across one filer's decade is
+    COMMITTED, not supposed: the capture holds KO's own
+    `0000021344-18-000008` (2018) and the agent-transmitted
+    `0001628280-26-010047` (2026). CONSTRUCTED here is only the DIRECTION —
+    those two observed prefixes paired so the newer filing carries the
+    smaller accession, which is the switch an issuer makes when it brings
+    filing in-house.
+    """
+    concept = "us-gaap_Revenues"
+    joined = series.series_for([
+        _Filing("0001628280-19-000001", "2019-02-21", {_RESTATED_ROLE: [
+            _line_row(concept, "Revenue", {_duration(2018): 31_856_000_000.0}),
+        ]}),
+        _Filing("0000021344-20-000006", "2020-02-24", {_RESTATED_ROLE: [
+            _line_row(concept, "Revenue", {_duration(2018): 34_300_000_000.0}),
+        ]}),
+    ])
+    point = joined.by_concept[("income", concept)].points[0]
+
+    assert point.vintage == ("2020-02-24", "0000021344-20-000006"), (
+        "the 2020 filing is newer but its accession sorts SMALLER; picking "
+        f"{point.vintage} means the ordering read the accession, not the date"
+    )
+    assert point.value == 34_300_000_000.0
+
+
 def test_input_order_does_not_change_the_answer(series):
     """The filings arrive in whatever order a caller enumerated accessions in.
     Newest-filed must be a property of the FILINGS, never of the argument
     order — the same defect the store's own grouping calls out (`kpi_store.
     _group_period_entries`: same data, different result on file-glob order).
+
+    `Series.__eq__` ALONE CANNOT SAY THIS. `by_concept` is a `dict`, and dict
+    equality ignores insertion order, so an implementation that emitted its
+    keys in whatever order the filings arrived would satisfy `==` and leave
+    the module's own "ordered by that key, so two runs never disagree"
+    untested. The KEY ORDER is therefore asserted separately, on a fixture
+    with two concepts — with one, every order is sorted.
     """
     filings = _restatement_filings(31_856_000_000.0, 34_300_000_000.0)
     forward = series.series_for(filings)
     backward = series.series_for(list(reversed(filings)))
+
     assert forward == backward
+    assert list(forward.by_concept) == list(backward.by_concept)
+    assert list(forward.by_concept) == [
+        ("income", "us-gaap_CostOfGoodsSold"), ("income", "us-gaap_Revenues"),
+    ]
 
 
-def test_the_newest_filed_rule_agrees_with_the_store(series, spine_view):
+def _conformance_pair(older, newer) -> list:
+    """Two filings differing only in vintage, for the store-agreement oracle.
+    Each is `(as_of, accession)`."""
+    return [
+        _Filing(accession, as_of, {_RESTATED_ROLE: [
+            _line_row("us-gaap_Revenues", "Revenue", {_duration(2018): value}),
+        ]})
+        for value, (as_of, accession) in enumerate((older, newer), start=1)
+    ]
+
+
+@pytest.mark.parametrize("filings", [
+    pytest.param(
+        _conformance_pair(("2020-02-20", "0000000000-20-000001"),
+                          ("2020-02-20", "0000000000-20-000002")),
+        id="same-day-tie-broken-by-accession",
+    ),
+    pytest.param(
+        _conformance_pair(("2019-02-21", "0001628280-19-000001"),
+                          ("2020-02-24", "0000021344-20-000006")),
+        id="differing-as-of-outranks-a-smaller-accession",
+    ),
+])
+def test_the_newest_filed_rule_agrees_with_the_store(series, spine_view, filings):
     """CONFORMANCE, not a copy: the vintage this module picks is checked
     against the STORE's own `_identity_vintage` fed the equivalent
     observations. If the store ever reorders vintages differently — a third
@@ -443,18 +522,18 @@ def test_the_newest_filed_rule_agrees_with_the_store(series, spine_view):
     silently drifting apart. `_identity_vintage` is private to its module and
     is read here only as an oracle, never called by production code.
 
-    Same-day tie included on purpose: `as_of` alone cannot order two filings
-    made on one day, which is exactly why the store's key is the PAIR
-    `(as_of, source_accession)` (kpi_spine_view.py:443-464).
+    BOTH HALVES OF THE STORE'S RULE ARE PINNED, in two parametrized cases,
+    because they are two different claims and a tie-only oracle pins only one:
+
+      same-day  — `as_of` cannot separate them and the accession decides,
+                  which is why the store's key is the PAIR
+                  `(as_of, source_accession)` (kpi_spine_view.py:443-464);
+      differing — `as_of` decides and the accession must not, which is the
+                  ORDERING half. Its accessions run counter to its dates for
+                  the reason `test_a_newer_filing_with_a_smaller_accession_
+                  still_wins` gives, so an oracle that agreed by coincidence
+                  of sort direction cannot agree here.
     """
-    filings = [
-        _Filing("0000000000-20-000001", "2020-02-20", {_RESTATED_ROLE: [
-            _line_row("us-gaap_Revenues", "Revenue", {_duration(2018): 1.0}),
-        ]}),
-        _Filing("0000000000-20-000002", "2020-02-20", {_RESTATED_ROLE: [
-            _line_row("us-gaap_Revenues", "Revenue", {_duration(2018): 2.0}),
-        ]}),
-    ]
     joined = series.series_for(filings)
     picked = joined.by_concept[("income", "us-gaap_Revenues")].points[0].vintage
 
@@ -463,6 +542,153 @@ def test_the_newest_filed_rule_agrees_with_the_store(series, spine_view):
         for filing in filings
     ]}
     assert picked == spine_view._identity_vintage(store_period)
+
+
+# --- what the departure-AND-arrival rule does and does not see --------------
+#
+# Every fixture in this section is CONSTRUCTED-CONVENTIONAL: it exercises a
+# re-tag shape, and no captured filing pair exercises any of them (the capture
+# holds rows for one filing per filer). The shapes themselves are not invented
+# — the two silent-miss cases below are how ASC 606 was adopted, the same
+# standard KO's measured transition came from.
+
+
+def _filing_tagging(accession: str, filed: str, tagged: dict) -> _Filing:
+    """One filing whose income statement tags exactly
+    `{concept: {period: value}}`, one row per concept."""
+    return _Filing(accession, filed, {_RESTATED_ROLE: [
+        _line_row(concept, concept.split("_")[-1], values)
+        for concept, values in tagged.items()
+    ]})
+
+
+def test_several_concepts_moving_at_once_ride_one_event(series):
+    """The `len(gone) > 1` branch, which both module docstrings specify and
+    nothing exercised. Two concepts leave and two arrive across one shared
+    period: ONE event carries all four, and this module declines to say which
+    became which. Pairing them 1-to-1 — by order, by position, by label
+    similarity — is precisely the silent merge the design forbids, so the
+    ambiguity is handed to the reader intact.
+    """
+    joined = series.series_for([
+        _filing_tagging("0000000000-19-000001", "2019-02-20", {
+            "us-gaap_SalesRevenueGoodsNet": {_duration(2018): 1.0},
+            "us-gaap_SalesRevenueServicesNet": {_duration(2018): 2.0},
+        }),
+        _filing_tagging("0000000000-20-000001", "2020-02-20", {
+            "us-gaap_RevenueFromContractWithCustomerExcludingAssessedTax":
+                {_duration(2018): 3.0},
+            "us-gaap_RevenueFromContractWithCustomerIncludingAssessedTax":
+                {_duration(2018): 4.0},
+        }),
+    ])
+
+    assert len(joined.transitions) == 1
+    event = joined.transitions[0]
+    assert event.gone == (
+        "us-gaap_SalesRevenueGoodsNet", "us-gaap_SalesRevenueServicesNet",
+    )
+    assert event.arrived == (
+        "us-gaap_RevenueFromContractWithCustomerExcludingAssessedTax",
+        "us-gaap_RevenueFromContractWithCustomerIncludingAssessedTax",
+    )
+    assert [value.value for value in event.values] == [1.0, 2.0, 3.0, 4.0]
+
+
+def test_an_unrelated_drop_and_add_is_recorded_like_a_retag(series):
+    """THE FALSE POSITIVE, pinned deliberately. A filer that stops reporting
+    one line and starts reporting an unrelated other one in the same period
+    pair produces `gone=(X,), arrived=(Y,)` — byte-identical in shape to a real
+    re-tag, because nothing structural separates them.
+
+    Current behaviour: it IS recorded. That is the intended direction — an
+    event is a CANDIDATE for review carrying both concepts and both values,
+    never a verdict that X became Y, and the reviewer who reads this one
+    dismisses it in a second. Suppressing it would need a similarity judgement
+    this module has no grounds to make. Pinned so the choice is a decision on
+    the record rather than an accident.
+    """
+    joined = series.series_for([
+        _filing_tagging("0000000000-19-000001", "2019-02-20", {
+            "us-gaap_Revenues": {_duration(2018): 100.0},
+            "us-gaap_IncomeLossFromDiscontinuedOperationsNetOfTax":
+                {_duration(2018): 5.0},
+        }),
+        _filing_tagging("0000000000-20-000001", "2020-02-20", {
+            "us-gaap_Revenues": {_duration(2018): 100.0},
+            "us-gaap_RestructuringCharges": {_duration(2018): 7.0},
+        }),
+    ])
+
+    assert len(joined.transitions) == 1
+    event = joined.transitions[0]
+    assert event.gone == ("us-gaap_IncomeLossFromDiscontinuedOperationsNetOfTax",)
+    assert event.arrived == ("us-gaap_RestructuringCharges",)
+
+
+def test_a_modified_retrospective_adoption_records_no_event(series):
+    """BLIND SPOT 1, pinned at its CURRENT no-event behaviour so lifting it
+    later forces this test to change.
+
+    Under modified-retrospective adoption — the transition method most ASC 606
+    filers chose, and the standard KO's own measured transition came from — the
+    filer tags the NEW concept for the adoption year only and leaves the
+    comparative years under the OLD one. Every period the two filings SHARE
+    therefore reads `{A} -> {A}`: no departure, no arrival, no event. The
+    re-tag is real and this rule cannot see it, because the only period that
+    would show it is the one period the older filing never reported.
+
+    What a reader gets instead is two series that abut rather than overlap —
+    visible in `by_concept`, unexplained by `transitions`. That is a MISS, not
+    a wrong answer, and the module's docstrings now say so.
+    """
+    joined = series.series_for([
+        _filing_tagging("0000000000-19-000001", "2019-02-20", {
+            "us-gaap_SalesRevenueGoodsNet": {
+                _duration(2016): 1.0, _duration(2017): 2.0, _duration(2018): 3.0,
+            },
+        }),
+        _filing_tagging("0000000000-20-000001", "2020-02-20", {
+            "us-gaap_SalesRevenueGoodsNet": {
+                _duration(2017): 2.0, _duration(2018): 3.0,
+            },
+            "us-gaap_Revenues": {_duration(2019): 4.0},
+        }),
+    ])
+
+    assert joined.transitions == ()
+    assert sorted(joined.by_concept) == [
+        ("income", "us-gaap_Revenues"),
+        ("income", "us-gaap_SalesRevenueGoodsNet"),
+    ]
+
+
+def test_dual_tagging_in_the_transition_year_records_no_event(series):
+    """BLIND SPOT 2, same pin. A filer that tags BOTH concepts in the
+    transition year gives `{A} -> {A, B}` on the shared period: an arrival with
+    no departure, which the departure-AND-arrival rule declines by design
+    (an arrival alone is an ordinary new line). The re-tag is again real and
+    again invisible here.
+
+    Both blind spots share one root: the rule reads a re-tag as a SUBSTITUTION
+    within one period, and a filer that phases the change in over two filings
+    never presents one.
+    """
+    joined = series.series_for([
+        _filing_tagging("0000000000-19-000001", "2019-02-20", {
+            "us-gaap_SalesRevenueGoodsNet": {
+                _duration(2017): 1.0, _duration(2018): 2.0,
+            },
+        }),
+        _filing_tagging("0000000000-20-000001", "2020-02-20", {
+            "us-gaap_SalesRevenueGoodsNet": {
+                _duration(2018): 2.0, _duration(2019): 3.0,
+            },
+            "us-gaap_Revenues": {_duration(2018): 2.0, _duration(2019): 3.0},
+        }),
+    ])
+
+    assert joined.transitions == ()
 
 
 # --- what this module must never do to a number -----------------------------

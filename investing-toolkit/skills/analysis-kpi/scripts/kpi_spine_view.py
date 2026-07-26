@@ -16,8 +16,19 @@ tearsheet_format.py is not touched.
 
 PURE FUNCTION -- no HTTP, no subprocess, no store access, no env access
 beyond argparse/stdin (tearsheet_format.py precedent): its whole input is the
-dump payload it is handed. It imports no data-markets module, and its ONE
-sibling import is `kpi_xbrl`, for `assert_dqc_schema`.
+payload it is handed. It imports no data-markets module, and its THREE sibling
+imports are `kpi_xbrl`, for `assert_dqc_schema`; `kpi_equity_terms`, for the
+whole-equity primitives the balance-sheet identity branches on; and
+`kpi_us_statement_cells`, for the four-state cell taxonomy the as-filed view
+reports (both added by plan Task 7).
+
+ONLY THE FIRST OF THE THREE CHANGES THE SCOPE OF THAT CLAIM, which is why the
+count is stated with what each one costs rather than as a number. Verified by
+walking their top-level statements, not by reading their docstrings:
+`kpi_equity_terms` is stdlib-only and imports nothing sibling;
+`kpi_us_statement_cells` imports exactly one sibling, `kpi_equity_terms`; and
+neither does I/O at import time. So the store reach described below is still
+`kpi_xbrl`'s alone, and the two additions do not widen it.
 
 That import is NOT store-free transitively, and the accurate statement is the
 one worth having here, because a "imports no store module" line tells the
@@ -28,8 +39,8 @@ unnoticed. The real chain: `kpi_xbrl` imports `kpi_series` (`kpi_xbrl.py:145`)
 filesystem module.
 
 Runtime purity nonetheless holds today, for a reason that is CHECKABLE rather
-than asserted, and both halves must be re-verified before a second sibling
-import is added:
+than asserted, and both halves must be re-verified before a further sibling
+import is added (they were re-verified for Task 7's two):
   1. NOTHING in those four modules does I/O at import time. Module level is
      constants, `Path(__file__).resolve()` sys.path shims, one `re.compile`
      and one `try: import fcntl` fallback -- verified by walking each
@@ -873,10 +884,6 @@ def main() -> int:
     return args.func(args)
 
 
-if __name__ == "__main__":
-    sys.exit(main())
-
-
 # =====================================================================
 # THE AS-FILED VIEW (plan Task 7) — the same 14 fields, over the
 # RECONSTRUCTION instead of over the store
@@ -987,24 +994,42 @@ def _local_name(concept: str | None) -> str:
     return (concept or "").replace(":", "_").rpartition("_")[2]
 
 
-def _is_revenue_candidate(line: _ReconstructedLine) -> bool:
-    """Is this line a revenue line of the income statement?
+def _has_revenue_wording(line: _ReconstructedLine) -> bool:
+    """Is this line NAMED the way a revenue line is named? Wording only — the
+    sign is a separate question, asked separately, because the two answers are
+    needed at different points (`_revenue_total`)."""
+    return any(w in _local_name(line.concept).lower() for w in _REVENUE_WORDINGS)
 
-    Two conditions, and the second is what makes the first safe. The NAME must
-    carry revenue wording, and the filer's own CALCULATION WEIGHT must not be
-    negative — a revenue line is added, never subtracted. The sign is not
-    decoration: IBM's income statement carries `CostOfRevenue`, whose local
-    name matches the same wording as `Revenues`, and only the declared weight
-    (-1) tells them apart. Without it IBM shows two candidate totals and its
-    revenue collapses to a gap.
+
+def _sign_admits(line: _ReconstructedLine) -> bool:
+    """Could this revenue-worded line be a revenue TOTAL, by the filer's own
+    declared sign?
+
+    A revenue total is ADDED into its parent subtotal, never subtracted. The
+    sign is not decoration: IBM's income statement carries `CostOfRevenue`,
+    whose local name matches the same wording as `Revenues`, and only the
+    declared weight (-1) tells them apart — measured on the captured filing,
+    where it is the ONLY line the filter excludes. Without it IBM shows two
+    candidate totals and its revenue collapses to a gap.
 
     A `None` weight is kept, not rejected: it means the line sits in no
     declared sum, which is true of a calculation ROOT as well as of an EPS row,
     and rejecting it would drop the total of a filer whose revenue heads its
     own tree.
+
+    CONTRA-REVENUE IS NOT A COUNTER-EXAMPLE — settled, not merely worried
+    about. A returns/allowances or sales-discount line is revenue-worded and
+    carries -1, so this excludes it, and that is the correct answer twice over:
+    a deduction from revenue is not the revenue total, and the total it is
+    deducted FROM is itself revenue-worded and positive, so it survives here
+    and the deduction is eliminated as its component either way. For this
+    filter to lose a real total, a filer would have to declare its revenue
+    total as a NEGATIVE child of its own subtotal — which would also break that
+    subtotal's declared sum, and `kpi_us_statement_check.verify` reports
+    exactly that. Unobserved: neither captured filing presents a contra-revenue
+    line, so no test here exercises it; what the filter is measured to exclude
+    is `CostOfRevenue`, one line, in one filing.
     """
-    if not any(w in _local_name(line.concept).lower() for w in _REVENUE_WORDINGS):
-        return False
     return line.weight is None or line.weight >= 0
 
 
@@ -1036,8 +1061,17 @@ def _revenue_total(lines: list[_ReconstructedLine]) -> tuple[str | None, tuple[s
     at all — an honest `not_presented`, which a bank's income statement reaches
     legitimately (the brief's open question about financial-sector filers).
     """
-    candidates = [line for line in lines if _is_revenue_candidate(line)]
-    concepts = {line.concept for line in candidates}
+    worded = [line for line in lines if _has_revenue_wording(line)]
+    # THE PARENT SET IS BUILT BEFORE THE SIGN FILTER, and that ordering is the
+    # whole correctness of the elimination. The filter drops negative-weight
+    # lines (IBM's `CostOfRevenue`); if this set were built from the survivors,
+    # such a line would stop existing as a PARENT, and its own revenue-worded
+    # children would look parentless — joining the totals set, pushing the
+    # count past one, and collapsing the filer's revenue into a false
+    # `unresolved` gap. A component is a component regardless of which side of
+    # the sign its parent sits on.
+    concepts = {line.concept for line in worded}
+    candidates = [line for line in worded if _sign_admits(line)]
     totals = [line for line in candidates if line.calculation_parent not in concepts]
     if len(totals) == 1:
         return totals[0].concept, ()
@@ -1047,10 +1081,18 @@ def _revenue_total(lines: list[_ReconstructedLine]) -> tuple[str | None, tuple[s
 def _chain_concept(lines: list[_ReconstructedLine], chain: tuple[str, ...]) -> str | None:
     """The first chain concept this filing PRESENTS, or None when it presents
     none — the same first-present rule `_resolve_field` applies per period on
-    the store, asked of one filing's statement instead."""
-    presented = {_local_name(line.concept) for line in lines}
+    the store, asked of one filing's statement instead.
+
+    IT RETURNS THE ROW'S OWN SPELLING, not the chain's re-qualified one. A
+    statement row spells the namespace separator `_` and the store's `kpi_id`
+    spells it `:`; both reach this payload's `concept` key, and
+    `kpi_us_statement_series.series_for` — which this view defers the
+    multi-year join to — keys series identity on the filer's own concept. Two
+    spellings under one key split one series in two.
+    """
+    presented = {_local_name(line.concept): line.concept for line in lines}
     return next(
-        (f"{_US_GAAP}{concept}" for concept in chain if concept in presented),
+        (presented[concept] for concept in chain if concept in presented),
         None,
     )
 
@@ -1068,21 +1110,30 @@ def _statement_periods(lines: list[_ReconstructedLine]) -> list[str]:
 
 
 def _cells(
-    statements: _ReconstructedStatements, kind: str, concept: str | None,
+    statements: _ReconstructedStatements, kind: str, concept: str,
     periods: list[str],
 ) -> dict[str, dict[str, Any]]:
     """One field's periods, each typed by `kpi_us_statement_cells.cell_state`.
 
-    A `None` concept means nothing was bound, which can only be "the filer
-    presents no such line" by the time this is called — the ambiguous case
-    returns earlier, with its candidates, and never reaches here.
+    `cell_state` DECIDES EVERY CELL, including the ones this view binds no line
+    for, and that is not a stylistic preference — it is the fix for a defect
+    this function shipped with. Answering `not_presented` here as soon as
+    nothing was bound is wrong in exactly the case the arc is built on: KO tags
+    `LiabilitiesAndStockholdersEquity` and no `Liabilities` line, so nothing
+    binds, and yet the figure is computable from the filer's own footing.
+    `cell_state`'s own ranking puts `derived` ABOVE `not_presented` for that
+    reason. Short-circuiting printed a blank where the filing gives 68,919M —
+    the failure this arc exists to remove, reproduced in its own output.
+
+    So an unbound field is asked under its chain's HEAD concept, which is the
+    conventional name for the thing that is absent and is what a derivation
+    rule is keyed on. `cell_state` then answers `derived` where a rule applies
+    and `not_presented` where none does.
 
     `derivation` rides along ONLY when there is one, so a consumer branching on
     `state` never has to ask whether a blank was our fault: `derived` is the one
     state that carries provenance, and `kpi_us_statement_cells` builds it.
     """
-    if concept is None:
-        return {period: {"state": "not_presented", "value": None} for period in periods}
     cells: dict[str, dict[str, Any]] = {}
     for period in periods:
         cell = statement_cells.cell_state(statements, kind, concept, period)
@@ -1117,8 +1168,16 @@ def _fields_of(filing: dict[str, Any]) -> list[dict[str, Any]]:
             "concept": concept,
             "statement": kind,
             "periods": (
+                # The ONE hard gap, and it is decision 甲: an ambiguous total
+                # must not be resolved, so there is nothing to ask `cell_state`
+                # about. Every other unbound field goes through it under the
+                # chain's head, because "nothing bound" is exactly when a
+                # derivation can still apply.
                 {} if unresolved
-                else _cells(statements, kind, concept, _statement_periods(lines))
+                else _cells(
+                    statements, kind, concept or f"{_US_GAAP}{chain[0]}",
+                    _statement_periods(lines),
+                )
             ),
         }
         if unresolved:
@@ -1164,3 +1223,7 @@ def derive_spine_as_filed(payload: dict[str, Any]) -> dict[str, Any]:
         "failed_items": list(reconstruction.get("failed_items") or []),
         "warnings": list(payload.get("warnings") or []),
     }
+
+
+if __name__ == "__main__":
+    sys.exit(main())

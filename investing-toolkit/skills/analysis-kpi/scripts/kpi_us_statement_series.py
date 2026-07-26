@@ -39,6 +39,27 @@ a line's POSITION or its label to decide identity (brief §Decision) — positio
 was measured unreliable for meaning, and the label is the thing this module
 exists to not trust.
 
+WHAT THAT RULE CANNOT SEE, stated here because a silent miss is worse than a
+known one. It reads a re-tag as a SUBSTITUTION INSIDE ONE SHARED PERIOD, so a
+filer that phases the change in across two filings never presents one and the
+re-tag goes unrecorded. Both shapes are real, and both are how ASC 606 was
+adopted — the same standard KO's measured transition came from:
+
+  * MODIFIED-RETROSPECTIVE ADOPTION — the new concept is tagged for the
+    adoption year only and the comparatives stay under the old one, so every
+    SHARED period reads `{A} -> {A}`. No event.
+  * DUAL TAGGING IN THE TRANSITION YEAR — `{A} -> {A, B}` on the shared
+    period: an arrival with no departure, which the rule declines by design.
+
+In both, `by_concept` still shows two series that ABUT rather than overlap;
+what is missing is the event explaining why. Both are pinned at their current
+no-event behaviour (`test_a_modified_retrospective_adoption_records_no_event`,
+`test_dual_tagging_in_the_transition_year_records_no_event`) so lifting the
+limit forces those tests to change. The INVERSE also holds: an unrelated line
+dropped and an unrelated line added in one period pair is shape-identical to a
+re-tag and IS recorded — which is why an event is a candidate for review
+carrying both sides, never a verdict that one concept became the other.
+
 OVERLAPPING VINTAGES RESOLVE BY THE STORE'S EXISTING POLICY, not a second one:
 NEWEST-FILED wins, on the pair `(as_of, accession)` — `as_of` orders,
 the accession breaks a same-day tie deterministically. That is
@@ -63,6 +84,13 @@ the frequency question — how often a real filing pair moves more than one
 concept at once — and the first live run over a decade is where that gets
 measured. It is stated here rather than left for a reader to discover, because
 this module's whole value proposition is a claim about real filings.
+
+The same gap governs the two blind spots above: WHICH transition method a
+filer used is not in this arc's measurements. KO's re-tag is recorded as one
+concept change in 2013-2026, not as a shape, so whether the detector would
+have caught the real KO event — rather than the fixture built from KO's real
+rows — is open until a live decade is run. Both blind spots are therefore
+DOCUMENTED AND PINNED, not measured as rare.
 
 NO ARITHMETIC HAPPENS HERE. This module SELECTS values; it never adds,
 scales or normalises one, so a value it emits is the object the filing
@@ -416,8 +444,25 @@ def _transition(
     departure alone is a line the filer stopped reporting and an arrival alone
     is one it started — ordinary, and reporting them as transitions would bury
     the handful of real re-taggings under every routine statement edit. That
-    asymmetry is the whole discriminating power here: KO's two filings differ
-    in ONE concept out of 26 income lines and yield ONE event.
+    asymmetry is the discriminating power here: KO's two filings differ in ONE
+    concept out of 26 income lines and yield ONE event.
+
+    IT IS A FILTER, AND A FILTER HAS TWO ERROR DIRECTIONS. Both are real and
+    neither is hypothetical (module docstring, "WHAT THAT RULE CANNOT SEE"):
+
+      MISSES a re-tag phased in across two filings, because no shared period
+        shows the substitution — `{A} -> {A}` under modified-retrospective
+        adoption, `{A} -> {A, B}` under dual tagging in the transition year.
+        Both are ASC 606 shapes. Both are pinned at their current no-event
+        behaviour by name in the test module.
+      ADMITS an unrelated drop plus an unrelated add in one period pair, which
+        is shape-identical to a re-tag. Kept: an event carries both concepts
+        and both values for a REVIEWER, and suppressing this would need a
+        similarity judgement between concepts that nothing here can ground.
+
+    So "no transition recorded" means "no substitution was visible in a shared
+    period", NOT "the filer did not re-tag" — the two abutting series are still
+    in `by_concept` either way.
     """
     gone: set[str] = set()
     arrived: set[str] = set()
