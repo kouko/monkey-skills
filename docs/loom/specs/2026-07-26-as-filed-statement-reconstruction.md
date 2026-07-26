@@ -20,7 +20,7 @@ The user wants **10+ continuous years of the three financial statements for ONE
 company, to read that company's trend**. Cross-company comparison is explicitly
 not the current priority (stated 2026-07-26).
 
-Today the pipeline forces every filer's statements through a fixed 15-field
+Today the pipeline forces every filer's statements through a fixed 14-field
 spine, resolved by fixed concept chains. That is lossy in both directions:
 
 **It drops what does not fit.** Measured across 65 domestic operating filers
@@ -83,7 +83,7 @@ Two consequences of single-company-at-a-time:
 ## Current State Evidence
 
 - **Forward** — `kpi_spine_view.SPINE_FIELD_CHAINS` (`kpi_spine_view.py:201`)
-  declares the 15 fields; `_resolve_field` (`:353`) keeps the first-present
+  declares the 14 fields; `_resolve_field` (`:353`) keeps the first-present
   entry per period identity in chain order. That is the only revenue-selection
   site on the read path.
 - **Reverse** — the store is written by two producers and BOTH already carry the
@@ -119,7 +119,7 @@ Evidence paths appendix:
 
 **Reconstruct each of the three statements from the filing's own declared
 structure, verify the filer's declared arithmetic against the filer's own
-numbers, and make the 15-field spine a derived view over that — not the storage
+numbers, and make the 14-field spine a derived view over that — not the storage
 format.**
 
 An XBRL filing ships two structures, and the reconstruction needs both, each in
@@ -229,9 +229,9 @@ storage format. They separate as:
 |---|---|---|
 | as-filed statements | fidelity — what the filer actually reported | what this arc builds |
 | named quantities | "this filer's line X IS `revenue`" | **necessary and unavoidable** — every derived metric (margin, growth, return) needs a named quantity to bind to; a faithful statement alone cannot supply one |
-| the specific 15 field names | which names exist | a preference, and once the layer above is a view, a freely reversible one |
+| the specific 14 field names | which names exist | a preference, and once the layer above is a view, a freely reversible one |
 
-**The 15-field list is NOT redesigned in this arc.** Only its POSITION changes —
+**The 14-field list is NOT redesigned in this arc.** Only its POSITION changes —
 from storage format to derived view. Two reasons, both load-bearing:
 
 1. Redesigning it now would be deciding at the moment of maximum cost and
@@ -282,7 +282,7 @@ Two consequences:
   cross-reference that renumbers. Labels are for display only; nothing may key on
   them.
 
-This also sharpens what the 15-field view is FOR: cross-company canonicalization
+This also sharpens what the 14-field view is FOR: cross-company canonicalization
 is the hard problem (whole sectors disagree), within-company continuity is the
 easy one — and the user has deprioritised cross-company. The view stays because
 derived metrics need named quantities, not because trends require it.
@@ -291,8 +291,29 @@ derived metrics need named quantities, not because trends require it.
 
 The 63-of-65 resolution rate was measured on filings **filed 2016-2018 only**.
 Resolution is era-dependent: DUK's calculation tree yields 2-3 candidate totals
-(unresolvable) for every filing from 2013 through 2017, and resolves cleanly only
-from 2018 — 5 of its 14 years. A 10-year reconstruction spans exactly the era
+(unresolvable) for every filing FILED 2013 through 2017, and resolves cleanly
+from the one FILED in 2018 onward — 5 of its 14 years.
+
+**"CANDIDATE TOTALS" IS REVENUE-SCOPED, NOT CALC-TREE ROOTS** — stated because
+this brief left it open and Task 8's implementer reasonably read it the other
+way, then measured that reading and refuted it. The count comes from the
+structural rule this arc is founded on: among the income calculation tree's
+REVENUE-ish concepts, those whose calculation parent is NOT itself a revenue
+concept. One survivor is the filing's total; two or three is the ambiguity.
+Applied to ALL calc-tree roots the phrase is meaningless — measured on the
+committed capture, KO income has 2 roots, KO balance sheet 2, IBM income 4, IBM
+cash flow 1, because `Assets` / `LiabilitiesAndStockholdersEquity` and the EPS
+rows are legitimately separate roots. A root-count rule would report almost
+every real statement unresolved.
+
+**FILED, not fiscal — the distinction was ambiguous here for one round and it
+matters.** Task 7's implementer read this sentence as fiscal-year-scoped and
+found an apparent contradiction: the committed DUK capture has period-of-report
+2017-12-31, so under a fiscal reading it would be unresolvable, while Task 7's
+RED demanded it yield a value. Under the correct FILED reading there is no
+contradiction — that filing was filed in 2018 and resolves to
+`RegulatedAndUnregulatedOperatingRevenue` with its three parts summing to 0.00%.
+A year in this brief always means the FILING year unless it says fiscal. A 10-year reconstruction spans exactly the era
 that was not measured. The per-era resolution rate is therefore something this
 arc must MEASURE, not assume, and the honest expectation is that early years
 resolve worse than the sampled window.
@@ -316,7 +337,7 @@ cell typed.
    identity keys on the FILER'S OWN concept (near-stable: 0-1 transitions per
    decade), never on its label; a transition is recorded as an explicit,
    reviewable event rather than silently resolved.
-5. The 15-field spine re-expressed as a view over the reconstruction, so the
+5. The 14-field spine re-expressed as a view over the reconstruction, so the
    existing tearsheet keeps working. **The field list is unchanged** — only its
    position moves. The single behavioural addition: the view renders "not
    presented" distinctly from empty, so the three-kind taxonomy survives to the
@@ -324,6 +345,28 @@ cell typed.
 6. Per-era resolution rate reported, not assumed — the structural rule's 63/65
    was measured on 2016-2018 filings only, and this arc reconstructs years
    outside that window.
+
+**"THE FILER'S OWN LABEL" MEANS ITS XBRL LABEL, AND FOR MOST LINES THAT IS NOT
+THE LABEL IT PRINTED.** Measured 2026-07-26 by transcribing KO's FY2017 primary
+document (`a2017123110-k.htm`) by hand and comparing it to the reconstruction:
+**a filer files its income statement TWICE and the two disagree.** Of 26 lines,
+15 labels differ between the printed page and the XBRL exhibit (an em dash for a
+word; a US-GAAP standard label where the page uses KO's own; `(in shares)` /
+`(in dollars per share)` suffixes; `AVERAGE SHARES OUTSTANDING — BASIC`
+collapsing to `AVERAGE SHARES OUTSTANDING`), 3 lines are transposed — the
+exhibit puts the `CONSOLIDATED NET INCOME` subtotal BEFORE two components the
+page puts above it — and 6 cells print an em dash where the exhibit tags `0`.
+**Zero figures differ**: every number the filer printed survives unchanged.
+
+The reconstruction is faithful to the exhibit, and that is checkable rather than
+asserted: it matches SEC's OWN renderer over the same accession (`R2.htm`, an
+independent implementation) byte for byte on all 26 labels and their order. So
+this is a fact about filing practice, not a defect — but it bounds what this arc
+can promise. A reader comparing the output to a printed 10-K will see different
+words against identical numbers, and must be told which document they are
+reading. Whether the arc should instead FAIL on that divergence is a product
+call this brief does not settle; it cannot be resolved in code, because both
+strings are the filer's own.
 
 **Acceptance is line-by-line against the real filing**, not sum reconciliation
 alone. Sum checks prove the declared arithmetic holds; they do not prove the
@@ -341,7 +384,7 @@ Industry research was run earlier this session and is summarised, not repeated.
    how the utility / REIT / mining sectors were missed; it leaves PSX and XOM
    understated; and it keeps one global ordering imposed on filers who disagree
    with each other.
-2. **Keep the 15-field spine as the storage format, fix only revenue.** This was
+2. **Keep the 14-field spine as the storage format, fix only revenue.** This was
    this session's own earlier proposal, withdrawn. *Rejected*: the measurement
    showed the loss is not revenue-specific (`operating_income` blanks 23% >
    `revenue` 15%), and a per-field fix would have to be repeated per field while
@@ -376,7 +419,7 @@ Industry research was run earlier this session and is summarised, not repeated.
 - **Financial-sector filers.** A bank's income statement has no single revenue
   origin by construction, and 9 of the 79 universe filers are financials. The
   reconstruction should still render their statements faithfully — the open
-  question is only what the DERIVED 15-field view shows for them, and it must
+  question is only what the DERIVED 14-field view shows for them, and it must
   not be guessed at implementation time.
 - **The 3 cash-flow declaration quirks** (GE, NEE, SBUX) surface as flagged
   lines in this cut. Whether any of them should be auto-corrected is deliberately

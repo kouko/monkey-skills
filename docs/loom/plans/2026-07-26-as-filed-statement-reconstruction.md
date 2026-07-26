@@ -253,9 +253,9 @@
   FY2017 rows; IBM's label churn on constructed rows carrying the six OBSERVED labels. Untested:
   how often a real filing pair moves more than one concept at once.
 
-## Task 7 — re-express the 15-field spine as a view, field list unchanged
+## Task 7 — re-express the 14-field spine as a view, field list unchanged
 
-- **Description**: Make `kpi_spine_view` derive its 15 fields from the reconstruction instead of
+- **Description**: Make `kpi_spine_view` derive its 14 fields from the reconstruction instead of
   resolving `SPINE_FIELD_CHAINS` against the raw store, WITHOUT changing which fields exist, and
   render `not_presented` distinctly from empty so the cell taxonomy survives to the reader.
 - **Module**: investing-toolkit/skills/analysis-kpi/scripts/kpi_spine_view.py
@@ -270,11 +270,16 @@
     and PLD (`RealEstateRevenueNet`), whose revenue the chain cannot resolve at all, must yield a
     revenue value; and PSX must yield its own declared total `RevenuesAndOtherIncome`
     (104,622M) rather than the chain's 2.2%-low `SalesRevenueNet` (102,354M).
-  - **GREEN**: the 15 field names are byte-identical to today's; the existing tearsheet tests
+  - **GREEN**: the 14 field names are byte-identical to today's; the existing tearsheet tests
     still pass; an oil major's `operating_income` renders as `not_presented`, distinct from empty.
 - **Dependencies**: Tasks 5, 6 complete first
 - **Independent**: true
-- **Brief item covered**: "The 15-field spine re-expressed as a view over the reconstruction …
+- **Status**: done(5a898662)
+  <!-- Returned NEEDS_CONTEXT first, correctly: it found that the reconstruction is NOT
+       computable from `derive_spine`'s input (a store dump carries no calculation linkbase), so
+       this was never a substitution. Task re-cut to a SECOND entry point binding `revenue` only.
+       Both reviews OWED. -->
+- **Brief item covered**: "The 14-field spine re-expressed as a view over the reconstruction …
   **The field list is unchanged** … the view renders 'not presented' distinctly from empty."
 
 ## Task 8 — report the per-era resolution rate
@@ -297,6 +302,9 @@
 - **Independent**: false
   <!-- shares kpi_us_statement_check.py with Task 4 AND depends on it, so it can never be
        dispatched in parallel with it; claiming true would be a false disjointness claim -->
+- **Status**: done(5a12dde0)
+  <!-- Also shipped the `decimals` field Task 4 left blocked on; disagreements 27 -> 3.
+       Both reviews OWED. -->
 - **Brief item covered**: "Per-era resolution rate reported, not assumed."
 
 ## Task 9 — expose the reconstruction on the command surface
@@ -362,6 +370,10 @@
     provenance (accession + the filed document URL) is recorded in the fixture.
 - **Dependencies**: Tasks 3, 5 complete first
 - **Independent**: true
+- **Status**: done(4142e444)
+  <!-- The arc's real acceptance. Found that a filer files its income statement TWICE and the
+       two disagree: 15 of 26 labels, 3 lines transposed, 6 em-dash-vs-zero cells, ZERO figures.
+       Both reviews OWED. -->
 - **Brief item covered**: "**Acceptance is line-by-line against the real filing**, not sum
   reconciliation alone."
 
@@ -391,6 +403,9 @@
     is edited.
 - **Dependencies**: Task 7 completes first
 - **Independent**: false
+- **Status**: done(5a898662)
+  <!-- Disposition is KEPT-with-role-stated, not deleted: Task 7 left it resolving 13 of 14
+       fields. Both reviews OWED. -->
 - **Brief item covered**: "`SPINE_FIELD_CHAINS` … must not be left in place as dead-but-live
   config: either it is deleted, or its remaining role is written down explicitly, in the same
   change" + "The BACKLOG entry … must be closed with a pointer."
