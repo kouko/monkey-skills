@@ -28,12 +28,12 @@ interest — and the mezzanine — into "liabilities": a wrong number wearing a
 correct-looking label, which nothing downstream can detect. On the OBSERVED KO
 FY2017 balance sheet the two answers differ by 1,905M.
 
-`kpi_spine_view` ALREADY resolves whole equity and this module REUSES it rather
-than re-deriving it (brief §"the existing `_equity_kind` / mezzanine machinery
-… must be reused rather than re-derived"). Reused by name, so a change there
-reaches here:
+THE WHOLE-EQUITY RULES ARE REUSED, NEVER RE-DERIVED (brief §"the existing
+`_equity_kind` / mezzanine machinery … must be reused rather than
+re-derived"). They live in `kpi_equity_terms`, a LEAF module that imports
+neither this one nor `kpi_spine_view`:
 
-  `SPINE_FIELD_CHAINS["total_equity"]`   the chain, PARENT-ONLY FIRST, which is
+  `EQUITY_CHAIN`                         the chain, PARENT-ONLY FIRST, which is
                                          also the order this resolves in
   `_equity_kind`                         which chain member a filing supplied
   `_minority_interest_term`              what to ADD on the parent-only branch,
@@ -43,12 +43,20 @@ reaches here:
   `MEZZANINE_CHAIN`, `MINORITY_INTEREST_CHAIN`, `EQUITY_INCL_NCI_CONCEPT`
   `_identity_value`                      what counts as a usable figure
 
-Three of those are private names in that module. That is a deliberate coupling
-and it is the lesser evil: the alternative is a SECOND copy of the whole-equity
-branch, and the branch is precisely the thing the brief says must not exist
-twice. `kpi_spine_view.py`'s own header section "THE EQUITY TERM IS WHOLE
-EQUITY" explains why the parent-only branch is the MAJORITY case (17 of 32
-checkable filers) rather than an edge case.
+THEY USED TO BE READ OFF `kpi_spine_view` DIRECTLY, and the import moved for a
+measured reason rather than a stylistic one: plan Task 7 makes `kpi_spine_view`
+consume the reconstruction, and with that import in place `import
+kpi_spine_view` raises `AttributeError: partially initialized module` while
+`import kpi_us_statement_cells` still succeeds — an order-dependent breakage,
+which is the kind that does not announce itself. `kpi_equity_terms`'s own
+header records the mutation that reproduced it. The COUPLING is unchanged and
+still deliberate: the alternative is a SECOND copy of the whole-equity branch,
+which is precisely the thing the brief says must not exist twice.
+`kpi_spine_view.py`'s header section "THE EQUITY TERM IS WHOLE EQUITY" explains
+why the parent-only branch is the MAJORITY case (17 of 32 checkable filers)
+rather than an edge case, and ITS import-time `_assert_equity_chain` is what
+keeps its own `SPINE_FIELD_CHAINS["total_equity"]` equal to the `EQUITY_CHAIN`
+read here.
 
 WHAT THE REUSE DOES **NOT** CARRY OVER. `kpi_spine_view` resolves across a
 BITEMPORAL store, where the same period is covered by several filings and
@@ -83,7 +91,7 @@ _SCRIPT_DIR = Path(__file__).resolve().parent
 if str(_SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPT_DIR))
 
-import kpi_spine_view as spine_view  # noqa: E402
+import kpi_equity_terms as equity_terms  # noqa: E402
 
 # The three kinds `kpi_us_statement_shape.statements_for` can produce. A kind
 # outside them is a CALLER BUG (a typo'd `"balance-sheet"`), and answering it
@@ -91,10 +99,13 @@ import kpi_spine_view as spine_view  # noqa: E402
 # module exists to abolish — so it raises instead (Rule 12, fail loud).
 _STATEMENT_KINDS = ("income", "balance_sheet", "cash_flow")
 
-# Reused BY NAME from `kpi_spine_view`, never re-transcribed: the chain's ORDER
-# is load-bearing (parent-only first) and a second copy of it is the drift this
-# module exists to avoid.
-_EQUITY_CHAIN: tuple[str, ...] = dict(spine_view.SPINE_FIELD_CHAINS)["total_equity"]
+# Read from the shared module, never re-transcribed: the chain's ORDER is
+# load-bearing (parent-only first) and a second copy of it is the drift this
+# module exists to avoid. It used to be sliced out of
+# `kpi_spine_view.SPINE_FIELD_CHAINS`; that chain is still the spine's, and
+# `kpi_spine_view._assert_equity_chain` fails loud at import if it ever stops
+# being this pair.
+_EQUITY_CHAIN: tuple[str, ...] = equity_terms.EQUITY_CHAIN
 
 # The concept the derivation starts from. Not a member of any spine chain --
 # it is the balance sheet's footing, which no spine field carries.
@@ -243,7 +254,7 @@ def _derive_total_liabilities(lines: Sequence[Any], period: str) -> Cell | None:
     equity_line, equity = _amount_with_line(lines, _EQUITY_CHAIN, period)
     if equity is None:
         return None
-    equity_kind = spine_view._equity_kind({"kpi_id": _store_qname(equity_line.concept)})
+    equity_kind = equity_terms._equity_kind({"kpi_id": _store_qname(equity_line.concept)})
     if equity_kind is None:
         # Unreachable while `kpi_spine_view._assert_equity_chain` holds -- it
         # refuses at import any `total_equity` chain that is not exactly the
@@ -269,13 +280,13 @@ def _derive_total_liabilities(lines: Sequence[Any], period: str) -> Cell | None:
         # tagged none", which is a different and false claim.
         subtracted.append((minority_name, minority))
 
-    footing_term = (spine_view._US_GAAP + _LIABILITIES_AND_EQUITY, footing)
+    footing_term = (equity_terms._US_GAAP + _LIABILITIES_AND_EQUITY, footing)
     return Cell(
         state="derived",
         value=footing - equity - minority - mezzanine,
         derivation=Derivation(
             formula=" - ".join(
-                [f"{spine_view._US_GAAP}{_DERIVABLE[1]} = {footing_term[0]}"]
+                [f"{equity_terms._US_GAAP}{_DERIVABLE[1]} = {footing_term[0]}"]
                 + [name for name, _ in subtracted]
             ),
             terms=(footing_term,) + tuple(subtracted),
@@ -287,7 +298,7 @@ def _minority_interest(
     lines: Sequence[Any], period: str, equity_kind: str,
 ) -> tuple[str, Decimal | None]:
     """The amount to ADD to this period's equity figure to make it WHOLE
-    equity, WITH the concept it came from — `kpi_spine_view.
+    equity, WITH the concept it came from — `kpi_equity_terms.
     _minority_interest_term`'s rule, called rather than restated.
 
     The two store-shaped arguments that rule takes collapse here: it separates
@@ -298,17 +309,17 @@ def _minority_interest(
     asserting a non-controlling interest exists whether or not it tagged the
     amount.
     """
-    line, raw = _raw(lines, spine_view.MINORITY_INTEREST_CHAIN, period)
+    line, raw = _raw(lines, equity_terms.MINORITY_INTEREST_CHAIN, period)
     observation = {"canonical_value": raw}
-    _, nci_raw = _raw(lines, (spine_view.EQUITY_INCL_NCI_CONCEPT,), period)
-    term = spine_view._minority_interest_term(
+    _, nci_raw = _raw(lines, (equity_terms.EQUITY_INCL_NCI_CONCEPT,), period)
+    term = equity_terms._minority_interest_term(
         equity_kind,
         observation if raw is not None else None,
         observation,
         nci_is_asserted=nci_raw is not None,
     )
     return (
-        _term_name(line, spine_view.MINORITY_INTEREST_CHAIN),
+        _term_name(line, equity_terms.MINORITY_INTEREST_CHAIN),
         None if term is None else _decimal(term),
     )
 
@@ -330,8 +341,8 @@ def _mezzanine(lines: Sequence[Any], period: str) -> tuple[str, Decimal | None]:
     balance-sheet residual being exactly its redeemable non-controlling
     interest, to the dollar.
     """
-    line, raw = _raw(lines, spine_view.MEZZANINE_CHAIN, period)
-    name = _term_name(line, spine_view.MEZZANINE_CHAIN)
+    line, raw = _raw(lines, equity_terms.MEZZANINE_CHAIN, period)
+    name = _term_name(line, equity_terms.MEZZANINE_CHAIN)
     return name, _decimal(0) if raw is None else _figure(raw)
 
 
@@ -349,7 +360,7 @@ def _term_name(line: Any | None, chain: Sequence[str]) -> str:
     let a reader audit the arithmetic.
     """
     return _store_qname(line.concept) if line is not None else (
-        spine_view._US_GAAP + chain[0]
+        equity_terms._US_GAAP + chain[0]
     )
 
 
@@ -366,7 +377,7 @@ def _raw(
     from "not tagged at all" needs to see the difference.
     """
     for name in chain:
-        line = _find(lines, spine_view._US_GAAP + name)
+        line = _find(lines, equity_terms._US_GAAP + name)
         if line is None:
             continue
         raw = line.values.get(period)
@@ -438,13 +449,13 @@ def _figure(raw: Any) -> Decimal | None:
     """A cell's raw value as a `Decimal`, or `None` when it is not a usable
     figure.
 
-    "Usable" is asked of `kpi_spine_view._identity_value` rather than
+    "Usable" is asked of `kpi_equity_terms._identity_value` rather than
     re-decided here, so this module and the balance-sheet identity can never
     disagree about whether a cell holds a number (it rejects `None`, strings
     and — deliberately — `bool`, which is an `int` in Python and would
     otherwise arrive as 0 or 1).
     """
-    value = spine_view._identity_value({"canonical_value": raw})
+    value = equity_terms._identity_value({"canonical_value": raw})
     return None if value is None else _decimal(value)
 
 

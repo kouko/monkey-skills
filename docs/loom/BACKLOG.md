@@ -330,11 +330,31 @@
   - Re-trigger: the next view-layer test that pins a branch of a producer-fed code
     path, or a second incident of a green test over an unreachable path.
 
-## investing-toolkit — spine chain misses 33 filer-years of reported history (OPEN)
+## investing-toolkit — spine chain misses 33 filer-years of reported history (CLOSED — superseded)
 
-- Status: OPEN. **Start: READY** — measured, scoped, and independent of any
-  other open item. Filed 2026-07-26 from the post-PR end-to-end coverage audit
-  of PR #619 (branch `feat-us-as-reported-statement-lane`, 2.38.0).
+- Status: **CLOSED 2026-07-26 — SUPERSEDED, do not start.** The fix this entry
+  proposed (widen the chains with early-era synonyms) is no longer the plan.
+  Pointer: `docs/loom/specs/2026-07-26-as-filed-statement-reconstruction.md`
+  §What Becomes Obsolete, implemented on branch `feat-spine-chain-coverage`.
+  That brief resolves revenue from the FILING'S OWN calculation tree instead of
+  from a chain (`kpi_spine_view._revenue_total`), so the missing-synonym cause
+  below no longer produces a short series on the as-filed path — KO's
+  `SalesRevenueGoodsNet` is picked up because the filer declared it as its
+  total, not because anyone added it to a list.
+  - **What this does NOT cover, stated so the closure is not oversold.** The
+    reconstruction is a SECOND entry point; `derive_spine` over the store dump
+    still resolves `SPINE_FIELD_CHAINS` and still starts those five filers'
+    revenue late. And only `revenue` moved — the other 13 fields resolve by
+    chain on both paths (`kpi_spine_view.py`, the disposition block above
+    `SPINE_FIELD_CHAINS`), so `net_income`'s 6 TGT filer-years below are
+    untouched by the brief.
+  - **Kept rather than deleted**, against this file's "completed items are
+    deleted" convention: the brief REQUIRES a pointer here, and a deleted entry
+    carries none — a future reader who greps for the synonym fix must land on
+    the reconstruction rather than on nothing. The measured table below is also
+    the artifact the entry was filed to preserve.
+- Originally filed 2026-07-26 from the post-PR end-to-end coverage audit of
+  PR #619 (branch `feat-us-as-reported-statement-lane`, 2.38.0).
 - **What.** The spine chains omit concepts that filers really used, so a field
   starts late rather than showing a hole. Measured over the arc's own 47-filer
   corpus, duration-filtered to annual 10-K rows:
@@ -362,7 +382,9 @@
   (a segment, a product line, a net-of-something variant) would write wrong
   values into an append-only store, which is strictly worse than the current
   honest short series.
-- **The evidence bar for the fix**, in order:
+- **The evidence bar, retained but no longer a work item.** Widening the chains
+  is superseded on the as-filed path and NOT recommended on the store path; if
+  anyone widens one anyway, this is still the bar it has to clear, in order:
   1. For each candidate concept, check on the filers that DO have full coverage
      whether the candidate is also present and, if so, whether it agrees with
      the chain's own value for the same period. A candidate that disagrees
@@ -379,8 +401,51 @@
   duration filter is load-bearing in both: a 10-K also tags quarterly rows, and
   counting them makes a quarter masquerade as a fiscal year (this bit the audit
   itself once — JNJ FY2009, a 97-day row compared against the annual figure).
-- Re-trigger: a user asks for one of the six named filers' early history, or the
-  corpus is re-probed for concept coverage by era.
+- Re-trigger: NONE for the fix — it is superseded. Re-read this entry only if
+  the STORE path's short revenue series is reported as a defect (the
+  reconstruction does not serve `kpi_store dump | kpi_spine_view derive`), or
+  if `net_income`'s 6 TGT filer-years surface, which no shipped change covers.
+
+## loom docs — two stale change-folders belong to shipped arcs (OPEN)
+
+- Status: OPEN. Filed 2026-07-26 from the as-filed-reconstruction plan's
+  `## Notes` (change-folder binding: N/A), which had to establish this to state
+  that neither folder binds that branch.
+- **What.** `docs/loom/2026-07-12-us-sec-primary-source-layer` and
+  `docs/loom/2026-07-19-8k-prose-kpi-intake` sit un-archived at the top level of
+  `docs/loom/` while both belong to arcs that already shipped. Archive them.
+- **Why it matters, and why it is small.** A live-looking change-folder is the
+  first thing a new arc's planner checks for a binding; two that bind nothing
+  make every future plan spend a paragraph ruling them out (this one did). Pure
+  housekeeping — no code, no tests.
+- **Why it was not done in that arc.** Unrelated to the branch's work; folding
+  it in would have been scope creep in a branch already touching 8 modules.
+- Re-trigger: the next loom arc that opens a change-folder, or any docs-only
+  housekeeping pass over `docs/loom/`.
+
+## investing-toolkit — the `reconstruct` verb inverts the pack layering (OPEN)
+
+- Status: OPEN. Filed 2026-07-26 at the close of the as-filed-reconstruction arc
+  (branch `feat-spine-chain-coverage`); recorded as its plan's `## Decision Log`
+  entry "Task 9 → whoever revisits the pack layering".
+- **What.** `pack_us.py` is a Layer-1 I/O module, and the `reconstruct` verb
+  there imports an analysis-layer function (`kpi_us_statement_shape.statements_for`)
+  — the opposite of this repo's usual direction, where analysis calls data and
+  never the reverse. The inversion is named in a comment at the site, so it is
+  visible rather than silent.
+- **Why it was accepted rather than fixed mid-arc.** It is a TWO-WAY door. The
+  repo's convention crosses layers by SUBPROCESS, which is unavailable here:
+  `statements_for` takes a live edgartools `Filing` object, which does not
+  survive a JSON boundary. Restructuring inside the arc would have been a plan
+  change improvised at implementation time.
+- **The honest resolution, not yet decided.** The verb probably belongs in
+  analysis-kpi, with data-markets supplying only acquisition
+  (`sec_edgar_client._acquire_raw_filing`). That is a plan change and wants its
+  own brief — it moves a shipped command surface, so the SKILL.md declaration
+  and `SUPPORTED_PACKS` registration move with it.
+- Re-trigger: the next arc that touches `pack_us.py`'s verb set or the
+  analysis-kpi ↔ data-markets boundary; or a second analysis import landing in a
+  Layer-1 module, which would make this a pattern rather than one exception.
 
 ## investing-toolkit kpi_id identity 2.37.0 — post-ship follow-ups (OPEN)
 

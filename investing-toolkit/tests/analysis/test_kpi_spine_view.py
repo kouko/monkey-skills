@@ -26,6 +26,7 @@ import copy
 import importlib.util
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -1188,3 +1189,371 @@ def test_cli_derive_reports_a_malformed_dump_as_an_error_not_a_traceback():
     assert result.stderr.startswith("error: ")
     assert "Traceback" not in result.stderr
     assert result.stdout == ""
+
+
+# =====================================================================
+# THE AS-FILED VIEW (plan Task 7) — the 14 fields over the RECONSTRUCTION
+# =====================================================================
+#
+# A SECOND ENTRY POINT, not a replacement, and the reason is structural: a
+# store dump carries no calculation linkbase, so the reconstruction is not
+# computable from `derive_spine`'s input at all. Its input is Task 9's
+# `reconstruct` pack payload (pack_us.py `_reconstruction_payload`), which is
+# plain JSON — which is what lets every test below run offline.
+#
+# FIXTURE PROVENANCE, per fixture and never in bulk:
+#
+#   OBSERVED — rows read verbatim from the committed live capture
+#              tests/data/fixtures/us_statement_reconstruction_2026-07-26.json.
+#              Only KO FY2017 and IBM FY2025 were captured WITH rows (the other
+#              three filings are census-only), so those two are the whole
+#              observed surface here.
+#   CONSTRUCTED-CONVENTIONAL — written by hand to exercise a branch no captured
+#              filing reaches, labelled at its own site.
+#
+# WHAT IS NOT OBSERVABLE OFFLINE, recorded so the coverage limit is visible
+# rather than implied. The plan's RED named three filers by their measured
+# revenue concepts — DUK (`RegulatedAndUnregulatedOperatingRevenue`), PLD
+# (`RealEstateRevenueNet`) and PSX (its own declared total
+# `RevenuesAndOtherIncome`, 104,622M, against the chain's 2.2%-low
+# `SalesRevenueNet`, 102,354M). None of the three has rows in the committed
+# capture, so none can ground a test here. KO FY2017 pins the SAME claim on
+# OBSERVED rows: it tags `SalesRevenueGoodsNet`, which is not in
+# `SPINE_FIELD_CHAINS["revenue"]` either, so the chain resolves nothing for it
+# while the filing declares the total plainly. The claim is the structure, not
+# the filer — the same re-grounding Task 5 applied when the plan named an oil
+# major and only IBM was observable.
+
+RECONSTRUCTION_CAPTURE = (
+    _ROOT / "tests" / "data" / "fixtures"
+    / "us_statement_reconstruction_2026-07-26.json"
+)
+
+# The 14 field names as this module has always emitted them. Written out
+# rather than read from `SPINE_FIELD_CHAINS`, deliberately: read from the
+# chain, this assertion would agree with any edit to the chain and could never
+# fail — the plan's GREEN asks whether the names are the SAME ones, which only
+# an independent transcription can answer.
+_FOURTEEN_FIELDS = (
+    "revenue", "gross_profit", "operating_income", "pretax_income",
+    "net_income", "eps_basic", "total_assets", "total_liabilities",
+    "total_equity", "cash", "operating_cash_flow", "investing_cash_flow",
+    "financing_cash_flow", "capex",
+)
+
+
+def _captured_filing(ticker: str) -> dict:
+    """One captured filing's rows, projected into Task 9's `reconstruct`
+    payload shape — the same projection `pack_us._reconstruction_payload`
+    performs on a live `Statements`, run here on captured rows so no network
+    call is made.
+
+    Assembly (`kpi_us_statement_shape.statements_for`) is deliberately NOT
+    called: Tasks 8 and 10 are editing that module in parallel and this suite
+    must not couple to a file in flight. The rows are filtered by the SAME
+    published predicate assembly uses (`is_statement_line` + not abstract), so
+    what reaches the view is what assembly would have produced.
+    """
+    capture = json.loads(RECONSTRUCTION_CAPTURE.read_text(encoding="utf-8"))
+    filing = next(
+        f for f in capture["filings"] if f["ticker"] == ticker and f["rows_captured"]
+    )
+    lines_module = _load(
+        "kpi_us_statement_lines_for_spine_test",
+        _SKILLS / "analysis-kpi" / "scripts" / "kpi_us_statement_lines.py",
+    )
+    statements: dict[str, list[dict]] = {}
+    for role in filing["roles_captured"]:
+        kind = _kind_of_role(role["role"])
+        if kind is None:
+            continue
+        statements[kind] = [
+            {
+                "label": row.get("label"), "concept": row.get("concept"),
+                "level": row.get("level"), "weight": row.get("weight"),
+                "calculation_parent": row.get("calculation_parent"),
+                "values": dict(row.get("values") or {}),
+            }
+            for row in role["rows"]
+            if lines_module.is_statement_line(row) and not row.get("is_abstract")
+        ]
+    return {
+        "accession": filing["accession"],
+        "form": filing["form"],
+        "filingDate": filing["filing_date"],
+        "statements": statements,
+        "roles": {},
+        "unrecognised_dimension_keys": [],
+    }
+
+
+def _kind_of_role(role: str) -> str | None:
+    """Which statement a captured role is, decided here from the three role
+    URIs this capture actually carries rather than by importing
+    `kpi_us_statement_shape.statement_kind` — that module is being edited by
+    two parallel tasks. Narrow on purpose: it answers for THIS fixture, and
+    the real classifier is pinned by its own suite."""
+    folded = role.rsplit("/", 1)[-1].lower()
+    if "cashflow" in folded.replace("_", ""):
+        return "cash_flow"
+    if "balancesheet" in folded:
+        return "balance_sheet"
+    if "income" in folded or "operations" in folded:
+        return "income"
+    return None
+
+
+def _payload(*filings: dict, company: str = "TEST CO") -> dict:
+    return {
+        "pack": "reconstruct", "ticker": "TEST", "company": company,
+        "reconstruction": {
+            "filings": list(filings), "failed_items": [],
+            "requested": len(filings), "succeeded": len(filings),
+            "failed": 0, "_status": "ok",
+        },
+    }
+
+
+def _field(view: dict, accession: str, name: str) -> dict:
+    filings = [f for f in view["filings"] if f["accession"] == accession]
+    assert len(filings) == 1, f"expected one filing {accession}, got {filings}"
+    matches = [f for f in filings[0]["fields"] if f["field"] == name]
+    assert len(matches) == 1, f"expected exactly one {name!r} field, got {matches}"
+    return matches[0]
+
+
+def test_sector_revenue_no_longer_blank(spine_view):
+    """OBSERVED (KO FY2017, accession 0000021344-18-000008).
+
+    THE PLAN'S RED, re-grounded on a filer whose rows this repo actually has.
+    KO tags `SalesRevenueGoodsNet` — the beverage/pharma dialect the brief
+    names alongside the utility (DUK), REIT (PLD) and refiner (PSX) dialects —
+    and it is NOT in `SPINE_FIELD_CHAINS["revenue"]`. So the chain resolves
+    NOTHING while the filing declares its total plainly, at 35,410M, labelled
+    "NET OPERATING REVENUES". That premise is asserted first: without it this
+    test would pass for the wrong reason the day someone widens the chain,
+    which is the fix the brief rejected.
+
+    IBM FY2025 rides along as the second OBSERVED filer, and it is not
+    redundant — it is the case that makes the sign filter load-bearing. IBM's
+    income statement carries `CostOfRevenue`, whose local name matches the same
+    revenue wording as `Revenues`; the calculation tree's own weight (-1) is
+    what tells them apart. Without it IBM shows two candidate totals and its
+    revenue becomes a gap.
+    """
+    chain = dict(spine_view.SPINE_FIELD_CHAINS)["revenue"]
+    assert "SalesRevenueGoodsNet" not in chain, (
+        "the premise of this test is that the chain CANNOT resolve KO's "
+        "revenue concept; widening the chain is the fix the brief rejected"
+    )
+
+    ko, ibm = _captured_filing("KO"), _captured_filing("IBM")
+    view = spine_view.derive_spine_as_filed(_payload(ko, ibm))
+
+    revenue = _field(view, ko["accession"], "revenue")
+    assert revenue["concept"] == "us-gaap_SalesRevenueGoodsNet"
+    assert revenue["periods"]["duration_2017-01-01_2017-12-31"] == {
+        "state": "value", "value": 35_410_000_000.0,
+    }
+
+    ibm_revenue = _field(view, ibm["accession"], "revenue")
+    assert ibm_revenue["concept"] == "us-gaap_Revenues"
+    assert ibm_revenue["periods"]["duration_2025-01-01_2025-12-31"]["value"] == (
+        67_535_000_000.0
+    )
+
+
+def test_a_filer_presenting_no_operating_income_renders_not_presented(spine_view):
+    """OBSERVED (IBM FY2025). The plan's GREEN: `not_presented` reaches the
+    reader as its own thing, DISTINCT from empty.
+
+    IBM's income statement runs gross profit -> total expense and other
+    (income) -> income from continuing operations before taxes. There is no
+    operating-income line at all, which is the filer's own presentation and not
+    a gap in ours. KO, which does present one, is asserted in the same test:
+    the claim is that the two render DIFFERENTLY, and a test that only looked
+    at IBM would pass if every field rendered `not_presented`.
+    """
+    ko, ibm = _captured_filing("KO"), _captured_filing("IBM")
+    view = spine_view.derive_spine_as_filed(_payload(ko, ibm))
+
+    ibm_operating = _field(view, ibm["accession"], "operating_income")
+    assert ibm_operating["periods"]["duration_2025-01-01_2025-12-31"] == {
+        "state": "not_presented", "value": None,
+    }
+
+    ko_operating = _field(view, ko["accession"], "operating_income")
+    assert ko_operating["periods"]["duration_2017-01-01_2017-12-31"] == {
+        # OBSERVED: the capture's `us-gaap_OperatingIncomeLoss` row, labelled
+        # "OPERATING INCOME", FY2017. Read off the fixture rather than recalled
+        # — this literal was first written from memory as 7,599M and the
+        # captured filing refuted it.
+        "state": "value", "value": 7_501_000_000.0,
+    }
+
+
+def test_the_as_filed_view_emits_the_same_fourteen_field_names(spine_view):
+    """The plan's GREEN: the field names are byte-identical to today's.
+
+    Asserted as an ORDERED tuple against an independent transcription, so both
+    halves of "the same fields" are covered — that none was added, renamed or
+    dropped, and that the statement reading order (income -> balance sheet ->
+    cash flow) the module deliberately departs from an alphabetical sort for is
+    the order this view emits too.
+    """
+    ko = _captured_filing("KO")
+    view = spine_view.derive_spine_as_filed(_payload(ko))
+
+    names = tuple(f["field"] for f in view["filings"][0]["fields"])
+    assert names == _FOURTEEN_FIELDS
+    assert tuple(f for f, _ in spine_view.SPINE_FIELD_CHAINS) == _FOURTEEN_FIELDS
+
+
+def test_several_candidate_totals_stay_an_honest_gap(spine_view):
+    """CONSTRUCTED-CONVENTIONAL — two sibling revenue totals under no common
+    parent. Not observable offline: the measured instance is DUK's 2013-2017
+    FILED range, which yields 2-3 candidate totals, and no DUK rows were
+    captured.
+
+    Kickoff decision 甲 (plan ## Notes): where the filing declares no single
+    total, emit a VISIBLE TYPED GAP — never fall back to `SPINE_FIELD_CHAINS`,
+    because a silently-low year reads as a downturn on a 10-year trend. The
+    gap must therefore NOT be a value, and must not be `not_presented` either:
+    the filer presents revenue lines, we simply cannot tell which is the total.
+    Both halves are asserted, because picking one candidate and reporting
+    `not_presented` are two different wrong answers.
+    """
+    filing = {
+        "accession": "0000000000-00-000000", "form": "10-K",
+        "filingDate": "2018-02-23",
+        "statements": {"income": [
+            {"label": "Regulated revenues", "concept": "us-gaap_RegulatedOperatingRevenue",
+             "level": 3, "weight": 1.0, "calculation_parent": "us-gaap_OperatingIncomeLoss",
+             "values": {"duration_2017-01-01_2017-12-31": 20_000_000_000.0}},
+            {"label": "Nonregulated revenues",
+             "concept": "us-gaap_UnregulatedOperatingRevenue",
+             "level": 3, "weight": 1.0, "calculation_parent": "us-gaap_OperatingIncomeLoss",
+             "values": {"duration_2017-01-01_2017-12-31": 3_000_000_000.0}},
+        ]},
+        "roles": {}, "unrecognised_dimension_keys": [],
+    }
+
+    view = spine_view.derive_spine_as_filed(_payload(filing))
+    revenue = _field(view, filing["accession"], "revenue")
+
+    assert revenue["concept"] is None
+    assert revenue["periods"] == {}
+    assert revenue["unresolved"] == (
+        "us-gaap_RegulatedOperatingRevenue", "us-gaap_UnregulatedOperatingRevenue",
+    )
+    assert "20000000000" not in json.dumps(revenue), (
+        "an unresolvable total must not leak a candidate's figure"
+    )
+
+
+# =====================================================================
+# THE DISPOSITION OF `SPINE_FIELD_CHAINS` (plan Task 11)
+# =====================================================================
+#
+# The plan drafted this task expecting the symbol to be DEAD after Task 7, so
+# its RED offers two passing shapes: the symbol is gone, or its prose names
+# what it is still for. Task 7 shipped the second world and the test is built
+# for the world that shipped — `derive_spine_as_filed` binds exactly ONE field
+# structurally (`revenue`) and resolves the other thirteen through this very
+# chain, so deleting it would delete the resolution rule of both entry points.
+#
+# WHY THE EXCEPTION IS MEASURED RATHER THAN TRANSCRIBED. A test that hard-coded
+# "revenue is the exception" would agree with any future change that made a
+# second field structural, and the prose would quietly become false again —
+# which is the exact defect this task exists to close, one round later. So the
+# exception set is measured by RUNNING the view and the prose is checked
+# against the measurement.
+#
+# WHAT THIS TEST CANNOT PROVE: that the prose is well written. It can prove
+# that the prose names both readers, names every field that left, and states a
+# count that matches what the code does. Prose quality is a reviewer's job.
+
+
+def _chain_prose(spine_view) -> str:
+    """The `#` comment block immediately preceding the `SPINE_FIELD_CHAINS`
+    declaration — the symbol's only prose.
+
+    Read from module SOURCE, never from an attribute: `SPINE_FIELD_CHAINS` is
+    a module-level tuple, so `SPINE_FIELD_CHAINS.__doc__` returns `tuple`'s own
+    docstring and asserting on it would test CPython rather than this module.
+    """
+    source = Path(spine_view.__file__).read_text(encoding="utf-8").splitlines()
+    declaration = next(
+        i for i, line in enumerate(source) if line.startswith("SPINE_FIELD_CHAINS")
+    )
+    block: list[str] = []
+    index = declaration - 1
+    while index >= 0 and source[index].startswith("#"):
+        block.append(source[index])
+        index -= 1
+    assert block, "the declaration carries no comment block at all"
+    return "\n".join(reversed(block))
+
+
+def _fields_resolved_without_the_chain(spine_view) -> set[str]:
+    """Which of the 14 fields the as-filed view resolves WITHOUT consulting
+    `SPINE_FIELD_CHAINS`, measured by running the view over a real captured
+    filing and recording which chains `_chain_concept` was actually asked for.
+
+    Measured, not read off a list, so the answer follows the code: a field
+    bound structurally tomorrow lands in this set on its own and forces the
+    prose to say so.
+    """
+    field_of_chain = {chain: field for field, chain in spine_view.SPINE_FIELD_CHAINS}
+    assert len(field_of_chain) == len(spine_view.SPINE_FIELD_CHAINS), (
+        "two fields share a chain; this measurement cannot attribute the call"
+    )
+    consulted: set[str] = set()
+    real = spine_view._chain_concept
+
+    def recording(lines, chain):
+        consulted.add(field_of_chain[chain])
+        return real(lines, chain)
+
+    spine_view._chain_concept = recording
+    try:
+        spine_view.derive_spine_as_filed(_payload(_captured_filing("KO")))
+    finally:
+        spine_view._chain_concept = real
+    return set(_FOURTEEN_FIELDS) - consulted
+
+
+def test_spine_field_chains_has_a_stated_disposition(spine_view):
+    """The plan's RED. `SPINE_FIELD_CHAINS` survives Task 7, so its prose must
+    say what it is STILL for — the claim that it resolves the spine's fields is
+    now only partly true, and a half-true description of a money-path constant
+    is the dead-but-live config the brief refuses to leave behind.
+
+    Three checks, each of which a stale description fails:
+      1. it names BOTH readers, since the chain now serves two entry points
+         over two different inputs (`derive_spine` over the store dump,
+         `derive_spine_as_filed` over the reconstruction) and a reader who
+         edits it must know both are downstream;
+      2. it names every field that no longer resolves through it — the
+         universal claim and its exception in the same place, never one
+         without the other;
+      3. the count it claims equals the measured count, so the prose cannot
+         drift away from the code silently.
+    """
+    left_the_chain = _fields_resolved_without_the_chain(spine_view)
+    still_served = len(_FOURTEEN_FIELDS) - len(left_the_chain)
+    prose = _chain_prose(spine_view)
+
+    for reader in ("`derive_spine`", "`derive_spine_as_filed`"):
+        assert reader in prose, (
+            f"the chain's prose does not name {reader}, which reads it"
+        )
+    for field in left_the_chain:
+        assert field in prose, (
+            f"{field!r} no longer resolves through the chain and the chain's "
+            "own prose does not say so"
+        )
+    assert re.search(rf"\b{still_served}\b", prose), (
+        f"the chain still resolves {still_served} of the {len(_FOURTEEN_FIELDS)} "
+        "fields and its prose does not state that count"
+    )

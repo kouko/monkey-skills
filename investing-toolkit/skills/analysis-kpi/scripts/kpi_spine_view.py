@@ -180,17 +180,71 @@ if str(_SCRIPT_DIR) not in sys.path:
 # graph behind it does reach `_store_fs` (module docstring, "PURE FUNCTION").
 import kpi_xbrl  # noqa: E402
 
-# The store holds the filer's own qname verbatim, namespace preserved
-# (`us-gaap:Revenues`), so the chains below -- transcribed as bare local
-# names from the plan's pin -- are qualified with this namespace on lookup.
-# Keeping the pin's transcription bare is deliberate: it stays diffable
-# against the plan character-for-character.
-_US_GAAP = "us-gaap:"
+# THE WHOLE-EQUITY PRIMITIVES LIVE IN A LEAF MODULE, not here, so that
+# `kpi_us_statement_cells` can read them without importing this module -- which
+# is what makes the Task 7 direction (this view consuming the reconstruction) an
+# acyclic import instead of an order-dependent failure. See
+# `kpi_equity_terms`'s own header for the mutation that reproduced the cycle.
+# Re-bound under their historical names so every existing reference to
+# `kpi_spine_view._equity_kind` (and its seven siblings) still resolves: the
+# plan's Decision Log requires all eight bindings to survive by name AND by
+# semantics.
+from kpi_equity_terms import (  # noqa: E402
+    _US_GAAP,
+    _equity_kind,
+    _identity_value,
+    _minority_interest_term,
+    EQUITY_CHAIN,
+    EQUITY_INCL_NCI_CONCEPT,
+    EQUITY_PARENT_ONLY_CONCEPT,
+    MEZZANINE_CHAIN,
+    MINORITY_INTEREST_CHAIN,
+)
 
 # PINNED spine field chains -- transcribed VERBATIM from
 # docs/loom/plans/2026-07-26-us-as-reported-statement-lane.md ## Notes
 # ("PIN -- spine field chains"). Ordered first-present chains; order is the
 # same-period tiebreak, never a per-company winner.
+#
+# WHAT THIS CONSTANT IS STILL FOR, now that the as-filed reconstruction ships
+# (plan Task 11's disposition; brief
+# docs/loom/specs/2026-07-26-as-filed-statement-reconstruction.md
+# §What Becomes Obsolete, which requires this list to be either DELETED or its
+# remaining role written down here, never left as dead-but-live config). It is
+# KEPT, and it is no longer the whole resolution rule:
+#   - It declares the 14 FIELD NAMES and their emission order for BOTH entry
+#     points -- `derive_spine`, over a store dump, and `derive_spine_as_filed`,
+#     over a Task 9 reconstruction payload.
+#   - It is still the CONCEPT resolution rule for 13 of those 14 fields, on
+#     both entry points. `derive_spine` resolves the chain against what the
+#     filer TAGGED in the store; `_chain_concept` resolves the same chain, in
+#     the same first-present order, against the lines the filer PRESENTED on
+#     the statement. Same concepts, one input each.
+#   - `revenue` is the ONE field this list no longer resolves on the as-filed
+#     path. `_revenue_total` binds it from the filing's own calculation tree
+#     instead -- a revenue line whose calculation parent is also a revenue line
+#     is a component, and the one that remains is the filing's total (63 of 65
+#     operating filings in the committed verification universe, zero violations
+#     against sum reconciliation). It left for a measured reason: revenue is
+#     the field whose blanks the brief measured as ALL recoverable, because
+#     whole sectors declare a total no chain here lists (KO's
+#     `SalesRevenueGoodsNet`, DUK's `RegulatedAndUnregulatedOperatingRevenue`,
+#     PLD's `RealEstateRevenueNet`, PSX's `RevenuesAndOtherIncome`).
+#   - The other 13 deliberately did NOT follow it, and this is the honest limit
+#     of the evidence rather than a half-finished migration. For those fields
+#     the chain concept IS the filer's own concept everywhere it was measured,
+#     and the two filings this repo holds rows for offline (KO FY2017, IBM
+#     FY2025) cannot discriminate a structural rule for them -- inventing one
+#     would be unpinned work on the money path. When that evidence arrives the
+#     rule goes beside `_revenue_total` and this list serves fewer fields;
+#     `test_spine_field_chains_has_a_stated_disposition` measures the split and
+#     fails when this paragraph stops matching the code.
+#   - SUPERSEDED, and no longer the plan: the BACKLOG entry "spine chain misses
+#     33 filer-years" proposed widening these chains with early-era synonyms.
+#     The brief above replaces that fix with the reconstruction and the entry
+#     is closed against it -- widening `revenue` here to chase early-era
+#     coverage would write a hand-picked synonym into an append-only store,
+#     which is the risk that entry declined to take.
 #
 # A tuple of pairs, not a dict literal, because the DECLARED order is the
 # statement's reading order (income statement -> balance sheet -> cash flow)
@@ -259,34 +313,6 @@ SPINE_FIELD_CHAINS: tuple[tuple[str, tuple[str, ...]], ...] = (
     )),
 )
 
-# IDENTITY-ONLY chain -- same first-present-per-period semantics as a spine
-# field's, but deliberately NOT a member of SPINE_FIELD_CHAINS: it never
-# becomes a `series` row (module docstring, "WHERE THE MEZZANINE COMES
-# FROM"). Transcribed from the same pinned block in
-# docs/loom/plans/2026-07-26-us-as-reported-statement-lane.md ## Notes.
-MEZZANINE_CHAIN: tuple[str, ...] = (
-    "TemporaryEquityCarryingAmountIncludingPortionAttributableToNoncontrollingInterests",
-    "RedeemableNoncontrollingInterestEquityCarryingAmount",
-)
-
-# The pin's third identity-only concept: the non-controlling interest that
-# completes a PARENT-ONLY equity total into whole equity (module docstring,
-# "THE EQUITY TERM IS WHOLE EQUITY"). Also identity-only -- never a `series`
-# row -- and read from the same raw index as the mezzanine.
-MINORITY_INTEREST_CHAIN: tuple[str, ...] = (
-    "MinorityInterest",
-)
-
-# The two `total_equity` chain members BY NAME, because the identity branches
-# on WHICH of them a period resolved to. Naming them separately from the
-# chain keeps the chain's transcription diffable against the plan
-# character-for-character; the guard below is what stops the two copies from
-# drifting apart silently.
-EQUITY_PARENT_ONLY_CONCEPT = "StockholdersEquity"
-EQUITY_INCL_NCI_CONCEPT = (
-    "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest"
-)
-
 def _assert_equity_chain(chain: tuple[str, ...]) -> None:
     """Fail LOUD when the `total_equity` chain no longer IS the exact pair of
     concepts the balance-sheet identity branches on. Called at import below.
@@ -305,13 +331,22 @@ def _assert_equity_chain(chain: tuple[str, ...]) -> None:
     reachable from a test: the import-time comparison alone can only be
     exercised by mutating a copy of this file, which leaves no committed
     evidence behind.
+
+    IT NOW GUARDS A CROSS-MODULE PAIR. `EQUITY_CHAIN` lives in
+    `kpi_equity_terms`, which `kpi_us_statement_cells` reads directly, so this
+    is the one place the SPINE's transcription of the chain and the pair the
+    identity branches on are compared. The guard therefore runs whenever this
+    module loads -- previously also whenever the cells module loaded, since it
+    imported this one. Nothing is left unguarded by that narrowing: the cells
+    module no longer transcribes the pair at all, it reads it, so the only
+    remaining way for the two to disagree is an edit to `SPINE_FIELD_CHAINS`
+    here, which is exactly what this call catches.
     """
-    if chain != (EQUITY_PARENT_ONLY_CONCEPT, EQUITY_INCL_NCI_CONCEPT):
+    if chain != EQUITY_CHAIN:
         raise RuntimeError(
             "kpi_spine_view: the total_equity chain "
             f"{chain} no longer matches the two concepts the "
-            "balance-sheet identity branches on "
-            f"({EQUITY_PARENT_ONLY_CONCEPT!r}, {EQUITY_INCL_NCI_CONCEPT!r}) -- "
+            f"balance-sheet identity branches on ({EQUITY_CHAIN}) -- "
             "decide what whole equity means for the new member before shipping"
         )
 
@@ -418,28 +453,6 @@ def _by_axis_key(periods: list[dict[str, Any]]) -> dict[Any, dict[str, Any]]:
     }
 
 
-def _identity_value(observation: dict[str, Any] | None) -> int | float | None:
-    """A component's figure for the identity: ONE observation's
-    `canonical_value`, when that is a real number.
-
-    `canonical_value` is the store's BASE-scale figure (the point's `scale`
-    already applied), so the components are directly comparable and no
-    magnitude is re-derived here. Anything else -- an absent observation, an
-    unparseable string value, a bool -- returns None, i.e. uncheckable.
-
-    An OBSERVATION, not a period entry, and that is the whole vintage fix
-    (module docstring, "ONE VINTAGE, NEVER ACROSS"): a period entry's `latest`
-    is per-COMPONENT, so reading it here compared figures from different
-    filings.
-    """
-    if observation is None:
-        return None
-    value = observation.get("canonical_value")
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        return None
-    return value
-
-
 def _vintage_key(observation: dict[str, Any]) -> tuple[str, str]:
     """ONE filing's identity on the store's vintage axis:
     `(as_of, source_accession)`.
@@ -520,75 +533,6 @@ def _identity_vintage(
         if not shared:
             return None
     return max(shared) if shared else None
-
-
-def _equity_kind(equity_observation: dict[str, Any] | None) -> str | None:
-    """Which `total_equity` chain member the CHECKED filing reported --
-    `"parent_only"`, `"incl_NCI"`, or None when it is neither.
-
-    Read from the checked observation's own `kpi_id`, i.e. the concept whose
-    amount the identity is about to use, so the branch can never disagree
-    with the number it is branching for. None (a `total_equity` entry
-    carrying some other concept, only reachable from a hand-fed payload)
-    makes the period uncheckable rather than guessed at.
-    """
-    if equity_observation is None:
-        return None
-    concept = equity_observation.get("kpi_id")
-    if concept == f"{_US_GAAP}{EQUITY_INCL_NCI_CONCEPT}":
-        return "incl_NCI"
-    if concept == f"{_US_GAAP}{EQUITY_PARENT_ONLY_CONCEPT}":
-        return "parent_only"
-    return None
-
-
-def _minority_interest_term(
-    equity_kind: str | None,
-    minority_interest_period: dict[str, Any] | None,
-    minority_interest_observation: dict[str, Any] | None,
-    nci_is_asserted: bool,
-) -> int | float | None:
-    """The amount to ADD to this period's `total_equity` to make it whole
-    equity. None means uncheckable.
-
-    On the `incl_NCI` branch the term is 0 by construction -- the resolved
-    concept already contains the non-controlling interest, and adding it
-    again would double-count.
-
-    On the `parent_only` branch a tagged `MinorityInterest` is the term. An
-    UNTAGGED one reads as 0 -- measured, exactly like the mezzanine: of the
-    committed probe's 32 checkable filers, 13 resolved parent-only with no
-    `MinorityInterest` at that instant (its `parent_plus_MI` branch fired
-    ZERO times in-sample) and all 13 balance EXACTLY, which can only hold if
-    absence means "no non-controlling interest". Making absence uncheckable
-    instead would silence the identity for the single-entity majority.
-
-    UNTAGGED means untagged for the PERIOD, by any filing -- which is why the
-    period entry AND the checked filing's observation are separate arguments.
-    A period some OTHER filing tagged is a period that demonstrably HAD a
-    non-controlling interest, so the checked filing simply not carrying the
-    amount is a MISSING AMOUNT (None here), never a zero: zeroing it would
-    manufacture a residual equal to the interest and falsely accuse the filer
-    (module docstring, "ONE VINTAGE, NEVER ACROSS").
-
-    THE ONE EXCEPTION, and the reason `nci_is_asserted` exists: a filer that
-    tags BOTH equity totals for the period is asserting an NCI EXISTS -- it
-    is the line between the two subtotals -- so an absent `MinorityInterest`
-    there is a MISSING AMOUNT, not a zero, and the period is uncheckable.
-    Reading 0 would reproduce the very defect this branch fixes (residual =
-    the NCI, filer falsely accused); substituting the incl-NCI figure would
-    instead make the flag's own `components.total_equity` disagree with the
-    `total_equity` the flag's own `checked_vintage` reported, which no reader
-    could reconcile. Uncheckable is the honest third answer.
-    """
-    if equity_kind == "incl_NCI":
-        return 0
-    if minority_interest_period is not None:
-        # Tagged for this period: the CHECKED filing must supply the amount.
-        # A missing or unreadable one stays uncheckable (`_identity_value`
-        # returns None) -- never quietly zeroed, same as the mezzanine.
-        return _identity_value(minority_interest_observation)
-    return None if nci_is_asserted else 0
 
 
 def _balance_identity_flag(
@@ -931,3 +875,292 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+# =====================================================================
+# THE AS-FILED VIEW (plan Task 7) — the same 14 fields, over the
+# RECONSTRUCTION instead of over the store
+# =====================================================================
+#
+# A SECOND ENTRY POINT, NOT A REPLACEMENT, and the reason is structural rather
+# than cautious: a store dump carries no calculation linkbase, so the
+# reconstruction is not computable from `derive_spine`'s input AT ALL. "Derive
+# the fields from the reconstruction" was never a substitution — it is a
+# different function over a different input. `derive_spine` and
+# `SPINE_FIELD_CHAINS` keep serving the store path unchanged, which is what
+# keeps the shipped tearsheet pipe working.
+#
+# WHAT THE RECONSTRUCTION ACTUALLY BINDS, AND WHAT IT DOES NOT. Exactly one
+# field is bound by the filing's own structure: `revenue`. The other thirteen
+# resolve their existing chain against the filer's OWN presented lines instead
+# of against the store — same concepts, same first-present order, new input.
+# That asymmetry is deliberate and is the honest limit of the evidence:
+# `revenue` is the field whose blanks the brief measured as "all recoverable"
+# because whole sectors use concepts no chain lists, and it is the only field
+# for which a structural rule was validated (63 of 65 operating filings, zero
+# violations against sum reconciliation). For every other field the chain
+# concept IS the filer's own concept in the measured sample, so a structural
+# rule there would be an unpinned invention on the money path — and the two
+# filings this repo holds rows for cannot discriminate one. When that evidence
+# arrives, this is where the rule goes; until then the chain stays and this
+# comment says why.
+#
+# WHAT THE FOUR CELL STATES BUY THE READER. Resolving against the filer's own
+# statement is what lets `kpi_us_statement_cells.cell_state` answer WHICH KIND
+# of empty a cell is — `not_presented` (IBM files no operating-income line at
+# all) is now distinguishable from `not_tagged` and from a derivation, which is
+# the single behavioural addition the brief asks of this view.
+
+import kpi_us_statement_cells as statement_cells  # noqa: E402
+
+# Which statement carries each field. A LOOKUP, not an inference: every entry
+# is where the line sits on any US filer's statements, and none of them is a
+# judgement call. `cash` is a balance-sheet instant (the cash-flow statement's
+# closing balance is the same figure, and reading the balance sheet keeps the
+# field an instant like its `total_*` siblings).
+_FIELD_STATEMENT: dict[str, str] = {
+    "revenue": "income",
+    "gross_profit": "income",
+    "operating_income": "income",
+    "pretax_income": "income",
+    "net_income": "income",
+    "eps_basic": "income",
+    "total_assets": "balance_sheet",
+    "total_liabilities": "balance_sheet",
+    "total_equity": "balance_sheet",
+    "cash": "balance_sheet",
+    "operating_cash_flow": "cash_flow",
+    "investing_cash_flow": "cash_flow",
+    "financing_cash_flow": "cash_flow",
+    "capex": "cash_flow",
+}
+
+# What a revenue line is NAMED, as a POSITIVE allowlist of wording rather than
+# a denylist of observed concepts
+# (docs/loom/memory/shared-classifier-over-open-dialects-needs-allowlist.md:
+# the set of dialects is OPEN). Two stems cover every sector dialect the brief
+# measured — `RegulatedAndUnregulatedOperatingRevenue` (utilities),
+# `RealEstateRevenueNet` (REITs), `RevenueMineralSales` (mining),
+# `SalesRevenueServicesNet` (software), `SalesRevenueGoodsNet` (beverage /
+# pharma), `RevenuesAndOtherIncome` (refiners), plus plain `Revenues`.
+_REVENUE_WORDINGS = ("revenue", "sales")
+
+
+class _ReconstructedLine:
+    """One `Line` back out of Task 9's JSON, with the two attributes
+    `cell_state` reads (`concept`, `values`) plus the calculation fields the
+    revenue rule needs.
+
+    Rehydrated here rather than by importing `kpi_us_statement_shape.Line`
+    deliberately: this view's whole input is a JSON payload that has already
+    crossed a process boundary, so the dataclass on the far side is not
+    available to it in the first place, and reaching for it would couple this
+    module to one it never otherwise needs.
+    """
+
+    __slots__ = ("label", "concept", "level", "weight", "calculation_parent", "values")
+
+    def __init__(self, row: dict[str, Any]) -> None:
+        self.label = row.get("label")
+        self.concept = row.get("concept")
+        self.level = row.get("level")
+        self.weight = row.get("weight")
+        self.calculation_parent = row.get("calculation_parent")
+        self.values = dict(row.get("values") or {})
+
+
+class _ReconstructedStatements:
+    """The `.by_kind` surface `cell_state` takes — its whole input contract."""
+
+    __slots__ = ("by_kind",)
+
+    def __init__(self, statements: dict[str, list[dict[str, Any]]]) -> None:
+        self.by_kind = {
+            kind: [_ReconstructedLine(row) for row in rows]
+            for kind, rows in (statements or {}).items()
+        }
+
+
+def _local_name(concept: str | None) -> str:
+    """A concept without its namespace, in either spelling (`us-gaap_Assets`
+    and `us-gaap:Assets` both give `Assets`)."""
+    return (concept or "").replace(":", "_").rpartition("_")[2]
+
+
+def _is_revenue_candidate(line: _ReconstructedLine) -> bool:
+    """Is this line a revenue line of the income statement?
+
+    Two conditions, and the second is what makes the first safe. The NAME must
+    carry revenue wording, and the filer's own CALCULATION WEIGHT must not be
+    negative — a revenue line is added, never subtracted. The sign is not
+    decoration: IBM's income statement carries `CostOfRevenue`, whose local
+    name matches the same wording as `Revenues`, and only the declared weight
+    (-1) tells them apart. Without it IBM shows two candidate totals and its
+    revenue collapses to a gap.
+
+    A `None` weight is kept, not rejected: it means the line sits in no
+    declared sum, which is true of a calculation ROOT as well as of an EPS row,
+    and rejecting it would drop the total of a filer whose revenue heads its
+    own tree.
+    """
+    if not any(w in _local_name(line.concept).lower() for w in _REVENUE_WORDINGS):
+        return False
+    return line.weight is None or line.weight >= 0
+
+
+def _revenue_total(lines: list[_ReconstructedLine]) -> tuple[str | None, tuple[str, ...]]:
+    """The concept this filing declares as its TOTAL revenue, by its own
+    calculation tree — with the candidates it could not choose between.
+
+    THE RULE, validated before this arc's brief was written: among the income
+    statement's revenue lines, one whose calculation parent is ALSO a revenue
+    line is a COMPONENT; the one that remains is the filing's total. Measured
+    across the committed 79-filer verification universe it answered 63 of 65
+    operating filings with ZERO violations against sum reconciliation, 12 of
+    them reconciling to 0.00%.
+
+    It reads the CALCULATION linkbase — which children roll into which parent —
+    and never presentation position, which the brief measured unreliable for
+    meaning (asked which line was the total, position named a 193M
+    professional-services line as ServiceNow's 1,933M total).
+
+    Returns `(None, candidates)` when it cannot choose, and that is the answer,
+    not a failure: kickoff decision 甲 requires a VISIBLE TYPED GAP where a
+    filing declares no single total, never a fallback to `SPINE_FIELD_CHAINS`,
+    because a silently-low year reads as a downturn on a ten-year trend. The
+    measured instance is DUK's 2013-2017 FILED range, which yields 2-3 candidate
+    totals; its 2018-filed 10-K resolves cleanly to
+    `RegulatedAndUnregulatedOperatingRevenue`.
+
+    `(None, ())` is the different case where the filing presents no revenue line
+    at all — an honest `not_presented`, which a bank's income statement reaches
+    legitimately (the brief's open question about financial-sector filers).
+    """
+    candidates = [line for line in lines if _is_revenue_candidate(line)]
+    concepts = {line.concept for line in candidates}
+    totals = [line for line in candidates if line.calculation_parent not in concepts]
+    if len(totals) == 1:
+        return totals[0].concept, ()
+    return None, tuple(sorted(line.concept for line in totals))
+
+
+def _chain_concept(lines: list[_ReconstructedLine], chain: tuple[str, ...]) -> str | None:
+    """The first chain concept this filing PRESENTS, or None when it presents
+    none — the same first-present rule `_resolve_field` applies per period on
+    the store, asked of one filing's statement instead."""
+    presented = {_local_name(line.concept) for line in lines}
+    return next(
+        (f"{_US_GAAP}{concept}" for concept in chain if concept in presented),
+        None,
+    )
+
+
+def _statement_periods(lines: list[_ReconstructedLine]) -> list[str]:
+    """Every period key this statement carries, sorted.
+
+    Taken from the STATEMENT rather than from the resolved line, so a field the
+    filing does not present still reports `not_presented` FOR EACH PERIOD the
+    statement covers instead of reporting nothing — "no such line" is a claim
+    about periods the reader is looking at, and an empty period map would
+    render as the same undifferentiated blank this view exists to abolish.
+    """
+    return sorted({period for line in lines for period in line.values})
+
+
+def _cells(
+    statements: _ReconstructedStatements, kind: str, concept: str | None,
+    periods: list[str],
+) -> dict[str, dict[str, Any]]:
+    """One field's periods, each typed by `kpi_us_statement_cells.cell_state`.
+
+    A `None` concept means nothing was bound, which can only be "the filer
+    presents no such line" by the time this is called — the ambiguous case
+    returns earlier, with its candidates, and never reaches here.
+
+    `derivation` rides along ONLY when there is one, so a consumer branching on
+    `state` never has to ask whether a blank was our fault: `derived` is the one
+    state that carries provenance, and `kpi_us_statement_cells` builds it.
+    """
+    if concept is None:
+        return {period: {"state": "not_presented", "value": None} for period in periods}
+    cells: dict[str, dict[str, Any]] = {}
+    for period in periods:
+        cell = statement_cells.cell_state(statements, kind, concept, period)
+        entry: dict[str, Any] = {"state": cell.state, "value": cell.value}
+        if cell.derivation is not None:
+            entry["derivation"] = cell.derivation.formula
+        cells[period] = entry
+    return cells
+
+
+def _fields_of(filing: dict[str, Any]) -> list[dict[str, Any]]:
+    """The 14 fields of ONE filing, in `SPINE_FIELD_CHAINS` order.
+
+    Every field is emitted, including the ones this filer does not present:
+    absence is the answer here, not a reason to omit a row (which is the
+    opposite of `derive_spine`'s honest-absence rule over the store, and
+    deliberately so — there, a missing row means no filing in a decade tagged
+    the concept; here it would hide WHICH of the four empties this filing has).
+    """
+    statements = _ReconstructedStatements(filing.get("statements") or {})
+    fields: list[dict[str, Any]] = []
+    for field, chain in SPINE_FIELD_CHAINS:
+        kind = _FIELD_STATEMENT[field]
+        lines = statements.by_kind.get(kind) or []
+        unresolved: tuple[str, ...] = ()
+        if field == "revenue":
+            concept, unresolved = _revenue_total(lines)
+        else:
+            concept = _chain_concept(lines, chain)
+        entry: dict[str, Any] = {
+            "field": field,
+            "concept": concept,
+            "statement": kind,
+            "periods": (
+                {} if unresolved
+                else _cells(statements, kind, concept, _statement_periods(lines))
+            ),
+        }
+        if unresolved:
+            # The typed gap: the candidates are named so a reader can
+            # adjudicate, and NO figure rides along -- emitting one would be
+            # this view picking a total, which is the decision it just declined.
+            entry["unresolved"] = unresolved
+        fields.append(entry)
+    return fields
+
+
+def derive_spine_as_filed(payload: dict[str, Any]) -> dict[str, Any]:
+    """The 14 spine fields of each filing in a Task 9 `reconstruct` payload,
+    as the FILER declared them (plan Task 7).
+
+    Input is `pack_us.pack_reconstruct`'s output — plain JSON, which is what
+    makes this offline-testable — and the answer is PER FILING. Joining N
+    filings into a ten-year series is `kpi_us_statement_series.series_for`'s
+    job, over live filings and by the store's newest-filed rule; reimplementing
+    that join here would be a second copy of a vintage policy this repo already
+    owns in one place.
+
+    VALUES ARE `Decimal`, carried up from `cell_state` (brief: "arithmetic in
+    `Decimal`, never binary float"). A JSON consumer must therefore serialize
+    with `default=str`; nothing in this repo serializes this payload today, and
+    the shipped `derive` CLI — which does `json.dump` — is a different entry
+    point over a different input and is untouched.
+    """
+    reconstruction = payload.get("reconstruction") or {}
+    return {
+        "company": payload.get("company") or "",
+        "filings": [
+            {
+                "accession": filing.get("accession"),
+                "filing_date": filing.get("filingDate"),
+                "fields": _fields_of(filing),
+            }
+            for filing in reconstruction.get("filings") or []
+        ],
+        # Acquisition failures ride through verbatim: a filing that could not be
+        # read is not a filing whose fields are empty, and a reader comparing
+        # years must be able to tell the two apart.
+        "failed_items": list(reconstruction.get("failed_items") or []),
+        "warnings": list(payload.get("warnings") or []),
+    }
