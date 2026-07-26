@@ -1,7 +1,16 @@
 #!/usr/bin/env python3
 """kpi_us_statement_shape.py — classify one XBRL role URI as one of the three
-statements (pure-compute, plan Task 2,
-docs/loom/plans/2026-07-26-as-filed-statement-reconstruction.md).
+statements (plan Task 2), and assemble a filing's three statements from the
+roles that classify (plan Task 3),
+docs/loom/plans/2026-07-26-as-filed-statement-reconstruction.md.
+
+TWO FUNCTIONS, TWO SCOPES. `statement_kind` is a pure function of a role
+string. `statements_for` reads a filing: it is a pure function of (filing,
+this module's derivation) with no cache and no persistence (plan ## Notes
+kickoff decision — the reconstruction is RECOMPUTED, never persisted, so it
+can be wrapped in a cache later without touching a caller). Everything below
+the `statement_kind` section belongs to assembly; the classification rules
+above it are unchanged by Task 3.
 
 A filing declares 14-132 presentation/calculation roles, MOST of them notes.
 `statement_kind` answers, for ONE role at a time, which of the three
@@ -72,27 +81,35 @@ fixture-provenance note (docs/loom/memory/unifying-a-normalization-has-a-scope.m
 A universal claim with a live counter-example is worse than no claim: the next
 reader trusts the rule and deletes the thing the rule never covered.
 
-Naming the exception, rather than writing "EVERY entry", is deliberate: this
-docstring said "every" for one round while `tables` already contradicted it 32
-lines below, which is the same defect the sibling module's mirroring claim and
-this module's own fixture-provenance note each shipped once
-(docs/loom/memory/unifying-a-normalization-has-a-scope.md). A universal claim
-with a live counter-example is worse than no claim: the next reader trusts the
-rule and deletes the thing the rule was never meant to cover.
-
 NOTHING HERE INFERS MEANING FROM A LINE'S POSITION (brief §Decision): this
 reads the role's NAME, which is what names are for. Which lines the role
 carries, and what they mean, is decided elsewhere.
 
-SELECTING AMONG ROLES IS NOT THIS FUNCTION'S JOB. A filing offering both a
+SELECTING AMONG ROLES IS NOT `statement_kind`'S JOB. A filing offering both a
 pure income role and a combined income-and-comprehensive one must prefer the
-pure one — but that is a choice BETWEEN roles and belongs to the assembly
-step (plan Task 3), which is the only caller that sees a filing's whole role
-set. Per-role classification stays total and order-free here.
+pure one — but that is a choice BETWEEN roles, so it lives in `statements_for`
+below, the only caller that sees a filing's whole role set. Per-role
+classification stays total and order-free.
 
-PURE FUNCTION of the role string — stdlib only, no I/O.
+`statement_kind` IS A PURE FUNCTION of the role string. The module as a whole
+is stdlib-only, but it is no longer I/O-free: `statements_for` reads the
+filing handed to it. Stated as the exception rather than dropping the claim,
+because the claim is still what governs everything above the assembly section.
 """
 from __future__ import annotations
+
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+# Sibling import, mirroring `kpi_spine_view.py`'s shim so the module resolves
+# both under `uv run --script` and under importlib test loading.
+_SCRIPT_DIR = Path(__file__).resolve().parent
+if str(_SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPT_DIR))
+
+import kpi_us_statement_lines as statement_lines  # noqa: E402
 
 # Note-role wording that repeats a statement's own words. Only roles that
 # would otherwise match a statement need to be here; a note with no statement
@@ -207,3 +224,224 @@ def _without_other_statement_wording(folded: str) -> str:
     for wording in _OTHER_STATEMENT_WORDINGS:
         folded = folded.replace(wording, "")
     return folded
+
+
+# =====================================================================
+# ASSEMBLY (plan Task 3) — a filing's three statements as ordered lines
+# =====================================================================
+
+# The keys that mark a `get_statement` row as a segment slice, as observed —
+# NOT as a rule. The rule lives in `kpi_us_statement_lines`, which rejects any
+# truthy "dim"-containing key that is not a known child descriptor, so it needs
+# no such list. This one exists only so assembly can tell a key it has SEEN
+# from one it has not, and report the latter (see
+# `_unrecognised_dimension_keys`).
+#
+# OBSERVED 2026-07-26 in tests/data/fixtures/
+# us_statement_reconstruction_2026-07-26.json: exactly four keys containing
+# "dim" occur across 5 filings x 3 statements x 2 eras — these three plus the
+# child descriptor. Its scope is that capture and nothing wider: a filer or an
+# edgartools version outside it may well spell a fifth, which is the entire
+# reason the unrecognised ones are counted rather than assumed absent.
+_SEEN_ROW_LEVEL_DIMENSION_KEYS = frozenset({
+    "is_dimension", "full_dimension_label", "dimension_metadata",
+})
+
+
+@dataclass(frozen=True)
+class Line:
+    """One rendered statement line, as the FILER declared it.
+
+    `label` is the filer's own prose and is for display only — it is never a
+    key (IBM moved its revenue label five times in 14 years while holding one
+    concept; brief §Series identity). `weight` and `calculation_parent` are
+    `None` for a line that participates in no declared sum: KO's EPS rows are
+    the observed case, and that is a property of the filing, not an error —
+    they are lines, and arithmetic must leave them alone.
+    """
+
+    label: str
+    concept: str
+    level: int | None
+    weight: float | None
+    calculation_parent: str | None
+    values: dict[str, Any]
+
+
+@dataclass(frozen=True)
+class Statements:
+    """One filing's three statements, plus what assembly could not account for.
+
+    `by_kind` holds only the kinds the filing actually declares a role for: a
+    kind whose role is missing is ABSENT, never an empty list, so "this filer
+    files no such statement" cannot be confused with "the statement is empty".
+
+    `roles` maps each kind to EVERY role that classified as it, in the order
+    preference put them; the first is the one read. A kind with more than one
+    entry is therefore visible to a caller without a second reporting channel.
+
+    `unrecognised_dimension_keys` is the counting half of the exclusion
+    doctrine in docs/loom/memory/
+    shared-classifier-over-open-dialects-needs-allowlist.md — exclude
+    fail-closed, count visibly, promote deliberately. Empty on every captured
+    filing; non-empty means the row shape has moved and a consolidated line
+    may now be being deleted in silence.
+    """
+
+    by_kind: dict[str, list[Line]]
+    roles: dict[str, tuple[str, ...]]
+    unrecognised_dimension_keys: tuple[str, ...]
+
+
+def statements_for(filing) -> Statements:
+    """The filing's three statements as ordered lines, from its own structure.
+
+    Reads the presentation linkbase for WHICH lines exist, their order, their
+    level and the filer's label, and the calculation linkbase (as carried on
+    each row) for `weight` and `calculation_parent`. Nothing here infers what
+    a line MEANS from where it sits — presentation was measured unreliable for
+    that and reliable for this (brief §Decision).
+
+    `filing` need only answer `.xbrl()` with an object exposing
+    `presentation_roles` and `get_statement(role)`; that two-call surface is
+    the whole input contract, which is what lets the suite run offline against
+    captured rows.
+    """
+    xbrl = filing.xbrl()
+
+    candidates: dict[str, list[str]] = {}
+    for role in xbrl.presentation_roles:
+        role = str(role)
+        kind = statement_kind(role)
+        if kind is not None:
+            candidates.setdefault(kind, []).append(role)
+
+    by_kind: dict[str, list[Line]] = {}
+    roles: dict[str, tuple[str, ...]] = {}
+    unrecognised: set[str] = set()
+    for kind, found in candidates.items():
+        ordered = _roles_in_preference_order(found)
+        roles[kind] = tuple(ordered)
+        rows = list(xbrl.get_statement(ordered[0]))
+        unrecognised |= _unrecognised_dimension_keys(rows)
+        by_kind[kind] = [_line(row) for row in rows if _is_rendered_line(row)]
+
+    return Statements(
+        by_kind=by_kind,
+        roles=roles,
+        unrecognised_dimension_keys=tuple(sorted(unrecognised)),
+    )
+
+
+def _roles_in_preference_order(roles: list[str]) -> list[str]:
+    """The candidate roles for one kind, best first.
+
+    A role that ALSO names an out-of-scope statement sorts last: a combined
+    income-and-comprehensive-income role carries comprehensive-income lines
+    this arc does not want, so a pure income role is the better read of the
+    same kind. Remaining ties break on the role URI — an arbitrary order, but
+    a STABLE one, so two runs over one filing never disagree (never "whichever
+    the role dict yielded first").
+
+    Sorting is on the FOLDED role — its last path segment with case and
+    punctuation dropped — because that is the only part of the URI the
+    classifier reads, and a tie-break keyed on a different string than the
+    rule it breaks ties for agrees with it only by coincidence of a shared
+    domain prefix.
+
+    THE MULTI-ROLE CASE IS UNOBSERVED. Across the five captured filings every
+    kind had exactly ONE role, and Realty Income's ONLY income role is the
+    combined one. That is asserted by
+    `test_a_filing_declares_one_role_per_kind_in_the_captured_sample`, which
+    RE-DERIVES it by running the live classifier over all 694 stored role URIs
+    — cite the test, never a stored count. An earlier version of this sentence
+    pointed at an `n_roles_per_kind` field that a later revision deleted for
+    being a frozen classifier verdict; a load-bearing claim grounded on a
+    pointer that can silently stop resolving is the defect this module's own
+    docstring legislates against above. So this is a GUARD, not a measured
+    policy: it exists to make the choice deterministic and to prefer the purer
+    role IF a filing ever offers both, and it must never REJECT a combined
+    role — doing so would erase the income statement of exactly the filer that
+    motivated the rule. The plan states the preference as though the situation
+    were observed; it was not, in this sample.
+    """
+    return sorted(roles, key=lambda role: (_names_another_statement(role), _fold(role)))
+
+
+def _names_another_statement(role: str) -> bool:
+    """True when the role's title also names a statement outside this arc's
+    three — the combined `...OfIncomeAndComprehensiveIncome` shape. Derived
+    from `_OTHER_STATEMENT_WORDINGS` via the same removal the classifier uses,
+    so the two can never disagree about what "another statement" means."""
+    folded = _fold(role)
+    return _without_other_statement_wording(folded) != folded
+
+
+def _is_rendered_line(row: dict[str, Any]) -> bool:
+    """Is this row a line a reader would see on the statement?
+
+    Two rejections, and the second is Task 3's own decision:
+
+      * NOT A STATEMENT LINE — dimensional or placeholder, per
+        `kpi_us_statement_lines.is_statement_line`, which is the single site
+        for that judgement and is composed rather than re-implemented.
+      * ABSTRACT — `us-gaap:IncomeStatementAbstract` and its kin reach here
+        because the XBRL convention reserves `Abstract` for a header and the
+        predicate above deliberately does not (plan Decision Log, Task 1 ->
+        Task 3, item 1). They are EXCLUDED, not rendered. A header carries a
+        section title but no fact, no period, no weight and no parent, so it
+        would be a `Line` whose every field but `label` is empty. The
+        arithmetic settles it: KO FY2017's income role is 80 rows less 49
+        segment slices less 5 abstract rows (the section header plus the four
+        `Table`/`Axis`/`Domain`/`LineItems` placeholders, which are abstract
+        too) = the 26 the plan's acceptance counts. Rendering the header would
+        make it 27.
+    """
+    return statement_lines.is_statement_line(row) and not row.get("is_abstract")
+
+
+def _unrecognised_dimension_keys(rows: list[dict[str, Any]]) -> set[str]:
+    """Dimension-ish keys these rows carry that this repo has never seen.
+
+    A key counts only when it is TRUTHY on at least one row, because that is
+    when it changes an answer: `is_statement_line` rejects a row for a truthy
+    unrecognised "dim" key, so a newly-spelled CHILD descriptor (say
+    `has_dimensioned_children`) would silently start deleting consolidated
+    lines — the exact defect measured on KO FY2017, arriving by a new route.
+    The predicate returns a bool and structurally cannot say so; assembly sees
+    every row of every statement it reads, so it says so here.
+
+    A key present but falsy everywhere is not reported: it rejected nothing,
+    and a warning nobody can act on trains readers to ignore the channel.
+
+    "Would this key reject the row?" is ASKED of the predicate rather than
+    re-derived here. This function first re-implemented the comparison and got
+    it subtly wrong — exact case against the predicate's `casefold()` — so a
+    key spelled `Has_Dimension_Children` was exempted there and reported as
+    unrecognised here: a false alarm on a channel whose entire value is being
+    silent when nothing is wrong. What is left for this module to know is only
+    which keys it has SEEN, which is a fact about the capture, not a rule.
+    """
+    seen = {key.casefold() for key in _SEEN_ROW_LEVEL_DIMENSION_KEYS}
+    return {
+        str(key) for row in rows for key, value in row.items()
+        if value
+        and statement_lines.is_row_level_dimension_signal(key)
+        and str(key).casefold() not in seen
+    }
+
+
+def _line(row: dict[str, Any]) -> Line:
+    """One row projected onto the six fields the brief asks a line to carry.
+
+    `values` is copied rather than aliased: the caller's `Line` must not
+    change because someone downstream mutated the row it came from.
+    """
+    return Line(
+        label=row.get("label"),
+        concept=row.get("concept"),
+        level=row.get("level"),
+        weight=row.get("weight"),
+        calculation_parent=row.get("calculation_parent"),
+        values=dict(row.get("values") or {}),
+    )
