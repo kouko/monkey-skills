@@ -141,7 +141,7 @@ def test_us_migration_contract():
     # fail this assertion.
     assert pack_us.SUPPORTED_PACKS == (
         "snapshot", "memo-fetch", "comps-multiples", "screener-batch", "regime-pack",
-        "kpi-quarterly", "kpi-topline-backfill", "statement-backfill",
+        "kpi-quarterly", "kpi-topline-backfill", "statement-backfill", "reconstruct",
     ), f"SUPPORTED_PACKS diverges from data-us pack.py --pack choices: {pack_us.SUPPORTED_PACKS}"
 
     # --- (b) build_pack("snapshot", ...) section keys match fixture (fixture-fed, mocked subprocess) ---
@@ -995,6 +995,371 @@ def test_build_pack_dispatches_statement_backfill(monkeypatch):
 
     assert calls == ["AAPL"]
     assert result == {"pack": "statement-backfill", "ticker": "AAPL"}
+
+
+def test_reconstruct_pack_is_registered_and_us_only(monkeypatch, capsys):
+    """Task 9, docs/loom/plans/2026-07-26-as-filed-statement-reconstruction.md:
+    the as-filed reconstruction verb must be REACHABLE from the CLI facade, and
+    reachable ONLY for US filers. Three claims, because two of them can hold
+    while the third silently does not:
+
+      1. `reconstruct` is in `pack_us.SUPPORTED_PACKS` — without it `build_pack`
+         raises the generic `unknown pack` ValueError and the lane is dead.
+      2. It DISPATCHES: `build_pack("reconstruct", ["KO"])` reaches
+         `pack_reconstruct`. Registration alone is not dispatch — `statement-
+         backfill` shipped registered-but-undispatched (see
+         `test_build_pack_dispatches_statement_backfill`), so this is a
+         measured failure mode in this exact module, not a hypothetical.
+      3. It is REFUSED (exit 64) for a non-US market by the facade's
+         `US_ONLY_PACKS` guard, which names the refusal as a market-
+         availability problem rather than letting `pack_tw.build_pack`'s
+         generic `unknown pack` ValueError misreport it as a pack-name typo.
+
+    The US arm asserts the guard does NOT fire for a US ticker — a guard that
+    rejects every market would satisfy claim 3 while making the verb
+    unreachable everywhere, so the negative case is what proves the guard is
+    market-scoped rather than blanket.
+
+    Offline: the `.TW` arm returns before any market module is called, and the
+    US arm's producer is stubbed, so neither reaches SEC EDGAR.
+    """
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack  # noqa: E402
+    import pack_us  # noqa: E402
+
+    # --- 1. registered ---
+    assert "reconstruct" in pack_us.SUPPORTED_PACKS, (
+        f"reconstruct is not registered: {pack_us.SUPPORTED_PACKS}"
+    )
+
+    # --- 2. dispatches through build_pack ---
+    calls: list[str] = []
+
+    def fake_pack_reconstruct(ticker):
+        calls.append(ticker)
+        return {"pack": "reconstruct", "ticker": ticker}
+
+    monkeypatch.setattr(pack_us, "pack_reconstruct", fake_pack_reconstruct)
+
+    result = pack_us.build_pack("reconstruct", ["KO"])
+    assert calls == ["KO"]
+    assert result == {"pack": "reconstruct", "ticker": "KO"}
+
+    # Ticker-count validation, mirroring every other single-heavy pack.
+    with pytest.raises(ValueError, match=r"requires exactly one ticker \(single, heavy\)"):
+        pack_us.build_pack("reconstruct", ["KO", "PEP"])
+
+    # --- 3. refused for a non-US market, at the facade ---
+    assert "reconstruct" in pack.US_ONLY_PACKS, (
+        f"reconstruct is not declared US-only: {sorted(pack.US_ONLY_PACKS)}"
+    )
+
+    exit_code = pack.main(["--ticker", "2330.TW", "--pack", "reconstruct"])
+    assert exit_code == pack.EXIT_USAGE_ERROR
+    refusal = json.loads(capsys.readouterr().out)["_status"]
+    assert refusal["status"] == "usage_error"
+    assert "US-only" in refusal["message"], (
+        f"refusal must name market availability, not a pack-name typo: {refusal}"
+    )
+
+    # ...and NOT refused for a US ticker (the guard is market-scoped, not blanket).
+    calls.clear()
+    us_exit = pack.main(["--ticker", "KO", "--pack", "reconstruct", "--quiet"])
+    capsys.readouterr()
+    assert calls == ["KO"], "the US arm must reach the producer, not be refused"
+    assert us_exit != pack.EXIT_USAGE_ERROR
+
+
+def _reconstruct_row(concept, label, **over):
+    """One `get_statement` presentation row, shaped as the live surface
+    carries it (verified key set, plan Task 3 Decision Log). Defaults are a
+    real statement line: undimensioned, non-placeholder, non-abstract."""
+    row = {
+        "concept": concept, "label": label, "level": 0,
+        "weight": 1.0, "calculation_parent": None,
+        "values": {"FY2017": 1.0}, "is_abstract": False,
+        "has_dimension_children": False,
+    }
+    row.update(over)
+    return row
+
+
+class _FakeXBRL:
+    def __init__(self, rows):
+        self.presentation_roles = ["http://ko.com/role/ConsolidatedStatementsOfIncome"]
+        self._rows = rows
+
+    def get_statement(self, role):
+        return list(self._rows)
+
+
+class _FakeFiling:
+    """Answers exactly the two-call surface `statements_for` documents as its
+    whole input contract (`.xbrl()` -> `presentation_roles` + `get_statement`)."""
+
+    def __init__(self, rows):
+        self._rows = rows
+
+    def xbrl(self):
+        return _FakeXBRL(self._rows)
+
+
+def test_pack_reconstruct_emits_per_accession_statements_with_status(monkeypatch):
+    """Task 9's producer body: one company, N accessions, the three statements
+    per accession as the filer declared them.
+
+    Stubs at the PRODUCERS' OWN boundaries (`resolve_cik` / `list_filings` /
+    `_acquire_raw_filing`) and lets the REAL `statements_for` run over
+    live-shaped rows -- this repo has a recorded incident where mocking one
+    layer up let a green suite certify a crash, and mocking the reconstruction
+    itself would leave the seam this task exists to build entirely unexercised.
+
+    Four claims:
+      1. the filer's OWN label and concept survive to the payload, in
+         presentation order (labels are display-only but they are what the
+         reader recognises; brief §Series identity);
+      2. a failed acquisition is a LOUD per-accession skip in `failed_items`,
+         never a fabricated statements entry -- mirroring
+         `_fetch_xval_source_a`'s already-pinned discipline;
+      3. the depth-1 `{requested, succeeded, failed}` triple reconciles and
+         `_status` reads `partial`, so the facade's structural walk sees the
+         degradation without descending into `filings`;
+      4. the payload is JSON-SERIALIZABLE. `statements_for` returns frozen
+         DATACLASSES (`Statements` / `Line`); `pack.py` ends in
+         `json.dumps(...)`, which cannot serialize them. Without an explicit
+         projection the verb crashes at the last line of a ~40s run, and no
+         assertion on shape alone would catch it.
+    """
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack_us  # noqa: E402
+    import sec_edgar_client  # noqa: E402
+
+    rows = [
+        _reconstruct_row("us-gaap:IncomeStatementAbstract", "INCOME", is_abstract=True),
+        _reconstruct_row("us-gaap:Revenues", "NET OPERATING REVENUES"),
+        _reconstruct_row("ko:UnusualOrInfrequentItemOperating", "OTHER OPERATING CHARGES"),
+        # A segment slice interleaved in the same role — must not leak through.
+        _reconstruct_row("us-gaap:Revenues", "Asia Pacific", is_dimension=True),
+    ]
+
+    good = "0000021344-18-000008"
+    bad = "0000021344-17-000009"
+    acquire_error = {
+        "error": f"SEC EDGAR filing acquisition failed: accession {bad!r} did not resolve",
+        "error_class": "resolution",
+    }
+
+    monkeypatch.setattr(sec_edgar_client, "resolve_cik", lambda t: {"cik": 21344})
+    monkeypatch.setattr(
+        sec_edgar_client, "list_filings",
+        lambda cik, forms, limit, min_filing_date=None: [
+            {"form": "10-K", "filingDate": "2018-02-23", "accessionNumber": good},
+            {"form": "10-K", "filingDate": "2017-02-24", "accessionNumber": bad},
+        ],
+    )
+    monkeypatch.setattr(
+        sec_edgar_client, "_acquire_raw_filing",
+        lambda accession: _FakeFiling(rows) if accession == good else acquire_error,
+    )
+
+    envelope = pack_us.pack_reconstruct("ko")
+
+    assert envelope["pack"] == "reconstruct"
+    assert envelope["ticker"] == "KO"
+    # Nested under one section so the facade's one-level walk honours the
+    # self-declared `_status`; see
+    # `test_reconstruct_clean_run_classifies_ok_through_the_facade`.
+    payload = envelope["reconstruction"]
+
+    # 1. the filer's own labels + concepts, in presentation order
+    assert len(payload["filings"]) == 1
+    filing = payload["filings"][0]
+    assert filing["accession"] == good
+    income = filing["statements"]["income"]
+    assert [line["label"] for line in income] == [
+        "NET OPERATING REVENUES", "OTHER OPERATING CHARGES"
+    ], f"labels/order/segment-leak: {income}"
+    assert income[1]["concept"] == "ko:UnusualOrInfrequentItemOperating", (
+        "the filer's own custom concept must survive — no fixed concept list "
+        "could contain it (brief §Decision)"
+    )
+
+    # 2. the failed acquisition is loud, and fabricates nothing
+    assert [item["accession"] for item in payload["failed_items"]] == [bad]
+    assert payload["failed_items"][0]["error_class"] == "resolution"
+    assert all(f["accession"] != bad for f in payload["filings"]), (
+        "a failed acquisition must never appear as a fabricated statements entry"
+    )
+
+    # 3. depth-1 triple reconciles; degradation visible without descending
+    assert payload["requested"] == 2
+    assert payload["succeeded"] == 1
+    assert payload["failed"] == 1
+    assert payload["succeeded"] + payload["failed"] == payload["requested"]
+    assert payload["_status"] == "partial"
+
+    # 4. the facade's final `json.dumps` must not crash on a dataclass
+    json.dumps(envelope)
+
+
+def _stub_reconstruct_producers(monkeypatch, accessions_to_rows):
+    """Stub the three `sec_edgar_client` producers `pack_reconstruct` calls,
+    from an {accession: rows-or-error-slot} map. Ordered as given."""
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import sec_edgar_client  # noqa: E402
+
+    monkeypatch.setattr(
+        sec_edgar_client, "resolve_cik",
+        lambda t: {"cik": 21344, "title": "COCA COLA CO"},
+    )
+    monkeypatch.setattr(
+        sec_edgar_client, "list_filings",
+        lambda cik, forms, limit, min_filing_date=None: [
+            {"form": "10-K", "filingDate": "2026-02-20", "accessionNumber": a}
+            for a in accessions_to_rows
+        ],
+    )
+    monkeypatch.setattr(
+        sec_edgar_client, "_acquire_raw_filing",
+        lambda accession: (
+            accessions_to_rows[accession]
+            if isinstance(accessions_to_rows[accession], dict)
+            else _FakeFiling(accessions_to_rows[accession])
+        ),
+    )
+
+
+def test_reconstruct_clean_run_classifies_ok_through_the_facade(monkeypatch):
+    """A run in which EVERY filing reconstructed must classify `ok` through
+    `pack._classify_result` -- the real structural reader, not just the
+    producer's own opinion of itself.
+
+    LIVE DOGFOOD DEFECT, 2026-07-26 (KO, real SEC fetch): 4 of 4 filings
+    reconstructed, `failed_items == []`, the producer self-declared `_status:
+    "ok"` -- and the facade still reported `partial`, exit 2. Two causes, both
+    invisible to any test that only inspects the producer's own return:
+
+      1. `_list_section_status` reads an EMPTY LIST as `"failed"` (deliberately
+         -- for a ticker fan-out, zero rows means nothing came back). A
+         top-level `failed_items: []` is the SUCCESS case, and it was being
+         read as the failure case.
+      2. `main()` assigns `output["_status"] = _status_block(...)`, so a
+         producer's own TOP-LEVEL `_status` is overwritten before anyone reads
+         it. Depth-1 status belongs on a named SECTION, which is where every
+         other pack in this module puts it (`sec_narrative`, `xval_source_a`).
+
+    The degraded arm is asserted in the same test on purpose: a "fix" that
+    stops reporting partial at all would satisfy the ok arm while making real
+    degradation invisible -- the strictly more dangerous direction, and the
+    one this pack's whole failure-honesty contract exists to prevent.
+    """
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack  # noqa: E402
+    import pack_us  # noqa: E402
+
+    rows = [_reconstruct_row("us-gaap:Revenues", "Net Operating Revenues")]
+
+    # --- every filing reconstructed ---
+    _stub_reconstruct_producers(monkeypatch, {"0001628280-26-010047": rows})
+    clean = pack_us.pack_reconstruct("ko")
+
+    status, failed_sections = pack._classify_result(clean)
+    assert status == "ok", (
+        f"a 1-for-1 clean reconstruction must not read as {status!r} "
+        f"(failed_sections={failed_sections})"
+    )
+
+    # --- one filing failed to acquire: degradation must still be visible ---
+    _stub_reconstruct_producers(monkeypatch, {
+        "0001628280-26-010047": rows,
+        "0000021344-25-000011": {"error": "did not resolve", "error_class": "resolution"},
+    })
+    degraded = pack_us.pack_reconstruct("ko")
+
+    degraded_status, degraded_sections = pack._classify_result(degraded)
+    assert degraded_status == "partial", (
+        f"a failed acquisition must stay visible to the facade, got "
+        f"{degraded_status!r}"
+    )
+    assert degraded_sections, "the degraded section must be named, not just counted"
+
+
+def test_reconstruct_reads_enough_filings_for_the_briefs_ten_years():
+    """`RECONSTRUCT_ANNUAL_FILINGS` must be enough to actually deliver the
+    brief's Smallest End State: "the three statements as filed, for 10+ years".
+
+    MEASURED 2026-07-26, live KO run: FOUR 10-Ks yielded SIX distinct annual
+    periods (2020-2025), not ten. Consecutive 10-Ks overlap by their two
+    comparative years, so N filings yield N+2 distinct years -- not 3N. The
+    brief's own arithmetic ("Ten years is ~4 filings (each 10-K carries three
+    comparative years)", §Users) multiplies where it should overlap, and the
+    plan's cost note inherits it; both are refuted by the measurement rather
+    than reinterpreted. This test is the guard that the constant tracks the
+    REQUIREMENT (10+ years) instead of the refuted estimate (4 filings).
+    """
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack_us  # noqa: E402
+
+    years_yielded = pack_us.RECONSTRUCT_ANNUAL_FILINGS + 2
+    assert years_yielded >= 10, (
+        f"{pack_us.RECONSTRUCT_ANNUAL_FILINGS} annual filings yield only "
+        f"{years_yielded} distinct years (N+2, measured); the brief asks for 10+"
+    )
+
+
+def test_missing_client_dependency_names_what_to_pass(monkeypatch, capsys):
+    """A dependency-free invocation must fail with a message naming what to
+    pass -- never a bare `ModuleNotFoundError`.
+
+    MEASURED, not hypothetical: the sibling as-reported lane's live dogfood
+    died on `ModuleNotFoundError: No module named 'requests'` until both client
+    deps were supplied on the `uv run` invocation (Gotcha trailer, PR #619,
+    2026-07-26). `pack.py` is a ZERO-DEPENDENCY facade by design -- the market
+    clients' deps are supplied per-invocation via `--with` and are deliberately
+    never imported by the facade -- so this failure is reachable by every SEC
+    pack, and the facade is the one place that knows the invocation contract.
+
+    The raw traceback is KEPT alongside the message. A guidance string that
+    replaced the cause would trade one opaque failure for another: the message
+    says what to do, the traceback still says what actually happened.
+    """
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack  # noqa: E402
+    import pack_us  # noqa: E402
+
+    def missing_requests(pack_name, tickers):
+        # `name=` is what the IMPORT SYSTEM populates on a real failed import
+        # (`sec_edgar_client`'s top-level `import requests`), so the stub sets
+        # it too -- a hand-built exception missing `name` would let an
+        # implementation that only reads `str(exc)` pass a test the real
+        # failure shape would not exercise.
+        raise ModuleNotFoundError("No module named 'requests'", name="requests")
+
+    monkeypatch.setattr(pack_us, "build_pack", missing_requests)
+
+    exit_code = pack.main(["--ticker", "KO", "--pack", "reconstruct", "--quiet"])
+    status = json.loads(capsys.readouterr().out)["_status"]
+
+    assert exit_code == pack.EXIT_FAILED
+    assert status["status"] == "failed"
+
+    message = status.get("message", "")
+    assert "requests" in message, f"must name the MISSING module: {message}"
+    assert "--with" in message, f"must name the fix, not just the symptom: {message}"
+    assert "edgartools" in message, (
+        f"must name the SEC lane's other client dep too — supplying only the "
+        f"one named in the error just moves the failure one import later "
+        f"(exactly how PR #619's dogfood went): {message}"
+    )
+    assert "ModuleNotFoundError" in status.get("traceback", ""), (
+        "the real cause must survive alongside the guidance, not be replaced by it"
+    )
 
 
 def test_build_pack_statement_backfill_requires_exactly_one_ticker():

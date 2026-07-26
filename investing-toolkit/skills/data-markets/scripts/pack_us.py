@@ -31,6 +31,11 @@ Pack types:
   - statement-backfill    single ticker, SEC EDGAR companyfacts as-reported
                      annual statement backfill (US-only; docs/loom/plans/
                      2026-07-26-us-as-reported-statement-lane.md)
+  - reconstruct      single ticker, the three statements AS THE FILER
+                     DECLARED THEM (own labels, own concepts, own order)
+                     across the last 8 annual filings — US-only; recomputed
+                     per run, never persisted (docs/loom/plans/
+                     2026-07-26-as-filed-statement-reconstruction.md)
 
 Environment:
   INVESTING_TOOLKIT_CACHE   passed through to underlying clients (yfinance / sec / fred)
@@ -41,6 +46,7 @@ import os
 import subprocess
 import sys
 import time
+from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -1193,6 +1199,186 @@ def pack_statement_backfill(ticker: str) -> dict:
     }
 
 
+# How many annual filings one `reconstruct` run reads, to satisfy the brief's
+# "10+ years" (§Smallest End State).
+#
+# EIGHT, and the brief's own estimate of FOUR is REFUTED, measured 2026-07-26
+# on a live KO run: four 10-Ks yielded SIX distinct annual periods (2020-2025),
+# not ten. Consecutive 10-Ks OVERLAP by their two comparative years, so N
+# filings yield N+2 distinct years, not 3N. The brief (§Users, "Ten years is ~4
+# filings (each 10-K carries three comparative years)") multiplies where it
+# should overlap, and the plan's cost line inherits the same error. Recorded
+# here rather than quietly satisfied, because the arithmetic is load-bearing
+# for anyone sizing a run.
+#
+# Cost, on the plan's own measurement (## Notes: ~10.7s cold / ~1.3s warm per
+# filing): ~85s cold, ~10s warm. The brief expects "minutes, not hours" and
+# budgets for it (§Open Questions), so the honest constant is the one that
+# meets the requirement, not the one that meets the estimate.
+RECONSTRUCT_ANNUAL_FILINGS = 8
+
+# Where the as-filed reconstruction itself lives. THIS IS A LAYER INVERSION AND
+# IT IS DELIBERATE, so it is named rather than buried: `pack_us` is Layer 1
+# (pure I/O) and `kpi_us_statement_shape` is Layer 2 (analysis), and this repo's
+# standing convention is the OPPOSITE direction -- analysis-* reaches
+# data-markets, and crosses BY SUBPROCESS, never by import
+# (`analysis-kpi/scripts/kpi_8k_candidates.py:117`). Three facts decided it:
+#
+#   * The plan assigns this verb to `pack_us.py` (Task 9, `Module:`), and the
+#     reconstruction to `analysis-kpi` (Task 3). A dependency between them is
+#     therefore forced by the plan, not chosen here.
+#   * The subprocess crossing is not available: `statements_for` takes a LIVE
+#     edgartools `Filing` (its input contract is `.xbrl()` ->
+#     `presentation_roles` + `get_statement`), which does not survive a JSON
+#     process boundary, and `kpi_us_statement_shape` exposes no CLI.
+#   * The import is cheap and acyclic: the module is stdlib-only, and it is
+#     imported LAZILY inside the one function that needs it, so no other pack
+#     type pays for it and no import cycle can form.
+#
+# Flagged for the reviewer rather than settled unilaterally: the honest fix is
+# probably that this verb belongs in analysis-kpi with data-markets supplying
+# only the acquisition, which would be a plan change, not an implementation
+# choice.
+_ANALYSIS_KPI_SCRIPTS = SCRIPT_DIR.parent.parent / "analysis-kpi" / "scripts"
+
+
+def _reconstruction_payload(statements) -> dict:
+    """One filing's `Statements` projected onto plain JSON.
+
+    `statements_for` returns FROZEN DATACLASSES (`Statements`, `Line`), and
+    this pack's last act is `json.dumps` in the facade -- which raises on a
+    dataclass. The projection is therefore load-bearing, not cosmetic, and
+    `test_pack_reconstruct_emits_per_accession_statements_with_status` asserts
+    the result actually serializes.
+
+    `by_kind` carries only the kinds the filing declares a role for, and that
+    absence is preserved here: a kind this filer does not file is ABSENT, never
+    an empty list, so "files no such statement" stays distinguishable from
+    "the statement came back empty" (the brief's whole empty-cell doctrine
+    depends on that distinction surviving every layer).
+    """
+    return {
+        "statements": {
+            kind: [asdict(line) for line in lines]
+            for kind, lines in statements.by_kind.items()
+        },
+        "roles": {kind: list(roles) for kind, roles in statements.roles.items()},
+        "unrecognised_dimension_keys": list(statements.unrecognised_dimension_keys),
+    }
+
+
+def pack_reconstruct(ticker: str) -> dict:
+    """US-only AS-FILED reconstruction pack (Task 9, plan
+    docs/loom/plans/2026-07-26-as-filed-statement-reconstruction.md): one
+    company's three statements, as the filer declared them, for its most recent
+    `RECONSTRUCT_ANNUAL_FILINGS` annual filings.
+
+    Orchestration only -- acquisition comes from `sec_edgar_client`, the
+    reconstruction from `kpi_us_statement_shape.statements_for` (see the layer
+    note above); nothing is decided here.
+
+    NOTHING IS PERSISTED. The reconstruction is RECOMPUTED per run and no point
+    reaches `kpi_store` (plan ## Notes kickoff decision: filings are immutable,
+    so the correct cache-invalidation trigger is OUR OWN CODE CHANGING, and a
+    naive TTL cache would serve a stale reconstruction after a logic fix -- the
+    "system disguises its own failure as data" mode this arc exists to remove).
+    Consequently the envelope carries NO `source_kind`: that key is the ingest
+    trust gate (`kpi_gate.TRUSTED_SOURCE_KINDS`), and a pack that never ingests
+    declaring one would be an unearned claim on a store this verb never writes.
+
+    Failure honesty, mirroring `_fetch_xval_source_a`: a per-accession
+    acquisition failure is a LOUD skip recorded in `failed_items`, never a
+    fabricated statements entry and never a silent drop. The depth-1
+    `{requested, succeeded, failed}` triple plus `_status` let the facade's
+    one-level structural walk see degradation without descending into
+    `filings` (pack.py `_section_status`).
+
+    THE RESULT IS NESTED UNDER ONE `reconstruction` SECTION, not spread across
+    the pack's top level, and that placement is load-bearing rather than
+    stylistic. A live KO run (2026-07-26) reconstructed 4 of 4 filings and was
+    still reported `partial`/exit 2, for two reasons this shape fixes:
+    `_list_section_status` reads an empty top-level list as `"failed"` (correct
+    for a ticker fan-out, wrong for a `failed_items: []` that MEANS success),
+    and `main()` overwrites any top-level `_status` with its own block before
+    a reader sees it. On a section, the self-declared `_status` is what
+    `_section_status` honours -- the same placement `sec_narrative` and
+    `xval_source_a` already use.
+    """
+    _log("reconstruct start", ticker)
+    t0 = time.monotonic()
+    if str(SCRIPT_DIR) not in sys.path:
+        sys.path.insert(0, str(SCRIPT_DIR))
+    if str(_ANALYSIS_KPI_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(_ANALYSIS_KPI_SCRIPTS))
+    # Lazy imports: same pattern as every other SEC pack above -- neither
+    # sec_edgar_client's top-level `import requests` nor the cross-layer
+    # reconstruction module may become an import-time cost for other packs.
+    import sec_edgar_client
+    from kpi_us_statement_shape import statements_for
+
+    envelope = {
+        "pack": "reconstruct",
+        "ticker": ticker.upper(),
+        "fetched_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    resolved = sec_edgar_client.resolve_cik(ticker)
+    if "error" in resolved:
+        _log("reconstruct done", f"{ticker} FAILED in {time.monotonic() - t0:.1f}s")
+        return {**envelope, **resolved}
+
+    rows = sec_edgar_client.list_filings(
+        resolved["cik"], ["10-K"], RECONSTRUCT_ANNUAL_FILINGS
+    )
+    selected = [row for row in rows if row.get("accessionNumber")]
+
+    filings: list[dict] = []
+    failed_items: list[dict] = []
+    for row in selected:
+        accession = row["accessionNumber"]
+        _log("pack [acquire + reconstruct]", accession)
+        filing = sec_edgar_client._acquire_raw_filing(accession)
+        if isinstance(filing, dict) and "error" in filing:
+            failed_items.append({"accession": accession, **filing})
+            continue
+        filings.append({
+            "accession": accession,
+            "form": row.get("form"),
+            "filingDate": row.get("filingDate"),
+            **_reconstruction_payload(statements_for(filing)),
+        })
+
+    requested = len(selected)
+    failed = len(failed_items)
+    _log(
+        "reconstruct done",
+        f"{ticker} {len(filings)}/{requested} filings in "
+        f"{time.monotonic() - t0:.1f}s",
+    )
+    return {
+        **envelope,
+        "cik": resolved["cik"],
+        "company": resolved.get("title"),
+        "reconstruction": {
+            "filings": filings,
+            "failed_items": failed_items,
+            "requested": requested,
+            "succeeded": len(filings),
+            "failed": failed,
+            # Self-declared section status, per pack.py's `_section_status`
+            # convention. `requested == 0` is NOT vacuously "failed" -- nothing
+            # was asked for, so nothing failed (the exact trap
+            # `test_fetch_sec_narrative_empty_selection_is_not_vacuously_failed`
+            # pins for the narrative lane).
+            "_status": (
+                "failed" if requested and failed == requested
+                else "partial" if failed
+                else "ok"
+            ),
+        },
+    }
+
+
 def pack_comps_multiples(tickers: list[str]) -> dict:
     """Multiples-only fields. Single or batch."""
     _log("comps-multiples start", f"{len(tickers)} ticker(s)")
@@ -1353,6 +1539,7 @@ SUPPORTED_PACKS: tuple[str, ...] = (
     "kpi-quarterly",
     "kpi-topline-backfill",
     "statement-backfill",
+    "reconstruct",
 )
 
 
@@ -1405,5 +1592,11 @@ def build_pack(pack_name: str, tickers: list[str]) -> dict:
                 "pack statement-backfill requires exactly one ticker (single, heavy)"
             )
         return pack_statement_backfill(ticker_list[0])
+    if pack_name == "reconstruct":
+        if len(ticker_list) != 1:
+            raise ValueError(
+                "pack reconstruct requires exactly one ticker (single, heavy)"
+            )
+        return pack_reconstruct(ticker_list[0])
     # regime-pack: no ticker dimension
     return pack_regime()
