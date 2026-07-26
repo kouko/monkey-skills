@@ -54,6 +54,29 @@ that a decade of trend analysis needs.
   The TTL is 7 days rather than permanent because SEC re-partitions the
   newest archive page in place.
 
+- **`--no-cache` clears the submissions caches again.** It unlinked
+  `submissions_{cik}` — the key nothing reads any more — leaving both the
+  merged entry and the 7-day archive pages warm, so the flag reported a bust
+  and then served the cache. The key set now lives in `bust_cik_caches()`,
+  which also globs the filer's archive pages (their names embed the CIK, so
+  the glob cannot reach another company). Measured on JPM: 70 entries removed.
+- **An archive entry with no `name` is an error, not a skip.** SEC states each
+  entry's `filingCount`, so dropping one discards a known, counted block —
+  a probe with a nameless entry declaring 1,138 filings previously returned a
+  clean success over a history missing all of them.
+- **A short column in `filings.recent` no longer mislabels filings.** The join
+  padded columns that were *missing*, never ones that were *short*; a short
+  column let the next page's rows slide forward, so filings after the gap
+  carried an earlier filing's accession number. `list_filings`'s bounds checks
+  turn that into wrong data rather than an error, which would have reached
+  `pack_reconstruct` as the wrong document filed under the wrong year.
+
+Grounding for the three above: a whole-branch review's mutation pass, which
+found 5 of 9 mutants of the merge surviving the full suite — including
+deleting the padding whose own docstring described behaviour the code did not
+have. The suite now kills 9 of 9 (10th mutant's anchor was refactored away).
+Live re-verification after the fixes: JPM cold 8/8 filings, 10 annual periods.
+
 ### Known limits
 
 - Two filers on the roster remain short for reasons this change does not

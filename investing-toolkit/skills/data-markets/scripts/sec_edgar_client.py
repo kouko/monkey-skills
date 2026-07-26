@@ -428,20 +428,71 @@ def _append_submission_block(merged: dict, merged_rows: int, block: dict) -> int
 
     `list_filings` indexes these arrays POSITIONALLY (`accn_list[i]` beside
     `forms_list[i]`), so a column that falls short by even one entry does not
-    fail — it silently re-labels every filing after the gap. Every column is
-    therefore padded to the same length on both sides of the join: a column
-    present in `merged` but missing from `block` is padded forward, and a
-    column that appears for the first time in `block` is back-filled to
-    `merged_rows` before its own rows are appended.
+    fail — it silently re-labels every filing after the gap.
+
+    THE INVARIANT, stated as what the code does rather than as intent: on
+    return, every column in `merged` has exactly `merged_rows + rows` entries.
+    Three shapes reach that, all through the same two pad lines — a column
+    missing from `block`, a column appearing for the first time IN `block`,
+    and a column already in `merged` that is SHORT of `merged_rows`. The third
+    is the one that corrupts rather than truncates, and an earlier revision of
+    this docstring claimed it was handled when it was not; the padding is
+    pinned by mutation now, not by this paragraph.
     """
     rows = _submission_block_rows(block)
     for key in set(merged) | {k for k, v in block.items() if isinstance(v, list)}:
-        column = merged.setdefault(key, [None] * merged_rows)
+        # ONE pad rule covers both sides of the join: square the column up to
+        # `merged_rows` before appending. A key seen for the first time in
+        # `block` starts empty and is back-filled by the same line that
+        # squares up a key already in `merged` but short -- which is the case
+        # that mislabels filings, because `list_filings`'s `i < len(...)`
+        # guards turn a short column into another filing's accession number
+        # rather than into an error.
+        column = merged.setdefault(key, [])
+        column.extend([None] * (merged_rows - len(column)))
         incoming = block.get(key)
         incoming = list(incoming) if isinstance(incoming, list) else []
-        column.extend(incoming[:rows])
-        column.extend([None] * (rows - len(incoming[:rows])))
+        # No clamp on `incoming`: `rows` is the max column length WITHIN this
+        # same block, so no column of it can be longer.
+        column.extend(incoming)
+        column.extend([None] * (rows - len(incoming)))
     return merged_rows + rows
+
+
+def bust_cik_caches(cik: int, concept: str | None = None) -> list:
+    """Remove every cache entry `--no-cache` is meant to clear for one filer.
+
+    Exists as a named function rather than an inline loop in `main()` because
+    the set of keys is no longer obvious: a filer's submissions history now
+    lives across a merged entry AND one entry per archive page, and the pages
+    carry a 7-day TTL that outlives the merged entry's 24 h. An operator
+    reaching for `--no-cache` to re-verify a filer against SEC has to clear
+    all of them or the flag reports a bust and then serves the warm cache.
+
+    Archive-page keys are derived from SEC's own page NAMES, which embed the
+    zero-padded CIK (`CIK0001326801-submissions-001.json`), so the glob is
+    filer-scoped and cannot reach another company's pages. `cache_path`
+    rewrites `.` to `_`, hence the trailing wildcard rather than a suffix.
+
+    Returns the paths removed, so a caller can report what it actually did.
+    """
+    removed = []
+    keys = [f"facts_{cik:010d}", f"submissions_full_{cik:010d}"]
+    if concept:
+        keys.append(f"concept_{cik:010d}_{concept}")
+    paths = [cache_util.cache_path("sec_edgar", key) for key in keys]
+    paths.extend(
+        sorted(
+            cache_util.cache_path("sec_edgar", "_probe").parent.glob(
+                f"submissions_page_CIK{cik:010d}-*"
+            )
+        )
+    )
+    for path in paths:
+        if path.exists():
+            path.unlink()
+            removed.append(path)
+    return removed
 
 
 def _fetch_submission_page(name: str) -> dict:
@@ -498,7 +549,18 @@ def _merge_submission_pages(raw: dict) -> dict:
     for entry in pages:
         name = entry.get("name") if isinstance(entry, dict) else None
         if not name:
-            continue
+            # An entry we cannot fetch is an UNREADABLE page, not an absent
+            # one -- SEC states each entry's `filingCount`, so skipping one
+            # drops a known, counted block of filings and still returns a
+            # clean success. That is indistinguishable from a complete
+            # history, which is the defect this whole function removes.
+            return {
+                "error": (
+                    "SEC EDGAR submissions archive entry has no 'name'; "
+                    f"cannot fetch {entry.get('filingCount') if isinstance(entry, dict) else '?'} "
+                    "filings it declares"
+                )
+            }
         page = _fetch_submission_page(name)
         if isinstance(page, dict) and "error" in page:
             return page
@@ -5775,16 +5837,7 @@ def main():
             tmap = load_ticker_map()
             entry = tmap.get("tickers", {}).get(t) if "error" not in tmap else None
             if entry:
-                cik = entry["cik"]
-                for key in (
-                    f"facts_{cik:010d}",
-                    f"submissions_{cik:010d}",
-                    f"concept_{cik:010d}_{args.concept}" if args.concept else "",
-                ):
-                    if key:
-                        p = cache_util.cache_path("sec_edgar", key)
-                        if p.exists():
-                            p.unlink()
+                bust_cik_caches(entry["cik"], args.concept)
         if args.accession:
             # The edgartools narrative cache key (Task 12) is
             # narrative_sections_{accession} — DISTINCT from the retired regex

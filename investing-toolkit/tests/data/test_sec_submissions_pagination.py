@@ -352,6 +352,156 @@ def test_cached_merged_payload_is_not_merged_a_second_time(responder):
     ), f"rows changed between calls: {second['data']['filings']['recent']['form']}"
 
 
+def test_ragged_recent_block_does_not_mislabel_filings(responder):
+    """`merged_rows` is the LONGEST column in `recent`, so a SHORT column in
+    the same block silently absorbs the next page's first rows — every filing
+    after the gap gets another filing's accession number. `list_filings`'s
+    `i < len(...)` guards turn this into wrong data rather than a crash, which
+    is how it reaches `pack_reconstruct` as the wrong document filed under the
+    wrong year."""
+    ragged = _rows(
+        ("10-K", "2026-04-01"), ("10-K", "2025-04-01"), ("10-K", "2024-04-01"),
+    )
+    ragged["accessionNumber"] = ragged["accessionNumber"][:2]  # 3 rows, 2 accessions
+    ragged["reportDate"] = ragged["reportDate"][:2]
+    responder.routes[_url_main()] = _main_doc(
+        ragged,
+        [{"name": "p1.json", "filingCount": 1,
+          "filingFrom": "2023-04-01", "filingTo": "2023-04-01"}],
+    )
+    responder.routes[_url_page("p1.json")] = _rows(("10-K", "2023-04-01"))
+
+    recent = sec.fetch_submissions(CIK)["data"]["filings"]["recent"]
+
+    assert len(recent["filingDate"]) == len(set(recent["filingDate"])), (
+        f"a filing date was duplicated by the join: {recent['filingDate']}"
+    )
+    for form, date, accession in zip(
+        recent["form"], recent["filingDate"], recent["accessionNumber"]
+    ):
+        assert accession in (None, f"acc-{form}-{date}"), (
+            f"row {date} carries accession {accession!r} — another filing's"
+        )
+
+
+def test_column_absent_from_recent_is_backfilled_not_left_short(responder):
+    """SEC omits a column entirely when no row in a block uses it. A column
+    appearing for the FIRST time in an archive page must be back-filled to the
+    rows already merged, or every one of its values lands against the wrong
+    row."""
+    recent = _rows(("10-K", "2026-04-01"), ("10-K", "2025-04-01"))
+    del recent["items"]  # no row in `recent` used it
+    page = _rows(("8-K", "2024-04-01"))
+    page["items"] = ["2.02"]
+    responder.routes[_url_main()] = _main_doc(
+        recent,
+        [{"name": "p1.json", "filingCount": 1,
+          "filingFrom": "2024-04-01", "filingTo": "2024-04-01"}],
+    )
+    responder.routes[_url_page("p1.json")] = page
+
+    merged = sec.fetch_submissions(CIK)["data"]["filings"]["recent"]
+
+    assert len(merged["items"]) == len(merged["form"]) == 3, (
+        f"`items` was not back-filled to the merged length: {merged['items']}"
+    )
+    assert merged["items"][2] == "2.02", (
+        f"the 8-K's item code landed on the wrong row: {merged['items']}"
+    )
+    assert merged["items"][:2] == [None, None]
+
+
+def test_short_column_in_an_archive_page_is_padded_to_the_page_length(responder):
+    """The tail back-fill: a page whose row count exceeds one of its own
+    columns must not shorten that column relative to the others."""
+    page = _rows(("10-K", "2024-04-01"), ("10-K", "2023-04-01"))
+    page["primaryDocDescription"] = page["primaryDocDescription"][:1]
+    responder.routes[_url_main()] = _main_doc(
+        _rows(("10-K", "2026-04-01")),
+        [{"name": "p1.json", "filingCount": 2,
+          "filingFrom": "2023-04-01", "filingTo": "2024-04-01"}],
+    )
+    responder.routes[_url_page("p1.json")] = page
+
+    merged = sec.fetch_submissions(CIK)["data"]["filings"]["recent"]
+
+    lengths = {k: len(v) for k, v in merged.items()}
+    assert set(lengths.values()) == {3}, f"columns diverged: {lengths}"
+    assert merged["filingDate"] == ["2026-04-01", "2024-04-01", "2023-04-01"]
+
+
+def test_files_entry_without_a_name_is_an_error_not_a_silent_skip(responder):
+    """An entry naming 1,138 filings but carrying no `name` cannot be fetched.
+    Dropping it returns a clean success over a history missing those 1,138
+    filings — indistinguishable from a complete one, which is the defect this
+    whole change exists to remove."""
+    responder.routes[_url_main()] = _main_doc(
+        _rows(("10-K", "2026-01-29")),
+        [{"filingCount": 1138, "filingFrom": "2005-01-03", "filingTo": "2017-02-02"}],
+    )
+
+    out = sec.fetch_submissions(CIK)
+
+    assert "error" in out, (
+        f"an unfetchable `files[]` entry must surface as an error, got {out}"
+    )
+
+
+def test_limit_selects_the_newest_filings_across_a_page_boundary(responder):
+    """`list_filings` with `limit` alone stops at the FIRST `limit` matching
+    rows in array order, and its docstring deliberately refuses to assume the
+    arrays are date-descending. Post-merge, "first N" equals "newest N" only
+    while SEC lists `files[]` newest-archive-first — verified across 28 of 28
+    paginated filers on 2026-07-27. Pinning it here means a change in that
+    external property fails a test instead of silently returning a filing from
+    a decade earlier."""
+    responder.routes[_url_main()] = _main_doc(
+        _rows(("10-K", "2026-03-01")),
+        [
+            {"name": "newer.json", "filingCount": 2,
+             "filingFrom": "2024-03-01", "filingTo": "2025-03-01"},
+            {"name": "older.json", "filingCount": 2,
+             "filingFrom": "2015-03-01", "filingTo": "2016-03-01"},
+        ],
+    )
+    responder.routes[_url_page("newer.json")] = _rows(
+        ("10-K", "2025-03-01"), ("10-K", "2024-03-01"),
+    )
+    responder.routes[_url_page("older.json")] = _rows(
+        ("10-K", "2016-03-01"), ("10-K", "2015-03-01"),
+    )
+
+    rows = sec.list_filings(CIK, ["10-K"], 3)
+
+    assert [r["filingDate"] for r in rows] == [
+        "2026-03-01", "2025-03-01", "2024-03-01",
+    ], f"`limit` did not take the newest three across the page boundary: {rows}"
+
+
+def test_cache_bust_clears_the_merged_entry_and_every_archive_page(responder):
+    """The CLI's `--no-cache` is the one lever an operator has to re-verify a
+    filer against SEC. It unlinked `submissions_{cik}` — the key nothing reads
+    any more — while the merged entry and the 7-day archive pages survived, so
+    the flag reported a bust and then served the warm cache."""
+    page_name = f"CIK{CIK:010d}-submissions-001.json"
+    responder.routes[_url_main()] = _main_doc(
+        _rows(("10-K", "2026-01-29")),
+        [{"name": page_name, "filingCount": 1,
+          "filingFrom": "2025-01-31", "filingTo": "2025-01-31"}],
+    )
+    responder.routes[_url_page(page_name)] = _rows(("10-K", "2025-01-31"))
+
+    sec.fetch_submissions(CIK)
+    merged_path = cache_util.cache_path("sec_edgar", f"submissions_full_{CIK:010d}")
+    assert merged_path.exists()
+
+    sec.bust_cik_caches(CIK)
+
+    assert not merged_path.exists(), "the merged submissions entry survived the bust"
+    survivors = list(merged_path.parent.glob("submissions_page_*"))
+    assert survivors == [], f"archive pages survived the bust: {survivors}"
+
+
 def test_main_document_error_still_propagates_uncached(responder):
     responder.routes[_url_main()] = {"error": "SEC EDGAR 404: nope"}
 
