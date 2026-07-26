@@ -57,7 +57,7 @@ def shape():
 
 
 def _line(shape, concept, *, weight, parent, values, label=None, level=5,
-          decimals=None):
+          decimals=None, balance=None):
     return shape.Line(
         label=label if label is not None else concept.split("_", 1)[-1],
         concept=concept,
@@ -65,6 +65,9 @@ def _line(shape, concept, *, weight, parent, values, label=None, level=5,
         weight=weight,
         calculation_parent=parent,
         values=values,
+        # DEFAULTS TO None, the taxonomy's commonest answer (349 of the 455
+        # captured rows) and the one that means "nothing is claimed".
+        balance=balance,
         # DEFAULTS TO EMPTY, which means "the filer declared no precision" and
         # is read as "compare exactly" — so every fixture that says nothing
         # about precision keeps the exact comparison Task 4 was written under.
@@ -374,6 +377,67 @@ def test_the_same_fact_rendered_twice_contributes_once(check, shape, capture):
     concepts = [term.concept for term in result.terms]
     assert concepts.count("us-gaap_CashAndCashEquivalentsAtCarryingValue") == 1
     assert result.computed == 6_006_000_000
+
+
+DUPLICATE_PARENT = "us-gaap_CashCashEquivalentsAndShortTermInvestments"
+DUPLICATE_CHILD = "us-gaap_CashAndCashEquivalentsAtCarryingValue"
+
+
+@pytest.mark.parametrize("second_row", [
+    pytest.param({"weight": 1.0, "values": {"instant_2017-12-31": 6_006_000_001}},
+                 id="different-value"),
+    pytest.param({"weight": -1.0, "values": {"instant_2017-12-31": 6_006_000_000}},
+                 id="different-weight"),
+    pytest.param({"weight": 1.0, "values": {"instant_2016-12-31": 6_006_000_000}},
+                 id="different-period-key"),
+])
+def test_two_rows_of_one_concept_that_disagree_fail_loudly(check, shape, second_row):
+    """CONSTRUCTED, and UNOBSERVED — which is the whole reason it raises.
+
+    De-duplication keeps the FIRST row of a concept. That is only sound while
+    the rows it discards say the same thing, and in the committed capture they
+    do: the one duplicate pair (KO's cash-flow
+    `CashAndCashEquivalentsAtCarryingValue`, rendered as "Balance at beginning
+    of year" and "Balance at end of year") carries identical values, weight and
+    decimals. Safe today, unobserved tomorrow.
+
+    Left as a silent first-wins pick, a future pair whose rows disagreed would
+    change `computed` AND the group's period set with nothing marking that a
+    row was dropped — the one place in this module that resolved an unobserved
+    shape by quietly choosing, while `_weight_of`, `_era` and the unresolved-
+    statement reason codes all fail loud. The three cases below are the three
+    ways a discarded row can differ: its value, its weight, its period keys.
+    """
+    period = "instant_2017-12-31"
+    statements = _statements(shape, "cash_flow", [
+        _line(shape, DUPLICATE_CHILD, weight=1.0, parent=DUPLICATE_PARENT,
+              values={period: 6_006_000_000}, label="Balance at beginning of year"),
+        _line(shape, DUPLICATE_CHILD, parent=DUPLICATE_PARENT,
+              label="Balance at end of year", **second_row),
+        _line(shape, DUPLICATE_PARENT, weight=1.0, parent=None,
+              values={period: 6_006_000_000}),
+    ])
+
+    with pytest.raises(ValueError, match=DUPLICATE_CHILD):
+        check.verify(statements)
+
+
+def test_two_rows_of_one_concept_that_agree_are_still_one_child(check, shape):
+    """The other half: the guard above must not reject the shape the capture
+    actually holds. Two rows, two labels, one fact — one child."""
+    period = "instant_2017-12-31"
+    statements = _statements(shape, "cash_flow", [
+        _line(shape, DUPLICATE_CHILD, weight=1.0, parent=DUPLICATE_PARENT,
+              values={period: 6_006_000_000}, label="Balance at beginning of year"),
+        _line(shape, DUPLICATE_CHILD, weight=1.0, parent=DUPLICATE_PARENT,
+              values={period: 6_006_000_000}, label="Balance at end of year"),
+        _line(shape, DUPLICATE_PARENT, weight=1.0, parent=None,
+              values={period: 6_006_000_000}),
+    ])
+
+    (result,) = check.verify(statements)
+    assert len(result.terms) == 1
+    assert result.status == check.AGREES
 
 
 def test_a_non_numeric_child_value_is_incomplete_not_a_wrong_sum(check, shape):
@@ -745,13 +809,18 @@ def test_the_income_statements_in_the_capture_resolve_to_one_revenue_total(
 
     IBM IS THE LOAD-BEARING HALF: it presents `us-gaap_CostOfRevenue` as a
     SIBLING of `us-gaap_Revenues` under the same parent, and its local name
-    contains "revenue" too. What separates them is the filer's own declared
-    SIGN — `Revenues` carries weight +1.0 and `CostOfRevenue` -1.0 — so a
-    deduction is excluded structurally, by the filer's arithmetic, and not by a
-    denylist of cost-shaped names
-    ([[shared-classifier-over-open-dialects-needs-allowlist]]). A rule matching
-    the name alone reads IBM as TWO candidates and reports a clean filing as
-    unresolved.
+    contains "revenue" too. A rule matching the name alone reads IBM as TWO
+    candidates and reports a clean filing as unresolved.
+
+    TWO INDEPENDENT SIGNALS exclude it here, and this test asserts BOTH rather
+    than crediting one: the taxonomy classifies `CostOfRevenue` as `debit`
+    against `Revenues`' `credit`, and the filer declares it -1.0 against +1.0.
+    Either alone would pass this test, which is exactly why the claim must not
+    be "the sign is what does it" — on the oil-major shape the sign is +1.0 and
+    only the balance separates them
+    (`test_a_revenue_line_topping_the_tree_is_deliberately_a_candidate`).
+    Both are structural: neither is a denylist of cost-shaped names
+    ([[shared-classifier-over-open-dialects-needs-allowlist]]).
     """
     for filing in _filings_with_rows(capture):
         income = _assembled(shape, capture, filing["accession"]).by_kind["income"]
@@ -763,9 +832,11 @@ def test_the_income_statements_in_the_capture_resolve_to_one_revenue_total(
     ibm = _assembled(shape, capture, IBM_FY2025).by_kind["income"]
     assert check.revenue_totals(ibm) == ("us-gaap_Revenues",)
     cost = next(line for line in ibm if line.concept == "us-gaap_CostOfRevenue")
-    assert cost.weight == -1.0, (
-        "premise gone: this test only proves the SIGN excludes a deduction "
-        "while the filer declares that deduction negative"
+    revenue = next(line for line in ibm if line.concept == "us-gaap_Revenues")
+    assert (cost.balance, cost.weight) == ("debit", -1.0)
+    assert (revenue.balance, revenue.weight) == ("credit", 1.0), (
+        "premise gone: this test only proves a deduction is excluded while the "
+        "taxonomy and the filer both say it is one"
     )
 
 
@@ -802,6 +873,121 @@ def test_revenue_components_rolling_into_a_revenue_parent_are_not_candidates(
         "a filer that disaggregates its revenue must not be reported "
         "unresolved for it"
     )
+
+
+def test_a_revenue_line_topping_the_tree_is_deliberately_a_candidate(check, shape):
+    """CONSTRUCTED from an OBSERVED shape, and the DECISION it pins is the one
+    a reviewer asked be made explicit rather than left implicit in the code.
+
+    An unparented revenue line IS a candidate, deliberately. The brief measures
+    PSX declaring its own total as `RevenuesAndOtherIncome` (104,622M); a
+    filer's total commonly tops the calculation tree and therefore has no
+    calculation parent of its own. Excluding unparented lines would drop that
+    total, leave zero candidates, and report `NO_REVENUE_TOTAL` on a filing
+    whose total is on the face of the statement — the "blames the filer for our
+    own structure handling" direction this arc exists to close.
+
+    THIS FIXTURE FOUND A DEFECT, recorded because the finding is the reason the
+    `balance` field exists: written first with `CostOfRevenue` rolling
+    POSITIVELY into a costs subtotal — the oil-major shape — it failed, because
+    the filer's sign excludes a cost only where the cost is subtracted
+    DIRECTLY. Here it is added to a costs total that is subtracted higher up,
+    so the sign says nothing and the cost line was returned as a second
+    candidate total. Only the taxonomy's own `debit` balance separates them.
+    """
+    period = "duration_2017-01-01_2017-12-31"
+    statements = _statements(shape, "income", [
+        _line(shape, "us-gaap_RevenuesAndOtherIncome", weight=None, parent=None,
+              values={period: 104_622_000_000}, label="Revenues and Other Income",
+              balance="credit"),
+        # POSITIVE weight, and that is the whole point: it rolls INTO the costs
+        # subtotal, which is what gets subtracted.
+        _line(shape, "us-gaap_CostOfRevenue", weight=1.0,
+              parent="us-gaap_CostsAndExpenses", values={period: 90_000_000_000},
+              balance="debit"),
+        _line(shape, "us-gaap_CostsAndExpenses", weight=None, parent=None,
+              values={period: 90_000_000_000}, balance="debit"),
+    ])
+
+    assert check.revenue_totals(statements.by_kind["income"]) == (
+        "us-gaap_RevenuesAndOtherIncome",
+    )
+    (income,) = check.resolution_report([("2018-02-23", statements)]).statements
+    assert [reason.reason for reason in income.reasons] == []
+
+
+def test_disaggregated_revenue_with_no_calculation_arcs_is_reported_ambiguous(
+    check, shape,
+):
+    """CONSTRUCTED, and this pins the OTHER side of the decision above — the
+    cost of it, stated rather than discovered later.
+
+    Because an unparented revenue line is a candidate, a filer that presents
+    revenue components with NO calculation arcs between them yields one
+    candidate per component. That is reported `AMBIGUOUS_TOTAL`, and it is the
+    correct answer rather than a false alarm: with no arc declaring one of them
+    the parent of the others, the structure does not say which is the total,
+    and the plan forbids resolving it by picking one. The reader is told the
+    count and the names and can go to the filing.
+
+    NOT the same fact as DUK's, and the report distinguishes them: a statement
+    declaring no arcs AT ALL also carries `NO_DECLARED_SUMS`, which DUK's
+    ambiguous-but-fully-declared tree does not.
+
+    STATED LIMIT, unobserved and deliberately not guessed at: a filer whose
+    real total DOES sit in the tree while its components sit outside it reads
+    as several candidates here too. Neither captured filing shows that shape,
+    and the report errs toward refusing rather than picking — the direction
+    this arc requires when it cannot tell.
+    """
+    period = "duration_2019-01-01_2019-12-31"
+    statements = _statements(shape, "income", [
+        _line(shape, "us-gaap_ProductRevenue", weight=None, parent=None,
+              values={period: 60_000_000}),
+        _line(shape, "us-gaap_ServiceRevenue", weight=None, parent=None,
+              values={period: 40_000_000}),
+    ])
+
+    (income,) = check.resolution_report([("2020-02-25", statements)]).statements
+
+    assert sorted(reason.reason for reason in income.reasons) == [
+        check.AMBIGUOUS_TOTAL, check.NO_DECLARED_SUMS,
+    ]
+    ambiguity = next(
+        r for r in income.reasons if r.reason == check.AMBIGUOUS_TOTAL
+    )
+    assert "2 candidate totals" in ambiguity.detail
+    assert "us-gaap_ProductRevenue" in ambiguity.detail
+    assert "us-gaap_ServiceRevenue" in ambiguity.detail
+
+
+def test_one_revenue_concept_rendered_twice_is_one_candidate(check, shape):
+    """CONSTRUCTED from an OBSERVED presentation habit: the same concept on two
+    rows.
+
+    KO's cash-flow statement renders `CashAndCashEquivalentsAtCarryingValue`
+    twice (opening and closing balance), which is why `_checks_for_statement`
+    already counts one child per CONCEPT. An income role repeating its revenue
+    concept — a subtotal echoed at the foot of a section — would otherwise
+    produce two identical candidates and report a filing with ONE revenue line
+    as ambiguous between it and itself.
+
+    Unobserved on an income role, so this is a guard rather than a fix; it is
+    taken because the two functions in this module must not disagree about
+    whether a repeated row is one fact, and a later reader would read the
+    asymmetry as intentional.
+    """
+    period = "duration_2017-01-01_2017-12-31"
+    statements = _statements(shape, "income", [
+        _line(shape, "us-gaap_Revenues", weight=1.0, parent="us-gaap_GrossProfit",
+              values={period: 100_000_000}, label="Net revenues"),
+        _line(shape, "us-gaap_Revenues", weight=1.0, parent="us-gaap_GrossProfit",
+              values={period: 100_000_000}, label="Total net revenues"),
+        _line(shape, "us-gaap_GrossProfit", weight=None, parent=None,
+              values={period: 100_000_000}),
+    ])
+
+    assert check.revenue_totals(statements.by_kind["income"]) == ("us-gaap_Revenues",)
 
 
 def test_an_income_statement_with_no_revenue_total_is_its_own_reason(check, shape):

@@ -273,6 +273,19 @@ class Line:
     a consumer must read as "compare exactly", never as "any precision". That
     is also the default, so a `Line` built by a caller that predates this field
     keeps working and keeps the strict reading.
+
+    `balance` is the TAXONOMY's own `debit` / `credit` classification of the
+    concept — not the filer's and not this module's. It is carried for plan
+    Task 8, which must tell a revenue concept from a cost concept whose local
+    name also carries the revenue wording (`us-gaap_CostOfRevenue`), and whose
+    weight does not always separate them: a cost line rolling POSITIVELY into a
+    costs subtotal is +1.0 like a revenue line.
+
+    `None` IS THE COMMON CASE — 349 of the 455 captured rows carry no balance
+    (abstract headers, per-share rows, concepts the taxonomy does not classify)
+    — and means "the taxonomy says nothing", never "not revenue". A consumer
+    that read `None` as a rejection would discard exactly the filer's OWN
+    custom concepts this design exists to keep.
     """
 
     label: str
@@ -282,6 +295,7 @@ class Line:
     calculation_parent: str | None
     values: dict[str, Any]
     decimals: dict[str, Any] = field(default_factory=dict)
+    balance: str | None = None
 
 
 @dataclass(frozen=True)
@@ -462,4 +476,5 @@ def _line(row: dict[str, Any]) -> Line:
         calculation_parent=row.get("calculation_parent"),
         values=dict(row.get("values") or {}),
         decimals=dict(row.get("decimals") or {}),
+        balance=row.get("balance"),
     )

@@ -1272,6 +1272,12 @@ def _captured_filing(ticker: str) -> dict:
                 "label": row.get("label"), "concept": row.get("concept"),
                 "level": row.get("level"), "weight": row.get("weight"),
                 "calculation_parent": row.get("calculation_parent"),
+                # The taxonomy's own debit/credit classification, which Task 8
+                # added to `Line` and `asdict` therefore carries. Projected
+                # from the SAME captured row as every other field — this helper
+                # mirrors `pack_us._reconstruction_payload`, so a field missing
+                # here is a field the view would never see in production.
+                "balance": row.get("balance"),
                 "values": dict(row.get("values") or {}),
             }
             for row in role["rows"]
@@ -1334,12 +1340,21 @@ def test_sector_revenue_no_longer_blank(spine_view):
     test would pass for the wrong reason the day someone widens the chain,
     which is the fix the brief rejected.
 
-    IBM FY2025 rides along as the second OBSERVED filer, and it is not
-    redundant — it is the case that makes the sign filter load-bearing. IBM's
-    income statement carries `CostOfRevenue`, whose local name matches the same
-    revenue wording as `Revenues`; the calculation tree's own weight (-1) is
-    what tells them apart. Without it IBM shows two candidate totals and its
-    revenue becomes a gap.
+    IBM FY2025 rides along as the second OBSERVED filer: its income statement
+    carries `CostOfRevenue`, whose local name matches the same revenue wording
+    as `Revenues`, and something must tell the two apart.
+
+    WHAT IBM DOES *NOT* EVIDENCE, corrected here after this test shipped for
+    two rounds with the wrong reason attached. It said the calculation weight
+    was "what makes the sign filter load-bearing". IBM carries BOTH signals on
+    that row — weight -1.0 AND `balance='debit'` — so EITHER filter alone
+    passes here and this filing cannot discriminate between them. The sign
+    looked sufficient only because IBM subtracts its cost DIRECTLY from
+    revenue; a filer whose cost block sums positively into its own subtotal
+    (the oil-major layout, PSX's shape) defeats the sign entirely. Both signals
+    are asserted below so the claim matches what the fixture can actually
+    prove, and `test_a_cost_block_that_sums_positively_does_not_rival_the_total`
+    is where the two are told apart.
     """
     chain = dict(spine_view.SPINE_FIELD_CHAINS)["revenue"]
     assert "SalesRevenueGoodsNet" not in chain, (
@@ -1361,6 +1376,16 @@ def test_sector_revenue_no_longer_blank(spine_view):
     assert ibm_revenue["periods"]["duration_2025-01-01_2025-12-31"]["value"] == (
         67_535_000_000.0
     )
+
+    # The reason this filing cannot arbitrate between the two filters, asserted
+    # rather than asserted-about: read the captured row and show it carries
+    # both. A prose claim here would be the same untested claim this docstring
+    # just retracted.
+    cost = next(
+        line for line in ibm["statements"]["income"]
+        if line["concept"] == "us-gaap_CostOfRevenue"
+    )
+    assert cost["weight"] == -1.0 and cost["balance"] == "debit"
 
 
 def test_a_filer_presenting_no_operating_income_renders_not_presented(spine_view):
@@ -1730,3 +1755,120 @@ def test_every_bound_concept_carries_the_filers_own_row_spelling(spine_view):
     assert bound["revenue"] == "us-gaap_SalesRevenueGoodsNet"
     assert bound["gross_profit"] == "us-gaap_GrossProfit"
     assert not [c for c in bound.values() if ":" in c], bound
+
+
+def test_a_cost_block_that_sums_positively_does_not_rival_the_total(spine_view):
+    """CONSTRUCTED-CONVENTIONAL row shape, OBSERVED figures — a PSX-shaped
+    refiner: a revenue block and a cost block, EACH summing POSITIVELY into its
+    own subtotal, both subtotals meeting at income before taxes.
+
+    Provenance, split because the two halves have different standing. The
+    LAYOUT and concepts are the oil-major shape the brief names (PSX declares
+    `RevenuesAndOtherIncome` as its total while the chain reaches only the
+    component `SalesRevenueNet`); the FIGURES — 104,622M and 102,354M, the
+    2.2% understatement — are the measurement recorded in the plan's Task 7
+    acceptance. The ROWS are written here because PSX has no rows in the
+    committed capture; no captured filing has this layout at all.
+
+    WHY THE SIGN FILTER IS NOT ENOUGH, which is the whole point of this test.
+    `CostOfRevenue` here carries weight +1.0 — it is ADDED into `CostsAndExpenses`,
+    and it is that subtotal which is subtracted later. So the filer's own sign
+    admits it as a candidate, it survives elimination (its parent is a cost
+    concept, not a revenue-worded one), and the rule reports two rival totals
+    and blanks the revenue of every filer with this layout. The taxonomy's
+    `balance` attribute is what separates them: `RevenuesAndOtherIncome` is
+    `credit`, `CostOfRevenue` is `debit`.
+
+    This test replaces the claim `test_sector_revenue_no_longer_blank` used to
+    make. IBM carries both signals, so it proved neither.
+    """
+    period = "duration_2017-01-01_2017-12-31"
+    filing = {
+        "accession": "0000000000-00-000003", "form": "10-K",
+        "filingDate": "2018-02-23",
+        "statements": {"income": [
+            {"label": "Sales and other operating revenues",
+             "concept": "us-gaap_SalesRevenueNet", "level": 4, "weight": 1.0,
+             "balance": "credit",
+             "calculation_parent": "us-gaap_RevenuesAndOtherIncome",
+             "values": {period: 102_354_000_000.0}},
+            {"label": "Equity in earnings of affiliates",
+             "concept": "us-gaap_IncomeLossFromEquityMethodInvestments",
+             "level": 4, "weight": 1.0, "balance": "credit",
+             "calculation_parent": "us-gaap_RevenuesAndOtherIncome",
+             "values": {period: 2_268_000_000.0}},
+            {"label": "Total Revenues and Other Income",
+             "concept": "us-gaap_RevenuesAndOtherIncome", "level": 3,
+             "weight": 1.0, "balance": "credit",
+             "calculation_parent": (
+                 "us-gaap_IncomeLossFromContinuingOperationsBeforeIncomeTaxes"
+                 "ExtraordinaryItemsNoncontrollingInterest"
+             ),
+             "values": {period: 104_622_000_000.0}},
+            {"label": "Purchased crude oil and products",
+             "concept": "us-gaap_CostOfRevenue", "level": 4, "weight": 1.0,
+             "balance": "debit", "calculation_parent": "us-gaap_CostsAndExpenses",
+             "values": {period: 90_000_000_000.0}},
+            {"label": "Total Costs and Expenses",
+             "concept": "us-gaap_CostsAndExpenses", "level": 3, "weight": -1.0,
+             "balance": "debit",
+             "calculation_parent": (
+                 "us-gaap_IncomeLossFromContinuingOperationsBeforeIncomeTaxes"
+                 "ExtraordinaryItemsNoncontrollingInterest"
+             ),
+             "values": {period: 99_000_000_000.0}},
+        ]},
+        "roles": {}, "unrecognised_dimension_keys": [],
+    }
+
+    revenue = _field(
+        spine_view.derive_spine_as_filed(_payload(filing)),
+        filing["accession"], "revenue",
+    )
+
+    assert "unresolved" not in revenue, (
+        "the cost block sums positively into its own subtotal, so the sign "
+        "cannot exclude it — a debit-balance line is not a revenue total"
+    )
+    assert revenue["concept"] == "us-gaap_RevenuesAndOtherIncome"
+    assert revenue["periods"][period] == {
+        "state": "value", "value": 104_622_000_000.0,
+    }, "the filer's own declared total, not the chain's 2.2%-low component"
+
+
+def test_a_revenue_concept_with_no_balance_is_still_admitted(spine_view):
+    """CONSTRUCTED-CONVENTIONAL — a filer's OWN revenue concept, carrying no
+    taxonomy balance at all.
+
+    THE BALANCE FILTER MUST FAIL OPEN, and this is the test that stops it being
+    tightened. Measured on the committed capture: 349 of 455 rows carry NO
+    balance, against 55 credit and 51 debit. Requiring `credit` would therefore
+    discard the filer's own custom concepts — the exact class this arc exists
+    to keep, and the one no fixed chain could ever contain
+    (`ko_UnusualOrInfrequentItemOperating` is the brief's example). Only a
+    positively-identified `debit` may exclude a line.
+    """
+    period = "duration_2017-01-01_2017-12-31"
+    filing = {
+        "accession": "0000000000-00-000004", "form": "10-K",
+        "filingDate": "2018-02-23",
+        "statements": {"income": [
+            {"label": "Refining revenues", "concept": "psx_RefiningRevenue",
+             "level": 3, "weight": 1.0, "balance": None,
+             "calculation_parent": "us-gaap_OperatingIncomeLoss",
+             "values": {period: 104_622_000_000.0}},
+            {"label": "Operating expenses",
+             "concept": "us-gaap_OperatingExpenses", "level": 3, "weight": -1.0,
+             "balance": "debit",
+             "calculation_parent": "us-gaap_OperatingIncomeLoss",
+             "values": {period: 97_000_000_000.0}},
+        ]},
+        "roles": {}, "unrecognised_dimension_keys": [],
+    }
+
+    revenue = _field(
+        spine_view.derive_spine_as_filed(_payload(filing)),
+        filing["accession"], "revenue",
+    )
+    assert revenue["concept"] == "psx_RefiningRevenue"
+    assert revenue["periods"][period]["value"] == 104_622_000_000.0

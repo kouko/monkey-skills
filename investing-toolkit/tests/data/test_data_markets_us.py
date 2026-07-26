@@ -1362,6 +1362,204 @@ def test_missing_client_dependency_names_what_to_pass(monkeypatch, capsys):
     )
 
 
+def test_reconstruct_exit_code_matches_the_run_through_main(monkeypatch, capsys):
+    """The nesting fix, pinned at the surface the live defect was SEEN at.
+
+    `test_reconstruct_clean_run_classifies_ok_through_the_facade` pins
+    `_classify_result`, which is the mechanism -- but the 2026-07-26 KO run
+    reported the defect as **exit 2** on a clean 8-for-8 reconstruction, and no
+    test crossed `main()` to reach an exit code. A future change to how
+    `main()` maps status -> exit, or to which section carries `_status`, would
+    reintroduce the observed symptom while the mechanism test stayed green.
+
+    Both arms again, for the same reason as the classifier test: a change that
+    made everything exit 0 would satisfy the clean arm while hiding real
+    degradation, which is the more dangerous direction.
+    """
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack  # noqa: E402
+
+    rows = [_reconstruct_row("us-gaap:Revenues", "Net Operating Revenues")]
+
+    _stub_reconstruct_producers(monkeypatch, {"0001628280-26-010047": rows})
+    clean_exit = pack.main(["--ticker", "KO", "--pack", "reconstruct", "--quiet"])
+    clean = json.loads(capsys.readouterr().out)
+    assert clean_exit == pack.EXIT_OK, (
+        f"a clean reconstruction must exit 0, got {clean_exit} "
+        f"(failed_sections={clean['_status']['failed_sections']})"
+    )
+    assert clean["_status"]["status"] == "ok"
+
+    _stub_reconstruct_producers(monkeypatch, {
+        "0001628280-26-010047": rows,
+        "0000021344-25-000011": {"error": "did not resolve", "error_class": "resolution"},
+    })
+    degraded_exit = pack.main(["--ticker", "KO", "--pack", "reconstruct", "--quiet"])
+    degraded = json.loads(capsys.readouterr().out)
+    assert degraded_exit == pack.EXIT_PARTIAL, (
+        f"a failed acquisition must still exit 2, got {degraded_exit}"
+    )
+    assert "reconstruction" in degraded["_status"]["failed_sections"]
+
+
+def _run_pack_raising(monkeypatch, capsys, exc):
+    """Drive `pack.main` with a `build_pack` that raises `exc`; return
+    (exit_code, _status block)."""
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack  # noqa: E402
+    import pack_us  # noqa: E402
+
+    def boom(pack_name, tickers):
+        raise exc
+
+    monkeypatch.setattr(pack_us, "build_pack", boom)
+    exit_code = pack.main(["--ticker", "KO", "--pack", "reconstruct", "--quiet"])
+    return exit_code, json.loads(capsys.readouterr().out)["_status"]
+
+
+def test_internal_module_failure_is_not_dressed_as_a_client_dep_error(monkeypatch, capsys):
+    """A missing INTERNAL module must not be answered with the client-deps
+    message.
+
+    The handler answers `ModuleNotFoundError` with "re-run with `--with ...`".
+    That is right for a dependency the user supplies on the invocation, and
+    WRONG for one of our own modules: `pack_us.pack_reconstruct` imports
+    `kpi_us_statement_shape` ACROSS a skill boundary, so a move or rename
+    there raises `ModuleNotFoundError` too -- and the user would be told to
+    `--with` a package that does not exist, to fix a breakage that is not on
+    their command line at all. An internal breakage wearing a user-error
+    costume is the same "system disguises its own failure" mode this arc
+    exists to remove, reproduced inside the error path meant to prevent it.
+
+    Such a failure must fall through to the generic handler: a real traceback,
+    and NO actionable-looking instruction that cannot work.
+    """
+    exit_code, status = _run_pack_raising(
+        monkeypatch, capsys,
+        ModuleNotFoundError(
+            "No module named 'kpi_us_statement_shape'", name="kpi_us_statement_shape"
+        ),
+    )
+
+    assert exit_code == 1
+    assert status["status"] == "failed"
+    assert "--with" not in status.get("message", ""), (
+        f"an internal module must not be reported as a user-invocation error: "
+        f"{status.get('message')!r}"
+    )
+    assert "kpi_us_statement_shape" in status.get("traceback", ""), (
+        "the real cause must still be surfaced by the generic handler"
+    )
+
+
+def test_missing_edgartools_names_the_distribution_not_the_import_name(monkeypatch, capsys):
+    """A missing edgartools must still be handled AND must name what the user
+    can actually pass.
+
+    IMPORT NAME != DISTRIBUTION NAME: `import edgar` (sec_edgar_client.py:853)
+    raises `exc.name == "edgar"`, but the installable package is `edgartools`.
+    Two consequences, and the first is why this test exists at all:
+
+      1. a membership check written against the DISTRIBUTION names would not
+         match `"edgar"`, so a genuinely missing client dep would be re-raised
+         into the generic traceback handler -- silently reintroducing the bare
+         `ModuleNotFoundError` this lane was built to remove;
+      2. `--with edgar` installs the wrong project (or nothing), so the
+         message must never tell the user to pass the import name.
+
+    The `requests` arm cannot catch either: there the two names coincide.
+    """
+    exit_code, status = _run_pack_raising(
+        monkeypatch, capsys,
+        ModuleNotFoundError("No module named 'edgar'", name="edgar"),
+    )
+
+    assert exit_code == 1
+    message = status.get("message", "")
+    assert "--with" in message, (
+        f"a genuinely missing client dep must still get the guidance: {message!r}"
+    )
+    assert "edgartools" in message, f"must name the installable package: {message!r}"
+    assert "--with edgar " not in message and not message.endswith("--with edgar"), (
+        f"must never tell the user to pass the IMPORT name: {message!r}"
+    )
+    assert "'edgar'" not in message.split("Pass the whole set")[-1], (
+        f"the closing clause must name the distribution, not the import name: {message!r}"
+    )
+
+
+def _required_third_party_imports(path):
+    """Top-level module names `path` REQUIRES that are neither stdlib nor a
+    local sibling script — i.e. exactly what a caller must supply.
+
+    Imports inside a `try:` with an except handler are EXCLUDED, because they
+    are optional by construction. Observed case: `sec_edgar_client.py:1256`
+    imports `httpx` under `try/except` to widen a timeout-exception tuple and
+    falls back to the builtin `TimeoutError` when it is absent. Declaring it
+    would tell the caller to pass a package the lane works fine without —
+    a false instruction, which is the same defect class as the false promise
+    this test exists to prevent, pointed the other way.
+    """
+    import ast  # noqa: E402
+
+    local = {
+        p.stem
+        for scripts in (MARKETS_SCRIPTS, ROOT / "skills" / "analysis-kpi" / "scripts")
+        for p in scripts.glob("*.py")
+    }
+    tree = ast.parse(path.read_text())
+
+    optional: set[int] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Try) and node.handlers:
+            for stmt in node.body:
+                for inner in ast.walk(stmt):
+                    if isinstance(inner, (ast.Import, ast.ImportFrom)):
+                        optional.add(id(inner))
+
+    names: set[str] = set()
+    for node in ast.walk(tree):
+        if id(node) in optional:
+            continue
+        if isinstance(node, ast.Import):
+            names |= {a.name.split(".")[0] for a in node.names}
+        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+            names.add(node.module.split(".")[0])
+    return {n for n in names if n not in sys.stdlib_module_names and n not in local}
+
+
+def test_client_dependencies_covers_every_third_party_import_of_the_sec_lane():
+    """`CLIENT_DEPENDENCIES` must be BOUND to the code, not to three copies of
+    a sentence.
+
+    The set is currently restated in `pack.py`'s constant, `pack.py`'s module
+    docstring, and `SKILL.md` — and the message built from it promises the
+    caller "the WHOLE set". Nothing derived that promise from the real imports,
+    so adding a third client dependency would leave the message confidently
+    false, which is precisely the PR #619 failure it was written to prevent
+    (supply what you were told, fail on the next import anyway).
+
+    Derived by parsing the real modules rather than listing names here: a test
+    that hardcoded the same two names would be a fourth copy of the sentence,
+    not a binding.
+    """
+    if str(MARKETS_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(MARKETS_SCRIPTS))
+    import pack  # noqa: E402
+
+    # Keyed on IMPORT names — what `ModuleNotFoundError.name` actually carries.
+    declared = set(pack.CLIENT_DEPENDENCIES)
+    for module in ("sec_edgar_client.py", "pack_us.py"):
+        found = _required_third_party_imports(MARKETS_SCRIPTS / module)
+        assert found <= declared, (
+            f"{module} imports {sorted(found - declared)}, which "
+            f"`CLIENT_DEPENDENCIES` does not declare — the message's "
+            f"\"pass the whole set\" promise is false for those"
+        )
+
+
 def test_build_pack_statement_backfill_requires_exactly_one_ticker():
     """Pins the ticker-count validation, mirroring `kpi-topline-backfill`'s
     branch (pack_us.py:1367-1372) and its exact error-message shape — a

@@ -129,11 +129,29 @@ _BARE_4DIGIT = re.compile(r"^\d{4}$")
 # The client dependencies the market modules import but this facade never
 # does. Supplied per-invocation (`uv run --with ...`), which is what keeps
 # pack.py itself zero-dependency; see the module docstring.
-CLIENT_DEPENDENCIES: tuple[str, ...] = ("edgartools", "requests")
+#
+# KEYED ON IMPORT NAME, VALUED ON DISTRIBUTION NAME, because the two differ and
+# both are load-bearing here. `import edgar` (sec_edgar_client.py:853) raises
+# `ModuleNotFoundError(name="edgar")`, but the installable package is
+# `edgartools`. A single flat list would therefore get BOTH directions wrong:
+# matched against distribution names it would fail to recognise a genuinely
+# missing edgartools (re-raising it as an opaque traceback), and rendered into
+# the message from import names it would tell the caller to `--with edgar`,
+# which installs the wrong project.
+#
+# `test_client_dependencies_covers_every_third_party_import_of_the_sec_lane`
+# binds this to the real imports by parsing them, so a third client dependency
+# cannot be added without this map learning about it -- the message promises
+# "the whole set", and that promise is only true if something checks it.
+CLIENT_DEPENDENCIES: dict[str, str] = {
+    "edgar": "edgartools",
+    "requests": "requests",
+}
 
 
-def _missing_dependency_message(exc: ModuleNotFoundError) -> str:
-    """Turn a bare `ModuleNotFoundError` into an instruction.
+def _missing_dependency_message(exc: ModuleNotFoundError) -> str | None:
+    """Turn a bare `ModuleNotFoundError` into an instruction — or `None` when
+    the missing module is not something the caller can supply.
 
     MEASURED FAILURE (Gotcha trailer, PR #619, 2026-07-26): the as-reported
     lane's live dogfood died on `ModuleNotFoundError: No module named
@@ -141,22 +159,39 @@ def _missing_dependency_message(exc: ModuleNotFoundError) -> str:
     knows the invocation contract it is enforcing, so it is the layer that
     must say what to pass.
 
+    `None` FOR ANYTHING ELSE, and that discrimination is the point. This
+    handler sees every `ModuleNotFoundError` escaping a market module,
+    including OUR OWN modules -- `pack_us.pack_reconstruct` imports
+    `kpi_us_statement_shape` across a skill boundary, so a move or rename there
+    surfaces here too. Answering that with "re-run with `--with ...`" would
+    send the reader to fix, on their command line, a breakage that is not on
+    their command line at all: an internal fault wearing a user-error costume,
+    which is the exact mode this lane exists to remove. Those fall through to a
+    plain traceback instead, with no instruction that cannot work.
+
     Names the WHOLE dependency set, not just the module that happened to fail
     first: the imports are sequential, so supplying only the named one moves
     the failure to the next import -- which is exactly how that dogfood went.
+    Every name it prints is a DISTRIBUTION name, the thing `--with` takes.
 
-    `exc.name` is what the import system populates; `str(exc)` is the fallback
-    for a hand-raised instance that left it unset, so this never degrades to
-    naming nothing.
+    A hand-raised instance with `name` unset is treated as not-a-client-dep
+    (fails closed to a traceback): the import system always populates `name`,
+    so an unset one is not a real import failure, and silence beats guidance
+    that may be wrong.
     """
-    missing = exc.name or str(exc)
-    supplied = " ".join(f"--with {dep}" for dep in CLIENT_DEPENDENCIES)
+    if exc.name not in CLIENT_DEPENDENCIES:
+        return None
+    missing = CLIENT_DEPENDENCIES[exc.name]
+    supplied = " ".join(
+        f"--with {dist}" for dist in dict.fromkeys(CLIENT_DEPENDENCIES.values())
+    )
     return (
-        f"missing client dependency {missing!r}. pack.py is a ZERO-DEPENDENCY "
-        f"facade: the market clients' dependencies are supplied on the "
-        f"invocation and are never bundled here. Re-run the same command with "
-        f"`uv run {supplied} pack.py ...`. Pass the whole set — supplying only "
-        f"{missing!r} moves the failure to the next import."
+        f"missing client dependency {exc.name!r} (installable as {missing!r}). "
+        f"pack.py is a ZERO-DEPENDENCY facade: the market clients' "
+        f"dependencies are supplied on the invocation and are never bundled "
+        f"here. Re-run the same command with `uv run {supplied} pack.py ...`. "
+        f"Pass the whole set — supplying only {missing!r} moves the failure "
+        f"to the next import."
     )
 
 
@@ -472,6 +507,12 @@ def main(argv: list[str] | None = None) -> int:
         # one crash whose fix the caller can act on, and a bare traceback does
         # not tell them what it is. The traceback still rides along — the
         # message adds guidance, it never replaces the cause.
+        #
+        # A non-client module yields `message=None`, so `_status_block` omits
+        # the field and the emitted result is byte-identical to the generic
+        # handler's. Deliberately NOT a bare `raise`: the generic clause below
+        # is a SIBLING of this one, not an enclosing one, so re-raising would
+        # escape `main()` entirely and lose the fail-loud JSON + exit contract.
         _emit(
             {
                 "_status": _status_block(

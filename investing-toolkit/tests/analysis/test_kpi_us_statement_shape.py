@@ -516,6 +516,59 @@ def test_a_line_carries_the_precision_the_filer_declared(shape, reconstruction_c
     assert top_line.decimals is not captured["decimals"]
 
 
+def test_a_line_carries_the_taxonomys_own_debit_credit_balance(
+    shape, reconstruction_capture,
+):
+    """COMMITTED — the US-GAAP taxonomy's own `balance` for each concept must
+    ride on the `Line`.
+
+    ADDED FOR PLAN TASK 8, and it is a SECOND widening of that task's
+    `Files touched` beyond the `decimals` one the plan amended in — taken on
+    measured grounds and flagged rather than slipped in. Task 8 must name the
+    income statement's candidate TOTAL revenue concepts, and a concept's local
+    name is not enough to tell revenue from cost: IBM presents
+    `us-gaap_CostOfRevenue`, whose name carries the revenue wording. The
+    filer's declared weight separates them only where the cost line is
+    subtracted directly (IBM: -1.0); where it instead rolls POSITIVELY into a
+    costs subtotal — the oil-major shape the brief names for PSX — the sign
+    says nothing and the cost line reads as a revenue total.
+
+    `balance` is the taxonomy's own answer and is independent of both
+    presentation and the filer's weight choices: revenue concepts are `credit`,
+    cost and expense concepts are `debit`. MEASURED on the committed capture:
+    55 rows carry `credit`, 51 `debit`, and `us-gaap_Revenues` /
+    `us-gaap_SalesRevenueGoodsNet` are `credit` while `us-gaap_CostOfRevenue`
+    is `debit`.
+
+    `None` IS THE COMMON CASE and must survive as `None`: 349 of the 455
+    captured rows carry no balance at all (abstract headers, per-share and
+    share-count rows, and concepts the taxonomy does not classify). A consumer
+    must therefore read `None` as "the taxonomy says nothing", never as
+    "not revenue" — a filer's OWN custom revenue concept is exactly the case
+    that would be discarded by the stricter reading, and the brief holds up
+    `ko_UnusualOrInfrequentItemOperating` as the thing this design must not
+    lose.
+    """
+    filing = _CapturedFiling(
+        _captured_filing(reconstruction_capture, "0000051143-26-000010")
+    )
+    income = shape.statements_for(filing).by_kind["income"]
+
+    revenue = next(line for line in income if line.concept == "us-gaap_Revenues")
+    cost = next(line for line in income if line.concept == "us-gaap_CostOfRevenue")
+
+    assert revenue.balance == "credit"
+    assert cost.balance == "debit", (
+        "the two concepts whose LOCAL NAMES both carry the revenue wording "
+        "must be separable by something the taxonomy states"
+    )
+
+    eps = next(
+        line for line in income if line.concept == "us-gaap_EarningsPerShareBasic"
+    )
+    assert eps.balance is None
+
+
 def test_a_line_whose_filer_declared_no_precision_carries_an_empty_mapping(shape):
     """CONSTRUCTED-CONVENTIONAL — a row with no `decimals` key at all.
 

@@ -1231,9 +1231,22 @@ RECONSTRUCT_ANNUAL_FILINGS = 8
 #     edgartools `Filing` (its input contract is `.xbrl()` ->
 #     `presentation_roles` + `get_statement`), which does not survive a JSON
 #     process boundary, and `kpi_us_statement_shape` exposes no CLI.
-#   * The import is cheap and acyclic: the module is stdlib-only, and it is
-#     imported LAZILY inside the one function that needs it, so no other pack
-#     type pays for it and no import cycle can form.
+#   * The import is cheap: the module is stdlib-only, and it is imported
+#     LAZILY inside the one function that needs it, so no other pack type pays
+#     for it at import time. LAZINESS BUYS COST, NOT ACYCLICITY -- an earlier
+#     revision of this comment credited it with preventing a cycle, which it
+#     does not; a lazy import closing a cycle merely fails later. What actually
+#     keeps this acyclic is the SIBLING CONVENTION that the reconstruction
+#     modules import no data-markets module at all ("does NOT import any
+#     data-markets module", `analysis-kpi/scripts/kpi_us_statements.py:10`).
+#     That convention is prose, enforced by no test — so it is the assumption
+#     this inversion actually rests on, and the thing to re-check before
+#     letting analysis-kpi reach back this way.
+#
+# One more consequence of reaching across by path: `sys.path.insert(0, ...)`
+# below PREPENDS analysis-kpi's scripts dir ahead of data-markets' for the rest
+# of the process. No basename collides between the two dirs today, but a future
+# one would shadow silently and resolve to the analysis-kpi copy.
 #
 # Flagged for the reviewer rather than settled unilaterally: the honest fix is
 # probably that this verb belongs in analysis-kpi with data-markets supplying

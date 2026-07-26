@@ -173,6 +173,14 @@ def verify(statements) -> list[SumCheck]:
     The result is one `SumCheck` per (declared parent, period), ordered by
     statement, then by where the group's first child appears on the statement,
     then by period. Deterministic: two runs over one filing never disagree.
+
+    BLAST RADIUS OF THE TWO RAISES (a row with a parent but no usable weight,
+    and two rows of one concept that disagree): both abort this call, and since
+    `resolution_report` calls `verify` per filing, one such row aborts the whole
+    batch rather than marking one filing unresolved. That is deliberate for an
+    oracle — both shapes mean the row vocabulary moved, so every other verdict
+    in the run is suspect too — but it is a stop, not a skip, and a caller
+    running 56 filers should expect to lose the run and not one statement.
     """
     checks: list[SumCheck] = []
     for kind, lines in statements.by_kind.items():
@@ -197,7 +205,12 @@ def _checks_for_statement(kind: str, lines) -> list[SumCheck]:
         # of year" and "Balance at end of year", with identical values, weight
         # and parent. Counting both would double that child and manufacture a
         # disagreement out of a layout choice.
-        groups.setdefault(line.calculation_parent, {}).setdefault(line.concept, line)
+        children = groups.setdefault(line.calculation_parent, {})
+        kept = children.get(line.concept)
+        if kept is None:
+            children[line.concept] = line
+        else:
+            _refuse_disagreeing_duplicate(kept, line)
 
     checks: list[SumCheck] = []
     for parent, children in groups.items():
@@ -317,6 +330,44 @@ def _declared_decimals(line, period) -> int | None:
         return None
 
 
+def _refuse_disagreeing_duplicate(kept, dropped) -> None:
+    """Raise unless the duplicate row about to be DROPPED says the same thing
+    as the one already kept.
+
+    De-duplication keeps the first row of a concept, which is only sound while
+    the discarded row agrees with it. In the committed capture the single
+    duplicate pair does agree — KO's `CashAndCashEquivalentsAtCarryingValue`
+    renders twice, "Balance at beginning of year" and "Balance at end of year",
+    with identical values, weight and decimals — but that is one observation,
+    not a property of the shape. A pair that disagreed would silently change
+    both `computed` and the group's period set with nothing marking that a row
+    had been dropped, which is the one thing this module otherwise never does:
+    `_weight_of`, `_era` and the unresolved-statement reason codes all refuse
+    to resolve an unobserved shape by quietly picking.
+
+    Values are compared as `Decimal`, not as the floats they arrive as, so two
+    rows stating one figure are not split by a representation difference.
+    """
+    if _weight_of(kept) == _weight_of(dropped) and _comparable(kept.values) == _comparable(dropped.values):
+        return
+    raise ValueError(
+        f"{dropped.concept} is presented twice under calculation parent "
+        f"{dropped.calculation_parent} ({kept.label!r}, {dropped.label!r}) with "
+        f"values/weight that DISAGREE: kept weight={kept.weight!r} "
+        f"values={kept.values!r}; dropped weight={dropped.weight!r} "
+        f"values={dropped.values!r}. De-duplication keeps the first row, so "
+        "one of these figures would vanish from the check; refusing to pick"
+    )
+
+
+def _comparable(values) -> dict:
+    """`values` keyed as given, with each value normalised through `_number` so
+    two rows are compared as figures rather than as float spellings. An
+    unusable value keeps its place as `None`, so a row stating `''` where the
+    other states a number still counts as a disagreement."""
+    return {period: _number(value) for period, value in values.items()}
+
+
 def _weight_of(line) -> Decimal:
     """The line's calculation weight, or a loud failure.
 
@@ -388,10 +439,10 @@ ERA_AFTER_SAMPLE = "post_2018"
 ERA_ORDER = (ERA_BEFORE_SAMPLE, ERA_SAMPLED, ERA_AFTER_SAMPLE)
 
 # WHY EACH UNRESOLVED STATEMENT FAILED. Each is a fact about THIS
-# RECONSTRUCTION, never a verdict on the filer — see `resolution_report`. Four
-# codes rather than two, because each names a DIFFERENT fact and a reader acts
-# on them differently; collapsing any pair would rebuild, one layer up, the
-# undifferentiated blank this arc exists to remove.
+# RECONSTRUCTION, never a verdict on the filer — see `resolution_report`. FIVE
+# codes, one per DIFFERENT fact, because a reader acts on them differently;
+# collapsing any pair would rebuild, one layer up, the undifferentiated blank
+# this arc exists to remove.
 AMBIGUOUS_TOTAL = "ambiguous_total"
 NO_REVENUE_TOTAL = "no_revenue_total"
 AMBIGUOUS_STATEMENT_ROLE = "ambiguous_statement_role"
@@ -451,8 +502,15 @@ class StatementResolution:
 
 @dataclass(frozen=True)
 class EraTally:
-    """The counts for one era. `reasons` is (code, count) pairs, ordered by
-    code, so two runs over one input never disagree."""
+    """The counts for one era.
+
+    `reasons` is (code, count) pairs ordered by code, so two runs over one
+    input never disagree. THEY DO NOT SUM TO `unresolved`: one statement may
+    fail for several reasons at once — a filing with no calculation arcs is
+    both `no_declared_sums` and `ambiguous_total` — so the counts total the
+    REASONS, not the statements. `resolved` + `unresolved` is the statement
+    count; nothing else is.
+    """
 
     era: str
     resolved: int
@@ -486,8 +544,13 @@ def resolution_report(reconstructions) -> ResolutionReport:
 
     A statement RESOLVES when all of these hold:
 
-      1. exactly ONE role classified as its kind, so which statement was read
-         was not a choice this code made silently;
+      1. NO MORE THAN ONE role classified as its kind, so which statement was
+         read was not a choice this code made silently. Worded as the predicate
+         actually behaves: a kind present in `by_kind` with NO entry in `roles`
+         passes this condition. That is unreachable through Task 3's assembler,
+         which writes both together, but it IS reachable through the duck-typed
+         input contract this docstring invites, and claiming "exactly one"
+         would be a promise the code does not keep;
       2. it declares at least one calculation group, so "nothing disagreed" is
          not vacuously true of a statement whose arithmetic was never read;
       3. every group it declares came out in `RECONCILES` — `agrees` or
@@ -561,19 +624,79 @@ def revenue_totals(lines) -> tuple[str, ...]:
     need not be a PRESENTED line (its own weight is then unavailable), and a
     component that rolls into an unpresented revenue total must still drop out.
 
+    AN UNPARENTED REVENUE LINE IS A CANDIDATE, and that is a DECISION, not an
+    accident of `_names_revenue(None)` being false. A filer's total commonly
+    TOPS the calculation tree and so has no calculation parent — the brief's
+    PSX declares its own `RevenuesAndOtherIncome` (104,622M) — and excluding
+    unparented lines would drop that total, leave zero candidates and report
+    `NO_REVENUE_TOTAL` on a filing whose total is on the face of the statement.
+    Its COST, stated in the same breath: a filer presenting several revenue
+    lines with no calculation arcs between them yields one candidate each and
+    is reported ambiguous. That is the correct answer — with no arc declaring
+    one the parent of the others, the structure does not say which is the
+    total, and the plan forbids picking one — but it is a cost, and
+    `test_disaggregated_revenue_with_no_calculation_arcs_is_reported_ambiguous`
+    pins it so nobody meets it as a surprise.
+
+    ONE CANDIDATE PER CONCEPT. The presentation may render one fact on two rows
+    (KO shows `CashAndCashEquivalentsAtCarryingValue` twice on its cash-flow
+    statement), and `_checks_for_statement` already de-duplicates for the same
+    reason; a repeated revenue row would otherwise report a filing as ambiguous
+    between its total and itself. Unobserved on an income role — a guard, not a
+    fix — and taken so the two functions in this module cannot disagree about
+    whether a repeated row is one fact.
+
     ORDER IS PRESENTATION ORDER, so two runs over one filing never disagree.
     """
-    return tuple(
-        line.concept for line in lines
-        if _is_revenue_line(line) and not _names_revenue(line.calculation_parent)
-    )
+    candidates = []
+    for line in lines:
+        if not _is_revenue_line(line) or _names_revenue(line.calculation_parent):
+            continue
+        if line.concept not in candidates:
+            candidates.append(line.concept)
+    return tuple(candidates)
 
 
 def _is_revenue_line(line) -> bool:
-    """A line stating revenue: its concept carries the revenue wording AND the
-    filer does not declare it as a deduction."""
+    """A line stating revenue: its concept carries the revenue wording, and
+    neither the taxonomy nor the filer calls it a deduction.
+
+    TWO INDEPENDENT EXCLUSIONS, because neither alone is enough and the case
+    that proves it is `us-gaap_CostOfRevenue`, whose local name carries the
+    revenue wording:
+
+      * THE TAXONOMY'S `balance`. A cost concept is `debit`, a revenue concept
+        `credit` — the taxonomy's own answer, independent of presentation and
+        of the filer's weight choices. OBSERVED: IBM's `Revenues` is `credit`
+        and its `CostOfRevenue` `debit`.
+      * THE FILER'S OWN SIGN. A line the filer subtracts is a deduction
+        whatever the taxonomy says, which also covers a filer's CUSTOM cost
+        concept — custom concepts commonly carry no balance at all.
+
+    `balance is None` IS NOT A REJECTION, deliberately fail-open: 349 of the
+    455 captured rows carry none, and requiring `credit` would discard a
+    filer's own custom revenue concept — precisely what this design promises
+    not to lose (brief §Decision, `ko_UnusualOrInfrequentItemOperating`).
+
+    WHY BOTH ARE LOAD-BEARING, measured rather than assumed: IBM subtracts
+    `CostOfRevenue` directly (-1.0), so the sign alone excludes it there. But
+    where a cost line instead rolls POSITIVELY into a costs subtotal — the
+    oil-major shape, `CostOfRevenue` +1.0 into `CostsAndExpenses` — the sign
+    says nothing and only `balance` excludes it. That path was found by writing
+    the PSX test, not by reading the code.
+
+    NO FALSE-EXCLUSION PATH, settled independently by this task's quality
+    reviewer and Task 7's and recorded here so it is not re-litigated: a
+    contra-revenue line rolls into a revenue-NAMED parent, so the parent clause
+    in `revenue_totals` drops it before either signal here is consulted; where
+    its parent is not revenue-named it is a deduction and never the top line.
+    """
     weight = _number(line.weight)
-    return _names_revenue(line.concept) and not (weight is not None and weight < 0)
+    if not _names_revenue(line.concept):
+        return False
+    if str(line.balance or "").casefold() == "debit":
+        return False
+    return not (weight is not None and weight < 0)
 
 
 def _names_revenue(concept) -> bool:

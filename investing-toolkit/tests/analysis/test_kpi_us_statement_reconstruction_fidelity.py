@@ -263,9 +263,22 @@ def test_the_divergence_between_the_two_filed_renderings_is_pinned(as_filed):
     the exhibit this repo reconstructs, which is the reassurance a reader
     actually needs.
 
-    This fails if the divergence grows, shrinks, or moves — including if it is
-    ever FIXED. A fix should be loud: it would mean the label the reconstruction
-    carries has changed, and every consumer that renders one has to know.
+    WHAT THIS TEST GUARDS, narrowed to what it earns: it reads the two
+    TRANSCRIPTIONS and nothing else — it never takes `reconstructed`. So it
+    guards the fixture, not the pipeline: it fails if either transcription is
+    hand-edited, if a fourth divergence CLASS appears, or if a known one grows,
+    shrinks or moves. A change on the PIPELINE side is caught one test up, by
+    `test_the_reconstruction_is_byte_identical_to_sec_s_own_rendering_of_the_
+    exhibit`, and the two together are what make a fix loud: the pipeline can
+    only stop matching the exhibit there, and the exhibit can only stop
+    diverging from the page here.
+
+    An earlier version of this docstring claimed the test fails "if the
+    divergence is ever FIXED", which would require watching the reconstruction
+    it never receives. Corrected rather than quietly deleted: a claim written
+    wider than the code earns is the defect this arc has now met nine times,
+    and it landed here, in the test whose whole subject is two claims that
+    disagree.
     """
     printed = {line["order"]: line for line in as_filed["lines"]}
     exhibit = as_filed["sec_rendered_lines"]
@@ -289,6 +302,19 @@ def test_the_divergence_between_the_two_filed_renderings_is_pinned(as_filed):
         if printed[line["printed_order"]]["values"][year] is not None
         and printed[line["printed_order"]]["values"][year] != line["values"][year]
     ]
+    # THE FOURTH BUCKET, and the reason the other three are not a partition:
+    # `blank_against_zero` requires the tagged figure to be exactly 0 and
+    # `altered` requires the printed figure to be present, so a cell the page
+    # leaves BLANK against a NON-ZERO tagged figure falls through both and
+    # could grow unseen. It is the worst of the four — a number that exists in
+    # the exhibit a reader never saw on the page — so it gets its own list
+    # rather than an assumption that it cannot happen.
+    blank_against_a_figure = [
+        (line["printed_order"], year)
+        for line in exhibit for year in YEARS
+        if printed[line["printed_order"]]["values"][year] is None
+        and line["values"][year] not in (None, 0)
+    ]
 
     # The subtotal CONSOLIDATED NET INCOME (printed 15) sits BEFORE the two
     # components the printed page puts above it (13, 14).
@@ -302,6 +328,11 @@ def test_the_divergence_between_the_two_filed_renderings_is_pinned(as_filed):
     assert altered == [], (
         "a figure the filer PRINTED differs from the one it TAGGED — that is a "
         "restatement between two documents of one filing, not a label quirk"
+    )
+    assert blank_against_a_figure == [], (
+        "the printed page leaves a cell BLANK where the exhibit tags a non-zero "
+        "figure — a number that reaches the reconstruction but that no reader of "
+        "the 10-K ever saw"
     )
 
 

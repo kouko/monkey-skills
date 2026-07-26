@@ -965,7 +965,10 @@ class _ReconstructedLine:
     module to one it never otherwise needs.
     """
 
-    __slots__ = ("label", "concept", "level", "weight", "calculation_parent", "values")
+    __slots__ = (
+        "label", "concept", "level", "weight", "calculation_parent",
+        "balance", "values",
+    )
 
     def __init__(self, row: dict[str, Any]) -> None:
         self.label = row.get("label")
@@ -973,6 +976,10 @@ class _ReconstructedLine:
         self.level = row.get("level")
         self.weight = row.get("weight")
         self.calculation_parent = row.get("calculation_parent")
+        # The taxonomy's own debit/credit classification (`Line.balance`).
+        # `.get`, not indexing: a payload produced before that field existed
+        # reads as None, which is the fail-open answer anyway.
+        self.balance = row.get("balance")
         self.values = dict(row.get("values") or {})
 
 
@@ -1005,32 +1012,57 @@ def _sign_admits(line: _ReconstructedLine) -> bool:
     """Could this revenue-worded line be a revenue TOTAL, by the filer's own
     declared sign?
 
-    A revenue total is ADDED into its parent subtotal, never subtracted. The
-    sign is not decoration: IBM's income statement carries `CostOfRevenue`,
-    whose local name matches the same wording as `Revenues`, and only the
-    declared weight (-1) tells them apart — measured on the captured filing,
-    where it is the ONLY line the filter excludes. Without it IBM shows two
-    candidate totals and its revenue collapses to a gap.
+    WHAT THE SIGN DECIDES, AND WHAT IT DOES NOT — stated as a scope because
+    this filter shipped for two rounds carrying a claim wider than its reach.
+    It decides ONE thing: a revenue-worded line SUBTRACTED where it stands is
+    not the total. It decides NOTHING about a cost line that is added into its
+    own cost subtotal, because such a line carries +1 and the subtraction
+    happens a level up — the oil-major layout, and the shape PSX has. That
+    whole class is `_balance_admits`'s job, and the two are not
+    interchangeable: the observed IBM row carries BOTH signals, so it evidences
+    neither on its own.
 
     A `None` weight is kept, not rejected: it means the line sits in no
     declared sum, which is true of a calculation ROOT as well as of an EPS row,
     and rejecting it would drop the total of a filer whose revenue heads its
     own tree.
 
-    CONTRA-REVENUE IS NOT A COUNTER-EXAMPLE — settled, not merely worried
-    about. A returns/allowances or sales-discount line is revenue-worded and
-    carries -1, so this excludes it, and that is the correct answer twice over:
-    a deduction from revenue is not the revenue total, and the total it is
-    deducted FROM is itself revenue-worded and positive, so it survives here
-    and the deduction is eliminated as its component either way. For this
-    filter to lose a real total, a filer would have to declare its revenue
-    total as a NEGATIVE child of its own subtotal — which would also break that
-    subtotal's declared sum, and `kpi_us_statement_check.verify` reports
-    exactly that. Unobserved: neither captured filing presents a contra-revenue
-    line, so no test here exercises it; what the filter is measured to exclude
-    is `CostOfRevenue`, one line, in one filing.
+    CONTRA-REVENUE IS NOT A COUNTER-EXAMPLE — settled, and still correct. A
+    returns/allowances or sales-discount line is revenue-worded and carries -1,
+    so this excludes it, and that is the correct answer twice over: a deduction
+    from revenue is not the revenue total, and the total it is deducted FROM is
+    itself revenue-worded and positive, so it survives here and the deduction is
+    eliminated as its component either way. For this filter to lose a real
+    total, a filer would have to declare its revenue total as a NEGATIVE child
+    of its own subtotal — which would also break that subtotal's declared sum,
+    and `kpi_us_statement_check.verify` reports exactly that. Unobserved:
+    neither captured filing presents a contra-revenue line, so no test here
+    exercises it.
     """
     return line.weight is None or line.weight >= 0
+
+
+def _balance_admits(line: _ReconstructedLine) -> bool:
+    """Could this revenue-worded line be a revenue TOTAL, by the TAXONOMY's own
+    debit/credit classification?
+
+    THE CASE THE SIGN CANNOT SEE. A refiner presents a revenue block and a cost
+    block, each summing POSITIVELY into its own subtotal, and only the two
+    subtotals meet — so `CostOfRevenue` carries weight +1.0 and the sign admits
+    it. It then survives component elimination (its parent is a cost concept,
+    not a revenue-worded one) and stands as a second candidate total, blanking
+    the revenue of every filer with that layout. The taxonomy already answers
+    it: `Revenues` is `credit`, `CostOfRevenue` is `debit`. Found by Task 8's
+    implementer while pinning an unrelated gap, on a filing neither of ours
+    could see.
+
+    FAIL OPEN ON `None`, which is the majority and not an edge case: 349 of the
+    455 captured rows carry no balance, against 55 credit and 51 debit.
+    Requiring `credit` would discard the filers' OWN custom revenue concepts —
+    the class this arc exists to keep, and the one no fixed chain could ever
+    contain. Only a positively-identified `debit` excludes.
+    """
+    return line.balance != "debit"
 
 
 def _revenue_total(lines: list[_ReconstructedLine]) -> tuple[str | None, tuple[str, ...]]:
@@ -1048,6 +1080,14 @@ def _revenue_total(lines: list[_ReconstructedLine]) -> tuple[str | None, tuple[s
     and never presentation position, which the brief measured unreliable for
     meaning (asked which line was the total, position named a 193M
     professional-services line as ServiceNow's 1,933M total).
+
+    "A REVENUE LINE" IS DECIDED BY THREE INDEPENDENT SIGNALS, none of which is
+    redundant and each of which covers a class the others miss: the concept's
+    WORDING (`_has_revenue_wording`), the filer's own declared SIGN
+    (`_sign_admits` — a line subtracted where it stands), and the taxonomy's
+    DEBIT/CREDIT balance (`_balance_admits` — a cost line that sums positively
+    into its own cost subtotal, which the sign cannot see). Wording alone
+    admits every cost-of-revenue line; sign alone blanks every oil major.
 
     Returns `(None, candidates)` when it cannot choose, and that is the answer,
     not a failure: kickoff decision 甲 requires a VISIBLE TYPED GAP where a
@@ -1071,7 +1111,9 @@ def _revenue_total(lines: list[_ReconstructedLine]) -> tuple[str | None, tuple[s
     # `unresolved` gap. A component is a component regardless of which side of
     # the sign its parent sits on.
     concepts = {line.concept for line in worded}
-    candidates = [line for line in worded if _sign_admits(line)]
+    candidates = [
+        line for line in worded if _sign_admits(line) and _balance_admits(line)
+    ]
     totals = [line for line in candidates if line.calculation_parent not in concepts]
     if len(totals) == 1:
         return totals[0].concept, ()
