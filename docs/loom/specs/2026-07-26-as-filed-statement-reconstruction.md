@@ -66,8 +66,17 @@ I can** tell a real decline from a hole in my own pipeline.
 
 Two consequences of single-company-at-a-time:
 
-- Per-filing parsing is affordable. Ten years is ~4 filings (each 10-K carries
-  three comparative years for income and cash flow, two for the balance sheet).
+- Per-filing parsing is affordable. **Ten years is 8 filings, not ~4** —
+  CORRECTED 2026-07-26 from a live run, refuting this brief's own arithmetic.
+  Each 10-K does carry three comparative years, but consecutive 10-Ks OVERLAP by
+  two of them: filing N covers Y, Y-1, Y-2 and filing N+1 covers Y+1, Y, Y-1. So
+  the first filing yields 3 years and every subsequent one adds exactly ONE —
+  **N filings yield N+2 distinct years**, not 3N. Measured: 4 filings → 6 years;
+  8 → 10 years (2016-2025). Cost follows: ~86s cold for a decade, not the ~42s
+  the recompute-vs-persist decision was argued on. That decision does not change
+  (a derived cache would still buy back only the warm-path seconds), but the
+  number it was argued on was wrong and is corrected here rather than left for a
+  reader to inherit.
 - A silently-low year is the expensive failure: on a trend chart it reads as a
   downturn and nothing distinguishes it from a real one.
 
@@ -186,13 +195,24 @@ distinct renderings — never one blank:
 |---|---|---|
 | not presented | the filer's statement has no such line | the line is absent from the reconstructed statement |
 | not tagged | the line exists, that period has no undimensioned value | line present, value absent for that period |
-| derived | not separately tagged but computable from the filer's own arithmetic | e.g. total liabilities = `LiabilitiesAndStockholdersEquity` − whole equity (21/21 filers) |
+| derived | not separately tagged but computable from the filer's own arithmetic | e.g. total liabilities = `LiabilitiesAndStockholdersEquity` − whole equity − mezzanine (21/21 filers) |
 
 A derived value must be labelled as derived, and the whole-equity subtlety is
 NOT optional: subtracting parent-only `StockholdersEquity` would push minority
-interest and mezzanine into "liabilities". The existing `_equity_kind` /
-mezzanine machinery already resolves whole equity and must be reused rather than
-re-derived (`kpi_spine_view.py` header, "THE EQUITY TERM IS WHOLE EQUITY").
+interest into "liabilities". The existing `_equity_kind` / mezzanine machinery
+already resolves whole equity and must be reused rather than re-derived
+(`kpi_spine_view.py` header, "THE EQUITY TERM IS WHOLE EQUITY").
+
+**The mezzanine is a SEPARATE term and this brief first omitted it** (corrected
+2026-07-26, caught by Task 5's implementer). Temporary equity sits BETWEEN
+liabilities and equity, so it is not part of whole equity and leaving it in the
+remainder relabels it as debt — the same defect as the minority interest, a
+different term. The formula is `_annotate_balance_identity`'s own identity
+(`A = L + mezzanine + E`) solved for L, not a new claim. Measured on the
+committed capture: KO FY2017 tags `LiabilitiesAndStockholdersEquity` (87,896M)
+with NO `Liabilities` line, parent-only `StockholdersEquity` 17,072M and a
+non-zero `MinorityInterest` 1,905M — so the parent-only mistake is worth exactly
+that 1,905M, mislabelled as debt.
 
 **Arithmetic in `Decimal`, never binary float.** Cross-layer arithmetic on money
 in this module family has already manufactured a false restatement signal once
