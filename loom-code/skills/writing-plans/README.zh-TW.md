@@ -36,6 +36,7 @@ brainstorming → brief                             (Discovery 階段)
 - **Context paths**: implementer 讀的既有 code 路徑（paths-not-content）
 - **Acceptance**: RED 測試名 + GREEN 可觀察條件
 - **Dependencies**: `none` | `Task N completes first` | `Tasks N, M parallel`
+- **Reuse-adequacy**: 任務指示重用既有 helper 到新 lane 時，一行講清楚該 helper 的行為在新 lane 是否跟舊 lane 一致，不一致的話為什麼可接受（見 `references/plan-format.md` §`Reuse-adequacy`）
 - **Brief item covered**: 引 brief 的 Smallest End State / Decision 對應段落
 
 這個 shape 就是 `subagent-driven-development` 派 3 個 subagent 時消費的形狀。

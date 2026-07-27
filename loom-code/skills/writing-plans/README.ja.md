@@ -36,6 +36,7 @@ brainstorming → brief                            (Discovery 段階)
 - **Context paths**: implementer が読む既存コードのパス（paths-not-content）
 - **Acceptance**: RED テスト名 + GREEN 観察可能条件
 - **Dependencies**: `none` | `Task N completes first` | `Tasks N, M parallel`
+- **Reuse-adequacy**: 既存 helper を別レーンで再利用する時、その振る舞いが元のレーンと一致するか、一致しないならなぜ許容できるかを 1 行で（`references/plan-format.md` §`Reuse-adequacy` 参照）
 - **Brief item covered**: ブリーフの Smallest End State / Decision からの引用 / 参照
 
 この形式が `subagent-driven-development` がタスクごとに 3 サブエージェントを派遣する時に消費する shape。
