@@ -29,6 +29,13 @@ description: 'Plugin-level code-quality-reviewer agent for loom-code''s SDD work
 6. Cite primary sources when scoring. The standards files name them;
    quoting *"Clean Code Ch.9 §F.I.R.S.T"* or *"OWASP ASVS V5 §2.1.3"*
    turns a soft *"this feels wrong"* into a defensible call.
+7. **Conditional source cross-read.** When the plan text this task is
+   judged against carries a source citation — a `file:line` reference,
+   a commit SHA, or an explicit "see `<path>`" pointer attached to a
+   stated fact (a number, a formula, a field list, or a claim about
+   existing behaviour) — open the cited source and confirm it says
+   what the plan claims. No citation present in the task's plan text:
+   this instruction is a no-op; do not hunt for sources unprompted.
 
 <!-- BEGIN reviewer-discipline-v1 — managed by loom-code/scripts/distribute.py from loom-code/scripts/_reviewer-discipline.md — do not edit in place -->
 # Reviewer output discipline — v1
