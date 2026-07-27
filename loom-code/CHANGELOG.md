@@ -41,7 +41,27 @@ Versioning: [Semantic Versioning](https://semver.org/).
   peer contracts: `spec-reviewer` is the natural home but runs at the weakest
   tier, while `code-quality-reviewer` is the one tier-protected on
   architecture tasks and where a spontaneous cross-read already caught a
-  defect in practice.
+  defect in practice. Each clause also states what a failed confirmation
+  **means** (a gap forcing `NEEDS_REVISION`; a finding with a 🔴 severity
+  floor) and where the rule **stops** — a drifted pointer whose named content
+  is still present in the cited document is a citation-hygiene note, not a
+  failed confirmation.
+
+  **Measured, with an uneven result — read before relying on this.** A live
+  cold read established that the cross-read fires at both tiers, and that
+  without the consequence clause the weakest tier performed it correctly and
+  still returned `PASS`. With the clause, the verdict flipped. The later
+  drift-boundary clause improved `sonnet` (it now detects, classifies and
+  records a stale pointer instead of absorbing it silently) and did **not**
+  improve `haiku`. Verdicts stayed correct in every measured cell and no false
+  alarm appeared at either tier, but this is not a rule that behaves
+  identically at both tiers, and n=1 per cell cannot separate the effect from
+  run-to-run variance at `haiku`. Evidence, including a discarded contaminated
+  fixture and the limitations:
+  `docs/loom/dogfood/2026-07-27-plan-fact-grounding-coldread.md`. What 0.39.0
+  does not close is enumerated in `docs/loom/BACKLOG.md` under "Plan-stage fact
+  grounding — what 0.39.0 does NOT close" (most consequentially: a plan that
+  states a false fact with **no** citation is untouched by any of this).
 
 ## [0.38.0] — 2026-07-25 — proactive bba imperative in router-card rule 5
 

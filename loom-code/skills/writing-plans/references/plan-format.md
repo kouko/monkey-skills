@@ -144,7 +144,7 @@ A **behaviour difference** is any case where the helper returns a different valu
 
 ### Stated facts — the pointer-not-copy rule (v0.39.0+)
 
-A plan is a technical SSOT that nothing validates: every downstream station judges the artifact **against the plan**, so a fact the plan states wrongly is implemented faithfully, reviewed as conformant, and only surfaces at close-out. This rule makes the copy unnecessary — it is not extra ceremony on top of it.
+A plan is a technical SSOT that nothing validates: every downstream station judges the artifact **against the plan**, so a fact the plan states wrongly is implemented faithfully, reviewed as conformant, and typically surfaces only at close-out — the most expensive point to catch it. This rule makes the copy unnecessary — it is not extra ceremony on top of it.
 
 **Any verifiable technical assertion in a plan carries a `file:line` citation of the source it came from.** A *verifiable technical assertion* is a sentence whose truth some existing artifact already settles: a number, a formula, a field list, a count, or a claim about existing behaviour (*"the helper already normalizes the ticker"*). Design intent, a preference, or an instruction to the implementer is **not** one and needs no citation. Cite the narrowest form that resolves — `src/renderers/csv.ts:120` or `src/renderers/csv.ts:120-134`.
 

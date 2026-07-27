@@ -19,8 +19,15 @@ number quoted from a probe, an instruction to reuse a specific helper. Every
 downstream station then judges conformance **to the plan**. So when a plan
 states something false, the pipeline confirms the falsehood: the implementer
 implements it faithfully, `spec-reviewer` grades the artifact against it and
-returns PASS, and the defect survives to close-out where only whole-branch
-review or a live dogfood can catch it.
+returns PASS, and the defect typically survives to close-out, where whole-branch
+review or a live dogfood catches it at the most expensive point in the pipeline.
+
+*(Corrected at close-out: an earlier draft said "only" whole-branch review or a
+live dogfood can catch it. That is the same overbroad claim the audit's §5 makes
+and the audit's erratum now retracts — the audit's own §3.7 and §6 record a
+per-task reviewer's spontaneous cross-read and an implementer's pre-work refusal
+catching A-class defects earlier. The tendency is real and is what motivates this
+change; the exclusivity was not.)*
 
 In Boehm's (1979) terms **[2nd]** the pipeline performs **verification** ("are
 we building the product right?" — artifact vs plan) at every station and
@@ -113,11 +120,31 @@ Five edits, ~19 added lines, no new agent, no new script, no new format element:
    enumerated list of amendment kinds that may skip re-review; anything else
    re-reviews.
 
-Coverage against the audit's seven planning-origin defects: items 1+2 prevent or
-detect the wrong-formula and wrong-field-count class; item 3 covers the
-illegal-reuse class; item 4 covers the dropped-obligation class; item 5 covers
-the unreviewed-amendment class. Same coverage as the rejected new-agent design
-at roughly 1/40 the added volume (see Alternatives).
+Coverage against the audit's planning-origin defects — **six** by its §1
+scoreboard's A column (`A×1` + `A×2` + `A×3`), **seven** by its §3.7 dossier,
+which enumerates three A-instances for PR #619 where the scoreboard records two;
+that mismatch is the first item BACKLOG's reconciliation entry leaves unresolved,
+so no total drawn from this audit is trustworthy yet. Against those defects:
+items 1+2 prevent or
+detect the wrong-formula and wrong-field-count class **when the plan cites a
+source for the claim**; item 3 covers the illegal-reuse class; item 4 covers the
+dropped-obligation class; item 5 covers the unreviewed-amendment class. Same
+coverage as the rejected new-agent design at roughly 1/40 the added volume (see
+Alternatives).
+
+**What this does not cover — added at close-out, after whole-branch review held
+this sentence to the branch's own standard.** Item 2 is by explicit design a
+no-op when the plan states a fact with no citation, and nothing checks a plan for
+item 1 compliance — the reviewer checks table stays at 16 and a guard test pins
+that. So an **uncited** false fact passes untouched, which is both the cheaper
+authoring path and the shape of the audit's own §3.8 instance ("15
+fields" asserted three times where the code says 14). The **acceptance-criteria**
+family (two further §3.8 instances) is likewise untouched. Two of the audit's
+planning-origin defects are therefore not closed by this change, on either
+count; the residual is enumerated in
+`docs/loom/BACKLOG.md` under "Plan-stage fact grounding — what 0.39.0 does NOT
+close". Stating the coverage claim unqualified would have reproduced the audit's
+own P4 pattern (§4) inside the fix for P4's siblings.
 
 **Prevention and detection are separable, and only one is model-dependent.**
 Item 1's primary value is *preventive*: a fact that is never restated cannot
