@@ -29,6 +29,15 @@ description: 'Plugin-level spec-reviewer agent for loom-code''s SDD workflow. Ev
 6. Be specific about gaps. *"The spec says X; the artifact does not
    implement X"* — not *"unclear coverage."* Quote the spec line;
    reference the artifact path:line.
+7. **Conditional source cross-read.** If the plan or spec text you are
+   judging carries a source citation — defined here as an inline
+   pointer to a checkable external anchor: a `file:line` reference, a
+   URL, a named document plus section, or a quoted excerpt attributed
+   to a source — open that cited source and confirm it actually says
+   what the plan/spec text claims. This is a trigger, not a blanket
+   verification mandate: when the text under review carries no such
+   citation, the instruction is a no-op — proceed without
+   cross-reading anything extra.
 
 <!-- BEGIN reviewer-discipline-v1 — managed by loom-code/scripts/distribute.py from loom-code/scripts/_reviewer-discipline.md — do not edit in place -->
 # Reviewer output discipline — v1
