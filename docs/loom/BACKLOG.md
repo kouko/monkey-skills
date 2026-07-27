@@ -1900,6 +1900,16 @@ agreement of the per-task + whole-branch reviewers.
       - **Fix when the reconciliation runs**: correcting the audit's three live
         inconsistencies and re-deriving this entry's header tally is one task, not two. Do
         not fix the tally alone — that re-creates the same decoupling in the other direction.
+  11. **`writing-plans/SKILL.md` is at its hard word cap.** This change pushed it over
+      CHK-SKL-010's 4,500-word ceiling (CI caught it at 4,571); rationale prose was trimmed
+      to bring it back under, and it now sits a handful of words below the cap. The next
+      addition to that file **cannot be an append** — it must extract an existing section to
+      `references/` and link it, or trade words out. Note the extraction hazards already
+      recorded in this store: `extract-to-reference-load-bearing-rule` and
+      `extraction-severing-cross-ref-needs-weak-model-test` (a strong-model equivalence gate
+      passes while a weak model drops the severed link, so extraction needs a weak-model
+      cold read). The file is also far above the repo's ~3,750-word soft target, which is a
+      standing condition of this skill rather than something this change introduced.
 
 ## spec-reviewer Rule R3 forbids the cross-read item 7 now requires (OPEN)
 - Status: OPEN

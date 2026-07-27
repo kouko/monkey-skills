@@ -108,19 +108,19 @@ After producing the plan, writing-plans **must** dispatch [`references/plan-docu
 
 The prompt also enforces parallel-dispatch checks — see it for the complete list.
 
-**Pre-patch before dispatch (saves a NEEDS_REVISION round):** Before dispatching the reviewer, Read [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) and scan Check 1 and Check 3. If the plan is missing `Plan-document-reviewer verdict: PENDING` in the top-level header, or if any task is missing a `Brief item covered:` line, patch those fields now. These two omissions are the most common Check-1 / Check-3 failures; pre-patching costs one Read and saves one full round-trip.
+**Pre-patch before dispatch (saves a NEEDS_REVISION round):** Before dispatching the reviewer, Read [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) and scan Check 1 and Check 3. If the plan is missing `Plan-document-reviewer verdict: PENDING` in the top-level header, or if any task is missing a `Brief item covered:` line, patch those fields now. They are the most common Check-1 / Check-3 failures; one Read saves a full round-trip.
 
 If reviewer returns `NEEDS_REVISION`, writing-plans **fixes the plan** and re-runs the reviewer. Up to 2 rounds; if still NEEDS_REVISION after round 2, escalate to user (likely the brief itself needs revisiting).
 
-**Amending a PASS plan:** If the plan is changed after the reviewer returned PASS, re-review is required UNLESS the amendment is one of these three kinds — a **closed list**; nothing outside it qualifies, and an amendment that does not clearly match one of the three is treated as outside the list:
+**Amending a PASS plan:** After PASS, any change re-reviews unless it is one of these three kinds — a **closed list**; an amendment that does not clearly match one of the three is outside the list:
 
-1. **Stamping the verdict** — writing the reviewer's own already-returned verdict, round number, or timestamp into the plan header (e.g., `Plan-document-reviewer verdict: PENDING` → `PASS (2026-07-27, round 3)`). The reviewer already saw and approved the plan; recording that fact changes no technical content.
-2. **Fixing a typo** — correcting spelling, punctuation, or formatting (e.g., a mis-rendered heading, a stray character) with no change to what any field asserts.
-3. **Filling a schema field** — writing a required-but-blank field (e.g., an empty `Brief item covered:`) with a value that is byte-identical to text already present in the brief, the loom-spec change-folder, or elsewhere in the plan (a verbatim copy-paste of a quote, citation, or stable join key) — never a paraphrase, summary, or any wording the author composed, since composing wording is itself the judgment call this list exists to keep out.
+1. **Stamping the verdict** — writing the reviewer's already-returned verdict, round, or timestamp into the header (`PENDING` → `PASS (2026-07-27, round 3)`). No technical content changes.
+2. **Fixing a typo** — spelling, punctuation, or formatting (a mis-rendered heading, a stray character), with no change to what any field asserts.
+3. **Filling a schema field** — writing a required-but-blank field (an empty `Brief item covered:`) with text **byte-identical** to wording already in the brief, the loom-spec change-folder, or the plan — a verbatim copy of a quote, citation, or join key, never a paraphrase or any wording the author composed.
 
-Anything else re-reviews — in particular: any change to a task's Acceptance RED or GREEN, any change to a cited fact (a `file:line`, a number, a claim about existing behaviour), any change to a Dependencies edge, or any change to a task's scope (Description, Module, Files touched).
+Anything else re-reviews — in particular a change to a task's Acceptance RED or GREEN, to a cited fact (a `file:line`, a number, a claim about existing behaviour), to a Dependencies edge, or to a task's scope (Description, Module, Files touched).
 
-When an amendment qualifies, record a one-line skip note in the plan's `Notes` section naming which of the three kinds it is (e.g., "amended Task 2's `Brief item covered` field — filling-a-schema-field, no re-review needed"). A stale PASS without a skip note is a silent gap.
+A qualifying amendment records a one-line skip note in the plan's `Notes` naming which kind (e.g. "Task 2's `Brief item covered` filled — filling a schema field, no re-review"). A stale PASS without a skip note is a silent gap.
 
 ## Kickoff briefing
 
