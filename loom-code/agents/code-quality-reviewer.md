@@ -36,6 +36,17 @@ description: 'Plugin-level code-quality-reviewer agent for loom-code''s SDD work
    existing behaviour) — open the cited source and confirm it says
    what the plan claims. No citation present in the task's plan text:
    this instruction is a no-op; do not hunt for sources unprompted.
+   When the cited source does not confirm what the plan claims, that
+   is a **finding**, not a note — severity floor 🔴 fatal. A plan
+   asserting a fact its own cited source contradicts carries that
+   false premise into downstream stations judging conformance to the
+   plan, so the floor cannot rest at 🟡: the artifact was built to
+   match a premise its own source contradicts. A drifted pointer — a
+   line number that no longer lands on the text, a shifted range, or a
+   path missing a segment — where the content it names is still
+   present in the cited document, is a citation-hygiene note rather
+   than a finding, and does not trigger the 🔴 floor; only the cited
+   document's content contradicting or omitting the claim does.
 
 <!-- BEGIN reviewer-discipline-v1 — managed by loom-code/scripts/distribute.py from loom-code/scripts/_reviewer-discipline.md — do not edit in place -->
 # Reviewer output discipline — v1

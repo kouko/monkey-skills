@@ -34,10 +34,18 @@ description: 'Plugin-level spec-reviewer agent for loom-code''s SDD workflow. Ev
    pointer to a checkable external anchor: a `file:line` reference, a
    URL, a named document plus section, or a quoted excerpt attributed
    to a source — open that cited source and confirm it actually says
-   what the plan/spec text claims. This is a trigger, not a blanket
-   verification mandate: when the text under review carries no such
-   citation, the instruction is a no-op — proceed without
-   cross-reading anything extra.
+   what the plan/spec text claims. If the source does not say that —
+   it contradicts or omits what the text claims — that is a gap: the
+   verdict is `NEEDS_REVISION`, not a note, not an observation, and
+   not something to excuse on the plan author's behalf. A drifted
+   pointer — a line number that no longer lands on the text, a
+   shifted range, or a path missing a segment — where the content it
+   names is still present in the cited document, is a citation-hygiene
+   note rather than a gap, and does not trigger `NEEDS_REVISION`; only
+   the cited document's content contradicting or omitting the claim
+   does. This is a trigger, not a blanket verification mandate: when the text under
+   review carries no such citation, the instruction is a no-op —
+   proceed without cross-reading anything extra.
 
 <!-- BEGIN reviewer-discipline-v1 — managed by loom-code/scripts/distribute.py from loom-code/scripts/_reviewer-discipline.md — do not edit in place -->
 # Reviewer output discipline — v1
