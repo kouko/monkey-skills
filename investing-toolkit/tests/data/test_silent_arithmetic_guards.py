@@ -68,12 +68,26 @@ def test_week_quarter_offsets_stay_pinned_to_both_observed_filer_families():
     from it (the Task-2 round-2 finding cited at the constant). Nothing pinned
     the derived result, so a week count could change silently.
 
-    NOTE on what this can and cannot catch: only elements 2 and 3 of each
-    (Q1, Q2, Q3, Q4) tuple change the derived offsets. Q1's own length is
-    never read, and a +1 on Q2 collides into an offset another family already
-    contributes (16+12+13 = 41 = 17+12+12). Those two are equivalent mutants —
-    unkillable by any test, and recorded here so a future reader does not
-    mistake them for a coverage gap.
+    NOTE on what this can and cannot catch, enumerated exhaustively over all
+    32 single-element ±1 mutations rather than reasoned from one row:
+
+      - **Element 0 (Q1's own length) is equivalent in all four structures.**
+        Q1's length is never read: the offsets are Q3 = Q4, Q2 = Q4 + Q3,
+        Q1 = Q4 + Q3 + Q2.
+      - **Element 1 (Q2) is equivalent in only TWO of the four** — this test
+        kills it in `(13,13,13,13)` and `(12,12,12,17)`. A mutation both ADDS
+        a new offset and REMOVES that structure's original contribution, and
+        those two structures are the sole contributors of Q1 offsets 39 and 41
+        respectively, so the derived set changes. In `(13,13,13,14)` and
+        `(12,12,12,16)` the new value collides with an offset another family
+        already supplies AND the old value is likewise still supplied, so the
+        set is unchanged.
+      - Elements 2 and 3 always change the offsets.
+
+    Recorded at this precision because an earlier revision of this docstring
+    generalised the single row it had tested to "each tuple" and declared four
+    unkillable mutants where there are five. A reader who dismissed a future
+    survivor at :4044 or :4047 on that basis would be dismissing a real one.
     """
     offsets = sec._compute_week_quarter_offsets(sec._WEEK_QUARTER_STRUCTURES)
 
@@ -86,6 +100,12 @@ def test_week_quarter_offsets_stay_pinned_to_both_observed_filer_families():
 
 # ---------------------------------------------------------------------------
 # Mutant: exhibit_tables.py:156  `occupied.add((r + dr, c + dc))` -> `c - dc`
+#
+# ONLY the third test below kills that mutant. The first two are regression
+# guards for `_anchor_cells` generally (five other single-line mutants of the
+# function kill them) but they CANNOT discriminate the reservation's
+# direction — see the third test's docstring for why. Stated here, at the
+# header a scanner reads, so neither is mistaken for closing this gap.
 # ---------------------------------------------------------------------------
 
 def _cell(text, colspan=1, rowspan=1):

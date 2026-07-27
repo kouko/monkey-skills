@@ -11,9 +11,15 @@ a December fiscal-year-end under Q3 and a March one under Q1, so a
 company's quarterly series is silently mis-binned by calendar quarter while
 every figure in it is correct.
 
-Non-December fiscal years are the point of the parametrisation: this repo's
-own verification roster carries AAPL(Sep), MSFT(Jun), NVDA(Jan) and others
-precisely because calendar-quarter classification is where they diverge.
+Which test holds which mutant, measured rather than assumed: under the
+`// 3 -> // 4` mutation ONLY the December row fails — `(9-1)//4+1 = 3`,
+`(6-1)//4+1 = 2` and `(1-1)//4+1 = 1` all still match their expected quarter.
+`test_every_month_maps_into_exactly_four_quarters` is the guard that holds the
+divisor in general. The non-December rows are not decoration: they carry the
+fiscal-year shapes this repo's verification roster exists for — AAPL(Sep),
+MSFT(Jun), NVDA(Jan) — and each fails under other single-line mutations of
+this function (e.g. dropping the `+ 1`), but they are regression guards for
+the labels rather than the killers of the divisor mutant.
 """
 from __future__ import annotations
 
