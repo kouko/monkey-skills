@@ -1717,3 +1717,87 @@ agreement of the per-task + whole-branch reviewers.
   fetches one 10-K (~3 comparative years). The full ~16-year live history needs fetching + stitching
   multiple filings across eras (the offline era-stitching + declared-break machinery already handles
   the cross-era join; only the multi-filing FETCH is missing). Unlocks the deep live trend.
+
+## Phase Containment Effectiveness — success measure for plan-stage fact grounding (OPEN)
+- Status: OPEN
+- Start: evaluate at the close-out (whole-branch review and/or live dogfood) of each
+  investing-toolkit arc that ships AFTER the plan-stage fact-grounding change
+  (`docs/loom/plans/2026-07-27-plan-stage-fact-grounding.md`) lands. The baseline cannot be
+  computed yet — see the Baseline note below and the reconciliation entry that follows this
+  one.
+- Origin: `docs/loom/specs/2026-07-27-plan-stage-fact-grounding.md` Open Question 1 —
+  "How is success measured? … Without this the change ships unfalsifiable." Plan Task 9
+  (`docs/loom/plans/2026-07-27-plan-stage-fact-grounding.md:452-455`) fixes the measure's
+  cheapest viable form. Evidence: `docs/loom/audits/2026-07-27-investing-arc-defect-provenance-audit.md`
+  §2 (root-cause taxonomy) and §3 (arc-by-arc dossier).
+- What: **Phase Containment Effectiveness (PCE)** — the share of planning-origin defects
+  caught BEFORE close-out (whole-branch review or live dogfood) rather than AT close-out.
+  **Planning-origin defect** (the audit's Category A, "計畫事實錯"), defined inline so a
+  future reader can classify without re-reading the audit: a defect where the PLAN ITSELF
+  asserted a false technical claim — a wrong formula/identity, an instruction to reuse a
+  semantically incompatible helper, a cited measurement that doesn't support its conclusion,
+  a field count that doesn't match the code, or a brief requirement that never made it into a
+  task. This is distinct from the audit's Category B (tests that pass without discriminating
+  power — fixtures that coincidentally mask a bug) and Category C (ordinary
+  implementation-vs-plan mismatches); PCE counts Category A only, because A is the one that
+  survives every downstream conformance check (spec-reviewer checks output against plan, and
+  the plan is the thing that's wrong).
+  - **Cheap classification rule (deliberately narrow)**: for each confirmed Category-A
+    instance, classify only whether it reached close-out or was caught before close-out — a
+    binary call. Do NOT attribute the earlier catches to a specific stage (plan review vs.
+    per-task review vs. implementation-time refusal, etc.) — that per-instance stage
+    attribution requires forensic tracing of each defect's exact catch point across every
+    task, which is not the cheap form this measure is supposed to take. It is also not this
+    measure's job: PCE only needs to answer whether close-out is where the defect surfaced,
+    not which earlier mechanism would have caught it. Do NOT attempt this classification for
+    Category B or C defects either; they are cheap to catch regardless of category, so
+    classifying them buys nothing toward this measure.
+  - **Formula**: PCE = (confirmed planning-origin defects caught before close-out) / (total
+    confirmed planning-origin defects).
+  - **Arcs to evaluate over**: seven already-shipped investing-toolkit arcs — KPI tearsheet
+    (PR #605), TW 背書保證 iXBRL (PR #610), US XBRL→store producer (PR #611), TW store
+    producer (PR #612), 公司總營收兩線 (PR #616), kpi_id injective (PR #618), US as-reported
+    線 (PR #619) — plus one **in-progress** arc, the as-filed reconstruction (branch
+    `feat-sec-submissions-pagination`), whose audit coverage is explicitly incomplete
+    (`audit.md:4`, `audit.md:28` — task-level PASS/PASS_WITH_NOTES counts are unfilled for
+    this arc, only the NEEDS_REVISION count is known, because it hasn't shipped).
+  - **Baseline: cannot be computed from the current audit.** The source document
+    (`docs/loom/audits/2026-07-27-investing-arc-defect-provenance-audit.md`) contains four
+    internally inconsistent claims about the same Category-A instances, so any count or
+    close-out/pre-close-out split drawn from it right now would be unreliable — see the
+    reconciliation entry immediately below for the specific inconsistencies and their
+    citations. Do not compute or assert a PCE number until that entry is resolved.
+
+## investing-toolkit arc defect-provenance audit — internal inconsistencies need reconciliation (OPEN)
+- Status: OPEN
+- Start: before computing the Phase Containment Effectiveness baseline (entry above) — that
+  measure depends on a trustworthy Category-A count and close-out determination from this
+  document.
+- Origin: found while writing the Phase Containment Effectiveness BACKLOG entry (Task 9,
+  `docs/loom/plans/2026-07-27-plan-stage-fact-grounding.md:452-455`), round 3, after a prior
+  round's attempt to compute a baseline from this audit produced a four-bucket per-instance
+  attribution that both reviewers rejected as out of scope. Re-checking the source turned up
+  the inconsistencies below.
+- What: `docs/loom/audits/2026-07-27-investing-arc-defect-provenance-audit.md` makes four
+  internally inconsistent claims about its own Category-A ("計畫事實錯") findings for PR #619
+  and the audit's overall detectability claim:
+  1. **Scoreboard count vs. dossier count mismatch.** §1's scoreboard (`audit.md:27`) reports
+     PR #619 as `A×2`; §3.7 enumerates three A-instances: A-1 (`audit.md:89-90`), A-2
+     (`audit.md:92-93`), A-3 (`audit.md:95`).
+  2. **"Only detectable at close-out" contradicted by the audit's own dossier.** §5
+     (`audit.md:134`, "A 類的偵測面只有兩個，都在收尾") asserts A-class defects are
+     structurally detectable ONLY at close-out; §3.7 (`audit.md:90`, a quality reviewer's
+     spontaneous cross-read at per-task review), §3.8 (`audit.md:101`, an implementer's
+     task-level refusal before any code was written), and §6 (`audit.md:144`, citing that
+     refusal as a positive counterexample) all document earlier catches.
+  3. **"Caught before merge" contradicted by a shipped defect.** §6 (`audit.md:145`) states
+     every A-defect was caught before merge; A-3 (`audit.md:95`) states the wrong text
+     ("GOOGL from 2014, DIS from 2018" in `analysis-kpi/SKILL.md:200-201`) shipped — i.e. was
+     NOT caught before merge.
+  4. **Self-contradicting count within one sentence.** §3.8 (`audit.md:101`) says "A 類三連"
+     (three in a row) and "回報四項量測" (reports four measurements) in the same sentence.
+  - **Why it matters**: the Phase Containment Effectiveness measure (entry above) needs a
+    reliable Category-A count and a reliable close-out/pre-close-out split per confirmed
+    instance. None of the four items above can be trusted as-is. Reconcile by re-reading the
+    underlying session transcripts this audit was extracted from (`audit.md:5`) and correcting
+    the audit's prose, then recompute the PCE baseline from the corrected document.
