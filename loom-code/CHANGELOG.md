@@ -5,6 +5,44 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.39.0] — 2026-07-27 — plan-stage fact grounding
+
+### Changed
+
+- **Pointer-not-copy rule for stated facts** (`writing-plans/references/plan-format.md`):
+  a plan may no longer restate a verifiable technical fact — a number, a
+  formula, a field list, a claim about existing behaviour — that it could
+  instead cite. Every such assertion now carries a `file:line` citation, or is
+  marked an explicit `(unverified assumption — …)`; a fact with no citable
+  source must be produced first, as its own task. A restated formula drifts
+  from its source while every test downstream stays green — this makes the
+  copy unnecessary rather than adding a detection step.
+- **Per-task `Reuse-adequacy` declaration** (`writing-plans/references/plan-format.md`):
+  a task that instructs the implementer to reuse an existing helper across a
+  new lane now states, in one line, whether that helper's behaviour in the new
+  lane matches the old one, and why any difference is acceptable. Motivated by
+  a case where a reused selector's semantics silently diverged across lanes
+  and 1165 passing tests never crossed the seam to notice.
+- **Check 8 sweeps the brief for uncovered obligations** (`writing-plans/references/plan-document-reviewer-prompt.md`):
+  amended in place (no renumbering — other files cite check numbers
+  literally) so the reviewer also greps the brief for obligation sentences and
+  lists any not covered by a task, instead of only mapping the Smallest End
+  State and Decision sections. An obligation written elsewhere in a brief
+  previously escaped legitimately.
+- **Closed list replaces the self-judged post-PASS skip note** (`writing-plans/SKILL.md`):
+  amending a plan after it PASSed review no longer skips re-review on the
+  author's own "additive and schema-safe" say-so. An enumerated, exhaustive
+  list of amendment kinds may skip re-review; anything else re-reviews.
+- **Conditional source cross-read in `spec-reviewer.md` and `code-quality-reviewer.md`**:
+  when the plan text a task is judged against carries a source citation, the
+  reviewer now opens the cited source and confirms it says what the plan
+  claims — worded as a triggered condition with an explicit no-op when no
+  citation is present, not a blanket verification mandate. Shipped in both
+  peer contracts: `spec-reviewer` is the natural home but runs at the weakest
+  tier, while `code-quality-reviewer` is the one tier-protected on
+  architecture tasks and where a spontaneous cross-read already caught a
+  defect in practice.
+
 ## [0.38.0] — 2026-07-25 — proactive bba imperative in router-card rule 5
 
 ### Changed
