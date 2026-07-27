@@ -508,20 +508,31 @@
 - Origin: dogfood of `pack.py --pack reconstruct`. `XOM` returns
   `requested: 0 / succeeded: 0 / failed: 0`, `failed_items: []`,
   `_status: "ok"`, exit 0, in 0.1 s — a clean success over zero filings.
-- Cause, measured: SEC's own `company_tickers.json` maps `XOM` to CIK
-  **2115436** ("ExxonMobil Holdings Corp"), which carries 26 filings and
-  **zero 10-Ks**; the 7 real 10-Ks sit under the predecessor CIK **34088**.
-  `resolve_cik` succeeds, `list_filings` returns an empty list, the loop never
-  runs, and `pack_reconstruct` reports the empty result as healthy. The defect
-  is ours: `requested == 0` is not distinguished from a completed run.
-- **Not a single case.** `BLK` is the same shape — its CIK holds 2 10-Ks,
-  oldest 2026-02, i.e. a 2024/25 re-registration. 2 of 71 roster filers as of
-  2026-07-27, and the population grows with every holding-company
-  reorganisation.
-- Scope note: `statement-backfill` already fails loud here ("a ticker whose
-  resolved CIK carries no statement history is a loud typed error with no
-  `facts` key", 2.38.0) — so the two US lanes DISAGREE on the same input, and
-  the reconstruct lane is the one that lies. Fixing the guard alone is cheap;
+- Cause, measured 2026-07-27 with the post-#621 merged read: SEC's own
+  `company_tickers.json` maps `XOM` to CIK **2115436** ("ExxonMobil Holdings
+  Corp"), which carries 26 filings (S-8 POS ×23, 8-K, POSASR, 8-K12B) and
+  **zero 10-Ks**. The predecessor CIK **34088** carries 3,552 filings and
+  **31 10-Ks spanning 1994-03-11 to 2026-02-18**. `resolve_cik` succeeds,
+  `list_filings` returns an empty list, the loop never runs, and
+  `pack_reconstruct` reports the empty result as healthy. The defect is ours:
+  `requested == 0` is not distinguished from a completed run.
+- **Two populations, not one — do not conflate them.** Only **1 of 71** roster
+  filers exhibits THIS defect (`silent_empty`: XOM alone). `BLK` is the
+  neighbouring shape: its current CIK 2012383 carries 5,049 filings but only
+  **2 10-Ks, 2025-02-25 and 2026-02-25**, so it returns a truthful-but-shallow
+  4-year history rather than a silent nothing. Both stem from the same cause
+  (a re-registration that leaves the history under a predecessor CIK) and the
+  population grows with every such reorganisation, but only XOM's failure mode
+  is a lie.
+- Scope note: `statement-backfill` already fails loud here — verified from
+  source, not from the CHANGELOG sentence: `sec_edgar_client.py:3980-3990`
+  returns `_statement_backfill_error_slot` when the `us_gaap` concept set is
+  empty, and `pack_us.py:1166-1171` passes it through with no `facts` key,
+  while `pack_reconstruct` (`pack_us.py:1539-1544`) iterates an empty
+  `list_filings` and reports ok. **The two US lanes genuinely disagree on the
+  same ticker** — but note their guards trip on DIFFERENT conditions (backfill
+  on "zero us-gaap concepts", reconstruct on "zero 10-K filings"); they agree
+  about XOM only because both happen to hold. Fixing the guard is cheap;
   deciding whether to STITCH across a predecessor CIK is a separate, larger
   question that 2.38.0 explicitly declined ("never stitched from a predecessor
   CIK") and this entry does not reopen.
@@ -538,47 +549,80 @@
   `capex` in the same payload correctly carry `not_presented`.
 - The data is present: JPM's income statement DOES carry
   `us-gaap_RevenuesNetOfInterestExpense` labelled "Total net revenue". The
-  structural rule declines it — `resolution_report` shows `ambiguous_total`
-  ×8 and every calculation `parent` is `None` on that statement, so no
-  part-whole relation is declarable. **Declining is correct** (user decision
-  「甲」, 2026-07-26: a visible typed gap, never a chain fallback).
-- The defect is the SHAPE of the decline. The arc's own contract is that every
-  empty cell is typed (`value` / `not_presented` / `not_tagged` / `derived`);
-  a field with no periods is untyped absence, and a consumer iterating periods
-  sees nothing rather than "present but unresolvable". A fifth state, or
-  `not_presented` with a reason, would close it.
-- Blast radius: the whole banking sector, which PR #621 just moved from 3
-  reachable annual periods to 10. The store lane is unaffected — JPM's
-  `revenue` has 19 years there (2007-2025, verified against SEC
-  `companyconcept`), so this is an as-filed-lane presentation gap, not a data
-  loss.
-- Start: READY, but pair it with the `ambiguous_total` census across the
-  roster first — if banks are the only shape that hits it, the fix is narrower
-  than a new cell state.
+  structural rule declines it because `revenue_totals` finds **three surviving
+  candidates** (`InvestmentBankingRevenue`, `PrincipalTransactionsRevenue`,
+  `RevenuesNetOfInterestExpense`) and refuses to pick when the count ≠ 1
+  (`kpi_spine_view.py:1102-1105`); the payload's `verification` section reports
+  `ambiguous_total` ×8. **Declining is correct** (user decision 「甲」,
+  2026-07-26: a visible typed gap, never a chain fallback).
+- **The calculation tree is NOT the problem** — recorded because the first
+  draft of this entry said it was, and that would have sent someone hunting a
+  missing linkbase: 195 of 239 income-statement lines across the 8 filings
+  carry a `calculation_parent`, and `RevenuesNetOfInterestExpense` is itself
+  the declared parent of `NoninterestIncome`.
+- The defect is the SHAPE of the decline, and it is narrower than "no typing":
+  the payload DOES name the candidates in an `unresolved` key
+  (`kpi_spine_view.py:1210-1214`, deliberately — "the typed gap: the candidates
+  are named"). What is missing is per-PERIOD typing: a consumer iterating
+  `periods` gets an empty dict and must know to look elsewhere, while every
+  other empty field hands it `not_presented` in the same loop. A fifth cell
+  state, or `not_presented` carrying the reason, would close it.
+- Blast radius, measured from `post/sweep.jsonl` rather than assumed — **3 of
+  71**, and it is not "the banking sector": `ambiguous_total` fires for 5
+  filers (BAC, BX, C, JPM, WFC) but BAC and BX still RESOLVE revenue, so the
+  exact defect (unresolved revenue, zero fill, via `ambiguous_total`) is JPM,
+  WFC and C. Separately, `revenue_concept: null` covers 7 filers including two
+  NON-banks (MO, NOW), so the null-revenue population and the bank population
+  are different sets. PR #621 moved JPM/BAC/C from 3 annual periods to 10 and
+  WFC from 4 to 12.
+- The store lane is unaffected: JPM's `revenue` spans 19 years there
+  (2007-2025 per `JPM_spine.json`), so this is an as-filed-lane presentation
+  gap, not data loss.
+- Start: READY. The roster census this would normally need is already in
+  `post/sweep.jsonl` (the `ambiguous_total` and `revenue_concept: null`
+  counts above came from it), so the open question is only whether to add a
+  cell state or to reuse `not_presented` with a reason.
 
 ## investing-toolkit — store-lane revenue covers 10 years where its sibling fields cover 19 (OPEN)
 
-- Status: OPEN, **UNDIAGNOSED** — recorded as an observation, not a diagnosis.
-- Origin: post-#621 end-to-end run, 2026-07-27. `KO` through
-  `statement-backfill → kpi_us_statements_ingest → kpi_store dump →
-  kpi_spine_view derive`: `revenue` covers 2016-2025 (10 years) while
-  `net_income`, `operating_cash_flow`, `capex` and eight more cover 2007-2025
-  (19 years) and `total_equity`/`cash` reach 2006 (20 years). The store holds
+- Status: OPEN, **DIAGNOSED** — filed 2026-07-27 as an undiagnosed observation
+  and diagnosed the same day by the entry's own fact-check; the cause was
+  reachable from a payload this session already held.
+- Origin: post-#621 end-to-end run. `KO` through `statement-backfill →
+  kpi_us_statements_ingest → kpi_store dump → kpi_spine_view derive`:
+  `revenue` covers 2016-2025 (10 years) while **eight** fields cover 2007-2025
+  (19 years: gross_profit, operating_income, net_income, eps_basic, and the
+  cash-flow trio plus capex), `pretax_income` and `total_assets` cover
+  2008-2025 (18), and `total_equity`/`cash` reach 2006 (20).
+  `total_liabilities` is absent from KO's store lane entirely. The store holds
   exactly one revenue-family series for KO, `us-gaap:Revenues`.
-- Contrast: `JPM`'s store-lane `revenue` covers the full 19 years, so this is
-  filer-shaped, not a lane-wide cap.
-- Hypothesis NOT verified: KO's ASC 606 concept transition (to
-  `RevenueFromContractWithCustomerExcludingAssessedTax`) may leave the older
-  `Revenues` rows outside whatever source-concept set `statement-backfill`
-  walks. Do not act on this without measuring it — the point of filing the
-  entry is that the cause is unknown.
+- Contrast: `JPM`'s store lane carries TWO revenue-family series
+  (`Revenues` 19 years, `RevenuesNetOfInterestExpense` 13) and the view
+  resolves 19 — so this is filer-shaped, not a lane-wide cap.
+- **Cause, measured** from the cached companyfacts payload
+  (`facts_0000021344.json`): KO's 2007-2017 revenue is tagged
+  `us-gaap:SalesRevenueGoodsNet` — 27 10-K rows — and that concept is **not a
+  member of `_STATEMENT_SPINE_CHAINS["revenue"]`**, which holds exactly five
+  entries (`Revenues`, `RevenuesNetOfInterestExpense`,
+  `RevenueFromContractWithCustomer{Excluding,Including}AssessedTax`,
+  `SalesRevenueNet`). KO carries ZERO rows of the ASC 606 concept, so the
+  originally-filed hypothesis — an ASC 606 transition stranding old rows — had
+  the right shape and the wrong concept. `coverage.skipped_rows` confirms no
+  pre-2016 `Revenues` row was fetched-then-dropped.
 - Why it matters: revenue is the first field anyone reads on a trend, and this
   is the lane that otherwise reaches 19-20 years. A 10-year revenue series
-  beside a 19-year net-income series reads as a data gap in the company, not
-  in the tool.
-- Start: measure first — for each roster filer, per spine field, the store
-  lane's year span, and see how many filers show a revenue span shorter than
-  their own median field span.
+  beside a 19-year net-income series reads as a gap in the company, not in the
+  tool. Note this is the SAME failure mode PR #620 fixed for the as-filed lane
+  (a fixed concept chain cannot see a concept nobody listed) surviving in the
+  store lane, which #620 did not touch — and the concept is one #620's own
+  brief NAMED: `docs/loom/specs/2026-07-26-as-filed-statement-reconstruction.md`
+  lists "pharma/beverage (`SalesRevenueGoodsNet`: MRK, PFE, KO)" among the
+  sector-shaped revenue blanks. The as-filed lane stopped depending on the
+  chain; the store lane still does, and its chain still does not list the
+  concept the brief had already identified for this exact filer.
+- Start: READY. Smallest end state is a chain-membership audit — for each
+  roster filer, which revenue-family concepts appear in its companyfacts and
+  which of those the chain lists — not a new mechanism.
 
 ## investing-toolkit — full three-statement + management-KPI history in kpi_store (OPEN)
 
