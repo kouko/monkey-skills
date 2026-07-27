@@ -133,6 +133,18 @@ Each bullet declares **category** + **specific name / identifier** + **grounding
 
 Per-task `code-quality-reviewer.md` D7 enforces that any external call in the task's diff carries a grounding cite. Whole-branch `code-reviewer.md` D7 additionally checks for cross-task surface-consistency conflicts. The `spec-consistency.md` checklist (`CHK-SPEC-008`) requires this field's presence when the task description / `Files touched` reference any of the five surface categories.
 
+### Stated facts — the pointer-not-copy rule (v0.39.0+)
+
+A plan is a technical SSOT that nothing validates: every downstream station judges the artifact **against the plan**, so a fact the plan states wrongly is implemented faithfully, reviewed as conformant, and only surfaces at close-out. This rule makes the copy unnecessary — it is not extra ceremony on top of it.
+
+**Any verifiable technical assertion in a plan carries a `file:line` citation of the source it came from.** A *verifiable technical assertion* is a sentence whose truth some existing artifact already settles: a number, a formula, a field list, a count, or a claim about existing behaviour (*"the helper already normalizes the ticker"*). Design intent, a preference, or an instruction to the implementer is **not** one and needs no citation. Cite the narrowest form that resolves — `src/renderers/csv.ts:120` or `src/renderers/csv.ts:120-134`.
+
+The citation **replaces** the copy: point at the formula, do not retype it. A retyped formula drifts from its source while every test stays green.
+
+**Escape — mark it, do not omit it.** An assertion whose source you have not opened is written as an explicit **unverified assumption**: a statement the author has *not checked* against any artifact, labelled inline so a reader never mistakes it for an established fact. Write it as `(unverified assumption — <what would settle it>)`. An unmarked guess reads identically to a verified fact; the label is the whole remedy.
+
+**No citable source → produce the source first, as a task.** When the fact is load-bearing and nothing in the repo settles it, the source has to be **produced** — a probe, a measurement, a test. That is a **task in this plan, not a sentence in it**: give it its own task block with its own RED / GREEN, and have the tasks that rely on the fact declare `Dependencies` on it.
+
 ### Optional sections
 
 ```markdown
