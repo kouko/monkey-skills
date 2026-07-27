@@ -502,6 +502,84 @@
   (`capture_companyconcept_form_domain.py`) has no fetch loop or cache. The
   reference does not resolve; fix wording on next touch.
 
+## investing-toolkit — a ticker resolving to a re-registered holding company returns nothing, successfully (OPEN)
+
+- Status: OPEN. Filed 2026-07-27 from the 71-filer live sweep run for PR #621.
+- Origin: dogfood of `pack.py --pack reconstruct`. `XOM` returns
+  `requested: 0 / succeeded: 0 / failed: 0`, `failed_items: []`,
+  `_status: "ok"`, exit 0, in 0.1 s — a clean success over zero filings.
+- Cause, measured: SEC's own `company_tickers.json` maps `XOM` to CIK
+  **2115436** ("ExxonMobil Holdings Corp"), which carries 26 filings and
+  **zero 10-Ks**; the 7 real 10-Ks sit under the predecessor CIK **34088**.
+  `resolve_cik` succeeds, `list_filings` returns an empty list, the loop never
+  runs, and `pack_reconstruct` reports the empty result as healthy. The defect
+  is ours: `requested == 0` is not distinguished from a completed run.
+- **Not a single case.** `BLK` is the same shape — its CIK holds 2 10-Ks,
+  oldest 2026-02, i.e. a 2024/25 re-registration. 2 of 71 roster filers as of
+  2026-07-27, and the population grows with every holding-company
+  reorganisation.
+- Scope note: `statement-backfill` already fails loud here ("a ticker whose
+  resolved CIK carries no statement history is a loud typed error with no
+  `facts` key", 2.38.0) — so the two US lanes DISAGREE on the same input, and
+  the reconstruct lane is the one that lies. Fixing the guard alone is cheap;
+  deciding whether to STITCH across a predecessor CIK is a separate, larger
+  question that 2.38.0 explicitly declined ("never stitched from a predecessor
+  CIK") and this entry does not reopen.
+- Start: READY. Smallest end state is a typed error when a resolved CIK yields
+  zero filings of the requested form, naming the CIK so the reader can see the
+  entity is wrong rather than the history empty.
+
+## investing-toolkit — the as-filed lane returns revenue with no cells at all for banks (OPEN)
+
+- Status: OPEN. Filed 2026-07-27 from the post-#621 end-to-end run.
+- Origin: `pack.py --pack reconstruct --ticker JPM` →
+  `kpi_spine_view derive-as-filed`. The `revenue` field comes back with
+  **zero periods** — not one typed cell — while `gross_profit`, `cash` and
+  `capex` in the same payload correctly carry `not_presented`.
+- The data is present: JPM's income statement DOES carry
+  `us-gaap_RevenuesNetOfInterestExpense` labelled "Total net revenue". The
+  structural rule declines it — `resolution_report` shows `ambiguous_total`
+  ×8 and every calculation `parent` is `None` on that statement, so no
+  part-whole relation is declarable. **Declining is correct** (user decision
+  「甲」, 2026-07-26: a visible typed gap, never a chain fallback).
+- The defect is the SHAPE of the decline. The arc's own contract is that every
+  empty cell is typed (`value` / `not_presented` / `not_tagged` / `derived`);
+  a field with no periods is untyped absence, and a consumer iterating periods
+  sees nothing rather than "present but unresolvable". A fifth state, or
+  `not_presented` with a reason, would close it.
+- Blast radius: the whole banking sector, which PR #621 just moved from 3
+  reachable annual periods to 10. The store lane is unaffected — JPM's
+  `revenue` has 19 years there (2007-2025, verified against SEC
+  `companyconcept`), so this is an as-filed-lane presentation gap, not a data
+  loss.
+- Start: READY, but pair it with the `ambiguous_total` census across the
+  roster first — if banks are the only shape that hits it, the fix is narrower
+  than a new cell state.
+
+## investing-toolkit — store-lane revenue covers 10 years where its sibling fields cover 19 (OPEN)
+
+- Status: OPEN, **UNDIAGNOSED** — recorded as an observation, not a diagnosis.
+- Origin: post-#621 end-to-end run, 2026-07-27. `KO` through
+  `statement-backfill → kpi_us_statements_ingest → kpi_store dump →
+  kpi_spine_view derive`: `revenue` covers 2016-2025 (10 years) while
+  `net_income`, `operating_cash_flow`, `capex` and eight more cover 2007-2025
+  (19 years) and `total_equity`/`cash` reach 2006 (20 years). The store holds
+  exactly one revenue-family series for KO, `us-gaap:Revenues`.
+- Contrast: `JPM`'s store-lane `revenue` covers the full 19 years, so this is
+  filer-shaped, not a lane-wide cap.
+- Hypothesis NOT verified: KO's ASC 606 concept transition (to
+  `RevenueFromContractWithCustomerExcludingAssessedTax`) may leave the older
+  `Revenues` rows outside whatever source-concept set `statement-backfill`
+  walks. Do not act on this without measuring it — the point of filing the
+  entry is that the cause is unknown.
+- Why it matters: revenue is the first field anyone reads on a trend, and this
+  is the lane that otherwise reaches 19-20 years. A 10-year revenue series
+  beside a 19-year net-income series reads as a data gap in the company, not
+  in the tool.
+- Start: measure first — for each roster filer, per spine field, the store
+  lane's year span, and see how many filers show a revenue span shorter than
+  their own median field span.
+
 ## investing-toolkit — full three-statement + management-KPI history in kpi_store (OPEN)
 
 - Status: OPEN — the destination arc the longitudinal work has been building
