@@ -71,16 +71,19 @@ that a decade of trend analysis needs.
   turn that into wrong data rather than an error, which would have reached
   `pack_reconstruct` as the wrong document filed under the wrong year.
 
-- **`--no-cache` reports what it removed**, including zero. A ticker the map
-  cannot resolve busts nothing, and a silent no-op there is indistinguishable
-  from a successful bust — the failure this flag exists to rule out.
+- **`--no-cache` reports what it removed**, including zero, on both its
+  branches. A ticker the map cannot resolve busts nothing, and a silent no-op
+  there is indistinguishable from a successful bust — the failure this flag
+  exists to rule out. An unreadable ticker map is reported as its own cause
+  rather than as an unknown ticker, so the operator is pointed at SEC and not
+  at their own input.
 
-Grounding for the four above: a whole-branch review's mutation pass, which
-found 5 of 9 mutants of the merge surviving the full suite — including
-deleting the padding whose own docstring described behaviour the code did not
-have. The suite now kills **8 of 8 distinct mutants**, none surviving. Live
-re-verification after the fixes: JPM cold 8/8 filings, 10 annual periods, and
-70 cache entries removed by one `bust_cik_caches` call.
+Grounding for the four above: three whole-branch review rounds, each with a
+mutation pass. The first found 5 of 9 mutants of the merge surviving the full
+suite — including deleting the padding whose own docstring described behaviour
+the code did not have. The suite now kills **12 of 12 distinct mutants**, none
+surviving. Live re-verification after the fixes: JPM cold 8/8 filings, 10
+annual periods, and 70 cache entries removed by one `bust_cik_caches` call.
 
 ### Known limits
 

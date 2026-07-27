@@ -502,6 +502,110 @@ def test_cache_bust_clears_the_merged_entry_and_every_archive_page(responder):
     assert survivors == [], f"archive pages survived the bust: {survivors}"
 
 
+# ---------------------------------------------------------------------------
+# 9. `--no-cache` REPORTS what it removed.
+#
+# `bust_cik_caches` is tested directly above, one layer below the CLI. These
+# drive `main()` itself, because the reported count is a user-facing guarantee
+# in the CHANGELOG and the two `_log` calls that make it true were deletable
+# with the whole suite staying green.
+# ---------------------------------------------------------------------------
+
+def _run_main(monkeypatch, argv, ticker_map):
+    """Drive `main()` for its `--no-cache` block only, then stop before the
+    action runs. `--action cik` is the cheapest required action; `action_cik`
+    is stubbed so nothing reaches the network, and `SystemExit` is expected
+    because `main()` always exits after printing its result."""
+    monkeypatch.setattr(sec, "load_ticker_map", lambda: ticker_map)
+    monkeypatch.setattr(sec, "action_cik", lambda t: {"ticker": t, "cik": CIK})
+    monkeypatch.setattr(sys, "argv", ["sec_edgar_client.py", *argv])
+    monkeypatch.setattr(sec, "_QUIET", False)
+    with pytest.raises(SystemExit):
+        sec.main()
+
+
+def test_no_cache_reports_how_many_entries_it_removed(
+    monkeypatch, capsys, responder
+):
+    """The count is the whole point: without it an operator cannot tell a bust
+    that cleared 70 files from one that cleared nothing."""
+    page_name = f"CIK{CIK:010d}-submissions-001.json"
+    responder.routes[_url_main()] = _main_doc(
+        _rows(("10-K", "2026-01-29")),
+        [{"name": page_name, "filingCount": 1,
+          "filingFrom": "2025-01-31", "filingTo": "2025-01-31"}],
+    )
+    responder.routes[_url_page(page_name)] = _rows(("10-K", "2025-01-31"))
+    sec.fetch_submissions(CIK)  # warm: 1 merged entry + 1 archive page
+
+    _run_main(
+        monkeypatch,
+        ["--action", "cik", "--ticker", "META", "--no-cache"],
+        {"tickers": {"META": {"cik": CIK}}},
+    )
+
+    assert "2 entries removed" in capsys.readouterr().err
+
+
+def test_no_cache_reports_zero_when_the_ticker_does_not_resolve(
+    monkeypatch, capsys
+):
+    """A bust that silently does nothing is indistinguishable from one that
+    worked — the failure this flag exists to rule out."""
+    _run_main(
+        monkeypatch,
+        ["--action", "cik", "--ticker", "NOSUCH", "--no-cache"],
+        {"tickers": {}},
+    )
+
+    err = capsys.readouterr().err
+    assert "0 entries removed" in err
+    assert "not resolved" in err
+
+
+def test_no_cache_names_an_unreadable_ticker_map_as_the_cause(
+    monkeypatch, capsys
+):
+    """`load_ticker_map` failing is NOT an unknown ticker — reporting it as one
+    points the operator at their own input instead of at SEC."""
+    _run_main(
+        monkeypatch,
+        ["--action", "cik", "--ticker", "META", "--no-cache"],
+        {"error": "SEC EDGAR HTTP 503: company_tickers.json"},
+    )
+
+    err = capsys.readouterr().err
+    assert "0 entries removed" in err
+    assert "ticker map unavailable" in err
+    assert "503" in err
+
+
+def test_no_cache_also_reports_the_accession_branch(monkeypatch, capsys):
+    """The block comment legislates "the count is REPORTED rather than
+    assumed" for the whole `--no-cache` block, and the `--accession` branch
+    lives under it. Silence there would exempt the branch its own governing
+    comment covers."""
+    accession = "0001045810-24-000316"
+    path = cache_util.cache_path("sec_edgar", f"narrative_sections_{accession}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    cache_util.save_cache(path, {"sections": {}})
+
+    monkeypatch.setattr(sec, "action_narrative", lambda a: {"accession": a})
+    monkeypatch.setattr(sec, "load_ticker_map", lambda: {"tickers": {}})
+    monkeypatch.setattr(
+        sys, "argv",
+        ["sec_edgar_client.py", "--action", "narrative",
+         "--accession", accession, "--no-cache"],
+    )
+    monkeypatch.setattr(sec, "_QUIET", False)
+    with pytest.raises(SystemExit):
+        sec.main()
+
+    err = capsys.readouterr().err
+    assert f"{accession}: 1 entries removed" in err
+    assert not path.exists()
+
+
 def test_main_document_error_still_propagates_uncached(responder):
     responder.routes[_url_main()] = {"error": "SEC EDGAR 404: nope"}
 
