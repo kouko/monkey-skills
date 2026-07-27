@@ -181,3 +181,101 @@ def test_pointer_not_copy_rule_present():
         "-- state that the author has not checked it against a source, so "
         "the reader knows what the label asserts"
     )
+
+
+def _per_task_block_section(text: str) -> str:
+    """Isolate the '### Per-task block' section (Task 2 of
+    `docs/loom/plans/2026-07-27-plan-stage-fact-grounding.md`).
+
+    Scoping to this section -- rather than grepping the whole file --
+    means the reuse-adequacy assertions below can only be satisfied by
+    the field actually living inside the per-task schema, not by an
+    incidental use of "reuse" or "behaviour" elsewhere in the document
+    (plan-format.md already uses both words outside this section). The
+    section runs from the '### Per-task block' heading to the next
+    heading of the same or shallower depth (`### Stated facts ...`),
+    which also covers the `####`-depth subsections describing
+    individual fields (Files touched, Review-weight, External
+    surfaces, ...) -- the same place a Reuse-adequacy subsection
+    belongs.
+    """
+    lines = text.splitlines(keepends=True)
+    start = None
+    depth = 0
+    for i, line in enumerate(lines):
+        if line.startswith("#") and "per-task block" in line.lower():
+            start = i
+            depth = len(line) - len(line.lstrip("#"))
+            break
+    assert start is not None, (
+        "plan-format.md carries no '### Per-task block' heading -- the "
+        "per-task schema must be a findable section"
+    )
+    end = len(lines)
+    in_fence = False
+    for j in range(start + 1, len(lines)):
+        line = lines[j]
+        if line.lstrip().startswith("```"):
+            in_fence = not in_fence
+            continue
+        # A fenced code block's own contents (e.g. the schema's worked
+        # examples embed a literal "## Task <N> -- ..." heading) must
+        # not be mistaken for a real heading that ends this section.
+        if not in_fence and line.startswith("#") and len(line) - len(line.lstrip("#")) <= depth:
+            end = j
+            break
+    return "".join(lines[start:end])
+
+
+def test_reuse_adequacy_field_present():
+    """plan-format.md's per-task block documents a reuse-adequacy
+    declaration: the behaviour-match claim, the why-acceptable clause,
+    and an inline definition of what counts as a behaviour difference
+    (Task 2, brief item 'Reuse-adequacy declaration'; motivating
+    evidence: #619 reused the top-line lane's selector in the
+    statement lane without re-checking its semantics --
+    `docs/loom/audits/2026-07-27-investing-arc-defect-provenance-audit.md`
+    §3.7 A-2)."""
+    text = _text()
+    section = _per_task_block_section(text)
+    low = section.lower()
+
+    # field name
+    assert "reuse-adequacy" in low, (
+        "the per-task block must name a Reuse-adequacy field -- a task "
+        "instructed to reuse an existing helper must declare whether its "
+        "behaviour still holds in the new lane"
+    )
+
+    # behaviour-match claim
+    assert "behaviour-match claim" in low, (
+        "must name the behaviour-match claim -- the one-line statement of "
+        "whether the helper's behaviour in the new lane matches its "
+        "behaviour in the old one"
+    )
+    match_para = _first_paragraph_at(section, "behaviour-match claim").lower()
+    assert "new lane" in match_para and "old" in match_para, (
+        "the behaviour-match claim must be defined against the concrete "
+        "old-lane vs new-lane comparison, not left abstract"
+    )
+
+    # why-acceptable clause
+    assert "why-acceptable clause" in low, (
+        "must name the why-acceptable clause -- the stated reason a "
+        "behaviour difference, if any, is acceptable for this task"
+    )
+    accept_para = _first_paragraph_at(section, "why-acceptable clause").lower()
+    assert "acceptable" in accept_para, (
+        "the why-acceptable clause must require a stated reason the "
+        "difference is acceptable, not just record that one exists"
+    )
+
+    # inline definition of "behaviour difference"
+    diff_para = _first_paragraph_at(section, "behaviour difference").lower()
+    for cue in ("different value", "different branch", "different default"):
+        assert cue in diff_para, (
+            f"'behaviour difference' must be defined inline at its first "
+            f"use by enumerating what counts ({cue!r} missing) -- a "
+            f"weak-tier reader cannot classify a helper's divergence from "
+            f"the bare term"
+        )

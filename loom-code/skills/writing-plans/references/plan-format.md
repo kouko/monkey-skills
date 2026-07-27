@@ -54,6 +54,7 @@ If `Plan-document-reviewer verdict` is `PENDING`, the plan has not been self-rev
   - **RED**: <failing test name OR diagnostic the implementer writes first>
   - **GREEN**: <observable condition when the task is done>
 - **External surfaces**: <v0.9.0+ — required when task touches non-stdlib external surface. See §External surfaces below. Omit field entirely if task is pure internal logic.>
+- **Reuse-adequacy**: <v0.39.0+ — required when the task's Description instructs the implementer to reuse an existing helper in a new lane. See §`Reuse-adequacy` below. Omit field entirely if the task authors new logic instead of reusing an existing helper across lanes.>
 - **Dependencies**: <one of: "none" | "Task N completes first" | "Tasks N, M complete first" (multi-prerequisite — N and M must both finish before this task starts) | "Tasks N, M parallel" (both are prerequisites, may run in parallel). Cross-part ordering: use "none" at task level + a plan-level `Notes` entry; the field is within-plan only and cannot reference a sibling part's tasks.>
 - **Independent**: <true | false>  # v0.8.0+ — opt-in marker for `dispatching-parallel-agents`. Default false.
 - **Review-weight**: <mechanical | OMIT>  # v0.11.0+ — opt-in, default absent = full triad (implementer + spec-reviewer + code-quality-reviewer). May ONLY be set when this task is an identical or near-identical edit reproducible from an exact spec — never for logic, heuristic, hook, or security-surface changes. See §`Review-weight` below.
@@ -132,6 +133,14 @@ Each bullet declares **category** + **specific name / identifier** + **grounding
 **Omit the field entirely** when the task is pure internal logic (renames a local symbol, edits a markdown doc with no external references, refactors an existing function with no new external calls, etc.). The field is opt-in by surface presence, not by every task.
 
 Per-task `code-quality-reviewer.md` D7 enforces that any external call in the task's diff carries a grounding cite. Whole-branch `code-reviewer.md` D7 additionally checks for cross-task surface-consistency conflicts. The `spec-consistency.md` checklist (`CHK-SPEC-008`) requires this field's presence when the task description / `Files touched` reference any of the five surface categories.
+
+#### `Reuse-adequacy` (v0.39.0+)
+
+When a task's Description instructs the implementer to reuse an existing helper, function, or selector in a **new lane** — a different call site, a different data shape, or a different code path than the one the helper was originally written for — the task MUST carry a **Reuse-adequacy** declaration: one line stating the **behaviour-match claim** (whether the helper's behaviour in the new lane matches its behaviour in the old one) and, when it does not fully match, the **why-acceptable clause** (the stated reason the difference is acceptable for this task — not merely that one exists).
+
+A **behaviour difference** is any case where the helper returns a different value, takes a different branch, or applies a different default between the old lane and the new lane on the same or analogous input. Reuse copies the helper's *code*; it does not copy its *semantics* into the new lane for free — the two can diverge silently, and every test inside the new lane's own slice can stay green while it does. Motivating case: PR #619 reused the top-line lane's selector in the statement lane without re-checking whether its old-lane behaviour still held; the selector's semantics did not carry over, and 1165 passing tests never crossed the seam to notice (`docs/loom/audits/2026-07-27-investing-arc-defect-provenance-audit.md` §3.7 A-2).
+
+**Omit the field entirely** when the task authors new logic rather than reusing an existing helper across lanes. The field is opt-in by reuse presence, not by every task.
 
 ### Stated facts — the pointer-not-copy rule (v0.39.0+)
 
