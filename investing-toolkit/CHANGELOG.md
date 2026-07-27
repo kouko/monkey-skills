@@ -81,8 +81,10 @@ that a decade of trend analysis needs.
 Grounding for the four above: three whole-branch review rounds, each with a
 mutation pass. The first found 5 of 9 mutants of the merge surviving the full
 suite — including deleting the padding whose own docstring described behaviour
-the code did not have. The suite now kills **12 of 12 distinct mutants**, none
-surviving. Live re-verification after the fixes: JPM cold 8/8 filings, 10
+the code did not have. **12 of 12 distinct mutants of this change are now
+killed** by `tests/data/test_sec_submissions_pagination.py`, none surviving —
+a claim about that file, not about the whole suite, which is what was
+measured. Live re-verification after the fixes: JPM cold 8/8 filings, 10
 annual periods, and 70 cache entries removed by one `bust_cik_caches` call.
 
 ### Known limits
