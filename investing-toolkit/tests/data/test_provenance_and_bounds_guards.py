@@ -70,7 +70,12 @@ def test_the_skip_message_names_the_field_that_is_missing_not_the_one_present():
     # Scope the assertion to the field list itself: the sentence ends with the
     # boilerplate "(accession/form)", which names BOTH fields and would make a
     # whole-message substring check pass no matter which one was reported.
-    named = flag["reason"].split("carries no companyfacts ")[1].split(", so its")[0]
+    reason = flag["reason"]
+    assert "carries no companyfacts " in reason and ", so its" in reason, (
+        f"the message no longer has the span this assertion scopes to, so it "
+        f"cannot say which field was named: {reason}"
+    )
+    named = reason.split("carries no companyfacts ")[1].split(", so its")[0]
 
     assert named == "accession", (
         f"the message must name the missing field, not the present one: "

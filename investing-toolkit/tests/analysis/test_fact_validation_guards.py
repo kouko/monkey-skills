@@ -51,15 +51,26 @@ def test_a_fact_without_a_usable_period_end_is_rejected(
     kpi_xbrl_guards, bad_period_end
 ):
     """`period_end` is the raw window every derived label is grounded in, and
-    the guard's docstring commits to rejecting rather than fabricating
-    `period "None"`. `''` is the case the weakened guard admits: it is a `str`,
-    so the type half passes, and only the emptiness half catches it."""
+    the guard commits to rejecting rather than fabricating `period "None"`.
+
+    Every case here must be reported as MISSING, not merely rejected. The
+    distinction is what makes the parametrisation hold the `or` -> `and`
+    mutation instead of just documenting it: under the weakened guard `''`
+    passes the type half, falls through to `date.fromisoformat('')`, and is
+    reported as MALFORMED — an assertion of "is a ValueError mentioning
+    period_end" is satisfied by both messages and catches nothing. An earlier
+    revision of this test asserted exactly that, and its docstring claimed
+    `''` was the discriminating case when it was the only one that was not.
+    """
     fact = {"concept": "us-gaap:Revenues", "period_end": bad_period_end}
 
     with pytest.raises(ValueError) as caught:
         kpi_xbrl_guards._require_period(fact)
 
-    assert "period_end" in str(caught.value)
+    assert "missing required 'period_end'" in str(caught.value), (
+        f"{bad_period_end!r} must be reported as missing, not "
+        f"reclassified: {caught.value}"
+    )
 
 
 def test_the_rejection_message_distinguishes_missing_from_malformed(
