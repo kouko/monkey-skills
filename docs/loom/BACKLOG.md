@@ -1881,7 +1881,8 @@ agreement of the per-task + whole-branch reviewers.
      SSOT-and-functional-copy convention and the two genuinely different verdict models;
      next-touch only. 🟢
   10. **Shipped with a known defect of its own, stated rather than fixed.** The
-      reconciliation entry above still opens by saying the audit "makes four internally
+      entry titled "investing-toolkit arc defect-provenance audit — internal inconsistencies
+      need reconciliation" still opens by saying the audit "makes four internally
       inconsistent claims" while its item 4 is struck WITHDRAWN and its own §Why it matters
       concludes that items 1-3 are the live ones. The audit's erratum says 三處; this
       entry's header is the stale copy — withdrawing item 4 did not re-measure the tally
@@ -1893,7 +1894,7 @@ agreement of the per-task + whole-branch reviewers.
         a stale shift magnitude, a wrong positional descriptor, a wrong instance tally, a
         round count sitting between its own abstention and its own prohibition. The
         terminal-round rule set before that round's verdict was: another instance of this
-        class gets recorded, not rewritten. Six rounds of moving one clause is evidence that
+        class gets recorded, not rewritten. Round after round of moving one clause is evidence that
         this prose surface is not driven clean by iteration, and that evidence is worth more
         shipped than hidden behind a seventh edit.
       - **Fix when the reconciliation runs**: correcting the audit's three live

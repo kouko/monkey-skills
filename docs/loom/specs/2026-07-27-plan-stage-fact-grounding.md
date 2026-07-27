@@ -121,11 +121,11 @@ Five edits, ~19 added lines, no new agent, no new script, no new format element:
    re-reviews.
 
 Coverage against the audit's planning-origin defects — **six** by its §1
-scoreboard's A column (`A×1` + `A×2` + `A×3`), **seven** by its §3.7 dossier,
-which enumerates three A-instances for PR #619 where the scoreboard records two;
-that mismatch is the first item BACKLOG's reconciliation entry leaves unresolved,
-so no total drawn from this audit is trustworthy yet. Against those defects:
-items 1+2 prevent or
+scoreboard's A column (`A×1` + `A×2` + `A×3`), **seven** if §3.7's dossier is
+read over the scoreboard, since that dossier enumerates three A-instances for
+PR #619 where the scoreboard records two; that mismatch is the first item
+BACKLOG's reconciliation entry leaves unresolved, so no total drawn from this
+audit is trustworthy yet. Against those defects: items 1+2 prevent or
 detect the wrong-formula and wrong-field-count class **when the plan cites a
 source for the claim**; item 3 covers the illegal-reuse class; item 4 covers the
 dropped-obligation class; item 5 covers the unreviewed-amendment class. Same
@@ -139,9 +139,10 @@ item 1 compliance — the reviewer checks table stays at 16 and a guard test pin
 that. So an **uncited** false fact passes untouched, which is both the cheaper
 authoring path and the shape of the audit's own §3.8 instance ("15
 fields" asserted three times where the code says 14). The **acceptance-criteria**
-family (two further §3.8 instances) is likewise untouched. Two of the audit's
-planning-origin defects are therefore not closed by this change, on either
-count; the residual is enumerated in
+family (two further §3.8 instances) is likewise untouched. Those instances are
+therefore not closed by this change — no total is stated for them, because which
+of §3.8's items are A-class is one of the things the reconciliation has to
+settle. The residual is enumerated in
 `docs/loom/BACKLOG.md` under "Plan-stage fact grounding — what 0.39.0 does NOT
 close". Stating the coverage claim unqualified would have reproduced the audit's
 own P4 pattern (§4) inside the fix for P4's siblings.
