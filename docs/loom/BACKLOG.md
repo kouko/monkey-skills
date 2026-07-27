@@ -571,10 +571,12 @@
   71**, and it is not "the banking sector": `ambiguous_total` fires for 5
   filers (BAC, BX, C, JPM, WFC) but BAC and BX still RESOLVE revenue, so the
   exact defect (unresolved revenue, zero fill, via `ambiguous_total`) is JPM,
-  WFC and C. Separately, `revenue_concept: null` covers 7 filers including two
-  NON-banks (MO, NOW), so the null-revenue population and the bank population
-  are different sets. PR #621 moved JPM/BAC/C from 3 annual periods to 10 and
-  WFC from 4 to 12.
+  WFC and C. Separately, `revenue_concept: null` covers **8** filers (BLK, C,
+  JPM, MO, NOW, PGR, WFC, XOM — 7 excluding XOM, whose null is the
+  silent-empty case above rather than a resolution failure), and **four of
+  those are non-banks** (MO, NOW, PGR, BLK), so the null-revenue population
+  and the bank population are different sets. PR #621 moved JPM/BAC/C from 3
+  annual periods to 10 and WFC from 4 to 12.
 - The store lane is unaffected: JPM's `revenue` spans 19 years there
   (2007-2025 per `JPM_spine.json`), so this is an as-filed-lane presentation
   gap, not data loss.
@@ -583,7 +585,7 @@
   counts above came from it), so the open question is only whether to add a
   cell state or to reuse `not_presented` with a reason.
 
-## investing-toolkit — store-lane revenue covers 10 years where its sibling fields cover 19 (OPEN)
+## investing-toolkit — store-lane revenue covers 10 years where its sibling fields cover 18-20 (OPEN)
 
 - Status: OPEN, **DIAGNOSED** — filed 2026-07-27 as an undiagnosed observation
   and diagnosed the same day by the entry's own fact-check; the cause was
