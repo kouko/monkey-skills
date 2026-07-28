@@ -2045,15 +2045,22 @@ agreement of the per-task + whole-branch reviewers.
      branch (`:365`→`:372` from a concurrent insertion, `:41` vs `:40`, `:32-39` vs `:34-39`,
      a path missing its directory). The T1 rule should prefer an anchor that survives
      insertion, and date any bare line number it keeps.
-     - **DETECTION (mechanised, 0.39.0).** The `loom-code/scripts/check_doc_citations.py`
+     - **DETECTION (mechanised, 0.40.0).** The `loom-code/scripts/check_doc_citations.py`
        script (default mode: path:line bounds with unique-suffix fallback) now verifies every
        `` `path:line` `` and `` `path:line-range` `` citation in the docs/loom corpus. Measured
        on the committed corpus: **0% false positive, 8/8 true positives on the line-exceeds-bounds class**; the documented content-drift instances (bounds-valid, content-wrong) are NOT detectable by this check — see `docs/loom/dogfood/2026-07-28-citation-check-corpus-run.md` §3a.
      - **PREVENTION (open).** Durable anchors over bare line numbers remain unimplemented.
-     - **§N-anchor detection (experimental, unwired).** The `--sections` flag detects §N
-       references resolving to numbered headings (§N / §N.M in the cited file). Zero true
-       positives on the corpus to date; re-measured threshold for escalation from
-       experimental to default. Same corpus-run note, same section.
+     - **§N-anchor detection (experimental, implemented behind the flag but not invoked by the
+       review mode).** The `--sections` flag detects §N references resolving to numbered
+       headings (§N / §N.M in the cited file). Zero true positives on the corpus to date;
+       awaiting a re-measured threshold for escalation from experimental to default. Same
+       corpus-run note, same section.
+     - **Quoted-citation false positives (parser v1 limitation).** The default-mode check
+       cannot distinguish a citation inside fenced code blocks, blockquotes, table cells, and inline examples — dogfood notes quoting
+       tool output, deliberately-broken fixture examples — from a live citation; both are
+       checked identically, producing false findings. 2/2 observed on this branch's own
+       dogfood notes. Reviewers must treat pre-pass findings inside fenced code blocks, blockquotes, table cells, and inline examples as
+       advisory, not as defects (see `requesting-code-review/SKILL.md:97`).
   4. **`Reuse-adequacy` is declarative-only.** Nothing enforces that a task carrying a reuse
      instruction fills the field.
   5. **Implementer test counts are not reproducible.** Two implementers reported "437 passed";
@@ -2112,6 +2119,18 @@ agreement of the per-task + whole-branch reviewers.
       passes while a weak model drops the severed link, so extraction needs a weak-model
       cold read). The file is also far above the repo's ~3,750-word soft target, which is a
       standing condition of this skill rather than something this change introduced.
+  12. **Release obligations are invisible to every plan check.** This branch's plan passed
+      14/14 with no version-bump task; the omission produced a live wrong version token in a
+      shipped annotation (item 3's 0.39.0/0.40.0 finding above). Check 8 sweeps the brief;
+      nothing sweeps repo conventions. Candidate: a standing release-obligations note in
+      writing-plans, or an append-only reviewer check.
+  13. **A gating obligation stated in a task Description binds nothing.** T3's "stop before
+      Task 4 ships the dependency" lived in prose; the Dependencies field did not encode it;
+      parallel marking let T4 commit first. Second consequence: the pre-pass population
+      caveat later folded into `requesting-code-review/SKILL.md:97` (the 0% false-positive
+      figure's scope) reached that file only at whole-branch review, not during the branch's
+      own plan-driven tasks. Candidate: plan-format rule — a Description sentence that gates
+      ANOTHER task must be encoded as a Dependencies edge or it does not exist.
 
 ## spec-reviewer Rule R3 forbids the cross-read item 7 now requires (OPEN)
 - Status: OPEN

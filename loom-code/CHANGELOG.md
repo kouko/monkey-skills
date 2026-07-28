@@ -18,8 +18,11 @@ Versioning: [Semantic Versioning](https://semver.org/).
   specs,plans}` corpus (329 files, 779 backtick citations) at **0%
   false-positive / 8/8 confirmed true positives** in default mode — see
   `docs/loom/dogfood/2026-07-28-citation-check-corpus-run.md` (Round 4) for
-  the four-round trajectory that got there (79.7% → 96.8% → 33.3% → 0% FP,
-  each round fixing one measured dominant false-positive class).
+  the four-round trajectory that got there: rounds 1–3 (79.7% → 96.8% →
+  33.3% FP) measure the file-citation and `§N`-anchor checks combined, per
+  the note's own split table the file-citation check alone was already at
+  0% FP by round 3, and round 4's 0% is simply that check running alone as
+  the shipped default mode after `§N` was descoped to `--sections`.
   `§N`/`§N.M` section-anchor checking exists but ships **behind an
   experimental `--sections` flag, off by default**: across all four
   measurement rounds it produced **zero confirmed true positives** against a
