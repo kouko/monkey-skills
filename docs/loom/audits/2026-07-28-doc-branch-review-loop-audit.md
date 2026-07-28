@@ -1,4 +1,4 @@
-# Seven review rounds on one docs branch — where the loom-* review loop failed
+# Nine review rounds on one docs branch — where the loom-* review loop failed
 
 - **Date**: 2026-07-28
 - **Scope**: one branch (`docs-backlog-resequence-around-hierarchy`, 11 commits,
@@ -22,7 +22,7 @@ verdicts and the remediation commits between them. Every claim below is
 
 ## Verdict (one line)
 
-The review loop ran seven rounds without converging because it was scoped to the
+The review loop ran nine rounds without converging because it was scoped to the
 diff while the branch's whole purpose was correcting claims the diff did not
 touch — and nothing in the loop measured its own convergence, so the cost stayed
 invisible until the operator volunteered it.
@@ -106,8 +106,8 @@ operator noticing the pattern produced it.
 ### §3.3 Review dimensions are code-shaped; documentation gets shallow default coverage
 
 **Evidence**: of the 10 dimensions, `security` / `architecture` / `tests` /
-`refactoring` / `deliberate-simplification` were vacuous PASS in all six FULL rounds (round 4 was a focused
-check with no dimension scores). The dimensions that actually caught things — does a citation resolve to
+`refactoring` / `deliberate-simplification` were vacuous PASS in all eight full rounds (round 4 was the
+only focused check, and carried no dimension scores). The dimensions that actually caught things — does a citation resolve to
 what the text claims, is a measurement's population stated, does an absolute
 ("only", "never", "zero") hold — are not dimensions at all. They had to be
 written into the dispatch prompt by hand, every round.
@@ -120,8 +120,8 @@ vacuous PASSes and a shallow read of the rest.
 claim-vs-evidence, population statements, absolutes, and cross-paragraph
 coherence.
 
-**Occurrences**: 1, but the operator wrote the same four instructions into seven
-consecutive dispatches, which is the signal.
+**Occurrences**: 1, but the operator wrote the same four instructions into every
+full-round dispatch, which is the signal.
 
 ### §3.4 Nothing enforces artifact-type jurisdiction
 
@@ -154,12 +154,12 @@ error was the mechanism's fault.
 
 ### §4.2 Fixing the named line instead of the population
 
-Three of the seven rounds' findings were siblings of an earlier finding, left
-unswept: one struck bullet restored verbatim while its sibling ten lines away
+Repeatedly across the nine rounds, a finding turned out to be the sibling of an
+earlier one, left unswept. Three concrete instances: one struck bullet restored verbatim while its sibling ten lines away
 stayed abridged; a cancelled SEQUENCE marked while the cancelled MECHANISM one
 bullet up stayed live; an ASCII dash corrected while a new one was written in the
-correcting text. No mechanism proposed — this is a working practice, and it has
-been recorded as one (`docs/loom/memory/` candidates in §6).
+correcting text. No mechanism proposed — this is a working practice, and it is
+PROPOSED as one in §6 (candidates; not written to the store by this audit).
 
 ### §4.3 Committing a subagent's claim without checking its source
 
@@ -175,11 +175,6 @@ finding, because it changes the lesson: the failure was not only "a subagent
 summary reached a committed artifact unchecked", it was **asserting an absolute
 on the strength of a search whose results were never read**. Both audits written
 this session made that same move, in the same sentence, about the same grep.
-
-The residual point for the 0.39.0 gate still stands and is worth separating from
-the above: this branch never went through `writing-plans`, so the plan-stage
-grounding gate had no artifact to bind to. **The gate is bound to an artifact
-type; the defect is not.**
 
 **This is the exact defect class `loom-code` 0.39.0 (plan-stage fact grounding,
 PR #625) shipped to prevent, on the day it merged.** It did not fire here because
@@ -210,7 +205,7 @@ once and then trust its own earlier pass; a script does not.
 Recorded here as candidates, not written — the durable-store decision is the
 user's:
 
-- **Verify the FIX against source, not the finding.** Five of seven rounds found
+- **Verify the FIX against source, not the finding.** Six of the nine rounds found
   a defect introduced by the previous round's remediation; every one was caught
   by re-reading what was just written rather than what it was meant to change.
 - **The named line is not the population.** §4.2.
