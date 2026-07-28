@@ -1,6 +1,6 @@
 ---
 name: same-economic-fact-different-concept-string-needs-first-present-fallback
-description: A producer can book the SAME economic item under DIFFERENT concept strings across sub-shapes of one taxonomy family — TW reinsurers record insurance-contract-liabilities under generic ifrs-full:LiabilitiesArisingFromInsuranceContracts while life/P&C insurers use tifrs-bsci-ins:InsuranceContractLiabilities_CB. A canonical mapper keyed on ONE concept string silently drops the field for the other sub-shape; resolve with a first-present candidate list (try the specific concept, fall back to the generic), not a single lookup.
+description: A producer can book the SAME economic item under DIFFERENT concept strings across sub-shapes of one taxonomy family — TW reinsurers record insurance-contract-liabilities under generic ifrs-full:LiabilitiesArisingFromInsuranceContracts while life/P&C insurers use tifrs-bsci-ins:InsuranceContractLiabilities_CB. A canonical mapper keyed on ONE concept string silently drops the field for the other sub-shape; resolve with a first-present candidate list (try the specific concept, fall back to the generic), not a single lookup. BOUNDED: this applies only where every candidate is a SYNONYM for one item — where they are different measures (a total and its component) first-present silently promotes the component in any period the total is absent.
 type: practice
 origin: branch feat-tw-ixbrl-fh (2026-07-22) — TW -ins insurer canonical; measured across life (三商壽) / P&C (台產/新產) / reinsurance (中再保) sub-shapes
 ---
@@ -27,3 +27,12 @@ BOTH legs with a test on a fixture of each sub-shape. Before writing the map, me
 sub-shape (life/P&C/reinsurance here), not one — the union of concepts, and which sub-shape
 uses which string, is only visible across the whole set.
 See [[market-canonical-must-satisfy-consumer-field-contract]] for the consumer-side twin.
+
+**Boundary (added 2026-07-28):** this pattern applies when the candidates are
+SYNONYMS for one economic item. It is WRONG when they are different measures —
+e.g. a revenue TOTAL and a revenue COMPONENT, where first-present silently hands
+the component the total's slot in every period the total is absent. Before
+reaching for a candidate list, establish that every candidate names the same
+thing; if they might not,
+[[concept-name-matching-cannot-separate-a-line-from-its-namesakes]] has the
+measurement and the alternative.
