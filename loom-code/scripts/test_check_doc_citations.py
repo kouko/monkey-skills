@@ -147,3 +147,124 @@ def test_main_exits_2_on_no_args() -> None:
 
 def test_main_exits_2_on_missing_doc_file(tmp_path: Path) -> None:
     assert main([str(tmp_path / "missing.md")]) == 2
+
+
+# --- §N section-anchor checks (Task 2) ---
+
+
+def test_flags_missing_section_anchor(tmp_path: Path) -> None:
+    _write(
+        tmp_path / "sibling.md",
+        "## 1. One\n"
+        "## 2. Two\n"
+        "## 3. Three\n"
+        "### 3.7 SubThree\n"
+        "## 4. Four\n"
+        "## 5. Five\n"
+        "## 6. Six\n"
+        "## 7. Seven\n",
+    )
+    doc = tmp_path / "doc.md"
+    _write(
+        doc,
+        "See `sibling.md` §9 (missing).\n"
+        "See `sibling.md` §3.7 (valid).\n",
+    )
+
+    findings = check_doc(doc, tmp_path)
+
+    assert len(findings) == 1
+    assert findings[0] == f"{doc}:1 -> sibling.md:§9 section not found"
+
+
+def test_bare_section_anchor_resolves_to_self_when_valid(tmp_path: Path) -> None:
+    doc = tmp_path / "doc.md"
+    _write(doc, "## 5. Some Heading\nSee §5 above.\n")
+
+    assert check_doc(doc, tmp_path) == []
+
+
+def test_bare_section_anchor_resolves_to_self_when_missing(tmp_path: Path) -> None:
+    doc = tmp_path / "doc.md"
+    _write(doc, "See §9 above but no such heading exists.\n")
+
+    findings = check_doc(doc, tmp_path)
+
+    assert len(findings) == 1
+    assert findings[0] == f"{doc}:1 -> {doc}:§9 section not found"
+
+
+def test_section_anchor_minor_does_not_match_major_only_heading(
+    tmp_path: Path,
+) -> None:
+    _write(tmp_path / "sibling2.md", "## 3. Three\n")
+    doc = tmp_path / "doc2.md"
+    _write(doc, "See `sibling2.md` §3.7 (no such subsection).\n")
+
+    findings = check_doc(doc, tmp_path)
+
+    assert len(findings) == 1
+    assert findings[0] == f"{doc}:1 -> sibling2.md:§3.7 section not found"
+
+
+def test_date_style_heading_parses_as_section_number(tmp_path: Path) -> None:
+    # KNOWN v1 false-resolve class: date-like headings without internal punctuation
+    # (e.g. `## 2026 Release Notes`) parse as section 2026, so a citation like
+    # `§2026` coincidentally resolves even though the heading looks like a date/title.
+    _write(
+        tmp_path / "target.md",
+        "## 2026 Release Notes\nSome content here.\n",
+    )
+    doc = tmp_path / "doc.md"
+    _write(doc, "See `target.md` §2026 (year parses as section number).\n")
+
+    findings = check_doc(doc, tmp_path)
+
+    # Should resolve without finding — the year (2026) gets parsed as section 2026,
+    # so the citation coincidentally succeeds (false-resolve).
+    assert len(findings) == 0
+
+    # Discrimination: flip the assertion to show the test catches the opposite
+    # (if we expected a finding, this would fail)
+    assert check_doc(doc, tmp_path) == []
+
+
+def test_missing_target_file_folds_into_section_not_found(tmp_path: Path) -> None:
+    # KNOWN v1 fold: check_section_anchor treats a missing target file as having
+    # no headings, so it returns "section not found" rather than a distinct
+    # "file not found" reason (v1 intentional collapse).
+    doc = tmp_path / "doc.md"
+    _write(doc, "See `absent.md` §3 (file missing).\n")
+
+    findings = check_doc(doc, tmp_path)
+
+    # Should have exactly one finding, and it must use "section not found" reason.
+    assert len(findings) == 1
+    assert "section not found" in findings[0]
+
+    # Discrimination: flip the reason check to show we're NOT getting a
+    # "file not found" distinct error
+    assert findings[0] == f"{doc}:1 -> absent.md:§3 section not found"
+
+
+def test_multiple_anchors_bind_to_nearest_preceding_doc(tmp_path: Path) -> None:
+    # When multiple document citations appear on one line, each section anchor
+    # binds to the nearest preceding document (from _nearest_doc_name logic).
+    _write(tmp_path / "one.md", "## 1. One\n## 2. Two\n")
+    _write(tmp_path / "two.md", "## 1. One\n")
+    doc = tmp_path / "doc.md"
+    _write(
+        doc,
+        "See `one.md` §1 and `two.md` §2 (missing in two.md).\n",
+    )
+
+    findings = check_doc(doc, tmp_path)
+
+    # Should have exactly one finding: §2 is missing in two.md. §1 binds to
+    # one.md (which has it), §2 binds to two.md (which lacks it).
+    assert len(findings) == 1
+    assert "two.md" in findings[0]
+
+    # Discrimination: flip to one.md to show the error binds to the nearest
+    # document, not a different one
+    assert findings[0] == f"{doc}:1 -> two.md:§2 section not found"

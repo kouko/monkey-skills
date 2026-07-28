@@ -9,15 +9,22 @@ against the repo root, and checked that the target file exists and that
 its line (or, for a range, the range end) does not exceed the file's
 line count.
 
-Scope (v1, this task only — see the plan's Task 1/Task 2 split):
-- ONLY backtick-wrapped citations are parsed. A bare, unbackticked
-  `path:line` in prose is deliberately ignored — backticks are the
-  reliable signal that a token is a path-citation rather than
+Scope (v1 — Task 1 + Task 2 only):
+- ONLY backtick-wrapped `path:line` citations are parsed. A bare,
+  unbackticked `path:line` in prose is deliberately ignored — backticks
+  are the reliable signal that a token is a path-citation rather than
   incidental text (e.g. a ratio, a clock time, a URL fragment); adding
   bare-form parsing would need heuristics to avoid false positives and
   is not needed by the corpus this ships against.
-- No `§N` anchor checking (Task 2), no quoted-string verification, and
-  no other semantic check — purely file-exists + line-in-range.
+- `§N` / `§N.M` anchors: numbered headings only (`## N.` / `### N.M`,
+  any heading level, an optional `§` decoration before the digit
+  tolerated since the corpus writes both `## 3.7 …` and `## §1 …`).
+  A `§N` adjacent to a backtick `` `doc.md` `` citation on the SAME
+  line resolves against that document; a bare `§N` with no document
+  named on that line resolves against the containing document itself.
+  Cross-line association (a doc named several lines above a `§N`) is a
+  known v1 limitation — out of scope, see the plan's Task 2 note.
+  No quoted-string verification, no other semantic check.
 
 Read-only: this script never writes to any file it inspects.
 
@@ -83,11 +90,104 @@ def check_citation(
     return None
 
 
+# Matches a backtick-quoted bare Markdown document name (no `:line`
+# suffix — that shape is `_CITATION_RE`'s territory). Used to find which
+# document a `§N` anchor on the same line is naming.
+_DOC_NAME_RE = re.compile(r"`([^`:\s]+\.md)`")
+
+# Matches a `§N` or `§N.M` section-anchor reference.
+_SECTION_REF_RE = re.compile(r"§(\d+)(?:\.(\d+))?")
+
+# Matches a numbered heading: `## N.` or `### N.M` (any level, optional
+# `§` decoration before the digit, optional trailing `.` after the last
+# digit group) — see module docstring's §N scope note.
+_HEADING_RE = re.compile(r"^#{1,6}\s+§?(\d+)(?:\.(\d+))?\.?(?:\s|$)")
+
+
+def extract_section_refs(
+    text: str,
+) -> list[tuple[int, str | None, int, int | None]]:
+    """Return `(doc_lineno, target_doc_name, major, minor)` per `§N` ref.
+
+    `target_doc_name` is the bare-Markdown-name captured from the
+    nearest backtick `` `doc.md` `` citation on the same line (nearest
+    preceding it, else the first one on the line); `None` if no
+    document is named on that line (bare self-reference). `minor` is
+    `None` for a `§N` reference and the int for `§N.M`.
+    """
+    refs: list[tuple[int, str | None, int, int | None]] = []
+    for lineno, line in enumerate(text.splitlines(), start=1):
+        doc_matches = list(_DOC_NAME_RE.finditer(line))
+        for match in _SECTION_REF_RE.finditer(line):
+            major = int(match.group(1))
+            minor = int(match.group(2)) if match.group(2) is not None else None
+            target = _nearest_doc_name(doc_matches, match.start())
+            refs.append((lineno, target, major, minor))
+    return refs
+
+
+def _nearest_doc_name(doc_matches: list[re.Match[str]], pos: int) -> str | None:
+    """Return the doc name from the nearest preceding match, else the first."""
+    if not doc_matches:
+        return None
+    preceding = [m for m in doc_matches if m.start() < pos]
+    chosen = preceding[-1] if preceding else doc_matches[0]
+    return chosen.group(1)
+
+
+def parse_headings(text: str) -> set[tuple[int, int | None]]:
+    """Return the set of `(major, minor)` numbered headings in `text`."""
+    headings: set[tuple[int, int | None]] = set()
+    for line in text.splitlines():
+        match = _HEADING_RE.match(line)
+        if match is None:
+            continue
+        major = int(match.group(1))
+        minor = int(match.group(2)) if match.group(2) is not None else None
+        headings.add((major, minor))
+    return headings
+
+
+def check_section_anchor(
+    repo_root: Path,
+    citing_doc_path: Path,
+    target_doc_name: str | None,
+    major: int,
+    minor: int | None,
+) -> str | None:
+    """Return a `<target>:§N section not found` finding tail, else `None`.
+
+    `target_doc_name` of `None` means the anchor refers to the citing
+    document itself. A missing target file is treated as having no
+    headings (folds into the same "section not found" finding — v1
+    does not distinguish it from an out-of-range section number).
+    """
+    if target_doc_name is None:
+        target_path = citing_doc_path
+        target_repr = str(citing_doc_path)
+    else:
+        target_path = repo_root / target_doc_name
+        target_repr = target_doc_name
+
+    headings: set[tuple[int, int | None]] = set()
+    if target_path.is_file():
+        headings = parse_headings(
+            target_path.read_text(encoding="utf-8", errors="replace")
+        )
+
+    if (major, minor) in headings:
+        return None
+    section_repr = f"{major}.{minor}" if minor is not None else str(major)
+    return f"{target_repr}:§{section_repr} section not found"
+
+
 def check_doc(doc_path: Path, repo_root: Path) -> list[str]:
     """Return one finding string per invalid citation in `doc_path`.
 
-    Finding format: `<doc>:<lineno> -> <cited-path>:<cited-line> <reason>`.
-    Empty list means every citation in the doc resolves cleanly.
+    Finding format: `<doc>:<lineno> -> <cited-path>:<cited-line> <reason>`
+    for `path:line` citations, and `<doc>:<lineno> -> <target>:§N
+    section not found` for unresolvable `§N` anchors. Empty list means
+    every citation in the doc resolves cleanly.
     """
     text = doc_path.read_text(encoding="utf-8")
     findings: list[str] = []
@@ -97,6 +197,11 @@ def check_doc(doc_path: Path, repo_root: Path) -> list[str]:
             continue
         cited_repr = f"{start}-{end}" if end is not None else str(start)
         findings.append(f"{doc_path}:{lineno} -> {cited_path}:{cited_repr} {reason}")
+    for lineno, target_doc_name, major, minor in extract_section_refs(text):
+        tail = check_section_anchor(repo_root, doc_path, target_doc_name, major, minor)
+        if tail is None:
+            continue
+        findings.append(f"{doc_path}:{lineno} -> {tail}")
     return findings
 
 
