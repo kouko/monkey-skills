@@ -2045,6 +2045,15 @@ agreement of the per-task + whole-branch reviewers.
      branch (`:365`→`:372` from a concurrent insertion, `:41` vs `:40`, `:32-39` vs `:34-39`,
      a path missing its directory). The T1 rule should prefer an anchor that survives
      insertion, and date any bare line number it keeps.
+     - **DETECTION (mechanised, 0.39.0).** The `loom-code/scripts/check_doc_citations.py`
+       script (default mode: path:line bounds with unique-suffix fallback) now verifies every
+       `` `path:line` `` and `` `path:line-range` `` citation in the docs/loom corpus. Measured
+       on the committed corpus: **0% false positive, 8/8 true positives on the line-exceeds-bounds class**; the documented content-drift instances (bounds-valid, content-wrong) are NOT detectable by this check — see `docs/loom/dogfood/2026-07-28-citation-check-corpus-run.md` §3a.
+     - **PREVENTION (open).** Durable anchors over bare line numbers remain unimplemented.
+     - **§N-anchor detection (experimental, unwired).** The `--sections` flag detects §N
+       references resolving to numbered headings (§N / §N.M in the cited file). Zero true
+       positives on the corpus to date; re-measured threshold for escalation from
+       experimental to default. Same corpus-run note, same section.
   4. **`Reuse-adequacy` is declarative-only.** Nothing enforces that a task carrying a reuse
      instruction fills the field.
   5. **Implementer test counts are not reproducible.** Two implementers reported "437 passed";
