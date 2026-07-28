@@ -29,11 +29,85 @@ Scope (v1 — Task 1 + Task 2 only):
 Read-only: this script never writes to any file it inspects.
 
 Stdlib only (`pathlib`, `re`, `sys`).
+
+Round 2 (2026-07-28, plan Task 3): the round-1 full-corpus dogfood
+(`docs/loom/dogfood/2026-07-28-citation-check-corpus-run.md`) measured a
+79.7% false-positive rate, 95% of it one pattern — docs cite files by
+bare name or partial path (`kpi_spine_view.py:1116`), trusting doc-level
+context, which the literal repo-root-relative resolver above cannot
+follow. When a cited path does not resolve directly under the repo root,
+`resolve_cited_path` falls back to a repo-wide suffix match (does any
+real file's path END WITH the cited string?):
+
+- Exactly one match: resolve against it and bounds-check as normal.
+- Zero or multiple matches: the citation is UNCHECKED — a third bucket,
+  distinct from both "resolves cleanly" and "finding". This is
+  deliberate, not a gap: asserting "file not found" from a repo-wide
+  search that ALSO came up empty (or ambiguous) would repeat the
+  false-positive problem in mirror image — confidently flagging drift
+  we cannot actually confirm. Loud skipping (an `unchecked` count in
+  every summary line) is the design instead of silent guessing.
+  Consequence: because a resolved target is by construction a real
+  file, "file not found" can no longer be produced as a finding reason
+  — only "line/section exceeds bounds" can. Real drift that manifests
+  as a citation with no remaining repo-wide match (e.g. a hard-cut
+  directory rename with no alias) now falls into `unchecked`, not a
+  finding; this is a recall-for-precision trade, documented in the
+  round-2 dogfood note, not an oversight.
+- `§N` anchor doc-name resolution (Task 2) uses the same fallback and
+  the same three-bucket outcome.
+
+Round 3 (2026-07-28, plan Task 3 continued): the round-2 corpus re-run
+(`docs/loom/dogfood/2026-07-28-citation-check-corpus-run.md` §Round 2)
+found the remaining `section not found` findings (244) were 240/244 one
+pattern: the cited target document uses named (non-numbered) headings
+throughout and simply doesn't use the `## N.` convention at all — the
+`§N` grammar cannot be applied to it in either direction. A resolved
+target with ZERO numbered headings is now UNCHECKED, not a finding
+(`check_section_anchor`); a finding may only fire when the target HAS
+numbered headings but lacks the specific one cited. This is the same
+"loud skip over confident wrong guess" design as the round-2 fallback
+above, applied to the applicability question instead of the resolution
+question. Four individually-adjudicated parser-mis-bind instances from
+round 2 were re-examined and left unfixed (documented in the round-3
+dogfood note instead): each is either an inherent grammar limitation
+(a `§N.M` referring to a numbered list item, never a real heading) or
+a same-line multi-doc-name ambiguity / cardinal-number false heading
+match already declined as unsafe to special-case in round 1's "Parser
+fixes considered, not made" section — fixing them would need semantic
+judgment a regex heuristic cannot supply safely, the same conclusion
+round 1 already reached.
+
+Round 4 (2026-07-29, plan Task 4 final — split-half shipping): the
+three-round dogfood (`docs/loom/dogfood/2026-07-28-citation-check-corpus-run.md`)
+measured the two checks apart, not just together. The path:line bounds
+check finished at 0% measured false positives (8/8 confirmed true
+positives, zero confirmed false positives across rounds 2-3). The §N
+anchor check never produced a single confirmed true positive on the
+whole 329-file corpus and still carries 4 architecturally distinct
+residual false positives after two targeted fixes. Per the user's
+decision, the default invocation now runs ONLY the path:line bounds
+check; the §N anchor check moves behind an opt-in `--sections` flag
+and is marked **experimental**: the `§N` convention it enforces was
+only introduced to this corpus days before the round-1 measurement, so
+its value is prospective, not yet demonstrated on real drift. Re-measure
+(and reconsider default-on) once the corpus's `§N` usage has grown
+materially past this run's population (401 refs, round 1 §1).
+
+The repo-wide file list (`list_repo_files`) walks the tree once via
+`os.walk`, excluding only `.git`. This over-includes untracked/ignored
+files relative to `git ls-files` (e.g. `__pycache__`), but that is the
+conservative direction for this design: an extra candidate can only
+ever turn a would-be-unique match into an ambiguous (unchecked) one —
+it never fabricates a false "resolves cleanly" result — and it avoids
+adding a `git` subprocess dependency to an otherwise stdlib-only script.
 """
 from __future__ import annotations
 
+import os
 import re
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 # Matches a backtick-quoted `path:line` or `path:line-range` citation.
@@ -72,22 +146,65 @@ def extract_citations(text: str) -> list[tuple[int, str, int, int | None]]:
     return citations
 
 
-def check_citation(
-    repo_root: Path, cited_path: str, start: int, end: int | None
-) -> str | None:
-    """Return a reason string if the citation is invalid, else `None`.
+def list_repo_files(repo_root: Path) -> list[str]:
+    """Return every file's path relative to `repo_root`, POSIX-style.
 
-    Distinguishes "file not found" from "line out of range" per the
-    task's scope guard.
+    Walks the tree once, skipping `.git`. See module docstring for why
+    `os.walk` (not `git ls-files`) and why over-inclusion is the safe
+    direction for the suffix-match fallback below.
     """
-    target = repo_root / cited_path
-    if not target.is_file():
-        return "file not found"
+    files: list[str] = []
+    for dirpath, dirnames, filenames in os.walk(repo_root):
+        dirnames[:] = [d for d in dirnames if d != ".git"]
+        for filename in filenames:
+            rel = (Path(dirpath) / filename).relative_to(repo_root)
+            files.append(rel.as_posix())
+    return files
+
+
+def resolve_cited_path(
+    repo_root: Path, cited_path: str, repo_files: list[str]
+) -> Path | None:
+    """Resolve `cited_path` to a real file, or `None` if UNCHECKED.
+
+    Tries the literal repo-root-relative path first; if that is not a
+    file, falls back to a repo-wide suffix match (a real file's path
+    ending with `cited_path`). Returns `None` (UNCHECKED) when the
+    fallback finds zero or multiple candidates — see module docstring.
+    """
+    direct = repo_root / cited_path
+    if direct.is_file():
+        return direct
+    matches = [f for f in repo_files if f.endswith("/" + cited_path)]
+    if len(matches) == 1:
+        return repo_root / matches[0]
+    return None
+
+
+def check_citation(
+    repo_root: Path,
+    cited_path: str,
+    start: int,
+    end: int | None,
+    repo_files: list[str],
+) -> tuple[bool, str | None]:
+    """Return `(checked, reason)` for one `path:line` citation.
+
+    `checked` is `False` when `cited_path` is UNCHECKED (see
+    `resolve_cited_path`); `reason` is then always `None`. When
+    `checked` is `True`, `reason` is a finding string for an
+    out-of-range line, or `None` for a clean citation. A resolved
+    target is by construction a real file, so "file not found" can no
+    longer occur here (round 2 — see module docstring).
+    """
+    target = resolve_cited_path(repo_root, cited_path, repo_files)
+    if target is None:
+        return False, None
     line_count = len(target.read_text(encoding="utf-8", errors="replace").splitlines())
     check_line = end if end is not None else start
     if check_line > line_count:
-        return f"line {check_line} exceeds file length ({line_count} lines)"
-    return None
+        return True, f"line {check_line} exceeds file length ({line_count} lines)"
+    return True, None
 
 
 # Matches a backtick-quoted bare Markdown document name (no `:line`
@@ -154,55 +271,120 @@ def check_section_anchor(
     target_doc_name: str | None,
     major: int,
     minor: int | None,
-) -> str | None:
-    """Return a `<target>:§N section not found` finding tail, else `None`.
+    repo_files: list[str],
+) -> tuple[bool, str | None]:
+    """Return `(checked, tail)` for one `§N` anchor.
 
     `target_doc_name` of `None` means the anchor refers to the citing
-    document itself. A missing target file is treated as having no
-    headings (folds into the same "section not found" finding — v1
-    does not distinguish it from an out-of-range section number).
+    document itself. Otherwise the target doc name is resolved via
+    `resolve_cited_path` (same repo-wide fallback as citations);
+    `checked` is `False` (UNCHECKED) when that resolution is ambiguous
+    or finds nothing — round 2 replaces v1's "missing file folds into
+    section not found" with this third bucket, see module docstring.
+
+    Round 3: a resolved target with ZERO numbered headings is ALSO
+    UNCHECKED, not a finding — the round-2 corpus re-run
+    (`docs/loom/dogfood/2026-07-28-citation-check-corpus-run.md`
+    §Round 2) found this is the dominant remaining false-positive class
+    (240/244): the `§N` grammar only exists for documents that use the
+    `## N.` numbered-heading convention; a doc that uses named headings
+    exclusively cannot support a "does §N exist" verdict at all, in
+    either direction (self-reference or cross-doc). A finding may only
+    fire when the target HAS numbered headings but lacks the specific
+    one cited. `tail`, when `checked` is `True`, is a `<target>:§N
+    section not found` finding tail, or `None` for a resolved section.
     """
     if target_doc_name is None:
-        target_path = citing_doc_path
+        target_path: Path | None = citing_doc_path
         target_repr = str(citing_doc_path)
     else:
-        target_path = repo_root / target_doc_name
+        target_path = resolve_cited_path(repo_root, target_doc_name, repo_files)
         target_repr = target_doc_name
+        if target_path is None:
+            return False, None
 
-    headings: set[tuple[int, int | None]] = set()
-    if target_path.is_file():
-        headings = parse_headings(
-            target_path.read_text(encoding="utf-8", errors="replace")
-        )
+    headings = parse_headings(target_path.read_text(encoding="utf-8", errors="replace"))
+    if not headings:
+        return False, None
 
     if (major, minor) in headings:
-        return None
+        return True, None
     section_repr = f"{major}.{minor}" if minor is not None else str(major)
-    return f"{target_repr}:§{section_repr} section not found"
+    return True, f"{target_repr}:§{section_repr} section not found"
 
 
-def check_doc(doc_path: Path, repo_root: Path) -> list[str]:
-    """Return one finding string per invalid citation in `doc_path`.
+@dataclass(frozen=True)
+class DocReport:
+    """Per-document result: findings plus the checked/unchecked split."""
 
-    Finding format: `<doc>:<lineno> -> <cited-path>:<cited-line> <reason>`
-    for `path:line` citations, and `<doc>:<lineno> -> <target>:§N
-    section not found` for unresolvable `§N` anchors. Empty list means
-    every citation in the doc resolves cleanly.
+    findings: list[str]
+    checked: int
+    unchecked: int
+
+
+def check_doc_report(
+    doc_path: Path,
+    repo_root: Path,
+    repo_files: list[str],
+    check_sections: bool = False,
+) -> DocReport:
+    """Return the full report (findings + checked/unchecked counts).
+
+    `repo_files` is caller-supplied (see `list_repo_files`) so `main()`
+    can compute it once per repo root instead of walking the tree once
+    per document. Finding format: `<doc>:<lineno> -> <cited-path>:
+    <cited-line> <reason>` for `path:line` citations, and `<doc>:
+    <lineno> -> <target>:§N section not found` for unresolvable `§N`
+    anchors.
+
+    `check_sections` (default `False`, round 4): the `§N` anchor check
+    is opt-in and experimental (see module docstring's Round 4 note).
+    When `False`, `§N` refs are never even extracted from `text` — they
+    contribute to neither `findings` nor `checked`/`unchecked`, a full
+    omission rather than a silent pass, so the counts never imply a
+    section anchor was checked when it was not.
     """
     text = doc_path.read_text(encoding="utf-8")
     findings: list[str] = []
+    checked = 0
+    unchecked = 0
     for lineno, cited_path, start, end in extract_citations(text):
-        reason = check_citation(repo_root, cited_path, start, end)
+        was_checked, reason = check_citation(repo_root, cited_path, start, end, repo_files)
+        if not was_checked:
+            unchecked += 1
+            continue
+        checked += 1
         if reason is None:
             continue
         cited_repr = f"{start}-{end}" if end is not None else str(start)
         findings.append(f"{doc_path}:{lineno} -> {cited_path}:{cited_repr} {reason}")
-    for lineno, target_doc_name, major, minor in extract_section_refs(text):
-        tail = check_section_anchor(repo_root, doc_path, target_doc_name, major, minor)
-        if tail is None:
-            continue
-        findings.append(f"{doc_path}:{lineno} -> {tail}")
-    return findings
+    if check_sections:
+        for lineno, target_doc_name, major, minor in extract_section_refs(text):
+            was_checked, tail = check_section_anchor(
+                repo_root, doc_path, target_doc_name, major, minor, repo_files
+            )
+            if not was_checked:
+                unchecked += 1
+                continue
+            checked += 1
+            if tail is None:
+                continue
+            findings.append(f"{doc_path}:{lineno} -> {tail}")
+    return DocReport(findings=findings, checked=checked, unchecked=unchecked)
+
+
+def check_doc(
+    doc_path: Path, repo_root: Path, check_sections: bool = False
+) -> list[str]:
+    """Return only the finding strings for `doc_path` (back-compat wrapper).
+
+    Computes the repo-wide file list internally. `main()` uses
+    `check_doc_report` directly with a cached `repo_files` list to
+    avoid re-walking the tree once per document in a multi-doc run.
+    """
+    return check_doc_report(
+        doc_path, repo_root, list_repo_files(repo_root), check_sections
+    ).findings
 
 
 def find_repo_root(doc_path: Path) -> Path:
@@ -218,6 +400,7 @@ def main(argv: list[str] | None = None) -> int:
     args = sys.argv[1:] if argv is None else argv
 
     repo_root: Path | None = None
+    check_sections = False
     doc_args: list[str] = []
     i = 0
     while i < len(args):
@@ -230,6 +413,9 @@ def main(argv: list[str] | None = None) -> int:
                 return 2
             repo_root = Path(args[i + 1])
             i += 2
+        elif args[i] == "--sections":
+            check_sections = True
+            i += 1
         else:
             doc_args.append(args[i])
             i += 1
@@ -237,19 +423,37 @@ def main(argv: list[str] | None = None) -> int:
     if not doc_args:
         print(
             "usage: check_doc_citations.py <file.md> [more.md ...] "
-            "[--repo-root PATH]",
+            "[--repo-root PATH] [--sections]\n"
+            "  --sections  EXPERIMENTAL, opt-in: also check §N section-anchor\n"
+            "              citations (off by default — see module docstring's\n"
+            "              Round 4 note for why and the re-measure trigger).",
             file=sys.stderr,
         )
         return 2
 
     all_findings: list[str] = []
+    total_checked = 0
+    total_unchecked = 0
+    repo_files_by_root: dict[Path, list[str]] = {}
     for doc_str in doc_args:
         doc_path = Path(doc_str)
         if not doc_path.is_file():
             print(f"usage error: not a file: {doc_str}", file=sys.stderr)
             return 2
         root = repo_root if repo_root is not None else find_repo_root(doc_path)
-        all_findings.extend(check_doc(doc_path, root))
+        if root not in repo_files_by_root:
+            repo_files_by_root[root] = list_repo_files(root)
+        report = check_doc_report(
+            doc_path, root, repo_files_by_root[root], check_sections
+        )
+        all_findings.extend(report.findings)
+        total_checked += report.checked
+        total_unchecked += report.unchecked
+
+    print(
+        f"checked {total_checked} / unchecked {total_unchecked} / "
+        f"findings {len(all_findings)}"
+    )
 
     if all_findings:
         for finding in all_findings:

@@ -261,3 +261,34 @@ Plan-document-reviewer verdict: PASS (2026-07-28, round 2, 14/14)
 - Brief item covered: "`docs/loom/BACKLOG.md` 'what 0.39.0 does NOT close'
   item 3 (citation drift) — the detection half is mechanised; annotate the
   entry at close-out rather than deleting it" (brief §What Becomes Obsolete)
+
+## Decision Log
+
+- 2026-07-28 (T3 round 1 → user): corpus run tripped the brief's ~10% FP
+  reversal condition (79.7%). User chose "fix the resolver, re-measure" over
+  narrowing scope or dropping the script. Establishes the ratified principle:
+  when the check's grammar cannot adjudicate a citation, classify it UNCHECKED
+  loudly — never emit a finding, never skip silently.
+- 2026-07-28 (T3 round 2 → orchestrator, logged not asked): round 2 still
+  trips the threshold, but the entire remaining FP class is §N references into
+  documents with zero numbered headings — the same grammar-not-applicable
+  shape the user already ratified for ambiguous basenames. Applied the same
+  principle (§N → UNCHECKED when the target has no numbered headings) as a
+  two-way-door scope rule and dispatched round 3, rather than re-asking; a
+  documented decision beats re-asking. If round 3 still trips, the full
+  trajectory goes back to the user.
+- 2026-07-29 (T3 round 3 → user): three-round FP trajectory 79.7% → 96.8% →
+  33.3%, still above threshold, but decisively split per check: path:line at
+  0% FP (8/8 TP), §N at zero TP with 4 architecturally-distinct residual FPs.
+  User chose **split-half shipping**: default invocation = path:line only
+  (reversal condition satisfied for the shipped wiring); §N behind an
+  experimental `--sections` flag with a stated re-measure trigger (the §N
+  convention entered the corpus only days before the run — prospective value,
+  no retrospective evidence).
+- 2026-07-28 (T3∥T4 sequencing miss, recorded for close-out): T3's Description
+  carried a gating obligation over T4 ("stop before Task 4's text ships a
+  dependency") that the Dependencies field did not encode; the parallel
+  marking (round-1 reviewer advisory, adopted) made T4 commit before T3's
+  reversal evaluation ran. Same defect class this branch exists to close — an
+  obligation living in prose that the structural fields do not encode. Carry
+  to whole-branch review.
