@@ -5,6 +5,62 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.40.0] — 2026-07-29 — mechanical citation checking + docs-only review mode
+
+### Added
+
+- **`scripts/check_doc_citations.py`** — mechanical citation resolution for
+  docs. Default mode checks backtick `` `path:line` ``/`` `path:line-range` ``
+  citations only: a direct repo-root match, falling back to a repo-wide
+  unique-suffix match when the cited path is bare/shorthand; a citation with
+  zero or multiple matching targets is reported as `unchecked`, never guessed
+  into a false "file not found." Measured on the full `docs/loom/{audits,
+  specs,plans}` corpus (329 files, 779 backtick citations) at **0%
+  false-positive / 8/8 confirmed true positives** in default mode — see
+  `docs/loom/dogfood/2026-07-28-citation-check-corpus-run.md` (Round 4) for
+  the four-round trajectory that got there (79.7% → 96.8% → 33.3% → 0% FP,
+  each round fixing one measured dominant false-positive class).
+  `§N`/`§N.M` section-anchor checking exists but ships **behind an
+  experimental `--sections` flag, off by default**: across all four
+  measurement rounds it produced **zero confirmed true positives** against a
+  residual of individually-diagnosed grammar-limitation false positives (4 on
+  the same corpus) — a heading-grammar mismatch (informal `§N` usage into
+  documents with no numbered-heading convention) that two targeted resolver
+  fixes could not close. Same dogfood note documents the re-measure trigger:
+  revisit default-on once the corpus's `§N` usage has grown materially past
+  this run's 401-ref population.
+
+### Changed
+
+- **Docs-only dispatch mode in `requesting-code-review`**
+  (`requesting-code-review/SKILL.md`, Step 1): when the branch diff is
+  non-empty and every changed file ends in `.md`, both reviewer dispatches
+  switch to (a) whole-artifact scope — each reviewer reads every changed
+  document in full, the diff only as context, and explicitly checks whether
+  any *unchanged* claim now contradicts the change; (b) five prose-defect
+  dimensions in place of the code-shaped ones — omission, ambiguity,
+  inconsistency, incorrect-fact, missing population; (c) a
+  `check_doc_citations.py` pre-pass over the changed files, folded into the
+  dispatch packet. Any non-`.md` file in the diff leaves the existing code
+  path unchanged.
+
+  **Measured with one A/B, scale-limited — read before relying on this.**
+  `docs/loom/dogfood/2026-07-28-docs-review-mode-ab.md`: on a 5-planted-defect
+  fixture, treatment (docs-only mode) caught 5/5 plus one incidental
+  out-of-scope defect; control (default diff-scoped dispatch) caught 4/5,
+  missing an unsupported-absolute claim, and also independently caught the
+  planted outside-diff contradiction the fixture was built to test — so the
+  mode's central claim (diff-scoped review is structurally blind to
+  out-of-diff defects) did **not** reproduce on this fixture. That claim
+  rests on the source audit's live-branch result instead
+  (`docs/loom/audits/2026-07-28-doc-branch-review-loop-audit.md:215-225`,
+  rounds 7-9: six diff-scoped rounds missed a defect that surfaced only once
+  review went whole-artifact) — the A/B fixture (~80 lines, diff covering
+  ~25%) was too small to force the same discriminating condition. n=1 per
+  arm; shipped on strict per-class dominance (treatment ≥ control on every
+  planted class, zero invented defects in either arm), not on the reproduced
+  structural claim.
+
 ## [0.39.0] — 2026-07-27 — plan-stage fact grounding
 
 ### Changed
