@@ -5,6 +5,41 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.41.0] — 2026-07-30 — docs-only review: instruction/evidence finding classes
+
+### Changed
+
+- **Finding-class taxonomy for docs-only dispatches**
+  (`requesting-code-review/SKILL.md`): scoped strictly to **docs-only
+  branches** (every changed file ends in `.md`) — the code-branch review
+  path is untouched. Each finding in a docs-mode dispatch now carries
+  `class: instruction | evidence`: **instruction** is text a reader or
+  executor will act on (a rule, a step, an acceptance criterion, a
+  prescribed command or path); **evidence** is a narrative claim about
+  what happened or is true (a measurement, an absolute, a provenance
+  attribution). A finding whose class is unclear is tagged `instruction`
+  (fail closed), the same fail-closed convention as a finding missing
+  `where:`.
+- **Aggregation scoped to instruction-class findings, in docs-only mode
+  only** (`requesting-code-review/SKILL.md`, Aggregation rule section):
+  **the aggregation rule itself is unchanged** — docs mode selects what
+  is fed into it, not its thresholds. Evidence-class findings are
+  carried into the verdict as recorded observations with no veto; an
+  evidence-class finding against settled (unchanged, per §Process Step
+  1(a)) narrative prose is superseded by an appended correction naming
+  what it replaces, never edited in place. **No round cap ships with
+  this change.** **The mixed-branch case — a branch touching both `.md`
+  and code files — is explicitly not addressed here**; such branches
+  keep the existing code-branch review path unchanged.
+
+### Note
+
+- `requesting-code-review/SKILL.md` is now 4,206 words — under
+  CHK-SKL-010's 4,500-word hard cap but above this repo's ~3,750-word
+  soft target, because the two additions above (finding-class
+  definitions plus the docs-mode aggregation filter) added content this
+  bump did not trade an equivalent amount out for.
+
 ## [0.40.0] — 2026-07-29 — mechanical citation checking + docs-only review mode
 
 ### Added

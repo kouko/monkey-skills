@@ -316,6 +316,28 @@ def test_aggregation_filters_to_instruction_class():
     )
 
 
+PLUGIN_JSON = Path(__file__).parents[1] / ".claude-plugin" / "plugin.json"
+CHANGELOG_MD = Path(__file__).parents[1] / "CHANGELOG.md"
+
+
+def test_plugin_version_and_changelog_at_0_41_0():
+    """Task 3 of docs/loom/plans/2026-07-30-docs-review-blocking-class.md:
+    plugin.json is bumped to 0.41.0 and CHANGELOG.md carries a matching
+    `## [0.41.0]` heading. Both read from the WORKING TREE, never a
+    committed blob -- an implementer cannot commit, so a test that reads
+    committed content can never go green in this workflow
+    (docs/loom/BACKLOG.md, "what 0.39.0 does NOT close", item 2)."""
+    plugin_text = PLUGIN_JSON.read_text(encoding="utf-8")
+    assert '"version": "0.41.0"' in plugin_text, (
+        "loom-code/.claude-plugin/plugin.json must read version 0.41.0"
+    )
+
+    changelog_text = CHANGELOG_MD.read_text(encoding="utf-8")
+    assert "## [0.41.0]" in changelog_text, (
+        "loom-code/CHANGELOG.md must carry a `## [0.41.0]` heading"
+    )
+
+
 def test_finding_class_window_excludes_unrelated_evidence_mention():
     """Sanity guard: window 1 and window 2 do not accidentally swallow
     the pre-existing, unrelated use of the word 'evidence' in this
