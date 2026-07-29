@@ -1,13 +1,12 @@
-"""Pre-flight safety gates for the nightly Phase 2 loop.
+"""Pre-flight safety gates for the Phase 2 loop.
 
-Three deterministic, side-effect-free checks the unattended routine runs
+Two deterministic, side-effect-free checks the unattended routine runs
 BEFORE it touches anything:
 
 - ``is_nightly_paused``            — kill switch (read-only sentinel file)
 - ``requires_real_agent_surface`` — scope guard (fail-closed keyword check)
-- ``assert_safe_target_branch``   — branch guard (owned-namespace allowlist)
 
-See docs/loom/specs/2026-07-11-u1-nightly-phase2-loop.md.
+See docs/loom/specs/2026-07-28-phase2-loop-execution-only.md.
 """
 
 import re
@@ -43,12 +42,6 @@ _REAL_AGENT_SIGNALS = (
 # false-positiving on words that merely contain them.
 _REAL_AGENT_WORD_SIGNALS = re.compile(r"\b(?:agent|eval)\b")
 
-# The routine may commit ONLY inside its own branch namespace. An allowlist
-# (not a denylist of human prefixes) is the strongest guarantee it never
-# collides with a human-owned branch, whatever that branch happens to be named.
-_OWNED_BRANCH_PREFIX = "nightly/"
-_BASE_BRANCHES = frozenset({"main", "master"})
-
 
 def is_nightly_paused(sentinel_path: Path) -> bool:
     """Return True iff the kill-switch sentinel file exists.
@@ -70,24 +63,3 @@ def requires_real_agent_surface(item_description: str) -> bool:
     if any(signal in text for signal in _REAL_AGENT_SIGNALS):
         return True
     return _REAL_AGENT_WORD_SIGNALS.search(text) is not None
-
-
-def assert_safe_target_branch(branch_name: str) -> None:
-    """Raise ValueError unless ``branch_name`` is inside the loop's own namespace.
-
-    Guards against the routine ever committing onto ``main``/``master`` or a
-    human-owned feature branch (e.g. ``feat/dbt-wiki-w1-l2-e2e-harness``). The
-    routine owns the ``nightly/`` namespace exclusively; everything else is
-    rejected.
-    """
-    name = branch_name.strip()
-    if name in _BASE_BRANCHES:
-        raise ValueError(
-            f"refusing to target base branch {name!r}: the nightly routine "
-            f"commits only inside its own {_OWNED_BRANCH_PREFIX!r} namespace"
-        )
-    if not name.startswith(_OWNED_BRANCH_PREFIX):
-        raise ValueError(
-            f"refusing to target {name!r}: the nightly routine may only commit "
-            f"to branches under {_OWNED_BRANCH_PREFIX!r} (never a human-owned branch)"
-        )

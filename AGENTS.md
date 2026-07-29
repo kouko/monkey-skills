@@ -131,12 +131,12 @@ Role boundaries enforced by behavior, not reading restrictions:
   whose changed-file diff itself fails — a hardcoded stderr message,
   not a `FreshnessResult.reason`, and no rebase remedy either.
 - **Run the nightly Phase 2 loop test suite**:
-  `source scripts/nightly-phase2-loop/.venv/bin/activate && PYTHONDONTWRITEBYTECODE=1 python -m pytest scripts/nightly-phase2-loop/ -v`
-  — covers the U1 nightly-loop skeleton's pure-logic modules (Phase 2
-  backlog parser, safety gates, journal writer) plus the structural-
-  completeness tests for the routine/schedule docs. Pure stdlib; the local
-  venv (gitignored via `**/.venv/`) needs only pytest: `uv venv
-  scripts/nightly-phase2-loop/.venv --python 3.11 && VIRTUAL_ENV=scripts/nightly-phase2-loop/.venv uv pip install pytest`.
+  `source scripts/phase2-loop/.venv/bin/activate && PYTHONDONTWRITEBYTECODE=1 python -m pytest scripts/phase2-loop/ -v`
+  — covers the U1 nightly-loop skeleton's pure-logic modules (safety gates,
+  journal writer) plus the structural-completeness tests for the routine/
+  schedule docs. Pure stdlib; the local venv (gitignored via `**/.venv/`)
+  needs only pytest: `uv venv scripts/phase2-loop/.venv --python 3.11 &&
+  VIRTUAL_ENV=scripts/phase2-loop/.venv uv pip install pytest`.
   Run manually; same Phase 4 (U1/U2) status as the dbt-wiki suite — no CI
   wiring yet.
 <!-- END command-surface (managed) -->

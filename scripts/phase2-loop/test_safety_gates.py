@@ -7,8 +7,8 @@ logic with no side effects so they can be exhaustively unit-tested.
 
 import pytest
 
+import safety_gates
 from safety_gates import (
-    assert_safe_target_branch,
     is_nightly_paused,
     requires_real_agent_surface,
 )
@@ -71,20 +71,11 @@ def test_fail_closed_on_ambiguous_description():
     assert requires_real_agent_surface(ambiguous) is True
 
 
-# --- branch guard: assert_safe_target_branch ------------------------------
+# --- branch guard removed: assert_safe_target_branch ----------------------
 
 
-@pytest.mark.parametrize("branch", ["main", "master"])
-def test_rejects_base_branches(branch):
-    with pytest.raises(ValueError):
-        assert_safe_target_branch(branch)
-
-
-def test_rejects_open_feature_branch():
-    with pytest.raises(ValueError):
-        assert_safe_target_branch("feat/dbt-wiki-w1-l2-e2e-harness")
-
-
-def test_allows_owned_nightly_branch():
-    # Must NOT raise — this is the branch the routine owns exclusively.
-    assert assert_safe_target_branch("nightly/phase2-burndown") is None
+def test_assert_safe_target_branch_removed():
+    # Retired dead code: batch_queue.py's ensure_worktree already isolates
+    # every queue entry into its own branch/worktree, superseding this
+    # module's own branch-collision check.
+    assert hasattr(safety_gates, "assert_safe_target_branch") is False
