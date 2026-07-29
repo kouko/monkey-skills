@@ -105,6 +105,42 @@ def _norm(s: str) -> str:
     return re.sub(r"\s+", " ", s).strip()
 
 
+def _aggregation_rule_section(text: str) -> str:
+    """Isolate the `**Aggregation rule**` section in §Verdict structure.
+
+    Runs from the line naming "**Aggregation rule**" (column 0) to the
+    line naming its actual next sibling heading, "**Panel union**"
+    (measured against the real file -- Task 2 adds a "**Docs-only
+    mode**" sub-heading INSIDE this section, so a generic
+    next-bold-heading-at-column-0 scan would stop early and exclude
+    it; anchoring on the real sibling name is deliberate, not a
+    shortcut). Preceding this section is an unrelated
+    `standards_version` paragraph, which the start anchor already
+    excludes.
+    """
+    lines = text.splitlines(keepends=True)
+    start = None
+    for i, line in enumerate(lines):
+        if line.lstrip().lower().startswith("**aggregation rule**"):
+            start = i
+            break
+    assert start is not None, (
+        "requesting-code-review/SKILL.md carries no '**Aggregation "
+        "rule**' heading -- this section must be findable, not absent"
+    )
+    end = len(lines)
+    for j in range(start + 1, len(lines)):
+        if lines[j].lstrip().lower().startswith("**panel union**"):
+            end = j
+            break
+    assert end != len(lines), (
+        "requesting-code-review/SKILL.md carries no '**Panel union**' "
+        "heading after Aggregation rule -- this window's end anchor "
+        "must be findable, not absent"
+    )
+    return "".join(lines[start:end])
+
+
 def test_docs_dispatch_defines_finding_classes():
     """The docs-only dispatch mode's clause (d) names both finding
     classes with inline definitions, one worked example per class drawn
@@ -185,6 +221,98 @@ def test_docs_dispatch_defines_finding_classes():
     ), (
         "the `class:` line's comment must mark it present for docs-mode "
         "dispatches only"
+    )
+
+
+def test_aggregation_filters_to_instruction_class():
+    """The `**Aggregation rule**` section states that in docs-only mode
+    the rule is applied to instruction-class findings only, that the
+    rule itself is unchanged (docs mode selects its input, not its
+    thresholds), that a finding missing `class:` fails closed to
+    instruction, and that an evidence-class finding against settled
+    narrative prose is superseded by an appended correction rather than
+    edited in place (Task 2 of
+    docs/loom/plans/2026-07-30-docs-review-blocking-class.md)."""
+    text = _text()
+    section = _norm(_aggregation_rule_section(text)).lower()
+
+    # docs-mode filter sentence: rule applies to instruction-class
+    # findings only; evidence-class findings are recorded, not a veto.
+    assert "instruction-class findings only" in section, (
+        "the Aggregation rule section must state that in docs-only "
+        "mode the rule applies to instruction-class findings only"
+    )
+    assert "evidence-class findings" in section and "do not gate" in section, (
+        "the Aggregation rule section must state that evidence-class "
+        "findings are carried into the verdict as recorded "
+        "observations that do not gate"
+    )
+
+    # aggregation-rule-unchanged statement.
+    assert "rule above is unchanged" in section, (
+        "the section must state explicitly that the aggregation rule "
+        "itself is unchanged"
+    )
+    assert "docs mode selects what is fed into it" in section, (
+        "the section must state that docs mode selects the rule's "
+        "input, not its thresholds"
+    )
+
+    # fail-closed sentence, consistent with the existing `where:` rule.
+    assert "missing `class:` counts as instruction" in section, (
+        "a finding missing `class:` must count as instruction (fail "
+        "closed)"
+    )
+    assert (
+        "finding missing `where:` flipping the whole verdict" in section
+    ), (
+        "the fail-closed sentence must draw the explicit parallel to "
+        "the existing missing-`where:` rule"
+    )
+
+    # supersede-not-edit sentence.
+    assert "superseded by an appended correction" in section, (
+        "an evidence-class finding against settled narrative prose "
+        "must be superseded by an appended correction"
+    )
+    assert "naming what it replaces" in section, (
+        "the correction must name what it replaces"
+    )
+    assert "never edited in place" in section, (
+        "the supersede sentence must forbid editing in place"
+    )
+
+    # "settled" must be operationally defined, not left to judgment:
+    # tied to the docs-only dispatch's UNCHANGED-claim vocabulary
+    # (§Process Step 1(a)), not a free-standing undefined term.
+    assert "left unchanged" in section and "§process step 1(a)" in section, (
+        "the supersede sentence must anchor 'settled' to §Process "
+        "Step 1(a)'s UNCHANGED-claim vocabulary, not leave it "
+        "undefined"
+    )
+
+    # --- window precision: excludes the nearest sibling sections ---
+    following_sibling = "each arm's own `verdict:` is advisory only"
+    preceding_paragraph = (
+        "lets downstream readers tell whether a verdict was scored "
+        "under the rules in effect now"
+    )
+    full_low = _norm(text).lower()
+    assert following_sibling in full_low, (
+        "test fixture assumption broken -- the Panel union sentence "
+        "this test checks for moved or was reworded"
+    )
+    assert preceding_paragraph in full_low, (
+        "test fixture assumption broken -- the standards_version "
+        "paragraph this test checks for moved or was reworded"
+    )
+    assert following_sibling not in section, (
+        "the Aggregation rule window must exclude the following "
+        "Panel union sibling section"
+    )
+    assert preceding_paragraph not in section, (
+        "the Aggregation rule window must exclude the preceding "
+        "standards_version paragraph"
     )
 
 
