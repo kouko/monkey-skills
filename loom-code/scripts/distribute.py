@@ -164,7 +164,7 @@ def distribute(route: dict[str, list[str]] | None = None) -> int:
 #    plugin-level agent (implementer + 3 reviewers).
 # 2. **reviewer-discipline-v1** — rules R1+R2 for verdict-producing agents
 #    (standards_version stamp + evidence-citation requirement). Applies ONLY
-#    to the 3 reviewer agents; implementer does not carry it.
+#    to the reviewer agents; implementer does not carry it.
 
 AGENT_BASELINE_SSOT_REL = "scripts/_baseline.md"
 AGENT_BASELINE_BEGIN = (
@@ -183,11 +183,14 @@ AGENT_BASELINE_END = "<!-- END baseline-v1 -->"
 #                           reviewer from requesting-code-review). systematic-
 #                           debugging has no agent directory; no debugger.md
 #                           in this batch.
+# v0.42.0: docs-reviewer.md (prose-native whole-artifact reviewer from
+#          requesting-docs-review).
 AGENT_BASELINE_TARGETS: list[str] = [
     "agents/implementer.md",
     "agents/spec-reviewer.md",
     "agents/code-quality-reviewer.md",
     "agents/code-reviewer.md",
+    "agents/docs-reviewer.md",
 ]
 
 AGENT_REVIEWER_DISCIPLINE_SSOT_REL = "scripts/_reviewer-discipline.md"
@@ -205,6 +208,7 @@ AGENT_REVIEWER_DISCIPLINE_TARGETS: list[str] = [
     "agents/spec-reviewer.md",
     "agents/code-quality-reviewer.md",
     "agents/code-reviewer.md",
+    "agents/docs-reviewer.md",
 ]
 
 AGENT_RULE_SHEET_SSOT_REL = "scripts/_rule-sheet.md"
