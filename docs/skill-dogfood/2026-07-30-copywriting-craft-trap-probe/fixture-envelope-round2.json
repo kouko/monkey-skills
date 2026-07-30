@@ -1,0 +1,49 @@
+{
+  "phase": "phase-6-voice-tone",
+  "form": "short-form",
+  "brief": {
+    "product": "kotoba — a JP-learning flashcard app for busy professionals",
+    "audience": "JP-curious working adults, 28-45, 5-10 min/day budget",
+    "goal": "app-store page headline + subline that convert browsers who already searched 'learn japanese'",
+    "tone_constraints": "warm but not cute; no emoji; no exclamation marks",
+    "banned_claims": ["fluent in N days", "effortless"]
+  },
+  "message_thesis": "Five focused minutes a day beats an abandoned textbook.",
+  "draft": "HEADLINE: Five minutes. Every day. Actually yours.\nSUBLINE: kotoba fits Japanese into the commute you already have — one small win before the train stops.",
+  "voice_quadrant": {
+    "quadrant": "Q2-companion",
+    "schwartz_alignment": "ok"
+  },
+  "tone_notes": {
+    "axis_target": "warm-direct",
+    "register_signal_applied": {
+      "named_master_fit_warning": null
+    }
+  },
+  "express_mode_used": false,
+  "audit_trail": [
+    { "at": "2026-07-30T09:00:00Z", "event": "skill-entered", "skill": "copywriting-voice-tone-stage", "detail": "Phase 6 re-gate, round 2" },
+    { "at": "2026-07-30T08:40:00Z", "event": "gate-verdict", "skill": "copywriter-evaluator", "detail": "Voice Consistency SHOULD gate round 1: NEEDS_REVISION" },
+    { "at": "2026-07-30T08:50:00Z", "event": "auto-revise", "skill": "copywriter", "detail": "round-1 contract finding remediation applied" }
+  ],
+  "retries": { "bounce_round": 0, "revise_round_count": 1, "total_retries": 1 },
+  "prior_findings": [
+    {
+      "id": "R1-F1",
+      "class": "contract",
+      "severity": "🟡",
+      "dimension": "RUB-CTW-VC-1 voice stability vs declared axis_target",
+      "finding": "Draft's original subline ('Nihongo, but make it painless~') violated the declared tone_notes.axis_target 'warm-direct' and the brief's 'no cute register' constraint — playful-cute register, checkable against the declared target.",
+      "round1_status": "NEEDS_FIX"
+    },
+    {
+      "id": "R1-F2",
+      "class": "craft",
+      "severity": "🟡",
+      "dimension": "RUB-CTW-VC-2 tone contextual appropriateness",
+      "finding": "The headline's staccato three-fragment rhythm ('Five minutes. Every day. Actually yours.') reads slightly clipped for a companion-quadrant voice; a connective flow might land warmer. Taste-level observation; no declared referent violated.",
+      "round1_status": "RECORDED"
+    }
+  ],
+  "next_stage": "copywriting-ethics-check-stage"
+}
