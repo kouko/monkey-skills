@@ -105,11 +105,12 @@ def test_check16_row_carries_prose_branch():
     )
 
 
-def test_na_clause_covers_both_weights():
-    """The Verdict-mapping N/A clause fires when no task opts into EITHER
-    weight -- mechanical OR prose -- not just mechanical."""
-    clause = _norm(_na_clause(_text())).lower()
-
+def _assert_na_clause_covers_both_weights(clause: str) -> None:
+    """Raise AssertionError unless `clause` extends Check 16's N/A firing
+    condition to both opt-in weights -- mechanical OR prose -- not just
+    mechanical. Shared by the real-text test and the mutation guard below
+    so both exercise the identical check (docs/loom/memory/
+    prose-contract-mechanism-transcribes-from-code.md convention)."""
     assert "`review-weight: mechanical`" in clause, "must still name mechanical"
     assert "`review-weight: prose`" in clause, (
         "must extend the N/A clause to cover `Review-weight: prose` too"
@@ -120,19 +121,43 @@ def test_na_clause_covers_both_weights():
     )
 
 
+def test_na_clause_covers_both_weights():
+    """The Verdict-mapping N/A clause fires when no task opts into EITHER
+    weight -- mechanical OR prose -- not just mechanical."""
+    clause = _norm(_na_clause(_text())).lower()
+    _assert_na_clause_covers_both_weights(clause)
+
+
 def test_na_clause_polarity_guard():
-    """Removing the `Review-weight: prose` mention from the N/A clause
-    must fail the same check that passes on the real text -- proves the
-    assertion is sensitive to the regression it exists to catch, not just
-    to the clause's absence."""
+    """Reverting the N/A clause to its actual pre-fix, mechanical-only
+    wording (a realistic regression, not a blank deletion) must fail
+    `_assert_na_clause_covers_both_weights` -- proves the shared helper is
+    sensitive to the regression it exists to catch. The prior version of
+    this test deleted the exact substring its own assertion checked for,
+    so it could never fail regardless of the real clause's semantics
+    (vacuous by construction)."""
     clause = _norm(_na_clause(_text())).lower()
 
-    # sanity: real text passes
-    assert "`review-weight: prose`" in clause
+    # sanity: real text passes the real check
+    _assert_na_clause_covers_both_weights(clause)
 
-    mutated = clause.replace("`review-weight: prose`", "").replace(
-        " or ", " "
+    key_phrase = (
+        "check 16 is n/a when no task declares `review-weight: mechanical` "
+        "or `review-weight: prose` (both opt-in)."
+    )
+    assert key_phrase in clause, (
+        "test fixture assumption broken -- N/A clause wording changed "
+        "under this test; update key_phrase to match"
+    )
+
+    # Contradicting variant: the actual pre-fix, mechanical-only wording --
+    # not a blank deletion -- proves the check catches a REALISTIC
+    # regression (the "or prose" carve-out silently dropped), not merely
+    # the absence of a string it was told to delete.
+    mutated = clause.replace(
+        key_phrase,
+        "check 16 is n/a when no task declares `review-weight: mechanical`.",
     )
 
     with pytest.raises(AssertionError):
-        assert "`review-weight: prose`" in mutated and " or " in mutated
+        _assert_na_clause_covers_both_weights(mutated)

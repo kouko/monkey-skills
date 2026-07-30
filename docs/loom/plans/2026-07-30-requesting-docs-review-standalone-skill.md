@@ -202,8 +202,9 @@ Plan-document-reviewer verdict: PASS (2026-07-30, round 1, 14/14); amendment (Ta
   point to the brief/plan).
 - Module: loom-code
 - Files touched: loom-code/.claude-plugin/plugin.json, loom-code/CHANGELOG.md,
-  loom-code/scripts/test_docs_review_blocking_class.py, .claude-plugin/marketplace.json,
-  loom-code/.codex-plugin/manifest.json, docs/loom/BACKLOG.md
+  loom-code/scripts/test_docs_review_blocking_class.py,
+  .claude-plugin/marketplace.json (listed, ultimately unchanged — sync check was
+  clean), loom-code/.codex-plugin/plugin.json, docs/loom/BACKLOG.md
 - Context paths:
   - scripts/check_version_bump.py
   - scripts/check-marketplace-description-sync.py
@@ -286,6 +287,10 @@ Plan-document-reviewer verdict: PASS (2026-07-30, round 1, 14/14); amendment (Ta
 - This branch itself is a MIXED branch (`.md` prose + Python tests) and will close
   out under the OLD review path (0.41.0's docs mode does not cover mixed) — treat
   the close-out as a live measurement of the pain this arc removes.
+- Correction (2026-07-30 close-out, supersedes the previous bullet's prediction):
+  the close-out ran the branch's OWN new mixed-branch per-file split live (two
+  code arms + two docs arms, joined verdict, mint-once) — the old-path prediction
+  did not hold; the live run doubles as the mixed-path dogfood.
 - Task 3 and Task 7 both touch test_docs_review_blocking_class.py — sequential by
   Dependencies (T3 → T7), no parallel conflict.
 - Task 2 bundles the relocated jurisdiction content and the new convergence contract

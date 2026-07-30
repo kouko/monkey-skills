@@ -41,7 +41,9 @@ where — schema-shaped for `loom_gate_markers.py`.
 Toy plan Task 2 declares `Review-weight: prose` with `scripts/fix.py` in Files
 touched. Haiku returned NEEDS_REVISION with exactly one gap, check_id 16, the
 right rule quoted, and a sensible split-or-drop suggested fix; 13/14 other
-checks clean, no noise. The prose row is weak-tier classifiable; fail-closed
+checks clean, no noise (denominator: 14 other checks total — 13 clean + Check 12
+N/A, since the toy plan carries no BLOCKED-fallback field for Check 12 to
+evaluate). The prose row is weak-tier classifiable; fail-closed
 gating holds at the plan gate.
 
 ## D3 — round-2 convergence duties (sonnet, cold): PASS incl. the semantics trap
@@ -58,6 +60,10 @@ in place — softened wording, date removed, number kept, no source.
   applied "evidence-class findings never gate" even when the surviving defect
   was its own round's headline. This was the designed trap; a contract misread
   here would have reproduced the 🟡-accumulation loop the arc exists to kill. ✅
+  Clarification: under the shipped aggregation the strictly correct token for
+  D3 (evidence 🟡 + instruction 🟢 only) is PASS, not PASS_WITH_NOTES; the
+  load-bearing boundary (not NEEDS_REVISION) held, recorded here so the token
+  doesn't seed precedent.
 - Bonus precision: flagged the corrected citation now pointing at the function
   header (:10) instead of the clamp line (:16) as a 🟢 nit — right severity.
 
