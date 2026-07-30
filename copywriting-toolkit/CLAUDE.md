@@ -226,6 +226,24 @@ Router does not draft, does not judge gate verdicts, does not rewrite. It routes
 
 Express Mode replaces Q1-Q10 **elicitation** with synthesis-plus-single-turn-confirmation. The Intake Completeness MUST gate still runs. The downstream skill still sees a well-formed envelope that satisfies its Preconditions. If Express-synthesised fields turn out to be wrong, a downstream skill will emit a violation → router routes back to intake → intake on re-entry forces Q1-Q10 (not Express) because bounce-backs are a disqualifier.
 
+## Gate Convergence Vocabulary (contract / craft) — canonical
+
+Canonical convergence semantics for EVERY gate in this plugin (Intake Completeness, Neta Safety, Voice Consistency, Ethics, Form 8a/8b, audit-stage reuse). Gate skills, rubrics, and the `copywriter-evaluator` contract POINT at this section — they do not restate it. If a gate document and this section ever disagree, this section wins.
+
+**1. Every gate finding carries `class: contract | craft`.**
+
+- `contract` — the finding cites a violated CONTRACT term with an objective checkable referent: a brief constraint, a form spec limit or mandatory element, a declared voice target, or an ethics rule. Someone reading the referent and the draft can check the violation without taste.
+- `craft` — a qualitative observation: affinity thickness, flow, tone nuance, positioning polish.
+- **A finding whose class is unclear is tagged `contract` (fail closed)** — ambiguity must never soften a gate.
+
+**2. Gate verdicts aggregate over contract-class findings ONLY.** Craft-class findings are recorded observations that never gate — they travel in the verdict as notes for the operator and downstream stages, but they cannot flip `PASS` to `NEEDS_REVISION`, alone or in accumulation.
+
+**3. Round-2 duty.** A re-gate dispatch carries the prior round's findings verbatim. The evaluator verifies each prior finding against the current draft BEFORE raising anything new. Re-raising a closed finding in new words is forbidden — that is re-litigation, not review.
+
+**4. Oscillation stop.** A finding that resurfaces after being fix-verified ends the loop → surface to the operator, regardless of counter state (`bounce_round` / `revise_round_count` / `total_retries` headroom does not authorize another round).
+
+**Ethics semantics unchanged:** ethics-check's FATAL/FIXABLE checklist semantics are UNCHANGED by this vocabulary — FATAL still blocks unconditionally; FIXABLE still follows its own auto-revise rule. This vocabulary governs how findings aggregate into verdicts, not what the ethics checklist means.
+
 ## Audit Trail
 
 The envelope's `audit_trail[]` field (defined in `.claude-plugin/envelope.schema.json`) is an append-only log of pipeline events. Each entry records one of:
