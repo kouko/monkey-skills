@@ -5,7 +5,7 @@ description: |
   time-sensitive stories + evergreen knowledge links — at
   news/daily-news/YYYY-MM-DD Daily News.md. Use for '整理今天的新聞' / '每日新聞' /
   'daily news digest' / summarizing what you read today. Also manages
-  long-story arc books in news/store-arcs/（開一本追蹤 X／不用追了）.
+  long-story arc books in news/store-arcs/（開一本追蹤 X／暫停追蹤／不用追了）.
 ---
 
 # Daily News Digest（每日新聞彙整）
@@ -251,47 +251,19 @@ wire feed, not summarizing notes one by one:
    the filename — YouTube-derived names routinely contain `&`, full-width `｜`
    and similar characters that make shell-string file reads return empty output
    **silently** (real failure 2026-06-16).
-2. **Integrate and cross-reference — reconcile FACTS first, then surface
-   interpretation.** Two complementary layers, in order:
+2. **Integrate and cross-reference.** Reconcile numbers (if two sources cite WTI
+   at 80.3 vs 81, say so), combine the timeline, assemble the fullest picture.
+   Where sources disagree on interpretation, **surface the disagreement** — that
+   tension is signal.
 
-   **(a) 事實對帳 (internal factual reconciliation) — facts first.** Align every
-   **number and concrete fact** that ≥2 sources touch (price, %, EPS, date,
-   count, who-did-what). This pass is **internal by design**: it reads ONLY the
-   day's own vault sources — never a web search, never a note dated after the
-   digest date — so it carries **zero look-ahead bias** and runs **identically on
-   a backfill as on a same-day run** (see the Hard-rules note "事實查核只做內部對帳"
-   on why external fact-check is deliberately excluded). Classify and handle each
-   contested fact:
-   - **Agree** → use it, no annotation.
-   - **Minor variance** (rounding / unit / as-of timing — WTI 80.3 vs 81; capex
-     620 vs the 600–640 range's midpoint) → fold a range into the prose
-     (「約 80–81」), don't editorialize.
-   - **Material conflict** (two values that can't both be true — a same-quarter
-     EPS of 27.25 vs 30) → **NEVER silently pick one**; emit a
-     `> [!warning] 數字對帳` callout inside that story naming both sources + their
-     values, and state that it is undecidable from the day's sources.
-   - **Transcription-error smell** (an implausible number, or the note itself
-     flags 「語音轉錄誤植」) → treat as low-confidence; take a corroborated value if
-     one exists, else keep it and label 「單一來源、疑轉錄誤差」.
-   - **Lone-source load-bearing fact** (nothing to reconcile against) → label
-     「單一來源未對帳」; do not present it as established (honest-limits).
-
-   Cross-cluster shared entities (the same EPS cited across several clusters) →
-   the main agent runs one global reconciliation after clusters return; on a
-   heavy day each subagent returns its own cluster's `reconciliation` object (see
-   `heavy-day-dispatch.md` return contract). Then combine the timeline and
-   assemble the fullest picture.
-
-   **(b) Interpretation divergence — 多空對照/分歧點.** With the facts now agreed,
-   surface where sources **disagree on interpretation** — a different axis from
-   (a): (a) asks *is the number right*, (b) asks *what does it mean*. When the
-   cluster holds ≥2 sources taking materially-differing stances on the SAME
-   question, emit a compact 多空對照/分歧點 block (`| 立場 | 誰 | 核心論據 |` stance
-   rows + MANDATORY final **分歧點** row). ALL rules: `digest-format.md`
-   §多空對照/分歧點 — **READ it before emitting**: trigger (real-disagreement
-   judgment, NOT a category gate), stance-counting test, 分歧點 false-balance
-   guard, do-not-over-fire (complementary angles = integration), zero 漏引 (every
-   stance source reaches `## Source Index`).
+   **When the cluster holds ≥2 sources taking materially-differing stances on the
+   SAME question, emit a compact 多空對照/分歧點 block** (`| 立場 | 誰 | 核心論據 |`
+   stance rows + MANDATORY final **分歧點** row). ALL rules:
+   `digest-format.md` §多空對照/分歧點 — **READ it before emitting**:
+   trigger (real-disagreement judgment, NOT a category gate),
+   stance-counting test, 分歧點 false-balance guard, do-not-over-fire
+   (complementary angles = integration), zero 漏引 (every stance
+   source reaches `## Source Index`).
 3. **Write a one-line TL;DR — the bottom-line takeaway / so-what**, NOT a
    restating of the causal steps (the COT diagram below carries those). Then a
    **COT (Chain-of-Thought) mini-diagram** directly (a compact `flowchart LR` of the story's causal
@@ -443,11 +415,10 @@ sub-heading — duplication across sub-headings is correct, not an error.
 - **Handwritten appendix**: if `daily/<YYYY-MM-DD>.md` exists, surface real
   handwritten content from its `## Note` section; skip silently if empty.
 - **Report**: digest path, story count (and sources merged), tier-2 item count,
-  kept-vs-dropped one-liner, **數字對帳** (material factual conflicts flagged +
-  any 疑轉錄誤差; 「無」 if the day was clean), **arc books** (updated count /
-  newly-opened list for the user to veto / stale `kind: event` books to suggest
-  closing / trackable-item proposals for recurring stories with no book of their
-  own), and anything borderline to double-check.
+  kept-vs-dropped one-liner, **arc books** (updated count / newly-opened list
+  for the user to veto / stale `kind: event` books to suggest closing /
+  trackable-item proposals for recurring stories with no book of their own),
+  and anything borderline to double-check.
 
 ## Hard rules
 
@@ -502,21 +473,6 @@ sub-heading — duplication across sub-headings is correct, not an error.
 >   judge on `tags` + `snippet`.
 > - **NEVER fabricate a fact to fill a theme.** If a snippet is too thin to know
 >   what happened, open the source note and read it rather than guessing.
-
-> [!note] 事實查核只做內部對帳，不搜尋外部 — 這是刻意的
-> The fact-check in STEP 6 step 2(a) reconciles ONLY among the day's own vault
-> sources — no web search, no external news. The reason is **temporal
-> integrity**: a digest is an *as-of that-day snapshot*, and on a **backfill**
-> any external search can pull in information dated **after** the digest date
-> (look-ahead bias / 前視偏誤). That leak is not reliably preventable — search
-> engines' publish dates are unreliable, pages are edited in place (a URL "dated"
-> D can carry text added after D), second-hand sources may be written by someone
-> who saw the outcome, and the failure is **silent**. Internal reconciliation
-> reads only vault notes ≤ the digest date (trustworthy filename dates, a closed
-> corpus), so it is **leakage-free and reproducible on any date**. If external
-> verification is genuinely needed, keep it **manual, explicit opt-in, and
-> same-day-runs only** (`D == today`) via `research-toolkit:fact-check` /
-> `cite-check` — never wire it into this automated flow, and never on a backfill.
 
 - **Create `news/daily-news/` if it doesn't exist** — a new top-level folder.
 - **One file per day.** If `news/daily-news/<date> Daily News.md` already exists, ask whether

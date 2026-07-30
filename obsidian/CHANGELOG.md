@@ -9,8 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Changed — `wiki-update` / `daily-news-digest` descriptions
 
 - Both frontmatter `description` blocks reworded and hard-wrapped at
-  ≤76 chars/line (no content dropped) — part of a cross-plugin pass
-  trimming five outlier skill descriptions.
+  ≤76 chars/line (no trigger hook dropped) — part of a cross-plugin
+  pass trimming five outlier skill descriptions.
 
 ## [3.20.1] — 2026-07-24 wikilink-target-insensitive word counter
 
