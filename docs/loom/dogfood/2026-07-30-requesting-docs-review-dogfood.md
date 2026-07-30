@@ -97,6 +97,38 @@ subagents; headless sessions install the marketplace's GitHub-main plugin, so
 a pre-merge headless probe would exercise 0.41.0). Re-trigger recorded in
 docs/loom/BACKLOG.md §"Standalone docs-review skill".
 
+## Weak-orchestrator probe (pre-merge; supersedes the addendum's claim above)
+
+Correction (2026-07-30, supersedes the haiku addendum's "structurally
+untestable pre-merge" sentence): the marketplace limitation is bypassable —
+project-level `.claude/skills/` + `.claude/agents/` in a sandbox repo carry
+the BRANCH's contract natively, and a headless `claude -p --model sonnet`
+session is a full harness with dispatch capability (the no-nested-dispatch
+gotcha applies to subagents, not to independent headless processes).
+
+Probe: sandbox git repo, docs-only branch, planted 🔴 instruction
+contradiction + citation-bounds defect + evidence-class claim; scripted
+remediation fixing ONLY the citation; prompt authorizes exactly one
+remediation + round 2, nothing further. Disk oracles, not self-report:
+
+- **No marker minted** — both rounds' NEEDS_REVISION refused to mint (exit 3
+  reported as correct behavior, `.git/loom/` absent). Mint discipline holds.
+- **Exactly 4 reviewer dispatches** in the transcript (2 rounds × 2
+  byte-identical arms) — no third round attempted.
+- **Directive 1 STOP executed**: round 2 ended NEEDS_REVISION → surviving 🔴
+  surfaced to the user with an explicit "third round is not authorized"
+  handoff. Directive 2 verbatim handoff + fix-verification ran; the arm
+  correctly distinguished not-fixed from resurfaced ("the remediation commit
+  never touched line 11 — partial fix, not oscillation"); evidence-class
+  stayed non-gating in both rounds.
+
+Coverage after this probe: orchestrator layer verified at **sonnet** — the
+realistic floor, since the operator's model-dispatch rules already exclude
+haiku from multi-step git workflows. Residual post-merge items narrow to:
+installed-plugin wiring fidelity (hook preloads, three-way routing firing via
+the real requesting-code-review entry) and the haiku-arm noise-rate
+measurement on real branches.
+
 ## Conclusions
 
 1. The agent-contract layer of the convergence design survives cold weak-tier

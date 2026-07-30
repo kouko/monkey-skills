@@ -2230,16 +2230,17 @@ agreement of the per-task + whole-branch reviewers.
   independently-actionable items below shipped in this arc: the whole-branch round cap
   (as the docs-arm's 2-round cap inside `requesting-docs-review`) and the mixed-branch
   per-file split (in `requesting-code-review`'s three-way routing).
-- **Post-merge follow-up (open, cheap)**: weak-ORCHESTRATOR probe. The agent-contract
-  layer is verified at haiku+sonnet (dogfood record incl. haiku addendum), but the
-  orchestrator layer (2-round cap firing, STOP-and-surface, round-2 packet, union /
-  worse-of / mint-once) has only ever run under the session model — structurally
-  untestable pre-merge (subagents cannot dispatch subagents; headless sessions install
-  the marketplace's GitHub-main plugin). After 0.42.0 is on device, run one headless
-  `claude -p --model sonnet` (then haiku) close-out of a sandbox docs-only branch with
-  a planted instruction defect and check: cap honored, STOP surfaces instead of a third
-  round, marker minted from the joined verdict. Also collect the haiku-arm noise-rate
-  observation (dogfood addendum) on the first real docs branches.
+- **Post-merge follow-up (open, cheap — NARROWED after the pre-merge probe ran)**: the
+  weak-orchestrator CONTRACT question is answered pre-merge — a sandbox with the
+  branch's skill/agent at project level (`.claude/skills` + `.claude/agents`) under
+  headless `claude -p --model sonnet` executed the full two-round flow correctly (cap
+  STOP, no third round, mint refused on NEEDS_REVISION, not-fixed vs resurfaced
+  distinguished; dogfood record §Weak-orchestrator probe). What remains post-merge:
+  (a) installed-plugin WIRING fidelity — does the three-way routing fire through the
+  real requesting-code-review entry + hook preloads on device; (b) the haiku-arm
+  noise-rate observation (dogfood addendum) on the first real docs branches. Sonnet is
+  the orchestrator floor by the operator's own model-dispatch rules (haiku excluded
+  from multi-step git workflows), so no haiku-orchestrator probe is owed.
 - Start (historical — the unpark condition that was in force before this arc shipped,
   kept for record): unpark if, after 0.41.0's blocking-class change has governed 2–3 docs-heavy branch
   close-outs, either (a) a mixed (`.md`+code) branch runs a pathological review loop — the
