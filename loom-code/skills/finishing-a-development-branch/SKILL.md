@@ -17,7 +17,9 @@ Orchestrates the close-branch sequence. The agent acts as conductor — invoking
 finishing-a-development-branch (this skill)
   │
   ├─→ Phase 1: requesting-code-review
-  │     dispatches code-reviewer subagent → verdict: PASS / PASS_WITH_NOTES / NEEDS_REVISION
+  │     three-way dispatch by file type (docs-only → whole review delegates to
+  │     requesting-docs-review; mixed → per-file split, code panel + docs-reviewer;
+  │     code-only → code-reviewer panel, unchanged) → verdict: PASS / PASS_WITH_NOTES / NEEDS_REVISION
   │     blocks on NEEDS_REVISION (any 🔴, or 2+ 🟡); PASS_WITH_NOTES (1 🟡) auto-proceeds,
   │     carrying the 🟡 forward into the PR body + close-out report
   │
@@ -78,7 +80,7 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
 
 | Step | Delegate | Why this skill doesn't do it directly |
 |---|---|---|
-| 1 | `requesting-code-review` | Human-judgment quality review is its own skill with its own subagent; this orchestrator just dispatches |
+| 1 | `requesting-code-review` (three-way dispatch: docs-only delegates whole to `requesting-docs-review`; mixed splits per-file; code-only unchanged) | Human-judgment quality review is its own skill with its own subagent; this orchestrator just dispatches |
 | 2 | `verification-before-completion` | Package-level test invocation has its own per-stack command table; this orchestrator just invokes the gate |
 | 2b | `ui-verification` (conditional) | The user's main acceptance stage for a UI-bearing branch — what "done" means to them — has its own tooling/degradation contract (browser/device automation, N/A-loud); fires only when the branch touched UI and a `ui-flows.md` exists |
 | 3 | `dev-workflow:git-memory` | P3-D MANDATORY — git-memory decides whether memory trailers are warranted on this commit. Orchestrator passes the diff + recent commits; git-memory returns the trailer set (or empty, if routine) |
@@ -103,6 +105,10 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
    - If PASS_WITH_NOTES (exactly 1 🟡, no 🔴): auto-proceed — carry the 🟡 finding forward
      into the PR body and the final close-out report as noted debt.
    - If PASS (all 🟢): proceed silently.
+   - If the docs arm (requesting-docs-review) returns its 2-round-cap STOP (round 2 ended
+     without PASS): surface the surviving findings to the user now — do NOT fold this into
+     the fix→re-review loop below. A third review round runs only on explicit user
+     authorization.
    - Budget/quota failure fallback: if the code-reviewer subagent fails to launch due to
      budget or quota exhaustion, perform an inline B2 self-review — Read the diff, surface
      🔴 / 🟡 / 🟢 findings with an explicit "(self-review — code-reviewer unavailable)" caveat,
@@ -114,7 +120,8 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
      SDD's per-task triad during development or this step's own fix-up cycle — digest
      silently; the user sees only the terminal verdict, never each iteration.
      PASS_WITH_NOTES above auto-proceeds without asking — consistent with this
-     digest-silently posture, not an exception to it.
+     digest-silently posture, not an exception to it. The docs-arm cap-STOP above IS
+     the one exception: it surfaces to the user immediately rather than looping silently.
 4. Before applying any review findings from Step 3: Read each file you intend to Edit
    (Bash inspection does NOT satisfy the Edit/Write precondition) — details in
    [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §S1.
