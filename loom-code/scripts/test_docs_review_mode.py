@@ -207,6 +207,107 @@ def test_old_inline_docs_mode_paragraph_absent():
     )
 
 
+def _step3_section(text: str) -> str:
+    """Isolate Process Step 3 (verdict aggregation + marker minting)."""
+    lines = text.splitlines(keepends=True)
+    start = None
+    for i, line in enumerate(lines):
+        if re.match(r"^3\.\s+\*\*Wait for BOTH verdicts", line):
+            start = i
+            break
+    assert start is not None, (
+        "requesting-code-review/SKILL.md carries no Process Step 3 "
+        "'Wait for BOTH verdicts' line -- the mint-marker step must be "
+        "findable, not absent"
+    )
+    end = len(lines)
+    for j in range(start + 1, len(lines)):
+        if re.match(r"^\d+\.\s", lines[j]):
+            end = j
+            break
+    return "".join(lines[start:end])
+
+
+def _assert_mint_once_from_joined(low: str) -> None:
+    """Raise AssertionError unless the mixed-branch bullet states the
+    marker is minted ONCE, from the joined verdict, and that neither
+    arm self-mints on a mixed branch."""
+    assert "mint the review-pass marker once" in low, (
+        "mixed-branch bullet must state the marker is minted ONCE"
+    )
+    assert "joined verdict" in low, (
+        "mixed-branch bullet must tie the single mint to the JOINED "
+        "verdict, not either arm's own"
+    )
+    assert "neither arm mints its own marker on a mixed branch" in low, (
+        "mixed-branch bullet must forbid either arm self-minting"
+    )
+
+
+def test_mixed_branch_mints_marker_once_from_joined_verdict():
+    """Step 1's mixed-branch bullet must state the review-pass marker
+    is minted ONCE from the joined (worse-of) verdict -- neither arm
+    mints its own marker. Otherwise a code-arm PASS could mint a valid
+    marker at HEAD while the docs arm silently refuses, and git-guard
+    would let the push through on a half-reviewed branch."""
+    text = _text()
+    step1_raw = _step1_section(text)
+    low = _norm(step1_raw).lower()
+    _assert_mint_once_from_joined(low)
+
+    # naming: the mixed bullet must name the docs arm as a PANEL
+    # (requesting-docs-review's two-agent contract), not a singular
+    # "the docs-reviewer agent" dispatch.
+    assert "the `docs-reviewer` agent" not in step1_raw, (
+        "mixed bullet must not imply a single docs-reviewer dispatch; "
+        "name the docs arm per requesting-docs-review's panel contract"
+    )
+    assert "panel contract" in low, (
+        "mixed bullet must name the docs arm via "
+        "requesting-docs-review's panel contract, not a singular agent"
+    )
+
+
+def test_mint_once_polarity_guard():
+    """Mutating 'neither arm mints its own marker' to 'each arm mints
+    its own marker' must fail the same check that passes on the real
+    text -- proves the guard is sensitive to the regression (a
+    per-arm-mint hazard), not just to the section's absence."""
+    text = _text()
+    low = _norm(_step1_section(text)).lower()
+    _assert_mint_once_from_joined(low)
+
+    key_phrase = "neither arm mints its own marker on a mixed branch"
+    assert key_phrase in low, (
+        "test fixture assumption broken -- SKILL.md wording changed "
+        "under this test; update key_phrase to match"
+    )
+    mutated = low.replace(
+        key_phrase, "each arm mints its own marker on a mixed branch"
+    )
+    with pytest.raises(AssertionError):
+        _assert_mint_once_from_joined(mutated)
+
+
+def test_step3_mint_scoped_away_from_mixed_branch():
+    """Step 3's mint instruction (mechanically minting from the code
+    panel's own union) must not silently apply on a mixed branch -- it
+    must say its own direct mint fires on the code-only path, deferring
+    to Step 1's joined-verdict mint otherwise. Without this scoping,
+    Step 3 and the mixed bullet contradict: Step 3 reads as "always
+    mint here" while the mixed bullet says "mint once elsewhere"."""
+    text = _text()
+    low = _norm(_step3_section(text)).lower()
+    assert "code-only" in low, (
+        "Step 3 must scope its own direct mint action to the "
+        "code-only path"
+    )
+    assert "mixed branch" in low, (
+        "Step 3 must name the mixed-branch case it defers to Step 1's "
+        "joined-verdict mint"
+    )
+
+
 def _when_to_use_trivial_row(text: str) -> str:
     """The §When to use table row for trivial diffs."""
     for line in text.splitlines():
